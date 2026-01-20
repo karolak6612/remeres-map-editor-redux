@@ -23,6 +23,7 @@
 #include "brush.h"
 #include "pngfiles.h"
 #include "artprovider.h"
+#include "main_menubar.h"
 #include <wx/artprov.h>
 #include <wx/mstream.h>
 
@@ -52,6 +53,8 @@ MainToolBar::MainToolBar(wxWindow* parent, wxAuiManager* manager) {
 	wxBitmap cut_bitmap = wxArtProvider::GetBitmap(wxART_CUT, wxART_TOOLBAR, icon_size);
 	wxBitmap copy_bitmap = wxArtProvider::GetBitmap(wxART_COPY, wxART_TOOLBAR, icon_size);
 	wxBitmap paste_bitmap = wxArtProvider::GetBitmap(wxART_PASTE, wxART_TOOLBAR, icon_size);
+	wxBitmap properties_bitmap = wxArtProvider::GetBitmap(wxART_REPORT_VIEW, wxART_TOOLBAR, icon_size);
+	wxBitmap find_bitmap = wxArtProvider::GetBitmap(wxART_FIND, wxART_TOOLBAR, icon_size);
 
 	standard_toolbar = newd wxAuiToolBar(parent, TOOLBAR_STANDARD, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	standard_toolbar->SetToolBitmapSize(icon_size);
@@ -66,6 +69,9 @@ MainToolBar::MainToolBar(wxWindow* parent, wxAuiManager* manager) {
 	standard_toolbar->AddTool(wxID_CUT, wxEmptyString, cut_bitmap, wxNullBitmap, wxITEM_NORMAL, "Cut", wxEmptyString, NULL);
 	standard_toolbar->AddTool(wxID_COPY, wxEmptyString, copy_bitmap, wxNullBitmap, wxITEM_NORMAL, "Copy", wxEmptyString, NULL);
 	standard_toolbar->AddTool(wxID_PASTE, wxEmptyString, paste_bitmap, wxNullBitmap, wxITEM_NORMAL, "Paste", wxEmptyString, NULL);
+	standard_toolbar->AddSeparator();
+	standard_toolbar->AddTool(MAIN_FRAME_MENU + MenuBar::FIND_ITEM, wxEmptyString, find_bitmap, wxNullBitmap, wxITEM_NORMAL, "Find Item", wxEmptyString, NULL);
+	standard_toolbar->AddTool(MAIN_FRAME_MENU + MenuBar::MAP_PROPERTIES, wxEmptyString, properties_bitmap, wxNullBitmap, wxITEM_NORMAL, "Map Properties", wxEmptyString, NULL);
 	standard_toolbar->Realize();
 
 	wxBitmap* border_bitmap = loadPNGFile(optional_border_small_png);
@@ -448,6 +454,7 @@ void MainToolBar::OnStandardButtonClick(wxCommandEvent& event) {
 			g_gui.PreparePaste();
 			break;
 		default:
+			event.Skip();
 			break;
 	}
 }

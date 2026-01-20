@@ -33,11 +33,13 @@ void WelcomeDialog::OnButtonClicked(const wxMouseEvent& event) {
 	auto* button = dynamic_cast<WelcomeDialogButton*>(event.GetEventObject());
 	wxSize button_size = button->GetSize();
 	wxPoint click_point = event.GetPosition();
-	if (click_point.x > 0 && click_point.x < button_size.x && click_point.y > 0 && click_point.y < button_size.x) {
+	if (click_point.x > 0 && click_point.x < button_size.x && click_point.y > 0 && click_point.y < button_size.y) {
 		if (button->GetAction() == wxID_PREFERENCES) {
 			PreferencesWindow preferences_window(m_welcome_dialog_panel, true);
 			preferences_window.ShowModal();
 			m_welcome_dialog_panel->updateInputs();
+		} else if (button->GetAction() == GOTO_WEBSITE) {
+			::wxLaunchDefaultBrowser(__SITE_URL__, wxBROWSER_NEW_WINDOW);
 		} else {
 			wxCommandEvent action_event(WELCOME_DIALOG_ACTION);
 			if (button->GetAction() == wxID_OPEN) {
@@ -83,32 +85,35 @@ WelcomeDialogPanel::WelcomeDialogPanel(WelcomeDialog* dialog, const wxSize& size
 	recent_maps_panel->SetMaxSize(wxSize(size.x / 2, size.y));
 	recent_maps_panel->SetBackgroundColour(base_colour.ChangeLightness(98));
 
-	wxSize button_size = FROM_DIP(this, wxSize(150, 35));
+	wxSize button_size = FROM_DIP(this, wxSize(180, 40));
 	wxColour button_base_colour = base_colour.ChangeLightness(90);
 
-	int button_pos_center_x = size.x / 4 - button_size.x / 2;
-	int button_pos_center_y = size.y / 2;
-
-	wxPoint newMapButtonPoint(button_pos_center_x, button_pos_center_y);
-	auto* new_map_button = newd WelcomeDialogButton(this, wxDefaultPosition, button_size, button_base_colour, "New");
+	auto* new_map_button = newd WelcomeDialogButton(this, wxDefaultPosition, button_size, button_base_colour, "New Map");
 	new_map_button->SetAction(wxID_NEW);
 	new_map_button->Bind(wxEVT_LEFT_UP, &WelcomeDialog::OnButtonClicked, dialog);
 
-	auto* open_map_button = newd WelcomeDialogButton(this, wxDefaultPosition, button_size, button_base_colour, "Open");
+	auto* open_map_button = newd WelcomeDialogButton(this, wxDefaultPosition, button_size, button_base_colour, "Open Map");
 	open_map_button->SetAction(wxID_OPEN);
 	open_map_button->Bind(wxEVT_LEFT_UP, &WelcomeDialog::OnButtonClicked, dialog);
+
 	auto* preferences_button = newd WelcomeDialogButton(this, wxDefaultPosition, button_size, button_base_colour, "Preferences");
 	preferences_button->SetAction(wxID_PREFERENCES);
 	preferences_button->Bind(wxEVT_LEFT_UP, &WelcomeDialog::OnButtonClicked, dialog);
+
+	auto* website_button = newd WelcomeDialogButton(this, wxDefaultPosition, button_size, button_base_colour, "Website");
+	website_button->SetAction(GOTO_WEBSITE);
+	website_button->Bind(wxEVT_LEFT_UP, &WelcomeDialog::OnButtonClicked, dialog);
 
 	Bind(wxEVT_PAINT, &WelcomeDialogPanel::OnPaint, this);
 
 	wxSizer* rootSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxSizer* buttons_sizer = newd wxBoxSizer(wxVERTICAL);
-	buttons_sizer->AddSpacer(size.y / 2);
-	buttons_sizer->Add(new_map_button, 0, wxALIGN_CENTER | wxTOP, FROM_DIP(this, 10));
-	buttons_sizer->Add(open_map_button, 0, wxALIGN_CENTER | wxTOP, FROM_DIP(this, 10));
-	buttons_sizer->Add(preferences_button, 0, wxALIGN_CENTER | wxTOP, FROM_DIP(this, 10));
+	buttons_sizer->AddStretchSpacer(1);
+	buttons_sizer->Add(new_map_button, 0, wxALIGN_CENTER | wxBOTTOM, FROM_DIP(this, 15));
+	buttons_sizer->Add(open_map_button, 0, wxALIGN_CENTER | wxBOTTOM, FROM_DIP(this, 15));
+	buttons_sizer->Add(preferences_button, 0, wxALIGN_CENTER | wxBOTTOM, FROM_DIP(this, 15));
+	buttons_sizer->Add(website_button, 0, wxALIGN_CENTER | wxBOTTOM, FROM_DIP(this, 15));
+	buttons_sizer->AddStretchSpacer(1);
 
 	wxSizer* vertical_sizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* horizontal_sizer = newd wxBoxSizer(wxHORIZONTAL);
