@@ -1189,7 +1189,6 @@ void MapCanvas::OnMouseActionRelease(wxMouseEvent& event) {
 							float dy = center_y - y;
 							for (int x = start_x - 1; x <= end_x + 1; x++) {
 								float dx = center_x - x;
-								// printf("%f;%f\n", dx, dy);
 								float distance = sqrt(dx * dx + dy * dy);
 								if (distance < radii) {
 									tilestodraw.push_back(Position(x, y, floor));

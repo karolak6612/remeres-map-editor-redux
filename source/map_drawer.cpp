@@ -887,7 +887,6 @@ void MapDrawer::DrawBrush() {
 						int cx = x * TileSize - view_scroll_x - getFloorAdjustment(floor);
 
 						float dx = center_x - x;
-						// printf("%f;%f\n", dx, dy);
 						float distance = sqrt(dx * dx + dy * dy);
 						if (distance < radii) {
 							if (brush->isRaw()) {
@@ -1249,7 +1248,6 @@ void MapDrawer::BlitSpriteType(int screenx, int screeny, uint32_t spriteid, int 
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				int texnum = spr->getHardwareID(cx, cy, cf, -1, 0, 0, 0, tme);
-				// printf("CF: %d\tTexturenum: %d\n", cf, texnum);
 				glBlitTexture(screenx - cx * TileSize, screeny - cy * TileSize, texnum, red, green, blue, alpha);
 			}
 		}
@@ -1268,7 +1266,6 @@ void MapDrawer::BlitSpriteType(int screenx, int screeny, GameSprite* spr, int re
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				int texnum = spr->getHardwareID(cx, cy, cf, -1, 0, 0, 0, tme);
-				// printf("CF: %d\tTexturenum: %d\n", cf, texnum);
 				glBlitTexture(screenx - cx * TileSize, screeny - cy * TileSize, texnum, red, green, blue, alpha);
 			}
 		}

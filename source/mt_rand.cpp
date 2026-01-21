@@ -30,11 +30,10 @@ static const unsigned long UPPER_MASK = 0x80000000UL;
 /* least significant r bits */
 static const unsigned long LOWER_MASK = 0x7fffffffUL;
 
-typedef struct
-{
+struct mt_state_t {
 	unsigned long mt[N];
 	int mti;
-} mt_state_t;
+};
 
 static inline unsigned long
 mt_get(void* vstate) {
