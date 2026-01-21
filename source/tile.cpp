@@ -30,6 +30,7 @@
 #include "table_brush.h"
 #include "town.h"
 #include "map.h"
+#include <algorithm>
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
@@ -56,10 +57,10 @@ Tile::Tile(TileLocation& loc) :
 }
 
 Tile::~Tile() {
-	while (!items.empty()) {
-		delete items.back();
-		items.pop_back();
+	for (Item* item : items) {
+		delete item;
 	}
+	items.clear();
 	delete creature;
 	// printf("%d,%d,%d,%p\n", tilePos.x, tilePos.y, tilePos.z, ground);
 	delete ground;
@@ -81,12 +82,8 @@ Tile* Tile::deepCopy(BaseMap& map) {
 		copy->ground = ground->deepCopy();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		copy->items.push_back((*it)->deepCopy());
-		++it;
+	for (Item* item : items) {
+		copy->items.push_back(item->deepCopy());
 	}
 
 	return copy;
@@ -98,12 +95,8 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		mem += (*it)->memsize();
-		++it;
+	for (const Item* item : items) {
+		mem += item->memsize();
 	}
 
 	mem += sizeof(Item*) * items.capacity();
@@ -169,12 +162,8 @@ void Tile::merge(Tile* other) {
 		other->creature = nullptr;
 	}
 
-	ItemVector::iterator it;
-
-	it = other->items.begin();
-	while (it != other->items.end()) {
-		addItem(*it);
-		++it;
+	for (Item* item : other->items) {
+		addItem(item);
 	}
 	other->items.clear();
 }
@@ -188,9 +177,8 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		return true;
 	}
 
-	ItemVector::const_iterator iit;
-	for (iit = items.begin(); iit != items.end(); ++iit) {
-		if ((*iit)->hasProperty(prop)) {
+	for (const Item* item : items) {
+		if (item->hasProperty(prop)) {
 			return true;
 		}
 	}
@@ -241,7 +229,7 @@ Item* Tile::getItemAt(int index) const {
 		}
 		index--;
 	}
-	if (index >= 0 && index < items.size()) {
+	if (index >= 0 && index < (int)items.size()) {
 		return items.at(index);
 	}
 	return nullptr;
@@ -269,10 +257,8 @@ void Tile::addItem(Item* item) {
 	} else {
 		if (item->isAlwaysOnBottom()) {
 			it = items.begin();
-			while (true) {
-				if (it == items.end()) {
-					break;
-				} else if ((*it)->isAlwaysOnBottom()) {
+			while (it != items.end()) {
+				if ((*it)->isAlwaysOnBottom()) {
 					if (item->getTopOrder() < (*it)->getTopOrder()) {
 						break;
 					}
@@ -307,12 +293,8 @@ void Tile::select() {
 		creature->select();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		(*it)->select();
-		++it;
+	for (Item* item : items) {
+		item->select();
 	}
 
 	statflags |= TILESTATE_SELECTED;
@@ -329,19 +311,15 @@ void Tile::deselect() {
 		creature->deselect();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		(*it)->deselect();
-		++it;
+	for (Item* item : items) {
+		item->deselect();
 	}
 
 	statflags &= ~TILESTATE_SELECTED;
 }
 
 Item* Tile::getTopSelectedItem() {
-	for (ItemVector::reverse_iterator iter = items.rbegin(); iter != items.rend(); ++iter) {
+	for (auto iter = items.rbegin(); iter != items.rend(); ++iter) {
 		if ((*iter)->isSelected() && !(*iter)->isMetaItem()) {
 			return *iter;
 		}
@@ -364,9 +342,7 @@ ItemVector Tile::popSelectedItems(bool ignoreTileSelected) {
 		ground = nullptr;
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
+	auto it = items.begin();
 	while (it != items.end()) {
 		if ((*it)->isSelected()) {
 			pop_items.push_back(*it);
@@ -393,14 +369,10 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		ItemVector::iterator it;
-
-		it = items.begin();
-		while (it != items.end()) {
-			if ((*it)->isSelected()) {
-				selected_items.push_back(*it);
+		for (Item* item : items) {
+			if (item->isSelected()) {
+				selected_items.push_back(item);
 			}
-			it++;
 		}
 	}
 
@@ -412,10 +384,9 @@ uint8_t Tile::getMiniMapColor() const {
 		return minimapColor;
 	}
 
-	for (ItemVector::const_reverse_iterator item_iter = items.rbegin(); item_iter != items.rend(); ++item_iter) {
+	for (auto item_iter = items.rbegin(); item_iter != items.rend(); ++item_iter) {
 		if ((*item_iter)->getMiniMapColor()) {
 			return (*item_iter)->getMiniMapColor();
-			break;
 		}
 	}
 
@@ -481,9 +452,7 @@ void Tile::update() {
 		}
 	}
 
-	ItemVector::const_iterator iter = items.begin();
-	while (iter != items.end()) {
-		Item* i = *iter;
+	for (Item* i : items) {
 		if (i->isSelected()) {
 			statflags |= TILESTATE_SELECTED;
 		}
@@ -507,7 +476,6 @@ void Tile::update() {
 		if (it.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
 		}
-		++iter;
 	}
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {
@@ -539,9 +507,7 @@ GroundBrush* Tile::getGroundBrush() const {
 }
 
 void Tile::cleanBorders() {
-	ItemVector::iterator it;
-
-	it = items.begin();
+	auto it = items.begin();
 	while (it != items.end()) {
 		if ((*it)->isBorder()) {
 			delete *it;
@@ -558,40 +524,28 @@ void Tile::wallize(BaseMap* parent) {
 }
 
 Item* Tile::getWall() const {
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall()) {
-			return *it;
+	for (Item* item : items) {
+		if (item->isWall()) {
+			return item;
 		}
-		++it;
 	}
 	return nullptr;
 }
 
 Item* Tile::getCarpet() const {
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isCarpet()) {
-			return *it;
+	for (Item* item : items) {
+		if (item->isCarpet()) {
+			return item;
 		}
-		++it;
 	}
 	return nullptr;
 }
 
 Item* Tile::getTable() const {
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isTable()) {
-			return *it;
+	for (Item* item : items) {
+		if (item->isTable()) {
+			return item;
 		}
-		++it;
 	}
 	return nullptr;
 }
@@ -606,9 +560,7 @@ void Tile::addWallItem(Item* item) {
 }
 
 void Tile::cleanWalls(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
+	auto it = items.begin();
 	while (it != items.end()) {
 		if ((*it)->isWall()) {
 			if (!dontdelete) {
@@ -622,9 +574,7 @@ void Tile::cleanWalls(bool dontdelete) {
 }
 
 void Tile::cleanWalls(WallBrush* wb) {
-	ItemVector::iterator it;
-
-	it = items.begin();
+	auto it = items.begin();
 	while (it != items.end()) {
 		if ((*it)->isWall() && wb->hasWall(*it)) {
 			delete *it;
@@ -636,9 +586,7 @@ void Tile::cleanWalls(WallBrush* wb) {
 }
 
 void Tile::cleanTables(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
+	auto it = items.begin();
 	while (it != items.end()) {
 		if ((*it)->isTable()) {
 			if (!dontdelete) {
@@ -665,17 +613,14 @@ void Tile::selectGround() {
 		ground->select();
 		selected_ = true;
 	}
-	ItemVector::iterator it;
 
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isBorder()) {
-			(*it)->select();
+	for (Item* item : items) {
+		if (item->isBorder()) {
+			item->select();
 			selected_ = true;
 		} else {
 			break;
 		}
-		++it;
 	}
 	if (selected_) {
 		statflags |= TILESTATE_SELECTED;
@@ -686,14 +631,13 @@ void Tile::deselectGround() {
 	if (ground) {
 		ground->deselect();
 	}
-	ItemVector::iterator it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isBorder()) {
-			(*it)->deselect();
+
+	for (Item* item : items) {
+		if (item->isBorder()) {
+			item->deselect();
 		} else {
 			break;
 		}
-		++it;
 	}
 }
 
@@ -727,7 +671,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	for (std::vector<uint32_t>::iterator it = house_exits->begin(); it != house_exits->end(); ++it) {
+	for (auto it = house_exits->begin(); it != house_exits->end(); ++it) {
 		if (*it == h->getID()) {
 			house_exits->erase(it);
 			return;

@@ -33,7 +33,7 @@ conan install "$SCRIPT_DIR" -of "$BUILD_DIR" --build=missing -s build_type=Relea
 echo "[3/4] Configuring CMake..."
 echo "[3/4] Configuring CMake..." >> "$LOG_FILE"
 
-cmake --preset conan-default >> "$LOG_FILE" 2>&1
+cmake --preset conan-release >> "$LOG_FILE" 2>&1
 
 echo "[4/4] Building Release..."
 echo "[4/4] Building Release..." >> "$LOG_FILE"

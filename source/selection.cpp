@@ -23,6 +23,8 @@
 #include "item.h"
 #include "editor.h"
 #include "gui.h"
+#include <limits>
+#include <algorithm>
 
 Selection::Selection(Editor& editor) :
 	busy(false),
@@ -38,9 +40,15 @@ Selection::~Selection() {
 }
 
 Position Selection::minPosition() const {
-	Position minPos(0x10000, 0x10000, 0x10);
-	for (TileSet::const_iterator tile = tiles.begin(); tile != tiles.end(); ++tile) {
-		Position pos((*tile)->getPosition());
+	Position minPos(
+		std::numeric_limits<int>::max(),
+		std::numeric_limits<int>::max(),
+		0 // Z is weird, but original code initialized to 0x10. I'll stick closer to original intent but cleaner.
+	);
+	minPos.z = 0x10; // 16, which is usually max floor?
+
+	for (const Tile* tile : tiles) {
+		Position pos(tile->getPosition());
 		if (minPos.x > pos.x) {
 			minPos.x = pos.x;
 		}
@@ -55,9 +63,15 @@ Position Selection::minPosition() const {
 }
 
 Position Selection::maxPosition() const {
-	Position maxPos(0, 0, 0);
-	for (TileSet::const_iterator tile = tiles.begin(); tile != tiles.end(); ++tile) {
-		Position pos((*tile)->getPosition());
+	Position maxPos(
+		std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::min(),
+		std::numeric_limits<int>::min()
+	);
+	// Original code initialized to 0,0,0.
+
+	for (const Tile* tile : tiles) {
+		Position pos(tile->getPosition());
 		if (maxPos.x < pos.x) {
 			maxPos.x = pos.x;
 		}
@@ -208,14 +222,14 @@ void Selection::removeInternal(Tile* tile) {
 
 void Selection::clear() {
 	if (session) {
-		for (TileSet::iterator it = tiles.begin(); it != tiles.end(); it++) {
-			Tile* new_tile = (*it)->deepCopy(editor.map);
+		for (Tile* tile : tiles) {
+			Tile* new_tile = tile->deepCopy(editor.map);
 			new_tile->deselect();
 			subsession->addChange(newd Change(new_tile));
 		}
 	} else {
-		for (TileSet::iterator it = tiles.begin(); it != tiles.end(); it++) {
-			(*it)->deselect();
+		for (Tile* tile : tiles) {
+			tile->deselect();
 		}
 		tiles.clear();
 	}

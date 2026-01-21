@@ -151,7 +151,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 	// std::ofstream conversions("converted_items.txt");
 
-	for (MapIterator miter = begin(); miter != end(); ++miter) {
+	for (auto miter = begin(); miter != end(); ++miter) {
 		Tile* tile = (*miter)->get();
 		ASSERT(tile);
 
@@ -165,9 +165,9 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 		if (tile->ground) {
 			id_list.push_back(tile->ground->getID());
 		}
-		for (ItemVector::const_iterator item_iter = tile->items.begin(); item_iter != tile->items.end(); ++item_iter) {
-			if ((*item_iter)->isBorder()) {
-				id_list.push_back((*item_iter)->getID());
+		for (Item* item : tile->items) {
+			if (item->isBorder()) {
+				id_list.push_back(item->getID());
 			}
 		}
 
@@ -194,7 +194,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				tile->ground = nullptr;
 			}
 
-			for (ItemVector::iterator item_iter = tile->items.begin(); item_iter != tile->items.end();) {
+			for (auto item_iter = tile->items.begin(); item_iter != tile->items.end();) {
 				if (std::find(v.begin(), v.end(), (*item_iter)->getID()) != v.end()) {
 					delete *item_iter;
 					item_iter = tile->items.erase(item_iter);
@@ -204,8 +204,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
-				Item* item = Item::Create(*iit);
+			for (uint16_t id : new_items) {
+				Item* item = Item::Create(id);
 				if (item->isGroundTile()) {
 					tile->ground = item;
 				} else {
@@ -225,8 +225,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				const std::vector<uint16_t>& v = cfstm->second;
 				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					Item* item = Item::Create(*iit);
+				for (uint16_t id : v) {
+					Item* item = Item::Create(id);
 					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
@@ -241,7 +241,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
-		for (ItemVector::iterator replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
+		for (auto replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
 			uint16_t id = (*replace_item_iter)->getID();
 			ConversionMap::STM::const_iterator cf = rm.stm.find(id);
 			if (cf != rm.stm.end()) {
@@ -251,8 +251,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(*iit));
+				for (uint16_t id : v) {
+					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(id));
 					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}
@@ -281,7 +281,7 @@ void Map::cleanInvalidTiles(bool showdialog) {
 
 	uint64_t tiles_done = 0;
 
-	for (MapIterator miter = begin(); miter != end(); ++miter) {
+	for (auto miter = begin(); miter != end(); ++miter) {
 		Tile* tile = (*miter)->get();
 		ASSERT(tile);
 
@@ -289,7 +289,7 @@ void Map::cleanInvalidTiles(bool showdialog) {
 			continue;
 		}
 
-		for (ItemVector::iterator item_iter = tile->items.begin(); item_iter != tile->items.end();) {
+		for (auto item_iter = tile->items.begin(); item_iter != tile->items.end();) {
 			if (g_items.typeExists((*item_iter)->getID())) {
 				++item_iter;
 			} else {
@@ -313,7 +313,7 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	g_gui.CreateLoadBar("Converting house tiles...");
 	uint64_t tiles_done = 0;
 
-	for (MapIterator miter = begin(); miter != end(); ++miter) {
+	for (auto miter = begin(); miter != end(); ++miter) {
 		Tile* tile = (*miter)->get();
 		ASSERT(tile);
 
@@ -497,7 +497,7 @@ bool Map::exportMinimap(FileName filename, int floor /*= GROUND_LAYER*/, bool di
 			return true;
 		}
 
-		for (MapIterator mit = begin(); mit != end(); ++mit) {
+		for (auto mit = begin(); mit != end(); ++mit) {
 			if ((*mit)->get() == nullptr || (*mit)->empty()) {
 				continue;
 			}
@@ -529,7 +529,7 @@ bool Map::exportMinimap(FileName filename, int floor /*= GROUND_LAYER*/, bool di
 		memset(pic, 0, minimap_width * minimap_height);
 
 		int tiles_iterated = 0;
-		for (MapIterator mit = begin(); mit != end(); ++mit) {
+		for (auto mit = begin(); mit != end(); ++mit) {
 			Tile* tile = (*mit)->get();
 			++tiles_iterated;
 			if (tiles_iterated % 8192 == 0 && displaydialog) {
@@ -544,7 +544,7 @@ bool Map::exportMinimap(FileName filename, int floor /*= GROUND_LAYER*/, bool di
 			uint32_t pixelpos = (tile->getY() - min_y) * minimap_width + (tile->getX() - min_x);
 			uint8_t& pixel = pic[pixelpos];
 
-			for (ItemVector::const_reverse_iterator item_iter = tile->items.rbegin(); item_iter != tile->items.rend(); ++item_iter) {
+			for (auto item_iter = tile->items.rbegin(); item_iter != tile->items.rend(); ++item_iter) {
 				if ((*item_iter)->getMiniMapColor()) {
 					pixel = (*item_iter)->getMiniMapColor();
 					break;
