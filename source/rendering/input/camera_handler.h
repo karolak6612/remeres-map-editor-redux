@@ -13,7 +13,7 @@ namespace rme {
 	}
 }
 
-using MapCanvas = rme::canvas::MapCanvas;
+// using MapCanvas = rme::canvas::MapCanvas;
 
 namespace rme {
 	namespace input {
@@ -21,14 +21,14 @@ namespace rme {
 		/// Handles camera-related input (scrolling and zooming)
 		class CameraInputHandler : public InputReceiver {
 		public:
-			CameraInputHandler(MapCanvas* canvas);
+			CameraInputHandler(rme::canvas::MapCanvas* canvas);
 			virtual ~CameraInputHandler() = default;
 
 			void onMouseDrag(const MouseEvent& event, const DragState& drag) override;
 			void onMouseWheel(const MouseEvent& event) override;
 
 		private:
-			MapCanvas* canvas_;
+			rme::canvas::MapCanvas* canvas_;
 		};
 
 	} // namespace input

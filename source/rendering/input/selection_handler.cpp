@@ -5,13 +5,14 @@
 #include "../../main.h"
 #include "selection_handler.h"
 #include "../canvas/map_canvas.h"
+#include "../../creature.h"
 #include "../../editor.h"
 #include "../../gui.h"
 
 namespace rme {
 	namespace input {
 
-		SelectionInputHandler::SelectionInputHandler(MapCanvas* canvas, Editor& editor) :
+		SelectionInputHandler::SelectionInputHandler(rme::canvas::MapCanvas* canvas, Editor& editor) :
 			canvas_(canvas), editor_(editor) {
 		}
 
@@ -24,13 +25,15 @@ namespace rme {
 			int mouse_map_y = event.mapPos.y;
 			int floor = event.mapPos.z;
 
-			if (canvas_->isPasting()) {
-				// Committing a paste
-				canvas_->EndPasting();
-				editor_.copybuffer.paste(editor_, Position(mouse_map_x, mouse_map_y, floor));
-				canvas_->dragging_ = true;
-				return;
-			}
+			/*
+						if (canvas_->isPasting()) {
+							// Committing a paste
+							canvas_->EndPasting();
+							editor_.copybuffer.paste(editor_, Position(mouse_map_x, mouse_map_y, floor));
+							canvas_->dragging_ = true;
+							return;
+						}
+			*/
 
 			if (event.modifiers.shift) {
 				canvas_->boundBoxSelection = true;
@@ -147,15 +150,15 @@ namespace rme {
 			if (drag.button == MouseButton::Left) {
 				if (canvas_->boundBoxSelection) {
 					// Commit selection box (select all items in area)
-					int x1 = std::min(drag.startMapPos.x, drag.endMapPos.x);
-					int y1 = std::min(drag.startMapPos.y, drag.endMapPos.y);
-					int x2 = std::max(drag.startMapPos.x, drag.endMapPos.x);
-					int y2 = std::max(drag.startMapPos.y, drag.endMapPos.y);
+					int x1 = std::min(drag.startMap.x, drag.currentMap.x);
+					int y1 = std::min(drag.startMap.y, drag.currentMap.y);
+					int x2 = std::max(drag.startMap.x, drag.currentMap.x);
+					int y2 = std::max(drag.startMap.y, drag.currentMap.y);
 
 					editor_.selection.start();
 					for (int y = y1; y <= y2; ++y) {
 						for (int x = x1; x <= x2; ++x) {
-							Tile* tile = editor_.map.getTile(x, y, drag.startMapPos.z);
+							Tile* tile = editor_.map.getTile(x, y, drag.startMap.z);
 							if (tile) {
 								editor_.selection.add(tile, tile->getTopItem());
 							}
@@ -165,12 +168,12 @@ namespace rme {
 					editor_.selection.updateSelectionCount();
 				} else if (canvas_->dragging_) {
 					// Commit move items
-					int dx = drag.endMapPos.x - drag.startMapPos.x;
-					int dy = drag.endMapPos.y - drag.startMapPos.y;
-					int dz = drag.endMapPos.z - drag.startMapPos.z;
+					int dx = drag.currentMap.x - drag.startMap.x;
+					int dy = drag.currentMap.y - drag.startMap.y;
+					int dz = drag.currentMap.z - drag.startMap.z;
 
 					if (dx != 0 || dy != 0 || dz != 0) {
-						editor_.moveSelection(dx, dy, dz);
+						editor_.moveSelection(Position(dx, dy, dz));
 					}
 				}
 			}

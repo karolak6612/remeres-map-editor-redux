@@ -18,6 +18,7 @@
 #include "main.h"
 
 #include "main_menubar.h"
+#include "creatures.h"
 #include "application.h"
 #include "preferences.h"
 #include "about_window.h"
@@ -1347,7 +1348,8 @@ namespace OnMapRemoveUnreachable {
 				g_gui.SetLoadDone((unsigned int)(100 * done / total));
 			}
 
-			Position pos = tile->getPosition();
+			auto mousePos = g_gui.GetCurrentMapTab()->GetCanvas()->mouseMapPos();
+			Position pos(mousePos.x, mousePos.y, mousePos.z);
 			int sx = std::max(pos.x - 10, 0);
 			int ex = std::min(pos.x + 10, 65535);
 			int sy = std::max(pos.y - 8, 0);
@@ -1778,9 +1780,10 @@ void MainMenuBar::OnTakeScreenshot(wxCommandEvent& WXUNUSED(event)) {
 		path = path + "/";
 	}
 
-	g_gui.GetCurrentMapTab()->GetView()->GetCanvas()->TakeScreenshot(
-		path, wxstr(g_settings.getString(Config::SCREENSHOT_FORMAT))
-	);
+	// TODO: Re-implement screenshot functionality with new rendering system
+	// g_gui.GetCurrentMapTab()->GetView()->GetCanvas()->TakeScreenshot(
+	// 	path, wxstr(g_settings.getString(Config::SCREENSHOT_FORMAT))
+	// );
 }
 
 void MainMenuBar::OnZoomIn(wxCommandEvent& event) {

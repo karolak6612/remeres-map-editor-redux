@@ -17,6 +17,7 @@
 
 #include "main.h"
 #include "texture_manager.h"
+#include "sprite_types.h"
 #include "../graphics.h"
 
 namespace rme {

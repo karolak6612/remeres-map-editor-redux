@@ -16,7 +16,7 @@ namespace rme {
 class Editor;
 class Brush;
 
-using MapCanvas = rme::canvas::MapCanvas;
+// using MapCanvas = rme::canvas::MapCanvas;
 
 namespace rme {
 	namespace input {
@@ -24,7 +24,7 @@ namespace rme {
 		/// Handles brush-related input (drawing, smearing, etc.)
 		class BrushInputHandler : public InputReceiver {
 		public:
-			BrushInputHandler(MapCanvas* canvas, Editor& editor);
+			BrushInputHandler(rme::canvas::MapCanvas* canvas, Editor& editor);
 			virtual ~BrushInputHandler() = default;
 
 			void onMouseDown(const MouseEvent& event) override;
@@ -36,7 +36,7 @@ namespace rme {
 		private:
 			void handleDrawing(const MapCoord& pos, const MouseEvent& event);
 
-			MapCanvas* canvas_;
+			rme::canvas::MapCanvas* canvas_;
 			Editor& editor_;
 		};
 

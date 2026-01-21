@@ -17,6 +17,7 @@
 
 #include "../../main.h"
 #include "tile_renderer.h"
+#include "../../editor.h"
 
 // Include core game types
 #include "tile.h"
@@ -26,6 +27,7 @@
 #include "editor.h"
 #include "rendering/graphics.h"
 #include "rendering/sprites.h"
+#include "rendering/texture/sprite_types.h"
 #include "gui.h"
 #include "items.h"
 #include "rendering/types/render_types.h"

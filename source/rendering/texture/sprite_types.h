@@ -14,6 +14,7 @@
 
 class GameSprite : public Sprite {
 public:
+	class TemplateImage;
 	GameSprite();
 	~GameSprite();
 
@@ -23,6 +24,9 @@ public:
 	virtual void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1);
 
 	virtual void unloadDC();
+
+	wxMemoryDC* getDC(SpriteSize size);
+	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
 
 	void clean(int time);
 

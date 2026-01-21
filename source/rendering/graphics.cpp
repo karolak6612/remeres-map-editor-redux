@@ -235,3 +235,27 @@ bool GraphicManager::loadEditorSprites() {
 }
 
 // End of GraphicManager implementation
+
+bool GraphicManager::loadSpriteDump(uint8_t*& target, uint16_t& size, int sprite_id) {
+	return spriteLoader_->loadSpriteDump(target, size, sprite_id);
+}
+
+wxFileName GraphicManager::getMetadataFileName() const {
+	return spriteLoader_->getMetadataInfo().metadataFile;
+}
+
+wxFileName GraphicManager::getSpritesFileName() const {
+	return spriteLoader_->getMetadataInfo().spritesFile;
+}
+
+bool GraphicManager::hasTransparency() const {
+	return spriteLoader_->getMetadataInfo().hasTransparency;
+}
+
+void GraphicManager::garbageCollection() {
+	textureCache_->collectGarbage();
+}
+
+void GraphicManager::addSpriteToCleanup(GameSprite* spr) {
+	textureCache_->addToCleanupQueue(spr);
+}

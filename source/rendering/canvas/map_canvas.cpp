@@ -18,12 +18,16 @@
 #include "../../main.h"
 #include "map_canvas.h"
 #include "../../editor.h"
+#include "../../editor.h"
 #include "../../map_window.h"
 #include "../../gui.h"
 #include "../../map.h"
 #include "../../ground_brush.h"
 #include "../opengl/gl_context.h"
 #include <wx/dcclient.h>
+#include "../input/selection_handler.h"
+#include "../input/brush_handler.h"
+#include "../input/camera_handler.h"
 
 namespace rme {
 	namespace canvas {
@@ -140,6 +144,21 @@ namespace rme {
 			}
 			if (y) {
 				*y = scrollY_ + (viewportHeight_ / 2) / zoom_;
+			}
+		}
+
+		void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) {
+			if (view_scroll_x) {
+				*view_scroll_x = scrollX_;
+			}
+			if (view_scroll_y) {
+				*view_scroll_y = scrollY_;
+			}
+			if (screensize_x) {
+				*screensize_x = viewportWidth_;
+			}
+			if (screensize_y) {
+				*screensize_y = viewportHeight_;
 			}
 		}
 

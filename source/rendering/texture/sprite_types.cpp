@@ -365,7 +365,7 @@ void GameSprite::Image::createGLTexture(GLuint whatid) {
 	}
 
 	isGLLoaded = true;
-	g_gui.gfx.loaded_textures += 1;
+	g_gui.gfx.getTextureManager().incrementLoadedTextures();
 
 	glBindTexture(GL_TEXTURE_2D, whatid);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -380,7 +380,7 @@ void GameSprite::Image::createGLTexture(GLuint whatid) {
 void GameSprite::Image::unloadGLTexture(GLuint whatid) {
 	if (isGLLoaded) {
 		isGLLoaded = false;
-		g_gui.gfx.loaded_textures -= 1;
+		g_gui.gfx.getTextureManager().decrementLoadedTextures();
 		glDeleteTextures(1, &whatid);
 	}
 }

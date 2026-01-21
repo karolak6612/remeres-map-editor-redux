@@ -28,6 +28,7 @@
 // Forward declarations
 class Editor;
 class MapWindow;
+class GroundBrush;
 
 namespace rme {
 	namespace input {
@@ -92,7 +93,14 @@ namespace rme {
 			void ChangeFloor(int floor) {
 				setFloor(floor);
 			}
+			float GetZoom() const {
+				return zoom_;
+			}
+			void SetZoom(float z) {
+				setZoom(z);
+			}
 			void GetScreenCenter(int* x, int* y);
+			void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y);
 
 			// Rendering
 
@@ -143,6 +151,12 @@ namespace rme {
 			void getTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, PositionVector* tilestodraw, PositionVector* tilestoborder, bool fill = false);
 
 		protected:
+			// State flags for input handlers
+			bool dragging_ = false;
+			bool drawing_ = false;
+			bool boundBoxSelection = false;
+			bool boundbox_selection_ = false;
+
 			enum {
 				BLOCK_SIZE = 100
 			};
@@ -175,6 +189,11 @@ namespace rme {
 			std::unique_ptr<input::BrushInputHandler> brushHandler_;
 			std::unique_ptr<input::CameraInputHandler> cameraHandler_;
 			std::unique_ptr<input::SelectionInputHandler> selectionHandler_;
+
+			// Friends for handler access
+			friend class rme::input::BrushInputHandler;
+			friend class rme::input::CameraInputHandler;
+			friend class rme::input::SelectionInputHandler;
 
 			// Dirty flag for redraw requests
 			bool needsRedraw_ = true;

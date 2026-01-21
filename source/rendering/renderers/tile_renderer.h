@@ -31,7 +31,7 @@ class GameSprite;
 class ItemType;
 class Map;
 class Editor;
-struct Position;
+class Position;
 struct Outfit;
 enum Direction; // Forward declaration without explicit type to match creature.h
 

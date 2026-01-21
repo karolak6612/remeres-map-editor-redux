@@ -15,7 +15,11 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "main.h"
+#include "light_renderer.h"
 #include "../light_drawer.h"
+#include "../../tile.h"
+#include "../../map_region.h"
 
 namespace rme {
 	namespace render {
@@ -80,6 +84,10 @@ namespace rme {
 				return;
 			}
 			lightDrawer_->clear();
+		}
+
+		void LightRenderer::setLightDrawer(LightDrawer* drawer) {
+			lightDrawer_.reset(drawer);
 		}
 
 	} // namespace render

@@ -26,6 +26,7 @@
 #include "brush.h"
 #include "map.h"
 #include "rendering/sprites.h"
+#include "rendering/texture/sprite_loader.h"
 #include "materials.h"
 #include "doodad_brush.h"
 #include "spawn_brush.h"
@@ -334,19 +335,30 @@ bool GUI::LoadDataFiles(wxString& error, wxArrayString& warnings) {
 
 	g_gui.gfx.client_version = getLoadedVersion();
 
-	if (!g_gui.gfx.loadOTFI(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR), error, warnings)) {
+	std::string otfiError;
+	std::vector<std::string> otfiWarnings;
+	if (!g_gui.gfx.getSpriteLoader().loadOTFI(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR).ToStdString(), otfiError, otfiWarnings)) {
+		error = otfiError;
+		for (const auto& w : otfiWarnings) {
+			warnings.Add(w);
+		}
 		error = "Couldn't load otfi file: " + error;
 		g_gui.DestroyLoadBar();
 		UnloadVersion();
 		return false;
+	}
+	for (const auto& w : otfiWarnings) {
+		warnings.Add(w);
 	}
 
 	g_gui.CreateLoadBar("Loading asset files");
 	g_gui.SetLoadDone(0, "Loading metadata file...");
 
 	wxFileName metadata_path = g_gui.gfx.getMetadataFileName();
-	if (!g_gui.gfx.loadSpriteMetadata(metadata_path, error, warnings)) {
-		error = "Couldn't load metadata: " + error;
+	std::string metadataError;
+	std::vector<std::string> metadataWarnings;
+	if (!g_gui.gfx.getSpriteLoader().loadMetadata(metadata_path.GetFullPath().ToStdString(), metadataError, metadataWarnings)) {
+		error = "Couldn't load metadata: " + wxString(metadataError);
 		g_gui.DestroyLoadBar();
 		UnloadVersion();
 		return false;
@@ -355,8 +367,10 @@ bool GUI::LoadDataFiles(wxString& error, wxArrayString& warnings) {
 	g_gui.SetLoadDone(10, "Loading sprites file...");
 
 	wxFileName sprites_path = g_gui.gfx.getSpritesFileName();
-	if (!g_gui.gfx.loadSpriteData(sprites_path.GetFullPath(), error, warnings)) {
-		error = "Couldn't load sprites: " + error;
+	std::string spriteError;
+	std::vector<std::string> spriteWarnings;
+	if (!g_gui.gfx.getSpriteLoader().loadSpriteData(sprites_path.GetFullPath().ToStdString(), spriteError, spriteWarnings)) {
+		error = "Couldn't load sprites: " + wxString(spriteError);
 		g_gui.DestroyLoadBar();
 		UnloadVersion();
 		return false;
@@ -1212,7 +1226,8 @@ void GUI::DoCopy() {
 void GUI::DoPaste() {
 	MapTab* mapTab = GetCurrentMapTab();
 	if (mapTab) {
-		copybuffer.paste(*mapTab->GetEditor(), mapTab->GetCanvas()->GetCursorPosition());
+		auto mousePos = mapTab->GetCanvas()->mouseMapPos();
+		copybuffer.paste(*mapTab->GetEditor(), Position(mousePos.x, mousePos.y, mousePos.z));
 	}
 }
 

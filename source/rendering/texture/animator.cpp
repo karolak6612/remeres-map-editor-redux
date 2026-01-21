@@ -5,6 +5,7 @@
 #include "main.h"
 #include "animator.h"
 #include "../graphics.h"
+#include "../../gui.h"
 
 // ============================================================================
 // Animator

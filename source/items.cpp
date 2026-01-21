@@ -19,6 +19,7 @@
 
 #include "materials.h"
 #include "gui.h"
+#include "rendering/texture/sprite_types.h"
 #include <string.h> // memcpy
 
 #include "items.h"

@@ -22,6 +22,7 @@
 #include "../../gui.h"
 #include "../../editor.h"
 #include "render_coordinator.h"
+#include "../../editor.h"
 #include <chrono>
 
 // Include all renderers

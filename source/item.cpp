@@ -19,6 +19,7 @@
 
 #include "brush.h"
 #include "rendering/graphics.h"
+#include "rendering/texture/sprite_types.h"
 #include "gui.h"
 #include "tile.h"
 #include "complexitem.h"

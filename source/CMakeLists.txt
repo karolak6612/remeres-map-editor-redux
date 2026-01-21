@@ -195,7 +195,9 @@ ${CMAKE_CURRENT_LIST_DIR}/rendering/opengl/gl_state.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/opengl/gl_primitives.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/opengl/gl_context.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/opengl/gl_debug.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/texture/animator.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/texture/sprite_loader.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/texture/sprite_types.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/texture/texture_manager.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/texture/texture_cache.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/tile_renderer.cpp

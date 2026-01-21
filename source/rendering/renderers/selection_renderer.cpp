@@ -10,6 +10,7 @@
 #include "creature_renderer.h"
 #include "tile_renderer.h"
 #include "../../creature.h"
+#include "../../live_server.h"
 #include "../opengl/gl_includes.h"
 #include <algorithm>
 #include <memory>
@@ -152,23 +153,19 @@ namespace rme {
 		}
 
 		void SelectionRenderer::renderLiveCursors(const RenderContext& ctx) {
-			if (!g_live.isLive()) {
-				return;
-			}
-
-			for (auto& cursor : g_live.getCursors()) {
-				if (cursor.floor != ctx.currentFloor) {
+			for (const auto& cursor : ctx.editor->GetLive().getCursorList()) {
+				if (cursor.pos.z != ctx.currentFloor) {
 					continue;
 				}
 
 				// Calculate screen position
-				int offset = (cursor.floor <= 7) ? (7 - cursor.floor) * kTileSize : kTileSize * (ctx.currentFloor - cursor.floor);
-				int sx = (cursor.x * kTileSize - ctx.scrollX) - offset;
-				int sy = (cursor.y * kTileSize - ctx.scrollY) - offset;
+				int offset = (cursor.pos.z <= 7) ? (7 - cursor.pos.z) * kTileSize : kTileSize * (ctx.currentFloor - cursor.pos.z);
+				int sx = (cursor.pos.x * kTileSize - ctx.scrollX) - offset;
+				int sy = (cursor.pos.y * kTileSize - ctx.scrollY) - offset;
 
 				// draw cursor
 				gl::GLState::instance().disableTexture2D();
-				gl::Primitives::drawFilledQuad(sx, sy, kTileSize, kTileSize, cursor.color);
+				gl::Primitives::drawFilledQuad(sx, sy, kTileSize, kTileSize, Color(cursor.color.Red(), cursor.color.Green(), cursor.color.Blue(), cursor.color.Alpha()));
 				gl::GLState::instance().enableTexture2D();
 			}
 		}

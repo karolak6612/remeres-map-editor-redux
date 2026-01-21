@@ -106,6 +106,8 @@ namespace rme {
 			bool loadSpriteMetadataFlags(FileReadHandle& file, GameSprite* sType, std::string& error, std::vector<std::string>& warnings);
 			bool loadSpriteDump(uint8_t*& target, uint16_t& size, int sprite_id);
 
+			friend class ::GraphicManager;
+
 			GraphicManager& graphicManager_;
 			SpriteMetadataInfo metadataInfo_;
 			DatFormat datFormat_ = DAT_FORMAT_UNKNOWN;

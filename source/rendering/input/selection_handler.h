@@ -14,7 +14,7 @@ namespace rme {
 }
 class Editor;
 
-using MapCanvas = rme::canvas::MapCanvas;
+// using MapCanvas = rme::canvas::MapCanvas; // Removed to avoid conflict with class MapCanvas forward decls
 
 namespace rme {
 	namespace input {
@@ -22,7 +22,7 @@ namespace rme {
 		/// Handles selection and dragging input
 		class SelectionInputHandler : public InputReceiver {
 		public:
-			SelectionInputHandler(MapCanvas* canvas, Editor& editor);
+			SelectionInputHandler(rme::canvas::MapCanvas* canvas, Editor& editor);
 			virtual ~SelectionInputHandler() = default;
 
 			void onMouseDown(const MouseEvent& event) override;
@@ -32,7 +32,7 @@ namespace rme {
 			void onDragEnd(const DragState& drag) override;
 
 		private:
-			MapCanvas* canvas_;
+			rme::canvas::MapCanvas* canvas_;
 			Editor& editor_;
 		};
 

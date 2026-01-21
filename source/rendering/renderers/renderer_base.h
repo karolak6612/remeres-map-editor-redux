@@ -22,12 +22,14 @@
 #include "../types/color.h"
 #include "../types/render_types.h"
 
+// Forward declarations
+class Editor;
+
 namespace rme {
 	namespace render {
 
 		// Forward declarations
 		struct RenderContext;
-		class Editor;
 
 		/// Base interface for all specialized renderers
 		/// Following the Strategy pattern for different rendering operations
@@ -112,7 +114,7 @@ namespace rme {
 			uint32_t currentHouseId;
 
 			// Pointer to editor (for access to map, etc.)
-			Editor* editor;
+			::Editor* editor;
 
 			// Clear the context
 			void clear() {

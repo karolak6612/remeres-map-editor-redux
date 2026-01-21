@@ -83,7 +83,8 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	// printf("W:%d\tH:%d\n", window_width, window_height);
 	int center_x, center_y;
 
-	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
+	// Use legacy compatibility pointer type if possible, or cast/access new canvas
+	rme::canvas::MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
 	canvas->GetScreenCenter(&center_x, &center_y);
 
 	int start_x, start_y;

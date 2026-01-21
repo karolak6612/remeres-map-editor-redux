@@ -32,7 +32,7 @@ class Waypoint;
 class Waypoints;
 class Tileset;
 class Town;
-struct Position;
+class Position;
 class Editor;
 class GUI;
 class Selection;

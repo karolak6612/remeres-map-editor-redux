@@ -19,6 +19,7 @@
 #define RME_TOOLTIP_RENDERER_H_
 
 #include "renderer_base.h"
+#include "../interfaces/i_font_renderer.h"
 #include <string>
 #include <vector>
 

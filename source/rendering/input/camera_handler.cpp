@@ -14,7 +14,7 @@
 namespace rme {
 	namespace input {
 
-		CameraInputHandler::CameraInputHandler(MapCanvas* canvas) :
+		CameraInputHandler::CameraInputHandler(rme::canvas::MapCanvas* canvas) :
 			canvas_(canvas) {
 		}
 

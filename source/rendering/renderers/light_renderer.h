@@ -60,9 +60,7 @@ namespace rme {
 			}
 
 			/// Set the existing LightDrawer for delegation
-			void setLightDrawer(LightDrawer* drawer) {
-				lightDrawer_ = drawer;
-			}
+			void setLightDrawer(LightDrawer* drawer);
 
 		private:
 			bool initialized_ = false;

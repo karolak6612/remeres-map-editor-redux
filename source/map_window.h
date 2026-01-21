@@ -100,7 +100,7 @@ private:
 	Position previous_position;
 
 	friend class MainFrame;
-	friend class MapCanvas;
+	friend class rme::canvas::MapCanvas;
 
 	DECLARE_EVENT_TABLE()
 };

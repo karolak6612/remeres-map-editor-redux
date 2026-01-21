@@ -19,6 +19,7 @@
 #include "texture_cache.h"
 #include "texture_manager.h"
 #include "../graphics.h"
+#include "sprite_types.h"
 
 namespace rme {
 	namespace render {

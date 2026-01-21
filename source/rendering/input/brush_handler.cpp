@@ -15,7 +15,7 @@
 namespace rme {
 	namespace input {
 
-		BrushInputHandler::BrushInputHandler(MapCanvas* canvas, Editor& editor) :
+		BrushInputHandler::BrushInputHandler(rme::canvas::MapCanvas* canvas, Editor& editor) :
 			canvas_(canvas), editor_(editor) {
 		}
 
