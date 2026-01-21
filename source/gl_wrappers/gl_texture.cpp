@@ -1,12 +1,14 @@
 #include "gl_texture.h"
 
-GLTexture::GLTexture() : id(0) {}
+GLTexture::GLTexture() :
+	id(0) { }
 
 GLTexture::~GLTexture() {
 	destroy();
 }
 
-GLTexture::GLTexture(GLTexture&& other) noexcept : id(other.id) {
+GLTexture::GLTexture(GLTexture&& other) noexcept :
+	id(other.id) {
 	other.id = 0;
 }
 

@@ -22,8 +22,12 @@ public:
 	void bind() const;
 	void unbind() const;
 
-	GLuint getID() const { return id; }
-	bool isValid() const { return id != 0; }
+	GLuint getID() const {
+		return id;
+	}
+	bool isValid() const {
+		return id != 0;
+	}
 
 private:
 	GLuint id = 0;

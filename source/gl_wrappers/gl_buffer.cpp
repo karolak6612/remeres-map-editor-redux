@@ -1,6 +1,7 @@
 #include "gl_buffer.h"
 
-GLBuffer::GLBuffer(BufferType type) : id(0) {
+GLBuffer::GLBuffer(BufferType type) :
+	id(0) {
 	switch (type) {
 		case BufferType::Vertex:
 			target = GL_ARRAY_BUFFER;
@@ -15,7 +16,8 @@ GLBuffer::~GLBuffer() {
 	destroy();
 }
 
-GLBuffer::GLBuffer(GLBuffer&& other) noexcept : id(other.id), target(other.target) {
+GLBuffer::GLBuffer(GLBuffer&& other) noexcept :
+	id(other.id), target(other.target) {
 	other.id = 0;
 }
 

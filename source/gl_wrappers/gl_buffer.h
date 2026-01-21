@@ -27,7 +27,9 @@ public:
 
 	void setData(const void* data, size_t size, GLenum usage);
 
-	GLuint getID() const { return id; }
+	GLuint getID() const {
+		return id;
+	}
 
 private:
 	GLuint id = 0;
