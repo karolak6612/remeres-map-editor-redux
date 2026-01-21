@@ -46,18 +46,20 @@ public:
 
 	void OnPaint(wxPaintEvent&);
 	void OnClick(wxMouseEvent&);
+	void OnMouseEnter(wxMouseEvent&);
+	void OnMouseLeave(wxMouseEvent&);
 
 protected:
 	void SetOverlay(Sprite* espr);
 
 	int type;
 	bool state; // pressed/unpressed
+	bool m_hover; // hover state
 	RenderSize size;
 	Sprite* sprite;
 	Sprite* overlay;
 
 	DECLARE_DYNAMIC_CLASS(DCButton)
-	DECLARE_EVENT_TABLE()
 };
 
 #endif

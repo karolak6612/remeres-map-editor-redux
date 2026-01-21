@@ -23,21 +23,22 @@
 #include "sprites.h"
 #include "gui.h"
 
-BEGIN_EVENT_TABLE(DCButton, wxPanel)
-EVT_PAINT(DCButton::OnPaint)
-EVT_LEFT_DOWN(DCButton::OnClick)
-END_EVENT_TABLE()
-
 IMPLEMENT_DYNAMIC_CLASS(DCButton, wxPanel)
 
 DCButton::DCButton() :
 	wxPanel(nullptr, wxID_ANY, wxDefaultPosition, wxSize(36, 36)),
 	type(DC_BTN_NORMAL),
 	state(false),
+	m_hover(false),
 	size(RENDER_SIZE_16x16),
 	sprite(nullptr),
 	overlay(nullptr) {
 	SetSprite(0);
+
+	Bind(wxEVT_PAINT, &DCButton::OnPaint, this);
+	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
+	Bind(wxEVT_ENTER_WINDOW, &DCButton::OnMouseEnter, this);
+	Bind(wxEVT_LEAVE_WINDOW, &DCButton::OnMouseLeave, this);
 }
 
 DCButton::DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, RenderSize sz, int sprite_id) :
@@ -45,10 +46,16 @@ DCButton::DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, Rende
 																								 : wxSize(20, 20))),
 	type(type),
 	state(false),
+	m_hover(false),
 	size(sz),
 	sprite(nullptr),
 	overlay(nullptr) {
 	SetSprite(sprite_id);
+
+	Bind(wxEVT_PAINT, &DCButton::OnPaint, this);
+	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
+	Bind(wxEVT_ENTER_WINDOW, &DCButton::OnMouseEnter, this);
+	Bind(wxEVT_LEAVE_WINDOW, &DCButton::OnMouseLeave, this);
 }
 
 DCButton::~DCButton() {
@@ -89,6 +96,16 @@ bool DCButton::GetValue() const {
 	return state;
 }
 
+void DCButton::OnMouseEnter(wxMouseEvent& event) {
+	m_hover = true;
+	Refresh();
+}
+
+void DCButton::OnMouseLeave(wxMouseEvent& event) {
+	m_hover = false;
+	Refresh();
+}
+
 void DCButton::OnPaint(wxPaintEvent& event) {
 	wxBufferedPaintDC pdc(this);
 
@@ -124,7 +141,13 @@ void DCButton::OnPaint(wxPaintEvent& event) {
 		size_y = 36;
 	}
 
-	pdc.SetBrush(*wxBLACK);
+	// Visual Feedback on Hover: Lighter background
+	if (m_hover) {
+		pdc.SetBrush(wxBrush(wxColor(60, 60, 60)));
+	} else {
+		pdc.SetBrush(*wxBLACK);
+	}
+
 	pdc.DrawRectangle(0, 0, size_x, size_y);
 	if (type == DC_BTN_TOGGLE && GetValue()) {
 		pdc.SetPen(*shadow_pen);
@@ -140,9 +163,16 @@ void DCButton::OnPaint(wxPaintEvent& event) {
 		pdc.DrawLine(size_x - 1, 0, size_x - 1, size_y - 1);
 		pdc.DrawLine(0, size_y - 1, size_y, size_y - 1);
 	} else {
-		pdc.SetPen(*highlight_pen);
+		// Hover effect on border?
+		if (m_hover) {
+			pdc.SetPen(wxPen(wxColor(100, 100, 100), 1, wxSOLID)); // Slightly lighter border for hover
+		} else {
+			pdc.SetPen(*highlight_pen);
+		}
+
 		pdc.DrawLine(0, 0, size_x - 1, 0);
 		pdc.DrawLine(0, 1, 0, size_y - 1);
+
 		pdc.SetPen(*dark_highlight_pen);
 		pdc.DrawLine(1, 1, size_x - 2, 1);
 		pdc.DrawLine(1, 2, 1, size_y - 2);
