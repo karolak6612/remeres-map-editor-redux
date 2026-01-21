@@ -965,6 +965,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 					}
 
 					map.setTile(pos.x, pos.y, pos.z, tile);
+					tile->items.shrink_to_fit();
 				} else {
 					warning("Unknown type of tile node");
 				}

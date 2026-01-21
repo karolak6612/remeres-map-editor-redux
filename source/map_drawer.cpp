@@ -117,7 +117,8 @@ bool DrawingOptions::isDrawLight() const noexcept {
 }
 
 MapDrawer::MapDrawer(MapCanvas* canvas) :
-	canvas(canvas), editor(canvas->editor) {
+	canvas(canvas), editor(canvas->editor),
+	m_lastTexture(-1), m_lastR(0), m_lastG(0), m_lastB(0), m_lastA(0) {
 	light_drawer = std::make_shared<LightDrawer>();
 }
 
@@ -178,6 +179,16 @@ void MapDrawer::SetupGL() {
 	glPushMatrix();
 	glLoadIdentity();
 	glTranslatef(0.375f, 0.375f, 0.0f);
+
+	InvalidateGLState();
+}
+
+void MapDrawer::InvalidateGLState() {
+	m_lastTexture = -1;
+	m_lastR = 0;
+	m_lastG = 0;
+	m_lastB = 0;
+	m_lastA = 0;
 }
 
 void MapDrawer::Release() {
@@ -198,10 +209,12 @@ void MapDrawer::Release() {
 }
 
 void MapDrawer::Draw() {
+	InvalidateGLState();
 	DrawBackground();
 	DrawMap();
 	if (options.isDrawLight()) {
 		DrawLight();
+		InvalidateGLState();
 	}
 	DrawDraggingShadow();
 	DrawHigherFloors();
@@ -1354,18 +1367,7 @@ void MapDrawer::BlitSquare(int sx, int sy, int red, int green, int blue, int alp
 		return;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, texnum);
-	glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.f, 0.f);
-	glVertex2f(sx, sy);
-	glTexCoord2f(1.f, 0.f);
-	glVertex2f(sx + TileSize, sy);
-	glTexCoord2f(1.f, 1.f);
-	glVertex2f(sx + TileSize, sy + TileSize);
-	glTexCoord2f(0.f, 1.f);
-	glVertex2f(sx, sy + TileSize);
-	glEnd();
+	glBlitTexture(sx, sy, texnum, red, green, blue, alpha);
 }
 
 void MapDrawer::DrawRawBrush(int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
@@ -1915,8 +1917,19 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 
 void MapDrawer::glBlitTexture(int sx, int sy, int texture_number, int red, int green, int blue, int alpha) {
 	if (texture_number != 0) {
-		glBindTexture(GL_TEXTURE_2D, texture_number);
-		glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
+		if (m_lastTexture != texture_number) {
+			glBindTexture(GL_TEXTURE_2D, texture_number);
+			m_lastTexture = texture_number;
+		}
+
+		if (m_lastR != red || m_lastG != green || m_lastB != blue || m_lastA != alpha) {
+			glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
+			m_lastR = red;
+			m_lastG = green;
+			m_lastB = blue;
+			m_lastA = alpha;
+		}
+
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.f, 0.f);
 		glVertex2f(sx, sy);
@@ -1935,7 +1948,14 @@ void MapDrawer::glBlitSquare(int sx, int sy, int red, int green, int blue, int a
 		size = TileSize;
 	}
 
-	glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
+	if (m_lastR != red || m_lastG != green || m_lastB != blue || m_lastA != alpha) {
+		glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
+		m_lastR = red;
+		m_lastG = green;
+		m_lastB = blue;
+		m_lastA = alpha;
+	}
+
 	glBegin(GL_QUADS);
 	glVertex2f(sx, sy);
 	glVertex2f(sx + size, sy);

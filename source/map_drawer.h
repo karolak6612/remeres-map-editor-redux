@@ -108,6 +108,10 @@ class MapDrawer {
 	int tile_size;
 	int floor;
 
+	// Cached GL state
+	int m_lastTexture;
+	uint8_t m_lastR, m_lastG, m_lastB, m_lastA;
+
 protected:
 	std::vector<MapTooltip*> tooltips;
 	std::ostringstream tooltip;
@@ -122,6 +126,7 @@ public:
 	void SetupVars();
 	void SetupGL();
 	void Release();
+	void InvalidateGLState();
 
 	void Draw();
 	void DrawBackground();
