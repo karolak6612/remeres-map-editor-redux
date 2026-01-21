@@ -18,6 +18,7 @@
 #ifndef RME_BRUSH_H_
 #define RME_BRUSH_H_
 #include "main.h"
+#include <memory>
 
 #include "position.h"
 
@@ -55,7 +56,7 @@ class EraserBrush;
 //=============================================================================
 // Brushes, holds all brushes
 
-typedef std::multimap<std::string, Brush*> BrushMap;
+typedef std::multimap<std::string, std::unique_ptr<Brush>> BrushMap;
 
 class Brushes {
 public:
@@ -67,7 +68,7 @@ public:
 
 	Brush* getBrush(const std::string& name) const;
 
-	void addBrush(Brush* brush);
+	void addBrush(std::unique_ptr<Brush> brush);
 
 	bool unserializeBorder(pugi::xml_node node, wxArrayString& warnings);
 	bool unserializeBrush(pugi::xml_node node, wxArrayString& warnings);
@@ -77,7 +78,7 @@ public:
 	}
 
 protected:
-	typedef std::map<uint32_t, AutoBorder*> BorderMap;
+	typedef std::map<uint32_t, std::unique_ptr<AutoBorder>> BorderMap;
 	BrushMap brushes;
 	BorderMap borders;
 

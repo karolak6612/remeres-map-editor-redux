@@ -20,6 +20,8 @@
 
 #include "filehandle.h"
 #include "brush_enums.h"
+#include <vector>
+#include <memory>
 
 class Brush;
 class GroundBrush;
@@ -439,7 +441,7 @@ public:
 	bool loadMetaItem(pugi::xml_node node);
 
 	// typedef std::map<int32_t, ItemType*> ItemMap;
-	typedef contigous_vector<ItemType*> ItemMap;
+	typedef std::vector<std::unique_ptr<ItemType>> ItemMap;
 	typedef std::map<std::string, ItemType*> ItemNameMap;
 	ItemMap items;
 

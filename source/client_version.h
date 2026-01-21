@@ -21,6 +21,8 @@
 #include "main.h"
 #include "settings.h"
 
+#include <memory>
+
 typedef int ClientVersionID;
 
 // Client versions
@@ -257,7 +259,7 @@ private:
 	static void loadVersionExtensions(pugi::xml_node client_node);
 
 	// All versions
-	typedef std::map<ClientVersionID, ClientVersion*> VersionMap;
+	typedef std::map<ClientVersionID, std::unique_ptr<ClientVersion>> VersionMap;
 	static VersionMap client_versions;
 	static ClientVersion* latest_version;
 

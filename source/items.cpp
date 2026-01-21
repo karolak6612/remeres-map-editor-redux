@@ -130,10 +130,7 @@ ItemDatabase::~ItemDatabase() {
 }
 
 void ItemDatabase::clear() {
-	for (uint32_t i = 0; i < items.size(); i++) {
-		delete items[i];
-		items.set(i, nullptr);
-	}
+	items.clear();
 }
 
 bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, wxArrayString& warnings) {
@@ -150,7 +147,7 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, wxArra
 			continue;
 		}
 
-		ItemType* t = newd ItemType();
+		auto t = std::make_unique<ItemType>();
 		t->group = ItemGroup_t(u8);
 
 		switch (t->group) {
@@ -403,11 +400,13 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, wxArra
 		}
 
 		if (t) {
+			if (t->id >= items.size()) {
+				items.resize(t->id + 1);
+			}
 			if (items[t->id]) {
 				warnings.push_back("items.otb: Duplicate items");
-				delete items[t->id];
 			}
-			items.set(t->id, t);
+			items[t->id] = std::move(t);
 		}
 	}
 	return true;
@@ -426,7 +425,7 @@ bool ItemDatabase::loadFromOtbVer2(BinaryNode* itemNode, wxString& error, wxArra
 			continue;
 		}
 
-		ItemType* t = newd ItemType();
+		auto t = std::make_unique<ItemType>();
 		t->group = ItemGroup_t(u8);
 
 		switch (t->group) {
@@ -570,11 +569,13 @@ bool ItemDatabase::loadFromOtbVer2(BinaryNode* itemNode, wxString& error, wxArra
 		}
 
 		if (t) {
+			if (t->id >= items.size()) {
+				items.resize(t->id + 1);
+			}
 			if (items[t->id]) {
 				warnings.push_back("items.otb: Duplicate items");
-				delete items[t->id];
 			}
-			items.set(t->id, t);
+			items[t->id] = std::move(t);
 		}
 	}
 	return true;
@@ -593,7 +594,7 @@ bool ItemDatabase::loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArra
 			continue;
 		}
 
-		ItemType* t = newd ItemType();
+		auto t = std::make_unique<ItemType>();
 		t->group = ItemGroup_t(u8);
 
 		switch (t->group) {
@@ -743,11 +744,13 @@ bool ItemDatabase::loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArra
 		}
 
 		if (t) {
+			if (t->id >= items.size()) {
+				items.resize(t->id + 1);
+			}
 			if (items[t->id]) {
 				warnings.push_back("items.otb: Duplicate items");
-				delete items[t->id];
 			}
-			items.set(t->id, t);
+			items[t->id] = std::move(t);
 		}
 	}
 	return true;
@@ -1061,10 +1064,16 @@ bool ItemDatabase::loadFromGameXml(const FileName& identifier, wxString& error, 
 bool ItemDatabase::loadMetaItem(pugi::xml_node node) {
 	if (const pugi::xml_attribute attribute = node.attribute("id")) {
 		const uint16_t id = attribute.as_ushort();
-		if (id == 0 || items[id]) {
+		if (id == 0) {
 			return false;
 		}
-		items.set(id, newd ItemType());
+		if (id < items.size() && items[id]) {
+			return false;
+		}
+		if (id >= items.size()) {
+			items.resize(id + 1);
+		}
+		items[id] = std::make_unique<ItemType>();
 		items[id]->is_metaitem = true;
 		items[id]->id = id;
 		return true;
@@ -1073,7 +1082,11 @@ bool ItemDatabase::loadMetaItem(pugi::xml_node node) {
 }
 
 ItemType& ItemDatabase::getItemType(int id) {
-	ItemType* it = items[id];
+	if (id < 0 || size_t(id) >= items.size()) {
+		static ItemType dummyItemType;
+		return dummyItemType;
+	}
+	ItemType* it = items[id].get();
 	if (it) {
 		return *it;
 	} else {
@@ -1083,6 +1096,8 @@ ItemType& ItemDatabase::getItemType(int id) {
 }
 
 bool ItemDatabase::typeExists(int id) const {
-	ItemType* it = items[id];
-	return it != nullptr;
+	if (id < 0 || size_t(id) >= items.size()) {
+		return false;
+	}
+	return items[id] != nullptr;
 }

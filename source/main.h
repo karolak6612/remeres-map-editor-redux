@@ -129,7 +129,6 @@ typedef wxFileName FileName;
 
 #include "json.h"
 
-#include "con_vector.h"
 #include "common.h"
 #include "threads.h"
 
