@@ -190,6 +190,18 @@ void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensi
 void MapCanvas::OnPaint(wxPaintEvent& event) {
 	SetCurrent(*g_gui.GetGLContext(this));
 
+	static bool glew_initialized = false;
+	if (!glew_initialized) {
+		GLenum err = glewInit();
+		if (GLEW_OK != err) {
+			// Problem: glewInit failed, something is seriously wrong.
+			wxString msg;
+			msg.Printf("Error initializing GLEW: %s", glewGetErrorString(err));
+			wxMessageBox(msg, "OpenGL Error", wxOK | wxICON_ERROR);
+		}
+		glew_initialized = true;
+	}
+
 	if (g_gui.IsRenderingEnabled()) {
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_buffer) {

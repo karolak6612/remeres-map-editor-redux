@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.31)
+cmake_minimum_required(VERSION 3.28)
 
 project(rme)
 
@@ -37,6 +37,7 @@ find_package(wxWidgets COMPONENTS html aui gl adv core net base REQUIRED)
 
 find_package(GLUT REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(GLEW REQUIRED)
 
 # wxWidgets_USE_FILE is set by vcpkg/system wxWidgets, but empty with Conan
 if(wxWidgets_USE_FILE)
@@ -95,6 +96,12 @@ if(TARGET ZLIB::ZLIB)
 	target_link_libraries(rme PRIVATE ZLIB::ZLIB)
 else()
 	target_link_libraries(rme PRIVATE ${ZLIB_LIBRARIES})
+endif()
+
+if(TARGET GLEW::GLEW)
+	target_link_libraries(rme PRIVATE GLEW::GLEW)
+else()
+	target_link_libraries(rme PRIVATE ${GLEW_LIBRARIES})
 endif()
 
 target_link_libraries(rme PRIVATE ${OPENGL_LIBRARIES})
