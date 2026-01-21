@@ -907,7 +907,6 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 						}
 					}
 
-
 					uint8_t attribute;
 					while (tileNode->getU8(attribute)) {
 						switch (attribute) {
@@ -933,7 +932,6 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 							}
 						}
 					}
-
 
 					for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
 						Item* item = nullptr;
