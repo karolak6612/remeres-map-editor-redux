@@ -25,16 +25,16 @@
 #include "editor.h"
 #include "brush.h"
 #include "map.h"
-#include "sprites.h"
+#include "rendering/sprites.h"
 #include "materials.h"
 #include "doodad_brush.h"
 #include "spawn_brush.h"
 
 #include "common_windows.h"
 #include "result_window.h"
-#include "minimap_window.h"
+#include "rendering/minimap_window.h"
 #include "palette_window.h"
-#include "map_display.h"
+#include "rendering/canvas/map_canvas.h"
 #include "application.h"
 #include "welcome_dialog.h"
 
@@ -45,6 +45,9 @@
 #ifdef __WXOSX__
 	#include <AGL/agl.h>
 #endif
+
+// GLAD for OpenGL function loading
+#include "rendering/opengl/gl_includes.h"
 
 const wxEventType EVT_UPDATE_MENUS = wxNewEventType();
 
@@ -113,6 +116,11 @@ wxGLContext* GUI::GetGLContext(wxGLCanvas* win) {
 #else
 		OGLContext = newd wxGLContext(win);
 #endif
+		// Initialize GLAD after context creation
+		win->SetCurrent(*OGLContext);
+		if (!gladLoadGL()) {
+			wxLogError("Failed to initialize GLAD OpenGL loader");
+		}
 	}
 
 	return OGLContext;

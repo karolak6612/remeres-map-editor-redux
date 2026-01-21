@@ -21,8 +21,11 @@
 #include "outfit.h"
 #include "common.h"
 #include <deque>
+#include <memory>
 
 #include "client_version.h"
+#include "texture/texture_manager.h"
+#include "texture/texture_cache.h"
 
 enum SpriteSize {
 	SPRITE_SIZE_16x16,
@@ -286,23 +289,17 @@ public:
 
 	// This is part of the binary
 	bool loadEditorSprites();
-	// Metadata should be loaded first
-	// This fills the item / creature adress space
-	bool loadOTFI(const FileName& filename, wxString& error, wxArrayString& warnings);
-	bool loadSpriteMetadata(const FileName& datafile, wxString& error, wxArrayString& warnings);
-	bool loadSpriteMetadataFlags(FileReadHandle& file, GameSprite* sType, wxString& error, wxArrayString& warnings);
-	bool loadSpriteData(const FileName& datafile, wxString& error, wxArrayString& warnings);
+	// Loading logic is now in SpriteLoader
+	rme::render::SpriteLoader& getSpriteLoader() {
+		return *spriteLoader_;
+	}
 
 	// Cleans old & unused textures according to config settings
 	void garbageCollection();
 	void addSpriteToCleanup(GameSprite* spr);
 
-	wxFileName getMetadataFileName() const {
-		return metadata_file;
-	}
-	wxFileName getSpritesFileName() const {
-		return sprites_file;
-	}
+	wxFileName getMetadataFileName() const;
+	wxFileName getSpritesFileName() const;
 
 	bool hasTransparency() const;
 	bool isUnloaded() const;
@@ -311,35 +308,31 @@ public:
 
 private:
 	bool unloaded;
-	// This is used if memcaching is NOT on
-	std::string spritefile;
+	// New: Composed texture subsystems
+	std::unique_ptr<rme::render::TextureManager> textureManager_;
+	std::unique_ptr<rme::render::TextureCache> textureCache_;
+	std::unique_ptr<rme::render::SpriteLoader> spriteLoader_;
+
+	// Legacy type aliases for internal use during migration
+	using SpriteMap = rme::render::TextureManager::SpriteMap;
+	using ImageMap = rme::render::TextureManager::ImageMap;
+
+	// Accessors for internal maps (delegates to TextureManager)
+	SpriteMap& sprite_space() {
+		return textureManager_->getSpriteSpace();
+	}
+	ImageMap& image_space() {
+		return textureManager_->getImageSpace();
+	}
+
 	bool loadSpriteDump(uint8_t*& target, uint16_t& size, int sprite_id);
-
-	typedef std::map<int, Sprite*> SpriteMap;
-	SpriteMap sprite_space;
-	typedef std::map<int, GameSprite::Image*> ImageMap;
-	ImageMap image_space;
-	std::deque<GameSprite*> cleanup_list;
-
-	DatFormat dat_format;
-	uint16_t item_count;
-	uint16_t creature_count;
-	bool otfi_found;
-	bool is_extended;
-	bool has_transparency;
-	bool has_frame_durations;
-	bool has_frame_groups;
-	wxFileName metadata_file;
-	wxFileName sprites_file;
-
-	int loaded_textures;
-	int lastclean;
-
-	wxStopWatch* animation_timer;
 
 	friend class GameSprite::Image;
 	friend class GameSprite::NormalImage;
 	friend class GameSprite::TemplateImage;
+	friend class rme::render::SpriteLoader;
+	friend class rme::render::TextureManager;
+	friend class rme::render::TextureCache;
 };
 
 struct RGBQuad {

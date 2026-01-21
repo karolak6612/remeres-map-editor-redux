@@ -32,7 +32,7 @@
 
 #include "settings.h"
 
-#include "sprites.h"
+#include "rendering/sprites.h"
 
 #include "item.h"
 #include "complexitem.h"

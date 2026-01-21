@@ -13,6 +13,7 @@ class RMERecipe(ConanFile):
     # Dependencies matching vcpkg.json
     requires = (
         "wxwidgets/3.2.6",
+        "glad/0.1.36",
         "freeglut/3.4.0",
         "asio/1.32.0",
         "nlohmann_json/3.11.3",

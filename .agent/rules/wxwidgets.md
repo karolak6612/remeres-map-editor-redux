@@ -1,6 +1,6 @@
 ---
+trigger: manual
 description: wxWidgets UI Best Practices for RME Map Editor
-trigger: always_on
 ---
 
 # wxWidgets Architecture & UI Rules

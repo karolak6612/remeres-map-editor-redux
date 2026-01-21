@@ -20,7 +20,7 @@
 #include "settings.h"
 #include "gui.h"
 #include "brush.h"
-#include "map_display.h"
+#include "rendering/canvas/map_canvas.h"
 
 #include "palette_window.h"
 #include "palette_brushlist.h"

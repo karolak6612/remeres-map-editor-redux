@@ -22,7 +22,7 @@
 #include "map.h"
 
 #include "gui.h"
-#include "map_display.h"
+#include "canvas/map_canvas.h"
 #include "minimap_window.h"
 
 BEGIN_EVENT_TABLE(MinimapWindow, wxPanel)

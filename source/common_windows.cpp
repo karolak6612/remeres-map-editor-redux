@@ -25,6 +25,8 @@
 #include "map.h"
 #include "item.h"
 #include "complexitem.h"
+#include "creature.h"
+#include "creatures.h"
 #include "raw_brush.h"
 
 #include "palette_window.h"

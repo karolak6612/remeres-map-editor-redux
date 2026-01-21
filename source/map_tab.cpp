@@ -20,10 +20,10 @@
 #include "gui.h"
 #include "editor.h"
 #include "map.h"
-#include "sprites.h"
+#include "rendering/sprites.h"
 #include "map_tab.h"
 #include "editor_tabs.h"
-#include "map_display.h"
+#include "rendering/canvas/map_canvas.h"
 
 MapTab::MapTab(MapTabbook* aui, Editor* editor) :
 	EditorTab(),
@@ -66,7 +66,7 @@ wxWindow* MapTab::GetWindow() const {
 	return const_cast<MapTab*>(this);
 }
 
-MapCanvas* MapTab::GetCanvas() const {
+rme::canvas::MapCanvas* MapTab::GetCanvas() const {
 	return canvas;
 }
 

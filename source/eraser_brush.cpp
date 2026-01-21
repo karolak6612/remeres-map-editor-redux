@@ -18,7 +18,7 @@
 #include "main.h"
 
 #include "brush.h"
-#include "sprites.h"
+#include "rendering/sprites.h"
 #include "basemap.h"
 #include "settings.h"
 

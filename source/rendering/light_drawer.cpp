@@ -18,6 +18,9 @@
 #include "main.h"
 #include "light_drawer.h"
 
+// GL abstraction layer (Phase 2)
+#include "opengl/gl_state.h"
+
 LightDrawer::LightDrawer() {
 	texture = 0;
 	global_color = wxColor(50, 50, 50, 255);
@@ -81,11 +84,11 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
 
 	if (!fog) {
-		glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+		rme::render::gl::GLState::instance().setBlendLight();
 	}
 
-	glColor4ub(255, 255, 255, 255); // reset color
-	glEnable(GL_TEXTURE_2D);
+	rme::render::gl::GLState::instance().setColor(255, 255, 255, 255); // reset color
+	rme::render::gl::GLState::instance().enableTexture2D();
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.f, 0.f);
 	glVertex2f(draw_x, draw_y);
@@ -96,12 +99,12 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 	glTexCoord2f(0.f, 1.f);
 	glVertex2f(draw_x, draw_y + draw_height);
 	glEnd();
-	glDisable(GL_TEXTURE_2D);
+	rme::render::gl::GLState::instance().disableTexture2D();
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	rme::render::gl::GLState::instance().setBlendAlpha();
 
 	if (fog) {
-		glColor4ub(10, 10, 10, 80);
+		rme::render::gl::GLState::instance().setColor(10, 10, 10, 80);
 		glBegin(GL_QUADS);
 		glVertex2f(draw_x, draw_y);
 		glVertex2f(draw_x + draw_width, draw_y);

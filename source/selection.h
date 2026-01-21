@@ -18,7 +18,10 @@
 #ifndef RME_SELECTION_H
 #define RME_SELECTION_H
 
+#include "main.h"
 #include "position.h"
+#include "rme_forward_declarations.h"
+#include <wx/thread.h>
 
 class Action;
 class Editor;
@@ -50,7 +53,7 @@ public:
 	void clear();
 
 	// Returns true when inside a session
-	bool isBusy() {
+	bool isBusy() const {
 		return busy;
 	}
 
@@ -87,10 +90,19 @@ public:
 	TileSet::iterator begin() {
 		return tiles.begin();
 	}
+	TileSet::const_iterator begin() const {
+		return tiles.begin();
+	}
 	TileSet::iterator end() {
 		return tiles.end();
 	}
+	TileSet::const_iterator end() const {
+		return tiles.end();
+	}
 	TileSet& getTiles() {
+		return tiles;
+	}
+	const TileSet& getTiles() const {
 		return tiles;
 	}
 	Tile* getSelectedTile() {

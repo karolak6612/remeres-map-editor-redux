@@ -26,6 +26,10 @@
 	#define _WIN32_WINNT 0x0501
 #endif
 
+// GLAD must be included BEFORE any OpenGL headers (including wxGLCanvas)
+// This provides modern OpenGL function loading
+#include <glad/glad.h>
+
 #ifdef DEBUG_MEM
 
 	#define _CRTDBG_MAP_ALLOC

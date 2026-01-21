@@ -35,8 +35,10 @@ find_package(Boost 1.34.0 COMPONENTS thread system REQUIRED)
 
 find_package(wxWidgets COMPONENTS html aui gl adv core net base REQUIRED)
 
-find_package(GLUT REQUIRED)
+find_package(glad CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
+find_package(fmt CONFIG REQUIRED)
+find_package(nlohmann_json CONFIG REQUIRED)
 
 # wxWidgets_USE_FILE is set by vcpkg/system wxWidgets, but empty with Conan
 if(wxWidgets_USE_FILE)
@@ -44,10 +46,23 @@ if(wxWidgets_USE_FILE)
 endif()
 
 include(source/CMakeLists.txt)
-if(WIN32)
+
+# Option to force console window for debugging (even in Release)
+option(RME_DEBUG_CONSOLE "Force console window for debugging output" OFF)
+
+if(WIN32 AND NOT RME_DEBUG_CONSOLE)
 	add_executable(rme WIN32 ${rme_H} ${rme_SRC})
 else()
 	add_executable(rme ${rme_H} ${rme_SRC})
+endif()
+
+if(RME_DEBUG_CONSOLE)
+	message(STATUS "Console window enabled for debugging")
+	# For MSVC: Keep console subsystem but use WinMain entry point via linker options
+	# This allows both console output AND wxWidgets to work together
+	if(MSVC)
+		target_link_options(rme PRIVATE /SUBSYSTEM:CONSOLE /ENTRY:WinMainCRTStartup)
+	endif()
 endif()
 
 set_target_properties(rme PROPERTIES CXX_STANDARD 20)
@@ -65,36 +80,35 @@ endif()
 
 # Include directories (for legacy find modules)
 target_include_directories(rme PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
 	${Boost_INCLUDE_DIRS}
 	${LibArchive_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
-	${GLUT_INCLUDE_DIRS}
 	${ZLIB_INCLUDE_DIR}
 )
 
 # Link other libraries (works with both vcpkg targets and Conan targets)
-if(TARGET Boost::boost)
-	target_link_libraries(rme PRIVATE Boost::boost Boost::thread Boost::system)
-else()
-	target_link_libraries(rme PRIVATE ${Boost_LIBRARIES})
-endif()
+target_link_libraries(rme PRIVATE 
+    ${OPENGL_LIBRARIES}
+    glad::glad
+    fmt::fmt-header-only
+    nlohmann_json::nlohmann_json
+)
 
-if(TARGET LibArchive::LibArchive)
-	target_link_libraries(rme PRIVATE LibArchive::LibArchive)
+if(TARGET Boost::thread AND TARGET Boost::system)
+    target_link_libraries(rme PRIVATE Boost::thread Boost::system)
 else()
-	target_link_libraries(rme PRIVATE ${LibArchive_LIBRARIES})
-endif()
-
-if(TARGET GLUT::GLUT)
-	target_link_libraries(rme PRIVATE GLUT::GLUT)
-else()
-	target_link_libraries(rme PRIVATE ${GLUT_LIBRARIES})
+    target_link_libraries(rme PRIVATE ${Boost_LIBRARIES})
 endif()
 
 if(TARGET ZLIB::ZLIB)
-	target_link_libraries(rme PRIVATE ZLIB::ZLIB)
+    target_link_libraries(rme PRIVATE ZLIB::ZLIB)
 else()
-	target_link_libraries(rme PRIVATE ${ZLIB_LIBRARIES})
+    target_link_libraries(rme PRIVATE ${ZLIB_LIBRARIES})
 endif()
 
-target_link_libraries(rme PRIVATE ${OPENGL_LIBRARIES})
+if(TARGET LibArchive::LibArchive)
+    target_link_libraries(rme PRIVATE LibArchive::LibArchive)
+else()
+    target_link_libraries(rme PRIVATE ${LibArchive_LIBRARIES})
+endif()

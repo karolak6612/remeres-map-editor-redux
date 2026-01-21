@@ -19,21 +19,19 @@
 
 #include "map_window.h"
 #include "gui.h"
-#include "sprites.h"
+#include "rendering/sprites.h"
 #include "editor.h"
+#include "rendering/canvas/map_canvas.h"
 
 MapWindow::MapWindow(wxWindow* parent, Editor& editor) :
 	wxPanel(parent, PANE_MAIN),
 	editor(editor),
 	replaceItemsDialog(nullptr) {
 	int GL_settings[3];
-	GL_settings[0] = WX_GL_RGBA;
-	GL_settings[1] = WX_GL_DOUBLEBUFFER;
-	GL_settings[2] = 0;
-	canvas = newd MapCanvas(this, editor, GL_settings);
+	canvas = newd rme::canvas::MapCanvas(this, editor, GL_settings);
 
-	vScroll = newd MapScrollBar(this, MAP_WINDOW_VSCROLL, wxVERTICAL, canvas);
-	hScroll = newd MapScrollBar(this, MAP_WINDOW_HSCROLL, wxHORIZONTAL, canvas);
+	vScroll = newd MapScrollBar(this, MAP_WINDOW_VSCROLL, wxVERTICAL, (wxWindow*)canvas);
+	hScroll = newd MapScrollBar(this, MAP_WINDOW_HSCROLL, wxHORIZONTAL, (wxWindow*)canvas);
 
 	gem = newd DCButton(this, MAP_WINDOW_GEM, wxDefaultPosition, DC_BTN_NORMAL, RENDER_SIZE_16x16, EDITOR_SPRITE_SELECTION_GEM);
 

@@ -21,7 +21,11 @@
 #include "position.h"
 #include "replace_items_window.h"
 
-class MapCanvas;
+namespace rme {
+	namespace canvas {
+		class MapCanvas;
+	}
+}
 class DCButton;
 
 // Map window, a window displaying a map, complete with scrollbars
@@ -70,7 +74,7 @@ public:
 	void GoToPreviousCenterPosition();
 
 	// Return the containing canvas
-	MapCanvas* GetCanvas() const {
+	rme::canvas::MapCanvas* GetCanvas() const {
 		return canvas;
 	}
 
@@ -87,7 +91,7 @@ protected:
 protected:
 	Editor& editor;
 	DCButton* gem;
-	MapCanvas* canvas;
+	rme::canvas::MapCanvas* canvas;
 	wxScrollBar* hScroll;
 	wxScrollBar* vScroll;
 

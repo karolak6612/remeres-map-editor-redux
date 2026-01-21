@@ -18,13 +18,13 @@
 #include "main.h"
 
 #include "application.h"
-#include "sprites.h"
+#include "rendering/sprites.h"
 #include "editor.h"
 #include "common_windows.h"
 #include "palette_window.h"
 #include "preferences.h"
 #include "result_window.h"
-#include "minimap_window.h"
+#include "rendering/minimap_window.h"
 #include "about_window.h"
 #include "main_menubar.h"
 #include "updater.h"
@@ -36,10 +36,6 @@
 #include "creature.h"
 
 #include <wx/snglinst.h>
-
-#if defined(__LINUX__) || defined(__WINDOWS__)
-	#include <GL/glut.h>
-#endif
 
 #include "../brushes/icon/editor_icon.xpm"
 
@@ -109,12 +105,6 @@ bool Application::OnInit() {
 	// Tell that we are the real thing
 	wxAppConsole::SetInstance(this);
 	wxArtProvider::Push(new ArtProvider());
-
-#if defined(__LINUX__) || defined(__WINDOWS__)
-	int argc = 1;
-	char* argv[1] = { wxString(this->argv[0]).char_str() };
-	glutInit(&argc, argv);
-#endif
 
 	// Load some internal stuff
 	g_settings.load();

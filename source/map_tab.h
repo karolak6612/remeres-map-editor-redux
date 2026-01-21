@@ -35,7 +35,7 @@ public:
 
 	// Properties
 	MapWindow* GetView() const;
-	MapCanvas* GetCanvas() const;
+	rme::canvas::MapCanvas* GetCanvas() const;
 	wxWindow* GetWindow() const;
 	wxString GetTitle() const;
 	Editor* GetEditor() const;

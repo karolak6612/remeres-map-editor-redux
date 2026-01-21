@@ -26,7 +26,7 @@
 #include "map.h"
 
 #include "application.h"
-#include "map_display.h"
+#include "rendering/canvas/map_canvas.h"
 
 #include "house_brush.h"
 #include "house_exit_brush.h"
