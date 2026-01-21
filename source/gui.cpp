@@ -29,6 +29,7 @@
 #include "materials.h"
 #include "doodad_brush.h"
 #include "spawn_brush.h"
+#include "creatures.h"
 
 #include "common_windows.h"
 #include "result_window.h"

@@ -118,6 +118,7 @@ ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/grid_renderer.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/light_renderer.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/tooltip_renderer.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/ui_renderer.h
+${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/font_renderer.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/pipeline/render_state.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/pipeline/render_pass.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/pipeline/render_coordinator.h
@@ -125,6 +126,9 @@ ${CMAKE_CURRENT_LIST_DIR}/rendering/input/input_types.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/coordinate_mapper.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/mouse_handler.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/input_dispatcher.h
+${CMAKE_CURRENT_LIST_DIR}/rendering/input/selection_handler.h
+${CMAKE_CURRENT_LIST_DIR}/rendering/input/brush_handler.h
+${CMAKE_CURRENT_LIST_DIR}/rendering/input/camera_handler.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/canvas/map_canvas.h
 ${CMAKE_CURRENT_LIST_DIR}/table_brush.h
 ${CMAKE_CURRENT_LIST_DIR}/templates.h
@@ -203,11 +207,15 @@ ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/grid_renderer.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/light_renderer.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/tooltip_renderer.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/ui_renderer.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/renderers/font_renderer.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/pipeline/render_state.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/pipeline/render_coordinator.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/coordinate_mapper.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/mouse_handler.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/input_dispatcher.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/input/selection_handler.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/input/brush_handler.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/input/camera_handler.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/canvas/map_canvas.cpp
 ${CMAKE_CURRENT_LIST_DIR}/live_action.cpp
 ${CMAKE_CURRENT_LIST_DIR}/live_client.cpp

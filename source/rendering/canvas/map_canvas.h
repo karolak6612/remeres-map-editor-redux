@@ -20,7 +20,7 @@
 
 #include "../../main.h"
 #include "../pipeline/render_coordinator.h"
-#include "render_state.h"
+#include "../pipeline/render_state.h"
 #include "../input/input_dispatcher.h"
 #include "../input/input_types.h"
 #include "../../position.h"

@@ -26,7 +26,7 @@ namespace rme {
 	namespace render {
 
 		// Forward declarations
-		class RenderContext;
+		struct RenderContext;
 
 		/// Base interface for all specialized renderers
 		/// Following the Strategy pattern for different rendering operations
@@ -47,38 +47,67 @@ namespace rme {
 		/// Render context provides shared state for all renderers
 		/// Passed to renderers during draw calls
 		struct RenderContext {
+			RenderContext() :
+				viewportWidth(0),
+				viewportHeight(0),
+				zoom(1.0f),
+				scrollX(0),
+				scrollY(0),
+				currentFloor(7),
+				startX(0), startY(0), endX(0), endY(0),
+				tileSize(kTileSize),
+				mouseMapX(0), mouseMapY(0),
+				dragOffsetX(0), dragOffsetY(0), dragOffsetZ(0),
+				boundBoxSelection(false),
+				currentHouseId(0) { }
+
 			// Viewport information
-			int viewportWidth = 0;
-			int viewportHeight = 0;
-			float zoom = 1.0f;
+			union {
+				int viewportWidth;
+				int screensizeX;
+			};
+			union {
+				int viewportHeight;
+				int screensizeY;
+			};
+			float zoom;
 
 			// View position (scroll offset)
-			int scrollX = 0;
-			int scrollY = 0;
+			union {
+				int scrollX;
+				int viewScrollX;
+			};
+			union {
+				int scrollY;
+				int viewScrollY;
+			};
 
 			// Current floor being rendered
-			int currentFloor = 7;
+			int currentFloor;
 
 			// Visible tile range
-			int startX = 0;
-			int startY = 0;
-			int endX = 0;
-			int endY = 0;
+			int startX;
+			int startY;
+			int endX;
+			int endY;
 
 			// Tile size in pixels (accounting for zoom)
-			int tileSize = kTileSize;
+			int tileSize;
 
 			// Mouse position in map coordinates
-			int mouseMapX = 0;
-			int mouseMapY = 0;
+			int mouseMapX;
+			int mouseMapY;
 
 			// Dragging information
-			int dragOffsetX = 0;
-			int dragOffsetY = 0;
-			int dragOffsetZ = 0;
+			int dragOffsetX;
+			int dragOffsetY;
+			int dragOffsetZ;
 
 			// Selection box state
-			bool boundBoxSelection = false;
+			bool boundBoxSelection;
+
+			// House rendering state
+			uint32_t currentHouseId;
 
 			// Clear the context
 			void clear() {
@@ -91,7 +120,9 @@ namespace rme {
 				startX = startY = endX = endY = 0;
 				tileSize = kTileSize;
 				mouseMapX = mouseMapY = 0;
+				dragOffsetX = dragOffsetY = dragOffsetZ = 0;
 				boundBoxSelection = false;
+				currentHouseId = 0;
 			}
 		};
 

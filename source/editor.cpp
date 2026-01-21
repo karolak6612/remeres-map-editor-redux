@@ -20,6 +20,7 @@
 #include "editor.h"
 #include "materials.h"
 #include "map.h"
+#include "creature.h"
 #include "complexitem.h"
 #include "settings.h"
 #include "gui.h"

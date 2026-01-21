@@ -21,6 +21,7 @@
 #include "graphics.h"
 #include "filehandle.h"
 #include "settings.h"
+#include "texture/sprite_loader.h"
 #include "gui.h"
 #include "otml.h"
 

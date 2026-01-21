@@ -23,7 +23,7 @@
 #include "../../map.h"
 #include "../../ground_brush.h"
 #include "../opengl/gl_context.h"
-#include <wx/dcpaint.h>
+#include <wx/dcclient.h>
 
 namespace rme {
 	namespace canvas {

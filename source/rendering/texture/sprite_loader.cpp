@@ -366,7 +366,7 @@ namespace rme {
 				for (uint32_t i = 1; i <= max_id; ++i) {
 					auto it = imageSpace.find(i);
 					if (it != imageSpace.end() && it->second != nullptr) {
-						GameSprite::NormalImage* img = static_cast<GameSprite::NormalImage*>(it->second);
+						::GameSprite::NormalImage* img = static_cast<::GameSprite::NormalImage*>(it->second);
 						if (!loadSpriteDump(img->dump, img->size, img->id)) {
 							warnings.push_back("Failed to load sprite dump for " + std::to_string(i));
 						}

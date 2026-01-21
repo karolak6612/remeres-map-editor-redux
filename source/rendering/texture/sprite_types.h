@@ -6,7 +6,7 @@
 #define RME_SPRITE_TYPES_H_
 
 #include "main.h"
-#include "graphics.h"
+#include "../graphics.h"
 #include "animator.h"
 #include <memory>
 #include <vector>

@@ -47,6 +47,13 @@ class MapCanvas;
 class GraphicManager;
 class FileReadHandle;
 class Animator;
+class wxStopWatch;
+
+namespace rme {
+	namespace render {
+		class SpriteLoader;
+	}
+}
 
 struct SpriteLight {
 	uint8_t intensity = 0;
@@ -312,6 +319,7 @@ private:
 	std::unique_ptr<rme::render::TextureManager> textureManager_;
 	std::unique_ptr<rme::render::TextureCache> textureCache_;
 	std::unique_ptr<rme::render::SpriteLoader> spriteLoader_;
+	wxStopWatch* animation_timer;
 
 	// Legacy type aliases for internal use during migration
 	using SpriteMap = rme::render::TextureManager::SpriteMap;
