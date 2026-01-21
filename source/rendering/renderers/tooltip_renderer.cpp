@@ -166,10 +166,10 @@ namespace rme {
 		}
 
 		int TooltipRenderer::getTextWidth(const std::string& text) {
-			if (!fontRenderer_) {
+			if (!this->fontRenderer_) {
 				return 0;
 			}
-			return fontRenderer_->getStringWidth(text);
+			return this->fontRenderer_->getStringWidth(text);
 		}
 
 	} // namespace render

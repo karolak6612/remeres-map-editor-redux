@@ -1,6 +1,6 @@
 ======================================== 
  RME Windows Build Script 
- Started: �r. 21.01.2026 21:46:14,05 
+ Started: �r. 21.01.2026 22:15:46,05 
 ======================================== 
 [1/3] Configuring CMake... 
 -- Running vcpkg install
@@ -174,7 +174,7 @@ The package wxwidgets provides CMake targets:
     find_package(wxWidgets CONFIG REQUIRED)
     target_link_libraries(main PRIVATE wx::core wx::base)
 
-All requested installations completed successfully in: 1.57 ms
+All requested installations completed successfully in: 1.92 ms
 -- Running vcpkg install - done
 -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
 -- Console window enabled for debugging
@@ -185,80 +185,441 @@ All requested installations completed successfully in: 1.57 ms
 Wersja programu MSBuild 17.14.23+b0019275e dla .NET Framework
 
   Trwa skanowanie źródeł pod kątem zależności modułów...
+  complexitem.cpp
+  brush_tables.cpp
+  brush.cpp
+  browse_tile_window.cpp
+  client_version.cpp
+  add_tileset_window.cpp
+  about_window.cpp
+  action.cpp
+  carpet_brush.cpp
+  basemap.cpp
+  positionctrl.cpp
+  artprovider.cpp
+  common.cpp
   application.cpp
   common_windows.cpp
-  dat_debug_view.cpp
-  about_window.cpp
-  add_tileset_window.cpp
-  browse_tile_window.cpp
-  brush.cpp
-  creatures.cpp
-  copybuffer.cpp
-  container_properties_window.cpp
   add_item_window.cpp
-  editor.cpp
-  dcbutton.cpp
-  action.cpp
-  client_version.cpp
-  creature_brush.cpp
-  editor_tabs.cpp
-  item_renderer.cpp
-  gui.cpp
-  grid_renderer.cpp
   find_item_window.cpp
-  sprite_loader.cpp
-  tile_renderer.cpp
-  iomap.cpp
-  extension_window.cpp
-  creature_renderer.cpp
-  item.cpp
-  items.cpp
-  brush_renderer.cpp
-  selection_renderer.cpp
-  iomap_otbm.cpp
+  creature_brush.cpp
+  creatures.cpp
+  dat_debug_view.cpp
+  copybuffer.cpp
+  creature.cpp
+  doodad_brush.cpp
+  dcbutton.cpp
+  editor.cpp
+  editor_tabs.cpp
+  container_properties_window.cpp
   graphics.cpp
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\brush_renderer.cpp(3,10): error C1083: Nie można otworzyć pliku dołącz: '../../brushes/brush.h': No such file or directory [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\brush_renderer.cpp(3,10): fatal error C1083: Nie mo┼╝na otworzy─ç pliku do┼é─ůcz: '../../brushes/brush.h': No such file or directory [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  render_state.cpp
+  eraser_brush.cpp
+  extension.cpp
+  extension_window.cpp
+  filehandle.cpp
+  ground_brush.cpp
+  gui.cpp
+  house_exit_brush.cpp
+  house.cpp
+  house_brush.cpp
+  item_attributes.cpp
+  iomap.cpp
+  iomap_otbm.cpp
+  item.cpp
+  light_drawer.cpp
+  sprite_loader.cpp
+  items.cpp
+  texture_cache.cpp
+  tile_renderer.cpp
+  item_renderer.cpp
+  texture_manager.cpp
+  creature_renderer.cpp
+  selection_renderer.cpp
+  brush_renderer.cpp
+  grid_renderer.cpp
+  light_renderer.cpp
   ui_renderer.cpp
+  font_renderer.cpp
   tooltip_renderer.cpp
+  render_state.cpp
   render_coordinator.cpp
+  mouse_handler.cpp
+  coordinate_mapper.cpp
   selection_handler.cpp
+  camera_handler.cpp
+  input_dispatcher.cpp
   brush_handler.cpp
-C:\Program Files\Microsoft Visual Studio\2022\Community\MSBuild\Microsoft\VC\v170\Microsoft.CppCommon.targets(532,5): warning MSB8074: Nie można odczytać pliku zależności modułu rme.dir\Release\brush_renderer.cpp.module.json: Oczekiwany element „root” z przestrzeni nazw „”.. Napotkano „None” o nazwie „”, przestrzeń nazw „”.  Kolejność kompilowania może być niepoprawna. [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  map_canvas.cpp
+  live_client.cpp
+  live_action.cpp
+  live_socket.cpp
+  live_peer.cpp
+  live_server.cpp
+  live_tab.cpp
+  main_menubar.cpp
+  main_toolbar.cpp
+  map.cpp
+  map_tab.cpp
+  materials.cpp
+  map_window.cpp
+  mkpch.cpp
+  minimap_window.cpp
+  map_region.cpp
+  mt_rand.cpp
+  net_connection.cpp
+  old_properties_window.cpp
+  numbertextctrl.cpp
+  palette_brushlist.cpp
+  palette_common.cpp
+  palette_creature.cpp
+  palette_house.cpp
+  process_com.cpp
+  pngfiles.cpp
+  palette_window.cpp
+  preferences.cpp
+  properties_window.cpp
+  palette_waypoints.cpp
+  replace_items_window.cpp
+  raw_brush.cpp
+  result_window.cpp
+  rme_net.cpp
+  selection.cpp
+  settings.cpp
+  spawn.cpp
+  spawn_brush.cpp
+  table_brush.cpp
+  templatemap76-74.cpp
+  templatemapclassic.cpp
+  templatemap81.cpp
+  tile.cpp
+  templatemap854.cpp
+  tileset.cpp
+  tileset_window.cpp
+  town.cpp
+  updater.cpp
+  wall_brush.cpp
+  waypoints.cpp
+  welcome_dialog.cpp
+  waypoint_brush.cpp
   Trwa kompilowanie…
-  add_tileset_window.cpp
-  container_properties_window.cpp
-  editor.cpp
-  dat_debug_view.cpp
+  artprovider.cpp
+  brush_tables.cpp
   common_windows.cpp
-  copybuffer.cpp
-  creature_brush.cpp
-  browse_tile_window.cpp
-  add_item_window.cpp
-  client_version.cpp
-  dcbutton.cpp
-  action.cpp
-  creatures.cpp
-  brush.cpp
+  add_tileset_window.cpp
+  carpet_brush.cpp
   about_window.cpp
+  basemap.cpp
+  complexitem.cpp
   application.cpp
-  extension_window.cpp
-  editor_tabs.cpp
+  common.cpp
+  client_version.cpp
+  brush.cpp
+  positionctrl.cpp
+  action.cpp
+  add_item_window.cpp
+  browse_tile_window.cpp
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/brush_tables.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+  (kompilowanie pliku źródłowego „../source/add_tileset_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+  (kompilowanie pliku źródłowego „../source/complexitem.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/add_item_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/application.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/carpet_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/action.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/about_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/common_windows.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/client_version.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/common.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/positionctrl.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/browse_tile_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/basemap.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+  (kompilowanie pliku źródłowego „../source/artprovider.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+  container_properties_window.cpp
+  dcbutton.cpp
+  creature_brush.cpp
+  dat_debug_view.cpp
+  creatures.cpp
+  copybuffer.cpp
+  doodad_brush.cpp
+  creature.cpp
+  graphics.cpp
+  editor.cpp
+  extension.cpp
   find_item_window.cpp
+  editor_tabs.cpp
+  extension_window.cpp
+  eraser_brush.cpp
+  filehandle.cpp
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/container_properties_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/dat_debug_view.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/dcbutton.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/creature_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/creatures.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/doodad_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/creature.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/extension.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/copybuffer.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/eraser_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/editor_tabs.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/find_item_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/filehandle.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/extension_window.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/editor.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/graphics.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+  ground_brush.cpp
+  gui.cpp
+  house.cpp
+  house_brush.cpp
+  house_exit_brush.cpp
+  item_attributes.cpp
   iomap.cpp
   iomap_otbm.cpp
-  graphics.cpp
-  gui.cpp
-  sprite_loader.cpp
-  item_renderer.cpp
   item.cpp
   items.cpp
+  sprite_loader.cpp
+  light_drawer.cpp
+  texture_manager.cpp
   tile_renderer.cpp
-  creature_renderer.cpp
-  selection_renderer.cpp
-  brush_renderer.cpp
-  grid_renderer.cpp
+  item_renderer.cpp
+  texture_cache.cpp
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/ground_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/gui.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(337,17): error C2039: „loadOTFI”: nie jest składową elementu „GraphicManager” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(276,7):
+      zobacz deklarację „GraphicManager”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(348,17): error C2039: „loadSpriteMetadata”: nie jest składową elementu „GraphicManager” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(276,7):
+      zobacz deklarację „GraphicManager”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(358,17): error C2039: „loadSpriteData”: nie jest składową elementu „GraphicManager” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(276,7):
+      zobacz deklarację „GraphicManager”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(472,28): error C2039: „GetZoom”: nie jest składową elementu „rme::canvas::MapCanvas” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\canvas\map_canvas.h(43,9):
+      zobacz deklarację „rme::canvas::MapCanvas”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(480,21): error C2039: „SetZoom”: nie jest składową elementu „rme::canvas::MapCanvas” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\canvas\map_canvas.h(43,9):
+      zobacz deklarację „rme::canvas::MapCanvas”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(1215,63): error C2039: „GetCursorPosition”: nie jest składową elementu „rme::canvas::MapCanvas” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\canvas\map_canvas.h(43,9):
+      zobacz deklarację „rme::canvas::MapCanvas”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(1215,14): error C2660: "CopyBuffer::paste": funkcja nie przyjmuje 1 argumentów [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\copybuffer.h(36,7):
+      zobacz deklarację „CopyBuffer::paste”
+      C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(1215,14):
+      podczas próby dopasowania listy argumentów "(Editor)"
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/iomap.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/house.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/item_attributes.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/house_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/iomap_otbm.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/house_exit_brush.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/items.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/item.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/renderers/item_renderer.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\item_renderer.h(28,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/renderers/item_renderer.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/renderers/tile_renderer.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.h(34,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/renderers/tile_renderer.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/texture/sprite_loader.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+  (kompilowanie pliku źródłowego „../source/rendering/texture/texture_cache.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
 C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\texture\animator.h(11,6): error C2011: "AnimationDirection'': "enum" wpisz ponownie definicję [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
   (kompilowanie pliku źródłowego „../source/rendering/texture/sprite_loader.cpp”)
       C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(37,6):
@@ -278,6 +639,24 @@ C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\texture\sprite_types.h(1
   (kompilowanie pliku źródłowego „../source/rendering/texture/sprite_loader.cpp”)
       C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(88,7):
       zobacz deklarację „GameSprite”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/light_drawer.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(35,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/texture/texture_manager.cpp”)
+      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
+      zobacz deklarację „Position”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(547,23): error C2027: wykorzystanie niezdefiniowanego przez użytkownika typu "rme::render::Editor" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(30,9):
+      zobacz deklarację „rme::render::Editor”
+  
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(563,60): error C2027: wykorzystanie niezdefiniowanego przez użytkownika typu "rme::render::Editor" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
+      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(30,9):
+      zobacz deklarację „rme::render::Editor”
   
 C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\texture\sprite_loader.cpp(101,40): error C2027: wykorzystanie niezdefiniowanego przez użytkownika typu "GameSprite" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
       C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(88,7):
@@ -477,212 +856,4 @@ C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\texture\sprite_loader.cp
       C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\texture\sprite_loader.cpp(370,12):
       podczas próby dopasowania listy argumentów "()"
   
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\texture\sprite_loader.cpp(406,9): error C2039: „getBinary”: nie jest składową elementu „FileReadHandle” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\filehandle.h(75,7):
-      zobacz deklarację „FileReadHandle”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\brush_renderer.h(27,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/brush_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
-      zobacz deklarację „Position”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\brush_renderer.cpp(3,10): error C1083: Nie można otworzyć pliku dołącz: '../../brushes/brush.h': No such file or directory [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\creature_renderer.h(25,7): warning C4099: "Outfit": nazwa typu najpierw widoczna przy użyciu "struct" teraz widoczna przy użyciu "class" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/creature_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(27,8):
-      zobacz deklarację „Outfit”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.h(34,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tile_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
-      zobacz deklarację „Position”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.h(27,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/selection_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
-      zobacz deklarację „Position”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\item_renderer.h(28,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/item_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
-      zobacz deklarację „Position”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(323,14): error C2039: „ingame”: nie jest składową elementu „rme::render::RenderOptions” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(131,10):
-      zobacz deklarację „rme::render::RenderOptions”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(329,14): error C2039: „ingame”: nie jest składową elementu „rme::render::RenderOptions” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(131,10):
-      zobacz deklarację „rme::render::RenderOptions”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(338,14): error C2039: „ingame”: nie jest składową elementu „rme::render::RenderOptions” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(131,10):
-      zobacz deklarację „rme::render::RenderOptions”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(408,71): error C2039: „ingame”: nie jest składową elementu „rme::render::RenderOptions” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(131,10):
-      zobacz deklarację „rme::render::RenderOptions”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(546,14): error C2039: „ingame”: nie jest składową elementu „rme::render::RenderOptions” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(131,10):
-      zobacz deklarację „rme::render::RenderOptions”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(546,50): error C2039: „editor”: nie jest składową elementu „rme::render::RenderContext” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(49,10):
-      zobacz deklarację „rme::render::RenderContext”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(547,24): error C2039: „editor”: nie jest składową elementu „rme::render::RenderContext” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(49,10):
-      zobacz deklarację „rme::render::RenderContext”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(563,30): error C2039: „editor”: nie jest składową elementu „rme::render::RenderContext” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(49,10):
-      zobacz deklarację „rme::render::RenderContext”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.cpp(563,61): error C2039: „editor”: nie jest składową elementu „rme::render::RenderContext” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\renderer_base.h(49,10):
-      zobacz deklarację „rme::render::RenderContext”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\item_renderer.h(28,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/selection_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
-      zobacz deklarację „Position”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\creature_renderer.h(25,7): warning C4099: "Outfit": nazwa typu najpierw widoczna przy użyciu "struct" teraz widoczna przy użyciu "class" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/selection_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\outfit.h(21,8):
-      zobacz deklarację „Outfit”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tile_renderer.h(34,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/selection_renderer.cpp”)
-      C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(28,7):
-      zobacz deklarację „Position”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.cpp(155,9): error C2065: "g_live": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.cpp(159,24): error C2065: "g_live": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.cpp(159,15): error C2530: "cursor": odwołania muszą być zainicjowane [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.cpp(159,15): error C3531: „cursor”: symbol, którego typ zawiera „auto”, musi mieć inicjator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.cpp(159,22): error C2143: błąd składniowy: brakuje „;” przed „:” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.cpp(159,43): error C2143: błąd składniowy: brakuje „;” przed „)” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  light_renderer.cpp
-C:\Users\karol\Documents\GitHub\RME_v2\source\outfit.h(38,11): error C3646: "getColorHash": nieznany specyfikator przesłonięcia [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/light_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\outfit.h(38,23): error C2059: błąd składniowy: „(” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/light_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\outfit.h(38,32): error C2334: nieoczekiwany(e) token(y) poprzedzające "{"; pomijanie treści widocznych funkcji [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/light_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(337,17): error C2039: „loadOTFI”: nie jest składową elementu „GraphicManager” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(276,7):
-      zobacz deklarację „GraphicManager”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(348,17): error C2039: „loadSpriteMetadata”: nie jest składową elementu „GraphicManager” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(276,7):
-      zobacz deklarację „GraphicManager”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(358,17): error C2039: „loadSpriteData”: nie jest składową elementu „GraphicManager” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\graphics.h(276,7):
-      zobacz deklarację „GraphicManager”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(472,28): error C2039: „GetZoom”: nie jest składową elementu „rme::canvas::MapCanvas” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\canvas\map_canvas.h(43,9):
-      zobacz deklarację „rme::canvas::MapCanvas”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(480,21): error C2039: „SetZoom”: nie jest składową elementu „rme::canvas::MapCanvas” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\canvas\map_canvas.h(43,9):
-      zobacz deklarację „rme::canvas::MapCanvas”
-  
-  tooltip_renderer.cpp
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(1215,63): error C2039: „GetCursorPosition”: nie jest składową elementu „rme::canvas::MapCanvas” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\canvas\map_canvas.h(43,9):
-      zobacz deklarację „rme::canvas::MapCanvas”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(1215,14): error C2660: "CopyBuffer::paste": funkcja nie przyjmuje 1 argumentów [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\copybuffer.h(36,7):
-      zobacz deklarację „CopyBuffer::paste”
-      C:\Users\karol\Documents\GitHub\RME_v2\source\gui.cpp(1215,14):
-      podczas próby dopasowania listy argumentów "(Editor)"
-  
-  ui_renderer.cpp
-  font_renderer.cpp
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(23,3): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(23,18): error C4430: brak specyfikatora typu - założono, że int. Uwaga: C++ nie obsługuje domyślnie typu int [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(24,4): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(25,3): warning C4508: "rme::render::LightRenderer": funkcja powinna zwrócić wartość; założono typ zwracany "void" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(27,3): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(27,19): error C4430: brak specyfikatora typu - założono, że int. Uwaga: C++ nie obsługuje domyślnie typu int [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(28,4): error C2660: "shutdown": funkcja nie przyjmuje 0 argumentów [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\um\winsock2.h(2160,1):
-      zobacz deklarację „shutdown”
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(28,4):
-      podczas próby dopasowania listy argumentów "()"
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(29,3): warning C4508: "rme::render::{dtor}": funkcja powinna zwrócić wartość; założono typ zwracany "void" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(31,8): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(32,8): error C2065: "initialized_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(35,4): error C2065: "initialized_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(38,8): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(39,9): error C2065: "initialized_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(42,4): error C2065: "initialized_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(45,8): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(45,36): error C4430: brak specyfikatora typu - założono, że int. Uwaga: C++ nie obsługuje domyślnie typu int [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(45,55): error C2143: błąd składniowy: brakuje „,” przed „&” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(46,9): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,4): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,23): error C2065: "ctx": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,35): error C2065: "ctx": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,47): error C2065: "ctx": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,57): error C2065: "ctx": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,67): error C2065: "ctx": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(50,80): error C2065: "ctx": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(53,8): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(54,22): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(58,16): error C2027: wykorzystanie niezdefiniowanego przez użytkownika typu "TileLocation" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(23,7):
-      zobacz deklarację „TileLocation”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(59,9): error C3536: "tile" : nie można użyć, zanim zostanie zainicjowany [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(63,27): error C2027: wykorzystanie niezdefiniowanego przez użytkownika typu "TileLocation" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-      C:\Users\karol\Documents\GitHub\RME_v2\source\rme_forward_declarations.h(23,7):
-      zobacz deklarację „TileLocation”
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(63,25): error C2530: "position": odwołania muszą być zainicjowane [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(66,5): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(66,28): error C3536: "position" : nie można użyć, zanim zostanie zainicjowany [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(70,15): error C3531: „item”: symbol, którego typ zawiera „auto”, musi mieć inicjator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(70,20): error C2143: błąd składniowy: brakuje „;” przed „:” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(70,33): error C2143: błąd składniowy: brakuje „;” przed „)” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(72,7): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(78,8): error C2653: "LightRenderer": nie jest nazwą klasa lub nazwą przestrzeni nazw [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(79,9): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\light_renderer.cpp(82,4): error C2065: "lightDrawer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.h(68,25): error C2061: błąd składniowy: identyfikator „IFontRenderer” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tooltip_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.h(80,17): error C2143: błąd składniowy: brakuje „;” przed „*” [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tooltip_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.h(80,4): error C4430: brak specyfikatora typu - założono, że int. Uwaga: C++ nie obsługuje domyślnie typu int [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tooltip_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.h(80,42): error C2238: nieoczekiwany(e) token(y) poprzedzający(e) ";" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tooltip_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.h(69,5): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tooltip_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.h(69,21): error C2065: "renderer": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/renderers/tooltip_renderer.cpp”)
-  
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(69,9): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(76,38): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(85,35): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(89,39): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(146,6): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(147,37): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(162,5): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(169,9): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\tooltip_renderer.cpp(172,11): error C2065: "fontRenderer_": niezadeklarowany identyfikator [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
 ERROR: Build failed 

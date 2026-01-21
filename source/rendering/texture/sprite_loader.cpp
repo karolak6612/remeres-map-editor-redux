@@ -403,7 +403,7 @@ namespace rme {
 
 			file.getU16(size);
 			target = newd uint8_t[size];
-			file.getBinary(target, size);
+			file.getRAW(target, size);
 
 			return true;
 		}

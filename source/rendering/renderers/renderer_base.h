@@ -27,6 +27,7 @@ namespace rme {
 
 		// Forward declarations
 		struct RenderContext;
+		class Editor;
 
 		/// Base interface for all specialized renderers
 		/// Following the Strategy pattern for different rendering operations
@@ -59,7 +60,8 @@ namespace rme {
 				mouseMapX(0), mouseMapY(0),
 				dragOffsetX(0), dragOffsetY(0), dragOffsetZ(0),
 				boundBoxSelection(false),
-				currentHouseId(0) { }
+				currentHouseId(0),
+				editor(nullptr) { }
 
 			// Viewport information
 			union {
@@ -109,6 +111,9 @@ namespace rme {
 			// House rendering state
 			uint32_t currentHouseId;
 
+			// Pointer to editor (for access to map, etc.)
+			Editor* editor;
+
 			// Clear the context
 			void clear() {
 				viewportWidth = 0;
@@ -123,12 +128,14 @@ namespace rme {
 				dragOffsetX = dragOffsetY = dragOffsetZ = 0;
 				boundBoxSelection = false;
 				currentHouseId = 0;
+				editor = nullptr;
 			}
 		};
 
 		/// Drawing options that control what gets rendered
 		/// Mirrors the existing DrawingOptions struct for compatibility
 		struct RenderOptions {
+			bool ingame = false;
 			bool transparentFloors = false;
 			bool transparentItems = false;
 			bool showIngameBox = false;
