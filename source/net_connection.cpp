@@ -15,51 +15,51 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include "main.h"
+#include "logging/logger.h"
 #include "net_connection.h"
 
-NetworkMessage::NetworkMessage() {
-	clear();
-}
+NetworkMessage::NetworkMessage() : position(0), size(0) { }
 
 void NetworkMessage::clear() {
-	buffer.resize(4);
-	position = 4;
+	buffer.clear();
+	position = 0;
 	size = 0;
 }
 
 void NetworkMessage::expand(const size_t length) {
-	if (position + length >= buffer.size()) {
-		buffer.resize(position + length + 1);
+	if (position + length > buffer.size()) {
+		buffer.resize(position + length);
 	}
-	size += length;
+	size = std::max(size, position + length);
 }
 
 template <>
 std::string NetworkMessage::read<std::string>() {
-	const uint16_t length = read<uint16_t>();
-	char* strBuffer = reinterpret_cast<char*>(&buffer[position]);
-	position += length;
-	return std::string(strBuffer, length);
-}
-
-template <>
-Position NetworkMessage::read<Position>() {
-	Position position;
-	position.x = read<uint16_t>();
-	position.y = read<uint16_t>();
-	position.z = read<uint8_t>();
-	return position;
+	uint16_t len = read<uint16_t>();
+	if (position + len > buffer.size()) {
+		return std::string();
+	}
+	std::string str((char*)&buffer[position], len);
+	position += len;
+	return str;
 }
 
 template <>
 void NetworkMessage::write<std::string>(const std::string& value) {
-	const size_t length = value.length();
-	write<uint16_t>(length);
+	uint16_t len = (uint16_t)value.length();
+	write<uint16_t>(len);
+	expand(len);
+	memcpy(&buffer[position], value.c_str(), len);
+	position += len;
+}
 
-	expand(length);
-	memcpy(&buffer[position], &value[0], length);
-	position += length;
+template <>
+Position NetworkMessage::read<Position>() {
+	Position pos;
+	pos.x = read<uint16_t>();
+	pos.y = read<uint16_t>();
+	pos.z = read<uint8_t>();
+	return pos;
 }
 
 template <>
@@ -69,45 +69,35 @@ void NetworkMessage::write<Position>(const Position& value) {
 	write<uint8_t>(value.z);
 }
 
-// NetworkConnection
-NetworkConnection::NetworkConnection() :
-	service(nullptr), thread(), stopped(false) {
-	//
-}
+NetworkConnection::NetworkConnection() : service(nullptr), stopped(false) { }
 
 NetworkConnection::~NetworkConnection() {
 	stop();
 }
 
 NetworkConnection& NetworkConnection::getInstance() {
-	static NetworkConnection connection;
-	return connection;
+	static NetworkConnection instance;
+	return instance;
 }
 
 bool NetworkConnection::start() {
-	if (thread.joinable()) {
-		if (stopped) {
-			return false;
-		}
-		return true;
+	if (service) {
+		return false;
 	}
 
+	service = new boost::asio::io_context();
 	stopped = false;
-	if (!service) {
-		service = new boost::asio::io_context;
-	}
 
-	thread = std::thread([this]() -> void {
-		boost::asio::io_context& serviceRef = *service;
+	thread = std::thread([this]() {
 		try {
-			while (!stopped) {
-				serviceRef.run_one();
-				serviceRef.restart();
-			}
+			// Keep the io_context running even if there is no work
+			boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work = boost::asio::make_work_guard(*service);
+			service->run();
 		} catch (std::exception& e) {
-			std::cout << e.what() << std::endl;
+			LOG_ERROR("Network thread exception: {}", e.what());
 		}
 	});
+
 	return true;
 }
 
@@ -118,7 +108,9 @@ void NetworkConnection::stop() {
 
 	service->stop();
 	stopped = true;
-	thread.join();
+	if (thread.joinable()) {
+		thread.join();
+	}
 
 	delete service;
 	service = nullptr;

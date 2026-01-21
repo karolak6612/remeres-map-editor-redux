@@ -39,6 +39,7 @@ find_package(glad CONFIG REQUIRED)
 find_package(ZLIB REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 find_package(nlohmann_json CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
 
 # wxWidgets_USE_FILE is set by vcpkg/system wxWidgets, but empty with Conan
 if(wxWidgets_USE_FILE)
@@ -48,7 +49,7 @@ endif()
 include(source/CMakeLists.txt)
 
 # Option to force console window for debugging (even in Release)
-option(RME_DEBUG_CONSOLE "Force console window for debugging output" OFF)
+option(RME_DEBUG_CONSOLE "Force console window for debugging output" ON)
 
 if(WIN32 AND NOT RME_DEBUG_CONSOLE)
 	add_executable(rme WIN32 ${rme_H} ${rme_SRC})
@@ -93,6 +94,7 @@ target_link_libraries(rme PRIVATE
     glad::glad
     fmt::fmt-header-only
     nlohmann_json::nlohmann_json
+    spdlog::spdlog
 )
 
 if(TARGET Boost::thread AND TARGET Boost::system)

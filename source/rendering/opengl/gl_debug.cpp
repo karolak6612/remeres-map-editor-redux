@@ -15,8 +15,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "logging/logger.h"
 #include "gl_debug.h"
-#include <cstdio>
 
 namespace rme {
 	namespace render {
@@ -32,7 +32,7 @@ namespace rme {
 				}
 
 				while (error != GL_NO_ERROR) {
-					fprintf(stderr, "GL Error [%s]: %s (0x%04X)\n", context, getErrorString(error), error);
+					LOG_RENDER_ERROR("GL Error [{}]: {} ({:#06X})", context, getErrorString(error), error);
 					error = glGetError();
 				}
 
@@ -71,22 +71,22 @@ namespace rme {
 			void GLDebug::logState() {
 				GLint viewport[4];
 				glGetIntegerv(GL_VIEWPORT, viewport);
-				fprintf(stderr, "GL State:\n");
-				fprintf(stderr, "  Viewport: %d, %d, %d, %d\n", viewport[0], viewport[1], viewport[2], viewport[3]);
+				LOG_RENDER_INFO("GL State:");
+				LOG_RENDER_INFO("  Viewport: {}, {}, {}, {}", viewport[0], viewport[1], viewport[2], viewport[3]);
 
 				GLint matrixMode;
 				glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
-				fprintf(stderr, "  Matrix Mode: 0x%04X\n", matrixMode);
+				LOG_RENDER_INFO("  Matrix Mode: {:#06X}", matrixMode);
 
 				GLboolean blend = glIsEnabled(GL_BLEND);
-				fprintf(stderr, "  Blend: %s\n", blend ? "enabled" : "disabled");
+				LOG_RENDER_INFO("  Blend: {}", blend ? "enabled" : "disabled");
 
 				GLboolean texture2d = glIsEnabled(GL_TEXTURE_2D);
-				fprintf(stderr, "  Texture 2D: %s\n", texture2d ? "enabled" : "disabled");
+				LOG_RENDER_INFO("  Texture 2D: {}", texture2d ? "enabled" : "disabled");
 
 				GLint boundTexture;
 				glGetIntegerv(GL_TEXTURE_BINDING_2D, &boundTexture);
-				fprintf(stderr, "  Bound Texture: %d\n", boundTexture);
+				LOG_RENDER_INFO("  Bound Texture: {}", boundTexture);
 			}
 
 			void GLDebug::logInfo() {
@@ -95,9 +95,9 @@ namespace rme {
 				const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
 
 				fprintf(stderr, "OpenGL Info:\n");
-				fprintf(stderr, "  Version: %s\n", version ? version : "unknown");
-				fprintf(stderr, "  Renderer: %s\n", renderer ? renderer : "unknown");
-				fprintf(stderr, "  Vendor: %s\n", vendor ? vendor : "unknown");
+				LOG_RENDER_INFO("  Version: {}", version ? version : "unknown");
+				LOG_RENDER_INFO("  Renderer: {}", renderer ? renderer : "unknown");
+				LOG_RENDER_INFO("  Vendor: {}", vendor ? vendor : "unknown");
 			}
 
 			void GLDebug::enableDebugOutput() {
@@ -114,7 +114,7 @@ namespace rme {
 #ifdef __DEBUG__
 				GLenum error = glGetError();
 				if (error != GL_NO_ERROR) {
-					fprintf(stderr, "GL ASSERTION FAILED [%s]: %s (0x%04X)\n", context, getErrorString(error), error);
+					LOG_RENDER_ERROR("GL ASSERTION FAILED [{}]: {} ({:#06X})", context, getErrorString(error), error);
 	#ifdef _MSC_VER
 					__debugbreak();
 	#elif defined(__GNUC__)

@@ -18,6 +18,7 @@
 #ifndef __POSITION_HPP__
 #define __POSITION_HPP__
 
+#include "definitions.h"
 #include <ostream>
 #include <cstdint>
 #include <vector>

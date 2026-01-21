@@ -27,7 +27,7 @@ MapWindow::MapWindow(wxWindow* parent, Editor& editor) :
 	wxPanel(parent, PANE_MAIN),
 	editor(editor),
 	replaceItemsDialog(nullptr) {
-	int GL_settings[3];
+	int GL_settings[] = { WX_GL_RGBA, WX_GL_DOUBLEBUFFER, WX_GL_DEPTH_SIZE, 16, 0 };
 	canvas = newd rme::canvas::MapCanvas(this, editor, GL_settings);
 
 	vScroll = newd MapScrollBar(this, MAP_WINDOW_VSCROLL, wxVERTICAL, (wxWindow*)canvas);

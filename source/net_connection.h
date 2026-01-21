@@ -19,6 +19,7 @@
 #define _RME_NET_CONNECTION_H_
 
 #include "position.h"
+#include <boost/asio.hpp>
 
 #include <string>
 #include <vector>

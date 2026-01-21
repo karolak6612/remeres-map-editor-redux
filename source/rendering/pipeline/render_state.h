@@ -35,8 +35,9 @@ namespace rme {
 			~RenderState() = default;
 
 			// View state
+			// View state
 			RenderContext context;
-			RenderOptions options;
+			struct RenderOptions options;
 
 			// Frame timing
 			uint32_t frameNumber = 0;

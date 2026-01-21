@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "main.h"
+#include "logging/logger.h"
 
 #include <wx/wfstream.h>
 #include <wx/tarstrm.h>
@@ -596,6 +597,7 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 }
 
 bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
+	LOG_INFO("Loading map from: {}", filename.GetFullPath().ToStdString());
 #ifdef OTGZ_SUPPORT
 	if (filename.GetExt() == "otgz") {
 		// Open the archive
@@ -761,6 +763,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 	}
 
 	version.otbm = (MapVersionID)u32;
+	LOG_INFO("Map OTBM Version: {}", (int)version.otbm);
 
 	if (version.otbm > MAP_OTBM_4) {
 		// Failed to read version
@@ -802,6 +805,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 		warning("This editor needs an updated items.otb version");
 	}
 	version.client = (ClientVersionID)u32;
+	LOG_INFO("Map Client Version: {}", (int)version.client);
 
 	BinaryNode* mapHeaderNode = root->getChild();
 	if (mapHeaderNode == nullptr || !mapHeaderNode->getByte(u8) || u8 != OTBM_MAP_DATA) {

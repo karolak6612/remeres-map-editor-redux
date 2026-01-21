@@ -134,48 +134,7 @@ namespace rme {
 			}
 		};
 
-		/// Drawing options that control what gets rendered
-		/// Mirrors the existing DrawingOptions struct for compatibility
-		struct RenderOptions {
-			bool ingame = false;
-			bool transparentFloors = false;
-			bool transparentItems = false;
-			bool showIngameBox = false;
-			bool showLights = false;
-			bool showLightStr = false;
-			bool showTechItems = true;
-			bool showWaypoints = true;
-
-			int showGrid = 0;
-			bool showAllFloors = false;
-			bool showCreatures = true;
-			bool showSpawns = true;
-			bool showHouses = true;
-			bool showShade = true;
-			bool showSpecialTiles = true;
-			bool showItems = true;
-
-			bool highlightItems = false;
-			bool highlightLockedDoors = false;
-			bool showBlocking = false;
-			bool showTooltips = false;
-			bool showAsMinimap = false;
-			bool showOnlyColors = false;
-			bool showOnlyModified = false;
-			bool showPreview = false;
-			bool showHooks = false;
-			bool hideItemsWhenZoomed = false;
-			bool showTowns = false;
-			bool alwaysShowZones = false;
-			bool extendedHouseShader = false;
-			bool experimentalFog = false;
-
-			// Interaction states
-			bool isDrawing = false;
-			bool isDragging = false;
-			int brushSize = 0;
-			int brushShape = 0;
-		};
+		// RenderOptions removed, using render_types.h version
 
 	} // namespace render
 } // namespace rme

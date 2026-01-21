@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "../../main.h"
+#include "../../logging/logger.h"
 #include "map_canvas.h"
 #include "../../editor.h"
 #include "../../editor.h"
@@ -60,6 +61,8 @@ namespace rme {
 			brushHandler_ = std::make_unique<input::BrushInputHandler>(this, editor_);
 			cameraHandler_ = std::make_unique<input::CameraInputHandler>(this);
 			selectionHandler_ = std::make_unique<input::SelectionInputHandler>(this, editor_);
+
+			LOG_INFO("MapCanvas created for editor instance");
 		}
 
 		MapCanvas::~MapCanvas() {
@@ -67,6 +70,7 @@ namespace rme {
 		}
 
 		void MapCanvas::initialize() {
+			LOG_INFO("MapCanvas::initialize() called");
 			if (initialized_) {
 				return;
 			}
@@ -124,6 +128,7 @@ namespace rme {
 		}
 
 		void MapCanvas::OnPaint(wxPaintEvent& WXUNUSED(event)) {
+			// LOG_TRACE("MapCanvas::OnPaint");
 			if (!initialized_) {
 				initialize();
 			}
@@ -342,6 +347,11 @@ namespace rme {
 			renderState_.setViewport(viewportWidth_, viewportHeight_, zoom_);
 			renderState_.setFloor(floor_);
 			renderState_.setScroll(scrollX_, scrollY_);
+
+			// Update InputDispatcher with the synced state
+			inputDispatcher_.setViewport(viewportWidth_, viewportHeight_, zoom_);
+			inputDispatcher_.setFloor(floor_);
+			inputDispatcher_.setScroll(scrollX_, scrollY_);
 
 			// Calculate visible tile range
 			auto& mapper = inputDispatcher_.coordinateMapper();

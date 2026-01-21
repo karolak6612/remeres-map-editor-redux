@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../map.h"
 #include "../../basemap.h"
 #include "../../main.h"
@@ -92,6 +93,7 @@ namespace rme {
 			uiRenderer_->setFontRenderer(fontRenderer_.get());
 
 			initialized_ = true;
+			LOG_RENDER_INFO("RenderCoordinator initialized with {} passes", (int)RenderPass::Count);
 		}
 
 		void RenderCoordinator::shutdown() {
@@ -149,6 +151,7 @@ namespace rme {
 			}
 
 			state.beginFrame();
+			// LOG_RENDER_TRACE("Begin Frame");
 
 			// Execute all passes in order (using existing RenderPass enum)
 			for (uint8_t i = 0; i < static_cast<uint8_t>(RenderPass::Count); ++i) {
@@ -156,6 +159,7 @@ namespace rme {
 			}
 
 			state.endFrame();
+			// LOG_RENDER_TRACE("End Frame");
 		}
 
 		void RenderCoordinator::executePass(RenderPass pass, RenderState& state) {
@@ -215,12 +219,39 @@ namespace rme {
 			gl::GLState::instance().resetCache();
 			gl::GLState::instance().setBlendAlpha();
 			gl::GLState::instance().enableBlend();
+
+			// Clear screen
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			// Setup Projection with Zoom
+			// Legacy used glOrtho(0, w*zoom, h*zoom...) where zoom was "inverse zoom" (0.5 = 2x size).
+			// We use direct zoom (2.0 = 2x size).
+			// So we use width / zoom.
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			if (state.context.zoom > 0.001f) {
+				glOrtho(0, state.context.viewportWidth / state.context.zoom, state.context.viewportHeight / state.context.zoom, 0, -1.0, 1.0);
+			} else {
+				glOrtho(0, state.context.viewportWidth, state.context.viewportHeight, 0, -1.0, 1.0);
+			}
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+
+			// Apply zoom - REMOVED, handled by Projection
+			// gl::GLState::instance().scale(state.context.zoom, state.context.zoom, 1.0f);
 		}
 
 		void RenderCoordinator::executeTilesPass(RenderState& state) {
 			Map* map = state.map();
 			if (!map) {
+				LOG_RENDER_WARN("executeTilesPass: Map is null!");
 				return;
+			}
+
+			static int trace_counter = 0;
+			if (trace_counter++ % 60 == 0) {
+				LOG_RENDER_INFO("TilesPass: Floor={} Range=[{}, {}]x[{}, {}] View=[{}x{}] Zoom={:.2f} Scroll=[{}, {}]", state.context.currentFloor, state.context.startX, state.context.endX, state.context.startY, state.context.endY, state.context.viewportWidth, state.context.viewportHeight, state.context.zoom, state.context.scrollX, state.context.scrollY);
 			}
 
 			// Logic ported from MapDrawer::DrawMap

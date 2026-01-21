@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "logging/logger.h"
 #include "gl_context.h"
 #include "gl_state.h"
 #include <cstdio>
@@ -24,7 +25,7 @@ namespace rme {
 		namespace gl {
 
 			void GLContext::setupViewport(int width, int height, float zoom) {
-				glViewport(0, 0, width, height);
+				GL_CHECK(glViewport(0, 0, width, height));
 
 				// Setup projection
 				glMatrixMode(GL_PROJECTION);
@@ -107,7 +108,7 @@ namespace rme {
 							errorStr = "OUT_OF_MEMORY";
 							break;
 					}
-					fprintf(stderr, "GL Error [%s]: %s\n", context, errorStr);
+					LOG_RENDER_ERROR("GL Error [{}]: {}", context, errorStr);
 				}
 			}
 

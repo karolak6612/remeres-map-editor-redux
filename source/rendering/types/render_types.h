@@ -25,7 +25,49 @@ namespace rme {
 
 		// Forward declarations
 		struct Viewport;
-		struct DrawingOptions;
+		/// Options controlling what is rendered
+		struct RenderOptions {
+			bool showGrid = false;
+			bool showLights = false;
+			bool showLightStr = true; // Legacy
+			bool showTechItems = true;
+			bool showWaypoints = true;
+			bool ingame = false;
+			bool isDrawing = false;
+			bool isDragging = false;
+
+			bool showAllFloors = true;
+			bool showCreatures = true;
+			bool showSpawns = true;
+			bool showHouses = true;
+			bool showShade = true;
+			bool showSpecialTiles = true;
+			bool showItems = true;
+
+			bool highlightItems = false;
+			bool highlightLockedDoors = true;
+			bool showBlocking = false;
+			bool showTooltips = false;
+			bool showAsMinimap = false;
+			bool showOnlyColors = false;
+			bool showOnlyModified = false;
+			bool showPreview = false;
+			bool showHooks = false;
+			bool hideItemsWhenZoomed = true;
+
+			bool alwaysShowZones = false;
+			bool extendedHouseShader = false;
+
+			bool transparentFloors = false;
+			bool transparentItems = false;
+			bool showIngameBox = false;
+			bool experimentalFog = false;
+			bool showTowns = false; // Add this one too, used in TileRenderer
+
+			int brushSize = 1;
+			int brushShape = 0; // Square
+		};
+
 		class RenderState;
 
 		/// 2D point with integer coordinates

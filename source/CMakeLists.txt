@@ -53,6 +53,7 @@ ${CMAKE_CURRENT_LIST_DIR}/live_server.h
 ${CMAKE_CURRENT_LIST_DIR}/live_socket.h
 ${CMAKE_CURRENT_LIST_DIR}/live_tab.h
 ${CMAKE_CURRENT_LIST_DIR}/main.h
+${CMAKE_CURRENT_LIST_DIR}/logging/logger.h
 ${CMAKE_CURRENT_LIST_DIR}/main_menubar.h
 ${CMAKE_CURRENT_LIST_DIR}/main_toolbar.h
 ${CMAKE_CURRENT_LIST_DIR}/map.h
@@ -226,6 +227,7 @@ ${CMAKE_CURRENT_LIST_DIR}/live_server.cpp
 ${CMAKE_CURRENT_LIST_DIR}/live_socket.cpp
 ${CMAKE_CURRENT_LIST_DIR}/live_tab.cpp
 ${CMAKE_CURRENT_LIST_DIR}/main_menubar.cpp
+${CMAKE_CURRENT_LIST_DIR}/logging/logger.cpp
 ${CMAKE_CURRENT_LIST_DIR}/main_toolbar.cpp
 ${CMAKE_CURRENT_LIST_DIR}/map.cpp
 ${CMAKE_CURRENT_LIST_DIR}/map_region.cpp

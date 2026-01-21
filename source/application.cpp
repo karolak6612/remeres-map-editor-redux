@@ -17,6 +17,7 @@
 
 #include "main.h"
 
+#include "logging/logger.h"
 #include "application.h"
 #include "rendering/sprites.h"
 #include "editor.h"
@@ -85,7 +86,7 @@ END_EVENT_TABLE()
 wxIMPLEMENT_APP(Application);
 
 Application::~Application() {
-	// Destroy
+	Logger::shutdown();
 }
 
 bool Application::OnInit() {
@@ -93,9 +94,10 @@ bool Application::OnInit() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-	std::cout << "This is free software: you are free to change and redistribute it." << std::endl;
-	std::cout << "There is NO WARRANTY, to the extent permitted by law." << std::endl;
-	std::cout << "Review COPYING in RME distribution for details." << std::endl;
+	Logger::init();
+	LOG_INFO("This is free software: you are free to change and redistribute it.");
+	LOG_INFO("There is NO WARRANTY, to the extent permitted by law.");
+	LOG_INFO("Review COPYING in RME distribution for details.");
 	mt_seed(time(nullptr));
 	srand(time(nullptr));
 

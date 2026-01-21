@@ -17,6 +17,7 @@
 
 #include "main.h"
 
+#include "logging/logger.h"
 #include "action.h"
 #include "settings.h"
 #include "map.h"
@@ -77,7 +78,7 @@ void Change::clear() {
 		default:
 #ifdef __DEBUG_MODE__
 			if (data) {
-				printf("UNHANDLED CHANGE TYPE! Leak!");
+				LOG_ERROR("UNHANDLED CHANGE TYPE! Leak!");
 			}
 #endif
 			break;

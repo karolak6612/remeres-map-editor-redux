@@ -110,10 +110,15 @@ namespace rme {
 			}
 
 			// Calculate visible tile range
+			// Note: scrollX_ and scrollY_ are in PIXELS
+			// We need to convert these to tile coordinates
+
 			startTileX_ = scrollX_ / effectiveSize;
 			startTileY_ = scrollY_ / effectiveSize;
-			endTileX_ = (scrollX_ + viewWidth_) / effectiveSize + 1;
-			endTileY_ = (scrollY_ + viewHeight_) / effectiveSize + 1;
+
+			// End tile is start + tiles fitting in view
+			endTileX_ = startTileX_ + (viewWidth_ / effectiveSize) + 2; // +1 for partial tile, +1 for safety
+			endTileY_ = startTileY_ + (viewHeight_ / effectiveSize) + 2;
 		}
 
 	} // namespace input
