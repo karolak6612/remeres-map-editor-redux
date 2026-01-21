@@ -65,6 +65,7 @@ endif()
 
 # Include directories (for legacy find modules)
 target_include_directories(rme PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
 	${Boost_INCLUDE_DIRS}
 	${LibArchive_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
