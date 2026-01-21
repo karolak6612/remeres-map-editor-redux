@@ -28,18 +28,6 @@
 // ============================================================================
 // Creature palette
 
-BEGIN_EVENT_TABLE(CreaturePalettePanel, PalettePanel)
-EVT_CHOICE(PALETTE_CREATURE_TILESET_CHOICE, CreaturePalettePanel::OnTilesetChange)
-
-EVT_LISTBOX(PALETTE_CREATURE_LISTBOX, CreaturePalettePanel::OnListBoxChange)
-
-EVT_TOGGLEBUTTON(PALETTE_CREATURE_BRUSH_BUTTON, CreaturePalettePanel::OnClickCreatureBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_SPAWN_BRUSH_BUTTON, CreaturePalettePanel::OnClickSpawnBrushButton)
-
-EVT_SPINCTRL(PALETTE_CREATURE_SPAWN_TIME, CreaturePalettePanel::OnChangeSpawnTime)
-EVT_SPINCTRL(PALETTE_CREATURE_SPAWN_SIZE, CreaturePalettePanel::OnChangeSpawnSize)
-END_EVENT_TABLE()
-
 CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	PalettePanel(parent, id),
 	handling_event(false) {
@@ -76,6 +64,13 @@ CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	sidesizer->Add(grid, 0, wxEXPAND);
 	topsizer->Add(sidesizer, 0, wxEXPAND);
 	SetSizerAndFit(topsizer);
+
+	Bind(wxEVT_CHOICE, &CreaturePalettePanel::OnTilesetChange, this, PALETTE_CREATURE_TILESET_CHOICE);
+	Bind(wxEVT_LISTBOX, &CreaturePalettePanel::OnListBoxChange, this, PALETTE_CREATURE_LISTBOX);
+	Bind(wxEVT_TOGGLEBUTTON, &CreaturePalettePanel::OnClickCreatureBrushButton, this, PALETTE_CREATURE_BRUSH_BUTTON);
+	Bind(wxEVT_TOGGLEBUTTON, &CreaturePalettePanel::OnClickSpawnBrushButton, this, PALETTE_SPAWN_BRUSH_BUTTON);
+	Bind(wxEVT_SPINCTRL, &CreaturePalettePanel::OnChangeSpawnTime, this, PALETTE_CREATURE_SPAWN_TIME);
+	Bind(wxEVT_SPINCTRL, &CreaturePalettePanel::OnChangeSpawnSize, this, PALETTE_CREATURE_SPAWN_SIZE);
 
 	OnUpdate();
 }

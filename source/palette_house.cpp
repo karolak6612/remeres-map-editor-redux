@@ -35,22 +35,6 @@
 // ============================================================================
 // House palette
 
-BEGIN_EVENT_TABLE(HousePalettePanel, PalettePanel)
-EVT_TIMER(PALETTE_LAYOUT_FIX_TIMER, HousePalettePanel::OnLayoutFixTimer)
-
-EVT_CHOICE(PALETTE_HOUSE_TOWN_CHOICE, HousePalettePanel::OnTownChange)
-
-EVT_LISTBOX(PALETTE_HOUSE_LISTBOX, HousePalettePanel::OnListBoxChange)
-EVT_LISTBOX_DCLICK(PALETTE_HOUSE_LISTBOX, HousePalettePanel::OnListBoxDoubleClick)
-
-EVT_BUTTON(PALETTE_HOUSE_ADD_HOUSE, HousePalettePanel::OnClickAddHouse)
-EVT_BUTTON(PALETTE_HOUSE_EDIT_HOUSE, HousePalettePanel::OnClickEditHouse)
-EVT_BUTTON(PALETTE_HOUSE_REMOVE_HOUSE, HousePalettePanel::OnClickRemoveHouse)
-
-EVT_TOGGLEBUTTON(PALETTE_HOUSE_BRUSH_BUTTON, HousePalettePanel::OnClickHouseBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_HOUSE_SELECT_EXIT_BUTTON, HousePalettePanel::OnClickSelectExitButton)
-END_EVENT_TABLE()
-
 HousePalettePanel::HousePalettePanel(wxWindow* parent, wxWindowID id) :
 	PalettePanel(parent, id),
 	map(nullptr),
@@ -97,6 +81,16 @@ HousePalettePanel::HousePalettePanel(wxWindow* parent, wxWindowID id) :
 	topsizer->Add(sidesizer, 0, wxEXPAND);
 
 	SetSizerAndFit(topsizer);
+
+	Bind(wxEVT_TIMER, &HousePalettePanel::OnLayoutFixTimer, this, PALETTE_LAYOUT_FIX_TIMER);
+	Bind(wxEVT_CHOICE, &HousePalettePanel::OnTownChange, this, PALETTE_HOUSE_TOWN_CHOICE);
+	Bind(wxEVT_LISTBOX, &HousePalettePanel::OnListBoxChange, this, PALETTE_HOUSE_LISTBOX);
+	Bind(wxEVT_LISTBOX_DCLICK, &HousePalettePanel::OnListBoxDoubleClick, this, PALETTE_HOUSE_LISTBOX);
+	Bind(wxEVT_BUTTON, &HousePalettePanel::OnClickAddHouse, this, PALETTE_HOUSE_ADD_HOUSE);
+	Bind(wxEVT_BUTTON, &HousePalettePanel::OnClickEditHouse, this, PALETTE_HOUSE_EDIT_HOUSE);
+	Bind(wxEVT_BUTTON, &HousePalettePanel::OnClickRemoveHouse, this, PALETTE_HOUSE_REMOVE_HOUSE);
+	Bind(wxEVT_TOGGLEBUTTON, &HousePalettePanel::OnClickHouseBrushButton, this, PALETTE_HOUSE_BRUSH_BUTTON);
+	Bind(wxEVT_TOGGLEBUTTON, &HousePalettePanel::OnClickSelectExitButton, this, PALETTE_HOUSE_SELECT_EXIT_BUTTON);
 }
 
 HousePalettePanel::~HousePalettePanel() {
@@ -431,12 +425,6 @@ void HousePalettePanel::OnListBoxClick(wxMouseEvent& event) {
 // ============================================================================
 // House Edit Dialog
 
-BEGIN_EVENT_TABLE(EditHouseDialog, wxDialog)
-EVT_SET_FOCUS(EditHouseDialog::OnFocusChange)
-EVT_BUTTON(wxID_OK, EditHouseDialog::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, EditHouseDialog::OnClickCancel)
-END_EVENT_TABLE()
-
 EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 	// window title
 	wxDialog(parent, wxID_ANY, "House Properties", wxDefaultPosition, wxSize(250, 160)),
@@ -535,6 +523,10 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 	topsizer->Add(buttonsSizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
 	SetSizerAndFit(topsizer);
+
+	Bind(wxEVT_SET_FOCUS, &EditHouseDialog::OnFocusChange, this);
+	Bind(wxEVT_BUTTON, &EditHouseDialog::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &EditHouseDialog::OnClickCancel, this, wxID_CANCEL);
 }
 
 EditHouseDialog::~EditHouseDialog() {
