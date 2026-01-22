@@ -48,7 +48,19 @@ namespace rme {
 		/// Manages all renderers and orchestrates the render passes
 		class RenderCoordinator {
 		public:
-			RenderCoordinator();
+			/// Constructor with dependency injection
+			RenderCoordinator(
+				std::unique_ptr<TileRenderer> tileRenderer,
+				std::unique_ptr<ItemRenderer> itemRenderer,
+				std::unique_ptr<CreatureRenderer> creatureRenderer,
+				std::unique_ptr<SelectionRenderer> selectionRenderer,
+				std::unique_ptr<BrushRenderer> brushRenderer,
+				std::unique_ptr<GridRenderer> gridRenderer,
+				std::unique_ptr<LightRenderer> lightRenderer,
+				std::unique_ptr<TooltipRenderer> tooltipRenderer,
+				std::unique_ptr<UIRenderer> uiRenderer,
+				std::unique_ptr<FontRenderer> fontRenderer
+			);
 			~RenderCoordinator();
 
 			/// Initialize all renderers

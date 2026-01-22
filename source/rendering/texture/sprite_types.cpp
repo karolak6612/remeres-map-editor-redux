@@ -7,6 +7,7 @@
 #include "settings.h"
 #include "gui.h"
 #include <wx/memory.h>
+#include "logging/logger.h"
 
 // All 133 template colors
 static const uint32_t TemplateOutfitLookupTable[] = {
@@ -374,6 +375,8 @@ void GameSprite::Image::createGLTexture(GLuint whatid) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812F); // GL_CLAMP_TO_EDGE
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SPRITE_PIXELS, SPRITE_PIXELS, 0, GL_RGBA, GL_UNSIGNED_BYTE, rgba);
 
+	LOG_RENDER_DEBUG("[RESOURCE] Created hardware texture: {} (GL ID: {})", whatid, whatid);
+
 	delete[] rgba;
 }
 
@@ -418,10 +421,8 @@ void GameSprite::NormalImage::clean(int time) {
 
 uint8_t* GameSprite::NormalImage::getRGBData() {
 	if (!dump) {
-		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
-			return nullptr;
-		}
-
+		// Even if using memcached sprites (GL textures only), we might need RGB data for software rendering (UI icons, export).
+		// So we force a temporary load from disk if 'dump' is missing.
 		if (!g_gui.gfx.loadSpriteDump(dump, size, id)) {
 			return nullptr;
 		}
@@ -454,12 +455,26 @@ uint8_t* GameSprite::NormalImage::getRGBData() {
 		}
 	}
 
+	// DEBUG: Logging for Black UI investigation
+	// Only log a few times to avoid spamming
+	static int debug_log_count = 0;
+	bool logged_this_sprite = false;
+
 	while (write < pixels_data_size) {
 		data[write + 0] = 0xFF; // red
 		data[write + 1] = 0x00; // green
 		data[write + 2] = 0xFF; // blue
 		write += 3;
 	}
+
+	if (debug_log_count < 10) {
+		LOG_INFO("getRGBData: SpriteID={} Size={} DumpBytes={} BPP={}", id, size, size, bpp);
+		// Sample the middle of the buffer
+		int mid = pixels_data_size / 2;
+		LOG_INFO("getRGBData: MidPixel RGB=[{}, {}, {}]", data[mid], data[mid + 1], data[mid + 2]);
+		debug_log_count++;
+	}
+
 	return data;
 }
 

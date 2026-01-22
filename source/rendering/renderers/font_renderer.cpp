@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "font_renderer.h"
 #include "../opengl/gl_state.h"
@@ -29,6 +30,7 @@ namespace rme {
 		}
 
 		void FontRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing FontRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -38,6 +40,7 @@ namespace rme {
 		}
 
 		void FontRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down FontRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -113,6 +116,7 @@ namespace rme {
 			}
 
 			// Upload to OpenGL
+			LOG_RENDER_INFO("[RESOURCE] Creating font texture: {}x{}", textureWidth_, textureHeight_);
 			wxImage image = bitmap.ConvertToImage();
 			unsigned char* data = image.GetData();
 

@@ -40,7 +40,7 @@ namespace rme {
 			~MouseHandler() = default;
 
 			/// Set the coordinate mapper for screen-to-map conversion
-			void setCoordinateMapper(CoordinateMapper* mapper);
+			void setCoordinateMapper(const CoordinateMapper* mapper);
 
 			/// Process raw mouse movement
 			/// @param screenX Screen X position
@@ -123,7 +123,7 @@ namespace rme {
 			}
 
 		private:
-			CoordinateMapper* mapper_ = nullptr;
+			const CoordinateMapper* mapper_ = nullptr;
 
 			// Current state
 			ScreenCoord currentScreen_;

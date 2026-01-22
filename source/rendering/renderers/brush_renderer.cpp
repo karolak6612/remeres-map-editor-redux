@@ -1,3 +1,4 @@
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "brush_renderer.h"
 #include "../../brush.h"
@@ -28,6 +29,7 @@ namespace rme {
 		}
 
 		void BrushRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing BrushRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -36,6 +38,7 @@ namespace rme {
 		}
 
 		void BrushRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down BrushRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -126,6 +129,8 @@ namespace rme {
 			if (!brush || !initialized_) {
 				return;
 			}
+
+			LOG_RENDER_TRACE("[BRUSH] Rendering brush preview - Pos: ({},{},{}), Size: {}", pos.x, pos.y, pos.z, opts.brushSize);
 
 			// Interaction states are now in opts (isDrawing, isDragging, brushSize, brushShape)
 

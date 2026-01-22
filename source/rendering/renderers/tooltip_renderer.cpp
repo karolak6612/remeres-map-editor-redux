@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "tooltip_renderer.h"
 #include "../opengl/gl_state.h"
@@ -32,6 +33,7 @@ namespace rme {
 		}
 
 		void TooltipRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing TooltipRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -40,6 +42,7 @@ namespace rme {
 		}
 
 		void TooltipRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down TooltipRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -56,6 +59,7 @@ namespace rme {
 				return;
 			}
 
+			LOG_RENDER_TRACE("[UI] Rendering {} tooltips", tooltips_.size());
 			for (const auto& tooltip : tooltips_) {
 				renderTooltip(tooltip);
 			}

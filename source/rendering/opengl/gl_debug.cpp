@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include "logging/logger.h"
+#include "../../logging/logger.h"
 #include "gl_debug.h"
 
 namespace rme {
@@ -71,22 +71,23 @@ namespace rme {
 			void GLDebug::logState() {
 				GLint viewport[4];
 				glGetIntegerv(GL_VIEWPORT, viewport);
-				LOG_RENDER_INFO("GL State:");
-				LOG_RENDER_INFO("  Viewport: {}, {}, {}, {}", viewport[0], viewport[1], viewport[2], viewport[3]);
+				LOG_RENDER_INFO("[STATE] === OpenGL State Snapshot ===");
+				LOG_RENDER_INFO("[STATE] Viewport: [{}, {}, {}, {}]", viewport[0], viewport[1], viewport[2], viewport[3]);
 
 				GLint matrixMode;
 				glGetIntegerv(GL_MATRIX_MODE, &matrixMode);
-				LOG_RENDER_INFO("  Matrix Mode: {:#06X}", matrixMode);
+				LOG_RENDER_INFO("[STATE] Matrix Mode: {:#06X}", matrixMode);
 
 				GLboolean blend = glIsEnabled(GL_BLEND);
-				LOG_RENDER_INFO("  Blend: {}", blend ? "enabled" : "disabled");
+				LOG_RENDER_INFO("[STATE] Blend: {}", blend ? "enabled" : "disabled");
 
 				GLboolean texture2d = glIsEnabled(GL_TEXTURE_2D);
-				LOG_RENDER_INFO("  Texture 2D: {}", texture2d ? "enabled" : "disabled");
+				LOG_RENDER_INFO("[STATE] Texture 2D: {}", texture2d ? "enabled" : "disabled");
 
 				GLint boundTexture;
 				glGetIntegerv(GL_TEXTURE_BINDING_2D, &boundTexture);
-				LOG_RENDER_INFO("  Bound Texture: {}", boundTexture);
+				LOG_RENDER_INFO("[STATE] Bound Texture: {}", boundTexture);
+				LOG_RENDER_INFO("[STATE] ===============================");
 			}
 
 			void GLDebug::logInfo() {
@@ -94,10 +95,11 @@ namespace rme {
 				const char* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
 				const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
 
-				fprintf(stderr, "OpenGL Info:\n");
-				LOG_RENDER_INFO("  Version: {}", version ? version : "unknown");
-				LOG_RENDER_INFO("  Renderer: {}", renderer ? renderer : "unknown");
-				LOG_RENDER_INFO("  Vendor: {}", vendor ? vendor : "unknown");
+				LOG_RENDER_INFO("[INIT] === OpenGL System Info ===");
+				LOG_RENDER_INFO("[INIT] Version: {}", version ? version : "unknown");
+				LOG_RENDER_INFO("[INIT] Renderer: {}", renderer ? renderer : "unknown");
+				LOG_RENDER_INFO("[INIT] Vendor: {}", vendor ? vendor : "unknown");
+				LOG_RENDER_INFO("[INIT] ==========================");
 			}
 
 			void GLDebug::enableDebugOutput() {

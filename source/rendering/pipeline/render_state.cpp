@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "render_state.h"
 #include "../../editor.h"
@@ -42,6 +43,10 @@ namespace rme {
 
 			frameTime = currentTime;
 			++frameNumber;
+
+			if (frameNumber % 300 == 0) { // Log every 300 frames (~5s at 60fps)
+				LOG_RENDER_INFO("[FRAME] Frame #{} - DeltaTime: {:.4f}s ({:.1f} FPS)", frameNumber, deltaTime, 1.0 / deltaTime);
+			}
 		}
 
 		void RenderState::endFrame() {
@@ -52,6 +57,7 @@ namespace rme {
 
 		void RenderState::setViewport(int width, int height, float zoom) {
 			if (context.viewportWidth != width || context.viewportHeight != height || context.zoom != zoom) {
+				LOG_RENDER_DEBUG("[STATE] Viewport change: {}x{}, Zoom: {:.2f}", width, height, zoom);
 				context.viewportWidth = width;
 				context.viewportHeight = height;
 				context.zoom = zoom;
@@ -62,6 +68,7 @@ namespace rme {
 
 		void RenderState::setVisibleRange(int startX, int startY, int endX, int endY) {
 			if (context.startX != startX || context.startY != startY || context.endX != endX || context.endY != endY) {
+				LOG_RENDER_DEBUG("[STATE] Visible range change: ({},{}) to ({},{})", startX, startY, endX, endY);
 				context.startX = startX;
 				context.startY = startY;
 				context.endX = endX;
@@ -72,6 +79,7 @@ namespace rme {
 
 		void RenderState::setScroll(int scrollX, int scrollY) {
 			if (context.scrollX != scrollX || context.scrollY != scrollY) {
+				LOG_RENDER_TRACE("[STATE] Scroll change: ({},{})", scrollX, scrollY);
 				context.scrollX = scrollX;
 				context.scrollY = scrollY;
 				contextDirty = true;
@@ -80,6 +88,7 @@ namespace rme {
 
 		void RenderState::setFloor(int floor) {
 			if (context.currentFloor != floor) {
+				LOG_RENDER_INFO("[STATE] Floor change: from {} to {}", context.currentFloor, floor);
 				context.currentFloor = floor;
 				contextDirty = true;
 			}

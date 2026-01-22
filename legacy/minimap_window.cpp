@@ -15,7 +15,6 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include "../logging/logger.h"
 #include "main.h"
 
 #include "graphics.h"
@@ -23,7 +22,7 @@
 #include "map.h"
 
 #include "gui.h"
-#include "canvas/map_canvas.h"
+#include "map_display.h"
 #include "minimap_window.h"
 
 BEGIN_EVENT_TABLE(MinimapWindow, wxPanel)
@@ -69,7 +68,6 @@ void MinimapWindow::OnDelayedUpdate(wxTimerEvent& event) {
 }
 
 void MinimapWindow::OnPaint(wxPaintEvent& event) {
-	LOG_RENDER_TRACE("[MINIMAP] Painting minimap");
 	wxBufferedPaintDC pdc(this);
 
 	pdc.SetBackground(*wxBLACK_BRUSH);
@@ -85,8 +83,7 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	// printf("W:%d\tH:%d\n", window_width, window_height);
 	int center_x, center_y;
 
-	// Use legacy compatibility pointer type if possible, or cast/access new canvas
-	rme::canvas::MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
+	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
 	canvas->GetScreenCenter(&center_x, &center_y);
 
 	int start_x, start_y;
@@ -183,7 +180,6 @@ void MinimapWindow::OnMouseClick(wxMouseEvent& event) {
 	}
 	int new_map_x = last_start_x + event.GetX();
 	int new_map_y = last_start_y + event.GetY();
-	LOG_RENDER_INFO("[MINIMAP] Minimap click: redirection to ({},{})", new_map_x, new_map_y);
 	g_gui.SetScreenCenterPosition(Position(new_map_x, new_map_y, g_gui.GetCurrentFloor()));
 	Refresh();
 	g_gui.RefreshView();

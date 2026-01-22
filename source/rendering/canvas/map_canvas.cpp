@@ -25,10 +25,37 @@
 #include "../../map.h"
 #include "../../ground_brush.h"
 #include "../opengl/gl_context.h"
-#include <wx/dcclient.h>
-#include "../input/selection_handler.h"
-#include "../input/brush_handler.h"
-#include "../input/camera_handler.h"
+#include "../opengl/gl_includes.h"
+#include "../opengl/gl_primitives.h"
+#include "../renderers/tile_renderer.h"
+#include "../renderers/item_renderer.h"
+#include "../renderers/creature_renderer.h"
+#include "../renderers/selection_renderer.h"
+#include "../renderers/brush_renderer.h"
+#include "../renderers/grid_renderer.h"
+#include "../renderers/light_renderer.h"
+#include "../renderers/tooltip_renderer.h"
+#include "../renderers/ui_renderer.h"
+#include "../renderers/font_renderer.h"
+// Forward declarations for wxWidgets types
+class wxMouseEvent;
+class wxKeyEvent;
+
+// Forward declarations for wxWidgets types
+class wxMouseEvent;
+class wxKeyEvent;
+
+// Renderers for dependency injection
+#include "../renderers/tile_renderer.h"
+#include "../renderers/item_renderer.h"
+#include "../renderers/creature_renderer.h"
+#include "../renderers/selection_renderer.h"
+#include "../renderers/brush_renderer.h"
+#include "../renderers/grid_renderer.h"
+#include "../renderers/light_renderer.h"
+#include "../renderers/tooltip_renderer.h"
+#include "../renderers/ui_renderer.h"
+#include "../renderers/font_renderer.h"
 
 namespace rme {
 	namespace canvas {
@@ -50,19 +77,38 @@ namespace rme {
 
 		EVT_KEY_DOWN(MapCanvas::OnKeyDown)
 		EVT_KEY_UP(MapCanvas::OnKeyUp)
+		EVT_TIMER(ANIMATION_TIMER_ID, MapCanvas::OnTimer)
 		END_EVENT_TABLE()
 
 		MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attribList) :
 			wxGLCanvas(parent, wxID_ANY, attribList, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
 			editor_(editor), parent_(parent) {
-			renderCoordinator_ = std::make_unique<render::RenderCoordinator>();
+			// Create renderers via dependency injection
+			renderCoordinator_ = std::make_unique<render::RenderCoordinator>(
+				std::make_unique<render::TileRenderer>(),
+				std::make_unique<render::ItemRenderer>(),
+				std::make_unique<render::CreatureRenderer>(),
+				std::make_unique<render::SelectionRenderer>(),
+				std::make_unique<render::BrushRenderer>(),
+				std::make_unique<render::GridRenderer>(),
+				std::make_unique<render::LightRenderer>(),
+				std::make_unique<render::TooltipRenderer>(),
+				std::make_unique<render::UIRenderer>(),
+				std::make_unique<render::FontRenderer>()
+			);
 
 			// Create handlers
 			brushHandler_ = std::make_unique<input::BrushInputHandler>(this, editor_);
 			cameraHandler_ = std::make_unique<input::CameraInputHandler>(this);
 			selectionHandler_ = std::make_unique<input::SelectionInputHandler>(this, editor_);
 
-			LOG_INFO("MapCanvas created for editor instance");
+			LOG_RENDER_INFO("[CANVAS] MapCanvas created - Parent: {}, Editor: {}", (void*)parent, (void*)&editor);
+
+			// Connect ViewManager to canvas redraw
+			viewManager_.addViewChangeListener([this]() {
+				syncRenderState(); // Ensure RenderState/InputDispatcher are in sync with ViewManager
+				requestRedraw();
+			});
 		}
 
 		MapCanvas::~MapCanvas() {
@@ -70,8 +116,9 @@ namespace rme {
 		}
 
 		void MapCanvas::initialize() {
-			LOG_INFO("MapCanvas::initialize() called");
+			LOG_RENDER_INFO("[CANVAS] Initializing MapCanvas...");
 			if (initialized_) {
+				LOG_RENDER_WARN("[CANVAS] MapCanvas already initialized");
 				return;
 			}
 
@@ -80,33 +127,44 @@ namespace rme {
 			SetCurrent(*glContext_);
 
 			// Initialize GLAD
+			LOG_RENDER_INFO("[CANVAS] Initializing GLAD...");
 			render::gl::initializeGLAD();
 
 			// Initialize render coordinator
 			renderCoordinator_->initialize();
 
 			// Initialize input dispatcher and register receivers
-			inputDispatcher_.initialize();
+			// Share ViewManager's coordinate mapper to ensure consistent state
+			inputDispatcher_.initialize(&viewManager_.getCoordinateMapper());
 			inputDispatcher_.addReceiver(this);
 			inputDispatcher_.addReceiver(brushHandler_.get());
 			inputDispatcher_.addReceiver(cameraHandler_.get());
 			inputDispatcher_.addReceiver(selectionHandler_.get());
 
+			// Initialize animation
+			animationTimer_.SetOwner(this, ANIMATION_TIMER_ID);
+			animationTimer_.Start(10); // 100 FPS target for smooth animations
+			animationManager_.start();
+			animationManager_.setRedrawCallback([this]() {
+				requestRedraw();
+			});
+
 			// Set initial viewport
 			int w, h;
 			GetClientSize(&w, &h);
-			viewportWidth_ = w;
-			viewportHeight_ = h;
-			inputDispatcher_.setViewport(viewportWidth_, viewportHeight_, zoom_);
-			inputDispatcher_.setFloor(floor_);
+			viewManager_.setViewportSize(w, h);
+
+			// InputDispatcher shares state via pointer, so no manual sync needed here
 
 			// Sync render state
 			syncRenderState();
 
 			initialized_ = true;
+			LOG_RENDER_INFO("[CANVAS] MapCanvas initialization complete");
 		}
 
 		void MapCanvas::shutdown() {
+			LOG_RENDER_INFO("[CANVAS] Shutting down MapCanvas...");
 			if (!initialized_) {
 				return;
 			}
@@ -114,22 +172,33 @@ namespace rme {
 			inputDispatcher_.shutdown();
 			renderCoordinator_->shutdown();
 
+			animationTimer_.Stop();
+			animationManager_.stop();
+
 			delete glContext_;
 			glContext_ = nullptr;
 
 			initialized_ = false;
+			LOG_RENDER_INFO("[CANVAS] MapCanvas shutdown complete");
 		}
 
 		void MapCanvas::OnSize(wxSizeEvent& event) {
 			int w, h;
 			GetClientSize(&w, &h);
-			setViewportSize(w, h);
+			LOG_RENDER_INFO("[CANVAS] Resize event - New Size: {}x{}", w, h);
+			viewManager_.setViewportSize(w, h);
 			event.Skip();
+		}
+
+		void MapCanvas::OnTimer(wxTimerEvent& WXUNUSED(event)) {
+			// Update animation manager, which may trigger redraw
+			animationManager_.update();
 		}
 
 		void MapCanvas::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 			// LOG_TRACE("MapCanvas::OnPaint");
 			if (!initialized_) {
+				LOG_RENDER_INFO("[CANVAS] First paint - Triggering initialization");
 				initialize();
 			}
 
@@ -145,25 +214,25 @@ namespace rme {
 
 		void MapCanvas::GetScreenCenter(int* x, int* y) {
 			if (x) {
-				*x = scrollX_ + (viewportWidth_ / 2) / zoom_;
+				*x = viewManager_.getScrollX() + (viewManager_.getViewportWidth() / 2) / viewManager_.getZoom();
 			}
 			if (y) {
-				*y = scrollY_ + (viewportHeight_ / 2) / zoom_;
+				*y = viewManager_.getScrollY() + (viewManager_.getViewportHeight() / 2) / viewManager_.getZoom();
 			}
 		}
 
 		void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) {
 			if (view_scroll_x) {
-				*view_scroll_x = scrollX_;
+				*view_scroll_x = viewManager_.getScrollX();
 			}
 			if (view_scroll_y) {
-				*view_scroll_y = scrollY_;
+				*view_scroll_y = viewManager_.getScrollY();
 			}
 			if (screensize_x) {
-				*screensize_x = viewportWidth_;
+				*screensize_x = viewManager_.getViewportWidth();
 			}
 			if (screensize_y) {
-				*screensize_y = viewportHeight_;
+				*screensize_y = viewManager_.getViewportHeight();
 			}
 		}
 
@@ -306,59 +375,51 @@ namespace rme {
 		}
 
 		void MapCanvas::setViewportSize(int width, int height) {
-			viewportWidth_ = width;
-			viewportHeight_ = height;
-			inputDispatcher_.setViewport(width, height, zoom_);
-			syncRenderState();
-			requestRedraw();
+			viewManager_.setViewportSize(width, height);
 		}
 
 		void MapCanvas::setZoom(float zoom) {
-			zoom_ = zoom;
-			inputDispatcher_.setViewport(viewportWidth_, viewportHeight_, zoom);
-			syncRenderState();
-			requestRedraw();
+			viewManager_.setZoom(zoom);
 		}
 
 		void MapCanvas::setFloor(int floor) {
-			floor_ = floor;
-			inputDispatcher_.setFloor(floor);
-			syncRenderState();
-			requestRedraw();
+			viewManager_.setFloor(floor);
 		}
 
 		void MapCanvas::setScroll(int scrollX, int scrollY) {
-			scrollX_ = scrollX;
-			scrollY_ = scrollY;
-			inputDispatcher_.setScroll(scrollX, scrollY);
-			syncRenderState();
-			requestRedraw();
+			viewManager_.setScroll(scrollX, scrollY);
 		}
 
 		void MapCanvas::syncRenderState() {
 			renderState_.setEditor(&editor_);
 
-			// Pull state from parent window
-			if (parent_) {
-				parent_->GetViewSize(&viewportWidth_, &viewportHeight_);
-				parent_->GetViewStart(&scrollX_, &scrollY_);
-			}
+			// Pull state from parent window if needed? No, ViewManager is truth now
+			// EXCEPT initialization pulling from parent (which usually happens via scrollbars)
+			// MapWindow updates scrollbars which calls setScroll on Canvas.
+			// So Canvas -> ViewManager is the flow.
 
-			renderState_.setViewport(viewportWidth_, viewportHeight_, zoom_);
-			renderState_.setFloor(floor_);
-			renderState_.setScroll(scrollX_, scrollY_);
+			renderState_.setViewport(viewManager_.getViewportWidth(), viewManager_.getViewportHeight(), viewManager_.getZoom());
+			renderState_.setFloor(viewManager_.getFloor());
+			renderState_.setScroll(viewManager_.getScrollX(), viewManager_.getScrollY());
+			renderState_.setTime(animationManager_.getTime());
 
-			// Update InputDispatcher with the synced state
-			inputDispatcher_.setViewport(viewportWidth_, viewportHeight_, zoom_);
-			inputDispatcher_.setFloor(floor_);
-			inputDispatcher_.setScroll(scrollX_, scrollY_);
+			// InputDispatcher uses shared mapper pointer, so it is automatically in sync
+			// No validation needed here
 
 			// Calculate visible tile range
-			auto& mapper = inputDispatcher_.coordinateMapper();
-			renderState_.setVisibleRange(
-				mapper.startTileX(), mapper.startTileY(),
-				mapper.endTileX(), mapper.endTileY()
-			);
+			const auto* mapper = inputDispatcher_.coordinateMapper();
+			if (mapper) {
+				renderState_.setVisibleRange(
+					mapper->startTileX(), mapper->startTileY(),
+					mapper->endTileX(), mapper->endTileY()
+				);
+
+				// Update mouse map position (it changes when view scrolls, even if screen pos is static)
+				auto screenPos = inputDispatcher_.mouseScreenPos();
+				auto mapPos = mapper->screenToMap(screenPos);
+				renderState_.setMousePosition(mapPos.x, mapPos.y);
+			}
+			// LOG_RENDER_TRACE("[CANVAS] Render state synced - Zoom: {}, Scroll: ({},{}), Visible: ({},{}) to ({},{})", zoom_, scrollX_, scrollY_, mapper.startTileX(), mapper.startTileY(), mapper.endTileX(), mapper.endTileY());
 
 			renderState_.options.isDrawing = drawing_;
 			renderState_.options.isDragging = dragging_;
@@ -372,10 +433,12 @@ namespace rme {
 			}
 
 			// Render using the coordinator
+			// LOG_RENDER_TRACE("[FRAME] Starting frame render pass");
 			renderCoordinator_->render(renderState_);
 
 			SwapBuffers();
 			needsRedraw_ = false;
+			// LOG_RENDER_TRACE("[FRAME] Frame render complete, buffers swapped");
 		}
 
 		void MapCanvas::requestRedraw() {
@@ -431,6 +494,7 @@ namespace rme {
 
 		// InputReceiver callbacks - handle application-level input
 		void MapCanvas::onMouseMove(const input::MouseEvent& event) {
+			// LOG_RENDER_TRACE("[INPUT] Mouse move - Screen: ({},{}), Map: ({},{})", event.screenPos.x, event.screenPos.y, event.mapPos.x, event.mapPos.y);
 			renderState_.setMousePosition(event.mapPos.x, event.mapPos.y);
 			requestRedraw();
 		}
@@ -449,25 +513,35 @@ namespace rme {
 
 		void MapCanvas::onMouseWheel(const input::MouseEvent& event) {
 			if (event.modifiers.ctrl) {
-				float newZoom = zoom_ + (event.wheelDelta > 0 ? 0.1f : -0.1f);
-				newZoom = std::max(0.1f, std::min(4.0f, newZoom));
-				setZoom(newZoom);
-			} else {
-				int newFloor = floor_ + (event.wheelDelta > 0 ? -1 : 1);
+				// Legacy: Ctrl + Wheel = Change Floor
+				// Up (Positive) = Move Up a floor (Decrease Z)
+				// Down (Negative) = Move Down a floor (Increase Z)
+				int newFloor = viewManager_.getFloor() + (event.wheelDelta > 0 ? -1 : 1);
 				newFloor = std::max(0, std::min(15, newFloor));
 				setFloor(newFloor);
+			} else if (event.modifiers.alt) {
+				// Legacy: Alt + Wheel = Change Brush Size
+				if (event.wheelDelta > 0) {
+					LOG_RENDER_DEBUG("[INPUT] Increasing brush size via Alt+Wheel");
+					g_gui.IncreaseBrushSize();
+				} else {
+					LOG_RENDER_DEBUG("[INPUT] Decreasing brush size via Alt+Wheel");
+					g_gui.DecreaseBrushSize();
+				}
+				requestRedraw();
 			}
+			// Default (No modifiers) is ignored here, handled by CameraHandler for Zoom.
 		}
 
 		void MapCanvas::onKeyDown(const input::KeyEvent& event) {
 			switch (event.keyCode) {
 				case WXK_NUMPAD_ADD:
 				case WXK_PAGEUP:
-					g_gui.ChangeFloor(floor_ - 1);
+					g_gui.ChangeFloor(viewManager_.getFloor() - 1);
 					break;
 				case WXK_NUMPAD_SUBTRACT:
 				case WXK_PAGEDOWN:
-					g_gui.ChangeFloor(floor_ + 1);
+					g_gui.ChangeFloor(viewManager_.getFloor() + 1);
 					break;
 				case '[':
 				case '+':
@@ -503,7 +577,7 @@ namespace rme {
 					}
 
 					if (parent_) {
-						parent_->ScrollRelative(int(dx * 32 * zoom_), int(dy * 32 * zoom_));
+						parent_->ScrollRelative(int(dx * 32), int(dy * 32));
 					}
 					requestRedraw();
 					break;

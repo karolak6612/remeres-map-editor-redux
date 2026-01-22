@@ -124,7 +124,9 @@ void DCButton::OnPaint(wxPaintEvent& event) {
 		size_y = 36;
 	}
 
-	pdc.SetBrush(*wxBLACK);
+	// Use configured background color or specific default
+	int bgVal = g_settings.getInteger(Config::ICON_BACKGROUND);
+	pdc.SetBrush(wxBrush(wxColor(bgVal, bgVal, bgVal)));
 	pdc.DrawRectangle(0, 0, size_x, size_y);
 	if (type == DC_BTN_TOGGLE && GetValue()) {
 		pdc.SetPen(*shadow_pen);

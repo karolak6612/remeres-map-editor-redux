@@ -18,14 +18,11 @@
 #ifndef RME_GRAPHICS_H_
 #define RME_GRAPHICS_H_
 
-#include "../outfit.h"
-#include "../common.h"
+#include "outfit.h"
+#include "common.h"
 #include <deque>
-#include <memory>
 
-#include "../client_version.h"
-#include "texture/texture_manager.h"
-#include "texture/texture_cache.h"
+#include "client_version.h"
 
 enum SpriteSize {
 	SPRITE_SIZE_16x16,
@@ -34,7 +31,10 @@ enum SpriteSize {
 	SPRITE_SIZE_COUNT
 };
 
-// AnimationDirection now in texture/animator.h
+enum AnimationDirection {
+	ANIMATION_FORWARD = 0,
+	ANIMATION_BACKWARD = 1
+};
 
 enum ItemAnimationDuration {
 	ITEM_FRAME_DURATION = 500
@@ -44,13 +44,6 @@ class MapCanvas;
 class GraphicManager;
 class FileReadHandle;
 class Animator;
-class wxStopWatch;
-
-namespace rme {
-	namespace render {
-		class SpriteLoader;
-	}
-}
 
 struct SpriteLight {
 	uint8_t intensity = 0;
@@ -82,12 +75,193 @@ protected:
 	wxBitmap* bm[SPRITE_SIZE_COUNT];
 };
 
-// Forward declaration - GameSprite is defined in texture/sprite_types.h
-// Include that file directly where GameSprite is needed
-class GameSprite;
+class GameSprite : public Sprite {
+public:
+	GameSprite();
+	~GameSprite();
 
-// FrameDuration and Animator are in texture/animator.h
-// They are now separate from graphics.h
+	int getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
+	GLuint getHardwareID(int _x, int _y, int _layer, int _subtype, int _pattern_x, int _pattern_y, int _pattern_z, int _frame);
+	GLuint getHardwareID(int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit, int _frame); // CreatureDatabase
+	virtual void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1);
+
+	virtual void unloadDC();
+
+	void clean(int time);
+
+	int getDrawHeight() const;
+	std::pair<int, int> getDrawOffset() const;
+	uint8_t getMiniMapColor() const;
+
+	bool hasLight() const noexcept {
+		return has_light;
+	}
+	const SpriteLight& getLight() const noexcept {
+		return light;
+	}
+
+protected:
+	class Image;
+	class NormalImage;
+	class TemplateImage;
+
+	wxMemoryDC* getDC(SpriteSize size);
+	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
+
+	class Image {
+	public:
+		Image();
+		virtual ~Image();
+
+		bool isGLLoaded;
+		int lastaccess;
+
+		void visit();
+		virtual void clean(int time);
+
+		virtual GLuint getHardwareID() = 0;
+		virtual uint8_t* getRGBData() = 0;
+		virtual uint8_t* getRGBAData() = 0;
+
+	protected:
+		virtual void createGLTexture(GLuint whatid);
+		virtual void unloadGLTexture(GLuint whatid);
+	};
+
+	class NormalImage : public Image {
+	public:
+		NormalImage();
+		virtual ~NormalImage();
+
+		// We use the sprite id as GL texture id
+		uint32_t id;
+
+		// This contains the pixel data
+		uint16_t size;
+		uint8_t* dump;
+
+		virtual void clean(int time);
+
+		virtual GLuint getHardwareID();
+		virtual uint8_t* getRGBData();
+		virtual uint8_t* getRGBAData();
+
+	protected:
+		virtual void createGLTexture(GLuint ignored = 0);
+		virtual void unloadGLTexture(GLuint ignored = 0);
+	};
+
+	class TemplateImage : public Image {
+	public:
+		TemplateImage(GameSprite* parent, int v, const Outfit& outfit);
+		virtual ~TemplateImage();
+
+		virtual GLuint getHardwareID();
+		virtual uint8_t* getRGBData();
+		virtual uint8_t* getRGBAData();
+
+		GLuint gl_tid;
+		GameSprite* parent;
+		int sprite_index;
+		uint8_t lookHead;
+		uint8_t lookBody;
+		uint8_t lookLegs;
+		uint8_t lookFeet;
+
+	protected:
+		void colorizePixel(uint8_t color, uint8_t& r, uint8_t& b, uint8_t& g);
+
+		virtual void createGLTexture(GLuint ignored = 0);
+		virtual void unloadGLTexture(GLuint ignored = 0);
+	};
+
+	uint32_t id;
+	wxMemoryDC* dc[SPRITE_SIZE_COUNT];
+
+public:
+	// GameSprite info
+	uint8_t height;
+	uint8_t width;
+	uint8_t layers;
+	uint8_t pattern_x;
+	uint8_t pattern_y;
+	uint8_t pattern_z;
+	uint8_t frames;
+	uint32_t numsprites;
+
+	Animator* animator;
+
+	uint16_t draw_height;
+	uint16_t drawoffset_x;
+	uint16_t drawoffset_y;
+
+	uint16_t minimap_color;
+
+	bool has_light = false;
+	SpriteLight light;
+
+	std::vector<NormalImage*> spriteList;
+	std::list<TemplateImage*> instanced_templates; // Templates that use this sprite
+
+	friend class GraphicManager;
+};
+
+struct FrameDuration {
+	int min;
+	int max;
+
+	FrameDuration(int min, int max) :
+		min(min), max(max) {
+		ASSERT(min <= max);
+	}
+
+	int getDuration() const {
+		if (min == max) {
+			return min;
+		}
+		return uniform_random(min, max);
+	};
+
+	void setValues(int min, int max) {
+		ASSERT(min <= max);
+		this->min = min;
+		this->max = max;
+	}
+};
+
+class Animator {
+public:
+	Animator(int frames, int start_frame, int loop_count, bool async);
+	~Animator();
+
+	int getStartFrame() const;
+
+	FrameDuration* getFrameDuration(int frame);
+
+	int getFrame();
+	void setFrame(int frame);
+
+	void reset();
+
+private:
+	int getDuration(int frame) const;
+	int getPingPongFrame();
+	int getLoopFrame();
+	void calculateSynchronous();
+
+	int frame_count;
+	int start_frame;
+	int loop_count;
+	bool async;
+	std::vector<FrameDuration*> durations;
+	int current_frame;
+	int current_loop;
+	int current_duration;
+	int total_duration;
+	AnimationDirection direction;
+	long last_time;
+	bool is_complete;
+};
 
 class GraphicManager {
 public:
@@ -112,52 +286,60 @@ public:
 
 	// This is part of the binary
 	bool loadEditorSprites();
-	// Loading logic is now in SpriteLoader
-	rme::render::SpriteLoader& getSpriteLoader() {
-		return *spriteLoader_;
-	}
+	// Metadata should be loaded first
+	// This fills the item / creature adress space
+	bool loadOTFI(const FileName& filename, wxString& error, wxArrayString& warnings);
+	bool loadSpriteMetadata(const FileName& datafile, wxString& error, wxArrayString& warnings);
+	bool loadSpriteMetadataFlags(FileReadHandle& file, GameSprite* sType, wxString& error, wxArrayString& warnings);
+	bool loadSpriteData(const FileName& datafile, wxString& error, wxArrayString& warnings);
 
 	// Cleans old & unused textures according to config settings
 	void garbageCollection();
 	void addSpriteToCleanup(GameSprite* spr);
 
-	wxFileName getMetadataFileName() const;
-	wxFileName getSpritesFileName() const;
+	wxFileName getMetadataFileName() const {
+		return metadata_file;
+	}
+	wxFileName getSpritesFileName() const {
+		return sprites_file;
+	}
 
 	bool hasTransparency() const;
-	bool isUnloaded() const {
-		return unloaded;
-	}
+	bool isUnloaded() const;
 
 	ClientVersion* client_version;
 
 private:
 	bool unloaded;
-	// New: Composed texture subsystems
-	std::unique_ptr<rme::render::TextureManager> textureManager_;
-	std::unique_ptr<rme::render::TextureCache> textureCache_;
-	std::unique_ptr<rme::render::SpriteLoader> spriteLoader_;
-	wxStopWatch* animation_timer;
-
-	// Legacy type aliases for internal use during migration
-	using SpriteMap = rme::render::TextureManager::SpriteMap;
-	using ImageMap = rme::render::TextureManager::ImageMap;
-
-	// Accessors for internal maps (delegates to TextureManager)
-
-	// Internal access for legacy/migration support
-	rme::render::TextureManager& getTextureManager() {
-		return *textureManager_;
-	}
-
+	// This is used if memcaching is NOT on
+	std::string spritefile;
 	bool loadSpriteDump(uint8_t*& target, uint16_t& size, int sprite_id);
 
-	// Note: GameSprite friend declarations removed - GameSprite is now in sprite_types.h
-	// but we restore it for loadSpriteDump access until further refactoring
-	friend class GameSprite;
-	friend class rme::render::SpriteLoader;
-	friend class rme::render::TextureManager;
-	friend class rme::render::TextureCache;
+	typedef std::map<int, Sprite*> SpriteMap;
+	SpriteMap sprite_space;
+	typedef std::map<int, GameSprite::Image*> ImageMap;
+	ImageMap image_space;
+	std::deque<GameSprite*> cleanup_list;
+
+	DatFormat dat_format;
+	uint16_t item_count;
+	uint16_t creature_count;
+	bool otfi_found;
+	bool is_extended;
+	bool has_transparency;
+	bool has_frame_durations;
+	bool has_frame_groups;
+	wxFileName metadata_file;
+	wxFileName sprites_file;
+
+	int loaded_textures;
+	int lastclean;
+
+	wxStopWatch* animation_timer;
+
+	friend class GameSprite::Image;
+	friend class GameSprite::NormalImage;
+	friend class GameSprite::TemplateImage;
 };
 
 struct RGBQuad {

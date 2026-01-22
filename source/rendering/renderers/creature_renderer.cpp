@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "creature_renderer.h"
 #include "../opengl/gl_state.h"
@@ -30,6 +31,7 @@ namespace rme {
 		}
 
 		void CreatureRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing CreatureRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -38,6 +40,7 @@ namespace rme {
 		}
 
 		void CreatureRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down CreatureRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -47,6 +50,7 @@ namespace rme {
 
 		void CreatureRenderer::bindTexture(GLuint textureId) {
 			if (lastBoundTexture_ != textureId) {
+				LOG_RENDER_TRACE("[RESOURCE] Binding creature texture: {}", textureId);
 				gl::GLState::instance().bindTexture2D(textureId);
 				lastBoundTexture_ = textureId;
 			}

@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "animator.h"
 #include "../graphics.h"
@@ -29,6 +30,7 @@ Animator::Animator(int frame_count, int start_frame, int loop_count, bool async)
 	}
 
 	reset();
+	LOG_RENDER_DEBUG("[RESOURCE] Animator created - Frames: {}, Start: {}, Loop: {}, Async: {}", frame_count, start_frame, loop_count, async);
 }
 
 Animator::~Animator() {
@@ -119,6 +121,7 @@ void Animator::reset() {
 	direction = ANIMATION_FORWARD;
 	current_loop = 0;
 	async = false;
+	LOG_RENDER_DEBUG("[RESOURCE] Animator reset");
 	setFrame(-1);
 }
 

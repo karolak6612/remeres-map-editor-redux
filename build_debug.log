@@ -1,6 +1,6 @@
 ======================================== 
- RME Windows Build Script 
- Started: czw. 22.01.2026 14:53:09,04 
+ RME Windows Build Script (RelWithDebInfo) 
+ Started: czw. 22.01.2026 13:48:57,75 
 ======================================== 
 [1/3] Configuring CMake... 
 -- Running vcpkg install
@@ -184,50 +184,50 @@ The package wxwidgets provides CMake targets:
     find_package(wxWidgets CONFIG REQUIRED)
     target_link_libraries(main PRIVATE wx::core wx::base)
 
-All requested installations completed successfully in: 1.48 ms
+All requested installations completed successfully in: 1.2 ms
 -- Running vcpkg install - done
 -- Selecting Windows SDK version 10.0.26100.0 to target Windows 10.0.26200.
 -- Console window enabled for debugging
--- Configuring done (2.2s)
+-- Configuring done (2.1s)
 -- Generating done (0.1s)
--- Build files have been written to: C:/Users/karol/Documents/GitHub/RME_v2/build
-[2/3] Building Release... 
+-- Build files have been written to: C:/Users/karol/Documents/GitHub/RME_v2/build_relwithdebinfo
+[2/3] Building RelWithDebInfo... 
 Wersja programu MSBuild 17.14.23+b0019275e dla .NET Framework
 
   Trwa skanowanie źródeł pod kątem zależności modułów...
-  map_canvas.cpp
+  input_dispatcher.cpp
+  basemap.cpp
+  map_window.cpp
+  render_coordinator.cpp
   Trwa kompilowanie…
-  process_com.cpp
-  result_window.cpp
-  map_canvas.cpp
-  preferences.cpp
-  selection.cpp
-  replace_items_window.cpp
-  wall_brush.cpp
-  tileset_window.cpp
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\item_renderer.h(28,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/canvas/map_canvas.cpp”)
+  basemap.cpp
+  render_coordinator.cpp
+  map_window.cpp
+  input_dispatcher.cpp
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\item_renderer.h(28,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/pipeline/render_coordinator.cpp”)
       C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(29,7):
       zobacz deklarację „Position”
   
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\creature_renderer.h(25,7): warning C4099: "Outfit": nazwa typu najpierw widoczna przy użyciu "struct" teraz widoczna przy użyciu "class" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/canvas/map_canvas.cpp”)
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\creature_renderer.h(25,7): warning C4099: "Outfit": nazwa typu najpierw widoczna przy użyciu "struct" teraz widoczna przy użyciu "class" [C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/pipeline/render_coordinator.cpp”)
       C:\Users\karol\Documents\GitHub\RME_v2\source\outfit.h(23,8):
       zobacz deklarację „Outfit”
   
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.h(27,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/canvas/map_canvas.cpp”)
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\selection_renderer.h(27,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/pipeline/render_coordinator.cpp”)
       C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(29,7):
       zobacz deklarację „Position”
   
-C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\brush_renderer.h(27,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build\rme.vcxproj]
-  (kompilowanie pliku źródłowego „../source/rendering/canvas/map_canvas.cpp”)
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\renderers\brush_renderer.h(27,8): warning C4099: "Position": nazwa typu najpierw widoczna przy użyciu "class" teraz widoczna przy użyciu "struct" [C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\rme.vcxproj]
+  (kompilowanie pliku źródłowego „../source/rendering/pipeline/render_coordinator.cpp”)
       C:\Users\karol\Documents\GitHub\RME_v2\source\position.h(29,7):
       zobacz deklarację „Position”
   
-  rme.vcxproj -> C:\Users\karol\Documents\GitHub\RME_v2\build\Release\rme.exe
+C:\Users\karol\Documents\GitHub\RME_v2\source\rendering\pipeline\render_coordinator.cpp(192,23): warning C4804: ">": niebezpieczne użycie typu "bool" w operacji [C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\rme.vcxproj]
+  rme.vcxproj -> C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\RelWithDebInfo\rme.exe
 ======================================== 
  BUILD SUCCESSFUL 
- Output: C:\Users\karol\Documents\GitHub\RME_v2\build\Release\rme.exe 
- Finished: czw. 22.01.2026 14:53:20,91 
+ Output: C:\Users\karol\Documents\GitHub\RME_v2\build_relwithdebinfo\RelWithDebInfo\rme.exe 
+ Finished: czw. 22.01.2026 13:49:08,26 
 ======================================== 

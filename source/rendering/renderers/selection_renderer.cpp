@@ -1,3 +1,4 @@
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "selection_renderer.h"
 #include "../../selection.h"
@@ -25,6 +26,7 @@ namespace rme {
 		}
 
 		void SelectionRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing SelectionRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -33,6 +35,7 @@ namespace rme {
 		}
 
 		void SelectionRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down SelectionRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -40,6 +43,7 @@ namespace rme {
 		}
 
 		void SelectionRenderer::renderSelectionBox(int startX, int startY, int endX, int endY, const Color& color) {
+			LOG_RENDER_TRACE("[SELECTION] Rendering selection box: ({},{}) to ({},{})", startX, startY, endX, endY);
 			int x1 = std::min(startX, endX);
 			int y1 = std::min(startY, endY);
 			int x2 = std::max(startX, endX);
@@ -97,6 +101,8 @@ namespace rme {
 			if (!selection || selection->isBusy() || !initialized_) {
 				return;
 			}
+
+			LOG_RENDER_TRACE("[SELECTION] Rendering drag shadow - Offset: ({},{})", offsetX, offsetY);
 
 			// Logic ported from MapDrawer::DrawDraggingShadow
 			// offsetX/offsetY are map coordinate deltas

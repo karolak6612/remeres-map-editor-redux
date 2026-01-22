@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "input_dispatcher.h"
 #include <chrono>
@@ -24,22 +25,22 @@ namespace rme {
 
 		InputDispatcher::InputDispatcher() = default;
 
-		void InputDispatcher::initialize() {
+		void InputDispatcher::initialize(const CoordinateMapper* mapper) {
+			LOG_RENDER_INFO("[INPUT] Initializing InputDispatcher...");
 			if (initialized_) {
 				return;
 			}
 
-			// Connect mouse handler to coordinate mapper
-			mouseHandler_.setCoordinateMapper(&coordinateMapper_);
+			coordinateMapper_ = mapper;
 
-			// Setup default viewport
-			coordinateMapper_.setTileSize(32);
-			coordinateMapper_.setViewport(800, 600, 1.0f);
+			// Connect mouse handler to coordinate mapper
+			mouseHandler_.setCoordinateMapper(coordinateMapper_);
 
 			initialized_ = true;
 		}
 
 		void InputDispatcher::shutdown() {
+			LOG_RENDER_INFO("[INPUT] Shutting down InputDispatcher...");
 			receivers_.clear();
 			initialized_ = false;
 		}
@@ -105,18 +106,6 @@ namespace rme {
 			});
 		}
 
-		void InputDispatcher::setViewport(int width, int height, float zoom) {
-			coordinateMapper_.setViewport(width, height, zoom);
-		}
-
-		void InputDispatcher::setScroll(int scrollX, int scrollY) {
-			coordinateMapper_.setScroll(scrollX, scrollY);
-		}
-
-		void InputDispatcher::setFloor(int floor) {
-			coordinateMapper_.setFloor(floor);
-		}
-
 		KeyModifiers InputDispatcher::makeModifiers(bool ctrl, bool alt, bool shift) {
 			KeyModifiers mods;
 			mods.ctrl = ctrl;
@@ -127,6 +116,7 @@ namespace rme {
 		}
 
 		void InputDispatcher::handleMouseMove(int x, int y, bool ctrl, bool alt, bool shift) {
+			// LOG_RENDER_TRACE("[INPUT] Mouse move: ({}, {}) - Modifiers: C={}, A={}, S={}", x, y, ctrl, alt, shift);
 			mouseHandler_.onMouseMove(x, y, makeModifiers(ctrl, alt, shift));
 		}
 
@@ -155,6 +145,8 @@ namespace rme {
 			auto now = std::chrono::high_resolution_clock::now();
 			auto duration = now.time_since_epoch();
 			event.timestamp = std::chrono::duration_cast<std::chrono::microseconds>(duration).count() / 1000000.0;
+
+			LOG_RENDER_INFO("[INPUT] Key down: {} - Modifiers: C={}, A={}, S={}", keyCode, ctrl, alt, shift);
 
 			for (auto* receiver : receivers_) {
 				receiver->onKeyDown(event);

@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "texture_cache.h"
 #include "texture_manager.h"
@@ -42,12 +43,13 @@ namespace rme {
 
 			// Only clean if we have enough textures and enough time has passed
 			if (loadedTextures > config_.cleanThreshold && currentTime - lastClean_ > config_.cleanPulse) {
+				LOG_RENDER_INFO("[RESOURCE] Triggering TextureCache garbage collection... Loaded textures: {}", loadedTextures);
 
 				// Note: Image cleanup must be done through GameSprite's public interface
 				// since GameSprite::Image is protected. We only clean GameSprite instances.
 
 				// Clean game sprites in the sprite space
-				auto& spriteSpace = textureManager_.getSpriteSpace();
+				auto& spriteSpace = textureManager_.spriteSpace_;
 				for (auto& pair : spriteSpace) {
 					GameSprite* gs = dynamic_cast<GameSprite*>(pair.second);
 					if (gs) {

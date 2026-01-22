@@ -157,8 +157,10 @@ void MapWindow::Scroll(int x, int y, bool center) {
 		int windowSizeX, windowSizeY;
 
 		canvas->GetSize(&windowSizeX, &windowSizeY);
-		x -= int((windowSizeX * g_gui.GetCurrentZoom()) / 2.0);
-		y -= int((windowSizeY * g_gui.GetCurrentZoom()) / 2.0);
+		// LOG_RENDER_DEBUG("[SCROLL] Centering - WindowSize: {}x{}, Zoom: {}, Target before offset: ({},{})", windowSizeX, windowSizeY, g_gui.GetCurrentZoom(), x, y);
+		x -= int((windowSizeX / g_gui.GetCurrentZoom()) / 2.0);
+		y -= int((windowSizeY / g_gui.GetCurrentZoom()) / 2.0);
+		// LOG_RENDER_DEBUG("[SCROLL] Centering - Target after offset: ({},{})", x, y);
 	}
 
 	hScroll->SetThumbPosition(x);

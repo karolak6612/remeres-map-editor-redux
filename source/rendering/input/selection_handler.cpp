@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "selection_handler.h"
 #include "../canvas/map_canvas.h"
@@ -24,6 +25,8 @@ namespace rme {
 			int mouse_map_x = event.mapPos.x;
 			int mouse_map_y = event.mapPos.y;
 			int floor = event.mapPos.z;
+
+			LOG_RENDER_INFO("[SELECTION] Mouse down at ({}, {}, {})", mouse_map_x, mouse_map_y, floor);
 
 			/*
 						if (canvas_->isPasting()) {
@@ -154,6 +157,8 @@ namespace rme {
 					int y1 = std::min(drag.startMap.y, drag.currentMap.y);
 					int x2 = std::max(drag.startMap.x, drag.currentMap.x);
 					int y2 = std::max(drag.startMap.y, drag.currentMap.y);
+
+					LOG_RENDER_INFO("[SELECTION] Committing box selection: ({},{}) to ({},{})", x1, y1, x2, y2);
 
 					editor_.selection.start();
 					for (int y = y1; y <= y2; ++y) {

@@ -44,11 +44,6 @@
 #include "waypoint_brush.h"
 #include "light_drawer.h"
 
-// GL abstraction layer (Phase 2)
-#include "opengl/gl_state.h"
-#include "opengl/gl_primitives.h"
-#include "opengl/gl_context.h"
-
 DrawingOptions::DrawingOptions() {
 	SetDefault();
 }
@@ -169,7 +164,6 @@ void MapDrawer::SetupVars() {
 void MapDrawer::SetupGL() {
 	// Reset texture cache at the start of each frame
 	last_bound_texture_ = 0;
-	rme::render::gl::GLState::instance().resetCache(); // Sync with GL abstraction layer
 
 	glViewport(0, 0, screensize_x, screensize_y);
 
@@ -237,12 +231,11 @@ void MapDrawer::DrawBackground() {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 
-	// Use GLState for blend setup
-	rme::render::gl::GLState::instance().setBlendAlpha();
-	rme::render::gl::GLState::instance().enableBlend();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glEnable(GL_BLEND);
 
-	// Reset state cache for new frame
-	rme::render::gl::GLState::instance().resetCache();
+	// glAlphaFunc(GL_GEQUAL, 0.9f);
+	// glEnable(GL_ALPHA_TEST);
 }
 
 inline int getFloorAdjustment(int floor) {
@@ -280,24 +273,26 @@ void MapDrawer::DrawMap() {
 
 	// Enable texture mode
 	if (!only_colors) {
-		rme::render::gl::GLState::instance().enableTexture2D();
+		glEnable(GL_TEXTURE_2D);
 	}
 
 	for (int map_z = start_z; map_z >= superend_z; map_z--) {
 		if (map_z == end_z && start_z != end_z && options.show_shade) {
-			// Draw shade using GLPrimitives
+			// Draw shade
 			if (!only_colors) {
-				rme::render::gl::GLState::instance().disableTexture2D();
+				glDisable(GL_TEXTURE_2D);
 			}
 
-			rme::render::gl::Primitives::drawFilledQuad(
-				0, 0,
-				int(screensize_x * zoom), int(screensize_y * zoom),
-				rme::render::Color(0, 0, 0, 128)
-			);
+			glColor4ub(0, 0, 0, 128);
+			glBegin(GL_QUADS);
+			glVertex2f(0, int(screensize_y * zoom));
+			glVertex2f(int(screensize_x * zoom), int(screensize_y * zoom));
+			glVertex2f(int(screensize_x * zoom), 0);
+			glVertex2f(0, 0);
+			glEnd();
 
 			if (!only_colors) {
-				rme::render::gl::GLState::instance().enableTexture2D();
+				glEnable(GL_TEXTURE_2D);
 			}
 		}
 
@@ -509,24 +504,19 @@ void MapDrawer::DrawIngameBox() {
 }
 
 void MapDrawer::DrawGrid() {
-	rme::render::gl::GLState::instance().disableTexture2D();
-
-	// Use batched line drawing for efficiency
-	rme::render::gl::Primitives::beginLines(rme::render::Color(255, 255, 255, 128), 1.0f);
-
+	glColor4ub(255, 255, 255, 128);
+	glBegin(GL_LINES);
 	// Batch all horizontal lines
 	for (int y = start_y; y < end_y; ++y) {
-		rme::render::gl::Primitives::addLineVertex(start_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
-		rme::render::gl::Primitives::addLineVertex(end_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
+		glVertex2f(start_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
+		glVertex2f(end_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
 	}
 	// Batch all vertical lines
 	for (int x = start_x; x < end_x; ++x) {
-		rme::render::gl::Primitives::addLineVertex(x * TileSize - view_scroll_x, start_y * TileSize - view_scroll_y);
-		rme::render::gl::Primitives::addLineVertex(x * TileSize - view_scroll_x, end_y * TileSize - view_scroll_y);
+		glVertex2f(x * TileSize - view_scroll_x, start_y * TileSize - view_scroll_y);
+		glVertex2f(x * TileSize - view_scroll_x, end_y * TileSize - view_scroll_y);
 	}
-
-	rme::render::gl::Primitives::endLines();
-	rme::render::gl::GLState::instance().enableTexture2D();
+	glEnd();
 }
 
 void MapDrawer::DrawDraggingShadow() {

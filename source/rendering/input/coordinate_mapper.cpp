@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "coordinate_mapper.h"
 #include <algorithm>
@@ -24,6 +25,7 @@ namespace rme {
 	namespace input {
 
 		void CoordinateMapper::setViewport(int viewWidth, int viewHeight, float zoom) {
+			LOG_RENDER_INFO("[VIEWPORT] Setting CoordinateMapper viewport: {}x{} - Zoom: {}", viewWidth, viewHeight, zoom);
 			viewWidth_ = viewWidth;
 			viewHeight_ = viewHeight;
 			zoom_ = std::max(0.1f, zoom); // Prevent division by zero
@@ -31,6 +33,7 @@ namespace rme {
 		}
 
 		void CoordinateMapper::setScroll(int scrollX, int scrollY) {
+			LOG_RENDER_DEBUG("[VIEWPORT] Setting CoordinateMapper scroll: ({}, {})", scrollX, scrollY);
 			scrollX_ = scrollX;
 			scrollY_ = scrollY;
 			updateVisibleRange();
@@ -46,44 +49,44 @@ namespace rme {
 		}
 
 		MapCoord CoordinateMapper::screenToMap(const ScreenCoord& screen) const {
-			int effectiveSize = effectiveTileSize();
-			if (effectiveSize <= 0) {
-				effectiveSize = 1;
-			}
+			// Convert screen position to world-pixel position by dividing by zoom
+			// Then add scroll offset and divide by base tile size
+			int worldX = static_cast<int>(screen.x / zoom_) + scrollX_;
+			int worldY = static_cast<int>(screen.y / zoom_) + scrollY_;
 
-			// Convert screen position to map tile position
-			int mapX = (screen.x + scrollX_) / effectiveSize;
-			int mapY = (screen.y + scrollY_) / effectiveSize;
-
-			return MapCoord(mapX, mapY, floor_);
+			MapCoord result(worldX / tileSize_, worldY / tileSize_, floor_);
+			// LOG_RENDER_TRACE("[MAPPER] Screen: ({},{}) -> World: ({},{}) -> Map: ({},{}) [Zoom: {}, Scroll: ({},{})]",
+			// 	screen.x, screen.y, worldX, worldY, result.x, result.y, zoom_, scrollX_, scrollY_);
+			return result;
 		}
 
 		ScreenCoord CoordinateMapper::mapToScreen(const MapCoord& map) const {
-			int effectiveSize = effectiveTileSize();
+			// Convert map tile position to world-pixel position
+			// Subtract scroll offset, then multiply by zoom for screen position
+			int worldX = map.x * tileSize_ - scrollX_;
+			int worldY = map.y * tileSize_ - scrollY_;
 
-			// Convert map tile position to screen position
-			int screenX = map.x * effectiveSize - scrollX_;
-			int screenY = map.y * effectiveSize - scrollY_;
-
-			return ScreenCoord(screenX, screenY);
+			return ScreenCoord(
+				static_cast<int>(worldX * zoom_),
+				static_cast<int>(worldY * zoom_)
+			);
 		}
 
 		ScreenCoord CoordinateMapper::getTileOffset(const ScreenCoord& screen) const {
-			int effectiveSize = effectiveTileSize();
-			if (effectiveSize <= 0) {
-				effectiveSize = 1;
-			}
+			// Get world-pixel position
+			int worldX = static_cast<int>(screen.x / zoom_) + scrollX_;
+			int worldY = static_cast<int>(screen.y / zoom_) + scrollY_;
 
-			// Get position within the tile
-			int offsetX = (screen.x + scrollX_) % effectiveSize;
-			int offsetY = (screen.y + scrollY_) % effectiveSize;
+			// Get position within the tile in world-pixels
+			int offsetX = worldX % tileSize_;
+			int offsetY = worldY % tileSize_;
 
 			// Handle negative modulo
 			if (offsetX < 0) {
-				offsetX += effectiveSize;
+				offsetX += tileSize_;
 			}
 			if (offsetY < 0) {
-				offsetY += effectiveSize;
+				offsetY += tileSize_;
 			}
 
 			return ScreenCoord(offsetX, offsetY);
@@ -104,21 +107,20 @@ namespace rme {
 		}
 
 		void CoordinateMapper::updateVisibleRange() {
-			int effectiveSize = effectiveTileSize();
-			if (effectiveSize <= 0) {
-				effectiveSize = 1;
-			}
+			// Calculate visible tile range in world-pixels
+			// Scroll is already in world-pixels
+			startTileX_ = scrollX_ / tileSize_;
+			startTileY_ = scrollY_ / tileSize_;
 
-			// Calculate visible tile range
-			// Note: scrollX_ and scrollY_ are in PIXELS
-			// We need to convert these to tile coordinates
+			// End tile is start + world-pixel width of viewport
+			// World Width = ViewWidth / Zoom
+			int worldWidth = static_cast<int>(viewWidth_ / zoom_);
+			int worldHeight = static_cast<int>(viewHeight_ / zoom_);
 
-			startTileX_ = scrollX_ / effectiveSize;
-			startTileY_ = scrollY_ / effectiveSize;
+			endTileX_ = startTileX_ + (worldWidth / tileSize_) + 2; // +1 for partial tile, +1 for safety
+			endTileY_ = startTileY_ + (worldHeight / tileSize_) + 2;
 
-			// End tile is start + tiles fitting in view
-			endTileX_ = startTileX_ + (viewWidth_ / effectiveSize) + 2; // +1 for partial tile, +1 for safety
-			endTileY_ = startTileY_ + (viewHeight_ / effectiveSize) + 2;
+			LOG_RENDER_DEBUG("[VIEWPORT] Visible tile range updated: ({},{}) to ({},{}) [Zoom: {}]", startTileX_, startTileY_, endTileX_, endTileY_, zoom_);
 		}
 
 	} // namespace input

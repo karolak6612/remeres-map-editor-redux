@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "gl_primitives.h"
 #include "gl_state.h"
 
@@ -23,6 +24,7 @@ namespace rme {
 		namespace gl {
 
 			void Primitives::drawTexturedQuad(int x, int y, int w, int h, float u0, float v0, float u1, float v1) {
+				LOG_RENDER_TRACE("[GL_STATE] drawTexturedQuad - Rect: ({},{},{},{}), UV: ({},{}) to ({},{})", x, y, w, h, u0, v0, u1, v1);
 				glBegin(GL_QUADS);
 				glTexCoord2f(u0, v0);
 				glVertex2i(x, y);
@@ -45,6 +47,7 @@ namespace rme {
 			}
 
 			void Primitives::drawFilledQuad(int x, int y, int w, int h, const Color& color) {
+				LOG_RENDER_TRACE("[GL_STATE] drawFilledQuad - Rect: ({},{},{},{}), Color: ({},{},{},{})", x, y, w, h, color.r, color.g, color.b, color.a);
 				GLState::instance().disableTexture2D();
 				GLState::instance().setColor(color);
 
@@ -157,11 +160,13 @@ namespace rme {
 			}
 
 			void Primitives::setScissor(int x, int y, int w, int h) {
+				LOG_RENDER_DEBUG("[GL_STATE] Enabling scissor test - Rect: ({},{},{},{})", x, y, w, h);
 				glEnable(GL_SCISSOR_TEST);
 				glScissor(x, y, w, h);
 			}
 
 			void Primitives::clearScissor() {
+				LOG_RENDER_DEBUG("[GL_STATE] Disabling scissor test");
 				glDisable(GL_SCISSOR_TEST);
 			}
 

@@ -111,19 +111,6 @@ namespace rme {
 			/// Clean software-only sprite data (wxDC resources)
 			void cleanSoftwareSprites();
 
-			/// Get direct access to sprite space (for migration compatibility)
-			[[nodiscard]] SpriteMap& getSpriteSpace() {
-				return spriteSpace_;
-			}
-			[[nodiscard]] const SpriteMap& getSpriteSpace() const {
-				return spriteSpace_;
-			}
-
-			/// Get direct access to image space (for migration compatibility)
-			[[nodiscard]] ImageMap& getImageSpace() {
-				return imageSpace_;
-			}
-
 			/// Track loaded texture count
 			void incrementLoadedTextures() {
 				++loadedTextures_;
@@ -142,6 +129,9 @@ namespace rme {
 			TextureManager& operator=(const TextureManager&) = delete;
 
 		private:
+			friend class TextureCache;
+			friend class SpriteLoader;
+
 			SpriteMap spriteSpace_;
 			ImageMap imageSpace_;
 

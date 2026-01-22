@@ -1,7 +1,8 @@
 #pragma once
 
 #include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h> // For logging custom types if needed
+#include <spdlog/fmt/ostr.h>
+#include <spdlog/fmt/chrono.h>
 
 #include <memory>
 #include <string>
@@ -22,17 +23,38 @@ private:
 };
 
 // Core logging macros
-#define LOG_TRACE(...) ::Logger::getCoreLogger()->trace(__VA_ARGS__)
-#define LOG_INFO(...) ::Logger::getCoreLogger()->info(__VA_ARGS__)
-#define LOG_WARN(...) ::Logger::getCoreLogger()->warn(__VA_ARGS__)
-#define LOG_ERROR(...) ::Logger::getCoreLogger()->error(__VA_ARGS__)
-#define LOG_CRITICAL(...) ::Logger::getCoreLogger()->critical(__VA_ARGS__)
+#define LOG_TRACE(...)             \
+	if (::Logger::getCoreLogger()) \
+	::Logger::getCoreLogger()->trace(__VA_ARGS__)
+#define LOG_INFO(...)              \
+	if (::Logger::getCoreLogger()) \
+	::Logger::getCoreLogger()->info(__VA_ARGS__)
+#define LOG_WARN(...)              \
+	if (::Logger::getCoreLogger()) \
+	::Logger::getCoreLogger()->warn(__VA_ARGS__)
+#define LOG_ERROR(...)             \
+	if (::Logger::getCoreLogger()) \
+	::Logger::getCoreLogger()->error(__VA_ARGS__)
+#define LOG_CRITICAL(...)          \
+	if (::Logger::getCoreLogger()) \
+	::Logger::getCoreLogger()->critical(__VA_ARGS__)
 
 // Rendering specific macros
-#define LOG_RENDER_TRACE(...) ::Logger::getRenderLogger()->trace(__VA_ARGS__)
-#define LOG_RENDER_INFO(...) ::Logger::getRenderLogger()->info(__VA_ARGS__)
-#define LOG_RENDER_WARN(...) ::Logger::getRenderLogger()->warn(__VA_ARGS__)
-#define LOG_RENDER_ERROR(...) ::Logger::getRenderLogger()->error(__VA_ARGS__)
+#define LOG_RENDER_TRACE(...)        \
+	if (::Logger::getRenderLogger()) \
+	::Logger::getRenderLogger()->trace(__VA_ARGS__)
+#define LOG_RENDER_DEBUG(...)        \
+	if (::Logger::getRenderLogger()) \
+	::Logger::getRenderLogger()->debug(__VA_ARGS__)
+#define LOG_RENDER_INFO(...)         \
+	if (::Logger::getRenderLogger()) \
+	::Logger::getRenderLogger()->info(__VA_ARGS__)
+#define LOG_RENDER_WARN(...)         \
+	if (::Logger::getRenderLogger()) \
+	::Logger::getRenderLogger()->warn(__VA_ARGS__)
+#define LOG_RENDER_ERROR(...)        \
+	if (::Logger::getRenderLogger()) \
+	::Logger::getRenderLogger()->error(__VA_ARGS__)
 
 // OpenGL Error Check Macro
 #ifdef NDEBUG

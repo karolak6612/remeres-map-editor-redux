@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "tile_renderer.h"
 #include "../../editor.h"
@@ -110,6 +111,7 @@ namespace rme {
 
 		void TileRenderer::bindTexture(GLuint textureId) {
 			if (lastBoundTexture_ != textureId) {
+				// LOG_RENDER_TRACE("[RESOURCE] Binding tile texture: {}", textureId);
 				glBindTexture(GL_TEXTURE_2D, textureId);
 				lastBoundTexture_ = textureId;
 			}
@@ -472,8 +474,14 @@ namespace rme {
 			const int screenY = (mapY * kTileSize) - ctx.viewScrollY - offset;
 
 			// Early viewport culling
+			// Projection acts as if the screen is (viewportWidth / zoom) units wide.
+			// So we must cull against this larger world-space-equivalent area.
 			constexpr int margin = kTileSize * 3;
-			if (screenX < -margin || screenX > ctx.screensizeX * ctx.zoom + margin || screenY < -margin || screenY > ctx.screensizeY * ctx.zoom + margin) {
+			float visibleWidth = ctx.screensizeX / ctx.zoom;
+			float visibleHeight = ctx.screensizeY / ctx.zoom;
+
+			if (screenX < -margin || screenX > visibleWidth + margin || screenY < -margin || screenY > visibleHeight + margin) {
+				LOG_RENDER_TRACE("[CULL] Tiled culled at ({},{}) - Screen: ({},{})", mapX, mapY, screenX, screenY);
 				return;
 			}
 

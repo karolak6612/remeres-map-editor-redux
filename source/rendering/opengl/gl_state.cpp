@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "gl_state.h"
 
 namespace rme {
@@ -32,6 +33,7 @@ namespace rme {
 
 			void GLState::bindTexture2D(GLuint textureId) {
 				if (currentTexture_ != textureId) {
+					LOG_RENDER_TRACE("[GL_STATE] Binding texture: {}", textureId);
 					glBindTexture(GL_TEXTURE_2D, textureId);
 					currentTexture_ = textureId;
 				}
@@ -39,6 +41,7 @@ namespace rme {
 
 			void GLState::unbindTexture2D() {
 				if (currentTexture_ != 0) {
+					LOG_RENDER_TRACE("[GL_STATE] Unbinding texture");
 					glBindTexture(GL_TEXTURE_2D, 0);
 					currentTexture_ = 0;
 				}
@@ -46,6 +49,7 @@ namespace rme {
 
 			void GLState::enableBlend() {
 				if (!blendEnabled_) {
+					LOG_RENDER_TRACE("[GL_STATE] Enabling blending");
 					glEnable(GL_BLEND);
 					blendEnabled_ = true;
 				}
@@ -53,6 +57,7 @@ namespace rme {
 
 			void GLState::disableBlend() {
 				if (blendEnabled_) {
+					LOG_RENDER_TRACE("[GL_STATE] Disabling blending");
 					glDisable(GL_BLEND);
 					blendEnabled_ = false;
 				}
@@ -87,6 +92,7 @@ namespace rme {
 			}
 
 			void GLState::setBlendAlpha() {
+				LOG_RENDER_TRACE("[GL_STATE] Setting alpha blend function");
 				enableBlend();
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 			}
@@ -150,6 +156,7 @@ namespace rme {
 			}
 
 			void GLState::resetCache() {
+				LOG_RENDER_TRACE("[GL_STATE] Resetting state cache");
 				currentTexture_ = 0;
 				blendEnabled_ = false;
 				texture2DEnabled_ = false;

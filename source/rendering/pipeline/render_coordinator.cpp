@@ -53,18 +53,28 @@
 namespace rme {
 	namespace render {
 
-		RenderCoordinator::RenderCoordinator() {
-			// Create all renderers
-			tileRenderer_ = std::unique_ptr<TileRenderer>(new TileRenderer());
-			itemRenderer_ = std::unique_ptr<ItemRenderer>(new ItemRenderer());
-			creatureRenderer_ = std::unique_ptr<CreatureRenderer>(new CreatureRenderer());
-			selectionRenderer_ = std::unique_ptr<SelectionRenderer>(new SelectionRenderer());
-			brushRenderer_ = std::unique_ptr<BrushRenderer>(new BrushRenderer());
-			gridRenderer_ = std::unique_ptr<GridRenderer>(new GridRenderer());
-			lightRenderer_ = std::unique_ptr<LightRenderer>(new LightRenderer());
-			tooltipRenderer_ = std::unique_ptr<TooltipRenderer>(new TooltipRenderer());
-			uiRenderer_ = std::unique_ptr<UIRenderer>(new UIRenderer());
-			fontRenderer_ = std::unique_ptr<FontRenderer>(new FontRenderer());
+		RenderCoordinator::RenderCoordinator(
+			std::unique_ptr<TileRenderer> tileRenderer,
+			std::unique_ptr<ItemRenderer> itemRenderer,
+			std::unique_ptr<CreatureRenderer> creatureRenderer,
+			std::unique_ptr<SelectionRenderer> selectionRenderer,
+			std::unique_ptr<BrushRenderer> brushRenderer,
+			std::unique_ptr<GridRenderer> gridRenderer,
+			std::unique_ptr<LightRenderer> lightRenderer,
+			std::unique_ptr<TooltipRenderer> tooltipRenderer,
+			std::unique_ptr<UIRenderer> uiRenderer,
+			std::unique_ptr<FontRenderer> fontRenderer
+		) :
+			tileRenderer_(std::move(tileRenderer)),
+			itemRenderer_(std::move(itemRenderer)),
+			creatureRenderer_(std::move(creatureRenderer)),
+			selectionRenderer_(std::move(selectionRenderer)),
+			brushRenderer_(std::move(brushRenderer)),
+			gridRenderer_(std::move(gridRenderer)),
+			lightRenderer_(std::move(lightRenderer)),
+			tooltipRenderer_(std::move(tooltipRenderer)),
+			uiRenderer_(std::move(uiRenderer)),
+			fontRenderer_(std::move(fontRenderer)) {
 		}
 
 		RenderCoordinator::~RenderCoordinator() {
@@ -72,12 +82,14 @@ namespace rme {
 		}
 
 		void RenderCoordinator::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing RenderCoordinator...");
 			if (initialized_) {
+				LOG_RENDER_WARN("[INIT] RenderCoordinator already initialized");
 				return;
 			}
 
 			// Initialize renderers that implement IRenderer interface
-			// Note: TileRenderer no longer uses IRenderer, so no initialize() call
+			LOG_RENDER_DEBUG("[INIT] Initializing sub-renderers...");
 			itemRenderer_->initialize();
 			creatureRenderer_->initialize();
 			selectionRenderer_->initialize();
@@ -93,16 +105,16 @@ namespace rme {
 			uiRenderer_->setFontRenderer(fontRenderer_.get());
 
 			initialized_ = true;
-			LOG_RENDER_INFO("RenderCoordinator initialized with {} passes", (int)RenderPass::Count);
+			LOG_RENDER_INFO("[INIT] RenderCoordinator initialized with {} passes", (int)RenderPass::Count);
 		}
 
 		void RenderCoordinator::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down RenderCoordinator...");
 			if (!initialized_) {
 				return;
 			}
 
 			// Shutdown renderers that implement IRenderer interface
-			// Note: TileRenderer no longer uses IRenderer, so no shutdown() call
 			if (itemRenderer_) {
 				itemRenderer_->shutdown();
 			}
@@ -143,6 +155,7 @@ namespace rme {
 			uiRenderer_.reset();
 
 			initialized_ = false;
+			LOG_RENDER_INFO("[INIT] RenderCoordinator shutdown complete");
 		}
 
 		void RenderCoordinator::render(RenderState& state) {
@@ -150,8 +163,8 @@ namespace rme {
 				return;
 			}
 
+			// LOG_RENDER_TRACE("[FRAME] RenderCoordinator::render started");
 			state.beginFrame();
-			// LOG_RENDER_TRACE("Begin Frame");
 
 			// Execute all passes in order (using existing RenderPass enum)
 			for (uint8_t i = 0; i < static_cast<uint8_t>(RenderPass::Count); ++i) {
@@ -159,10 +172,11 @@ namespace rme {
 			}
 
 			state.endFrame();
-			// LOG_RENDER_TRACE("End Frame");
+			// LOG_RENDER_TRACE("[FRAME] RenderCoordinator::render finished");
 		}
 
 		void RenderCoordinator::executePass(RenderPass pass, RenderState& state) {
+			// LOG_RENDER_TRACE("[PIPELINE] Executing render pass: {}", static_cast<int>(pass));
 			auto startTime = std::chrono::high_resolution_clock::now();
 
 			switch (pass) {
@@ -207,14 +221,20 @@ namespace rme {
 			}
 
 			// Callback for profiling
+			auto endTime = std::chrono::high_resolution_clock::now();
+			auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - startTime).count();
+
 			if (passCallback_) {
-				auto endTime = std::chrono::high_resolution_clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::duration<double, std::milli>>(endTime - startTime).count();
 				passCallback_(pass, static_cast<double>(elapsed));
+			}
+
+			if (elapsed > 16.6) { // Flag slow passes (> 16.6ms for 60fps)
+				LOG_RENDER_WARN("[PERF] Slow render pass! Pass: {}, Time: {:.2f}ms", static_cast<int>(pass), elapsed);
 			}
 		}
 
 		void RenderCoordinator::executeBackgroundPass(RenderState& state) {
+			// LOG_RENDER_TRACE("[PIPELINE] executeBackgroundPass");
 			// Reset GL state for new frame
 			gl::GLState::instance().resetCache();
 			gl::GLState::instance().setBlendAlpha();
@@ -224,10 +244,12 @@ namespace rme {
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+			// Setup Viewport (CRITICAL for resize)
+			glViewport(0, 0, state.context.viewportWidth, state.context.viewportHeight);
+
+			// LOG_RENDER_DEBUG("[FRAME] Viewport: {}x{}, Zoom: {:.2f}, Scroll: ({},{})", state.context.viewportWidth, state.context.viewportHeight, state.context.zoom, state.context.scrollX, state.context.scrollY);
+
 			// Setup Projection with Zoom
-			// Legacy used glOrtho(0, w*zoom, h*zoom...) where zoom was "inverse zoom" (0.5 = 2x size).
-			// We use direct zoom (2.0 = 2x size).
-			// So we use width / zoom.
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
 			if (state.context.zoom > 0.001f) {
@@ -237,22 +259,21 @@ namespace rme {
 			}
 			glMatrixMode(GL_MODELVIEW);
 			glLoadIdentity();
-
-			// Apply zoom - REMOVED, handled by Projection
-			// gl::GLState::instance().scale(state.context.zoom, state.context.zoom, 1.0f);
+			glTranslatef(0.375f, 0.375f, 0.0f);
 		}
 
 		void RenderCoordinator::executeTilesPass(RenderState& state) {
+			// LOG_RENDER_TRACE("[PIPELINE] executeTilesPass");
 			Map* map = state.map();
 			if (!map) {
-				LOG_RENDER_WARN("executeTilesPass: Map is null!");
+				LOG_RENDER_WARN("[PIPELINE] executeTilesPass: Map is null!");
 				return;
 			}
 
-			static int trace_counter = 0;
-			if (trace_counter++ % 60 == 0) {
-				LOG_RENDER_INFO("TilesPass: Floor={} Range=[{}, {}]x[{}, {}] View=[{}x{}] Zoom={:.2f} Scroll=[{}, {}]", state.context.currentFloor, state.context.startX, state.context.endX, state.context.startY, state.context.endY, state.context.viewportWidth, state.context.viewportHeight, state.context.zoom, state.context.scrollX, state.context.scrollY);
-			}
+			// Ensure Texture 2D is enabled for tile rendering
+			gl::GLState::instance().enableTexture2D();
+
+			// LOG_RENDER_DEBUG("[PIPELINE] TilesPass: Floor={} Range=({}, {}) to ({}, {})", state.context.currentFloor, state.context.startX, state.context.startY, state.context.endX, state.context.endY);
 
 			// Logic ported from MapDrawer::DrawMap
 			int start_z, end_z, superend_z;
@@ -278,8 +299,8 @@ namespace rme {
 					gl::GLState::instance().disableTexture2D();
 					gl::Primitives::drawFilledQuad(
 						0, 0,
-						static_cast<int>(state.context.viewportWidth * state.context.zoom),
-						static_cast<int>(state.context.viewportHeight * state.context.zoom),
+						static_cast<int>(state.context.viewportWidth / state.context.zoom),
+						static_cast<int>(state.context.viewportHeight / state.context.zoom),
 						Color(0, 0, 0, 128)
 					);
 					gl::GLState::instance().enableTexture2D();
@@ -389,6 +410,14 @@ namespace rme {
 		}
 
 		void RenderCoordinator::executeUIPass(RenderState& state) {
+			// Switch to Screen Space for UI rendering (1:1 pixel mapping)
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glOrtho(0, state.context.viewportWidth, state.context.viewportHeight, 0, -1.0, 1.0);
+
+			glMatrixMode(GL_MODELVIEW);
+			glLoadIdentity();
+
 			uiRenderer_->renderUI(state.context, state.options);
 		}
 

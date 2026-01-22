@@ -37,7 +37,7 @@ namespace rme {
 
 			/// Calculate effective tile size based on zoom
 			[[nodiscard]] constexpr int tileSize() const noexcept {
-				return static_cast<int>(kTileSize / zoom);
+				return static_cast<int>(kTileSize * zoom);
 			}
 
 			/// Get the starting tile X coordinate visible in viewport
@@ -52,12 +52,14 @@ namespace rme {
 
 			/// Get the ending tile X coordinate (exclusive) visible in viewport
 			[[nodiscard]] constexpr int endTileX() const noexcept {
-				return startTileX() + (width / tileSize()) + 2;
+				int worldWidth = static_cast<int>(width / zoom);
+				return startTileX() + (worldWidth / kTileSize) + 2;
 			}
 
 			/// Get the ending tile Y coordinate (exclusive) visible in viewport
 			[[nodiscard]] constexpr int endTileY() const noexcept {
-				return startTileY() + (height / tileSize()) + 2;
+				int worldHeight = static_cast<int>(height / zoom);
+				return startTileY() + (worldHeight / kTileSize) + 2;
 			}
 
 			/// Get floor adjustment offset for perspective rendering

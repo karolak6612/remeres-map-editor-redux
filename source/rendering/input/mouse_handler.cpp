@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "mouse_handler.h"
 #include <cmath>
@@ -29,7 +30,7 @@ namespace rme {
 			}
 		}
 
-		void MouseHandler::setCoordinateMapper(CoordinateMapper* mapper) {
+		void MouseHandler::setCoordinateMapper(const CoordinateMapper* mapper) {
 			mapper_ = mapper;
 		}
 
@@ -72,6 +73,7 @@ namespace rme {
 		}
 
 		void MouseHandler::onMouseMove(int screenX, int screenY, const KeyModifiers& modifiers) {
+			// LOG_RENDER_TRACE("[INPUT] Mouse move: ({}, {})", screenX, screenY);
 			updatePosition(screenX, screenY);
 
 			// Check if we should start dragging
@@ -104,6 +106,7 @@ namespace rme {
 		}
 
 		void MouseHandler::onMouseDown(int screenX, int screenY, MouseButton button, const KeyModifiers& modifiers) {
+			LOG_RENDER_DEBUG("[INPUT] Mouse down: ({}, {}) - Button: {}", screenX, screenY, static_cast<int>(button));
 			updatePosition(screenX, screenY);
 
 			int idx = static_cast<int>(button);

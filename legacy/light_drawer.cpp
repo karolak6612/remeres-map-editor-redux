@@ -15,12 +15,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include "../logging/logger.h"
 #include "main.h"
 #include "light_drawer.h"
-
-// GL abstraction layer (Phase 2)
-#include "opengl/gl_state.h"
 
 LightDrawer::LightDrawer() {
 	texture = 0;
@@ -37,8 +33,6 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 	if (texture == 0) {
 		createGLTexture();
 	}
-
-	LOG_RENDER_TRACE("[LIGHT] Drawing lights - Range: ({},{}) to ({},{}) - Lights: {}", map_x, map_y, end_x, end_y, lights.size());
 
 	int w = end_x - map_x;
 	int h = end_y - map_y;
@@ -87,11 +81,11 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
 
 	if (!fog) {
-		rme::render::gl::GLState::instance().setBlendLight();
+		glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
-	rme::render::gl::GLState::instance().setColor(255, 255, 255, 255); // reset color
-	rme::render::gl::GLState::instance().enableTexture2D();
+	glColor4ub(255, 255, 255, 255); // reset color
+	glEnable(GL_TEXTURE_2D);
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.f, 0.f);
 	glVertex2f(draw_x, draw_y);
@@ -102,12 +96,12 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 	glTexCoord2f(0.f, 1.f);
 	glVertex2f(draw_x, draw_y + draw_height);
 	glEnd();
-	rme::render::gl::GLState::instance().disableTexture2D();
+	glDisable(GL_TEXTURE_2D);
 
-	rme::render::gl::GLState::instance().setBlendAlpha();
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (fog) {
-		rme::render::gl::GLState::instance().setColor(10, 10, 10, 80);
+		glColor4ub(10, 10, 10, 80);
 		glBegin(GL_QUADS);
 		glVertex2f(draw_x, draw_y);
 		glVertex2f(draw_x + draw_width, draw_y);
@@ -141,7 +135,6 @@ void LightDrawer::addLight(int map_x, int map_y, int map_z, const SpriteLight& l
 		}
 	}
 
-	LOG_RENDER_TRACE("[LIGHT] Adding light at: ({},{},{}) - Intensity: {}", map_x, map_y, map_z, intensity);
 	lights.push_back(Light { static_cast<uint16_t>(map_x), static_cast<uint16_t>(map_y), light.color, intensity });
 }
 
@@ -151,14 +144,12 @@ void LightDrawer::clear() {
 }
 
 void LightDrawer::createGLTexture() {
-	LOG_RENDER_INFO("[RESOURCE] Creating LightDrawer OpenGL texture");
 	glGenTextures(1, &texture);
 	ASSERT(texture == 0);
 }
 
 void LightDrawer::unloadGLTexture() {
 	if (texture != 0) {
-		LOG_RENDER_INFO("[RESOURCE] Unloading LightDrawer OpenGL texture: {}", texture);
 		glDeleteTextures(1, &texture);
 	}
 }

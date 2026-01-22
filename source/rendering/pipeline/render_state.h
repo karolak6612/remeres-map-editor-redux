@@ -79,6 +79,11 @@ namespace rme {
 			/// Update mouse position in map coordinates
 			void setMousePosition(int mapX, int mapY);
 
+			/// Set current animation time
+			void setTime(double time) {
+				frameTime = time;
+			}
+
 			/// Set/Get Editor
 			void setEditor(Editor* editor) {
 				editor_ = editor;

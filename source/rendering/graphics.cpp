@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "../main.h"
+#include "../logging/logger.h"
 
 #include "sprites.h"
 #include "graphics.h"
@@ -48,6 +49,7 @@
 GraphicManager::GraphicManager() :
 	client_version(nullptr),
 	unloaded(true) {
+	LOG_RENDER_INFO("[INIT] Creating GraphicManager subsystems...");
 	// Create texture subsystems
 	textureManager_ = std::make_unique<rme::render::TextureManager>();
 	textureCache_ = std::make_unique<rme::render::TextureCache>(*textureManager_);
@@ -55,6 +57,7 @@ GraphicManager::GraphicManager() :
 
 	animation_timer = newd wxStopWatch();
 	animation_timer->Start();
+	LOG_RENDER_INFO("[INIT] GraphicManager subsystems created");
 }
 
 GraphicManager::~GraphicManager() {
@@ -62,6 +65,7 @@ GraphicManager::~GraphicManager() {
 }
 
 void GraphicManager::clear() {
+	LOG_RENDER_INFO("[RESOURCE] Clearing GraphicManager textures and cache");
 	textureManager_->clear();
 	textureCache_->clear();
 }
@@ -101,136 +105,44 @@ inline wxBitmap* _wxGetBitmapFromMemory(const unsigned char* data, int length) {
 }
 
 bool GraphicManager::loadEditorSprites() {
-	auto& sSpace = textureManager_->getSpriteSpace();
+	LOG_RENDER_INFO("[INIT] Loading editor sprites...");
 	// Unused graphics MIGHT be loaded here, but it's a neglectable loss
-	sSpace[EDITOR_SPRITE_SELECTION_MARKER] = newd EditorSprite(
-		newd wxBitmap(selection_marker_xpm16x16),
-		newd wxBitmap(selection_marker_xpm32x32)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_1x1] = newd EditorSprite(
-		loadPNGFile(circular_1_small_png),
-		loadPNGFile(circular_1_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_3x3] = newd EditorSprite(
-		loadPNGFile(circular_2_small_png),
-		loadPNGFile(circular_2_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_5x5] = newd EditorSprite(
-		loadPNGFile(circular_3_small_png),
-		loadPNGFile(circular_3_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_7x7] = newd EditorSprite(
-		loadPNGFile(circular_4_small_png),
-		loadPNGFile(circular_4_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_9x9] = newd EditorSprite(
-		loadPNGFile(circular_5_small_png),
-		loadPNGFile(circular_5_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_15x15] = newd EditorSprite(
-		loadPNGFile(circular_6_small_png),
-		loadPNGFile(circular_6_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_CD_19x19] = newd EditorSprite(
-		loadPNGFile(circular_7_small_png),
-		loadPNGFile(circular_7_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_1x1] = newd EditorSprite(
-		loadPNGFile(rectangular_1_small_png),
-		loadPNGFile(rectangular_1_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_3x3] = newd EditorSprite(
-		loadPNGFile(rectangular_2_small_png),
-		loadPNGFile(rectangular_2_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_5x5] = newd EditorSprite(
-		loadPNGFile(rectangular_3_small_png),
-		loadPNGFile(rectangular_3_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_7x7] = newd EditorSprite(
-		loadPNGFile(rectangular_4_small_png),
-		loadPNGFile(rectangular_4_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_9x9] = newd EditorSprite(
-		loadPNGFile(rectangular_5_small_png),
-		loadPNGFile(rectangular_5_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_15x15] = newd EditorSprite(
-		loadPNGFile(rectangular_6_small_png),
-		loadPNGFile(rectangular_6_png)
-	);
-	sSpace[EDITOR_SPRITE_BRUSH_SD_19x19] = newd EditorSprite(
-		loadPNGFile(rectangular_7_small_png),
-		loadPNGFile(rectangular_7_png)
-	);
+	textureManager_->registerSprite(EDITOR_SPRITE_SELECTION_MARKER, newd EditorSprite(newd wxBitmap(selection_marker_xpm16x16), newd wxBitmap(selection_marker_xpm32x32)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_1x1, newd EditorSprite(loadPNGFile(circular_1_small_png), loadPNGFile(circular_1_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_3x3, newd EditorSprite(loadPNGFile(circular_2_small_png), loadPNGFile(circular_2_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_5x5, newd EditorSprite(loadPNGFile(circular_3_small_png), loadPNGFile(circular_3_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_7x7, newd EditorSprite(loadPNGFile(circular_4_small_png), loadPNGFile(circular_4_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_9x9, newd EditorSprite(loadPNGFile(circular_5_small_png), loadPNGFile(circular_5_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_15x15, newd EditorSprite(loadPNGFile(circular_6_small_png), loadPNGFile(circular_6_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_CD_19x19, newd EditorSprite(loadPNGFile(circular_7_small_png), loadPNGFile(circular_7_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_1x1, newd EditorSprite(loadPNGFile(rectangular_1_small_png), loadPNGFile(rectangular_1_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_3x3, newd EditorSprite(loadPNGFile(rectangular_2_small_png), loadPNGFile(rectangular_2_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_5x5, newd EditorSprite(loadPNGFile(rectangular_3_small_png), loadPNGFile(rectangular_3_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_7x7, newd EditorSprite(loadPNGFile(rectangular_4_small_png), loadPNGFile(rectangular_4_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_9x9, newd EditorSprite(loadPNGFile(rectangular_5_small_png), loadPNGFile(rectangular_5_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_15x15, newd EditorSprite(loadPNGFile(rectangular_6_small_png), loadPNGFile(rectangular_6_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_BRUSH_SD_19x19, newd EditorSprite(loadPNGFile(rectangular_7_small_png), loadPNGFile(rectangular_7_png)));
 
-	sSpace[EDITOR_SPRITE_OPTIONAL_BORDER_TOOL] = newd EditorSprite(
-		loadPNGFile(optional_border_small_png),
-		loadPNGFile(optional_border_png)
-	);
-	sSpace[EDITOR_SPRITE_ERASER] = newd EditorSprite(
-		loadPNGFile(eraser_small_png),
-		loadPNGFile(eraser_png)
-	);
-	sSpace[EDITOR_SPRITE_PZ_TOOL] = newd EditorSprite(
-		loadPNGFile(protection_zone_small_png),
-		loadPNGFile(protection_zone_png)
-	);
-	sSpace[EDITOR_SPRITE_PVPZ_TOOL] = newd EditorSprite(
-		loadPNGFile(pvp_zone_small_png),
-		loadPNGFile(pvp_zone_png)
-	);
-	sSpace[EDITOR_SPRITE_NOLOG_TOOL] = newd EditorSprite(
-		loadPNGFile(no_logout_small_png),
-		loadPNGFile(no_logout_png)
-	);
-	sSpace[EDITOR_SPRITE_NOPVP_TOOL] = newd EditorSprite(
-		loadPNGFile(no_pvp_small_png),
-		loadPNGFile(no_pvp_png)
-	);
+	textureManager_->registerSprite(EDITOR_SPRITE_OPTIONAL_BORDER_TOOL, newd EditorSprite(loadPNGFile(optional_border_small_png), loadPNGFile(optional_border_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_ERASER, newd EditorSprite(loadPNGFile(eraser_small_png), loadPNGFile(eraser_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_PZ_TOOL, newd EditorSprite(loadPNGFile(protection_zone_small_png), loadPNGFile(protection_zone_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_PVPZ_TOOL, newd EditorSprite(loadPNGFile(pvp_zone_small_png), loadPNGFile(pvp_zone_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_NOLOG_TOOL, newd EditorSprite(loadPNGFile(no_logout_small_png), loadPNGFile(no_logout_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_NOPVP_TOOL, newd EditorSprite(loadPNGFile(no_pvp_small_png), loadPNGFile(no_pvp_png)));
 
-	sSpace[EDITOR_SPRITE_DOOR_NORMAL] = newd EditorSprite(
-		newd wxBitmap(door_normal_small_xpm),
-		newd wxBitmap(door_normal_xpm)
-	);
-	sSpace[EDITOR_SPRITE_DOOR_LOCKED] = newd EditorSprite(
-		newd wxBitmap(door_locked_small_xpm),
-		newd wxBitmap(door_locked_xpm)
-	);
-	sSpace[EDITOR_SPRITE_DOOR_MAGIC] = newd EditorSprite(
-		newd wxBitmap(door_magic_small_xpm),
-		newd wxBitmap(door_magic_xpm)
-	);
-	sSpace[EDITOR_SPRITE_DOOR_QUEST] = newd EditorSprite(
-		newd wxBitmap(door_quest_small_xpm),
-		newd wxBitmap(door_quest_xpm)
-	);
-	sSpace[EDITOR_SPRITE_DOOR_NORMAL_ALT] = newd EditorSprite(
-		newd wxBitmap(door_normal_alt_small_xpm),
-		newd wxBitmap(door_normal_alt_xpm)
-	);
-	sSpace[EDITOR_SPRITE_DOOR_ARCHWAY] = newd EditorSprite(
-		newd wxBitmap(door_archway_small_xpm),
-		newd wxBitmap(door_archway_xpm)
-	);
-	sSpace[EDITOR_SPRITE_WINDOW_NORMAL] = newd EditorSprite(
-		loadPNGFile(window_normal_small_png),
-		loadPNGFile(window_normal_png)
-	);
-	sSpace[EDITOR_SPRITE_WINDOW_HATCH] = newd EditorSprite(
-		loadPNGFile(window_hatch_small_png),
-		loadPNGFile(window_hatch_png)
-	);
+	textureManager_->registerSprite(EDITOR_SPRITE_DOOR_NORMAL, newd EditorSprite(newd wxBitmap(door_normal_small_xpm), newd wxBitmap(door_normal_xpm)));
+	textureManager_->registerSprite(EDITOR_SPRITE_DOOR_LOCKED, newd EditorSprite(newd wxBitmap(door_locked_small_xpm), newd wxBitmap(door_locked_xpm)));
+	textureManager_->registerSprite(EDITOR_SPRITE_DOOR_MAGIC, newd EditorSprite(newd wxBitmap(door_magic_small_xpm), newd wxBitmap(door_magic_xpm)));
+	textureManager_->registerSprite(EDITOR_SPRITE_DOOR_QUEST, newd EditorSprite(newd wxBitmap(door_quest_small_xpm), newd wxBitmap(door_quest_xpm)));
+	textureManager_->registerSprite(EDITOR_SPRITE_DOOR_NORMAL_ALT, newd EditorSprite(newd wxBitmap(door_normal_alt_small_xpm), newd wxBitmap(door_normal_alt_xpm)));
+	textureManager_->registerSprite(EDITOR_SPRITE_DOOR_ARCHWAY, newd EditorSprite(newd wxBitmap(door_archway_small_xpm), newd wxBitmap(door_archway_xpm)));
+	textureManager_->registerSprite(EDITOR_SPRITE_WINDOW_NORMAL, newd EditorSprite(loadPNGFile(window_normal_small_png), loadPNGFile(window_normal_png)));
+	textureManager_->registerSprite(EDITOR_SPRITE_WINDOW_HATCH, newd EditorSprite(loadPNGFile(window_hatch_small_png), loadPNGFile(window_hatch_png)));
 
-	sSpace[EDITOR_SPRITE_SELECTION_GEM] = newd EditorSprite(
-		loadPNGFile(gem_edit_png),
-		nullptr
-	);
-	sSpace[EDITOR_SPRITE_DRAWING_GEM] = newd EditorSprite(
-		loadPNGFile(gem_move_png),
-		nullptr
-	);
+	textureManager_->registerSprite(EDITOR_SPRITE_SELECTION_GEM, newd EditorSprite(loadPNGFile(gem_edit_png), nullptr));
+	textureManager_->registerSprite(EDITOR_SPRITE_DRAWING_GEM, newd EditorSprite(loadPNGFile(gem_move_png), nullptr));
 
+	LOG_RENDER_INFO("[INIT] Editor sprites loaded successfully");
 	return true;
 }
 
@@ -253,6 +165,7 @@ bool GraphicManager::hasTransparency() const {
 }
 
 void GraphicManager::garbageCollection() {
+	LOG_RENDER_DEBUG("[RESOURCE] Running GraphicManager garbage collection");
 	textureCache_->collectGarbage();
 }
 

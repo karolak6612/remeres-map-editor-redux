@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "light_renderer.h"
 #include "../light_drawer.h"
@@ -33,6 +34,7 @@ namespace rme {
 		}
 
 		void LightRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing LightRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -40,6 +42,7 @@ namespace rme {
 		}
 
 		void LightRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down LightRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -51,6 +54,7 @@ namespace rme {
 				return;
 			}
 
+			LOG_RENDER_TRACE("[LIGHT] Rendering lights in range: ({},{}) to ({},{})", ctx.startX, ctx.startY, ctx.endX, ctx.endY);
 			lightDrawer_->draw(ctx.startX, ctx.startY, ctx.endX, ctx.endY, ctx.scrollX, ctx.scrollY, false);
 		}
 
@@ -67,6 +71,7 @@ namespace rme {
 			const auto& position = location->getPosition();
 
 			if (tile->ground && tile->ground->hasLight()) {
+				LOG_RENDER_TRACE("[LIGHT] Adding ground light at: ({},{},{})", position.x, position.y, position.z);
 				lightDrawer_->addLight(position.x, position.y, position.z, tile->ground->getLight());
 			}
 

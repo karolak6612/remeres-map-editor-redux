@@ -70,6 +70,9 @@ Tile* BaseMap::getOrCreateTile(const Position& pos) {
 
 TileLocation* BaseMap::getTileL(int x, int y, int z) {
 	ASSERT(z < MAP_LAYERS);
+	if (x < 0 || y < 0) {
+		return nullptr;
+	}
 	QTreeNode* leaf = root.getLeaf(x, y);
 	if (leaf) {
 		Floor* floor = leaf->getFloor(z);

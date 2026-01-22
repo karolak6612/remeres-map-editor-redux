@@ -67,3 +67,4 @@ cmake-build-debug/
 /build_vcpkg
 /project
 /project
+/build_relwithdebinfo

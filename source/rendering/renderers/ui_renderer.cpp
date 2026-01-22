@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "../../main.h"
 #include "ui_renderer.h"
 #include "../opengl/gl_state.h"
@@ -35,6 +36,7 @@ namespace rme {
 		}
 
 		void UIRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing UIRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -42,6 +44,7 @@ namespace rme {
 		}
 
 		void UIRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down UIRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -49,6 +52,7 @@ namespace rme {
 		}
 
 		void UIRenderer::renderUI(const RenderContext& ctx, const RenderOptions& opts) {
+			LOG_RENDER_TRACE("[UI] Rendering UI components");
 			if (opts.showIngameBox) {
 				renderIngameBox(ctx.viewportWidth / 2, ctx.viewportHeight / 2, ctx.viewportWidth, ctx.viewportHeight); // This needs more logic from legacy
 			}

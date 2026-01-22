@@ -23,7 +23,10 @@
 #include "../pipeline/render_state.h"
 #include "../input/input_dispatcher.h"
 #include "../input/input_types.h"
+#include "../view/view_manager.h"
+#include "../animation/animation_manager.h"
 #include "../../position.h"
+#include <wx/timer.h>
 
 // Forward declarations
 class Editor;
@@ -78,23 +81,23 @@ namespace rme {
 
 			/// Get current zoom
 			[[nodiscard]] float zoom() const noexcept {
-				return zoom_;
+				return viewManager_.getZoom();
 			}
 
 			/// Get current floor
 			[[nodiscard]] int floor() const noexcept {
-				return floor_;
+				return viewManager_.getFloor();
 			}
 
 			// Legacy compatibility
 			int GetFloor() const {
-				return floor_;
+				return viewManager_.getFloor();
 			}
 			void ChangeFloor(int floor) {
 				setFloor(floor);
 			}
 			float GetZoom() const {
-				return zoom_;
+				return viewManager_.getZoom();
 			}
 			void SetZoom(float z) {
 				setZoom(z);
@@ -110,6 +113,8 @@ namespace rme {
 
 			/// Request a redraw
 			void requestRedraw();
+
+			void OnTimer(wxTimerEvent& event);
 
 			void OnMouseMove(wxMouseEvent& event);
 			void OnMouseLeftClick(wxMouseEvent& event);
@@ -139,6 +144,14 @@ namespace rme {
 				return inputDispatcher_;
 			}
 
+			/// Access View Manager
+			render::ViewManager& viewManager() {
+				return viewManager_;
+			}
+			const render::ViewManager& viewManager() const {
+				return viewManager_;
+			}
+
 			/// Get mouse position in map coordinates
 			[[nodiscard]] const input::MapCoord& mouseMapPos() const;
 
@@ -156,6 +169,11 @@ namespace rme {
 			bool drawing_ = false;
 			bool boundBoxSelection = false;
 			bool boundbox_selection_ = false;
+
+			// Timer ID
+			enum {
+				ANIMATION_TIMER_ID = 1001
+			};
 
 			enum {
 				BLOCK_SIZE = 100
@@ -175,12 +193,10 @@ namespace rme {
 			MapWindow* parent_ = nullptr;
 
 			// Viewport state
-			int viewportWidth_ = 800;
-			int viewportHeight_ = 600;
-			float zoom_ = 1.0f;
-			int floor_ = 7;
-			int scrollX_ = 0;
-			int scrollY_ = 0;
+			// Viewport state is now managed by ViewManager
+			render::ViewManager viewManager_;
+			render::AnimationManager animationManager_;
+			wxTimer animationTimer_;
 
 			// Core systems
 			std::unique_ptr<render::RenderCoordinator> renderCoordinator_;

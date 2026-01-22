@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "texture_manager.h"
 #include "sprite_types.h"
@@ -30,6 +31,10 @@ namespace rme {
 		}
 
 		Sprite* TextureManager::getSprite(int id) {
+			if (id < 0) {
+				LOG_RENDER_WARN("[RESOURCE] Negative sprite ID requested: {}", id);
+			}
+			// LOG_RENDER_TRACE("[RESOURCE] Getting sprite ID: {}", id);
 			auto it = spriteSpace_.find(id);
 			if (it != spriteSpace_.end()) {
 				return it->second;
@@ -50,6 +55,7 @@ namespace rme {
 		}
 
 		void TextureManager::registerSprite(int id, Sprite* sprite) {
+			LOG_RENDER_DEBUG("[RESOURCE] Registering sprite ID: {}", id);
 			// Clean up any existing sprite at this ID
 			auto it = spriteSpace_.find(id);
 			if (it != spriteSpace_.end()) {
@@ -67,6 +73,7 @@ namespace rme {
 		}
 
 		void TextureManager::clear() {
+			LOG_RENDER_INFO("[RESOURCE] Clearing TextureManager... Total sprites: {}", spriteSpace_.size());
 			for (auto& pair : spriteSpace_) {
 				delete pair.second;
 			}

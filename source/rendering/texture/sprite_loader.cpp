@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "sprite_loader.h"
 #include "sprite_types.h"
@@ -26,6 +27,7 @@ namespace rme {
 		SpriteLoader::~SpriteLoader() = default;
 
 		bool SpriteLoader::loadOTFI(const std::string& filename, std::string& error, std::vector<std::string>& warnings) {
+			LOG_RENDER_INFO("[RESOURCE] Loading OTFI from: {}", filename);
 			wxDir dir(filename);
 			wxString otfi_file;
 
@@ -66,9 +68,11 @@ namespace rme {
 		}
 
 		bool SpriteLoader::loadMetadata(const std::string& filename, std::string& error, std::vector<std::string>& warnings) {
+			LOG_RENDER_INFO("[RESOURCE] Loading metadata from: {}", filename);
 			FileReadHandle file(filename);
 
 			if (!file.isOk()) {
+				LOG_RENDER_ERROR("[RESOURCE] Failed to open metadata file: {}", filename);
 				error += "Failed to open " + filename + " for reading\nThe error reported was:" + file.getErrorMessage();
 				return false;
 			}
@@ -82,6 +86,8 @@ namespace rme {
 			file.getU16(effect_count);
 			file.getU16(distance_count);
 
+			LOG_RENDER_INFO("[RESOURCE] Metadata stats - Items: {}, Creatures: {}, Effects: {}, Distance: {}", metadataInfo_.itemCount, metadataInfo_.creatureCount, effect_count, distance_count);
+
 			uint32_t minID = 100;
 			uint32_t maxID = metadataInfo_.itemCount + metadataInfo_.creatureCount;
 
@@ -93,8 +99,9 @@ namespace rme {
 				metadataInfo_.hasFrameGroups = datFormat_ >= DAT_FORMAT_1057;
 			}
 
-			auto& spriteSpace = graphicManager_.sprite_space();
-			auto& imageSpace = graphicManager_.image_space();
+			auto& tm = graphicManager_.getTextureManager();
+			auto& spriteSpace = tm.spriteSpace_;
+			auto& imageSpace = tm.imageSpace_;
 
 			uint16_t id = minID;
 			while (id <= maxID) {
@@ -342,8 +349,10 @@ namespace rme {
 		}
 
 		bool SpriteLoader::loadSpriteData(const std::string& filename, std::string& error, std::vector<std::string>& warnings) {
+			LOG_RENDER_INFO("[RESOURCE] Loading sprite data from: {}", filename);
 			FileReadHandle fh(filename);
 			if (!fh.isOk()) {
+				LOG_RENDER_ERROR("[RESOURCE] Failed to open sprite file: {}", filename);
 				error = "Failed to open file for reading";
 				return false;
 			}
@@ -362,7 +371,7 @@ namespace rme {
 
 			if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
 				// Loading all dumps to memory
-				auto& imageSpace = graphicManager_.image_space();
+				auto& imageSpace = graphicManager_.getTextureManager().imageSpace_;
 				for (uint32_t i = 1; i <= max_id; ++i) {
 					auto it = imageSpace.find(i);
 					if (it != imageSpace.end() && it->second != nullptr) {
@@ -409,6 +418,7 @@ namespace rme {
 		}
 
 		SpriteLoadResult SpriteLoader::loadFromDirectory(const std::string& directory) {
+			LOG_RENDER_INFO("[RESOURCE] Starting asset load from directory: {}", directory);
 			SpriteLoadResult result;
 			std::string error;
 			std::vector<std::string> warnings;

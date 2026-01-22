@@ -21,17 +21,37 @@ namespace rme {
 	namespace render {
 
 		Point Viewport::screenToTile(int screenX, int screenY) const noexcept {
-			int ts = tileSize();
-			int mapX = (screenX + scrollX) / ts;
-			int mapY = (screenY + scrollY) / ts;
+			// Consistent with legacy MapCanvas::ScreenToMap and CoordinateMapper::screenToMap
+			int worldX = static_cast<int>(screenX / zoom) + scrollX;
+			int worldY = static_cast<int>(screenY / zoom) + scrollY;
+			int mapX = worldX / kTileSize;
+			int mapY = worldY / kTileSize;
+			
+			if (floor <= kGroundLayer) {
+				mapX += kGroundLayer - floor;
+				mapY += kGroundLayer - floor;
+			}
+			
 			return Point(mapX, mapY);
 		}
 
 		Point Viewport::tileToScreen(int tileX, int tileY) const noexcept {
-			int ts = tileSize();
-			int screenX = tileX * ts - scrollX;
-			int screenY = tileY * ts - scrollY;
-			return Point(screenX, screenY);
+			// Consistent with legacy and CoordinateMapper::mapToScreen
+			int adjustedTileX = tileX;
+			int adjustedTileY = tileY;
+			
+			if (floor <= kGroundLayer) {
+				adjustedTileX -= kGroundLayer - floor;
+				adjustedTileY -= kGroundLayer - floor;
+			}
+			
+			int worldX = adjustedTileX * kTileSize - scrollX;
+			int worldY = adjustedTileY * kTileSize - scrollY;
+			
+			return Point(
+				static_cast<int>(worldX * zoom),
+				static_cast<int>(worldY * zoom)
+			);
 		}
 
 		Point Viewport::centerTile() const noexcept {

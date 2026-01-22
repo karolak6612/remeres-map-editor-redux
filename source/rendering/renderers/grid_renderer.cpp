@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "../../logging/logger.h"
 #include "main.h"
 #include "grid_renderer.h"
 #include "../opengl/gl_state.h"
@@ -30,6 +31,7 @@ namespace rme {
 		}
 
 		void GridRenderer::initialize() {
+			LOG_RENDER_INFO("[INIT] Initializing GridRenderer...");
 			if (initialized_) {
 				return;
 			}
@@ -37,6 +39,7 @@ namespace rme {
 		}
 
 		void GridRenderer::shutdown() {
+			LOG_RENDER_INFO("[INIT] Shutting down GridRenderer...");
 			if (!initialized_) {
 				return;
 			}
@@ -48,6 +51,7 @@ namespace rme {
 				return;
 			}
 
+			LOG_RENDER_TRACE("[GRID] Rendering grid - Type: {}", gridType);
 			gridType_ = gridType;
 
 			if (gridType == 1) {

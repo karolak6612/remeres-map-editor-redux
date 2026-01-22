@@ -53,7 +53,8 @@ namespace rme {
 			~InputDispatcher() = default;
 
 			/// Initialize the dispatcher
-			void initialize();
+			/// @param mapper Pointer to the shared coordinate mapper
+			void initialize(const CoordinateMapper* mapper);
 
 			/// Shutdown and cleanup
 			void shutdown();
@@ -65,10 +66,7 @@ namespace rme {
 			void removeReceiver(InputReceiver* receiver);
 
 			/// Access the coordinate mapper
-			CoordinateMapper& coordinateMapper() {
-				return coordinateMapper_;
-			}
-			const CoordinateMapper& coordinateMapper() const {
+			const CoordinateMapper* coordinateMapper() const {
 				return coordinateMapper_;
 			}
 
@@ -80,14 +78,7 @@ namespace rme {
 				return mouseHandler_;
 			}
 
-			/// Update viewport parameters
-			void setViewport(int width, int height, float zoom);
-
-			/// Update scroll position
-			void setScroll(int scrollX, int scrollY);
-
-			/// Set current floor
-			void setFloor(int floor);
+			// Viewport updates are no longer needed as we use shared mapper state
 
 			// Raw input entry points (call these from wxWidgets event handlers)
 
@@ -124,7 +115,7 @@ namespace rme {
 			}
 
 		private:
-			CoordinateMapper coordinateMapper_;
+			const CoordinateMapper* coordinateMapper_ = nullptr;
 			MouseHandler mouseHandler_;
 			std::vector<InputReceiver*> receivers_;
 			bool initialized_ = false;

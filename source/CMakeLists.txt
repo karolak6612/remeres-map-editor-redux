@@ -130,6 +130,8 @@ ${CMAKE_CURRENT_LIST_DIR}/rendering/input/input_dispatcher.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/selection_handler.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/brush_handler.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/camera_handler.h
+${CMAKE_CURRENT_LIST_DIR}/rendering/view/view_manager.h
+${CMAKE_CURRENT_LIST_DIR}/rendering/animation/animation_manager.h
 ${CMAKE_CURRENT_LIST_DIR}/rendering/canvas/map_canvas.h
 ${CMAKE_CURRENT_LIST_DIR}/table_brush.h
 ${CMAKE_CURRENT_LIST_DIR}/templates.h
@@ -219,6 +221,8 @@ ${CMAKE_CURRENT_LIST_DIR}/rendering/input/input_dispatcher.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/selection_handler.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/brush_handler.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/input/camera_handler.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/view/view_manager.cpp
+${CMAKE_CURRENT_LIST_DIR}/rendering/animation/animation_manager.cpp
 ${CMAKE_CURRENT_LIST_DIR}/rendering/canvas/map_canvas.cpp
 ${CMAKE_CURRENT_LIST_DIR}/live_action.cpp
 ${CMAKE_CURRENT_LIST_DIR}/live_client.cpp
