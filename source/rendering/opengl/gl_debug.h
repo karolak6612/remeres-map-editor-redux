@@ -75,7 +75,8 @@ namespace rme {
 			/// RAII helper for scoped GL error checking
 			class GLErrorScope {
 			public:
-				explicit GLErrorScope(const char* context) : context_(context) {
+				explicit GLErrorScope(const char* context) :
+					context_(context) {
 					GLDebug::checkError(context_); // Clear any existing errors
 				}
 

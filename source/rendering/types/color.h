@@ -36,7 +36,8 @@ namespace rme {
 
 			constexpr Color() = default;
 
-			constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) : r(r), g(g), b(b), a(a) { }
+			constexpr Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255) :
+				r(r), g(g), b(b), a(a) { }
 
 			/// Create from wxColour (defined in cpp to avoid wx header dependency)
 			explicit Color(const wxColour& wx);

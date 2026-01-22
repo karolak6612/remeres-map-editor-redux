@@ -18,7 +18,8 @@
 #include "logging/logger.h"
 #include "net_connection.h"
 
-NetworkMessage::NetworkMessage() : position(0), size(0) { }
+NetworkMessage::NetworkMessage() :
+	position(0), size(0) { }
 
 void NetworkMessage::clear() {
 	buffer.clear();
@@ -69,7 +70,8 @@ void NetworkMessage::write<Position>(const Position& value) {
 	write<uint8_t>(value.z);
 }
 
-NetworkConnection::NetworkConnection() : service(nullptr), stopped(false) { }
+NetworkConnection::NetworkConnection() :
+	service(nullptr), stopped(false) { }
 
 NetworkConnection::~NetworkConnection() {
 	stop();

@@ -21,7 +21,8 @@
 namespace rme {
 	namespace render {
 
-		Color::Color(const wxColour& wx) : r(wx.Red()), g(wx.Green()), b(wx.Blue()), a(wx.Alpha()) {
+		Color::Color(const wxColour& wx) :
+			r(wx.Red()), g(wx.Green()), b(wx.Blue()), a(wx.Alpha()) {
 		}
 
 		wxColour Color::toWx() const {

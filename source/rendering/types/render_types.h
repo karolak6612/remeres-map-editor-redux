@@ -76,7 +76,8 @@ namespace rme {
 			int y = 0;
 
 			constexpr Point() = default;
-			constexpr Point(int x, int y) : x(x), y(y) { }
+			constexpr Point(int x, int y) :
+				x(x), y(y) { }
 
 			[[nodiscard]] constexpr bool operator==(const Point& other) const noexcept {
 				return x == other.x && y == other.y;
@@ -98,7 +99,8 @@ namespace rme {
 			int height = 0;
 
 			constexpr Size() = default;
-			constexpr Size(int w, int h) : width(w), height(h) { }
+			constexpr Size(int w, int h) :
+				width(w), height(h) { }
 
 			[[nodiscard]] constexpr bool isValid() const noexcept {
 				return width > 0 && height > 0;
@@ -116,8 +118,10 @@ namespace rme {
 			int height = 0;
 
 			constexpr Rect() = default;
-			constexpr Rect(int x, int y, int w, int h) : x(x), y(y), width(w), height(h) { }
-			constexpr Rect(const Point& pos, const Size& size) : x(pos.x), y(pos.y), width(size.width), height(size.height) { }
+			constexpr Rect(int x, int y, int w, int h) :
+				x(x), y(y), width(w), height(h) { }
+			constexpr Rect(const Point& pos, const Size& size) :
+				x(pos.x), y(pos.y), width(size.width), height(size.height) { }
 
 			[[nodiscard]] constexpr Point position() const noexcept {
 				return Point(x, y);

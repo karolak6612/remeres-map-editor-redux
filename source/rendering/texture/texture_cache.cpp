@@ -25,7 +25,8 @@
 namespace rme {
 	namespace render {
 
-		TextureCache::TextureCache(TextureManager& textureManager) : textureManager_(textureManager) {
+		TextureCache::TextureCache(TextureManager& textureManager) :
+			textureManager_(textureManager) {
 			lastClean_ = static_cast<int>(std::time(nullptr));
 		}
 

@@ -29,7 +29,8 @@ namespace rme {
 			int y = 0;
 
 			constexpr ScreenCoord() = default;
-			constexpr ScreenCoord(int x, int y) : x(x), y(y) { }
+			constexpr ScreenCoord(int x, int y) :
+				x(x), y(y) { }
 		};
 
 		/// Map coordinates (tile position on the map)
@@ -39,7 +40,8 @@ namespace rme {
 			int z = 0; // Floor level
 
 			constexpr MapCoord() = default;
-			constexpr MapCoord(int x, int y, int z = 7) : x(x), y(y), z(z) { }
+			constexpr MapCoord(int x, int y, int z = 7) :
+				x(x), y(y), z(z) { }
 
 			[[nodiscard]] constexpr bool operator==(const MapCoord& other) const noexcept {
 				return x == other.x && y == other.y && z == other.z;

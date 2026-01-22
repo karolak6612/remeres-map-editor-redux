@@ -26,12 +26,12 @@ namespace rme {
 			int worldY = static_cast<int>(screenY / zoom) + scrollY;
 			int mapX = worldX / kTileSize;
 			int mapY = worldY / kTileSize;
-			
+
 			if (floor <= kGroundLayer) {
 				mapX += kGroundLayer - floor;
 				mapY += kGroundLayer - floor;
 			}
-			
+
 			return Point(mapX, mapY);
 		}
 
@@ -39,15 +39,15 @@ namespace rme {
 			// Consistent with legacy and CoordinateMapper::mapToScreen
 			int adjustedTileX = tileX;
 			int adjustedTileY = tileY;
-			
+
 			if (floor <= kGroundLayer) {
 				adjustedTileX -= kGroundLayer - floor;
 				adjustedTileY -= kGroundLayer - floor;
 			}
-			
+
 			int worldX = adjustedTileX * kTileSize - scrollX;
 			int worldY = adjustedTileY * kTileSize - scrollY;
-			
+
 			return Point(
 				static_cast<int>(worldX * zoom),
 				static_cast<int>(worldY * zoom)

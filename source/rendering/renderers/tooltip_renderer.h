@@ -35,7 +35,8 @@ namespace rme {
 			bool ellipsis = false;
 
 			Tooltip() = default;
-			Tooltip(int x, int y, const std::string& text, const Color& color = colors::White) : x(x), y(y), text(text), color(color) { }
+			Tooltip(int x, int y, const std::string& text, const Color& color = colors::White) :
+				x(x), y(y), text(text), color(color) { }
 		};
 
 		/// Handles rendering of tooltips on the map
