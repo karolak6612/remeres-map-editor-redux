@@ -28,12 +28,6 @@ public:
 	RAWBrush(uint16_t itemid); // Create a RAWBrush of the specified type
 	virtual ~RAWBrush();
 
-	bool isRaw() const {
-		return true;
-	}
-	RAWBrush* asRaw() {
-		return static_cast<RAWBrush*>(this);
-	}
 
 	virtual bool canDraw(BaseMap* map, const Position& position) const {
 		return true;

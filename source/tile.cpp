@@ -212,9 +212,9 @@ int Tile::getIndexOf(Item* item) const {
 	}
 
 	if (!items.empty()) {
-		auto it = std::find(items.begin(), items.end(), item);
+		auto it = std::ranges::find(items, item);
 		if (it != items.end()) {
-			index += (it - items.begin());
+			index += std::distance(items.begin(), it);
 			return index;
 		}
 	}
@@ -268,19 +268,9 @@ void Tile::addItem(Item* item) {
 		it = items.begin();
 	} else {
 		if (item->isAlwaysOnBottom()) {
-			it = items.begin();
-			while (true) {
-				if (it == items.end()) {
-					break;
-				} else if ((*it)->isAlwaysOnBottom()) {
-					if (item->getTopOrder() < (*it)->getTopOrder()) {
-						break;
-					}
-				} else { // Always on top
-					break;
-				}
-				++it;
-			}
+			it = std::ranges::find_if(items, [&](Item* i) {
+				return !i->isAlwaysOnBottom() || item->getTopOrder() < i->getTopOrder();
+			});
 		} else {
 			it = items.end();
 		}
@@ -307,13 +297,7 @@ void Tile::select() {
 		creature->select();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		(*it)->select();
-		++it;
-	}
+	std::ranges::for_each(items, [](Item* item) { item->select(); });
 
 	statflags |= TILESTATE_SELECTED;
 }
@@ -329,13 +313,7 @@ void Tile::deselect() {
 		creature->deselect();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		(*it)->deselect();
-		++it;
-	}
+	std::ranges::for_each(items, [](Item* item) { item->deselect(); });
 
 	statflags &= ~TILESTATE_SELECTED;
 }
@@ -364,17 +342,12 @@ ItemVector Tile::popSelectedItems(bool ignoreTileSelected) {
 		ground = nullptr;
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isSelected()) {
-			pop_items.push_back(*it);
-			it = items.erase(it);
-		} else {
-			++it;
+	for (Item* item : items) {
+		if (item->isSelected()) {
+			pop_items.push_back(item);
 		}
 	}
+	std::erase_if(items, [](Item* item) { return item->isSelected(); });
 
 	statflags &= ~TILESTATE_SELECTED;
 	return pop_items;
@@ -393,14 +366,10 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		ItemVector::iterator it;
-
-		it = items.begin();
-		while (it != items.end()) {
-			if ((*it)->isSelected()) {
-				selected_items.push_back(*it);
+		for (Item* item : items) {
+			if (item->isSelected()) {
+				selected_items.push_back(item);
 			}
-			it++;
 		}
 	}
 
@@ -481,9 +450,7 @@ void Tile::update() {
 		}
 	}
 
-	ItemVector::const_iterator iter = items.begin();
-	while (iter != items.end()) {
-		Item* i = *iter;
+	for (Item* i : items) {
 		if (i->isSelected()) {
 			statflags |= TILESTATE_SELECTED;
 		}
@@ -507,7 +474,6 @@ void Tile::update() {
 		if (it.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
 		}
-		++iter;
 	}
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {
@@ -558,42 +524,18 @@ void Tile::wallize(BaseMap* parent) {
 }
 
 Item* Tile::getWall() const {
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall()) {
-			return *it;
-		}
-		++it;
-	}
-	return nullptr;
+	auto it = std::ranges::find_if(items, [](Item* item) { return item->isWall(); });
+	return (it != items.end()) ? *it : nullptr;
 }
 
 Item* Tile::getCarpet() const {
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isCarpet()) {
-			return *it;
-		}
-		++it;
-	}
-	return nullptr;
+	auto it = std::ranges::find_if(items, [](Item* item) { return item->isCarpet(); });
+	return (it != items.end()) ? *it : nullptr;
 }
 
 Item* Tile::getTable() const {
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isTable()) {
-			return *it;
-		}
-		++it;
-	}
-	return nullptr;
+	auto it = std::ranges::find_if(items, [](Item* item) { return item->isTable(); });
+	return (it != items.end()) ? *it : nullptr;
 }
 
 void Tile::addWallItem(Item* item) {
@@ -606,49 +548,28 @@ void Tile::addWallItem(Item* item) {
 }
 
 void Tile::cleanWalls(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall()) {
-			if (!dontdelete) {
-				delete *it;
-			}
-			it = items.erase(it);
-		} else {
-			++it;
+	if (!dontdelete) {
+		for (Item* item : items) {
+			if (item->isWall()) delete item;
 		}
 	}
+	std::erase_if(items, [](Item* item) { return item->isWall(); });
 }
 
 void Tile::cleanWalls(WallBrush* wb) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall() && wb->hasWall(*it)) {
-			delete *it;
-			it = items.erase(it);
-		} else {
-			++it;
-		}
+	for (Item* item : items) {
+		if (item->isWall() && wb->hasWall(item)) delete item;
 	}
+	std::erase_if(items, [&](Item* item) { return item->isWall() && wb->hasWall(item); });
 }
 
 void Tile::cleanTables(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isTable()) {
-			if (!dontdelete) {
-				delete *it;
-			}
-			it = items.erase(it);
-		} else {
-			++it;
+	if (!dontdelete) {
+		for (Item* item : items) {
+			if (item->isTable()) delete item;
 		}
 	}
+	std::erase_if(items, [](Item* item) { return item->isTable(); });
 }
 
 void Tile::tableize(BaseMap* parent) {
@@ -665,17 +586,13 @@ void Tile::selectGround() {
 		ground->select();
 		selected_ = true;
 	}
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isBorder()) {
-			(*it)->select();
+	for (Item* item : items) {
+		if (item->isBorder()) {
+			item->select();
 			selected_ = true;
 		} else {
 			break;
 		}
-		++it;
 	}
 	if (selected_) {
 		statflags |= TILESTATE_SELECTED;
@@ -686,14 +603,12 @@ void Tile::deselectGround() {
 	if (ground) {
 		ground->deselect();
 	}
-	ItemVector::iterator it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isBorder()) {
-			(*it)->deselect();
+	for (Item* item : items) {
+		if (item->isBorder()) {
+			item->deselect();
 		} else {
 			break;
 		}
-		++it;
 	}
 }
 

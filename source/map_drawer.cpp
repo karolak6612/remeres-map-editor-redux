@@ -259,10 +259,10 @@ void MapDrawer::DrawMap() {
 	// The current house we're drawing
 	current_house_id = 0;
 	if (brush) {
-		if (brush->isHouse()) {
-			current_house_id = brush->asHouse()->getHouseID();
-		} else if (brush->isHouseExit()) {
-			current_house_id = brush->asHouseExit()->getHouseID();
+		if (HouseBrush* hb = brush->as<HouseBrush>()) {
+			current_house_id = hb->getHouseID();
+		} else if (HouseExitBrush* heb = brush->as<HouseExitBrush>()) {
+			current_house_id = heb->getHouseID();
 		}
 	}
 
@@ -811,10 +811,7 @@ void MapDrawer::DrawBrush() {
 						end_y = mouse_map_y;
 					}
 
-					RAWBrush* raw_brush = nullptr;
-					if (brush->isRaw()) {
-						raw_brush = brush->asRaw();
-					}
+					RAWBrush* raw_brush = brush->as<RAWBrush>();
 
 					for (int y = start_y; y <= end_y; y++) {
 						int cy = y * TileSize - view_scroll_y - getFloorAdjustment(floor);
@@ -875,10 +872,7 @@ void MapDrawer::DrawBrush() {
 				int center_y = start_y + (end_y - start_y) / 2;
 				float radii = width / 2.0f + 0.005f;
 
-				RAWBrush* raw_brush = nullptr;
-				if (brush->isRaw()) {
-					raw_brush = brush->asRaw();
-				}
+				RAWBrush* raw_brush = brush->as<RAWBrush>();
 
 				for (int y = start_y - 1; y <= end_y + 1; y++) {
 					int cy = y * TileSize - view_scroll_y - getFloorAdjustment(floor);
@@ -966,22 +960,20 @@ void MapDrawer::DrawBrush() {
 			glVertex2f(cx + TileSize, cy);
 			glVertex2f(cx, cy);
 			glEnd();
-		} else if (brush->isCreature()) {
+		} else if (CreatureBrush* creature_brush = brush->as<CreatureBrush>()) {
 			glEnable(GL_TEXTURE_2D);
 			int cy = (mouse_map_y)*TileSize - view_scroll_y - getFloorAdjustment(floor);
 			int cx = (mouse_map_x)*TileSize - view_scroll_x - getFloorAdjustment(floor);
-			CreatureBrush* creature_brush = brush->asCreature();
 			if (creature_brush->canDraw(&editor.map, Position(mouse_map_x, mouse_map_y, floor))) {
 				BlitCreature(cx, cy, creature_brush->getType()->outfit, SOUTH, 255, 255, 255, 160);
 			} else {
 				BlitCreature(cx, cy, creature_brush->getType()->outfit, SOUTH, 255, 64, 64, 160);
 			}
 			glDisable(GL_TEXTURE_2D);
-		} else if (!brush->isDoodad()) {
-			RAWBrush* raw_brush = nullptr;
-			if (brush->isRaw()) { // Textured brush
+		} else if (!brush->as<DoodadBrush>()) {
+			RAWBrush* raw_brush = brush->as<RAWBrush>();
+			if (raw_brush) { // Textured brush
 				glEnable(GL_TEXTURE_2D);
-				raw_brush = brush->asRaw();
 			}
 
 			for (int y = -g_gui.GetBrushSize() - 1; y <= g_gui.GetBrushSize() + 1; y++) {

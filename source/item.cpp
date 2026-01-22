@@ -310,35 +310,40 @@ uint8_t Item::getMiniMapColor() const {
 
 GroundBrush* Item::getGroundBrush() const {
 	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isGroundTile() && item_type.brush && item_type.brush->isGround()) {
-		return item_type.brush->asGround();
+	if (item_type.isGroundTile() && item_type.brush) {
+		return item_type.brush->as<GroundBrush>();
 	}
 	return nullptr;
 }
 
 TableBrush* Item::getTableBrush() const {
 	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isTable && item_type.brush && item_type.brush->isTable()) {
-		return item_type.brush->asTable();
+	if (item_type.isTable && item_type.brush) {
+		return item_type.brush->as<TableBrush>();
 	}
 	return nullptr;
 }
 
 CarpetBrush* Item::getCarpetBrush() const {
 	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isCarpet && item_type.brush && item_type.brush->isCarpet()) {
-		return item_type.brush->asCarpet();
+	if (item_type.isCarpet && item_type.brush) {
+		return item_type.brush->as<CarpetBrush>();
 	}
 	return nullptr;
 }
 
 DoorBrush* Item::getDoorBrush() const {
 	ItemType& item_type = g_items.getItemType(id);
-	if (!item_type.isWall || !item_type.isBrushDoor || !item_type.brush || !item_type.brush->isWall()) {
+	if (!item_type.isWall || !item_type.isBrushDoor || !item_type.brush) {
 		return nullptr;
 	}
 
-	DoorType door_type = item_type.brush->asWall()->getDoorTypeFromID(id);
+	WallBrush* wall_brush = item_type.brush->as<WallBrush>();
+	if (!wall_brush) {
+		return nullptr;
+	}
+
+	DoorType door_type = wall_brush->getDoorTypeFromID(id);
 	DoorBrush* door_brush = nullptr;
 	// Quite a horrible dependency on a global here, meh.
 	switch (door_type) {
@@ -383,8 +388,8 @@ DoorBrush* Item::getDoorBrush() const {
 
 WallBrush* Item::getWallBrush() const {
 	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isWall && item_type.brush && item_type.brush->isWall()) {
-		return item_type.brush->asWall();
+	if (item_type.isWall && item_type.brush) {
+		return item_type.brush->as<WallBrush>();
 	}
 	return nullptr;
 }

@@ -32,12 +32,6 @@ public:
 	GroundBrush();
 	virtual ~GroundBrush();
 
-	bool isGround() const {
-		return true;
-	}
-	GroundBrush* asGround() {
-		return static_cast<GroundBrush*>(this);
-	}
 
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings);
 

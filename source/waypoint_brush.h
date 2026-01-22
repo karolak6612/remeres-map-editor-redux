@@ -30,12 +30,6 @@ public:
 	WaypointBrush();
 	virtual ~WaypointBrush();
 
-	bool isWaypoint() const {
-		return true;
-	}
-	WaypointBrush* asWaypoint() {
-		return static_cast<WaypointBrush*>(this);
-	}
 
 	// Not used
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings) {

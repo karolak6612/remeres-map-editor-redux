@@ -256,10 +256,11 @@ bool WallBrush::load(pugi::xml_node node, wxArrayString& warnings) {
 				}
 
 				if (childNode.attribute("redirect").as_bool()) {
-					if (!brush->isWall()) {
+					WallBrush* wb = brush->as<WallBrush>();
+					if (!wb) {
 						warnings.push_back("Wall brush redirect link: '" + wxstr(name) + "' is not a wall brush.");
 					} else if (!redirect_to) {
-						redirect_to = brush->asWall();
+						redirect_to = wb;
 					} else {
 						warnings.push_back("Wall brush '" + wxstr(getName()) + "' has more than one redirect link.");
 					}
@@ -420,7 +421,7 @@ void WallBrush::doWalls(BaseMap* map, Tile* tile) {
 			continue;
 		}
 		// or if it's a decoration brush.
-		if (wall_brush->isWallDecoration()) {
+		if (wall_brush->as<WallDecorationBrush>()) {
 			items_to_add.push_back(wall);
 			it = tile->items.erase(it);
 			continue;
@@ -488,7 +489,7 @@ void WallBrush::doWalls(BaseMap* map, Tile* tile) {
 					Item* wall_decoration = *it;
 					ASSERT(wall_decoration);
 					WallBrush* brush = wall_decoration->getWallBrush();
-					if (brush && brush->isWallDecoration()) {
+					if (brush && brush->as<WallDecorationBrush>()) {
 						// We don't know if we have changed alignment
 						if (wall_decoration->getWallAlignment() == bt) {
 							// Same, no need to change...
@@ -591,7 +592,7 @@ void WallBrush::doWalls(BaseMap* map, Tile* tile) {
 					// If we have a decoration ontop of us, we need to change it's alignment aswell!
 					Item* wall_decoration = *it;
 					WallBrush* brush = wall_decoration->getWallBrush();
-					if (brush && brush->isWallDecoration()) {
+					if (brush && brush->as<WallDecorationBrush>()) {
 						// We know we have changed alignment, so no need to check for it again.
 						uint16_t id = 0;
 						WallNode& wn = brush->wall_items[int(bt)];
@@ -703,7 +704,7 @@ void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 			// Is it just a decoration, like what we're trying to add?
 			WallBrush* brush = item->getWallBrush();
-			if (brush && brush->isWallDecoration()) {
+			if (brush && brush->as<WallDecorationBrush>()) {
 				// It is, discard and advance!
 				++iter;
 				continue;

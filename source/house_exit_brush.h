@@ -30,12 +30,6 @@ public:
 	HouseExitBrush();
 	virtual ~HouseExitBrush();
 
-	bool isHouseExit() const {
-		return true;
-	}
-	HouseExitBrush* asHouseExit() {
-		return static_cast<HouseExitBrush*>(this);
-	}
 
 	// Not used
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings) {

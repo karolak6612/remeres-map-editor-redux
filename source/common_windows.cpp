@@ -744,11 +744,12 @@ void ExportTilesetsWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 					pugi::xml_node palette = tileset.append_child(data.c_str());
 					for (BrushVector::const_iterator _iter = tilesetCategory->brushlist.begin(); _iter != tilesetCategory->brushlist.end(); ++_iter) {
-						if (!(*_iter)->isRaw()) {
+						RAWBrush* raw = (*_iter)->as<RAWBrush>();
+						if (!raw) {
 							pugi::xml_node brush = palette.append_child("brush");
 							brush.append_attribute("name") = (*_iter)->getName().c_str();
 						} else {
-							ItemType& it = g_items[(*_iter)->asRaw()->getItemID()];
+							ItemType& it = g_items[raw->getItemID()];
 							if (it.id != 0) {
 								pugi::xml_node item = palette.append_child("item");
 								item.append_attribute("id") = it.id;
@@ -982,7 +983,7 @@ void FindBrushDialog::OnClickOKInternal() {
 					}
 
 					// Don't match RAWs now.
-					if (brush->isRaw()) {
+					if (brush->as<RAWBrush>()) {
 						continue;
 					}
 
@@ -1045,7 +1046,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 				continue;
 			}
 
-			if (brush->isRaw()) {
+			if (brush->as<RAWBrush>()) {
 				continue;
 			}
 

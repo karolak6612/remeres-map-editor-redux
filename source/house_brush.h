@@ -31,12 +31,6 @@ public:
 	HouseBrush();
 	virtual ~HouseBrush();
 
-	bool isHouse() const {
-		return true;
-	}
-	HouseBrush* asHouse() {
-		return static_cast<HouseBrush*>(this);
-	}
 
 	// Not used
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings) {

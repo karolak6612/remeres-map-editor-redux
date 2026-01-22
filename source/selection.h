@@ -84,13 +84,13 @@ public:
 		return tiles.size();
 	}
 	void updateSelectionCount();
-	TileSet::iterator begin() {
+	std::vector<Tile*>::iterator begin() {
 		return tiles.begin();
 	}
-	TileSet::iterator end() {
+	std::vector<Tile*>::iterator end() {
 		return tiles.end();
 	}
-	TileSet& getTiles() {
+	std::vector<Tile*>& getTiles() {
 		return tiles;
 	}
 	Tile* getSelectedTile() {
@@ -104,7 +104,7 @@ private:
 	BatchAction* session;
 	Action* subsession;
 
-	TileSet tiles;
+	std::vector<Tile*> tiles;
 
 	friend class SelectionThread;
 };

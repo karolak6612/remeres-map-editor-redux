@@ -2571,11 +2571,11 @@ void MapPopupMenu::Update() {
 void MapCanvas::getTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, PositionVector* tilestodraw, PositionVector* tilestoborder, bool fill /*= false*/) {
 	if (fill) {
 		Brush* brush = g_gui.GetCurrentBrush();
-		if (!brush || !brush->isGround()) {
+		if (!brush || !brush->as<GroundBrush>()) {
 			return;
 		}
 
-		GroundBrush* newBrush = brush->asGround();
+		GroundBrush* newBrush = brush->as<GroundBrush>();
 		Position position(mouse_map_x, mouse_map_y, floor);
 
 		Tile* tile = editor.map.getTile(position);

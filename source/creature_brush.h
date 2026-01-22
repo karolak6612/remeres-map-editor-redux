@@ -28,12 +28,6 @@ public:
 	CreatureBrush(CreatureType* type); // Create a RAWBrush of the specified type
 	virtual ~CreatureBrush();
 
-	bool isCreature() const {
-		return true;
-	}
-	CreatureBrush* asCreature() {
-		return static_cast<CreatureBrush*>(this);
-	}
 
 	virtual bool canDraw(BaseMap* map, const Position& position) const;
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);

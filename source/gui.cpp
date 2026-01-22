@@ -1637,7 +1637,7 @@ void GUI::SelectBrushInternal(Brush* brush) {
 
 	brush_variation = min(brush_variation, brush->getMaxVariation());
 	FillDoodadPreviewBuffer();
-	if (brush->isDoodad()) {
+	if (brush->as<DoodadBrush>()) {
 		secondary_map = doodad_buffer_map;
 	}
 
@@ -1652,13 +1652,17 @@ void GUI::SelectPreviousBrush() {
 }
 
 void GUI::FillDoodadPreviewBuffer() {
-	if (!current_brush || !current_brush->isDoodad()) {
+	if (!current_brush) {
+		return;
+	}
+
+	DoodadBrush* brush = current_brush->as<DoodadBrush>();
+	if (!brush) {
 		return;
 	}
 
 	doodad_buffer_map->clear();
 
-	DoodadBrush* brush = current_brush->asDoodad();
 	if (brush->isEmpty(GetBrushVariation())) {
 		return;
 	}

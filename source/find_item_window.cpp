@@ -451,7 +451,7 @@ void FindItemDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 		Brush* brush = items_list->GetSelectedBrush();
 		if (brush) {
 			result_brush = brush;
-			result_id = brush->asRaw()->getItemID();
+			result_id = brush->as<RAWBrush>()->getItemID();
 			EndModal(wxID_OK);
 		}
 	}
