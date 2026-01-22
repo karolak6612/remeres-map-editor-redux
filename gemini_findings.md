@@ -12,21 +12,21 @@
 The legacy codebase follows a monolithic design pattern typical of older C++ GUI applications. It heavily relies on `wxWidgets` for window management and event handling, coupled tightly with OpenGL for rendering.
 
 *   **`MapCanvas` (Legacy)**
-    *   **Role**: The central "God Class" for the map view. It inherits from `wxGLCanvas` and handles responsibilities ranging from window events, input processing, viewport management, to orchestration of the rendering loop.
-    *   **Dependencies**: It owns a `MapDrawer` instance and has direct references to the global `Editor` and `GUI` singletons.
-    *   **Context**: It uses `GUI::GetGLContext(this)` to obtain the OpenGL context. This implies a shared context model where the `GUI` class manages the lifecycle of the GL context, allowing resources (textures) to be shared across different windows (e.g., Palette, Minimap, Map).
+	*   **Role**: The central "God Class" for the map view. It inherits from `wxGLCanvas` and handles responsibilities ranging from window events, input processing, viewport management, to orchestration of the rendering loop.
+	*   **Dependencies**: It owns a `MapDrawer` instance and has direct references to the global `Editor` and `GUI` singletons.
+	*   **Context**: It uses `GUI::GetGLContext(this)` to obtain the OpenGL context. This implies a shared context model where the `GUI` class manages the lifecycle of the GL context, allowing resources (textures) to be shared across different windows (e.g., Palette, Minimap, Map).
 
 *   **`MapDrawer` (Legacy)**
-    *   **Role**: The rendering engine. It encapsulates the OpenGL logic.
-    *   **Responsibilities**:
-        *   Setting up the OpenGL projection (`SetupGL`).
-        *   Managing the frame rendering sequence (`Draw`, `DrawMap`, `DrawBackground`).
-        *   Implementing the specific logic for drawing tiles (`DrawTile`), items (`BlitItem`), and creatures (`BlitCreature`).
-    *   **Implementation**: It uses Immediate Mode OpenGL (`glBegin`, `glEnd`) extensively. State management is manual and scattered.
+	*   **Role**: The rendering engine. It encapsulates the OpenGL logic.
+	*   **Responsibilities**:
+		*   Setting up the OpenGL projection (`SetupGL`).
+		*   Managing the frame rendering sequence (`Draw`, `DrawMap`, `DrawBackground`).
+		*   Implementing the specific logic for drawing tiles (`DrawTile`), items (`BlitItem`), and creatures (`BlitCreature`).
+	*   **Implementation**: It uses Immediate Mode OpenGL (`glBegin`, `glEnd`) extensively. State management is manual and scattered.
 
 *   **`GraphicManager` (Legacy)**
-    *   **Role**: A global singleton managing sprite assets.
-    *   **Mechanism**: It loads `.spr` and `.dat` files. It provides `GameSprite` objects. Crucially, it handles the lazy loading of GL textures. When `GameSprite::getHardwareID()` is called, it checks if the texture is loaded (`isGLLoaded`). If not, it calls `createGLTexture`, which uploads the pixel data to the *currently active* OpenGL context.
+	*   **Role**: A global singleton managing sprite assets.
+	*   **Mechanism**: It loads `.spr` and `.dat` files. It provides `GameSprite` objects. Crucially, it handles the lazy loading of GL textures. When `GameSprite::getHardwareID()` is called, it checks if the texture is loaded (`isGLLoaded`). If not, it calls `createGLTexture`, which uploads the pixel data to the *currently active* OpenGL context.
 
 ### 1.2 Rendering Pipeline Analysis
 The rendering pipeline is imperative and executed synchronously within the `OnPaint` event.
@@ -36,11 +36,11 @@ The rendering pipeline is imperative and executed synchronously within the `OnPa
 3.  **Preparation**: `MapDrawer::SetupVars` calculates the visible map region (start/end x, y, z) based on `view_scroll` and `zoom`.
 4.  **GL Setup**: `MapDrawer::SetupGL` configures the 2D orthographic projection using `glOrtho`.
 5.  **Drawing Loop (`MapDrawer::DrawMap`)**:
-    *   Iterates through Z-levels from bottom to top (Painter's Algorithm).
-    *   Iterates through X/Y coordinates of visible chunks.
-    *   Calls `DrawTile` for each location.
-    *   `DrawTile` calls `BlitItem` for each item in the tile stack.
-    *   `BlitItem` retrieves the sprite from `GraphicManager` and calls `glBlitTexture`.
+	*   Iterates through Z-levels from bottom to top (Painter's Algorithm).
+	*   Iterates through X/Y coordinates of visible chunks.
+	*   Calls `DrawTile` for each location.
+	*   `DrawTile` calls `BlitItem` for each item in the tile stack.
+	*   `BlitItem` retrieves the sprite from `GraphicManager` and calls `glBlitTexture`.
 6.  **Presentation**: `SwapBuffers` is called to display the frame.
 
 ### 1.3 Core Systems Documentation
@@ -56,38 +56,38 @@ The rendering pipeline is imperative and executed synchronously within the `OnPa
 The refactored codebase (`source/rendering/`) attempts to modernize the application by applying SOLID principles, specifically separating concerns into distinct layers.
 
 *   **`MapCanvas` (Refactored)** (`source/rendering/canvas/map_canvas.cpp`)
-    *   **Role**: Acts as a controller/facade. It initializes the subsystems (`RenderCoordinator`, `InputDispatcher`, `ViewManager`) and bridges `wxWidgets` events to them.
-    *   **Key Change**: It explicitly creates its own `wxGLContext` in `initialize()`: `glContext_ = new wxGLContext(this);`. This is a departure from the shared context model.
+	*   **Role**: Acts as a controller/facade. It initializes the subsystems (`RenderCoordinator`, `InputDispatcher`, `ViewManager`) and bridges `wxWidgets` events to them.
+	*   **Key Change**: It explicitly creates its own `wxGLContext` in `initialize()`: `glContext_ = new wxGLContext(this);`. This is a departure from the shared context model.
 
 *   **`RenderCoordinator`** (`source/rendering/pipeline/render_coordinator.cpp`)
-    *   **Role**: Manages the rendering pipeline. It holds ownership of specialized renderers (`TileRenderer`, `ItemRenderer`, etc.) via `std::unique_ptr`.
-    *   **Pattern**: Dependency Injection is used to supply renderers during construction.
+	*   **Role**: Manages the rendering pipeline. It holds ownership of specialized renderers (`TileRenderer`, `ItemRenderer`, etc.) via `std::unique_ptr`.
+	*   **Pattern**: Dependency Injection is used to supply renderers during construction.
 
 *   **`RenderState`**
-    *   **Role**: A context object (`DTO`) passed through the rendering pipeline. It carries viewport data (`viewportWidth`, `zoom`, `scrollX`) and pointers to the `Map` and `Editor`. This effectively decouples renderers from the `MapCanvas` instance.
+	*   **Role**: A context object (`DTO`) passed through the rendering pipeline. It carries viewport data (`viewportWidth`, `zoom`, `scrollX`) and pointers to the `Map` and `Editor`. This effectively decouples renderers from the `MapCanvas` instance.
 
 *   **`InputDispatcher`**
-    *   **Role**: A centralized hub for input events. It receives raw wxWidgets events, normalizes them, and routes them to specific handlers like `BrushInputHandler`.
+	*   **Role**: A centralized hub for input events. It receives raw wxWidgets events, normalizes them, and routes them to specific handlers like `BrushInputHandler`.
 
 ### 2.2 Refactored Rendering Pipeline
 The pipeline is structured as a series of "Passes" defined in the `RenderPass` enum.
 
 1.  **Pass Execution (`RenderCoordinator::render`)**:
-    *   `RenderPass::Background`: Clears the framebuffer and sets up the camera matrix.
-    *   `RenderPass::Tiles`: The main pass. Calls `TileRenderer::drawTile` for visible tiles.
-    *   `RenderPass::Selection`: Draws selection boxes.
-    *   `RenderPass::DraggingShadow`: Draws the ghost of items being dragged.
-    *   `RenderPass::Brush`: Renders the brush preview under the cursor.
-    *   `RenderPass::UI`: Intended to draw on-screen UI elements (like the "Ingame Box").
+	*   `RenderPass::Background`: Clears the framebuffer and sets up the camera matrix.
+	*   `RenderPass::Tiles`: The main pass. Calls `TileRenderer::drawTile` for visible tiles.
+	*   `RenderPass::Selection`: Draws selection boxes.
+	*   `RenderPass::DraggingShadow`: Draws the ghost of items being dragged.
+	*   `RenderPass::Brush`: Renders the brush preview under the cursor.
+	*   `RenderPass::UI`: Intended to draw on-screen UI elements (like the "Ingame Box").
 
 ### 2.3 Core Systems Documentation (Refactored)
 *   **Renderer Specialization**:
-    *   **`TileRenderer`**: Heavily burdened. It contains the ported logic for drawing tiles, items, creatures, and effects. It effectively replicates `MapDrawer`'s logic.
-    *   **`ItemRenderer`**: Found to be an empty stub. Method bodies contain only comments indicating future migration.
-    *   **`UIRenderer`**: Incomplete. Methods like `renderIngameBox` are placeholders without actual drawing commands.
+	*   **`TileRenderer`**: Heavily burdened. It contains the ported logic for drawing tiles, items, creatures, and effects. It effectively replicates `MapDrawer`'s logic.
+	*   **`ItemRenderer`**: Found to be an empty stub. Method bodies contain only comments indicating future migration.
+	*   **`UIRenderer`**: Incomplete. Methods like `renderIngameBox` are placeholders without actual drawing commands.
 
 *   **Input Handling**:
-    *   **`BrushInputHandler`**: Handles map editing logic. It correctly calls `editor_.draw()` and `editor_.undraw()`, confirming that the *logic* for editing works, even if the visual feedback is broken.
+	*   **`BrushInputHandler`**: Handles map editing logic. It correctly calls `editor_.draw()` and `editor_.undraw()`, confirming that the *logic* for editing works, even if the visual feedback is broken.
 
 ---
 
@@ -130,8 +130,8 @@ The pipeline is structured as a series of "Passes" defined in the `RenderPass` e
 *   **The Flaw**: The refactored `MapCanvas` instantiates a new `wxGLContext` in its `initialize()` method. It does *not* attempt to share this context with the global context managed by `GUI` (`g_gui.GetGLContext`).
 *   **The Mechanism**: The `GraphicManager` is a global singleton. When the application launches, it likely pre-loads certain assets or, crucially, other windows (like the Palette) trigger the lazy-loading of textures into the `GUI`'s global context. When the refactored `MapCanvas` creates a *separate* context, it cannot access these textures. OpenGL texture IDs are context-specific (unless explicit context sharing is enabled).
 *   **Evidence**:
-    *   Legacy: `SetCurrent(*g_gui.GetGLContext(this));`
-    *   Refactor: `glContext_ = new wxGLContext(this); SetCurrent(*glContext_);`
+	*   Legacy: `SetCurrent(*g_gui.GetGLContext(this));`
+	*   Refactor: `glContext_ = new wxGLContext(this); SetCurrent(*glContext_);`
 
 ### 4.2 The "Empty Renderer"
 **Investigation**: `ItemRenderer.cpp` was found to be almost entirely empty.
@@ -173,81 +173,81 @@ The pipeline is structured as a series of "Passes" defined in the `RenderPass` e
 #### Legacy Architecture
 ```mermaid
 classDiagram
-    class MapWindow {
-        +MapCanvas* canvas
-    }
-    class MapCanvas {
-        +MapDrawer* drawer
-        +OnPaint()
-    }
-    class MapDrawer {
-        +DrawMap()
-        +BlitItem()
-    }
-    class GraphicManager {
-        +GameSprite sprites
-    }
-    class GUI {
-        +wxGLContext* globalContext
-    }
+	class MapWindow {
+		+MapCanvas* canvas
+	}
+	class MapCanvas {
+		+MapDrawer* drawer
+		+OnPaint()
+	}
+	class MapDrawer {
+		+DrawMap()
+		+BlitItem()
+	}
+	class GraphicManager {
+		+GameSprite sprites
+	}
+	class GUI {
+		+wxGLContext* globalContext
+	}
 
-    MapCanvas --> MapDrawer : Owns
-    MapDrawer ..> GraphicManager : Global Access
-    MapCanvas ..> GUI : Uses Global Context
+	MapCanvas --> MapDrawer : Owns
+	MapDrawer ..> GraphicManager : Global Access
+	MapCanvas ..> GUI : Uses Global Context
 ```
 
 #### Refactored Architecture
 ```mermaid
 classDiagram
-    class MapCanvas {
-        -RenderCoordinator* coordinator
-        -wxGLContext* privateContext
-        +initialize()
-    }
-    class RenderCoordinator {
-        -TileRenderer* tileRenderer
-        -ItemRenderer* itemRenderer
-        +render()
-    }
-    class TileRenderer {
-        +drawTile()
-        +drawItem()
-    }
-    class ItemRenderer {
-        <<Empty>>
-    }
+	class MapCanvas {
+		-RenderCoordinator* coordinator
+		-wxGLContext* privateContext
+		+initialize()
+	}
+	class RenderCoordinator {
+		-TileRenderer* tileRenderer
+		-ItemRenderer* itemRenderer
+		+render()
+	}
+	class TileRenderer {
+		+drawTile()
+		+drawItem()
+	}
+	class ItemRenderer {
+		<<Empty>>
+	}
 
-    MapCanvas --> RenderCoordinator : Owns
-    RenderCoordinator --> TileRenderer : Owns
-    RenderCoordinator --> ItemRenderer : Owns
-    TileRenderer ..> GraphicManager : Global Access
+	MapCanvas --> RenderCoordinator : Owns
+	RenderCoordinator --> TileRenderer : Owns
+	RenderCoordinator --> ItemRenderer : Owns
+	TileRenderer ..> GraphicManager : Global Access
 ```
 
 ### 6.2 The Context Mismatch Issue
 ```mermaid
 sequenceDiagram
-    participant App as Application
-    participant GM as GraphicManager
-    participant Legacy as Legacy MapCanvas
-    participant Refactor as Refactored MapCanvas
+	participant App as Application
+	participant GM as GraphicManager
+	participant Legacy as Legacy MapCanvas
+	participant Refactor as Refactored MapCanvas
 
-    Note over App, GM: 1. App Starts, Shared Context Created
-    App->>GM: Load Sprites (Lazy Load)
-    GM->>GM: Generate Texture ID (e.g. 42) for Shared Context
+	Note over App, GM: 1. App Starts, Shared Context Created
+	App->>GM: Load Sprites (Lazy Load)
+	GM->>GM: Generate Texture ID (e.g. 42) for Shared Context
 
-    Note over Legacy: Legacy Rendering
-    Legacy->>App: Get Shared Context
-    Legacy->>GM: Get Texture
-    GM-->>Legacy: ID 42
-    Legacy->>Legacy: Bind ID 42 (Valid) -> Renders OK
+	Note over Legacy: Legacy Rendering
+	Legacy->>App: Get Shared Context
+	Legacy->>GM: Get Texture
+	GM-->>Legacy: ID 42
+	Legacy->>Legacy: Bind ID 42 (Valid) -> Renders OK
 
-    Note over Refactor: Refactored Rendering
-    Refactor->>Refactor: Create NEW Private Context
-    Refactor->>GM: Get Texture
-    GM-->>Refactor: ID 42 (Cached)
-    Refactor->>Refactor: Bind ID 42
-    Note right of Refactor: ERROR: ID 42 is invalid in Private Context!
-    Refactor->>Refactor: Renders Black
+	Note over Refactor: Refactored Rendering
+	Refactor->>Refactor: Create NEW Private Context
+	Refactor->>GM: Get Texture
+	GM-->>Refactor: ID 42 (Cached)
+	Refactor->>Refactor: Bind ID 42
+	Note right of Refactor: ERROR: ID 42 is invalid in Private Context!
+	Refactor->>Refactor: Renders Black
 ```
 
 ---
@@ -262,17 +262,17 @@ However, the project is currently in a **non-functional state**. The refactoring
 ### 7.2 Recommendations
 
 1.  **Immediate Fix (Critical)**: **Restore Shared Context**.
-    *   Modify `MapCanvas::initialize` to accept the global `wxGLContext` from `g_gui` instead of creating a new one. Alternatively, ensure the new context is explicitly shared with the global context during creation (via `wxGLContext` constructor arguments).
+	*   Modify `MapCanvas::initialize` to accept the global `wxGLContext` from `g_gui` instead of creating a new one. Alternatively, ensure the new context is explicitly shared with the global context during creation (via `wxGLContext` constructor arguments).
 
 2.  **Implementation Completion (Major)**: **Implement `ItemRenderer`**.
-    *   Migrate the item drawing logic currently duplicated in `TileRenderer` to `ItemRenderer`.
-    *   Update `TileRenderer`, `BrushRenderer`, and `SelectionRenderer` to use the shared `ItemRenderer` instance from the `RenderCoordinator` instead of instantiating their own private `TileRenderer`s.
+	*   Migrate the item drawing logic currently duplicated in `TileRenderer` to `ItemRenderer`.
+	*   Update `TileRenderer`, `BrushRenderer`, and `SelectionRenderer` to use the shared `ItemRenderer` instance from the `RenderCoordinator` instead of instantiating their own private `TileRenderer`s.
 
 3.  **UI Restoration (Major)**: **Finish `UIRenderer`**.
-    *   Implement the missing geometry drawing calls for `renderIngameBox` and other UI overlays to restore the HUD.
+	*   Implement the missing geometry drawing calls for `renderIngameBox` and other UI overlays to restore the HUD.
 
 4.  **Cleanup (Minor)**: **Fix GLAD Initialization**.
-    *   Refactor `initializeGLAD` to ensure function pointers are updated if the context changes, or guarantee a single initialization path.
+	*   Refactor `initializeGLAD` to ensure function pointers are updated if the context changes, or guarantee a single initialization path.
 
 ---
 **End of Analysis**
