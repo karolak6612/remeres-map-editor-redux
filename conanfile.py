@@ -21,6 +21,7 @@ class RMERecipe(ConanFile):
         "boost/1.87.0",
         "zlib/1.3.1",
         "opengl/system",
+        "wayland/1.23.92",
     )
     
     def layout(self):

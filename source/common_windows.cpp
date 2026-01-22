@@ -522,7 +522,7 @@ void ExportMiniMapWindow::OnExportTypeChange(wxCommandEvent& event) {
 }
 
 void ExportMiniMapWindow::OnClickBrowse(wxCommandEvent& WXUNUSED(event)) {
-	wxDirDialog dialog(NULL, "Select the output folder", "", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
+	wxDirDialog dialog(nullptr, "Select the output folder", "", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 	if (dialog.ShowModal() == wxID_OK) {
 		const wxString& directory = dialog.GetPath();
 		directory_text_field->ChangeValue(directory);
@@ -675,7 +675,7 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 ExportTilesetsWindow::~ExportTilesetsWindow() = default;
 
 void ExportTilesetsWindow::OnClickBrowse(wxCommandEvent& WXUNUSED(event)) {
-	wxDirDialog dialog(NULL, "Select the output folder", "", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
+	wxDirDialog dialog(nullptr, "Select the output folder", "", wxDD_DEFAULT_STYLE | wxDD_DIR_MUST_EXIST);
 	if (dialog.ShowModal() == wxID_OK) {
 		const wxString& directory = dialog.GetPath();
 		directory_text_field->ChangeValue(directory);

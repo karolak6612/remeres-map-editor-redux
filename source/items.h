@@ -42,9 +42,9 @@ class ItemDatabase;
 
 extern ItemDatabase g_items;
 
-typedef uint8_t attribute_t;
-typedef uint32_t flags_t;
-typedef uint16_t datasize_t;
+using attribute_t = uint8_t;
+using flags_t = uint32_t;
+using datasize_t = uint16_t;
 
 enum ItemGroup_t {
 	ITEM_GROUP_NONE = 0,
@@ -438,9 +438,9 @@ public:
 	bool loadItemFromGameXml(pugi::xml_node itemNode, int id);
 	bool loadMetaItem(pugi::xml_node node);
 
-	// typedef std::map<int32_t, ItemType*> ItemMap;
-	typedef contigous_vector<ItemType*> ItemMap;
-	typedef std::map<std::string, ItemType*> ItemNameMap;
+	// using ItemMap = std::map<int32_t, ItemType*>;
+	using ItemMap = contigous_vector<ItemType*>;
+	using ItemNameMap = std::map<std::string, ItemType*>;
 	ItemMap items;
 
 	// Version information
