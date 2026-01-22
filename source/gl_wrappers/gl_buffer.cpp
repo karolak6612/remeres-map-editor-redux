@@ -1,12 +1,12 @@
 #include "gl_buffer.h"
 
 #if defined(__LINUX__)
-    // Ensure prototypes are defined
-    #ifndef GL_GLEXT_PROTOTYPES
-    #define GL_GLEXT_PROTOTYPES
-    #endif
-    #include <GL/gl.h>
-    #include <GL/glext.h>
+	// Ensure prototypes are defined
+	#ifndef GL_GLEXT_PROTOTYPES
+		#define GL_GLEXT_PROTOTYPES
+	#endif
+	#include <GL/gl.h>
+	#include <GL/glext.h>
 #endif
 
 GLBuffer::GLBuffer(Type type) :

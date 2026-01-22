@@ -29,7 +29,9 @@ public:
 	void setFilter(GLenum minFilter, GLenum magFilter);
 	void setWrap(GLenum wrapS, GLenum wrapT);
 
-	GLuint getID() const { return id; }
+	GLuint getID() const {
+		return id;
+	}
 
 private:
 	GLuint id = 0;
