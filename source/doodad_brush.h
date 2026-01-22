@@ -30,7 +30,6 @@ public:
 	DoodadBrush();
 	virtual ~DoodadBrush();
 
-
 protected:
 	struct AlternativeBlock;
 

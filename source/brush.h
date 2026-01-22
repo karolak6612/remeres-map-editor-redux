@@ -173,7 +173,6 @@ public:
 	TerrainBrush();
 	virtual ~TerrainBrush();
 
-
 	virtual bool canDraw(BaseMap* map, const Position& position) const {
 		return true;
 	}
@@ -216,7 +215,6 @@ public:
 	FlagBrush(uint32_t _flag);
 	virtual ~FlagBrush();
 
-
 	virtual bool canDraw(BaseMap* map, const Position& position) const;
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
 	virtual void undraw(BaseMap* map, Tile* tile);
@@ -238,7 +236,6 @@ class DoorBrush : public Brush {
 public:
 	DoorBrush(DoorType _doortype);
 	virtual ~DoorBrush();
-
 
 	static void switchDoor(Item* door);
 
@@ -264,7 +261,6 @@ public:
 	OptionalBorderBrush();
 	virtual ~OptionalBorderBrush();
 
-
 	virtual bool canDraw(BaseMap* map, const Position& position) const;
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
 	virtual void undraw(BaseMap* map, Tile* tile);
@@ -283,7 +279,6 @@ class EraserBrush : public Brush {
 public:
 	EraserBrush();
 	virtual ~EraserBrush();
-
 
 	virtual bool canDraw(BaseMap* map, const Position& position) const;
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);

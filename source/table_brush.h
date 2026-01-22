@@ -31,7 +31,6 @@ public:
 	TableBrush();
 	virtual ~TableBrush();
 
-
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings);
 
 	virtual bool canDraw(BaseMap* map, const Position& position) const;

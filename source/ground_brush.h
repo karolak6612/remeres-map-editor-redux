@@ -32,7 +32,6 @@ public:
 	GroundBrush();
 	virtual ~GroundBrush();
 
-
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings);
 
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);

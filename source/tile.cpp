@@ -550,7 +550,9 @@ void Tile::addWallItem(Item* item) {
 void Tile::cleanWalls(bool dontdelete) {
 	if (!dontdelete) {
 		for (Item* item : items) {
-			if (item->isWall()) delete item;
+			if (item->isWall()) {
+				delete item;
+			}
 		}
 	}
 	std::erase_if(items, [](Item* item) { return item->isWall(); });
@@ -558,7 +560,9 @@ void Tile::cleanWalls(bool dontdelete) {
 
 void Tile::cleanWalls(WallBrush* wb) {
 	for (Item* item : items) {
-		if (item->isWall() && wb->hasWall(item)) delete item;
+		if (item->isWall() && wb->hasWall(item)) {
+			delete item;
+		}
 	}
 	std::erase_if(items, [&](Item* item) { return item->isWall() && wb->hasWall(item); });
 }
@@ -566,7 +570,9 @@ void Tile::cleanWalls(WallBrush* wb) {
 void Tile::cleanTables(bool dontdelete) {
 	if (!dontdelete) {
 		for (Item* item : items) {
-			if (item->isTable()) delete item;
+			if (item->isTable()) {
+				delete item;
+			}
 		}
 	}
 	std::erase_if(items, [](Item* item) { return item->isTable(); });

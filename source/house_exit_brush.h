@@ -30,7 +30,6 @@ public:
 	HouseExitBrush();
 	virtual ~HouseExitBrush();
 
-
 	// Not used
 	virtual bool load(pugi::xml_node node, wxArrayString& warnings) {
 		return true;

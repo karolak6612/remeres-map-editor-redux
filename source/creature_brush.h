@@ -28,7 +28,6 @@ public:
 	CreatureBrush(CreatureType* type); // Create a RAWBrush of the specified type
 	virtual ~CreatureBrush();
 
-
 	virtual bool canDraw(BaseMap* map, const Position& position) const;
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
 	void draw_creature(BaseMap* map, Tile* tile);
