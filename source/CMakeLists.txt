@@ -30,6 +30,9 @@ ${CMAKE_CURRENT_LIST_DIR}/extension.h
 ${CMAKE_CURRENT_LIST_DIR}/extension_window.h
 ${CMAKE_CURRENT_LIST_DIR}/find_item_window.h
 ${CMAKE_CURRENT_LIST_DIR}/filehandle.h
+${CMAKE_CURRENT_LIST_DIR}/gl_wrappers/gl_buffer.h
+${CMAKE_CURRENT_LIST_DIR}/gl_wrappers/gl_renderer.h
+${CMAKE_CURRENT_LIST_DIR}/gl_wrappers/gl_texture.h
 ${CMAKE_CURRENT_LIST_DIR}/graphics.h
 ${CMAKE_CURRENT_LIST_DIR}/ground_brush.h
 ${CMAKE_CURRENT_LIST_DIR}/gui.h
@@ -138,6 +141,9 @@ ${CMAKE_CURRENT_LIST_DIR}/extension.cpp
 ${CMAKE_CURRENT_LIST_DIR}/extension_window.cpp
 ${CMAKE_CURRENT_LIST_DIR}/find_item_window.cpp
 ${CMAKE_CURRENT_LIST_DIR}/filehandle.cpp
+${CMAKE_CURRENT_LIST_DIR}/gl_wrappers/gl_buffer.cpp
+${CMAKE_CURRENT_LIST_DIR}/gl_wrappers/gl_renderer.cpp
+${CMAKE_CURRENT_LIST_DIR}/gl_wrappers/gl_texture.cpp
 ${CMAKE_CURRENT_LIST_DIR}/graphics.cpp
 ${CMAKE_CURRENT_LIST_DIR}/ground_brush.cpp
 ${CMAKE_CURRENT_LIST_DIR}/gui.cpp

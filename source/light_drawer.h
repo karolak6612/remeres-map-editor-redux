@@ -1,25 +1,10 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
 #ifndef RME_LIGHDRAWER_H
 #define RME_LIGHDRAWER_H
 
 #include "graphics.h"
 #include "position.h"
+#include "gl_wrappers/gl_texture.h"
+#include "gl_wrappers/gl_buffer.h"
 
 class LightDrawer {
 	struct Light {
@@ -40,9 +25,6 @@ public:
 	void clear() noexcept;
 
 private:
-	void createGLTexture();
-	void unloadGLTexture();
-
 	inline float calculateIntensity(int map_x, int map_y, const Light& light) {
 		int dx = map_x - light.map_x;
 		int dy = map_y - light.map_y;
@@ -57,10 +39,13 @@ private:
 		return std::min(intensity, 1.f);
 	}
 
-	GLuint texture;
+	GLTexture texture;
 	std::vector<Light> lights;
 	std::vector<uint8_t> buffer;
 	wxColor global_color;
+
+	// Quad VBO
+	GLBuffer vbo;
 };
 
 #endif

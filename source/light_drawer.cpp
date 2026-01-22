@@ -1,39 +1,16 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
 #include "main.h"
 #include "light_drawer.h"
 
-LightDrawer::LightDrawer() {
-	texture = 0;
+LightDrawer::LightDrawer() :
+	vbo(GLBuffer::VERTEX) {
 	global_color = wxColor(50, 50, 50, 255);
 }
 
 LightDrawer::~LightDrawer() {
-	unloadGLTexture();
-
 	lights.clear();
 }
 
 void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x, int scroll_y, bool fog) {
-	if (texture == 0) {
-		createGLTexture();
-	}
-
 	int w = end_x - map_x;
 	int h = end_y - map_y;
 
@@ -67,18 +44,15 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 		}
 	}
 
-	const int draw_x = map_x * TileSize - scroll_x;
-	const int draw_y = map_y * TileSize - scroll_y;
-	int draw_width = w * TileSize;
-	int draw_height = h * TileSize;
+	const float draw_x = (float)(map_x * TileSize - scroll_x);
+	const float draw_y = (float)(map_y * TileSize - scroll_y);
+	const float draw_width = (float)(w * TileSize);
+	const float draw_height = (float)(h * TileSize);
 
-	glBindTexture(GL_TEXTURE_2D, texture);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, 0x812F);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, 0x812F);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data());
+	texture.bind();
+	texture.setFilter(GL_LINEAR, GL_LINEAR);
+	texture.setWrap(0x812F, 0x812F); // GL_CLAMP_TO_EDGE
+	texture.upload(w, h, buffer.data());
 
 	if (!fog) {
 		glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
@@ -86,28 +60,59 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 
 	glColor4ub(255, 255, 255, 255); // reset color
 	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.f, 0.f);
-	glVertex2f(draw_x, draw_y);
-	glTexCoord2f(1.f, 0.f);
-	glVertex2f(draw_x + draw_width, draw_y);
-	glTexCoord2f(1.f, 1.f);
-	glVertex2f(draw_x + draw_width, draw_y + draw_height);
-	glTexCoord2f(0.f, 1.f);
-	glVertex2f(draw_x, draw_y + draw_height);
-	glEnd();
+
+	struct QuadVert {
+		float x, y;
+		float u, v;
+	};
+
+	QuadVert verts[4] = {
+		{ draw_x, draw_y, 0.f, 0.f },
+		{ draw_x + draw_width, draw_y, 1.f, 0.f },
+		{ draw_x + draw_width, draw_y + draw_height, 1.f, 1.f },
+		{ draw_x, draw_y + draw_height, 0.f, 1.f }
+	};
+
+	vbo.setData(verts, sizeof(verts), GL_DYNAMIC_DRAW);
+	vbo.bind();
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(QuadVert), (const void*)offsetof(QuadVert, x));
+	glTexCoordPointer(2, GL_FLOAT, sizeof(QuadVert), (const void*)offsetof(QuadVert, u));
+
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	vbo.unbind();
+	texture.unbind();
+
 	glDisable(GL_TEXTURE_2D);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (fog) {
 		glColor4ub(10, 10, 10, 80);
-		glBegin(GL_QUADS);
-		glVertex2f(draw_x, draw_y);
-		glVertex2f(draw_x + draw_width, draw_y);
-		glVertex2f(draw_x + draw_width, draw_y + draw_height);
-		glVertex2f(draw_x, draw_y + draw_height);
-		glEnd();
+
+		QuadVert fogVerts[4] = {
+			{ draw_x, draw_y, 0.f, 0.f },
+			{ draw_x + draw_width, draw_y, 0.f, 0.f },
+			{ draw_x + draw_width, draw_y + draw_height, 0.f, 0.f },
+			{ draw_x, draw_y + draw_height, 0.f, 0.f }
+		};
+		vbo.setData(fogVerts, sizeof(fogVerts), GL_DYNAMIC_DRAW);
+		vbo.bind();
+
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(2, GL_FLOAT, sizeof(QuadVert), (const void*)offsetof(QuadVert, x));
+
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+		glDisableClientState(GL_VERTEX_ARRAY);
+		vbo.unbind();
 	}
 }
 
@@ -140,15 +145,4 @@ void LightDrawer::addLight(int map_x, int map_y, int map_z, const SpriteLight& l
 
 void LightDrawer::clear() noexcept {
 	lights.clear();
-}
-
-void LightDrawer::createGLTexture() {
-	glGenTextures(1, &texture);
-	ASSERT(texture == 0);
-}
-
-void LightDrawer::unloadGLTexture() {
-	if (texture != 0) {
-		glDeleteTextures(1, &texture);
-	}
 }

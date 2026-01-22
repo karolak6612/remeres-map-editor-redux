@@ -178,9 +178,13 @@ void MapDrawer::SetupGL() {
 	glPushMatrix();
 	glLoadIdentity();
 	glTranslatef(0.375f, 0.375f, 0.0f);
+
+	renderer.begin();
 }
 
 void MapDrawer::Release() {
+	renderer.end();
+
 	for (std::vector<MapTooltip*>::const_iterator it = tooltips.begin(); it != tooltips.end(); ++it) {
 		delete *it;
 	}
@@ -276,6 +280,7 @@ void MapDrawer::DrawMap() {
 	for (int map_z = start_z; map_z >= superend_z; map_z--) {
 		if (map_z == end_z && start_z != end_z && options.show_shade) {
 			// Draw shade
+			renderer.flush();
 			if (!only_colors) {
 				glDisable(GL_TEXTURE_2D);
 			}
@@ -331,6 +336,7 @@ void MapDrawer::DrawMap() {
 						int cy = (nd_map_y)*TileSize - view_scroll_y - getFloorAdjustment(floor);
 						int cx = (nd_map_x)*TileSize - view_scroll_x - getFloorAdjustment(floor);
 
+						renderer.flush();
 						glColor4ub(255, 0, 255, 128);
 						glBegin(GL_QUADS);
 						glVertex2f(cx, cy + TileSize * 4);
@@ -458,6 +464,7 @@ void MapDrawer::DrawIngameBox() {
 
 	static wxColor side_color(0, 0, 0, 200);
 
+	renderer.flush();
 	glDisable(GL_TEXTURE_2D);
 
 	// left side
@@ -501,21 +508,33 @@ void MapDrawer::DrawIngameBox() {
 }
 
 void MapDrawer::DrawGrid() {
+	renderer.flush();
+	std::vector<float> verts;
+	verts.reserve((end_y - start_y + end_x - start_x) * 4);
+
 	for (int y = start_y; y < end_y; ++y) {
-		glColor4ub(255, 255, 255, 128);
-		glBegin(GL_LINES);
-		glVertex2f(start_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
-		glVertex2f(end_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
-		glEnd();
+		verts.push_back((float)(start_x * TileSize - view_scroll_x));
+		verts.push_back((float)(y * TileSize - view_scroll_y));
+		verts.push_back((float)(end_x * TileSize - view_scroll_x));
+		verts.push_back((float)(y * TileSize - view_scroll_y));
 	}
 
 	for (int x = start_x; x < end_x; ++x) {
-		glColor4ub(255, 255, 255, 128);
-		glBegin(GL_LINES);
-		glVertex2f(x * TileSize - view_scroll_x, start_y * TileSize - view_scroll_y);
-		glVertex2f(x * TileSize - view_scroll_x, end_y * TileSize - view_scroll_y);
-		glEnd();
+		verts.push_back((float)(x * TileSize - view_scroll_x));
+		verts.push_back((float)(start_y * TileSize - view_scroll_y));
+		verts.push_back((float)(x * TileSize - view_scroll_x));
+		verts.push_back((float)(end_y * TileSize - view_scroll_y));
 	}
+
+	if (verts.empty()) {
+		return;
+	}
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, 0, verts.data());
+	glColor4ub(255, 255, 255, 128);
+	glDrawArrays(GL_LINES, 0, verts.size() / 2);
+	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 void MapDrawer::DrawDraggingShadow() {
@@ -1915,18 +1934,7 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 
 void MapDrawer::glBlitTexture(int sx, int sy, int texture_number, int red, int green, int blue, int alpha) {
 	if (texture_number != 0) {
-		glBindTexture(GL_TEXTURE_2D, texture_number);
-		glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.f, 0.f);
-		glVertex2f(sx, sy);
-		glTexCoord2f(1.f, 0.f);
-		glVertex2f(sx + TileSize, sy);
-		glTexCoord2f(1.f, 1.f);
-		glVertex2f(sx + TileSize, sy + TileSize);
-		glTexCoord2f(0.f, 1.f);
-		glVertex2f(sx, sy + TileSize);
-		glEnd();
+		renderer.drawQuad(sx, sy, TileSize, TileSize, texture_number, 0.f, 0.f, 1.f, 1.f, red, green, blue, alpha);
 	}
 }
 
@@ -1934,14 +1942,7 @@ void MapDrawer::glBlitSquare(int sx, int sy, int red, int green, int blue, int a
 	if (size == 0) {
 		size = TileSize;
 	}
-
-	glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
-	glBegin(GL_QUADS);
-	glVertex2f(sx, sy);
-	glVertex2f(sx + size, sy);
-	glVertex2f(sx + size, sy + size);
-	glVertex2f(sx, sy + size);
-	glEnd();
+	renderer.drawRect(sx, sy, size, size, red, green, blue, alpha);
 }
 
 void MapDrawer::glColor(wxColor color) {
@@ -2000,23 +2001,24 @@ void MapDrawer::glColorCheck(Brush* brush, const Position& pos) {
 }
 
 void MapDrawer::drawRect(int x, int y, int w, int h, const wxColor& color, int width) {
+	renderer.flush();
 	glLineWidth(width);
 	glColor4ub(color.Red(), color.Green(), color.Blue(), color.Alpha());
-	glBegin(GL_LINE_STRIP);
-	glVertex2f(x, y);
-	glVertex2f(x + w, y);
-	glVertex2f(x + w, y + h);
-	glVertex2f(x, y + h);
-	glVertex2f(x, y);
-	glEnd();
+
+	float verts[] = {
+		(float)x, (float)y,
+		(float)(x + w), (float)y,
+		(float)(x + w), (float)(y + h),
+		(float)x, (float)(y + h),
+		(float)x, (float)y
+	};
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, 0, verts);
+	glDrawArrays(GL_LINE_STRIP, 0, 5);
+	glDisableClientState(GL_VERTEX_ARRAY);
 }
 
 void MapDrawer::drawFilledRect(int x, int y, int w, int h, const wxColor& color) {
-	glColor4ub(color.Red(), color.Green(), color.Blue(), color.Alpha());
-	glBegin(GL_QUADS);
-	glVertex2f(x, y);
-	glVertex2f(x + w, y);
-	glVertex2f(x + w, y + h);
-	glVertex2f(x, y + h);
-	glEnd();
+	renderer.drawRect(x, y, w, h, color.Red(), color.Green(), color.Blue(), color.Alpha());
 }
