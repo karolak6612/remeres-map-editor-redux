@@ -98,6 +98,8 @@ class MapDrawer {
 
 	float zoom;
 
+	GLint last_texture_id;
+
 	uint32_t current_house_id;
 
 	int mouse_map_x, mouse_map_y;

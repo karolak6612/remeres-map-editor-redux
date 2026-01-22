@@ -117,7 +117,7 @@ bool DrawingOptions::isDrawLight() const noexcept {
 }
 
 MapDrawer::MapDrawer(MapCanvas* canvas) :
-	canvas(canvas), editor(canvas->editor) {
+	canvas(canvas), editor(canvas->editor), last_texture_id(-1) {
 	light_drawer = std::make_shared<LightDrawer>();
 }
 
@@ -222,6 +222,9 @@ void MapDrawer::Draw() {
 }
 
 void MapDrawer::DrawBackground() {
+	// Reset texture state
+	last_texture_id = -1;
+
 	// Black Background
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -278,6 +281,8 @@ void MapDrawer::DrawMap() {
 			// Draw shade
 			if (!only_colors) {
 				glDisable(GL_TEXTURE_2D);
+				// Invalidate texture state as we disabled it
+				last_texture_id = -1;
 			}
 
 			glColor4ub(0, 0, 0, 128);
@@ -331,6 +336,11 @@ void MapDrawer::DrawMap() {
 						int cy = (nd_map_y)*TileSize - view_scroll_y - getFloorAdjustment(floor);
 						int cx = (nd_map_x)*TileSize - view_scroll_x - getFloorAdjustment(floor);
 
+						if (!only_colors) {
+							glDisable(GL_TEXTURE_2D);
+							last_texture_id = -1;
+						}
+
 						glColor4ub(255, 0, 255, 128);
 						glBegin(GL_QUADS);
 						glVertex2f(cx, cy + TileSize * 4);
@@ -338,6 +348,10 @@ void MapDrawer::DrawMap() {
 						glVertex2f(cx + TileSize * 4, cy);
 						glVertex2f(cx, cy);
 						glEnd();
+
+						if (!only_colors) {
+							glEnable(GL_TEXTURE_2D);
+						}
 					}
 				}
 			}
@@ -523,6 +537,7 @@ void MapDrawer::DrawDraggingShadow() {
 
 	// Draw dragging shadow
 	if (!editor.selection.isBusy() && dragging && !options.ingame) {
+		last_texture_id = -1; // Reset state before drawing shadow which might mix textures and colors
 		for (TileSet::iterator tit = editor.selection.begin(); tit != editor.selection.end(); tit++) {
 			Tile* tile = *tit;
 			Position pos = tile->getPosition();
@@ -1915,7 +1930,10 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 
 void MapDrawer::glBlitTexture(int sx, int sy, int texture_number, int red, int green, int blue, int alpha) {
 	if (texture_number != 0) {
-		glBindTexture(GL_TEXTURE_2D, texture_number);
+		if (last_texture_id != texture_number) {
+			glBindTexture(GL_TEXTURE_2D, texture_number);
+			last_texture_id = texture_number;
+		}
 		glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.f, 0.f);
@@ -1935,6 +1953,16 @@ void MapDrawer::glBlitSquare(int sx, int sy, int red, int green, int blue, int a
 		size = TileSize;
 	}
 
+	// We are drawing a colored square, so we should disable texturing if it was enabled.
+	// But to avoid constant flipping, we rely on the caller to handle state if they are batching squares.
+	// However, `glBlitSquare` is often called mixed with textured drawing.
+
+	// Check current state to avoid breaking external state assumptions
+	GLboolean texturing_was_enabled = glIsEnabled(GL_TEXTURE_2D);
+	if (texturing_was_enabled) {
+		glDisable(GL_TEXTURE_2D);
+	}
+
 	glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
 	glBegin(GL_QUADS);
 	glVertex2f(sx, sy);
@@ -1942,6 +1970,13 @@ void MapDrawer::glBlitSquare(int sx, int sy, int red, int green, int blue, int a
 	glVertex2f(sx + size, sy + size);
 	glVertex2f(sx, sy + size);
 	glEnd();
+
+	if (texturing_was_enabled) {
+		glEnable(GL_TEXTURE_2D);
+	}
+	// Note: We do NOT invalidate last_texture_id here.
+	// Disabling/Enabling GL_TEXTURE_2D does not change the currently bound texture unit.
+	// So the cache remains valid.
 }
 
 void MapDrawer::glColor(wxColor color) {
