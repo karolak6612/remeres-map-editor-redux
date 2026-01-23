@@ -70,8 +70,6 @@ protected:
 	wxSpinCtrl* spawn_size_spin;
 
 	bool handling_event;
-
-	DECLARE_EVENT_TABLE();
 };
 
 #endif
