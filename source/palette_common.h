@@ -43,8 +43,6 @@ public:
 	Brush* brush;
 
 	void OnKey(wxKeyEvent& event);
-
-	DECLARE_EVENT_TABLE()
 };
 
 class PalettePanel : public wxPanel {
@@ -96,8 +94,6 @@ protected:
 	ToolBarList tool_bars;
 	wxTimer refresh_timer;
 	int last_brush_size;
-
-	DECLARE_EVENT_TABLE();
 };
 
 class BrushSizePanel : public PalettePanel {
@@ -162,8 +158,6 @@ protected:
 	DCButton* brushsize6Button;
 	DCButton* brushsize8Button;
 	DCButton* brushsize11Button;
-
-	DECLARE_EVENT_TABLE()
 };
 
 class BrushToolPanel : public PalettePanel {
@@ -234,8 +228,6 @@ public:
 	BrushButton* pvpzoneBrushButton;
 
 	wxCheckBox* lockDoorCheckbox;
-
-	DECLARE_EVENT_TABLE()
 };
 
 class BrushThicknessPanel : public PalettePanel {
@@ -256,8 +248,6 @@ public:
 public:
 	wxSlider* slider;
 	wxCheckBox* use_button;
-
-	DECLARE_EVENT_TABLE()
 };
 
 #endif

@@ -34,14 +34,6 @@
 // ============================================================================
 // Palette window
 
-BEGIN_EVENT_TABLE(PaletteWindow, wxPanel)
-EVT_CHOICEBOOK_PAGE_CHANGING(PALETTE_CHOICEBOOK, PaletteWindow::OnSwitchingPage)
-EVT_CHOICEBOOK_PAGE_CHANGED(PALETTE_CHOICEBOOK, PaletteWindow::OnPageChanged)
-EVT_CLOSE(PaletteWindow::OnClose)
-
-EVT_KEY_DOWN(PaletteWindow::OnKey)
-END_EVENT_TABLE()
-
 PaletteWindow::PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets) :
 	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(230, 250)),
 	choicebook(nullptr),
@@ -55,8 +47,13 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets)
 	raw_palette(nullptr) {
 	SetMinSize(wxSize(225, 250));
 
+	Bind(wxEVT_CLOSE_WINDOW, &PaletteWindow::OnClose, this);
+	Bind(wxEVT_KEY_DOWN, &PaletteWindow::OnKey, this);
+
 	// Create choicebook
 	choicebook = newd wxChoicebook(this, PALETTE_CHOICEBOOK, wxDefaultPosition, wxSize(230, 250));
+	choicebook->Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &PaletteWindow::OnSwitchingPage, this);
+	choicebook->Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &PaletteWindow::OnPageChanged, this);
 
 	terrain_palette = static_cast<BrushPalettePanel*>(CreateTerrainPalette(choicebook, tilesets));
 	choicebook->AddPage(terrain_palette, terrain_palette->GetName());

@@ -28,15 +28,11 @@
 // ============================================================================
 // Palette Panel
 
-BEGIN_EVENT_TABLE(PalettePanel, wxPanel)
-EVT_TIMER(PALETTE_DELAYED_REFRESH_TIMER, WaypointPalettePanel::OnRefreshTimer)
-END_EVENT_TABLE()
-
 PalettePanel::PalettePanel(wxWindow* parent, wxWindowID id, long style) :
 	wxPanel(parent, id, wxDefaultPosition, wxDefaultSize, style),
 	refresh_timer(this, PALETTE_DELAYED_REFRESH_TIMER),
 	last_brush_size(0) {
-	////
+	Bind(wxEVT_TIMER, &PalettePanel::OnRefreshTimer, this, PALETTE_DELAYED_REFRESH_TIMER);
 }
 
 PalettePanel::~PalettePanel() {
@@ -170,19 +166,6 @@ void PalettePanel::OnRefreshTimer(wxTimerEvent&) {
 // ============================================================================
 // Size Page
 
-BEGIN_EVENT_TABLE(BrushSizePanel, wxPanel)
-EVT_TOGGLEBUTTON(PALETTE_BRUSHSHAPE_SQUARE, BrushSizePanel::OnClickSquareBrush)
-EVT_TOGGLEBUTTON(PALETTE_BRUSHSHAPE_CIRCLE, BrushSizePanel::OnClickCircleBrush)
-
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_0, BrushSizePanel::OnClickBrushSize0)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_1, BrushSizePanel::OnClickBrushSize1)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_2, BrushSizePanel::OnClickBrushSize2)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_4, BrushSizePanel::OnClickBrushSize4)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_6, BrushSizePanel::OnClickBrushSize6)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_8, BrushSizePanel::OnClickBrushSize8)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_11, BrushSizePanel::OnClickBrushSize11)
-END_EVENT_TABLE()
-
 BrushSizePanel::BrushSizePanel(wxWindow* parent) :
 	PalettePanel(parent, wxID_ANY),
 	loaded(false),
@@ -196,7 +179,6 @@ BrushSizePanel::BrushSizePanel(wxWindow* parent) :
 	brushsize6Button(nullptr),
 	brushsize8Button(nullptr),
 	brushsize11Button(nullptr) {
-	////
 }
 
 void BrushSizePanel::InvalidateContents() {
@@ -234,9 +216,11 @@ void BrushSizePanel::LoadAllContents() {
 
 	sub_sizer->Add(brushshapeSquareButton = newd DCButton(this, PALETTE_BRUSHSHAPE_SQUARE, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_9x9));
 	brushshapeSquareButton->SetToolTip("Square brush");
+	brushshapeSquareButton->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickSquareBrush, this);
 
 	sub_sizer->Add(brushshapeCircleButton = newd DCButton(this, PALETTE_BRUSHSHAPE_CIRCLE, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_CD_9x9));
 	brushshapeCircleButton->SetToolTip("Circle brush");
+	brushshapeCircleButton->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickCircleBrush, this);
 	brushshapeSquareButton->SetValue(true);
 
 	if (large_icons) {
@@ -248,9 +232,11 @@ void BrushSizePanel::LoadAllContents() {
 	sub_sizer->Add(brushsize0Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_0, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_CD_1x1));
 	brushsize0Button->SetToolTip("Brush size 1");
 	brushsize0Button->SetValue(true);
+	brushsize0Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize0, this);
 
 	sub_sizer->Add(brushsize1Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_1, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_3x3));
 	brushsize1Button->SetToolTip("Brush size 2");
+	brushsize1Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize1, this);
 
 	if (large_icons) {
 		size_sizer->Add(sub_sizer);
@@ -259,18 +245,23 @@ void BrushSizePanel::LoadAllContents() {
 
 	sub_sizer->Add(brushsize2Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_2, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_5x5));
 	brushsize2Button->SetToolTip("Brush size 3");
+	brushsize2Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize2, this);
 
 	sub_sizer->Add(brushsize4Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_4, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_7x7));
 	brushsize4Button->SetToolTip("Brush size 5");
+	brushsize4Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize4, this);
 
 	sub_sizer->Add(brushsize6Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_6, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_9x9));
 	brushsize6Button->SetToolTip("Brush size 7");
+	brushsize6Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize6, this);
 
 	sub_sizer->Add(brushsize8Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_8, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_15x15));
 	brushsize8Button->SetToolTip("Brush size 9");
+	brushsize8Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize8, this);
 
 	sub_sizer->Add(brushsize11Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_11, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_19x19));
 	brushsize11Button->SetToolTip("Brush size 12");
+	brushsize11Button->Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize11, this);
 
 	size_sizer->Add(sub_sizer);
 	SetSizerAndFit(size_sizer);
@@ -384,27 +375,6 @@ void BrushSizePanel::OnClickBrushSize(int which) {
 // ============================================================================
 // Tool Brush Panel
 
-BEGIN_EVENT_TABLE(BrushToolPanel, PalettePanel)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, BrushToolPanel::OnClickGravelButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_ERASER, BrushToolPanel::OnClickEraserButton)
-
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NORMAL_DOOR, BrushToolPanel::OnClickNormalDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_LOCKED_DOOR, BrushToolPanel::OnClickLockedDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_MAGIC_DOOR, BrushToolPanel::OnClickMagicDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_QUEST_DOOR, BrushToolPanel::OnClickQuestDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_HATCH_DOOR, BrushToolPanel::OnClickHatchDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_WINDOW_DOOR, BrushToolPanel::OnClickWindowDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NORMAL_ALT_DOOR, BrushToolPanel::OnClickNormalAltDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_ARCHWAY_DOOR, BrushToolPanel::OnClickArchwayDoorButton)
-
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_PZ_TOOL, BrushToolPanel::OnClickPZBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NOPVP_TOOL, BrushToolPanel::OnClickNOPVPBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NOLOGOUT_TOOL, BrushToolPanel::OnClickNoLogoutBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_PVPZONE_TOOL, BrushToolPanel::OnClickPVPZoneBrushButton)
-
-EVT_CHECKBOX(PALETTE_TERRAIN_LOCK_DOOR, BrushToolPanel::OnClickLockDoorCheckbox)
-END_EVENT_TABLE()
-
 BrushToolPanel::BrushToolPanel(wxWindow* parent) :
 	PalettePanel(parent, wxID_ANY),
 	loaded(false),
@@ -423,7 +393,6 @@ BrushToolPanel::BrushToolPanel(wxWindow* parent) :
 	nopvpBrushButton(nullptr),
 	nologBrushButton(nullptr),
 	pvpzoneBrushButton(nullptr) {
-	////
 }
 
 BrushToolPanel::~BrushToolPanel() {
@@ -469,26 +438,32 @@ void BrushToolPanel::LoadAllContents() {
 		ASSERT(g_gui.optional_brush);
 		sub_sizer->Add(optionalBorderButton = newd BrushButton(this, g_gui.optional_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL));
 		optionalBorderButton->SetToolTip("Optional Border Tool");
+		optionalBorderButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickGravelButton, this);
 
 		ASSERT(g_gui.eraser);
 		sub_sizer->Add(eraserButton = newd BrushButton(this, g_gui.eraser, RENDER_SIZE_32x32, PALETTE_TERRAIN_ERASER));
 		eraserButton->SetToolTip("Eraser");
+		eraserButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickEraserButton, this);
 
 		ASSERT(g_gui.pz_brush);
 		sub_sizer->Add(pzBrushButton = newd BrushButton(this, g_gui.pz_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_PZ_TOOL));
 		pzBrushButton->SetToolTip("PZ Tool");
+		pzBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickPZBrushButton, this);
 
 		ASSERT(g_gui.rook_brush);
 		sub_sizer->Add(nopvpBrushButton = newd BrushButton(this, g_gui.rook_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_NOPVP_TOOL));
 		nopvpBrushButton->SetToolTip("NO PVP Tool");
+		nopvpBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNOPVPBrushButton, this);
 
 		ASSERT(g_gui.nolog_brush);
 		sub_sizer->Add(nologBrushButton = newd BrushButton(this, g_gui.nolog_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_NOLOGOUT_TOOL));
 		nologBrushButton->SetToolTip("No Logout Tool");
+		nologBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNoLogoutBrushButton, this);
 
 		ASSERT(g_gui.pvp_brush);
 		sub_sizer->Add(pvpzoneBrushButton = newd BrushButton(this, g_gui.pvp_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_PVPZONE_TOOL));
 		pvpzoneBrushButton->SetToolTip("PVP Zone Tool");
+		pvpzoneBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickPVPZoneBrushButton, this);
 
 		// New row
 		size_sizer->Add(sub_sizer);
@@ -497,26 +472,32 @@ void BrushToolPanel::LoadAllContents() {
 		ASSERT(g_gui.normal_door_brush);
 		sub_sizer->Add(normalDoorButton = newd BrushButton(this, g_gui.normal_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_NORMAL_DOOR));
 		normalDoorButton->SetToolTip("Normal Door Tool");
+		normalDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNormalDoorButton, this);
 
 		ASSERT(g_gui.locked_door_brush);
 		sub_sizer->Add(lockedDoorButton = newd BrushButton(this, g_gui.locked_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_LOCKED_DOOR));
 		lockedDoorButton->SetToolTip("Locked Door Tool");
+		lockedDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickLockedDoorButton, this);
 
 		ASSERT(g_gui.magic_door_brush);
 		sub_sizer->Add(magicDoorButton = newd BrushButton(this, g_gui.magic_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_MAGIC_DOOR));
 		magicDoorButton->SetToolTip("Magic Door Tool");
+		magicDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickMagicDoorButton, this);
 
 		ASSERT(g_gui.quest_door_brush);
 		sub_sizer->Add(questDoorButton = newd BrushButton(this, g_gui.quest_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_QUEST_DOOR));
 		questDoorButton->SetToolTip("Quest Door Tool");
+		questDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickQuestDoorButton, this);
 
 		ASSERT(g_gui.hatch_door_brush);
 		sub_sizer->Add(hatchDoorButton = newd BrushButton(this, g_gui.hatch_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_HATCH_DOOR));
 		hatchDoorButton->SetToolTip("Hatch Window Tool");
+		hatchDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickHatchDoorButton, this);
 
 		ASSERT(g_gui.window_door_brush);
 		sub_sizer->Add(windowDoorButton = newd BrushButton(this, g_gui.window_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_WINDOW_DOOR));
 		windowDoorButton->SetToolTip("Window Tool");
+		windowDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickWindowDoorButton, this);
 
 		// New row
 		size_sizer->Add(sub_sizer);
@@ -525,10 +506,12 @@ void BrushToolPanel::LoadAllContents() {
 		ASSERT(g_gui.normal_door_alt_brush);
 		sub_sizer->Add(normalDoorAltButton = newd BrushButton(this, g_gui.normal_door_alt_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_NORMAL_ALT_DOOR));
 		normalDoorAltButton->SetToolTip("Normal Door (alt)");
+		normalDoorAltButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNormalAltDoorButton, this);
 
 		ASSERT(g_gui.archway_door_brush);
 		sub_sizer->Add(archwayDoorButton = newd BrushButton(this, g_gui.archway_door_brush, RENDER_SIZE_32x32, PALETTE_TERRAIN_ARCHWAY_DOOR));
 		archwayDoorButton->SetToolTip("Archway Tool");
+		archwayDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickArchwayDoorButton, this);
 	} else {
 		// Create the tool page with 16x16 icons
 		// Create tool window #1
@@ -536,43 +519,53 @@ void BrushToolPanel::LoadAllContents() {
 		ASSERT(g_gui.optional_brush);
 		sub_sizer->Add(optionalBorderButton = newd BrushButton(this, g_gui.optional_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL));
 		optionalBorderButton->SetToolTip("Optional Border Tool");
+		optionalBorderButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickGravelButton, this);
 
 		ASSERT(g_gui.eraser);
 		sub_sizer->Add(eraserButton = newd BrushButton(this, g_gui.eraser, RENDER_SIZE_16x16, PALETTE_TERRAIN_ERASER));
 		eraserButton->SetToolTip("Eraser");
+		eraserButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickEraserButton, this);
 
 		// sub_sizer->AddSpacer(20);
 		ASSERT(g_gui.normal_door_alt_brush);
 		sub_sizer->Add(normalDoorAltButton = newd BrushButton(this, g_gui.normal_door_alt_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_NORMAL_ALT_DOOR));
 		normalDoorAltButton->SetToolTip("Normal Door (alt)");
+		normalDoorAltButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNormalAltDoorButton, this);
 
 		ASSERT(g_gui.normal_door_brush);
 		sub_sizer->Add(normalDoorButton = newd BrushButton(this, g_gui.normal_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_NORMAL_DOOR));
 		normalDoorButton->SetToolTip("Normal Door Tool");
+		normalDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNormalDoorButton, this);
 
 		ASSERT(g_gui.locked_door_brush);
 		sub_sizer->Add(lockedDoorButton = newd BrushButton(this, g_gui.locked_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_LOCKED_DOOR));
 		lockedDoorButton->SetToolTip("Locked Door Tool");
+		lockedDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickLockedDoorButton, this);
 
 		ASSERT(g_gui.magic_door_brush);
 		sub_sizer->Add(magicDoorButton = newd BrushButton(this, g_gui.magic_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_MAGIC_DOOR));
 		magicDoorButton->SetToolTip("Magic Door Tool");
+		magicDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickMagicDoorButton, this);
 
 		ASSERT(g_gui.quest_door_brush);
 		sub_sizer->Add(questDoorButton = newd BrushButton(this, g_gui.quest_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_QUEST_DOOR));
 		questDoorButton->SetToolTip("Quest Door Tool");
+		questDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickQuestDoorButton, this);
 
 		ASSERT(g_gui.hatch_door_brush);
 		sub_sizer->Add(hatchDoorButton = newd BrushButton(this, g_gui.hatch_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_HATCH_DOOR));
 		hatchDoorButton->SetToolTip("Hatch Window Tool");
+		hatchDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickHatchDoorButton, this);
 
 		ASSERT(g_gui.window_door_brush);
 		sub_sizer->Add(windowDoorButton = newd BrushButton(this, g_gui.window_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_WINDOW_DOOR));
 		windowDoorButton->SetToolTip("Window Tool");
+		windowDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickWindowDoorButton, this);
 
 		ASSERT(g_gui.archway_door_brush);
 		sub_sizer->Add(archwayDoorButton = newd BrushButton(this, g_gui.archway_door_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_ARCHWAY_DOOR));
 		archwayDoorButton->SetToolTip("Archway Tool");
+		archwayDoorButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickArchwayDoorButton, this);
 
 		// Next row
 		size_sizer->Add(sub_sizer);
@@ -581,18 +574,22 @@ void BrushToolPanel::LoadAllContents() {
 		ASSERT(g_gui.pz_brush);
 		sub_sizer->Add(pzBrushButton = newd BrushButton(this, g_gui.pz_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_PZ_TOOL));
 		pzBrushButton->SetToolTip("PZ Tool");
+		pzBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickPZBrushButton, this);
 
 		ASSERT(g_gui.rook_brush);
 		sub_sizer->Add(nopvpBrushButton = newd BrushButton(this, g_gui.rook_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_NOPVP_TOOL));
 		nopvpBrushButton->SetToolTip("NO PVP Tool");
+		nopvpBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNOPVPBrushButton, this);
 
 		ASSERT(g_gui.nolog_brush);
 		sub_sizer->Add(nologBrushButton = newd BrushButton(this, g_gui.nolog_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_NOLOGOUT_TOOL));
 		nologBrushButton->SetToolTip("No Logout Tool");
+		nologBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNoLogoutBrushButton, this);
 
 		ASSERT(g_gui.pvp_brush);
 		sub_sizer->Add(pvpzoneBrushButton = newd BrushButton(this, g_gui.pvp_brush, RENDER_SIZE_16x16, PALETTE_TERRAIN_PVPZONE_TOOL));
 		pvpzoneBrushButton->SetToolTip("PVP Zone Tool");
+		pvpzoneBrushButton->Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickPVPZoneBrushButton, this);
 	}
 
 	sub_sizer->AddSpacer(large_icons ? 42 : 24);
@@ -603,6 +600,7 @@ void BrushToolPanel::LoadAllContents() {
 	lockDoorCheckbox = newd wxCheckBox(this, PALETTE_TERRAIN_LOCK_DOOR, "Lock door");
 	lockDoorCheckbox->SetToolTip("Prefer to draw \"locked\" variant of selected door brush if applicable.");
 	lockDoorCheckbox->SetValue(g_settings.getInteger(Config::DRAW_LOCKED_DOOR));
+	lockDoorCheckbox->Bind(wxEVT_CHECKBOX, &BrushToolPanel::OnClickLockDoorCheckbox, this);
 	checkbox_sub_sizer->Add(lockDoorCheckbox);
 
 	sub_sizer->Add(checkbox_sub_sizer);
@@ -840,10 +838,6 @@ void BrushToolPanel::OnClickLockDoorCheckbox(wxCommandEvent& event) {
 // ============================================================================
 // Brush Button
 
-BEGIN_EVENT_TABLE(BrushButton, ItemToggleButton)
-EVT_KEY_DOWN(BrushButton::OnKey)
-END_EVENT_TABLE()
-
 BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_t id) :
 	ItemToggleButton(parent, sz, uint16_t(0), id),
 	brush(_brush) {
@@ -851,6 +845,7 @@ BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_
 	ASSERT(brush);
 	SetSprite(brush->getLookID());
 	SetToolTip(wxstr(brush->getName()));
+	Bind(wxEVT_KEY_DOWN, &BrushButton::OnKey, this);
 }
 
 BrushButton::~BrushButton() {
@@ -864,23 +859,6 @@ void BrushButton::OnKey(wxKeyEvent& event) {
 // ============================================================================
 // Brush Thickness Panel
 
-BEGIN_EVENT_TABLE(BrushThicknessPanel, PalettePanel)
-#ifdef __WINDOWS__
-// This only works in wxmsw
-EVT_COMMAND_SCROLL_CHANGED(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-#else
-EVT_COMMAND_SCROLL_TOP(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_BOTTOM(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_LINEUP(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_LINEDOWN(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_PAGEUP(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_PAGEDOWN(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_THUMBRELEASE(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-#endif
-
-EVT_CHECKBOX(PALETTE_DOODAD_USE_THICKNESS, BrushThicknessPanel::OnClickCustomThickness)
-END_EVENT_TABLE()
-
 BrushThicknessPanel::BrushThicknessPanel(wxWindow* parent) :
 	PalettePanel(parent, wxID_ANY) {
 	wxSizer* thickness_sizer = newd wxBoxSizer(wxVERTICAL);
@@ -888,10 +866,22 @@ BrushThicknessPanel::BrushThicknessPanel(wxWindow* parent) :
 	wxSizer* thickness_sub_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	thickness_sub_sizer->Add(20, 10);
 	use_button = newd wxCheckBox(this, PALETTE_DOODAD_USE_THICKNESS, "Use custom thickness");
+	use_button->Bind(wxEVT_CHECKBOX, &BrushThicknessPanel::OnClickCustomThickness, this);
 	thickness_sub_sizer->Add(use_button);
 	thickness_sizer->Add(thickness_sub_sizer, 1, wxEXPAND);
 
 	slider = newd wxSlider(this, PALETTE_DOODAD_SLIDER, 5, 1, 10, wxDefaultPosition);
+#ifdef __WINDOWS__
+	slider->Bind(wxEVT_SCROLL_CHANGED, &BrushThicknessPanel::OnScroll, this);
+#else
+	slider->Bind(wxEVT_SCROLL_TOP, &BrushThicknessPanel::OnScroll, this);
+	slider->Bind(wxEVT_SCROLL_BOTTOM, &BrushThicknessPanel::OnScroll, this);
+	slider->Bind(wxEVT_SCROLL_LINEUP, &BrushThicknessPanel::OnScroll, this);
+	slider->Bind(wxEVT_SCROLL_LINEDOWN, &BrushThicknessPanel::OnScroll, this);
+	slider->Bind(wxEVT_SCROLL_PAGEUP, &BrushThicknessPanel::OnScroll, this);
+	slider->Bind(wxEVT_SCROLL_PAGEDOWN, &BrushThicknessPanel::OnScroll, this);
+	slider->Bind(wxEVT_SCROLL_THUMBRELEASE, &BrushThicknessPanel::OnScroll, this);
+#endif
 	thickness_sizer->Add(slider, 1, wxEXPAND);
 
 	SetSizerAndFit(thickness_sizer);

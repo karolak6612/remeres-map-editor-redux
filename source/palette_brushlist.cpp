@@ -18,6 +18,7 @@
 #include "main.h"
 
 #include "palette_brushlist.h"
+#include <wx/wrapsizer.h>
 #include "gui.h"
 #include "brush.h"
 #include "add_tileset_window.h"
@@ -27,13 +28,6 @@
 // ============================================================================
 // Brush Palette Panel
 // A common class for terrain/doodad/item/raw palette
-
-BEGIN_EVENT_TABLE(BrushPalettePanel, PalettePanel)
-EVT_BUTTON(wxID_ADD, BrushPalettePanel::OnClickAddItemToTileset)
-EVT_BUTTON(wxID_NEW, BrushPalettePanel::OnClickAddTileset)
-EVT_CHOICEBOOK_PAGE_CHANGING(wxID_ANY, BrushPalettePanel::OnSwitchingPage)
-EVT_CHOICEBOOK_PAGE_CHANGED(wxID_ANY, BrushPalettePanel::OnPageChanged)
-END_EVENT_TABLE()
 
 BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const TilesetContainer& tilesets, TilesetCategoryType category, wxWindowID id) :
 	PalettePanel(parent, id),
@@ -51,13 +45,18 @@ BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const TilesetContainer& t
 	if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
 		wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 		wxButton* buttonAddTileset = newd wxButton(this, wxID_NEW, "Add new Tileset");
+		buttonAddTileset->Bind(wxEVT_BUTTON, &BrushPalettePanel::OnClickAddTileset, this);
 		tmpsizer->Add(buttonAddTileset, wxSizerFlags(0).Center());
 
 		wxButton* buttonAddItemToTileset = newd wxButton(this, wxID_ADD, "Add new Item");
+		buttonAddItemToTileset->Bind(wxEVT_BUTTON, &BrushPalettePanel::OnClickAddItemToTileset, this);
 		tmpsizer->Add(buttonAddItemToTileset, wxSizerFlags(0).Center());
 
 		topsizer->Add(tmpsizer, 0, wxCENTER, 10);
 	}
+
+	tmp_choicebook->Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &BrushPalettePanel::OnSwitchingPage, this);
+	tmp_choicebook->Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &BrushPalettePanel::OnPageChanged, this);
 
 	for (TilesetContainer::const_iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
 		const TilesetCategory* tcg = iter->second->getCategory(category);
@@ -273,11 +272,6 @@ void BrushPalettePanel::OnClickAddItemToTileset(wxCommandEvent& WXUNUSED(event))
 // Brush Panel
 // A container of brush buttons
 
-BEGIN_EVENT_TABLE(BrushPanel, wxPanel)
-// Listbox style
-EVT_LISTBOX(wxID_ANY, BrushPanel::OnClickListBoxRow)
-END_EVENT_TABLE()
-
 BrushPanel::BrushPanel(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY),
 	tileset(nullptr),
@@ -339,6 +333,7 @@ void BrushPanel::LoadContents() {
 			break;
 		case BRUSHLIST_LISTBOX:
 			brushbox = newd BrushListBox(this, tileset);
+			brushbox->GetSelfWindow()->Bind(wxEVT_LISTBOX, &BrushPanel::OnClickListBoxRow, this);
 			break;
 		default:
 			break;
@@ -413,54 +408,34 @@ void BrushPanel::OnClickListBoxRow(wxCommandEvent& event) {
 // ============================================================================
 // BrushIconBox
 
-BEGIN_EVENT_TABLE(BrushIconBox, wxScrolledWindow)
-// Listbox style
-EVT_TOGGLEBUTTON(wxID_ANY, BrushIconBox::OnClickBrushButton)
-END_EVENT_TABLE()
-
 BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
 	wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL),
 	BrushBoxInterface(_tileset),
 	icon_size(rsz) {
 	ASSERT(tileset->getType() >= TILESET_UNKNOWN && tileset->getType() <= TILESET_HOUSE);
-	int width;
-	if (icon_size == RENDER_SIZE_32x32) {
-		width = max(g_settings.getInteger(Config::PALETTE_COL_COUNT) / 2 + 1, 1);
-	} else {
-		width = max(g_settings.getInteger(Config::PALETTE_COL_COUNT) + 1, 1);
-	}
 
-	// Create buttons
-	wxSizer* stacksizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* rowsizer = nullptr;
-	int item_counter = 0;
+	wxSizer* sizer = newd wxWrapSizer(wxHORIZONTAL);
 	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
 		ASSERT(*iter);
-		++item_counter;
-
-		if (!rowsizer) {
-			rowsizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
-
 		BrushButton* bb = newd BrushButton(this, *iter, rsz);
-		rowsizer->Add(bb);
+		bb->Bind(wxEVT_TOGGLEBUTTON, &BrushIconBox::OnClickBrushButton, this);
+		sizer->Add(bb, 0, wxALL, 1);
 		brush_buttons.push_back(bb);
-
-		if (item_counter % width == 0) { // newd row
-			stacksizer->Add(rowsizer);
-			rowsizer = nullptr;
-		}
-	}
-	if (rowsizer) {
-		stacksizer->Add(rowsizer);
 	}
 
-	SetScrollbars(20, 20, 8, item_counter / width, 0, 0);
-	SetSizer(stacksizer);
+	SetSizer(sizer);
+	SetScrollRate(10, 10);
+	Bind(wxEVT_SIZE, &BrushIconBox::OnSize, this);
 }
 
 BrushIconBox::~BrushIconBox() {
 	////
+}
+
+void BrushIconBox::OnSize(wxSizeEvent& event) {
+	Layout();
+	FitInside();
+	event.Skip();
 }
 
 void BrushIconBox::SelectFirstBrush() {
@@ -551,14 +526,11 @@ void BrushIconBox::OnClickBrushButton(wxCommandEvent& event) {
 // ============================================================================
 // BrushListBox
 
-BEGIN_EVENT_TABLE(BrushListBox, wxVListBox)
-EVT_KEY_DOWN(BrushListBox::OnKey)
-END_EVENT_TABLE()
-
 BrushListBox::BrushListBox(wxWindow* parent, const TilesetCategory* tileset) :
 	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
 	BrushBoxInterface(tileset) {
 	SetItemCount(tileset->size());
+	Bind(wxEVT_KEY_DOWN, &BrushListBox::OnKey, this);
 }
 
 BrushListBox::~BrushListBox() {
