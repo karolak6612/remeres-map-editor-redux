@@ -81,12 +81,8 @@ Tile* Tile::deepCopy(BaseMap& map) {
 		copy->ground = ground->deepCopy();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		copy->items.push_back((*it)->deepCopy());
-		++it;
+	for (Item* item : items) {
+		copy->items.push_back(item->deepCopy());
 	}
 
 	return copy;
@@ -98,12 +94,8 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	ItemVector::const_iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		mem += (*it)->memsize();
-		++it;
+	for (Item* item : items) {
+		mem += item->memsize();
 	}
 
 	mem += sizeof(Item*) * items.capacity();
@@ -169,12 +161,8 @@ void Tile::merge(Tile* other) {
 		other->creature = nullptr;
 	}
 
-	ItemVector::iterator it;
-
-	it = other->items.begin();
-	while (it != other->items.end()) {
-		addItem(*it);
-		++it;
+	for (Item* item : other->items) {
+		addItem(item);
 	}
 	other->items.clear();
 }
@@ -188,9 +176,8 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		return true;
 	}
 
-	ItemVector::const_iterator iit;
-	for (iit = items.begin(); iit != items.end(); ++iit) {
-		if ((*iit)->hasProperty(prop)) {
+	for (Item* item : items) {
+		if (item->hasProperty(prop)) {
 			return true;
 		}
 	}
@@ -307,12 +294,8 @@ void Tile::select() {
 		creature->select();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		(*it)->select();
-		++it;
+	for (Item* item : items) {
+		item->select();
 	}
 
 	statflags |= TILESTATE_SELECTED;
@@ -329,12 +312,8 @@ void Tile::deselect() {
 		creature->deselect();
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		(*it)->deselect();
-		++it;
+	for (Item* item : items) {
+		item->deselect();
 	}
 
 	statflags &= ~TILESTATE_SELECTED;
@@ -393,14 +372,10 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		ItemVector::iterator it;
-
-		it = items.begin();
-		while (it != items.end()) {
-			if ((*it)->isSelected()) {
-				selected_items.push_back(*it);
+		for (Item* item : items) {
+			if (item->isSelected()) {
+				selected_items.push_back(item);
 			}
-			it++;
 		}
 	}
 
@@ -481,9 +456,7 @@ void Tile::update() {
 		}
 	}
 
-	ItemVector::const_iterator iter = items.begin();
-	while (iter != items.end()) {
-		Item* i = *iter;
+	for (Item* i : items) {
 		if (i->isSelected()) {
 			statflags |= TILESTATE_SELECTED;
 		}
@@ -507,7 +480,6 @@ void Tile::update() {
 		if (it.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
 		}
-		++iter;
 	}
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {
@@ -539,18 +511,13 @@ GroundBrush* Tile::getGroundBrush() const {
 }
 
 void Tile::cleanBorders() {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isBorder()) {
-			delete *it;
-			it = items.erase(it);
-		} else {
-			// Borders should only be on the bottom, we can ignore the rest of the items
-			return;
+	std::erase_if(items, [](Item* item) {
+		if (item->isBorder()) {
+			delete item;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::wallize(BaseMap* parent) {
@@ -606,49 +573,37 @@ void Tile::addWallItem(Item* item) {
 }
 
 void Tile::cleanWalls(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall()) {
+	std::erase_if(items, [dontdelete](Item* item) {
+		if (item->isWall()) {
 			if (!dontdelete) {
-				delete *it;
+				delete item;
 			}
-			it = items.erase(it);
-		} else {
-			++it;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::cleanWalls(WallBrush* wb) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall() && wb->hasWall(*it)) {
-			delete *it;
-			it = items.erase(it);
-		} else {
-			++it;
+	std::erase_if(items, [wb](Item* item) {
+		if (item->isWall() && wb->hasWall(item)) {
+			delete item;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::cleanTables(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isTable()) {
+	std::erase_if(items, [dontdelete](Item* item) {
+		if (item->isTable()) {
 			if (!dontdelete) {
-				delete *it;
+				delete item;
 			}
-			it = items.erase(it);
-		} else {
-			++it;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::tableize(BaseMap* parent) {

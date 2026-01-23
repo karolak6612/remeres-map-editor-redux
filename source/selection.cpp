@@ -198,12 +198,18 @@ void Selection::remove(Tile* tile) {
 void Selection::addInternal(Tile* tile) {
 	ASSERT(tile);
 
-	tiles.insert(tile);
+	auto it = std::lower_bound(tiles.begin(), tiles.end(), tile);
+	if (it == tiles.end() || *it != tile) {
+		tiles.insert(it, tile);
+	}
 }
 
 void Selection::removeInternal(Tile* tile) {
 	ASSERT(tile);
-	tiles.erase(tile);
+	auto it = std::lower_bound(tiles.begin(), tiles.end(), tile);
+	if (it != tiles.end() && *it == tile) {
+		tiles.erase(it);
+	}
 }
 
 void Selection::clear() {

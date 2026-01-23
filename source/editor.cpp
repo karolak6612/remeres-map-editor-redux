@@ -1051,7 +1051,7 @@ void Editor::moveSelection(Position offset) {
 			doborders = true;
 		}
 
-		tmp_storage.insert(tmp_storage_tile);
+		tmp_storage.push_back(tmp_storage_tile);
 		// Add the tile copy to the action
 		action->addChange(newd Change(new_src_tile));
 	}

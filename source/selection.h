@@ -19,6 +19,8 @@
 #define RME_SELECTION_H
 
 #include "position.h"
+#include <vector>
+#include <algorithm>
 
 class Action;
 class Editor;
