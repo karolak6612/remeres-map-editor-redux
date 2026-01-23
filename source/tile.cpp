@@ -252,41 +252,26 @@ void Tile::addItem(Item* item) {
 		return;
 	}
 	if (item->isGroundTile()) {
-		// printf("ADDING GROUND\n");
 		delete ground;
 		ground = item;
 		return;
 	}
 
-	ItemVector::iterator it;
-
-	uint16_t gid = item->getGroundEquivalent();
-	if (gid != 0) {
+	if (uint16_t gid = item->getGroundEquivalent(); gid != 0) {
 		delete ground;
 		ground = Item::Create(gid);
-		// At the very bottom!
-		it = items.begin();
-	} else {
-		if (item->isAlwaysOnBottom()) {
-			it = items.begin();
-			while (true) {
-				if (it == items.end()) {
-					break;
-				} else if ((*it)->isAlwaysOnBottom()) {
-					if (item->getTopOrder() < (*it)->getTopOrder()) {
-						break;
-					}
-				} else { // Always on top
-					break;
-				}
-				++it;
+		items.insert(items.begin(), item);
+	} else if (item->isAlwaysOnBottom()) {
+		auto it = items.begin();
+		for (; it != items.end(); ++it) {
+			if (!(*it)->isAlwaysOnBottom() || item->getTopOrder() < (*it)->getTopOrder()) {
+				break;
 			}
-		} else {
-			it = items.end();
 		}
+		items.insert(it, item);
+	} else {
+		items.push_back(item);
 	}
-
-	items.insert(it, item);
 
 	if (item->isSelected()) {
 		statflags |= TILESTATE_SELECTED;

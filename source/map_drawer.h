@@ -108,6 +108,8 @@ class MapDrawer {
 	int tile_size;
 	int floor;
 
+	GLuint last_texture_id;
+
 protected:
 	std::vector<MapTooltip*> tooltips;
 	std::ostringstream tooltip;

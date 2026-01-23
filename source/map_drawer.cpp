@@ -117,7 +117,7 @@ bool DrawingOptions::isDrawLight() const noexcept {
 }
 
 MapDrawer::MapDrawer(MapCanvas* canvas) :
-	canvas(canvas), editor(canvas->editor) {
+	canvas(canvas), editor(canvas->editor), last_texture_id(0) {
 	light_drawer = std::make_shared<LightDrawer>();
 }
 
@@ -224,6 +224,8 @@ void MapDrawer::Draw() {
 void MapDrawer::DrawBackground() {
 	// Black Background
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+	last_texture_id = 0;
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
@@ -1354,7 +1356,10 @@ void MapDrawer::BlitSquare(int sx, int sy, int red, int green, int blue, int alp
 		return;
 	}
 
-	glBindTexture(GL_TEXTURE_2D, texnum);
+	if (texnum != last_texture_id) {
+		glBindTexture(GL_TEXTURE_2D, texnum);
+		last_texture_id = texnum;
+	}
 	glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.f, 0.f);
@@ -1915,7 +1920,10 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 
 void MapDrawer::glBlitTexture(int sx, int sy, int texture_number, int red, int green, int blue, int alpha) {
 	if (texture_number != 0) {
-		glBindTexture(GL_TEXTURE_2D, texture_number);
+		if (texture_number != last_texture_id) {
+			glBindTexture(GL_TEXTURE_2D, texture_number);
+			last_texture_id = texture_number;
+		}
 		glColor4ub(uint8_t(red), uint8_t(green), uint8_t(blue), uint8_t(alpha));
 		glBegin(GL_QUADS);
 		glTexCoord2f(0.f, 0.f);
