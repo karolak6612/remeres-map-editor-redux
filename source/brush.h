@@ -31,7 +31,7 @@ class BaseMap;
 class House;
 class Item;
 class Tile;
-typedef std::vector<Tile*> TileVector;
+using TileVector = std::vector<Tile*>;
 class AutoBorder;
 class Brush;
 class RAWBrush;
@@ -55,7 +55,7 @@ class EraserBrush;
 //=============================================================================
 // Brushes, holds all brushes
 
-typedef std::multimap<std::string, Brush*> BrushMap;
+using BrushMap = std::multimap<std::string, Brush*>;
 
 class Brushes {
 public:
@@ -77,7 +77,7 @@ public:
 	}
 
 protected:
-	typedef std::map<uint32_t, AutoBorder*> BorderMap;
+	using BorderMap = std::map<uint32_t, AutoBorder*>;
 	BrushMap brushes;
 	BorderMap borders;
 
@@ -267,35 +267,35 @@ public:
 	TerrainBrush();
 	virtual ~TerrainBrush();
 
-	bool isTerrain() const {
+	bool isTerrain() const override {
 		return true;
 	}
 	TerrainBrush* asTerrain() {
 		return static_cast<TerrainBrush*>(this);
 	}
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const {
+	bool canDraw(BaseMap* map, const Position& position) const override {
 		return true;
 	}
 
-	virtual std::string getName() const {
+	std::string getName() const override {
 		return name;
 	}
-	virtual void setName(const std::string& newName) {
+	void setName(const std::string& newName) override {
 		name = newName;
 	}
 
 	virtual int32_t getZ() const {
 		return 0;
 	}
-	virtual int32_t getLookID() const {
+	int32_t getLookID() const override {
 		return look_id;
 	}
 
-	virtual bool needBorders() const {
+	bool needBorders() const override {
 		return true;
 	}
-	virtual bool canDrag() const {
+	bool canDrag() const override {
 		return true;
 	}
 
@@ -316,22 +316,22 @@ public:
 	FlagBrush(uint32_t _flag);
 	virtual ~FlagBrush();
 
-	bool isFlag() const {
+	bool isFlag() const override {
 		return true;
 	}
 	FlagBrush* asFlag() {
 		return static_cast<FlagBrush*>(this);
 	}
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const;
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	virtual void undraw(BaseMap* map, Tile* tile);
+	bool canDraw(BaseMap* map, const Position& position) const override;
+	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void undraw(BaseMap* map, Tile* tile) override;
 
-	virtual bool canDrag() const {
+	bool canDrag() const override {
 		return true;
 	}
-	virtual int getLookID() const;
-	virtual std::string getName() const;
+	int getLookID() const override;
+	std::string getName() const override;
 
 protected:
 	uint32_t flag;
@@ -345,7 +345,7 @@ public:
 	DoorBrush(DoorType _doortype);
 	virtual ~DoorBrush();
 
-	bool isDoor() const {
+	bool isDoor() const override {
 		return true;
 	}
 	DoorBrush* asDoor() {
@@ -354,13 +354,13 @@ public:
 
 	static void switchDoor(Item* door);
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const;
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	virtual void undraw(BaseMap* map, Tile* tile);
+	bool canDraw(BaseMap* map, const Position& position) const override;
+	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void undraw(BaseMap* map, Tile* tile) override;
 
-	virtual int getLookID() const;
-	virtual std::string getName() const;
-	virtual bool oneSizeFitsAll() const {
+	int getLookID() const override;
+	std::string getName() const override;
+	bool oneSizeFitsAll() const override {
 		return true;
 	}
 
@@ -376,22 +376,22 @@ public:
 	OptionalBorderBrush();
 	virtual ~OptionalBorderBrush();
 
-	bool isOptionalBorder() const {
+	bool isOptionalBorder() const override {
 		return true;
 	}
 	OptionalBorderBrush* asOptionalBorder() {
 		return static_cast<OptionalBorderBrush*>(this);
 	}
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const;
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	virtual void undraw(BaseMap* map, Tile* tile);
+	bool canDraw(BaseMap* map, const Position& position) const override;
+	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void undraw(BaseMap* map, Tile* tile) override;
 
-	virtual bool canDrag() const {
+	bool canDrag() const override {
 		return true;
 	}
-	virtual int getLookID() const;
-	virtual std::string getName() const;
+	int getLookID() const override;
+	std::string getName() const override;
 };
 
 //=============================================================================
@@ -402,25 +402,25 @@ public:
 	EraserBrush();
 	virtual ~EraserBrush();
 
-	bool isEraser() const {
+	bool isEraser() const override {
 		return true;
 	}
 	EraserBrush* asEraser() {
 		return static_cast<EraserBrush*>(this);
 	}
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const;
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	virtual void undraw(BaseMap* map, Tile* tile);
+	bool canDraw(BaseMap* map, const Position& position) const override;
+	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void undraw(BaseMap* map, Tile* tile) override;
 
-	virtual bool needBorders() const {
+	bool needBorders() const override {
 		return true;
 	}
-	virtual bool canDrag() const {
+	bool canDrag() const override {
 		return true;
 	}
-	virtual int getLookID() const;
-	virtual std::string getName() const;
+	int getLookID() const override;
+	std::string getName() const override;
 };
 
 //=============================================================================

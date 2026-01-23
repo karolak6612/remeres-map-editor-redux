@@ -30,7 +30,7 @@ public:
 	HouseExitBrush();
 	virtual ~HouseExitBrush();
 
-	bool isHouseExit() const {
+	bool isHouseExit() const override {
 		return true;
 	}
 	HouseExitBrush* asHouseExit() {
@@ -38,32 +38,32 @@ public:
 	}
 
 	// Not used
-	virtual bool load(pugi::xml_node node, wxArrayString& warnings) {
+	bool load(pugi::xml_node node, wxArrayString& warnings) override {
 		return true;
 	}
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const;
+	bool canDraw(BaseMap* map, const Position& position) const override;
 	// Will ASSERT
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	virtual void undraw(BaseMap* map, Tile* tile);
+	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void undraw(BaseMap* map, Tile* tile) override;
 
-	virtual bool canDrag() const {
+	bool canDrag() const override {
 		return false;
 	}
-	virtual bool canSmear() const {
+	bool canSmear() const override {
 		return false;
 	}
-	virtual bool oneSizeFitsAll() const {
+	bool oneSizeFitsAll() const override {
 		return true;
 	}
 
 	void setHouse(House* house);
 
 	uint32_t getHouseID() const;
-	virtual int getLookID() const {
+	int getLookID() const override {
 		return 0;
 	} // We don't have a graphic
-	virtual std::string getName() const {
+	std::string getName() const override {
 		return "House Exit Brush";
 	} // We don't have a name
 

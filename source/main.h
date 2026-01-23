@@ -124,8 +124,8 @@ _Ret_bytecap_(_Size) inline void* __CRTDECL operator new[](size_t _Size, const c
 #include <time.h>
 #include <fstream>
 
-typedef std::vector<std::string> StringVector;
-typedef wxFileName FileName;
+using StringVector = std::vector<std::string>;
+using FileName = wxFileName;
 
 #include "json.h"
 

@@ -37,7 +37,7 @@ public:
 	Container(const uint16_t type);
 	~Container();
 
-	Item* deepCopy() const;
+	Item* deepCopy() const override;
 	Item* getItem(size_t index) const;
 
 	size_t getItemCount() const {
@@ -50,10 +50,10 @@ public:
 	ItemVector& getVector() {
 		return contents;
 	}
-	double getWeight();
+	double getWeight() override;
 
-	virtual bool unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* node);
-	virtual bool serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
+	bool unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* node) override;
+	bool serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const override;
 	// virtual bool unserializeItemNode_OTMM(const IOMap& maphandle, BinaryNode* node);
 	// virtual bool serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
@@ -65,10 +65,10 @@ class Teleport : public Item {
 public:
 	Teleport(const uint16_t type);
 
-	Item* deepCopy() const;
+	Item* deepCopy() const override;
 
-	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
+	void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const override;
+	bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node) override;
 	// virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	// virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* node);
 
@@ -104,13 +104,13 @@ class Door : public Item {
 public:
 	Door(const uint16_t type);
 
-	Item* deepCopy() const;
+	Item* deepCopy() const override;
 
 	uint8_t getDoorID() const;
 	void setDoorID(uint8_t id);
 
-	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
+	void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const override;
+	bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node) override;
 	// virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	// virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* node);
 
@@ -125,7 +125,7 @@ class Depot : public Item {
 public:
 	Depot(const uint16_t _type);
 
-	Item* deepCopy() const;
+	Item* deepCopy() const override;
 
 	uint8_t getDepotID() const {
 		return depotId;
@@ -134,8 +134,8 @@ public:
 		depotId = id;
 	}
 
-	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
+	void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const override;
+	bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node) override;
 	// virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	// virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* node);
 
@@ -147,7 +147,7 @@ class Podium : public Item {
 public:
 	Podium(const uint16_t _type);
 
-	Item* deepCopy() const;
+	Item* deepCopy() const override;
 
 	const Outfit& getOutfit() const {
 		return outfit;
@@ -183,8 +183,8 @@ public:
 		showPlatform = newState;
 	}
 
-	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
+	void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const override;
+	bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node) override;
 
 protected:
 	Outfit outfit;

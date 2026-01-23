@@ -37,8 +37,8 @@
 
 #include "iomap_otbm.h"
 
-typedef uint8_t attribute_t;
-typedef uint32_t flags_t;
+using attribute_t = uint8_t;
+using flags_t = uint32_t;
 
 // H4X
 void reform(Map* map, Tile* tile, Item* item) {

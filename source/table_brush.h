@@ -31,33 +31,33 @@ public:
 	TableBrush();
 	virtual ~TableBrush();
 
-	bool isTable() const {
+	bool isTable() const override {
 		return true;
 	}
 	TableBrush* asTable() {
 		return static_cast<TableBrush*>(this);
 	}
 
-	virtual bool load(pugi::xml_node node, wxArrayString& warnings);
+	bool load(pugi::xml_node node, wxArrayString& warnings) override;
 
-	virtual bool canDraw(BaseMap* map, const Position& position) const;
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter);
-	virtual void undraw(BaseMap* map, Tile* tile);
+	bool canDraw(BaseMap* map, const Position& position) const override;
+	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void undraw(BaseMap* map, Tile* tile) override;
 
 	static void doTables(BaseMap* map, Tile* tile);
 
-	virtual int getLookID() const {
+	int getLookID() const override {
 		return look_id;
 	}
 
-	virtual std::string getName() const {
+	std::string getName() const override {
 		return name;
 	}
-	virtual void setName(const std::string& newName) {
+	void setName(const std::string& newName) override {
 		name = newName;
 	}
 
-	virtual bool needBorders() const {
+	bool needBorders() const override {
 		return true;
 	}
 
