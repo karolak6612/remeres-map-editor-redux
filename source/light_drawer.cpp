@@ -19,19 +19,19 @@
 #include "light_drawer.h"
 
 LightDrawer::LightDrawer() {
-	texture = 0;
 	global_color = wxColor(50, 50, 50, 255);
 }
 
 LightDrawer::~LightDrawer() {
-	unloadGLTexture();
-
 	lights.clear();
 }
 
 void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x, int scroll_y, bool fog) {
-	if (texture == 0) {
-		createGLTexture();
+	if (texture.get() == 0) {
+		texture.generate();
+	}
+	if (vbo.get() == 0) {
+		vbo.generate();
 	}
 
 	int w = end_x - map_x;
@@ -67,12 +67,12 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 		}
 	}
 
-	const int draw_x = map_x * TileSize - scroll_x;
-	const int draw_y = map_y * TileSize - scroll_y;
-	int draw_width = w * TileSize;
-	int draw_height = h * TileSize;
+	const float draw_x = map_x * TileSize - scroll_x;
+	const float draw_y = map_y * TileSize - scroll_y;
+	const float draw_width = w * TileSize;
+	const float draw_height = h * TileSize;
 
-	glBindTexture(GL_TEXTURE_2D, texture);
+	texture.bind();
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -86,28 +86,48 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 
 	glColor4ub(255, 255, 255, 255); // reset color
 	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.f, 0.f);
-	glVertex2f(draw_x, draw_y);
-	glTexCoord2f(1.f, 0.f);
-	glVertex2f(draw_x + draw_width, draw_y);
-	glTexCoord2f(1.f, 1.f);
-	glVertex2f(draw_x + draw_width, draw_y + draw_height);
-	glTexCoord2f(0.f, 1.f);
-	glVertex2f(draw_x, draw_y + draw_height);
-	glEnd();
+
+	// Upload vertex data to VBO
+	struct Vertex {
+		float x, y;
+		float u, v;
+	};
+
+	Vertex vertices[4] = {
+		{ draw_x, draw_y, 0.f, 0.f },
+		{ draw_x + draw_width, draw_y, 1.f, 0.f },
+		{ draw_x + draw_width, draw_y + draw_height, 1.f, 1.f },
+		{ draw_x, draw_y + draw_height, 0.f, 1.f }
+	};
+
+	vbo.bind(GL_ARRAY_BUFFER);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
+
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glVertexPointer(2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, x));
+	glTexCoordPointer(2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, u));
+
+	glDrawArrays(GL_QUADS, 0, 4);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
 	glDisable(GL_TEXTURE_2D);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (fog) {
 		glColor4ub(10, 10, 10, 80);
-		glBegin(GL_QUADS);
-		glVertex2f(draw_x, draw_y);
-		glVertex2f(draw_x + draw_width, draw_y);
-		glVertex2f(draw_x + draw_width, draw_y + draw_height);
-		glVertex2f(draw_x, draw_y + draw_height);
-		glEnd();
+		// Reuse VBO for fog quad (same geometry, no texture coords needed but we can ignore them)
+		vbo.bind(GL_ARRAY_BUFFER);
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, x));
+		glDrawArrays(GL_QUADS, 0, 4);
+		glDisableClientState(GL_VERTEX_ARRAY);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
 
@@ -140,15 +160,4 @@ void LightDrawer::addLight(int map_x, int map_y, int map_z, const SpriteLight& l
 
 void LightDrawer::clear() noexcept {
 	lights.clear();
-}
-
-void LightDrawer::createGLTexture() {
-	glGenTextures(1, &texture);
-	ASSERT(texture == 0);
-}
-
-void LightDrawer::unloadGLTexture() {
-	if (texture != 0) {
-		glDeleteTextures(1, &texture);
-	}
 }

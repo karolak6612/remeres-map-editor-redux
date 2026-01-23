@@ -18,6 +18,8 @@
 #ifndef RME_MAP_DRAWER_H_
 #define RME_MAP_DRAWER_H_
 
+#include "rendering/gl_resources.h"
+
 class GameSprite;
 
 struct MapTooltip {
@@ -95,6 +97,7 @@ class MapDrawer {
 	Editor& editor;
 	DrawingOptions options;
 	std::shared_ptr<LightDrawer> light_drawer;
+	GLBuffer grid_vbo;
 
 	float zoom;
 

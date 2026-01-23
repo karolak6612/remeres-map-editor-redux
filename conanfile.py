@@ -38,6 +38,10 @@ class RMERecipe(ConanFile):
         tc.preprocessor_definitions["_UNICODE"] = ""
         tc.generate()
     
+    def requirements(self):
+        # Override wayland version to resolve conflict
+        self.requires("wayland/1.23.92", override=True)
+
     def configure(self):
         # Boost components needed
         self.options["boost/*"].without_python = True
