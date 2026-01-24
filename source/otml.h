@@ -42,10 +42,10 @@ using OTMLNodeWeakPtr = std::weak_ptr<OTMLNode>;
 #else
 	#include <boost/shared_ptr.hpp>
 	#include <boost/enable_shared_from_this.hpp>
-	typedef boost::shared_ptr<OTMLNode> OTMLNodePtr;
-	typedef boost::enable_shared_from_this<OTMLNode> OTMLNodeEnableSharedFromThis;
-	typedef boost::shared_ptr<OTMLDocument> OTMLDocumentPtr;
-	typedef boost::weak_ptr<OTMLNode> OTMLNodeWeakPtr;
+typedef boost::shared_ptr<OTMLNode> OTMLNodePtr;
+typedef boost::enable_shared_from_this<OTMLNode> OTMLNodeEnableSharedFromThis;
+typedef boost::shared_ptr<OTMLDocument> OTMLDocumentPtr;
+typedef boost::weak_ptr<OTMLNode> OTMLNodeWeakPtr;
 #endif
 
 using OTMLNodeList = std::vector<OTMLNodePtr>;
