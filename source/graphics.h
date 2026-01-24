@@ -315,9 +315,9 @@ private:
 	std::string spritefile;
 	bool loadSpriteDump(uint8_t*& target, uint16_t& size, int sprite_id);
 
-	typedef std::map<int, Sprite*> SpriteMap;
+	using SpriteMap = std::map<int, Sprite*>;
 	SpriteMap sprite_space;
-	typedef std::map<int, GameSprite::Image*> ImageMap;
+	using ImageMap = std::map<int, GameSprite::Image*>;
 	ImageMap image_space;
 	std::deque<GameSprite*> cleanup_list;
 

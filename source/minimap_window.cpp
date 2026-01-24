@@ -80,7 +80,6 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 
 	int window_width = GetSize().GetWidth();
 	int window_height = GetSize().GetHeight();
-	// printf("W:%d\tH:%d\n", window_width, window_height);
 	int center_x, center_y;
 
 	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
@@ -119,7 +118,6 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 
 	int floor = g_gui.GetCurrentFloor();
 
-	// printf("Draw from %d:%d to %d:%d\n", start_x, start_y, end_x, end_y);
 	uint8_t last = 0;
 	if (g_gui.IsRenderingEnabled()) {
 		for (int y = start_y, window_y = 0; y <= end_y; ++y, ++window_y) {
