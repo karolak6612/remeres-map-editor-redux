@@ -364,17 +364,13 @@ ItemVector Tile::popSelectedItems(bool ignoreTileSelected) {
 		ground = nullptr;
 	}
 
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isSelected()) {
-			pop_items.push_back(*it);
-			it = items.erase(it);
-		} else {
-			++it;
+	std::erase_if(items, [&pop_items](Item* item) {
+		if (item->isSelected()) {
+			pop_items.push_back(item);
+			return true;
 		}
-	}
+		return false;
+	});
 
 	statflags &= ~TILESTATE_SELECTED;
 	return pop_items;
@@ -539,18 +535,13 @@ GroundBrush* Tile::getGroundBrush() const {
 }
 
 void Tile::cleanBorders() {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isBorder()) {
-			delete *it;
-			it = items.erase(it);
-		} else {
-			// Borders should only be on the bottom, we can ignore the rest of the items
-			return;
+	std::erase_if(items, [](Item* item) {
+		if (item->isBorder()) {
+			delete item;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::wallize(BaseMap* parent) {
@@ -606,49 +597,37 @@ void Tile::addWallItem(Item* item) {
 }
 
 void Tile::cleanWalls(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall()) {
+	std::erase_if(items, [dontdelete](Item* item) {
+		if (item->isWall()) {
 			if (!dontdelete) {
-				delete *it;
+				delete item;
 			}
-			it = items.erase(it);
-		} else {
-			++it;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::cleanWalls(WallBrush* wb) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isWall() && wb->hasWall(*it)) {
-			delete *it;
-			it = items.erase(it);
-		} else {
-			++it;
+	std::erase_if(items, [wb](Item* item) {
+		if (item->isWall() && wb->hasWall(item)) {
+			delete item;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::cleanTables(bool dontdelete) {
-	ItemVector::iterator it;
-
-	it = items.begin();
-	while (it != items.end()) {
-		if ((*it)->isTable()) {
+	std::erase_if(items, [dontdelete](Item* item) {
+		if (item->isTable()) {
 			if (!dontdelete) {
-				delete *it;
+				delete item;
 			}
-			it = items.erase(it);
-		} else {
-			++it;
+			return true;
 		}
-	}
+		return false;
+	});
 }
 
 void Tile::tableize(BaseMap* parent) {
@@ -727,10 +706,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	for (std::vector<uint32_t>::iterator it = house_exits->begin(); it != house_exits->end(); ++it) {
-		if (*it == h->getID()) {
-			house_exits->erase(it);
-			return;
-		}
-	}
+	std::erase_if(*house_exits, [h](uint32_t id) {
+		return id == h->getID();
+	});
 }

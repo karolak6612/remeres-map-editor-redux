@@ -501,20 +501,30 @@ void MapDrawer::DrawIngameBox() {
 }
 
 void MapDrawer::DrawGrid() {
+	static std::vector<float> vertices;
+	vertices.clear();
+	vertices.reserve((end_y - start_y + end_x - start_x) * 4);
+
 	for (int y = start_y; y < end_y; ++y) {
-		glColor4ub(255, 255, 255, 128);
-		glBegin(GL_LINES);
-		glVertex2f(start_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
-		glVertex2f(end_x * TileSize - view_scroll_x, y * TileSize - view_scroll_y);
-		glEnd();
+		vertices.push_back(static_cast<float>(start_x * TileSize - view_scroll_x));
+		vertices.push_back(static_cast<float>(y * TileSize - view_scroll_y));
+		vertices.push_back(static_cast<float>(end_x * TileSize - view_scroll_x));
+		vertices.push_back(static_cast<float>(y * TileSize - view_scroll_y));
 	}
 
 	for (int x = start_x; x < end_x; ++x) {
+		vertices.push_back(static_cast<float>(x * TileSize - view_scroll_x));
+		vertices.push_back(static_cast<float>(start_y * TileSize - view_scroll_y));
+		vertices.push_back(static_cast<float>(x * TileSize - view_scroll_x));
+		vertices.push_back(static_cast<float>(end_y * TileSize - view_scroll_y));
+	}
+
+	if (!vertices.empty()) {
 		glColor4ub(255, 255, 255, 128);
-		glBegin(GL_LINES);
-		glVertex2f(x * TileSize - view_scroll_x, start_y * TileSize - view_scroll_y);
-		glVertex2f(x * TileSize - view_scroll_x, end_y * TileSize - view_scroll_y);
-		glEnd();
+		glEnableClientState(GL_VERTEX_ARRAY);
+		glVertexPointer(2, GL_FLOAT, 0, vertices.data());
+		glDrawArrays(GL_LINES, 0, vertices.size() / 2);
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }
 

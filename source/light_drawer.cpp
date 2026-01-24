@@ -36,33 +36,84 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 
 	int w = end_x - map_x;
 	int h = end_y - map_y;
+	size_t buffer_size = static_cast<size_t>(w * h * PixelFormatRGBA);
 
-	buffer.resize(static_cast<size_t>(w * h * PixelFormatRGBA));
+	if (buffer.size() != buffer_size) {
+		buffer.resize(buffer_size);
+	}
 
-	for (int x = 0; x < w; ++x) {
-		for (int y = 0; y < h; ++y) {
-			int mx = (map_x + x);
-			int my = (map_y + y);
-			int index = (y * w + x);
-			int color_index = index * PixelFormatRGBA;
+	// Initialize buffer with global color
+	uint8_t gr = global_color.Red();
+	uint8_t gg = global_color.Green();
+	uint8_t gb = global_color.Blue();
+	uint8_t ga = 140; // global_color.Alpha();
 
-			buffer[color_index] = global_color.Red();
-			buffer[color_index + 1] = global_color.Green();
-			buffer[color_index + 2] = global_color.Blue();
-			buffer[color_index + 3] = 140; // global_color.Alpha();
+	for (size_t i = 0; i < buffer_size; i += PixelFormatRGBA) {
+		buffer[i] = gr;
+		buffer[i + 1] = gg;
+		buffer[i + 2] = gb;
+		buffer[i + 3] = ga;
+	}
 
-			for (auto& light : lights) {
-				float intensity = calculateIntensity(mx, my, light);
-				if (intensity == 0.f) {
+	for (const auto& light : lights) {
+		if (light.intensity == 0) {
+			continue;
+		}
+
+		int radius = light.intensity;
+		int lx_min = light.map_x - radius;
+		int lx_max = light.map_x + radius;
+		int ly_min = light.map_y - radius;
+		int ly_max = light.map_y + radius;
+
+		// Clip to view
+		int start_x_rel = std::max(0, lx_min - map_x);
+		int end_x_rel = std::min(w, lx_max - map_x + 1);
+		int start_y_rel = std::max(0, ly_min - map_y);
+		int end_y_rel = std::min(h, ly_max - map_y + 1);
+
+		if (start_x_rel >= end_x_rel || start_y_rel >= end_y_rel) {
+			continue;
+		}
+
+		wxColor light_color = colorFromEightBit(light.color);
+		uint8_t lr = light_color.Red();
+		uint8_t lg = light_color.Green();
+		uint8_t lb = light_color.Blue();
+
+		for (int y = start_y_rel; y < end_y_rel; ++y) {
+			int my = map_y + y;
+			int dy = my - light.map_y;
+			int dy2 = dy * dy;
+			size_t row_idx = y * w * PixelFormatRGBA;
+
+			for (int x = start_x_rel; x < end_x_rel; ++x) {
+				int mx = map_x + x;
+				int dx = mx - light.map_x;
+				int dist_sq = dx * dx + dy2;
+
+				if (dist_sq > radius * radius) {
 					continue;
 				}
-				wxColor light_color = colorFromEightBit(light.color);
-				uint8_t red = static_cast<uint8_t>(light_color.Red() * intensity);
-				uint8_t green = static_cast<uint8_t>(light_color.Green() * intensity);
-				uint8_t blue = static_cast<uint8_t>(light_color.Blue() * intensity);
-				buffer[color_index] = std::max(buffer[color_index], red);
-				buffer[color_index + 1] = std::max(buffer[color_index + 1], green);
-				buffer[color_index + 2] = std::max(buffer[color_index + 2], blue);
+
+				float distance = std::sqrt(static_cast<float>(dist_sq));
+				// Assuming calculateIntensity logic here to avoid function call overhead
+				if (distance > MaxLightIntensity) {
+					continue;
+				}
+
+				float intensity = (-distance + light.intensity) * 0.2f;
+				if (intensity < 0.01f) {
+					continue;
+				}
+				if (intensity > 1.f) {
+					intensity = 1.f;
+				}
+
+				size_t idx = row_idx + x * PixelFormatRGBA;
+				buffer[idx] = std::max(buffer[idx], static_cast<uint8_t>(lr * intensity));
+				buffer[idx + 1] = std::max(buffer[idx + 1], static_cast<uint8_t>(lg * intensity));
+				buffer[idx + 2] = std::max(buffer[idx + 2], static_cast<uint8_t>(lb * intensity));
 			}
 		}
 	}
