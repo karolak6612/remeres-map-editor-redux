@@ -23,6 +23,9 @@ class RMERecipe(ConanFile):
         "opengl/system",
     )
     
+    def requirements(self):
+        self.requires("wayland/1.23.92", override=True)
+
     def layout(self):
         cmake_layout(self)
     
@@ -48,4 +51,3 @@ class RMERecipe(ConanFile):
         self.options["wxwidgets/*"].aui = True
         self.options["wxwidgets/*"].html = True
         self.options["wxwidgets/*"].unicode = True
-
