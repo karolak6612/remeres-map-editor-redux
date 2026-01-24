@@ -22,6 +22,9 @@ class RMERecipe(ConanFile):
         "zlib/1.3.1",
         "opengl/system",
     )
+
+    def requirements(self):
+        self.requires("wayland/1.23.92", override=True)
     
     def layout(self):
         cmake_layout(self)
