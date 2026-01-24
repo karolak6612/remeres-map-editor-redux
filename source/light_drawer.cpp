@@ -19,18 +19,15 @@
 #include "light_drawer.h"
 
 LightDrawer::LightDrawer() {
-	texture = 0;
 	global_color = wxColor(50, 50, 50, 255);
 }
 
 LightDrawer::~LightDrawer() {
-	unloadGLTexture();
-
 	lights.clear();
 }
 
 void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x, int scroll_y, bool fog) {
-	if (texture == 0) {
+	if (texture.get() == 0) {
 		createGLTexture();
 	}
 
@@ -72,7 +69,7 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 	int draw_width = w * TileSize;
 	int draw_height = h * TileSize;
 
-	glBindTexture(GL_TEXTURE_2D, texture);
+	texture.bind();
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -84,31 +81,36 @@ void LightDrawer::draw(int map_x, int map_y, int end_x, int end_y, int scroll_x,
 		glBlendFunc(GL_DST_COLOR, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glTranslatef(draw_x, draw_y, 0.f);
+	glScalef(draw_width, draw_height, 1.f);
+
+	quad_buffer.bind();
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, 4 * sizeof(float), (void*)0);
+
 	glColor4ub(255, 255, 255, 255); // reset color
 	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.f, 0.f);
-	glVertex2f(draw_x, draw_y);
-	glTexCoord2f(1.f, 0.f);
-	glVertex2f(draw_x + draw_width, draw_y);
-	glTexCoord2f(1.f, 1.f);
-	glVertex2f(draw_x + draw_width, draw_y + draw_height);
-	glTexCoord2f(0.f, 1.f);
-	glVertex2f(draw_x, draw_y + draw_height);
-	glEnd();
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisable(GL_TEXTURE_2D);
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	if (fog) {
 		glColor4ub(10, 10, 10, 80);
-		glBegin(GL_QUADS);
-		glVertex2f(draw_x, draw_y);
-		glVertex2f(draw_x + draw_width, draw_y);
-		glVertex2f(draw_x + draw_width, draw_y + draw_height);
-		glVertex2f(draw_x, draw_y + draw_height);
-		glEnd();
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 	}
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	quad_buffer.unbind();
+
+	glPopMatrix();
 }
 
 void LightDrawer::setGlobalLightColor(uint8_t color) {
@@ -143,12 +145,14 @@ void LightDrawer::clear() noexcept {
 }
 
 void LightDrawer::createGLTexture() {
-	glGenTextures(1, &texture);
-	ASSERT(texture == 0);
-}
+	texture.create();
 
-void LightDrawer::unloadGLTexture() {
-	if (texture != 0) {
-		glDeleteTextures(1, &texture);
-	}
+	quad_buffer.create();
+	static const float quad_data[] = {
+		0.f, 0.f, 0.f, 0.f,
+		1.f, 0.f, 1.f, 0.f,
+		1.f, 1.f, 1.f, 1.f,
+		0.f, 1.f, 0.f, 1.f
+	};
+	quad_buffer.data(sizeof(quad_data), quad_data);
 }

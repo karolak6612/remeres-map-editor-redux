@@ -53,6 +53,8 @@ _Ret_bytecap_(_Size) inline void* __CRTDECL operator new[](size_t _Size, const c
 #include <boost/range/adaptor/reversed.hpp>
 #include <boost/asio.hpp>
 
+#include <GL/glew.h>
+
 #include <wx/defs.h>
 #include "definitions.h"
 

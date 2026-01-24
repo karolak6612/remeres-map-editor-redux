@@ -190,6 +190,16 @@ void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensi
 void MapCanvas::OnPaint(wxPaintEvent& event) {
 	SetCurrent(*g_gui.GetGLContext(this));
 
+	static bool glew_inited = false;
+	if (!glew_inited) {
+		GLenum err = glewInit();
+		if (GLEW_OK != err) {
+			// Problem: glewInit failed, something is seriously wrong.
+			fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
+		}
+		glew_inited = true;
+	}
+
 	if (g_gui.IsRenderingEnabled()) {
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_buffer) {

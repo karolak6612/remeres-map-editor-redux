@@ -20,6 +20,7 @@
 
 #include "graphics.h"
 #include "position.h"
+#include "rendering/gl_resources.h"
 
 class LightDrawer {
 	struct Light {
@@ -41,7 +42,6 @@ public:
 
 private:
 	void createGLTexture();
-	void unloadGLTexture();
 
 	inline float calculateIntensity(int map_x, int map_y, const Light& light) {
 		int dx = map_x - light.map_x;
@@ -57,7 +57,8 @@ private:
 		return std::min(intensity, 1.f);
 	}
 
-	GLuint texture;
+	GLTexture texture;
+	GLBuffer quad_buffer;
 	std::vector<Light> lights;
 	std::vector<uint8_t> buffer;
 	wxColor global_color;
