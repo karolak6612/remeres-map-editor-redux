@@ -24,6 +24,7 @@
 #include "game/complexitem.h"
 #include "io/iomap.h"
 #include "game/item.h"
+#include "game/item_allocator.h"
 
 #include "brushes/ground_brush.h"
 #include "brushes/carpet_brush.h"
@@ -553,4 +554,24 @@ Item* Item::Create(pugi::xml_node xml) {
 	}
 
 	return Create(id, count);
+}
+
+// Memory management
+void* Item::operator new(size_t size) {
+	return ItemAllocator::allocate(size);
+}
+
+void Item::operator delete(void* ptr, size_t size) {
+	ItemAllocator::deallocate(ptr, size);
+}
+
+void* Item::operator new(size_t size, const char* file, int line) {
+	return ItemAllocator::allocate(size);
+}
+
+void Item::operator delete(void* ptr, const char* file, int line) {
+	// This is only called if the constructor throws an exception during placement new.
+	// Since we don't track size in the allocation itself (for performance),
+	// we cannot correctly deallocate here without size.
+	// In practice, Item constructors should not throw.
 }

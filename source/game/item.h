@@ -87,6 +87,12 @@ protected:
 	Item(unsigned short _type, unsigned short _count);
 
 public:
+	// Memory management
+	static void* operator new(size_t size);
+	static void operator delete(void* ptr, size_t size);
+	static void* operator new(size_t size, const char* file, int line);
+	static void operator delete(void* ptr, const char* file, int line);
+
 	virtual ~Item();
 
 	// Deep copy thingy
