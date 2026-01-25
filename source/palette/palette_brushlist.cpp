@@ -417,7 +417,7 @@ BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, Re
 	icon_size(rsz) {
 	ASSERT(tileset->getType() >= TILESET_UNKNOWN && tileset->getType() <= TILESET_HOUSE);
 
-	wxSizer* sizer = newd wxWrapSizer(wxHORIZONTAL);
+	auto* sizer = newd wxWrapSizer(wxHORIZONTAL);
 
 	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
 		ASSERT(*iter);
@@ -523,7 +523,7 @@ void BrushIconBox::OnClickBrushButton(wxCommandEvent& event) {
 }
 
 void BrushIconBox::OnSize(wxSizeEvent& event) {
-	int width = GetClientSize().GetWidth();
+	auto width = GetClientSize().GetWidth();
 	SetVirtualSize(width, -1);
 	FitInside();
 	event.Skip();
