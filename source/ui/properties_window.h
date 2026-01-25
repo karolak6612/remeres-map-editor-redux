@@ -61,8 +61,6 @@ protected:
 protected:
 	wxNotebook* notebook;
 	wxWindow* currentPanel;
-
-	DECLARE_EVENT_TABLE()
 };
 
 #endif

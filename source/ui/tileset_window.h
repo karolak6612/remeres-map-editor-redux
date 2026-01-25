@@ -38,8 +38,6 @@ protected:
 	// tileset
 	wxChoice* palette_field;
 	wxChoice* tileset_field;
-
-	DECLARE_EVENT_TABLE();
 };
 
 #endif

@@ -11,18 +11,19 @@ class RMERecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     
     # Dependencies matching vcpkg.json
-    requires = (
-        "wxwidgets/3.2.6",
-        "freeglut/3.4.0",
-        "asio/1.32.0",
-        "nlohmann_json/3.11.3",
-        "fmt/11.1.4",
-        "libarchive/3.7.7",
-        "boost/1.87.0",
-        "zlib/1.3.1",
-        "opengl/system",
-    )
-    
+    def requirements(self):
+        self.requires("wxwidgets/3.2.6")
+        self.requires("freeglut/3.4.0")
+        self.requires("asio/1.32.0")
+        self.requires("nlohmann_json/3.11.3")
+        self.requires("fmt/11.1.4", override=True)
+        self.requires("libarchive/3.7.7")
+        self.requires("boost/1.87.0")
+        self.requires("zlib/1.3.1")
+        self.requires("opengl/system")
+        if self.settings.os == "Linux":
+            self.requires("wayland/1.23.92", override=True)
+
     def layout(self):
         cmake_layout(self)
     
