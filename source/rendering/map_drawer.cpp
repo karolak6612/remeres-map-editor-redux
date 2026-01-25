@@ -1,4 +1,4 @@
-﻿//////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 // Remere's Map Editor is free software: you can redistribute it and/or modify
@@ -182,6 +182,7 @@ void MapDrawer::Draw() {
 	}
 	primitive_renderer->flush();
 
+	UpdateHoveredTooltip(view);
 	// Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
 }
 
@@ -231,6 +232,49 @@ void MapDrawer::DrawIngameBox() {
 
 void MapDrawer::DrawGrid() {
 	grid_drawer->DrawGrid(*sprite_batch, view, options);
+}
+
+void MapDrawer::UpdateHoveredTooltip(const RenderView& view) {
+	if (!options.show_tooltips) {
+		return;
+	}
+
+	int z = view.floor;
+	int x = view.mouse_map_x;
+	int y = view.mouse_map_y;
+
+	Tile* tile = editor.map.getTile(x, y, z);
+	if (!tile) {
+		return;
+	}
+
+	TileLocation* location = tile->getLocation();
+	if (!location) {
+		return;
+	}
+
+	Waypoint* waypoint = editor.map.waypoints.getWaypoint(location);
+
+	// Waypoint tooltip
+	if (location->getWaypointCount() > 0 && waypoint) {
+		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
+	}
+
+	// Ground tooltip
+	if (tile->ground) {
+		TooltipData groundData = TileRenderer::CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
+		if (groundData.hasVisibleFields()) {
+			tooltip_drawer->addItemTooltip(groundData);
+		}
+	}
+
+	// Items
+	for (auto item : tile->items) {
+		TooltipData itemData = TileRenderer::CreateItemTooltipData(item, location->getPosition(), tile->isHouseTile());
+		if (itemData.hasVisibleFields()) {
+			tooltip_drawer->addItemTooltip(itemData);
+		}
+	}
 }
 
 void MapDrawer::DrawTooltips() {

@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 
+#include <algorithm>
 #include "brushes/brush.h"
 
 #include "map/tile.h"
@@ -268,19 +269,12 @@ void Tile::addItem(Item* item) {
 		it = items.begin();
 	} else {
 		if (item->isAlwaysOnBottom()) {
-			it = items.begin();
-			while (true) {
-				if (it == items.end()) {
-					break;
-				} else if ((*it)->isAlwaysOnBottom()) {
-					if (item->getTopOrder() < (*it)->getTopOrder()) {
-						break;
-					}
-				} else { // Always on top
-					break;
+			it = std::upper_bound(items.begin(), items.end(), item, [](Item* val, Item* elem) {
+				if (!elem->isAlwaysOnBottom()) {
+					return true;
 				}
-				++it;
-			}
+				return val->getTopOrder() < elem->getTopOrder();
+			});
 		} else {
 			it = items.end();
 		}

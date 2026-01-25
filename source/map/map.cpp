@@ -196,14 +196,13 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				tile->ground = nullptr;
 			}
 
-			for (ItemVector::iterator item_iter = tile->items.begin(); item_iter != tile->items.end();) {
-				if (std::find(v.begin(), v.end(), (*item_iter)->getID()) != v.end()) {
-					delete *item_iter;
-					item_iter = tile->items.erase(item_iter);
-				} else {
-					++item_iter;
+			std::erase_if(tile->items, [&](Item* item) {
+				if (std::find(v.begin(), v.end(), item->getID()) != v.end()) {
+					delete item;
+					return true;
 				}
-			}
+				return false;
+			});
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
 			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
@@ -291,14 +290,13 @@ void Map::cleanInvalidTiles(bool showdialog) {
 			continue;
 		}
 
-		for (ItemVector::iterator item_iter = tile->items.begin(); item_iter != tile->items.end();) {
-			if (g_items.typeExists((*item_iter)->getID())) {
-				++item_iter;
-			} else {
-				delete *item_iter;
-				item_iter = tile->items.erase(item_iter);
+		std::erase_if(tile->items, [](Item* item) {
+			if (!g_items.typeExists(item->getID())) {
+				delete item;
+				return true;
 			}
-		}
+			return false;
+		});
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {

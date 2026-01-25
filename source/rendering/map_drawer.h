@@ -100,6 +100,7 @@ public:
 	void DrawIngameBox();
 
 	void DrawGrid();
+	void UpdateHoveredTooltip(const RenderView& view);
 	void DrawTooltips();
 	void ClearTooltips();
 

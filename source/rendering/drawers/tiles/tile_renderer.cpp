@@ -29,7 +29,7 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 }
 
 // Helper function to create tooltip data from an item
-static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool isHouseTile) {
+TooltipData TileRenderer::CreateItemTooltipData(Item* item, const Position& pos, bool isHouseTile) {
 	if (!item) {
 		return TooltipData();
 	}
@@ -112,11 +112,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	Waypoint* waypoint = editor->map.waypoints.getWaypoint(location);
 
-	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && location->getWaypointCount() > 0 && waypoint && map_z == view.floor) {
-		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
-	}
-
 	bool as_minimap = options.show_as_minimap;
 	bool only_colors = as_minimap || options.show_only_colors;
 
@@ -147,28 +142,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 		}
 	}
 
-	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
-		if (groundData.hasVisibleFields()) {
-			tooltip_drawer->addItemTooltip(groundData);
-		}
-	}
-
-	// end filters for ground tile
-
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
-				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
-					if (itemData.hasVisibleFields()) {
-						tooltip_drawer->addItemTooltip(itemData);
-					}
-				}
-
 				// item animation
 				if (options.show_preview && view.zoom <= 2.0) {
 					(*it)->animate();
