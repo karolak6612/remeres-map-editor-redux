@@ -29,6 +29,7 @@
 #include "ui/map_tab.h"
 #include "palette/palette_window.h"
 #include "app/client_version.h"
+#include "game/item_metadata.h"
 
 class BaseMap;
 class Map;
@@ -416,6 +417,7 @@ public:
 	DCButton* gem; // The small gem in the lower-right corner
 	SearchResultWindow* search_result_window;
 	GraphicManager gfx;
+	std::unique_ptr<ItemMetadataManager> itemMetadataManager;
 
 	BaseMap* secondary_map; // A buffer map
 	BaseMap* doodad_buffer_map; // The map in which doodads are temporarily stored

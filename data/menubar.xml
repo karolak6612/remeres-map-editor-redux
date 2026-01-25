@@ -162,6 +162,7 @@
 		<item name="Show Light" hotkey="Shift+L" action="SHOW_LIGHTS" help="Show lights."/>
 		<item name="Show Light Strength" hotkey="Shift+K" action="SHOW_LIGHT_STR" help="Show indicators of light strength."/>
 		<item name="Show Technical Items" hotkey="Shift+T" action="SHOW_TECHNICAL_ITEMS" help="Shows some of special items that are not visible in game."/>
+		<item name="Configure Technical Items..." action="VIEW_ITEM_CONFIG" help="Configure properties of technical items and disguises."/>
 		<separator/>
 		<item name="Show creatures" hotkey="F" action="SHOW_CREATURES" help="Show creatures on the map."/>
 		<item name="Show spawns" hotkey="S" action="SHOW_SPAWNS" help="Show spawns on the map."/>

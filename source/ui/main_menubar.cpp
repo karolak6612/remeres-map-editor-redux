@@ -27,6 +27,7 @@
 #include "ui/extension_window.h"
 #include "ui/find_item_window.h"
 #include "app/settings.h"
+#include "ui/windows/item_config_window.h"
 
 #include "ui/gui.h"
 
@@ -157,6 +158,7 @@ MainMenuBar::MainMenuBar(MainFrame* frame) :
 	MAKE_ACTION(SHOW_TOWNS, wxITEM_CHECK, OnChangeViewSettings);
 	MAKE_ACTION(ALWAYS_SHOW_ZONES, wxITEM_CHECK, OnChangeViewSettings);
 	MAKE_ACTION(EXT_HOUSE_SHADER, wxITEM_CHECK, OnChangeViewSettings);
+	MAKE_ACTION(VIEW_ITEM_CONFIG, wxITEM_NORMAL, OnViewItemConfig);
 
 	MAKE_ACTION(EXPERIMENTAL_FOG, wxITEM_CHECK, OnChangeViewSettings); // experimental
 
@@ -466,6 +468,7 @@ void MainMenuBar::LoadValues() {
 	CheckItem(SHOW_TOWNS, g_settings.getBoolean(Config::SHOW_TOWNS));
 	CheckItem(ALWAYS_SHOW_ZONES, g_settings.getBoolean(Config::ALWAYS_SHOW_ZONES));
 	CheckItem(EXT_HOUSE_SHADER, g_settings.getBoolean(Config::EXT_HOUSE_SHADER));
+	EnableItem(VIEW_ITEM_CONFIG, loaded);
 
 	CheckItem(EXPERIMENTAL_FOG, g_settings.getBoolean(Config::EXPERIMENTAL_FOG));
 }
@@ -1856,6 +1859,14 @@ void MainMenuBar::OnChangeFloor(wxCommandEvent& event) {
 			}
 		}
 	}
+}
+
+void MainMenuBar::OnViewItemConfig(wxCommandEvent& WXUNUSED(event)) {
+    if (g_gui.IsVersionLoaded()) {
+        ItemConfigWindow dlg(frame);
+        dlg.ShowModal();
+        g_gui.RefreshView();
+    }
 }
 
 void MainMenuBar::OnMinimapWindow(wxCommandEvent& event) {

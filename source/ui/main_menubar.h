@@ -120,6 +120,7 @@ namespace MenuBar {
 		SHOW_TOWNS,
 		ALWAYS_SHOW_ZONES,
 		EXT_HOUSE_SHADER,
+		VIEW_ITEM_CONFIG,
 		WIN_MINIMAP,
 		NEW_PALETTE,
 		TAKE_SCREENSHOT,
@@ -260,6 +261,7 @@ public:
 	void OnZoomOut(wxCommandEvent& event);
 	void OnZoomNormal(wxCommandEvent& event);
 	void OnChangeViewSettings(wxCommandEvent& event);
+	void OnViewItemConfig(wxCommandEvent& event);
 
 	// Network menu
 	void OnStartLive(wxCommandEvent& event);

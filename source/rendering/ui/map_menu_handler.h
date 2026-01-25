@@ -45,6 +45,7 @@ public:
 	void OnSelectMoveTo(wxCommandEvent& event);
 
 	void OnProperties(wxCommandEvent& event);
+	void OnAddTechnicalItem(wxCommandEvent& event);
 
 private:
 	MapCanvas* canvas;

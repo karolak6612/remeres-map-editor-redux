@@ -25,6 +25,7 @@
 #include "ui/tileset_window.h"
 #include "ui/dialog_helper.h"
 #include "brushes/brush.h"
+#include "ui/windows/item_config_window.h"
 
 void PopupActionHandler::RotateItem(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
@@ -98,6 +99,39 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) 
 	}
 
 	w->Destroy();
+}
+
+void PopupActionHandler::AddTechnicalItem(Editor& editor) {
+	if (editor.selection.size() != 1) {
+		return;
+	}
+
+	Tile* tile = editor.selection.getSelectedTile();
+	if (!tile) {
+		return;
+	}
+
+	ItemVector selected_items = tile->getSelectedItems();
+	if (selected_items.empty()) {
+		return;
+	}
+
+	// Prefer the top selected item
+	Item* item = selected_items.back();
+	uint16_t id = item->getID();
+
+	ItemMetadata meta = g_gui.itemMetadataManager->getMetadata(id);
+	ItemConfigDialog dlg(g_gui.root, id, meta);
+
+	if (dlg.ShowModal() == wxID_OK) {
+		if (dlg.GetItemID() != id) {
+             g_gui.itemMetadataManager->removeMetadata(id);
+        }
+        g_gui.itemMetadataManager->setMetadata(dlg.GetItemID(), dlg.GetMetadata());
+
+		// Refresh view to show changes immediately
+		g_gui.RefreshView();
+	}
 }
 
 void PopupActionHandler::OpenProperties(Editor& editor) {

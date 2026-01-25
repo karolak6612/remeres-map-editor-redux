@@ -223,6 +223,10 @@ void MapPopupMenu::Update() {
 
 			AppendSeparator();
 
+			if (topSelectedItem) {
+				Append(MAP_POPUP_MENU_ADD_TECHNICAL_ITEM, "Add Technical Item...", "Configure technical rendering for this item type");
+			}
+
 			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items");
 			browseTile->Enable(anything_selected);
 		}

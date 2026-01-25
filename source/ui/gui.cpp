@@ -96,6 +96,7 @@ GUI::GUI() :
 	progressBar(nullptr),
 	disabled_counter(0) {
 	doodad_buffer_map = newd BaseMap();
+	itemMetadataManager = std::make_unique<ItemMetadataManager>();
 }
 
 GUI::~GUI() {
@@ -403,6 +404,11 @@ bool GUI::LoadDataFiles(wxString& error, wxArrayString& warnings) {
 	if (!g_materials.loadExtensions(extension_path, error, warnings)) {
 		// warnings.push_back("Couldn't load extensions: " + error);
 	}
+
+	// Load technical items XML
+	g_gui.SetLoadDone(70, "Loading technical items...");
+	std::string tech_items_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR).ToStdString() + "technical-items.xml";
+	g_gui.itemMetadataManager->load(tech_items_path);
 
 	g_gui.SetLoadDone(70, "Finishing...");
 	g_brushes.init();

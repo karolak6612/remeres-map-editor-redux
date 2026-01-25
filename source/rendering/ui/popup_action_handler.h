@@ -35,6 +35,7 @@ public:
 	static void BrowseTile(Editor& editor, int cursor_x, int cursor_y);
 	static void OpenProperties(Editor& editor);
 	static void SelectMoveTo(Editor& editor);
+	static void AddTechnicalItem(Editor& editor);
 
 private:
 	PopupActionHandler() = delete;

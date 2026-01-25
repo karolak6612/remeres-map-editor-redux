@@ -53,6 +53,7 @@ void MapMenuHandler::BindEvents() {
 
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnProperties, this, MAP_POPUP_MENU_PROPERTIES);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnBrowseTile, this, MAP_POPUP_MENU_BROWSE_TILE);
+	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnAddTechnicalItem, this, MAP_POPUP_MENU_ADD_TECHNICAL_ITEM);
 }
 
 void MapMenuHandler::OnCopy(wxCommandEvent& WXUNUSED(event)) {
@@ -153,4 +154,8 @@ void MapMenuHandler::OnSelectMoveTo(wxCommandEvent& WXUNUSED(event)) {
 
 void MapMenuHandler::OnProperties(wxCommandEvent& WXUNUSED(event)) {
 	PopupActionHandler::OpenProperties(editor);
+}
+
+void MapMenuHandler::OnAddTechnicalItem(wxCommandEvent& WXUNUSED(event)) {
+	PopupActionHandler::AddTechnicalItem(editor);
 }

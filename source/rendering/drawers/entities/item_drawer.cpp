@@ -23,6 +23,7 @@
 #include "game/complexitem.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "game/item_metadata.h"
 
 ItemDrawer::ItemDrawer() {
 }
@@ -53,48 +54,55 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 	// item sprite
 	GameSprite* spr = it.sprite;
 
-	// Display invisible and invalid items
-	// Ugly hacks. :)
-	if (!options.ingame && options.show_tech_items) {
-		// Red invalid client id
-		if (it.id == 0) {
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, alpha);
-			return;
+	if (!options.ingame) {
+		const ItemMetadata& meta = g_gui.itemMetadataManager->getMetadata(it.id);
+
+		// Disguise logic
+		if (meta.disguiseID != 0) {
+			ItemType& disguiseType = g_items.getItemType(meta.disguiseID);
+			if (disguiseType.sprite) {
+				spr = disguiseType.sprite;
+			}
 		}
 
-		switch (it.clientID) {
-			// Yellow invisible stairs tile (459)
-			case 469:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, green, 0, alpha / 3 * 2);
+		// Technical Item Rendering
+		if (options.show_tech_items) {
+			// Red invalid client id
+			if (it.id == 0 || meta.techType == TechItemType::CLIENT_ID_ZERO) {
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, alpha);
 				return;
+			}
 
-			// Red invisible walkable tile (460)
-			case 470:
-			case 17970:
-			case 20028:
-			case 34168:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, alpha / 3 * 2);
-				return;
+			switch (meta.techType) {
+				case TechItemType::INVISIBLE_STAIRS:
+					// Yellow invisible stairs tile
+					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, green, 0, alpha / 3 * 2);
+					return;
 
-			// Cyan invisible wall (1548)
-			case 2187:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, 0, green, blue, 80);
-				return;
+				case TechItemType::INVISIBLE_WALKABLE:
+					// Red invisible walkable tile
+					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, alpha / 3 * 2);
+					return;
 
-			default:
-				break;
-		}
+				case TechItemType::INVISIBLE_WALL:
+					// Cyan invisible wall
+					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, 0, green, blue, 80);
+					return;
 
-		// primal light
-		if (it.clientID >= 39092 && it.clientID <= 39100 || it.clientID == 39236 || it.clientID == 39367 || it.clientID == 39368) {
-			spr = g_items[SPRITE_LIGHTSOURCE].sprite;
-			red = 0;
-			alpha = 180;
+				case TechItemType::PRIMAL_LIGHT:
+					spr = g_items[SPRITE_LIGHTSOURCE].sprite;
+					red = 0;
+					alpha = 180;
+					break;
+
+				default:
+					break;
+			}
 		}
 	}
 
 	// metaItem, sprite not found or not hidden
-	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.pickupable && !options.show_items) {
+	if (it.isMetaItem() || spr == nullptr || (!ephemeral && it.pickupable && !options.show_items)) {
 		return;
 	}
 
@@ -227,40 +235,46 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 
 void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
 	GameSprite* spr = itemType->sprite;
-	uint16_t cid = itemType->clientID;
+	const ItemMetadata& meta = g_gui.itemMetadataManager->getMetadata(itemType->id);
 
-	switch (cid) {
-		// Yellow invisible stairs tile
-		case 469:
+	if (meta.disguiseID != 0) {
+		ItemType& disguiseType = g_items.getItemType(meta.disguiseID);
+		if (disguiseType.sprite) {
+			spr = disguiseType.sprite;
+		}
+	}
+
+	switch (meta.techType) {
+		case TechItemType::INVISIBLE_STAIRS:
+			// Yellow invisible stairs tile
 			b = 0;
 			alpha = alpha / 3 * 2;
 			spr = g_items[SPRITE_ZONE].sprite;
 			break;
 
-		// Red invisible walkable tile
-		case 470:
+		case TechItemType::INVISIBLE_WALKABLE:
+			// Red invisible walkable tile
 			g = 0;
 			b = 0;
 			alpha = alpha / 3 * 2;
 			spr = g_items[SPRITE_ZONE].sprite;
 			break;
 
-		// Cyan invisible wall
-		case 2187:
+		case TechItemType::INVISIBLE_WALL:
+			// Cyan invisible wall
 			r = 0;
 			alpha = alpha / 3;
 			spr = g_items[SPRITE_ZONE].sprite;
 			break;
 
+		case TechItemType::PRIMAL_LIGHT:
+			spr = g_items[SPRITE_LIGHTSOURCE].sprite;
+			r = 0;
+			alpha = alpha / 3 * 2;
+			break;
+
 		default:
 			break;
-	}
-
-	// primal light
-	if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
-		spr = g_items[SPRITE_LIGHTSOURCE].sprite;
-		r = 0;
-		alpha = alpha / 3 * 2;
 	}
 
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, r, g, b, alpha);
