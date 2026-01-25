@@ -34,14 +34,6 @@
 // ============================================================================
 // Palette window
 
-BEGIN_EVENT_TABLE(PaletteWindow, wxPanel)
-EVT_CHOICEBOOK_PAGE_CHANGING(PALETTE_CHOICEBOOK, PaletteWindow::OnSwitchingPage)
-EVT_CHOICEBOOK_PAGE_CHANGED(PALETTE_CHOICEBOOK, PaletteWindow::OnPageChanged)
-EVT_CLOSE(PaletteWindow::OnClose)
-
-EVT_KEY_DOWN(PaletteWindow::OnKey)
-END_EVENT_TABLE()
-
 PaletteWindow::PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets) :
 	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(230, 250)),
 	choicebook(nullptr),
@@ -53,6 +45,11 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets)
 	house_palette(nullptr),
 	waypoint_palette(nullptr),
 	raw_palette(nullptr) {
+	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &PaletteWindow::OnSwitchingPage, this, PALETTE_CHOICEBOOK);
+	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &PaletteWindow::OnPageChanged, this, PALETTE_CHOICEBOOK);
+	Bind(wxEVT_CLOSE_WINDOW, &PaletteWindow::OnClose, this);
+	Bind(wxEVT_KEY_DOWN, &PaletteWindow::OnKey, this);
+
 	SetMinSize(wxSize(225, 250));
 
 	// Create choicebook
