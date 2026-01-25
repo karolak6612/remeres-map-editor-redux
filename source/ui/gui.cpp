@@ -104,6 +104,11 @@ GUI::~GUI() {
 	delete OGLContext;
 }
 
+void GUI::Cleanup() {
+	wxDELETE(aui_manager);
+	wxDELETE(OGLContext);
+}
+
 wxGLContext* GUI::GetGLContext(wxGLCanvas* win) {
 	if (OGLContext == nullptr) {
 #ifdef __WXOSX__

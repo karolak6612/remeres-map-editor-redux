@@ -113,6 +113,8 @@ public: // dtor and ctor
 	GUI();
 	~GUI();
 
+	void Cleanup();
+
 private:
 	GUI(const GUI& g_gui); // Don't copy me
 	GUI& operator=(const GUI& g_gui); // Don't assign me

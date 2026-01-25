@@ -347,6 +347,7 @@ void Application::Unload() {
 	ClientVersion::saveVersions();
 	ClientVersion::unloadVersions();
 	g_settings.save(true);
+	g_gui.Cleanup();
 	g_gui.root = nullptr;
 }
 
@@ -649,10 +650,6 @@ void MainFrame::OnExit(wxCloseEvent& event) {
 	}
 	g_gui.aui_manager->UnInit();
 	((Application&)wxGetApp()).Unload();
-#ifdef __RELEASE__
-	// Hack, "crash" gracefully in release builds, let OS handle cleanup of windows
-	exit(0);
-#endif
 	Destroy();
 }
 
