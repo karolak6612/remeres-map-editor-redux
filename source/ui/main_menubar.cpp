@@ -1862,11 +1862,11 @@ void MainMenuBar::OnChangeFloor(wxCommandEvent& event) {
 }
 
 void MainMenuBar::OnViewItemConfig(wxCommandEvent& WXUNUSED(event)) {
-    if (g_gui.IsVersionLoaded()) {
-        ItemConfigWindow dlg(frame);
-        dlg.ShowModal();
-        g_gui.RefreshView();
-    }
+	if (g_gui.IsVersionLoaded()) {
+		ItemConfigWindow dlg(frame);
+		dlg.ShowModal();
+		g_gui.RefreshView();
+	}
 }
 
 void MainMenuBar::OnMinimapWindow(wxCommandEvent& event) {

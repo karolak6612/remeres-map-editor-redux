@@ -125,9 +125,9 @@ void PopupActionHandler::AddTechnicalItem(Editor& editor) {
 
 	if (dlg.ShowModal() == wxID_OK) {
 		if (dlg.GetItemID() != id) {
-             g_gui.itemMetadataManager->removeMetadata(id);
-        }
-        g_gui.itemMetadataManager->setMetadata(dlg.GetItemID(), dlg.GetMetadata());
+			g_gui.itemMetadataManager->removeMetadata(id);
+		}
+		g_gui.itemMetadataManager->setMetadata(dlg.GetItemID(), dlg.GetMetadata());
 
 		// Refresh view to show changes immediately
 		g_gui.RefreshView();
