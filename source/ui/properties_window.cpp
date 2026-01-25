@@ -94,15 +94,15 @@ wxWindow* PropertiesWindow::createGeneralPanel(wxWindow* parent) {
 
 wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 	Container* container = (Container*)edit_item;
-	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
-	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
+	auto* panel = newd wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
+	auto* topSizer = newd wxBoxSizer(wxVERTICAL);
 
-	wxSizer* itemSizer = newd wxWrapSizer(wxHORIZONTAL);
+	auto* itemSizer = newd wxWrapSizer(wxHORIZONTAL);
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
 	for (uint32_t i = 0; i < container->getVolume(); ++i) {
-		Item* item = container->getItem(i);
-		ContainerItemButton* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
+		auto* item = container->getItem(i);
+		auto* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
 
 		container_items.push_back(containerItemButton);
 		itemSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));

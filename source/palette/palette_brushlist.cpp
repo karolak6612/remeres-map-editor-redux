@@ -420,9 +420,9 @@ BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, Re
 	ASSERT(tileset->getType() >= TILESET_UNKNOWN && tileset->getType() <= TILESET_HOUSE);
 
 	wxSizer* sizer = newd wxWrapSizer(wxHORIZONTAL);
-	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
-		ASSERT(*iter);
-		BrushButton* bb = newd BrushButton(this, *iter, rsz);
+	for (Brush* brush : tileset->brushlist) {
+		ASSERT(brush);
+		auto* bb = newd BrushButton(this, brush, rsz);
 		brush_buttons.push_back(bb);
 		sizer->Add(bb, wxSizerFlags(0).Border(wxALL, 2));
 	}
