@@ -20,15 +20,15 @@
 #include "app/application.h"
 #include "game/sprites.h"
 #include "editor/editor.h"
-#include "ui/common_windows.h"
-#include "palette/palette_window.h"
+#include "ui/windows/common_windows.h"
+#include "ui/palettes/palette_window.h"
 #include "app/preferences.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 #include "rendering/ui/minimap_window.h"
-#include "ui/about_window.h"
+#include "ui/windows/about_window.h"
 #include "ui/main_menubar.h"
 #include "app/updater.h"
-#include "ui/artprovider.h"
+#include "ui/controls/artprovider.h"
 #include <wx/stattext.h>
 #include <wx/slider.h>
 

@@ -22,12 +22,12 @@
 #include "map/position.h"
 
 #include "editor/copybuffer.h"
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 #include "brushes/brush_enums.h"
 #include "ui/gui_ids.h"
 #include "editor/editor_tabs.h"
-#include "ui/map_tab.h"
-#include "palette/palette_window.h"
+#include "ui/windows/map_tab.h"
+#include "ui/palettes/palette_window.h"
 #include "app/client_version.h"
 
 class BaseMap;

@@ -72,12 +72,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.h
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.h
     ${CMAKE_CURRENT_LIST_DIR}/net/rme_net.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_house.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.h
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_brushlist.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_common.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_creature.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_house.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_waypoints.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_window.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
@@ -148,34 +148,34 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/artprovider.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/common_windows.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/container_properties_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/about_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_item_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_tileset_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/artprovider.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/browse_tile_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/common_windows.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/container_properties_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/dat_debug_view.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/dcbutton.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/dialog_helper.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/extension_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/find_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui_ids.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_menubar.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_toolbar.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_popup_menu.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map_tab.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/numbertextctrl.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/old_properties_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/map_tab.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/map_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/numbertextctrl.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/old_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/pngfiles.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/positionctrl.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/properties_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/replace_items_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/positionctrl.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/properties_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/replace_items_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/result_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/tileset_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/welcome_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/util/common.h
     ${CMAKE_CURRENT_LIST_DIR}/util/con_vector.h
     ${CMAKE_CURRENT_LIST_DIR}/util/json.h
@@ -246,12 +246,12 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/rme_net.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_house.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_brushlist.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_common.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_creature.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_house.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_waypoints.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/palettes/palette_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
@@ -318,33 +318,33 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/artprovider.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/common_windows.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/container_properties_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/about_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_item_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_tileset_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/artprovider.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/browse_tile_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/common_windows.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/container_properties_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/dat_debug_view.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/dcbutton.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/dialog_helper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/extension_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/find_item_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_menubar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_toolbar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_popup_menu.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map_tab.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/numbertextctrl.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/old_properties_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/map_tab.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/map_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/numbertextctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/old_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/pngfiles.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/positionctrl.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/properties_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/replace_items_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/positionctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/properties_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/replace_items_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/result_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/tileset_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/welcome_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/mt_rand.cpp
 )

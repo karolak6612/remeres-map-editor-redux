@@ -22,7 +22,7 @@
 #include "app/settings.h"
 #include "brushes/brush.h"
 #include "ui/pngfiles.h"
-#include "ui/artprovider.h"
+#include "ui/controls/artprovider.h"
 #include <wx/artprov.h>
 #include <wx/mstream.h>
 

@@ -32,13 +32,13 @@
 #include "brushes/doodad_brush.h"
 #include "brushes/spawn_brush.h"
 
-#include "ui/common_windows.h"
-#include "ui/result_window.h"
+#include "ui/windows/common_windows.h"
+#include "ui/windows/result_window.h"
 #include "rendering/ui/minimap_window.h"
-#include "palette/palette_window.h"
+#include "ui/palettes/palette_window.h"
 #include "rendering/ui/map_display.h"
 #include "app/application.h"
-#include "ui/welcome_dialog.h"
+#include "ui/windows/welcome_dialog.h"
 
 #include "live/live_client.h"
 #include "live/live_tab.h"
