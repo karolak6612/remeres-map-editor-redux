@@ -20,6 +20,7 @@
 
 #include "rendering/core/graphics.h"
 #include "map/position.h"
+#include <memory>
 
 #include "editor/copybuffer.h"
 #include "ui/dcbutton.h"
@@ -339,7 +340,7 @@ public:
 
 	// Editor interface
 	wxAuiManager* GetAuiManager() const {
-		return aui_manager;
+		return aui_manager.get();
 	}
 	EditorTab* GetCurrentTab();
 	EditorTab* GetTab(int idx);
@@ -408,7 +409,7 @@ protected:
 	//=========================================================================
 public:
 	wxString m_dataDirectory;
-	wxAuiManager* aui_manager;
+	std::unique_ptr<wxAuiManager> aui_manager;
 	MapTabbook* tabbook;
 	MainFrame* root; // The main frame
 	WelcomeDialog* welcomeDialog;
@@ -452,7 +453,7 @@ protected:
 	typedef std::list<PaletteWindow*> PaletteList;
 	PaletteList palettes;
 
-	wxGLContext* OGLContext;
+	std::unique_ptr<wxGLContext> OGLContext;
 
 	ClientVersionID loaded_version;
 	EditorMode mode;

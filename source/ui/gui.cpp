@@ -100,13 +100,11 @@ GUI::GUI() :
 
 GUI::~GUI() {
 	delete doodad_buffer_map;
-	delete g_gui.aui_manager;
-	delete OGLContext;
 }
 
 void GUI::Cleanup() {
-	wxDELETE(aui_manager);
-	wxDELETE(OGLContext);
+	aui_manager.reset();
+	OGLContext.reset();
 }
 
 wxGLContext* GUI::GetGLContext(wxGLCanvas* win) {
@@ -118,11 +116,11 @@ wxGLContext* GUI::GetGLContext(wxGLCanvas* win) {
 					const wxGLContext *other
 					);
 		*/
-		OGLContext = new wxGLContext(win, nullptr);
+		OGLContext.reset(new wxGLContext(win, nullptr));
 #else
 		wxGLContextAttrs ctxAttrs;
 		ctxAttrs.PlatformDefaults().CoreProfile().MajorVersion(4).MinorVersion(5).EndList();
-		OGLContext = newd wxGLContext(win, nullptr, &ctxAttrs);
+		OGLContext.reset(newd wxGLContext(win, nullptr, &ctxAttrs));
 		spdlog::info("GUI: Created new OpenGL 4.5 Core Profile context");
 #endif
 		// Initialize GLAD for the new context
@@ -134,7 +132,7 @@ wxGLContext* GUI::GetGLContext(wxGLCanvas* win) {
 		}
 	}
 
-	return OGLContext;
+	return OGLContext.get();
 }
 
 wxString GUI::GetDataDirectory() {

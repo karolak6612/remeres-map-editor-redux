@@ -405,10 +405,10 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetStatusText(wxString("Welcome to ") << __W_RME_APPLICATION_NAME__ << " " << __W_RME_VERSION__);
 
 	// Le sizer
-	g_gui.aui_manager = newd wxAuiManager(this);
+	g_gui.aui_manager.reset(newd wxAuiManager(this));
 	g_gui.tabbook = newd MapTabbook(this, wxID_ANY);
 
-	tool_bar = newd MainToolBar(this, g_gui.aui_manager);
+	tool_bar = newd MainToolBar(this, g_gui.aui_manager.get());
 
 	g_gui.aui_manager->AddPane(g_gui.tabbook, wxAuiPaneInfo().CenterPane().Floatable(false).CloseButton(false).PaneBorder(false));
 
