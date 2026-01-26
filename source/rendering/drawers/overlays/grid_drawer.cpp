@@ -61,12 +61,8 @@ GridDrawer::GridDrawer() {
 }
 
 GridDrawer::~GridDrawer() {
-	if (vao_) {
-		glDeleteVertexArrays(1, &vao_);
-	}
-	if (vbo_) {
-		glDeleteBuffers(1, &vbo_);
-	}
+	if (vao_) glDeleteVertexArrays(1, &vao_);
+	if (vbo_) glDeleteBuffers(1, &vbo_);
 }
 
 bool GridDrawer::initialize() {
@@ -113,13 +109,13 @@ void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, con
 		return;
 	}
 
-	// We must interrupt the sprite batch if we want to draw with our own shader/VAO
-	// This assumes sprite_batch was started.
-	// Ideally we should use SpriteBatch if possible, but we want a custom shader.
-	// So we flush sprite_batch first.
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.flush(*g_gui.gfx.getAtlasManager());
-	}
+    // We must interrupt the sprite batch if we want to draw with our own shader/VAO
+    // This assumes sprite_batch was started.
+    // Ideally we should use SpriteBatch if possible, but we want a custom shader.
+    // So we flush sprite_batch first.
+    if (g_gui.gfx.ensureAtlasManager()) {
+        sprite_batch.flush(*g_gui.gfx.getAtlasManager());
+    }
 
 	shader_->Use();
 
@@ -135,7 +131,7 @@ void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, con
 	shader_->SetMat4("uMVP", view.projectionMatrix * model);
 	shader_->SetVec2("uMapStart", glm::vec2(view.start_x, view.start_y));
 	shader_->SetVec2("uMapEnd", glm::vec2(view.end_x, view.end_y));
-	shader_->SetFloat("uZoom", view.zoom);
+    shader_->SetFloat("uZoom", view.zoom);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

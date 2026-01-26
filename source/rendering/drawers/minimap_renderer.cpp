@@ -118,6 +118,7 @@ bool MinimapRenderer::initialize() {
 	glVertexArrayAttribFormat(vao_, 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
 	glVertexArrayAttribBinding(vao_, 1, 0);
 
+
 	// 2. Instance Data
 	// Allocate initial space (dynamic)
 	glNamedBufferData(instance_vbo_, 64 * sizeof(InstanceData), nullptr, GL_DYNAMIC_DRAW);
