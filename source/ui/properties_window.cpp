@@ -24,6 +24,7 @@
 #include "ui/container_properties_window.h"
 
 #include <wx/grid.h>
+#include <wx/wrapsizer.h>
 
 BEGIN_EVENT_TABLE(PropertiesWindow, wxDialog)
 EVT_BUTTON(wxID_OK, PropertiesWindow::OnClickOK)
@@ -101,7 +102,7 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 
-	wxSizer* gridSizer = newd wxGridSizer(6, 5, 5);
+	wxWrapSizer* gridSizer = newd wxWrapSizer(wxHORIZONTAL);
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
 	for (uint32_t i = 0; i < container->getVolume(); ++i) {
@@ -109,7 +110,7 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 		ContainerItemButton* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
 
 		container_items.push_back(containerItemButton);
-		gridSizer->Add(containerItemButton, wxSizerFlags(0));
+		gridSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));
 	}
 
 	topSizer->Add(gridSizer, wxSizerFlags(1).Expand());

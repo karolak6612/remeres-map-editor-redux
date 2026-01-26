@@ -97,6 +97,7 @@ public:
 
 	// Event handling...
 	void OnClickBrushButton(wxCommandEvent& event);
+	void OnSize(wxSizeEvent& event);
 
 protected:
 	// Used internally to deselect all buttons before selecting a newd one.

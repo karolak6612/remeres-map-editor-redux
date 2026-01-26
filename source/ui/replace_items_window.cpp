@@ -226,24 +226,16 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	Centre(wxBOTH);
 
 	// Connect Events
-	list->Connect(wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(ReplaceItemsDialog::OnListSelected), nullptr, this);
-	replace_button->Connect(wxEVT_LEFT_DOWN, wxMouseEventHandler(ReplaceItemsDialog::OnReplaceItemClicked), nullptr, this);
-	with_button->Connect(wxEVT_LEFT_DOWN, wxMouseEventHandler(ReplaceItemsDialog::OnWithItemClicked), nullptr, this);
-	add_button->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnAddButtonClicked), nullptr, this);
-	remove_button->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnRemoveButtonClicked), nullptr, this);
-	execute_button->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnExecuteButtonClicked), nullptr, this);
-	close_button->Connect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnCancelButtonClicked), nullptr, this);
+	list->Bind(wxEVT_COMMAND_LISTBOX_SELECTED, &ReplaceItemsDialog::OnListSelected, this);
+	replace_button->Bind(wxEVT_LEFT_DOWN, &ReplaceItemsDialog::OnReplaceItemClicked, this);
+	with_button->Bind(wxEVT_LEFT_DOWN, &ReplaceItemsDialog::OnWithItemClicked, this);
+	add_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ReplaceItemsDialog::OnAddButtonClicked, this);
+	remove_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ReplaceItemsDialog::OnRemoveButtonClicked, this);
+	execute_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ReplaceItemsDialog::OnExecuteButtonClicked, this);
+	close_button->Bind(wxEVT_COMMAND_BUTTON_CLICKED, &ReplaceItemsDialog::OnCancelButtonClicked, this);
 }
 
 ReplaceItemsDialog::~ReplaceItemsDialog() {
-	// Disconnect Events
-	list->Disconnect(wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(ReplaceItemsDialog::OnListSelected), nullptr, this);
-	replace_button->Disconnect(wxEVT_LEFT_DOWN, wxMouseEventHandler(ReplaceItemsDialog::OnReplaceItemClicked), nullptr, this);
-	with_button->Disconnect(wxEVT_LEFT_DOWN, wxMouseEventHandler(ReplaceItemsDialog::OnWithItemClicked), nullptr, this);
-	add_button->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnAddButtonClicked), nullptr, this);
-	remove_button->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnRemoveButtonClicked), nullptr, this);
-	execute_button->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnExecuteButtonClicked), nullptr, this);
-	close_button->Disconnect(wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(ReplaceItemsDialog::OnCancelButtonClicked), nullptr, this);
 }
 
 void ReplaceItemsDialog::UpdateWidgets() {
