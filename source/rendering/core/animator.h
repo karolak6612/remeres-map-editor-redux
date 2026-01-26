@@ -19,6 +19,7 @@
 #define RME_ANIMATOR_H_
 
 #include <vector>
+#include <memory>
 #include "util/common.h"
 
 enum AnimationDirection {
@@ -77,7 +78,7 @@ private:
 	int start_frame;
 	int loop_count;
 	bool async;
-	std::vector<FrameDuration*> durations;
+	std::vector<std::unique_ptr<FrameDuration>> durations;
 	int current_frame;
 	int current_loop;
 	int current_duration;

@@ -33,18 +33,15 @@ Animator::Animator(int frame_count, int start_frame, int loop_count, bool async)
 	is_complete(false) {
 	ASSERT(start_frame >= -1 && start_frame < frame_count);
 
+	durations.reserve(frame_count);
 	for (int i = 0; i < frame_count; i++) {
-		durations.push_back(newd FrameDuration(ITEM_FRAME_DURATION, ITEM_FRAME_DURATION));
+		durations.push_back(std::make_unique<FrameDuration>(ITEM_FRAME_DURATION, ITEM_FRAME_DURATION));
 	}
 
 	reset();
 }
 
 Animator::~Animator() {
-	for (int i = 0; i < frame_count; i++) {
-		delete durations[i];
-	}
-	durations.clear();
 }
 
 int Animator::getStartFrame() const {
@@ -56,7 +53,7 @@ int Animator::getStartFrame() const {
 
 FrameDuration* Animator::getFrameDuration(int frame) {
 	ASSERT(frame >= 0 && frame < frame_count);
-	return durations[frame];
+	return durations[frame].get();
 }
 
 int Animator::getFrame() {

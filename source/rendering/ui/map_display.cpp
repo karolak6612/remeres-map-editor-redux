@@ -143,9 +143,9 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 	last_mmb_click_x(-1),
 	last_mmb_click_y(-1) {
-	popup_menu = newd MapPopupMenu(editor);
-	animation_timer = newd AnimationTimer(this);
-	drawer = new MapDrawer(this);
+	popup_menu = std::make_unique<MapPopupMenu>(editor);
+	animation_timer = std::make_unique<AnimationTimer>(this);
+	drawer = std::make_unique<MapDrawer>(this);
 	selection_controller = std::make_unique<SelectionController>(this, editor);
 	drawing_controller = std::make_unique<DrawingController>(this, editor);
 	screenshot_controller = std::make_unique<ScreenshotController>(this);
@@ -155,10 +155,6 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 }
 
 MapCanvas::~MapCanvas() {
-	delete popup_menu;
-	delete animation_timer;
-
-	delete drawer;
 }
 
 void MapCanvas::Refresh() {
@@ -470,7 +466,7 @@ void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event) {
 	selection_controller->HandlePropertiesRelease(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
 
 	popup_menu->Update();
-	PopupMenu(popup_menu);
+	PopupMenu(popup_menu.get());
 
 	editor.actionQueue->resetTimer();
 	dragging = false;

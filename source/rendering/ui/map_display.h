@@ -24,14 +24,12 @@
 #include "rendering/utilities/frame_pacer.h"
 
 #include "ui/map_popup_menu.h"
-#include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include <memory>
 
 class Item;
 class Creature;
 class MapWindow;
-class AnimationTimer;
 class AnimationTimer;
 class MapDrawer;
 class SelectionController;
@@ -112,7 +110,7 @@ public:
 
 	static bool processed[BLOCK_SIZE * BLOCK_SIZE];
 	Editor& editor;
-	MapDrawer* drawer;
+	std::unique_ptr<MapDrawer> drawer;
 	int keyCode;
 
 	// View related
@@ -149,8 +147,8 @@ public:
 	uint32_t current_house_id;
 
 	wxStopWatch refresh_watch;
-	MapPopupMenu* popup_menu;
-	AnimationTimer* animation_timer;
+	std::unique_ptr<MapPopupMenu> popup_menu;
+	std::unique_ptr<AnimationTimer> animation_timer;
 
 	FramePacer frame_pacer;
 
