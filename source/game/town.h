@@ -53,7 +53,7 @@ private:
 	Position templepos;
 };
 
-using TownMap = std::map<uint32_t, Town*>;
+using TownMap = std::map<uint32_t, std::unique_ptr<Town>>;
 
 class Towns {
 public:
@@ -67,7 +67,7 @@ public:
 		return towns.size();
 	}
 
-	bool addTown(Town* town);
+	bool addTown(std::unique_ptr<Town> town);
 	uint32_t getEmptyID();
 
 	Town* getTown(std::string& townname);

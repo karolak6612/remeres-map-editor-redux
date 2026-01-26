@@ -434,9 +434,10 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 								if (house_id) {
 									house = map.houses.getHouse(house_id);
 									if (!house) {
-										house = newd House(map);
-										house->id = house_id;
-										map.houses.addHouse(house);
+								std::unique_ptr<House> new_house = std::make_unique<House>(map);
+								new_house->setID(house_id);
+								house = new_house.get();
+								map.houses.addHouse(std::move(new_house));
 									}
 								} else {
 									warning("Invalid house id from tile %d:%d:%d", pos.x, pos.y, pos.z);
@@ -649,9 +650,9 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 								warning("Duplicate town id %d, discarding duplicate", town_id);
 								continue;
 							} else {
-								town = newd Town(town_id);
-								if (!map.towns.addTown(town)) {
-									delete town;
+								std::unique_ptr<Town> new_town = std::make_unique<Town>(town_id);
+								town = new_town.get();
+								if (!map.towns.addTown(std::move(new_town))) {
 									continue;
 								}
 							}

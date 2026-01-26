@@ -344,7 +344,7 @@ void HousePalettePanel::OnClickAddHouse(wxCommandEvent& event) {
 		return;
 	}
 
-	House* new_house = newd House(*map);
+	std::unique_ptr<House> new_house = std::make_unique<House>(*map);
 	new_house->setID(map->houses.getEmptyID());
 
 	std::ostringstream os;
@@ -355,9 +355,10 @@ void HousePalettePanel::OnClickAddHouse(wxCommandEvent& event) {
 	ASSERT(town);
 	new_house->townid = town->getID();
 
-	map->houses.addHouse(new_house);
-	house_list->Append(wxstr(new_house->getDescription()), new_house);
-	SelectHouse(house_list->FindString(wxstr(new_house->getDescription())));
+	House* house_ptr = new_house.get();
+	map->houses.addHouse(std::move(new_house));
+	house_list->Append(wxstr(house_ptr->getDescription()), house_ptr);
+	SelectHouse(house_list->FindString(wxstr(house_ptr->getDescription())));
 	g_gui.SelectBrush();
 	refresh_timer.Start(300, true);
 }

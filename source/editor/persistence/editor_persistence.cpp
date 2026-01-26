@@ -263,7 +263,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 
 	if (house_import_type != IMPORT_DONT) {
 		for (TownMap::iterator tit = imported_map.towns.begin(); tit != imported_map.towns.end();) {
-			Town* imported_town = tit->second;
+			Town* imported_town = tit->second.get();
 			Town* current_town = editor.map.towns.getTown(imported_town->getID());
 
 			Position oldexit = imported_town->getTemplePosition();
@@ -315,7 +315,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 				}
 			}
 
-			editor.map.towns.addTown(imported_town);
+			editor.map.towns.addTown(std::move(tit->second));
 
 #ifdef __VISUALC__ // C++0x compliance to some degree :)
 			tit = imported_map.towns.erase(tit);
@@ -336,7 +336,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 		}
 
 		for (HouseMap::iterator hit = imported_map.houses.begin(); hit != imported_map.houses.end();) {
-			House* imported_house = hit->second;
+			House* imported_house = hit->second.get();
 			House* current_house = editor.map.houses.getHouse(imported_house->getID());
 			imported_house->townid = town_id_map[imported_house->townid];
 
@@ -401,7 +401,17 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 			if (newexit.isValid()) {
 				imported_house->setExit(&editor.map, newexit);
 			}
-			editor.map.houses.addHouse(imported_house);
+
+			// We need to move ownership from imported_map to editor.map
+			// Since imported_map.houses stores unique_ptr, we can extract it.
+			// However, 'hit' is an iterator to the map.
+			// We can move from hit->second.
+
+			// Note: imported_house is a raw pointer obtained from hit->second earlier.
+			// We need to move the unique_ptr from the map.
+
+			editor.map.houses.addHouse(std::move(hit->second));
+			// editor.map.towns.addTown(std::move(tit->second)); // Incorrectly pasted here in previous step
 
 #ifdef __VISUALC__ // C++0x compliance to some degree :)
 			hit = imported_map.houses.erase(hit);

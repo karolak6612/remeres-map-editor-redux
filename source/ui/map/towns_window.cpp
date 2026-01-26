@@ -307,7 +307,7 @@ void EditTownsDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 		// Build the newd town map
 		for (std::vector<Town*>::iterator town_iter = town_list.begin(); town_iter != town_list.end(); ++town_iter) {
-			towns.addTown(*town_iter);
+			towns.addTown(std::unique_ptr<Town>(*town_iter));
 		}
 		town_list.clear();
 		editor.map.doChange();

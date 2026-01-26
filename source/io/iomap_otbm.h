@@ -146,10 +146,6 @@ protected:
 	bool loadWaypoints(Map& map, const FileName& dir);
 	bool loadWaypoints(Map& map, pugi::xml_document& doc);
 
-	bool loadTileArea(Map& map, BinaryNode* mapNode);
-	bool loadTowns(Map& map, BinaryNode* mapNode);
-	bool loadWaypointsOTBM(Map& map, BinaryNode* mapNode);
-
 	virtual bool saveMap(Map& map, NodeFileWriteHandle& handle);
 	bool saveSpawns(Map& map, const FileName& dir);
 	bool saveSpawns(Map& map, pugi::xml_document& doc);
@@ -157,6 +153,12 @@ protected:
 	bool saveHouses(Map& map, pugi::xml_document& doc);
 	bool saveWaypoints(Map& map, const FileName& dir);
 	bool saveWaypoints(Map& map, pugi::xml_document& doc);
+
+private:
+	bool loadTileArea(Map& map, BinaryNode* mapNode);
+	bool loadTile(Map& map, BinaryNode* tileNode, const Position& base_pos);
+	bool loadTowns(Map& map, BinaryNode* mapNode);
+	bool loadWaypointsOTBM(Map& map, BinaryNode* mapNode);
 
 	void saveTowns(const Map& map, NodeFileWriteHandle& f);
 	void saveWaypointsOTBM(const Map& map, NodeFileWriteHandle& f);
