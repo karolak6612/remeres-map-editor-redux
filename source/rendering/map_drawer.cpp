@@ -24,6 +24,7 @@
 #include "rendering/map_drawer.h"
 #include "brushes/brush.h"
 #include "rendering/drawers/map_layer_drawer.h"
+#include "map/map.h"
 #include "rendering/ui/map_display.h"
 #include "editor/copybuffer.h"
 #include "live/live_socket.h"
@@ -145,17 +146,17 @@ void MapDrawer::Draw() {
 	DrawMap();
 
 	// Flush Map for Light Pass
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch->end(*g_gui.gfx.getAtlasManager());
-	}
-	primitive_renderer->flush();
-
 	if (options.isDrawLight()) {
-		DrawLight();
-	}
+		if (g_gui.gfx.ensureAtlasManager()) {
+			sprite_batch->end(*g_gui.gfx.getAtlasManager());
+		}
+		primitive_renderer->flush();
 
-	// Resume Batch for Overlays
-	sprite_batch->begin(view.projectionMatrix);
+		DrawLight();
+
+		// Resume Batch for Overlays
+		sprite_batch->begin(view.projectionMatrix);
+	}
 
 	if (drag_shadow_drawer) {
 		drag_shadow_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
@@ -231,6 +232,17 @@ void MapDrawer::DrawIngameBox() {
 
 void MapDrawer::DrawGrid() {
 	grid_drawer->DrawGrid(*sprite_batch, view, options);
+}
+
+void MapDrawer::UpdateHoveredTooltip(int map_x, int map_y, int map_z) {
+	QTreeNode* leaf = editor.map.getLeaf(map_x, map_y);
+	if (!leaf) {
+		return;
+	}
+	TileLocation* location = leaf->getTile(map_x & 3, map_y & 3, map_z);
+	if (location) {
+		tile_renderer->CaptureTooltips(location, view, options);
+	}
 }
 
 void MapDrawer::DrawTooltips() {
