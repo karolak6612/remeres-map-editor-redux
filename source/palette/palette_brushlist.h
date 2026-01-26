@@ -102,11 +102,11 @@ protected:
 	// Used internally to deselect all buttons before selecting a newd one.
 	void DeselectAll();
 
+	void OnSize(wxSizeEvent& event);
+
 protected:
 	std::vector<BrushButton*> brush_buttons;
 	RenderSize icon_size;
-
-	DECLARE_EVENT_TABLE();
 };
 
 // A panel capapable of displaying a collection of brushes

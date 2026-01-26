@@ -17,6 +17,8 @@
 
 #include "app/main.h"
 
+#include <wx/wrapsizer.h>
+
 #include "palette/palette_brushlist.h"
 #include "ui/gui.h"
 #include "brushes/brush.h"
@@ -411,54 +413,37 @@ void BrushPanel::OnClickListBoxRow(wxCommandEvent& event) {
 // ============================================================================
 // BrushIconBox
 
-BEGIN_EVENT_TABLE(BrushIconBox, wxScrolledWindow)
-// Listbox style
-EVT_TOGGLEBUTTON(wxID_ANY, BrushIconBox::OnClickBrushButton)
-END_EVENT_TABLE()
-
 BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
 	wxScrolledWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL),
 	BrushBoxInterface(_tileset),
 	icon_size(rsz) {
 	ASSERT(tileset->getType() >= TILESET_UNKNOWN && tileset->getType() <= TILESET_HOUSE);
-	int width;
-	if (icon_size == RENDER_SIZE_32x32) {
-		width = max(g_settings.getInteger(Config::PALETTE_COL_COUNT) / 2 + 1, 1);
-	} else {
-		width = max(g_settings.getInteger(Config::PALETTE_COL_COUNT) + 1, 1);
-	}
 
 	// Create buttons
-	wxSizer* stacksizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* rowsizer = nullptr;
-	int item_counter = 0;
+	wxSizer* sizer = newd wxWrapSizer(wxHORIZONTAL);
 	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
 		ASSERT(*iter);
-		++item_counter;
-
-		if (!rowsizer) {
-			rowsizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
 
 		BrushButton* bb = newd BrushButton(this, *iter, rsz);
-		rowsizer->Add(bb);
+		sizer->Add(bb, wxSizerFlags(0).Border(wxALL, 1));
 		brush_buttons.push_back(bb);
-
-		if (item_counter % width == 0) { // newd row
-			stacksizer->Add(rowsizer);
-			rowsizer = nullptr;
-		}
-	}
-	if (rowsizer) {
-		stacksizer->Add(rowsizer);
 	}
 
-	SetScrollbars(20, 20, 8, item_counter / width, 0, 0);
-	SetSizer(stacksizer);
+	SetScrollbars(20, 20, 0, 0, 0, 0);
+	SetSizer(sizer);
+
+	Bind(wxEVT_SIZE, &BrushIconBox::OnSize, this);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushIconBox::OnClickBrushButton, this, wxID_ANY);
 }
 
 BrushIconBox::~BrushIconBox() {
 	////
+}
+
+void BrushIconBox::OnSize(wxSizeEvent& event) {
+	event.Skip();
+	SetVirtualSize(GetClientSize().x, -1);
+	FitInside();
 }
 
 void BrushIconBox::SelectFirstBrush() {
