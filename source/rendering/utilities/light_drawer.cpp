@@ -82,11 +82,17 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	// (LightBuffer is passed as const ref, so we need a copy)
 	std::vector<LightBuffer::Light> sorted_lights = light_buffer.lights;
 
-	std::sort(sorted_lights.begin(), sorted_lights.end(), [centerX, centerY](const LightBuffer::Light& a, const LightBuffer::Light& b) {
-		int distA = (a.map_x - centerX) * (a.map_x - centerX) + (a.map_y - centerY) * (a.map_y - centerY);
-		int distB = (b.map_x - centerX) * (b.map_x - centerX) + (b.map_y - centerY) * (b.map_y - centerY);
+	auto comparator = [centerX, centerY](const LightBuffer::Light& a, const LightBuffer::Light& b) {
+		int64_t distA = static_cast<int64_t>(a.map_x - centerX) * (a.map_x - centerX) + static_cast<int64_t>(a.map_y - centerY) * (a.map_y - centerY);
+		int64_t distB = static_cast<int64_t>(b.map_x - centerX) * (b.map_x - centerX) + static_cast<int64_t>(b.map_y - centerY) * (b.map_y - centerY);
 		return distA < distB;
-	});
+	};
+
+	if (sorted_lights.size() > 256) {
+		std::partial_sort(sorted_lights.begin(), sorted_lights.begin() + 256, sorted_lights.end(), comparator);
+	} else {
+		std::sort(sorted_lights.begin(), sorted_lights.end(), comparator);
+	}
 
 	for (const auto& light : sorted_lights) {
 		if (lightCount >= 256) {

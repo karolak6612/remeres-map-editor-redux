@@ -322,7 +322,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 			float screen_tile_h = TILE_SIZE * scale_y;
 
 			int layer = r * cols_ + c;
-			instance_buffer_.push_back({ screen_tile_x, screen_tile_y, screen_tile_w, screen_tile_h, (float)layer });
+			instance_buffer_.push_back({screen_tile_x, screen_tile_y, screen_tile_w, screen_tile_h, (float)layer});
 		}
 	}
 
