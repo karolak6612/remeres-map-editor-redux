@@ -434,10 +434,10 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 								if (house_id) {
 									house = map.houses.getHouse(house_id);
 									if (!house) {
-										std::unique_ptr<House> new_house = std::make_unique<House>(map);
-										new_house->setID(house_id);
-										house = new_house.get();
-										map.houses.addHouse(std::move(new_house));
+								std::unique_ptr<House> new_house = std::make_unique<House>(map);
+								new_house->setID(house_id);
+								house = new_house.get();
+								map.houses.addHouse(std::move(new_house));
 									}
 								} else {
 									warning("Invalid house id from tile %d:%d:%d", pos.x, pos.y, pos.z);
