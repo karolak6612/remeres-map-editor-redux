@@ -5,7 +5,6 @@
 #include <sstream>
 #include <stdint.h>
 
-class Tile;
 class TileLocation;
 struct RenderView;
 struct DrawingOptions;
@@ -26,7 +25,6 @@ public:
 	TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed);
 
 	void DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, std::ostringstream& tooltip_stream);
-	void CaptureTooltips(TileLocation* location, const RenderView& view, const DrawingOptions& options);
 	void AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:

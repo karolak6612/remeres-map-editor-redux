@@ -100,7 +100,6 @@ public:
 	void DrawIngameBox();
 
 	void DrawGrid();
-	void UpdateHoveredTooltip(int map_x, int map_y, int map_z);
 	void DrawTooltips();
 	void ClearTooltips();
 

@@ -221,7 +221,6 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		// Draw UI (Tooltips) using NanoVG
 		if (options.show_tooltips) {
-			drawer->UpdateHoveredTooltip(last_cursor_map_x, last_cursor_map_y, floor);
 			TextRenderer::BeginFrame(GetSize().x, GetSize().y);
 			drawer->DrawTooltips();
 			TextRenderer::EndFrame();
