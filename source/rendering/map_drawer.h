@@ -101,6 +101,7 @@ public:
 
 	void DrawGrid();
 	void DrawTooltips();
+	void CaptureTooltips(Tile* tile);
 	void ClearTooltips();
 
 	void DrawLight();

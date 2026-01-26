@@ -77,8 +77,14 @@ private:
 	std::unique_ptr<PixelBufferObject> pbo_;
 
 	// Temporary staging buffer for PBO uploads
-	// Temporary staging buffer for PBO uploads
 	std::vector<uint8_t> stage_buffer_;
+
+	GLuint instance_vbo_ = 0;
+	struct InstanceData {
+		float x, y, w, h;
+		float layer;
+	};
+	std::vector<InstanceData> instance_buffer_;
 
 	// Tiled configuration
 	static constexpr int TILE_SIZE = 2048;

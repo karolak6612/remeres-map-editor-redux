@@ -221,6 +221,11 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		// Draw UI (Tooltips) using NanoVG
 		if (options.show_tooltips) {
+			int map_x, map_y;
+			ScreenToMap(cursor_x, cursor_y, &map_x, &map_y);
+			Tile* hovered_tile = editor.map.getTile(map_x, map_y, floor);
+			drawer->CaptureTooltips(hovered_tile);
+
 			TextRenderer::BeginFrame(GetSize().x, GetSize().y);
 			drawer->DrawTooltips();
 			TextRenderer::EndFrame();
