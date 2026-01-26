@@ -12,27 +12,33 @@ const char* minimap_vert = R"(
 #version 450 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec4 aRect; // x, y, w, h
+layout (location = 3) in float aLayer;
 
 out vec2 TexCoord;
-uniform mat4 uMVP;
+out float Layer;
+
+uniform mat4 uProjection;
 
 void main() {
-    gl_Position = uMVP * vec4(aPos, 0.0, 1.0);
+    vec2 pos = aRect.xy + aPos * aRect.zw;
+    gl_Position = uProjection * vec4(pos, 0.0, 1.0);
     TexCoord = aTexCoord;
+    Layer = aLayer;
 }
 )";
 
 const char* minimap_frag = R"(
 #version 450 core
 in vec2 TexCoord;
+in float Layer;
 out vec4 FragColor;
 
 uniform usampler2DArray uMinimapTexture; // R8UI Array
 uniform sampler1D uPaletteTexture;  // RGBA
-uniform float uLayer;               // Layer index for current tile
 
 void main() {
-    uint colorIndex = texture(uMinimapTexture, vec3(TexCoord, uLayer)).r;
+    uint colorIndex = texture(uMinimapTexture, vec3(TexCoord, Layer)).r;
     if (colorIndex == 0u) {
         discard; // Transparent
     }
@@ -59,6 +65,9 @@ MinimapRenderer::~MinimapRenderer() {
 	if (vbo_) {
 		glDeleteBuffers(1, &vbo_);
 	}
+	if (instance_vbo_) {
+		glDeleteBuffers(1, &instance_vbo_);
+	}
 }
 
 bool MinimapRenderer::initialize() {
@@ -82,6 +91,7 @@ bool MinimapRenderer::initialize() {
 	// Create VAO/VBO for fullscreen quad
 	glCreateVertexArrays(1, &vao_);
 	glCreateBuffers(1, &vbo_);
+	glCreateBuffers(1, &instance_vbo_);
 
 	float quad_vertices[] = {
 		// pos      // tex
@@ -94,13 +104,31 @@ bool MinimapRenderer::initialize() {
 	glNamedBufferStorage(vbo_, sizeof(quad_vertices), quad_vertices, 0);
 
 	glBindVertexArray(vao_);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	// Quad Attributes (0, 1)
+	glVertexArrayVertexBuffer(vao_, 0, vbo_, 0, 4 * sizeof(float));
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	glEnableVertexArrayAttrib(vao_, 0);
+	glVertexArrayAttribFormat(vao_, 0, 2, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao_, 0, 0);
+
+	glEnableVertexArrayAttrib(vao_, 1);
+	glVertexArrayAttribFormat(vao_, 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
+	glVertexArrayAttribBinding(vao_, 1, 0);
+
+	// Instance Attributes (2, 3)
+	// Bind instance buffer to binding point 1 with divisor 1
+	glVertexArrayBindingDivisor(vao_, 1, 1);
+
+	// Loc 2: Rect (vec4)
+	glEnableVertexArrayAttrib(vao_, 2);
+	glVertexArrayAttribFormat(vao_, 2, 4, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao_, 2, 1);
+
+	// Loc 3: Layer (float)
+	glEnableVertexArrayAttrib(vao_, 3);
+	glVertexArrayAttribFormat(vao_, 3, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float));
+	glVertexArrayAttribBinding(vao_, 3, 1);
 
 	glBindVertexArray(0);
 
@@ -259,6 +287,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	shader_->Use();
+	shader_->SetMat4("uProjection", projection);
 
 	// Bind textures
 	glBindTextureUnit(0, texture_id_);
@@ -266,8 +295,6 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 
 	glBindTextureUnit(1, palette_texture_id_);
 	shader_->SetInt("uPaletteTexture", 1);
-
-	glBindVertexArray(vao_);
 
 	// Constants
 	float scale_x = (float)w / map_w;
@@ -285,6 +312,8 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	end_col = std::min(cols_ - 1, end_col);
 	end_row = std::min(rows_ - 1, end_row);
 
+	instance_data_.clear();
+
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
 			int tile_x = c * TILE_SIZE;
@@ -296,21 +325,33 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 			float screen_tile_w = TILE_SIZE * scale_x;
 			float screen_tile_h = TILE_SIZE * scale_y;
 
-			// Model matrix for this tile
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(screen_tile_x, screen_tile_y, 0.0f));
-			model = glm::scale(model, glm::vec3(screen_tile_w, screen_tile_h, 1.0f));
-
-			shader_->SetMat4("uMVP", projection * model);
-
 			int layer = r * cols_ + c;
-			shader_->SetFloat("uLayer", (float)layer);
 
-			// spdlog::info("Minimap Rendering Tile: {},{} (Layer {}) at x:{}, y:{}, w:{}, h:{}", c, r, layer, screen_tile_x, screen_tile_y, screen_tile_w, screen_tile_h);
-
-			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			// Push Rect (x,y,w,h) and Layer
+			instance_data_.push_back(screen_tile_x);
+			instance_data_.push_back(screen_tile_y);
+			instance_data_.push_back(screen_tile_w);
+			instance_data_.push_back(screen_tile_h);
+			instance_data_.push_back((float)layer);
 		}
 	}
 
+	if (instance_data_.empty()) {
+		return;
+	}
+
+	// Upload instance data
+	// Note: Re-allocating dynamic buffer every frame for simplicity.
+	// For production, a ring buffer or persistent mapping would be better,
+	// but this is already vastly superior to loop-draw.
+	glNamedBufferData(instance_vbo_, instance_data_.size() * sizeof(float), instance_data_.data(), GL_DYNAMIC_DRAW);
+
+	// Bind buffer to VAO binding point 1 (if not done in init, but we did)
+	// However, we need to bind it again if we deleted/recreated it? No, name is constant.
+	// But we DO need to ensure the binding point is linked to the buffer.
+	glVertexArrayVertexBuffer(vao_, 1, instance_vbo_, 0, 5 * sizeof(float));
+
+	glBindVertexArray(vao_);
+	glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, (GLsizei)(instance_data_.size() / 5));
 	glBindVertexArray(0);
 }

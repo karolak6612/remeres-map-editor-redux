@@ -69,6 +69,7 @@ private:
 	GLuint palette_texture_id_ = 0;
 	GLuint vao_ = 0;
 	GLuint vbo_ = 0;
+	GLuint instance_vbo_ = 0;
 
 	int width_ = 0;
 	int height_ = 0;
@@ -79,6 +80,7 @@ private:
 	// Temporary staging buffer for PBO uploads
 	// Temporary staging buffer for PBO uploads
 	std::vector<uint8_t> stage_buffer_;
+	std::vector<float> instance_data_;
 
 	// Tiled configuration
 	static constexpr int TILE_SIZE = 2048;
