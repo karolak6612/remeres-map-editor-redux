@@ -402,16 +402,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 				imported_house->setExit(&editor.map, newexit);
 			}
 
-			// We need to move ownership from imported_map to editor.map
-			// Since imported_map.houses stores unique_ptr, we can extract it.
-			// However, 'hit' is an iterator to the map.
-			// We can move from hit->second.
-
-			// Note: imported_house is a raw pointer obtained from hit->second earlier.
-			// We need to move the unique_ptr from the map.
-
 			editor.map.houses.addHouse(std::move(hit->second));
-			// editor.map.towns.addTown(std::move(tit->second)); // Incorrectly pasted here in previous step
 
 #ifdef __VISUALC__ // C++0x compliance to some degree :)
 			hit = imported_map.houses.erase(hit);

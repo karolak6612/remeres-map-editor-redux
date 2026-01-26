@@ -27,7 +27,7 @@ protected:
 
 	Editor& editor;
 
-	std::vector<Town*> town_list;
+	std::vector<std::unique_ptr<Town>> town_list;
 	uint32_t max_town_id;
 
 	wxListBox* town_listbox;

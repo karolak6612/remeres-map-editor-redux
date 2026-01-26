@@ -168,7 +168,7 @@ bool Item::readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute att
 void IOMapOTBM::saveTowns(const Map& map, NodeFileWriteHandle& f) {
 	f.addNode(OTBM_TOWNS);
 	for (const auto& townEntry : map.towns) {
-		Town* town = townEntry.second;
+		Town* town = townEntry.second.get();
 		const Position& townPosition = town->getTemplePosition();
 		f.addNode(OTBM_TOWN);
 		f.addU32(town->getID());
@@ -184,7 +184,7 @@ void IOMapOTBM::saveTowns(const Map& map, NodeFileWriteHandle& f) {
 void IOMapOTBM::saveWaypointsOTBM(const Map& map, NodeFileWriteHandle& f) {
 	f.addNode(OTBM_WAYPOINTS);
 	for (const auto& waypointEntry : map.waypoints) {
-		Waypoint* waypoint = waypointEntry.second;
+		Waypoint* waypoint = waypointEntry.second.get();
 		f.addNode(OTBM_WAYPOINT);
 		f.addString(waypoint->name);
 		f.addU16(waypoint->pos.x);
