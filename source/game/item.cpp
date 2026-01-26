@@ -416,123 +416,48 @@ void Item::animate() {
 // ============================================================================
 // Static conversions
 
+static const std::map<uint16_t, std::string> liquid_names = {
+	{LIQUID_NONE, "None"},
+	{LIQUID_WATER, "Water"},
+	{LIQUID_BLOOD, "Blood"},
+	{LIQUID_BEER, "Beer"},
+	{LIQUID_SLIME, "Slime"},
+	{LIQUID_LEMONADE, "Lemonade"},
+	{LIQUID_MILK, "Milk"},
+	{LIQUID_MANAFLUID, "Manafluid"},
+	{LIQUID_WATER2, "Water"},
+	{LIQUID_LIFEFLUID, "Lifefluid"},
+	{LIQUID_OIL, "Oil"},
+	{LIQUID_SLIME2, "Slime"},
+	{LIQUID_URINE, "Urine"},
+	{LIQUID_COCONUT_MILK, "Coconut Milk"},
+	{LIQUID_WINE, "Wine"},
+	{LIQUID_MUD, "Mud"},
+	{LIQUID_FRUIT_JUICE, "Fruit Juice"},
+	{LIQUID_LAVA, "Lava"},
+	{LIQUID_RUM, "Rum"},
+	{LIQUID_SWAMP, "Swamp"},
+	{LIQUID_INK, "Ink"},
+	{LIQUID_TEA, "Tea"},
+	{LIQUID_MEAD, "Mead"}
+};
+
 std::string Item::LiquidID2Name(uint16_t id) {
-	switch (id) {
-		case LIQUID_NONE:
-			return "None";
-		case LIQUID_WATER:
-			return "Water";
-		case LIQUID_BLOOD:
-			return "Blood";
-		case LIQUID_BEER:
-			return "Beer";
-		case LIQUID_SLIME:
-			return "Slime";
-		case LIQUID_LEMONADE:
-			return "Lemonade";
-		case LIQUID_MILK:
-			return "Milk";
-		case LIQUID_MANAFLUID:
-			return "Manafluid";
-		case LIQUID_WATER2:
-			return "Water";
-		case LIQUID_LIFEFLUID:
-			return "Lifefluid";
-		case LIQUID_OIL:
-			return "Oil";
-		case LIQUID_SLIME2:
-			return "Slime";
-		case LIQUID_URINE:
-			return "Urine";
-		case LIQUID_COCONUT_MILK:
-			return "Coconut Milk";
-		case LIQUID_WINE:
-			return "Wine";
-		case LIQUID_MUD:
-			return "Mud";
-		case LIQUID_FRUIT_JUICE:
-			return "Fruit Juice";
-		case LIQUID_LAVA:
-			return "Lava";
-		case LIQUID_RUM:
-			return "Rum";
-		case LIQUID_SWAMP:
-			return "Swamp";
-		case LIQUID_INK:
-			return "Ink";
-		case LIQUID_TEA:
-			return "Tea";
-		case LIQUID_MEAD:
-			return "Mead";
-		default:
-			return "Unknown";
+	auto it = liquid_names.find(id);
+	if (it != liquid_names.end()) {
+		return it->second;
 	}
+	return "Unknown";
 }
 
 uint16_t Item::LiquidName2ID(std::string liquid) {
 	to_lower_str(liquid);
-	if (liquid == "none") {
-		return LIQUID_NONE;
-	}
-	if (liquid == "water") {
-		return LIQUID_WATER;
-	}
-	if (liquid == "blood") {
-		return LIQUID_BLOOD;
-	}
-	if (liquid == "beer") {
-		return LIQUID_BEER;
-	}
-	if (liquid == "slime") {
-		return LIQUID_SLIME;
-	}
-	if (liquid == "lemonade") {
-		return LIQUID_LEMONADE;
-	}
-	if (liquid == "milk") {
-		return LIQUID_MILK;
-	}
-	if (liquid == "manafluid") {
-		return LIQUID_MANAFLUID;
-	}
-	if (liquid == "lifefluid") {
-		return LIQUID_LIFEFLUID;
-	}
-	if (liquid == "oil") {
-		return LIQUID_OIL;
-	}
-	if (liquid == "urine") {
-		return LIQUID_URINE;
-	}
-	if (liquid == "coconut milk") {
-		return LIQUID_COCONUT_MILK;
-	}
-	if (liquid == "wine") {
-		return LIQUID_WINE;
-	}
-	if (liquid == "mud") {
-		return LIQUID_MUD;
-	}
-	if (liquid == "fruit juice") {
-		return LIQUID_FRUIT_JUICE;
-	}
-	if (liquid == "lava") {
-		return LIQUID_LAVA;
-	}
-	if (liquid == "rum") {
-		return LIQUID_RUM;
-	}
-	if (liquid == "swamp") {
-		return LIQUID_SWAMP;
-	}
-	if (liquid == "ink") {
-		return LIQUID_INK;
-	}
-	if (liquid == "tea") {
-		return LIQUID_TEA;
-	}
-	if (liquid == "mead") {
-		return LIQUID_MEAD;
+	for (const auto& pair : liquid_names) {
+		std::string name = pair.second;
+		to_lower_str(name);
+		if (name == liquid) {
+			return pair.first;
+		}
 	}
 	return LIQUID_NONE;
 }
