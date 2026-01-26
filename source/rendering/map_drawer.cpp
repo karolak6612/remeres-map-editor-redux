@@ -122,6 +122,7 @@ void MapDrawer::SetupGL() {
 		spdlog::info("MapDrawer: Initializing renderers for canvas {:p}", (void*)canvas);
 		sprite_batch->initialize();
 		primitive_renderer->initialize();
+		grid_drawer->initialize();
 		renderers_initialized = true;
 	}
 }

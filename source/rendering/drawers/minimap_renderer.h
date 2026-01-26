@@ -69,6 +69,13 @@ private:
 	GLuint palette_texture_id_ = 0;
 	GLuint vao_ = 0;
 	GLuint vbo_ = 0;
+	GLuint instance_vbo_ = 0;
+
+	struct InstanceData {
+		float x, y, w, h;
+		float layer;
+	};
+	std::vector<InstanceData> instance_buffer_;
 
 	int width_ = 0;
 	int height_ = 0;
@@ -76,7 +83,6 @@ private:
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<PixelBufferObject> pbo_;
 
-	// Temporary staging buffer for PBO uploads
 	// Temporary staging buffer for PBO uploads
 	std::vector<uint8_t> stage_buffer_;
 
