@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "rendering/core/graphics.h"
 #include "io/filehandle.h"
 #include "app/settings.h"

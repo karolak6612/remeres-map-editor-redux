@@ -6,8 +6,8 @@
 #include "ui/dialog_util.h"
 #include "app/managers/version_manager.h"
 #include "app/application.h"
-#include "game/creature.h"
-#include "game/items.h"
+#include "data/creature.h"
+#include "data/items.h"
 #include "map/tile.h"
 
 struct MapConversionContext {

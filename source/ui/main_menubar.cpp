@@ -28,16 +28,16 @@
 #include "ui/map/towns_window.h"
 #include "ui/map/map_properties_window.h"
 
-#include "ui/about_window.h"
+#include "ui/windows/about_window.h"
 #include "ui/dat_debug_view.h"
 #include "ui/menubar_loader.h"
 #include "ui/map_statistics_dialog.h"
 #include "ui/live_dialogs.h"
 
-#include "ui/extension_window.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/extension_window.h"
+#include "ui/windows/find_item_window.h"
 #include "app/preferences.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 
 #include "ui/menubar/search_handler.h"
 #include "ui/menubar/view_settings_handler.h"
@@ -50,7 +50,7 @@
 #include <wx/chartype.h>
 
 #include "editor/editor.h"
-#include "game/materials.h"
+#include "data/materials.h"
 #include "live/live_client.h"
 #include "editor/action_queue.h"
 

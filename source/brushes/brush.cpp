@@ -33,12 +33,12 @@
 
 #include "app/settings.h"
 
-#include "game/sprites.h"
+#include "data/sprites.h"
 
-#include "game/item.h"
-#include "game/complexitem.h"
-#include "game/creatures.h"
-#include "game/creature.h"
+#include "data/item.h"
+#include "data/complexitem.h"
+#include "data/creatures.h"
+#include "data/creature.h"
 #include "map/map.h"
 
 #include "ui/gui.h"

@@ -1,7 +1,7 @@
 #include "ui/dialogs/find_dialog.h"
 
 #include "brushes/brush.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "ui/gui.h"
 #include "brushes/raw_brush.h"
 

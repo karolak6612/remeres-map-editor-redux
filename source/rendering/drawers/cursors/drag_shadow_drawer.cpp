@@ -21,11 +21,11 @@
 #include "editor/editor.h"
 #include "rendering/ui/map_display.h"
 #include "map/tile.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 
-#include "game/item.h"
-#include "game/creature.h"
-#include "game/spawn.h"
+#include "data/item.h"
+#include "data/creature.h"
+#include "data/spawn.h"
 #include "rendering/ui/selection_controller.h"
 
 DragShadowDrawer::DragShadowDrawer() {

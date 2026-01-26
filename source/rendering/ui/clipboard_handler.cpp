@@ -20,7 +20,7 @@
 #include "editor/editor.h"
 #include "ui/gui.h"
 #include "map/tile.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "editor/selection.h"
 #include "app/settings.h"
 

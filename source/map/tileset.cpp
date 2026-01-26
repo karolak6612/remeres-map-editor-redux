@@ -18,9 +18,9 @@
 #include "app/main.h"
 
 #include "map/tileset.h"
-#include "game/creatures.h"
+#include "data/creatures.h"
 #include "brushes/creature_brush.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "brushes/raw_brush.h"
 
 Tileset::Tileset(Brushes& brushes, const std::string& name) :

@@ -18,7 +18,7 @@
 #include "app/main.h"
 
 #include "brushes/house_exit_brush.h"
-#include "game/house.h"
+#include "data/house.h"
 #include "map/basemap.h"
 
 //=============================================================================

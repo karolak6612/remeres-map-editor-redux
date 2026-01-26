@@ -7,8 +7,8 @@
 #include "app/managers/version_manager.h"
 #include "ui/gui.h"
 #include "app/application.h"
-#include "palette/palette_window.h"
-#include "palette/managers/palette_manager.h"
+#include "ui/palettes/palette_window.h"
+#include "ui/palettes/managers/palette_manager.h"
 
 #include "rendering/ui/minimap_window.h"
 #include "ui/main_menubar.h"

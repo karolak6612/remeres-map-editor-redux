@@ -20,11 +20,11 @@
 
 #include "map/basemap.h"
 #include "map/tile.h"
-#include "game/town.h"
-#include "game/house.h"
-#include "game/spawn.h"
-#include "game/complexitem.h"
-#include "game/waypoints.h"
+#include "data/town.h"
+#include "data/house.h"
+#include "data/spawn.h"
+#include "data/complexitem.h"
+#include "data/waypoints.h"
 #include "io/templates.h"
 
 class Map : public BaseMap {

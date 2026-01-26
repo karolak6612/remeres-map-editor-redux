@@ -21,7 +21,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <format>
 #include "map/tile.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "rendering/core/drawing_options.h"
 
 LightDrawer::LightDrawer() {

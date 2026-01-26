@@ -2,7 +2,7 @@
 #include "map/map_statistics.h"
 #include "map/map.h"
 #include "map/tile.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "ui/gui.h"
 #include <sstream>
 

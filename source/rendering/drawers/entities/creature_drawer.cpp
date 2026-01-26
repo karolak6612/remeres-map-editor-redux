@@ -12,10 +12,10 @@
 
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
-#include "game/creature.h"
+#include "data/creature.h"
 #include "ui/gui.h"
-#include "game/items.h"
-#include "game/sprites.h"
+#include "data/items.h"
+#include "data/sprites.h"
 #include "rendering/core/sprite_batch.h"
 
 CreatureDrawer::CreatureDrawer() {

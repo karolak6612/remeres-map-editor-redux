@@ -11,8 +11,8 @@
 #include "map/tile.h"
 #include "ui/gui.h"
 #include "app/settings.h"
-#include "ui/old_properties_window.h"
-#include "ui/properties_window.h"
+#include "ui/windows/old_properties_window.h"
+#include "ui/windows/properties_window.h"
 
 void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 	if (!tile) {

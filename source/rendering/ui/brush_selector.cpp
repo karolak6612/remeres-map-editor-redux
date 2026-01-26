@@ -21,7 +21,7 @@
 #include "brushes/managers/brush_manager.h"
 #include "editor/editor.h"
 #include "map/tile.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "brushes/brush.h"
 #include "brushes/ground_brush.h"
 #include "brushes/wall_brush.h"

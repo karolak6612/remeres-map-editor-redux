@@ -9,8 +9,8 @@
 
 #include "ui/gui.h"
 #include "util/file_system.h"
-#include "game/sprites.h"
-#include "game/materials.h"
+#include "data/sprites.h"
+#include "data/materials.h"
 #include "brushes/brush.h"
 #include "brushes/managers/brush_manager.h"
 #include "ui/managers/loading_manager.h"

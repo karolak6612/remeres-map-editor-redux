@@ -20,7 +20,7 @@
 #include "brushes/wall_brush.h"
 
 #include "ui/gui.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "map/basemap.h"
 
 uint32_t WallBrush::full_border_types[16];

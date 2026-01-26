@@ -21,9 +21,9 @@
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "map/tile.h"
-#include "game/creature.h"
+#include "data/creature.h"
 #include "map/basemap.h"
-#include "game/spawn.h"
+#include "data/spawn.h"
 
 //=============================================================================
 // Creature brush

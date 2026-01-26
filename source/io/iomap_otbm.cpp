@@ -27,13 +27,13 @@
 #include "ui/gui.h"
 #include "ui/dialog_util.h" // Loadbar
 
-#include "game/creatures.h"
-#include "game/creature.h"
+#include "data/creatures.h"
+#include "data/creature.h"
 #include "map/map.h"
 #include "map/tile.h"
-#include "game/item.h"
-#include "game/complexitem.h"
-#include "game/town.h"
+#include "data/item.h"
+#include "data/complexitem.h"
+#include "data/town.h"
 #include "brushes/wall_brush.h"
 
 #include "io/iomap_otbm.h"

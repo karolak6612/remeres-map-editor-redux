@@ -6,11 +6,11 @@
 
 #include "brushes/managers/brush_manager.h"
 #include "ui/gui.h"
-#include "palette/palette_window.h"
+#include "ui/palettes/palette_window.h"
 #include "brushes/brush.h"
 #include "brushes/spawn_brush.h"
 #include "brushes/managers/doodad_preview_manager.h"
-#include "palette/managers/palette_manager.h"
+#include "ui/palettes/managers/palette_manager.h"
 #include "ui/main_toolbar.h"
 
 BrushManager g_brush_manager;

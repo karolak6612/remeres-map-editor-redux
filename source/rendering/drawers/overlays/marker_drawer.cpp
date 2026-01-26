@@ -4,7 +4,7 @@
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_batch.h"
 #include "map/tile.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "editor/editor.h"
 
 MarkerDrawer::MarkerDrawer() {

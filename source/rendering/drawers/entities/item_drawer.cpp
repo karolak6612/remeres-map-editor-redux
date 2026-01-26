@@ -18,10 +18,10 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/drawing_options.h"
 #include "map/tile.h"
-#include "game/item.h"
-#include "game/items.h"
-#include "game/complexitem.h"
-#include "game/sprites.h"
+#include "data/item.h"
+#include "data/items.h"
+#include "data/complexitem.h"
+#include "data/sprites.h"
 #include "ui/gui.h"
 
 ItemDrawer::ItemDrawer() {

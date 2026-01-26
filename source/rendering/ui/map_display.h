@@ -20,12 +20,12 @@
 
 #include "editor/action.h"
 #include "map/tile.h"
-#include "game/creature.h"
+#include "data/creature.h"
 #include "rendering/utilities/frame_pacer.h"
 
 #include "ui/map_popup_menu.h"
 #include "ui/map_popup_menu.h"
-#include "game/animation_timer.h"
+#include "data/animation_timer.h"
 #include <memory>
 
 class Item;

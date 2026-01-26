@@ -20,15 +20,15 @@
 #include "brushes/brush.h"
 
 #include "map/tile.h"
-#include "game/creature.h"
-#include "game/house.h"
+#include "data/creature.h"
+#include "data/house.h"
 #include "map/basemap.h"
-#include "game/spawn.h"
+#include "data/spawn.h"
 #include "brushes/ground_brush.h"
 #include "brushes/wall_brush.h"
 #include "brushes/carpet_brush.h"
 #include "brushes/table_brush.h"
-#include "game/town.h"
+#include "data/town.h"
 #include "map/map.h"
 
 Tile::Tile(int x, int y, int z) :

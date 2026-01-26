@@ -1,7 +1,7 @@
 #include "app/main.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
 #include "map/tile.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h"
 

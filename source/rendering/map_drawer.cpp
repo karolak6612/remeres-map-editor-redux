@@ -19,7 +19,7 @@
 
 #include "editor/editor.h"
 #include "ui/gui.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include <spdlog/spdlog.h>
 #include "rendering/map_drawer.h"
 #include "brushes/brush.h"

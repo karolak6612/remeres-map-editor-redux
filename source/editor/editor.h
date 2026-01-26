@@ -18,7 +18,7 @@
 #ifndef RME_EDITOR_H
 #define RME_EDITOR_H
 
-#include "game/item.h"
+#include "data/item.h"
 #include "map/tile.h"
 #include "io/iomap.h"
 #include "map/map.h"

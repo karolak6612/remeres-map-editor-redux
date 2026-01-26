@@ -3,8 +3,8 @@
 
 #include "map/map.h"
 #include "map/tile.h"
-#include "game/item.h"
-#include "game/complexitem.h"
+#include "data/item.h"
+#include "data/complexitem.h"
 #include "ui/gui.h"
 
 namespace EditorOperations {

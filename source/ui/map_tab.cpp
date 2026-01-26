@@ -20,7 +20,7 @@
 #include "ui/gui.h"
 #include "editor/editor.h"
 #include "map/map.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "ui/map_tab.h"
 #include "editor/editor_tabs.h"
 #include "rendering/ui/map_display.h"

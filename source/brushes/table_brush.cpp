@@ -19,7 +19,7 @@
 
 #include "brushes/table_brush.h"
 
-#include "game/items.h"
+#include "data/items.h"
 #include "map/basemap.h"
 
 uint32_t TableBrush::table_types[256];

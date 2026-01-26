@@ -3,8 +3,8 @@
 
 #include "map/map.h"
 #include "map/tile.h"
-#include "game/item.h"
-#include "game/materials.h"
+#include "data/item.h"
+#include "data/materials.h"
 #include "ui/gui.h"
 #include <algorithm>
 #include <limits>

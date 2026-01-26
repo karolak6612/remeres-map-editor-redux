@@ -19,9 +19,9 @@
 
 #include "editor/editor.h"
 #include "editor/action_queue.h"
-#include "game/materials.h"
+#include "data/materials.h"
 #include "map/map.h"
-#include "game/complexitem.h"
+#include "data/complexitem.h"
 #include "app/settings.h"
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"

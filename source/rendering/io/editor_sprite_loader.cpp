@@ -2,7 +2,7 @@
 #include "rendering/io/editor_sprite_loader.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/editor_sprite.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "../../../brushes/door_normal.xpm"
 #include "../../../brushes/door_normal_small.xpm"
 #include "../../../brushes/door_locked.xpm"

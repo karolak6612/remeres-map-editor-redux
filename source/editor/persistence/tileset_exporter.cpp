@@ -1,7 +1,7 @@
 #include "editor/persistence/tileset_exporter.h"
 
-#include "game/materials.h"
-#include "game/items.h"
+#include "data/materials.h"
+#include "data/items.h"
 #include "brushes/brush.h"
 #include "brushes/raw_brush.h"
 #include "ui/gui.h"

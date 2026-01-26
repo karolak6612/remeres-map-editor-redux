@@ -19,7 +19,7 @@
 
 #include "brushes/spawn_brush.h"
 #include "map/basemap.h"
-#include "game/spawn.h"
+#include "data/spawn.h"
 
 //=============================================================================
 // Spawn brush

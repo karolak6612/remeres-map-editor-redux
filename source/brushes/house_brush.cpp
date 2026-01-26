@@ -18,9 +18,9 @@
 #include "app/main.h"
 
 #include "brushes/house_brush.h"
-#include "game/house.h"
+#include "data/house.h"
 #include "map/map.h"
-#include "game/complexitem.h"
+#include "data/complexitem.h"
 
 //=============================================================================
 // House Brush
