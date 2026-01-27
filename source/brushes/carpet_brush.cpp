@@ -18,6 +18,7 @@
 #include "app/main.h"
 
 #include "brushes/carpet_brush.h"
+#include "brushes/auto_border.h"
 
 #include "map/basemap.h"
 #include "game/items.h"

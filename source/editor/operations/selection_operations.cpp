@@ -10,6 +10,7 @@
 #include "editor/action_queue.h"
 #include "editor/selection.h"
 #include "map/map.h"
+#include "map/operations/tile_operations.h"
 #include "brushes/ground_brush.h"
 #include "app/settings.h"
 #include "ui/gui.h"
@@ -37,7 +38,7 @@ void SelectionOperations::doSurroundingBorders(DoodadBrush* doodad_brush, Positi
 void SelectionOperations::removeDuplicateWalls(Tile* buffer, Tile* tile) {
 	for (ItemVector::const_iterator iter = buffer->items.begin(); iter != buffer->items.end(); ++iter) {
 		if ((*iter)->getWallBrush()) {
-			tile->cleanWalls((*iter)->getWallBrush());
+			TileOperations::cleanWalls(tile, (*iter)->getWallBrush());
 		}
 	}
 }
@@ -50,7 +51,7 @@ void SelectionOperations::borderizeSelection(Editor& editor) {
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_BORDERIZE);
 	for (Tile* tile : editor.selection) {
 		Tile* newTile = tile->deepCopy(editor.map);
-		newTile->borderize(&editor.map);
+		TileOperations::borderize(newTile, &editor.map);
 		newTile->select();
 		action->addChange(std::make_unique<Change>(newTile));
 	}
@@ -195,11 +196,11 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 			Tile* tile = *it;
 			Tile* new_tile = (*it)->deepCopy(editor.map);
 			if (doborders) {
-				new_tile->borderize(&editor.map);
+				TileOperations::borderize(new_tile, &editor.map);
 			}
-			new_tile->wallize(&editor.map);
-			new_tile->tableize(&editor.map);
-			new_tile->carpetize(&editor.map);
+			TileOperations::wallize(new_tile, &editor.map);
+			TileOperations::tableize(new_tile, &editor.map);
+			TileOperations::carpetize(new_tile, &editor.map);
 			if (tile->ground && tile->ground->isSelected()) {
 				new_tile->selectGround();
 			}
@@ -318,12 +319,12 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 					Tile* new_tile = tile->deepCopy(editor.map);
 
 					if (doborders) {
-						new_tile->borderize(&editor.map);
+						TileOperations::borderize(new_tile, &editor.map);
 					}
 
-					new_tile->wallize(&editor.map);
-					new_tile->tableize(&editor.map);
-					new_tile->carpetize(&editor.map);
+					TileOperations::wallize(new_tile, &editor.map);
+					TileOperations::tableize(new_tile, &editor.map);
+					TileOperations::carpetize(new_tile, &editor.map);
 					if (tile->ground->isSelected()) {
 						new_tile->selectGround();
 					}
@@ -401,14 +402,14 @@ void SelectionOperations::destroySelection(Editor& editor) {
 
 				if (tile) {
 					Tile* new_tile = tile->deepCopy(editor.map);
-					new_tile->borderize(&editor.map);
-					new_tile->wallize(&editor.map);
-					new_tile->tableize(&editor.map);
-					new_tile->carpetize(&editor.map);
+					TileOperations::borderize(new_tile, &editor.map);
+					TileOperations::wallize(new_tile, &editor.map);
+					TileOperations::tableize(new_tile, &editor.map);
+					TileOperations::carpetize(new_tile, &editor.map);
 					action->addChange(std::make_unique<Change>(new_tile));
 				} else {
 					Tile* new_tile = editor.map.allocator(location);
-					new_tile->borderize(&editor.map);
+					TileOperations::borderize(new_tile, &editor.map);
 					if (new_tile->size()) {
 						action->addChange(std::make_unique<Change>(new_tile));
 					} else {

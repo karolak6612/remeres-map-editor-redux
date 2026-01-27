@@ -18,7 +18,9 @@
 #include "app/main.h"
 
 #include "brushes/brush.h"
+#include "brushes/auto_border.h"
 #include "brushes/carpet_brush.h"
+#include "map/operations/tile_operations.h"
 #include "brushes/creature_brush.h"
 #include "brushes/doodad_brush.h"
 #include "brushes/ground_brush.h"
@@ -460,7 +462,7 @@ void DoorBrush::undraw(BaseMap* map, Tile* tile) {
 		if (item->isBrushDoor()) {
 			item->getWallBrush()->draw(map, tile, nullptr);
 			if (g_settings.getInteger(Config::USE_AUTOMAGIC)) {
-				tile->wallize(map);
+				TileOperations::wallize(tile, map);
 			}
 			return;
 		}
