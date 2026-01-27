@@ -26,7 +26,7 @@ class NetworkedActionQueue;
 class NetworkedAction : public Action {
 protected:
 	NetworkedAction(Editor& editor, ActionIdentifier ident);
-	~NetworkedAction();
+	~NetworkedAction() override;
 
 public:
 	uint32_t owner;
@@ -39,15 +39,15 @@ class NetworkedBatchAction : public BatchAction {
 
 protected:
 	NetworkedBatchAction(Editor& editor, NetworkedActionQueue& queue, ActionIdentifier ident);
-	~NetworkedBatchAction();
+	~NetworkedBatchAction() override;
 
 public:
-	void addAndCommitAction(std::unique_ptr<Action> action);
+	void addAndCommitAction(std::unique_ptr<Action> action) override;
 
 protected:
-	void commit();
-	void undo();
-	void redo();
+	void commit() override;
+	void undo() override;
+	void redo() override;
 
 	friend class NetworkedActionQueue;
 };
@@ -55,7 +55,7 @@ protected:
 class NetworkedActionQueue : public ActionQueue {
 public:
 	NetworkedActionQueue(Editor& editor);
-	~NetworkedActionQueue();
+	~NetworkedActionQueue() override;
 
 	std::unique_ptr<Action> createAction(ActionIdentifier ident) override;
 	std::unique_ptr<BatchAction> createBatch(ActionIdentifier ident) override;

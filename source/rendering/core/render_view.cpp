@@ -10,8 +10,8 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	canvas->MouseToMap(&mouse_map_x, &mouse_map_y);
 	canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
 
-	zoom = (float)canvas->GetZoom();
-	tile_size = std::max(1, (int)(TileSize / zoom)); // after zoom
+	zoom = static_cast<float>(canvas->GetZoom());
+	tile_size = std::max(1, static_cast<int>(TileSize / zoom)); // after zoom
 	floor = canvas->GetFloor();
 
 	if (options.show_all_floors) {

@@ -338,7 +338,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			ring_buffer_.advance();
 
 			processed += batch_size;
-			sprite_count_ += (int)batch_size;
+			sprite_count_ += static_cast<int>(batch_size);
 		}
 
 		// Flush remaining commands
@@ -381,7 +381,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 
 			processed += batch_size;
 			draw_call_count_++;
-			sprite_count_ += (int)batch_size;
+			sprite_count_ += static_cast<int>(batch_size);
 		}
 	}
 

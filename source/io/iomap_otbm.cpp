@@ -629,10 +629,10 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 			if (entryName == "world/map.otbm") {
 				// Read the entire OTBM file into a memory region
 				size_t otbm_size = archive_entry_size(entry);
-				std::shared_ptr<uint8_t> otbm_buffer(new uint8_t[otbm_size], [](uint8_t* p) { delete[] p; });
+				std::vector<uint8_t> otbm_buffer(otbm_size);
 
 				// Read from the archive
-				size_t read_bytes = archive_read_data(a.get(), otbm_buffer.get(), otbm_size);
+				size_t read_bytes = archive_read_data(a.get(), otbm_buffer.data(), otbm_size);
 
 				// Check so it at least contains the 4-byte file id
 				if (read_bytes < 4) {
@@ -648,7 +648,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 
 				// Create a read handle on it
 				std::shared_ptr<NodeFileReadHandle> f(
-					new MemoryNodeFileReadHandle(otbm_buffer.get() + 4, otbm_size - 4)
+					new MemoryNodeFileReadHandle(otbm_buffer.data() + 4, otbm_size - 4)
 				);
 
 				// Read the version info
@@ -1029,9 +1029,10 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 					warning("Duplicate town id %d, discarding duplicate", town_id);
 					continue;
 				} else {
-					town = newd Town(town_id);
-					if (!map.towns.addTown(town)) {
-						delete town;
+					auto newTown = std::make_unique<Town>(town_id);
+					if (map.towns.addTown(newTown.get())) {
+						town = newTown.release();
+					} else {
 						continue;
 					}
 				}
