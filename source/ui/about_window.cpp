@@ -58,8 +58,6 @@ protected:
 private:
 	bool paused_val;
 
-	DECLARE_EVENT_TABLE()
-
 protected:
 	bool dead;
 };
@@ -163,17 +161,14 @@ protected:
 //=============================================================================
 // About Window - Information window about the application
 
-BEGIN_EVENT_TABLE(AboutWindow, wxDialog)
-EVT_BUTTON(wxID_OK, AboutWindow::OnClickOK)
-EVT_BUTTON(ABOUT_VIEW_LICENSE, AboutWindow::OnClickLicense)
-EVT_MENU(ABOUT_RUN_TETRIS, AboutWindow::OnTetris)
-EVT_MENU(ABOUT_RUN_SNAKE, AboutWindow::OnSnake)
-EVT_MENU(wxID_CANCEL, AboutWindow::OnClickOK)
-END_EVENT_TABLE()
-
 AboutWindow::AboutWindow(wxWindow* parent) :
 	wxDialog(parent, wxID_ANY, "About", wxDefaultPosition, wxSize(300, 320), wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX),
 	game_panel(nullptr) {
+	Bind(wxEVT_BUTTON, &AboutWindow::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &AboutWindow::OnClickLicense, this, ABOUT_VIEW_LICENSE);
+	Bind(wxEVT_MENU, &AboutWindow::OnTetris, this, ABOUT_RUN_TETRIS);
+	Bind(wxEVT_MENU, &AboutWindow::OnSnake, this, ABOUT_RUN_SNAKE);
+	Bind(wxEVT_MENU, &AboutWindow::OnClickOK, this, wxID_CANCEL);
 	wxString about;
 
 	about << "OTAcademy Map Editor\n";
@@ -278,17 +273,14 @@ void AboutWindow::OnSnake(wxCommandEvent&) {
 //=============================================================================
 // GamePanel - Abstract class for games
 
-BEGIN_EVENT_TABLE(GamePanel, wxPanel)
-EVT_KEY_DOWN(GamePanel::OnKeyDown)
-EVT_KEY_UP(GamePanel::OnKeyUp)
-EVT_PAINT(GamePanel::OnPaint)
-EVT_IDLE(GamePanel::OnIdle)
-END_EVENT_TABLE()
-
 GamePanel::GamePanel(wxWindow* parent, int width, int height) :
 	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(width, height), wxWANTS_CHARS),
 	paused_val(false),
 	dead(false) {
+	Bind(wxEVT_KEY_DOWN, &GamePanel::OnKeyDown, this);
+	Bind(wxEVT_KEY_UP, &GamePanel::OnKeyUp, this);
+	Bind(wxEVT_PAINT, &GamePanel::OnPaint, this);
+	Bind(wxEVT_IDLE, &GamePanel::OnIdle, this);
 	// Receive idle events
 	SetExtraStyle(wxWS_EX_PROCESS_IDLE);
 	// Complete redraw
