@@ -40,10 +40,6 @@ class RMERecipe(ConanFile):
         tc.generate()
     
     def configure(self):
-        # Boost components needed
-        self.options["boost/*"].without_python = True
-        self.options["boost/*"].without_test = True
-        
         # wxWidgets components needed
         self.options["wxwidgets/*"].opengl = True
         self.options["wxwidgets/*"].aui = True
