@@ -53,7 +53,12 @@ public:
 	}
 
 	void setSize(int newsize) {
-		ASSERT(size < 100);
+		if (newsize > 100) {
+			newsize = 100;
+		}
+		if (newsize < 1) {
+			newsize = 1;
+		}
 		size = newsize;
 	}
 	int getSize() const {

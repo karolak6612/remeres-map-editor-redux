@@ -1140,6 +1140,8 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 		}
 
 		int32_t radius = spawnNode.attribute("radius").as_int();
+		radius = std::min<int32_t>(radius, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
+
 		if (radius < 1) {
 			warning("Couldn't read radius of spawn.. discarding spawn...");
 			continue;
