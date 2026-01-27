@@ -162,6 +162,9 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/minigames/game_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/minigames/tetris_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/minigames/snake_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/artprovider.h
@@ -397,6 +400,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/minigames/game_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/minigames/tetris_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/minigames/snake_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/artprovider.cpp

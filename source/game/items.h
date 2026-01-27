@@ -458,6 +458,10 @@ protected:
 	bool loadFromOtbVer2(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 	bool loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 
+private:
+	bool parseOtbAttrVer1(ItemType* t, BinaryNode* itemNode, uint8_t attribute, uint16_t datalen, wxString& error, wxArrayString& warnings);
+	void parseGameXmlAttribute(ItemType& it, const std::string& key, const pugi::xml_node& itemAttributesNode);
+
 protected:
 	// Count of GameSprite types
 	uint16_t item_count;
