@@ -25,18 +25,18 @@ class WallBrush;
 
 namespace TileOperations {
 
-void wallize(Tile* tile, BaseMap* map);
-void borderize(Tile* tile, BaseMap* map);
-void tableize(Tile* tile, BaseMap* map);
-void carpetize(Tile* tile, BaseMap* map);
+	void wallize(Tile* tile, BaseMap* map);
+	void borderize(Tile* tile, BaseMap* map);
+	void tableize(Tile* tile, BaseMap* map);
+	void carpetize(Tile* tile, BaseMap* map);
 
-void cleanWalls(Tile* tile, bool dontdelete = false);
-void cleanWalls(Tile* tile, WallBrush* wb);
-void cleanBorders(Tile* tile);
-void cleanTables(Tile* tile, bool dontdelete = false);
+	void cleanWalls(Tile* tile, bool dontdelete = false);
+	void cleanWalls(Tile* tile, WallBrush* wb);
+	void cleanBorders(Tile* tile);
+	void cleanTables(Tile* tile, bool dontdelete = false);
 
-void addBorderItem(Tile* tile, Item* item);
-void addWallItem(Tile* tile, Item* item);
+	void addBorderItem(Tile* tile, Item* item);
+	void addWallItem(Tile* tile, Item* item);
 
 } // namespace TileOperations
 
