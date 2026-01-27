@@ -15,13 +15,22 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_PALETTE_COMMONS_H_
-#define RME_PALETTE_COMMONS_H_
+#ifndef RME_PALETTE_BRUSH_BUTTON_H_
+#define RME_PALETTE_BRUSH_BUTTON_H_
 
-#include "palette/palette_panel.h"
-#include "palette/brush_size_panel.h"
-#include "palette/brush_tool_panel.h"
-#include "palette/brush_thickness_panel.h"
-#include "palette/brush_button.h"
+#include "ui/controls/item_buttons.h"
+#include "brushes/brush.h"
+
+class BrushButton : public ItemToggleButton {
+public:
+	BrushButton(wxWindow* parent, Brush* brush, RenderSize, uint32_t id = wxID_ANY);
+	virtual ~BrushButton();
+
+	Brush* brush;
+
+	void OnKey(wxKeyEvent& event);
+
+	DECLARE_EVENT_TABLE()
+};
 
 #endif

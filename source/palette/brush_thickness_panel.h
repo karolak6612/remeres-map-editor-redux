@@ -15,13 +15,32 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_PALETTE_COMMONS_H_
-#define RME_PALETTE_COMMONS_H_
+#ifndef RME_PALETTE_BRUSH_THICKNESS_PANEL_H_
+#define RME_PALETTE_BRUSH_THICKNESS_PANEL_H_
 
 #include "palette/palette_panel.h"
-#include "palette/brush_size_panel.h"
-#include "palette/brush_tool_panel.h"
-#include "palette/brush_thickness_panel.h"
-#include "palette/brush_button.h"
+#include <wx/slider.h>
+
+class BrushThicknessPanel : public PalettePanel {
+public:
+	BrushThicknessPanel(wxWindow* parent);
+	~BrushThicknessPanel();
+
+	// Interface
+	wxString GetName() const;
+
+	// Called when this page is displayed
+	void OnSwitchIn();
+
+	// wxWidgets event handling
+	void OnScroll(wxScrollEvent& event);
+	void OnClickCustomThickness(wxCommandEvent& event);
+
+public:
+	wxSlider* slider;
+	wxCheckBox* use_button;
+
+	DECLARE_EVENT_TABLE()
+};
 
 #endif

@@ -87,6 +87,11 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/net/rme_net.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_size_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_tool_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_thickness_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_button.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_house.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.h
@@ -193,8 +198,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/export_tilesets_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/games/game_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/games/tetris_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/games/snake_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui_ids.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/main_frame.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/loading_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/layout_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/minimap_manager.h
@@ -325,7 +334,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/rme_net.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/palette_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_size_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_tool_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_thickness_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/palette/brush_button.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_house.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_waypoints.cpp
@@ -427,7 +440,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/export_tilesets_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/games/game_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/games/tetris_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/games/snake_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/gui.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/main_frame.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_menubar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/menubar_action_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/search_handler.cpp

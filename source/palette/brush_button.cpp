@@ -15,13 +15,30 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_PALETTE_COMMONS_H_
-#define RME_PALETTE_COMMONS_H_
-
-#include "palette/palette_panel.h"
-#include "palette/brush_size_panel.h"
-#include "palette/brush_tool_panel.h"
-#include "palette/brush_thickness_panel.h"
+#include "app/main.h"
 #include "palette/brush_button.h"
+#include "ui/gui.h"
 
-#endif
+// ============================================================================
+// Brush Button
+
+BEGIN_EVENT_TABLE(BrushButton, ItemToggleButton)
+EVT_KEY_DOWN(BrushButton::OnKey)
+END_EVENT_TABLE()
+
+BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_t id) :
+	ItemToggleButton(parent, sz, uint16_t(0), id),
+	brush(_brush) {
+	ASSERT(sz != RENDER_SIZE_64x64);
+	ASSERT(brush);
+	SetSprite(brush->getLookID());
+	SetToolTip(wxstr(brush->getName()));
+}
+
+BrushButton::~BrushButton() {
+	////
+}
+
+void BrushButton::OnKey(wxKeyEvent& event) {
+	g_gui.AddPendingCanvasEvent(event);
+}
