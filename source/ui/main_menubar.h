@@ -187,6 +187,8 @@ public:
 	void CheckItem(MenuBar::ActionID id, bool check);
 	bool IsItemChecked(MenuBar::ActionID id) const;
 
+	wxString GetShortcutText(MenuBar::ActionID id) const;
+
 	// Handlers
 	void OnNew(wxCommandEvent& event);
 	void OnOpen(wxCommandEvent& event);

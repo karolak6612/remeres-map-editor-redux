@@ -163,6 +163,18 @@ bool MainMenuBar::IsItemChecked(MenuBar::ActionID id) const {
 	return false;
 }
 
+wxString MainMenuBar::GetShortcutText(MenuBar::ActionID id) const {
+	std::map<MenuBar::ActionID, std::list<wxMenuItem*>>::const_iterator fi = items.find(id);
+	if (fi == items.end() || fi->second.empty()) {
+		return "";
+	}
+	wxAcceleratorEntry* accel = fi->second.front()->GetAccel();
+	if (accel) {
+		return accel->ToString();
+	}
+	return "";
+}
+
 void MainMenuBar::Update() {
 	using namespace MenuBar;
 	// This updates all buttons and sets them to proper enabled/disabled state
