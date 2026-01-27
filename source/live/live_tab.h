@@ -23,6 +23,7 @@
 #include "editor/editor_tabs.h"
 #include "app/application.h"
 #include "live/live_server.h"
+#include <memory>
 
 class wxGrid;
 
@@ -52,7 +53,7 @@ public:
 		return socket;
 	}
 
-	void UpdateClientList(const std::unordered_map<uint32_t, LivePeer*>& updatedClients);
+	void UpdateClientList(const std::unordered_map<uint32_t, std::shared_ptr<LivePeer>>& updatedClients);
 
 	void OnSelectChatbox(wxFocusEvent& evt);
 	void OnDeselectChatbox(wxFocusEvent& evt);
@@ -68,7 +69,7 @@ protected:
 	wxTextCtrl* input;
 	wxGrid* user_list;
 
-	std::unordered_map<uint32_t, LivePeer*> clients;
+	std::unordered_map<uint32_t, std::shared_ptr<LivePeer>> clients;
 
 	DECLARE_EVENT_TABLE();
 };

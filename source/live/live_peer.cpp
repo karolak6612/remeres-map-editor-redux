@@ -60,7 +60,8 @@ std::string LivePeer::getHostName() const {
 
 void LivePeer::receiveHeader() {
 	readMessage.position = 0;
-	boost::asio::async_read(socket, boost::asio::buffer(readMessage.buffer, 4), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
+	auto self = shared_from_this();
+	boost::asio::async_read(socket, boost::asio::buffer(readMessage.buffer, 4), [this, self](const boost::system::error_code& error, size_t bytesReceived) -> void {
 		if (error) {
 			if (!handleError(error)) {
 				logMessage(wxString() + getHostName() + ": " + error.message());
@@ -75,7 +76,8 @@ void LivePeer::receiveHeader() {
 
 void LivePeer::receive(uint32_t packetSize) {
 	readMessage.buffer.resize(readMessage.position + packetSize);
-	boost::asio::async_read(socket, boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
+	auto self = shared_from_this();
+	boost::asio::async_read(socket, boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize), [this, self](const boost::system::error_code& error, size_t bytesReceived) -> void {
 		if (error) {
 			if (!handleError(error)) {
 				logMessage(wxString() + getHostName() + ": " + error.message());
@@ -83,7 +85,7 @@ void LivePeer::receive(uint32_t packetSize) {
 		} else if (bytesReceived < readMessage.buffer.size() - 4) {
 			logMessage(wxString() + getHostName() + ": Could not receive packet[size: " + std::to_string(bytesReceived) + "], disconnecting client.");
 		} else {
-			wxTheApp->CallAfter([this]() {
+			wxTheApp->CallAfter([this, self]() {
 				if (connected) {
 					parseEditorPacket(std::move(readMessage));
 				} else {
@@ -97,7 +99,8 @@ void LivePeer::receive(uint32_t packetSize) {
 
 void LivePeer::send(NetworkMessage& message) {
 	memcpy(&message.buffer[0], &message.size, 4);
-	boost::asio::async_write(socket, boost::asio::buffer(message.buffer, message.size + 4), [this](const boost::system::error_code& error, size_t bytesTransferred) -> void {
+	auto self = shared_from_this();
+	boost::asio::async_write(socket, boost::asio::buffer(message.buffer, message.size + 4), [this, self](const boost::system::error_code& error, size_t bytesTransferred) -> void {
 		if (error) {
 			logMessage(wxString() + getHostName() + ": " + error.message());
 		}
