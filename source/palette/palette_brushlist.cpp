@@ -59,12 +59,12 @@ BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const TilesetContainer& t
 		topsizer->Add(tmpsizer, 0, wxCENTER, 10);
 	}
 
-	for (TilesetContainer::const_iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
-		const TilesetCategory* tcg = iter->second->getCategory(category);
+	for (const auto& [name, tileset] : tilesets) {
+		const TilesetCategory* tcg = tileset->getCategory(category);
 		if (tcg && tcg->size() > 0) {
 			BrushPanel* panel = newd BrushPanel(tmp_choicebook);
 			panel->AssignTileset(tcg);
-			tmp_choicebook->AddPage(panel, wxstr(iter->second->name));
+			tmp_choicebook->AddPage(panel, wxstr(tileset->name));
 		}
 	}
 
@@ -134,8 +134,8 @@ Brush* BrushPalettePanel::GetSelectedBrush() const {
 	BrushPanel* panel = dynamic_cast<BrushPanel*>(page);
 	Brush* res = nullptr;
 	if (panel) {
-		for (ToolBarList::const_iterator iter = tool_bars.begin(); iter != tool_bars.end(); ++iter) {
-			res = (*iter)->GetSelectedBrush();
+		for (const auto& toolBar : tool_bars) {
+			res = toolBar->GetSelectedBrush();
 			if (res) {
 				return res;
 			}
@@ -203,8 +203,8 @@ void BrushPalettePanel::OnSwitchingPage(wxChoicebookEvent& event) {
 	BrushPanel* old_panel = dynamic_cast<BrushPanel*>(choicebook->GetCurrentPage());
 	if (old_panel) {
 		old_panel->OnSwitchOut();
-		for (ToolBarList::iterator iter = tool_bars.begin(); iter != tool_bars.end(); ++iter) {
-			Brush* tmp = (*iter)->GetSelectedBrush();
+		for (const auto& toolBar : tool_bars) {
+			Brush* tmp = toolBar->GetSelectedBrush();
 			if (tmp) {
 				remembered_brushes[old_panel] = tmp;
 			}
@@ -215,8 +215,8 @@ void BrushPalettePanel::OnSwitchingPage(wxChoicebookEvent& event) {
 	BrushPanel* panel = dynamic_cast<BrushPanel*>(page);
 	if (panel) {
 		panel->OnSwitchIn();
-		for (ToolBarList::iterator iter = tool_bars.begin(); iter != tool_bars.end(); ++iter) {
-			(*iter)->SelectBrush(remembered_brushes[panel]);
+		for (const auto& toolBar : tool_bars) {
+			toolBar->SelectBrush(remembered_brushes[panel]);
 		}
 	}
 }
@@ -374,8 +374,8 @@ bool BrushPanel::SelectBrush(const Brush* whatbrush) {
 		return brushbox->SelectBrush(whatbrush);
 	}
 
-	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
-		if (*iter == whatbrush) {
+	for (const auto* brush : tileset->brushlist) {
+		if (brush == whatbrush) {
 			LoadContents();
 			return brushbox->SelectBrush(whatbrush);
 		}
@@ -432,15 +432,15 @@ BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, Re
 	wxSizer* stacksizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* rowsizer = nullptr;
 	int item_counter = 0;
-	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
-		ASSERT(*iter);
+	for (Brush* brush : tileset->brushlist) {
+		ASSERT(brush);
 		++item_counter;
 
 		if (!rowsizer) {
 			rowsizer = newd wxBoxSizer(wxHORIZONTAL);
 		}
 
-		BrushButton* bb = newd BrushButton(this, *iter, rsz);
+		BrushButton* bb = newd BrushButton(this, brush, rsz);
 		rowsizer->Add(bb);
 		brush_buttons.push_back(bb);
 
@@ -474,9 +474,9 @@ Brush* BrushIconBox::GetSelectedBrush() const {
 		return nullptr;
 	}
 
-	for (std::vector<BrushButton*>::const_iterator it = brush_buttons.begin(); it != brush_buttons.end(); ++it) {
-		if ((*it)->GetValue()) {
-			return (*it)->brush;
+	for (const auto& btn : brush_buttons) {
+		if (btn->GetValue()) {
+			return btn->brush;
 		}
 	}
 	return nullptr;
@@ -484,10 +484,10 @@ Brush* BrushIconBox::GetSelectedBrush() const {
 
 bool BrushIconBox::SelectBrush(const Brush* whatbrush) {
 	DeselectAll();
-	for (std::vector<BrushButton*>::iterator it = brush_buttons.begin(); it != brush_buttons.end(); ++it) {
-		if ((*it)->brush == whatbrush) {
-			(*it)->SetValue(true);
-			EnsureVisible(*it);
+	for (auto& btn : brush_buttons) {
+		if (btn->brush == whatbrush) {
+			btn->SetValue(true);
+			EnsureVisible(btn);
 			return true;
 		}
 	}
@@ -495,8 +495,8 @@ bool BrushIconBox::SelectBrush(const Brush* whatbrush) {
 }
 
 void BrushIconBox::DeselectAll() {
-	for (std::vector<BrushButton*>::iterator it = brush_buttons.begin(); it != brush_buttons.end(); ++it) {
-		(*it)->SetValue(false);
+	for (auto& btn : brush_buttons) {
+		btn->SetValue(false);
 	}
 }
 
