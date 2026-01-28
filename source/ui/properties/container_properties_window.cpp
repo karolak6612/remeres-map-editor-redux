@@ -10,12 +10,7 @@
 #include "ui/properties/property_validator.h"
 #include "app/application.h"
 
-/*
-BEGIN_EVENT_TABLE(ContainerPropertiesWindow, wxDialog)
-EVT_BUTTON(wxID_OK, ContainerPropertiesWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, ContainerPropertiesWindow::OnClickCancel)
-END_EVENT_TABLE()
-*/
+#include <wx/wrapsizer.h>
 
 ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(win_parent, "Container Properties", map, tile_parent, item, pos),
@@ -51,34 +46,17 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 	wxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
-	wxSizer* horizontal_sizer = nullptr;
-	int32_t maxColumns;
-	if (use_large_sprites) {
-		maxColumns = 6;
-	} else {
-		maxColumns = 12;
-	}
+	wxSizer* gridSizer = newd wxWrapSizer(wxHORIZONTAL);
 
 	for (uint32_t index = 0; index < container->getVolume(); ++index) {
-		if (!horizontal_sizer) {
-			horizontal_sizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
-
 		Item* sub_item = container->getItem(index);
 		ContainerItemButton* containerItemButton = newd ContainerItemButton(this, use_large_sprites, index, map, sub_item);
 
 		container_items.push_back(containerItemButton);
-		horizontal_sizer->Add(containerItemButton);
-
-		if (((index + 1) % maxColumns) == 0) {
-			contents_sizer->Add(horizontal_sizer);
-			horizontal_sizer = nullptr;
-		}
+		gridSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 1));
 	}
 
-	if (horizontal_sizer != nullptr) {
-		contents_sizer->Add(horizontal_sizer);
-	}
+	contents_sizer->Add(gridSizer, wxSizerFlags(1).Expand());
 
 	boxsizer->Add(contents_sizer, wxSizerFlags(2).Expand());
 
