@@ -28,84 +28,84 @@
 
 namespace TileOperations {
 
-void borderize(Tile* tile, BaseMap* parent) {
-	GroundBrush::doBorders(parent, tile);
-}
-
-void wallize(Tile* tile, BaseMap* parent) {
-	WallBrush::doWalls(parent, tile);
-}
-
-void tableize(Tile* tile, BaseMap* parent) {
-	TableBrush::doTables(parent, tile);
-}
-
-void carpetize(Tile* tile, BaseMap* parent) {
-	CarpetBrush::doCarpets(parent, tile);
-}
-
-void cleanBorders(Tile* tile) {
-	auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
-		return !item->isBorder();
-	});
-
-	for (auto it = first_to_remove; it != tile->items.end(); ++it) {
-		delete *it;
+	void borderize(Tile* tile, BaseMap* parent) {
+		GroundBrush::doBorders(parent, tile);
 	}
-	tile->items.erase(first_to_remove, tile->items.end());
-}
 
-void cleanWalls(Tile* tile, bool dontdelete) {
-	auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
-		return !item->isWall();
-	});
+	void wallize(Tile* tile, BaseMap* parent) {
+		WallBrush::doWalls(parent, tile);
+	}
 
-	if (!dontdelete) {
+	void tableize(Tile* tile, BaseMap* parent) {
+		TableBrush::doTables(parent, tile);
+	}
+
+	void carpetize(Tile* tile, BaseMap* parent) {
+		CarpetBrush::doCarpets(parent, tile);
+	}
+
+	void cleanBorders(Tile* tile) {
+		auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
+			return !item->isBorder();
+		});
+
 		for (auto it = first_to_remove; it != tile->items.end(); ++it) {
 			delete *it;
 		}
+		tile->items.erase(first_to_remove, tile->items.end());
 	}
-	tile->items.erase(first_to_remove, tile->items.end());
-}
 
-void cleanWalls(Tile* tile, WallBrush* wb) {
-	auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [wb](Item* item) {
-		return !(item->isWall() && wb->hasWall(item));
-	});
+	void cleanWalls(Tile* tile, bool dontdelete) {
+		auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
+			return !item->isWall();
+		});
 
-	for (auto it = first_to_remove; it != tile->items.end(); ++it) {
-		delete *it;
+		if (!dontdelete) {
+			for (auto it = first_to_remove; it != tile->items.end(); ++it) {
+				delete *it;
+			}
+		}
+		tile->items.erase(first_to_remove, tile->items.end());
 	}
-	tile->items.erase(first_to_remove, tile->items.end());
-}
 
-void cleanTables(Tile* tile, bool dontdelete) {
-	auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
-		return !item->isTable();
-	});
+	void cleanWalls(Tile* tile, WallBrush* wb) {
+		auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [wb](Item* item) {
+			return !(item->isWall() && wb->hasWall(item));
+		});
 
-	if (!dontdelete) {
 		for (auto it = first_to_remove; it != tile->items.end(); ++it) {
 			delete *it;
 		}
+		tile->items.erase(first_to_remove, tile->items.end());
 	}
-	tile->items.erase(first_to_remove, tile->items.end());
-}
 
-void addBorderItem(Tile* tile, Item* item) {
-	if (!item) {
-		return;
-	}
-	ASSERT(item->isBorder());
-	tile->items.insert(tile->items.begin(), item);
-}
+	void cleanTables(Tile* tile, bool dontdelete) {
+		auto first_to_remove = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
+			return !item->isTable();
+		});
 
-void addWallItem(Tile* tile, Item* item) {
-	if (!item) {
-		return;
+		if (!dontdelete) {
+			for (auto it = first_to_remove; it != tile->items.end(); ++it) {
+				delete *it;
+			}
+		}
+		tile->items.erase(first_to_remove, tile->items.end());
 	}
-	ASSERT(item->isWall());
-	tile->addItem(item);
-}
+
+	void addBorderItem(Tile* tile, Item* item) {
+		if (!item) {
+			return;
+		}
+		ASSERT(item->isBorder());
+		tile->items.insert(tile->items.begin(), item);
+	}
+
+	void addWallItem(Tile* tile, Item* item) {
+		if (!item) {
+			return;
+		}
+		ASSERT(item->isWall());
+		tile->addItem(item);
+	}
 
 }

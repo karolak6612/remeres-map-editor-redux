@@ -181,14 +181,16 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 		}
 
 		if (tile->ground) {
-			foreach (map, tile, tile->ground, done);
+			foreach (map, tile, tile->ground, done)
+				;
 		}
 
 		std::queue<Container*> containers;
 		for (ItemVector::iterator itemiter = tile->items.begin(); itemiter != tile->items.end(); ++itemiter) {
 			Item* item = *itemiter;
 			Container* container = dynamic_cast<Container*>(item);
-			foreach (map, tile, item, done);
+			foreach (map, tile, item, done)
+				;
 			if (container) {
 				containers.push(container);
 
@@ -198,7 +200,8 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 					for (ItemVector::iterator containeriter = v.begin(); containeriter != v.end(); ++containeriter) {
 						Item* i = *containeriter;
 						Container* c = dynamic_cast<Container*>(i);
-						foreach (map, tile, i, done);
+						foreach (map, tile, i, done)
+							;
 						if (c) {
 							containers.push(c);
 						}
@@ -215,7 +218,8 @@ inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
 	long long done = 0;
 
 	for (TileLocation* location : map) {
-		foreach (map, location->get(), ++done);
+		foreach (map, location->get(), ++done)
+			;
 	}
 }
 

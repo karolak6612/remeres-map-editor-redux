@@ -528,7 +528,6 @@ Item* Tile::getTable() const {
 	return (it != items.end()) ? *it : nullptr;
 }
 
-
 void Tile::selectGround() {
 	bool selected_ = false;
 	if (ground) {
