@@ -1,0 +1,752 @@
+[1/112] Building CXX object CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o
+[2/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/keyboard_handler.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/rendering/ui/keyboard_handler.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[3/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/clipboard_handler.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/ui/clipboard_handler.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[4/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/drawing_controller.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/ui/drawing_controller.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[5/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/map_menu_handler.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/ui/map_menu_handler.cpp:19:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[6/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/map_display.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/ui/map_display.cpp:26:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+In file included from /app/source/app/application.h:27,
+                 from /app/source/ui/map_tab.h:22:
+/app/source/rendering/ui/map_display.h: In constructor ‘MapCanvas::MapCanvas(MapWindow*, Editor&, int*)’:
+/app/source/rendering/ui/map_display.h:173:14: warning: ‘MapCanvas::renderer_initialized’ will be initialized after [-Wreorder]
+  173 |         bool renderer_initialized = false;
+      |              ^~~~~~~~~~~~~~~~~~~~
+/app/source/rendering/ui/map_display.h:121:13: warning:   ‘int MapCanvas::cursor_x’ [-Wreorder]
+  121 |         int cursor_x;
+      |             ^~~~~~~~
+/app/source/rendering/ui/map_display.cpp:120:1: warning:   when initialized here [-Wreorder]
+  120 | MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
+      | ^~~~~~~~~
+[7/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/map_status_updater.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/ui/map_status_updater.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[8/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/minimap_window.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/ui/minimap_window.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[9/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/navigation_controller.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/rendering/ui/navigation_controller.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[10/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/popup_action_handler.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/ui/popup_action_handler.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[11/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/screenshot_controller.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/ui/screenshot_controller.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[12/112] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/fps_counter.cpp.o
+[13/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/selection_controller.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/ui/selection_controller.cpp:9:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[14/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/tooltip_drawer.cpp.o
+FAILED: CMakeFiles/rme.dir/source/rendering/ui/tooltip_drawer.cpp.o
+/usr/bin/c++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE="" -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE="" -D__WXGTK__ -I/app/build_conan/build/Release/_deps/wxmaterialdesignartprovider-src -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/gladefaf68f0fac23/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O3 -DNDEBUG -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/rendering/ui/tooltip_drawer.cpp.o -MF CMakeFiles/rme.dir/source/rendering/ui/tooltip_drawer.cpp.o.d -o CMakeFiles/rme.dir/source/rendering/ui/tooltip_drawer.cpp.o -c /app/source/rendering/ui/tooltip_drawer.cpp
+/app/source/rendering/ui/tooltip_drawer.cpp: In member function ‘void TooltipDrawer::draw(const RenderView&)’:
+/app/source/rendering/ui/tooltip_drawer.cpp:127:41: error: no matching function for call to ‘std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::push_back(<brace-enclosed initializer list>)’
+  127 |                         fields.push_back({ "Waypoint", tooltip.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
+      |                         ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+In file included from /usr/include/c++/13/vector:66,
+                 from /app/source/map/position.h:23,
+                 from /app/source/rendering/ui/tooltip_drawer.h:23,
+                 from /app/source/rendering/ui/tooltip_drawer.cpp:18:
+/usr/include/c++/13/bits/stl_vector.h:1281:7: note: candidate: ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = TooltipDrawer::draw(const RenderView&)::FieldLine; _Alloc = std::allocator<TooltipDrawer::draw(const RenderView&)::FieldLine>; value_type = TooltipDrawer::draw(const RenderView&)::FieldLine]’
+ 1281 |       push_back(const value_type& __x)
+      |       ^~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1281:35: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::value_type&’ {aka ‘const TooltipDrawer::draw(const RenderView&)::FieldLine&’}
+ 1281 |       push_back(const value_type& __x)
+      |                 ~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/13/bits/stl_vector.h:1298:7: note: candidate: ‘constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = TooltipDrawer::draw(const RenderView&)::FieldLine; _Alloc = std::allocator<TooltipDrawer::draw(const RenderView&)::FieldLine>; value_type = TooltipDrawer::draw(const RenderView&)::FieldLine]’
+ 1298 |       push_back(value_type&& __x)
+      |       ^~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1298:30: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::value_type&&’ {aka ‘TooltipDrawer::draw(const RenderView&)::FieldLine&&’}
+ 1298 |       push_back(value_type&& __x)
+      |                 ~~~~~~~~~~~~~^~~
+/app/source/rendering/ui/tooltip_drawer.cpp:143:49: error: no matching function for call to ‘std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::push_back(<brace-enclosed initializer list>)’
+  143 |                                 fields.push_back({ "Description", tooltip.description, BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, {} });
+      |                                 ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1281:7: note: candidate: ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = TooltipDrawer::draw(const RenderView&)::FieldLine; _Alloc = std::allocator<TooltipDrawer::draw(const RenderView&)::FieldLine>; value_type = TooltipDrawer::draw(const RenderView&)::FieldLine]’
+ 1281 |       push_back(const value_type& __x)
+      |       ^~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1281:35: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::value_type&’ {aka ‘const TooltipDrawer::draw(const RenderView&)::FieldLine&’}
+ 1281 |       push_back(const value_type& __x)
+      |                 ~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/13/bits/stl_vector.h:1298:7: note: candidate: ‘constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = TooltipDrawer::draw(const RenderView&)::FieldLine; _Alloc = std::allocator<TooltipDrawer::draw(const RenderView&)::FieldLine>; value_type = TooltipDrawer::draw(const RenderView&)::FieldLine]’
+ 1298 |       push_back(value_type&& __x)
+      |       ^~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1298:30: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::value_type&&’ {aka ‘TooltipDrawer::draw(const RenderView&)::FieldLine&&’}
+ 1298 |       push_back(value_type&& __x)
+      |                 ~~~~~~~~~~~~~^~~
+/app/source/rendering/ui/tooltip_drawer.cpp:146:65: error: no match for ‘operator+’ (operand types are ‘const char [2]’ and ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’})
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                            ~~~~ ^ ~~~~~~~~~~~~
+      |                                                            |              |
+      |                                                            const char [2] const std::string_view {aka const std::basic_string_view<char>}
+In file included from /usr/include/wx-3.2/wx/time.h:13,
+                 from /usr/include/wx-3.2/wx/log.h:65,
+                 from /usr/include/wx-3.2/wx/wx.h:23,
+                 from /app/source/app/main.h:63,
+                 from /app/source/util/common.h:21,
+                 from /app/source/rendering/core/graphics.h:22,
+                 from /app/source/rendering/ui/tooltip_drawer.cpp:19:
+/usr/include/wx-3.2/wx/longlong.h:1059:20: note: candidate: ‘wxULongLong operator+(long unsigned int, const wxULongLong&)’
+ 1059 | inline wxULongLong operator+(unsigned long l, const wxULongLong& ull) { return ull + l; }
+      |                    ^~~~~~~~
+/usr/include/wx-3.2/wx/longlong.h:1059:66: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxULongLong&’ {aka ‘const wxULongLongNative&’}
+ 1059 | inline wxULongLong operator+(unsigned long l, const wxULongLong& ull) { return ull + l; }
+      |                                               ~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/longlong.h:1046:19: note: candidate: ‘wxLongLong operator+(long int, const wxLongLong&)’
+ 1046 | inline wxLongLong operator+(long l, const wxLongLong& ll) { return ll + l; }
+      |                   ^~~~~~~~
+/usr/include/wx-3.2/wx/longlong.h:1046:55: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxLongLong&’ {aka ‘const wxLongLongNative&’}
+ 1046 | inline wxLongLong operator+(long l, const wxLongLong& ll) { return ll + l; }
+      |                                     ~~~~~~~~~~~~~~~~~~^~
+In file included from /usr/include/wx-3.2/wx/memory.h:15,
+                 from /usr/include/wx-3.2/wx/object.h:19,
+                 from /usr/include/wx-3.2/wx/wx.h:15:
+/usr/include/wx-3.2/wx/string.h:3862:17: note: candidate: ‘wxString operator+(wchar_t, const wxString&)’
+ 3862 | inline wxString operator+(wchar_t ch, const wxString& string)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3862:55: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxString&’
+ 3862 | inline wxString operator+(wchar_t ch, const wxString& string)
+      |                                       ~~~~~~~~~~~~~~~~^~~~~~
+/usr/include/wx-3.2/wx/string.h:3860:17: note: candidate: ‘wxString operator+(char, const wxString&)’
+ 3860 | inline wxString operator+(char ch, const wxString& string)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3860:52: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxString&’
+ 3860 | inline wxString operator+(char ch, const wxString& string)
+      |                                    ~~~~~~~~~~~~~~~~^~~~~~
+/usr/include/wx-3.2/wx/string.h:3850:27: note: candidate: ‘wxString operator+(wxUniChar, const wxString&)’
+ 3850 | wxString WXDLLIMPEXP_BASE operator+(wxUniChar ch, const wxString& string);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2159:76: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxString&’
+ 2159 |   friend wxString WXDLLIMPEXP_BASE operator+(wxUniChar ch, const wxString& string);
+      |                                                            ~~~~~~~~~~~~~~~~^~~~~~
+/usr/include/wx-3.2/wx/string.h:3832:41: note: candidate: ‘wxString::const_reverse_iterator operator+(ptrdiff_t, wxString::const_reverse_iterator)’
+ 3832 | inline wxString::const_reverse_iterator operator+(ptrdiff_t n, wxString::const_reverse_iterator i)
+      |                                         ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3832:97: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wxString::const_reverse_iterator’ {aka ‘wxString::reverse_iterator_impl<wxString::const_iterator>’}
+ 3832 | inline wxString::const_reverse_iterator operator+(ptrdiff_t n, wxString::const_reverse_iterator i)
+      |                                                                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+/usr/include/wx-3.2/wx/string.h:3830:35: note: candidate: ‘wxString::reverse_iterator operator+(ptrdiff_t, wxString::reverse_iterator)’
+ 3830 | inline wxString::reverse_iterator operator+(ptrdiff_t n, wxString::reverse_iterator i)
+      |                                   ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3830:85: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wxString::reverse_iterator’ {aka ‘wxString::reverse_iterator_impl<wxString::iterator>’}
+ 3830 | inline wxString::reverse_iterator operator+(ptrdiff_t n, wxString::reverse_iterator i)
+      |                                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+/usr/include/wx-3.2/wx/string.h:3828:33: note: candidate: ‘wxString::const_iterator operator+(ptrdiff_t, wxString::const_iterator)’
+ 3828 | inline wxString::const_iterator operator+(ptrdiff_t n, wxString::const_iterator i)
+      |                                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3828:81: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wxString::const_iterator’
+ 3828 | inline wxString::const_iterator operator+(ptrdiff_t n, wxString::const_iterator i)
+      |                                                        ~~~~~~~~~~~~~~~~~~~~~~~~~^
+/usr/include/wx-3.2/wx/string.h:3826:27: note: candidate: ‘wxString::iterator operator+(ptrdiff_t, wxString::iterator)’
+ 3826 | inline wxString::iterator operator+(ptrdiff_t n, wxString::iterator i)
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3826:69: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wxString::iterator’
+ 3826 | inline wxString::iterator operator+(ptrdiff_t n, wxString::iterator i)
+      |                                                  ~~~~~~~~~~~~~~~~~~~^
+In file included from /usr/include/c++/13/string:48,
+                 from /usr/include/c++/13/bits/locale_classes.h:40,
+                 from /usr/include/c++/13/bits/ios_base.h:41,
+                 from /usr/include/c++/13/ios:44,
+                 from /usr/include/c++/13/ostream:40,
+                 from /usr/include/c++/13/iostream:41,
+                 from /app/source/rendering/ui/tooltip_drawer.h:22:
+/usr/include/c++/13/bits/stl_iterator.h:634:5: note: candidate: ‘template<class _Iterator> constexpr std::reverse_iterator<_IteratorL> std::operator+(typename reverse_iterator<_IteratorL>::difference_type, const reverse_iterator<_IteratorL>&)’
+  634 |     operator+(typename reverse_iterator<_Iterator>::difference_type __n,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/stl_iterator.h:634:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::reverse_iterator<_IteratorL>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/stl_iterator.h:1808:5: note: candidate: ‘template<class _Iterator> constexpr std::move_iterator<_IteratorL> std::operator+(typename move_iterator<_IteratorL>::difference_type, const move_iterator<_IteratorL>&)’
+ 1808 |     operator+(typename move_iterator<_Iterator>::difference_type __n,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/stl_iterator.h:1808:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::move_iterator<_IteratorL>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+In file included from /usr/include/c++/13/string:54:
+/usr/include/c++/13/bits/basic_string.h:3553:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(const __cxx11::basic_string<_CharT, _Traits, _Allocator>&, const __cxx11::basic_string<_CharT, _Traits, _Allocator>&)’
+ 3553 |     operator+(const basic_string<_CharT, _Traits, _Alloc>& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3553:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3571:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(const _CharT*, const __cxx11::basic_string<_CharT, _Traits, _Allocator>&)’
+ 3571 |     operator+(const _CharT* __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3571:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3590:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(_CharT, const __cxx11::basic_string<_CharT, _Traits, _Allocator>&)’
+ 3590 |     operator+(_CharT __lhs, const basic_string<_CharT,_Traits,_Alloc>& __rhs)
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3590:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3607:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(const __cxx11::basic_string<_CharT, _Traits, _Allocator>&, const _CharT*)’
+ 3607 |     operator+(const basic_string<_CharT, _Traits, _Alloc>& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3607:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3625:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(const __cxx11::basic_string<_CharT, _Traits, _Allocator>&, _CharT)’
+ 3625 |     operator+(const basic_string<_CharT, _Traits, _Alloc>& __lhs, _CharT __rhs)
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3625:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3637:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(__cxx11::basic_string<_CharT, _Traits, _Allocator>&&, const __cxx11::basic_string<_CharT, _Traits, _Allocator>&)’
+ 3637 |     operator+(basic_string<_CharT, _Traits, _Alloc>&& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3637:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3644:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(const __cxx11::basic_string<_CharT, _Traits, _Allocator>&, __cxx11::basic_string<_CharT, _Traits, _Allocator>&&)’
+ 3644 |     operator+(const basic_string<_CharT, _Traits, _Alloc>& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3644:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3651:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(__cxx11::basic_string<_CharT, _Traits, _Allocator>&&, __cxx11::basic_string<_CharT, _Traits, _Allocator>&&)’
+ 3651 |     operator+(basic_string<_CharT, _Traits, _Alloc>&& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3651:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3674:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(const _CharT*, __cxx11::basic_string<_CharT, _Traits, _Allocator>&&)’
+ 3674 |     operator+(const _CharT* __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3674:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   types ‘std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} have incompatible cv-qualifiers
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3681:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(_CharT, __cxx11::basic_string<_CharT, _Traits, _Allocator>&&)’
+ 3681 |     operator+(_CharT __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3681:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   types ‘std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} have incompatible cv-qualifiers
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3688:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(__cxx11::basic_string<_CharT, _Traits, _Allocator>&&, const _CharT*)’
+ 3688 |     operator+(basic_string<_CharT, _Traits, _Alloc>&& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3688:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/basic_string.h:3695:5: note: candidate: ‘template<class _CharT, class _Traits, class _Alloc> constexpr std::__cxx11::basic_string<_CharT, _Traits, _Allocator> std::operator+(__cxx11::basic_string<_CharT, _Traits, _Allocator>&&, _CharT)’
+ 3695 |     operator+(basic_string<_CharT, _Traits, _Alloc>&& __lhs,
+      |     ^~~~~~~~
+/usr/include/c++/13/bits/basic_string.h:3695:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘std::__cxx11::basic_string<_CharT, _Traits, _Allocator>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+In file included from /usr/include/c++/13/valarray:605,
+                 from /usr/include/nlohmann/detail/conversions/from_json.hpp:21,
+                 from /usr/include/nlohmann/adl_serializer.hpp:14,
+                 from /usr/include/nlohmann/json.hpp:34,
+                 from /app/source/util/json.h:21,
+                 from /app/source/app/main.h:132:
+/usr/include/c++/13/bits/valarray_after.h:405:5: note: candidate: ‘template<class _Dom1, class _Dom2> std::_Expr<std::__detail::_BinClos<std::__plus, std::_Expr, std::_Expr, _Dom1, _Dom2>, typename std::__fun<std::__plus, typename _Dom1::value_type>::result_type> std::operator+(const _Expr<_Dom1, typename _Dom1::value_type>&, const _Expr<_Dom2, typename _Dom2::value_type>&)’
+  405 |     _DEFINE_EXPR_BINARY_OPERATOR(+, struct std::__plus)
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::_Expr<_Dom1, typename _Dom1::value_type>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note: candidate: ‘template<class _Dom> std::_Expr<std::__detail::_BinClos<std::__plus, std::_Expr, std::_Constant, _Dom, typename _Dom::value_type>, typename std::__fun<std::__plus, typename _Dom1::value_type>::result_type> std::operator+(const _Expr<_Dom1, typename _Dom1::value_type>&, const typename _Dom::value_type&)’
+  405 |     _DEFINE_EXPR_BINARY_OPERATOR(+, struct std::__plus)
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::_Expr<_Dom1, typename _Dom1::value_type>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note: candidate: ‘template<class _Dom> std::_Expr<std::__detail::_BinClos<std::__plus, std::_Constant, std::_Expr, typename _Dom::value_type, _Dom>, typename std::__fun<std::__plus, typename _Dom1::value_type>::result_type> std::operator+(const typename _Dom::value_type&, const _Expr<_Dom1, typename _Dom1::value_type>&)’
+  405 |     _DEFINE_EXPR_BINARY_OPERATOR(+, struct std::__plus)
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::_Expr<_Dom1, typename _Dom1::value_type>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note: candidate: ‘template<class _Dom> std::_Expr<std::__detail::_BinClos<std::__plus, std::_Expr, std::_ValArray, _Dom, typename _Dom::value_type>, typename std::__fun<std::__plus, typename _Dom1::value_type>::result_type> std::operator+(const _Expr<_Dom1, typename _Dom1::value_type>&, const valarray<typename _Dom::value_type>&)’
+  405 |     _DEFINE_EXPR_BINARY_OPERATOR(+, struct std::__plus)
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::_Expr<_Dom1, typename _Dom1::value_type>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note: candidate: ‘template<class _Dom> std::_Expr<std::__detail::_BinClos<std::__plus, std::_ValArray, std::_Expr, typename _Dom::value_type, _Dom>, typename std::__fun<std::__plus, typename _Dom1::value_type>::result_type> std::operator+(const valarray<typename _Dom::value_type>&, const _Expr<_Dom1, typename _Dom1::value_type>&)’
+  405 |     _DEFINE_EXPR_BINARY_OPERATOR(+, struct std::__plus)
+      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/valarray_after.h:405:5: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::_Expr<_Dom1, typename _Dom1::value_type>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/valarray:1196:1: note: candidate: ‘template<class _Tp> std::_Expr<std::__detail::_BinClos<std::__plus, std::_ValArray, std::_ValArray, _Tp, _Tp>, typename std::__fun<std::__plus, _Tp>::result_type> std::operator+(const valarray<_Tp>&, const valarray<_Tp>&)’
+ 1196 | _DEFINE_BINARY_OPERATOR(+, __plus)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/valarray:1196:1: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::valarray<_Tp>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/valarray:1196:1: note: candidate: ‘template<class _Tp> std::_Expr<std::__detail::_BinClos<std::__plus, std::_ValArray, std::_Constant, _Tp, _Tp>, typename std::__fun<std::__plus, _Tp>::result_type> std::operator+(const valarray<_Tp>&, const typename valarray<_Tp>::value_type&)’
+ 1196 | _DEFINE_BINARY_OPERATOR(+, __plus)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/valarray:1196:1: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   mismatched types ‘const std::valarray<_Tp>’ and ‘const char [2]’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+/usr/include/c++/13/valarray:1196:1: note: candidate: ‘template<class _Tp> std::_Expr<std::__detail::_BinClos<std::__plus, std::_Constant, std::_ValArray, _Tp, _Tp>, typename std::__fun<std::__plus, _Tp>::result_type> std::operator+(const typename valarray<_Tp>::value_type&, const valarray<_Tp>&)’
+ 1196 | _DEFINE_BINARY_OPERATOR(+, __plus)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/valarray:1196:1: note:   template argument deduction/substitution failed:
+/app/source/rendering/ui/tooltip_drawer.cpp:146:75: note:   ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} is not derived from ‘const std::valarray<_Tp>’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                                                           ^~~~
+In file included from /app/source/app/main.h:56:
+/usr/include/wx-3.2/wx/defs.h:1522:1: note: candidate: ‘int operator+(wxAlignment, wxBorder)’
+ 1522 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxBorder)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1522:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxAlignment’
+ 1522 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxBorder)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1522:1: note: candidate: ‘int operator+(wxBorder, wxAlignment)’
+ 1522 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxBorder)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1522:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+ 1522 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxBorder)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1523:1: note: candidate: ‘int operator+(wxAlignment, wxDirection)’
+ 1523 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxDirection)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1523:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxAlignment’
+ 1523 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxDirection)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1523:1: note: candidate: ‘int operator+(wxDirection, wxAlignment)’
+ 1523 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxDirection)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1523:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxDirection’
+ 1523 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxDirection)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1524:1: note: candidate: ‘int operator+(wxAlignment, wxGeometryCentre)’
+ 1524 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxGeometryCentre)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1524:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxAlignment’
+ 1524 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxGeometryCentre)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1524:1: note: candidate: ‘int operator+(wxGeometryCentre, wxAlignment)’
+ 1524 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxGeometryCentre)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1524:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxGeometryCentre’
+ 1524 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxGeometryCentre)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1525:1: note: candidate: ‘int operator+(wxAlignment, wxSizerFlagBits)’
+ 1525 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1525:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxAlignment’
+ 1525 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1525:1: note: candidate: ‘int operator+(wxSizerFlagBits, wxAlignment)’
+ 1525 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1525:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxSizerFlagBits’
+ 1525 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1526:1: note: candidate: ‘int operator+(wxAlignment, wxStretch)’
+ 1526 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1526:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxAlignment’
+ 1526 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1526:1: note: candidate: ‘int operator+(wxStretch, wxAlignment)’
+ 1526 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1526:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxStretch’
+ 1526 | wxALLOW_COMBINING_ENUMS(wxAlignment, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1527:1: note: candidate: ‘int operator+(wxBorder, wxDirection)’
+ 1527 | wxALLOW_COMBINING_ENUMS(wxBorder, wxDirection)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1527:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+ 1527 | wxALLOW_COMBINING_ENUMS(wxBorder, wxDirection)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1527:1: note: candidate: ‘int operator+(wxDirection, wxBorder)’
+ 1527 | wxALLOW_COMBINING_ENUMS(wxBorder, wxDirection)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1527:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxDirection’
+ 1527 | wxALLOW_COMBINING_ENUMS(wxBorder, wxDirection)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1528:1: note: candidate: ‘int operator+(wxBorder, wxGeometryCentre)’
+ 1528 | wxALLOW_COMBINING_ENUMS(wxBorder, wxGeometryCentre)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1528:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+ 1528 | wxALLOW_COMBINING_ENUMS(wxBorder, wxGeometryCentre)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1528:1: note: candidate: ‘int operator+(wxGeometryCentre, wxBorder)’
+ 1528 | wxALLOW_COMBINING_ENUMS(wxBorder, wxGeometryCentre)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1528:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxGeometryCentre’
+ 1528 | wxALLOW_COMBINING_ENUMS(wxBorder, wxGeometryCentre)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1529:1: note: candidate: ‘int operator+(wxBorder, wxSizerFlagBits)’
+ 1529 | wxALLOW_COMBINING_ENUMS(wxBorder, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1529:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+ 1529 | wxALLOW_COMBINING_ENUMS(wxBorder, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1529:1: note: candidate: ‘int operator+(wxSizerFlagBits, wxBorder)’
+ 1529 | wxALLOW_COMBINING_ENUMS(wxBorder, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1529:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxSizerFlagBits’
+ 1529 | wxALLOW_COMBINING_ENUMS(wxBorder, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1530:1: note: candidate: ‘int operator+(wxBorder, wxStretch)’
+ 1530 | wxALLOW_COMBINING_ENUMS(wxBorder, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1530:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+ 1530 | wxALLOW_COMBINING_ENUMS(wxBorder, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1530:1: note: candidate: ‘int operator+(wxStretch, wxBorder)’
+ 1530 | wxALLOW_COMBINING_ENUMS(wxBorder, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1530:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxStretch’
+ 1530 | wxALLOW_COMBINING_ENUMS(wxBorder, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1531:1: note: candidate: ‘int operator+(wxDirection, wxGeometryCentre)’
+ 1531 | wxALLOW_COMBINING_ENUMS(wxDirection, wxGeometryCentre)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1531:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxDirection’
+ 1531 | wxALLOW_COMBINING_ENUMS(wxDirection, wxGeometryCentre)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1531:1: note: candidate: ‘int operator+(wxGeometryCentre, wxDirection)’
+ 1531 | wxALLOW_COMBINING_ENUMS(wxDirection, wxGeometryCentre)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1531:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxGeometryCentre’
+ 1531 | wxALLOW_COMBINING_ENUMS(wxDirection, wxGeometryCentre)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1532:1: note: candidate: ‘int operator+(wxDirection, wxStretch)’
+ 1532 | wxALLOW_COMBINING_ENUMS(wxDirection, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1532:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxDirection’
+ 1532 | wxALLOW_COMBINING_ENUMS(wxDirection, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1532:1: note: candidate: ‘int operator+(wxStretch, wxDirection)’
+ 1532 | wxALLOW_COMBINING_ENUMS(wxDirection, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1532:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxStretch’
+ 1532 | wxALLOW_COMBINING_ENUMS(wxDirection, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1533:1: note: candidate: ‘int operator+(wxDirection, wxSizerFlagBits)’
+ 1533 | wxALLOW_COMBINING_ENUMS(wxDirection, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1533:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxDirection’
+ 1533 | wxALLOW_COMBINING_ENUMS(wxDirection, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1533:1: note: candidate: ‘int operator+(wxSizerFlagBits, wxDirection)’
+ 1533 | wxALLOW_COMBINING_ENUMS(wxDirection, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1533:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxSizerFlagBits’
+ 1533 | wxALLOW_COMBINING_ENUMS(wxDirection, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1534:1: note: candidate: ‘int operator+(wxGeometryCentre, wxSizerFlagBits)’
+ 1534 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1534:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxGeometryCentre’
+ 1534 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1534:1: note: candidate: ‘int operator+(wxSizerFlagBits, wxGeometryCentre)’
+ 1534 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxSizerFlagBits)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1534:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxSizerFlagBits’
+ 1534 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxSizerFlagBits)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1535:1: note: candidate: ‘int operator+(wxGeometryCentre, wxStretch)’
+ 1535 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1535:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxGeometryCentre’
+ 1535 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1535:1: note: candidate: ‘int operator+(wxStretch, wxGeometryCentre)’
+ 1535 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1535:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxStretch’
+ 1535 | wxALLOW_COMBINING_ENUMS(wxGeometryCentre, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1536:1: note: candidate: ‘int operator+(wxSizerFlagBits, wxStretch)’
+ 1536 | wxALLOW_COMBINING_ENUMS(wxSizerFlagBits, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1536:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxSizerFlagBits’
+ 1536 | wxALLOW_COMBINING_ENUMS(wxSizerFlagBits, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/defs.h:1536:1: note: candidate: ‘int operator+(wxStretch, wxSizerFlagBits)’
+ 1536 | wxALLOW_COMBINING_ENUMS(wxSizerFlagBits, wxStretch)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/defs.h:1536:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxStretch’
+ 1536 | wxALLOW_COMBINING_ENUMS(wxSizerFlagBits, wxStretch)
+      | ^
+/usr/include/wx-3.2/wx/string.h:3839:27: note: candidate: ‘wxString operator+(const wxString&, const wxString&)’
+ 3839 | wxString WXDLLIMPEXP_BASE operator+(const wxString& string1, const wxString& string2);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2155:62: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxString&’
+ 2155 |                                              const wxString& string2);
+      |                                              ~~~~~~~~~~~~~~~~^~~~~~~
+/usr/include/wx-3.2/wx/string.h:3841:27: note: candidate: ‘wxString operator+(const wxString&, const char*)’
+ 3841 | wxString WXDLLIMPEXP_BASE operator+(const wxString& string, const char *psz);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2163:58: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const char*’
+ 2163 |                                              const char *psz);
+      |                                              ~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/string.h:3843:27: note: candidate: ‘wxString operator+(const wxString&, const wchar_t*)’
+ 3843 | wxString WXDLLIMPEXP_BASE operator+(const wxString& string, const wchar_t *pwz);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2166:61: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wchar_t*’
+ 2166 |                                              const wchar_t *pwz);
+      |                                              ~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/string.h:3845:27: note: candidate: ‘wxString operator+(const char*, const wxString&)’
+ 3845 | wxString WXDLLIMPEXP_BASE operator+(const char *psz, const wxString& string);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2170:62: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxString&’
+ 2170 |                                              const wxString& string);
+      |                                              ~~~~~~~~~~~~~~~~^~~~~~
+/usr/include/wx-3.2/wx/string.h:3847:27: note: candidate: ‘wxString operator+(const wchar_t*, const wxString&)’
+ 3847 | wxString WXDLLIMPEXP_BASE operator+(const wchar_t *pwz, const wxString& string);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2172:61: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wchar_t*’
+ 2172 |   friend wxString WXDLLIMPEXP_BASE operator+(const wchar_t *pwz,
+      |                                              ~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/string.h:3849:27: note: candidate: ‘wxString operator+(const wxString&, wxUniChar)’
+ 3849 | wxString WXDLLIMPEXP_BASE operator+(const wxString& string, wxUniChar ch);
+      |                           ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:2157:80: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wxUniChar’
+ 2157 |   friend wxString WXDLLIMPEXP_BASE operator+(const wxString& string, wxUniChar ch);
+      |                                                                      ~~~~~~~~~~^~
+/usr/include/wx-3.2/wx/string.h:3852:17: note: candidate: ‘wxString operator+(const wxString&, wxUniCharRef)’
+ 3852 | inline wxString operator+(const wxString& string, wxUniCharRef ch)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3852:64: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wxUniCharRef’
+ 3852 | inline wxString operator+(const wxString& string, wxUniCharRef ch)
+      |                                                   ~~~~~~~~~~~~~^~
+/usr/include/wx-3.2/wx/string.h:3854:17: note: candidate: ‘wxString operator+(const wxString&, char)’
+ 3854 | inline wxString operator+(const wxString& string, char ch)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3854:56: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘char’
+ 3854 | inline wxString operator+(const wxString& string, char ch)
+      |                                                   ~~~~~^~
+/usr/include/wx-3.2/wx/string.h:3856:17: note: candidate: ‘wxString operator+(const wxString&, wchar_t)’
+ 3856 | inline wxString operator+(const wxString& string, wchar_t ch)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3856:59: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘wchar_t’
+ 3856 | inline wxString operator+(const wxString& string, wchar_t ch)
+      |                                                   ~~~~~~~~^~
+/usr/include/wx-3.2/wx/string.h:3858:17: note: candidate: ‘wxString operator+(wxUniCharRef, const wxString&)’
+ 3858 | inline wxString operator+(wxUniCharRef ch, const wxString& string)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:3858:40: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxUniCharRef’
+ 3858 | inline wxString operator+(wxUniCharRef ch, const wxString& string)
+      |                           ~~~~~~~~~~~~~^~
+/usr/include/wx-3.2/wx/string.h:4237:17: note: candidate: ‘wxString operator+(const wxString&, const wxScopedWCharBuffer&)’
+ 4237 | inline wxString operator+(const wxString& string, const wxScopedWCharBuffer& buf)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:4237:78: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxScopedWCharBuffer&’ {aka ‘const wxScopedCharTypeBuffer<wchar_t>&’}
+ 4237 | inline wxString operator+(const wxString& string, const wxScopedWCharBuffer& buf)
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/string.h:4239:17: note: candidate: ‘wxString operator+(const wxScopedWCharBuffer&, const wxString&)’
+ 4239 | inline wxString operator+(const wxScopedWCharBuffer& buf, const wxString& string)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:4239:54: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxScopedWCharBuffer&’ {aka ‘const wxScopedCharTypeBuffer<wchar_t>&’}
+ 4239 | inline wxString operator+(const wxScopedWCharBuffer& buf, const wxString& string)
+      |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/string.h:4243:17: note: candidate: ‘wxString operator+(const wxString&, const wxScopedCharBuffer&)’
+ 4243 | inline wxString operator+(const wxString& string, const wxScopedCharBuffer& buf)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:4243:77: note:   no known conversion for argument 2 from ‘const std::string_view’ {aka ‘const std::basic_string_view<char>’} to ‘const wxScopedCharBuffer&’ {aka ‘const wxScopedCharTypeBuffer<char>&’}
+ 4243 | inline wxString operator+(const wxString& string, const wxScopedCharBuffer& buf)
+      |                                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/string.h:4245:17: note: candidate: ‘wxString operator+(const wxScopedCharBuffer&, const wxString&)’
+ 4245 | inline wxString operator+(const wxScopedCharBuffer& buf, const wxString& string)
+      |                 ^~~~~~~~
+/usr/include/wx-3.2/wx/string.h:4245:53: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxScopedCharBuffer&’ {aka ‘const wxScopedCharTypeBuffer<char>&’}
+ 4245 | inline wxString operator+(const wxScopedCharBuffer& buf, const wxString& string)
+      |                           ~~~~~~~~~~~~~~~~~~~~~~~~~~^~~
+In file included from /usr/include/wx-3.2/wx/event.h:21,
+                 from /usr/include/wx-3.2/wx/wx.h:24:
+/usr/include/wx-3.2/wx/gdicmn.h:368:15: note: candidate: ‘wxSize operator+(const wxSize&, const wxSize&)’
+  368 | inline wxSize operator+(const wxSize& s1, const wxSize& s2)
+      |               ^~~~~~~~
+/usr/include/wx-3.2/wx/gdicmn.h:368:39: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxSize&’
+  368 | inline wxSize operator+(const wxSize& s1, const wxSize& s2)
+      |                         ~~~~~~~~~~~~~~^~
+/usr/include/wx-3.2/wx/gdicmn.h:490:20: note: candidate: ‘wxRealPoint operator+(const wxRealPoint&, const wxRealPoint&)’
+  490 | inline wxRealPoint operator+(const wxRealPoint& p1, const wxRealPoint& p2)
+      |                    ^~~~~~~~
+/usr/include/wx-3.2/wx/gdicmn.h:490:49: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxRealPoint&’
+  490 | inline wxRealPoint operator+(const wxRealPoint& p1, const wxRealPoint& p2)
+      |                              ~~~~~~~~~~~~~~~~~~~^~
+/usr/include/wx-3.2/wx/gdicmn.h:622:16: note: candidate: ‘wxPoint operator+(const wxPoint&, const wxPoint&)’
+  622 | inline wxPoint operator+(const wxPoint& p1, const wxPoint& p2)
+      |                ^~~~~~~~
+/usr/include/wx-3.2/wx/gdicmn.h:622:41: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxPoint&’
+  622 | inline wxPoint operator+(const wxPoint& p1, const wxPoint& p2)
+      |                          ~~~~~~~~~~~~~~~^~
+/usr/include/wx-3.2/wx/gdicmn.h:632:16: note: candidate: ‘wxPoint operator+(const wxPoint&, const wxSize&)’
+  632 | inline wxPoint operator+(const wxPoint& p, const wxSize& s)
+      |                ^~~~~~~~
+/usr/include/wx-3.2/wx/gdicmn.h:632:41: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxPoint&’
+  632 | inline wxPoint operator+(const wxPoint& p, const wxSize& s)
+      |                          ~~~~~~~~~~~~~~~^
+/usr/include/wx-3.2/wx/gdicmn.h:642:16: note: candidate: ‘wxPoint operator+(const wxSize&, const wxPoint&)’
+  642 | inline wxPoint operator+(const wxSize& s, const wxPoint& p)
+      |                ^~~~~~~~
+/usr/include/wx-3.2/wx/gdicmn.h:642:40: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxSize&’
+  642 | inline wxPoint operator+(const wxSize& s, const wxPoint& p)
+      |                          ~~~~~~~~~~~~~~^
+/usr/include/wx-3.2/wx/gdicmn.h:889:25: note: candidate: ‘wxRect operator+(const wxRect&, const wxRect&)’
+  889 | WXDLLIMPEXP_CORE wxRect operator+(const wxRect& r1, const wxRect& r2);
+      |                         ^~~~~~~~
+/usr/include/wx-3.2/wx/gdicmn.h:889:49: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxRect&’
+  889 | WXDLLIMPEXP_CORE wxRect operator+(const wxRect& r1, const wxRect& r2);
+      |                                   ~~~~~~~~~~~~~~^~
+In file included from /usr/include/wx-3.2/wx/affinematrix2dbase.h:17,
+                 from /usr/include/wx-3.2/wx/affinematrix2d.h:17,
+                 from /usr/include/wx-3.2/wx/dc.h:31,
+                 from /usr/include/wx-3.2/wx/wx.h:51:
+/usr/include/wx-3.2/wx/geometry.h:213:21: note: candidate: ‘wxPoint2DInt operator+(const wxPoint2DInt&, const wxPoint2DInt&)’
+  213 | inline wxPoint2DInt operator+(const wxPoint2DInt& pt1 , const wxPoint2DInt& pt2)
+      |                     ^~~~~~~~
+/usr/include/wx-3.2/wx/geometry.h:213:51: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxPoint2DInt&’
+  213 | inline wxPoint2DInt operator+(const wxPoint2DInt& pt1 , const wxPoint2DInt& pt2)
+      |                               ~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/geometry.h:430:24: note: candidate: ‘wxPoint2DDouble operator+(const wxPoint2DDouble&, const wxPoint2DDouble&)’
+  430 | inline wxPoint2DDouble operator+(const wxPoint2DDouble& pt1 , const wxPoint2DDouble& pt2)
+      |                        ^~~~~~~~
+/usr/include/wx-3.2/wx/geometry.h:430:57: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘const wxPoint2DDouble&’
+  430 | inline wxPoint2DDouble operator+(const wxPoint2DDouble& pt1 , const wxPoint2DDouble& pt2)
+      |                                  ~~~~~~~~~~~~~~~~~~~~~~~^~~
+/usr/include/wx-3.2/wx/toolbar.h:64:1: note: candidate: ‘int operator+(wxToolBarStyleFlags, wxBorder)’
+   64 | wxALLOW_COMBINING_ENUMS(wxToolBarStyleFlags, wxBorder)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/toolbar.h:64:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxToolBarStyleFlags’
+   64 | wxALLOW_COMBINING_ENUMS(wxToolBarStyleFlags, wxBorder)
+      | ^
+/usr/include/wx-3.2/wx/toolbar.h:64:1: note: candidate: ‘int operator+(wxBorder, wxToolBarStyleFlags)’
+   64 | wxALLOW_COMBINING_ENUMS(wxToolBarStyleFlags, wxBorder)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/toolbar.h:64:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+   64 | wxALLOW_COMBINING_ENUMS(wxToolBarStyleFlags, wxBorder)
+      | ^
+/usr/include/wx-3.2/wx/aui/auibook.h:58:1: note: candidate: ‘int operator+(wxAuiNotebookOption, wxBorder)’
+   58 | wxALLOW_COMBINING_ENUMS(wxAuiNotebookOption, wxBorder)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/aui/auibook.h:58:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxAuiNotebookOption’
+   58 | wxALLOW_COMBINING_ENUMS(wxAuiNotebookOption, wxBorder)
+      | ^
+/usr/include/wx-3.2/wx/aui/auibook.h:58:1: note: candidate: ‘int operator+(wxBorder, wxAuiNotebookOption)’
+   58 | wxALLOW_COMBINING_ENUMS(wxAuiNotebookOption, wxBorder)
+      | ^~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/wx-3.2/wx/aui/auibook.h:58:1: note:   no known conversion for argument 1 from ‘const char [2]’ to ‘wxBorder’
+   58 | wxALLOW_COMBINING_ENUMS(wxAuiNotebookOption, wxBorder)
+      | ^
+/app/source/rendering/ui/tooltip_drawer.cpp:146:49: error: no matching function for call to ‘std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::push_back(<brace-enclosed initializer list>)’
+  146 |                                 fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+      |                                 ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1281:7: note: candidate: ‘constexpr void std::vector<_Tp, _Alloc>::push_back(const value_type&) [with _Tp = TooltipDrawer::draw(const RenderView&)::FieldLine; _Alloc = std::allocator<TooltipDrawer::draw(const RenderView&)::FieldLine>; value_type = TooltipDrawer::draw(const RenderView&)::FieldLine]’
+ 1281 |       push_back(const value_type& __x)
+      |       ^~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1281:35: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘const std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::value_type&’ {aka ‘const TooltipDrawer::draw(const RenderView&)::FieldLine&’}
+ 1281 |       push_back(const value_type& __x)
+      |                 ~~~~~~~~~~~~~~~~~~^~~
+/usr/include/c++/13/bits/stl_vector.h:1298:7: note: candidate: ‘constexpr void std::vector<_Tp, _Alloc>::push_back(value_type&&) [with _Tp = TooltipDrawer::draw(const RenderView&)::FieldLine; _Alloc = std::allocator<TooltipDrawer::draw(const RenderView&)::FieldLine>; value_type = TooltipDrawer::draw(const RenderView&)::FieldLine]’
+ 1298 |       push_back(value_type&& __x)
+      |       ^~~~~~~~~
+/usr/include/c++/13/bits/stl_vector.h:1298:30: note:   no known conversion for argument 1 from ‘<brace-enclosed initializer list>’ to ‘std::vector<TooltipDrawer::draw(const RenderView&)::FieldLine>::value_type&&’ {aka ‘TooltipDrawer::draw(const RenderView&)::FieldLine&&’}
+ 1298 |       push_back(value_type&& __x)
+      |                 ~~~~~~~~~~~~~^~~
+[15/112] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/zoom_controller.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/rendering/ui/zoom_controller.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[16/112] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/frame_pacer.cpp.o
+[17/112] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/light_calculator.cpp.o
+ninja: build stopped: subcommand failed.

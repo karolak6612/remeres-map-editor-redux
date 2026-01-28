@@ -1,0 +1,238 @@
+[1/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/creature_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/drawers/entities/creature_drawer.cpp:12:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[2/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/item_drawer.cpp.o
+In file included from /app/source/rendering/drawers/entities/item_drawer.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+/app/source/rendering/drawers/entities/item_drawer.cpp: In member function ‘void ItemDrawer::BlitItem(SpriteBatch&, PrimitiveRenderer&, SpriteDrawer*, CreatureDrawer*, int&, int&, const Position&, Item*, const DrawingOptions&, bool, int, int, int, int, const Tile*)’:
+/app/source/rendering/drawers/entities/item_drawer.cpp:89:42: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+   89 |                 if (it.clientID >= 39092 && it.clientID <= 39100 || it.clientID == 39236 || it.clientID == 39367 || it.clientID == 39368) {
+      |                     ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/app/source/rendering/drawers/entities/item_drawer.cpp:97:78: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+   97 |         if (it.isMetaItem() || spr == nullptr || !ephemeral && it.pickupable && !options.show_items) {
+      |                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/app/source/rendering/drawers/entities/item_drawer.cpp: In member function ‘void ItemDrawer::DrawRawBrush(SpriteBatch&, SpriteDrawer*, int, int, ItemType*, uint8_t, uint8_t, uint8_t, uint8_t)’:
+/app/source/rendering/drawers/entities/item_drawer.cpp:262:26: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  262 |         if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
+      |             ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+[3/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/cursors/live_cursor_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/cursors/live_cursor_drawer.cpp:7:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[4/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/sprite_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/drawers/entities/sprite_drawer.cpp:6:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[5/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/map_layer_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/map_layer_drawer.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[6/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/minimap_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/minimap_drawer.cpp:5:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[7/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/brush_overlay_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/overlays/brush_overlay_drawer.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[8/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/minimap_renderer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/rendering/drawers/minimap_renderer.cpp:2:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[9/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/grid_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/drawers/overlays/grid_drawer.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[10/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/marker_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/overlays/marker_drawer.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[11/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/preview_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/drawers/overlays/preview_drawer.cpp:11:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[12/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/selection_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/drawers/overlays/selection_drawer.cpp:11:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[13/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/floor_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/tiles/floor_drawer.cpp:15:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[14/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/shade_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/drawers/tiles/shade_drawer.cpp:15:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[15/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/tile_color_calculator.cpp.o
+[16/133] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/tile_renderer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/drawers/tiles/tile_renderer.cpp:6:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[17/133] Building CXX object CMakeFiles/rme.dir/source/rendering/io/editor_sprite_loader.cpp.o
+[18/133] Building CXX object CMakeFiles/rme.dir/source/rendering/io/screen_capture.cpp.o
+[19/133] Building CXX object CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o
+FAILED: CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o
+/usr/bin/c++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE="" -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE="" -D__WXGTK__ -I/app/build_conan/build/Release/_deps/wxmaterialdesignartprovider-src -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/gladefaf68f0fac23/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O3 -DNDEBUG -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o -MF CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o.d -o CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o -c /app/source/rendering/io/screenshot_saver.cpp
+In file included from /app/source/rendering/io/screenshot_saver.cpp:5:
+/app/source/rendering/io/screenshot_saver.h:24:9: error: ‘uint8_t’ does not name a type
+   24 |         uint8_t* GetBuffer() const {
+      |         ^~~~~~~
+/app/source/rendering/io/screenshot_saver.h:12:1: note: ‘uint8_t’ is defined in header ‘<cstdint>’; did you forget to ‘#include <cstdint>’?
+   11 | #include <wx/bitmap.h>
+  +++ |+#include <cstdint>
+   12 |
+/app/source/rendering/io/screenshot_saver.h:34:9: error: ‘uint8_t’ does not name a type
+   34 |         uint8_t* buffer;
+      |         ^~~~~~~
+/app/source/rendering/io/screenshot_saver.h:34:9: note: ‘uint8_t’ is defined in header ‘<cstdint>’; did you forget to ‘#include <cstdint>’?
+/app/source/rendering/io/screenshot_saver.h: In constructor ‘ScreenshotSaver::ScreenshotSaver()’:
+/app/source/rendering/io/screenshot_saver.h:16:17: error: class ‘ScreenshotSaver’ does not have any field named ‘buffer’
+   16 |                 buffer(nullptr) { }
+      |                 ^~~~~~
+/app/source/rendering/io/screenshot_saver.h: In member function ‘bool ScreenshotSaver::IsCapturing() const’:
+/app/source/rendering/io/screenshot_saver.h:28:24: error: ‘buffer’ was not declared in this scope; did you mean ‘setbuffer’?
+   28 |                 return buffer != nullptr;
+      |                        ^~~~~~
+      |                        setbuffer
+/app/source/rendering/io/screenshot_saver.cpp: In member function ‘wxString ScreenshotSaver::SaveCapture(const wxFileName&, const wxString&, int, int)’:
+/app/source/rendering/io/screenshot_saver.cpp:31:14: error: ‘buffer’ was not declared in this scope; did you mean ‘boost::asio::buffer’?
+   31 |         if (!buffer) {
+      |              ^~~~~~
+      |              boost::asio::buffer
+In file included from /usr/include/boost/asio/detail/buffer_sequence_adapter.hpp:22,
+                 from /usr/include/boost/asio/detail/reactive_socket_service.hpp:27,
+                 from /usr/include/boost/asio/basic_socket.hpp:38,
+                 from /usr/include/boost/asio/basic_datagram_socket.hpp:20,
+                 from /usr/include/boost/asio.hpp:32,
+                 from /app/source/app/main.h:54,
+                 from /app/source/rendering/io/screenshot_saver.cpp:6:
+/usr/include/boost/asio/registered_buffer.hpp:299:32: note: ‘boost::asio::buffer’ declared here
+  299 | inline const_registered_buffer buffer(
+      |                                ^~~~~~
+/app/source/rendering/io/screenshot_saver.cpp:35:43: error: ‘buffer’ was not declared in this scope; did you mean ‘boost::asio::buffer’?
+   35 |         wxImage screenshot(width, height, buffer, true);
+      |                                           ^~~~~~
+      |                                           boost::asio::buffer
+/usr/include/boost/asio/registered_buffer.hpp:299:32: note: ‘boost::asio::buffer’ declared here
+  299 | inline const_registered_buffer buffer(
+      |                                ^~~~~~
+/app/source/rendering/io/screenshot_saver.cpp: In member function ‘void ScreenshotSaver::PrepareCapture(int, int)’:
+/app/source/rendering/io/screenshot_saver.cpp:76:9: error: ‘buffer’ was not declared in this scope; did you mean ‘boost::asio::buffer’?
+   76 |         buffer = newd uint8_t[3 * width * height];
+      |         ^~~~~~
+      |         boost::asio::buffer
+/usr/include/boost/asio/registered_buffer.hpp:299:32: note: ‘boost::asio::buffer’ declared here
+  299 | inline const_registered_buffer buffer(
+      |                                ^~~~~~
+/app/source/rendering/io/screenshot_saver.cpp: In member function ‘void ScreenshotSaver::Cleanup()’:
+/app/source/rendering/io/screenshot_saver.cpp:80:13: error: ‘buffer’ was not declared in this scope; did you mean ‘boost::asio::buffer’?
+   80 |         if (buffer) {
+      |             ^~~~~~
+      |             boost::asio::buffer
+/usr/include/boost/asio/registered_buffer.hpp:299:32: note: ‘boost::asio::buffer’ declared here
+  299 | inline const_registered_buffer buffer(
+      |                                ^~~~~~
+/app/source/rendering/io/screenshot_saver.cpp:81:17: error: type ‘<type error>’ argument given to ‘delete’, expected pointer
+   81 |                 delete[] buffer;
+      |                 ^~~~~~~~~~~~~~~
+[20/133] Building CXX object CMakeFiles/rme.dir/source/rendering/io/game_sprite_loader.cpp.o
+In file included from /app/source/rendering/io/game_sprite_loader.cpp:9:
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = unsigned char]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  124 |                 fread(&ref, sizeof(ref), 1, file);
+      |                 ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = int]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = signed char]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = unsigned int]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = short unsigned int]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+[21/133] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/brush_selector.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/ui/brush_selector.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[22/133] Building CXX object CMakeFiles/rme.dir/source/rendering/map_drawer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/rendering/map_drawer.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+ninja: build stopped: subcommand failed.

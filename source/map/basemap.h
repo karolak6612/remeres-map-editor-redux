@@ -123,6 +123,11 @@ public:
 		root.visitLeaves(0, 0, 65536, min_x, min_y, max_x, max_y, std::forward<Func>(func));
 	}
 
+	template <typename Func>
+	void visitLeavesForce(int min_x, int min_y, int max_x, int max_y, Func&& func) {
+		root.visitLeavesForce(0, 0, 65536, min_x, min_y, max_x, max_y, std::forward<Func>(func));
+	}
+
 	// Assigns a tile, it might seem pointless to provide position, but it is not, as the passed tile may be nullptr
 	void setTile(int _x, int _y, int _z, Tile* newtile, bool remove = false);
 	void setTile(const Position& pos, Tile* newtile, bool remove = false) {

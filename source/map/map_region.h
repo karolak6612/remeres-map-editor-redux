@@ -129,6 +129,44 @@ public:
 	QTreeNode* getLeaf(int x, int y); // Might return nullptr
 	QTreeNode* getLeafForce(int x, int y); // Will never return nullptr, it will create the node if it's not there
 
+	template <typename Func>
+	void visitLeavesForce(int x, int y, int size, int min_x, int min_y, int max_x, int max_y, Func&& func) {
+		if (x >= max_x || y >= max_y || x + size <= min_x || y + size <= min_y) {
+			return;
+		}
+
+		if (isLeaf) {
+			func(this, x, y);
+			return;
+		}
+
+		int child_size = size / 4;
+		for (int iy = 0; iy < 4; ++iy) {
+			int cy = y + iy * child_size;
+			if (cy >= max_y || cy + child_size <= min_y) {
+				continue;
+			}
+
+			for (int ix = 0; ix < 4; ++ix) {
+				int cx = x + ix * child_size;
+				if (cx >= max_x || cx + child_size <= min_x) {
+					continue;
+				}
+
+				int index = (iy << 2) | ix;
+				if (!child[index]) {
+					child[index] = newd QTreeNode(map);
+					// Ensure consistent visibility state with createLeaf (default invisible)
+					child[index]->setVisible(false, false);
+					if (child_size == 4) {
+						child[index]->isLeaf = true;
+					}
+				}
+				child[index]->visitLeavesForce(cx, cy, child_size, min_x, min_y, max_x, max_y, std::forward<Func>(func));
+			}
+		}
+	}
+
 	// Coordinates are NOT relative
 	TileLocation* createTile(int x, int y, int z);
 	TileLocation* getTile(int x, int y, int z);
