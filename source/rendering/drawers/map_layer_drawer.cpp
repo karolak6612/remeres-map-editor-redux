@@ -56,8 +56,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 				}
 
 				if (nd->isVisible(map_z > GROUND_LAYER)) {
-					bool fully_visible = (nd_map_x >= view.start_x + 4) && (nd_map_x + 4 <= view.end_x - 4) &&
-					                     (nd_map_y >= view.start_y + 4) && (nd_map_y + 4 <= view.end_y - 4);
+					bool fully_visible = (nd_map_x >= view.start_x + 4) && (nd_map_x + 4 <= view.end_x - 4) && (nd_map_y >= view.start_y + 4) && (nd_map_y + 4 <= view.end_y - 4);
 
 					for (int map_x = 0; map_x < 4; ++map_x) {
 						for (int map_y = 0; map_y < 4; ++map_y) {
@@ -79,8 +78,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 		}
 	} else {
 		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](QTreeNode* nd, int nd_map_x, int nd_map_y) {
-			bool fully_visible = (nd_map_x >= view.start_x + 4) && (nd_map_x + 4 <= view.end_x - 4) &&
-			                     (nd_map_y >= view.start_y + 4) && (nd_map_y + 4 <= view.end_y - 4);
+			bool fully_visible = (nd_map_x >= view.start_x + 4) && (nd_map_x + 4 <= view.end_x - 4) && (nd_map_y >= view.start_y + 4) && (nd_map_y + 4 <= view.end_y - 4);
 
 			for (int map_x = 0; map_x < 4; ++map_x) {
 				for (int map_y = 0; map_y < 4; ++map_y) {
