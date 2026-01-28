@@ -26,7 +26,7 @@ class LivePeer;
 class LiveLogTab;
 class QTreeNode;
 
-class LiveServer : public LiveSocket {
+class LiveServer : public LiveSocket, public std::enable_shared_from_this<LiveServer> {
 public:
 	LiveServer(Editor& editor);
 	~LiveServer();
@@ -70,7 +70,7 @@ public:
 	void updateOperation(int32_t percent);
 
 protected:
-	std::unordered_map<uint32_t, LivePeer*> clients;
+	std::unordered_map<uint32_t, std::shared_ptr<LivePeer>> clients;
 
 	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 	std::shared_ptr<boost::asio::ip::tcp::socket> socket;

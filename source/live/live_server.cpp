@@ -64,9 +64,6 @@ bool LiveServer::bind() {
 }
 
 void LiveServer::close() {
-	for (auto& clientEntry : clients) {
-		delete clientEntry.second;
-	}
 	clients.clear();
 
 	if (log) {
@@ -97,11 +94,11 @@ void LiveServer::acceptClient() {
 		);
 	}
 
-	acceptor->async_accept(*socket, [this](const boost::system::error_code& error) -> void {
+	acceptor->async_accept(*socket, [this, self = shared_from_this()](const boost::system::error_code& error) -> void {
 		if (error) {
 			//
 		} else {
-			LivePeer* peer = new LivePeer(this, std::move(*socket));
+			auto peer = std::make_shared<LivePeer>(this, std::move(*socket));
 			peer->log = log;
 			peer->receiveHeader();
 
@@ -191,7 +188,7 @@ void LiveServer::broadcastNodes(DirtyList& dirtyList) {
 		}
 
 		for (auto& clientEntry : clients) {
-			LivePeer* peer = clientEntry.second;
+			LivePeer* peer = clientEntry.second.get();
 
 			const uint32_t clientId = peer->getClientId();
 			if (dirtyList.owner != 0 && dirtyList.owner == clientId) {
@@ -223,7 +220,7 @@ void LiveServer::broadcastCursor(const LiveCursor& cursor) {
 	writeCursor(message, cursor);
 
 	for (auto& clientEntry : clients) {
-		LivePeer* peer = clientEntry.second;
+		LivePeer* peer = clientEntry.second.get();
 		if (peer->getClientId() != cursor.id) {
 			peer->send(message);
 		}

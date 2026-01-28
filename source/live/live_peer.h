@@ -22,7 +22,7 @@
 #include "net/net_connection.h"
 
 class LiveServer;
-class LivePeer : public LiveSocket {
+class LivePeer : public LiveSocket, public std::enable_shared_from_this<LivePeer> {
 public:
 	LivePeer(LiveServer* server, boost::asio::ip::tcp::socket socket);
 	~LivePeer();

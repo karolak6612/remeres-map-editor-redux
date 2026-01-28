@@ -63,7 +63,7 @@ std::unique_ptr<Editor> EditorFactory::LoadFromFile(CopyBuffer& copybuffer, cons
 	return editor;
 }
 
-std::unique_ptr<Editor> EditorFactory::JoinLive(CopyBuffer& copybuffer, LiveClient* client) {
+std::unique_ptr<Editor> EditorFactory::JoinLive(CopyBuffer& copybuffer, std::shared_ptr<LiveClient> client) {
 	MapVersion mapVersion;
 	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
 	mapVersion.client = g_version.GetCurrentVersionID();

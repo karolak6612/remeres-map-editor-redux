@@ -127,7 +127,7 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 	while (true) {
 		int ret = live_join_dlg->ShowModal();
 		if (ret == wxID_OK) {
-			LiveClient* liveClient = newd LiveClient();
+			auto liveClient = std::make_shared<LiveClient>();
 			liveClient->setPassword(password->GetValue());
 
 			wxString tmp = name->GetValue();
@@ -139,7 +139,6 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 			const wxString& error = liveClient->getLastError();
 			if (!error.empty()) {
 				DialogUtil::PopupDialog(live_join_dlg, "Error", error, wxOK);
-				delete liveClient;
 				continue;
 			}
 
@@ -149,7 +148,6 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 			liveClient->createLogWindow(g_gui.tabbook);
 			if (!liveClient->connect(nstr(address), portNumber)) {
 				DialogUtil::PopupDialog("Connection Error", liveClient->getLastError(), wxOK);
-				delete liveClient;
 			}
 
 			break;

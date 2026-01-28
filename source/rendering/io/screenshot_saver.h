@@ -10,6 +10,8 @@
 #include <wx/image.h>
 #include <wx/bitmap.h>
 
+#include <cstdint>
+
 class ScreenshotSaver {
 public:
 	ScreenshotSaver() :

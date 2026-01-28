@@ -26,7 +26,7 @@
 class DirtyList;
 class MapTab;
 
-class LiveClient : public LiveSocket {
+class LiveClient : public LiveSocket, public std::enable_shared_from_this<LiveClient> {
 public:
 	LiveClient();
 	~LiveClient();
@@ -85,7 +85,7 @@ protected:
 	std::shared_ptr<boost::asio::ip::tcp::resolver> resolver;
 	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
 
-	std::unique_ptr<Editor> editor;
+	Editor* editor;
 
 	bool stopped;
 };

@@ -41,7 +41,7 @@ class LiveSocket;
 
 class Editor {
 public:
-	Editor(CopyBuffer& copybuffer, const MapVersion& version, LiveClient* client);
+	Editor(CopyBuffer& copybuffer, const MapVersion& version, std::shared_ptr<LiveClient> client);
 	Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn);
 	Editor(CopyBuffer& copybuffer, const MapVersion& version);
 	~Editor();
@@ -51,7 +51,7 @@ public:
 
 public:
 	// Public members
-	ActionQueue* actionQueue;
+	std::unique_ptr<ActionQueue> actionQueue;
 	Selection selection;
 	CopyBuffer& copybuffer;
 	GroundBrush* replace_brush;

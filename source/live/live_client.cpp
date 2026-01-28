@@ -56,7 +56,7 @@ bool LiveClient::connect(const std::string& address, uint16_t port) {
 		socket = std::make_shared<boost::asio::ip::tcp::socket>(service);
 	}
 
-	resolver->async_resolve(address, std::to_string(port), [this](const boost::system::error_code& error, boost::asio::ip::tcp::resolver::results_type endpoints) -> void {
+	resolver->async_resolve(address, std::to_string(port), [this, self = shared_from_this()](const boost::system::error_code& error, boost::asio::ip::tcp::resolver::results_type endpoints) -> void {
 		if (error) {
 			logMessage("Error: " + error.message());
 		} else {
@@ -103,16 +103,16 @@ void LiveClient::tryConnect(boost::asio::ip::tcp::resolver::results_type endpoin
 
 	logMessage("Joining server...");
 
-	boost::asio::async_connect(*socket, endpoints, [this](boost::system::error_code error, boost::asio::ip::tcp::endpoint endpoint) -> void {
+	boost::asio::async_connect(*socket, endpoints, [this, self = shared_from_this()](boost::system::error_code error, boost::asio::ip::tcp::endpoint endpoint) -> void {
 		if (!socket->is_open()) {
 			logMessage("Socket not open after connection attempt.");
-			wxTheApp->CallAfter([this]() {
+			wxTheApp->CallAfter([this, self]() {
 				close();
 				g_gui.CloseLiveEditors(this);
 			});
 		} else if (error) {
 			if (!handleError(error)) {
-				wxTheApp->CallAfter([this]() {
+				wxTheApp->CallAfter([this, self]() {
 					close();
 					g_gui.CloseLiveEditors(this);
 				});
@@ -120,7 +120,7 @@ void LiveClient::tryConnect(boost::asio::ip::tcp::resolver::results_type endpoin
 		} else {
 			socket->set_option(boost::asio::ip::tcp::no_delay(true), error);
 			if (error) {
-				wxTheApp->CallAfter([this]() {
+				wxTheApp->CallAfter([this, self]() {
 					close();
 				});
 				return;
@@ -172,7 +172,7 @@ std::string LiveClient::getHostName() const {
 
 void LiveClient::receiveHeader() {
 	readMessage.position = 0;
-	boost::asio::async_read(*socket, boost::asio::buffer(readMessage.buffer, 4), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
+	boost::asio::async_read(*socket, boost::asio::buffer(readMessage.buffer, 4), [this, self = shared_from_this()](const boost::system::error_code& error, size_t bytesReceived) -> void {
 		if (error) {
 			if (!handleError(error)) {
 				logMessage(wxString() + getHostName() + ": " + error.message());
@@ -187,7 +187,7 @@ void LiveClient::receiveHeader() {
 
 void LiveClient::receive(uint32_t packetSize) {
 	readMessage.buffer.resize(readMessage.position + packetSize);
-	boost::asio::async_read(*socket, boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
+	boost::asio::async_read(*socket, boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize), [this, self = shared_from_this()](const boost::system::error_code& error, size_t bytesReceived) -> void {
 		if (error) {
 			if (!handleError(error)) {
 				logMessage(wxString() + getHostName() + ": " + error.message());
@@ -195,7 +195,7 @@ void LiveClient::receive(uint32_t packetSize) {
 		} else if (bytesReceived < readMessage.buffer.size() - 4) {
 			logMessage(wxString() + getHostName() + ": Could not receive packet[size: " + std::to_string(bytesReceived) + "], disconnecting client.");
 		} else {
-			wxTheApp->CallAfter([this]() {
+			wxTheApp->CallAfter([this, self]() {
 				parsePacket(std::move(readMessage));
 				receiveHeader();
 			});
@@ -205,7 +205,7 @@ void LiveClient::receive(uint32_t packetSize) {
 
 void LiveClient::send(NetworkMessage& message) {
 	memcpy(&message.buffer[0], &message.size, 4);
-	boost::asio::async_write(*socket, boost::asio::buffer(message.buffer, message.size + 4), [this](const boost::system::error_code& error, size_t bytesTransferred) -> void {
+	boost::asio::async_write(*socket, boost::asio::buffer(message.buffer, message.size + 4), [this, self = shared_from_this()](const boost::system::error_code& error, size_t bytesTransferred) -> void {
 		if (error) {
 			logMessage(wxString() + getHostName() + ": " + error.message());
 		}
@@ -244,7 +244,7 @@ MapTab* LiveClient::createEditorWindow() {
 	MapTabbook* mtb = dynamic_cast<MapTabbook*>(g_gui.tabbook);
 	ASSERT(mtb);
 
-	MapTab* edit = newd MapTab(mtb, editor.get());
+	MapTab* edit = newd MapTab(mtb, editor);
 	edit->OnSwitchEditorMode(g_gui.IsSelectionMode() ? SELECTION_MODE : DRAWING_MODE);
 
 	return edit;
@@ -372,7 +372,7 @@ void LiveClient::parsePacket(NetworkMessage message) {
 
 void LiveClient::parseHello(NetworkMessage& message) {
 	ASSERT(editor == nullptr);
-	editor = EditorFactory::JoinLive(g_gui.copybuffer, this);
+	editor = EditorFactory::JoinLive(g_gui.copybuffer, shared_from_this()).release();
 
 	Map& map = editor->map;
 	map.setName("Live Map - " + message.read<std::string>());

@@ -18,7 +18,7 @@ LiveManager::LiveManager(Editor& editor) :
 	live_client(nullptr) {
 }
 
-LiveManager::LiveManager(Editor& editor, LiveClient* client) :
+LiveManager::LiveManager(Editor& editor, std::shared_ptr<LiveClient> client) :
 	editor(editor),
 	live_server(nullptr),
 	live_client(client) {
@@ -47,11 +47,11 @@ bool LiveManager::IsLocal() const {
 }
 
 LiveClient* LiveManager::GetClient() const {
-	return live_client;
+	return live_client.get();
 }
 
 LiveServer* LiveManager::GetServer() const {
-	return live_server;
+	return live_server.get();
 }
 
 LiveSocket& LiveManager::GetSocket() const {
@@ -63,29 +63,25 @@ LiveSocket& LiveManager::GetSocket() const {
 
 LiveServer* LiveManager::StartServer() {
 	ASSERT(IsLocal());
-	live_server = newd LiveServer(editor);
+	live_server = std::make_shared<LiveServer>(editor);
 
-	delete editor.actionQueue;
-	editor.actionQueue = newd NetworkedActionQueue(editor);
+	editor.actionQueue = std::make_unique<NetworkedActionQueue>(editor);
 
-	return live_server;
+	return live_server.get();
 }
 
 void LiveManager::CloseServer() {
 	if (live_server) {
 		live_server->close();
-		delete live_server;
 		live_server = nullptr;
 	}
 
 	if (live_client) {
 		live_client->close();
-		delete live_client;
 		live_client = nullptr;
 	}
 
-	delete editor.actionQueue;
-	editor.actionQueue = newd ActionQueue(editor);
+	editor.actionQueue = std::make_unique<ActionQueue>(editor);
 
 	NetworkConnection& connection = NetworkConnection::getInstance();
 	connection.stop();
