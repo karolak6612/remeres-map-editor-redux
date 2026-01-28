@@ -185,16 +185,6 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		return true;
 	}
 
-	if (prop == BLOCKSOLID) {
-		if (!isBlocking()) {
-			return false;
-		}
-		// isBlocking() is true if there is a blocking item OR if the tile is empty (void).
-		// hasProperty(BLOCKSOLID) only cares about items.
-		// If we are not empty, then the blocking flag must come from an item.
-		return ground || !items.empty();
-	}
-
 	if (ground && ground->hasProperty(prop)) {
 		return true;
 	}
