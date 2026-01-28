@@ -39,11 +39,6 @@
 // ============================================================================
 // Tileset Window
 
-BEGIN_EVENT_TABLE(TilesetWindow, wxDialog)
-EVT_BUTTON(wxID_OK, TilesetWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, TilesetWindow::OnClickCancel)
-END_EVENT_TABLE()
-
 static constexpr int OUTFIT_COLOR_MAX = 133;
 
 TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
@@ -67,14 +62,14 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 	palette_field = newd wxChoice(this, wxID_ANY);
 	palette_field->SetToolTip("Select the palette category");
 
-	palette_field->Append("Terrain", newd int(TILESET_TERRAIN));
-	palette_field->Append("Collections", newd int(TILESET_COLLECTION));
-	palette_field->Append("Doodad", newd int(TILESET_DOODAD));
-	palette_field->Append("Item", newd int(TILESET_ITEM));
-	palette_field->Append("Raw", newd int(TILESET_RAW));
+	palette_field->Append("Terrain", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_TERRAIN)));
+	palette_field->Append("Collections", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_COLLECTION)));
+	palette_field->Append("Doodad", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_DOODAD)));
+	palette_field->Append("Item", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_ITEM)));
+	palette_field->Append("Raw", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_RAW)));
 	palette_field->SetSelection(3);
 
-	palette_field->Connect(wxEVT_COMMAND_CHOICE_SELECTED, wxCommandEventHandler(TilesetWindow::OnChangePalette), nullptr, this);
+	palette_field->Bind(wxEVT_CHOICE, &TilesetWindow::OnChangePalette, this);
 	subsizer->Add(palette_field, wxSizerFlags(1).Expand());
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Tileset"));
@@ -82,7 +77,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 	tileset_field->SetToolTip("Select the target tileset");
 
 	for (TilesetContainer::iterator iter = g_materials.tilesets.begin(); iter != g_materials.tilesets.end(); ++iter) {
-		tileset_field->Append(wxstr(iter->second->name), newd std::string(iter->second->name));
+		tileset_field->Append(wxstr(iter->second->name), new wxStringClientData(iter->second->name));
 	}
 	tileset_field->SetSelection(0);
 	subsizer->Add(tileset_field, wxSizerFlags(1).Expand());
@@ -98,14 +93,19 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	Bind(wxEVT_BUTTON, &TilesetWindow::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &TilesetWindow::OnClickCancel, this, wxID_CANCEL);
 }
 
 void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {
 	tileset_field->Clear();
 
+	TilesetCategoryType categoryType = static_cast<TilesetCategoryType>(reinterpret_cast<intptr_t>(palette_field->GetClientData(palette_field->GetSelection())));
+
 	for (TilesetContainer::iterator iter = g_materials.tilesets.begin(); iter != g_materials.tilesets.end(); ++iter) {
-		if (iter->second->getCategory(TilesetCategoryType(*static_cast<int*>(palette_field->GetClientData(palette_field->GetSelection()))))->brushlist.size() > 0) {
-			tileset_field->Append(wxstr(iter->second->name), newd std::string(iter->second->name));
+		if (iter->second->getCategory(categoryType)->brushlist.size() > 0) {
+			tileset_field->Append(wxstr(iter->second->name), new wxStringClientData(iter->second->name));
 		}
 	}
 
@@ -114,8 +114,8 @@ void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {
 
 void TilesetWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (edit_item) {
-		TilesetCategoryType categoryType = TilesetCategoryType(*reinterpret_cast<int*>(palette_field->GetClientData(palette_field->GetSelection())));
-		std::string tilesetName = *static_cast<std::string*>(tileset_field->GetClientData(tileset_field->GetSelection()));
+		TilesetCategoryType categoryType = static_cast<TilesetCategoryType>(reinterpret_cast<intptr_t>(palette_field->GetClientData(palette_field->GetSelection())));
+		std::string tilesetName = static_cast<wxStringClientData*>(tileset_field->GetClientObject(tileset_field->GetSelection()))->GetData().ToStdString();
 
 		g_materials.addToTileset(tilesetName, edit_item->getID(), categoryType);
 		DialogUtil::PopupDialog("Added to Tileset", "'" + std::string(edit_item->getName()) + "' has been added to tileset '" + tilesetName + "' of palette '" + palette_field->GetStringSelection() + "'", wxOK);
