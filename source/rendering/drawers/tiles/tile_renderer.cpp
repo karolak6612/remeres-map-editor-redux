@@ -86,7 +86,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 	return data;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, std::ostringstream& tooltip_stream) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, std::ostringstream& tooltip_stream, LightBuffer* light_buffer, bool check_visibility) {
 	if (!location) {
 		return;
 	}
@@ -106,8 +106,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// Early viewport culling - skip tiles that are completely off-screen
 	int draw_x, draw_y;
-	if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
-		return;
+	if (check_visibility) {
+		if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
+			return;
+		}
+	} else {
+		view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
 	}
 
 	Waypoint* waypoint = editor->map.waypoints.getWaypoint(location);
@@ -141,6 +145,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			}
 
 			item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, false, r, g, b);
+
+			if (light_buffer && tile->ground->hasLight()) {
+				light_buffer->AddLight(map_x, map_y, map_z, tile->ground->getLight());
+			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -190,6 +198,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 					}
 					item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, *it, options, false, ir, ig, ib);
 				}
+
+				if (light_buffer && (*it)->hasLight()) {
+					light_buffer->AddLight(map_x, map_y, map_z, (*it)->getLight());
+				}
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
@@ -204,30 +216,3 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	}
 }
 
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (auto item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
-		}
-	}
-}

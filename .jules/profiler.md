@@ -1,4 +1,6 @@
-## 2024-10-26 - Optimization of Item Tooltips and Viewport Culling
-Finding: Generating tooltip data for every item in the viewport involved excessive string allocation and copying, even for items with no tooltip info. Additionally, the render loop calculated screen coordinates twice for every visible tile.
-Impact: Significantly reduced memory allocations per frame by avoiding string copies for items without text/description. Reduced arithmetic operations per tile by ~50% in the hot loop.
-Learning: `std::string` return by value in accessor methods (`getText`) can be a silent killer in tight loops. Combining visibility checks with coordinate calculation avoids redundant math.
+# Profiler's Journal
+
+## 2024-05-22 - Initial Performance Optimizations
+Finding: CPU bottlenecks in redundant visibility checks and item iteration.
+Impact: Expected reduction in frame time by eliminating redundant logic in hot paths.
+Learning: `MapLayerDrawer` already iterates visible leaves, making `IsTileVisible` inside `DrawTile` redundant. Merging `AddLight` avoids double iteration over items.

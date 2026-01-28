@@ -109,14 +109,13 @@ namespace IngamePreview {
 			view.end_x = (int)std::ceil((view.view_scroll_x + viewport_width * zoom + TileSize * 2) / (float)TileSize);
 			view.end_y = (int)std::ceil((view.view_scroll_y + viewport_height * zoom + TileSize * 2) / (float)TileSize);
 
+			LightBuffer* light_ptr = lighting_enabled ? light_buffer.get() : nullptr;
+
 			for (int x = view.start_x; x <= view.end_x; ++x) {
 				for (int y = view.start_y; y <= view.end_y; ++y) {
 					const Tile* tile = map.getTile(x, y, z);
 					if (tile) {
-						tile_renderer->DrawTile(*sprite_batch, *primitive_renderer, tile->location, view, options, 0, tooltip_stream);
-						if (lighting_enabled) {
-							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
-						}
+						tile_renderer->DrawTile(*sprite_batch, *primitive_renderer, tile->location, view, options, 0, tooltip_stream, light_ptr, false);
 					}
 				}
 			}
