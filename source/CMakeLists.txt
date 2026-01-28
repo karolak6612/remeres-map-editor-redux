@@ -100,6 +100,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/map/map.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_allocator.h
     ${CMAKE_CURRENT_LIST_DIR}/map/operations/map_processor.h
+    ${CMAKE_CURRENT_LIST_DIR}/map/operations/tile_operations.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.h
@@ -396,6 +397,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/map/basemap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/operations/map_processor.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/map/operations/tile_operations.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.cpp

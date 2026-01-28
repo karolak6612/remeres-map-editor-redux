@@ -6,6 +6,7 @@
 #include "brushes/wall/wall_brush.h"
 #include "brushes/wall/wall_brush_items.h"
 #include "map/basemap.h"
+#include "map/operations/tile_operations.h"
 #include "game/items.h"
 #include "app/main.h" // ASSERT, etc
 
@@ -188,8 +189,8 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 			}
 		}
 	}
-	tile->cleanWalls();
+	TileOperations::cleanWalls(tile);
 	for (Item* item : items_to_add) {
-		tile->addWallItem(item);
+		TileOperations::addWallItem(tile, item);
 	}
 }

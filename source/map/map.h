@@ -171,29 +171,24 @@ public:
 
 template <typename ForeachType>
 inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles) {
-	MapIterator tileiter = map.begin();
-	MapIterator end = map.end();
 	long long done = 0;
 
-	while (tileiter != end) {
+	for (TileLocation* location : map) {
 		++done;
-		Tile* tile = (*tileiter)->get();
+		Tile* tile = location->get();
 		if (selectedTiles && !tile->isSelected()) {
-			++tileiter;
 			continue;
 		}
 
 		if (tile->ground) {
-			foreach (map, tile, tile->ground, done)
-				;
+			foreach (map, tile, tile->ground, done);
 		}
 
 		std::queue<Container*> containers;
 		for (ItemVector::iterator itemiter = tile->items.begin(); itemiter != tile->items.end(); ++itemiter) {
 			Item* item = *itemiter;
 			Container* container = dynamic_cast<Container*>(item);
-			foreach (map, tile, item, done)
-				;
+			foreach (map, tile, item, done);
 			if (container) {
 				containers.push(container);
 
@@ -203,8 +198,7 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 					for (ItemVector::iterator containeriter = v.begin(); containeriter != v.end(); ++containeriter) {
 						Item* i = *containeriter;
 						Container* c = dynamic_cast<Container*>(i);
-						foreach (map, tile, i, done)
-							;
+						foreach (map, tile, i, done);
 						if (c) {
 							containers.push(c);
 						}
@@ -213,37 +207,30 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 				} while (containers.size());
 			}
 		}
-		++tileiter;
 	}
 }
 
 template <typename ForeachType>
 inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
-	MapIterator tileiter = map.begin();
-	MapIterator end = map.end();
 	long long done = 0;
 
-	while (tileiter != end) {
-		foreach (map, (*tileiter++)->get(), ++done)
-			;
+	for (TileLocation* location : map) {
+		foreach (map, location->get(), ++done);
 	}
 }
 
 template <typename RemoveIfType>
 inline long long remove_if_TileOnMap(Map& map, RemoveIfType& remove_if) {
-	MapIterator tileiter = map.begin();
-	MapIterator end = map.end();
 	long long done = 0;
 	long long removed = 0;
 	long long total = map.getTileCount();
 
-	while (tileiter != end) {
-		Tile* tile = (*tileiter)->get();
+	for (TileLocation* location : map) {
+		Tile* tile = location->get();
 		if (remove_if(map, tile, removed, done, total)) {
 			map.setTile(tile->getPosition(), nullptr, true);
 			++removed;
 		}
-		++tileiter;
 		++done;
 	}
 
@@ -255,14 +242,10 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 	int64_t done = 0;
 	int64_t removed = 0;
 
-	MapIterator it = map.begin();
-	MapIterator end = map.end();
-
-	while (it != end) {
+	for (TileLocation* location : map) {
 		++done;
-		Tile* tile = (*it)->get();
+		Tile* tile = location->get();
 		if (selectedOnly && !tile->isSelected()) {
-			++it;
 			continue;
 		}
 
@@ -284,7 +267,6 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 				++iit;
 			}
 		}
-		++it;
 	}
 	return removed;
 }

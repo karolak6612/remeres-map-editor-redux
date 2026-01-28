@@ -7,6 +7,7 @@
 #include "brushes/wall/wall_brush.h"
 #include "brushes/wall/wall_brush_loader.h"
 #include "brushes/wall/wall_border_calculator.h"
+#include "map/operations/tile_operations.h"
 
 #include "ui/gui.h"
 #include "game/items.h"
@@ -29,7 +30,7 @@ bool WallBrush::load(pugi::xml_node node, wxArrayString& warnings) {
 }
 
 void WallBrush::undraw(BaseMap* map, Tile* tile) {
-	tile->cleanWalls(this);
+	TileOperations::cleanWalls(tile, this);
 }
 
 void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
@@ -77,7 +78,7 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		}
 	}
 
-	tile->cleanWalls(this);
+	TileOperations::cleanWalls(tile, this);
 
 	// Just find a valid item and place it, the bordering algorithm will change it to the proper shape.
 	uint16_t id = 0;
@@ -104,7 +105,7 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		}
 	}
 
-	tile->addWallItem(Item::Create(id));
+	TileOperations::addWallItem(tile, Item::Create(id));
 }
 
 void WallBrush::doWalls(BaseMap* map, Tile* tile) {
@@ -152,7 +153,7 @@ void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 	bool prefLocked = g_gui.HasDoorLocked();
 
-	tile->cleanWalls(this);
+	TileOperations::cleanWalls(tile, this);
 	while (iter != tile->items.end()) {
 		Item* item = *iter;
 		if (item->isBorder()) {
