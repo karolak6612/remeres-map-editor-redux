@@ -106,10 +106,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// Early viewport culling - skip tiles that are completely off-screen
 	int draw_x, draw_y;
-    if (in_draw_x.has_value()) {
-        draw_x = in_draw_x.value();
-        draw_y = in_draw_y.value();
-    } else if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
+	if (in_draw_x.has_value()) {
+		draw_x = in_draw_x.value();
+		draw_y = in_draw_y.value();
+	} else if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
 		return;
 	}
 
