@@ -129,7 +129,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 	return data;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, std::ostringstream& tooltip_stream) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id) {
 	if (!location) {
 		return;
 	}
@@ -155,8 +155,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	Waypoint* waypoint = editor->map.waypoints.getWaypoint(location);
 
+	// Check if this tile is under the mouse
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y);
+
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && location->getWaypointCount() > 0 && waypoint && map_z == view.floor) {
+	if (options.show_tooltips && is_hovered && location->getWaypointCount() > 0 && waypoint && map_z == view.floor) {
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
@@ -191,7 +194,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+	if (options.show_tooltips && is_hovered && map_z == view.floor && tile->ground) {
 		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
 		if (groundData.hasVisibleFields()) {
 			tooltip_drawer->addItemTooltip(groundData);
@@ -225,7 +228,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (options.show_tooltips && is_hovered && map_z == view.floor) {
 					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
 					if (itemData.hasVisibleFields()) {
 						tooltip_drawer->addItemTooltip(itemData);
