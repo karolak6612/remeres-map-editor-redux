@@ -614,8 +614,8 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 		}
 
 		// Memory buffers for the houses & spawns
-		std::shared_ptr<uint8_t> house_buffer;
-		std::shared_ptr<uint8_t> spawn_buffer;
+		std::unique_ptr<uint8_t[]> house_buffer;
+		std::unique_ptr<uint8_t[]> spawn_buffer;
 		size_t house_buffer_size = 0;
 		size_t spawn_buffer_size = 0;
 
@@ -631,7 +631,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 			if (entryName == "world/map.otbm") {
 				// Read the entire OTBM file into a memory region
 				size_t otbm_size = archive_entry_size(entry);
-				std::shared_ptr<uint8_t> otbm_buffer(new uint8_t[otbm_size], [](uint8_t* p) { delete[] p; });
+				std::unique_ptr<uint8_t[]> otbm_buffer = std::make_unique<uint8_t[]>(otbm_size);
 
 				// Read from the archive
 				size_t read_bytes = archive_read_data(a.get(), otbm_buffer.get(), otbm_size);
@@ -662,7 +662,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 				otbm_loaded = true;
 			} else if (entryName == "world/houses.xml") {
 				house_buffer_size = archive_entry_size(entry);
-				house_buffer.reset(new uint8_t[house_buffer_size]);
+				house_buffer = std::make_unique<uint8_t[]>(house_buffer_size);
 
 				// Read from the archive
 				size_t read_bytes = archive_read_data(a.get(), house_buffer.get(), house_buffer_size);
@@ -675,7 +675,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 				}
 			} else if (entryName == "world/spawns.xml") {
 				spawn_buffer_size = archive_entry_size(entry);
-				spawn_buffer.reset(new uint8_t[spawn_buffer_size]);
+				spawn_buffer = std::make_unique<uint8_t[]>(spawn_buffer_size);
 
 				// Read from the archive
 				size_t read_bytes = archive_read_data(a.get(), spawn_buffer.get(), spawn_buffer_size);
@@ -943,7 +943,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 						if (house_id) {
 							house = map.houses.getHouse(house_id);
 							if (!house) {
-								house = newd House(map);
+								house = new House(map);
 								house->setID(house_id);
 								map.houses.addHouse(house);
 							}
@@ -1032,7 +1032,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 					warning("Duplicate town id %d, discarding duplicate", town_id);
 					continue;
 				} else {
-					town = newd Town(town_id);
+					town = new Town(town_id);
 					if (!map.towns.addTown(town)) {
 						delete town;
 						continue;
@@ -1087,7 +1087,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 				wp.pos.y = y;
 				wp.pos.z = z;
 
-				map.waypoints.addWaypoint(newd Waypoint(wp));
+				map.waypoints.addWaypoint(new Waypoint(wp));
 			}
 		}
 	}
@@ -1154,7 +1154,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			continue;
 		}
 
-		Spawn* spawn = newd Spawn(radius);
+		Spawn* spawn = new Spawn(radius);
 		if (!tile) {
 			tile = map.allocator(map.createTileL(spawnPosition));
 			map.setTile(spawnPosition, tile);
@@ -1233,7 +1233,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 				type = g_creatures.addMissingCreatureType(name, isNpc);
 			}
 
-			Creature* creature = newd Creature(type);
+			Creature* creature = new Creature(type);
 			creature->setDirection(direction);
 			creature->setSpawnTime(spawntime);
 			creatureTile->creature = creature;
@@ -1241,7 +1241,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			if (creatureTile->getLocation()->getSpawnCount() == 0) {
 				// No spawn, create a newd one
 				ASSERT(creatureTile->spawn == nullptr);
-				Spawn* spawn = newd Spawn(5);
+				Spawn* spawn = new Spawn(5);
 				creatureTile->spawn = spawn;
 				map.addSpawn(creatureTile);
 			}

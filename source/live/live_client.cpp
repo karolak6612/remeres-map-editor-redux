@@ -234,7 +234,7 @@ LiveLogTab* LiveClient::createLogWindow(wxWindow* parent) {
 	MapTabbook* mtb = dynamic_cast<MapTabbook*>(parent);
 	ASSERT(mtb);
 
-	log = newd LiveLogTab(mtb, this);
+	log = new LiveLogTab(mtb, this);
 	log->Message("New Live mapping session started.");
 
 	return log;
@@ -244,7 +244,7 @@ MapTab* LiveClient::createEditorWindow() {
 	MapTabbook* mtb = dynamic_cast<MapTabbook*>(g_gui.tabbook);
 	ASSERT(mtb);
 
-	MapTab* edit = newd MapTab(mtb, editor.get());
+	MapTab* edit = new MapTab(mtb, editor.get());
 	edit->OnSwitchEditorMode(g_gui.IsSelectionMode() ? SELECTION_MODE : DRAWING_MODE);
 
 	return edit;
