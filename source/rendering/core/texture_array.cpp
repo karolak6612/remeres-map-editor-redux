@@ -19,21 +19,17 @@ bool TextureArray::initialize(int width, int height, int maxLayers) {
 	maxLayers_ = maxLayers;
 
 	// Create texture array
-	glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &textureId_);
-	if (textureId_ == 0) {
-		std::cerr << "TextureArray: Failed to create texture" << std::endl;
-		return false;
-	}
+	textureId_ = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
 
 	// Allocate immutable storage for all layers
 	// Using RGBA8 format, no mipmaps (level 1)
-	glTextureStorage3D(textureId_, 1, GL_RGBA8, width_, height_, maxLayers_);
+	glTextureStorage3D(textureId_->GetID(), 1, GL_RGBA8, width_, height_, maxLayers_);
 
 	// Set texture parameters
-	glTextureParameteri(textureId_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(textureId_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTextureParameteri(textureId_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteri(textureId_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(textureId_->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(textureId_->GetID(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureParameteri(textureId_->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(textureId_->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	allocatedLayers_ = 0;
 	initialized_ = true;
@@ -59,7 +55,7 @@ bool TextureArray::uploadLayer(int layer, const uint8_t* rgbaData) {
 	}
 
 	// Upload to specific layer (z offset = layer, depth = 1 layer)
-	glTextureSubImage3D(textureId_, 0, 0, 0, layer, width_, height_, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
+	glTextureSubImage3D(textureId_->GetID(), 0, 0, 0, layer, width_, height_, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
 
 	return true;
 }
@@ -77,15 +73,12 @@ int TextureArray::allocateLayer() {
 
 void TextureArray::bind(int unit) const {
 	if (initialized_) {
-		glBindTextureUnit(unit, textureId_);
+		glBindTextureUnit(unit, textureId_->GetID());
 	}
 }
 
 void TextureArray::cleanup() {
-	if (textureId_) {
-		glDeleteTextures(1, &textureId_);
-		textureId_ = 0;
-	}
+	textureId_.reset();
 	initialized_ = false;
 	allocatedLayers_ = 0;
 }

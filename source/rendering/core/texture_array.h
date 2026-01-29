@@ -2,7 +2,9 @@
 #define RME_RENDERING_CORE_TEXTURE_ARRAY_H_
 
 #include "app/main.h"
+#include "rendering/core/gl_resources.h"
 #include <vector>
+#include <memory>
 
 /**
  * OpenGL Texture Array (GL_TEXTURE_2D_ARRAY) for sprite atlas.
@@ -55,7 +57,7 @@ public:
 	 * Get the OpenGL texture ID.
 	 */
 	GLuint getTextureId() const {
-		return textureId_;
+		return textureId_ ? textureId_->GetID() : 0;
 	}
 
 	/**
@@ -87,7 +89,7 @@ public:
 	void cleanup();
 
 private:
-	GLuint textureId_ = 0;
+	std::unique_ptr<GLTextureResource> textureId_;
 	int width_ = 0;
 	int height_ = 0;
 	int maxLayers_ = 0;
