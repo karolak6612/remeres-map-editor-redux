@@ -28,18 +28,7 @@
 #include "ui/properties/teleport_service.h"
 
 #include <wx/grid.h>
-
-BEGIN_EVENT_TABLE(PropertiesWindow, wxDialog)
-EVT_BUTTON(wxID_OK, PropertiesWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, PropertiesWindow::OnClickCancel)
-
-EVT_BUTTON(ITEM_PROPERTIES_ADD_ATTRIBUTE, PropertiesWindow::OnClickAddAttribute)
-EVT_BUTTON(ITEM_PROPERTIES_REMOVE_ATTRIBUTE, PropertiesWindow::OnClickRemoveAttribute)
-
-EVT_NOTEBOOK_PAGE_CHANGED(wxID_ANY, PropertiesWindow::OnNotebookPageChanged)
-
-EVT_GRID_CELL_CHANGED(PropertiesWindow::OnGridValueChanged)
-END_EVENT_TABLE()
+#include <wx/wrapsizer.h>
 
 PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(parent, "Item Properties", map, tile_parent, item, pos),
@@ -49,11 +38,22 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	tier_field(nullptr),
 	currentPanel(nullptr) {
 	ASSERT(edit_item);
+
+	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickCancel, this, wxID_CANCEL);
+
+	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickAddAttribute, this, ITEM_PROPERTIES_ADD_ATTRIBUTE);
+	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickRemoveAttribute, this, ITEM_PROPERTIES_REMOVE_ATTRIBUTE);
+
+	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
+
+	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+
 	createUI();
 }
 
 void PropertiesWindow::createUI() {
-	notebook = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxSize(600, 300));
+	notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxSize(600, 300));
 
 	notebook->AddPage(createGeneralPanel(notebook), "Simple", true);
 	if (dynamic_cast<Container*>(edit_item)) {
@@ -61,12 +61,12 @@ void PropertiesWindow::createUI() {
 	}
 	notebook->AddPage(createAttributesPanel(notebook), "Advanced");
 
-	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
+	wxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 	topSizer->Add(notebook, wxSizerFlags(1).DoubleBorder());
 
-	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
-	optSizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(0).Center());
-	optSizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(0).Center());
+	wxSizer* optSizer = new wxBoxSizer(wxHORIZONTAL);
+	optSizer->Add(new wxButton(this, wxID_OK, "OK"), wxSizerFlags(0).Center());
+	optSizer->Add(new wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
 
 	SetSizerAndFit(topSizer);
@@ -88,8 +88,8 @@ void PropertiesWindow::Update() {
 }
 
 wxWindow* PropertiesWindow::createGeneralPanel(wxWindow* parent) {
-	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_GENERAL_TAB);
-	wxFlexGridSizer* gridsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxPanel* panel = new wxPanel(parent, ITEM_PROPERTIES_GENERAL_TAB);
+	wxFlexGridSizer* gridsizer = new wxFlexGridSizer(2, 10, 10);
 	gridsizer->AddGrowableCol(1);
 
 	createGeneralFields(gridsizer, panel);
@@ -100,10 +100,10 @@ wxWindow* PropertiesWindow::createGeneralPanel(wxWindow* parent) {
 }
 
 void PropertiesWindow::createGeneralFields(wxFlexGridSizer* gridsizer, wxWindow* panel) {
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "ID " + i2ws(edit_item->getID())));
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "\"" + wxstr(edit_item->getName()) + "\""));
+	gridsizer->Add(new wxStaticText(panel, wxID_ANY, "ID " + i2ws(edit_item->getID())));
+	gridsizer->Add(new wxStaticText(panel, wxID_ANY, "\"" + wxstr(edit_item->getName()) + "\""));
 
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, (edit_item->isCharged() ? "Charges" : "Count")));
+	gridsizer->Add(new wxStaticText(panel, wxID_ANY, (edit_item->isCharged() ? "Charges" : "Count")));
 	int max_count = 100;
 	if (edit_item->isClientCharged()) {
 		max_count = 250;
@@ -111,54 +111,54 @@ void PropertiesWindow::createGeneralFields(wxFlexGridSizer* gridsizer, wxWindow*
 	if (edit_item->isExtraCharged()) {
 		max_count = 65500;
 	}
-	count_field = newd wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getCount()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, max_count, edit_item->getCount());
+	count_field = new wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getCount()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, max_count, edit_item->getCount());
 	if (!edit_item->isStackable() && !edit_item->isCharged()) {
 		count_field->Enable(false);
 	}
 	gridsizer->Add(count_field, wxSizerFlags(1).Expand());
 
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "Action ID"));
-	action_id_field = newd wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
+	gridsizer->Add(new wxStaticText(panel, wxID_ANY, "Action ID"));
+	action_id_field = new wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
 	gridsizer->Add(action_id_field, wxSizerFlags(1).Expand());
 
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "Unique ID"));
-	unique_id_field = newd wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, wxSize(-1, 20), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
+	gridsizer->Add(new wxStaticText(panel, wxID_ANY, "Unique ID"));
+	unique_id_field = new wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, wxSize(-1, 20), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
 	gridsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 }
 
 void PropertiesWindow::createClassificationFields(wxFlexGridSizer* gridsizer, wxWindow* panel) {
 	if (g_items.MajorVersion >= 3 && g_items.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
-		gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "Classification"));
-		gridsizer->Add(newd wxStaticText(panel, wxID_ANY, i2ws(edit_item->getClassification())));
+		gridsizer->Add(new wxStaticText(panel, wxID_ANY, "Classification"));
+		gridsizer->Add(new wxStaticText(panel, wxID_ANY, i2ws(edit_item->getClassification())));
 
-		gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "Tier"));
-		tier_field = newd wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getTier()), wxDefaultPosition, wxSize(-1, 20), wxSP_ARROW_KEYS, 0, 0xFF, edit_item->getTier());
+		gridsizer->Add(new wxStaticText(panel, wxID_ANY, "Tier"));
+		tier_field = new wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getTier()), wxDefaultPosition, wxSize(-1, 20), wxSP_ARROW_KEYS, 0, 0xFF, edit_item->getTier());
 		gridsizer->Add(tier_field, wxSizerFlags(1).Expand());
 	}
 }
 
 wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 	Container* container = (Container*)edit_item;
-	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
-	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
+	wxPanel* panel = new wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
+	wxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
-	wxSizer* gridSizer = newd wxGridSizer(6, 5, 5);
+	wxSizer* gridSizer = new wxWrapSizer(wxHORIZONTAL);
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
 	for (uint32_t i = 0; i < container->getVolume(); ++i) {
 		Item* item = container->getItem(i);
-		ContainerItemButton* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
+		ContainerItemButton* containerItemButton = new ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
 
 		container_items.push_back(containerItemButton);
-		gridSizer->Add(containerItemButton, wxSizerFlags(0));
+		gridSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));
 	}
 
 	topSizer->Add(gridSizer, wxSizerFlags(1).Expand());
 
 	/*
-	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
-	optSizer->Add(newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Item"), wxSizerFlags(0).Center());
-	// optSizer->Add(newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute"), wxSizerFlags(0).Center());
+	wxSizer* optSizer = new wxBoxSizer(wxHORIZONTAL);
+	optSizer->Add(new wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Item"), wxSizerFlags(0).Center());
+	// optSizer->Add(new wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute"), wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
 	*/
 
@@ -167,10 +167,10 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 }
 
 wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
-	wxPanel* panel = newd wxPanel(parent, wxID_ANY);
-	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
+	wxPanel* panel = new wxPanel(parent, wxID_ANY);
+	wxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
-	attributesGrid = newd wxGrid(panel, ITEM_PROPERTIES_ADVANCED_TAB, wxDefaultPosition, wxSize(-1, 160));
+	attributesGrid = new wxGrid(panel, ITEM_PROPERTIES_ADVANCED_TAB, wxDefaultPosition, wxSize(-1, 160));
 	topSizer->Add(attributesGrid, wxSizerFlags(1).Expand());
 
 	wxFont time_font(*wxSWISS_FONT);
@@ -199,9 +199,9 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 		AttributeService::setGridValue(attributesGrid, i, aiter->first, aiter->second);
 	}
 
-	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
-	optSizer->Add(newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute"), wxSizerFlags(0).Center());
-	optSizer->Add(newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute"), wxSizerFlags(0).Center());
+	wxSizer* optSizer = new wxBoxSizer(wxHORIZONTAL);
+	optSizer->Add(new wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute"), wxSizerFlags(0).Center());
+	optSizer->Add(new wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute"), wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
 
 	panel->SetSizer(topSizer);

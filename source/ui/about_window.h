@@ -36,8 +36,6 @@ public:
 private:
 	wxSizer* topsizer;
 	GamePanel* game_panel;
-
-	DECLARE_EVENT_TABLE()
 };
 
 #endif

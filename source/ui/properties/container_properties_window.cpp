@@ -5,6 +5,8 @@
 #include "app/main.h"
 #include "ui/properties/container_properties_window.h"
 
+#include <wx/wrapsizer.h>
+
 #include "game/complexitem.h"
 #include "ui/dialog_util.h"
 #include "ui/properties/property_validator.h"
@@ -30,67 +32,49 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 	Bind(wxEVT_MENU, &ContainerPropertiesWindow::OnEditItem, this, CONTAINER_POPUP_MENU_EDIT);
 	Bind(wxEVT_MENU, &ContainerPropertiesWindow::OnRemoveItem, this, CONTAINER_POPUP_MENU_REMOVE);
 
-	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Container Properties");
+	wxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
+	wxSizer* boxsizer = new wxStaticBoxSizer(wxVERTICAL, this, "Container Properties");
 
-	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* subsizer = new wxFlexGridSizer(2, 10, 10);
 	subsizer->AddGrowableCol(1);
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "ID " + i2ws(item->getID())));
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
+	subsizer->Add(new wxStaticText(this, wxID_ANY, "ID " + i2ws(item->getID())));
+	subsizer->Add(new wxStaticText(this, wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Action ID"));
-	action_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
+	subsizer->Add(new wxStaticText(this, wxID_ANY, "Action ID"));
+	action_id_field = new wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
 	subsizer->Add(action_id_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Unique ID"));
-	unique_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, wxSize(-1, 20), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
+	subsizer->Add(new wxStaticText(this, wxID_ANY, "Unique ID"));
+	unique_id_field = new wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, wxSize(-1, 20), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
 	subsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 
 	boxsizer->Add(subsizer, wxSizerFlags(0).Expand());
 
 	// Now we add the subitems!
-	wxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
+	wxSizer* contents_sizer = new wxStaticBoxSizer(wxVERTICAL, this, "Contents");
+	wxSizer* wrap_sizer = new wxWrapSizer(wxHORIZONTAL);
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
-	wxSizer* horizontal_sizer = nullptr;
-	int32_t maxColumns;
-	if (use_large_sprites) {
-		maxColumns = 6;
-	} else {
-		maxColumns = 12;
-	}
 
 	for (uint32_t index = 0; index < container->getVolume(); ++index) {
-		if (!horizontal_sizer) {
-			horizontal_sizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
-
 		Item* sub_item = container->getItem(index);
-		ContainerItemButton* containerItemButton = newd ContainerItemButton(this, use_large_sprites, index, map, sub_item);
+		ContainerItemButton* containerItemButton = new ContainerItemButton(this, use_large_sprites, index, map, sub_item);
 		containerItemButton->Bind(wxEVT_BUTTON, &ContainerPropertiesWindow::OnContainerItemClick, this);
 		containerItemButton->Bind(wxEVT_RIGHT_UP, &ContainerPropertiesWindow::OnContainerItemRightClick, this);
 
 		container_items.push_back(containerItemButton);
-		horizontal_sizer->Add(containerItemButton);
-
-		if (((index + 1) % maxColumns) == 0) {
-			contents_sizer->Add(horizontal_sizer);
-			horizontal_sizer = nullptr;
-		}
+		wrap_sizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));
 	}
 
-	if (horizontal_sizer != nullptr) {
-		contents_sizer->Add(horizontal_sizer);
-	}
-
+	contents_sizer->Add(wrap_sizer, wxSizerFlags(1).Expand());
 	boxsizer->Add(contents_sizer, wxSizerFlags(2).Expand());
 
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxALL, 20));
 
-	wxSizer* std_sizer = newd wxBoxSizer(wxHORIZONTAL);
-	std_sizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
-	std_sizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxSizer* std_sizer = new wxBoxSizer(wxHORIZONTAL);
+	std_sizer->Add(new wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	std_sizer->Add(new wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(std_sizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
 	SetSizerAndFit(topsizer);
@@ -211,9 +195,9 @@ void ContainerPropertiesWindow::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 
 	wxDialog* d;
 	if (edit_map->getVersion().otbm >= MAP_OTBM_4) {
-		d = newd PropertiesWindow(this, edit_map, nullptr, sub_item, newDialogAt);
+		d = new PropertiesWindow(this, edit_map, nullptr, sub_item, newDialogAt);
 	} else {
-		d = newd OldPropertiesWindow(this, edit_map, nullptr, sub_item, newDialogAt);
+		d = new OldPropertiesWindow(this, edit_map, nullptr, sub_item, newDialogAt);
 	}
 
 	d->ShowModal();
