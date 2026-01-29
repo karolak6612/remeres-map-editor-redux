@@ -12,27 +12,32 @@ const char* minimap_vert = R"(
 #version 450 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec4 aInstanceRect; // x, y, w, h
+layout (location = 3) in float aInstanceLayer;
 
 out vec2 TexCoord;
-uniform mat4 uMVP;
+out float Layer;
+uniform mat4 uProjection;
 
 void main() {
-    gl_Position = uMVP * vec4(aPos, 0.0, 1.0);
+    vec2 pos = aInstanceRect.xy + aPos * aInstanceRect.zw;
+    gl_Position = uProjection * vec4(pos, 0.0, 1.0);
     TexCoord = aTexCoord;
+    Layer = aInstanceLayer;
 }
 )";
 
 const char* minimap_frag = R"(
 #version 450 core
 in vec2 TexCoord;
+in float Layer;
 out vec4 FragColor;
 
 uniform usampler2DArray uMinimapTexture; // R8UI Array
 uniform sampler1D uPaletteTexture;  // RGBA
-uniform float uLayer;               // Layer index for current tile
 
 void main() {
-    uint colorIndex = texture(uMinimapTexture, vec3(TexCoord, uLayer)).r;
+    uint colorIndex = texture(uMinimapTexture, vec3(TexCoord, Layer)).r;
     if (colorIndex == 0u) {
         discard; // Transparent
     }
@@ -77,6 +82,12 @@ bool MinimapRenderer::initialize() {
 	// Initial PBO size for small chunk
 	pbo_->initialize(1024 * 1024);
 
+	// Initialize RingBuffer for instancing (max 2048 tiles per batch seems plenty for minimap)
+	if (!ring_buffer_.initialize(sizeof(MinimapInstance), 2048)) {
+		spdlog::error("MinimapRenderer: Failed to initialize RingBuffer");
+		return false;
+	}
+
 	createPaletteTexture();
 
 	// Create VAO/VBO for fullscreen quad
@@ -94,13 +105,33 @@ bool MinimapRenderer::initialize() {
 	glNamedBufferStorage(vbo_, sizeof(quad_vertices), quad_vertices, 0);
 
 	glBindVertexArray(vao_);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_);
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	// Binding 0: Quad geometry (static)
+	glVertexArrayVertexBuffer(vao_, 0, vbo_, 0, 4 * sizeof(float));
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	// Loc 0: Pos
+	glEnableVertexArrayAttrib(vao_, 0);
+	glVertexArrayAttribFormat(vao_, 0, 2, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao_, 0, 0);
+
+	// Loc 1: Tex
+	glEnableVertexArrayAttrib(vao_, 1);
+	glVertexArrayAttribFormat(vao_, 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
+	glVertexArrayAttribBinding(vao_, 1, 0);
+
+	// Binding 1: Instance Data (dynamic)
+	glVertexArrayVertexBuffer(vao_, 1, ring_buffer_.getBufferId(), 0, sizeof(MinimapInstance));
+	glVertexArrayBindingDivisor(vao_, 1, 1);
+
+	// Loc 2: Rect (x, y, w, h)
+	glEnableVertexArrayAttrib(vao_, 2);
+	glVertexArrayAttribFormat(vao_, 2, 4, GL_FLOAT, GL_FALSE, offsetof(MinimapInstance, x));
+	glVertexArrayAttribBinding(vao_, 2, 1);
+
+	// Loc 3: Layer
+	glEnableVertexArrayAttrib(vao_, 3);
+	glVertexArrayAttribFormat(vao_, 3, 1, GL_FLOAT, GL_FALSE, offsetof(MinimapInstance, layer));
+	glVertexArrayAttribBinding(vao_, 3, 1);
 
 	glBindVertexArray(0);
 
@@ -259,6 +290,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	shader_->Use();
+	shader_->SetMat4("uProjection", projection);
 
 	// Bind textures
 	glBindTextureUnit(0, texture_id_);
@@ -285,8 +317,20 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	end_col = std::min(cols_ - 1, end_col);
 	end_row = std::min(rows_ - 1, end_row);
 
+	// Collect instances
+	size_t count = 0;
+	size_t max_instances = ring_buffer_.getMaxElements();
+
+	MinimapInstance* instances = (MinimapInstance*)ring_buffer_.waitAndMap(max_instances);
+	if (!instances) {
+		glBindVertexArray(0);
+		return;
+	}
+
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
+			if (count >= max_instances) break;
+
 			int tile_x = c * TILE_SIZE;
 			int tile_y = r * TILE_SIZE;
 
@@ -296,20 +340,27 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 			float screen_tile_w = TILE_SIZE * scale_x;
 			float screen_tile_h = TILE_SIZE * scale_y;
 
-			// Model matrix for this tile
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(screen_tile_x, screen_tile_y, 0.0f));
-			model = glm::scale(model, glm::vec3(screen_tile_w, screen_tile_h, 1.0f));
-
-			shader_->SetMat4("uMVP", projection * model);
-
 			int layer = r * cols_ + c;
-			shader_->SetFloat("uLayer", (float)layer);
 
-			// spdlog::info("Minimap Rendering Tile: {},{} (Layer {}) at x:{}, y:{}, w:{}, h:{}", c, r, layer, screen_tile_x, screen_tile_y, screen_tile_w, screen_tile_h);
+			instances[count].x = screen_tile_x;
+			instances[count].y = screen_tile_y;
+			instances[count].w = screen_tile_w;
+			instances[count].h = screen_tile_h;
+			instances[count].layer = (float)layer;
 
-			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			count++;
 		}
+	}
+
+	ring_buffer_.finishWrite();
+
+	if (count > 0) {
+		// Update binding offset
+		glVertexArrayVertexBuffer(vao_, 1, ring_buffer_.getBufferId(), ring_buffer_.getCurrentSectionOffset(), sizeof(MinimapInstance));
+
+		glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, (GLsizei)count);
+
+		ring_buffer_.signalFinished();
 	}
 
 	glBindVertexArray(0);

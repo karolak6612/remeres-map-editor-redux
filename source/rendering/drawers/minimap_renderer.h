@@ -4,9 +4,15 @@
 #include "app/main.h"
 #include "rendering/core/pixel_buffer_object.h"
 #include "rendering/core/shader_program.h"
+#include "rendering/core/ring_buffer.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
+
+struct MinimapInstance {
+	float x, y, w, h;
+	float layer;
+};
 
 class Map;
 
@@ -77,8 +83,9 @@ private:
 	std::unique_ptr<PixelBufferObject> pbo_;
 
 	// Temporary staging buffer for PBO uploads
-	// Temporary staging buffer for PBO uploads
 	std::vector<uint8_t> stage_buffer_;
+
+	RingBuffer ring_buffer_;
 
 	// Tiled configuration
 	static constexpr int TILE_SIZE = 2048;
