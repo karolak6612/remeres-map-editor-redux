@@ -71,8 +71,6 @@ public:
 	virtual wxCoord OnMeasureItem(size_t n) const;
 
 	void OnKey(wxKeyEvent& event);
-
-	DECLARE_EVENT_TABLE();
 };
 
 class BrushIconBox : public wxScrolledWindow, public BrushBoxInterface {
@@ -105,8 +103,6 @@ protected:
 protected:
 	std::vector<BrushButton*> brush_buttons;
 	RenderSize icon_size;
-
-	DECLARE_EVENT_TABLE();
 };
 
 // A panel capapable of displaying a collection of brushes
@@ -153,8 +149,6 @@ protected:
 	BrushBoxInterface* brushbox;
 	bool loaded;
 	BrushListType list_type;
-
-	DECLARE_EVENT_TABLE();
 };
 
 class BrushPalettePanel : public PalettePanel {
@@ -197,8 +191,6 @@ protected:
 	wxChoicebook* choicebook;
 	BrushSizePanel* size_panel;
 	std::map<wxWindow*, Brush*> remembered_brushes;
-
-	DECLARE_EVENT_TABLE();
 };
 
 #endif

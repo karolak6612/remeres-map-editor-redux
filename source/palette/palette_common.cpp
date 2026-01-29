@@ -33,15 +33,11 @@
 // ============================================================================
 // Palette Panel
 
-BEGIN_EVENT_TABLE(PalettePanel, wxPanel)
-EVT_TIMER(PALETTE_DELAYED_REFRESH_TIMER, WaypointPalettePanel::OnRefreshTimer)
-END_EVENT_TABLE()
-
 PalettePanel::PalettePanel(wxWindow* parent, wxWindowID id, long style) :
 	wxPanel(parent, id, wxDefaultPosition, wxDefaultSize, style),
 	refresh_timer(this, PALETTE_DELAYED_REFRESH_TIMER),
 	last_brush_size(0) {
-	////
+	Bind(wxEVT_TIMER, &PalettePanel::OnRefreshTimer, this, PALETTE_DELAYED_REFRESH_TIMER);
 }
 
 PalettePanel::~PalettePanel() {
@@ -175,19 +171,6 @@ void PalettePanel::OnRefreshTimer(wxTimerEvent&) {
 // ============================================================================
 // Size Page
 
-BEGIN_EVENT_TABLE(BrushSizePanel, wxPanel)
-EVT_TOGGLEBUTTON(PALETTE_BRUSHSHAPE_SQUARE, BrushSizePanel::OnClickSquareBrush)
-EVT_TOGGLEBUTTON(PALETTE_BRUSHSHAPE_CIRCLE, BrushSizePanel::OnClickCircleBrush)
-
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_0, BrushSizePanel::OnClickBrushSize0)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_1, BrushSizePanel::OnClickBrushSize1)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_2, BrushSizePanel::OnClickBrushSize2)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_4, BrushSizePanel::OnClickBrushSize4)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_6, BrushSizePanel::OnClickBrushSize6)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_8, BrushSizePanel::OnClickBrushSize8)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_BRUSHSIZE_11, BrushSizePanel::OnClickBrushSize11)
-END_EVENT_TABLE()
-
 BrushSizePanel::BrushSizePanel(wxWindow* parent) :
 	PalettePanel(parent, wxID_ANY),
 	loaded(false),
@@ -201,7 +184,15 @@ BrushSizePanel::BrushSizePanel(wxWindow* parent) :
 	brushsize6Button(nullptr),
 	brushsize8Button(nullptr),
 	brushsize11Button(nullptr) {
-	////
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickSquareBrush, this, PALETTE_BRUSHSHAPE_SQUARE);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickCircleBrush, this, PALETTE_BRUSHSHAPE_CIRCLE);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize0, this, PALETTE_TERRAIN_BRUSHSIZE_0);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize1, this, PALETTE_TERRAIN_BRUSHSIZE_1);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize2, this, PALETTE_TERRAIN_BRUSHSIZE_2);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize4, this, PALETTE_TERRAIN_BRUSHSIZE_4);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize6, this, PALETTE_TERRAIN_BRUSHSIZE_6);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize8, this, PALETTE_TERRAIN_BRUSHSIZE_8);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushSizePanel::OnClickBrushSize11, this, PALETTE_TERRAIN_BRUSHSIZE_11);
 }
 
 void BrushSizePanel::InvalidateContents() {
@@ -389,27 +380,6 @@ void BrushSizePanel::OnClickBrushSize(int which) {
 // ============================================================================
 // Tool Brush Panel
 
-BEGIN_EVENT_TABLE(BrushToolPanel, PalettePanel)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, BrushToolPanel::OnClickGravelButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_ERASER, BrushToolPanel::OnClickEraserButton)
-
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NORMAL_DOOR, BrushToolPanel::OnClickNormalDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_LOCKED_DOOR, BrushToolPanel::OnClickLockedDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_MAGIC_DOOR, BrushToolPanel::OnClickMagicDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_QUEST_DOOR, BrushToolPanel::OnClickQuestDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_HATCH_DOOR, BrushToolPanel::OnClickHatchDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_WINDOW_DOOR, BrushToolPanel::OnClickWindowDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NORMAL_ALT_DOOR, BrushToolPanel::OnClickNormalAltDoorButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_ARCHWAY_DOOR, BrushToolPanel::OnClickArchwayDoorButton)
-
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_PZ_TOOL, BrushToolPanel::OnClickPZBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NOPVP_TOOL, BrushToolPanel::OnClickNOPVPBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_NOLOGOUT_TOOL, BrushToolPanel::OnClickNoLogoutBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_TERRAIN_PVPZONE_TOOL, BrushToolPanel::OnClickPVPZoneBrushButton)
-
-EVT_CHECKBOX(PALETTE_TERRAIN_LOCK_DOOR, BrushToolPanel::OnClickLockDoorCheckbox)
-END_EVENT_TABLE()
-
 BrushToolPanel::BrushToolPanel(wxWindow* parent) :
 	PalettePanel(parent, wxID_ANY),
 	loaded(false),
@@ -428,7 +398,21 @@ BrushToolPanel::BrushToolPanel(wxWindow* parent) :
 	nopvpBrushButton(nullptr),
 	nologBrushButton(nullptr),
 	pvpzoneBrushButton(nullptr) {
-	////
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickGravelButton, this, PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickEraserButton, this, PALETTE_TERRAIN_ERASER);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNormalDoorButton, this, PALETTE_TERRAIN_NORMAL_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickLockedDoorButton, this, PALETTE_TERRAIN_LOCKED_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickMagicDoorButton, this, PALETTE_TERRAIN_MAGIC_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickQuestDoorButton, this, PALETTE_TERRAIN_QUEST_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickHatchDoorButton, this, PALETTE_TERRAIN_HATCH_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickWindowDoorButton, this, PALETTE_TERRAIN_WINDOW_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNormalAltDoorButton, this, PALETTE_TERRAIN_NORMAL_ALT_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickArchwayDoorButton, this, PALETTE_TERRAIN_ARCHWAY_DOOR);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickPZBrushButton, this, PALETTE_TERRAIN_PZ_TOOL);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNOPVPBrushButton, this, PALETTE_TERRAIN_NOPVP_TOOL);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickNoLogoutBrushButton, this, PALETTE_TERRAIN_NOLOGOUT_TOOL);
+	Bind(wxEVT_TOGGLEBUTTON, &BrushToolPanel::OnClickPVPZoneBrushButton, this, PALETTE_TERRAIN_PVPZONE_TOOL);
+	Bind(wxEVT_CHECKBOX, &BrushToolPanel::OnClickLockDoorCheckbox, this, PALETTE_TERRAIN_LOCK_DOOR);
 }
 
 BrushToolPanel::~BrushToolPanel() {
@@ -845,10 +829,6 @@ void BrushToolPanel::OnClickLockDoorCheckbox(wxCommandEvent& event) {
 // ============================================================================
 // Brush Button
 
-BEGIN_EVENT_TABLE(BrushButton, ItemToggleButton)
-EVT_KEY_DOWN(BrushButton::OnKey)
-END_EVENT_TABLE()
-
 BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_t id) :
 	ItemToggleButton(parent, sz, uint16_t(0), id),
 	brush(_brush) {
@@ -856,6 +836,8 @@ BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_
 	ASSERT(brush);
 	SetSprite(brush->getLookID());
 	SetToolTip(wxstr(brush->getName()));
+
+	Bind(wxEVT_KEY_DOWN, &BrushButton::OnKey, this);
 }
 
 BrushButton::~BrushButton() {
@@ -869,25 +851,21 @@ void BrushButton::OnKey(wxKeyEvent& event) {
 // ============================================================================
 // Brush Thickness Panel
 
-BEGIN_EVENT_TABLE(BrushThicknessPanel, PalettePanel)
-#ifdef __WINDOWS__
-// This only works in wxmsw
-EVT_COMMAND_SCROLL_CHANGED(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-#else
-EVT_COMMAND_SCROLL_TOP(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_BOTTOM(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_LINEUP(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_LINEDOWN(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_PAGEUP(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_PAGEDOWN(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-EVT_COMMAND_SCROLL_THUMBRELEASE(PALETTE_DOODAD_SLIDER, BrushThicknessPanel::OnScroll)
-#endif
-
-EVT_CHECKBOX(PALETTE_DOODAD_USE_THICKNESS, BrushThicknessPanel::OnClickCustomThickness)
-END_EVENT_TABLE()
-
 BrushThicknessPanel::BrushThicknessPanel(wxWindow* parent) :
 	PalettePanel(parent, wxID_ANY) {
+#ifdef __WINDOWS__
+	Bind(wxEVT_SCROLL_CHANGED, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+#else
+	Bind(wxEVT_SCROLL_TOP, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+	Bind(wxEVT_SCROLL_BOTTOM, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+	Bind(wxEVT_SCROLL_LINEUP, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+	Bind(wxEVT_SCROLL_LINEDOWN, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+	Bind(wxEVT_SCROLL_PAGEUP, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+	Bind(wxEVT_SCROLL_PAGEDOWN, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+	Bind(wxEVT_SCROLL_THUMBRELEASE, &BrushThicknessPanel::OnScroll, this, PALETTE_DOODAD_SLIDER);
+#endif
+	Bind(wxEVT_CHECKBOX, &BrushThicknessPanel::OnClickCustomThickness, this, PALETTE_DOODAD_USE_THICKNESS);
+
 	wxSizer* thickness_sizer = newd wxBoxSizer(wxVERTICAL);
 
 	wxSizer* thickness_sub_sizer = newd wxBoxSizer(wxHORIZONTAL);

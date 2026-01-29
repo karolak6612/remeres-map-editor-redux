@@ -28,18 +28,7 @@
 #include "ui/properties/teleport_service.h"
 
 #include <wx/grid.h>
-
-BEGIN_EVENT_TABLE(PropertiesWindow, wxDialog)
-EVT_BUTTON(wxID_OK, PropertiesWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, PropertiesWindow::OnClickCancel)
-
-EVT_BUTTON(ITEM_PROPERTIES_ADD_ATTRIBUTE, PropertiesWindow::OnClickAddAttribute)
-EVT_BUTTON(ITEM_PROPERTIES_REMOVE_ATTRIBUTE, PropertiesWindow::OnClickRemoveAttribute)
-
-EVT_NOTEBOOK_PAGE_CHANGED(wxID_ANY, PropertiesWindow::OnNotebookPageChanged)
-
-EVT_GRID_CELL_CHANGED(PropertiesWindow::OnGridValueChanged)
-END_EVENT_TABLE()
+#include <wx/wrapsizer.h>
 
 PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(parent, "Item Properties", map, tile_parent, item, pos),
@@ -61,13 +50,23 @@ void PropertiesWindow::createUI() {
 	}
 	notebook->AddPage(createAttributesPanel(notebook), "Advanced");
 
+	notebook->Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this);
+
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 	topSizer->Add(notebook, wxSizerFlags(1).DoubleBorder());
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
-	optSizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(0).Center());
-	optSizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(0).Center());
+	wxButton* okButton = newd wxButton(this, wxID_OK, "OK");
+	okButton->SetToolTip("Save changes and close");
+	optSizer->Add(okButton, wxSizerFlags(0).Center());
+
+	wxButton* cancelButton = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelButton->SetToolTip("Discard changes and close");
+	optSizer->Add(cancelButton, wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
+
+	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickCancel, this, wxID_CANCEL);
 
 	SetSizerAndFit(topSizer);
 	Centre(wxBOTH);
@@ -142,7 +141,7 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 
-	wxSizer* gridSizer = newd wxGridSizer(6, 5, 5);
+	wxSizer* gridSizer = new wxWrapSizer(wxHORIZONTAL);
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
 	for (uint32_t i = 0; i < container->getVolume(); ++i) {
@@ -150,7 +149,7 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 		ContainerItemButton* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
 
 		container_items.push_back(containerItemButton);
-		gridSizer->Add(containerItemButton, wxSizerFlags(0));
+		gridSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));
 	}
 
 	topSizer->Add(gridSizer, wxSizerFlags(1).Expand());
@@ -200,9 +199,18 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 	}
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
-	optSizer->Add(newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute"), wxSizerFlags(0).Center());
-	optSizer->Add(newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute"), wxSizerFlags(0).Center());
+	wxButton* addButton = newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute");
+	addButton->SetToolTip("Add a new custom attribute");
+	optSizer->Add(addButton, wxSizerFlags(0).Center());
+
+	wxButton* removeButton = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
+	removeButton->SetToolTip("Remove selected attribute");
+	optSizer->Add(removeButton, wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
+
+	attributesGrid->Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	addButton->Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickAddAttribute, this);
+	removeButton->Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickRemoveAttribute, this);
 
 	panel->SetSizer(topSizer);
 
