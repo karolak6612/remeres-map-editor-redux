@@ -18,6 +18,8 @@
 #ifndef RME_SPAWN_H_
 #define RME_SPAWN_H_
 
+#include <vector>
+
 class Tile;
 
 class Spawn {
@@ -66,7 +68,7 @@ protected:
 };
 
 using SpawnPositionList = std::set<Position>;
-using SpawnList = std::list<Spawn*>;
+using SpawnList = std::vector<Spawn*>;
 
 class Spawns {
 public:

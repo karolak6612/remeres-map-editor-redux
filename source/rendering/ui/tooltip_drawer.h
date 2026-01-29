@@ -100,8 +100,8 @@ struct TooltipData {
 		pos(p), category(TooltipCategory::WAYPOINT), waypointName(wpName) { }
 
 	// Constructor for item
-	TooltipData(Position p, uint16_t id, const std::string& name) :
-		pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(name) { }
+	TooltipData(Position p, uint16_t id, std::string name) :
+		pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(std::move(name)) { }
 
 	// Determine category based on fields
 	void updateCategory() {
@@ -130,7 +130,7 @@ public:
 	~TooltipDrawer();
 
 	// Add a structured tooltip for an item
-	void addItemTooltip(const TooltipData& data);
+	void addItemTooltip(TooltipData data);
 
 	// Add a waypoint tooltip
 	void addWaypointTooltip(Position pos, const std::string& name);

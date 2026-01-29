@@ -474,6 +474,7 @@ SpawnList Map::getSpawnList(Tile* where) {
 	TileLocation* tile_loc = where->getLocation();
 	if (tile_loc) {
 		if (tile_loc->getSpawnCount() > 0) {
+			list.reserve(tile_loc->getSpawnCount());
 			uint32_t found = 0;
 			if (where->spawn) {
 				++found;
