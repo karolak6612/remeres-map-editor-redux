@@ -31,6 +31,7 @@
 #include "brushes/wall/wall_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "brushes/managers/brush_manager.h"
+#include "brushes/brush_factory.h"
 
 #include "brushes/flag/flag_brush.h"
 #include "brushes/door/door_brush.h"
@@ -56,6 +57,21 @@
 #include <memory>
 
 Brushes g_brushes;
+
+namespace {
+	struct CoreBrushRegistration {
+		CoreBrushRegistration() {
+			auto& factory = BrushFactory::getInstance();
+			factory.registerBrush("border", [] { return newd GroundBrush(); });
+			factory.registerBrush("ground", [] { return newd GroundBrush(); });
+			factory.registerBrush("wall", [] { return newd WallBrush(); });
+			factory.registerBrush("wall decoration", [] { return newd WallDecorationBrush(); });
+			factory.registerBrush("carpet", [] { return newd CarpetBrush(); });
+			factory.registerBrush("table", [] { return newd TableBrush(); });
+			factory.registerBrush("doodad", [] { return newd DoodadBrush(); });
+		}
+	} core_brush_registration;
+}
 
 Brushes::Brushes() {
 	////
@@ -127,19 +143,8 @@ bool Brushes::unserializeBrush(pugi::xml_node node, wxArrayString& warnings) {
 
 		const std::string_view brushType = attribute.as_string();
 
-		static const std::unordered_map<std::string_view, std::function<Brush*()>> typeMap = {
-			{ "border", [] { return newd GroundBrush(); } },
-			{ "ground", [] { return newd GroundBrush(); } },
-			{ "wall", [] { return newd WallBrush(); } },
-			{ "wall decoration", [] { return newd WallDecorationBrush(); } },
-			{ "carpet", [] { return newd CarpetBrush(); } },
-			{ "table", [] { return newd TableBrush(); } },
-			{ "doodad", [] { return newd DoodadBrush(); } }
-		};
-
-		if (auto it = typeMap.find(brushType); it != typeMap.end()) {
-			brush = it->second();
-		} else {
+		brush = BrushFactory::getInstance().createBrush(brushType);
+		if (!brush) {
 			warnings.push_back(wxstr(std::format("Unknown brush type {}", brushType)));
 			return false;
 		}

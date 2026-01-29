@@ -193,8 +193,8 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile, std::less<Tile*>());
-		if (it == tiles.end() || *it != tile) {
+		if (quick_lookup.insert(tile).second) {
+			auto it = std::lower_bound(tiles.begin(), tiles.end(), tile, std::less<Tile*>());
 			tiles.insert(it, tile);
 		}
 	}
@@ -205,9 +205,11 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile, std::less<Tile*>());
-		if (it != tiles.end() && *it == tile) {
-			tiles.erase(it);
+		if (quick_lookup.erase(tile)) {
+			auto it = std::lower_bound(tiles.begin(), tiles.end(), tile, std::less<Tile*>());
+			if (it != tiles.end() && *it == tile) {
+				tiles.erase(it);
+			}
 		}
 	}
 }
@@ -234,6 +236,9 @@ void Selection::flush() {
 	tiles.reserve(temp.size() + pending_adds.size());
 	std::set_union(temp.begin(), temp.end(), pending_adds.begin(), pending_adds.end(), std::back_inserter(tiles), std::less<Tile*>());
 
+	quick_lookup.clear();
+	quick_lookup.insert(tiles.begin(), tiles.end());
+
 	pending_adds.clear();
 	pending_removes.clear();
 }
@@ -250,6 +255,7 @@ void Selection::clear() {
 			tile->deselect();
 		});
 		tiles.clear();
+		quick_lookup.clear();
 	}
 }
 

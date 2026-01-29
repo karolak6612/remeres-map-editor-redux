@@ -20,6 +20,7 @@
 
 #include "map/position.h"
 #include <functional>
+#include <unordered_set>
 
 class Action;
 class Editor;
@@ -115,6 +116,7 @@ private:
 	std::unique_ptr<Action> subsession;
 
 	TileSet tiles;
+	std::unordered_set<Tile*> quick_lookup;
 	std::vector<Tile*> pending_adds;
 	std::vector<Tile*> pending_removes;
 
