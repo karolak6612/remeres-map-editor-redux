@@ -329,9 +329,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
-			if (count >= max_instances) {
-				break;
-			}
+			if (count >= max_instances) break;
 
 			int tile_x = c * TILE_SIZE;
 			int tile_y = r * TILE_SIZE;
@@ -361,9 +359,10 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 		glVertexArrayVertexBuffer(vao_, 1, ring_buffer_.getBufferId(), ring_buffer_.getCurrentSectionOffset(), sizeof(MinimapInstance));
 
 		glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, (GLsizei)count);
-
-		ring_buffer_.signalFinished();
 	}
+
+	// Always advance the ring buffer to maintain synchronization/rotation
+	ring_buffer_.signalFinished();
 
 	glBindVertexArray(0);
 }
