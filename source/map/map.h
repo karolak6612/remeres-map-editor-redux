@@ -223,7 +223,8 @@ inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
 	long long done = 0;
 	for (TileLocation* loc : std::ranges::subrange(map.begin(), map.end())) {
 		if (Tile* tile = loc ? loc->get() : nullptr) {
-			foreach (map, tile, ++done);
+			foreach (map, tile, ++done)
+				;
 		}
 	}
 }
