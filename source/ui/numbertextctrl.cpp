@@ -91,7 +91,7 @@ void NumberTextCtrl::CheckRange() {
 
 	// Check that value is in range
 	long v;
-	if (ntext.size() != 0 && ntext.ToLong(&v)) {
+	if (!ntext.empty() && ntext.ToLong(&v)) {
 		if (v < minval) {
 			v = minval;
 		} else if (v > maxval) {

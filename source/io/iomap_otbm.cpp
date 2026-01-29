@@ -1643,7 +1643,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			f.endNode();
 
 			bool supportWaypoints = version.otbm >= MAP_OTBM_3;
-			if (supportWaypoints || map.waypoints.waypoints.size() > 0) {
+			if (supportWaypoints || !map.waypoints.waypoints.empty()) {
 				if (!supportWaypoints) {
 					waypointsWarning = true;
 				}

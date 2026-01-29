@@ -97,7 +97,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		}
 		batch->addAndCommitAction(std::move(action));
 
-		if (tilestoborder.size() > 0) {
+		if (!tilestoborder.empty()) {
 			action = editor.actionQueue->createAction(batch.get());
 
 			// Remove duplicates

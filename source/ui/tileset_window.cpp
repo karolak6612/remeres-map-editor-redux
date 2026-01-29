@@ -104,7 +104,7 @@ void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {
 	tileset_field->Clear();
 
 	for (TilesetContainer::iterator iter = g_materials.tilesets.begin(); iter != g_materials.tilesets.end(); ++iter) {
-		if (iter->second->getCategory(TilesetCategoryType(*static_cast<int*>(palette_field->GetClientData(palette_field->GetSelection()))))->brushlist.size() > 0) {
+		if (!iter->second->getCategory(TilesetCategoryType(*static_cast<int*>(palette_field->GetClientData(palette_field->GetSelection()))))->brushlist.empty()) {
 			tileset_field->Append(wxstr(iter->second->name), newd std::string(iter->second->name));
 		}
 	}

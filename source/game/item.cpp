@@ -127,7 +127,7 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 			}
 		}
 
-		while (containers.size() != 0) {
+		while (!containers.empty()) {
 			Container* container = containers.front();
 			ItemVector& v = container->getVector();
 			for (ItemVector::iterator item_iter = v.begin(); item_iter != v.end(); ++item_iter) {

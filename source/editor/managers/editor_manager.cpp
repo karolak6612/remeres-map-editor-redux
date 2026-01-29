@@ -403,7 +403,7 @@ bool EditorManager::DoUndo() {
 	Editor* editor = GetCurrentEditor();
 	if (editor && editor->actionQueue->canUndo()) {
 		editor->actionQueue->undo();
-		if (editor->selection.size() > 0) {
+		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
 		g_status.SetStatusText("Undo action");
@@ -419,7 +419,7 @@ bool EditorManager::DoRedo() {
 	Editor* editor = GetCurrentEditor();
 	if (editor && editor->actionQueue->canRedo()) {
 		editor->actionQueue->redo();
-		if (editor->selection.size() > 0) {
+		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
 		g_status.SetStatusText("Redo action");
