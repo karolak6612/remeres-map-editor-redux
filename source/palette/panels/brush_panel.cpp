@@ -119,8 +119,8 @@ bool BrushPanel::SelectBrush(const Brush* whatbrush) {
 		return brushbox->SelectBrush(whatbrush);
 	}
 
-	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
-		if (*iter == whatbrush) {
+	for (const auto& brush : tileset->brushlist) {
+		if (brush == whatbrush) {
 			LoadContents();
 			return brushbox->SelectBrush(whatbrush);
 		}
@@ -180,15 +180,15 @@ BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, Re
 	wxSizer* stacksizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* rowsizer = nullptr;
 	int item_counter = 0;
-	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
-		ASSERT(*iter);
+	for (const auto& brush : tileset->brushlist) {
+		ASSERT(brush);
 		++item_counter;
 
 		if (!rowsizer) {
 			rowsizer = newd wxBoxSizer(wxHORIZONTAL);
 		}
 
-		BrushButton* bb = newd BrushButton(this, *iter, rsz);
+		BrushButton* bb = newd BrushButton(this, brush, rsz);
 		rowsizer->Add(bb);
 		brush_buttons.push_back(bb);
 
@@ -222,9 +222,9 @@ Brush* BrushIconBox::GetSelectedBrush() const {
 		return nullptr;
 	}
 
-	for (std::vector<BrushButton*>::const_iterator it = brush_buttons.begin(); it != brush_buttons.end(); ++it) {
-		if ((*it)->GetValue()) {
-			return (*it)->brush;
+	for (const auto& btn : brush_buttons) {
+		if (btn->GetValue()) {
+			return btn->brush;
 		}
 	}
 	return nullptr;
@@ -232,10 +232,10 @@ Brush* BrushIconBox::GetSelectedBrush() const {
 
 bool BrushIconBox::SelectBrush(const Brush* whatbrush) {
 	DeselectAll();
-	for (std::vector<BrushButton*>::iterator it = brush_buttons.begin(); it != brush_buttons.end(); ++it) {
-		if ((*it)->brush == whatbrush) {
-			(*it)->SetValue(true);
-			EnsureVisible(*it);
+	for (auto& btn : brush_buttons) {
+		if (btn->brush == whatbrush) {
+			btn->SetValue(true);
+			EnsureVisible(btn);
 			return true;
 		}
 	}
@@ -243,8 +243,8 @@ bool BrushIconBox::SelectBrush(const Brush* whatbrush) {
 }
 
 void BrushIconBox::DeselectAll() {
-	for (std::vector<BrushButton*>::iterator it = brush_buttons.begin(); it != brush_buttons.end(); ++it) {
-		(*it)->SetValue(false);
+	for (auto& btn : brush_buttons) {
+		btn->SetValue(false);
 	}
 }
 

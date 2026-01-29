@@ -925,16 +925,15 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 					}
 					f.endNode(); // OTMM_SPAWN_AREA
 				}
-				for (CreatureList::iterator iter = creature_list.begin(); iter != creature_list.end(); ++iter) {
-					(*iter)->reset();
+				for (Creature* creature : creature_list) {
+					creature->reset();
 				}
 			}
 			f.endNode(); // OTMM_SPAWN_DATA
 
 			f.addNode(OTMM_TOWN_DATA);
 			{
-				for (TownMap::const_iterator it = map.towns.begin(); it != map.towns.end(); ++it) {
-					const Town* town = it->second;
+				for (const auto& [id, town] : map.towns) {
 					f.addNode(OTMM_TOWN);
 					{
 						f.addU32(town->getID());
@@ -950,8 +949,7 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 
 			f.addNode(OTMM_HOUSE_DATA);
 			{
-				for (HouseMap::const_iterator it = map.houses.begin(); it != map.houses.end(); ++it) {
-					const House* house = it->second;
+				for (const auto& [id, house] : map.houses) {
 					f.addNode(OTMM_HOUSE);
 					{
 						f.addU32(house->id);

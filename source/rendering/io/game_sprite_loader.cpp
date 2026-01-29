@@ -145,13 +145,13 @@ bool GameSpriteLoader::LoadSpriteMetadata(GraphicManager* manager, const wxFileN
 						file.getU32(min);
 						file.getU32(max);
 						FrameDuration* frame_duration = sType->animator->getFrameDuration(i);
-						frame_duration->setValues(int(min), int(max));
+						frame_duration->setValues(static_cast<int>(min), static_cast<int>(max));
 					}
 					sType->animator->reset();
 				}
 			}
 
-			sType->numsprites = (int)sType->width * (int)sType->height * (int)sType->layers * (int)sType->pattern_x * (int)sType->pattern_y * sType->pattern_z * (int)sType->frames;
+			sType->numsprites = static_cast<int>(sType->width) * static_cast<int>(sType->height) * static_cast<int>(sType->layers) * static_cast<int>(sType->pattern_x) * static_cast<int>(sType->pattern_y) * sType->pattern_z * static_cast<int>(sType->frames);
 
 			// Read the sprite ids
 			for (uint32_t i = 0; i < sType->numsprites; ++i) {
@@ -408,8 +408,8 @@ bool GameSpriteLoader::LoadSpriteData(GraphicManager* manager, const wxFileName&
 
 	// Now read individual sprites
 	int id = 1;
-	for (std::vector<uint32_t>::iterator sprite_iter = sprite_indexes.begin(); sprite_iter != sprite_indexes.end(); ++sprite_iter, ++id) {
-		uint32_t index = *sprite_iter + 3;
+	for (const auto& sprite_index : sprite_indexes) {
+		uint32_t index = sprite_index + 3;
 		fh.seek(index);
 		uint16_t size;
 		safe_get(U16, size);
@@ -436,6 +436,7 @@ bool GameSpriteLoader::LoadSpriteData(GraphicManager* manager, const wxFileName&
 		} else {
 			fh.seekRelative(size);
 		}
+		++id;
 	}
 #undef safe_get
 	manager->unloaded = false;
