@@ -329,9 +329,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
-			if (count >= max_instances) {
-				break;
-			}
+			if (count >= max_instances) break;
 
 			int tile_x = c * TILE_SIZE;
 			int tile_y = r * TILE_SIZE;
