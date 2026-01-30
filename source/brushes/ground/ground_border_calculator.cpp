@@ -14,13 +14,13 @@
 #include <vector>
 
 namespace {
-GroundBrush* extractGroundBrushFromTile(BaseMap* map, uint32_t x, uint32_t y, uint32_t z) {
-	Tile* tile = map->getTile(x, y, z);
-	if (tile) {
-		return tile->getGroundBrush();
+	GroundBrush* extractGroundBrushFromTile(BaseMap* map, uint32_t x, uint32_t y, uint32_t z) {
+		Tile* tile = map->getTile(x, y, z);
+		if (tile) {
+			return tile->getGroundBrush();
+		}
+		return nullptr;
 	}
-	return nullptr;
-}
 }
 
 void GroundBorderCalculator::gatherNeighbors(CalculationContext& ctx) {

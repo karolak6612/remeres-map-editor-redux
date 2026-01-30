@@ -13,10 +13,10 @@
 extern Brushes g_brushes;
 
 namespace {
-// Helper for C++20 case-insensitive comparison (zero allocation)
-const auto iequal = [](char a, char b) {
-	return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
-};
+	// Helper for C++20 case-insensitive comparison (zero allocation)
+	const auto iequal = [](char a, char b) {
+		return std::tolower(static_cast<unsigned char>(a)) == std::tolower(static_cast<unsigned char>(b));
+	};
 }
 
 bool GroundBrushLoader::loadItem(GroundBrush& brush, const pugi::xml_node& childNode, wxArrayString& warnings) {
