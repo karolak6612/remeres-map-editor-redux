@@ -142,6 +142,13 @@ public:
 	void clear();
 
 protected:
+	struct FieldLine {
+		std::string label;
+		std::string value;
+		uint8_t r, g, b;
+		std::vector<std::string> wrappedLines; // For multi-line values
+	};
+
 	std::vector<TooltipData> tooltips;
 	std::map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
 	NVGcontext* lastContext = nullptr;
@@ -151,6 +158,11 @@ protected:
 
 	// Helper to get header color based on category
 	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
+
+private:
+	void prepareFields(const TooltipData& tooltip, std::vector<FieldLine>& fields) const;
+	void calculateLayout(NVGcontext* vg, std::vector<FieldLine>& fields, float maxWidth, float minWidth, float padding, float valueStartX, int& totalLines, float& actualMaxWidth) const;
+	void drawTooltip(NVGcontext* vg, const TooltipData& tooltip, const RenderView& view);
 };
 
 #endif

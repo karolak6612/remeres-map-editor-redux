@@ -193,329 +193,334 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	return 0;
 }
 
+void TooltipDrawer::prepareFields(const TooltipData& tooltip, std::vector<FieldLine>& fields) const {
+	using namespace TooltipColors;
+	if (tooltip.category == TooltipCategory::WAYPOINT) {
+		fields.push_back({ "Waypoint", tooltip.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
+	} else {
+		if (tooltip.actionId > 0) {
+			fields.push_back({ "Action ID", std::to_string(tooltip.actionId), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B, {} });
+		}
+		if (tooltip.uniqueId > 0) {
+			fields.push_back({ "Unique ID", std::to_string(tooltip.uniqueId), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B, {} });
+		}
+		if (tooltip.doorId > 0) {
+			fields.push_back({ "Door ID", std::to_string(tooltip.doorId), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B, {} });
+		}
+		if (tooltip.destination.x > 0) {
+			std::string dest = std::to_string(tooltip.destination.x) + ", " + std::to_string(tooltip.destination.y) + ", " + std::to_string(tooltip.destination.z);
+			fields.push_back({ "Destination", dest, TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B, {} });
+		}
+		if (!tooltip.description.empty()) {
+			fields.push_back({ "Description", tooltip.description, BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, {} });
+		}
+		if (!tooltip.text.empty()) {
+			fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+		}
+	}
+}
+
+void TooltipDrawer::calculateLayout(NVGcontext* vg, std::vector<FieldLine>& fields, float maxWidth, float minWidth, float padding, float valueStartX, int& totalLines, float& actualMaxWidth) const {
+	float maxValueWidth = maxWidth - valueStartX - padding * 2;
+	totalLines = 0;
+	actualMaxWidth = minWidth;
+
+	for (auto& field : fields) {
+		const char* start = field.value.c_str();
+		const char* end = start + field.value.length();
+
+		// Check if value fits on one line
+		float valueBounds[4];
+		nvgTextBounds(vg, 0, 0, start, nullptr, valueBounds);
+		float valueWidth = valueBounds[2] - valueBounds[0];
+
+		if (valueWidth <= maxValueWidth) {
+			// Single line
+			field.wrappedLines.push_back(field.value);
+			totalLines++;
+			float lineWidth = valueStartX + valueWidth + padding * 2;
+			if (lineWidth > actualMaxWidth) {
+				actualMaxWidth = lineWidth;
+			}
+		} else {
+			// Need to wrap - use NanoVG text breaking
+			NVGtextRow rows[16];
+			int nRows = nvgTextBreakLines(vg, start, end, maxValueWidth, rows, 16);
+
+			for (int i = 0; i < nRows; i++) {
+				std::string line(rows[i].start, rows[i].end);
+				field.wrappedLines.push_back(line);
+				totalLines++;
+
+				float lineWidth = valueStartX + rows[i].width + padding * 2;
+				if (lineWidth > actualMaxWidth) {
+					actualMaxWidth = lineWidth;
+				}
+			}
+
+			if (nRows == 0) {
+				// Fallback if breaking failed
+				field.wrappedLines.push_back(field.value);
+				totalLines++;
+			}
+		}
+	}
+}
+
+void TooltipDrawer::drawTooltip(NVGcontext* vg, const TooltipData& tooltip, const RenderView& view) {
+	using namespace TooltipColors;
+	int unscaled_x, unscaled_y;
+	view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
+
+	float zoom = view.zoom;
+	if (zoom < 0.01f) {
+		zoom = 1.0f;
+	}
+
+	float screen_x = unscaled_x / zoom;
+	float screen_y = unscaled_y / zoom;
+	float tile_size_screen = 32.0f / zoom;
+
+	// Center on tile
+	screen_x += tile_size_screen / 2.0f;
+	screen_y += tile_size_screen / 2.0f;
+
+	// Layout constants
+	float fontSize = 11.0f;
+	float padding = 10.0f;
+	float lineHeight = fontSize * 1.4f;
+	float cornerRadius = 4.0f;
+	float borderWidth = 1.0f; // Thinner border
+	float minWidth = 120.0f;
+	float maxWidth = 220.0f; // Max content width for wrapping
+
+	std::vector<FieldLine> fields;
+	prepareFields(tooltip, fields);
+
+	// Skip if no fields and no container items
+	if (fields.empty() && tooltip.containerItems.empty()) {
+		return;
+	}
+
+	// Set up font for measurements
+	nvgFontSize(vg, fontSize);
+	nvgFontFace(vg, "sans");
+
+	// Measure label widths and wrap long values
+	float maxLabelWidth = 0.0f;
+	for (auto& field : fields) {
+		float labelBounds[4];
+		nvgTextBounds(vg, 0, 0, field.label.c_str(), nullptr, labelBounds);
+		float lw = labelBounds[2] - labelBounds[0];
+		if (lw > maxLabelWidth) {
+			maxLabelWidth = lw;
+		}
+	}
+
+	float valueStartX = maxLabelWidth + 12.0f; // Gap between label and value
+	int totalLines = 0;
+	float actualMaxWidth = minWidth;
+
+	calculateLayout(vg, fields, maxWidth, minWidth, padding, valueStartX, totalLines, actualMaxWidth);
+
+	// Calculate container grid dimensions
+	int containerCols = 0;
+	int containerRows = 0;
+	float gridSlotSize = 34.0f; // 32px + padding
+	float containerHeight = 0.0f;
+
+	int numItems = (int)tooltip.containerItems.size();
+	int capacity = (int)tooltip.containerCapacity;
+	int emptySlots = std::max(0, capacity - numItems);
+	int totalSlots = numItems;
+
+	if (emptySlots > 0) {
+		totalSlots++; // Add one slot for the summary
+	}
+
+	// Apply a hard cap for visual safety (though items are capped at 32 in TileRenderer)
+	if (totalSlots > 33) {
+		totalSlots = 33;
+	}
+
+	if (capacity > 0 || numItems > 0) {
+		// Heuristic: try to keep it somewhat square but matching width
+		containerCols = std::min(4, totalSlots);
+		// Force roughly square-ish if many items, but max 4-5 cols
+		if (totalSlots > 4) {
+			containerCols = 5;
+		}
+		if (totalSlots > 10) {
+			containerCols = 6;
+		}
+		if (totalSlots > 15) {
+			containerCols = 8;
+		}
+
+		// Ensure at least 1 col if there are slots
+		if (containerCols == 0 && totalSlots > 0) {
+			containerCols = 1;
+		}
+
+		if (containerCols > 0) {
+			containerRows = (totalSlots + containerCols - 1) / containerCols;
+			containerHeight = containerRows * gridSlotSize + 4.0f; // + top margin
+		}
+	}
+
+	// Calculate box dimensions
+	float boxWidth = std::min(maxWidth + padding * 2, std::max(minWidth, actualMaxWidth));
+	// Expand max width if grid needs it (override clamp)
+	bool hasContainer = totalSlots > 0;
+	if (hasContainer) {
+		float gridWidth = containerCols * gridSlotSize;
+		boxWidth = std::max(boxWidth, gridWidth + padding * 2);
+	}
+
+	float boxHeight = totalLines * lineHeight + padding * 2;
+	if (hasContainer) {
+		boxHeight += containerHeight + 4.0f; // Add grid area
+	}
+
+	// Position tooltip above tile
+	float tooltipX = screen_x - (boxWidth / 2.0f);
+	float tooltipY = screen_y - boxHeight - 12.0f;
+
+	// Get border color based on category
+	uint8_t borderR, borderG, borderB;
+	getHeaderColor(tooltip.category, borderR, borderG, borderB);
+
+	// Shadow (multi-layer soft shadow)
+	for (int i = 3; i >= 0; i--) {
+		float alpha = 35.0f + (3 - i) * 20.0f;
+		float spread = i * 2.0f;
+		float offsetY = 3.0f + i * 1.0f;
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, tooltipX - spread, tooltipY + offsetY - spread, boxWidth + spread * 2, boxHeight + spread * 2, cornerRadius + spread);
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, (int)alpha));
+		nvgFill(vg);
+	}
+
+	// Main background
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, tooltipX, tooltipY, boxWidth, boxHeight, cornerRadius);
+	nvgFillColor(vg, nvgRGBA(BODY_BG_R, BODY_BG_G, BODY_BG_B, 250));
+	nvgFill(vg);
+
+	// Full colored border around entire frame
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, tooltipX, tooltipY, boxWidth, boxHeight, cornerRadius);
+	nvgStrokeColor(vg, nvgRGBA(borderR, borderG, borderB, 255));
+	nvgStrokeWidth(vg, borderWidth);
+	nvgStroke(vg);
+
+	// Draw content
+	float contentX = tooltipX + padding;
+	float cursorY = tooltipY + padding;
+
+	nvgFontSize(vg, fontSize);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+	for (const auto& field : fields) {
+		bool firstLine = true;
+		for (const auto& line : field.wrappedLines) {
+			if (firstLine) {
+				// Draw label on first line
+				nvgFillColor(vg, nvgRGBA(BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, 160));
+				nvgText(vg, contentX, cursorY, field.label.c_str(), nullptr);
+				firstLine = false;
+			}
+
+			// Draw value line in semantic color
+			nvgFillColor(vg, nvgRGBA(field.r, field.g, field.b, 255));
+			nvgText(vg, contentX + valueStartX, cursorY, line.c_str(), nullptr);
+
+			cursorY += lineHeight;
+		}
+	}
+
+	// Draw container items
+	if (totalSlots > 0) {
+		cursorY += 8.0f; // Spacer
+
+		float startX = contentX;
+		float startY = cursorY;
+
+		for (int idx = 0; idx < totalSlots; ++idx) {
+			int col = idx % containerCols;
+			int row = idx / containerCols;
+
+			float itemX = startX + col * gridSlotSize;
+			float itemY = startY + row * gridSlotSize;
+
+			// Draw slot background (always)
+			nvgBeginPath(vg);
+			nvgRect(vg, itemX, itemY, 32, 32);
+			nvgFillColor(vg, nvgRGBA(60, 60, 60, 100)); // Dark slot placeholder
+			nvgStrokeColor(vg, nvgRGBA(100, 100, 100, 100)); // Light border
+			nvgStrokeWidth(vg, 1.0f);
+			nvgFill(vg);
+			nvgStroke(vg);
+
+			// Check if this is the summary info slot (last slot if we have empty spaces)
+			bool isSummarySlot = (emptySlots > 0 && idx == totalSlots - 1);
+
+			if (isSummarySlot) {
+				// Draw empty slots count: "+N"
+				std::string summary = "+" + std::to_string(emptySlots);
+
+				nvgFontSize(vg, 12.0f);
+				nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+
+				// Text shadow
+				nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+				nvgText(vg, itemX + 17, itemY + 17, summary.c_str(), nullptr); // +1 offset
+
+				// Text
+				nvgFillColor(vg, nvgRGBA(COUNT_TEXT_R, COUNT_TEXT_G, COUNT_TEXT_B, 255));
+				nvgText(vg, itemX + 16, itemY + 16, summary.c_str(), nullptr);
+
+			} else if (idx < numItems) {
+				// Draw Actual Item
+				const auto& item = tooltip.containerItems[idx];
+
+				// Draw item sprite
+				int img = getSpriteImage(vg, item.id);
+				if (img > 0) {
+					nvgBeginPath(vg);
+					nvgRect(vg, itemX, itemY, 32, 32);
+					nvgFillPaint(vg, nvgImagePattern(vg, itemX, itemY, 32, 32, 0, img, 1.0f));
+					nvgFill(vg);
+				}
+				// Else: already drew placeholder background
+
+				// Draw Count
+				if (item.count > 1) {
+					std::string countStr = std::to_string(item.count);
+					nvgFontSize(vg, 10.0f);
+					nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
+
+					// Text shadow
+					nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+					nvgText(vg, itemX + 33, itemY + 33, countStr.c_str(), nullptr);
+
+					// Text
+					nvgFillColor(vg, nvgRGBA(COUNT_TEXT_R, COUNT_TEXT_G, COUNT_TEXT_B, 255));
+					nvgText(vg, itemX + 32, itemY + 32, countStr.c_str(), nullptr);
+				}
+			}
+		}
+	}
+}
+
 void TooltipDrawer::draw(const RenderView& view) {
 	NVGcontext* vg = TextRenderer::GetContext();
 	if (!vg) {
 		return;
 	}
 
-	using namespace TooltipColors;
-
 	for (const auto& tooltip : tooltips) {
-		int unscaled_x, unscaled_y;
-		view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
-
-		float zoom = view.zoom;
-		if (zoom < 0.01f) {
-			zoom = 1.0f;
-		}
-
-		float screen_x = unscaled_x / zoom;
-		float screen_y = unscaled_y / zoom;
-		float tile_size_screen = 32.0f / zoom;
-
-		// Center on tile
-		screen_x += tile_size_screen / 2.0f;
-		screen_y += tile_size_screen / 2.0f;
-
-		// Layout constants
-		float fontSize = 11.0f;
-		float padding = 10.0f;
-		float lineHeight = fontSize * 1.4f;
-		float cornerRadius = 4.0f;
-		float borderWidth = 1.0f; // Thinner border
-		float minWidth = 120.0f;
-		float maxWidth = 220.0f; // Max content width for wrapping
-
-		// Build content lines with word wrapping support
-		struct FieldLine {
-			std::string label;
-			std::string value;
-			uint8_t r, g, b;
-			std::vector<std::string> wrappedLines; // For multi-line values
-		};
-		std::vector<FieldLine> fields;
-
-		if (tooltip.category == TooltipCategory::WAYPOINT) {
-			fields.push_back({ "Waypoint", tooltip.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
-		} else {
-			if (tooltip.actionId > 0) {
-				fields.push_back({ "Action ID", std::to_string(tooltip.actionId), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B, {} });
-			}
-			if (tooltip.uniqueId > 0) {
-				fields.push_back({ "Unique ID", std::to_string(tooltip.uniqueId), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B, {} });
-			}
-			if (tooltip.doorId > 0) {
-				fields.push_back({ "Door ID", std::to_string(tooltip.doorId), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B, {} });
-			}
-			if (tooltip.destination.x > 0) {
-				std::string dest = std::to_string(tooltip.destination.x) + ", " + std::to_string(tooltip.destination.y) + ", " + std::to_string(tooltip.destination.z);
-				fields.push_back({ "Destination", dest, TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B, {} });
-			}
-			if (!tooltip.description.empty()) {
-				fields.push_back({ "Description", tooltip.description, BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, {} });
-			}
-			if (!tooltip.text.empty()) {
-				fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
-			}
-		}
-
-		// Skip if no fields and no container items
-		if (fields.empty() && tooltip.containerItems.empty()) {
-			continue;
-		}
-
-		// Set up font for measurements
-		nvgFontSize(vg, fontSize);
-		nvgFontFace(vg, "sans");
-
-		// Measure label widths and wrap long values
-		float maxLabelWidth = 0.0f;
-		for (auto& field : fields) {
-			float labelBounds[4];
-			nvgTextBounds(vg, 0, 0, field.label.c_str(), nullptr, labelBounds);
-			float lw = labelBounds[2] - labelBounds[0];
-			if (lw > maxLabelWidth) {
-				maxLabelWidth = lw;
-			}
-		}
-
-		float valueStartX = maxLabelWidth + 12.0f; // Gap between label and value
-		float maxValueWidth = maxWidth - valueStartX - padding * 2;
-
-		// Word wrap values that are too long
-		int totalLines = 0;
-		float actualMaxWidth = minWidth;
-
-		for (auto& field : fields) {
-			const char* start = field.value.c_str();
-			const char* end = start + field.value.length();
-
-			// Check if value fits on one line
-			float valueBounds[4];
-			nvgTextBounds(vg, 0, 0, start, nullptr, valueBounds);
-			float valueWidth = valueBounds[2] - valueBounds[0];
-
-			if (valueWidth <= maxValueWidth) {
-				// Single line
-				field.wrappedLines.push_back(field.value);
-				totalLines++;
-				float lineWidth = valueStartX + valueWidth + padding * 2;
-				if (lineWidth > actualMaxWidth) {
-					actualMaxWidth = lineWidth;
-				}
-			} else {
-				// Need to wrap - use NanoVG text breaking
-				NVGtextRow rows[16];
-				int nRows = nvgTextBreakLines(vg, start, end, maxValueWidth, rows, 16);
-
-				for (int i = 0; i < nRows; i++) {
-					std::string line(rows[i].start, rows[i].end);
-					field.wrappedLines.push_back(line);
-					totalLines++;
-
-					float lineWidth = valueStartX + rows[i].width + padding * 2;
-					if (lineWidth > actualMaxWidth) {
-						actualMaxWidth = lineWidth;
-					}
-				}
-
-				if (nRows == 0) {
-					// Fallback if breaking failed
-					field.wrappedLines.push_back(field.value);
-					totalLines++;
-				}
-			}
-		}
-
-		// Calculate container grid dimensions
-		int containerCols = 0;
-		int containerRows = 0;
-		float gridSlotSize = 34.0f; // 32px + padding
-		float containerHeight = 0.0f;
-
-		int numItems = (int)tooltip.containerItems.size();
-		int capacity = (int)tooltip.containerCapacity;
-		int emptySlots = std::max(0, capacity - numItems);
-		int totalSlots = numItems;
-
-		if (emptySlots > 0) {
-			totalSlots++; // Add one slot for the summary
-		}
-
-		// Apply a hard cap for visual safety (though items are capped at 32 in TileRenderer)
-		if (totalSlots > 33) {
-			totalSlots = 33;
-		}
-
-		if (capacity > 0 || numItems > 0) {
-			// Heuristic: try to keep it somewhat square but matching width
-			containerCols = std::min(4, totalSlots);
-			// Force roughly square-ish if many items, but max 4-5 cols
-			if (totalSlots > 4) {
-				containerCols = 5;
-			}
-			if (totalSlots > 10) {
-				containerCols = 6;
-			}
-			if (totalSlots > 15) {
-				containerCols = 8;
-			}
-
-			// Ensure at least 1 col if there are slots
-			if (containerCols == 0 && totalSlots > 0) {
-				containerCols = 1;
-			}
-
-			if (containerCols > 0) {
-				containerRows = (totalSlots + containerCols - 1) / containerCols;
-				containerHeight = containerRows * gridSlotSize + 4.0f; // + top margin
-			}
-		}
-
-		// Calculate box dimensions
-		float boxWidth = std::min(maxWidth + padding * 2, std::max(minWidth, actualMaxWidth));
-		// Expand max width if grid needs it (override clamp)
-		bool hasContainer = totalSlots > 0;
-		if (hasContainer) {
-			float gridWidth = containerCols * gridSlotSize;
-			boxWidth = std::max(boxWidth, gridWidth + padding * 2);
-		}
-
-		float boxHeight = totalLines * lineHeight + padding * 2;
-		if (hasContainer) {
-			boxHeight += containerHeight + 4.0f; // Add grid area
-		}
-
-		// Position tooltip above tile
-		float tooltipX = screen_x - (boxWidth / 2.0f);
-		float tooltipY = screen_y - boxHeight - 12.0f;
-
-		// Get border color based on category
-		uint8_t borderR, borderG, borderB;
-		getHeaderColor(tooltip.category, borderR, borderG, borderB);
-
-		// Shadow (multi-layer soft shadow)
-		for (int i = 3; i >= 0; i--) {
-			float alpha = 35.0f + (3 - i) * 20.0f;
-			float spread = i * 2.0f;
-			float offsetY = 3.0f + i * 1.0f;
-			nvgBeginPath(vg);
-			nvgRoundedRect(vg, tooltipX - spread, tooltipY + offsetY - spread, boxWidth + spread * 2, boxHeight + spread * 2, cornerRadius + spread);
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, (int)alpha));
-			nvgFill(vg);
-		}
-
-		// Main background
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, tooltipX, tooltipY, boxWidth, boxHeight, cornerRadius);
-		nvgFillColor(vg, nvgRGBA(BODY_BG_R, BODY_BG_G, BODY_BG_B, 250));
-		nvgFill(vg);
-
-		// Full colored border around entire frame
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, tooltipX, tooltipY, boxWidth, boxHeight, cornerRadius);
-		nvgStrokeColor(vg, nvgRGBA(borderR, borderG, borderB, 255));
-		nvgStrokeWidth(vg, borderWidth);
-		nvgStroke(vg);
-
-		// Draw content
-		float contentX = tooltipX + padding;
-		float cursorY = tooltipY + padding;
-
-		nvgFontSize(vg, fontSize);
-		nvgFontFace(vg, "sans");
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-
-		for (const auto& field : fields) {
-			bool firstLine = true;
-			for (const auto& line : field.wrappedLines) {
-				if (firstLine) {
-					// Draw label on first line
-					nvgFillColor(vg, nvgRGBA(BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, 160));
-					nvgText(vg, contentX, cursorY, field.label.c_str(), nullptr);
-					firstLine = false;
-				}
-
-				// Draw value line in semantic color
-				nvgFillColor(vg, nvgRGBA(field.r, field.g, field.b, 255));
-				nvgText(vg, contentX + valueStartX, cursorY, line.c_str(), nullptr);
-
-				cursorY += lineHeight;
-			}
-		}
-
-		// Draw container items
-		if (totalSlots > 0) {
-			cursorY += 8.0f; // Spacer
-
-			float startX = contentX;
-			float startY = cursorY;
-
-			for (int idx = 0; idx < totalSlots; ++idx) {
-				int col = idx % containerCols;
-				int row = idx / containerCols;
-
-				float itemX = startX + col * gridSlotSize;
-				float itemY = startY + row * gridSlotSize;
-
-				// Draw slot background (always)
-				nvgBeginPath(vg);
-				nvgRect(vg, itemX, itemY, 32, 32);
-				nvgFillColor(vg, nvgRGBA(60, 60, 60, 100)); // Dark slot placeholder
-				nvgStrokeColor(vg, nvgRGBA(100, 100, 100, 100)); // Light border
-				nvgStrokeWidth(vg, 1.0f);
-				nvgFill(vg);
-				nvgStroke(vg);
-
-				// Check if this is the summary info slot (last slot if we have empty spaces)
-				bool isSummarySlot = (emptySlots > 0 && idx == totalSlots - 1);
-
-				if (isSummarySlot) {
-					// Draw empty slots count: "+N"
-					std::string summary = "+" + std::to_string(emptySlots);
-
-					nvgFontSize(vg, 12.0f);
-					nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-
-					// Text shadow
-					nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-					nvgText(vg, itemX + 17, itemY + 17, summary.c_str(), nullptr); // +1 offset
-
-					// Text
-					nvgFillColor(vg, nvgRGBA(COUNT_TEXT_R, COUNT_TEXT_G, COUNT_TEXT_B, 255));
-					nvgText(vg, itemX + 16, itemY + 16, summary.c_str(), nullptr);
-
-				} else if (idx < numItems) {
-					// Draw Actual Item
-					const auto& item = tooltip.containerItems[idx];
-
-					// Draw item sprite
-					int img = getSpriteImage(vg, item.id);
-					if (img > 0) {
-						nvgBeginPath(vg);
-						nvgRect(vg, itemX, itemY, 32, 32);
-						nvgFillPaint(vg, nvgImagePattern(vg, itemX, itemY, 32, 32, 0, img, 1.0f));
-						nvgFill(vg);
-					}
-					// Else: already drew placeholder background
-
-					// Draw Count
-					if (item.count > 1) {
-						std::string countStr = std::to_string(item.count);
-						nvgFontSize(vg, 10.0f);
-						nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
-
-						// Text shadow
-						nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-						nvgText(vg, itemX + 33, itemY + 33, countStr.c_str(), nullptr);
-
-						// Text
-						nvgFillColor(vg, nvgRGBA(COUNT_TEXT_R, COUNT_TEXT_G, COUNT_TEXT_B, 255));
-						nvgText(vg, itemX + 32, itemY + 32, countStr.c_str(), nullptr);
-					}
-				}
-			}
-		}
+		drawTooltip(vg, tooltip, view);
 	}
 }
