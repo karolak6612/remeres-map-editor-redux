@@ -363,4 +363,3 @@ bool Application::ParseCommandLineMap(wxString& fileName) {
 	}
 	return false;
 }
-
