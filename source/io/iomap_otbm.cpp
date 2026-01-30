@@ -614,8 +614,8 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 		}
 
 		// Memory buffers for the houses & spawns
-		std::shared_ptr<uint8_t> house_buffer;
-		std::shared_ptr<uint8_t> spawn_buffer;
+		std::unique_ptr<uint8_t[]> house_buffer;
+		std::unique_ptr<uint8_t[]> spawn_buffer;
 		size_t house_buffer_size = 0;
 		size_t spawn_buffer_size = 0;
 
@@ -631,7 +631,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 			if (entryName == "world/map.otbm") {
 				// Read the entire OTBM file into a memory region
 				size_t otbm_size = archive_entry_size(entry);
-				std::shared_ptr<uint8_t> otbm_buffer(new uint8_t[otbm_size], [](uint8_t* p) { delete[] p; });
+				auto otbm_buffer = std::make_unique<uint8_t[]>(otbm_size);
 
 				// Read from the archive
 				size_t read_bytes = archive_read_data(a.get(), otbm_buffer.get(), otbm_size);
@@ -662,7 +662,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 				otbm_loaded = true;
 			} else if (entryName == "world/houses.xml") {
 				house_buffer_size = archive_entry_size(entry);
-				house_buffer.reset(new uint8_t[house_buffer_size]);
+				house_buffer = std::make_unique<uint8_t[]>(house_buffer_size);
 
 				// Read from the archive
 				size_t read_bytes = archive_read_data(a.get(), house_buffer.get(), house_buffer_size);
@@ -675,7 +675,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 				}
 			} else if (entryName == "world/spawns.xml") {
 				spawn_buffer_size = archive_entry_size(entry);
-				spawn_buffer.reset(new uint8_t[spawn_buffer_size]);
+				spawn_buffer = std::make_unique<uint8_t[]>(spawn_buffer_size);
 
 				// Read from the archive
 				size_t read_bytes = archive_read_data(a.get(), spawn_buffer.get(), spawn_buffer_size);
