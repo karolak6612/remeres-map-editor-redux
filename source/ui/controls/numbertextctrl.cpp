@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/numbertextctrl.h"
+#include "ui/controls/numbertextctrl.h"
 
 BEGIN_EVENT_TABLE(NumberTextCtrl, wxTextCtrl)
 EVT_KILL_FOCUS(NumberTextCtrl::OnKillFocus)

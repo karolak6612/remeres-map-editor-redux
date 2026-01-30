@@ -19,7 +19,7 @@
 
 #include "app/settings.h"
 
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
 

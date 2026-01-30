@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 
 #include "editor/editor_tabs.h"
 #include "editor/editor.h"

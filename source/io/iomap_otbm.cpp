@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 
 #include <wx/wfstream.h>
 #include <wx/tarstrm.h>

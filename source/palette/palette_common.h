@@ -20,7 +20,7 @@
 
 #include "app/main.h"
 
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 #include "map/tileset.h"
 #include "ui/gui_ids.h"
 #include "brushes/brush_enums.h"

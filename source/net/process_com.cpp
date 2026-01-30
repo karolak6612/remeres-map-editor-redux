@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 
 #ifdef _USE_PROCESS_COM
 

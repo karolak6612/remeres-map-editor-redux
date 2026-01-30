@@ -1,0 +1,80 @@
+//////////////////////////////////////////////////////////////////////
+// This file is part of Remere's Map Editor
+//////////////////////////////////////////////////////////////////////
+// Remere's Map Editor is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Remere's Map Editor is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program. If not, see <http://www.gnu.org/licenses/>.
+//////////////////////////////////////////////////////////////////////
+
+#ifndef RME_UI_WINDOWS_MAIN_WINDOW_H_UNIQUE_123
+#define RME_UI_WINDOWS_MAIN_WINDOW_H_UNIQUE_123
+
+#include <wx/frame.h>
+#include <wx/filename.h>
+#include <vector>
+
+class MainMenuBar;
+class MainToolBar;
+
+using FileName = wxFileName;
+
+class MainFrame : public wxFrame {
+public:
+	MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size);
+	~MainFrame() override;
+
+	void UpdateMenubar();
+	bool DoQueryClose();
+	bool DoQuerySave(bool doclose = true);
+	bool DoQuerySaveTileset(bool doclose = true);
+	bool DoQueryImportCreatures();
+	bool LoadMap(FileName name);
+
+	void AddRecentFile(const FileName& file);
+	void LoadRecentFiles();
+	void SaveRecentFiles();
+	std::vector<wxString> GetRecentFiles();
+
+	MainToolBar* GetAuiToolBar() const {
+		return tool_bar;
+	}
+
+	MainMenuBar* GetMainMenuBar() const {
+		return menu_bar;
+	}
+
+	void OnUpdateMenus(wxCommandEvent& event);
+	void UpdateFloorMenu();
+	void OnIdle(wxIdleEvent& event);
+	void OnExit(wxCloseEvent& event);
+
+#ifdef _USE_UPDATER_
+	void OnUpdateReceived(wxCommandEvent& event);
+#endif
+
+#ifdef __WINDOWS__
+	virtual bool MSWTranslateMessage(WXMSG* msg);
+#endif
+
+	void PrepareDC(wxDC& dc);
+
+protected:
+	MainMenuBar* menu_bar;
+	MainToolBar* tool_bar;
+
+	friend class Application;
+	friend class GUI;
+
+	DECLARE_EVENT_TABLE()
+};
+
+#endif

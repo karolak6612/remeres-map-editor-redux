@@ -1,3 +1,5 @@
+#include "app/main.h"
+#include "ui/windows/main_window.h"
 #include <iostream>
 #include "ingame_preview/ingame_preview_manager.h"
 #include "ingame_preview/ingame_preview_window.h"

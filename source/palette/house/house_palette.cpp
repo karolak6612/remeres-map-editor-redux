@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 #include "palette/house/house_palette.h"
 #include "palette/house/edit_house_dialog.h"
 

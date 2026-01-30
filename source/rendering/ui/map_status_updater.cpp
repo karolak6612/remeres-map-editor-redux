@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 #include "rendering/ui/map_status_updater.h"
 #include "ui/gui.h"
 #include "editor/editor.h"

@@ -4,9 +4,9 @@
 #include "ui/dialog_util.h"
 #include "ui/dialogs/find_dialog.h"
 #include "ui/map_tab.h"
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "ui/dialogs/goto_position_dialog.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/find_item_window.h"
 #include "ui/main_menubar.h"
 #include "app/preferences.h"
 

@@ -2,7 +2,7 @@
 #define RME_PALETTE_PANELS_BRUSH_SIZE_PANEL_H_
 
 #include "palette/palette_common.h"
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 
 class BrushSizePanel : public PalettePanel {
 public:

@@ -18,7 +18,7 @@
 #include "app/main.h"
 
 // Needs to be defined or included to access png files
-#include "ui/pngfiles.h"
+#include "resources/embedded_images.h"
 #include "rendering/utilities/wx_utils.h"
 
 #include <wx/mstream.h>

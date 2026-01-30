@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 
 #include "brushes/managers/brush_manager.h"
 #include "brushes/brush.h"

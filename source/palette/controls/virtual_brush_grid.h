@@ -3,7 +3,7 @@
 
 #include "app/main.h"
 #include "palette/panels/brush_panel.h"
-#include "ui/dcbutton.h" // For RenderSize
+#include "ui/controls/dcbutton.h" // For RenderSize
 
 class VirtualBrushGrid : public wxScrolledWindow, public BrushBoxInterface {
 public:

@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 #include "app/settings.h"
 #include "app/preferences.h"
 

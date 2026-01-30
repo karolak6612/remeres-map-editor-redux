@@ -1,4 +1,4 @@
-#include "ui/tool_options_window.h"
+#include "ui/windows/tool_options_window.h"
 #include "palette/panels/brush_size_panel.h"
 #include "palette/panels/brush_tool_panel.h"
 #include "palette/panels/brush_thickness_panel.h"

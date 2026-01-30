@@ -16,8 +16,8 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/replace_items_window.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/replace_items_window.h"
+#include "ui/windows/find_item_window.h"
 #include "editor/action_queue.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"

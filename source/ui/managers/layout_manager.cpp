@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 #include "ui/managers/layout_manager.h"
 #include "app/managers/version_manager.h"
 #include "ui/gui.h"
@@ -19,7 +20,7 @@
 #include "ingame_preview/ingame_preview_manager.h"
 #include "ingame_preview/ingame_preview_window.h"
 #include "ui/managers/status_manager.h"
-#include "ui/tool_options_window.h"
+#include "ui/windows/tool_options_window.h"
 
 LayoutManager g_layout;
 

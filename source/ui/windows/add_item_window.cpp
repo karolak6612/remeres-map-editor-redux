@@ -33,30 +33,31 @@
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "app/application.h"
-#include "ui/add_tileset_window.h"
+#include "ui/windows/add_item_window.h"
 #include "ui/properties/container_properties_window.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/find_item_window.h"
 
 // ============================================================================
-// Add Tileset Window
+// Add Item Window
 
-BEGIN_EVENT_TABLE(AddTilesetWindow, wxDialog)
-EVT_BUTTON(wxID_OK, AddTilesetWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, AddTilesetWindow::OnClickCancel)
+BEGIN_EVENT_TABLE(AddItemWindow, wxDialog)
+EVT_BUTTON(wxID_OK, AddItemWindow::OnClickOK)
+EVT_BUTTON(wxID_CANCEL, AddItemWindow::OnClickCancel)
 END_EVENT_TABLE()
 
 static constexpr int OUTFIT_COLOR_MAX = 133;
 
-AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType categoryType, wxPoint pos) :
-	ObjectPropertiesWindowBase(win_parent, "Add a Tileset", pos),
+AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryType, Tileset* tilesetItem, wxPoint pos) :
+	ObjectPropertiesWindowBase(win_parent, "Add a Item", pos),
+	item_id(0),
+	tileset_item(tilesetItem),
 	category_type(categoryType),
+	item_id_field(nullptr),
 	item_id_label(nullptr),
 	item_name_label(nullptr),
-	tileset_name_field(nullptr),
-	item_id_field(nullptr),
 	item_button(nullptr) {
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxString description = "Add a Tileset";
+	wxString description = "Add a Item";
 
 	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, description);
 
@@ -72,15 +73,14 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item"), wxSizerFlags(1).CenterVertical());
 	item_button = newd DCButton(this, wxID_ANY, wxDefaultPosition, DC_BTN_TOGGLE, RENDER_SIZE_32x32, 0);
+	item_button->SetToolTip("Click to search for an item");
 	subsizer->Add(item_button);
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item Id of First Item"));
+	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item Id"));
 	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, 100000);
+	item_id_field->SetToolTip("Enter item ID directly");
+	item_id_field->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &AddItemWindow::OnChangeItemId, this);
 	subsizer->Add(item_id_field, wxSizerFlags(1).Expand());
-
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Tileset Name"));
-	tileset_name_field = newd wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE);
-	subsizer->Add(tileset_name_field);
 
 	boxsizer->Add(subsizer, wxSizerFlags(1).Expand());
 
@@ -94,11 +94,28 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
 
-	item_id_field->Connect(wxEVT_COMMAND_SPINCTRL_UPDATED, wxCommandEventHandler(AddTilesetWindow::OnChangeItemId), nullptr, this);
-	item_button->Connect(wxEVT_LEFT_DOWN, wxMouseEventHandler(AddTilesetWindow::OnItemClicked), nullptr, this);
+	item_button->Bind(wxEVT_LEFT_DOWN, &AddItemWindow::OnItemClicked, this);
 }
 
-void AddTilesetWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
+void AddItemWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
+	const ItemType& it = g_items.getItemType(item_id_field->GetValue());
+	if (it.id != 0) {
+		g_materials.addToTileset(tileset_item->name, it.id, category_type);
+		g_materials.modify();
+		DialogUtil::PopupDialog("Item added to Tileset", "'" + it.name + "' has been added to tileset '" + tileset_item->name + "'", wxOK);
+
+		EndModal(1);
+	} else {
+		DialogUtil::PopupDialog("Something went wrong", "You need to select any item", wxOK);
+	}
+}
+
+void AddItemWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
+	// Just close this window
+	EndModal(0);
+}
+
+void AddItemWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
 	ItemType& it = g_items[itemId];
 	if (it.id != 0) {
@@ -111,7 +128,7 @@ void AddTilesetWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
 	}
 }
 
-void AddTilesetWindow::OnItemClicked(wxMouseEvent& WXUNUSED(event)) {
+void AddItemWindow::OnItemClicked(wxMouseEvent& WXUNUSED(event)) {
 	FindItemDialog dialog(this, "Item");
 	if (dialog.ShowModal() == wxID_OK) {
 		uint16_t id = dialog.getResultID();
@@ -120,7 +137,7 @@ void AddTilesetWindow::OnItemClicked(wxMouseEvent& WXUNUSED(event)) {
 	dialog.Destroy();
 }
 
-void AddTilesetWindow::SetItemIdToItemButton(uint16_t id) {
+void AddItemWindow::SetItemIdToItemButton(uint16_t id) {
 	if (!item_button) {
 		return;
 	}
@@ -138,24 +155,4 @@ void AddTilesetWindow::SetItemIdToItemButton(uint16_t id) {
 	}
 
 	item_button->SetSprite(0);
-}
-
-void AddTilesetWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
-	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
-		std::string tilesetName = std::string(tileset_name_field->GetValue().mb_str());
-		g_materials.addToTileset(tilesetName, it.id, category_type);
-		g_materials.modify();
-		DialogUtil::PopupDialog("Added Tileset", "'" + it.name + "' has been added to new tileset '" + tilesetName + "'", wxOK);
-
-		EndModal(1);
-	} else {
-		DialogUtil::PopupDialog(this, "Error", "Item does not exist.", wxOK);
-	}
-}
-
-void AddTilesetWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
-	// Just close this window
-	EndModal(0);
 }

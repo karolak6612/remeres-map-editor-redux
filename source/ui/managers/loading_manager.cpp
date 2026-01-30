@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 #include "ui/managers/loading_manager.h"
 
 #include "ui/gui.h"

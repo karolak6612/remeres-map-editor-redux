@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "ui/windows/main_window.h"
 #include "ui/managers/status_manager.h"
 #include "ui/gui.h"
 #include "editor/editor_tabs.h"

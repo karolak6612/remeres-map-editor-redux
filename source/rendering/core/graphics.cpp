@@ -28,7 +28,7 @@
 
 #include <wx/mstream.h>
 #include <wx/dir.h>
-#include "ui/pngfiles.h"
+#include "resources/embedded_images.h"
 #include "rendering/utilities/wx_utils.h"
 
 #include "../../../brushes/door_normal.xpm"
