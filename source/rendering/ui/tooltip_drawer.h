@@ -130,7 +130,7 @@ public:
 	~TooltipDrawer();
 
 	// Add a structured tooltip for an item
-	void addItemTooltip(const TooltipData& data);
+	void addItemTooltip(TooltipData data);
 
 	// Add a waypoint tooltip
 	void addWaypointTooltip(Position pos, const std::string& name);

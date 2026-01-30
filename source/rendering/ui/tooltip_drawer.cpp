@@ -44,11 +44,11 @@ void TooltipDrawer::clear() {
 	tooltips.clear();
 }
 
-void TooltipDrawer::addItemTooltip(const TooltipData& data) {
+void TooltipDrawer::addItemTooltip(TooltipData data) {
 	if (!data.hasVisibleFields()) {
 		return;
 	}
-	tooltips.push_back(data);
+	tooltips.push_back(std::move(data));
 }
 
 void TooltipDrawer::addWaypointTooltip(Position pos, const std::string& name) {
@@ -201,7 +201,17 @@ void TooltipDrawer::draw(const RenderView& view) {
 
 	using namespace TooltipColors;
 
+	// Build content lines with word wrapping support
+	struct FieldLine {
+		std::string label;
+		std::string value;
+		uint8_t r, g, b;
+		std::vector<std::string> wrappedLines; // For multi-line values
+	};
+	std::vector<FieldLine> fields;
+
 	for (const auto& tooltip : tooltips) {
+		fields.clear();
 		int unscaled_x, unscaled_y;
 		view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
 
@@ -226,15 +236,6 @@ void TooltipDrawer::draw(const RenderView& view) {
 		float borderWidth = 1.0f; // Thinner border
 		float minWidth = 120.0f;
 		float maxWidth = 220.0f; // Max content width for wrapping
-
-		// Build content lines with word wrapping support
-		struct FieldLine {
-			std::string label;
-			std::string value;
-			uint8_t r, g, b;
-			std::vector<std::string> wrappedLines; // For multi-line values
-		};
-		std::vector<FieldLine> fields;
 
 		if (tooltip.category == TooltipCategory::WAYPOINT) {
 			fields.push_back({ "Waypoint", tooltip.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
