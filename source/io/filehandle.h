@@ -247,10 +247,10 @@ protected:
 class MemoryNodeFileReadHandle : public NodeFileReadHandle {
 public:
 	// Does NOT claim ownership of the memory it is given.
-	MemoryNodeFileReadHandle(const uint8_t* data, size_t size);
+	MemoryNodeFileReadHandle(const uint8_t* data, size_t size, bool skip_start = true);
 	virtual ~MemoryNodeFileReadHandle();
 
-	void assign(const uint8_t* data, size_t size);
+	void assign(const uint8_t* data, size_t size, bool skip_start = true);
 
 	virtual void close();
 	virtual BinaryNode* getRootNode();
@@ -269,6 +269,7 @@ protected:
 	virtual bool renewCache();
 
 	uint8_t* index;
+	bool skip_start;
 };
 
 class FileWriteHandle : public FileHandle {

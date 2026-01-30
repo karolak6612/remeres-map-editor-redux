@@ -175,17 +175,18 @@ void NodeFileReadHandle::freeNode(BinaryNode* node) {
 //=============================================================================
 // Memory based node file read handle
 
-MemoryNodeFileReadHandle::MemoryNodeFileReadHandle(const uint8_t* data, size_t size) {
-	assign(data, size);
+MemoryNodeFileReadHandle::MemoryNodeFileReadHandle(const uint8_t* data, size_t size, bool skip_start) {
+	assign(data, size, skip_start);
 }
 
-void MemoryNodeFileReadHandle::assign(const uint8_t* data, size_t size) {
+void MemoryNodeFileReadHandle::assign(const uint8_t* data, size_t size, bool skip_start) {
 	freeNode(root_node);
 	root_node = nullptr;
 	// Highly volatile, but we know we're not gonna modify
 	cache = const_cast<uint8_t*>(data);
 	cache_size = cache_length = size;
 	local_read_index = 0;
+	this->skip_start = skip_start;
 }
 
 MemoryNodeFileReadHandle::~MemoryNodeFileReadHandle() {
@@ -203,7 +204,9 @@ bool MemoryNodeFileReadHandle::renewCache() {
 BinaryNode* MemoryNodeFileReadHandle::getRootNode() {
 	assert(root_node == nullptr); // You should never do this twice
 
-	local_read_index++; // Skip first NODE_START
+	if (skip_start) {
+		local_read_index++; // Skip first NODE_START
+	}
 	last_was_start = true;
 	root_node = getNode(nullptr);
 	root_node->load();

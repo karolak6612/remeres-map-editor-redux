@@ -170,7 +170,7 @@ void LiveSocket::receiveFloor(NetworkMessage& message, Editor& editor, Action* a
 
 	// -1 on address since we skip the first START_NODE when sending
 	const std::string& data = message.read<std::string>();
-	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str() - 1), data.size());
+	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str()), data.size(), false);
 
 	BinaryNode* rootNode = mapReader.getRootNode();
 	BinaryNode* tileNode = rootNode->getChild();
