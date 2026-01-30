@@ -943,7 +943,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 						if (house_id) {
 							house = map.houses.getHouse(house_id);
 							if (!house) {
-								house = newd House(map);
+								house = new House(map);
 								house->setID(house_id);
 								map.houses.addHouse(house);
 							}
@@ -1032,7 +1032,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 					warning("Duplicate town id %d, discarding duplicate", town_id);
 					continue;
 				} else {
-					town = newd Town(town_id);
+					town = new Town(town_id);
 					if (!map.towns.addTown(town)) {
 						delete town;
 						continue;
@@ -1087,7 +1087,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 				wp.pos.y = y;
 				wp.pos.z = z;
 
-				map.waypoints.addWaypoint(newd Waypoint(wp));
+				map.waypoints.addWaypoint(new Waypoint(wp));
 			}
 		}
 	}
@@ -1154,7 +1154,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			continue;
 		}
 
-		Spawn* spawn = newd Spawn(radius);
+		Spawn* spawn = new Spawn(radius);
 		if (!tile) {
 			tile = map.allocator(map.createTileL(spawnPosition));
 			map.setTile(spawnPosition, tile);
@@ -1233,15 +1233,15 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 				type = g_creatures.addMissingCreatureType(name, isNpc);
 			}
 
-			Creature* creature = newd Creature(type);
+			Creature* creature = new Creature(type);
 			creature->setDirection(direction);
 			creature->setSpawnTime(spawntime);
 			creatureTile->creature = creature;
 
 			if (creatureTile->getLocation()->getSpawnCount() == 0) {
-				// No spawn, create a newd one
+				// No spawn, create a new one
 				ASSERT(creatureTile->spawn == nullptr);
-				Spawn* spawn = newd Spawn(5);
+				Spawn* spawn = new Spawn(5);
 				creatureTile->spawn = spawn;
 				map.addSpawn(creatureTile);
 			}
@@ -1540,8 +1540,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 
 			int local_x = -1, local_y = -1, local_z = -1;
 
-			MapIterator map_iterator = map.begin();
-			while (map_iterator != map.end()) {
+			for (auto tile_loc : map) {
 				// Update progressbar
 				++tiles_saved;
 				if (tiles_saved % 8192 == 0) {
@@ -1549,17 +1548,16 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 				}
 
 				// Get tile
-				Tile* save_tile = (*map_iterator)->get();
+				Tile* save_tile = tile_loc->get();
 
 				// Is it an empty tile that we can skip? (Leftovers...)
 				if (!save_tile || save_tile->size() == 0) {
-					++map_iterator;
 					continue;
 				}
 
 				const Position& pos = save_tile->getPosition();
 
-				// Decide if newd node should be created
+				// Decide if new node should be created
 				if (pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
 					// End last node
 					if (!first) {
@@ -1567,7 +1565,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 					}
 					first = false;
 
-					// Start newd node
+					// Start new node
 					f.addNode(OTBM_TILE_AREA);
 					f.addU16(local_x = pos.x & 0xFF00);
 					f.addU16(local_y = pos.y & 0xFF00);
@@ -1620,7 +1618,6 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 				}
 
 				f.endNode();
-				++map_iterator;
 			}
 
 			// Only close the last node if one has actually been created

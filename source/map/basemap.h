@@ -24,6 +24,8 @@
 #include "map/map_allocator.h"
 #include "map/tile.h"
 
+#include <iterator>
+
 // Class declarations
 class QTreeNode;
 class BaseMap;
@@ -34,6 +36,12 @@ class TileLocation;
 
 class MapIterator {
 public:
+	using iterator_category = std::forward_iterator_tag;
+	using value_type = TileLocation*;
+	using difference_type = std::ptrdiff_t;
+	using pointer = TileLocation**;
+	using reference = TileLocation*;
+
 	MapIterator(BaseMap* _map = nullptr);
 	~MapIterator();
 	MapIterator(const MapIterator& other);
