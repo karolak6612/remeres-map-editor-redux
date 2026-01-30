@@ -92,14 +92,14 @@ namespace IngamePreview {
 		primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 		light_buffer->Clear();
 
-		std::ostringstream tooltip_stream;
-
 		// Render floors from bottom to top
 		for (int z = last_visible; z >= 0; z--) {
 			float alpha = floor_opacity[z];
 			if (alpha <= 0.001f) {
 				continue;
 			}
+
+			int layer_offset = (z <= GROUND_LAYER) ? (GROUND_LAYER - z) * TileSize : TileSize * (view.floor - z);
 
 			// Sync viewport and start batch for this floor
 			sprite_batch->begin(view.projectionMatrix);
@@ -115,7 +115,10 @@ namespace IngamePreview {
 				for (int y = view.start_y; y <= view.end_y; ++y) {
 					const Tile* tile = map.getTile(x, y, z);
 					if (tile) {
-						tile_renderer->DrawTile(*sprite_batch, *primitive_renderer, tile->location, view, options, 0, tooltip_stream);
+						int draw_x = (x * TileSize) - view.view_scroll_x - layer_offset;
+						int draw_y = (y * TileSize) - view.view_scroll_y - layer_offset;
+
+						tile_renderer->DrawTile(*sprite_batch, *primitive_renderer, tile->location, view, options, 0, draw_x, draw_y);
 						if (lighting_enabled) {
 							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
 						}

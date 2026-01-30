@@ -38,15 +38,20 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer, std::ostringstream& tooltip) {
+void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
 	int nd_end_y = (view.end_y & ~3) + 4;
 
+	int offset = (map_z <= GROUND_LAYER) ? (GROUND_LAYER - map_z) * TileSize : TileSize * (view.floor - map_z);
+
 	if (live_client) {
 		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
+			int node_draw_x = (nd_map_x * TileSize) - view.view_scroll_x - offset;
 			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
+				int node_draw_y = (nd_map_y * TileSize) - view.view_scroll_y - offset;
+
 				QTreeNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
 				if (!nd) {
 					nd = editor->map.createLeaf(nd_map_x, nd_map_y);
@@ -57,7 +62,9 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 					for (int map_x = 0; map_x < 4; ++map_x) {
 						for (int map_y = 0; map_y < 4; ++map_y) {
 							TileLocation* location = nd->getTile(map_x, map_y, map_z);
-							tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, tooltip);
+							int draw_x = node_draw_x + map_x * TileSize;
+							int draw_y = node_draw_y + map_y * TileSize;
+							tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 							// draw light, but only if not zoomed too far
 							if (location && options.isDrawLight() && view.zoom <= 10.0) {
 								tile_renderer->AddLight(location, view, options, light_buffer);
@@ -77,11 +84,16 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 			}
 		}
 	} else {
-		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](QTreeNode* nd, int, int) {
+		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](QTreeNode* nd, int nd_map_x, int nd_map_y) {
+			int node_draw_x = (nd_map_x * TileSize) - view.view_scroll_x - offset;
+			int node_draw_y = (nd_map_y * TileSize) - view.view_scroll_y - offset;
+
 			for (int map_x = 0; map_x < 4; ++map_x) {
 				for (int map_y = 0; map_y < 4; ++map_y) {
 					TileLocation* location = nd->getTile(map_x, map_y, map_z);
-					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, tooltip);
+					int draw_x = node_draw_x + map_x * TileSize;
+					int draw_y = node_draw_y + map_y * TileSize;
+					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
 					if (location && options.isDrawLight() && view.zoom <= 10.0) {
 						tile_renderer->AddLight(location, view, options, light_buffer);

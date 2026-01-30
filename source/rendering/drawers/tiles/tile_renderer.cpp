@@ -129,7 +129,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 	return data;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, std::ostringstream& tooltip_stream) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
 	if (!location) {
 		return;
 	}
@@ -147,9 +147,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	int map_y = location->getY();
 	int map_z = location->getZ();
 
-	// Early viewport culling - skip tiles that are completely off-screen
-	int draw_x, draw_y;
-	if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
+	int draw_x = in_draw_x;
+	int draw_y = in_draw_y;
+
+	// Bounds check (similar to IsTileVisible)
+	// We use TileSize constant from definitions.h (which is implicitly available) or literal 32
+	// IsTileVisible uses TileSize * 3.
+	int margin = 32 * 3;
+	// Note: view.screensize_x is viewport width.
+	if (draw_x < -margin || draw_x > view.screensize_x * view.zoom + margin || draw_y < -margin || draw_y > view.screensize_y * view.zoom + margin) {
 		return;
 	}
 
@@ -190,8 +196,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 		}
 	}
 
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y);
+
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+	if (options.show_tooltips && is_hovered && map_z == view.floor && tile->ground) {
 		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
 		if (groundData.hasVisibleFields()) {
 			tooltip_drawer->addItemTooltip(groundData);
@@ -225,7 +233,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (options.show_tooltips && is_hovered && map_z == view.floor) {
 					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
 					if (itemData.hasVisibleFields()) {
 						tooltip_drawer->addItemTooltip(itemData);
