@@ -5,6 +5,7 @@
 #include "palette/palette_window.h" // For PaletteWindow dynamic_casts
 #include "palette/controls/virtual_brush_grid.h"
 #include <spdlog/spdlog.h>
+#include <wx/wrapsizer.h>
 
 // ============================================================================
 // Brush Panel
@@ -169,40 +170,19 @@ BrushIconBox::BrushIconBox(wxWindow* parent, const TilesetCategory* _tileset, Re
 	BrushBoxInterface(_tileset),
 	icon_size(rsz) {
 	ASSERT(tileset->getType() >= TILESET_UNKNOWN && tileset->getType() <= TILESET_HOUSE);
-	int width;
-	if (icon_size == RENDER_SIZE_32x32) {
-		width = max(g_settings.getInteger(Config::PALETTE_COL_COUNT) / 2 + 1, 1);
-	} else {
-		width = max(g_settings.getInteger(Config::PALETTE_COL_COUNT) + 1, 1);
-	}
 
-	// Create buttons
-	wxSizer* stacksizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* rowsizer = nullptr;
-	int item_counter = 0;
+	wxSizer* stacksizer = newd wxWrapSizer(wxHORIZONTAL);
 	for (BrushVector::const_iterator iter = tileset->brushlist.begin(); iter != tileset->brushlist.end(); ++iter) {
 		ASSERT(*iter);
-		++item_counter;
-
-		if (!rowsizer) {
-			rowsizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
 
 		BrushButton* bb = newd BrushButton(this, *iter, rsz);
-		rowsizer->Add(bb);
+		stacksizer->Add(bb);
 		brush_buttons.push_back(bb);
-
-		if (item_counter % width == 0) { // newd row
-			stacksizer->Add(rowsizer);
-			rowsizer = nullptr;
-		}
-	}
-	if (rowsizer) {
-		stacksizer->Add(rowsizer);
 	}
 
-	SetScrollbars(20, 20, 8, item_counter / width, 0, 0);
 	SetSizer(stacksizer);
+	SetScrollRate(20, 20);
+	FitInside();
 }
 
 BrushIconBox::~BrushIconBox() {

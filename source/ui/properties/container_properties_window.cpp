@@ -13,6 +13,7 @@
 #include "ui/gui_ids.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"
+#include <wx/wrapsizer.h>
 
 ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(win_parent, "Container Properties", map, tile_parent, item, pos),
@@ -51,39 +52,21 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 
 	// Now we add the subitems!
 	wxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
+	wxSizer* wrap_sizer = newd wxWrapSizer(wxHORIZONTAL);
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
-	wxSizer* horizontal_sizer = nullptr;
-	int32_t maxColumns;
-	if (use_large_sprites) {
-		maxColumns = 6;
-	} else {
-		maxColumns = 12;
-	}
 
 	for (uint32_t index = 0; index < container->getVolume(); ++index) {
-		if (!horizontal_sizer) {
-			horizontal_sizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
-
 		Item* sub_item = container->getItem(index);
 		ContainerItemButton* containerItemButton = newd ContainerItemButton(this, use_large_sprites, index, map, sub_item);
 		containerItemButton->Bind(wxEVT_BUTTON, &ContainerPropertiesWindow::OnContainerItemClick, this);
 		containerItemButton->Bind(wxEVT_RIGHT_UP, &ContainerPropertiesWindow::OnContainerItemRightClick, this);
 
 		container_items.push_back(containerItemButton);
-		horizontal_sizer->Add(containerItemButton);
-
-		if (((index + 1) % maxColumns) == 0) {
-			contents_sizer->Add(horizontal_sizer);
-			horizontal_sizer = nullptr;
-		}
+		wrap_sizer->Add(containerItemButton);
 	}
 
-	if (horizontal_sizer != nullptr) {
-		contents_sizer->Add(horizontal_sizer);
-	}
-
+	contents_sizer->Add(wrap_sizer, wxSizerFlags(1).Expand());
 	boxsizer->Add(contents_sizer, wxSizerFlags(2).Expand());
 
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxALL, 20));
