@@ -895,7 +895,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 
 	for (BinaryNode* mapNode = mapHeaderNode->getChild(); mapNode != nullptr; mapNode = mapNode->advance()) {
 		++nodes_loaded;
-		if (nodes_loaded % 2048 == 0) {
+		if (nodes_loaded % 2048 == 0 && f.size() != 0) {
 			g_gui.SetLoadDone(static_cast<int32_t>(100.0 * f.tell() / f.size()));
 		}
 
@@ -1544,7 +1544,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			while (map_iterator != map.end()) {
 				// Update progressbar
 				++tiles_saved;
-				if (tiles_saved % 8192 == 0) {
+				if (tiles_saved % 8192 == 0 && map.getTileCount() != 0) {
 					g_gui.SetLoadDone(int(tiles_saved / double(map.getTileCount()) * 100.0));
 				}
 

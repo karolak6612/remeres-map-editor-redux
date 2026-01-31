@@ -379,7 +379,7 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 	if (mapNode) {
 		do {
 			++nodes_loaded;
-			if (showdialog && nodes_loaded % 15 == 0) {
+			if (showdialog && nodes_loaded % 15 == 0 && f.size() != 0) {
 				g_gui.SetLoadDone(int(100.0 * f.tell() / f.size()));
 			}
 			uint8_t node_type;
@@ -801,7 +801,7 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 				while (map_iterator != map.end()) {
 					// Update progressbar
 					++tiles_saved;
-					if (showdialog && tiles_saved % 8192 == 0) {
+					if (showdialog && tiles_saved % 8192 == 0 && map.getTileCount() != 0) {
 						g_gui.SetLoadDone(int(tiles_saved / double(map.getTileCount()) * 100.0));
 					}
 

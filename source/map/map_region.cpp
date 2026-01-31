@@ -204,9 +204,9 @@ void QTreeNode::setRequested(bool underground, bool r) {
 
 void QTreeNode::setVisible(uint32_t client, bool underground, bool value) {
 	if (value) {
-		visible |= (1 << client << (underground ? MAP_LAYERS : 0));
+		visible |= (1U << client << (underground ? MAP_LAYERS : 0));
 	} else {
-		visible &= ~(1 << client << (underground ? MAP_LAYERS : 0));
+		visible &= ~(1U << client << (underground ? MAP_LAYERS : 0));
 	}
 }
 
