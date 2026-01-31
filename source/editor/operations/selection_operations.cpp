@@ -146,7 +146,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		action = editor.actionQueue->createAction(batchAction.get());
 		TileList borderize_tiles;
 		// Go through all modified (selected) tiles (might be slow)
-		for (TileSet::iterator it = tmp_storage.begin(); it != tmp_storage.end(); ++it) {
+		for (auto it = tmp_storage.begin(); it != tmp_storage.end(); ++it) {
 			Position pos = (*it)->getPosition();
 			// Go through all neighbours
 			Tile* t;
@@ -211,7 +211,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 
 	// New action for adding the destination tiles
 	action = editor.actionQueue->createAction(batchAction.get());
-	for (TileSet::iterator it = tmp_storage.begin(); it != tmp_storage.end(); ++it) {
+	for (auto it = tmp_storage.begin(); it != tmp_storage.end(); ++it) {
 		Tile* tile = (*it);
 		const Position old_pos = tile->getPosition();
 		Position new_pos;
@@ -253,7 +253,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		action = editor.actionQueue->createAction(batchAction.get());
 		TileList borderize_tiles;
 		// Go through all modified (selected) tiles (might be slow)
-		for (TileSet::iterator it = editor.selection.begin(); it != editor.selection.end(); it++) {
+		for (auto it = editor.selection.begin(); it != editor.selection.end(); it++) {
 			bool add_me = false; // If this tile is touched
 			Position pos = (*it)->getPosition();
 			// Go through all neighbours

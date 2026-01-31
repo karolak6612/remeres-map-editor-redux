@@ -24,12 +24,6 @@
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 
-BEGIN_EVENT_TABLE(FindItemDialog, wxDialog)
-EVT_TIMER(wxID_ANY, FindItemDialog::OnInputTimer)
-EVT_BUTTON(wxID_OK, FindItemDialog::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, FindItemDialog::OnClickCancel)
-END_EVENT_TABLE()
-
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
 	input_timer(this),
@@ -38,9 +32,9 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	only_pickupables(onlyPickupables) {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
-	wxBoxSizer* box_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	wxBoxSizer* box_sizer = new wxBoxSizer(wxHORIZONTAL);
 
-	wxBoxSizer* options_box_sizer = newd wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* options_box_sizer = new wxBoxSizer(wxVERTICAL);
 
 	wxString radio_boxChoices[] = { "Find by Server ID",
 									"Find by Client ID",
@@ -49,30 +43,30 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 									"Find by Properties" };
 
 	int radio_boxNChoices = sizeof(radio_boxChoices) / sizeof(wxString);
-	options_radio_box = newd wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, radio_boxNChoices, radio_boxChoices, 1, wxRA_SPECIFY_COLS);
+	options_radio_box = new wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, radio_boxNChoices, radio_boxChoices, 1, wxRA_SPECIFY_COLS);
 	options_radio_box->SetSelection(SearchMode::ServerIDs);
 	options_box_sizer->Add(options_radio_box, 0, wxALL | wxEXPAND, 5);
 
-	wxStaticBoxSizer* server_id_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Server ID"), wxVERTICAL);
-	server_id_spin = newd wxSpinCtrl(server_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_items.getMaxID(), 100);
+	wxStaticBoxSizer* server_id_box_sizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Server ID"), wxVERTICAL);
+	server_id_spin = new wxSpinCtrl(server_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_items.getMaxID(), 100);
 	server_id_spin->SetToolTip("Search by server ID");
 	server_id_box_sizer->Add(server_id_spin, 0, wxALL | wxEXPAND, 5);
 
-	invalid_item = newd wxCheckBox(server_id_box_sizer->GetStaticBox(), wxID_ANY, "Force select", wxDefaultPosition, wxDefaultSize, 0);
+	invalid_item = new wxCheckBox(server_id_box_sizer->GetStaticBox(), wxID_ANY, "Force select", wxDefaultPosition, wxDefaultSize, 0);
 	invalid_item->SetToolTip("Force choose item ID that does not appear on the list.");
 	server_id_box_sizer->Add(invalid_item, 1, wxALL | wxEXPAND, 5);
 
 	options_box_sizer->Add(server_id_box_sizer, 1, wxALL | wxEXPAND, 5);
 
-	wxStaticBoxSizer* client_id_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Client ID"), wxVERTICAL);
-	client_id_spin = newd wxSpinCtrl(client_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_gui.gfx.getItemSpriteMaxID(), 100);
+	wxStaticBoxSizer* client_id_box_sizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Client ID"), wxVERTICAL);
+	client_id_spin = new wxSpinCtrl(client_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_gui.gfx.getItemSpriteMaxID(), 100);
 	client_id_spin->SetToolTip("Search by client ID");
 	client_id_spin->Enable(false);
 	client_id_box_sizer->Add(client_id_spin, 0, wxALL | wxEXPAND, 5);
 	options_box_sizer->Add(client_id_box_sizer, 1, wxALL | wxEXPAND, 5);
 
-	wxStaticBoxSizer* name_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Name"), wxVERTICAL);
-	name_text_input = newd wxTextCtrl(name_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
+	wxStaticBoxSizer* name_box_sizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Name"), wxVERTICAL);
+	name_text_input = new wxTextCtrl(name_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
 	name_text_input->SetToolTip("Search by item name");
 	name_text_input->Enable(false);
 	name_box_sizer->Add(name_text_input, 0, wxALL | wxEXPAND, 5);
@@ -81,11 +75,11 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	// spacer
 	options_box_sizer->Add(0, 0, 4, wxALL | wxEXPAND, 5);
 
-	buttons_box_sizer = newd wxStdDialogButtonSizer();
-	ok_button = newd wxButton(this, wxID_OK);
+	buttons_box_sizer = new wxStdDialogButtonSizer();
+	ok_button = new wxButton(this, wxID_OK);
 	ok_button->SetToolTip("Select an item to confirm");
 	buttons_box_sizer->AddButton(ok_button);
-	cancel_button = newd wxButton(this, wxID_CANCEL);
+	cancel_button = new wxButton(this, wxID_CANCEL);
 	cancel_button->SetToolTip("Cancel selection");
 	buttons_box_sizer->AddButton(cancel_button);
 	buttons_box_sizer->Realize();
@@ -95,7 +89,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	// --------------- Types ---------------
 
-	wxStaticBoxSizer* type_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Types"), wxVERTICAL);
+	wxStaticBoxSizer* type_box_sizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Types"), wxVERTICAL);
 
 	wxString types_choices[] = { "Depot",
 								 "Mailbox",
@@ -109,7 +103,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 								 "Podium" };
 
 	int types_choices_count = sizeof(types_choices) / sizeof(wxString);
-	types_radio_box = newd wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, types_choices_count, types_choices, 1, wxRA_SPECIFY_COLS);
+	types_radio_box = new wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, types_choices_count, types_choices, 1, wxRA_SPECIFY_COLS);
 	types_radio_box->SetSelection(0);
 	types_radio_box->Enable(false);
 	type_box_sizer->Add(types_radio_box, 0, wxALL | wxEXPAND, 5);
@@ -118,67 +112,67 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	// --------------- Properties ---------------
 
-	wxStaticBoxSizer* properties_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Properties"), wxVERTICAL);
+	wxStaticBoxSizer* properties_box_sizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Properties"), wxVERTICAL);
 
-	unpassable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unpassable", wxDefaultPosition, wxDefaultSize, 0);
+	unpassable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unpassable", wxDefaultPosition, wxDefaultSize, 0);
 	unpassable->SetToolTip("Item blocks movement");
 	properties_box_sizer->Add(unpassable, 0, wxALL, 5);
 
-	unmovable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unmovable", wxDefaultPosition, wxDefaultSize, 0);
+	unmovable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unmovable", wxDefaultPosition, wxDefaultSize, 0);
 	unmovable->SetToolTip("Item cannot be moved");
 	properties_box_sizer->Add(unmovable, 0, wxALL, 5);
 
-	block_missiles = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Block Missiles", wxDefaultPosition, wxDefaultSize, 0);
+	block_missiles = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Block Missiles", wxDefaultPosition, wxDefaultSize, 0);
 	block_missiles->SetToolTip("Item blocks projectiles");
 	properties_box_sizer->Add(block_missiles, 0, wxALL, 5);
 
-	block_pathfinder = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Block Pathfinder", wxDefaultPosition, wxDefaultSize, 0);
+	block_pathfinder = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Block Pathfinder", wxDefaultPosition, wxDefaultSize, 0);
 	block_pathfinder->SetToolTip("Item blocks pathfinding");
 	properties_box_sizer->Add(block_pathfinder, 0, wxALL, 5);
 
-	readable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Readable", wxDefaultPosition, wxDefaultSize, 0);
+	readable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Readable", wxDefaultPosition, wxDefaultSize, 0);
 	readable->SetToolTip("Item has text");
 	properties_box_sizer->Add(readable, 0, wxALL, 5);
 
-	writeable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Writeable", wxDefaultPosition, wxDefaultSize, 0);
+	writeable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Writeable", wxDefaultPosition, wxDefaultSize, 0);
 	writeable->SetToolTip("Item can be written on");
 	properties_box_sizer->Add(writeable, 0, wxALL, 5);
 
-	pickupable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Pickupable", wxDefaultPosition, wxDefaultSize, 0);
+	pickupable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Pickupable", wxDefaultPosition, wxDefaultSize, 0);
 	pickupable->SetToolTip("Item can be picked up");
 	pickupable->SetValue(only_pickupables);
 	pickupable->Enable(!only_pickupables);
 	properties_box_sizer->Add(pickupable, 0, wxALL, 5);
 
-	stackable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Stackable", wxDefaultPosition, wxDefaultSize, 0);
+	stackable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Stackable", wxDefaultPosition, wxDefaultSize, 0);
 	stackable->SetToolTip("Item is stackable");
 	properties_box_sizer->Add(stackable, 0, wxALL, 5);
 
-	rotatable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Rotatable", wxDefaultPosition, wxDefaultSize, 0);
+	rotatable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Rotatable", wxDefaultPosition, wxDefaultSize, 0);
 	rotatable->SetToolTip("Item can be rotated");
 	properties_box_sizer->Add(rotatable, 0, wxALL, 5);
 
-	hangable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hangable", wxDefaultPosition, wxDefaultSize, 0);
+	hangable = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hangable", wxDefaultPosition, wxDefaultSize, 0);
 	hangable->SetToolTip("Item can be hung on walls");
 	properties_box_sizer->Add(hangable, 0, wxALL, 5);
 
-	hook_east = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hook East", wxDefaultPosition, wxDefaultSize, 0);
+	hook_east = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hook East", wxDefaultPosition, wxDefaultSize, 0);
 	hook_east->SetToolTip("Item hooks to the east");
 	properties_box_sizer->Add(hook_east, 0, wxALL, 5);
 
-	hook_south = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hook South", wxDefaultPosition, wxDefaultSize, 0);
+	hook_south = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hook South", wxDefaultPosition, wxDefaultSize, 0);
 	hook_south->SetToolTip("Item hooks to the south");
 	properties_box_sizer->Add(hook_south, 0, wxALL, 5);
 
-	has_elevation = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Has Elevation", wxDefaultPosition, wxDefaultSize, 0);
+	has_elevation = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Has Elevation", wxDefaultPosition, wxDefaultSize, 0);
 	has_elevation->SetToolTip("Item has height (elevation)");
 	properties_box_sizer->Add(has_elevation, 0, wxALL, 5);
 
-	ignore_look = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Ignore Look", wxDefaultPosition, wxDefaultSize, 0);
+	ignore_look = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Ignore Look", wxDefaultPosition, wxDefaultSize, 0);
 	ignore_look->SetToolTip("Item is ignored when looking");
 	properties_box_sizer->Add(ignore_look, 0, wxALL, 5);
 
-	floor_change = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Floor Change", wxDefaultPosition, wxDefaultSize, 0);
+	floor_change = new wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Floor Change", wxDefaultPosition, wxDefaultSize, 0);
 	floor_change->SetToolTip("Item causes floor change");
 	properties_box_sizer->Add(floor_change, 0, wxALL, 5);
 
@@ -186,8 +180,8 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	// --------------- Items list ---------------
 
-	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
-	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
+	wxStaticBoxSizer* result_box_sizer = new wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
+	items_list = new FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
 	items_list->SetMinSize(wxSize(230, 512));
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
@@ -224,6 +218,10 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	ignore_look->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &FindItemDialog::OnPropertyChange, this);
 	floor_change->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &FindItemDialog::OnPropertyChange, this);
 	invalid_item->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &FindItemDialog::OnPropertyChange, this);
+
+	Bind(wxEVT_TIMER, &FindItemDialog::OnInputTimer, this);
+	Bind(wxEVT_BUTTON, &FindItemDialog::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &FindItemDialog::OnClickCancel, this, wxID_CANCEL);
 }
 
 FindItemDialog::~FindItemDialog() {
