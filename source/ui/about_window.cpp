@@ -28,14 +28,12 @@
 //=============================================================================
 // About Window - Information window about the application
 
-BEGIN_EVENT_TABLE(AboutWindow, wxDialog)
-EVT_BUTTON(wxID_OK, AboutWindow::OnClickOK)
-EVT_BUTTON(ABOUT_VIEW_LICENSE, AboutWindow::OnClickLicense)
-EVT_MENU(wxID_CANCEL, AboutWindow::OnClickOK)
-END_EVENT_TABLE()
-
 AboutWindow::AboutWindow(wxWindow* parent) :
 	wxDialog(parent, wxID_ANY, "About", wxDefaultPosition, wxSize(300, 320), wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX) {
+	Bind(wxEVT_BUTTON, &AboutWindow::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &AboutWindow::OnClickLicense, this, ABOUT_VIEW_LICENSE);
+	Bind(wxEVT_MENU, &AboutWindow::OnClickOK, this, wxID_CANCEL);
+
 	wxString about;
 
 	about << "OTAcademy Map Editor\n";
@@ -67,12 +65,12 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	about << "Compiled on: " << __TDATE__ << " : " << __TTIME__ << "\n";
 	about << "Compiled with: " << BOOST_COMPILER << "\n";
 
-	topsizer = newd wxBoxSizer(wxVERTICAL);
+	topsizer = new wxBoxSizer(wxVERTICAL);
 
-	topsizer->Add(newd wxStaticText(this, wxID_ANY, about), 1, wxALL, 20);
+	topsizer->Add(new wxStaticText(this, wxID_ANY, about), 1, wxALL, 20);
 
-	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
-	choicesizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center());
+	wxSizer* choicesizer = new wxBoxSizer(wxHORIZONTAL);
+	choicesizer->Add(new wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, 0, wxALIGN_CENTER | wxLEFT | wxRIGHT | wxBOTTOM, 20);
 
 	wxAcceleratorEntry entries[1];

@@ -30,41 +30,42 @@
 // ============================================================================
 // Creature palette
 
-BEGIN_EVENT_TABLE(CreaturePalettePanel, PalettePanel)
-EVT_CHOICEBOOK_PAGE_CHANGING(wxID_ANY, CreaturePalettePanel::OnSwitchingPage)
-EVT_CHOICEBOOK_PAGE_CHANGED(wxID_ANY, CreaturePalettePanel::OnPageChanged)
-
-EVT_TOGGLEBUTTON(PALETTE_CREATURE_BRUSH_BUTTON, CreaturePalettePanel::OnClickCreatureBrushButton)
-EVT_TOGGLEBUTTON(PALETTE_SPAWN_BRUSH_BUTTON, CreaturePalettePanel::OnClickSpawnBrushButton)
-
-EVT_SPINCTRL(PALETTE_CREATURE_SPAWN_TIME, CreaturePalettePanel::OnChangeSpawnTime)
-EVT_SPINCTRL(PALETTE_CREATURE_SPAWN_SIZE, CreaturePalettePanel::OnChangeSpawnSize)
-END_EVENT_TABLE()
-
 CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	PalettePanel(parent, id),
 	handling_event(false) {
-	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
+	wxSizer* topsizer = new wxBoxSizer(wxVERTICAL);
 
-	choicebook = newd wxChoicebook(this, wxID_ANY);
+	choicebook = new wxChoicebook(this, wxID_ANY);
+	choicebook->Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &CreaturePalettePanel::OnSwitchingPage, this);
+	choicebook->Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &CreaturePalettePanel::OnPageChanged, this);
 	topsizer->Add(choicebook, 1, wxEXPAND);
 
 	// Footer for brushes and settings
-	wxSizer* sidesizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Brushes");
+	wxSizer* sidesizer = new wxStaticBoxSizer(wxVERTICAL, this, "Brushes");
 
-	wxFlexGridSizer* grid = newd wxFlexGridSizer(3, 10, 10);
+	wxFlexGridSizer* grid = new wxFlexGridSizer(3, 10, 10);
 	grid->AddGrowableCol(1);
 
-	grid->Add(newd wxStaticText(this, wxID_ANY, "Spawntime"));
-	creature_spawntime_spin = newd wxSpinCtrl(this, PALETTE_CREATURE_SPAWN_TIME, i2ws(g_settings.getInteger(Config::DEFAULT_SPAWNTIME)), wxDefaultPosition, wxSize(50, 20), wxSP_ARROW_KEYS, 0, 86400, g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
+	grid->Add(new wxStaticText(this, wxID_ANY, "Spawntime"));
+	creature_spawntime_spin = new wxSpinCtrl(this, PALETTE_CREATURE_SPAWN_TIME, i2ws(g_settings.getInteger(Config::DEFAULT_SPAWNTIME)), wxDefaultPosition, wxSize(50, 20), wxSP_ARROW_KEYS, 0, 86400, g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
+	creature_spawntime_spin->Bind(wxEVT_SPINCTRL, &CreaturePalettePanel::OnChangeSpawnTime, this);
+	creature_spawntime_spin->SetToolTip("Set the spawn time in seconds.");
 	grid->Add(creature_spawntime_spin, 0, wxEXPAND);
-	creature_brush_button = newd wxToggleButton(this, PALETTE_CREATURE_BRUSH_BUTTON, "Place Creature");
+
+	creature_brush_button = new wxToggleButton(this, PALETTE_CREATURE_BRUSH_BUTTON, "Place Creature");
+	creature_brush_button->Bind(wxEVT_TOGGLEBUTTON, &CreaturePalettePanel::OnClickCreatureBrushButton, this);
+	creature_brush_button->SetToolTip("Select to place creatures.");
 	grid->Add(creature_brush_button, 0, wxEXPAND);
 
-	grid->Add(newd wxStaticText(this, wxID_ANY, "Spawn size"));
-	spawn_size_spin = newd wxSpinCtrl(this, PALETTE_CREATURE_SPAWN_SIZE, i2ws(5), wxDefaultPosition, wxSize(50, 20), wxSP_ARROW_KEYS, 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS), g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
+	grid->Add(new wxStaticText(this, wxID_ANY, "Spawn size"));
+	spawn_size_spin = new wxSpinCtrl(this, PALETTE_CREATURE_SPAWN_SIZE, i2ws(5), wxDefaultPosition, wxSize(50, 20), wxSP_ARROW_KEYS, 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS), g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
+	spawn_size_spin->Bind(wxEVT_SPINCTRL, &CreaturePalettePanel::OnChangeSpawnSize, this);
+	spawn_size_spin->SetToolTip("Set the radius of the spawn.");
 	grid->Add(spawn_size_spin, 0, wxEXPAND);
-	spawn_brush_button = newd wxToggleButton(this, PALETTE_SPAWN_BRUSH_BUTTON, "Place Spawn");
+
+	spawn_brush_button = new wxToggleButton(this, PALETTE_SPAWN_BRUSH_BUTTON, "Place Spawn");
+	spawn_brush_button->Bind(wxEVT_TOGGLEBUTTON, &CreaturePalettePanel::OnClickSpawnBrushButton, this);
+	spawn_brush_button->SetToolTip("Select to place spawn points.");
 	grid->Add(spawn_brush_button, 0, wxEXPAND);
 
 	sidesizer->Add(grid, 0, wxEXPAND);
@@ -142,7 +143,7 @@ void CreaturePalettePanel::OnUpdate() {
 	for (TilesetContainer::const_iterator iter = g_materials.tilesets.begin(); iter != g_materials.tilesets.end(); ++iter) {
 		const TilesetCategory* tsc = iter->second->getCategory(TILESET_CREATURE);
 		if ((tsc && tsc->size() > 0) || iter->second->name == "NPCs" || iter->second->name == "Others") {
-			BrushPanel* bp = newd BrushPanel(choicebook);
+			BrushPanel* bp = new BrushPanel(choicebook);
 			bp->SetListType(ltype);
 			bp->AssignTileset(tsc);
 			bp->LoadContents();
