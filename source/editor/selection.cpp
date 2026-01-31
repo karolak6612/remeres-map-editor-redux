@@ -193,7 +193,10 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		tiles.insert(tile);
+		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile);
+		if (it == tiles.end() || *it != tile) {
+			tiles.insert(it, tile);
+		}
 	}
 }
 
@@ -202,7 +205,10 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		tiles.erase(tile);
+		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile);
+		if (it != tiles.end() && *it == tile) {
+			tiles.erase(it);
+		}
 	}
 }
 
@@ -211,12 +217,74 @@ void Selection::flush() {
 		return;
 	}
 
-	for (Tile* t : pending_removes) {
-		tiles.erase(t);
+	// Batch remove
+	if (!pending_removes.empty()) {
+		std::ranges::sort(pending_removes);
+		auto new_end = std::unique(pending_removes.begin(), pending_removes.end());
+		pending_removes.erase(new_end, pending_removes.end());
+
+		std::vector<Tile*> remaining_tiles;
+		remaining_tiles.reserve(tiles.size());
+
+		auto tiles_it = tiles.begin();
+		auto remove_it = pending_removes.begin();
+
+		while (tiles_it != tiles.end() && remove_it != pending_removes.end()) {
+			if (*tiles_it < *remove_it) {
+				remaining_tiles.push_back(*tiles_it);
+				++tiles_it;
+			} else if (*remove_it < *tiles_it) {
+				++remove_it;
+			} else {
+				// Match, skip tile
+				++tiles_it;
+				++remove_it;
+			}
+		}
+		// Append remaining
+		while (tiles_it != tiles.end()) {
+			remaining_tiles.push_back(*tiles_it);
+			++tiles_it;
+		}
+		tiles = std::move(remaining_tiles);
 	}
 
-	for (Tile* t : pending_adds) {
-		tiles.insert(t);
+	// Batch add
+	if (!pending_adds.empty()) {
+		std::ranges::sort(pending_adds);
+		auto new_end = std::unique(pending_adds.begin(), pending_adds.end());
+		pending_adds.erase(new_end, pending_adds.end());
+
+		std::vector<Tile*> merged_tiles;
+		merged_tiles.reserve(tiles.size() + pending_adds.size());
+
+		auto tiles_it = tiles.begin();
+		auto add_it = pending_adds.begin();
+
+		while (tiles_it != tiles.end() && add_it != pending_adds.end()) {
+			if (*tiles_it < *add_it) {
+				merged_tiles.push_back(*tiles_it);
+				++tiles_it;
+			} else if (*add_it < *tiles_it) {
+				merged_tiles.push_back(*add_it);
+				++add_it;
+			} else {
+				// Duplicate
+				merged_tiles.push_back(*tiles_it);
+				++tiles_it;
+				++add_it;
+			}
+		}
+
+		while (tiles_it != tiles.end()) {
+			merged_tiles.push_back(*tiles_it);
+			++tiles_it;
+		}
+		while (add_it != pending_adds.end()) {
+			merged_tiles.push_back(*add_it);
+			++add_it;
+		}
+		tiles = std::move(merged_tiles);
 	}
 
 	pending_adds.clear();

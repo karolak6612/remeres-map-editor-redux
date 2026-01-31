@@ -12,15 +12,15 @@
 #include <array>
 #include <algorithm>
 
-void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
-	static const auto extractGroundBrushFromTile = [](BaseMap* map, uint32_t x, uint32_t y, uint32_t z) -> GroundBrush* {
-		Tile* tile = map->getTile(x, y, z);
-		if (tile) {
-			return tile->getGroundBrush();
-		}
-		return nullptr;
-	};
+GroundBrush* GroundBorderCalculator::getGroundBrushFromTile(BaseMap* map, uint32_t x, uint32_t y, uint32_t z) {
+	Tile* tile = map->getTile(x, y, z);
+	if (tile) {
+		return tile->getGroundBrush();
+	}
+	return nullptr;
+}
 
+void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	ASSERT(tile);
 
 	GroundBrush* borderBrush;
@@ -55,7 +55,7 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 		// extractGroundBrushFromTile takes uint32_t.
 		// So x + dx where dx is -1 (which is 0xFFFFFFFF) results in x - 1.
 
-		neighbours[i] = { false, extractGroundBrushFromTile(map, x + dx, y + dy, z) };
+		neighbours[i] = { false, getGroundBrushFromTile(map, x + dx, y + dy, z) };
 	}
 
 	static std::vector<const GroundBrush::BorderBlock*> specificList;

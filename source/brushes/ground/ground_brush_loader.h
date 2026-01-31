@@ -28,6 +28,15 @@ public:
 	 * @return true if loading was successful, false otherwise.
 	 */
 	static bool load(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+
+private:
+	static void loadItem(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+	static void loadOptional(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+	static void loadBorder(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+	static void loadFriend(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+	static void loadEnemy(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+	static void loadClearBorders(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
+	static void loadClearFriends(GroundBrush& brush, pugi::xml_node node, wxArrayString& warnings);
 };
 
 #endif // RME_GROUND_BRUSH_LOADER_H

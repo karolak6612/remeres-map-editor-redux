@@ -9,6 +9,7 @@
 
 class BaseMap;
 class Tile;
+class GroundBrush;
 
 /**
  * @brief Handles the calculation of ground borders.
@@ -22,6 +23,9 @@ public:
 	 * @param tile The tile to calculate borders for.
 	 */
 	static void calculate(BaseMap* map, Tile* tile);
+
+private:
+	static GroundBrush* getGroundBrushFromTile(BaseMap* map, uint32_t x, uint32_t y, uint32_t z);
 };
 
 #endif // RME_GROUND_BORDER_CALCULATOR_H

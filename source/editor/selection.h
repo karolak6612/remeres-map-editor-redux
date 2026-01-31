@@ -97,7 +97,7 @@ public:
 	auto end() {
 		return tiles.end();
 	}
-	const std::set<Tile*>& getTiles() const {
+	const std::vector<Tile*>& getTiles() const {
 		return tiles;
 	}
 	Tile* getSelectedTile() {
@@ -118,7 +118,7 @@ private:
 	std::unique_ptr<BatchAction> session;
 	std::unique_ptr<Action> subsession;
 
-	std::set<Tile*> tiles;
+	std::vector<Tile*> tiles;
 	std::vector<Tile*> pending_adds;
 	std::vector<Tile*> pending_removes;
 
