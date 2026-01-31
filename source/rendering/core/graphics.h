@@ -283,6 +283,10 @@ public:
 
 	// This is part of the binary
 	bool loadEditorSprites();
+
+	void updateTime();
+	time_t getCachedTime() const;
+
 	// Metadata should be loaded first
 	// This fills the item / creature adress space
 
@@ -332,6 +336,8 @@ private:
 	SpriteMap sprite_space;
 	using ImageMap = std::unordered_map<int, std::unique_ptr<GameSprite::Image>>;
 	ImageMap image_space;
+
+	time_t cached_time = 0;
 
 	DatFormat dat_format;
 	uint16_t item_count;

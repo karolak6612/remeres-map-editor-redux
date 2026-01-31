@@ -164,6 +164,14 @@ bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
 }
 
+void GraphicManager::updateTime() {
+	cached_time = time(nullptr);
+}
+
+time_t GraphicManager::getCachedTime() const {
+	return cached_time;
+}
+
 bool GraphicManager::loadOTFI(const FileName& filename, wxString& error, wxArrayString& warnings) {
 	return GameSpriteLoader::LoadOTFI(this, filename, error, warnings);
 }
@@ -426,7 +434,7 @@ GameSprite::Image::~Image() {
 }
 
 void GameSprite::Image::visit() {
-	lastaccess = time(nullptr);
+	lastaccess = g_gui.gfx.getCachedTime();
 }
 
 void GameSprite::Image::clean(int time) {

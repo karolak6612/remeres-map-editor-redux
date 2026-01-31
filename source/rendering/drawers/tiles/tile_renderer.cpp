@@ -191,7 +191,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+	if (options.show_tooltips && map_z == view.floor && tile->ground && map_x == view.mouse_map_x && map_y == view.mouse_map_y) {
 		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
 		if (groundData.hasVisibleFields()) {
 			tooltip_drawer->addItemTooltip(groundData);
@@ -225,7 +225,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (options.show_tooltips && map_z == view.floor && map_x == view.mouse_map_x && map_y == view.mouse_map_y) {
 					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
 					if (itemData.hasVisibleFields()) {
 						tooltip_drawer->addItemTooltip(itemData);

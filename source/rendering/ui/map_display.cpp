@@ -183,6 +183,8 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	SetCurrent(*g_gui.GetGLContext(this));
 
 	if (g_gui.IsRenderingEnabled()) {
+		g_gui.gfx.updateTime();
+
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_controller->IsCapturing()) {
 			options.SetIngame();

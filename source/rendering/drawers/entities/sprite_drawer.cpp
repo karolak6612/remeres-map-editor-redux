@@ -22,7 +22,10 @@ void SpriteDrawer::ResetCache() {
 	last_bound_texture_ = 0;
 	// Log stats each frame
 	if (s_blitCount > 0) {
-		spdlog::info("SpriteDrawer: {} sprites drawn, {} zero-texture skipped", s_blitCount, s_zeroTextureCount);
+		static int log_counter = 0;
+		if (log_counter++ % 600 == 0) {
+			spdlog::info("SpriteDrawer: {} sprites drawn, {} zero-texture skipped", s_blitCount, s_zeroTextureCount);
+		}
 	}
 	s_blitCount = 0;
 	s_zeroTextureCount = 0;
