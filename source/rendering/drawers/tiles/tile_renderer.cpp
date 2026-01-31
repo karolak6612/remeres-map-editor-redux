@@ -223,10 +223,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// items on tile
-			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
+			for (Item* item : tile->items) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
+					TooltipData itemData = CreateItemTooltipData(item, location->getPosition(), tile->isHouseTile());
 					if (itemData.hasVisibleFields()) {
 						tooltip_drawer->addItemTooltip(itemData);
 					}
@@ -234,12 +234,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 				// item animation
 				if (options.show_preview && view.zoom <= 2.0) {
-					(*it)->animate();
+					item->animate();
 				}
 
 				// item sprite
-				if ((*it)->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, *it, options, false, r, g, b);
+				if (item->isBorder()) {
+					item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, false, r, g, b);
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
@@ -263,7 +263,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 							}
 						}
 					}
-					item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, *it, options, false, ir, ig, ib);
+					item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, false, ir, ig, ib);
 				}
 			}
 			// monster/npc on tile

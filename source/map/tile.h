@@ -22,6 +22,7 @@
 #include "game/item.h"
 #include "map/map_region.h"
 #include <unordered_set>
+#include <algorithm>
 
 enum {
 	TILESTATE_NONE = 0x0000,
@@ -300,14 +301,7 @@ inline bool Tile::isHouseExit() const {
 
 inline bool Tile::hasHouseExit(uint32_t exit) const {
 	const HouseExitList* house_exits = getHouseExits();
-	if (house_exits) {
-		for (HouseExitList::const_iterator iter = house_exits->begin(); iter != house_exits->end(); ++iter) {
-			if (*iter == exit) {
-				return true;
-			}
-		}
-	}
-	return false;
+	return house_exits && std::find(house_exits->begin(), house_exits->end(), exit) != house_exits->end();
 }
 
 inline void Tile::setMapFlags(uint16_t _flags) {

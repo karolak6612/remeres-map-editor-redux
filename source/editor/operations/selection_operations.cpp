@@ -253,9 +253,9 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		action = editor.actionQueue->createAction(batchAction.get());
 		TileList borderize_tiles;
 		// Go through all modified (selected) tiles (might be slow)
-		for (TileSet::iterator it = editor.selection.begin(); it != editor.selection.end(); it++) {
+		for (Tile* tile : editor.selection) {
 			bool add_me = false; // If this tile is touched
-			Position pos = (*it)->getPosition();
+			Position pos = tile->getPosition();
 			// Go through all neighbours
 			Tile* t;
 			t = editor.map.getTile(pos.x - 1, pos.y - 1, pos.z);
@@ -304,7 +304,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 				add_me = true;
 			}
 			if (add_me) {
-				borderize_tiles.push_back(*it);
+				borderize_tiles.push_back(tile);
 			}
 		}
 		// Remove duplicates
