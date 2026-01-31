@@ -18,8 +18,6 @@
 #ifndef RME_MAP_LAYER_DRAWER_H
 #define RME_MAP_LAYER_DRAWER_H
 
-#include <iosfwd>
-
 class Editor;
 class TileRenderer;
 class GridDrawer;
@@ -34,7 +32,7 @@ public:
 	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
 	~MapLayerDrawer();
 
-	void Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer, std::ostringstream& tooltip);
+	void Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
 	TileRenderer* tile_renderer;

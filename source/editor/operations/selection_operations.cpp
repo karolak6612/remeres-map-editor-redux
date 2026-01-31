@@ -43,7 +43,7 @@ void SelectionOperations::removeDuplicateWalls(Tile* buffer, Tile* tile) {
 }
 
 void SelectionOperations::borderizeSelection(Editor& editor) {
-	if (editor.selection.size() == 0) {
+	if (editor.selection.empty()) {
 		g_gui.SetStatusText("No items selected. Can't borderize.");
 	}
 
@@ -58,7 +58,7 @@ void SelectionOperations::borderizeSelection(Editor& editor) {
 }
 
 void SelectionOperations::randomizeSelection(Editor& editor) {
-	if (editor.selection.size() == 0) {
+	if (editor.selection.empty()) {
 		g_gui.SetStatusText("No items selected. Can't randomize.");
 	}
 
@@ -93,9 +93,8 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 	TileSet tmp_storage;
 
 	// Update the tiles with the newd positions
-	for (auto it = editor.selection.begin(); it != editor.selection.end(); ++it) {
+	for (Tile* tile : editor.selection) {
 		// First we get the old tile and it's position
-		Tile* tile = (*it);
 		// const Position pos = tile->getPosition();
 
 		// Create the duplicate source tile, which will replace the old one later
@@ -146,8 +145,8 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		action = editor.actionQueue->createAction(batchAction.get());
 		TileList borderize_tiles;
 		// Go through all modified (selected) tiles (might be slow)
-		for (TileSet::iterator it = tmp_storage.begin(); it != tmp_storage.end(); ++it) {
-			Position pos = (*it)->getPosition();
+		for (Tile* tile : tmp_storage) {
+			Position pos = tile->getPosition();
 			// Go through all neighbours
 			Tile* t;
 			t = editor.map.getTile(pos.x, pos.y, pos.z);
@@ -191,9 +190,8 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		borderize_tiles.sort();
 		borderize_tiles.unique();
 		// Do le borders!
-		for (TileList::iterator it = borderize_tiles.begin(); it != borderize_tiles.end(); ++it) {
-			Tile* tile = *it;
-			Tile* new_tile = (*it)->deepCopy(editor.map);
+		for (Tile* tile : borderize_tiles) {
+			Tile* new_tile = tile->deepCopy(editor.map);
 			if (doborders) {
 				new_tile->borderize(&editor.map);
 			}
@@ -211,8 +209,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 
 	// New action for adding the destination tiles
 	action = editor.actionQueue->createAction(batchAction.get());
-	for (TileSet::iterator it = tmp_storage.begin(); it != tmp_storage.end(); ++it) {
-		Tile* tile = (*it);
+	for (Tile* tile : tmp_storage) {
 		const Position old_pos = tile->getPosition();
 		Position new_pos;
 
@@ -253,9 +250,9 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		action = editor.actionQueue->createAction(batchAction.get());
 		TileList borderize_tiles;
 		// Go through all modified (selected) tiles (might be slow)
-		for (TileSet::iterator it = editor.selection.begin(); it != editor.selection.end(); it++) {
+		for (Tile* tile : editor.selection) {
 			bool add_me = false; // If this tile is touched
-			Position pos = (*it)->getPosition();
+			Position pos = tile->getPosition();
 			// Go through all neighbours
 			Tile* t;
 			t = editor.map.getTile(pos.x - 1, pos.y - 1, pos.z);
@@ -304,15 +301,14 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 				add_me = true;
 			}
 			if (add_me) {
-				borderize_tiles.push_back(*it);
+				borderize_tiles.push_back(tile);
 			}
 		}
 		// Remove duplicates
 		borderize_tiles.sort();
 		borderize_tiles.unique();
 		// Do le borders!
-		for (TileList::iterator it = borderize_tiles.begin(); it != borderize_tiles.end(); it++) {
-			Tile* tile = *it;
+		for (Tile* tile : borderize_tiles) {
 			if (tile->ground) {
 				if (tile->ground->getGroundBrush()) {
 					Tile* new_tile = tile->deepCopy(editor.map);
@@ -342,7 +338,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 }
 
 void SelectionOperations::destroySelection(Editor& editor) {
-	if (editor.selection.size() == 0) {
+	if (editor.selection.empty()) {
 		g_gui.SetStatusText("No selected items to delete.");
 	} else {
 		int tile_count = 0;
@@ -352,10 +348,9 @@ void SelectionOperations::destroySelection(Editor& editor) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DELETE_TILES);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
-		for (auto it = editor.selection.begin(); it != editor.selection.end(); ++it) {
+		for (Tile* tile : editor.selection) {
 			tile_count++;
 
-			Tile* tile = *it;
 			Tile* newtile = tile->deepCopy(editor.map);
 
 			ItemVector tile_selection = newtile->popSelectedItems();
@@ -421,8 +416,6 @@ void SelectionOperations::destroySelection(Editor& editor) {
 		}
 
 		editor.addBatch(std::move(batch));
-		wxString ss;
-		ss << "Deleted " << tile_count << " tile" << (tile_count > 1 ? "s" : "") << " (" << item_count << " item" << (item_count > 1 ? "s" : "") << ")";
-		g_gui.SetStatusText(ss);
+		g_gui.SetStatusText(wxString::Format("Deleted %d tile%s (%d item%s)", tile_count, (tile_count > 1 ? "s" : ""), item_count, (item_count > 1 ? "s" : "")));
 	}
 }
