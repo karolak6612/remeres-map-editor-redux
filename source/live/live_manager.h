@@ -12,7 +12,7 @@ class DirtyList;
 class LiveManager {
 public:
 	LiveManager(Editor& editor);
-	LiveManager(Editor& editor, LiveClient* client);
+	LiveManager(Editor& editor, std::unique_ptr<LiveClient> client);
 	~LiveManager();
 
 	LiveServer* StartServer();
@@ -31,8 +31,8 @@ public:
 
 private:
 	Editor& editor;
-	LiveServer* live_server;
-	LiveClient* live_client;
+	std::unique_ptr<LiveServer> live_server;
+	std::unique_ptr<LiveClient> live_client;
 };
 
 #endif

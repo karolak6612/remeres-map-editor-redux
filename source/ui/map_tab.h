@@ -24,7 +24,7 @@
 
 class MapTab : public EditorTab, public MapWindow {
 public:
-	MapTab(MapTabbook* aui, Editor* editor);
+	MapTab(MapTabbook* aui, std::shared_ptr<Editor> editor);
 	// Constructs a newd window, but it uses the same internal editor as 'other'
 	// AND the same parent, aui_notebook etc.
 	MapTab(const MapTab* other);
@@ -47,16 +47,12 @@ public:
 	void OnSwitchEditorMode(EditorMode mode);
 
 protected:
-	struct InternalReference {
-		Editor* editor;
-		int owner_count;
-	};
 	MapTabbook* aui;
-	InternalReference* iref;
+	std::shared_ptr<Editor> editor_ptr;
 };
 
 inline bool MapTab::HasSameReference(MapTab* other) const {
-	return other->iref == iref;
+	return other->editor_ptr == editor_ptr;
 }
 
 #endif

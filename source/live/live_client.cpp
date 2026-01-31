@@ -240,11 +240,11 @@ LiveLogTab* LiveClient::createLogWindow(wxWindow* parent) {
 	return log;
 }
 
-MapTab* LiveClient::createEditorWindow() {
+MapTab* LiveClient::createEditorWindow(std::shared_ptr<Editor> editor) {
 	MapTabbook* mtb = dynamic_cast<MapTabbook*>(g_gui.tabbook);
 	ASSERT(mtb);
 
-	MapTab* edit = newd MapTab(mtb, editor.get());
+	MapTab* edit = newd MapTab(mtb, editor);
 	edit->OnSwitchEditorMode(g_gui.IsSelectionMode() ? SELECTION_MODE : DRAWING_MODE);
 
 	return edit;
@@ -372,14 +372,15 @@ void LiveClient::parsePacket(NetworkMessage message) {
 
 void LiveClient::parseHello(NetworkMessage& message) {
 	ASSERT(editor == nullptr);
-	editor = EditorFactory::JoinLive(g_gui.copybuffer, this);
+	std::shared_ptr<Editor> sharedEditor = EditorFactory::JoinLive(g_gui.copybuffer, this);
+	editor = sharedEditor.get();
 
 	Map& map = editor->map;
 	map.setName("Live Map - " + message.read<std::string>());
 	map.setWidth(message.read<uint16_t>());
 	map.setHeight(message.read<uint16_t>());
 
-	createEditorWindow();
+	createEditorWindow(sharedEditor);
 }
 
 void LiveClient::parseKick(NetworkMessage& message) {
