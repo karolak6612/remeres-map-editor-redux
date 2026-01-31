@@ -82,16 +82,16 @@ bool MinimapRenderer::initialize() {
 
 	glNamedBufferStorage(vbo_->GetID(), sizeof(quad_vertices), quad_vertices, 0);
 
-	glBindVertexArray(vao_->GetID());
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_->GetID());
+	// DSA setup
+	glVertexArrayVertexBuffer(vao_->GetID(), 0, vbo_->GetID(), 0, 4 * sizeof(float));
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	glEnableVertexArrayAttrib(vao_->GetID(), 0);
+	glVertexArrayAttribFormat(vao_->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao_->GetID(), 0, 0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-
-	glBindVertexArray(0);
+	glEnableVertexArrayAttrib(vao_->GetID(), 1);
+	glVertexArrayAttribFormat(vao_->GetID(), 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
+	glVertexArrayAttribBinding(vao_->GetID(), 1, 0);
 
 	return true;
 }

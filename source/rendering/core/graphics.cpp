@@ -444,7 +444,7 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id) {
 		}
 
 		// 2. Load data
-		std::unique_ptr<uint8_t[]> rgba(getRGBAData());
+		std::unique_ptr<uint8_t[]> rgba = getRGBAData();
 		if (!rgba) {
 			// Fallback: Create a magenta texture to distinguish failure from garbage
 			// Use literal 32 to ensure compilation (OT sprites are always 32x32)
@@ -509,11 +509,11 @@ void GameSprite::NormalImage::clean(int time) {
 	}
 }
 
-uint8_t* GameSprite::NormalImage::getRGBData() {
+std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 	if (id == 0) {
 		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
-		uint8_t* data = newd uint8_t[pixels_data_size];
-		memset(data, 0, pixels_data_size); // Black/Empty
+		auto data = std::make_unique<uint8_t[]>(pixels_data_size);
+		// Default initialized to 0 (Black/Empty)
 		return data;
 	}
 
@@ -528,7 +528,7 @@ uint8_t* GameSprite::NormalImage::getRGBData() {
 	}
 
 	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
-	uint8_t* data = newd uint8_t[pixels_data_size];
+	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
 	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
 	int write = 0;
 	int read = 0;
@@ -565,12 +565,12 @@ uint8_t* GameSprite::NormalImage::getRGBData() {
 	return data;
 }
 
-uint8_t* GameSprite::NormalImage::getRGBAData() {
+std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBAData() {
 	// Robust ID 0 handling
 	if (id == 0) {
 		const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
-		uint8_t* data = newd uint8_t[pixels_data_size];
-		memset(data, 0, pixels_data_size); // Transparent
+		auto data = std::make_unique<uint8_t[]>(pixels_data_size);
+		// Default initialized to 0 (Transparent)
 		return data;
 	}
 
@@ -587,7 +587,7 @@ uint8_t* GameSprite::NormalImage::getRGBAData() {
 	}
 
 	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
-	uint8_t* data = newd uint8_t[pixels_data_size];
+	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
 	bool use_alpha = g_gui.gfx.hasTransparency();
 	uint8_t bpp = use_alpha ? 4 : 3;
 	int write = 0;
@@ -726,16 +726,14 @@ void GameSprite::TemplateImage::clean(int time) {
 	}
 }
 
-uint8_t* GameSprite::TemplateImage::getRGBData() {
-	uint8_t* rgbdata = parent->spriteList[sprite_index]->getRGBData();
-	uint8_t* template_rgbdata = parent->spriteList[sprite_index + parent->height * parent->width]->getRGBData();
+std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBData() {
+	auto rgbdata = parent->spriteList[sprite_index]->getRGBData();
+	auto template_rgbdata = parent->spriteList[sprite_index + parent->height * parent->width]->getRGBData();
 
 	if (!rgbdata) {
-		delete[] template_rgbdata;
 		return nullptr;
 	}
 	if (!template_rgbdata) {
-		delete[] rgbdata;
 		return nullptr;
 	}
 
@@ -773,22 +771,20 @@ uint8_t* GameSprite::TemplateImage::getRGBData() {
 			}
 		}
 	}
-	delete[] template_rgbdata;
+	// template_rgbdata is unique_ptr, auto deleted
 	return rgbdata;
 }
 
-uint8_t* GameSprite::TemplateImage::getRGBAData() {
-	uint8_t* rgbadata = parent->spriteList[sprite_index]->getRGBAData();
-	uint8_t* template_rgbdata = parent->spriteList[sprite_index + parent->height * parent->width]->getRGBData();
+std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
+	auto rgbadata = parent->spriteList[sprite_index]->getRGBAData();
+	auto template_rgbdata = parent->spriteList[sprite_index + parent->height * parent->width]->getRGBData();
 
 	if (!rgbadata) {
 		spdlog::warn("TemplateImage: Failed to load BASE sprite data for sprite_index={} (template_id={}). Parent width={}, height={}", sprite_index, texture_id, parent->width, parent->height);
-		delete[] template_rgbdata;
 		return nullptr;
 	}
 	if (!template_rgbdata) {
 		spdlog::warn("TemplateImage: Failed to load MASK sprite data for sprite_index={} (template_id={}) (mask_index={})", sprite_index, texture_id, sprite_index + parent->height * parent->width);
-		delete[] rgbadata;
 		return nullptr;
 	}
 
@@ -826,7 +822,6 @@ uint8_t* GameSprite::TemplateImage::getRGBAData() {
 			}
 		}
 	}
-	delete[] template_rgbdata;
 	return rgbadata;
 }
 
