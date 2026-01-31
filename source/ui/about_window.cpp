@@ -24,13 +24,19 @@
 #include <fstream>
 #include <typeinfo>
 #include <memory>
+#include <wx/dataobj.h>
 
 //=============================================================================
 // About Window - Information window about the application
 
+enum {
+	ABOUT_COPY_VERSION = wxID_HIGHEST + 1
+};
+
 BEGIN_EVENT_TABLE(AboutWindow, wxDialog)
 EVT_BUTTON(wxID_OK, AboutWindow::OnClickOK)
 EVT_BUTTON(ABOUT_VIEW_LICENSE, AboutWindow::OnClickLicense)
+EVT_BUTTON(ABOUT_COPY_VERSION, AboutWindow::OnClickCopyVersion)
 EVT_MENU(wxID_CANCEL, AboutWindow::OnClickOK)
 END_EVENT_TABLE()
 
@@ -73,6 +79,7 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
 	choicesizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center());
+	choicesizer->Add(newd wxButton(this, ABOUT_COPY_VERSION, "Copy Info"), wxSizerFlags(1).Center().Border(wxLEFT, 10));
 	topsizer->Add(choicesizer, 0, wxALIGN_CENTER | wxLEFT | wxRIGHT | wxBOTTOM, 20);
 
 	wxAcceleratorEntry entries[1];
@@ -109,4 +116,21 @@ void AboutWindow::OnClickLicense(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	DialogUtil::ShowTextBox(this, "License", wxstr(gpl_str.size() ? gpl_str : "The COPYING.txt file is not available."));
+}
+
+void AboutWindow::OnClickCopyVersion(wxCommandEvent& WXUNUSED(event)) {
+	if (wxTheClipboard->Open()) {
+		wxString versionInfo;
+		versionInfo << "OTAcademy Map Editor Version " << __W_RME_VERSION__ << "\n";
+		versionInfo << "Compiled on: " << __TDATE__ << " : " << __TTIME__ << "\n";
+		versionInfo << "Compiled with: " << BOOST_COMPILER << "\n";
+		versionInfo << "Using " << wxVERSION_STRING << "\n";
+		const char* gl_ver = (const char*)glGetString(GL_VERSION);
+		versionInfo << "OpenGL version " << (gl_ver ? wxString(gl_ver, wxConvUTF8) : "Unknown");
+
+		wxTheClipboard->SetData(new wxTextDataObject(versionInfo));
+		wxTheClipboard->Close();
+
+		wxMessageBox("Version information copied to clipboard.", "Success", wxOK | wxICON_INFORMATION);
+	}
 }

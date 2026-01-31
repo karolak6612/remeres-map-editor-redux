@@ -88,11 +88,11 @@ void BrushSizePanel::LoadAllContents() {
 	}
 
 	sub_sizer->Add(brushsize0Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_0, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_CD_1x1));
-	brushsize0Button->SetToolTip("Brush size 1");
+	brushsize0Button->SetToolTip("Brush size 1 (1x1)");
 	brushsize0Button->SetValue(true);
 
 	sub_sizer->Add(brushsize1Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_1, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_3x3));
-	brushsize1Button->SetToolTip("Brush size 2");
+	brushsize1Button->SetToolTip("Brush size 2 (3x3)");
 
 	if (large_icons) {
 		size_sizer->Add(sub_sizer);
@@ -100,19 +100,19 @@ void BrushSizePanel::LoadAllContents() {
 	}
 
 	sub_sizer->Add(brushsize2Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_2, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_5x5));
-	brushsize2Button->SetToolTip("Brush size 3");
+	brushsize2Button->SetToolTip("Brush size 3 (5x5)");
 
 	sub_sizer->Add(brushsize4Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_4, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_7x7));
-	brushsize4Button->SetToolTip("Brush size 5");
+	brushsize4Button->SetToolTip("Brush size 5 (7x7)");
 
 	sub_sizer->Add(brushsize6Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_6, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_9x9));
-	brushsize6Button->SetToolTip("Brush size 7");
+	brushsize6Button->SetToolTip("Brush size 7 (9x9)");
 
 	sub_sizer->Add(brushsize8Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_8, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_15x15));
-	brushsize8Button->SetToolTip("Brush size 9");
+	brushsize8Button->SetToolTip("Brush size 9 (15x15)");
 
 	sub_sizer->Add(brushsize11Button = newd DCButton(this, PALETTE_TERRAIN_BRUSHSIZE_11, wxDefaultPosition, DC_BTN_TOGGLE, render_size, EDITOR_SPRITE_BRUSH_SD_19x19));
-	brushsize11Button->SetToolTip("Brush size 12");
+	brushsize11Button->SetToolTip("Brush size 12 (19x19)");
 
 	size_sizer->Add(sub_sizer);
 	SetSizerAndFit(size_sizer);

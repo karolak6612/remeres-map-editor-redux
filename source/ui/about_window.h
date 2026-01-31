@@ -27,6 +27,7 @@ public:
 
 	void OnClickOK(wxCommandEvent&);
 	void OnClickLicense(wxCommandEvent&);
+	void OnClickCopyVersion(wxCommandEvent&);
 
 private:
 	wxSizer* topsizer;

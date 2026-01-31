@@ -128,7 +128,7 @@ void MapPopupMenu::Update() {
 					}
 
 					if (teleport && teleport->hasDestination()) {
-						Append(MAP_POPUP_MENU_GOTO, "&Go To Destination", "Go to the destination of this teleport");
+						Append(MAP_POPUP_MENU_GOTO, "&Teleport to Destination", "Go to the destination of this teleport");
 					}
 
 					if (topSelectedItem->isDoor()) {
@@ -188,7 +188,7 @@ void MapPopupMenu::Update() {
 				}
 
 				AppendSeparator();
-				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object");
+				Append(MAP_POPUP_MENU_PROPERTIES, "&Edit Properties...", "Edit properties for the selected object");
 			} else {
 
 				if (topCreature) {
@@ -217,7 +217,7 @@ void MapPopupMenu::Update() {
 
 				if (tile->hasGround() || topCreature || topSpawn) {
 					AppendSeparator();
-					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object");
+					Append(MAP_POPUP_MENU_PROPERTIES, "&Edit Properties...", "Edit properties for the selected object");
 				}
 			}
 

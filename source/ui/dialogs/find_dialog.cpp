@@ -41,10 +41,12 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	search_field = newd KeyForwardingTextCtrl(this, JUMP_DIALOG_TEXT, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+	search_field->SetToolTip("Type to filter items...");
 	search_field->SetFocus();
 	sizer->Add(search_field, 0, wxEXPAND);
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
+	item_list->SetToolTip("Double-click to select");
 	item_list->SetMinSize(wxSize(470, 400));
 	sizer->Add(item_list, wxSizerFlags(1).Expand().Border());
 

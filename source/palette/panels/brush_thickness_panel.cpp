@@ -38,7 +38,7 @@ BrushThicknessPanel::BrushThicknessPanel(wxWindow* parent) :
 	thickness_sizer->Add(thickness_sub_sizer, 1, wxEXPAND);
 
 	slider = newd wxSlider(this, PALETTE_DOODAD_SLIDER, 5, 1, 10, wxDefaultPosition);
-	slider->SetToolTip("Adjust brush thickness");
+	slider->SetToolTip("Adjust brush thickness (1-80)");
 	thickness_sizer->Add(slider, 1, wxEXPAND);
 
 	SetSizerAndFit(thickness_sizer);

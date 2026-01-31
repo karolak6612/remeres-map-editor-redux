@@ -50,8 +50,13 @@ StandardToolBar::~StandardToolBar() {
 void StandardToolBar::Update() {
 	Editor* editor = g_gui.GetCurrentEditor();
 	if (editor) {
-		toolbar->EnableTool(wxID_UNDO, editor->actionQueue->canUndo());
-		toolbar->EnableTool(wxID_REDO, editor->actionQueue->canRedo());
+		bool canUndo = editor->actionQueue->canUndo();
+		toolbar->EnableTool(wxID_UNDO, canUndo);
+		toolbar->SetToolShortHelp(wxID_UNDO, canUndo ? "Undo (Ctrl+Z)" : "Undo (Ctrl+Z) - Nothing to undo");
+
+		bool canRedo = editor->actionQueue->canRedo();
+		toolbar->EnableTool(wxID_REDO, canRedo);
+		toolbar->SetToolShortHelp(wxID_REDO, canRedo ? "Redo (Ctrl+Shift+Z)" : "Redo (Ctrl+Shift+Z) - Nothing to redo");
 
 		bool canPaste = editor->copybuffer.canPaste();
 		toolbar->EnableTool(wxID_PASTE, canPaste);
@@ -62,7 +67,11 @@ void StandardToolBar::Update() {
 		}
 	} else {
 		toolbar->EnableTool(wxID_UNDO, false);
+		toolbar->SetToolShortHelp(wxID_UNDO, "Undo (Ctrl+Z) - No editor open");
+
 		toolbar->EnableTool(wxID_REDO, false);
+		toolbar->SetToolShortHelp(wxID_REDO, "Redo (Ctrl+Shift+Z) - No editor open");
+
 		toolbar->EnableTool(wxID_PASTE, false);
 		toolbar->SetToolShortHelp(wxID_PASTE, "Paste (Ctrl+V) - No editor open");
 	}
@@ -72,8 +81,13 @@ void StandardToolBar::Update() {
 
 	toolbar->EnableTool(wxID_SAVE, is_host);
 	toolbar->EnableTool(wxID_SAVEAS, is_host);
-	toolbar->EnableTool(wxID_CUT, has_map);
-	toolbar->EnableTool(wxID_COPY, has_map);
+
+	bool canCopy = has_map && !editor->selection.empty();
+	toolbar->EnableTool(wxID_CUT, canCopy);
+	toolbar->SetToolShortHelp(wxID_CUT, canCopy ? "Cut (Ctrl+X)" : "Cut (Ctrl+X) - Select items first");
+
+	toolbar->EnableTool(wxID_COPY, canCopy);
+	toolbar->SetToolShortHelp(wxID_COPY, canCopy ? "Copy (Ctrl+C)" : "Copy (Ctrl+C) - Select items first");
 
 	toolbar->Refresh();
 }
