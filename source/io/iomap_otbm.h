@@ -138,7 +138,13 @@ public:
 protected:
 	static bool getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver);
 
+	bool loadOTGZ(Map& map, const FileName& identifier);
+
 	virtual bool loadMap(Map& map, NodeFileReadHandle& handle);
+	bool readTileArea(Map& map, BinaryNode* mapNode);
+	bool readTowns(Map& map, BinaryNode* mapNode);
+	bool readWaypoints(Map& map, BinaryNode* mapNode);
+
 	bool loadSpawns(Map& map, const FileName& dir);
 	bool loadSpawns(Map& map, pugi::xml_document& doc);
 	bool loadHouses(Map& map, const FileName& dir);
@@ -147,6 +153,8 @@ protected:
 	bool loadWaypoints(Map& map, pugi::xml_document& doc);
 
 	virtual bool saveMap(Map& map, NodeFileWriteHandle& handle);
+	void saveTile(NodeFileWriteHandle& f, Tile* save_tile);
+
 	bool saveSpawns(Map& map, const FileName& dir);
 	bool saveSpawns(Map& map, pugi::xml_document& doc);
 	bool saveHouses(Map& map, const FileName& dir);
