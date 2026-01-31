@@ -26,6 +26,8 @@
 #include "ui/gui.h"
 
 TooltipDrawer::TooltipDrawer() {
+	tooltips.reserve(32); // Reserve some initial space
+	scratch_fields.reserve(8);
 }
 
 TooltipDrawer::~TooltipDrawer() {
@@ -48,6 +50,10 @@ void TooltipDrawer::addItemTooltip(const TooltipData& data) {
 	if (!data.hasVisibleFields()) {
 		return;
 	}
+	// Ensure we don't reallocate often
+	if (tooltips.capacity() == tooltips.size()) {
+		tooltips.reserve(tooltips.capacity() + 16);
+	}
 	tooltips.push_back(data);
 }
 
@@ -55,7 +61,22 @@ void TooltipDrawer::addWaypointTooltip(Position pos, const std::string& name) {
 	if (name.empty()) {
 		return;
 	}
+	// We make a copy of the name string into a view-compatible storage if needed,
+	// but here TooltipData takes string_view.
+	// Since 'name' is const std::string& passed to this function, it might be temporary?
+	// But wait, TooltipData constructor:
+	// TooltipData(Position p, std::string_view wpName)
+	// If 'name' dies, wpName dies.
+	// Waypoint tooltip is called from TileRenderer::DrawTile:
+	// tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
+	// waypoint->name is std::string in Waypoint object, which is stable.
+	// So it is safe.
+
 	TooltipData data(pos, name);
+
+	if (tooltips.capacity() == tooltips.size()) {
+		tooltips.reserve(tooltips.capacity() + 16);
+	}
 	tooltips.push_back(data);
 }
 
@@ -228,16 +249,12 @@ void TooltipDrawer::draw(const RenderView& view) {
 		float maxWidth = 220.0f; // Max content width for wrapping
 
 		// Build content lines with word wrapping support
-		struct FieldLine {
-			std::string label;
-			std::string value;
-			uint8_t r, g, b;
-			std::vector<std::string> wrappedLines; // For multi-line values
-		};
-		std::vector<FieldLine> fields;
+		// Use scratch_fields to avoid repeated allocations
+		scratch_fields.clear();
+		std::vector<FieldLine>& fields = scratch_fields;
 
 		if (tooltip.category == TooltipCategory::WAYPOINT) {
-			fields.push_back({ "Waypoint", tooltip.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
+			fields.push_back({ "Waypoint", std::string(tooltip.waypointName), WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
 		} else {
 			if (tooltip.actionId > 0) {
 				fields.push_back({ "Action ID", std::to_string(tooltip.actionId), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B, {} });
@@ -253,10 +270,10 @@ void TooltipDrawer::draw(const RenderView& view) {
 				fields.push_back({ "Destination", dest, TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B, {} });
 			}
 			if (!tooltip.description.empty()) {
-				fields.push_back({ "Description", tooltip.description, BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, {} });
+				fields.push_back({ "Description", std::string(tooltip.description), BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, {} });
 			}
 			if (!tooltip.text.empty()) {
-				fields.push_back({ "Text", "\"" + tooltip.text + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+				fields.push_back({ "Text", "\"" + std::string(tooltip.text) + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
 			}
 		}
 

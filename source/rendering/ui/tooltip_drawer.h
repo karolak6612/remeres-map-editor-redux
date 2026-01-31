@@ -24,6 +24,7 @@
 #include "rendering/core/render_view.h"
 #include <vector>
 #include <string>
+#include <string_view>
 #include <sstream>
 #include <map>
 
@@ -76,18 +77,18 @@ struct TooltipData {
 
 	// Header info
 	uint16_t itemId = 0;
-	std::string itemName;
+	std::string_view itemName;
 
 	// Optional fields (0 or empty = not shown)
 	uint16_t actionId = 0;
 	uint16_t uniqueId = 0;
 	uint8_t doorId = 0;
-	std::string text;
-	std::string description;
+	std::string_view text;
+	std::string_view description;
 	Position destination; // For teleports (check if valid via destination.x > 0)
 
 	// Waypoint-specific
-	std::string waypointName;
+	std::string_view waypointName;
 
 	// Container contents
 	std::vector<ContainerItem> containerItems;
@@ -96,11 +97,11 @@ struct TooltipData {
 	TooltipData() = default;
 
 	// Constructor for waypoint
-	TooltipData(Position p, const std::string& wpName) :
+	TooltipData(Position p, std::string_view wpName) :
 		pos(p), category(TooltipCategory::WAYPOINT), waypointName(wpName) { }
 
 	// Constructor for item
-	TooltipData(Position p, uint16_t id, const std::string& name) :
+	TooltipData(Position p, uint16_t id, std::string_view name) :
 		pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(name) { }
 
 	// Determine category based on fields
@@ -151,6 +152,14 @@ protected:
 
 	// Helper to get header color based on category
 	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
+
+	struct FieldLine {
+		std::string label;
+		std::string value;
+		uint8_t r, g, b;
+		std::vector<std::string> wrappedLines; // For multi-line values
+	};
+	std::vector<FieldLine> scratch_fields;
 };
 
 #endif

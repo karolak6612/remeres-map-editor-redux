@@ -25,6 +25,7 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/light_buffer.h"
+#include <algorithm>
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), creature_name_drawer(cnd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), editor(ed) {
@@ -84,7 +85,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 		itemName = "Item";
 	}
 
-	TooltipData data(pos, id, std::string(itemName));
+	TooltipData data(pos, id, itemName);
 	data.actionId = action;
 	data.uniqueId = unique;
 	data.doorId = doorId;
@@ -102,6 +103,10 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 			// but getItem(i) is safer if available, or just iterating vector.
 			// Container::getVector() returns ItemVector& (std::vector<Item*>)
 			const ItemVector& items = container->getVector();
+
+			// Reserve space to avoid reallocation
+			data.containerItems.reserve(std::min((size_t)32, items.size()));
+
 			for (Item* subItem : items) {
 				if (subItem) {
 					ContainerItem ci;
@@ -129,7 +134,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 	return data;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, std::ostringstream& tooltip_stream) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id) {
 	if (!location) {
 		return;
 	}
@@ -200,24 +205,34 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// end filters for ground tile
 
-	// Draw helper border for selected house tiles
-	// Only draw on the current floor (grid)
-	if (options.show_houses && tile->isHouseTile() && (int)tile->getHouseID() == current_house_id && map_z == view.floor) {
+	// Helper for house color - hoisted out of item loop
+	uint8_t house_r = 255, house_g = 255, house_b = 255;
+	bool house_color_calculated = false;
 
-		uint8_t hr, hg, hb;
-		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
+	if (options.show_houses && tile->isHouseTile()) {
+		uint32_t house_id = tile->getHouseID();
 
-		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		glm::vec4 border_color((float)hr / 255.0f, (float)hg / 255.0f, (float)hb / 255.0f, intensity); // House color border with pulsing alpha
+		// Calculate if we are drawing the border OR if we need it for extended shader
+		if (((int)house_id == current_house_id && map_z == view.floor) || options.extended_house_shader) {
+			TileColorCalculator::GetHouseColor(house_id, house_r, house_g, house_b);
+			house_color_calculated = true;
+		}
 
-		// Map coordinates to screen coordinates
-		// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
-		float x = (float)draw_x;
-		float y = (float)draw_y;
-		float s = 32.0f; // Standard tile size
+		// Draw helper border for selected house tiles
+		// Only draw on the current floor (grid)
+		if ((int)house_id == current_house_id && map_z == view.floor) {
+			float intensity = 0.5f + (0.5f * options.highlight_pulse);
+			glm::vec4 border_color((float)house_r / 255.0f, (float)house_g / 255.0f, (float)house_b / 255.0f, intensity); // House color border with pulsing alpha
 
-		// Draw 1px solid border using geometry generation
-		primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
+			// Map coordinates to screen coordinates
+			// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
+			float x = (float)draw_x;
+			float y = (float)draw_y;
+			float s = 32.0f; // Standard tile size
+
+			// Draw 1px solid border using geometry generation
+			primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
+		}
 	}
 
 	if (!only_colors) {
@@ -243,17 +258,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
-					if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
-						uint32_t house_id = tile->getHouseID();
-						uint8_t hr = 255, hg = 255, hb = 255;
-						TileColorCalculator::GetHouseColor(house_id, hr, hg, hb);
+					if (options.extended_house_shader && options.show_houses && tile->isHouseTile() && house_color_calculated) {
+						// Apply house color tint (calculated once above)
+						ir = (uint8_t)((int)ir * house_r / 255);
+						ig = (uint8_t)((int)ig * house_g / 255);
+						ib = (uint8_t)((int)ib * house_b / 255);
 
-						// Apply house color tint
-						ir = (uint8_t)((int)ir * hr / 255);
-						ig = (uint8_t)((int)ig * hg / 255);
-						ib = (uint8_t)((int)ib * hb / 255);
-
-						if ((int)house_id == current_house_id) {
+						if ((int)tile->getHouseID() == current_house_id) {
 							// Pulse effect matching the tile pulse
 							if (options.highlight_pulse > 0.0f) {
 								float boost = options.highlight_pulse * 0.6f;
