@@ -208,16 +208,14 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
 		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		glm::vec4 border_color((float)hr / 255.0f, (float)hg / 255.0f, (float)hb / 255.0f, intensity); // House color border with pulsing alpha
+		int alpha = (int)(intensity * 255.0f);
 
 		// Map coordinates to screen coordinates
 		// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
-		float x = (float)draw_x;
-		float y = (float)draw_y;
-		float s = 32.0f; // Standard tile size
+		int s = 32; // Standard tile size
 
 		// Draw 1px solid border using geometry generation
-		primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
+		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, s, s, hr, hg, hb, alpha);
 	}
 
 	if (!only_colors) {
