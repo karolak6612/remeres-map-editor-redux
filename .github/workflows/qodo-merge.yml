@@ -26,6 +26,7 @@ jobs:
     steps:
       - name: PR Agent action step
         uses: qodo-ai/pr-agent@main
+        continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
