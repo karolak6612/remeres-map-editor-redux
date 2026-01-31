@@ -84,7 +84,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 		itemName = "Item";
 	}
 
-	TooltipData data(pos, id, std::string(itemName));
+	TooltipData data(pos, id, itemName);
 	data.actionId = action;
 	data.uniqueId = unique;
 	data.doorId = doorId;
@@ -221,6 +221,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	}
 
 	if (!only_colors) {
+		bool use_house_tint = false;
+		uint8_t house_r = 255, house_g = 255, house_b = 255;
+		bool is_current_house = false;
+
+		if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
+			use_house_tint = true;
+			uint32_t house_id = tile->getHouseID();
+			TileColorCalculator::GetHouseColor(house_id, house_r, house_g, house_b);
+			is_current_house = ((int)house_id == (int)current_house_id);
+		}
+
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
@@ -243,17 +254,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
-					if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
-						uint32_t house_id = tile->getHouseID();
-						uint8_t hr = 255, hg = 255, hb = 255;
-						TileColorCalculator::GetHouseColor(house_id, hr, hg, hb);
-
+					if (use_house_tint) {
 						// Apply house color tint
-						ir = (uint8_t)((int)ir * hr / 255);
-						ig = (uint8_t)((int)ig * hg / 255);
-						ib = (uint8_t)((int)ib * hb / 255);
+						ir = (uint8_t)((int)ir * house_r / 255);
+						ig = (uint8_t)((int)ig * house_g / 255);
+						ib = (uint8_t)((int)ib * house_b / 255);
 
-						if ((int)house_id == current_house_id) {
+						if (is_current_house) {
 							// Pulse effect matching the tile pulse
 							if (options.highlight_pulse > 0.0f) {
 								float boost = options.highlight_pulse * 0.6f;
