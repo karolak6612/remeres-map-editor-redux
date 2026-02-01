@@ -84,7 +84,7 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 		itemName = "Item";
 	}
 
-	TooltipData data(pos, id, std::string(itemName));
+	TooltipData data(pos, id, itemName);
 	data.actionId = action;
 	data.uniqueId = unique;
 	data.doorId = doorId;
@@ -157,7 +157,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// Waypoint tooltip (one per waypoint)
 	if (options.show_tooltips && location->getWaypointCount() > 0 && waypoint && map_z == view.floor) {
-		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
+		if (map_x == view.mouse_map_x && map_y == view.mouse_map_y) {
+			tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
+		}
 	}
 
 	bool as_minimap = options.show_as_minimap;
@@ -192,9 +194,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
-		if (groundData.hasVisibleFields()) {
-			tooltip_drawer->addItemTooltip(groundData);
+		if (map_x == view.mouse_map_x && map_y == view.mouse_map_y) {
+			TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
+			if (groundData.hasVisibleFields()) {
+				tooltip_drawer->addItemTooltip(groundData);
+			}
 		}
 	}
 
@@ -226,9 +230,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
-					if (itemData.hasVisibleFields()) {
-						tooltip_drawer->addItemTooltip(itemData);
+					if (map_x == view.mouse_map_x && map_y == view.mouse_map_y) {
+						TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
+						if (itemData.hasVisibleFields()) {
+							tooltip_drawer->addItemTooltip(itemData);
+						}
 					}
 				}
 
