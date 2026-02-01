@@ -123,8 +123,8 @@ protected:
 		void visit();
 		virtual void clean(int time);
 
-		virtual uint8_t* getRGBData() = 0;
-		virtual uint8_t* getRGBAData() = 0;
+		virtual std::unique_ptr<uint8_t[]> getRGBData() = 0;
+		virtual std::unique_ptr<uint8_t[]> getRGBAData() = 0;
 
 	protected:
 		// Helper to handle atlas interactions
@@ -146,8 +146,8 @@ protected:
 
 		virtual void clean(int time) override;
 
-		virtual uint8_t* getRGBData() override;
-		virtual uint8_t* getRGBAData() override;
+		virtual std::unique_ptr<uint8_t[]> getRGBData() override;
+		virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
 
 		// Phase 2: Get atlas region (ensures loaded first)
 		const AtlasRegion* getAtlasRegion();
@@ -160,8 +160,8 @@ protected:
 
 		virtual void clean(int time) override;
 
-		virtual uint8_t* getRGBData() override;
-		virtual uint8_t* getRGBAData() override;
+		virtual std::unique_ptr<uint8_t[]> getRGBData() override;
+		virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
 
 		const AtlasRegion* getAtlasRegion();
 		const AtlasRegion* atlas_region;
