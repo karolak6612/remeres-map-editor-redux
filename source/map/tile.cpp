@@ -507,7 +507,6 @@ GroundBrush* Tile::getGroundBrush() const {
 	return nullptr;
 }
 
-
 Item* Tile::getWall() const {
 	auto it = std::ranges::find_if(items, [](const Item* i) {
 		return i->isWall();
