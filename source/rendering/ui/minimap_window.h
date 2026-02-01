@@ -39,9 +39,7 @@ public:
 protected:
 	std::unique_ptr<MinimapDrawer> drawer;
 	wxTimer update_timer;
-	wxGLContext* context;
-
-	DECLARE_EVENT_TABLE()
+	std::unique_ptr<wxGLContext> context;
 };
 
 #endif
