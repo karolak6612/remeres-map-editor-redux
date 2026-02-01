@@ -158,23 +158,24 @@ bool QTreeNode::isRequested(bool underground) {
 	}
 }
 
-void QTreeNode::clearVisible(uint32_t u) {
+void QTreeNode::clearVisible(uint32_t clientMask) {
+	uint32_t mask = clientMask | (clientMask << MAP_LAYERS);
 	if (isLeaf) {
-		visible &= u;
+		visible &= ~mask;
 	} else {
 		for (int i = 0; i < MAP_LAYERS; ++i) {
 			if (child[i]) {
-				child[i]->clearVisible(u);
+				child[i]->clearVisible(clientMask);
 			}
 		}
 	}
 }
 
-bool QTreeNode::isVisible(uint32_t client, bool underground) {
+bool QTreeNode::isVisible(uint32_t clientMask, bool underground) {
 	if (underground) {
-		return testFlags(visible >> MAP_LAYERS, static_cast<uint64_t>(1) << client);
+		return testFlags(visible >> MAP_LAYERS, clientMask);
 	} else {
-		return testFlags(visible, static_cast<uint64_t>(1) << client);
+		return testFlags(visible, clientMask);
 	}
 }
 
@@ -202,11 +203,11 @@ void QTreeNode::setRequested(bool underground, bool r) {
 	}
 }
 
-void QTreeNode::setVisible(uint32_t client, bool underground, bool value) {
+void QTreeNode::setVisible(uint32_t clientMask, bool underground, bool value) {
 	if (value) {
-		visible |= (1 << client << (underground ? MAP_LAYERS : 0));
+		visible |= (clientMask << (underground ? MAP_LAYERS : 0));
 	} else {
-		visible &= ~(1 << client << (underground ? MAP_LAYERS : 0));
+		visible &= ~(clientMask << (underground ? MAP_LAYERS : 0));
 	}
 }
 

@@ -120,7 +120,7 @@ void LiveServer::removeClient(uint32_t id) {
 	const uint32_t clientId = it->second->getClientId();
 	if (clientId != 0) {
 		clientIds &= ~clientId;
-		editor->map.clearVisible(clientIds);
+		editor->map.clearVisible(clientId);
 	}
 
 	clients.erase(it);
@@ -158,7 +158,8 @@ bool LiveServer::setPort(int32_t newPort) {
 }
 
 uint32_t LiveServer::getFreeClientId() {
-	for (int32_t bit = 1; bit < (1 << 16); bit <<= 1) {
+	// Start at bit 4 (16) to avoid conflict with internal QTreeNode flags (bits 0-3)
+	for (int32_t bit = (1 << 4); bit < (1 << 16); bit <<= 1) {
 		if (!testFlags(clientIds, bit)) {
 			clientIds |= bit;
 			return bit;

@@ -177,9 +177,9 @@ public:
 	}
 
 	void setVisible(bool overground, bool underground);
-	void setVisible(uint32_t client, bool underground, bool value);
-	bool isVisible(uint32_t client, bool underground);
-	void clearVisible(uint32_t client);
+	void setVisible(uint32_t clientMask, bool underground, bool value);
+	bool isVisible(uint32_t clientMask, bool underground);
+	void clearVisible(uint32_t clientMask);
 
 	void setRequested(bool underground, bool r);
 	bool isVisible(bool underground);
