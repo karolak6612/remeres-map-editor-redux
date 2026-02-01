@@ -68,7 +68,7 @@ std::unique_ptr<Editor> EditorFactory::JoinLive(CopyBuffer& copybuffer, LiveClie
 	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
 	mapVersion.client = g_version.GetCurrentVersionID();
 
-	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, client);
+	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, std::unique_ptr<LiveClient>(client));
 	SetupCallbacks(editor.get());
 	return editor;
 }

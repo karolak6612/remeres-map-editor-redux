@@ -25,6 +25,7 @@
 
 class DirtyList;
 class MapTab;
+class Editor;
 
 class LiveClient : public LiveSocket {
 public:
@@ -50,7 +51,7 @@ public:
 	void updateCursor(const Position& position);
 
 	LiveLogTab* createLogWindow(wxWindow* parent);
-	MapTab* createEditorWindow();
+	MapTab* createEditorWindow(std::shared_ptr<Editor> editor);
 
 	// send packets
 	void sendHello();
@@ -85,7 +86,7 @@ protected:
 	std::shared_ptr<boost::asio::ip::tcp::resolver> resolver;
 	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
 
-	std::unique_ptr<Editor> editor;
+	Editor* editor;
 
 	bool stopped;
 };

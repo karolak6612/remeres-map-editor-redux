@@ -46,7 +46,7 @@
 
 Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version) :
 	live_manager(*this),
-	actionQueue(newd ActionQueue(*this)),
+	actionQueue(std::make_unique<ActionQueue>(*this)),
 	selection(*this),
 	copybuffer(copybuffer),
 	replace_brush(nullptr) {
@@ -57,7 +57,7 @@ Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version) :
 
 Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn) :
 	live_manager(*this),
-	actionQueue(newd ActionQueue(*this)),
+	actionQueue(std::make_unique<ActionQueue>(*this)),
 	selection(*this),
 	copybuffer(copybuffer),
 	replace_brush(nullptr) {
@@ -67,9 +67,9 @@ Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName
 	EditorPersistence::loadMap(*this, fn);
 }
 
-Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, LiveClient* client) :
-	live_manager(*this, client),
-	actionQueue(newd NetworkedActionQueue(*this)),
+Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, std::unique_ptr<LiveClient> client) :
+	live_manager(*this, std::move(client)),
+	actionQueue(std::unique_ptr<NetworkedActionQueue>(new NetworkedActionQueue(*this))),
 	selection(*this),
 	copybuffer(copybuffer),
 	replace_brush(nullptr) {
@@ -85,7 +85,6 @@ Editor::~Editor() {
 
 	UnnamedRenderingLock();
 	selection.clear();
-	delete actionQueue;
 	spdlog::info("Editor destroyed [Editor={}]", (void*)this);
 }
 

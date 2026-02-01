@@ -28,6 +28,7 @@
 #include "editor/operations/selection_operations.h"
 #include "map/operations/map_processor.h"
 #include "editor/persistence/editor_persistence.h"
+#include <memory>
 
 class BaseMap;
 class CopyBuffer;
@@ -41,17 +42,14 @@ class LiveSocket;
 
 class Editor {
 public:
-	Editor(CopyBuffer& copybuffer, const MapVersion& version, LiveClient* client);
+	Editor(CopyBuffer& copybuffer, const MapVersion& version, std::unique_ptr<LiveClient> client);
 	Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn);
 	Editor(CopyBuffer& copybuffer, const MapVersion& version);
 	~Editor();
 
-	// Live Manager
-	LiveManager live_manager;
-
 public:
 	// Public members
-	ActionQueue* actionQueue;
+	std::unique_ptr<ActionQueue> actionQueue;
 	Selection selection;
 	CopyBuffer& copybuffer;
 	GroundBrush* replace_brush;
@@ -106,6 +104,10 @@ protected:
 
 	Editor(const Editor&);
 	Editor& operator=(const Editor&);
+
+public:
+	// Live Manager
+	LiveManager live_manager;
 };
 
 inline void Editor::draw(const Position& offset, bool alt) {

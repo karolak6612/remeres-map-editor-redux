@@ -27,14 +27,11 @@
 
 #include <spdlog/spdlog.h>
 
-MapTab::MapTab(MapTabbook* aui, Editor* editor) :
+MapTab::MapTab(MapTabbook* aui, std::shared_ptr<Editor> editor) :
 	EditorTab(),
 	MapWindow(aui, *editor),
-	aui(aui) {
-	iref = newd InternalReference;
-	iref->editor = editor;
-	iref->owner_count = 1;
-
+	aui(aui),
+	editor_ptr(editor) {
 	spdlog::info("MapTab created (New Editor) [Tab={}]", (void*)this);
 
 	aui->AddTab(this, true);
@@ -43,10 +40,9 @@ MapTab::MapTab(MapTabbook* aui, Editor* editor) :
 
 MapTab::MapTab(const MapTab* other) :
 	EditorTab(),
-	MapWindow(other->aui, *other->iref->editor),
+	MapWindow(other->aui, *other->editor_ptr),
 	aui(other->aui),
-	iref(other->iref) {
-	iref->owner_count++;
+	editor_ptr(other->editor_ptr) {
 	spdlog::info("MapTab created (Shared Editor) [Tab={}]", (void*)this);
 	aui->AddTab(this, true);
 	FitToMap();
@@ -56,17 +52,11 @@ MapTab::MapTab(const MapTab* other) :
 }
 
 MapTab::~MapTab() {
-	spdlog::info("MapTab destroying [Tab={}] (Owner count: {})", (void*)this, iref->owner_count);
-	iref->owner_count--;
-	if (iref->owner_count <= 0) {
-		spdlog::info("MapTab destroying editor [Editor={}]", (void*)iref->editor);
-		delete iref->editor;
-		delete iref;
-	}
+	spdlog::info("MapTab destroying [Tab={}] (Use count: {})", (void*)this, editor_ptr.use_count());
 }
 
 bool MapTab::IsUniqueReference() const {
-	return iref->owner_count == 1;
+	return editor_ptr.unique();
 }
 
 wxWindow* MapTab::GetWindow() const {
@@ -83,16 +73,16 @@ MapWindow* MapTab::GetView() const {
 
 wxString MapTab::GetTitle() const {
 	wxString ss;
-	ss << wxstr(iref->editor->map.getName()) << (iref->editor->map.hasChanged() ? "*" : "");
+	ss << wxstr(editor_ptr->map.getName()) << (editor_ptr->map.hasChanged() ? "*" : "");
 	return ss;
 }
 
 Editor* MapTab::GetEditor() const {
-	return &editor;
+	return editor_ptr.get();
 }
 
 Map* MapTab::GetMap() const {
-	return &editor.map;
+	return &editor_ptr->map;
 }
 
 void MapTab::VisibilityCheck() {
