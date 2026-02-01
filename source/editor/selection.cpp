@@ -193,7 +193,9 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		tiles.insert(tile);
+		if (tile_lookup.insert(tile).second) {
+			tiles.push_back(tile);
+		}
 	}
 }
 
@@ -202,7 +204,9 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		tiles.erase(tile);
+		if (tile_lookup.erase(tile)) {
+			std::erase(tiles, tile);
+		}
 	}
 }
 
@@ -212,11 +216,15 @@ void Selection::flush() {
 	}
 
 	for (Tile* t : pending_removes) {
-		tiles.erase(t);
+		if (tile_lookup.erase(t)) {
+			std::erase(tiles, t);
+		}
 	}
 
 	for (Tile* t : pending_adds) {
-		tiles.insert(t);
+		if (tile_lookup.insert(t).second) {
+			tiles.push_back(t);
+		}
 	}
 
 	pending_adds.clear();
@@ -234,8 +242,9 @@ void Selection::clear() {
 		std::ranges::for_each(tiles, [](Tile* tile) {
 			tile->deselect();
 		});
-		tiles.clear();
 	}
+	tiles.clear();
+	tile_lookup.clear();
 }
 
 void Selection::start(SessionFlags flags) {
