@@ -131,9 +131,9 @@ ItemDatabase::~ItemDatabase() {
 }
 
 void ItemDatabase::clear() {
-	for (uint32_t i = 0; i < items.size(); i++) {
-		delete items[i];
-		items.set(i, nullptr);
+	for (auto& item : items) {
+		delete item;
+		item = nullptr;
 	}
 }
 
@@ -151,7 +151,7 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, wxArra
 			continue;
 		}
 
-		ItemType* t = newd ItemType();
+		ItemType* t = new ItemType();
 		t->group = ItemGroup_t(u8);
 
 		switch (t->group) {
@@ -427,7 +427,7 @@ bool ItemDatabase::loadFromOtbVer2(BinaryNode* itemNode, wxString& error, wxArra
 			continue;
 		}
 
-		ItemType* t = newd ItemType();
+		ItemType* t = new ItemType();
 		t->group = ItemGroup_t(u8);
 
 		switch (t->group) {
@@ -594,7 +594,7 @@ bool ItemDatabase::loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArra
 			continue;
 		}
 
-		ItemType* t = newd ItemType();
+		ItemType* t = new ItemType();
 		t->group = ItemGroup_t(u8);
 
 		switch (t->group) {
@@ -1065,7 +1065,7 @@ bool ItemDatabase::loadMetaItem(pugi::xml_node node) {
 		if (id == 0 || items[id]) {
 			return false;
 		}
-		items.set(id, newd ItemType());
+		items.set(id, new ItemType());
 		items[id]->is_metaitem = true;
 		items[id]->id = id;
 		return true;

@@ -26,6 +26,10 @@ class contigous_vector {
 		return *t;
 	} // If this fails, you have tried using this class with a non-pointer type, DONT
 public:
+	using value_type = T;
+	using iterator = T*;
+	using const_iterator = const T*;
+
 	contigous_vector(size_t start_size = 7) {
 		start = reinterpret_cast<T*>(malloc(sizeof(T) * start_size));
 		memset(start, 0, sizeof(T) * start_size);
@@ -41,8 +45,37 @@ public:
 		memset(start + old_size, 0, sizeof(T) * (new_size - old_size));
 		sz = new_size;
 	}
-	size_t size() {
+
+	size_t size() const {
 		return sz;
+	}
+
+	bool empty() const {
+		return sz == 0;
+	}
+
+	iterator begin() {
+		return start;
+	}
+
+	iterator end() {
+		return start + sz;
+	}
+
+	const_iterator begin() const {
+		return start;
+	}
+
+	const_iterator end() const {
+		return start + sz;
+	}
+
+	const_iterator cbegin() const {
+		return start;
+	}
+
+	const_iterator cend() const {
+		return start + sz;
 	}
 
 	T& locate(size_t index) {
