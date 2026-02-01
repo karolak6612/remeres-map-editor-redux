@@ -39,11 +39,6 @@
 // ============================================================================
 // Tileset Window
 
-BEGIN_EVENT_TABLE(TilesetWindow, wxDialog)
-EVT_BUTTON(wxID_OK, TilesetWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, TilesetWindow::OnClickCancel)
-END_EVENT_TABLE()
-
 static constexpr int OUTFIT_COLOR_MAX = 133;
 
 TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
@@ -98,6 +93,9 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	Bind(wxEVT_BUTTON, &TilesetWindow::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &TilesetWindow::OnClickCancel, this, wxID_CANCEL);
 }
 
 void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {

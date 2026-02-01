@@ -1,0 +1,805 @@
+ninja: Entering directory `build_conan/build/Release'
+[1/272] Building CXX object CMakeFiles/rme.dir/source/app/extension.cpp.o
+[2/272] Building C object CMakeFiles/nanovg_lib.dir/ext/nanovg/src/nanovg.c.o
+[3/272] Linking C static library libnanovg_lib.a
+[4/272] Building CXX object CMakeFiles/rme.dir/source/app/application.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/application.h:21,
+                 from /app/source/app/application.cpp:21:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+In file included from /usr/include/wx-3.2/wx/wx.h:24,
+                 from /app/source/app/main.h:63,
+                 from /app/source/app/application.cpp:18:
+/app/source/ui/gui.h:63:40: warning: cast between incompatible pointer to member types from ‘void (wxEvtHandler::*)(wxCommandEvent&)’ to ‘wxEventFunction’ {aka ‘void (wxEvtHandler::*)(wxEvent&)’} [-Wcast-function-type]
+   63 |                 (wxObjectEventFunction)(wxEventFunction)wxStaticCastEvent(wxCommandEventFunction, &fn), \
+/app/source/app/application.cpp:57:1: note: in expansion of macro ‘EVT_ON_UPDATE_MENUS’
+   57 | EVT_ON_UPDATE_MENUS(wxID_ANY, MainFrame::OnUpdateMenus)
+      | ^~~~~~~~~~~~~~~~~~~
+[5/272] Building CXX object CMakeFiles/rme.dir/source/app/settings.cpp.o
+[6/272] Building CXX object CMakeFiles/rme.dir/source/app/preferences.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/app/preferences.cpp:24:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[7/272] Building CXX object CMakeFiles/rme.dir/source/app/updater.cpp.o
+[8/272] Building CXX object CMakeFiles/rme.dir/source/editor/hotkey_manager.cpp.o
+[9/272] Building CXX object CMakeFiles/rme.dir/source/app/client_version.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/client_version.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+In file included from /app/source/app/client_version.cpp:21:
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = unsigned int]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  124 |                 fread(&ref, sizeof(ref), 1, file);
+      |                 ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[10/272] Building CXX object CMakeFiles/rme.dir/source/brushes/brush_utility.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/brushes/brush_utility.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[11/272] Building CXX object CMakeFiles/rme.dir/source/brushes/door/door_brush.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/brushes/door/door_brush.cpp:13:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[12/272] Building CXX object CMakeFiles/rme.dir/source/brushes/flag/flag_brush.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/brushes/flag/flag_brush.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[13/272] Building CXX object CMakeFiles/rme.dir/source/brushes/brush.cpp.o
+In file included from /app/source/brushes/brush.cpp:44:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[14/272] Building CXX object CMakeFiles/rme.dir/source/app/managers/version_manager.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/managers/version_manager.cpp:10:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[15/272] Building CXX object CMakeFiles/rme.dir/source/brushes/border/optional_border_brush.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/brushes/border/optional_border_brush.cpp:10:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[16/272] Building CXX object CMakeFiles/rme.dir/source/brushes/carpet/carpet_brush.cpp.o
+[17/272] Building CXX object CMakeFiles/rme.dir/source/brushes/carpet/carpet_brush_items.cpp.o
+[18/272] Building CXX object CMakeFiles/rme.dir/source/brushes/carpet/carpet_brush_loader.cpp.o
+[19/272] Building CXX object CMakeFiles/rme.dir/source/brushes/carpet/carpet_brush_arrays.cpp.o
+[20/272] Building CXX object CMakeFiles/rme.dir/source/brushes/carpet/carpet_border_calculator.cpp.o
+[21/272] Building CXX object CMakeFiles/rme.dir/source/brushes/creature/creature_brush.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/brushes/creature/creature_brush.cpp:21:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[22/272] Building CXX object CMakeFiles/rme.dir/source/brushes/doodad/doodad_brush.cpp.o
+[23/272] Building CXX object CMakeFiles/rme.dir/source/brushes/eraser/eraser_brush.cpp.o
+[24/272] Building CXX object CMakeFiles/rme.dir/source/brushes/doodad/doodad_brush_loader.cpp.o
+[25/272] Building CXX object CMakeFiles/rme.dir/source/brushes/doodad/doodad_brush_items.cpp.o
+[26/272] Building CXX object CMakeFiles/rme.dir/source/brushes/ground/auto_border.cpp.o
+[27/272] Building CXX object CMakeFiles/rme.dir/source/brushes/ground/ground_border_calculator.cpp.o
+[28/272] Building CXX object CMakeFiles/rme.dir/source/brushes/ground/ground_brush_arrays.cpp.o
+[29/272] Building CXX object CMakeFiles/rme.dir/source/brushes/ground/ground_brush.cpp.o
+[30/272] Building CXX object CMakeFiles/rme.dir/source/brushes/house/house_exit_brush.cpp.o
+[31/272] Building CXX object CMakeFiles/rme.dir/source/brushes/ground/ground_brush_loader.cpp.o
+[32/272] Building CXX object CMakeFiles/rme.dir/source/brushes/house/house_brush.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/brushes/house/house_brush.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[33/272] Building CXX object CMakeFiles/rme.dir/source/brushes/raw/raw_brush.cpp.o
+[34/272] Building CXX object CMakeFiles/rme.dir/source/brushes/spawn/spawn_brush.cpp.o
+[35/272] Building CXX object CMakeFiles/rme.dir/source/brushes/table/table_border_calculator.cpp.o
+[36/272] Building CXX object CMakeFiles/rme.dir/source/brushes/table/table_brush.cpp.o
+[37/272] Building CXX object CMakeFiles/rme.dir/source/brushes/table/table_brush_items.cpp.o
+[38/272] Building CXX object CMakeFiles/rme.dir/source/brushes/table/table_brush_loader.cpp.o
+[39/272] Building CXX object CMakeFiles/rme.dir/source/brushes/table/table_brush_arrays.cpp.o
+[40/272] Building CXX object CMakeFiles/rme.dir/source/brushes/wall/wall_brush_items.cpp.o
+[41/272] Building CXX object CMakeFiles/rme.dir/source/brushes/wall/wall_border_calculator.cpp.o
+[42/272] Building CXX object CMakeFiles/rme.dir/source/brushes/wall/wall_brush.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/brushes/wall/wall_brush.cpp:11:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[43/272] Building CXX object CMakeFiles/rme.dir/source/brushes/wall/wall_brush_loader.cpp.o
+[44/272] Building CXX object CMakeFiles/rme.dir/source/brushes/wall/wall_brush_arrays.cpp.o
+[45/272] Building CXX object CMakeFiles/rme.dir/source/brushes/waypoint/waypoint_brush.cpp.o
+[46/272] Building CXX object CMakeFiles/rme.dir/source/editor/action_queue.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/action_queue.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[47/272] Building CXX object CMakeFiles/rme.dir/source/editor/action.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/action.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[48/272] Building CXX object CMakeFiles/rme.dir/source/editor/copybuffer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/copybuffer.cpp:21:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[49/272] Building CXX object CMakeFiles/rme.dir/source/editor/dirty_list.cpp.o
+[50/272] Building CXX object CMakeFiles/rme.dir/source/editor/editor_factory.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/editor_factory.cpp:4:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[51/272] Building CXX object CMakeFiles/rme.dir/source/editor/editor.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/editor.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[52/272] Building CXX object CMakeFiles/rme.dir/source/editor/operations/selection_operations.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/operations/selection_operations.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[53/272] Building CXX object CMakeFiles/rme.dir/source/editor/operations/copy_operations.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/operations/copy_operations.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[54/272] Building CXX object CMakeFiles/rme.dir/source/editor/operations/draw_operations.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/operations/draw_operations.cpp:7:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[55/272] Building CXX object CMakeFiles/rme.dir/source/editor/operations/map_version_changer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/operations/map_version_changer.h:4,
+                 from /app/source/editor/operations/map_version_changer.cpp:1:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[56/272] Building CXX object CMakeFiles/rme.dir/source/ext/pugixml.cpp.o
+[57/272] Building CXX object CMakeFiles/rme.dir/source/editor/persistence/tileset_exporter.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/editor/persistence/tileset_exporter.cpp:7:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[58/272] Building CXX object CMakeFiles/rme.dir/source/editor/persistence/editor_persistence.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/persistence/editor_persistence.cpp:10:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[59/272] Building CXX object CMakeFiles/rme.dir/source/editor/editor_tabs.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/editor_tabs.cpp:21:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[60/272] Building CXX object CMakeFiles/rme.dir/source/editor/selection_thread.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/selection_thread.cpp:21:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[61/272] Building CXX object CMakeFiles/rme.dir/source/editor/selection.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/editor/selection.cpp:25:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[62/272] Building CXX object CMakeFiles/rme.dir/source/game/animation_timer.cpp.o
+[63/272] Building CXX object CMakeFiles/rme.dir/source/game/complexitem.cpp.o
+In file included from /app/source/game/complexitem.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+/app/source/game/complexitem.h: In constructor ‘Podium::Podium(uint16_t)’:
+/app/source/game/complexitem.h:194:14: warning: ‘Podium::showPlatform’ will be initialized after [-Wreorder]
+  194 |         bool showPlatform = true;
+      |              ^~~~~~~~~~~~
+/app/source/game/complexitem.h:191:17: warning:   ‘uint8_t Podium::direction’ [-Wreorder]
+  191 |         uint8_t direction;
+      |                 ^~~~~~~~~
+/app/source/game/complexitem.cpp:101:1: warning:   when initialized here [-Wreorder]
+  101 | Podium::Podium(const uint16_t type) :
+      | ^~~~~~
+[64/272] Building CXX object CMakeFiles/rme.dir/source/game/creature.cpp.o
+[65/272] Building CXX object CMakeFiles/rme.dir/source/game/house.cpp.o
+In file included from /app/source/game/house.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+/app/source/game/house.cpp: In member function ‘void Houses::addHouse(House*)’:
+/app/source/game/house.cpp:53:28: warning: variable ‘it’ set but not used [-Wunused-but-set-variable]
+   53 |         HouseMap::iterator it = houses.find(new_house->id);
+      |                            ^~
+In file included from /app/source/game/house.cpp:21:
+/app/source/game/house.h: In constructor ‘House::House(Map&)’:
+/app/source/game/house.h:62:18: warning: ‘House::id’ will be initialized after [-Wreorder]
+   62 |         uint32_t id;
+      |                  ^~
+/app/source/game/house.h:47:13: warning:   ‘int House::rent’ [-Wreorder]
+   47 |         int rent;
+      |             ^~~~
+/app/source/game/house.cpp:103:1: warning:   when initialized here [-Wreorder]
+  103 | House::House(Map& map) :
+      | ^~~~~
+[66/272] Building CXX object CMakeFiles/rme.dir/source/game/item.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/game/item.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[67/272] Building CXX object CMakeFiles/rme.dir/source/game/creatures.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/game/creatures.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[68/272] Building CXX object CMakeFiles/rme.dir/source/game/item_attributes.cpp.o
+/app/source/game/item_attributes.cpp: In member function ‘bool ItemAttribute::unserialize(const IOMap&, BinaryNode*)’:
+/app/source/game/item_attributes.cpp:326:9: warning: ‘rtype’ may be used uninitialized [-Wmaybe-uninitialized]
+  326 |         switch (rtype) {
+      |         ^~~~~~
+/app/source/game/item_attributes.cpp:322:17: note: ‘rtype’ was declared here
+  322 |         uint8_t rtype;
+      |                 ^~~~~
+[69/272] Building CXX object CMakeFiles/rme.dir/source/game/items.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/game/items.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+In file included from /app/source/game/item.h:21,
+                 from /app/source/map/tile.h:22,
+                 from /app/source/map/map_allocator.h:21,
+                 from /app/source/map/basemap.h:24,
+                 from /app/source/editor/copybuffer.h:25,
+                 from /app/source/ui/gui.h:7:
+/app/source/game/items.h: In constructor ‘ItemType::ItemType()’:
+/app/source/game/items.h:377:18: warning: ‘ItemType::charges’ will be initialized after [-Wreorder]
+  377 |         uint32_t charges;
+      |                  ^~~~~~~
+/app/source/game/items.h:360:18: warning:   ‘uint16_t ItemType::slot_position’ [-Wreorder]
+  360 |         uint16_t slot_position;
+      |                  ^~~~~~~~~~~~~
+/app/source/game/items.cpp:30:1: warning:   when initialized here [-Wreorder]
+   30 | ItemType::ItemType() :
+      | ^~~~~~~~
+[70/272] Building CXX object CMakeFiles/rme.dir/source/game/town.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/game/town.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[71/272] Building CXX object CMakeFiles/rme.dir/source/game/materials.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/game/materials.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+/app/source/game/materials.cpp: In member function ‘bool Materials::isInTileset(Item*, std::string) const’:
+/app/source/game/materials.cpp:363:27: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  363 |         return it.id != 0 && (isInTileset(it.brush, tilesetName) || isInTileset(it.doodad_brush, tilesetName) || isInTileset(it.raw_brush, tilesetName)) || isInTileset(it.collection_brush, tilesetName);
+      |                ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[72/272] Building CXX object CMakeFiles/rme.dir/source/game/spawn.cpp.o
+/app/source/game/spawn.cpp: In member function ‘void Spawns::addSpawn(Tile*)’:
+/app/source/game/spawn.cpp:34:14: warning: variable ‘it’ set but not used [-Wunused-but-set-variable]
+   34 |         auto it = spawns.insert(tile->getPosition());
+      |              ^~
+[73/272] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/floor_visibility_calculator.cpp.o
+[74/272] Building CXX object CMakeFiles/rme.dir/source/game/waypoints.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/game/waypoints.cpp:21:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[75/272] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_renderer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/ingame_preview/ingame_preview_renderer.cpp:10:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[76/272] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_window.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ingame_preview/ingame_preview_window.cpp:6:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[77/272] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_manager.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/ingame_preview/ingame_preview_manager.cpp:6:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[78/272] Building CXX object CMakeFiles/rme.dir/source/io/iomap.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/io/iomap.cpp:19:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[79/272] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_canvas.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ingame_preview/ingame_preview_canvas.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[80/272] Building CXX object CMakeFiles/rme.dir/source/io/filehandle.cpp.o
+In file included from /app/source/io/filehandle.cpp:20:
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = short unsigned int]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  124 |                 fread(&ref, sizeof(ref), 1, file);
+      |                 ~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/io/filehandle.h: In member function ‘bool FileReadHandle::getType(T&) [with T = unsigned int]’:
+/app/source/io/filehandle.h:124:22: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+/app/source/io/filehandle.cpp: In member function ‘virtual BinaryNode* DiskNodeFileReadHandle::getRootNode()’:
+/app/source/io/filehandle.cpp:284:14: warning: ignoring return value of ‘size_t fread(void*, size_t, size_t, FILE*)’ declared with attribute ‘warn_unused_result’ [-Wunused-result]
+  284 |         fread(&first, 1, 1, file);
+      |         ~~~~~^~~~~~~~~~~~~~~~~~~~
+[81/272] Building CXX object CMakeFiles/rme.dir/source/live/live_action.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/live/live_action.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[82/272] Building CXX object CMakeFiles/rme.dir/source/live/live_manager.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/live/live_manager.cpp:7:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[83/272] Building CXX object CMakeFiles/rme.dir/source/live/live_peer.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/application.h:21,
+                 from /app/source/live/live_tab.h:24,
+                 from /app/source/live/live_peer.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[84/272] Building CXX object CMakeFiles/rme.dir/source/live/live_client.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/application.h:21,
+                 from /app/source/live/live_tab.h:24,
+                 from /app/source/live/live_client.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[85/272] Building CXX object CMakeFiles/rme.dir/source/io/iomap_otbm.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/io/iomap_otbm.cpp:31:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+In file included from /app/source/ext/pugiconfig.hpp:37,
+                 from /app/source/ext/pugixml.hpp:20,
+                 from /app/source/app/main.h:91,
+                 from /app/source/io/iomap_otbm.cpp:18:
+In member function ‘void pugi::impl::xml_allocator::deallocate_string(pugi::char_t*)’,
+    inlined from ‘bool pugi::impl::strcpy_insitu(pugi::char_t*&, uintptr_t&, uintptr_t, const pugi::char_t*)’ at /app/source/ext/pugixml.cpp:1519:28,
+    inlined from ‘bool pugi::xml_attribute::set_name(const pugi::char_t*)’ at /app/source/ext/pugixml.cpp:3881:29,
+    inlined from ‘pugi::xml_attribute pugi::xml_node::append_attribute(const pugi::char_t*)’ at /app/source/ext/pugixml.cpp:4185:13:
+/app/source/ext/pugixml.cpp:420:80: warning: array subscript -1 is outside array bounds of ‘pugi::char_t []’ [-Warray-bounds=]
+  420 |                 size_t page_offset = offsetof(xml_memory_page, data) + header->page_offset;
+      |                                                                        ~~~~~~~~^~~~~~~~~~~
+/app/source/ext/pugixml.cpp:424:44: warning: array subscript -1 is outside array bounds of ‘pugi::char_t []’ [-Warray-bounds=]
+  424 |                 size_t full_size = header->full_size == 0 ? page->busy_size : header->full_size;
+      |                                    ~~~~~~~~^~~~~~~~~
+In file included from /usr/include/c++/13/bits/shared_ptr.h:53,
+                 from /usr/include/c++/13/memory:80,
+                 from /usr/include/boost/asio/detail/memory.hpp:21,
+                 from /usr/include/boost/asio/execution/detail/as_invocable.hpp:20,
+                 from /usr/include/boost/asio/execution/execute.hpp:23,
+                 from /usr/include/boost/asio/execution/executor.hpp:25,
+                 from /usr/include/boost/asio/execution/allocator.hpp:20,
+                 from /usr/include/boost/asio/execution.hpp:18,
+                 from /usr/include/boost/asio/any_completion_executor.hpp:22,
+                 from /usr/include/boost/asio.hpp:20,
+                 from /app/source/app/main.h:54:
+In constructor ‘std::__shared_count<_Lp>::__shared_count(_Ptr) [with _Ptr = unsigned char*; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’,
+    inlined from ‘std::__shared_count<_Lp>::__shared_count(_Ptr, std::false_type) [with _Ptr = unsigned char*; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/13/bits/shared_ptr_base.h:928:22,
+    inlined from ‘std::__shared_ptr<_Tp, _Lp>::__shared_ptr(_Yp*) [with _Yp = unsigned char; <template-parameter-2-2> = void; _Tp = unsigned char; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/13/bits/shared_ptr_base.h:1469:17,
+    inlined from ‘std::__shared_ptr<_Tp, _Lp>::_SafeConv<_Yp> std::__shared_ptr<_Tp, _Lp>::reset(_Yp*) [with _Yp = unsigned char; _Tp = unsigned char; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/13/bits/shared_ptr_base.h:1650:4,
+    inlined from ‘virtual bool IOMapOTBM::loadMap(Map&, const FileName&)’ at /app/source/io/iomap_otbm.cpp:665:23:
+/usr/include/c++/13/bits/shared_ptr_base.h:921:15: warning: ‘void operator delete(void*, std::size_t)’ called on pointer returned from a mismatched allocation function [-Wmismatched-new-delete]
+  921 |               delete __p;
+      |               ^~~~~~~~~~
+/app/source/io/iomap_otbm.cpp: In member function ‘virtual bool IOMapOTBM::loadMap(Map&, const FileName&)’:
+/app/source/io/iomap_otbm.cpp:665:81: note: returned from ‘void* operator new [](std::size_t)’
+  665 |                                 house_buffer.reset(new uint8_t[house_buffer_size]);
+      |                                                                                 ^
+In constructor ‘std::__shared_count<_Lp>::__shared_count(_Ptr) [with _Ptr = unsigned char*; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’,
+    inlined from ‘std::__shared_count<_Lp>::__shared_count(_Ptr, std::false_type) [with _Ptr = unsigned char*; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/13/bits/shared_ptr_base.h:928:22,
+    inlined from ‘std::__shared_ptr<_Tp, _Lp>::__shared_ptr(_Yp*) [with _Yp = unsigned char; <template-parameter-2-2> = void; _Tp = unsigned char; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/13/bits/shared_ptr_base.h:1469:17,
+    inlined from ‘std::__shared_ptr<_Tp, _Lp>::_SafeConv<_Yp> std::__shared_ptr<_Tp, _Lp>::reset(_Yp*) [with _Yp = unsigned char; _Tp = unsigned char; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/13/bits/shared_ptr_base.h:1650:4,
+    inlined from ‘virtual bool IOMapOTBM::loadMap(Map&, const FileName&)’ at /app/source/io/iomap_otbm.cpp:678:23:
+/usr/include/c++/13/bits/shared_ptr_base.h:921:15: warning: ‘void operator delete(void*, std::size_t)’ called on pointer returned from a mismatched allocation function [-Wmismatched-new-delete]
+  921 |               delete __p;
+      |               ^~~~~~~~~~
+/app/source/io/iomap_otbm.cpp: In member function ‘virtual bool IOMapOTBM::loadMap(Map&, const FileName&)’:
+/app/source/io/iomap_otbm.cpp:678:81: note: returned from ‘void* operator new [](std::size_t)’
+  678 |                                 spawn_buffer.reset(new uint8_t[spawn_buffer_size]);
+      |                                                                                 ^
+[86/272] Building CXX object CMakeFiles/rme.dir/source/live/live_server.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/application.h:21,
+                 from /app/source/live/live_tab.h:24,
+                 from /app/source/live/live_server.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[87/272] Building CXX object CMakeFiles/rme.dir/source/live/live_tab.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/application.h:21,
+                 from /app/source/live/live_tab.h:24,
+                 from /app/source/live/live_tab.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[88/272] Building CXX object CMakeFiles/rme.dir/source/live/live_socket.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/app/application.h:21,
+                 from /app/source/live/live_tab.h:24,
+                 from /app/source/live/live_socket.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+/app/source/live/live_socket.cpp: In member function ‘Tile* LiveSocket::readTile(BinaryNode*, Editor&, const Position*)’:
+/app/source/live/live_socket.cpp:293:25: warning: ‘y’ may be used uninitialized [-Wmaybe-uninitialized]
+  293 |                 pos.y = y;
+      |                         ^
+/app/source/live/live_socket.cpp:291:26: note: ‘y’ was declared here
+  291 |                 uint16_t y;
+      |                          ^
+/app/source/live/live_socket.cpp:280:35: warning: ‘tileType’ may be used uninitialized [-Wmaybe-uninitialized]
+  280 |         if (tileType != OTBM_TILE && tileType != OTBM_HOUSETILE) {
+      |             ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/live/live_socket.cpp:277:17: note: ‘tileType’ was declared here
+  277 |         uint8_t tileType;
+      |                 ^~~~~~~~
+/app/source/live/live_socket.cpp:290:25: warning: ‘x’ may be used uninitialized [-Wmaybe-uninitialized]
+  290 |                 pos.x = x;
+      |                         ^
+/app/source/live/live_socket.cpp:288:26: note: ‘x’ was declared here
+  288 |                 uint16_t x;
+      |                          ^
+/app/source/live/live_socket.cpp:296:25: warning: ‘z’ may be used uninitialized [-Wmaybe-uninitialized]
+  296 |                 pos.z = z;
+      |                         ^
+/app/source/live/live_socket.cpp:294:25: note: ‘z’ was declared here
+  294 |                 uint8_t z;
+      |                         ^
+[89/272] Building CXX object CMakeFiles/rme.dir/source/map/basemap.cpp.o
+[90/272] Building CXX object CMakeFiles/rme.dir/source/map/operations/map_processor.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/map/operations/map_processor.cpp:8:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[91/272] Building CXX object CMakeFiles/rme.dir/source/map/map_region.cpp.o
+[92/272] Building CXX object CMakeFiles/rme.dir/source/map/map_search.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/map/map_search.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[93/272] Building CXX object CMakeFiles/rme.dir/source/map/map.cpp.o
+/app/source/map/map.cpp:153:9: warning: "/*" within comment [-Wcomment]
+  153 |         /* Legacy conversion logic removed */
+      |
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/map/map.cpp:20:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[94/272] Building CXX object CMakeFiles/rme.dir/source/map/tile.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/map/tile.cpp:32:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[95/272] Building CXX object CMakeFiles/rme.dir/source/map/map_statistics.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/map/map_statistics.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[96/272] Building CXX object CMakeFiles/rme.dir/source/mkpch.cpp.o
+[97/272] Building CXX object CMakeFiles/rme.dir/source/map/tileset.cpp.o
+[98/272] Building CXX object CMakeFiles/rme.dir/source/net/process_com.cpp.o
+[99/272] Building CXX object CMakeFiles/rme.dir/source/net/net_connection.cpp.o
+[100/272] Building CXX object CMakeFiles/rme.dir/source/net/rme_net.cpp.o
+[101/272] Building CXX object CMakeFiles/rme.dir/source/palette/palette_brushlist.cpp.o
+[102/272] Building CXX object CMakeFiles/rme.dir/source/palette/palette_common.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/palette_common.cpp:27:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[103/272] Building CXX object CMakeFiles/rme.dir/source/palette/palette_waypoints.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/palette_waypoints.cpp:23:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[104/272] Building CXX object CMakeFiles/rme.dir/source/palette/palette_window.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/palette_window.cpp:22:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+/app/source/palette/palette_window.cpp: In member function ‘virtual bool PaletteWindow::OnSelectBrush(const Brush*, PaletteType)’:
+/app/source/palette/palette_window.cpp:253:25: warning: this statement may fall through [-Wimplicit-fallthrough=]
+  253 |                         if (collection_palette && collection_palette->SelectBrush(whatbrush)) {
+      |                         ^~
+/app/source/palette/palette_window.cpp:258:17: note: here
+  258 |                 case TILESET_ITEM: {
+      |                 ^~~~
+[105/272] Building CXX object CMakeFiles/rme.dir/source/palette/house/house_palette.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/palette/house/house_palette.cpp:9:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[106/272] Building CXX object CMakeFiles/rme.dir/source/palette/palette_creature.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/palette_creature.cpp:25:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[107/272] Building CXX object CMakeFiles/rme.dir/source/palette/house/edit_house_dialog.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/house/edit_house_dialog.cpp:10:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[108/272] Building CXX object CMakeFiles/rme.dir/source/palette/controls/brush_button.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/controls/brush_button.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[109/272] Building CXX object CMakeFiles/rme.dir/source/palette/controls/virtual_brush_grid.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/controls/virtual_brush_grid.cpp:2:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[110/272] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_tool_panel.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/panels/brush_tool_panel.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[111/272] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_thickness_panel.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/panels/brush_thickness_panel.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[112/272] Building CXX object CMakeFiles/rme.dir/source/rendering/core/coordinate_mapper.cpp.o
+[113/272] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_palette_panel.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/panels/brush_palette_panel.cpp:2:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[114/272] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_size_panel.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/panels/brush_size_panel.cpp:3:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[115/272] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_panel.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/palette/panels/brush_panel.cpp:2:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+[116/272] Building CXX object CMakeFiles/rme.dir/source/rendering/core/light_buffer.cpp.o
+[117/272] Building CXX object CMakeFiles/rme.dir/source/rendering/core/drawing_options.cpp.o
+In file included from /app/source/map/map.h:26,
+                 from /app/source/editor/editor.h:24,
+                 from /app/source/ui/replace_items_window.h:23,
+                 from /app/source/ui/map_window.h:22,
+                 from /app/source/ui/map_tab.h:23,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/core/drawing_options.cpp:2:
+/app/source/game/complexitem.h:159:9: warning: type qualifiers ignored on function return type [-Wignored-qualifiers]
+  159 |         const uint8_t getDirection() {
+      |         ^~~~~
+ninja: build stopped: interrupted by user.
