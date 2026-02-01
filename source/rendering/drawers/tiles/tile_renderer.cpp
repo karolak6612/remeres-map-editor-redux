@@ -102,6 +102,10 @@ static TooltipData CreateItemTooltipData(Item* item, const Position& pos, bool i
 			// but getItem(i) is safer if available, or just iterating vector.
 			// Container::getVector() returns ItemVector& (std::vector<Item*>)
 			const ItemVector& items = container->getVector();
+
+			// ⚡ Bolt Optimization: Reserve vector capacity to avoid reallocations
+			data.containerItems.reserve(std::min((size_t)32, items.size()));
+
 			for (Item* subItem : items) {
 				if (subItem) {
 					ContainerItem ci;
@@ -194,7 +198,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
 		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
 		if (groundData.hasVisibleFields()) {
-			tooltip_drawer->addItemTooltip(groundData);
+			// ⚡ Bolt Optimization: Move large tooltip data
+			tooltip_drawer->addItemTooltip(std::move(groundData));
 		}
 	}
 
@@ -222,13 +227,21 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
+			// ⚡ Bolt Optimization: Hoist house color calculation
+			uint8_t house_r = 255, house_g = 255, house_b = 255;
+			bool use_house_tint = options.extended_house_shader && options.show_houses && tile->isHouseTile();
+			if (use_house_tint) {
+				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
+			}
+
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
 					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
 					if (itemData.hasVisibleFields()) {
-						tooltip_drawer->addItemTooltip(itemData);
+						// ⚡ Bolt Optimization: Move large tooltip data
+						tooltip_drawer->addItemTooltip(std::move(itemData));
 					}
 				}
 
@@ -243,17 +256,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
-					if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
-						uint32_t house_id = tile->getHouseID();
-						uint8_t hr = 255, hg = 255, hb = 255;
-						TileColorCalculator::GetHouseColor(house_id, hr, hg, hb);
-
+					if (use_house_tint) {
 						// Apply house color tint
-						ir = (uint8_t)((int)ir * hr / 255);
-						ig = (uint8_t)((int)ig * hg / 255);
-						ib = (uint8_t)((int)ib * hb / 255);
+						ir = (uint8_t)((int)ir * house_r / 255);
+						ig = (uint8_t)((int)ig * house_g / 255);
+						ib = (uint8_t)((int)ib * house_b / 255);
 
-						if ((int)house_id == current_house_id) {
+						if ((int)tile->getHouseID() == current_house_id) {
 							// Pulse effect matching the tile pulse
 							if (options.highlight_pulse > 0.0f) {
 								float boost = options.highlight_pulse * 0.6f;
