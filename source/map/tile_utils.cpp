@@ -3,11 +3,12 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "map/tile_utils.h"
-#include "map/tile.h"
-#include "brushes/ground/ground_brush.h"
-#include "brushes/wall/wall_brush.h"
-#include "brushes/table/table_brush.h"
+
 #include "brushes/carpet/carpet_brush.h"
+#include "brushes/ground/ground_brush.h"
+#include "brushes/table/table_brush.h"
+#include "brushes/wall/wall_brush.h"
+#include "map/tile.h"
 #include <algorithm>
 
 void TileUtils::borderize(BaseMap* parent, Tile* tile) {
