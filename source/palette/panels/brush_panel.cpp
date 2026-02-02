@@ -3,7 +3,6 @@
 #include "app/settings.h"
 #include "app/settings.h"
 #include "palette/palette_window.h" // For PaletteWindow dynamic_casts
-#include "palette/controls/virtual_brush_grid.h"
 #include <spdlog/spdlog.h>
 #include <wx/wrapsizer.h>
 
@@ -68,10 +67,10 @@ void BrushPanel::LoadContents() {
 
 	switch (list_type) {
 		case BRUSHLIST_LARGE_ICONS:
-			brushbox = newd VirtualBrushGrid(this, tileset, RENDER_SIZE_32x32);
+			brushbox = newd BrushIconBox(this, tileset, RENDER_SIZE_32x32);
 			break;
 		case BRUSHLIST_SMALL_ICONS:
-			brushbox = newd VirtualBrushGrid(this, tileset, RENDER_SIZE_16x16);
+			brushbox = newd BrushIconBox(this, tileset, RENDER_SIZE_16x16);
 			break;
 		case BRUSHLIST_LISTBOX:
 		case BRUSHLIST_TEXT_LISTBOX:

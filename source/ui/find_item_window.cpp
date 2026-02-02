@@ -24,12 +24,6 @@
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 
-BEGIN_EVENT_TABLE(FindItemDialog, wxDialog)
-EVT_TIMER(wxID_ANY, FindItemDialog::OnInputTimer)
-EVT_BUTTON(wxID_OK, FindItemDialog::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, FindItemDialog::OnClickCancel)
-END_EVENT_TABLE()
-
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
 	input_timer(this),
@@ -199,6 +193,10 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	this->RefreshContentsInternal();
 
 	// Connect Events
+	Bind(wxEVT_TIMER, &FindItemDialog::OnInputTimer, this);
+	Bind(wxEVT_BUTTON, &FindItemDialog::OnClickOK, this, wxID_OK);
+	Bind(wxEVT_BUTTON, &FindItemDialog::OnClickCancel, this, wxID_CANCEL);
+
 	options_radio_box->Bind(wxEVT_COMMAND_RADIOBOX_SELECTED, &FindItemDialog::OnOptionChange, this);
 	server_id_spin->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &FindItemDialog::OnServerIdChange, this);
 	server_id_spin->Bind(wxEVT_COMMAND_TEXT_UPDATED, &FindItemDialog::OnServerIdChange, this);
