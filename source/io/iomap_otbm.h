@@ -19,6 +19,7 @@
 #define RME_OTBM_MAP_IO_H_
 
 #include "io/iomap.h"
+#include "io/filehandle.h"
 
 // Pragma pack is VERY important since otherwise it won't be able to load the structs correctly
 #pragma pack(1)

@@ -87,6 +87,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.h
+    ${CMAKE_CURRENT_LIST_DIR}/resources/png_data.h
     ${CMAKE_CURRENT_LIST_DIR}/io/templates.h
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.h
     ${CMAKE_CURRENT_LIST_DIR}/live/live_client.h
@@ -263,7 +264,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/toolbar_factory.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/toolbar_layout.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/old_properties_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/pngfiles.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/positionctrl.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_items_window.h
@@ -392,8 +392,13 @@ set(rme_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
-    #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/map.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/item.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/spawn.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/house.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/waypoint.cpp
+    #${CMAKE_CURRENT_LIST_DIR}/io/otmm/map.cpp
+    #${CMAKE_CURRENT_LIST_DIR}/io/otmm/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_client.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_manager.cpp
@@ -560,7 +565,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/toolbar_factory.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/toolbar_layout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/old_properties_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/pngfiles.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/resources/png_data.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/positionctrl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_items_window.cpp
