@@ -217,7 +217,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 		float s = 32.0f; // Standard tile size
 
 		// Draw 1px solid border using geometry generation
-		primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
+		if (g_gui.gfx.hasAtlasManager()) {
+			sprite_batch.drawRectLines(x, y, s, s, border_color, *g_gui.gfx.getAtlasManager());
+		} else {
+			primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
+		}
 	}
 
 	if (!only_colors) {

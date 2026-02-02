@@ -70,6 +70,7 @@ private:
 	std::unique_ptr<GLTextureResource> palette_texture_id_;
 	std::unique_ptr<GLVertexArray> vao_;
 	std::unique_ptr<GLBuffer> vbo_;
+	std::unique_ptr<GLBuffer> instance_vbo_;
 
 	int width_ = 0;
 	int height_ = 0;

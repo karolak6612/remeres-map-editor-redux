@@ -12,27 +12,32 @@ const char* minimap_vert = R"(
 #version 450 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
+layout (location = 2) in vec4 aRect; // x, y, w, h
+layout (location = 3) in float aLayer;
 
 out vec2 TexCoord;
-uniform mat4 uMVP;
+flat out float Layer;
+uniform mat4 uProjection;
 
 void main() {
-    gl_Position = uMVP * vec4(aPos, 0.0, 1.0);
+    vec2 worldPos = aRect.xy + aPos * aRect.zw;
+    gl_Position = uProjection * vec4(worldPos, 0.0, 1.0);
     TexCoord = aTexCoord;
+    Layer = aLayer;
 }
 )";
 
 const char* minimap_frag = R"(
 #version 450 core
 in vec2 TexCoord;
+flat in float Layer;
 out vec4 FragColor;
 
 uniform usampler2DArray uMinimapTexture; // R8UI Array
 uniform sampler1D uPaletteTexture;  // RGBA
-uniform float uLayer;               // Layer index for current tile
 
 void main() {
-    uint colorIndex = texture(uMinimapTexture, vec3(TexCoord, uLayer)).r;
+    uint colorIndex = texture(uMinimapTexture, vec3(TexCoord, Layer)).r;
     if (colorIndex == 0u) {
         discard; // Transparent
     }
@@ -71,6 +76,11 @@ bool MinimapRenderer::initialize() {
 	// Create VAO/VBO for fullscreen quad
 	vao_ = std::make_unique<GLVertexArray>();
 	vbo_ = std::make_unique<GLBuffer>();
+	instance_vbo_ = std::make_unique<GLBuffer>();
+
+	// Allocate instance buffer (max 65536 instances)
+	// struct { float x,y,w,h,layer; } = 5 floats
+	glNamedBufferStorage(instance_vbo_->GetID(), 65536 * 5 * sizeof(float), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	float quad_vertices[] = {
 		// pos      // tex
@@ -82,16 +92,32 @@ bool MinimapRenderer::initialize() {
 
 	glNamedBufferStorage(vbo_->GetID(), sizeof(quad_vertices), quad_vertices, 0);
 
-	glBindVertexArray(vao_->GetID());
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_->GetID());
+	// DSA Setup for Quad
+	glVertexArrayVertexBuffer(vao_->GetID(), 0, vbo_->GetID(), 0, 4 * sizeof(float));
 
-	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
+	// Pos
+	glEnableVertexArrayAttrib(vao_->GetID(), 0);
+	glVertexArrayAttribFormat(vao_->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao_->GetID(), 0, 0);
 
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-	glEnableVertexAttribArray(1);
+	// Tex
+	glEnableVertexArrayAttrib(vao_->GetID(), 1);
+	glVertexArrayAttribFormat(vao_->GetID(), 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
+	glVertexArrayAttribBinding(vao_->GetID(), 1, 0);
 
-	glBindVertexArray(0);
+	// DSA Setup for Instances (Binding 1)
+	glVertexArrayVertexBuffer(vao_->GetID(), 1, instance_vbo_->GetID(), 0, 5 * sizeof(float));
+	glVertexArrayBindingDivisor(vao_->GetID(), 1, 1);
+
+	// Rect (Loc 2)
+	glEnableVertexArrayAttrib(vao_->GetID(), 2);
+	glVertexArrayAttribFormat(vao_->GetID(), 2, 4, GL_FLOAT, GL_FALSE, 0);
+	glVertexArrayAttribBinding(vao_->GetID(), 2, 1);
+
+	// Layer (Loc 3)
+	glEnableVertexArrayAttrib(vao_->GetID(), 3);
+	glVertexArrayAttribFormat(vao_->GetID(), 3, 1, GL_FLOAT, GL_FALSE, 4 * sizeof(float));
+	glVertexArrayAttribBinding(vao_->GetID(), 3, 1);
 
 	return true;
 }
@@ -270,6 +296,14 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	end_col = std::min(cols_ - 1, end_col);
 	end_row = std::min(rows_ - 1, end_row);
 
+	struct InstanceData {
+		float x, y, w, h;
+		float layer;
+	};
+
+	std::vector<InstanceData> instances;
+	instances.reserve((end_row - start_row + 1) * (end_col - start_col + 1));
+
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
 			int tile_x = c * TILE_SIZE;
@@ -281,21 +315,32 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 			float screen_tile_w = TILE_SIZE * scale_x;
 			float screen_tile_h = TILE_SIZE * scale_y;
 
-			// Model matrix for this tile
-			glm::mat4 model = glm::mat4(1.0f);
-			model = glm::translate(model, glm::vec3(screen_tile_x, screen_tile_y, 0.0f));
-			model = glm::scale(model, glm::vec3(screen_tile_w, screen_tile_h, 1.0f));
-
-			shader_->SetMat4("uMVP", projection * model);
-
 			int layer = r * cols_ + c;
-			shader_->SetFloat("uLayer", (float)layer);
 
-			// spdlog::info("Minimap Rendering Tile: {},{} (Layer {}) at x:{}, y:{}, w:{}, h:{}", c, r, layer, screen_tile_x, screen_tile_y, screen_tile_w, screen_tile_h);
-
-			glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+			instances.push_back({ screen_tile_x, screen_tile_y, screen_tile_w, screen_tile_h, (float)layer });
 		}
 	}
+
+	if (instances.empty()) {
+		glBindVertexArray(0);
+		return;
+	}
+
+	// Limit to buffer capacity (65536)
+	if (instances.size() > 65536) {
+		instances.resize(65536);
+		static bool warned = false;
+		if (!warned) {
+			spdlog::warn("MinimapRenderer: Too many visible chunks (>65536), capped. This warning will appear once.");
+			warned = true;
+		}
+	}
+
+	glNamedBufferSubData(instance_vbo_->GetID(), 0, instances.size() * sizeof(InstanceData), instances.data());
+
+	shader_->SetMat4("uProjection", projection);
+
+	glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, (GLsizei)instances.size());
 
 	glBindVertexArray(0);
 }
