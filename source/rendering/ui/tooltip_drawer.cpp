@@ -51,6 +51,13 @@ void TooltipDrawer::addItemTooltip(const TooltipData& data) {
 	tooltips.push_back(data);
 }
 
+void TooltipDrawer::addItemTooltip(TooltipData&& data) {
+	if (!data.hasVisibleFields()) {
+		return;
+	}
+	tooltips.push_back(std::move(data));
+}
+
 void TooltipDrawer::addWaypointTooltip(Position pos, const std::string& name) {
 	if (name.empty()) {
 		return;
