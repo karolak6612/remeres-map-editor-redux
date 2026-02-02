@@ -37,7 +37,9 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive
 		MapIterator end = g_gui.secondary_map->end();
 		for (; it != end; ++it) {
 			Tile* tile = (*it)->get();
-			if (!tile) continue;
+			if (!tile) {
+				continue;
+			}
 
 			Position pos = tile->getPosition();
 			// Calculate where this tile would land on the screen
