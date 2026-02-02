@@ -357,7 +357,7 @@ protected:
 	int disabled_counter;
 
 	friend class RenderingLock;
-	friend MapTab::MapTab(MapTabbook*, Editor*);
+	friend MapTab::MapTab(MapTabbook*, std::shared_ptr<Editor>);
 	friend MapTab::MapTab(const MapTab*);
 };
 

@@ -52,7 +52,7 @@ public:
 		return socket;
 	}
 
-	void UpdateClientList(const std::unordered_map<uint32_t, LivePeer*>& updatedClients);
+	void UpdateClientList(const std::unordered_map<uint32_t, std::unique_ptr<LivePeer>>& updatedClients);
 
 	void OnSelectChatbox(wxFocusEvent& evt);
 	void OnDeselectChatbox(wxFocusEvent& evt);
