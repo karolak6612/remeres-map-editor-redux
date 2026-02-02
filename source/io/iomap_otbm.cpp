@@ -1544,7 +1544,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			while (map_iterator != map.end()) {
 				// Update progressbar
 				++tiles_saved;
-				if (tiles_saved % 8192 == 0) {
+				if (tiles_saved % 8192 == 0 && map.getTileCount() > 0) {
 					g_gui.SetLoadDone(int(tiles_saved / double(map.getTileCount()) * 100.0));
 				}
 

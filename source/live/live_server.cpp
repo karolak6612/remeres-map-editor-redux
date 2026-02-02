@@ -158,7 +158,7 @@ bool LiveServer::setPort(int32_t newPort) {
 }
 
 uint32_t LiveServer::getFreeClientId() {
-	for (int32_t bit = 1; bit < (1 << 16); bit <<= 1) {
+	for (int32_t bit = 16; bit < (1 << 16); bit <<= 1) {
 		if (!testFlags(clientIds, bit)) {
 			clientIds |= bit;
 			return bit;

@@ -801,7 +801,7 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 				while (map_iterator != map.end()) {
 					// Update progressbar
 					++tiles_saved;
-					if (showdialog && tiles_saved % 8192 == 0) {
+					if (showdialog && tiles_saved % 8192 == 0 && map.getTileCount() > 0) {
 						g_gui.SetLoadDone(int(tiles_saved / double(map.getTileCount()) * 100.0));
 					}
 
