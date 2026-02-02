@@ -27,7 +27,7 @@
 #include "rendering/core/light_buffer.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
-	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), creature_name_drawer(cnd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), editor(ed) {
+	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
 }
 
 // Helper function to create tooltip data from an item
