@@ -191,7 +191,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+	// PROFILER: Only generate tooltips for the hovered tile to save CPU
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y);
+	if (options.show_tooltips && map_z == view.floor && is_hovered && tile->ground) {
 		TooltipData groundData = CreateItemTooltipData(tile->ground, location->getPosition(), tile->isHouseTile());
 		if (groundData.hasVisibleFields()) {
 			tooltip_drawer->addItemTooltip(groundData);
@@ -222,10 +224,19 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
+			// PROFILER: Hoist house color calculation out of the loop
+			uint8_t house_r = 255, house_g = 255, house_b = 255;
+			bool should_tint_house = options.extended_house_shader && options.show_houses && tile->isHouseTile();
+			uint32_t house_id = 0;
+			if (should_tint_house) {
+				house_id = tile->getHouseID();
+				TileColorCalculator::GetHouseColor(house_id, house_r, house_g, house_b);
+			}
+
 			// items on tile
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (options.show_tooltips && map_z == view.floor && is_hovered) {
 					TooltipData itemData = CreateItemTooltipData(*it, location->getPosition(), tile->isHouseTile());
 					if (itemData.hasVisibleFields()) {
 						tooltip_drawer->addItemTooltip(itemData);
@@ -243,15 +254,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
-					if (options.extended_house_shader && options.show_houses && tile->isHouseTile()) {
-						uint32_t house_id = tile->getHouseID();
-						uint8_t hr = 255, hg = 255, hb = 255;
-						TileColorCalculator::GetHouseColor(house_id, hr, hg, hb);
-
+					if (should_tint_house) {
 						// Apply house color tint
-						ir = (uint8_t)((int)ir * hr / 255);
-						ig = (uint8_t)((int)ig * hg / 255);
-						ib = (uint8_t)((int)ib * hb / 255);
+						ir = (uint8_t)((int)ir * house_r / 255);
+						ig = (uint8_t)((int)ig * house_g / 255);
+						ib = (uint8_t)((int)ib * house_b / 255);
 
 						if ((int)house_id == current_house_id) {
 							// Pulse effect matching the tile pulse
