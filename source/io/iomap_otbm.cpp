@@ -790,6 +790,114 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 	return true;
 }
 
+bool IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
+	uint16_t base_x, base_y;
+	uint8_t base_z;
+	if (!mapNode->getU16(base_x) || !mapNode->getU16(base_y) || !mapNode->getU8(base_z)) {
+		warning("Invalid map node, no base coordinate");
+		return false;
+	}
+
+	for (BinaryNode* tileNode = mapNode->getChild(); tileNode != nullptr; tileNode = tileNode->advance()) {
+		Tile* tile = nullptr;
+		uint8_t tile_type;
+		if (!tileNode->getByte(tile_type)) {
+			warning("Invalid tile type");
+			continue;
+		}
+		if (tile_type == OTBM_TILE || tile_type == OTBM_HOUSETILE) {
+			uint8_t x_offset, y_offset;
+			if (!tileNode->getU8(x_offset) || !tileNode->getU8(y_offset)) {
+				warning("Could not read position of tile");
+				continue;
+			}
+			const Position pos(base_x + x_offset, base_y + y_offset, base_z);
+
+			if (map.getTile(pos)) {
+				warning("Duplicate tile at %d:%d:%d, discarding duplicate", pos.x, pos.y, pos.z);
+				continue;
+			}
+
+			tile = map.allocator(map.createTileL(pos));
+			House* house = nullptr;
+			if (tile_type == OTBM_HOUSETILE) {
+				uint32_t house_id;
+				if (!tileNode->getU32(house_id)) {
+					warning("House tile without house data, discarding tile");
+					continue;
+				}
+				if (house_id) {
+					house = map.houses.getHouse(house_id);
+					if (!house) {
+						house = newd House(map);
+						house->setID(house_id);
+						map.houses.addHouse(house);
+					}
+				} else {
+					warning("Invalid house id from tile %d:%d:%d", pos.x, pos.y, pos.z);
+				}
+			}
+
+			uint8_t attribute;
+			while (tileNode->getU8(attribute)) {
+				switch (attribute) {
+					case OTBM_ATTR_TILE_FLAGS: {
+						uint32_t flags = 0;
+						if (!tileNode->getU32(flags)) {
+							warning("Invalid tile flags of tile on %d:%d:%d", pos.x, pos.y, pos.z);
+						}
+						tile->setMapFlags(flags);
+						break;
+					}
+					case OTBM_ATTR_ITEM: {
+						Item* item = Item::Create_OTBM(*this, tileNode);
+						if (item == nullptr) {
+							warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
+						}
+						tile->addItem(item);
+						break;
+					}
+					default: {
+						warning("Unknown tile attribute at %d:%d:%d", pos.x, pos.y, pos.z);
+						break;
+					}
+				}
+			}
+
+			for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
+				Item* item = nullptr;
+				uint8_t item_type;
+				if (!itemNode->getByte(item_type)) {
+					warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
+					continue;
+				}
+				if (item_type == OTBM_ITEM) {
+					item = Item::Create_OTBM(*this, itemNode);
+					if (item) {
+						if (!item->unserializeItemNode_OTBM(*this, itemNode)) {
+							warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
+						}
+						// reform(&map, tile, item);
+						tile->addItem(item);
+					}
+				} else {
+					warning("Unknown type of tile child node");
+				}
+			}
+
+			tile->update();
+			if (house) {
+				house->addTile(tile);
+			}
+
+			map.setTile(pos.x, pos.y, pos.z, tile);
+		} else {
+			warning("Unknown type of tile node");
+		}
+	}
+	return true;
+}
+
 bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 	BinaryNode* root = f.getRootNode();
 	if (!root) {
@@ -905,110 +1013,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 			continue;
 		}
 		if (node_type == OTBM_TILE_AREA) {
-			uint16_t base_x, base_y;
-			uint8_t base_z;
-			if (!mapNode->getU16(base_x) || !mapNode->getU16(base_y) || !mapNode->getU8(base_z)) {
-				warning("Invalid map node, no base coordinate");
-				continue;
-			}
-
-			for (BinaryNode* tileNode = mapNode->getChild(); tileNode != nullptr; tileNode = tileNode->advance()) {
-				Tile* tile = nullptr;
-				uint8_t tile_type;
-				if (!tileNode->getByte(tile_type)) {
-					warning("Invalid tile type");
-					continue;
-				}
-				if (tile_type == OTBM_TILE || tile_type == OTBM_HOUSETILE) {
-					uint8_t x_offset, y_offset;
-					if (!tileNode->getU8(x_offset) || !tileNode->getU8(y_offset)) {
-						warning("Could not read position of tile");
-						continue;
-					}
-					const Position pos(base_x + x_offset, base_y + y_offset, base_z);
-
-					if (map.getTile(pos)) {
-						warning("Duplicate tile at %d:%d:%d, discarding duplicate", pos.x, pos.y, pos.z);
-						continue;
-					}
-
-					tile = map.allocator(map.createTileL(pos));
-					House* house = nullptr;
-					if (tile_type == OTBM_HOUSETILE) {
-						uint32_t house_id;
-						if (!tileNode->getU32(house_id)) {
-							warning("House tile without house data, discarding tile");
-							continue;
-						}
-						if (house_id) {
-							house = map.houses.getHouse(house_id);
-							if (!house) {
-								house = newd House(map);
-								house->setID(house_id);
-								map.houses.addHouse(house);
-							}
-						} else {
-							warning("Invalid house id from tile %d:%d:%d", pos.x, pos.y, pos.z);
-						}
-					}
-
-					uint8_t attribute;
-					while (tileNode->getU8(attribute)) {
-						switch (attribute) {
-							case OTBM_ATTR_TILE_FLAGS: {
-								uint32_t flags = 0;
-								if (!tileNode->getU32(flags)) {
-									warning("Invalid tile flags of tile on %d:%d:%d", pos.x, pos.y, pos.z);
-								}
-								tile->setMapFlags(flags);
-								break;
-							}
-							case OTBM_ATTR_ITEM: {
-								Item* item = Item::Create_OTBM(*this, tileNode);
-								if (item == nullptr) {
-									warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
-								}
-								tile->addItem(item);
-								break;
-							}
-							default: {
-								warning("Unknown tile attribute at %d:%d:%d", pos.x, pos.y, pos.z);
-								break;
-							}
-						}
-					}
-
-					for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
-						Item* item = nullptr;
-						uint8_t item_type;
-						if (!itemNode->getByte(item_type)) {
-							warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
-							continue;
-						}
-						if (item_type == OTBM_ITEM) {
-							item = Item::Create_OTBM(*this, itemNode);
-							if (item) {
-								if (!item->unserializeItemNode_OTBM(*this, itemNode)) {
-									warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
-								}
-								// reform(&map, tile, item);
-								tile->addItem(item);
-							}
-						} else {
-							warning("Unknown type of tile child node");
-						}
-					}
-
-					tile->update();
-					if (house) {
-						house->addTile(tile);
-					}
-
-					map.setTile(pos.x, pos.y, pos.z, tile);
-				} else {
-					warning("Unknown type of tile node");
-				}
-			}
+			readTileArea(map, mapNode);
 		} else if (node_type == OTBM_TOWNS) {
 			for (BinaryNode* townNode = mapNode->getChild(); townNode != nullptr; townNode = townNode->advance()) {
 				Town* town = nullptr;

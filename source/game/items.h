@@ -458,6 +458,13 @@ protected:
 	bool loadFromOtbVer2(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 	bool loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 
+	void parseItemGroup(ItemType* t, uint8_t group, wxArrayString& warnings);
+	void parseCommonFlags(ItemType* t, uint32_t flags);
+	bool parseCommonAttribute(ItemType* t, uint8_t attribute, uint16_t datalen, BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
+
+	void parseItemTypeAttribute(ItemType& it, const std::string& value);
+	void parseItemGeneralAttribute(ItemType& it, const std::string& key, const std::string& value);
+
 protected:
 	// Count of GameSprite types
 	uint16_t item_count;
