@@ -121,8 +121,10 @@ protected:
 
 	template <class T>
 	bool getType(T& ref) {
-		fread(&ref, sizeof(ref), 1, file);
-		return ferror(file) == 0;
+		if (fread(&ref, sizeof(ref), 1, file) != 1) {
+			return false;
+		}
+		return true;
 	}
 };
 
