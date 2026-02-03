@@ -38,6 +38,27 @@ MapWindow::MapWindow(wxWindow* parent, Editor& editor) :
 	gem = newd DCButton(this, MAP_WINDOW_GEM, wxDefaultPosition, DC_BTN_NORMAL, RENDER_SIZE_16x16, EDITOR_SPRITE_SELECTION_GEM);
 	gem->SetToolTip("Switch between Drawing and Selection mode (Space)");
 
+	Bind(wxEVT_SIZE, &MapWindow::OnSize, this);
+	Bind(wxEVT_BUTTON, &MapWindow::OnGem, this, MAP_WINDOW_GEM);
+
+	// Scroll events for MAP_WINDOW_HSCROLL
+	Bind(wxEVT_SCROLL_TOP, &MapWindow::OnScroll, this, MAP_WINDOW_HSCROLL);
+	Bind(wxEVT_SCROLL_BOTTOM, &MapWindow::OnScroll, this, MAP_WINDOW_HSCROLL);
+	Bind(wxEVT_SCROLL_THUMBTRACK, &MapWindow::OnScroll, this, MAP_WINDOW_HSCROLL);
+	Bind(wxEVT_SCROLL_LINEUP, &MapWindow::OnScrollLineUp, this, MAP_WINDOW_HSCROLL);
+	Bind(wxEVT_SCROLL_LINEDOWN, &MapWindow::OnScrollLineDown, this, MAP_WINDOW_HSCROLL);
+	Bind(wxEVT_SCROLL_PAGEUP, &MapWindow::OnScrollPageUp, this, MAP_WINDOW_HSCROLL);
+	Bind(wxEVT_SCROLL_PAGEDOWN, &MapWindow::OnScrollPageDown, this, MAP_WINDOW_HSCROLL);
+
+	// Scroll events for MAP_WINDOW_VSCROLL
+	Bind(wxEVT_SCROLL_TOP, &MapWindow::OnScroll, this, MAP_WINDOW_VSCROLL);
+	Bind(wxEVT_SCROLL_BOTTOM, &MapWindow::OnScroll, this, MAP_WINDOW_VSCROLL);
+	Bind(wxEVT_SCROLL_THUMBTRACK, &MapWindow::OnScroll, this, MAP_WINDOW_VSCROLL);
+	Bind(wxEVT_SCROLL_LINEUP, &MapWindow::OnScrollLineUp, this, MAP_WINDOW_VSCROLL);
+	Bind(wxEVT_SCROLL_LINEDOWN, &MapWindow::OnScrollLineDown, this, MAP_WINDOW_VSCROLL);
+	Bind(wxEVT_SCROLL_PAGEUP, &MapWindow::OnScrollPageUp, this, MAP_WINDOW_VSCROLL);
+	Bind(wxEVT_SCROLL_PAGEDOWN, &MapWindow::OnScrollPageDown, this, MAP_WINDOW_VSCROLL);
+
 	wxFlexGridSizer* topsizer = newd wxFlexGridSizer(2, 0, 0);
 
 	topsizer->AddGrowableCol(0);

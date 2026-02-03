@@ -162,8 +162,6 @@ public:
 	friend class SelectionController;
 	friend class DrawingController;
 
-	DECLARE_EVENT_TABLE()
-
 	std::unique_ptr<SelectionController> selection_controller;
 	std::unique_ptr<DrawingController> drawing_controller;
 	std::unique_ptr<MapMenuHandler> menu_handler;

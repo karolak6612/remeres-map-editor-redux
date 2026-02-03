@@ -47,49 +47,6 @@
 
 #include "../brushes/icon/editor_icon.xpm"
 
-BEGIN_EVENT_TABLE(MainFrame, wxFrame)
-EVT_CLOSE(MainFrame::OnExit)
-
-// Update check complete
-#ifdef _USE_UPDATER_
-EVT_ON_UPDATE_CHECK_FINISHED(wxID_ANY, MainFrame::OnUpdateReceived)
-#endif
-EVT_ON_UPDATE_MENUS(wxID_ANY, MainFrame::OnUpdateMenus)
-
-// Idle event handler
-EVT_IDLE(MainFrame::OnIdle)
-END_EVENT_TABLE()
-
-BEGIN_EVENT_TABLE(MapWindow, wxPanel)
-EVT_SIZE(MapWindow::OnSize)
-
-EVT_COMMAND_SCROLL_TOP(MAP_WINDOW_HSCROLL, MapWindow::OnScroll)
-EVT_COMMAND_SCROLL_BOTTOM(MAP_WINDOW_HSCROLL, MapWindow::OnScroll)
-EVT_COMMAND_SCROLL_THUMBTRACK(MAP_WINDOW_HSCROLL, MapWindow::OnScroll)
-EVT_COMMAND_SCROLL_LINEUP(MAP_WINDOW_HSCROLL, MapWindow::OnScrollLineUp)
-EVT_COMMAND_SCROLL_LINEDOWN(MAP_WINDOW_HSCROLL, MapWindow::OnScrollLineDown)
-EVT_COMMAND_SCROLL_PAGEUP(MAP_WINDOW_HSCROLL, MapWindow::OnScrollPageUp)
-EVT_COMMAND_SCROLL_PAGEDOWN(MAP_WINDOW_HSCROLL, MapWindow::OnScrollPageDown)
-
-EVT_COMMAND_SCROLL_TOP(MAP_WINDOW_VSCROLL, MapWindow::OnScroll)
-EVT_COMMAND_SCROLL_BOTTOM(MAP_WINDOW_VSCROLL, MapWindow::OnScroll)
-EVT_COMMAND_SCROLL_THUMBTRACK(MAP_WINDOW_VSCROLL, MapWindow::OnScroll)
-EVT_COMMAND_SCROLL_LINEUP(MAP_WINDOW_VSCROLL, MapWindow::OnScrollLineUp)
-EVT_COMMAND_SCROLL_LINEDOWN(MAP_WINDOW_VSCROLL, MapWindow::OnScrollLineDown)
-EVT_COMMAND_SCROLL_PAGEUP(MAP_WINDOW_VSCROLL, MapWindow::OnScrollPageUp)
-EVT_COMMAND_SCROLL_PAGEDOWN(MAP_WINDOW_VSCROLL, MapWindow::OnScrollPageDown)
-
-EVT_BUTTON(MAP_WINDOW_GEM, MapWindow::OnGem)
-END_EVENT_TABLE()
-
-BEGIN_EVENT_TABLE(MapScrollBar, wxScrollBar)
-EVT_KEY_DOWN(MapScrollBar::OnKey)
-EVT_KEY_UP(MapScrollBar::OnKey)
-EVT_CHAR(MapScrollBar::OnKey)
-EVT_SET_FOCUS(MapScrollBar::OnFocus)
-EVT_MOUSEWHEEL(MapScrollBar::OnWheel)
-END_EVENT_TABLE()
-
 wxIMPLEMENT_APP(Application);
 
 Application::~Application() {
@@ -380,6 +337,13 @@ bool Application::ParseCommandLineMap(wxString& fileName) {
 
 MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& size) :
 	wxFrame((wxFrame*)nullptr, -1, title, pos, size, wxDEFAULT_FRAME_STYLE) {
+	Bind(wxEVT_CLOSE_WINDOW, &MainFrame::OnExit, this);
+#ifdef _USE_UPDATER_
+	Bind(EVT_UPDATE_CHECK_FINISHED, &MainFrame::OnUpdateReceived, this);
+#endif
+	Bind(EVT_UPDATE_MENUS, &MainFrame::OnUpdateMenus, this);
+	Bind(wxEVT_IDLE, &MainFrame::OnIdle, this);
+
 	// Receive idle events
 	SetExtraStyle(wxWS_EX_PROCESS_IDLE);
 

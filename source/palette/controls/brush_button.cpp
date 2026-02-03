@@ -7,13 +7,10 @@
 // ============================================================================
 // Brush Button
 
-BEGIN_EVENT_TABLE(BrushButton, ItemToggleButton)
-EVT_KEY_DOWN(BrushButton::OnKey)
-END_EVENT_TABLE()
-
 BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_t id) :
 	ItemToggleButton(parent, sz, uint16_t(0), id),
 	brush(_brush) {
+	Bind(wxEVT_KEY_DOWN, &BrushButton::OnKey, this);
 	ASSERT(sz != RENDER_SIZE_64x64);
 	ASSERT(brush);
 	if (Sprite* s = brush->getSprite()) {
@@ -27,6 +24,7 @@ BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, uint32_
 BrushButton::BrushButton(wxWindow* parent, Brush* _brush, RenderSize sz, EditorSprite* espr, uint32_t id) :
 	ItemToggleButton(parent, sz, uint16_t(0), id),
 	brush(_brush) {
+	Bind(wxEVT_KEY_DOWN, &BrushButton::OnKey, this);
 	ASSERT(sz != RENDER_SIZE_64x64);
 	ASSERT(brush);
 	SetSprite(espr);
