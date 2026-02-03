@@ -85,7 +85,8 @@ protected:
 	std::shared_ptr<boost::asio::ip::tcp::resolver> resolver;
 	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
 
-	std::unique_ptr<Editor> editor;
+	// Owned by MapTab/Editor (LiveClient is owned by Editor via LiveManager)
+	Editor* editor;
 
 	bool stopped;
 };
