@@ -18,7 +18,7 @@
 #include "app/main.h"
 #include "live/live_socket.h"
 #include "map/map_region.h"
-#include "io/iomap_otbm.h"
+#include "io/otbm/map.h"
 #include "live/live_tab.h"
 #include "editor/editor.h"
 

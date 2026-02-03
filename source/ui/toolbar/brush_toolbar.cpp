@@ -11,7 +11,7 @@
 #include "brushes/flag/flag_brush.h"
 #include "brushes/door/door_brush.h"
 #include "brushes/border/optional_border_brush.h"
-#include "ui/pngfiles.h"
+#include "resources/png_data.h"
 #include "ui/artprovider.h"
 #include <wx/artprov.h>
 #include <wx/mstream.h>

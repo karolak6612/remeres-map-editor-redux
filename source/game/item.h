@@ -20,7 +20,7 @@
 
 #include "game/items.h"
 #include <string_view>
-#include "io/iomap_otbm.h"
+#include "io/otbm/map.h"
 // #include "io/iomap_otmm.h"
 #include "game/item_attributes.h"
 #include "brushes/doodad/doodad_brush.h"

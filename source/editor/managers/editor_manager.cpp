@@ -21,7 +21,7 @@
 #include "brushes/managers/brush_manager.h"
 #include "live/live_tab.h"
 #include "live/live_client.h"
-#include "io/iomap_otbm.h"
+#include "io/otbm/map.h"
 
 #include <set>
 #include <sstream>
