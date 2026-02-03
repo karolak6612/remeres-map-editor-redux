@@ -171,7 +171,7 @@ bool GameSpriteLoader::LoadSpriteMetadata(GraphicManager* manager, const wxFileN
 				}
 			}
 
-			uint32_t numsprites = (int)width * (int)height * (int)layers * (int)pattern_x * (int)pattern_y * pattern_z * (int)frames;
+			uint32_t numsprites = static_cast<int>(width) * static_cast<int>(height) * static_cast<int>(layers) * static_cast<int>(pattern_x) * static_cast<int>(pattern_y) * pattern_z * static_cast<int>(frames);
 			if (k == 0) {
 				sType->numsprites = numsprites;
 			}

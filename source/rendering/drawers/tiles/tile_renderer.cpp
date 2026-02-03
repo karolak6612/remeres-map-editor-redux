@@ -208,13 +208,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
-	if (options.show_houses && tile->isHouseTile() && (int)tile->getHouseID() == current_house_id && map_z == view.floor) {
+	if (options.show_houses && tile->isHouseTile() && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
 
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
 		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		glm::vec4 border_color((float)hr / 255.0f, (float)hg / 255.0f, (float)hb / 255.0f, intensity); // House color border with pulsing alpha
+		glm::vec4 border_color(static_cast<float>(hr) / 255.0f, static_cast<float>(hg) / 255.0f, static_cast<float>(hb) / 255.0f, intensity); // House color border with pulsing alpha
 
 		// Map coordinates to screen coordinates
 		// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
@@ -222,10 +222,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 		// primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
 
 		// Use SpriteDrawer to keep batching unified (prevents PrimitiveRenderer flush/state change)
-		int br = (int)(border_color.r * 255.0f);
-		int bg = (int)(border_color.g * 255.0f);
-		int bb = (int)(border_color.b * 255.0f);
-		int ba = (int)(border_color.a * 255.0f);
+		int br = static_cast<int>((border_color.r * 255.0f));
+		int bg = static_cast<int>((border_color.g * 255.0f));
+		int bb = static_cast<int>((border_color.b * 255.0f));
+		int ba = static_cast<int>((border_color.a * 255.0f));
 		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, br, bg, bb, ba);
 	}
 
@@ -261,17 +261,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 					if (calculate_house_color) {
 						// Apply house color tint
-						ir = (uint8_t)((int)ir * house_r / 255);
-						ig = (uint8_t)((int)ig * house_g / 255);
-						ib = (uint8_t)((int)ib * house_b / 255);
+						ir = static_cast<uint8_t>((static_cast<int>(ir) * house_r / 255));
+						ig = static_cast<uint8_t>((static_cast<int>(ig) * house_g / 255));
+						ib = static_cast<uint8_t>((static_cast<int>(ib) * house_b / 255));
 
-						if ((int)tile->getHouseID() == current_house_id) {
+						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
 							// Pulse effect matching the tile pulse
 							if (options.highlight_pulse > 0.0f) {
 								float boost = options.highlight_pulse * 0.6f;
-								ir = (uint8_t)std::min(255, (int)(ir + (255 - ir) * boost));
-								ig = (uint8_t)std::min(255, (int)(ig + (255 - ig) * boost));
-								ib = (uint8_t)std::min(255, (int)(ib + (255 - ib) * boost));
+								ir = static_cast<uint8_t>(std::min(255, static_cast<int>((ir + (255 - ir) * boost))));
+								ig = static_cast<uint8_t>(std::min(255, static_cast<int>((ig + (255 - ig) * boost))));
+								ib = static_cast<uint8_t>(std::min(255, static_cast<int>((ib + (255 - ib) * boost))));
 							}
 						}
 					}

@@ -691,14 +691,14 @@ const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
 }
 
 GameSprite::TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
+	atlas_region(nullptr),
+	texture_id(template_id_generator.fetch_add(1)), // Generate unique ID for Atlas
 	parent(parent),
 	sprite_index(v),
 	lookHead(outfit.lookHead),
 	lookBody(outfit.lookBody),
 	lookLegs(outfit.lookLegs),
-	lookFeet(outfit.lookFeet),
-	atlas_region(nullptr),
-	texture_id(template_id_generator.fetch_add(1)) { // Generate unique ID for Atlas
+	lookFeet(outfit.lookFeet) {
 	////
 }
 
