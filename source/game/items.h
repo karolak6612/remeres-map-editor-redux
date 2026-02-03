@@ -459,6 +459,9 @@ protected:
 	bool loadFromOtbVer2(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 	bool loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 
+	void parseCommonFlags(uint32_t flags, ItemType* t);
+	int parseCommonAttribute(uint8_t attribute, uint16_t datalen, BinaryNode* itemNode, ItemType* t, wxString& error, wxArrayString& warnings);
+
 protected:
 	// Count of GameSprite types
 	uint16_t item_count;
