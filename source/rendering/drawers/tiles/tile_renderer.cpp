@@ -30,8 +30,8 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), creature_name_drawer(cnd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), editor(ed) {
 }
 
-// Helper function to populate tooltip data from an item (in-place)
-static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& pos, bool isHouseTile) {
+// Helper function to check if item has any tooltip data to show (Cheap check)
+static bool HasTooltipData(Item* item, bool isHouseTile) {
 	if (!item) {
 		return false;
 	}
@@ -76,6 +76,45 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	// Only create tooltip if there's something to show
 	if (unique == 0 && action == 0 && doorId == 0 && text.empty() && description.empty() && destination.x == 0 && !hasContent) {
 		return false;
+	}
+
+	return true;
+}
+
+// Helper function to populate tooltip data from an item (in-place)
+static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& pos, bool isHouseTile) {
+	if (!item) {
+		return false;
+	}
+
+	const uint16_t id = item->getID();
+	// Redundant check if HasTooltipData is used, but safe to keep
+	if (id < 100) {
+		return false;
+	}
+
+	const uint16_t unique = item->getUniqueID();
+	const uint16_t action = item->getActionID();
+	std::string_view text = item->getText();
+	std::string_view description = item->getDescription();
+	uint8_t doorId = 0;
+	Position destination;
+
+	// Check if it's a door
+	if (isHouseTile && item->isDoor()) {
+		if (const Door* door = item->asDoor()) {
+			if (door->isRealDoor()) {
+				doorId = door->getDoorID();
+			}
+		}
+	}
+
+	// Check if it's a teleport
+	if (item->isTeleport()) {
+		Teleport* tp = static_cast<Teleport*>(item);
+		if (tp->hasDestination()) {
+			destination = tp->getDestination();
+		}
 	}
 
 	// Get item name from database
@@ -199,10 +238,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground, location->getPosition(), tile->isHouseTile())) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
+		// Optimization: Check if tooltip is needed before requesting data/allocating strings
+		if (HasTooltipData(tile->ground, tile->isHouseTile())) {
+			TooltipData& groundData = tooltip_drawer->requestTooltipData();
+			if (FillItemTooltipData(groundData, tile->ground, location->getPosition(), tile->isHouseTile())) {
+				if (groundData.hasVisibleFields()) {
+					tooltip_drawer->commitTooltip();
+				}
 			}
 		}
 	}
@@ -245,10 +287,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			for (ItemVector::iterator it = tile->items.begin(); it != tile->items.end(); it++) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, *it, location->getPosition(), tile->isHouseTile())) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+					// Optimization: Check if tooltip is needed before requesting data/allocating strings
+					if (HasTooltipData(*it, tile->isHouseTile())) {
+						TooltipData& itemData = tooltip_drawer->requestTooltipData();
+						if (FillItemTooltipData(itemData, *it, location->getPosition(), tile->isHouseTile())) {
+							if (itemData.hasVisibleFields()) {
+								tooltip_drawer->commitTooltip();
+							}
 						}
 					}
 				}
