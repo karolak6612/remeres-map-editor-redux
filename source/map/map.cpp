@@ -430,9 +430,22 @@ bool Map::addSpawn(Tile* tile) {
 		int end_x = tile->getX() + spawn->getSize();
 		int end_y = tile->getY() + spawn->getSize();
 
+		MapNode* cached_node = nullptr;
+		int cached_nx = std::numeric_limits<int>::min();
+		int cached_ny = std::numeric_limits<int>::min();
+
 		for (int y = start_y; y <= end_y; ++y) {
 			for (int x = start_x; x <= end_x; ++x) {
-				TileLocation* ctile_loc = createTileL(x, y, z);
+				int nx = x >> SpatialHashGrid::NODE_SHIFT;
+				int ny = y >> SpatialHashGrid::NODE_SHIFT;
+
+				if (nx != cached_nx || ny != cached_ny) {
+					cached_node = createLeaf(x, y);
+					cached_nx = nx;
+					cached_ny = ny;
+				}
+
+				TileLocation* ctile_loc = cached_node->createTile(x, y, z);
 				ctile_loc->increaseSpawnCount();
 			}
 		}
