@@ -213,12 +213,12 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 		} else if (childName == "metaitem") {
 			g_items.loadMetaItem(childNode);
 		} else if (childName == "border") {
-			g_brushes.unserializeBorder(childNode, warnings);
+			GetBrushes().unserializeBorder(childNode, warnings);
 			if (warning.size()) {
 				warnings.push_back("materials.xml: " + warning);
 			}
 		} else if (childName == "brush") {
-			g_brushes.unserializeBrush(childNode, warnings);
+			GetBrushes().unserializeBrush(childNode, warnings);
 			if (warning.size()) {
 				warnings.push_back("materials.xml: " + warning);
 			}
@@ -237,7 +237,7 @@ void Materials::createOtherTileset() {
 		others = tilesets["Others"];
 		others->clear();
 	} else {
-		others = newd Tileset(g_brushes, "Others");
+		others = newd Tileset(GetBrushes(), "Others");
 		tilesets["Others"] = others;
 	}
 
@@ -245,7 +245,7 @@ void Materials::createOtherTileset() {
 		npc_tileset = tilesets["NPCs"];
 		npc_tileset->clear();
 	} else {
-		npc_tileset = newd Tileset(g_brushes, "NPCs");
+		npc_tileset = newd Tileset(GetBrushes(), "NPCs");
 		tilesets["NPCs"] = npc_tileset;
 	}
 
@@ -264,7 +264,7 @@ void Materials::createOtherTileset() {
 			} else if (it.raw_brush == nullptr) {
 				brush = it.raw_brush = newd RAWBrush(it.id);
 				it.has_raw = true;
-				g_brushes.addBrush(it.raw_brush);
+				GetBrushes().addBrush(it.raw_brush);
 			} else if (!it.has_raw) {
 				brush = it.raw_brush;
 			} else {
@@ -282,7 +282,7 @@ void Materials::createOtherTileset() {
 
 		if (type->brush == nullptr) {
 			type->brush = newd CreatureBrush(type);
-			g_brushes.addBrush(type->brush);
+			GetBrushes().addBrush(type->brush);
 		}
 
 		type->brush->flagAsVisible();
@@ -310,7 +310,7 @@ bool Materials::unserializeTileset(pugi::xml_node node, wxArrayString& warnings)
 	if (it != tilesets.end()) {
 		tileset = it->second;
 	} else {
-		tileset = newd Tileset(g_brushes, name);
+		tileset = newd Tileset(GetBrushes(), name);
 		tilesets.insert(std::make_pair(name, tileset));
 	}
 
@@ -332,7 +332,7 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 	if (_it != tilesets.end()) {
 		tileset = _it->second;
 	} else {
-		tileset = newd Tileset(g_brushes, tilesetName);
+		tileset = newd Tileset(GetBrushes(), tilesetName);
 		tilesets.insert(std::make_pair(tilesetName, tileset));
 	}
 
@@ -346,7 +346,7 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 		} else if (it.raw_brush == nullptr) {
 			brush = it.raw_brush = newd RAWBrush(it.id);
 			it.has_raw = true;
-			g_brushes.addBrush(it.raw_brush);
+			GetBrushes().addBrush(it.raw_brush);
 		} else {
 			brush = it.raw_brush;
 		}

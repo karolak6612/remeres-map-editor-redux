@@ -113,8 +113,8 @@ class Brush {
 
 ### Global Manager
 ```cpp
-extern Brushes g_brushes;  // Access all brushes
-g_brushes.getBrush("grass");  // Get by name
+GetBrushes();  // Access all brushes
+GetBrushes().getBrush("grass");  // Get by name
 ```
 
 ---
@@ -328,7 +328,7 @@ Editor::Editor(copybuffer, filename) {
 | Variable | Type | Purpose |
 |----------|------|---------|
 | `g_gui` | `GUI` | Central GUI controller |
-| `g_brushes` | `Brushes` | Brush manager |
+| `GetBrushes()` | `Brushes` | Brush manager |
 | `g_items` | `Items` | Item type database |
 | `g_creatures` | `Creatures` | Creature database |
 | `g_materials` | `Materials` | Materials/tilesets |

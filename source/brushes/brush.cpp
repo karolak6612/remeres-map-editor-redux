@@ -55,7 +55,10 @@
 #include <format>
 #include <memory>
 
-Brushes g_brushes;
+Brushes& GetBrushes() {
+	static Brushes brushes;
+	return brushes;
+}
 
 Brushes::Brushes() {
 	////

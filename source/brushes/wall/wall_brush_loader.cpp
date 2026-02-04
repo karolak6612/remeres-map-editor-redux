@@ -218,7 +218,7 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 			if (name == "all") {
 				// friends.push_back(-1);
 			} else {
-				Brush* friendBrush = g_brushes.getBrush(name);
+				Brush* friendBrush = GetBrushes().getBrush(name);
 				if (friendBrush) {
 					brush->friends.push_back(friendBrush->getID());
 				} else {

@@ -28,6 +28,7 @@
 
 #include <ranges>
 #include <algorithm>
+#include <vector>
 
 Selection::Selection(Editor& editor) :
 	busy(false),
@@ -193,7 +194,10 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		tiles.insert(tile);
+		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile);
+		if (it == tiles.end() || *it != tile) {
+			tiles.insert(it, tile);
+		}
 	}
 }
 
@@ -202,7 +206,10 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		tiles.erase(tile);
+		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile);
+		if (it != tiles.end() && *it == tile) {
+			tiles.erase(it);
+		}
 	}
 }
 
@@ -211,12 +218,31 @@ void Selection::flush() {
 		return;
 	}
 
-	for (Tile* t : pending_removes) {
-		tiles.erase(t);
+	// Sort and unique the pending vectors
+	std::sort(pending_adds.begin(), pending_adds.end());
+	pending_adds.erase(std::unique(pending_adds.begin(), pending_adds.end()), pending_adds.end());
+
+	std::sort(pending_removes.begin(), pending_removes.end());
+	pending_removes.erase(std::unique(pending_removes.begin(), pending_removes.end()), pending_removes.end());
+
+	// Apply removals
+	if (!pending_removes.empty()) {
+		std::vector<Tile*> remaining;
+		remaining.reserve(tiles.size());
+		std::set_difference(tiles.begin(), tiles.end(),
+							pending_removes.begin(), pending_removes.end(),
+							std::back_inserter(remaining));
+		tiles = std::move(remaining);
 	}
 
-	for (Tile* t : pending_adds) {
-		tiles.insert(t);
+	// Apply additions
+	if (!pending_adds.empty()) {
+		std::vector<Tile*> result;
+		result.reserve(tiles.size() + pending_adds.size());
+		std::set_union(tiles.begin(), tiles.end(),
+					   pending_adds.begin(), pending_adds.end(),
+					   std::back_inserter(result));
+		tiles = std::move(result);
 	}
 
 	pending_adds.clear();

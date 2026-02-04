@@ -160,7 +160,7 @@ bool VersionManager::LoadDataFiles(wxString& error, wxArrayString& warnings) {
 	}
 
 	g_loading.SetLoadDone(70, "Finishing...");
-	g_brushes.init();
+	GetBrushes().init();
 	g_materials.createOtherTileset();
 
 	g_loading.DestroyLoadBar();
@@ -174,7 +174,7 @@ void VersionManager::UnloadVersion() {
 
 	if (loaded_version != CLIENT_VERSION_NONE) {
 		g_materials.clear();
-		g_brushes.clear();
+		GetBrushes().clear();
 		g_items.clear();
 		g_gui.gfx.clear();
 

@@ -91,7 +91,7 @@ protected:
 	friend class GroundBrushLoader;
 };
 
-extern Brushes g_brushes;
+Brushes& GetBrushes();
 
 //=============================================================================
 // Common brush interface
