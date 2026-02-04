@@ -56,11 +56,11 @@ std::string f2s(const double _d) {
 	return std::format("{:.6g}", _d);
 }
 
-int s2i(const std::string s) {
+int s2i(const std::string& s) {
 	return atoi(s.c_str());
 }
 
-double s2f(const std::string s) {
+double s2f(const std::string& s) {
 	return atof(s.c_str());
 }
 
