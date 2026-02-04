@@ -16,34 +16,34 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "rendering/core/texture_garbage_collector.h"
+#include "rendering/core/texture_cache_manager.h"
 #include "rendering/core/graphics.h"
 #include "app/settings.h"
 #include <algorithm>
 
-TextureGarbageCollector::TextureGarbageCollector() :
+TextureCacheManager::TextureCacheManager() :
 	loaded_textures(0),
 	lastclean(0) {
 }
 
-TextureGarbageCollector::~TextureGarbageCollector() {
+TextureCacheManager::~TextureCacheManager() {
 }
 
-void TextureGarbageCollector::Clear() {
+void TextureCacheManager::Clear() {
 	loaded_textures = 0;
 	lastclean = time(nullptr);
 	cleanup_list.clear();
 }
 
-void TextureGarbageCollector::NotifyTextureLoaded() {
+void TextureCacheManager::NotifyTextureLoaded() {
 	loaded_textures++;
 }
 
-void TextureGarbageCollector::NotifyTextureUnloaded() {
+void TextureCacheManager::NotifyTextureUnloaded() {
 	loaded_textures--;
 }
 
-void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
+void TextureCacheManager::AddSpriteToCleanup(GameSprite* spr) {
 	cleanup_list.push_back(spr);
 	// Clean if needed
 	if (cleanup_list.size() > std::max<uint32_t>(100, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD))) {
@@ -54,7 +54,7 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 	}
 }
 
-void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
+void TextureCacheManager::PruneCache(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
 	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 
@@ -86,7 +86,7 @@ void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_
 	}
 }
 
-void TextureGarbageCollector::CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space) {
+void TextureCacheManager::CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space) {
 	for (auto& sprite_ptr : sprite_space) {
 		if (sprite_ptr) {
 			sprite_ptr->unloadDC();

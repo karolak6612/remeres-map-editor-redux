@@ -50,6 +50,7 @@ endif()
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(bdwgc CONFIG REQUIRED)
 
 # nanovg: try vcpkg/Conan first, fallback to ext/nanovg
 find_package(nanovg CONFIG QUIET)
@@ -122,3 +123,4 @@ target_link_libraries(rme PRIVATE glad::glad)
 target_link_libraries(rme PRIVATE glm::glm)
 target_link_libraries(rme PRIVATE nanovg::nanovg)
 target_link_libraries(rme PRIVATE spdlog::spdlog)
+target_link_libraries(rme PRIVATE bdwgc::bdwgc)

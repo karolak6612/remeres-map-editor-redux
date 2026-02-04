@@ -15,8 +15,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_TEXTURE_GARBAGE_COLLECTOR_H
-#define RME_TEXTURE_GARBAGE_COLLECTOR_H
+#ifndef RME_TEXTURE_CACHE_MANAGER_H
+#define RME_TEXTURE_CACHE_MANAGER_H
 
 #include <deque>
 #include <map>
@@ -27,12 +27,12 @@
 class GameSprite;
 class Sprite;
 
-class TextureGarbageCollector {
+class TextureCacheManager {
 public:
-	TextureGarbageCollector();
-	~TextureGarbageCollector();
+	TextureCacheManager();
+	~TextureCacheManager();
 
-	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time);
+	void PruneCache(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time);
 	void AddSpriteToCleanup(GameSprite* spr);
 	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
 	void Clear();

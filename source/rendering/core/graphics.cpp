@@ -200,8 +200,8 @@ void GraphicManager::addSpriteToCleanup(GameSprite* spr) {
 	collector.AddSpriteToCleanup(spr);
 }
 
-void GraphicManager::garbageCollection() {
-	collector.GarbageCollect(resident_game_sprites, resident_images, cached_time_);
+void GraphicManager::pruneTextureCache() {
+	collector.PruneCache(resident_game_sprites, resident_images, cached_time_);
 }
 
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :

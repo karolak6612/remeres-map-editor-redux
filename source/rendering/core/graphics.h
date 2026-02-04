@@ -45,7 +45,7 @@ class FileReadHandle;
 class Animator;
 
 #include "rendering/core/sprite_light.h"
-#include "rendering/core/texture_garbage_collector.h"
+#include "rendering/core/texture_cache_manager.h"
 #include "rendering/core/render_timer.h"
 #include "rendering/core/atlas_manager.h"
 
@@ -238,7 +238,7 @@ public:
 	friend class DatLoader;
 	friend class SprLoader;
 	friend class SpriteIconGenerator;
-	friend class TextureGarbageCollector;
+	friend class TextureCacheManager;
 	friend class TooltipDrawer;
 };
 
@@ -289,7 +289,7 @@ public:
 	friend class SprLoader;
 
 	// Cleans old & unused textures according to config settings
-	void garbageCollection();
+	void pruneTextureCache();
 	void addSpriteToCleanup(GameSprite* spr);
 
 	wxFileName getMetadataFileName() const {
@@ -348,7 +348,7 @@ private:
 	wxFileName metadata_file;
 	wxFileName sprites_file;
 
-	TextureGarbageCollector collector;
+	TextureCacheManager collector;
 
 	std::unique_ptr<RenderTimer> animation_timer;
 	time_t cached_time_ = 0;

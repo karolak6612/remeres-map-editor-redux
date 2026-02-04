@@ -290,7 +290,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	static long last_gc_time = 0;
 	long current_time = wxGetLocalTime();
 	if (current_time - last_gc_time >= 1) {
-		g_gui.gfx.garbageCollection();
+		g_gui.gfx.pruneTextureCache();
 		last_gc_time = current_time;
 	}
 
