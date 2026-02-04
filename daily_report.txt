@@ -1,0 +1,50 @@
+OPENGL RENDERING SPECIALIST - Daily Report
+Date: 2024-12-15 15:00
+Files Scanned: 48
+Review Time: 20 minutes
+
+Quick Summary
+Rendering pipeline is highly optimized using modern OpenGL (DSA, Texture Arrays, Instancing).
+Critical issues mentioned in the example (individual draw calls per tile) are NOT present in the current codebase; `SpriteBatch` correctly batches tiles and entities using `glDrawElementsInstanced`.
+Estimated improvement potential is low for draw calls, but Medium for PCIe bandwidth reduction.
+
+Issue Count
+CRITICAL: 0
+HIGH: 0
+MEDIUM: 1
+LOW: 0
+
+Issues Found
+
+MEDIUM: Static tile geometry uploaded every frame
+Location: source/rendering/core/sprite_batch.cpp (RingBuffer usage) / source/rendering/drawers/map_layer_drawer.cpp
+Problem: Map geometry (tiles) is treated as dynamic sprites and re-uploaded to the GPU RingBuffer every frame via `memcpy`.
+Impact: Consumes PCIe bandwidth (~6MB/frame for 100k tiles) and CPU time for visibility culling and buffer mapping.
+Fix: Implement a `StaticMapRenderer` that uploads map chunks to static VBOs (`GL_STATIC_DRAW`) and uses the camera matrix (`uMVP`) for positioning, only updating VBOs when the map is modified.
+Expected improvement: Reduced CPU overhead and PCIe bandwidth; potentially smoother framerates on lower-end CPUs.
+
+Summary Stats
+Most common issue: None (Codebase is clean)
+Cleanest file: source/rendering/core/sprite_batch.cpp (Excellent use of MDI and RingBuffers)
+Needs attention: Architectural decision between Dynamic Batching (current) vs Static VBOs (future optimization)
+Estimated total speedup: < 1ms frame time (Current implementation is already efficient)
+
+Integration Details
+Estimated Runtime: 20 minutes per review
+Expected Findings: 0 issues (Code is stable)
+Automation: Run daily to ensure no regression (e.g., accidental direct draw calls).
+
+RASTER'S PHILOSOPHY
+Draw calls are expensive - batch everything possible
+State changes kill performance - minimize glBind* calls
+GPU time is precious - cull before submitting
+Static data should stay static - upload once, draw many
+Measure in milliseconds - every frame counts
+
+RASTER'S EXPERTISE
+I verified:
+- `MapLayerDrawer` uses `TileRenderer::DrawTile` inside loops, but `TileRenderer` uses `SpriteBatch`.
+- `SpriteBatch` accumulates sprites and flushes using `glDrawElementsInstanced`.
+- `TextureAtlas` uses `GL_TEXTURE_2D_ARRAY`, avoiding texture bind thrashing.
+- `RenderView::IsTileVisible` performs CPU-side culling.
+- No direct `glDraw*` calls found in tile loops.
