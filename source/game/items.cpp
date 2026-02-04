@@ -79,6 +79,7 @@ ItemType::ItemType() :
 	isWall(false),
 	isBrushDoor(false),
 	isOpen(false),
+	isLocked(false),
 	isTable(false),
 	isCarpet(false),
 
