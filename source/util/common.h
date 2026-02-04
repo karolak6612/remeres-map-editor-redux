@@ -38,12 +38,12 @@ int32_t uniform_random(int32_t maxNumber);
 // Function-like convertions between float, int and doubles
 std::string i2s(int i);
 std::string f2s(double i);
-int s2i(std::string s);
-double s2f(std::string s);
+int s2i(const std::string& s);
+double s2f(const std::string& s);
 wxString i2ws(int i);
 wxString f2ws(double i);
-int ws2i(wxString s);
-double ws2f(wxString s);
+int ws2i(const wxString& s);
+double ws2f(const wxString& s);
 
 inline wxString wxstr(std::string_view sv) {
 	return wxString::FromUTF8(sv.data(), sv.length());
