@@ -20,6 +20,7 @@
 #include "ui/gui.h" // loadbar
 
 #include "map/map.h"
+#include "map/map_region.h"
 
 #include <sstream>
 #include <algorithm>
@@ -482,16 +483,41 @@ SpawnList Map::getSpawnList(Tile* where) {
 
 			// Scans the border tiles in an expanding square around the original spawn
 			int z = where->getZ();
+
+			MapNode* cached_node = nullptr;
+			int cached_nx = -1;
+			int cached_ny = -1;
+
+			auto getTileFast = [&](int x, int y) -> Tile* {
+				int nx = x >> SpatialHashGrid::NODE_SHIFT;
+				int ny = y >> SpatialHashGrid::NODE_SHIFT;
+				if (cached_node && nx == cached_nx && ny == cached_ny) {
+					// cache hit
+				} else {
+					cached_node = grid.getLeaf(x, y);
+					cached_nx = nx;
+					cached_ny = ny;
+				}
+
+				if (cached_node) {
+					TileLocation* loc = cached_node->getTile(x, y, z);
+					return loc ? loc->get() : nullptr;
+				}
+				return nullptr;
+			};
+
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
 			while (found != tile_loc->getSpawnCount()) {
 				for (int x = start_x; x <= end_x; ++x) {
-					Tile* tile = getTile(x, start_y, z);
+					Tile* tile = getTileFast(x, start_y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
 					}
-					tile = getTile(x, end_y, z);
+				}
+				for (int x = start_x; x <= end_x; ++x) {
+					Tile* tile = getTileFast(x, end_y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
@@ -499,12 +525,14 @@ SpawnList Map::getSpawnList(Tile* where) {
 				}
 
 				for (int y = start_y + 1; y < end_y; ++y) {
-					Tile* tile = getTile(start_x, y, z);
+					Tile* tile = getTileFast(start_x, y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
 					}
-					tile = getTile(end_x, y, z);
+				}
+				for (int y = start_y + 1; y < end_y; ++y) {
+					Tile* tile = getTileFast(end_x, y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
