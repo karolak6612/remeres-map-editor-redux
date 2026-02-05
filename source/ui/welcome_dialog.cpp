@@ -3,76 +3,143 @@
 #include "app/settings.h"
 #include "app/preferences.h"
 #include "ui/controls/modern_button.h"
+#include "util/nanovg_canvas.h"
 #include <wx/dcbuffer.h>
 #include <wx/statline.h>
 
+#include <nanovg.h>
+
 wxDEFINE_EVENT(WELCOME_DIALOG_ACTION, wxCommandEvent);
 
-// Helper for recent files
-class RecentFileItem : public wxPanel {
+class RecentFilesView : public NanoVGCanvas {
 public:
-	RecentFileItem(wxWindow* parent, const wxString& path, const wxString& date) :
-		wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
-		m_path(path), m_date(date), m_isHover(false), m_isPressed(false) {
-		SetCursor(wxCursor(wxCURSOR_HAND));
-		SetMinSize(wxSize(-1, FromDIP(45))); // Slightly more compact
+	RecentFilesView(wxWindow* parent, const std::vector<wxString>& recentFiles) :
+		NanoVGCanvas(parent, wxID_ANY),
+		m_files(recentFiles),
+		m_hoverIndex(-1),
+		m_itemHeight(50) {
 
-		Bind(wxEVT_PAINT, &RecentFileItem::OnPaint, this);
-		Bind(wxEVT_ENTER_WINDOW, [this](wxMouseEvent&) { m_isHover = true; Refresh(); });
-		Bind(wxEVT_LEAVE_WINDOW, [this](wxMouseEvent&) { m_isHover = false; m_isPressed = false; Refresh(); });
-		Bind(wxEVT_LEFT_DOWN, [this](wxMouseEvent&) { m_isPressed = true; Refresh(); });
-		Bind(wxEVT_LEFT_UP, [this](wxMouseEvent& evt) {
-			if (m_isPressed) {
-				m_isPressed = false;
-				Refresh();
-				wxCommandEvent event(wxEVT_BUTTON, GetId());
-				event.SetString(m_path); // Pass the path with the event
-				event.SetEventObject(this);
-				GetEventHandler()->ProcessEvent(event);
+		Bind(wxEVT_MOTION, &RecentFilesView::OnMotion, this);
+		Bind(wxEVT_LEAVE_WINDOW, &RecentFilesView::OnLeave, this);
+		Bind(wxEVT_LEFT_DOWN, &RecentFilesView::OnLeftDown, this);
+		Bind(wxEVT_SIZE, &RecentFilesView::OnSize, this);
+
+		UpdateLayout();
+	}
+
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override {
+		int scrollPos = GetScrollPosition();
+		int startRow = scrollPos / m_itemHeight;
+		int endRow = (scrollPos + height + m_itemHeight - 1) / m_itemHeight + 1;
+
+		int startIdx = std::max(0, startRow);
+		int endIdx = std::min(static_cast<int>(m_files.size()), endRow);
+
+		// Fill background
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, scrollPos, width, height);
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255)); // White background
+		nvgFill(vg);
+
+		for (int i = startIdx; i < endIdx; ++i) {
+			int y = i * m_itemHeight;
+
+			// Hover effect
+			if (i == m_hoverIndex) {
+				nvgBeginPath(vg);
+				nvgRect(vg, 0, y, width, m_itemHeight);
+				nvgFillColor(vg, nvgRGBA(240, 240, 245, 255)); // Light highlight
+				nvgFill(vg);
 			}
-		});
+
+			// File Name
+			wxFileName fn(m_files[i]);
+			wxString filename = fn.GetFullName();
+			wxString fpath = fn.GetPath();
+
+			nvgFontSize(vg, 14.0f);
+			nvgFontFace(vg, "sans-bold");
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+			nvgText(vg, 12, y + 8, filename.ToUTF8().data(), nullptr);
+
+			// File Path
+			nvgFontSize(vg, 12.0f);
+			nvgFontFace(vg, "sans");
+			nvgFillColor(vg, nvgRGBA(128, 128, 128, 255));
+			nvgText(vg, 12, y + 26, fpath.ToUTF8().data(), nullptr);
+
+			// Separator line (optional, but nice)
+			nvgBeginPath(vg);
+			nvgMoveTo(vg, 12, y + m_itemHeight - 1);
+			nvgLineTo(vg, width - 12, y + m_itemHeight - 1);
+			nvgStrokeColor(vg, nvgRGBA(240, 240, 240, 255));
+			nvgStrokeWidth(vg, 1.0f);
+			nvgStroke(vg);
+		}
+	}
+
+	void UpdateLayout() {
+		int contentHeight = m_files.size() * m_itemHeight;
+		UpdateScrollbar(contentHeight);
+	}
+
+	void OnSize(wxSizeEvent& event) {
+		UpdateLayout();
+		Refresh();
+		event.Skip();
+	}
+
+	void OnMotion(wxMouseEvent& event) {
+		int y = event.GetY() + GetScrollPosition();
+		int index = y / m_itemHeight;
+
+		if (index >= 0 && index < static_cast<int>(m_files.size())) {
+			if (index != m_hoverIndex) {
+				m_hoverIndex = index;
+				SetCursor(wxCursor(wxCURSOR_HAND));
+				Refresh();
+			}
+		} else {
+			if (m_hoverIndex != -1) {
+				m_hoverIndex = -1;
+				SetCursor(wxNullCursor);
+				Refresh();
+			}
+		}
+	}
+
+	void OnLeave(wxMouseEvent& event) {
+		m_hoverIndex = -1;
+		SetCursor(wxNullCursor);
+		Refresh();
+	}
+
+	void OnLeftDown(wxMouseEvent& event) {
+		int y = event.GetY() + GetScrollPosition();
+		int index = y / m_itemHeight;
+
+		if (index >= 0 && index < static_cast<int>(m_files.size())) {
+			// Trigger wxEVT_BUTTON to match legacy behavior which parent listens to
+			wxCommandEvent evt(wxEVT_BUTTON, GetId());
+			evt.SetString(m_files[index]);
+			evt.SetEventObject(this);
+
+			// Bubble up to parent (WelcomePanel -> WelcomeDialog)
+			// But since we are binding explicitly in WelcomePanel, emitting on self is enough
+			GetEventHandler()->ProcessEvent(evt);
+		}
 	}
 
 	wxSize DoGetBestClientSize() const override {
-		return wxSize(FromDIP(300), FromDIP(50));
-	}
-
-	void OnPaint(wxPaintEvent& evt) {
-		wxAutoBufferedPaintDC dc(this);
-		wxSize size = GetClientSize();
-
-		// Background - Extremely subtle for "Quiet" UI
-		wxColour bg = GetParent()->GetBackgroundColour();
-		if (m_isPressed) {
-			bg = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(115);
-		} else if (m_isHover) {
-			bg = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(105);
-		}
-
-		dc.SetBrush(wxBrush(bg));
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.DrawRectangle(size);
-
-		// Boundaries removed for cleaner list feel (Implied via spacing)
-
-		wxFileName fn(m_path);
-		wxString filename = fn.GetFullName();
-		wxString fpath = fn.GetPath();
-
-		dc.SetFont(GetFont().Bold()); // Standard weight bold, not Larger
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-		dc.DrawText(filename, FromDIP(12), FromDIP(6));
-
-		dc.SetFont(GetFont().Smaller());
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-		dc.DrawText(fpath, FromDIP(12), FromDIP(24));
+		return wxSize(FromDIP(300), FromDIP(200));
 	}
 
 private:
-	wxString m_path;
-	wxString m_date;
-	bool m_isHover = false;
-	bool m_isPressed = false;
+	std::vector<wxString> m_files;
+	int m_hoverIndex;
+	int m_itemHeight;
 };
 
 // Main Panel Class
@@ -132,21 +199,12 @@ public:
 		recentTitle->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
 		contentSizer->Add(recentTitle, 0, wxLEFT | wxTOP | wxBOTTOM, FromDIP(15));
 
-		// Scrollable list
-		wxScrolledWindow* scroll = new wxScrolledWindow(content, wxID_ANY);
-		scroll->SetScrollRate(0, 10);
-		wxBoxSizer* listSizer = new wxBoxSizer(wxVERTICAL);
+		// NanoVG Recent Files View
+		RecentFilesView* recentView = new RecentFilesView(content, recentFiles);
+		contentSizer->Add(recentView, 1, wxEXPAND | wxBOTTOM, 1);
 
-		for (const auto& file : recentFiles) {
-			RecentFileItem* item = new RecentFileItem(scroll, file, "");
-			listSizer->Add(item, 0, wxEXPAND | wxBOTTOM, 1);
-
-			// Bind event to parent dialog handler
-			item->Bind(wxEVT_BUTTON, &WelcomeDialog::OnRecentFileClicked, parent);
-		}
-
-		scroll->SetSizer(listSizer);
-		contentSizer->Add(scroll, 1, wxEXPAND);
+		// Bind event to parent dialog handler
+		recentView->Bind(wxEVT_BUTTON, &WelcomeDialog::OnRecentFileClicked, parent);
 
 		// Anchored Footer for Startup Toggle
 		wxPanel* footer = new wxPanel(content);

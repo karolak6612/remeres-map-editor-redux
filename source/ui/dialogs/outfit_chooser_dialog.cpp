@@ -27,64 +27,147 @@
 #include "rendering/core/outfit_colorizer.h"
 #include "ui/gui.h"
 #include "util/json.h"
+#include "util/nanovg_canvas.h"
 #include <fstream>
 #include <nlohmann/json.hpp>
+
+#include <nanovg.h>
 
 namespace {
 	const int COLOR_COLUMNS = 19;
 	const int COLOR_ROWS = 7;
+	const int COLOR_SIZE = 16;
+	const int COLOR_GAP = 2;
 	const int PREVIEW_SIZE = 192;
 	const int OUTFIT_TILE_WIDTH = 100;
 	const int OUTFIT_TILE_HEIGHT = 120;
+}
 
-	class ColorSwatch : public wxWindow {
-	public:
-		ColorSwatch(wxWindow* parent, int id, uint32_t color) :
-			wxWindow(parent, id, wxDefaultPosition, wxSize(16, 16), wxBORDER_NONE),
-			color(color), selected(false) {
-			SetBackgroundStyle(wxBG_STYLE_PAINT);
-			Bind(wxEVT_PAINT, &ColorSwatch::OnPaint, this);
-			Bind(wxEVT_LEFT_DOWN, &ColorSwatch::OnMouse, this);
+class ColorPaletteView : public NanoVGCanvas {
+public:
+	ColorPaletteView(wxWindow* parent) :
+		NanoVGCanvas(parent, wxID_ANY, 0), // No scrolling needed
+		selected_color_index(0) {
+
+		int w = COLOR_COLUMNS * (COLOR_SIZE + COLOR_GAP) + COLOR_GAP;
+		int h = COLOR_ROWS * (COLOR_SIZE + COLOR_GAP) + COLOR_GAP;
+		SetMinSize(wxSize(w, h));
+
+		Bind(wxEVT_LEFT_DOWN, &ColorPaletteView::OnMouseDown, this);
+		Bind(wxEVT_MOTION, &ColorPaletteView::OnMotion, this);
+		Bind(wxEVT_LEAVE_WINDOW, &ColorPaletteView::OnLeave, this);
+	}
+
+	void SetSelection(int index) {
+		if (selected_color_index != index) {
+			selected_color_index = index;
+			Refresh();
 		}
+	}
 
-		void SetSelected(bool s) {
-			if (selected != s) {
-				selected = s;
-				Refresh();
+	int GetSelection() const {
+		return selected_color_index;
+	}
+
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override {
+		// Draw background
+		// nvgBeginPath(vg);
+		// nvgRect(vg, 0, 0, width, height);
+		// nvgFillColor(vg, nvgRGBA(30, 30, 30, 255));
+		// nvgFill(vg);
+
+		for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
+			int col = i % COLOR_COLUMNS;
+			int row = i / COLOR_COLUMNS;
+
+			float x = (float)(COLOR_GAP + col * (COLOR_SIZE + COLOR_GAP));
+			float y = (float)(COLOR_GAP + row * (COLOR_SIZE + COLOR_GAP));
+
+			uint32_t color = TemplateOutfitLookupTable[i];
+			uint8_t r = (color >> 16) & 0xFF;
+			uint8_t g = (color >> 8) & 0xFF;
+			uint8_t b = color & 0xFF;
+
+			nvgBeginPath(vg);
+			nvgRect(vg, x, y, COLOR_SIZE, COLOR_SIZE);
+			nvgFillColor(vg, nvgRGBA(r, g, b, 255));
+			nvgFill(vg);
+
+			// Selection border
+			if (static_cast<int>(i) == selected_color_index) {
+				nvgBeginPath(vg);
+				nvgRect(vg, x - 1, y - 1, COLOR_SIZE + 2, COLOR_SIZE + 2);
+				nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 255));
+				nvgStrokeWidth(vg, 2.0f);
+				nvgStroke(vg);
+			} else if (static_cast<int>(i) == hover_index) {
+				nvgBeginPath(vg);
+				nvgRect(vg, x, y, COLOR_SIZE, COLOR_SIZE);
+				nvgStrokeColor(vg, nvgRGBA(200, 200, 200, 128));
+				nvgStrokeWidth(vg, 1.0f);
+				nvgStroke(vg);
 			}
 		}
+	}
 
-	private:
-		void OnPaint(wxPaintEvent&) {
-			wxAutoBufferedPaintDC dc(this);
-			dc.SetBackground(*wxBLACK_BRUSH);
-			dc.Clear();
+	void OnMouseDown(wxMouseEvent& event) {
+		int index = HitTest(event.GetX(), event.GetY());
+		if (index != -1 && index != selected_color_index) {
+			selected_color_index = index;
+			Refresh();
 
-			wxRect rect = GetClientRect();
-			dc.SetPen(*wxTRANSPARENT_PEN);
-			dc.SetBrush(wxBrush(wxColor((color >> 16) & 0xFF, (color >> 8) & 0xFF, color & 0xFF)));
-			dc.DrawRectangle(rect);
-
-			if (selected) {
-				dc.SetBrush(*wxTRANSPARENT_BRUSH);
-				dc.SetPen(wxPen(*wxWHITE, 2));
-				dc.DrawRectangle(rect.Inflate(-1, -1));
-			}
-		}
-
-		void OnMouse(wxMouseEvent&) {
+			// Notify parent
 			wxCommandEvent evt(wxEVT_BUTTON, GetId());
 			evt.SetEventObject(this);
-			HandleWindowEvent(evt); // Ensure internal bindings (lambdas) are called
-			if (GetParent()) {
-				GetParent()->GetEventHandler()->ProcessEvent(evt); // Also send to parent just in case
+			evt.SetInt(selected_color_index); // Pass selection in Int
+			GetEventHandler()->ProcessEvent(evt);
+		}
+	}
+
+	void OnMotion(wxMouseEvent& event) {
+		int index = HitTest(event.GetX(), event.GetY());
+		if (index != hover_index) {
+			hover_index = index;
+			Refresh();
+		}
+		if (index != -1) {
+			SetCursor(wxCursor(wxCURSOR_HAND));
+		} else {
+			SetCursor(wxNullCursor);
+		}
+	}
+
+	void OnLeave(wxMouseEvent& event) {
+		hover_index = -1;
+		SetCursor(wxNullCursor);
+		Refresh();
+	}
+
+	int HitTest(int x, int y) const {
+		int col = (x - COLOR_GAP) / (COLOR_SIZE + COLOR_GAP);
+		int row = (y - COLOR_GAP) / (COLOR_SIZE + COLOR_GAP);
+
+		if (col >= 0 && col < COLOR_COLUMNS && row >= 0 && row < COLOR_ROWS) {
+			int index = row * COLOR_COLUMNS + col;
+			if (index >= 0 && index < static_cast<int>(TemplateOutfitLookupTableSize)) {
+				return index;
 			}
 		}
+		return -1;
+	}
 
-		uint32_t color;
-		bool selected;
-	};
-}
+	wxSize DoGetBestClientSize() const override {
+		int w = COLOR_COLUMNS * (COLOR_SIZE + COLOR_GAP) + COLOR_GAP;
+		int h = COLOR_ROWS * (COLOR_SIZE + COLOR_GAP) + COLOR_GAP;
+		return wxSize(w, h);
+	}
+
+private:
+	int selected_color_index;
+	int hover_index = -1;
+};
+
 
 // ============================================================================
 // OutfitChooserDialog
@@ -171,18 +254,13 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	part_sizer->Add(feet_btn, 1, wxEXPAND);
 	col1_sizer->Add(part_sizer, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 8);
 
-	wxFlexGridSizer* palette_sizer = new wxFlexGridSizer(COLOR_ROWS, COLOR_COLUMNS, 1, 1);
-	for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
-		uint32_t color = TemplateOutfitLookupTable[i];
-		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color);
-		palette_sizer->Add(swatch, 0);
-		color_buttons.push_back(swatch);
+	// NanoVG Color Palette
+	palette_view = new ColorPaletteView(this);
+	col1_sizer->Add(palette_view, 0, wxALL, 8);
 
-		swatch->Bind(wxEVT_BUTTON, [this, i](wxCommandEvent&) {
-			SelectColor(i);
-		});
-	}
-	col1_sizer->Add(palette_sizer, 0, wxALL, 8);
+	palette_view->Bind(wxEVT_BUTTON, [this](wxCommandEvent& evt) {
+		SelectColor(evt.GetInt());
+	});
 
 	col1_sizer->Add(CreateHeader("Configuration"), 0, wxLEFT | wxTOP, 8);
 	wxWrapSizer* check_sizer = new wxWrapSizer(wxHORIZONTAL);
@@ -332,8 +410,8 @@ void OutfitChooserDialog::UpdateColorSelection() {
 		currentColor = current_outfit.lookFeet;
 	}
 
-	for (size_t i = 0; i < color_buttons.size(); ++i) {
-		static_cast<ColorSwatch*>(color_buttons[i])->SetSelected(i == (size_t)currentColor);
+	if (palette_view) {
+		palette_view->SetSelection(currentColor);
 	}
 }
 

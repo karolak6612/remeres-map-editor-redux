@@ -11,6 +11,8 @@
 #include "ui/dialogs/outfit_preview_panel.h"
 #include "ui/dialogs/outfit_selection_grid.h"
 
+class ColorPaletteView; // Forward declaration
+
 class OutfitChooserDialog : public wxDialog {
 public:
 	enum {
@@ -54,11 +56,7 @@ public:
 	void OnFavoriteEdit(wxCommandEvent& event);
 	void OnFavoriteDelete(wxCommandEvent& event);
 
-	Outfit current_outfit; // Made public or keep friend? Friend is messy with circular includes. Let's make it public for now or add getter/setter.
-	// Actually, OutfitSelectionGrid accesses current_outfit. Let's use getter/setter in the grid.
-	// But current_outfit is used extensively. Let's keep it private and add friends or accessors.
-	// Wait, I already added GetOutfit/SetOutfit. I'll make members public/accessors as needed.
-	// For now, I'll keep the private section but moving specific handlers to public so Grid can bind them.
+	Outfit current_outfit;
 
 private:
 	void OnColorPartChange(wxCommandEvent& event);
@@ -80,6 +78,7 @@ private:
 	wxSearchCtrl* outfit_search;
 	OutfitSelectionGrid* selection_panel;
 	OutfitSelectionGrid* favorites_panel;
+	ColorPaletteView* palette_view;
 
 	wxCheckBox* addon1;
 	wxCheckBox* addon2;
@@ -92,8 +91,6 @@ private:
 	wxButton* body_btn;
 	wxButton* legs_btn;
 	wxButton* feet_btn;
-
-	std::vector<wxWindow*> color_buttons;
 };
 
 #endif

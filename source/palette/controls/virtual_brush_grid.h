@@ -16,13 +16,19 @@
  */
 class VirtualBrushGrid : public NanoVGCanvas, public BrushBoxInterface {
 public:
+	enum ViewMode {
+		VIEW_GRID,
+		VIEW_LIST
+	};
+
 	/**
 	 * @brief Constructs a VirtualBrushGrid.
 	 * @param parent Parent window
 	 * @param _tileset The tileset category containing brushes
 	 * @param rsz Icon render size (16x16 or 32x32)
+	 * @param mode View mode (Grid or List)
 	 */
-	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz);
+	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz, ViewMode mode = VIEW_GRID);
 	~VirtualBrushGrid() override;
 
 	wxWindow* GetSelfWindow() override {
@@ -48,6 +54,7 @@ protected:
 	// Event Handlers
 	void OnMouseDown(wxMouseEvent& event);
 	void OnMotion(wxMouseEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
 
 	// Internal helpers
 	void UpdateLayout();
@@ -55,8 +62,10 @@ protected:
 	wxRect GetItemRect(int index) const;
 	int GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush);
 	void DrawBrushItem(NVGcontext* vg, int index, const wxRect& rect);
+	void UpdateSelection(); // Helper to notify GUI and ensure visible
 
 	RenderSize icon_size;
+	ViewMode view_mode;
 	int selected_index;
 	int hover_index;
 	int columns;
