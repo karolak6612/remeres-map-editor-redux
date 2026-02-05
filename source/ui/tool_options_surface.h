@@ -89,6 +89,20 @@ private:
 	Brush* GetBrushAt(const wxPoint& pt);
 	void HandleClick(const wxPoint& pt);
 	void SelectBrush(Brush* brush);
+
+	// Cached GDI Objects
+	wxBrush m_highlightBrush;
+	wxBrush m_transparentBrush;
+	wxPen m_highlightPen;
+	wxPen m_borderPen;
+	wxPen m_transparentPen;
+
+	// More cached brushes
+	wxBrush m_highlightSolidBrush;
+	wxBrush m_trackBrush;
+	wxBrush m_thumbBrush;
+
+	wxPen m_checkboxBorderPen;
 };
 
 #endif

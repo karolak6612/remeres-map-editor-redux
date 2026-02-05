@@ -484,14 +484,40 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
+
+			MapNode* cached_node = nullptr;
+			int cached_node_x = -1;
+			int cached_node_y = -1;
+
+			auto getTileFast = [&](int tx, int ty) -> Tile* {
+				int nx = tx >> SpatialHashGrid::NODE_SHIFT;
+				int ny = ty >> SpatialHashGrid::NODE_SHIFT;
+
+				if (nx != cached_node_x || ny != cached_node_y) {
+					cached_node = getLeaf(tx, ty);
+					cached_node_x = nx;
+					cached_node_y = ny;
+				}
+
+				if (cached_node) {
+					Floor* floor = cached_node->getFloor(z);
+					if (floor) {
+						constexpr int MASK = (1 << SpatialHashGrid::NODE_SHIFT) - 1;
+						constexpr int WIDTH = (1 << SpatialHashGrid::NODE_SHIFT);
+						return floor->locs[(tx & MASK) * WIDTH + (ty & MASK)].get();
+					}
+				}
+				return nullptr;
+			};
+
 			while (found != tile_loc->getSpawnCount()) {
 				for (int x = start_x; x <= end_x; ++x) {
-					Tile* tile = getTile(x, start_y, z);
+					Tile* tile = getTileFast(x, start_y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
 					}
-					tile = getTile(x, end_y, z);
+					tile = getTileFast(x, end_y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
@@ -499,12 +525,12 @@ SpawnList Map::getSpawnList(Tile* where) {
 				}
 
 				for (int y = start_y + 1; y < end_y; ++y) {
-					Tile* tile = getTile(start_x, y, z);
+					Tile* tile = getTileFast(start_x, y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;
 					}
-					tile = getTile(end_x, y, z);
+					tile = getTileFast(end_x, y);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn);
 						++found;

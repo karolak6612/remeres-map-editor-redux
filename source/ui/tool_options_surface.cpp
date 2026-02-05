@@ -17,6 +17,18 @@ ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) : wxControl(parent, wxI
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	m_animTimer.SetOwner(this);
 
+	// Initialize GDI Objects
+	m_highlightBrush = wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(180));
+	m_transparentBrush = wxBrush(wxColour(200, 200, 200, 100));
+	m_highlightPen = wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	m_borderPen = wxPen(wxColour(100, 100, 100));
+	m_transparentPen = *wxTRANSPARENT_PEN;
+
+	m_highlightSolidBrush = wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT));
+	m_trackBrush = wxBrush(wxColour(200, 200, 200));
+	m_thumbBrush = wxBrush(wxColour(50, 50, 50));
+	m_checkboxBorderPen = wxPen(wxColour(150, 150, 150));
+
 	Bind(wxEVT_PAINT, &ToolOptionsSurface::OnPaint, this);
 	Bind(wxEVT_ERASE_BACKGROUND, &ToolOptionsSurface::OnEraseBackground, this);
 	Bind(wxEVT_LEFT_DOWN, &ToolOptionsSurface::OnMouse, this);
@@ -226,12 +238,12 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 
 	// Background
 	if (is_selected) {
-		dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
-		dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(180)));
+		dc.SetPen(m_highlightPen);
+		dc.SetBrush(m_highlightBrush);
 		dc.DrawRectangle(r);
 	} else if (is_hover) {
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.SetBrush(wxBrush(wxColour(200, 200, 200, 100))); // Transparent grey
+		dc.SetPen(m_transparentPen);
+		dc.SetBrush(m_transparentBrush); // Transparent grey
 		dc.DrawRectangle(r);
 	}
 
@@ -259,9 +271,9 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 	// Border
 	dc.SetBrush(*wxTRANSPARENT_BRUSH);
 	if (is_selected) {
-		dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
+		dc.SetPen(m_highlightPen);
 	} else {
-		dc.SetPen(wxPen(wxColour(100, 100, 100)));
+		dc.SetPen(m_borderPen);
 	}
 	dc.DrawRectangle(r);
 }
@@ -284,7 +296,7 @@ void ToolOptionsSurface::DrawSlider(wxDC& dc, const wxRect& rect, const wxString
 	wxRect track_rect(track_x, track_y, track_w, track_h);
 
 	dc.SetPen(*wxTRANSPARENT_PEN);
-	dc.SetBrush(wxBrush(wxColour(200, 200, 200)));
+	dc.SetBrush(m_trackBrush);
 	dc.DrawRectangle(track_rect);
 
 	// Fill
@@ -292,11 +304,11 @@ void ToolOptionsSurface::DrawSlider(wxDC& dc, const wxRect& rect, const wxString
 		float pct = (float)(value - min) / (float)(max - min);
 		int fill_w = (int)(track_w * pct);
 		wxRect fill_rect(track_x, track_y, fill_w, track_h);
-		dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
+		dc.SetBrush(m_highlightSolidBrush);
 		dc.DrawRectangle(fill_rect);
 
 		// Thumb
-		dc.SetBrush(wxBrush(wxColour(50, 50, 50)));
+		dc.SetBrush(m_thumbBrush);
 		dc.DrawCircle(track_x + fill_w, track_y + track_h / 2, FromDIP(5));
 	}
 
@@ -312,12 +324,12 @@ void ToolOptionsSurface::DrawCheckbox(wxDC& dc, const wxRect& rect, const wxStri
 	wxRect box(rect.GetLeft(), box_y, box_sz, box_sz);
 
 	if (hover) {
-		dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
+		dc.SetPen(m_highlightPen);
 	} else {
-		dc.SetPen(wxPen(wxColour(150, 150, 150)));
+		dc.SetPen(m_checkboxBorderPen);
 	}
 
-	dc.SetBrush(value ? wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)) : *wxWHITE_BRUSH);
+	dc.SetBrush(value ? m_highlightSolidBrush : *wxWHITE_BRUSH);
 	dc.DrawRectangle(box);
 
 	// Checkmark (simple)
