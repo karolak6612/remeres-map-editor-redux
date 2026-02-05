@@ -145,6 +145,9 @@ protected:
 	bool loadHouses(Map& map, pugi::xml_document& doc);
 	bool loadWaypoints(Map& map, const FileName& dir);
 	bool loadWaypoints(Map& map, pugi::xml_document& doc);
+	bool loadWaypoints(Map& map, BinaryNode* node);
+	bool loadTileArea(Map& map, BinaryNode* node);
+	bool loadTowns(Map& map, BinaryNode* node);
 
 	virtual bool saveMap(Map& map, NodeFileWriteHandle& handle);
 	bool saveSpawns(Map& map, const FileName& dir);
