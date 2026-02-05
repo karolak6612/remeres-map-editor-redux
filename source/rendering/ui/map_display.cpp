@@ -248,22 +248,42 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 					hud_cached_text = std::format("Pos: {}, {}, {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z);
 				}
 
+				// Tool Hints
+				if (g_gui.IsSelectionMode()) {
+					hud_cached_text += " | [Shift] Add";
+				} else if (editor.replace_brush) {
+					hud_cached_text += " | [Repl]";
+				} else {
+					hud_cached_text += " | [Ctrl] Pick";
+				}
+
 				hud_cached_selection_count = editor.selection.size();
 				hud_cached_x = last_cursor_map_x;
 				hud_cached_y = last_cursor_map_y;
 				hud_cached_z = last_cursor_map_z;
 
-				nvgFontSize(vg, 14.0f);
+				nvgFontSize(vg, 12.0f); // Slightly smaller for less intrusion
 				nvgFontFace(vg, "sans");
 				nvgTextBounds(vg, 0, 0, hud_cached_text.c_str(), nullptr, hud_cached_bounds);
 			}
 
 			float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
-			float padding = 8.0f;
+			float padding = 6.0f;
 			float hudW = textW + padding * 2;
-			float hudH = 24.0f;
-			float hudX = w - hudW - 10.0f;
-			float hudY = h - hudH - 10.0f;
+			float hudH = 20.0f;
+
+			// Position near cursor but clamped
+			float hudX = cursor_x + 20.0f;
+			float hudY = cursor_y + 20.0f;
+
+			// Smart clamping logic to keep it visible
+			if (hudX + hudW > w) hudX = cursor_x - hudW - 10.0f;
+			if (hudY + hudH > h) hudY = cursor_y - hudH - 10.0f;
+
+			if (hudX < 0) hudX = 10.0f;
+			if (hudY < 0) hudY = 10.0f;
+			if (hudX + hudW > w) hudX = w - hudW - 10.0f;
+			if (hudY + hudH > h) hudY = h - hudH - 10.0f;
 
 			// Glass Background
 			nvgBeginPath(vg);
