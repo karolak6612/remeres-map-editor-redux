@@ -39,10 +39,10 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetToolTip("Jump to selected item/brush");
+	okBtn->SetToolTip("Jump to selected item/brush (Enter)");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetToolTip("Close this window");
+	cancelBtn->SetToolTip("Close this window (Esc)");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
 
@@ -334,7 +334,7 @@ void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
 	if (no_matches) {
 		dc.DrawText("No matches for your search.", rect.GetX() + 40, rect.GetY() + 6);
 	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + 40, rect.GetY() + 6);
+		dc.DrawText("Type to search items and brushes...", rect.GetX() + 40, rect.GetY() + 6);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());

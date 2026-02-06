@@ -32,10 +32,10 @@ GotoPositionDialog::GotoPositionDialog(wxWindow* parent, Editor& editor) :
 	// OK/Cancel buttons
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetToolTip("Go to position");
+	okBtn->SetToolTip("Go to position (Enter)");
 	tmpsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetToolTip("Close this window");
+	cancelBtn->SetToolTip("Close this window (Esc)");
 	tmpsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(tmpsizer, 0, wxALL | wxCENTER, 20); // Border to top too
 
