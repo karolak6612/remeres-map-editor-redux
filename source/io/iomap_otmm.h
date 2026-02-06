@@ -80,6 +80,12 @@ public:
 
 	virtual bool saveMap(Map& map, NodeFileWriteHandle& handle, const FileName& identifier, bool showdialog);
 	virtual bool saveMap(Map& map, const FileName& identifier, bool showdialog);
+
+protected:
+	bool loadTileData(BinaryNode* node, Map& map);
+	bool loadSpawnData(BinaryNode* node, Map& map);
+	bool loadTownData(BinaryNode* node, Map& map);
+	bool loadHouseData(BinaryNode* node, Map& map);
 };
 
 #endif

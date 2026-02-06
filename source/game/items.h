@@ -461,6 +461,7 @@ protected:
 	bool loadFromOtbVer3(BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 
 private:
+	bool readOtbAttributes(ItemType* t, BinaryNode* itemNode, wxString& error, wxArrayString& warnings);
 	void parseItemTypeAttribute(ItemType& it, std::string_view value);
 	void parseSlotTypeAttribute(ItemType& it, std::string_view value);
 	void parseWeaponTypeAttribute(ItemType& it, std::string_view value);
