@@ -35,30 +35,6 @@ protected:
 	bool loaded;
 };
 
-class BrushListBox : public wxVListBox, public BrushBoxInterface {
-public:
-	BrushListBox(wxWindow* parent, const TilesetCategory* _tileset);
-	~BrushListBox();
-
-	wxWindow* GetSelfWindow() {
-		return this;
-	}
-
-	// Select the first brush
-	void SelectFirstBrush();
-	// Returns the currently selected brush (First brush if panel is not loaded)
-	Brush* GetSelectedBrush() const;
-	// Select the brush in the parameter, this only changes the look of the panel
-	bool SelectBrush(const Brush* brush);
-
-	// Event handlers
-	virtual void OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const;
-	virtual wxCoord OnMeasureItem(size_t n) const;
-
-	void OnKey(wxKeyEvent& event);
-};
-
-
 class BrushPanel : public wxPanel {
 public:
 	BrushPanel(wxWindow* parent);

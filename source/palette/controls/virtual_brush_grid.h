@@ -20,9 +20,9 @@ public:
 	 * @brief Constructs a VirtualBrushGrid.
 	 * @param parent Parent window
 	 * @param _tileset The tileset category containing brushes
-	 * @param rsz Icon render size (16x16 or 32x32)
+	 * @param type The list display type
 	 */
-	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz);
+	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, BrushListType type);
 	~VirtualBrushGrid() override;
 
 	wxWindow* GetSelfWindow() override {
@@ -48,6 +48,7 @@ protected:
 	// Event Handlers
 	void OnMouseDown(wxMouseEvent& event);
 	void OnMotion(wxMouseEvent& event);
+	void OnKey(wxKeyEvent& event);
 
 	// Internal helpers
 	void UpdateLayout();
@@ -56,6 +57,7 @@ protected:
 	int GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush);
 	void DrawBrushItem(NVGcontext* vg, int index, const wxRect& rect);
 
+	BrushListType list_type;
 	RenderSize icon_size;
 	int selected_index;
 	int hover_index;
