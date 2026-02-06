@@ -77,6 +77,17 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 }
 
 void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& g, uint8_t& b) {
+	// 1-element cache to speed up consecutive lookups for the same house (common in spatial rendering)
+	static thread_local uint32_t last_house_id = 0xFFFFFFFF;
+	static thread_local uint8_t last_r = 0, last_g = 0, last_b = 0;
+
+	if (house_id == last_house_id) {
+		r = last_r;
+		g = last_g;
+		b = last_b;
+		return;
+	}
+
 	// Use a simple seeded random to get consistent colors
 	// Simple hash
 	// (Cache removed as calculation is faster than hash map lookup)
@@ -96,6 +107,11 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 		g += 100;
 		b += 100;
 	}
+
+	last_house_id = house_id;
+	last_r = r;
+	last_g = g;
+	last_b = b;
 }
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {

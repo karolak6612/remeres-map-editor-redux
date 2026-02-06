@@ -99,23 +99,29 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 		}
 	} else {
 		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+			Floor* floor = nd->getFloor(map_z);
+			if (!floor) {
+				return;
+			}
+
 			int node_draw_x = nd_map_x * TileSize + base_screen_x;
 			int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
-			for (int map_x = 0; map_x < 4; ++map_x) {
-				for (int map_y = 0; map_y < 4; ++map_y) {
-					// Calculate draw coordinates directly
-					int draw_x = node_draw_x + (map_x * TileSize);
-					int draw_y = node_draw_y + (map_y * TileSize);
+			int draw_x = node_draw_x;
 
-					TileLocation* location = nd->getTile(map_x, map_y, map_z);
+			for (int map_x = 0; map_x < 4; ++map_x) {
+				int draw_y = node_draw_y;
+				for (int map_y = 0; map_y < 4; ++map_y) {
+					TileLocation* location = &floor->locs[(map_x << 2) + map_y];
 
 					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
-					if (location && options.isDrawLight() && view.zoom <= 10.0) {
+					if (options.isDrawLight() && view.zoom <= 10.0) {
 						tile_renderer->AddLight(location, view, options, light_buffer);
 					}
+					draw_y += TileSize;
 				}
+				draw_x += TileSize;
 			}
 		});
 	}

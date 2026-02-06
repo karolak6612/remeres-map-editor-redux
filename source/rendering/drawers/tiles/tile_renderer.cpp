@@ -131,7 +131,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int draw_x, int draw_y) {
 	if (!location) {
 		return;
 	}
@@ -148,17 +148,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	int map_x = location->getX();
 	int map_y = location->getY();
 	int map_z = location->getZ();
-
-	int draw_x, draw_y;
-	if (in_draw_x != -1 && in_draw_y != -1) {
-		draw_x = in_draw_x;
-		draw_y = in_draw_y;
-	} else {
-		// Early viewport culling - skip tiles that are completely off-screen
-		if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
-			return;
-		}
-	}
 
 	Waypoint* waypoint = editor->map.waypoints.getWaypoint(location);
 
@@ -198,7 +187,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+	if (options.show_tooltips && map_z == view.floor && tile->ground && tile->ground->getID() >= 100) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground, location->getPosition(), tile->isHouseTile())) {
 			if (groundData.hasVisibleFields()) {
@@ -244,7 +233,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 			// items on tile
 			for (auto* item : tile->items) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (options.show_tooltips && map_z == view.floor && item->getID() >= 100) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item, location->getPosition(), tile->isHouseTile())) {
 						if (itemData.hasVisibleFields()) {
