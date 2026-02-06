@@ -97,12 +97,11 @@ void MainFrame::OnIdle(wxIdleEvent& event) {
 
 #ifdef _USE_UPDATER_
 void MainFrame::OnUpdateReceived(wxCommandEvent& event) {
-	void* clientData = event.GetClientData();
+	std::unique_ptr<std::string> clientData(static_cast<std::string*>(event.GetClientData()));
 	if (!clientData) {
 		return;
 	}
-	std::string data = *static_cast<std::string*>(clientData);
-	delete static_cast<std::string*>(clientData);
+	std::string data = *clientData;
 
 	size_t first_colon = data.find(':');
 	size_t second_colon = data.find(':', first_colon + 1);
@@ -283,14 +282,14 @@ bool MainFrame::DoQueryImportCreatures() {
 				if (dlg.ShowModal() == wxID_OK) {
 					wxArrayString paths;
 					dlg.GetPaths(paths);
-					for (uint32_t i = 0; i < paths.GetCount(); ++i) {
+					for (const auto& path : paths) {
 						wxString error;
 						std::vector<std::string> warnings;
-						bool ok = g_creatures.importXMLFromOT(FileName(paths[i]), error, warnings);
+						bool ok = g_creatures.importXMLFromOT(FileName(path), error, warnings);
 						if (ok) {
 							DialogUtil::ListDialog("Monster loader errors", warnings);
 						} else {
-							wxMessageBox("Error OT data file \"" + paths[i] + "\".\n" + error, "Error", wxOK | wxICON_INFORMATION, g_gui.root);
+							wxMessageBox("Error OT data file \"" + path + "\".\n" + error, "Error", wxOK | wxICON_INFORMATION, g_gui.root);
 						}
 					}
 				} else {
