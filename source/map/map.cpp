@@ -34,7 +34,7 @@ Map::Map() :
 	has_changed(false),
 	unnamed(false),
 	waypoints(*this) {
-	spdlog::info("Map created [Map={}]", (void*)this);
+	spdlog::info("Map created [Map={}]", static_cast<void*>(this));
 	// Earliest version possible
 	// Caller is responsible for converting us to proper version
 	mapVersion.otbm = MAP_OTBM_1;
@@ -42,7 +42,7 @@ Map::Map() :
 }
 
 void Map::initializeEmpty() {
-	spdlog::info("Map::initializeEmpty [Map={}]", (void*)this);
+	spdlog::info("Map::initializeEmpty [Map={}]", static_cast<void*>(this));
 	height = 2048;
 	width = 2048;
 
@@ -60,7 +60,7 @@ void Map::initializeEmpty() {
 }
 
 Map::~Map() {
-	spdlog::info("Map destroying [Map={}]", (void*)this);
+	spdlog::info("Map destroying [Map={}]", static_cast<void*>(this));
 	////
 }
 
@@ -196,9 +196,9 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 		if (tile->ground) {
 			id_list.push_back(tile->ground->getID());
 		}
-		for (ItemVector::const_iterator item_iter = tile->items.begin(); item_iter != tile->items.end(); ++item_iter) {
-			if ((*item_iter)->isBorder()) {
-				id_list.push_back((*item_iter)->getID());
+		for (const auto& item : tile->items) {
+			if (item->isBorder()) {
+				id_list.push_back(item->getID());
 			}
 		}
 
@@ -236,8 +236,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			tile->items.erase(part_iter, tile->items.end());
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
-				Item* item = Item::Create(*iit);
+			for (const auto& new_item_id : new_items) {
+				Item* item = Item::Create(new_item_id);
 				if (item->isGroundTile()) {
 					tile->ground = item;
 				} else {
@@ -257,8 +257,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				const std::vector<uint16_t>& v = cfstm->second;
 				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					Item* item = Item::Create(*iit);
+				for (const auto& new_item_id : v) {
+					Item* item = Item::Create(new_item_id);
 					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
@@ -283,8 +283,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(*iit));
+				for (const auto& new_item_id : v) {
+					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_item_id));
 					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}
@@ -321,14 +321,14 @@ void Map::cleanInvalidTiles(bool showdialog) {
 			continue;
 		}
 
-		auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
+		auto subrange = std::ranges::stable_partition(tile->items, [](Item* item) {
 			return g_items.typeExists(item->getID());
 		});
 
-		std::for_each(part_iter, tile->items.end(), [](Item* item) {
+		std::ranges::for_each(subrange, [](Item* item) {
 			delete item;
 		});
-		tile->items.erase(part_iter, tile->items.end());
+		tile->items.erase(subrange.begin(), subrange.end());
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {

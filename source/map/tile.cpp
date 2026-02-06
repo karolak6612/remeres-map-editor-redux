@@ -125,13 +125,9 @@ std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
 		copy->ground = ground->deepCopy();
 	}
 
-	ItemVector::iterator it;
-
 	copy->items.reserve(items.size());
-	it = items.begin();
-	while (it != items.end()) {
-		copy->items.push_back((*it)->deepCopy());
-		++it;
+	for (const auto& item : items) {
+		copy->items.push_back(item->deepCopy());
 	}
 
 	return copy;
@@ -200,13 +196,9 @@ void Tile::merge(Tile* other) {
 		spawn = std::move(other->spawn);
 	}
 
-	ItemVector::iterator it;
-
 	items.reserve(items.size() + other->items.size());
-	it = other->items.begin();
-	while (it != other->items.end()) {
-		addItem(*it);
-		++it;
+	for (auto* item : other->items) {
+		addItem(item);
 	}
 	other->items.clear();
 }
@@ -707,12 +699,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	for (std::vector<uint32_t>::iterator it = house_exits->begin(); it != house_exits->end(); ++it) {
-		if (*it == h->getID()) {
-			house_exits->erase(it);
-			return;
-		}
-	}
+	std::erase(*house_exits, h->getID());
 }
 
 bool Tile::isContentEqual(const Tile* other) const {
