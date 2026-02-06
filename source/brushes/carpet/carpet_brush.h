@@ -29,6 +29,8 @@ class CarpetBrush : public Brush {
 	friend class CarpetBrushLoader;
 
 	friend class CarpetBorderCalculator;
+	friend class ReplaceToolWindow;
+	friend class LibraryPanel;
 
 public:
 	static void init();

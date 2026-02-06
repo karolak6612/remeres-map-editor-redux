@@ -77,6 +77,8 @@ protected:
 	// Friend classes access protected members directly.
 	friend class TableBrushLoader;
 	friend class TableBorderCalculator;
+	friend class ReplaceToolWindow;
+	friend class LibraryPanel;
 };
 
 #endif
