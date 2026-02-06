@@ -75,7 +75,7 @@ public:
 
 private:
 	std::array<std::unique_ptr<GLBuffer>, BUFFER_COUNT> buffers_;
-	SyncHandle fences_[BUFFER_COUNT];
+	std::array<SyncHandle, BUFFER_COUNT> fences_;
 
 	size_t size_ = 0;
 	int current_index_ = 0;

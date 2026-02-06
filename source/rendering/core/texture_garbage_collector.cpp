@@ -20,6 +20,7 @@
 #include "rendering/core/graphics.h"
 #include "app/settings.h"
 #include <algorithm>
+#include <vector>
 
 TextureGarbageCollector::TextureGarbageCollector() :
 	loaded_textures(0),
@@ -58,22 +59,14 @@ void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_
 	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 
-			for (size_t i = resident_images.size(); i > 0; --i) {
-				GameSprite::Image* img = static_cast<GameSprite::Image*>(resident_images[i - 1]);
+			std::erase_if(resident_images, [current_time](void* ptr) {
+				GameSprite::Image* img = static_cast<GameSprite::Image*>(ptr);
 				img->clean(current_time);
-
-				if (!img->isGLLoaded) {
-					// Image evicted itself during clean()
-					if (i - 1 < resident_images.size() - 1) {
-						resident_images[i - 1] = resident_images.back();
-					}
-					resident_images.pop_back();
-				}
-			}
+				return !img->isGLLoaded;
+			});
 
 			// 2. Clean GameSprites (Software caches/animators)
-			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
-				GameSprite* gs = resident_game_sprites[i - 1];
+			for (GameSprite* gs : resident_game_sprites) {
 				gs->clean(current_time);
 
 				// Optional: Add logic to check if GameSprite is still "active"
