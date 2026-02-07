@@ -180,8 +180,21 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
+	// Animation Pop (Scale Up)
+	bool isHovered = (i == hover_index);
+	bool isSelected = (i == selected_index);
+
+	if (isHovered) {
+		nvgSave(vg);
+		float cx = x + w * 0.5f;
+		float cy = y + h * 0.5f;
+		nvgTranslate(vg, cx, cy);
+		nvgScale(vg, 1.1f, 1.1f);
+		nvgTranslate(vg, -cx, -cy);
+	}
+
 	// Shadow / Glow
-	if (i == selected_index) {
+	if (isSelected) {
 		// Glow for selected
 		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 10.0f, nvgRGBA(100, 150, 255, 128), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
@@ -190,9 +203,9 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
-	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
+	} else if (isHovered) {
+		// Stronger shadow/glow for hover
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 8.0f, nvgRGBA(0, 0, 0, 90), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
 		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
@@ -205,10 +218,11 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	nvgBeginPath(vg);
 	nvgRoundedRect(vg, x, y, w, h, 4.0f);
 
-	if (i == selected_index) {
+	if (isSelected) {
 		nvgFillColor(vg, nvgRGBA(80, 100, 120, 255));
-	} else if (i == hover_index) {
-		nvgFillColor(vg, nvgRGBA(70, 70, 75, 255));
+	} else if (isHovered) {
+		// Slightly lighter for hover
+		nvgFillColor(vg, nvgRGBA(75, 75, 80, 255));
 	} else {
 		// Normal - dark card with subtle gradient
 		NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
@@ -217,7 +231,7 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	nvgFill(vg);
 
 	// Selection border
-	if (i == selected_index) {
+	if (isSelected) {
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
 		nvgStrokeColor(vg, nvgRGBA(100, 180, 255, 255));
@@ -241,6 +255,10 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 		}
+	}
+
+	if (isHovered) {
+		nvgRestore(vg);
 	}
 }
 
