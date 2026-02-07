@@ -106,17 +106,20 @@ public:
 		sideSizer->Add(version, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, FromDIP(25));
 
 		// Actions (Nav-style)
-		auto addButton = [&](const wxString& label, int id) {
+		auto addButton = [&](const wxString& label, int id, const wxString& tooltip = "") {
 			ModernButton* btn = new ModernButton(sidebar, id, label);
 			btn->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 			btn->SetMinSize(wxSize(-1, FromDIP(35))); // More compact nav height
+			if (!tooltip.IsEmpty()) {
+				btn->SetToolTip(tooltip);
+			}
 			sideSizer->Add(btn, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(8));
 			btn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, parent);
 		};
 
-		addButton("New Project", wxID_NEW);
-		addButton("Open Project", wxID_OPEN);
-		addButton("Preferences", wxID_PREFERENCES);
+		addButton("New Project", wxID_NEW, "Create a new map (Ctrl+N)");
+		addButton("Open Project", wxID_OPEN, "Open an existing map (Ctrl+O)");
+		addButton("Preferences", wxID_PREFERENCES, "Configure settings");
 
 		sideSizer->AddStretchSpacer();
 
