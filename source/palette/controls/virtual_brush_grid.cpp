@@ -14,6 +14,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
 	icon_size(rsz),
+	list_mode(rsz == RENDER_SIZE_16x16 ? BRUSHLIST_SMALL_ICONS : BRUSHLIST_LARGE_ICONS),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
@@ -39,13 +40,38 @@ VirtualBrushGrid::~VirtualBrushGrid() {
 	delete m_animTimer;
 }
 
+void VirtualBrushGrid::SetDisplayMode(BrushListType mode) {
+	if (list_mode != mode) {
+		list_mode = mode;
+		// Update item size based on mode
+		if (list_mode == BRUSHLIST_SMALL_ICONS) {
+			icon_size = RENDER_SIZE_16x16;
+			item_size = 18;
+		} else if (list_mode == BRUSHLIST_LARGE_ICONS) {
+			icon_size = RENDER_SIZE_32x32;
+			item_size = 34;
+		} else {
+			// List modes
+			icon_size = RENDER_SIZE_32x32;
+			item_size = 34; // Height
+		}
+		UpdateLayout();
+		Refresh();
+	}
+}
+
 void VirtualBrushGrid::UpdateLayout() {
 	int width = GetClientSize().x;
 	if (width <= 0) {
 		width = 200; // Default
 	}
 
-	columns = std::max(1, (width - padding) / (item_size + padding));
+	if (list_mode == BRUSHLIST_LISTBOX || list_mode == BRUSHLIST_TEXT_LISTBOX) {
+		columns = 1;
+	} else {
+		columns = std::max(1, (width - padding) / (item_size + padding));
+	}
+
 	int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
 	int contentHeight = rows * (item_size + padding) + padding;
 
@@ -53,7 +79,11 @@ void VirtualBrushGrid::UpdateLayout() {
 }
 
 wxSize VirtualBrushGrid::DoGetBestClientSize() const {
-	return FromDIP(wxSize(200, 300));
+	int width = 200;
+	if (list_mode == BRUSHLIST_LISTBOX || list_mode == BRUSHLIST_TEXT_LISTBOX) {
+		width = 250;
+	}
+	return FromDIP(wxSize(width, 300));
 }
 
 int VirtualBrushGrid::GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush) {
@@ -225,14 +255,19 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 		nvgStroke(vg);
 	}
 
-	// Draw brush sprite
 	Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushlist[i] : nullptr;
 	if (brush) {
+		// Draw brush sprite
 		int tex = GetOrCreateBrushTexture(vg, brush);
 		if (tex > 0) {
 			int iconSize = item_size - 4;
 			int iconX = rect.x + 2;
 			int iconY = rect.y + 2;
+
+			// In list mode, icon size is fixed
+			if (list_mode == BRUSHLIST_LISTBOX || list_mode == BRUSHLIST_TEXT_LISTBOX) {
+				iconSize = 30;
+			}
 
 			NVGpaint imgPaint = nvgImagePattern(vg, static_cast<float>(iconX), static_cast<float>(iconY), static_cast<float>(iconSize), static_cast<float>(iconSize), 0.0f, tex, 1.0f);
 
@@ -241,12 +276,36 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 		}
+
+		// Draw Text
+		if (list_mode == BRUSHLIST_LISTBOX || list_mode == BRUSHLIST_TEXT_LISTBOX) {
+			nvgFontSize(vg, 14.0f);
+			nvgFontFace(vg, "sans");
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+			if (i == selected_index) {
+				nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			} else {
+				nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+			}
+			nvgText(vg, x + 40.0f, y + h / 2.0f, brush->getName().c_str(), nullptr);
+		}
 	}
 }
 
 wxRect VirtualBrushGrid::GetItemRect(int index) const {
 	int row = index / columns;
 	int col = index % columns;
+
+	if (list_mode == BRUSHLIST_LISTBOX || list_mode == BRUSHLIST_TEXT_LISTBOX) {
+		int width = GetClientSize().x - (padding * 2);
+		if (width < 100) width = 100;
+		return wxRect(
+			padding,
+			padding + row * (item_size + padding),
+			width,
+			item_size
+		);
+	}
 
 	return wxRect(
 		padding + col * (item_size + padding),
@@ -260,6 +319,20 @@ int VirtualBrushGrid::HitTest(int x, int y) const {
 	int scrollPos = GetScrollPosition();
 	int realY = y + scrollPos;
 	int realX = x;
+
+	if (list_mode == BRUSHLIST_LISTBOX || list_mode == BRUSHLIST_TEXT_LISTBOX) {
+		int row = (realY - padding) / (item_size + padding);
+		if (row < 0 || row >= static_cast<int>(tileset->size())) {
+			return -1;
+		}
+
+		int width = GetClientSize().x - (padding * 2);
+		// Check X bounds (roughly)
+		if (realX >= padding && realX <= padding + width) {
+			return row;
+		}
+		return -1;
+	}
 
 	int col = (realX - padding) / (item_size + padding);
 	int row = (realY - padding) / (item_size + padding);
