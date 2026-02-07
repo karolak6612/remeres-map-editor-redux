@@ -34,6 +34,12 @@ public:
 	Brush* GetSelectedBrush() const override;
 	bool SelectBrush(const Brush* brush) override;
 
+	/**
+	 * @brief Sets the display mode (grid or list).
+	 * @param mode The desired display mode.
+	 */
+	void SetDisplayMode(BrushListType mode);
+
 protected:
 	/**
 	 * @brief Performs NanoVG rendering of the brush grid.
@@ -57,6 +63,7 @@ protected:
 	void DrawBrushItem(NVGcontext* vg, int index, const wxRect& rect);
 
 	RenderSize icon_size;
+	BrushListType list_mode;
 	int selected_index;
 	int hover_index;
 	int columns;
