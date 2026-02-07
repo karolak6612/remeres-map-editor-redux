@@ -294,15 +294,14 @@ Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* pos
 		pos.z = z;
 	}
 
-	Tile* tile = map.allocator(
+	std::unique_ptr<Tile> tile(map.allocator(
 		map.createTileL(pos)
-	);
+	));
 
 	if (tileType == OTBM_HOUSETILE) {
 		uint32_t houseId;
 		if (!node->getU32(houseId)) {
 			// warning("House tile without house data, discarding tile");
-			delete tile;
 			return nullptr;
 		}
 
@@ -348,7 +347,6 @@ Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* pos
 			uint8_t itemType;
 			if (!itemNode->getByte(itemType)) {
 				// warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
-				delete tile;
 				return nullptr;
 			}
 
@@ -367,7 +365,7 @@ Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* pos
 		} while (itemNode->advance());
 	}
 
-	return tile;
+	return tile.release();
 }
 
 LiveCursor LiveSocket::readCursor(NetworkMessage& message) {

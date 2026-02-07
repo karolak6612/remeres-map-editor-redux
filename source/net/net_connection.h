@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <memory>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -78,7 +79,7 @@ public:
 	boost::asio::io_context& get_service();
 
 private:
-	boost::asio::io_context* service;
+	std::unique_ptr<boost::asio::io_context> service;
 	std::thread thread;
 	bool stopped;
 };
