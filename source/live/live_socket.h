@@ -55,6 +55,7 @@ public:
 
 	std::string getHostName() const;
 	std::vector<LiveCursor> getCursorList() const;
+	const std::unordered_map<uint32_t, LiveCursor>& getCursors() const;
 
 	//
 	void logMessage(const wxString& message);

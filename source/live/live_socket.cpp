@@ -82,6 +82,10 @@ std::vector<LiveCursor> LiveSocket::getCursorList() const {
 	return cursorList;
 }
 
+const std::unordered_map<uint32_t, LiveCursor>& LiveSocket::getCursors() const {
+	return cursors;
+}
+
 void LiveSocket::logMessage(const wxString& message) {
 	wxTheApp->CallAfter([this, message]() {
 		if (log) {

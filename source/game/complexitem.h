@@ -180,7 +180,7 @@ public:
 		outfit = newOutfit;
 	}
 
-	const uint8_t getDirection() {
+	uint8_t getDirection() {
 		return direction;
 	}
 	void setDirection(uint8_t newDirection) {
