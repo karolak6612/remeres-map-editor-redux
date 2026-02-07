@@ -629,7 +629,7 @@ size_t MemoryNodeFileWriteHandle::getSize() {
 void MemoryNodeFileWriteHandle::renewCache() {
 	if (cache) {
 		cache_size = cache_size * 2;
-		cache = (uint8_t*)realloc(cache, cache_size);
+		cache = (uint8_t*)realloc(cache, cache_size + 1);
 		if (!cache) {
 			exit(1);
 		}

@@ -39,6 +39,9 @@ void NetworkMessage::expand(const size_t length) {
 template <>
 std::string NetworkMessage::read<std::string>() {
 	const uint16_t length = read<uint16_t>();
+	if (position + length > buffer.size()) {
+		throw std::out_of_range("NetworkMessage::read<string>: buffer overflow");
+	}
 	char* strBuffer = reinterpret_cast<char*>(&buffer[position]);
 	position += length;
 	return std::string(strBuffer, length);
@@ -119,7 +122,9 @@ void NetworkConnection::stop() {
 
 	service->stop();
 	stopped = true;
-	thread.join();
+	if (thread.joinable()) {
+		thread.join();
+	}
 
 	delete service;
 	service = nullptr;
