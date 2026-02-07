@@ -247,18 +247,32 @@ SpatialHashGrid::~SpatialHashGrid() {
 
 void SpatialHashGrid::clear() {
 	cells.clear();
+	cached_cell = nullptr;
+	cached_key = 0;
 }
 
 MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 	uint64_t key = makeKey(x, y);
-	auto it = cells.find(key);
-	if (it == cells.end()) {
+
+	GridCell* cell = nullptr;
+	if (key == cached_key && cached_cell) {
+		cell = cached_cell;
+	} else {
+		auto it = cells.find(key);
+		if (it != cells.end()) {
+			cell = it->second.get();
+			cached_key = key;
+			cached_cell = cell;
+		}
+	}
+
+	if (!cell) {
 		return nullptr;
 	}
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-	return it->second->nodes[ny * NODES_PER_CELL + nx].get();
+	return cell->nodes[ny * NODES_PER_CELL + nx].get();
 }
 
 MapNode* SpatialHashGrid::getLeafForce(int x, int y) {

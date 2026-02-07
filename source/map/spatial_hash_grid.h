@@ -101,6 +101,10 @@ protected:
 	BaseMap& map;
 	std::unordered_map<uint64_t, std::unique_ptr<GridCell>> cells;
 
+	// Simple MRU cache for getLeaf
+	mutable uint64_t cached_key = 0;
+	mutable GridCell* cached_cell = nullptr;
+
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		// Assumption: cell coordinates fit in 32 bits (covering +/- 2 billion tiles).
 		// Tibia maps are typically limited to 65k x 65k.
