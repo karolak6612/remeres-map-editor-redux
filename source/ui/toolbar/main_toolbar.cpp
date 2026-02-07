@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/main_toolbar.h"
+#include "ui/toolbar/main_toolbar.h"
 #include "ui/gui.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"

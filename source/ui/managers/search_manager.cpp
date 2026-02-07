@@ -1,7 +1,7 @@
 #include "app/main.h"
 #include "ui/managers/search_manager.h"
 #include "ui/gui.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 
 SearchManager g_search;
 

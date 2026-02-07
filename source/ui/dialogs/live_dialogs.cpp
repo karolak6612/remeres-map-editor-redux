@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 
-#include "ui/live_dialogs.h"
+#include "ui/dialogs/live_dialogs.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "editor/editor.h"

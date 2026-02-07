@@ -14,8 +14,8 @@
 #include "map/tile.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"
-#include "ui/tileset_window.h"
-#include "ui/browse_tile_window.h"
+#include "ui/windows/tileset_window.h"
+#include "ui/windows/browse_tile_window.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/house/house_exit_brush.h"

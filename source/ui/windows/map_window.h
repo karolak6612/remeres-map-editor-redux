@@ -19,7 +19,7 @@
 #define RME_MAP_WINDOW_H_
 
 #include "map/position.h"
-#include "ui/replace_items_window.h"
+#include "ui/windows/replace_items_window.h"
 
 class MapCanvas;
 class DCButton;
