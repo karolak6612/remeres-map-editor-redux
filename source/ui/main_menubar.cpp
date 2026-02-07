@@ -64,12 +64,12 @@ MainMenuBar::MainMenuBar(MainFrame* frame) :
 	using namespace MenuBar;
 	checking_programmaticly = false;
 
-	searchHandler = new SearchHandler(frame);
-	viewSettingsHandler = new ViewSettingsHandler(this);
-	mapActionsHandler = new MapActionsHandler(frame);
-	fileMenuHandler = new FileMenuHandler(frame, this);
-	navigationMenuHandler = new NavigationMenuHandler(frame, this);
-	paletteMenuHandler = new PaletteMenuHandler(frame, this);
+	searchHandler = std::make_unique<SearchHandler>(frame);
+	viewSettingsHandler = std::make_unique<ViewSettingsHandler>(this);
+	mapActionsHandler = std::make_unique<MapActionsHandler>(frame);
+	fileMenuHandler = std::make_unique<FileMenuHandler>(frame, this);
+	navigationMenuHandler = std::make_unique<NavigationMenuHandler>(frame, this);
+	paletteMenuHandler = std::make_unique<PaletteMenuHandler>(frame, this);
 
 	MenuBarActionManager::RegisterActions(this, actions);
 
@@ -108,13 +108,6 @@ MainMenuBar::~MainMenuBar() {
 	for (std::map<std::string, MenuBar::Action*>::iterator ai = actions.begin(); ai != actions.end(); ++ai) {
 		delete ai->second;
 	}
-
-	delete searchHandler;
-	delete viewSettingsHandler;
-	delete mapActionsHandler;
-	delete fileMenuHandler;
-	delete navigationMenuHandler;
-	delete paletteMenuHandler;
 }
 
 void MainMenuBar::EnableItem(MenuBar::ActionID id, bool enable) {
