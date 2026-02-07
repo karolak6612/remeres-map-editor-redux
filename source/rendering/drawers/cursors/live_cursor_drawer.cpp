@@ -16,7 +16,9 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 	}
 
 	LiveSocket& live = editor.live_manager.GetSocket();
-	for (LiveCursor& cursor : live.getCursorList()) {
+	for (const auto& pair : live.getCursors()) {
+		LiveCursor cursor = pair.second;
+
 		if (cursor.pos.z <= GROUND_LAYER && view.floor > GROUND_LAYER) {
 			continue;
 		}
