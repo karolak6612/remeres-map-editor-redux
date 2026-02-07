@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "ui/extension_window.h"
+#include "ui/windows/extension_window.h"
 
 #include "ui/gui.h"
 #include "util/file_system.h"

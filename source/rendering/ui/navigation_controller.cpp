@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "rendering/ui/navigation_controller.h"
 #include "rendering/ui/map_display.h"
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "ui/gui.h"
 #include <algorithm>
 #include <cmath>
