@@ -166,10 +166,62 @@ bool Map::convert(MapVersion to, bool showdialog) {
 	return true;
 }
 
+namespace {
+	class ConversionTrie {
+	public:
+		struct Node {
+			std::unordered_map<uint16_t, std::unique_ptr<Node>> children;
+			const ConversionMap::MTM::value_type* value = nullptr; // Pointer to the map entry
+		};
+
+		ConversionTrie(const ConversionMap::MTM& mtm) {
+			root = std::make_unique<Node>();
+			for (const auto& entry : mtm) {
+				insert(entry);
+			}
+		}
+
+		void insert(const ConversionMap::MTM::value_type& entry) {
+			Node* current = root.get();
+			for (uint16_t id : entry.first) {
+				if (!current->children.contains(id)) {
+					current->children[id] = std::make_unique<Node>();
+				}
+				current = current->children[id].get();
+			}
+			current->value = &entry;
+		}
+
+		// Returns the entry with the longest matching prefix
+		const ConversionMap::MTM::value_type* findLongestPrefix(const std::vector<uint16_t>& sorted_ids) const {
+			const Node* current = root.get();
+			const ConversionMap::MTM::value_type* last_match = nullptr;
+
+			for (uint16_t id : sorted_ids) {
+				auto it = current->children.find(id);
+				if (it == current->children.end()) {
+					break;
+				}
+				current = it->second.get();
+				if (current->value) {
+					last_match = current->value;
+				}
+			}
+			return last_match;
+		}
+
+	private:
+		std::unique_ptr<Node> root;
+	};
+}
+
 bool Map::convert(const ConversionMap& rm, bool showdialog) {
 	if (showdialog) {
 		g_gui.CreateLoadBar("Converting map ...");
 	}
+
+	// Optimize: Build Trie for O(L) lookup instead of loop of map lookups
+	ConversionTrie trie(rm.mtm);
 
 	std::map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>> mtm_lookups;
 	for (const auto& entry : rm.mtm) {
@@ -204,21 +256,13 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 		std::sort(id_list.begin(), id_list.end());
 
-		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
-
-		while (id_list.size()) {
-			cfmtm = rm.mtm.find(id_list);
-			if (cfmtm != rm.mtm.end()) {
-				break;
-			}
-			id_list.pop_back();
-		}
+		const ConversionMap::MTM::value_type* cfmtm_entry = trie.findLongestPrefix(id_list);
 
 		// Keep track of how many items have been inserted at the bottom
 		size_t inserted_items = 0;
 
-		if (cfmtm != rm.mtm.end()) {
-			const std::vector<uint16_t>& v = cfmtm->first;
+		if (cfmtm_entry) {
+			const std::vector<uint16_t>& v = cfmtm_entry->first;
 			const auto& ids_to_remove = mtm_lookups.at(&v);
 
 			if (tile->ground && ids_to_remove.contains(tile->ground->getID())) {
@@ -235,7 +279,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			});
 			tile->items.erase(part_iter, tile->items.end());
 
-			const std::vector<uint16_t>& new_items = cfmtm->second;
+			const std::vector<uint16_t>& new_items = cfmtm_entry->second;
 			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
 				Item* item = Item::Create(*iit);
 				if (item->isGroundTile()) {
