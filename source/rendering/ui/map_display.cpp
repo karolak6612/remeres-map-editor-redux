@@ -65,6 +65,7 @@
 #include "rendering/ui/map_menu_handler.h"
 
 #include "brushes/doodad/doodad_brush.h"
+#include "brushes/door/door_brush.h"
 #include "brushes/house/house_exit_brush.h"
 #include "brushes/house/house_brush.h"
 #include "brushes/wall/wall_brush.h"
@@ -228,47 +229,74 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			int w = GetSize().x;
 			int h = GetSize().y;
 
+			// Check if anything changed that affects the HUD text
+			Brush* currentBrush = g_gui.IsDrawingMode() ? g_gui.GetCurrentBrush() : nullptr;
+			// Quick pointer equality check or assume it might change.
+			// Ideally we cache the pointer too.
+
 			bool needs_update = (editor.selection.size() != hud_cached_selection_count || last_cursor_map_x != hud_cached_x || last_cursor_map_y != hud_cached_y || last_cursor_map_z != hud_cached_z);
 
+			// We also force update if brush changed (not tracked in cached vars efficiently, but let's assume frames render fast enough or we just update)
+			// For simplicity, we'll rebuild string every few frames or if mouse moved.
+			// Actually, let's just rebuild if needs_update OR always if in drawing mode (to catch tool changes).
+			if (g_gui.IsDrawingMode()) needs_update = true;
+
 			if (needs_update || hud_cached_text.empty()) {
+				std::stringstream ss;
+				ss << "Pos: " << last_cursor_map_x << ", " << last_cursor_map_y << ", " << last_cursor_map_z;
+
 				if (!editor.selection.empty()) {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, editor.selection.size());
-				} else {
-					hud_cached_text = std::format("Pos: {}, {}, {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z);
+					ss << " | Sel: " << editor.selection.size();
 				}
+
+				if (currentBrush) {
+					ss << " | " << currentBrush->getName();
+					if (dynamic_cast<DoorBrush*>(currentBrush)) {
+						ss << " (Shift: Lock)";
+					}
+				}
+
+				hud_cached_text = ss.str();
 
 				hud_cached_selection_count = editor.selection.size();
 				hud_cached_x = last_cursor_map_x;
 				hud_cached_y = last_cursor_map_y;
 				hud_cached_z = last_cursor_map_z;
 
-				nvgFontSize(vg, 14.0f);
+				nvgFontSize(vg, 13.0f);
 				nvgFontFace(vg, "sans");
 				nvgTextBounds(vg, 0, 0, hud_cached_text.c_str(), nullptr, hud_cached_bounds);
 			}
 
 			float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
-			float padding = 8.0f;
+			float padding = 12.0f;
 			float hudW = textW + padding * 2;
-			float hudH = 24.0f;
-			float hudX = w - hudW - 10.0f;
-			float hudY = h - hudH - 10.0f;
+			float hudH = 28.0f;
+			float hudX = w - hudW - 12.0f;
+			float hudY = h - hudH - 12.0f;
 
-			// Glass Background
+			// Glass Background (Premium)
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 6.0f);
+			nvgFillColor(vg, nvgRGBA(30, 30, 35, 210));
+			nvgFill(vg);
+
+			// Subtle Gradient Overlay
+			NVGpaint bgPaint = nvgLinearGradient(vg, hudX, hudY, hudX, hudY + hudH, nvgRGBA(255, 255, 255, 10), nvgRGBA(255, 255, 255, 0));
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 6.0f);
+			nvgFillPaint(vg, bgPaint);
 			nvgFill(vg);
 
 			// Border
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
+			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 6.0f);
 			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 40));
 			nvgStrokeWidth(vg, 1.0f);
 			nvgStroke(vg);
 
 			// Text
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 220));
+			nvgFillColor(vg, nvgRGBA(240, 240, 240, 255));
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 			nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
 
