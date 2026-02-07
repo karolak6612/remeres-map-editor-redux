@@ -102,10 +102,10 @@ bool Tile::hasHouseExit(uint32_t exit) const {
 }
 
 Tile::~Tile() {
-	while (!items.empty()) {
-		delete items.back();
-		items.pop_back();
+	for (const Item* item : items) {
+		delete item;
 	}
+	items.clear();
 	delete ground;
 }
 
@@ -125,13 +125,9 @@ std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
 		copy->ground = ground->deepCopy();
 	}
 
-	ItemVector::iterator it;
-
 	copy->items.reserve(items.size());
-	it = items.begin();
-	while (it != items.end()) {
-		copy->items.push_back((*it)->deepCopy());
-		++it;
+	for (const Item* item : items) {
+		copy->items.push_back(item->deepCopy());
 	}
 
 	return copy;
@@ -200,13 +196,9 @@ void Tile::merge(Tile* other) {
 		spawn = std::move(other->spawn);
 	}
 
-	ItemVector::iterator it;
-
 	items.reserve(items.size() + other->items.size());
-	it = other->items.begin();
-	while (it != other->items.end()) {
-		addItem(*it);
-		++it;
+	for (Item* item : other->items) {
+		addItem(item);
 	}
 	other->items.clear();
 }
@@ -406,14 +398,10 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		ItemVector::iterator it;
-
-		it = items.begin();
-		while (it != items.end()) {
-			if ((*it)->isSelected()) {
-				selected_items.push_back(*it);
+		for (Item* item : items) {
+			if (item->isSelected()) {
+				selected_items.push_back(item);
 			}
-			it++;
 		}
 	}
 
@@ -557,9 +545,7 @@ void Tile::cleanBorders() {
 		return !item->isBorder();
 	});
 
-	for (auto it = first_to_remove; it != items.end(); ++it) {
-		delete *it;
-	}
+	std::for_each(first_to_remove, items.end(), std::default_delete<Item>());
 	items.erase(first_to_remove, items.end());
 }
 
@@ -707,12 +693,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	for (std::vector<uint32_t>::iterator it = house_exits->begin(); it != house_exits->end(); ++it) {
-		if (*it == h->getID()) {
-			house_exits->erase(it);
-			return;
-		}
-	}
+	std::erase(*house_exits, h->getID());
 }
 
 bool Tile::isContentEqual(const Tile* other) const {

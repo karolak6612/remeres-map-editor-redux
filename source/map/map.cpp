@@ -34,7 +34,7 @@ Map::Map() :
 	has_changed(false),
 	unnamed(false),
 	waypoints(*this) {
-	spdlog::info("Map created [Map={}]", (void*)this);
+	spdlog::info("Map created [Map={}]", static_cast<void*>(this));
 	// Earliest version possible
 	// Caller is responsible for converting us to proper version
 	mapVersion.otbm = MAP_OTBM_1;
@@ -60,7 +60,7 @@ void Map::initializeEmpty() {
 }
 
 Map::~Map() {
-	spdlog::info("Map destroying [Map={}]", (void*)this);
+	spdlog::info("Map destroying [Map={}]", static_cast<void*>(this));
 	////
 }
 
@@ -202,7 +202,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
-		std::sort(id_list.begin(), id_list.end());
+		std::ranges::sort(id_list);
 
 		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
 
@@ -236,8 +236,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			tile->items.erase(part_iter, tile->items.end());
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
-				Item* item = Item::Create(*iit);
+			for (const uint16_t id : new_items) {
+				Item* item = Item::Create(id);
 				if (item->isGroundTile()) {
 					tile->ground = item;
 				} else {
@@ -257,8 +257,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				const std::vector<uint16_t>& v = cfstm->second;
 				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					Item* item = Item::Create(*iit);
+				for (const uint16_t id : v) {
+					Item* item = Item::Create(id);
 					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
