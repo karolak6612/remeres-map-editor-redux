@@ -16,6 +16,11 @@
  */
 class VirtualBrushGrid : public NanoVGCanvas, public BrushBoxInterface {
 public:
+	enum class DisplayMode {
+		GRID,
+		LIST
+	};
+
 	/**
 	 * @brief Constructs a VirtualBrushGrid.
 	 * @param parent Parent window
@@ -28,6 +33,8 @@ public:
 	wxWindow* GetSelfWindow() override {
 		return this;
 	}
+
+	void SetDisplayMode(DisplayMode mode);
 
 	// BrushBoxInterface
 	void SelectFirstBrush() override;
@@ -55,12 +62,15 @@ protected:
 	wxRect GetItemRect(int index) const;
 	int GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush);
 	void DrawBrushItem(NVGcontext* vg, int index, const wxRect& rect);
+	void DrawListItem(NVGcontext* vg, int index, const wxRect& rect);
 
 	RenderSize icon_size;
+	DisplayMode display_mode;
 	int selected_index;
 	int hover_index;
 	int columns;
 	int item_size;
+	int item_height; // Used for list mode
 	int padding;
 
 	// Animation state
