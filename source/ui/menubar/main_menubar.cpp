@@ -17,10 +17,10 @@
 
 #include "app/main.h"
 
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "ui/dialog_util.h"
 #include "ui/gui.h"
-#include "ui/tool_options_window.h"
+#include "ui/windows/tool_options_window.h"
 
 #include "map/map_statistics.h"
 #include "map/map_search.h"
@@ -29,16 +29,16 @@
 #include "ui/map/towns_window.h"
 #include "ui/map/map_properties_window.h"
 
-#include "ui/about_window.h"
+#include "ui/windows/about_window.h"
 #include "ui/dat_debug_view.h"
 #include "ui/menubar_loader.h"
 #include "ui/map_statistics_dialog.h"
 #include "ui/live_dialogs.h"
 
-#include "ui/extension_window.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/extension_window.h"
+#include "ui/windows/find_item_window.h"
 #include "app/preferences.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 
 #include "ui/menubar/search_handler.h"
 #include "ui/menubar/view_settings_handler.h"

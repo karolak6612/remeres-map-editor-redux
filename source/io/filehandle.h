@@ -24,6 +24,9 @@
 #include <string>
 #include <stack>
 #include <stdio.h>
+#include <cstring>
+#include <vector>
+#include <boost/utility.hpp>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER

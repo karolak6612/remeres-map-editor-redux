@@ -1,7 +1,7 @@
 #include "ui/managers/welcome_manager.h"
 #include "ui/gui.h"
 #include "ui/welcome_dialog.h"
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "app/main.h"
 
 WelcomeManager g_welcome;
