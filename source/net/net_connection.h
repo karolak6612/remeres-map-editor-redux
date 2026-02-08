@@ -25,6 +25,9 @@
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <cstring>
+#include <atomic>
+#include <memory>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -35,7 +38,11 @@ struct NetworkMessage {
 	//
 	template <typename T>
 	T read() {
-		T& value = *reinterpret_cast<T*>(&buffer[position]);
+		if (position + sizeof(T) > buffer.size()) {
+			throw std::out_of_range("NetworkMessage::read: buffer overflow");
+		}
+		T value;
+		std::memcpy(&value, &buffer[position], sizeof(T));
 		position += sizeof(T);
 		return value;
 	}
@@ -43,7 +50,7 @@ struct NetworkMessage {
 	template <typename T>
 	void write(const T& value) {
 		expand(sizeof(T));
-		memcpy(&buffer[position], &value, sizeof(T));
+		std::memcpy(&buffer[position], &value, sizeof(T));
 		position += sizeof(T);
 	}
 
@@ -78,9 +85,9 @@ public:
 	boost::asio::io_context& get_service();
 
 private:
-	boost::asio::io_context* service;
+	std::unique_ptr<boost::asio::io_context> service;
 	std::thread thread;
-	bool stopped;
+	std::atomic<bool> stopped;
 };
 
 #endif

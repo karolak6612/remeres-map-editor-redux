@@ -353,7 +353,8 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, std::v
 						break;
 					}
 
-					double wi = *reinterpret_cast<double*>(&w);
+					double wi;
+					memcpy(&wi, w, sizeof(double));
 					t->weight = wi;
 					break;
 				}
