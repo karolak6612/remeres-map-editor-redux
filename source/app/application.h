@@ -19,7 +19,7 @@
 #define RME_APPLICATION_H_
 
 #include "ui/gui.h"
-#include "ui/main_toolbar.h"
+#include "ui/toolbar/main_toolbar.h"
 #include "editor/action.h"
 #include "app/settings.h"
 

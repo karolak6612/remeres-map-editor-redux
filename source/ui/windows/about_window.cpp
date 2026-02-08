@@ -20,7 +20,7 @@
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 
-#include "ui/about_window.h"
+#include "ui/windows/about_window.h"
 #include <fstream>
 #include <typeinfo>
 #include <memory>

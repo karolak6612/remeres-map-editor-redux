@@ -18,6 +18,7 @@
 #ifndef RME_ITEMS_H_
 #define RME_ITEMS_H_
 
+#include "app/main.h"
 #include "io/filehandle.h"
 #include "brushes/brush_enums.h"
 #include "ext/pugixml.hpp"

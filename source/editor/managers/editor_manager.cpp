@@ -7,7 +7,7 @@
 #include "editor/managers/editor_manager.h"
 #include "ui/gui.h"
 #include "ui/map_tab.h"
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "palette/palette_window.h"
 #include "editor/editor.h"
 #include "editor/editor_factory.h"

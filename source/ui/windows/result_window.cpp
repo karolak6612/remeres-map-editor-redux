@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 #include "ui/gui.h"
 #include "map/position.h"
 
