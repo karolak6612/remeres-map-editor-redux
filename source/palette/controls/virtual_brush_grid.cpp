@@ -14,18 +14,13 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
 	icon_size(rsz),
+	display_mode(rsz == RENDER_SIZE_16x16 ? BRUSHLIST_SMALL_ICONS : BRUSHLIST_LARGE_ICONS),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
 	item_size(0),
 	padding(4),
 	m_animTimer(new wxTimer(this)) {
-
-	if (icon_size == RENDER_SIZE_16x16) {
-		item_size = 18;
-	} else {
-		item_size = 34; // 32 + border
-	}
 
 	Bind(wxEVT_LEFT_DOWN, &VirtualBrushGrid::OnMouseDown, this);
 	Bind(wxEVT_MOTION, &VirtualBrushGrid::OnMotion, this);
@@ -39,13 +34,33 @@ VirtualBrushGrid::~VirtualBrushGrid() {
 	delete m_animTimer;
 }
 
+void VirtualBrushGrid::SetDisplayMode(BrushListType mode) {
+	if (display_mode != mode) {
+		display_mode = mode;
+		UpdateLayout();
+		Refresh();
+	}
+}
+
 void VirtualBrushGrid::UpdateLayout() {
 	int width = GetClientSize().x;
 	if (width <= 0) {
 		width = 200; // Default
 	}
 
-	columns = std::max(1, (width - padding) / (item_size + padding));
+	if (display_mode == BRUSHLIST_LISTBOX || display_mode == BRUSHLIST_TEXT_LISTBOX) {
+		columns = 1;
+		item_size = 32; // Fixed height for list items
+	} else {
+		// Icon modes
+		if (icon_size == RENDER_SIZE_16x16) {
+			item_size = 18;
+		} else {
+			item_size = 34; // 32 + border
+		}
+		columns = std::max(1, (width - padding) / (item_size + padding));
+	}
+
 	int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
 	int contentHeight = rows * (item_size + padding) + padding;
 
@@ -180,44 +195,31 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
-	// Shadow / Glow
-	if (i == selected_index) {
-		// Glow for selected
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 10.0f, nvgRGBA(100, 150, 255, 128), nvgRGBA(0, 0, 0, 0));
-		nvgBeginPath(vg);
-		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
-		nvgRoundedRect(vg, x, y, w, h, 4.0f);
-		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillPaint(vg, shadowPaint);
-		nvgFill(vg);
-	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
-		nvgBeginPath(vg);
-		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
-		nvgRoundedRect(vg, x, y, w, h, 4.0f);
-		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillPaint(vg, shadowPaint);
-		nvgFill(vg);
-	}
-
-	// Card background
+	// Background and Highlights
 	nvgBeginPath(vg);
-	nvgRoundedRect(vg, x, y, w, h, 4.0f);
+	if (display_mode == BRUSHLIST_LISTBOX || display_mode == BRUSHLIST_TEXT_LISTBOX) {
+		nvgRect(vg, x, y, w, h);
+	} else {
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+	}
 
 	if (i == selected_index) {
 		nvgFillColor(vg, nvgRGBA(80, 100, 120, 255));
 	} else if (i == hover_index) {
 		nvgFillColor(vg, nvgRGBA(70, 70, 75, 255));
 	} else {
-		// Normal - dark card with subtle gradient
-		NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
-		nvgFillPaint(vg, bgPaint);
+		if (display_mode == BRUSHLIST_LISTBOX || display_mode == BRUSHLIST_TEXT_LISTBOX) {
+			// Alternating row colors could go here, but flat is fine for now
+			nvgFillColor(vg, nvgRGBA(50, 50, 55, 255));
+		} else {
+			NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
+			nvgFillPaint(vg, bgPaint);
+		}
 	}
 	nvgFill(vg);
 
-	// Selection border
-	if (i == selected_index) {
+	// Selection Border for Icons
+	if (i == selected_index && (display_mode == BRUSHLIST_SMALL_ICONS || display_mode == BRUSHLIST_LARGE_ICONS)) {
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
 		nvgStrokeColor(vg, nvgRGBA(100, 180, 255, 255));
@@ -225,9 +227,37 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 		nvgStroke(vg);
 	}
 
-	// Draw brush sprite
 	Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushlist[i] : nullptr;
-	if (brush) {
+	if (!brush) {
+		return;
+	}
+
+	// Content
+	if (display_mode == BRUSHLIST_TEXT_LISTBOX) {
+		nvgFontSize(vg, 16.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgText(vg, x + 10, y + h * 0.5f, brush->getName().c_str(), nullptr);
+	} else if (display_mode == BRUSHLIST_LISTBOX) {
+		// Icon + Text
+		int tex = GetOrCreateBrushTexture(vg, brush);
+		if (tex > 0) {
+			float iconSize = h - 4;
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 2, y + 2, iconSize, iconSize, 0.0f, tex, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 2, y + 2, iconSize, iconSize);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		nvgFontSize(vg, 16.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgText(vg, x + h + 10, y + h * 0.5f, brush->getName().c_str(), nullptr);
+	} else {
+		// Icons Only
 		int tex = GetOrCreateBrushTexture(vg, brush);
 		if (tex > 0) {
 			int iconSize = item_size - 4;
@@ -248,6 +278,18 @@ wxRect VirtualBrushGrid::GetItemRect(int index) const {
 	int row = index / columns;
 	int col = index % columns;
 
+	if (display_mode == BRUSHLIST_LISTBOX || display_mode == BRUSHLIST_TEXT_LISTBOX) {
+		int width = GetClientSize().x;
+		// Ensure width is valid (might be called before layout)
+		if (width <= 0) width = 200;
+		return wxRect(
+			padding,
+			padding + row * (item_size + padding),
+			width - 2 * padding,
+			item_size
+		);
+	}
+
 	return wxRect(
 		padding + col * (item_size + padding),
 		padding + row * (item_size + padding),
@@ -261,17 +303,24 @@ int VirtualBrushGrid::HitTest(int x, int y) const {
 	int realY = y + scrollPos;
 	int realX = x;
 
-	int col = (realX - padding) / (item_size + padding);
 	int row = (realY - padding) / (item_size + padding);
+	int col = 0;
 
-	if (col < 0 || col >= columns || row < 0) {
+	if (display_mode != BRUSHLIST_LISTBOX && display_mode != BRUSHLIST_TEXT_LISTBOX) {
+		col = (realX - padding) / (item_size + padding);
+		if (col < 0 || col >= columns) {
+			return -1;
+		}
+	}
+
+	if (row < 0) {
 		return -1;
 	}
 
 	int index = row * columns + col;
 	if (index >= 0 && index < static_cast<int>(tileset->size())) {
+		// Use GetItemRect for precise hit testing (especially width)
 		wxRect rect = GetItemRect(index);
-		// Adjust rect to scroll position for contains check
 		rect.y -= scrollPos;
 		if (rect.Contains(x, y)) {
 			return index;
