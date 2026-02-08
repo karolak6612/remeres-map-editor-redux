@@ -223,13 +223,9 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 
 template <typename ForeachType>
 inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
-	MapIterator tileiter = map.begin();
-	MapIterator end = map.end();
 	long long done = 0;
-
-	while (tileiter != end) {
-		foreach (map, (tileiter++)->get(), ++done)
-			;
+	for (TileLocation& loc : map.tiles()) {
+		foreach(map, loc.get(), ++done);
 	}
 }
 
