@@ -78,7 +78,7 @@ protected:
 	void sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const Position* position);
 
 	// read / write types
-	Tile* readTile(BinaryNode* node, Editor& editor, const Position* position);
+	std::unique_ptr<Tile> readTile(BinaryNode* node, Editor& editor, const Position* position);
 
 	LiveCursor readCursor(NetworkMessage& message);
 	void writeCursor(NetworkMessage& message, const LiveCursor& cursor);

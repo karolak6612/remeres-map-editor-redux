@@ -38,6 +38,7 @@ class LiveSocket;
 #include "live/live_manager.h"
 
 #include <functional>
+#include <memory>
 
 class Editor {
 public:
@@ -51,7 +52,7 @@ public:
 
 public:
 	// Public members
-	ActionQueue* actionQueue;
+	std::unique_ptr<ActionQueue> actionQueue;
 	Selection selection;
 	CopyBuffer& copybuffer;
 	GroundBrush* replace_brush;
