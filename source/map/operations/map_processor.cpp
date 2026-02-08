@@ -7,6 +7,7 @@
 #include "map/operations/map_processor.h"
 #include "editor/editor.h"
 #include "map/map.h"
+#include "map/tile_operations.h"
 #include "ui/gui.h"
 #include "brushes/ground/ground_brush.h"
 
@@ -24,7 +25,7 @@ void MapProcessor::borderizeMap(Editor& editor, bool showdialog) {
 		Tile* tile = tileLocation.get();
 		ASSERT(tile);
 
-		tile->borderize(&editor.map);
+		TileOperations::borderize(&editor.map, tile);
 		++tiles_done;
 	}
 
@@ -47,7 +48,7 @@ void MapProcessor::randomizeMap(Editor& editor, bool showdialog) {
 		Tile* tile = tileLocation.get();
 		ASSERT(tile);
 
-		GroundBrush* groundBrush = tile->getGroundBrush();
+		GroundBrush* groundBrush = tile->ground ? tile->ground->getGroundBrush() : nullptr;
 		if (groundBrush) {
 			Item* oldGround = tile->ground;
 

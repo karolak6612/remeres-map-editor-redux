@@ -7,6 +7,7 @@
 #include "brushes/ground/auto_border.h"
 #include "map/basemap.h"
 #include "map/tile.h"
+#include "map/tile_operations.h"
 #include "game/item.h"
 #include "game/items.h"
 #include <array>
@@ -296,7 +297,7 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	auto [first, last] = std::ranges::unique(specificList);
 	specificList.erase(first, last);
 
-	tile->cleanBorders();
+	TileOperations::cleanBorders(tile);
 
 	while (!borderList.empty()) {
 		GroundBrush::BorderCluster& borderCluster = borderList.back();
@@ -321,27 +322,27 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 			}
 
 			if (borderCluster.border->tiles[direction] != 0) {
-				tile->addBorderItem(Item::Create(borderCluster.border->tiles[direction]));
+				TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[direction]));
 			} else {
 				if (direction == NORTHWEST_DIAGONAL) {
 					if (borderCluster.border->tiles[WEST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
 					}
 				} else if (direction == NORTHEAST_DIAGONAL) {
 					if (borderCluster.border->tiles[EAST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
 					}
 				} else if (direction == SOUTHWEST_DIAGONAL) {
 					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[WEST_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
 					}
 				} else if (direction == SOUTHEAST_DIAGONAL) {
 					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[EAST_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
 					}
 				}
 			}
