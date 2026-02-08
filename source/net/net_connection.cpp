@@ -72,7 +72,7 @@ void NetworkMessage::write<Position>(const Position& value) {
 
 // NetworkConnection
 NetworkConnection::NetworkConnection() :
-	service(nullptr), thread(), stopped(false) {
+	thread(), stopped(false) {
 	//
 }
 
@@ -95,7 +95,7 @@ bool NetworkConnection::start() {
 
 	stopped = false;
 	if (!service) {
-		service = new boost::asio::io_context;
+		service = std::make_unique<boost::asio::io_context>();
 	}
 
 	thread = std::thread([this]() -> void {
@@ -119,10 +119,11 @@ void NetworkConnection::stop() {
 
 	service->stop();
 	stopped = true;
-	thread.join();
+	if (thread.joinable()) {
+		thread.join();
+	}
 
-	delete service;
-	service = nullptr;
+	service.reset();
 }
 
 boost::asio::io_context& NetworkConnection::get_service() {
