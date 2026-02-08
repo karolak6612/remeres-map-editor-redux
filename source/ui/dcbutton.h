@@ -18,6 +18,8 @@
 #ifndef RME_DC_BUTTON_H
 #define RME_DC_BUTTON_H
 
+#include "util/nanovg_canvas.h"
+
 class Sprite;
 class GameSprite;
 class EditorSprite;
@@ -33,7 +35,7 @@ enum RenderSize {
 	RENDER_SIZE_64x64,
 };
 
-class DCButton : public wxPanel {
+class DCButton : public NanoVGCanvas {
 public:
 	DCButton();
 	DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, RenderSize sz, int sprite_id);
@@ -45,11 +47,12 @@ public:
 	void SetSprite(int id);
 	void SetSprite(Sprite* sprite);
 
-	void OnPaint(wxPaintEvent&);
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
 	void OnClick(wxMouseEvent&);
 
 protected:
 	void SetOverlay(Sprite* espr);
+	int GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* spr);
 
 	int type;
 	bool state; // pressed/unpressed
