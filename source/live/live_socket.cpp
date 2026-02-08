@@ -74,12 +74,8 @@ std::string LiveSocket::getHostName() const {
 	return "?";
 }
 
-std::vector<LiveCursor> LiveSocket::getCursorList() const {
-	std::vector<LiveCursor> cursorList;
-	for (auto& cursorEntry : cursors) {
-		cursorList.push_back(cursorEntry.second);
-	}
-	return cursorList;
+const std::unordered_map<uint32_t, LiveCursor>& LiveSocket::getCursors() const {
+	return cursors;
 }
 
 void LiveSocket::logMessage(const wxString& message) {
