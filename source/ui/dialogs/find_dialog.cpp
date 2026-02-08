@@ -33,16 +33,17 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	sizer->Add(search_field, 0, wxEXPAND);
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
-	item_list->SetMinSize(wxSize(470, 400));
+	item_list->SetMinSize(FROM_DIP(this, wxSize(470, 400)));
 	item_list->SetToolTip("Double click to select.");
 	sizer->Add(item_list, wxSizerFlags(1).Expand().Border());
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetToolTip("Jump to selected item/brush");
+	okBtn->SetToolTip("Jump to selected item/brush (Enter)");
+	okBtn->SetDefault();
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetToolTip("Close this window");
+	cancelBtn->SetToolTip("Close this window (Esc)");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
 
@@ -331,10 +332,13 @@ Brush* FindDialogListBox::GetSelectedBrush() {
 }
 
 void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+	int textX = rect.GetX() + FROM_DIP(this, 40);
+	int textY = rect.GetY() + FROM_DIP(this, 6);
+
 	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + 40, rect.GetY() + 6);
+		dc.DrawText("No matches for your search.", textX, textY);
 	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + 40, rect.GetY() + 6);
+		dc.DrawText("Please enter your search string.", textX, textY);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
@@ -352,10 +356,10 @@ void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
 			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
 		}
 
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + 40, rect.GetY() + 6);
+		dc.DrawText(wxstr(brushlist[n]->getName()), textX, textY);
 	}
 }
 
 wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return 32;
+	return FROM_DIP(this, 32);
 }

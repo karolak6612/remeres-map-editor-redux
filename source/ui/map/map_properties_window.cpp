@@ -101,11 +101,12 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 
 	wxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetToolTip("Confirm changes");
+	okBtn->SetToolTip("Confirm changes (Enter)");
+	okBtn->SetDefault();
 	subsizer->Add(okBtn, wxSizerFlags(1).Center());
 
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetToolTip("Discard changes");
+	cancelBtn->SetToolTip("Discard changes (Esc)");
 	subsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	topsizer->Add(subsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT | wxBOTTOM, 20));
 
@@ -197,7 +198,7 @@ void MapPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 void MapPropertiesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 	// Just close this window
-	EndModal(1);
+	EndModal(0);
 }
 
 MapPropertiesWindow::~MapPropertiesWindow() = default;

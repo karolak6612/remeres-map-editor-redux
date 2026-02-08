@@ -449,10 +449,7 @@ void MainMenuBar::OnMapProperties(wxCommandEvent& WXUNUSED(event)) {
 		*g_gui.GetCurrentEditor()
 	);
 
-	if (properties->ShowModal() == 0) {
-		// FAIL!
-		g_gui.CloseAllEditors();
-	}
+	properties->ShowModal();
 	properties->Destroy();
 }
 
