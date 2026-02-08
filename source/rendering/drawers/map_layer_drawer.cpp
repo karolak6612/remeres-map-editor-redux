@@ -23,6 +23,7 @@
 #include "editor/editor.h"
 #include "live/live_client.h"
 #include "map/map.h"
+#include "map/map_region.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
@@ -69,6 +70,15 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 				if (nd->isVisible(map_z > GROUND_LAYER)) {
 					int node_draw_x = nd_map_x * TileSize + base_screen_x;
 					int node_draw_y = nd_map_y * TileSize + base_screen_y;
+					int node_size = 4 * TileSize;
+
+					// Optimization: Check if the whole node is visible
+					if (!view.IsRectVisible(node_draw_x, node_draw_y, node_size, node_size, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+						continue;
+					}
+
+					bool fully_visible = view.IsRectFullyInside(node_draw_x, node_draw_y, node_size, node_size, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS);
+					Floor* floor = nd->getFloor(map_z);
 
 					for (int map_x = 0; map_x < 4; ++map_x) {
 						for (int map_y = 0; map_y < 4; ++map_y) {
@@ -77,16 +87,21 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 							int draw_y = node_draw_y + (map_y * TileSize);
 
 							// Culling: Skip tiles that are far outside the viewport.
-							if (!view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+							if (!fully_visible && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 								continue;
 							}
 
-							TileLocation* location = nd->getTile(map_x, map_y, map_z);
+							TileLocation* location = nullptr;
+							if (floor) {
+								location = &floor->locs[map_x * 4 + map_y];
+							}
 
-							tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
-							// draw light, but only if not zoomed too far
-							if (location && options.isDrawLight() && view.zoom <= 10.0) {
-								tile_renderer->AddLight(location, view, options, light_buffer);
+							if (location) {
+								tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
+								// draw light, but only if not zoomed too far
+								if (options.isDrawLight() && view.zoom <= 10.0) {
+									tile_renderer->AddLight(location, view, options, light_buffer);
+								}
 							}
 						}
 					}
@@ -106,6 +121,15 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
 			int node_draw_x = nd_map_x * TileSize + base_screen_x;
 			int node_draw_y = nd_map_y * TileSize + base_screen_y;
+			int node_size = 4 * TileSize;
+
+			// Optimization: Check if the whole node is visible
+			if (!view.IsRectVisible(node_draw_x, node_draw_y, node_size, node_size, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+				return; // In lambda, return is essentially continue for the iteration
+			}
+
+			bool fully_visible = view.IsRectFullyInside(node_draw_x, node_draw_y, node_size, node_size, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS);
+			Floor* floor = nd->getFloor(map_z);
 
 			for (int map_x = 0; map_x < 4; ++map_x) {
 				for (int map_y = 0; map_y < 4; ++map_y) {
@@ -114,16 +138,21 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 					int draw_y = node_draw_y + (map_y * TileSize);
 
 					// Culling: Skip tiles that are far outside the viewport.
-					if (!view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+					if (!fully_visible && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 						continue;
 					}
 
-					TileLocation* location = nd->getTile(map_x, map_y, map_z);
+					TileLocation* location = nullptr;
+					if (floor) {
+						location = &floor->locs[map_x * 4 + map_y];
+					}
 
-					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
-					// draw light, but only if not zoomed too far
-					if (location && options.isDrawLight() && view.zoom <= 10.0) {
-						tile_renderer->AddLight(location, view, options, light_buffer);
+					if (location) {
+						tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
+						// draw light, but only if not zoomed too far
+						if (options.isDrawLight() && view.zoom <= 10.0) {
+							tile_renderer->AddLight(location, view, options, light_buffer);
+						}
 					}
 				}
 			}

@@ -64,6 +64,31 @@ bool RenderView::IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int&
 	return true;
 }
 
+bool RenderView::IsRectVisible(int draw_x, int draw_y, int width, int height, int margin) const {
+	float logical_width = screensize_x * zoom;
+	float logical_height = screensize_y * zoom;
+
+	if (draw_x + width + margin < 0 || draw_x - margin > logical_width || draw_y + height + margin < 0 || draw_y - margin > logical_height) {
+		return false;
+	}
+	return true;
+}
+
+bool RenderView::IsRectFullyInside(int draw_x, int draw_y, int width, int height, int margin) const {
+	float logical_width = screensize_x * zoom;
+	float logical_height = screensize_y * zoom;
+
+	// Check if the rectangle is fully inside the safe area (viewport extended by margin)
+	// Viewport visible range: [-margin, logical_width + margin]
+	// Rect range: [draw_x, draw_x + width]
+
+	if (draw_x >= -margin && (draw_x + width) <= (logical_width + margin) &&
+		draw_y >= -margin && (draw_y + height) <= (logical_height + margin)) {
+		return true;
+	}
+	return false;
+}
+
 bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	// Logic matches IsTileVisible but uses pre-calculated draw coordinates.
 	// screensize_x * zoom gives the logical viewport size (since TileSize is constant 32).
