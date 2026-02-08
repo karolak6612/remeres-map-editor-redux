@@ -31,7 +31,7 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 }
 
 // Helper function to populate tooltip data from an item (in-place)
-static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& pos, bool isHouseTile) {
+static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& pos, bool isHouseTile, float zoom) {
 	if (!item) {
 		return false;
 	}
@@ -101,25 +101,27 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 			// Set capacity for rendering empty slots
 			data.containerCapacity = static_cast<uint8_t>(container->getVolume());
 
-			const ItemVector& items = container->getVector();
-			data.containerItems.clear();
-			data.containerItems.reserve(items.size());
-			for (Item* subItem : items) {
-				if (subItem) {
-					ContainerItem ci;
-					ci.id = subItem->getID();
-					ci.subtype = subItem->getSubtype();
-					ci.count = subItem->getCount();
-					// Sanity check for count
-					if (ci.count == 0) {
-						ci.count = 1;
-					}
+			if (zoom <= 1.5f) {
+				const ItemVector& items = container->getVector();
+				data.containerItems.clear();
+				data.containerItems.reserve(items.size());
+				for (Item* subItem : items) {
+					if (subItem) {
+						ContainerItem ci;
+						ci.id = subItem->getID();
+						ci.subtype = subItem->getSubtype();
+						ci.count = subItem->getCount();
+						// Sanity check for count
+						if (ci.count == 0) {
+							ci.count = 1;
+						}
 
-					data.containerItems.push_back(ci);
+						data.containerItems.push_back(ci);
 
-					// Limit preview items to avoid massive tooltips
-					if (data.containerItems.size() >= 32) {
-						break;
+						// Limit preview items to avoid massive tooltips
+						if (data.containerItems.size() >= 32) {
+							break;
+						}
 					}
 				}
 			}
@@ -200,7 +202,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground, location->getPosition(), tile->isHouseTile())) {
+		if (FillItemTooltipData(groundData, tile->ground, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -246,7 +248,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, PrimitiveRenderer& primit
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item, location->getPosition(), tile->isHouseTile())) {
+					if (FillItemTooltipData(itemData, item, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
 						}

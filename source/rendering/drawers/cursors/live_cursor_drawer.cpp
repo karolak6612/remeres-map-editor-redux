@@ -16,7 +16,9 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 	}
 
 	LiveSocket& live = editor.live_manager.GetSocket();
-	for (LiveCursor& cursor : live.getCursorList()) {
+	for (auto& pair : live.getCursors()) {
+		const LiveCursor& cursor = pair.second;
+
 		if (cursor.pos.z <= GROUND_LAYER && view.floor > GROUND_LAYER) {
 			continue;
 		}
@@ -25,8 +27,9 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 			continue;
 		}
 
+		wxColor drawColor = cursor.color;
 		if (cursor.pos.z < view.floor) {
-			cursor.color = wxColor(
+			drawColor = wxColor(
 				cursor.color.Red(),
 				cursor.color.Green(),
 				cursor.color.Blue(),
@@ -45,10 +48,10 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 		float draw_y = ((cursor.pos.y * TileSize) - view.view_scroll_y) - offset;
 
 		glm::vec4 color(
-			cursor.color.Red() / 255.0f,
-			cursor.color.Green() / 255.0f,
-			cursor.color.Blue() / 255.0f,
-			cursor.color.Alpha() / 255.0f
+			drawColor.Red() / 255.0f,
+			drawColor.Green() / 255.0f,
+			drawColor.Blue() / 255.0f,
+			drawColor.Alpha() / 255.0f
 		);
 
 		if (g_gui.gfx.ensureAtlasManager()) {
