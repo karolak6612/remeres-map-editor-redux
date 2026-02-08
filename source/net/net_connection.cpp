@@ -39,6 +39,9 @@ void NetworkMessage::expand(const size_t length) {
 template <>
 std::string NetworkMessage::read<std::string>() {
 	const uint16_t length = read<uint16_t>();
+	if (position + length > buffer.size()) {
+		throw std::out_of_range("NetworkMessage::read<string>: buffer overflow");
+	}
 	char* strBuffer = reinterpret_cast<char*>(&buffer[position]);
 	position += length;
 	return std::string(strBuffer, length);
@@ -95,7 +98,7 @@ bool NetworkConnection::start() {
 
 	stopped = false;
 	if (!service) {
-		service = new boost::asio::io_context;
+		service = std::make_unique<boost::asio::io_context>();
 	}
 
 	thread = std::thread([this]() -> void {
@@ -119,10 +122,11 @@ void NetworkConnection::stop() {
 
 	service->stop();
 	stopped = true;
-	thread.join();
+	if (thread.joinable()) {
+		thread.join();
+	}
 
-	delete service;
-	service = nullptr;
+	service.reset();
 }
 
 boost::asio::io_context& NetworkConnection::get_service() {
