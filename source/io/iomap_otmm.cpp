@@ -307,6 +307,10 @@ ClientVersionID IOMapOTMM::getVersionInfo(const FileName& filename) {
 	return CLIENT_VERSION_NONE;
 }
 
+bool IOMapOTMM::loadMap(Map& map, const FileName& identifier) {
+	return loadMap(map, identifier, true);
+}
+
 bool IOMapOTMM::loadMap(Map& map, const FileName& identifier, bool showdialog) {
 	if (showdialog) {
 		g_gui.CreateLoadBar("Loading OTMM map...");
@@ -738,6 +742,10 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 		} while (mapNode->advance());
 	}
 	return true;
+}
+
+bool IOMapOTMM::saveMap(Map& map, const FileName& identifier) {
+	return saveMap(map, identifier, true);
 }
 
 bool IOMapOTMM::saveMap(Map& map, const FileName& identifier, bool showdialog) {
