@@ -26,10 +26,12 @@
 extern Materials g_materials;
 
 ExtensionsDialog::ExtensionsDialog(wxWindow* parent) :
-	wxDialog(parent, wxID_ANY, "Extensions", wxDefaultPosition, wxSize(600, 500), wxRESIZE_BORDER | wxCAPTION) {
+	wxDialog(parent, wxID_ANY, "Extensions", wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION) {
+	SetSize(FromDIP(wxSize(600, 500)));
+
 	wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
-	wxHtmlWindow* htmlWindow = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxSize(550, 400));
+	wxHtmlWindow* htmlWindow = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, FromDIP(wxSize(550, 400)));
 	htmlWindow->SetPage(HTML());
 	topSizer->Add(htmlWindow, wxSizerFlags(1).DoubleBorder().Expand());
 

@@ -39,10 +39,13 @@ MapLayerDrawer::~MapLayerDrawer() {
 }
 
 void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	int nd_start_x = view.start_x & ~3;
-	int nd_start_y = view.start_y & ~3;
-	int nd_end_x = (view.end_x & ~3) + 4;
-	int nd_end_y = (view.end_y & ~3) + 4;
+	constexpr int NodeSize = 1 << SpatialHashGrid::NODE_SHIFT;
+	constexpr int NodeMask = ~(NodeSize - 1);
+
+	int nd_start_x = view.start_x & NodeMask;
+	int nd_start_y = view.start_y & NodeMask;
+	int nd_end_x = (view.end_x & NodeMask) + NodeSize;
+	int nd_end_y = (view.end_y & NodeMask) + NodeSize;
 
 	// Optimization: Pre-calculate offset and base coordinates
 	// IsTileVisible does this for every tile, but it's constant per layer/frame.
@@ -58,8 +61,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 	// ND visibility
 
 	if (live_client) {
-		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
-			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
+		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += NodeSize) {
+			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += NodeSize) {
 				MapNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
 				if (!nd) {
 					nd = editor->map.createLeaf(nd_map_x, nd_map_y);
@@ -67,11 +70,16 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 				}
 
 				if (nd->isVisible(map_z > GROUND_LAYER)) {
+					Floor* floor = nd->getFloor(map_z);
+					if (!floor) {
+						continue;
+					}
+
 					int node_draw_x = nd_map_x * TileSize + base_screen_x;
 					int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
-					for (int map_x = 0; map_x < 4; ++map_x) {
-						for (int map_y = 0; map_y < 4; ++map_y) {
+					for (int map_x = 0; map_x < NodeSize; ++map_x) {
+						for (int map_y = 0; map_y < NodeSize; ++map_y) {
 							// Calculate draw coordinates directly
 							int draw_x = node_draw_x + (map_x * TileSize);
 							int draw_y = node_draw_y + (map_y * TileSize);
@@ -81,7 +89,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 								continue;
 							}
 
-							TileLocation* location = nd->getTile(map_x, map_y, map_z);
+							TileLocation* location = &floor->locs[map_x * NodeSize + map_y];
 
 							tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 							// draw light, but only if not zoomed too far
@@ -104,11 +112,16 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 		}
 	} else {
 		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+			Floor* floor = nd->getFloor(map_z);
+			if (!floor) {
+				return;
+			}
+
 			int node_draw_x = nd_map_x * TileSize + base_screen_x;
 			int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
-			for (int map_x = 0; map_x < 4; ++map_x) {
-				for (int map_y = 0; map_y < 4; ++map_y) {
+			for (int map_x = 0; map_x < NodeSize; ++map_x) {
+				for (int map_y = 0; map_y < NodeSize; ++map_y) {
 					// Calculate draw coordinates directly
 					int draw_x = node_draw_x + (map_x * TileSize);
 					int draw_y = node_draw_y + (map_y * TileSize);
@@ -118,7 +131,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 						continue;
 					}
 
-					TileLocation* location = nd->getTile(map_x, map_y, map_z);
+					TileLocation* location = &floor->locs[map_x * NodeSize + map_y];
 
 					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
