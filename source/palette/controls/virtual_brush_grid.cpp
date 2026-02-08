@@ -14,17 +14,21 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
 	icon_size(rsz),
+	display_mode(DisplayMode::GRID),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
 	item_size(0),
+	item_height(36),
 	padding(4),
 	m_animTimer(new wxTimer(this)) {
 
 	if (icon_size == RENDER_SIZE_16x16) {
 		item_size = 18;
+		item_height = 20;
 	} else {
 		item_size = 34; // 32 + border
+		item_height = 36;
 	}
 
 	Bind(wxEVT_LEFT_DOWN, &VirtualBrushGrid::OnMouseDown, this);
@@ -39,17 +43,31 @@ VirtualBrushGrid::~VirtualBrushGrid() {
 	delete m_animTimer;
 }
 
+void VirtualBrushGrid::SetDisplayMode(DisplayMode mode) {
+	if (display_mode != mode) {
+		display_mode = mode;
+		UpdateLayout();
+		Refresh();
+	}
+}
+
 void VirtualBrushGrid::UpdateLayout() {
 	int width = GetClientSize().x;
 	if (width <= 0) {
 		width = 200; // Default
 	}
 
-	columns = std::max(1, (width - padding) / (item_size + padding));
-	int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
-	int contentHeight = rows * (item_size + padding) + padding;
-
-	UpdateScrollbar(contentHeight);
+	if (display_mode == DisplayMode::LIST) {
+		columns = 1;
+		int rows = static_cast<int>(tileset->size());
+		int contentHeight = rows * (item_height + padding) + padding;
+		UpdateScrollbar(contentHeight);
+	} else {
+		columns = std::max(1, (width - padding) / (item_size + padding));
+		int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
+		int contentHeight = rows * (item_size + padding) + padding;
+		UpdateScrollbar(contentHeight);
+	}
 }
 
 wxSize VirtualBrushGrid::DoGetBestClientSize() const {
@@ -151,26 +169,34 @@ int VirtualBrushGrid::GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush) {
 
 void VirtualBrushGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// Update layout if needed
-	int newCols = std::max(1, (width - padding) / (item_size + padding));
-	if (newCols != columns) {
-		columns = newCols;
-		int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
-		int contentHeight = rows * (item_size + padding) + padding;
-		UpdateScrollbar(contentHeight);
+	if (display_mode == DisplayMode::LIST) {
+		columns = 1;
+	} else {
+		int newCols = std::max(1, (width - padding) / (item_size + padding));
+		if (newCols != columns) {
+			columns = newCols;
+			int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
+			int contentHeight = rows * (item_size + padding) + padding;
+			UpdateScrollbar(contentHeight);
+		}
 	}
 
 	// Calculate visible range
 	int scrollPos = GetScrollPosition();
-	int rowHeight = item_size + padding;
-	int startRow = scrollPos / rowHeight;
-	int endRow = (scrollPos + height + rowHeight - 1) / rowHeight + 1;
+	int rowH = (display_mode == DisplayMode::LIST) ? (item_height + padding) : (item_size + padding);
+	int startRow = scrollPos / rowH;
+	int endRow = (scrollPos + height + rowH - 1) / rowH + 1;
 
 	int startIdx = startRow * columns;
 	int endIdx = std::min(static_cast<int>(tileset->size()), endRow * columns);
 
 	// Draw visible items
 	for (int i = startIdx; i < endIdx; ++i) {
-		DrawBrushItem(vg, i, GetItemRect(i));
+		if (display_mode == DisplayMode::LIST) {
+			DrawListItem(vg, i, GetItemRect(i));
+		} else {
+			DrawBrushItem(vg, i, GetItemRect(i));
+		}
 	}
 }
 
@@ -244,9 +270,77 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	}
 }
 
+void VirtualBrushGrid::DrawListItem(NVGcontext* vg, int i, const wxRect& rect) {
+	float x = static_cast<float>(rect.x);
+	float y = static_cast<float>(rect.y);
+	float w = static_cast<float>(rect.width);
+	float h = static_cast<float>(rect.height);
+
+	// Background
+	if (i == selected_index) {
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		nvgFillColor(vg, nvgRGBA(80, 100, 120, 255));
+		nvgFill(vg);
+	} else if (i == hover_index) {
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		nvgFillColor(vg, nvgRGBA(70, 70, 75, 255));
+		nvgFill(vg);
+	}
+
+	// Selection border
+	if (i == selected_index) {
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
+		nvgStrokeColor(vg, nvgRGBA(100, 180, 255, 255));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
+	}
+
+	Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushlist[i] : nullptr;
+	if (brush) {
+		// Draw Icon
+		int tex = GetOrCreateBrushTexture(vg, brush);
+		int iconSize = item_height - 4; // Use item_height for icon size in list
+		int iconX = rect.x + 4;
+		int iconY = rect.y + 2;
+
+		if (tex > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, static_cast<float>(iconX), static_cast<float>(iconY), static_cast<float>(iconSize), static_cast<float>(iconSize), 0.0f, tex, 1.0f);
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, static_cast<float>(iconX), static_cast<float>(iconY), static_cast<float>(iconSize), static_cast<float>(iconSize), 3.0f);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Draw Text
+		nvgFontSize(vg, 16.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		if (i == selected_index) {
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		} else {
+			nvgFillColor(vg, nvgRGBA(220, 220, 220, 255));
+		}
+		nvgText(vg, static_cast<float>(iconX + iconSize + 10), y + h * 0.5f, brush->getName().c_str(), nullptr);
+	}
+}
+
 wxRect VirtualBrushGrid::GetItemRect(int index) const {
 	int row = index / columns;
 	int col = index % columns;
+
+	if (display_mode == DisplayMode::LIST) {
+		// In List mode, width extends to fill container
+		int w = GetClientSize().x - padding * 2;
+		return wxRect(
+			padding,
+			padding + row * (item_height + padding),
+			w,
+			item_height
+		);
+	}
 
 	return wxRect(
 		padding + col * (item_size + padding),
@@ -260,6 +354,18 @@ int VirtualBrushGrid::HitTest(int x, int y) const {
 	int scrollPos = GetScrollPosition();
 	int realY = y + scrollPos;
 	int realX = x;
+
+	if (display_mode == DisplayMode::LIST) {
+		int row = (realY - padding) / (item_height + padding);
+		if (row < 0 || row >= static_cast<int>(tileset->size())) {
+			return -1;
+		}
+		// List items span full width (minus padding)
+		if (realX >= padding && realX <= GetClientSize().x - padding) {
+			return row;
+		}
+		return -1;
+	}
 
 	int col = (realX - padding) / (item_size + padding);
 	int row = (realY - padding) / (item_size + padding);

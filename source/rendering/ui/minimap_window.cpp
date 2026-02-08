@@ -28,8 +28,8 @@
 #include "rendering/ui/minimap_window.h"
 
 #include "rendering/drawers/minimap_drawer.h"
+#include "rendering/core/text_renderer.h"
 
-#define NANOVG_GL3
 #include <nanovg.h>
 #include <nanovg_gl.h>
 
@@ -117,6 +117,9 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		// Minimap uses a separate NanoVG context to avoid state interference with the main
 		// TextRenderer, as the minimap window has its own GL context and lifecycle.
 		nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
+		if (nvg) {
+			TextRenderer::LoadFont(nvg.get());
+		}
 	}
 
 	if (!g_gui.IsEditorOpen()) {
@@ -151,6 +154,17 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
 		nvgFillPaint(vg, glow);
 		nvgFill(vg);
+
+		// "MINIMAP" Label
+		nvgFontSize(vg, 12.0f);
+		nvgFontFace(vg, "sans-bold");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 200)); // Shadow
+		nvgText(vg, 9.0f, 9.0f, "MINIMAP", nullptr);
+
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 180));
+		nvgText(vg, 8.0f, 8.0f, "MINIMAP", nullptr);
 
 		nvgEndFrame(vg);
 	}
