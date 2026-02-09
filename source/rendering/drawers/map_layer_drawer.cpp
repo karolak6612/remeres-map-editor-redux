@@ -70,6 +70,9 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 					int node_draw_x = nd_map_x * TileSize + base_screen_x;
 					int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
+					// Optimization: Check if the whole node (4x4 tiles) is fully visible
+					bool node_fully_visible = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS);
+
 					for (int map_x = 0; map_x < 4; ++map_x) {
 						for (int map_y = 0; map_y < 4; ++map_y) {
 							// Calculate draw coordinates directly
@@ -77,7 +80,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 							int draw_y = node_draw_y + (map_y * TileSize);
 
 							// Culling: Skip tiles that are far outside the viewport.
-							if (!view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+							// Only perform this check if the node is NOT fully visible
+							if (!node_fully_visible && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 								continue;
 							}
 
@@ -107,6 +111,9 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 			int node_draw_x = nd_map_x * TileSize + base_screen_x;
 			int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
+			// Optimization: Check if the whole node (4x4 tiles) is fully visible
+			bool node_fully_visible = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS);
+
 			for (int map_x = 0; map_x < 4; ++map_x) {
 				for (int map_y = 0; map_y < 4; ++map_y) {
 					// Calculate draw coordinates directly
@@ -114,7 +121,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 					int draw_y = node_draw_y + (map_y * TileSize);
 
 					// Culling: Skip tiles that are far outside the viewport.
-					if (!view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+					// Only perform this check if the node is NOT fully visible
+					if (!node_fully_visible && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 						continue;
 					}
 

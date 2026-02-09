@@ -77,6 +77,22 @@ bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	return true;
 }
 
+bool RenderView::IsRectFullyInside(int draw_x, int draw_y, int width, int height, int margin) const {
+	// Logic matches IsPixelVisible but checks containment.
+	// screensize_x * zoom gives the logical viewport size (since TileSize is constant 32).
+	float logical_width = screensize_x * zoom;
+	float logical_height = screensize_y * zoom;
+
+	// Check if the rectangle is fully within the visible bounds (expanded by margin)
+	if (draw_x >= -margin &&
+		draw_x + width <= logical_width + margin &&
+		draw_y >= -margin &&
+		draw_y + height <= logical_height + margin) {
+		return true;
+	}
+	return false;
+}
+
 void RenderView::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TileSize
