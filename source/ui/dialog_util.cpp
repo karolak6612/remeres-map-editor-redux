@@ -52,7 +52,9 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 	sizer->Add(item_list, 1, wxEXPAND);
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
-	stdsizer->Add(newd wxButton(dlg, wxID_OK, "OK"), wxSizerFlags(1).Center());
+	wxButton* okBtn = newd wxButton(dlg, wxID_OK, "OK");
+	okBtn->SetToolTip("Close this window");
+	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center());
 
 	dlg->SetSizerAndFit(sizer);
@@ -70,7 +72,9 @@ void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content)
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
-	choicesizer->Add(newd wxButton(dlg, wxID_CANCEL, "OK"), wxSizerFlags(1).Center());
+	wxButton* okBtn = newd wxButton(dlg, wxID_CANCEL, "OK");
+	okBtn->SetToolTip("Close this window");
+	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(0).Center());
 	dlg->SetSizerAndFit(topsizer);
 

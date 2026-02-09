@@ -74,8 +74,12 @@ DepotPropertiesWindow::DepotPropertiesWindow(wxWindow* parent, const Map* map, c
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxALL, 20));
 
 	wxSizer* buttonsizer = newd wxBoxSizer(wxHORIZONTAL);
-	buttonsizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
-	buttonsizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
+	okBtn->SetToolTip("Confirm changes");
+	buttonsizer->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelBtn->SetToolTip("Discard changes");
+	buttonsizer->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(buttonsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
 	SetSizerAndFit(topsizer);

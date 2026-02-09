@@ -19,6 +19,7 @@
 
 #include "ui/properties/properties_window.h"
 
+#include "ui/dialog_util.h"
 #include "ui/gui_ids.h"
 #include "game/complexitem.h"
 #include "ui/properties/container_properties_window.h"
@@ -48,6 +49,7 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	Bind(wxEVT_GRID_RANGE_SELECT, &PropertiesWindow::OnGridSelectionChanged, this);
 
 	createUI();
 }
@@ -116,7 +118,7 @@ void PropertiesWindow::createGeneralFields(wxFlexGridSizer* gridsizer, wxWindow*
 		max_count = 65500;
 	}
 	count_field = newd wxSpinCtrl(panel, wxID_ANY, i2ws(edit_item->getCount()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, max_count, edit_item->getCount());
-	count_field->SetToolTip("Number of items in stack / Charges");
+	count_field->SetToolTip("Number of items in stack / Charges (Max 100 for stackable)");
 	if (!edit_item->isStackable() && !edit_item->isCharged()) {
 		count_field->Enable(false);
 		count_field->SetToolTip("Only stackable or charged items can have a count.");
@@ -215,6 +217,7 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
 	removeBtn->SetToolTip("Remove selected custom attribute");
+	removeBtn->Enable(false);
 	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
 
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
@@ -292,6 +295,14 @@ void PropertiesWindow::OnGridValueChanged(wxGridEvent& event) {
 	}
 }
 
+void PropertiesWindow::OnGridSelectionChanged(wxGridRangeSelectEvent& event) {
+	wxWindow* removeBtn = FindWindow(ITEM_PROPERTIES_REMOVE_ATTRIBUTE);
+	if (removeBtn) {
+		removeBtn->Enable(attributesGrid->GetSelectedRows().Count() > 0);
+	}
+	event.Skip();
+}
+
 void PropertiesWindow::OnClickOK(wxCommandEvent&) {
 	int new_uid = unique_id_field->GetValue();
 	int new_aid = action_id_field->GetValue();
@@ -318,8 +329,10 @@ void PropertiesWindow::OnClickRemoveAttribute(wxCommandEvent&) {
 		return;
 	}
 
-	int rowIndex = rowIndexes[0];
-	attributesGrid->DeleteRows(rowIndex, 1);
+	if (DialogUtil::PopupDialog(this, "Remove Attribute", "Are you sure you want to remove this attribute?", wxYES | wxNO) == wxID_YES) {
+		int rowIndex = rowIndexes[0];
+		attributesGrid->DeleteRows(rowIndex, 1);
+	}
 }
 
 void PropertiesWindow::OnClickCancel(wxCommandEvent&) {

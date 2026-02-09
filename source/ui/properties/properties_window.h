@@ -29,6 +29,7 @@ class ItemAttribute;
 class wxSpinCtrl;
 class wxFlexGridSizer;
 class wxPanel;
+class wxGridRangeSelectEvent;
 
 class PropertiesWindow : public ObjectPropertiesWindowBase {
 public:
@@ -43,6 +44,7 @@ public:
 	void OnResize(wxSizeEvent&);
 	void OnNotebookPageChanged(wxNotebookEvent&);
 	void OnGridValueChanged(wxGridEvent&);
+	void OnGridSelectionChanged(wxGridRangeSelectEvent& event);
 
 	void Update();
 
