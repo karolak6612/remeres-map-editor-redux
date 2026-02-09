@@ -34,21 +34,19 @@ public:
 	wxCoord OnMeasureItem(size_t index) const;
 
 protected:
-	using SpriteMap = std::map<int, Sprite*>;
-	SpriteMap sprites;
+	using SpriteVector = std::vector<Sprite*>;
+	SpriteVector sprites;
 };
 
 DatDebugViewListBox::DatDebugViewListBox(wxWindow* parent, wxWindowID id) :
 	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	int n = 0;
 	for (int id = 0; id < g_gui.gfx.getItemSpriteMaxID(); ++id) {
 		Sprite* spr = g_gui.gfx.getSprite(id);
 		if (spr) {
-			sprites[n] = spr;
-			++n;
+			sprites.push_back(spr);
 		}
 	}
-	SetItemCount(n);
+	SetItemCount(sprites.size());
 }
 
 DatDebugViewListBox::~DatDebugViewListBox() {
@@ -56,9 +54,13 @@ DatDebugViewListBox::~DatDebugViewListBox() {
 }
 
 void DatDebugViewListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	SpriteMap::const_iterator spr_iter = sprites.find(int(n));
-	if (spr_iter != sprites.end()) {
-		spr_iter->second->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
+	if (n >= sprites.size()) {
+		return;
+	}
+
+	Sprite* spr = sprites[n];
+	if (spr) {
+		spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
 	}
 
 	if (IsSelected(n)) {
