@@ -90,7 +90,11 @@ void LiveSocket::logMessage(const wxString& message) {
 	});
 }
 
-void LiveSocket::receiveNode(NetworkMessage& message, Editor& editor, Action* action, int32_t ndx, int32_t ndy, bool underground) {
+void LiveSocket::receiveNode(NetworkMessage& message, Editor& editor, Action* action, const NodeRequest& request) {
+	int32_t ndx = request.ndx;
+	int32_t ndy = request.ndy;
+	bool underground = request.underground;
+
 	MapNode* node = editor.map.getLeaf(ndx * 4, ndy * 4);
 	if (!node) {
 		log->Message("Warning: Received update for unknown tile (" + std::to_string(ndx * 4) + "/" + std::to_string(ndy * 4) + "/" + (underground ? "true" : "false") + ")");
@@ -112,7 +116,11 @@ void LiveSocket::receiveNode(NetworkMessage& message, Editor& editor, Action* ac
 	}
 }
 
-void LiveSocket::sendNode(uint32_t clientId, MapNode* node, int32_t ndx, int32_t ndy, uint32_t floorMask) {
+void LiveSocket::sendNode(uint32_t clientId, MapNode* node, const NodeData& data) {
+	int32_t ndx = data.ndx;
+	int32_t ndy = data.ndy;
+	uint32_t floorMask = data.floorMask;
+
 	bool underground;
 	if (floorMask & 0xFF00) {
 		if (floorMask & 0x00FF) {

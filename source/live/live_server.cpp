@@ -197,11 +197,19 @@ void LiveServer::broadcastNodes(DirtyList& dirtyList) {
 			}
 
 			if (node->isVisible(clientId, true)) {
-				peer->sendNode(clientId, node, ndx, ndy, floors & 0xFF00);
+				NodeData data;
+				data.ndx = ndx;
+				data.ndy = ndy;
+				data.floorMask = floors & 0xFF00;
+				peer->sendNode(clientId, node, data);
 			}
 
 			if (node->isVisible(clientId, false)) {
-				peer->sendNode(clientId, node, ndx, ndy, floors & 0x00FF);
+				NodeData data;
+				data.ndx = ndx;
+				data.ndy = ndy;
+				data.floorMask = floors & 0x00FF;
+				peer->sendNode(clientId, node, data);
 			}
 		}
 	}

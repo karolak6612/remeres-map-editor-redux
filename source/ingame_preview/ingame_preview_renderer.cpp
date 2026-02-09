@@ -58,7 +58,21 @@ namespace IngamePreview {
 		}
 	}
 
-	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y) {
+	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, const IngamePreviewOptions& preview_options) {
+		int viewport_x = preview_options.viewport_x;
+		int viewport_y = preview_options.viewport_y;
+		int viewport_width = preview_options.viewport_width;
+		int viewport_height = preview_options.viewport_height;
+		const Position& camera_pos = preview_options.camera_pos;
+		float zoom = preview_options.zoom;
+		bool lighting_enabled = preview_options.lighting_enabled;
+		uint8_t ambient_light = preview_options.ambient_light;
+		const Outfit& preview_outfit = preview_options.preview_outfit;
+		Direction preview_direction = preview_options.preview_direction;
+		int animation_phase = preview_options.animation_phase;
+		int offset_x = preview_options.offset_x;
+		int offset_y = preview_options.offset_y;
+
 		auto now = std::chrono::steady_clock::now();
 		double dt = std::chrono::duration<double>(now - last_time).count();
 		last_time = now;

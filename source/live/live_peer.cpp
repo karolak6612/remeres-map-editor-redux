@@ -255,7 +255,11 @@ void LivePeer::parseNodeRequest(NetworkMessage& message) {
 
 		MapNode* node = map.createLeaf(ndx * 4, ndy * 4);
 		if (node) {
-			sendNode(clientId, node, ndx, ndy, underground ? 0xFF00 : 0x00FF);
+			NodeData data;
+			data.ndx = ndx;
+			data.ndy = ndy;
+			data.floorMask = underground ? 0xFF00 : 0x00FF;
+			sendNode(clientId, node, data);
 		}
 	}
 }

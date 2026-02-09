@@ -28,6 +28,22 @@ namespace IngamePreview {
 
 	class FloorVisibilityCalculator;
 
+	struct IngamePreviewOptions {
+		int viewport_x;
+		int viewport_y;
+		int viewport_width;
+		int viewport_height;
+		Position camera_pos;
+		float zoom;
+		bool lighting_enabled;
+		uint8_t ambient_light;
+		const Outfit& preview_outfit;
+		Direction preview_direction;
+		int animation_phase;
+		int offset_x;
+		int offset_y;
+	};
+
 	/**
 	 * High-level renderer for the in-game preview window.
 	 */
@@ -39,7 +55,7 @@ namespace IngamePreview {
 		/**
 		 * Render the preview.
 		 */
-		void Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y);
+		void Render(NVGcontext* vg, const BaseMap& map, const IngamePreviewOptions& options);
 
 		void SetLightIntensity(float intensity) {
 			light_intensity = intensity;

@@ -426,7 +426,11 @@ void LiveClient::parseNode(NetworkMessage& message) {
 	bool underground = ind & 1;
 
 	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REMOTE);
-	receiveNode(message, *editor, action.get(), ndx, ndy, underground);
+	NodeRequest request;
+	request.ndx = ndx;
+	request.ndy = ndy;
+	request.underground = underground;
+	receiveNode(message, *editor, action.get(), request);
 	editor->actionQueue->addAction(std::move(action));
 
 	g_gui.RefreshView();

@@ -390,9 +390,24 @@ namespace IngamePreview {
 		float calculated_zoom = 1.0f / scale;
 
 		NVGcontext* vg = m_nvg.get();
+		IngamePreviewOptions options;
+		options.viewport_x = view_x;
+		options.viewport_y = view_y;
+		options.viewport_width = view_w;
+		options.viewport_height = view_h;
+		options.camera_pos = camera_pos;
+		options.zoom = calculated_zoom;
+		options.lighting_enabled = lighting_enabled;
+		options.ambient_light = ambient_light;
+		options.preview_outfit = preview_outfit;
+		options.preview_direction = preview_direction;
+		options.animation_phase = animation_phase;
+		options.offset_x = walk_offset_x;
+		options.offset_y = walk_offset_y;
+
 		renderer->SetLightIntensity(light_intensity);
 		renderer->SetName(preview_name_str);
-		renderer->Render(vg, current_editor->map, view_x, view_y, view_w, view_h, camera_pos, calculated_zoom, lighting_enabled, ambient_light, preview_outfit, preview_direction, animation_phase, walk_offset_x, walk_offset_y);
+		renderer->Render(vg, current_editor->map, options);
 
 		SwapBuffers();
 	}

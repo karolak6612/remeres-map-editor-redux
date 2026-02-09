@@ -390,6 +390,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/house.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/item_otbm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/items.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.cpp
