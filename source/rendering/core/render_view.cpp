@@ -77,6 +77,16 @@ bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	return true;
 }
 
+bool RenderView::IsRectFullyInside(int x, int y, int w, int h, int margin) const {
+	float logical_width = screensize_x * zoom;
+	float logical_height = screensize_y * zoom;
+
+	return (x >= -margin) &&
+	       (x + w <= logical_width + margin) &&
+	       (y >= -margin) &&
+	       (y + h <= logical_height + margin);
+}
+
 void RenderView::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TileSize

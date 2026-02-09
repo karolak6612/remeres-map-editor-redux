@@ -23,6 +23,7 @@
 #include "editor/editor.h"
 #include "live/live_client.h"
 #include "map/map.h"
+#include "map/map_region.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
@@ -39,6 +40,10 @@ MapLayerDrawer::~MapLayerDrawer() {
 }
 
 void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+	if (map_z < 0 || map_z >= MAP_LAYERS) {
+		return;
+	}
+
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
@@ -70,18 +75,25 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 					int node_draw_x = nd_map_x * TileSize + base_screen_x;
 					int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
+					Floor* floor = nd->getFloor(map_z);
+					if (!floor) continue;
+
+					// Check if node is fully inside viewport to skip per-tile checks
+					// Use 4 * TileSize because coordinates are logical
+					bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize);
+
+					TileLocation* location = &floor->locs[0];
+
 					for (int map_x = 0; map_x < 4; ++map_x) {
-						for (int map_y = 0; map_y < 4; ++map_y) {
+						for (int map_y = 0; map_y < 4; ++map_y, ++location) {
 							// Calculate draw coordinates directly
 							int draw_x = node_draw_x + (map_x * TileSize);
 							int draw_y = node_draw_y + (map_y * TileSize);
 
 							// Culling: Skip tiles that are far outside the viewport.
-							if (!view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+							if (!fully_inside && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 								continue;
 							}
-
-							TileLocation* location = nd->getTile(map_x, map_y, map_z);
 
 							tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 							// draw light, but only if not zoomed too far
@@ -107,18 +119,25 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 			int node_draw_x = nd_map_x * TileSize + base_screen_x;
 			int node_draw_y = nd_map_y * TileSize + base_screen_y;
 
+			Floor* floor = nd->getFloor(map_z);
+			if (!floor) return;
+
+			// Check if node is fully inside viewport to skip per-tile checks
+			// Use 4 * TileSize because coordinates are logical
+			bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize);
+
+			TileLocation* location = &floor->locs[0];
+
 			for (int map_x = 0; map_x < 4; ++map_x) {
-				for (int map_y = 0; map_y < 4; ++map_y) {
+				for (int map_y = 0; map_y < 4; ++map_y, ++location) {
 					// Calculate draw coordinates directly
 					int draw_x = node_draw_x + (map_x * TileSize);
 					int draw_y = node_draw_y + (map_y * TileSize);
 
 					// Culling: Skip tiles that are far outside the viewport.
-					if (!view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+					if (!fully_inside && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 						continue;
 					}
-
-					TileLocation* location = nd->getTile(map_x, map_y, map_z);
 
 					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
