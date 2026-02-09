@@ -20,6 +20,7 @@
 #include <spdlog/spdlog.h>
 
 #include "rendering/core/graphics.h"
+#include "rendering/core/text_renderer.h"
 #include "editor/editor.h"
 #include "map/map.h"
 
@@ -93,8 +94,6 @@ void MinimapWindow::OnDelayedUpdate(wxTimerEvent& event) {
 void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	wxPaintDC dc(this); // validates the paint event
 
-	// spdlog::info("MinimapWindow::OnPaint");
-
 	if (!context) {
 		spdlog::error("MinimapWindow::OnPaint - No context!");
 		return;
@@ -102,21 +101,24 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 
 	SetCurrent(*context);
 
-	static bool gladInitialized = false;
-	if (!gladInitialized) {
-		spdlog::info("MinimapWindow::OnPaint - Initializing GLAD");
-		if (!gladLoadGL()) {
-			spdlog::error("MinimapWindow::OnPaint - Failed to load GLAD");
-		} else {
-			spdlog::info("MinimapWindow::OnPaint - GLAD loaded. GL Version: {}", (char*)glGetString(GL_VERSION));
-		}
-		gladInitialized = true;
-	}
-
 	if (!nvg) {
+		static bool gladInitialized = false;
+		if (!gladInitialized) {
+			spdlog::info("MinimapWindow::OnPaint - Initializing GLAD");
+			if (!gladLoadGL()) {
+				spdlog::error("MinimapWindow::OnPaint - Failed to load GLAD");
+			} else {
+				spdlog::info("MinimapWindow::OnPaint - GLAD loaded. GL Version: {}", (char*)glGetString(GL_VERSION));
+			}
+			gladInitialized = true;
+		}
+
 		// Minimap uses a separate NanoVG context to avoid state interference with the main
 		// TextRenderer, as the minimap window has its own GL context and lifecycle.
 		nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
+		if (nvg) {
+			TextRenderer::LoadFont(nvg.get());
+		}
 	}
 
 	if (!g_gui.IsEditorOpen()) {
@@ -138,19 +140,56 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, 1.0f);
 
-		// Subtle glass border
+		// Outer shadow/glow
+		NVGpaint shadowPaint = nvgBoxGradient(vg, 0, 0, w, h, 8.0f, 20.0f, nvgRGBA(0, 0, 0, 100), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
-		nvgStrokeWidth(vg, 2.0f);
+		nvgRect(vg, -10, -10, w + 20, h + 20);
+		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillPaint(vg, shadowPaint);
+		nvgFill(vg);
+
+		// Glass Reflection / Shine
+		NVGpaint shine = nvgLinearGradient(vg, 0, 0, 0, h, nvgRGBA(255, 255, 255, 30), nvgRGBA(255, 255, 255, 5));
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, 1, 1, w - 2, h - 2, 3.0f);
+		nvgFillPaint(vg, shine);
+		nvgFill(vg);
+
+		// Border
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, 0.5f, 0.5f, w - 1.0f, h - 1.0f, 4.0f);
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 80));
+		nvgStrokeWidth(vg, 1.0f);
 		nvgStroke(vg);
 
-		// Inner glow
-		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
+		// Floor Label (HUD style)
+		int floor = g_gui.GetCurrentFloor();
+		std::string label = "Floor " + std::to_string(floor);
+		if (floor == 7) label += " (Ground)";
+
+		nvgFontSize(vg, 14.0f);
+		nvgFontFace(vg, "sans-bold"); // Assuming sans-bold loaded by TextRenderer
+
+		float textBounds[4];
+		nvgTextBounds(vg, 0, 0, label.c_str(), nullptr, textBounds);
+		float tw = textBounds[2] - textBounds[0];
+		float th = textBounds[3] - textBounds[1];
+
+		float pad = 4.0f;
+		float lx = w - tw - pad * 3;
+		float ly = h - th - pad * 3;
+
+		// Label Background
 		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
-		nvgFillPaint(vg, glow);
+		nvgRoundedRect(vg, lx, ly, tw + pad * 2, th + pad * 2, 4.0f);
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
 		nvgFill(vg);
+
+		// Label Text
+		nvgFillColor(vg, nvgRGBA(220, 220, 220, 255));
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		nvgText(vg, lx + pad, ly + pad, label.c_str(), nullptr);
 
 		nvgEndFrame(vg);
 	}

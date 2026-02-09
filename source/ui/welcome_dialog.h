@@ -17,10 +17,11 @@ public:
 	void OnButtonClicked(wxCommandEvent& event);
 	void OnCheckboxClicked(wxCommandEvent& event);
 	void OnRecentFileClicked(wxCommandEvent& event);
+	void OnCanvasAction(wxCommandEvent& event);
 
 private:
 	// Implementation details
-	class WelcomePanel;
+	class WelcomeCanvas;
 };
 
 #endif // WELCOME_DIALOG_H
