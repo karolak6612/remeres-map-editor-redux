@@ -22,6 +22,7 @@
 #include "net/net_connection.h"
 #include "editor/action.h"
 #include <memory>
+#include <mutex>
 
 class LivePeer;
 class LiveLogTab;
@@ -72,6 +73,7 @@ public:
 
 protected:
 	std::unordered_map<uint32_t, std::unique_ptr<LivePeer>> clients;
+	mutable std::mutex clientMutex;
 
 	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 	std::shared_ptr<boost::asio::ip::tcp::socket> socket;

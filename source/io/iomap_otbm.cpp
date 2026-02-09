@@ -26,6 +26,8 @@
 #include <format>
 #include <fstream>
 #include <vector>
+#include <limits>
+#include <cmath>
 
 #include "app/settings.h"
 #include "ui/gui.h"
@@ -1199,8 +1201,17 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			creaturePosition.x += xAttribute.as_int();
 			creaturePosition.y += yAttribute.as_int();
 
-			radius = std::max<int32_t>(radius, std::abs(creaturePosition.x - spawnPosition.x));
-			radius = std::max<int32_t>(radius, std::abs(creaturePosition.y - spawnPosition.y));
+			int64_t diffX = std::abs(static_cast<int64_t>(creaturePosition.x) - spawnPosition.x);
+			int64_t diffY = std::abs(static_cast<int64_t>(creaturePosition.y) - spawnPosition.y);
+			if (diffX > std::numeric_limits<int32_t>::max()) {
+				diffX = std::numeric_limits<int32_t>::max();
+			}
+			if (diffY > std::numeric_limits<int32_t>::max()) {
+				diffY = std::numeric_limits<int32_t>::max();
+			}
+
+			radius = std::max<int32_t>(radius, static_cast<int32_t>(diffX));
+			radius = std::max<int32_t>(radius, static_cast<int32_t>(diffY));
 			radius = std::min<int32_t>(radius, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
 
 			Tile* creatureTile;

@@ -64,7 +64,10 @@ bool LiveServer::bind() {
 }
 
 void LiveServer::close() {
-	clients.clear();
+	{
+		std::lock_guard<std::mutex> lock(clientMutex);
+		clients.clear();
+	}
 
 	if (log) {
 		log->Message("Server was shutdown.");
@@ -102,26 +105,34 @@ void LiveServer::acceptClient() {
 			peer->log = log;
 			peer->receiveHeader();
 
-			clients.emplace(id++, std::move(peer));
+			{
+				std::lock_guard<std::mutex> lock(clientMutex);
+				clients.emplace(id++, std::move(peer));
+			}
 		}
 		acceptClient();
 	});
 }
 
 void LiveServer::removeClient(uint32_t id) {
-	auto it = clients.find(id);
-	if (it == clients.end()) {
-		return;
-	}
+	wxTheApp->CallAfter([this, id]() {
+		{
+			std::lock_guard<std::mutex> lock(clientMutex);
+			auto it = clients.find(id);
+			if (it == clients.end()) {
+				return;
+			}
 
-	const uint32_t clientId = it->second->getClientId();
-	if (clientId != 0) {
-		clientIds &= ~clientId;
-		editor->map.clearVisible(clientIds);
-	}
+			const uint32_t clientId = it->second->getClientId();
+			if (clientId != 0) {
+				clientIds &= ~clientId;
+				editor->map.clearVisible(clientIds);
+			}
 
-	clients.erase(it);
-	updateClientList();
+			clients.erase(it);
+		}
+		updateClientList();
+	});
 }
 
 void LiveServer::updateCursor(const Position& position) {
@@ -138,7 +149,10 @@ void LiveServer::updateCursor(const Position& position) {
 }
 
 void LiveServer::updateClientList() const {
-	log->UpdateClientList(clients);
+	std::lock_guard<std::mutex> lock(clientMutex);
+	if (log) {
+		log->UpdateClientList(clients);
+	}
 }
 
 uint16_t LiveServer::getPort() const {
@@ -178,6 +192,8 @@ void LiveServer::broadcastNodes(DirtyList& dirtyList) {
 		return;
 	}
 
+	std::lock_guard<std::mutex> lock(clientMutex);
+
 	for (const auto& ind : dirtyList.GetPosList()) {
 		int32_t ndx = ind.pos >> 18;
 		int32_t ndy = (ind.pos >> 4) & 0x3FFF;
@@ -208,6 +224,8 @@ void LiveServer::broadcastNodes(DirtyList& dirtyList) {
 }
 
 void LiveServer::broadcastCursor(const LiveCursor& cursor) {
+	std::lock_guard<std::mutex> lock(clientMutex);
+
 	if (clients.empty()) {
 		return;
 	}
@@ -229,6 +247,8 @@ void LiveServer::broadcastCursor(const LiveCursor& cursor) {
 }
 
 void LiveServer::broadcastChat(const wxString& speaker, const wxString& chatMessage) {
+	std::lock_guard<std::mutex> lock(clientMutex);
+
 	if (clients.empty()) {
 		return;
 	}
@@ -246,6 +266,8 @@ void LiveServer::broadcastChat(const wxString& speaker, const wxString& chatMess
 }
 
 void LiveServer::startOperation(const wxString& operationMessage) {
+	std::lock_guard<std::mutex> lock(clientMutex);
+
 	if (clients.empty()) {
 		return;
 	}
@@ -260,6 +282,8 @@ void LiveServer::startOperation(const wxString& operationMessage) {
 }
 
 void LiveServer::updateOperation(int32_t percent) {
+	std::lock_guard<std::mutex> lock(clientMutex);
+
 	if (clients.empty()) {
 		return;
 	}
