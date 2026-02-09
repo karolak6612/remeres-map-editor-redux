@@ -91,26 +91,26 @@ public:
 
 		// Logo
 		wxStaticBitmap* logoCtrl = new wxStaticBitmap(sidebar, wxID_ANY, logo);
-		sideSizer->Add(logoCtrl, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP | wxBOTTOM, FromDIP(20));
+		sideSizer->Add(logoCtrl, wxSizerFlags(0).Align(wxALIGN_CENTER_HORIZONTAL).Border(wxTOP | wxBOTTOM, FromDIP(20)));
 
 		// Title
 		wxStaticText* title = new wxStaticText(sidebar, wxID_ANY, "RME");
 		title->SetFont(wxFontInfo(16).Bold());
 		title->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-		sideSizer->Add(title, 0, wxALIGN_CENTER_HORIZONTAL | wxTOP, FromDIP(15));
+		sideSizer->Add(title, wxSizerFlags(0).Align(wxALIGN_CENTER_HORIZONTAL).Border(wxTOP, FromDIP(15)));
 
 		// Branding Info (Version) - Discrete
 		wxStaticText* version = new wxStaticText(sidebar, wxID_ANY, wxString("v") << __W_RME_VERSION__);
 		version->SetFont(wxFontInfo(7));
 		version->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-		sideSizer->Add(version, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, FromDIP(25));
+		sideSizer->Add(version, wxSizerFlags(0).Align(wxALIGN_CENTER_HORIZONTAL).Border(wxBOTTOM, FromDIP(25)));
 
 		// Actions (Nav-style)
 		auto addButton = [&](const wxString& label, int id) {
 			ModernButton* btn = new ModernButton(sidebar, id, label);
 			btn->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 			btn->SetMinSize(wxSize(-1, FromDIP(35))); // More compact nav height
-			sideSizer->Add(btn, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(8));
+			sideSizer->Add(btn, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(8)));
 			btn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, parent);
 		};
 
@@ -130,7 +130,7 @@ public:
 		wxStaticText* recentTitle = new wxStaticText(content, wxID_ANY, "Recent Projects");
 		recentTitle->SetFont(wxFontInfo(12).Bold());
 		recentTitle->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-		contentSizer->Add(recentTitle, 0, wxLEFT | wxTOP | wxBOTTOM, FromDIP(15));
+		contentSizer->Add(recentTitle, wxSizerFlags(0).Border(wxLEFT | wxTOP | wxBOTTOM, FromDIP(15)));
 
 		// Scrollable list
 		wxScrolledWindow* scroll = new wxScrolledWindow(content, wxID_ANY);
@@ -139,14 +139,14 @@ public:
 
 		for (const auto& file : recentFiles) {
 			RecentFileItem* item = new RecentFileItem(scroll, file, "");
-			listSizer->Add(item, 0, wxEXPAND | wxBOTTOM, 1);
+			listSizer->Add(item, wxSizerFlags(0).Expand().Border(wxBOTTOM, 1));
 
 			// Bind event to parent dialog handler
 			item->Bind(wxEVT_BUTTON, &WelcomeDialog::OnRecentFileClicked, parent);
 		}
 
 		scroll->SetSizer(listSizer);
-		contentSizer->Add(scroll, 1, wxEXPAND);
+		contentSizer->Add(scroll, wxSizerFlags(1).Expand());
 
 		// Anchored Footer for Startup Toggle
 		wxPanel* footer = new wxPanel(content);
@@ -158,16 +158,16 @@ public:
 		startupCheck->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
 		startupCheck->SetValue(g_settings.getInteger(Config::WELCOME_DIALOG) != 0);
 		startupCheck->Bind(wxEVT_CHECKBOX, &WelcomeDialog::OnCheckboxClicked, parent);
-		footerSizer->Add(startupCheck, 0, wxALL, FromDIP(10));
+		footerSizer->Add(startupCheck, wxSizerFlags(0).Border(wxALL, FromDIP(10)));
 
 		footer->SetSizer(footerSizer);
-		contentSizer->Add(footer, 0, wxEXPAND | wxTOP, 0);
+		contentSizer->Add(footer, wxSizerFlags(0).Expand().Border(wxTOP, 0));
 
 		content->SetSizer(contentSizer);
 
 		// combine
-		mainSizer->Add(sidebar, 0, wxEXPAND | wxRIGHT, 0);
-		mainSizer->Add(content, 1, wxEXPAND);
+		mainSizer->Add(sidebar, wxSizerFlags(0).Expand().Border(wxRIGHT, 0));
+		mainSizer->Add(content, wxSizerFlags(1).Expand());
 
 		SetSizer(mainSizer);
 	}

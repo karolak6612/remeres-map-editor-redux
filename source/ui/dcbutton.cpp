@@ -26,25 +26,26 @@
 IMPLEMENT_DYNAMIC_CLASS(DCButton, wxPanel)
 
 DCButton::DCButton() :
-	wxPanel(nullptr, wxID_ANY, wxDefaultPosition, wxSize(36, 36)),
+	wxPanel(nullptr, wxID_ANY, wxDefaultPosition, wxDefaultSize),
 	type(DC_BTN_NORMAL),
 	state(false),
 	size(RENDER_SIZE_16x16),
 	sprite(nullptr),
 	overlay(nullptr) {
+	SetSize(FromDIP(wxSize(36, 36)));
 	Bind(wxEVT_PAINT, &DCButton::OnPaint, this);
 	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
 	SetSprite(0);
 }
 
 DCButton::DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, RenderSize sz, int sprite_id) :
-	wxPanel(parent, id, pos, (sz == RENDER_SIZE_64x64 ? wxSize(68, 68) : sz == RENDER_SIZE_32x32 ? wxSize(36, 36)
-																								 : wxSize(20, 20))),
+	wxPanel(parent, id, pos, wxDefaultSize),
 	type(type),
 	state(false),
 	size(sz),
 	sprite(nullptr),
 	overlay(nullptr) {
+	SetSize(FromDIP(sz == RENDER_SIZE_64x64 ? wxSize(68, 68) : sz == RENDER_SIZE_32x32 ? wxSize(36, 36) : wxSize(20, 20)));
 	Bind(wxEVT_PAINT, &DCButton::OnPaint, this);
 	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
 	SetSprite(sprite_id);

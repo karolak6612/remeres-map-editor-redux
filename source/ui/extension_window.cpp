@@ -26,10 +26,11 @@
 extern Materials g_materials;
 
 ExtensionsDialog::ExtensionsDialog(wxWindow* parent) :
-	wxDialog(parent, wxID_ANY, "Extensions", wxDefaultPosition, wxSize(600, 500), wxRESIZE_BORDER | wxCAPTION) {
+	wxDialog(parent, wxID_ANY, "Extensions", wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION) {
+	SetSize(FromDIP(wxSize(600, 500)));
 	wxBoxSizer* topSizer = new wxBoxSizer(wxVERTICAL);
 
-	wxHtmlWindow* htmlWindow = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, wxSize(550, 400));
+	wxHtmlWindow* htmlWindow = new wxHtmlWindow(this, wxID_ANY, wxDefaultPosition, FromDIP(wxSize(550, 400)));
 	htmlWindow->SetPage(HTML());
 	topSizer->Add(htmlWindow, wxSizerFlags(1).DoubleBorder().Expand());
 
@@ -40,7 +41,7 @@ ExtensionsDialog::ExtensionsDialog(wxWindow* parent) :
 	auto openBtn = newd wxButton(this, EXTENSIONS_OPEN_FOLDER_BUTTON, "Open Extensions Folder");
 	openBtn->SetToolTip("Open the extensions directory in file explorer");
 	buttonSizer->Add(openBtn, wxSizerFlags(1).Center());
-	topSizer->Add(buttonSizer, 0, wxCENTER | wxLEFT | wxRIGHT | wxBOTTOM, 20);
+	topSizer->Add(buttonSizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT | wxBOTTOM, 20));
 
 	SetSizerAndFit(topSizer);
 	Centre(wxBOTH);
