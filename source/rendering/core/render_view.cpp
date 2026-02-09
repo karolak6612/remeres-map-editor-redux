@@ -77,6 +77,18 @@ bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	return true;
 }
 
+bool RenderView::IsRectFullyInside(int draw_x, int draw_y, int w, int h) const {
+	// Checks if the rectangle [draw_x, draw_y, w, h] is fully inside the viewport [0, logical_width] x [0, logical_height]
+	// Note: zoom is inverse scale (zoom > 1.0 means minified/zoomed out), so logical dimensions increase with zoom.
+	float logical_width = screensize_x * zoom;
+	float logical_height = screensize_y * zoom;
+
+	if (draw_x >= 0 && draw_x + w <= logical_width && draw_y >= 0 && draw_y + h <= logical_height) {
+		return true;
+	}
+	return false;
+}
+
 void RenderView::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TileSize

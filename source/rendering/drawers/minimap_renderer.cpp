@@ -68,9 +68,9 @@ bool MinimapRenderer::initialize() {
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
 	spdlog::info("MinimapRenderer: GL_MAX_TEXTURE_SIZE = {}", maxTextureSize);
 
-	pbo_ = std::make_unique<PixelBufferObject>();
-	// Initial PBO size for small chunk
-	pbo_->initialize(1024 * 1024);
+	// Initial PBO size: 4MB per section, 3 sections (Triple Buffered)
+	// Fits one 2048x2048 tile exactly (1 byte per pixel)
+	pbo_.initialize(1, 4 * 1024 * 1024);
 
 	createPaletteTexture();
 
@@ -205,15 +205,65 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 	int start_row = y / TILE_SIZE;
 	int end_row = (y + h - 1) / TILE_SIZE;
 
-	// Max update size for PBO safety (likely just one tile usually)
-	size_t max_tile_update = TILE_SIZE * TILE_SIZE;
-	if (stage_buffer_.size() < max_tile_update) {
-		stage_buffer_.resize(max_tile_update);
-		if (pbo_->getSize() < max_tile_update) {
-			pbo_->cleanup();
-			pbo_->initialize(max_tile_update);
+	struct UpdateInfo {
+		int layer;
+		int offset_x;
+		int offset_y;
+		int w;
+		int h;
+		int int_x;
+		int int_y;
+		size_t pbo_offset;
+	};
+	std::vector<UpdateInfo> updates;
+	size_t current_batch_size = 0;
+	size_t max_batch_size = 4 * 1024 * 1024; // Must match PBO section size
+
+	auto processBatch = [&]() {
+		if (updates.empty()) return;
+
+		void* ptr = pbo_.waitAndMap(current_batch_size);
+		if (!ptr) {
+			// Failed to map (timeout or too large), skip batch to avoid stall/crash
+			updates.clear();
+			current_batch_size = 0;
+			return;
 		}
-	}
+
+		uint8_t* dst = static_cast<uint8_t*>(ptr);
+
+		// Fill PBO
+		for (const auto& u : updates) {
+			uint8_t* current_dst = dst + u.pbo_offset;
+			for (int dy = 0; dy < u.h; ++dy) {
+				for (int dx = 0; dx < u.w; ++dx) {
+					const Tile* tile = map.getTile(u.int_x + dx, u.int_y + dy, floor);
+					if (tile) {
+						*current_dst++ = tile->getMiniMapColor();
+					} else {
+						*current_dst++ = 0;
+					}
+				}
+			}
+		}
+
+		// Upload
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, pbo_.getBufferId());
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+		size_t base_offset = pbo_.getCurrentSectionOffset();
+
+		for (const auto& u : updates) {
+			glTextureSubImage3D(texture_id_->GetID(), 0, u.offset_x, u.offset_y, u.layer, u.w, u.h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, (void*)(base_offset + u.pbo_offset));
+		}
+
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
+		pbo_.signalFinished();
+
+		updates.clear();
+		current_batch_size = 0;
+	};
 
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
@@ -232,39 +282,21 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 				continue;
 			}
 
-			// Fill buffer
-			int idx = 0;
-			for (int dy = 0; dy < update_h; ++dy) {
-				for (int dx = 0; dx < update_w; ++dx) {
-					const Tile* tile = map.getTile(int_x + dx, int_y + dy, floor);
-					if (tile) {
-						stage_buffer_[idx++] = tile->getMiniMapColor();
-					} else {
-						stage_buffer_[idx++] = 0;
-					}
-				}
+			size_t size = update_w * update_h;
+			if (current_batch_size + size > max_batch_size) {
+				processBatch();
 			}
 
-			// Upload to layer
-			void* ptr = pbo_->mapWrite();
-			if (ptr) {
-				memcpy(ptr, stage_buffer_.data(), update_w * update_h);
-				pbo_->unmap();
-				pbo_->bind();
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+			int layer = r * cols_ + c;
+			int offset_x = int_x - tile_x;
+			int offset_y = int_y - tile_y;
 
-				int layer = r * cols_ + c;
-				int offset_x = int_x - tile_x;
-				int offset_y = int_y - tile_y;
-
-				glTextureSubImage3D(texture_id_->GetID(), 0, offset_x, offset_y, layer, update_w, update_h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0);
-
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-				pbo_->unbind();
-				pbo_->advance();
-			}
+			updates.push_back({ layer, offset_x, offset_y, update_w, update_h, int_x, int_y, current_batch_size });
+			current_batch_size += size;
 		}
 	}
+
+	processBatch();
 }
 
 void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, int h, float map_x, float map_y, float map_w, float map_h) {
