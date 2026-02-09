@@ -10,10 +10,10 @@
 
 #include <spdlog/spdlog.h>
 
-VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
+VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, BrushListType ltype) :
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
-	icon_size(rsz),
+	list_type(ltype),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
@@ -21,9 +21,11 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	padding(4),
 	m_animTimer(new wxTimer(this)) {
 
-	if (icon_size == RENDER_SIZE_16x16) {
+	if (list_type == BRUSHLIST_SMALL_ICONS) {
+		icon_size = RENDER_SIZE_16x16;
 		item_size = 18;
 	} else {
+		icon_size = RENDER_SIZE_32x32;
 		item_size = 34; // 32 + border
 	}
 
@@ -45,7 +47,12 @@ void VirtualBrushGrid::UpdateLayout() {
 		width = 200; // Default
 	}
 
-	columns = std::max(1, (width - padding) / (item_size + padding));
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		columns = 1;
+	} else {
+		columns = std::max(1, (width - padding) / (item_size + padding));
+	}
+
 	int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
 	int contentHeight = rows * (item_size + padding) + padding;
 
@@ -151,7 +158,13 @@ int VirtualBrushGrid::GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush) {
 
 void VirtualBrushGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// Update layout if needed
-	int newCols = std::max(1, (width - padding) / (item_size + padding));
+	int newCols = 1;
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		newCols = 1;
+	} else {
+		newCols = std::max(1, (width - padding) / (item_size + padding));
+	}
+
 	if (newCols != columns) {
 		columns = newCols;
 		int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
@@ -242,18 +255,47 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 			nvgFill(vg);
 		}
 	}
+
+	// Draw text for list mode
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		if (brush) {
+			nvgFontSize(vg, 14.0f);
+			nvgFontFace(vg, "sans");
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+			if (i == selected_index) {
+				nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			} else {
+				nvgFillColor(vg, nvgRGBA(220, 220, 220, 255));
+			}
+
+			float textX = x + item_size + 10;
+			float textY = y + h / 2;
+			nvgText(vg, textX, textY, brush->getName().c_str(), nullptr);
+		}
+	}
 }
 
 wxRect VirtualBrushGrid::GetItemRect(int index) const {
 	int row = index / columns;
 	int col = index % columns;
 
-	return wxRect(
-		padding + col * (item_size + padding),
-		padding + row * (item_size + padding),
-		item_size,
-		item_size
-	);
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		int w = GetClientSize().x - 2 * padding;
+		return wxRect(
+			padding,
+			padding + row * (item_size + padding),
+			w,
+			item_size
+		);
+	} else {
+		return wxRect(
+			padding + col * (item_size + padding),
+			padding + row * (item_size + padding),
+			item_size,
+			item_size
+		);
+	}
 }
 
 int VirtualBrushGrid::HitTest(int x, int y) const {
@@ -261,8 +303,16 @@ int VirtualBrushGrid::HitTest(int x, int y) const {
 	int realY = y + scrollPos;
 	int realX = x;
 
-	int col = (realX - padding) / (item_size + padding);
-	int row = (realY - padding) / (item_size + padding);
+	int col = 0;
+	int row = 0;
+
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		col = 0;
+		row = (realY - padding) / (item_size + padding);
+	} else {
+		col = (realX - padding) / (item_size + padding);
+		row = (realY - padding) / (item_size + padding);
+	}
 
 	if (col < 0 || col >= columns || row < 0) {
 		return -1;

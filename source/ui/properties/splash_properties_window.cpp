@@ -13,12 +13,7 @@
 // ============================================================================
 // Splash Properties Window
 
-/*
-BEGIN_EVENT_TABLE(SplashPropertiesWindow, wxDialog)
-EVT_BUTTON(wxID_OK, SplashPropertiesWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, SplashPropertiesWindow::OnClickCancel)
-END_EVENT_TABLE()
-*/
+
 
 SplashPropertiesWindow::SplashPropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(parent, "Splash Properties", map, tile, item, pos),

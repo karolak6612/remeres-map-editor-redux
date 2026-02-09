@@ -13,12 +13,7 @@
 // ============================================================================
 // Writable Properties Window
 
-/*
-BEGIN_EVENT_TABLE(WritablePropertiesWindow, wxDialog)
-EVT_BUTTON(wxID_OK, WritablePropertiesWindow::OnClickOK)
-EVT_BUTTON(wxID_CANCEL, WritablePropertiesWindow::OnClickCancel)
-END_EVENT_TABLE()
-*/
+
 
 WritablePropertiesWindow::WritablePropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(parent, "Writable Properties", map, tile, item, pos),
