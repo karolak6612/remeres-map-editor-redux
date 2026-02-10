@@ -24,6 +24,8 @@
 #include <string>
 #include <stack>
 #include <stdio.h>
+#include <memory>
+#include <vector>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER
@@ -50,6 +52,15 @@ enum NodeType {
 	ESCAPE_CHAR = 0xfd,
 };
 
+struct FileDeleter {
+	void operator()(FILE* file) const {
+		if (file) {
+			fclose(file);
+		}
+	}
+};
+using FilePtr = std::unique_ptr<FILE, FileDeleter>;
+
 class FileHandle : boost::noncopyable {
 public:
 	FileHandle() :
@@ -63,13 +74,13 @@ public:
 		return file != nullptr;
 	}
 	virtual bool isOk() {
-		return isOpen() && error_code == FILE_NO_ERROR && ferror(file) == 0;
+		return isOpen() && error_code == FILE_NO_ERROR && ferror(file.get()) == 0;
 	}
 	std::string getErrorMessage();
 
 public:
 	FileHandleError error_code;
-	FILE* file;
+	FilePtr file;
 };
 
 class FileReadHandle : public FileHandle {
@@ -111,7 +122,7 @@ public:
 	}
 	size_t tell() {
 		if (file) {
-			return ftell(file);
+			return ftell(file.get());
 		}
 		return 0;
 	}
@@ -121,8 +132,8 @@ protected:
 
 	template <class T>
 	bool getType(T& ref) {
-		fread(&ref, sizeof(ref), 1, file);
-		return ferror(file) == 0;
+		fread(&ref, sizeof(ref), 1, file.get());
+		return ferror(file.get()) == 0;
 	}
 };
 
@@ -215,7 +226,7 @@ protected:
 
 	BinaryNode* root_node;
 
-	std::stack<void*> unused;
+	std::stack<BinaryNode*> unused;
 
 	friend class BinaryNode;
 };
@@ -233,7 +244,7 @@ public:
 	}
 	size_t tell() override {
 		if (file) {
-			return ftell(file);
+			return ftell(file.get());
 		}
 		return 0;
 	}
@@ -242,6 +253,7 @@ protected:
 	bool renewCache() override;
 
 	size_t file_size;
+	std::vector<uint8_t> buffer;
 };
 
 class MemoryNodeFileReadHandle : public NodeFileReadHandle {
@@ -303,8 +315,8 @@ public:
 protected:
 	template <class T>
 	bool addType(T ref) {
-		fwrite(&ref, sizeof(ref), 1, file);
-		return ferror(file) == 0;
+		fwrite(&ref, sizeof(ref), 1, file.get());
+		return ferror(file.get()) == 0;
 	}
 };
 
@@ -336,8 +348,7 @@ protected:
 	static uint8_t NODE_END;
 	static uint8_t ESCAPE_CHAR;
 
-	uint8_t* cache;
-	size_t cache_size;
+	std::vector<uint8_t> cache;
 	size_t local_write_index;
 
 	FORCEINLINE void writeBytes(const uint8_t* ptr, size_t sz) {
@@ -345,12 +356,12 @@ protected:
 			do {
 				if (*ptr == NODE_START || *ptr == NODE_END || *ptr == ESCAPE_CHAR) {
 					cache[local_write_index++] = ESCAPE_CHAR;
-					if (local_write_index >= cache_size) {
+					if (local_write_index >= cache.size()) {
 						renewCache();
 					}
 				}
 				cache[local_write_index++] = *ptr;
-				if (local_write_index >= cache_size) {
+				if (local_write_index >= cache.size()) {
 					renewCache();
 				}
 				++ptr;

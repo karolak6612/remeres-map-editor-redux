@@ -21,16 +21,14 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <algorithm>
 
 uint8_t NodeFileWriteHandle::NODE_START = ::NODE_START;
 uint8_t NodeFileWriteHandle::NODE_END = ::NODE_END;
 uint8_t NodeFileWriteHandle::ESCAPE_CHAR = ::ESCAPE_CHAR;
 
 void FileHandle::close() {
-	if (file) {
-		fclose(file);
-		file = nullptr;
-	}
+	file.reset();
 }
 
 std::string FileHandle::getErrorMessage() {
@@ -55,8 +53,8 @@ std::string FileHandle::getErrorMessage() {
 	if (file == nullptr) {
 		return "Could not open file (2)";
 	}
-	if (ferror(file)) {
-		return "Internal file error #" + i2s(ferror(file));
+	if (ferror(file.get())) {
+		return "Internal file error #" + i2s(ferror(file.get()));
 	}
 	return "No error";
 }
@@ -67,16 +65,16 @@ std::string FileHandle::getErrorMessage() {
 FileReadHandle::FileReadHandle(const std::string& name) :
 	file_size(0) {
 #if defined __VISUALC__ && defined _UNICODE
-	file = _wfopen(string2wstring(name).c_str(), L"rb");
+	file.reset(_wfopen(string2wstring(name).c_str(), L"rb"));
 #else
-	file = fopen(name.c_str(), "rb");
+	file.reset(fopen(name.c_str(), "rb"));
 #endif
-	if (!file || ferror(file)) {
+	if (!file || ferror(file.get())) {
 		error_code = FILE_COULD_NOT_OPEN;
 	} else {
-		fseek(file, 0, SEEK_END);
-		file_size = ftell(file);
-		fseek(file, 0, SEEK_SET);
+		fseek(file.get(), 0, SEEK_END);
+		file_size = ftell(file.get());
+		fseek(file.get(), 0, SEEK_SET);
 	}
 }
 
@@ -90,7 +88,7 @@ void FileReadHandle::close() {
 }
 
 bool FileReadHandle::getRAW(uint8_t* ptr, size_t sz) {
-	size_t o = fread(ptr, 1, sz, file);
+	size_t o = fread(ptr, 1, sz, file.get());
 	if (o != sz) {
 		error_code = FILE_READ_ERROR;
 		return false;
@@ -100,7 +98,7 @@ bool FileReadHandle::getRAW(uint8_t* ptr, size_t sz) {
 
 bool FileReadHandle::getRAW(std::string& str, size_t sz) {
 	str.resize(sz);
-	size_t o = fread(const_cast<char*>(str.data()), 1, sz, file);
+	size_t o = fread(const_cast<char*>(str.data()), 1, sz, file.get());
 	if (o != sz) {
 		error_code = FILE_READ_ERROR;
 		return false;
@@ -127,11 +125,11 @@ bool FileReadHandle::getLongString(std::string& str) {
 }
 
 bool FileReadHandle::seek(size_t offset) {
-	return fseek(file, long(offset), SEEK_SET) == 0;
+	return fseek(file.get(), long(offset), SEEK_SET) == 0;
 }
 
 bool FileReadHandle::seekRelative(size_t offset) {
-	return fseek(file, long(offset), SEEK_CUR) == 0;
+	return fseek(file.get(), long(offset), SEEK_CUR) == 0;
 }
 
 //=============================================================================
@@ -149,7 +147,8 @@ NodeFileReadHandle::NodeFileReadHandle() :
 
 NodeFileReadHandle::~NodeFileReadHandle() {
 	while (!unused.empty()) {
-		free(unused.top());
+		// Just deallocate memory, destructor was already called in freeNode
+		operator delete(unused.top());
 		unused.pop();
 	}
 }
@@ -157,7 +156,7 @@ NodeFileReadHandle::~NodeFileReadHandle() {
 BinaryNode* NodeFileReadHandle::getNode(BinaryNode* parent) {
 	void* mem;
 	if (unused.empty()) {
-		mem = malloc(sizeof(BinaryNode));
+		mem = operator new(sizeof(BinaryNode));
 	} else {
 		mem = unused.top();
 		unused.pop();
@@ -216,16 +215,16 @@ BinaryNode* MemoryNodeFileReadHandle::getRootNode() {
 DiskNodeFileReadHandle::DiskNodeFileReadHandle(const std::string& name, const std::vector<std::string>& acceptable_identifiers) :
 	file_size(0) {
 #if defined __VISUALC__ && defined _UNICODE
-	file = _wfopen(string2wstring(name).c_str(), L"rb");
+	file.reset(_wfopen(string2wstring(name).c_str(), L"rb"));
 #else
-	file = fopen(name.c_str(), "rb");
+	file.reset(fopen(name.c_str(), "rb"));
 #endif
-	if (!file || ferror(file)) {
+	if (!file || ferror(file.get())) {
 		error_code = FILE_COULD_NOT_OPEN;
 	} else {
 		char ver[4];
-		if (fread(ver, 1, 4, file) != 4) {
-			fclose(file);
+		if (fread(ver, 1, 4, file.get()) != 4) {
+			file.reset();
 			error_code = FILE_SYNTAX_ERROR;
 			return;
 		}
@@ -242,15 +241,15 @@ DiskNodeFileReadHandle::DiskNodeFileReadHandle(const std::string& name, const st
 			}
 
 			if (!accepted) {
-				fclose(file);
+				file.reset();
 				error_code = FILE_SYNTAX_ERROR;
 				return;
 			}
 		}
 
-		fseek(file, 0, SEEK_END);
-		file_size = ftell(file);
-		fseek(file, 4, SEEK_SET);
+		fseek(file.get(), 0, SEEK_END);
+		file_size = ftell(file.get());
+		fseek(file.get(), 4, SEEK_SET);
 	}
 }
 
@@ -262,16 +261,18 @@ void DiskNodeFileReadHandle::close() {
 	freeNode(root_node);
 	file_size = 0;
 	FileHandle::close();
-	free(cache);
+	buffer.clear();
+	cache = nullptr;
 }
 
 bool DiskNodeFileReadHandle::renewCache() {
-	if (!cache) {
-		cache = (uint8_t*)malloc(cache_size);
+	if (buffer.empty()) {
+		buffer.resize(cache_size);
+		cache = buffer.data();
 	}
-	cache_length = fread(cache, 1, cache_size, file);
+	cache_length = fread(buffer.data(), 1, cache_size, file.get());
 
-	if (cache_length == 0 || ferror(file)) {
+	if (cache_length == 0 || ferror(file.get())) {
 		return false;
 	}
 	local_read_index = 0;
@@ -281,7 +282,7 @@ bool DiskNodeFileReadHandle::renewCache() {
 BinaryNode* DiskNodeFileReadHandle::getRootNode() {
 	assert(root_node == nullptr); // You should never do this twice
 	uint8_t first;
-	fread(&first, 1, 1, file);
+	fread(&first, 1, 1, file.get());
 	if (first == NODE_START) {
 		root_node = getNode(nullptr);
 		root_node->load();
@@ -494,11 +495,11 @@ void BinaryNode::load() {
 
 FileWriteHandle::FileWriteHandle(const std::string& name) {
 #if defined __VISUALC__ && defined _UNICODE
-	file = _wfopen(string2wstring(name).c_str(), L"wb");
+	file.reset(_wfopen(string2wstring(name).c_str(), L"wb"));
 #else
-	file = fopen(name.c_str(), "wb");
+	file.reset(fopen(name.c_str(), "wb"));
 #endif
-	if (file == nullptr || ferror(file)) {
+	if (file == nullptr || ferror(file.get())) {
 		error_code = FILE_COULD_NOT_OPEN;
 	}
 }
@@ -524,7 +525,7 @@ bool FileWriteHandle::addString(const char* str) {
 		return false;
 	}
 	addU16(uint16_t(len));
-	fwrite(str, 1, len, file);
+	fwrite(str, 1, len, file.get());
 	return true;
 }
 
@@ -535,13 +536,13 @@ bool FileWriteHandle::addLongString(const std::string& str) {
 }
 
 bool FileWriteHandle::addRAW(const std::string& str) {
-	fwrite(str.c_str(), 1, str.size(), file);
-	return ferror(file) == 0;
+	fwrite(str.c_str(), 1, str.size(), file.get());
+	return ferror(file.get()) == 0;
 }
 
 bool FileWriteHandle::addRAW(const uint8_t* ptr, size_t sz) {
-	fwrite(ptr, 1, sz, file);
-	return ferror(file) == 0;
+	fwrite(ptr, 1, sz, file.get());
+	return ferror(file.get()) == 0;
 }
 
 //=============================================================================
@@ -549,11 +550,11 @@ bool FileWriteHandle::addRAW(const uint8_t* ptr, size_t sz) {
 
 DiskNodeFileWriteHandle::DiskNodeFileWriteHandle(const std::string& name, const std::string& identifier) {
 #if defined __VISUALC__ && defined _UNICODE
-	file = _wfopen(string2wstring(name).c_str(), L"wb");
+	file.reset(_wfopen(string2wstring(name).c_str(), L"wb"));
 #else
-	file = fopen(name.c_str(), "wb");
+	file.reset(fopen(name.c_str(), "wb"));
 #endif
-	if (!file || ferror(file)) {
+	if (!file || ferror(file.get())) {
 		error_code = FILE_COULD_NOT_OPEN;
 		return;
 	}
@@ -562,10 +563,9 @@ DiskNodeFileWriteHandle::DiskNodeFileWriteHandle(const std::string& name, const 
 		return;
 	}
 
-	fwrite(identifier.c_str(), 1, 4, file);
-	if (!cache) {
-		cache = (uint8_t*)malloc(cache_size + 1);
-	}
+	fwrite(identifier.c_str(), 1, 4, file.get());
+
+	cache.resize(0x7FFF + 1);
 	local_write_index = 0;
 }
 
@@ -576,20 +576,19 @@ DiskNodeFileWriteHandle::~DiskNodeFileWriteHandle() {
 void DiskNodeFileWriteHandle::close() {
 	if (file) {
 		renewCache();
-		fclose(file);
-		file = nullptr;
+		file.reset();
 		error_code = FILE_NO_ERROR;
 	}
 }
 
 void DiskNodeFileWriteHandle::renewCache() {
-	if (cache) {
-		fwrite(cache, local_write_index, 1, file);
-		if (ferror(file) != 0) {
+	if (!cache.empty()) {
+		fwrite(cache.data(), local_write_index, 1, file.get());
+		if (ferror(file.get()) != 0) {
 			error_code = FILE_WRITE_ERROR;
 		}
 	} else {
-		cache = (uint8_t*)malloc(cache_size + 1);
+		cache.resize(0x7FFF + 1);
 	}
 	local_write_index = 0;
 }
@@ -598,9 +597,7 @@ void DiskNodeFileWriteHandle::renewCache() {
 // Memory based node file write handle
 
 MemoryNodeFileWriteHandle::MemoryNodeFileWriteHandle() {
-	if (!cache) {
-		cache = (uint8_t*)malloc(cache_size + 1);
-	}
+	cache.resize(0x7FFF + 1);
 	local_write_index = 0;
 }
 
@@ -609,17 +606,16 @@ MemoryNodeFileWriteHandle::~MemoryNodeFileWriteHandle() {
 }
 
 void MemoryNodeFileWriteHandle::reset() {
-	memset(cache, 0xAA, cache_size);
+	std::fill(cache.begin(), cache.end(), 0xAA);
 	local_write_index = 0;
 }
 
 void MemoryNodeFileWriteHandle::close() {
-	free(cache);
-	cache = nullptr;
+	cache.clear();
 }
 
 uint8_t* MemoryNodeFileWriteHandle::getMemory() {
-	return cache;
+	return cache.data();
 }
 
 size_t MemoryNodeFileWriteHandle::getSize() {
@@ -627,14 +623,10 @@ size_t MemoryNodeFileWriteHandle::getSize() {
 }
 
 void MemoryNodeFileWriteHandle::renewCache() {
-	if (cache) {
-		cache_size = cache_size * 2;
-		cache = (uint8_t*)realloc(cache, cache_size);
-		if (!cache) {
-			exit(1);
-		}
+	if (!cache.empty()) {
+		cache.resize(cache.size() * 2);
 	} else {
-		cache = (uint8_t*)malloc(cache_size + 1);
+		cache.resize(0x7FFF + 1);
 	}
 }
 
@@ -642,24 +634,22 @@ void MemoryNodeFileWriteHandle::renewCache() {
 // Node file write handle
 
 NodeFileWriteHandle::NodeFileWriteHandle() :
-	cache(nullptr),
-	cache_size(0x7FFF),
 	local_write_index(0) {
-	////
+	cache.resize(0x7FFF);
 }
 
 NodeFileWriteHandle::~NodeFileWriteHandle() {
-	free(cache);
+	// cache vector clears itself
 }
 
 bool NodeFileWriteHandle::addNode(uint8_t nodetype) {
 	cache[local_write_index++] = NODE_START;
-	if (local_write_index >= cache_size) {
+	if (local_write_index >= cache.size()) {
 		renewCache();
 	}
 
 	cache[local_write_index++] = nodetype;
-	if (local_write_index >= cache_size) {
+	if (local_write_index >= cache.size()) {
 		renewCache();
 	}
 
@@ -668,7 +658,7 @@ bool NodeFileWriteHandle::addNode(uint8_t nodetype) {
 
 bool NodeFileWriteHandle::endNode() {
 	cache[local_write_index++] = NODE_END;
-	if (local_write_index >= cache_size) {
+	if (local_write_index >= cache.size()) {
 		renewCache();
 	}
 
