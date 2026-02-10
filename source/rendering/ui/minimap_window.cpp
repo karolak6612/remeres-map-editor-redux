@@ -138,6 +138,13 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, 1.0f);
 
+		// Vignette (Darken corners)
+		NVGpaint vignette = nvgRadialGradient(vg, w / 2, h / 2, std::min(w, h) / 2, std::max(w, h), nvgRGBA(0, 0, 0, 0), nvgRGBA(0, 0, 0, 100));
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, 0, w, h);
+		nvgFillPaint(vg, vignette);
+		nvgFill(vg);
+
 		// Subtle glass border
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);

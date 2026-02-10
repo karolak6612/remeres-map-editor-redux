@@ -21,8 +21,9 @@ public:
 	 * @param parent Parent window
 	 * @param _tileset The tileset category containing brushes
 	 * @param rsz Icon render size (16x16 or 32x32)
+	 * @param ltype The layout type (grid or list)
 	 */
-	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz);
+	VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz, BrushListType ltype = BRUSHLIST_LARGE_ICONS);
 	~VirtualBrushGrid() override;
 
 	wxWindow* GetSelfWindow() override {
@@ -48,15 +49,18 @@ protected:
 	// Event Handlers
 	void OnMouseDown(wxMouseEvent& event);
 	void OnMotion(wxMouseEvent& event);
+	void OnKey(wxKeyEvent& event);
 
 	// Internal helpers
 	void UpdateLayout();
+	void NotifySelectionChanged();
 	int HitTest(int x, int y) const;
 	wxRect GetItemRect(int index) const;
 	int GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush);
 	void DrawBrushItem(NVGcontext* vg, int index, const wxRect& rect);
 
 	RenderSize icon_size;
+	BrushListType list_type;
 	int selected_index;
 	int hover_index;
 	int columns;

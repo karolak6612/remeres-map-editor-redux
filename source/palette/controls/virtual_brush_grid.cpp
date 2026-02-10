@@ -2,6 +2,7 @@
 #include "palette/controls/virtual_brush_grid.h"
 #include "ui/gui.h"
 #include "rendering/core/graphics.h"
+#include "app/settings.h"
 
 #include <glad/glad.h>
 
@@ -10,10 +11,11 @@
 
 #include <spdlog/spdlog.h>
 
-VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
+VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz, BrushListType ltype) :
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
 	icon_size(rsz),
+	list_type(ltype),
 	selected_index(-1),
 	hover_index(-1),
 	columns(1),
@@ -21,7 +23,9 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	padding(4),
 	m_animTimer(new wxTimer(this)) {
 
-	if (icon_size == RENDER_SIZE_16x16) {
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		item_size = 32; // Height of list row
+	} else if (icon_size == RENDER_SIZE_16x16) {
 		item_size = 18;
 	} else {
 		item_size = 34; // 32 + border
@@ -30,6 +34,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	Bind(wxEVT_LEFT_DOWN, &VirtualBrushGrid::OnMouseDown, this);
 	Bind(wxEVT_MOTION, &VirtualBrushGrid::OnMotion, this);
 	Bind(wxEVT_TIMER, &VirtualBrushGrid::OnTimer, this);
+	Bind(wxEVT_KEY_DOWN, &VirtualBrushGrid::OnKey, this);
 
 	UpdateLayout();
 }
@@ -45,7 +50,11 @@ void VirtualBrushGrid::UpdateLayout() {
 		width = 200; // Default
 	}
 
-	columns = std::max(1, (width - padding) / (item_size + padding));
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		columns = 1;
+	} else {
+		columns = std::max(1, (width - padding) / (item_size + padding));
+	}
 	int rows = (static_cast<int>(tileset->size()) + columns - 1) / columns;
 	int contentHeight = rows * (item_size + padding) + padding;
 
@@ -62,7 +71,8 @@ int VirtualBrushGrid::GetOrCreateBrushTexture(NVGcontext* vg, Brush* brush) {
 	}
 
 	// Use brush pointer address as unique ID (stable during runtime)
-	uint32_t brushId = static_cast<uint32_t>(reinterpret_cast<uintptr_t>(brush) & 0xFFFFFFFF);
+	uintptr_t ptr = reinterpret_cast<uintptr_t>(brush);
+	uint32_t brushId = static_cast<uint32_t>(ptr ^ (ptr >> 32));
 
 	// Check cache first
 	int existingTex = GetCachedImage(brushId);
@@ -230,9 +240,9 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	if (brush) {
 		int tex = GetOrCreateBrushTexture(vg, brush);
 		if (tex > 0) {
-			int iconSize = item_size - 4;
+			int iconSize = (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) ? 32 : (item_size - 4);
 			int iconX = rect.x + 2;
-			int iconY = rect.y + 2;
+			int iconY = rect.y + (rect.height - iconSize) / 2;
 
 			NVGpaint imgPaint = nvgImagePattern(vg, static_cast<float>(iconX), static_cast<float>(iconY), static_cast<float>(iconSize), static_cast<float>(iconSize), 0.0f, tex, 1.0f);
 
@@ -241,12 +251,26 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 		}
+
+		// Text for List Mode
+		if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+			nvgFontSize(vg, 14.0f);
+			nvgFontFace(vg, "sans");
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+			nvgText(vg, x + 32 + 10, y + h / 2, brush->getName().c_str(), nullptr);
+		}
 	}
 }
 
 wxRect VirtualBrushGrid::GetItemRect(int index) const {
 	int row = index / columns;
 	int col = index % columns;
+
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		int w = GetClientSize().x - 2 * padding;
+		return wxRect(padding, padding + row * (item_size + padding), w, item_size);
+	}
 
 	return wxRect(
 		padding + col * (item_size + padding),
@@ -261,7 +285,12 @@ int VirtualBrushGrid::HitTest(int x, int y) const {
 	int realY = y + scrollPos;
 	int realX = x;
 
-	int col = (realX - padding) / (item_size + padding);
+	int col = 0;
+	if (list_type == BRUSHLIST_LISTBOX || list_type == BRUSHLIST_TEXT_LISTBOX) {
+		col = 0;
+	} else {
+		col = (realX - padding) / (item_size + padding);
+	}
 	int row = (realY - padding) / (item_size + padding);
 
 	if (col < 0 || col >= columns || row < 0) {
@@ -285,21 +314,40 @@ void VirtualBrushGrid::OnMouseDown(wxMouseEvent& event) {
 	int index = HitTest(event.GetX(), event.GetY());
 	if (index != -1 && index != selected_index) {
 		selected_index = index;
-
-		// Notify GUI - find PaletteWindow parent
-		wxWindow* w = GetParent();
-		while (w) {
-			PaletteWindow* pw = dynamic_cast<PaletteWindow*>(w);
-			if (pw) {
-				g_gui.ActivatePalette(pw);
-				break;
-			}
-			w = w->GetParent();
-		}
-
-		g_gui.SelectBrush(tileset->brushlist[selected_index], tileset->getType());
-		Refresh();
+		NotifySelectionChanged();
 	}
+}
+
+void VirtualBrushGrid::NotifySelectionChanged() {
+	if (selected_index < 0 || selected_index >= static_cast<int>(tileset->brushlist.size())) {
+		return;
+	}
+
+	// Notify GUI - find PaletteWindow parent
+	wxWindow* w = GetParent();
+	while (w) {
+		PaletteWindow* pw = dynamic_cast<PaletteWindow*>(w);
+		if (pw) {
+			g_gui.ActivatePalette(pw);
+			break;
+		}
+		w = w->GetParent();
+	}
+
+	g_gui.SelectBrush(tileset->brushlist[selected_index], tileset->getType());
+
+	// Ensure visible
+	wxRect rect = GetItemRect(selected_index);
+	int scrollPos = GetScrollPosition();
+	int clientHeight = GetClientSize().y;
+
+	if (rect.y < scrollPos) {
+		SetScrollPosition(rect.y - padding);
+	} else if (rect.y + rect.height > scrollPos + clientHeight) {
+		SetScrollPosition(rect.y + rect.height - clientHeight + padding);
+	}
+
+	Refresh();
 }
 
 void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
@@ -329,6 +377,75 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 void VirtualBrushGrid::OnTimer(wxTimerEvent& event) {
 	// Animation tick for hover effects (optional - can be enhanced later)
 	Refresh();
+}
+
+void VirtualBrushGrid::OnKey(wxKeyEvent& event) {
+	if (tileset->brushlist.empty()) {
+		event.Skip();
+		return;
+	}
+
+	bool eat = g_settings.getInteger(Config::LISTBOX_EATS_ALL_EVENTS);
+
+	if (eat) {
+		switch (event.GetKeyCode()) {
+			case WXK_UP:
+				if (selected_index >= columns) {
+					selected_index -= columns;
+					NotifySelectionChanged();
+					return;
+				}
+				break;
+			case WXK_DOWN:
+				if (selected_index + columns < static_cast<int>(tileset->brushlist.size())) {
+					selected_index += columns;
+					NotifySelectionChanged();
+					return;
+				}
+				break;
+			case WXK_LEFT:
+				if (selected_index > 0) {
+					selected_index--;
+					NotifySelectionChanged();
+					return;
+				}
+				break;
+			case WXK_RIGHT:
+				if (selected_index + 1 < static_cast<int>(tileset->brushlist.size())) {
+					selected_index++;
+					NotifySelectionChanged();
+					return;
+				}
+				break;
+			case WXK_HOME:
+				selected_index = 0;
+				NotifySelectionChanged();
+				return;
+			case WXK_END:
+				selected_index = static_cast<int>(tileset->brushlist.size()) - 1;
+				NotifySelectionChanged();
+				return;
+			case WXK_PAGEUP:
+				{
+					int rowsPerPage = GetClientSize().y / (item_size + padding);
+					selected_index = std::max(0, selected_index - rowsPerPage * columns);
+					NotifySelectionChanged();
+					return;
+				}
+			case WXK_PAGEDOWN:
+				{
+					int rowsPerPage = GetClientSize().y / (item_size + padding);
+					selected_index = std::min(static_cast<int>(tileset->brushlist.size()) - 1, selected_index + rowsPerPage * columns);
+					NotifySelectionChanged();
+					return;
+				}
+		}
+	}
+
+	// Forward to map if not eaten or not handled
+	if (g_gui.GetCurrentTab() != nullptr) {
+		g_gui.GetCurrentMapTab()->GetEventHandler()->AddPendingEvent(event);
+	}
 }
 
 void VirtualBrushGrid::SelectFirstBrush() {
