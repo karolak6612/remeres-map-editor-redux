@@ -36,7 +36,7 @@ namespace NvgUtils {
 			for (int w = 0; w < gs.width; ++w) {
 				for (int h = 0; h < gs.height; ++h) {
 					int spriteIdx = gs.getIndex(w, h, l, pattern_x, pattern_y, pattern_z, frame);
-					if (spriteIdx < 0 || (size_t)spriteIdx >= gs.spriteList.size()) {
+					if (spriteIdx < 0 || static_cast<size_t>(spriteIdx) >= gs.spriteList.size()) {
 						continue;
 					}
 
@@ -74,9 +74,9 @@ namespace NvgUtils {
 							} else {
 								float a = sa / 255.0f;
 								float inv_a = 1.0f - a;
-								composite[dst_idx + 0] = (uint8_t)(spriteData[src_idx + 0] * a + composite[dst_idx + 0] * inv_a);
-								composite[dst_idx + 1] = (uint8_t)(spriteData[src_idx + 1] * a + composite[dst_idx + 1] * inv_a);
-								composite[dst_idx + 2] = (uint8_t)(spriteData[src_idx + 2] * a + composite[dst_idx + 2] * inv_a);
+								composite[dst_idx + 0] = static_cast<uint8_t>(spriteData[src_idx + 0] * a + composite[dst_idx + 0] * inv_a);
+								composite[dst_idx + 1] = static_cast<uint8_t>(spriteData[src_idx + 1] * a + composite[dst_idx + 1] * inv_a);
+								composite[dst_idx + 2] = static_cast<uint8_t>(spriteData[src_idx + 2] * a + composite[dst_idx + 2] * inv_a);
 								composite[dst_idx + 3] = std::max(composite[dst_idx + 3], sa);
 							}
 						}

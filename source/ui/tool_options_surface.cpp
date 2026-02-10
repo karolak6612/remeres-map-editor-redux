@@ -12,13 +12,13 @@
 #include "brushes/border/optional_border_brush.h"
 #include "brushes/door/door_brush.h"
 #include "brushes/flag/flag_brush.h"
+#include "util/nvg_utils.h"
+#include "rendering/core/text_renderer.h"
 
-ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) : wxControl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxWANTS_CHARS) {
+ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) : NanoVGCanvas(parent, wxID_ANY, wxBORDER_NONE | wxWANTS_CHARS | wxVSCROLL) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 	m_animTimer.SetOwner(this);
 
-	Bind(wxEVT_PAINT, &ToolOptionsSurface::OnPaint, this);
-	Bind(wxEVT_ERASE_BACKGROUND, &ToolOptionsSurface::OnEraseBackground, this);
 	Bind(wxEVT_LEFT_DOWN, &ToolOptionsSurface::OnMouse, this);
 	Bind(wxEVT_LEFT_UP, &ToolOptionsSurface::OnMouse, this);
 	Bind(wxEVT_MOTION, &ToolOptionsSurface::OnMouse, this);
@@ -65,7 +65,7 @@ wxSize ToolOptionsSurface::DoGetBestClientSize() const {
 }
 
 void ToolOptionsSurface::DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) {
-	wxControl::DoSetSizeHints(minW, minH, maxW, maxH, incW, incH);
+	wxWindow::DoSetSizeHints(minW, minH, maxW, maxH, incW, incH);
 }
 
 void ToolOptionsSurface::RebuildLayout() {
@@ -178,158 +178,218 @@ void ToolOptionsSurface::RebuildLayout() {
 		interactables.preview_check_rect = wxRect(x, y, slider_w, FromDIP(20));
 		y += FromDIP(24);
 		interactables.lock_check_rect = wxRect(x, y, slider_w, FromDIP(20));
+		y += FromDIP(24);
 	}
 
 	InvalidateBestSize();
+	UpdateScrollbar(y + FromDIP(8));
 }
 
-void ToolOptionsSurface::OnPaint(wxPaintEvent& evt) {
-	wxAutoBufferedPaintDC dc(this);
-	PrepareDC(dc);
-
-	// Background
-	wxColour bg = wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE);
-	dc.SetBackground(wxBrush(bg));
-	dc.Clear();
-
+void ToolOptionsSurface::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// 1. Draw Tools
 	for (const auto& tr : tool_rects) {
-		DrawToolIcon(dc, tr);
+		DrawToolIcon(vg, tr);
 	}
 
 	// 2. Draw Sliders
 	if (interactables.size_slider_rect.height > 0) {
-		DrawSlider(dc, interactables.size_slider_rect, "Size", current_size, 1, 15, true);
+		DrawSlider(vg, interactables.size_slider_rect, "Size", current_size, 1, 15, true);
 	}
 	if (interactables.thickness_slider_rect.height > 0) {
-		// Doodad thickness logic usually 0-100% or similar? No, old code was just "Thickness".
-		DrawSlider(dc, interactables.thickness_slider_rect, "Thinkness", current_thickness, 1, 100, true);
+		DrawSlider(vg, interactables.thickness_slider_rect, "Thinkness", current_thickness, 1, 100, true);
 	}
 
 	// 3. Checkboxes
 	if (interactables.preview_check_rect.height > 0) {
-		DrawCheckbox(dc, interactables.preview_check_rect, "Preview Border", show_preview, interactables.hover_preview);
+		DrawCheckbox(vg, interactables.preview_check_rect, "Preview Border", show_preview, interactables.hover_preview);
 	}
 	if (interactables.lock_check_rect.height > 0) {
-		DrawCheckbox(dc, interactables.lock_check_rect, "Lock Doors (Shift)", lock_doors, interactables.hover_lock);
+		DrawCheckbox(vg, interactables.lock_check_rect, "Lock Doors (Shift)", lock_doors, interactables.hover_lock);
 	}
-
-	// Debug Focus
-	// if (HasFocus()) { wxPen p(*wxRED, 1); dc.SetPen(p); dc.SetBrush(*wxTRANSPARENT_BRUSH); dc.DrawRectangle(GetClientSize()); }
 }
 
-void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
+void ToolOptionsSurface::DrawToolIcon(NVGcontext* vg, const ToolRect& tr) {
 	bool is_selected = (active_brush == tr.brush);
 	bool is_hover = (hover_brush == tr.brush);
 
-	wxRect r = tr.rect;
+	float r_x = static_cast<float>(tr.rect.x);
+	float r_y = static_cast<float>(tr.rect.y);
+	float r_w = static_cast<float>(tr.rect.width);
+	float r_h = static_cast<float>(tr.rect.height);
 
 	// Background
 	if (is_selected) {
-		dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
-		dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(180)));
-		dc.DrawRectangle(r);
+		nvgBeginPath(vg);
+		nvgRect(vg, r_x, r_y, r_w, r_h);
+		nvgFillColor(vg, nvgRGBA(51, 153, 255, 180)); // Highlight
+		nvgFill(vg);
+		nvgStrokeColor(vg, nvgRGBA(51, 153, 255, 255));
+		nvgStroke(vg);
 	} else if (is_hover) {
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.SetBrush(wxBrush(wxColour(200, 200, 200, 100))); // Transparent grey
-		dc.DrawRectangle(r);
+		nvgBeginPath(vg);
+		nvgRect(vg, r_x, r_y, r_w, r_h);
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 100));
+		nvgFill(vg);
 	}
 
 	// Draw Brush Sprite
 	if (tr.brush) {
 		Sprite* s = tr.brush->getSprite();
-		if (!s && tr.brush->getLookID() != 0) {
-			s = g_gui.gfx.getSprite(tr.brush->getLookID());
+		int spriteId = tr.brush->getLookID();
+
+		if (!s && spriteId != 0) {
+			s = g_gui.gfx.getSprite(spriteId);
 		}
 
+		int img = 0;
 		if (s) {
-			// Center the sprite in the rect
-			// Assuming 32x32 icon size for now, which matches SPRITE_SIZE_32x32 (32x32)
-			int x_off = r.x + (r.width - 32) / 2;
-			int y_off = r.y + (r.height - 32) / 2;
-			s->DrawTo(&dc, SPRITE_SIZE_32x32, x_off, y_off);
+			uint32_t key;
+			if (spriteId != 0) {
+				key = static_cast<uint32_t>(spriteId) | 0x40000000;
+			} else {
+				// Pointer hash for dynamic/unregistered sprites
+				uint64_t ptr = reinterpret_cast<uint64_t>(s);
+				key = static_cast<uint32_t>(ptr ^ (ptr >> 32));
+				key |= 0x80000000;
+			}
+			img = GetOrCreateSpriteTexture(s, key);
+		}
+
+		if (img > 0) {
+			// Assuming 32x32 sprite content
+			int sw, sh;
+			nvgImageSize(vg, img, &sw, &sh);
+
+			// Center
+			float draw_x = r_x + (r_w - 32) / 2;
+			float draw_y = r_y + (r_h - 32) / 2;
+
+			nvgBeginPath(vg);
+			nvgRect(vg, draw_x, draw_y, 32, 32);
+			nvgFillPaint(vg, nvgImagePattern(vg, draw_x, draw_y, 32, 32, 0, img, 1.0f));
+			nvgFill(vg);
 		} else {
-			// Fallback text/color if no sprite
-			wxString label = tr.tooltip.Left(1);
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-			dc.DrawLabel(label, r, wxALIGN_CENTER);
+			// Fallback text
+			nvgFontSize(vg, 16.0f);
+			nvgFontFace(vg, "sans");
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+			nvgText(vg, r_x + r_w / 2, r_y + r_h / 2, tr.tooltip.Left(1).c_str(), nullptr);
 		}
 	}
 
 	// Border
-	dc.SetBrush(*wxTRANSPARENT_BRUSH);
+	nvgBeginPath(vg);
+	nvgRect(vg, r_x, r_y, r_w, r_h);
 	if (is_selected) {
-		dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
+		nvgStrokeColor(vg, nvgRGBA(51, 153, 255, 255));
 	} else {
-		dc.SetPen(wxPen(wxColour(100, 100, 100)));
+		nvgStrokeColor(vg, nvgRGBA(100, 100, 100, 255));
 	}
-	dc.DrawRectangle(r);
+	nvgStroke(vg);
 }
 
-void ToolOptionsSurface::DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active) {
+void ToolOptionsSurface::DrawSlider(NVGcontext* vg, const wxRect& rect, const wxString& label, int value, int min, int max, bool active) {
 	// Label
-	dc.SetFont(GetFont());
-	dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
+	nvgFontSize(vg, 12.0f); // Default font size
+	nvgFontFace(vg, "sans");
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-	wxSize extent = dc.GetTextExtent(label);
-	dc.DrawText(label, rect.GetLeft(), rect.GetTop() + (rect.height - extent.y) / 2);
+	float r_x = static_cast<float>(rect.x);
+	float r_y = static_cast<float>(rect.y);
+	float r_h = static_cast<float>(rect.height);
+
+	nvgText(vg, r_x, r_y + r_h / 2, label.c_str(), nullptr);
 
 	// Track
 	int label_w = FromDIP(70);
-	int track_x = rect.GetLeft() + label_w;
-	int track_w = rect.width - label_w - FromDIP(40); // Room for value text
-	int track_h = FromDIP(4);
-	int track_y = rect.GetTop() + (rect.height - track_h) / 2;
+	float track_x = r_x + label_w;
+	float track_w = static_cast<float>(rect.width - label_w - FromDIP(40));
+	float track_h = static_cast<float>(FromDIP(4));
+	float track_y = r_y + (r_h - track_h) / 2;
 
-	wxRect track_rect(track_x, track_y, track_w, track_h);
-
-	dc.SetPen(*wxTRANSPARENT_PEN);
-	dc.SetBrush(wxBrush(wxColour(200, 200, 200)));
-	dc.DrawRectangle(track_rect);
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, track_x, track_y, track_w, track_h, 2.0f);
+	nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+	nvgFill(vg);
 
 	// Fill
 	if (value > min && max > min) {
 		float pct = (float)(value - min) / (float)(max - min);
-		int fill_w = (int)(track_w * pct);
-		wxRect fill_rect(track_x, track_y, fill_w, track_h);
-		dc.SetBrush(wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
-		dc.DrawRectangle(fill_rect);
+		float fill_w = track_w * pct;
+
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, track_x, track_y, fill_w, track_h, 2.0f);
+		nvgFillColor(vg, nvgRGBA(51, 153, 255, 255));
+		nvgFill(vg);
 
 		// Thumb
-		dc.SetBrush(wxBrush(wxColour(50, 50, 50)));
-		dc.DrawCircle(track_x + fill_w, track_y + track_h / 2, FromDIP(5));
+		float thumb_x = track_x + fill_w;
+		float thumb_y = track_y + track_h / 2;
+		nvgBeginPath(vg);
+		nvgCircle(vg, thumb_x, thumb_y, static_cast<float>(FromDIP(5)));
+		nvgFillColor(vg, nvgRGBA(50, 50, 50, 255));
+		nvgFill(vg);
 	}
 
 	// Value Text
-	wxString val_str = wxString::Format("%d", value);
-	dc.DrawText(val_str, track_x + track_w + FromDIP(8), rect.GetTop() + (rect.height - extent.y) / 2);
+	std::string val_str = std::to_string(value);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, track_x + track_w + FromDIP(8), r_y + r_h / 2, val_str.c_str(), nullptr);
 }
 
-void ToolOptionsSurface::DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover) {
-	// Box
-	int box_sz = FromDIP(14);
-	int box_y = rect.GetTop() + (rect.height - box_sz) / 2;
-	wxRect box(rect.GetLeft(), box_y, box_sz, box_sz);
+void ToolOptionsSurface::DrawCheckbox(NVGcontext* vg, const wxRect& rect, const wxString& label, bool value, bool hover) {
+	float box_sz = static_cast<float>(FromDIP(14));
+	float box_y = static_cast<float>(rect.y) + (static_cast<float>(rect.height) - box_sz) / 2;
+	float box_x = static_cast<float>(rect.x);
+
+	nvgBeginPath(vg);
+	nvgRect(vg, box_x, box_y, box_sz, box_sz);
 
 	if (hover) {
-		dc.SetPen(wxPen(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)));
+		nvgStrokeColor(vg, nvgRGBA(51, 153, 255, 255));
 	} else {
-		dc.SetPen(wxPen(wxColour(150, 150, 150)));
+		nvgStrokeColor(vg, nvgRGBA(150, 150, 150, 255));
 	}
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStroke(vg);
 
-	dc.SetBrush(value ? wxBrush(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT)) : *wxWHITE_BRUSH);
-	dc.DrawRectangle(box);
-
-	// Checkmark (simple)
 	if (value) {
-		dc.SetPen(*wxWHITE_PEN);
-		dc.DrawLine(box.GetLeft() + 3, box.GetTop() + 7, box.GetLeft() + 6, box.GetTop() + 10);
-		dc.DrawLine(box.GetLeft() + 6, box.GetTop() + 10, box.GetRight() - 3, box.GetTop() + 4);
+		nvgFillColor(vg, nvgRGBA(51, 153, 255, 255));
+		nvgFill(vg);
+
+		// Checkmark
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, box_x + 3, box_y + 7);
+		nvgLineTo(vg, box_x + 6, box_y + 10);
+		nvgLineTo(vg, box_x + box_sz - 3, box_y + 4);
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgStrokeWidth(vg, 1.5f);
+		nvgStroke(vg);
 	}
 
 	// Label
-	dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-	dc.DrawText(label, box.GetRight() + FromDIP(8), box_y - 1);
+	nvgFontSize(vg, 12.0f);
+	nvgFontFace(vg, "sans");
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, box_x + box_sz + FromDIP(8), box_y + box_sz / 2, label.c_str(), nullptr);
+}
+
+int ToolOptionsSurface::GetOrCreateSpriteTexture(Sprite* s, uint32_t key) {
+	int tex = GetCachedImage(key);
+	if (tex > 0) return tex;
+
+	if (!s) return 0;
+	GameSprite* gs = dynamic_cast<GameSprite*>(s);
+	if (!gs) return 0;
+
+	int w, h;
+	auto data = NvgUtils::CreateCompositeRGBA(*gs, w, h);
+	if (!data) return 0;
+
+	return GetOrCreateImage(key, data.get(), w, h);
 }
 
 void ToolOptionsSurface::OnEraseBackground(wxEraseEvent& evt) {
@@ -338,6 +398,7 @@ void ToolOptionsSurface::OnEraseBackground(wxEraseEvent& evt) {
 
 void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	m_hoverPos = evt.GetPosition();
+	m_hoverPos.y += GetScrollPosition();
 
 	// Hit testing
 	Brush* prev_hover = hover_brush;

@@ -216,8 +216,8 @@ namespace IngamePreview {
 				// Total elevation offset was calculated above.
 				// For the label to stay synced, we should probably fetch it again or store it.
 				// Since we are at the center of the screen, we can just use screen-relative coords.
-				float screenCenterX = (float)viewport_width / 2.0f;
-				float screenCenterY = (float)viewport_height / 2.0f;
+				float screenCenterX = static_cast<float>(viewport_width) / 2.0f;
+				float screenCenterY = static_cast<float>(viewport_height) / 2.0f;
 
 				// Fetch elevation again to be precise
 				int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
