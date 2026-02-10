@@ -21,17 +21,17 @@
 
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include "ui/controls/nanovg_listbox.h"
 
 // ============================================================================
 //
 
-class DatDebugViewListBox : public wxVListBox {
+class DatDebugViewListBox : public NanoVGListBox {
 public:
 	DatDebugViewListBox(wxWindow* parent, wxWindowID id);
 	~DatDebugViewListBox();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) override;
 
 protected:
 	using SpriteMap = std::vector<Sprite*>;
@@ -39,7 +39,7 @@ protected:
 };
 
 DatDebugViewListBox::DatDebugViewListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
+	NanoVGListBox(parent, id, wxLB_SINGLE) {
 	sprites.reserve(g_gui.gfx.getItemSpriteMaxID());
 	for (int id = 0; id < g_gui.gfx.getItemSpriteMaxID(); ++id) {
 		Sprite* spr = g_gui.gfx.getSprite(id);
@@ -47,6 +47,7 @@ DatDebugViewListBox::DatDebugViewListBox(wxWindow* parent, wxWindowID id) :
 			sprites.push_back(spr);
 		}
 	}
+	SetRowHeight(FROM_DIP(parent, 32));
 	SetItemCount(sprites.size());
 }
 
@@ -54,26 +55,33 @@ DatDebugViewListBox::~DatDebugViewListBox() {
 	////
 }
 
-void DatDebugViewListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	if (n < sprites.size()) {
-		sprites[n]->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
-	}
+void DatDebugViewListBox::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) {
+	if (index < 0 || (size_t)index >= sprites.size()) return;
 
-	if (IsSelected(n)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
+	Sprite* spr = sprites[index];
+	GameSprite* gs = dynamic_cast<GameSprite*>(spr);
+	if (gs) {
+		int tex = GetOrCreateSpriteImage(gs->id);
+		if (tex > 0) {
+			int iconSize = rect.height;
+			nvgBeginPath(vg);
+			nvgRect(vg, rect.x, rect.y, iconSize, iconSize);
+			NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, iconSize, iconSize, 0, tex, 1.0f);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
 		}
-	} else {
-		dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
 	}
 
-	dc.DrawText(wxString() << n, rect.GetX() + 40, rect.GetY() + 6);
-}
+	if (selected) {
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+	} else {
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	}
 
-wxCoord DatDebugViewListBox::OnMeasureItem(size_t n) const {
-	return 32;
+	nvgFontSize(vg, 14.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, rect.x + 40, rect.y + rect.height / 2, (wxString() << index).ToStdString().c_str(), nullptr);
 }
 
 // ============================================================================

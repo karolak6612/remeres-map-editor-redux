@@ -99,6 +99,11 @@ public:
 	 */
 	int GetOrCreateItemImage(uint16_t itemId);
 
+	/**
+	 * @brief Gets or creates a cached NanoVG image for a sprite (client ID).
+	 */
+	int GetOrCreateSpriteImage(uint32_t spriteId);
+
 protected:
 	/**
 	 * @brief Override this to implement your custom NanoVG drawing.

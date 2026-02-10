@@ -286,9 +286,10 @@ void FindBrushDialog::RefreshContentsInternal() {
 // Listbox in find item / brush stuff
 
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
+	NanoVGListBox(parent, id, wxLB_SINGLE),
 	cleared(false),
 	no_matches(false) {
+	SetRowHeight(FROM_DIP(parent, 32));
 	Clear();
 }
 
@@ -330,33 +331,40 @@ Brush* FindDialogListBox::GetSelectedBrush() {
 	return brushlist[n];
 }
 
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+void FindDialogListBox::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) {
+	if (selected) {
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 	} else {
-		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
-		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
-		}
-
-		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-			}
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
-		}
-
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	}
-}
 
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
+	nvgFontSize(vg, 14.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+	if (no_matches) {
+		nvgText(vg, rect.x + 40, rect.y + rect.height / 2, "No matches for your search.", nullptr);
+	} else if (cleared) {
+		nvgText(vg, rect.x + 40, rect.y + rect.height / 2, "Please enter your search string.", nullptr);
+	} else {
+		if (index < 0 || (size_t)index >= brushlist.size()) return;
+
+		Sprite* spr = g_gui.gfx.getSprite(brushlist[index]->getLookID());
+		if (spr) {
+			int spriteId = brushlist[index]->getLookID();
+			int tex = GetOrCreateSpriteImage(spriteId);
+			if (tex > 0) {
+				int iconSize = rect.height;
+				nvgBeginPath(vg);
+				nvgRect(vg, rect.x, rect.y, iconSize, iconSize);
+				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, iconSize, iconSize, 0, tex, 1.0f);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
+		}
+
+		wxString label = wxstr(brushlist[index]->getName());
+		// rect.height is 32 (icon size)
+		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2, label.ToStdString().c_str(), nullptr);
+	}
 }

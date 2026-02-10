@@ -182,6 +182,24 @@ int NanoVGCanvas::GetOrCreateItemImage(uint16_t itemId) {
 	return tex;
 }
 
+int NanoVGCanvas::GetOrCreateSpriteImage(uint32_t spriteId) {
+	int tex = GetCachedImage(spriteId);
+	if (tex > 0) {
+		return tex;
+	}
+
+	NVGcontext* vg = GetNVGContext();
+	if (!vg) {
+		return 0;
+	}
+
+	tex = NvgUtils::CreateSpriteTexture(vg, spriteId);
+	if (tex > 0) {
+		AddCachedImage(spriteId, tex);
+	}
+	return tex;
+}
+
 void NanoVGCanvas::UpdateScrollbar(int contentHeight) {
 	m_contentHeight = contentHeight;
 	int h = GetClientSize().y;

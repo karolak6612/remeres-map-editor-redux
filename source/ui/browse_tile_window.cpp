@@ -24,22 +24,24 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "ui/browse_tile_window.h"
+#include "ui/controls/nanovg_listbox.h"
 
 // ============================================================================
 //
 
-class BrowseTileListBox : public wxVListBox {
+class BrowseTileListBox : public NanoVGListBox {
 public:
 	BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile);
 	~BrowseTileListBox();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) override;
 	Item* GetSelectedItem();
 	void RemoveSelected();
 
 protected:
 	void UpdateItems();
+	void SyncSelection();
+	void OnSelectionChanged() override { SyncSelection(); }
 
 	using ItemsMap = std::vector<Item*>;
 	ItemsMap items;
@@ -47,7 +49,8 @@ protected:
 };
 
 BrowseTileListBox::BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile) :
-	wxVListBox(parent, id, wxDefaultPosition, FROM_DIP(parent, wxSize(200, 180)), wxLB_MULTIPLE), edit_tile(tile) {
+	NanoVGListBox(parent, id, wxLB_MULTIPLE), edit_tile(tile) {
+	SetRowHeight(FROM_DIP(parent, 32));
 	UpdateItems();
 }
 
@@ -55,40 +58,53 @@ BrowseTileListBox::~BrowseTileListBox() {
 	////
 }
 
-void BrowseTileListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	Item* item = items[n];
+void BrowseTileListBox::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) {
+	Item* item = items[index];
 
-	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
-	if (sprite) {
-		sprite->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
+	// Draw sprite
+	int spriteId = item->getClientID();
+	int tex = GetOrCreateSpriteImage(spriteId);
+	if (tex > 0) {
+		int iconSize = rect.height;
+		nvgBeginPath(vg);
+		nvgRect(vg, rect.x, rect.y, iconSize, iconSize);
+		NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, iconSize, iconSize, 0, tex, 1.0f);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
 	}
 
-	if (IsSelected(n)) {
-		item->select();
-		if (HasFocus()) {
-			dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-		}
+	// Draw Text
+	nvgFontSize(vg, 14.0f);
+	nvgFontFace(vg, "sans");
+	if (selected) {
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 	} else {
-		item->deselect();
-		dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	}
 
 	wxString label;
 	label << item->getID() << " - " << wxstr(item->getName());
-	dc.DrawText(label, rect.GetX() + 40, rect.GetY() + 6);
+
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	// 40 offset to skip icon
+	nvgText(vg, rect.x + 40, rect.y + rect.height / 2, label.ToStdString().c_str(), nullptr);
 }
 
-wxCoord BrowseTileListBox::OnMeasureItem(size_t n) const {
-	return 32;
+void BrowseTileListBox::SyncSelection() {
+	for (size_t i = 0; i < items.size(); ++i) {
+		if (IsSelected(i)) {
+			items[i]->select();
+		} else {
+			items[i]->deselect();
+		}
+	}
 }
 
 Item* BrowseTileListBox::GetSelectedItem() {
 	if (GetItemCount() == 0 || GetSelectedCount() == 0) {
 		return nullptr;
 	}
-
+	SyncSelection();
 	return edit_tile->getTopSelectedItem();
 }
 
@@ -97,7 +113,8 @@ void BrowseTileListBox::RemoveSelected() {
 		return;
 	}
 
-	Clear();
+	SyncSelection();
+
 	items.clear();
 
 	// Delete the items from the tile
@@ -106,6 +123,7 @@ void BrowseTileListBox::RemoveSelected() {
 		delete *iit;
 	}
 
+	DeselectAll();
 	UpdateItems();
 	Refresh();
 }

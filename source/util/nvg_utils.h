@@ -87,6 +87,24 @@ namespace NvgUtils {
 		return composite;
 	}
 
+	// Generates RGBA pixel data for a given sprite ID (client ID).
+	// Returns a texture ID created in the given NanoVG context.
+	// Returns 0 if generation fails.
+	inline int CreateSpriteTexture(NVGcontext* vg, uint32_t spriteId) {
+		GameSprite* gs = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(spriteId));
+		if (!gs) {
+			return 0;
+		}
+
+		int w, h;
+		auto composite = CreateCompositeRGBA(*gs, w, h);
+		if (!composite) {
+			return 0;
+		}
+
+		return nvgCreateImageRGBA(vg, w, h, 0, composite.get());
+	}
+
 	// Generates RGBA pixel data for a given item ID.
 	// Returns a texture ID created in the given NanoVG context.
 	// Returns 0 if generation fails.
