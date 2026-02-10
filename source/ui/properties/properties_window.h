@@ -43,6 +43,7 @@ public:
 	void OnResize(wxSizeEvent&);
 	void OnNotebookPageChanged(wxNotebookEvent&);
 	void OnGridValueChanged(wxGridEvent&);
+	void OnGridSelectionChanged(wxNotifyEvent&);
 
 	void Update();
 

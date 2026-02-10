@@ -48,6 +48,8 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	Bind(wxEVT_GRID_RANGE_SELECT, &PropertiesWindow::OnGridSelectionChanged, this);
+	Bind(wxEVT_GRID_LABEL_LEFT_CLICK, &PropertiesWindow::OnGridSelectionChanged, this);
 
 	createUI();
 }
@@ -215,6 +217,7 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
 	removeBtn->SetToolTip("Remove selected custom attribute");
+	removeBtn->Enable(false);
 	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
 
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
@@ -320,8 +323,19 @@ void PropertiesWindow::OnClickRemoveAttribute(wxCommandEvent&) {
 
 	int rowIndex = rowIndexes[0];
 	attributesGrid->DeleteRows(rowIndex, 1);
+
+	if (wxWindow* btn = FindWindow(ITEM_PROPERTIES_REMOVE_ATTRIBUTE)) {
+		btn->Enable(false);
+	}
 }
 
 void PropertiesWindow::OnClickCancel(wxCommandEvent&) {
 	EndModal(0);
+}
+
+void PropertiesWindow::OnGridSelectionChanged(wxNotifyEvent& event) {
+	if (wxWindow* btn = FindWindow(ITEM_PROPERTIES_REMOVE_ATTRIBUTE)) {
+		btn->Enable(attributesGrid->GetSelectedRows().GetCount() > 0);
+	}
+	event.Skip();
 }
