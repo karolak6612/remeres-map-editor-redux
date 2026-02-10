@@ -18,6 +18,7 @@
 #include "app/main.h"
 #include <string_view>
 #include <map>
+#include <bit>
 
 #include "game/materials.h"
 #include "app/managers/version_manager.h"
@@ -134,9 +135,9 @@ ItemDatabase::~ItemDatabase() {
 }
 
 void ItemDatabase::clear() {
-	for (uint32_t i = 0; i < items.size(); i++) {
-		delete items[i];
-		items.set(i, nullptr);
+	for (auto& item : items) {
+		delete item;
+		item = nullptr;
 	}
 }
 
@@ -155,7 +156,7 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, std::v
 		}
 
 		ItemType* t = newd ItemType();
-		t->group = ItemGroup_t(u8);
+		t->group = static_cast<ItemGroup_t>(u8);
 
 		switch (t->group) {
 			case ITEM_GROUP_NONE:
@@ -308,7 +309,7 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, std::v
 						warnings.push_back("Invalid item type property (6)");
 						break;
 					}
-					t->name = (char*)name;
+					t->name = reinterpret_cast<char*>(name);
 					break;
 				}
 
@@ -326,7 +327,7 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, std::v
 						break;
 					}
 
-					t->description = (char*)description;
+					t->description = reinterpret_cast<char*>(description);
 					break;
 				}
 
@@ -353,8 +354,7 @@ bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, std::v
 						break;
 					}
 
-					double wi = *reinterpret_cast<double*>(&w);
-					t->weight = wi;
+					t->weight = std::bit_cast<double>(w);
 					break;
 				}
 
@@ -427,12 +427,12 @@ bool ItemDatabase::loadFromOtbVer2(BinaryNode* itemNode, wxString& error, std::v
 			continue;
 		}
 
-		if (ItemGroup_t(u8) == ITEM_GROUP_DEPRECATED) {
+		if (static_cast<ItemGroup_t>(u8) == ITEM_GROUP_DEPRECATED) {
 			continue;
 		}
 
 		ItemType* t = newd ItemType();
-		t->group = ItemGroup_t(u8);
+		t->group = static_cast<ItemGroup_t>(u8);
 
 		switch (t->group) {
 			case ITEM_GROUP_NONE:
@@ -595,12 +595,12 @@ bool ItemDatabase::loadFromOtbVer3(BinaryNode* itemNode, wxString& error, std::v
 			continue;
 		}
 
-		if (ItemGroup_t(u8) == ITEM_GROUP_DEPRECATED) {
+		if (static_cast<ItemGroup_t>(u8) == ITEM_GROUP_DEPRECATED) {
 			continue;
 		}
 
 		ItemType* t = newd ItemType();
-		t->group = ItemGroup_t(u8);
+		t->group = static_cast<ItemGroup_t>(u8);
 
 		switch (t->group) {
 			case ITEM_GROUP_NONE:
@@ -918,7 +918,7 @@ bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id) {
 	it.editorsuffix = itemNode.attribute("editorsuffix").as_string();
 
 	pugi::xml_attribute attribute;
-	for (pugi::xml_node itemAttributesNode = itemNode.first_child(); itemAttributesNode; itemAttributesNode = itemAttributesNode.next_sibling()) {
+	for (pugi::xml_node itemAttributesNode : itemNode.children()) {
 		if (!(attribute = itemAttributesNode.attribute("key"))) {
 			continue;
 		}
@@ -1032,7 +1032,7 @@ bool ItemDatabase::loadFromGameXml(const FileName& identifier, wxString& error, 
 		return false;
 	}
 
-	for (pugi::xml_node itemNode = node.first_child(); itemNode; itemNode = itemNode.next_sibling()) {
+	for (pugi::xml_node itemNode : node.children()) {
 		if (as_lower_str(itemNode.name()) != "item") {
 			continue;
 		}
