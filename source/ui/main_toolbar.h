@@ -24,7 +24,7 @@
 
 #include "ui/gui_ids.h"
 #include "brushes/brush_enums.h"
-#include "ui/numbertextctrl.h"
+#include "ui/controls/numbertextctrl.h"
 
 #include "ui/toolbar/brush_toolbar.h"
 #include "ui/toolbar/position_toolbar.h"

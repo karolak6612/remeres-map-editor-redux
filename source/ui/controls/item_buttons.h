@@ -6,7 +6,7 @@
 #define RME_ITEM_BUTTONS_H_
 
 #include "app/main.h"
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 
 /**
  * A toggle button with an item on it.

@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "ui/dat_debug_view.h"
+#include "ui/windows/dat_debug_view.h"
 
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"

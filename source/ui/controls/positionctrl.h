@@ -18,7 +18,7 @@
 #ifndef _RME_POSITION_CTRL_H_
 #define _RME_POSITION_CTRL_H_
 
-#include "ui/numbertextctrl.h"
+#include "ui/controls/numbertextctrl.h"
 
 class PositionCtrl : public wxStaticBoxSizer {
 public:
