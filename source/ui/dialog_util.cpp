@@ -35,7 +35,7 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 	wxListBox* item_list = newd wxListBox(dlg, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
-	item_list->SetMinSize(wxSize(500, 300));
+	item_list->SetMinSize(FROM_DIP(dlg, wxSize(500, 300)));
 
 	for (size_t i = 0; i != list_items.size();) {
 		wxString str = list_items[i];
@@ -49,7 +49,7 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 		item_list->Append(list_items[i]);
 		++i;
 	}
-	sizer->Add(item_list, 1, wxEXPAND);
+	sizer->Add(item_list, wxSizerFlags(1).Expand());
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	stdsizer->Add(newd wxButton(dlg, wxID_OK, "OK"), wxSizerFlags(1).Center());
@@ -66,7 +66,7 @@ void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content)
 	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxTextCtrl* text_field = newd wxTextCtrl(dlg, wxID_ANY, content, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
-	text_field->SetMinSize(wxSize(400, 550));
+	text_field->SetMinSize(FROM_DIP(dlg, wxSize(400, 550)));
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);

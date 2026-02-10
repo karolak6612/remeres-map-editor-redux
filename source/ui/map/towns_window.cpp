@@ -28,35 +28,35 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 
 	// Town list
 	town_listbox = newd wxListBox(this, EDIT_TOWNS_LISTBOX, wxDefaultPosition, FROM_DIP(this, wxSize(240, 100)));
-	sizer->Add(town_listbox, 1, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 10);
+	sizer->Add(town_listbox, wxSizerFlags(1).Expand().Border(wxTOP | wxLEFT | wxRIGHT, 10));
 
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto addBtn = newd wxButton(this, EDIT_TOWNS_ADD, "Add");
 	addBtn->SetToolTip("Add a new town");
-	tmpsizer->Add(addBtn, 0, wxTOP, 5);
+	tmpsizer->Add(addBtn, wxSizerFlags(0).Border(wxTOP, 5));
 	remove_button = newd wxButton(this, EDIT_TOWNS_REMOVE, "Remove");
 	remove_button->SetToolTip("Remove selected town");
-	tmpsizer->Add(remove_button, 0, wxRIGHT | wxTOP, 5);
-	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	tmpsizer->Add(remove_button, wxSizerFlags(0).Border(wxRIGHT | wxTOP, 5));
+	sizer->Add(tmpsizer, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
 
 	// House options
 	tmpsizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Name / ID");
 	name_field = newd wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, FROM_DIP(this, wxSize(190, 20)), 0, wxTextValidator(wxFILTER_ASCII, &town_name));
 	name_field->SetToolTip("Town name");
-	tmpsizer->Add(name_field, 2, wxEXPAND | wxLEFT | wxBOTTOM, 5);
+	tmpsizer->Add(name_field, wxSizerFlags(2).Expand().Border(wxLEFT | wxBOTTOM, 5));
 
 	id_field = newd wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, FROM_DIP(this, wxSize(40, 20)), 0, wxTextValidator(wxFILTER_NUMERIC, &town_id));
 	id_field->SetToolTip("Town ID");
 	id_field->Enable(false);
-	tmpsizer->Add(id_field, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
-	sizer->Add(tmpsizer, 0, wxEXPAND | wxALL, 10);
+	tmpsizer->Add(id_field, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, 5));
+	sizer->Add(tmpsizer, wxSizerFlags(0).Expand().Border(wxALL, 10));
 
 	// Temple position
 	temple_position = newd PositionCtrl(this, "Temple Position", 0, 0, 0, map.getWidth(), map.getHeight());
 	select_position_button = newd wxButton(this, EDIT_TOWNS_SELECT_TEMPLE, "Go To");
 	select_position_button->SetToolTip("Jump to temple position");
-	temple_position->Add(select_position_button, 0, wxLEFT | wxRIGHT | wxBOTTOM, 5);
-	sizer->Add(temple_position, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	temple_position->Add(select_position_button, wxSizerFlags(0).Border(wxLEFT | wxRIGHT | wxBOTTOM, 5));
+	sizer->Add(temple_position, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
 
 	// OK/Cancel buttons
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);

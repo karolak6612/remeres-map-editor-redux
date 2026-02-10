@@ -1,8 +1,10 @@
+#include "app/main.h" // For FROM_DIP and others
 #include "ui/replace_tool/card_panel.h"
 #include "ui/theme.h"
 #include <wx/dcclient.h>
 #include <wx/graphics.h>
 #include <wx/settings.h>
+#include <wx/dcbuffer.h>
 #include <numbers>
 
 CardPanel::CardPanel(wxWindow* parent, wxWindowID id) : wxPanel(parent, id) {
@@ -11,13 +13,13 @@ CardPanel::CardPanel(wxWindow* parent, wxWindowID id) : wxPanel(parent, id) {
 	Bind(wxEVT_SIZE, &CardPanel::OnSize, this);
 
 	m_mainSizer = new wxBoxSizer(wxVERTICAL);
-	m_mainSizer->AddSpacer(HEADER_HEIGHT);
+	m_mainSizer->AddSpacer(FromDIP(HEADER_HEIGHT));
 
 	m_contentSizer = new wxBoxSizer(wxVERTICAL);
-	m_mainSizer->Add(m_contentSizer, 1, wxEXPAND);
+	m_mainSizer->Add(m_contentSizer, wxSizerFlags(1).Expand());
 
 	m_footerSizer = new wxBoxSizer(wxVERTICAL);
-	m_mainSizer->Add(m_footerSizer, 0, wxEXPAND);
+	m_mainSizer->Add(m_footerSizer, wxSizerFlags(0).Expand());
 
 	SetSizer(m_mainSizer);
 }
@@ -25,7 +27,7 @@ CardPanel::CardPanel(wxWindow* parent, wxWindowID id) : wxPanel(parent, id) {
 void CardPanel::SetShowFooter(bool show) {
 	m_showFooter = show;
 	if (m_showFooter) {
-		m_mainSizer->SetItemMinSize(m_footerSizer, wxSize(-1, FOOTER_HEIGHT));
+		m_mainSizer->SetItemMinSize(m_footerSizer, FromDIP(wxSize(-1, FOOTER_HEIGHT)));
 	} else {
 		m_mainSizer->SetItemMinSize(m_footerSizer, wxSize(-1, 0));
 	}
@@ -46,7 +48,7 @@ void CardPanel::OnSize(wxSizeEvent& event) {
 }
 
 void CardPanel::OnPaint(wxPaintEvent& event) {
-	wxPaintDC dc(this);
+	wxAutoBufferedPaintDC dc(this);
 	std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
 
 	if (!gc) {
@@ -71,13 +73,13 @@ void CardPanel::OnPaint(wxPaintEvent& event) {
 	gc->DrawRectangle(0, 0, w, h);
 
 	// Padding for "shadow"
-	double margin = 2.0;
-	double r = 6.0; // Radius
+	double margin = (double)FromDIP(2);
+	double r = (double)FromDIP(6); // Radius
 
 	// Draw Shadow (simulated with offset rect)
 	gc->SetBrush(wxBrush(wxColour(0, 0, 0, 40)));
 	gc->SetPen(*wxTRANSPARENT_PEN);
-	gc->DrawRoundedRectangle(margin + 2, margin + 2, w - 2 * margin, h - 2 * margin, r);
+	gc->DrawRoundedRectangle(margin + FromDIP(2), margin + FromDIP(2), w - 2 * margin, h - 2 * margin, r);
 
 	// Draw Card Body
 	wxGraphicsPath path = gc->CreatePath();
@@ -91,9 +93,8 @@ void CardPanel::OnPaint(wxPaintEvent& event) {
 	gc->StrokePath(path);
 
 	// Draw Header if Title exists
-	// Draw Header if Title exists
 	if (!m_title.IsEmpty()) {
-		double headerH = (double)HEADER_HEIGHT;
+		double headerH = (double)FromDIP(HEADER_HEIGHT);
 		double x = margin;
 		double y = margin;
 		double cw = w - 2 * margin;
@@ -150,7 +151,7 @@ void CardPanel::OnPaint(wxPaintEvent& event) {
 
 	// Draw Footer if requested
 	if (m_showFooter) {
-		double footerH = (double)FOOTER_HEIGHT;
+		double footerH = (double)FromDIP(FOOTER_HEIGHT);
 		double x = margin;
 		double y = h - margin - footerH;
 		double cw = w - 2 * margin;

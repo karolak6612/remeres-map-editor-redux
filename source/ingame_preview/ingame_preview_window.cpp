@@ -8,26 +8,14 @@
 #include "editor/editor.h"
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"
+#include "app/main.h" // For FROM_DIP
 #include <wx/tglbtn.h>
 
 namespace IngamePreview {
 
-	enum {
-		ID_FOLLOW_SELECTION = 10001,
-		ID_ENABLE_LIGHTING,
-		ID_CHOOSE_OUTFIT,
-		ID_AMBIENT_SLIDER,
-		ID_INTENSITY_SLIDER,
-		ID_VIEWPORT_W_UP,
-		ID_VIEWPORT_W_DOWN,
-		ID_VIEWPORT_H_UP,
-		ID_VIEWPORT_H_DOWN,
-		ID_UPDATE_TIMER
-	};
-
 	IngamePreviewWindow::IngamePreviewWindow(wxWindow* parent) :
 		wxPanel(parent, wxID_ANY),
-		update_timer(this, ID_UPDATE_TIMER),
+		update_timer(this, wxID_ANY),
 		follow_selection(true) {
 
 		// Load initial preferences
@@ -36,87 +24,93 @@ namespace IngamePreview {
 		current_name = wxString::FromUTF8(g_preview_preferences.getName());
 		current_speed = g_preview_preferences.getSpeed();
 
-		// Bind Events
-		Bind(wxEVT_TIMER, &IngamePreviewWindow::OnUpdateTimer, this, ID_UPDATE_TIMER);
-		Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleFollow, this, ID_FOLLOW_SELECTION);
-		Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleLighting, this, ID_ENABLE_LIGHTING);
-		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnAmbientSlider, this, ID_AMBIENT_SLIDER);
-		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnIntensitySlider, this, ID_INTENSITY_SLIDER);
-		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthUp, this, ID_VIEWPORT_W_UP);
-		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthDown, this, ID_VIEWPORT_W_DOWN);
-		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportHeightUp, this, ID_VIEWPORT_H_UP);
-		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportHeightDown, this, ID_VIEWPORT_H_DOWN);
-		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnChooseOutfit, this, ID_CHOOSE_OUTFIT);
-
 		wxBoxSizer* main_sizer = new wxBoxSizer(wxVERTICAL);
 
 		// Single Toolbar
 		wxBoxSizer* toolbar_sizer = new wxBoxSizer(wxHORIZONTAL);
 
 		// Toggles
-		follow_btn = new wxToggleButton(this, ID_FOLLOW_SELECTION, "", wxDefaultPosition, wxSize(28, 24));
-		follow_btn->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_MY_LOCATION, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(76, 175, 80)));
+		follow_btn = new wxToggleButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(28, 24)));
+		follow_btn->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_MY_LOCATION, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(76, 175, 80))));
 		follow_btn->SetValue(true);
 		follow_btn->SetToolTip("Follow Selection / Camera");
-		toolbar_sizer->Add(follow_btn, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		toolbar_sizer->Add(follow_btn, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
 
-		lighting_btn = new wxToggleButton(this, ID_ENABLE_LIGHTING, "", wxDefaultPosition, wxSize(28, 24));
-		lighting_btn->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_WB_SUNNY, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(255, 235, 59)));
+		follow_btn->Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleFollow, this);
+
+		lighting_btn = new wxToggleButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(28, 24)));
+		lighting_btn->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_WB_SUNNY, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(255, 235, 59))));
 		lighting_btn->SetValue(true);
 		lighting_btn->SetToolTip("Toggle Lighting");
-		toolbar_sizer->Add(lighting_btn, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		toolbar_sizer->Add(lighting_btn, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
 
-		outfit_btn = new wxButton(this, ID_CHOOSE_OUTFIT, "", wxDefaultPosition, wxSize(28, 24));
-		outfit_btn->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_ACCOUNT_CIRCLE, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(96, 125, 139)));
+		lighting_btn->Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleLighting, this);
+
+		outfit_btn = new wxButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(28, 24)));
+		outfit_btn->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_ACCOUNT_CIRCLE, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(96, 125, 139))));
 		outfit_btn->SetToolTip("Change Preview Creature Outfit");
-		toolbar_sizer->Add(outfit_btn, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		toolbar_sizer->Add(outfit_btn, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
+
+		outfit_btn->Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnChooseOutfit, this);
 
 		// Sliders
-		ambient_slider = new wxSlider(this, ID_AMBIENT_SLIDER, 128, 0, 255, wxDefaultPosition, wxSize(60, -1));
+		ambient_slider = new wxSlider(this, wxID_ANY, 128, 0, 255, wxDefaultPosition, FromDIP(wxSize(60, -1)));
 		ambient_slider->SetToolTip("Ambient Light");
-		toolbar_sizer->Add(ambient_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		toolbar_sizer->Add(ambient_slider, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
 
-		intensity_slider = new wxSlider(this, ID_INTENSITY_SLIDER, 100, 0, 200, wxDefaultPosition, wxSize(60, -1));
+		ambient_slider->Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnAmbientSlider, this);
+
+		intensity_slider = new wxSlider(this, wxID_ANY, 100, 0, 200, wxDefaultPosition, FromDIP(wxSize(60, -1)));
 		intensity_slider->SetToolTip("Light Intensity");
-		toolbar_sizer->Add(intensity_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		toolbar_sizer->Add(intensity_slider, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
+
+		intensity_slider->Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnIntensitySlider, this);
 
 		// Spacer
-		toolbar_sizer->AddSpacer(4);
-		toolbar_sizer->Add(new wxStaticText(this, wxID_ANY, "|"), 0, wxALL | wxALIGN_CENTER_VERTICAL, 2);
-		toolbar_sizer->AddSpacer(4);
+		toolbar_sizer->AddSpacer(FromDIP(4));
+		toolbar_sizer->Add(new wxStaticText(this, wxID_ANY, "|"), wxSizerFlags(0).Border(wxALL, 2).Align(wxALIGN_CENTER_VERTICAL));
+		toolbar_sizer->AddSpacer(FromDIP(4));
 
 		// Viewport Controls
 		// Width
-		viewport_w_down = new wxButton(this, ID_VIEWPORT_W_DOWN, "", wxDefaultPosition, wxSize(24, 24));
-		viewport_w_down->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_DO_NOT_DISTURB_ON, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(0, 150, 136)));
-		toolbar_sizer->Add(viewport_w_down, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+		viewport_w_down = new wxButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(24, 24)));
+		viewport_w_down->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_DO_NOT_DISTURB_ON, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(0, 150, 136))));
+		toolbar_sizer->Add(viewport_w_down, wxSizerFlags(0).Border(wxALL, 0).Align(wxALIGN_CENTER_VERTICAL));
 
-		viewport_x_text = new wxTextCtrl(this, wxID_ANY, "15", wxDefaultPosition, wxSize(30, -1), wxTE_READONLY | wxTE_CENTER);
-		toolbar_sizer->Add(viewport_x_text, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		viewport_w_down->Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthDown, this);
 
-		viewport_w_up = new wxButton(this, ID_VIEWPORT_W_UP, "", wxDefaultPosition, wxSize(24, 24));
-		viewport_w_up->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_ADD_CIRCLE, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(0, 150, 136)));
-		toolbar_sizer->Add(viewport_w_up, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+		viewport_x_text = new wxTextCtrl(this, wxID_ANY, "15", wxDefaultPosition, FromDIP(wxSize(30, -1)), wxTE_READONLY | wxTE_CENTER);
+		toolbar_sizer->Add(viewport_x_text, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
 
-		toolbar_sizer->Add(new wxStaticText(this, wxID_ANY, "x"), 0, wxALL | wxALIGN_CENTER_VERTICAL, 2);
+		viewport_w_up = new wxButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(24, 24)));
+		viewport_w_up->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_ADD_CIRCLE, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(0, 150, 136))));
+		toolbar_sizer->Add(viewport_w_up, wxSizerFlags(0).Border(wxALL, 0).Align(wxALIGN_CENTER_VERTICAL));
+
+		viewport_w_up->Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthUp, this);
+
+		toolbar_sizer->Add(new wxStaticText(this, wxID_ANY, "x"), wxSizerFlags(0).Border(wxALL, 2).Align(wxALIGN_CENTER_VERTICAL));
 
 		// Height
-		viewport_h_down = new wxButton(this, ID_VIEWPORT_H_DOWN, "", wxDefaultPosition, wxSize(24, 24));
-		viewport_h_down->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_DO_NOT_DISTURB_ON, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(0, 150, 136)));
-		toolbar_sizer->Add(viewport_h_down, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+		viewport_h_down = new wxButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(24, 24)));
+		viewport_h_down->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_DO_NOT_DISTURB_ON, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(0, 150, 136))));
+		toolbar_sizer->Add(viewport_h_down, wxSizerFlags(0).Border(wxALL, 0).Align(wxALIGN_CENTER_VERTICAL));
 
-		viewport_y_text = new wxTextCtrl(this, wxID_ANY, "11", wxDefaultPosition, wxSize(30, -1), wxTE_READONLY | wxTE_CENTER);
-		toolbar_sizer->Add(viewport_y_text, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+		viewport_h_down->Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportHeightDown, this);
 
-		viewport_h_up = new wxButton(this, ID_VIEWPORT_H_UP, "", wxDefaultPosition, wxSize(24, 24));
-		viewport_h_up->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_ADD_CIRCLE, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(0, 150, 136)));
-		toolbar_sizer->Add(viewport_h_up, 0, wxALL | wxALIGN_CENTER_VERTICAL, 0);
+		viewport_y_text = new wxTextCtrl(this, wxID_ANY, "11", wxDefaultPosition, FromDIP(wxSize(30, -1)), wxTE_READONLY | wxTE_CENTER);
+		toolbar_sizer->Add(viewport_y_text, wxSizerFlags(0).Border(wxALL, 1).Align(wxALIGN_CENTER_VERTICAL));
 
-		main_sizer->Add(toolbar_sizer, 0, wxEXPAND | wxALL, 2);
+		viewport_h_up = new wxButton(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(24, 24)));
+		viewport_h_up->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_ADD_CIRCLE, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(0, 150, 136))));
+		toolbar_sizer->Add(viewport_h_up, wxSizerFlags(0).Border(wxALL, 0).Align(wxALIGN_CENTER_VERTICAL));
+
+		viewport_h_up->Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportHeightUp, this);
+
+		main_sizer->Add(toolbar_sizer, wxSizerFlags(0).Expand().Border(wxALL, 2));
 
 		// Canvas
 		canvas = std::make_unique<IngamePreviewCanvas>(this);
-		main_sizer->Add(canvas.get(), 1, wxEXPAND);
+		main_sizer->Add(canvas.get(), wxSizerFlags(1).Expand());
 
 		// Sync UI State to Canvas
 		canvas->SetLightingEnabled(lighting_btn->GetValue());
@@ -128,6 +122,7 @@ namespace IngamePreview {
 
 		SetSizer(main_sizer);
 
+		Bind(wxEVT_TIMER, &IngamePreviewWindow::OnUpdateTimer, this, update_timer.GetId());
 		update_timer.Start(50);
 	}
 
@@ -176,9 +171,9 @@ namespace IngamePreview {
 	void IngamePreviewWindow::SetFollowSelection(bool follow) {
 		follow_selection = follow;
 		if (follow_selection) {
-			follow_btn->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_MY_LOCATION, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(76, 175, 80)));
+			follow_btn->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_MY_LOCATION, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(76, 175, 80))));
 		} else {
-			follow_btn->SetBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_MY_LOCATION, wxART_CLIENT_MATERIAL_FILLED, wxSize(16, 16), wxColour(158, 158, 158)));
+			follow_btn->SetBitmap(wxBitmapBundle::FromBitmap(wxMaterialDesignArtProvider::GetBitmap(wxART_MY_LOCATION, wxART_CLIENT_MATERIAL_FILLED, FromDIP(wxSize(16, 16)), wxColour(158, 158, 158))));
 		}
 		follow_btn->SetValue(follow_selection);
 	}
