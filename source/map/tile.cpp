@@ -220,6 +220,12 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 	if (prop == PROTECTIONZONE && isPZ()) {
 		return true;
 	}
+	if (prop == HOOK_SOUTH) {
+		return (statflags & TILESTATE_HAS_HOOK_SOUTH) != 0;
+	}
+	if (prop == HOOK_EAST) {
+		return (statflags & TILESTATE_HAS_HOOK_EAST) != 0;
+	}
 
 	if (ground && ground->hasProperty(prop)) {
 		return true;
@@ -501,6 +507,14 @@ void Tile::update() {
 		if (ground->getMiniMapColor() != 0) {
 			minimapColor = ground->getMiniMapColor();
 		}
+
+		ItemType& it = g_items[ground->getID()];
+		if (it.hookSouth) {
+			statflags |= TILESTATE_HAS_HOOK_SOUTH;
+		}
+		if (it.hookEast) {
+			statflags |= TILESTATE_HAS_HOOK_EAST;
+		}
 	}
 
 	for (Item* i : items) {
@@ -526,6 +540,12 @@ void Tile::update() {
 		}
 		if (it.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
+		}
+		if (it.hookSouth) {
+			statflags |= TILESTATE_HAS_HOOK_SOUTH;
+		}
+		if (it.hookEast) {
+			statflags |= TILESTATE_HAS_HOOK_EAST;
 		}
 	}
 
