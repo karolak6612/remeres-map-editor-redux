@@ -12,6 +12,7 @@
 #include "game/sprites.h"
 #include "map/map.h"
 #include "map/tile.h"
+#include "util/image_manager.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"
 #include "ui/tileset_window.h"
