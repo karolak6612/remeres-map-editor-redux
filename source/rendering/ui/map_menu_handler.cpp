@@ -15,7 +15,7 @@
 
 #include "ui/map_tab.h"
 #include "ui/map_popup_menu.h"
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "map/tile.h"
 #include "game/item.h"
 #include "editor/editor.h"

@@ -6,10 +6,10 @@
 
 #include "ui/map/import_map_window.h"
 #include "ui/dialog_util.h"
-#include "ui/about_window.h"
-#include "ui/dat_debug_view.h"
+#include "ui/windows/about_window.h"
+#include "ui/controls/dat_debug_view.h"
 #include "app/preferences.h"
-#include "ui/extension_window.h"
+#include "ui/windows/extension_window.h"
 #include "game/creatures.h"
 #include "app/managers/version_manager.h"
 #include "ui/controls/sortable_list_box.h"

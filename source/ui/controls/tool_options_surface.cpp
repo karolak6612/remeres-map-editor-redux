@@ -1,4 +1,4 @@
-#include "ui/tool_options_surface.h"
+#include "ui/controls/tool_options_surface.h"
 #include "app/main.h"
 #include "app/settings.h"
 #include "ui/gui.h"

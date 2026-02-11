@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "ui/gui.h"
 #include "game/sprites.h"
 #include "editor/editor.h"

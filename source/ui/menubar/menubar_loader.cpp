@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/menubar_loader.h"
+#include "ui/menubar/menubar_loader.h"
 #include "ui/gui_ids.h"
 #include <wx/wx.h>
 #include <algorithm>
