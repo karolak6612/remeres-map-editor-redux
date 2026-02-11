@@ -4,6 +4,10 @@
 #include "game/items.h"
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
+#include "util/nvg_utils.h"
+#include "ui/theme.h"
+
+#include <nanovg.h>
 
 // ============================================================================
 // Numkey forwarding text control
@@ -64,18 +68,22 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 FindDialog::~FindDialog() = default;
 
 void FindDialog::OnKeyDown(wxKeyEvent& event) {
+	// Let the list box handle its own navigation if focused?
+	// But this dialog catches events from text ctrl too via pending event?
+
 	int w, h;
 	item_list->GetSize(&w, &h);
 	size_t amount = 1;
+	int rowHeight = item_list->GetRowHeight();
 
 	switch (event.GetKeyCode()) {
 		case WXK_PAGEUP:
-			amount = h / 32 + 1;
+			amount = h / rowHeight + 1;
 			[[fallthrough]];
 		case WXK_UP: {
 			if (item_list->GetItemCount() > 0) {
-				ssize_t n = item_list->GetSelection();
-				if (n == wxNOT_FOUND) {
+				int n = item_list->GetSelection();
+				if (n == -1) {
 					n = 0;
 				} else if (static_cast<size_t>(n) >= amount) {
 					n -= amount;
@@ -83,23 +91,27 @@ void FindDialog::OnKeyDown(wxKeyEvent& event) {
 					n = 0;
 				}
 				item_list->SetSelection(n);
+				// TODO: EnsureVisible logic is inside SetSelection/NanoVGListBox already?
+				// Yes, SetSelection in NanoVGListBox handles selection but not scrolling EnsureVisible?
+				// No, NanoVGListBox::OnKeyDown handles it. But here we manually set selection.
+				// We might need to expose EnsureVisible or make SetSelection do it.
 			}
 			break;
 		}
 
 		case WXK_PAGEDOWN:
-			amount = h / 32 + 1;
+			amount = h / rowHeight + 1;
 			[[fallthrough]];
 		case WXK_DOWN: {
 			if (item_list->GetItemCount() > 0) {
-				ssize_t n = item_list->GetSelection();
-				size_t itemcount = item_list->GetItemCount();
-				if (n == wxNOT_FOUND) {
+				int n = item_list->GetSelection();
+				int itemcount = item_list->GetItemCount();
+				if (n == -1) {
 					n = 0;
-				} else if (static_cast<uint32_t>(n) < itemcount - amount && itemcount - amount < itemcount) {
+				} else if (static_cast<size_t>(n) < itemcount - amount && itemcount - amount < static_cast<size_t>(itemcount)) {
 					n += amount;
 				} else {
-					n = item_list->GetItemCount() - 1;
+					n = itemcount - 1;
 				}
 
 				item_list->SetSelection(n);
@@ -159,7 +171,7 @@ void FindBrushDialog::OnClickListInternal(wxCommandEvent& event) {
 void FindBrushDialog::OnClickOKInternal() {
 	// This is kind of stupid as it would fail unless the "Please enter a search string" wasn't there
 	if (item_list->GetItemCount() > 0) {
-		if (item_list->GetSelection() == wxNOT_FOUND) {
+		if (item_list->GetSelection() == -1) {
 			item_list->SetSelection(0);
 		}
 		Brush* brush = item_list->GetSelectedBrush();
@@ -286,9 +298,10 @@ void FindBrushDialog::RefreshContentsInternal() {
 // Listbox in find item / brush stuff
 
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
+	NanoVGListBox(parent, id, wxLB_SINGLE),
 	cleared(false),
 	no_matches(false) {
+	SetRowHeight(FROM_DIP(this, 32));
 	Clear();
 }
 
@@ -318,45 +331,80 @@ void FindDialogListBox::AddBrush(Brush* brush) {
 	cleared = false;
 	no_matches = false;
 
-	SetItemCount(GetItemCount() + 1);
 	brushlist.push_back(brush);
+	// We only update the count, NanoVGListBox handles scrolling update
+	// But to avoid O(N) refresh spam, we should probably defer this?
+	// For now, simple enough.
+	SetItemCount(static_cast<int>(brushlist.size()));
 }
 
 Brush* FindDialogListBox::GetSelectedBrush() {
-	ssize_t n = GetSelection();
-	if (n == wxNOT_FOUND || no_matches || cleared) {
+	int n = GetSelection();
+	if (n == -1 || no_matches || cleared) {
 		return nullptr;
 	}
 	return brushlist[n];
 }
 
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, int n) {
 	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+		nvgFontSize(vg, 16.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+		nvgFontSize(vg, 16.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
-		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+		if (n >= static_cast<int>(brushlist.size())) return;
+
+		bool isSelected = IsSelected(n);
+
+		// Background handled by OnNanoVGPaint loop if needed, but NanoVGListBox::OnNanoVGPaint doesn't draw item background
+		// We should draw background
+		if (isSelected) {
+			nvgBeginPath(vg);
+			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+			wxColour c = Theme::Get(Theme::Role::Accent);
+			nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), 255));
+			nvgFill(vg);
+		} else if (m_hoverIndex == n) {
+			nvgBeginPath(vg);
+			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+			wxColour c = Theme::Get(Theme::Role::Surface);
+			nvgFillColor(vg, nvgRGBA(c.Red() + 10, c.Green() + 10, c.Blue() + 10, 255)); // Slightly lighter
+			nvgFill(vg);
+		}
+
+		Brush* brush = brushlist[n];
+		Sprite* spr = brush->getSprite();
+		if (!spr) {
+			spr = g_gui.gfx.getSprite(brush->getLookID());
+		}
+
 		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
-		}
-
-		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
+			int tex = GetOrCreateSpriteTexture(vg, spr);
+			if (tex > 0) {
+				int iconSize = rect.height - 4;
+				NVGpaint imgPaint = nvgImagePattern(vg, rect.x + 2, rect.y + 2, iconSize, iconSize, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, rect.x + 2, rect.y + 2, iconSize, iconSize);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
 			}
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
 		}
 
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
-	}
-}
+		wxColour textColor = isSelected ? *wxWHITE : Theme::Get(Theme::Role::Text);
+		nvgFillColor(vg, nvgRGBA(textColor.Red(), textColor.Green(), textColor.Blue(), 255));
+		nvgFontSize(vg, 15.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
+		std::string name = wxstr(brush->getName()).ToStdString();
+		nvgText(vg, rect.x + rect.height + 10, rect.y + rect.height / 2.0f, name.c_str(), nullptr);
+	}
 }

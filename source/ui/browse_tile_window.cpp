@@ -24,19 +24,25 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "ui/browse_tile_window.h"
+#include "ui/controls/nanovg_listbox.h"
+#include "ui/theme.h"
+#include "util/nvg_utils.h"
+#include <nanovg.h>
 
 // ============================================================================
 //
 
-class BrowseTileListBox : public wxVListBox {
+class BrowseTileListBox : public NanoVGListBox {
 public:
 	BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile);
 	~BrowseTileListBox();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, const wxRect& rect, int index) override;
+
 	Item* GetSelectedItem();
 	void RemoveSelected();
+
+	void OnSelectionChanged() override;
 
 protected:
 	void UpdateItems();
@@ -47,7 +53,9 @@ protected:
 };
 
 BrowseTileListBox::BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile) :
-	wxVListBox(parent, id, wxDefaultPosition, FROM_DIP(parent, wxSize(200, 180)), wxLB_MULTIPLE), edit_tile(tile) {
+	NanoVGListBox(parent, id, wxLB_MULTIPLE), edit_tile(tile) {
+	SetRowHeight(FromDIP(32));
+	SetMinSize(FromDIP(wxSize(200, 180)));
 	UpdateItems();
 }
 
@@ -55,33 +63,62 @@ BrowseTileListBox::~BrowseTileListBox() {
 	////
 }
 
-void BrowseTileListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void BrowseTileListBox::OnSelectionChanged() {
+	// Sync selection to items
+	// This is critical because other parts of the system check item->isSelected()
+	for (int i = 0; i < static_cast<int>(items.size()); ++i) {
+		if (IsSelected(i)) {
+			items[i]->select();
+		} else {
+			items[i]->deselect();
+		}
+	}
+}
+
+void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, int n) {
+	if (n < 0 || n >= static_cast<int>(items.size())) return;
+
 	Item* item = items[n];
+
+	// Background
+	bool isSelected = IsSelected(n);
+	if (isSelected) {
+		nvgBeginPath(vg);
+		nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+		wxColour c = Theme::Get(Theme::Role::Accent);
+		nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), 255));
+		nvgFill(vg);
+	} else if (m_hoverIndex == n) {
+		nvgBeginPath(vg);
+		nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+		wxColour c = Theme::Get(Theme::Role::Surface);
+		nvgFillColor(vg, nvgRGBA(c.Red() + 10, c.Green() + 10, c.Blue() + 10, 255));
+		nvgFill(vg);
+	}
 
 	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
 	if (sprite) {
-		sprite->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
+		int tex = GetOrCreateSpriteTexture(vg, sprite);
+		if (tex > 0) {
+			int iconSize = rect.height - 4;
+			NVGpaint imgPaint = nvgImagePattern(vg, rect.x + 2, rect.y + 2, iconSize, iconSize, 0, tex, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, rect.x + 2, rect.y + 2, iconSize, iconSize);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
 	}
 
-	if (IsSelected(n)) {
-		item->select();
-		if (HasFocus()) {
-			dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-		}
-	} else {
-		item->deselect();
-		dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
-	}
+	wxColour textColor = isSelected ? *wxWHITE : Theme::Get(Theme::Role::Text);
+	nvgFillColor(vg, nvgRGBA(textColor.Red(), textColor.Green(), textColor.Blue(), 255));
+
+	nvgFontSize(vg, 15.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
 	wxString label;
 	label << item->getID() << " - " << wxstr(item->getName());
-	dc.DrawText(label, rect.GetX() + 40, rect.GetY() + 6);
-}
-
-wxCoord BrowseTileListBox::OnMeasureItem(size_t n) const {
-	return 32;
+	nvgText(vg, rect.x + rect.height + 10, rect.y + rect.height / 2.0f, label.ToStdString().c_str(), nullptr);
 }
 
 Item* BrowseTileListBox::GetSelectedItem() {
@@ -97,17 +134,19 @@ void BrowseTileListBox::RemoveSelected() {
 		return;
 	}
 
-	Clear();
+	// Must pop items before deselecting, as popSelectedItems relies on selection state
+	ItemVector tile_selection = edit_tile->popSelectedItems(true);
+
+	DeselectAll();
 	items.clear();
 
 	// Delete the items from the tile
-	ItemVector tile_selection = edit_tile->popSelectedItems(true);
 	for (ItemVector::iterator iit = tile_selection.begin(); iit != tile_selection.end(); ++iit) {
 		delete *iit;
 	}
 
 	UpdateItems();
-	Refresh();
+	Refresh(); // Refresh UI
 }
 
 void BrowseTileListBox::UpdateItems() {
@@ -121,7 +160,7 @@ void BrowseTileListBox::UpdateItems() {
 		items.push_back(edit_tile->ground);
 	}
 
-	SetItemCount(items.size());
+	SetItemCount(static_cast<int>(items.size()));
 }
 
 // ============================================================================
