@@ -1,15 +1,14 @@
 #include "ui/replace_tool/rule_list_control.h"
 #include "ui/theme.h"
-#include <wx/dcbuffer.h>
-#include <wx/graphics.h>
+#include <nanovg.h>
 #include <memory>
+#include <algorithm>
 
-RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : wxControl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxVSCROLL | wxNO_BORDER | wxWANTS_CHARS),
+RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 																		 m_listener(listener) {
-	SetBackgroundStyle(wxBG_STYLE_PAINT);
+	// NanoVGCanvas handles background style
 	m_itemHeight = FromDIP(56);
 
-	Bind(wxEVT_PAINT, &RuleListControl::OnPaint, this);
 	Bind(wxEVT_SIZE, &RuleListControl::OnSize, this);
 	Bind(wxEVT_LEFT_DOWN, &RuleListControl::OnMouse, this);
 	Bind(wxEVT_MOTION, &RuleListControl::OnMouse, this);
@@ -17,7 +16,7 @@ RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : wxContr
 	Bind(wxEVT_MOUSEWHEEL, &RuleListControl::OnMouseWheel, this);
 	Bind(wxEVT_CONTEXT_MENU, &RuleListControl::OnContextMenu, this);
 
-	// Bind scroll events
+	// Bind scroll events - NanoVGCanvas might handle some, but we keep our logic for now to ensure behavior
 	Bind(wxEVT_SCROLLWIN_TOP, &RuleListControl::OnScroll, this);
 	Bind(wxEVT_SCROLLWIN_BOTTOM, &RuleListControl::OnScroll, this);
 	Bind(wxEVT_SCROLLWIN_LINEUP, &RuleListControl::OnScroll, this);
@@ -26,8 +25,6 @@ RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : wxContr
 	Bind(wxEVT_SCROLLWIN_PAGEDOWN, &RuleListControl::OnScroll, this);
 	Bind(wxEVT_SCROLLWIN_THUMBTRACK, &RuleListControl::OnScroll, this);
 	Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &RuleListControl::OnScroll, this);
-
-	Bind(wxEVT_ERASE_BACKGROUND, [](wxEraseEvent&) { });
 }
 
 void RuleListControl::SetRuleSets(const std::vector<std::string>& ruleSetNames) {
@@ -49,35 +46,41 @@ wxSize RuleListControl::DoGetBestClientSize() const {
 
 void RuleListControl::OnSize(wxSizeEvent& event) {
 	RefreshVirtualSize();
+	Refresh();
 	event.Skip();
 }
 
-void RuleListControl::OnPaint(wxPaintEvent& event) {
-	wxAutoBufferedPaintDC dc(this);
-	dc.Clear();
-
-	std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
-	if (!gc) {
-		return;
-	}
+void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	int scrollPos = GetScrollPos(wxVERTICAL);
+	// Assumption: NanoVGCanvas applies nvgTranslate(0, -scrollPos) automatically.
+	// So we draw items at their absolute Y position.
 
 	wxSize clientSize = GetClientSize();
-	int scrollPos = GetScrollPos(wxVERTICAL);
 
-	// Larger height for card look, maybe 56 or 64. I'll use whatever is set for now but subtract padding for drawing
 	int startIdx = scrollPos / m_itemHeight;
-	int endIdx = std::min((int)m_ruleSetNames.size() - 1, (scrollPos + clientSize.y) / m_itemHeight);
+	int endIdx = std::min((int)m_ruleSetNames.size() - 1, (scrollPos + clientSize.y) / m_itemHeight + 1);
 
-	const double padding = 4.0;
-	const double radius = 4.0;
+	const float padding = 4.0f;
+	const float radius = 4.0f;
 
 	// Card Colors
 	wxColour cardBase = wxColour(50, 50, 55);
 	wxColour cardBaseHover = wxColour(60, 60, 65);
-	wxColour cardBaseSelected = wxColour(70, 70, 80); // Or Accent
+	wxColour cardBaseSelected = Theme::Get(Theme::Role::Accent);
+	wxColour textNormal = Theme::Get(Theme::Role::Text);
+	wxColour textSelected = *wxWHITE;
+	wxColour borderNormal = wxColour(80, 80, 80);
+	wxColour borderSelected = *wxWHITE;
+
+	nvgFontSize(vg, 16.0f); // approx 10pt
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
 	for (int i = startIdx; i <= endIdx; ++i) {
-		wxRect rect(padding, i * m_itemHeight - scrollPos + padding, clientSize.x - 2 * padding, m_itemHeight - 2 * padding);
+		float y = i * m_itemHeight + padding;
+		float x = padding;
+		float w = width - 2 * padding;
+		float h = m_itemHeight - 2 * padding;
 
 		// Determine State
 		bool isSelected = (i == m_selectedIndex);
@@ -85,46 +88,36 @@ void RuleListControl::OnPaint(wxPaintEvent& event) {
 
 		wxColour fillColor = cardBase;
 		if (isSelected) {
-			fillColor = Theme::Get(Theme::Role::Accent);
+			fillColor = cardBaseSelected;
 		} else if (isHovered) {
 			fillColor = cardBaseHover;
 		}
 
-		// Draw Card Path
-		wxGraphicsPath path = gc->CreatePath();
-		path.AddRoundedRectangle(rect.x, rect.y, rect.width, rect.height, radius);
-
-		// Shadow (Simple offset)
+		// Draw Shadow (Simple offset)
 		if (!isSelected) {
-			gc->SetBrush(wxBrush(wxColour(0, 0, 0, 50)));
-			gc->SetPen(*wxTRANSPARENT_PEN);
-			gc->DrawRoundedRectangle(rect.x + 2, rect.y + 2, rect.width, rect.height, radius);
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, x + 2, y + 2, w, h, radius);
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 50));
+			nvgFill(vg);
 		}
 
-		// Fill
-		gc->SetBrush(wxBrush(fillColor));
-		if (isSelected) {
-			// Add a border for selection?
-			gc->SetPen(wxPen(*wxWHITE, 1));
-		} else {
-			gc->SetPen(wxPen(wxColour(80, 80, 80), 1));
-		}
-		gc->FillPath(path);
-		gc->StrokePath(path);
+		// Draw Card Body
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, y, w, h, radius);
+		nvgFillColor(vg, nvgRGBA(fillColor.Red(), fillColor.Green(), fillColor.Blue(), fillColor.Alpha()));
+		nvgFill(vg);
+
+		// Border
+		wxColour borderColor = isSelected ? borderSelected : borderNormal;
+		nvgStrokeColor(vg, nvgRGBA(borderColor.Red(), borderColor.Green(), borderColor.Blue(), borderColor.Alpha()));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
 
 		// Text
-		dc.SetFont(Theme::GetFont(10, isSelected));
-		if (isSelected) {
-			dc.SetTextForeground(*wxWHITE);
-		} else {
-			dc.SetTextForeground(Theme::Get(Theme::Role::Text));
-		}
+		wxColour textColor = isSelected ? textSelected : textNormal;
+		nvgFillColor(vg, nvgRGBA(textColor.Red(), textColor.Green(), textColor.Blue(), textColor.Alpha()));
 
-		wxString label = m_ruleSetNames[i];
-		wxSize textSize = dc.GetTextExtent(label);
-
-		// Clip to card ?? Or just draw
-		dc.DrawText(label, rect.x + 10, rect.y + (rect.height - textSize.y) / 2);
+		nvgText(vg, x + 10, y + h / 2.0f, m_ruleSetNames[i].c_str(), nullptr);
 	}
 }
 
