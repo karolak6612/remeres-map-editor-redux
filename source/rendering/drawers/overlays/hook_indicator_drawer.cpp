@@ -25,14 +25,21 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 	nvgSave(vg);
 
 	// Style
-	const NVGcolor fillColor = nvgRGBA(0, 120, 215, 200); // Standard RME blue accent
-	const NVGcolor strokeColor = nvgRGBA(255, 255, 255, 100); // Subtle white outline
+	const NVGcolor fillColor = nvgRGBA(255, 215, 0, 240); // Golden Yellow, more intense
+	const NVGcolor strokeColor = nvgRGBA(0, 0, 0, 255); // Solid black border
 
-	const float arrowSize = 10.0f; // Fixed pixel size as requested
-	const float headSize = 4.0f;
-	const float shaftWidth = 2.0f;
+	const float zoomFactor = 1.0f / view.zoom;
+	const float arrowSize = 15.0f * zoomFactor; // Slightly larger
+	const float headSize = 6.0f * zoomFactor;
+	const float shaftWidth = 4.0f * zoomFactor; // Thicker shaft to show more fill
+	const float strokeWidth = 1.0f * zoomFactor; // Thinner border relative to size
 
 	for (const auto& request : requests) {
+		// Only render hooks on the current floor
+		if (request.pos.z != view.floor) {
+			continue;
+		}
+
 		int unscaled_x, unscaled_y;
 		if (!view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
 			continue;
@@ -61,7 +68,7 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 			nvgFillColor(vg, fillColor);
 			nvgFill(vg);
 			nvgStrokeColor(vg, strokeColor);
-			nvgStrokeWidth(vg, 1.0f);
+			nvgStrokeWidth(vg, strokeWidth);
 			nvgStroke(vg);
 		}
 
@@ -83,7 +90,7 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 			nvgFillColor(vg, fillColor);
 			nvgFill(vg);
 			nvgStrokeColor(vg, strokeColor);
-			nvgStrokeWidth(vg, 1.0f);
+			nvgStrokeWidth(vg, strokeWidth);
 			nvgStroke(vg);
 		}
 	}

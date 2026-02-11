@@ -122,7 +122,7 @@ public:
 	void DrawGrid();
 	void DrawTooltips(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
-	void ClearTooltips();
+	void ClearFrameOverlays();
 	void DrawCreatureNames(NVGcontext* vg);
 
 	void DrawLight();

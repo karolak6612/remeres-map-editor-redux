@@ -210,7 +210,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	// draw wall hook
 	if (!options.ingame && options.show_hooks && (it.hookSouth || it.hookEast)) {
-		DrawHookIndicator(draw_x, draw_y, it, pos);
+		DrawHookIndicator(it, pos);
 	}
 
 	// draw light color indicator
@@ -277,7 +277,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, r, g, b, alpha);
 }
 
-void ItemDrawer::DrawHookIndicator(int x, int y, const ItemType& type, const Position& pos) {
+void ItemDrawer::DrawHookIndicator(const ItemType& type, const Position& pos) {
 	if (hook_indicator_drawer) {
 		hook_indicator_drawer->addHook(pos, type.hookSouth, type.hookEast);
 	}

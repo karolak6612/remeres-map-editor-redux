@@ -415,7 +415,7 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 	ScreenCapture::Capture(view.screensize_x, view.screensize_y, screenshot_buffer);
 }
 
-void MapDrawer::ClearTooltips() {
+void MapDrawer::ClearFrameOverlays() {
 	tooltip_drawer->clear();
 	hook_indicator_drawer->clear();
 }

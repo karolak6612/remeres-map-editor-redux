@@ -50,9 +50,8 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 						}
 					}
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
-						ItemVector::iterator it;
-						for (it = tile->items.begin(); it != tile->items.end(); it++) {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, *it, options, false, 255, 255, 255, 96);
+						for (auto* item : tile->items) {
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, false, 255, 255, 255, 96);
 						}
 					}
 				}
