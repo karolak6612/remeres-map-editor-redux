@@ -20,7 +20,7 @@ public:
 	DragShadowDrawer();
 	~DragShadowDrawer();
 
-	void draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options);
+	void draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options);
 };
 
 #endif

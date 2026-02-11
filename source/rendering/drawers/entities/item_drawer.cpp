@@ -30,12 +30,12 @@ ItemDrawer::ItemDrawer() {
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha) {
 	const Position& pos = tile->getPosition();
-	BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile);
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile);
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
 	ItemType& it = g_items[item->getID()];
 
 	// Locked door indicator
@@ -212,7 +212,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 
 	// draw wall hook
 	if (!options.ingame && options.show_hooks && (it.hookSouth || it.hookEast)) {
-		DrawHookIndicator(sprite_batch, primitive_renderer, draw_x, draw_y, it);
+		DrawHookIndicator(sprite_batch, sprite_drawer, draw_x, draw_y, it);
 	}
 
 	// draw light color indicator
@@ -279,26 +279,28 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, r, g, b, alpha);
 }
 
-void ItemDrawer::DrawHookIndicator(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int x, int y, const ItemType& type) {
-	glm::vec4 color(0.0f, 0.0f, 1.0f, 200.0f / 255.0f);
+void ItemDrawer::DrawHookIndicator(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int x, int y, const ItemType& type) {
+	// Approximating triangle with axis-aligned boxes for batching
+	int r = 0;
+	int g = 0;
+	int b = 255;
+	int a = 200;
 
 	if (type.hookSouth) {
 		// South Hook: Arrow pointing down/south
-		// Triangle 1: (x, y) -> (x+20, y) -> (x+10, y+10)
-		primitive_renderer.drawTriangle(
-			glm::vec2(x, y),
-			glm::vec2(x + 20, y),
-			glm::vec2(x + 10, y + 10),
-			color
-		);
+		// Top bar: 20x4
+		sprite_drawer->glDrawBox(sprite_batch, x, y, 20, 4, r, g, b, a);
+		// Middle block: 8x3
+		sprite_drawer->glDrawBox(sprite_batch, x + 6, y + 4, 8, 3, r, g, b, a);
+		// Bottom tip: 4x3
+		sprite_drawer->glDrawBox(sprite_batch, x + 8, y + 7, 4, 3, r, g, b, a);
 	} else if (type.hookEast) {
 		// East Hook: Arrow pointing right/east
-		// Triangle 1: (x, y) -> (x, y+20) -> (x+10, y+10)
-		primitive_renderer.drawTriangle(
-			glm::vec2(x, y),
-			glm::vec2(x, y + 20),
-			glm::vec2(x + 10, y + 10),
-			color
-		);
+		// Left bar: 4x20
+		sprite_drawer->glDrawBox(sprite_batch, x, y, 4, 20, r, g, b, a);
+		// Middle block: 3x8
+		sprite_drawer->glDrawBox(sprite_batch, x + 4, y + 6, 3, 8, r, g, b, a);
+		// Right tip: 3x4
+		sprite_drawer->glDrawBox(sprite_batch, x + 7, y + 8, 3, 4, r, g, b, a);
 	}
 }

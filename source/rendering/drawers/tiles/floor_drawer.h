@@ -22,7 +22,7 @@ public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
 };
 
 #endif

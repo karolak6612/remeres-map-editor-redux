@@ -322,7 +322,7 @@ void MapDrawer::Draw() {
 	sprite_batch->begin(view.projectionMatrix);
 
 	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
+		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
 	}
 
 	if (options.boundbox_selection) {
@@ -370,7 +370,7 @@ void MapDrawer::DrawMap() {
 			DrawMapLayer(map_z, live_client);
 		}
 
-		preview_drawer->draw(*sprite_batch, *primitive_renderer, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
+		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 
 		--view.start_x;
 		--view.start_y;
@@ -396,7 +396,7 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 }
 
 void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, *primitive_renderer, map_z, live_client, view, options, light_buffer);
+	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
 }
 
 void MapDrawer::DrawLight() {
