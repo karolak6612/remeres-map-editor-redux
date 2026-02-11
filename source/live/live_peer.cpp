@@ -59,47 +59,66 @@ std::string LivePeer::getHostName() const {
 }
 
 void LivePeer::receiveHeader() {
-	readMessage.position = 0;
-	boost::asio::async_read(socket, boost::asio::buffer(readMessage.buffer, 4), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
-		if (error) {
-			if (!handleError(error)) {
-				logMessage(wxString() + getHostName() + ": " + error.message());
+	readMessage.clear(); // Ensure buffer is ready for header
+	boost::asio::async_read(socket, boost::asio::buffer(readMessage.buffer, 4), [weak_self = std::weak_ptr<LivePeer>(shared_from_this())](const boost::system::error_code& error, size_t bytesReceived) -> void {
+		if (auto self = weak_self.lock()) {
+			if (error) {
+				if (!self->handleError(error)) {
+					self->logMessage(wxString() + self->getHostName() + ": " + error.message());
+				}
+			} else if (bytesReceived < 4) {
+				self->logMessage(wxString() + self->getHostName() + ": Could not receive header[size: " + std::to_string(bytesReceived) + "], disconnecting client.");
+			} else {
+				self->receive(self->readMessage.read<uint32_t>());
 			}
-		} else if (bytesReceived < 4) {
-			logMessage(wxString() + getHostName() + ": Could not receive header[size: " + std::to_string(bytesReceived) + "], disconnecting client.");
-		} else {
-			receive(readMessage.read<uint32_t>());
 		}
 	});
 }
 
 void LivePeer::receive(uint32_t packetSize) {
+	if (packetSize > 10 * 1024 * 1024) { // 10 MB limit
+		logMessage(wxString() + getHostName() + ": Packet too large (" + std::to_string(packetSize) + "), disconnecting client.");
+		close();
+		return;
+	}
+
 	readMessage.buffer.resize(readMessage.position + packetSize);
-	boost::asio::async_read(socket, boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize), [this](const boost::system::error_code& error, size_t bytesReceived) -> void {
-		if (error) {
-			if (!handleError(error)) {
-				logMessage(wxString() + getHostName() + ": " + error.message());
-			}
-		} else if (bytesReceived < readMessage.buffer.size() - 4) {
-			logMessage(wxString() + getHostName() + ": Could not receive packet[size: " + std::to_string(bytesReceived) + "], disconnecting client.");
-		} else {
-			wxTheApp->CallAfter([this]() {
-				if (connected) {
-					parseEditorPacket(std::move(readMessage));
-				} else {
-					parseLoginPacket(std::move(readMessage));
+	boost::asio::async_read(socket, boost::asio::buffer(&readMessage.buffer[readMessage.position], packetSize), [weak_self = std::weak_ptr<LivePeer>(shared_from_this())](const boost::system::error_code& error, size_t bytesReceived) -> void {
+		if (auto self = weak_self.lock()) {
+			if (error) {
+				if (!self->handleError(error)) {
+					self->logMessage(wxString() + self->getHostName() + ": " + error.message());
 				}
-				receiveHeader();
-			});
+			} else if (bytesReceived < self->readMessage.buffer.size() - 4) {
+				self->logMessage(wxString() + self->getHostName() + ": Could not receive packet[size: " + std::to_string(bytesReceived) + "], disconnecting client.");
+			} else {
+				wxTheApp->CallAfter([weak_self]() {
+					if (auto self = weak_self.lock()) {
+						try {
+							if (self->connected) {
+								self->parseEditorPacket(std::move(self->readMessage));
+							} else {
+								self->parseLoginPacket(std::move(self->readMessage));
+							}
+							self->receiveHeader();
+						} catch (std::exception& e) {
+							self->logMessage(wxString() + self->getHostName() + ": Exception in packet handling: " + e.what());
+							self->close();
+						}
+					}
+				});
+			}
 		}
 	});
 }
 
 void LivePeer::send(NetworkMessage& message) {
 	memcpy(&message.buffer[0], &message.size, 4);
-	boost::asio::async_write(socket, boost::asio::buffer(message.buffer, message.size + 4), [this](const boost::system::error_code& error, size_t bytesTransferred) -> void {
-		if (error) {
-			logMessage(wxString() + getHostName() + ": " + error.message());
+	boost::asio::async_write(socket, boost::asio::buffer(message.buffer, message.size + 4), [weak_self = std::weak_ptr<LivePeer>(shared_from_this())](const boost::system::error_code& error, size_t bytesTransferred) -> void {
+		if (auto self = weak_self.lock()) {
+			if (error) {
+				self->logMessage(wxString() + self->getHostName() + ": " + error.message());
+			}
 		}
 	});
 }
@@ -246,7 +265,14 @@ void LivePeer::parseReady(NetworkMessage& message) {
 
 void LivePeer::parseNodeRequest(NetworkMessage& message) {
 	Map& map = server->getEditor()->map;
-	for (uint32_t nodes = message.read<uint32_t>(); nodes != 0; --nodes) {
+	uint32_t nodes = message.read<uint32_t>();
+	if (nodes > 65536) {
+		log->Message("Client requested too many nodes, connection severed.");
+		close();
+		return;
+	}
+
+	for (; nodes != 0; --nodes) {
 		uint32_t ind = message.read<uint32_t>();
 
 		int32_t ndx = ind >> 18;

@@ -25,6 +25,9 @@
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <cstring>
+#include <stdexcept>
+#include <algorithm>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -35,7 +38,11 @@ struct NetworkMessage {
 	//
 	template <typename T>
 	T read() {
-		T& value = *reinterpret_cast<T*>(&buffer[position]);
+		if (position + sizeof(T) > size) {
+			throw std::out_of_range("NetworkMessage read out of bounds");
+		}
+		T value;
+		std::memcpy(&value, &buffer[position], sizeof(T));
 		position += sizeof(T);
 		return value;
 	}
@@ -43,7 +50,7 @@ struct NetworkMessage {
 	template <typename T>
 	void write(const T& value) {
 		expand(sizeof(T));
-		memcpy(&buffer[position], &value, sizeof(T));
+		std::memcpy(&buffer[position], &value, sizeof(T));
 		position += sizeof(T);
 	}
 

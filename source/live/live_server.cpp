@@ -101,7 +101,7 @@ void LiveServer::acceptClient() {
 		if (error) {
 			//
 		} else {
-			auto peer = std::make_unique<LivePeer>(this, std::move(*socket));
+			auto peer = std::make_shared<LivePeer>(this, std::move(*socket));
 			peer->log = log;
 			peer->receiveHeader();
 

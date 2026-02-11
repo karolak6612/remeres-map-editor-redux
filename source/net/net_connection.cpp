@@ -39,6 +39,9 @@ void NetworkMessage::expand(const size_t length) {
 template <>
 std::string NetworkMessage::read<std::string>() {
 	const uint16_t length = read<uint16_t>();
+	if (position + length > size) {
+		throw std::out_of_range("NetworkMessage read<string> out of bounds");
+	}
 	char* strBuffer = reinterpret_cast<char*>(&buffer[position]);
 	position += length;
 	return std::string(strBuffer, length);
@@ -46,11 +49,11 @@ std::string NetworkMessage::read<std::string>() {
 
 template <>
 Position NetworkMessage::read<Position>() {
-	Position position;
-	position.x = read<uint16_t>();
-	position.y = read<uint16_t>();
-	position.z = read<uint8_t>();
-	return position;
+	Position pos;
+	pos.x = read<uint16_t>();
+	pos.y = read<uint16_t>();
+	pos.z = read<uint8_t>();
+	return pos;
 }
 
 template <>

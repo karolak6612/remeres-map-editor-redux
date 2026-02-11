@@ -22,6 +22,7 @@
 #include "net/net_connection.h"
 #include "editor/action.h"
 #include <memory>
+#include <unordered_map>
 
 class LivePeer;
 class LiveLogTab;
@@ -71,7 +72,7 @@ public:
 	void updateOperation(int32_t percent);
 
 protected:
-	std::unordered_map<uint32_t, std::unique_ptr<LivePeer>> clients;
+	std::unordered_map<uint32_t, std::shared_ptr<LivePeer>> clients;
 
 	std::shared_ptr<boost::asio::ip::tcp::acceptor> acceptor;
 	std::shared_ptr<boost::asio::ip::tcp::socket> socket;
