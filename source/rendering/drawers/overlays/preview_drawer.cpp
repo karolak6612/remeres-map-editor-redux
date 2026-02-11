@@ -20,7 +20,7 @@ PreviewDrawer::PreviewDrawer() {
 PreviewDrawer::~PreviewDrawer() {
 }
 
-void PreviewDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, MapCanvas* canvas, const RenderView& view, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
+void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const RenderView& view, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
 	MapTab* mapTab = dynamic_cast<MapTab*>(canvas->GetMapWindow());
 	BaseMap* secondary_map = mapTab ? mapTab->GetSession()->secondary_map : nullptr;
 
@@ -89,18 +89,17 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive
 							g /= 2;
 						}
 						if (tile->ground) {
-							item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, true, r, g, b, 255);
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, true, r, g, b, 255);
 						}
 					}
 
 					// Draw items on the tile
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
-						ItemVector::iterator it;
-						for (it = tile->items.begin(); it != tile->items.end(); it++) {
-							if ((*it)->isBorder()) {
-								item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, *it, options, true, 255, r, g, b);
+						for (auto* item : tile->items) {
+							if (item->isBorder()) {
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, true, 255, r, g, b);
 							} else {
-								item_drawer->BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, tile, *it, options, true, 255, 255, 255, 255);
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, true, 255, 255, 255, 255);
 							}
 						}
 						if (tile->creature && options.show_creatures) {

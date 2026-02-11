@@ -229,6 +229,9 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			if (options.show_tooltips) {
 				drawer->DrawTooltips(vg);
 			}
+			if (options.show_hooks) {
+				drawer->DrawHookIndicators(vg);
+			}
 
 			// Floating HUD (Selection & Cursor Info)
 			int w = GetSize().x;
@@ -288,7 +291,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			glBindVertexArray(0);
 		}
 
-		drawer->ClearTooltips();
+		drawer->ClearFrameOverlays();
 	}
 
 	// Clean unused textures once every second

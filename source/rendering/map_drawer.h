@@ -22,6 +22,7 @@ class GameSprite;
 
 struct NVGcontext;
 class TooltipDrawer;
+class HookIndicatorDrawer;
 
 // Storage during drawing, for option caching
 #include "rendering/core/drawing_options.h"
@@ -55,6 +56,7 @@ class PreviewDrawer;
 class ShadeDrawer;
 class TileRenderer;
 class CreatureNameDrawer;
+class HookIndicatorDrawer;
 
 class MapDrawer {
 	MapCanvas* canvas;
@@ -80,6 +82,7 @@ class MapDrawer {
 	std::unique_ptr<ShadeDrawer> shade_drawer;
 	std::unique_ptr<TileRenderer> tile_renderer;
 	std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
+	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
@@ -118,7 +121,8 @@ public:
 
 	void DrawGrid();
 	void DrawTooltips(NVGcontext* vg);
-	void ClearTooltips();
+	void DrawHookIndicators(NVGcontext* vg);
+	void ClearFrameOverlays();
 	void DrawCreatureNames(NVGcontext* vg);
 
 	void DrawLight();
