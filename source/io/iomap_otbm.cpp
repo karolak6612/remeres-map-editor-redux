@@ -588,7 +588,7 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 	if (!root->getU32(u32)) { // Version
 		return false;
 	}
-	out_ver.otbm = (MapVersionID)u32;
+	out_ver.otbm = static_cast<MapVersionID>(u32);
 
 	root->getU16(u16); // map size X
 	root->getU16(u16); // map size Y
@@ -598,7 +598,7 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 		return false;
 	}
 
-	out_ver.client = ClientVersionID(u32);
+	out_ver.client = static_cast<ClientVersionID>(u32);
 	return true;
 }
 
@@ -801,7 +801,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 		return false;
 	}
 
-	version.otbm = (MapVersionID)u32;
+	version.otbm = static_cast<MapVersionID>(u32);
 
 	if (version.otbm > MAP_OTBM_4) {
 		// Failed to read version
@@ -827,7 +827,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 
 	map.height = u16;
 
-	if (!root->getU32(u32) || u32 > (unsigned long)g_items.MajorVersion) { // OTB major version
+	if (!root->getU32(u32) || u32 > static_cast<unsigned long>(g_items.MajorVersion)) { // OTB major version
 		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a items.otb format that deviates from the "
 												 "items.otb loaded by the editor. Do you still want to attempt to load the map?",
 									wxYES | wxNO)
@@ -839,10 +839,10 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 		}
 	}
 
-	if (!root->getU32(u32) || u32 > (unsigned long)g_items.MinorVersion) { // OTB minor version
+	if (!root->getU32(u32) || u32 > static_cast<unsigned long>(g_items.MinorVersion)) { // OTB minor version
 		warning("This editor needs an updated items.otb version");
 	}
-	version.client = (ClientVersionID)u32;
+	version.client = static_cast<ClientVersionID>(u32);
 
 	BinaryNode* mapHeaderNode = root->getChild();
 	if (mapHeaderNode == nullptr || !mapHeaderNode->getByte(u8) || u8 != OTBM_MAP_DATA) {
@@ -1094,7 +1094,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 }
 
 bool IOMapOTBM::loadSpawns(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	std::string fn = static_cast<const char*>(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
 	fn += map.spawnfile;
 
 	FileName filename(wxstr(fn));
@@ -1104,7 +1104,7 @@ bool IOMapOTBM::loadSpawns(Map& map, const FileName& dir) {
 	}
 
 	// has to be declared again as encoding-specific characters break loading there
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
+	std::string encoded_path = static_cast<const char*>(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
 	encoded_path += map.spawnfile;
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(encoded_path.c_str());
@@ -1180,7 +1180,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			Direction direction = SOUTH;
 			int dir = creatureNode.attribute("direction").as_int(-1);
 			if (dir >= DIRECTION_FIRST && dir <= DIRECTION_LAST) {
-				direction = (Direction)dir;
+				direction = static_cast<Direction>(dir);
 			}
 
 			Position creaturePosition(spawnPosition);
@@ -1247,7 +1247,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 }
 
 bool IOMapOTBM::loadHouses(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	std::string fn = static_cast<const char*>(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
 	fn += map.housefile;
 
 	FileName filename(wxstr(fn));
@@ -1257,7 +1257,7 @@ bool IOMapOTBM::loadHouses(Map& map, const FileName& dir) {
 	}
 
 	// has to be declared again as encoding-specific characters break loading there
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
+	std::string encoded_path = static_cast<const char*>(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
 	encoded_path += map.housefile;
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(encoded_path.c_str());
@@ -1323,7 +1323,7 @@ bool IOMapOTBM::loadHouses(Map& map, pugi::xml_document& doc) {
 }
 
 bool IOMapOTBM::loadWaypoints(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	std::string fn = static_cast<const char*>(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
 	fn += map.waypointfile;
 	FileName filename(wxstr(fn));
 	if (!filename.FileExists()) {
@@ -1464,7 +1464,7 @@ bool IOMapOTBM::saveMap(Map& map, const FileName& identifier) {
 	);
 
 	if (!f.isOk()) {
-		error("Can not open file %s for writing", (const char*)identifier.GetFullPath().mb_str(wxConvUTF8));
+		error("Can not open file %s for writing", static_cast<const char*>(identifier.GetFullPath().mb_str(wxConvUTF8)));
 		return false;
 	}
 

@@ -100,7 +100,7 @@ bool FileReadHandle::getRAW(uint8_t* ptr, size_t sz) {
 
 bool FileReadHandle::getRAW(std::string& str, size_t sz) {
 	str.resize(sz);
-	size_t o = fread(const_cast<char*>(str.data()), 1, sz, file);
+	size_t o = fread(str.data(), 1, sz, file);
 	if (o != sz) {
 		error_code = FILE_READ_ERROR;
 		return false;
@@ -234,8 +234,8 @@ DiskNodeFileReadHandle::DiskNodeFileReadHandle(const std::string& name, const st
 
 		if (ver[0] != 0 || ver[1] != 0 || ver[2] != 0 || ver[3] != 0) {
 			bool accepted = false;
-			for (std::vector<std::string>::const_iterator id_iter = acceptable_identifiers.begin(); id_iter != acceptable_identifiers.end(); ++id_iter) {
-				if (memcmp(ver, id_iter->c_str(), 4) == 0) {
+			for (const std::string& identifier : acceptable_identifiers) {
+				if (memcmp(ver, identifier.c_str(), 4) == 0) {
 					accepted = true;
 					break;
 				}
@@ -564,7 +564,7 @@ DiskNodeFileWriteHandle::DiskNodeFileWriteHandle(const std::string& name, const 
 
 	fwrite(identifier.c_str(), 1, 4, file);
 	if (!cache) {
-		cache = (uint8_t*)malloc(cache_size + 1);
+		cache = static_cast<uint8_t*>(malloc(cache_size + 1));
 	}
 	local_write_index = 0;
 }
@@ -589,7 +589,7 @@ void DiskNodeFileWriteHandle::renewCache() {
 			error_code = FILE_WRITE_ERROR;
 		}
 	} else {
-		cache = (uint8_t*)malloc(cache_size + 1);
+		cache = static_cast<uint8_t*>(malloc(cache_size + 1));
 	}
 	local_write_index = 0;
 }
@@ -599,7 +599,7 @@ void DiskNodeFileWriteHandle::renewCache() {
 
 MemoryNodeFileWriteHandle::MemoryNodeFileWriteHandle() {
 	if (!cache) {
-		cache = (uint8_t*)malloc(cache_size + 1);
+		cache = static_cast<uint8_t*>(malloc(cache_size + 1));
 	}
 	local_write_index = 0;
 }
@@ -629,12 +629,12 @@ size_t MemoryNodeFileWriteHandle::getSize() {
 void MemoryNodeFileWriteHandle::renewCache() {
 	if (cache) {
 		cache_size = cache_size * 2;
-		cache = (uint8_t*)realloc(cache, cache_size);
+		cache = static_cast<uint8_t*>(realloc(cache, cache_size));
 		if (!cache) {
 			exit(1);
 		}
 	} else {
-		cache = (uint8_t*)malloc(cache_size + 1);
+		cache = static_cast<uint8_t*>(malloc(cache_size + 1));
 	}
 }
 
@@ -706,18 +706,18 @@ bool NodeFileWriteHandle::addString(const std::string& str) {
 		return false;
 	}
 	addU16(uint16_t(str.size()));
-	addRAW((const uint8_t*)str.c_str(), str.size());
+	addRAW(reinterpret_cast<const uint8_t*>(str.c_str()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 
 bool NodeFileWriteHandle::addLongString(const std::string& str) {
 	addU32(uint32_t(str.size()));
-	addRAW((const uint8_t*)str.c_str(), str.size());
+	addRAW(reinterpret_cast<const uint8_t*>(str.c_str()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 
 bool NodeFileWriteHandle::addRAW(std::string& str) {
-	writeBytes(reinterpret_cast<uint8_t*>(const_cast<char*>(str.data())), str.size());
+	writeBytes(reinterpret_cast<const uint8_t*>(str.data()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 

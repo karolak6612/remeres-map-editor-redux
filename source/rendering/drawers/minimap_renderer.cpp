@@ -269,15 +269,15 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	}
 
 	// Constants
-	float scale_x = (float)w / map_w;
-	float scale_y = (float)h / map_h;
+	float scale_x = static_cast<float>(w) / map_w;
+	float scale_y = static_cast<float>(h) / map_h;
 
 	// Determine visible tiles
 	// Clamp to integer grid
-	int start_col = (int)std::floor(map_x / TILE_SIZE);
-	int end_col = (int)std::floor((map_x + map_w) / TILE_SIZE);
-	int start_row = (int)std::floor(map_y / TILE_SIZE);
-	int end_row = (int)std::floor((map_y + map_h) / TILE_SIZE);
+	int start_col = static_cast<int>(std::floor(map_x / TILE_SIZE));
+	int end_col = static_cast<int>(std::floor((map_x + map_w) / TILE_SIZE));
+	int start_row = static_cast<int>(std::floor(map_y / TILE_SIZE));
+	int end_row = static_cast<int>(std::floor((map_y + map_h) / TILE_SIZE));
 
 	start_col = std::max(0, start_col);
 	start_row = std::max(0, start_row);
@@ -301,7 +301,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 
 			int layer = r * cols_ + c;
 
-			instance_data_.push_back({ .x = screen_tile_x, .y = screen_tile_y, .w = screen_tile_w, .h = screen_tile_h, .layer = (float)layer });
+			instance_data_.push_back({ .x = screen_tile_x, .y = screen_tile_y, .w = screen_tile_w, .h = screen_tile_h, .layer = static_cast<float>(layer) });
 		}
 	}
 
