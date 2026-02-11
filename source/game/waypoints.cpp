@@ -20,7 +20,7 @@
 #include "game/waypoints.h"
 #include "map/map.h"
 
-void Waypoints::addWaypoint(Waypoint* wp) {
+void Waypoints::addWaypoint(std::unique_ptr<Waypoint> wp) {
 	removeWaypoint(wp->name);
 	if (wp->pos != Position()) {
 		Tile* t = map.getTile(wp->pos);
@@ -29,7 +29,7 @@ void Waypoints::addWaypoint(Waypoint* wp) {
 		}
 		t->getLocation()->increaseWaypointCount();
 	}
-	waypoints.insert(std::make_pair(as_lower_str(wp->name), wp));
+	waypoints.insert(std::make_pair(as_lower_str(wp->name), std::move(wp)));
 }
 
 Waypoint* Waypoints::getWaypoint(std::string name) {
@@ -38,7 +38,7 @@ Waypoint* Waypoints::getWaypoint(std::string name) {
 	if (iter == waypoints.end()) {
 		return nullptr;
 	}
-	return iter->second;
+	return iter->second.get();
 }
 
 Waypoint* Waypoints::getWaypoint(TileLocation* location) {
@@ -47,7 +47,7 @@ Waypoint* Waypoints::getWaypoint(TileLocation* location) {
 	}
 	// TODO find waypoint by position hash.
 	for (WaypointMap::iterator it = waypoints.begin(); it != waypoints.end(); it++) {
-		Waypoint* waypoint = it->second;
+		Waypoint* waypoint = it->second.get();
 		if (waypoint && waypoint->pos == location->position) {
 			return waypoint;
 		}
@@ -61,6 +61,6 @@ void Waypoints::removeWaypoint(std::string name) {
 	if (iter == waypoints.end()) {
 		return;
 	}
-	delete iter->second;
+	// delete iter->second; // unique_ptr handles it
 	waypoints.erase(iter);
 }

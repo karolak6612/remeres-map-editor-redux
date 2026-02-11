@@ -61,7 +61,7 @@ CreatureType::~CreatureType() {
 	////
 }
 
-CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::string>& warnings) {
+std::unique_ptr<CreatureType> CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::string>& warnings) {
 	pugi::xml_attribute attribute;
 	if (!(attribute = node.attribute("type"))) {
 		warnings.push_back("Couldn't read type tag of creature node.");
@@ -79,7 +79,7 @@ CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::st
 		return nullptr;
 	}
 
-	CreatureType* ct = newd CreatureType();
+	auto ct = std::make_unique<CreatureType>();
 	ct->name = attribute.as_string();
 	ct->isNpc = tmpType == "npc";
 
@@ -140,7 +140,7 @@ CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::st
 	return ct;
 }
 
-CreatureType* CreatureType::loadFromOTXML(const FileName& filename, pugi::xml_document& doc, std::vector<std::string>& warnings) {
+std::unique_ptr<CreatureType> CreatureType::loadFromOTXML(const FileName& filename, pugi::xml_document& doc, std::vector<std::string>& warnings) {
 	ASSERT(doc != nullptr);
 
 	bool isNpc;
@@ -160,7 +160,7 @@ CreatureType* CreatureType::loadFromOTXML(const FileName& filename, pugi::xml_do
 		return nullptr;
 	}
 
-	CreatureType* ct = newd CreatureType();
+	auto ct = std::make_unique<CreatureType>();
 	if (isNpc) {
 		ct->name = nstr(filename.GetName());
 	} else {
@@ -233,16 +233,13 @@ CreatureDatabase::~CreatureDatabase() {
 }
 
 void CreatureDatabase::clear() {
-	for (CreatureMap::iterator iter = creature_map.begin(); iter != creature_map.end(); ++iter) {
-		delete iter->second;
-	}
 	creature_map.clear();
 }
 
 CreatureType* CreatureDatabase::operator[](const std::string& name) {
 	CreatureMap::iterator iter = creature_map.find(as_lower_str(name));
 	if (iter != creature_map.end()) {
-		return iter->second;
+		return iter->second.get();
 	}
 	return nullptr;
 }
@@ -250,7 +247,7 @@ CreatureType* CreatureDatabase::operator[](const std::string& name) {
 CreatureType* CreatureDatabase::addMissingCreatureType(const std::string& name, bool isNpc) {
 	assert((*this)[name] == nullptr);
 
-	CreatureType* ct = newd CreatureType();
+	auto ct = std::make_unique<CreatureType>();
 	ct->name = name;
 	ct->isNpc = isNpc;
 	ct->missing = true;
@@ -261,21 +258,23 @@ CreatureType* CreatureDatabase::addMissingCreatureType(const std::string& name, 
 	ct->outfit.lookFeet = 76;
 	ct->outfit.lookAddon = 0;
 
-	creature_map.insert(std::make_pair(as_lower_str(name), ct));
-	return ct;
+	CreatureType* ret = ct.get();
+	creature_map.emplace(as_lower_str(name), std::move(ct));
+	return ret;
 }
 
 CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool isNpc, const Outfit& outfit) {
 	assert((*this)[name] == nullptr);
 
-	CreatureType* ct = newd CreatureType();
+	auto ct = std::make_unique<CreatureType>();
 	ct->name = name;
 	ct->isNpc = isNpc;
 	ct->missing = false;
 	ct->outfit = outfit;
 
-	creature_map.insert(std::make_pair(as_lower_str(name), ct));
-	return ct;
+	CreatureType* ret = ct.get();
+	creature_map.emplace(as_lower_str(name), std::move(ct));
+	return ret;
 }
 
 bool CreatureDatabase::hasMissing() const {
@@ -306,14 +305,14 @@ bool CreatureDatabase::loadFromXML(const FileName& filename, bool standard, wxSt
 			continue;
 		}
 
-		CreatureType* creatureType = CreatureType::loadFromXML(creatureNode, warnings);
+		auto creatureType = CreatureType::loadFromXML(creatureNode, warnings);
 		if (creatureType) {
 			creatureType->standard = standard;
 			if ((*this)[creatureType->name]) {
 				warnings.push_back((wxString("Duplicate creature type name \"") + wxstr(creatureType->name) + "\"! Discarding...").ToStdString());
-				delete creatureType;
+				// delete not needed, unique_ptr handles it
 			} else {
-				creature_map[as_lower_str(creatureType->name)] = creatureType;
+				creature_map.emplace(as_lower_str(creatureType->name), std::move(creatureType));
 			}
 		}
 	}
@@ -349,57 +348,64 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 				continue;
 			}
 
-			CreatureType* creatureType = CreatureType::loadFromOTXML(monsterFile, monsterDoc, warnings);
+			auto creatureType = CreatureType::loadFromOTXML(monsterFile, monsterDoc, warnings);
 			if (creatureType) {
 				CreatureType* current = (*this)[creatureType->name];
 				if (current) {
 					*current = *creatureType;
-					delete creatureType;
+					// delete not needed
 				} else {
-					creature_map[as_lower_str(creatureType->name)] = creatureType;
+					// We need raw pointer for brush before move
+					CreatureType* ctRaw = creatureType.get();
 
 					Tileset* tileSet = nullptr;
-					if (creatureType->isNpc) {
+					if (ctRaw->isNpc) {
 						tileSet = g_materials.tilesets["NPCs"];
 					} else {
 						tileSet = g_materials.tilesets["Others"];
 					}
 					ASSERT(tileSet != nullptr);
 
-					creatureType->brush = newd CreatureBrush(creatureType);
-					g_brushes.addBrush(creatureType->brush);
-					creatureType->in_other_tileset = true;
+					// Note: ctRaw->brush points to a brush that will be owned by g_brushes
+					// CreatureBrush takes CreatureType* as argument
+					ctRaw->brush = newd CreatureBrush(ctRaw);
+					g_brushes.addBrush(ctRaw->brush);
+					ctRaw->in_other_tileset = true;
 
 					TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);
-					tileSetCategory->brushlist.push_back(creatureType->brush);
+					tileSetCategory->brushlist.push_back(ctRaw->brush);
+
+					creature_map.emplace(as_lower_str(creatureType->name), std::move(creatureType));
 				}
 			}
 		}
 	} else if ((node = doc.child("monster")) || (node = doc.child("npc"))) {
-		CreatureType* creatureType = CreatureType::loadFromOTXML(filename, doc, warnings);
+		auto creatureType = CreatureType::loadFromOTXML(filename, doc, warnings);
 		if (creatureType) {
 			CreatureType* current = (*this)[creatureType->name];
 
 			if (current) {
 				*current = *creatureType;
-				delete creatureType;
+				// delete not needed
 			} else {
-				creature_map[as_lower_str(creatureType->name)] = creatureType;
+				CreatureType* ctRaw = creatureType.get();
 
 				Tileset* tileSet = nullptr;
-				if (creatureType->isNpc) {
+				if (ctRaw->isNpc) {
 					tileSet = g_materials.tilesets["NPCs"];
 				} else {
 					tileSet = g_materials.tilesets["Others"];
 				}
 				ASSERT(tileSet != nullptr);
 
-				creatureType->brush = newd CreatureBrush(creatureType);
-				g_brushes.addBrush(creatureType->brush);
-				creatureType->in_other_tileset = true;
+				ctRaw->brush = newd CreatureBrush(ctRaw);
+				g_brushes.addBrush(ctRaw->brush);
+				ctRaw->in_other_tileset = true;
 
 				TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);
-				tileSetCategory->brushlist.push_back(creatureType->brush);
+				tileSetCategory->brushlist.push_back(ctRaw->brush);
+
+				creature_map.emplace(as_lower_str(creatureType->name), std::move(creatureType));
 			}
 		}
 	} else {
@@ -417,7 +423,7 @@ bool CreatureDatabase::saveToXML(const FileName& filename) {
 
 	pugi::xml_node creatureNodes = doc.append_child("creatures");
 	for (const auto& creatureEntry : creature_map) {
-		CreatureType* creatureType = creatureEntry.second;
+		CreatureType* creatureType = creatureEntry.second.get();
 		if (!creatureType->standard) {
 			pugi::xml_node creatureNode = creatureNodes.append_child("creature");
 

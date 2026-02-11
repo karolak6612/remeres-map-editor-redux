@@ -554,7 +554,7 @@ bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver) {
 				}
 
 				// Create a read handle on it
-				std::shared_ptr<NodeFileReadHandle> f(new MemoryNodeFileReadHandle(buffer + 4, read_bytes - 4));
+				std::shared_ptr<NodeFileReadHandle> f = std::make_shared<MemoryNodeFileReadHandle>(buffer + 4, read_bytes - 4);
 
 				// Read the version info
 				return getVersionInfo(f.get(), out_ver);
@@ -647,9 +647,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 				g_gui.SetLoadDone(0, "Loading OTBM map...");
 
 				// Create a read handle on it
-				std::shared_ptr<NodeFileReadHandle> f(
-					new MemoryNodeFileReadHandle(otbm_buffer.data() + 4, otbm_size - 4)
-				);
+				std::shared_ptr<NodeFileReadHandle> f = std::make_shared<MemoryNodeFileReadHandle>(otbm_buffer.data() + 4, otbm_size - 4);
 
 				// Read the version info
 				if (!loadMap(map, *f.get())) {
@@ -1082,7 +1080,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 				wp.pos.y = y;
 				wp.pos.z = z;
 
-				map.waypoints.addWaypoint(newd Waypoint(wp));
+				map.waypoints.addWaypoint(std::make_unique<Waypoint>(wp));
 			}
 		}
 	}
@@ -1149,12 +1147,12 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			continue;
 		}
 
-		Spawn* spawn = newd Spawn(radius);
+		auto spawn = std::make_unique<Spawn>(radius);
 		if (!tile) {
 			tile = map.createTile(spawnPosition.x, spawnPosition.y, spawnPosition.z);
 		}
 
-		tile->spawn.reset(spawn);
+		tile->spawn = std::move(spawn);
 		map.addSpawn(tile);
 
 		for (pugi::xml_node creatureNode = spawnNode.first_child(); creatureNode; creatureNode = creatureNode.next_sibling()) {
@@ -1629,7 +1627,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 
 				f.addNode(OTBM_WAYPOINTS);
 				for (const auto& waypointEntry : map.waypoints) {
-					Waypoint* waypoint = waypointEntry.second;
+					Waypoint* waypoint = waypointEntry.second.get();
 					f.addNode(OTBM_WAYPOINT);
 					f.addString(waypoint->name);
 					f.addU16(waypoint->pos.x);

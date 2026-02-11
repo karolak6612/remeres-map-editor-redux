@@ -19,6 +19,9 @@
 #define RME_WAYPOINTS_H_
 
 #include "map/position.h"
+#include <memory>
+#include <map>
+#include <string>
 
 class Waypoint {
 public:
@@ -26,7 +29,7 @@ public:
 	Position pos;
 };
 
-using WaypointMap = std::map<std::string, Waypoint*>;
+using WaypointMap = std::map<std::string, std::unique_ptr<Waypoint>>;
 
 class Waypoints {
 	Map& map;
@@ -34,13 +37,9 @@ class Waypoints {
 public:
 	Waypoints(Map& map) :
 		map(map) { }
-	~Waypoints() {
-		for (WaypointMap::iterator iter = waypoints.begin(); iter != waypoints.end(); ++iter) {
-			delete iter->second;
-		}
-	}
+	~Waypoints() = default;
 
-	void addWaypoint(Waypoint* wp);
+	void addWaypoint(std::unique_ptr<Waypoint> wp);
 	Waypoint* getWaypoint(std::string name);
 	Waypoint* getWaypoint(TileLocation* location);
 	void removeWaypoint(std::string name);

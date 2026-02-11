@@ -22,11 +22,12 @@
 
 #include <string>
 #include <map>
+#include <memory>
 
 class CreatureType;
 class CreatureBrush;
 
-using CreatureMap = std::map<std::string, CreatureType*>;
+using CreatureMap = std::map<std::string, std::unique_ptr<CreatureType>>;
 
 class CreatureDatabase {
 protected:
@@ -74,8 +75,8 @@ public:
 	Outfit outfit;
 	CreatureBrush* brush;
 
-	static CreatureType* loadFromXML(pugi::xml_node node, std::vector<std::string>& warnings);
-	static CreatureType* loadFromOTXML(const FileName& filename, pugi::xml_document& node, std::vector<std::string>& warnings);
+	static std::unique_ptr<CreatureType> loadFromXML(pugi::xml_node node, std::vector<std::string>& warnings);
+	static std::unique_ptr<CreatureType> loadFromOTXML(const FileName& filename, pugi::xml_document& node, std::vector<std::string>& warnings);
 };
 
 extern CreatureDatabase g_creatures;
