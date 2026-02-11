@@ -9,11 +9,9 @@
 #undef max
 
 #include "rendering/drawers/entities/item_drawer.h"
-#include "rendering/core/graphics.h"
-#include "rendering/drawers/entities/item_drawer.h"
+#include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/primitive_renderer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/drawing_options.h"
@@ -212,7 +210,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	// draw wall hook
 	if (!options.ingame && options.show_hooks && (it.hookSouth || it.hookEast)) {
-		DrawHookIndicator(sprite_batch, sprite_drawer, draw_x, draw_y, it);
+		DrawHookIndicator(draw_x, draw_y, it, pos);
 	}
 
 	// draw light color indicator
@@ -279,28 +277,8 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, r, g, b, alpha);
 }
 
-void ItemDrawer::DrawHookIndicator(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int x, int y, const ItemType& type) {
-	// Approximating triangle with axis-aligned boxes for batching
-	int r = 0;
-	int g = 0;
-	int b = 255;
-	int a = 200;
-
-	if (type.hookSouth) {
-		// South Hook: Arrow pointing down/south
-		// Top bar: 20x4
-		sprite_drawer->glDrawBox(sprite_batch, x, y, 20, 4, r, g, b, a);
-		// Middle block: 8x3
-		sprite_drawer->glDrawBox(sprite_batch, x + 6, y + 4, 8, 3, r, g, b, a);
-		// Bottom tip: 4x3
-		sprite_drawer->glDrawBox(sprite_batch, x + 8, y + 7, 4, 3, r, g, b, a);
-	} else if (type.hookEast) {
-		// East Hook: Arrow pointing right/east
-		// Left bar: 4x20
-		sprite_drawer->glDrawBox(sprite_batch, x, y, 4, 20, r, g, b, a);
-		// Middle block: 3x8
-		sprite_drawer->glDrawBox(sprite_batch, x + 4, y + 6, 3, 8, r, g, b, a);
-		// Right tip: 3x4
-		sprite_drawer->glDrawBox(sprite_batch, x + 7, y + 8, 3, 4, r, g, b, a);
+void ItemDrawer::DrawHookIndicator(int x, int y, const ItemType& type, const Position& pos) {
+	if (hook_indicator_drawer) {
+		hook_indicator_drawer->addHook(pos, type.hookSouth, type.hookEast);
 	}
 }

@@ -167,7 +167,7 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TileSize) + base_draw_x;
 						int draw_y = (y * TileSize) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, *primitive_renderer, tile->location, view, options, 0, draw_x, draw_y);
+						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y);
 						if (lighting_enabled) {
 							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
 						}
