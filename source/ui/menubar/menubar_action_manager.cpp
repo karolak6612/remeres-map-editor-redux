@@ -7,19 +7,22 @@
 #include "editor/action_queue.h"
 #include "app/preferences.h"
 #include "ui/managers/recent_files_manager.h"
+#include "util/image_manager.h"
 
 void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions) {
 	using namespace MenuBar;
 
 #define MAKE_ACTION(id, kind, handler) actions[#id] = std::make_unique<MenuBar::Action>(#id, id, kind, wxCommandEventFunction(&MainMenuBar::handler))
+#define MAKE_ACTION_ICON(id, kind, icon, handler) actions[#id] = std::make_unique<MenuBar::Action>(#id, icon, id, kind, wxCommandEventFunction(&MainMenuBar::handler))
+
 #define MAKE_SET_ACTION(id, kind, setting_, handler)                                                                \
 	actions[#id] = std::make_unique<MenuBar::Action>(#id, id, kind, wxCommandEventFunction(&MainMenuBar::handler)); \
 	actions[#id]->setting = setting_
 
-	MAKE_ACTION(NEW, wxITEM_NORMAL, OnNew);
-	MAKE_ACTION(OPEN, wxITEM_NORMAL, OnOpen);
-	MAKE_ACTION(SAVE, wxITEM_NORMAL, OnSave);
-	MAKE_ACTION(SAVE_AS, wxITEM_NORMAL, OnSaveAs);
+	MAKE_ACTION_ICON(NEW, wxITEM_NORMAL, ICON_NEW, OnNew);
+	MAKE_ACTION_ICON(OPEN, wxITEM_NORMAL, ICON_OPEN, OnOpen);
+	MAKE_ACTION_ICON(SAVE, wxITEM_NORMAL, ICON_SAVE, OnSave);
+	MAKE_ACTION_ICON(SAVE_AS, wxITEM_NORMAL, ICON_SAVE, OnSaveAs);
 	MAKE_ACTION(GENERATE_MAP, wxITEM_NORMAL, OnGenerateMap);
 	MAKE_ACTION(CLOSE, wxITEM_NORMAL, OnClose);
 
@@ -31,14 +34,14 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 
 	MAKE_ACTION(RELOAD_DATA, wxITEM_NORMAL, OnReloadDataFiles);
 	// MAKE_ACTION(RECENT_FILES, wxITEM_NORMAL, OnRecent);
-	MAKE_ACTION(PREFERENCES, wxITEM_NORMAL, OnPreferences);
-	MAKE_ACTION(EXIT, wxITEM_NORMAL, OnQuit);
+	MAKE_ACTION_ICON(PREFERENCES, wxITEM_NORMAL, ICON_GEAR, OnPreferences);
+	MAKE_ACTION_ICON(EXIT, wxITEM_NORMAL, ICON_POWER_OFF, OnQuit);
 
-	MAKE_ACTION(UNDO, wxITEM_NORMAL, OnUndo);
-	MAKE_ACTION(REDO, wxITEM_NORMAL, OnRedo);
+	MAKE_ACTION_ICON(UNDO, wxITEM_NORMAL, ICON_UNDO, OnUndo);
+	MAKE_ACTION_ICON(REDO, wxITEM_NORMAL, ICON_REDO, OnRedo);
 
-	MAKE_ACTION(FIND_ITEM, wxITEM_NORMAL, OnSearchForItem);
-	MAKE_ACTION(REPLACE_ITEMS, wxITEM_NORMAL, OnReplaceItems);
+	MAKE_ACTION_ICON(FIND_ITEM, wxITEM_NORMAL, ICON_SEARCH, OnSearchForItem);
+	MAKE_ACTION_ICON(REPLACE_ITEMS, wxITEM_NORMAL, ICON_SYNC, OnReplaceItems);
 	MAKE_ACTION(SEARCH_ON_MAP_EVERYTHING, wxITEM_NORMAL, OnSearchForStuffOnMap);
 	MAKE_ACTION(SEARCH_ON_MAP_UNIQUE, wxITEM_NORMAL, OnSearchForUniqueOnMap);
 	MAKE_ACTION(SEARCH_ON_MAP_ACTION, wxITEM_NORMAL, OnSearchForActionOnMap);
@@ -63,13 +66,13 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION(RANDOMIZE_SELECTION, wxITEM_NORMAL, OnRandomizeSelection);
 	MAKE_ACTION(RANDOMIZE_MAP, wxITEM_NORMAL, OnRandomizeMap);
 	MAKE_ACTION(GOTO_PREVIOUS_POSITION, wxITEM_NORMAL, OnGotoPreviousPosition);
-	MAKE_ACTION(GOTO_POSITION, wxITEM_NORMAL, OnGotoPosition);
+	MAKE_ACTION_ICON(GOTO_POSITION, wxITEM_NORMAL, ICON_LOCATION, OnGotoPosition);
 	MAKE_ACTION(JUMP_TO_BRUSH, wxITEM_NORMAL, OnJumpToBrush);
 	MAKE_ACTION(JUMP_TO_ITEM_BRUSH, wxITEM_NORMAL, OnJumpToItemBrush);
 
-	MAKE_ACTION(CUT, wxITEM_NORMAL, OnCut);
-	MAKE_ACTION(COPY, wxITEM_NORMAL, OnCopy);
-	MAKE_ACTION(PASTE, wxITEM_NORMAL, OnPaste);
+	MAKE_ACTION_ICON(CUT, wxITEM_NORMAL, ICON_CUT, OnCut);
+	MAKE_ACTION_ICON(COPY, wxITEM_NORMAL, ICON_COPY, OnCopy);
+	MAKE_ACTION_ICON(PASTE, wxITEM_NORMAL, ICON_PASTE, OnPaste);
 
 	MAKE_ACTION(EDIT_TOWNS, wxITEM_NORMAL, OnMapEditTowns);
 	MAKE_ACTION(EDIT_ITEMS, wxITEM_NORMAL, OnMapEditItems);
@@ -82,7 +85,7 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION(MAP_REMOVE_UNREACHABLE_TILES, wxITEM_NORMAL, OnMapRemoveUnreachable);
 	MAKE_ACTION(MAP_CLEANUP, wxITEM_NORMAL, OnMapCleanup);
 	MAKE_ACTION(MAP_CLEAN_HOUSE_ITEMS, wxITEM_NORMAL, OnMapCleanHouseItems);
-	MAKE_ACTION(MAP_PROPERTIES, wxITEM_NORMAL, OnMapProperties);
+	MAKE_ACTION_ICON(MAP_PROPERTIES, wxITEM_NORMAL, ICON_GEAR, OnMapProperties);
 	MAKE_ACTION(MAP_STATISTICS, wxITEM_NORMAL, OnMapStatistics);
 
 	MAKE_ACTION(VIEW_TOOLBARS_BRUSHES, wxITEM_CHECK, OnToolbars);
@@ -92,8 +95,8 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION(NEW_VIEW, wxITEM_NORMAL, OnNewView);
 	MAKE_ACTION(TOGGLE_FULLSCREEN, wxITEM_NORMAL, OnToggleFullscreen);
 
-	MAKE_ACTION(ZOOM_IN, wxITEM_NORMAL, OnZoomIn);
-	MAKE_ACTION(ZOOM_OUT, wxITEM_NORMAL, OnZoomOut);
+	MAKE_ACTION_ICON(ZOOM_IN, wxITEM_NORMAL, ICON_PLUS, OnZoomIn);
+	MAKE_ACTION_ICON(ZOOM_OUT, wxITEM_NORMAL, ICON_MINUS, OnZoomOut);
 	MAKE_ACTION(ZOOM_NORMAL, wxITEM_NORMAL, OnZoomNormal);
 
 	MAKE_ACTION(SHOW_SHADE, wxITEM_CHECK, OnChangeViewSettings);
@@ -165,9 +168,10 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION(DEBUG_VIEW_DAT, wxITEM_NORMAL, OnDebugViewDat);
 	MAKE_ACTION(EXTENSIONS, wxITEM_NORMAL, OnListExtensions);
 	MAKE_ACTION(GOTO_WEBSITE, wxITEM_NORMAL, OnGotoWebsite);
-	MAKE_ACTION(ABOUT, wxITEM_NORMAL, OnAbout);
+	MAKE_ACTION_ICON(ABOUT, wxITEM_NORMAL, ICON_INFO, OnAbout);
 
 #undef MAKE_ACTION
+#undef MAKE_ACTION_ICON
 #undef MAKE_SET_ACTION
 }
 
