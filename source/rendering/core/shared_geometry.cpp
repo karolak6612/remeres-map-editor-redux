@@ -10,11 +10,11 @@
 
 void* GetCurrentGLContext() {
 #ifdef _WIN32
-	return (void*)wglGetCurrentContext();
+	return reinterpret_cast<void*>(wglGetCurrentContext());
 #elif defined(__linux__)
-	return (void*)glXGetCurrentContext();
+	return reinterpret_cast<void*>(glXGetCurrentContext());
 #elif defined(__APPLE__)
-	return (void*)CGLGetCurrentContext();
+	return reinterpret_cast<void*>(CGLGetCurrentContext());
 #else
 	return nullptr;
 #endif
@@ -28,7 +28,7 @@ bool SharedGeometry::initialize() {
 
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (contexts_.find(ctx) != contexts_.end()) {
+	if (contexts_.contains(ctx)) {
 		return true;
 	}
 
