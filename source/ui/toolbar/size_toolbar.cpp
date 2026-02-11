@@ -25,7 +25,7 @@ SizeToolBar::SizeToolBar(wxWindow* parent) {
 	wxBitmap size6_bitmap = wxArtProvider::GetBitmap(ART_RECTANGULAR_6, wxART_TOOLBAR, icon_size);
 	wxBitmap size7_bitmap = wxArtProvider::GetBitmap(ART_RECTANGULAR_7, wxART_TOOLBAR, icon_size);
 
-	toolbar = newd wxAuiToolBar(parent, TOOLBAR_SIZES, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
+	toolbar = newd wxAuiToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);
 	toolbar->AddTool(TOOLBAR_SIZES_RECTANGULAR, wxEmptyString, rectangular_bitmap, wxNullBitmap, wxITEM_CHECK, "Rectangular Brush", wxEmptyString, nullptr);
 	toolbar->AddTool(TOOLBAR_SIZES_CIRCULAR, wxEmptyString, circular_bitmap, wxNullBitmap, wxITEM_CHECK, "Circular Brush", wxEmptyString, nullptr);
@@ -70,7 +70,7 @@ void SizeToolBar::UpdateBrushSize(BrushShape shape, int size) {
 		toolbar->ToggleTool(TOOLBAR_SIZES_CIRCULAR, true);
 		toolbar->ToggleTool(TOOLBAR_SIZES_RECTANGULAR, false);
 
-		wxSize icon_size = wxSize(16, 16);
+		wxSize icon_size = toolbar->FromDIP(wxSize(16, 16));
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_1, wxArtProvider::GetBitmap(ART_CIRCULAR_1, wxART_TOOLBAR, icon_size));
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_2, wxArtProvider::GetBitmap(ART_CIRCULAR_2, wxART_TOOLBAR, icon_size));
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_3, wxArtProvider::GetBitmap(ART_CIRCULAR_3, wxART_TOOLBAR, icon_size));
@@ -82,7 +82,7 @@ void SizeToolBar::UpdateBrushSize(BrushShape shape, int size) {
 		toolbar->ToggleTool(TOOLBAR_SIZES_CIRCULAR, false);
 		toolbar->ToggleTool(TOOLBAR_SIZES_RECTANGULAR, true);
 
-		wxSize icon_size = wxSize(16, 16);
+		wxSize icon_size = toolbar->FromDIP(wxSize(16, 16));
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_1, wxArtProvider::GetBitmap(ART_RECTANGULAR_1, wxART_TOOLBAR, icon_size));
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_2, wxArtProvider::GetBitmap(ART_RECTANGULAR_2, wxART_TOOLBAR, icon_size));
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_3, wxArtProvider::GetBitmap(ART_RECTANGULAR_3, wxART_TOOLBAR, icon_size));

@@ -14,15 +14,15 @@ const wxString LightToolBar::PANE_NAME = "light_toolbar";
 LightToolBar::LightToolBar(wxWindow* parent) {
 	wxSize icon_size = FROM_DIP(parent, wxSize(16, 16));
 
-	toolbar = newd wxAuiToolBar(parent, TOOLBAR_LIGHT, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_HORZ_TEXT);
+	toolbar = newd wxAuiToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_HORZ_TEXT);
 	toolbar->SetToolBitmapSize(icon_size);
 
 	wxStaticText* intensity_label = newd wxStaticText(toolbar, wxID_ANY, "Intensity:");
-	light_slider = newd wxSlider(toolbar, ID_LIGHT_INTENSITY_SLIDER, 100, 0, 200, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
+	light_slider = newd wxSlider(toolbar, wxID_ANY, 100, 0, 200, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
 	light_slider->SetToolTip("Global Light Intensity");
 
 	wxStaticText* ambient_label = newd wxStaticText(toolbar, wxID_ANY, "Ambient:");
-	ambient_slider = newd wxSlider(toolbar, ID_AMBIENT_LIGHT_SLIDER, 50, 0, 100, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
+	ambient_slider = newd wxSlider(toolbar, wxID_ANY, 50, 0, 100, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
 	ambient_slider->SetToolTip("Ambient Light Level");
 
 	toolbar->AddControl(intensity_label);

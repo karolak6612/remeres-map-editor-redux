@@ -312,12 +312,12 @@ protected:
 
 	std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>> actions;
 
-	SearchHandler* searchHandler;
-	ViewSettingsHandler* viewSettingsHandler;
-	MapActionsHandler* mapActionsHandler;
-	FileMenuHandler* fileMenuHandler;
-	NavigationMenuHandler* navigationMenuHandler;
-	PaletteMenuHandler* paletteMenuHandler;
+	std::unique_ptr<SearchHandler> searchHandler;
+	std::unique_ptr<ViewSettingsHandler> viewSettingsHandler;
+	std::unique_ptr<MapActionsHandler> mapActionsHandler;
+	std::unique_ptr<FileMenuHandler> fileMenuHandler;
+	std::unique_ptr<NavigationMenuHandler> navigationMenuHandler;
+	std::unique_ptr<PaletteMenuHandler> paletteMenuHandler;
 };
 
 namespace MenuBar {

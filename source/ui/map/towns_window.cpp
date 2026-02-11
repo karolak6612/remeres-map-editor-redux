@@ -27,14 +27,14 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	}
 
 	// Town list
-	town_listbox = newd wxListBox(this, EDIT_TOWNS_LISTBOX, wxDefaultPosition, FROM_DIP(this, wxSize(240, 100)));
+	town_listbox = newd wxListBox(this, wxID_ANY, wxDefaultPosition, FROM_DIP(this, wxSize(240, 100)));
 	sizer->Add(town_listbox, 1, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 10);
 
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
-	auto addBtn = newd wxButton(this, EDIT_TOWNS_ADD, "Add");
+	auto addBtn = newd wxButton(this, wxID_ANY, "Add");
 	addBtn->SetToolTip("Add a new town");
 	tmpsizer->Add(addBtn, 0, wxTOP, 5);
-	remove_button = newd wxButton(this, EDIT_TOWNS_REMOVE, "Remove");
+	remove_button = newd wxButton(this, wxID_ANY, "Remove");
 	remove_button->SetToolTip("Remove selected town");
 	tmpsizer->Add(remove_button, 0, wxRIGHT | wxTOP, 5);
 	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
@@ -53,7 +53,7 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 
 	// Temple position
 	temple_position = newd PositionCtrl(this, "Temple Position", 0, 0, 0, map.getWidth(), map.getHeight());
-	select_position_button = newd wxButton(this, EDIT_TOWNS_SELECT_TEMPLE, "Go To");
+	select_position_button = newd wxButton(this, wxID_ANY, "Go To");
 	select_position_button->SetToolTip("Jump to temple position");
 	temple_position->Add(select_position_button, 0, wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	sizer->Add(temple_position, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);

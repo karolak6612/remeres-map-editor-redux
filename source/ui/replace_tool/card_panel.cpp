@@ -1,6 +1,7 @@
 #include "ui/replace_tool/card_panel.h"
 #include "ui/theme.h"
 #include <wx/dcclient.h>
+#include <wx/dcbuffer.h>
 #include <wx/graphics.h>
 #include <wx/settings.h>
 #include <numbers>
@@ -47,7 +48,7 @@ void CardPanel::OnSize(wxSizeEvent& event) {
 }
 
 void CardPanel::OnPaint(wxPaintEvent& event) {
-	wxPaintDC dc(this);
+	wxAutoBufferedPaintDC dc(this);
 	std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
 
 	if (!gc) {

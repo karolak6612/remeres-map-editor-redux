@@ -16,7 +16,7 @@ PositionToolBar::PositionToolBar(wxWindow* parent) {
 	wxSize icon_size = FROM_DIP(parent, wxSize(16, 16));
 	wxBitmap go_bitmap = wxArtProvider::GetBitmap(ART_POSITION_GO, wxART_TOOLBAR, icon_size);
 
-	toolbar = newd wxAuiToolBar(parent, TOOLBAR_POSITION, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_HORZ_TEXT);
+	toolbar = newd wxAuiToolBar(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE | wxAUI_TB_HORZ_TEXT);
 	toolbar->SetToolBitmapSize(icon_size);
 
 	x_control = newd NumberTextCtrl(toolbar, wxID_ANY, 0, 0, MAP_MAX_WIDTH, wxTE_PROCESS_ENTER, "X", wxDefaultPosition, FROM_DIP(parent, wxSize(60, 20)));
@@ -28,7 +28,7 @@ PositionToolBar::PositionToolBar(wxWindow* parent) {
 	z_control = newd NumberTextCtrl(toolbar, wxID_ANY, 0, 0, MAP_MAX_LAYER, wxTE_PROCESS_ENTER, "Z", wxDefaultPosition, FROM_DIP(parent, wxSize(35, 20)));
 	z_control->SetToolTip("Z Coordinate");
 
-	go_button = newd wxButton(toolbar, TOOLBAR_POSITION_GO, wxEmptyString, wxDefaultPosition, parent->FromDIP(wxSize(22, 20)));
+	go_button = newd wxButton(toolbar, wxID_ANY, wxEmptyString, wxDefaultPosition, parent->FromDIP(wxSize(22, 20)));
 	go_button->SetBitmap(go_bitmap);
 	go_button->SetToolTip("Go To Position");
 
@@ -78,11 +78,9 @@ void PositionToolBar::OnGoClick(wxCommandEvent& event) {
 		return;
 	}
 
-	if (event.GetId() == TOOLBAR_POSITION_GO) {
-		Position pos(x_control->GetIntValue(), y_control->GetIntValue(), z_control->GetIntValue());
-		if (pos.isValid()) {
-			g_gui.SetScreenCenterPosition(pos);
-		}
+	Position pos(x_control->GetIntValue(), y_control->GetIntValue(), z_control->GetIntValue());
+	if (pos.isValid()) {
+		g_gui.SetScreenCenterPosition(pos);
 	}
 }
 
