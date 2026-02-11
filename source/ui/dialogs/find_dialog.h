@@ -3,9 +3,11 @@
 
 #include "app/main.h"
 #include <wx/wx.h>
-#include <wx/vlbox.h>
 #include <vector>
 
+#include "ui/controls/nanovg_listbox.h"
+
+struct NVGcontext;
 class Brush;
 
 class KeyForwardingTextCtrl : public wxTextCtrl {
@@ -19,7 +21,7 @@ public:
 	void OnKeyDown(wxKeyEvent&);
 };
 
-class FindDialogListBox : public wxVListBox {
+class FindDialogListBox : public NanoVGListBox {
 public:
 	FindDialogListBox(wxWindow* parent, wxWindowID id);
 	~FindDialogListBox();
@@ -27,10 +29,11 @@ public:
 	void Clear();
 	void SetNoMatches();
 	void AddBrush(Brush*);
+	void UpdateCount();
 	Brush* GetSelectedBrush();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;
+	wxCoord OnMeasureItem(size_t index) const override;
 
 protected:
 	bool cleared;
