@@ -39,20 +39,16 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
-		bool locked = (item->getActionID() != 0 || item->getUniqueID() != 0);
-		if (!locked) {
-			const Door* door = item->asDoor();
-			if (door && door->getDoorID() != 0) {
-				locked = true;
-			}
-		}
+		bool locked = item->isLocked();
 
 		// Door orientation: horizontal wall -> West border (south=true), vertical wall -> North border (east=true)
 		if (it.border_alignment == WALL_HORIZONTAL) {
 			DrawDoorIndicator(locked, pos, true, false);
-		}
-		if (it.border_alignment == WALL_VERTICAL) {
+		} else if (it.border_alignment == WALL_VERTICAL) {
 			DrawDoorIndicator(locked, pos, false, true);
+		} else {
+			// Center case for non-aligned doors
+			DrawDoorIndicator(locked, pos, false, false);
 		}
 	}
 

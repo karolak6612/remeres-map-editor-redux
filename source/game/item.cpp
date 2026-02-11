@@ -232,6 +232,16 @@ bool Item::hasProperty(enum ITEMPROPERTY prop) const {
 	return false;
 }
 
+bool Item::isLocked() const {
+	if (getActionID() != 0 || getUniqueID() != 0) {
+		return true;
+	}
+	if (const Door* door = asDoor()) {
+		return door->getDoorID() != 0;
+	}
+	return false;
+}
+
 std::pair<int, int> Item::getDrawOffset() const {
 	ItemType& it = g_items[id];
 	if (it.sprite != nullptr) {

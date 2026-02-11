@@ -346,6 +346,9 @@ public:
 		return g_items[id].isMetaItem();
 	}
 
+	// Logic for UI overlays
+	virtual bool isLocked() const;
+
 	// Slot-based Item Types
 	bool isWeapon() const {
 		uint8_t weaponType = g_items[id].weapon_type;

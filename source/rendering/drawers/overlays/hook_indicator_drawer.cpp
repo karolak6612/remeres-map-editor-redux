@@ -3,6 +3,7 @@
 #include "rendering/core/render_view.h"
 #include "app/definitions.h"
 #include "util/image_manager.h"
+#include "rendering/utilities/icon_renderer.h"
 
 HookIndicatorDrawer::HookIndicatorDrawer() {
 	requests.reserve(100);
@@ -50,43 +51,14 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		const float y = unscaled_y / zoom;
 		const float tileSize = 32.0f / zoom;
 
-		auto drawIconWithBorder = [&](float cx, float cy, const std::string& iconMacro) {
-			int imgBlack = IMAGE_MANAGER.GetNanoVGImage(vg, iconMacro, wxBlack);
-			int imgGreen = IMAGE_MANAGER.GetNanoVGImage(vg, iconMacro, wxTint);
-
-			if (imgBlack > 0 && imgGreen > 0) {
-				// Draw outline (4 directions)
-				float offsets[4][2] = {
-					{ -outlineOffset, 0 }, { outlineOffset, 0 }, { 0, -outlineOffset }, { 0, outlineOffset }
-				};
-
-				for (int i = 0; i < 4; ++i) {
-					float ox = cx + offsets[i][0];
-					float oy = cy + offsets[i][1];
-					NVGpaint paint = nvgImagePattern(vg, ox - iconSize / 2.0f, oy - iconSize / 2.0f, iconSize, iconSize, 0, imgBlack, 1.0f);
-					nvgBeginPath(vg);
-					nvgRect(vg, ox - iconSize / 2.0f, oy - iconSize / 2.0f, iconSize, iconSize);
-					nvgFillPaint(vg, paint);
-					nvgFill(vg);
-				}
-
-				// Draw main icon
-				NVGpaint paint = nvgImagePattern(vg, cx - iconSize / 2.0f, cy - iconSize / 2.0f, iconSize, iconSize, 0, imgGreen, 1.0f);
-				nvgBeginPath(vg);
-				nvgRect(vg, cx - iconSize / 2.0f, cy - iconSize / 2.0f, iconSize, iconSize);
-				nvgFillPaint(vg, paint);
-				nvgFill(vg);
-			}
-		};
-
 		if (request.south) {
 			// Center of WEST border, pointing NORTH (towards corner)
-			drawIconWithBorder(x, y + tileSize / 2.0f, ICON_ANGLE_UP);
+			IconRenderer::DrawIconWithBorder(vg, x, y + tileSize / 2.0f, iconSize, outlineOffset, ICON_ANGLE_UP, tintColor);
 		}
 
 		if (request.east) {
 			// Center of NORTH border, pointing WEST (towards corner)
-			drawIconWithBorder(x + tileSize / 2.0f, y, ICON_ANGLE_LEFT);
+			IconRenderer::DrawIconWithBorder(vg, x + tileSize / 2.0f, y, iconSize, outlineOffset, ICON_ANGLE_LEFT, tintColor);
 		}
 	}
 

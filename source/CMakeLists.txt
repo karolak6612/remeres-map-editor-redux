@@ -522,6 +522,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/frame_pacer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/icon_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_calculator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.cpp
