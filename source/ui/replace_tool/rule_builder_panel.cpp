@@ -11,6 +11,7 @@
 #include <nanovg.h>
 #include <format>
 #include <cmath>
+#include <ranges>
 #include "rendering/core/text_renderer.h"
 #include "ui/replace_tool/rule_card_renderer.h"
 
@@ -48,16 +49,16 @@ bool RuleBuilderPanel::ItemDropTarget::OnDropText(wxCoord x, wxCoord y, const wx
 	RuleBuilderPanel::HitResult hit = m_panel->HitTest(x, y);
 
 	if (hit.type == RuleBuilderPanel::HitResult::Source) {
-		if (hit.ruleIndex >= 0 && hit.ruleIndex < (int)m_panel->m_rules.size()) {
+		if (hit.ruleIndex >= 0 && hit.ruleIndex < std::ssize(m_panel->m_rules)) {
 			m_panel->m_rules[hit.ruleIndex].fromId = itemId;
 			m_panel->m_listener->OnRuleChanged();
 			m_panel->Refresh();
 			return true;
 		}
 	} else if (hit.type == RuleBuilderPanel::HitResult::Target || hit.type == RuleBuilderPanel::HitResult::DeleteTarget) {
-		if (hit.ruleIndex >= 0 && hit.ruleIndex < (int)m_panel->m_rules.size()) {
+		if (hit.ruleIndex >= 0 && hit.ruleIndex < std::ssize(m_panel->m_rules)) {
 			// Replace existing target
-			if (hit.targetIndex >= 0 && hit.targetIndex < m_panel->m_rules[hit.ruleIndex].targets.size()) {
+			if (hit.targetIndex >= 0 && hit.targetIndex < std::ssize(m_panel->m_rules[hit.ruleIndex].targets)) {
 				m_panel->m_rules[hit.ruleIndex].targets[hit.targetIndex].id = itemId;
 				m_panel->m_listener->OnRuleChanged();
 				m_panel->Refresh();
@@ -65,14 +66,12 @@ bool RuleBuilderPanel::ItemDropTarget::OnDropText(wxCoord x, wxCoord y, const wx
 			}
 		}
 	} else if (hit.type == RuleBuilderPanel::HitResult::AddTarget) { // Drag to [+] slot
-		if (hit.ruleIndex >= 0 && hit.ruleIndex < (int)m_panel->m_rules.size()) {
+		if (hit.ruleIndex >= 0 && hit.ruleIndex < std::ssize(m_panel->m_rules)) {
 			// TRASH LOGIC: Reject if has trash
-			bool hasTrash = false;
-			for (const auto& t : m_panel->m_rules[hit.ruleIndex].targets) {
-				if (t.id == TRASH_ITEM_ID) {
-					hasTrash = true;
-				}
-			}
+			bool hasTrash = std::ranges::any_of(m_panel->m_rules[hit.ruleIndex].targets, [](const auto& t) {
+				return t.id == TRASH_ITEM_ID;
+			});
+
 			if (hasTrash) {
 				return false;
 			}
@@ -157,7 +156,7 @@ std::vector<ReplacementRule> RuleBuilderPanel::GetRules() const {
 // ----------------------------------------------------------------------------
 
 int RuleBuilderPanel::GetRuleHeight(int index, int width) const {
-	if (index < 0 || index >= (int)m_rules.size()) {
+	if (index < 0 || index >= std::ssize(m_rules)) {
 		return FromDIP(ITEM_H);
 	}
 
@@ -167,15 +166,13 @@ int RuleBuilderPanel::GetRuleHeight(int index, int width) const {
 		availableWidth = CARD_W;
 	}
 
-	int columns = std::max(1, (int)(availableWidth / (CARD_W + ITEM_SPACING)));
+	int columns = std::max(1, static_cast<int>(availableWidth / (CARD_W + ITEM_SPACING)));
 	int targetCount = m_rules[index].targets.size();
 
-	bool hasTrash = false;
-	for (const auto& t : m_rules[index].targets) {
-		if (t.id == TRASH_ITEM_ID) {
-			hasTrash = true;
-		}
-	}
+	bool hasTrash = std::ranges::any_of(m_rules[index].targets, [](const auto& t) {
+		return t.id == TRASH_ITEM_ID;
+	});
+
 	if (!hasTrash) {
 		targetCount++; // [+] slot
 	}
@@ -186,8 +183,8 @@ int RuleBuilderPanel::GetRuleHeight(int index, int width) const {
 }
 
 int RuleBuilderPanel::GetRuleY(int index, int width) const {
-	if (index < 0 || index >= (int)m_ruleYCache.size()) {
-		if (index == (int)m_ruleYCache.size()) {
+	if (index < 0 || index >= std::ssize(m_ruleYCache)) {
+		if (index == std::ssize(m_ruleYCache)) {
 			return m_totalHeight;
 		}
 		return 0;
@@ -204,9 +201,9 @@ void RuleBuilderPanel::LayoutRules() {
 	m_ruleYCache.clear();
 	int currentY = RuleCardRenderer::CARD_MARGIN_Y + RuleCardRenderer::HEADER_HEIGHT;
 
-	for (size_t i = 0; i < m_rules.size(); ++i) {
+	for (int i = 0; i < std::ssize(m_rules); ++i) {
 		m_ruleYCache.push_back(currentY);
-		currentY += GetRuleHeight((int)i, width);
+		currentY += GetRuleHeight(i, width);
 	}
 	m_totalHeight = currentY;
 
@@ -215,7 +212,7 @@ void RuleBuilderPanel::LayoutRules() {
 }
 
 void RuleBuilderPanel::DistributeProbabilities(int ruleIndex) {
-	if (ruleIndex < 0 || ruleIndex >= m_rules.size()) {
+	if (ruleIndex < 0 || ruleIndex >= std::ssize(m_rules)) {
 		return;
 	}
 	auto& targets = m_rules[ruleIndex].targets;
@@ -233,8 +230,8 @@ void RuleBuilderPanel::DistributeProbabilities(int ruleIndex) {
 
 	for (size_t i = 0; i < targets.size(); ++i) {
 		accumulated += step;
-		int currentTotal = (int)std::round(accumulated);
-		int prevTotal = (int)std::round(accumulated - step);
+		int currentTotal = static_cast<int>(std::round(accumulated));
+		int prevTotal = static_cast<int>(std::round(accumulated - step));
 		targets[i].probability = currentTotal - prevTotal;
 	}
 }
@@ -335,7 +332,7 @@ RuleBuilderPanel::HitResult RuleBuilderPanel::HitTest(int x, int y) const {
 	}
 
 	// Check Rules
-	for (size_t i = 0; i < m_rules.size(); ++i) {
+	for (int i = 0; i < std::ssize(m_rules); ++i) {
 		int ruleH = GetRuleHeight(i, width);
 		int ruleY = GetRuleY(i, width);
 		wxRect card(CARD_MARGIN_X, ruleY, width - CARD_MARGIN_X * 2, ruleH);
@@ -346,7 +343,7 @@ RuleBuilderPanel::HitResult RuleBuilderPanel::HitTest(int x, int y) const {
 
 			// Delete Rule Button (Top Right)
 			if (localX > card.width - 24 && localY < 24) {
-				return { HitResult::DeleteRule, (int)i, -1 };
+				return { HitResult::DeleteRule, i, -1 };
 			}
 
 			// Source Item (Left, always in first row logically)
@@ -354,32 +351,29 @@ RuleBuilderPanel::HitResult RuleBuilderPanel::HitTest(int x, int y) const {
 			float sourceY = CARD_PADDING; // Vertical top in card
 
 			if (localX >= startX && localX <= startX + CARD_W && localY >= sourceY && localY <= sourceY + ITEM_HEIGHT) {
-				return { HitResult::Source, (int)i, -1 };
+				return { HitResult::Source, i, -1 };
 			}
 
 			// Targets (Wrapping)
 			float targetStartX = startX + CARD_W + 10 + ARROW_WIDTH;
 			float availableWidth = card.width - targetStartX - CARD_PADDING;
-			int columns = std::max(1, (int)(availableWidth / (CARD_W + ITEM_SPACING)));
+			int columns = std::max(1, static_cast<int>(availableWidth / (CARD_W + ITEM_SPACING)));
 
-			for (size_t t = 0; t < m_rules[i].targets.size(); ++t) {
+			for (int t = 0; t < std::ssize(m_rules[i].targets); ++t) {
 				int row = t / columns;
 				int col = t % columns;
 				float tx = targetStartX + col * (RuleCardRenderer::CARD_W + RuleCardRenderer::ITEM_SPACING);
 				float ty = RuleCardRenderer::CARD_PADDING + row * (ITEM_HEIGHT + RuleCardRenderer::ITEM_SPACING);
 
 				if (localX >= tx && localX <= tx + RuleCardRenderer::CARD_W && localY >= ty && localY <= ty + ITEM_HEIGHT) {
-					return { HitResult::DeleteTarget, (int)i, (int)t };
+					return { HitResult::DeleteTarget, i, t };
 				}
 			}
 
 			// Add Target Slot
-			bool hasTrash = false;
-			for (const auto& t : m_rules[i].targets) {
-				if (t.id == TRASH_ITEM_ID) {
-					hasTrash = true;
-				}
-			}
+			bool hasTrash = std::ranges::any_of(m_rules[i].targets, [](const auto& t) {
+				return t.id == TRASH_ITEM_ID;
+			});
 
 			if (!hasTrash) {
 				int tIdx = m_rules[i].targets.size();
@@ -389,11 +383,11 @@ RuleBuilderPanel::HitResult RuleBuilderPanel::HitTest(int x, int y) const {
 				float ty = RuleCardRenderer::CARD_PADDING + row * (ITEM_HEIGHT + RuleCardRenderer::ITEM_SPACING);
 
 				if (localX >= tx && localX <= tx + RuleCardRenderer::CARD_W && localY >= ty && localY <= ty + ITEM_HEIGHT) {
-					return { HitResult::AddTarget, (int)i, -1 };
+					return { HitResult::AddTarget, i, -1 };
 				}
 			}
 
-			return { HitResult::None, (int)i, -1 };
+			return { HitResult::None, i, -1 };
 		}
 	}
 
@@ -434,13 +428,13 @@ void RuleBuilderPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	nvgRestore(vg);
 
 	// 2. Draw Content (Implicitly scrolled by base class)
-	for (size_t i = 0; i < m_rules.size(); ++i) {
+	for (int i = 0; i < std::ssize(m_rules); ++i) {
 		int ruleY = GetRuleY(i, width);
-		bool hoverDel = (m_dragHover.type == HitResult::DeleteRule && m_dragHover.ruleIndex == (int)i);
-		int dragType = (m_dragHover.ruleIndex == (int)i) ? (int)m_dragHover.type : 0;
-		int dragIdx = (m_dragHover.ruleIndex == (int)i) ? m_dragHover.targetIndex : -1;
+		bool hoverDel = (m_dragHover.type == HitResult::DeleteRule && m_dragHover.ruleIndex == i);
+		int dragType = (m_dragHover.ruleIndex == i) ? static_cast<int>(m_dragHover.type) : 0;
+		int dragIdx = (m_dragHover.ruleIndex == i) ? m_dragHover.targetIndex : -1;
 
-		RuleCardRenderer::DrawRuleCard(this, vg, (int)i, ruleY, width, hoverDel, dragIdx, dragType, m_isExternalDrag);
+		RuleCardRenderer::DrawRuleCard(this, vg, i, ruleY, width, hoverDel, dragIdx, dragType, m_isExternalDrag);
 	}
 
 	int newRuleY = GetRuleY(m_rules.size(), width) + RuleCardRenderer::CARD_MARGIN_Y;

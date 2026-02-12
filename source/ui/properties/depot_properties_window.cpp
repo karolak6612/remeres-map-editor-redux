@@ -44,18 +44,18 @@ DepotPropertiesWindow::DepotPropertiesWindow(wxWindow* parent, const Map* map, c
 			if (town_iter->second->getID() == depot->getDepotID()) {
 				found = true;
 			}
-			depot_id_field->Append(wxstr(town_iter->second->getName()), (void*)(intptr_t)(town_iter->second->getID()));
+			depot_id_field->Append(wxstr(town_iter->second->getName()), reinterpret_cast<void*>(static_cast<intptr_t>(town_iter->second->getID())));
 			if (!found) {
 				++to_select_index;
 			}
 		}
 		if (!found) {
 			if (depot->getDepotID() != 0) {
-				depot_id_field->Append("Undefined Town (id:" + i2ws(depot->getDepotID()) + ")", (void*)(intptr_t)(depot->getDepotID()));
+				depot_id_field->Append("Undefined Town (id:" + i2ws(depot->getDepotID()) + ")", reinterpret_cast<void*>(static_cast<intptr_t>(depot->getDepotID())));
 			}
 		}
 	}
-	depot_id_field->Append("No Town", (void*)(intptr_t)(0));
+	depot_id_field->Append("No Town", reinterpret_cast<void*>(static_cast<intptr_t>(0)));
 	if (depot->getDepotID() == 0) {
 		to_select_index = depot_id_field->GetCount() - 1;
 	}
@@ -81,7 +81,7 @@ DepotPropertiesWindow::~DepotPropertiesWindow() {
 
 void DepotPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (Depot* depot = dynamic_cast<Depot*>(edit_item)) {
-		int new_depotid = (int)(intptr_t)depot_id_field->GetClientData(depot_id_field->GetSelection());
+		int new_depotid = static_cast<int>(reinterpret_cast<intptr_t>(depot_id_field->GetClientData(depot_id_field->GetSelection())));
 		depot->setDepotID(new_depotid);
 	}
 	EndModal(1);
