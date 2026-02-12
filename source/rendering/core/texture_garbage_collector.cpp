@@ -46,11 +46,12 @@ void TextureGarbageCollector::NotifyTextureUnloaded() {
 void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 	cleanup_list.push_back(spr);
 	// Clean if needed
-	// Clean if needed
-	const auto clean_threshold = std::max<uint32_t>(100, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD));
-	if (cleanup_list.size() > clean_threshold) {
-		const auto software_clean_size = g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE);
-		for (int i = 0; i < software_clean_size && !cleanup_list.empty(); ++i) {
+	const auto clean_threshold = std::max(100, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD));
+	if (cleanup_list.size() > static_cast<size_t>(clean_threshold)) {
+		const auto software_clean_size = std::max(0, g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE));
+		const size_t count = std::min(cleanup_list.size(), static_cast<size_t>(software_clean_size));
+
+		for (size_t i = 0; i < count; ++i) {
 			cleanup_list.front()->unloadDC();
 			cleanup_list.pop_front();
 		}
