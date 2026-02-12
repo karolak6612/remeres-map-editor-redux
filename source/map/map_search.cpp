@@ -10,9 +10,90 @@
 #include <algorithm>
 #include <thread>
 #include <future>
-#include <mutex>
 #include <vector>
 #include <cmath>
+
+namespace {
+	void ProcessItemsOnTile(Map& map, Tile* tile, EditorOperations::MapSearcher& searcher, long long& done, std::vector<Container*>& container_buffer) {
+		// Process Ground
+		if (tile->ground) {
+			searcher(map, tile, tile->ground, done);
+		}
+
+		// Process Items
+		for (auto* item : tile->items) {
+			searcher(map, tile, item, done);
+
+			// Deep search in containers
+			if (Container* c = item->asContainer()) {
+				container_buffer.clear();
+				container_buffer.push_back(c);
+
+				size_t idx = 0;
+				while (idx < container_buffer.size()) {
+					Container* current = container_buffer[idx++];
+					ItemVector& v = current->getVector();
+					for (auto* inner_item : v) {
+						searcher(map, tile, inner_item, done);
+						if (Container* inner_c = inner_item->asContainer()) {
+							container_buffer.push_back(inner_c);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	std::vector<std::pair<Tile*, Item*>> ProcessChunk(
+		Map& map,
+		const std::vector<SpatialHashGrid::SortedGridCell>& cells,
+		size_t start_idx,
+		size_t end_idx,
+		const EditorOperations::MapSearcher& prototype_searcher
+	) {
+		EditorOperations::MapSearcher local_searcher = prototype_searcher;
+		long long dummy_done = -1; // -1 to disable progress updates in MapSearcher operator()
+		std::vector<Container*> containers;
+		containers.reserve(64);
+
+		for (size_t i = start_idx; i < end_idx; ++i) {
+			SpatialHashGrid::GridCell* cell = cells[i].cell;
+			if (!cell) {
+				continue;
+			}
+
+			for (const auto& node_ptr : cell->nodes) {
+				MapNode* node = node_ptr.get();
+				if (!node) {
+					continue;
+				}
+
+				// Iterate all floors (layers)
+				for (int z = 0; z <= MAP_MAX_LAYER; ++z) {
+					if (!node->hasFloor(z)) {
+						continue;
+					}
+
+					Floor* floor = node->getFloor(z);
+					if (!floor) {
+						continue;
+					}
+
+					for (int t = 0; t < SpatialHashGrid::TILES_PER_NODE; ++t) {
+						TileLocation& loc = floor->locs[t];
+						Tile* tile = loc.get();
+						if (!tile) {
+							continue;
+						}
+
+						ProcessItemsOnTile(map, tile, local_searcher, dummy_done, containers);
+					}
+				}
+			}
+		}
+		return local_searcher.found;
+	}
+}
 
 std::vector<SearchResult> MapSearchUtility::SearchItems(Map& map, bool unique, bool action, bool container, bool writable, bool onSelection) {
 	// Prepare search configuration
@@ -27,7 +108,7 @@ std::vector<SearchResult> MapSearchUtility::SearchItems(Map& map, bool unique, b
 		std::vector<SearchResult> results;
 		results.reserve(searcher.found.size());
 		for (auto& p : searcher.found) {
-			results.push_back({ p.first, p.second, std::string(searcher.desc(p.second).c_str()) });
+			results.push_back({ p.first, p.second, searcher.desc(p.second).ToStdString() });
 		}
 		return results;
 	};
@@ -36,10 +117,17 @@ std::vector<SearchResult> MapSearchUtility::SearchItems(Map& map, bool unique, b
 	if (!onSelection) {
 		auto cells = map.getGrid().getSortedCells();
 		size_t num_cells = cells.size();
-		if (num_cells == 0) return {};
+		if (num_cells == 0) {
+			return {};
+		}
 
 		unsigned int num_threads = std::thread::hardware_concurrency();
-		if (num_threads == 0) num_threads = 2;
+		if (num_threads == 0) {
+			num_threads = 2;
+		}
+		if (num_threads > 16) {
+			num_threads = 16; // Cap to reasonable limit
+		}
 
 		// Don't spawn threads for tiny maps
 		if (num_cells < 100) {
@@ -49,75 +137,16 @@ std::vector<SearchResult> MapSearchUtility::SearchItems(Map& map, bool unique, b
 		size_t chunk_size = (num_cells + num_threads - 1) / num_threads;
 		std::vector<std::future<std::vector<std::pair<Tile*, Item*>>>> futures;
 
-		// Lambda for processing a chunk of cells
-		auto process_chunk = [&](size_t start_idx, size_t end_idx) -> std::vector<std::pair<Tile*, Item*>> {
-			EditorOperations::MapSearcher local_searcher = prototype_searcher;
-			long long dummy_done = 0;
-			std::vector<Container*> containers;
-			containers.reserve(64);
-
-			for (size_t i = start_idx; i < end_idx; ++i) {
-				SpatialHashGrid::GridCell* cell = cells[i].cell;
-				if (!cell) continue;
-
-				for (const auto& node_ptr : cell->nodes) {
-					MapNode* node = node_ptr.get();
-					if (!node) continue;
-
-					// Iterate all floors (layers)
-					for (int z = 0; z <= MAP_MAX_LAYER; ++z) {
-						if (!node->hasFloor(z)) continue;
-
-						Floor* floor = node->getFloor(z);
-						if (!floor) continue;
-
-						for (int t = 0; t < SpatialHashGrid::TILES_PER_NODE; ++t) {
-							TileLocation& loc = floor->locs[t];
-							Tile* tile = loc.get();
-							if (!tile) continue;
-
-							// Process Ground
-							if (tile->ground) {
-								local_searcher(map, tile, tile->ground, dummy_done);
-							}
-
-							// Process Items
-							for (auto* item : tile->items) {
-								local_searcher(map, tile, item, dummy_done);
-
-								// Deep search in containers
-								if (Container* c = item->asContainer()) {
-									containers.clear();
-									containers.push_back(c);
-
-									size_t idx = 0;
-									while (idx < containers.size()) {
-										Container* current = containers[idx++];
-										ItemVector& v = current->getVector();
-										for (auto* inner_item : v) {
-											local_searcher(map, tile, inner_item, dummy_done);
-											if (Container* inner_c = inner_item->asContainer()) {
-												containers.push_back(inner_c);
-											}
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-			return local_searcher.found;
-		};
-
 		// Launch threads
 		for (unsigned int t = 0; t < num_threads; ++t) {
 			size_t start = t * chunk_size;
 			size_t end = std::min(start + chunk_size, num_cells);
 
-			if (start >= end) break;
+			if (start >= end) {
+				break;
+			}
 
-			futures.push_back(std::async(std::launch::async, process_chunk, start, end));
+			futures.push_back(std::async(std::launch::async, ProcessChunk, std::ref(map), std::ref(cells), start, end, prototype_searcher));
 		}
 
 		// Collect results

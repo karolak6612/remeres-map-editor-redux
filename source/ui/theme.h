@@ -14,9 +14,13 @@ public:
 		AccentHover, // Lighter accent
 		Text, // Primary text
 		TextSubtle, // De-emphasized text
+		TextOnAccent, // Text color when on accented background (usually white)
 		Border, // Outline/Separator colors
 		Selected, // Selection fill
-		Error // Warning/Error states
+		Error, // Warning/Error states
+		CardBase, // Rule card background
+		CardBaseHover, // Rule card hover background
+		CardBorder // Rule card default border
 	};
 
 	static wxColour Get(Role role) {
@@ -35,12 +39,20 @@ public:
 				return wxColour(230, 230, 230);
 			case Role::TextSubtle:
 				return wxColour(150, 150, 150);
+			case Role::TextOnAccent:
+				return wxColour(255, 255, 255);
 			case Role::Border:
 				return wxColour(60, 60, 60);
 			case Role::Selected:
 				return wxColour(0, 120, 215, 60); // Alpha translucency
 			case Role::Error:
 				return wxColour(200, 50, 50);
+			case Role::CardBase:
+				return wxColour(50, 50, 55);
+			case Role::CardBaseHover:
+				return wxColour(60, 60, 65);
+			case Role::CardBorder:
+				return wxColour(80, 80, 80);
 			default:
 				return *wxWHITE;
 		}

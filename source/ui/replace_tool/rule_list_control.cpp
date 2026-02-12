@@ -4,7 +4,7 @@
 #include <memory>
 #include <algorithm>
 
-RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
+RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxNO_BORDER | wxWANTS_CHARS),
 																		 m_listener(listener) {
 	// NanoVGCanvas handles background style
 	m_itemHeight = FromDIP(56);
@@ -60,20 +60,23 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	int startIdx = scrollPos / m_itemHeight;
 	int endIdx = std::min((int)m_ruleSetNames.size() - 1, (scrollPos + clientSize.y) / m_itemHeight + 1);
 
-	const float padding = 4.0f;
-	const float radius = 4.0f;
+	static const float padding = 4.0f;
+	static const float radius = 4.0f;
+	static const float FONT_SIZE = 16.0f; // 10pt equivalent, adjusted for better visual weight
 
 	// Card Colors
-	wxColour cardBase = wxColour(50, 50, 55);
-	wxColour cardBaseHover = wxColour(60, 60, 65);
+	wxColour cardBase = Theme::Get(Theme::Role::CardBase);
+	wxColour cardBaseHover = Theme::Get(Theme::Role::CardBaseHover);
 	wxColour cardBaseSelected = Theme::Get(Theme::Role::Accent);
 	wxColour textNormal = Theme::Get(Theme::Role::Text);
-	wxColour textSelected = *wxWHITE;
-	wxColour borderNormal = wxColour(80, 80, 80);
-	wxColour borderSelected = *wxWHITE;
+	wxColour textSelected = Theme::Get(Theme::Role::TextOnAccent);
+	wxColour borderNormal = Theme::Get(Theme::Role::CardBorder);
+	wxColour borderSelected = Theme::Get(Theme::Role::TextOnAccent);
 
-	nvgFontSize(vg, 16.0f); // approx 10pt
-	nvgFontFace(vg, "sans");
+	nvgFontSize(vg, FONT_SIZE);
+	if (nvgFindFont(vg, "sans") != -1) {
+		nvgFontFace(vg, "sans");
+	}
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
 	for (int i = startIdx; i <= endIdx; ++i) {
@@ -119,6 +122,15 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 		nvgText(vg, x + 10, y + h / 2.0f, m_ruleSetNames[i].c_str(), nullptr);
 	}
+}
+
+wxRect RuleListControl::GetItemRect(int index) const {
+	if (index < 0 || index >= (int)m_ruleSetNames.size()) {
+		return wxRect();
+	}
+	wxSize clientSize = GetClientSize();
+	int scrollPos = GetScrollPos(wxVERTICAL);
+	return wxRect(0, index * m_itemHeight - scrollPos, clientSize.x, m_itemHeight);
 }
 
 void RuleListControl::OnMouse(wxMouseEvent& event) {

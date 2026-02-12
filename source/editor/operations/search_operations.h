@@ -52,7 +52,7 @@ namespace EditorOperations {
 		std::vector<std::pair<Tile*, Item*>> found;
 
 		void operator()(Map& map, Tile* tile, Item* item, long long done) {
-			if (done % SEARCH_UPDATE_INTERVAL == 0) {
+			if (done >= 0 && done % SEARCH_UPDATE_INTERVAL == 0) {
 				g_gui.SetLoadDone((unsigned int)(100 * done / map.getTileCount()));
 			}
 			Container* container;

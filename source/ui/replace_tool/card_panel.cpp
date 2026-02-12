@@ -33,6 +33,7 @@ void CardPanel::SetShowFooter(bool show) {
 
 void CardPanel::SetTitle(const wxString& title) {
 	m_title = title;
+	m_cachedTitleStr.clear();
 	Refresh();
 }
 
@@ -74,9 +75,7 @@ void CardPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	float cardH = height - 2 * margin;
 
 	// Gradient
-	NVGpaint paint = nvgLinearGradient(vg, cardX, cardY, cardX, cardY + cardH,
-		nvgRGBA(cardBgStart.Red(), cardBgStart.Green(), cardBgStart.Blue(), cardBgStart.Alpha()),
-		nvgRGBA(cardBgEnd.Red(), cardBgEnd.Green(), cardBgEnd.Blue(), cardBgEnd.Alpha()));
+	NVGpaint paint = nvgLinearGradient(vg, cardX, cardY, cardX, cardY + cardH, nvgRGBA(cardBgStart.Red(), cardBgStart.Green(), cardBgStart.Blue(), cardBgStart.Alpha()), nvgRGBA(cardBgEnd.Red(), cardBgEnd.Green(), cardBgEnd.Blue(), cardBgEnd.Alpha()));
 
 	nvgBeginPath(vg);
 	nvgRoundedRect(vg, cardX, cardY, cardW, cardH, r);
@@ -107,7 +106,7 @@ void CardPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		nvgLineTo(vg, x + cw - r, y);
 		// Top-Right Corner
 		nvgArc(vg, x + cw - r, y + r, r, 1.5f * NVG_PI, 0, NVG_CW);
-		// Right vertical down
+		// Bottom-Right of header part
 		nvgLineTo(vg, x + cw, y + ch);
 		// Bottom Line (Separator)
 		nvgLineTo(vg, x, y + ch);
@@ -126,16 +125,21 @@ void CardPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		nvgStroke(vg);
 
 		// Draw Text
-		nvgFontSize(vg, 14.0f); // approx 9pt * 1.5 ?? NanoVG uses pixels.
-		// Use Theme font size? Theme::GetFont(9) -> 9pt.
-		// Standard conversion: pt * 1.33 = px. 9 * 1.33 ~= 12.
-		nvgFontFace(vg, "sans"); // Assuming 'sans' is loaded
+		static const float TITLE_FONT_SIZE_PX = 12.0f; // 9pt * 4/3 = 12px
+		nvgFontSize(vg, TITLE_FONT_SIZE_PX);
+		if (nvgFindFont(vg, "sans") != -1) {
+			nvgFontFace(vg, "sans");
+		}
 		nvgFillColor(vg, nvgRGBA(titleColor.Red(), titleColor.Green(), titleColor.Blue(), titleColor.Alpha()));
 		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
 		float tx = x + cw / 2.0f;
 		float ty = y + ch / 2.0f;
-		nvgText(vg, tx, ty, m_title.ToStdString().c_str(), nullptr);
+
+		if (m_cachedTitleStr.empty() && !m_title.IsEmpty()) {
+			m_cachedTitleStr = m_title.ToStdString();
+		}
+		nvgText(vg, tx, ty, m_cachedTitleStr.c_str(), nullptr);
 	}
 
 	// Draw Footer if requested

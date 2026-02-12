@@ -30,6 +30,7 @@ protected:
 private:
 	bool m_showFooter = false;
 	wxString m_title;
+	std::string m_cachedTitleStr;
 
 	wxBoxSizer* m_mainSizer = nullptr;
 	wxBoxSizer* m_contentSizer = nullptr;
