@@ -182,45 +182,4 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE nanovg::nanovg)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
 
-	# Test executable for rendering optimizations
-	add_executable(test_rendering_optimization ${rme_H} ${rme_SRC_TEST} ${CMAKE_CURRENT_SOURCE_DIR}/source/test_rendering_optimization.cpp)
-	target_compile_definitions(test_rendering_optimization PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
-
-	target_include_directories(test_rendering_optimization PRIVATE
-		${Boost_INCLUDE_DIRS}
-		${LibArchive_INCLUDE_DIRS}
-		${OPENGL_INCLUDE_DIR}
-		${ZLIB_INCLUDE_DIR}
-		${CMAKE_CURRENT_SOURCE_DIR}/source
-	)
-
-	if(TARGET wxWidgets::wxWidgets)
-		target_link_libraries(test_rendering_optimization PRIVATE wxWidgets::wxWidgets)
-	else()
-		target_link_libraries(test_rendering_optimization PRIVATE ${wxWidgets_LIBRARIES})
-	endif()
-
-	if(TARGET Boost::boost)
-		target_link_libraries(test_rendering_optimization PRIVATE Boost::boost Boost::thread Boost::system)
-	else()
-		target_link_libraries(test_rendering_optimization PRIVATE ${Boost_LIBRARIES})
-	endif()
-
-	if(TARGET LibArchive::LibArchive)
-		target_link_libraries(test_rendering_optimization PRIVATE LibArchive::LibArchive)
-	else()
-		target_link_libraries(test_rendering_optimization PRIVATE ${LibArchive_LIBRARIES})
-	endif()
-
-	if(TARGET ZLIB::ZLIB)
-		target_link_libraries(test_rendering_optimization PRIVATE ZLIB::ZLIB)
-	else()
-		target_link_libraries(test_rendering_optimization PRIVATE ${ZLIB_LIBRARIES})
-	endif()
-
-	target_link_libraries(test_rendering_optimization PRIVATE ${OPENGL_LIBRARIES})
-	target_link_libraries(test_rendering_optimization PRIVATE glad::glad)
-	target_link_libraries(test_rendering_optimization PRIVATE glm::glm)
-	target_link_libraries(test_rendering_optimization PRIVATE nanovg::nanovg)
-	target_link_libraries(test_rendering_optimization PRIVATE spdlog::spdlog)
 endif()

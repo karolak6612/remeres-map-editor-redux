@@ -25,9 +25,9 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	}
 
 	if (options.show_spawns && spawn_count > 0) {
-		// Precomputed 0.7^n * 256
-		static const int spawn_factor[] = { 256, 179, 125, 88, 61, 43, 30, 21, 15, 10 };
-		int f = (spawn_count < 10) ? spawn_factor[spawn_count] : 10;
+		// Precomputed 0.7^n * 256 for n=1..9
+		static const int spawn_factor[] = { 179, 125, 88, 61, 43, 30, 21, 15, 10 };
+		int f = (spawn_count > 0 && spawn_count <= 9) ? spawn_factor[spawn_count - 1] : 10;
 		g = (g * f) >> 8;
 		b = (b * f) >> 8;
 	}
