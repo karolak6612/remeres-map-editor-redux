@@ -128,7 +128,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
 			if (rgba) {
-				result_queue.push({ task.id, std::move(rgba) });
+				result_queue.push({ task.id, std::move(rgba), std::move(task.spritefile) });
 			} else {
 				pending_ids.erase(task.id);
 			}
@@ -153,8 +153,8 @@ void SpritePreloader::update() {
 		Result& res = results.front();
 		uint32_t id = res.id;
 
-		// Check if GraphicManager is loaded and ID is valid
-		if (!g_gui.gfx.isUnloaded() && id < g_gui.gfx.image_space.size()) {
+		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
+		if (res.spritefile == g_gui.gfx.getSpriteFile() && !g_gui.gfx.isUnloaded() && id < g_gui.gfx.image_space.size()) {
 			auto& img_ptr = g_gui.gfx.image_space[id];
 			if (img_ptr) {
 				// Use static_cast for performance, as we know the type from loaders

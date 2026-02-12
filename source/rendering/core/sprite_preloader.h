@@ -54,6 +54,7 @@ private:
 	struct Result {
 		uint32_t id;
 		std::unique_ptr<uint8_t[]> data;
+		std::string spritefile;
 	};
 
 	void workerLoop(std::stop_token stop_token);
