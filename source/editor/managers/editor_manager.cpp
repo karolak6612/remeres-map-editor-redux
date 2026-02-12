@@ -19,8 +19,6 @@
 #include "ui/managers/status_manager.h"
 #include "palette/managers/palette_manager.h"
 #include "brushes/managers/brush_manager.h"
-#include "live/live_tab.h"
-#include "live/live_client.h"
 #include "io/iomap_otbm.h"
 
 #include <set>
@@ -81,27 +79,6 @@ MapTab* EditorManager::GetCurrentMapTab() const {
 
 void EditorManager::CycleTab(bool forward) {
 	g_gui.tabbook->CycleTab(forward);
-}
-
-bool EditorManager::CloseLiveEditors(LiveSocket* sock) {
-	for (int i = 0; i < g_gui.tabbook->GetTabCount(); ++i) {
-		auto* mapTab = dynamic_cast<MapTab*>(g_gui.tabbook->GetTab(i));
-		if (mapTab) {
-			Editor* editor = mapTab->GetEditor();
-			if (editor->live_manager.GetClient() == sock) {
-				g_gui.tabbook->DeleteTab(i--);
-			}
-		}
-		auto* liveLogTab = dynamic_cast<LiveLogTab*>(g_gui.tabbook->GetTab(i));
-		if (liveLogTab) {
-			if (liveLogTab->GetSocket() == sock) {
-				liveLogTab->Disconnect();
-				g_gui.tabbook->DeleteTab(i--);
-			}
-		}
-	}
-	g_gui.root->UpdateMenubar();
-	return true;
 }
 
 bool EditorManager::CloseAllEditors() {

@@ -35,7 +35,6 @@ class Town;
 class Position;
 class Editor;
 class GUI;
-class LiveClient;
 class Selection;
 class CopyBuffer;
 class ItemType;

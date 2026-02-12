@@ -8,7 +8,6 @@
 #include "ui/gui.h"
 #include "editor/editor.h"
 #include "ui/map_tab.h"
-#include "live/live_server.h"
 
 LoadingManager g_loading;
 
@@ -33,14 +32,6 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 	progressBar = newd wxGenericProgressDialog("Loading", progressText + " (0%)", 100, g_gui.root, wxPD_APP_MODAL | wxPD_SMOOTH | (canCancel ? wxPD_CAN_ABORT : 0));
 	progressBar->Show(true);
 
-	if (g_gui.tabbook) {
-		for (int idx = 0; idx < g_gui.tabbook->GetTabCount(); ++idx) {
-			auto* mt = dynamic_cast<MapTab*>(g_gui.tabbook->GetTab(idx));
-			if (mt && mt->GetEditor()->live_manager.IsServer()) {
-				mt->GetEditor()->live_manager.GetServer()->startOperation(progressText);
-			}
-		}
-	}
 	progressBar->Update(0);
 }
 
@@ -72,18 +63,6 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 			&skip
 		);
 		currentProgress = newProgress;
-	}
-
-	if (g_gui.tabbook) {
-		for (int32_t index = 0; index < g_gui.tabbook->GetTabCount(); ++index) {
-			auto* mapTab = dynamic_cast<MapTab*>(g_gui.tabbook->GetTab(index));
-			if (mapTab && mapTab->GetEditor()) {
-				LiveServer* server = mapTab->GetEditor()->live_manager.GetServer();
-				if (server) {
-					server->updateOperation(newProgress);
-				}
-			}
-		}
 	}
 
 	return skip;

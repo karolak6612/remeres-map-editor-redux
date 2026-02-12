@@ -33,7 +33,6 @@
 #include "ui/dat_debug_view.h"
 #include "ui/menubar_loader.h"
 #include "ui/map_statistics_dialog.h"
-#include "ui/live_dialogs.h"
 
 #include "ui/extension_window.h"
 #include "ui/find_item_window.h"
@@ -53,7 +52,6 @@
 
 #include "editor/editor.h"
 #include "game/materials.h"
-#include "live/live_client.h"
 #include "editor/action_queue.h"
 
 #include "editor/operations/search_operations.h"
@@ -539,22 +537,4 @@ void MainMenuBar::OnSelectWaypointPalette(wxCommandEvent& event) {
 
 void MainMenuBar::OnSelectRawPalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectRawPalette(event);
-}
-
-void MainMenuBar::OnStartLive(wxCommandEvent& event) {
-	LiveDialogs::ShowHostDialog(frame, g_gui.GetCurrentEditor());
-}
-
-void MainMenuBar::OnJoinLive(wxCommandEvent& event) {
-	LiveDialogs::ShowJoinDialog(frame);
-	Update();
-}
-
-void MainMenuBar::OnCloseLive(wxCommandEvent& event) {
-	Editor* editor = g_gui.GetCurrentEditor();
-	if (editor && editor->live_manager.IsLive()) {
-		g_gui.CloseLiveEditors(&editor->live_manager.GetSocket());
-	}
-
-	Update();
 }

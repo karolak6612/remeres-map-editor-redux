@@ -47,8 +47,6 @@
 #include <nanovg.h>
 #include <nanovg_gl.h>
 #include "app/application.h"
-#include "live/live_server.h"
-#include "live/live_client.h"
 #include "ui/browse_tile_window.h"
 #include "ui/dialog_helper.h"
 #include "game/animation_timer.h"
@@ -310,11 +308,6 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 	// FPS tracking and limiting
 	frame_pacer.UpdateAndLimit(g_settings.getInteger(Config::FRAME_RATE_LIMIT), g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
-
-	// Send newd node requests
-	if (editor.live_manager.GetClient()) {
-		editor.live_manager.GetClient()->sendNodeRequests();
-	}
 }
 
 void MapCanvas::TakeScreenshot(wxFileName path, wxString format) {

@@ -96,14 +96,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/templates.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_action.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_client.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_packets.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_peer.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_manager.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_server.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_socket.h
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_tab.h
     ${CMAKE_CURRENT_LIST_DIR}/map/basemap.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_allocator.h
@@ -117,8 +109,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.h
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.h
     ${CMAKE_CURRENT_LIST_DIR}/map/tileset.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.h
-    ${CMAKE_CURRENT_LIST_DIR}/net/process_com.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.h
@@ -159,7 +149,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_garbage_collector.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/brush_cursor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/drag_shadow_drawer.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/live_cursor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/creature_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/creature_name_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/item_drawer.h
@@ -293,7 +282,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.h
@@ -424,13 +412,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_action.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_client.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_manager.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_peer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_server.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_socket.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/live/live_tab.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/basemap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/operations/map_processor.cpp
@@ -442,8 +423,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tileset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mkpch.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/net/process_com.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_creature.cpp
@@ -480,7 +459,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_garbage_collector.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/brush_cursor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/drag_shadow_drawer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/live_cursor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/creature_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/creature_name_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/item_drawer.cpp
@@ -619,7 +597,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.cpp

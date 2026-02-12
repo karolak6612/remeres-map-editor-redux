@@ -23,7 +23,6 @@
 #include "editor/action.h"
 #include "app/settings.h"
 
-#include "net/process_com.h"
 #include "rendering/ui/map_display.h"
 #include "ui/welcome_dialog.h"
 
@@ -57,7 +56,6 @@ private:
 	virtual void OnFatalException() override;
 
 #ifdef _USE_PROCESS_COM
-	RMEProcessServer* m_proc_server;
 	wxSingleInstanceChecker* m_single_instance_checker;
 #endif
 };

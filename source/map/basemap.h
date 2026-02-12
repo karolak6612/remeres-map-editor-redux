@@ -144,9 +144,6 @@ public:
 		return grid;
 	}
 
-	// Clears the visiblity according to the mask passed
-	void clearVisible(uint32_t mask);
-
 	uint64_t getTileCount() const {
 		return tilecount;
 	}

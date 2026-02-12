@@ -128,9 +128,6 @@ namespace MenuBar {
 		WIN_INGAME_PREVIEW,
 		NEW_PALETTE,
 		TAKE_SCREENSHOT,
-		LIVE_START,
-		LIVE_JOIN,
-		LIVE_CLOSE,
 		SELECT_TERRAIN,
 		SELECT_DOODAD,
 		SELECT_ITEM,
@@ -281,10 +278,6 @@ public:
 	void OnToolOptionsWindow(wxCommandEvent& event);
 	void OnIngamePreviewWindow(wxCommandEvent& event);
 	void OnNewPalette(wxCommandEvent& event);
-
-	void OnStartLive(wxCommandEvent& event);
-	void OnJoinLive(wxCommandEvent& event);
-	void OnCloseLive(wxCommandEvent& event);
 
 	void OnSelectTerrainPalette(wxCommandEvent& event);
 	void OnSelectDoodadPalette(wxCommandEvent& event);

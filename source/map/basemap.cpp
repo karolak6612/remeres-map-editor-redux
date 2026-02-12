@@ -42,10 +42,6 @@ void BaseMap::clear(bool del) {
 	}
 }
 
-void BaseMap::clearVisible(uint32_t mask) {
-	grid.clearVisible(mask);
-}
-
 Tile* BaseMap::createTile(int x, int y, int z) {
 	ASSERT(z < MAP_LAYERS);
 	MapNode* leaf = grid.getLeafForce(x, y);

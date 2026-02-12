@@ -21,7 +21,6 @@
 #include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "editor/editor.h"
-#include "live/live_client.h"
 #include "map/map.h"
 #include "map/map_region.h"
 #include "rendering/core/render_view.h"
@@ -40,7 +39,7 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
@@ -61,120 +60,51 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 	// ND visibility
 
-	if (live_client) {
-		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
-			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
-				MapNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
-				if (!nd) {
-					nd = editor->map.createLeaf(nd_map_x, nd_map_y);
-					nd->setVisible(false, false);
+	editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+		int node_draw_x = nd_map_x * TileSize + base_screen_x;
+		int node_draw_y = nd_map_y * TileSize + base_screen_y;
+
+		// Node level culling
+		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+			return;
+		}
+
+		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize);
+
+		Floor* floor = nd->getFloor(map_z);
+		if (!floor) {
+			return;
+		}
+
+		for (int map_x = 0; map_x < 4; ++map_x) {
+			for (int map_y = 0; map_y < 4; ++map_y) {
+				// Calculate draw coordinates directly
+				int draw_x = node_draw_x + (map_x * TileSize);
+				int draw_y = node_draw_y + (map_y * TileSize);
+
+				// Culling: Skip tiles that are far outside the viewport.
+				if (!fully_inside && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+					continue;
 				}
 
-				if (nd->isVisible(map_z > GROUND_LAYER)) {
-					int node_draw_x = nd_map_x * TileSize + base_screen_x;
-					int node_draw_y = nd_map_y * TileSize + base_screen_y;
+				TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
-					// Node level culling
-					if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-						continue;
+				// Trigger preloading for this tile's sprites
+				if (Tile* tile = location->get()) {
+					if (tile->ground) {
+						rme::collectTileSprites(g_items[tile->ground->getID()].sprite, 0, 0, 0, 0);
 					}
-
-					bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize);
-
-					Floor* floor = nd->getFloor(map_z);
-					if (!floor) {
-						continue;
+					for (Item* item : tile->items) {
+						rme::collectTileSprites(g_items[item->getID()].sprite, 0, 0, 0, 0);
 					}
+				}
 
-					for (int map_x = 0; map_x < 4; ++map_x) {
-						for (int map_y = 0; map_y < 4; ++map_y) {
-							// Calculate draw coordinates directly
-							int draw_x = node_draw_x + (map_x * TileSize);
-							int draw_y = node_draw_y + (map_y * TileSize);
-
-							// Culling: Skip tiles that are far outside the viewport.
-							if (!fully_inside && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-								continue;
-							}
-
-							TileLocation* location = &floor->locs[map_x * 4 + map_y];
-
-							// Trigger preloading for this tile's sprites
-							if (Tile* tile = location->get()) {
-								if (tile->ground) {
-									rme::collectTileSprites(g_items[tile->ground->getID()].sprite, 0, 0, 0, 0);
-								}
-								for (Item* item : tile->items) {
-									rme::collectTileSprites(g_items[item->getID()].sprite, 0, 0, 0, 0);
-								}
-							}
-
-							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
-							// draw light, but only if not zoomed too far
-							if (draw_lights) {
-								tile_renderer->AddLight(location, view, options, light_buffer);
-							}
-						}
-					}
-				} else {
-					if (!nd->isRequested(map_z > GROUND_LAYER)) {
-						// Request the node
-						if (editor->live_manager.GetClient()) {
-							editor->live_manager.GetClient()->queryNode(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
-						}
-						nd->setRequested(map_z > GROUND_LAYER, true);
-					}
-					grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
+				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
+				// draw light, but only if not zoomed too far
+				if (draw_lights) {
+					tile_renderer->AddLight(location, view, options, light_buffer);
 				}
 			}
 		}
-	} else {
-		editor->map.visitLeaves(nd_start_x, nd_start_y, nd_end_x, nd_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
-			int node_draw_x = nd_map_x * TileSize + base_screen_x;
-			int node_draw_y = nd_map_y * TileSize + base_screen_y;
-
-			// Node level culling
-			if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-				return;
-			}
-
-			bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize);
-
-			Floor* floor = nd->getFloor(map_z);
-			if (!floor) {
-				return;
-			}
-
-			for (int map_x = 0; map_x < 4; ++map_x) {
-				for (int map_y = 0; map_y < 4; ++map_y) {
-					// Calculate draw coordinates directly
-					int draw_x = node_draw_x + (map_x * TileSize);
-					int draw_y = node_draw_y + (map_y * TileSize);
-
-					// Culling: Skip tiles that are far outside the viewport.
-					if (!fully_inside && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-						continue;
-					}
-
-					TileLocation* location = &floor->locs[map_x * 4 + map_y];
-
-					// Trigger preloading for this tile's sprites
-					if (Tile* tile = location->get()) {
-						if (tile->ground) {
-							rme::collectTileSprites(g_items[tile->ground->getID()].sprite, 0, 0, 0, 0);
-						}
-						for (Item* item : tile->items) {
-							rme::collectTileSprites(g_items[item->getID()].sprite, 0, 0, 0, 0);
-						}
-					}
-
-					tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
-					// draw light, but only if not zoomed too far
-					if (draw_lights) {
-						tile_renderer->AddLight(location, view, options, light_buffer);
-					}
-				}
-			}
-		});
-	}
+	});
 }

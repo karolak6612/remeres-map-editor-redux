@@ -50,10 +50,6 @@
 #include "ui/welcome_dialog.h"
 #include "ui/tool_options_window.h"
 
-#include "live/live_client.h"
-#include "live/live_tab.h"
-#include "live/live_server.h"
-
 #ifdef __WXOSX__
 	#include <AGL/agl.h>
 #endif
@@ -379,31 +375,11 @@ MapTab* GUI::GetCurrentMapTab() const {
 void GUI::CycleTab(bool forward) {
 	g_editors.CycleTab(forward);
 }
-bool GUI::CloseLiveEditors(LiveSocket* sock) {
-	return g_editors.CloseLiveEditors(sock);
-}
 bool GUI::CloseAllEditors() {
 	return g_editors.CloseAllEditors();
 }
 void GUI::NewMapView() {
 	g_editors.NewMapView();
-}
-
-void GUI::AddPendingLiveClient(std::unique_ptr<LiveClient> client) {
-	std::lock_guard<std::mutex> lock(pending_live_clients_mutex);
-	pending_live_clients.push_back(std::move(client));
-}
-
-std::unique_ptr<LiveClient> GUI::PopPendingLiveClient(LiveClient* ptr) {
-	std::lock_guard<std::mutex> lock(pending_live_clients_mutex);
-	auto it = std::find_if(pending_live_clients.begin(), pending_live_clients.end(), [ptr](const std::unique_ptr<LiveClient>& c) { return c.get() == ptr; });
-
-	if (it != pending_live_clients.end()) {
-		std::unique_ptr<LiveClient> client = std::move(*it);
-		pending_live_clients.erase(it);
-		return client;
-	}
-	return nullptr;
 }
 
 bool GUI::NewMap() {

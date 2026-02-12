@@ -75,13 +75,12 @@ void StandardToolBar::Update() {
 	}
 
 	bool has_map = editor != nullptr;
-	bool is_host = has_map && !editor->live_manager.IsClient();
 
-	toolbar->EnableTool(wxID_SAVE, is_host);
-	toolbar->SetToolShortHelp(wxID_SAVE, is_host ? "Save Map (Ctrl+S)" : (has_map ? "Save Map (Ctrl+S) - Client cannot save" : "Save Map (Ctrl+S) - No map open"));
+	toolbar->EnableTool(wxID_SAVE, has_map);
+	toolbar->SetToolShortHelp(wxID_SAVE, has_map ? "Save Map (Ctrl+S)" : "Save Map (Ctrl+S) - No map open");
 
-	toolbar->EnableTool(wxID_SAVEAS, is_host);
-	toolbar->SetToolShortHelp(wxID_SAVEAS, is_host ? "Save Map As... (Ctrl+Alt+S)" : (has_map ? "Save Map As... (Ctrl+Alt+S) - Client cannot save" : "Save Map As... (Ctrl+Alt+S) - No map open"));
+	toolbar->EnableTool(wxID_SAVEAS, has_map);
+	toolbar->SetToolShortHelp(wxID_SAVEAS, has_map ? "Save Map As... (Ctrl+Alt+S)" : "Save Map As... (Ctrl+Alt+S) - No map open");
 
 	toolbar->EnableTool(wxID_CUT, has_map);
 	toolbar->SetToolShortHelp(wxID_CUT, has_map ? "Cut (Ctrl+X)" : "Cut (Ctrl+X) - No map open");

@@ -33,23 +33,14 @@
 
 class BaseMap;
 class CopyBuffer;
-class LiveClient;
-class LiveServer;
-class LiveSocket;
-
-#include "live/live_manager.h"
 
 #include <functional>
 
 class Editor {
 public:
-	Editor(CopyBuffer& copybuffer, const MapVersion& version, std::unique_ptr<LiveClient> client);
 	Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn);
 	Editor(CopyBuffer& copybuffer, const MapVersion& version);
 	~Editor();
-
-	// Live Manager
-	LiveManager live_manager;
 
 public:
 	// Public members

@@ -36,16 +36,11 @@
 #include "brushes/creature/creature_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 
-#include "live/live_server.h"
-#include "live/live_client.h"
-#include "live/live_action.h"
-
 #include "editor/operations/draw_operations.h"
 
 #include <spdlog/spdlog.h>
 
 Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version) :
-	live_manager(*this),
 	actionQueue(newd ActionQueue(*this)),
 	selection(*this),
 	copybuffer(copybuffer),
@@ -56,7 +51,6 @@ Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version) :
 }
 
 Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn) :
-	live_manager(*this),
 	actionQueue(newd ActionQueue(*this)),
 	selection(*this),
 	copybuffer(copybuffer),
@@ -67,21 +61,8 @@ Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName
 	EditorPersistence::loadMap(*this, fn);
 }
 
-Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, std::unique_ptr<LiveClient> client) :
-	live_manager(*this, std::move(client)),
-	actionQueue(newd NetworkedActionQueue(*this)),
-	selection(*this),
-	copybuffer(copybuffer),
-	replace_brush(nullptr) {
-	spdlog::info("Editor created (Live Client) [Editor={}]", (void*)this);
-	map.convert(version);
-}
-
 Editor::~Editor() {
 	spdlog::info("Editor destroying [Editor={}]", (void*)this);
-	if (live_manager.IsLive()) {
-		live_manager.CloseServer();
-	}
 
 	UnnamedRenderingLock();
 	selection.clear();
@@ -149,6 +130,3 @@ void Editor::drawInternal(const PositionVector& tilestodraw, bool alt, bool dodr
 void Editor::drawInternal(const PositionVector& tilestodraw, PositionVector& tilestoborder, bool alt, bool dodraw) {
 	DrawOperations::draw(*this, tilestodraw, tilestoborder, alt, dodraw);
 }
-
-///////////////////////////////////////////////////////////////////////////////
-// Live!

@@ -27,7 +27,6 @@
 #include "ui/dialogs/goto_position_dialog.h"
 #include "palette/palette_window.h"
 #include "app/preferences.h"
-#include "net/net_connection.h"
 #include "ui/result_window.h"
 #include "rendering/ui/minimap_window.h"
 #include "ui/about_window.h"
@@ -118,24 +117,8 @@ bool Application::OnInit() {
 #ifdef _USE_PROCESS_COM
 	m_single_instance_checker = newd wxSingleInstanceChecker; // Instance checker has to stay alive throughout the applications lifetime
 	if (g_settings.getInteger(Config::ONLY_ONE_INSTANCE) && m_single_instance_checker->IsAnotherRunning()) {
-		RMEProcessClient client;
-		wxConnectionBase* connection = client.MakeConnection("localhost", "rme_host", "rme_talk");
-		if (connection) {
-			wxString fileName;
-			if (ParseCommandLineMap(fileName)) {
-				wxLogNull nolog; // We might get a timeout message if the file fails to open on the running instance. Let's not show that message.
-				connection->Execute(fileName);
-			}
-			connection->Disconnect();
-			wxDELETE(connection);
-		}
 		wxDELETE(m_single_instance_checker);
 		return false; // Since we return false - OnExit is never called
-	}
-	// We act as server then
-	m_proc_server = newd RMEProcessServer();
-	if (!m_proc_server->Create("rme_host")) {
-		wxLogWarning("Could not register IPC service!");
 	}
 #endif
 
@@ -317,10 +300,6 @@ void Application::Unload() {
 	ClientVersion::unloadVersions();
 	g_settings.save(true);
 
-	spdlog::info("Application::Unload - Stopping NetworkConnection");
-	spdlog::default_logger()->flush();
-	NetworkConnection::getInstance().stop();
-
 	g_preview.Destroy();
 
 	g_gui.root = nullptr;
@@ -329,7 +308,6 @@ void Application::Unload() {
 
 int Application::OnExit() {
 #ifdef _USE_PROCESS_COM
-	wxDELETE(m_proc_server);
 	wxDELETE(m_single_instance_checker);
 #endif
 	return 0;

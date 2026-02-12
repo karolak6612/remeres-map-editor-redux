@@ -44,7 +44,6 @@ public:
 	MapNode* getLeafForce(int x, int y);
 
 	void clear();
-	void clearVisible(uint32_t mask);
 
 	std::vector<SortedGridCell> getSortedCells() const;
 

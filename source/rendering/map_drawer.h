@@ -42,7 +42,6 @@ class GridDrawer;
 
 class MapCanvas;
 class LightDrawer;
-class LiveCursorDrawer;
 class SelectionDrawer;
 class BrushCursorDrawer;
 class BrushOverlayDrawer;
@@ -69,7 +68,6 @@ class MapDrawer {
 	LightBuffer light_buffer;
 	std::unique_ptr<TooltipDrawer> tooltip_drawer;
 	std::unique_ptr<GridDrawer> grid_drawer;
-	std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
 	std::unique_ptr<SelectionDrawer> selection_drawer;
 	std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
 	std::unique_ptr<BrushOverlayDrawer> brush_overlay_drawer;
@@ -119,7 +117,6 @@ public:
 	void Draw();
 	void DrawBackground();
 	void DrawMap();
-	void DrawLiveCursors();
 	void DrawIngameBox();
 
 	void DrawGrid();
@@ -151,7 +148,7 @@ public:
 	}
 
 private:
-	void DrawMapLayer(int map_z, bool live_client);
+	void DrawMapLayer(int map_z);
 	bool renderers_initialized = false;
 };
 

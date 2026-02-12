@@ -141,25 +141,8 @@ public:
 	}
 	bool hasFloor(uint32_t z);
 
-	void setVisible(bool underground, bool value);
-	void setVisible(uint32_t client, bool underground, bool value);
-	bool isVisible(uint32_t client, bool underground);
-	void clearVisible(uint32_t client);
-
-	bool isRequested(bool underground);
-	void setRequested(bool underground, bool r);
-	bool isVisible(bool underground);
-
-	enum VisibilityFlags : uint32_t {
-		VISIBLE_OVERGROUND = 1 << 0,
-		VISIBLE_UNDERGROUND = 1 << 1,
-		REQUESTED_UNDERGROUND = 1 << 2,
-		REQUESTED_OVERGROUND = 1 << 3,
-	};
-
 protected:
 	BaseMap& map;
-	uint32_t visible;
 	std::array<std::unique_ptr<Floor>, MAP_LAYERS> array;
 
 	friend class BaseMap;

@@ -28,7 +28,6 @@
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/ui/map_display.h"
 #include "editor/copybuffer.h"
-#include "live/live_socket.h"
 #include "rendering/core/graphics.h"
 
 #include "brushes/doodad/doodad_brush.h"
@@ -49,7 +48,6 @@
 #include "rendering/core/primitive_renderer.h"
 
 #include "rendering/drawers/overlays/grid_drawer.h"
-#include "rendering/drawers/cursors/live_cursor_drawer.h"
 #include "rendering/drawers/overlays/selection_drawer.h"
 #include "rendering/drawers/cursors/brush_cursor_drawer.h"
 #include "rendering/drawers/overlays/brush_overlay_drawer.h"
@@ -103,7 +101,6 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 
 	grid_drawer = std::make_unique<GridDrawer>();
 	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
-	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
 	selection_drawer = std::make_unique<SelectionDrawer>();
 	brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
 	brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
@@ -335,7 +332,6 @@ void MapDrawer::Draw() {
 	if (options.boundbox_selection) {
 		selection_drawer->draw(*sprite_batch, view, canvas, options);
 	}
-	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
 
 	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
 
@@ -362,8 +358,6 @@ void MapDrawer::DrawBackground() {
 }
 
 void MapDrawer::DrawMap() {
-	bool live_client = editor.live_manager.IsClient();
-
 	bool only_colors = options.show_as_minimap || options.show_only_colors;
 
 	// Enable texture mode
@@ -374,7 +368,7 @@ void MapDrawer::DrawMap() {
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			DrawMapLayer(map_z);
 		}
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
@@ -412,8 +406,8 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawMapLayer(int map_z) {
+	map_layer_drawer->Draw(*sprite_batch, map_z, view, options, light_buffer);
 }
 
 void MapDrawer::DrawLight() {

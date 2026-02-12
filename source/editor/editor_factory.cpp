@@ -7,7 +7,6 @@
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "io/iomap.h"
-#include "live/live_client.h"
 
 void SetupCallbacks(Editor* editor) {
 	editor->onStateChange = []() {
@@ -60,16 +59,6 @@ std::unique_ptr<Editor> EditorFactory::LoadFromFile(CopyBuffer& copybuffer, cons
 	mapVersion.client = g_version.GetCurrentVersionID();
 
 	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, fn);
-	SetupCallbacks(editor.get());
-	return editor;
-}
-
-std::unique_ptr<Editor> EditorFactory::JoinLive(CopyBuffer& copybuffer, std::unique_ptr<LiveClient> client) {
-	MapVersion mapVersion;
-	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
-	mapVersion.client = g_version.GetCurrentVersionID();
-
-	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, std::move(client));
 	SetupCallbacks(editor.get());
 	return editor;
 }

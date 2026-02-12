@@ -125,25 +125,9 @@ void Action::commit(DirtyList* dirty_list) {
 				Tile* newtile = uptr.get();
 				Position pos = newtile->getPosition();
 
-				if (editor.live_manager.IsClient()) {
-					MapNode* nd = editor.map.getLeaf(pos.x, pos.y);
-					if (!nd || !nd->isVisible(pos.z > GROUND_LAYER)) {
-						// Delete all changes that affect tiles outside our view
-						c->clear();
-						uptr.reset();
-						++it;
-						continue;
-					}
-				}
-
 				std::unique_ptr<Tile> oldtile_uptr = editor.map.swapTile(pos, std::move(uptr));
 				Tile* oldtile = oldtile_uptr.get();
 				TileLocation* location = newtile->getLocation();
-
-				// Update other nodes in the network
-				if (editor.live_manager.IsServer() && dirty_list) {
-					dirty_list->AddPosition(pos.x, pos.y, pos.z);
-				}
 
 				newtile->update();
 
@@ -201,11 +185,6 @@ void Action::commit(DirtyList* dirty_list) {
 				// Mark the tile as modified
 				newtile->modify();
 
-				// Update client dirty list
-				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
-					// Local action, assemble changes
-					dirty_list->AddChange(c);
-				}
 				break;
 			}
 
@@ -274,24 +253,8 @@ void Action::undo(DirtyList* dirty_list) {
 				Tile* oldtile = old_uptr.get();
 				Position pos = oldtile->getPosition();
 
-				if (editor.live_manager.IsClient()) {
-					MapNode* nd = editor.map.getLeaf(pos.x, pos.y);
-					if (!nd || !nd->isVisible(pos.z > GROUND_LAYER)) {
-						// Delete all changes that affect tiles outside our view
-						c->clear();
-						old_uptr.reset();
-						++it;
-						continue;
-					}
-				}
-
 				std::unique_ptr<Tile> newtile_uptr = editor.map.swapTile(pos, std::move(old_uptr));
 				Tile* newtile = newtile_uptr.get();
-
-				// Update server side change list (for broadcast)
-				if (editor.live_manager.IsServer() && dirty_list) {
-					dirty_list->AddPosition(pos.x, pos.y, pos.z);
-				}
 
 				if (oldtile->isSelected()) {
 					editor.selection.addInternal(oldtile);
@@ -330,11 +293,6 @@ void Action::undo(DirtyList* dirty_list) {
 				}
 				uptr = std::move(newtile_uptr);
 
-				// Update client dirty list
-				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
-					// Local action, assemble changes
-					dirty_list->AddChange(c);
-				}
 				break;
 			}
 
@@ -429,10 +387,6 @@ void BatchAction::addAction(std::unique_ptr<Action> action) {
 
 	ASSERT(action->getType() == type);
 
-	if (editor.live_manager.IsClient()) {
-		return;
-	}
-
 	// Add it!
 	batch.push_back(std::move(action));
 	timestamp = time(nullptr);
@@ -441,10 +395,6 @@ void BatchAction::addAction(std::unique_ptr<Action> action) {
 void BatchAction::addAndCommitAction(std::unique_ptr<Action> action) {
 	// If empty, do nothing.
 	if (action->size() == 0) {
-		return;
-	}
-
-	if (editor.live_manager.IsClient()) {
 		return;
 	}
 

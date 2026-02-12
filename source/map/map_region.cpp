@@ -67,8 +67,7 @@ Floor::Floor(int sx, int sy, int z) {
 //**************** MapNode **********************
 
 MapNode::MapNode(BaseMap& map) :
-	map(map),
-	visible(0) {
+	map(map) {
 	// std::array<std::unique_ptr> initializes to nullptr automatically
 }
 
@@ -83,66 +82,6 @@ Floor* MapNode::createFloor(int x, int y, int z) {
 	return array[z].get();
 }
 
-bool MapNode::isVisible(bool underground) {
-	return testFlags(visible, underground ? VISIBLE_UNDERGROUND : VISIBLE_OVERGROUND);
-}
-
-bool MapNode::isRequested(bool underground) {
-	return testFlags(visible, underground ? REQUESTED_UNDERGROUND : REQUESTED_OVERGROUND);
-}
-
-void MapNode::clearVisible(uint32_t u) {
-	// u contains the mask of ACTIVE clients (as bitmask of their IDs)
-	// We want to clear visibility for clients NOT in u.
-	// So we keep bits set in u.
-	// BUT, we must also preserve global flags (bits 0-3).
-	// AND we must preserve the "underground" versions of the active clients in u.
-	// The client ID format (from LiveServer) is single bit 1<<N.
-	// MapNode storage logic:
-	//   Overground: 1u << N
-	//   Underground: 1u << (N + MAP_LAYERS)
-
-	// So we construct a mask of BITS TO KEEP.
-	// explicit Keep Mask = u (overground clients) | (u << MAP_LAYERS) (underground clients) | 0xF (global flags)
-	// Actually, u passed from LiveServer::removeClient is the UPDATED list of active clients.
-	// So yes, we want to KEEP u and its underground variant.
-
-	uint32_t keep_mask = u | (u << MAP_LAYERS) | 0xF;
-	visible &= keep_mask;
-}
-
-bool MapNode::isVisible(uint32_t client, bool underground) {
-	if (client == 0 || !std::has_single_bit(client)) {
-		return false;
-	}
-	int position = std::countr_zero(client);
-	if (position >= MAP_LAYERS) {
-		return false;
-	}
-
-	if (underground) {
-		return testFlags(visible, 1u << (position + MAP_LAYERS));
-	} else {
-		return testFlags(visible, 1u << position);
-	}
-}
-
-void MapNode::setVisible(bool underground, bool value) {
-	if (underground) {
-		if (value) {
-			visible |= VISIBLE_UNDERGROUND;
-		} else {
-			visible &= ~VISIBLE_UNDERGROUND;
-		}
-	} else { // overground
-		if (value) {
-			visible |= VISIBLE_OVERGROUND;
-		} else {
-			visible &= ~VISIBLE_OVERGROUND;
-		}
-	}
-}
-
 std::vector<SpatialHashGrid::SortedGridCell> SpatialHashGrid::getSortedCells() const {
 	std::vector<SortedGridCell> sorted_cells;
 	sorted_cells.reserve(cells.size());
@@ -153,32 +92,6 @@ std::vector<SpatialHashGrid::SortedGridCell> SpatialHashGrid::getSortedCells() c
 		return a.key < b.key;
 	});
 	return sorted_cells;
-}
-
-void MapNode::setRequested(bool underground, bool r) {
-	uint32_t mask = (underground ? REQUESTED_UNDERGROUND : REQUESTED_OVERGROUND);
-	if (r) {
-		visible |= mask;
-	} else {
-		visible &= ~mask;
-	}
-}
-
-void MapNode::setVisible(uint32_t client, bool underground, bool value) {
-	if (client == 0 || !std::has_single_bit(client)) {
-		return;
-	}
-	int position = std::countr_zero(client);
-	if (position >= MAP_LAYERS) {
-		return;
-	}
-
-	uint32_t bit = 1u << (position + (underground ? MAP_LAYERS : 0));
-	if (value) {
-		visible |= bit;
-	} else {
-		visible &= ~bit;
-	}
 }
 
 bool MapNode::hasFloor(uint32_t z) {
@@ -278,18 +191,4 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 		node = std::make_unique<MapNode>(map);
 	}
 	return node.get();
-}
-
-void SpatialHashGrid::clearVisible(uint32_t mask) {
-	for (auto& pair : cells) {
-		auto& cell = pair.second;
-		if (!cell) {
-			continue;
-		}
-		for (int i = 0; i < NODES_PER_CELL * NODES_PER_CELL; ++i) {
-			if (cell->nodes[i]) {
-				cell->nodes[i]->clearVisible(mask);
-			}
-		}
-	}
 }

@@ -135,10 +135,6 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(NEW_PALETTE, wxITEM_NORMAL, ICON_PLUS, OnNewPalette);
 	MAKE_ACTION_ICON(TAKE_SCREENSHOT, wxITEM_NORMAL, ICON_CAMERA, OnTakeScreenshot);
 
-	MAKE_ACTION_ICON(LIVE_START, wxITEM_NORMAL, ICON_SIGNAL, OnStartLive);
-	MAKE_ACTION_ICON(LIVE_JOIN, wxITEM_NORMAL, ICON_NETWORK_WIRED, OnJoinLive);
-	MAKE_ACTION_ICON(LIVE_CLOSE, wxITEM_NORMAL, ICON_POWER_OFF, OnCloseLive);
-
 	MAKE_ACTION_ICON(SELECT_TERRAIN, wxITEM_NORMAL, ICON_MOUNTAIN, OnSelectTerrainPalette);
 	MAKE_ACTION_ICON(SELECT_DOODAD, wxITEM_NORMAL, ICON_TREE, OnSelectDoodadPalette);
 	MAKE_ACTION_ICON(SELECT_ITEM, wxITEM_NORMAL, ICON_CUBE, OnSelectItemPalette);
@@ -199,63 +195,60 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	bool loaded = g_version.IsVersionLoaded();
 	bool has_map = editor != nullptr;
 	bool has_selection = editor && editor->hasSelection();
-	bool is_live = editor && editor->live_manager.IsLive();
-	bool is_host = has_map && !editor->live_manager.IsClient();
-	bool is_local = has_map && !is_live;
 
-	mb->EnableItem(CLOSE, is_local);
-	mb->EnableItem(SAVE, is_host);
-	mb->EnableItem(SAVE_AS, is_host);
+	mb->EnableItem(CLOSE, has_map);
+	mb->EnableItem(SAVE, has_map);
+	mb->EnableItem(SAVE_AS, has_map);
 	mb->EnableItem(GENERATE_MAP, false);
 
-	mb->EnableItem(IMPORT_MAP, is_local);
-	mb->EnableItem(IMPORT_MONSTERS, is_local);
+	mb->EnableItem(IMPORT_MAP, has_map);
+	mb->EnableItem(IMPORT_MONSTERS, has_map);
 	mb->EnableItem(IMPORT_MINIMAP, false);
 
 	mb->EnableItem(EXPORT_TILESETS, loaded);
 
-	mb->EnableItem(FIND_ITEM, is_host);
-	mb->EnableItem(REPLACE_ITEMS, is_local);
-	mb->EnableItem(SEARCH_ON_MAP_EVERYTHING, is_host);
-	mb->EnableItem(SEARCH_ON_MAP_UNIQUE, is_host);
-	mb->EnableItem(SEARCH_ON_MAP_ACTION, is_host);
-	mb->EnableItem(SEARCH_ON_MAP_CONTAINER, is_host);
-	mb->EnableItem(SEARCH_ON_MAP_WRITEABLE, is_host);
-	mb->EnableItem(SEARCH_ON_SELECTION_EVERYTHING, has_selection && is_host);
-	mb->EnableItem(SEARCH_ON_SELECTION_UNIQUE, has_selection && is_host);
-	mb->EnableItem(SEARCH_ON_SELECTION_ACTION, has_selection && is_host);
-	mb->EnableItem(SEARCH_ON_SELECTION_CONTAINER, has_selection && is_host);
-	mb->EnableItem(SEARCH_ON_SELECTION_WRITEABLE, has_selection && is_host);
-	mb->EnableItem(SEARCH_ON_SELECTION_ITEM, has_selection && is_host);
-	mb->EnableItem(REPLACE_ON_SELECTION_ITEMS, has_selection && is_host);
-	mb->EnableItem(REMOVE_ON_SELECTION_ITEM, has_selection && is_host);
+	mb->EnableItem(FIND_ITEM, has_map);
+	mb->EnableItem(REPLACE_ITEMS, has_map);
+	mb->EnableItem(SEARCH_ON_MAP_EVERYTHING, has_map);
+	mb->EnableItem(SEARCH_ON_MAP_UNIQUE, has_map);
+	mb->EnableItem(SEARCH_ON_MAP_ACTION, has_map);
+	mb->EnableItem(SEARCH_ON_MAP_CONTAINER, has_map);
+	mb->EnableItem(SEARCH_ON_MAP_WRITEABLE, has_map);
+	mb->EnableItem(SEARCH_ON_SELECTION_EVERYTHING, has_selection && has_map);
+	mb->EnableItem(SEARCH_ON_SELECTION_UNIQUE, has_selection && has_map);
+	mb->EnableItem(SEARCH_ON_SELECTION_ACTION, has_selection && has_map);
+	mb->EnableItem(SEARCH_ON_SELECTION_CONTAINER, has_selection && has_map);
+	mb->EnableItem(SEARCH_ON_SELECTION_WRITEABLE, has_selection && has_map);
+	mb->EnableItem(SEARCH_ON_SELECTION_ITEM, has_selection && has_map);
+	mb->EnableItem(REPLACE_ON_SELECTION_ITEMS, has_selection && has_map);
+	mb->EnableItem(REMOVE_ON_SELECTION_ITEM, has_selection && has_map);
 
 	mb->EnableItem(CUT, has_map);
 	mb->EnableItem(COPY, has_map);
 
 	mb->EnableItem(BORDERIZE_SELECTION, has_map && has_selection);
-	mb->EnableItem(BORDERIZE_MAP, is_local);
+	mb->EnableItem(BORDERIZE_MAP, has_map);
 	mb->EnableItem(RANDOMIZE_SELECTION, has_map && has_selection);
-	mb->EnableItem(RANDOMIZE_MAP, is_local);
+	mb->EnableItem(RANDOMIZE_MAP, has_map);
 
 	mb->EnableItem(GOTO_PREVIOUS_POSITION, has_map);
 	mb->EnableItem(GOTO_POSITION, has_map);
 	mb->EnableItem(JUMP_TO_BRUSH, loaded);
 	mb->EnableItem(JUMP_TO_ITEM_BRUSH, loaded);
 
-	mb->EnableItem(MAP_REMOVE_ITEMS, is_host);
-	mb->EnableItem(MAP_REMOVE_CORPSES, is_local);
-	mb->EnableItem(MAP_REMOVE_UNREACHABLE_TILES, is_local);
-	mb->EnableItem(CLEAR_INVALID_HOUSES, is_local);
-	mb->EnableItem(CLEAR_MODIFIED_STATE, is_local);
+	mb->EnableItem(MAP_REMOVE_ITEMS, has_map);
+	mb->EnableItem(MAP_REMOVE_CORPSES, has_map);
+	mb->EnableItem(MAP_REMOVE_UNREACHABLE_TILES, has_map);
+	mb->EnableItem(CLEAR_INVALID_HOUSES, has_map);
+	mb->EnableItem(CLEAR_MODIFIED_STATE, has_map);
 
-	mb->EnableItem(EDIT_TOWNS, is_local);
+	mb->EnableItem(EDIT_TOWNS, has_map);
 	mb->EnableItem(EDIT_ITEMS, false);
 	mb->EnableItem(EDIT_MONSTERS, false);
 
-	mb->EnableItem(MAP_CLEANUP, is_local);
-	mb->EnableItem(MAP_PROPERTIES, is_local);
-	mb->EnableItem(MAP_STATISTICS, is_local);
+	mb->EnableItem(MAP_CLEANUP, has_map);
+	mb->EnableItem(MAP_PROPERTIES, has_map);
+	mb->EnableItem(MAP_STATISTICS, has_map);
 
 	mb->EnableItem(NEW_VIEW, has_map);
 	mb->EnableItem(ZOOM_IN, has_map);
@@ -279,10 +272,6 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(SELECT_CREATURE, loaded);
 	mb->EnableItem(SELECT_WAYPOINT, loaded);
 	mb->EnableItem(SELECT_RAW, loaded);
-
-	mb->EnableItem(LIVE_START, is_local);
-	mb->EnableItem(LIVE_JOIN, loaded);
-	mb->EnableItem(LIVE_CLOSE, is_live);
 
 	mb->EnableItem(DEBUG_VIEW_DAT, loaded);
 

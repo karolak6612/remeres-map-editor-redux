@@ -41,7 +41,6 @@ class MainFrame;
 class WelcomeDialog;
 class MapWindow;
 class MapCanvas;
-class LiveClient;
 class SearchResultWindow;
 class MinimapWindow;
 class PaletteWindow;
@@ -50,8 +49,6 @@ class TilesetWindow;
 class EditTownsDialog;
 class ItemButton;
 class HousePalette;
-
-class LiveSocket;
 
 class SidebarWindow;
 class ToolOptionsWindow;
@@ -276,11 +273,8 @@ public:
 	Editor* GetCurrentEditor();
 	MapTab* GetCurrentMapTab() const;
 	void CycleTab(bool forward = true);
-	bool CloseLiveEditors(LiveSocket* sock);
 	bool CloseAllEditors();
 	void NewMapView();
-	void AddPendingLiveClient(std::unique_ptr<LiveClient> client);
-	std::unique_ptr<LiveClient> PopPendingLiveClient(LiveClient* ptr);
 
 	// Map
 	Map& GetCurrentMap();
@@ -352,9 +346,6 @@ protected:
 	wxWindowDisabler* winDisabler;
 
 	int disabled_counter;
-
-	std::mutex pending_live_clients_mutex;
-	std::vector<std::unique_ptr<LiveClient>> pending_live_clients;
 
 	friend class RenderingLock;
 	friend class MapTab;

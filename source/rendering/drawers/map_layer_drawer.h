@@ -34,7 +34,7 @@ public:
 	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
 	~MapLayerDrawer();
 
-	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
+	void Draw(SpriteBatch& sprite_batch, int map_z, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
 	TileRenderer* tile_renderer;
