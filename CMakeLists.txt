@@ -183,3 +183,54 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
 
 endif()
+
+option(RME_BUILD_BENCHMARKS "Build benchmark executables" OFF)
+
+if(RME_BUILD_BENCHMARKS)
+    # Benchmark executable
+    set(rme_SRC_BENCH ${rme_SRC})
+    list(FILTER rme_SRC_BENCH EXCLUDE REGEX "app/application\\.cpp$")
+
+    add_executable(benchmark_gamesprite ${rme_H} ${rme_SRC_BENCH} ${CMAKE_CURRENT_SOURCE_DIR}/source/benchmark_gamesprite.cpp)
+    target_compile_definitions(benchmark_gamesprite PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
+
+    # Include directories
+    target_include_directories(benchmark_gamesprite PRIVATE
+        ${Boost_INCLUDE_DIRS}
+        ${LibArchive_INCLUDE_DIRS}
+        ${OPENGL_INCLUDE_DIR}
+        ${ZLIB_INCLUDE_DIR}
+        ${CMAKE_CURRENT_SOURCE_DIR}/source
+    )
+
+    # Link libraries (same as main rme target)
+    if(TARGET wxWidgets::wxWidgets)
+        target_link_libraries(benchmark_gamesprite PRIVATE wxWidgets::wxWidgets)
+    else()
+        target_link_libraries(benchmark_gamesprite PRIVATE ${wxWidgets_LIBRARIES})
+    endif()
+
+    if(TARGET Boost::boost)
+        target_link_libraries(benchmark_gamesprite PRIVATE Boost::boost Boost::thread Boost::system)
+    else()
+        target_link_libraries(benchmark_gamesprite PRIVATE ${Boost_LIBRARIES})
+    endif()
+
+    if(TARGET LibArchive::LibArchive)
+        target_link_libraries(benchmark_gamesprite PRIVATE LibArchive::LibArchive)
+    else()
+        target_link_libraries(benchmark_gamesprite PRIVATE ${LibArchive_LIBRARIES})
+    endif()
+
+    if(TARGET ZLIB::ZLIB)
+        target_link_libraries(benchmark_gamesprite PRIVATE ZLIB::ZLIB)
+    else()
+        target_link_libraries(benchmark_gamesprite PRIVATE ${ZLIB_LIBRARIES})
+    endif()
+
+    target_link_libraries(benchmark_gamesprite PRIVATE ${OPENGL_LIBRARIES})
+    target_link_libraries(benchmark_gamesprite PRIVATE glad::glad)
+    target_link_libraries(benchmark_gamesprite PRIVATE glm::glm)
+    target_link_libraries(benchmark_gamesprite PRIVATE nanovg::nanovg)
+    target_link_libraries(benchmark_gamesprite PRIVATE spdlog::spdlog)
+endif()
