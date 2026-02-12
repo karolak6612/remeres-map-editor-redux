@@ -75,6 +75,14 @@ endif()
 set_target_properties(rme PROPERTIES CXX_STANDARD 20)
 set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
 target_compile_definitions(rme PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
+ 
+# Copy assets to build directory
+add_custom_command(TARGET rme POST_BUILD
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/assets"
+	"$<TARGET_FILE_DIR:rme>/assets"
+	COMMENT "Copying assets to output directory..."
+)
 
 
 # Link against wxWidgets (works with both vcpkg and Conan)
@@ -126,8 +134,12 @@ target_link_libraries(rme PRIVATE spdlog::spdlog)
 option(RME_BUILD_TESTS "Build test executables" OFF)
 
 if(RME_BUILD_TESTS)
+	# Filter out application.cpp from tests to avoid multiple main() definitions
+	set(rme_SRC_TEST ${rme_SRC})
+	list(FILTER rme_SRC_TEST EXCLUDE REGEX "app/application\\.cpp$")
+
 	# Test executable for autoborder preview - uses same sources as main target
-	add_executable(test_autoborder_preview ${rme_H} ${rme_SRC} ${CMAKE_CURRENT_SOURCE_DIR}/source/test_autoborder_preview.cpp)
+	add_executable(test_autoborder_preview ${rme_H} ${rme_SRC_TEST} ${CMAKE_CURRENT_SOURCE_DIR}/source/test_autoborder_preview.cpp)
 	target_compile_definitions(test_autoborder_preview PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
 
 	# Include directories
@@ -169,4 +181,5 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE glm::glm)
 	target_link_libraries(test_autoborder_preview PRIVATE nanovg::nanovg)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
+
 endif()

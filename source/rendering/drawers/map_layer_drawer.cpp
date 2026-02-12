@@ -39,7 +39,7 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
@@ -98,7 +98,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 
 							TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
-							tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
+							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
 							// draw light, but only if not zoomed too far
 							if (draw_lights) {
 								tile_renderer->AddLight(location, view, options, light_buffer);
@@ -147,7 +147,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 
 					TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
-					tile_renderer->DrawTile(sprite_batch, primitive_renderer, location, view, options, options.current_house_id, draw_x, draw_y);
+					tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
 					if (draw_lights) {
 						tile_renderer->AddLight(location, view, options, light_buffer);

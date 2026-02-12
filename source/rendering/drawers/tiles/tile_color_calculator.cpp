@@ -9,25 +9,27 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
 
 	if (options.show_blocking && tile->isBlocking() && tile->size() > 0) {
-		g = g / 3 * 2;
-		b = b / 3 * 2;
+		// g * 2/3 approx g * 171 / 256
+		g = (g * 171) >> 8;
+		b = (b * 171) >> 8;
 	}
 
 	int item_count = tile->items.size();
 	if (options.highlight_items && item_count > 0 && !tile->items.back()->isBorder()) {
-		static const float factor[5] = { 0.75f, 0.6f, 0.48f, 0.40f, 0.33f };
+		// Fixed point factors (x/256)
+		// 0.75 -> 192, 0.6 -> 154, 0.48 -> 123, 0.40 -> 102, 0.33 -> 84
+		static const int factor[5] = { 192, 154, 123, 102, 84 };
 		int idx = (item_count < 5 ? item_count : 5) - 1;
-		g = static_cast<int>(g * factor[idx]);
-		r = static_cast<int>(r * factor[idx]);
+		g = (g * factor[idx]) >> 8;
+		r = (r * factor[idx]) >> 8;
 	}
 
 	if (options.show_spawns && spawn_count > 0) {
-		float f = 1.0f;
-		for (int i = 0; i < spawn_count; ++i) {
-			f *= 0.7f;
-		}
-		g = static_cast<uint8_t>(g * f);
-		b = static_cast<uint8_t>(b * f);
+		// Precomputed 0.7^n * 256 for n=1..9
+		static const int spawn_factor[] = { 179, 125, 88, 61, 43, 30, 21, 15, 10 };
+		int f = (spawn_count > 0 && spawn_count <= 9) ? spawn_factor[spawn_count - 1] : 10;
+		g = (g * f) >> 8;
+		b = (b * f) >> 8;
 	}
 
 	if (options.show_houses && tile->isHouseTile()) {
@@ -58,25 +60,35 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 			}
 		}
 	} else if (showspecial && tile->isPZ()) {
-		r /= 2;
-		b /= 2;
+		r >>= 1;
+		b >>= 1;
 	}
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_PVPZONE) {
-		g = r / 4;
-		b = b / 3 * 2;
+		g = r >> 2;
+		b = (b * 171) >> 8;
 	}
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
-		b /= 2;
+		b >>= 1;
 	}
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_NOPVP) {
-		g /= 2;
+		g >>= 1;
 	}
 }
 
 void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& g, uint8_t& b) {
+	static thread_local uint32_t cached_house_id = 0xFFFFFFFF;
+	static thread_local uint8_t cached_r = 0, cached_g = 0, cached_b = 0;
+
+	if (cached_house_id == house_id) {
+		r = cached_r;
+		g = cached_g;
+		b = cached_b;
+		return;
+	}
+
 	// Use a simple seeded random to get consistent colors
 	// Simple hash
 	// (Cache removed as calculation is faster than hash map lookup)
@@ -96,6 +108,11 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 		g += 100;
 		b += 100;
 	}
+
+	cached_house_id = house_id;
+	cached_r = r;
+	cached_g = g;
+	cached_b = b;
 }
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {

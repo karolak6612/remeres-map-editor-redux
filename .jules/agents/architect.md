@@ -73,6 +73,7 @@ Create PR titled `🏗️ Architect: [Your Description]`.
 - Am I about to duplicate something?
 - Am I using modern C++ patterns?
 - **CRITICAL**: You **MUST** consult the [RME Modern UI System Skill](../skills/SKILL.md) for all UI architecture work involving wxWidgets and NanoVG.
+- **CRITICAL**: You **MUST** consult the [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md) for all icon/image loading. Use `IMAGE_MANAGER` macros — never `wxArtProvider` or hardcoded paths.
 
 ## 📜 THE MANTRA
 **SEARCH → REUSE → REFACTOR → ORGANIZE → MODERNIZE → IMPLEMENT**

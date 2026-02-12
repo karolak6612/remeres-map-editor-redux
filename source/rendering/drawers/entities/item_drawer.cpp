@@ -9,11 +9,10 @@
 #undef max
 
 #include "rendering/drawers/entities/item_drawer.h"
-#include "rendering/core/graphics.h"
-#include "rendering/drawers/entities/item_drawer.h"
+#include "rendering/drawers/overlays/hook_indicator_drawer.h"
+#include "rendering/drawers/overlays/door_indicator_drawer.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/primitive_renderer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/drawing_options.h"
@@ -30,23 +29,28 @@ ItemDrawer::ItemDrawer() {
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha) {
 	const Position& pos = tile->getPosition();
-	BlitItem(sprite_batch, primitive_renderer, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile);
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile);
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
 	ItemType& it = g_items[item->getID()];
 
 	// Locked door indicator
-	// FIXME: This logic causes the map to turn black when zooming out with a house brush selected.
-	// Disabled until a proper fix is found.
-	/*
-	if (!options.ingame && options.highlight_locked_doors && it.isDoor() && it.isLocked) {
-		blue /= 2;
-		green /= 2;
+	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
+		bool locked = item->isLocked();
+
+		// Door orientation: horizontal wall -> West border (south=true), vertical wall -> North border (east=true)
+		if (it.border_alignment == WALL_HORIZONTAL) {
+			DrawDoorIndicator(locked, pos, true, false);
+		} else if (it.border_alignment == WALL_VERTICAL) {
+			DrawDoorIndicator(locked, pos, false, true);
+		} else {
+			// Center case for non-aligned doors
+			DrawDoorIndicator(locked, pos, false, false);
+		}
 	}
-	*/
 
 	if (!options.ingame && !ephemeral && item->isSelected()) {
 		red /= 2;
@@ -122,9 +126,9 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 	if (it.isSplash() || it.isFluidContainer()) {
 		subtype = item->getSubtype();
 	} else if (it.isHangable) {
-		if (tile && tile->hasProperty(HOOK_SOUTH)) {
+		if (tile && tile->hasHookSouth()) {
 			pattern_x = 1;
-		} else if (tile && tile->hasProperty(HOOK_EAST)) {
+		} else if (tile && tile->hasHookEast()) {
 			pattern_x = 2;
 		} else {
 			pattern_x = 0;
@@ -170,7 +174,17 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 
 	int frame = (spr->animator) ? spr->animator->getFrame() : 0;
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
-		const AtlasRegion* region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
+		const AtlasRegion* region;
+		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
+			region = spr->getCachedDefaultRegion();
+			if (!region) {
+				// Fallback to slow path to populate cache
+				region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+			}
+		} else {
+			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
+		}
+
 		if (region) {
 			sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, red, green, blue, alpha);
 		}
@@ -212,7 +226,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitiv
 
 	// draw wall hook
 	if (!options.ingame && options.show_hooks && (it.hookSouth || it.hookEast)) {
-		DrawHookIndicator(sprite_batch, primitive_renderer, draw_x, draw_y, it);
+		DrawHookIndicator(it, pos);
 	}
 
 	// draw light color indicator
@@ -279,26 +293,14 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, r, g, b, alpha);
 }
 
-void ItemDrawer::DrawHookIndicator(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int x, int y, const ItemType& type) {
-	glm::vec4 color(0.0f, 0.0f, 1.0f, 200.0f / 255.0f);
+void ItemDrawer::DrawHookIndicator(const ItemType& type, const Position& pos) {
+	if (hook_indicator_drawer) {
+		hook_indicator_drawer->addHook(pos, type.hookSouth, type.hookEast);
+	}
+}
 
-	if (type.hookSouth) {
-		// South Hook: Arrow pointing down/south
-		// Triangle 1: (x, y) -> (x+20, y) -> (x+10, y+10)
-		primitive_renderer.drawTriangle(
-			glm::vec2(x, y),
-			glm::vec2(x + 20, y),
-			glm::vec2(x + 10, y + 10),
-			color
-		);
-	} else if (type.hookEast) {
-		// East Hook: Arrow pointing right/east
-		// Triangle 1: (x, y) -> (x, y+20) -> (x+10, y+10)
-		primitive_renderer.drawTriangle(
-			glm::vec2(x, y),
-			glm::vec2(x, y + 20),
-			glm::vec2(x + 10, y + 10),
-			color
-		);
+void ItemDrawer::DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east) {
+	if (door_indicator_drawer) {
+		door_indicator_drawer->addDoor(pos, locked, south, east);
 	}
 }

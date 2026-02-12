@@ -85,7 +85,6 @@ Editor::~Editor() {
 
 	UnnamedRenderingLock();
 	selection.clear();
-	delete actionQueue;
 	spdlog::info("Editor destroyed [Editor={}]", (void*)this);
 }
 

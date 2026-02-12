@@ -80,6 +80,7 @@ NanoVG images are GPU resources that MUST be cleaned up:
 - Every `nvgCreateImageRGBA()` must have matching `nvgDeleteImage()` in destructor
 - Every `nvgCreateGL3()` must have matching `nvgDeleteGL3()` in destructor
 - Clear texture cache when item set changes (to avoid stale handles)
+- For centralized image loading, use `IMAGE_MANAGER` (see [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md)) — its `ClearCache()` method handles cleanup of all cached bitmaps, bundles, and NanoVG textures
 
 **Reference**: `source/ui/replace_tool/item_grid_panel.cpp`
 

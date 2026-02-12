@@ -1,5 +1,6 @@
 #include "app/main.h"
 #include "util/nanovg_canvas.h"
+#include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
 
 #include <glad/glad.h>
@@ -96,7 +97,7 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	NVGcontext* vg = m_nvg.get();
-	nvgBeginFrame(vg, w, h, 1.0f);
+	nvgBeginFrame(vg, w, h, GetContentScaleFactor());
 	nvgSave(vg);
 	nvgTranslate(vg, 0, static_cast<float>(-m_scrollPos));
 
@@ -180,6 +181,15 @@ int NanoVGCanvas::GetOrCreateItemImage(uint16_t itemId) {
 		AddCachedImage(static_cast<uint64_t>(itemId), tex);
 	}
 	return tex;
+}
+
+int NanoVGCanvas::GetOrCreateStaticImage(const std::string& assetPath) {
+	NVGcontext* vg = GetNVGContext();
+	if (!vg) {
+		return 0;
+	}
+
+	return IMAGE_MANAGER.GetNanoVGImage(vg, assetPath);
 }
 
 int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {

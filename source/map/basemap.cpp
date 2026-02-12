@@ -179,7 +179,7 @@ MapIterator BaseMap::end() {
 	return it;
 }
 
-TileLocation& MapIterator::operator*() noexcept {
+TileLocation& MapIterator::operator*() const noexcept {
 	return *current_tile;
 }
 

@@ -88,9 +88,9 @@ Scan the codebase for these violation categories:
 - **Why?** Flags are much easier to read and less prone to errors.
 
 **Feature 8: High DPI**
-- **MANDATORY:** Use `wxBitmapBundle`.
-- **FORBIDDEN:** Use `wxBitmap` or `wxIcon` directly.
-- **Why?** Bundles store multiple sizes to keep icons crisp on 4K/Retina displays.
+- **MANDATORY:** Use `IMAGE_MANAGER.GetBitmapBundle()` from `util/image_manager.h` (see [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md)).
+- **FORBIDDEN:** Use `wxBitmap` or `wxIcon` directly, `wxArtProvider`, or hardcoded image paths.
+- **Why?** The centralized `ImageManager` handles DPI scaling, SVG rasterization, tinting, and NanoVG textures in one place.
 
 **Feature 9: Spacing**
 - **MANDATORY:** Use `sizer->AddSpacer(n)`.
@@ -171,9 +171,9 @@ Scan the codebase for these violation categories:
 - **Why?** wxWidgets is massive; using precompiled headers can cut your build time by 50-80%.
 
 **Feature 23: Asset Loading**
-- **MANDATORY:** Use `wxEmbeddedFile` or Resources.
-- **FORBIDDEN:** Assume icons are in the same folder as the EXE.
-- **Why?** Apps are often installed in "Program Files" where they don't have permission to read local loose files easily.
+- **MANDATORY:** Use `IMAGE_MANAGER.GetBitmap()` / `IMAGE_MANAGER.GetBitmapBundle()` with macros from `util/image_manager.h`. Consult [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md) for the full workflow.
+- **FORBIDDEN:** Use `wxArtProvider`, `wxEmbeddedFile`, hardcoded paths, or XPM data.
+- **Why?** `ImageManager` resolves assets relative to the executable's `assets/` directory, supports PNG/SVG, tinting, and NanoVG textures.
 
 **Feature 24: Logging**
 - **MANDATORY:** Use `wxLogMessage()` or `wxLogError()`.
@@ -198,9 +198,9 @@ Scan the codebase for these violation categories:
 - **Why?** This information is used by the OS for task manager grouping and config file locations.
 
 **Feature 28: Bitmaps**
-- **MANDATORY:** Use `wxBitmapBundle` with SVG support.
-- **FORBIDDEN:** Use `.ico` or `.bmp` files for icons.
-- **Why?** SVG bundles scale perfectly from 100% to 400% DPI without blurring.
+- **MANDATORY:** Use `IMAGE_MANAGER.GetBitmapBundle()` with SVG/PNG macros (e.g., `ICON_SAVE`, `IMAGE_ERASER`). See [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md).
+- **FORBIDDEN:** Use `.ico` or `.bmp` files, `wxArtProvider`, or inline XPM data for icons.
+- **Why?** `ImageManager` handles SVG rasterization, DPI scaling, and tinting centrally.
 
 ## UI Best Practices
 
@@ -333,6 +333,7 @@ As I scan and fix:
 - Will this fix improve stability or UX?
 - Are there similar violations in other files?
 - Does this fix align with the RME Modern UI System skill?
+- Am I using `IMAGE_MANAGER` macros for all icons/images? (see [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md))
 - After fixing, does the UI still work correctly?
 - Have I identified at least 20 violations?
 - Are all fixes tested and verified?

@@ -28,7 +28,7 @@
 // ============================================================================
 // Item
 
-Item* Item::Create_OTMM(const IOMap& maphandle, BinaryNode* stream) {
+std::unique_ptr<Item> Item::Create_OTMM(const IOMap& maphandle, BinaryNode* stream) {
 	uint16_t _id;
 	if (!stream->getU16(_id)) {
 		return nullptr;
@@ -238,15 +238,14 @@ bool Container::unserializeItemNode_OTMM(const IOMap& maphandle, BinaryNode* nod
 				}
 				// load container items
 				if (type == OTMM_ITEM) {
-					Item* item = Item::Create_OTMM(maphandle, child);
+					std::unique_ptr<Item> item = Item::Create_OTMM(maphandle, child);
 					if (!item) {
 						return false;
 					}
 					if (!item->unserializeItemNode_OTMM(maphandle, child)) {
-						delete item;
 						return false;
 					}
-					contents.push_back(item);
+					contents.push_back(item.release());
 				} else {
 					// corrupted file data!
 					return false;
@@ -447,7 +446,7 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 							uint16_t ground_id;
 							tileNode->getU16(ground_id);
 							if (ground_id != 0) {
-								tile->addItem(Item::Create(ground_id));
+								tile->addItem(Item::Create(ground_id).release());
 							}
 
 							uint8_t attribute;
@@ -469,7 +468,7 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 							BinaryNode* itemNode = tileNode->getChild();
 							if (itemNode) {
 								do {
-									Item* item = nullptr;
+									std::unique_ptr<Item> item;
 									uint8_t item_type;
 									if (!itemNode->getByte(item_type)) {
 										warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
@@ -481,7 +480,7 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 											if (item->unserializeItemNode_OTMM(*this, itemNode) == false) {
 												warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
 											}
-											tile->addItem(item);
+											tile->addItem(item.release());
 										}
 									} else {
 										warning("Unknown type of tile child node");

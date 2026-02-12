@@ -23,6 +23,7 @@
 #include "game/items.h"
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
+#include "util/image_manager.h"
 
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
@@ -77,9 +78,11 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	buttons_box_sizer = newd wxStdDialogButtonSizer();
 	ok_button = newd wxButton(this, wxID_OK);
+	ok_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	ok_button->SetToolTip("Select an item to confirm");
 	buttons_box_sizer->AddButton(ok_button);
 	cancel_button = newd wxButton(this, wxID_CANCEL);
+	cancel_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancel_button->SetToolTip("Cancel selection");
 	buttons_box_sizer->AddButton(cancel_button);
 	buttons_box_sizer->Realize();

@@ -76,7 +76,7 @@ void TableBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	}
 
 	if (type != 0) {
-		tile->addItem(Item::Create(type));
+		tile->addItem(Item::Create(type).release());
 	}
 }
 

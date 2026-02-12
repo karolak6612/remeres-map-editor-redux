@@ -167,12 +167,13 @@ public:
 
 protected:
 	struct FieldLine {
-		std::string label;
+		std::string_view label;
 		std::string value;
 		uint8_t r, g, b;
 		std::vector<std::string> wrappedLines; // For multi-line values
 	};
 	std::vector<FieldLine> scratch_fields;
+	size_t scratch_fields_count = 0;
 
 	std::vector<TooltipData> tooltips;
 	size_t active_count = 0;
