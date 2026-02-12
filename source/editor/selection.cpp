@@ -213,7 +213,7 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile, tilePositionLessThan);
+		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
 			bounds_dirty = true;
@@ -226,7 +226,7 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		auto it = std::lower_bound(tiles.begin(), tiles.end(), tile, tilePositionLessThan);
+		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
 			bounds_dirty = true;
@@ -238,8 +238,10 @@ void Selection::flush() {
 	if (pending_adds.empty() && pending_removes.empty()) {
 		return;
 	}
+
+	bounds_dirty = true;
+
 	if (!pending_removes.empty()) {
-		bounds_dirty = true;
 		std::ranges::sort(pending_removes, tilePositionLessThan);
 		auto [first, last] = std::ranges::unique(pending_removes, [](Tile* a, Tile* b) {
 			return a->getPosition() == b->getPosition();
@@ -253,7 +255,6 @@ void Selection::flush() {
 	}
 
 	if (!pending_adds.empty()) {
-		bounds_dirty = true;
 		std::ranges::sort(pending_adds, tilePositionLessThan);
 		auto [first, last] = std::ranges::unique(pending_adds, [](Tile* a, Tile* b) {
 			return a->getPosition() == b->getPosition();

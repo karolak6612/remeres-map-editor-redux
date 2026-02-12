@@ -205,14 +205,10 @@ void Tile::merge(Tile* other) {
 		spawn = std::move(other->spawn);
 	}
 
-	ItemVector::iterator it;
-
 	items.reserve(items.size() + other->items.size());
-	it = other->items.begin();
-	while (it != other->items.end()) {
-		addItem(*it);
-		++it;
-	}
+	std::ranges::for_each(other->items, [&](Item* item) {
+		addItem(item);
+	});
 	other->items.clear();
 }
 
@@ -296,24 +292,19 @@ void Tile::addItem(Item* item) {
 		ground = Item::Create(gid).release();
 		// At the very bottom!
 		it = items.begin();
-	} else {
-		if (item->isAlwaysOnBottom()) {
-			it = items.begin();
-			while (true) {
-				if (it == items.end()) {
-					break;
-				} else if ((*it)->isAlwaysOnBottom()) {
-					if (item->getTopOrder() < (*it)->getTopOrder()) {
-						break;
-					}
-				} else { // Always on top
-					break;
-				}
-				++it;
+	} else if (item->isAlwaysOnBottom()) {
+		// Find insertion point for always-on-bottom items
+		// They are sorted by TopOrder, and come before normal items.
+		it = std::ranges::find_if(items, [&](Item* i) {
+			if (!i->isAlwaysOnBottom()) {
+				return true; // Found a normal item, insert before it
 			}
-		} else {
-			it = items.end();
-		}
+			// find_if will stop at the first non-bottom item, which is equivalent to the original
+			// manually written loop and ensures efficient insertion even with large item counts.
+			return item->getTopOrder() < i->getTopOrder(); // Found a bottom item with higher order
+		});
+	} else {
+		it = items.end();
 	}
 
 	items.insert(it, item);
