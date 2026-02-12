@@ -5,6 +5,7 @@
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include <nanovg.h>
 
 // ============================================================================
 // Numkey forwarding text control
@@ -59,9 +60,6 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	Bind(wxEVT_LISTBOX_DCLICK, &FindDialog::OnClickList, this, JUMP_DIALOG_LIST);
 	Bind(wxEVT_BUTTON, &FindDialog::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &FindDialog::OnClickCancel, this, wxID_CANCEL);
-
-	// We can't call it here since it calls an abstract function, call in child constructors instead.
-	// RefreshContents();
 }
 
 FindDialog::~FindDialog() = default;
@@ -128,7 +126,6 @@ void FindDialog::OnClickList(wxCommandEvent& event) {
 }
 
 void FindDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
-	// This is to get virtual callback
 	OnClickOKInternal();
 }
 
@@ -137,7 +134,6 @@ void FindDialog::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void FindDialog::RefreshContents() {
-	// This is to get virtual callback
 	RefreshContentsInternal();
 }
 
@@ -160,15 +156,12 @@ void FindBrushDialog::OnClickListInternal(wxCommandEvent& event) {
 }
 
 void FindBrushDialog::OnClickOKInternal() {
-	// This is kind of stupid as it would fail unless the "Please enter a search string" wasn't there
 	if (item_list->GetItemCount() > 0) {
 		if (item_list->GetSelection() == wxNOT_FOUND) {
 			item_list->SetSelection(0);
 		}
 		Brush* brush = item_list->GetSelectedBrush();
 		if (!brush) {
-			// It's either "Please enter a search string" or "No matches"
-			// Perhaps we can refresh now?
 			std::string search_string = as_lower_str(nstr(search_field->GetValue()));
 			bool do_search = (search_string.size() >= 2);
 
@@ -180,19 +173,15 @@ void FindBrushDialog::OnClickOKInternal() {
 						continue;
 					}
 
-					// Don't match RAWs now.
 					if (brush->isRaw()) {
 						continue;
 					}
 
-					// Found one!
 					result_brush = brush;
 					break;
 				}
 
-				// Did we not find a matching brush?
 				if (!result_brush) {
-					// Then let's search the RAWs
 					for (int id = 0; id <= g_items.getMaxID(); ++id) {
 						ItemType& it = g_items[id];
 						if (it.id == 0) {
@@ -208,12 +197,10 @@ void FindBrushDialog::OnClickOKInternal() {
 							continue;
 						}
 
-						// Found one!
 						result_brush = raw_brush;
 						break;
 					}
 				}
-				// Done!
 			}
 		} else {
 			result_brush = brush;
@@ -234,7 +221,6 @@ void FindBrushDialog::RefreshContentsInternal() {
 
 		const BrushMap& brushes_map = g_brushes.getMap();
 
-		// We store the raws so they display last of all results
 		std::deque<const RAWBrush*> raws;
 
 		for (const auto& [name, brush_ptr] : brushes_map) {
@@ -289,7 +275,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 // Listbox in find item / brush stuff
 
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
+	NanoVGListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
 	cleared(false),
 	no_matches(false) {
 	Clear();
@@ -333,30 +319,45 @@ Brush* FindDialogListBox::GetSelectedBrush() {
 	return brushlist[n];
 }
 
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) const {
+	int fontSize = FROM_DIP(this, 12);
+	nvgFontSize(vg, (float)fontSize);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+	float textY = rect.y + rect.height / 2.0f;
+	float textX = rect.x + FROM_DIP(this, 40);
+
 	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+		nvgText(vg, textX, textY, "No matches for your search.", nullptr);
 	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+		nvgText(vg, textX, textY, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
+
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
 		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
+			int tex = const_cast<NanoVGCanvas*>(static_cast<const NanoVGCanvas*>(this))->GetOrCreateSpriteTexture(vg, spr);
+			if (tex > 0) {
+				int iconSize = rect.height;
+				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, iconSize, iconSize, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, rect.x, rect.y, iconSize, iconSize);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
 		}
 
 		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-			}
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 		}
 
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
+		float labelX = rect.x + rect.height + FROM_DIP(this, 8);
+		nvgText(vg, labelX, textY, wxstr(brushlist[n]->getName()).ToUTF8(), nullptr);
 	}
 }
 

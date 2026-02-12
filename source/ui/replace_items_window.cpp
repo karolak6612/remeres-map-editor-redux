@@ -23,6 +23,9 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "game/items.h"
+#include <nanovg.h>
+#include <format>
+#include "ui/theme.h"
 
 // ============================================================================
 // ReplaceItemsButton
@@ -65,9 +68,7 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 // ReplaceItemsListBox
 
 ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
-	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+	NanoVGListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
 }
 
 bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
@@ -75,9 +76,8 @@ bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
 		return false;
 	}
 
-	SetItemCount(GetItemCount() + 1);
 	m_items.push_back(item);
-	Refresh();
+	SetItemCount(m_items.size()); // Base class handles refresh and scroll update
 
 	return true;
 }
@@ -102,8 +102,14 @@ void ReplaceItemsListBox::RemoveSelected() {
 	}
 
 	m_items.erase(m_items.begin() + index);
-	SetItemCount(GetItemCount() - 1);
-	Refresh();
+	SetItemCount(m_items.size());
+	// Selection correction is handled by NanoVGListBox::SetItemCount (resets selection usually, or we might want to select next?)
+	// NanoVGListBox::SetItemCount resets selection to none (-1).
+	// Ideally we should select index if valid, or index-1.
+	if (!m_items.empty()) {
+		int newSel = std::min(index, (int)m_items.size() - 1);
+		SetSelection(newSel);
+	}
 }
 
 bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
@@ -119,7 +125,7 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const {
+void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) const {
 	ASSERT(index < m_items.size());
 
 	const ReplacingItem& item = m_items.at(index);
@@ -128,29 +134,69 @@ void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index)
 	const ItemType& type2 = g_items.getItemType(item.withId);
 	Sprite* sprite2 = g_gui.gfx.getSprite(type2.clientID);
 
+	// Setup text style
+	nvgFontSize(vg, (float)FROM_DIP(this, 12));
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+
 	if (sprite1 && sprite2) {
-		int x = rect.GetX();
-		int y = rect.GetY();
-		sprite1->DrawTo(&dc, SPRITE_SIZE_32x32, x + 4, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawBitmap(m_arrow_bitmap, x + 38, y + 10, true);
-		sprite2->DrawTo(&dc, SPRITE_SIZE_32x32, x + 56, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawText(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId), x + 104, y + 10);
+		int x = rect.x;
+		int y = rect.y;
+		int size = FROM_DIP(this, 32);
+
+		// Item 1
+		int tex1 = const_cast<NanoVGCanvas*>(static_cast<const NanoVGCanvas*>(this))->GetOrCreateSpriteTexture(vg, sprite1);
+		if (tex1 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 4, y + 4, size, size, 0, tex1, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 4, y + 4, size, size);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Arrow
+		int arrowImg = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_LOCATION_ARROW, Theme::Get(Theme::Role::Icon));
+		if (arrowImg > 0) {
+			int iconSize = FROM_DIP(this, 16);
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 38, y + 10, iconSize, iconSize, 0, arrowImg, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 38, y + 10, iconSize, iconSize);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Item 2
+		int tex2 = const_cast<NanoVGCanvas*>(static_cast<const NanoVGCanvas*>(this))->GetOrCreateSpriteTexture(vg, sprite2);
+		if (tex2 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 56, y + 4, size, size, 0, tex2, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 56, y + 4, size, size);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Text
+		std::string text = std::format("Replace: {} With: {}", item.replaceId, item.withId);
+		nvgText(vg, x + 104, y + rect.height / 2.0f, text.c_str(), nullptr);
 
 		if (item.complete) {
-			x = rect.GetWidth() - 100;
-			dc.DrawBitmap(m_flag_bitmap, x + 70, y + 10, true);
-			dc.DrawText(wxString::Format("Total: %d", item.total), x, y + 10);
-		}
-	}
+			int flagX = rect.width - 100;
 
-	if (IsSelected(index)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		} else {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+			// Flag Icon
+			int flagImg = IMAGE_MANAGER.GetNanoVGImage(vg, IMAGE_PROTECTION_ZONE_SMALL);
+			if (flagImg > 0) {
+				int iconSize = FROM_DIP(this, 16);
+				NVGpaint imgPaint = nvgImagePattern(vg, flagX + 70, y + 10, iconSize, iconSize, 0, flagImg, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, flagX + 70, y + 10, iconSize, iconSize);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
+
+			std::string totalText = std::format("Total: {}", item.total);
+			nvgText(vg, flagX, y + rect.height / 2.0f, totalText.c_str(), nullptr);
 		}
-	} else {
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
 	}
 }
 
@@ -168,16 +214,14 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-	wxFlexGridSizer* list_sizer = new wxFlexGridSizer(0, 2, 0, 0);
-	list_sizer->SetFlexibleDirection(wxBOTH);
-	list_sizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
-	list_sizer->SetMinSize(wxSize(-1, FromDIP(300)));
+	// Using wxWrapSizer or keeping FlexGridSizer?
+	// The original code used wxFlexGridSizer but effectively as a box.
+	// We can simplify this to wxBoxSizer or just add list directly to sizer.
 
 	list = new ReplaceItemsListBox(this);
 	list->SetMinSize(FromDIP(wxSize(480, 320)));
 
-	list_sizer->Add(list, 0, wxALL | wxEXPAND, 5);
-	sizer->Add(list_sizer, 1, wxALL | wxEXPAND, 5);
+	sizer->Add(list, 1, wxALL | wxEXPAND, 5); // Expanded to take space
 
 	wxBoxSizer* items_sizer = new wxBoxSizer(wxHORIZONTAL);
 	items_sizer->SetMinSize(wxSize(-1, FromDIP(40)));
@@ -198,7 +242,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	progress->SetValue(0);
 	items_sizer->Add(progress, 0, wxALL, 5);
 
-	sizer->Add(items_sizer, 1, wxALL | wxEXPAND, 5);
+	sizer->Add(items_sizer, 0, wxALL | wxEXPAND, 5);
 
 	wxBoxSizer* buttons_sizer = new wxBoxSizer(wxHORIZONTAL);
 
@@ -223,7 +267,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	close_button->SetToolTip("Close this window");
 	buttons_sizer->Add(close_button, 0, wxALL, 5);
 
-	sizer->Add(buttons_sizer, 1, wxALL | wxLEFT | wxRIGHT | wxSHAPED, 5);
+	sizer->Add(buttons_sizer, 0, wxALL | wxLEFT | wxRIGHT | wxSHAPED, 5);
 
 	SetSizer(sizer);
 	Layout();
@@ -370,7 +414,7 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		}
 
 		done++;
-		const int value = static_cast<int>((done / items.size()) * 100);
+		const int value = static_cast<int>((static_cast<float>(done) / items.size()) * 100);
 		progress->SetValue(std::clamp<int>(value, 0, 100));
 		list->MarkAsComplete(info, total);
 	}
