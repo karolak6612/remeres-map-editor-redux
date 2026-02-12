@@ -31,8 +31,8 @@ void SpritePreloader::shutdown() {
 		}
 		stopping = true;
 	}
+	worker.request_stop(); // Correctly signaled transition for jthread's stop_token
 	cv.notify_all();
-	// jthread will join on destruction/assignment, but explicit request_stop is handled by stop_token
 }
 
 void SpritePreloader::clear() {
@@ -49,7 +49,13 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		return;
 	}
 
-	// This loop logic mirrors the inefficient synchronous loop, but queues async tasks instead.
+	// Capture global state once per preload call (one item)
+	const std::string sprfile = g_gui.gfx.getSpriteFile();
+	const bool is_extended = g_gui.gfx.isExtended();
+	const bool has_transparency = g_gui.gfx.hasTransparency();
+
+	std::vector<uint32_t> ids_to_enqueue;
+
 	for (int cx = 0; cx < spr->width; ++cx) {
 		for (int cy = 0; cy < spr->height; ++cy) {
 			for (int cf = 0; cf < spr->layers; ++cf) {
@@ -68,25 +74,25 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 				}
 
 				GameSprite::NormalImage* img = spr->spriteList[idx];
-				if (!img || img->isGLLoaded) {
-					continue; // Already loaded or null
-				}
-
-				{
-					std::lock_guard<std::mutex> lock(queue_mutex);
-					if (pending_ids.find(img->id) == pending_ids.end()) {
-						pending_ids.insert(img->id);
-
-						std::string sprfile = g_gui.gfx.getSpriteFile();
-						bool is_extended = g_gui.gfx.isExtended();
-						bool has_transparency = g_gui.gfx.hasTransparency();
-
-						task_queue.push({ img->id, std::move(sprfile), is_extended, has_transparency });
-						cv.notify_one();
-					}
+				if (img && !img->isGLLoaded) {
+					ids_to_enqueue.push_back(img->id);
 				}
 			}
 		}
+	}
+
+	if (!ids_to_enqueue.empty()) {
+		std::lock_guard<std::mutex> lock(queue_mutex);
+		if (task_queue.size() > MAX_QUEUE_SIZE) {
+			return; // Drop requests if queue is slammed
+		}
+
+		for (uint32_t id : ids_to_enqueue) {
+			if (pending_ids.insert(id).second) {
+				task_queue.push({ id, sprfile, is_extended, has_transparency });
+			}
+		}
+		cv.notify_all();
 	}
 }
 
@@ -128,6 +134,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 }
 
 void SpritePreloader::update() {
+	// CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
 	std::queue<Result> results;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
@@ -145,9 +152,10 @@ void SpritePreloader::update() {
 		if (!g_gui.gfx.isUnloaded() && id < g_gui.gfx.image_space.size()) {
 			auto& img_ptr = g_gui.gfx.image_space[id];
 			if (img_ptr) {
-				// Use dynamic_cast for safer type conversion
-				auto* img = dynamic_cast<GameSprite::NormalImage*>(img_ptr.get());
-				if (img && !img->isGLLoaded) {
+				// Use static_cast for performance, as we know the type from loaders
+				auto* img = static_cast<GameSprite::NormalImage*>(img_ptr.get());
+				assert(img);
+				if (!img->isGLLoaded) {
 					img->fulfillPreload(std::move(res.data));
 				}
 			}

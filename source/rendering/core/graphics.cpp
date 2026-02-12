@@ -69,9 +69,12 @@ bool GraphicManager::isUnloaded() const {
 
 void GraphicManager::updateTime() {
 	cached_time_ = time(nullptr);
+	SpritePreloader::get().update();
 }
 
 void GraphicManager::clear() {
+	// CRITICAL: Ensure preloader is cleared before modifying image_space to avoid
+	// use-after-free or OOB access in SpritePreloader::update() on main thread.
 	SpritePreloader::get().clear();
 	sprite_space.clear();
 	image_space.clear();

@@ -53,10 +53,12 @@ private:
 
 	void workerLoop(std::stop_token stop_token);
 
-	std::jthread worker;
+	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
+
 	std::mutex queue_mutex;
 	std::condition_variable cv;
 	bool stopping = false;
+	std::jthread worker;
 
 	std::queue<Task> task_queue;
 	std::queue<Result> result_queue;
