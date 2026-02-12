@@ -359,6 +359,7 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 			hover_brush = tr.brush;
 			if (prev_hover != hover_brush) {
 				SetToolTip(tr.tooltip);
+				g_gui.SetStatusText(tr.tooltip);
 			}
 			hand_cursor = true;
 			break;
@@ -366,6 +367,7 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	}
 	if (!hover_brush && prev_hover) {
 		UnsetToolTip();
+		g_gui.SetStatusText("");
 	}
 
 	// Sliders Interaction
@@ -450,14 +452,36 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_preview = true;
 		hand_cursor = true;
-	}
-	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
+		if (!prev_preview) {
+			SetToolTip("Toggle automatic border preview");
+			g_gui.SetStatusText("Toggle automatic border preview");
+		}
+	} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_lock = true;
 		hand_cursor = true;
-	}
-
-	if (interactables.size_slider_rect.Contains(m_hoverPos) || interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		if (!prev_lock) {
+			SetToolTip("Lock Door Placement (Shift)");
+			g_gui.SetStatusText("Lock door placement to prevent overwriting existing doors (Hold Shift)");
+		}
+	} else if (interactables.size_slider_rect.Contains(m_hoverPos)) {
 		hand_cursor = true;
+		wxString tip = "Brush Size (Double-click to reset)";
+		if (GetToolTipText() != tip) {
+			SetToolTip(tip);
+			g_gui.SetStatusText("Brush Size: Adjust the size of the brush (Double-click to reset to 1)");
+		}
+	} else if (interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		hand_cursor = true;
+		wxString tip = "Brush Thickness (Double-click to reset)";
+		if (GetToolTipText() != tip) {
+			SetToolTip(tip);
+			g_gui.SetStatusText("Brush Thickness: Adjust the line thickness (Double-click to reset to 100)");
+		}
+	} else if (!hover_brush) {
+		if (GetToolTip()) {
+			UnsetToolTip();
+			g_gui.SetStatusText("");
+		}
 	}
 
 	SetCursor(hand_cursor ? wxCursor(wxCURSOR_HAND) : wxCursor(wxCURSOR_ARROW));
