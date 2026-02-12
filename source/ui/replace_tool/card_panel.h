@@ -1,12 +1,12 @@
 #ifndef RME_UI_REPLACE_TOOL_CARD_PANEL_H_
 #define RME_UI_REPLACE_TOOL_CARD_PANEL_H_
 
-#include <wx/panel.h>
+#include "util/nanovg_canvas.h"
 #include <wx/string.h>
 #include <wx/sizer.h>
 #include <wx/event.h>
 
-class CardPanel : public wxPanel {
+class CardPanel : public NanoVGCanvas {
 public:
 	CardPanel(wxWindow* parent, wxWindowID id = wxID_ANY);
 
@@ -24,12 +24,13 @@ public:
 	static const int FOOTER_HEIGHT = 40;
 
 protected:
-	void OnPaint(wxPaintEvent& event);
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
 	void OnSize(wxSizeEvent& event);
 
 private:
 	bool m_showFooter = false;
 	wxString m_title;
+	std::string m_cachedTitleStr;
 
 	wxBoxSizer* m_mainSizer = nullptr;
 	wxBoxSizer* m_contentSizer = nullptr;

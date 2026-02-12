@@ -2,11 +2,11 @@
 #define RME_RULE_LIST_CONTROL_H_
 
 #include "ui/replace_tool/rule_manager.h"
-#include <wx/control.h>
+#include "util/nanovg_canvas.h"
 #include <vector>
 #include <string>
 
-class RuleListControl : public wxControl {
+class RuleListControl : public NanoVGCanvas {
 public:
 	class Listener {
 	public:
@@ -28,8 +28,8 @@ public:
 		return m_ruleSetNames;
 	}
 
-private:
-	void OnPaint(wxPaintEvent& event);
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
 	void OnMouse(wxMouseEvent& event);
 	void OnMouseWheel(wxMouseEvent& event);
 	void OnContextMenu(wxContextMenuEvent& event);
