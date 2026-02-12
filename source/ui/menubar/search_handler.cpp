@@ -3,8 +3,8 @@
 
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
-#include "ui/find_item_window.h"
-#include "ui/result_window.h"
+#include "ui/windows/find_item_window.h"
+#include "ui/windows/result_window.h"
 #include "ui/map_window.h"
 #include "app/preferences.h"
 #include "editor/editor.h"

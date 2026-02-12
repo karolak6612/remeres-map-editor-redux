@@ -205,9 +205,9 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/about_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_item_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/browse_tile_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/item_buttons.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.h
@@ -226,11 +226,11 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/splash_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/depot_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/dcbutton.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_util.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/extension_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/find_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.h
@@ -266,7 +266,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_popup_menu.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_tab.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/numbertextctrl.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/numbertextctrl.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/brush_toolbar.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/position_toolbar.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/size_toolbar.h
@@ -279,7 +279,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/old_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/util/image_manager.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/replace_items_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/replace_items_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/item_grid_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/library_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_card_renderer.h
@@ -290,14 +290,14 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_list_control.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/visual_similarity_service.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/result_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/tileset_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/welcome_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/map_statistics_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/live_dialogs.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_window.h
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/tool_options_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/tool_options_surface.h
     ${CMAKE_CURRENT_LIST_DIR}/util/common.h
     ${CMAKE_CURRENT_LIST_DIR}/util/json.h
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.h
@@ -532,10 +532,10 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/screen.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/scanline.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/xbrz.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/about_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_item_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/add_tileset_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/browse_tile_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.cpp
 
@@ -553,11 +553,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/splash_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/depot_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/dcbutton.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_util.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/extension_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/find_item_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.cpp
@@ -593,7 +593,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_popup_menu.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_tab.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/numbertextctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/numbertextctrl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/brush_toolbar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/position_toolbar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/size_toolbar.cpp
@@ -604,9 +604,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/toolbar_factory.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/toolbar/toolbar_layout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/old_properties_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/positionctrl.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/positionctrl.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/properties_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/replace_items_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/replace_items_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/item_grid_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/library_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_card_renderer.cpp
@@ -617,17 +617,17 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_list_control.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/rule_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/visual_similarity_service.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/result_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/tileset_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/welcome_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/map_statistics_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/live_dialogs.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/virtual_item_grid.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_window.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/windows/tool_options_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/tool_options_surface.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/file_system.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/image_manager.cpp
     ${wxmaterialdesignartprovider_SOURCE_DIR}/MaterialDesign/wxAwesomeBrandsArt.cpp

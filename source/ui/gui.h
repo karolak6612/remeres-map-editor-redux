@@ -5,7 +5,7 @@
 #include "map/position.h"
 
 #include "editor/copybuffer.h"
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 #include "brushes/brush_enums.h"
 #include "ui/gui_ids.h"
 #include "editor/editor_tabs.h"
