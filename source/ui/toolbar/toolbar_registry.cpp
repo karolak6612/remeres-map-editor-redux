@@ -14,27 +14,27 @@ ToolbarRegistry::ToolbarRegistry() :
 }
 
 ToolbarRegistry::~ToolbarRegistry() {
-	// Smart pointers handle deletion
+	// Pointers are owned by MainFrame/wxWindow parent
 }
 
-void ToolbarRegistry::SetStandardToolbar(std::unique_ptr<StandardToolBar> tb) {
-	standard_toolbar = std::move(tb);
+void ToolbarRegistry::SetStandardToolbar(StandardToolBar* tb) {
+	standard_toolbar = tb;
 }
 
-void ToolbarRegistry::SetBrushToolbar(std::unique_ptr<BrushToolBar> tb) {
-	brush_toolbar = std::move(tb);
+void ToolbarRegistry::SetBrushToolbar(BrushToolBar* tb) {
+	brush_toolbar = tb;
 }
 
-void ToolbarRegistry::SetPositionToolbar(std::unique_ptr<PositionToolBar> tb) {
-	position_toolbar = std::move(tb);
+void ToolbarRegistry::SetPositionToolbar(PositionToolBar* tb) {
+	position_toolbar = tb;
 }
 
-void ToolbarRegistry::SetSizeToolbar(std::unique_ptr<SizeToolBar> tb) {
-	size_toolbar = std::move(tb);
+void ToolbarRegistry::SetSizeToolbar(SizeToolBar* tb) {
+	size_toolbar = tb;
 }
 
-void ToolbarRegistry::SetLightToolbar(std::unique_ptr<LightToolBar> tb) {
-	light_toolbar = std::move(tb);
+void ToolbarRegistry::SetLightToolbar(LightToolBar* tb) {
+	light_toolbar = tb;
 }
 
 void ToolbarRegistry::UpdateAll() {

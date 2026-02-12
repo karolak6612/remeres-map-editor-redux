@@ -22,26 +22,26 @@ public:
 	ToolbarRegistry();
 	~ToolbarRegistry();
 
-	void SetStandardToolbar(std::unique_ptr<StandardToolBar> tb);
-	void SetBrushToolbar(std::unique_ptr<BrushToolBar> tb);
-	void SetPositionToolbar(std::unique_ptr<PositionToolBar> tb);
-	void SetSizeToolbar(std::unique_ptr<SizeToolBar> tb);
-	void SetLightToolbar(std::unique_ptr<LightToolBar> tb);
+	void SetStandardToolbar(StandardToolBar* tb);
+	void SetBrushToolbar(BrushToolBar* tb);
+	void SetPositionToolbar(PositionToolBar* tb);
+	void SetSizeToolbar(SizeToolBar* tb);
+	void SetLightToolbar(LightToolBar* tb);
 
 	StandardToolBar* GetStandardToolbar() const {
-		return standard_toolbar.get();
+		return standard_toolbar;
 	}
 	BrushToolBar* GetBrushToolbar() const {
-		return brush_toolbar.get();
+		return brush_toolbar;
 	}
 	PositionToolBar* GetPositionToolbar() const {
-		return position_toolbar.get();
+		return position_toolbar;
 	}
 	SizeToolBar* GetSizeToolbar() const {
-		return size_toolbar.get();
+		return size_toolbar;
 	}
 	LightToolBar* GetLightToolbar() const {
-		return light_toolbar.get();
+		return light_toolbar;
 	}
 
 	wxAuiPaneInfo& GetPane(ToolBarID id, wxAuiManager* manager);
@@ -49,12 +49,12 @@ public:
 	void UpdateAll();
 
 private:
-	// Owned pointers
-	std::unique_ptr<StandardToolBar> standard_toolbar;
-	std::unique_ptr<BrushToolBar> brush_toolbar;
-	std::unique_ptr<PositionToolBar> position_toolbar;
-	std::unique_ptr<SizeToolBar> size_toolbar;
-	std::unique_ptr<LightToolBar> light_toolbar;
+	// Pointers owned by MainFrame (parent window)
+	StandardToolBar* standard_toolbar;
+	BrushToolBar* brush_toolbar;
+	PositionToolBar* position_toolbar;
+	SizeToolBar* size_toolbar;
+	LightToolBar* light_toolbar;
 };
 
 #endif // RME_UI_TOOLBAR_TOOLBAR_REGISTRY_H_

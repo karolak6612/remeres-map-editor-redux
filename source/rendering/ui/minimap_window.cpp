@@ -66,10 +66,16 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 }
 
 MinimapWindow::~MinimapWindow() {
+	spdlog::info("MinimapWindow destructor started");
+	spdlog::default_logger()->flush();
 	if (context && nvg) {
+		spdlog::info("MinimapWindow destructor - setting context and resetting nvg");
+		spdlog::default_logger()->flush();
 		SetCurrent(*context);
 		nvg.reset();
 	}
+	spdlog::info("MinimapWindow destructor finished");
+	spdlog::default_logger()->flush();
 }
 
 void MinimapWindow::OnSize(wxSizeEvent& event) {
@@ -77,6 +83,8 @@ void MinimapWindow::OnSize(wxSizeEvent& event) {
 }
 
 void MinimapWindow::OnClose(wxCloseEvent&) {
+	spdlog::info("MinimapWindow::OnClose called");
+	spdlog::default_logger()->flush();
 	g_gui.DestroyMinimap();
 }
 

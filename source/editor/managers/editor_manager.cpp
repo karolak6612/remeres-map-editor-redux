@@ -218,7 +218,7 @@ bool EditorManager::NewMap() {
 		return false;
 	}
 
-	auto* mapTab = newd MapTab(g_gui.tabbook.get(), editor.release());
+	auto* mapTab = newd MapTab(g_gui.tabbook, editor.release());
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
 	mapTab->GetMap()->clearChanges();
 
@@ -315,7 +315,7 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 		return false;
 	}
 
-	auto* mapTab = newd MapTab(g_gui.tabbook.get(), editor.release());
+	auto* mapTab = newd MapTab(g_gui.tabbook, editor.release());
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
 
 	g_gui.root->AddRecentFile(fileName);

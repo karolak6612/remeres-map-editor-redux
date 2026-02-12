@@ -65,12 +65,8 @@ if(NOT nanovg_FOUND)
 endif()
 
 include(source/CMakeLists.txt)
-# WIN32 is required for wxWidgets app entry point (WinMain)
-if(WIN32)
-	add_executable(rme WIN32 ${rme_H} ${rme_SRC})
-else()
-	add_executable(rme ${rme_H} ${rme_SRC})
-endif()
+# Removed WIN32 to enable Console subsystem for persistent debugging logs
+add_executable(rme ${rme_H} ${rme_SRC})
 
 set_target_properties(rme PROPERTIES CXX_STANDARD 20)
 set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)

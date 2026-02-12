@@ -52,7 +52,7 @@ bool Tileset::containsBrush(Brush* brush) const {
 }
 
 TilesetCategory* Tileset::getCategory(TilesetCategoryType type) {
-	ASSERT(type >= TILESET_UNKNOWN && type <= TILESET_HOUSE);
+	ASSERT(type >= TILESET_TERRAIN && type <= TILESET_UNKNOWN);
 	auto it = std::ranges::find_if(categories, [type](const auto& category) {
 		return category->getType() == type;
 	});
@@ -74,7 +74,7 @@ bool TilesetCategory::containsBrush(Brush* brush) const {
 }
 
 const TilesetCategory* Tileset::getCategory(TilesetCategoryType type) const {
-	ASSERT(type >= TILESET_UNKNOWN && type <= TILESET_HOUSE);
+	ASSERT(type >= TILESET_TERRAIN && type <= TILESET_UNKNOWN);
 	auto it = std::ranges::find_if(categories, [type](const auto& category) {
 		return category->getType() == type;
 	});
@@ -162,11 +162,11 @@ void Tileset::loadCategory(pugi::xml_node node, std::vector<std::string>& warnin
 
 TilesetCategory::TilesetCategory(Tileset& parent, TilesetCategoryType type) :
 	type(type), tileset(parent) {
-	ASSERT(type >= TILESET_UNKNOWN && type <= TILESET_HOUSE);
+	ASSERT(type >= TILESET_TERRAIN && type <= TILESET_UNKNOWN);
 }
 
 TilesetCategory::~TilesetCategory() {
-	ASSERT(type >= TILESET_UNKNOWN && type <= TILESET_HOUSE);
+	ASSERT(type >= TILESET_TERRAIN && type <= TILESET_UNKNOWN);
 }
 
 bool TilesetCategory::isTrivial() const {

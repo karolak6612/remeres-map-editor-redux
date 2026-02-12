@@ -233,7 +233,7 @@ void Materials::createOtherTileset() {
 	Tileset* others;
 	Tileset* npc_tileset;
 
-	if (tilesets["Others"] != nullptr) {
+	if (tilesets.find("Others") != tilesets.end()) {
 		others = tilesets["Others"];
 		others->clear();
 	} else {
@@ -241,7 +241,7 @@ void Materials::createOtherTileset() {
 		tilesets["Others"] = others;
 	}
 
-	if (tilesets["NPCs"] != nullptr) {
+	if (tilesets.find("NPCs") != tilesets.end()) {
 		npc_tileset = tilesets["NPCs"];
 		npc_tileset->clear();
 	} else {
@@ -305,13 +305,19 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 
 	const std::string& name = attribute.as_string();
 
-	Tileset* tileset;
+	Tileset* tileset = nullptr;
 	auto it = tilesets.find(name);
 	if (it != tilesets.end()) {
 		tileset = it->second;
-	} else {
+	}
+
+	if (!tileset) {
 		tileset = newd Tileset(g_brushes, name);
-		tilesets.insert(std::make_pair(name, tileset));
+		if (it != tilesets.end()) {
+			it->second = tileset;
+		} else {
+			tilesets.insert(std::make_pair(name, tileset));
+		}
 	}
 
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {

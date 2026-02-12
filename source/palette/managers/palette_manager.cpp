@@ -18,6 +18,11 @@ PaletteManager::PaletteManager() :
 }
 
 PaletteManager::~PaletteManager() {
+	spdlog::info("PaletteManager destructor started");
+	spdlog::default_logger()->flush();
+
+	spdlog::info("PaletteManager destructor finished");
+	spdlog::default_logger()->flush();
 }
 
 PaletteWindow* PaletteManager::GetPalette() {
@@ -94,12 +99,24 @@ void PaletteManager::SelectPalettePage(PaletteType pt) {
 }
 
 void PaletteManager::DestroyPalettes() {
+	spdlog::info("PaletteManager::DestroyPalettes called - destroying {} palettes", palettes.size());
+	spdlog::default_logger()->flush();
 	for (auto palette : palettes) {
+		spdlog::info("PaletteManager::DestroyPalettes - detaching and destroying a palette");
+		spdlog::default_logger()->flush();
 		g_gui.aui_manager->DetachPane(palette);
 		palette->Destroy();
 	}
+	spdlog::info("PaletteManager::DestroyPalettes - clearing palettes list");
+	spdlog::default_logger()->flush();
 	palettes.clear();
+
+	spdlog::info("PaletteManager::DestroyPalettes - updating aui_manager");
+	spdlog::default_logger()->flush();
 	g_gui.aui_manager->Update();
+
+	spdlog::info("PaletteManager::DestroyPalettes finished");
+	spdlog::default_logger()->flush();
 }
 
 PaletteWindow* PaletteManager::CreatePalette() {
