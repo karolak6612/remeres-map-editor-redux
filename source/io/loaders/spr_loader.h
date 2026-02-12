@@ -15,6 +15,7 @@ class SprLoader {
 public:
 	static bool LoadData(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
 	static bool LoadDump(GraphicManager* manager, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
+	static bool LoadDump(const std::string& filename, bool extended, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
 
 private:
 	static std::vector<uint32_t> ReadSpriteIndexes(FileReadHandle& fh, uint32_t total_pics, wxString& error);

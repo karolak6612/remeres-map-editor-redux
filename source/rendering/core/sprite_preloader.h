@@ -7,7 +7,6 @@
 
 #include "rendering/core/game_sprite.h"
 #include <memory>
-#include <vector>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
@@ -16,7 +15,7 @@
 
 class SpritePreloader {
 public:
-	static SpritePreloader& get();
+	[[nodiscard]] static SpritePreloader& get();
 
 	SpritePreloader(const SpritePreloader&) = delete;
 	SpritePreloader& operator=(const SpritePreloader&) = delete;
@@ -33,12 +32,18 @@ public:
 	// Should be called when GraphicManager is cleared.
 	void clear();
 
+	// Explicit shutdown to be called before global destruction
+	void shutdown();
+
 private:
 	SpritePreloader();
 	~SpritePreloader();
 
 	struct Task {
 		uint32_t id;
+		std::string spritefile;
+		bool is_extended;
+		bool has_transparency;
 	};
 
 	struct Result {
@@ -46,9 +51,9 @@ private:
 		std::unique_ptr<uint8_t[]> data;
 	};
 
-	void workerLoop();
+	void workerLoop(std::stop_token stop_token);
 
-	std::thread worker;
+	std::jthread worker;
 	std::mutex queue_mutex;
 	std::condition_variable cv;
 	bool stopping = false;

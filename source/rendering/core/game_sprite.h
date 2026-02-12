@@ -98,7 +98,7 @@ public:
 	}
 
 	// Helper for SpritePreloader to decompress data off-thread
-	static std::unique_ptr<uint8_t[]> Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id = 0);
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id = 0);
 
 protected:
 	class Image;

@@ -437,60 +437,6 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 	return data;
 }
 
-std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
-	if (id == 0) {
-		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
-		return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
-	}
-
-	if (!dump) {
-		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
-			return nullptr;
-		}
-
-		if (!g_gui.gfx.loadSpriteDump(dump, size, id)) {
-			return nullptr;
-		}
-	}
-
-	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
-	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
-	int write = 0;
-	int read = 0;
-
-	// decompress pixels
-	while (read < size && write < pixels_data_size) {
-		int transparent = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
-			data[write + 0] = 0xFF; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0xFF; // blue
-			write += 3;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int i = 0; i < colored && write < pixels_data_size; i++) {
-			data[write + 0] = dump[read + 0]; // red
-			data[write + 1] = dump[read + 1]; // green
-			data[write + 2] = dump[read + 2]; // blue
-			write += 3;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < pixels_data_size) {
-		data[write + 0] = 0xFF; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0xFF; // blue
-		write += 3;
-	}
-	return data;
-}
-
 std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
 	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);

@@ -13,19 +13,26 @@ SpritePreloader& SpritePreloader::get() {
 	return instance;
 }
 
-SpritePreloader::SpritePreloader() {
-	worker = std::thread(&SpritePreloader::workerLoop, this);
+SpritePreloader::SpritePreloader() : stopping(false) {
+	worker = std::jthread([this](std::stop_token stop_token) {
+		this->workerLoop(stop_token);
+	});
 }
 
 SpritePreloader::~SpritePreloader() {
+	shutdown();
+}
+
+void SpritePreloader::shutdown() {
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
+		if (stopping) {
+			return;
+		}
 		stopping = true;
 	}
-	cv.notify_one();
-	if (worker.joinable()) {
-		worker.join();
-	}
+	cv.notify_all();
+	// jthread will join on destruction/assignment, but explicit request_stop is handled by stop_token
 }
 
 void SpritePreloader::clear() {
@@ -38,7 +45,9 @@ void SpritePreloader::clear() {
 }
 
 void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
-	if (!spr) return;
+	if (!spr) {
+		return;
+	}
 
 	// This loop logic mirrors the inefficient synchronous loop, but queues async tasks instead.
 	for (int cx = 0; cx < spr->width; ++cx) {
@@ -54,16 +63,25 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 					}
 				}
 
-				if (idx < 0 || (size_t)idx >= spr->spriteList.size()) continue;
+				if (idx < 0 || (size_t)idx >= spr->spriteList.size()) {
+					continue;
+				}
 
 				GameSprite::NormalImage* img = spr->spriteList[idx];
-				if (!img || img->isGLLoaded) continue; // Already loaded or null
+				if (!img || img->isGLLoaded) {
+					continue; // Already loaded or null
+				}
 
 				{
 					std::lock_guard<std::mutex> lock(queue_mutex);
 					if (pending_ids.find(img->id) == pending_ids.end()) {
 						pending_ids.insert(img->id);
-						task_queue.push({img->id});
+
+						std::string sprfile = g_gui.gfx.getSpriteFile();
+						bool is_extended = g_gui.gfx.isExtended();
+						bool has_transparency = g_gui.gfx.hasTransparency();
+
+						task_queue.push({ img->id, std::move(sprfile), is_extended, has_transparency });
 						cv.notify_one();
 					}
 				}
@@ -72,39 +90,39 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	}
 }
 
-void SpritePreloader::workerLoop() {
-	while (true) {
+void SpritePreloader::workerLoop(std::stop_token stop_token) {
+	while (!stop_token.stop_requested()) {
 		Task task;
 		{
 			std::unique_lock<std::mutex> lock(queue_mutex);
-			cv.wait(lock, [this] { return stopping || !task_queue.empty(); });
-			if (stopping) break;
-			task = task_queue.front();
+			cv.wait(lock, [this, &stop_token] { return stop_token.stop_requested() || !task_queue.empty(); });
+			if (stop_token.stop_requested()) {
+				break;
+			}
+			task = std::move(task_queue.front());
 			task_queue.pop();
 		}
 
 		std::unique_ptr<uint8_t[]> dump;
 		uint16_t size = 0;
-		// Safe to access g_gui.gfx members as long as they are thread-safe or read-only during runtime
-		// spritefile string is constant after load
-		bool success = SprLoader::LoadDump(&g_gui.gfx, dump, size, task.id);
+		bool success = false;
 
+		if (!task.spritefile.empty()) {
+			success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump, size, task.id);
+		}
+
+		std::unique_ptr<uint8_t[]> rgba;
 		if (success && dump) {
-			// Decompress
-			// hasTransparency() reads a bool, thread-safe
-			auto rgba = GameSprite::Decompress(dump.get(), size, g_gui.gfx.hasTransparency(), task.id);
+			rgba = GameSprite::Decompress(dump.get(), size, task.has_transparency, task.id);
+		}
+
+		{
+			std::lock_guard<std::mutex> lock(queue_mutex);
 			if (rgba) {
-				std::lock_guard<std::mutex> lock(queue_mutex);
-				result_queue.push({task.id, std::move(rgba)});
+				result_queue.push({ task.id, std::move(rgba) });
 			} else {
-				// Failed to decompress
-				std::lock_guard<std::mutex> lock(queue_mutex);
 				pending_ids.erase(task.id);
 			}
-		} else {
-			// Failed to load dump
-			std::lock_guard<std::mutex> lock(queue_mutex);
-			pending_ids.erase(task.id);
 		}
 	}
 }
@@ -113,7 +131,9 @@ void SpritePreloader::update() {
 	std::queue<Result> results;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
-		if (result_queue.empty()) return;
+		if (result_queue.empty()) {
+			return;
+		}
 		std::swap(results, result_queue);
 	}
 
@@ -125,9 +145,8 @@ void SpritePreloader::update() {
 		if (!g_gui.gfx.isUnloaded() && id < g_gui.gfx.image_space.size()) {
 			auto& img_ptr = g_gui.gfx.image_space[id];
 			if (img_ptr) {
-				// We assume it's NormalImage because it came from sprite file loading process
-				// and image_space typically contains NormalImage (or derived from Image)
-				auto* img = static_cast<GameSprite::NormalImage*>(img_ptr.get());
+				// Use dynamic_cast for safer type conversion
+				auto* img = dynamic_cast<GameSprite::NormalImage*>(img_ptr.get());
 				if (img && !img->isGLLoaded) {
 					img->fulfillPreload(std::move(res.data));
 				}
@@ -145,5 +164,5 @@ void SpritePreloader::update() {
 
 void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
 	SpritePreloader::get().preload(spr, pattern_x, pattern_y, pattern_z, frame);
-	SpritePreloader::get().update();
+	// Removed immediate update() call to allow true async processing
 }

@@ -105,6 +105,13 @@ public:
 	bool hasTransparency() const;
 	bool isUnloaded() const;
 
+	std::string getSpriteFile() const {
+		return spritefile;
+	}
+	bool isExtended() const {
+		return is_extended;
+	}
+
 	ClientVersion* client_version;
 
 	// Sprite Atlas (Phase 2) - manages all game sprites in a texture array
