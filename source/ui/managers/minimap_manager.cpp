@@ -16,11 +16,18 @@ MinimapManager::MinimapManager() :
 }
 
 MinimapManager::~MinimapManager() {
+	spdlog::info("MinimapManager destructor started");
+	spdlog::default_logger()->flush();
+
 	// Root window will destroy minimap window if it's a child.
 	// But we should detach it from aui_manager if it exists.
 	if (minimap && g_gui.aui_manager) {
+		spdlog::info("MinimapManager destructor - detaching minimap from aui_manager");
+		spdlog::default_logger()->flush();
 		g_gui.aui_manager->DetachPane(minimap);
 	}
+	spdlog::info("MinimapManager destructor finished");
+	spdlog::default_logger()->flush();
 }
 
 void MinimapManager::Create() {
@@ -46,12 +53,27 @@ void MinimapManager::Hide() {
 }
 
 void MinimapManager::Destroy() {
+	spdlog::info("MinimapManager::Destroy called");
+	spdlog::default_logger()->flush();
 	if (minimap) {
+		spdlog::info("MinimapManager::Destroy - detaching minimap from aui_manager");
+		spdlog::default_logger()->flush();
 		g_gui.aui_manager->DetachPane(minimap);
+
+		spdlog::info("MinimapManager::Destroy - updating aui_manager");
+		spdlog::default_logger()->flush();
 		g_gui.aui_manager->Update();
+
+		spdlog::info("MinimapManager::Destroy - calling minimap->Destroy()");
+		spdlog::default_logger()->flush();
 		minimap->Destroy();
+
+		spdlog::info("MinimapManager::Destroy - resetting minimap pointer");
+		spdlog::default_logger()->flush();
 		minimap = nullptr;
 	}
+	spdlog::info("MinimapManager::Destroy finished");
+	spdlog::default_logger()->flush();
 }
 
 void MinimapManager::Update(bool immediate) {

@@ -14,7 +14,7 @@ public:
 	RecentFileItem(wxWindow* parent, const wxString& path, const wxString& date) :
 		wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
 		m_path(path), m_date(date), m_isHover(false), m_isPressed(false) {
-		SetCursor(wxCursor(wxCURSOR_HAND));
+		SetBackgroundStyle(wxBG_STYLE_PAINT);
 		SetMinSize(wxSize(-1, FromDIP(45))); // Slightly more compact
 
 		Bind(wxEVT_PAINT, &RecentFileItem::OnPaint, this);
@@ -187,19 +187,26 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 		preferences_window.ShowModal();
 		// Update UI if needed
 	} else if (id == wxID_NEW) {
-		wxCommandEvent newEvent(WELCOME_DIALOG_ACTION);
-		newEvent.SetId(wxID_NEW);
-		ProcessWindowEvent(newEvent);
+		wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
+		newEvent->SetId(wxID_NEW);
+		QueueEvent(newEvent);
 	} else if (id == wxID_OPEN) {
 		// Open file dialog
 		wxString wildcard = g_settings.getInteger(Config::USE_OTGZ) != 0 ? "(*.otbm;*.otgz)|*.otbm;*.otgz" : "(*.otbm)|*.otbm|Compressed OpenTibia Binary Map (*.otgz)|*.otgz";
 
-		wxFileDialog file_dialog(this, "Open map file", "", "", wildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-		if (file_dialog.ShowModal() == wxID_OK) {
-			wxCommandEvent newEvent(WELCOME_DIALOG_ACTION);
-			newEvent.SetId(wxID_OPEN);
-			newEvent.SetString(file_dialog.GetPath());
-			ProcessWindowEvent(newEvent);
+		wxString filePath;
+		{
+			wxFileDialog file_dialog(this, "Open map file", "", "", wildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			if (file_dialog.ShowModal() == wxID_OK) {
+				filePath = file_dialog.GetPath();
+			}
+		}
+
+		if (!filePath.IsEmpty()) {
+			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
+			newEvent->SetId(wxID_OPEN);
+			newEvent->SetString(filePath);
+			QueueEvent(newEvent);
 		}
 	}
 }
@@ -209,8 +216,8 @@ void WelcomeDialog::OnCheckboxClicked(wxCommandEvent& event) {
 }
 
 void WelcomeDialog::OnRecentFileClicked(wxCommandEvent& event) {
-	wxCommandEvent newEvent(WELCOME_DIALOG_ACTION);
-	newEvent.SetId(wxID_OPEN);
-	newEvent.SetString(event.GetString());
-	ProcessWindowEvent(newEvent);
+	wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
+	newEvent->SetId(wxID_OPEN);
+	newEvent->SetString(event.GetString());
+	QueueEvent(newEvent);
 }

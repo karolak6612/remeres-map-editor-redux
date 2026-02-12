@@ -43,6 +43,7 @@ public:
 	virtual void OnEventLoopEnter(wxEventLoopBase* loop);
 	virtual void MacOpenFiles(const wxArrayString& fileNames);
 	virtual int OnExit();
+	virtual int OnRun();
 	void Unload();
 
 private:
@@ -51,7 +52,9 @@ private:
 	void FixVersionDiscrapencies();
 	bool ParseCommandLineMap(wxString& fileName);
 
-	virtual void OnFatalException();
+	virtual bool OnExceptionInMainLoop() override;
+	virtual void OnUnhandledException() override;
+	virtual void OnFatalException() override;
 
 #ifdef _USE_PROCESS_COM
 	RMEProcessServer* m_proc_server;

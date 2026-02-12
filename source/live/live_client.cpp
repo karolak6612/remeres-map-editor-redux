@@ -241,7 +241,7 @@ LiveLogTab* LiveClient::createLogWindow(wxWindow* parent) {
 }
 
 MapTab* LiveClient::createEditorWindow() {
-	MapTabbook* mtb = g_gui.tabbook.get();
+	MapTabbook* mtb = g_gui.tabbook;
 	ASSERT(mtb);
 
 	MapTab* edit = newd MapTab(mtb, editor.get());

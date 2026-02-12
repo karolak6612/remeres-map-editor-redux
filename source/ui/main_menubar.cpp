@@ -73,23 +73,9 @@ MainMenuBar::MainMenuBar(MainFrame* frame) :
 
 	MenuBarActionManager::RegisterActions(this, actions);
 
-	// A deleter, this way the frame does not need
-
-	// A deleter, this way the frame does not need
-	// to bother deleting us.
-	class CustomMenuBar : public wxMenuBar {
-	public:
-		CustomMenuBar(MainMenuBar* mb) :
-			mb(mb) { }
-		~CustomMenuBar() {
-			delete mb;
-		}
-
-	private:
-		MainMenuBar* mb;
-	};
-
-	menubar = newd CustomMenuBar(this);
+	// Don't use a custom deleter that deletes us back!
+	// MainFrame owns MainMenuBar via std::unique_ptr.
+	menubar = newd wxMenuBar();
 	frame->SetMenuBar(menubar);
 
 	// Tie all events to this handler!

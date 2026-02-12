@@ -62,12 +62,12 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	SetStatusText(wxString("Welcome to ") << __W_RME_APPLICATION_NAME__ << " " << __W_RME_VERSION__);
 
 	// Le sizer
-	g_gui.aui_manager = std::make_unique<wxAuiManager>(this);
-	g_gui.tabbook = std::make_unique<MapTabbook>(this, wxID_ANY);
+	g_gui.aui_manager = new wxAuiManager(this);
+	g_gui.tabbook = new MapTabbook(this, wxID_ANY);
 
-	tool_bar = std::make_unique<MainToolBar>(this, g_gui.aui_manager.get());
+	tool_bar = std::make_unique<MainToolBar>(this, g_gui.aui_manager);
 
-	g_gui.aui_manager->AddPane(g_gui.tabbook.get(), wxAuiPaneInfo().CenterPane().Floatable(false).CloseButton(false).PaneBorder(false));
+	g_gui.aui_manager->AddPane(g_gui.tabbook, wxAuiPaneInfo().CenterPane().Floatable(false).CloseButton(false).PaneBorder(false));
 
 	g_gui.aui_manager->Update();
 
@@ -81,7 +81,10 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	Bind(wxEVT_IDLE, &MainFrame::OnIdle, this);
 }
 
-MainFrame::~MainFrame() = default;
+MainFrame::~MainFrame() {
+	menu_bar.reset();
+	tool_bar.reset();
+}
 
 void MainFrame::OnIdle(wxIdleEvent& event) {
 	if (menu_bar) {
@@ -312,7 +315,6 @@ bool MainFrame::LoadMap(FileName name) {
 
 void MainFrame::OnExit(wxCloseEvent& event) {
 	// clicking 'x' button
-
 	// do you want to save map changes?
 	while (g_gui.IsEditorOpen()) {
 		if (!DoQuerySave()) {
@@ -325,12 +327,14 @@ void MainFrame::OnExit(wxCloseEvent& event) {
 		}
 	}
 	g_layout.SavePerspective();
-
 	g_palettes.DestroyPalettes();
 	g_minimap.Destroy();
 	g_search.HideSearchWindow();
 
-	g_gui.aui_manager->UnInit();
+	if (g_gui.aui_manager) {
+		g_gui.aui_manager->UnInit();
+	}
+
 	static_cast<Application&>(wxGetApp()).Unload();
 	Destroy();
 }
