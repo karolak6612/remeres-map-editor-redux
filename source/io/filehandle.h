@@ -26,6 +26,7 @@
 #include <stdio.h>
 #include <memory>
 #include <vector>
+#include <cstring>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER
@@ -162,7 +163,7 @@ public:
 		return getType(u64);
 	}
 	FORCEINLINE bool skip(size_t sz) {
-		if (read_offset + sz > data.size()) {
+		if (sz > data.size() || read_offset > data.size() - sz) {
 			read_offset = data.size();
 			return false;
 		}
@@ -185,7 +186,7 @@ protected:
 			read_offset = data.size();
 			return false;
 		}
-		ref = *(T*)(data.data() + read_offset);
+		std::memcpy(&ref, data.data() + read_offset, sizeof(T));
 
 		read_offset += sizeof(ref);
 		return true;

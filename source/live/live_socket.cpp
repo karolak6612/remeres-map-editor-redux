@@ -171,6 +171,13 @@ void LiveSocket::receiveFloor(NetworkMessage& message, Editor& editor, Action* a
 	data.insert(0, 1, ' ');
 	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 
+	struct MapReaderGuard {
+		MemoryNodeFileReadHandle& reader;
+		~MapReaderGuard() {
+			reader.close();
+		}
+	} guard{mapReader};
+
 	BinaryNode* rootNode = mapReader.getRootNode();
 	BinaryNode* tileNode = rootNode->getChild();
 
@@ -188,7 +195,6 @@ void LiveSocket::receiveFloor(NetworkMessage& message, Editor& editor, Action* a
 			}
 		}
 	}
-	mapReader.close();
 }
 
 void LiveSocket::sendFloor(NetworkMessage& message, Floor* floor) {
