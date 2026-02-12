@@ -9,6 +9,7 @@
 #include "editor/editor.h"
 #include "ui/map_tab.h"
 #include "live/live_server.h"
+#include "ui/dialogs/loading_dialog.h"
 
 LoadingManager g_loading;
 
@@ -30,7 +31,7 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 	progressTo = 100;
 	currentProgress = -1;
 
-	progressBar = newd wxGenericProgressDialog("Loading", progressText + " (0%)", 100, g_gui.root, wxPD_APP_MODAL | wxPD_SMOOTH | (canCancel ? wxPD_CAN_ABORT : 0));
+	progressBar = newd NanoVGLoadingDialog(g_gui.root, "Loading", progressText, canCancel);
 	progressBar->Show(true);
 
 	if (g_gui.tabbook) {
@@ -41,7 +42,8 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 			}
 		}
 	}
-	progressBar->Update(0);
+	progressBar->Update(0, progressText);
+	wxYield(); // Ensure UI updates
 }
 
 void LoadingManager::SetLoadScale(int32_t from, int32_t to) {
@@ -54,6 +56,11 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 		DestroyLoadBar();
 		return true;
 	} else if (done == currentProgress) {
+		// Yield to allow UI updates even if progress doesn't change
+		wxYield();
+		if (progressBar && progressBar->IsCancelled()) {
+			return false;
+		}
 		return true;
 	}
 
@@ -64,14 +71,15 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 	int32_t newProgress = progressFrom + static_cast<int32_t>((done / 100.f) * (progressTo - progressFrom));
 	newProgress = std::max<int32_t>(0, std::min<int32_t>(100, newProgress));
 
-	bool skip = false;
 	if (progressBar) {
-		progressBar->Update(
-			newProgress,
-			wxString::Format("%s (%d%%)", progressText, newProgress),
-			&skip
-		);
+		progressBar->Update(newProgress, progressText);
 		currentProgress = newProgress;
+		// Essential for animations to run during heavy load
+		wxYield();
+
+		if (progressBar->IsCancelled()) {
+			return false;
+		}
 	}
 
 	if (g_gui.tabbook) {
@@ -86,7 +94,7 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 		}
 	}
 
-	return skip;
+	return true;
 }
 
 void LoadingManager::DestroyLoadBar() {

@@ -87,6 +87,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_chooser_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_preview_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_selection_grid.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/loading_dialog.h
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.h
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.h
@@ -417,6 +418,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_chooser_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_preview_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_selection_grid.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/loading_dialog.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.cpp

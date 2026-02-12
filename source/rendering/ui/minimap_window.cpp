@@ -43,9 +43,13 @@ static wxGLAttributes& GetCoreProfileAttributes() {
 	return vAttrs;
 }
 
+static const int ID_UPDATE_TIMER = 5001;
+static const int ID_ANIM_TIMER = 5002;
+
 MinimapWindow::MinimapWindow(wxWindow* parent) :
 	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
-	update_timer(this),
+	update_timer(this, ID_UPDATE_TIMER),
+	animation_timer(this, ID_ANIM_TIMER),
 	context(nullptr),
 	nvg(nullptr, NVGDeleter()) {
 	spdlog::info("MinimapWindow::MinimapWindow - Creating context");
@@ -61,7 +65,8 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	Bind(wxEVT_PAINT, &MinimapWindow::OnPaint, this);
 	Bind(wxEVT_ERASE_BACKGROUND, &MinimapWindow::OnEraseBackground, this);
 	Bind(wxEVT_CLOSE_WINDOW, &MinimapWindow::OnClose, this);
-	Bind(wxEVT_TIMER, &MinimapWindow::OnDelayedUpdate, this, wxID_ANY);
+	Bind(wxEVT_TIMER, &MinimapWindow::OnDelayedUpdate, this, ID_UPDATE_TIMER);
+	Bind(wxEVT_TIMER, &MinimapWindow::OnAnimationTimer, this, ID_ANIM_TIMER);
 	Bind(wxEVT_KEY_DOWN, &MinimapWindow::OnKey, this);
 }
 
@@ -88,6 +93,34 @@ void MinimapWindow::DelayedUpdate() {
 
 void MinimapWindow::OnDelayedUpdate(wxTimerEvent& event) {
 	Refresh();
+}
+
+void MinimapWindow::OnAnimationTimer(wxTimerEvent& event) {
+	if (!g_gui.IsEditorOpen()) {
+		animation_timer.Stop();
+		return;
+	}
+
+	double dx = anim_target_x - anim_current_x;
+	double dy = anim_target_y - anim_current_y;
+	double distSq = dx * dx + dy * dy;
+
+	if (distSq < 1.0) {
+		anim_current_x = anim_target_x;
+		anim_current_y = anim_target_y;
+		is_animating = false;
+		animation_timer.Stop();
+		g_gui.SetScreenCenterPosition(Position(static_cast<int>(anim_current_x), static_cast<int>(anim_current_y), g_gui.GetCurrentFloor()));
+	} else {
+		double factor = 0.2; // Smoothness factor
+		anim_current_x += dx * factor;
+		anim_current_y += dy * factor;
+
+		g_gui.SetScreenCenterPosition(Position(static_cast<int>(anim_current_x), static_cast<int>(anim_current_y), g_gui.GetCurrentFloor()));
+	}
+
+	Refresh();
+	g_gui.RefreshView();
 }
 
 void MinimapWindow::OnPaint(wxPaintEvent& event) {
@@ -138,18 +171,25 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, GetContentScaleFactor());
 
-		// Subtle glass border
+		// Border
 		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
-		nvgStrokeWidth(vg, 2.0f);
+		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 6.0f);
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 80));
+		nvgStrokeWidth(vg, 3.0f);
 		nvgStroke(vg);
 
-		// Inner glow
-		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
+		// Inner gradient (Glass shine)
+		NVGpaint gloss = nvgLinearGradient(vg, 0, 0, 0, h * 0.5f, nvgRGBA(255, 255, 255, 30), nvgRGBA(255, 255, 255, 0));
 		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
-		nvgFillPaint(vg, glow);
+		nvgRoundedRect(vg, 0, 0, w, h, 6.0f);
+		nvgFillPaint(vg, gloss);
+		nvgFill(vg);
+
+		// Bottom shading
+		NVGpaint shadow = nvgLinearGradient(vg, 0, h * 0.8f, 0, h, nvgRGBA(0, 0, 0, 0), nvgRGBA(0, 0, 0, 40));
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, 0, 0, w, h, 6.0f);
+		nvgFillPaint(vg, shadow);
 		nvgFill(vg);
 
 		nvgEndFrame(vg);
@@ -165,9 +205,21 @@ void MinimapWindow::OnMouseClick(wxMouseEvent& event) {
 	int new_map_x, new_map_y;
 	drawer->ScreenToMap(event.GetX(), event.GetY(), new_map_x, new_map_y);
 
-	g_gui.SetScreenCenterPosition(Position(new_map_x, new_map_y, g_gui.GetCurrentFloor()));
-	Refresh();
-	g_gui.RefreshView();
+	// Start animation
+	if (!is_animating) {
+		Position current = g_gui.GetScreenCenterPosition();
+		anim_current_x = current.x;
+		anim_current_y = current.y;
+	}
+
+	anim_target_x = new_map_x;
+	anim_target_y = new_map_y;
+
+	// Prevent small jitters
+	if (std::abs(anim_target_x - anim_current_x) > 1.0 || std::abs(anim_target_y - anim_current_y) > 1.0) {
+		is_animating = true;
+		animation_timer.Start(16); // ~60 FPS
+	}
 }
 
 void MinimapWindow::OnKey(wxKeyEvent& event) {
