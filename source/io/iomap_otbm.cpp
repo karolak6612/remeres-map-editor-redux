@@ -70,7 +70,7 @@ void reform(Map* map, Tile* tile, Item* item) {
 // ============================================================================
 // Item
 
-Item* Item::Create_OTBM(const IOMap& maphandle, BinaryNode* stream) {
+std::unique_ptr<Item> Item::Create_OTBM(const IOMap& maphandle, BinaryNode* stream) {
 	uint16_t _id;
 	if (!stream->getU16(_id)) {
 		return nullptr;
@@ -385,17 +385,16 @@ bool Container::unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* nod
 				return false;
 			}
 
-			Item* item = Item::Create_OTBM(maphandle, child);
+			std::unique_ptr<Item> item = Item::Create_OTBM(maphandle, child);
 			if (!item) {
 				return false;
 			}
 
 			if (!item->unserializeItemNode_OTBM(maphandle, child)) {
-				delete item;
 				return false;
 			}
 
-			contents.push_back(item);
+			contents.push_back(item.release());
 		} while (child->advance());
 	}
 	return true;
@@ -958,11 +957,11 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 								break;
 							}
 							case OTBM_ATTR_ITEM: {
-								Item* item = Item::Create_OTBM(*this, tileNode);
+								std::unique_ptr<Item> item = Item::Create_OTBM(*this, tileNode);
 								if (item == nullptr) {
 									warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
 								}
-								tile->addItem(item);
+								tile->addItem(item.release());
 								break;
 							}
 							default: {
@@ -973,7 +972,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 					}
 
 					for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
-						Item* item = nullptr;
+						std::unique_ptr<Item> item;
 						uint8_t item_type;
 						if (!itemNode->getByte(item_type)) {
 							warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
@@ -986,7 +985,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 									warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
 								}
 								// reform(&map, tile, item);
-								tile->addItem(item);
+								tile->addItem(item.release());
 							}
 						} else {
 							warning("Unknown type of tile child node");

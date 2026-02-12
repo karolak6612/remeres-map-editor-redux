@@ -32,40 +32,40 @@
 #include "brushes/table/table_brush.h"
 #include "brushes/wall/wall_brush.h"
 
-Item* Item::Create(uint16_t _type, uint16_t _subtype /*= 0xFFFF*/) {
+std::unique_ptr<Item> Item::Create(uint16_t _type, uint16_t _subtype /*= 0xFFFF*/) {
 	if (_type == 0) {
 		return nullptr;
 	}
-	Item* newItem = nullptr;
+	std::unique_ptr<Item> newItem;
 
 	const ItemType& it = g_items[_type];
 
 	if (it.id != 0) {
 		if (it.isDepot()) {
-			newItem = newd Depot(_type);
+			newItem.reset(newd Depot(_type));
 		} else if (it.isContainer()) {
-			newItem = newd Container(_type);
+			newItem.reset(newd Container(_type));
 		} else if (it.isTeleport()) {
-			newItem = newd Teleport(_type);
+			newItem.reset(newd Teleport(_type));
 		} else if (it.isDoor()) {
-			newItem = newd Door(_type);
+			newItem.reset(newd Door(_type));
 		} else if (it.isPodium()) {
-			newItem = newd Podium(_type);
+			newItem.reset(newd Podium(_type));
 		} else if (_subtype == 0xFFFF) {
 			if (it.isFluidContainer()) {
-				newItem = newd Item(_type, LIQUID_NONE);
+				newItem.reset(newd Item(_type, LIQUID_NONE));
 			} else if (it.isSplash()) {
-				newItem = newd Item(_type, LIQUID_WATER);
+				newItem.reset(newd Item(_type, LIQUID_WATER));
 			} else if (it.charges > 0) {
-				newItem = newd Item(_type, it.charges);
+				newItem.reset(newd Item(_type, it.charges));
 			} else {
-				newItem = newd Item(_type, 1);
+				newItem.reset(newd Item(_type, 1));
 			}
 		} else {
-			newItem = newd Item(_type, _subtype);
+			newItem.reset(newd Item(_type, _subtype));
 		}
 	} else {
-		newItem = newd Item(_type, _subtype);
+		newItem.reset(newd Item(_type, _subtype));
 	}
 
 	return newItem;
@@ -85,14 +85,14 @@ Item::~Item() {
 }
 
 Item* Item::deepCopy() const {
-	Item* copy = Create(id, subtype);
+	std::unique_ptr<Item> copy = Create(id, subtype);
 	if (copy) {
 		copy->selected = selected;
 		if (attributes) {
 			copy->attributes = newd ItemAttributeMap(*attributes);
 		}
 	}
-	return copy;
+	return copy.release();
 }
 
 Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
@@ -515,7 +515,7 @@ uint16_t Item::LiquidName2ID(std::string liquid) {
 // ============================================================================
 // XML Saving & loading
 
-Item* Item::Create(pugi::xml_node xml) {
+std::unique_ptr<Item> Item::Create(pugi::xml_node xml) {
 	pugi::xml_attribute attribute;
 
 	int16_t id = 0;

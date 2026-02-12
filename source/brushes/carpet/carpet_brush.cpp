@@ -49,7 +49,7 @@ bool CarpetBrush::canDraw(BaseMap* map, const Position& position) const {
 
 void CarpetBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	undraw(map, tile); // Remove old
-	tile->addItem(Item::Create(getRandomCarpet(CARPET_CENTER)));
+	tile->addItem(Item::Create(getRandomCarpet(CARPET_CENTER)).release());
 }
 
 void CarpetBrush::undraw(BaseMap* map, Tile* tile) {

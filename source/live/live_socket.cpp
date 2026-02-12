@@ -230,8 +230,8 @@ void LiveSocket::sendFloor(NetworkMessage& message, Floor* floor) {
 void LiveSocket::receiveTile(BinaryNode* node, Editor& editor, Action* action, const Position* position) {
 	ASSERT(node != nullptr);
 
-	Tile* tile = readTile(node, editor, position);
-	action->addChange(std::make_unique<Change>(tile));
+	std::unique_ptr<Tile> tile = readTile(node, editor, position);
+	action->addChange(std::make_unique<Change>(tile.release()));
 }
 
 void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const Position* position) {
@@ -268,7 +268,7 @@ void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const P
 	writer.endNode();
 }
 
-Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* position) {
+std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* position) {
 	ASSERT(node != nullptr);
 
 	Map& map = editor.map;
@@ -295,16 +295,14 @@ Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* pos
 		pos.z = z;
 	}
 
-	std::unique_ptr<Tile> new_tile = map.allocator(
+	std::unique_ptr<Tile> tile = map.allocator(
 		map.createTileL(pos)
 	);
-	Tile* tile = new_tile.release();
 
 	if (tileType == OTBM_HOUSETILE) {
 		uint32_t houseId;
 		if (!node->getU32(houseId)) {
 			// warning("House tile without house data, discarding tile");
-			delete tile;
 			return nullptr;
 		}
 
@@ -330,11 +328,11 @@ Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* pos
 				break;
 			}
 			case OTBM_ATTR_ITEM: {
-				Item* item = Item::Create_OTBM(mapVersion, node);
+				std::unique_ptr<Item> item = Item::Create_OTBM(mapVersion, node);
 				if (!item) {
 					// warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
 				}
-				tile->addItem(item);
+				tile->addItem(item.release());
 				break;
 			}
 			default:
@@ -350,17 +348,16 @@ Tile* LiveSocket::readTile(BinaryNode* node, Editor& editor, const Position* pos
 			uint8_t itemType;
 			if (!itemNode->getByte(itemType)) {
 				// warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
-				delete tile;
 				return nullptr;
 			}
 
 			if (itemType == OTBM_ITEM) {
-				Item* item = Item::Create_OTBM(mapVersion, itemNode);
+				std::unique_ptr<Item> item = Item::Create_OTBM(mapVersion, itemNode);
 				if (item) {
 					if (!item->unserializeItemNode_OTBM(mapVersion, itemNode)) {
 						// warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
 					}
-					tile->addItem(item);
+					tile->addItem(item.release());
 				}
 			} else {
 				// warning("Unknown type of tile child node");

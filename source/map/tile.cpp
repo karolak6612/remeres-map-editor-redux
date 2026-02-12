@@ -293,7 +293,7 @@ void Tile::addItem(Item* item) {
 	uint16_t gid = item->getGroundEquivalent();
 	if (gid != 0) {
 		delete ground;
-		ground = Item::Create(gid);
+		ground = Item::Create(gid).release();
 		// At the very bottom!
 		it = items.begin();
 	} else {

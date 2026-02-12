@@ -85,10 +85,10 @@ public:
 	inline static const std::string ATTR_TIER = "tier";
 
 	// Factory member to create item of right type based on type
-	static Item* Create(uint16_t _type, uint16_t _subtype = 0xFFFF);
-	static Item* Create(pugi::xml_node);
-	static Item* Create_OTBM(const IOMap& maphandle, BinaryNode* stream);
-	// static Item* Create_OTMM(const IOMap& maphandle, BinaryNode* stream);
+	static std::unique_ptr<Item> Create(uint16_t _type, uint16_t _subtype = 0xFFFF);
+	static std::unique_ptr<Item> Create(pugi::xml_node);
+	static std::unique_ptr<Item> Create_OTBM(const IOMap& maphandle, BinaryNode* stream);
+	// static std::unique_ptr<Item> Create_OTMM(const IOMap& maphandle, BinaryNode* stream);
 
 protected:
 	// Constructor for items

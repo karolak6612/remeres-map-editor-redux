@@ -122,11 +122,11 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 						uint16_t id = brush->items.getRandomWallId(bt);
 
 						if (id != 0) {
-							Item* new_wall = Item::Create(id);
+							std::unique_ptr<Item> new_wall = Item::Create(id);
 							if (wall_decoration->isSelected()) {
 								new_wall->select();
 							}
-							items_to_add.push_back(new_wall);
+							items_to_add.push_back(new_wall.release());
 						}
 						++it;
 					} else {
@@ -157,11 +157,11 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 					continue;
 				} else {
 					// If there is such an item, add it to the tile
-					Item* new_wall = Item::Create(id);
+					std::unique_ptr<Item> new_wall = Item::Create(id);
 					if (wall->isSelected()) {
 						new_wall->select();
 					}
-					items_to_add.push_back(new_wall);
+					items_to_add.push_back(new_wall.release());
 					exit = true;
 					++it;
 				}
@@ -173,11 +173,11 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 					if (brush && brush->isWallDecoration()) {
 						uint16_t id = brush->items.getRandomWallId(bt);
 						if (id != 0) {
-							Item* new_wall = Item::Create(id);
+							std::unique_ptr<Item> new_wall = Item::Create(id);
 							if (wall_decoration->isSelected()) {
 								new_wall->select();
 							}
-							items_to_add.push_back(new_wall);
+							items_to_add.push_back(new_wall.release());
 						}
 						++it;
 					} else {
