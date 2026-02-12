@@ -299,6 +299,8 @@ void Tile::addItem(Item* item) {
 			if (!i->isAlwaysOnBottom()) {
 				return true; // Found a normal item, insert before it
 			}
+			// find_if will stop at the first non-bottom item, which is equivalent to the original
+			// manually written loop and ensures efficient insertion even with large item counts.
 			return item->getTopOrder() < i->getTopOrder(); // Found a bottom item with higher order
 		});
 	} else {

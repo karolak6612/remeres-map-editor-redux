@@ -176,7 +176,7 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 	std::vector<Container*> containers;
 	containers.reserve(32);
 
-	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
+	std::ranges::for_each(map.tiles(), [&map, &foreach, &done, &containers, selectedTiles](auto& tile_loc) {
 		++done;
 		Tile* tile = tile_loc.get();
 		if (selectedTiles && !tile->isSelected()) {
@@ -184,13 +184,15 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 		}
 
 		if (tile->ground) {
-			foreach (map, tile, tile->ground, done);
+			foreach (map, tile, tile->ground, done)
+				;
 		}
 
 		for (auto* item : tile->items) {
 			containers.clear();
 			Container* container = item->asContainer();
-			foreach (map, tile, item, done);
+			foreach (map, tile, item, done)
+				;
 
 			if (container) {
 				containers.push_back(container);
@@ -202,7 +204,8 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 					ItemVector& v = container->getVector();
 					for (auto* i : v) {
 						Container* c = i->asContainer();
-						foreach (map, tile, i, done);
+						foreach (map, tile, i, done)
+							;
 
 						if (c) {
 							containers.push_back(c);
@@ -218,7 +221,8 @@ template <typename ForeachType>
 inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
 	long long done = 0;
 	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
-		foreach (map, tile_loc.get(), ++done);
+		foreach (map, tile_loc.get(), ++done)
+			;
 	});
 }
 
@@ -260,8 +264,8 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 			}
 		}
 
-		// Use erase_if pattern for vector
-		auto it = std::remove_if(tile->items.begin(), tile->items.end(), [&](Item* item) {
+		// Use C++20's std::erase_if for a safer and more idiomatic way to remove elements.
+		std::erase_if(tile->items, [&](Item* item) {
 			if (condition(map, item, removed, done)) {
 				delete item;
 				++removed;
@@ -269,7 +273,6 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 			}
 			return false;
 		});
-		tile->items.erase(it, tile->items.end());
 	});
 	return removed;
 }
