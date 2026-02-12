@@ -37,10 +37,8 @@ void SpritePreloader::shutdown() {
 
 void SpritePreloader::clear() {
 	std::lock_guard<std::mutex> lock(queue_mutex);
-	std::queue<Task> empty;
-	std::swap(task_queue, empty);
-	std::queue<Result> empty_res;
-	std::swap(result_queue, empty_res);
+	task_queue = std::priority_queue<Task>();
+	result_queue = std::queue<Result>();
 	pending_ids.clear();
 }
 
@@ -54,7 +52,12 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	const bool is_extended = g_gui.gfx.isExtended();
 	const bool has_transparency = g_gui.gfx.hasTransparency();
 
-	std::vector<uint32_t> ids_to_enqueue;
+	thread_local std::vector<uint32_t> ids_to_enqueue;
+	ids_to_enqueue.clear();
+	// Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize allocations
+	if (ids_to_enqueue.capacity() < 64) {
+		ids_to_enqueue.reserve(64);
+	}
 
 	for (int cx = 0; cx < spr->width; ++cx) {
 		for (int cy = 0; cy < spr->height; ++cy) {
@@ -89,7 +92,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 		for (uint32_t id : ids_to_enqueue) {
 			if (pending_ids.insert(id).second) {
-				task_queue.push({ id, sprfile, is_extended, has_transparency });
+				task_queue.push({ id, sprfile, is_extended, has_transparency, ++request_counter });
 			}
 		}
 		cv.notify_all();
@@ -105,7 +108,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 			if (stop_token.stop_requested()) {
 				break;
 			}
-			task = std::move(task_queue.front());
+			task = std::move(const_cast<Task&>(task_queue.top()));
 			task_queue.pop();
 		}
 
@@ -135,6 +138,8 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 
 void SpritePreloader::update() {
 	// CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
+	assert(wxIsMainThread());
+
 	std::queue<Result> results;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
@@ -170,7 +175,9 @@ void SpritePreloader::update() {
 	}
 }
 
-void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
-	SpritePreloader::get().preload(spr, pattern_x, pattern_y, pattern_z, frame);
-	// Removed immediate update() call to allow true async processing
+namespace rme {
+	void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
+		SpritePreloader::get().preload(spr, pattern_x, pattern_y, pattern_z, frame);
+		// Removed immediate update() call to allow true async processing
+	}
 }

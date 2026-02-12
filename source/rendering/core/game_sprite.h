@@ -17,7 +17,6 @@
 #include <memory>
 #include <map>
 #include <unordered_map>
-#include <list>
 #include <vector>
 #include <wx/dc.h>
 #include <wx/bitmap.h>
@@ -203,7 +202,7 @@ public:
 	SpriteLight light;
 
 	std::vector<NormalImage*> spriteList;
-	std::list<std::unique_ptr<TemplateImage>> instanced_templates; // Templates that use this sprite
+	std::vector<std::unique_ptr<TemplateImage>> instanced_templates; // Templates that use this sprite
 	struct CachedDC {
 		std::unique_ptr<wxMemoryDC> dc;
 		std::unique_ptr<wxBitmap> bm;
