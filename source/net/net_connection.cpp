@@ -117,12 +117,25 @@ void NetworkConnection::stop() {
 		return;
 	}
 
+	spdlog::info("NetworkConnection::stop started");
+	spdlog::default_logger()->flush();
+
 	service->stop();
 	stopped = true;
-	thread.join();
+
+	if (thread.joinable()) {
+		spdlog::info("NetworkConnection::stop - joining thread");
+		spdlog::default_logger()->flush();
+		thread.join();
+		spdlog::info("NetworkConnection::stop - thread joined");
+		spdlog::default_logger()->flush();
+	}
 
 	delete service;
 	service = nullptr;
+
+	spdlog::info("NetworkConnection::stop finished");
+	spdlog::default_logger()->flush();
 }
 
 boost::asio::io_context& NetworkConnection::get_service() {

@@ -27,6 +27,7 @@
 #include "ui/dialogs/goto_position_dialog.h"
 #include "palette/palette_window.h"
 #include "app/preferences.h"
+#include "net/net_connection.h"
 #include "ui/result_window.h"
 #include "rendering/ui/minimap_window.h"
 #include "ui/about_window.h"
@@ -41,15 +42,27 @@
 #include "game/complexitem.h"
 #include "game/creature.h"
 
+#include "ingame_preview/ingame_preview_manager.h"
+
 #include <wx/snglinst.h>
 #include <spdlog/spdlog.h>
+#include <thread>
+#include <chrono>
 
 #include "../brushes/icon/editor_icon.xpm"
 
-wxIMPLEMENT_APP(Application);
+wxIMPLEMENT_APP_NO_MAIN(Application);
+
+int main(int argc, char** argv) {
+	spdlog::info("Entering main");
+	int ret = wxEntry(argc, argv);
+	spdlog::info("Exiting main with code {}", ret);
+	return ret;
+}
+
+// OnRun is implemented below
 
 Application::~Application() {
-	// Destroy
 }
 
 bool Application::OnInit() {
@@ -67,13 +80,13 @@ bool Application::OnInit() {
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
-#ifdef __WINDOWS__
-	// Allocate console for debug output
-	AllocConsole();
-	FILE* fp;
-	freopen_s(&fp, "CONOUT$", "w", stdout);
-	freopen_s(&fp, "CONOUT$", "w", stderr);
-#endif
+	// #ifdef __WINDOWS__
+	// 	// Allocate console for debug output
+	// 	AllocConsole();
+	// 	FILE* fp;
+	// 	freopen_s(&fp, "CONOUT$", "w", stdout);
+	// 	freopen_s(&fp, "CONOUT$", "w", stderr);
+	// #endif
 
 	// Configure spdlog for debug output
 	spdlog::set_level(spdlog::level::debug);
@@ -131,9 +144,8 @@ bool Application::OnInit() {
 
 	g_gui.gfx.loadEditorSprites();
 
-#ifndef __DEBUG_MODE__
 	// wxHandleFatalExceptions(true);
-#endif
+	wxHandleFatalExceptions(true);
 	// Load all the dependency files
 	std::string error;
 	StringVector warnings;
@@ -296,6 +308,7 @@ void Application::FixVersionDiscrapencies() {
 }
 
 void Application::Unload() {
+	spdlog::info("Application::Unload started");
 	g_gui.CloseAllEditors();
 	g_version.UnloadVersion();
 	g_hotkeys.SaveHotkeys();
@@ -303,7 +316,15 @@ void Application::Unload() {
 	ClientVersion::saveVersions();
 	ClientVersion::unloadVersions();
 	g_settings.save(true);
+
+	spdlog::info("Application::Unload - Stopping NetworkConnection");
+	spdlog::default_logger()->flush();
+	NetworkConnection::getInstance().stop();
+
+	g_preview.Destroy();
+
 	g_gui.root = nullptr;
+	spdlog::info("Application::Unload finished");
 }
 
 int Application::OnExit() {
@@ -311,11 +332,54 @@ int Application::OnExit() {
 	wxDELETE(m_proc_server);
 	wxDELETE(m_single_instance_checker);
 #endif
-	return 1;
+	return 0;
+}
+
+int Application::OnRun() {
+	spdlog::info("Application::OnRun started");
+	int ret = -1;
+	try {
+		ret = wxApp::OnRun();
+	} catch (const std::exception& e) {
+		spdlog::error("Application::OnRun - Caught std::exception: {}", e.what());
+		spdlog::default_logger()->flush();
+	} catch (...) {
+		spdlog::error("Application::OnRun - Caught unknown exception");
+		spdlog::default_logger()->flush();
+	}
+	spdlog::info("Application::OnRun finished with code {}", ret);
+	spdlog::default_logger()->flush();
+	return ret;
 }
 
 void Application::OnFatalException() {
-	////
+	spdlog::critical("Application::OnFatalException called - Application crashed!");
+	spdlog::default_logger()->flush();
+}
+
+bool Application::OnExceptionInMainLoop() {
+	try {
+		throw;
+	} catch (const std::exception& e) {
+		spdlog::error("Application::OnExceptionInMainLoop - Caught std::exception: {}", e.what());
+		spdlog::default_logger()->flush();
+	} catch (...) {
+		spdlog::error("Application::OnExceptionInMainLoop - Caught unknown exception");
+		spdlog::default_logger()->flush();
+	}
+	return true; // Continue running if possible, or false to abort
+}
+
+void Application::OnUnhandledException() {
+	try {
+		throw;
+	} catch (const std::exception& e) {
+		spdlog::error("Application::OnUnhandledException - Caught std::exception: {}", e.what());
+		spdlog::default_logger()->flush();
+	} catch (...) {
+		spdlog::error("Application::OnUnhandledException - Caught unknown exception");
+		spdlog::default_logger()->flush();
+	}
 }
 
 bool Application::ParseCommandLineMap(wxString& fileName) {

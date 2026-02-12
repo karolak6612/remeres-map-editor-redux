@@ -95,7 +95,11 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets)
 }
 
 PaletteWindow::~PaletteWindow() {
-	////
+	spdlog::info("PaletteWindow destructor started");
+	spdlog::default_logger()->flush();
+
+	spdlog::info("PaletteWindow destructor finished");
+	spdlog::default_logger()->flush();
 }
 
 PalettePanel* PaletteWindow::CreateTerrainPalette(wxWindow* parent, const TilesetContainer& tilesets) {
@@ -379,11 +383,17 @@ void PaletteWindow::OnKey(wxKeyEvent& event) {
 }
 
 void PaletteWindow::OnClose(wxCloseEvent& event) {
+	spdlog::info("PaletteWindow::OnClose called");
+	spdlog::default_logger()->flush();
 	if (!event.CanVeto()) {
+		spdlog::info("PaletteWindow::OnClose - cannot veto, calling Destroy()");
+		spdlog::default_logger()->flush();
 		// We can't do anything! This sucks!
 		// (application is closed, we have to destroy ourselves)
 		Destroy();
 	} else {
+		spdlog::info("PaletteWindow::OnClose - vetoing close, hiding window instead");
+		spdlog::default_logger()->flush();
 		Show(false);
 		event.Veto(true);
 	}

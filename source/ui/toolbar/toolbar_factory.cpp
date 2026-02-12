@@ -11,11 +11,13 @@ std::unique_ptr<ToolbarRegistry> ToolbarFactory::CreateToolbars(wxWindow* parent
 	// Use newd macro as per project convention if applicable, or just new.
 	// The original code used `newd`.
 
-	registry->SetStandardToolbar(std::make_unique<StandardToolBar>(parent));
-	registry->SetBrushToolbar(std::make_unique<BrushToolBar>(parent));
-	registry->SetPositionToolbar(std::make_unique<PositionToolBar>(parent));
-	registry->SetSizeToolbar(std::make_unique<SizeToolBar>(parent));
-	registry->SetLightToolbar(std::make_unique<LightToolBar>(parent));
+	// Toolbars are owned by 'parent' (MainFrame) via wxWindow mechanism.
+	// ToolbarRegistry holds non-owning pointers for access.
+	registry->SetStandardToolbar(newd StandardToolBar(parent));
+	registry->SetBrushToolbar(newd BrushToolBar(parent));
+	registry->SetPositionToolbar(newd PositionToolBar(parent));
+	registry->SetSizeToolbar(newd SizeToolBar(parent));
+	registry->SetLightToolbar(newd LightToolBar(parent));
 
 	return registry;
 }
