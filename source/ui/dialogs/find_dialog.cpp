@@ -289,9 +289,10 @@ void FindBrushDialog::RefreshContentsInternal() {
 // Listbox in find item / brush stuff
 
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
+	NanoVGListBox(parent, id, wxLB_SINGLE),
 	cleared(false),
 	no_matches(false) {
+	SetItemHeight(FromDIP(32));
 	Clear();
 }
 
@@ -315,51 +316,73 @@ void FindDialogListBox::SetNoMatches() {
 
 void FindDialogListBox::AddBrush(Brush* brush) {
 	if (cleared || no_matches) {
-		SetItemCount(0);
+		brushlist.clear();
 	}
 
 	cleared = false;
 	no_matches = false;
 
-	SetItemCount(GetItemCount() + 1);
 	brushlist.push_back(brush);
+	SetItemCount(brushlist.size());
 }
 
 Brush* FindDialogListBox::GetSelectedBrush() {
-	ssize_t n = GetSelection();
-	if (n == wxNOT_FOUND || no_matches || cleared) {
+	int n = GetSelection();
+	if (n == -1 || no_matches || cleared) {
 		return nullptr;
 	}
-	return brushlist[n];
+	if (n >= 0 && static_cast<size_t>(n) < brushlist.size()) {
+		return brushlist[n];
+	}
+	return nullptr;
 }
 
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) const {
+	nvgFontSize(vg, 14.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+	float x = rect.GetX();
+	float y = rect.GetY();
+	float h = rect.GetHeight();
+
 	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+		nvgText(vg, x + 40, y + h / 2, "No matches for your search.", nullptr);
 	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+		nvgText(vg, x + 40, y + h / 2, "Please enter your search string.", nullptr);
 	} else {
-		ASSERT(n < brushlist.size());
+		if (n >= brushlist.size()) return;
+
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
 		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
+			// Cast away constness because GetOrCreateSpriteTexture takes non-const NanoVGCanvas* effectively (via this)
+			// Actually NanoVGCanvas::GetOrCreateSpriteTexture is not const.
+			// But FindDialogListBox::OnDrawItem is const.
+			// We need to use const_cast or make GetOrCreateSpriteTexture const (it uses cache which is mutable).
+			// NanoVGCanvas methods like GetOrCreateSpriteTexture modify cache.
+			// I should use a const_cast<FindDialogListBox*>(this)->GetOrCreateSpriteTexture(...)
+			int tex = const_cast<FindDialogListBox*>(this)->GetOrCreateSpriteTexture(vg, spr);
+			if (tex > 0) {
+				NVGpaint imgPaint = nvgImagePattern(vg, x, y, h, h, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, x, y, h, h);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
 		}
 
 		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-			}
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
+			nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
 		}
 
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
+		nvgText(vg, x + h + 8, y + h / 2, brushlist[n]->getName().c_str(), nullptr);
 	}
 }
 
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
+int FindDialogListBox::OnMeasureItem(size_t n) const {
+	return FromDIP(32);
 }
