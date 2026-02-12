@@ -126,7 +126,9 @@ namespace IngamePreview {
 
 			// Sync viewport and start batch for this floor
 			sprite_batch->begin(view.projectionMatrix);
-			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha);
+			if (g_gui.gfx.ensureAtlasManager()) {
+				sprite_batch->setGlobalTint(*g_gui.gfx.getAtlasManager(), 1.0f, 1.0f, 1.0f, alpha);
+			}
 
 			// Pre-calculate view offsets for this floor
 			int floor_offset = (z <= GROUND_LAYER)
@@ -180,7 +182,9 @@ namespace IngamePreview {
 					}
 				}
 			}
-			sprite_batch->end(*g_gui.gfx.getAtlasManager());
+			if (g_gui.gfx.ensureAtlasManager()) {
+				sprite_batch->end(*g_gui.gfx.getAtlasManager());
+			}
 		}
 
 		// Draw Preview Character (Center Screen)
@@ -217,7 +221,9 @@ namespace IngamePreview {
 
 			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, 255, 255, 255, 255, animation_phase);
 
-			sprite_batch->end(*g_gui.gfx.getAtlasManager());
+			if (g_gui.gfx.ensureAtlasManager()) {
+				sprite_batch->end(*g_gui.gfx.getAtlasManager());
+			}
 		}
 
 		if (lighting_enabled && light_drawer) {

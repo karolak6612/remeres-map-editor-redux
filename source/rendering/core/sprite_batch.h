@@ -83,7 +83,7 @@ public:
 	/**
 	 * Set global tint for subsequent draws in current batch.
 	 */
-	void setGlobalTint(float r, float g, float b, float a);
+	void setGlobalTint(const AtlasManager& atlas_manager, float r, float g, float b, float a);
 
 	/**
 	 * Ensure capacity in pending vector.
