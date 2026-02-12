@@ -33,6 +33,7 @@ private:
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 	int last_start_x;
 	int last_start_y;
+	bool initialized_ = false;
 };
 
 #endif

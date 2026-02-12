@@ -42,15 +42,14 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 	int window_width = size.GetWidth();
 	int window_height = size.GetHeight();
 
-	static bool initialized = false;
-	if (!initialized) {
+	if (!initialized_) {
 		if (renderer->initialize()) {
 			primitive_renderer->initialize();
-			initialized = true;
+			initialized_ = true;
 		}
 	}
 
-	if (!initialized) {
+	if (!initialized_) {
 		return;
 	}
 

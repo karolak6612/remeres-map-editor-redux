@@ -173,7 +173,7 @@ void MinimapRenderer::resize(int width, int height) {
 }
 
 void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int w, int h) {
-	if (!texture_id_) {
+	if (!texture_id_ || !pbo_) {
 		return;
 	}
 
