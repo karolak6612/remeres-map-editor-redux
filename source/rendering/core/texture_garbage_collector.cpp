@@ -47,7 +47,8 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 	cleanup_list.push_back(spr);
 	// Clean if needed
 	if (cleanup_list.size() > std::max<uint32_t>(100, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD))) {
-		for (int i = 0; i < g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE) && static_cast<uint32_t>(i) < cleanup_list.size(); ++i) {
+		int software_clean_size = g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE);
+		for (int i = 0; i < software_clean_size && static_cast<uint32_t>(i) < cleanup_list.size(); ++i) {
 			cleanup_list.front()->unloadDC();
 			cleanup_list.pop_front();
 		}
