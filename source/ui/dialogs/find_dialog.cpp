@@ -31,7 +31,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	search_field->SetHint("Type to search...");
 	search_field->SetToolTip("Type at least 2 characters to search for brushes or items.");
 	search_field->SetFocus();
-	sizer->Add(search_field, 0, wxEXPAND);
+	sizer->Add(search_field, wxSizerFlags(0).Expand());
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
@@ -40,11 +40,11 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
 	okBtn->SetToolTip("Jump to selected item/brush");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FromDIP(wxSize(16, 16))));
 	cancelBtn->SetToolTip("Close this window");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());

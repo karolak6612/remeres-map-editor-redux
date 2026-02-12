@@ -50,23 +50,23 @@ void MapPopupMenu::Update() {
 	bool anything_selected = editor.selection.size() != 0;
 
 	wxMenuItem* cutItem = Append(MAP_POPUP_MENU_CUT, "&Cut\tCTRL+X", "Cut out all selected items");
-	cutItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUT, wxSize(16, 16)));
+	cutItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUT, g_gui.root->FromDIP(wxSize(16, 16))));
 	cutItem->Enable(anything_selected);
 
 	wxMenuItem* copyItem = Append(MAP_POPUP_MENU_COPY, "&Copy\tCTRL+C", "Copy all selected items");
-	copyItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	copyItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, g_gui.root->FromDIP(wxSize(16, 16))));
 	copyItem->Enable(anything_selected);
 
 	wxMenuItem* copyPositionItem = Append(MAP_POPUP_MENU_COPY_POSITION, "&Copy Position", "Copy the position as a lua table");
-	copyPositionItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LOCATION, wxSize(16, 16)));
+	copyPositionItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LOCATION, g_gui.root->FromDIP(wxSize(16, 16))));
 	copyPositionItem->Enable(anything_selected);
 
 	wxMenuItem* pasteItem = Append(MAP_POPUP_MENU_PASTE, "&Paste\tCTRL+V", "Paste items in the copybuffer here");
-	pasteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PASTE, wxSize(16, 16)));
+	pasteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PASTE, g_gui.root->FromDIP(wxSize(16, 16))));
 	pasteItem->Enable(editor.copybuffer.canPaste());
 
 	wxMenuItem* deleteItem = Append(MAP_POPUP_MENU_DELETE, "&Delete\tDEL", "Removes all seleceted items");
-	deleteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
+	deleteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, g_gui.root->FromDIP(wxSize(16, 16))));
 	deleteItem->Enable(anything_selected);
 
 	if (anything_selected) {
@@ -123,9 +123,9 @@ void MapPopupMenu::Update() {
 			AppendSeparator();
 
 			if (topSelectedItem) {
-				Append(MAP_POPUP_MENU_COPY_SERVER_ID, "Copy Item Server Id", "Copy the server id of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SERVER, wxSize(16, 16)));
-				Append(MAP_POPUP_MENU_COPY_CLIENT_ID, "Copy Item Client Id", "Copy the client id of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DESKTOP, wxSize(16, 16)));
-				Append(MAP_POPUP_MENU_COPY_NAME, "Copy Item Name", "Copy the name of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TAG, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_COPY_SERVER_ID, "Copy Item Server Id", "Copy the server id of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SERVER, g_gui.root->FromDIP(wxSize(16, 16))));
+				Append(MAP_POPUP_MENU_COPY_CLIENT_ID, "Copy Item Client Id", "Copy the client id of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DESKTOP, g_gui.root->FromDIP(wxSize(16, 16))));
+				Append(MAP_POPUP_MENU_COPY_NAME, "Copy Item Name", "Copy the name of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TAG, g_gui.root->FromDIP(wxSize(16, 16))));
 				AppendSeparator();
 			}
 
@@ -134,7 +134,7 @@ void MapPopupMenu::Update() {
 				if (topSelectedItem && (topSelectedItem->isBrushDoor() || topSelectedItem->isRoteable() || teleport)) {
 
 					if (topSelectedItem->isRoteable()) {
-						Append(MAP_POPUP_MENU_ROTATE, "&Rotate item", "Rotate this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE, wxSize(16, 16)));
+						Append(MAP_POPUP_MENU_ROTATE, "&Rotate item", "Rotate this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE, g_gui.root->FromDIP(wxSize(16, 16))));
 					}
 
 					if (teleport && teleport->hasDestination()) {
@@ -198,7 +198,7 @@ void MapPopupMenu::Update() {
 				}
 
 				AppendSeparator();
-				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, g_gui.root->FromDIP(wxSize(16, 16))));
 			} else {
 
 				if (topCreature) {
@@ -227,14 +227,14 @@ void MapPopupMenu::Update() {
 
 				if (tile->hasGround() || topCreature || topSpawn) {
 					AppendSeparator();
-					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, g_gui.root->FromDIP(wxSize(16, 16))));
 				}
 			}
 
 			AppendSeparator();
 
 			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items");
-			browseTile->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
+			browseTile->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, g_gui.root->FromDIP(wxSize(16, 16))));
 			browseTile->Enable(anything_selected);
 		}
 	}

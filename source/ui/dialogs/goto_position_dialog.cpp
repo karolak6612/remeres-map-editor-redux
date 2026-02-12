@@ -23,19 +23,19 @@ GotoPositionDialog::GotoPositionDialog(wxWindow* parent, Editor& editor) :
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	posctrl = newd PositionCtrl(this, "Destination", map.getWidth() / 2, map.getHeight() / 2, GROUND_LAYER, map.getWidth(), map.getHeight());
-	sizer->Add(posctrl, 0, wxTOP | wxLEFT | wxRIGHT, 20);
+	sizer->Add(posctrl, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 20));
 
 	// OK/Cancel buttons
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
 	okBtn->SetToolTip("Go to position");
 	tmpsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FromDIP(wxSize(16, 16))));
 	cancelBtn->SetToolTip("Close this window");
 	tmpsizer->Add(cancelBtn, wxSizerFlags(1).Center());
-	sizer->Add(tmpsizer, 0, wxALL | wxCENTER, 20); // Border to top too
+	sizer->Add(tmpsizer, wxSizerFlags(0).Border(wxALL, 20).Center()); // Border to top too
 
 	SetSizerAndFit(sizer);
 	Centre(wxBOTH);

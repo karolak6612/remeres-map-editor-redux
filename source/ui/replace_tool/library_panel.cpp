@@ -51,11 +51,11 @@ void LibraryPanel::InitLayout() {
 	m_itemSearch->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_itemSearch->Bind(wxEVT_TEXT, &LibraryPanel::OnSearchChange, this);
 	m_itemSearch->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &LibraryPanel::OnSearchChange, this);
-	itemListSizer->Add(m_itemSearch, 0, wxEXPAND | wxALL, padding);
+	itemListSizer->Add(m_itemSearch, wxSizerFlags().Expand().Border(wxALL, padding));
 
 	m_allItemsGrid = new ItemGridPanel(itemListPage, this);
 	m_allItemsGrid->SetDraggable(true);
-	itemListSizer->Add(m_allItemsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, padding);
+	itemListSizer->Add(m_allItemsGrid, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, padding));
 
 	itemListPage->SetSizer(itemListSizer);
 	m_notebook->AddPage(itemListPage, "Items");
@@ -74,12 +74,12 @@ void LibraryPanel::InitLayout() {
 	m_brushSearch->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_brushSearch->Bind(wxEVT_TEXT, &LibraryPanel::OnBrushSearchChange, this);
 	m_brushSearch->Bind(wxEVT_SEARCHCTRL_SEARCH_BTN, &LibraryPanel::OnBrushSearchChange, this);
-	brushesSizer->Add(m_brushSearch, 0, wxEXPAND | wxALL, 2);
+	brushesSizer->Add(m_brushSearch, wxSizerFlags().Expand().Border(wxALL, 2));
 
 	m_brushGrid = new ItemGridPanel(brushesPanel, this);
 	m_brushGrid->SetShowDetails(false);
-	brushesSizer->Add(new wxStaticText(brushesPanel, wxID_ANY, "Available Brushes"), 0, wxALL, 2);
-	brushesSizer->Add(m_brushGrid, 1, wxEXPAND);
+	brushesSizer->Add(new wxStaticText(brushesPanel, wxID_ANY, "Available Brushes"), wxSizerFlags().Border(wxALL, 2));
+	brushesSizer->Add(m_brushGrid, wxSizerFlags(1).Expand());
 	brushesPanel->SetSizer(brushesSizer);
 
 	// Bottom: Related Items
@@ -87,18 +87,18 @@ void LibraryPanel::InitLayout() {
 	wxBoxSizer* relatedSizer = new wxBoxSizer(wxVERTICAL);
 	m_relatedGrid = new ItemGridPanel(relatedPanel, this);
 	m_relatedGrid->SetDraggable(true);
-	relatedSizer->Add(new wxStaticText(relatedPanel, wxID_ANY, "Related Items"), 0, wxALL, 2);
-	relatedSizer->Add(m_relatedGrid, 1, wxEXPAND);
+	relatedSizer->Add(new wxStaticText(relatedPanel, wxID_ANY, "Related Items"), wxSizerFlags().Border(wxALL, 2));
+	relatedSizer->Add(m_relatedGrid, wxSizerFlags(1).Expand());
 	relatedPanel->SetSizer(relatedSizer);
 
 	brushSplitter->SplitHorizontally(brushesPanel, relatedPanel);
 	brushSplitter->SetSashGravity(0.5);
-	brushListSizer->Add(brushSplitter, 1, wxEXPAND | wxALL, padding);
+	brushListSizer->Add(brushSplitter, wxSizerFlags(1).Expand().Border(wxALL, padding));
 
 	brushListPage->SetSizer(brushListSizer);
 	m_notebook->AddPage(brushListPage, "Brushes");
 
-	mainSizer->Add(m_notebook, 1, wxEXPAND);
+	mainSizer->Add(m_notebook, wxSizerFlags(1).Expand());
 	SetSizer(mainSizer);
 }
 
