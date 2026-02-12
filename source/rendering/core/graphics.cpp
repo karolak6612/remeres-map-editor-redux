@@ -19,6 +19,7 @@
 
 #include "game/sprites.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_preloader.h"
 #include <nanovg.h>
 #include <spdlog/spdlog.h>
 #include <nanovg_gl.h>
@@ -71,6 +72,7 @@ void GraphicManager::updateTime() {
 }
 
 void GraphicManager::clear() {
+	SpritePreloader::get().clear();
 	sprite_space.clear();
 	image_space.clear();
 	// editor_sprite_space.clear(); // Editor sprites are global/internal and should persist across version changes
