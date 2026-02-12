@@ -222,30 +222,42 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
 	// Build content lines with word wrapping support
 	using namespace TooltipColors;
-	scratch_fields.clear();
-	std::vector<FieldLine>& fields = scratch_fields;
+	scratch_fields_count = 0;
+
+	auto addField = [&](std::string_view label, std::string value, uint8_t r, uint8_t g, uint8_t b) {
+		if (scratch_fields_count >= scratch_fields.size()) {
+			scratch_fields.emplace_back();
+		}
+		FieldLine& field = scratch_fields[scratch_fields_count++];
+		field.label = label;
+		field.value = std::move(value);
+		field.r = r;
+		field.g = g;
+		field.b = b;
+		field.wrappedLines.clear();
+	};
 
 	if (tooltip.category == TooltipCategory::WAYPOINT) {
-		fields.push_back({ "Waypoint", std::string(tooltip.waypointName), WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B, {} });
+		addField("Waypoint", std::string(tooltip.waypointName), WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B);
 	} else {
 		if (tooltip.actionId > 0) {
-			fields.push_back({ "Action ID", std::to_string(tooltip.actionId), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B, {} });
+			addField("Action ID", std::to_string(tooltip.actionId), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B);
 		}
 		if (tooltip.uniqueId > 0) {
-			fields.push_back({ "Unique ID", std::to_string(tooltip.uniqueId), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B, {} });
+			addField("Unique ID", std::to_string(tooltip.uniqueId), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B);
 		}
 		if (tooltip.doorId > 0) {
-			fields.push_back({ "Door ID", std::to_string(tooltip.doorId), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B, {} });
+			addField("Door ID", std::to_string(tooltip.doorId), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B);
 		}
 		if (tooltip.destination.x > 0) {
 			std::string dest = std::to_string(tooltip.destination.x) + ", " + std::to_string(tooltip.destination.y) + ", " + std::to_string(tooltip.destination.z);
-			fields.push_back({ "Destination", dest, TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B, {} });
+			addField("Destination", std::move(dest), TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B);
 		}
 		if (!tooltip.description.empty()) {
-			fields.push_back({ "Description", std::string(tooltip.description), BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, {} });
+			addField("Description", std::string(tooltip.description), BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B);
 		}
 		if (!tooltip.text.empty()) {
-			fields.push_back({ "Text", "\"" + std::string(tooltip.text) + "\"", TEXT_R, TEXT_G, TEXT_B, {} });
+			addField("Text", "\"" + std::string(tooltip.text) + "\"", TEXT_R, TEXT_G, TEXT_B);
 		}
 	}
 }
@@ -259,9 +271,10 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 
 	// Measure label widths
 	float maxLabelWidth = 0.0f;
-	for (auto& field : scratch_fields) {
+	for (size_t i = 0; i < scratch_fields_count; ++i) {
+		const auto& field = scratch_fields[i];
 		float labelBounds[4];
-		nvgTextBounds(vg, 0, 0, field.label.c_str(), nullptr, labelBounds);
+		nvgTextBounds(vg, 0, 0, field.label.data(), field.label.data() + field.label.size(), labelBounds);
 		float lw = labelBounds[2] - labelBounds[0];
 		if (lw > maxLabelWidth) {
 			maxLabelWidth = lw;
@@ -275,7 +288,8 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 	int totalLines = 0;
 	float actualMaxWidth = minWidth;
 
-	for (auto& field : scratch_fields) {
+	for (size_t i = 0; i < scratch_fields_count; ++i) {
+		auto& field = scratch_fields[i];
 		const char* start = field.value.c_str();
 		const char* end = start + field.value.length();
 
@@ -419,13 +433,14 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	nvgFontFace(vg, "sans");
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-	for (const auto& field : scratch_fields) {
+	for (size_t i = 0; i < scratch_fields_count; ++i) {
+		const auto& field = scratch_fields[i];
 		bool firstLine = true;
 		for (const auto& line : field.wrappedLines) {
 			if (firstLine) {
 				// Draw label on first line
 				nvgFillColor(vg, nvgRGBA(BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, 160));
-				nvgText(vg, contentX, cursorY, field.label.c_str(), nullptr);
+				nvgText(vg, contentX, cursorY, field.label.data(), field.label.data() + field.label.size());
 				firstLine = false;
 			}
 
@@ -452,7 +467,8 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 	float fontSize = 11.0f;
 	float lineHeight = fontSize * 1.4f;
 	float textBlockHeight = 0.0f;
-	for (const auto& field : scratch_fields) {
+	for (size_t i = 0; i < scratch_fields_count; ++i) {
+		const auto& field = scratch_fields[i];
 		textBlockHeight += field.wrappedLines.size() * lineHeight;
 	}
 
@@ -554,7 +570,7 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		prepareFields(tooltip);
 
 		// Skip if nothing to show
-		if (scratch_fields.empty() && tooltip.containerItems.empty()) {
+		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
 			continue;
 		}
 

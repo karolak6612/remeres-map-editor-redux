@@ -11,6 +11,7 @@
 #include "app/main.h" // ASSERT, etc
 
 #include <vector>
+#include <memory>
 
 bool WallBorderCalculator::hasMatchingWallBrushAtTile(BaseMap* map, WallBrush* wall_brush, int32_t x, int32_t y, int32_t z) {
 	Tile* t = map->getTile(x, y, z);
@@ -45,7 +46,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 	for (; it != tile->items.end() && (*it)->isBorder(); ++it)
 		;
 
-	ItemVector items_to_add;
+	std::vector<std::unique_ptr<Item>> items_to_add;
 
 	while (it != tile->items.end()) {
 		Item* wall = *it;
@@ -61,7 +62,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 		}
 		// or if it's a decoration brush.
 		if (wall_brush->isWallDecoration()) {
-			items_to_add.push_back(wall);
+			items_to_add.push_back(std::unique_ptr<Item>(wall));
 			it = tile->items.erase(it);
 			continue;
 		}
@@ -98,11 +99,11 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 			::BorderType bt = ::BorderType(border_tables[i][tiledata]);
 
 			if (wall->getWallAlignment() == WALL_UNTOUCHABLE) {
-				items_to_add.push_back(wall);
+				items_to_add.push_back(std::unique_ptr<Item>(wall));
 				it = tile->items.erase(it);
 				exit = true;
 			} else if (wall->getWallAlignment() == bt) { // Already correct alignment
-				items_to_add.push_back(wall);
+				items_to_add.push_back(std::unique_ptr<Item>(wall));
 				it = tile->items.erase(it);
 				exit = true;
 
@@ -114,7 +115,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 					if (brush && brush->isWallDecoration()) {
 						if (wall_decoration->getWallAlignment() == bt) {
 							// Same, no need to change...
-							items_to_add.push_back(wall_decoration);
+							items_to_add.push_back(std::unique_ptr<Item>(wall_decoration));
 							it = tile->items.erase(it);
 							continue;
 						}
@@ -122,11 +123,13 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 						uint16_t id = brush->items.getRandomWallId(bt);
 
 						if (id != 0) {
-							Item* new_wall = Item::Create(id);
-							if (wall_decoration->isSelected()) {
-								new_wall->select();
+							std::unique_ptr<Item> new_wall = Item::Create(id);
+							if (new_wall) {
+								if (wall_decoration->isSelected()) {
+									new_wall->select();
+								}
+								items_to_add.push_back(std::move(new_wall));
 							}
-							items_to_add.push_back(new_wall);
 						}
 						++it;
 					} else {
@@ -157,11 +160,13 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 					continue;
 				} else {
 					// If there is such an item, add it to the tile
-					Item* new_wall = Item::Create(id);
-					if (wall->isSelected()) {
-						new_wall->select();
+					std::unique_ptr<Item> new_wall = Item::Create(id);
+					if (new_wall) {
+						if (wall->isSelected()) {
+							new_wall->select();
+						}
+						items_to_add.push_back(std::move(new_wall));
 					}
-					items_to_add.push_back(new_wall);
 					exit = true;
 					++it;
 				}
@@ -173,11 +178,13 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 					if (brush && brush->isWallDecoration()) {
 						uint16_t id = brush->items.getRandomWallId(bt);
 						if (id != 0) {
-							Item* new_wall = Item::Create(id);
-							if (wall_decoration->isSelected()) {
-								new_wall->select();
+							std::unique_ptr<Item> new_wall = Item::Create(id);
+							if (new_wall) {
+								if (wall_decoration->isSelected()) {
+									new_wall->select();
+								}
+								items_to_add.push_back(std::move(new_wall));
 							}
-							items_to_add.push_back(new_wall);
 						}
 						++it;
 					} else {
@@ -190,7 +197,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 		}
 	}
 	TileOperations::cleanWalls(tile);
-	for (Item* item : items_to_add) {
-		tile->addWallItem(item);
+	for (auto& item : items_to_add) {
+		tile->addWallItem(item.release());
 	}
 }

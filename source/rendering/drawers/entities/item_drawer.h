@@ -14,21 +14,34 @@ class CreatureDrawer;
 class Tile;
 class Item;
 class ItemType;
+class HookIndicatorDrawer;
+class DoorIndicatorDrawer;
 
 struct DrawingOptions;
 class SpriteBatch;
-class PrimitiveRenderer;
 
 class ItemDrawer {
 public:
 	ItemDrawer();
 	~ItemDrawer();
 
-	void BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral = false, int red = 255, int green = 255, int blue = 255, int alpha = 255);
-	void BlitItem(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral = false, int red = 255, int green = 255, int blue = 255, int alpha = 255, const Tile* tile = nullptr);
+	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral = false, int red = 255, int green = 255, int blue = 255, int alpha = 255);
+	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral = false, int red = 255, int green = 255, int blue = 255, int alpha = 255, const Tile* tile = nullptr);
 
 	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
-	void DrawHookIndicator(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int x, int y, const ItemType& type);
+	void DrawHookIndicator(const ItemType& type, const Position& pos);
+	void DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east);
+
+	void SetHookIndicatorDrawer(HookIndicatorDrawer* drawer) {
+		hook_indicator_drawer = drawer;
+	}
+	void SetDoorIndicatorDrawer(DoorIndicatorDrawer* drawer) {
+		door_indicator_drawer = drawer;
+	}
+
+private:
+	HookIndicatorDrawer* hook_indicator_drawer = nullptr;
+	DoorIndicatorDrawer* door_indicator_drawer = nullptr;
 };
 
 #endif

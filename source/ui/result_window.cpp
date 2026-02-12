@@ -20,6 +20,7 @@
 #include "ui/result_window.h"
 #include "ui/gui.h"
 #include "map/position.h"
+#include "util/image_manager.h"
 
 SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY) {
@@ -29,10 +30,12 @@ SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 
 	wxSizer* buttonsSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* exportBtn = newd wxButton(this, wxID_FILE, "Export");
+	exportBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
 	exportBtn->SetToolTip("Export results to text file");
 	buttonsSizer->Add(exportBtn, wxSizerFlags(0).Center());
 
 	wxButton* clearBtn = newd wxButton(this, wxID_CLEAR, "Clear");
+	clearBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 	clearBtn->SetToolTip("Clear search results");
 	buttonsSizer->Add(clearBtn, wxSizerFlags(0).Center());
 	sizer->Add(buttonsSizer, wxSizerFlags(0).Center().DoubleBorder());

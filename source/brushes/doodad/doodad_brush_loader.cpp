@@ -114,7 +114,7 @@ bool DoodadBrushLoader::loadAlternative(pugi::xml_node node, DoodadBrushItems& i
 				continue;
 			}
 
-			Item* item = Item::Create(childNode);
+			std::unique_ptr<Item> item = Item::Create(childNode);
 			if (!item) {
 				warnings.push_back("Can't create item from doodad item node.");
 				continue;
@@ -130,7 +130,7 @@ bool DoodadBrushLoader::loadAlternative(pugi::xml_node node, DoodadBrushItems& i
 				warnings.push_back("Chance for doodad item " + std::to_string(item->getID()) + " is negative, defaulting to 0.");
 				chance = 0;
 			}
-			items.addSingleToBlock(alternativeBlock, std::unique_ptr<Item>(item), chance);
+			items.addSingleToBlock(alternativeBlock, std::move(item), chance);
 
 		} else if (std::ranges::equal(childName, std::string_view("composite"), iequal)) {
 			if (!(attribute = childNode.attribute("chance"))) {
@@ -180,14 +180,13 @@ bool DoodadBrushLoader::loadAlternative(pugi::xml_node node, DoodadBrushItems& i
 						continue;
 					}
 
-					Item* item = Item::Create(itemNode);
+					std::unique_ptr<Item> item = Item::Create(itemNode);
 					if (item) {
-						tiles_items.push_back(std::unique_ptr<Item>(item));
-
 						ItemType& it = g_items[item->getID()];
 						if (it.id != 0 && brushPtr) {
 							it.doodad_brush = brushPtr;
 						}
+						tiles_items.push_back(std::move(item));
 					} else {
 						warnings.push_back("Can't create item from doodad composite tile node.");
 					}

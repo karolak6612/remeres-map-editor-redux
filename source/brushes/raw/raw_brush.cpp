@@ -98,5 +98,5 @@ void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 			}
 		}
 	}
-	tile->addItem(Item::Create(itemtype->id));
+	tile->addItem(Item::Create(itemtype->id).release());
 }

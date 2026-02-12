@@ -5,6 +5,7 @@
 #include "app/main.h"
 #include "ui/menubar_loader.h"
 #include "ui/gui_ids.h"
+#include "util/image_manager.h"
 #include <wx/wx.h>
 #include <algorithm>
 
@@ -123,6 +124,9 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unor
 			wxstr(help), // Help text
 			act.kind // Kind of item
 		);
+		if (!act.icon.empty()) {
+			tmp->SetBitmap(IMAGE_MANAGER.GetBitmap(act.icon, wxSize(16, 16)));
+		}
 		items[MenuBar::ActionID(act.id)].push_back(tmp);
 		return tmp;
 	} else if (nodeName == "separator") {

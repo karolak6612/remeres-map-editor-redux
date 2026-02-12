@@ -315,27 +315,27 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 			}
 
 			if (borderCluster.border->tiles[direction] != 0) {
-				tile->addBorderItem(Item::Create(borderCluster.border->tiles[direction]));
+				tile->addBorderItem(Item::Create(borderCluster.border->tiles[direction]).release());
 			} else {
 				if (direction == NORTHWEST_DIAGONAL) {
 					if (borderCluster.border->tiles[WEST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]).release());
 					}
 				} else if (direction == NORTHEAST_DIAGONAL) {
 					if (borderCluster.border->tiles[EAST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]).release());
 					}
 				} else if (direction == SOUTHWEST_DIAGONAL) {
 					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[WEST_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]).release());
 					}
 				} else if (direction == SOUTHEAST_DIAGONAL) {
 					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[EAST_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]).release());
 					}
 				}
 			}

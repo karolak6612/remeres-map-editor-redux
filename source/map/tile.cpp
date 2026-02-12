@@ -289,7 +289,7 @@ void Tile::addItem(Item* item) {
 	uint16_t gid = item->getGroundEquivalent();
 	if (gid != 0) {
 		delete ground;
-		ground = Item::Create(gid);
+		ground = Item::Create(gid).release();
 		// At the very bottom!
 		it = items.begin();
 	} else if (item->isAlwaysOnBottom()) {
@@ -515,6 +515,12 @@ void Tile::update() {
 		}
 		if (it.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
+		}
+		if (it.hookSouth) {
+			statflags |= TILESTATE_HOOK_SOUTH;
+		}
+		if (it.hookEast) {
+			statflags |= TILESTATE_HOOK_EAST;
 		}
 	}
 

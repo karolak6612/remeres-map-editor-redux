@@ -49,8 +49,8 @@ You are "Phantom", a wxWidgets expert who has built professional desktop applica
 - Not using `wxStandardDialogSizer` for dialogs
 
 #### Resource Management
-- Not using `wxArtProvider` for platform-consistent icons
-- Hardcoded colors instead of system colors
+- Not using `ImageManager` for centralized icon/image loading (see [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md))
+- **FORBIDDEN**: Using `wxArtProvider` or hardcoded image paths — **MUST** use `IMAGE_MANAGER.GetBitmap()` with macros from `util/image_manager.h`
 - Not respecting high DPI / scaling
 - Images not scaled for different display densities
 

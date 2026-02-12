@@ -29,6 +29,8 @@
 #include "map/operations/map_processor.h"
 #include "editor/persistence/editor_persistence.h"
 
+#include <memory>
+
 class BaseMap;
 class CopyBuffer;
 class LiveClient;
@@ -51,7 +53,7 @@ public:
 
 public:
 	// Public members
-	ActionQueue* actionQueue;
+	std::unique_ptr<ActionQueue> actionQueue;
 	Selection selection;
 	CopyBuffer& copybuffer;
 	GroundBrush* replace_brush;

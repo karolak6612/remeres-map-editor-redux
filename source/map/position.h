@@ -19,9 +19,26 @@
 #define __POSITION_HPP__
 
 #include <ostream>
+#include <istream>
 #include <cstdint>
 #include <vector>
 #include <list>
+
+#if __has_include("app/definitions.h")
+	#include "app/definitions.h"
+#elif __has_include("../app/definitions.h")
+	#include "../app/definitions.h"
+#endif
+
+#ifndef MAP_MAX_WIDTH
+	#define MAP_MAX_WIDTH 65000
+#endif
+#ifndef MAP_MAX_HEIGHT
+	#define MAP_MAX_HEIGHT 65000
+#endif
+#ifndef MAP_MAX_LAYER
+	#define MAP_MAX_LAYER 15
+#endif
 
 class SmallPosition;
 

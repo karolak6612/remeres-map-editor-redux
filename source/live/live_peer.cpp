@@ -278,9 +278,9 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message) {
 
 	if (tileNode) {
 		do {
-			Tile* tile = readTile(tileNode, editor, nullptr);
+			std::unique_ptr<Tile> tile = readTile(tileNode, editor, nullptr);
 			if (tile) {
-				action->addChange(std::make_unique<Change>(tile));
+				action->addChange(std::make_unique<Change>(tile.release()));
 			}
 		} while (tileNode->advance());
 	}

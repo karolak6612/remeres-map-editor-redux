@@ -18,8 +18,8 @@
 #include <nanovg.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
-#include <algorithm>  // For std::max
-#include <cstdlib>    // For std::abs
+#include <algorithm> // For std::max
+#include <cstdlib> // For std::abs
 
 namespace IngamePreview {
 
@@ -63,7 +63,7 @@ namespace IngamePreview {
 	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y) {
 		// CRITICAL: Update animation time for all sprite animations to work
 		g_gui.gfx.updateTime();
-		
+
 		auto now = std::chrono::steady_clock::now();
 		double dt = std::chrono::duration<double>(now - last_time).count();
 		last_time = now;
@@ -83,7 +83,7 @@ namespace IngamePreview {
 		view.camera_pos = camera_pos;
 		view.viewport_x = viewport_x;
 		view.viewport_y = viewport_y;
-		
+
 		// Initialize cached logical dimensions (required for visibility culling)
 		view.logical_width = viewport_width * zoom;
 		view.logical_height = viewport_height * zoom;
@@ -117,6 +117,10 @@ namespace IngamePreview {
 			creature_name_drawer->clear(); // Clear old labels
 		}
 
+		if (!g_gui.gfx.ensureAtlasManager()) {
+			return;
+		}
+
 		// Render floors from bottom to top
 		for (int z = last_visible; z >= 0; z--) {
 			float alpha = floor_opacity[z];
@@ -126,7 +130,7 @@ namespace IngamePreview {
 
 			// Sync viewport and start batch for this floor
 			sprite_batch->begin(view.projectionMatrix);
-			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha);
+			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *g_gui.gfx.getAtlasManager());
 
 			// Pre-calculate view offsets for this floor
 			int floor_offset = (z <= GROUND_LAYER)
@@ -143,21 +147,21 @@ namespace IngamePreview {
 			// The camera floor (z == camera_pos.z) uses view_scroll directly
 			// Other floors are shifted by floor_offset, so we need to expand bounds
 			constexpr int margin = TileSize * 16; // 16 tiles margin = 512 pixels
-			
+
 			// For viewport bounds, we need to consider the camera floor's coordinate system
 			// The camera floor uses view_scroll directly (floor_offset = camera_offset)
 			// For other floors, tiles are drawn at different positions due to floor_offset
 			// To ensure ALL visible tiles on ANY floor are rendered, we expand bounds by max possible offset
 			int max_floor_offset = std::max(
 				std::abs(floor_offset - camera_offset),
-				TileSize * MAP_MAX_LAYER  // Maximum possible floor offset
+				TileSize * MAP_MAX_LAYER // Maximum possible floor offset
 			);
-			
+
 			view.start_x = static_cast<int>(std::floor((view.view_scroll_x - margin - max_floor_offset) / static_cast<float>(TileSize)));
 			view.start_y = static_cast<int>(std::floor((view.view_scroll_y - margin - max_floor_offset) / static_cast<float>(TileSize)));
 			view.end_x = static_cast<int>(std::ceil((view.view_scroll_x + viewport_width * zoom + margin + max_floor_offset) / static_cast<float>(TileSize)));
 			view.end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TileSize)));
-			
+
 			int base_draw_x = -view.view_scroll_x - floor_offset;
 			int base_draw_y = -view.view_scroll_y - floor_offset;
 
@@ -167,7 +171,7 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TileSize) + base_draw_x;
 						int draw_y = (y * TileSize) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, *primitive_renderer, tile->location, view, options, 0, draw_x, draw_y);
+						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y);
 						if (lighting_enabled) {
 							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
 						}
@@ -229,7 +233,7 @@ namespace IngamePreview {
 
 		// Draw Names
 		if (creature_name_drawer && vg) {
-			TextRenderer::BeginFrame(vg, viewport_width, viewport_height);
+			TextRenderer::BeginFrame(vg, viewport_width, viewport_height, 1.0f); // Ingame preview doesn't use scale factor yet
 
 			// 1. Draw creatures on map
 			creature_name_drawer->draw(vg, view);
