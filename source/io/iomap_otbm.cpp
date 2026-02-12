@@ -782,8 +782,8 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 	return true;
 }
 
-bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
-	BinaryNode* root = f.getRootNode();
+bool IOMapOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, BinaryNode*& root, BinaryNode*& mapHeaderNode) {
+	root = f.getRootNode();
 	if (!root) {
 		error("Could not read root node.");
 		return false;
@@ -841,12 +841,15 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 	}
 	version.client = (ClientVersionID)u32;
 
-	BinaryNode* mapHeaderNode = root->getChild();
+	mapHeaderNode = root->getChild();
 	if (mapHeaderNode == nullptr || !mapHeaderNode->getByte(u8) || u8 != OTBM_MAP_DATA) {
 		error("Could not get root child node. Cannot recover from fatal error!");
 		return false;
 	}
+	return true;
+}
 
+void IOMapOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
 	uint8_t attribute;
 	while (mapHeaderNode->getU8(attribute)) {
 		switch (attribute) {
@@ -882,7 +885,10 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 			}
 		}
 	}
+	
+}
 
+void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode) {
 	int nodes_loaded = 0;
 
 	for (BinaryNode* mapNode = mapHeaderNode->getChild(); mapNode != nullptr; mapNode = mapNode->advance()) {
@@ -1083,6 +1089,20 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 			}
 		}
 	}
+	
+}
+
+bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
+	BinaryNode* root = nullptr;
+	BinaryNode* mapHeaderNode = nullptr;
+
+	if (!loadMapRoot(map, f, root, mapHeaderNode)) {
+		return false;
+	}
+
+	readMapAttributes(map, mapHeaderNode);
+
+	readMapNodes(map, f, mapHeaderNode);
 
 	if (!f.isOk()) {
 		warning(wxstr(f.getErrorMessage()).wc_str());

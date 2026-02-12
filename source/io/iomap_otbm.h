@@ -20,6 +20,8 @@
 
 #include "io/iomap.h"
 
+class BinaryNode;
+
 // Pragma pack is VERY important since otherwise it won't be able to load the structs correctly
 #pragma pack(1)
 
@@ -139,6 +141,10 @@ protected:
 	static bool getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver);
 
 	bool loadMap(Map& map, NodeFileReadHandle& handle);
+	bool loadMapRoot(Map& map, NodeFileReadHandle& f, BinaryNode*& root, BinaryNode*& mapHeaderNode);
+	void readMapAttributes(Map& map, BinaryNode* mapHeaderNode);
+	void readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode);
+
 	bool loadSpawns(Map& map, const FileName& dir);
 	bool loadSpawns(Map& map, pugi::xml_document& doc);
 	bool loadHouses(Map& map, const FileName& dir);

@@ -93,48 +93,6 @@ bool Map::open(const std::string file) {
 
 	// convert(getReplacementMapClassic(), true);
 
-#if 0 // This will create a replacement map out of one of SO's template files
-	std::ofstream out("templateshit.cpp");
-	out << "\tConversionMap replacement_map;\n";
-	int count = 0;
-	out << "\tstd::vector<uint16_t> veckey, vecval;\n\n";
-
-	for(int x = 20; ; x += 2) {
-		int y = 22;
-		Tile* old = getTile(x, y, GROUND_LAYER);
-		if(old) {
-			y -= 2;
-			Tile* new_ = getTile(x, y, GROUND_LAYER);
-			if(new_) {
-				if(old->ground || old->items.size()) {
-					out << "\tvecval.clear();\n";
-					if(new_->ground)
-						out << "\tvecval.push_back(" << new_->ground->getID() << ");\n";
-					for(ItemVector::iterator iter = new_->items.begin(); iter != new_->items.end(); ++iter)
-						out << "\tvecval.push_back(" << (*iter)->getID() << ");\n";
-
-					if(old->ground && old->items.empty()) // Single item
-						out << "\treplacement_map.stm[" << old->ground->getID() << "] = vecval;\n\n";
-					else if(old->ground == nullptr && old->items.size() == 1) // Single item
-						out << "\treplacement_map.stm[" << old->items.front()->getID() << "] = vecval;\n\n";
-					else {
-						// Many items
-						out << "\tveckey.clear();\n";
-						if(old->ground)
-							out << "\tveckey.push_back(" << old->ground->getID() << ");\n";
-						for(ItemVector::iterator iter = old->items.begin(); iter != old->items.end(); ++iter)
-							out << "\tveckey.push_back(" << (*iter)->getID() << ");\n";
-						out << "\tstd::sort(veckey.begin(), veckey.end());\n";
-						out << "\treplacement_map.mtm[veckey] = vecval;\n\n";
-					}
-				}
-			}
-		} else {
-			break;
-		}
-	}
-	out.close();
-#endif
 	return true;
 }
 
