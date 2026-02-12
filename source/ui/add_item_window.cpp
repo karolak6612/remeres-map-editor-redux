@@ -99,6 +99,10 @@ AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryT
 	item_button->Bind(wxEVT_LEFT_DOWN, &AddItemWindow::OnItemClicked, this);
 	Bind(wxEVT_BUTTON, &AddItemWindow::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &AddItemWindow::OnClickCancel, this, wxID_CANCEL);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void AddItemWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {

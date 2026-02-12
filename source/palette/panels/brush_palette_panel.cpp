@@ -4,6 +4,7 @@
 #include "ui/add_item_window.h"
 #include "game/materials.h"
 #include "palette/palette_window.h"
+#include "util/image_manager.h"
 #include <spdlog/spdlog.h>
 
 // ============================================================================
@@ -30,10 +31,12 @@ BrushPalettePanel::BrushPalettePanel(wxWindow* parent, const TilesetContainer& t
 	if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
 		wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 		wxButton* buttonAddTileset = newd wxButton(this, wxID_NEW, "Add new Tileset");
+		buttonAddTileset->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 		buttonAddTileset->SetToolTip("Create a new custom tileset");
 		tmpsizer->Add(buttonAddTileset, wxSizerFlags(0).Center());
 
 		wxButton* buttonAddItemToTileset = newd wxButton(this, wxID_ADD, "Add new Item");
+		buttonAddItemToTileset->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 		buttonAddItemToTileset->SetToolTip("Add a new item to the current tileset");
 		tmpsizer->Add(buttonAddItemToTileset, wxSizerFlags(0).Center());
 

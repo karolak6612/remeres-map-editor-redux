@@ -1,0 +1,83 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 28,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base-vcpkg",
+            "description": "Base preset for vcpkg integration",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "c:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+            }
+        },
+        {
+            "name": "windows-vcpkg",
+            "displayName": "Windows x64 vcpkg",
+            "description": "Build for Windows x64 using vcpkg and Ninja",
+            "inherits": "base-vcpkg",
+            "cacheVariables": {
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe",
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            },
+            "architecture": {
+                "value": "x64",
+                "strategy": "external"
+            },
+            "toolset": {
+                "value": "host=x64",
+                "strategy": "external"
+            }
+        },
+        {
+            "name": "vs-vcpkg",
+            "displayName": "Visual Studio 2022 vcpkg",
+            "description": "Build for Windows x64 using Visual Studio 2022 and vcpkg",
+            "generator": "Visual Studio 17 2022",
+            "binaryDir": "${sourceDir}/build/vs",
+            "architecture": "x64",
+            "cacheVariables": {
+                "CMAKE_TOOLCHAIN_FILE": "c:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "VCPKG_TARGET_TRIPLET": "x64-windows"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "windows-vcpkg",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release",
+            "configurePreset": "windows-vcpkg",
+            "configuration": "Release"
+        },
+        {
+            "name": "relwithdebinfo",
+            "configurePreset": "windows-vcpkg",
+            "configuration": "RelWithDebInfo"
+        },
+        {
+            "name": "vs-debug",
+            "configurePreset": "vs-vcpkg",
+            "configuration": "Debug"
+        },
+        {
+            "name": "vs-release",
+            "configurePreset": "vs-vcpkg",
+            "configuration": "Release"
+        },
+        {
+            "name": "vs-relwithdebinfo",
+            "configurePreset": "vs-vcpkg",
+            "configuration": "RelWithDebInfo"
+        }
+    ]
+}

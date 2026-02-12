@@ -103,6 +103,10 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_BOX_OPEN, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 ContainerPropertiesWindow::~ContainerPropertiesWindow() {

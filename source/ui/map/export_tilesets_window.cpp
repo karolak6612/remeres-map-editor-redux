@@ -65,6 +65,10 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 	browseBtn->Bind(wxEVT_BUTTON, &ExportTilesetsWindow::OnClickBrowse, this);
 	ok_button->Bind(wxEVT_BUTTON, &ExportTilesetsWindow::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &ExportTilesetsWindow::OnClickCancel, this);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 ExportTilesetsWindow::~ExportTilesetsWindow() = default;

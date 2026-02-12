@@ -43,6 +43,10 @@ SpawnPropertiesWindow::SpawnPropertiesWindow(wxWindow* win_parent, const Map* ma
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 SpawnPropertiesWindow::~SpawnPropertiesWindow() {

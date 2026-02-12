@@ -3,6 +3,7 @@
 #include "app/settings.h"
 #include "app/preferences.h"
 #include "ui/controls/modern_button.h"
+#include "util/image_manager.h"
 #include <wx/dcbuffer.h>
 #include <wx/statline.h>
 
@@ -106,17 +107,20 @@ public:
 		sideSizer->Add(version, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, FromDIP(25));
 
 		// Actions (Nav-style)
-		auto addButton = [&](const wxString& label, int id) {
+		auto addButton = [&](const wxString& label, int id, const char* icon) {
 			ModernButton* btn = new ModernButton(sidebar, id, label);
 			btn->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 			btn->SetMinSize(wxSize(-1, FromDIP(35))); // More compact nav height
+			if (icon) {
+				btn->SetBitmap(IMAGE_MANAGER.GetBitmap(icon, wxSize(16, 16)));
+			}
 			sideSizer->Add(btn, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(8));
 			btn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, parent);
 		};
 
-		addButton("New Project", wxID_NEW);
-		addButton("Open Project", wxID_OPEN);
-		addButton("Preferences", wxID_PREFERENCES);
+		addButton("New Project", wxID_NEW, ICON_NEW);
+		addButton("Open Project", wxID_OPEN, ICON_OPEN);
+		addButton("Preferences", wxID_PREFERENCES, ICON_GEAR);
 
 		sideSizer->AddStretchSpacer();
 

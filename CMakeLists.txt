@@ -5,9 +5,12 @@ project(rme)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-if(NOT CMAKE_BUILD_TYPE)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 	set(CMAKE_BUILD_TYPE RelWithDebInfo)
 endif()
+
+# Explicitly set configuration types for multi-config generators
+set(CMAKE_CONFIGURATION_TYPES "Debug;Release;RelWithDebInfo;MinSizeRel" CACHE STRING "" FORCE)
 
 # Compiler-specific flags
 if(MSVC)
@@ -15,13 +18,13 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_DEBUG          "/Od /Zi /D__DEBUG__")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "/O1 /DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE        "/O2 /DNDEBUG")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /Zi")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /Zi /DNDEBUG")
 else()
 	set(CMAKE_CXX_FLAGS                "-Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result")
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -D__DEBUG__")
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "-Os -DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE        "-O3 -DNDEBUG")
-	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g")
+	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
 endif()
 
 find_package(OpenGL REQUIRED)

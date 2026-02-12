@@ -30,6 +30,7 @@
 #include "ui/dialog_util.h"
 #include "app/managers/version_manager.h"
 #include "app/preferences.h"
+#include "util/image_manager.h"
 
 PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false) :
 	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(400, 400), wxCAPTION | wxCLOSE_BOX) {
@@ -38,18 +39,35 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	book = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBK_TOP);
 	// book->SetPadding(4);
 
-	book->AddPage(CreateGeneralPage(), "General", true);
-	book->AddPage(CreateEditorPage(), "Editor");
-	book->AddPage(CreateGraphicsPage(), "Graphics");
-	book->AddPage(CreateUIPage(), "Interface");
-	book->AddPage(CreateClientPage(), "Client Version", clientVersionSelected);
+	wxImageList* imageList = new wxImageList(16, 16);
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_IMAGE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_WINDOW_MAXIMIZE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_GAMEPAD, wxSize(16, 16)));
+	book->AssignImageList(imageList);
+
+	book->AddPage(CreateGeneralPage(), "General", true, 0);
+	book->AddPage(CreateEditorPage(), "Editor", false, 1);
+	book->AddPage(CreateGraphicsPage(), "Graphics", false, 2);
+	book->AddPage(CreateUIPage(), "Interface", false, 3);
+	book->AddPage(CreateClientPage(), "Client Version", clientVersionSelected, 4);
 
 	sizer->Add(book, 1, wxEXPAND | wxALL, 10);
 
 	wxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
-	subsizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center());
-	subsizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(1).Border(wxALL, 5).Left().Center());
-	subsizer->Add(newd wxButton(this, wxID_APPLY, "Apply"), wxSizerFlags(1).Center());
+	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	subsizer->Add(okBtn, wxSizerFlags(1).Center());
+
+	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	subsizer->Add(cancelBtn, wxSizerFlags(1).Border(wxALL, 5).Left().Center());
+
+	wxButton* applyBtn = newd wxButton(this, wxID_APPLY, "Apply");
+	applyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(16, 16)));
+	subsizer->Add(applyBtn, wxSizerFlags(1).Center());
+
 	sizer->Add(subsizer, 0, wxCENTER | wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
 	SetSizerAndFit(sizer);
@@ -60,6 +78,10 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickCancel, this, wxID_CANCEL);
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickApply, this, wxID_APPLY);
 	Bind(wxEVT_COLLAPSIBLEPANE_CHANGED, &PreferencesWindow::OnCollapsiblePane, this);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 PreferencesWindow::~PreferencesWindow() {

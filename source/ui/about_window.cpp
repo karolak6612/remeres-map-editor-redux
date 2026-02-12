@@ -107,6 +107,10 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	Bind(wxEVT_BUTTON, &AboutWindow::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &AboutWindow::OnClickLicense, this, ABOUT_VIEW_LICENSE);
 	Bind(wxEVT_MENU, &AboutWindow::OnClickOK, this, wxID_CANCEL);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_INFO, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 AboutWindow::~AboutWindow() {

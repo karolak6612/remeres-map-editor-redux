@@ -27,6 +27,7 @@
 #include "palette/panels/brush_palette_panel.h"
 #include "palette/palette_creature.h"
 #include "palette/palette_waypoints.h"
+#include "util/image_manager.h"
 
 // Removed includes for size/tool panels as they are no longer managed here
 
@@ -51,31 +52,41 @@ PaletteWindow::PaletteWindow(wxWindow* parent, const TilesetContainer& tilesets)
 	// Create choicebook
 	choicebook = newd wxChoicebook(this, PALETTE_CHOICEBOOK, wxDefaultPosition, wxSize(230, 250));
 
+	wxImageList* imageList = new wxImageList(16, 16);
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_MOUNTAIN, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_TREE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FLAG, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CUBES, wxSize(16, 16)));
+	choicebook->AssignImageList(imageList);
+
 	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGING, &PaletteWindow::OnSwitchingPage, this, PALETTE_CHOICEBOOK);
 	Bind(wxEVT_CHOICEBOOK_PAGE_CHANGED, &PaletteWindow::OnPageChanged, this, PALETTE_CHOICEBOOK);
 	Bind(wxEVT_CLOSE_WINDOW, &PaletteWindow::OnClose, this);
 	Bind(wxEVT_KEY_DOWN, &PaletteWindow::OnKey, this);
 
 	terrain_palette = static_cast<BrushPalettePanel*>(CreateTerrainPalette(choicebook, tilesets));
-	choicebook->AddPage(terrain_palette, terrain_palette->GetName());
+	choicebook->AddPage(terrain_palette, terrain_palette->GetName(), false, 0);
 
 	doodad_palette = static_cast<BrushPalettePanel*>(CreateDoodadPalette(choicebook, tilesets));
-	choicebook->AddPage(doodad_palette, doodad_palette->GetName());
+	choicebook->AddPage(doodad_palette, doodad_palette->GetName(), false, 1);
 
 	collection_palette = static_cast<BrushPalettePanel*>(CreateCollectionPalette(choicebook, tilesets));
-	choicebook->AddPage(collection_palette, collection_palette->GetName());
+	choicebook->AddPage(collection_palette, collection_palette->GetName(), false, 2);
 
 	item_palette = static_cast<BrushPalettePanel*>(CreateItemPalette(choicebook, tilesets));
-	choicebook->AddPage(item_palette, item_palette->GetName());
+	choicebook->AddPage(item_palette, item_palette->GetName(), false, 3);
 
 	waypoint_palette = static_cast<WaypointPalettePanel*>(CreateWaypointPalette(choicebook, tilesets));
-	choicebook->AddPage(waypoint_palette, waypoint_palette->GetName());
+	choicebook->AddPage(waypoint_palette, waypoint_palette->GetName(), false, 4);
 
 	creature_palette = static_cast<CreaturePalettePanel*>(CreateCreaturePalette(choicebook, tilesets));
-	choicebook->AddPage(creature_palette, creature_palette->GetName());
+	choicebook->AddPage(creature_palette, creature_palette->GetName(), false, 5);
 
 	raw_palette = static_cast<BrushPalettePanel*>(CreateRAWPalette(choicebook, tilesets));
-	choicebook->AddPage(raw_palette, raw_palette->GetName());
+	choicebook->AddPage(raw_palette, raw_palette->GetName(), false, 6);
 
 	// Setup sizers
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);

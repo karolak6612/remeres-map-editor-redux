@@ -56,11 +56,17 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 void PropertiesWindow::createUI() {
 	notebook = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
-	notebook->AddPage(createGeneralPanel(notebook), "Simple", true);
+	wxImageList* imageList = new wxImageList(16, 16);
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_BOX_OPEN, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
+	notebook->AssignImageList(imageList);
+
+	notebook->AddPage(createGeneralPanel(notebook), "Simple", true, 0);
 	if (dynamic_cast<Container*>(edit_item)) {
-		notebook->AddPage(createContainerPanel(notebook), "Contents");
+		notebook->AddPage(createContainerPanel(notebook), "Contents", false, 1);
 	}
-	notebook->AddPage(createAttributesPanel(notebook), "Advanced");
+	notebook->AddPage(createAttributesPanel(notebook), "Advanced", false, 2);
 
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 	topSizer->Add(notebook, wxSizerFlags(1).DoubleBorder());
@@ -78,6 +84,10 @@ void PropertiesWindow::createUI() {
 
 	SetSizerAndFit(topSizer);
 	Centre(wxBOTH);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 PropertiesWindow::~PropertiesWindow() {

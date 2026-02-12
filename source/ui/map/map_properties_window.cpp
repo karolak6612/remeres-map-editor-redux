@@ -122,6 +122,10 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	version_choice->Bind(wxEVT_CHOICE, &MapPropertiesWindow::OnChangeVersion, this);
 	okBtn->Bind(wxEVT_BUTTON, &MapPropertiesWindow::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &MapPropertiesWindow::OnClickCancel, this);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void MapPropertiesWindow::UpdateProtocolList() {

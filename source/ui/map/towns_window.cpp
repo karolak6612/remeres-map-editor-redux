@@ -84,6 +84,10 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	select_position_button->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickSelectTemplePosition, this);
 	okBtn->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickCancel, this);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CITY, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 EditTownsDialog::~EditTownsDialog() = default;

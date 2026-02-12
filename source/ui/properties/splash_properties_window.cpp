@@ -80,6 +80,10 @@ SplashPropertiesWindow::SplashPropertiesWindow(wxWindow* parent, const Map* map,
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_WATER, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 SplashPropertiesWindow::~SplashPropertiesWindow() {

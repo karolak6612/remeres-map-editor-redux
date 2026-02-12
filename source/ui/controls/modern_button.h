@@ -12,6 +12,8 @@ public:
 	wxSize DoGetBestClientSize() const override;
 	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
 
+	void SetBitmap(const wxBitmap& bitmap);
+
 	// Rendering
 	void OnPaint(wxPaintEvent& evt);
 	void OnMouse(wxMouseEvent& evt);
@@ -22,6 +24,9 @@ public:
 	float m_targetHover = 0.0f;
 	wxTimer m_animTimer;
 	void OnTimer(wxTimerEvent& evt);
+
+private:
+	wxBitmap m_icon;
 };
 
 #endif

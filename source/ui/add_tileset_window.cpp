@@ -101,6 +101,10 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 
 	item_id_field->Bind(wxEVT_SPINCTRL, &AddTilesetWindow::OnChangeItemId, this);
 	item_button->Bind(wxEVT_LEFT_DOWN, &AddTilesetWindow::OnItemClicked, this);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void AddTilesetWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {

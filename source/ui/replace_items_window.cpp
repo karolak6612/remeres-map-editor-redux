@@ -241,6 +241,10 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	remove_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnRemoveButtonClicked, this);
 	execute_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnExecuteButtonClicked, this);
 	close_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnCancelButtonClicked, this);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 ReplaceItemsDialog::~ReplaceItemsDialog() {

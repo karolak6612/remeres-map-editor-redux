@@ -107,6 +107,10 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 
 	Bind(wxEVT_BUTTON, &TilesetWindow::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &TilesetWindow::OnClickCancel, this, wxID_CANCEL);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHARE_FROM_SQUARE, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {

@@ -59,6 +59,10 @@ CreaturePropertiesWindow::CreaturePropertiesWindow(wxWindow* win_parent, const M
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 CreaturePropertiesWindow::~CreaturePropertiesWindow() {

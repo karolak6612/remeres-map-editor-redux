@@ -111,5 +111,9 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	} else if (ret == wxID_CANCEL) {
 	}
 
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
+	dg->SetIcon(icon);
+
 	dg->Destroy();
 }

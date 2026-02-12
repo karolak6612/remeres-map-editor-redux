@@ -74,6 +74,10 @@ OldPropertiesWindow::OldPropertiesWindow(wxWindow* win_parent, const Map* map, c
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void OldPropertiesWindow::createHeaderFields(wxFlexGridSizer* subsizer) {

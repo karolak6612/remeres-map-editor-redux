@@ -1,6 +1,6 @@
 #include "ui/controls/modern_button.h"
 
-	ModernButton::ModernButton(wxWindow* parent, wxWindowID id, const wxString& label, const wxPoint& pos, const wxSize& size, long style) :
+ModernButton::ModernButton(wxWindow* parent, wxWindowID id, const wxString& label, const wxPoint& pos, const wxSize& size, long style) :
 	wxControl(parent, id, pos, size, style | wxBORDER_NONE),
 	m_animTimer(this) {
 	SetLabel(label);
@@ -15,11 +15,24 @@
 	m_animTimer.Bind(wxEVT_TIMER, &ModernButton::OnTimer, this);
 }
 
+void ModernButton::SetBitmap(const wxBitmap& bitmap) {
+	m_icon = bitmap;
+	InvalidateBestSize();
+	Refresh();
+}
+
 wxSize ModernButton::DoGetBestClientSize() const {
 	wxClientDC dc(const_cast<ModernButton*>(this));
 	dc.SetFont(GetFont());
 	wxSize text = dc.GetTextExtent(GetLabel());
-	return wxSize(text.x + FromDIP(40), text.y + FromDIP(20));
+
+	int width = text.x + FromDIP(40);
+	if (m_icon.IsOk()) {
+		width += m_icon.GetWidth() + FromDIP(8);
+	}
+
+	int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(20);
+	return wxSize(width, height);
 }
 
 void ModernButton::DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) {
@@ -68,7 +81,17 @@ void ModernButton::OnPaint(wxPaintEvent& evt) {
 	dc.SetFont(GetFont());
 	dc.SetTextForeground(textCol);
 	wxSize textSize = dc.GetTextExtent(GetLabel());
-	dc.DrawText(GetLabel(), FromDIP(10), (clientSize.y - textSize.y) / 2); // Left-aligned nav style
+
+	int x = FromDIP(10);
+	int cy = clientSize.y / 2;
+
+	if (m_icon.IsOk()) {
+		int iy = cy - m_icon.GetHeight() / 2;
+		dc.DrawBitmap(m_icon, x, iy, true);
+		x += m_icon.GetWidth() + FromDIP(8);
+	}
+
+	dc.DrawText(GetLabel(), x, cy - textSize.y / 2); // Left-aligned nav style
 }
 
 void ModernButton::OnMouse(wxMouseEvent& evt) {
