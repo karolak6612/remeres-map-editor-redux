@@ -602,7 +602,7 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 	return true;
 }
 
-bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
+bool IOMapOTBM::loadOTGZ(Map& map, const FileName& filename) {
 #ifdef OTGZ_SUPPORT
 	if (filename.GetExt() == "otgz") {
 		// Open the archive
@@ -717,6 +717,13 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 		return true;
 	}
 #endif
+	return false;
+}
+
+bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
+	if (loadOTGZ(map, filename)) {
+		return true;
+	}
 
 	std::ifstream file(nstr(filename.GetFullPath()), std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
@@ -783,71 +790,7 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 	return true;
 }
 
-bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
-	BinaryNode* root = f.getRootNode();
-	if (!root) {
-		error("Could not read root node.");
-		return false;
-	}
-	root->skip(1); // Skip the type byte
-
-	uint8_t u8;
-	uint16_t u16;
-	uint32_t u32;
-
-	if (!root->getU32(u32)) {
-		return false;
-	}
-
-	version.otbm = (MapVersionID)u32;
-
-	if (version.otbm > MAP_OTBM_4) {
-		// Failed to read version
-		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a OTBM format that is not supported by the editor."
-												 "Do you still want to attempt to load the map?",
-									wxYES | wxNO)
-			== wxID_YES) {
-			warning("Unsupported or damaged map version");
-		} else {
-			error("Unsupported OTBM version, could not load map");
-			return false;
-		}
-	}
-
-	if (!root->getU16(u16)) {
-		return false;
-	}
-
-	map.width = u16;
-	if (!root->getU16(u16)) {
-		return false;
-	}
-
-	map.height = u16;
-
-	if (!root->getU32(u32) || u32 > (unsigned long)g_items.MajorVersion) { // OTB major version
-		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a items.otb format that deviates from the "
-												 "items.otb loaded by the editor. Do you still want to attempt to load the map?",
-									wxYES | wxNO)
-			== wxID_YES) {
-			warning("Unsupported or damaged map version");
-		} else {
-			error("Outdated items.otb, could not load map");
-			return false;
-		}
-	}
-
-	if (!root->getU32(u32) || u32 > (unsigned long)g_items.MinorVersion) { // OTB minor version
-		warning("This editor needs an updated items.otb version");
-	}
-	version.client = (ClientVersionID)u32;
-
-	BinaryNode* mapHeaderNode = root->getChild();
-	if (mapHeaderNode == nullptr || !mapHeaderNode->getByte(u8) || u8 != OTBM_MAP_DATA) {
-		error("Could not get root child node. Cannot recover from fatal error!");
-		return false;
-	}
-
+void IOMapOTBM::readMapAttributes(BinaryNode* mapHeaderNode, Map& map) {
 	uint8_t attribute;
 	while (mapHeaderNode->getU8(attribute)) {
 		switch (attribute) {
@@ -883,7 +826,9 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 			}
 		}
 	}
+}
 
+bool IOMapOTBM::readMapNodes(BinaryNode* mapHeaderNode, Map& map, NodeFileReadHandle& f) {
 	int nodes_loaded = 0;
 
 	for (BinaryNode* mapNode = mapHeaderNode->getChild(); mapNode != nullptr; mapNode = mapNode->advance()) {
@@ -1083,6 +1028,79 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 				map.waypoints.addWaypoint(newd Waypoint(wp));
 			}
 		}
+	}
+	return true;
+}
+
+bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
+	BinaryNode* root = f.getRootNode();
+	if (!root) {
+		error("Could not read root node.");
+		return false;
+	}
+	root->skip(1); // Skip the type byte
+
+	uint8_t u8;
+	uint16_t u16;
+	uint32_t u32;
+
+	if (!root->getU32(u32)) {
+		return false;
+	}
+
+	version.otbm = (MapVersionID)u32;
+
+	if (version.otbm > MAP_OTBM_4) {
+		// Failed to read version
+		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a OTBM format that is not supported by the editor."
+												 "Do you still want to attempt to load the map?",
+									wxYES | wxNO)
+			== wxID_YES) {
+			warning("Unsupported or damaged map version");
+		} else {
+			error("Unsupported OTBM version, could not load map");
+			return false;
+		}
+	}
+
+	if (!root->getU16(u16)) {
+		return false;
+	}
+
+	map.width = u16;
+	if (!root->getU16(u16)) {
+		return false;
+	}
+
+	map.height = u16;
+
+	if (!root->getU32(u32) || u32 > (unsigned long)g_items.MajorVersion) { // OTB major version
+		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a items.otb format that deviates from the "
+												 "items.otb loaded by the editor. Do you still want to attempt to load the map?",
+									wxYES | wxNO)
+			== wxID_YES) {
+			warning("Unsupported or damaged map version");
+		} else {
+			error("Outdated items.otb, could not load map");
+			return false;
+		}
+	}
+
+	if (!root->getU32(u32) || u32 > (unsigned long)g_items.MinorVersion) { // OTB minor version
+		warning("This editor needs an updated items.otb version");
+	}
+	version.client = (ClientVersionID)u32;
+
+	BinaryNode* mapHeaderNode = root->getChild();
+	if (mapHeaderNode == nullptr || !mapHeaderNode->getByte(u8) || u8 != OTBM_MAP_DATA) {
+		error("Could not get root child node. Cannot recover from fatal error!");
+		return false;
+	}
+
+	readMapAttributes(mapHeaderNode, map);
+
+	if (!readMapNodes(mapHeaderNode, map, f)) {
+		return false;
 	}
 
 	if (!f.isOk()) {
