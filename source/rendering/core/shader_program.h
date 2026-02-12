@@ -37,7 +37,7 @@ private:
 	mutable std::unordered_map<std::string, GLint> uniform_cache;
 
 	GLint GetUniformLocation(const std::string& name) const;
-	GLuint CompileShader(GLenum type, const std::string& source);
+	bool CompileShader(GLuint shader, const std::string& source);
 };
 
 #endif

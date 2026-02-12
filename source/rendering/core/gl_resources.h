@@ -5,6 +5,51 @@
 #include <utility> // for std::exchange
 #include <spdlog/spdlog.h>
 
+// RAII wrapper for OpenGL Shaders
+class GLShader {
+public:
+	explicit GLShader(GLenum type) {
+		id = glCreateShader(type);
+		// spdlog::trace("GLShader created [ID={}]", id);
+	}
+
+	~GLShader() {
+		if (id) {
+			// spdlog::trace("GLShader deleted [ID={}]", id);
+			glDeleteShader(id);
+		}
+	}
+
+	// Disable copy
+	GLShader(const GLShader&) = delete;
+	GLShader& operator=(const GLShader&) = delete;
+
+	// Enable move
+	GLShader(GLShader&& other) noexcept :
+		id(std::exchange(other.id, 0)) { }
+
+	GLShader& operator=(GLShader&& other) noexcept {
+		if (this != &other) {
+			if (id) {
+				glDeleteShader(id);
+			}
+			id = std::exchange(other.id, 0);
+		}
+		return *this;
+	}
+
+	// Explicit conversion
+	explicit operator GLuint() const {
+		return id;
+	}
+	GLuint GetID() const {
+		return id;
+	}
+
+private:
+	GLuint id = 0;
+};
+
 // RAII wrapper for OpenGL Buffers (VBO, EBO, UBO, SSBO)
 class GLBuffer {
 public:

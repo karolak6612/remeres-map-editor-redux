@@ -143,17 +143,14 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	shader_->SetVec4("uGlobalTint", global_tint_);
 }
 
-void SpriteBatch::setGlobalTint(float r, float g, float b, float a) {
+void SpriteBatch::setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) {
 	if (!in_batch_) {
 		return;
 	}
 
 	// If pending sprites exist, must flush to apply previous tint
 	if (!pending_sprites_.empty()) {
-		// Warning: This causes a flush and state change
-		// We can't access AtlasManager here, so we must assume calling code
-		// flushes or sets tint at appropriate times.
-		// Ideally setGlobalTint is called when batch is empty.
+		flush(atlas_manager);
 	}
 
 	global_tint_ = glm::vec4(r, g, b, a);
