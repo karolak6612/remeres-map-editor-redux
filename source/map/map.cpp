@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <algorithm>
+#include <ranges>
 #include <unordered_set>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
@@ -203,7 +204,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
-		std::sort(id_list.begin(), id_list.end());
+		std::ranges::sort(id_list);
 
 		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
 
@@ -227,18 +228,18 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				tile->ground = nullptr;
 			}
 
-			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](Item* item) {
+			auto subrange = std::ranges::stable_partition(tile->items, [&ids_to_remove](Item* item) {
 				return !ids_to_remove.contains(item->getID());
 			});
 
-			std::for_each(part_iter, tile->items.end(), [](Item* item) {
+			std::ranges::for_each(subrange, [](Item* item) {
 				delete item;
 			});
-			tile->items.erase(part_iter, tile->items.end());
+			tile->items.erase(subrange.begin(), subrange.end());
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
-				Item* item = Item::Create(*iit);
+			for (uint16_t id : new_items) {
+				Item* item = Item::Create(id);
 				if (item->isGroundTile()) {
 					tile->ground = item;
 				} else {
@@ -258,8 +259,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				const std::vector<uint16_t>& v = cfstm->second;
 				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					Item* item = Item::Create(*iit);
+				for (uint16_t id : v) {
+					Item* item = Item::Create(id);
 					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
@@ -284,8 +285,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(*iit));
+				for (uint16_t id : v) {
+					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(id));
 					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}
@@ -322,14 +323,14 @@ void Map::cleanInvalidTiles(bool showdialog) {
 			continue;
 		}
 
-		auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [](Item* item) {
+		auto subrange = std::ranges::stable_partition(tile->items, [](Item* item) {
 			return g_items.typeExists(item->getID());
 		});
 
-		std::for_each(part_iter, tile->items.end(), [](Item* item) {
+		std::ranges::for_each(subrange, [](Item* item) {
 			delete item;
 		});
-		tile->items.erase(part_iter, tile->items.end());
+		tile->items.erase(subrange.begin(), subrange.end());
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {
