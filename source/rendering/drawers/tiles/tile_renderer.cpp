@@ -27,7 +27,7 @@
 #include "rendering/core/light_buffer.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
-	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), creature_name_drawer(cnd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), editor(ed) {
+	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
 }
 
 // Helper function to populate tooltip data from an item (in-place)
@@ -41,15 +41,33 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 		return false;
 	}
 
-	const uint16_t unique = item->getUniqueID();
-	const uint16_t action = item->getActionID();
-	std::string_view text = item->getText();
-	std::string_view description = item->getDescription();
+	uint16_t unique = 0;
+	uint16_t action = 0;
+	std::string_view text;
+	std::string_view description;
 	uint8_t doorId = 0;
 	Position destination;
+	bool hasContent = false;
+
+	bool is_complex = item->isComplex();
+	bool is_container = g_items[id].isContainer();
+	bool is_door = isHouseTile && item->isDoor();
+	bool is_teleport = item->isTeleport();
+
+	// Early exit for simple items
+	if (!is_complex && !is_container && !is_door && !is_teleport) {
+		return false;
+	}
+
+	if (is_complex) {
+		unique = item->getUniqueID();
+		action = item->getActionID();
+		text = item->getText();
+		description = item->getDescription();
+	}
 
 	// Check if it's a door
-	if (isHouseTile && item->isDoor()) {
+	if (is_door) {
 		if (const Door* door = item->asDoor()) {
 			if (door->isRealDoor()) {
 				doorId = door->getDoorID();
@@ -58,7 +76,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	}
 
 	// Check if it's a teleport
-	if (item->isTeleport()) {
+	if (is_teleport) {
 		Teleport* tp = static_cast<Teleport*>(item);
 		if (tp->hasDestination()) {
 			destination = tp->getDestination();
@@ -66,8 +84,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	}
 
 	// Check if container has content
-	bool hasContent = false;
-	if (g_items[id].isContainer()) {
+	if (is_container) {
 		if (const Container* container = item->asContainer()) {
 			hasContent = container->getItemCount() > 0;
 		}
