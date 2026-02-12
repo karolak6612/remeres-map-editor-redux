@@ -527,6 +527,12 @@ void Tile::update() {
 		if (it.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
 		}
+		if (it.hookSouth) {
+			statflags |= TILESTATE_HOOK_SOUTH;
+		}
+		if (it.hookEast) {
+			statflags |= TILESTATE_HOOK_EAST;
+		}
 	}
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {

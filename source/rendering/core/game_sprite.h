@@ -235,6 +235,11 @@ public:
 	friend class TextureGarbageCollector;
 	friend class TooltipDrawer;
 
+	// Exposed for fast-path rendering (BlitItem)
+	const AtlasRegion* getCachedDefaultRegion() const {
+		return cached_default_region;
+	}
+
 protected:
 	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites
 	mutable const AtlasRegion* cached_default_region = nullptr;

@@ -45,6 +45,8 @@ enum {
 	TILESTATE_HAS_TABLE = 0x0010,
 	TILESTATE_HAS_CARPET = 0x0020,
 	TILESTATE_MODIFIED = 0x0040,
+	TILESTATE_HOOK_SOUTH = 0x0080,
+	TILESTATE_HOOK_EAST = 0x0100,
 };
 
 enum : uint8_t {
@@ -185,6 +187,14 @@ public: // Functions
 		return testFlags(statflags, TILESTATE_HAS_CARPET);
 	}
 	Item* getCarpet() const;
+
+	bool hasHookSouth() const {
+		return testFlags(statflags, TILESTATE_HOOK_SOUTH);
+	}
+
+	bool hasHookEast() const {
+		return testFlags(statflags, TILESTATE_HOOK_EAST);
+	}
 
 	bool hasOptionalBorder() const {
 		return testFlags(statflags, TILESTATE_OP_BORDER);

@@ -82,8 +82,9 @@ public:
 
 	/**
 	 * Set global tint for subsequent draws in current batch.
+	 * If pending sprites exist, they will be flushed using the provided atlas manager.
 	 */
-	void setGlobalTint(float r, float g, float b, float a);
+	void setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager);
 
 	/**
 	 * Ensure capacity in pending vector.

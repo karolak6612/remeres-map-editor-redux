@@ -117,6 +117,10 @@ namespace IngamePreview {
 			creature_name_drawer->clear(); // Clear old labels
 		}
 
+		if (!g_gui.gfx.ensureAtlasManager()) {
+			return;
+		}
+
 		// Render floors from bottom to top
 		for (int z = last_visible; z >= 0; z--) {
 			float alpha = floor_opacity[z];
@@ -126,7 +130,7 @@ namespace IngamePreview {
 
 			// Sync viewport and start batch for this floor
 			sprite_batch->begin(view.projectionMatrix);
-			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha);
+			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *g_gui.gfx.getAtlasManager());
 
 			// Pre-calculate view offsets for this floor
 			int floor_offset = (z <= GROUND_LAYER)

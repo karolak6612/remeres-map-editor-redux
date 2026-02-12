@@ -126,9 +126,9 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	if (it.isSplash() || it.isFluidContainer()) {
 		subtype = item->getSubtype();
 	} else if (it.isHangable) {
-		if (tile && tile->hasProperty(HOOK_SOUTH)) {
+		if (tile && tile->hasHookSouth()) {
 			pattern_x = 1;
-		} else if (tile && tile->hasProperty(HOOK_EAST)) {
+		} else if (tile && tile->hasHookEast()) {
 			pattern_x = 2;
 		} else {
 			pattern_x = 0;
@@ -174,7 +174,17 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	int frame = (spr->animator) ? spr->animator->getFrame() : 0;
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
-		const AtlasRegion* region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
+		const AtlasRegion* region;
+		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
+			region = spr->getCachedDefaultRegion();
+			if (!region) {
+				// Fallback to slow path to populate cache
+				region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+			}
+		} else {
+			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
+		}
+
 		if (region) {
 			sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, red, green, blue, alpha);
 		}
