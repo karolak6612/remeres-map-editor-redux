@@ -4,7 +4,6 @@
 #include "app/main.h"
 #include "map/tileset.h"
 #include "brushes/brush.h"
-#include "palette/controls/brush_button.h"
 
 enum BrushListType {
 	BRUSHLIST_LARGE_ICONS,

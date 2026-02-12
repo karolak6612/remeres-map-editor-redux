@@ -1,4 +1,5 @@
 #include "rendering/core/shader_program.h"
+#include "rendering/core/gl_resources.h"
 #include <vector>
 #include <spdlog/spdlog.h>
 
@@ -13,20 +14,19 @@ ShaderProgram::~ShaderProgram() {
 }
 
 bool ShaderProgram::Load(const std::string& vertexSource, const std::string& fragmentSource) {
-	GLuint vertexShader = CompileShader(GL_VERTEX_SHADER, vertexSource);
-	if (vertexShader == 0) {
+	GLShader vertexShader(GL_VERTEX_SHADER);
+	if (!CompileShader(vertexShader.GetID(), vertexSource)) {
 		return false;
 	}
 
-	GLuint fragmentShader = CompileShader(GL_FRAGMENT_SHADER, fragmentSource);
-	if (fragmentShader == 0) {
-		glDeleteShader(vertexShader);
+	GLShader fragmentShader(GL_FRAGMENT_SHADER);
+	if (!CompileShader(fragmentShader.GetID(), fragmentSource)) {
 		return false;
 	}
 
 	program_id = glCreateProgram();
-	glAttachShader(program_id, vertexShader);
-	glAttachShader(program_id, fragmentShader);
+	glAttachShader(program_id, vertexShader.GetID());
+	glAttachShader(program_id, fragmentShader.GetID());
 	glLinkProgram(program_id);
 
 	GLint success;
@@ -35,13 +35,9 @@ bool ShaderProgram::Load(const std::string& vertexSource, const std::string& fra
 		char infoLog[1024];
 		glGetProgramInfoLog(program_id, 1024, nullptr, infoLog);
 		spdlog::error("SHADER PROGRAM LINKING ERROR: {}", infoLog);
-		glDeleteShader(vertexShader);
-		glDeleteShader(fragmentShader);
 		return false;
 	}
 
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
 	return true;
 }
 
@@ -97,8 +93,7 @@ void ShaderProgram::SetMat4(const std::string& name, const glm::mat4& value) con
 	glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, &value[0][0]);
 }
 
-GLuint ShaderProgram::CompileShader(GLenum type, const std::string& source) {
-	GLuint shader = glCreateShader(type);
+bool ShaderProgram::CompileShader(GLuint shader, const std::string& source) {
 	const char* src = source.c_str();
 	glShaderSource(shader, 1, &src, nullptr);
 	glCompileShader(shader);
@@ -108,9 +103,11 @@ GLuint ShaderProgram::CompileShader(GLenum type, const std::string& source) {
 	if (!success) {
 		char infoLog[1024];
 		glGetShaderInfoLog(shader, 1024, nullptr, infoLog);
+
+		GLint type;
+		glGetShaderiv(shader, GL_SHADER_TYPE, &type);
 		spdlog::error("SHADER COMPILATION ERROR ({}):\n{}", (type == GL_VERTEX_SHADER ? "VERTEX" : "FRAGMENT"), infoLog);
-		glDeleteShader(shader);
-		return 0;
+		return false;
 	}
-	return shader;
+	return true;
 }

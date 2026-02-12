@@ -176,21 +176,23 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 	std::vector<Container*> containers;
 	containers.reserve(32);
 
-	for (auto& tile_loc : map.tiles()) {
+	std::ranges::for_each(map.tiles(), [&map, &foreach, &done, &containers, selectedTiles](auto& tile_loc) {
 		++done;
 		Tile* tile = tile_loc.get();
 		if (selectedTiles && !tile->isSelected()) {
-			continue;
+			return;
 		}
 
 		if (tile->ground) {
-			foreach (map, tile, tile->ground, done);
+			foreach (map, tile, tile->ground, done)
+				;
 		}
 
 		for (auto* item : tile->items) {
 			containers.clear();
 			Container* container = item->asContainer();
-			foreach (map, tile, item, done);
+			foreach (map, tile, item, done)
+				;
 
 			if (container) {
 				containers.push_back(container);
@@ -202,7 +204,8 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 					ItemVector& v = container->getVector();
 					for (auto* i : v) {
 						Container* c = i->asContainer();
-						foreach (map, tile, i, done);
+						foreach (map, tile, i, done)
+							;
 
 						if (c) {
 							containers.push_back(c);
@@ -211,15 +214,16 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 				}
 			}
 		}
-	}
+	});
 }
 
 template <typename ForeachType>
 inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
 	long long done = 0;
-	for (auto& tile_loc : map.tiles()) {
-		foreach (map, tile_loc.get(), ++done);
-	}
+	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
+		foreach (map, tile_loc.get(), ++done)
+			;
+	});
 }
 
 template <typename RemoveIfType>
@@ -228,14 +232,14 @@ inline long long remove_if_TileOnMap(Map& map, RemoveIfType& remove_if) {
 	long long removed = 0;
 	long long total = map.getTileCount();
 
-	for (auto& tile_loc : map.tiles()) {
+	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
 		Tile* tile = tile_loc.get();
 		if (remove_if(map, tile, removed, done, total)) {
 			map.setTile(tile->getPosition(), std::unique_ptr<Tile>());
 			++removed;
 		}
 		++done;
-	}
+	});
 
 	return removed;
 }
@@ -245,11 +249,11 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 	int64_t done = 0;
 	int64_t removed = 0;
 
-	for (auto& tile_loc : map.tiles()) {
+	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
 		++done;
 		Tile* tile = tile_loc.get();
 		if (selectedOnly && !tile->isSelected()) {
-			continue;
+			return;
 		}
 
 		if (tile->ground) {
@@ -260,17 +264,16 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 			}
 		}
 
-		for (auto iit = tile->items.begin(); iit != tile->items.end();) {
-			Item* item = *iit;
+		// Use C++20's std::erase_if for a safer and more idiomatic way to remove elements.
+		std::erase_if(tile->items, [&](Item* item) {
 			if (condition(map, item, removed, done)) {
-				iit = tile->items.erase(iit);
 				delete item;
 				++removed;
-			} else {
-				++iit;
+				return true;
 			}
-		}
-	}
+			return false;
+		});
+	});
 	return removed;
 }
 

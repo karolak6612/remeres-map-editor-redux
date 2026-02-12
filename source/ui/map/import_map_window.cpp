@@ -6,6 +6,7 @@
 #include "ui/dialog_util.h"
 #include "ui/gui_ids.h"
 #include "map/map.h"
+#include "util/image_manager.h"
 
 #include <wx/filedlg.h>
 #include <wx/textctrl.h>
@@ -26,6 +27,7 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	file_text_field = newd wxTextCtrl(tmpsizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, FROM_DIP(this, wxSize(230, 23)));
 	tmpsizer->Add(file_text_field, 0, wxALL, 5);
 	wxButton* browse_button = newd wxButton(tmpsizer->GetStaticBox(), MAP_WINDOW_FILE_BUTTON, "Browse...", wxDefaultPosition, FROM_DIP(this, wxSize(80, 23)));
+	browse_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FOLDER_OPEN, wxSize(16, 16)));
 	browse_button->SetToolTip("Browse for map file");
 	tmpsizer->Add(browse_button, 0, wxALL, 5);
 	sizer->Add(tmpsizer, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 5);
@@ -75,9 +77,11 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	// OK/Cancel buttons
 	wxBoxSizer* buttons = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(this, wxID_OK, "Ok");
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	okBtn->SetToolTip("Start import");
 	buttons->Add(okBtn, 0, wxALL, 5);
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancelBtn->SetToolTip("Cancel");
 	buttons->Add(cancelBtn, 0, wxALL, 5);
 	sizer->Add(buttons, wxSizerFlags(1).Center());

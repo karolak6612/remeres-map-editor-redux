@@ -21,6 +21,8 @@
 #include "editor/dirty_list.h"
 #include "editor/editor.h"
 
+#include <memory>
+
 NetworkedAction::NetworkedAction(Editor& editor, ActionIdentifier ident) :
 	Action(editor, ident),
 	owner(0) {

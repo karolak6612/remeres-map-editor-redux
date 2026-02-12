@@ -196,11 +196,11 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
 			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
-				Item* item = Item::Create(*iit);
+				std::unique_ptr<Item> item = Item::Create(*iit);
 				if (item->isGroundTile()) {
-					tile->ground = item;
+					tile->ground = item.release();
 				} else {
-					tile->items.insert(tile->items.begin(), item);
+					tile->items.insert(tile->items.begin(), item.release());
 					++inserted_items;
 				}
 			}
@@ -217,14 +217,14 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				const std::vector<uint16_t>& v = cfstm->second;
 				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
 				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					Item* item = Item::Create(*iit);
+					std::unique_ptr<Item> item = Item::Create(*iit);
 					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
 						item->setUniqueID(uid);
-						tile->addItem(item);
+						tile->addItem(item.release());
 					} else {
-						tile->items.insert(tile->items.begin(), item);
+						tile->items.insert(tile->items.begin(), item.release());
 						++inserted_items;
 					}
 				}
@@ -243,7 +243,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
 				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(*iit));
+					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(*iit).release());
 					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}

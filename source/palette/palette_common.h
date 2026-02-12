@@ -27,7 +27,6 @@
 #include "ui/controls/item_buttons.h"
 
 class GUI;
-class BrushButton;
 class TilesetCategory;
 class BrushSizePanel;
 class BrushPalettePanel;

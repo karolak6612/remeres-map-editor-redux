@@ -5,6 +5,7 @@
 #include "editor/persistence/tileset_exporter.h"
 #include "ui/gui_ids.h"
 #include "app/application.h"
+#include "util/image_manager.h"
 
 #include <wx/dirdlg.h>
 #include <wx/textctrl.h>
@@ -32,6 +33,7 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 	tmpsizer = newd wxStaticBoxSizer(wxHORIZONTAL, this, "Output Folder");
 	tmpsizer->Add(directory_text_field, 1, wxALL, 5);
 	auto browseBtn = newd wxButton(this, TILESET_FILE_BUTTON, "Browse");
+	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FOLDER_OPEN, wxSize(16, 16)));
 	browseBtn->SetToolTip("Browse for output directory");
 	tmpsizer->Add(browseBtn, 0, wxALL, 5);
 	sizer->Add(tmpsizer, 0, wxALL | wxEXPAND, 5);
@@ -46,9 +48,11 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 	// OK/Cancel buttons
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	ok_button = newd wxButton(this, wxID_OK, "OK");
+	ok_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	ok_button->SetToolTip("Start export");
 	tmpsizer->Add(ok_button, wxSizerFlags(1).Center());
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancelBtn->SetToolTip("Cancel");
 	tmpsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(tmpsizer, 0, wxCENTER, 10);

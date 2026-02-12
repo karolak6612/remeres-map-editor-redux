@@ -136,6 +136,7 @@ Create PR titled `✨ Designer: [Your Description]`.
 - Am I about to duplicate something?
 - Am I using modern C++ patterns?
 - **CRITICAL**: You **MUST** consult the [RME Modern UI System Skill](../skills/SKILL.md) before implementing ANY GUI changes. This skill documents the golden standard for wxWidgets and NanoVG usage, established by the "Advanced Replace Tool".
+- **CRITICAL**: You **MUST** consult the [RME Image System Skill](../../.agent/skills/RME_IMAGE_SYSTEM/SKILL.md) for all icon and image usage. **NEVER** use `wxArtProvider`, hardcoded paths, or XPM data — always use `IMAGE_MANAGER.GetBitmap()` with macros from `util/image_manager.h`. When adding new icons, follow the checklist in the Image System Skill.
 
 ## 📜 THE MANTRA
 **SEARCH → REUSE → REFACTOR → ORGANIZE → MODERNIZE → IMPLEMENT**

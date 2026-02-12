@@ -105,7 +105,7 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		}
 	}
 
-	tile->addWallItem(Item::Create(id));
+	tile->addWallItem(Item::Create(id).release());
 }
 
 void WallBrush::doWalls(BaseMap* map, Tile* tile) {
@@ -246,9 +246,9 @@ void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 			ASSERT(id);
 
 			// Add a matching item above this item.
-			Item* item = Item::Create(id);
+			std::unique_ptr<Item> item = Item::Create(id);
 			++iter;
-			iter = tile->items.insert(iter, item);
+			iter = tile->items.insert(iter, item.release());
 		}
 		++iter;
 	}

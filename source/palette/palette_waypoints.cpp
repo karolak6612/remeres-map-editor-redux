@@ -103,23 +103,27 @@ void WaypointPalettePanel::OnUpdate() {
 			map->waypoints.removeWaypoint(wp->name);
 		}
 	}
+	waypoint_list->Freeze();
 	waypoint_list->DeleteAllItems();
 
 	if (!map) {
 		waypoint_list->Enable(false);
 		add_waypoint_button->Enable(false);
 		remove_waypoint_button->Enable(false);
-	} else {
-		waypoint_list->Enable(true);
-		add_waypoint_button->Enable(true);
-		remove_waypoint_button->Enable(true);
-
-		Waypoints& waypoints = map->waypoints;
-
-		for (WaypointMap::const_iterator iter = waypoints.begin(); iter != waypoints.end(); ++iter) {
-			waypoint_list->InsertItem(0, wxstr(iter->second->name));
-		}
+		waypoint_list->Thaw();
+		return;
 	}
+
+	waypoint_list->Enable(true);
+	add_waypoint_button->Enable(true);
+	remove_waypoint_button->Enable(true);
+
+	Waypoints& waypoints = map->waypoints;
+
+	for (WaypointMap::const_iterator iter = waypoints.begin(); iter != waypoints.end(); ++iter) {
+		waypoint_list->InsertItem(0, wxstr(iter->second->name));
+	}
+	waypoint_list->Thaw();
 }
 
 void WaypointPalettePanel::OnClickWaypoint(wxListEvent& event) {

@@ -1,14 +1,11 @@
 #include "ui/replace_tool/card_panel.h"
 #include "ui/theme.h"
-#include <wx/dcclient.h>
-#include <wx/graphics.h>
 #include <wx/settings.h>
 #include <numbers>
+#include <nanovg.h>
 #include <memory>
 
-CardPanel::CardPanel(wxWindow* parent, wxWindowID id) : wxPanel(parent, id) {
-	SetBackgroundStyle(wxBG_STYLE_PAINT);
-	Bind(wxEVT_PAINT, &CardPanel::OnPaint, this);
+CardPanel::CardPanel(wxWindow* parent, wxWindowID id) : NanoVGCanvas(parent, id) {
 	Bind(wxEVT_SIZE, &CardPanel::OnSize, this);
 
 	m_mainSizer = new wxBoxSizer(wxVERTICAL);
@@ -34,32 +31,20 @@ void CardPanel::SetShowFooter(bool show) {
 	Refresh();
 }
 
-// SetIsActive removed for now or just ignored
-
 void CardPanel::SetTitle(const wxString& title) {
 	m_title = title;
+	m_cachedTitleStr.clear();
 	Refresh();
 }
 
 void CardPanel::OnSize(wxSizeEvent& event) {
+	// NanoVGCanvas usually handles resizing GL context
 	Refresh();
 	event.Skip();
 }
 
-void CardPanel::OnPaint(wxPaintEvent& event) {
-	wxPaintDC dc(this);
-	std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
-
-	if (!gc) {
-		return;
-	}
-
-	wxRect rect = GetClientRect();
-	double w = rect.width;
-	double h = rect.height;
-
+void CardPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// Determine Colors
-	// Outer background (simulated shadow/border)
 	wxColour base = Theme::Get(Theme::Role::Surface);
 	wxColour cardBgStart = Theme::Get(Theme::Role::Surface);
 	wxColour cardBgEnd = Theme::Get(Theme::Role::Background);
@@ -67,130 +52,131 @@ void CardPanel::OnPaint(wxPaintEvent& event) {
 	wxColour headerBg = Theme::Get(Theme::Role::Header);
 	wxColour titleColor = Theme::Get(Theme::Role::Text);
 
-	// Clear
-	gc->SetBrush(wxBrush(base));
-	gc->DrawRectangle(0, 0, w, h);
+	// Clear background
+	nvgBeginPath(vg);
+	nvgRect(vg, 0, 0, width, height);
+	nvgFillColor(vg, nvgRGBA(base.Red(), base.Green(), base.Blue(), base.Alpha()));
+	nvgFill(vg);
 
 	// Padding for "shadow"
-	double margin = 2.0;
-	double r = 6.0; // Radius
+	float margin = 2.0f;
+	float r = 6.0f; // Radius
 
 	// Draw Shadow (simulated with offset rect)
-	gc->SetBrush(wxBrush(wxColour(0, 0, 0, 40)));
-	gc->SetPen(*wxTRANSPARENT_PEN);
-	gc->DrawRoundedRectangle(margin + 2, margin + 2, w - 2 * margin, h - 2 * margin, r);
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, margin + 2, margin + 2, width - 2 * margin, height - 2 * margin, r);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 40));
+	nvgFill(vg);
 
 	// Draw Card Body
-	wxGraphicsPath path = gc->CreatePath();
-	path.AddRoundedRectangle(margin, margin, w - 2 * margin, h - 2 * margin, r);
+	float cardX = margin;
+	float cardY = margin;
+	float cardW = width - 2 * margin;
+	float cardH = height - 2 * margin;
 
 	// Gradient
-	wxGraphicsBrush brush = gc->CreateLinearGradientBrush(margin, margin, margin, h - margin, cardBgStart, cardBgEnd);
-	gc->SetBrush(brush);
-	gc->SetPen(wxPen(borderColor, 1));
-	gc->FillPath(path);
-	gc->StrokePath(path);
+	NVGpaint paint = nvgLinearGradient(vg, cardX, cardY, cardX, cardY + cardH, nvgRGBA(cardBgStart.Red(), cardBgStart.Green(), cardBgStart.Blue(), cardBgStart.Alpha()), nvgRGBA(cardBgEnd.Red(), cardBgEnd.Green(), cardBgEnd.Blue(), cardBgEnd.Alpha()));
 
-	// Draw Header if Title exists
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, cardX, cardY, cardW, cardH, r);
+	nvgFillPaint(vg, paint);
+	nvgFill(vg);
+
+	// Border
+	nvgStrokeColor(vg, nvgRGBA(borderColor.Red(), borderColor.Green(), borderColor.Blue(), borderColor.Alpha()));
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStroke(vg);
+
 	// Draw Header if Title exists
 	if (!m_title.IsEmpty()) {
-		double headerH = (double)HEADER_HEIGHT;
-		double x = margin;
-		double y = margin;
-		double cw = w - 2 * margin;
-		double ch = headerH; // Height of header part
+		float headerH = (float)HEADER_HEIGHT;
+		float x = margin;
+		float y = margin;
+		float cw = cardW;
+		float ch = headerH; // Height of header part
 
-		// Create path for header (Top corners rounded, bottom square)
-		wxGraphicsPath headerPath = gc->CreatePath();
-
+		nvgBeginPath(vg);
 		// Start at Bottom-Left of header
-		headerPath.MoveToPoint(x, y + ch);
-
+		nvgMoveTo(vg, x, y + ch);
 		// Left vertical up to start of round
-		headerPath.AddLineToPoint(x, y + r);
-
-		// Top-Left Corner (180 to 270 degrees) -> PI to 1.5 PI
-		const double PI = std::numbers::pi;
-		headerPath.AddArc(x + r, y + r, r, PI, 1.5 * PI, true);
-
+		nvgLineTo(vg, x, y + r);
+		// Top-Left Corner
+		nvgArc(vg, x + r, y + r, r, NVG_PI, 1.5f * NVG_PI, NVG_CW);
 		// Top Line
-		headerPath.AddLineToPoint(x + cw - r, y);
-
-		// Top-Right Corner (270 to 360 degrees) -> 1.5 PI to 2 PI
-		headerPath.AddArc(x + cw - r, y + r, r, 1.5 * PI, 2.0 * PI, true);
-
-		// Right vertical down
-		headerPath.AddLineToPoint(x + cw, y + ch);
-
+		nvgLineTo(vg, x + cw - r, y);
+		// Top-Right Corner
+		nvgArc(vg, x + cw - r, y + r, r, 1.5f * NVG_PI, 0, NVG_CW);
+		// Bottom-Right of header part
+		nvgLineTo(vg, x + cw, y + ch);
 		// Bottom Line (Separator)
-		headerPath.AddLineToPoint(x, y + ch);
-
-		headerPath.CloseSubpath();
+		nvgLineTo(vg, x, y + ch);
+		nvgClosePath(vg);
 
 		// Fill Header
-		gc->SetBrush(wxBrush(headerBg));
-		gc->SetPen(*wxTRANSPARENT_PEN);
-		gc->FillPath(headerPath);
+		nvgFillColor(vg, nvgRGBA(headerBg.Red(), headerBg.Green(), headerBg.Blue(), headerBg.Alpha()));
+		nvgFill(vg);
 
 		// Draw Separator Line
-		gc->SetPen(wxPen(wxColour(0, 0, 0, 50), 1));
-		gc->StrokeLine(x, y + ch, x + cw, y + ch);
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, x, y + ch);
+		nvgLineTo(vg, x + cw, y + ch);
+		nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 50));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
 
 		// Draw Text
-		gc->SetFont(Theme::GetFont(9, true), titleColor);
+		static const float TITLE_FONT_SIZE_PX = 12.0f; // 9pt * 4/3 = 12px
+		nvgFontSize(vg, TITLE_FONT_SIZE_PX);
+		if (nvgFindFont(vg, "sans") != -1) {
+			nvgFontFace(vg, "sans");
+		}
+		nvgFillColor(vg, nvgRGBA(titleColor.Red(), titleColor.Green(), titleColor.Blue(), titleColor.Alpha()));
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-		double tw, th, td, te;
-		gc->GetTextExtent(m_title, &tw, &th, &td, &te);
+		float tx = x + cw / 2.0f;
+		float ty = y + ch / 2.0f;
 
-		// Center text in header
-		double tx = x + (cw - tw) / 2.0;
-		double ty = y + (ch - th) / 2.0;
-
-		gc->DrawText(m_title, tx, ty);
+		if (m_cachedTitleStr.empty() && !m_title.IsEmpty()) {
+			m_cachedTitleStr = m_title.ToStdString();
+		}
+		nvgText(vg, tx, ty, m_cachedTitleStr.c_str(), nullptr);
 	}
 
 	// Draw Footer if requested
 	if (m_showFooter) {
-		double footerH = (double)FOOTER_HEIGHT;
-		double x = margin;
-		double y = h - margin - footerH;
-		double cw = w - 2 * margin;
-		double ch = footerH;
+		float footerH = (float)FOOTER_HEIGHT;
+		float x = margin;
+		float y = height - margin - footerH;
+		float cw = cardW;
+		float ch = footerH;
 
-		// Create path for footer (Bottom corners rounded, top square)
-		wxGraphicsPath footerPath = gc->CreatePath();
-
+		nvgBeginPath(vg);
 		// Start at Top-Left of footer
-		footerPath.MoveToPoint(x, y);
-
+		nvgMoveTo(vg, x, y);
 		// Top Line (Separator)
-		footerPath.AddLineToPoint(x + cw, y);
-
+		nvgLineTo(vg, x + cw, y);
 		// Right vertical down to start of round
-		footerPath.AddLineToPoint(x + cw, y + ch - r);
-
+		nvgLineTo(vg, x + cw, y + ch - r);
 		// Bottom-Right Corner
-		const double PI = std::numbers::pi;
-		footerPath.AddArc(x + cw - r, y + ch - r, r, 0, 0.5 * PI, true);
-
+		nvgArc(vg, x + cw - r, y + ch - r, r, 0, 0.5f * NVG_PI, NVG_CW);
 		// Bottom Line
-		footerPath.AddLineToPoint(x + r, y + ch);
-
+		nvgLineTo(vg, x + r, y + ch);
 		// Bottom-Left Corner
-		footerPath.AddArc(x + r, y + ch - r, r, 0.5 * PI, PI, true);
-
+		nvgArc(vg, x + r, y + ch - r, r, 0.5f * NVG_PI, NVG_PI, NVG_CW);
 		// Left vertical up
-		footerPath.AddLineToPoint(x, y);
-
-		footerPath.CloseSubpath();
+		nvgLineTo(vg, x, y);
+		nvgClosePath(vg);
 
 		// Fill Footer
-		gc->SetBrush(wxBrush(headerBg));
-		gc->SetPen(*wxTRANSPARENT_PEN);
-		gc->FillPath(footerPath);
+		nvgFillColor(vg, nvgRGBA(headerBg.Red(), headerBg.Green(), headerBg.Blue(), headerBg.Alpha()));
+		nvgFill(vg);
 
 		// Draw Separator Line
-		gc->SetPen(wxPen(wxColour(0, 0, 0, 50), 1));
-		gc->StrokeLine(x, y, x + cw, y);
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, x, y);
+		nvgLineTo(vg, x + cw, y);
+		nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 50));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
 	}
 }
