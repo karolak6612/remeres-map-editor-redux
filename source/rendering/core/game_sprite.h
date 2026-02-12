@@ -17,7 +17,6 @@
 #include <memory>
 #include <map>
 #include <unordered_map>
-#include <list>
 #include <vector>
 #include <wx/dc.h>
 #include <wx/bitmap.h>
@@ -32,6 +31,7 @@ enum SpriteSize {
 };
 
 class GraphicManager;
+class SpritePreloader;
 
 class Sprite {
 public:
@@ -96,6 +96,9 @@ public:
 		return light;
 	}
 
+	// Helper for SpritePreloader to decompress data off-thread
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id = 0);
+
 protected:
 	class Image;
 	class NormalImage;
@@ -121,13 +124,15 @@ protected:
 
 	protected:
 		// Helper to handle atlas interactions
-		const AtlasRegion* EnsureAtlasSprite(uint32_t sprite_id);
+		const AtlasRegion* EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data = nullptr);
 	};
 
 	class NormalImage : public Image {
 	public:
 		NormalImage();
 		~NormalImage() override;
+
+		void fulfillPreload(std::unique_ptr<uint8_t[]> data);
 
 		// We use the sprite id as key
 		uint32_t id;
@@ -197,7 +202,7 @@ public:
 	SpriteLight light;
 
 	std::vector<NormalImage*> spriteList;
-	std::list<std::unique_ptr<TemplateImage>> instanced_templates; // Templates that use this sprite
+	std::vector<std::unique_ptr<TemplateImage>> instanced_templates; // Templates that use this sprite
 	struct CachedDC {
 		std::unique_ptr<wxMemoryDC> dc;
 		std::unique_ptr<wxBitmap> bm;
@@ -234,6 +239,7 @@ public:
 	friend class SpriteIconGenerator;
 	friend class TextureGarbageCollector;
 	friend class TooltipDrawer;
+	friend class SpritePreloader;
 
 	// Exposed for fast-path rendering (BlitItem)
 	const AtlasRegion* getCachedDefaultRegion() const {

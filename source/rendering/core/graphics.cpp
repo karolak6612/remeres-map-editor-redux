@@ -19,6 +19,7 @@
 
 #include "game/sprites.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_preloader.h"
 #include <nanovg.h>
 #include <spdlog/spdlog.h>
 #include <nanovg_gl.h>
@@ -68,9 +69,13 @@ bool GraphicManager::isUnloaded() const {
 
 void GraphicManager::updateTime() {
 	cached_time_ = time(nullptr);
+	SpritePreloader::get().update();
 }
 
 void GraphicManager::clear() {
+	// CRITICAL: Ensure preloader is cleared before modifying image_space to avoid
+	// use-after-free or OOB access in SpritePreloader::update() on main thread.
+	SpritePreloader::get().clear();
 	sprite_space.clear();
 	image_space.clear();
 	// editor_sprite_space.clear(); // Editor sprites are global/internal and should persist across version changes

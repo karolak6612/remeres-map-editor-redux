@@ -105,6 +105,13 @@ public:
 	bool hasTransparency() const;
 	bool isUnloaded() const;
 
+	std::string getSpriteFile() const {
+		return spritefile;
+	}
+	bool isExtended() const {
+		return is_extended;
+	}
+
 	ClientVersion* client_version;
 
 	// Sprite Atlas (Phase 2) - manages all game sprites in a texture array
@@ -118,7 +125,7 @@ public:
 	bool ensureAtlasManager();
 
 private:
-	bool unloaded;
+	std::atomic<bool> unloaded;
 	// This is used if memcaching is NOT on
 	std::string spritefile;
 	bool loadSpriteDump(std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
@@ -159,6 +166,7 @@ private:
 	friend class GameSprite::Image;
 	friend class GameSprite::NormalImage;
 	friend class GameSprite::TemplateImage;
+	friend class SpritePreloader;
 };
 
 #include "minimap_colors.h"

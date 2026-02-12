@@ -28,6 +28,7 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_batch.h"
+#include "rendering/core/sprite_preloader.h"
 #include "rendering/core/primitive_renderer.h"
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
@@ -98,6 +99,16 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 							TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
+							// Trigger preloading for this tile's sprites
+							if (Tile* tile = location->get()) {
+								if (tile->ground) {
+									rme::collectTileSprites(g_items[tile->ground->getID()].sprite, 0, 0, 0, 0);
+								}
+								for (Item* item : tile->items) {
+									rme::collectTileSprites(g_items[item->getID()].sprite, 0, 0, 0, 0);
+								}
+							}
+
 							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
 							// draw light, but only if not zoomed too far
 							if (draw_lights) {
@@ -146,6 +157,16 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 					}
 
 					TileLocation* location = &floor->locs[map_x * 4 + map_y];
+
+					// Trigger preloading for this tile's sprites
+					if (Tile* tile = location->get()) {
+						if (tile->ground) {
+							rme::collectTileSprites(g_items[tile->ground->getID()].sprite, 0, 0, 0, 0);
+						}
+						for (Item* item : tile->items) {
+							rme::collectTileSprites(g_items[item->getID()].sprite, 0, 0, 0, 0);
+						}
+					}
 
 					tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
