@@ -26,6 +26,7 @@
 #include <iomanip>
 #include <string>
 #include <string_view>
+#include <algorithm>
 
 //
 inline bool testFlags(size_t flags, size_t test) {
@@ -108,26 +109,26 @@ T max(T t, U u) {
 
 template <class T, class U, class V>
 inline T min(T t, U u, V v) {
-	int min = t;
-	if (u < min) {
-		min = u;
+	T min_val = t;
+	if (u < min_val) {
+		min_val = static_cast<T>(u);
 	}
-	if (v < min) {
-		min = v;
+	if (v < min_val) {
+		min_val = static_cast<T>(v);
 	}
-	return min;
+	return min_val;
 }
 
 template <class T, class U, class V>
 inline T max(T t, U u, V v) {
-	int max = t;
-	if (u > max) {
-		max = u;
+	T max_val = t;
+	if (u > max_val) {
+		max_val = static_cast<T>(u);
 	}
-	if (v > max) {
-		max = v;
+	if (v > max_val) {
+		max_val = static_cast<T>(v);
 	}
-	return max;
+	return max_val;
 }
 
 #endif

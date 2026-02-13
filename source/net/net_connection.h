@@ -25,6 +25,7 @@
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -80,7 +81,7 @@ public:
 private:
 	boost::asio::io_context* service;
 	std::thread thread;
-	bool stopped;
+	std::atomic<bool> stopped;
 };
 
 #endif
