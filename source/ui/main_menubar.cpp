@@ -417,7 +417,10 @@ void MainMenuBar::OnMapEditMonsters(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MainMenuBar::OnMapStatistics(wxCommandEvent& WXUNUSED(event)) {
-	MapStatisticsDialog::Show(frame);
+	if (g_gui.IsEditorOpen()) {
+		MapStatisticsDialog dlg(frame, &g_gui.GetCurrentMap());
+		dlg.ShowModal();
+	}
 }
 
 void MainMenuBar::OnMapCleanup(wxCommandEvent& event) {

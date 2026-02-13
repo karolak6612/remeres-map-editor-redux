@@ -14,106 +14,167 @@
 #include "util/image_manager.h"
 
 #include <wx/wx.h>
-#include <sstream>
+#include <format>
 
 extern GUI g_gui;
 
-void MapStatisticsDialog::Show(wxWindow* parent) {
-	if (!g_gui.IsEditorOpen()) {
-		return;
-	}
+MapStatisticsDialog::MapStatisticsDialog(wxWindow* parent, Map* map) :
+	wxDialog(parent, wxID_ANY, "Map Statistics", wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX),
+	map(map) {
 
 	g_gui.CreateLoadBar("Collecting data...");
-
-	Map* map = &g_gui.GetCurrentMap();
-	MapStatistics stats = MapStatisticsCollector::Collect(map);
-
+	stats = MapStatisticsCollector::Collect(map);
 	g_gui.DestroyLoadBar();
 
-	std::ostringstream os;
-	os.setf(std::ios::fixed, std::ios::floatfield);
-	os.precision(2);
-	os << "Map statistics for the map \"" << map->getMapDescription() << "\"\n";
-	os << "\tTile data:\n";
-	os << "\t\tTotal number of tiles: " << stats.tile_count << "\n";
-	os << "\t\tNumber of pathable tiles: " << stats.walkable_tile_count << "\n";
-	os << "\t\tNumber of unpathable tiles: " << stats.blocking_tile_count << "\n";
+	SetIcon(wxIcon(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32))));
+
+	createUI();
+}
+
+void MapStatisticsDialog::createUI() {
+	std::string text;
+	text += std::format("Map statistics for the map \"{}\"\n", map->getMapDescription());
+
+	text += "\tTile data:\n";
+	text += std::format("\t\tTotal number of tiles: {}\n", stats.tile_count);
+	text += std::format("\t\tNumber of pathable tiles: {}\n", stats.walkable_tile_count);
+	text += std::format("\t\tNumber of unpathable tiles: {}\n", stats.blocking_tile_count);
 	if (stats.percent_pathable >= 0.0) {
-		os << "\t\tPercent walkable tiles: " << stats.percent_pathable << "%\n";
+		text += std::format("\t\tPercent walkable tiles: {:.2f}%\n", stats.percent_pathable);
 	}
-	os << "\t\tDetailed tiles: " << stats.detailed_tile_count << "\n";
+	text += std::format("\t\tDetailed tiles: {}\n", stats.detailed_tile_count);
 	if (stats.percent_detailed >= 0.0) {
-		os << "\t\tPercent detailed tiles: " << stats.percent_detailed << "%\n";
+		text += std::format("\t\tPercent detailed tiles: {:.2f}%\n", stats.percent_detailed);
 	}
 
-	os << "\tItem data:\n";
-	os << "\t\tTotal number of items: " << stats.item_count << "\n";
-	os << "\t\tNumber of moveable tiles: " << stats.loose_item_count << "\n";
-	os << "\t\tNumber of depots: " << stats.depot_count << "\n";
-	os << "\t\tNumber of containers: " << stats.container_count << "\n";
-	os << "\t\tNumber of items with Action ID: " << stats.action_item_count << "\n";
-	os << "\t\tNumber of items with Unique ID: " << stats.unique_item_count << "\n";
+	text += "\tItem data:\n";
+	text += std::format("\t\tTotal number of items: {}\n", stats.item_count);
+	text += std::format("\t\tNumber of moveable tiles: {}\n", stats.loose_item_count);
+	text += std::format("\t\tNumber of depots: {}\n", stats.depot_count);
+	text += std::format("\t\tNumber of containers: {}\n", stats.container_count);
+	text += std::format("\t\tNumber of items with Action ID: {}\n", stats.action_item_count);
+	text += std::format("\t\tNumber of items with Unique ID: {}\n", stats.unique_item_count);
 
-	os << "\tCreature data:\n";
-	os << "\t\tTotal creature count: " << stats.creature_count << "\n";
-	os << "\t\tTotal spawn count: " << stats.spawn_count << "\n";
+	text += "\tCreature data:\n";
+	text += std::format("\t\tTotal creature count: {}\n", stats.creature_count);
+	text += std::format("\t\tTotal spawn count: {}\n", stats.spawn_count);
 	if (stats.creatures_per_spawn >= 0) {
-		os << "\t\tMean creatures per spawn: " << stats.creatures_per_spawn << "\n";
+		text += std::format("\t\tMean creatures per spawn: {:.2f}\n", stats.creatures_per_spawn);
 	}
 
-	os << "\tTown/House data:\n";
-	os << "\t\tTotal number of towns: " << stats.town_count << "\n";
-	os << "\t\tTotal number of houses: " << stats.house_count << "\n";
+	text += "\tTown/House data:\n";
+	text += std::format("\t\tTotal number of towns: {}\n", stats.town_count);
+	text += std::format("\t\tTotal number of houses: {}\n", stats.house_count);
 	if (stats.houses_per_town >= 0) {
-		os << "\t\tMean houses per town: " << stats.houses_per_town << "\n";
+		text += std::format("\t\tMean houses per town: {:.2f}\n", stats.houses_per_town);
 	}
-	os << "\t\tTotal amount of housetiles: " << stats.total_house_sqm << "\n";
+	text += std::format("\t\tTotal amount of housetiles: {}\n", stats.total_house_sqm);
 	if (stats.sqm_per_house >= 0) {
-		os << "\t\tMean tiles per house: " << stats.sqm_per_house << "\n";
+		text += std::format("\t\tMean tiles per house: {:.2f}\n", stats.sqm_per_house);
 	}
 	if (stats.sqm_per_town >= 0) {
-		os << "\t\tMean tiles per town: " << stats.sqm_per_town << "\n";
+		text += std::format("\t\tMean tiles per town: {:.2f}\n", stats.sqm_per_town);
 	}
 
 	if (stats.largest_town) {
-		os << "\t\tLargest Town: \"" << std::string(stats.largest_town->getName()) << "\" (" << stats.largest_town_size << " sqm)\n";
+		text += std::format("\t\tLargest Town: \"{}\" ({} sqm)\n", stats.largest_town->getName(), stats.largest_town_size);
 	}
 	if (stats.largest_house) {
-		os << "\t\tLargest House: \"" << stats.largest_house->name << "\" (" << stats.largest_house_size << " sqm)\n";
+		text += std::format("\t\tLargest House: \"{}\" ({} sqm)\n", stats.largest_house->name, stats.largest_house_size);
 	}
 
-	os << "\n";
-	os << "Generated by Remere's Map Editor version " + __RME_VERSION__ + "\n";
+	text += "\n";
+	text += std::format("Generated by Remere's Map Editor version {}\n", __RME_VERSION__);
 
-	wxDialog* dg = newd wxDialog(parent, wxID_ANY, "Map Statistics", wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxTextCtrl* text_field = newd wxTextCtrl(dg, wxID_ANY, wxstr(os.str()), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+	wxTextCtrl* text_field = newd wxTextCtrl(this, wxID_ANY, wxstr(text), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 	text_field->SetMinSize(wxSize(400, 300));
-	topsizer->Add(text_field, wxSizerFlags(5).Expand());
+	topsizer->Add(text_field, wxSizerFlags(1).Expand().Border());
 
-	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
-	wxButton* export_button = newd wxButton(dg, wxID_OK, "Export as XML");
-	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
-	choicesizer->Add(export_button, wxSizerFlags(1).Center());
-	export_button->SetToolTip("Not implemented yet");
-	export_button->Enable(false);
-	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Close this window");
-	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
-	topsizer->Add(choicesizer, wxSizerFlags(1).Center());
-	dg->SetSizerAndFit(topsizer);
-	dg->Centre(wxBOTH);
+	wxSizer* buttonsizer = newd wxBoxSizer(wxHORIZONTAL);
 
-	int ret = dg->ShowModal();
+	wxButton* export_button = newd wxButton(this, wxID_SAVE, "Export as XML");
+	export_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_EXPORT));
+	export_button->SetToolTip("Export statistics to an XML file");
 
-	if (ret == wxID_OK) {
-	} else if (ret == wxID_CANCEL) {
+	wxButton* closeBtn = newd wxButton(this, wxID_CANCEL, "Close");
+	closeBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
+	closeBtn->SetToolTip("Close this window");
+
+	buttonsizer->Add(export_button, wxSizerFlags(0).Center().Border(wxRIGHT, 10));
+	buttonsizer->Add(closeBtn, wxSizerFlags(0).Center());
+
+	topsizer->Add(buttonsizer, wxSizerFlags(0).Center().Border());
+
+	SetSizerAndFit(topsizer);
+	Centre(wxBOTH);
+
+	Bind(wxEVT_BUTTON, &MapStatisticsDialog::OnExport, this, wxID_SAVE);
+	Bind(wxEVT_BUTTON, &MapStatisticsDialog::OnClose, this, wxID_CANCEL);
+}
+
+void MapStatisticsDialog::OnExport(wxCommandEvent& event) {
+	wxFileDialog saveFileDialog(this, "Export Statistics XML", "", "statistics.xml",
+								"XML files (*.xml)|*.xml", wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
+
+	if (saveFileDialog.ShowModal() == wxID_CANCEL)
+		return;
+
+	pugi::xml_document doc;
+	pugi::xml_node root = doc.append_child("map_statistics");
+	root.append_attribute("map_name") = map->getMapDescription().c_str();
+	root.append_attribute("generator") = std::format("Remere's Map Editor {}", __RME_VERSION__).c_str();
+
+	// Tile Data
+	pugi::xml_node tiles = root.append_child("tiles");
+	tiles.append_attribute("total") = stats.tile_count;
+	tiles.append_attribute("walkable") = stats.walkable_tile_count;
+	tiles.append_attribute("blocking") = stats.blocking_tile_count;
+	tiles.append_attribute("detailed") = stats.detailed_tile_count;
+	tiles.append_attribute("percent_walkable") = stats.percent_pathable;
+	tiles.append_attribute("percent_detailed") = stats.percent_detailed;
+
+	// Item Data
+	pugi::xml_node items = root.append_child("items");
+	items.append_attribute("total") = stats.item_count;
+	items.append_attribute("moveable") = stats.loose_item_count;
+	items.append_attribute("depots") = stats.depot_count;
+	items.append_attribute("containers") = stats.container_count;
+	items.append_attribute("with_aid") = stats.action_item_count;
+	items.append_attribute("with_uid") = stats.unique_item_count;
+
+	// Creature Data
+	pugi::xml_node creatures = root.append_child("creatures");
+	creatures.append_attribute("count") = stats.creature_count;
+	creatures.append_attribute("spawns") = stats.spawn_count;
+	creatures.append_attribute("per_spawn") = stats.creatures_per_spawn;
+
+	// Town/House Data
+	pugi::xml_node locations = root.append_child("locations");
+	locations.append_attribute("towns") = stats.town_count;
+	locations.append_attribute("houses") = stats.house_count;
+	locations.append_attribute("house_sqm") = stats.total_house_sqm;
+	locations.append_attribute("houses_per_town") = stats.houses_per_town;
+	locations.append_attribute("sqm_per_house") = stats.sqm_per_house;
+	locations.append_attribute("sqm_per_town") = stats.sqm_per_town;
+
+	if (stats.largest_town) {
+		pugi::xml_node town = locations.append_child("largest_town");
+		town.append_attribute("name") = stats.largest_town->getName().c_str();
+		town.append_attribute("size") = stats.largest_town_size;
 	}
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
-	dg->SetIcon(icon);
+	if (stats.largest_house) {
+		pugi::xml_node house = locations.append_child("largest_house");
+		house.append_attribute("name") = stats.largest_house->name.c_str();
+		house.append_attribute("size") = stats.largest_house_size;
+	}
 
-	dg->Destroy();
+	if (!doc.save_file(saveFileDialog.GetPath().ToStdString().c_str())) {
+		wxMessageBox("Failed to save XML file.", "Error", wxOK | wxICON_ERROR, this);
+	}
+}
+
+void MapStatisticsDialog::OnClose(wxCommandEvent& event) {
+	EndModal(wxID_CANCEL);
 }

@@ -5,11 +5,23 @@
 #ifndef RME_UI_MAP_STATISTICS_DIALOG_H_
 #define RME_UI_MAP_STATISTICS_DIALOG_H_
 
-#include <wx/window.h>
+#include "app/main.h"
+#include <wx/dialog.h>
+#include "map/map_statistics.h"
 
-class MapStatisticsDialog {
+class Map;
+
+class MapStatisticsDialog : public wxDialog {
 public:
-	static void Show(wxWindow* parent);
+	MapStatisticsDialog(wxWindow* parent, Map* map);
+
+private:
+	void createUI();
+	void OnExport(wxCommandEvent& event);
+	void OnClose(wxCommandEvent& event);
+
+	Map* map;
+	MapStatistics stats;
 };
 
 #endif
