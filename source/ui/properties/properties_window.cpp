@@ -73,11 +73,11 @@ void PropertiesWindow::createUI() {
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Apply changes and close");
 	optSizer->Add(okBtn, wxSizerFlags(0).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Discard changes and close");
 	optSizer->Add(cancelBtn, wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
@@ -223,12 +223,12 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* addBtn = newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute");
-	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	addBtn->SetToolTip("Add a new custom attribute");
 	optSizer->Add(addBtn, wxSizerFlags(0).Center());
 
 	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
-	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
 	removeBtn->SetToolTip("Remove selected custom attribute");
 	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
 
