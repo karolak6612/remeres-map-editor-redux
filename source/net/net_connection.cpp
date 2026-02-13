@@ -95,7 +95,7 @@ bool NetworkConnection::start() {
 
 	stopped = false;
 	if (!service) {
-		service = new boost::asio::io_context;
+		service = std::make_unique<boost::asio::io_context>();
 	}
 
 	thread = std::thread([this]() -> void {
@@ -131,8 +131,7 @@ void NetworkConnection::stop() {
 		spdlog::default_logger()->flush();
 	}
 
-	delete service;
-	service = nullptr;
+	service.reset();
 
 	spdlog::info("NetworkConnection::stop finished");
 	spdlog::default_logger()->flush();

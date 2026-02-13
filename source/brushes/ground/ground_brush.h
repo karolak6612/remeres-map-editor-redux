@@ -83,6 +83,7 @@ protected: // Members
 	bool has_zilch_inner_border;
 	bool has_outer_border;
 	bool has_inner_border;
+	std::unique_ptr<AutoBorder> owned_optional_border;
 	AutoBorder* optional_border;
 	bool use_only_optional; // If this is true, there will be no normal border under the gravel
 	bool randomize;
@@ -104,8 +105,9 @@ protected: // Members
 		bool super;
 		uint32_t to;
 
+		std::unique_ptr<AutoBorder> owned_autoborder;
 		AutoBorder* autoborder;
-		std::vector<SpecificCaseBlock*> specific_cases;
+		std::vector<std::unique_ptr<SpecificCaseBlock>> specific_cases;
 	};
 
 	struct ItemChanceBlock {
@@ -123,7 +125,7 @@ protected: // Members
 		}
 	};
 
-	std::vector<BorderBlock*> borders;
+	std::vector<std::unique_ptr<BorderBlock>> borders;
 	std::vector<ItemChanceBlock> border_items;
 	int total_chance;
 

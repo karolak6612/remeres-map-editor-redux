@@ -48,7 +48,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	}
 
 	// Capture global state once per preload call (one item)
-	const std::string sprfile = g_gui.gfx.getSpriteFile();
+	const std::string& sprfile = g_gui.gfx.getSpriteFile();
 	const bool is_extended = g_gui.gfx.isExtended();
 	const bool has_transparency = g_gui.gfx.hasTransparency();
 

@@ -105,7 +105,7 @@ public:
 	bool hasTransparency() const;
 	bool isUnloaded() const;
 
-	std::string getSpriteFile() const {
+	const std::string& getSpriteFile() const {
 		return spritefile;
 	}
 	bool isExtended() const {
