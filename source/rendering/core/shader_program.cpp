@@ -52,8 +52,7 @@ void ShaderProgram::Unuse() const {
 }
 
 GLint ShaderProgram::GetUniformLocation(const std::string& name) const {
-	auto it = uniform_cache.find(name);
-	if (it != uniform_cache.end()) {
+	if (auto it = uniform_cache.find(name); it != uniform_cache.end()) {
 		return it->second;
 	}
 
@@ -66,7 +65,8 @@ GLint ShaderProgram::GetUniformLocation(const std::string& name) const {
 }
 
 void ShaderProgram::SetBool(const std::string& name, bool value) const {
-	glUniform1i(GetUniformLocation(name), (int)value);
+	// OpenGL doesn't have a native bool uniform type, so we cast to int (0 or 1)
+	glUniform1i(GetUniformLocation(name), static_cast<int>(value));
 }
 
 void ShaderProgram::SetInt(const std::string& name, int value) const {

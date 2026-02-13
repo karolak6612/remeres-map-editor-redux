@@ -12,6 +12,8 @@
 #include "rendering/core/outfit_colors.h"
 #include <spdlog/spdlog.h>
 #include <atomic>
+#include <algorithm>
+#include <ranges>
 
 static std::atomic<uint32_t> template_id_generator(0x1000000);
 
@@ -164,7 +166,7 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 GameSprite::TemplateImage* GameSprite::getTemplateImage(int sprite_index, const Outfit& outfit) {
 	// While this is linear lookup, it is very rare for the list to contain more than 4-8 entries,
 	// so it's faster than a hashmap anyways.
-	auto it = std::find_if(instanced_templates.begin(), instanced_templates.end(), [sprite_index, &outfit](const auto& img) {
+	auto it = std::ranges::find_if(instanced_templates, [sprite_index, &outfit](const auto& img) {
 		if (img->sprite_index != sprite_index) {
 			return false;
 		}

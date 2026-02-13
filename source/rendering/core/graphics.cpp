@@ -64,7 +64,7 @@ bool GraphicManager::hasTransparency() const {
 }
 
 bool GraphicManager::isUnloaded() const {
-	return unloaded;
+	return unloaded.load();
 }
 
 void GraphicManager::updateTime() {
@@ -123,8 +123,7 @@ bool GraphicManager::ensureAtlasManager() {
 
 Sprite* GraphicManager::getSprite(int id) {
 	if (id < 0) {
-		auto it = editor_sprite_space.find(id);
-		if (it != editor_sprite_space.end()) {
+		if (auto it = editor_sprite_space.find(id); it != editor_sprite_space.end()) {
 			return it->second.get();
 		}
 		return nullptr;

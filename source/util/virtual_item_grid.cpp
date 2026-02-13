@@ -60,10 +60,10 @@ int VirtualItemGrid::HitTest(int x, int y) const {
 
 	size_t index = row * m_columns + col;
 	if (index < GetItemCount()) {
-		wxRect r = GetItemRect((int)index);
+		wxRect r = GetItemRect(static_cast<int>(index));
 		r.y -= scrollPos; // Convert back to local for test
 		if (r.Contains(x, y)) {
-			return (int)index;
+			return static_cast<int>(index);
 		}
 	}
 	return -1;
@@ -90,14 +90,14 @@ void VirtualItemGrid::SetSelection(int index) {
 }
 
 uint16_t VirtualItemGrid::GetSelectedItemId() const {
-	if (m_selectedIndex >= 0 && m_selectedIndex < (int)GetItemCount()) {
+	if (m_selectedIndex >= 0 && m_selectedIndex < static_cast<int>(GetItemCount())) {
 		return GetItem(m_selectedIndex);
 	}
 	return 0;
 }
 
 void VirtualItemGrid::EnsureVisible(int index) {
-	if (index < 0 || index >= (int)GetItemCount()) {
+	if (index < 0 || index >= static_cast<int>(GetItemCount())) {
 		return;
 	}
 
@@ -184,7 +184,7 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	int endRow = (scrollPos + height + rowHeight - 1) / rowHeight;
 
 	int startIdx = startRow * m_columns;
-	int endIdx = std::min((int)count, (endRow + 1) * m_columns);
+	int endIdx = std::min(static_cast<int>(count), (endRow + 1) * m_columns);
 
 	for (int i = startIdx; i < endIdx; ++i) {
 		if (i < 0) {
@@ -192,10 +192,10 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		}
 
 		wxRect r = GetItemRect(i);
-		float x = (float)r.x;
-		float y = (float)r.y;
-		float w = (float)r.width;
-		float h = (float)r.height;
+		float x = static_cast<float>(r.x);
+		float y = static_cast<float>(r.y);
+		float w = static_cast<float>(r.width);
+		float h = static_cast<float>(r.height);
 
 		bool isSelected = (i == m_selectedIndex);
 		bool isHovered = (i == m_hoverIndex);
