@@ -109,7 +109,7 @@ namespace IngamePreview {
 		// Initialize GL state
 		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 		primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 		light_buffer->Clear();

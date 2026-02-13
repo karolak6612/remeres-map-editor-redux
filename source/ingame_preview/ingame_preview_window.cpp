@@ -132,15 +132,15 @@ namespace IngamePreview {
 	}
 
 	IngamePreviewWindow::~IngamePreviewWindow() {
-		spdlog::info("IngamePreviewWindow destructor started");
+		spdlog::debug("IngamePreviewWindow destructor started");
 		spdlog::default_logger()->flush();
 
-		spdlog::info("IngamePreviewWindow destructor - stopping update_timer");
+		spdlog::debug("IngamePreviewWindow destructor - stopping update_timer");
 		spdlog::default_logger()->flush();
 		update_timer.Stop();
 
-		spdlog::info("IngamePreviewWindow destructor finished");
-		spdlog::default_logger()->flush();
+		spdlog::debug("IngamePreviewWindow destructor finished");
+		// spdlog::default_logger()->flush();
 	}
 
 	void IngamePreviewWindow::OnUpdateTimer(wxTimerEvent& event) {

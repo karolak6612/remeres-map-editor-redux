@@ -66,15 +66,16 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 }
 
 MinimapWindow::~MinimapWindow() {
-	spdlog::info("MinimapWindow destructor started");
+	spdlog::debug("MinimapWindow destructor started");
 	spdlog::default_logger()->flush();
-	if (context && nvg) {
-		spdlog::info("MinimapWindow destructor - setting context and resetting nvg");
+	if (context) {
+		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer/nvg");
 		spdlog::default_logger()->flush();
 		SetCurrent(*context);
+		drawer.reset();
 		nvg.reset();
 	}
-	spdlog::info("MinimapWindow destructor finished");
+	spdlog::debug("MinimapWindow destructor finished");
 	spdlog::default_logger()->flush();
 }
 
@@ -142,6 +143,7 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	// Glass Overlay
 	NVGcontext* vg = nvg.get();
 	if (vg) {
+		glClear(GL_STENCIL_BUFFER_BIT);
 		int w, h;
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, GetContentScaleFactor());

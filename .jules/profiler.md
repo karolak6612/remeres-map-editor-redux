@@ -7,3 +7,8 @@ Learning: `std::string` return by value in accessor methods (`getText`) can be a
 Finding: `visitLeavesByViewport` had a cache thrashing issue where iterating `cx` (inner loop) reset the single-entry cache for every column, causing redundant `unordered_map` lookups for every cell in a row.
 Impact: Reduced map lookups by ~16x (NODES_PER_CELL) in viewport traversal. Measured 2x speedup (13ms -> 6ms) in isolated benchmark for dense viewport traversal.
 Learning: Single-entry caching in nested loops must respect the iteration order. Pre-fetching data for the inner loop (row-based) is more cache-friendly than random lookups.
+
+## 2026-02-13 - Optimization of Sprite File Path Access
+Finding: `GraphicManager::getSpriteFile()` returned `std::string` by value, causing a heap allocation and copy for every item in the render loop during sprite preloading checks.
+Impact: Reduced memory allocations per frame significantly (thousands of allocations avoided per frame).
+Learning: Returning `std::string` by value from a getter called in a hot loop is a major performance killer. Always use `const std::string&` or `std::string_view` for members.

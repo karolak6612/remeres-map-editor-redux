@@ -41,19 +41,6 @@ GroundBrush::GroundBrush() :
 }
 
 GroundBrush::~GroundBrush() {
-	for (BorderBlock* borderBlock : borders) {
-		if (borderBlock->autoborder) {
-			for (SpecificCaseBlock* specificCaseBlock : borderBlock->specific_cases) {
-				delete specificCaseBlock;
-			}
-
-			if (borderBlock->autoborder->ground) {
-				delete borderBlock->autoborder;
-			}
-		}
-		delete borderBlock;
-	}
-	borders.clear();
 }
 
 bool GroundBrush::load(pugi::xml_node node, std::vector<std::string>& warnings) {
@@ -105,49 +92,49 @@ const GroundBrush::BorderBlock* GroundBrush::getBrushTo(GroundBrush* first, Grou
 		if (second) {
 			if (first->getZ() < second->getZ() && second->hasOuterBorder()) {
 				if (first->hasInnerBorder()) {
-					for (BorderBlock* bb : first->borders) {
+					for (const auto& bb : first->borders) {
 						if (bb->outer) {
 							continue;
 						} else if (bb->to == second->getID() || bb->to == 0xFFFFFFFF) {
-							return bb;
+							return bb.get();
 						}
 					}
 				}
-				for (BorderBlock* bb : second->borders) {
+				for (const auto& bb : second->borders) {
 					if (!bb->outer) {
 						continue;
 					} else if (bb->to == first->getID()) {
-						return bb;
+						return bb.get();
 					} else if (bb->to == 0xFFFFFFFF) {
-						return bb;
+						return bb.get();
 					}
 				}
 			} else if (first->hasInnerBorder()) {
-				for (BorderBlock* bb : first->borders) {
+				for (const auto& bb : first->borders) {
 					if (bb->outer) {
 						continue;
 					} else if (bb->to == second->getID()) {
-						return bb;
+						return bb.get();
 					} else if (bb->to == 0xFFFFFFFF) {
-						return bb;
+						return bb.get();
 					}
 				}
 			}
 		} else if (first->hasInnerZilchBorder()) {
-			for (BorderBlock* bb : first->borders) {
+			for (const auto& bb : first->borders) {
 				if (bb->outer) {
 					continue;
 				} else if (bb->to == 0) {
-					return bb;
+					return bb.get();
 				}
 			}
 		}
 	} else if (second && second->hasOuterZilchBorder()) {
-		for (BorderBlock* bb : second->borders) {
+		for (const auto& bb : second->borders) {
 			if (!bb->outer) {
 				continue;
 			} else if (bb->to == 0) {
-				return bb;
+				return bb.get();
 			}
 		}
 	}
@@ -169,7 +156,7 @@ void GroundBrush::getRelatedItems(std::vector<uint16_t>& items) {
 		}
 	}
 
-	for (const BorderBlock* bb : borders) {
+	for (const auto& bb : borders) {
 		if (bb->autoborder) {
 			for (uint32_t tile_id : bb->autoborder->tiles) {
 				if (tile_id != 0) {
@@ -177,7 +164,7 @@ void GroundBrush::getRelatedItems(std::vector<uint16_t>& items) {
 				}
 			}
 		}
-		for (const SpecificCaseBlock* sc : bb->specific_cases) {
+		for (const auto& sc : bb->specific_cases) {
 			if (sc->to_replace_id != 0) {
 				items.push_back(sc->to_replace_id);
 			}

@@ -35,8 +35,8 @@ DCButton::DCButton() :
 	size(RENDER_SIZE_16x16),
 	sprite(nullptr),
 	overlay(nullptr) {
-	SetSize(36, 36);
-	SetMinSize(wxSize(36, 36));
+	SetSize(FromDIP(wxSize(36, 36)));
+	SetMinSize(FromDIP(wxSize(36, 36)));
 	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
 	SetSprite(0);
 }
@@ -51,11 +51,11 @@ DCButton::DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, Rende
 
 	wxSize winSize;
 	if (sz == RENDER_SIZE_64x64) {
-		winSize = wxSize(68, 68);
+		winSize = FromDIP(wxSize(68, 68));
 	} else if (sz == RENDER_SIZE_32x32) {
-		winSize = wxSize(36, 36);
+		winSize = FromDIP(wxSize(36, 36));
 	} else {
-		winSize = wxSize(20, 20);
+		winSize = FromDIP(wxSize(20, 20));
 	}
 
 	SetSize(winSize);

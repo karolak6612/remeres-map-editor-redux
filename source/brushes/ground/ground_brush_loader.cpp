@@ -99,10 +99,11 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 					continue;
 				}
 
-				AutoBorder* autoBorder = newd AutoBorder(0); // Empty id basically
+				auto autoBorder = std::make_unique<AutoBorder>(0);
 				autoBorder->ground = true;
 				autoBorder->load(childNode, warnings, &brush, ground_equivalent);
-				brush.optional_border = autoBorder;
+				brush.owned_optional_border = std::move(autoBorder);
+				brush.optional_border = brush.owned_optional_border.get();
 			} else {
 				// Load from ID
 				if (!(attribute = childNode.attribute("id"))) {
@@ -120,7 +121,9 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				brush.optional_border = it->second.get();
 			}
 		} else if (std::ranges::equal(childName, std::string_view("border"), iequal)) {
-			AutoBorder* autoBorder;
+			std::unique_ptr<AutoBorder> newAutoBorder;
+			AutoBorder* autoBorderPtr = nullptr;
+
 			if (!(attribute = childNode.attribute("id"))) {
 				if (!(attribute = childNode.attribute("ground_equivalent"))) {
 					continue;
@@ -141,30 +144,34 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				}
 
 				if (valid) {
-					autoBorder = newd AutoBorder(0); // Empty id basically
-					autoBorder->ground = true;
-					autoBorder->load(childNode, warnings, &brush, ground_equivalent);
+					newAutoBorder = std::make_unique<AutoBorder>(0);
+					newAutoBorder->ground = true;
+					newAutoBorder->load(childNode, warnings, &brush, ground_equivalent);
+					autoBorderPtr = newAutoBorder.get();
 				} else {
 					continue;
 				}
 			} else {
 				int32_t id = attribute.as_int();
 				if (id == 0) {
-					autoBorder = nullptr;
+					autoBorderPtr = nullptr;
 				} else {
 					auto it = g_brushes.borders.find(id);
 					if (it == g_brushes.borders.end() || !it->second) {
 						warnings.push_back("\nCould not find border id " + std::to_string(id));
 						continue;
 					}
-					autoBorder = it->second.get();
+					autoBorderPtr = it->second.get();
 				}
 			}
 
 			auto borderBlock = std::make_unique<GroundBrush::BorderBlock>();
 			borderBlock->super = false;
 			borderBlock->outer = true;
-			borderBlock->autoborder = autoBorder;
+			if (newAutoBorder) {
+				borderBlock->owned_autoborder = std::move(newAutoBorder);
+			}
+			borderBlock->autoborder = autoBorderPtr;
 
 			if ((attribute = childNode.attribute("to"))) {
 				const std::string_view value = attribute.as_string();
@@ -176,9 +183,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 					Brush* tobrush = g_brushes.getBrush(value);
 					if (!tobrush) {
 						warnings.push_back((wxString("To brush ") + wxstr(value) + " doesn't exist.").ToStdString());
-						if (autoBorder && autoBorder->ground) {
-							delete autoBorder;
-						}
+						// newAutoBorder is automatically deleted if borderBlock is destroyed or reset (RAII via std::unique_ptr)
 						continue;
 					}
 					borderBlock->to = tobrush->getID();
@@ -221,7 +226,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 					continue;
 				}
 
-				GroundBrush::SpecificCaseBlock* specificCaseBlock = nullptr;
+				std::unique_ptr<GroundBrush::SpecificCaseBlock> specificCaseBlock;
 				for (pugi::xml_node superChildNode : subChildNode.children()) {
 					std::string_view superChildName = superChildNode.name();
 					if (std::ranges::equal(superChildName, std::string_view("conditions"), iequal)) {
@@ -249,7 +254,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 								uint32_t match_itemid = autoBorder->tiles[edge_id];
 								if (!specificCaseBlock) {
-									specificCaseBlock = newd GroundBrush::SpecificCaseBlock();
+									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
 								specificCaseBlock->items_to_match.push_back(match_itemid);
 							} else if (std::ranges::equal(conditionName, std::string_view("match_group"), iequal)) {
@@ -264,7 +269,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 								int32_t edge_id = AutoBorder::edgeNameToID(attribute.as_string());
 								if (!specificCaseBlock) {
-									specificCaseBlock = newd GroundBrush::SpecificCaseBlock();
+									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
 
 								specificCaseBlock->match_group = group;
@@ -277,7 +282,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 								int32_t match_itemid = attribute.as_int();
 								if (!specificCaseBlock) {
-									specificCaseBlock = newd GroundBrush::SpecificCaseBlock();
+									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
 
 								specificCaseBlock->match_group = 0;
@@ -319,7 +324,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 								it.isBorder = true;
 								if (!specificCaseBlock) {
-									specificCaseBlock = newd GroundBrush::SpecificCaseBlock();
+									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
 
 								specificCaseBlock->to_replace_id = autoBorder->tiles[edge_id];
@@ -342,14 +347,14 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 								it.isBorder = true;
 								if (!specificCaseBlock) {
-									specificCaseBlock = newd GroundBrush::SpecificCaseBlock();
+									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
 
 								specificCaseBlock->to_replace_id = to_replace_id;
 								specificCaseBlock->with_id = with_id;
 							} else if (std::ranges::equal(actionName, std::string_view("delete_borders"), iequal)) {
 								if (!specificCaseBlock) {
-									specificCaseBlock = newd GroundBrush::SpecificCaseBlock();
+									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
 								specificCaseBlock->delete_all = true;
 							}
@@ -361,10 +366,10 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 						specificCaseBlock->keepBorder = attribute.as_bool();
 					}
 
-					borderBlock->specific_cases.push_back(specificCaseBlock);
+					borderBlock->specific_cases.push_back(std::move(specificCaseBlock));
 				}
 			}
-			brush.borders.push_back(borderBlock.release());
+			brush.borders.push_back(std::move(borderBlock));
 		} else if (std::ranges::equal(childName, std::string_view("friend"), iequal)) {
 			const std::string_view name = childNode.attribute("name").as_string();
 			if (!name.empty()) {
@@ -396,17 +401,6 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 			}
 			brush.hate_friends = true;
 		} else if (std::ranges::equal(childName, std::string_view("clear_borders"), iequal)) {
-			for (GroundBrush::BorderBlock* bb : brush.borders) {
-				if (bb->autoborder) {
-					for (GroundBrush::SpecificCaseBlock* specificCaseBlock : bb->specific_cases) {
-						delete specificCaseBlock;
-					}
-					if (bb->autoborder->ground) {
-						delete bb->autoborder;
-					}
-				}
-				delete bb;
-			}
 			brush.borders.clear();
 		} else if (std::ranges::equal(childName, std::string_view("clear_friends"), iequal)) {
 			brush.friends.clear();
