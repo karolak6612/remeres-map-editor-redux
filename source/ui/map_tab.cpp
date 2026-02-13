@@ -24,6 +24,7 @@
 #include "ui/map_tab.h"
 #include "editor/editor_tabs.h"
 #include "rendering/ui/map_display.h"
+#include "util/image_manager.h"
 
 #include <spdlog/spdlog.h>
 
@@ -83,6 +84,10 @@ wxString MapTab::GetTitle() const {
 	wxString ss;
 	ss << wxstr(iref->session.editor->map.getName()) << (iref->session.editor->map.hasChanged() ? "*" : "");
 	return ss;
+}
+
+wxBitmapBundle MapTab::GetIcon() const {
+	return IMAGE_MANAGER.GetBitmapBundle(ICON_MAP);
 }
 
 Editor* MapTab::GetEditor() const {

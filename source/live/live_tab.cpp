@@ -24,6 +24,7 @@
 #include "live/live_socket.h"
 #include "live/live_peer.h"
 #include "editor/hotkey_manager.h"
+#include "util/image_manager.h"
 
 class myGrid : public wxGrid {
 public:
@@ -130,6 +131,10 @@ wxString LiveLogTab::GetTitle() const {
 		return "Live Log - " + socket->getHostName();
 	}
 	return "Live Log - Disconnected";
+}
+
+wxBitmapBundle LiveLogTab::GetIcon() const {
+	return IMAGE_MANAGER.GetBitmapBundle(ICON_TERMINAL);
 }
 
 void LiveLogTab::Disconnect() {

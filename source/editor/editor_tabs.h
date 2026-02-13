@@ -19,6 +19,7 @@
 #define RME_EDITOR_TABS_H_
 
 #include "ui/gui_ids.h"
+#include <wx/bmpbndl.h>
 
 class EditorTab;
 
@@ -60,6 +61,9 @@ public:
 	// Properties
 	virtual wxWindow* GetWindow() const = 0;
 	virtual wxString GetTitle() const = 0;
+	virtual wxBitmapBundle GetIcon() const {
+		return wxBitmapBundle();
+	}
 
 	//
 	virtual void OnSwitchEditorMode(EditorMode mode) { }

@@ -133,7 +133,7 @@ void MapTabbook::OnAllowNotebookDND(wxAuiNotebookEvent& evt) {
 
 void MapTabbook::AddTab(EditorTab* tab, bool select) {
 	tab->GetWindow()->Reparent(notebook);
-	notebook->AddPage(tab->GetWindow(), tab->GetTitle(), select);
+	notebook->AddPage(tab->GetWindow(), tab->GetTitle(), select, tab->GetIcon());
 	conv[tab->GetWindow()] = tab;
 }
 

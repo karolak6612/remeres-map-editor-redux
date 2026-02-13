@@ -44,6 +44,7 @@ public:
 		return (wxPanel*)this;
 	}
 	virtual wxString GetTitle() const;
+	wxBitmapBundle GetIcon() const override;
 
 	bool IsConnected() const {
 		return socket != nullptr;

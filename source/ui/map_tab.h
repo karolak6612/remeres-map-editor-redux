@@ -39,6 +39,7 @@ public:
 	MapCanvas* GetCanvas() const;
 	wxWindow* GetWindow() const;
 	wxString GetTitle() const;
+	wxBitmapBundle GetIcon() const override;
 	Editor* GetEditor() const;
 	Map* GetMap() const;
 	MapSession* GetSession() const {
