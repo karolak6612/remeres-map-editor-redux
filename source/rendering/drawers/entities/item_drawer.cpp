@@ -73,7 +73,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		switch (it.clientID) {
 			// Yellow invisible stairs tile (459)
 			case 469:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, green, 0, alpha / 3 * 2);
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, green, 0, (alpha * 171) >> 8);
 				return;
 
 			// Red invisible walkable tile (460)
@@ -81,7 +81,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			case 17970:
 			case 20028:
 			case 34168:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, alpha / 3 * 2);
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, (alpha * 171) >> 8);
 				return;
 
 			// Cyan invisible wall (1548)
@@ -119,9 +119,9 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	int subtype = -1;
 
-	int pattern_x = pos.x % spr->pattern_x;
-	int pattern_y = pos.y % spr->pattern_y;
-	int pattern_z = pos.z % spr->pattern_z;
+	int pattern_x = (spr->pattern_x > 1) ? pos.x % spr->pattern_x : 0;
+	int pattern_y = (spr->pattern_y > 1) ? pos.y % spr->pattern_y : 0;
+	int pattern_z = (spr->pattern_z > 1) ? pos.z % spr->pattern_z : 0;
 
 	if (it.isSplash() || it.isFluidContainer()) {
 		subtype = item->getSubtype();
@@ -260,7 +260,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 		// Yellow invisible stairs tile
 		case 469:
 			b = 0;
-			alpha = alpha / 3 * 2;
+			alpha = (alpha * 171) >> 8;
 			spr = g_items[SPRITE_ZONE].sprite;
 			break;
 
@@ -268,7 +268,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 		case 470:
 			g = 0;
 			b = 0;
-			alpha = alpha / 3 * 2;
+			alpha = (alpha * 171) >> 8;
 			spr = g_items[SPRITE_ZONE].sprite;
 			break;
 
@@ -287,7 +287,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
 		spr = g_items[SPRITE_LIGHTSOURCE].sprite;
 		r = 0;
-		alpha = alpha / 3 * 2;
+		alpha = (alpha * 171) >> 8;
 	}
 
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, r, g, b, alpha);

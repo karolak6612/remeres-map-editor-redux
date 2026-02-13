@@ -5,6 +5,18 @@
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include <algorithm>
+
+static bool caseInsensitiveContains(std::string_view haystack, std::string_view needle_lower) {
+	auto it = std::search(
+		haystack.begin(), haystack.end(),
+		needle_lower.begin(), needle_lower.end(),
+		[](char ch1, char ch2) {
+			return std::tolower(static_cast<unsigned char>(ch1)) == std::tolower(static_cast<unsigned char>(ch2));
+		}
+	);
+	return it != haystack.end();
+}
 
 // ============================================================================
 // Numkey forwarding text control
@@ -180,7 +192,7 @@ void FindBrushDialog::OnClickOKInternal() {
 				const BrushMap& map = g_brushes.getMap();
 				for (const auto& [name, brush_ptr] : map) {
 					const Brush* brush = brush_ptr.get();
-					if (as_lower_str(brush->getName()).find(search_string) == std::string::npos) {
+					if (!caseInsensitiveContains(brush->getName(), search_string)) {
 						continue;
 					}
 
@@ -208,7 +220,7 @@ void FindBrushDialog::OnClickOKInternal() {
 							continue;
 						}
 
-						if (as_lower_str(raw_brush->getName()).find(search_string) == std::string::npos) {
+						if (!caseInsensitiveContains(raw_brush->getName(), search_string)) {
 							continue;
 						}
 
@@ -244,7 +256,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 		for (const auto& [name, brush_ptr] : brushes_map) {
 			const Brush* brush = brush_ptr.get();
 
-			if (as_lower_str(brush->getName()).find(search_string) == std::string::npos) {
+			if (!caseInsensitiveContains(brush->getName(), search_string)) {
 				continue;
 			}
 
@@ -267,7 +279,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 				continue;
 			}
 
-			if (as_lower_str(raw_brush->getName()).find(search_string) == std::string::npos) {
+			if (!caseInsensitiveContains(raw_brush->getName(), search_string)) {
 				continue;
 			}
 

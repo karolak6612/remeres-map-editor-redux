@@ -24,6 +24,7 @@
 	#include "util/json.h"
 
 	#include "app/updater.h"
+	#include "app/application.h"
 	#include <thread>
 
 wxDEFINE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);

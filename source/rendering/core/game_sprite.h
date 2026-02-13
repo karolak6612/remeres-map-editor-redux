@@ -83,7 +83,7 @@ public:
 		return wxSize(width * 32, height * 32);
 	}
 
-	void clean(time_t time);
+	void clean(time_t time, int longevity = -1);
 
 	int getDrawHeight() const;
 	std::pair<int, int> getDrawOffset() const;
@@ -117,7 +117,7 @@ protected:
 		time_t lastaccess;
 
 		void visit();
-		virtual void clean(time_t time);
+		virtual void clean(time_t time, int longevity);
 
 		virtual std::unique_ptr<uint8_t[]> getRGBData() = 0;
 		virtual std::unique_ptr<uint8_t[]> getRGBAData() = 0;
@@ -142,7 +142,7 @@ protected:
 		uint16_t size;
 		std::unique_ptr<uint8_t[]> dump;
 
-		virtual void clean(time_t time) override;
+		virtual void clean(time_t time, int longevity) override;
 
 		virtual std::unique_ptr<uint8_t[]> getRGBData() override;
 		virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
@@ -158,7 +158,7 @@ protected:
 		TemplateImage(GameSprite* parent, int v, const Outfit& outfit);
 		~TemplateImage() override;
 
-		void clean(time_t time) override;
+		void clean(time_t time, int longevity) override;
 
 		virtual std::unique_ptr<uint8_t[]> getRGBData() override;
 		virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
@@ -245,6 +245,8 @@ public:
 	const AtlasRegion* getCachedDefaultRegion() const {
 		return cached_default_region;
 	}
+
+	bool isSimpleAndLoaded() const;
 
 protected:
 	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites

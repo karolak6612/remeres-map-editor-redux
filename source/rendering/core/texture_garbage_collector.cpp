@@ -65,9 +65,10 @@ void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_
 	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 
+			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 			for (size_t i = resident_images.size(); i > 0; --i) {
 				GameSprite::Image* img = static_cast<GameSprite::Image*>(resident_images[i - 1]);
-				img->clean(current_time);
+				img->clean(current_time, longevity);
 
 				if (!img->isGLLoaded) {
 					// Image evicted itself during clean()
@@ -81,7 +82,7 @@ void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_
 			// 2. Clean GameSprites (Software caches/animators)
 			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
 				GameSprite* gs = resident_game_sprites[i - 1];
-				gs->clean(current_time);
+				gs->clean(current_time, longevity);
 
 				// Optional: Add logic to check if GameSprite is still "active"
 				// For now, GameSprites stay resident if they have software DC/animator state

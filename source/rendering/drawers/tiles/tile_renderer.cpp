@@ -50,14 +50,15 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	bool hasContent = false;
 
 	bool is_complex = item->isComplex();
+	// Early exit for simple items
+	// isTooltipable is cached (isContainer || isDoor || isTeleport)
+	if (!is_complex && !g_items[id].isTooltipable()) {
+		return false;
+	}
+
 	bool is_container = g_items[id].isContainer();
 	bool is_door = isHouseTile && item->isDoor();
 	bool is_teleport = item->isTeleport();
-
-	// Early exit for simple items
-	if (!is_complex && !is_container && !is_door && !is_teleport) {
-		return false;
-	}
 
 	if (is_complex) {
 		unique = item->getUniqueID();
