@@ -102,16 +102,16 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 							// Trigger preloading for this tile's sprites
 							if (Tile* tile = location->get()) {
 								if (tile->ground) {
-							GameSprite* spr = g_items[tile->ground->getID()].sprite;
-							if (spr && !spr->isSimpleAndLoaded()) {
-								rme::collectTileSprites(spr, 0, 0, 0, 0);
-							}
+									GameSprite* spr = g_items[tile->ground->getID()].sprite;
+									if (spr && !spr->isSimpleAndLoaded()) {
+										rme::collectTileSprites(spr, 0, 0, 0, 0);
+									}
 								}
 								for (Item* item : tile->items) {
-							GameSprite* spr = g_items[item->getID()].sprite;
-							if (spr && !spr->isSimpleAndLoaded()) {
-								rme::collectTileSprites(spr, 0, 0, 0, 0);
-							}
+									GameSprite* spr = g_items[item->getID()].sprite;
+									if (spr && !spr->isSimpleAndLoaded()) {
+										rme::collectTileSprites(spr, 0, 0, 0, 0);
+									}
 								}
 							}
 

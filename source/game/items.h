@@ -479,6 +479,7 @@ private:
 	static void parseSlotTypeAttribute(ItemType& it, std::string_view value);
 	static void parseWeaponTypeAttribute(ItemType& it, std::string_view value);
 	static void parseFloorChangeAttribute(ItemType& it, std::string_view value);
+	void updateAllTooltipableFlags();
 
 protected:
 	// Count of GameSprite types

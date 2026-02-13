@@ -47,15 +47,6 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		return;
 	}
 
-	// Fast path for simple sprites that are already loaded
-	if (spr->numsprites == 1 && !spr->spriteList.empty()) {
-		if (GameSprite::NormalImage* img = spr->spriteList[0]) {
-			if (img->isGLLoaded) {
-				return;
-			}
-		}
-	}
-
 	// Capture global state once per preload call (one item)
 	const std::string& sprfile = g_gui.gfx.getSpriteFile();
 	const bool is_extended = g_gui.gfx.isExtended();

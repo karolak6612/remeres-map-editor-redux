@@ -486,11 +486,7 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
 	if (auto it_loader = loaders.find(MajorVersion); it_loader != loaders.end()) {
 		bool res = (this->*(it_loader->second))(itemNode, error, warnings);
 		if (res) {
-			for (auto& it_ptr : items) {
-				if (it_ptr) {
-					it_ptr->updateTooltipable();
-				}
-			}
+			updateAllTooltipableFlags();
 		}
 		return res;
 	}
@@ -708,11 +704,6 @@ bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id) {
 		}
 	}
 
-	for (auto& it_ptr : items) {
-		if (it_ptr) {
-			it_ptr->updateTooltipable();
-		}
-	}
 	return true;
 }
 
@@ -755,6 +746,7 @@ bool ItemDatabase::loadFromGameXml(const FileName& identifier, wxString& error, 
 			}
 		}
 	}
+	updateAllTooltipableFlags();
 	return true;
 }
 
@@ -788,4 +780,12 @@ ItemType& ItemDatabase::getItemType(int id) {
 
 bool ItemDatabase::typeExists(int id) const {
 	return static_cast<size_t>(id) < items.size() && items[id] != nullptr;
+}
+
+void ItemDatabase::updateAllTooltipableFlags() {
+	for (auto& it_ptr : items) {
+		if (it_ptr) {
+			it_ptr->updateTooltipable();
+		}
+	}
 }
