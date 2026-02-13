@@ -17,6 +17,9 @@
 
 static std::atomic<uint32_t> template_id_generator(0x1000000);
 
+constexpr int RGB_COMPONENTS = 3;
+constexpr int RGBA_COMPONENTS = 4;
+
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :
 	parent(parent),
 	outfit(outfit) {
@@ -323,12 +326,12 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std:
 		if (!rgba) {
 			// Fallback: Create a magenta texture to distinguish failure from garbage
 			// Use literal 32 to ensure compilation (OT sprites are always 32x32)
-			rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
+			rgba = std::make_unique<uint8_t[]>(32 * 32 * RGBA_COMPONENTS);
 			for (int i = 0; i < 32 * 32; ++i) {
-				rgba[i * 4 + 0] = 255;
-				rgba[i * 4 + 1] = 0;
-				rgba[i * 4 + 2] = 255;
-				rgba[i * 4 + 3] = 255;
+				rgba[i * RGBA_COMPONENTS + 0] = 255;
+				rgba[i * RGBA_COMPONENTS + 1] = 0;
+				rgba[i * RGBA_COMPONENTS + 2] = 255;
+				rgba[i * RGBA_COMPONENTS + 3] = 255;
 			}
 			spdlog::warn("getRGBAData returned null for sprite_id={} - using fallback", sprite_id);
 		}
@@ -427,7 +430,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 			data[write + 0] = 0xFF; // red
 			data[write + 1] = 0x00; // green
 			data[write + 2] = 0xFF; // blue
-			write += 3;
+			write += RGB_COMPONENTS;
 		}
 
 		int colored = dump[read] | dump[read + 1] << 8;
@@ -436,7 +439,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 			data[write + 0] = dump[read + 0]; // red
 			data[write + 1] = dump[read + 1]; // green
 			data[write + 2] = dump[read + 2]; // blue
-			write += 3;
+			write += RGB_COMPONENTS;
 			read += bpp;
 		}
 	}
@@ -446,7 +449,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 		data[write + 0] = 0xFF; // red
 		data[write + 1] = 0x00; // green
 		data[write + 2] = 0xFF; // blue
-		write += 3;
+		write += RGB_COMPONENTS;
 	}
 	return data;
 }
@@ -476,7 +479,7 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 			data[write + 1] = 0x00; // green
 			data[write + 2] = 0x00; // blue
 			data[write + 3] = 0x00; // alpha
-			write += 4;
+			write += RGBA_COMPONENTS;
 		}
 
 		if (read >= size || write >= pixels_data_size) {
@@ -517,7 +520,7 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 				non_black_pixel_found = true;
 			}
 
-			write += 4;
+			write += RGBA_COMPONENTS;
 			read += bpp;
 		}
 	}
@@ -528,7 +531,7 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 		data[write + 1] = 0x00; // green
 		data[write + 2] = 0x00; // blue
 		data[write + 3] = 0x00; // alpha
-		write += 4;
+		write += RGBA_COMPONENTS;
 	}
 
 	// Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
@@ -641,25 +644,23 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBData() {
 		lookFeet = 0;
 	}
 
-	for (int y = 0; y < SPRITE_PIXELS; ++y) {
-		for (int x = 0; x < SPRITE_PIXELS; ++x) {
-			uint8_t& red = rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 0];
-			uint8_t& green = rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 1];
-			uint8_t& blue = rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 2];
+	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
+		uint8_t& red = rgbdata[i * RGB_COMPONENTS + 0];
+		uint8_t& green = rgbdata[i * RGB_COMPONENTS + 1];
+		uint8_t& blue = rgbdata[i * RGB_COMPONENTS + 2];
 
-			uint8_t& tred = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 0];
-			uint8_t& tgreen = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 1];
-			uint8_t& tblue = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 2];
+		const uint8_t& tred = template_rgbdata[i * RGB_COMPONENTS + 0];
+		const uint8_t& tgreen = template_rgbdata[i * RGB_COMPONENTS + 1];
+		const uint8_t& tblue = template_rgbdata[i * RGB_COMPONENTS + 2];
 
-			if (tred && tgreen && !tblue) { // yellow => head
-				OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
-			} else if (tred && !tgreen && !tblue) { // red => body
-				OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
-			} else if (!tred && tgreen && !tblue) { // green => legs
-				OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
-			} else if (!tred && !tgreen && tblue) { // blue => feet
-				OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
-			}
+		if (tred && tgreen && !tblue) { // yellow => head
+			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
+		} else if (tred && !tgreen && !tblue) { // red => body
+			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
+		} else if (!tred && tgreen && !tblue) { // green => legs
+			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
+		} else if (!tred && !tgreen && tblue) { // blue => feet
+			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
 		}
 	}
 	// template_rgbdata auto-deleted
@@ -694,25 +695,24 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 		lookFeet = 0;
 	}
 
-	for (int y = 0; y < SPRITE_PIXELS; ++y) {
-		for (int x = 0; x < SPRITE_PIXELS; ++x) {
-			uint8_t& red = rgbadata[y * SPRITE_PIXELS * 4 + x * 4 + 0];
-			uint8_t& green = rgbadata[y * SPRITE_PIXELS * 4 + x * 4 + 1];
-			uint8_t& blue = rgbadata[y * SPRITE_PIXELS * 4 + x * 4 + 2];
+	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
+	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
+		uint8_t& red = rgbadata[i * RGBA_COMPONENTS + 0];
+		uint8_t& green = rgbadata[i * RGBA_COMPONENTS + 1];
+		uint8_t& blue = rgbadata[i * RGBA_COMPONENTS + 2];
 
-			uint8_t& tred = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 0];
-			uint8_t& tgreen = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 1];
-			uint8_t& tblue = template_rgbdata[y * SPRITE_PIXELS * 3 + x * 3 + 2];
+		const uint8_t& tred = template_rgbdata[i * RGB_COMPONENTS + 0];
+		const uint8_t& tgreen = template_rgbdata[i * RGB_COMPONENTS + 1];
+		const uint8_t& tblue = template_rgbdata[i * RGB_COMPONENTS + 2];
 
-			if (tred && tgreen && !tblue) { // yellow => head
-				OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
-			} else if (tred && !tgreen && !tblue) { // red => body
-				OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
-			} else if (!tred && tgreen && !tblue) { // green => legs
-				OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
-			} else if (!tred && !tgreen && tblue) { // blue => feet
-				OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
-			}
+		if (tred && tgreen && !tblue) { // yellow => head
+			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
+		} else if (tred && !tgreen && !tblue) { // red => body
+			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
+		} else if (!tred && tgreen && !tblue) { // green => legs
+			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
+		} else if (!tred && !tgreen && tblue) { // blue => feet
+			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
 		}
 	}
 	// template_rgbdata auto-deleted

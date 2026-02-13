@@ -527,7 +527,7 @@ bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver) {
 #ifdef OTGZ_SUPPORT
 	if (filename.GetExt() == "otgz") {
 		// Open the archive
-		std::shared_ptr<struct archive> a(archive_read_new(), archive_read_free);
+		std::unique_ptr<struct archive, decltype(&archive_read_free)> a(archive_read_new(), &archive_read_free);
 		archive_read_support_filter_all(a.get());
 		archive_read_support_format_all(a.get());
 		if (archive_read_open_filename(a.get(), nstr(filename.GetFullPath()).c_str(), 10240) != ARCHIVE_OK) {
@@ -601,122 +601,124 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 	return true;
 }
 
-bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
+bool IOMapOTBM::loadMapFromOTGZ(Map& map, const FileName& filename) {
 #ifdef OTGZ_SUPPORT
-	if (filename.GetExt() == "otgz") {
-		// Open the archive
-		std::shared_ptr<struct archive> a(archive_read_new(), archive_read_free);
-		archive_read_support_filter_all(a.get());
-		archive_read_support_format_all(a.get());
-		if (archive_read_open_filename(a.get(), nstr(filename.GetFullPath()).c_str(), 10240) != ARCHIVE_OK) {
-			return false;
-		}
-
-		// Memory buffers for the houses & spawns
-		std::vector<uint8_t> house_buffer;
-		std::vector<uint8_t> spawn_buffer;
-
-		// See if the otbm file has been loaded
-		bool otbm_loaded = false;
-
-		// Loop over the archive entries until we find the otbm file
-		g_gui.SetLoadDone(0, "Decompressing archive...");
-		struct archive_entry* entry;
-		while (archive_read_next_header(a.get(), &entry) == ARCHIVE_OK) {
-			std::string entryName = archive_entry_pathname(entry);
-
-			if (entryName == "world/map.otbm") {
-				// Read the entire OTBM file into a memory region
-				size_t otbm_size = archive_entry_size(entry);
-				std::vector<uint8_t> otbm_buffer(otbm_size);
-
-				// Read from the archive
-				size_t read_bytes = archive_read_data(a.get(), otbm_buffer.data(), otbm_size);
-
-				// Check so it at least contains the 4-byte file id
-				if (read_bytes < 4) {
-					return false;
-				}
-
-				if (read_bytes < otbm_size) {
-					error("Could not read file.");
-					return false;
-				}
-
-				g_gui.SetLoadDone(0, "Loading OTBM map...");
-
-				// Create a read handle on it
-				std::shared_ptr<NodeFileReadHandle> f = std::make_shared<MemoryNodeFileReadHandle>(otbm_buffer.data() + 4, otbm_size - 4);
-
-				// Read the version info
-				if (!loadMap(map, *f.get())) {
-					error("Could not load OTBM file inside archive");
-					return false;
-				}
-
-				otbm_loaded = true;
-			} else if (entryName == "world/houses.xml") {
-				size_t house_buffer_size = archive_entry_size(entry);
-				house_buffer.resize(house_buffer_size);
-
-				// Read from the archive
-				size_t read_bytes = archive_read_data(a.get(), house_buffer.data(), house_buffer_size);
-
-				// Check so it at least contains the 4-byte file id
-				if (read_bytes < house_buffer_size) {
-					house_buffer.clear();
-					warning("Failed to decompress houses.");
-				}
-			} else if (entryName == "world/spawns.xml") {
-				size_t spawn_buffer_size = archive_entry_size(entry);
-				spawn_buffer.resize(spawn_buffer_size);
-
-				// Read from the archive
-				size_t read_bytes = archive_read_data(a.get(), spawn_buffer.data(), spawn_buffer_size);
-
-				// Check so it at least contains the 4-byte file id
-				if (read_bytes < spawn_buffer_size) {
-					spawn_buffer.clear();
-					warning("Failed to decompress spawns.");
-				}
-			}
-		}
-
-		if (!otbm_loaded) {
-			error("OTBM file not found inside archive.");
-			return false;
-		}
-
-		// Load the houses from the stored buffer
-		if (!house_buffer.empty()) {
-			pugi::xml_document doc;
-			pugi::xml_parse_result result = doc.load_buffer(house_buffer.data(), house_buffer.size());
-			if (result) {
-				if (!loadHouses(map, doc)) {
-					warning("Failed to load houses.");
-				}
-			} else {
-				warning("Failed to load houses due to XML parse error.");
-			}
-		}
-
-		// Load the spawns from the stored buffer
-		if (!spawn_buffer.empty()) {
-			pugi::xml_document doc;
-			pugi::xml_parse_result result = doc.load_buffer(spawn_buffer.data(), spawn_buffer.size());
-			if (result) {
-				if (!loadSpawns(map, doc)) {
-					warning("Failed to load spawns.");
-				}
-			} else {
-				warning("Failed to load spawns due to XML parse error.");
-			}
-		}
-
-		return true;
+	// Open the archive
+	std::unique_ptr<struct archive, decltype(&archive_read_free)> a(archive_read_new(), &archive_read_free);
+	archive_read_support_filter_all(a.get());
+	archive_read_support_format_all(a.get());
+	if (archive_read_open_filename(a.get(), nstr(filename.GetFullPath()).c_str(), 10240) != ARCHIVE_OK) {
+		return false;
 	}
-#endif
 
+	// Memory buffers for the houses & spawns
+	std::vector<uint8_t> house_buffer;
+	std::vector<uint8_t> spawn_buffer;
+
+	// See if the otbm file has been loaded
+	bool otbm_loaded = false;
+
+	// Loop over the archive entries until we find the otbm file
+	g_gui.SetLoadDone(0, "Decompressing archive...");
+	struct archive_entry* entry;
+	while (archive_read_next_header(a.get(), &entry) == ARCHIVE_OK) {
+		std::string entryName = archive_entry_pathname(entry);
+
+		if (entryName == "world/map.otbm") {
+			// Read the entire OTBM file into a memory region
+			size_t otbm_size = archive_entry_size(entry);
+			std::vector<uint8_t> otbm_buffer(otbm_size);
+
+			// Read from the archive
+			size_t read_bytes = archive_read_data(a.get(), otbm_buffer.data(), otbm_size);
+
+			// Check so it at least contains the 4-byte file id
+			if (read_bytes < 4) {
+				return false;
+			}
+
+			if (read_bytes < otbm_size) {
+				error("Could not read file.");
+				return false;
+			}
+
+			g_gui.SetLoadDone(0, "Loading OTBM map...");
+
+			// Create a read handle on it
+			std::shared_ptr<NodeFileReadHandle> f = std::make_shared<MemoryNodeFileReadHandle>(otbm_buffer.data() + 4, otbm_size - 4);
+
+			// Read the version info
+			if (!loadMap(map, *f.get())) {
+				error("Could not load OTBM file inside archive");
+				return false;
+			}
+
+			otbm_loaded = true;
+		} else if (entryName == "world/houses.xml") {
+			size_t house_buffer_size = archive_entry_size(entry);
+			house_buffer.resize(house_buffer_size);
+
+			// Read from the archive
+			size_t read_bytes = archive_read_data(a.get(), house_buffer.data(), house_buffer_size);
+
+			// Check so it at least contains the 4-byte file id
+			if (read_bytes < house_buffer_size) {
+				house_buffer.clear();
+				warning("Failed to decompress houses.");
+			}
+		} else if (entryName == "world/spawns.xml") {
+			size_t spawn_buffer_size = archive_entry_size(entry);
+			spawn_buffer.resize(spawn_buffer_size);
+
+			// Read from the archive
+			size_t read_bytes = archive_read_data(a.get(), spawn_buffer.data(), spawn_buffer_size);
+
+			// Check so it at least contains the 4-byte file id
+			if (read_bytes < spawn_buffer_size) {
+				spawn_buffer.clear();
+				warning("Failed to decompress spawns.");
+			}
+		}
+	}
+
+	if (!otbm_loaded) {
+		error("OTBM file not found inside archive.");
+		return false;
+	}
+
+	// Load the houses from the stored buffer
+	if (!house_buffer.empty()) {
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_buffer(house_buffer.data(), house_buffer.size());
+		if (result) {
+			if (!loadHouses(map, doc)) {
+				warning("Failed to load houses.");
+			}
+		} else {
+			warning("Failed to load houses due to XML parse error.");
+		}
+	}
+
+	// Load the spawns from the stored buffer
+	if (!spawn_buffer.empty()) {
+		pugi::xml_document doc;
+		pugi::xml_parse_result result = doc.load_buffer(spawn_buffer.data(), spawn_buffer.size());
+		if (result) {
+			if (!loadSpawns(map, doc)) {
+				warning("Failed to load spawns.");
+			}
+		} else {
+			warning("Failed to load spawns due to XML parse error.");
+		}
+	}
+
+	return true;
+#else
+	return false;
+#endif
+}
+
+bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	std::ifstream file(nstr(filename.GetFullPath()), std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
 		std::string err = std::format("Couldn't open file for reading: {}", filename.GetFullPath().ToStdString());
@@ -780,6 +782,15 @@ bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
 		map.waypointfile = nstr(filename.GetName()) + "-waypoint.xml";
 	}
 	return true;
+}
+
+bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
+#ifdef OTGZ_SUPPORT
+	if (filename.GetExt() == "otgz") {
+		return loadMapFromOTGZ(map, filename);
+	}
+#endif
+	return loadMapFromDisk(map, filename);
 }
 
 bool IOMapOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, BinaryNode*& root, BinaryNode*& mapHeaderNode) {
@@ -885,7 +896,6 @@ void IOMapOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
 			}
 		}
 	}
-	
 }
 
 void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode) {
@@ -1089,7 +1099,6 @@ void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHea
 			}
 		}
 	}
-	
 }
 
 bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
@@ -1357,123 +1366,126 @@ bool IOMapOTBM::loadWaypoints(Map& map, pugi::xml_document& doc) {
 	return true;
 };
 
-bool IOMapOTBM::saveMap(Map& map, const FileName& identifier) {
+bool IOMapOTBM::saveMapToOTGZ(Map& map, const FileName& identifier) {
 #ifdef OTGZ_SUPPORT
-	if (identifier.GetExt() == "otgz") {
-		// Create the archive
-		struct archive* a = archive_write_new();
-		struct archive_entry* entry = nullptr;
+	// Create the archive
+	auto archive_deleter = [](struct archive* ar) {
+		if (ar) {
+			archive_write_close(ar);
+			archive_write_free(ar);
+		}
+	};
+	std::unique_ptr<struct archive, decltype(archive_deleter)> a(archive_write_new(), archive_deleter);
+	struct archive_entry* entry = nullptr;
+
+	archive_write_set_compression_gzip(a.get());
+	archive_write_set_format_pax_restricted(a.get());
+	archive_write_open_filename(a.get(), nstr(identifier.GetFullPath()).c_str());
+
+	g_gui.SetLoadDone(0, "Saving spawns...");
+
+	pugi::xml_document spawnDoc;
+	if (saveSpawns(map, spawnDoc)) {
 		std::ostringstream streamData;
+		// Write the data
+		spawnDoc.save(streamData, "", pugi::format_raw, pugi::encoding_utf8);
+		std::string xmlData = streamData.str();
 
-		archive_write_set_compression_gzip(a);
-		archive_write_set_format_pax_restricted(a);
-		archive_write_open_filename(a, nstr(identifier.GetFullPath()).c_str());
-
-		g_gui.SetLoadDone(0, "Saving spawns...");
-
-		pugi::xml_document spawnDoc;
-		if (saveSpawns(map, spawnDoc)) {
-			// Write the data
-			spawnDoc.save(streamData, "", pugi::format_raw, pugi::encoding_utf8);
-			std::string xmlData = streamData.str();
-
-			// Write to the arhive
-			entry = archive_entry_new();
-			archive_entry_set_pathname(entry, "world/spawns.xml");
-			archive_entry_set_size(entry, xmlData.size());
-			archive_entry_set_filetype(entry, AE_IFREG);
-			archive_entry_set_perm(entry, 0644);
-
-			// Write to the archive
-			archive_write_header(a, entry);
-			archive_write_data(a, xmlData.data(), xmlData.size());
-
-			// Free the entry
-			archive_entry_free(entry);
-			streamData.str("");
-		}
-
-		g_gui.SetLoadDone(0, "Saving houses...");
-
-		pugi::xml_document houseDoc;
-		if (saveHouses(map, houseDoc)) {
-			// Write the data
-			houseDoc.save(streamData, "", pugi::format_raw, pugi::encoding_utf8);
-			std::string xmlData = streamData.str();
-
-			// Write to the arhive
-			entry = archive_entry_new();
-			archive_entry_set_pathname(entry, "world/houses.xml");
-			archive_entry_set_size(entry, xmlData.size());
-			archive_entry_set_filetype(entry, AE_IFREG);
-			archive_entry_set_perm(entry, 0644);
-
-			// Write to the archive
-			archive_write_header(a, entry);
-			archive_write_data(a, xmlData.data(), xmlData.size());
-
-			// Free the entry
-			archive_entry_free(entry);
-			streamData.str("");
-		}
-		// to do
-		/*
-		g_gui.SetLoadDone(0, "Saving waypoints...");
-
-		pugi::xml_document wpDoc;
-		if (saveWaypoints(map, wpDoc)) {
-			// Write the data
-			wpDoc.save(streamData, "", pugi::format_raw, pugi::encoding_utf8);
-			std::string xmlData = streamData.str();
-
-			// Write to the arhive
-			entry = archive_entry_new();
-			archive_entry_set_pathname(entry, "world/waypoints.xml");
-			archive_entry_set_size(entry, xmlData.size());
-			archive_entry_set_filetype(entry, AE_IFREG);
-			archive_entry_set_perm(entry, 0644);
-
-			// Write to the archive
-			archive_write_header(a, entry);
-			archive_write_data(a, xmlData.data(), xmlData.size());
-
-			// Free the entry
-			archive_entry_free(entry);
-			streamData.str("");
-		}
-		*/
-		g_gui.SetLoadDone(0, "Saving OTBM map...");
-
-		MemoryNodeFileWriteHandle otbmWriter;
-		saveMap(map, otbmWriter);
-
-		g_gui.SetLoadDone(75, "Compressing...");
-
-		// Create an archive entry for the otbm file
+		// Write to the arhive
 		entry = archive_entry_new();
-		archive_entry_set_pathname(entry, "world/map.otbm");
-		archive_entry_set_size(entry, otbmWriter.getSize() + 4); // 4 bytes extra for header
+		archive_entry_set_pathname(entry, "world/spawns.xml");
+		archive_entry_set_size(entry, xmlData.size());
 		archive_entry_set_filetype(entry, AE_IFREG);
 		archive_entry_set_perm(entry, 0644);
-		archive_write_header(a, entry);
 
-		// Write the version header
-		char otbm_identifier[] = "OTBM";
-		archive_write_data(a, otbm_identifier, 4);
+		// Write to the archive
+		archive_write_header(a.get(), entry);
+		archive_write_data(a.get(), xmlData.data(), xmlData.size());
 
-		// Write the OTBM data
-		archive_write_data(a, otbmWriter.getMemory(), otbmWriter.getSize());
+		// Free the entry
 		archive_entry_free(entry);
-
-		// Free / close the archive
-		archive_write_close(a);
-		archive_write_free(a);
-
-		g_gui.DestroyLoadBar();
-		return true;
 	}
-#endif
 
+	g_gui.SetLoadDone(0, "Saving houses...");
+
+	pugi::xml_document houseDoc;
+	if (saveHouses(map, houseDoc)) {
+		std::ostringstream streamData;
+		// Write the data
+		houseDoc.save(streamData, "", pugi::format_raw, pugi::encoding_utf8);
+		std::string xmlData = streamData.str();
+
+		// Write to the arhive
+		entry = archive_entry_new();
+		archive_entry_set_pathname(entry, "world/houses.xml");
+		archive_entry_set_size(entry, xmlData.size());
+		archive_entry_set_filetype(entry, AE_IFREG);
+		archive_entry_set_perm(entry, 0644);
+
+		// Write to the archive
+		archive_write_header(a.get(), entry);
+		archive_write_data(a.get(), xmlData.data(), xmlData.size());
+
+		// Free the entry
+		archive_entry_free(entry);
+	}
+	// to do
+	/*
+	g_gui.SetLoadDone(0, "Saving waypoints...");
+
+	pugi::xml_document wpDoc;
+	if (saveWaypoints(map, wpDoc)) {
+		std::ostringstream streamData;
+		// Write the data
+		wpDoc.save(streamData, "", pugi::format_raw, pugi::encoding_utf8);
+		std::string xmlData = streamData.str();
+
+		// Write to the arhive
+		entry = archive_entry_new();
+		archive_entry_set_pathname(entry, "world/waypoints.xml");
+		archive_entry_set_size(entry, xmlData.size());
+		archive_entry_set_filetype(entry, AE_IFREG);
+		archive_entry_set_perm(entry, 0644);
+
+		// Write to the archive
+		archive_write_header(a.get(), entry);
+		archive_write_data(a.get(), xmlData.data(), xmlData.size());
+
+		// Free the entry
+		archive_entry_free(entry);
+	}
+	*/
+	g_gui.SetLoadDone(0, "Saving OTBM map...");
+
+	MemoryNodeFileWriteHandle otbmWriter;
+	saveMap(map, otbmWriter);
+
+	g_gui.SetLoadDone(75, "Compressing...");
+
+	// Create an archive entry for the otbm file
+	entry = archive_entry_new();
+	archive_entry_set_pathname(entry, "world/map.otbm");
+	archive_entry_set_size(entry, otbmWriter.getSize() + 4); // 4 bytes extra for header
+	archive_entry_set_filetype(entry, AE_IFREG);
+	archive_entry_set_perm(entry, 0644);
+	archive_write_header(a.get(), entry);
+
+	// Write the version header
+	char otbm_identifier[] = "OTBM";
+	archive_write_data(a.get(), otbm_identifier, 4);
+
+	// Write the OTBM data
+	archive_write_data(a.get(), otbmWriter.getMemory(), otbmWriter.getSize());
+	archive_entry_free(entry);
+
+	g_gui.DestroyLoadBar();
+	return true;
+#else
+	return false;
+#endif
+}
+
+bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	DiskNodeFileWriteHandle f(
 		nstr(identifier.GetFullPath()),
 		(g_settings.getInteger(Config::SAVE_WITH_OTB_MAGIC_NUMBER) ? "OTBM" : std::string(4, '\0'))
@@ -1498,6 +1510,15 @@ bool IOMapOTBM::saveMap(Map& map, const FileName& identifier) {
 	// g_gui.SetLoadDone(99, "Saving waypoints...");
 	// saveWaypoints(map, identifier);
 	return true;
+}
+
+bool IOMapOTBM::saveMap(Map& map, const FileName& identifier) {
+#ifdef OTGZ_SUPPORT
+	if (identifier.GetExt() == "otgz") {
+		return saveMapToOTGZ(map, identifier);
+	}
+#endif
+	return saveMapToDisk(map, identifier);
 }
 
 bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
