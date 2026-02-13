@@ -144,7 +144,11 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 }
 
 MapCanvas::~MapCanvas() {
-	drawer.reset();
+	if (auto context = g_gui.GetGLContext(this)) {
+		SetCurrent(*context);
+		drawer.reset();
+		m_nvg.reset();
+	}
 }
 
 void MapCanvas::Refresh() {

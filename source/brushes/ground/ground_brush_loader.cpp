@@ -183,7 +183,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 					Brush* tobrush = g_brushes.getBrush(value);
 					if (!tobrush) {
 						warnings.push_back((wxString("To brush ") + wxstr(value) + " doesn't exist.").ToStdString());
-						// newAutoBorder is automatically deleted if borderBlock is destroyed or reset
+						// newAutoBorder is automatically deleted if borderBlock is destroyed or reset (RAII via std::unique_ptr)
 						continue;
 					}
 					borderBlock->to = tobrush->getID();
