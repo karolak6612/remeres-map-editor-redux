@@ -68,10 +68,11 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 MinimapWindow::~MinimapWindow() {
 	spdlog::info("MinimapWindow destructor started");
 	spdlog::default_logger()->flush();
-	if (context && nvg) {
-		spdlog::info("MinimapWindow destructor - setting context and resetting nvg");
+	if (context) {
+		spdlog::info("MinimapWindow destructor - setting context and resetting drawer/nvg");
 		spdlog::default_logger()->flush();
 		SetCurrent(*context);
+		drawer.reset();
 		nvg.reset();
 	}
 	spdlog::info("MinimapWindow destructor finished");
