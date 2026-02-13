@@ -50,7 +50,6 @@ bool GroundBrush::load(pugi::xml_node node, std::vector<std::string>& warnings) 
 void GroundBrush::undraw(BaseMap* map, Tile* tile) {
 	ASSERT(tile);
 	if (tile->hasGround() && tile->ground->getGroundBrush() == this) {
-		delete tile->ground;
 		tile->ground = nullptr;
 	}
 }
@@ -84,7 +83,7 @@ void GroundBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		id = border_items.front().id;
 	}
 
-	tile->addItem(Item::Create(id).release());
+	tile->addItem(Item::Create(id));
 }
 
 const GroundBrush::BorderBlock* GroundBrush::getBrushTo(GroundBrush* first, GroundBrush* second) {

@@ -535,9 +535,8 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 		}
 
 		if (offset != Position(0, 0, 0)) {
-			for (ItemVector::iterator iter = import_tile->items.begin(); iter != import_tile->items.end(); ++iter) {
-				Item* item = *iter;
-				if (Teleport* teleport = dynamic_cast<Teleport*>(item)) {
+			for (auto& item : import_tile->items) {
+				if (Teleport* teleport = dynamic_cast<Teleport*>(item.get())) {
 					teleport->setDestination(teleport->getDestination() + offset);
 				}
 			}

@@ -42,7 +42,7 @@ public:
 	static std::string DirID2Name(uint16_t id);
 	static uint16_t DirName2ID(std::string id);
 
-	Creature* deepCopy() const;
+	std::unique_ptr<Creature> deepCopy() const;
 
 	const Outfit& getLookType() const;
 

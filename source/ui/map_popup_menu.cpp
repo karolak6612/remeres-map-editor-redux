@@ -87,7 +87,7 @@ void MapPopupMenu::Update() {
 			Creature* topCreature = tile->creature.get();
 			Spawn* topSpawn = tile->spawn.get();
 
-			for (auto* item : tile->items) {
+			for (const auto& item : tile->items) {
 				if (item->isWall()) {
 					Brush* wb = item->getWallBrush();
 					if (wb && wb->visibleInPalette()) {
@@ -113,11 +113,11 @@ void MapPopupMenu::Update() {
 					hasCollection = hasCollection || db->hasCollection();
 				}
 				if (item->isSelected()) {
-					topItem = item;
+					topItem = item.get();
 				}
 			}
 			if (!topItem) {
-				topItem = tile->ground;
+				topItem = tile->ground.get();
 			}
 
 			AppendSeparator();

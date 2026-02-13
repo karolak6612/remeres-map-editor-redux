@@ -119,10 +119,10 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 			// Set capacity for rendering empty slots
 			data.containerCapacity = static_cast<uint8_t>(container->getVolume());
 
-			const ItemVector& items = container->getVector();
+			const auto& items = container->getVector();
 			data.containerItems.clear();
 			data.containerItems.reserve(items.size());
-			for (Item* subItem : items) {
+			for (const auto& subItem : items) {
 				if (subItem) {
 					ContainerItem ci;
 					ci.id = subItem->getID();
@@ -207,7 +207,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground) {
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, false, r, g, b);
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -217,7 +217,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -259,11 +259,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			}
 
 			// items on tile
-			for (auto* item : tile->items) {
+			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
 						}
@@ -272,7 +272,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 				// item sprite
 				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, false, r, g, b);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
@@ -292,7 +292,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 							}
 						}
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, false, ir, ig, ib);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
 				}
 			}
 			// monster/npc on tile
@@ -331,7 +331,7 @@ void TileRenderer::AddLight(TileLocation* location, const RenderView& view, cons
 
 	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
 	if (!hidden && !tile->items.empty()) {
-		for (const auto* item : tile->items) {
+		for (const auto& item : tile->items) {
 			if (item->hasLight()) {
 				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
 			}

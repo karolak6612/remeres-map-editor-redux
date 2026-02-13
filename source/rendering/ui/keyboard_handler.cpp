@@ -152,7 +152,7 @@ void KeyboardHandler::HandleBrushVariation(MapCanvas* canvas, int keycode) {
 	if (keycode == 'z' || keycode == 'Z') {
 		--nv;
 		if (nv < 0) {
-			nv = max(0, (g_gui.GetCurrentBrush() ? g_gui.GetCurrentBrush()->getMaxVariation() - 1 : 0));
+			nv = std::max(0, (g_gui.GetCurrentBrush() ? g_gui.GetCurrentBrush()->getMaxVariation() - 1 : 0));
 		}
 	} else {
 		++nv;

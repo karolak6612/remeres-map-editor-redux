@@ -44,14 +44,14 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 
 					if (tile->ground) {
 						if (tile->isPZ()) {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, false, 128, 255, 128, 96);
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, 128, 255, 128, 96);
 						} else {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, false, 255, 255, 255, 96);
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, 255, 255, 255, 96);
 						}
 					}
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
-						for (auto* item : tile->items) {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, false, 255, 255, 255, 96);
+						for (const auto& item : tile->items) {
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, 255, 255, 255, 96);
 						}
 					}
 				}

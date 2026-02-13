@@ -251,7 +251,7 @@ void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const P
 		writer.addU32(tile->getMapFlags());
 	}
 
-	Item* ground = tile->ground;
+	Item* ground = tile->ground.get();
 	if (ground) {
 		if (ground->isComplex()) {
 			ground->serializeItemNode_OTBM(mapVersion, writer);
@@ -261,7 +261,7 @@ void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const P
 		}
 	}
 
-	for (Item* item : tile->items) {
+	for (const auto& item : tile->items) {
 		item->serializeItemNode_OTBM(mapVersion, writer);
 	}
 
@@ -332,7 +332,7 @@ std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, con
 				if (!item) {
 					// warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
 				}
-				tile->addItem(item.release());
+				tile->addItem(std::move(item));
 				break;
 			}
 			default:
@@ -357,7 +357,7 @@ std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, con
 					if (!item->unserializeItemNode_OTBM(mapVersion, itemNode)) {
 						// warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
 					}
-					tile->addItem(item.release());
+					tile->addItem(std::move(item));
 				}
 			} else {
 				// warning("Unknown type of tile child node");

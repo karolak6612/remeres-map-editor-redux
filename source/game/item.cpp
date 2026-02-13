@@ -84,7 +84,7 @@ Item::~Item() {
 	////
 }
 
-Item* Item::deepCopy() const {
+std::unique_ptr<Item> Item::deepCopy() const {
 	std::unique_ptr<Item> copy = Create(id, subtype);
 	if (copy) {
 		copy->selected = selected;
@@ -92,7 +92,7 @@ Item* Item::deepCopy() const {
 			copy->attributes = newd ItemAttributeMap(*attributes);
 		}
 	}
-	return copy.release();
+	return copy;
 }
 
 Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
@@ -102,25 +102,25 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 
 	old_item->setID(new_id);
 	// Through the magic of deepCopy, this will now be a pointer to an item of the correct type.
-	Item* new_item = old_item->deepCopy();
+	std::unique_ptr<Item> new_item_ptr = old_item->deepCopy();
+	Item* new_item = new_item_ptr.get();
+
 	if (parent) {
 		// Find the old item and remove it from the tile, insert this one instead!
-		if (old_item == parent->ground) {
-			delete old_item;
-			parent->ground = new_item;
+		if (old_item == parent->ground.get()) {
+			parent->ground = std::move(new_item_ptr);
 			return new_item;
 		}
 
 		std::queue<Container*> containers;
-		for (ItemVector::iterator item_iter = parent->items.begin(); item_iter != parent->items.end(); ++item_iter) {
-			if (*item_iter == old_item) {
-				delete old_item;
-				item_iter = parent->items.erase(item_iter);
-				parent->items.insert(item_iter, new_item);
+		for (auto it = parent->items.begin(); it != parent->items.end(); ++it) {
+			if (it->get() == old_item) {
+				it = parent->items.erase(it);
+				parent->items.insert(it, std::move(new_item_ptr));
 				return new_item;
 			}
 
-			Container* c = (*item_iter)->asContainer();
+			Container* c = (*it)->asContainer();
 			if (c) {
 				containers.push(c);
 			}
@@ -128,9 +128,9 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 
 		while (containers.size() != 0) {
 			Container* container = containers.front();
-			ItemVector& v = container->getVector();
-			for (ItemVector::iterator item_iter = v.begin(); item_iter != v.end(); ++item_iter) {
-				Item* i = *item_iter;
+			auto& v = container->getVector();
+			for (auto it = v.begin(); it != v.end(); ++it) {
+				Item* i = it->get();
 				Container* c = i->asContainer();
 				if (c) {
 					containers.push(c);
@@ -138,8 +138,8 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 
 				if (i == old_item) {
 					// Found it!
-					item_iter = v.erase(item_iter);
-					v.insert(item_iter, new_item);
+					it = v.erase(it);
+					v.insert(it, std::move(new_item_ptr));
 					return new_item;
 				}
 			}
@@ -147,7 +147,6 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 		}
 	}
 
-	delete new_item;
 	return nullptr;
 }
 

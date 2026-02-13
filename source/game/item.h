@@ -97,7 +97,7 @@ public:
 	virtual ~Item();
 
 	// Deep copy thingy
-	virtual Item* deepCopy() const;
+	virtual std::unique_ptr<Item> deepCopy() const;
 
 	// Get memory footprint size
 	uint32_t memsize() const;

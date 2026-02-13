@@ -151,7 +151,7 @@ bool DoorBrush::canDraw(BaseMap* map, const Position& position) const {
 }
 
 void DoorBrush::undraw(BaseMap* map, Tile* tile) {
-	for (Item* item : tile->items) {
+	for (const auto& item : tile->items) {
 		if (item->isBrushDoor()) {
 			item->getWallBrush()->draw(map, tile, nullptr);
 			if (g_settings.getInteger(Config::USE_AUTOMAGIC)) {
@@ -164,7 +164,7 @@ void DoorBrush::undraw(BaseMap* map, Tile* tile) {
 
 void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	for (auto it = tile->items.begin(); it != tile->items.end();) {
-		Item* item = *it;
+		Item* item = it->get();
 		if (!item->isWall()) {
 			++it;
 			continue;
@@ -228,17 +228,17 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 		// Decorations
 		while (true) {
-			auto found_it = std::ranges::find(tile->items, item);
+			auto found_it = std::ranges::find_if(tile->items, [item](const auto& ptr) { return ptr.get() == item; });
 			if (found_it == tile->items.end()) {
 				return;
 			}
 
-			it = ++found_it;
-			if (it == tile->items.end()) {
+			auto next_it = ++found_it;
+			if (next_it == tile->items.end()) {
 				return;
 			}
 
-			item = *it;
+			item = next_it->get();
 			if (item->isWall()) {
 				if (WallBrush* brush = item->getWallBrush(); brush && brush->isWallDecoration()) {
 					perfect_match = false;

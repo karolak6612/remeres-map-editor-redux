@@ -18,7 +18,7 @@ bool TableBorderCalculator::hasMatchingTableBrushAtTile(BaseMap* map, TableBrush
 		return false;
 	}
 
-	for (Item* item : t->items) {
+	for (const auto& item : t->items) {
 		TableBrush* tb = item->getTableBrush();
 		if (tb == table_brush) {
 			return true;
@@ -39,7 +39,7 @@ void TableBorderCalculator::doTables(BaseMap* map, Tile* tile) {
 	int32_t y = position.y;
 	int32_t z = position.z;
 
-	for (Item* item : tile->items) {
+	for (const auto& item : tile->items) {
 		ASSERT(item);
 
 		TableBrush* table_brush = item->getTableBrush();

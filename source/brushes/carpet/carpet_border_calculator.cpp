@@ -17,7 +17,7 @@ static bool hasMatchingCarpetBrushAtTile(BaseMap* map, CarpetBrush* carpetBrush,
 		return false;
 	}
 
-	for (Item* item : tile->items) {
+	for (const auto& item : tile->items) {
 		if (item->getCarpetBrush() == carpetBrush) {
 			return true;
 		}
@@ -36,7 +36,7 @@ void CarpetBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	int32_t y = position.y;
 	int32_t z = position.z;
 
-	for (Item* item : tile->items) {
+	for (const auto& item : tile->items) {
 		ASSERT(item);
 
 		CarpetBrush* carpetBrush = item->getCarpetBrush();

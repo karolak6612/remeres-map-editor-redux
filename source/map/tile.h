@@ -28,6 +28,7 @@ class House;
 class Map;
 #include "app/rme_forward_declarations.h"
 #include <unordered_set>
+#include <memory>
 
 enum {
 	TILESTATE_NONE = 0x0000,
@@ -56,8 +57,8 @@ enum : uint8_t {
 class Tile {
 public: // Members
 	TileLocation* location;
-	Item* ground;
-	ItemVector items;
+	std::unique_ptr<Item> ground;
+	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
 	std::unique_ptr<Spawn> spawn;
 	uint32_t house_id; // House id for this tile (pointer not safe)
@@ -140,7 +141,7 @@ public: // Functions
 	int getIndexOf(Item* item) const;
 	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
 	Item* getItemAt(int index) const;
-	void addItem(Item* item);
+	void addItem(std::unique_ptr<Item> item);
 
 	void select();
 	void deselect();
@@ -155,7 +156,7 @@ public: // Functions
 		return testFlags(statflags, TILESTATE_UNIQUE);
 	}
 
-	ItemVector popSelectedItems(bool ignoreTileSelected = false);
+	std::vector<std::unique_ptr<Item>> popSelectedItems(bool ignoreTileSelected = false);
 	ItemVector getSelectedItems(bool unzoomed = false);
 	Item* getTopSelectedItem();
 
@@ -176,7 +177,7 @@ public: // Functions
 	GroundBrush* getGroundBrush() const;
 
 	// Add a border item (added at the bottom of all items)
-	void addBorderItem(Item* item);
+	void addBorderItem(std::unique_ptr<Item> item);
 
 	bool hasTable() const {
 		return testFlags(statflags, TILESTATE_HAS_TABLE);
@@ -211,7 +212,7 @@ public: // Functions
 	Item* getWall() const;
 	bool hasWall() const;
 	// Add a wall item (same as just addItem, but an additional check to verify that it is a wall)
-	void addWallItem(Item* item);
+	void addWallItem(std::unique_ptr<Item> item);
 
 	// Has to do with houses
 	bool isHouseTile() const;

@@ -273,12 +273,8 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	}
 
 	// Clean current borders
-	std::erase_if(tile->items, [](Item* item) {
-		if (item->isBorder()) {
-			delete item;
-			return true;
-		}
-		return false;
+	std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
+		return item->isBorder();
 	});
 
 	// Sort borders based on z-order
@@ -315,27 +311,27 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 			}
 
 			if (borderCluster.border->tiles[direction] != 0) {
-				tile->addBorderItem(Item::Create(borderCluster.border->tiles[direction]).release());
+				tile->addBorderItem(Item::Create(borderCluster.border->tiles[direction]));
 			} else {
 				if (direction == NORTHWEST_DIAGONAL) {
 					if (borderCluster.border->tiles[WEST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]).release());
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
 					}
 				} else if (direction == NORTHEAST_DIAGONAL) {
 					if (borderCluster.border->tiles[EAST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]).release());
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
 					}
 				} else if (direction == SOUTHWEST_DIAGONAL) {
 					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[WEST_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]).release());
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
 					}
 				} else if (direction == SOUTHEAST_DIAGONAL) {
 					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[EAST_HORIZONTAL] != 0) {
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]).release());
-						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]).release());
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
+						tile->addBorderItem(Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
 					}
 				}
 			}
@@ -348,7 +344,7 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 		for (const auto& specificCaseBlockPtr : borderBlock->specific_cases) {
 			const GroundBrush::SpecificCaseBlock* specificCaseBlock = specificCaseBlockPtr.get();
 			uint32_t matches = 0;
-			for (Item* item : tile->items) {
+			for (const auto& item : tile->items) {
 				if (!item->isBorder()) {
 					break;
 				}
@@ -375,7 +371,7 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 				bool replaced = specificCaseBlock->delete_all;
 
 				while (it != tileItems.end()) {
-					Item* item = *it;
+					Item* item = it->get();
 					if (!item->isBorder()) {
 						++it;
 						continue;
@@ -390,7 +386,6 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 								replaced = true;
 							} else {
 								if (specificCaseBlock->delete_all || !specificCaseBlock->keepBorder) {
-									delete item;
 									it = tileItems.erase(it);
 									inc = false;
 									break;

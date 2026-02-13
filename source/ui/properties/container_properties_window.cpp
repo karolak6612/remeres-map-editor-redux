@@ -197,15 +197,15 @@ void ContainerPropertiesWindow::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 	if (dialog.ShowModal() == wxID_OK) {
 		uint16_t item_id = dialog.getResultID();
 		if (item_id != 0) {
-			ItemVector& contents = container->getVector();
+			auto& contents = container->getVector();
 			uint32_t index = last_clicked_button->getIndex();
 
 			std::unique_ptr<Item> new_item(Item::Create(item_id)); // Wrap locally
 			if (new_item) {
 				if (index < contents.size()) {
-					contents.insert(contents.begin() + index, new_item.release()); // Release ownership to vector
+					contents.insert(contents.begin() + index, std::move(new_item));
 				} else {
-					contents.push_back(new_item.release()); // Release ownership to vector
+					contents.push_back(std::move(new_item));
 				}
 			}
 			Update();
@@ -249,12 +249,13 @@ void ContainerPropertiesWindow::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	ItemVector& contents = container->getVector();
+	auto& contents = container->getVector();
 	Item* to_remove = last_clicked_button->getItem();
 
-	auto it = std::find(contents.begin(), contents.end(), to_remove);
+	auto it = std::find_if(contents.begin(), contents.end(), [to_remove](const std::unique_ptr<Item>& item) {
+		return item.get() == to_remove;
+	});
 	if (it != contents.end()) {
-		std::unique_ptr<Item> item_ptr(*it); // Transfer ownership to unique_ptr for safe deletion
 		contents.erase(it);
 	}
 

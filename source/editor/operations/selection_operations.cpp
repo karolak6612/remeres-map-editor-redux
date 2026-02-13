@@ -36,9 +36,9 @@ void SelectionOperations::doSurroundingBorders(DoodadBrush* doodad_brush, Positi
 }
 
 void SelectionOperations::removeDuplicateWalls(Tile* buffer, Tile* tile) {
-	for (ItemVector::const_iterator iter = buffer->items.begin(); iter != buffer->items.end(); ++iter) {
-		if ((*iter)->getWallBrush()) {
-			TileOperations::cleanWalls(tile, (*iter)->getWallBrush());
+	for (const auto& item : buffer->items) {
+		if (item->getWallBrush()) {
+			TileOperations::cleanWalls(tile, item->getWallBrush());
 		}
 	}
 }
@@ -70,8 +70,8 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
 		if (groundBrush && groundBrush->isReRandomizable()) {
 			groundBrush->draw(&editor.map, newTile.get(), nullptr);
 
-			Item* oldGround = tile->ground;
-			Item* newGround = newTile->ground;
+			Item* oldGround = tile->ground.get();
+			Item* newGround = newTile->ground.get();
 			if (oldGround && newGround) {
 				newGround->setActionID(oldGround->getActionID());
 				newGround->setUniqueID(oldGround->getUniqueID());
@@ -105,11 +105,10 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 
 		// Get all the selected items from the NEW source tile and iterate through them
 		// This transfers ownership to the temporary tile
-		ItemVector tile_selection = new_src_tile->popSelectedItems();
-		for (ItemVector::iterator iit = tile_selection.begin(); iit != tile_selection.end(); iit++) {
+		auto tile_selection = new_src_tile->popSelectedItems();
+		for (auto& item : tile_selection) {
 			// Add the copied item to the newd destination tile,
-			Item* item = (*iit);
-			tmp_storage_tile->addItem(item);
+			tmp_storage_tile->addItem(std::move(item));
 		}
 		// Move spawns
 		if (new_src_tile->spawn && new_src_tile->spawn->isSelected()) {
@@ -355,11 +354,10 @@ void SelectionOperations::destroySelection(Editor& editor) {
 			Tile* tile = *it;
 			std::unique_ptr<Tile> newtile = tile->deepCopy(editor.map);
 
-			ItemVector tile_selection = newtile->popSelectedItems();
-			for (ItemVector::iterator iit = tile_selection.begin(); iit != tile_selection.end(); ++iit) {
+			auto tile_selection = newtile->popSelectedItems();
+			for (auto& item : tile_selection) {
 				++item_count;
-				// Delete the items from the tile
-				delete *iit;
+				// Items are deleted when the unique_ptr in tile_selection goes out of scope
 			}
 
 			if (newtile->creature && newtile->creature->isSelected()) {

@@ -526,7 +526,7 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 								continue;
 							}
 							// Adjust radius
-							radius = min(radius, uint32_t(g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
+							radius = std::min(radius, uint32_t(g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
 
 							// Create and assign spawn
 							Tile* spawn_tile = map.getTile(spawnpos);
@@ -586,7 +586,7 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 									const Position creaturepos(creature_x, creature_y, creature_z);
 
 									// Check radius
-									if (uint32_t(abs(creaturepos.x - spawnpos.x)) > radius || uint32_t(abs(creaturepos.y - spawnpos.y)) > radius) {
+									if (uint32_t(std::abs(creaturepos.x - spawnpos.x)) > radius || uint32_t(std::abs(creaturepos.y - spawnpos.y)) > radius) {
 										// Outside of the spawn...
 									}
 

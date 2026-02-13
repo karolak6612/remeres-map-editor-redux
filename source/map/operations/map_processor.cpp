@@ -50,7 +50,7 @@ void MapProcessor::randomizeMap(Editor& editor, bool showdialog) {
 
 		GroundBrush* groundBrush = tile->getGroundBrush();
 		if (groundBrush) {
-			Item* oldGround = tile->ground;
+			Item* oldGround = tile->ground.get();
 
 			uint16_t actionId, uniqueId;
 			if (oldGround) {
@@ -62,7 +62,7 @@ void MapProcessor::randomizeMap(Editor& editor, bool showdialog) {
 			}
 			groundBrush->draw(&editor.map, tile, nullptr);
 
-			Item* newGround = tile->ground;
+			Item* newGround = tile->ground.get();
 			if (newGround) {
 				newGround->setActionID(actionId);
 				newGround->setUniqueID(uniqueId);

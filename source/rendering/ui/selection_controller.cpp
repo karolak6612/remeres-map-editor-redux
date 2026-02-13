@@ -398,7 +398,7 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
 	// We know it's a square, just split it into several areas
 	int width = e_x - s_x;
 	if (width < threadcount) {
-		threadcount = min(1, width);
+		threadcount = std::min(1, width);
 	}
 	// Let's divide!
 	int remainder = width;

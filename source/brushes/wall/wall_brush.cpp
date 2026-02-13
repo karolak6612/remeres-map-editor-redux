@@ -38,7 +38,7 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	bool b = (parameter ? *reinterpret_cast<bool*>(parameter) : false);
 	if (b) {
 		// Find a matching wall item on this tile, and shift the id
-		for (Item* item : tile->items) {
+		for (const auto& item : tile->items) {
 			if (item->isWall()) {
 				WallBrush* wb = item->getWallBrush();
 				if (wb == this) {
@@ -105,7 +105,7 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		}
 	}
 
-	tile->addWallItem(Item::Create(id).release());
+	tile->addWallItem(Item::Create(id));
 }
 
 void WallBrush::doWalls(BaseMap* map, Tile* tile) {
@@ -166,13 +166,13 @@ WallDecorationBrush::~WallDecorationBrush() {
 void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	ASSERT(tile);
 
-	ItemVector::iterator iter = tile->items.begin();
+	auto iter = tile->items.begin();
 
 	bool prefLocked = g_gui.HasDoorLocked();
 
 	TileOperations::cleanWalls(tile, this);
 	while (iter != tile->items.end()) {
-		Item* item = *iter;
+		Item* item = iter->get();
 		if (item->isBorder()) {
 			++iter;
 			continue;
@@ -246,9 +246,9 @@ void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 			ASSERT(id);
 
 			// Add a matching item above this item.
-			std::unique_ptr<Item> item = Item::Create(id);
+			std::unique_ptr<Item> deco_item = Item::Create(id);
 			++iter;
-			iter = tile->items.insert(iter, item.release());
+			iter = tile->items.insert(iter, std::move(deco_item));
 		}
 		++iter;
 	}

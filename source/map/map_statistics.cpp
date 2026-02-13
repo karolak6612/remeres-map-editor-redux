@@ -52,11 +52,11 @@ MapStatistics MapStatisticsCollector::Collect(Map* map) {
 		};
 
 		if (tile->ground) {
-			analyze_item(tile->ground);
+			analyze_item(tile->ground.get());
 		}
 
-		for (Item* item : tile->items) {
-			analyze_item(item);
+		for (const auto& item : tile->items) {
+			analyze_item(item.get());
 		}
 
 		if (tile->spawn) {

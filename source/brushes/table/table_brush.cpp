@@ -48,12 +48,8 @@ bool TableBrush::canDraw(BaseMap* map, const Position& position) const {
 }
 
 void TableBrush::undraw(BaseMap* map, Tile* t) {
-	std::erase_if(t->items, [this](Item* item) {
-		if (item->isTable() && item->getTableBrush() == this) {
-			delete item;
-			return true;
-		}
-		return false;
+	std::erase_if(t->items, [this](const auto& item) {
+		return item->isTable() && item->getTableBrush() == this;
 	});
 }
 
@@ -76,7 +72,7 @@ void TableBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	}
 
 	if (type != 0) {
-		tile->addItem(Item::Create(type).release());
+		tile->addItem(Item::Create(type));
 	}
 }
 

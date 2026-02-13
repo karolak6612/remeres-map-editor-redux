@@ -53,38 +53,27 @@ bool DoodadBrush::ownsItem(Item* item) const {
 
 void DoodadBrush::undraw(BaseMap* map, Tile* tile) {
 	// Remove all doodad-related
-	for (ItemVector::iterator item_iter = tile->items.begin(); item_iter != tile->items.end();) {
-		Item* item = *item_iter;
+	std::erase_if(tile->items, [this](const std::unique_ptr<Item>& item) {
 		if (item->getDoodadBrush() != nullptr) {
 			if (item->isComplex() && g_settings.getInteger(Config::ERASER_LEAVE_UNIQUE)) {
-				++item_iter;
-			} else if (g_settings.getInteger(Config::DOODAD_BRUSH_ERASE_LIKE)) {
-				// Only delete items of the same doodad brush
-				if (ownsItem(item)) {
-					delete item;
-					item_iter = tile->items.erase(item_iter);
-				} else {
-					++item_iter;
-				}
-			} else {
-				delete item;
-				item_iter = tile->items.erase(item_iter);
+				return false;
 			}
-		} else {
-			++item_iter;
+			if (g_settings.getInteger(Config::DOODAD_BRUSH_ERASE_LIKE)) {
+				return ownsItem(item.get());
+			}
+			return true;
 		}
-	}
+		return false;
+	});
 
 	if (tile->ground && tile->ground->getDoodadBrush() != nullptr) {
 		if (g_settings.getInteger(Config::DOODAD_BRUSH_ERASE_LIKE)) {
 			// Only delete items of the same doodad brush
-			if (ownsItem(tile->ground)) {
-				delete tile->ground;
-				tile->ground = nullptr;
+			if (ownsItem(tile->ground.get())) {
+				tile->ground.reset();
 			}
 		} else {
-			delete tile->ground;
-			tile->ground = nullptr;
+			tile->ground.reset();
 		}
 	}
 }

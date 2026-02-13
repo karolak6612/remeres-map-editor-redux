@@ -162,7 +162,7 @@ void BrushSelector::SelectCollectionBrush(Selection& selection) {
 		return;
 	}
 
-	for (auto* item : tile->items) {
+	for (const auto& item : tile->items) {
 		if (item->isWall()) {
 			WallBrush* wb = item->getWallBrush();
 			if (wb && wb->visibleInPalette() && wb->hasCollection()) {

@@ -89,17 +89,17 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							g /= 2;
 						}
 						if (tile->ground) {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground, options, true, r, g, b, 255);
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, true, r, g, b, 255);
 						}
 					}
 
 					// Draw items on the tile
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
-						for (auto* item : tile->items) {
+						for (const auto& item : tile->items) {
 							if (item->isBorder()) {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, true, 255, r, g, b);
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, r, g, b);
 							} else {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item, options, true, 255, 255, 255, 255);
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, 255, 255, 255);
 							}
 						}
 						if (tile->creature && options.show_creatures) {

@@ -168,7 +168,7 @@ void MapMenuHandler::OnAdvancedReplace(wxCommandEvent& WXUNUSED(event)) {
 				uniqueIds.insert(id);
 			}
 		}
-		for (Item* item : tile->items) {
+		for (const auto& item : tile->items) {
 			uint16_t id = item->getID();
 			if (id != 0) {
 				uniqueIds.insert(id);

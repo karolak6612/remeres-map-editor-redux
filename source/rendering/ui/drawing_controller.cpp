@@ -289,7 +289,7 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 				int map_x = start_map_x + (end_map_x - start_map_x) / 2;
 				int map_y = start_map_y + (end_map_y - start_map_y) / 2;
 
-				int width = min(g_settings.getInteger(Config::MAX_SPAWN_RADIUS), ((end_map_x - start_map_x) / 2 + (end_map_y - start_map_y) / 2) / 2);
+				int width = std::min(g_settings.getInteger(Config::MAX_SPAWN_RADIUS), ((end_map_x - start_map_x) / 2 + (end_map_y - start_map_y) / 2) / 2);
 				int old = g_gui.GetBrushSize();
 				g_gui.SetBrushSize(width);
 				editor.draw(Position(map_x, map_y, mouse_map_pos.z), alt_down);

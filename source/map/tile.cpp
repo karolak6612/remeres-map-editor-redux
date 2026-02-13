@@ -35,6 +35,7 @@
 #include <ranges>
 #include <algorithm>
 #include <iterator>
+#include <memory>
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
@@ -102,11 +103,7 @@ bool Tile::hasHouseExit(uint32_t exit) const {
 }
 
 Tile::~Tile() {
-	while (!items.empty()) {
-		delete items.back();
-		items.pop_back();
-	}
-	delete ground;
+	// Smart pointers handle deletion
 }
 
 std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
@@ -120,23 +117,19 @@ std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
 	copy->minimapColor = minimapColor;
 	copy->house_id = house_id;
 	if (spawn) {
-		copy->spawn.reset(spawn->deepCopy());
+		copy->spawn = spawn->deepCopy();
 	}
 	if (creature) {
-		copy->creature.reset(creature->deepCopy());
+		copy->creature = creature->deepCopy();
 	}
 	// Spawncount & exits are not transferred on copy!
 	if (ground) {
 		copy->ground = ground->deepCopy();
 	}
 
-	ItemVector::iterator it;
-
 	copy->items.reserve(items.size());
-	it = items.begin();
-	while (it != items.end()) {
-		copy->items.push_back((*it)->deepCopy());
-		++it;
+	for (const auto& item : items) {
+		copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
 	}
 
 	return copy;
@@ -148,11 +141,11 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	std::ranges::for_each(items, [&](const Item* i) {
+	for (const auto& i : items) {
 		mem += i->memsize();
-	});
+	}
 
-	mem += sizeof(Item*) * items.capacity();
+	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
 
 	return mem;
 }
@@ -192,9 +185,7 @@ void Tile::merge(Tile* other) {
 	}
 
 	if (other->ground) {
-		delete ground;
-		ground = other->ground;
-		other->ground = nullptr;
+		ground = std::move(other->ground);
 	}
 
 	if (other->creature) {
@@ -206,9 +197,9 @@ void Tile::merge(Tile* other) {
 	}
 
 	items.reserve(items.size() + other->items.size());
-	std::ranges::for_each(other->items, [&](Item* item) {
-		addItem(item);
-	});
+	for (auto& item : other->items) {
+		addItem(std::move(item));
+	}
 	other->items.clear();
 }
 
@@ -221,7 +212,7 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		return true;
 	}
 
-	return std::ranges::any_of(items, [prop](const Item* i) {
+	return std::ranges::any_of(items, [prop](const auto& i) {
 		return i->hasProperty(prop);
 	});
 }
@@ -233,14 +224,14 @@ int Tile::getIndexOf(Item* item) const {
 
 	int index = 0;
 	if (ground) {
-		if (ground == item) {
+		if (ground.get() == item) {
 			return index;
 		}
 		index++;
 	}
 
 	if (!items.empty()) {
-		if (auto it = std::ranges::find(items, item); it != items.end()) {
+		if (auto it = std::ranges::find_if(items, [item](const std::unique_ptr<Item>& i) { return i.get() == item; }); it != items.end()) {
 			index += std::distance(items.begin(), it);
 			return index;
 		}
@@ -250,10 +241,10 @@ int Tile::getIndexOf(Item* item) const {
 
 Item* Tile::getTopItem() const {
 	if (!items.empty() && !items.back()->isMetaItem()) {
-		return items.back();
+		return items.back().get();
 	}
 	if (ground && !ground->isMetaItem()) {
-		return ground;
+		return ground.get();
 	}
 	return nullptr;
 }
@@ -264,38 +255,36 @@ Item* Tile::getItemAt(int index) const {
 	}
 	if (ground) {
 		if (index == 0) {
-			return ground;
+			return ground.get();
 		}
 		index--;
 	}
-	if (index >= 0 && index < items.size()) {
-		return items.at(index);
+	if (index >= 0 && index < (int)items.size()) {
+		return items.at(index).get();
 	}
 	return nullptr;
 }
 
-void Tile::addItem(Item* item) {
+void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
 	if (item->isGroundTile()) {
-		delete ground;
-		ground = item;
+		ground = std::move(item);
 		return;
 	}
 
-	ItemVector::iterator it;
+	std::vector<std::unique_ptr<Item>>::iterator it;
 
 	uint16_t gid = item->getGroundEquivalent();
 	if (gid != 0) {
-		delete ground;
-		ground = Item::Create(gid).release();
+		ground = Item::Create(gid);
 		// At the very bottom!
 		it = items.begin();
 	} else if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
 		// They are sorted by TopOrder, and come before normal items.
-		it = std::ranges::find_if(items, [&](Item* i) {
+		it = std::ranges::find_if(items, [&](const std::unique_ptr<Item>& i) {
 			if (!i->isAlwaysOnBottom()) {
 				return true; // Found a normal item, insert before it
 			}
@@ -307,11 +296,10 @@ void Tile::addItem(Item* item) {
 		it = items.end();
 	}
 
-	items.insert(it, item);
-
 	if (item->isSelected()) {
 		statflags |= TILESTATE_SELECTED;
 	}
+	items.insert(it, std::move(item));
 }
 
 void Tile::select() {
@@ -328,7 +316,7 @@ void Tile::select() {
 		creature->select();
 	}
 
-	std::ranges::for_each(items, [](Item* i) {
+	std::ranges::for_each(items, [](const auto& i) {
 		i->select();
 	});
 
@@ -346,7 +334,7 @@ void Tile::deselect() {
 		creature->deselect();
 	}
 
-	std::ranges::for_each(items, [](Item* i) {
+	std::ranges::for_each(items, [](const auto& i) {
 		i->deselect();
 	});
 
@@ -355,34 +343,33 @@ void Tile::deselect() {
 
 Item* Tile::getTopSelectedItem() {
 	auto view = std::ranges::reverse_view(items);
-	auto it = std::ranges::find_if(view, [](Item* i) {
+	auto it = std::ranges::find_if(view, [](const std::unique_ptr<Item>& i) {
 		return i->isSelected() && !i->isMetaItem();
 	});
 
 	if (it != view.end()) {
-		return *it;
+		return it->get();
 	}
 
 	if (ground && ground->isSelected() && !ground->isMetaItem()) {
-		return ground;
+		return ground.get();
 	}
 	return nullptr;
 }
 
-ItemVector Tile::popSelectedItems(bool ignoreTileSelected) {
-	ItemVector pop_items;
+std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelected) {
+	std::vector<std::unique_ptr<Item>> pop_items;
 
 	if (!ignoreTileSelected && !isSelected()) {
 		return pop_items;
 	}
 
 	if (ground && ground->isSelected()) {
-		pop_items.push_back(ground);
-		ground = nullptr;
+		pop_items.push_back(std::move(ground));
 	}
 
-	auto split_point = std::stable_partition(items.begin(), items.end(), [](Item* i) { return !i->isSelected(); });
-	pop_items.insert(pop_items.end(), split_point, items.end());
+	auto split_point = std::stable_partition(items.begin(), items.end(), [](const std::unique_ptr<Item>& i) { return !i->isSelected(); });
+	std::move(split_point, items.end(), std::back_inserter(pop_items));
 	items.erase(split_point, items.end());
 
 	statflags &= ~TILESTATE_SELECTED;
@@ -397,19 +384,15 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 	}
 
 	if (ground && ground->isSelected()) {
-		selected_items.push_back(ground);
+		selected_items.push_back(ground.get());
 	}
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		ItemVector::iterator it;
-
-		it = items.begin();
-		while (it != items.end()) {
-			if ((*it)->isSelected()) {
-				selected_items.push_back(*it);
+		for (const auto& item : items) {
+			if (item->isSelected()) {
+				selected_items.push_back(item.get());
 			}
-			it++;
 		}
 	}
 
@@ -422,12 +405,12 @@ uint8_t Tile::getMiniMapColor() const {
 	}
 
 	auto view = std::ranges::reverse_view(items);
-	auto it = std::ranges::find_if(view, [](const Item* i) {
+	auto it = std::ranges::find_if(view, [](const std::unique_ptr<Item>& i) {
 		return i->getMiniMapColor() != 0;
 	});
 
 	if (it != view.end()) {
-		return (*it)->getMiniMapColor();
+		return it->get()->getMiniMapColor();
 	}
 
 	// check ground too
@@ -494,7 +477,7 @@ void Tile::update() {
 		}
 	}
 
-	for (Item* i : items) {
+	for (const auto& i : items) {
 		if (i->isSelected()) {
 			statflags |= TILESTATE_SELECTED;
 		}
@@ -505,23 +488,23 @@ void Tile::update() {
 			minimapColor = i->getMiniMapColor();
 		}
 
-		ItemType& it = g_items[i->getID()];
-		if (it.unpassable) {
+		ItemType& it_type = g_items[i->getID()];
+		if (it_type.unpassable) {
 			statflags |= TILESTATE_BLOCKING;
 		}
-		if (it.isOptionalBorder) {
+		if (it_type.isOptionalBorder) {
 			statflags |= TILESTATE_OP_BORDER;
 		}
-		if (it.isTable) {
+		if (it_type.isTable) {
 			statflags |= TILESTATE_HAS_TABLE;
 		}
-		if (it.isCarpet) {
+		if (it_type.isCarpet) {
 			statflags |= TILESTATE_HAS_CARPET;
 		}
-		if (it.hookSouth) {
+		if (it_type.hookSouth) {
 			statflags |= TILESTATE_HOOK_SOUTH;
 		}
-		if (it.hookEast) {
+		if (it_type.hookEast) {
 			statflags |= TILESTATE_HOOK_EAST;
 		}
 	}
@@ -533,12 +516,12 @@ void Tile::update() {
 	}
 }
 
-void Tile::addBorderItem(Item* item) {
+void Tile::addBorderItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
 	ASSERT(item->isBorder());
-	items.insert(items.begin(), item);
+	items.insert(items.begin(), std::move(item));
 }
 
 GroundBrush* Tile::getGroundBrush() const {
@@ -551,33 +534,33 @@ GroundBrush* Tile::getGroundBrush() const {
 }
 
 Item* Tile::getWall() const {
-	auto it = std::ranges::find_if(items, [](const Item* i) {
+	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isWall();
 	});
-	return (it != items.end()) ? *it : nullptr;
+	return (it != items.end()) ? it->get() : nullptr;
 }
 
 Item* Tile::getCarpet() const {
-	auto it = std::ranges::find_if(items, [](const Item* i) {
+	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isCarpet();
 	});
-	return (it != items.end()) ? *it : nullptr;
+	return (it != items.end()) ? it->get() : nullptr;
 }
 
 Item* Tile::getTable() const {
-	auto it = std::ranges::find_if(items, [](const Item* i) {
+	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isTable();
 	});
-	return (it != items.end()) ? *it : nullptr;
+	return (it != items.end()) ? it->get() : nullptr;
 }
 
-void Tile::addWallItem(Item* item) {
+void Tile::addWallItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
 	ASSERT(item->isWall());
 
-	addItem(item);
+	addItem(std::move(item));
 }
 
 void Tile::selectGround() {
@@ -587,7 +570,7 @@ void Tile::selectGround() {
 		selected_ = true;
 	}
 
-	for (Item* i : items) {
+	for (const auto& i : items) {
 		if (i->isBorder()) {
 			i->select();
 			selected_ = true;
@@ -606,7 +589,7 @@ void Tile::deselectGround() {
 		ground->deselect();
 	}
 
-	for (Item* i : items) {
+	for (const auto& i : items) {
 		if (i->isBorder()) {
 			i->deselect();
 		} else {
@@ -672,7 +655,7 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const Item* it1, const Item* it2) {
+	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }

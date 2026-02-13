@@ -184,14 +184,14 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 		}
 
 		if (tile->ground) {
-			foreach (map, tile, tile->ground, done)
+			foreach (map, tile, tile->ground.get(), done)
 				;
 		}
 
-		for (auto* item : tile->items) {
+		for (const auto& item : tile->items) {
 			containers.clear();
 			Container* container = item->asContainer();
-			foreach (map, tile, item, done)
+			foreach (map, tile, item.get(), done)
 				;
 
 			if (container) {
@@ -201,10 +201,10 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 				while (index < containers.size()) {
 					container = containers[index++];
 
-					ItemVector& v = container->getVector();
-					for (auto* i : v) {
+					auto& contents = container->getVector();
+					for (const auto& i : contents) {
 						Container* c = i->asContainer();
-						foreach (map, tile, i, done)
+						foreach (map, tile, i.get(), done)
 							;
 
 						if (c) {
@@ -257,17 +257,15 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 		}
 
 		if (tile->ground) {
-			if (condition(map, tile->ground, removed, done)) {
-				delete tile->ground;
-				tile->ground = nullptr;
+			if (condition(map, tile->ground.get(), removed, done)) {
+				tile->ground.reset();
 				++removed;
 			}
 		}
 
 		// Use C++20's std::erase_if for a safer and more idiomatic way to remove elements.
-		std::erase_if(tile->items, [&](Item* item) {
-			if (condition(map, item, removed, done)) {
-				delete item;
+		std::erase_if(tile->items, [&](const auto& item) {
+			if (condition(map, item.get(), removed, done)) {
 				++removed;
 				return true;
 			}

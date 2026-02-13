@@ -28,8 +28,8 @@ public:
 	}
 	~Spawn() { }
 
-	Spawn* deepCopy() {
-		Spawn* copy = newd Spawn(size);
+	std::unique_ptr<Spawn> deepCopy() {
+		std::unique_ptr<Spawn> copy = std::make_unique<Spawn>(size);
 		copy->selected = selected;
 		return copy;
 	}

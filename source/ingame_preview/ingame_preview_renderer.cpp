@@ -282,7 +282,7 @@ namespace IngamePreview {
 	int IngamePreviewRenderer::GetTileElevationOffset(const Tile* tile) const {
 		int elevation_offset = 0;
 		if (tile) {
-			for (const Item* item : tile->items) {
+			for (const auto& item : tile->items) {
 				elevation_offset += item->getHeight();
 			}
 			if (tile->ground) {

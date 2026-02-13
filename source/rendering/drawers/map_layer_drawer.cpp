@@ -107,7 +107,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 										rme::collectTileSprites(spr, 0, 0, 0, 0);
 									}
 								}
-								for (Item* item : tile->items) {
+								for (const auto& item : tile->items) {
 									GameSprite* spr = g_items[item->getID()].sprite;
 									if (spr && !spr->isSimpleAndLoaded()) {
 										rme::collectTileSprites(spr, 0, 0, 0, 0);
@@ -172,7 +172,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 								rme::collectTileSprites(spr, 0, 0, 0, 0);
 							}
 						}
-						for (Item* item : tile->items) {
+						for (const auto& item : tile->items) {
 							GameSprite* spr = g_items[item->getID()].sprite;
 							if (spr && !spr->isSimpleAndLoaded()) {
 								rme::collectTileSprites(spr, 0, 0, 0, 0);

@@ -37,7 +37,7 @@ public:
 	Container(const uint16_t type);
 	~Container();
 
-	Item* deepCopy() const;
+	std::unique_ptr<Item> deepCopy() const;
 	Item* getItem(size_t index) const;
 
 	Container* asContainer() override {
@@ -54,10 +54,10 @@ public:
 		return g_items[id].volume;
 	}
 
-	ItemVector& getVector() {
+	std::vector<std::unique_ptr<Item>>& getVector() {
 		return contents;
 	}
-	const ItemVector& getVector() const {
+	const std::vector<std::unique_ptr<Item>>& getVector() const {
 		return contents;
 	}
 	double getWeight() const;
@@ -68,14 +68,14 @@ public:
 	// virtual bool serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
 protected:
-	ItemVector contents;
+	std::vector<std::unique_ptr<Item>> contents;
 };
 
 class Teleport : public Item {
 public:
 	Teleport(const uint16_t type);
 
-	Item* deepCopy() const;
+	std::unique_ptr<Item> deepCopy() const;
 
 	Teleport* asTeleport() override {
 		return this;
@@ -121,7 +121,7 @@ class Door : public Item {
 public:
 	Door(const uint16_t type);
 
-	Item* deepCopy() const;
+	std::unique_ptr<Item> deepCopy() const;
 
 	Door* asDoor() override {
 		return this;
@@ -149,7 +149,7 @@ class Depot : public Item {
 public:
 	Depot(const uint16_t _type);
 
-	Item* deepCopy() const;
+	std::unique_ptr<Item> deepCopy() const;
 
 	uint8_t getDepotID() const {
 		return depotId;
@@ -171,7 +171,7 @@ class Podium : public Item {
 public:
 	Podium(const uint16_t _type);
 
-	Item* deepCopy() const;
+	std::unique_ptr<Item> deepCopy() const;
 
 	const Outfit& getOutfit() const {
 		return outfit;

@@ -28,16 +28,14 @@ Container::Container(const uint16_t type) :
 }
 
 Container::~Container() {
-	for (Item* item : contents) {
-		delete item;
-	}
+	// std::unique_ptr handles cleanup
 }
 
-Item* Container::deepCopy() const {
-	Item* copy = Item::deepCopy();
-	Container* copyContainer = dynamic_cast<Container*>(copy);
+std::unique_ptr<Item> Container::deepCopy() const {
+	std::unique_ptr<Item> copy = Item::deepCopy();
+	Container* copyContainer = dynamic_cast<Container*>(copy.get());
 	if (copyContainer) {
-		for (Item* item : contents) {
+		for (const auto& item : contents) {
 			copyContainer->contents.push_back(item->deepCopy());
 		}
 	}
@@ -46,7 +44,7 @@ Item* Container::deepCopy() const {
 
 Item* Container::getItem(size_t index) const {
 	if (index < contents.size()) {
-		return contents[index];
+		return contents[index].get();
 	}
 	return nullptr;
 }
@@ -62,9 +60,11 @@ Teleport::Teleport(const uint16_t type) :
 	////
 }
 
-Item* Teleport::deepCopy() const {
-	Teleport* copy = static_cast<Teleport*>(Item::deepCopy());
-	copy->destination = destination;
+std::unique_ptr<Item> Teleport::deepCopy() const {
+	std::unique_ptr<Item> copy = Item::deepCopy();
+	if (Teleport* teleport_copy = dynamic_cast<Teleport*>(copy.get())) {
+		teleport_copy->destination = destination;
+	}
 	return copy;
 }
 
@@ -75,9 +75,11 @@ Door::Door(const uint16_t type) :
 	////
 }
 
-Item* Door::deepCopy() const {
-	Door* copy = static_cast<Door*>(Item::deepCopy());
-	copy->doorId = doorId;
+std::unique_ptr<Item> Door::deepCopy() const {
+	std::unique_ptr<Item> copy = Item::deepCopy();
+	if (Door* door_copy = dynamic_cast<Door*>(copy.get())) {
+		door_copy->doorId = doorId;
+	}
 	return copy;
 }
 
@@ -88,10 +90,9 @@ Depot::Depot(const uint16_t type) :
 	////
 }
 
-Item* Depot::deepCopy() const {
-	Item* copy = Item::deepCopy();
-	Depot* copy_depot = dynamic_cast<Depot*>(copy);
-	if (copy_depot) {
+std::unique_ptr<Item> Depot::deepCopy() const {
+	std::unique_ptr<Item> copy = Item::deepCopy();
+	if (Depot* copy_depot = dynamic_cast<Depot*>(copy.get())) {
 		copy_depot->depotId = depotId;
 	}
 	return copy;
@@ -104,12 +105,14 @@ Podium::Podium(const uint16_t type) :
 	////
 }
 
-Item* Podium::deepCopy() const {
-	Podium* copy = static_cast<Podium*>(Item::deepCopy());
-	copy->outfit = outfit;
-	copy->showOutfit = showOutfit;
-	copy->showMount = showMount;
-	copy->showPlatform = showPlatform;
-	copy->direction = direction;
+std::unique_ptr<Item> Podium::deepCopy() const {
+	std::unique_ptr<Item> copy = Item::deepCopy();
+	if (Podium* copy_podium = dynamic_cast<Podium*>(copy.get())) {
+		copy_podium->outfit = outfit;
+		copy_podium->showOutfit = showOutfit;
+		copy_podium->showMount = showMount;
+		copy_podium->showPlatform = showPlatform;
+		copy_podium->direction = direction;
+	}
 	return copy;
 }

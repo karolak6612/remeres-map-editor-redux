@@ -292,7 +292,7 @@ namespace IngamePreview {
 						Position next_pos;
 						bool teleported = false;
 
-						for (const Item* item : tile->items) {
+						for (const auto& item : tile->items) {
 							if (const Teleport* teleport = item->asTeleport()) {
 								if (teleport->hasDestination()) {
 									next_pos = teleport->getDestination();

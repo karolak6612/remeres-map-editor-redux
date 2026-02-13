@@ -67,8 +67,8 @@ uint16_t Creature::DirName2ID(std::string dir) {
 	return SOUTH;
 }
 
-Creature* Creature::deepCopy() const {
-	Creature* copy = newd Creature(type_name);
+std::unique_ptr<Creature> Creature::deepCopy() const {
+	std::unique_ptr<Creature> copy = std::make_unique<Creature>(type_name);
 	copy->spawntime = spawntime;
 	copy->direction = direction;
 	copy->selected = selected;

@@ -19,7 +19,7 @@ bool WallBorderCalculator::hasMatchingWallBrushAtTile(BaseMap* map, WallBrush* w
 		return false;
 	}
 
-	for (Item* item : t->items) {
+	for (const auto& item : t->items) {
 		if (item->isWall()) {
 			WallBrush* wb = item->getWallBrush();
 			if (wb == wall_brush) {
@@ -42,14 +42,14 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 	const int32_t z = tile->getPosition().z;
 
 	// Advance the vector to the beginning of the walls
-	ItemVector::iterator it = tile->items.begin();
+	auto it = tile->items.begin();
 	for (; it != tile->items.end() && (*it)->isBorder(); ++it)
 		;
 
 	std::vector<std::unique_ptr<Item>> items_to_add;
 
 	while (it != tile->items.end()) {
-		Item* wall = *it;
+		Item* wall = it->get();
 		if (!wall->isWall()) {
 			++it;
 			continue;
@@ -62,7 +62,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 		}
 		// or if it's a decoration brush.
 		if (wall_brush->isWallDecoration()) {
-			items_to_add.push_back(std::unique_ptr<Item>(wall));
+			items_to_add.push_back(std::move(*it));
 			it = tile->items.erase(it);
 			continue;
 		}
@@ -99,23 +99,23 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 			::BorderType bt = ::BorderType(border_tables[i][tiledata]);
 
 			if (wall->getWallAlignment() == WALL_UNTOUCHABLE) {
-				items_to_add.push_back(std::unique_ptr<Item>(wall));
+				items_to_add.push_back(std::move(*it));
 				it = tile->items.erase(it);
 				exit = true;
 			} else if (wall->getWallAlignment() == bt) { // Already correct alignment
-				items_to_add.push_back(std::unique_ptr<Item>(wall));
+				items_to_add.push_back(std::move(*it));
 				it = tile->items.erase(it);
 				exit = true;
 
 				// Handle decorations on top
 				while (it != tile->items.end()) {
-					Item* wall_decoration = *it;
+					Item* wall_decoration = it->get();
 					ASSERT(wall_decoration);
 					WallBrush* brush = wall_decoration->getWallBrush();
 					if (brush && brush->isWallDecoration()) {
 						if (wall_decoration->getWallAlignment() == bt) {
 							// Same, no need to change...
-							items_to_add.push_back(std::unique_ptr<Item>(wall_decoration));
+							items_to_add.push_back(std::move(*it));
 							it = tile->items.erase(it);
 							continue;
 						}
@@ -131,7 +131,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 								items_to_add.push_back(std::move(new_wall));
 							}
 						}
-						++it;
+						it = tile->items.erase(it);
 					} else {
 						break;
 					}
@@ -168,12 +168,12 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 						items_to_add.push_back(std::move(new_wall));
 					}
 					exit = true;
-					++it;
+					it = tile->items.erase(it);
 				}
 
 				// Increment and check for deco
 				while (it != tile->items.end()) {
-					Item* wall_decoration = *it;
+					Item* wall_decoration = it->get();
 					WallBrush* brush = wall_decoration->getWallBrush();
 					if (brush && brush->isWallDecoration()) {
 						uint16_t id = brush->items.getRandomWallId(bt);
@@ -186,10 +186,12 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 								items_to_add.push_back(std::move(new_wall));
 							}
 						}
-						++it;
+						it = tile->items.erase(it);
 					} else {
 						// Deliberately skip this non-decoration item and continuing loop with next item
-						++it;
+						// Wait, if it's not a decoration, we SHOULD NOT erase it or skip it here?
+						// The original code did ++it.
+						// But if we moved the original wall, 'it' already points to the next item.
 						break;
 					}
 				}
@@ -198,6 +200,6 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 	}
 	TileOperations::cleanWalls(tile);
 	for (auto& item : items_to_add) {
-		tile->addWallItem(item.release());
+		tile->addWallItem(std::move(item));
 	}
 }

@@ -54,8 +54,8 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 				if (tile) {
 					bool place = true;
 					if (!doodad_brush->placeOnDuplicate() && !alt) {
-						for (ItemVector::const_iterator iter = tile->items.begin(); iter != tile->items.end(); ++iter) {
-							if (doodad_brush->ownsItem(*iter)) {
+						for (const auto& item : tile->items) {
+							if (doodad_brush->ownsItem(item.get())) {
 								place = false;
 								break;
 							}
@@ -79,8 +79,8 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 				if (tile && !tile->isBlocking()) {
 					bool place = true;
 					if (!doodad_brush->placeOnDuplicate() && !alt) {
-						for (ItemVector::const_iterator iter = tile->items.begin(); iter != tile->items.end(); ++iter) {
-							if (doodad_brush->ownsItem(*iter)) {
+						for (const auto& item : tile->items) {
+							if (doodad_brush->ownsItem(item.get())) {
 								place = false;
 								break;
 							}

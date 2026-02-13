@@ -443,7 +443,7 @@ void ReplaceToolWindow::OnAddVisibleTiles(wxCommandEvent&) {
 				if (tile->ground) {
 					uniqueIds.insert(tile->ground->getID());
 				}
-				for (Item* item : tile->items) {
+				for (const auto& item : tile->items) {
 					uniqueIds.insert(item->getID());
 				}
 			}

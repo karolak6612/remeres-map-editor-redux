@@ -154,9 +154,9 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 		if (tile->ground) {
 			id_list.push_back(tile->ground->getID());
 		}
-		for (ItemVector::const_iterator item_iter = tile->items.begin(); item_iter != tile->items.end(); ++item_iter) {
-			if ((*item_iter)->isBorder()) {
-				id_list.push_back((*item_iter)->getID());
+		for (const auto& item : tile->items) {
+			if (item->isBorder()) {
+				id_list.push_back(item->getID());
 			}
 		}
 
@@ -180,26 +180,22 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			const auto& ids_to_remove = mtm_lookups.at(&v);
 
 			if (tile->ground && ids_to_remove.contains(tile->ground->getID())) {
-				delete tile->ground;
-				tile->ground = nullptr;
+				tile->ground.reset();
 			}
 
-			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](Item* item) {
+			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](const std::unique_ptr<Item>& item) {
 				return !ids_to_remove.contains(item->getID());
 			});
 
-			std::for_each(part_iter, tile->items.end(), [](Item* item) {
-				delete item;
-			});
 			tile->items.erase(part_iter, tile->items.end());
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (std::vector<uint16_t>::const_iterator iit = new_items.begin(); iit != new_items.end(); ++iit) {
-				std::unique_ptr<Item> item = Item::Create(*iit);
+			for (uint16_t new_id : new_items) {
+				std::unique_ptr<Item> item = Item::Create(new_id);
 				if (item->isGroundTile()) {
-					tile->ground = item.release();
+					tile->ground = std::move(item);
 				} else {
-					tile->items.insert(tile->items.begin(), item.release());
+					tile->items.insert(tile->items.begin(), std::move(item));
 					++inserted_items;
 				}
 			}
@@ -210,20 +206,19 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			if (cfstm != rm.stm.end()) {
 				uint16_t aid = tile->ground->getActionID();
 				uint16_t uid = tile->ground->getUniqueID();
-				delete tile->ground;
-				tile->ground = nullptr;
+				tile->ground.reset();
 
 				const std::vector<uint16_t>& v = cfstm->second;
 				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					std::unique_ptr<Item> item = Item::Create(*iit);
+				for (uint16_t new_id : v) {
+					std::unique_ptr<Item> item = Item::Create(new_id);
 					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
 						item->setUniqueID(uid);
-						tile->addItem(item.release());
+						tile->addItem(std::move(item));
 					} else {
-						tile->items.insert(tile->items.begin(), item.release());
+						tile->items.insert(tile->items.begin(), std::move(item));
 						++inserted_items;
 					}
 				}
@@ -231,18 +226,17 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
-		for (ItemVector::iterator replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
+		for (auto replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
 			uint16_t id = (*replace_item_iter)->getID();
 			ConversionMap::STM::const_iterator cf = rm.stm.find(id);
 			if (cf != rm.stm.end()) {
 				// uint16_t aid = (*replace_item_iter)->getActionID();
 				// uint16_t uid = (*replace_item_iter)->getUniqueID();
-				delete *replace_item_iter;
 
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
-				for (std::vector<uint16_t>::const_iterator iit = v.begin(); iit != v.end(); ++iit) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(*iit).release());
+				for (uint16_t new_id : v) {
+					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_id));
 					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}
@@ -280,12 +274,8 @@ void Map::cleanInvalidTiles(bool showdialog) {
 		}
 
 		// Use std::erase_if from C++20 for cleanup
-		std::erase_if(tile->items, [](Item* item) {
-			if (!g_items.typeExists(item->getID())) {
-				delete item;
-				return true;
-			}
-			return false;
+		std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
+			return !g_items.typeExists(item->getID());
 		});
 
 		++tiles_done;

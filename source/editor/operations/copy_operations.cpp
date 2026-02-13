@@ -40,19 +40,19 @@ void CopyOperations::copy(Editor& editor, CopyBuffer& buffer, int floor) {
 			copied_tile->setMapFlags(tile->getMapFlags());
 		}
 
-		ItemVector tile_selection = tile->getSelectedItems();
+		auto tile_selection = tile->getSelectedItems();
 
-		for (Item* item : tile_selection) {
+		for (auto* item : tile_selection) {
 			++item_count;
 			// Copy items to copybuffer
 			copied_tile->addItem(item->deepCopy());
 		}
 
 		if (tile->creature && tile->creature->isSelected()) {
-			copied_tile->creature.reset(tile->creature->deepCopy());
+			copied_tile->creature = tile->creature->deepCopy();
 		}
 		if (tile->spawn && tile->spawn->isSelected()) {
-			copied_tile->spawn.reset(tile->spawn->deepCopy());
+			copied_tile->spawn = tile->spawn->deepCopy();
 		}
 
 		if (copied_tile->getX() < buffer.copyPos.x) {
@@ -100,12 +100,12 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 			newtile->setMapFlags(TILESTATE_NONE);
 		}
 
-		ItemVector tile_selection = newtile->popSelectedItems();
+		auto tile_selection = newtile->popSelectedItems();
 
-		for (Item* item : tile_selection) {
+		for (auto& item : tile_selection) {
 			item_count++;
 			// Add items to copybuffer
-			copied_tile->addItem(item);
+			copied_tile->addItem(std::move(item));
 		}
 
 		if (newtile->creature && newtile->creature->isSelected()) {

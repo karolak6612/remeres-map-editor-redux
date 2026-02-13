@@ -73,24 +73,24 @@ void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<Rep
 
 		long long dummy = 0;
 		if (tile->ground) {
-			finder(editor->map, tile, tile->ground, ++dummy);
+			finder(editor->map, tile, tile->ground.get(), ++dummy);
 		}
 
 		std::vector<Container*> containers;
-		for (auto* item : tile->items) {
+		for (const auto& item : tile->items) {
 			containers.clear();
 			Container* container = item->asContainer();
-			finder(editor->map, tile, item, ++dummy);
+			finder(editor->map, tile, item.get(), ++dummy);
 
 			if (container) {
 				containers.push_back(container);
 				size_t index = 0;
 				while (index < containers.size()) {
 					container = containers[index++];
-					ItemVector& v = container->getVector();
-					for (auto* i : v) {
+					auto& v = container->getVector();
+					for (const auto& i : v) {
 						Container* c = i->asContainer();
-						finder(editor->map, tile, i, ++dummy);
+						finder(editor->map, tile, i.get(), ++dummy);
 						if (c) {
 							containers.push_back(c);
 						}

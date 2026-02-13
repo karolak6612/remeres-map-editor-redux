@@ -17,12 +17,12 @@ namespace {
 	void ProcessItemsOnTile(Map& map, Tile* tile, EditorOperations::MapSearcher& searcher, long long& done, std::vector<Container*>& container_buffer) {
 		// Process Ground
 		if (tile->ground) {
-			searcher(map, tile, tile->ground, done);
+			searcher(map, tile, tile->ground.get(), done);
 		}
 
 		// Process Items
-		for (auto* item : tile->items) {
-			searcher(map, tile, item, done);
+		for (const auto& item : tile->items) {
+			searcher(map, tile, item.get(), done);
 
 			// Deep search in containers
 			if (Container* c = item->asContainer()) {
@@ -32,9 +32,9 @@ namespace {
 				size_t idx = 0;
 				while (idx < container_buffer.size()) {
 					Container* current = container_buffer[idx++];
-					ItemVector& v = current->getVector();
-					for (auto* inner_item : v) {
-						searcher(map, tile, inner_item, done);
+					const auto& v = current->getVector();
+					for (const auto& inner_item : v) {
+						searcher(map, tile, inner_item.get(), done);
 						if (Container* inner_c = inner_item->asContainer()) {
 							container_buffer.push_back(inner_c);
 						}

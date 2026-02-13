@@ -102,10 +102,8 @@ void BrowseTileListBox::RemoveSelected() {
 	items.clear();
 
 	// Delete the items from the tile
-	ItemVector tile_selection = edit_tile->popSelectedItems(true);
-	for (ItemVector::iterator iit = tile_selection.begin(); iit != tile_selection.end(); ++iit) {
-		delete *iit;
-	}
+	auto tile_selection = edit_tile->popSelectedItems(true);
+	// items are automatically deleted when tile_selection goes out of scope
 
 	UpdateItems();
 	Refresh();
@@ -114,12 +112,12 @@ void BrowseTileListBox::RemoveSelected() {
 void BrowseTileListBox::UpdateItems() {
 	items.clear();
 	items.reserve(edit_tile->items.size() + (edit_tile->ground ? 1 : 0));
-	for (ItemVector::reverse_iterator it = edit_tile->items.rbegin(); it != edit_tile->items.rend(); ++it) {
-		items.push_back(*it);
+	for (auto it = edit_tile->items.rbegin(); it != edit_tile->items.rend(); ++it) {
+		items.push_back(it->get());
 	}
 
 	if (edit_tile->ground) {
-		items.push_back(edit_tile->ground);
+		items.push_back(edit_tile->ground.get());
 	}
 
 	SetItemCount(items.size());

@@ -90,44 +90,7 @@ wxString b2yn(bool v);
 
 wxColor colorFromEightBit(int color);
 
-// Standard math functions
-template <class T>
-inline T abs(T t) {
-	return (t < 0 ? -t : t);
-}
-
-template <class T, class U>
-inline T min(T t, U u) {
-	return (t < u ? t : u);
-}
-
-template <class T, class U>
-T max(T t, U u) {
-	return (t > u ? t : u);
-}
-
-template <class T, class U, class V>
-inline T min(T t, U u, V v) {
-	T min_val = t;
-	if (u < min_val) {
-		min_val = u;
-	}
-	if (v < min_val) {
-		min_val = v;
-	}
-	return min_val;
-}
-
-template <class T, class U, class V>
-inline T max(T t, U u, V v) {
-	T max_val = t;
-	if (u > max_val) {
-		max_val = u;
-	}
-	if (v > max_val) {
-		max_val = v;
-	}
-	return max_val;
-}
+// Standard math functions are now used via <cmath> and <algorithm>
+// std::abs, std::min, std::max should be used instead.
 
 #endif

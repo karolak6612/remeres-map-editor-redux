@@ -158,8 +158,8 @@ uint8_t House::getEmptyDoorID() const {
 	std::set<uint8_t> taken;
 	for (PositionList::const_iterator tile_iter = tiles.begin(); tile_iter != tiles.end(); ++tile_iter) {
 		if (const Tile* tile = map->getTile(*tile_iter)) {
-			for (ItemVector::const_iterator item_iter = tile->items.begin(); item_iter != tile->items.end(); ++item_iter) {
-				if (Door* door = dynamic_cast<Door*>(*item_iter)) {
+			for (const auto& item : tile->items) {
+				if (Door* door = dynamic_cast<Door*>(item.get())) {
 					taken.insert(door->getDoorID());
 				}
 			}
@@ -179,8 +179,8 @@ uint8_t House::getEmptyDoorID() const {
 Position House::getDoorPositionByID(uint8_t id) const {
 	for (PositionList::const_iterator tile_iter = tiles.begin(); tile_iter != tiles.end(); ++tile_iter) {
 		if (const Tile* tile = map->getTile(*tile_iter)) {
-			for (ItemVector::const_iterator item_iter = tile->items.begin(); item_iter != tile->items.end(); ++item_iter) {
-				if (Door* door = dynamic_cast<Door*>(*item_iter)) {
+			for (const auto& item : tile->items) {
+				if (Door* door = dynamic_cast<Door*>(item.get())) {
 					if (door->getDoorID() == id) {
 						return *tile_iter;
 					}
