@@ -274,10 +274,11 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 
 	// Determine visible tiles
 	// Clamp to integer grid
-	int start_col = static_cast<int>(std::floor(map_x / TILE_SIZE));
-	int end_col = static_cast<int>(std::floor((map_x + map_w) / TILE_SIZE));
-	int start_row = static_cast<int>(std::floor(map_y / TILE_SIZE));
-	int end_row = static_cast<int>(std::floor((map_y + map_h) / TILE_SIZE));
+	auto floor_to_int = [](float val) { return static_cast<int>(std::floor(val)); };
+	int start_col = floor_to_int(map_x / TILE_SIZE);
+	int end_col = floor_to_int((map_x + map_w) / TILE_SIZE);
+	int start_row = floor_to_int(map_y / TILE_SIZE);
+	int end_row = floor_to_int((map_y + map_h) / TILE_SIZE);
 
 	start_col = std::max(0, start_col);
 	start_row = std::max(0, start_row);

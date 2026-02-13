@@ -13,6 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <atomic>
 #include <algorithm>
+#include <ranges>
 
 static std::atomic<uint32_t> template_id_generator(0x1000000);
 

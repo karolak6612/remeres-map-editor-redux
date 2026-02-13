@@ -65,6 +65,7 @@ GLint ShaderProgram::GetUniformLocation(const std::string& name) const {
 }
 
 void ShaderProgram::SetBool(const std::string& name, bool value) const {
+	// OpenGL doesn't have a native bool uniform type, so we cast to int (0 or 1)
 	glUniform1i(GetUniformLocation(name), static_cast<int>(value));
 }
 
