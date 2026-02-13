@@ -50,6 +50,8 @@ namespace IngamePreview {
 		walk_lock_timer(0),
 		animation_timer(this) {
 
+		m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
+
 		preview_outfit.lookType = 128;
 
 		// Bind Events
@@ -395,7 +397,9 @@ namespace IngamePreview {
 			spdlog::warn("Render: animation_phase={} but is_walking=false! This shouldn't happen.", animation_phase);
 		}
 
-		SetCurrent(*g_gui.GetGLContext(this));
+		if (m_glContext) {
+			SetCurrent(*m_glContext);
+		}
 
 		if (!m_nvg) {
 			if (!gladLoadGL()) {

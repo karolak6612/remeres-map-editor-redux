@@ -59,14 +59,9 @@ namespace IngamePreview {
 
 	private:
 		std::unique_ptr<IngamePreviewRenderer> renderer;
+		std::unique_ptr<wxGLContext> m_glContext;
 		std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
-		const void* last_tile_renderer; // Using void* to avoid forward declaration issues if TileRenderer isn't fully known, but forward decl is better.
-		// Actually, let's look at lines 12. IngamePreviewRenderer is forward declared.
-		// TileRenderer is in map_drawer implementation details usually.
-		// Let's check if we can simply use const void* or if we need forward declaration.
-		// IngamePreviewCanvas.cpp includes "rendering/map_drawer.h" which usually has TileRenderer.
-		// But in header we might not have it.
-		// Let's use const void* for safety or forward declare class TileRenderer;
+		const void* last_tile_renderer;
 
 		Position camera_pos;
 		float zoom;

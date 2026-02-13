@@ -181,6 +181,7 @@ public:
 private:
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
+	std::unique_ptr<wxGLContext> m_glContext;
 	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 };
 

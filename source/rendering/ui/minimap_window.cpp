@@ -142,6 +142,7 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	// Glass Overlay
 	NVGcontext* vg = nvg.get();
 	if (vg) {
+		glClear(GL_STENCIL_BUFFER_BIT);
 		int w, h;
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, GetContentScaleFactor());
