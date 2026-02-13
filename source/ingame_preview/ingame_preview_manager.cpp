@@ -15,14 +15,14 @@ namespace IngamePreview {
 	}
 
 	IngamePreviewManager::~IngamePreviewManager() {
-		spdlog::info("IngamePreviewManager destructor started");
+		spdlog::debug("IngamePreviewManager destructor started");
 		spdlog::default_logger()->flush();
 		if (window && g_gui.aui_manager) {
-			spdlog::info("IngamePreviewManager destructor - detaching window from aui_manager");
+			spdlog::debug("IngamePreviewManager destructor - detaching window from aui_manager");
 			spdlog::default_logger()->flush();
 			g_gui.aui_manager->DetachPane(window.get());
 		}
-		spdlog::info("IngamePreviewManager destructor finished");
+		spdlog::debug("IngamePreviewManager destructor finished");
 		spdlog::default_logger()->flush();
 	}
 
@@ -55,11 +55,11 @@ namespace IngamePreview {
 	}
 
 	void IngamePreviewManager::Destroy() {
-		spdlog::info("IngamePreviewManager::Destroy called");
+		spdlog::debug("IngamePreviewManager::Destroy called");
 		spdlog::default_logger()->flush();
 		if (window) {
 			if (g_gui.aui_manager) {
-				spdlog::info("IngamePreviewManager::Destroy - detaching window from aui_manager");
+				spdlog::debug("IngamePreviewManager::Destroy - detaching window from aui_manager");
 				spdlog::default_logger()->flush();
 				g_gui.aui_manager->DetachPane(window.get());
 			}
@@ -69,11 +69,11 @@ namespace IngamePreview {
 			// delete calls ~wxWindow(), which removes from parent. This is safe.
 			// Calling Destroy() queues deletion? No, for normal windows it's effectively delete.
 			// We just reset() the unique_ptr.
-			spdlog::info("IngamePreviewManager::Destroy - resetting window (unique_ptr)");
+			spdlog::debug("IngamePreviewManager::Destroy - resetting window (unique_ptr)");
 			spdlog::default_logger()->flush();
 			window.reset();
 		}
-		spdlog::info("IngamePreviewManager::Destroy finished");
+		spdlog::debug("IngamePreviewManager::Destroy finished");
 		spdlog::default_logger()->flush();
 	}
 

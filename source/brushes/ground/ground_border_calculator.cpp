@@ -345,7 +345,8 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	}
 
 	for (const GroundBrush::BorderBlock* borderBlock : specificList) {
-		for (const GroundBrush::SpecificCaseBlock* specificCaseBlock : borderBlock->specific_cases) {
+		for (const auto& specificCaseBlockPtr : borderBlock->specific_cases) {
+			const GroundBrush::SpecificCaseBlock* specificCaseBlock = specificCaseBlockPtr.get();
 			uint32_t matches = 0;
 			for (Item* item : tile->items) {
 				if (!item->isBorder()) {

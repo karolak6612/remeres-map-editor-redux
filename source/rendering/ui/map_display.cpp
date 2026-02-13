@@ -143,7 +143,13 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 	Bind(wxEVT_ERASE_BACKGROUND, &MapCanvas::OnEraseBackground, this);
 }
 
-MapCanvas::~MapCanvas() = default;
+MapCanvas::~MapCanvas() {
+	if (auto context = g_gui.GetGLContext(this)) {
+		SetCurrent(*context);
+		drawer.reset();
+		m_nvg.reset();
+	}
+}
 
 void MapCanvas::Refresh() {
 	if (refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
