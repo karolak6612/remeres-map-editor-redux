@@ -107,8 +107,11 @@ public:
 		sideSizer->Add(version, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, FromDIP(25));
 
 		// Actions (Nav-style)
-		auto addButton = [&](const wxString& label, int id, const char* icon) {
+		auto addButton = [&](const wxString& label, int id, const char* icon, const wxString& tooltip = "") {
 			ModernButton* btn = new ModernButton(sidebar, id, label);
+			if (!tooltip.IsEmpty()) {
+				btn->SetToolTip(tooltip);
+			}
 			btn->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 			btn->SetMinSize(wxSize(-1, FromDIP(35))); // More compact nav height
 			if (icon) {
@@ -118,9 +121,9 @@ public:
 			btn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, parent);
 		};
 
-		addButton("New Project", wxID_NEW, ICON_NEW);
-		addButton("Open Project", wxID_OPEN, ICON_OPEN);
-		addButton("Preferences", wxID_PREFERENCES, ICON_GEAR);
+		addButton("New Project", wxID_NEW, ICON_NEW, "Create a new empty map");
+		addButton("Open Project", wxID_OPEN, ICON_OPEN, "Open an existing map file");
+		addButton("Preferences", wxID_PREFERENCES, ICON_GEAR, "Configure editor settings");
 
 		sideSizer->AddStretchSpacer();
 
@@ -158,6 +161,7 @@ public:
 		wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 		wxCheckBox* startupCheck = new wxCheckBox(footer, wxID_ANY, "Show on Startup");
+		startupCheck->SetToolTip("Show this dialog when starting the editor");
 		startupCheck->SetFont(wxFontInfo(8));
 		startupCheck->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
 		startupCheck->SetValue(g_settings.getInteger(Config::WELCOME_DIALOG) != 0);

@@ -164,12 +164,16 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	wxBoxSizer* part_sizer = new wxBoxSizer(wxHORIZONTAL);
 	head_btn = new wxButton(this, ID_COLOR_HEAD, "Head", wxDefaultPosition, wxSize(50, -1));
 	head_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, wxSize(16, 16)));
+	head_btn->SetToolTip("Select head color");
 	body_btn = new wxButton(this, ID_COLOR_BODY, "Primary", wxDefaultPosition, wxSize(50, -1));
 	body_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHIRT, wxSize(16, 16)));
+	body_btn->SetToolTip("Select primary color");
 	legs_btn = new wxButton(this, ID_COLOR_LEGS, "Secondary", wxDefaultPosition, wxSize(50, -1));
 	legs_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SOCKS, wxSize(16, 16)));
+	legs_btn->SetToolTip("Select secondary color");
 	feet_btn = new wxButton(this, ID_COLOR_FEET, "Detail", wxDefaultPosition, wxSize(50, -1));
 	feet_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHOE_PRINTS, wxSize(16, 16)));
+	feet_btn->SetToolTip("Select detail color");
 
 	part_sizer->Add(head_btn, 1, wxEXPAND | wxRIGHT, 2);
 	part_sizer->Add(body_btn, 1, wxEXPAND | wxRIGHT, 2);
@@ -212,10 +216,12 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	wxFlexGridSizer* text_fields = new wxFlexGridSizer(2, 2, 4, 8);
 	text_fields->Add(new wxStaticText(this, wxID_ANY, "Speed:"), 0, wxALIGN_CENTER_VERTICAL);
 	speed_ctrl = new wxSpinCtrl(this, ID_SPEED, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 50, 3000, current_speed);
+	speed_ctrl->SetToolTip("Set movement speed for preview");
 	text_fields->Add(speed_ctrl, 1, wxEXPAND);
 
 	text_fields->Add(new wxStaticText(this, wxID_ANY, "Name:"), 0, wxALIGN_CENTER_VERTICAL);
 	name_ctrl = new wxTextCtrl(this, ID_NAME, current_name);
+	name_ctrl->SetToolTip("Set character name for preview");
 	text_fields->Add(name_ctrl, 1, wxEXPAND);
 	text_fields->AddGrowableCol(1);
 	col1_sizer->Add(text_fields, 0, wxEXPAND | wxALL, 8);
@@ -248,6 +254,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 
 	wxButton* fav_btn = new wxButton(this, ID_ADD_FAVORITE, "Save Current Outfit as Favorite", wxDefaultPosition, wxSize(-1, 28));
 	fav_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_STAR, wxSize(16, 16)));
+	fav_btn->SetToolTip("Save current outfit configuration to favorites");
 	favs_sizer->Add(fav_btn, 0, wxEXPAND | wxTOP, 8);
 
 	main_sizer->Add(favs_sizer, 0, wxEXPAND | wxLEFT, 5);

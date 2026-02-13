@@ -166,18 +166,21 @@ void ReplaceToolWindow::InitLayout() {
 
 	m_addRuleBtn = new wxButton(actionsCard, wxID_ANY, "ADD", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_addRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	m_addRuleBtn->SetToolTip("Create a new replacement rule");
 	m_addRuleBtn->SetBackgroundColour(wxColour(40, 180, 40)); // Green
 	m_addRuleBtn->SetForegroundColour(*wxWHITE);
 	m_addRuleBtn->SetFont(Theme::GetFont(9, true));
 
 	m_editRuleBtn = new wxButton(actionsCard, wxID_ANY, "EDIT", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_editRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
+	m_editRuleBtn->SetToolTip("Edit selected rule set name");
 	m_editRuleBtn->SetBackgroundColour(wxColour(80, 80, 80)); // Neutral Dark Gray
 	m_editRuleBtn->SetForegroundColour(*wxWHITE);
 	m_editRuleBtn->SetFont(Theme::GetFont(9, true));
 
 	m_deleteRuleBtn = new wxButton(actionsCard, wxID_ANY, "DEL", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_deleteRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
+	m_deleteRuleBtn->SetToolTip("Delete selected rule set");
 	m_deleteRuleBtn->SetBackgroundColour(wxColour(180, 40, 40)); // Red
 	m_deleteRuleBtn->SetForegroundColour(*wxWHITE);
 	m_deleteRuleBtn->SetFont(Theme::GetFont(9, true));
@@ -190,6 +193,7 @@ void ReplaceToolWindow::InitLayout() {
 
 	m_addVisibleBtn = new wxButton(actionsCard, wxID_ANY, "ADD VISIBLE FROM VIEWPORT", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_addVisibleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS_SQUARE, wxSize(16, 16)));
+	m_addVisibleBtn->SetToolTip("Add rules for all visible items in the viewport");
 	m_addVisibleBtn->SetBackgroundColour(wxColour(45, 120, 180)); // Sky Blue
 	m_addVisibleBtn->SetForegroundColour(*wxWHITE);
 	m_addVisibleBtn->SetFont(Theme::GetFont(9, true));
@@ -221,6 +225,7 @@ void ReplaceToolWindow::InitLayout() {
 	// Execute Button
 	m_executeBtn = new wxButton(actionsCard, wxID_ANY, "EXECUTE REPLACE", wxDefaultPosition, FromDIP(wxSize(-1, 32)));
 	m_executeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLAY, wxSize(16, 16)));
+	m_executeBtn->SetToolTip("Execute the replacement rules on the map");
 	m_executeBtn->SetDefault();
 	m_executeBtn->SetBackgroundColour(Theme::Get(Theme::Role::Accent)); // Blue
 	m_executeBtn->SetForegroundColour(*wxWHITE);
