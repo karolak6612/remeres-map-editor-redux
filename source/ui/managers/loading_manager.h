@@ -6,7 +6,7 @@
 #define RME_LOADING_MANAGER_H_
 
 #include "app/main.h"
-#include <wx/progdlg.h>
+#include "ui/dialogs/nanovg_loading_dialog.h"
 
 class LoadingManager {
 public:
@@ -41,7 +41,7 @@ public:
 
 private:
 	wxString progressText;
-	wxGenericProgressDialog* progressBar;
+	NanoVGLoadingDialog* progressBar;
 
 	int32_t progressFrom;
 	int32_t progressTo;

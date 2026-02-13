@@ -6,12 +6,13 @@
 #include <wx/timer.h>
 #include <vector>
 #include "palette/palette_common.h"
+#include "util/nanovg_canvas.h"
 
 class Brush;
 
 // A custom-drawn, high-density surface for tool options.
-// Replaces the old panel-based layout with a unified, paint-optimized control.
-class ToolOptionsSurface : public wxControl {
+// Replaces the old panel-based layout with a unified, paint-optimized control using NanoVG.
+class ToolOptionsSurface : public NanoVGCanvas {
 public:
 	ToolOptionsSurface(wxWindow* parent);
 	~ToolOptionsSurface();
@@ -20,9 +21,10 @@ public:
 	wxSize DoGetBestClientSize() const override;
 	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
 
+	// NanoVG Drawing
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+
 	// Event Handlers
-	void OnPaint(wxPaintEvent& evt);
-	void OnEraseBackground(wxEraseEvent& evt); // No-op
 	void OnMouse(wxMouseEvent& evt);
 	void OnLeave(wxMouseEvent& evt);
 	void OnSize(wxSizeEvent& evt);
@@ -50,7 +52,7 @@ private:
 	const int SLIDER_LABEL_WIDTH = 70;
 	const int SLIDER_TEXT_MARGIN = 40;
 	const int SLIDER_VALUE_MARGIN = 8;
-	const int SLIDER_THUMB_RADIUS = 5;
+	const int SLIDER_THUMB_RADIUS = 6;
 
 	const int MIN_BRUSH_SIZE = 1;
 	const int MAX_BRUSH_SIZE = 15;
@@ -68,6 +70,9 @@ private:
 		Brush* brush;
 		int id; // Command ID / Toggle ID
 		wxString tooltip;
+
+		// Anim state
+		float hoverAnim = 0.0f;
 	};
 	std::vector<ToolRect> tool_rects;
 
@@ -82,6 +87,9 @@ private:
 		bool dragging_thickness = false;
 		bool hover_preview = false;
 		bool hover_lock = false;
+
+		// Anim state
+		float thumbAnim = 0.0f;
 	} interactables;
 
 	// Data Cache
@@ -92,9 +100,9 @@ private:
 
 	// Internal Helpers
 	void RebuildLayout();
-	void DrawToolIcon(wxDC& dc, const ToolRect& tr);
-	void DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
-	void DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover);
+	void DrawToolIcon(NVGcontext* vg, ToolRect& tr);
+	void DrawSlider(NVGcontext* vg, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
+	void DrawCheckbox(NVGcontext* vg, const wxRect& rect, const wxString& label, bool value, bool hover);
 
 	int CalculateSliderValue(const wxRect& sliderRect, int min, int max) const;
 

@@ -240,17 +240,33 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			int w = GetSize().x;
 			int h = GetSize().y;
 
-			const float hudFontSize = 16.0f;
+			const float hudFontSize = 14.0f;
 			nvgFontSize(vg, hudFontSize);
 			nvgFontFace(vg, "sans");
 
 			bool needs_update = (editor.selection.size() != hud_cached_selection_count || last_cursor_map_x != hud_cached_x || last_cursor_map_y != hud_cached_y || last_cursor_map_z != hud_cached_z || zoom != hud_cached_zoom);
 
+			// Always check tile description if we are updating or if text is empty
+			// (Optimization: In a real scenario we'd track tile changes too, but this is acceptable for now)
 			if (needs_update || hud_cached_text.empty()) {
+				std::string infoText;
 				if (!editor.selection.empty()) {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size());
+					infoText = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size());
 				} else {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}%", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100);
+					infoText = std::format("Pos: {}, {}, {} | Zoom: {:.0f}%", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100);
+				}
+
+				// Get Tile Description
+				std::string tileDesc = "";
+				Tile* tile = editor.map.getTile(last_cursor_map_x, last_cursor_map_y, last_cursor_map_z);
+				if (tile) {
+					tileDesc = TileDescriber::GetDescription(tile, g_settings.getInteger(Config::SHOW_SPAWNS), g_settings.getInteger(Config::SHOW_CREATURES)).ToStdString();
+				}
+
+				if (!tileDesc.empty()) {
+					hud_cached_text = infoText + "\n" + tileDesc;
+				} else {
+					hud_cached_text = infoText;
 				}
 
 				hud_cached_selection_count = editor.selection.size();
@@ -259,20 +275,37 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 				hud_cached_z = last_cursor_map_z;
 				hud_cached_zoom = zoom;
 
-				nvgTextBounds(vg, 0, 0, hud_cached_text.c_str(), nullptr, hud_cached_bounds);
+				// Calculate multi-line bounds
+				float maxW = 400.0f;
+				float bounds[4];
+				nvgTextBoxBounds(vg, 0, 0, maxW, hud_cached_text.c_str(), nullptr, bounds);
+				// bounds: [xmin, ymin, xmax, ymax]
+				hud_cached_bounds[0] = bounds[0];
+				hud_cached_bounds[1] = bounds[1];
+				hud_cached_bounds[2] = bounds[2];
+				hud_cached_bounds[3] = bounds[3];
 			}
 
 			float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
-			float padding = 8.0f;
-			float hudW = textW + padding * 2;
-			float hudH = 28.0f;
+			float textH = hud_cached_bounds[3] - hud_cached_bounds[1];
+
+			float padding = 10.0f;
+			float hudW = std::max(textW + padding * 2, 200.0f); // Min width
+			float hudH = textH + padding * 2;
 			float hudX = 10.0f;
 			float hudY = h - hudH - 10.0f;
 
-			// Background
+			// Glass Background
 			nvgBeginPath(vg);
 			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+			nvgFillColor(vg, nvgRGBA(20, 20, 25, 220)); // Darker, less transparent
+			nvgFill(vg);
+
+			// Inner Glow
+			NVGpaint glow = nvgBoxGradient(vg, hudX, hudY, hudW, hudH, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 10));
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
+			nvgFillPaint(vg, glow);
 			nvgFill(vg);
 
 			// Border
@@ -283,9 +316,10 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			nvgStroke(vg);
 
 			// Text
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 220));
-			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-			nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
+			nvgFillColor(vg, nvgRGBA(230, 230, 230, 255));
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+			float maxW = 400.0f;
+			nvgTextBox(vg, hudX + padding, hudY + padding, maxW, hud_cached_text.c_str(), nullptr);
 
 			TextRenderer::EndFrame(vg);
 

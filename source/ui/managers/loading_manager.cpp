@@ -30,7 +30,7 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 	progressTo = 100;
 	currentProgress = -1;
 
-	progressBar = newd wxGenericProgressDialog("Loading", progressText + " (0%)", 100, g_gui.root, wxPD_APP_MODAL | wxPD_SMOOTH | (canCancel ? wxPD_CAN_ABORT : 0));
+	progressBar = newd NanoVGLoadingDialog(g_gui.root, "Loading", progressText, canCancel);
 	progressBar->Show(true);
 
 	if (g_gui.tabbook) {
@@ -41,7 +41,7 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 			}
 		}
 	}
-	progressBar->Update(0);
+	progressBar->UpdateProgress(0, progressText);
 }
 
 void LoadingManager::SetLoadScale(int32_t from, int32_t to) {
@@ -54,6 +54,10 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 		DestroyLoadBar();
 		return true;
 	} else if (done == currentProgress) {
+		// Check for cancellation even if progress hasn't changed
+		if (progressBar && progressBar->IsCancelled()) {
+			return false;
+		}
 		return true;
 	}
 
@@ -64,14 +68,13 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 	int32_t newProgress = progressFrom + static_cast<int32_t>((done / 100.f) * (progressTo - progressFrom));
 	newProgress = std::max<int32_t>(0, std::min<int32_t>(100, newProgress));
 
-	bool skip = false;
+	bool cancelled = false;
 	if (progressBar) {
-		progressBar->Update(
-			newProgress,
-			wxString::Format("%s (%d%%)", progressText, newProgress),
-			&skip
-		);
+		progressBar->UpdateProgress(newProgress, progressText);
 		currentProgress = newProgress;
+		if (progressBar->IsCancelled()) {
+			cancelled = true;
+		}
 	}
 
 	if (g_gui.tabbook) {
@@ -86,7 +89,7 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 		}
 	}
 
-	return skip;
+	return !cancelled;
 }
 
 void LoadingManager::DestroyLoadBar() {
