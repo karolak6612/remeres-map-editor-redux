@@ -263,8 +263,8 @@ bool Container::serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHand
 	f.addU16(id);
 	serializeItemAttributes_OTMM(maphandle, f);
 
-	for (ItemVector::const_iterator it = contents.begin(); it != contents.end(); ++it) {
-		(*it)->serializeItemNode_OTMM(maphandle, f);
+	for (const auto& item : contents) {
+		item->serializeItemNode_OTMM(maphandle, f);
 	}
 	f.endNode();
 	return true;
@@ -793,11 +793,9 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 			// Start writing tiles
 			uint tiles_saved = 0;
 
-			MapIterator map_iterator = map.begin();
-
 			f.addNode(OTMM_TILE_DATA);
 			{
-				while (map_iterator != map.end()) {
+				for (const auto& tile_loc : map.tiles()) {
 					// Update progressbar
 					++tiles_saved;
 					if (showdialog && tiles_saved % 8192 == 0) {
@@ -805,12 +803,15 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 					}
 
 					// Get tile
-					const Tile* save_tile = *map_iterator;
+					const Tile* save_tile = tile_loc.get();
+					if (!save_tile) {
+						continue;
+					}
+
 					const Position& pos = save_tile->getPosition();
 
 					// Is it an empty tile that we can skip? (Leftovers...)
 					if (save_tile->size() == 0) {
-						++map_iterator;
 						continue;
 					}
 
@@ -835,8 +836,8 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 								f.addU16(0);
 							} else if (ground->hasBorderEquivalent()) {
 								bool found = false;
-								for (ItemVector::const_iterator it = save_tile->items.begin(); it != save_tile->items.end(); ++it) {
-									if ((*it)->getGroundEquivalent() == ground->getID()) {
+								for (const auto& item : save_tile->items) {
+									if (item->getGroundEquivalent() == ground->getID()) {
 										// Do nothing
 										// Found equivalent
 										found = true;
@@ -858,15 +859,13 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 							f.addU16(0);
 						}
 
-						for (ItemVector::const_iterator it = save_tile->items.begin(); it != save_tile->items.end(); ++it) {
-							if (!(*it)->isMetaItem()) {
-								(*it)->serializeItemNode_OTMM(*this, f);
+						for (const auto& item : save_tile->items) {
+							if (!item->isMetaItem()) {
+								item->serializeItemNode_OTMM(*this, f);
 							}
 						}
 					}
 					f.endNode();
-
-					++map_iterator;
 				}
 			}
 			f.endNode(); // OTMM_TILE_DATA
@@ -875,8 +874,8 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 			{
 				Spawns& spawns = map.spawns;
 				CreatureList creature_list;
-				for (SpawnPositionList::const_iterator piter = spawns.begin(); piter != spawns.end(); ++piter) {
-					const Tile* tile = map.getTile(*piter);
+				for (const auto& spawn_pos : spawns) {
+					const Tile* tile = map.getTile(spawn_pos);
 					ASSERT(tile);
 					const Spawn* spawn = tile->spawn;
 					ASSERT(spawn);
@@ -889,7 +888,7 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 						f.addU32(spawn->getSize());
 						for (int y = -tile->spawn->getSize(); y <= tile->spawn->getSize(); ++y) {
 							for (int x = -tile->spawn->getSize(); x <= tile->spawn->getSize(); ++x) {
-								Tile* creature_tile = map.getTile(*piter + Position(x, y, 0));
+								Tile* creature_tile = map.getTile(spawn_pos + Position(x, y, 0));
 								if (creature_tile) {
 									Creature* c = creature_tile->creature;
 									if (c && c->isSaved() == false) {
@@ -924,8 +923,8 @@ bool IOMapOTMM::saveMap(Map& map, NodeFileWriteHandle& f, const FileName& identi
 					}
 					f.endNode(); // OTMM_SPAWN_AREA
 				}
-				for (CreatureList::iterator iter = creature_list.begin(); iter != creature_list.end(); ++iter) {
-					(*iter)->reset();
+				for (auto* creature : creature_list) {
+					creature->reset();
 				}
 			}
 			f.endNode(); // OTMM_SPAWN_DATA

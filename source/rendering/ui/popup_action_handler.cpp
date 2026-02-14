@@ -128,10 +128,10 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 
 	Item* item = nullptr;
 	int count = 0;
-	for (ItemVector::iterator it = selected_items.begin(); it != selected_items.end(); ++it) {
+	for (auto* current_item : selected_items) {
 		++count;
-		if ((*it)->isSelected()) {
-			item = *it;
+		if (current_item->isSelected()) {
+			item = current_item;
 		}
 	}
 
