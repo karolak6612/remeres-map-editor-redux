@@ -408,48 +408,74 @@ void Map::removeSpawn(Tile* tile) {
 SpawnList Map::getSpawnList(Tile* where) {
 	SpawnList list;
 	TileLocation* tile_loc = where->getLocation();
-	if (tile_loc) {
-		if (tile_loc->getSpawnCount() > 0) {
-			uint32_t found = 0;
-			if (where->spawn) {
+	if (!tile_loc || tile_loc->getSpawnCount() == 0) {
+		return list;
+	}
+
+	uint32_t count = tile_loc->getSpawnCount();
+	uint32_t found = 0;
+
+	if (where->spawn) {
+		list.push_back(where->spawn.get());
+		++found;
+	}
+
+	if (found >= count) {
+		return list;
+	}
+
+	int z = where->getZ();
+	int cx = where->getX();
+	int cy = where->getY();
+	int radius = 1;
+
+	// Safety limit to prevent infinite loops on corrupted maps
+	int max_radius = std::max(width, height) + 100;
+
+	while (found < count && radius < max_radius) {
+		int start_x = cx - radius;
+		int end_x = cx + radius;
+		int start_y = cy - radius;
+		int end_y = cy + radius;
+
+		// Check top and bottom rows
+		for (int x = start_x; x <= end_x; ++x) {
+			// Top
+			Tile* t = getTile(x, start_y, z);
+			if (t && t->spawn && t->spawn->getSize() >= radius) {
+				list.push_back(t->spawn.get());
 				++found;
-				list.push_back(where->spawn.get());
 			}
-
-			// Scans the border tiles in an expanding square around the original spawn
-			int z = where->getZ();
-			int start_x = where->getX() - 1, end_x = where->getX() + 1;
-			int start_y = where->getY() - 1, end_y = where->getY() + 1;
-			while (found != tile_loc->getSpawnCount()) {
-				for (int x = start_x; x <= end_x; ++x) {
-					Tile* tile = getTile(x, start_y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-					tile = getTile(x, end_y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-				}
-
-				for (int y = start_y + 1; y < end_y; ++y) {
-					Tile* tile = getTile(start_x, y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-					tile = getTile(end_x, y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-				}
-				--start_x, --start_y;
-				++end_x, ++end_y;
+			// Bottom
+			t = getTile(x, end_y, z);
+			if (t && t->spawn && t->spawn->getSize() >= radius) {
+				list.push_back(t->spawn.get());
+				++found;
 			}
 		}
+
+		// Check left and right columns (excluding corners)
+		for (int y = start_y + 1; y < end_y; ++y) {
+			// Left
+			Tile* t = getTile(start_x, y, z);
+			if (t && t->spawn && t->spawn->getSize() >= radius) {
+				list.push_back(t->spawn.get());
+				++found;
+			}
+			// Right
+			t = getTile(end_x, y, z);
+			if (t && t->spawn && t->spawn->getSize() >= radius) {
+				list.push_back(t->spawn.get());
+				++found;
+			}
+		}
+		++radius;
 	}
+
+	if (found < count) {
+		spdlog::warn("Map::getSpawnList: Expected {} spawns at ({}, {}, {}), but found only {}. Map corruption?",
+					 count, cx, cy, z, found);
+	}
+
 	return list;
 }

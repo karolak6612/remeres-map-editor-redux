@@ -45,6 +45,7 @@ Selection::~Selection() {
 }
 
 void Selection::recalculateBounds() const {
+	flush(); // Ensure tiles are up to date
 	if (!bounds_dirty) {
 		return;
 	}
@@ -209,32 +210,25 @@ void Selection::remove(Tile* tile) {
 
 void Selection::addInternal(Tile* tile) {
 	ASSERT(tile);
-
-	if (deferred) {
-		pending_adds.push_back(tile);
-	} else {
-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
-		if (it == tiles.end() || *it != tile) {
-			tiles.insert(it, tile);
-			bounds_dirty = true;
-		}
+	if (lookup.contains(tile)) {
+		return;
 	}
+	lookup.insert(tile);
+	pending_adds.push_back(tile);
+	bounds_dirty = true;
 }
 
 void Selection::removeInternal(Tile* tile) {
 	ASSERT(tile);
-	if (deferred) {
-		pending_removes.push_back(tile);
-	} else {
-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
-		if (it != tiles.end() && *it == tile) {
-			tiles.erase(it);
-			bounds_dirty = true;
-		}
+	if (!lookup.contains(tile)) {
+		return;
 	}
+	lookup.erase(tile);
+	pending_removes.push_back(tile);
+	bounds_dirty = true;
 }
 
-void Selection::flush() {
+void Selection::flush() const {
 	if (pending_adds.empty() && pending_removes.empty()) {
 		return;
 	}
@@ -253,6 +247,10 @@ void Selection::flush() {
 		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), tilePositionLessThan);
 		tiles = std::move(result);
 	}
+	pending_removes.clear();
+
+	// Remove adds that are not in lookup (e.g. added then removed)
+	std::erase_if(pending_adds, [this](Tile* t){ return !lookup.contains(t); });
 
 	if (!pending_adds.empty()) {
 		std::ranges::sort(pending_adds, tilePositionLessThan);
@@ -266,13 +264,11 @@ void Selection::flush() {
 		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), tilePositionLessThan);
 		tiles = std::move(merged);
 	}
-
 	pending_adds.clear();
-	pending_removes.clear();
 }
 
 void Selection::clear() {
-	if (tiles.empty()) {
+	if (tiles.empty() && lookup.empty()) {
 		return;
 	}
 
@@ -288,6 +284,9 @@ void Selection::clear() {
 		});
 	}
 	tiles.clear();
+	lookup.clear();
+	pending_adds.clear();
+	pending_removes.clear();
 	bounds_dirty = true;
 }
 
