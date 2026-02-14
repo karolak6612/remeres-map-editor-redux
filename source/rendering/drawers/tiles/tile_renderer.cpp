@@ -216,10 +216,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
+		CachedTooltip* entry = tooltip_drawer->requestItemTooltip(tile->ground.get());
+		if (FillItemTooltipData(entry->data, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+			if (entry->data.hasVisibleFields()) {
+				tooltip_drawer->commitItemTooltip(entry);
 			}
 		}
 	}
@@ -262,10 +262,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+					CachedTooltip* entry = tooltip_drawer->requestItemTooltip(item.get());
+					if (FillItemTooltipData(entry->data, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+						if (entry->data.hasVisibleFields()) {
+							tooltip_drawer->commitItemTooltip(entry);
 						}
 					}
 				}

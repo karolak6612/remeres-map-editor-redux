@@ -43,6 +43,20 @@ TooltipDrawer::~TooltipDrawer() {
 
 void TooltipDrawer::clear() {
 	active_count = 0;
+	drawList.clear();
+
+	currentFrame++;
+
+	// Garbage Collection every 600 frames (approx 10 seconds at 60fps)
+	if (currentFrame % 600 == 0) {
+		for (auto it = itemCache.begin(); it != itemCache.end(); ) {
+			if (currentFrame - it->second.lastFrameTouched > 600) {
+				it = itemCache.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
 }
 
 TooltipData& TooltipDrawer::requestTooltipData() {
@@ -52,6 +66,29 @@ TooltipData& TooltipDrawer::requestTooltipData() {
 	TooltipData& data = tooltips[active_count];
 	data.clear();
 	return data;
+}
+
+CachedTooltip* TooltipDrawer::requestItemTooltip(const void* key) {
+	if (!key) return nullptr;
+
+	auto it = itemCache.find(key);
+	if (it == itemCache.end()) {
+		auto res = itemCache.emplace(key, CachedTooltip());
+		it = res.first;
+	}
+
+	CachedTooltip* entry = &it->second;
+	entry->lastFrameTouched = currentFrame;
+
+	entry->data.clear();
+
+	return entry;
+}
+
+void TooltipDrawer::commitItemTooltip(CachedTooltip* entry) {
+	if (entry) {
+		drawList.push_back(entry);
+	}
 }
 
 void TooltipDrawer::commitTooltip() {
@@ -126,9 +163,6 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 	// Detect context change and clear cache
 	if (vg != lastContext) {
-		// If we had a previous context, we'd ideally delete images from it,
-		// but if the context pointer changed, the old one might be invalid.
-		// However, adhering to the request to clear cache with nvgDeleteImage:
 		if (lastContext) {
 			for (auto& pair : spriteCache) {
 				if (pair.second > 0) {
@@ -146,23 +180,18 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 		return 0;
 	}
 
-	// We use the item ID as the cache key since it's unique and stable
 	auto itCache = spriteCache.find(itemId);
 	if (itCache != spriteCache.end()) {
 		return itCache->second;
 	}
 
-	// Use the sprite directly from ItemType
 	GameSprite* gameSprite = it.sprite;
 
 	if (gameSprite && !gameSprite->spriteList.empty()) {
-		// Use the first frame/part of the sprite
 		GameSprite::NormalImage* img = gameSprite->spriteList[0];
 		if (img) {
 			std::unique_ptr<uint8_t[]> rgba;
 
-			// For legacy sprites (no transparency), use getRGBData + Magenta Masking
-			// This matches how WxWidgets/SpriteIconGenerator renders icons
 			if (!g_gui.gfx.hasTransparency()) {
 				std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
 				if (rgb) {
@@ -172,7 +201,6 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 						uint8_t g = rgb[i * 3 + 1];
 						uint8_t b = rgb[i * 3 + 2];
 
-						// Magic Pink (Magenta) is transparent for legacy sprites
 						if (r == 0xFF && g == 0x00 && b == 0xFF) {
 							rgba[i * 4 + 0] = 0;
 							rgba[i * 4 + 1] = 0;
@@ -185,26 +213,16 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 							rgba[i * 4 + 3] = 255;
 						}
 					}
-				} else {
-					// getRGBData failed, should ideally not happen if sprite exists logic is correct
 				}
 			}
 
-			// Fallback/Standard path for alpha sprites or if RGB failed
 			if (!rgba) {
 				rgba = img->getRGBAData();
-				if (!rgba) {
-					// getRGBAData failed
-				}
 			}
 
 			if (rgba) {
 				int image = nvgCreateImageRGBA(vg, 32, 32, 0, rgba.get());
-				if (image == 0) {
-					// nvgCreateImageRGBA failed
-				} else {
-					// Success
-					// Check if we are overwriting an existing valid image (shouldn't happen given find() above, but safest)
+				if (image != 0) {
 					if (spriteCache.contains(itemId) && spriteCache[itemId] > 0) {
 						nvgDeleteImage(vg, spriteCache[itemId]);
 					}
@@ -213,27 +231,23 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 				}
 			}
 		}
-	} else {
-		// GameSprite missing or empty list
 	}
 
 	return 0;
 }
 
-void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
+void TooltipDrawer::prepareFields(const TooltipData& tooltip, std::vector<FieldLine>& out_fields, std::string& storage_buffer) {
 	// Build content lines with word wrapping support
 	using namespace TooltipColors;
-	scratch_fields_count = 0;
-	storage.clear();
-	if (storage.capacity() < 4096) {
-		storage.reserve(4096);
+	out_fields.clear();
+	storage_buffer.clear();
+	if (storage_buffer.capacity() < 4096) {
+		storage_buffer.reserve(4096);
 	}
 
 	auto addField = [&](std::string_view label, std::string_view value, uint8_t r, uint8_t g, uint8_t b) {
-		if (scratch_fields_count >= scratch_fields.size()) {
-			scratch_fields.emplace_back();
-		}
-		FieldLine& field = scratch_fields[scratch_fields_count++];
+		out_fields.emplace_back();
+		FieldLine& field = out_fields.back();
 		field.label = label;
 		field.value = value;
 		field.r = r;
@@ -246,37 +260,37 @@ void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
 		addField("Waypoint", tooltip.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B);
 	} else {
 		if (tooltip.actionId > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}", tooltip.actionId);
-			addField("Action ID", std::string_view(storage.data() + start, storage.size() - start), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B);
+			size_t start = storage_buffer.size();
+			std::format_to(std::back_inserter(storage_buffer), "{}", tooltip.actionId);
+			addField("Action ID", std::string_view(storage_buffer.data() + start, storage_buffer.size() - start), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B);
 		}
 		if (tooltip.uniqueId > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}", tooltip.uniqueId);
-			addField("Unique ID", std::string_view(storage.data() + start, storage.size() - start), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B);
+			size_t start = storage_buffer.size();
+			std::format_to(std::back_inserter(storage_buffer), "{}", tooltip.uniqueId);
+			addField("Unique ID", std::string_view(storage_buffer.data() + start, storage_buffer.size() - start), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B);
 		}
 		if (tooltip.doorId > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}", tooltip.doorId);
-			addField("Door ID", std::string_view(storage.data() + start, storage.size() - start), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B);
+			size_t start = storage_buffer.size();
+			std::format_to(std::back_inserter(storage_buffer), "{}", tooltip.doorId);
+			addField("Door ID", std::string_view(storage_buffer.data() + start, storage_buffer.size() - start), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B);
 		}
 		if (tooltip.destination.x > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}, {}, {}", tooltip.destination.x, tooltip.destination.y, tooltip.destination.z);
-			addField("Destination", std::string_view(storage.data() + start, storage.size() - start), TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B);
+			size_t start = storage_buffer.size();
+			std::format_to(std::back_inserter(storage_buffer), "{}, {}, {}", tooltip.destination.x, tooltip.destination.y, tooltip.destination.z);
+			addField("Destination", std::string_view(storage_buffer.data() + start, storage_buffer.size() - start), TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B);
 		}
 		if (!tooltip.description.empty()) {
 			addField("Description", tooltip.description, BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B);
 		}
 		if (!tooltip.text.empty()) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "\"{}\"", tooltip.text);
-			addField("Text", std::string_view(storage.data() + start, storage.size() - start), TEXT_R, TEXT_G, TEXT_B);
+			size_t start = storage_buffer.size();
+			std::format_to(std::back_inserter(storage_buffer), "\"{}\"", tooltip.text);
+			addField("Text", std::string_view(storage_buffer.data() + start, storage_buffer.size() - start), TEXT_R, TEXT_G, TEXT_B);
 		}
 	}
 }
 
-TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize) {
+LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, std::vector<FieldLine>& fields, float maxWidth, float minWidth, float padding, float fontSize) {
 	LayoutMetrics lm = {};
 
 	// Set up font for measurements
@@ -285,8 +299,7 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 
 	// Measure label widths
 	float maxLabelWidth = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	for (const auto& field : fields) {
 		float labelBounds[4];
 		nvgTextBounds(vg, 0, 0, field.label.data(), field.label.data() + field.label.size(), labelBounds);
 		float lw = labelBounds[2] - labelBounds[0];
@@ -302,8 +315,7 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 	int totalLines = 0;
 	float actualMaxWidth = minWidth;
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		auto& field = scratch_fields[i];
+	for (auto& field : fields) {
 		const char* start = field.value.data();
 		const char* end = start + field.value.length();
 
@@ -311,6 +323,8 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 		float valueBounds[4];
 		nvgTextBounds(vg, 0, 0, start, end, valueBounds);
 		float valueWidth = valueBounds[2] - valueBounds[0];
+
+		field.wrappedLines.clear();
 
 		if (valueWidth <= maxValueWidth) {
 			// Single line
@@ -437,7 +451,7 @@ void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width
 	nvgStroke(vg);
 }
 
-void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize) {
+void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, const std::vector<FieldLine>& fields, float valueStartX, float lineHeight, float padding, float fontSize) {
 	using namespace TooltipColors;
 
 	float contentX = x + padding;
@@ -447,8 +461,7 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	nvgFontFace(vg, "sans");
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	for (const auto& field : fields) {
 		bool firstLine = true;
 		for (const auto& line : field.wrappedLines) {
 			if (firstLine) {
@@ -467,22 +480,17 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	}
 }
 
-void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout) {
+void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout, const std::vector<FieldLine>& fields) {
 	using namespace TooltipColors;
 
 	if (layout.totalContainerSlots <= 0) {
 		return;
 	}
 
-	// Calculate cursorY after text fields
-	// We need to re-calculate text height or pass it, but simpler to deduce from logic:
-	// The grid is at the bottom. We can just use the bottom of the box minus grid height minus padding.
-	// But let's calculate exact start Y based on text content for precision
 	float fontSize = 11.0f;
 	float lineHeight = fontSize * 1.4f;
 	float textBlockHeight = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	for (const auto& field : fields) {
 		textBlockHeight += field.wrappedLines.size() * lineHeight;
 	}
 
@@ -559,8 +567,7 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		return;
 	}
 
-	for (size_t i = 0; i < active_count; ++i) {
-		const auto& tooltip = tooltips[i];
+	auto drawTooltip = [&](const TooltipData& tooltip, const std::vector<FieldLine>& fields, LayoutMetrics& layout, bool calculate_layout) {
 		int unscaled_x, unscaled_y;
 		view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
 
@@ -580,28 +587,48 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		float minWidth = 120.0f;
 		float maxWidth = 220.0f;
 
-		// 1. Prepare Content
-		prepareFields(tooltip);
-
-		// Skip if nothing to show
-		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
-			continue;
+		if (calculate_layout) {
+			layout = calculateLayout(vg, tooltip, fields, maxWidth, minWidth, padding, fontSize);
 		}
-
-		// 2. Calculate Layout
-		LayoutMetrics layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
 
 		// Position tooltip above tile
 		float tooltipX = screen_x - (layout.width / 2.0f);
 		float tooltipY = screen_y - layout.height - 12.0f;
 
-		// 3. Draw Background & Shadow
+		// Draw Background & Shadow
 		drawBackground(vg, tooltipX, tooltipY, layout.width, layout.height, 4.0f, tooltip);
 
-		// 4. Draw Text Fields
-		drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
+		// Draw Text Fields
+		drawFields(vg, tooltipX, tooltipY, fields, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
 
-		// 5. Draw Container Grid
-		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
+		// Draw Container Grid
+		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout, fields);
+	};
+
+	// 1. Draw cached items
+	for (CachedTooltip* entry : drawList) {
+		// Detect changes
+		if (!entry->layoutValid || !entry->data.isContentEqual(entry->shadowData)) {
+			// Update cache
+			prepareFields(entry->data, entry->fields, entry->storage);
+			entry->layout = calculateLayout(vg, entry->data, entry->fields, 220.0f, 120.0f, 10.0f, 11.0f);
+			entry->shadowData = entry->data;
+			entry->layoutValid = true;
+		}
+
+		drawTooltip(entry->data, entry->fields, entry->layout, false);
+	}
+
+	// 2. Draw uncached items (legacy)
+	for (size_t i = 0; i < active_count; ++i) {
+		const auto& tooltip = tooltips[i];
+		prepareFields(tooltip, scratch_fields, this->storage); // Populates scratch_fields
+
+		if (scratch_fields.empty() && tooltip.containerItems.empty()) {
+			continue;
+		}
+
+		LayoutMetrics layout; // Will be calculated
+		drawTooltip(tooltip, scratch_fields, layout, true);
 	}
 }
