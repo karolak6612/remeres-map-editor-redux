@@ -2,9 +2,11 @@
 #define RME_RENDERING_CORE_SHADER_PROGRAM_H_
 
 #include "app/main.h"
+#include "rendering/core/gl_resources.h"
 #include <string>
 #include <unordered_map>
 #include <glm/glm.hpp>
+#include <memory>
 
 class ShaderProgram {
 public:
@@ -25,15 +27,15 @@ public:
 	void SetMat4(const std::string& name, const glm::mat4& value) const;
 
 	bool IsValid() const {
-		return program_id != 0;
+		return program_resource_ && program_resource_->GetID() != 0;
 	}
 
 	GLuint GetID() const {
-		return program_id;
+		return program_resource_ ? program_resource_->GetID() : 0;
 	}
 
 private:
-	GLuint program_id;
+	std::unique_ptr<GLProgram> program_resource_;
 	mutable std::unordered_map<std::string, GLint> uniform_cache;
 
 	GLint GetUniformLocation(const std::string& name) const;

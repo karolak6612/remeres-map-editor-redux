@@ -19,22 +19,22 @@ bool TextureArray::initialize(int width, int height, int maxLayers) {
 	height_ = height;
 	maxLayers_ = maxLayers;
 
-	// Create texture array
-	glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &textureId_);
-	if (textureId_ == 0) {
+	// Create texture array using RAII wrapper
+	texture_resource_ = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
+	if (!texture_resource_ || texture_resource_->GetID() == 0) {
 		spdlog::error("TextureArray: Failed to create texture");
 		return false;
 	}
 
 	// Allocate immutable storage for all layers
 	// Using RGBA8 format, no mipmaps (level 1)
-	glTextureStorage3D(textureId_, 1, GL_RGBA8, width_, height_, maxLayers_);
+	glTextureStorage3D(texture_resource_->GetID(), 1, GL_RGBA8, width_, height_, maxLayers_);
 
 	// Set texture parameters
-	glTextureParameteri(textureId_, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(textureId_, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTextureParameteri(textureId_, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteri(textureId_, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(texture_resource_->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTextureParameteri(texture_resource_->GetID(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTextureParameteri(texture_resource_->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTextureParameteri(texture_resource_->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
 	allocatedLayers_ = 0;
 	initialized_ = true;
@@ -59,7 +59,7 @@ bool TextureArray::uploadLayer(int layer, const uint8_t* rgbaData) {
 	}
 
 	// Upload to specific layer (z offset = layer, depth = 1 layer)
-	glTextureSubImage3D(textureId_, 0, 0, 0, layer, width_, height_, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
+	glTextureSubImage3D(texture_resource_->GetID(), 0, 0, 0, layer, width_, height_, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
 
 	return true;
 }
@@ -76,16 +76,13 @@ int TextureArray::allocateLayer() {
 }
 
 void TextureArray::bind(int unit) const {
-	if (initialized_) {
-		glBindTextureUnit(unit, textureId_);
+	if (initialized_ && texture_resource_) {
+		glBindTextureUnit(unit, texture_resource_->GetID());
 	}
 }
 
 void TextureArray::cleanup() {
-	if (textureId_) {
-		glDeleteTextures(1, &textureId_);
-		textureId_ = 0;
-	}
+	texture_resource_.reset();
 	initialized_ = false;
 	allocatedLayers_ = 0;
 }

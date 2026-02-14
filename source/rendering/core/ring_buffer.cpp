@@ -10,12 +10,11 @@ RingBuffer::~RingBuffer() {
 
 RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 	:
-	buffer_id_(other.buffer_id_),
+	buffer_resource_(std::move(other.buffer_resource_)),
 	mapped_ptr_(other.mapped_ptr_), element_size_(other.element_size_), max_elements_(other.max_elements_), section_size_(other.section_size_), current_section_(other.current_section_), use_persistent_mapping_(other.use_persistent_mapping_), initialized_(other.initialized_) {
 	for (size_t i = 0; i < BUFFER_COUNT; ++i) {
 		fences_[i] = std::move(other.fences_[i]);
 	}
-	other.buffer_id_ = 0;
 	other.mapped_ptr_ = nullptr;
 	other.initialized_ = false;
 }
@@ -23,7 +22,7 @@ RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 	if (this != &other) {
 		cleanup();
-		buffer_id_ = other.buffer_id_;
+		buffer_resource_ = std::move(other.buffer_resource_);
 		mapped_ptr_ = other.mapped_ptr_;
 		for (size_t i = 0; i < BUFFER_COUNT; ++i) {
 			fences_[i] = std::move(other.fences_[i]);
@@ -35,7 +34,6 @@ RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 		use_persistent_mapping_ = other.use_persistent_mapping_;
 		initialized_ = other.initialized_;
 
-		other.buffer_id_ = 0;
 		other.mapped_ptr_ = nullptr;
 		other.initialized_ = false;
 	}
@@ -55,27 +53,27 @@ bool RingBuffer::initialize(size_t element_size, size_t max_elements) {
 	size_t total_size = section_size_ * BUFFER_COUNT;
 
 	// Create buffer
-	glCreateBuffers(1, &buffer_id_);
-	if (buffer_id_ == 0) {
+	buffer_resource_ = std::make_unique<GLBuffer>();
+	if (!buffer_resource_ || buffer_resource_->GetID() == 0) {
 		spdlog::error("RingBuffer: Failed to create buffer");
 		return false;
 	}
+	GLuint id = buffer_resource_->GetID();
 
 	// GL 4.4+ persistent coherent mapping
 	GLbitfield storage_flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
 	// Use NamedBufferStorage if available (GL 4.5+) or bind and use BufferStorage
 	// RME uses GL 4.5, so glNamedBufferStorage is safe
-	glNamedBufferStorage(buffer_id_, total_size, nullptr, storage_flags);
+	glNamedBufferStorage(id, total_size, nullptr, storage_flags);
 
 	GLbitfield map_flags = GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
 
-	mapped_ptr_ = glMapNamedBufferRange(buffer_id_, 0, total_size, map_flags);
+	mapped_ptr_ = glMapNamedBufferRange(id, 0, total_size, map_flags);
 
 	if (!mapped_ptr_) {
 		spdlog::error("RingBuffer: Persistent mapping failed");
-		glDeleteBuffers(1, &buffer_id_);
-		buffer_id_ = 0;
+		buffer_resource_.reset();
 		return false;
 	}
 
@@ -95,13 +93,12 @@ void RingBuffer::cleanup() {
 	}
 
 	// Unmap and delete buffer
-	if (buffer_id_) {
+	if (buffer_resource_) {
 		if (mapped_ptr_) {
-			glUnmapNamedBuffer(buffer_id_);
+			glUnmapNamedBuffer(buffer_resource_->GetID());
 			mapped_ptr_ = nullptr;
 		}
-		glDeleteBuffers(1, &buffer_id_);
-		buffer_id_ = 0;
+		buffer_resource_.reset();
 	}
 
 	initialized_ = false;

@@ -3,14 +3,10 @@
 #include <vector>
 #include <spdlog/spdlog.h>
 
-ShaderProgram::ShaderProgram() :
-	program_id(0) {
+ShaderProgram::ShaderProgram() {
 }
 
 ShaderProgram::~ShaderProgram() {
-	if (program_id != 0) {
-		glDeleteProgram(program_id);
-	}
 }
 
 bool ShaderProgram::Load(const std::string& vertexSource, const std::string& fragmentSource) {
@@ -24,17 +20,19 @@ bool ShaderProgram::Load(const std::string& vertexSource, const std::string& fra
 		return false;
 	}
 
-	program_id = glCreateProgram();
-	glAttachShader(program_id, vertexShader.GetID());
-	glAttachShader(program_id, fragmentShader.GetID());
-	glLinkProgram(program_id);
+	program_resource_ = std::make_unique<GLProgram>();
+	GLuint id = program_resource_->GetID();
+	glAttachShader(id, vertexShader.GetID());
+	glAttachShader(id, fragmentShader.GetID());
+	glLinkProgram(id);
 
 	GLint success;
-	glGetProgramiv(program_id, GL_LINK_STATUS, &success);
+	glGetProgramiv(id, GL_LINK_STATUS, &success);
 	if (!success) {
 		char infoLog[1024];
-		glGetProgramInfoLog(program_id, 1024, nullptr, infoLog);
+		glGetProgramInfoLog(id, 1024, nullptr, infoLog);
 		spdlog::error("SHADER PROGRAM LINKING ERROR: {}", infoLog);
+		program_resource_.reset();
 		return false;
 	}
 
@@ -42,8 +40,8 @@ bool ShaderProgram::Load(const std::string& vertexSource, const std::string& fra
 }
 
 void ShaderProgram::Use() const {
-	if (program_id != 0) {
-		glUseProgram(program_id);
+	if (program_resource_) {
+		glUseProgram(program_resource_->GetID());
 	}
 }
 
@@ -52,11 +50,13 @@ void ShaderProgram::Unuse() const {
 }
 
 GLint ShaderProgram::GetUniformLocation(const std::string& name) const {
+	if (!program_resource_) return -1;
+
 	if (auto it = uniform_cache.find(name); it != uniform_cache.end()) {
 		return it->second;
 	}
 
-	GLint location = glGetUniformLocation(program_id, name.c_str());
+	GLint location = glGetUniformLocation(program_resource_->GetID(), name.c_str());
 	if (location == -1) {
 	}
 
