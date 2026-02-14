@@ -68,14 +68,14 @@ LiveLogTab::LiveLogTab(MapTabbook* aui, LiveSocket* server) :
 	log->EnableEditing(false);
 
 	log->SetColLabelValue(0, "Time");
-	log->SetColMinimalWidth(0, 60);
-	log->SetColSize(0, 60);
+	log->SetColMinimalWidth(0, FromDIP(60));
+	log->SetColSize(0, FromDIP(60));
 	log->SetColLabelValue(1, "User");
-	log->SetColMinimalWidth(1, 100);
-	log->SetColSize(1, 100);
+	log->SetColMinimalWidth(1, FromDIP(100));
+	log->SetColSize(1, FromDIP(100));
 	log->SetColLabelValue(2, "Message");
-	log->SetColMinimalWidth(2, 100);
-	log->SetColSize(2, 100);
+	log->SetColMinimalWidth(2, FromDIP(100));
+	log->SetColSize(2, FromDIP(100));
 
 	log->Bind(wxEVT_SIZE, &LiveLogTab::OnResizeChat, this);
 
@@ -91,7 +91,7 @@ LiveLogTab::LiveLogTab(MapTabbook* aui, LiveSocket* server) :
 	left_pane->SetSizerAndFit(left_sizer);
 
 	// Setup right panel
-	user_list = newd myGrid(splitter, wxID_ANY, wxDefaultPosition, wxSize(280, 100));
+	user_list = newd myGrid(splitter, wxID_ANY, wxDefaultPosition, wxSize(FromDIP(280), FromDIP(100)));
 	user_list->CreateGrid(5, 3);
 	user_list->DisableDragRowSize();
 	user_list->DisableDragColSize();
@@ -99,11 +99,11 @@ LiveLogTab::LiveLogTab(MapTabbook* aui, LiveSocket* server) :
 	user_list->SetRowLabelSize(0);
 
 	user_list->SetColLabelValue(0, "");
-	user_list->SetColSize(0, 24);
+	user_list->SetColSize(0, FromDIP(24));
 	user_list->SetColLabelValue(1, "#");
-	user_list->SetColSize(1, 36);
+	user_list->SetColSize(1, FromDIP(36));
 	user_list->SetColLabelValue(2, "Name");
-	user_list->SetColSize(2, 200);
+	user_list->SetColSize(2, FromDIP(200));
 
 	// user_list->GetGridWindow()->
 
@@ -184,7 +184,7 @@ void LiveLogTab::OnChat(wxCommandEvent& evt) {
 }
 
 void LiveLogTab::OnResizeChat(wxSizeEvent& evt) {
-	log->SetColSize(2, log->GetSize().GetWidth() - 160);
+	log->SetColSize(2, log->GetSize().GetWidth() - FromDIP(160));
 }
 
 void LiveLogTab::OnResizeClientList(wxSizeEvent& evt) {
