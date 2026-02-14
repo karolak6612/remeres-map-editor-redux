@@ -443,6 +443,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/map/tileset.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mkpch.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/net_connection.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/net/network_message.cpp
     ${CMAKE_CURRENT_LIST_DIR}/net/process_com.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_brushlist.cpp
     ${CMAKE_CURRENT_LIST_DIR}/palette/palette_common.cpp

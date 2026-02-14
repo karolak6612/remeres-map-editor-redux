@@ -18,50 +18,22 @@
 #ifndef _RME_NET_CONNECTION_H_
 #define _RME_NET_CONNECTION_H_
 
-#include "map/position.h"
+#include "net/network_message.h"
 
 #include <string>
 #include <vector>
 #include <cstdint>
 #include <thread>
 #include <mutex>
+#include <atomic>
 #include <memory>
 
-struct NetworkMessage {
-	NetworkMessage();
-
-	void clear();
-	void expand(const size_t length);
-
-	//
-	template <typename T>
-	T read() {
-		T& value = *reinterpret_cast<T*>(&buffer[position]);
-		position += sizeof(T);
-		return value;
-	}
-
-	template <typename T>
-	void write(const T& value) {
-		expand(sizeof(T));
-		memcpy(&buffer[position], &value, sizeof(T));
-		position += sizeof(T);
-	}
-
-	//
-	std::vector<uint8_t> buffer;
-	size_t position;
-	size_t size;
-};
-
-template <>
-std::string NetworkMessage::read<std::string>();
-template <>
-Position NetworkMessage::read<Position>();
-template <>
-void NetworkMessage::write<std::string>(const std::string& value);
-template <>
-void NetworkMessage::write<Position>(const Position& value);
+// Forward declaration
+namespace boost {
+namespace asio {
+class io_context;
+}
+} // namespace boost
 
 class NetworkConnection {
 private:
@@ -81,7 +53,8 @@ public:
 private:
 	std::unique_ptr<boost::asio::io_context> service;
 	std::thread thread;
-	bool stopped;
+	std::atomic<bool> stopped;
+	std::mutex connection_mutex;
 };
 
 #endif
