@@ -29,8 +29,22 @@ ImageManager::~ImageManager() {
 void ImageManager::ClearCache() {
 	m_bitmapBundleCache.clear();
 	m_tintedBitmapCache.clear();
-	m_nvgImageCache.clear();
+	m_nvgContextCache.clear();
 	m_glTextureCache.clear();
+}
+
+void ImageManager::ClearCache(NVGcontext* vg) {
+	if (!vg) {
+		return;
+	}
+
+	auto it = m_nvgContextCache.find(vg);
+	if (it != m_nvgContextCache.end()) {
+		for (const auto& [key, handle] : it->second) {
+			nvgDeleteImage(vg, handle);
+		}
+		m_nvgContextCache.erase(it);
+	}
 }
 
 std::string ImageManager::ResolvePath(const std::string& assetPath) {
@@ -145,9 +159,15 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 }
 
 int ImageManager::GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, const wxColour& tint) {
+	if (!vg) {
+		return 0;
+	}
+
 	std::pair<std::string, uint32_t> cacheKey = { assetPath, tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
-	auto it = m_nvgImageCache.find(cacheKey);
-	if (it != m_nvgImageCache.end()) {
+
+	auto& contextCache = m_nvgContextCache[vg];
+	auto it = contextCache.find(cacheKey);
+	if (it != contextCache.end()) {
 		return it->second;
 	}
 
@@ -181,7 +201,7 @@ int ImageManager::GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, c
 	}
 
 	if (img != 0) {
-		m_nvgImageCache[cacheKey] = img;
+		contextCache[cacheKey] = img;
 	} else {
 		spdlog::error("Failed to load NanoVG image: {}", assetPath);
 	}

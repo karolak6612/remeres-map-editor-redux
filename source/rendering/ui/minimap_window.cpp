@@ -25,6 +25,7 @@
 
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"
+#include "util/image_manager.h"
 #include "rendering/ui/minimap_window.h"
 
 #include "rendering/drawers/minimap_drawer.h"
@@ -73,6 +74,9 @@ MinimapWindow::~MinimapWindow() {
 		spdlog::default_logger()->flush();
 		SetCurrent(*context);
 		drawer.reset();
+		if (nvg) {
+			IMAGE_MANAGER.ClearCache(nvg.get());
+		}
 		nvg.reset();
 	}
 	spdlog::debug("MinimapWindow destructor finished");

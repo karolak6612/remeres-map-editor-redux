@@ -40,6 +40,7 @@
 #include "rendering/utilities/tile_describer.h"
 #include "rendering/core/coordinate_mapper.h"
 #include "rendering/ui/map_display.h"
+#include "util/image_manager.h"
 #include "rendering/ui/map_status_updater.h"
 #include "rendering/map_drawer.h"
 #include "rendering/core/text_renderer.h"
@@ -153,6 +154,9 @@ MapCanvas::~MapCanvas() {
 	if (auto context = g_gui.GetGLContext(this)) {
 		SetCurrent(*context);
 		drawer.reset();
+		if (m_nvg) {
+			IMAGE_MANAGER.ClearCache(m_nvg.get());
+		}
 		m_nvg.reset();
 	}
 }

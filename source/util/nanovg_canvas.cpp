@@ -43,6 +43,9 @@ NanoVGCanvas::~NanoVGCanvas() {
 	if (m_glContext) {
 		SetCurrent(*m_glContext);
 		ClearImageCache();
+		if (m_nvg) {
+			IMAGE_MANAGER.ClearCache(m_nvg.get());
+		}
 	}
 }
 

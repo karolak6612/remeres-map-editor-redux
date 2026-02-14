@@ -34,6 +34,7 @@ public:
 
 	// Cleanup
 	void ClearCache();
+	void ClearCache(NVGcontext* vg);
 
 private:
 	ImageManager();
@@ -44,7 +45,7 @@ private:
 	// Caches
 	std::map<std::string, wxBitmapBundle> m_bitmapBundleCache;
 	std::map<std::pair<std::string, uint32_t>, wxBitmap> m_tintedBitmapCache;
-	std::map<std::pair<std::string, uint32_t>, int> m_nvgImageCache;
+	std::map<NVGcontext*, std::map<std::pair<std::string, uint32_t>, int>> m_nvgContextCache;
 	std::map<std::string, uint32_t> m_glTextureCache;
 
 	// Helper for tinting

@@ -6,6 +6,7 @@
 #include "rendering/map_drawer.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/core/text_renderer.h"
+#include "util/image_manager.h"
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -69,7 +70,14 @@ namespace IngamePreview {
 		animation_timer.Start(16); // ~60 FPS update
 	}
 
-	IngamePreviewCanvas::~IngamePreviewCanvas() = default;
+	IngamePreviewCanvas::~IngamePreviewCanvas() {
+		if (m_glContext) {
+			SetCurrent(*m_glContext);
+			if (m_nvg) {
+				IMAGE_MANAGER.ClearCache(m_nvg.get());
+			}
+		}
+	}
 
 	void IngamePreviewCanvas::OnPaint(wxPaintEvent& event) {
 		// Validating the paint event prevents infinite paint loops on some platforms
