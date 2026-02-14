@@ -17,6 +17,7 @@ public:
 		m_path(path), m_date(date), m_isHover(false), m_isPressed(false) {
 		SetBackgroundStyle(wxBG_STYLE_PAINT);
 		SetMinSize(wxSize(-1, FromDIP(45))); // Slightly more compact
+		SetToolTip(m_path);
 
 		Bind(wxEVT_PAINT, &RecentFileItem::OnPaint, this);
 		Bind(wxEVT_ENTER_WINDOW, [this](wxMouseEvent&) { m_isHover = true; Refresh(); });
@@ -107,20 +108,23 @@ public:
 		sideSizer->Add(version, 0, wxALIGN_CENTER_HORIZONTAL | wxBOTTOM, FromDIP(25));
 
 		// Actions (Nav-style)
-		auto addButton = [&](const wxString& label, int id, const char* icon) {
+		auto addButton = [&](const wxString& label, int id, const char* icon, const wxString& tooltip) {
 			ModernButton* btn = new ModernButton(sidebar, id, label);
 			btn->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_BTNTEXT));
 			btn->SetMinSize(wxSize(-1, FromDIP(35))); // More compact nav height
 			if (icon) {
 				btn->SetBitmap(IMAGE_MANAGER.GetBitmap(icon, wxSize(16, 16)));
 			}
+			if (!tooltip.IsEmpty()) {
+				btn->SetToolTip(tooltip);
+			}
 			sideSizer->Add(btn, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(8));
 			btn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, parent);
 		};
 
-		addButton("New Project", wxID_NEW, ICON_NEW);
-		addButton("Open Project", wxID_OPEN, ICON_OPEN);
-		addButton("Preferences", wxID_PREFERENCES, ICON_GEAR);
+		addButton("New Project", wxID_NEW, ICON_NEW, "Create a new empty map (Ctrl+N)");
+		addButton("Open Project", wxID_OPEN, ICON_OPEN, "Open an existing map file (Ctrl+O)");
+		addButton("Preferences", wxID_PREFERENCES, ICON_GEAR, "Configure editor settings");
 
 		sideSizer->AddStretchSpacer();
 

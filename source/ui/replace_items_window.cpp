@@ -162,8 +162,13 @@ wxCoord ReplaceItemsListBox::OnMeasureItem(size_t WXUNUSED(index)) const {
 // ReplaceItemsDialog
 
 ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
-	wxDialog(parent, wxID_ANY, (selectionOnly ? "Replace Items on Selection" : "Replace Items"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE),
+	wxDialog(parent, wxID_ANY, (selectionOnly ? "Replace Items on Selection" : "Replace Items Tool"), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE),
 	selectionOnly(selectionOnly) {
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(32, 32)));
+	SetIcon(icon);
+
 	SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
@@ -193,6 +198,9 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	items_sizer->Add(with_button, 0, wxALL, 5);
 
 	items_sizer->Add(0, 0, 1, wxEXPAND, 5);
+
+	progress_text = new wxStaticText(this, wxID_ANY, "Ready");
+	items_sizer->Add(progress_text, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 
 	progress = new wxGauge(this, wxID_ANY, 100);
 	progress->SetValue(0);
@@ -241,10 +249,6 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	remove_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnRemoveButtonClicked, this);
 	execute_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnExecuteButtonClicked, this);
 	close_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnCancelButtonClicked, this);
-
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(32, 32)));
-	SetIcon(icon);
 }
 
 ReplaceItemsDialog::~ReplaceItemsDialog() {
@@ -378,11 +382,15 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		}
 
 		done++;
-		const int value = static_cast<int>((done / items.size()) * 100);
+		const int value = static_cast<int>((static_cast<float>(done) / items.size()) * 100);
 		progress->SetValue(std::clamp<int>(value, 0, 100));
+		progress_text->SetLabel(wxString::Format("Processing... %d%%", std::clamp<int>(value, 0, 100)));
+		wxYield();
+
 		list->MarkAsComplete(info, total);
 	}
 
+	progress_text->SetLabel("Done");
 	tab->Refresh();
 	close_button->Enable(true);
 	UpdateWidgets();

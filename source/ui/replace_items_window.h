@@ -130,6 +130,7 @@ private:
 	ReplaceItemsButton* replace_button;
 	ReplaceItemsButton* with_button;
 	wxGauge* progress;
+	wxStaticText* progress_text;
 	wxStaticBitmap* arrow_bitmap;
 	wxButton* add_button;
 	wxButton* remove_button;

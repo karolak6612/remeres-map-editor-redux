@@ -48,6 +48,7 @@ public:
 	void SetSprite(Sprite* sprite);
 
 	void OnClick(wxMouseEvent&);
+	void OnKeyDown(wxKeyEvent&);
 
 protected:
 	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;

@@ -31,6 +31,11 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	result_brush(nullptr),
 	result_id(0),
 	only_pickupables(onlyPickupables) {
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
+	SetIcon(icon);
+
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* box_sizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -194,10 +199,6 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	this->Centre(wxBOTH);
 	this->EnableProperties(false);
 	this->RefreshContentsInternal();
-
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
-	SetIcon(icon);
 
 	// Connect Events
 	options_radio_box->Bind(wxEVT_COMMAND_RADIOBOX_SELECTED, &FindItemDialog::OnOptionChange, this);

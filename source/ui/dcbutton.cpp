@@ -38,6 +38,7 @@ DCButton::DCButton() :
 	SetSize(FromDIP(wxSize(36, 36)));
 	SetMinSize(FromDIP(wxSize(36, 36)));
 	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
+	Bind(wxEVT_KEY_DOWN, &DCButton::OnKeyDown, this);
 	SetSprite(0);
 }
 
@@ -65,6 +66,7 @@ DCButton::DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, Rende
 	}
 
 	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
+	Bind(wxEVT_KEY_DOWN, &DCButton::OnKeyDown, this);
 	SetSprite(sprite_id);
 }
 
@@ -192,6 +194,15 @@ void DCButton::OnClick(wxMouseEvent& WXUNUSED(evt)) {
 	SetFocus();
 
 	GetEventHandler()->ProcessEvent(event);
+}
+
+void DCButton::OnKeyDown(wxKeyEvent& evt) {
+	if (evt.GetKeyCode() == WXK_SPACE || evt.GetKeyCode() == WXK_RETURN) {
+		wxMouseEvent mouseEvt(wxEVT_LEFT_DOWN);
+		OnClick(mouseEvt);
+	} else {
+		evt.Skip();
+	}
 }
 
 void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
