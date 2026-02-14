@@ -181,4 +181,51 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE nanovg::nanovg)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
 
+	# Test executable for file handle modernization
+	add_executable(test_filehandle
+		${CMAKE_CURRENT_SOURCE_DIR}/source/test_filehandle.cpp
+		${CMAKE_CURRENT_SOURCE_DIR}/source/io/filehandle.cpp
+	)
+	target_compile_definitions(test_filehandle PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
+
+	# Include directories
+	target_include_directories(test_filehandle PRIVATE
+		${Boost_INCLUDE_DIRS}
+		${LibArchive_INCLUDE_DIRS}
+		${OPENGL_INCLUDE_DIR}
+		${ZLIB_INCLUDE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/source
+	)
+
+	# Link libraries (same as main rme target)
+	if(TARGET wxWidgets::wxWidgets)
+		target_link_libraries(test_filehandle PRIVATE wxWidgets::wxWidgets)
+	else()
+		target_link_libraries(test_filehandle PRIVATE ${wxWidgets_LIBRARIES})
+	endif()
+
+	if(TARGET Boost::boost)
+		target_link_libraries(test_filehandle PRIVATE Boost::boost Boost::thread Boost::system)
+	else()
+		target_link_libraries(test_filehandle PRIVATE ${Boost_LIBRARIES})
+	endif()
+
+	if(TARGET LibArchive::LibArchive)
+		target_link_libraries(test_filehandle PRIVATE LibArchive::LibArchive)
+	else()
+		target_link_libraries(test_filehandle PRIVATE ${LibArchive_LIBRARIES})
+	endif()
+
+	if(TARGET ZLIB::ZLIB)
+		target_link_libraries(test_filehandle PRIVATE ZLIB::ZLIB)
+	else()
+		target_link_libraries(test_filehandle PRIVATE ${ZLIB_LIBRARIES})
+	endif()
+
+	target_link_libraries(test_filehandle PRIVATE ${OPENGL_LIBRARIES})
+	target_link_libraries(test_filehandle PRIVATE glad::glad)
+	target_link_libraries(test_filehandle PRIVATE glm::glm)
+	target_link_libraries(test_filehandle PRIVATE nanovg::nanovg)
+	target_link_libraries(test_filehandle PRIVATE spdlog::spdlog)
+
 endif()

@@ -26,6 +26,10 @@
 #include <stdio.h>
 #include <memory>
 #include <vector>
+#include <cstring>
+#include <string_view>
+#include <span>
+#include <boost/utility.hpp>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER
@@ -132,8 +136,7 @@ protected:
 
 	template <class T>
 	bool getType(T& ref) {
-		fread(&ref, sizeof(ref), 1, file.get());
-		return ferror(file.get()) == 0;
+		return fread(&ref, sizeof(ref), 1, file.get()) == 1;
 	}
 };
 
@@ -185,7 +188,7 @@ protected:
 			read_offset = data.size();
 			return false;
 		}
-		ref = *(T*)(data.data() + read_offset);
+		std::memcpy(&ref, data.data() + read_offset, sizeof(T));
 
 		read_offset += sizeof(ref);
 		return true;
@@ -303,20 +306,15 @@ public:
 	FORCEINLINE bool addU64(uint64_t u64) {
 		return addType(u64);
 	}
-	bool addString(const std::string& str);
-	bool addString(const char* str);
-	bool addLongString(const std::string& str);
-	bool addRAW(const std::string& str);
-	bool addRAW(const uint8_t* ptr, size_t sz);
-	bool addRAW(const char* c) {
-		return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));
-	}
+	bool addString(std::string_view str);
+	bool addLongString(std::string_view str);
+	bool addRAW(std::string_view str);
+	bool addRAW(std::span<const uint8_t> data);
 
 protected:
 	template <class T>
 	bool addType(T ref) {
-		fwrite(&ref, sizeof(ref), 1, file.get());
-		return ferror(file.get()) == 0;
+		return fwrite(&ref, sizeof(ref), 1, file.get()) == 1;
 	}
 };
 
@@ -333,13 +331,10 @@ public:
 	bool addU16(uint16_t u16);
 	bool addU32(uint32_t u32);
 	bool addU64(uint64_t u64);
-	bool addString(const std::string& str);
-	bool addLongString(const std::string& str);
-	bool addRAW(std::string& str);
-	bool addRAW(const uint8_t* ptr, size_t sz);
-	bool addRAW(const char* c) {
-		return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));
-	}
+	bool addString(std::string_view str);
+	bool addLongString(std::string_view str);
+	bool addRAW(std::string_view str);
+	bool addRAW(std::span<const uint8_t> data);
 
 protected:
 	virtual bool renewCache() = 0;

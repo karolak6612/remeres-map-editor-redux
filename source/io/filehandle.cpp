@@ -23,6 +23,7 @@
 #include <assert.h>
 #include <algorithm>
 #include <format>
+#include <array>
 
 uint8_t NodeFileWriteHandle::NODE_START = ::NODE_START;
 uint8_t NodeFileWriteHandle::NODE_END = ::NODE_END;
@@ -51,7 +52,7 @@ std::string FileHandle::getErrorMessage() {
 		case FILE_PREMATURE_END:
 			return "File end encountered unexpectedly";
 	}
-	if (file == nullptr) {
+	if (!file) {
 		return "Could not open file (2)";
 	}
 	if (ferror(file.get())) {
@@ -223,8 +224,8 @@ DiskNodeFileReadHandle::DiskNodeFileReadHandle(const std::string& name, const st
 	if (!file || ferror(file.get())) {
 		error_code = FILE_COULD_NOT_OPEN;
 	} else {
-		char ver[4];
-		if (fread(ver, 1, 4, file.get()) != 4) {
+		std::array<char, 4> ver;
+		if (fread(ver.data(), 1, ver.size(), file.get()) != ver.size()) {
 			file.reset();
 			error_code = FILE_SYNTAX_ERROR;
 			return;
@@ -233,13 +234,9 @@ DiskNodeFileReadHandle::DiskNodeFileReadHandle(const std::string& name, const st
 		// 0x00 00 00 00 is accepted as a wildcard version
 
 		if (ver[0] != 0 || ver[1] != 0 || ver[2] != 0 || ver[3] != 0) {
-			bool accepted = false;
-			for (std::vector<std::string>::const_iterator id_iter = acceptable_identifiers.begin(); id_iter != acceptable_identifiers.end(); ++id_iter) {
-				if (memcmp(ver, id_iter->c_str(), 4) == 0) {
-					accepted = true;
-					break;
-				}
-			}
+			bool accepted = std::ranges::any_of(acceptable_identifiers, [&](const auto& id) {
+				return std::memcmp(ver.data(), id.c_str(), 4) == 0;
+			});
 
 			if (!accepted) {
 				file.reset();
@@ -283,7 +280,10 @@ bool DiskNodeFileReadHandle::renewCache() {
 BinaryNode* DiskNodeFileReadHandle::getRootNode() {
 	assert(root_node == nullptr); // You should never do this twice
 	uint8_t first;
-	fread(&first, 1, 1, file.get());
+	if (fread(&first, 1, 1, file.get()) != 1) {
+		error_code = FILE_READ_ERROR;
+		return nullptr;
+	}
 	if (first == NODE_START) {
 		root_node = getNode(nullptr);
 		root_node->load();
@@ -509,7 +509,7 @@ FileWriteHandle::~FileWriteHandle() {
 	////
 }
 
-bool FileWriteHandle::addString(const std::string& str) {
+bool FileWriteHandle::addString(std::string_view str) {
 	if (str.size() > 0xFFFF) {
 		error_code = FILE_STRING_TOO_LONG;
 		return false;
@@ -519,34 +519,18 @@ bool FileWriteHandle::addString(const std::string& str) {
 	return true;
 }
 
-bool FileWriteHandle::addString(const char* str) {
-	size_t len = strlen(str);
-	if (len > 0xFFFF) {
-		error_code = FILE_STRING_TOO_LONG;
-		return false;
-	}
-	addU16(uint16_t(len));
-	if (fwrite(str, 1, len, file.get()) != len) {
-		error_code = FILE_WRITE_ERROR;
-		return false;
-	}
-	return true;
-}
-
-bool FileWriteHandle::addLongString(const std::string& str) {
+bool FileWriteHandle::addLongString(std::string_view str) {
 	addU32(uint32_t(str.size()));
 	addRAW(str);
 	return true;
 }
 
-bool FileWriteHandle::addRAW(const std::string& str) {
-	fwrite(str.c_str(), 1, str.size(), file.get());
-	return ferror(file.get()) == 0;
+bool FileWriteHandle::addRAW(std::string_view str) {
+	return fwrite(str.data(), 1, str.size(), file.get()) == str.size();
 }
 
-bool FileWriteHandle::addRAW(const uint8_t* ptr, size_t sz) {
-	fwrite(ptr, 1, sz, file.get());
-	return ferror(file.get()) == 0;
+bool FileWriteHandle::addRAW(std::span<const uint8_t> data) {
+	return fwrite(data.data(), 1, data.size(), file.get()) == data.size();
 }
 
 //=============================================================================
@@ -697,28 +681,28 @@ bool NodeFileWriteHandle::addU64(uint64_t u64) {
 	return error_code == FILE_NO_ERROR;
 }
 
-bool NodeFileWriteHandle::addString(const std::string& str) {
+bool NodeFileWriteHandle::addString(std::string_view str) {
 	if (str.size() > 0xFFFF) {
 		error_code = FILE_STRING_TOO_LONG;
 		return false;
 	}
 	addU16(uint16_t(str.size()));
-	addRAW((const uint8_t*)str.c_str(), str.size());
+	addRAW(str);
 	return error_code == FILE_NO_ERROR;
 }
 
-bool NodeFileWriteHandle::addLongString(const std::string& str) {
+bool NodeFileWriteHandle::addLongString(std::string_view str) {
 	addU32(uint32_t(str.size()));
-	addRAW((const uint8_t*)str.c_str(), str.size());
+	addRAW(str);
 	return error_code == FILE_NO_ERROR;
 }
 
-bool NodeFileWriteHandle::addRAW(std::string& str) {
-	writeBytes(reinterpret_cast<uint8_t*>(const_cast<char*>(str.data())), str.size());
+bool NodeFileWriteHandle::addRAW(std::string_view str) {
+	writeBytes(reinterpret_cast<const uint8_t*>(str.data()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 
-bool NodeFileWriteHandle::addRAW(const uint8_t* ptr, size_t sz) {
-	writeBytes(ptr, sz);
+bool NodeFileWriteHandle::addRAW(std::span<const uint8_t> data) {
+	writeBytes(data.data(), data.size());
 	return error_code == FILE_NO_ERROR;
 }
