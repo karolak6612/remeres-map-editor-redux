@@ -452,6 +452,12 @@ public:
 	ItemType& getItemType(int id);
 	ItemType& getItemIdByClientID(int spriteId);
 
+	void updateMaxItemId(uint16_t id) {
+		if (id > max_item_id) {
+			max_item_id = id;
+		}
+	}
+
 	bool loadFromOtb(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
 	bool loadFromGameXml(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
 	bool loadItemFromGameXml(pugi::xml_node itemNode, int id);
