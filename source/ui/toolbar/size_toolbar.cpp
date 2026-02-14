@@ -6,7 +6,7 @@
 #include "ui/toolbar/size_toolbar.h"
 #include "ui/gui.h"
 #include "ui/gui_ids.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "util/image_manager.h"
 #include <wx/artprov.h>
 

@@ -6,7 +6,7 @@
 #include "palette/house/house_palette.h"
 #include "palette/house/edit_house_dialog.h"
 
-#include "map/map.h"
+#include "core/map.h"
 #include "game/house.h"
 #include "game/town.h"
 #include "ui/gui.h"

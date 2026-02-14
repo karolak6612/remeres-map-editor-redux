@@ -9,7 +9,7 @@
 #include "brushes/wall/wall_border_calculator.h"
 
 #include "ui/gui.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "map/basemap.h"
 #include "map/tile_operations.h"
 

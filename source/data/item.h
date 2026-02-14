@@ -18,7 +18,7 @@
 #ifndef RME_ITEM_H_
 #define RME_ITEM_H_
 
-#include "game/items.h"
+#include "data/items.h"
 #include <string_view>
 #include "io/iomap_otbm.h"
 // #include "io/iomap_otmm.h"

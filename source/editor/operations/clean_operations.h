@@ -1,9 +1,9 @@
 #ifndef RME_EDITOR_OPERATIONS_CLEAN_OPERATIONS_H_
 #define RME_EDITOR_OPERATIONS_CLEAN_OPERATIONS_H_
 
-#include "map/map.h"
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/map.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "game/materials.h"
 #include "ui/gui.h"
 #include <algorithm>

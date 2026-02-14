@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "game/creature.h"
+#include "data/creature.h"
 
 Creature::Creature(CreatureType* ctype) :
 	direction(SOUTH), spawntime(0), saved(false), selected(false) {

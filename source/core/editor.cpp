@@ -17,10 +17,10 @@
 
 #include "app/main.h"
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "game/materials.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "game/complexitem.h"
 #include "app/settings.h"
 #include "ui/gui.h"

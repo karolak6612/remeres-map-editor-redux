@@ -19,9 +19,9 @@
 
 #include "editor/action_queue.h"
 #include "editor/action.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "app/settings.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "boost/range/adaptor/reversed.hpp"
 
 ActionQueue::ActionQueue(Editor& editor) :

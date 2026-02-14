@@ -1,7 +1,7 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/core/graphics.h"
 #include "game/sprites.h"
-#include "game/items.h"
+#include "data/items.h"
 
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>

@@ -17,7 +17,7 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/graphics.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 #include "game/sprites.h"
 #include "app/settings.h"

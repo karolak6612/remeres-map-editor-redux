@@ -9,7 +9,7 @@
 #include "app/settings.h"
 #include "ui/gui.h"
 
-#include "map/map.h"
+#include "core/map.h"
 #include "game/house.h"
 #include "game/town.h"
 

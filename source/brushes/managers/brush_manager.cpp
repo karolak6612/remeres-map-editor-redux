@@ -12,7 +12,7 @@
 #include "palette/managers/palette_manager.h"
 #include "palette/palette_window.h"
 #include "palette/house/house_palette.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "map/basemap.h"
 #include "ui/gui.h"
 #include "ui/main_toolbar.h"

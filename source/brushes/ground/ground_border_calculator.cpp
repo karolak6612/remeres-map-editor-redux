@@ -6,10 +6,10 @@
 #include "brushes/ground/ground_brush.h"
 #include "brushes/ground/auto_border.h"
 #include "map/basemap.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "map/tile_operations.h"
-#include "game/item.h"
-#include "game/items.h"
+#include "data/item.h"
+#include "data/items.h"
 #include <array>
 #include <algorithm>
 

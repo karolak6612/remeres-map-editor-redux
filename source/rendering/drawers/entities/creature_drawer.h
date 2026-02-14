@@ -7,7 +7,7 @@
 
 #include "app/definitions.h"
 #include "game/outfit.h"
-#include "game/creature.h"
+#include "data/creature.h"
 
 // Forward declarations
 

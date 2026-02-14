@@ -5,7 +5,7 @@
 #include "game/preview_preferences.h"
 #include "util/image_manager.h"
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"
 #include <wx/tglbtn.h>

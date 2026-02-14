@@ -1,7 +1,7 @@
 #include "ui/map/towns_window.h"
 
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 #include "game/town.h"
 #include "ui/positionctrl.h"
 #include "ui/gui.h"

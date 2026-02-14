@@ -11,7 +11,7 @@
 #include "ui/gui.h"
 #include "brushes/brush.h"
 #include "editor/copybuffer.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/map_tab.h"
 
 PreviewDrawer::PreviewDrawer() {

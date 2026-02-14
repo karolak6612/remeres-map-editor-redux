@@ -25,7 +25,7 @@
 #include "editor/hotkey_manager.h"
 #include "palette/palette_waypoints.h"
 #include "brushes/waypoint/waypoint_brush.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "util/image_manager.h"
 
 WaypointPalettePanel::WaypointPalettePanel(wxWindow* parent, wxWindowID id) :

@@ -16,11 +16,11 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/find_item_window.h"
 #include "ui/dialogs/find_dialog.h"
 #include "ui/controls/sortable_list_box.h"
 #include "ui/gui.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"

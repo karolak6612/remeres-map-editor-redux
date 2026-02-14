@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "brushes/doodad/doodad_brush_items.h"
-#include "game/item.h"
+#include "data/item.h"
 #include <random>
 
 //=============================================================================

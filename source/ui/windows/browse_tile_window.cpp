@@ -17,13 +17,13 @@
 
 #include "app/main.h"
 
-#include "map/map.h"
+#include "core/map.h"
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
-#include "ui/browse_tile_window.h"
+#include "ui/windows/browse_tile_window.h"
 #include "util/image_manager.h"
 
 // ============================================================================

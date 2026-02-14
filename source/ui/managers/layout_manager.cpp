@@ -19,7 +19,7 @@
 #include "ingame_preview/ingame_preview_manager.h"
 #include "ingame_preview/ingame_preview_window.h"
 #include "ui/managers/status_manager.h"
-#include "ui/tool_options_window.h"
+#include "ui/windows/tool_options_window.h"
 
 LayoutManager g_layout;
 

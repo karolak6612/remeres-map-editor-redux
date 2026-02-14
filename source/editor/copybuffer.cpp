@@ -18,10 +18,10 @@
 #include "app/main.h"
 
 #include "editor/copybuffer.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/operations/copy_operations.h"
 #include "ui/gui.h"
-#include "game/creature.h"
+#include "data/creature.h"
 
 CopyBuffer::CopyBuffer() :
 	tiles(std::make_unique<BaseMap>()) {

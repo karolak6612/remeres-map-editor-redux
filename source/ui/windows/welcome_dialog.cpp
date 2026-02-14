@@ -1,5 +1,5 @@
 #include "app/main.h"
-#include "ui/welcome_dialog.h"
+#include "ui/windows/welcome_dialog.h"
 #include "app/settings.h"
 #include "app/preferences.h"
 #include "ui/controls/modern_button.h"

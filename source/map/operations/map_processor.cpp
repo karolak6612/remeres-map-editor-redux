@@ -5,8 +5,8 @@
 #include "app/main.h"
 
 #include "map/operations/map_processor.h"
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 #include "map/tile_operations.h"
 #include "ui/gui.h"
 #include "brushes/ground/ground_brush.h"

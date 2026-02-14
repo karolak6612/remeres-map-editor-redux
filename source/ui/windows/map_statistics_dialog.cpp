@@ -4,11 +4,11 @@
 
 #include "app/main.h"
 
-#include "ui/map_statistics_dialog.h"
+#include "ui/windows/map_statistics_dialog.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "map/map_statistics.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "game/town.h"
 #include "game/house.h"
 #include "util/image_manager.h"

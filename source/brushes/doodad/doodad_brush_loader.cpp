@@ -7,9 +7,9 @@
 #include "brushes/doodad/doodad_brush_items.h"
 #include "brushes/doodad/doodad_brush.h" // For DoodadBrush definition if needed for pointer check?
 // actually we just pass DoodadBrush*
-#include "game/item.h" // For g_items
-#include "game/items.h"
-#include "map/tile.h"
+#include "data/item.h" // For g_items
+#include "data/items.h"
+#include "core/tile.h"
 
 #include "ext/pugixml.hpp"
 #include <boost/lexical_cast.hpp>

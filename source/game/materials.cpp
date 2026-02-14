@@ -19,8 +19,8 @@
 
 #include <wx/dir.h>
 
-#include "editor/editor.h"
-#include "game/items.h"
+#include "core/editor.h"
+#include "data/items.h"
 #include "game/creatures.h"
 
 #include "ui/gui.h"

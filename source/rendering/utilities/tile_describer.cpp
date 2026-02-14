@@ -1,11 +1,11 @@
 #include "rendering/utilities/tile_describer.h"
 #include "app/main.h"
 #include "app/definitions.h"
-#include "game/items.h"
-#include "map/tile.h"
+#include "data/items.h"
+#include "core/tile.h"
 #include "game/spawn.h"
-#include "game/creature.h"
-#include "game/item.h"
+#include "data/creature.h"
+#include "data/item.h"
 #include "util/common.h" // for wxstr
 
 wxString TileDescriber::GetDescription(Tile* tile, bool showSpawns, bool showCreatures) {

@@ -19,10 +19,10 @@
 
 #include "editor/selection.h"
 #include "editor/selection_thread.h"
-#include "map/tile.h"
-#include "game/creature.h"
-#include "game/item.h"
-#include "editor/editor.h"
+#include "core/tile.h"
+#include "data/creature.h"
+#include "data/item.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "ui/gui.h"
 

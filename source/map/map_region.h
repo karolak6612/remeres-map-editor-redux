@@ -19,7 +19,7 @@
 #define RME_MAP_REGION_H
 
 #include "map/position.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "map/spatial_hash_grid.h"
 #include <utility>
 #include <unordered_map>

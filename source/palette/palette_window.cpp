@@ -32,7 +32,7 @@
 // Removed includes for size/tool panels as they are no longer managed here
 
 #include "brushes/house/house_brush.h"
-#include "map/map.h"
+#include "core/map.h"
 
 // ============================================================================
 // Palette window

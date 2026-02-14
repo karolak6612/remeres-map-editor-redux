@@ -30,7 +30,7 @@ class DoorIndicatorDrawer;
 #include "rendering/core/light_buffer.h"
 #include "app/definitions.h"
 #include "game/outfit.h"
-#include "game/creature.h"
+#include "data/creature.h"
 
 #include "rendering/core/render_view.h"
 #include "rendering/core/sprite_batch.h"

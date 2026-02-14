@@ -19,7 +19,7 @@
 #define RME_CONTAINER_H_
 
 #include "map/position.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "game/outfit.h"
 
 #pragma pack(1)

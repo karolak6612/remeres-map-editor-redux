@@ -18,7 +18,7 @@
 #include "app/main.h"
 
 #include "game/waypoints.h"
-#include "map/map.h"
+#include "core/map.h"
 
 void Waypoints::addWaypoint(Waypoint* wp) {
 	removeWaypoint(wp->name);

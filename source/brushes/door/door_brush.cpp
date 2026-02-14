@@ -7,11 +7,11 @@
 
 #include "app/settings.h"
 #include "brushes/wall/wall_brush.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "game/house.h"
 #include "game/sprites.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 #include "map/tile_operations.h"
 #include "ui/gui.h"
 

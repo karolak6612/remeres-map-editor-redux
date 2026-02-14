@@ -1,8 +1,8 @@
 #include <iostream>
 #include "ingame_preview/floor_visibility_calculator.h"
 #include "map/basemap.h"
-#include "map/tile.h"
-#include "game/items.h"
+#include "core/tile.h"
+#include "data/items.h"
 #include <algorithm>
 
 namespace IngamePreview {

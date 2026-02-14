@@ -4,8 +4,8 @@
 
 #include "app/main.h"
 #include "map/tile_operations.h"
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "brushes/ground/ground_brush.h"
 #include "brushes/wall/wall_brush.h"
 #include "brushes/table/table_brush.h"

@@ -19,23 +19,23 @@
 
 #include <wx/grid.h>
 
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "game/house.h"
-#include "map/map.h"
-#include "editor/editor.h"
-#include "game/creature.h"
+#include "core/map.h"
+#include "core/editor.h"
+#include "data/creature.h"
 #include "game/materials.h"
 #include "map/tileset.h"
 
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "app/application.h"
-#include "ui/add_item_window.h"
+#include "ui/windows/add_item_window.h"
 #include "ui/properties/container_properties_window.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/find_item_window.h"
 #include "util/image_manager.h"
 
 // ============================================================================

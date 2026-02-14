@@ -1,11 +1,11 @@
 #include "app/main.h"
 #include "ui/map/import_map_window.h"
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/persistence/editor_persistence.h"
 #include "ui/dialog_util.h"
 #include "ui/gui_ids.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "util/image_manager.h"
 
 #include <wx/filedlg.h>

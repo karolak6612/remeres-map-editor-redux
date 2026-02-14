@@ -40,11 +40,11 @@
 
 #include "game/sprites.h"
 
-#include "game/item.h"
+#include "data/item.h"
 #include "game/complexitem.h"
 #include "game/creatures.h"
-#include "game/creature.h"
-#include "map/map.h"
+#include "data/creature.h"
+#include "core/map.h"
 
 #include "ui/gui.h"
 

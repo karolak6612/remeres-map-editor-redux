@@ -1,11 +1,11 @@
 #include "app/main.h"
 #include "map/map_search.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 #include "map/map_region.h" // For MapNode, Floor
 #include "map/spatial_hash_grid.h"
 #include "ui/gui.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/operations/search_operations.h"
 #include <algorithm>
 #include <thread>

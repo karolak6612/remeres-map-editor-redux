@@ -18,7 +18,7 @@
 #ifndef RME_MAP_ALLOCATOR_H
 #define RME_MAP_ALLOCATOR_H
 
-#include "map/tile.h"
+#include "core/tile.h"
 #include "map/map_region.h"
 
 class BaseMap;

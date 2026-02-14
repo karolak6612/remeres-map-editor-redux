@@ -18,8 +18,8 @@
 #include "app/main.h"
 
 #include "ui/gui.h"
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 #include "game/sprites.h"
 #include "ui/map_tab.h"
 #include "editor/editor_tabs.h"

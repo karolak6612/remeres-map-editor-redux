@@ -23,7 +23,7 @@
 #include "map/map_region.h"
 #include "map/basemap.h"
 #include "map/position.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "map/spatial_hash_grid.h"
 
 //**************** Tile Location **********************

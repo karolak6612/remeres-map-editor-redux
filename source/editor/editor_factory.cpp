@@ -1,7 +1,7 @@
 #include "app/main.h"
 #include "ui/dialog_util.h"
 #include "editor/editor_factory.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/persistence/editor_persistence.h"
 #include "app/managers/version_manager.h"
 #include "ui/gui.h"

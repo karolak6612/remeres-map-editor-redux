@@ -20,8 +20,8 @@
 #include "editor/action.h"
 #include "editor/dirty_list.h"
 #include "app/settings.h"
-#include "map/map.h"
-#include "editor/editor.h"
+#include "core/map.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 
 #include <ranges>

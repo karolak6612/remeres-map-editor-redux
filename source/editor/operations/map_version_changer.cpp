@@ -1,14 +1,14 @@
 #include "editor/operations/map_version_changer.h"
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "app/managers/version_manager.h"
 #include "app/application.h"
-#include "game/creature.h"
-#include "game/items.h"
-#include "map/tile.h"
+#include "data/creature.h"
+#include "data/items.h"
+#include "core/tile.h"
 
 #include <unordered_map>
 

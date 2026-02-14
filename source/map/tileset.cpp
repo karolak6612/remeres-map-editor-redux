@@ -22,7 +22,7 @@
 #include "map/tileset.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "brushes/raw/raw_brush.h"
 
 Tileset::Tileset(Brushes& brushes, const std::string& name) :

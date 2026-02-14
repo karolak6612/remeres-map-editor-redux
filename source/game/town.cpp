@@ -19,8 +19,8 @@
 
 #include "game/town.h"
 
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 
 Towns::Towns() {
 	////

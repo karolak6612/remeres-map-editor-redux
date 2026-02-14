@@ -6,8 +6,8 @@
 #include "brushes/carpet/carpet_border_calculator.h"
 #include "brushes/carpet/carpet_brush.h"
 #include "map/basemap.h"
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include <array>
 
 // Helper lambda as a static function

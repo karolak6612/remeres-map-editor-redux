@@ -28,8 +28,8 @@
 #include "ui/gui.h"
 #include <string.h> // memcpy
 
-#include "game/items.h"
-#include "game/item.h"
+#include "data/items.h"
+#include "data/item.h"
 
 ItemDatabase g_items;
 

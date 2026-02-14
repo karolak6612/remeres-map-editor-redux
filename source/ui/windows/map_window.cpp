@@ -17,10 +17,10 @@
 
 #include "app/main.h"
 
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "ui/gui.h"
 #include "game/sprites.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/replace_tool/replace_tool_window.h"
 
 void ReplaceToolWindowDeleter::operator()(ReplaceToolWindow* w) {

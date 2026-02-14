@@ -6,9 +6,9 @@
 #include <wx/wx.h>
 
 #include "ui/dialog_helper.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "ui/properties/creature_properties_window.h"

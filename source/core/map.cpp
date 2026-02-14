@@ -19,7 +19,7 @@
 
 #include "ui/gui.h" // loadbar
 
-#include "map/map.h"
+#include "core/map.h"
 
 #include <sstream>
 #include <algorithm>

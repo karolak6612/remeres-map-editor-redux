@@ -5,7 +5,7 @@
 #include "brushes/table/table_brush_loader.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/table/table_brush_items.h"
-#include "game/items.h"
+#include "data/items.h"
 #include <utility>
 #include <string_view>
 #include <algorithm>

@@ -1,7 +1,7 @@
 #include "rendering/drawers/minimap_renderer.h"
 #include "rendering/core/shared_geometry.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 #include "rendering/core/minimap_colors.h"
 #include <iostream>
 #include <algorithm>

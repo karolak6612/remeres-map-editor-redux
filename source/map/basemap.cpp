@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "map/tile.h"
+#include "core/tile.h"
 #include "map/basemap.h"
 #include "map/spatial_hash_grid.h"
 

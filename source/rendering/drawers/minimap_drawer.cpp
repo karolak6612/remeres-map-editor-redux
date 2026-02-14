@@ -2,9 +2,9 @@
 #include "rendering/drawers/minimap_drawer.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/ui/map_display.h"
-#include "editor/editor.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/editor.h"
+#include "core/map.h"
+#include "core/tile.h"
 #include "ui/gui.h"
 
 // Included for minimap_color

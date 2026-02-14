@@ -18,8 +18,8 @@
 #include "app/main.h"
 
 #include "editor/selection_thread.h"
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 #include "app/settings.h"
 #include "editor/action.h"
 

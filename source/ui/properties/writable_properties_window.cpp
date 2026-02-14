@@ -4,8 +4,8 @@
 
 #include "app/main.h"
 
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "ui/dialog_util.h"
 #include "ui/properties/property_validator.h"
 #include "ui/properties/writable_properties_window.h"

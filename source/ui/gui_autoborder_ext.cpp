@@ -2,8 +2,8 @@
 #include "ui/gui.h"
 #include "brushes/brush.h"
 #include "app/settings.h"
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 #include "map/position.h"
 #include "brushes/managers/autoborder_preview_manager.h"
 

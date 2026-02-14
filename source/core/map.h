@@ -19,7 +19,7 @@
 #define RME_MAP_H_
 
 #include "map/basemap.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "game/town.h"
 #include "game/house.h"
 #include "game/spawn.h"

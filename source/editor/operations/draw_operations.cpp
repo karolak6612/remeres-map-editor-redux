@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "editor/operations/draw_operations.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "ui/gui.h"
 #include "brushes/managers/doodad_preview_manager.h"
@@ -19,9 +19,9 @@
 #include "brushes/creature/creature_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "brushes/door/door_brush.h"
-#include "map/map.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/map.h"
+#include "core/tile.h"
 #include "map/tile_operations.h"
 #include "app/settings.h"
 

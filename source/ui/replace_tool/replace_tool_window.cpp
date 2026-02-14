@@ -2,14 +2,14 @@
 #include "replace_tool_window.h"
 #include "visual_similarity_service.h"
 #include "ui/theme.h"
-#include "editor/editor.h"
-#include "game/items.h"
+#include "core/editor.h"
+#include "data/items.h"
 #include "ui/gui.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "app/managers/version_manager.h"
 #include <algorithm> // For std::find
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "rendering/ui/map_display.h"
 #include <wx/statline.h>
 #include <wx/stattext.h>

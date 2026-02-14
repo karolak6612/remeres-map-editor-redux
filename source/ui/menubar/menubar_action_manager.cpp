@@ -3,7 +3,7 @@
 #include "app/main.h"
 #include "ui/main_menubar.h"
 #include "ui/gui.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "app/preferences.h"
 #include "ui/managers/recent_files_manager.h"

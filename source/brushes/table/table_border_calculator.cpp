@@ -6,7 +6,7 @@
 #include "brushes/table/table_brush.h"
 #include "brushes/table/table_brush_items.h"
 #include "map/basemap.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "app/main.h"
 #include <array>
 

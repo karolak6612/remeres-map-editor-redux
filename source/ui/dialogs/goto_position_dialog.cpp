@@ -4,8 +4,8 @@
 
 #include "app/main.h"
 #include "ui/dialogs/goto_position_dialog.h"
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 #include "ui/positionctrl.h"
 #include "ui/gui.h"
 #include "util/image_manager.h"

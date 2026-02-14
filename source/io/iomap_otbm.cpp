@@ -32,11 +32,11 @@
 #include "ui/dialog_util.h" // Loadbar
 
 #include "game/creatures.h"
-#include "game/creature.h"
-#include "map/map.h"
+#include "data/creature.h"
+#include "core/map.h"
 #include "map/map_region.h"
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "brushes/wall/wall_brush.h"

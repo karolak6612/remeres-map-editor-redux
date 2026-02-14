@@ -19,7 +19,7 @@
 #define RME_TILE_H
 
 #include "map/position.h"
-#include "game/item.h"
+#include "data/item.h"
 
 class TileLocation;
 class GroundBrush;

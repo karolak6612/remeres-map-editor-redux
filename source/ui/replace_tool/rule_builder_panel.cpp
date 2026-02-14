@@ -1,6 +1,6 @@
 #include "ui/replace_tool/rule_builder_panel.h"
 #include "ui/theme.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "ui/gui.h"
 
 #include "app/managers/version_manager.h"

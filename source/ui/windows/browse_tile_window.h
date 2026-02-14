@@ -19,8 +19,8 @@
 #define RME_BROWSE_TILE_WINDOW_H_
 
 #include "app/main.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 
 class BrowseTileListBox;
 

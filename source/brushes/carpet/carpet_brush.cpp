@@ -23,7 +23,7 @@
 #include "brushes/ground/auto_border.h"
 #include "brushes/brush_utility.h"
 #include "map/basemap.h"
-#include "game/items.h"
+#include "data/items.h"
 
 //=============================================================================
 // Carpet brush

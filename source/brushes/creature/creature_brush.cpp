@@ -20,11 +20,11 @@
 #include "brushes/creature/creature_brush.h"
 #include "ui/gui.h"
 #include "app/settings.h"
-#include "map/tile.h"
-#include "game/creature.h"
+#include "core/tile.h"
+#include "data/creature.h"
 #include "map/basemap.h"
 #include "game/spawn.h"
-#include "game/items.h"
+#include "data/items.h"
 
 //=============================================================================
 // Creature brush

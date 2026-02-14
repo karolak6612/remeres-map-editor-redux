@@ -22,7 +22,7 @@
 #include <format>
 #include "rendering/core/coordinate_mapper.h"
 #include <wx/wx.h>
-#include "game/items.h"
+#include "data/items.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
 

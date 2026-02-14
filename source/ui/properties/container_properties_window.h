@@ -7,7 +7,7 @@
 
 #include "app/main.h"
 #include "ui/dcbutton.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "ui/properties/object_properties_base.h"
 
 class ContainerItemButton : public DCButton {

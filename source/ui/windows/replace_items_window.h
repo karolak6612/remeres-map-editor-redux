@@ -20,7 +20,7 @@
 
 #include "app/main.h"
 #include "ui/controls/item_buttons.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 
 struct ReplacingItem {
 	ReplacingItem() :

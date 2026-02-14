@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 #include "game/sprites.h"
 

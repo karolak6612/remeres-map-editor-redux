@@ -19,8 +19,8 @@
 
 #include "game/complexitem.h" // Door
 #include "game/house.h"
-#include "map/tile.h"
-#include "map/map.h"
+#include "core/tile.h"
+#include "core/map.h"
 
 Houses::Houses(Map& map) :
 	map(map),

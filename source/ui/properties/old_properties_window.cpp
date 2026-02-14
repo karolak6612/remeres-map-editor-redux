@@ -4,14 +4,14 @@
 
 #include "app/main.h"
 
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "game/house.h"
-#include "map/map.h"
-#include "editor/editor.h"
-#include "game/creature.h"
+#include "core/map.h"
+#include "core/editor.h"
+#include "data/creature.h"
 
 #include "ui/gui.h"
 #include "ui/dialog_util.h"

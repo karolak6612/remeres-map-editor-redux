@@ -1,7 +1,7 @@
 #include "ingame_preview/ingame_preview_canvas.h"
 #include "ingame_preview/ingame_preview_renderer.h"
 #include "ingame_preview/ingame_preview_window.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/map_display.h"

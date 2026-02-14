@@ -6,11 +6,11 @@
 #include "ui/properties/property_validator.h"
 #include "ui/dialog_util.h"
 #include "game/house.h"
-#include "map/map.h"
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/map.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include "game/complexitem.h"
-#include "game/creature.h"
+#include "data/creature.h"
 
 static constexpr int OUTFIT_COLOR_MAX = 133;
 

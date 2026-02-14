@@ -10,8 +10,8 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/outfit.h"
 #include "map/basemap.h"
-#include "map/tile.h"
-#include "game/creature.h"
+#include "core/tile.h"
+#include "data/creature.h"
 #include "ui/gui.h"
 #include "rendering/core/text_renderer.h"
 #include <glad/glad.h>

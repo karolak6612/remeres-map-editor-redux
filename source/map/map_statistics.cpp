@@ -1,8 +1,8 @@
 #include "app/main.h"
 #include "map/map_statistics.h"
-#include "map/map.h"
-#include "map/tile.h"
-#include "game/items.h"
+#include "core/map.h"
+#include "core/tile.h"
+#include "data/items.h"
 #include "ui/gui.h"
 #include <sstream>
 #include <unordered_map>

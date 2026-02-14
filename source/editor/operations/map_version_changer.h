@@ -1,7 +1,7 @@
 #ifndef RME_EDITOR_OPERATIONS_MAP_VERSION_CHANGER_H
 #define RME_EDITOR_OPERATIONS_MAP_VERSION_CHANGER_H
 
-#include "map/map.h"
+#include "core/map.h"
 #include <wx/window.h>
 
 class Editor;

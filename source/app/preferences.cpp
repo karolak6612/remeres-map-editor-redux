@@ -22,7 +22,7 @@
 #include "app/settings.h"
 
 #include "app/client_version.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 #include "ui/gui.h"

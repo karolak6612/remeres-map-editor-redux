@@ -20,10 +20,10 @@
 #include "brushes/brush.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "game/complexitem.h"
 #include "io/iomap.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "brushes/managers/brush_manager.h"
 #include <unordered_map>
 

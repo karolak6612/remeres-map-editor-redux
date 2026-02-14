@@ -2,7 +2,7 @@
 #include "ui/replace_tool/rule_card_renderer.h"
 #include "util/nanovg_canvas.h"
 #include "ui/replace_tool/rule_manager.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "util/nvg_utils.h"
 #include <string>
 #include <algorithm>

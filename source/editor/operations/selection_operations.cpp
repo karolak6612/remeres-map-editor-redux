@@ -5,11 +5,11 @@
 #include "app/main.h"
 
 #include "editor/operations/selection_operations.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action.h"
 #include "editor/action_queue.h"
 #include "editor/selection.h"
-#include "map/map.h"
+#include "core/map.h"
 #include "map/tile_operations.h"
 #include "brushes/ground/ground_brush.h"
 #include "app/settings.h"

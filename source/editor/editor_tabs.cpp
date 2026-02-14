@@ -18,7 +18,7 @@
 #include "app/main.h"
 
 #include "editor/editor_tabs.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "live/live_tab.h"
 
 EditorTab::EditorTab() {

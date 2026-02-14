@@ -3,7 +3,7 @@
 
 #include "app/main.h"
 #include "map/position.h"
-#include "game/creature.h"
+#include "data/creature.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include <memory>

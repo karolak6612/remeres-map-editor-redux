@@ -19,8 +19,8 @@
 
 #include "brushes/brush.h"
 
-#include "map/tile.h"
-#include "game/creature.h"
+#include "core/tile.h"
+#include "data/creature.h"
 #include "game/house.h"
 #include "map/basemap.h"
 #include "map/map_region.h"
@@ -30,7 +30,7 @@
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/table/table_brush.h"
 #include "game/town.h"
-#include "map/map.h"
+#include "core/map.h"
 
 #include <ranges>
 #include <algorithm>

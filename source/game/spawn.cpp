@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "map/tile.h"
+#include "core/tile.h"
 #include "game/spawn.h"
 
 Spawns::Spawns() {

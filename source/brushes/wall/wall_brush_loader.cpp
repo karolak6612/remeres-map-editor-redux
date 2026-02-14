@@ -7,7 +7,7 @@
 #include "app/main.h" // Global brushes
 #include "brushes/wall/wall_brush.h"
 #include "brushes/wall/wall_brush_items.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "util/common.h"
 
 #include "wx/arrstr.h"

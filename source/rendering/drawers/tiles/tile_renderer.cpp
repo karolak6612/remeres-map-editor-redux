@@ -4,10 +4,10 @@
 #include "rendering/core/primitive_renderer.h"
 #include "ui/gui.h"
 
-#include "editor/editor.h"
-#include "map/tile.h"
-#include "game/item.h"
-#include "game/items.h"
+#include "core/editor.h"
+#include "core/tile.h"
+#include "data/item.h"
+#include "data/items.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "game/complexitem.h"
 

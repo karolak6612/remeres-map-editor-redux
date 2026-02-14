@@ -22,7 +22,7 @@
 #include "live/live_client.h"
 #include "live/live_tab.h"
 #include "live/live_action.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "editor/dirty_list.h"
 #include "editor/editor_factory.h"

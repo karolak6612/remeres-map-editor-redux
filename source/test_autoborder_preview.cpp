@@ -7,7 +7,7 @@
 #include <cassert>
 #include <memory>
 #include "map/basemap.h"
-#include "map/tile.h"
+#include "core/tile.h"
 #include "map/map_region.h"
 #include "map/position.h"
 

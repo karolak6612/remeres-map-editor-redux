@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "ui/properties/property_applier.h"
-#include "game/item.h"
+#include "data/item.h"
 #include "game/complexitem.h"
 
 void PropertyApplier::applyItemProperties(Item* item, int count, int uid, int aid, int tier) {

@@ -18,7 +18,7 @@
 #include "app/main.h"
 #include "ui/main_toolbar.h"
 #include "ui/gui.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "editor/action_queue.h"
 #include "app/settings.h"
 #include "brushes/brush.h"

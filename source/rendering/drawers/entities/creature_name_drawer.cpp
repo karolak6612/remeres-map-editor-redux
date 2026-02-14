@@ -8,7 +8,7 @@
 #include "rendering/core/text_renderer.h"
 #include <nanovg.h>
 #include "rendering/core/coordinate_mapper.h"
-#include "game/creature.h"
+#include "data/creature.h"
 
 CreatureNameDrawer::CreatureNameDrawer() {
 }

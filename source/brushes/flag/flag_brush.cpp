@@ -5,8 +5,8 @@
 #include "app/main.h"
 #include "brushes/flag/flag_brush.h"
 
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 #include "game/sprites.h"
 
 #include <array>
