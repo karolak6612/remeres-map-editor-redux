@@ -4,6 +4,7 @@
 
 #include "app/main.h"
 #include "ui/managers/loading_manager.h"
+#include "ui/dialogs/nanovg_loading_dialog.h" // Include new dialog
 
 #include "ui/gui.h"
 #include "editor/editor.h"
@@ -30,8 +31,9 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 	progressTo = 100;
 	currentProgress = -1;
 
-	progressBar = newd wxGenericProgressDialog("Loading", progressText + " (0%)", 100, g_gui.root, wxPD_APP_MODAL | wxPD_SMOOTH | (canCancel ? wxPD_CAN_ABORT : 0));
-	progressBar->Show(true);
+	// Use NanoVGLoadingDialog instead of wxGenericProgressDialog
+	progressBar = newd NanoVGLoadingDialog(g_gui.root, "Loading", progressText);
+	progressBar->Show();
 
 	if (g_gui.tabbook) {
 		for (int idx = 0; idx < g_gui.tabbook->GetTabCount(); ++idx) {
@@ -41,7 +43,7 @@ void LoadingManager::CreateLoadBar(wxString message, bool canCancel) {
 			}
 		}
 	}
-	progressBar->Update(0);
+	progressBar->Update(0, progressText);
 }
 
 void LoadingManager::SetLoadScale(int32_t from, int32_t to) {
@@ -64,13 +66,12 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 	int32_t newProgress = progressFrom + static_cast<int32_t>((done / 100.f) * (progressTo - progressFrom));
 	newProgress = std::max<int32_t>(0, std::min<int32_t>(100, newProgress));
 
-	bool skip = false;
+	bool continueLoading = true;
 	if (progressBar) {
-		progressBar->Update(
-			newProgress,
-			wxString::Format("%s (%d%%)", progressText, newProgress),
-			&skip
-		);
+		// Update NanoVG dialog
+		// Pass progressText only if it changed?
+		// Update(value, msg) uses msg if not empty.
+		continueLoading = progressBar->Update(newProgress, progressText);
 		currentProgress = newProgress;
 	}
 
@@ -86,7 +87,7 @@ bool LoadingManager::SetLoadDone(int32_t done, const wxString& newMessage) {
 		}
 	}
 
-	return skip;
+	return continueLoading;
 }
 
 void LoadingManager::DestroyLoadBar() {
