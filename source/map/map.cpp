@@ -421,6 +421,11 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
 			while (found != tile_loc->getSpawnCount()) {
+				if ((end_x - start_x) > std::max(width, height)) {
+					spdlog::warn("Map::getSpawnList: Infinite loop detected! Spawn count mismatch at {} {} {}", where->getX(), where->getY(), where->getZ());
+					break;
+				}
+
 				for (int x = start_x; x <= end_x; ++x) {
 					Tile* tile = getTile(x, start_y, z);
 					if (tile && tile->spawn) {

@@ -22,9 +22,7 @@ void ModernButton::SetBitmap(const wxBitmap& bitmap) {
 }
 
 wxSize ModernButton::DoGetBestClientSize() const {
-	wxClientDC dc(const_cast<ModernButton*>(this));
-	dc.SetFont(GetFont());
-	wxSize text = dc.GetTextExtent(GetLabel());
+	wxSize text = GetTextExtent(GetLabel());
 
 	int width = text.x + FromDIP(40);
 	if (m_icon.IsOk()) {
