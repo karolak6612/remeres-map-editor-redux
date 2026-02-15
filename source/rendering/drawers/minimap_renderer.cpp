@@ -83,15 +83,15 @@ bool MinimapRenderer::initialize() {
 
 	// Create VAO/VBO for fullscreen quad
 	vao_ = std::make_unique<GLVertexArray>();
-	instance_vbo_ = std::make_unique<GLBuffer>();
+	instance_vbo_ = std::make_unique<RingBuffer>();
 
-	// Pre-allocate instance buffer
-	instance_vbo_capacity_ = 1024;
-	glNamedBufferStorage(instance_vbo_->GetID(), instance_vbo_capacity_ * sizeof(InstanceData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	// Pre-allocate instance buffer (16384 instances capacity)
+	// This covers up to ~8K screen resolution with 32x32 tiles
+	instance_vbo_->initialize(sizeof(InstanceData), 16384);
 
 	// Setup VAO (DSA)
 	GLuint vao = vao_->GetID();
-	GLuint inst_vbo = instance_vbo_->GetID();
+	GLuint inst_vbo = instance_vbo_->getBufferId();
 
 	// Binding 0: Quad Data from SharedGeometry
 	glVertexArrayVertexBuffer(vao, 0, SharedGeometry::Instance().getQuadVBO(), 0, 4 * sizeof(float));
@@ -310,37 +310,40 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 		return;
 	}
 
-	// Resize buffer if needed
-	// Resize buffer if needed
-	if (instance_data_.size() > instance_vbo_capacity_) {
-		instance_vbo_capacity_ = instance_data_.size() * 2; // Grow strategy
-		instance_vbo_ = std::make_unique<GLBuffer>();
-		glNamedBufferStorage(instance_vbo_->GetID(), instance_vbo_capacity_ * sizeof(InstanceData), nullptr, GL_DYNAMIC_STORAGE_BIT);
-
-		// Update VAO binding
-		glVertexArrayVertexBuffer(vao_->GetID(), 1, instance_vbo_->GetID(), 0, sizeof(InstanceData));
+	if (instance_data_.size() > instance_vbo_->getMaxElements()) {
+		spdlog::warn("MinimapRenderer: Too many instances ({}), clamping to {}", instance_data_.size(), instance_vbo_->getMaxElements());
+		instance_data_.resize(instance_vbo_->getMaxElements());
 	}
 
 	// Upload data
-	glNamedBufferSubData(instance_vbo_->GetID(), 0, instance_data_.size() * sizeof(InstanceData), instance_data_.data());
+	void* ptr = instance_vbo_->waitAndMap(instance_data_.size());
+	if (ptr) {
+		memcpy(ptr, instance_data_.data(), instance_data_.size() * sizeof(InstanceData));
+		instance_vbo_->finishWrite();
 
-	// Render
-	{
-		ScopedGLCapability blendCap(GL_BLEND);
-		ScopedGLBlend blendState(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		// Update VAO binding offset to point to current RingBuffer section
+		glVertexArrayVertexBuffer(vao_->GetID(), 1, instance_vbo_->getBufferId(), instance_vbo_->getCurrentSectionOffset(), sizeof(InstanceData));
 
-		shader_->Use();
-		shader_->SetMat4("uProjection", projection);
+		// Render
+		{
+			ScopedGLCapability blendCap(GL_BLEND);
+			ScopedGLBlend blendState(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Bind textures
-		glBindTextureUnit(0, texture_id_->GetID());
-		shader_->SetInt("uMinimapTexture", 0);
+			shader_->Use();
+			shader_->SetMat4("uProjection", projection);
 
-		glBindTextureUnit(1, palette_texture_id_->GetID());
-		shader_->SetInt("uPaletteTexture", 1);
+			// Bind textures
+			glBindTextureUnit(0, texture_id_->GetID());
+			shader_->SetInt("uMinimapTexture", 0);
 
-		glBindVertexArray(vao_->GetID());
-		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instance_data_.size()));
-		glBindVertexArray(0);
+			glBindTextureUnit(1, palette_texture_id_->GetID());
+			shader_->SetInt("uPaletteTexture", 1);
+
+			glBindVertexArray(vao_->GetID());
+			glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instance_data_.size()));
+			glBindVertexArray(0);
+		}
+
+		instance_vbo_->signalFinished();
 	}
 }

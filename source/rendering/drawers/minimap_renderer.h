@@ -5,6 +5,7 @@
 #include "rendering/core/pixel_buffer_object.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/ring_buffer.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -75,9 +76,8 @@ private:
 	std::unique_ptr<GLTextureResource> palette_texture_id_;
 	std::unique_ptr<GLVertexArray> vao_;
 
-	std::unique_ptr<GLBuffer> instance_vbo_;
+	std::unique_ptr<RingBuffer> instance_vbo_;
 	std::vector<InstanceData> instance_data_;
-	size_t instance_vbo_capacity_ = 0;
 
 	int width_ = 0;
 	int height_ = 0;

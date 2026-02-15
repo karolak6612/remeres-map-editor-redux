@@ -133,7 +133,18 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	sprite_count_ = 0;
 	global_tint_ = glm::vec4(1.0f);
 
-	glEnable(GL_BLEND);
+	// Save State
+	prev_blend_enabled_ = glIsEnabled(GL_BLEND);
+	glGetIntegerv(GL_BLEND_SRC_RGB, &prev_src_rgb_);
+	glGetIntegerv(GL_BLEND_DST_RGB, &prev_dst_rgb_);
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &prev_src_alpha_);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &prev_dst_alpha_);
+	glGetIntegerv(GL_BLEND_EQUATION_RGB, &prev_eq_rgb_);
+	glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &prev_eq_alpha_);
+
+	if (!prev_blend_enabled_) {
+		glEnable(GL_BLEND);
+	}
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	shader_->Use();
@@ -340,5 +351,11 @@ void SpriteBatch::end(const AtlasManager& atlas_manager) {
 
 	in_batch_ = false;
 	glBindVertexArray(0);
-	glDisable(GL_BLEND);
+
+	// Restore State
+	if (!prev_blend_enabled_) {
+		glDisable(GL_BLEND);
+	}
+	glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
+	glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
 }

@@ -117,6 +117,15 @@ private:
 
 	int draw_call_count_ = 0;
 	int sprite_count_ = 0;
+
+	// State management
+	GLboolean prev_blend_enabled_ = GL_FALSE;
+	GLint prev_src_rgb_ = GL_ONE;
+	GLint prev_dst_rgb_ = GL_ZERO;
+	GLint prev_src_alpha_ = GL_ONE;
+	GLint prev_dst_alpha_ = GL_ZERO;
+	GLint prev_eq_rgb_ = GL_FUNC_ADD;
+	GLint prev_eq_alpha_ = GL_FUNC_ADD;
 };
 
 #endif

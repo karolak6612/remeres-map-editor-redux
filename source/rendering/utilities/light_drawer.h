@@ -28,6 +28,7 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/ring_buffer.h"
 
 struct DrawingOptions;
 struct RenderView;
@@ -52,11 +53,11 @@ private:
 	// Open GL Texture used for lightmap
 	// It is owned by this class and should be released when context is destroyed
 
-	std::unique_ptr<ShaderProgram> shader;
+	std::unique_ptr<ShaderProgram> generation_shader;
+	std::unique_ptr<ShaderProgram> composite_shader;
 	std::unique_ptr<GLVertexArray> vao;
 	std::unique_ptr<GLBuffer> vbo;
-	std::unique_ptr<GLBuffer> light_ssbo;
-	size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
+	std::unique_ptr<RingBuffer> light_ssbo;
 
 	std::vector<GPULight> gpu_lights_;
 
