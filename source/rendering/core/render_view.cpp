@@ -13,7 +13,7 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	viewport_y = 0;
 
 	zoom = (float)canvas->GetZoom();
-	tile_size = std::max(1, (int)(TileSize / zoom)); // after zoom
+	tile_size = std::max(1, static_cast<int>(TileSize / zoom)); // after zoom
 	floor = canvas->GetFloor();
 	camera_pos.z = floor;
 

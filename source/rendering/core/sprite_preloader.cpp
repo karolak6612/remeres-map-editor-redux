@@ -64,7 +64,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 			for (int cf = 0; cf < spr->layers; ++cf) {
 				int idx = spr->getIndex(cx, cy, cf, pattern_x, pattern_y, pattern_z, frame);
 
-				if (idx >= (int)spr->numsprites) {
+				if (idx >= static_cast<int>(spr->numsprites)) {
 					if (spr->numsprites == 1) {
 						idx = 0;
 					} else {
@@ -72,7 +72,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 					}
 				}
 
-				if (idx < 0 || (size_t)idx >= spr->spriteList.size()) {
+				if (idx < 0 || static_cast<size_t>(idx) >= spr->spriteList.size()) {
 					continue;
 				}
 
