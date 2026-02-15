@@ -30,12 +30,6 @@ public:
 	HouseExitBrush();
 	~HouseExitBrush() override;
 
-	bool isHouseExit() const override {
-		return true;
-	}
-	HouseExitBrush* asHouseExit() override {
-		return static_cast<HouseExitBrush*>(this);
-	}
 
 	// Not used
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override {

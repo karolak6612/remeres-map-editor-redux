@@ -32,12 +32,6 @@ public:
 	TableBrush();
 	~TableBrush() override;
 
-	bool isTable() const override {
-		return true;
-	}
-	TableBrush* asTable() override {
-		return static_cast<TableBrush*>(this);
-	}
 
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 

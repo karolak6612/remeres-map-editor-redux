@@ -18,12 +18,6 @@ public:
 	WallBrush();
 	~WallBrush() override;
 
-	bool isWall() const override {
-		return true;
-	}
-	WallBrush* asWall() override {
-		return static_cast<WallBrush*>(this);
-	}
 
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 
@@ -73,12 +67,6 @@ public:
 	WallDecorationBrush();
 	~WallDecorationBrush() override;
 
-	bool isWallDecoration() const override {
-		return true;
-	}
-	WallDecorationBrush* asWallDecoration() override {
-		return static_cast<WallDecorationBrush*>(this);
-	}
 
 	// We use the exact same loading algorithm as normal walls
 

@@ -144,108 +144,18 @@ public:
 		return 0;
 	}
 
-	virtual bool isRaw() const {
-		return false;
+	template <typename T>
+	T* as() {
+		return dynamic_cast<T*>(this);
 	}
-	virtual bool isDoodad() const {
-		return false;
-	}
-	virtual bool isTerrain() const {
-		return false;
-	}
-	virtual bool isGround() const {
-		return false;
-	}
-	virtual bool isWall() const {
-		return false;
-	}
-	virtual bool isWallDecoration() const {
-		return false;
-	}
-	virtual bool isTable() const {
-		return false;
-	}
-	virtual bool isCarpet() const {
-		return false;
-	}
-	virtual bool isDoor() const {
-		return false;
-	}
-	virtual bool isOptionalBorder() const {
-		return false;
-	}
-	virtual bool isCreature() const {
-		return false;
-	}
-	virtual bool isSpawn() const {
-		return false;
-	}
-	virtual bool isHouse() const {
-		return false;
-	}
-	virtual bool isHouseExit() const {
-		return false;
-	}
-	virtual bool isWaypoint() const {
-		return false;
-	}
-	virtual bool isFlag() const {
-		return false;
-	}
-	virtual bool isEraser() const {
-		return false;
+	template <typename T>
+	const T* as() const {
+		return dynamic_cast<const T*>(this);
 	}
 
-	virtual RAWBrush* asRaw() {
-		return nullptr;
-	}
-	virtual DoodadBrush* asDoodad() {
-		return nullptr;
-	}
-	virtual TerrainBrush* asTerrain() {
-		return nullptr;
-	}
-	virtual GroundBrush* asGround() {
-		return nullptr;
-	}
-	virtual WallBrush* asWall() {
-		return nullptr;
-	}
-	virtual WallDecorationBrush* asWallDecoration() {
-		return nullptr;
-	}
-	virtual TableBrush* asTable() {
-		return nullptr;
-	}
-	virtual CarpetBrush* asCarpet() {
-		return nullptr;
-	}
-	virtual DoorBrush* asDoor() {
-		return nullptr;
-	}
-	virtual OptionalBorderBrush* asOptionalBorder() {
-		return nullptr;
-	}
-	virtual CreatureBrush* asCreature() {
-		return nullptr;
-	}
-	virtual SpawnBrush* asSpawn() {
-		return nullptr;
-	}
-	virtual HouseBrush* asHouse() {
-		return nullptr;
-	}
-	virtual HouseExitBrush* asHouseExit() {
-		return nullptr;
-	}
-	virtual WaypointBrush* asWaypoint() {
-		return nullptr;
-	}
-	virtual FlagBrush* asFlag() {
-		return nullptr;
-	}
-	virtual EraserBrush* asEraser() {
-		return nullptr;
+	template <typename T>
+	bool is() const {
+		return dynamic_cast<const T*>(this) != nullptr;
 	}
 
 	bool visibleInPalette() const {
@@ -278,13 +188,6 @@ class TerrainBrush : public Brush {
 public:
 	TerrainBrush();
 	~TerrainBrush() override;
-
-	bool isTerrain() const override {
-		return true;
-	}
-	TerrainBrush* asTerrain() override {
-		return static_cast<TerrainBrush*>(this);
-	}
 
 	bool canDraw(BaseMap* map, const Position& position) const override {
 		return true;
@@ -327,13 +230,6 @@ class EraserBrush : public Brush {
 public:
 	EraserBrush();
 	~EraserBrush() override;
-
-	bool isEraser() const override {
-		return true;
-	}
-	EraserBrush* asEraser() override {
-		return static_cast<EraserBrush*>(this);
-	}
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;

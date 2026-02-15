@@ -197,7 +197,7 @@ void FindBrushDialog::OnClickOKInternal() {
 					}
 
 					// Don't match RAWs now.
-					if (brush->isRaw()) {
+					if (brush->is<RAWBrush>()) {
 						continue;
 					}
 
@@ -260,7 +260,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 				continue;
 			}
 
-			if (brush->isRaw()) {
+			if (brush->is<RAWBrush>()) {
 				continue;
 			}
 

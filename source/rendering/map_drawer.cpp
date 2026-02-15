@@ -130,10 +130,10 @@ void MapDrawer::SetupVars() {
 	options.current_house_id = 0;
 	Brush* brush = g_gui.GetCurrentBrush();
 	if (brush) {
-		if (brush->isHouse()) {
-			options.current_house_id = brush->asHouse()->getHouseID();
-		} else if (brush->isHouseExit()) {
-			options.current_house_id = brush->asHouseExit()->getHouseID();
+		if (brush->is<HouseBrush>()) {
+			options.current_house_id = brush->as<HouseBrush>()->getHouseID();
+		} else if (brush->is<HouseExitBrush>()) {
+			options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
 		}
 	}
 

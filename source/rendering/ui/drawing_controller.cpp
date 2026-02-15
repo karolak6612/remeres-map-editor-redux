@@ -51,7 +51,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 			} else {
 				drawing = g_gui.GetCurrentBrush()->canSmear();
 			}
-			if (brush->isWall()) {
+			if (brush->is<WallBrush>()) {
 				if (alt_down && g_gui.GetBrushSize() == 0) {
 					// z0mg, just clicked a tile, shift variaton.
 					if (ctrl_down) {
@@ -85,7 +85,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 						editor.draw(tilestodraw, tilestoborder, alt_down);
 					}
 				}
-			} else if (brush->isDoor()) {
+			} else if (brush->is<DoorBrush>()) {
 				PositionVector tilestodraw;
 				PositionVector tilestoborder;
 
@@ -101,9 +101,9 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 				} else {
 					editor.draw(tilestodraw, tilestoborder, alt_down);
 				}
-			} else if (brush->isDoodad() || brush->isSpawn() || brush->isCreature()) {
+			} else if (brush->is<DoodadBrush>() || brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
 				if (ctrl_down) {
-					if (brush->isDoodad()) {
+					if (brush->is<DoodadBrush>()) {
 						PositionVector tilestodraw;
 						BrushUtility::GetTilesToDraw(mouse_map_pos.x, mouse_map_pos.y, mouse_map_pos.z, &tilestodraw, nullptr);
 						editor.undraw(tilestodraw, alt_down);
@@ -112,7 +112,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					}
 				} else {
 					bool will_show_spawn = false;
-					if (brush->isSpawn() || brush->isCreature()) {
+					if (brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
 						if (!g_settings.getBoolean(Config::SHOW_SPAWNS)) {
 							Tile* tile = editor.map.getTile(mouse_map_pos);
 							if (!tile || !tile->spawn) {
@@ -132,7 +132,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					}
 				}
 			} else {
-				if (brush->isGround() && alt_down) {
+				if (brush->is<GroundBrush>() && alt_down) {
 					replace_dragging = true;
 					Tile* draw_tile = editor.map.getTile(mouse_map_pos);
 					if (draw_tile) {
@@ -147,7 +147,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					PositionVector tilestodraw;
 					PositionVector tilestoborder;
 
-					bool fill = canvas->keyCode == WXK_CONTROL_D && ctrl_down && brush->isGround();
+					bool fill = canvas->keyCode == WXK_CONTROL_D && ctrl_down && brush->is<GroundBrush>();
 					BrushUtility::GetTilesToDraw(mouse_map_pos.x, mouse_map_pos.y, mouse_map_pos.z, &tilestodraw, &tilestoborder, fill);
 
 					if (!fill && ctrl_down) {
@@ -156,7 +156,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 						editor.draw(tilestodraw, tilestoborder, alt_down);
 					}
 				} else if (brush->oneSizeFitsAll()) {
-					if (brush->isHouseExit() || brush->isWaypoint()) {
+					if (brush->is<HouseExitBrush>() || brush->is<WaypointBrush>()) {
 						editor.draw(mouse_map_pos, alt_down);
 					} else {
 						PositionVector tilestodraw;
@@ -193,7 +193,7 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
 
 	Brush* brush = g_gui.GetCurrentBrush();
 	if (drawing && brush) {
-		if (brush->isDoodad()) {
+		if (brush->is<DoodadBrush>()) {
 			if (ctrl_down) {
 				PositionVector tilestodraw;
 				BrushUtility::GetTilesToDraw(mouse_map_pos.x, mouse_map_pos.y, mouse_map_pos.z, &tilestodraw, nullptr);
@@ -201,7 +201,7 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
 			} else {
 				editor.draw(mouse_map_pos, shift_down || alt_down);
 			}
-		} else if (brush->isDoor()) {
+		} else if (brush->is<DoorBrush>()) {
 			if (!brush->canDraw(&editor.map, mouse_map_pos)) {
 				// We don't have to waste an action in this case...
 			} else {
@@ -280,7 +280,7 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 	if (dragging_draw) {
 		Brush* brush = g_gui.GetCurrentBrush();
 		if (brush) {
-			if (brush->isSpawn()) {
+			if (brush->is<SpawnBrush>()) {
 				int start_map_x = std::min(canvas->last_click_map_x, mouse_map_pos.x);
 				int start_map_y = std::min(canvas->last_click_map_y, mouse_map_pos.y);
 				int end_map_x = std::max(canvas->last_click_map_x, mouse_map_pos.x);
@@ -297,7 +297,7 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 			} else {
 				PositionVector tilestodraw;
 				PositionVector tilestoborder;
-				if (brush->isWall()) {
+				if (brush->is<WallBrush>()) {
 					int start_map_x = std::min(canvas->last_click_map_x, mouse_map_pos.x);
 					int start_map_y = std::min(canvas->last_click_map_y, mouse_map_pos.y);
 					int end_map_x = std::max(canvas->last_click_map_x, mouse_map_pos.x);

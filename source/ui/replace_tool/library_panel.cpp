@@ -147,7 +147,7 @@ void LibraryPanel::PopulateBrushGrid() {
 
 	for (const auto& pair : g_brushes.getMap()) {
 		Brush* brush = pair.second.get();
-		if (!brush || brush->isEraser() || brush->isRaw()) {
+		if (!brush || brush->is<EraserBrush>() || brush->is<RAWBrush>()) {
 			continue;
 		}
 

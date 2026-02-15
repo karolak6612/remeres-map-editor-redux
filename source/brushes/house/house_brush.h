@@ -31,12 +31,6 @@ public:
 	HouseBrush();
 	~HouseBrush() override;
 
-	bool isHouse() const override {
-		return true;
-	}
-	HouseBrush* asHouse() override {
-		return static_cast<HouseBrush*>(this);
-	}
 
 	// Not used
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override {

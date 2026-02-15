@@ -27,13 +27,13 @@ void DoodadPreviewManager::Clear() {
 
 void DoodadPreviewManager::FillBuffer() {
 	Brush* current_brush = g_brush_manager.GetCurrentBrush();
-	if (!current_brush || !current_brush->isDoodad()) {
+	if (!current_brush || !current_brush->is<DoodadBrush>()) {
 		return;
 	}
 
 	doodad_buffer_map->clear();
 
-	DoodadBrush* brush = current_brush->asDoodad();
+	DoodadBrush* brush = current_brush->as<DoodadBrush>();
 	if (brush->isEmpty(g_brush_manager.GetBrushVariation())) {
 		return;
 	}

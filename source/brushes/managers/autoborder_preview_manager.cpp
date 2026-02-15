@@ -92,8 +92,8 @@ void AutoborderPreviewManager::SimulateBrush(Editor& editor, const Position& pos
 		return;
 	}
 
-	bool is_wall = brush->isWall() || brush->isDoor();
-	bool is_ground = brush->isGround();
+	bool is_wall = brush->is<WallBrush>() || brush->is<DoorBrush>();
+	bool is_ground = brush->is<GroundBrush>();
 
 	// Apply draw
 	for (const auto& p : tilestodraw) {
@@ -134,10 +134,10 @@ void AutoborderPreviewManager::ApplyBorders(const std::vector<Position>& tilesto
 		return;
 	}
 
-	bool is_eraser = brush->isEraser();
-	bool is_wall = brush->isWall() || brush->isDoor();
-	bool is_table = brush->isTable();
-	bool is_carpet = brush->isCarpet();
+	bool is_eraser = brush->is<EraserBrush>();
+	bool is_wall = brush->is<WallBrush>() || brush->is<DoorBrush>();
+	bool is_table = brush->is<TableBrush>();
+	bool is_carpet = brush->is<CarpetBrush>();
 
 	auto process_tile = [&](const Position& p) {
 		Tile* tile = preview_buffer_map->getTile(p);

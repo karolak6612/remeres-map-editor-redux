@@ -12,7 +12,7 @@
 void GUI::UpdateAutoborderPreview(Position pos) {
 	MapTab* mapTab = GetCurrentMapTab();
 	Brush* brush = GetCurrentBrush();
-	if (brush && brush->isDoodad()) {
+	if (brush && brush->is<DoodadBrush>()) {
 		if (mapTab && mapTab->GetSession()->secondary_map == g_autoborder_preview.GetBufferMap()) {
 			g_autoborder_preview.Clear();
 			mapTab->GetSession()->secondary_map = nullptr;

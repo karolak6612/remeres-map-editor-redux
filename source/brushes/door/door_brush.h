@@ -12,12 +12,6 @@ public:
 	explicit DoorBrush(DoorType doortype);
 	~DoorBrush() override = default;
 
-	bool isDoor() const override {
-		return true;
-	}
-	DoorBrush* asDoor() override {
-		return this;
-	}
 
 	static void switchDoor(Item* door);
 

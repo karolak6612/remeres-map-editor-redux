@@ -12,12 +12,6 @@ public:
 	OptionalBorderBrush();
 	~OptionalBorderBrush() override = default;
 
-	bool isOptionalBorder() const override {
-		return true;
-	}
-	OptionalBorderBrush* asOptionalBorder() override {
-		return this;
-	}
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;
