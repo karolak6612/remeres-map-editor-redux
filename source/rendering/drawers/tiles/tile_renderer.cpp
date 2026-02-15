@@ -25,6 +25,7 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/light_buffer.h"
+#include "rendering/core/sprite_preloader.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
@@ -207,6 +208,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground) {
+			// Preload ground sprite
+			GameSprite* spr = g_items[tile->ground->getID()].sprite;
+			if (spr && !spr->isSimpleAndLoaded()) {
+				rme::collectTileSprites(spr, 0, 0, 0, 0);
+			}
+
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
@@ -215,7 +222,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+	// Only generate tooltips for the hovered tile to save performance
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y);
+	if (options.show_tooltips && is_hovered && map_z == view.floor && tile->ground) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -260,8 +269,14 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
+				// Preload item sprite
+				GameSprite* spr = g_items[item->getID()].sprite;
+				if (spr && !spr->isSimpleAndLoaded()) {
+					rme::collectTileSprites(spr, 0, 0, 0, 0);
+				}
+
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (options.show_tooltips && is_hovered && map_z == view.floor) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
