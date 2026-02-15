@@ -80,7 +80,7 @@ protected:
 	mutable std::unordered_map<const Brush*, std::string> m_utf8NameCache;
 
 	// Animation state
-	wxTimer* m_animTimer;
+	wxTimer m_animTimer;
 	void OnTimer(wxTimerEvent& event);
 };
 

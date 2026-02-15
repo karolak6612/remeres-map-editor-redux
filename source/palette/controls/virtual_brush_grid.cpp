@@ -19,7 +19,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	columns(1),
 	item_size(0),
 	padding(4),
-	m_animTimer(new wxTimer(this)) {
+	m_animTimer(this) {
 
 	if (icon_size == RENDER_SIZE_16x16) {
 		item_size = 18;
@@ -36,8 +36,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 }
 
 VirtualBrushGrid::~VirtualBrushGrid() {
-	m_animTimer->Stop();
-	delete m_animTimer;
+	m_animTimer.Stop();
 }
 
 void VirtualBrushGrid::SetDisplayMode(DisplayMode mode) {

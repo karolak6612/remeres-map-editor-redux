@@ -64,30 +64,6 @@ bool LiveClient::connect(const std::string& address, uint16_t port) {
 		}
 	});
 
-	/*
-	if(!client->WaitOnConnect(5, 0)) {
-		if(log)
-			log->Disconnect();
-		last_err = "Connection timed out.";
-		client->Destroy();
-		client = nullptr;
-		delete connection;
-		return false;
-	}
-
-	if(!client->IsConnected()) {
-		if(log)
-			log->Disconnect();
-		last_err = "Connection refused by peer.";
-		client->Destroy();
-		client = nullptr;
-		delete connection;
-		return false;
-	}
-
-	if(log)
-		log->Message("Connection established!");
-	*/
 	return true;
 }
 

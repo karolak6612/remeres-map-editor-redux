@@ -233,7 +233,7 @@ void Materials::createOtherTileset() {
 	Tileset* others;
 	Tileset* npc_tileset;
 
-	if (tilesets.find("Others") != tilesets.end()) {
+	if (tilesets.contains("Others")) {
 		others = tilesets["Others"];
 		others->clear();
 	} else {
@@ -241,7 +241,7 @@ void Materials::createOtherTileset() {
 		tilesets["Others"] = others;
 	}
 
-	if (tilesets.find("NPCs") != tilesets.end()) {
+	if (tilesets.contains("NPCs")) {
 		npc_tileset = tilesets["NPCs"];
 		npc_tileset->clear();
 	} else {
@@ -306,18 +306,13 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 	const std::string& name = attribute.as_string();
 
 	Tileset* tileset = nullptr;
-	auto it = tilesets.find(name);
-	if (it != tilesets.end()) {
-		tileset = it->second;
+	if (tilesets.contains(name)) {
+		tileset = tilesets[name];
 	}
 
 	if (!tileset) {
 		tileset = newd Tileset(g_brushes, name);
-		if (it != tilesets.end()) {
-			it->second = tileset;
-		} else {
-			tilesets.insert(std::make_pair(name, tileset));
-		}
+		tilesets[name] = tileset;
 	}
 
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
@@ -334,12 +329,11 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 	}
 
 	Tileset* tileset;
-	auto _it = tilesets.find(tilesetName);
-	if (_it != tilesets.end()) {
-		tileset = _it->second;
+	if (tilesets.contains(tilesetName)) {
+		tileset = tilesets[tilesetName];
 	} else {
 		tileset = newd Tileset(g_brushes, tilesetName);
-		tilesets.insert(std::make_pair(tilesetName, tileset));
+		tilesets[tilesetName] = tileset;
 	}
 
 	TilesetCategory* category = tileset->getCategory(categoryType);
@@ -374,11 +368,10 @@ bool Materials::isInTileset(Brush* brush, std::string tilesetName) const {
 		return false;
 	}
 
-	TilesetContainer::const_iterator tilesetiter = tilesets.find(tilesetName);
-	if (tilesetiter == tilesets.end()) {
+	if (!tilesets.contains(tilesetName)) {
 		return false;
 	}
-	Tileset* tileset = tilesetiter->second;
+	Tileset* tileset = tilesets.at(tilesetName);
 
 	return tileset->containsBrush(brush);
 }
