@@ -101,9 +101,8 @@ jobs:
           REPOSITORY: '${{ github.repository }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
         with:
-          openai_api_key: 'dummy'
-          openai_base_url: ''
-          openai_model: ''
+          openai_base_url: 'placeholder'
+          openai_model: 'placeholder'
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
           qwen_debug: true
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'

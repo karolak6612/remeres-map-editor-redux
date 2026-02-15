@@ -61,7 +61,7 @@ jobs:
         github.event_name == 'issues' &&
         contains(fromJSON('["opened", "reopened"]'), github.event.action)
       ) || (
-        startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@qwen-code')
+        contains(github.event.comment.body || github.event.review.body || github.event.issue.body, '@qwen')
       )
     runs-on: 'ubuntu-latest'
     permissions:
@@ -106,14 +106,14 @@ jobs:
               core.setOutput('command', 'review');
             } else if (eventName === 'issues' && ['opened', 'reopened'].includes(eventAction)) {
               core.setOutput('command', 'triage');
-            } else if (request.startsWith("@qwen-code /review")) {
+            } else if (request.match(/^@(qwen-code|qwencoder) \/review/)) {
               core.setOutput('command', 'review');
-              const additionalContext = request.replace(/^@qwen-code \/review/, '').trim();
+              const additionalContext = request.replace(/^@(qwen-code|qwencoder) \/review/, '').trim();
               core.setOutput('additional_context', additionalContext);
-            } else if (request.startsWith("@qwen-code /triage")) {
+            } else if (request.match(/^@(qwen-code|qwencoder) \/triage/)) {
               core.setOutput('command', 'triage');
-            } else if (request.startsWith("@qwen-code")) {
-              const additionalContext = request.replace(/^@qwen-code/, '').trim();
+            } else if (request.match(/^@(qwen-code|qwencoder)/)) {
+              const additionalContext = request.replace(/^@(qwen-code|qwencoder)/, '').trim();
               core.setOutput('command', 'invoke');
               core.setOutput('additional_context', additionalContext);
             } else {
@@ -122,7 +122,7 @@ jobs:
 
       - name: 'Acknowledge request'
         if: |-
-          ${{ startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@qwen-code') }}
+          ${{ contains(github.event.comment.body || github.event.review.body || github.event.issue.body, '@qwen') }}
         env:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
           ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
