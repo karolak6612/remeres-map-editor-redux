@@ -15,10 +15,7 @@ on:
       - 'edited'
       - 'ready_for_review'
   push:
-    branches:
-      - 'master'
-      - 'main'
-      - 'release/**/*'
+    # No branch restrictions
   issues:
     types:
       - 'opened'
@@ -57,19 +54,14 @@ jobs:
     # For comments: only if user types @gemini-cli and is OWNER/MEMBER/COLLABORATOR
     if: |-
       (
-        github.event_name == 'pull_request' &&
-        github.event.pull_request.head.repo.fork == false
+        github.event_name == 'pull_request'
       ) || (
         github.event_name == 'push'
       ) || (
         github.event_name == 'issues' &&
         contains(fromJSON('["opened", "reopened"]'), github.event.action)
       ) || (
-        startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@qwen-code') &&
-        (
-          contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association || github.event.review.author_association || github.event.issue.author_association) ||
-          github.event.sender.type == 'Bot'
-        )
+        startsWith(github.event.comment.body || github.event.review.body || github.event.issue.body, '@qwen-code')
       )
     runs-on: 'ubuntu-latest'
     permissions:
