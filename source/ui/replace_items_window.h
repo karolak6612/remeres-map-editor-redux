@@ -78,8 +78,8 @@ public:
 
 private:
 	std::vector<ReplacingItem> m_items;
-	wxBitmap m_arrow_bitmap;
-	wxBitmap m_flag_bitmap;
+	wxBitmapBundle m_arrow_bitmap;
+	wxBitmapBundle m_flag_bitmap;
 };
 
 // ============================================================================

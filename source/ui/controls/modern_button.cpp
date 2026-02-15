@@ -15,7 +15,7 @@ ModernButton::ModernButton(wxWindow* parent, wxWindowID id, const wxString& labe
 	m_animTimer.Bind(wxEVT_TIMER, &ModernButton::OnTimer, this);
 }
 
-void ModernButton::SetBitmap(const wxBitmap& bitmap) {
+void ModernButton::SetBitmap(const wxBitmapBundle& bitmap) {
 	m_icon = bitmap;
 	InvalidateBestSize();
 	Refresh();
@@ -28,10 +28,16 @@ wxSize ModernButton::DoGetBestClientSize() const {
 
 	int width = text.x + FromDIP(40);
 	if (m_icon.IsOk()) {
-		width += m_icon.GetWidth() + FromDIP(8);
+		// Use the bitmap suitable for the current window scale to determine size
+		wxBitmap bmp = m_icon.GetBitmapFor(const_cast<ModernButton*>(this));
+		width += bmp.GetWidth() + FromDIP(8);
 	}
 
-	int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(20);
+	int height = text.y + FromDIP(20);
+	if (m_icon.IsOk()) {
+		wxBitmap bmp = m_icon.GetBitmapFor(const_cast<ModernButton*>(this));
+		height = std::max(height, bmp.GetHeight() + FromDIP(20));
+	}
 	return wxSize(width, height);
 }
 
@@ -86,9 +92,10 @@ void ModernButton::OnPaint(wxPaintEvent& evt) {
 	int cy = clientSize.y / 2;
 
 	if (m_icon.IsOk()) {
-		int iy = cy - m_icon.GetHeight() / 2;
-		dc.DrawBitmap(m_icon, x, iy, true);
-		x += m_icon.GetWidth() + FromDIP(8);
+		wxBitmap bmp = m_icon.GetBitmapFor(this);
+		int iy = cy - bmp.GetHeight() / 2;
+		dc.DrawBitmap(bmp, x, iy, true);
+		x += bmp.GetWidth() + FromDIP(8);
 	}
 
 	dc.DrawText(GetLabel(), x, cy - textSize.y / 2); // Left-aligned nav style

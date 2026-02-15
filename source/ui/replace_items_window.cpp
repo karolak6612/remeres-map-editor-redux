@@ -66,8 +66,8 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 
 ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
 	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+	m_arrow_bitmap = IMAGE_MANAGER.GetBitmapBundle(ICON_LOCATION_ARROW);
+	m_flag_bitmap = IMAGE_MANAGER.GetBitmapBundle(IMAGE_PROTECTION_ZONE_SMALL);
 }
 
 bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
@@ -132,13 +132,13 @@ void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index)
 		int x = rect.GetX();
 		int y = rect.GetY();
 		sprite1->DrawTo(&dc, SPRITE_SIZE_32x32, x + 4, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawBitmap(m_arrow_bitmap, x + 38, y + 10, true);
+		dc.DrawBitmap(m_arrow_bitmap.GetBitmapFor(this), x + 38, y + 10, true);
 		sprite2->DrawTo(&dc, SPRITE_SIZE_32x32, x + 56, y + 4, rect.GetWidth(), rect.GetHeight());
 		dc.DrawText(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId), x + 104, y + 10);
 
 		if (item.complete) {
 			x = rect.GetWidth() - 100;
-			dc.DrawBitmap(m_flag_bitmap, x + 70, y + 10, true);
+			dc.DrawBitmap(m_flag_bitmap.GetBitmapFor(this), x + 70, y + 10, true);
 			dc.DrawText(wxString::Format("Total: %d", item.total), x, y + 10);
 		}
 	}
@@ -185,7 +185,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	replace_button = new ReplaceItemsButton(this);
 	items_sizer->Add(replace_button, 0, wxALL, 5);
 
-	wxBitmap bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FromDIP(wxSize(16, 16)));
+	wxBitmapBundle bitmap = IMAGE_MANAGER.GetBitmapBundle(ICON_LOCATION_ARROW);
 	arrow_bitmap = new wxStaticBitmap(this, wxID_ANY, bitmap);
 	items_sizer->Add(arrow_bitmap, 0, wxTOP, 15);
 
@@ -203,13 +203,13 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	wxBoxSizer* buttons_sizer = new wxBoxSizer(wxHORIZONTAL);
 
 	add_button = new wxButton(this, wxID_ANY, "Add");
-	add_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	add_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	add_button->SetToolTip("Add replacement rule to list");
 	add_button->Enable(false);
 	buttons_sizer->Add(add_button, 0, wxALL, 5);
 
 	remove_button = new wxButton(this, wxID_ANY, "Remove");
-	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
 	remove_button->SetToolTip("Remove selected rule");
 	remove_button->Enable(false);
 	buttons_sizer->Add(remove_button, 0, wxALL, 5);
@@ -217,13 +217,13 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	buttons_sizer->Add(0, 0, 1, wxEXPAND, 5);
 
 	execute_button = new wxButton(this, wxID_ANY, "Execute");
-	execute_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLAY, wxSize(16, 16)));
+	execute_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLAY));
 	execute_button->SetToolTip("Execute all replacement rules");
 	execute_button->Enable(false);
 	buttons_sizer->Add(execute_button, 0, wxALL, 5);
 
 	close_button = new wxButton(this, wxID_ANY, "Close");
-	close_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	close_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	close_button->SetToolTip("Close this window");
 	buttons_sizer->Add(close_button, 0, wxALL, 5);
 
@@ -242,9 +242,15 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	execute_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnExecuteButtonClicked, this);
 	close_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnCancelButtonClicked, this);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(32, 32)));
-	SetIcon(icon);
+	wxIconBundle icons;
+	wxBitmapBundle bundle = IMAGE_MANAGER.GetBitmapBundle(ICON_SYNC);
+	wxIcon icon16;
+	icon16.CopyFromBitmap(bundle.GetBitmap(wxSize(16, 16)));
+	icons.AddIcon(icon16);
+	wxIcon icon32;
+	icon32.CopyFromBitmap(bundle.GetBitmap(wxSize(32, 32)));
+	icons.AddIcon(icon32);
+	SetIcons(icons);
 }
 
 ReplaceItemsDialog::~ReplaceItemsDialog() {

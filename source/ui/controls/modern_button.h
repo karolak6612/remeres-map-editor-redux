@@ -2,6 +2,7 @@
 #define MODERN_BUTTON_H
 
 #include <wx/wx.h>
+#include <wx/bmpbndl.h>
 #include <wx/dcbuffer.h>
 
 class ModernButton : public wxControl {
@@ -12,7 +13,7 @@ public:
 	wxSize DoGetBestClientSize() const override;
 	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
 
-	void SetBitmap(const wxBitmap& bitmap);
+	void SetBitmap(const wxBitmapBundle& bitmap);
 
 	// Rendering
 	void OnPaint(wxPaintEvent& evt);
@@ -26,7 +27,7 @@ public:
 	void OnTimer(wxTimerEvent& evt);
 
 private:
-	wxBitmap m_icon;
+	wxBitmapBundle m_icon;
 };
 
 #endif

@@ -17,30 +17,32 @@
 // Map Import Window
 
 ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
-	wxDialog(parent, wxID_ANY, "Import Map", wxDefaultPosition, FROM_DIP(parent, wxSize(350, 315))),
+	wxDialog(parent, wxID_ANY, "Import Map", wxDefaultPosition, wxDefaultSize),
 	editor(editor) {
+	SetMinSize(FromDIP(wxSize(350, 315)));
+
 	wxBoxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 	wxStaticBoxSizer* tmpsizer;
 
 	// File
 	tmpsizer = newd wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Map File"), wxHORIZONTAL);
-	file_text_field = newd wxTextCtrl(tmpsizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, FROM_DIP(this, wxSize(230, 23)));
-	tmpsizer->Add(file_text_field, 0, wxALL, 5);
-	wxButton* browse_button = newd wxButton(tmpsizer->GetStaticBox(), MAP_WINDOW_FILE_BUTTON, "Browse...", wxDefaultPosition, FROM_DIP(this, wxSize(80, 23)));
-	browse_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FOLDER_OPEN, wxSize(16, 16)));
+	file_text_field = newd wxTextCtrl(tmpsizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize);
+	tmpsizer->Add(file_text_field, 1, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+	wxButton* browse_button = newd wxButton(tmpsizer->GetStaticBox(), MAP_WINDOW_FILE_BUTTON, "Browse...", wxDefaultPosition, wxDefaultSize);
+	browse_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FOLDER_OPEN));
 	browse_button->SetToolTip("Browse for map file");
-	tmpsizer->Add(browse_button, 0, wxALL, 5);
-	sizer->Add(tmpsizer, 1, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 5);
+	tmpsizer->Add(browse_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, 5);
 
 	// Import offset
 	tmpsizer = newd wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Import Offset"), wxHORIZONTAL);
-	tmpsizer->Add(newd wxStaticText(tmpsizer->GetStaticBox(), wxID_ANY, "Offset X:"), 0, wxALL | wxEXPAND, 5);
-	x_offset_ctrl = newd wxSpinCtrl(tmpsizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, FROM_DIP(this, wxSize(100, 23)), wxSP_ARROW_KEYS, -MAP_MAX_HEIGHT, MAP_MAX_HEIGHT);
-	tmpsizer->Add(x_offset_ctrl, 0, wxALL, 5);
-	tmpsizer->Add(newd wxStaticText(tmpsizer->GetStaticBox(), wxID_ANY, "Offset Y:"), 0, wxALL, 5);
-	y_offset_ctrl = newd wxSpinCtrl(tmpsizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, FROM_DIP(this, wxSize(100, 23)), wxSP_ARROW_KEYS, -MAP_MAX_HEIGHT, MAP_MAX_HEIGHT);
-	tmpsizer->Add(y_offset_ctrl, 0, wxALL, 5);
-	sizer->Add(tmpsizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 5);
+	tmpsizer->Add(newd wxStaticText(tmpsizer->GetStaticBox(), wxID_ANY, "Offset X:"), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+	x_offset_ctrl = newd wxSpinCtrl(tmpsizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, -MAP_MAX_HEIGHT, MAP_MAX_HEIGHT);
+	tmpsizer->Add(x_offset_ctrl, 1, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+	tmpsizer->Add(newd wxStaticText(tmpsizer->GetStaticBox(), wxID_ANY, "Offset Y:"), 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+	y_offset_ctrl = newd wxSpinCtrl(tmpsizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, -MAP_MAX_HEIGHT, MAP_MAX_HEIGHT);
+	tmpsizer->Add(y_offset_ctrl, 1, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 5);
 
 	// Import options
 	std::vector<std::string> house_choices;
@@ -57,7 +59,7 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	}
 	house_options->SetSelection(0);
 	tmpsizer->Add(house_options, 0, wxALL | wxEXPAND, 5);
-	sizer->Add(tmpsizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 5);
+	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 5);
 
 	// Import options
 	std::vector<std::string> spawn_choices;
@@ -72,21 +74,21 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	}
 	spawn_options->SetSelection(0);
 	tmpsizer->Add(spawn_options, 0, wxALL | wxEXPAND, 5);
-	sizer->Add(tmpsizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 5);
+	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 5);
 
 	// OK/Cancel buttons
 	wxBoxSizer* buttons = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(this, wxID_OK, "Ok");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Start import");
 	buttons->Add(okBtn, 0, wxALL, 5);
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Cancel");
 	buttons->Add(cancelBtn, 0, wxALL, 5);
 	sizer->Add(buttons, wxSizerFlags(1).Center());
 
-	SetSizer(sizer);
+	SetSizerAndFit(sizer);
 	Layout();
 	Centre(wxBOTH);
 
@@ -94,9 +96,15 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	okBtn->Bind(wxEVT_BUTTON, &ImportMapWindow::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &ImportMapWindow::OnClickCancel, this);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_IMPORT, wxSize(32, 32)));
-	SetIcon(icon);
+	wxIconBundle icons;
+	wxBitmapBundle bundle = IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_IMPORT);
+	wxIcon icon16;
+	icon16.CopyFromBitmap(bundle.GetBitmap(wxSize(16, 16)));
+	icons.AddIcon(icon16);
+	wxIcon icon32;
+	icon32.CopyFromBitmap(bundle.GetBitmap(wxSize(32, 32)));
+	icons.AddIcon(icon32);
+	SetIcons(icons);
 }
 
 ImportMapWindow::~ImportMapWindow() = default;
