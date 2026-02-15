@@ -640,11 +640,9 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	for (std::vector<uint32_t>::iterator it = house_exits->begin(); it != house_exits->end(); ++it) {
-		if (*it == h->getID()) {
-			house_exits->erase(it);
-			return;
-		}
+	auto it = std::find(house_exits->begin(), house_exits->end(), h->getID());
+	if (it != house_exits->end()) {
+		house_exits->erase(it);
 	}
 }
 

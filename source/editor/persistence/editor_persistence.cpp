@@ -266,7 +266,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 	house_id_map.reserve(imported_map.houses.count());
 
 	if (house_import_type != IMPORT_DONT) {
-		for (TownMap::iterator tit = imported_map.towns.begin(); tit != imported_map.towns.end();) {
+		for (auto tit = imported_map.towns.begin(); tit != imported_map.towns.end();) {
 			Town* imported_town = tit->second.get();
 			Town* current_town = editor.map.towns.getTown(imported_town->getID());
 
@@ -277,12 +277,12 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 				editor.map.getOrCreateTile(newexit)->getLocation()->increaseTownCount();
 			}
 
+			bool skip = false;
 			switch (house_import_type) {
 				case IMPORT_MERGE: {
 					town_id_map[imported_town->getID()] = imported_town->getID();
 					if (current_town) {
-						++tit;
-						continue;
+						skip = true;
 					}
 					break;
 				}
@@ -292,8 +292,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 						if (current_town->getName() == imported_town->getName() && current_town->getID() == imported_town->getID()) {
 							// Just add to map
 							town_id_map[imported_town->getID()] = current_town->getID();
-							++tit;
-							continue;
+							skip = true;
 						} else {
 							// Conflict! Find a newd id and replace old
 							uint32_t new_id = editor.map.towns.getEmptyID();
@@ -313,35 +312,25 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 					break;
 				}
 				case IMPORT_DONT: {
-					++tit;
-					continue; // Should never happend..?
-					break; // Continue or break ?
+					skip = true;
+					break;
 				}
 			}
 
-			if (!editor.map.towns.addTown(std::move(tit->second))) {
-				spdlog::warn("Failed to add town {} during import (duplicate ID)", imported_town->getID());
+			if (skip) {
+				++tit;
+				continue;
 			}
 
-#ifdef __VISUALC__ // C++0x compliance to some degree :)
+			uint32_t town_id = imported_town->getID();
+			if (!editor.map.towns.addTown(std::move(tit->second))) {
+				spdlog::warn("Failed to add town {} during import (duplicate ID)", town_id);
+			}
+
 			tit = imported_map.towns.erase(tit);
-#else // Bulky, slow way
-			TownMap::iterator tmp_iter = tit;
-			++tmp_iter;
-			uint32_t next_key = 0;
-			if (tmp_iter != imported_map.towns.end()) {
-				next_key = tmp_iter->first;
-			}
-			imported_map.towns.erase(tit);
-			if (next_key != 0) {
-				tit = imported_map.towns.find(next_key);
-			} else {
-				tit = imported_map.towns.end();
-			}
-#endif
 		}
 
-		for (HouseMap::iterator hit = imported_map.houses.begin(); hit != imported_map.houses.end();) {
+		for (auto hit = imported_map.houses.begin(); hit != imported_map.houses.end();) {
 			House* imported_house = hit->second.get();
 			House* current_house = editor.map.houses.getHouse(imported_house->getID());
 			imported_house->townid = town_id_map[imported_house->townid];
@@ -349,16 +338,16 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 			Position oldexit = imported_house->getExit();
 			imported_house->setExit(nullptr, Position()); // Reset it
 
+			bool skip = false;
 			switch (house_import_type) {
 				case IMPORT_MERGE: {
 					house_id_map[imported_house->getID()] = imported_house->getID();
 					if (current_house) {
-						++hit;
+						skip = true;
 						Position newexit = oldexit + offset;
 						if (newexit.isValid()) {
 							current_house->setExit(&editor.map, newexit);
 						}
-						continue;
 					}
 					break;
 				}
@@ -368,12 +357,11 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 						if (current_house->name == imported_house->name && current_house->townid == imported_house->townid) {
 							// Just add to map
 							house_id_map[imported_house->getID()] = current_house->getID();
-							++hit;
+							skip = true;
 							Position newexit = oldexit + offset;
 							if (newexit.isValid()) {
 								imported_house->setExit(&editor.map, newexit);
 							}
-							continue;
 						} else {
 							// Conflict! Find a newd id and replace old
 							uint32_t new_id = editor.map.houses.getEmptyID();
@@ -393,48 +381,40 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 					break;
 				}
 				case IMPORT_DONT: {
-					++hit;
+					skip = true;
 					Position newexit = oldexit + offset;
 					if (newexit.isValid()) {
 						imported_house->setExit(&editor.map, newexit);
 					}
-					continue; // Should never happend..?
-					break; // Continue or break ?
+					break;
 				}
+			}
+
+			if (skip) {
+				++hit;
+				continue;
 			}
 
 			Position newexit = oldexit + offset;
 			if (newexit.isValid()) {
 				imported_house->setExit(&editor.map, newexit);
 			}
+			uint32_t house_id = imported_house->getID();
 			if (!editor.map.houses.addHouse(std::move(hit->second))) {
-				spdlog::warn("Failed to add house {} during import (duplicate ID)", imported_house->getID());
+				spdlog::warn("Failed to add house {} during import (duplicate ID)", house_id);
 			}
 
-#ifdef __VISUALC__ // C++0x compliance to some degree :)
 			hit = imported_map.houses.erase(hit);
-#else // Bulky, slow way
-			HouseMap::iterator tmp_iter = hit;
-			++tmp_iter;
-			uint32_t next_key = 0;
-			if (tmp_iter != imported_map.houses.end()) {
-				next_key = tmp_iter->first;
-			}
-			imported_map.houses.erase(hit);
-			if (next_key != 0) {
-				hit = imported_map.houses.find(next_key);
-			} else {
-				hit = imported_map.houses.end();
-			}
-#endif
 		}
 	}
 
 	std::map<Position, std::unique_ptr<Spawn>> spawn_map;
 	if (spawn_import_type != IMPORT_DONT) {
-		for (SpawnPositionList::iterator siter = imported_map.spawns.begin(); siter != imported_map.spawns.end();) {
+		for (auto siter = imported_map.spawns.begin(); siter != imported_map.spawns.end();) {
 			Position old_spawn_pos = *siter;
 			Position new_spawn_pos = *siter + offset;
+			bool skip = false;
+
 			switch (spawn_import_type) {
 				case IMPORT_SMART_MERGE:
 				case IMPORT_INSERT:
@@ -443,40 +423,33 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 					if (imported_tile) {
 						ASSERT(imported_tile->spawn);
 						spawn_map[new_spawn_pos] = std::move(imported_tile->spawn);
-
-						SpawnPositionList::iterator next = siter;
-						bool cont = true;
-						Position next_spawn;
-
-						++next;
-						if (next == imported_map.spawns.end()) {
-							cont = false;
-						} else {
-							next_spawn = *next;
-						}
-						imported_map.spawns.erase(siter);
-						if (cont) {
-							siter = imported_map.spawns.find(next_spawn);
-						} else {
-							siter = imported_map.spawns.end();
-						}
 					}
 					break;
 				}
 				case IMPORT_DONT: {
-					++siter;
+					skip = true;
 					break;
+				}
+			}
+
+			if (skip) {
+				++siter;
+			} else {
+				Tile* imported_tile = imported_map.getTile(old_spawn_pos);
+				if (imported_tile) {
+					siter = imported_map.spawns.erase(siter);
+				} else {
+					++siter;
 				}
 			}
 		}
 	}
 
 	// Plain merge of waypoints, very simple! :)
-	for (WaypointMap::iterator iter = imported_map.waypoints.begin(); iter != imported_map.waypoints.end(); ++iter) {
-		iter->second->pos += offset;
+	for (auto& [name, waypoint] : imported_map.waypoints) {
+		waypoint->pos += offset;
+		editor.map.waypoints.addWaypoint(std::move(waypoint));
 	}
-
-	editor.map.waypoints.waypoints.insert(imported_map.waypoints.begin(), imported_map.waypoints.end());
 	imported_map.waypoints.waypoints.clear();
 
 	uint64_t tiles_merged = 0;

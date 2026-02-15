@@ -25,6 +25,8 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/light_buffer.h"
+#include "rendering/core/sprite_preloader.h"
+#include "rendering/utilities/pattern_calculator.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
@@ -207,6 +209,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground) {
+			PreloadItem(tile, tile->ground.get());
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
 			if (light_buffer) {
 				SpriteLight light;
@@ -286,6 +289,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						light_buffer->AddLight(map_x, map_y, map_z, light);
 					}
 				}
+				PreloadItem(tile, item.get());
 
 				// item sprite
 				if (item->isBorder()) {
@@ -325,6 +329,47 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// markers (waypoint, house exit, town temple, spawn)
 			if (options.has_markers) {
 				marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
+			}
+		}
+	}
+}
+
+void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
+	if (!item) {
+		return;
+	}
+
+	const ItemType& it = g_items[item->getID()];
+	GameSprite* spr = it.sprite;
+	if (spr && !spr->isSimpleAndLoaded()) {
+		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
+	}
+}
+
+void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+	if (!options.isDrawLight() || !location) {
+		return;
+	}
+
+	auto tile = location->get();
+	if (!tile) {
+		return;
+	}
+
+	const auto& position = location->getPosition();
+
+	if (tile->ground) {
+		if (tile->ground->hasLight()) {
+			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
+		}
+	}
+
+	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
+	if (!hidden && !tile->items.empty()) {
+		for (const auto& item : tile->items) {
+			if (item->hasLight()) {
+				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
 			}
 		}
 	}

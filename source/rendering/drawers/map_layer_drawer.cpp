@@ -28,8 +28,8 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/sprite_preloader.h"
 #include "rendering/core/primitive_renderer.h"
+#include "rendering/core/sprite_preloader.h"
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
 	tile_renderer(tile_renderer),
@@ -60,6 +60,14 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
 	// ND visibility
+	auto collectSpriteWithPattern = [&](GameSprite* spr, int tx, int ty) {
+		if (spr && !spr->isSimpleAndLoaded()) {
+			int pattern_x = (spr->pattern_x > 1) ? tx % spr->pattern_x : 0;
+			int pattern_y = (spr->pattern_y > 1) ? ty % spr->pattern_y : 0;
+			int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
+			rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
+		}
+	};
 
 	if (live_client) {
 		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
