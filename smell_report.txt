@@ -1,0 +1,362 @@
+[Large Class/File] source/io/iomap_otbm.cpp: 1915 lines
+[Switch Statement] source/io/iomap_otbm.cpp:91
+[Long Method] source/io/iomap_otbm.cpp:90 Function 'Item::readItemAttribute_OTBM' is 82 lines long
+[Long Method] source/io/iomap_otbm.cpp:426 Function 'Podium::readItemAttribute_OTBM' is 54 lines long
+[Long Method] source/io/iomap_otbm.cpp:604 Function 'IOMapOTBM::loadMapFromOTGZ' is 115 lines long
+[Long Method] source/io/iomap_otbm.cpp:721 Function 'IOMapOTBM::loadMapFromDisk' is 64 lines long
+[Long Method] source/io/iomap_otbm.cpp:796 Function 'IOMapOTBM::loadMapRoot' is 65 lines long
+[Switch Statement] source/io/iomap_otbm.cpp:866
+[Switch Statement] source/io/iomap_otbm.cpp:976
+[Long Method] source/io/iomap_otbm.cpp:925 Function 'IOMapOTBM::readTileArea' is 105 lines long
+[Long Method] source/io/iomap_otbm.cpp:1156 Function 'IOMapOTBM::loadSpawns' is 128 lines long
+[Long Method] source/io/iomap_otbm.cpp:1308 Function 'IOMapOTBM::loadHouses' is 52 lines long
+[Long Method] source/io/iomap_otbm.cpp:1381 Function 'IOMapOTBM::saveMapToOTGZ' is 117 lines long
+[Long Method] source/io/iomap_otbm.cpp:1536 Function 'IOMapOTBM::saveMap' is 56 lines long
+[Long Method] source/io/iomap_otbm.cpp:1594 Function 'IOMapOTBM::writeTileData' is 77 lines long
+[Long Method] source/io/iomap_otbm.cpp:1724 Function 'IOMapOTBM::saveSpawns' is 59 lines long
+[Large Class/File] source/io/filehandle.cpp: 724 lines
+[Switch Statement] source/io/filehandle.cpp:36
+[Long Method] source/io/filehandle.cpp:360 Function 'BinaryNode::advance' is 58 lines long
+[Switch Statement] source/io/filehandle.cpp:465
+[Long Method] source/io/filehandle.cpp:420 Function 'BinaryNode::load' is 72 lines long
+[Large Class/File] source/io/iomap_otmm.cpp: 973 lines
+[Switch Statement] source/io/iomap_otmm.cpp:41
+[Long Method] source/io/iomap_otmm.cpp:40 Function 'Item::readItemAttribute_OTMM' is 58 lines long
+[Switch Statement] source/io/iomap_otmm.cpp:389
+[Switch Statement] source/io/iomap_otmm.cpp:454
+[Long Method] source/io/iomap_otmm.cpp:328 Function 'IOMapOTMM::loadMap' is 411 lines long
+[Long Method] source/io/iomap_otmm.cpp:760 Function 'IOMapOTMM::saveMap' is 213 lines long
+[Long Method] source/io/loaders/spr_loader.cpp:19 Function 'SprLoader::LoadData' is 74 lines long
+[Long Method] source/io/loaders/spr_loader.cpp:110 Function 'SprLoader::ReadSprites' is 78 lines long
+[Large Class/File] source/io/loaders/dat_loader.cpp: 509 lines
+[Switch Statement] source/io/loaders/dat_loader.cpp:41
+[Long Parameter List] source/io/loaders/dat_loader.cpp:76 Function 'ReadFlagData' has 6 parameters
+[Switch Statement] source/io/loaders/dat_loader.cpp:77
+[Long Method] source/io/loaders/dat_loader.cpp:76 Function 'ReadFlagData' is 132 lines long
+[Long Method] source/io/loaders/dat_loader.cpp:256 Function 'DatLoader::LoadMetadata' is 116 lines long
+[Long Method] source/io/loaders/dat_loader.cpp:374 Function 'DatLoader::ReadSpriteGroup' is 135 lines long
+[Switch Statement] source/live/live_client.cpp:290
+[Switch Statement] source/live/live_client.cpp:336
+[Switch Statement] source/live/live_peer.cpp:111
+[Switch Statement] source/live/live_peer.cpp:131
+[Long Parameter List] source/live/live_socket.cpp:93 Function 'LiveSocket::receiveNode' has 6 parameters
+[Long Parameter List] source/live/live_socket.cpp:156 Function 'LiveSocket::receiveFloor' has 8 parameters
+[Switch Statement] source/live/live_socket.cpp:321
+[Long Method] source/live/live_socket.cpp:271 Function 'LiveSocket::readTile' is 99 lines long
+[Long Method] source/ingame_preview/ingame_preview_canvas.cpp:91 Function 'IngamePreviewCanvas::OnKeyDown' is 53 lines long
+[Long Method] source/ingame_preview/ingame_preview_canvas.cpp:198 Function 'IngamePreviewCanvas::StartWalk' is 57 lines long
+[Long Method] source/ingame_preview/ingame_preview_canvas.cpp:257 Function 'IngamePreviewCanvas::UpdateWalk' is 87 lines long
+[Long Method] source/ingame_preview/ingame_preview_canvas.cpp:394 Function 'IngamePreviewCanvas::Render' is 73 lines long
+[Long Parameter List] source/ingame_preview/ingame_preview_renderer.cpp:63 Function 'IngamePreviewRenderer::Render' has 15 parameters
+[Long Method] source/ingame_preview/ingame_preview_renderer.cpp:63 Function 'IngamePreviewRenderer::Render' is 217 lines long
+[Long Method] source/util/virtual_item_grid.cpp:173 Function 'VirtualItemGrid::OnNanoVGPaint' is 116 lines long
+[Large Class/File] source/util/image_manager.h: 1777 lines
+[Long Method] source/util/nanovg_canvas.cpp:219 Function 'NanoVGCanvas::CreateGameSpriteTexture' is 68 lines long
+[Long Method] source/rendering/map_drawer.cpp:286 Function 'MapDrawer::Draw' is 72 lines long
+[Long Method] source/rendering/utilities/sprite_icon_generator.cpp:52 Function 'SpriteIconGenerator::Generate' is 122 lines long
+[Long Parameter List] source/rendering/utilities/icon_renderer.cpp:8 Function 'DrawIconWithBorder' has 7 parameters
+[Long Parameter List] source/rendering/utilities/light_drawer.cpp:70 Function 'LightDrawer::draw' has 6 parameters
+[Long Method] source/rendering/utilities/light_drawer.cpp:70 Function 'LightDrawer::draw' is 207 lines long
+[Long Method] source/rendering/utilities/light_drawer.cpp:279 Function 'LightDrawer::initRenderResources' is 113 lines long
+[Long Method] source/rendering/postprocess/effects/xbrz.cpp:93 Function 'main' is 167 lines long
+[Long Parameter List] source/rendering/drawers/map_layer_drawer.cpp:43 Function 'MapLayerDrawer::Draw' has 6 parameters
+[Long Method] source/rendering/drawers/map_layer_drawer.cpp:43 Function 'MapLayerDrawer::Draw' is 125 lines long
+[Long Method] source/rendering/drawers/minimap_drawer.cpp:23 Function 'MinimapDrawer::Draw' is 132 lines long
+[Long Method] source/rendering/drawers/minimap_renderer.cpp:60 Function 'MinimapRenderer::initialize' is 65 lines long
+[Long Parameter List] source/rendering/drawers/minimap_renderer.cpp:175 Function 'MinimapRenderer::updateRegion' has 6 parameters
+[Long Method] source/rendering/drawers/minimap_renderer.cpp:175 Function 'MinimapRenderer::updateRegion' is 89 lines long
+[Long Parameter List] source/rendering/drawers/minimap_renderer.cpp:266 Function 'MinimapRenderer::render' has 9 parameters
+[Long Method] source/rendering/drawers/minimap_renderer.cpp:266 Function 'MinimapRenderer::render' is 80 lines long
+[Long Parameter List] source/rendering/drawers/tiles/tile_renderer.cpp:154 Function 'TileRenderer::DrawTile' has 7 parameters
+[Long Method] source/rendering/drawers/tiles/tile_renderer.cpp:154 Function 'TileRenderer::DrawTile' is 163 lines long
+[Long Parameter List] source/rendering/drawers/tiles/floor_drawer.cpp:24 Function 'FloorDrawer::draw' has 7 parameters
+[Long Parameter List] source/rendering/drawers/tiles/tile_color_calculator.cpp:8 Function 'TileColorCalculator::Calculate' has 7 parameters
+[Long Method] source/rendering/drawers/tiles/tile_color_calculator.cpp:8 Function 'TileColorCalculator::Calculate' is 71 lines long
+[Long Parameter List] source/rendering/drawers/overlays/marker_drawer.cpp:16 Function 'MarkerDrawer::draw' has 9 parameters
+[Long Method] source/rendering/drawers/overlays/grid_drawer.cpp:38 Function 'GridDrawer::DrawIngameBox' is 61 lines long
+[Long Parameter List] source/rendering/drawers/overlays/grid_drawer.cpp:112 Function 'GridDrawer::drawRect' has 7 parameters
+[Long Parameter List] source/rendering/drawers/overlays/grid_drawer.cpp:121 Function 'GridDrawer::drawFilledRect' has 6 parameters
+[Long Parameter List] source/rendering/drawers/overlays/preview_drawer.cpp:23 Function 'PreviewDrawer::draw' has 10 parameters
+[Long Method] source/rendering/drawers/overlays/preview_drawer.cpp:23 Function 'PreviewDrawer::draw' is 110 lines long
+[Long Method] source/rendering/drawers/overlays/selection_drawer.cpp:13 Function 'SelectionDrawer::draw' is 70 lines long
+[Switch Statement] source/rendering/drawers/overlays/brush_overlay_drawer.cpp:52
+[Long Parameter List] source/rendering/drawers/overlays/brush_overlay_drawer.cpp:103 Function 'BrushOverlayDrawer::draw' has 9 parameters
+[Long Method] source/rendering/drawers/overlays/brush_overlay_drawer.cpp:103 Function 'BrushOverlayDrawer::draw' is 315 lines long
+[Long Parameter List] source/rendering/drawers/overlays/brush_overlay_drawer.cpp:420 Function 'BrushOverlayDrawer::get_color' has 6 parameters
+[Long Method] source/rendering/drawers/entities/creature_name_drawer.cpp:31 Function 'CreatureNameDrawer::draw' is 52 lines long
+[Long Parameter List] source/rendering/drawers/entities/creature_drawer.cpp:26 Function 'CreatureDrawer::BlitCreature' has 11 parameters
+[Long Parameter List] source/rendering/drawers/entities/creature_drawer.cpp:35 Function 'CreatureDrawer::BlitCreature' has 11 parameters
+[Long Method] source/rendering/drawers/entities/creature_drawer.cpp:35 Function 'CreatureDrawer::BlitCreature' is 74 lines long
+[Long Parameter List] source/rendering/drawers/entities/sprite_drawer.cpp:31 Function 'SpriteDrawer::glBlitAtlasQuad' has 8 parameters
+[Long Parameter List] source/rendering/drawers/entities/sprite_drawer.cpp:47 Function 'SpriteDrawer::glBlitSquare' has 8 parameters
+[Long Parameter List] source/rendering/drawers/entities/sprite_drawer.cpp:64 Function 'SpriteDrawer::glDrawBox' has 9 parameters
+[Long Parameter List] source/rendering/drawers/entities/sprite_drawer.cpp:81 Function 'SpriteDrawer::BlitSprite' has 8 parameters
+[Long Parameter List] source/rendering/drawers/entities/sprite_drawer.cpp:90 Function 'SpriteDrawer::BlitSprite' has 8 parameters
+[Long Parameter List] source/rendering/drawers/entities/item_drawer.cpp:33 Function 'ItemDrawer::BlitItem' has 13 parameters
+[Long Parameter List] source/rendering/drawers/entities/item_drawer.cpp:38 Function 'ItemDrawer::BlitItem' has 14 parameters
+[Switch Statement] source/rendering/drawers/entities/item_drawer.cpp:74
+[Long Method] source/rendering/drawers/entities/item_drawer.cpp:38 Function 'ItemDrawer::BlitItem' is 192 lines long
+[Long Parameter List] source/rendering/drawers/entities/item_drawer.cpp:232 Function 'ItemDrawer::DrawRawBrush' has 9 parameters
+[Switch Statement] source/rendering/drawers/entities/item_drawer.cpp:236
+[Long Parameter List] source/rendering/drawers/cursors/brush_cursor_drawer.cpp:14 Function 'BrushCursorDrawer::draw' has 8 parameters
+[Long Method] source/rendering/drawers/cursors/brush_cursor_drawer.cpp:14 Function 'BrushCursorDrawer::draw' is 73 lines long
+[Long Parameter List] source/rendering/drawers/cursors/drag_shadow_drawer.cpp:35 Function 'DragShadowDrawer::draw' has 7 parameters
+[Long Method] source/rendering/drawers/cursors/drag_shadow_drawer.cpp:35 Function 'DragShadowDrawer::draw' is 60 lines long
+[Long Parameter List] source/rendering/core/editor_sprite.cpp:18 Function 'EditorSprite::DrawTo' has 6 parameters
+[Large Class/File] source/rendering/core/game_sprite.cpp: 793 lines
+[Long Parameter List] source/rendering/core/game_sprite.cpp:31 Function 'CreatureSprite::DrawTo' has 6 parameters
+[Long Parameter List] source/rendering/core/game_sprite.cpp:127 Function 'GameSprite::getIndex' has 7 parameters
+[Long Parameter List] source/rendering/core/game_sprite.cpp:276 Function 'GameSprite::DrawTo' has 6 parameters
+[Long Parameter List] source/rendering/core/game_sprite.cpp:298 Function 'GameSprite::DrawTo' has 7 parameters
+[Long Method] source/rendering/core/sprite_preloader.cpp:57 Function 'SpritePreloader::preload' is 59 lines long
+[Long Method] source/rendering/core/sprite_preloader.cpp:155 Function 'SpritePreloader::update' is 57 lines long
+[Long Method] source/rendering/core/texture_atlas.cpp:96 Function 'TextureAtlas::addLayer' is 52 lines long
+[Long Method] source/rendering/core/texture_atlas.cpp:150 Function 'TextureAtlas::addSprite' is 81 lines long
+[Long Parameter List] source/rendering/core/coordinate_mapper.cpp:12 Function 'CoordinateMapper::ScreenToMap' has 9 parameters
+[Long Parameter List] source/rendering/core/text_renderer.cpp:88 Function 'TextRenderer::DrawText' has 6 parameters
+[Long Parameter List] source/rendering/core/text_renderer.cpp:100 Function 'TextRenderer::DrawTextBox' has 7 parameters
+[Long Parameter List] source/rendering/core/text_renderer.cpp:112 Function 'TextRenderer::DrawRect' has 6 parameters
+[Long Method] source/rendering/core/sprite_batch.cpp:55 Function 'SpriteBatch::initialize' is 71 lines long
+[Long Parameter List] source/rendering/core/sprite_batch.cpp:169 Function 'SpriteBatch::draw' has 9 parameters
+[Long Parameter List] source/rendering/core/sprite_batch.cpp:192 Function 'SpriteBatch::drawRect' has 6 parameters
+[Long Parameter List] source/rendering/core/sprite_batch.cpp:199 Function 'SpriteBatch::drawRectLines' has 6 parameters
+[Long Method] source/rendering/core/sprite_batch.cpp:210 Function 'SpriteBatch::flush' is 122 lines long
+[Switch Statement] source/rendering/ui/clipboard_handler.cpp:73
+[Long Method] source/rendering/ui/drawing_controller.cpp:43 Function 'DrawingController::HandleClick' is 143 lines long
+[Long Method] source/rendering/ui/drawing_controller.cpp:188 Function 'DrawingController::HandleDrag' is 89 lines long
+[Long Method] source/rendering/ui/drawing_controller.cpp:279 Function 'DrawingController::HandleRelease' is 121 lines long
+[Large Class/File] source/rendering/ui/map_display.cpp: 667 lines
+[Long Method] source/rendering/ui/map_display.cpp:181 Function 'MapCanvas::OnPaint' is 155 lines long
+[Long Method] source/rendering/ui/minimap_window.cpp:102 Function 'MinimapWindow::OnPaint' is 67 lines long
+[Switch Statement] source/rendering/ui/keyboard_handler.cpp:30
+[Long Method] source/rendering/ui/keyboard_handler.cpp:29 Function 'KeyboardHandler::OnKeyDown' is 89 lines long
+[Long Method] source/rendering/ui/keyboard_handler.cpp:167 Function 'KeyboardHandler::HandleHotkeys' is 57 lines long
+[Large Class/File] source/rendering/ui/tooltip_drawer.cpp: 607 lines
+[Switch Statement] source/rendering/ui/tooltip_drawer.cpp:92
+[Long Method] source/rendering/ui/tooltip_drawer.cpp:122 Function 'TooltipDrawer::getSpriteImage' is 99 lines long
+[Long Method] source/rendering/ui/tooltip_drawer.cpp:223 Function 'TooltipDrawer::prepareFields' is 54 lines long
+[Long Parameter List] source/rendering/ui/tooltip_drawer.cpp:279 Function 'TooltipDrawer::calculateLayout' has 6 parameters
+[Long Method] source/rendering/ui/tooltip_drawer.cpp:279 Function 'TooltipDrawer::calculateLayout' is 127 lines long
+[Long Parameter List] source/rendering/ui/tooltip_drawer.cpp:408 Function 'TooltipDrawer::drawBackground' has 7 parameters
+[Long Parameter List] source/rendering/ui/tooltip_drawer.cpp:440 Function 'TooltipDrawer::drawFields' has 7 parameters
+[Long Method] source/rendering/ui/tooltip_drawer.cpp:470 Function 'TooltipDrawer::drawContainerGrid' is 85 lines long
+[Long Method] source/rendering/ui/selection_controller.cpp:34 Function 'SelectionController::HandleClick' is 111 lines long
+[Long Method] source/rendering/ui/selection_controller.cpp:174 Function 'SelectionController::HandleRelease' is 62 lines long
+[Switch Statement] source/rendering/ui/selection_controller.cpp:342
+[Long Method] source/rendering/ui/selection_controller.cpp:323 Function 'SelectionController::ExecuteBoundboxSelection' is 110 lines long
+[Large Class/File] source/ext/pugixml.cpp: 10155 lines
+[Switch Statement] source/ext/pugixml.cpp:1599
+[Switch Statement] source/ext/pugixml.cpp:1833
+[Switch Statement] source/ext/pugixml.cpp:1986
+[Long Method] source/ext/pugixml.cpp:2186 Function 'parse_exclamation' is 109 lines long
+[Long Method] source/ext/pugixml.cpp:2297 Function 'parse_question' is 85 lines long
+[Long Method] source/ext/pugixml.cpp:2384 Function 'parse' is 233 lines long
+[Long Parameter List] source/ext/pugixml.cpp:2953 Function 'write' has 6 parameters
+[Switch Statement] source/ext/pugixml.cpp:3006
+[Switch Statement] source/ext/pugixml.cpp:3090
+[Switch Statement] source/ext/pugixml.cpp:3248
+[Switch Statement] source/ext/pugixml.cpp:4154
+[Switch Statement] source/ext/pugixml.cpp:4166
+[Switch Statement] source/ext/pugixml.cpp:4773
+[Switch Statement] source/ext/pugixml.cpp:5111
+[Long Parameter List] source/ext/pugixml.cpp:5564 Function 'partition' has 6 parameters
+[Long Method] source/ext/pugixml.cpp:5564 Function 'partition' is 60 lines long
+[Switch Statement] source/ext/pugixml.cpp:6035
+[Long Method] source/ext/pugixml.cpp:6160 Function 'operator' is 53 lines long
+[Switch Statement] source/ext/pugixml.cpp:6263
+[Switch Statement] source/ext/pugixml.cpp:6710
+[Switch Statement] source/ext/pugixml.cpp:6735
+[Switch Statement] source/ext/pugixml.cpp:6809
+[Switch Statement] source/ext/pugixml.cpp:7007
+[Long Method] source/ext/pugixml.cpp:6997 Function 'next' is 250 lines long
+[Switch Statement] source/ext/pugixml.cpp:7579
+[Switch Statement] source/ext/pugixml.cpp:7606
+[Long Method] source/ext/pugixml.cpp:7601 Function 'step_push' is 55 lines long
+[Switch Statement] source/ext/pugixml.cpp:7662
+[Long Method] source/ext/pugixml.cpp:7659 Function 'step_fill' is 171 lines long
+[Switch Statement] source/ext/pugixml.cpp:7836
+[Long Method] source/ext/pugixml.cpp:7833 Function 'step_fill' is 70 lines long
+[Switch Statement] source/ext/pugixml.cpp:7993
+[Switch Statement] source/ext/pugixml.cpp:8089
+[Long Method] source/ext/pugixml.cpp:7992 Function 'eval_boolean' is 119 lines long
+[Switch Statement] source/ext/pugixml.cpp:8114
+[Switch Statement] source/ext/pugixml.cpp:8211
+[Long Method] source/ext/pugixml.cpp:8113 Function 'eval_number' is 120 lines long
+[Long Method] source/ext/pugixml.cpp:8235 Function 'eval_string_concat' is 53 lines long
+[Switch Statement] source/ext/pugixml.cpp:8291
+[Switch Statement] source/ext/pugixml.cpp:8476
+[Long Method] source/ext/pugixml.cpp:8290 Function 'eval_string' is 208 lines long
+[Switch Statement] source/ext/pugixml.cpp:8501
+[Switch Statement] source/ext/pugixml.cpp:8537
+[Long Method] source/ext/pugixml.cpp:8500 Function 'eval_node_set' is 121 lines long
+[Switch Statement] source/ext/pugixml.cpp:8624
+[Switch Statement] source/ext/pugixml.cpp:8733
+[Long Method] source/ext/pugixml.cpp:8732 Function 'parse_function' is 119 lines long
+[Switch Statement] source/ext/pugixml.cpp:8856
+[Long Method] source/ext/pugixml.cpp:8853 Function 'parse_axis_name' is 71 lines long
+[Switch Statement] source/ext/pugixml.cpp:8927
+[Switch Statement] source/ext/pugixml.cpp:8965
+[Long Method] source/ext/pugixml.cpp:8964 Function 'parse_primary_expression' is 102 lines long
+[Long Method] source/ext/pugixml.cpp:9102 Function 'parse_step' is 137 lines long
+[Switch Statement] source/ext/pugixml.cpp:9756
+[Long Method] source/brushes/brush.cpp:107 Function 'Brushes::unserializeBrush' is 75 lines long
+[Long Parameter List] source/brushes/brush_utility.cpp:18 Function 'BrushUtility::GetTilesToDraw' has 6 parameters
+[Long Method] source/brushes/brush_utility.cpp:18 Function 'BrushUtility::GetTilesToDraw' is 68 lines long
+[Long Parameter List] source/brushes/brush_utility.cpp:88 Function 'BrushUtility::FloodFill' has 6 parameters
+[Long Method] source/brushes/brush_utility.cpp:88 Function 'BrushUtility::FloodFill' is 51 lines long
+[Long Method] source/brushes/table/table_brush_loader.cpp:19 Function 'TableBrushLoader::load' is 67 lines long
+[Long Method] source/brushes/table/table_border_calculator.cpp:31 Function 'TableBorderCalculator::doTables' is 67 lines long
+[Long Method] source/brushes/managers/doodad_preview_manager.cpp:28 Function 'DoodadPreviewManager::FillBuffer' is 145 lines long
+[Long Method] source/brushes/wall/wall_brush_loader.cpp:74 Function 'WallBrushLoader::load' is 168 lines long
+[Long Method] source/brushes/wall/wall_brush.cpp:36 Function 'WallBrush::draw' is 73 lines long
+[Long Method] source/brushes/wall/wall_brush.cpp:166 Function 'WallDecorationBrush::draw' is 89 lines long
+[Long Method] source/brushes/wall/wall_border_calculator.cpp:36 Function 'WallBorderCalculator::doWalls' is 169 lines long
+[Long Method] source/brushes/carpet/carpet_brush_loader.cpp:20 Function 'CarpetBrushLoader::load' is 96 lines long
+[Long Method] source/brushes/carpet/carpet_border_calculator.cpp:28 Function 'CarpetBorderCalculator::calculate' is 51 lines long
+[Long Method] source/brushes/ground/ground_brush_loader.cpp:20 Function 'GroundBrushLoader::load' is 396 lines long
+[Long Method] source/brushes/ground/ground_border_calculator.cpp:16 Function 'GroundBorderCalculator::calculate' is 388 lines long
+[Long Method] source/brushes/ground/auto_border.cpp:42 Function 'AutoBorder::load' is 59 lines long
+[Long Method] source/brushes/doodad/doodad_brush_loader.cpp:28 Function 'DoodadBrushLoader::load' is 70 lines long
+[Long Method] source/brushes/doodad/doodad_brush_loader.cpp:100 Function 'DoodadBrushLoader::loadAlternative' is 107 lines long
+[Long Method] source/brushes/door/door_brush.cpp:165 Function 'DoorBrush::draw' is 117 lines long
+[Switch Statement] source/palette/palette_common.cpp:99
+[Switch Statement] source/palette/palette_window.cpp:259
+[Long Method] source/palette/palette_window.cpp:254 Function 'PaletteWindow::OnSelectBrush' is 88 lines long
+[Long Method] source/palette/house/edit_house_dialog.cpp:120 Function 'EditHouseDialog::OnClickOK' is 65 lines long
+[Long Method] source/palette/house/house_palette.cpp:150 Function 'HousePalette::FilterHouses' is 52 lines long
+[Switch Statement] source/palette/panels/brush_panel.cpp:69
+[Long Method] source/palette/controls/virtual_brush_grid.cpp:90 Function 'VirtualBrushGrid::DrawBrushItem' is 91 lines long
+[Long Method] source/map/otml.cpp:230 Function 'OTMLEmitter::emitNode' is 53 lines long
+[Long Method] source/map/otml.cpp:344 Function 'OTMLParser::parseNode' is 71 lines long
+[Large Class/File] source/map/tile.cpp: 659 lines
+[Long Method] source/map/tile.cpp:453 Function 'Tile::update' is 64 lines long
+[Long Parameter List] source/map/tile.cpp:656 Function 'std::equal' has 6 parameters
+[Long Parameter List] source/map/spatial_hash_grid.h:93 Function 'visitLeavesByViewport' has 9 parameters
+[Long Parameter List] source/map/spatial_hash_grid.h:140 Function 'visitLeavesByCells' has 9 parameters
+[Long Method] source/map/spatial_hash_grid.h:140 Function 'visitLeavesByCells' is 58 lines long
+[Long Method] source/map/map_statistics.cpp:10 Function 'MapStatisticsCollector::Collect' is 111 lines long
+[Long Method] source/map/tileset.cpp:87 Function 'Tileset::loadCategory' is 72 lines long
+[Long Method] source/map/tileset.cpp:176 Function 'TilesetCategory::loadBrush' is 94 lines long
+[Long Parameter List] source/map/map_search.cpp:98 Function 'MapSearchUtility::SearchItems' has 6 parameters
+[Long Method] source/map/map_search.cpp:98 Function 'MapSearchUtility::SearchItems' is 73 lines long
+[Long Method] source/map/map.cpp:127 Function 'Map::convert' is 132 lines long
+[Long Method] source/ui/dcbutton.cpp:123 Function 'DCButton::OnNanoVGPaint' is 60 lines long
+[Switch Statement] source/ui/theme.h:27
+[Long Method] source/ui/map_popup_menu.cpp:42 Function 'MapPopupMenu::Update' is 199 lines long
+[Large Class/File] source/ui/tool_options_surface.cpp: 526 lines
+[Long Parameter List] source/ui/tool_options_surface.cpp:70 Function 'ToolOptionsSurface::DoSetSizeHints' has 6 parameters
+[Long Method] source/ui/tool_options_surface.cpp:74 Function 'ToolOptionsSurface::RebuildLayout' is 113 lines long
+[Long Parameter List] source/ui/tool_options_surface.cpp:272 Function 'ToolOptionsSurface::DrawSlider' has 7 parameters
+[Long Method] source/ui/tool_options_surface.cpp:342 Function 'ToolOptionsSurface::OnMouse' is 126 lines long
+[Long Method] source/ui/map_statistics_dialog.cpp:21 Function 'MapStatisticsDialog::Show' is 98 lines long
+[Long Method] source/ui/dialog_helper.cpp:24 Function 'DialogHelper::OpenProperties' is 57 lines long
+[Long Method] source/ui/main_frame.cpp:211 Function 'MainFrame::DoQuerySave' is 66 lines long
+[Long Method] source/ui/replace_items_window.cpp:330 Function 'ReplaceItemsDialog::OnExecuteButtonClicked' is 59 lines long
+[Long Method] source/ui/live_dialogs.cpp:20 Function 'LiveDialogs::ShowHostDialog' is 81 lines long
+[Long Method] source/ui/live_dialogs.cpp:103 Function 'LiveDialogs::ShowJoinDialog' is 81 lines long
+[Large Class/File] source/ui/main_menubar.cpp: 560 lines
+[Long Parameter List] source/ui/menubar_loader.cpp:12 Function 'MenuBarLoader::Load' has 9 parameters
+[Long Parameter List] source/ui/menubar_loader.cpp:53 Function 'MenuBarLoader::LoadItem' has 9 parameters
+[Long Method] source/ui/menubar_loader.cpp:53 Function 'MenuBarLoader::LoadItem' is 87 lines long
+[Long Method] source/ui/find_item_window.cpp:284 Function 'FindItemDialog::RefreshContentsInternal' is 134 lines long
+[Long Parameter List] source/ui/dialog_util.cpp:13 Function 'DialogUtil::PopupDialog' has 6 parameters
+[Long Method] source/ui/replace_tool/rule_list_control.cpp:54 Function 'RuleListControl::OnNanoVGPaint' is 72 lines long
+[Large Class/File] source/ui/replace_tool/replace_tool_window.cpp: 523 lines
+[Long Method] source/ui/replace_tool/replace_tool_window.cpp:101 Function 'ReplaceToolWindow::InitLayout' is 194 lines long
+[Long Method] source/ui/replace_tool/replace_tool_window.cpp:352 Function 'ReplaceToolWindow::OnExecute' is 61 lines long
+[Long Method] source/ui/replace_tool/replace_tool_window.cpp:415 Function 'ReplaceToolWindow::OnAddVisibleTiles' is 61 lines long
+[Long Method] source/ui/replace_tool/card_panel.cpp:46 Function 'CardPanel::OnNanoVGPaint' is 136 lines long
+[Long Method] source/ui/replace_tool/library_panel.cpp:39 Function 'LibraryPanel::InitLayout' is 64 lines long
+[Long Method] source/ui/replace_tool/visual_similarity_service.cpp:237 Function 'VisualSimilarityService::FindSimilar' is 115 lines long
+[Long Method] source/ui/replace_tool/rule_builder_panel.cpp:36 Function 'RuleBuilderPanel::ItemDropTarget::OnDropText' is 66 lines long
+[Long Method] source/ui/replace_tool/rule_builder_panel.cpp:256 Function 'RuleBuilderPanel::OnMouse' is 55 lines long
+[Long Method] source/ui/replace_tool/rule_builder_panel.cpp:313 Function 'RuleBuilderPanel::HitTest' is 98 lines long
+[Long Parameter List] source/ui/replace_tool/rule_card_renderer.cpp:88 Function 'RuleCardRenderer::DrawRuleCard' has 9 parameters
+[Long Method] source/ui/replace_tool/rule_card_renderer.cpp:88 Function 'RuleCardRenderer::DrawRuleCard' is 109 lines long
+[Long Parameter List] source/ui/replace_tool/rule_card_renderer.cpp:252 Function 'RuleCardRenderer::DrawRuleItemCard' has 11 parameters
+[Long Method] source/ui/replace_tool/rule_card_renderer.cpp:252 Function 'RuleCardRenderer::DrawRuleItemCard' is 80 lines long
+[Long Method] source/ui/replace_tool/replacement_engine.cpp:47 Function 'ReplacementEngine::ExecuteReplacement' is 89 lines long
+[Long Method] source/ui/toolbar/brush_toolbar.cpp:66 Function 'BrushToolBar::Update' is 59 lines long
+[Switch Statement] source/ui/toolbar/brush_toolbar.cpp:132
+[Long Method] source/ui/toolbar/brush_toolbar.cpp:127 Function 'BrushToolBar::OnToolbarClick' is 51 lines long
+[Switch Statement] source/ui/toolbar/toolbar_registry.cpp:64
+[Switch Statement] source/ui/toolbar/size_toolbar.cpp:111
+[Switch Statement] source/ui/toolbar/standard_toolbar.cpp:96
+[Long Method] source/ui/dialogs/outfit_selection_grid.cpp:141 Function 'OutfitSelectionGrid::OnNanoVGPaint' is 100 lines long
+[Switch Statement] source/ui/dialogs/find_dialog.cpp:90
+[Long Method] source/ui/dialogs/find_dialog.cpp:178 Function 'FindBrushDialog::OnClickOKInternal' is 61 lines long
+[Long Method] source/ui/dialogs/find_dialog.cpp:241 Function 'FindBrushDialog::RefreshContentsInternal' is 61 lines long
+[Long Method] source/ui/managers/layout_manager.cpp:32 Function 'LayoutManager::LoadPerspective' is 148 lines long
+[Switch Statement] source/ui/properties/properties_window.cpp:265
+[Switch Statement] source/ui/properties/attribute_service.cpp:17
+[Long Parameter List] source/ui/controls/modern_button.cpp:38 Function 'ModernButton::DoSetSizeHints' has 6 parameters
+[Switch Statement] source/ui/map/map_properties_window.cpp:39
+[Long Method] source/ui/map/towns_window.cpp:141 Function 'EditTownsDialog::UpdateSelection' is 63 lines long
+[Long Method] source/ui/map/towns_window.cpp:267 Function 'EditTownsDialog::OnClickOK' is 68 lines long
+[Switch Statement] source/ui/map/import_map_window.cpp:124
+[Switch Statement] source/ui/map/import_map_window.cpp:133
+[Switch Statement] source/ui/menubar/view_settings_handler.cpp:29
+[Long Method] source/ui/menubar/view_settings_handler.cpp:11 Function 'ViewSettingsHandler::LoadValues' is 62 lines long
+[Long Method] source/ui/menubar/view_settings_handler.cpp:75 Function 'ViewSettingsHandler::OnChangeViewSettings' is 57 lines long
+[Switch Statement] source/ui/menubar/view_settings_handler.cpp:138
+[Long Method] source/ui/menubar/menubar_action_manager.cpp:12 Function 'MenuBarActionManager::RegisterActions' is 164 lines long
+[Long Method] source/ui/menubar/menubar_action_manager.cpp:178 Function 'MenuBarActionManager::UpdateState' is 112 lines long
+[Switch Statement] source/editor/action.cpp:121
+[Long Method] source/editor/action.cpp:116 Function 'Action::commit' is 141 lines long
+[Switch Statement] source/editor/action.cpp:269
+[Long Method] source/editor/action.cpp:259 Function 'Action::undo' is 128 lines long
+[Long Method] source/editor/action_queue.cpp:54 Function 'ActionQueue::addBatch' is 53 lines long
+[Long Method] source/editor/managers/editor_manager.cpp:276 Function 'EditorManager::LoadMap' is 68 lines long
+[Long Method] source/editor/operations/map_version_changer.cpp:39 Function 'MapVersionChanger::changeMapVersion' is 70 lines long
+[Large Class/File] source/editor/operations/draw_operations.cpp: 545 lines
+[Long Method] source/editor/operations/draw_operations.cpp:28 Function 'DrawOperations::draw' is 169 lines long
+[Long Method] source/editor/operations/draw_operations.cpp:199 Function 'DrawOperations::draw' is 63 lines long
+[Long Method] source/editor/operations/draw_operations.cpp:264 Function 'DrawOperations::draw' is 281 lines long
+[Long Method] source/editor/operations/copy_operations.cpp:72 Function 'CopyOperations::cut' is 96 lines long
+[Long Method] source/editor/operations/copy_operations.cpp:170 Function 'CopyOperations::paste' is 129 lines long
+[Long Method] source/editor/operations/selection_operations.cpp:87 Function 'SelectionOperations::moveSelection' is 247 lines long
+[Long Method] source/editor/operations/selection_operations.cpp:336 Function 'SelectionOperations::destroySelection' is 78 lines long
+[Long Method] source/editor/persistence/tileset_exporter.cpp:13 Function 'TilesetExporter::exportTilesets' is 77 lines long
+[Large Class/File] source/editor/persistence/editor_persistence.cpp: 565 lines
+[Long Method] source/editor/persistence/editor_persistence.cpp:44 Function 'EditorPersistence::saveMap' is 195 lines long
+[Long Parameter List] source/editor/persistence/editor_persistence.cpp:241 Function 'EditorPersistence::importMap' has 6 parameters
+[Switch Statement] source/editor/persistence/editor_persistence.cpp:281
+[Switch Statement] source/editor/persistence/editor_persistence.cpp:342
+[Switch Statement] source/editor/persistence/editor_persistence.cpp:418
+[Long Method] source/editor/persistence/editor_persistence.cpp:241 Function 'EditorPersistence::importMap' is 320 lines long
+[Long Parameter List] source/editor/persistence/editor_persistence.cpp:563 Function 'EditorPersistence::importMiniMap' has 6 parameters
+[Switch Statement] source/app/settings.cpp:139
+[Long Method] source/app/settings.cpp:152 Function 'Settings::IO' is 228 lines long
+[Large Class/File] source/app/preferences.cpp: 755 lines
+[Long Method] source/app/preferences.cpp:91 Function 'PreferencesWindow::CreateGeneralPage' is 71 lines long
+[Long Method] source/app/preferences.cpp:164 Function 'PreferencesWindow::CreateEditorPage' is 60 lines long
+[Long Method] source/app/preferences.cpp:226 Function 'PreferencesWindow::CreateGraphicsPage' is 131 lines long
+[Long Method] source/app/preferences.cpp:394 Function 'PreferencesWindow::CreateUIPage' is 110 lines long
+[Long Method] source/app/preferences.cpp:506 Function 'PreferencesWindow::CreateClientPage' is 69 lines long
+[Long Method] source/app/preferences.cpp:599 Function 'PreferencesWindow::Apply' is 156 lines long
+[Large Class/File] source/app/client_version.cpp: 574 lines
+[Long Method] source/app/client_version.cpp:37 Function 'ClientVersion::loadVersions' is 96 lines long
+[Long Method] source/app/client_version.cpp:175 Function 'ClientVersion::loadVersion' is 103 lines long
+[Long Method] source/app/client_version.cpp:416 Function 'ClientVersion::hasValidPaths' is 83 lines long
+[Long Method] source/app/application.cpp:68 Function 'Application::OnInit' is 189 lines long
+[Long Method] source/app/managers/version_manager.cpp:81 Function 'VersionManager::LoadDataFiles' is 87 lines long
+[Long Method] source/game/materials.cpp:87 Function 'Materials::loadExtensions' is 106 lines long
+[Long Method] source/game/materials.cpp:232 Function 'Materials::createOtherTileset' is 65 lines long
+[Large Class/File] source/game/item.cpp: 531 lines
+[Long Method] source/game/item.cpp:98 Function 'transformItem' is 53 lines long
+[Switch Statement] source/game/item.cpp:180
+[Long Method] source/game/item.cpp:178 Function 'Item::hasProperty' is 54 lines long
+[Switch Statement] source/game/item.cpp:364
+[Switch Statement] source/game/item.cpp:429
+[Long Method] source/game/item.cpp:428 Function 'Item::LiquidID2Name' is 51 lines long
+[Large Class/File] source/game/items.cpp: 791 lines
+[Long Method] source/game/items.cpp:155 Function 'ItemDatabase::loadFromOtbGeneric' is 267 lines long
+[Long Method] source/game/items.cpp:424 Function 'ItemDatabase::loadFromOtb' is 72 lines long
+[Long Method] source/game/items.cpp:574 Function 'ItemDatabase::loadItemFromGameXml' is 134 lines long
+[Long Method] source/game/creatures.cpp:64 Function 'CreatureType::loadFromXML' is 77 lines long
+[Long Method] source/game/creatures.cpp:143 Function 'CreatureType::loadFromOTXML' is 82 lines long
+[Long Method] source/game/creatures.cpp:323 Function 'CreatureDatabase::importXMLFromOT' is 87 lines long
+[Switch Statement] source/game/item_attributes.cpp:288
+[Long Method] source/game/item_attributes.cpp:282 Function 'ItemAttribute::unserialize' is 58 lines long
+[Switch Statement] source/game/item_attributes.cpp:347
+[Switch Statement] source/game/creature.cpp:39
