@@ -164,7 +164,7 @@ protected:
 
 	bool saveMap(Map& map, NodeFileWriteHandle& handle);
 
-	void writeTileData(Map& map, NodeFileWriteHandle& f);
+	void writeTileData(const Map& map, NodeFileWriteHandle& f);
 	void writeTowns(const Map& map, NodeFileWriteHandle& f);
 	bool writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
 

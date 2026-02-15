@@ -174,8 +174,9 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 					g_gui.RefreshPalettes();
 				}
 			} else {
-				Waypoint* nwp = newd Waypoint(*wp);
-				nwp->name = wpname;
+				auto nwp_ptr = std::make_unique<Waypoint>(*wp);
+				nwp_ptr->name = wpname;
+				Waypoint* nwp = nwp_ptr.get();
 
 				Waypoint* rwp = map->waypoints.getWaypoint(oldwpname);
 				if (rwp) {
@@ -185,7 +186,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 					map->waypoints.removeWaypoint(rwp->name);
 				}
 
-				map->waypoints.addWaypoint(nwp);
+				map->waypoints.addWaypoint(std::move(nwp_ptr));
 				g_brush_manager.waypoint_brush->setWaypoint(nwp);
 
 				// Refresh other palettes
@@ -201,7 +202,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 
 void WaypointPalettePanel::OnClickAddWaypoint(wxCommandEvent& event) {
 	if (map) {
-		map->waypoints.addWaypoint(newd Waypoint());
+		map->waypoints.addWaypoint(std::make_unique<Waypoint>());
 		long i = waypoint_list->InsertItem(0, "");
 		waypoint_list->EditLabel(i);
 
