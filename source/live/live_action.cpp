@@ -22,6 +22,7 @@
 #include "editor/editor.h"
 
 #include <memory>
+#include <ranges>
 
 NetworkedAction::NetworkedAction(Editor& editor, ActionIdentifier ident) :
 	Action(editor, ident),
@@ -69,8 +70,8 @@ void NetworkedBatchAction::commit() {
 	// Track changed nodes...
 	DirtyList dirty_list;
 
-	for (ActionVector::iterator it = batch.begin(); it != batch.end(); ++it) {
-		NetworkedAction* action = static_cast<NetworkedAction*>(it->get());
+	for (const auto& action_ptr : batch) {
+		NetworkedAction* action = static_cast<NetworkedAction*>(action_ptr.get());
 		if (!action->isCommited()) {
 			action->commit(type != ACTION_SELECT ? &dirty_list : nullptr);
 			if (action->owner != 0) {
@@ -86,8 +87,8 @@ void NetworkedBatchAction::undo() {
 	// Track changed nodes...
 	DirtyList dirty_list;
 
-	for (ActionVector::reverse_iterator it = batch.rbegin(); it != batch.rend(); ++it) {
-		(*it)->undo(type != ACTION_SELECT ? &dirty_list : nullptr);
+	for (auto& action_ptr : std::ranges::reverse_view(batch)) {
+		action_ptr->undo(type != ACTION_SELECT ? &dirty_list : nullptr);
 	}
 	// Broadcast changes!
 	queue.broadcast(dirty_list);
