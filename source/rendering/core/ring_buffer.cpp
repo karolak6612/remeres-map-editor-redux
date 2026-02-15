@@ -1,5 +1,4 @@
 #include "rendering/core/ring_buffer.h"
-#include "rendering/core/gl_resources.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <cstring>
@@ -11,11 +10,12 @@ RingBuffer::~RingBuffer() {
 
 RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 	:
-	buffer_(std::move(other.buffer_)),
+	buffer_id_(other.buffer_id_),
 	mapped_ptr_(other.mapped_ptr_), element_size_(other.element_size_), max_elements_(other.max_elements_), section_size_(other.section_size_), current_section_(other.current_section_), use_persistent_mapping_(other.use_persistent_mapping_), initialized_(other.initialized_) {
 	for (size_t i = 0; i < BUFFER_COUNT; ++i) {
 		fences_[i] = std::move(other.fences_[i]);
 	}
+	other.buffer_id_ = 0;
 	other.mapped_ptr_ = nullptr;
 	other.initialized_ = false;
 }
@@ -23,7 +23,7 @@ RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 	if (this != &other) {
 		cleanup();
-		buffer_ = std::move(other.buffer_);
+		buffer_id_ = other.buffer_id_;
 		mapped_ptr_ = other.mapped_ptr_;
 		for (size_t i = 0; i < BUFFER_COUNT; ++i) {
 			fences_[i] = std::move(other.fences_[i]);
@@ -35,6 +35,7 @@ RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 		use_persistent_mapping_ = other.use_persistent_mapping_;
 		initialized_ = other.initialized_;
 
+		other.buffer_id_ = 0;
 		other.mapped_ptr_ = nullptr;
 		other.initialized_ = false;
 	}
@@ -54,12 +55,9 @@ bool RingBuffer::initialize(size_t element_size, size_t max_elements) {
 	size_t total_size = section_size_ * BUFFER_COUNT;
 
 	// Create buffer
-	buffer_ = std::make_unique<GLBuffer>();
-	GLuint buffer_id_ = buffer_->GetID();
-
+	glCreateBuffers(1, &buffer_id_);
 	if (buffer_id_ == 0) {
 		spdlog::error("RingBuffer: Failed to create buffer");
-		buffer_.reset();
 		return false;
 	}
 
@@ -76,7 +74,8 @@ bool RingBuffer::initialize(size_t element_size, size_t max_elements) {
 
 	if (!mapped_ptr_) {
 		spdlog::error("RingBuffer: Persistent mapping failed");
-		buffer_.reset();
+		glDeleteBuffers(1, &buffer_id_);
+		buffer_id_ = 0;
 		return false;
 	}
 
@@ -96,19 +95,16 @@ void RingBuffer::cleanup() {
 	}
 
 	// Unmap and delete buffer
-	if (buffer_) {
+	if (buffer_id_) {
 		if (mapped_ptr_) {
-			glUnmapNamedBuffer(buffer_->GetID());
+			glUnmapNamedBuffer(buffer_id_);
 			mapped_ptr_ = nullptr;
 		}
-		buffer_.reset();
+		glDeleteBuffers(1, &buffer_id_);
+		buffer_id_ = 0;
 	}
 
 	initialized_ = false;
-}
-
-GLuint RingBuffer::getBufferId() const {
-	return buffer_ ? buffer_->GetID() : 0;
 }
 
 void* RingBuffer::waitAndMap(size_t count) {
@@ -118,10 +114,10 @@ void* RingBuffer::waitAndMap(size_t count) {
 
 	// Wait for fence on current section if it exists
 	if (fences_[current_section_]) {
-		static constexpr uint64_t WAIT_TIMEOUT_NS = 5000000000ULL; // 5 second timeout (increased from 1s for large viewports)
+		// Wait with timeout
 		GLenum result = fences_[current_section_].clientWait(
-			GL_SYNC_FLUSH_COMMANDS_BIT, WAIT_TIMEOUT_NS
-		);
+			GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000
+		); // 1 second timeout
 
 		if (result == GL_TIMEOUT_EXPIRED || result == GL_WAIT_FAILED) {
 			spdlog::error("RingBuffer: Fence wait timeout/failed on section {}", current_section_);

@@ -176,22 +176,16 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
 		const AtlasRegion* region;
 		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
-			region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+			region = spr->getCachedDefaultRegion();
+			if (!region) {
+				// Fallback to slow path to populate cache
+				region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+			}
 		} else {
 			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
 		}
 
 		if (region) {
-#ifdef DEBUG
-			// DEBUG: Check for mismatch on Item 369 using PRECISE sub-sprite ID
-			if (item->getID() == 369) {
-				// Use 0,0 as pattern coordinates for 1x1 items
-				uint32_t precise_expected_id = spr->getSpriteId(frame, 0, 0);
-				if (region->debug_sprite_id != 0 && precise_expected_id != 0 && region->debug_sprite_id != precise_expected_id) {
-					spdlog::error("SPRITE MISMATCH DETECTED: Item 369 (Expected Sprite ID {}, Actual Region Owner {})", precise_expected_id, region->debug_sprite_id);
-				}
-			}
-#endif
 			sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, red, green, blue, alpha);
 		}
 	} else {

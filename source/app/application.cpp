@@ -88,8 +88,8 @@ bool Application::OnInit() {
 	// 	freopen_s(&fp, "CONOUT$", "w", stderr);
 	// #endif
 
-	// Configure spdlog for info output
-	spdlog::set_level(spdlog::level::info);
+	// Configure spdlog for debug output
+	spdlog::set_level(spdlog::level::debug);
 	spdlog::flush_on(spdlog::level::info);
 	spdlog::info("RME starting up - logging enabled");
 

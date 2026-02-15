@@ -88,8 +88,8 @@ public:
 	SpawnPositionList::const_iterator end() const {
 		return spawns.end();
 	}
-	SpawnPositionList::iterator erase(SpawnPositionList::iterator iter) {
-		return spawns.erase(iter);
+	void erase(SpawnPositionList::iterator iter) {
+		spawns.erase(iter);
 	}
 	SpawnPositionList::iterator find(Position& pos) {
 		return spawns.find(pos);

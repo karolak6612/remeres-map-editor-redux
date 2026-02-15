@@ -43,12 +43,6 @@ public:
 	void removeSprite(uint32_t sprite_id);
 
 	/**
-	 * Clear the mapping for a sprite ID WITHOUT freeing the slot.
-	 * Used for recovering from stale/colliding map entries safely.
-	 */
-	void clearMapping(uint32_t sprite_id);
-
-	/**
 	 * Get the atlas region for a sprite. O(1) for common sprites.
 	 * @param sprite_id Sprite ID
 	 * @return Pointer to region, or nullptr if not found
@@ -108,7 +102,7 @@ private:
 	std::unordered_map<uint32_t, AtlasRegion*> sprite_regions_;
 
 	// O(1) direct lookup for sprite IDs < DIRECT_LOOKUP_SIZE
-	std::vector<AtlasRegion*> direct_lookup_ { DIRECT_LOOKUP_SIZE, nullptr };
+	std::vector<const AtlasRegion*> direct_lookup_ { DIRECT_LOOKUP_SIZE, nullptr };
 };
 
 #endif
