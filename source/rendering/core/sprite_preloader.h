@@ -41,6 +41,7 @@ private:
 
 	struct Task {
 		uint32_t id;
+		uint64_t generation_id;
 		std::string spritefile;
 		bool is_extended;
 		bool has_transparency;
@@ -48,6 +49,7 @@ private:
 
 	struct Result {
 		uint32_t id;
+		uint64_t generation_id;
 		std::unique_ptr<uint8_t[]> data;
 		std::string spritefile;
 	};
@@ -64,6 +66,7 @@ private:
 	std::queue<Task> task_queue;
 	std::queue<Result> result_queue;
 	std::unordered_set<uint32_t> pending_ids; // To avoid duplicate tasks
+	std::unordered_set<uint32_t> cancelled_ids; // IDs that were cleared and should be ignored
 };
 
 namespace rme {

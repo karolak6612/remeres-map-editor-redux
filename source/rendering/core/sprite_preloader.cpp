@@ -37,6 +37,11 @@ void SpritePreloader::shutdown() {
 
 void SpritePreloader::clear() {
 	std::lock_guard<std::mutex> lock(queue_mutex);
+	// When clearing, we must ensure any in-flight tasks are ignored when they complete.
+	// We move all pending IDs to the cancelled set.
+	for (auto id : pending_ids) {
+		cancelled_ids.insert(id);
+	}
 	task_queue = std::queue<Task>();
 	result_queue = std::queue<Result>();
 	pending_ids.clear();
@@ -72,12 +77,16 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 					}
 				}
 
+				// Fix 1: Handle negative indices and strict bounds check
 				if (idx < 0 || (size_t)idx >= spr->spriteList.size()) {
 					continue;
 				}
 
 				GameSprite::NormalImage* img = spr->spriteList[idx];
 				if (img && !img->isGLLoaded) {
+					// Ensure parent is set so GC can invalidate cached_default_region
+					// when evicting this sprite later (prevents stale cache → wrong sprite)
+					img->parent = spr;
 					ids_to_enqueue.push_back(img->id);
 				}
 			}
@@ -92,7 +101,22 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 		for (uint32_t id : ids_to_enqueue) {
 			if (pending_ids.insert(id).second) {
-				task_queue.push({ id, sprfile, is_extended, has_transparency });
+				// Capture the current generation ID of the sprite to detect stale tasks later
+				uint64_t gen_id = 0;
+				// We need to look up the sprite again to get generation_id, or cache it.
+				// Since we just built ids_to_enqueue, we implicitly know the IDs.
+				// However, ids_to_enqueue is just IDs. We should have captured generation_id earlier or valid pointer.
+				// But we can't safely access 'img' here as it might have been invalidated if optimization was loop-hoisted?
+				// Actually, 'img' was accessed inside the loop. 'ids_to_enqueue' is local thread storage.
+				// We need to store pairs of (id, generation_id) in ids_to_enqueue, or look it up safely.
+				// Safest is to look up in image_space since we are on main thread (preload called from draw).
+				if (id < g_gui.gfx.image_space.size()) {
+					auto& ptr = g_gui.gfx.image_space[id];
+					if (ptr) {
+						gen_id = ptr->generation_id;
+					}
+				}
+				task_queue.push({ id, gen_id, sprfile, is_extended, has_transparency });
 			}
 		}
 		cv.notify_all();
@@ -128,7 +152,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
 			if (rgba) {
-				result_queue.push({ task.id, std::move(rgba), std::move(task.spritefile) });
+				result_queue.push({ task.id, task.generation_id, std::move(rgba), std::move(task.spritefile) });
 			} else {
 				pending_ids.erase(task.id);
 			}
@@ -157,15 +181,44 @@ void SpritePreloader::update() {
 		Result& res = results.front();
 		auto id = res.id;
 
-		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-		if (res.spritefile == g_gui.gfx.getSpriteFile() && !g_gui.gfx.isUnloaded() && id < g_gui.gfx.image_space.size()) {
-			auto& img_ptr = g_gui.gfx.image_space[id];
-			if (img_ptr) {
-				// Use static_cast for performance, as we know the type from loaders
-				auto* img = static_cast<GameSprite::NormalImage*>(img_ptr.get());
-				assert(img);
-				if (!img->isGLLoaded) {
-					img->fulfillPreload(std::move(res.data));
+		// Check if this ID was cancelled
+		bool cancelled = false;
+		{
+			// We need to check cancelled_ids which is protected by mutex
+			// But we don't want to hold the mutex for the whole loop if possible.
+			// However, since we're in the main thread (update), and clear() also locks mutex,
+			// we need to be careful.
+			// Actually, let's just use the lock for the brief check if we were to be 100% safe,
+			// but cancelled_ids is only modified in clear() (main thread) and update() (main thread).
+			// Wait, clear() might be called from main thread too. A race with worker? No, worker doesn't touch cancelled_ids.
+			// So it's safe to read/write cancelled_ids here without mutex IF clear() is main thread only.
+			// SpritePreloader::clear() uses the mutex, implying it might be called from elsewhere?
+			// The header says "Should be called when GraphicManager is cleared", which is main thread.
+			// So we technically don't need the mutex for cancelled_ids if it's main-thread only.
+			// BUT, let's be safe and assume clear() could be called during some emergency shutdown/reset.
+			std::lock_guard<std::mutex> lock(queue_mutex);
+			if (cancelled_ids.count(id)) {
+				cancelled_ids.erase(id); // Consume the cancellation
+				cancelled = true;
+			}
+		}
+
+		if (!cancelled) {
+			// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
+			if (res.spritefile == g_gui.gfx.getSpriteFile() && !g_gui.gfx.isUnloaded() && id < g_gui.gfx.image_space.size()) {
+				auto& img_ptr = g_gui.gfx.image_space[id];
+				if (img_ptr) {
+					// Use static_cast for performance, as we know the type from loaders
+					// BUT we must verify it is indeed a NormalImage to avoid casting TemplateImage unsafely
+					if (img_ptr->isNormalImage()) {
+						auto* img = static_cast<GameSprite::NormalImage*>(img_ptr.get());
+
+						// Fix 2 & 3: Validate Sprite Identity & Generation
+						// Check ID match, Generation match, and GLLoaded state
+						if (img && img->id == id && img->generation_id == res.generation_id && !img->isGLLoaded) {
+							img->fulfillPreload(std::move(res.data));
+						}
+					}
 				}
 			}
 		}

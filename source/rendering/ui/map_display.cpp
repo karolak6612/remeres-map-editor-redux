@@ -198,6 +198,9 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	}
 
 	if (g_gui.IsRenderingEnabled()) {
+		// CRITICAL FIX: Update graphics time and process preloader queue
+		g_gui.gfx.updateTime();
+
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_controller->IsCapturing()) {
 			options.SetIngame();

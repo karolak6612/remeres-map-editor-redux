@@ -18,6 +18,7 @@ struct AtlasRegion {
 	float v_min = 0.0f; // UV top
 	float u_max = 1.0f; // UV right
 	float v_max = 1.0f; // UV bottom
+	uint32_t debug_sprite_id = 0; // DEBUG: Track which sprite ID owns this region
 };
 
 /**
@@ -118,7 +119,13 @@ private:
 	int next_x_ = 0; // Next slot X in grid
 	int next_y_ = 0; // Next slot Y in grid
 
-	std::vector<AtlasRegion> free_slots_;
+	// Freed slots stored as integer coordinates to avoid float round-trip precision loss
+	struct FreeSlot {
+		int pixel_x;
+		int pixel_y;
+		int layer;
+	};
+	std::vector<FreeSlot> free_slots_;
 };
 
 #endif

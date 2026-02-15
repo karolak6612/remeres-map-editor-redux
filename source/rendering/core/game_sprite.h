@@ -12,6 +12,7 @@
 #include "rendering/core/texture_garbage_collector.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/render_timer.h"
+#include <atomic>
 
 #include <deque>
 #include <memory>
@@ -68,7 +69,7 @@ public:
 	GameSprite();
 	~GameSprite() override;
 
-	int getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
+	size_t getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
 
 	// Phase 2: Get atlas region for texture array rendering
 	const AtlasRegion* getAtlasRegion(int _x, int _y, int _layer, int _subtype, int _pattern_x, int _pattern_y, int _pattern_z, int _frame);
@@ -113,14 +114,19 @@ protected:
 		Image();
 		virtual ~Image() = default;
 
-		bool isGLLoaded;
-		time_t lastaccess;
+		bool isGLLoaded = false;
+		mutable std::atomic<time_t> lastaccess;
+		std::atomic<uint32_t> generation_id { 0 };
 
-		void visit();
+		void visit() const;
 		virtual void clean(time_t time, int longevity);
 
 		virtual std::unique_ptr<uint8_t[]> getRGBData() = 0;
 		virtual std::unique_ptr<uint8_t[]> getRGBAData() = 0;
+
+		virtual bool isNormalImage() const {
+			return false;
+		}
 
 	protected:
 		// Helper to handle atlas interactions
@@ -132,23 +138,26 @@ protected:
 		NormalImage();
 		~NormalImage() override;
 
-		void fulfillPreload(std::unique_ptr<uint8_t[]> data);
+		bool isNormalImage() const override {
+			return true;
+		}
+
+		const AtlasRegion* getAtlasRegion();
 
 		// We use the sprite id as key
 		uint32_t id;
-		const AtlasRegion* atlas_region; // AtlasRegion in texture array (nullptr if not loaded)
+		const AtlasRegion* atlas_region;
 
 		// This contains the pixel data
 		uint16_t size;
 		std::unique_ptr<uint8_t[]> dump;
 
-		virtual void clean(time_t time, int longevity) override;
+		void clean(time_t time, int longevity) override;
 
-		virtual std::unique_ptr<uint8_t[]> getRGBData() override;
-		virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
+		std::unique_ptr<uint8_t[]> getRGBData() override;
+		std::unique_ptr<uint8_t[]> getRGBAData() override;
 
-		// Phase 2: Get atlas region (ensures loaded first)
-		const AtlasRegion* getAtlasRegion();
+		void fulfillPreload(std::unique_ptr<uint8_t[]> preloaded_data);
 
 		GameSprite* parent = nullptr;
 	};
@@ -189,6 +198,10 @@ public:
 	uint8_t pattern_z;
 	uint8_t frames;
 	uint32_t numsprites;
+	uint32_t getId() const {
+		return id;
+	}
+	uint32_t getDebugImageId(size_t index = 0) const;
 
 	std::unique_ptr<Animator> animator;
 
@@ -246,11 +259,22 @@ public:
 		return cached_default_region;
 	}
 
+	// DEBUG: Get the actual image ID that would be rendered for these coordinates
+	uint32_t getSpriteId(int frameIndex, int x, int y) const {
+		int idx = getIndex(width, height, 0, x, y, 0, frameIndex); // Assuming layer, pattern_z are 0 for this context
+		if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
+			return static_cast<NormalImage*>(spriteList[idx])->id;
+		}
+		return 0;
+	}
+
 	bool isSimpleAndLoaded() const;
 
 protected:
 	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites
 	mutable const AtlasRegion* cached_default_region = nullptr;
+	uint64_t cached_generation_id = 0;
+	uint32_t cached_sprite_id = 0;
 };
 
 #endif

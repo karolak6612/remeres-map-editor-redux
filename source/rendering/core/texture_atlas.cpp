@@ -1,6 +1,5 @@
 #include "rendering/core/texture_atlas.h"
 #include <iostream>
-#include <vector>
 #include <algorithm>
 #include <spdlog/spdlog.h>
 
@@ -78,11 +77,12 @@ bool TextureAtlas::initialize(int initial_layers) {
 	next_y_ = 0;
 
 	// Initialize PBO
-	pbo_ = std::make_unique<PixelBufferObject>();
-	if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
+	// pbo_ = std::make_unique<PixelBufferObject>();
+	// Disable PBO for now to fix potential data corruption issues (random sprites)
+	/*if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
 		spdlog::error("TextureAtlas: Failed to initialize PBO");
 		return false;
-	}
+	}*/
 
 	spdlog::info("TextureAtlas created: {}x{} x {} layers, id={}", ATLAS_SIZE, ATLAS_SIZE, initial_layers, texture_id_->GetID());
 	return true;
@@ -121,6 +121,12 @@ bool TextureAtlas::addLayer() {
 		// Copy existing layers using glCopyImageSubData (GL 4.3+)
 		glCopyImageSubData(texture_id_->GetID(), GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, new_texture->GetID(), GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, ATLAS_SIZE, ATLAS_SIZE, allocated_layers_);
 
+		err = glGetError();
+		if (err != GL_NO_ERROR) {
+			spdlog::error("TextureAtlas: glCopyImageSubData failed (err={}). Texture data lost!", err);
+			// We can't easily recover here, but at least we know why sprites are black.
+		}
+
 		// Removed glFinish() - it causes main thread to freeze waiting for GPU
 		// The driver should handle synchronization implicitly for the next draw call
 
@@ -148,22 +154,15 @@ std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
 	}
 
 	int pixel_x, pixel_y, layer;
-	AtlasRegion region;
 
-	// Check free list first
+	// Check free list first (uses integer coordinates to avoid float precision issues)
 	if (!free_slots_.empty()) {
-		region = free_slots_.back();
+		auto slot = free_slots_.back();
 		free_slots_.pop_back();
 
-		// Recalculate pixel coords from UV
-		// u_min = pixel_x / SIZE + half_texel
-		// pixel_x = (u_min - half_texel) * SIZE
-		const float texel_size = 1.0f / static_cast<float>(ATLAS_SIZE);
-		const float half_texel = texel_size * 0.5f;
-
-		pixel_x = static_cast<int>((region.u_min - half_texel) * ATLAS_SIZE + 0.5f);
-		pixel_y = static_cast<int>((region.v_min - half_texel) * ATLAS_SIZE + 0.5f);
-		layer = region.atlas_index;
+		pixel_x = slot.pixel_x;
+		pixel_y = slot.pixel_y;
+		layer = slot.layer;
 	} else {
 		// Check if current layer is full
 		if (next_y_ >= SPRITES_PER_ROW) {
@@ -214,6 +213,7 @@ std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
 	const float texel_size = 1.0f / static_cast<float>(ATLAS_SIZE);
 	const float half_texel = texel_size * 0.5f;
 
+	AtlasRegion region;
 	region.atlas_index = static_cast<uint32_t>(layer);
 	region.u_min = static_cast<float>(pixel_x) / ATLAS_SIZE + half_texel;
 	region.v_min = static_cast<float>(pixel_y) / ATLAS_SIZE + half_texel;
@@ -224,7 +224,30 @@ std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
 }
 
 void TextureAtlas::freeSlot(const AtlasRegion& region) {
-	free_slots_.push_back(region);
+	// Store as integer pixel coordinates to avoid float round-trip precision loss
+	const float texel_size = 1.0f / static_cast<float>(ATLAS_SIZE);
+	const float half_texel = texel_size * 0.5f;
+
+	FreeSlot slot;
+	slot.pixel_x = static_cast<int>((region.u_min - half_texel) * ATLAS_SIZE + 0.5f);
+	slot.pixel_y = static_cast<int>((region.v_min - half_texel) * ATLAS_SIZE + 0.5f);
+	slot.layer = static_cast<int>(region.atlas_index);
+
+	// Snap to grid to guarantee alignment (defensive)
+	slot.pixel_x = (slot.pixel_x / SPRITE_SIZE) * SPRITE_SIZE;
+	slot.pixel_y = (slot.pixel_y / SPRITE_SIZE) * SPRITE_SIZE;
+
+	// Critical Fix: check if slot is already in free list (Double Free protection)
+	// Iterating vector is fine as free_slots_ is small (usually < 100)
+	// If performance becomes issue, we can use std::unordered_set for lookup
+	for (const auto& s : free_slots_) {
+		if (s.pixel_x == slot.pixel_x && s.pixel_y == slot.pixel_y && s.layer == slot.layer) {
+			spdlog::warn("TextureAtlas: Double free detected for slot [x={}, y={}, layer={}] - ignoring", slot.pixel_x, slot.pixel_y, slot.layer);
+			return;
+		}
+	}
+
+	free_slots_.push_back(slot);
 }
 
 void TextureAtlas::bind(uint32_t slot) const {

@@ -60,6 +60,7 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 	AtlasRegion* ptr = &region_storage_.back();
 
 	// Store pointer in hash map
+	ptr->debug_sprite_id = sprite_id;
 	sprite_regions_.emplace(sprite_id, ptr);
 
 	// Also store in direct lookup for O(1) access
@@ -71,21 +72,34 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 }
 
 void AtlasManager::removeSprite(uint32_t sprite_id) {
+	AtlasRegion* region = nullptr;
+
 	if (sprite_id < DIRECT_LOOKUP_SIZE) {
 		if (direct_lookup_[sprite_id] != nullptr) {
-			const AtlasRegion* region = direct_lookup_[sprite_id];
-			atlas_.freeSlot(*region);
+			region = const_cast<AtlasRegion*>(direct_lookup_[sprite_id]);
 			direct_lookup_[sprite_id] = nullptr;
-			sprite_regions_.erase(sprite_id);
-			// We can't easily remove from region_storage_ (deque), but it's okay, pointers remain valid.
-			// The slot in atlas is freed for reuse.
+			size_t erased = sprite_regions_.erase(sprite_id);
+			if (erased == 0) {
+				// Should have been in map if in lookup, but handled for safety
+			}
 		}
 	} else {
 		auto it = sprite_regions_.find(sprite_id);
 		if (it != sprite_regions_.end()) {
-			atlas_.freeSlot(*(it->second));
+			region = it->second;
 			sprite_regions_.erase(it);
 		}
+	}
+
+	if (region) {
+		// 1. Free the slot in the texture array (requires valid UVs)
+		atlas_.freeSlot(*region);
+
+		// 2. MARK AS INVALID to trigger Self-Healing in stale GameSprites
+		// This prevents "Double Allocation" visual bugs where a stale sprite references
+		// this region object after the slot has been reused for a new sprite.
+		region->debug_sprite_id = 0xFFFFFFFF; // INVALID_ID
+		region->atlas_index = 0xFFFFFFFF;
 	}
 }
 
