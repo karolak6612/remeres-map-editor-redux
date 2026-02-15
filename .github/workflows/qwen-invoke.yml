@@ -55,9 +55,9 @@ jobs:
           REPOSITORY: '${{ github.repository }}'
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
         with:
-          openai_api_key: 'dummy'
-          openai_base_url: 'placeholder'
-          openai_model: 'placeholder'
+          openai_api_key: ''
+          openai_base_url: ''
+          openai_model: ''
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
           qwen_debug: true
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
