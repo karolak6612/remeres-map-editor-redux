@@ -29,6 +29,7 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
+#include "rendering/core/sprite_preloader.h"
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
 	tile_renderer(tile_renderer),
