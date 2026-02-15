@@ -49,6 +49,7 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	Bind(wxEVT_SIZE, &PropertiesWindow::OnResize, this);
 
 	createUI();
 }
@@ -244,17 +245,16 @@ void PropertiesWindow::SetGridValue(wxGrid* grid, int rowIndex, std::string labe
 }
 
 void PropertiesWindow::OnResize(wxSizeEvent& evt) {
-	/*
-	if(wxGrid* grid = (wxGrid*)currentPanel->FindWindowByName("AdvancedGrid")) {
-		int tWidth = 0;
-		for(int i = 0; i < 3; ++i)
-			tWidth += grid->GetColumnWidth(i);
-
-		int wWidth = grid->GetParent()->GetSize().GetWidth();
-
-		grid->SetColumnWidth(2, wWidth - 100 - 80);
+	if (attributesGrid) {
+		int width = attributesGrid->GetClientSize().GetWidth();
+		int col0 = attributesGrid->GetColSize(0);
+		int col1 = attributesGrid->GetColSize(1);
+		int remaining = width - col0 - col1;
+		if (remaining > 0) {
+			attributesGrid->SetColSize(2, remaining);
+		}
 	}
-	*/
+	evt.Skip();
 }
 
 void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
