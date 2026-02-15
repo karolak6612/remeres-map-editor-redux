@@ -26,6 +26,7 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/stattext.h>
 
 class FindDialogListBox;
 
@@ -78,6 +79,9 @@ private:
 	void OnInputTimer(wxTimerEvent& event);
 	void OnClickOK(wxCommandEvent& event);
 	void OnClickCancel(wxCommandEvent& event);
+	void OnClickClear(wxCommandEvent& event);
+	void OnListDoubleClick(wxCommandEvent& event);
+	void OnEnterKey(wxCommandEvent& event);
 
 	wxRadioBox* options_radio_box;
 
@@ -86,6 +90,8 @@ private:
 	wxSpinCtrl* server_id_spin;
 	wxSpinCtrl* client_id_spin;
 	wxTextCtrl* name_text_input;
+	wxButton* clear_search_button;
+	wxStaticText* result_count_label;
 	wxTimer input_timer;
 	wxCheckBox* unpassable;
 	wxCheckBox* unmovable;

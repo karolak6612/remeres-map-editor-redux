@@ -30,6 +30,7 @@ public:
 
 	void OnClickResult(wxCommandEvent&);
 	void OnClickExport(wxCommandEvent&);
+	void OnClickCopy(wxCommandEvent&);
 	void OnClickClear(wxCommandEvent&);
 
 protected:

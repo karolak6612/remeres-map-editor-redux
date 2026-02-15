@@ -66,12 +66,18 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	client_id_box_sizer->Add(client_id_spin, 0, wxALL | wxEXPAND, 5);
 	options_box_sizer->Add(client_id_box_sizer, 1, wxALL | wxEXPAND, 5);
 
-	wxStaticBoxSizer* name_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Name"), wxVERTICAL);
-	name_text_input = newd wxTextCtrl(name_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, 0);
+	wxStaticBoxSizer* name_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Name"), wxHORIZONTAL);
+	name_text_input = newd wxTextCtrl(name_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	name_text_input->SetToolTip("Search by item name (requires 2+ characters)");
 	name_text_input->Enable(false);
-	name_box_sizer->Add(name_text_input, 0, wxALL | wxEXPAND, 5);
-	options_box_sizer->Add(name_box_sizer, 1, wxALL | wxEXPAND, 5);
+	name_box_sizer->Add(name_text_input, 1, wxALL | wxEXPAND | wxALIGN_CENTER_VERTICAL, 5);
+
+	clear_search_button = newd wxButton(name_box_sizer->GetStaticBox(), wxID_ANY, "X", wxDefaultPosition, wxSize(24, -1), wxBU_EXACTFIT);
+	clear_search_button->SetToolTip("Clear search text");
+	clear_search_button->Enable(false);
+	name_box_sizer->Add(clear_search_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, 5);
+
+	options_box_sizer->Add(name_box_sizer, 0, wxALL | wxEXPAND, 5);
 
 	// spacer
 	options_box_sizer->Add(0, 0, 4, wxALL | wxEXPAND, 5);
@@ -184,6 +190,9 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	// --------------- Items list ---------------
 
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
+	result_count_label = newd wxStaticText(result_box_sizer->GetStaticBox(), wxID_ANY, "Found 0 items");
+	result_box_sizer->Add(result_count_label, 0, wxLEFT | wxRIGHT | wxTOP, 5);
+
 	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
 	items_list->SetMinSize(wxSize(230, 512));
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
@@ -206,6 +215,9 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	client_id_spin->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &FindItemDialog::OnClientIdChange, this);
 	client_id_spin->Bind(wxEVT_COMMAND_TEXT_UPDATED, &FindItemDialog::OnClientIdChange, this);
 	name_text_input->Bind(wxEVT_COMMAND_TEXT_UPDATED, &FindItemDialog::OnText, this);
+	name_text_input->Bind(wxEVT_TEXT_ENTER, &FindItemDialog::OnEnterKey, this);
+	clear_search_button->Bind(wxEVT_BUTTON, &FindItemDialog::OnClickClear, this);
+	items_list->Bind(wxEVT_LISTBOX_DCLICK, &FindItemDialog::OnListDoubleClick, this);
 
 	types_radio_box->Bind(wxEVT_COMMAND_RADIOBOX_SELECTED, &FindItemDialog::OnTypeChange, this);
 
@@ -248,6 +260,7 @@ void FindItemDialog::setSearchMode(FindItemDialog::SearchMode mode) {
 	invalid_item->Enable(mode == SearchMode::ServerIDs);
 	client_id_spin->Enable(mode == SearchMode::ClientIDs);
 	name_text_input->Enable(mode == SearchMode::Names);
+	clear_search_button->Enable(mode == SearchMode::Names);
 	types_radio_box->Enable(mode == SearchMode::Types);
 	EnableProperties(mode == SearchMode::Properties);
 	RefreshContentsInternal();
@@ -410,9 +423,12 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetSelection(0);
 		ok_button->Enable(true);
 		ok_button->SetToolTip("Confirm selection");
+		result_count_label->SetLabel(wxString::Format("Found %u items", (unsigned int)items_list->GetItemCount()));
 	} else {
 		items_list->SetNoMatches();
+		result_count_label->SetLabel("No items found");
 	}
+	result_count_label->GetParent()->Layout();
 
 	items_list->Refresh();
 }
@@ -463,4 +479,17 @@ void FindItemDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 void FindItemDialog::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 	EndModal(wxID_CANCEL);
+}
+
+void FindItemDialog::OnClickClear(wxCommandEvent& WXUNUSED(event)) {
+	name_text_input->Clear();
+	name_text_input->SetFocus();
+}
+
+void FindItemDialog::OnListDoubleClick(wxCommandEvent& event) {
+	OnClickOK(event);
+}
+
+void FindItemDialog::OnEnterKey(wxCommandEvent& event) {
+	OnClickOK(event);
 }

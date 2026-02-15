@@ -39,11 +39,22 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	result_id(0) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
+	wxBoxSizer* searchSizer = newd wxBoxSizer(wxHORIZONTAL);
 	search_field = newd KeyForwardingTextCtrl(this, JUMP_DIALOG_TEXT, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	search_field->SetHint("Type to search...");
 	search_field->SetToolTip("Type at least 2 characters to search for brushes or items.");
 	search_field->SetFocus();
-	sizer->Add(search_field, 0, wxEXPAND);
+	searchSizer->Add(search_field, 1, wxEXPAND | wxALIGN_CENTER_VERTICAL);
+
+	wxButton* clearBtn = newd wxButton(this, wxID_ANY, "X", wxDefaultPosition, wxSize(24, -1), wxBU_EXACTFIT);
+	clearBtn->SetToolTip("Clear search text");
+	clearBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+		search_field->Clear();
+		search_field->SetFocus();
+	});
+	searchSizer->Add(clearBtn, 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
+
+	sizer->Add(searchSizer, 0, wxEXPAND);
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));

@@ -42,6 +42,12 @@ void MapStatusUpdater::Update(Editor& editor, int map_x, int map_y, int map_z) {
 	} else {
 		g_gui.root->SetStatusText("Nothing", 1);
 	}
+
+	if (editor.selection.size() > 0) {
+		g_gui.root->SetStatusText(wxString::Format("Selection: %u", (unsigned int)editor.selection.size()), 3);
+	} else {
+		g_gui.root->SetStatusText("", 3);
+	}
 }
 
 void MapStatusUpdater::UpdateFPS(const wxString& fps_status) {
