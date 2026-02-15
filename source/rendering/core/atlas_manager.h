@@ -108,7 +108,7 @@ private:
 	std::unordered_map<uint32_t, AtlasRegion*> sprite_regions_;
 
 	// O(1) direct lookup for sprite IDs < DIRECT_LOOKUP_SIZE
-	std::vector<const AtlasRegion*> direct_lookup_ { DIRECT_LOOKUP_SIZE, nullptr };
+	std::vector<AtlasRegion*> direct_lookup_ { DIRECT_LOOKUP_SIZE, nullptr };
 };
 
 #endif

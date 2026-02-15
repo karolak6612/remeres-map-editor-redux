@@ -76,13 +76,14 @@ bool TextureAtlas::initialize(int initial_layers) {
 	next_x_ = 0;
 	next_y_ = 0;
 
-	// Initialize PBO
-	// pbo_ = std::make_unique<PixelBufferObject>();
-	// Disable PBO for now to fix potential data corruption issues (random sprites)
-	/*if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
+	// Gate PBO because it currently causes random sprite corruption
+#if 0
+	pbo_ = std::make_unique<PixelBufferObject>();
+	if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
 		spdlog::error("TextureAtlas: Failed to initialize PBO");
 		return false;
-	}*/
+	}
+#endif
 
 	spdlog::info("TextureAtlas created: {}x{} x {} layers, id={}", ATLAS_SIZE, ATLAS_SIZE, initial_layers, texture_id_->GetID());
 	return true;
@@ -215,6 +216,8 @@ std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
 
 	AtlasRegion region;
 	region.atlas_index = static_cast<uint32_t>(layer);
+	region.pixel_x = pixel_x;
+	region.pixel_y = pixel_y;
 	region.u_min = static_cast<float>(pixel_x) / ATLAS_SIZE + half_texel;
 	region.v_min = static_cast<float>(pixel_y) / ATLAS_SIZE + half_texel;
 	region.u_max = static_cast<float>(pixel_x + SPRITE_SIZE) / ATLAS_SIZE - half_texel;
@@ -224,18 +227,10 @@ std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
 }
 
 void TextureAtlas::freeSlot(const AtlasRegion& region) {
-	// Store as integer pixel coordinates to avoid float round-trip precision loss
-	const float texel_size = 1.0f / static_cast<float>(ATLAS_SIZE);
-	const float half_texel = texel_size * 0.5f;
-
 	FreeSlot slot;
-	slot.pixel_x = static_cast<int>((region.u_min - half_texel) * ATLAS_SIZE + 0.5f);
-	slot.pixel_y = static_cast<int>((region.v_min - half_texel) * ATLAS_SIZE + 0.5f);
+	slot.pixel_x = region.pixel_x;
+	slot.pixel_y = region.pixel_y;
 	slot.layer = static_cast<int>(region.atlas_index);
-
-	// Snap to grid to guarantee alignment (defensive)
-	slot.pixel_x = (slot.pixel_x / SPRITE_SIZE) * SPRITE_SIZE;
-	slot.pixel_y = (slot.pixel_y / SPRITE_SIZE) * SPRITE_SIZE;
 
 	// Critical Fix: check if slot is already in free list (Double Free protection)
 	// Iterating vector is fine as free_slots_ is small (usually < 100)

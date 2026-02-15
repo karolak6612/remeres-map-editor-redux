@@ -20,7 +20,7 @@ bool AtlasManager::ensureInitialized() {
 
 	spdlog::info("AtlasManager: Texture array initialized ({}x{}, {} initial layers)", TextureAtlas::ATLAS_SIZE, TextureAtlas::ATLAS_SIZE, INITIAL_LAYERS);
 
-	// Ensure white pixel exists (ID 0xFFFFFFFF)
+	// Ensure white pixel exists (ID AtlasRegion::INVALID_SENTINEL)
 	std::vector<uint8_t> white_data(32 * 32 * 4, 255);
 	addSprite(WHITE_PIXEL_ID, white_data.data());
 
@@ -76,12 +76,9 @@ void AtlasManager::removeSprite(uint32_t sprite_id) {
 
 	if (sprite_id < DIRECT_LOOKUP_SIZE) {
 		if (direct_lookup_[sprite_id] != nullptr) {
-			region = const_cast<AtlasRegion*>(direct_lookup_[sprite_id]);
+			region = direct_lookup_[sprite_id];
 			direct_lookup_[sprite_id] = nullptr;
-			size_t erased = sprite_regions_.erase(sprite_id);
-			if (erased == 0) {
-				// Should have been in map if in lookup, but handled for safety
-			}
+			sprite_regions_.erase(sprite_id);
 		}
 	} else {
 		auto it = sprite_regions_.find(sprite_id);
@@ -98,8 +95,8 @@ void AtlasManager::removeSprite(uint32_t sprite_id) {
 		// 2. MARK AS INVALID to trigger Self-Healing in stale GameSprites
 		// This prevents "Double Allocation" visual bugs where a stale sprite references
 		// this region object after the slot has been reused for a new sprite.
-		region->debug_sprite_id = 0xFFFFFFFF; // INVALID_ID
-		region->atlas_index = 0xFFFFFFFF;
+		region->debug_sprite_id = AtlasRegion::INVALID_SENTINEL;
+		region->atlas_index = AtlasRegion::INVALID_SENTINEL;
 	}
 }
 

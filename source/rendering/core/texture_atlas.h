@@ -19,6 +19,10 @@ struct AtlasRegion {
 	float u_max = 1.0f; // UV right
 	float v_max = 1.0f; // UV bottom
 	uint32_t debug_sprite_id = 0; // DEBUG: Track which sprite ID owns this region
+	int pixel_x = 0; // Pre-calculated pixel X in the atlas layer
+	int pixel_y = 0; // Pre-calculated pixel Y in the atlas layer
+
+	static constexpr uint32_t INVALID_SENTINEL = 0xFFFFFFFF;
 };
 
 /**

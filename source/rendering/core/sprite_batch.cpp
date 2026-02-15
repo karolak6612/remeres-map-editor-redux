@@ -131,7 +131,6 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	in_batch_ = true;
 	draw_call_count_ = 0;
 	sprite_count_ = 0;
-	sprite_count_ = 0;
 	global_tint_ = glm::vec4(1.0f);
 
 	glEnable(GL_BLEND);

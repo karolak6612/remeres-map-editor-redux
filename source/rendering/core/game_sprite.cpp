@@ -339,16 +339,11 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std:
 		if (region) {
 			// CRITICAL FIX: Check if the region we found is marked INVALID (from double-allocation fix)
 			// or belongs to another sprite (mismatch).
-			if (region->debug_sprite_id == 0xFFFFFFFF || (region->debug_sprite_id != 0 && region->debug_sprite_id != sprite_id)) {
-				spdlog::warn("STALE/INVALID MAP ENTRY DETECTED: Sprite {} maps to region owned by {}. Clearing local map.", sprite_id, region->debug_sprite_id);
-				// SAFETY: Only call removeSprite if WE own the region, otherwise just clear the mapping
-				// to avoid calling freeSlot on a slot owned by another sprite.
-				if (region->debug_sprite_id == sprite_id) {
-					atlas_mgr->removeSprite(sprite_id);
-				} else {
-					// Manually clear the stale map entry without freeing the shared slot
-					atlas_mgr->clearMapping(sprite_id);
-				}
+			if (region->debug_sprite_id == AtlasRegion::INVALID_SENTINEL || (region->debug_sprite_id != 0 && region->debug_sprite_id != sprite_id)) {
+				spdlog::warn("STALE/INVALID MAP ENTRY DETECTED: Sprite {} maps to region owned by {}. Clearing mapping.", sprite_id, region->debug_sprite_id);
+				// SAFETY: Only call clearMapping to avoid freeing shared slots owned by others.
+				// removeSprite() is only for explicit destruction.
+				atlas_mgr->clearMapping(sprite_id);
 				region = nullptr; // Force reload
 			} else {
 				return region;

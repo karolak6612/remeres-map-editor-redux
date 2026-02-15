@@ -198,7 +198,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	}
 
 	if (g_gui.IsRenderingEnabled()) {
-		// CRITICAL FIX: Update graphics time and process preloader queue
+		// Advance graphics clock and drain the preloader queue before rendering
 		g_gui.gfx.updateTime();
 
 		DrawingOptions& options = drawer->getOptions();
