@@ -3,9 +3,6 @@
 
 #include "app/main.h"
 #include <vector>
-#include <memory>
-
-class GLTextureResource;
 
 /**
  * OpenGL Texture Array (GL_TEXTURE_2D_ARRAY) for sprite atlas.
@@ -57,7 +54,9 @@ public:
 	/**
 	 * Get the OpenGL texture ID.
 	 */
-	GLuint getTextureId() const;
+	GLuint getTextureId() const {
+		return textureId_;
+	}
 
 	/**
 	 * Get dimensions.
@@ -88,7 +87,7 @@ public:
 	void cleanup();
 
 private:
-	std::unique_ptr<GLTextureResource> texture_;
+	GLuint textureId_ = 0;
 	int width_ = 0;
 	int height_ = 0;
 	int maxLayers_ = 0;

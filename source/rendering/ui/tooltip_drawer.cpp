@@ -350,8 +350,8 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 	lm.gridSlotSize = 34.0f; // 32px + padding
 	lm.containerHeight = 0.0f;
 
-	lm.numContainerItems = static_cast<int>(tooltip.containerItems.size());
-	int capacity = static_cast<int>(tooltip.containerCapacity);
+	lm.numContainerItems = (int)tooltip.containerItems.size();
+	int capacity = (int)tooltip.containerCapacity;
 	lm.emptyContainerSlots = std::max(0, capacity - lm.numContainerItems);
 	lm.totalContainerSlots = lm.numContainerItems;
 
@@ -419,7 +419,7 @@ void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width
 		float offsetY = 3.0f + i * 1.0f;
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x - spread, y + offsetY - spread, width + spread * 2, height + spread * 2, cornerRadius + spread);
-		nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<unsigned char>(alpha)));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, (int)alpha));
 		nvgFill(vg);
 	}
 

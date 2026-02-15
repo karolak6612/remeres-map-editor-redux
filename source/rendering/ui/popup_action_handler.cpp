@@ -26,7 +26,6 @@
 #include "ui/tileset_window.h"
 #include "ui/dialog_helper.h"
 #include "brushes/brush.h"
-#include <ranges>
 #include "brushes/door/door_brush.h"
 
 void PopupActionHandler::RotateItem(Editor& editor) {
@@ -128,10 +127,11 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 	ItemVector selected_items = new_tile->getSelectedItems();
 
 	Item* item = nullptr;
-	for (auto* item_ptr : std::ranges::reverse_view(selected_items)) {
-		if (item_ptr->isSelected()) {
-			item = item_ptr;
-			break;
+	int count = 0;
+	for (ItemVector::iterator it = selected_items.begin(); it != selected_items.end(); ++it) {
+		++count;
+		if ((*it)->isSelected()) {
+			item = *it;
 		}
 	}
 

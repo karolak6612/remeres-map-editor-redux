@@ -121,8 +121,8 @@ Brush* BrushPalettePanel::GetSelectedBrush() const {
 	BrushPanel* panel = dynamic_cast<BrushPanel*>(page);
 	Brush* res = nullptr;
 	if (panel) {
-		for (const auto& toolBar : tool_bars) {
-			res = toolBar->GetSelectedBrush();
+		for (ToolBarList::const_iterator iter = tool_bars.begin(); iter != tool_bars.end(); ++iter) {
+			res = (*iter)->GetSelectedBrush();
 			if (res) {
 				return res;
 			}

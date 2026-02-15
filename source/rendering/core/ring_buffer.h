@@ -5,9 +5,6 @@
 #include "rendering/core/sync_handle.h"
 #include <cstddef>
 #include <cstdint>
-#include <memory>
-
-class GLBuffer;
 
 /**
  * Triple-buffered ring buffer with persistent mapping for zero-copy GPU uploads.
@@ -79,7 +76,9 @@ public:
 	/**
 	 * Get the OpenGL buffer ID.
 	 */
-	GLuint getBufferId() const;
+	GLuint getBufferId() const {
+		return buffer_id_;
+	}
 
 	/**
 	 * Get byte offset to current section for vertex attribute setup.
@@ -101,7 +100,7 @@ public:
 	}
 
 private:
-	std::unique_ptr<GLBuffer> buffer_;
+	GLuint buffer_id_ = 0;
 	void* mapped_ptr_ = nullptr;
 	SyncHandle fences_[BUFFER_COUNT];
 

@@ -913,203 +913,191 @@ void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHea
 			continue;
 		}
 		if (node_type == OTBM_TILE_AREA) {
-			readTileArea(map, mapNode);
+			uint16_t base_x, base_y;
+			uint8_t base_z;
+			if (!mapNode->getU16(base_x) || !mapNode->getU16(base_y) || !mapNode->getU8(base_z)) {
+				warning("Invalid map node, no base coordinate");
+				continue;
+			}
+
+			for (BinaryNode* tileNode = mapNode->getChild(); tileNode != nullptr; tileNode = tileNode->advance()) {
+				Tile* tile = nullptr;
+				uint8_t tile_type;
+				if (!tileNode->getByte(tile_type)) {
+					warning("Invalid tile type");
+					continue;
+				}
+				if (tile_type == OTBM_TILE || tile_type == OTBM_HOUSETILE) {
+					uint8_t x_offset, y_offset;
+					if (!tileNode->getU8(x_offset) || !tileNode->getU8(y_offset)) {
+						warning("Could not read position of tile");
+						continue;
+					}
+					const Position pos(base_x + x_offset, base_y + y_offset, base_z);
+
+					if (map.getTile(pos)) {
+						warning("Duplicate tile at %d:%d:%d, discarding duplicate", pos.x, pos.y, pos.z);
+						continue;
+					}
+
+					tile = map.createTile(pos.x, pos.y, pos.z);
+					House* house = nullptr;
+					if (tile_type == OTBM_HOUSETILE) {
+						uint32_t house_id;
+						if (!tileNode->getU32(house_id)) {
+							warning("House tile without house data, discarding tile");
+							continue;
+						}
+						if (house_id) {
+							house = map.houses.getHouse(house_id);
+							if (!house) {
+								auto new_house = std::make_unique<House>(map);
+								house = new_house.get();
+								new_house->setID(house_id);
+								map.houses.addHouse(std::move(new_house));
+							}
+						} else {
+							warning("Invalid house id from tile %d:%d:%d", pos.x, pos.y, pos.z);
+						}
+					}
+
+					uint8_t attribute;
+					while (tileNode->getU8(attribute)) {
+						switch (attribute) {
+							case OTBM_ATTR_TILE_FLAGS: {
+								uint32_t flags = 0;
+								if (!tileNode->getU32(flags)) {
+									warning("Invalid tile flags of tile on %d:%d:%d", pos.x, pos.y, pos.z);
+								}
+								tile->setMapFlags(flags);
+								break;
+							}
+							case OTBM_ATTR_ITEM: {
+								std::unique_ptr<Item> item = Item::Create_OTBM(*this, tileNode);
+								if (item == nullptr) {
+									warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
+								}
+								tile->addItem(std::move(item));
+								break;
+							}
+							default: {
+								warning("Unknown tile attribute at %d:%d:%d", pos.x, pos.y, pos.z);
+								break;
+							}
+						}
+					}
+
+					for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
+						std::unique_ptr<Item> item;
+						uint8_t item_type;
+						if (!itemNode->getByte(item_type)) {
+							warning("Unknown item type %d:%d:%d", pos.x, pos.y, pos.z);
+							continue;
+						}
+						if (item_type == OTBM_ITEM) {
+							item = Item::Create_OTBM(*this, itemNode);
+							if (item) {
+								if (!item->unserializeItemNode_OTBM(*this, itemNode)) {
+									warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
+								}
+								// reform(&map, tile, item);
+								tile->addItem(std::move(item));
+							}
+						} else {
+							warning("Unknown type of tile child node");
+						}
+					}
+
+					tile->update();
+					if (house) {
+						house->addTile(tile);
+					}
+
+				} else {
+					warning("Unknown type of tile node");
+				}
+			}
 		} else if (node_type == OTBM_TOWNS) {
-			readTowns(map, mapNode);
+			for (BinaryNode* townNode = mapNode->getChild(); townNode != nullptr; townNode = townNode->advance()) {
+				Town* town = nullptr;
+				uint8_t town_type;
+				if (!townNode->getByte(town_type)) {
+					warning("Invalid town type (1)");
+					continue;
+				}
+				if (town_type != OTBM_TOWN) {
+					warning("Invalid town type (2)");
+					continue;
+				}
+				uint32_t town_id;
+				if (!townNode->getU32(town_id)) {
+					warning("Invalid town id");
+					continue;
+				}
+
+				town = map.towns.getTown(town_id);
+				if (town) {
+					warning("Duplicate town id %d, discarding duplicate", town_id);
+					continue;
+				} else {
+					auto new_town = std::make_unique<Town>(town_id);
+					town = new_town.get();
+					if (!map.towns.addTown(std::move(new_town))) {
+						continue;
+					}
+				}
+				std::string town_name;
+				if (!townNode->getString(town_name)) {
+					warning("Invalid town name");
+					continue;
+				}
+				town->setName(town_name);
+				Position pos;
+				uint16_t x;
+				uint16_t y;
+				uint8_t z;
+				if (!townNode->getU16(x) || !townNode->getU16(y) || !townNode->getU8(z)) {
+					warning("Invalid town temple position");
+					continue;
+				}
+				pos.x = x;
+				pos.y = y;
+				pos.z = z;
+				town->setTemplePosition(pos);
+				map.getOrCreateTile(pos)->getLocation()->increaseTownCount();
+			}
 		} else if (node_type == OTBM_WAYPOINTS) {
-			readWaypoints(map, mapNode);
-		}
-	}
-}
-
-void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
-	uint16_t base_x, base_y;
-	uint8_t base_z;
-	if (!mapNode->getU16(base_x) || !mapNode->getU16(base_y) || !mapNode->getU8(base_z)) {
-		warning("Invalid map node, no base coordinate");
-		return;
-	}
-
-	for (BinaryNode* tileNode = mapNode->getChild(); tileNode != nullptr; tileNode = tileNode->advance()) {
-		Tile* tile = nullptr;
-		uint8_t tile_type;
-		if (!tileNode->getByte(tile_type)) {
-			warning("Invalid tile type");
-			continue;
-		}
-		if (tile_type == OTBM_TILE || tile_type == OTBM_HOUSETILE) {
-			uint8_t x_offset, y_offset;
-			if (!tileNode->getU8(x_offset) || !tileNode->getU8(y_offset)) {
-				warning("Could not read position of tile");
-				continue;
-			}
-			const Position pos(base_x + x_offset, base_y + y_offset, base_z);
-
-			if (map.getTile(pos)) {
-				warning(wxstr(std::format("Duplicate tile at {}:{}:{}, discarding duplicate", pos.x, pos.y, pos.z)));
-				continue;
-			}
-
-			tile = map.createTile(pos.x, pos.y, pos.z);
-			House* house = nullptr;
-			if (tile_type == OTBM_HOUSETILE) {
-				uint32_t house_id;
-				if (!tileNode->getU32(house_id)) {
-					warning("House tile without house data, discarding tile");
+			for (BinaryNode* waypointNode = mapNode->getChild(); waypointNode != nullptr; waypointNode = waypointNode->advance()) {
+				uint8_t waypoint_type;
+				if (!waypointNode->getByte(waypoint_type)) {
+					warning("Invalid waypoint type (1)");
 					continue;
 				}
-				if (house_id) {
-					house = map.houses.getHouse(house_id);
-					if (!house) {
-						auto new_house = std::make_unique<House>(map);
-						house = new_house.get();
-						new_house->setID(house_id);
-						map.houses.addHouse(std::move(new_house));
-					}
-				} else {
-					warning("Invalid house id from tile %d:%d:%d", pos.x, pos.y, pos.z);
-				}
-			}
-
-			uint8_t attribute;
-			while (tileNode->getU8(attribute)) {
-				switch (attribute) {
-					case OTBM_ATTR_TILE_FLAGS: {
-						uint32_t flags = 0;
-						if (!tileNode->getU32(flags)) {
-							warning(wxstr(std::format("Invalid tile flags of tile on {}:{}:{}", pos.x, pos.y, pos.z)));
-						}
-						tile->setMapFlags(flags);
-						break;
-					}
-					case OTBM_ATTR_ITEM: {
-						std::unique_ptr<Item> item = Item::Create_OTBM(*this, tileNode);
-						if (item == nullptr) {
-							warning(wxstr(std::format("Invalid item at tile {}:{}:{}", pos.x, pos.y, pos.z)));
-						}
-						tile->addItem(std::move(item));
-						break;
-					}
-					default: {
-						warning(wxstr(std::format("Unknown tile attribute at {}:{}:{}", pos.x, pos.y, pos.z)));
-						break;
-					}
-				}
-			}
-
-			for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
-				std::unique_ptr<Item> item;
-				uint8_t item_type;
-				if (!itemNode->getByte(item_type)) {
-					warning(wxstr(std::format("Unknown item type {}:{}:{}", pos.x, pos.y, pos.z)));
+				if (waypoint_type != OTBM_WAYPOINT) {
+					warning("Invalid waypoint type (2)");
 					continue;
 				}
-				if (item_type == OTBM_ITEM) {
-					item = Item::Create_OTBM(*this, itemNode);
-					if (item) {
-						if (!item->unserializeItemNode_OTBM(*this, itemNode)) {
-							warning(wxstr(std::format("Couldn't unserialize item attributes at {}:{}:{}", pos.x, pos.y, pos.z)));
-						}
-						// reform(&map, tile, item);
-						tile->addItem(std::move(item));
-					}
-				} else {
-					warning("Unknown type of tile child node");
+
+				Waypoint wp;
+
+				if (!waypointNode->getString(wp.name)) {
+					warning("Invalid waypoint name");
+					continue;
 				}
-			}
+				uint16_t x;
+				uint16_t y;
+				uint8_t z;
+				if (!waypointNode->getU16(x) || !waypointNode->getU16(y) || !waypointNode->getU8(z)) {
+					warning("Invalid waypoint position");
+					continue;
+				}
+				wp.pos.x = x;
+				wp.pos.y = y;
+				wp.pos.z = z;
 
-			tile->update();
-			if (house) {
-				house->addTile(tile);
-			}
-
-		} else {
-			warning("Unknown type of tile node");
-		}
-	}
-}
-
-void IOMapOTBM::readTowns(Map& map, BinaryNode* mapNode) {
-	for (BinaryNode* townNode = mapNode->getChild(); townNode != nullptr; townNode = townNode->advance()) {
-		Town* town = nullptr;
-		uint8_t town_type;
-		if (!townNode->getByte(town_type)) {
-			warning("Invalid town type (1)");
-			continue;
-		}
-		if (town_type != OTBM_TOWN) {
-			warning("Invalid town type (2)");
-			continue;
-		}
-		uint32_t town_id;
-		if (!townNode->getU32(town_id)) {
-			warning("Invalid town id");
-			continue;
-		}
-
-		town = map.towns.getTown(town_id);
-		if (town) {
-			warning(wxstr(std::format("Duplicate town id {}, discarding duplicate", town_id)));
-			continue;
-		} else {
-			auto new_town = std::make_unique<Town>(town_id);
-			town = new_town.get();
-			if (!map.towns.addTown(std::move(new_town))) {
-				continue;
+				map.waypoints.addWaypoint(newd Waypoint(wp));
 			}
 		}
-		std::string town_name;
-		if (!townNode->getString(town_name)) {
-			warning("Invalid town name");
-			continue;
-		}
-		town->setName(town_name);
-		Position pos;
-		uint16_t x;
-		uint16_t y;
-		uint8_t z;
-		if (!townNode->getU16(x) || !townNode->getU16(y) || !townNode->getU8(z)) {
-			warning("Invalid town temple position");
-			continue;
-		}
-		pos.x = x;
-		pos.y = y;
-		pos.z = z;
-		town->setTemplePosition(pos);
-		map.getOrCreateTile(pos)->getLocation()->increaseTownCount();
-	}
-}
-
-void IOMapOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
-	for (BinaryNode* waypointNode = mapNode->getChild(); waypointNode != nullptr; waypointNode = waypointNode->advance()) {
-		uint8_t waypoint_type;
-		if (!waypointNode->getByte(waypoint_type)) {
-			warning("Invalid waypoint type (1)");
-			continue;
-		}
-		if (waypoint_type != OTBM_WAYPOINT) {
-			warning("Invalid waypoint type (2)");
-			continue;
-		}
-
-		Waypoint wp;
-
-		if (!waypointNode->getString(wp.name)) {
-			warning("Invalid waypoint name");
-			continue;
-		}
-		uint16_t x;
-		uint16_t y;
-		uint8_t z;
-		if (!waypointNode->getU16(x) || !waypointNode->getU16(y) || !waypointNode->getU8(z)) {
-			warning("Invalid waypoint position");
-			continue;
-		}
-		wp.pos.x = x;
-		wp.pos.y = y;
-		wp.pos.z = z;
-
-		map.waypoints.addWaypoint(std::make_unique<Waypoint>(wp));
 	}
 }
 
@@ -1183,7 +1171,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 
 		Tile* tile = map.getTile(spawnPosition);
 		if (tile && tile->spawn) {
-			warning(wxstr(std::format("Duplicate spawn on position {}:{}:{}", tile->getX(), tile->getY(), tile->getZ())));
+			warning("Duplicate spawn on position %d:%d:%d\n", tile->getX(), tile->getY(), tile->getZ());
 			continue;
 		}
 
@@ -1352,7 +1340,7 @@ bool IOMapOTBM::loadHouses(Map& map, pugi::xml_document& doc) {
 		if ((attribute = houseNode.attribute("townid"))) {
 			house->townid = attribute.as_uint();
 		} else {
-			warning(wxstr(std::format("House {} has no town! House was removed.", house->getID())));
+			warning("House %d has no town! House was removed.", house->getID());
 			map.houses.removeHouse(house);
 		}
 	}
@@ -1547,6 +1535,8 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 
 	bool waypointsWarning = false;
 
+	const IOMapOTBM& self = *this;
+
 	FileName tmpName;
 	MapVersion mapVersion = map.getVersion();
 
@@ -1577,9 +1567,115 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			f.addU8(OTBM_ATTR_EXT_HOUSE_FILE);
 			f.addString(nstr(tmpName.GetFullName()));
 
-			writeTileData(map, f);
-			writeTowns(map, f);
-			waypointsWarning = writeWaypoints(map, f, mapVersion);
+			// Start writing tiles
+			uint32_t tiles_saved = 0;
+			bool first = true;
+
+			int local_x = -1, local_y = -1, local_z = -1;
+
+			// Iterate tiles in spatial order to optimize OTBM node grouping
+			auto sorted_cells = map.getGrid().getSortedCells();
+			for (const auto& sorted_cell : sorted_cells) {
+				SpatialHashGrid::GridCell* cell = sorted_cell.cell;
+				if (!cell) {
+					continue;
+				}
+
+				for (int i = 0; i < SpatialHashGrid::NODES_IN_CELL; ++i) {
+					MapNode* node = cell->nodes[i].get();
+					if (!node) {
+						continue;
+					}
+
+					for (int j = 0; j < MAP_LAYERS; ++j) {
+						Floor* floor = node->getFloor(j);
+						if (!floor) {
+							continue;
+						}
+
+						for (int k = 0; k < SpatialHashGrid::TILES_PER_NODE; ++k) {
+							TileLocation& loc = floor->locs[k];
+							Tile* save_tile = loc.get();
+
+							if (!save_tile) {
+								continue;
+							}
+
+							// Update progressbar
+							++tiles_saved;
+							if (tiles_saved % 8192 == 0) {
+								uint64_t total_tiles = map.getTileCount();
+								if (total_tiles > 0) {
+									int progress = std::min(100, int(tiles_saved / double(total_tiles) * 100.0));
+									g_gui.SetLoadDone(progress);
+								}
+							}
+
+							// Is it an empty tile that we can skip? (Leftovers...)
+							if (save_tile->size() == 0) {
+								continue;
+							}
+
+							const Position& pos = save_tile->getPosition();
+
+							// Decide if new node should be created
+							if (pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
+								// End last node
+								if (!first) {
+									f.endNode();
+								}
+								first = false;
+
+								// Start new node
+								f.addNode(OTBM_TILE_AREA);
+								f.addU16(local_x = pos.x & 0xFF00);
+								f.addU16(local_y = pos.y & 0xFF00);
+								f.addU8(local_z = pos.z);
+							}
+
+							serializeTile_OTBM(save_tile, f, self);
+						}
+					}
+				}
+			}
+
+			// Only close the last node if one has actually been created
+			if (!first) {
+				f.endNode();
+			}
+
+			f.addNode(OTBM_TOWNS);
+			for (const auto& townEntry : map.towns) {
+				Town* town = townEntry.second.get();
+				const Position& townPosition = town->getTemplePosition();
+				f.addNode(OTBM_TOWN);
+				f.addU32(town->getID());
+				f.addString(town->getName());
+				f.addU16(townPosition.x);
+				f.addU16(townPosition.y);
+				f.addU8(townPosition.z);
+				f.endNode();
+			}
+			f.endNode();
+
+			bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
+			if (supportWaypoints || !map.waypoints.waypoints.empty()) {
+				if (!supportWaypoints) {
+					waypointsWarning = true;
+				}
+
+				f.addNode(OTBM_WAYPOINTS);
+				for (const auto& waypointEntry : map.waypoints) {
+					Waypoint* waypoint = waypointEntry.second;
+					f.addNode(OTBM_WAYPOINT);
+					f.addString(waypoint->name);
+					f.addU16(waypoint->pos.x);
+					f.addU16(waypoint->pos.y);
+					f.addU8(waypoint->pos.z);
+					f.endNode();
+				}
+				f.endNode();
+			}
 		}
 		f.endNode();
 	}
@@ -1589,124 +1685,6 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 		DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints were saved, but they are not supported in OTBM 2!\nIf your map fails to load, consider removing all waypoints and saving again.\n\nThis warning can be disabled in file->preferences.", wxOK);
 	}
 	return true;
-}
-
-void IOMapOTBM::writeTileData(const Map& map, NodeFileWriteHandle& f) {
-	const IOMapOTBM& self = *this;
-	uint32_t tiles_saved = 0;
-	bool first = true;
-
-	int local_x = -1, local_y = -1, local_z = -1;
-
-	// Iterate tiles in spatial order to optimize OTBM node grouping
-	auto sorted_cells = map.getGrid().getSortedCells();
-	for (const auto& sorted_cell : sorted_cells) {
-		SpatialHashGrid::GridCell* cell = sorted_cell.cell;
-		if (!cell) {
-			continue;
-		}
-
-		for (int i = 0; i < SpatialHashGrid::NODES_IN_CELL; ++i) {
-			MapNode* node = cell->nodes[i].get();
-			if (!node) {
-				continue;
-			}
-
-			for (int j = 0; j < MAP_LAYERS; ++j) {
-				Floor* floor = node->getFloor(j);
-				if (!floor) {
-					continue;
-				}
-
-				for (int k = 0; k < SpatialHashGrid::TILES_PER_NODE; ++k) {
-					TileLocation& loc = floor->locs[k];
-					Tile* save_tile = loc.get();
-
-					if (!save_tile) {
-						continue;
-					}
-
-					// Update progressbar
-					++tiles_saved;
-					if (tiles_saved % 8192 == 0) {
-						uint64_t total_tiles = map.getTileCount();
-						if (total_tiles > 0) {
-							int progress = std::min(100, int(tiles_saved / double(total_tiles) * 100.0));
-							g_gui.SetLoadDone(progress);
-						}
-					}
-
-					// Is it an empty tile that we can skip? (Leftovers...)
-					if (save_tile->size() == 0) {
-						continue;
-					}
-
-					const Position& pos = save_tile->getPosition();
-
-					// Decide if new node should be created
-					if (pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
-						// End last node
-						if (!first) {
-							f.endNode();
-						}
-						first = false;
-
-						// Start new node
-						f.addNode(OTBM_TILE_AREA);
-						f.addU16(local_x = pos.x & 0xFF00);
-						f.addU16(local_y = pos.y & 0xFF00);
-						f.addU8(local_z = pos.z);
-					}
-
-					serializeTile_OTBM(save_tile, f, self);
-				}
-			}
-		}
-	}
-
-	// Only close the last node if one has actually been created
-	if (!first) {
-		f.endNode();
-	}
-}
-
-void IOMapOTBM::writeTowns(const Map& map, NodeFileWriteHandle& f) {
-	f.addNode(OTBM_TOWNS);
-	for (const auto& townEntry : map.towns) {
-		Town* town = townEntry.second.get();
-		const Position& townPosition = town->getTemplePosition();
-		f.addNode(OTBM_TOWN);
-		f.addU32(town->getID());
-		f.addString(town->getName());
-		f.addU16(townPosition.x);
-		f.addU16(townPosition.y);
-		f.addU8(townPosition.z);
-		f.endNode();
-	}
-	f.endNode();
-}
-
-bool IOMapOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
-	bool waypointsWarning = false;
-	bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
-	if (supportWaypoints || !map.waypoints.waypoints.empty()) {
-		if (!supportWaypoints) {
-			waypointsWarning = true;
-		}
-
-		f.addNode(OTBM_WAYPOINTS);
-		for (const auto& waypointEntry : map.waypoints) {
-			Waypoint* waypoint = waypointEntry.second.get();
-			f.addNode(OTBM_WAYPOINT);
-			f.addString(waypoint->name);
-			f.addU16(waypoint->pos.x);
-			f.addU16(waypoint->pos.y);
-			f.addU8(waypoint->pos.z);
-			f.endNode();
-		}
-		f.endNode();
-	}
-	return waypointsWarning;
 }
 
 bool IOMapOTBM::saveSpawns(Map& map, const FileName& dir) {

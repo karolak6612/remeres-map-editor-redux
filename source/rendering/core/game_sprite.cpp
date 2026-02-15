@@ -98,22 +98,12 @@ int GameSprite::getDrawHeight() const {
 }
 
 bool GameSprite::isSimpleAndLoaded() const {
-	return numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1 && !spriteList.empty() && spriteList[0]->isGLLoaded;
-}
-
-uint32_t GameSprite::getDebugImageId(size_t index) const {
-	if (index < spriteList.size() && spriteList[index]->isNormalImage()) {
-		return static_cast<const NormalImage*>(spriteList[index])->id;
+	if (numsprites == 1 && !spriteList.empty()) {
+		if (NormalImage* img = spriteList[0]) {
+			return img->isGLLoaded;
+		}
 	}
-	return 0;
-}
-
-uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
-	auto idx = getIndex(width, height, 0, pattern_x, pattern_y, 0, frameIndex); // Assuming layer, pattern_z are 0 for this context
-	if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
-		return static_cast<const NormalImage*>(spriteList[idx])->id;
-	}
-	return 0;
+	return false;
 }
 
 std::pair<int, int> GameSprite::getDrawOffset() const {
@@ -124,16 +114,8 @@ uint8_t GameSprite::getMiniMapColor() const {
 	return minimap_color;
 }
 
-size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {
-	size_t idx = frame % this->frames;
-	// Cast operands to size_t to force 64-bit arithmetic and avoid overflow
-	idx = idx * static_cast<size_t>(this->pattern_z) + static_cast<size_t>(pattern_z);
-	idx = idx * static_cast<size_t>(this->pattern_y) + static_cast<size_t>(pattern_y);
-	idx = idx * static_cast<size_t>(this->pattern_x) + static_cast<size_t>(pattern_x);
-	idx = idx * static_cast<size_t>(this->layers) + static_cast<size_t>(layer);
-	idx = idx * static_cast<size_t>(this->height) + static_cast<size_t>(height);
-	idx = idx * static_cast<size_t>(this->width) + static_cast<size_t>(width);
-	return idx;
+int GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {
+	return ((((((frame % this->frames) * this->pattern_z + pattern_z) * this->pattern_y + pattern_y) * this->pattern_x + pattern_x) * this->layers + layer) * this->height + height) * this->width + width;
 }
 
 const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y, int _pattern_z, int _frame) {
@@ -144,28 +126,21 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 		if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0) {
 			// Check cache
 			// We rely on spriteList[0] being valid for simple sprites
-			// shared Sprite Fix: Verify generation ID matches what we cached.
-			// Wrong Sprite Fix: Verify sprite ID matches what we cached.
-			// Optimization: Check lightweight fields BEFORE calling heavy getAtlasRegion()
-			if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id && cached_sprite_id == spriteList[0]->id) {
+			// Check isGLLoaded to ensure validity of cached region (it must correspond to loaded texture)
+			if (cached_default_region && spriteList[0]->isGLLoaded) {
 				return cached_default_region;
 			}
 
-			// Cache miss or staleness suspected: Use the getter to ensure self-healing check runs
-			const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
-			if (valid_region && spriteList[0]->isGLLoaded) {
-				cached_default_region = valid_region;
-				cached_generation_id = spriteList[0]->generation_id;
-				cached_sprite_id = spriteList[0]->id;
+			// Lazy set parent for cache invalidation
+			spriteList[0]->parent = this;
+
+			const AtlasRegion* r = spriteList[0]->getAtlasRegion();
+			if (spriteList[0]->isGLLoaded) {
+				cached_default_region = r;
 			} else {
 				cached_default_region = nullptr;
-				cached_generation_id = 0;
-				cached_sprite_id = 0;
 			}
-
-			// Lazy set parent for cache invalidation (legacy path, kept for safety)
-			spriteList[0]->parent = this;
-			return valid_region;
+			return r;
 		}
 	}
 
@@ -322,12 +297,12 @@ GameSprite::Image::Image() :
 	lastaccess(0) {
 }
 
-void GameSprite::Image::visit() const {
-	lastaccess = static_cast<int64_t>(g_gui.gfx.getCachedTime());
+void GameSprite::Image::visit() {
+	lastaccess = g_gui.gfx.getCachedTime();
 }
 
 void GameSprite::Image::clean(time_t time, int longevity) {
-	// Base implementation does nothing
+	// Legacy texture cleanup logic removed
 }
 
 const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data) {
@@ -337,17 +312,7 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std:
 		// 1. Check if already loaded
 		const AtlasRegion* region = atlas_mgr->getRegion(sprite_id);
 		if (region) {
-			// CRITICAL FIX: Check if the region we found is marked INVALID (from double-allocation fix)
-			// or belongs to another sprite (mismatch).
-			if (region->debug_sprite_id == AtlasRegion::INVALID_SENTINEL || (region->debug_sprite_id != 0 && region->debug_sprite_id != sprite_id)) {
-				spdlog::warn("STALE/INVALID MAP ENTRY DETECTED: Sprite {} maps to region owned by {}. Clearing mapping.", sprite_id, region->debug_sprite_id);
-				// SAFETY: Only call clearMapping to avoid freeing shared slots owned by others.
-				// removeSprite() is only for explicit destruction.
-				atlas_mgr->clearMapping(sprite_id);
-				region = nullptr; // Force reload
-			} else {
-				return region;
-			}
+			return region;
 		}
 
 		// 2. Load data
@@ -415,26 +380,22 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
+	if (isGLLoaded && time - lastaccess > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(id);
 		}
-		if (parent && parent->cached_default_region == atlas_region) {
-			parent->cached_default_region = nullptr;
-			parent->cached_generation_id = 0;
-			parent->cached_sprite_id = 0;
-		}
-
 		isGLLoaded = false;
 		atlas_region = nullptr;
 
-		// Invalidate any pending preloads for this sprite ID
-		generation_id++;
+		if (parent) {
+			parent->cached_default_region = nullptr;
+		}
 
+		// resident_images removal is handled by GC loop using swap-and-pop
 		g_gui.gfx.collector.NotifyTextureUnloaded();
 	}
 
-	if (time - static_cast<time_t>(lastaccess.load()) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
+	if (time - lastaccess > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
 		dump.reset();
 	}
 }
@@ -616,19 +577,6 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBAData() {
 }
 
 const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
-	if (isGLLoaded && atlas_region) {
-		// Self-Healing: Check for stale atlas region pointer (e.g. from memory reuse)
-		// Force reload if Owner is INVALID or DOES NOT MATCH
-		if (atlas_region->debug_sprite_id == AtlasRegion::INVALID_SENTINEL || (atlas_region->debug_sprite_id != 0 && atlas_region->debug_sprite_id != id)) {
-			spdlog::warn("STALE ATLAS REGION DETECTED: NormalImage {} held region owned by {}. Force reloading.", id, atlas_region->debug_sprite_id);
-			isGLLoaded = false;
-			atlas_region = nullptr;
-		} else {
-			visit();
-			return atlas_region;
-		}
-	}
-
 	if (!isGLLoaded) {
 		atlas_region = EnsureAtlasSprite(id);
 	}
@@ -660,13 +608,12 @@ void GameSprite::TemplateImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
+	if (isGLLoaded && time - lastaccess > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
 		}
 		isGLLoaded = false;
 		atlas_region = nullptr;
-		generation_id++;
 		g_gui.gfx.collector.NotifyTextureUnloaded();
 	}
 }
@@ -773,18 +720,6 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 }
 
 const AtlasRegion* GameSprite::TemplateImage::getAtlasRegion() {
-	if (isGLLoaded && atlas_region) {
-		// Self-Healing: Check for stale atlas region pointer
-		if (atlas_region->debug_sprite_id == AtlasRegion::INVALID_SENTINEL || (atlas_region->debug_sprite_id != 0 && atlas_region->debug_sprite_id != texture_id)) {
-			spdlog::warn("STALE ATLAS REGION DETECTED: TemplateImage {} held region owned by {}. Force reloading.", texture_id, atlas_region->debug_sprite_id);
-			isGLLoaded = false;
-			atlas_region = nullptr;
-		} else {
-			visit();
-			return atlas_region;
-		}
-	}
-
 	if (!isGLLoaded) {
 		atlas_region = EnsureAtlasSprite(texture_id);
 	}

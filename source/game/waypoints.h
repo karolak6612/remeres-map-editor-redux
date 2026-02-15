@@ -26,7 +26,7 @@ public:
 	Position pos;
 };
 
-using WaypointMap = std::map<std::string, std::unique_ptr<Waypoint>>;
+using WaypointMap = std::map<std::string, Waypoint*>;
 
 class Waypoints {
 	Map& map;
@@ -34,9 +34,13 @@ class Waypoints {
 public:
 	Waypoints(Map& map) :
 		map(map) { }
-	~Waypoints() = default;
+	~Waypoints() {
+		for (WaypointMap::iterator iter = waypoints.begin(); iter != waypoints.end(); ++iter) {
+			delete iter->second;
+		}
+	}
 
-	void addWaypoint(std::unique_ptr<Waypoint> wp);
+	void addWaypoint(Waypoint* wp);
 	Waypoint* getWaypoint(std::string name);
 	Waypoint* getWaypoint(TileLocation* location);
 	void removeWaypoint(std::string name);

@@ -198,9 +198,6 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	}
 
 	if (g_gui.IsRenderingEnabled()) {
-		// Advance graphics clock and drain the preloader queue before rendering
-		g_gui.gfx.updateTime();
-
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_controller->IsCapturing()) {
 			options.SetIngame();

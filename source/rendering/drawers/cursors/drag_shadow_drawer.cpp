@@ -72,11 +72,11 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 				// save performance when moving large chunks unzoomed
 				ItemVector toRender = tile->getSelectedItems(view.zoom > 3.0);
 				Tile* desttile = drawer->editor.map.getTile(pos);
-				for (const auto& item : toRender) {
+				for (ItemVector::const_iterator iit = toRender.begin(); iit != toRender.end(); iit++) {
 					if (desttile) {
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, desttile, item, options, true, 160, 160, 160, 160);
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, desttile, *iit, options, true, 160, 160, 160, 160);
 					} else {
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, true, 160, 160, 160, 160);
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, *iit, options, true, 160, 160, 160, 160);
 					}
 				}
 

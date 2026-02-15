@@ -47,12 +47,12 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 
 	if (towns.count() > 0) {
 		bool found = false;
-		for (const auto& [id, town_ptr] : towns) {
-			if (town_ptr->getID() == houseTownId) {
+		for (TownMap::const_iterator town_iter = towns.begin(); town_iter != towns.end(); ++town_iter) {
+			if (town_iter->second->getID() == houseTownId) {
 				found = true;
 			}
-			town_id_field->Append(wxstr(town_ptr->getName()));
-			town_ids_.push_back(town_ptr->getID());
+			town_id_field->Append(wxstr(town_iter->second->getName()));
+			town_ids_.push_back(town_iter->second->getID());
 			if (!found) {
 				++to_select_index;
 			}

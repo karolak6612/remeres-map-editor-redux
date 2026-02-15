@@ -10,12 +10,12 @@ class GLShader {
 public:
 	explicit GLShader(GLenum type) {
 		id = glCreateShader(type);
-		spdlog::info("GLShader created [ID={}]", id);
+		// spdlog::trace("GLShader created [ID={}]", id);
 	}
 
 	~GLShader() {
 		if (id) {
-			spdlog::info("GLShader deleted [ID={}]", id);
+			// spdlog::trace("GLShader deleted [ID={}]", id);
 			glDeleteShader(id);
 		}
 	}
@@ -50,62 +50,17 @@ private:
 	GLuint id = 0;
 };
 
-// RAII wrapper for OpenGL Shader Programs
-class GLProgram {
-public:
-	GLProgram() {
-		id = glCreateProgram();
-		spdlog::info("GLProgram created [ID={}]", id);
-	}
-
-	~GLProgram() {
-		if (id) {
-			spdlog::info("GLProgram deleted [ID={}]", id);
-			glDeleteProgram(id);
-		}
-	}
-
-	// Disable copy
-	GLProgram(const GLProgram&) = delete;
-	GLProgram& operator=(const GLProgram&) = delete;
-
-	// Enable move
-	GLProgram(GLProgram&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
-
-	GLProgram& operator=(GLProgram&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteProgram(id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
-
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
-
-private:
-	GLuint id = 0;
-};
-
 // RAII wrapper for OpenGL Buffers (VBO, EBO, UBO, SSBO)
 class GLBuffer {
 public:
 	GLBuffer() {
 		glCreateBuffers(1, &id);
-		spdlog::info("GLBuffer created [ID={}]", id);
+		// spdlog::trace("GLBuffer created [ID={}]", id);
 	}
 
 	~GLBuffer() {
 		if (id) {
-			spdlog::info("GLBuffer deleted [ID={}]", id);
+			// spdlog::trace("GLBuffer deleted [ID={}]", id);
 			glDeleteBuffers(1, &id);
 		}
 	}
@@ -145,12 +100,12 @@ class GLVertexArray {
 public:
 	GLVertexArray() {
 		glCreateVertexArrays(1, &id);
-		spdlog::info("GLVertexArray created [ID={}]", id);
+		// spdlog::trace("GLVertexArray created [ID={}]", id);
 	}
 
 	~GLVertexArray() {
 		if (id) {
-			spdlog::info("GLVertexArray deleted [ID={}]", id);
+			// spdlog::trace("GLVertexArray deleted [ID={}]", id);
 			glDeleteVertexArrays(1, &id);
 		}
 	}
