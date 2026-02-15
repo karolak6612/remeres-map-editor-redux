@@ -28,8 +28,8 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/sprite_preloader.h"
 #include "rendering/core/primitive_renderer.h"
+#include "rendering/core/sprite_preloader.h"
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
 	tile_renderer(tile_renderer),
@@ -107,16 +107,6 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 							TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
-							// Trigger preloading for this tile's sprites
-							if (Tile* tile = location->get()) {
-								int tx = nd_map_x + map_x;
-								int ty = nd_map_y + map_y;
-								collectSpriteWithPattern(tile->ground ? g_items[tile->ground->getID()].sprite : nullptr, tx, ty);
-								for (const auto& item : tile->items) {
-									collectSpriteWithPattern(g_items[item->getID()].sprite, tx, ty);
-								}
-							}
-
 							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
 							// draw light, but only if not zoomed too far
 							if (draw_lights) {
@@ -165,16 +155,6 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 					}
 
 					TileLocation* location = &floor->locs[map_x * 4 + map_y];
-
-					// Trigger preloading for this tile's sprites
-					if (Tile* tile = location->get()) {
-						int tx = nd_map_x + map_x;
-						int ty = nd_map_y + map_y;
-						collectSpriteWithPattern(tile->ground ? g_items[tile->ground->getID()].sprite : nullptr, tx, ty);
-						for (const auto& item : tile->items) {
-							collectSpriteWithPattern(g_items[item->getID()].sprite, tx, ty);
-						}
-					}
 
 					tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
 					// draw light, but only if not zoomed too far
