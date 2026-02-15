@@ -59,6 +59,7 @@ jobs:
           openai_api_key: ''
           openai_base_url: ''
           openai_model: ''
+          use_qwen_code_assist: true
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
           qwen_debug: true
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
