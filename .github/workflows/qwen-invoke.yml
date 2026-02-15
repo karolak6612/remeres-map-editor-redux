@@ -41,6 +41,7 @@ jobs:
         run: |
           mkdir -p ~/.qwen
           echo '${{ secrets.QWEN }}' > ~/.qwen/oauth_creds.json
+          echo '{"auth_type": "code_assist"}' > ~/.qwen/settings.json
 
       - name: 'Run Qwen Code CLI'
         id: 'run_qwen'
