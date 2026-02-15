@@ -56,8 +56,8 @@ void ZoomController::ApplyRelativeZoom(MapCanvas* canvas, double diff) {
 
 	// This took a day to figure out!
 	// Using cursor position from canvas
-	int scroll_x = int(screensize_x * diff * (std::max(canvas->cursor_x, 1) / double(screensize_x))) * canvas->GetContentScaleFactor();
-	int scroll_y = int(screensize_y * diff * (std::max(canvas->cursor_y, 1) / double(screensize_y))) * canvas->GetContentScaleFactor();
+	int scroll_x = static_cast<int>(screensize_x * diff * (std::max(canvas->cursor_x, 1) / double(screensize_x))) * canvas->GetContentScaleFactor();
+	int scroll_y = static_cast<int>(screensize_y * diff * (std::max(canvas->cursor_y, 1) / double(screensize_y))) * canvas->GetContentScaleFactor();
 
 	static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(-scroll_x, -scroll_y);
 
@@ -65,7 +65,7 @@ void ZoomController::ApplyRelativeZoom(MapCanvas* canvas, double diff) {
 }
 
 void ZoomController::UpdateStatus(MapCanvas* canvas) {
-	int percentage = (int)((1.0 / canvas->zoom) * 100);
+	int percentage = static_cast<int>((1.0 / canvas->zoom) * 100);
 	wxString ss;
 	ss << "zoom: " << percentage << "%";
 	g_gui.root->SetStatusText(ss, 3);
