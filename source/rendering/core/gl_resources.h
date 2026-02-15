@@ -10,12 +10,12 @@ class GLShader {
 public:
 	explicit GLShader(GLenum type) {
 		id = glCreateShader(type);
-		// spdlog::trace("GLShader created [ID={}]", id);
+		spdlog::info("GLShader created [ID={}]", id);
 	}
 
 	~GLShader() {
 		if (id) {
-			// spdlog::trace("GLShader deleted [ID={}]", id);
+			spdlog::info("GLShader deleted [ID={}]", id);
 			glDeleteShader(id);
 		}
 	}
@@ -55,12 +55,12 @@ class GLProgram {
 public:
 	GLProgram() {
 		id = glCreateProgram();
-		// spdlog::trace("GLProgram created [ID={}]", id);
+		spdlog::info("GLProgram created [ID={}]", id);
 	}
 
 	~GLProgram() {
 		if (id) {
-			// spdlog::trace("GLProgram deleted [ID={}]", id);
+			spdlog::info("GLProgram deleted [ID={}]", id);
 			glDeleteProgram(id);
 		}
 	}
@@ -100,12 +100,12 @@ class GLBuffer {
 public:
 	GLBuffer() {
 		glCreateBuffers(1, &id);
-		// spdlog::trace("GLBuffer created [ID={}]", id);
+		spdlog::info("GLBuffer created [ID={}]", id);
 	}
 
 	~GLBuffer() {
 		if (id) {
-			// spdlog::trace("GLBuffer deleted [ID={}]", id);
+			spdlog::info("GLBuffer deleted [ID={}]", id);
 			glDeleteBuffers(1, &id);
 		}
 	}
@@ -145,12 +145,12 @@ class GLVertexArray {
 public:
 	GLVertexArray() {
 		glCreateVertexArrays(1, &id);
-		// spdlog::trace("GLVertexArray created [ID={}]", id);
+		spdlog::info("GLVertexArray created [ID={}]", id);
 	}
 
 	~GLVertexArray() {
 		if (id) {
-			// spdlog::trace("GLVertexArray deleted [ID={}]", id);
+			spdlog::info("GLVertexArray deleted [ID={}]", id);
 			glDeleteVertexArrays(1, &id);
 		}
 	}
