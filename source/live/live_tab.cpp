@@ -82,6 +82,7 @@ LiveLogTab::LiveLogTab(MapTabbook* aui, LiveSocket* server) :
 	left_sizer->Add(log, 1, wxEXPAND);
 
 	input = newd wxTextCtrl(left_pane, LIVE_CHAT_TEXTBOX, wxEmptyString, wxDefaultPosition, wxDefaultSize);
+	input->SetHint("Type a message...");
 	left_sizer->Add(input, 0, wxEXPAND);
 
 	input->Bind(wxEVT_SET_FOCUS, &LiveLogTab::OnSelectChatbox, this);

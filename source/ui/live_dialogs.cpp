@@ -57,11 +57,11 @@ void LiveDialogs::ShowHostDialog(wxWindow* parent, Editor* editor) {
 	wxSizer* ok_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(live_host_dlg, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Start server");
+	okBtn->SetToolTip("Start server (Enter)");
 	ok_sizer->Add(okBtn, 1, wxCENTER);
 	auto cancelBtn = newd wxButton(live_host_dlg, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Cancel");
+	cancelBtn->SetToolTip("Cancel (Esc)");
 	ok_sizer->Add(cancelBtn, wxCENTER, 1);
 	top_sizer->Add(ok_sizer, 0, wxCENTER | wxALL, 20);
 
@@ -131,11 +131,11 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 	wxSizer* ok_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(live_join_dlg, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Connect to server");
+	okBtn->SetToolTip("Connect to server (Enter)");
 	ok_sizer->Add(okBtn, 1, wxRIGHT);
 	auto cancelBtn = newd wxButton(live_join_dlg, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Cancel");
+	cancelBtn->SetToolTip("Cancel (Esc)");
 	ok_sizer->Add(cancelBtn, 1, wxRIGHT);
 	top_sizer->Add(ok_sizer, 0, wxCENTER | wxALL, 20);
 

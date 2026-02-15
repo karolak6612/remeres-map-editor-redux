@@ -189,7 +189,7 @@ void EditorManager::SaveCurrentMap(FileName fileName, bool showdialog) {
 			EditorPersistence::saveMap(*editor, fileName, showdialog);
 
 			if (!editor->map.hasChanged()) {
-				g_status.SetStatusText("Map saved successfully.");
+				g_status.SetStatusText("Map saved to " + fileName.GetFullName());
 			}
 
 			const std::string& path = editor->map.getFilename();
@@ -339,7 +339,7 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 		}
 	}
 
-	g_status.SetStatusText("Map loaded successfully.");
+	g_status.SetStatusText("Map loaded: " + fileName.GetFullName());
 	return true;
 }
 

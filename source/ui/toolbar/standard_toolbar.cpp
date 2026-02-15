@@ -19,7 +19,7 @@ StandardToolBar::StandardToolBar(wxWindow* parent) {
 	wxBitmap new_bitmap = IMAGE_MANAGER.GetBitmap(ICON_NEW, icon_size);
 	wxBitmap open_bitmap = IMAGE_MANAGER.GetBitmap(ICON_OPEN, icon_size);
 	wxBitmap save_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SAVE, icon_size);
-	wxBitmap saveas_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SAVE, icon_size);
+	wxBitmap saveas_bitmap = IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, icon_size);
 	wxBitmap undo_bitmap = IMAGE_MANAGER.GetBitmap(ICON_UNDO, icon_size);
 	wxBitmap redo_bitmap = IMAGE_MANAGER.GetBitmap(ICON_REDO, icon_size);
 	wxBitmap cut_bitmap = IMAGE_MANAGER.GetBitmap(ICON_CUT, icon_size);
@@ -29,8 +29,8 @@ StandardToolBar::StandardToolBar(wxWindow* parent) {
 
 	toolbar = newd wxAuiToolBar(parent, TOOLBAR_STANDARD, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);
-	toolbar->AddTool(wxID_NEW, wxEmptyString, new_bitmap, wxNullBitmap, wxITEM_NORMAL, "New Map (Ctrl+N) - Create a new empty map", "Create a new empty map", nullptr);
-	toolbar->AddTool(wxID_OPEN, wxEmptyString, open_bitmap, wxNullBitmap, wxITEM_NORMAL, "Open Map (Ctrl+O) - Open an existing map", "Open an existing map", nullptr);
+	toolbar->AddTool(wxID_NEW, wxEmptyString, new_bitmap, wxNullBitmap, wxITEM_NORMAL, "New Map (Ctrl+N)", "Create a new empty map", nullptr);
+	toolbar->AddTool(wxID_OPEN, wxEmptyString, open_bitmap, wxNullBitmap, wxITEM_NORMAL, "Open Map (Ctrl+O)", "Open an existing map", nullptr);
 	toolbar->AddTool(wxID_SAVE, wxEmptyString, save_bitmap, wxNullBitmap, wxITEM_NORMAL, "Save Map (Ctrl+S)", "Save the current map", nullptr);
 	toolbar->AddTool(wxID_SAVEAS, wxEmptyString, saveas_bitmap, wxNullBitmap, wxITEM_NORMAL, "Save Map As... (Ctrl+Alt+S)", "Save the current map with a new name", nullptr);
 	toolbar->AddSeparator();

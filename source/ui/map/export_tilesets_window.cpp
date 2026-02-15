@@ -6,6 +6,7 @@
 #include "ui/gui_ids.h"
 #include "app/application.h"
 #include "util/image_manager.h"
+#include "ui/managers/status_manager.h"
 
 #include <wx/dirdlg.h>
 #include <wx/textctrl.h>
@@ -49,11 +50,11 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	ok_button = newd wxButton(this, wxID_OK, "OK");
 	ok_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	ok_button->SetToolTip("Start export");
+	ok_button->SetToolTip("Start export (Enter)");
 	tmpsizer->Add(ok_button, wxSizerFlags(1).Center());
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Cancel");
+	cancelBtn->SetToolTip("Cancel (Esc)");
 	tmpsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(tmpsizer, 0, wxCENTER, 10);
 
@@ -99,6 +100,7 @@ void ExportTilesetsWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	std::string filename = file_name_text_field->GetValue().ToStdString();
 
 	TilesetExporter::exportTilesets(directory, filename);
+	g_status.SetStatusText("Tilesets exported successfully.");
 
 	EndModal(1);
 }
