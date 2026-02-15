@@ -50,6 +50,51 @@ private:
 	GLuint id = 0;
 };
 
+// RAII wrapper for OpenGL Shader Programs
+class GLProgram {
+public:
+	GLProgram() {
+		id = glCreateProgram();
+		// spdlog::trace("GLProgram created [ID={}]", id);
+	}
+
+	~GLProgram() {
+		if (id) {
+			// spdlog::trace("GLProgram deleted [ID={}]", id);
+			glDeleteProgram(id);
+		}
+	}
+
+	// Disable copy
+	GLProgram(const GLProgram&) = delete;
+	GLProgram& operator=(const GLProgram&) = delete;
+
+	// Enable move
+	GLProgram(GLProgram&& other) noexcept :
+		id(std::exchange(other.id, 0)) { }
+
+	GLProgram& operator=(GLProgram&& other) noexcept {
+		if (this != &other) {
+			if (id) {
+				glDeleteProgram(id);
+			}
+			id = std::exchange(other.id, 0);
+		}
+		return *this;
+	}
+
+	// Explicit conversion
+	explicit operator GLuint() const {
+		return id;
+	}
+	GLuint GetID() const {
+		return id;
+	}
+
+private:
+	GLuint id = 0;
+};
+
 // RAII wrapper for OpenGL Buffers (VBO, EBO, UBO, SSBO)
 class GLBuffer {
 public:

@@ -1,4 +1,5 @@
 #include "rendering/core/ring_buffer.h"
+#include "rendering/core/gl_resources.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
 #include <cstring>
@@ -10,12 +11,11 @@ RingBuffer::~RingBuffer() {
 
 RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 	:
-	buffer_id_(other.buffer_id_),
+	buffer_(std::move(other.buffer_)),
 	mapped_ptr_(other.mapped_ptr_), element_size_(other.element_size_), max_elements_(other.max_elements_), section_size_(other.section_size_), current_section_(other.current_section_), use_persistent_mapping_(other.use_persistent_mapping_), initialized_(other.initialized_) {
 	for (size_t i = 0; i < BUFFER_COUNT; ++i) {
 		fences_[i] = std::move(other.fences_[i]);
 	}
-	other.buffer_id_ = 0;
 	other.mapped_ptr_ = nullptr;
 	other.initialized_ = false;
 }
@@ -23,7 +23,7 @@ RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 	if (this != &other) {
 		cleanup();
-		buffer_id_ = other.buffer_id_;
+		buffer_ = std::move(other.buffer_);
 		mapped_ptr_ = other.mapped_ptr_;
 		for (size_t i = 0; i < BUFFER_COUNT; ++i) {
 			fences_[i] = std::move(other.fences_[i]);
@@ -35,7 +35,6 @@ RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 		use_persistent_mapping_ = other.use_persistent_mapping_;
 		initialized_ = other.initialized_;
 
-		other.buffer_id_ = 0;
 		other.mapped_ptr_ = nullptr;
 		other.initialized_ = false;
 	}
@@ -55,9 +54,12 @@ bool RingBuffer::initialize(size_t element_size, size_t max_elements) {
 	size_t total_size = section_size_ * BUFFER_COUNT;
 
 	// Create buffer
-	glCreateBuffers(1, &buffer_id_);
+	buffer_ = std::make_unique<GLBuffer>();
+	GLuint buffer_id_ = buffer_->GetID();
+
 	if (buffer_id_ == 0) {
 		spdlog::error("RingBuffer: Failed to create buffer");
+		buffer_.reset();
 		return false;
 	}
 
@@ -74,8 +76,7 @@ bool RingBuffer::initialize(size_t element_size, size_t max_elements) {
 
 	if (!mapped_ptr_) {
 		spdlog::error("RingBuffer: Persistent mapping failed");
-		glDeleteBuffers(1, &buffer_id_);
-		buffer_id_ = 0;
+		buffer_.reset();
 		return false;
 	}
 
@@ -95,16 +96,19 @@ void RingBuffer::cleanup() {
 	}
 
 	// Unmap and delete buffer
-	if (buffer_id_) {
+	if (buffer_) {
 		if (mapped_ptr_) {
-			glUnmapNamedBuffer(buffer_id_);
+			glUnmapNamedBuffer(buffer_->GetID());
 			mapped_ptr_ = nullptr;
 		}
-		glDeleteBuffers(1, &buffer_id_);
-		buffer_id_ = 0;
+		buffer_.reset();
 	}
 
 	initialized_ = false;
+}
+
+GLuint RingBuffer::getBufferId() const {
+	return buffer_ ? buffer_->GetID() : 0;
 }
 
 void* RingBuffer::waitAndMap(size_t count) {

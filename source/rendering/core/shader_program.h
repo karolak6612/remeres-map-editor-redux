@@ -5,6 +5,9 @@
 #include <string>
 #include <unordered_map>
 #include <glm/glm.hpp>
+#include <memory>
+
+class GLProgram;
 
 class ShaderProgram {
 public:
@@ -24,16 +27,12 @@ public:
 	void SetVec4(const std::string& name, const glm::vec4& value) const;
 	void SetMat4(const std::string& name, const glm::mat4& value) const;
 
-	bool IsValid() const {
-		return program_id != 0;
-	}
+	bool IsValid() const;
 
-	GLuint GetID() const {
-		return program_id;
-	}
+	GLuint GetID() const;
 
 private:
-	GLuint program_id;
+	std::unique_ptr<GLProgram> program_;
 	mutable std::unordered_map<std::string, GLint> uniform_cache;
 
 	GLint GetUniformLocation(const std::string& name) const;
