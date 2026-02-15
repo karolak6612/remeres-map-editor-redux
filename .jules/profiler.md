@@ -12,3 +12,8 @@ Learning: Single-entry caching in nested loops must respect the iteration order.
 Finding: `GraphicManager::getSpriteFile()` returned `std::string` by value, causing a heap allocation and copy for every item in the render loop during sprite preloading checks.
 Impact: Reduced memory allocations per frame significantly (thousands of allocations avoided per frame).
 Learning: Returning `std::string` by value from a getter called in a hot loop is a major performance killer. Always use `const std::string&` or `std::string_view` for members.
+
+## 2026-02-15 - Optimization of Sprite Pattern Calculation and Tooltip Logic
+Finding: `PatternCalculator::Calculate` was being called twice for every complex item in the render loop: once during sprite preloading and again during drawing. Additionally, `requestTooltipData` was being called for every item regardless of whether it could have a tooltip.
+Impact: Eliminated redundant arithmetic and logic for sprite pattern calculation by caching the result from the preload step. Reduced unnecessary tooltip processing calls by pre-checking `isTooltipable` flag.
+Learning: Passing calculation results from a "prepare/preload" step to the "draw" step via `std::optional` is an effective way to avoid redundant work in immediate mode rendering loops.
