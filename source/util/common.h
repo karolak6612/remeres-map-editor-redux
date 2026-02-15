@@ -38,8 +38,8 @@ int32_t uniform_random(int32_t maxNumber);
 // Function-like convertions between float, int and doubles
 std::string i2s(int i);
 std::string f2s(double i);
-int s2i(std::string s);
-double s2f(std::string s);
+int s2i(const std::string& s);
+double s2f(const std::string& s);
 wxString i2ws(int i);
 wxString f2ws(double i);
 int ws2i(wxString s);
@@ -70,8 +70,8 @@ std::string as_upper_str(const std::string& other);
 
 // isFalseString returns true if the string is either "0", "false", "no", "not" or blank
 // isTrueString returns the opposite value of isFalseString
-bool isFalseString(std::string& str);
-bool isTrueString(std::string& str);
+bool isFalseString(std::string_view str);
+bool isTrueString(std::string_view str);
 
 // Generates a random number between low and high using the Mersenne Twister algorithm (std::mt19937).
 // Swaps low and high if low > high for a more intuitive behavior.

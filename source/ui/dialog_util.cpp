@@ -29,7 +29,11 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 		return;
 	}
 
-	std::vector<std::string> list_items(param_items);
+	std::vector<wxString> list_items;
+	list_items.reserve(param_items.size());
+	for (const auto& item : param_items) {
+		list_items.push_back(wxstr(item));
+	}
 
 	// Create the window
 	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);

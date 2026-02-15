@@ -19,6 +19,7 @@
 #define RME_EDITOR_TABS_H_
 
 #include "ui/gui_ids.h"
+#include <unordered_map>
 
 class EditorTab;
 
@@ -49,7 +50,7 @@ public:
 protected:
 	EditorTab* GetInternalTab(int idx);
 	wxAuiNotebook* notebook;
-	std::map<wxWindow*, EditorTab*> conv;
+	std::unordered_map<wxWindow*, EditorTab*> conv;
 };
 
 class EditorTab {

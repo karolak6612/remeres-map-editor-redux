@@ -476,7 +476,7 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
 	}
 
 	using OtbLoaderFunc = bool (ItemDatabase::*)(BinaryNode*, wxString&, std::vector<std::string>&);
-	static const std::map<uint32_t, OtbLoaderFunc> loaders = {
+	static const std::unordered_map<uint32_t, OtbLoaderFunc> loaders = {
 		{ 1, &ItemDatabase::loadFromOtbVer1 },
 		{ 2, &ItemDatabase::loadFromOtbVer2 },
 		{ 3, &ItemDatabase::loadFromOtbVer3 }

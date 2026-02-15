@@ -53,14 +53,14 @@ void PaletteManager::RebuildPalettes() {
 }
 
 void PaletteManager::RefreshPalettes(Map* m, bool usedefault) {
-	for (auto& palette : palettes) {
+	for (const auto& palette : palettes) {
 		palette->OnUpdate(m ? m : (usedefault ? (g_gui.IsEditorOpen() ? &g_gui.GetCurrentMap() : nullptr) : nullptr));
 	}
 	g_brush_manager.SelectBrush();
 }
 
 void PaletteManager::RefreshOtherPalettes(PaletteWindow* p) {
-	for (auto& palette : palettes) {
+	for (const auto& palette : palettes) {
 		if (palette != p) {
 			palette->OnUpdate(g_gui.IsEditorOpen() ? &g_gui.GetCurrentMap() : nullptr);
 		}

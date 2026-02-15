@@ -713,8 +713,8 @@ bool NodeFileWriteHandle::addLongString(const std::string& str) {
 	return error_code == FILE_NO_ERROR;
 }
 
-bool NodeFileWriteHandle::addRAW(std::string& str) {
-	writeBytes(reinterpret_cast<uint8_t*>(const_cast<char*>(str.data())), str.size());
+bool NodeFileWriteHandle::addRAW(const std::string& str) {
+	writeBytes(reinterpret_cast<const uint8_t*>(str.data()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 

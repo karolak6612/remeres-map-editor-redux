@@ -946,7 +946,7 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 			const Position pos(base_x + x_offset, base_y + y_offset, base_z);
 
 			if (map.getTile(pos)) {
-				warning(wxstr(std::format("Duplicate tile at {}:{}:{}, discarding duplicate", pos.x, pos.y, pos.z)));
+				warnings.push_back(std::format("Duplicate tile at {}:{}:{}, discarding duplicate", pos.x, pos.y, pos.z));
 				continue;
 			}
 
@@ -977,7 +977,7 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 					case OTBM_ATTR_TILE_FLAGS: {
 						uint32_t flags = 0;
 						if (!tileNode->getU32(flags)) {
-							warning(wxstr(std::format("Invalid tile flags of tile on {}:{}:{}", pos.x, pos.y, pos.z)));
+							warnings.push_back(std::format("Invalid tile flags of tile on {}:{}:{}", pos.x, pos.y, pos.z));
 						}
 						tile->setMapFlags(flags);
 						break;
@@ -985,13 +985,13 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 					case OTBM_ATTR_ITEM: {
 						std::unique_ptr<Item> item = Item::Create_OTBM(*this, tileNode);
 						if (item == nullptr) {
-							warning(wxstr(std::format("Invalid item at tile {}:{}:{}", pos.x, pos.y, pos.z)));
+							warnings.push_back(std::format("Invalid item at tile {}:{}:{}", pos.x, pos.y, pos.z));
 						}
 						tile->addItem(std::move(item));
 						break;
 					}
 					default: {
-						warning(wxstr(std::format("Unknown tile attribute at {}:{}:{}", pos.x, pos.y, pos.z)));
+						warnings.push_back(std::format("Unknown tile attribute at {}:{}:{}", pos.x, pos.y, pos.z));
 						break;
 					}
 				}
@@ -1001,14 +1001,14 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 				std::unique_ptr<Item> item;
 				uint8_t item_type;
 				if (!itemNode->getByte(item_type)) {
-					warning(wxstr(std::format("Unknown item type {}:{}:{}", pos.x, pos.y, pos.z)));
+					warnings.push_back(std::format("Unknown item type {}:{}:{}", pos.x, pos.y, pos.z));
 					continue;
 				}
 				if (item_type == OTBM_ITEM) {
 					item = Item::Create_OTBM(*this, itemNode);
 					if (item) {
 						if (!item->unserializeItemNode_OTBM(*this, itemNode)) {
-							warning(wxstr(std::format("Couldn't unserialize item attributes at {}:{}:{}", pos.x, pos.y, pos.z)));
+							warnings.push_back(std::format("Couldn't unserialize item attributes at {}:{}:{}", pos.x, pos.y, pos.z));
 						}
 						// reform(&map, tile, item);
 						tile->addItem(std::move(item));
@@ -1049,7 +1049,7 @@ void IOMapOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 
 		town = map.towns.getTown(town_id);
 		if (town) {
-			warning(wxstr(std::format("Duplicate town id {}, discarding duplicate", town_id)));
+			warnings.push_back(std::format("Duplicate town id {}, discarding duplicate", town_id));
 			continue;
 		} else {
 			auto new_town = std::make_unique<Town>(town_id);
@@ -1183,7 +1183,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 
 		Tile* tile = map.getTile(spawnPosition);
 		if (tile && tile->spawn) {
-			warning(wxstr(std::format("Duplicate spawn on position {}:{}:{}", tile->getX(), tile->getY(), tile->getZ())));
+			warnings.push_back(std::format("Duplicate spawn on position {}:{}:{}", tile->getX(), tile->getY(), tile->getZ()));
 			continue;
 		}
 
@@ -1352,7 +1352,7 @@ bool IOMapOTBM::loadHouses(Map& map, pugi::xml_document& doc) {
 		if ((attribute = houseNode.attribute("townid"))) {
 			house->townid = attribute.as_uint();
 		} else {
-			warning(wxstr(std::format("House {} has no town! House was removed.", house->getID())));
+			warnings.push_back(std::format("House {} has no town! House was removed.", house->getID()));
 			map.houses.removeHouse(house);
 		}
 	}

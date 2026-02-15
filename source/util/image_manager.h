@@ -10,6 +10,8 @@
 #include <wx/colour.h>
 #include <wx/gdicmn.h>
 #include <map>
+#include <unordered_map>
+#include <functional>
 #include <string>
 #include <memory>
 #include <cstdint>
@@ -19,6 +21,15 @@
 struct NVGcontext;
 
 class ImageManager {
+	struct PairHash {
+		template <class T1, class T2>
+		std::size_t operator()(const std::pair<T1, T2>& p) const {
+			auto h1 = std::hash<T1>{}(p.first);
+			auto h2 = std::hash<T2>{}(p.second);
+			return h1 ^ h2;
+		}
+	};
+
 public:
 	static ImageManager& GetInstance();
 
@@ -42,10 +53,10 @@ private:
 	std::string ResolvePath(const std::string& assetPath);
 
 	// Caches
-	std::map<std::string, wxBitmapBundle> m_bitmapBundleCache;
-	std::map<std::pair<std::string, uint32_t>, wxBitmap> m_tintedBitmapCache;
-	std::map<std::pair<std::string, uint32_t>, int> m_nvgImageCache;
-	std::map<std::string, uint32_t> m_glTextureCache;
+	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;
+	std::unordered_map<std::pair<std::string, uint32_t>, wxBitmap, PairHash> m_tintedBitmapCache;
+	std::unordered_map<std::pair<std::string, uint32_t>, int, PairHash> m_nvgImageCache;
+	std::unordered_map<std::string, uint32_t> m_glTextureCache;
 
 	// Helper for tinting
 	wxImage TintImage(const wxImage& image, const wxColour& tint);

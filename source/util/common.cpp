@@ -56,11 +56,11 @@ std::string f2s(const double _d) {
 	return std::format("{:.6g}", _d);
 }
 
-int s2i(const std::string s) {
+int s2i(const std::string& s) {
 	return atoi(s.c_str());
 }
 
-double s2f(const std::string s) {
+double s2f(const std::string& s) {
 	return atof(s.c_str());
 }
 
@@ -130,14 +130,14 @@ std::string as_upper_str(const std::string& other) {
 	return ret;
 }
 
-bool isFalseString(std::string& str) {
-	if (str == "false" || str == "0" || str == "" || str == "no" || str == "not") {
+bool isFalseString(std::string_view str) {
+	if (str == "false" || str == "0" || str.empty() || str == "no" || str == "not") {
 		return true;
 	}
 	return false;
 }
 
-bool isTrueString(std::string& str) {
+bool isTrueString(std::string_view str) {
 	return !isFalseString(str);
 }
 

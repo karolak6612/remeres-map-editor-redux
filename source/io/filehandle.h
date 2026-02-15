@@ -335,7 +335,7 @@ public:
 	bool addU64(uint64_t u64);
 	bool addString(const std::string& str);
 	bool addLongString(const std::string& str);
-	bool addRAW(std::string& str);
+	bool addRAW(const std::string& str);
 	bool addRAW(const uint8_t* ptr, size_t sz);
 	bool addRAW(const char* c) {
 		return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));
