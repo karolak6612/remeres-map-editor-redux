@@ -263,8 +263,8 @@ bool Container::serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHand
 	f.addU16(id);
 	serializeItemAttributes_OTMM(maphandle, f);
 
-	for (ItemVector::const_iterator it = contents.begin(); it != contents.end(); ++it) {
-		(*it)->serializeItemNode_OTMM(maphandle, f);
+	for (const auto& item : contents) {
+		item->serializeItemNode_OTMM(maphandle, f);
 	}
 	f.endNode();
 	return true;
