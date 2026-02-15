@@ -48,6 +48,7 @@
 #include "ui/menubar/palette_menu_handler.h"
 #include "ui/menubar/menubar_action_manager.h"
 #include "ingame_preview/ingame_preview_manager.h"
+#include "util/image_manager.h"
 
 #include <wx/chartype.h>
 
@@ -237,6 +238,11 @@ void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
 void MainMenuBar::OnDebugViewDat(wxCommandEvent& event) {
 	wxDialog dlg(frame, wxID_ANY, "Debug .dat file", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 	new DatDebugView(&dlg);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_BUG, wxSize(32, 32)));
+	dlg.SetIcon(icon);
+
 	dlg.ShowModal();
 }
 

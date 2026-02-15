@@ -182,6 +182,10 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 	Centre();
 	new WelcomePanel(this, rmeLogo, recentFiles);
 	SetSize(FromDIP(800), FromDIP(500));
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GLOBE, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {

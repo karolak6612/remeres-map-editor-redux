@@ -105,15 +105,15 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	dg->SetSizerAndFit(topsizer);
 	dg->Centre(wxBOTH);
 
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
+	dg->SetIcon(icon);
+
 	int ret = dg->ShowModal();
 
 	if (ret == wxID_OK) {
 	} else if (ret == wxID_CANCEL) {
 	}
-
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
-	dg->SetIcon(icon);
 
 	dg->Destroy();
 }
