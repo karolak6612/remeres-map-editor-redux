@@ -25,6 +25,8 @@
 #include "game/items.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "game/item.h"
+#include "game/complexitem.h"
 
 TooltipDrawer::TooltipDrawer() {
 }
@@ -43,6 +45,91 @@ TooltipDrawer::~TooltipDrawer() {
 
 void TooltipDrawer::clear() {
 	active_count = 0;
+	active_tooltips.clear();
+	current_frame++;
+	garbageCollect();
+}
+
+static uint64_t computeItemHash(const Item* item, const Position& pos, bool isHouseTile, float zoom) {
+	if (!item) return 0;
+
+	// FNV-1a hash
+	uint64_t hash = 14695981039346656037ULL;
+	auto add = [&](uint64_t val) {
+		hash ^= val;
+		hash *= 1099511628211ULL;
+	};
+	auto addStr = [&](std::string_view s) {
+		for (char c : s) {
+			hash ^= (uint64_t)c;
+			hash *= 1099511628211ULL;
+		}
+	};
+
+	add(item->getID());
+	add(item->getSubtype());
+	add((uint64_t)isHouseTile);
+	add(pos.x);
+	add(pos.y);
+	add(pos.z);
+
+	// Zoom level affects container visibility
+	if (item->isContainer()) {
+		add((uint64_t)(zoom <= 1.5f));
+		if (zoom <= 1.5f) {
+			if (const Container* c = item->asContainer()) {
+				// Hash container content (shallow, first 32 items)
+				size_t count = 0;
+				for (const auto& i : c->getVector()) {
+					if (i) {
+						add(i->getID());
+						add(i->getCount());
+						count++;
+						if (count >= 32) break;
+					}
+				}
+				add(c->getItemCount()); // Include total count
+			}
+		}
+	}
+
+	// Attributes
+	if (item->isComplex()) {
+		add(item->getActionID());
+		add(item->getUniqueID());
+		addStr(item->getText());
+		addStr(item->getDescription());
+		if (item->isTeleport()) {
+			if (const Teleport* t = item->asTeleport()) {
+				Position dest = t->getDestination();
+				add(dest.x);
+				add(dest.y);
+				add(dest.z);
+			}
+		}
+		if (item->isDoor()) {
+			if (const Door* d = item->asDoor()) {
+				add(d->getDoorID());
+			}
+		}
+	}
+
+	return hash;
+}
+
+void TooltipDrawer::garbageCollect() {
+	// GC every 600 frames (approx 10 seconds at 60fps)
+	if (current_frame % 600 != 0) return;
+
+	auto it = cache.begin();
+	while (it != cache.end()) {
+		// Remove if not seen for 600 frames
+		if (it->second.lastFrameSeen < current_frame - 600) {
+			it = cache.erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 TooltipData& TooltipDrawer::requestTooltipData() {
@@ -74,6 +161,163 @@ void TooltipDrawer::addItemTooltip(TooltipData&& data) {
 	TooltipData& dest = requestTooltipData();
 	dest = std::move(data);
 	commitTooltip();
+}
+
+// Helper function to populate tooltip data from an item (in-place)
+// Migrated from tile_renderer.cpp
+static bool FillItemTooltipData(TooltipData& data, const Item* item, const Position& pos, bool isHouseTile, float zoom) {
+	if (!item) {
+		return false;
+	}
+
+	const uint16_t id = item->getID();
+	if (id < 100) {
+		return false;
+	}
+
+	uint16_t unique = 0;
+	uint16_t action = 0;
+	std::string_view text;
+	std::string_view description;
+	uint8_t doorId = 0;
+	Position destination;
+	bool hasContent = false;
+
+	bool is_complex = item->isComplex();
+	// Early exit for simple items
+	// isTooltipable is cached (isContainer || isDoor || isTeleport)
+	if (!is_complex && !g_items[id].isTooltipable()) {
+		return false;
+	}
+
+	bool is_container = g_items[id].isContainer();
+	bool is_door = isHouseTile && item->isDoor();
+	bool is_teleport = item->isTeleport();
+
+	if (is_complex) {
+		unique = item->getUniqueID();
+		action = item->getActionID();
+		text = item->getText();
+		description = item->getDescription();
+	}
+
+	// Check if it's a door
+	if (is_door) {
+		if (const Door* door = item->asDoor()) {
+			if (door->isRealDoor()) {
+				doorId = door->getDoorID();
+			}
+		}
+	}
+
+	// Check if it's a teleport
+	if (is_teleport) {
+		const Teleport* tp = item->asTeleport();
+		if (tp && tp->hasDestination()) {
+			destination = tp->getDestination();
+		}
+	}
+
+	// Check if container has content
+	if (is_container) {
+		if (const Container* container = item->asContainer()) {
+			hasContent = container->getItemCount() > 0;
+		}
+	}
+
+	// Only create tooltip if there's something to show
+	if (unique == 0 && action == 0 && doorId == 0 && text.empty() && description.empty() && destination.x == 0 && !hasContent) {
+		return false;
+	}
+
+	// Get item name from database
+	std::string_view itemName = g_items[id].name;
+	if (itemName.empty()) {
+		itemName = "Item";
+	}
+
+	data.pos = pos;
+	data.itemId = id;
+	data.itemName = itemName; // Assign string_view to string_view (no copy)
+
+	data.actionId = action;
+	data.uniqueId = unique;
+	data.doorId = doorId;
+	data.text = text;
+	data.description = description;
+	data.destination = destination;
+
+	// Populate container items
+	if (g_items[id].isContainer() && zoom <= 1.5f) {
+		if (const Container* container = item->asContainer()) {
+			// Set capacity for rendering empty slots
+			data.containerCapacity = static_cast<uint8_t>(container->getVolume());
+
+			const auto& items = container->getVector();
+			data.containerItems.clear();
+			data.containerItems.reserve(items.size());
+			for (const auto& subItem : items) {
+				if (subItem) {
+					ContainerItem ci;
+					ci.id = subItem->getID();
+					ci.subtype = subItem->getSubtype();
+					ci.count = subItem->getCount();
+					// Sanity check for count
+					if (ci.count == 0) {
+						ci.count = 1;
+					}
+
+					data.containerItems.push_back(ci);
+
+					// Limit preview items to avoid massive tooltips
+					if (data.containerItems.size() >= 32) {
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	data.updateCategory();
+
+	return true;
+}
+
+void TooltipDrawer::addItemTooltip(const Item* item, const Position& pos, bool isHouseTile, float zoom) {
+	if (!item) return;
+
+	// Calculate hash to detect changes
+	uint64_t hash = computeItemHash(item, pos, isHouseTile, zoom);
+
+	// Check cache
+	CachedTooltipEntry& entry = cache[item]; // Creates if not exists
+
+	// If new or changed, regenerate
+	if (entry.hash != hash) {
+		entry.hash = hash;
+		entry.data.clear();
+		// Regenerate Data
+		bool hasContent = FillItemTooltipData(entry.data, item, pos, isHouseTile, zoom);
+		entry.isEmpty = !hasContent || !entry.data.hasVisibleFields();
+
+		if (!entry.isEmpty) {
+			// Regenerate Layout Strings
+			entry.storage.clear();
+			entry.fields.clear();
+			if (entry.storage.capacity() < 256) entry.storage.reserve(256);
+
+			prepareFields(entry.data, entry.fields, entry.storage);
+
+			// Mark layout as invalid (width=0) so draw() recalculates it
+			entry.layout.width = 0;
+		}
+	}
+
+	entry.lastFrameSeen = current_frame;
+
+	if (!entry.isEmpty) {
+		active_tooltips.push_back(&entry);
+	}
 }
 
 void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name) {
@@ -220,20 +464,17 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	return 0;
 }
 
-void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
+void TooltipDrawer::prepareFields(const TooltipData& tooltip, std::vector<FieldLine>& fields, std::string& storage) {
 	// Build content lines with word wrapping support
 	using namespace TooltipColors;
-	scratch_fields_count = 0;
+	fields.clear();
 	storage.clear();
 	if (storage.capacity() < 4096) {
 		storage.reserve(4096);
 	}
 
 	auto addField = [&](std::string_view label, std::string_view value, uint8_t r, uint8_t g, uint8_t b) {
-		if (scratch_fields_count >= scratch_fields.size()) {
-			scratch_fields.emplace_back();
-		}
-		FieldLine& field = scratch_fields[scratch_fields_count++];
+		FieldLine& field = fields.emplace_back();
 		field.label = label;
 		field.value = value;
 		field.r = r;
@@ -276,7 +517,7 @@ void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
 	}
 }
 
-TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize) {
+TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, std::vector<FieldLine>& fields, float maxWidth, float minWidth, float padding, float fontSize) {
 	LayoutMetrics lm = {};
 
 	// Set up font for measurements
@@ -285,8 +526,7 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 
 	// Measure label widths
 	float maxLabelWidth = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	for (const auto& field : fields) {
 		float labelBounds[4];
 		nvgTextBounds(vg, 0, 0, field.label.data(), field.label.data() + field.label.size(), labelBounds);
 		float lw = labelBounds[2] - labelBounds[0];
@@ -302,8 +542,7 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 	int totalLines = 0;
 	float actualMaxWidth = minWidth;
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		auto& field = scratch_fields[i];
+	for (auto& field : fields) {
 		const char* start = field.value.data();
 		const char* end = start + field.value.length();
 
@@ -437,7 +676,7 @@ void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width
 	nvgStroke(vg);
 }
 
-void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize) {
+void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, const std::vector<FieldLine>& fields, float valueStartX, float lineHeight, float padding, float fontSize) {
 	using namespace TooltipColors;
 
 	float contentX = x + padding;
@@ -447,8 +686,7 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	nvgFontFace(vg, "sans");
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	for (const auto& field : fields) {
 		bool firstLine = true;
 		for (const auto& line : field.wrappedLines) {
 			if (firstLine) {
@@ -467,7 +705,7 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	}
 }
 
-void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout) {
+void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout, const std::vector<FieldLine>& fields) {
 	using namespace TooltipColors;
 
 	if (layout.totalContainerSlots <= 0) {
@@ -481,8 +719,7 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 	float fontSize = 11.0f;
 	float lineHeight = fontSize * 1.4f;
 	float textBlockHeight = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	for (const auto& field : fields) {
 		textBlockHeight += field.wrappedLines.size() * lineHeight;
 	}
 
@@ -559,8 +796,13 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		return;
 	}
 
-	for (size_t i = 0; i < active_count; ++i) {
-		const auto& tooltip = tooltips[i];
+	float fontSize = 11.0f;
+	float padding = 10.0f;
+	float minWidth = 120.0f;
+	float maxWidth = 220.0f;
+	float lineHeight = fontSize * 1.4f;
+
+	auto drawOne = [&](const TooltipData& tooltip, std::vector<FieldLine>& fields, LayoutMetrics& layout, bool layoutValid) {
 		int unscaled_x, unscaled_y;
 		view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
 
@@ -574,34 +816,46 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		screen_x += tile_size_screen / 2.0f;
 		screen_y += tile_size_screen / 2.0f;
 
-		// Constants
-		float fontSize = 11.0f;
-		float padding = 10.0f;
-		float minWidth = 120.0f;
-		float maxWidth = 220.0f;
-
-		// 1. Prepare Content
-		prepareFields(tooltip);
-
-		// Skip if nothing to show
-		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
-			continue;
+		// Calculate Layout if needed
+		if (!layoutValid) {
+			layout = calculateLayout(vg, tooltip, fields, maxWidth, minWidth, padding, fontSize);
 		}
-
-		// 2. Calculate Layout
-		LayoutMetrics layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
 
 		// Position tooltip above tile
 		float tooltipX = screen_x - (layout.width / 2.0f);
 		float tooltipY = screen_y - layout.height - 12.0f;
 
-		// 3. Draw Background & Shadow
+		// Draw Background & Shadow
 		drawBackground(vg, tooltipX, tooltipY, layout.width, layout.height, 4.0f, tooltip);
 
-		// 4. Draw Text Fields
-		drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
+		// Draw Text Fields
+		drawFields(vg, tooltipX, tooltipY, fields, layout.valueStartX, lineHeight, padding, fontSize);
 
-		// 5. Draw Container Grid
-		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
+		// Draw Container Grid
+		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout, fields);
+	};
+
+	// 1. Draw cached item tooltips
+	for (auto* entry : active_tooltips) {
+		if (entry) {
+			// Check if layout needs update (width == 0 is our flag)
+			bool valid = entry->layout.width > 0;
+			// We pass reference to entry->layout so it gets updated if invalid
+			drawOne(entry->data, entry->fields, entry->layout, valid);
+		}
+	}
+
+	// 2. Draw immediate tooltips (waypoints)
+	for (size_t i = 0; i < active_count; ++i) {
+		const auto& tooltip = tooltips[i];
+		// Prepare fields into scratch buffers
+		prepareFields(tooltip, scratch_fields, storage);
+
+		if (scratch_fields.empty() && tooltip.containerItems.empty()) {
+			continue;
+		}
+
+		LayoutMetrics layout;
+		drawOne(tooltip, scratch_fields, layout, false);
 	}
 }

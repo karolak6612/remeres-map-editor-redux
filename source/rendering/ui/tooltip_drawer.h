@@ -159,36 +159,19 @@ public:
 	// Add a waypoint tooltip
 	void addWaypointTooltip(Position pos, std::string_view name);
 
+	// Add an item tooltip (cached)
+	void addItemTooltip(const Item* item, const Position& pos, bool isHouseTile, float zoom);
+
 	// Draw all tooltips
 	void draw(NVGcontext* vg, const RenderView& view);
 
 	// Clear all tooltips
 	void clear();
 
+	// Garbage collect old cache entries
+	void garbageCollect();
+
 protected:
-	struct FieldLine {
-		std::string_view label;
-		std::string_view value;
-		uint8_t r, g, b;
-		std::vector<std::string_view> wrappedLines; // For multi-line values
-	};
-	std::vector<FieldLine> scratch_fields;
-	size_t scratch_fields_count = 0;
-	std::string storage; // Scratch buffer for text generation
-
-	std::vector<TooltipData> tooltips;
-	size_t active_count = 0;
-
-	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
-	NVGcontext* lastContext = nullptr;
-
-	// Helper to get or load sprite image
-	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
-
-	// Helper to get header color based on category
-	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
-
-	// Refactored drawing helpers
 	struct LayoutMetrics {
 		float width;
 		float height;
@@ -202,11 +185,54 @@ protected:
 		int numContainerItems;
 	};
 
-	void prepareFields(const TooltipData& tooltip);
-	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
+	struct FieldLine {
+		std::string_view label;
+		std::string_view value;
+		uint8_t r, g, b;
+		std::vector<std::string_view> wrappedLines; // For multi-line values
+	};
+
+	struct CachedTooltipEntry {
+		uint64_t hash = 0;
+		uint64_t lastFrameSeen = 0;
+		bool isEmpty = true;
+		TooltipData data;
+
+		// Layout cache
+		std::string storage;
+		std::vector<FieldLine> fields;
+		LayoutMetrics layout;
+	};
+
+	std::vector<FieldLine> scratch_fields;
+	size_t scratch_fields_count = 0;
+	std::string storage; // Scratch buffer for text generation
+
+	std::vector<TooltipData> tooltips;
+	size_t active_count = 0;
+
+	// Cache for item tooltips
+	std::unordered_map<const Item*, CachedTooltipEntry> cache;
+	std::vector<CachedTooltipEntry*> active_tooltips;
+	uint64_t current_frame = 0;
+
+	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
+	NVGcontext* lastContext = nullptr;
+
+	// Helper to get or load sprite image
+	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
+
+	// Helper to get header color based on category
+	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
+
+	// Refactored drawing helpers
+	// LayoutMetrics moved up
+
+	void prepareFields(const TooltipData& tooltip, std::vector<FieldLine>& fields, std::string& storage);
+	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, std::vector<FieldLine>& fields, float maxWidth, float minWidth, float padding, float fontSize);
 	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
-	void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
-	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
+	void drawFields(NVGcontext* vg, float x, float y, const std::vector<FieldLine>& fields, float valueStartX, float lineHeight, float padding, float fontSize);
+	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout, const std::vector<FieldLine>& fields);
 };
 
 #endif
