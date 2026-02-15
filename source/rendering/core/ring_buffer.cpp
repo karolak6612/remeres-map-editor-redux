@@ -114,10 +114,10 @@ void* RingBuffer::waitAndMap(size_t count) {
 
 	// Wait for fence on current section if it exists
 	if (fences_[current_section_]) {
-		// Wait with timeout
+		static constexpr uint64_t WAIT_TIMEOUT_NS = 5000000000ULL; // 5 second timeout (increased from 1s for large viewports)
 		GLenum result = fences_[current_section_].clientWait(
-			GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000
-		); // 1 second timeout
+			GL_SYNC_FLUSH_COMMANDS_BIT, WAIT_TIMEOUT_NS
+		);
 
 		if (result == GL_TIMEOUT_EXPIRED || result == GL_WAIT_FAILED) {
 			spdlog::error("RingBuffer: Fence wait timeout/failed on section {}", current_section_);

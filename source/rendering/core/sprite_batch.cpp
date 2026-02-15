@@ -131,7 +131,6 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	in_batch_ = true;
 	draw_call_count_ = 0;
 	sprite_count_ = 0;
-	sprite_count_ = 0;
 	global_tint_ = glm::vec4(1.0f);
 
 	glEnable(GL_BLEND);
@@ -261,6 +260,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			// (If we just flushed above, the fence was placed, and waitAndMap will block correctly if GPU is slow)
 			void* ptr = ring_buffer_.waitAndMap(batch_size);
 			if (!ptr) {
+				spdlog::error("SpriteBatch: RingBuffer mapping failed (MDI path). Aborting batch.");
 				break;
 			}
 
@@ -304,6 +304,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			size_t batch_size = std::min(total - processed, max_batch);
 			void* ptr = ring_buffer_.waitAndMap(batch_size);
 			if (!ptr) {
+				spdlog::error("SpriteBatch: RingBuffer mapping failed (Fallback path). Aborting batch.");
 				break;
 			}
 
