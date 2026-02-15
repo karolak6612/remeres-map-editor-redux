@@ -92,3 +92,6 @@ analyze_legacy.py
 /test_variant_logic
 build_output*.txt
 build_script.log
+
+.qwen/
+gha-creds-*.json

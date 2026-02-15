@@ -19,8 +19,7 @@
 #define RME_TEXTURE_GARBAGE_COLLECTOR_H
 
 #include <deque>
-#include <map>
-#include <unordered_map>
+#include <vector>
 #include <memory>
 #include <time.h>
 

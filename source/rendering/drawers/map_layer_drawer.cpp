@@ -60,6 +60,14 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
 	// ND visibility
+	auto collectSpriteWithPattern = [&](GameSprite* spr, int tx, int ty) {
+		if (spr && !spr->isSimpleAndLoaded()) {
+			int pattern_x = (spr->pattern_x > 1) ? tx % spr->pattern_x : 0;
+			int pattern_y = (spr->pattern_y > 1) ? ty % spr->pattern_y : 0;
+			int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
+			rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
+		}
+	};
 
 	if (live_client) {
 		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
@@ -101,17 +109,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 							// Trigger preloading for this tile's sprites
 							if (Tile* tile = location->get()) {
-								if (tile->ground) {
-									GameSprite* spr = g_items[tile->ground->getID()].sprite;
-									if (spr && !spr->isSimpleAndLoaded()) {
-										rme::collectTileSprites(spr, 0, 0, 0, 0);
-									}
-								}
+								int tx = nd_map_x + map_x;
+								int ty = nd_map_y + map_y;
+								collectSpriteWithPattern(tile->ground ? g_items[tile->ground->getID()].sprite : nullptr, tx, ty);
 								for (const auto& item : tile->items) {
-									GameSprite* spr = g_items[item->getID()].sprite;
-									if (spr && !spr->isSimpleAndLoaded()) {
-										rme::collectTileSprites(spr, 0, 0, 0, 0);
-									}
+									collectSpriteWithPattern(g_items[item->getID()].sprite, tx, ty);
 								}
 							}
 
@@ -166,17 +168,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 					// Trigger preloading for this tile's sprites
 					if (Tile* tile = location->get()) {
-						if (tile->ground) {
-							GameSprite* spr = g_items[tile->ground->getID()].sprite;
-							if (spr && !spr->isSimpleAndLoaded()) {
-								rme::collectTileSprites(spr, 0, 0, 0, 0);
-							}
-						}
+						int tx = nd_map_x + map_x;
+						int ty = nd_map_y + map_y;
+						collectSpriteWithPattern(tile->ground ? g_items[tile->ground->getID()].sprite : nullptr, tx, ty);
 						for (const auto& item : tile->items) {
-							GameSprite* spr = g_items[item->getID()].sprite;
-							if (spr && !spr->isSimpleAndLoaded()) {
-								rme::collectTileSprites(spr, 0, 0, 0, 0);
-							}
+							collectSpriteWithPattern(g_items[item->getID()].sprite, tx, ty);
 						}
 					}
 
