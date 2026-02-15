@@ -7,6 +7,9 @@
 #include "util/image_manager.h"
 #include <algorithm>
 
+#include <glad/glad.h>
+#include <nanovg.h>
+
 static bool caseInsensitiveContains(std::string_view haystack, std::string_view needle_lower) {
 	auto it = std::search(
 		haystack.begin(), haystack.end(),
@@ -293,21 +296,37 @@ void FindBrushDialog::RefreshContentsInternal() {
 		}
 
 		if (found_search_results) {
+			item_list->UpdateLayout();
 			item_list->SetSelection(0);
 		} else {
 			item_list->SetNoMatches();
 		}
 	}
-	item_list->Refresh();
 }
 
 // ============================================================================
 // Listbox in find item / brush stuff
 
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
-	cleared(false),
-	no_matches(false) {
+	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
+	cleared(true),
+	no_matches(false),
+	selected_index(-1),
+	hover_index(-1),
+	item_height(0) {
+
+	// Set white background
+	m_bgRed = 1.0f;
+	m_bgGreen = 1.0f;
+	m_bgBlue = 1.0f;
+
+	item_height = FromDIP(32);
+
+	Bind(wxEVT_LEFT_DOWN, &FindDialogListBox::OnLeftDown, this);
+	Bind(wxEVT_MOTION, &FindDialogListBox::OnMotion, this);
+	Bind(wxEVT_LEFT_DCLICK, &FindDialogListBox::OnLeftDClick, this);
+	Bind(wxEVT_SIZE, &FindDialogListBox::OnSize, this);
+
 	Clear();
 }
 
@@ -319,63 +338,200 @@ void FindDialogListBox::Clear() {
 	cleared = true;
 	no_matches = false;
 	brushlist.clear();
-	SetItemCount(1);
+	selected_index = -1;
+	hover_index = -1;
+	UpdateLayout();
+	Refresh();
 }
 
 void FindDialogListBox::SetNoMatches() {
 	cleared = false;
 	no_matches = true;
 	brushlist.clear();
-	SetItemCount(1);
+	selected_index = -1;
+	hover_index = -1;
+	UpdateLayout();
+	Refresh();
 }
 
 void FindDialogListBox::AddBrush(Brush* brush) {
 	if (cleared || no_matches) {
-		SetItemCount(0);
+		brushlist.clear();
+		selected_index = -1;
 	}
 
 	cleared = false;
 	no_matches = false;
 
-	SetItemCount(GetItemCount() + 1);
 	brushlist.push_back(brush);
 }
 
 Brush* FindDialogListBox::GetSelectedBrush() {
-	ssize_t n = GetSelection();
-	if (n == wxNOT_FOUND || no_matches || cleared) {
-		return nullptr;
+	if (selected_index >= 0 && selected_index < (int)brushlist.size()) {
+		return brushlist[selected_index];
 	}
-	return brushlist[n];
+	return nullptr;
 }
 
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else {
-		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
-		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
-		}
+void FindDialogListBox::SetSelection(int index) {
+	if (index >= -1 && index < (int)brushlist.size()) {
+		selected_index = index;
 
-		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
+		// Scroll into view
+		if (index != -1) {
+			int y = index * item_height;
+			int scrollPos = GetScrollPosition();
+			int h = GetClientSize().y;
+			if (y < scrollPos) {
+				SetScrollPosition(y);
+			} else if (y + item_height > scrollPos + h) {
+				SetScrollPosition(y + item_height - h);
 			}
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
 		}
-
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
+		Refresh();
 	}
 }
 
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
+int FindDialogListBox::GetSelection() const {
+	return selected_index;
+}
+
+size_t FindDialogListBox::GetItemCount() const {
+	return brushlist.size();
+}
+
+wxSize FindDialogListBox::DoGetBestClientSize() const {
+	return FromDIP(wxSize(470, 400));
+}
+
+void FindDialogListBox::UpdateLayout() {
+	int contentHeight = 0;
+	if (cleared || no_matches) {
+		contentHeight = item_height; // Just one line of text
+	} else {
+		contentHeight = brushlist.size() * item_height;
+	}
+	UpdateScrollbar(contentHeight);
+}
+
+void FindDialogListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	if (cleared) {
+		nvgFontSize(vg, 16.0f); // 16px is approx standard UI font
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+		nvgText(vg, FromDIP(40), FromDIP(6), "Please enter your search string.", nullptr);
+		return;
+	}
+	if (no_matches) {
+		nvgFontSize(vg, 16.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+		nvgText(vg, FromDIP(40), FromDIP(6), "No matches for your search.", nullptr);
+		return;
+	}
+
+	int scrollPos = GetScrollPosition();
+	int startIdx = scrollPos / item_height;
+	int endIdx = std::min((int)brushlist.size(), (scrollPos + height + item_height - 1) / item_height + 1);
+
+	nvgFontSize(vg, 14.0f); // Slightly smaller for list items
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+	for (int i = startIdx; i < endIdx; ++i) {
+		int y = i * item_height;
+
+		// Selection/Hover
+		if (i == selected_index) {
+			// Draw selection rect
+			nvgBeginPath(vg);
+			nvgRect(vg, 0, y, width, item_height);
+			nvgFillColor(vg, nvgRGBA(51, 153, 255, 255)); // Standard selection blue
+			nvgFill(vg);
+		} else if (i == hover_index) {
+			// Draw hover rect
+			nvgBeginPath(vg);
+			nvgRect(vg, 0, y, width, item_height);
+			nvgFillColor(vg, nvgRGBA(230, 230, 230, 255)); // Light gray
+			nvgFill(vg);
+		}
+
+		// Draw sprite
+		Brush* brush = brushlist[i];
+		Sprite* spr = g_gui.gfx.getSprite(brush->getLookID());
+		if (spr) {
+			int tex = GetOrCreateSpriteTexture(vg, spr);
+			if (tex > 0) {
+				int icon_padding = FromDIP(2);
+				int icon_size = item_height - icon_padding * 2;
+				NVGpaint imgPaint = nvgImagePattern(vg, icon_padding, y + icon_padding, icon_size, icon_size, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, icon_padding, y + icon_padding, icon_size, icon_size);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
+		}
+
+		// Draw text
+		if (i == selected_index) {
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		} else {
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+		}
+
+		nvgText(vg, item_height + FromDIP(10), y + item_height / 2.0f, wxstr(brush->getName()).ToUTF8(), nullptr);
+	}
+}
+
+void FindDialogListBox::OnLeftDown(wxMouseEvent& event) {
+	int y = event.GetY() + GetScrollPosition();
+	int idx = HitTest(y);
+	if (idx != -1) {
+		SetSelection(idx);
+
+		wxCommandEvent evt(wxEVT_LISTBOX, GetId());
+		evt.SetEventObject(this);
+		evt.SetInt(idx);
+		ProcessEvent(evt);
+	}
+	event.Skip();
+}
+
+void FindDialogListBox::OnMotion(wxMouseEvent& event) {
+	int y = event.GetY() + GetScrollPosition();
+	int idx = HitTest(y);
+
+	if (idx != hover_index) {
+		hover_index = idx;
+		Refresh();
+	}
+
+	event.Skip();
+}
+
+void FindDialogListBox::OnLeftDClick(wxMouseEvent& event) {
+	int y = event.GetY() + GetScrollPosition();
+	int idx = HitTest(y);
+	if (idx != -1) {
+		SetSelection(idx);
+		// Propagate event
+		wxCommandEvent evt(wxEVT_LISTBOX_DCLICK, GetId());
+		evt.SetEventObject(this);
+		ProcessEvent(evt);
+	}
+}
+
+void FindDialogListBox::OnSize(wxSizeEvent& event) {
+	UpdateLayout();
+	Refresh();
+	event.Skip();
+}
+
+int FindDialogListBox::HitTest(int y) const {
+	if (cleared || no_matches) return -1;
+	int idx = y / item_height;
+	if (idx >= 0 && idx < (int)brushlist.size()) return idx;
+	return -1;
 }

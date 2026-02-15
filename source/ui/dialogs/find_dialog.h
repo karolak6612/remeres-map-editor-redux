@@ -3,7 +3,7 @@
 
 #include "app/main.h"
 #include <wx/wx.h>
-#include <wx/vlbox.h>
+#include "util/nanovg_canvas.h"
 #include <vector>
 
 class Brush;
@@ -19,7 +19,7 @@ public:
 	void OnKeyDown(wxKeyEvent&);
 };
 
-class FindDialogListBox : public wxVListBox {
+class FindDialogListBox : public NanoVGCanvas {
 public:
 	FindDialogListBox(wxWindow* parent, wxWindowID id);
 	~FindDialogListBox();
@@ -29,13 +29,30 @@ public:
 	void AddBrush(Brush*);
 	Brush* GetSelectedBrush();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void SetSelection(int index);
+	int GetSelection() const;
+	size_t GetItemCount() const;
+	void UpdateLayout();
+
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	wxSize DoGetBestClientSize() const override;
+
+	void OnLeftDown(wxMouseEvent& event);
+	void OnMotion(wxMouseEvent& event);
+	void OnLeftDClick(wxMouseEvent& event);
+	void OnSize(wxSizeEvent& event);
+
+	int HitTest(int y) const;
 
 protected:
 	bool cleared;
 	bool no_matches;
 	std::vector<Brush*> brushlist;
+
+	int selected_index;
+	int hover_index;
+	int item_height;
 };
 
 class FindDialog : public wxDialog {
