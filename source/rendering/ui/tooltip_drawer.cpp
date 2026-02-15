@@ -30,7 +30,11 @@ TooltipDrawer::TooltipDrawer() {
 }
 
 TooltipDrawer::~TooltipDrawer() {
+	ClearCache();
 	clear();
+}
+
+void TooltipDrawer::ClearCache() {
 	if (lastContext) {
 		for (auto& pair : spriteCache) {
 			if (pair.second > 0) {

@@ -34,15 +34,15 @@ ActionQueue::~ActionQueue() {
 }
 
 std::unique_ptr<Action> ActionQueue::createAction(ActionIdentifier ident) {
-	return std::unique_ptr<Action>(new Action(editor, ident));
+	return std::make_unique<Action>(editor, ident);
 }
 
 std::unique_ptr<Action> ActionQueue::createAction(BatchAction* batch) {
-	return std::unique_ptr<Action>(new Action(editor, batch->getType()));
+	return std::make_unique<Action>(editor, batch->getType());
 }
 
 std::unique_ptr<BatchAction> ActionQueue::createBatch(ActionIdentifier ident) {
-	return std::unique_ptr<BatchAction>(new BatchAction(editor, ident));
+	return std::make_unique<BatchAction>(editor, ident);
 }
 
 void ActionQueue::resetTimer() {

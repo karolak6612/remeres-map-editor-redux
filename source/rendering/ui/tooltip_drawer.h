@@ -165,6 +165,9 @@ public:
 	// Clear all tooltips
 	void clear();
 
+	// Clear NanoVG image cache (call before context destruction)
+	void ClearCache();
+
 protected:
 	struct FieldLine {
 		std::string_view label;

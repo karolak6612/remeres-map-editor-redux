@@ -129,9 +129,9 @@ public:
 		commit(dirty_list);
 	}
 
-protected:
 	Action(Editor& editor, ActionIdentifier ident);
 
+protected:
 	bool commited;
 	ChangeList changes;
 	Editor& editor;
@@ -162,9 +162,9 @@ public:
 	virtual void addAction(std::unique_ptr<Action> action);
 	virtual void addAndCommitAction(std::unique_ptr<Action> action);
 
-protected:
 	BatchAction(Editor& editor, ActionIdentifier ident);
 
+protected:
 	virtual void commit();
 	virtual void undo();
 	virtual void redo();
