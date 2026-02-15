@@ -446,11 +446,10 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 	}
 
 	// Plain merge of waypoints, very simple! :)
-	for (auto& [key, waypoint] : imported_map.waypoints) {
+	for (auto& [name, waypoint] : imported_map.waypoints) {
 		waypoint->pos += offset;
+		editor.map.waypoints.addWaypoint(std::move(waypoint));
 	}
-
-	editor.map.waypoints.waypoints.insert(imported_map.waypoints.begin(), imported_map.waypoints.end());
 	imported_map.waypoints.waypoints.clear();
 
 	uint64_t tiles_merged = 0;
