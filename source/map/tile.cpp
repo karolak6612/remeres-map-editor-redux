@@ -274,12 +274,14 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		return;
 	}
 
-	std::vector<std::unique_ptr<Item>>::iterator it;
-
 	uint16_t gid = item->getGroundEquivalent();
 	if (gid != 0) {
 		ground = Item::Create(gid);
-		// At the very bottom!
+	}
+
+	std::vector<std::unique_ptr<Item>>::iterator it;
+
+	if (gid != 0) {
 		it = items.begin();
 	} else if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
@@ -288,8 +290,6 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 			if (!i->isAlwaysOnBottom()) {
 				return true; // Found a normal item, insert before it
 			}
-			// find_if will stop at the first non-bottom item, which is equivalent to the original
-			// manually written loop and ensures efficient insertion even with large item counts.
 			return item->getTopOrder() < i->getTopOrder(); // Found a bottom item with higher order
 		});
 	} else {
@@ -628,10 +628,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	auto it = std::find(house_exits->begin(), house_exits->end(), h->getID());
-	if (it != house_exits->end()) {
-		house_exits->erase(it);
-	}
+	std::erase(*house_exits, h->getID());
 }
 
 bool Tile::isContentEqual(const Tile* other) const {
