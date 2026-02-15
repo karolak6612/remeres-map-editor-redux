@@ -25,7 +25,7 @@
 #include "util/file_system.h"
 #include "ui/dialog_util.h"
 #include "app/client_version.h"
-#include "map/otml.h"
+#include "core/otml.h"
 #include <wx/dir.h>
 
 // Static methods to load/save

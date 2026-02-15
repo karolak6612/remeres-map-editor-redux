@@ -5,7 +5,7 @@ class MapCanvas;
 struct DrawingOptions;
 
 #include <glm/glm.hpp>
-#include "map/position.h"
+#include "core/position.h"
 #include "app/definitions.h"
 
 struct RenderView {

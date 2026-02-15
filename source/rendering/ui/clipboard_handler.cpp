@@ -17,11 +17,11 @@
 
 #include "app/main.h"
 #include "rendering/ui/clipboard_handler.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
-#include "map/tile.h"
-#include "game/item.h"
-#include "editor/selection.h"
+#include "core/tile.h"
+#include "data/item.h"
+#include "core/selection.h"
 #include "app/settings.h"
 
 void ClipboardHandler::copy(Editor& editor, int floor) {

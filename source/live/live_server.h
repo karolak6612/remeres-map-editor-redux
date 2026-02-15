@@ -20,7 +20,7 @@
 
 #include "live/live_socket.h"
 #include "net/net_connection.h"
-#include "editor/action.h"
+#include "core/action.h"
 #include <memory>
 
 class LivePeer;

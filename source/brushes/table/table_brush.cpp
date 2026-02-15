@@ -22,8 +22,8 @@
 #include "brushes/table/table_brush_loader.h"
 #include "brushes/table/table_border_calculator.h"
 
-#include "game/items.h"
-#include "map/basemap.h"
+#include "data/items.h"
+#include "core/basemap.h"
 
 uint32_t TableBrush::table_types[256];
 

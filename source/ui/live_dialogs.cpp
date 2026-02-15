@@ -7,7 +7,7 @@
 #include "ui/live_dialogs.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "live/live_server.h"
 #include "live/live_client.h"
 #include "util/image_manager.h"

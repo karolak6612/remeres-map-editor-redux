@@ -7,7 +7,7 @@
 
 #include <wx/event.h>
 #include <vector>
-#include "map/position.h"
+#include "core/position.h"
 
 class MapCanvas;
 class Editor;

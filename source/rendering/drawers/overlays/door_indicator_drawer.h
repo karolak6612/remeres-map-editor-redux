@@ -2,7 +2,7 @@
 #define RME_DOOR_INDICATOR_DRAWER_H_
 
 #include <vector>
-#include "map/position.h"
+#include "core/position.h"
 
 struct NVGcontext;
 struct RenderView;

@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_preloader.h"
 #include <nanovg.h>
@@ -26,7 +26,7 @@
 #include "io/filehandle.h"
 #include "app/settings.h"
 #include "ui/gui.h"
-#include "map/otml.h"
+#include "core/otml.h"
 #include "rendering/io/editor_sprite_loader.h"
 
 #include <wx/mstream.h>

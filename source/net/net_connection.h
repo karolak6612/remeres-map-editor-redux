@@ -18,7 +18,7 @@
 #ifndef _RME_NET_CONNECTION_H_
 #define _RME_NET_CONNECTION_H_
 
-#include "map/position.h"
+#include "core/position.h"
 
 #include <string>
 #include <vector>

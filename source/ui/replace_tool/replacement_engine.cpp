@@ -36,10 +36,10 @@ bool ReplacementEngine::ResolveReplacement(uint16_t& resultId, const Replacement
 	return false;
 }
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
-#include "map/tile.h"
-#include "game/item.h"
+#include "core/tile.h"
+#include "data/item.h"
 #include <algorithm>
 #include <map>
 #include <string>

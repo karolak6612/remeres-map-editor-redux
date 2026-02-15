@@ -23,8 +23,8 @@
 #include "live/live_tab.h"
 #include "live/live_action.h"
 
-#include "editor/editor.h"
-#include "editor/action_queue.h"
+#include "core/editor.h"
+#include "core/action_queue.h"
 
 LivePeer::LivePeer(LiveServer* server, boost::asio::ip::tcp::socket socket) :
 	LiveSocket(),

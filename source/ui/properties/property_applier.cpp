@@ -4,8 +4,8 @@
 
 #include "app/main.h"
 #include "ui/properties/property_applier.h"
-#include "game/item.h"
-#include "game/complexitem.h"
+#include "data/item.h"
+#include "data/complexitem.h"
 
 void PropertyApplier::applyItemProperties(Item* item, int count, int uid, int aid, int tier) {
 	if (item->isStackable() || item->isCharged()) {

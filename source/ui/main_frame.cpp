@@ -8,26 +8,26 @@
 #include "ui/dialog_util.h"
 #include "app/application.h"
 #include "util/file_system.h"
-#include "editor/hotkey_manager.h"
+#include "core/hotkey_manager.h"
 
-#include "game/sprites.h"
-#include "editor/editor.h"
+#include "data/sprites.h"
+#include "core/editor.h"
 #include "ui/dialogs/goto_position_dialog.h"
-#include "palette/palette_window.h"
+#include "ui/palettes/palette_window.h"
 #include "app/preferences.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 #include "rendering/ui/minimap_window.h"
-#include "ui/about_window.h"
+#include "ui/windows/about_window.h"
 #include "ui/main_menubar.h"
 #include "app/updater.h"
 #include "ui/map/export_tilesets_window.h"
 #include <wx/stattext.h>
 #include <wx/slider.h>
 
-#include "game/materials.h"
-#include "map/map.h"
-#include "game/complexitem.h"
-#include "game/creature.h"
+#include "data/materials.h"
+#include "core/map.h"
+#include "data/complexitem.h"
+#include "data/creature.h"
 
 #include <spdlog/spdlog.h>
 #include "../brushes/icon/editor_icon.xpm"

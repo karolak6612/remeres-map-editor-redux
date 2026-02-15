@@ -23,7 +23,7 @@
 #include "live/live_tab.h"
 #include "live/live_socket.h"
 #include "live/live_peer.h"
-#include "editor/hotkey_manager.h"
+#include "core/hotkey_manager.h"
 
 class myGrid : public wxGrid {
 public:

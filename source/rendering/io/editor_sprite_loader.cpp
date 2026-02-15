@@ -2,7 +2,7 @@
 #include "rendering/io/editor_sprite_loader.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/editor_sprite.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "util/image_manager.h"
 #include <memory>
 

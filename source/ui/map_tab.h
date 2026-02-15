@@ -18,10 +18,10 @@
 #ifndef RME_MAP_TAB_H_
 #define RME_MAP_TAB_H_
 
-#include "editor/editor_tabs.h"
+#include "core/editor_tabs.h"
 #include "app/application.h"
-#include "ui/map_window.h"
-#include "editor/map_session.h"
+#include "ui/windows/map_window.h"
+#include "core/map_session.h"
 
 class MapTab : public EditorTab, public MapWindow {
 public:

@@ -21,7 +21,7 @@
 
 #include "util/image_manager.h"
 #include "ui/gui_ids.h"
-#include "game/complexitem.h"
+#include "data/complexitem.h"
 #include "ui/properties/container_properties_window.h"
 #include "ui/properties/attribute_service.h"
 #include "ui/properties/property_validator.h"

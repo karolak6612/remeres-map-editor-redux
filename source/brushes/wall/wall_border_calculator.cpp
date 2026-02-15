@@ -5,9 +5,9 @@
 #include "brushes/wall/wall_border_calculator.h"
 #include "brushes/wall/wall_brush.h"
 #include "brushes/wall/wall_brush_items.h"
-#include "map/basemap.h"
-#include "map/tile_operations.h"
-#include "game/items.h"
+#include "core/basemap.h"
+#include "core/tile_operations.h"
+#include "data/items.h"
 #include "app/main.h" // ASSERT, etc
 
 #include <vector>

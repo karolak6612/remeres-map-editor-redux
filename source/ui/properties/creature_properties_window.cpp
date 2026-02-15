@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "ui/properties/creature_properties_window.h"
 
-#include "game/creature.h"
+#include "data/creature.h"
 #include "ui/gui.h"
 #include "util/image_manager.h"
 

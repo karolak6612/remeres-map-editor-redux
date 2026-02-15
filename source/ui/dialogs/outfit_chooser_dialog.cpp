@@ -20,7 +20,7 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "game/creatures.h"
+#include "data/creatures.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/graphics.h"

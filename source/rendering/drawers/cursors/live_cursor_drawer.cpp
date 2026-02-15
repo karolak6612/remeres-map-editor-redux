@@ -4,7 +4,7 @@
 
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/render_view.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "live/live_socket.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/graphics.h"

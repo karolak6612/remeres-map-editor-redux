@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "ui/properties/spawn_properties_window.h"
 
-#include "map/map.h"
+#include "core/map.h"
 #include "app/application.h"
 #include "util/image_manager.h"
 

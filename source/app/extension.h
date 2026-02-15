@@ -18,7 +18,7 @@
 #ifndef RME_EXTENSION_H_
 #define RME_EXTENSION_H_
 
-#include "map/tileset.h"
+#include "core/tileset.h"
 #include "app/client_version.h"
 
 class MaterialsExtension {

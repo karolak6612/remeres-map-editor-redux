@@ -20,7 +20,7 @@
 
 #include "app/definitions.h"
 #include <iostream>
-#include "map/position.h"
+#include "core/position.h"
 #include "rendering/core/render_view.h"
 #include <vector>
 #include <string>

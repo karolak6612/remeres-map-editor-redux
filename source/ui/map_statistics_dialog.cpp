@@ -7,10 +7,10 @@
 #include "ui/map_statistics_dialog.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
-#include "map/map_statistics.h"
-#include "map/map.h"
-#include "game/town.h"
-#include "game/house.h"
+#include "core/map_statistics.h"
+#include "core/map.h"
+#include "data/town.h"
+#include "data/house.h"
 #include "util/image_manager.h"
 
 #include <wx/wx.h>

@@ -2,8 +2,8 @@
 #define RME_UI_DIALOGS_OUTFIT_SELECTION_GRID_H_
 
 #include "app/main.h"
-#include "game/outfit.h"
-#include "game/preview_preferences.h"
+#include "data/outfit.h"
+#include "data/preview_preferences.h"
 #include "util/nanovg_canvas.h"
 #include <vector>
 #include <unordered_map>

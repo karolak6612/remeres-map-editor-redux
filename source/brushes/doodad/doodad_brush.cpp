@@ -6,8 +6,8 @@
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/doodad/doodad_brush_loader.h"
-#include "map/basemap.h"
-#include "game/item.h"
+#include "core/basemap.h"
+#include "data/item.h"
 
 //=============================================================================
 // Doodad brush

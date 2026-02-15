@@ -6,7 +6,7 @@
 #define RME_PROPERTY_APPLIER_H
 
 #include "app/main.h"
-#include "map/position.h"
+#include "core/position.h"
 
 class Item;
 class Door;

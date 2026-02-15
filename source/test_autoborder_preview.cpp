@@ -6,10 +6,10 @@
 #include <iostream>
 #include <cassert>
 #include <memory>
-#include "map/basemap.h"
-#include "map/tile.h"
-#include "map/map_region.h"
-#include "map/position.h"
+#include "core/basemap.h"
+#include "core/tile.h"
+#include "core/map_region.h"
+#include "core/position.h"
 
 // Test 1: Verify Tile::deepCopy uses destination map's TileLocation
 void test_deepCopy_uses_destination_location() {

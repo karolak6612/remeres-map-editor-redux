@@ -2,9 +2,9 @@
 #define RME_INGAME_PREVIEW_CANVAS_H_
 
 #include "app/main.h"
-#include "map/position.h"
-#include "game/creature.h"
-#include "game/outfit.h"
+#include "core/position.h"
+#include "data/creature.h"
+#include "data/outfit.h"
 #include <memory>
 
 class Editor;

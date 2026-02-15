@@ -18,7 +18,7 @@
 #ifndef RME_GRAPHICS_H_
 #define RME_GRAPHICS_H_
 
-#include "game/outfit.h"
+#include "data/outfit.h"
 #include "util/common.h"
 #include <deque>
 #include <memory>

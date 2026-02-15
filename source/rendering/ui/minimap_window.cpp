@@ -20,8 +20,8 @@
 #include <spdlog/spdlog.h>
 
 #include "rendering/core/graphics.h"
-#include "editor/editor.h"
-#include "map/map.h"
+#include "core/editor.h"
+#include "core/map.h"
 
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"

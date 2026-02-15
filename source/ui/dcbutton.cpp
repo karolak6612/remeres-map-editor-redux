@@ -20,7 +20,7 @@
 #include "app/settings.h"
 
 #include "ui/dcbutton.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include "ui/gui.h"
 
 #include <glad/glad.h>

@@ -6,7 +6,7 @@
 #define RME_RENDERING_UI_DRAWING_CONTROLLER_H_
 
 #include <wx/event.h>
-#include "map/position.h"
+#include "core/position.h"
 
 class MapCanvas;
 class Editor;

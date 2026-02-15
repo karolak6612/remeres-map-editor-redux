@@ -1,7 +1,7 @@
 #include "ingame_preview/ingame_preview_canvas.h"
 #include "ingame_preview/ingame_preview_renderer.h"
 #include "ingame_preview/ingame_preview_window.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/map_display.h"
@@ -10,7 +10,7 @@
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <nanovg_gl.h>
-#include "game/complexitem.h"
+#include "data/complexitem.h"
 #include "ui/managers/minimap_manager.h"
 
 namespace IngamePreview {

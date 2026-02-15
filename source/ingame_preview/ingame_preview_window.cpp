@@ -2,10 +2,10 @@
 #include "ingame_preview/ingame_preview_window.h"
 #include "ingame_preview/ingame_preview_canvas.h"
 #include "ui/dialogs/outfit_chooser_dialog.h"
-#include "game/preview_preferences.h"
+#include "data/preview_preferences.h"
 #include "util/image_manager.h"
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"
 #include <wx/tglbtn.h>

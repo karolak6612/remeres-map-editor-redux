@@ -19,7 +19,7 @@
 #define RME_COMMONS_H_
 
 #include "app/main.h"
-#include "map/position.h"
+#include "core/position.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <cmath>

@@ -12,8 +12,8 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
-#include "editor/editor.h"
-#include "map/tile.h"
+#include "core/editor.h"
+#include "core/tile.h"
 
 FloorDrawer::FloorDrawer() {
 }

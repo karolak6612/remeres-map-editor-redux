@@ -2,7 +2,7 @@
 #define RME_INGAME_PREVIEW_WINDOW_H_
 
 #include "app/main.h"
-#include "game/outfit.h"
+#include "data/outfit.h"
 #include <memory>
 
 class Editor;

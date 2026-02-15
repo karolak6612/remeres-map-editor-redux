@@ -7,8 +7,8 @@
 #include "ui/gui.h"
 #include "ui/gui_ids.h"
 #include "ui/main_menubar.h"
-#include "editor/editor.h"
-#include "editor/action_queue.h"
+#include "core/editor.h"
+#include "core/action_queue.h"
 #include "util/image_manager.h"
 #include <wx/artprov.h>
 

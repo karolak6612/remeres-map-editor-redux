@@ -6,7 +6,7 @@
 #include "brushes/carpet/carpet_brush_loader.h"
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/ground/auto_border.h"
-#include "game/items.h"
+#include "data/items.h"
 #include <string_view>
 #include <charconv>
 #include <algorithm>

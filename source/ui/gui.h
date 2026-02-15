@@ -2,15 +2,15 @@
 #define RME_GUI_H_
 
 #include "rendering/core/graphics.h"
-#include "map/position.h"
+#include "core/position.h"
 
-#include "editor/copybuffer.h"
+#include "core/copybuffer.h"
 #include "ui/dcbutton.h"
 #include "brushes/brush_enums.h"
 #include "ui/gui_ids.h"
-#include "editor/editor_tabs.h"
+#include "core/editor_tabs.h"
 #include "ui/map_tab.h"
-#include "palette/palette_window.h"
+#include "ui/palettes/palette_window.h"
 #include "app/client_version.h"
 #include "app/managers/version_manager.h"
 #include "ui/managers/loading_manager.h"
@@ -67,9 +67,9 @@ wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 
 #include <mutex>
 #include "brushes/managers/brush_manager.h"
-#include "palette/managers/palette_manager.h"
-#include "editor/managers/editor_manager.h"
-#include "editor/hotkey_manager.h"
+#include "ui/palettes/managers/palette_manager.h"
+#include "core/managers/editor_manager.h"
+#include "core/hotkey_manager.h"
 
 class GUI {
 public: // dtor and ctor

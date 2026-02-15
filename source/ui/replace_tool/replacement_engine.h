@@ -3,7 +3,7 @@
 
 #include "app/main.h"
 #include "rule_manager.h"
-#include "map/position.h"
+#include "core/position.h"
 #include <random>
 #include <vector>
 

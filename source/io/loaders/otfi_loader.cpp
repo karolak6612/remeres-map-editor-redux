@@ -1,7 +1,7 @@
 #include "io/loaders/otfi_loader.h"
 
 #include "rendering/core/graphics.h"
-#include "map/otml.h"
+#include "core/otml.h"
 #include <wx/dir.h>
 #include "app/main.h" // For ASSETS_NAME
 

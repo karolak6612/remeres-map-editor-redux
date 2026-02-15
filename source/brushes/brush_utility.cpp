@@ -6,11 +6,11 @@
 
 #include "brushes/brush_utility.h"
 #include "ui/gui.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "brushes/brush.h"
 #include "brushes/ground/ground_brush.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "core/map.h"
+#include "core/tile.h"
 
 bool BrushUtility::processed[BrushUtility::BLOCK_SIZE * BrushUtility::BLOCK_SIZE] = { false };
 int BrushUtility::countMaxFills = 0;

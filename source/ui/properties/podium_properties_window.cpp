@@ -5,8 +5,8 @@
 #include "app/main.h"
 #include "ui/properties/podium_properties_window.h"
 
-#include "game/complexitem.h"
-#include "game/creature.h"
+#include "data/complexitem.h"
+#include "data/creature.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "util/image_manager.h"

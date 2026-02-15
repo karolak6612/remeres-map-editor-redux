@@ -3,15 +3,15 @@
 
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
-#include "ui/find_item_window.h"
-#include "ui/result_window.h"
-#include "ui/map_window.h"
+#include "ui/windows/find_item_window.h"
+#include "ui/windows/result_window.h"
+#include "ui/windows/map_window.h"
 #include "app/preferences.h"
-#include "editor/editor.h"
-#include "editor/operations/search_operations.h"
-#include "editor/operations/clean_operations.h"
-#include "map/map.h"
-#include "editor/action_queue.h"
+#include "core/editor.h"
+#include "core/operations/search_operations.h"
+#include "core/operations/clean_operations.h"
+#include "core/map.h"
+#include "core/action_queue.h"
 
 SearchHandler::SearchHandler(MainFrame* frame) :
 	frame(frame) {

@@ -6,7 +6,7 @@
 #define RME_TELEPORT_SERVICE_H
 
 #include "app/main.h"
-#include "map/position.h"
+#include "core/position.h"
 
 class TeleportService {
 public:

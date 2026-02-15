@@ -6,13 +6,13 @@
 #include "brushes/managers/autoborder_preview_manager.h"
 #include "brushes/brush.h"
 #include "brushes/managers/brush_manager.h"
-#include "map/map.h"
-#include "map/tile.h"
-#include "map/tile_operations.h"
+#include "core/map.h"
+#include "core/tile.h"
+#include "core/tile_operations.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "brushes/brush_utility.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 
 AutoborderPreviewManager g_autoborder_preview;
 

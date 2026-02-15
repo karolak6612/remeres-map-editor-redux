@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "ui/properties/attribute_service.h"
-#include "game/item.h"
+#include "data/item.h"
 
 void AttributeService::setGridValue(wxGrid* grid, int rowIndex, const std::string& label, const ItemAttribute& attr) {
 	std::vector<std::string> types;

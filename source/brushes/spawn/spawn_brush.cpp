@@ -18,8 +18,8 @@
 #include "app/main.h"
 
 #include "brushes/spawn/spawn_brush.h"
-#include "map/basemap.h"
-#include "game/spawn.h"
+#include "core/basemap.h"
+#include "data/spawn.h"
 
 //=============================================================================
 // Spawn brush

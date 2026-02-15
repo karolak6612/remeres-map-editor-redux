@@ -18,8 +18,8 @@
 #include "app/main.h"
 
 #include "live/live_action.h"
-#include "editor/dirty_list.h"
-#include "editor/editor.h"
+#include "core/dirty_list.h"
+#include "core/editor.h"
 
 #include <memory>
 

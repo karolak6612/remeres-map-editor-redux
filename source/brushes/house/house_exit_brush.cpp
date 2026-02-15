@@ -18,8 +18,8 @@
 #include "app/main.h"
 
 #include "brushes/house/house_exit_brush.h"
-#include "game/house.h"
-#include "map/basemap.h"
+#include "data/house.h"
+#include "core/basemap.h"
 
 //=============================================================================
 // House Exit Brush

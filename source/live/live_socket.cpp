@@ -17,10 +17,10 @@
 
 #include "app/main.h"
 #include "live/live_socket.h"
-#include "map/map_region.h"
+#include "core/map_region.h"
 #include "io/iomap_otbm.h"
 #include "live/live_tab.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 
 LiveSocket::LiveSocket() :
 	cursors(), mapReader(nullptr, 0), mapWriter(),

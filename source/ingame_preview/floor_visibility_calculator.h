@@ -2,7 +2,7 @@
 #define RME_INGAME_PREVIEW_FLOOR_VISIBILITY_CALCULATOR_H_
 
 #include "app/main.h"
-#include "map/position.h"
+#include "core/position.h"
 
 class BaseMap;
 class Tile;

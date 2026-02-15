@@ -6,7 +6,7 @@
 #define RME_PROPERTY_VALIDATOR_H
 
 #include "app/main.h"
-#include "map/position.h"
+#include "core/position.h"
 
 class Map;
 class Tile;

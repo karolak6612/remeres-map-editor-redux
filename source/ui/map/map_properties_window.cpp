@@ -1,8 +1,8 @@
 #include "ui/map/map_properties_window.h"
 
-#include "editor/editor.h"
-#include "map/map.h"
-#include "editor/operations/map_version_changer.h"
+#include "core/editor.h"
+#include "core/map.h"
+#include "core/operations/map_version_changer.h"
 #include "ui/gui.h"
 #include "app/managers/version_manager.h"
 #include "ui/dialog_util.h"

@@ -4,11 +4,11 @@
 
 #include "app/main.h"
 
-#include "map/tile.h"
-#include "game/item.h"
-#include "game/complexitem.h"
-#include "game/town.h"
-#include "map/map.h"
+#include "core/tile.h"
+#include "data/item.h"
+#include "data/complexitem.h"
+#include "data/town.h"
+#include "core/map.h"
 #include "ui/dialog_util.h"
 #include "ui/properties/depot_properties_window.h"
 #include "util/image_manager.h"

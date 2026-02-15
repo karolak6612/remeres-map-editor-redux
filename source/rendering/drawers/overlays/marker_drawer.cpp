@@ -3,9 +3,9 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_batch.h"
-#include "map/tile.h"
-#include "game/sprites.h"
-#include "editor/editor.h"
+#include "core/tile.h"
+#include "data/sprites.h"
+#include "core/editor.h"
 
 MarkerDrawer::MarkerDrawer() {
 }

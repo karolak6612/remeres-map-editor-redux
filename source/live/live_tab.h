@@ -23,7 +23,7 @@
 #include "live/live_peer.h"
 #include "app/main.h"
 
-#include "editor/editor_tabs.h"
+#include "core/editor_tabs.h"
 #include "app/application.h"
 #include "live/live_server.h"
 class wxGrid;

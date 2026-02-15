@@ -6,7 +6,7 @@
 #include "ui/managers/loading_manager.h"
 
 #include "ui/gui.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/map_tab.h"
 #include "live/live_server.h"
 

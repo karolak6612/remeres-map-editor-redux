@@ -2,7 +2,7 @@
 #include "ui/replace_tool/visual_similarity_service.h"
 #include "util/nvg_utils.h"
 #include "ui/gui.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "rendering/core/graphics.h"
 #include <algorithm>
 #include <cmath>

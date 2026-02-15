@@ -6,7 +6,7 @@
 #include "rendering/core/graphics.h"
 #include "brushes/managers/brush_manager.h"
 #include "brushes/brush.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 #include <format>
 #include <algorithm>
 

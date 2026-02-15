@@ -6,8 +6,8 @@
 #define RME_RENDERING_CREATURE_DRAWER_H_
 
 #include "app/definitions.h"
-#include "game/outfit.h"
-#include "game/creature.h"
+#include "data/outfit.h"
+#include "data/creature.h"
 
 // Forward declarations
 

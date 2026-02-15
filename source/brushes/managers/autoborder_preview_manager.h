@@ -8,7 +8,7 @@
 #include "app/main.h"
 #include <memory>
 #include <vector>
-#include "map/position.h"
+#include "core/position.h"
 
 class BaseMap;
 class Editor;

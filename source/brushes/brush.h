@@ -19,7 +19,7 @@
 #define RME_BRUSH_H_
 #include "app/main.h"
 
-#include "map/position.h"
+#include "core/position.h"
 
 #include "brushes/brush_enums.h"
 #include <map>

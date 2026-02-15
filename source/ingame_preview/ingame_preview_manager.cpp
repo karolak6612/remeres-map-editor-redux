@@ -4,7 +4,7 @@
 #include "util/image_manager.h"
 
 #include "ui/gui.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include <wx/aui/aui.h>
 
 IngamePreview::IngamePreviewManager g_preview;

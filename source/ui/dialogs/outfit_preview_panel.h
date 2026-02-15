@@ -2,7 +2,7 @@
 #define RME_UI_DIALOGS_OUTFIT_PREVIEW_PANEL_H_
 
 #include "app/main.h"
-#include "game/outfit.h"
+#include "data/outfit.h"
 #include <wx/panel.h>
 
 class OutfitPreviewPanel : public wxPanel {

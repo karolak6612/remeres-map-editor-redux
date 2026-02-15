@@ -20,25 +20,25 @@
 #include "ui/main_menubar.h"
 #include "ui/dialog_util.h"
 #include "ui/gui.h"
-#include "ui/tool_options_window.h"
+#include "ui/windows/tool_options_window.h"
 
-#include "map/map_statistics.h"
-#include "map/map_search.h"
-#include "map/map_search.h"
+#include "core/map_statistics.h"
+#include "core/map_search.h"
+#include "core/map_search.h"
 #include "ui/managers/recent_files_manager.h"
 #include "ui/map/towns_window.h"
 #include "ui/map/map_properties_window.h"
 
-#include "ui/about_window.h"
+#include "ui/windows/about_window.h"
 #include "ui/dat_debug_view.h"
 #include "ui/menubar_loader.h"
 #include "ui/map_statistics_dialog.h"
 #include "ui/live_dialogs.h"
 
-#include "ui/extension_window.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/extension_window.h"
+#include "ui/windows/find_item_window.h"
 #include "app/preferences.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 
 #include "ui/menubar/search_handler.h"
 #include "ui/menubar/view_settings_handler.h"
@@ -51,13 +51,13 @@
 
 #include <wx/chartype.h>
 
-#include "editor/editor.h"
-#include "game/materials.h"
+#include "core/editor.h"
+#include "data/materials.h"
 #include "live/live_client.h"
-#include "editor/action_queue.h"
+#include "core/action_queue.h"
 
-#include "editor/operations/search_operations.h"
-#include "editor/operations/clean_operations.h"
+#include "core/operations/search_operations.h"
+#include "core/operations/clean_operations.h"
 
 MainMenuBar::MainMenuBar(MainFrame* frame) :
 	frame(frame) {

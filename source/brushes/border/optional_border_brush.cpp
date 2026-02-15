@@ -6,9 +6,9 @@
 #include "brushes/border/optional_border_brush.h"
 
 #include "brushes/ground/ground_brush.h"
-#include "game/sprites.h"
-#include "map/map.h"
-#include "map/tile.h"
+#include "data/sprites.h"
+#include "core/map.h"
+#include "core/tile.h"
 
 #include <array>
 

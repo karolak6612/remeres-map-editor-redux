@@ -6,7 +6,7 @@
 #include "ui/toolbar/brush_toolbar.h"
 #include "ui/gui.h"
 #include "ui/gui_ids.h"
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "brushes/managers/brush_manager.h"
 #include "brushes/flag/flag_brush.h"
 #include "brushes/door/door_brush.h"

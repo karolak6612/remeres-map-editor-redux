@@ -9,9 +9,9 @@
 #include "brushes/wall/wall_border_calculator.h"
 
 #include "ui/gui.h"
-#include "game/items.h"
-#include "map/basemap.h"
-#include "map/tile_operations.h"
+#include "data/items.h"
+#include "core/basemap.h"
+#include "core/tile_operations.h"
 
 uint32_t WallBrush::full_border_types[16];
 uint32_t WallBrush::half_border_types[16];

@@ -5,7 +5,7 @@
 #ifndef RME_BRUSH_UTILITY_H_
 #define RME_BRUSH_UTILITY_H_
 
-#include "map/position.h"
+#include "core/position.h"
 #include <vector>
 
 class Map;

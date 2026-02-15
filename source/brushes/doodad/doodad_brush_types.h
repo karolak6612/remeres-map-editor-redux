@@ -5,7 +5,7 @@
 #ifndef RME_DOODAD_BRUSH_TYPES_H
 #define RME_DOODAD_BRUSH_TYPES_H
 
-#include "map/position.h"
+#include "core/position.h"
 #include <vector>
 #include <utility>
 #include <cstdint>

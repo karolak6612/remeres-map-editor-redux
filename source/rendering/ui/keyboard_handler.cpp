@@ -20,10 +20,10 @@
 #include "rendering/ui/zoom_controller.h"
 #include "rendering/ui/navigation_controller.h"
 #include "rendering/ui/map_display.h"
-#include "ui/map_window.h"
+#include "ui/windows/map_window.h"
 #include "ui/gui.h"
-#include "editor/hotkey_manager.h"
-#include "editor/editor.h"
+#include "core/hotkey_manager.h"
+#include "core/editor.h"
 #include "brushes/brush.h"
 
 void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {

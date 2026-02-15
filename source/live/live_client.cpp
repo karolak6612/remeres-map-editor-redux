@@ -22,10 +22,10 @@
 #include "live/live_client.h"
 #include "live/live_tab.h"
 #include "live/live_action.h"
-#include "editor/editor.h"
-#include "editor/action_queue.h"
-#include "editor/dirty_list.h"
-#include "editor/editor_factory.h"
+#include "core/editor.h"
+#include "core/action_queue.h"
+#include "core/dirty_list.h"
+#include "core/editor_factory.h"
 
 #include <wx/event.h>
 

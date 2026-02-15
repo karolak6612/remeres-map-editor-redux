@@ -5,7 +5,7 @@
 #ifndef RME_RENDERING_CORE_GAME_SPRITE_H_
 #define RME_RENDERING_CORE_GAME_SPRITE_H_
 
-#include "game/outfit.h"
+#include "data/outfit.h"
 #include "util/common.h"
 #include "rendering/core/animator.h"
 #include "rendering/core/sprite_light.h"

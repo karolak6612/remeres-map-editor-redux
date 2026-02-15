@@ -9,7 +9,7 @@ struct RenderView;
 struct NVGcontext;
 class Creature;
 
-#include "map/position.h"
+#include "core/position.h"
 
 struct CreatureLabel {
 	Position pos;

@@ -6,7 +6,7 @@
 #define RME_ATTRIBUTE_SERVICE_H
 
 #include "app/main.h"
-#include "game/item_attributes.h"
+#include "data/item_attributes.h"
 #include <wx/grid.h>
 
 class Item;

@@ -5,7 +5,7 @@
 #include "brushes/ground/auto_border.h"
 #include "brushes/brush_enums.h"
 #include "brushes/ground/ground_brush.h"
-#include "game/items.h"
+#include "data/items.h"
 #include "ext/pugixml.hpp"
 #include <wx/string.h>
 #include <utility>

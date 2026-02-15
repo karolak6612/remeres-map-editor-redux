@@ -20,7 +20,7 @@
 
 #include "ui/gui.h"
 #include "ui/main_toolbar.h"
-#include "editor/action.h"
+#include "core/action.h"
 #include "app/settings.h"
 
 #include "net/process_com.h"

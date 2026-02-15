@@ -19,15 +19,15 @@
 
 #include <algorithm>
 
-#include "editor/editor.h"
+#include "core/editor.h"
 #include "ui/gui.h"
-#include "game/sprites.h"
+#include "data/sprites.h"
 
 #include "rendering/map_drawer.h"
 #include "brushes/brush.h"
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/ui/map_display.h"
-#include "editor/copybuffer.h"
+#include "core/copybuffer.h"
 #include "live/live_socket.h"
 #include "rendering/core/graphics.h"
 

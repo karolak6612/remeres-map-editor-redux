@@ -1,8 +1,8 @@
 #include "app/main.h"
 #include "ui/map/export_tilesets_window.h"
 
-#include "editor/editor.h"
-#include "editor/persistence/tileset_exporter.h"
+#include "core/editor.h"
+#include "core/persistence/tileset_exporter.h"
 #include "ui/gui_ids.h"
 #include "app/application.h"
 #include "util/image_manager.h"

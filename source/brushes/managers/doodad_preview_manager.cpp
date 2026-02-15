@@ -7,8 +7,8 @@
 #include "brushes/brush.h"
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/managers/brush_manager.h"
-#include "game/sprites.h"
-#include "map/map.h"
+#include "data/sprites.h"
+#include "core/map.h"
 #include "ui/gui.h"
 #include <cmath>
 #include <numbers>
