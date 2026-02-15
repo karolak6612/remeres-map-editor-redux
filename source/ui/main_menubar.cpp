@@ -39,6 +39,7 @@
 #include "ui/find_item_window.h"
 #include "app/preferences.h"
 #include "ui/result_window.h"
+#include "util/image_manager.h"
 
 #include "ui/menubar/search_handler.h"
 #include "ui/menubar/view_settings_handler.h"
@@ -237,6 +238,11 @@ void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
 void MainMenuBar::OnDebugViewDat(wxCommandEvent& event) {
 	wxDialog dlg(frame, wxID_ANY, "Debug .dat file", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
 	new DatDebugView(&dlg);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_BUG, wxSize(32, 32)));
+	dlg.SetIcon(icon);
+
 	dlg.ShowModal();
 }
 
