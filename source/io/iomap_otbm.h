@@ -148,6 +148,10 @@ protected:
 	void readMapAttributes(Map& map, BinaryNode* mapHeaderNode);
 	void readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode);
 
+	void readTileArea(Map& map, BinaryNode* mapNode);
+	void readTowns(Map& map, BinaryNode* mapNode);
+	void readWaypoints(Map& map, BinaryNode* mapNode);
+
 	bool loadSpawns(Map& map, const FileName& dir);
 	bool loadSpawns(Map& map, pugi::xml_document& doc);
 	bool loadHouses(Map& map, const FileName& dir);
@@ -159,6 +163,11 @@ protected:
 	bool saveMapToDisk(Map& map, const FileName& identifier);
 
 	bool saveMap(Map& map, NodeFileWriteHandle& handle);
+
+	void writeTileData(Map& map, NodeFileWriteHandle& f);
+	void writeTowns(const Map& map, NodeFileWriteHandle& f);
+	bool writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
+
 	bool saveSpawns(Map& map, const FileName& dir);
 	bool saveSpawns(Map& map, pugi::xml_document& doc);
 	bool saveHouses(Map& map, const FileName& dir);
