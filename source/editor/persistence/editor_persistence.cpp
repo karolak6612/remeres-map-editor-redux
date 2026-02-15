@@ -322,8 +322,9 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 				continue;
 			}
 
+			uint32_t town_id = imported_town->getID();
 			if (!editor.map.towns.addTown(std::move(tit->second))) {
-				spdlog::warn("Failed to add town {} during import (duplicate ID)", imported_town->getID());
+				spdlog::warn("Failed to add town {} during import (duplicate ID)", town_id);
 			}
 
 			tit = imported_map.towns.erase(tit);
@@ -398,8 +399,9 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 			if (newexit.isValid()) {
 				imported_house->setExit(&editor.map, newexit);
 			}
+			uint32_t house_id = imported_house->getID();
 			if (!editor.map.houses.addHouse(std::move(hit->second))) {
-				spdlog::warn("Failed to add house {} during import (duplicate ID)", imported_house->getID());
+				spdlog::warn("Failed to add house {} during import (duplicate ID)", house_id);
 			}
 
 			hit = imported_map.houses.erase(hit);
@@ -433,7 +435,12 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 			if (skip) {
 				++siter;
 			} else {
-				siter = imported_map.spawns.erase(siter);
+				Tile* imported_tile = imported_map.getTile(old_spawn_pos);
+				if (imported_tile) {
+					siter = imported_map.spawns.erase(siter);
+				} else {
+					++siter;
+				}
 			}
 		}
 	}

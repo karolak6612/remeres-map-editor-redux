@@ -419,7 +419,7 @@ void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width
 		float offsetY = 3.0f + i * 1.0f;
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x - spread, y + offsetY - spread, width + spread * 2, height + spread * 2, cornerRadius + spread);
-		nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<int>(alpha)));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<unsigned char>(alpha)));
 		nvgFill(vg);
 	}
 
