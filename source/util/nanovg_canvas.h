@@ -77,6 +77,10 @@ public:
 	 * @return Current vertical scroll offset
 	 */
 	[[nodiscard]] int GetScrollPosition() const {
+		return static_cast<int>(m_visualScrollPos);
+	}
+
+	[[nodiscard]] int GetTargetScrollPosition() const {
 		return m_scrollPos;
 	}
 
@@ -187,6 +191,7 @@ private:
 	void OnMouseWheel(wxMouseEvent& evt);
 	void OnEraseBackground(wxEraseEvent& evt);
 	void OnScroll(wxScrollWinEvent& evt);
+	void OnScrollTimer(wxTimerEvent& evt);
 
 	std::unique_ptr<wxGLContext> m_glContext;
 	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
@@ -198,9 +203,11 @@ private:
 	size_t m_maxCacheSize = 1024; // Default limit
 
 	// Scroll state
-	int m_scrollPos = 0;
+	int m_scrollPos = 0; // Target scroll position
+	float m_visualScrollPos = 0.0f; // Visual scroll position for smooth scrolling
 	int m_contentHeight = 0;
 	int m_scrollStep = 40; // Pixels per wheel notch
+	wxTimer m_scrollTimer;
 
 protected:
 	/**

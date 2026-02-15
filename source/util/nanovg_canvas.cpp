@@ -20,13 +20,15 @@ ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
 }
 
 NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
-	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
+	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style),
+	m_scrollTimer(this) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 	Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);
 	Bind(wxEVT_SIZE, &NanoVGCanvas::OnSize, this);
 	Bind(wxEVT_MOUSEWHEEL, &NanoVGCanvas::OnMouseWheel, this);
 	Bind(wxEVT_ERASE_BACKGROUND, &NanoVGCanvas::OnEraseBackground, this);
+	Bind(wxEVT_TIMER, &NanoVGCanvas::OnScrollTimer, this);
 
 	// Scrollbar interaction events
 	Bind(wxEVT_SCROLLWIN_TOP, &NanoVGCanvas::OnScroll, this);
@@ -99,7 +101,7 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 	NVGcontext* vg = m_nvg.get();
 	nvgBeginFrame(vg, w, h, GetContentScaleFactor());
 	nvgSave(vg);
-	nvgTranslate(vg, 0, static_cast<float>(-m_scrollPos));
+	nvgTranslate(vg, 0, -std::round(m_visualScrollPos));
 
 	// Call subclass implementation
 	OnNanoVGPaint(vg, w, h);
@@ -124,7 +126,14 @@ void NanoVGCanvas::OnMouseWheel(wxMouseEvent& evt) {
 	m_scrollPos = std::clamp(m_scrollPos, 0, maxScroll);
 
 	UpdateScrollbar(m_contentHeight);
-	Refresh();
+	if (std::abs(m_scrollPos - m_visualScrollPos) > 0.5f) {
+		if (!m_scrollTimer.IsRunning()) {
+			m_scrollTimer.Start(16); // ~60 FPS
+		}
+	} else {
+		m_visualScrollPos = static_cast<float>(m_scrollPos);
+		Refresh();
+	}
 }
 
 void NanoVGCanvas::OnEraseBackground(wxEraseEvent&) {
@@ -155,13 +164,44 @@ void NanoVGCanvas::OnScroll(wxScrollWinEvent& evt) {
 
 	m_scrollPos = std::clamp(m_scrollPos, 0, maxScroll);
 	UpdateScrollbar(m_contentHeight);
-	Refresh();
+
+	if (type == wxEVT_SCROLLWIN_THUMBTRACK || type == wxEVT_SCROLLWIN_THUMBRELEASE) {
+		// Instant update for thumb dragging to feel responsive
+		m_visualScrollPos = static_cast<float>(m_scrollPos);
+		Refresh();
+	} else {
+		// Smooth scroll for clicks
+		if (std::abs(m_scrollPos - m_visualScrollPos) > 0.5f) {
+			if (!m_scrollTimer.IsRunning()) {
+				m_scrollTimer.Start(16);
+			}
+		}
+	}
 }
 
 void NanoVGCanvas::SetScrollPosition(int pos) {
 	int maxScroll = std::max(0, m_contentHeight - GetClientSize().y);
 	m_scrollPos = std::clamp(pos, 0, maxScroll);
 	UpdateScrollbar(m_contentHeight);
+
+	if (std::abs(m_scrollPos - m_visualScrollPos) > 0.5f) {
+		if (!m_scrollTimer.IsRunning()) {
+			m_scrollTimer.Start(16);
+		}
+	} else {
+		m_visualScrollPos = static_cast<float>(m_scrollPos);
+		Refresh();
+	}
+}
+
+void NanoVGCanvas::OnScrollTimer(wxTimerEvent& evt) {
+	float diff = static_cast<float>(m_scrollPos) - m_visualScrollPos;
+	if (std::abs(diff) < 0.5f) {
+		m_visualScrollPos = static_cast<float>(m_scrollPos);
+		m_scrollTimer.Stop();
+	} else {
+		m_visualScrollPos += diff * 0.2f; // Smooth factor
+	}
 	Refresh();
 }
 

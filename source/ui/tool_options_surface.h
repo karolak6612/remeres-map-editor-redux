@@ -6,23 +6,24 @@
 #include <wx/timer.h>
 #include <vector>
 #include "palette/palette_common.h"
+#include "util/nanovg_canvas.h"
 
 class Brush;
+struct NVGcontext;
 
 // A custom-drawn, high-density surface for tool options.
 // Replaces the old panel-based layout with a unified, paint-optimized control.
-class ToolOptionsSurface : public wxControl {
+class ToolOptionsSurface : public NanoVGCanvas {
 public:
 	ToolOptionsSurface(wxWindow* parent);
 	~ToolOptionsSurface();
 
 	// Mandatory overrides for custom controls
 	wxSize DoGetBestClientSize() const override;
-	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
 
 	// Event Handlers
-	void OnPaint(wxPaintEvent& evt);
-	void OnEraseBackground(wxEraseEvent& evt); // No-op
+	// OnPaint is handled by NanoVGCanvas
+	// OnEraseBackground is handled by NanoVGCanvas
 	void OnMouse(wxMouseEvent& evt);
 	void OnLeave(wxMouseEvent& evt);
 	void OnSize(wxSizeEvent& evt);
@@ -89,12 +90,17 @@ private:
 	int current_thickness = 1;
 	bool show_preview = false;
 	bool lock_doors = false;
+	float m_brushRotation = 0.0f;
 
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+
+private:
 	// Internal Helpers
 	void RebuildLayout();
-	void DrawToolIcon(wxDC& dc, const ToolRect& tr);
-	void DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
-	void DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover);
+	void DrawToolIcon(NVGcontext* vg, const ToolRect& tr);
+	void DrawSlider(NVGcontext* vg, const wxRect& rect, const std::string& label, int value, int min, int max, bool active);
+	void DrawCheckbox(NVGcontext* vg, const wxRect& rect, const std::string& label, bool value, bool hover);
 
 	int CalculateSliderValue(const wxRect& sliderRect, int min, int max) const;
 
