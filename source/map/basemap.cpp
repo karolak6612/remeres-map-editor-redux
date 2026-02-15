@@ -34,8 +34,8 @@ void BaseMap::clear(bool del) {
 		Tile* t = map_iter->get();
 		pos_vec.push_back(t->getPosition());
 	}
-	for (PositionVector::iterator pos_iter = pos_vec.begin(); pos_iter != pos_vec.end(); ++pos_iter) {
-		std::unique_ptr<Tile> t = setTile(*pos_iter, nullptr);
+	for (const auto& pos : pos_vec) {
+		std::unique_ptr<Tile> t = setTile(pos, nullptr);
 		if (!del) {
 			t.release();
 		}
