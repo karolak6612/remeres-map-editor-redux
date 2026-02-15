@@ -38,6 +38,7 @@ void DrawingOptions::SetDefault() {
 	show_preview = false;
 	show_hooks = false;
 	hide_items_when_zoomed = true;
+	show_towns = true;
 	current_house_id = 0;
 	light_intensity = 1.0f;
 	ambient_light_level = 0.5f;
@@ -45,6 +46,10 @@ void DrawingOptions::SetDefault() {
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = ShaderNames::NONE;
+
+	has_color_modifications = show_blocking || highlight_items || show_spawns || show_houses || show_special_tiles || show_only_colors || show_as_minimap;
+	has_markers = show_waypoints || show_houses || show_towns || show_spawns;
+	has_tooltips_enabled = show_tooltips;
 }
 
 void DrawingOptions::SetIngame() {
@@ -79,6 +84,10 @@ void DrawingOptions::SetIngame() {
 	show_hooks = false;
 	hide_items_when_zoomed = false;
 	current_house_id = 0;
+
+	has_color_modifications = show_blocking || highlight_items || show_spawns || show_houses || show_special_tiles || show_only_colors || show_as_minimap;
+	has_markers = show_waypoints || show_houses || show_towns || show_spawns;
+	has_tooltips_enabled = show_tooltips;
 }
 
 #include "app/settings.h"
@@ -119,8 +128,8 @@ void DrawingOptions::Update() {
 	experimental_fog = g_settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	anti_aliasing = g_settings.getBoolean(Config::ANTI_ALIASING);
 	screen_shader_name = g_settings.getString(Config::SCREEN_SHADER);
-}
 
-bool DrawingOptions::isDrawLight() const noexcept {
-	return show_lights;
+	has_color_modifications = show_blocking || highlight_items || show_spawns || show_houses || show_special_tiles || show_only_colors || show_as_minimap;
+	has_markers = show_waypoints || show_houses || show_towns || show_spawns;
+	has_tooltips_enabled = show_tooltips;
 }

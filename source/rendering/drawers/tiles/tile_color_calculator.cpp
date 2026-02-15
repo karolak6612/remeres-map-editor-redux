@@ -6,9 +6,13 @@
 #include "app/definitions.h"
 
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
+	if (!options.has_color_modifications) {
+		return;
+	}
+
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
 
-	if (options.show_blocking && tile->isBlocking() && tile->size() > 0) {
+	if (options.show_blocking && tile->isBlocking() && !tile->empty()) {
 		// g * 2/3 approx g * 171 / 256
 		g = (g * 171) >> 8;
 		b = (b * 171) >> 8;

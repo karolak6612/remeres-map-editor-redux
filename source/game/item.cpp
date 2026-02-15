@@ -265,6 +265,15 @@ SpriteLight Item::getLight() const {
 	return SpriteLight { 0, 0 };
 }
 
+bool Item::getLight(SpriteLight& light) const {
+	const ItemType& type = g_items.getItemType(id);
+	if (type.sprite) {
+		light = type.sprite->getLight();
+		return light.intensity > 0;
+	}
+	return false;
+}
+
 double Item::getWeight() const {
 	ItemType& it = g_items[id];
 	if (it.stackable) {

@@ -99,27 +99,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 							TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
-							// Trigger preloading for this tile's sprites
-							if (Tile* tile = location->get()) {
-								if (tile->ground) {
-									GameSprite* spr = g_items[tile->ground->getID()].sprite;
-									if (spr && !spr->isSimpleAndLoaded()) {
-										rme::collectTileSprites(spr, 0, 0, 0, 0);
-									}
-								}
-								for (const auto& item : tile->items) {
-									GameSprite* spr = g_items[item->getID()].sprite;
-									if (spr && !spr->isSimpleAndLoaded()) {
-										rme::collectTileSprites(spr, 0, 0, 0, 0);
-									}
-								}
-							}
-
-							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
-							// draw light, but only if not zoomed too far
-							if (draw_lights) {
-								tile_renderer->AddLight(location, view, options, light_buffer);
-							}
+							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y, draw_lights ? &light_buffer : nullptr);
 						}
 					}
 				} else {
@@ -164,27 +144,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 					TileLocation* location = &floor->locs[map_x * 4 + map_y];
 
-					// Trigger preloading for this tile's sprites
-					if (Tile* tile = location->get()) {
-						if (tile->ground) {
-							GameSprite* spr = g_items[tile->ground->getID()].sprite;
-							if (spr && !spr->isSimpleAndLoaded()) {
-								rme::collectTileSprites(spr, 0, 0, 0, 0);
-							}
-						}
-						for (const auto& item : tile->items) {
-							GameSprite* spr = g_items[item->getID()].sprite;
-							if (spr && !spr->isSimpleAndLoaded()) {
-								rme::collectTileSprites(spr, 0, 0, 0, 0);
-							}
-						}
-					}
-
-					tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
-					// draw light, but only if not zoomed too far
-					if (draw_lights) {
-						tile_renderer->AddLight(location, view, options, light_buffer);
-					}
+					tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y, draw_lights ? &light_buffer : nullptr);
 				}
 			}
 		});

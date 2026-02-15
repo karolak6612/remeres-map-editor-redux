@@ -266,10 +266,14 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 			// This should be impossible due to std::max, but good for invariant documentation
 			spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
 		}
+
+		// Force update
+		last_anti_aliasing = !options.anti_aliasing;
 	}
 
 	// Always update filtering parameters (supports toggling AA without resize)
-	if (scale_texture) {
+	if (scale_texture && last_anti_aliasing != options.anti_aliasing) {
+		last_anti_aliasing = options.anti_aliasing;
 		GLenum filter = options.anti_aliasing ? GL_LINEAR : GL_NEAREST;
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MIN_FILTER, filter);
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);

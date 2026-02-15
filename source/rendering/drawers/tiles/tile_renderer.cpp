@@ -149,7 +149,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
 	}
@@ -179,12 +179,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	Waypoint* waypoint = nullptr;
-	if (location->getWaypointCount() > 0) {
+	if (options.has_markers && location->getWaypointCount() > 0) {
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
 
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && waypoint && map_z == view.floor) {
+	if (options.has_tooltips_enabled && waypoint && map_z == view.floor) {
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
@@ -208,6 +208,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	} else {
 		if (tile->ground) {
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+			if (light_buffer) {
+				SpriteLight light;
+				if (tile->ground->getLight(light)) {
+					light_buffer->AddLight(map_x, map_y, map_z, light);
+				}
+			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -215,11 +221,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
+	if (options.has_tooltips_enabled && map_z == view.floor && tile->ground) {
+		if (g_items[tile->ground->getID()].isTooltipable()) {
+			TooltipData& groundData = tooltip_drawer->requestTooltipData();
+			if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+				if (groundData.hasVisibleFields()) {
+					tooltip_drawer->commitTooltip();
+				}
 			}
 		}
 	}
@@ -261,12 +269,21 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// items on tile
 			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+				if (options.has_tooltips_enabled && map_z == view.floor) {
+					if (g_items[item->getID()].isTooltipable() || item->isComplex()) {
+						TooltipData& itemData = tooltip_drawer->requestTooltipData();
+						if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+							if (itemData.hasVisibleFields()) {
+								tooltip_drawer->commitTooltip();
+							}
 						}
+					}
+				}
+
+				if (light_buffer) {
+					SpriteLight light;
+					if (item->getLight(light)) {
+						light_buffer->AddLight(map_x, map_y, map_z, light);
 					}
 				}
 
@@ -306,34 +323,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 		if (view.zoom < 10.0) {
 			// markers (waypoint, house exit, town temple, spawn)
-			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
-		}
-	}
-}
-
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
+			if (options.has_markers) {
+				marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
 			}
 		}
 	}

@@ -252,6 +252,7 @@ public:
 
 	bool hasLight() const;
 	SpriteLight getLight() const;
+	bool getLight(SpriteLight& light) const;
 
 	// Item types
 	bool hasProperty(enum ITEMPROPERTY prop) const;

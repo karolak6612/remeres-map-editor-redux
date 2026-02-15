@@ -114,9 +114,7 @@ public: // Functions
 	// Get memory footprint size
 	uint32_t memsize() const;
 	// Get number of items on the tile
-	bool empty() const {
-		return size() == 0;
-	}
+	bool empty() const;
 	int size() const;
 
 	// Blocking?

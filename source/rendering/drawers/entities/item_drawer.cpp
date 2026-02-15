@@ -21,6 +21,7 @@
 #include "game/items.h"
 #include "game/complexitem.h"
 #include "game/sprites.h"
+#include "rendering/core/sprite_preloader.h"
 #include "ui/gui.h"
 
 ItemDrawer::ItemDrawer() {
@@ -60,6 +61,10 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	// item sprite
 	GameSprite* spr = it.sprite;
+
+	if (spr && !spr->isSimpleAndLoaded()) {
+		rme::collectTileSprites(spr, 0, 0, 0, 0);
+	}
 
 	// Display invisible and invalid items
 	// Ugly hacks. :)
@@ -173,7 +178,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
 
 	int frame = (spr->animator) ? spr->animator->getFrame() : 0;
-	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
+	if (spr->isSimple()) {
 		const AtlasRegion* region;
 		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
 			region = spr->getCachedDefaultRegion();

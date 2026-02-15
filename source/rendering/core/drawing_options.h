@@ -11,7 +11,9 @@ struct DrawingOptions {
 	void SetIngame();
 	void SetDefault();
 	void Update();
-	bool isDrawLight() const noexcept;
+	bool isDrawLight() const noexcept {
+		return show_lights;
+	}
 
 	bool transparent_floors;
 	bool transparent_items;
@@ -59,6 +61,11 @@ struct DrawingOptions {
 	bool anti_aliasing;
 
 	std::string screen_shader_name;
+
+	// Cached flags for performance optimization
+	bool has_color_modifications;
+	bool has_markers;
+	bool has_tooltips_enabled;
 };
 
 #endif
