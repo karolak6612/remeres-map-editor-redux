@@ -57,6 +57,7 @@ jobs:
           REPOSITORY: '${{ github.repository }}'
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
         with:
+          openai_api_key: 'dummy'
           openai_base_url: 'placeholder'
           openai_model: 'placeholder'
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
@@ -65,6 +66,7 @@ jobs:
           workflow_name: 'qwen-review'
           settings: |-
             {
+              "auth_type": "code_assist",
               "use_qwen_code_assist": true,
               "model": {
                 "maxSessionTurns": 25
