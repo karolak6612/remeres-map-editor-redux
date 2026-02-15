@@ -131,7 +131,6 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	in_batch_ = true;
 	draw_call_count_ = 0;
 	sprite_count_ = 0;
-	sprite_count_ = 0;
 	global_tint_ = glm::vec4(1.0f);
 
 	glEnable(GL_BLEND);
@@ -261,6 +260,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			// (If we just flushed above, the fence was placed, and waitAndMap will block correctly if GPU is slow)
 			void* ptr = ring_buffer_.waitAndMap(batch_size);
 			if (!ptr) {
+				spdlog::error("SpriteBatch: RingBuffer mapping failed (MDI path). Aborting batch.");
 				break;
 			}
 
@@ -280,7 +280,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			ring_buffer_.advance();
 
 			processed += batch_size;
-			sprite_count_ += (int)batch_size;
+			sprite_count_ += static_cast<int>(batch_size);
 		}
 
 		// Flush remaining commands
@@ -304,6 +304,7 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			size_t batch_size = std::min(total - processed, max_batch);
 			void* ptr = ring_buffer_.waitAndMap(batch_size);
 			if (!ptr) {
+				spdlog::error("SpriteBatch: RingBuffer mapping failed (Fallback path). Aborting batch.");
 				break;
 			}
 
@@ -316,14 +317,14 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 			// Binding point 1 is used for instance data (Attributes 2, 3, 4, 5)
 			glVertexArrayVertexBuffer(vao_->GetID(), 1, ring_buffer_.getBufferId(), offset, sizeof(SpriteInstance));
 
-			glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, (GLsizei)batch_size);
+			glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(batch_size));
 
 			// Standard signal: Fence current and advance
 			ring_buffer_.signalFinished();
 
 			processed += batch_size;
 			draw_call_count_++;
-			sprite_count_ += (int)batch_size;
+			sprite_count_ += static_cast<int>(batch_size);
 		}
 	}
 

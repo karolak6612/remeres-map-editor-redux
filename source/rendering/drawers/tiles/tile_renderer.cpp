@@ -25,6 +25,8 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/light_buffer.h"
+#include "rendering/core/sprite_preloader.h"
+#include "rendering/utilities/pattern_calculator.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
@@ -207,6 +209,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground) {
+			PreloadItem(tile, tile->ground.get());
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
@@ -270,6 +273,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
+				PreloadItem(tile, item.get());
+
 				// item sprite
 				if (item->isBorder()) {
 					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
@@ -308,6 +313,19 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// markers (waypoint, house exit, town temple, spawn)
 			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
 		}
+	}
+}
+
+void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
+	if (!item) {
+		return;
+	}
+
+	const ItemType& it = g_items[item->getID()];
+	GameSprite* spr = it.sprite;
+	if (spr && !spr->isSimpleAndLoaded()) {
+		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
 }
 

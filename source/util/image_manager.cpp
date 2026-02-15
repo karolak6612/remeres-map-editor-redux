@@ -43,7 +43,6 @@ std::string ImageManager::ResolvePath(const std::string& assetPath) {
 	wxFileName fn(fullPathLine);
 
 	std::string fullPath = fn.GetFullPath().ToStdString();
-	spdlog::debug("ImageManager: Resolving {} -> {}", assetPath, fullPath);
 	return fullPath;
 }
 

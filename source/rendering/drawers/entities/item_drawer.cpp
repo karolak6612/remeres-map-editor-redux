@@ -16,6 +16,7 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/drawing_options.h"
+#include "rendering/utilities/pattern_calculator.h"
 #include "map/tile.h"
 #include "game/item.h"
 #include "game/items.h"
@@ -117,41 +118,12 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
 
-	int subtype = -1;
-
-	int pattern_x = (spr->pattern_x > 1) ? pos.x % spr->pattern_x : 0;
-	int pattern_y = (spr->pattern_y > 1) ? pos.y % spr->pattern_y : 0;
-	int pattern_z = (spr->pattern_z > 1) ? pos.z % spr->pattern_z : 0;
-
-	if (it.isSplash() || it.isFluidContainer()) {
-		subtype = item->getSubtype();
-	} else if (it.isHangable) {
-		if (tile && tile->hasHookSouth()) {
-			pattern_x = 1;
-		} else if (tile && tile->hasHookEast()) {
-			pattern_x = 2;
-		} else {
-			pattern_x = 0;
-		}
-	} else if (it.stackable) {
-		if (item->getSubtype() <= 1) {
-			subtype = 0;
-		} else if (item->getSubtype() <= 2) {
-			subtype = 1;
-		} else if (item->getSubtype() <= 3) {
-			subtype = 2;
-		} else if (item->getSubtype() <= 4) {
-			subtype = 3;
-		} else if (item->getSubtype() < 10) {
-			subtype = 4;
-		} else if (item->getSubtype() < 25) {
-			subtype = 5;
-		} else if (item->getSubtype() < 50) {
-			subtype = 6;
-		} else {
-			subtype = 7;
-		}
-	}
+	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+	int subtype = patterns.subtype;
+	int pattern_x = patterns.x;
+	int pattern_y = patterns.y;
+	int pattern_z = patterns.z;
+	int frame = patterns.frame;
 
 	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.isBorder || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
@@ -172,20 +144,25 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	// g_gui.gfx.ensureAtlasManager();
 	// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
 
-	int frame = (spr->animator) ? spr->animator->getFrame() : 0;
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
 		const AtlasRegion* region;
 		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
-			region = spr->getCachedDefaultRegion();
-			if (!region) {
-				// Fallback to slow path to populate cache
-				region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
-			}
+			region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
 		} else {
 			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
 		}
 
 		if (region) {
+#ifdef DEBUG
+			// DEBUG: Check for mismatch on Item 369 using PRECISE sub-sprite ID
+			if (item->getID() == 369) {
+				// Use 0,0 as pattern coordinates for 1x1 items
+				uint32_t precise_expected_id = spr->getSpriteId(frame, 0, 0);
+				if (region->debug_sprite_id != 0 && precise_expected_id != 0 && region->debug_sprite_id != precise_expected_id) {
+					spdlog::error("SPRITE MISMATCH DETECTED: Item 369 (Expected Sprite ID {}, Actual Region Owner {})", precise_expected_id, region->debug_sprite_id);
+				}
+			}
+#endif
 			sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, red, green, blue, alpha);
 		}
 	} else {
