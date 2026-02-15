@@ -204,8 +204,9 @@ void LiveClient::receive(uint32_t packetSize) {
 }
 
 void LiveClient::send(NetworkMessage& message) {
-	memcpy(&message.buffer[0], &message.size, 4);
-	boost::asio::async_write(*socket, boost::asio::buffer(message.buffer, message.size + 4), [this](const boost::system::error_code& error, size_t bytesTransferred) -> void {
+	auto msgPtr = std::make_shared<NetworkMessage>(message);
+	memcpy(&msgPtr->buffer[0], &msgPtr->size, 4);
+	boost::asio::async_write(*socket, boost::asio::buffer(msgPtr->buffer, msgPtr->size + 4), [this, msgPtr](const boost::system::error_code& error, size_t bytesTransferred) -> void {
 		if (error) {
 			logMessage(wxString() + getHostName() + ": " + error.message());
 		}

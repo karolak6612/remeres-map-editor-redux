@@ -96,8 +96,9 @@ void LivePeer::receive(uint32_t packetSize) {
 }
 
 void LivePeer::send(NetworkMessage& message) {
-	memcpy(&message.buffer[0], &message.size, 4);
-	boost::asio::async_write(socket, boost::asio::buffer(message.buffer, message.size + 4), [this](const boost::system::error_code& error, size_t bytesTransferred) -> void {
+	auto msgPtr = std::make_shared<NetworkMessage>(message);
+	memcpy(&msgPtr->buffer[0], &msgPtr->size, 4);
+	boost::asio::async_write(socket, boost::asio::buffer(msgPtr->buffer, msgPtr->size + 4), [this, msgPtr](const boost::system::error_code& error, size_t bytesTransferred) -> void {
 		if (error) {
 			logMessage(wxString() + getHostName() + ": " + error.message());
 		}
@@ -263,9 +264,10 @@ void LivePeer::parseNodeRequest(NetworkMessage& message) {
 void LivePeer::parseReceiveChanges(NetworkMessage& message) {
 	Editor& editor = *server->getEditor();
 
-	// -1 on address since we skip the first START_NODE when sending
-	const std::string& data = message.read<std::string>();
-	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str() - 1), data.size());
+	// Insert START_NODE since we skip it when sending
+	std::string data = message.read<std::string>();
+	data.insert(0, 1, NodeFileWriteHandle::NODE_START);
+	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 
 	BinaryNode* rootNode = mapReader.getRootNode();
 	BinaryNode* tileNode = rootNode->getChild();

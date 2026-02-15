@@ -163,6 +163,8 @@ bool LiveServer::setPort(int32_t newPort) {
 }
 
 uint32_t LiveServer::getFreeClientId() {
+	std::lock_guard<std::mutex> lock(clientMutex);
+
 	// Start from bit 4 (16) to avoid colliding with reserved visibility flags (bits 0-3)
 	for (int32_t bit = (1 << 4); bit < (1 << 16); bit <<= 1) {
 		if (!testFlags(clientIds, bit)) {
