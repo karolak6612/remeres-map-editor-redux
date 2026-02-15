@@ -22,7 +22,7 @@ struct AtlasRegion {
 	int pixel_x = 0; // Pre-calculated pixel X in the atlas layer
 	int pixel_y = 0; // Pre-calculated pixel Y in the atlas layer
 
-	static constexpr uint32_t INVALID_SENTINEL = 0xFFFFFFFF;
+	static constexpr uint32_t INVALID_SENTINEL = 0xFFFFFFFE;
 };
 
 /**

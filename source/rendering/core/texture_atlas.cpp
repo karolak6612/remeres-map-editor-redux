@@ -17,13 +17,15 @@ TextureAtlas::TextureAtlas(TextureAtlas&& other) noexcept
 	total_sprite_count_(other.total_sprite_count_),
 	current_layer_(other.current_layer_), next_x_(other.next_x_),
 	next_y_(other.next_y_),
-	free_slots_(std::move(other.free_slots_)) {
+	free_slots_(std::move(other.free_slots_)),
+	pbo_(std::move(other.pbo_)) {
 	other.layer_count_ = 0;
 	other.allocated_layers_ = 0;
 	other.total_sprite_count_ = 0;
 	other.current_layer_ = 0;
 	other.next_x_ = 0;
 	other.next_y_ = 0;
+	other.pbo_.reset();
 }
 
 TextureAtlas& TextureAtlas::operator=(TextureAtlas&& other) noexcept {
@@ -37,12 +39,14 @@ TextureAtlas& TextureAtlas::operator=(TextureAtlas&& other) noexcept {
 		next_x_ = other.next_x_;
 		next_y_ = other.next_y_;
 		free_slots_ = std::move(other.free_slots_);
+		pbo_ = std::move(other.pbo_);
 		other.layer_count_ = 0;
 		other.allocated_layers_ = 0;
 		other.total_sprite_count_ = 0;
 		other.current_layer_ = 0;
 		other.next_x_ = 0;
 		other.next_y_ = 0;
+		other.pbo_.reset();
 	}
 	return *this;
 }
@@ -77,7 +81,7 @@ bool TextureAtlas::initialize(int initial_layers) {
 	next_y_ = 0;
 
 	// Gate PBO because it currently causes random sprite corruption
-#if 0
+#ifdef USE_PBO_FOR_SPRITE_UPLOAD
 	pbo_ = std::make_unique<PixelBufferObject>();
 	if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
 		spdlog::error("TextureAtlas: Failed to initialize PBO");

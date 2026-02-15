@@ -323,7 +323,7 @@ GameSprite::Image::Image() :
 }
 
 void GameSprite::Image::visit() const {
-	lastaccess = g_gui.gfx.getCachedTime();
+	lastaccess = static_cast<int64_t>(g_gui.gfx.getCachedTime());
 }
 
 void GameSprite::Image::clean(time_t time, int longevity) {
@@ -415,7 +415,7 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - lastaccess > longevity) {
+	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(id);
 		}
@@ -434,7 +434,7 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 		g_gui.gfx.collector.NotifyTextureUnloaded();
 	}
 
-	if (time - lastaccess > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
+	if (time - static_cast<time_t>(lastaccess.load()) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
 		dump.reset();
 	}
 }
@@ -619,7 +619,7 @@ const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
 	if (isGLLoaded && atlas_region) {
 		// Self-Healing: Check for stale atlas region pointer (e.g. from memory reuse)
 		// Force reload if Owner is INVALID or DOES NOT MATCH
-		if (atlas_region->debug_sprite_id == 0xFFFFFFFF || (atlas_region->debug_sprite_id != 0 && atlas_region->debug_sprite_id != id)) {
+		if (atlas_region->debug_sprite_id == AtlasRegion::INVALID_SENTINEL || (atlas_region->debug_sprite_id != 0 && atlas_region->debug_sprite_id != id)) {
 			spdlog::warn("STALE ATLAS REGION DETECTED: NormalImage {} held region owned by {}. Force reloading.", id, atlas_region->debug_sprite_id);
 			isGLLoaded = false;
 			atlas_region = nullptr;
@@ -660,7 +660,7 @@ void GameSprite::TemplateImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - lastaccess > longevity) {
+	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
 		}
@@ -775,7 +775,7 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 const AtlasRegion* GameSprite::TemplateImage::getAtlasRegion() {
 	if (isGLLoaded && atlas_region) {
 		// Self-Healing: Check for stale atlas region pointer
-		if (atlas_region->debug_sprite_id == 0xFFFFFFFF || (atlas_region->debug_sprite_id != 0 && atlas_region->debug_sprite_id != texture_id)) {
+		if (atlas_region->debug_sprite_id == AtlasRegion::INVALID_SENTINEL || (atlas_region->debug_sprite_id != 0 && atlas_region->debug_sprite_id != texture_id)) {
 			spdlog::warn("STALE ATLAS REGION DETECTED: TemplateImage {} held region owned by {}. Force reloading.", texture_id, atlas_region->debug_sprite_id);
 			isGLLoaded = false;
 			atlas_region = nullptr;

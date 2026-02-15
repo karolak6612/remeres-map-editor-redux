@@ -13,6 +13,7 @@
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/render_timer.h"
 #include <atomic>
+#include <cstdint>
 
 #include <deque>
 #include <memory>
@@ -115,7 +116,7 @@ protected:
 		virtual ~Image() = default;
 
 		bool isGLLoaded = false;
-		mutable std::atomic<time_t> lastaccess;
+		mutable std::atomic<int64_t> lastaccess;
 		uint32_t generation_id = 0;
 
 		void visit() const;

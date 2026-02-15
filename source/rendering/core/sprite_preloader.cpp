@@ -8,6 +8,13 @@
 #include "io/loaders/spr_loader.h"
 #include <mutex>
 
+namespace {
+	struct PendingTask {
+		uint32_t id;
+		uint32_t generation_id;
+	};
+}
+
 SpritePreloader& SpritePreloader::get() {
 	static SpritePreloader instance;
 	return instance;
@@ -57,10 +64,6 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	const bool is_extended = g_gui.gfx.isExtended();
 	const bool has_transparency = g_gui.gfx.hasTransparency();
 
-	struct PendingTask {
-		uint32_t id;
-		uint32_t generation_id;
-	};
 	static thread_local std::vector<PendingTask> ids_to_enqueue;
 	ids_to_enqueue.clear();
 
