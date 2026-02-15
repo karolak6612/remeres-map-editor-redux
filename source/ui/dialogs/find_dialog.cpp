@@ -43,7 +43,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	search_field->SetHint("Type to search...");
 	search_field->SetToolTip("Type at least 2 characters to search for brushes or items.");
 	search_field->SetFocus();
-	sizer->Add(search_field, 0, wxEXPAND);
+	sizer->Add(search_field, wxSizerFlags(0).Expand());
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
@@ -52,11 +52,11 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Jump to selected item/brush");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Close this window");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
@@ -75,9 +75,10 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	// We can't call it here since it calls an abstract function, call in child constructors instead.
 	// RefreshContents();
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
-	SetIcon(icon);
+	wxIconBundle icons;
+	icons.AddIcon(wxIcon(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16))));
+	icons.AddIcon(wxIcon(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32))));
+	SetIcons(icons);
 }
 
 FindDialog::~FindDialog() = default;
@@ -364,12 +365,12 @@ void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const
 
 		if (IsSelected(n)) {
 			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
+				dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
 			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
+				dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HOTLIGHT));
 			}
 		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
+			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
 		}
 
 		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
