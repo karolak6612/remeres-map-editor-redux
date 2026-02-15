@@ -108,6 +108,14 @@ uint32_t GameSprite::getDebugImageId(size_t index) const {
 	return 0;
 }
 
+uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
+	auto idx = getIndex(width, height, 0, pattern_x, pattern_y, 0, frameIndex); // Assuming layer, pattern_z are 0 for this context
+	if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
+		return static_cast<const NormalImage*>(spriteList[idx])->id;
+	}
+	return 0;
+}
+
 std::pair<int, int> GameSprite::getDrawOffset() const {
 	return std::make_pair(drawoffset_x, drawoffset_y);
 }
@@ -136,22 +144,17 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 		if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0) {
 			// Check cache
 			// We rely on spriteList[0] being valid for simple sprites
-			// Check isGLLoaded AND ensure cached region matches current region (handles reload/slot reuse)
-			// Shared Sprite Fix: Verify generation ID matches what we cached.
+			// shared Sprite Fix: Verify generation ID matches what we cached.
 			// Wrong Sprite Fix: Verify sprite ID matches what we cached.
-			// Use the getter to ensure self-healing check runs
-			const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
-			if (cached_default_region && spriteList[0]->isGLLoaded && cached_default_region == valid_region && cached_generation_id == spriteList[0]->generation_id && cached_sprite_id == spriteList[0]->id) {
+			// Optimization: Check lightweight fields BEFORE calling heavy getAtlasRegion()
+			if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id && cached_sprite_id == spriteList[0]->id) {
 				return cached_default_region;
 			}
 
-			// Lazy set parent for cache invalidation (legacy path, kept for safety)
-			spriteList[0]->parent = this;
-
-			// const AtlasRegion* r = spriteList[0]->getAtlasRegion(); // Already called above
-			const AtlasRegion* r = valid_region;
-			if (spriteList[0]->isGLLoaded) {
-				cached_default_region = r;
+			// Cache miss or staleness suspected: Use the getter to ensure self-healing check runs
+			const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
+			if (valid_region && spriteList[0]->isGLLoaded) {
+				cached_default_region = valid_region;
 				cached_generation_id = spriteList[0]->generation_id;
 				cached_sprite_id = spriteList[0]->id;
 			} else {
@@ -159,7 +162,10 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 				cached_generation_id = 0;
 				cached_sprite_id = 0;
 			}
-			return r;
+
+			// Lazy set parent for cache invalidation (legacy path, kept for safety)
+			spriteList[0]->parent = this;
+			return valid_region;
 		}
 	}
 
@@ -332,15 +338,18 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std:
 		const AtlasRegion* region = atlas_mgr->getRegion(sprite_id);
 		if (region) {
 			// CRITICAL FIX: Check if the region we found is marked INVALID (from double-allocation fix)
-			if (region->debug_sprite_id == 0xFFFFFFFF) {
-				spdlog::warn("CORRUPT MAP ENTRY: Sprite {} maps to an INVALID region (Owner 0xFFFFFFFF). Clearing and reloading.", sprite_id);
-				atlas_mgr->removeSprite(sprite_id); // Remove the stale map entry
+			// or belongs to another sprite (mismatch).
+			if (region->debug_sprite_id == 0xFFFFFFFF || (region->debug_sprite_id != 0 && region->debug_sprite_id != sprite_id)) {
+				spdlog::warn("STALE/INVALID MAP ENTRY DETECTED: Sprite {} maps to region owned by {}. Clearing local map.", sprite_id, region->debug_sprite_id);
+				// SAFETY: Only call removeSprite if WE own the region, otherwise just clear the mapping
+				// to avoid calling freeSlot on a slot owned by another sprite.
+				if (region->debug_sprite_id == sprite_id) {
+					atlas_mgr->removeSprite(sprite_id);
+				} else {
+					// Manually clear the stale map entry without freeing the shared slot
+					atlas_mgr->clearMapping(sprite_id);
+				}
 				region = nullptr; // Force reload
-			} else if (region->debug_sprite_id != 0 && region->debug_sprite_id != sprite_id) {
-				// Also check for standard mismatch here just in case
-				spdlog::warn("EnsureAtlasSprite: Map mismatch! Sprite {} maps to region owned by {}. Clearing.", sprite_id, region->debug_sprite_id);
-				atlas_mgr->removeSprite(sprite_id);
-				region = nullptr;
 			} else {
 				return region;
 			}

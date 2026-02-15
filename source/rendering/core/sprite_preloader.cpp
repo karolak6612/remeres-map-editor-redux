@@ -102,7 +102,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		for (uint32_t id : ids_to_enqueue) {
 			if (pending_ids.insert(id).second) {
 				// Capture the current generation ID of the sprite to detect stale tasks later
-				uint64_t gen_id = 0;
+				uint32_t gen_id = 0;
 				// We need to look up the sprite again to get generation_id, or cache it.
 				// Since we just built ids_to_enqueue, we implicitly know the IDs.
 				// However, ids_to_enqueue is just IDs. We should have captured generation_id earlier or valid pointer.

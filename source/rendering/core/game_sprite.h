@@ -116,7 +116,7 @@ protected:
 
 		bool isGLLoaded = false;
 		mutable std::atomic<time_t> lastaccess;
-		std::atomic<uint32_t> generation_id { 0 };
+		uint32_t generation_id = 0;
 
 		void visit() const;
 		virtual void clean(time_t time, int longevity);
@@ -260,13 +260,7 @@ public:
 	}
 
 	// DEBUG: Get the actual image ID that would be rendered for these coordinates
-	uint32_t getSpriteId(int frameIndex, int x, int y) const {
-		int idx = getIndex(width, height, 0, x, y, 0, frameIndex); // Assuming layer, pattern_z are 0 for this context
-		if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
-			return static_cast<NormalImage*>(spriteList[idx])->id;
-		}
-		return 0;
-	}
+	uint32_t getSpriteId(int frameIndex, int pattern_x, int pattern_y) const;
 
 	bool isSimpleAndLoaded() const;
 

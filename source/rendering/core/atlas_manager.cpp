@@ -103,6 +103,14 @@ void AtlasManager::removeSprite(uint32_t sprite_id) {
 	}
 }
 
+void AtlasManager::clearMapping(uint32_t sprite_id) {
+	if (sprite_id < DIRECT_LOOKUP_SIZE) {
+		direct_lookup_[sprite_id] = nullptr;
+	} else {
+		sprite_regions_.erase(sprite_id);
+	}
+}
+
 const AtlasRegion* AtlasManager::getWhitePixel() const {
 	if (sprite_regions_.count(WHITE_PIXEL_ID)) {
 		return sprite_regions_.at(WHITE_PIXEL_ID);

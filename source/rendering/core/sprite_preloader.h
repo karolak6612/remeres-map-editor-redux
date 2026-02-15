@@ -41,7 +41,7 @@ private:
 
 	struct Task {
 		uint32_t id;
-		uint64_t generation_id;
+		uint32_t generation_id;
 		std::string spritefile;
 		bool is_extended;
 		bool has_transparency;
@@ -49,7 +49,7 @@ private:
 
 	struct Result {
 		uint32_t id;
-		uint64_t generation_id;
+		uint32_t generation_id;
 		std::unique_ptr<uint8_t[]> data;
 		std::string spritefile;
 	};

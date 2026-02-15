@@ -104,8 +104,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 								if (tile->ground) {
 									GameSprite* spr = g_items[tile->ground->getID()].sprite;
 									if (spr && !spr->isSimpleAndLoaded()) {
-										int pattern_x = (spr->pattern_x > 1) ? draw_x % spr->pattern_x : 0;
-										int pattern_y = (spr->pattern_y > 1) ? draw_y % spr->pattern_y : 0;
+										int pattern_x = (spr->pattern_x > 1) ? (nd_map_x + map_x) % spr->pattern_x : 0;
+										int pattern_y = (spr->pattern_y > 1) ? (nd_map_y + map_y) % spr->pattern_y : 0;
 										int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
 										rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
 									}
@@ -113,8 +113,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 								for (const auto& item : tile->items) {
 									GameSprite* spr = g_items[item->getID()].sprite;
 									if (spr && !spr->isSimpleAndLoaded()) {
-										int pattern_x = (spr->pattern_x > 1) ? draw_x % spr->pattern_x : 0;
-										int pattern_y = (spr->pattern_y > 1) ? draw_y % spr->pattern_y : 0;
+										int pattern_x = (spr->pattern_x > 1) ? (nd_map_x + map_x) % spr->pattern_x : 0;
+										int pattern_y = (spr->pattern_y > 1) ? (nd_map_y + map_y) % spr->pattern_y : 0;
 										int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
 										rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
 									}
@@ -175,8 +175,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 						if (tile->ground) {
 							GameSprite* spr = g_items[tile->ground->getID()].sprite;
 							if (spr && !spr->isSimpleAndLoaded()) {
-								int pattern_x = (spr->pattern_x > 1) ? draw_x % spr->pattern_x : 0;
-								int pattern_y = (spr->pattern_y > 1) ? draw_y % spr->pattern_y : 0;
+								int pattern_x = (spr->pattern_x > 1) ? (nd_map_x + map_x) % spr->pattern_x : 0;
+								int pattern_y = (spr->pattern_y > 1) ? (nd_map_y + map_y) % spr->pattern_y : 0;
 								int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
 								rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
 							}
@@ -184,8 +184,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 						for (const auto& item : tile->items) {
 							GameSprite* spr = g_items[item->getID()].sprite;
 							if (spr && !spr->isSimpleAndLoaded()) {
-								int pattern_x = (spr->pattern_x > 1) ? draw_x % spr->pattern_x : 0;
-								int pattern_y = (spr->pattern_y > 1) ? draw_y % spr->pattern_y : 0;
+								int pattern_x = (spr->pattern_x > 1) ? (nd_map_x + map_x) % spr->pattern_x : 0;
+								int pattern_y = (spr->pattern_y > 1) ? (nd_map_y + map_y) % spr->pattern_y : 0;
 								int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
 								rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
 							}
