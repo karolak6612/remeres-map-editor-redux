@@ -266,7 +266,11 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 			if (needs_update || hud_cached_text.empty()) {
 				if (!editor.selection.empty()) {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size());
+					Position min = editor.selection.minPosition();
+					Position max = editor.selection.maxPosition();
+					int selW = max.x - min.x + 1;
+					int selH = max.y - min.y + 1;
+					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {} ({}x{})", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size(), selW, selH);
 				} else {
 					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}%", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100);
 				}
@@ -281,27 +285,28 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			}
 
 			float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
-			float padding = 8.0f;
+			float padding = 12.0f;
 			float hudW = textW + padding * 2;
-			float hudH = 28.0f;
-			float hudX = 10.0f;
-			float hudY = h - hudH - 10.0f;
+			float hudH = 32.0f;
+			float hudX = 16.0f;
+			float hudY = h - hudH - 16.0f;
 
-			// Background
+			// Background (Glassmorphism)
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 6.0f);
+			NVGpaint bgPaint = nvgLinearGradient(vg, hudX, hudY, hudX, hudY + hudH, nvgRGBA(40, 40, 45, 220), nvgRGBA(20, 20, 25, 240));
+			nvgFillPaint(vg, bgPaint);
 			nvgFill(vg);
 
 			// Border
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 40));
+			nvgRoundedRect(vg, hudX + 0.5f, hudY + 0.5f, hudW - 1.0f, hudH - 1.0f, 6.0f);
+			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 30));
 			nvgStrokeWidth(vg, 1.0f);
 			nvgStroke(vg);
 
 			// Text
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 220));
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 240));
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 			nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
 

@@ -93,49 +93,84 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
-	// Shadow / Glow
+	// Shadow / Glow / Card
 	if (i == selected_index) {
-		// Glow for selected
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 10.0f, nvgRGBA(100, 150, 255, 128), nvgRGBA(0, 0, 0, 0));
+		// Glow for selected (Double pass for WOW effect)
+		// 1. Broad soft glow
+		NVGpaint glowPaint = nvgBoxGradient(vg, x, y, w, h, 10.0f, 20.0f, nvgRGBA(100, 180, 255, 100), nvgRGBA(0, 0, 0, 0));
+		nvgBeginPath(vg);
+		nvgRect(vg, x - 20, y - 20, w + 40, h + 40);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillPaint(vg, glowPaint);
+		nvgFill(vg);
+
+		// 2. Tighter bright glow
+		glowPaint = nvgBoxGradient(vg, x, y, w, h, 2.0f, 4.0f, nvgRGBA(150, 200, 255, 200), nvgRGBA(0, 0, 0, 0));
+		nvgBeginPath(vg);
+		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillPaint(vg, glowPaint);
+		nvgFill(vg);
+
+		// Card Background (Selected)
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		NVGpaint selBg = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(90, 110, 130, 255), nvgRGBA(70, 90, 110, 255));
+		nvgFillPaint(vg, selBg);
+		nvgFill(vg);
+
+		// Selection Border (with pulse effect if desired, static for now but clean)
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
+		nvgStrokeColor(vg, nvgRGBA(180, 220, 255, 255));
+		nvgStrokeWidth(vg, 2.0f);
+		nvgStroke(vg);
+
+	} else {
+		// Normal or Hover State
+
+		// Card Shadow (Common)
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 8.0f, nvgRGBA(0, 0, 0, 80), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
 		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
-	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
-		nvgBeginPath(vg);
-		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
-		nvgRoundedRect(vg, x, y, w, h, 4.0f);
-		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillPaint(vg, shadowPaint);
-		nvgFill(vg);
-	}
 
-	// Card background
-	nvgBeginPath(vg);
-	nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		if (i == hover_index) {
+			// Hover Glow (Large soft)
+			NVGpaint hoverGlow = nvgBoxGradient(vg, x, y, w, h, 8.0f, 16.0f, nvgRGBA(255, 255, 255, 40), nvgRGBA(0, 0, 0, 0));
+			nvgBeginPath(vg);
+			nvgRect(vg, x - 20, y - 20, w + 40, h + 40);
+			nvgRoundedRect(vg, x, y, w, h, 4.0f);
+			nvgPathWinding(vg, NVG_HOLE);
+			nvgFillPaint(vg, hoverGlow);
+			nvgFill(vg);
 
-	if (i == selected_index) {
-		nvgFillColor(vg, nvgRGBA(80, 100, 120, 255));
-	} else if (i == hover_index) {
-		nvgFillColor(vg, nvgRGBA(70, 70, 75, 255));
-	} else {
-		// Normal - dark card with subtle gradient
-		NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
-		nvgFillPaint(vg, bgPaint);
-	}
-	nvgFill(vg);
+			// Card Background (Hover)
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, x, y, w, h, 4.0f);
+			nvgFillColor(vg, nvgRGBA(75, 75, 80, 255));
+			nvgFill(vg);
 
-	// Selection border
-	if (i == selected_index) {
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(100, 180, 255, 255));
-		nvgStrokeWidth(vg, 2.0f);
-		nvgStroke(vg);
+			// Hover Border
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
+			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 80));
+			nvgStrokeWidth(vg, 1.0f);
+			nvgStroke(vg);
+		} else {
+			// Normal State
+			// Card Background
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, x, y, w, h, 4.0f);
+			NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
+			nvgFillPaint(vg, bgPaint);
+			nvgFill(vg);
+		}
 	}
 
 	// Draw brush sprite

@@ -2,6 +2,7 @@
 #define RME_UI_TOOL_OPTIONS_SURFACE_H_
 
 #include "app/main.h"
+#include "util/nanovg_canvas.h"
 #include <wx/wx.h>
 #include <wx/timer.h>
 #include <vector>
@@ -11,7 +12,7 @@ class Brush;
 
 // A custom-drawn, high-density surface for tool options.
 // Replaces the old panel-based layout with a unified, paint-optimized control.
-class ToolOptionsSurface : public wxControl {
+class ToolOptionsSurface : public NanoVGCanvas {
 public:
 	ToolOptionsSurface(wxWindow* parent);
 	~ToolOptionsSurface();
@@ -21,8 +22,9 @@ public:
 	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
 
 	// Event Handlers
-	void OnPaint(wxPaintEvent& evt);
-	void OnEraseBackground(wxEraseEvent& evt); // No-op
+	// OnPaint handled by NanoVGCanvas
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+
 	void OnMouse(wxMouseEvent& evt);
 	void OnLeave(wxMouseEvent& evt);
 	void OnSize(wxSizeEvent& evt);
@@ -92,9 +94,6 @@ private:
 
 	// Internal Helpers
 	void RebuildLayout();
-	void DrawToolIcon(wxDC& dc, const ToolRect& tr);
-	void DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
-	void DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover);
 
 	int CalculateSliderValue(const wxRect& sliderRect, int min, int max) const;
 
