@@ -26,6 +26,7 @@
 #include <format>
 #include <fstream>
 #include <vector>
+#include <limits>
 
 #include "app/settings.h"
 #include "ui/gui.h"
@@ -1181,6 +1182,16 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 			continue;
 		}
 
+		int32_t maxRadius = g_settings.getInteger(Config::MAX_SPAWN_RADIUS);
+		if (maxRadius <= 0) {
+			maxRadius = 100;
+		}
+
+		if (radius > maxRadius) {
+			warning(wxstr(std::format("Spawn radius ({}) too large, clamping to {}", radius, maxRadius)));
+			radius = maxRadius;
+		}
+
 		Tile* tile = map.getTile(spawnPosition);
 		if (tile && tile->spawn) {
 			warning(wxstr(std::format("Duplicate spawn on position {}:{}:{}", tile->getX(), tile->getY(), tile->getZ())));
@@ -1231,8 +1242,17 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 				break;
 			}
 
-			creaturePosition.x += xAttribute.as_int();
-			creaturePosition.y += yAttribute.as_int();
+			long long cx = static_cast<long long>(creaturePosition.x) + xAttribute.as_int();
+			long long cy = static_cast<long long>(creaturePosition.y) + yAttribute.as_int();
+
+			if (cx < std::numeric_limits<int>::min() || cx > std::numeric_limits<int>::max() ||
+				cy < std::numeric_limits<int>::min() || cy > std::numeric_limits<int>::max()) {
+				warning(wxstr(std::format("Discarding creature \"{}\" at spawn {}:{}:{} due to position overflow.", name, spawnPosition.x, spawnPosition.y, spawnPosition.z)));
+				break;
+			}
+
+			creaturePosition.x = static_cast<int>(cx);
+			creaturePosition.y = static_cast<int>(cy);
 
 			radius = std::max<int32_t>(radius, std::abs(creaturePosition.x - spawnPosition.x));
 			radius = std::max<int32_t>(radius, std::abs(creaturePosition.y - spawnPosition.y));
