@@ -1,4 +1,5 @@
 #include "rendering/core/texture_array.h"
+#include "rendering/core/gl_resources.h"
 #include <iostream>
 #include <spdlog/spdlog.h>
 
@@ -20,9 +21,12 @@ bool TextureArray::initialize(int width, int height, int maxLayers) {
 	maxLayers_ = maxLayers;
 
 	// Create texture array
-	glCreateTextures(GL_TEXTURE_2D_ARRAY, 1, &textureId_);
+	texture_ = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
+	GLuint textureId_ = texture_->GetID();
+
 	if (textureId_ == 0) {
 		spdlog::error("TextureArray: Failed to create texture");
+		texture_.reset();
 		return false;
 	}
 
@@ -45,7 +49,7 @@ bool TextureArray::initialize(int width, int height, int maxLayers) {
 }
 
 bool TextureArray::uploadLayer(int layer, const uint8_t* rgbaData) {
-	if (!initialized_) {
+	if (!initialized_ || !texture_) {
 		spdlog::error("TextureArray: Not initialized");
 		return false;
 	}
@@ -59,7 +63,7 @@ bool TextureArray::uploadLayer(int layer, const uint8_t* rgbaData) {
 	}
 
 	// Upload to specific layer (z offset = layer, depth = 1 layer)
-	glTextureSubImage3D(textureId_, 0, 0, 0, layer, width_, height_, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
+	glTextureSubImage3D(texture_->GetID(), 0, 0, 0, layer, width_, height_, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgbaData);
 
 	return true;
 }
@@ -76,16 +80,17 @@ int TextureArray::allocateLayer() {
 }
 
 void TextureArray::bind(int unit) const {
-	if (initialized_) {
-		glBindTextureUnit(unit, textureId_);
+	if (initialized_ && texture_) {
+		glBindTextureUnit(unit, texture_->GetID());
 	}
 }
 
+GLuint TextureArray::getTextureId() const {
+	return texture_ ? texture_->GetID() : 0;
+}
+
 void TextureArray::cleanup() {
-	if (textureId_) {
-		glDeleteTextures(1, &textureId_);
-		textureId_ = 0;
-	}
+	texture_.reset();
 	initialized_ = false;
 	allocatedLayers_ = 0;
 }
