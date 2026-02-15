@@ -66,15 +66,17 @@ jobs:
           ISSUE_BODY: '${{ github.event.issue.body }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
         with:
-          openai_api_key: '${{ secrets.QWEN_API_KEY }}'
-          openai_base_url: '${{ vars.QWEN_BASE_URL }}'
-          openai_model: '${{ vars.QWEN_MODEL }}'
+          # Required by the action.yml, but we use code assist so we pass a dummy value
+          openai_api_key: 'dummy'
+          # openai_base_url: '${{ vars.QWEN_BASE_URL }}'
+          # openai_model: '${{ vars.QWEN_MODEL }}'
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
           qwen_debug: '${{ fromJSON(vars.DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
           workflow_name: 'qwen-triage'
           settings: |-
             {
+              "use_qwen_code_assist": true,
               "model": {
                 "maxSessionTurns": 25
               },
