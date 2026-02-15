@@ -9,7 +9,7 @@ on:
         required: false
 
 concurrency:
-  group: '${{ github.workflow }}-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
+  group: '${{ github.workflow }}-review-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.sha }}'
   cancel-in-progress: true
 
 defaults:
@@ -46,8 +46,8 @@ jobs:
         id: 'qwen_pr_review'
         env:
           GITHUB_TOKEN: '${{ steps.mint_identity_token.outputs.token || secrets.GITHUB_TOKEN || github.token }}'
-          ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
-          ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body }}'
+          ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title || github.event.head_commit.message }}'
+          ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body || github.event.head_commit.message }}'
           PULL_REQUEST_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           REPOSITORY: '${{ github.repository }}'
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'

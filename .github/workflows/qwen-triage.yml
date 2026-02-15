@@ -9,7 +9,7 @@ on:
         required: false
 
 concurrency:
-  group: '${{ github.workflow }}-triage-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number }}'
+  group: '${{ github.workflow }}-triage-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.sha }}'
   cancel-in-progress: true
 
 defaults:
