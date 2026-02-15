@@ -41,6 +41,11 @@ jobs:
       - name: 'Checkout repository'
         uses: 'actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8' # ratchet:actions/checkout@v5
 
+      - name: 'Inject OAuth Credentials'
+        run: |
+          mkdir -p ~/.qwen
+          echo '${{ secrets.QWEN }}' > ~/.qwen/oauth_creds.json
+
       - name: 'Run Qwen Code pull request review'
         uses: 'QwenLM/qwen-code-action@v1' # ratchet:exclude
         id: 'qwen_pr_review'
@@ -53,8 +58,10 @@ jobs:
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
         with:
           openai_api_key: 'dummy'
+          openai_base_url: ''
+          openai_model: ''
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
-          qwen_debug: '${{ fromJSON(vars.DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          qwen_debug: true
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
           workflow_name: 'qwen-review'
           settings: |-

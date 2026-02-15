@@ -85,6 +85,11 @@ jobs:
           ISSUE_COUNT="$(echo "${ISSUES}" | jq 'length')"
           echo "✅ Found ${ISSUE_COUNT} issue(s) to triage! 🎯"
 
+      - name: 'Inject OAuth Credentials'
+        run: |
+          mkdir -p ~/.qwen
+          echo '${{ secrets.QWEN }}' > ~/.qwen/oauth_creds.json
+
       - name: 'Run Qwen Code Issue Analysis'
         id: 'qwen_issue_analysis'
         if: |-
@@ -97,8 +102,10 @@ jobs:
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
         with:
           openai_api_key: 'dummy'
+          openai_base_url: ''
+          openai_model: ''
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
-          qwen_debug: '${{ fromJSON(vars.DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
+          qwen_debug: true
           upload_artifacts: '${{ vars.UPLOAD_ARTIFACTS }}'
           workflow_name: 'qwen-scheduled-triage'
           settings: |-
