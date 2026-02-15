@@ -27,7 +27,7 @@
 #include <wx/button.h>
 #include <wx/dialog.h>
 
-class FindDialogListBox;
+class VirtualBrushList;
 
 class FindItemDialog : public wxDialog {
 public:
@@ -104,7 +104,7 @@ private:
 	wxCheckBox* floor_change;
 	wxCheckBox* invalid_item;
 
-	FindDialogListBox* items_list;
+	VirtualBrushList* items_list;
 	wxStdDialogButtonSizer* buttons_box_sizer;
 	wxButton* ok_button;
 	wxButton* cancel_button;

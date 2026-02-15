@@ -45,7 +45,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	search_field->SetFocus();
 	sizer->Add(search_field, 0, wxEXPAND);
 
-	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
+	item_list = newd VirtualBrushList(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
 	item_list->SetToolTip("Double click to select.");
 	sizer->Add(item_list, wxSizerFlags(1).Expand().Border());
@@ -83,51 +83,8 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 FindDialog::~FindDialog() = default;
 
 void FindDialog::OnKeyDown(wxKeyEvent& event) {
-	int w, h;
-	item_list->GetSize(&w, &h);
-	size_t amount = 1;
-
-	switch (event.GetKeyCode()) {
-		case WXK_PAGEUP:
-			amount = h / 32 + 1;
-			[[fallthrough]];
-		case WXK_UP: {
-			if (item_list->GetItemCount() > 0) {
-				ssize_t n = item_list->GetSelection();
-				if (n == wxNOT_FOUND) {
-					n = 0;
-				} else if (static_cast<size_t>(n) >= amount) {
-					n -= amount;
-				} else {
-					n = 0;
-				}
-				item_list->SetSelection(n);
-			}
-			break;
-		}
-
-		case WXK_PAGEDOWN:
-			amount = h / 32 + 1;
-			[[fallthrough]];
-		case WXK_DOWN: {
-			if (item_list->GetItemCount() > 0) {
-				ssize_t n = item_list->GetSelection();
-				size_t itemcount = item_list->GetItemCount();
-				if (n == wxNOT_FOUND) {
-					n = 0;
-				} else if (static_cast<uint32_t>(n) < itemcount - amount && itemcount - amount < itemcount) {
-					n += amount;
-				} else {
-					n = item_list->GetItemCount() - 1;
-				}
-
-				item_list->SetSelection(n);
-			}
-			break;
-		}
-		default:
-			event.Skip();
-			break;
+	if (item_list) {
+		item_list->GetEventHandler()->ProcessEvent(event);
 	}
 }
 
@@ -301,81 +258,3 @@ void FindBrushDialog::RefreshContentsInternal() {
 	item_list->Refresh();
 }
 
-// ============================================================================
-// Listbox in find item / brush stuff
-
-FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
-	cleared(false),
-	no_matches(false) {
-	Clear();
-}
-
-FindDialogListBox::~FindDialogListBox() {
-	////
-}
-
-void FindDialogListBox::Clear() {
-	cleared = true;
-	no_matches = false;
-	brushlist.clear();
-	SetItemCount(1);
-}
-
-void FindDialogListBox::SetNoMatches() {
-	cleared = false;
-	no_matches = true;
-	brushlist.clear();
-	SetItemCount(1);
-}
-
-void FindDialogListBox::AddBrush(Brush* brush) {
-	if (cleared || no_matches) {
-		SetItemCount(0);
-	}
-
-	cleared = false;
-	no_matches = false;
-
-	SetItemCount(GetItemCount() + 1);
-	brushlist.push_back(brush);
-}
-
-Brush* FindDialogListBox::GetSelectedBrush() {
-	ssize_t n = GetSelection();
-	if (n == wxNOT_FOUND || no_matches || cleared) {
-		return nullptr;
-	}
-	return brushlist[n];
-}
-
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else {
-		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
-		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
-		}
-
-		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-			}
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
-		}
-
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
-	}
-}
-
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
-}
