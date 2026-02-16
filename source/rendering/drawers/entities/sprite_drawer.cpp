@@ -8,9 +8,6 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"
 
-static int s_blitCount = 0;
-static int s_zeroTextureCount = 0;
-
 SpriteDrawer::SpriteDrawer() :
 	last_bound_texture_(0) {
 }
@@ -20,12 +17,6 @@ SpriteDrawer::~SpriteDrawer() {
 
 void SpriteDrawer::ResetCache() {
 	last_bound_texture_ = 0;
-	// Log stats each frame
-	if (s_blitCount > 0) {
-		spdlog::info("SpriteDrawer: {} sprites drawn, {} zero-texture skipped", s_blitCount, s_zeroTextureCount);
-	}
-	s_blitCount = 0;
-	s_zeroTextureCount = 0;
 }
 
 void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, int red, int green, int blue, int alpha) {
