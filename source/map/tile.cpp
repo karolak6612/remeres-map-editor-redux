@@ -177,6 +177,7 @@ int Tile::size() const {
 }
 
 void Tile::merge(Tile* other) {
+	minimapColor = INVALID_MINIMAP_COLOR;
 	if (other->isPZ()) {
 		setPZ(true);
 	}
@@ -269,6 +270,9 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
+
+	minimapColor = INVALID_MINIMAP_COLOR;
+
 	if (item->isGroundTile()) {
 		ground = std::move(item);
 		return;
@@ -358,6 +362,7 @@ Item* Tile::getTopSelectedItem() {
 }
 
 std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelected) {
+	minimapColor = INVALID_MINIMAP_COLOR;
 	std::vector<std::unique_ptr<Item>> pop_items;
 
 	if (!ignoreTileSelected && !isSelected()) {
@@ -521,6 +526,7 @@ void Tile::addBorderItem(std::unique_ptr<Item> item) {
 		return;
 	}
 	ASSERT(item->isBorder());
+	minimapColor = INVALID_MINIMAP_COLOR;
 	items.insert(items.begin(), std::move(item));
 }
 

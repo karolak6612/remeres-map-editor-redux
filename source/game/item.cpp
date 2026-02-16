@@ -95,14 +95,27 @@ std::unique_ptr<Item> Item::deepCopy() const {
 	return copy;
 }
 
+std::unique_ptr<Item> Item::cloneAs(uint16_t new_id) const {
+	std::unique_ptr<Item> copy = Create(new_id, subtype);
+	if (copy) {
+		copy->selected = selected;
+		if (attributes) {
+			copy->attributes = newd ItemAttributeMap(*attributes);
+		}
+	}
+	return copy;
+}
+
 Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 	if (old_item == nullptr) {
 		return nullptr;
 	}
 
-	old_item->setID(new_id);
-	// Through the magic of deepCopy, this will now be a pointer to an item of the correct type.
-	std::unique_ptr<Item> new_item_ptr = old_item->deepCopy();
+	std::unique_ptr<Item> new_item_ptr = old_item->cloneAs(new_id);
+	if (!new_item_ptr) {
+		return nullptr;
+	}
+
 	Item* new_item = new_item_ptr.get();
 
 	if (parent) {

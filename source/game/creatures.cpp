@@ -353,7 +353,14 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			if (creatureType) {
 				CreatureType* current = (*this)[creatureType->name];
 				if (current) {
+					CreatureBrush* oldBrush = current->brush;
+					bool oldInOtherTileset = current->in_other_tileset;
+
 					*current = *creatureType;
+
+					current->brush = oldBrush;
+					current->in_other_tileset = oldInOtherTileset;
+
 					delete creatureType;
 				} else {
 					creature_map[as_lower_str(creatureType->name)] = creatureType;
@@ -381,7 +388,14 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			CreatureType* current = (*this)[creatureType->name];
 
 			if (current) {
+				CreatureBrush* oldBrush = current->brush;
+				bool oldInOtherTileset = current->in_other_tileset;
+
 				*current = *creatureType;
+
+				current->brush = oldBrush;
+				current->in_other_tileset = oldInOtherTileset;
+
 				delete creatureType;
 			} else {
 				creature_map[as_lower_str(creatureType->name)] = creatureType;

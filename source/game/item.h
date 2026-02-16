@@ -98,6 +98,7 @@ public:
 
 	// Deep copy thingy
 	virtual std::unique_ptr<Item> deepCopy() const;
+	virtual std::unique_ptr<Item> cloneAs(uint16_t new_id) const;
 
 	// Get memory footprint size
 	uint32_t memsize() const;
