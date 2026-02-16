@@ -372,6 +372,9 @@ BinaryNode* BinaryNode::advance() {
 	while (child) {
 		// both functions modify ourselves and sets child to nullptr, so loop will be aborted
 		// possibly change to assignment ?
+		if (file->error_code != FILE_NO_ERROR) {
+			return nullptr;
+		}
 		child->getChild();
 		child->advance();
 	}

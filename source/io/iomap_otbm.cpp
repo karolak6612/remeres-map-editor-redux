@@ -226,6 +226,7 @@ bool IOMapOTBM::loadMapFromOTGZ(Map& map, const FileName& filename) {
 
 	// Load OTBM
 	if (auto otbmBuffer = reader.extractFile("world/map.otbm")) {
+		spdlog::debug("Loading OTBM map from OTGZ archive");
 		if (otbmBuffer->size() < 4) {
 			return false;
 		}
@@ -234,6 +235,7 @@ bool IOMapOTBM::loadMapFromOTGZ(Map& map, const FileName& filename) {
 		MemoryNodeFileReadHandle f(otbmBuffer->data() + 4, otbmBuffer->size() - 4);
 		if (!loadMap(map, f)) {
 			error("Could not load OTBM file inside archive");
+			spdlog::debug("Could not load OTBM file inside archive");
 			return false;
 		}
 	} else {
@@ -272,6 +274,7 @@ bool IOMapOTBM::loadMapFromOTGZ(Map& map, const FileName& filename) {
 }
 
 bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
+	spdlog::debug("Loading OTBM map from disk: {}", filename.GetFullPath().ToStdString());
 	std::ifstream file(nstr(filename.GetFullPath()), std::ios::binary | std::ios::ate);
 	if (!file.is_open()) {
 		std::string err = std::format("Couldn't open file for reading: {}", filename.GetFullPath().ToStdString());
@@ -452,6 +455,7 @@ void IOMapOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
 }
 
 void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode) {
+	spdlog::debug("Starting to read map nodes...");
 	int nodes_loaded = 0;
 
 	for (BinaryNode* mapNode = mapHeaderNode->getChild(); mapNode != nullptr; mapNode = mapNode->advance()) {
@@ -463,6 +467,7 @@ void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHea
 		uint8_t node_type;
 		if (!mapNode->getByte(node_type)) {
 			warning("Invalid map node");
+			spdlog::debug("Invalid map node encountered (failed to read type byte)");
 			continue;
 		}
 		if (node_type == OTBM_TILE_AREA) {
@@ -480,20 +485,24 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 	uint8_t base_z;
 	if (!mapNode->getU16(base_x) || !mapNode->getU16(base_y) || !mapNode->getU8(base_z)) {
 		warning("Invalid map node, no base coordinate");
+		spdlog::debug("Invalid map node (OTBM_TILE_AREA), no base coordinate");
 		return;
 	}
+	spdlog::debug("Reading OTBM_TILE_AREA at base_x={}, base_y={}, base_z={}", base_x, base_y, base_z);
 
 	for (BinaryNode* tileNode = mapNode->getChild(); tileNode != nullptr; tileNode = tileNode->advance()) {
 		Tile* tile = nullptr;
 		uint8_t tile_type;
 		if (!tileNode->getByte(tile_type)) {
 			warning("Invalid tile type");
+			spdlog::debug("Invalid tile type in Tile Area starting at {}, {}, {}. Skipping.", base_x, base_y, base_z);
 			continue;
 		}
 		if (tile_type == OTBM_TILE || tile_type == OTBM_HOUSETILE) {
 			uint8_t x_offset, y_offset;
 			if (!tileNode->getU8(x_offset) || !tileNode->getU8(y_offset)) {
 				warning("Could not read position of tile");
+				spdlog::debug("Could not read position of tile in Tile Area starting at {}, {}, {}. Skipping.", base_x, base_y, base_z);
 				continue;
 			}
 			const Position pos(base_x + x_offset, base_y + y_offset, base_z);
@@ -539,6 +548,7 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 						auto item = ItemSerializationOTBM::createFromStream(*this, tileNode);
 						if (item == nullptr) {
 							warning(wxstr(std::format("Invalid item at tile {}:{}:{}", pos.x, pos.y, pos.z)));
+							spdlog::debug("Invalid item (OTBM_ATTR_ITEM) at tile {}:{}:{}", pos.x, pos.y, pos.z);
 						}
 						tile->addItem(std::move(item));
 						break;
@@ -583,6 +593,7 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 }
 
 void IOMapOTBM::readTowns(Map& map, BinaryNode* mapNode) {
+	spdlog::debug("Reading OTBM_TOWNS...");
 	for (BinaryNode* townNode = mapNode->getChild(); townNode != nullptr; townNode = townNode->advance()) {
 		Town* town = nullptr;
 		uint8_t town_type;
@@ -634,6 +645,7 @@ void IOMapOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 }
 
 void IOMapOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
+	spdlog::debug("Reading OTBM_WAYPOINTS...");
 	for (BinaryNode* waypointNode = mapNode->getChild(); waypointNode != nullptr; waypointNode = waypointNode->advance()) {
 		uint8_t waypoint_type;
 		if (!waypointNode->getByte(waypoint_type)) {
