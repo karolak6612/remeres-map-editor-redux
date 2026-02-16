@@ -71,7 +71,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 
 	// Check if it's a door
 	if (is_door) {
-		if (const Door* door = item->as<DoorBrush>()) {
+		if (const Door* door = item->asDoor()) {
 			if (door->isRealDoor()) {
 				doorId = door->getDoorID();
 			}

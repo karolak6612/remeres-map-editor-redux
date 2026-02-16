@@ -1,0 +1,24 @@
+source/rendering/map_drawer.cpp:			options.current_house_id = brush->as<HouseBrush>()->getHouseID();
+source/rendering/map_drawer.cpp:			options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
+source/rendering/drawers/tiles/tile_renderer.cpp:		if (const Door* door = item->as<DoorBrush>()) {
+source/rendering/drawers/overlays/brush_overlay_drawer.cpp:						raw_brush = brush->as<RAWBrush>();
+source/rendering/drawers/overlays/brush_overlay_drawer.cpp:					raw_brush = brush->as<RAWBrush>();
+source/rendering/drawers/overlays/brush_overlay_drawer.cpp:			CreatureBrush* creature_brush = brush->as<CreatureBrush>();
+source/rendering/drawers/overlays/brush_overlay_drawer.cpp:				raw_brush = brush->as<RAWBrush>();
+source/brushes/managers/doodad_preview_manager.cpp:	DoodadBrush* brush = current_brush->as<DoodadBrush>();
+source/brushes/wall/wall_brush_loader.cpp:						brush->redirect_to = friendBrush->as<WallBrush>();
+source/brushes/brush_utility.cpp:		GroundBrush* newBrush = brush->as<GroundBrush>();
+source/ui/find_item_window.cpp:			result_id = brush->as<RAWBrush>()->getItemID();
+source/editor/operations/draw_operations.cpp:			DoodadBrush* doodad_brush = brush->as<DoodadBrush>();
+source/editor/operations/draw_operations.cpp:		HouseExitBrush* house_exit_brush = brush->as<HouseExitBrush>();
+source/editor/operations/draw_operations.cpp:		WaypointBrush* waypoint_brush = brush->as<WaypointBrush>();
+source/editor/operations/draw_operations.cpp:			brush->as<WallBrush>()->draw(&editor.map, new_tile.get(), &b);
+source/editor/operations/draw_operations.cpp:			brush->as<WallBrush>()->undraw(&editor.map, new_tile.get());
+source/editor/operations/draw_operations.cpp:		DoorBrush* door_brush = brush->as<DoorBrush>();
+source/editor/operations/draw_operations.cpp:					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
+source/editor/persistence/tileset_exporter.cpp:							ItemType& it = g_items[brush_ptr->as<RAWBrush>()->getItemID()];
+source/game/item.cpp:		return item_type.brush->as<GroundBrush>();
+source/game/item.cpp:		return item_type.brush->as<TableBrush>();
+source/game/item.cpp:		return item_type.brush->as<CarpetBrush>();
+source/game/item.cpp:	DoorType door_type = item_type.brush->as<WallBrush>()->getDoorTypeFromID(id);
+source/game/item.cpp:		return item_type.brush->as<WallBrush>();
