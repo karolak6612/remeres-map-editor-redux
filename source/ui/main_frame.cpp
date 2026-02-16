@@ -23,6 +23,8 @@
 #include "ui/map/export_tilesets_window.h"
 #include <wx/stattext.h>
 #include <wx/slider.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 
 #include "game/materials.h"
 #include "map/map.h"
@@ -60,6 +62,25 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	wxStatusBar* statusbar = CreateStatusBar();
 	statusbar->SetFieldsCount(4);
 	SetStatusText(wxString("Welcome to ") << __W_RME_APPLICATION_NAME__ << " " << __W_RME_VERSION__);
+
+	statusbar->Bind(wxEVT_LEFT_DCLICK, [statusbar](wxMouseEvent& event) {
+		wxPoint pt = event.GetPosition();
+		for (int i = 0; i < statusbar->GetFieldsCount(); ++i) {
+			wxRect rect;
+			statusbar->GetFieldRect(i, rect);
+			if (rect.Contains(pt)) {
+				wxString text = statusbar->GetStatusText(i);
+				if (!text.IsEmpty()) {
+					if (wxTheClipboard->Open()) {
+						wxTheClipboard->SetData(new wxTextDataObject(text));
+						wxTheClipboard->Close();
+					}
+				}
+				break;
+			}
+		}
+		event.Skip();
+	});
 
 	// Le sizer
 	g_gui.aui_manager = new wxAuiManager(this);

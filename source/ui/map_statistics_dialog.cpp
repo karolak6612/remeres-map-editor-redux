@@ -14,6 +14,8 @@
 #include "util/image_manager.h"
 
 #include <wx/wx.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 #include <sstream>
 
 extern GUI g_gui;
@@ -97,6 +99,19 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	choicesizer->Add(export_button, wxSizerFlags(1).Center());
 	export_button->SetToolTip("Not implemented yet");
 	export_button->Enable(false);
+
+	wxButton* copyBtn = newd wxButton(dg, wxID_COPY, "Copy to Clipboard");
+	copyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	copyBtn->SetToolTip("Copy statistics to clipboard");
+	std::string statsText = os.str();
+	copyBtn->Bind(wxEVT_BUTTON, [statsText](wxCommandEvent&) {
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(statsText));
+			wxTheClipboard->Close();
+		}
+	});
+	choicesizer->Add(copyBtn, wxSizerFlags(1).Center());
+
 	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	okBtn->SetToolTip("Close this window");

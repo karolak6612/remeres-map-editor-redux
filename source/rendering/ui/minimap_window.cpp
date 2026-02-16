@@ -28,6 +28,11 @@
 #include "rendering/ui/minimap_window.h"
 
 #include "rendering/drawers/minimap_drawer.h"
+#include "util/image_manager.h"
+
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
+#include <wx/menu.h>
 
 #define NANOVG_GL3
 #include <nanovg.h>
@@ -57,6 +62,7 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	drawer = std::make_unique<MinimapDrawer>();
 
 	Bind(wxEVT_LEFT_DOWN, &MinimapWindow::OnMouseClick, this);
+	Bind(wxEVT_RIGHT_DOWN, &MinimapWindow::OnRightClick, this);
 	Bind(wxEVT_SIZE, &MinimapWindow::OnSize, this);
 	Bind(wxEVT_PAINT, &MinimapWindow::OnPaint, this);
 	Bind(wxEVT_ERASE_BACKGROUND, &MinimapWindow::OnEraseBackground, this);
@@ -178,6 +184,30 @@ void MinimapWindow::OnMouseClick(wxMouseEvent& event) {
 	g_gui.SetScreenCenterPosition(Position(new_map_x, new_map_y, g_gui.GetCurrentFloor()));
 	Refresh();
 	g_gui.RefreshView();
+}
+
+void MinimapWindow::OnRightClick(wxMouseEvent& event) {
+	if (!g_gui.IsEditorOpen()) {
+		return;
+	}
+	int new_map_x, new_map_y;
+	drawer->ScreenToMap(event.GetX(), event.GetY(), new_map_x, new_map_y);
+	int floor = g_gui.GetCurrentFloor();
+
+	wxString coords = wxString::Format("%d, %d, %d", new_map_x, new_map_y, floor);
+
+	wxMenu menu;
+	wxMenuItem* item = menu.Append(wxID_COPY, "Copy Coordinates (" + coords + ")");
+	item->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+
+	menu.Bind(wxEVT_MENU, [coords](wxCommandEvent&) {
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(coords));
+			wxTheClipboard->Close();
+		}
+	}, wxID_COPY);
+
+	PopupMenu(&menu);
 }
 
 void MinimapWindow::OnKey(wxKeyEvent& event) {

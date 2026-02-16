@@ -14,6 +14,8 @@
 
 #include <wx/wx.h>
 #include <wx/spinctrl.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 
 extern GUI g_gui;
 
@@ -47,7 +49,22 @@ void LiveDialogs::ShowHostDialog(wxWindow* parent, Editor* editor) {
 	gsizer->Add(port = newd wxSpinCtrl(live_host_dlg, wxID_ANY, "31313", wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 65535, 31313), 0, wxEXPAND);
 
 	gsizer->Add(newd wxStaticText(live_host_dlg, wxID_ANY, "Password:"));
-	gsizer->Add(password = newd wxTextCtrl(live_host_dlg, wxID_ANY), 0, wxEXPAND);
+
+	wxBoxSizer* passSizer = newd wxBoxSizer(wxHORIZONTAL);
+	password = newd wxTextCtrl(live_host_dlg, wxID_ANY);
+	passSizer->Add(password, 1, wxEXPAND);
+
+	wxButton* copyPassBtn = newd wxButton(live_host_dlg, wxID_ANY, "Copy", wxDefaultPosition, wxSize(50, -1));
+	copyPassBtn->SetToolTip("Copy password");
+	copyPassBtn->Bind(wxEVT_BUTTON, [password](wxCommandEvent&) {
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(password->GetValue()));
+			wxTheClipboard->Close();
+		}
+	});
+	passSizer->Add(copyPassBtn, 0, wxLEFT, 5);
+
+	gsizer->Add(passSizer, 0, wxEXPAND);
 
 	top_sizer->Add(gsizer, 0, wxALL, 20);
 

@@ -117,8 +117,15 @@ wxWindow* PropertiesWindow::createGeneralPanel(wxWindow* parent) {
 }
 
 void PropertiesWindow::createGeneralFields(wxFlexGridSizer* gridsizer, wxWindow* panel) {
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "ID " + i2ws(edit_item->getID())));
-	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "\"" + wxstr(edit_item->getName()) + "\""));
+	wxTextCtrl* idField = newd wxTextCtrl(panel, wxID_ANY, "ID " + i2ws(edit_item->getID()), wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxBORDER_NONE);
+	idField->SetBackgroundColour(panel->GetBackgroundColour());
+	idField->SetToolTip("Item ID (selectable)");
+	gridsizer->Add(idField, wxSizerFlags(1).Expand());
+
+	wxTextCtrl* nameField = newd wxTextCtrl(panel, wxID_ANY, "\"" + wxstr(edit_item->getName()) + "\"", wxDefaultPosition, wxDefaultSize, wxTE_READONLY | wxBORDER_NONE);
+	nameField->SetBackgroundColour(panel->GetBackgroundColour());
+	nameField->SetToolTip("Item Name (selectable)");
+	gridsizer->Add(nameField, wxSizerFlags(1).Expand());
 
 	gridsizer->Add(newd wxStaticText(panel, wxID_ANY, (edit_item->isCharged() ? "Charges" : "Count")));
 	int max_count = 100;

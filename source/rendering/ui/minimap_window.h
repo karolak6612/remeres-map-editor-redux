@@ -32,6 +32,7 @@ public:
 	void OnPaint(wxPaintEvent&);
 	void OnEraseBackground(wxEraseEvent&) { }
 	void OnMouseClick(wxMouseEvent&);
+	void OnRightClick(wxMouseEvent&);
 	void OnSize(wxSizeEvent&);
 	void OnClose(wxCloseEvent&);
 

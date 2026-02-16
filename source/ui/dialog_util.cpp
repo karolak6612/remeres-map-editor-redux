@@ -5,6 +5,8 @@
 #include "app/main.h"
 #include "ui/dialog_util.h"
 #include <wx/app.h>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 #include "ui/gui.h"
 #include "util/image_manager.h"
 
@@ -73,6 +75,17 @@ void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content)
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
+	wxButton* copyBtn = newd wxButton(dlg, wxID_COPY, "Copy to Clipboard");
+	copyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	copyBtn->SetToolTip("Copy text to clipboard");
+	copyBtn->Bind(wxEVT_BUTTON, [content](wxCommandEvent&) {
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(content));
+			wxTheClipboard->Close();
+		}
+	});
+	choicesizer->Add(copyBtn, wxSizerFlags(1).Center());
+
 	wxButton* okBtn = newd wxButton(dlg, wxID_CANCEL, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
