@@ -97,7 +97,17 @@ bool Door::isRealDoor() const {
 	const DoorType& dt = getDoorType();
 	// doors with no wallbrush will appear as WALL_UNDEFINED
 	// this is for compatibility
-	return dt == WALL_UNDEFINED || dt == WALL_DOOR_NORMAL || dt == WALL_DOOR_LOCKED || dt == WALL_DOOR_QUEST || dt == WALL_DOOR_MAGIC || dt == WALL_DOOR_NORMAL_ALT;
+	switch (dt) {
+		case WALL_UNDEFINED:
+		case WALL_DOOR_NORMAL:
+		case WALL_DOOR_LOCKED:
+		case WALL_DOOR_QUEST:
+		case WALL_DOOR_MAGIC:
+		case WALL_DOOR_NORMAL_ALT:
+			return true;
+		default:
+			return false;
+	}
 }
 
 DoorType Door::getDoorType() const {

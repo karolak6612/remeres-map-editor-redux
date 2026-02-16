@@ -30,15 +30,12 @@ void EditorPersistence::loadMap(Editor& editor, const FileName& fn) {
 		throw std::runtime_error("Could not open file \"" + nstr(fn.GetFullPath()) + "\".\nThis is not a valid OTBM file or it does not exist.");
 	}
 
-	bool success = true;
 	if (g_version.GetCurrentVersionID() != ver.client) {
 		throw std::runtime_error(std::format("Client version mismatch. Expected {} but got {}", ver.client, g_version.GetCurrentVersionID()));
 	}
 
-	if (success) {
-		ScopedLoadingBar LoadingBar("Loading OTBM map...");
-		success = editor.map.open(nstr(fn.GetFullPath()));
-	}
+	ScopedLoadingBar LoadingBar("Loading OTBM map...");
+	editor.map.open(nstr(fn.GetFullPath()));
 }
 
 void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdialog) {
@@ -46,10 +43,10 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 	bool save_as = false;
 
 	if (savefile.empty()) {
-		savefile = editor.map.getFilename();
-
-		FileName c1(wxstr(savefile));
+		FileName c1(filename);
 		FileName c2(wxstr(editor.map.getFilename()));
+
+		savefile = editor.map.getFilename();
 		save_as = c1 != c2;
 	}
 
@@ -110,7 +107,8 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		std::ofstream f(n.c_str(), std::ios::trunc | std::ios::out);
 		f << backup_otbm << std::endl
 		  << backup_house << std::endl
-		  << backup_spawn << std::endl;
+		  << backup_spawn << std::endl
+		  << backup_waypoint << std::endl;
 	}
 
 	{

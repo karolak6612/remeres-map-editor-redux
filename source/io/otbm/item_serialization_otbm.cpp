@@ -278,7 +278,9 @@ bool ItemSerializationOTBM::serializeItemNode(const IOMap& maphandle, NodeFileWr
 
 	if (auto container = item.asContainer()) {
 		for (const auto& child : container->getVector()) {
-			serializeItemNode(maphandle, f, *child);
+			if (!serializeItemNode(maphandle, f, *child)) {
+				return false;
+			}
 		}
 	}
 	f.endNode();

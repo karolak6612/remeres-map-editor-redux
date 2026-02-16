@@ -10,7 +10,7 @@ class NodeFileWriteHandle;
 class WaypointSerializationOTBM {
 public:
 	static void readWaypoints(Map& map, BinaryNode* mapNode);
-	static bool writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
+	static IOMapOTBM::WriteResult writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
 };
 
 #endif

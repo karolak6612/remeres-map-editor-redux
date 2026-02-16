@@ -76,6 +76,11 @@ bool MapXMLIO::loadSpawns(Map& map, pugi::xml_document& doc) {
 			tile = map.createTile(spawnPosition.x, spawnPosition.y, spawnPosition.z);
 		}
 
+		if (!tile) {
+			spdlog::warn("MapXMLIO: Failed to create tile at {}:{}:{}", spawnPosition.x, spawnPosition.y, spawnPosition.z);
+			continue;
+		}
+
 		tile->spawn = std::make_unique<Spawn>(radius);
 		map.addSpawn(tile);
 
@@ -385,7 +390,6 @@ bool MapXMLIO::saveWaypoints(const Map& map, pugi::xml_document& doc) {
 
 	pugi::xml_node rootNode = doc.append_child("waypoints");
 
-	// FIXED SMELL: Original code iterated over map.houses instead of map.waypoints!
 	for (const auto& [name, waypoint] : map.waypoints) {
 		pugi::xml_node wpNode = rootNode.append_child("waypoint");
 

@@ -35,13 +35,13 @@ void WaypointSerializationOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
 	}
 }
 
-bool WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
-	bool waypointsWarning = false;
+IOMapOTBM::WriteResult WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
+	IOMapOTBM::WriteResult result = IOMapOTBM::WriteResult::Success;
 	const bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
 
 	if (!map.waypoints.waypoints.empty()) {
 		if (!supportWaypoints) {
-			waypointsWarning = true;
+			result = IOMapOTBM::WriteResult::SuccessWithUnsupportedVersion;
 		}
 
 		f.addNode(OTBM_WAYPOINTS);
@@ -56,5 +56,5 @@ bool WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFileWriteHand
 		}
 		f.endNode();
 	}
-	return waypointsWarning;
+	return result;
 }

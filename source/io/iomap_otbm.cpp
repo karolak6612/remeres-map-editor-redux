@@ -27,7 +27,6 @@
 #include <spdlog/spdlog.h>
 
 #include "app/settings.h"
-#include "app/main.h"
 #include "ext/pugixml.hpp"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
@@ -193,10 +192,7 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 	loadAux(&MapXMLIO::loadHouses, "house", map.housefile);
 	loadAux(&MapXMLIO::loadSpawns, "spawn", map.spawnfile);
-
-	if (!MapXMLIO::loadWaypoints(map, filename)) {
-		map.waypointfile = nstr(filename.GetName()) + "-waypoint.xml";
-	}
+	loadAux(&MapXMLIO::loadWaypoints, "waypoint", map.waypointfile);
 
 	return true;
 }
@@ -340,7 +336,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			writeTileData(map, f);
 			writeTowns(map, f);
 
-			if (writeWaypoints(map, f, mapVersion)) {
+			if (writeWaypoints(map, f, mapVersion) == WriteResult::SuccessWithUnsupportedVersion) {
 				DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints were saved, but they are not supported in OTBM 2!\nIf your map fails to load, consider removing all waypoints and saving again.\n\nThis warning can be disabled in file->preferences.", wxOK);
 			}
 		}
@@ -359,7 +355,7 @@ void IOMapOTBM::writeTowns(const Map& map, NodeFileWriteHandle& f) {
 	TownSerializationOTBM::writeTowns(map, f);
 }
 
-bool IOMapOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
+IOMapOTBM::WriteResult IOMapOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
 	return WaypointSerializationOTBM::writeWaypoints(map, f, mapVersion);
 }
 
