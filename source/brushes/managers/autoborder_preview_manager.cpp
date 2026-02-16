@@ -13,6 +13,11 @@
 #include "app/settings.h"
 #include "brushes/brush_utility.h"
 #include "editor/editor.h"
+#include "brushes/door/door_brush.h"
+#include "brushes/wall/wall_brush.h"
+#include "brushes/ground/ground_brush.h"
+#include "brushes/table/table_brush.h"
+#include "brushes/carpet/carpet_brush.h"
 
 AutoborderPreviewManager g_autoborder_preview;
 

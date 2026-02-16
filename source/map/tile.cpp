@@ -93,11 +93,7 @@ bool Tile::isHouseExit() const {
 bool Tile::hasHouseExit(uint32_t exit) const {
 	const HouseExitList* house_exits = getHouseExits();
 	if (house_exits) {
-		for (const auto& current_exit : *house_exits) {
-			if (current_exit == exit) {
-				return true;
-			}
-		}
+		return std::ranges::any_of(*house_exits, [exit](uint32_t current_exit) { return current_exit == exit; });
 	}
 	return false;
 }
@@ -275,14 +271,11 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	}
 
 	uint16_t gid = item->getGroundEquivalent();
+	auto it = items.begin();
+
 	if (gid != 0) {
 		ground = Item::Create(gid);
-	}
-
-	std::vector<std::unique_ptr<Item>>::iterator it;
-
-	if (gid != 0) {
-		it = items.begin();
+		// At the very bottom!
 	} else if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
 		// They are sorted by TopOrder, and come before normal items.
@@ -389,11 +382,11 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		for (const auto& item : items) {
+		std::ranges::for_each(items, [&](const auto& item) {
 			if (item->isSelected()) {
 				selected_items.push_back(item.get());
 			}
-		}
+		});
 	}
 
 	return selected_items;
@@ -477,7 +470,7 @@ void Tile::update() {
 		}
 	}
 
-	for (const auto& i : items) {
+	std::ranges::for_each(items, [&](const auto& i) {
 		if (i->isSelected()) {
 			statflags |= TILESTATE_SELECTED;
 		}
@@ -507,7 +500,7 @@ void Tile::update() {
 		if (it_type.hookEast) {
 			statflags |= TILESTATE_HOOK_EAST;
 		}
-	}
+	});
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {
 		if (ground == nullptr && items.empty()) {

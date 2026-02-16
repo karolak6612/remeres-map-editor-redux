@@ -27,6 +27,7 @@
 #include "brushes/table/table_brush.h"
 #include "brushes/wall/wall_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
+#include "brushes/door/door_brush.h"
 
 DrawingController::DrawingController(MapCanvas* canvas, Editor& editor) :
 	canvas(canvas),

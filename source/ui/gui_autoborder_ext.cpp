@@ -6,6 +6,7 @@
 #include "map/map.h"
 #include "map/position.h"
 #include "brushes/managers/autoborder_preview_manager.h"
+#include "brushes/doodad/doodad_brush.h"
 
 #include "ui/map_tab.h"
 

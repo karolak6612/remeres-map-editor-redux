@@ -43,6 +43,9 @@
 #include "brushes/raw/raw_brush.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
+#include "brushes/door/door_brush.h"
+#include "brushes/flag/flag_brush.h"
+#include "brushes/border/optional_border_brush.h"
 
 #include "brushes/waypoint/waypoint_brush.h"
 
