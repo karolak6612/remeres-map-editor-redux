@@ -232,7 +232,7 @@ bool EditorManager::NewMap() {
 }
 
 void EditorManager::OpenMap() {
-	wxString wildcard = g_settings.getInteger(Config::USE_OTGZ) != 0 ? MAP_LOAD_FILE_WILDCARD_OTGZ : MAP_LOAD_FILE_WILDCARD;
+	wxString wildcard = MAP_LOAD_FILE_WILDCARD;
 	wxFileDialog dialog(g_gui.root, "Open map file", wxEmptyString, wxEmptyString, wildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
 
 	if (dialog.ShowModal() == wxID_OK) {
@@ -248,7 +248,7 @@ void EditorManager::SaveMap() {
 	if (GetCurrentMap().hasFile()) {
 		SaveCurrentMap(FileName(""), true);
 	} else {
-		wxString wildcard = g_settings.getInteger(Config::USE_OTGZ) != 0 ? MAP_SAVE_FILE_WILDCARD_OTGZ : MAP_SAVE_FILE_WILDCARD;
+		wxString wildcard = MAP_SAVE_FILE_WILDCARD;
 		wxFileDialog dialog(g_gui.root, "Save...", wxEmptyString, wxEmptyString, wildcard, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 		if (dialog.ShowModal() == wxID_OK) {
@@ -262,7 +262,7 @@ void EditorManager::SaveMapAs() {
 		return;
 	}
 
-	wxString wildcard = g_settings.getInteger(Config::USE_OTGZ) != 0 ? MAP_SAVE_FILE_WILDCARD_OTGZ : MAP_SAVE_FILE_WILDCARD;
+	wxString wildcard = MAP_SAVE_FILE_WILDCARD;
 	wxFileDialog dialog(g_gui.root, "Save As...", "", "", wildcard, wxFD_SAVE | wxFD_OVERWRITE_PROMPT);
 
 	if (dialog.ShowModal() == wxID_OK) {

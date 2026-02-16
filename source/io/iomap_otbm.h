@@ -91,7 +91,6 @@ public:
 protected:
 	static bool getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver);
 
-	bool loadMapFromOTGZ(Map& map, const FileName& identifier);
 	bool loadMapFromDisk(Map& map, const FileName& identifier);
 
 	bool loadMap(Map& map, NodeFileReadHandle& handle);
@@ -110,7 +109,6 @@ protected:
 	bool loadWaypoints(Map& map, const FileName& dir);
 	bool loadWaypoints(Map& map, pugi::xml_document& doc);
 
-	bool saveMapToOTGZ(Map& map, const FileName& identifier);
 	bool saveMapToDisk(Map& map, const FileName& identifier);
 
 	bool saveMap(Map& map, NodeFileWriteHandle& handle);
@@ -128,7 +126,6 @@ protected:
 	static void serializeTile_OTBM(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& handle);
 
 	friend class HeaderSerializationOTBM;
-	friend class ArchiveSerializationOTBM;
 	friend class TownSerializationOTBM;
 	friend class WaypointSerializationOTBM;
 	friend class TileSerializationOTBM;

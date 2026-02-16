@@ -196,7 +196,7 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 		QueueEvent(newEvent);
 	} else if (id == wxID_OPEN) {
 		// Open file dialog
-		wxString wildcard = g_settings.getInteger(Config::USE_OTGZ) != 0 ? "(*.otbm;*.otgz)|*.otbm;*.otgz" : "(*.otbm)|*.otbm|Compressed OpenTibia Binary Map (*.otgz)|*.otgz";
+		wxString wildcard = "(*.otbm)|*.otbm";
 
 		wxString filePath;
 		{

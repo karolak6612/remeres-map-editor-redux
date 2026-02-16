@@ -64,8 +64,6 @@ public:
 
 	virtual bool unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* node);
 	virtual bool serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	// virtual bool unserializeItemNode_OTMM(const IOMap& maphandle, BinaryNode* node);
-	// virtual bool serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
 protected:
 	std::vector<std::unique_ptr<Item>> contents;

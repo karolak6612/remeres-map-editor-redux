@@ -11,7 +11,7 @@
 |------|---------------|
 | Map rendering | `rendering/map_drawer.cpp`, `rendering/core/graphics.cpp` |
 | Add brush type | `brushes/brush.h` (base), `brushes/[type]/` directories |
-| File I/O | `io/iomap_otbm.cpp`, `io/iomap_otmm.cpp` |
+| File I/O | `io/iomap_otbm.cpp` |
 | Client data loading | `io/loaders/dat_loader.cpp`, `io/loaders/spr_loader.cpp` |
 | Networking/Live | `live/live_*.cpp`, `net/net_connection.cpp` |
 | UI windows/dialogs | `ui/dialogs/`, `ui/properties/`, `ui/map/` |
@@ -50,7 +50,7 @@
 │  item.cpp, creature.cpp, house.cpp, spawn.cpp, town.cpp, materials.cpp   │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                         I/O Layer                                        │
-│  iomap_otbm.cpp | iomap_otmm.cpp | filehandle.cpp | loaders/*            │
+│  iomap_otbm.cpp | filehandle.cpp | loaders/*            │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -181,7 +181,6 @@ class Item {
 | Format | Files | Description |
 |--------|-------|-------------|
 | OTBM | `io/iomap_otbm.*` | Binary map format (primary) |
-| OTMM | `io/iomap_otmm.*` | Alternative format |
 
 ### Client Data Loaders
 | Loader | Purpose |
@@ -254,6 +253,5 @@ Separate OpenGL window showing game-accurate rendering:
 | GLM | Math library | Transforms, vectors |
 | Boost.Asio | Networking | Live editing |
 | nlohmann_json | JSON parsing | Config files |
-| libarchive | Archive handling | OTGZ loading |
 | pugixml | XML parsing | Materials/configs |
 | spdlog | Logging | Application logging |

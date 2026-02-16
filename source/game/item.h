@@ -21,7 +21,6 @@
 #include "game/items.h"
 #include <string_view>
 #include "io/iomap_otbm.h"
-// #include "io/iomap_otmm.h"
 #include "game/item_attributes.h"
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/raw/raw_brush.h"
@@ -88,7 +87,6 @@ public:
 	static std::unique_ptr<Item> Create(uint16_t _type, uint16_t _subtype = 0xFFFF);
 	static std::unique_ptr<Item> Create(pugi::xml_node);
 	static std::unique_ptr<Item> Create_OTBM(const IOMap& maphandle, BinaryNode* stream);
-	// static std::unique_ptr<Item> Create_OTMM(const IOMap& maphandle, BinaryNode* stream);
 
 public:
 	// Constructor for items
@@ -150,21 +148,6 @@ public:
 	// Will write this item to the stream supplied in the argument
 	virtual void serializeItemCompact_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-
-	// OTMM map interface
-	/*
-	// Serialize and unserialize (for save/load)
-	// Used internally
-	virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* stream);
-	virtual bool unserializeAttributes_OTMM(const IOMap& maphandle, BinaryNode* stream);
-	virtual bool unserializeItemNode_OTMM(const IOMap& maphandle, BinaryNode* node);
-
-	// Will return a node containing this item
-	virtual bool serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	// Will write this item to the stream supplied in the argument
-	virtual void serializeItemCompact_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	*/
 
 	// Static conversions
 	static std::string LiquidID2Name(uint16_t id);

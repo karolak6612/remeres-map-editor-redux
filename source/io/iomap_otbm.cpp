@@ -18,8 +18,6 @@
 #include "app/main.h"
 
 #include <wx/wfstream.h>
-#include <wx/tarstrm.h>
-#include <wx/zstream.h>
 #include <wx/mstream.h>
 #include <wx/datstrm.h>
 
@@ -43,13 +41,11 @@
 #include "brushes/wall/wall_brush.h"
 
 #include "io/iomap_otbm.h"
-#include "io/archive_io.h"
 #include "io/map_xml_io.h"
 #include "io/otbm/item_serialization_otbm.h"
 
 // New specialized serialization classes
 #include "io/otbm/header_serialization_otbm.h"
-#include "io/otbm/archive_serialization_otbm.h"
 #include "io/otbm/town_serialization_otbm.h"
 #include "io/otbm/waypoint_serialization_otbm.h"
 #include "io/otbm/tile_serialization_otbm.h"
@@ -129,22 +125,6 @@ void Podium::serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteH
 /* Entry level calls */
 
 bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver) {
-#ifdef OTGZ_SUPPORT
-	if (filename.GetExt() == "otgz") {
-		ArchiveReader reader;
-		if (!reader.open(nstr(filename.GetFullPath()))) {
-			return false;
-		}
-
-		auto otbmBuffer = reader.extractFile("world/map.otbm");
-		if (!otbmBuffer || otbmBuffer->size() < 4) {
-			return false;
-		}
-
-		auto f = std::make_unique<MemoryNodeFileReadHandle>(otbmBuffer->data() + 4, otbmBuffer->size() - 4);
-		return getVersionInfo(f.get(), out_ver);
-	}
-#endif
 
 	DiskNodeFileReadHandle f(nstr(filename.GetFullPath()), StringVector(1, "OTBM"));
 	if (!f.isOk()) {
@@ -155,10 +135,6 @@ bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver) {
 
 bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 	return HeaderSerializationOTBM::getVersionInfo(f, out_ver);
-}
-
-bool IOMapOTBM::loadMapFromOTGZ(Map& map, const FileName& filename) {
-	return ArchiveSerializationOTBM::loadMapFromOTGZ(*this, map, filename);
 }
 
 bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
@@ -224,11 +200,6 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 }
 
 bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {
-#ifdef OTGZ_SUPPORT
-	if (filename.GetExt() == "otgz") {
-		return loadMapFromOTGZ(map, filename);
-	}
-#endif
 	return loadMapFromDisk(map, filename);
 }
 
@@ -341,10 +312,6 @@ bool IOMapOTBM::saveWaypoints(Map& map, pugi::xml_document& doc) {
 	return MapXMLIO::saveWaypoints(map, doc);
 }
 
-bool IOMapOTBM::saveMapToOTGZ(Map& map, const FileName& identifier) {
-	return ArchiveSerializationOTBM::saveMapToOTGZ(*this, map, identifier);
-}
-
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	DiskNodeFileWriteHandle f(
 		nstr(identifier.GetFullPath()),
@@ -370,11 +337,6 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 }
 
 bool IOMapOTBM::saveMap(Map& map, const FileName& identifier) {
-#ifdef OTGZ_SUPPORT
-	if (identifier.GetExt() == "otgz") {
-		return saveMapToOTGZ(map, identifier);
-	}
-#endif
 	return saveMapToDisk(map, identifier);
 }
 
