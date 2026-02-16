@@ -49,27 +49,33 @@ void Selection::recalculateBounds() const {
 		return;
 	}
 
-	Position minPos(0x10000, 0x10000, 0x10);
-	Position maxPos(0, 0, 0);
-
 	if (tiles.empty()) {
-		minPos = Position(0, 0, 0);
-		maxPos = Position(0, 0, 0);
-	} else {
-		std::ranges::for_each(tiles, [&](Tile* tile) {
-			const Position& pos = tile->getPosition();
-			minPos.x = std::min(minPos.x, pos.x);
-			minPos.y = std::min(minPos.y, pos.y);
-			minPos.z = std::min(minPos.z, pos.z);
-
-			maxPos.x = std::max(maxPos.x, pos.x);
-			maxPos.y = std::max(maxPos.y, pos.y);
-			maxPos.z = std::max(maxPos.z, pos.z);
-		});
+		cached_min = Position(0, 0, 0);
+		cached_max = Position(0, 0, 0);
+		bounds_dirty = false;
+		return;
 	}
 
-	cached_min = minPos;
-	cached_max = maxPos;
+	// Tiles are sorted by Z, then Y, then X.
+	// So min Z is first, max Z is last.
+	const int min_z = tiles.front()->getZ();
+	const int max_z = tiles.back()->getZ();
+
+	int min_x = 65535;
+	int max_x = 0;
+	int min_y = 65535;
+	int max_y = 0;
+
+	for (const Tile* tile : tiles) {
+		const Position pos = tile->getPosition();
+		if (pos.x < min_x) min_x = pos.x;
+		if (pos.x > max_x) max_x = pos.x;
+		if (pos.y < min_y) min_y = pos.y;
+		if (pos.y > max_y) max_y = pos.y;
+	}
+
+	cached_min = Position(min_x, min_y, min_z);
+	cached_max = Position(max_x, max_y, max_z);
 	bounds_dirty = false;
 }
 

@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <numeric>
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
@@ -137,9 +138,9 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	for (const auto& i : items) {
-		mem += i->memsize();
-	}
+	mem += std::accumulate(items.begin(), items.end(), 0, [](uint32_t sum, const auto& i) {
+		return sum + i->memsize();
+	});
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
 
@@ -643,7 +644,7 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }

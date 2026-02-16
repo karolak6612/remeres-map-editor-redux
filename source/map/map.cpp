@@ -129,15 +129,17 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 		g_gui.CreateLoadBar("Converting map ...");
 	}
 
+	// Pre-calculate lookups for efficient removal check
 	std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>> mtm_lookups;
+	mtm_lookups.reserve(rm.mtm.size());
 	for (const auto& entry : rm.mtm) {
 		mtm_lookups.emplace(&entry.first, std::unordered_set<uint16_t>(entry.first.begin(), entry.first.end()));
 	}
 
 	uint64_t tiles_done = 0;
 	std::vector<uint16_t> id_list;
-
-	// std::ofstream conversions("converted_items.txt");
+	// Reserve enough space to avoid reallocations for most tiles
+	id_list.reserve(64);
 
 	for (auto& tile_loc : tiles()) {
 		Tile* tile = tile_loc.get();
@@ -149,8 +151,6 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 		// id_list try MTM conversion
 		id_list.clear();
-		id_list.reserve(tile->items.size() + 1);
-
 		if (tile->ground) {
 			id_list.push_back(tile->ground->getID());
 		}
@@ -160,10 +160,11 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
-		std::sort(id_list.begin(), id_list.end());
+		std::ranges::sort(id_list);
 
 		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
 
+		// Find the longest matching prefix
 		while (!id_list.empty()) {
 			cfmtm = rm.mtm.find(id_list);
 			if (cfmtm != rm.mtm.end()) {
@@ -183,10 +184,14 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				tile->ground.reset();
 			}
 
+			// Use erase_if with a predicate logic, but since we need stable partition equivalent for existing items:
+			// Actually std::erase_if for vector in C++20 is:
+			// std::erase_if(c, pred);
+			// But here we used stable_partition + erase.
+			// Let's stick to stable_partition to preserve order of non-removed items (important for rendering)
 			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](const std::unique_ptr<Item>& item) {
 				return !ids_to_remove.contains(item->getID());
 			});
-
 			tile->items.erase(part_iter, tile->items.end());
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
@@ -201,18 +206,16 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
+		// STM for Ground
 		if (tile->ground) {
-			ConversionMap::STM::const_iterator cfstm = rm.stm.find(tile->ground->getID());
-			if (cfstm != rm.stm.end()) {
+			if (auto cfstm = rm.stm.find(tile->ground->getID()); cfstm != rm.stm.end()) {
 				uint16_t aid = tile->ground->getActionID();
 				uint16_t uid = tile->ground->getUniqueID();
 				tile->ground.reset();
 
 				const std::vector<uint16_t>& v = cfstm->second;
-				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
 				for (uint16_t new_id : v) {
 					std::unique_ptr<Item> item = Item::Create(new_id);
-					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
 						item->setUniqueID(uid);
@@ -222,22 +225,19 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 						++inserted_items;
 					}
 				}
-				// conversions << std::endl;
 			}
 		}
 
+		// STM for Items
+		// We can't easily use range-based for loop here because we modify the vector (erase/insert)
+		// and need to control the iterator.
 		for (auto replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
 			uint16_t id = (*replace_item_iter)->getID();
-			ConversionMap::STM::const_iterator cf = rm.stm.find(id);
-			if (cf != rm.stm.end()) {
-				// uint16_t aid = (*replace_item_iter)->getActionID();
-				// uint16_t uid = (*replace_item_iter)->getUniqueID();
-
+			if (auto cf = rm.stm.find(id); cf != rm.stm.end()) {
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
 				for (uint16_t new_id : v) {
 					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_id));
-					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}
 			} else {
