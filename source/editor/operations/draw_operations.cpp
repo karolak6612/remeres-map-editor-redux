@@ -414,7 +414,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				Tile* tile = location->get();
 				if (tile) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-					TileOperations::cleanWalls(new_tile.get(), brush->is<WallBrush>());
+					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 					g_gui.GetCurrentBrush()->draw(draw_map, new_tile.get());
 					draw_map->setTile(*it, std::move(new_tile));
 				} else if (dodraw) {
@@ -441,7 +441,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				if (tile) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 					// Wall cleaning is exempt from automagic
-					TileOperations::cleanWalls(new_tile.get(), brush->is<WallBrush>());
+					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 					if (dodraw) {
 						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get());
 					} else {
