@@ -24,6 +24,8 @@
 #include <wx/wx.h>
 #include "game/items.h"
 #include "game/sprites.h"
+#include "game/item.h"
+#include "game/complexitem.h"
 #include "ui/gui.h"
 
 TooltipDrawer::TooltipDrawer() {
@@ -43,6 +45,19 @@ TooltipDrawer::~TooltipDrawer() {
 
 void TooltipDrawer::clear() {
 	active_count = 0;
+	current_frame++;
+	if (current_frame % 60 == 0) {
+		garbageCollect();
+	}
+}
+
+void TooltipDrawer::garbageCollect() {
+	if (current_frame < 120) return;
+	uint64_t threshold = current_frame - 120;
+
+	std::erase_if(itemCache, [threshold](const auto& pair) {
+		return pair.second.last_frame_seen < threshold;
+	});
 }
 
 TooltipData& TooltipDrawer::requestTooltipData() {
@@ -74,6 +89,177 @@ void TooltipDrawer::addItemTooltip(TooltipData&& data) {
 	TooltipData& dest = requestTooltipData();
 	dest = std::move(data);
 	commitTooltip();
+}
+
+void TooltipDrawer::addItemTooltip(const Item* item, const Position& pos, bool isHouseTile, float zoom) {
+	if (!item) {
+		return;
+	}
+
+	bool currentDetailedContainer = (zoom <= 1.5f);
+
+	// Try cache first
+	auto it = itemCache.find(item);
+	if (it != itemCache.end()) {
+		// Cache hit
+		CachedTooltipEntry& entry = it->second;
+
+		// Validation
+		bool valid = true;
+		if (entry.itemId != item->getID()) valid = false;
+		else if (entry.actionId != item->getActionID()) valid = false;
+		else if (entry.uniqueId != item->getUniqueID()) valid = false;
+		else if (entry.text != item->getText()) valid = false;
+		else if (entry.description != item->getDescription()) valid = false;
+		else if (entry.isHouseTile != isHouseTile) valid = false;
+		else if (entry.detailedContainer != currentDetailedContainer) valid = false;
+		else if (!entry.containerItems.empty()) {
+			if (const Container* c = item->asContainer()) {
+				// Heuristic: check if item count matches cached count (capped at 32)
+				if (entry.containerItems.size() != std::min((size_t)32, c->getItemCount())) valid = false;
+			} else {
+				valid = false; // Was container, now not?
+			}
+		}
+
+		if (valid) {
+			entry.last_frame_seen = current_frame;
+
+			TooltipData& dest = requestTooltipData();
+			dest.pos = pos;
+			dest.category = entry.category;
+			dest.itemId = entry.itemId;
+			dest.actionId = entry.actionId;
+			dest.uniqueId = entry.uniqueId;
+			dest.doorId = entry.doorId;
+			dest.destination = entry.destination;
+			dest.containerCapacity = entry.containerCapacity;
+
+			// Point string_views to cached strings
+			dest.itemName = entry.itemName;
+			dest.text = entry.text;
+			dest.description = entry.description;
+			dest.waypointName = entry.waypointName;
+
+			// Copy container items (vector copy)
+			if (!entry.containerItems.empty()) {
+				dest.containerItems = entry.containerItems;
+			}
+
+			commitTooltip();
+			return;
+		}
+	}
+
+	// Cache miss - Generate Data
+	const uint16_t id = item->getID();
+	if (id < 100) {
+		return;
+	}
+
+	bool is_complex = item->isComplex();
+	// Early exit for simple items
+	if (!is_complex && !g_items[id].isTooltipable()) {
+		return;
+	}
+
+	bool is_container = g_items[id].isContainer();
+	bool is_door = isHouseTile && item->isDoor();
+	bool is_teleport = item->isTeleport();
+
+	CachedTooltipEntry entry;
+	entry.last_frame_seen = current_frame;
+	entry.itemId = id;
+	entry.isHouseTile = isHouseTile;
+	entry.detailedContainer = currentDetailedContainer;
+
+	if (is_complex) {
+		entry.uniqueId = item->getUniqueID();
+		entry.actionId = item->getActionID();
+		entry.text = item->getText();
+		entry.description = item->getDescription();
+	}
+
+	// Check if it's a door
+	if (is_door) {
+		if (const Door* door = item->asDoor()) {
+			if (door->isRealDoor()) {
+				entry.doorId = door->getDoorID();
+			}
+		}
+	}
+
+	// Check if it's a teleport
+	if (is_teleport) {
+		if (const Teleport* tp = item->asTeleport()) {
+			if (tp->hasDestination()) {
+				entry.destination = tp->getDestination();
+			}
+		}
+	}
+
+	// Check if container has content
+	bool hasContent = false;
+	if (is_container) {
+		if (const Container* container = item->asContainer()) {
+			hasContent = container->getItemCount() > 0;
+
+			// Populate container items
+			if (zoom <= 1.5f) {
+				entry.containerCapacity = static_cast<uint8_t>(container->getVolume());
+
+				const auto& items = container->getVector();
+				entry.containerItems.reserve(std::min((size_t)32, items.size()));
+				for (const auto& subItem : items) {
+					if (subItem) {
+						ContainerItem ci;
+						ci.id = subItem->getID();
+						ci.subtype = subItem->getSubtype();
+						ci.count = subItem->getCount();
+						if (ci.count == 0) ci.count = 1;
+
+						entry.containerItems.push_back(ci);
+
+						if (entry.containerItems.size() >= 32) {
+							break;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Only cache and show if there's something to show
+	if (entry.uniqueId == 0 && entry.actionId == 0 && entry.doorId == 0 && entry.text.empty() && entry.description.empty() && entry.destination.x == 0 && !hasContent) {
+		return;
+	}
+
+	// Get item name
+	std::string_view nameView = g_items[id].name;
+	if (nameView.empty()) {
+		entry.itemName = "Item";
+	} else {
+		entry.itemName = std::string(nameView);
+	}
+
+	// Determine category (logic ported from TooltipData::updateCategory)
+	if (entry.destination.x > 0) {
+		entry.category = TooltipCategory::TELEPORT;
+	} else if (entry.doorId > 0) {
+		entry.category = TooltipCategory::DOOR;
+	} else if (!entry.text.empty()) {
+		entry.category = TooltipCategory::TEXT;
+	} else {
+		entry.category = TooltipCategory::ITEM;
+	}
+
+	// Emplace into cache
+	auto [inserted_it, success] = itemCache.emplace(item, std::move(entry));
+
+	// Recursively call with cached data
+	if (success) {
+		addItemTooltip(item, pos, isHouseTile, zoom);
+	}
 }
 
 void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name) {

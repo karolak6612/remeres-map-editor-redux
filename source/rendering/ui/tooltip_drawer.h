@@ -47,6 +47,31 @@ enum class TooltipCategory {
 	TEXT // Gold - readable text (signs, books)
 };
 
+// Cached tooltip entry to avoid regenerating data every frame
+struct CachedTooltipEntry {
+	uint64_t last_frame_seen = 0;
+	TooltipCategory category = TooltipCategory::ITEM;
+
+	// Context validation
+	bool detailedContainer = false;
+	bool isHouseTile = false;
+
+	// Data fields
+	uint16_t itemId = 0;
+	uint16_t actionId = 0;
+	uint16_t uniqueId = 0;
+	uint8_t doorId = 0;
+	Position destination;
+
+	std::string itemName;
+	std::string text;
+	std::string description;
+	std::string waypointName;
+
+	std::vector<ContainerItem> containerItems;
+	uint8_t containerCapacity = 0;
+};
+
 // Semantic color palette for tooltip rendering
 namespace TooltipColors {
 	// Header colors by category (RGB)
@@ -152,6 +177,9 @@ public:
 	void addItemTooltip(const TooltipData& data);
 	void addItemTooltip(TooltipData&& data);
 
+	// Add a tooltip for an item (cached)
+	void addItemTooltip(const Item* item, const Position& pos, bool isHouseTile, float zoom);
+
 	// Request a tooltip object from the pool. Call commitTooltip() to finalize.
 	TooltipData& requestTooltipData();
 	void commitTooltip();
@@ -164,6 +192,9 @@ public:
 
 	// Clear all tooltips
 	void clear();
+
+	// Remove stale cache entries
+	void garbageCollect();
 
 protected:
 	struct FieldLine {
@@ -178,6 +209,10 @@ protected:
 
 	std::vector<TooltipData> tooltips;
 	size_t active_count = 0;
+
+	// Item cache
+	std::unordered_map<const Item*, CachedTooltipEntry> itemCache;
+	uint64_t current_frame = 0;
 
 	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
 	NVGcontext* lastContext = nullptr;
