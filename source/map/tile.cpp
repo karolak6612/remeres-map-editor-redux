@@ -93,11 +93,7 @@ bool Tile::isHouseExit() const {
 bool Tile::hasHouseExit(uint32_t exit) const {
 	const HouseExitList* house_exits = getHouseExits();
 	if (house_exits) {
-		for (const auto& current_exit : *house_exits) {
-			if (current_exit == exit) {
-				return true;
-			}
-		}
+		return std::ranges::any_of(*house_exits, [exit](uint32_t current_exit) { return current_exit == exit; });
 	}
 	return false;
 }
@@ -274,13 +270,12 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		return;
 	}
 
-	std::vector<std::unique_ptr<Item>>::iterator it;
-
 	uint16_t gid = item->getGroundEquivalent();
+	auto it = items.begin();
+
 	if (gid != 0) {
 		ground = Item::Create(gid);
 		// At the very bottom!
-		it = items.begin();
 	} else if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
 		// They are sorted by TopOrder, and come before normal items.
@@ -288,8 +283,6 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 			if (!i->isAlwaysOnBottom()) {
 				return true; // Found a normal item, insert before it
 			}
-			// find_if will stop at the first non-bottom item, which is equivalent to the original
-			// manually written loop and ensures efficient insertion even with large item counts.
 			return item->getTopOrder() < i->getTopOrder(); // Found a bottom item with higher order
 		});
 	} else {
@@ -389,11 +382,11 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		for (const auto& item : items) {
+		std::ranges::for_each(items, [&](const auto& item) {
 			if (item->isSelected()) {
 				selected_items.push_back(item.get());
 			}
-		}
+		});
 	}
 
 	return selected_items;
@@ -477,7 +470,7 @@ void Tile::update() {
 		}
 	}
 
-	for (const auto& i : items) {
+	std::ranges::for_each(items, [&](const auto& i) {
 		if (i->isSelected()) {
 			statflags |= TILESTATE_SELECTED;
 		}
@@ -507,7 +500,7 @@ void Tile::update() {
 		if (it_type.hookEast) {
 			statflags |= TILESTATE_HOOK_EAST;
 		}
-	}
+	});
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {
 		if (ground == nullptr && items.empty()) {
@@ -628,10 +621,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	auto it = std::find(house_exits->begin(), house_exits->end(), h->getID());
-	if (it != house_exits->end()) {
-		house_exits->erase(it);
-	}
+	std::erase(*house_exits, h->getID());
 }
 
 bool Tile::isContentEqual(const Tile* other) const {

@@ -30,12 +30,6 @@ public:
 	WaypointBrush();
 	~WaypointBrush() override;
 
-	bool isWaypoint() const override {
-		return true;
-	}
-	WaypointBrush* asWaypoint() override {
-		return static_cast<WaypointBrush*>(this);
-	}
 
 	// Not used
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override {

@@ -28,12 +28,6 @@ public:
 	SpawnBrush(); // Create a RAWBrush of the specified type
 	~SpawnBrush() override;
 
-	bool isSpawn() const override {
-		return true;
-	}
-	SpawnBrush* asSpawn() override {
-		return static_cast<SpawnBrush*>(this);
-	}
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
 	void draw(BaseMap* map, Tile* tile, void* parameter) override; // parameter is brush size

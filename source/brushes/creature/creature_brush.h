@@ -30,12 +30,6 @@ public:
 	CreatureBrush(CreatureType* type); // Create a RAWBrush of the specified type
 	~CreatureBrush() override;
 
-	bool isCreature() const override {
-		return true;
-	}
-	CreatureBrush* asCreature() override {
-		return static_cast<CreatureBrush*>(this);
-	}
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;

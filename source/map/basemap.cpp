@@ -30,16 +30,18 @@ BaseMap::BaseMap() :
 
 void BaseMap::clear(bool del) {
 	PositionVector pos_vec;
-	for (MapIterator map_iter = begin(); map_iter != end(); ++map_iter) {
-		Tile* t = map_iter->get();
-		pos_vec.push_back(t->getPosition());
-	}
-	for (const auto& pos : pos_vec) {
+	pos_vec.reserve(size());
+	std::ranges::for_each(tiles(), [&](auto& loc) {
+		if (Tile* t = loc.get()) {
+			pos_vec.push_back(t->getPosition());
+		}
+	});
+	std::ranges::for_each(pos_vec, [&](const auto& pos) {
 		std::unique_ptr<Tile> t = setTile(pos, nullptr);
 		if (!del) {
 			t.release();
 		}
-	}
+	});
 }
 
 void BaseMap::clearVisible(uint32_t mask) {

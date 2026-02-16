@@ -6,6 +6,7 @@
 #include "game/items.h"
 #include "game/item.h"
 #include "brushes/brush.h"
+#include "brushes/raw/raw_brush.h"
 #include "brushes/ground/ground_brush.h"
 #include "brushes/wall/wall_brush.h"
 #include "brushes/doodad/doodad_brush.h"
@@ -147,7 +148,7 @@ void LibraryPanel::PopulateBrushGrid() {
 
 	for (const auto& pair : g_brushes.getMap()) {
 		Brush* brush = pair.second.get();
-		if (!brush || brush->isEraser() || brush->isRaw()) {
+		if (!brush || brush->is<EraserBrush>() || brush->is<RAWBrush>()) {
 			continue;
 		}
 

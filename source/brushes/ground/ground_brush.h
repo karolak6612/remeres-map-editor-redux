@@ -35,12 +35,6 @@ public:
 	GroundBrush();
 	~GroundBrush() override;
 
-	bool isGround() const override {
-		return true;
-	}
-	GroundBrush* asGround() override {
-		return static_cast<GroundBrush*>(this);
-	}
 
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 

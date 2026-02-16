@@ -11,6 +11,7 @@
 #include "brushes/brush.h"
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/ground/ground_brush.h"
+#include "brushes/border/optional_border_brush.h"
 #include "brushes/house/house_exit_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "brushes/wall/wall_brush.h"
@@ -31,7 +32,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		return;
 	}
 
-	if (brush->isDoodad()) {
+	if (brush->is<DoodadBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 		BaseMap* buffer_map = g_doodad_preview.GetBufferMap();
@@ -48,7 +49,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 
 			TileLocation* location = editor.map.createTileL(pos);
 			Tile* tile = location->get();
-			DoodadBrush* doodad_brush = brush->asDoodad();
+			DoodadBrush* doodad_brush = brush->as<DoodadBrush>();
 
 			if (doodad_brush->placeOnBlocking() || alt) {
 				if (tile) {
@@ -117,8 +118,8 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 			batch->addAndCommitAction(std::move(action));
 		}
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->isHouseExit()) {
-		HouseExitBrush* house_exit_brush = brush->asHouseExit();
+	} else if (brush->is<HouseExitBrush>()) {
+		HouseExitBrush* house_exit_brush = brush->as<HouseExitBrush>();
 		if (!house_exit_brush->canDraw(&editor.map, offset)) {
 			return;
 		}
@@ -133,8 +134,8 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		action->addChange(std::unique_ptr<Change>(Change::Create(house, offset)));
 		batch->addAndCommitAction(std::move(action));
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->isWaypoint()) {
-		WaypointBrush* waypoint_brush = brush->asWaypoint();
+	} else if (brush->is<WaypointBrush>()) {
+		WaypointBrush* waypoint_brush = brush->as<WaypointBrush>();
 		if (!waypoint_brush->canDraw(&editor.map, offset)) {
 			return;
 		}
@@ -149,7 +150,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		action->addChange(std::unique_ptr<Change>(Change::Create(waypoint, offset)));
 		batch->addAndCommitAction(std::move(action));
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->isWall()) {
+	} else if (brush->is<WallBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 		// This will only occur with a size 0, when clicking on a tile (not drawing)
@@ -163,14 +164,14 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 
 		if (dodraw) {
 			bool b = true;
-			brush->asWall()->draw(&editor.map, new_tile.get(), &b);
+			brush->as<WallBrush>()->draw(&editor.map, new_tile.get(), &b);
 		} else {
-			brush->asWall()->undraw(&editor.map, new_tile.get());
+			brush->as<WallBrush>()->undraw(&editor.map, new_tile.get());
 		}
 		action->addChange(std::make_unique<Change>(new_tile.release()));
 		batch->addAndCommitAction(std::move(action));
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->isSpawn() || brush->isCreature()) {
+	} else if (brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
@@ -182,7 +183,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 			new_tile = editor.map.allocator(editor.map.createTileL(offset));
 		}
 		int param;
-		if (!brush->isCreature()) {
+		if (!brush->is<CreatureBrush>()) {
 			param = g_gui.GetBrushSize();
 		}
 		if (dodraw) {
@@ -203,7 +204,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, boo
 	}
 
 #ifdef __DEBUG__
-	if (brush->isGround() || brush->isWall()) {
+	if (brush->is<GroundBrush>() || brush->is<WallBrush>()) {
 		// Wrong function, end call
 		return;
 	}
@@ -211,7 +212,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, boo
 
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DRAW);
 
-	if (brush->isOptionalBorder()) {
+	if (brush->is<OptionalBorderBrush>()) {
 		// We actually need to do borders, but on the same tiles we draw to
 		for (PositionVector::const_iterator it = tilestodraw.begin(); it != tilestodraw.end(); ++it) {
 			TileLocation* location = editor.map.createTileL(*it);
@@ -267,7 +268,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 		return;
 	}
 
-	if (brush->isGround() || brush->isEraser()) {
+	if (brush->is<GroundBrush>() || brush->is<EraserBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
@@ -280,7 +281,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 					TileOperations::cleanBorders(new_tile.get());
 				}
 				if (dodraw) {
-					if (brush->isGround() && alt) {
+					if (brush->is<GroundBrush>() && alt) {
 						std::pair<bool, GroundBrush*> param;
 						if (editor.replace_brush) {
 							param.first = false;
@@ -300,7 +301,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				action->addChange(std::make_unique<Change>(new_tile.release()));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				if (brush->isGround() && alt) {
+				if (brush->is<GroundBrush>() && alt) {
 					std::pair<bool, GroundBrush*> param;
 					if (editor.replace_brush) {
 						param.first = false;
@@ -328,7 +329,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				Tile* tile = location->get();
 				if (tile) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-					if (brush->isEraser()) {
+					if (brush->is<EraserBrush>()) {
 						TileOperations::wallize(new_tile.get(), &editor.map);
 						TileOperations::tableize(new_tile.get(), &editor.map);
 						TileOperations::carpetize(new_tile.get(), &editor.map);
@@ -337,7 +338,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 					action->addChange(std::make_unique<Change>(new_tile.release()));
 				} else {
 					std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-					if (brush->isEraser()) {
+					if (brush->is<EraserBrush>()) {
 						// There are no carpets/tables/walls on empty tiles...
 						// new_tile->wallize(map);
 						// new_tile->tableize(map);
@@ -353,7 +354,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 		}
 
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->isTable() || brush->isCarpet()) {
+	} else if (brush->is<TableBrush>() || brush->is<CarpetBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
@@ -382,13 +383,13 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 		action = editor.actionQueue->createAction(batch.get());
 		for (PositionVector::const_iterator it = tilestoborder.begin(); it != tilestoborder.end(); ++it) {
 			Tile* tile = editor.map.getTile(*it);
-			if (brush->isTable()) {
+			if (brush->is<TableBrush>()) {
 				if (tile && tile->hasTable()) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 					TileOperations::tableize(new_tile.get(), &editor.map);
 					action->addChange(std::make_unique<Change>(new_tile.release()));
 				}
-			} else if (brush->isCarpet()) {
+			} else if (brush->is<CarpetBrush>()) {
 				if (tile && tile->hasCarpet()) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 					TileOperations::carpetize(new_tile.get(), &editor.map);
@@ -399,7 +400,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 		batch->addAndCommitAction(std::move(action));
 
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->isWall()) {
+	} else if (brush->is<WallBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
@@ -413,7 +414,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				Tile* tile = location->get();
 				if (tile) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-					TileOperations::cleanWalls(new_tile.get(), brush->isWall());
+					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 					g_gui.GetCurrentBrush()->draw(draw_map, new_tile.get());
 					draw_map->setTile(*it, std::move(new_tile));
 				} else if (dodraw) {
@@ -440,7 +441,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				if (tile) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 					// Wall cleaning is exempt from automagic
-					TileOperations::cleanWalls(new_tile.get(), brush->isWall());
+					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 					if (dodraw) {
 						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get());
 					} else {
@@ -474,10 +475,10 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 		}
 
 		editor.actionQueue->addBatch(std::move(batch), 2);
-	} else if (brush->isDoor()) {
+	} else if (brush->is<DoorBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
-		DoorBrush* door_brush = brush->asDoor();
+		DoorBrush* door_brush = brush->as<DoorBrush>();
 
 		// Loop is kind of redundant since there will only ever be one index.
 		for (PositionVector::const_iterator it = tilestodraw.begin(); it != tilestodraw.end(); ++it) {
@@ -486,8 +487,8 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 			if (tile) {
 				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 				// Wall cleaning is exempt from automagic
-				if (brush->isWall()) {
-					TileOperations::cleanWalls(new_tile.get(), brush->asWall());
+				if (brush->is<WallBrush>()) {
+					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 				}
 				if (dodraw) {
 					door_brush->draw(&editor.map, new_tile.get(), &alt);

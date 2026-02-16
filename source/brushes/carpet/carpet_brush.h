@@ -36,12 +36,6 @@ public:
 	CarpetBrush();
 	~CarpetBrush() override;
 
-	bool isCarpet() const override {
-		return true;
-	}
-	CarpetBrush* asCarpet() override {
-		return static_cast<CarpetBrush*>(this);
-	}
 
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 

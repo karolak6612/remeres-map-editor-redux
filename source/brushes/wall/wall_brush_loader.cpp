@@ -227,10 +227,10 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 				}
 
 				if (childNode.attribute("redirect").as_bool()) {
-					if (!friendBrush->isWall()) {
+					if (!friendBrush->is<WallBrush>()) {
 						warnings.push_back((wxString("Wall brush redirect link: '") + wxstr(name) + "' is not a wall brush.").ToStdString());
 					} else if (!brush->redirect_to) {
-						brush->redirect_to = friendBrush->asWall();
+						brush->redirect_to = friendBrush->as<WallBrush>();
 					} else {
 						warnings.push_back((wxString("Wall brush '") + wxstr(brush->getName()) + "' has more than one redirect link.").ToStdString());
 					}

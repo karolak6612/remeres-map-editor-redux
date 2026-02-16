@@ -32,7 +32,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 
 		if (canvas->isPasting()) {
 			normalPos = editor.copybuffer.getPosition();
-		} else if (brush && brush->isDoodad()) {
+		} else if (brush && brush->is<DoodadBrush>()) {
 			normalPos = Position(0x8000, 0x8000, 0x8);
 		} else {
 			normalPos = to;

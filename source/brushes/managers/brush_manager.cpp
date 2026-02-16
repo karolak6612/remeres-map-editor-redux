@@ -106,7 +106,7 @@ void BrushManager::SelectBrushInternal(Brush* brush) {
 	// If we are switching away from a doodad brush, we need to clear the secondary map
 	// Or if the new brush isn't a doodad brush
 	MapTab* mapTab = g_gui.GetCurrentMapTab();
-	if (brush->isDoodad()) {
+	if (brush->is<DoodadBrush>()) {
 		UpdateDoodadPreview();
 	} else {
 		if (mapTab) {
@@ -157,7 +157,7 @@ BrushShape BrushManager::GetBrushShape() const {
 }
 
 void BrushManager::SetBrushSizeInternal(int nz) {
-	if (nz != brush_size && current_brush && current_brush->isDoodad() && !current_brush->oneSizeFitsAll()) {
+	if (nz != brush_size && current_brush && current_brush->is<DoodadBrush>() && !current_brush->oneSizeFitsAll()) {
 		brush_size = nz;
 		g_doodad_preview.FillBuffer();
 		MapTab* mapTab = g_gui.GetCurrentMapTab();
@@ -180,14 +180,14 @@ void BrushManager::SetBrushSize(int nz) {
 }
 
 void BrushManager::SetBrushVariation(int nz) {
-	if (nz != brush_variation && current_brush && current_brush->isDoodad()) {
+	if (nz != brush_variation && current_brush && current_brush->is<DoodadBrush>()) {
 		brush_variation = nz;
 		UpdateDoodadPreview();
 	}
 }
 
 void BrushManager::SetBrushShape(BrushShape bs) {
-	if (bs != brush_shape && current_brush && current_brush->isDoodad() && !current_brush->oneSizeFitsAll()) {
+	if (bs != brush_shape && current_brush && current_brush->is<DoodadBrush>() && !current_brush->oneSizeFitsAll()) {
 		brush_shape = bs;
 		UpdateDoodadPreview();
 	}
@@ -207,7 +207,7 @@ void BrushManager::SetBrushThickness(bool on, int x, int y) {
 		custom_thickness_mod = static_cast<float>(std::max(x, 1)) / static_cast<float>(std::max(y, 1));
 	}
 
-	if (current_brush && current_brush->isDoodad()) {
+	if (current_brush && current_brush->is<DoodadBrush>()) {
 		g_doodad_preview.FillBuffer();
 	}
 
@@ -217,7 +217,7 @@ void BrushManager::SetBrushThickness(bool on, int x, int y) {
 void BrushManager::SetBrushThickness(int low, int ceil) {
 	custom_thickness_mod = static_cast<float>(std::max(low, 1)) / static_cast<float>(std::max(ceil, 1));
 
-	if (use_custom_thickness && current_brush && current_brush->isDoodad()) {
+	if (use_custom_thickness && current_brush && current_brush->is<DoodadBrush>()) {
 		g_doodad_preview.FillBuffer();
 	}
 

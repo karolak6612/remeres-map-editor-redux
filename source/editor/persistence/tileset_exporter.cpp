@@ -59,11 +59,11 @@ void TilesetExporter::exportTilesets(const FileName& directory, const std::strin
 
 					pugi::xml_node palette = tileset.append_child(data.c_str());
 					for (const auto& brush_ptr : tilesetCategory->brushlist) {
-						if (!brush_ptr->isRaw()) {
+						if (!brush_ptr->is<RAWBrush>()) {
 							pugi::xml_node brush = palette.append_child("brush");
 							brush.append_attribute("name") = brush_ptr->getName().c_str();
 						} else {
-							ItemType& it = g_items[brush_ptr->asRaw()->getItemID()];
+							ItemType& it = g_items[brush_ptr->as<RAWBrush>()->getItemID()];
 							if (it.id != 0) {
 								pugi::xml_node item = palette.append_child("item");
 								item.append_attribute("id") = it.id;

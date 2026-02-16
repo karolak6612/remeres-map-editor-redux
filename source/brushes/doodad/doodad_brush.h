@@ -18,12 +18,6 @@ public:
 	DoodadBrush();
 	~DoodadBrush() override;
 
-	bool isDoodad() const override {
-		return true;
-	}
-	DoodadBrush* asDoodad() override {
-		return static_cast<DoodadBrush*>(this);
-	}
 
 public:
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;

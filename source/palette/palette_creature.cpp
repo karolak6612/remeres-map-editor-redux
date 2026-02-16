@@ -95,7 +95,7 @@ Brush* CreaturePalettePanel::GetSelectedBrush() const {
 		}
 		BrushPanel* bp = reinterpret_cast<BrushPanel*>(choicebook->GetCurrentPage());
 		Brush* brush = bp->GetSelectedBrush();
-		if (brush && brush->isCreature()) {
+		if (brush && brush->is<CreatureBrush>()) {
 			g_brush_manager.SetSpawnTime(creature_spawntime_spin->GetValue());
 			return brush;
 		}
@@ -112,7 +112,7 @@ bool CreaturePalettePanel::SelectBrush(const Brush* whatbrush) {
 		return false;
 	}
 
-	if (whatbrush->isCreature()) {
+	if (whatbrush->is<CreatureBrush>()) {
 		for (size_t i = 0; i < choicebook->GetPageCount(); ++i) {
 			BrushPanel* bp = reinterpret_cast<BrushPanel*>(choicebook->GetPage(i));
 			if (bp->SelectBrush(whatbrush)) {
@@ -123,7 +123,7 @@ bool CreaturePalettePanel::SelectBrush(const Brush* whatbrush) {
 				return true;
 			}
 		}
-	} else if (whatbrush->isSpawn()) {
+	} else if (whatbrush->is<SpawnBrush>()) {
 		SelectSpawnBrush();
 		return true;
 	}

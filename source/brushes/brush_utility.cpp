@@ -18,11 +18,11 @@ int BrushUtility::countMaxFills = 0;
 void BrushUtility::GetTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, std::vector<Position>* tilestodraw, std::vector<Position>* tilestoborder, bool fill) {
 	if (fill) {
 		Brush* brush = g_gui.GetCurrentBrush();
-		if (!brush || !brush->isGround()) {
+		if (!brush || !brush->is<GroundBrush>()) {
 			return;
 		}
 
-		GroundBrush* newBrush = brush->asGround();
+		GroundBrush* newBrush = brush->as<GroundBrush>();
 		Position position(mouse_map_x, mouse_map_y, floor);
 
 		Tile* tile = g_gui.GetCurrentMap().getTile(position);

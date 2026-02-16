@@ -240,7 +240,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 			item = next_it->get();
 			if (item->isWall()) {
-				if (WallBrush* brush = item->getWallBrush(); brush && brush->isWallDecoration()) {
+				if (WallBrush* brush = item->getWallBrush(); brush && brush->is<WallDecorationBrush>()) {
 					perfect_match = false;
 					close_match = false;
 					discarded_id = 0;
