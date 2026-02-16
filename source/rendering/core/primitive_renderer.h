@@ -48,13 +48,16 @@ private:
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<GLVertexArray> vao_;
 	std::unique_ptr<GLBuffer> vbo_;
+	std::unique_ptr<GLBuffer> ebo_;
 
 	std::vector<Vertex> triangle_verts_;
+	std::vector<uint32_t> triangle_indices_;
 	std::vector<Vertex> line_verts_;
 
 	glm::mat4 projection_ { 1.0f };
 
 	static constexpr size_t MAX_VERTICES = 10000;
+	static constexpr size_t MAX_INDICES = MAX_VERTICES * 2;
 };
 
 #endif

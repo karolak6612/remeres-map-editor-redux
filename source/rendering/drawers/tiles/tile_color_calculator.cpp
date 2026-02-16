@@ -4,6 +4,7 @@
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h"
+#include <array>
 
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
@@ -116,8 +117,22 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 }
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {
+	struct ColorRGB {
+		uint8_t r, g, b;
+	};
+	static const std::array<ColorRGB, 256> minimap_palette = []() {
+		std::array<ColorRGB, 256> table;
+		for (int i = 0; i < 256; ++i) {
+			table[i].r = static_cast<uint8_t>(i / 36 % 6 * 51);
+			table[i].g = static_cast<uint8_t>(i / 6 % 6 * 51);
+			table[i].b = static_cast<uint8_t>(i % 6 * 51);
+		}
+		return table;
+	}();
+
 	uint8_t color = tile->getMiniMapColor();
-	r = static_cast<uint8_t>(color / 36 % 6 * 51);
-	g = static_cast<uint8_t>(color / 6 % 6 * 51);
-	b = static_cast<uint8_t>(color % 6 * 51);
+	const auto& c = minimap_palette[color];
+	r = c.r;
+	g = c.g;
+	b = c.b;
 }

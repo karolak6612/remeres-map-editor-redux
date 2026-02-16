@@ -8,9 +8,6 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"
 
-static int s_blitCount = 0;
-static int s_zeroTextureCount = 0;
-
 SpriteDrawer::SpriteDrawer() :
 	last_bound_texture_(0) {
 }
@@ -20,12 +17,6 @@ SpriteDrawer::~SpriteDrawer() {
 
 void SpriteDrawer::ResetCache() {
 	last_bound_texture_ = 0;
-	// Log stats each frame
-	if (s_blitCount > 0) {
-		spdlog::info("SpriteDrawer: {} sprites drawn, {} zero-texture skipped", s_blitCount, s_zeroTextureCount);
-	}
-	s_blitCount = 0;
-	s_zeroTextureCount = 0;
 }
 
 void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, int red, int green, int blue, int alpha) {
@@ -99,6 +90,15 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	// Atlas-only rendering - ensure atlas is available
 	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
 	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
+
+	// Optimization: Fast path for simple 1x1x1 sprites (most common case)
+	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
+		const AtlasRegion* region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, tme);
+		if (region) {
+			glBlitAtlasQuad(sprite_batch, screenx, screeny, region, red, green, blue, alpha);
+		}
+		return;
+	}
 
 	for (int cx = 0; cx != spr->width; ++cx) {
 		for (int cy = 0; cy != spr->height; ++cy) {

@@ -6,6 +6,7 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "io/loaders/spr_loader.h"
+#include "io/filehandle.h"
 #include <mutex>
 
 namespace {
@@ -116,6 +117,9 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 }
 
 void SpritePreloader::workerLoop(std::stop_token stop_token) {
+	std::string cached_filename;
+	std::unique_ptr<FileReadHandle> cached_fh;
+
 	while (!stop_token.stop_requested()) {
 		Task task;
 		{
@@ -133,7 +137,14 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 		bool success = false;
 
 		if (!task.spritefile.empty()) {
-			success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump, size, task.id);
+			if (task.spritefile != cached_filename || !cached_fh || !cached_fh->isOk()) {
+				cached_filename = task.spritefile;
+				cached_fh = std::make_unique<FileReadHandle>(cached_filename);
+			}
+
+			if (cached_fh && cached_fh->isOk()) {
+				success = SprLoader::LoadDump(*cached_fh, task.is_extended, dump, size, task.id);
+			}
 		}
 
 		std::unique_ptr<uint8_t[]> rgba;

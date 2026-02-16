@@ -176,6 +176,33 @@ int Tile::size() const {
 	return sz;
 }
 
+bool Tile::empty() const {
+	if (ground) {
+		return false;
+	}
+	if (!items.empty()) {
+		return false;
+	}
+	if (creature) {
+		return false;
+	}
+	if (spawn) {
+		return false;
+	}
+	if (location) {
+		if (location->getHouseExits()) {
+			return false;
+		}
+		if (location->getSpawnCount()) {
+			return false;
+		}
+		if (location->getWaypointCount()) {
+			return false;
+		}
+	}
+	return true;
+}
+
 void Tile::merge(Tile* other) {
 	if (other->isPZ()) {
 		setPZ(true);

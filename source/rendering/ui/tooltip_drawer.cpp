@@ -24,6 +24,7 @@
 #include <wx/wx.h>
 #include "game/items.h"
 #include "game/sprites.h"
+#include "game/item.h"
 #include "ui/gui.h"
 
 TooltipDrawer::TooltipDrawer() {
@@ -74,6 +75,58 @@ void TooltipDrawer::addItemTooltip(TooltipData&& data) {
 	TooltipData& dest = requestTooltipData();
 	dest = std::move(data);
 	commitTooltip();
+}
+
+bool TooltipDrawer::getCachedTooltip(const Item* item, TooltipData& outData) {
+	auto it = item_cache.find(item);
+	if (it != item_cache.end()) {
+		// Validate against item state changes (basic checks)
+		if (it->second.data.itemId != item->getID()) {
+			return false;
+		}
+		if (it->second.data.uniqueId != item->getUniqueID()) {
+			return false;
+		}
+		if (it->second.data.actionId != item->getActionID()) {
+			return false;
+		}
+
+		outData = it->second.data;
+		it->second.last_frame_seen = current_frame;
+		return true;
+	}
+	return false;
+}
+
+void TooltipDrawer::cacheTooltip(const Item* item, const TooltipData& data) {
+	if (!item) {
+		return;
+	}
+
+	CachedTooltipEntry entry;
+	entry.data = data;
+	entry.last_frame_seen = current_frame;
+
+	// Deep copy strings
+	entry.itemNameStorage = std::string(data.itemName);
+	entry.textStorage = std::string(data.text);
+	entry.descStorage = std::string(data.description);
+	entry.waypointNameStorage = std::string(data.waypointName);
+
+	// Point views to storage
+	entry.data.itemName = entry.itemNameStorage;
+	entry.data.text = entry.textStorage;
+	entry.data.description = entry.descStorage;
+	entry.data.waypointName = entry.waypointNameStorage;
+
+	item_cache[item] = std::move(entry);
+}
+
+void TooltipDrawer::garbageCollect(uint64_t current_frame_arg) {
+	static constexpr uint64_t CACHE_TTL = 600; // ~10 seconds at 60fps
+	std::erase_if(item_cache, [current_frame_arg](const auto& pair) {
+		return (current_frame_arg > pair.second.last_frame_seen + CACHE_TTL);
+	});
 }
 
 void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name) {
@@ -557,6 +610,11 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 	if (!vg) {
 		return;
+	}
+
+	current_frame++;
+	if (current_frame % 600 == 0) {
+		garbageCollect(current_frame);
 	}
 
 	for (size_t i = 0; i < active_count; ++i) {

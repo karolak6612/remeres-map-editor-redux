@@ -29,6 +29,7 @@ void main() {
 
 PrimitiveRenderer::PrimitiveRenderer() {
 	triangle_verts_.reserve(MAX_VERTICES);
+	triangle_indices_.reserve(MAX_INDICES);
 	line_verts_.reserve(MAX_VERTICES);
 }
 
@@ -44,12 +45,15 @@ void PrimitiveRenderer::initialize() {
 
 	vao_ = std::make_unique<GLVertexArray>();
 	vbo_ = std::make_unique<GLBuffer>();
+	ebo_ = std::make_unique<GLBuffer>();
 
 	// Allocate buffer
 	glNamedBufferStorage(vbo_->GetID(), MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(ebo_->GetID(), MAX_INDICES * sizeof(uint32_t), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	// DSA setup
 	glVertexArrayVertexBuffer(vao_->GetID(), 0, vbo_->GetID(), 0, sizeof(Vertex));
+	glVertexArrayElementBuffer(vao_->GetID(), ebo_->GetID());
 
 	// Pos
 	glEnableVertexArrayAttrib(vao_->GetID(), 0);
@@ -67,6 +71,7 @@ void PrimitiveRenderer::initialize() {
 void PrimitiveRenderer::shutdown() {
 	vao_.reset();
 	vbo_.reset();
+	ebo_.reset();
 }
 
 void PrimitiveRenderer::setProjectionMatrix(const glm::mat4& projection) {
@@ -74,12 +79,17 @@ void PrimitiveRenderer::setProjectionMatrix(const glm::mat4& projection) {
 }
 
 void PrimitiveRenderer::drawTriangle(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, const glm::vec4& color) {
-	if (triangle_verts_.size() + 3 > MAX_VERTICES) {
+	if (triangle_verts_.size() + 3 > MAX_VERTICES || triangle_indices_.size() + 3 > MAX_INDICES) {
 		flushTriangles();
 	}
+	uint32_t idx = static_cast<uint32_t>(triangle_verts_.size());
 	triangle_verts_.push_back({ p1, color });
 	triangle_verts_.push_back({ p2, color });
 	triangle_verts_.push_back({ p3, color });
+
+	triangle_indices_.push_back(idx);
+	triangle_indices_.push_back(idx + 1);
+	triangle_indices_.push_back(idx + 2);
 }
 
 void PrimitiveRenderer::drawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color) {
@@ -102,10 +112,23 @@ void PrimitiveRenderer::drawRect(const glm::vec4& rect, const glm::vec4& color) 
 	glm::vec2 p3(x + w, y + h);
 	glm::vec2 p4(x, y + h);
 
-	// Triangle 1: p1, p2, p3
-	drawTriangle(p1, p2, p3, color);
-	// Triangle 2: p3, p4, p1
-	drawTriangle(p3, p4, p1, color);
+	if (triangle_verts_.size() + 4 > MAX_VERTICES || triangle_indices_.size() + 6 > MAX_INDICES) {
+		flushTriangles();
+	}
+
+	uint32_t idx = static_cast<uint32_t>(triangle_verts_.size());
+	triangle_verts_.push_back({ p1, color });
+	triangle_verts_.push_back({ p2, color });
+	triangle_verts_.push_back({ p3, color });
+	triangle_verts_.push_back({ p4, color });
+
+	triangle_indices_.push_back(idx);
+	triangle_indices_.push_back(idx + 1);
+	triangle_indices_.push_back(idx + 2);
+
+	triangle_indices_.push_back(idx + 2);
+	triangle_indices_.push_back(idx + 3);
+	triangle_indices_.push_back(idx);
 }
 
 void PrimitiveRenderer::drawBox(const glm::vec4& rect, const glm::vec4& color, float thickness) {
@@ -137,7 +160,7 @@ void PrimitiveRenderer::flush() {
 }
 
 void PrimitiveRenderer::flushTriangles() {
-	if (triangle_verts_.empty()) {
+	if (triangle_indices_.empty()) {
 		return;
 	}
 
@@ -149,13 +172,15 @@ void PrimitiveRenderer::flushTriangles() {
 		shader_->SetMat4("uMVP", projection_);
 
 		glNamedBufferSubData(vbo_->GetID(), 0, triangle_verts_.size() * sizeof(Vertex), triangle_verts_.data());
+		glNamedBufferSubData(ebo_->GetID(), 0, triangle_indices_.size() * sizeof(uint32_t), triangle_indices_.data());
 
 		glBindVertexArray(vao_->GetID());
-		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)triangle_verts_.size());
+		glDrawElements(GL_TRIANGLES, (GLsizei)triangle_indices_.size(), GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
 
 	triangle_verts_.clear();
+	triangle_indices_.clear();
 }
 
 void PrimitiveRenderer::flushLines() {

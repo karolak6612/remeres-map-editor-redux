@@ -151,7 +151,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
 	}
@@ -179,6 +179,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			return;
 		}
 	}
+
+	// Light check
+	bool collect_light = light_buffer && options.isDrawLight() && (view.zoom <= 10.0);
 
 	Waypoint* waypoint = nullptr;
 	if (location->getWaypointCount() > 0) {
@@ -211,6 +214,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		if (tile->ground) {
 			PreloadItem(tile, tile->ground.get());
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+
+			if (collect_light && tile->ground->hasLight()) {
+				light_buffer->AddLight(map_x, map_y, map_z, tile->ground->getLight());
+			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -220,9 +227,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+		if (tooltip_drawer->getCachedTooltip(tile->ground.get(), groundData)) {
+			groundData.pos = location->getPosition();
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
+			}
+		} else {
+			if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+				if (groundData.hasVisibleFields()) {
+					tooltip_drawer->cacheTooltip(tile->ground.get(), groundData);
+					tooltip_drawer->commitTooltip();
+				}
 			}
 		}
 	}
@@ -266,9 +281,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+					if (tooltip_drawer->getCachedTooltip(item.get(), itemData)) {
+						itemData.pos = location->getPosition();
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
+						}
+					} else {
+						if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+							if (itemData.hasVisibleFields()) {
+								tooltip_drawer->cacheTooltip(item.get(), itemData);
+								tooltip_drawer->commitTooltip();
+							}
 						}
 					}
 				}
@@ -299,6 +322,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
 				}
+
+				if (collect_light && item->hasLight()) {
+					light_buffer->AddLight(map_x, map_y, map_z, item->getLight());
+				}
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
@@ -326,33 +353,5 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
 	if (spr && !spr->isSimpleAndLoaded()) {
 		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
-	}
-}
-
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
-		}
 	}
 }

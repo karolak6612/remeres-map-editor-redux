@@ -165,7 +165,24 @@ public:
 	// Clear all tooltips
 	void clear();
 
+	// Caching
+	bool getCachedTooltip(const Item* item, TooltipData& outData);
+	void cacheTooltip(const Item* item, const TooltipData& data);
+	void garbageCollect(uint64_t current_frame);
+
 protected:
+	struct CachedTooltipEntry {
+		TooltipData data;
+		uint64_t last_frame_seen = 0;
+		// Persistent storage for string_views in data
+		std::string itemNameStorage;
+		std::string textStorage;
+		std::string descStorage;
+		std::string waypointNameStorage;
+	};
+	std::unordered_map<const Item*, CachedTooltipEntry> item_cache;
+	uint64_t current_frame = 1;
+
 	struct FieldLine {
 		std::string_view label;
 		std::string_view value;
