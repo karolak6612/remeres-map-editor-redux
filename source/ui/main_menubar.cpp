@@ -107,8 +107,8 @@ void MainMenuBar::EnableItem(MenuBar::ActionID id, bool enable) {
 
 	std::list<wxMenuItem*>& li = fi->second;
 
-	for (std::list<wxMenuItem*>::iterator i = li.begin(); i != li.end(); ++i) {
-		(*i)->Enable(enable);
+	for (auto* item : li) {
+		item->Enable(enable);
 	}
 }
 
@@ -121,8 +121,8 @@ void MainMenuBar::CheckItem(MenuBar::ActionID id, bool enable) {
 	std::list<wxMenuItem*>& li = fi->second;
 
 	checking_programmaticly = true;
-	for (std::list<wxMenuItem*>::iterator i = li.begin(); i != li.end(); ++i) {
-		(*i)->Check(enable);
+	for (auto* item : li) {
+		item->Check(enable);
 	}
 	checking_programmaticly = false;
 }
@@ -135,8 +135,8 @@ bool MainMenuBar::IsItemChecked(MenuBar::ActionID id) const {
 
 	const std::list<wxMenuItem*>& li = fi->second;
 
-	for (std::list<wxMenuItem*>::const_iterator i = li.begin(); i != li.end(); ++i) {
-		if ((*i)->IsChecked()) {
+	for (const auto* item : li) {
+		if (item->IsChecked()) {
 			return true;
 		}
 	}
