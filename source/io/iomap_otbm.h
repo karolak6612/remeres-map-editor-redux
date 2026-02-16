@@ -178,6 +178,12 @@ protected:
 	bool saveWaypoints(Map& map, const FileName& dir);
 	bool saveWaypoints(Map& map, pugi::xml_document& doc);
 	void serializeTile_OTBM(Tile* tile, NodeFileWriteHandle& handle, const IOMapOTBM& self);
+
+	friend class HeaderSerializationOTBM;
+	friend class ArchiveSerializationOTBM;
+	friend class TownSerializationOTBM;
+	friend class WaypointSerializationOTBM;
+	friend class TileSerializationOTBM;
 };
 
 #endif

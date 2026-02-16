@@ -97,6 +97,11 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/io/archive_io.h
     ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.h
     ${CMAKE_CURRENT_LIST_DIR}/io/item_serialization_otbm.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/header_serialization_otbm.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/archive_serialization_otbm.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/town_serialization_otbm.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/waypoint_serialization_otbm.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/tile_serialization_otbm.h
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/templates.h
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.h
@@ -405,6 +410,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/io/archive_io.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/item_serialization_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/header_serialization_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/archive_serialization_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/town_serialization_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/waypoint_serialization_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/otbm/tile_serialization_otbm.cpp
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_client.cpp

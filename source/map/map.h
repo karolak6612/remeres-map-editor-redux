@@ -166,6 +166,11 @@ protected:
 	friend class EditorPersistence;
 	friend class MapXMLIO;
 	friend class ItemSerializationOTBM;
+	friend class HeaderSerializationOTBM;
+	friend class ArchiveSerializationOTBM;
+	friend class TownSerializationOTBM;
+	friend class WaypointSerializationOTBM;
+	friend class TileSerializationOTBM;
 
 public:
 	Waypoints waypoints;
