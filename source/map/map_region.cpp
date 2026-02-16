@@ -143,16 +143,31 @@ void MapNode::setVisible(bool underground, bool value) {
 	}
 }
 
-std::vector<SpatialHashGrid::SortedGridCell> SpatialHashGrid::getSortedCells() const {
-	std::vector<SortedGridCell> sorted_cells;
-	sorted_cells.reserve(cells.size());
-	for (const auto& pair : cells) {
-		sorted_cells.emplace_back(pair.first, pair.second.get());
+void SpatialHashGrid::updateSortedCells() const {
+	if (!sorted_cells_dirty) {
+		return;
 	}
-	std::sort(sorted_cells.begin(), sorted_cells.end(), [](const auto& a, const auto& b) {
-		return a.key < b.key;
+
+	sorted_cells_cache.clear();
+	sorted_cells_cache.reserve(cells.size());
+
+	for (const auto& [key, cell] : cells) {
+		int cx, cy;
+		getCellCoordsFromKey(key, cx, cy);
+		sorted_cells_cache.push_back({key, cell.get(), cx, cy});
+	}
+
+	// Sort by Y then X for optimal iteration
+	std::sort(sorted_cells_cache.begin(), sorted_cells_cache.end(), [](const auto& a, const auto& b) {
+		return std::tie(a.y, a.x) < std::tie(b.y, b.x);
 	});
-	return sorted_cells;
+
+	sorted_cells_dirty = false;
+}
+
+const std::vector<SpatialHashGrid::SortedGridCell>& SpatialHashGrid::getSortedCells() const {
+	updateSortedCells();
+	return sorted_cells_cache;
 }
 
 void MapNode::setRequested(bool underground, bool r) {
@@ -250,6 +265,8 @@ SpatialHashGrid::~SpatialHashGrid() {
 
 void SpatialHashGrid::clear() {
 	cells.clear();
+	sorted_cells_cache.clear();
+	sorted_cells_dirty = true;
 }
 
 MapNode* SpatialHashGrid::getLeaf(int x, int y) {
@@ -269,6 +286,7 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	auto& cell = cells[key];
 	if (!cell) {
 		cell = std::make_unique<GridCell>();
+		sorted_cells_dirty = true;
 	}
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);

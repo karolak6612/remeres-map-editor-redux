@@ -136,6 +136,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 	uint64_t tiles_done = 0;
 	std::vector<uint16_t> id_list;
+	std::vector<std::unique_ptr<Item>> new_tile_items;
 
 	// std::ofstream conversions("converted_items.txt");
 
@@ -190,15 +191,30 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			tile->items.erase(part_iter, tile->items.end());
 
 			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (uint16_t new_id : new_items) {
+
+			// Optimize insertion: construct new vector instead of repeated insertions at begin
+			new_tile_items.clear();
+			new_tile_items.reserve(new_items.size() + tile->items.size());
+			bool assigned_new_ground = false;
+
+			// Insert new items in reverse order to match original behavior (insert at begin reverses order of iteration)
+			for (auto it = new_items.rbegin(); it != new_items.rend(); ++it) {
+				uint16_t new_id = *it;
 				std::unique_ptr<Item> item = Item::Create(new_id);
 				if (item->isGroundTile()) {
-					tile->ground = std::move(item);
+					if (!assigned_new_ground) {
+						tile->ground = std::move(item);
+						assigned_new_ground = true;
+					}
 				} else {
-					tile->items.insert(tile->items.begin(), std::move(item));
+					new_tile_items.push_back(std::move(item));
 					++inserted_items;
 				}
 			}
+
+			// Append existing items
+			std::move(tile->items.begin(), tile->items.end(), std::back_inserter(new_tile_items));
+			tile->items = std::move(new_tile_items);
 		}
 
 		if (tile->ground) {
