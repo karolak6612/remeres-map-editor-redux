@@ -7,6 +7,7 @@
 #include "ui/gui_ids.h"
 #include "map/map.h"
 #include "util/image_manager.h"
+#include "ui/gui.h"
 
 #include <wx/filedlg.h>
 #include <wx/textctrl.h>
@@ -25,6 +26,7 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	// File
 	tmpsizer = newd wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Map File"), wxHORIZONTAL);
 	file_text_field = newd wxTextCtrl(tmpsizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, FROM_DIP(this, wxSize(230, 23)));
+	file_text_field->SetToolTip("Path to the map file to import");
 	tmpsizer->Add(file_text_field, 0, wxALL, 5);
 	wxButton* browse_button = newd wxButton(tmpsizer->GetStaticBox(), MAP_WINDOW_FILE_BUTTON, "Browse...", wxDefaultPosition, FROM_DIP(this, wxSize(80, 23)));
 	browse_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FOLDER_OPEN, wxSize(16, 16)));
@@ -36,9 +38,11 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	tmpsizer = newd wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Import Offset"), wxHORIZONTAL);
 	tmpsizer->Add(newd wxStaticText(tmpsizer->GetStaticBox(), wxID_ANY, "Offset X:"), 0, wxALL | wxEXPAND, 5);
 	x_offset_ctrl = newd wxSpinCtrl(tmpsizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, FROM_DIP(this, wxSize(100, 23)), wxSP_ARROW_KEYS, -MAP_MAX_HEIGHT, MAP_MAX_HEIGHT);
+	x_offset_ctrl->SetToolTip("Horizontal offset for the imported map");
 	tmpsizer->Add(x_offset_ctrl, 0, wxALL, 5);
 	tmpsizer->Add(newd wxStaticText(tmpsizer->GetStaticBox(), wxID_ANY, "Offset Y:"), 0, wxALL, 5);
 	y_offset_ctrl = newd wxSpinCtrl(tmpsizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, FROM_DIP(this, wxSize(100, 23)), wxSP_ARROW_KEYS, -MAP_MAX_HEIGHT, MAP_MAX_HEIGHT);
+	y_offset_ctrl->SetToolTip("Vertical offset for the imported map");
 	tmpsizer->Add(y_offset_ctrl, 0, wxALL, 5);
 	sizer->Add(tmpsizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 5);
 
@@ -52,6 +56,7 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	// House options
 	tmpsizer = newd wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "House Import Behaviour"), wxVERTICAL);
 	house_options = newd wxChoice(tmpsizer->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	house_options->SetToolTip("Select how to handle houses from the imported map");
 	for (const auto& choice : house_choices) {
 		house_options->Append(choice);
 	}
@@ -67,6 +72,7 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	// Spawn options
 	tmpsizer = newd wxStaticBoxSizer(new wxStaticBox(this, wxID_ANY, "Spawn Import Behaviour"), wxVERTICAL);
 	spawn_options = newd wxChoice(tmpsizer->GetStaticBox(), wxID_ANY, wxDefaultPosition, wxDefaultSize);
+	spawn_options->SetToolTip("Select how to handle spawns from the imported map");
 	for (const auto& choice : spawn_choices) {
 		spawn_options->Append(choice);
 	}
@@ -78,11 +84,11 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	wxBoxSizer* buttons = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(this, wxID_OK, "Ok");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Start import");
+	okBtn->SetToolTip("Start import (Enter)");
 	buttons->Add(okBtn, 0, wxALL, 5);
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Cancel");
+	cancelBtn->SetToolTip("Close this window (Esc)");
 	buttons->Add(cancelBtn, 0, wxALL, 5);
 	sizer->Add(buttons, wxSizerFlags(1).Center());
 
@@ -147,7 +153,17 @@ void ImportMapWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 		EndModal(1);
 
-		EditorPersistence::importMap(editor, fn, x_offset_ctrl->GetValue(), y_offset_ctrl->GetValue(), house_import_type, spawn_import_type);
+		bool success = false;
+		{
+			ScopedLoadingBar loading("Importing map...");
+			success = EditorPersistence::importMap(editor, fn, x_offset_ctrl->GetValue(), y_offset_ctrl->GetValue(), house_import_type, spawn_import_type);
+		}
+
+		if (success) {
+			DialogUtil::PopupDialog("Success", "Map imported successfully.", wxOK);
+		} else {
+			DialogUtil::PopupDialog("Error", "Failed to import map.", wxOK);
+		}
 	}
 }
 

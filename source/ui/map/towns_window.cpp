@@ -120,7 +120,15 @@ void EditTownsDialog::BuildListBox(bool doselect) {
 	for (const auto& name : town_name_list) {
 		town_listbox->Append(name);
 	}
-	remove_button->Enable(town_listbox->GetCount() != 0);
+
+	bool has_towns = town_listbox->GetCount() != 0;
+	remove_button->Enable(has_towns);
+	if (has_towns) {
+		remove_button->SetToolTip("Remove selected town");
+	} else {
+		remove_button->SetToolTip("No towns to remove");
+	}
+
 	select_position_button->Enable(false);
 
 	if (doselect) {

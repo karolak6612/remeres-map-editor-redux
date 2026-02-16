@@ -49,11 +49,11 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	ok_button = newd wxButton(this, wxID_OK, "OK");
 	ok_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	ok_button->SetToolTip("Start export");
+	ok_button->SetToolTip("Start export (Enter)");
 	tmpsizer->Add(ok_button, wxSizerFlags(1).Center());
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Cancel");
+	cancelBtn->SetToolTip("Close this window (Esc)");
 	tmpsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(tmpsizer, 0, wxCENTER, 10);
 
@@ -112,12 +112,14 @@ void ExportTilesetsWindow::CheckValues() {
 	if (directory_text_field->IsEmpty()) {
 		error_field->SetLabel("Type or select an output folder.");
 		ok_button->Enable(false);
+		ok_button->SetToolTip("Please select an output folder");
 		return;
 	}
 
 	if (file_name_text_field->IsEmpty()) {
 		error_field->SetLabel("Type a name for the file.");
 		ok_button->Enable(false);
+		ok_button->SetToolTip("Please enter a file name");
 		return;
 	}
 
@@ -126,15 +128,18 @@ void ExportTilesetsWindow::CheckValues() {
 	if (!directory.Exists()) {
 		error_field->SetLabel("Output folder not found.");
 		ok_button->Enable(false);
+		ok_button->SetToolTip("Output folder not found");
 		return;
 	}
 
 	if (!directory.IsDirWritable()) {
 		error_field->SetLabel("Output folder is not writable.");
 		ok_button->Enable(false);
+		ok_button->SetToolTip("Output folder is not writable");
 		return;
 	}
 
 	error_field->SetLabel(wxEmptyString);
 	ok_button->Enable(true);
+	ok_button->SetToolTip("Start export (Enter)");
 }
