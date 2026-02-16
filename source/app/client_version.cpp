@@ -355,9 +355,9 @@ ClientVersion* ClientVersion::get(ClientVersionID id) {
 }
 
 ClientVersion* ClientVersion::get(std::string id) {
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->getName() == id) {
-			return i->second.get();
+	for (const auto& [_, version] : client_versions) {
+		if (version->getName() == id) {
+			return version.get();
 		}
 	}
 	return nullptr;
@@ -365,17 +365,18 @@ ClientVersion* ClientVersion::get(std::string id) {
 
 ClientVersionList ClientVersion::getAll() {
 	ClientVersionList l;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		l.push_back(i->second.get());
+	l.reserve(client_versions.size());
+	for (const auto& [_, version] : client_versions) {
+		l.push_back(version.get());
 	}
 	return l;
 }
 
 ClientVersionList ClientVersion::getAllVisible() {
 	ClientVersionList l;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->isVisible()) {
-			l.push_back(i->second.get());
+	for (const auto& [_, version] : client_versions) {
+		if (version->isVisible()) {
+			l.push_back(version.get());
 		}
 	}
 	return l;
@@ -383,11 +384,11 @@ ClientVersionList ClientVersion::getAllVisible() {
 
 ClientVersionList ClientVersion::getAllForOTBMVersion(MapVersionID id) {
 	ClientVersionList list;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->isVisible()) {
-			for (std::vector<MapVersionID>::iterator v = i->second->map_versions_supported.begin(); v != i->second->map_versions_supported.end(); ++v) {
-				if (*v == id) {
-					list.push_back(i->second.get());
+	for (const auto& [_, version] : client_versions) {
+		if (version->isVisible()) {
+			for (MapVersionID v : version->map_versions_supported) {
+				if (v == id) {
+					list.push_back(version.get());
 				}
 			}
 		}
