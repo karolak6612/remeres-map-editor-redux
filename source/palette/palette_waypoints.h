@@ -23,6 +23,35 @@
 #include "game/waypoints.h"
 #include "palette/palette_common.h"
 
+class VirtualWaypointListCtrl : public wxListCtrl {
+public:
+	VirtualWaypointListCtrl(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) :
+		wxListCtrl(parent, id, pos, size, style) {
+	}
+
+	void UpdateItems(const WaypointMap& waypoints) {
+		item_cache.clear();
+		item_cache.reserve(waypoints.size());
+		for (const auto& [name, wp] : waypoints) {
+			item_cache.push_back(name);
+		}
+		SetItemCount(item_cache.size());
+		Refresh();
+	}
+
+protected:
+	wxString OnGetItemText(long item, long column) const override {
+		if (item < 0 || item >= (long)item_cache.size()) {
+			return wxEmptyString;
+		}
+		// Return in reverse order to match original behavior (newest/last added/highest key first)
+		return wxstr(item_cache[item_cache.size() - 1 - item]);
+	}
+
+private:
+	std::vector<std::string> item_cache;
+};
+
 class WaypointPalettePanel : public PalettePanel {
 public:
 	WaypointPalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
@@ -59,7 +88,7 @@ public:
 
 protected:
 	Map* map;
-	wxListCtrl* waypoint_list;
+	VirtualWaypointListCtrl* waypoint_list;
 	wxButton* add_waypoint_button;
 	wxButton* remove_waypoint_button;
 };

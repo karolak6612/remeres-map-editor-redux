@@ -59,8 +59,11 @@ HousePalette::HousePalette(wxWindow* parent) :
 	// Action buttons (Add, Edit, Remove)
 	wxBoxSizer* action_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_button = newd wxButton(this, ID_ADD_HOUSE, "Add", wxDefaultPosition, wxSize(50, -1));
+	add_button->SetToolTip("Add House");
 	edit_button = newd wxButton(this, ID_EDIT_HOUSE, "Edit", wxDefaultPosition, wxSize(50, -1));
+	edit_button->SetToolTip("Edit House");
 	remove_button = newd wxButton(this, ID_REMOVE_HOUSE, "Remove", wxDefaultPosition, wxSize(60, -1));
+	remove_button->SetToolTip("Remove House");
 
 	action_sizer->Add(add_button, 1, wxEXPAND | wxRIGHT, 2);
 	action_sizer->Add(edit_button, 1, wxEXPAND | wxRIGHT, 2);
@@ -72,7 +75,9 @@ HousePalette::HousePalette(wxWindow* parent) :
 	wxStaticBoxSizer* brush_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Brushes");
 
 	house_brush_button = newd wxToggleButton(brush_sizer->GetStaticBox(), ID_HOUSE_BRUSH, "House tiles");
+	house_brush_button->SetToolTip("Paint house tiles");
 	select_exit_button = newd wxToggleButton(brush_sizer->GetStaticBox(), ID_EXIT_BRUSH, "Select Exit");
+	select_exit_button->SetToolTip("Select house exit");
 
 	brush_sizer->Add(house_brush_button, 0, wxEXPAND | wxBOTTOM, 2);
 	brush_sizer->Add(select_exit_button, 0, wxEXPAND);

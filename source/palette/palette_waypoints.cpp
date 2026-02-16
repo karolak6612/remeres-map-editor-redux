@@ -33,16 +33,18 @@ WaypointPalettePanel::WaypointPalettePanel(wxWindow* parent, wxWindowID id) :
 	map(nullptr) {
 	wxSizer* sidesizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Waypoints");
 
-	waypoint_list = newd wxListCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_LISTBOX, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_EDIT_LABELS | wxLC_NO_HEADER);
+	waypoint_list = newd VirtualWaypointListCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_LISTBOX, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_VIRTUAL | wxLC_SINGLE_SEL | wxLC_EDIT_LABELS | wxLC_NO_HEADER);
 	waypoint_list->InsertColumn(0, "UNNAMED", wxLIST_FORMAT_LEFT, 200);
 	sidesizer->Add(waypoint_list, 1, wxEXPAND);
 
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_waypoint_button = newd wxButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_ADD_WAYPOINT, "Add", wxDefaultPosition, wxSize(50, -1));
 	add_waypoint_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	add_waypoint_button->SetToolTip("Add Waypoint");
 	tmpsizer->Add(add_waypoint_button, 1, wxEXPAND);
 	remove_waypoint_button = newd wxButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_REMOVE_WAYPOINT, "Remove", wxDefaultPosition, wxSize(70, -1));
 	remove_waypoint_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	remove_waypoint_button->SetToolTip("Remove Waypoint");
 	tmpsizer->Add(remove_waypoint_button, 1, wxEXPAND);
 	sidesizer->Add(tmpsizer, 0, wxEXPAND);
 
@@ -108,14 +110,14 @@ void WaypointPalettePanel::OnUpdate() {
 			map->waypoints.removeWaypoint(wp->name);
 		}
 	}
-	waypoint_list->Freeze();
-	waypoint_list->DeleteAllItems();
+	// waypoint_list->Freeze(); // Not strictly needed for virtual list refresh
 
 	if (!map) {
 		waypoint_list->Enable(false);
 		add_waypoint_button->Enable(false);
 		remove_waypoint_button->Enable(false);
-		waypoint_list->Thaw();
+		// waypoint_list->Thaw();
+		waypoint_list->UpdateItems({});
 		return;
 	}
 
@@ -123,12 +125,8 @@ void WaypointPalettePanel::OnUpdate() {
 	add_waypoint_button->Enable(true);
 	remove_waypoint_button->Enable(true);
 
-	Waypoints& waypoints = map->waypoints;
-
-	for (const auto& [name, wp] : waypoints) {
-		waypoint_list->InsertItem(0, wxstr(wp->name));
-	}
-	waypoint_list->Thaw();
+	waypoint_list->UpdateItems(map->waypoints.waypoints);
+	// waypoint_list->Thaw();
 }
 
 void WaypointPalettePanel::OnClickWaypoint(wxListEvent& event) {
@@ -160,6 +158,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 
 	if (wpname == "") {
 		map->waypoints.removeWaypoint(oldwpname);
+		waypoint_list->UpdateItems(map->waypoints.waypoints);
 		g_gui.RefreshPalettes();
 	} else if (wp) {
 		if (wpname == oldwpname) {
@@ -171,6 +170,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 				event.Veto();
 				if (oldwpname == "") {
 					map->waypoints.removeWaypoint(oldwpname);
+					waypoint_list->UpdateItems(map->waypoints.waypoints);
 					g_gui.RefreshPalettes();
 				}
 			} else {
@@ -189,6 +189,9 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 				map->waypoints.addWaypoint(std::move(nwp_ptr));
 				g_brush_manager.waypoint_brush->setWaypoint(nwp);
 
+				// Update list
+				waypoint_list->UpdateItems(map->waypoints.waypoints);
+
 				// Refresh other palettes
 				refresh_timer.Start(300, true);
 			}
@@ -203,8 +206,10 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 void WaypointPalettePanel::OnClickAddWaypoint(wxCommandEvent& event) {
 	if (map) {
 		map->waypoints.addWaypoint(std::make_unique<Waypoint>());
-		long i = waypoint_list->InsertItem(0, "");
-		waypoint_list->EditLabel(i);
+		waypoint_list->UpdateItems(map->waypoints.waypoints);
+		// New empty waypoint is at the beginning of the sorted map (empty string),
+		// so it is at the end of the reverse-sorted list.
+		waypoint_list->EditLabel(waypoint_list->GetItemCount() - 1);
 
 		// g_gui.RefreshPalettes();
 	}
@@ -224,7 +229,7 @@ void WaypointPalettePanel::OnClickRemoveWaypoint(wxCommandEvent& event) {
 			}
 			map->waypoints.removeWaypoint(wp->name);
 		}
-		waypoint_list->DeleteItem(item);
+		waypoint_list->UpdateItems(map->waypoints.waypoints);
 		refresh_timer.Start(300, true);
 	}
 }
