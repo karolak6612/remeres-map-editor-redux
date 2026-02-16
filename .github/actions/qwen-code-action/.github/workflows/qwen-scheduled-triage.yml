@@ -89,15 +89,14 @@ jobs:
         id: 'qwen_issue_analysis'
         if: |-
           ${{ steps.find_issues.outputs.issues_to_triage != '[]' }}
-        uses: './.github/actions/qwen-code-action'
+        uses: 'QwenLM/qwen-code-action@v1' # ratchet:exclude
         env:
           GITHUB_TOKEN: '' # Do not pass any auth token here since this runs on untrusted inputs
           ISSUES_TO_TRIAGE: '${{ steps.find_issues.outputs.issues_to_triage }}'
           REPOSITORY: '${{ github.repository }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
         with:
-          use_oauth: true
-          oauth_credentials: '${{ secrets.QWEN }}'
+          openai_api_key: '${{ secrets.QWEN_API_KEY }}'
           openai_base_url: '${{ vars.QWEN_BASE_URL }}'
           openai_model: '${{ vars.QWEN_MODEL }}'
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'

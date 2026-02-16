@@ -39,7 +39,7 @@ jobs:
 
       - name: 'Run Qwen Code'
         id: 'run_qwen'
-        uses: './.github/actions/qwen-code-action'
+        uses: 'QwenLM/qwen-code-action@v1' # ratchet:exclude
         env:
           TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
           DESCRIPTION: '${{ github.event.pull_request.body || github.event.issue.body }}'
@@ -50,8 +50,7 @@ jobs:
           REPOSITORY: '${{ github.repository }}'
           ADDITIONAL_CONTEXT: '${{ inputs.additional_context }}'
         with:
-          use_oauth: true
-          oauth_credentials: '${{ secrets.QWEN }}'
+          openai_api_key: '${{ secrets.QWEN_API_KEY }}'
           openai_base_url: '${{ vars.QWEN_BASE_URL }}'
           openai_model: '${{ vars.QWEN_MODEL }}'
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'

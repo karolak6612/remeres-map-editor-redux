@@ -59,15 +59,14 @@ jobs:
         id: 'qwen_analysis'
         if: |-
           ${{ steps.get_labels.outputs.available_labels != '' }}
-        uses: './.github/actions/qwen-code-action'
+        uses: 'QwenLM/qwen-code-action@v1' # ratchet:exclude
         env:
           GITHUB_TOKEN: '' # Do NOT pass any auth tokens here since this runs on untrusted inputs
           ISSUE_TITLE: '${{ github.event.issue.title }}'
           ISSUE_BODY: '${{ github.event.issue.body }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
         with:
-          use_oauth: true
-          oauth_credentials: '${{ secrets.QWEN }}'
+          openai_api_key: '${{ secrets.QWEN_API_KEY }}'
           openai_base_url: '${{ vars.QWEN_BASE_URL }}'
           openai_model: '${{ vars.QWEN_MODEL }}'
           qwen_cli_version: '${{ vars.QWEN_CLI_VERSION }}'
