@@ -180,20 +180,20 @@ public:
 		outfit = newOutfit;
 	}
 
-	const uint8_t getDirection() {
+	uint8_t getDirection() const {
 		return direction;
 	}
 	void setDirection(uint8_t newDirection) {
 		direction = newDirection;
 	}
 
-	bool hasShowOutfit() {
+	bool hasShowOutfit() const {
 		return showOutfit && outfit.lookType != 0;
 	}
-	bool hasShowMount() {
+	bool hasShowMount() const {
 		return showMount && outfit.lookMount != 0;
 	}
-	bool hasShowPlatform() {
+	bool hasShowPlatform() const {
 		return showPlatform;
 	}
 

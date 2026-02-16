@@ -1,0 +1,33 @@
+//////////////////////////////////////////////////////////////////////
+// This file is part of Remere's Map Editor
+//////////////////////////////////////////////////////////////////////
+
+#ifndef RME_ITEM_SERIALIZATION_OTBM_H_
+#define RME_ITEM_SERIALIZATION_OTBM_H_
+
+#include "io/iomap_otbm.h"
+#include <memory>
+
+class Item;
+class BinaryNode;
+class NodeFileWriteHandle;
+
+/**
+ * @brief Utility for OTBM-specific item serialization.
+ * Extracts the logic of how items are read from and written to OTBM streams.
+ */
+class ItemSerializationOTBM {
+public:
+	// Reading
+	static std::unique_ptr<Item> createFromStream(const IOMap& maphandle, BinaryNode* stream);
+	static bool unserializeItemNode(const IOMap& maphandle, BinaryNode* node, Item& item);
+	static bool unserializeAttributes(const IOMap& maphandle, BinaryNode* stream, Item& item);
+	static bool readAttribute(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* stream, Item& item);
+
+	// Writing
+	static bool serializeItemNode(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
+	static void serializeItemCompact(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
+	static void serializeItemAttributes(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
+};
+
+#endif // RME_ITEM_SERIALIZATION_OTBM_H_

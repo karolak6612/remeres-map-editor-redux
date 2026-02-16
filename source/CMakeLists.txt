@@ -94,6 +94,9 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/archive_io.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.h
+    ${CMAKE_CURRENT_LIST_DIR}/io/item_serialization_otbm.h
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/templates.h
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.h
@@ -399,6 +402,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/archive_io.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/item_serialization_otbm.cpp
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_client.cpp

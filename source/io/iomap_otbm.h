@@ -19,6 +19,9 @@
 #define RME_OTBM_MAP_IO_H_
 
 #include "io/iomap.h"
+#include "io/filehandle.h"
+#include "ext/pugixml.hpp"
+#include "app/main.h"
 
 class BinaryNode;
 

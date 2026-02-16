@@ -164,6 +164,8 @@ protected:
 	friend class SelectionOperations;
 	friend class MapProcessor;
 	friend class EditorPersistence;
+	friend class MapXMLIO;
+	friend class ItemSerializationOTBM;
 
 public:
 	Waypoints waypoints;

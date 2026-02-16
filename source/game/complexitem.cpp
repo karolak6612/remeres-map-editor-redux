@@ -20,6 +20,7 @@
 #include "game/complexitem.h"
 
 #include "io/iomap.h"
+#include "brushes/brush_enums.h"
 
 // Container
 Container::Container(const uint16_t type) :
@@ -81,6 +82,22 @@ std::unique_ptr<Item> Door::deepCopy() const {
 		door_copy->doorId = doorId;
 	}
 	return copy;
+}
+
+void Door::setDoorID(uint8_t id) {
+	doorId = id;
+}
+
+uint8_t Door::getDoorID() const {
+	return doorId;
+}
+
+bool Door::isRealDoor() const {
+	return true;
+}
+
+DoorType Door::getDoorType() const {
+	return WALL_DOOR_NORMAL; // Stub to satisfy if needed, using normal door as default
 }
 
 // Depot
