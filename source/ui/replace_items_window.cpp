@@ -24,6 +24,10 @@
 #include "util/image_manager.h"
 #include "game/items.h"
 
+#include <glad/glad.h>
+#include <nanovg.h>
+#include <format>
+
 // ============================================================================
 // ReplaceItemsButton
 
@@ -62,27 +66,36 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 }
 
 // ============================================================================
-// ReplaceItemsListBox
+// ReplaceItemsCanvas
 
-ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
-	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+ReplaceItemsCanvas::ReplaceItemsCanvas(wxWindow* parent) :
+	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
+	m_selectedIndex(-1),
+	m_hoverIndex(-1),
+	m_itemHeight(50) {
+
+	Bind(wxEVT_SIZE, &ReplaceItemsCanvas::OnSize, this);
+	Bind(wxEVT_LEFT_DOWN, &ReplaceItemsCanvas::OnMouseDown, this);
+	Bind(wxEVT_MOTION, &ReplaceItemsCanvas::OnMotion, this);
+	Bind(wxEVT_LEAVE_WINDOW, &ReplaceItemsCanvas::OnLeave, this);
 }
 
-bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
+ReplaceItemsCanvas::~ReplaceItemsCanvas() {
+}
+
+bool ReplaceItemsCanvas::AddItem(const ReplacingItem& item) {
 	if (item.replaceId == 0 || item.withId == 0 || item.replaceId == item.withId) {
 		return false;
 	}
 
-	SetItemCount(GetItemCount() + 1);
 	m_items.push_back(item);
+	UpdateLayout();
 	Refresh();
 
 	return true;
 }
 
-void ReplaceItemsListBox::MarkAsComplete(const ReplacingItem& item, uint32_t total) {
+void ReplaceItemsCanvas::MarkAsComplete(const ReplacingItem& item, uint32_t total) {
 	auto it = std::find(m_items.begin(), m_items.end(), item);
 	if (it != m_items.end()) {
 		it->total = total;
@@ -91,22 +104,25 @@ void ReplaceItemsListBox::MarkAsComplete(const ReplacingItem& item, uint32_t tot
 	}
 }
 
-void ReplaceItemsListBox::RemoveSelected() {
-	if (m_items.empty()) {
+void ReplaceItemsCanvas::RemoveSelected() {
+	if (m_items.empty() || m_selectedIndex == -1) {
 		return;
 	}
 
-	const int index = GetSelection();
-	if (index == wxNOT_FOUND) {
-		return;
-	}
+	if (m_selectedIndex >= 0 && m_selectedIndex < static_cast<int>(m_items.size())) {
+		m_items.erase(m_items.begin() + m_selectedIndex);
+		m_selectedIndex = -1;
+		UpdateLayout();
+		Refresh();
 
-	m_items.erase(m_items.begin() + index);
-	SetItemCount(GetItemCount() - 1);
-	Refresh();
+		// Notify parent that selection changed (cleared)
+		wxCommandEvent event(wxEVT_LISTBOX, GetId());
+		event.SetEventObject(this);
+		GetEventHandler()->ProcessEvent(event);
+	}
 }
 
-bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
+bool ReplaceItemsCanvas::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	if (replaceId == 0 || withId == 0 || replaceId == withId) {
 		return false;
 	}
@@ -119,43 +135,198 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const {
-	ASSERT(index < m_items.size());
-
-	const ReplacingItem& item = m_items.at(index);
-	const ItemType& type1 = g_items.getItemType(item.replaceId);
-	Sprite* sprite1 = g_gui.gfx.getSprite(type1.clientID);
-	const ItemType& type2 = g_items.getItemType(item.withId);
-	Sprite* sprite2 = g_gui.gfx.getSprite(type2.clientID);
-
-	if (sprite1 && sprite2) {
-		int x = rect.GetX();
-		int y = rect.GetY();
-		sprite1->DrawTo(&dc, SPRITE_SIZE_32x32, x + 4, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawBitmap(m_arrow_bitmap, x + 38, y + 10, true);
-		sprite2->DrawTo(&dc, SPRITE_SIZE_32x32, x + 56, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawText(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId), x + 104, y + 10);
-
-		if (item.complete) {
-			x = rect.GetWidth() - 100;
-			dc.DrawBitmap(m_flag_bitmap, x + 70, y + 10, true);
-			dc.DrawText(wxString::Format("Total: %d", item.total), x, y + 10);
-		}
-	}
-
-	if (IsSelected(index)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		} else {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		}
-	} else {
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
-	}
+void ReplaceItemsCanvas::UpdateLayout() {
+	int rows = static_cast<int>(m_items.size());
+	UpdateScrollbar(rows * m_itemHeight);
 }
 
-wxCoord ReplaceItemsListBox::OnMeasureItem(size_t WXUNUSED(index)) const {
-	return FromDIP(40);
+void ReplaceItemsCanvas::OnSize(wxSizeEvent& event) {
+	UpdateLayout();
+	Refresh();
+	event.Skip();
+}
+
+wxSize ReplaceItemsCanvas::DoGetBestClientSize() const {
+	return FromDIP(wxSize(480, 320));
+}
+
+int ReplaceItemsCanvas::HitTest(int x, int y) {
+	int scrollPos = GetScrollPosition();
+	int realY = y + scrollPos;
+	int index = realY / m_itemHeight;
+
+	if (index >= 0 && index < static_cast<int>(m_items.size())) {
+		return index;
+	}
+	return -1;
+}
+
+void ReplaceItemsCanvas::OnMouseDown(wxMouseEvent& event) {
+	int index = HitTest(event.GetX(), event.GetY());
+	if (index != m_selectedIndex) {
+		m_selectedIndex = index;
+		Refresh();
+
+		wxCommandEvent cmdEvent(wxEVT_LISTBOX, GetId());
+		cmdEvent.SetEventObject(this);
+		GetEventHandler()->ProcessEvent(cmdEvent);
+	}
+	event.Skip();
+}
+
+void ReplaceItemsCanvas::OnMotion(wxMouseEvent& event) {
+	int index = HitTest(event.GetX(), event.GetY());
+	if (index != m_hoverIndex) {
+		m_hoverIndex = index;
+		if (m_hoverIndex != -1) {
+			SetCursor(wxCursor(wxCURSOR_HAND));
+		} else {
+			SetCursor(wxNullCursor);
+		}
+		Refresh();
+	}
+	event.Skip();
+}
+
+void ReplaceItemsCanvas::OnLeave(wxMouseEvent& event) {
+	if (m_hoverIndex != -1) {
+		m_hoverIndex = -1;
+		Refresh();
+	}
+	event.Skip();
+}
+
+void ReplaceItemsCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	int scrollPos = GetScrollPosition();
+
+	// Background
+	wxColour bgCol = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOX);
+	nvgBeginPath(vg);
+	nvgRect(vg, 0, scrollPos, width, height);
+	nvgFillColor(vg, nvgRGBA(bgCol.Red(), bgCol.Green(), bgCol.Blue(), 255));
+	nvgFill(vg);
+
+	int startRow = scrollPos / m_itemHeight;
+	int endRow = (scrollPos + height + m_itemHeight - 1) / m_itemHeight;
+	int count = static_cast<int>(m_items.size());
+
+	int startIdx = std::max(0, startRow);
+	int endIdx = std::min(count, endRow + 1);
+
+	wxColour selCol = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
+	NVGcolor selColor = nvgRGBA(selCol.Red(), selCol.Green(), selCol.Blue(), 255);
+
+	wxColour textCol = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+	NVGcolor textColor = nvgRGBA(textCol.Red(), textCol.Green(), textCol.Blue(), 255);
+
+	wxColour selTextCol = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+	NVGcolor selTextColor = nvgRGBA(selTextCol.Red(), selTextCol.Green(), selTextCol.Blue(), 255);
+
+	wxColour borderCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT);
+	NVGcolor borderColor = nvgRGBA(borderCol.Red(), borderCol.Green(), borderCol.Blue(), 255);
+
+	// Pre-calc lighter/darker shades for alternating rows if needed, or stick to solid
+	// Let's use simple solid background for standard list look, with selection
+
+	for (int i = startIdx; i < endIdx; ++i) {
+		int y = i * m_itemHeight;
+		const ReplacingItem& item = m_items[i];
+
+		bool isSelected = (i == m_selectedIndex);
+		bool isHovered = (i == m_hoverIndex);
+
+		// Background
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, y, width, m_itemHeight);
+		if (isSelected) {
+			nvgFillColor(vg, selColor);
+		} else if (isHovered) {
+			// Slight hover effect
+			nvgFillColor(vg, nvgRGBA(selCol.Red(), selCol.Green(), selCol.Blue(), 50));
+		} else {
+			// Alternating
+			/*if (i % 2 == 1) {
+				nvgFillColor(vg, nvgRGBA(bgCol.Red() * 0.95, bgCol.Green() * 0.95, bgCol.Blue() * 0.95, 255));
+			} else {
+				nvgFillColor(vg, nvgRGBA(bgCol.Red(), bgCol.Green(), bgCol.Blue(), 255));
+			}*/
+			// Actually just standard background is fine for cleaner look
+			nvgFillColor(vg, nvgRGBA(bgCol.Red(), bgCol.Green(), bgCol.Blue(), 255));
+		}
+		nvgFill(vg);
+
+		// Separator
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, 0, y + m_itemHeight - 0.5f);
+		nvgLineTo(vg, width, y + m_itemHeight - 0.5f);
+		nvgStrokeColor(vg, borderColor);
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
+
+		// Sprites
+		int tex1 = GetOrCreateItemImage(item.replaceId);
+		int tex2 = GetOrCreateItemImage(item.withId);
+
+		float imgSize = 32.0f;
+		float startX = 10.0f;
+		float startY = y + (m_itemHeight - imgSize) / 2.0f;
+
+		// Sprite 1
+		if (tex1 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, startX, startY, imgSize, imgSize, 0, tex1, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, startX, startY, imgSize, imgSize);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Arrow
+		nvgFontSize(vg, 20.0f);
+		nvgFontFace(vg, "sans-bold");
+		if (isSelected) {
+			nvgFillColor(vg, selTextColor);
+		} else {
+			nvgFillColor(vg, nvgRGBA(150, 150, 150, 255));
+		}
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgText(vg, startX + imgSize + 20, y + m_itemHeight / 2.0f, "->", nullptr);
+
+		// Sprite 2
+		float x2 = startX + imgSize + 40;
+		if (tex2 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x2, startY, imgSize, imgSize, 0, tex2, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x2, startY, imgSize, imgSize);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Text
+		float tx = x2 + imgSize + 15;
+		nvgFontSize(vg, 14.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		if (isSelected) {
+			nvgFillColor(vg, selTextColor);
+		} else {
+			nvgFillColor(vg, textColor);
+		}
+
+		std::string label = std::format("Replace: {} With: {}", item.replaceId, item.withId);
+		nvgText(vg, tx, y + m_itemHeight / 2.0f, label.c_str(), nullptr);
+
+		// Completion status
+		if (item.complete) {
+			std::string status = std::format("Total: {}", item.total);
+			nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_MIDDLE);
+			if (isSelected) {
+				nvgFillColor(vg, nvgRGBA(150, 255, 150, 255));
+			} else {
+				nvgFillColor(vg, nvgRGBA(50, 180, 50, 255));
+			}
+			nvgText(vg, width - 10, y + m_itemHeight / 2.0f, status.c_str(), nullptr);
+		}
+	}
 }
 
 // ============================================================================
@@ -168,16 +339,10 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-	wxFlexGridSizer* list_sizer = new wxFlexGridSizer(0, 2, 0, 0);
-	list_sizer->SetFlexibleDirection(wxBOTH);
-	list_sizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
-	list_sizer->SetMinSize(wxSize(-1, FromDIP(300)));
-
-	list = new ReplaceItemsListBox(this);
+	list = new ReplaceItemsCanvas(this);
 	list->SetMinSize(FromDIP(wxSize(480, 320)));
 
-	list_sizer->Add(list, 0, wxALL | wxEXPAND, 5);
-	sizer->Add(list_sizer, 1, wxALL | wxEXPAND, 5);
+	sizer->Add(list, 1, wxALL | wxEXPAND, 5);
 
 	wxBoxSizer* items_sizer = new wxBoxSizer(wxHORIZONTAL);
 	items_sizer->SetMinSize(wxSize(-1, FromDIP(40)));
@@ -234,7 +399,9 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	Centre(wxBOTH);
 
 	// Connect Events
+	// Note: ReplaceItemsCanvas emits wxEVT_LISTBOX with its ID
 	list->Bind(wxEVT_LISTBOX, &ReplaceItemsDialog::OnListSelected, this);
+
 	replace_button->Bind(wxEVT_LEFT_DOWN, &ReplaceItemsDialog::OnReplaceItemClicked, this);
 	with_button->Bind(wxEVT_LEFT_DOWN, &ReplaceItemsDialog::OnWithItemClicked, this);
 	add_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnAddButtonClicked, this);
@@ -260,7 +427,7 @@ void ReplaceItemsDialog::UpdateWidgets() {
 		add_button->SetToolTip("Select replacement and target items to add.");
 	}
 
-	remove_button->Enable(list->GetCount() != 0 && list->GetSelection() != wxNOT_FOUND);
+	remove_button->Enable(list->GetCount() != 0 && list->GetSelection() != -1);
 	if (remove_button->IsEnabled()) {
 		remove_button->SetToolTip("Remove selected rule");
 	} else {
@@ -276,7 +443,7 @@ void ReplaceItemsDialog::UpdateWidgets() {
 }
 
 void ReplaceItemsDialog::OnListSelected(wxCommandEvent& WXUNUSED(event)) {
-	remove_button->Enable(list->GetCount() != 0 && list->GetSelection() != wxNOT_FOUND);
+	remove_button->Enable(list->GetCount() != 0 && list->GetSelection() != -1);
 }
 
 void ReplaceItemsDialog::OnReplaceItemClicked(wxMouseEvent& WXUNUSED(event)) {

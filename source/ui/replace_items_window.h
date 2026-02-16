@@ -21,6 +21,7 @@
 #include "app/main.h"
 #include "ui/controls/item_buttons.h"
 #include "editor/editor.h"
+#include "util/nanovg_canvas.h"
 
 struct ReplacingItem {
 	ReplacingItem() :
@@ -55,19 +56,17 @@ private:
 };
 
 // ============================================================================
-// ReplaceItemsListBox
+// ReplaceItemsCanvas (NanoVG Migration)
 
-class ReplaceItemsListBox : public wxVListBox {
+class ReplaceItemsCanvas : public NanoVGCanvas {
 public:
-	ReplaceItemsListBox(wxWindow* parent);
+	ReplaceItemsCanvas(wxWindow* parent);
+	virtual ~ReplaceItemsCanvas();
 
 	bool AddItem(const ReplacingItem& item);
 	void MarkAsComplete(const ReplacingItem& item, uint32_t total);
 	void RemoveSelected();
 	bool CanAdd(uint16_t replaceId, uint16_t withId) const;
-
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
 
 	const std::vector<ReplacingItem>& GetItems() const {
 		return m_items;
@@ -75,11 +74,27 @@ public:
 	size_t GetCount() const {
 		return m_items.size();
 	}
+	int GetSelection() const {
+		return m_selectedIndex;
+	}
+
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	wxSize DoGetBestClientSize() const override;
+
+	void OnSize(wxSizeEvent& event);
+	void OnMouseDown(wxMouseEvent& event);
+	void OnMotion(wxMouseEvent& event);
+	void OnLeave(wxMouseEvent& event);
+
+	int HitTest(int x, int y);
+	void UpdateLayout();
 
 private:
 	std::vector<ReplacingItem> m_items;
-	wxBitmap m_arrow_bitmap;
-	wxBitmap m_flag_bitmap;
+	int m_selectedIndex;
+	int m_hoverIndex;
+	int m_itemHeight;
 };
 
 // ============================================================================
@@ -126,7 +141,7 @@ public:
 private:
 	void UpdateWidgets();
 
-	ReplaceItemsListBox* list;
+	ReplaceItemsCanvas* list;
 	ReplaceItemsButton* replace_button;
 	ReplaceItemsButton* with_button;
 	wxGauge* progress;
