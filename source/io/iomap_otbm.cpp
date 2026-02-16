@@ -1637,7 +1637,7 @@ void IOMapOTBM::writeTileData(const Map& map, NodeFileWriteHandle& f) {
 					}
 
 					// Is it an empty tile that we can skip? (Leftovers...)
-					if (save_tile->size() == 0) {
+					if (save_tile->size() == 0 && !save_tile->isHouseTile() && !save_tile->getMapFlags()) {
 						continue;
 					}
 
