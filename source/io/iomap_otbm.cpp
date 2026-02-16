@@ -291,10 +291,16 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	}
 
 	g_gui.SetLoadDone(99, "Saving spawns...");
-	MapXMLIO::saveSpawns(map, identifier);
+	if (!MapXMLIO::saveSpawns(map, identifier)) {
+		spdlog::error("Failed to save spawns!");
+		return false;
+	}
 
 	g_gui.SetLoadDone(99, "Saving houses...");
-	MapXMLIO::saveHouses(map, identifier);
+	if (!MapXMLIO::saveHouses(map, identifier)) {
+		spdlog::error("Failed to save houses!");
+		return false;
+	}
 
 	return true;
 }

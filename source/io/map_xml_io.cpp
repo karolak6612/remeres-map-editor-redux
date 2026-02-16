@@ -23,7 +23,7 @@ std::pair<std::string, std::string> MapXMLIO::NormalizeMapFilePaths(const FileNa
 	std::string utf8_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
 	utf8_path += filename;
 
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
+	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvLocal));
 	encoded_path += filename;
 
 	return { utf8_path, encoded_path };
@@ -157,7 +157,9 @@ bool MapXMLIO::saveSpawns(const Map& map, const FileName& dir) {
 	auto paths = NormalizeMapFilePaths(dir, map.spawnfile);
 
 	pugi::xml_document doc;
-	return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	if (saveSpawns(map, doc)) {
+		return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	}
 	return false;
 }
 
@@ -287,7 +289,9 @@ bool MapXMLIO::saveHouses(const Map& map, const FileName& dir) {
 	auto paths = NormalizeMapFilePaths(dir, map.housefile);
 
 	pugi::xml_document doc;
-	return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	if (saveHouses(map, doc)) {
+		return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	}
 	return false;
 }
 
@@ -366,7 +370,9 @@ bool MapXMLIO::saveWaypoints(const Map& map, const FileName& dir) {
 	auto paths = NormalizeMapFilePaths(dir, map.waypointfile);
 
 	pugi::xml_document doc;
-	return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	if (saveWaypoints(map, doc)) {
+		return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	}
 	return false;
 }
 

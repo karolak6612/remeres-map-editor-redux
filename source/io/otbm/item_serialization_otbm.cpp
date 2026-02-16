@@ -183,28 +183,77 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 				uint8_t lookHead, lookBody, lookLegs, lookFeet, lookAddon;
 				uint8_t lookMountHead, lookMountBody, lookMountLegs, lookMountFeet;
 
-				if (stream->getU8(flags) && stream->getU8(direction) && stream->getU16(lookType) && stream->getU8(lookHead) && stream->getU8(lookBody) && stream->getU8(lookLegs) && stream->getU8(lookFeet) && stream->getU8(lookAddon) && stream->getU16(lookMount) && stream->getU8(lookMountHead) && stream->getU8(lookMountBody) && stream->getU8(lookMountLegs) && stream->getU8(lookMountFeet)) {
-					podium->setShowOutfit((flags & PODIUM_SHOW_OUTFIT) != 0);
-					podium->setShowMount((flags & PODIUM_SHOW_MOUNT) != 0);
-					podium->setShowPlatform((flags & PODIUM_SHOW_PLATFORM) != 0);
-					podium->setDirection(direction);
-
-					Outfit newOutfit;
-					newOutfit.lookType = lookType;
-					newOutfit.lookHead = lookHead;
-					newOutfit.lookBody = lookBody;
-					newOutfit.lookLegs = lookLegs;
-					newOutfit.lookFeet = lookFeet;
-					newOutfit.lookAddon = lookAddon;
-					newOutfit.lookMount = lookMount;
-					newOutfit.lookMountHead = lookMountHead;
-					newOutfit.lookMountBody = lookMountBody;
-					newOutfit.lookMountLegs = lookMountLegs;
-					newOutfit.lookMountFeet = lookMountFeet;
-					podium->setOutfit(newOutfit);
-				} else {
+				if (!stream->getU8(flags)) {
+					spdlog::error("Podium read failed: flags");
 					return false;
 				}
+				if (!stream->getU8(direction)) {
+					spdlog::error("Podium read failed: direction");
+					return false;
+				}
+				if (!stream->getU16(lookType)) {
+					spdlog::error("Podium read failed: lookType");
+					return false;
+				}
+				if (!stream->getU8(lookHead)) {
+					spdlog::error("Podium read failed: lookHead");
+					return false;
+				}
+				if (!stream->getU8(lookBody)) {
+					spdlog::error("Podium read failed: lookBody");
+					return false;
+				}
+				if (!stream->getU8(lookLegs)) {
+					spdlog::error("Podium read failed: lookLegs");
+					return false;
+				}
+				if (!stream->getU8(lookFeet)) {
+					spdlog::error("Podium read failed: lookFeet");
+					return false;
+				}
+				if (!stream->getU8(lookAddon)) {
+					spdlog::error("Podium read failed: lookAddon");
+					return false;
+				}
+				if (!stream->getU16(lookMount)) {
+					spdlog::error("Podium read failed: lookMount");
+					return false;
+				}
+				if (!stream->getU8(lookMountHead)) {
+					spdlog::error("Podium read failed: lookMountHead");
+					return false;
+				}
+				if (!stream->getU8(lookMountBody)) {
+					spdlog::error("Podium read failed: lookMountBody");
+					return false;
+				}
+				if (!stream->getU8(lookMountLegs)) {
+					spdlog::error("Podium read failed: lookMountLegs");
+					return false;
+				}
+				if (!stream->getU8(lookMountFeet)) {
+					spdlog::error("Podium read failed: lookMountFeet");
+					return false;
+				}
+
+				podium->setShowOutfit((flags & PODIUM_SHOW_OUTFIT) != 0);
+				podium->setShowMount((flags & PODIUM_SHOW_MOUNT) != 0);
+				podium->setShowPlatform((flags & PODIUM_SHOW_PLATFORM) != 0);
+				podium->setDirection(direction);
+
+				Outfit newOutfit;
+				newOutfit.lookType = lookType;
+				newOutfit.lookHead = lookHead;
+				newOutfit.lookBody = lookBody;
+				newOutfit.lookLegs = lookLegs;
+				newOutfit.lookFeet = lookFeet;
+				newOutfit.lookAddon = lookAddon;
+				newOutfit.lookMount = lookMount;
+				newOutfit.lookMountHead = lookMountHead;
+				newOutfit.lookMountBody = lookMountBody;
+				newOutfit.lookMountLegs = lookMountLegs;
+				newOutfit.lookMountFeet = lookMountFeet;
+				podium->setOutfit(newOutfit);
 			} else {
 				return stream->skip(15);
 			}

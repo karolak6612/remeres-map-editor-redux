@@ -120,6 +120,10 @@ public:
 	void setHouseFilename(const std::string& new_housefile);
 	void setSpawnFilename(const std::string& new_spawnfile);
 
+	std::string getWaypointFilename() const {
+		return waypointfile;
+	}
+
 	void flagAsNamed() {
 		unnamed = false;
 	}
