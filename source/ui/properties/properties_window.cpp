@@ -37,7 +37,8 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	unique_id_field(nullptr),
 	count_field(nullptr),
 	tier_field(nullptr),
-	currentPanel(nullptr) {
+	currentPanel(nullptr),
+	attributesGrid(nullptr) {
 	ASSERT(edit_item);
 
 	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickOK, this, wxID_OK);
@@ -49,6 +50,7 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	Bind(wxEVT_SIZE, &PropertiesWindow::OnResize, this);
 
 	createUI();
 }
@@ -189,10 +191,10 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 }
 
 wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
-	wxPanel* panel = newd wxPanel(parent, wxID_ANY);
+	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_ADVANCED_TAB);
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 
-	attributesGrid = newd wxGrid(panel, ITEM_PROPERTIES_ADVANCED_TAB, wxDefaultPosition, wxSize(-1, FromDIP(160)));
+	attributesGrid = newd wxGrid(panel, wxID_ANY, wxDefaultPosition, wxSize(-1, FromDIP(160)));
 	topSizer->Add(attributesGrid, wxSizerFlags(1).Expand());
 
 	wxFont time_font(*wxSWISS_FONT);
@@ -244,17 +246,26 @@ void PropertiesWindow::SetGridValue(wxGrid* grid, int rowIndex, std::string labe
 }
 
 void PropertiesWindow::OnResize(wxSizeEvent& evt) {
-	/*
-	if(wxGrid* grid = (wxGrid*)currentPanel->FindWindowByName("AdvancedGrid")) {
-		int tWidth = 0;
-		for(int i = 0; i < 3; ++i)
-			tWidth += grid->GetColumnWidth(i);
+	evt.Skip();
 
-		int wWidth = grid->GetParent()->GetSize().GetWidth();
+	if (attributesGrid && attributesGrid->IsShownOnScreen()) {
+		// Calculate available width for the grid
+		// We use GetClientSize() of the grid itself to be safe, as it should be resized by sizers by now
+		int gridWidth = attributesGrid->GetClientSize().GetWidth();
+		if (gridWidth <= 0) {
+			return;
+		}
 
-		grid->SetColumnWidth(2, wWidth - 100 - 80);
+		int col0 = attributesGrid->GetColSize(0);
+		int col1 = attributesGrid->GetColSize(1);
+		int scrollbarWidth = wxSystemSettings::GetMetric(wxSYS_VSCROLL_X);
+		int margins = 4; // Small margin to avoid horizontal scrollbar appearing
+
+		int newCol2 = gridWidth - col0 - col1 - scrollbarWidth - margins;
+		if (newCol2 > 50) {
+			attributesGrid->SetColSize(2, newCol2);
+		}
 	}
-	*/
 }
 
 void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
@@ -268,7 +279,10 @@ void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
 			break;
 		}
 		case ITEM_PROPERTIES_ADVANCED_TAB: {
-			// currentPanel = createAttributesPanel(page);
+			// Trigger a resize to layout the grid columns correctly
+			wxSizeEvent resizeEvt(GetSize(), GetId());
+			resizeEvt.SetEventObject(this);
+			OnResize(resizeEvt);
 			break;
 		}
 		default:
