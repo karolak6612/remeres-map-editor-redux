@@ -7,7 +7,6 @@
 
 #include <string>
 #include <vector>
-#include <map>
 #include <memory>
 #include <optional>
 #include <span>
@@ -20,6 +19,13 @@ class ArchiveReader {
 public:
 	ArchiveReader();
 	~ArchiveReader();
+
+	ArchiveReader(ArchiveReader&&) noexcept;
+	ArchiveReader& operator=(ArchiveReader&&) noexcept;
+
+	// No copy
+	ArchiveReader(const ArchiveReader&) = delete;
+	ArchiveReader& operator=(const ArchiveReader&) = delete;
 
 	bool open(const std::filesystem::path& path);
 
@@ -47,6 +53,13 @@ class ArchiveWriter {
 public:
 	ArchiveWriter();
 	~ArchiveWriter();
+
+	ArchiveWriter(ArchiveWriter&&) noexcept;
+	ArchiveWriter& operator=(ArchiveWriter&&) noexcept;
+
+	// No copy
+	ArchiveWriter(const ArchiveWriter&) = delete;
+	ArchiveWriter& operator=(const ArchiveWriter&) = delete;
 
 	bool open(const std::filesystem::path& path);
 

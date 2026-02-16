@@ -125,14 +125,6 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 			item.setDescription(desc);
 			break;
 		}
-		case OTBM_ATTR_RUNE_CHARGES: {
-			uint8_t subtype;
-			if (!stream->getU8(subtype)) {
-				return false;
-			}
-			item.setSubtype(subtype);
-			break;
-		}
 		case OTBM_ATTR_TIER: {
 			uint8_t tier;
 			if (!stream->getU8(tier)) {
@@ -167,12 +159,13 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 			break;
 		}
 		case OTBM_ATTR_DEPOT_ID: {
-			// Depot inherits from item directly in some versions, but let's check
-			// Actually Depot class is in complexitem.h
-			// Let's assume we can cast if it's a Depot
 			if (auto depot = dynamic_cast<Depot*>(&item)) {
 				uint16_t id;
 				if (!stream->getU16(id)) {
+					return false;
+				}
+				if (id > 255) {
+					spdlog::error("ItemSerializationOTBM: Depot ID too large: {}", id);
 					return false;
 				}
 				depot->setDepotID(static_cast<uint8_t>(id));
@@ -189,9 +182,9 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 				uint8_t lookMountHead, lookMountBody, lookMountLegs, lookMountFeet;
 
 				if (stream->getU8(flags) && stream->getU8(direction) && stream->getU16(lookType) && stream->getU8(lookHead) && stream->getU8(lookBody) && stream->getU8(lookLegs) && stream->getU8(lookFeet) && stream->getU8(lookAddon) && stream->getU16(lookMount) && stream->getU8(lookMountHead) && stream->getU8(lookMountBody) && stream->getU8(lookMountLegs) && stream->getU8(lookMountFeet)) {
-					podium->setShowOutfit((flags & 0x01) != 0); // PODIUM_SHOW_OUTFIT
-					podium->setShowMount((flags & 0x02) != 0); // PODIUM_SHOW_MOUNT
-					podium->setShowPlatform((flags & 0x04) != 0); // PODIUM_SHOW_PLATFORM
+					podium->setShowOutfit((flags & PODIUM_SHOW_OUTFIT) != 0);
+					podium->setShowMount((flags & PODIUM_SHOW_MOUNT) != 0);
+					podium->setShowPlatform((flags & PODIUM_SHOW_PLATFORM) != 0);
 					podium->setDirection(direction);
 
 					Outfit newOutfit;
@@ -298,34 +291,34 @@ void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, Node
 
 	// Specific attributes
 	if (auto tele = item.asTeleport()) {
-		f.addByte(OTBM_ATTR_TELE_DEST);
+		f.addU8(OTBM_ATTR_TELE_DEST);
 		f.addU16(tele->getDestination().x);
 		f.addU16(tele->getDestination().y);
 		f.addU8(tele->getDestination().z);
 	} else if (auto door = item.asDoor()) {
 		if (door->getDoorID() != 0) {
-			f.addByte(OTBM_ATTR_HOUSEDOORID);
+			f.addU8(OTBM_ATTR_HOUSEDOORID);
 			f.addU8(door->getDoorID());
 		}
 	} else if (auto depot = dynamic_cast<const Depot*>(&item)) {
 		if (depot->getDepotID() != 0) {
-			f.addByte(OTBM_ATTR_DEPOT_ID);
+			f.addU8(OTBM_ATTR_DEPOT_ID);
 			f.addU16(depot->getDepotID());
 		}
 	} else if (auto podium = dynamic_cast<const Podium*>(&item)) {
 		uint8_t flags = 0;
 		if (podium->hasShowOutfit()) {
-			flags |= 0x01; // PODIUM_SHOW_OUTFIT
+			flags |= PODIUM_SHOW_OUTFIT;
 		}
 		if (podium->hasShowMount()) {
-			flags |= 0x02; // PODIUM_SHOW_MOUNT
+			flags |= PODIUM_SHOW_MOUNT;
 		}
 		if (podium->hasShowPlatform()) {
-			flags |= 0x04; // PODIUM_SHOW_PLATFORM
+			flags |= PODIUM_SHOW_PLATFORM;
 		}
 
 		const Outfit& outfit = podium->getOutfit();
-		f.addByte(OTBM_ATTR_PODIUMOUTFIT);
+		f.addU8(OTBM_ATTR_PODIUMOUTFIT);
 		f.addU8(flags);
 		f.addU8(podium->getDirection());
 

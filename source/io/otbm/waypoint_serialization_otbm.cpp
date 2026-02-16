@@ -39,7 +39,7 @@ bool WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFileWriteHand
 	bool waypointsWarning = false;
 	const bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
 
-	if (supportWaypoints || !map.waypoints.waypoints.empty()) {
+	if (!map.waypoints.waypoints.empty()) {
 		if (!supportWaypoints) {
 			waypointsWarning = true;
 		}

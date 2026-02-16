@@ -4,7 +4,7 @@
 #include "map/tile.h"
 #include "game/item.h"
 #include "game/house.h"
-#include "io/item_serialization_otbm.h"
+#include "io/otbm/item_serialization_otbm.h"
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
 #include <format>
@@ -67,10 +67,11 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 			switch (attribute) {
 				case OTBM_ATTR_TILE_FLAGS: {
 					uint32_t flags = 0;
-					if (!tileNode->getU32(flags)) {
+					if (tileNode->getU32(flags)) {
+						tile->setMapFlags(flags);
+					} else {
 						spdlog::warn("Invalid tile flags at {},{},{}", pos.x, pos.y, pos.z);
 					}
-					tile->setMapFlags(flags);
 					break;
 				}
 				case OTBM_ATTR_ITEM: {
@@ -190,7 +191,7 @@ void TileSerializationOTBM::serializeTile_OTBM(const IOMapOTBM& iomap, Tile* sav
 	}
 
 	if (save_tile->getMapFlags()) {
-		f.addByte(OTBM_ATTR_TILE_FLAGS);
+		f.addU8(OTBM_ATTR_TILE_FLAGS);
 		f.addU32(save_tile->getMapFlags());
 	}
 
@@ -208,7 +209,7 @@ void TileSerializationOTBM::serializeTile_OTBM(const IOMapOTBM& iomap, Tile* sav
 			} else if (ground->isComplex()) {
 				ItemSerializationOTBM::serializeItemNode(iomap, f, *ground);
 			} else {
-				f.addByte(OTBM_ATTR_ITEM);
+				f.addU8(OTBM_ATTR_ITEM);
 				ItemSerializationOTBM::serializeItemCompact(iomap, f, *ground);
 			}
 		}

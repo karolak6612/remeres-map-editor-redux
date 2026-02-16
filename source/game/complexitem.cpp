@@ -69,6 +69,8 @@ std::unique_ptr<Item> Teleport::deepCopy() const {
 	return copy;
 }
 
+#include "brushes/wall/wall_brush.h"
+
 // Door
 Door::Door(const uint16_t type) :
 	Item(type, 0),
@@ -85,19 +87,27 @@ std::unique_ptr<Item> Door::deepCopy() const {
 }
 
 void Door::setDoorID(uint8_t id) {
-	doorId = id;
+	doorId = isRealDoor() ? id : 0;
 }
 
 uint8_t Door::getDoorID() const {
-	return doorId;
+	return isRealDoor() ? doorId : 0;
 }
 
 bool Door::isRealDoor() const {
-	return true;
+	const DoorType& dt = getDoorType();
+	// doors with no wallbrush will appear as WALL_UNDEFINED
+	// this is for compatibility
+	return dt == WALL_UNDEFINED || dt == WALL_DOOR_NORMAL || dt == WALL_DOOR_LOCKED || dt == WALL_DOOR_QUEST || dt == WALL_DOOR_MAGIC || dt == WALL_DOOR_NORMAL_ALT;
 }
 
 DoorType Door::getDoorType() const {
-	return WALL_DOOR_NORMAL; // Stub to satisfy if needed, using normal door as default
+	WallBrush* wb = getWallBrush();
+	if (!wb) {
+		return WALL_UNDEFINED;
+	}
+
+	return wb->getDoorTypeFromID(id);
 }
 
 // Depot

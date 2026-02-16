@@ -21,15 +21,15 @@ bool HeaderSerializationOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& 
 	out_ver.otbm = static_cast<MapVersionID>(u32);
 
 	uint16_t u16;
-	root->getU16(u16); // map size X
-	root->getU16(u16); // map size Y
-	root->getU32(u32); // OTB major version
+	if (!root->getU16(u16) || !root->getU16(u16) || !root->getU32(u32)) {
+		return false;
+	}
 
 	if (!root->getU32(u32)) { // OTB minor version
 		return false;
 	}
 
-	out_ver.client = ClientVersionID(u32);
+	out_ver.client = static_cast<ClientVersionID>(u32);
 	return true;
 }
 
@@ -72,7 +72,11 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 	}
 	map.height = u16;
 
-	if (!root->getU32(u32) || u32 > static_cast<uint32_t>(g_items.MajorVersion)) {
+	if (!root->getU32(u32)) {
+		return false;
+	}
+
+	if (u32 > static_cast<uint32_t>(g_items.MajorVersion)) {
 		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a items.otb format that deviates from the "
 												 "items.otb loaded by the editor. Do you still want to attempt to load the map?",
 									wxYES | wxNO)
@@ -84,7 +88,11 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 		}
 	}
 
-	if (!root->getU32(u32) || u32 > static_cast<uint32_t>(g_items.MinorVersion)) {
+	if (!root->getU32(u32)) {
+		return false;
+	}
+
+	if (u32 > static_cast<uint32_t>(g_items.MinorVersion)) {
 		spdlog::warn("This editor needs an updated items.otb version (found minor {})", u32);
 	}
 	version.client = static_cast<ClientVersionID>(u32);
@@ -98,25 +106,28 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 	return true;
 }
 
-void HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
+bool HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
 	uint8_t attribute;
 	while (mapHeaderNode->getU8(attribute)) {
 		switch (attribute) {
 			case OTBM_ATTR_DESCRIPTION: {
 				if (!mapHeaderNode->getString(map.description)) {
 					spdlog::warn("Invalid map description tag");
+					return false;
 				}
 				break;
 			}
 			case OTBM_ATTR_EXT_SPAWN_FILE: {
 				if (!mapHeaderNode->getString(map.spawnfile)) {
 					spdlog::warn("Invalid map spawnfile tag");
+					return false;
 				}
 				break;
 			}
 			case OTBM_ATTR_EXT_HOUSE_FILE: {
 				if (!mapHeaderNode->getString(map.housefile)) {
 					spdlog::warn("Invalid map housefile tag");
+					return false;
 				}
 				break;
 			}
@@ -125,6 +136,7 @@ void HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderN
 				std::string stringToSkip;
 				if (!mapHeaderNode->getString(stringToSkip)) {
 					spdlog::warn("Invalid map NPC spawnfile tag");
+					return false;
 				}
 				break;
 			}
@@ -134,4 +146,5 @@ void HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderN
 			}
 		}
 	}
+	return true;
 }

@@ -1,7 +1,6 @@
 #ifndef RME_WAYPOINT_SERIALIZATION_OTBM_H_
 #define RME_WAYPOINT_SERIALIZATION_OTBM_H_
 
-#include "app/main.h"
 #include "io/iomap_otbm.h"
 
 class Map;

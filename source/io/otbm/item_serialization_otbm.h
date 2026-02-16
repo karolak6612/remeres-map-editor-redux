@@ -5,9 +5,10 @@
 #ifndef RME_ITEM_SERIALIZATION_OTBM_H_
 #define RME_ITEM_SERIALIZATION_OTBM_H_
 
-#include "io/iomap_otbm.h"
+#include "io/otbm/otbm_types.h"
 #include <memory>
 
+class IOMap;
 class Item;
 class BinaryNode;
 class NodeFileWriteHandle;

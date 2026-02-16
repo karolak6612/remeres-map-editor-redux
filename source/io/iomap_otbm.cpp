@@ -45,7 +45,7 @@
 #include "io/iomap_otbm.h"
 #include "io/archive_io.h"
 #include "io/map_xml_io.h"
-#include "io/item_serialization_otbm.h"
+#include "io/otbm/item_serialization_otbm.h"
 
 // New specialized serialization classes
 #include "io/otbm/header_serialization_otbm.h"
@@ -141,7 +141,7 @@ bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver) {
 			return false;
 		}
 
-		auto f = std::make_shared<MemoryNodeFileReadHandle>(otbmBuffer->data() + 4, otbmBuffer->size() - 4);
+		auto f = std::make_unique<MemoryNodeFileReadHandle>(otbmBuffer->data() + 4, otbmBuffer->size() - 4);
 		return getVersionInfo(f.get(), out_ver);
 	}
 #endif
@@ -236,8 +236,8 @@ bool IOMapOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, BinaryNode*& root, 
 	return HeaderSerializationOTBM::loadMapRoot(map, f, version, root, mapHeaderNode);
 }
 
-void IOMapOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
-	HeaderSerializationOTBM::readMapAttributes(map, mapHeaderNode);
+bool IOMapOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderNode) {
+	return HeaderSerializationOTBM::readMapAttributes(map, mapHeaderNode);
 }
 
 void IOMapOTBM::readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode) {
@@ -291,7 +291,9 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 		return false;
 	}
 
-	readMapAttributes(map, mapHeaderNode);
+	if (!readMapAttributes(map, mapHeaderNode)) {
+		return false;
+	}
 	readMapNodes(map, f, mapHeaderNode);
 
 	if (!f.isOk()) {
@@ -389,7 +391,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 
 		f.addNode(OTBM_MAP_DATA);
 		{
-			f.addByte(OTBM_ATTR_DESCRIPTION);
+			f.addU8(OTBM_ATTR_DESCRIPTION);
 			f.addString(std::format("Saved with {} {}", __RME_APPLICATION_NAME__, __RME_VERSION__));
 
 			f.addU8(OTBM_ATTR_DESCRIPTION);
@@ -430,6 +432,6 @@ bool IOMapOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersio
 	return WaypointSerializationOTBM::writeWaypoints(map, f, mapVersion);
 }
 
-void IOMapOTBM::serializeTile_OTBM(Tile* save_tile, NodeFileWriteHandle& f, const IOMapOTBM& self) {
-	TileSerializationOTBM::serializeTile_OTBM(self, save_tile, f);
+void IOMapOTBM::serializeTile_OTBM(const IOMapOTBM& iomap, Tile* save_tile, NodeFileWriteHandle& f) {
+	TileSerializationOTBM::serializeTile_OTBM(iomap, save_tile, f);
 }

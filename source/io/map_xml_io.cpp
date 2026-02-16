@@ -19,20 +19,24 @@
 #include <sstream>
 #include <ranges>
 
-bool MapXMLIO::loadSpawns(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
-	fn += map.spawnfile;
+std::pair<std::string, std::string> MapXMLIO::NormalizeMapFilePaths(const FileName& dir, const std::string& filename) {
+	std::string utf8_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	utf8_path += filename;
 
-	FileName filename(wxstr(fn));
-	if (!filename.FileExists()) {
+	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
+	encoded_path += filename;
+
+	return { utf8_path, encoded_path };
+}
+
+bool MapXMLIO::loadSpawns(Map& map, const FileName& dir) {
+	auto paths = NormalizeMapFilePaths(dir, map.spawnfile);
+	if (!FileName(wxstr(paths.first)).FileExists()) {
 		return false;
 	}
 
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
-	encoded_path += map.spawnfile;
-
 	pugi::xml_document doc;
-	if (!doc.load_file(encoded_path.c_str())) {
+	if (!doc.load_file(paths.second.c_str())) {
 		return false;
 	}
 	return loadSpawns(map, doc);
@@ -85,7 +89,7 @@ bool MapXMLIO::loadSpawns(Map& map, pugi::xml_document& doc) {
 			std::string name = creatureNode.attribute("name").as_string();
 			if (name.empty()) {
 				spdlog::warn("MapXMLIO: Creature missing name at spawn {}:{}:{}", spawnPosition.x, spawnPosition.y, spawnPosition.z);
-				break;
+				continue;
 			}
 
 			int32_t spawntime = creatureNode.attribute("spawntime").as_int();
@@ -105,7 +109,7 @@ bool MapXMLIO::loadSpawns(Map& map, pugi::xml_document& doc) {
 
 			if (!xAttr || !yAttr) {
 				spdlog::warn("MapXMLIO: Creature '{}' missing offset position at spawn {}:{}:{}", name, spawnPosition.x, spawnPosition.y, spawnPosition.z);
-				break;
+				continue;
 			}
 
 			creaturePosition.x += xAttr.as_int();
@@ -121,12 +125,12 @@ bool MapXMLIO::loadSpawns(Map& map, pugi::xml_document& doc) {
 
 			if (!creatureTile) {
 				spdlog::warn("MapXMLIO: Creature '{}' at invalid position {}:{}:{}", name, creaturePosition.x, creaturePosition.y, creaturePosition.z);
-				break;
+				continue;
 			}
 
 			if (creatureTile->creature) {
 				spdlog::warn("MapXMLIO: Duplicate creature '{}' at {}:{}:{}", name, creaturePosition.x, creaturePosition.y, creaturePosition.z);
-				break;
+				continue;
 			}
 
 			CreatureType* type = g_creatures[name];
@@ -149,18 +153,17 @@ bool MapXMLIO::loadSpawns(Map& map, pugi::xml_document& doc) {
 	return true;
 }
 
-bool MapXMLIO::saveSpawns(Map& map, const FileName& dir) {
-	std::string filepath = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
-	filepath += map.spawnfile;
+bool MapXMLIO::saveSpawns(const Map& map, const FileName& dir) {
+	auto paths = NormalizeMapFilePaths(dir, map.spawnfile);
 
 	pugi::xml_document doc;
 	if (saveSpawns(map, doc)) {
-		return doc.save_file(wxstr(filepath).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+		return doc.save_file(wxstr(paths.first).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
 	}
 	return false;
 }
 
-bool MapXMLIO::saveSpawns(Map& map, pugi::xml_document& doc) {
+bool MapXMLIO::saveSpawns(const Map& map, pugi::xml_document& doc) {
 	pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
 	if (!decl) {
 		return false;
@@ -171,7 +174,7 @@ bool MapXMLIO::saveSpawns(Map& map, pugi::xml_document& doc) {
 	std::vector<Creature*> creatureList;
 
 	for (const auto& spawnPos : map.spawns) {
-		Tile* tile = map.getTile(spawnPos);
+		const Tile* tile = map.getTile(spawnPos);
 		if (!tile) {
 			continue;
 		}
@@ -191,7 +194,7 @@ bool MapXMLIO::saveSpawns(Map& map, pugi::xml_document& doc) {
 
 		for (int32_t y = -radius; y <= radius; ++y) {
 			for (int32_t x = -radius; x <= radius; ++x) {
-				Tile* creatureTile = map.getTile(spawnPosition + Position(x, y, 0));
+				const Tile* creatureTile = map.getTile(spawnPosition + Position(x, y, 0));
 				if (creatureTile && creatureTile->creature && !creatureTile->creature->isSaved()) {
 					Creature* creature = creatureTile->creature.get();
 					pugi::xml_node creatureNode = spawnNode.append_child(creature->isNpc() ? "npc" : "monster");
@@ -199,7 +202,6 @@ bool MapXMLIO::saveSpawns(Map& map, pugi::xml_document& doc) {
 					creatureNode.append_attribute("name") = creature->getName().c_str();
 					creatureNode.append_attribute("x") = x;
 					creatureNode.append_attribute("y") = y;
-					creatureNode.append_attribute("z") = spawnPosition.z;
 					creatureNode.append_attribute("spawntime") = creature->getSpawnTime();
 
 					if (creature->getDirection() != NORTH) {
@@ -220,19 +222,13 @@ bool MapXMLIO::saveSpawns(Map& map, pugi::xml_document& doc) {
 }
 
 bool MapXMLIO::loadHouses(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
-	fn += map.housefile;
-
-	FileName filename(wxstr(fn));
-	if (!filename.FileExists()) {
+	auto paths = NormalizeMapFilePaths(dir, map.housefile);
+	if (!FileName(wxstr(paths.first)).FileExists()) {
 		return false;
 	}
 
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
-	encoded_path += map.housefile;
-
 	pugi::xml_document doc;
-	if (!doc.load_file(encoded_path.c_str())) {
+	if (!doc.load_file(paths.second.c_str())) {
 #if defined(OTSERV_DEBUG_XML)
 		return true;
 #else
@@ -267,7 +263,7 @@ bool MapXMLIO::loadHouses(Map& map, pugi::xml_document& doc) {
 			houseNode.attribute("entryz").as_int()
 		);
 
-		if (exitPos.x != 0 && exitPos.y != 0 && exitPos.z != 0) {
+		if (exitPos.x != 0 && exitPos.y != 0) {
 			house->setExit(exitPos);
 		}
 
@@ -289,18 +285,17 @@ bool MapXMLIO::loadHouses(Map& map, pugi::xml_document& doc) {
 	return true;
 }
 
-bool MapXMLIO::saveHouses(Map& map, const FileName& dir) {
-	std::string filepath = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
-	filepath += map.housefile;
+bool MapXMLIO::saveHouses(const Map& map, const FileName& dir) {
+	auto paths = NormalizeMapFilePaths(dir, map.housefile);
 
 	pugi::xml_document doc;
 	if (saveHouses(map, doc)) {
-		return doc.save_file(wxstr(filepath).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+		return doc.save_file(wxstr(paths.first).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
 	}
 	return false;
 }
 
-bool MapXMLIO::saveHouses(Map& map, pugi::xml_document& doc) {
+bool MapXMLIO::saveHouses(const Map& map, pugi::xml_document& doc) {
 	pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
 	if (!decl) {
 		return false;
@@ -332,38 +327,56 @@ bool MapXMLIO::saveHouses(Map& map, pugi::xml_document& doc) {
 }
 
 bool MapXMLIO::loadWaypoints(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
-	fn += map.waypointfile;
-
-	FileName filename(wxstr(fn));
-	if (!filename.FileExists()) {
+	auto paths = NormalizeMapFilePaths(dir, map.waypointfile);
+	if (!FileName(wxstr(paths.first)).FileExists()) {
 		return false;
 	}
 
 	pugi::xml_document doc;
-	if (!doc.load_file(fn.c_str())) {
+	if (!doc.load_file(paths.second.c_str())) {
 		return false;
 	}
 	return loadWaypoints(map, doc);
 }
 
-bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_document& doc) {
-	// Original code was a stub returning true
+bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_node node) {
+	if (!node) {
+		return false;
+	}
+
+	for (auto wpNode : node.children("waypoint")) {
+		std::string name = wpNode.attribute("name").as_string();
+		Position pos(
+			wpNode.attribute("x").as_int(),
+			wpNode.attribute("y").as_int(),
+			wpNode.attribute("z").as_int()
+		);
+
+		if (name.empty() || pos.x == 0 || pos.y == 0) {
+			spdlog::warn("MapXMLIO: Malformed waypoint data, discarding...");
+			continue;
+		}
+
+		map.waypoints.addWaypoint(std::make_unique<Waypoint>(name, pos));
+	}
 	return true;
 }
 
-bool MapXMLIO::saveWaypoints(Map& map, const FileName& dir) {
-	std::string filepath = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
-	filepath += map.waypointfile;
+bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_document& doc) {
+	return loadWaypoints(map, doc.child("waypoints"));
+}
+
+bool MapXMLIO::saveWaypoints(const Map& map, const FileName& dir) {
+	auto paths = NormalizeMapFilePaths(dir, map.waypointfile);
 
 	pugi::xml_document doc;
 	if (saveWaypoints(map, doc)) {
-		return doc.save_file(wxstr(filepath).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+		return doc.save_file(wxstr(paths.first).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
 	}
 	return false;
 }
 
-bool MapXMLIO::saveWaypoints(Map& map, pugi::xml_document& doc) {
+bool MapXMLIO::saveWaypoints(const Map& map, pugi::xml_document& doc) {
 	pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
 	if (!decl) {
 		return false;
