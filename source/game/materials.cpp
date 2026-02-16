@@ -40,12 +40,12 @@ Materials::~Materials() {
 }
 
 void Materials::clear() {
-	for (TilesetContainer::iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
-		delete iter->second;
+	for (auto& [name, tileset] : tilesets) {
+		delete tileset;
 	}
 
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		delete *iter;
+	for (auto* ext : extensions) {
+		delete ext;
 	}
 
 	tilesets.clear();
@@ -58,9 +58,9 @@ const MaterialsExtensionList& Materials::getExtensions() {
 
 MaterialsExtensionList Materials::getExtensionsByVersion(uint16_t version_id) {
 	MaterialsExtensionList ret_list;
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		if ((*iter)->isForVersion(version_id)) {
-			ret_list.push_back(*iter);
+	for (auto* ext : extensions) {
+		if (ext->isForVersion(version_id)) {
+			ret_list.push_back(ext);
 		}
 	}
 	return ret_list;
@@ -233,7 +233,7 @@ void Materials::createOtherTileset() {
 	Tileset* others;
 	Tileset* npc_tileset;
 
-	if (tilesets.find("Others") != tilesets.end()) {
+	if (tilesets.contains("Others")) {
 		others = tilesets["Others"];
 		others->clear();
 	} else {
@@ -241,7 +241,7 @@ void Materials::createOtherTileset() {
 		tilesets["Others"] = others;
 	}
 
-	if (tilesets.find("NPCs") != tilesets.end()) {
+	if (tilesets.contains("NPCs")) {
 		npc_tileset = tilesets["NPCs"];
 		npc_tileset->clear();
 	} else {
@@ -277,9 +277,7 @@ void Materials::createOtherTileset() {
 		}
 	}
 
-	for (CreatureMap::iterator iter = g_creatures.begin(); iter != g_creatures.end(); ++iter) {
-		CreatureType* type = iter->second;
-
+	for (const auto& [id, type] : g_creatures) {
 		if (type->brush == nullptr) {
 			type->brush = newd CreatureBrush(type);
 			g_brushes.addBrush(type->brush);
@@ -316,7 +314,7 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 		if (it != tilesets.end()) {
 			it->second = tileset;
 		} else {
-			tilesets.insert(std::make_pair(name, tileset));
+			tilesets.emplace(name, tileset);
 		}
 	}
 
@@ -334,12 +332,11 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 	}
 
 	Tileset* tileset;
-	auto _it = tilesets.find(tilesetName);
-	if (_it != tilesets.end()) {
+	if (auto _it = tilesets.find(tilesetName); _it != tilesets.end()) {
 		tileset = _it->second;
 	} else {
 		tileset = newd Tileset(g_brushes, tilesetName);
-		tilesets.insert(std::make_pair(tilesetName, tileset));
+		tilesets.emplace(tilesetName, tileset);
 	}
 
 	TilesetCategory* category = tileset->getCategory(categoryType);

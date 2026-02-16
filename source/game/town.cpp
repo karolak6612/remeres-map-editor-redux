@@ -35,28 +35,24 @@ void Towns::clear() {
 }
 
 bool Towns::addTown(std::unique_ptr<Town> town) {
-	TownMap::iterator it = find(town->getID());
-	if (it != end()) {
+	if (towns.contains(town->getID())) {
 		return false;
 	}
-	towns[town->getID()] = std::move(town);
+	towns.emplace(town->getID(), std::move(town));
 	return true;
 }
 
 uint32_t Towns::getEmptyID() {
-	uint32_t empty = 0;
-	for (TownMap::iterator it = begin(); it != end(); ++it) {
-		if (it->second->getID() > empty) {
-			empty = it->second->getID();
-		}
+	if (towns.empty()) {
+		return 1;
 	}
-	return empty + 1;
+	return towns.rbegin()->first + 1;
 }
 
 Town* Towns::getTown(std::string& name) {
-	for (TownMap::iterator it = begin(); it != end(); ++it) {
-		if (it->second->getName() == name) {
-			return it->second.get();
+	for (const auto& [id, town] : towns) {
+		if (town->getName() == name) {
+			return town.get();
 		}
 	}
 	return nullptr;

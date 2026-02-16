@@ -217,8 +217,8 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 	ItemAttributeMap attrs = edit_item->getAttributes();
 	attributesGrid->AppendRows(attrs.size());
 	int i = 0;
-	for (ItemAttributeMap::iterator aiter = attrs.begin(); aiter != attrs.end(); ++aiter, ++i) {
-		AttributeService::setGridValue(attributesGrid, i, aiter->first, aiter->second);
+	for (const auto& [key, attr] : attrs) {
+		AttributeService::setGridValue(attributesGrid, i++, key, attr);
 	}
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
