@@ -141,7 +141,7 @@ void MapPopupMenu::Update() {
 						Append(MAP_POPUP_MENU_GOTO, "&Go To Destination", "Go to the destination of this teleport")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ARROW_RIGHT_TO_BRACKET, wxSize(16, 16)));
 					}
 
-					if (topSelectedItem->is<DoorBrush>()) {
+					if (topSelectedItem->isDoor()) {
 						if (topSelectedItem->isOpen()) {
 							Append(MAP_POPUP_MENU_SWITCH_DOOR, "&Close door", "Close this door")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, wxSize(16, 16)));
 						} else {

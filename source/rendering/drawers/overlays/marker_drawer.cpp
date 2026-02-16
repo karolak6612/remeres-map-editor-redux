@@ -20,7 +20,7 @@ void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int dra
 	}
 
 	// house exit (blue splash)
-	if (tile->is<HouseExitBrush>() && options.show_houses) {
+	if (tile->isHouseExit() && options.show_houses) {
 		if (tile->hasHouseExit(current_house_id)) {
 			drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_HOUSE_EXIT, 64, 255, 255);
 		} else {
