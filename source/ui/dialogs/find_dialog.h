@@ -3,8 +3,8 @@
 
 #include "app/main.h"
 #include <wx/wx.h>
-#include <wx/vlbox.h>
 #include <vector>
+#include "ui/controls/virtual_list_canvas.h"
 
 class Brush;
 
@@ -19,18 +19,18 @@ public:
 	void OnKeyDown(wxKeyEvent&);
 };
 
-class FindDialogListBox : public wxVListBox {
+class FindDialogCanvas : public VirtualListCanvas {
 public:
-	FindDialogListBox(wxWindow* parent, wxWindowID id);
-	~FindDialogListBox();
+	FindDialogCanvas(wxWindow* parent, wxWindowID id);
+	~FindDialogCanvas();
 
-	void Clear();
+	void ClearList();
 	void SetNoMatches();
 	void AddBrush(Brush*);
 	Brush* GetSelectedBrush();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	size_t GetItemCount() const override;
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) override;
 
 protected:
 	bool cleared;
@@ -63,7 +63,7 @@ protected:
 	virtual void OnClickListInternal(wxCommandEvent&) = 0;
 	virtual void OnClickOKInternal() = 0;
 
-	FindDialogListBox* item_list;
+	FindDialogCanvas* item_list;
 	KeyForwardingTextCtrl* search_field;
 	wxTimer idle_input_timer;
 	const Brush* result_brush;

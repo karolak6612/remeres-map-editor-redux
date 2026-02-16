@@ -184,7 +184,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	// --------------- Items list ---------------
 
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
-	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
+	items_list = newd FindDialogCanvas(result_box_sizer->GetStaticBox(), wxID_ANY);
 	items_list->SetMinSize(wxSize(230, 512));
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
@@ -282,7 +282,7 @@ void FindItemDialog::EnableProperties(bool enable) {
 }
 
 void FindItemDialog::RefreshContentsInternal() {
-	items_list->Clear();
+	items_list->ClearList();
 	ok_button->Enable(false);
 	ok_button->SetToolTip("Select an item to continue");
 
@@ -414,7 +414,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetNoMatches();
 	}
 
-	items_list->Refresh();
+	items_list->RefreshList();
 }
 
 void FindItemDialog::OnOptionChange(wxCommandEvent& WXUNUSED(event)) {

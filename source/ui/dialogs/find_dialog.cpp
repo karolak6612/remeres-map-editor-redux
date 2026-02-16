@@ -5,7 +5,9 @@
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include "rendering/core/text_renderer.h"
 #include <algorithm>
+#include <nanovg.h>
 
 static bool caseInsensitiveContains(std::string_view haystack, std::string_view needle_lower) {
 	auto it = std::search(
@@ -45,7 +47,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	search_field->SetFocus();
 	sizer->Add(search_field, 0, wxEXPAND);
 
-	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
+	item_list = newd FindDialogCanvas(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
 	item_list->SetToolTip("Double click to select.");
 	sizer->Add(item_list, wxSizerFlags(1).Expand().Border());
@@ -84,7 +86,7 @@ FindDialog::~FindDialog() = default;
 
 void FindDialog::OnKeyDown(wxKeyEvent& event) {
 	int w, h;
-	item_list->GetSize(&w, &h);
+	item_list->GetClientSize(&w, &h);
 	size_t amount = 1;
 
 	switch (event.GetKeyCode()) {
@@ -239,7 +241,7 @@ void FindBrushDialog::OnClickOKInternal() {
 }
 
 void FindBrushDialog::RefreshContentsInternal() {
-	item_list->Clear();
+	item_list->ClearList();
 
 	std::string search_string = as_lower_str(nstr(search_field->GetValue()));
 	bool do_search = (search_string.size() >= 2);
@@ -298,84 +300,109 @@ void FindBrushDialog::RefreshContentsInternal() {
 			item_list->SetNoMatches();
 		}
 	}
-	item_list->Refresh();
+	item_list->RefreshList();
 }
 
 // ============================================================================
-// Listbox in find item / brush stuff
+// Canvas in find item / brush stuff
 
-FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
+FindDialogCanvas::FindDialogCanvas(wxWindow* parent, wxWindowID id) :
+	VirtualListCanvas(parent, id, SINGLE),
 	cleared(false),
 	no_matches(false) {
-	Clear();
+	ClearList();
 }
 
-FindDialogListBox::~FindDialogListBox() {
+FindDialogCanvas::~FindDialogCanvas() {
 	////
 }
 
-void FindDialogListBox::Clear() {
+void FindDialogCanvas::ClearList() {
 	cleared = true;
 	no_matches = false;
 	brushlist.clear();
-	SetItemCount(1);
+	RefreshList();
 }
 
-void FindDialogListBox::SetNoMatches() {
+void FindDialogCanvas::SetNoMatches() {
 	cleared = false;
 	no_matches = true;
 	brushlist.clear();
-	SetItemCount(1);
+	RefreshList();
 }
 
-void FindDialogListBox::AddBrush(Brush* brush) {
+void FindDialogCanvas::AddBrush(Brush* brush) {
 	if (cleared || no_matches) {
-		SetItemCount(0);
+		// Just clear flags, list is empty
+		cleared = false;
+		no_matches = false;
 	}
 
-	cleared = false;
-	no_matches = false;
-
-	SetItemCount(GetItemCount() + 1);
 	brushlist.push_back(brush);
 }
 
-Brush* FindDialogListBox::GetSelectedBrush() {
-	ssize_t n = GetSelection();
+Brush* FindDialogCanvas::GetSelectedBrush() {
+	int n = GetSelection();
 	if (n == wxNOT_FOUND || no_matches || cleared) {
 		return nullptr;
 	}
-	return brushlist[n];
-}
-
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
-	} else {
-		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
-		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
-		}
-
-		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-			}
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
-		}
-
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
+	if (n >= 0 && static_cast<size_t>(n) < brushlist.size()) {
+		return brushlist[n];
 	}
+	return nullptr;
 }
 
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
+size_t FindDialogCanvas::GetItemCount() const {
+	if (no_matches || cleared) {
+		return 1;
+	}
+	return brushlist.size();
+}
+
+void FindDialogCanvas::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) {
+	if (no_matches) {
+		nvgFillColor(vg, nvgRGB(0, 0, 0));
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgFontFace(vg, "sans");
+		nvgFontSize(vg, 16.0f);
+		nvgText(vg, rect.GetX() + 40, rect.GetY() + rect.GetHeight() / 2.0f, "No matches for your search.", nullptr);
+	} else if (cleared) {
+		nvgFillColor(vg, nvgRGB(0, 0, 0));
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgFontFace(vg, "sans");
+		nvgFontSize(vg, 16.0f);
+		nvgText(vg, rect.GetX() + 40, rect.GetY() + rect.GetHeight() / 2.0f, "Please enter your search string.", nullptr);
+	} else {
+		if (index < 0 || static_cast<size_t>(index) >= brushlist.size()) {
+			return;
+		}
+
+		Brush* brush = brushlist[index];
+		bool selected = IsSelected(index);
+
+		// Icon
+		Sprite* spr = g_gui.gfx.getSprite(brush->getLookID());
+		if (spr) {
+			int tex = GetOrCreateSpriteTexture(vg, spr);
+			if (tex > 0) {
+				int icon_size = 32; // Standard size
+				int iy = rect.GetY();
+				int ix = rect.GetX();
+
+				nvgBeginPath(vg);
+				nvgRect(vg, ix, iy, icon_size, icon_size);
+				NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, icon_size, icon_size, 0, tex, 1.0f);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
+		}
+
+		// Text
+		NVGcolor textColor = selected ? nvgRGB(255, 255, 255) : nvgRGB(0, 0, 0);
+		nvgFillColor(vg, textColor);
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgFontFace(vg, "sans");
+		nvgFontSize(vg, 16.0f);
+		nvgText(vg, rect.GetX() + 32 + 8, rect.GetY() + rect.GetHeight() / 2.0f, wxstr(brush->getName()).utf8_str(), nullptr);
+	}
 }

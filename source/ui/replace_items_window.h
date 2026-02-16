@@ -21,6 +21,7 @@
 #include "app/main.h"
 #include "ui/controls/item_buttons.h"
 #include "editor/editor.h"
+#include "ui/controls/virtual_list_canvas.h"
 
 struct ReplacingItem {
 	ReplacingItem() :
@@ -55,19 +56,23 @@ private:
 };
 
 // ============================================================================
-// ReplaceItemsListBox
+// ReplaceItemsCanvas
 
-class ReplaceItemsListBox : public wxVListBox {
+class ReplaceItemsCanvas : public VirtualListCanvas {
 public:
-	ReplaceItemsListBox(wxWindow* parent);
+	ReplaceItemsCanvas(wxWindow* parent);
 
 	bool AddItem(const ReplacingItem& item);
 	void MarkAsComplete(const ReplacingItem& item, uint32_t total);
 	void RemoveSelected();
 	bool CanAdd(uint16_t replaceId, uint16_t withId) const;
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) override;
+
+	size_t GetItemCount() const override {
+		return m_items.size();
+	}
+	int GetItemHeight() const override { return FromDIP(40); }
 
 	const std::vector<ReplacingItem>& GetItems() const {
 		return m_items;
@@ -78,8 +83,7 @@ public:
 
 private:
 	std::vector<ReplacingItem> m_items;
-	wxBitmap m_arrow_bitmap;
-	wxBitmap m_flag_bitmap;
+	// Bitmaps are replaced by NanoVG icons or we load them as static images
 };
 
 // ============================================================================
@@ -126,7 +130,7 @@ public:
 private:
 	void UpdateWidgets();
 
-	ReplaceItemsListBox* list;
+	ReplaceItemsCanvas* list;
 	ReplaceItemsButton* replace_button;
 	ReplaceItemsButton* with_button;
 	wxGauge* progress;

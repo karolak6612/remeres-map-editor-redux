@@ -23,6 +23,8 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "game/items.h"
+#include <nanovg.h>
+#include <format>
 
 // ============================================================================
 // ReplaceItemsButton
@@ -62,36 +64,33 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 }
 
 // ============================================================================
-// ReplaceItemsListBox
+// ReplaceItemsCanvas
 
-ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
-	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+ReplaceItemsCanvas::ReplaceItemsCanvas(wxWindow* parent) :
+	VirtualListCanvas(parent, wxID_ANY, SINGLE) {
 }
 
-bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
+bool ReplaceItemsCanvas::AddItem(const ReplacingItem& item) {
 	if (item.replaceId == 0 || item.withId == 0 || item.replaceId == item.withId) {
 		return false;
 	}
 
-	SetItemCount(GetItemCount() + 1);
 	m_items.push_back(item);
-	Refresh();
+	RefreshList();
 
 	return true;
 }
 
-void ReplaceItemsListBox::MarkAsComplete(const ReplacingItem& item, uint32_t total) {
+void ReplaceItemsCanvas::MarkAsComplete(const ReplacingItem& item, uint32_t total) {
 	auto it = std::find(m_items.begin(), m_items.end(), item);
 	if (it != m_items.end()) {
 		it->total = total;
 		it->complete = true;
-		Refresh();
+		RefreshList();
 	}
 }
 
-void ReplaceItemsListBox::RemoveSelected() {
+void ReplaceItemsCanvas::RemoveSelected() {
 	if (m_items.empty()) {
 		return;
 	}
@@ -102,11 +101,12 @@ void ReplaceItemsListBox::RemoveSelected() {
 	}
 
 	m_items.erase(m_items.begin() + index);
-	SetItemCount(GetItemCount() - 1);
-	Refresh();
+	// Selection correction is handled by VirtualListCanvas logic mostly, but if we remove current selection:
+	DeselectAll();
+	RefreshList();
 }
 
-bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
+bool ReplaceItemsCanvas::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	if (replaceId == 0 || withId == 0 || replaceId == withId) {
 		return false;
 	}
@@ -119,8 +119,10 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const {
-	ASSERT(index < m_items.size());
+void ReplaceItemsCanvas::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) {
+	if (index < 0 || static_cast<size_t>(index) >= m_items.size()) {
+		return;
+	}
 
 	const ReplacingItem& item = m_items.at(index);
 	const ItemType& type1 = g_items.getItemType(item.replaceId);
@@ -128,34 +130,73 @@ void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index)
 	const ItemType& type2 = g_items.getItemType(item.withId);
 	Sprite* sprite2 = g_gui.gfx.getSprite(type2.clientID);
 
-	if (sprite1 && sprite2) {
-		int x = rect.GetX();
-		int y = rect.GetY();
-		sprite1->DrawTo(&dc, SPRITE_SIZE_32x32, x + 4, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawBitmap(m_arrow_bitmap, x + 38, y + 10, true);
-		sprite2->DrawTo(&dc, SPRITE_SIZE_32x32, x + 56, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawText(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId), x + 104, y + 10);
+	bool selected = IsSelected(index);
 
-		if (item.complete) {
-			x = rect.GetWidth() - 100;
-			dc.DrawBitmap(m_flag_bitmap, x + 70, y + 10, true);
-			dc.DrawText(wxString::Format("Total: %d", item.total), x, y + 10);
+	int x = rect.GetX();
+	int y = rect.GetY();
+
+	// Draw Sprite 1
+	if (sprite1) {
+		int tex = GetOrCreateSpriteTexture(vg, sprite1);
+		if (tex > 0) {
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 4, y + 4, 32, 32);
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 4, y + 4, 32, 32, 0, tex, 1.0f);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
 		}
 	}
 
-	if (IsSelected(index)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		} else {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		}
-	} else {
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
-	}
-}
+	// Draw Arrow
+	// We can use an icon or a simple shape.
+	// Let's use simple triangle for now to avoid dependency on "ICON_LOCATION_ARROW" path mapping in NanoVG
+	// Or use GetOrCreateStaticImage if we knew the path. ICON_LOCATION_ARROW is likely an enum for wxBitmap.
+	// NanoVG doesn't load wxBitmap directly easily without conversion.
+	// Drawing a simple arrow is faster.
+	nvgBeginPath(vg);
+	nvgMoveTo(vg, x + 38, y + 10 + 5);
+	nvgLineTo(vg, x + 38 + 10, y + 10 + 5); // Shaft
+	nvgMoveTo(vg, x + 38 + 10 - 4, y + 10);
+	nvgLineTo(vg, x + 38 + 10, y + 10 + 5);
+	nvgLineTo(vg, x + 38 + 10 - 4, y + 10 + 10);
+	nvgStrokeColor(vg, selected ? nvgRGB(255, 255, 255) : nvgRGB(0, 0, 0));
+	nvgStrokeWidth(vg, 2.0f);
+	nvgStroke(vg);
 
-wxCoord ReplaceItemsListBox::OnMeasureItem(size_t WXUNUSED(index)) const {
-	return FromDIP(40);
+	// Draw Sprite 2
+	if (sprite2) {
+		int tex = GetOrCreateSpriteTexture(vg, sprite2);
+		if (tex > 0) {
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 56, y + 4, 32, 32);
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 56, y + 4, 32, 32, 0, tex, 1.0f);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+	}
+
+	// Text
+	NVGcolor textColor = selected ? nvgRGB(255, 255, 255) : nvgRGB(0, 0, 0);
+	nvgFillColor(vg, textColor);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgFontFace(vg, "sans");
+	nvgFontSize(vg, 14.0f);
+
+	std::string text = wxString::Format("Replace: %d With: %d", item.replaceId, item.withId).ToStdString();
+	nvgText(vg, x + 104, y + 20, text.c_str(), nullptr);
+
+	if (item.complete) {
+		int endX = rect.GetWidth() - 100;
+		// Flag icon? Just draw a small rect or circle
+		nvgBeginPath(vg);
+		nvgCircle(vg, endX + 80, y + 20, 5);
+		nvgFillColor(vg, nvgRGB(0, 200, 0));
+		nvgFill(vg);
+
+		std::string totalText = wxString::Format("Total: %d", item.total).ToStdString();
+		nvgFillColor(vg, textColor);
+		nvgText(vg, endX, y + 20, totalText.c_str(), nullptr);
+	}
 }
 
 // ============================================================================
@@ -173,7 +214,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	list_sizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
 	list_sizer->SetMinSize(wxSize(-1, FromDIP(300)));
 
-	list = new ReplaceItemsListBox(this);
+	list = new ReplaceItemsCanvas(this);
 	list->SetMinSize(FromDIP(wxSize(480, 320)));
 
 	list_sizer->Add(list, 0, wxALL | wxEXPAND, 5);

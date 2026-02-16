@@ -24,20 +24,26 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "ui/browse_tile_window.h"
+#include "ui/controls/virtual_list_canvas.h"
 #include "util/image_manager.h"
+#include <nanovg.h>
 
 // ============================================================================
 //
 
-class BrowseTileListBox : public wxVListBox {
+class BrowseTileCanvas : public VirtualListCanvas {
 public:
-	BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile);
-	~BrowseTileListBox();
+	BrowseTileCanvas(wxWindow* parent, wxWindowID id, Tile* tile);
+	~BrowseTileCanvas();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	size_t GetItemCount() const override;
+	int GetItemHeight() const override { return FromDIP(32); }
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) override;
 	Item* GetSelectedItem();
 	void RemoveSelected();
+	size_t GetSelectedCount() const {
+		return VirtualListCanvas::GetSelectedCount();
+	}
 
 protected:
 	void UpdateItems();
@@ -47,45 +53,65 @@ protected:
 	Tile* edit_tile;
 };
 
-BrowseTileListBox::BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile) :
-	wxVListBox(parent, id, wxDefaultPosition, FROM_DIP(parent, wxSize(200, 180)), wxLB_MULTIPLE), edit_tile(tile) {
+BrowseTileCanvas::BrowseTileCanvas(wxWindow* parent, wxWindowID id, Tile* tile) :
+	VirtualListCanvas(parent, id, MULTIPLE), edit_tile(tile) {
 	UpdateItems();
 }
 
-BrowseTileListBox::~BrowseTileListBox() {
+BrowseTileCanvas::~BrowseTileCanvas() {
 	////
 }
 
-void BrowseTileListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	Item* item = items[n];
+size_t BrowseTileCanvas::GetItemCount() const {
+	return items.size();
+}
 
-	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
-	if (sprite) {
-		sprite->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
-	}
+void BrowseTileCanvas::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) {
+	Item* item = items[index];
+	bool selected = IsSelected(index);
 
-	if (IsSelected(n)) {
+	// Selection state update on item (legacy logic kept)
+	if (selected) {
 		item->select();
-		if (HasFocus()) {
-			dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-		}
 	} else {
 		item->deselect();
-		dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
 	}
 
+	// Text Color
+	NVGcolor textColor = selected ? nvgRGB(255, 255, 255) : nvgRGB(0, 0, 0);
+
+	// Draw Sprite
+	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
+	if (sprite) {
+		int tex = GetOrCreateSpriteTexture(vg, sprite);
+		if (tex > 0) {
+			int ix = rect.GetX();
+			int iy = rect.GetY();
+			int iw = 32;
+			int ih = 32;
+
+			nvgBeginPath(vg);
+			nvgRect(vg, ix, iy, iw, ih);
+			NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, iw, ih, 0, tex, 1.0f);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+	}
+
+	// Draw Text
 	wxString label;
 	label << item->getID() << " - " << wxstr(item->getName());
-	dc.DrawText(label, rect.GetX() + 40, rect.GetY() + 6);
+
+	nvgFillColor(vg, textColor);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	// Font setup should be done by caller or NanoVGCanvas default, assuming "sans" or similar exists.
+	// NanoVGCanvas loads font in InitGL.
+	nvgFontFace(vg, "sans");
+	nvgFontSize(vg, 16.0f);
+	nvgText(vg, rect.GetX() + 40, rect.GetY() + rect.GetHeight() / 2.0f, label.utf8_str(), nullptr);
 }
 
-wxCoord BrowseTileListBox::OnMeasureItem(size_t n) const {
-	return 32;
-}
-
-Item* BrowseTileListBox::GetSelectedItem() {
+Item* BrowseTileCanvas::GetSelectedItem() {
 	if (GetItemCount() == 0 || GetSelectedCount() == 0) {
 		return nullptr;
 	}
@@ -93,23 +119,32 @@ Item* BrowseTileListBox::GetSelectedItem() {
 	return edit_tile->getTopSelectedItem();
 }
 
-void BrowseTileListBox::RemoveSelected() {
+void BrowseTileCanvas::RemoveSelected() {
 	if (GetItemCount() == 0 || GetSelectedCount() == 0) {
 		return;
 	}
 
-	Clear();
-	items.clear();
+	// Ensure items are selected on the tile model
+	for (size_t i = 0; i < items.size(); ++i) {
+		if (IsSelected(i)) {
+			items[i]->select();
+		} else {
+			items[i]->deselect();
+		}
+	}
+
+	DeselectAll(); // Clear selection in UI
+	items.clear(); // Clear local cache
 
 	// Delete the items from the tile
 	auto tile_selection = edit_tile->popSelectedItems(true);
 	// items are automatically deleted when tile_selection goes out of scope
 
 	UpdateItems();
-	Refresh();
+	RefreshList();
 }
 
-void BrowseTileListBox::UpdateItems() {
+void BrowseTileCanvas::UpdateItems() {
 	items.clear();
 	items.reserve(edit_tile->items.size() + (edit_tile->ground ? 1 : 0));
 	for (auto it = edit_tile->items.rbegin(); it != edit_tile->items.rend(); ++it) {
@@ -120,7 +155,7 @@ void BrowseTileListBox::UpdateItems() {
 		items.push_back(edit_tile->ground.get());
 	}
 
-	SetItemCount(items.size());
+	RefreshList();
 }
 
 // ============================================================================
@@ -129,7 +164,7 @@ void BrowseTileListBox::UpdateItems() {
 BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint position /* = wxDefaultPosition */) :
 	wxDialog(parent, wxID_ANY, "Browse Field", position, FROM_DIP(parent, wxSize(600, 400)), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	item_list = newd BrowseTileListBox(this, wxID_ANY, tile);
+	item_list = newd BrowseTileCanvas(this, wxID_ANY, tile);
 	sizer->Add(item_list, wxSizerFlags(1).Expand());
 
 	wxString pos;
