@@ -43,10 +43,10 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 	bool save_as = false;
 
 	if (savefile.empty()) {
-		FileName c1(filename);
-		FileName c2(wxstr(editor.map.getFilename()));
-
 		savefile = editor.map.getFilename();
+
+		FileName c1(wxstr(savefile));
+		FileName c2(wxstr(editor.map.getFilename()));
 		save_as = c1 != c2;
 	}
 
