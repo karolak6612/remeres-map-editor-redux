@@ -212,7 +212,6 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	// So we draw a textured quad.
 
 	// We can reuse the `shader` but we need a "PASS THROUGH" mode or a separate shader.
-	// Easier to just use `glEnable(GL_TEXTURE_2D)` and fixed function if compatible? No, we are in Core Profile likely.
 	// Let's assume we need a simple texture shader.
 	// BUT wait, `LightDrawer::draw` previously drew a quad with the computed light.
 	// We can just use a simple "Texture Shader" here.

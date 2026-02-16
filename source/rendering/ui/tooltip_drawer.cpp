@@ -412,16 +412,17 @@ void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width
 	uint8_t borderR, borderG, borderB;
 	getHeaderColor(tooltip.category, borderR, borderG, borderB);
 
-	// Shadow (multi-layer soft shadow)
-	for (int i = 3; i >= 0; i--) {
-		float alpha = 35.0f + (3 - i) * 20.0f;
-		float spread = i * 2.0f;
-		float offsetY = 3.0f + i * 1.0f;
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, x - spread, y + offsetY - spread, width + spread * 2, height + spread * 2, cornerRadius + spread);
-		nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<unsigned char>(alpha)));
-		nvgFill(vg);
-	}
+	// Shadow (single nvgBoxGradient)
+	float shadowBlur = 8.0f;
+	float shadowOffset = 4.0f;
+	// BoxGradient: x, y, w, h, r, f, col1, col2
+	NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + shadowOffset, width, height, cornerRadius, shadowBlur, nvgRGBA(0, 0, 0, 128), nvgRGBA(0, 0, 0, 0));
+
+	nvgBeginPath(vg);
+	// Draw a rect that encompasses the shadow area
+	nvgRect(vg, x - shadowBlur - 10, y - shadowBlur - 10, width + (shadowBlur + 10) * 2, height + (shadowBlur + 10) * 2 + shadowOffset);
+	nvgFillPaint(vg, shadowPaint);
+	nvgFill(vg);
 
 	// Main background
 	nvgBeginPath(vg);

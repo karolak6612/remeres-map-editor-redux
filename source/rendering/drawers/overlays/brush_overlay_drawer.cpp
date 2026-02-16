@@ -171,8 +171,6 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				}
 			}
 		} else {
-			// if (brush->is<RAWBrush>()) { glEnable(GL_TEXTURE_2D); } -> handled by DrawRawBrush or BatchRenderer
-
 			if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
 				if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
 					int start_x, end_x;
@@ -300,7 +298,6 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				}
 			}
 
-			// if (brush->is<RAWBrush>()) { glDisable(GL_TEXTURE_2D); }
 		}
 	} else {
 		if (brush->is<WallBrush>()) {
@@ -347,7 +344,6 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				sprite_batch.drawRect((float)cx, (float)cy, (float)TileSize, (float)TileSize, get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor)), *g_gui.gfx.getAtlasManager());
 			}
 		} else if (brush->is<CreatureBrush>()) {
-			// glEnable(GL_TEXTURE_2D);
 			int cy = (view.mouse_map_y) * TileSize - view.view_scroll_y - view.getFloorAdjustment();
 			int cx = (view.mouse_map_x) * TileSize - view.view_scroll_x - view.getFloorAdjustment();
 			CreatureBrush* creature_brush = brush->as<CreatureBrush>();
@@ -356,11 +352,9 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 			} else {
 				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, 255, 64, 64, 160);
 			}
-			// glDisable(GL_TEXTURE_2D);
 		} else if (!brush->is<DoodadBrush>()) {
 			RAWBrush* raw_brush = nullptr;
 			if (brush->is<RAWBrush>()) { // Textured brush
-				// glEnable(GL_TEXTURE_2D);
 				raw_brush = brush->as<RAWBrush>();
 			}
 
@@ -412,10 +406,6 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 					}
 				}
 			}
-
-			// if (brush->is<RAWBrush>()) { // Textured brush
-			// 	glDisable(GL_TEXTURE_2D);
-			// }
 		}
 	}
 }
