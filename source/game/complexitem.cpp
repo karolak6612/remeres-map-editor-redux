@@ -21,6 +21,7 @@
 
 #include "io/iomap.h"
 #include "brushes/brush_enums.h"
+#include "brushes/wall/wall_brush.h"
 
 // Container
 Container::Container(const uint16_t type) :
@@ -68,8 +69,6 @@ std::unique_ptr<Item> Teleport::deepCopy() const {
 	}
 	return copy;
 }
-
-#include "brushes/wall/wall_brush.h"
 
 // Door
 Door::Door(const uint16_t type) :

@@ -22,7 +22,9 @@ std::unique_ptr<Item> ItemSerializationOTBM::createFromStream(const IOMap& mapha
 	const ItemType& iType = g_items[_id];
 	if (maphandle.version.otbm == MAP_OTBM_1) {
 		if (iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
-			stream->getU8(_count);
+			if (!stream->getU8(_count)) {
+				return nullptr;
+			}
 		}
 	}
 	return Item::Create(_id, _count);
@@ -284,8 +286,14 @@ void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, Node
 
 		uint16_t tier = item.getTier();
 		if (tier > 0) {
-			f.addU8(OTBM_ATTR_TIER);
-			f.addU8(static_cast<uint8_t>(tier));
+			if (tier <= 0xFF) {
+				f.addU8(OTBM_ATTR_TIER);
+				f.addU8(static_cast<uint8_t>(tier));
+			} else {
+				spdlog::warn("ItemSerializationOTBM: Item '{}' has tier {} which is too large for uint8_t, truncating to 255", item.getName(), tier);
+				f.addU8(OTBM_ATTR_TIER);
+				f.addU8(0xFF);
+			}
 		}
 	}
 

@@ -214,7 +214,7 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		}
 
 		if (!backup_waypoint.empty()) {
-			converter.SetFullName(wxstr(editor.map.getSpawnFilename()));
+			converter.SetFullName(wxstr(editor.map.waypointfile));
 			std::string waypoint_filename = map_path + nstr(converter.GetName());
 			std::rename(backup_waypoint.c_str(), std::string(waypoint_filename + "." + date.str() + ".xml").c_str());
 		}
@@ -223,6 +223,7 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		std::remove(backup_otbm.c_str());
 		std::remove(backup_house.c_str());
 		std::remove(backup_spawn.c_str());
+		std::remove(backup_waypoint.c_str());
 	}
 
 	editor.map.clearChanges();

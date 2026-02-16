@@ -101,8 +101,9 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 				if (item) {
 					if (!ItemSerializationOTBM::unserializeItemNode(iomap, itemNode, *item)) {
 						spdlog::warn("Failed to unserialize item at {},{},{}", pos.x, pos.y, pos.z);
+					} else {
+						tile->addItem(std::move(item));
 					}
-					tile->addItem(std::move(item));
 				}
 			} else {
 				spdlog::warn("Unknown tile child node type {} at {},{},{}", static_cast<int>(item_type), pos.x, pos.y, pos.z);

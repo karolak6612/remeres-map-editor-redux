@@ -14,27 +14,23 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
+#ifndef RME_IOMAP_OTBM_H_
+#define RME_IOMAP_OTBM_H_
 
-#ifndef RME_OTBM_MAP_IO_H_
-#define RME_OTBM_MAP_IO_H_
-
+#include <vector>
 #include "io/iomap.h"
 #include "io/filehandle.h"
-#include "ext/pugixml.hpp"
-#include "app/main.h"
+#include "io/otbm/otbm_types.h"
 
 class BinaryNode;
 
 // Pragma pack is VERY important since otherwise it won't be able to load the structs correctly
 #pragma pack(1)
 
-#include "io/otbm/otbm_types.h"
-#include <vector>
-
 enum PodiumFlags : uint8_t {
-	PODIUM_SHOW_OUTFIT = 1 << 0, // show outfit
-	PODIUM_SHOW_MOUNT = 1 << 1, // show mount
-	PODIUM_SHOW_PLATFORM = 1 << 2 // show the platform below the outfit
+	PODIUM_SHOW_PLATFORM = 1 << 0, // show the platform below the outfit
+	PODIUM_SHOW_OUTFIT = 1 << 1, // show outfit
+	PODIUM_SHOW_MOUNT = 1 << 2 // show mount
 };
 
 struct OTBM_root_header {
@@ -102,13 +98,6 @@ protected:
 	void readTowns(Map& map, BinaryNode* mapNode);
 	void readWaypoints(Map& map, BinaryNode* mapNode);
 
-	bool loadSpawns(Map& map, const FileName& dir);
-	bool loadSpawns(Map& map, pugi::xml_document& doc);
-	bool loadHouses(Map& map, const FileName& dir);
-	bool loadHouses(Map& map, pugi::xml_document& doc);
-	bool loadWaypoints(Map& map, const FileName& dir);
-	bool loadWaypoints(Map& map, pugi::xml_document& doc);
-
 	bool saveMapToDisk(Map& map, const FileName& identifier);
 
 	bool saveMap(Map& map, NodeFileWriteHandle& handle);
@@ -117,12 +106,6 @@ protected:
 	void writeTowns(const Map& map, NodeFileWriteHandle& f);
 	bool writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
 
-	bool saveSpawns(Map& map, const FileName& dir);
-	bool saveSpawns(Map& map, pugi::xml_document& doc);
-	bool saveHouses(Map& map, const FileName& dir);
-	bool saveHouses(Map& map, pugi::xml_document& doc);
-	bool saveWaypoints(Map& map, const FileName& dir);
-	bool saveWaypoints(Map& map, pugi::xml_document& doc);
 	static void serializeTile_OTBM(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& handle);
 
 	friend class HeaderSerializationOTBM;

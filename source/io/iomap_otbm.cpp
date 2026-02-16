@@ -27,6 +27,8 @@
 #include <spdlog/spdlog.h>
 
 #include "app/settings.h"
+#include "app/main.h"
+#include "ext/pugixml.hpp"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 
@@ -182,17 +184,17 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	}
 
 	// Read auxiliary files
-	auto loadAux = [&](bool (IOMapOTBM::*func)(Map&, const FileName&), const std::string& suffix, std::string& target) {
-		if (!(this->*func)(map, filename)) {
+	auto loadAux = [&](bool (*func)(Map&, const FileName&), const std::string& suffix, std::string& target) {
+		if (!func(map, filename)) {
 			spdlog::warn("Failed to load {}", suffix);
 			target = nstr(filename.GetName()) + "-" + suffix + ".xml";
 		}
 	};
 
-	loadAux(&IOMapOTBM::loadHouses, "house", map.housefile);
-	loadAux(&IOMapOTBM::loadSpawns, "spawn", map.spawnfile);
+	loadAux(&MapXMLIO::loadHouses, "house", map.housefile);
+	loadAux(&MapXMLIO::loadSpawns, "spawn", map.spawnfile);
 
-	if (!loadWaypoints(map, filename)) {
+	if (!MapXMLIO::loadWaypoints(map, filename)) {
 		map.waypointfile = nstr(filename.GetName()) + "-waypoint.xml";
 	}
 
@@ -273,45 +275,6 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 	return true;
 }
 
-/* XML loading/saving redirections */
-bool IOMapOTBM::loadSpawns(Map& map, const FileName& dir) {
-	return MapXMLIO::loadSpawns(map, dir);
-}
-bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
-	return MapXMLIO::loadSpawns(map, doc);
-}
-bool IOMapOTBM::loadHouses(Map& map, const FileName& dir) {
-	return MapXMLIO::loadHouses(map, dir);
-}
-bool IOMapOTBM::loadHouses(Map& map, pugi::xml_document& doc) {
-	return MapXMLIO::loadHouses(map, doc);
-}
-bool IOMapOTBM::loadWaypoints(Map& map, const FileName& dir) {
-	return MapXMLIO::loadWaypoints(map, dir);
-}
-bool IOMapOTBM::loadWaypoints(Map& map, pugi::xml_document& doc) {
-	return MapXMLIO::loadWaypoints(map, doc);
-}
-
-bool IOMapOTBM::saveSpawns(Map& map, const FileName& dir) {
-	return MapXMLIO::saveSpawns(map, dir);
-}
-bool IOMapOTBM::saveSpawns(Map& map, pugi::xml_document& doc) {
-	return MapXMLIO::saveSpawns(map, doc);
-}
-bool IOMapOTBM::saveHouses(Map& map, const FileName& dir) {
-	return MapXMLIO::saveHouses(map, dir);
-}
-bool IOMapOTBM::saveHouses(Map& map, pugi::xml_document& doc) {
-	return MapXMLIO::saveHouses(map, doc);
-}
-bool IOMapOTBM::saveWaypoints(Map& map, const FileName& dir) {
-	return MapXMLIO::saveWaypoints(map, dir);
-}
-bool IOMapOTBM::saveWaypoints(Map& map, pugi::xml_document& doc) {
-	return MapXMLIO::saveWaypoints(map, doc);
-}
-
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	DiskNodeFileWriteHandle f(
 		nstr(identifier.GetFullPath()),
@@ -328,10 +291,10 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	}
 
 	g_gui.SetLoadDone(99, "Saving spawns...");
-	saveSpawns(map, identifier);
+	MapXMLIO::saveSpawns(map, identifier);
 
 	g_gui.SetLoadDone(99, "Saving houses...");
-	saveHouses(map, identifier);
+	MapXMLIO::saveHouses(map, identifier);
 
 	return true;
 }

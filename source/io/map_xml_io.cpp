@@ -97,8 +97,8 @@ bool MapXMLIO::loadSpawns(Map& map, pugi::xml_document& doc) {
 				spawntime = g_settings.getInteger(Config::DEFAULT_SPAWNTIME);
 			}
 
-			Direction direction = SOUTH;
-			int dir = creatureNode.attribute("direction").as_int(-1);
+			Direction direction = NORTH;
+			int dir = creatureNode.attribute("direction").as_int(static_cast<int>(NORTH));
 			if (dir >= DIRECTION_FIRST && dir <= DIRECTION_LAST) {
 				direction = static_cast<Direction>(dir);
 			}
@@ -157,9 +157,7 @@ bool MapXMLIO::saveSpawns(const Map& map, const FileName& dir) {
 	auto paths = NormalizeMapFilePaths(dir, map.spawnfile);
 
 	pugi::xml_document doc;
-	if (saveSpawns(map, doc)) {
-		return doc.save_file(wxstr(paths.first).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
-	}
+	return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
 	return false;
 }
 
@@ -289,9 +287,7 @@ bool MapXMLIO::saveHouses(const Map& map, const FileName& dir) {
 	auto paths = NormalizeMapFilePaths(dir, map.housefile);
 
 	pugi::xml_document doc;
-	if (saveHouses(map, doc)) {
-		return doc.save_file(wxstr(paths.first).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
-	}
+	return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
 	return false;
 }
 
@@ -370,9 +366,7 @@ bool MapXMLIO::saveWaypoints(const Map& map, const FileName& dir) {
 	auto paths = NormalizeMapFilePaths(dir, map.waypointfile);
 
 	pugi::xml_document doc;
-	if (saveWaypoints(map, doc)) {
-		return doc.save_file(wxstr(paths.first).wc_str(), "\t", pugi::format_default, pugi::encoding_utf8);
-	}
+	return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
 	return false;
 }
 

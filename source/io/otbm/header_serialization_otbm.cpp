@@ -11,7 +11,9 @@ bool HeaderSerializationOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& 
 		return false;
 	}
 
-	root->skip(1); // Skip the type byte
+	if (!root->skip(1)) { // Skip the type byte
+		return false;
+	}
 
 	uint32_t u32;
 
@@ -39,7 +41,9 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 		spdlog::error("Could not read root node.");
 		return false;
 	}
-	root->skip(1); // Skip the type byte
+	if (!root->skip(1)) { // Skip the type byte
+		return false;
+	}
 
 	uint32_t u32;
 	if (!root->getU32(u32)) {
