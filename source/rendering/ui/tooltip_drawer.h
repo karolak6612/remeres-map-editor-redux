@@ -22,11 +22,13 @@
 #include <iostream>
 #include "map/position.h"
 #include "rendering/core/render_view.h"
+#include "rendering/core/nanovg_image.h"
 #include <vector>
 #include <string>
 #include <string_view>
 #include <sstream>
 #include <unordered_map>
+#include <memory>
 
 class Item;
 class Waypoint;
@@ -179,8 +181,7 @@ protected:
 	std::vector<TooltipData> tooltips;
 	size_t active_count = 0;
 
-	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
-	NVGcontext* lastContext = nullptr;
+	std::unordered_map<uint32_t, std::unique_ptr<NanoVGImage>> spriteCache; // sprite_id -> nvg image RAII wrapper
 
 	// Helper to get or load sprite image
 	int getSpriteImage(NVGcontext* vg, uint16_t itemId);

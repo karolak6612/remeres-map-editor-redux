@@ -31,14 +31,7 @@ TooltipDrawer::TooltipDrawer() {
 
 TooltipDrawer::~TooltipDrawer() {
 	clear();
-	if (lastContext) {
-		for (auto& pair : spriteCache) {
-			if (pair.second > 0) {
-				nvgDeleteImage(lastContext, pair.second);
-			}
-		}
-		spriteCache.clear();
-	}
+	spriteCache.clear();
 }
 
 void TooltipDrawer::clear() {
@@ -124,22 +117,6 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 		return 0;
 	}
 
-	// Detect context change and clear cache
-	if (vg != lastContext) {
-		// If we had a previous context, we'd ideally delete images from it,
-		// but if the context pointer changed, the old one might be invalid.
-		// However, adhering to the request to clear cache with nvgDeleteImage:
-		if (lastContext) {
-			for (auto& pair : spriteCache) {
-				if (pair.second > 0) {
-					nvgDeleteImage(lastContext, pair.second);
-				}
-			}
-		}
-		spriteCache.clear();
-		lastContext = vg;
-	}
-
 	// Resolve Item ID
 	ItemType& it = g_items[itemId];
 	if (!it.sprite) {
@@ -149,7 +126,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	// We use the item ID as the cache key since it's unique and stable
 	auto itCache = spriteCache.find(itemId);
 	if (itCache != spriteCache.end()) {
-		return itCache->second;
+		return itCache->second->get();
 	}
 
 	// Use the sprite directly from ItemType
@@ -204,11 +181,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 					// nvgCreateImageRGBA failed
 				} else {
 					// Success
-					// Check if we are overwriting an existing valid image (shouldn't happen given find() above, but safest)
-					if (spriteCache.contains(itemId) && spriteCache[itemId] > 0) {
-						nvgDeleteImage(vg, spriteCache[itemId]);
-					}
-					spriteCache[itemId] = image;
+					spriteCache[itemId] = std::make_unique<NanoVGImage>(vg, image);
 					return image;
 				}
 			}

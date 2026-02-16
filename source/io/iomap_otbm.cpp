@@ -47,26 +47,6 @@
 using attribute_t = uint8_t;
 using flags_t = uint32_t;
 
-// H4X
-void reform(Map* map, Tile* tile, Item* item) {
-	/*
-	int aid = item->getActionID();
-	int id = item->getID();
-	int uid = item->getUniqueID();
-
-	if(item->isDoor()) {
-		item->eraseAttribute("aid");
-		item->setAttribute("keyid", aid);
-	}
-
-	if((item->isDoor()) && tile && tile->getHouseID()) {
-		Door* self = static_cast<Door*>(item);
-		House* house = map->houses.getHouse(tile->getHouseID());
-		self->setDoorID(house->getEmptyDoorID());
-	}
-	*/
-}
-
 // ============================================================================
 // Item
 
@@ -1010,7 +990,6 @@ void IOMapOTBM::readTileArea(Map& map, BinaryNode* mapNode) {
 						if (!item->unserializeItemNode_OTBM(*this, itemNode)) {
 							warning(wxstr(std::format("Couldn't unserialize item attributes at {}:{}:{}", pos.x, pos.y, pos.z)));
 						}
-						// reform(&map, tile, item);
 						tile->addItem(std::move(item));
 					}
 				} else {

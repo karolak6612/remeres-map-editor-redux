@@ -262,9 +262,10 @@ void Materials::createOtherTileset() {
 				others->getCategory(TILESET_RAW)->brushlist.push_back(it.raw_brush);
 				continue;
 			} else if (it.raw_brush == nullptr) {
-				brush = it.raw_brush = newd RAWBrush(it.id);
+				auto new_brush = std::make_unique<RAWBrush>(it.id);
+				brush = it.raw_brush = new_brush.get();
 				it.has_raw = true;
-				g_brushes.addBrush(it.raw_brush);
+				g_brushes.addBrush(std::move(new_brush));
 			} else if (!it.has_raw) {
 				brush = it.raw_brush;
 			} else {
@@ -281,8 +282,9 @@ void Materials::createOtherTileset() {
 		CreatureType* type = iter->second;
 
 		if (type->brush == nullptr) {
-			type->brush = newd CreatureBrush(type);
-			g_brushes.addBrush(type->brush);
+			auto new_brush = std::make_unique<CreatureBrush>(type);
+			type->brush = new_brush.get();
+			g_brushes.addBrush(std::move(new_brush));
 		}
 
 		type->brush->flagAsVisible();
@@ -350,9 +352,10 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 			category->brushlist.push_back(it.raw_brush);
 			return;
 		} else if (it.raw_brush == nullptr) {
-			brush = it.raw_brush = newd RAWBrush(it.id);
+			auto new_brush = std::make_unique<RAWBrush>(it.id);
+			brush = it.raw_brush = new_brush.get();
 			it.has_raw = true;
-			g_brushes.addBrush(it.raw_brush);
+			g_brushes.addBrush(std::move(new_brush));
 		} else {
 			brush = it.raw_brush;
 		}

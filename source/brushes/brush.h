@@ -73,7 +73,7 @@ public:
 
 	Brush* getBrush(std::string_view name) const;
 
-	void addBrush(Brush* brush);
+	void addBrush(std::unique_ptr<Brush> brush);
 
 	bool unserializeBorder(pugi::xml_node node, std::vector<std::string>& warnings);
 	bool unserializeBrush(pugi::xml_node node, std::vector<std::string>& warnings);
