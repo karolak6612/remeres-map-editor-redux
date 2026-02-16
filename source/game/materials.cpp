@@ -278,7 +278,7 @@ void Materials::createOtherTileset() {
 	}
 
 	for (CreatureMap::iterator iter = g_creatures.begin(); iter != g_creatures.end(); ++iter) {
-		CreatureType* type = iter->second;
+		CreatureType* type = iter->second.get();
 
 		if (type->brush == nullptr) {
 			type->brush = newd CreatureBrush(type);

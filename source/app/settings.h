@@ -19,6 +19,7 @@
 #define RME_SETTINGS_H_
 
 #include "app/main.h"
+#include <variant>
 
 namespace Config {
 	enum Key {
@@ -240,49 +241,30 @@ public:
 	};
 	class DynamicValue {
 	public:
-		DynamicValue() :
-			type(TYPE_NONE) {
-			intval = 0;
-		};
-		DynamicValue(DynamicType t) :
-			type(t) {
-			if (t == TYPE_STR) {
-				strval = nullptr;
-			} else if (t == TYPE_INT) {
-				intval = 0;
-			} else if (t == TYPE_FLOAT) {
-				floatval = 0.0;
-			} else {
-				intval = 0;
-			}
-		};
-		~DynamicValue() {
-			if (type == TYPE_STR) {
-				delete strval;
+		DynamicValue() = default;
+		DynamicValue(DynamicType t) {
+			switch (t) {
+				case TYPE_INT:
+					value = 0;
+					break;
+				case TYPE_FLOAT:
+					value = 0.0f;
+					break;
+				case TYPE_STR:
+					value = std::string();
+					break;
+				default:
+					value = std::monostate{};
+					break;
 			}
 		}
-		DynamicValue(const DynamicValue& dv) :
-			type(dv.type) {
-			if (dv.type == TYPE_STR) {
-				strval = newd std::string(*dv.strval);
-			} else if (dv.type == TYPE_INT) {
-				intval = dv.intval;
-			} else if (dv.type == TYPE_FLOAT) {
-				floatval = dv.floatval;
-			} else {
-				intval = 0;
-			}
-		};
+		// Rule of zero: automatic destructor, copy/move constructors and assignment
 
 		std::string str();
+		DynamicType getType() const;
 
 	private:
-		DynamicType type;
-		union {
-			int intval;
-			std::string* strval;
-			float floatval;
-		};
+		std::variant<std::monostate, int, float, std::string> value;
 
 		friend class Settings;
 	};

@@ -56,8 +56,8 @@ bool Settings::getBoolean(uint32_t key) const {
 	}
 
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_INT) {
-		return dv.intval != 0;
+	if (auto pval = std::get_if<int>(&dv.value)) {
+		return *pval != 0;
 	}
 	return false;
 }
@@ -67,8 +67,8 @@ int Settings::getInteger(uint32_t key) const {
 		return 0;
 	}
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_INT) {
-		return dv.intval;
+	if (auto pval = std::get_if<int>(&dv.value)) {
+		return *pval;
 	}
 	return 0;
 }
@@ -78,8 +78,8 @@ float Settings::getFloat(uint32_t key) const {
 		return 0.0;
 	}
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_FLOAT) {
-		return dv.floatval;
+	if (auto pval = std::get_if<float>(&dv.value)) {
+		return *pval;
 	}
 	return 0.0;
 }
@@ -89,8 +89,8 @@ std::string Settings::getString(uint32_t key) const {
 		return "";
 	}
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_STR && dv.strval != nullptr) {
-		return *dv.strval;
+	if (auto pval = std::get_if<std::string>(&dv.value)) {
+		return *pval;
 	}
 	return "";
 }
@@ -100,11 +100,8 @@ void Settings::setInteger(uint32_t key, int newval) {
 		return;
 	}
 	DynamicValue& dv = store[key];
-	if (dv.type == TYPE_INT) {
-		dv.intval = newval;
-	} else if (dv.type == TYPE_NONE) {
-		dv.type = TYPE_INT;
-		dv.intval = newval;
+	if (std::holds_alternative<int>(dv.value) || std::holds_alternative<std::monostate>(dv.value)) {
+		dv.value = newval;
 	}
 }
 
@@ -113,11 +110,8 @@ void Settings::setFloat(uint32_t key, float newval) {
 		return;
 	}
 	DynamicValue& dv = store[key];
-	if (dv.type == TYPE_FLOAT) {
-		dv.floatval = newval;
-	} else if (dv.type == TYPE_NONE) {
-		dv.type = TYPE_FLOAT;
-		dv.floatval = newval;
+	if (std::holds_alternative<float>(dv.value) || std::holds_alternative<std::monostate>(dv.value)) {
+		dv.value = newval;
 	}
 }
 
@@ -126,27 +120,23 @@ void Settings::setString(uint32_t key, std::string newval) {
 		return;
 	}
 	DynamicValue& dv = store[key];
-	if (dv.type == TYPE_STR) {
-		delete dv.strval;
-		dv.strval = newd std::string(newval);
-	} else if (dv.type == TYPE_NONE) {
-		dv.type = TYPE_STR;
-		dv.strval = newd std::string(newval);
+	if (std::holds_alternative<std::string>(dv.value) || std::holds_alternative<std::monostate>(dv.value)) {
+		dv.value = std::move(newval);
 	}
 }
 
 std::string Settings::DynamicValue::str() {
-	switch (type) {
-		case TYPE_FLOAT:
-			return f2s(floatval);
-		case TYPE_STR:
-			return std::string(*strval);
-		case TYPE_INT:
-			return i2s(intval);
-		default:
-		case TYPE_NONE:
-			return "";
-	}
+	if (auto pval = std::get_if<int>(&value)) return i2s(*pval);
+	if (auto pval = std::get_if<float>(&value)) return f2s(*pval);
+	if (auto pval = std::get_if<std::string>(&value)) return *pval;
+	return "";
+}
+
+Settings::DynamicType Settings::DynamicValue::getType() const {
+	if (std::holds_alternative<int>(value)) return TYPE_INT;
+	if (std::holds_alternative<float>(value)) return TYPE_FLOAT;
+	if (std::holds_alternative<std::string>(value)) return TYPE_STR;
+	return TYPE_NONE;
 }
 
 void Settings::IO(IOMode mode) {
