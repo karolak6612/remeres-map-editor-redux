@@ -67,7 +67,7 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
 	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
 	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(ICON_FLAG, FROM_DIP(parent, wxSize(16, 16)));
 }
 
 bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
