@@ -26,6 +26,8 @@
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <atomic>
+#include <cstring>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -36,7 +38,8 @@ struct NetworkMessage {
 	//
 	template <typename T>
 	T read() {
-		T& value = *reinterpret_cast<T*>(&buffer[position]);
+		T value;
+		memcpy(&value, &buffer[position], sizeof(T));
 		position += sizeof(T);
 		return value;
 	}
@@ -81,7 +84,7 @@ public:
 private:
 	std::unique_ptr<boost::asio::io_context> service;
 	std::thread thread;
-	bool stopped;
+	std::atomic<bool> stopped;
 };
 
 #endif

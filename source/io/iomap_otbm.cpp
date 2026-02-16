@@ -26,6 +26,7 @@
 #include <format>
 #include <fstream>
 #include <vector>
+#include <limits>
 
 #include "app/settings.h"
 #include "ui/gui.h"
@@ -1231,11 +1232,22 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 				break;
 			}
 
-			creaturePosition.x += xAttribute.as_int();
-			creaturePosition.y += yAttribute.as_int();
+			int64_t creatureX = static_cast<int64_t>(creaturePosition.x) + xAttribute.as_int();
+			int64_t creatureY = static_cast<int64_t>(creaturePosition.y) + yAttribute.as_int();
 
-			radius = std::max<int32_t>(radius, std::abs(creaturePosition.x - spawnPosition.x));
-			radius = std::max<int32_t>(radius, std::abs(creaturePosition.y - spawnPosition.y));
+			if (creatureX < std::numeric_limits<int>::min() || creatureX > std::numeric_limits<int>::max() ||
+				creatureY < std::numeric_limits<int>::min() || creatureY > std::numeric_limits<int>::max()) {
+				wxString err;
+				err << "Discarding creature \"" << name << "\" at spawn " << spawnPosition.x << ":" << spawnPosition.y << ":" << spawnPosition.z << " due to invalid position (overflow).";
+				warnings.push_back(err.ToStdString());
+				break;
+			}
+
+			creaturePosition.x = static_cast<int>(creatureX);
+			creaturePosition.y = static_cast<int>(creatureY);
+
+			radius = std::max<int32_t>(radius, std::abs(static_cast<long long>(creaturePosition.x) - spawnPosition.x));
+			radius = std::max<int32_t>(radius, std::abs(static_cast<long long>(creaturePosition.y) - spawnPosition.y));
 			radius = std::min<int32_t>(radius, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
 
 			Tile* creatureTile;
