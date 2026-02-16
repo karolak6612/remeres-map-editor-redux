@@ -403,14 +403,17 @@ uint8_t Tile::getMiniMapColor() const {
 	});
 
 	if (it != view.end()) {
-		return it->get()->getMiniMapColor();
+		minimapColor = it->get()->getMiniMapColor();
+		return minimapColor;
 	}
 
 	// check ground too
 	if (hasGround()) {
-		return ground->getMiniMapColor();
+		minimapColor = ground->getMiniMapColor();
+		return minimapColor;
 	}
 
+	minimapColor = 0;
 	return 0;
 }
 

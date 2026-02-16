@@ -25,3 +25,11 @@ Action: Use a 1-element `thread_local` cache (last input -> last output) to elim
 ## 2026-02-05 - Tooltip String Allocations
 Learning: `TooltipData` was performing deep copies of strings (`itemName`, `text`, etc.) from stable memory (`g_items`) into transient per-frame objects, causing thousands of allocations.
 Action: Use `std::string_view` for transient DTOs that only live for the duration of a frame, especially when sourcing data from static or long-lived buffers.
+
+## 2026-02-19 - Minimap Color Invalidation Cost
+Learning: `Tile::getMiniMapColor` scanned all items every frame when `minimapColor` was `INVALID_MINIMAP_COLOR` (which happened if `update()` wasn't called or after deep copy). It did not cache the result of this scan, causing O(N) overhead per tile.
+Action: Make `minimapColor` mutable and update it during the `const` accessor call if it is invalid, ensuring subsequent calls are O(1) (lazy initialization).
+
+## 2026-02-19 - Redundant Pattern Calculation
+Learning: `TileRenderer::DrawTile` called `PreloadItem` (which calculated `SpritePatterns` for complex items) and then `ItemDrawer::BlitItem` (which recalculated the same `SpritePatterns`). This effectively doubled the cost of `PatternCalculator::Calculate` for every animated/complex item.
+Action: Modify `PreloadItem` to return the calculated patterns and pass them to `BlitItem` to reuse the result.

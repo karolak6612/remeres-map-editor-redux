@@ -247,7 +247,7 @@ protected:
 	};
 
 private:
-	uint8_t minimapColor;
+	mutable uint8_t minimapColor;
 
 	Tile(const Tile& tile); // No copy
 	Tile& operator=(const Tile& i); // Can't copy

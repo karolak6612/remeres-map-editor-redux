@@ -209,8 +209,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground) {
-			PreloadItem(tile, tile->ground.get());
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+			auto patterns = PreloadItem(tile, tile->ground.get());
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b, 255, patterns);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -262,9 +262,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			}
 
 			// items on tile
+			bool show_tooltips_here = options.show_tooltips && map_z == view.floor;
+
 			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (show_tooltips_here) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
@@ -273,19 +275,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				PreloadItem(tile, item.get());
+				auto patterns = PreloadItem(tile, item.get());
 
 				// item sprite
 				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b, 255, patterns);
 				} else {
-					uint8_t ir = 255, ig = 255, ib = 255;
-
 					if (calculate_house_color) {
 						// Apply house color tint
-						ir = static_cast<uint8_t>(ir * house_r / 255);
-						ig = static_cast<uint8_t>(ig * house_g / 255);
-						ib = static_cast<uint8_t>(ib * house_b / 255);
+						uint8_t ir = house_r;
+						uint8_t ig = house_g;
+						uint8_t ib = house_b;
 
 						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
 							// Pulse effect matching the tile pulse
@@ -296,8 +296,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
 							}
 						}
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib, 255, patterns);
+					} else {
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, 255, 255, 255, 255, patterns);
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
 				}
 			}
 			// monster/npc on tile
@@ -316,9 +318,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 }
 
-void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
+std::optional<SpritePatterns> TileRenderer::PreloadItem(const Tile* tile, Item* item) {
 	if (!item) {
-		return;
+		return std::nullopt;
 	}
 
 	const ItemType& it = g_items[item->getID()];
@@ -326,7 +328,9 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
 	if (spr && !spr->isSimpleAndLoaded()) {
 		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
+		return patterns;
 	}
+	return std::nullopt;
 }
 
 void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
