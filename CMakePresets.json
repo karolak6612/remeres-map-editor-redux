@@ -40,7 +40,7 @@
             "displayName": "Visual Studio 2022 vcpkg",
             "description": "Build for Windows x64 using Visual Studio 2022 and vcpkg",
             "generator": "Visual Studio 17 2022",
-            "binaryDir": "${sourceDir}/build/vs",
+            "binaryDir": "${sourceDir}/build",
             "architecture": "x64",
             "cacheVariables": {
                 "CMAKE_TOOLCHAIN_FILE": "c:/vcpkg/scripts/buildsystems/vcpkg.cmake",

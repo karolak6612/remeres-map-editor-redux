@@ -38,7 +38,6 @@ Remere's Map Editor (RME) is a map editor for game servers derived from the Open
 | pugixml | (bundled) | XML parsing |
 
 ### External Resources
-- **wxMaterialDesignArtProvider**: Fetched via CMake FetchContent for modern UI icons
 - **nanovg**: Fallback to bundled version in `ext/nanovg/` if not found via package manager
 
 ---

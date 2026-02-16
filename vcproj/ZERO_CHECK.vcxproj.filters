@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\karol\Documents\GitHub\remeres-map-editor-redux\vcproj\CMakeFiles\3448c0ab014156fc85b4bf3cbccb0b31\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{33577AEB-6672-386B-8793-0C0D67F42DD6}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

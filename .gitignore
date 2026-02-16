@@ -95,3 +95,6 @@ build_script.log
 
 .qwen/
 gha-creds-*.json
+/vcproj/_deps
+/vcproj/vcpkg_installed
+/vcproj/rme.dir
