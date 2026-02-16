@@ -4,10 +4,12 @@
 #include <memory>
 #include <sstream>
 #include <stdint.h>
+#include <optional>
 
 class TileLocation;
 struct RenderView;
 struct DrawingOptions;
+struct SpritePatterns;
 class Editor;
 class ItemDrawer;
 class SpriteDrawer;
@@ -28,7 +30,7 @@ public:
 	void AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
-	void PreloadItem(const Tile* tile, Item* item);
+	std::optional<SpritePatterns> PreloadItem(const Tile* tile, Item* item);
 
 	ItemDrawer* item_drawer;
 	SpriteDrawer* sprite_drawer;

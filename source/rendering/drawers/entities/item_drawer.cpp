@@ -30,12 +30,12 @@ ItemDrawer::ItemDrawer() {
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, std::optional<SpritePatterns> patterns) {
 	const Position& pos = tile->getPosition();
-	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile);
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile, patterns);
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile, std::optional<SpritePatterns> patterns) {
 	ItemType& it = g_items[item->getID()];
 
 	// Locked door indicator
@@ -118,12 +118,12 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
 
-	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
-	int subtype = patterns.subtype;
-	int pattern_x = patterns.x;
-	int pattern_y = patterns.y;
-	int pattern_z = patterns.z;
-	int frame = patterns.frame;
+	SpritePatterns sp = patterns ? *patterns : PatternCalculator::Calculate(spr, it, item, tile, pos);
+	int subtype = sp.subtype;
+	int pattern_x = sp.x;
+	int pattern_y = sp.y;
+	int pattern_z = sp.z;
+	int frame = sp.frame;
 
 	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.isBorder || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
