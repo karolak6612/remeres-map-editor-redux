@@ -20,7 +20,10 @@
 #include "game/waypoints.h"
 #include "map/map.h"
 
-void Waypoints::addWaypoint(std::unique_ptr<Waypoint> wp) {
+void Waypoints::addWaypoint(std::unique_ptr<Waypoint> wp, bool replace) {
+	if (getWaypoint(wp->name) && !replace) {
+		return;
+	}
 	removeWaypoint(wp->name);
 	if (wp->pos != Position()) {
 		Tile* t = map.getTile(wp->pos);

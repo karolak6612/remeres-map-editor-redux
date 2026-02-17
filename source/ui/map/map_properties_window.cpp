@@ -98,6 +98,15 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	);
 	spawn_filename_ctrl->SetToolTip("External spawn XML file (leave empty for internal)");
 
+	grid_sizer->Add(
+		newd wxStaticText(this, wxID_ANY, "External Waypointfile")
+	);
+
+	grid_sizer->Add(
+		waypoint_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getWaypointFilename())), 1, wxEXPAND
+	);
+	waypoint_filename_ctrl->SetToolTip("External waypoint XML file (leave empty for internal)");
+
 	topsizer->Add(grid_sizer, wxSizerFlags(1).Expand().Border(wxALL, 20));
 
 	wxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -188,6 +197,7 @@ void MapPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	map.setMapDescription(nstr(description_ctrl->GetValue()));
 	map.setHouseFilename(nstr(house_filename_ctrl->GetValue()));
 	map.setSpawnFilename(nstr(spawn_filename_ctrl->GetValue()));
+	map.setWaypointFilename(nstr(waypoint_filename_ctrl->GetValue()));
 
 	// Only resize if we have to
 	int new_map_width = width_spin->GetValue();

@@ -30,6 +30,7 @@ protected:
 	wxTextCtrl* description_ctrl;
 	wxTextCtrl* house_filename_ctrl;
 	wxTextCtrl* spawn_filename_ctrl;
+	wxTextCtrl* waypoint_filename_ctrl;
 };
 
 #endif

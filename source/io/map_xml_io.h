@@ -30,11 +30,11 @@ public:
 	static bool saveHouses(const Map& map, pugi::xml_document& doc);
 
 	// Waypoints
-	static bool loadWaypoints(Map& map, const wxFileName& dir);
-	static bool loadWaypoints(Map& map, pugi::xml_document& doc);
+	static bool loadWaypoints(Map& map, const wxFileName& dir, bool replace = true);
+	static bool loadWaypoints(Map& map, pugi::xml_document& doc, bool replace = true);
 	static bool saveWaypoints(const Map& map, const wxFileName& dir);
 	static bool saveWaypoints(const Map& map, pugi::xml_document& doc);
-	static bool loadWaypoints(Map& map, pugi::xml_node node);
+	static bool loadWaypoints(Map& map, pugi::xml_node node, bool replace = true);
 
 	static std::pair<std::string, std::string> normalizeMapFilePaths(const wxFileName& dir, const std::string& filename);
 };
