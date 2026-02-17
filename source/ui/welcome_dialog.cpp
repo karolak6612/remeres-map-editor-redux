@@ -6,74 +6,62 @@
 #include "util/image_manager.h"
 #include <wx/dcbuffer.h>
 #include <wx/statline.h>
+#include "ui/controls/virtual_list_canvas.h"
 
 wxDEFINE_EVENT(WELCOME_DIALOG_ACTION, wxCommandEvent);
 
-// Helper for recent files
-class RecentFileItem : public wxPanel {
+class WelcomeCanvas : public VirtualListCanvas {
 public:
-	RecentFileItem(wxWindow* parent, const wxString& path, const wxString& date) :
-		wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE),
-		m_path(path), m_date(date), m_isHover(false), m_isPressed(false) {
-		SetBackgroundStyle(wxBG_STYLE_PAINT);
-		SetMinSize(wxSize(-1, FromDIP(45))); // Slightly more compact
-
-		Bind(wxEVT_PAINT, &RecentFileItem::OnPaint, this);
-		Bind(wxEVT_ENTER_WINDOW, [this](wxMouseEvent&) { m_isHover = true; Refresh(); });
-		Bind(wxEVT_LEAVE_WINDOW, [this](wxMouseEvent&) { m_isHover = false; m_isPressed = false; Refresh(); });
-		Bind(wxEVT_LEFT_DOWN, [this](wxMouseEvent&) { m_isPressed = true; Refresh(); });
-		Bind(wxEVT_LEFT_UP, [this](wxMouseEvent& evt) {
-			if (m_isPressed) {
-				m_isPressed = false;
-				Refresh();
-				wxCommandEvent event(wxEVT_BUTTON, GetId());
-				event.SetString(m_path); // Pass the path with the event
-				event.SetEventObject(this);
-				GetEventHandler()->ProcessEvent(event);
-			}
-		});
+	WelcomeCanvas(wxWindow* parent, const std::vector<wxString>& recentFiles) :
+		VirtualListCanvas(parent, wxID_ANY),
+		m_files(recentFiles) {
+		SetItemHeight(50);
+		SetSelectionMode(SelectionMode::Single);
 	}
 
-	wxSize DoGetBestClientSize() const override {
-		return wxSize(FromDIP(300), FromDIP(50));
+	size_t GetItemCount() const override {
+		return m_files.size();
 	}
 
-	void OnPaint(wxPaintEvent& evt) {
-		wxAutoBufferedPaintDC dc(this);
-		wxSize size = GetClientSize();
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) override {
+		if (index < 0 || index >= (int)m_files.size()) return;
 
-		// Background - Extremely subtle for "Quiet" UI
-		wxColour bg = GetParent()->GetBackgroundColour();
-		if (m_isPressed) {
-			bg = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(115);
-		} else if (m_isHover) {
-			bg = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT).ChangeLightness(105);
-		}
-
-		dc.SetBrush(wxBrush(bg));
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.DrawRectangle(size);
-
-		// Boundaries removed for cleaner list feel (Implied via spacing)
-
-		wxFileName fn(m_path);
+		wxFileName fn(m_files[index]);
 		wxString filename = fn.GetFullName();
 		wxString fpath = fn.GetPath();
 
-		dc.SetFont(GetFont().Bold()); // Standard weight bold, not Larger
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
-		dc.DrawText(filename, FromDIP(12), FromDIP(6));
+		// Background handled by VirtualListCanvas logic
 
-		dc.SetFont(GetFont().Smaller());
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT));
-		dc.DrawText(fpath, FromDIP(12), FromDIP(24));
+		// Filename
+		nvgFontFace(vg, "sans-bold"); // Assuming sans-bold exists, otherwise falls back
+		nvgFontSize(vg, 16.0f);
+
+		NVGcolor textColor = m_textColor;
+		if (IsSelected(index)) {
+			textColor = nvgRGBA(255, 255, 255, 255);
+		}
+
+		nvgFillColor(vg, textColor);
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		nvgText(vg, rect.GetX() + 12, rect.GetY() + 6, filename.c_str(), nullptr);
+
+		// Path
+		nvgFontFace(vg, "sans");
+		nvgFontSize(vg, 12.0f);
+		NVGcolor gray = nvgRGBA(128, 128, 128, 255);
+		if (IsSelected(index)) gray = nvgRGBA(200, 200, 200, 255);
+		nvgFillColor(vg, gray);
+
+		nvgText(vg, rect.GetX() + 12, rect.GetY() + 24, fpath.c_str(), nullptr);
+	}
+
+	wxString GetFilePath(int index) const {
+		if (index >= 0 && index < (int)m_files.size()) return m_files[index];
+		return "";
 	}
 
 private:
-	wxString m_path;
-	wxString m_date;
-	bool m_isHover = false;
-	bool m_isPressed = false;
+	std::vector<wxString> m_files;
 };
 
 // Main Panel Class
@@ -136,21 +124,20 @@ public:
 		recentTitle->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOWTEXT));
 		contentSizer->Add(recentTitle, 0, wxLEFT | wxTOP | wxBOTTOM, FromDIP(15));
 
-		// Scrollable list
-		wxScrolledWindow* scroll = new wxScrolledWindow(content, wxID_ANY);
-		scroll->SetScrollRate(0, 10);
-		wxBoxSizer* listSizer = new wxBoxSizer(wxVERTICAL);
+		// Virtual List Canvas
+		WelcomeCanvas* canvas = new WelcomeCanvas(content, recentFiles);
+		contentSizer->Add(canvas, 1, wxEXPAND);
 
-		for (const auto& file : recentFiles) {
-			RecentFileItem* item = new RecentFileItem(scroll, file, "");
-			listSizer->Add(item, 0, wxEXPAND | wxBOTTOM, 1);
-
-			// Bind event to parent dialog handler
-			item->Bind(wxEVT_BUTTON, &WelcomeDialog::OnRecentFileClicked, parent);
-		}
-
-		scroll->SetSizer(listSizer);
-		contentSizer->Add(scroll, 1, wxEXPAND);
+		// Bind selection event
+		canvas->Bind(wxEVT_LISTBOX, [parent, canvas](wxCommandEvent& evt) {
+			int sel = canvas->GetSelection();
+			if (sel != wxNOT_FOUND) {
+				wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
+				newEvent->SetId(wxID_OPEN);
+				newEvent->SetString(canvas->GetFilePath(sel));
+				parent->QueueEvent(newEvent);
+			}
+		});
 
 		// Anchored Footer for Startup Toggle
 		wxPanel* footer = new wxPanel(content);
@@ -217,11 +204,4 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 
 void WelcomeDialog::OnCheckboxClicked(wxCommandEvent& event) {
 	g_settings.setInteger(Config::WELCOME_DIALOG, event.IsChecked() ? 1 : 0);
-}
-
-void WelcomeDialog::OnRecentFileClicked(wxCommandEvent& event) {
-	wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-	newEvent->SetId(wxID_OPEN);
-	newEvent->SetString(event.GetString());
-	QueueEvent(newEvent);
 }

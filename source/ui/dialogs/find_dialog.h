@@ -3,7 +3,7 @@
 
 #include "app/main.h"
 #include <wx/wx.h>
-#include <wx/vlbox.h>
+#include "ui/controls/virtual_list_canvas.h"
 #include <vector>
 
 class Brush;
@@ -19,7 +19,7 @@ public:
 	void OnKeyDown(wxKeyEvent&);
 };
 
-class FindDialogListBox : public wxVListBox {
+class FindDialogListBox : public VirtualListCanvas {
 public:
 	FindDialogListBox(wxWindow* parent, wxWindowID id);
 	~FindDialogListBox();
@@ -29,8 +29,8 @@ public:
 	void AddBrush(Brush*);
 	Brush* GetSelectedBrush();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	size_t GetItemCount() const override;
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect) override;
 
 protected:
 	bool cleared;

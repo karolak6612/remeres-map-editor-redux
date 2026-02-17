@@ -209,6 +209,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/item_buttons.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/virtual_list_canvas.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/goto_position_dialog.h
@@ -511,6 +512,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/virtual_list_canvas.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/goto_position_dialog.cpp

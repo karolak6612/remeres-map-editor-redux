@@ -16,7 +16,6 @@ public:
 	// Event Handlers
 	void OnButtonClicked(wxCommandEvent& event);
 	void OnCheckboxClicked(wxCommandEvent& event);
-	void OnRecentFileClicked(wxCommandEvent& event);
 
 private:
 	// Implementation details
