@@ -13,14 +13,14 @@ MapStatistics MapStatisticsCollector::Collect(Map* map) {
 
 	std::unordered_map<uint32_t, uint32_t> town_sqm_count;
 
-	for (auto& tile_location : map->tiles()) {
+	std::ranges::for_each(map->tiles(), [&](auto& tile_location) {
 		Tile* tile = tile_location.get();
 		if (load_counter % 8192 == 0) {
 			g_gui.SetLoadDone(static_cast<unsigned int>(static_cast<int64_t>(load_counter) * 95ll / static_cast<int64_t>(map->getTileCount())));
 		}
 
 		if (tile->empty()) {
-			continue;
+			return; // Continue in loop becomes return in lambda
 		}
 
 		stats.tile_count += 1;
@@ -43,7 +43,7 @@ MapStatistics MapStatisticsCollector::Collect(Map* map) {
 				if (item->getUniqueID() > 0) {
 					stats.unique_item_count += 1;
 				}
-				if (Container* c = dynamic_cast<Container*>(item)) {
+				if (Container* c = item->asContainer()) {
 					if (c->getVector().size()) {
 						stats.container_count += 1;
 					}
@@ -55,9 +55,9 @@ MapStatistics MapStatisticsCollector::Collect(Map* map) {
 			analyze_item(tile->ground.get());
 		}
 
-		for (const auto& item : tile->items) {
+		std::ranges::for_each(tile->items, [&](const auto& item) {
 			analyze_item(item.get());
-		}
+		});
 
 		if (tile->spawn) {
 			stats.spawn_count += 1;
@@ -78,7 +78,7 @@ MapStatistics MapStatisticsCollector::Collect(Map* map) {
 		}
 
 		load_counter += 1;
-	}
+	});
 
 	stats.creatures_per_spawn = (stats.spawn_count != 0 ? static_cast<double>(stats.creature_count) / static_cast<double>(stats.spawn_count) : -1.0);
 	stats.percent_pathable = 100.0 * (stats.tile_count != 0 ? static_cast<double>(stats.walkable_tile_count) / static_cast<double>(stats.tile_count) : -1.0);

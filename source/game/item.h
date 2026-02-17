@@ -168,10 +168,10 @@ public:
 	static uint16_t LiquidName2ID(std::string id);
 
 	// IDs
-	uint16_t getID() const {
+	[[nodiscard]] uint16_t getID() const {
 		return id;
 	}
-	uint16_t getClientID() const {
+	[[nodiscard]] uint16_t getClientID() const {
 		return g_items[id].clientID;
 	}
 	// NOTE: This is very volatile, do NOT use this unless you know exactly what you're doing
@@ -396,7 +396,7 @@ public:
 	bool hasWeight() {
 		return isPickupable();
 	}
-	virtual double getWeight();
+	[[nodiscard]] virtual double getWeight();
 
 	// Subtype (count, fluid, charges)
 	int getCount() const;

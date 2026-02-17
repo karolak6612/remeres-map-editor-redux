@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <algorithm>
+#include <ranges>
 #include <unordered_set>
 #include <unordered_map>
 #include <spdlog/spdlog.h>
@@ -154,13 +155,11 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 		if (tile->ground) {
 			id_list.push_back(tile->ground->getID());
 		}
-		for (const auto& item : tile->items) {
-			if (item->isBorder()) {
-				id_list.push_back(item->getID());
-			}
-		}
 
-		std::sort(id_list.begin(), id_list.end());
+		auto border_ids = tile->items | std::views::filter([](const auto& i) { return i->isBorder(); }) | std::views::transform([](const auto& i) { return i->getID(); });
+		id_list.insert(id_list.end(), border_ids.begin(), border_ids.end());
+
+		std::ranges::sort(id_list);
 
 		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
 
