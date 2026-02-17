@@ -184,11 +184,25 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 	// Read auxiliary files
 	auto loadAux = [&](bool (*func)(Map&, const FileName&), const std::string& suffix, std::string& target) {
-		if (!func(map, filename)) {
-			spdlog::warn("Failed to load {}", suffix);
-			if (target.empty()) {
-				target = nstr(filename.GetName()) + "-" + suffix + ".xml";
+		bool expected = !target.empty();
+
+		if (target.empty()) {
+			std::string defaultFile = nstr(filename.GetName()) + "-" + suffix + ".xml";
+			auto paths = MapXMLIO::normalizeMapFilePaths(filename, defaultFile);
+			if (FileName(wxstr(paths.first)).FileExists()) {
+				target = defaultFile;
+				expected = true;
 			}
+		}
+
+		if (expected) {
+			if (!func(map, filename)) {
+				spdlog::warn("Failed to load {} file: {}", suffix, target);
+			}
+		} else {
+			// No file specified in OTBM and no default file found.
+			// Set the default filename for future saves so we don't end up with empty strings.
+			target = nstr(filename.GetName()) + "-" + suffix + ".xml";
 		}
 	};
 
@@ -214,13 +228,17 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 			// Load from XML to merge with existing OTBM waypoints
 			// Pass false to NOT replace existing OTBM waypoints (OTBM takes precedence)
+			size_t beforeCount = map.waypoints.size();
 			if (MapXMLIO::loadWaypoints(map, filename, false)) {
-				DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints detected in both OTBM and external XML file.\n"
-															   "They have been merged.\n"
-															   "Note: OTBM waypoints took precedence over XML duplicates.\n"
-															   "\n"
-															   "Future saves will ONLY use the XML file.",
-										wxOK | wxICON_WARNING);
+				size_t afterCount = map.waypoints.size();
+				if (afterCount > beforeCount) {
+					DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints detected in both OTBM and external XML file.\n"
+																   "They have been merged.\n"
+																   "Note: OTBM waypoints took precedence over XML duplicates.\n"
+																   "\n"
+																   "Future saves will ONLY use the XML file.",
+											wxOK | wxICON_WARNING);
+				}
 			}
 		} else {
 			// Case 2: OTBM has waypoints, XML does not - Migrate
@@ -245,23 +263,26 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	} else {
 		// OTBM has no waypoints
 
-		// If map.waypointfile is empty (not set in OTBM), we should try to look for the default file
-		// effectively auto-associating it if it exists.
-		if (map.waypointfile.empty()) {
+		bool expected = !map.waypointfile.empty();
+
+		// If map.waypointfile is empty (not set in OTBM), try to look for the default file
+		if (!expected) {
 			std::string defaultFile = nstr(filename.GetName()) + "-waypoint.xml";
 			auto paths = MapXMLIO::normalizeMapFilePaths(filename, defaultFile);
 			if (FileName(wxstr(paths.first)).FileExists()) {
 				map.waypointfile = defaultFile;
+				expected = true;
 			}
 		}
 
-		// Try to load from XML (standard behavior)
-		// Manual call to avoid function pointer mismatch with default arguments
-		if (!MapXMLIO::loadWaypoints(map, filename)) {
-			spdlog::warn("Failed to load waypoint");
-			if (map.waypointfile.empty()) {
-				map.waypointfile = nstr(filename.GetName()) + "-waypoint.xml";
+		if (expected) {
+			// Try to load from XML
+			if (!MapXMLIO::loadWaypoints(map, filename)) {
+				spdlog::warn("Failed to load waypoint file: {}", map.waypointfile);
 			}
+		} else {
+			// No waypoint file specified and no default file found, just set the default for future saves
+			map.waypointfile = nstr(filename.GetName()) + "-waypoint.xml";
 		}
 	}
 

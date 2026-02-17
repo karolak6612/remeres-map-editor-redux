@@ -222,10 +222,26 @@ public:
 	MapVersionID getPrefferedMapVersionID() const;
 	OtbVersion getOTBVersion() const;
 	DatFormat getDatFormatForSignature(uint32_t signature) const;
+	static DatFormat getDatFormatForVersion(int version);
 	ClientVersionList getExtensionsSupported() const;
 
 	bool isTransparent() const {
 		return is_transparent;
+	}
+	bool isExtended() const {
+		return is_extended;
+	}
+	bool hasFrameDurations() const {
+		return has_frame_durations;
+	}
+	bool hasFrameGroups() const {
+		return has_frame_groups;
+	}
+	std::string getMetadataFile() const {
+		return metadata_file;
+	}
+	std::string getSpritesFile() const {
+		return sprites_file;
 	}
 
 	FileName getDataPath() const;
@@ -246,7 +262,12 @@ private:
 	std::string name;
 	bool visible;
 	bool is_transparent;
-	bool usesFuckedUpCharges;
+	bool is_extended;
+	bool has_frame_durations;
+	bool has_frame_groups;
+
+	std::string metadata_file;
+	std::string sprites_file;
 
 	std::vector<MapVersionID> map_versions_supported;
 	MapVersionID preferred_map_version;
@@ -257,15 +278,15 @@ private:
 	FileName client_path;
 	wxFileName metadata_path;
 	wxFileName sprites_path;
+	std::string description;
+	std::string config_type;
 
 private:
-	static void loadOTBInfo(pugi::xml_node otb_nodes);
-	static void loadVersion(pugi::xml_node client_node);
-	static void loadVersionExtensions(pugi::xml_node client_node);
+	static void loadVersionsFromTOML(const std::string& configPath);
 
 	// All versions
-	using VersionMap = std::map<ClientVersionID, std::unique_ptr<ClientVersion>>;
-	static VersionMap client_versions;
+	using VersionList = std::vector<std::unique_ptr<ClientVersion>>;
+	static VersionList client_versions;
 	static ClientVersion* latest_version;
 
 	// All otbs

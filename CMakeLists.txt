@@ -49,6 +49,7 @@ endif()
 find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
+find_package(tomlplusplus CONFIG REQUIRED)
 
 # nanovg: try vcpkg/Conan first, fallback to ext/nanovg
 find_package(nanovg CONFIG QUIET)
@@ -117,6 +118,7 @@ target_link_libraries(rme PRIVATE glad::glad)
 target_link_libraries(rme PRIVATE glm::glm)
 target_link_libraries(rme PRIVATE nanovg::nanovg)
 target_link_libraries(rme PRIVATE spdlog::spdlog)
+target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
 
 option(RME_BUILD_TESTS "Build test executables" OFF)
 
@@ -162,5 +164,6 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE glm::glm)
 	target_link_libraries(test_autoborder_preview PRIVATE nanovg::nanovg)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
+	target_link_libraries(test_autoborder_preview PRIVATE tomlplusplus::tomlplusplus)
 
 endif()

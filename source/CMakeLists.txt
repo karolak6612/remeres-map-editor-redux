@@ -90,7 +90,7 @@ set(rme_H
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.h
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.h
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/otfi_loader.h
+
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
@@ -116,7 +116,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.h
-    ${CMAKE_CURRENT_LIST_DIR}/map/otml.h
+
     ${CMAKE_CURRENT_LIST_DIR}/map/position.h
     ${CMAKE_CURRENT_LIST_DIR}/map/spatial_hash_grid.h
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.h
@@ -400,7 +400,7 @@ set(rme_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/otfi_loader.cpp
+
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
@@ -423,7 +423,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/map/otml.cpp
+
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tileset.cpp

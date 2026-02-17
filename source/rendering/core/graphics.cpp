@@ -26,7 +26,7 @@
 #include "io/filehandle.h"
 #include "app/settings.h"
 #include "ui/gui.h"
-#include "map/otml.h"
+
 #include "rendering/io/editor_sprite_loader.h"
 
 #include <wx/mstream.h>
@@ -42,7 +42,6 @@ GraphicManager::GraphicManager() :
 	client_version(nullptr),
 	unloaded(true),
 	dat_format(DAT_FORMAT_UNKNOWN),
-	otfi_found(false),
 	is_extended(false),
 	has_transparency(false),
 	has_frame_durations(false),
@@ -169,10 +168,6 @@ uint16_t GraphicManager::getCreatureSpriteMaxID() const {
 
 bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
-}
-
-bool GraphicManager::loadOTFI(const FileName& filename, wxString& error, std::vector<std::string>& warnings) {
-	return GameSpriteLoader::LoadOTFI(this, filename, error, warnings);
 }
 
 bool GraphicManager::loadSpriteMetadata(const FileName& datafile, wxString& error, std::vector<std::string>& warnings) {

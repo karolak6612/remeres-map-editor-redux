@@ -85,17 +85,12 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 	g_gui.gfx.client_version = getLoadedVersion();
 
-	if (!g_gui.gfx.loadOTFI(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR), error, warnings)) {
-		error = "Couldn't load otfi file: " + error;
-		g_loading.DestroyLoadBar();
-		UnloadVersion();
-		return false;
-	}
+	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
 
 	g_loading.CreateLoadBar("Loading asset files");
 	g_loading.SetLoadDone(0, "Loading metadata file...");
 
-	wxFileName metadata_path = g_gui.gfx.getMetadataFileName();
+	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
 	if (!g_gui.gfx.loadSpriteMetadata(metadata_path, error, warnings)) {
 		error = "Couldn't load metadata: " + error;
 		g_loading.DestroyLoadBar();
@@ -105,8 +100,8 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 	g_loading.SetLoadDone(10, "Loading sprites file...");
 
-	wxFileName sprites_path = g_gui.gfx.getSpritesFileName();
-	if (!g_gui.gfx.loadSpriteData(sprites_path.GetFullPath(), error, warnings)) {
+	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
+	if (!g_gui.gfx.loadSpriteData(sprites_path, error, warnings)) {
 		error = "Couldn't load sprites: " + error;
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
