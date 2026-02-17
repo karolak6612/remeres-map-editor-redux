@@ -17,6 +17,7 @@
 #include <wx/textdlg.h>
 #include <wx/stdpaths.h>
 #include <wx/menu.h>
+#include <wx/valtext.h>
 #include <algorithm>
 #include <unordered_map>
 
@@ -177,11 +178,11 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	part_sizer->Add(feet_btn, 1, wxEXPAND);
 	col1_sizer->Add(part_sizer, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 8);
 
-	wxFlexGridSizer* palette_sizer = new wxFlexGridSizer(COLOR_ROWS, COLOR_COLUMNS, 1, 1);
+	wxWrapSizer* palette_sizer = new wxWrapSizer(wxHORIZONTAL);
 	for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
 		uint32_t color = TemplateOutfitLookupTable[i];
 		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color);
-		palette_sizer->Add(swatch, 0);
+		palette_sizer->Add(swatch, 0, wxALL, 1);
 		color_buttons.push_back(swatch);
 
 		swatch->Bind(wxEVT_BUTTON, [this, i](wxCommandEvent&) {
@@ -215,7 +216,8 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	text_fields->Add(speed_ctrl, 1, wxEXPAND);
 
 	text_fields->Add(new wxStaticText(this, wxID_ANY, "Name:"), 0, wxALIGN_CENTER_VERTICAL);
-	name_ctrl = new wxTextCtrl(this, ID_NAME, current_name);
+	name_ctrl = new wxTextCtrl(this, ID_NAME, current_name, wxDefaultPosition, wxDefaultSize, 0, wxTextValidator(wxFILTER_NONE));
+	name_ctrl->SetMaxLength(29);
 	text_fields->Add(name_ctrl, 1, wxEXPAND);
 	text_fields->AddGrowableCol(1);
 	col1_sizer->Add(text_fields, 0, wxEXPAND | wxALL, 8);
