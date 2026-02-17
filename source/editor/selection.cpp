@@ -49,23 +49,57 @@ void Selection::recalculateBounds() const {
 		return;
 	}
 
+	if (tiles.empty()) {
+		cached_min = Position(0, 0, 0);
+		cached_max = Position(0, 0, 0);
+		bounds_dirty = false;
+		return;
+	}
+
 	Position minPos(0x10000, 0x10000, 0x10);
 	Position maxPos(0, 0, 0);
 
-	if (tiles.empty()) {
-		minPos = Position(0, 0, 0);
-		maxPos = Position(0, 0, 0);
-	} else {
-		std::ranges::for_each(tiles, [&](Tile* tile) {
-			const Position& pos = tile->getPosition();
-			minPos.x = std::min(minPos.x, pos.x);
-			minPos.y = std::min(minPos.y, pos.y);
-			minPos.z = std::min(minPos.z, pos.z);
+	// The tiles vector is sorted by position (Z, Y, X).
+	// We can exploit this to calculate bounds in O(Rows) instead of O(Tiles).
+	const Position& firstPos = tiles.front()->getPosition();
+	minPos = firstPos;
+	maxPos = firstPos;
 
-			maxPos.x = std::max(maxPos.x, pos.x);
-			maxPos.y = std::max(maxPos.y, pos.y);
-			maxPos.z = std::max(maxPos.z, pos.z);
-		});
+	if (tiles.size() > 1) {
+		const Tile* prevTile = tiles.front();
+
+		// Iterate starting from the second tile
+		for (size_t i = 1; i < tiles.size(); ++i) {
+			const Tile* currTile = tiles[i];
+			const Position& currPos = currTile->getPosition();
+			const Position& prevPos = prevTile->getPosition();
+
+			// Check if we started a new row (Y or Z changed)
+			if (currPos.y != prevPos.y || currPos.z != prevPos.z) {
+				// Previous tile was the end of the previous row. Update max X.
+				maxPos.x = std::max(maxPos.x, prevPos.x);
+
+				// Current tile is the start of a new row. Update min X.
+				minPos.x = std::min(minPos.x, currPos.x);
+
+				// Update Y and Z bounds
+				minPos.y = std::min(minPos.y, currPos.y);
+				maxPos.y = std::max(maxPos.y, currPos.y);
+
+				minPos.z = std::min(minPos.z, currPos.z);
+				maxPos.z = std::max(maxPos.z, currPos.z);
+			}
+
+			prevTile = currTile;
+		}
+
+		// Handle the last tile (end of the last row)
+		const Position& lastPos = tiles.back()->getPosition();
+		maxPos.x = std::max(maxPos.x, lastPos.x);
+
+		// Z is sorted, so min Z is first, max Z is last.
+		minPos.z = firstPos.z;
+		maxPos.z = lastPos.z;
 	}
 
 	cached_min = minPos;

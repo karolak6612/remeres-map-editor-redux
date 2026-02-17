@@ -397,21 +397,27 @@ uint8_t Tile::getMiniMapColor() const {
 		return minimapColor;
 	}
 
+	minimapColor = 0;
+
 	auto view = std::ranges::reverse_view(items);
 	auto it = std::ranges::find_if(view, [](const std::unique_ptr<Item>& i) {
 		return i->getMiniMapColor() != 0;
 	});
 
 	if (it != view.end()) {
-		return it->get()->getMiniMapColor();
+		minimapColor = it->get()->getMiniMapColor();
+		return minimapColor;
 	}
 
 	// check ground too
 	if (hasGround()) {
-		return ground->getMiniMapColor();
+		uint8_t color = ground->getMiniMapColor();
+		if (color != 0) {
+			minimapColor = color;
+		}
 	}
 
-	return 0;
+	return minimapColor;
 }
 
 bool tilePositionLessThan(const Tile* a, const Tile* b) {
@@ -453,7 +459,7 @@ void Tile::update() {
 		statflags |= TILESTATE_SELECTED;
 	}
 
-	minimapColor = 0; // Reset to "no color" (valid)
+	minimapColor = INVALID_MINIMAP_COLOR;
 
 	if (ground) {
 		if (ground->isSelected()) {
@@ -465,9 +471,6 @@ void Tile::update() {
 		if (ground->getUniqueID() != 0) {
 			statflags |= TILESTATE_UNIQUE;
 		}
-		if (ground->getMiniMapColor() != 0) {
-			minimapColor = ground->getMiniMapColor();
-		}
 	}
 
 	std::ranges::for_each(items, [&](const auto& i) {
@@ -476,9 +479,6 @@ void Tile::update() {
 		}
 		if (i->getUniqueID() != 0) {
 			statflags |= TILESTATE_UNIQUE;
-		}
-		if (i->getMiniMapColor() != 0) {
-			minimapColor = i->getMiniMapColor();
 		}
 
 		ItemType& it_type = g_items[i->getID()];

@@ -46,7 +46,7 @@ public:
 	void clear();
 	void clearVisible(uint32_t mask);
 
-	std::vector<SortedGridCell> getSortedCells() const;
+	const std::vector<SortedGridCell>& getSortedCells() const;
 
 	template <typename Func>
 	void visitLeaves(int min_x, int min_y, int max_x, int max_y, Func&& func) {
@@ -86,6 +86,9 @@ public:
 protected:
 	BaseMap& map;
 	std::unordered_map<uint64_t, std::unique_ptr<GridCell>> cells;
+
+	mutable std::vector<SortedGridCell> sorted_cells_cache;
+	mutable bool sorted_cells_dirty = true;
 
 	// Traverses cells by iterating over the viewport coordinates.
 	// Efficient for small or dense viewports.
@@ -138,59 +141,54 @@ protected:
 	// Efficient for huge or sparse viewports.
 	template <typename Func>
 	void visitLeavesByCells(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		struct CellEntry {
-			int cx;
-			int cy;
-			GridCell* cell;
-		};
-		std::vector<CellEntry> visible_cells;
-		visible_cells.reserve(std::min(cells.size(), static_cast<size_t>((static_cast<long long>(end_cx) - start_cx + 1) * (static_cast<long long>(end_cy) - start_cy + 1))));
+		const auto& sorted_cells = getSortedCells();
 
-		for (const auto& [key, cell_ptr] : cells) {
-			int cx, cy;
-			getCellCoordsFromKey(key, cx, cy);
-
-			if (cx >= start_cx && cx <= end_cx && cy >= start_cy && cy <= end_cy) {
-				visible_cells.push_back({ .cx = cx, .cy = cy, .cell = cell_ptr.get() });
-			}
-		}
-
-		if (visible_cells.empty()) {
+		if (sorted_cells.empty()) {
 			return;
 		}
 
-		if (visible_cells.size() > 1) {
-			std::sort(visible_cells.begin(), visible_cells.end(), [](const CellEntry& a, const CellEntry& b) {
-				return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
-			});
-		}
+		// Find the first cell that might be in range (using binary search on Y)
+		auto it = std::lower_bound(sorted_cells.begin(), sorted_cells.end(), start_cy, [](const SortedGridCell& cell, int val) {
+			int cx, cy;
+			getCellCoordsFromKey(cell.key, cx, cy);
+			return cy < val;
+		});
 
-		size_t first_in_row_idx = 0;
-		size_t num_visible = visible_cells.size();
+		size_t first_in_row_idx = std::distance(sorted_cells.begin(), it);
+		size_t num_cells = sorted_cells.size();
 
 		for (int ny : std::views::iota(start_ny, end_ny + 1)) {
 			int current_cy = ny >> NODES_PER_CELL_SHIFT;
 			int local_ny = ny & (NODES_PER_CELL - 1);
 
 			// Advance to current row. This correctly handles gaps in Y coordinates.
-			while (first_in_row_idx < num_visible && visible_cells[first_in_row_idx].cy < current_cy) {
+			while (first_in_row_idx < num_cells) {
+				int cx, cy;
+				getCellCoordsFromKey(sorted_cells[first_in_row_idx].key, cx, cy);
+				if (cy >= current_cy) break;
 				first_in_row_idx++;
 			}
 
 			// Iterate cells in current row
-			for (size_t i = first_in_row_idx; i < num_visible && visible_cells[i].cy == current_cy; ++i) {
-				const auto& entry = visible_cells[i];
-				GridCell* cell = entry.cell;
-				int cx = entry.cx;
+			for (size_t i = first_in_row_idx; i < num_cells; ++i) {
+				const auto& entry = sorted_cells[i];
+				int cx, cy;
+				getCellCoordsFromKey(entry.key, cx, cy);
 
-				int cell_start_nx = cx << NODES_PER_CELL_SHIFT;
-				int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
-				int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
+				if (cy > current_cy) break; // Optimization: Stop if we passed the row
+				if (cy != current_cy) continue; // Should not happen if loop logic is correct
 
-				for (int lnx = local_start_nx; lnx <= local_end_nx; ++lnx) {
-					int idx = local_ny * NODES_PER_CELL + lnx;
-					if (MapNode* node = cell->nodes[idx].get()) {
-						func(node, (cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
+				if (cx >= start_cx && cx <= end_cx) {
+					GridCell* cell = entry.cell;
+					int cell_start_nx = cx << NODES_PER_CELL_SHIFT;
+					int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
+					int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
+
+					for (int lnx = local_start_nx; lnx <= local_end_nx; ++lnx) {
+						int idx = local_ny * NODES_PER_CELL + lnx;
+						if (MapNode* node = cell->nodes[idx].get()) {
+							func(node, (cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
+						}
 					}
 				}
 			}
