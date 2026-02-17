@@ -34,7 +34,7 @@ void EditorPersistence::loadMap(Editor& editor, const FileName& fn) {
 		throw std::runtime_error(std::format("Client version mismatch. Expected {} but got {}", ver.client, g_version.GetCurrentVersionID()));
 	}
 
-	ScopedLoadingBar LoadingBar("Loading OTBM map...");
+	ScopedLoadingBar loadingBar("Loading OTBM map...");
 	editor.map.open(nstr(fn.GetFullPath()));
 }
 

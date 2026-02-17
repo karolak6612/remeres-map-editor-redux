@@ -121,7 +121,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 	}
 }
 
-void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map, NodeFileWriteHandle& f, std::function<void(int)> progressCb) {
+void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map, NodeFileWriteHandle& f, const std::function<void(int)>& progressCb) {
 	uint32_t tiles_saved = 0;
 	bool first = true;
 	int local_x = -1, local_y = -1, local_z = -1;

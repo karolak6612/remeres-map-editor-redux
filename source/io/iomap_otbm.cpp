@@ -135,7 +135,7 @@ bool IOMapOTBM::getVersionInfo(const FileName& filename, MapVersion& out_ver) {
 }
 
 bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
-	return HeaderSerializationOTBM::getVersionInfo(f, out_ver);
+	return HeaderSerializationOTBM::getVersionInfo(*f, out_ver);
 }
 
 bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {

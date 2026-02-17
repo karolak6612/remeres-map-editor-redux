@@ -10,7 +10,6 @@
 #include "map/tile.h"
 #include "io/filehandle.h"
 #include <spdlog/spdlog.h>
-#include <format>
 
 std::unique_ptr<Item> ItemSerializationOTBM::createFromStream(const IOMap& maphandle, BinaryNode* stream) {
 	uint16_t _id;
@@ -182,47 +181,37 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 		}
 		case OTBM_ATTR_PODIUMOUTFIT: {
 			if (auto podium = item.asPodium()) {
-#pragma pack(push, 1)
-				struct PodiumData {
-					uint8_t flags;
-					uint8_t direction;
-					uint16_t lookType;
-					uint8_t lookHead;
-					uint8_t lookBody;
-					uint8_t lookLegs;
-					uint8_t lookFeet;
-					uint8_t lookAddon;
-					uint16_t lookMount;
-					uint8_t lookMountHead;
-					uint8_t lookMountBody;
-					uint8_t lookMountLegs;
-					uint8_t lookMountFeet;
-				};
-#pragma pack(pop)
-
-				PodiumData podiumData;
-				if (!stream->getRAW(reinterpret_cast<uint8_t*>(&podiumData), sizeof(PodiumData))) {
-					spdlog::error("Failed to read podium data block.");
+				uint8_t flags;
+				uint8_t direction;
+				if (!stream->getU8(flags) || !stream->getU8(direction)) {
 					return false;
 				}
 
-				podium->setShowOutfit((podiumData.flags & PODIUM_SHOW_OUTFIT) != 0);
-				podium->setShowMount((podiumData.flags & PODIUM_SHOW_MOUNT) != 0);
-				podium->setShowPlatform((podiumData.flags & PODIUM_SHOW_PLATFORM) != 0);
-				podium->setDirection(podiumData.direction);
+				uint16_t lookType, lookMount;
+				uint8_t lookHead, lookBody, lookLegs, lookFeet, lookAddon;
+				uint8_t lookMountHead, lookMountBody, lookMountLegs, lookMountFeet;
+
+				if (!stream->getU16(lookType) || !stream->getU8(lookHead) || !stream->getU8(lookBody) || !stream->getU8(lookLegs) || !stream->getU8(lookFeet) || !stream->getU8(lookAddon) || !stream->getU16(lookMount) || !stream->getU8(lookMountHead) || !stream->getU8(lookMountBody) || !stream->getU8(lookMountLegs) || !stream->getU8(lookMountFeet)) {
+					return false;
+				}
 
 				Outfit newOutfit;
-				newOutfit.lookType = podiumData.lookType;
-				newOutfit.lookHead = podiumData.lookHead;
-				newOutfit.lookBody = podiumData.lookBody;
-				newOutfit.lookLegs = podiumData.lookLegs;
-				newOutfit.lookFeet = podiumData.lookFeet;
-				newOutfit.lookAddon = podiumData.lookAddon;
-				newOutfit.lookMount = podiumData.lookMount;
-				newOutfit.lookMountHead = podiumData.lookMountHead;
-				newOutfit.lookMountBody = podiumData.lookMountBody;
-				newOutfit.lookMountLegs = podiumData.lookMountLegs;
-				newOutfit.lookMountFeet = podiumData.lookMountFeet;
+				newOutfit.lookType = lookType;
+				newOutfit.lookHead = lookHead;
+				newOutfit.lookBody = lookBody;
+				newOutfit.lookLegs = lookLegs;
+				newOutfit.lookFeet = lookFeet;
+				newOutfit.lookAddon = lookAddon;
+				newOutfit.lookMount = lookMount;
+				newOutfit.lookMountHead = lookMountHead;
+				newOutfit.lookMountBody = lookMountBody;
+				newOutfit.lookMountLegs = lookMountLegs;
+				newOutfit.lookMountFeet = lookMountFeet;
+
+				podium->setShowOutfit((flags & PODIUM_SHOW_OUTFIT) != 0);
+				podium->setShowMount((flags & PODIUM_SHOW_MOUNT) != 0);
+				podium->setShowPlatform((flags & PODIUM_SHOW_PLATFORM) != 0);
+				podium->setDirection(direction);
 				podium->setOutfit(newOutfit);
 			} else {
 				return stream->skip(15);

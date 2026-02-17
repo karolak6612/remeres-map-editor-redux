@@ -6,7 +6,7 @@
 #define RME_MAP_XML_IO_H_
 
 #include <string>
-#include <vector>
+#include <utility>
 #include "ext/pugixml.hpp"
 
 class Map;
@@ -26,17 +26,17 @@ public:
 	// Houses
 	static bool loadHouses(Map& map, const wxFileName& dir);
 	static bool loadHouses(Map& map, pugi::xml_document& doc);
-	static bool saveHouses(const Map& map, const FileName& dir);
+	static bool saveHouses(const Map& map, const wxFileName& dir);
 	static bool saveHouses(const Map& map, pugi::xml_document& doc);
 
 	// Waypoints
-	static bool loadWaypoints(Map& map, const FileName& dir);
+	static bool loadWaypoints(Map& map, const wxFileName& dir);
 	static bool loadWaypoints(Map& map, pugi::xml_document& doc);
-	static bool saveWaypoints(const Map& map, const FileName& dir);
+	static bool saveWaypoints(const Map& map, const wxFileName& dir);
 	static bool saveWaypoints(const Map& map, pugi::xml_document& doc);
 	static bool loadWaypoints(Map& map, pugi::xml_node node);
 
-	static std::pair<std::string, std::string> normalizeMapFilePaths(const FileName& dir, const std::string& filename);
+	static std::pair<std::string, std::string> normalizeMapFilePaths(const wxFileName& dir, const std::string& filename);
 };
 
 #endif // RME_MAP_XML_IO_H_

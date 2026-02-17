@@ -39,20 +39,28 @@ OTBMWriteResult WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFi
 		return OTBMWriteResult::Success;
 	}
 
+	OTBMWriteResult WriteResult = OTBMWriteResult::Success;
+
 	if (mapVersion.otbm < MAP_OTBM_2) {
 		return OTBMWriteResult::SuccessWithUnsupportedVersion;
 	}
 	const bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
 
-	f.addNode(OTBM_WAYPOINTS);
-	for (const auto& [name, waypoint_ptr] : map.waypoints) {
-		const Waypoint* waypoint = waypoint_ptr.get();
-		f.addNode(OTBM_WAYPOINT);
-		f.addString(waypoint->name);
-		f.addU16(waypoint->pos.x);
-		f.addU16(waypoint->pos.y);
-		f.addU8(waypoint->pos.z);
+	if (supportWaypoints) {
+		f.addNode(OTBM_WAYPOINTS);
+		for (const auto& [name, waypoint_ptr] : map.waypoints) {
+			const Waypoint* waypoint = waypoint_ptr.get();
+			f.addNode(OTBM_WAYPOINT);
+			f.addString(waypoint->name);
+			f.addU16(waypoint->pos.x);
+			f.addU16(waypoint->pos.y);
+			f.addU8(waypoint->pos.z);
+			f.endNode();
+		}
 		f.endNode();
+	} else {
+		WriteResult = OTBMWriteResult::SuccessWithUnsupportedVersion;
 	}
-	f.endNode();
+
+	return WriteResult;
 }

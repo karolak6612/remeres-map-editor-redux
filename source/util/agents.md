@@ -50,7 +50,7 @@
 │  item.cpp, creature.cpp, house.cpp, spawn.cpp, town.cpp, materials.cpp   │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                         I/O Layer                                        │
-│  iomap_otbm.cpp | filehandle.cpp | loaders/*            │
+│  iomap_otbm.cpp | filehandle.cpp | loaders/*                             │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
