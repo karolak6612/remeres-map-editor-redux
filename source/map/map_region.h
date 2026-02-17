@@ -15,6 +15,15 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+/*
+ * @file map_region.h
+ * @brief Manages spatial regions and tile storage locations.
+ *
+ * Defines structures for organizing tiles into regions (MapNode), floors (Floor),
+ * and individual tile containers (TileLocation). These classes manage memory
+ * layout and visibility for the map.
+ */
+
 #ifndef RME_MAP_REGION_H
 #define RME_MAP_REGION_H
 
@@ -29,6 +38,13 @@ class Floor;
 class BaseMap;
 class MapNode;
 
+/*
+ * @brief Holds a Tile and its metadata at a specific map position.
+ *
+ * TileLocation acts as a container for a Tile pointer and associated counters
+ * (spawns, waypoints, towns) and house exits pointing to this location.
+ * It ensures these properties persist even if the Tile object itself is replaced.
+ */
 class TileLocation {
 	TileLocation();
 
@@ -49,16 +65,38 @@ protected:
 public:
 	// Access tile
 	// Can't set directly since that does not update tile count
+	/*
+	 * @brief Gets the tile stored at this location.
+	 * @return Pointer to Tile.
+	 */
 	Tile* get() {
 		return tile.get();
 	}
+
+	/*
+	 * @brief Gets the tile (const).
+	 * @return Const pointer to Tile.
+	 */
 	const Tile* get() const {
 		return tile.get();
 	}
 
+	/*
+	 * @brief Gets the number of items/entities at this location.
+	 * @return Item count.
+	 */
 	int size() const;
+
+	/*
+	 * @brief Checks if the location is empty (no tile or empty tile).
+	 * @return true if empty.
+	 */
 	bool empty() const;
 
+	/*
+	 * @brief Gets the absolute position of this location.
+	 * @return Position struct.
+	 */
 	Position getPosition() const {
 		return position;
 	}
@@ -73,6 +111,10 @@ public:
 		return position.z;
 	}
 
+	/*
+	 * @brief Gets the count of spawns at this location.
+	 * @return Spawn count.
+	 */
 	size_t getSpawnCount() const {
 		return spawn_count;
 	}
@@ -82,6 +124,11 @@ public:
 	void decreaseSpawnCount() {
 		spawn_count--;
 	}
+
+	/*
+	 * @brief Gets the count of waypoints at this location.
+	 * @return Waypoint count.
+	 */
 	size_t getWaypointCount() const {
 		return waypoint_count;
 	}
@@ -91,6 +138,11 @@ public:
 	void decreaseWaypointCount() {
 		waypoint_count--;
 	}
+
+	/*
+	 * @brief Gets the count of towns referencing this location.
+	 * @return Town count.
+	 */
 	size_t getTownCount() const {
 		return town_count;
 	}
@@ -100,6 +152,11 @@ public:
 	void decreaseTownCount() {
 		town_count--;
 	}
+
+	/*
+	 * @brief Creates or retrieves the list of house exits pointing here.
+	 * @return Pointer to HouseExitList.
+	 */
 	HouseExitList* createHouseExits() {
 		if (house_exits) {
 			return house_exits.get();
@@ -107,6 +164,11 @@ public:
 		house_exits = std::make_unique<HouseExitList>();
 		return house_exits.get();
 	}
+
+	/*
+	 * @brief Gets the house exits list (if any).
+	 * @return Pointer to HouseExitList or nullptr.
+	 */
 	HouseExitList* getHouseExits() {
 		return house_exits.get();
 	}
@@ -116,12 +178,23 @@ public:
 	friend class Waypoints;
 };
 
+/*
+ * @brief Represents a single Z-layer (floor) within a map region.
+ *
+ * Contains a fixed array of TileLocations.
+ */
 class Floor {
 public:
 	Floor(int x, int y, int z);
-	TileLocation locs[MAP_LAYERS];
+	TileLocation locs[MAP_LAYERS]; /* Fixed size array of locations on this floor? (Note: MAP_LAYERS name is confusing if this is a floor) */
 };
 
+/*
+ * @brief Represents a spatial chunk of the map (Map Region).
+ *
+ * A MapNode typically covers a rectangular area and manages all floors
+ * within that area. It handles visibility state and tile access.
+ */
 class MapNode {
 public:
 	MapNode(BaseMap& map);
@@ -130,17 +203,72 @@ public:
 	MapNode(const MapNode&) = delete;
 	MapNode& operator=(const MapNode&) = delete;
 
+	/*
+	 * @brief Creates a new tile location at the given coordinates.
+	 * @param x Local X coordinate?
+	 * @param y Local Y coordinate?
+	 * @param z Local Z coordinate?
+	 * @return Pointer to new TileLocation.
+	 */
 	TileLocation* createTile(int x, int y, int z);
+
+	/*
+	 * @brief Retrieves a tile location.
+	 * @param x Local X coordinate.
+	 * @param y Local Y coordinate.
+	 * @param z Local Z coordinate.
+	 * @return Pointer to TileLocation.
+	 */
 	TileLocation* getTile(int x, int y, int z);
+
+	/*
+	 * @brief Sets a tile at the given coordinates.
+	 * @param x Local X coordinate.
+	 * @param y Local Y coordinate.
+	 * @param z Local Z coordinate.
+	 * @param tile Unique pointer to the new Tile.
+	 * @return Unique pointer to any previous tile.
+	 */
 	std::unique_ptr<Tile> setTile(int x, int y, int z, std::unique_ptr<Tile> tile);
+
+	/*
+	 * @brief Clears (removes) a tile at the given coordinates.
+	 * @param x Local X coordinate.
+	 * @param y Local Y coordinate.
+	 * @param z Local Z coordinate.
+	 */
 	void clearTile(int x, int y, int z);
 
+	/*
+	 * @brief Creates a floor structure at the given coordinates.
+	 * @param x X coordinate.
+	 * @param y Y coordinate.
+	 * @param z Z coordinate.
+	 * @return Pointer to the new Floor.
+	 */
 	Floor* createFloor(int x, int y, int z);
+
+	/*
+	 * @brief Gets an existing floor at a Z-level.
+	 * @param z Z-level index.
+	 * @return Pointer to Floor.
+	 */
 	Floor* getFloor(uint32_t z) {
 		return array[z].get();
 	}
+
+	/*
+	 * @brief Checks if a floor exists at a Z-level.
+	 * @param z Z-level index.
+	 * @return true if exists.
+	 */
 	bool hasFloor(uint32_t z);
 
+	/*
+	 * @brief Sets visibility flags for this node.
+	 * @param underground Target underground layer?
+	 * @param value Visibility state.
+	 */
 	void setVisible(bool underground, bool value);
 	void setVisible(uint32_t client, bool underground, bool value);
 	bool isVisible(uint32_t client, bool underground);
