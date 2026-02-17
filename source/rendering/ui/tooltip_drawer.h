@@ -27,6 +27,9 @@
 #include <string_view>
 #include <sstream>
 #include <unordered_map>
+#include <functional>
+#include <list>
+#include <type_traits>
 
 class Item;
 class Waypoint;
@@ -141,6 +144,37 @@ struct TooltipData {
 		containerItems.clear();
 		containerCapacity = 0;
 	}
+
+	// Helper to combine hashes
+	template <typename T>
+	static inline void hash_combine(size_t& seed, const T& val) {
+		std::hash<T> hasher;
+		seed ^= hasher(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	size_t computeHash() const {
+		size_t seed = 0;
+		// category is enum, hash as underlying type
+		hash_combine(seed, static_cast<std::underlying_type_t<TooltipCategory>>(category));
+		hash_combine(seed, itemId);
+		hash_combine(seed, itemName);
+		hash_combine(seed, actionId);
+		hash_combine(seed, uniqueId);
+		hash_combine(seed, doorId);
+		hash_combine(seed, text);
+		hash_combine(seed, description);
+		hash_combine(seed, destination.x);
+		hash_combine(seed, destination.y);
+		hash_combine(seed, destination.z);
+		hash_combine(seed, waypointName);
+		hash_combine(seed, containerCapacity);
+		for (const auto& item : containerItems) {
+			hash_combine(seed, item.id);
+			hash_combine(seed, item.count);
+			hash_combine(seed, item.subtype);
+		}
+		return seed;
+	}
 };
 
 class TooltipDrawer {
@@ -202,10 +236,28 @@ protected:
 		int numContainerItems;
 	};
 
+	// Cached tooltip data (persistent layout)
+	struct CachedFieldLine {
+		std::string label;
+		std::string value;
+		uint8_t r, g, b;
+		std::vector<std::string> wrappedLines;
+	};
+
+	struct CachedTooltip {
+		LayoutMetrics layout;
+		std::vector<CachedFieldLine> fields;
+	};
+
+	std::unordered_map<size_t, CachedTooltip> layoutCache;
+	std::list<size_t> layoutLruList;
+	size_t maxLayoutCacheSize = 1000;
+
 	void prepareFields(const TooltipData& tooltip);
 	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
 	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
 	void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
+	void drawFieldsCached(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize, const CachedTooltip& cached);
 	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
 };
 

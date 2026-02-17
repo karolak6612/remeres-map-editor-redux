@@ -467,6 +467,35 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	}
 }
 
+void TooltipDrawer::drawFieldsCached(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize, const CachedTooltip& cached) {
+	using namespace TooltipColors;
+
+	float contentX = x + padding;
+	float cursorY = y + padding;
+
+	nvgFontSize(vg, fontSize);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+	for (const auto& field : cached.fields) {
+		bool firstLine = true;
+		for (const auto& line : field.wrappedLines) {
+			if (firstLine) {
+				// Draw label on first line
+				nvgFillColor(vg, nvgRGBA(BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, 160));
+				nvgText(vg, contentX, cursorY, field.label.c_str(), nullptr);
+				firstLine = false;
+			}
+
+			// Draw value line in semantic color
+			nvgFillColor(vg, nvgRGBA(field.r, field.g, field.b, 255));
+			nvgText(vg, contentX + valueStartX, cursorY, line.c_str(), nullptr);
+
+			cursorY += lineHeight;
+		}
+	}
+}
+
 void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout) {
 	using namespace TooltipColors;
 
@@ -474,19 +503,20 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 		return;
 	}
 
-	// Calculate cursorY after text fields
-	// We need to re-calculate text height or pass it, but simpler to deduce from logic:
-	// The grid is at the bottom. We can just use the bottom of the box minus grid height minus padding.
-	// But let's calculate exact start Y based on text content for precision
-	float fontSize = 11.0f;
-	float lineHeight = fontSize * 1.4f;
-	float textBlockHeight = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
-		textBlockHeight += field.wrappedLines.size() * lineHeight;
+	// Deduce grid start Y from layout metrics
+	// layout.height = textHeightWithPadding + layout.containerHeight + 4.0f (extra spacing)
+	// Original (uncached) logic used: y + 10.0f (padding) + textBlockHeight + 8.0f (spacer)
+	// textHeightWithPadding = textBlockHeight + 20.0f
+	// So textBlockHeight = layout.height - layout.containerHeight - 4.0f - 20.0f
+	// startY = y + 10.0f + (layout.height - layout.containerHeight - 24.0f) + 8.0f
+	// startY = y + layout.height - layout.containerHeight - 6.0f
+	float startY = 0.0f;
+	if (layout.containerHeight > 0) {
+		startY = y + layout.height - layout.containerHeight - 6.0f;
+	} else {
+		return;
 	}
 
-	float startY = y + 10.0f + textBlockHeight + 8.0f; // Padding + Text + Spacer
 	float startX = x + 10.0f; // Padding
 
 	for (int idx = 0; idx < layout.totalContainerSlots; ++idx) {
@@ -580,16 +610,59 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		float minWidth = 120.0f;
 		float maxWidth = 220.0f;
 
-		// 1. Prepare Content
-		prepareFields(tooltip);
+		size_t hash = tooltip.computeHash();
+		LayoutMetrics layout;
+		bool cached = false;
 
-		// Skip if nothing to show
-		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
-			continue;
+		auto it = layoutCache.find(hash);
+		if (it != layoutCache.end()) {
+			cached = true;
+			layout = it->second.layout;
+			// LRU update: move to front
+			// We don't have list iterator in map, so we can't splice O(1).
+			// We skip LRU update on read for performance,
+			// or we could implement a better LRU if needed.
+			// For now, assuming map lookup is fast enough.
+		} else {
+			// 1. Prepare Content
+			prepareFields(tooltip);
+
+			// Skip if nothing to show
+			if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
+				continue;
+			}
+
+			// 2. Calculate Layout
+			layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
+
+			// Store in cache
+			CachedTooltip ct;
+			ct.layout = layout;
+			ct.fields.reserve(scratch_fields_count);
+			for(size_t k=0; k<scratch_fields_count; ++k) {
+				const auto& src = scratch_fields[k];
+				CachedFieldLine dst;
+				dst.label = std::string(src.label);
+				dst.value = std::string(src.value);
+				dst.r = src.r; dst.g = src.g; dst.b = src.b;
+				for(const auto& line : src.wrappedLines) {
+					dst.wrappedLines.emplace_back(std::string(line));
+				}
+				ct.fields.push_back(std::move(dst));
+			}
+
+			if (layoutCache.size() >= maxLayoutCacheSize) {
+				if (!layoutLruList.empty()) {
+					size_t victim = layoutLruList.back();
+					layoutLruList.pop_back();
+					layoutCache.erase(victim);
+				}
+			}
+
+			layoutCache[hash] = std::move(ct);
+			layoutLruList.push_front(hash);
+			cached = true;
 		}
-
-		// 2. Calculate Layout
-		LayoutMetrics layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
 
 		// Position tooltip above tile
 		float tooltipX = screen_x - (layout.width / 2.0f);
@@ -599,7 +672,17 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		drawBackground(vg, tooltipX, tooltipY, layout.width, layout.height, 4.0f, tooltip);
 
 		// 4. Draw Text Fields
-		drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
+		if (cached) {
+			drawFieldsCached(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize, layoutCache[hash]);
+		} else {
+			// This path is technically reachable if caching failed or was disabled,
+			// but with current logic 'cached' becomes true after miss handling.
+			// However, if we skip caching for some reason, we would use drawFields.
+			// But drawFields relies on scratch_fields which is populated by prepareFields.
+			// In cache hit case, prepareFields is NOT called, so scratch_fields is empty/stale.
+			// So we MUST use drawFieldsCached.
+			drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
+		}
 
 		// 5. Draw Container Grid
 		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
