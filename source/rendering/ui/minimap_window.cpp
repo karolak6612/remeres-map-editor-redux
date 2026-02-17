@@ -18,6 +18,7 @@
 #include "app/main.h"
 
 #include <spdlog/spdlog.h>
+#include <cmath>
 
 #include "rendering/core/graphics.h"
 #include "editor/editor.h"
@@ -47,7 +48,11 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
 	update_timer(this),
 	context(nullptr),
-	nvg(nullptr, NVGDeleter()) {
+	nvg(nullptr, NVGDeleter()),
+	m_smoothX(0.0),
+	m_smoothY(0.0),
+	m_lastFrameTime(0),
+	m_dragging(false) {
 	spdlog::info("MinimapWindow::MinimapWindow - Creating context");
 	context = std::make_unique<wxGLContext>(this);
 	if (!context->IsOK()) {
@@ -57,6 +62,8 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	drawer = std::make_unique<MinimapDrawer>();
 
 	Bind(wxEVT_LEFT_DOWN, &MinimapWindow::OnMouseClick, this);
+	Bind(wxEVT_MOTION, &MinimapWindow::OnMouseMove, this);
+	Bind(wxEVT_LEFT_UP, &MinimapWindow::OnMouseUp, this);
 	Bind(wxEVT_SIZE, &MinimapWindow::OnSize, this);
 	Bind(wxEVT_PAINT, &MinimapWindow::OnPaint, this);
 	Bind(wxEVT_ERASE_BACKGROUND, &MinimapWindow::OnEraseBackground, this);
@@ -137,10 +144,40 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	Editor& editor = *g_gui.GetCurrentEditor();
 	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
 
-	// Mock dc passed to Draw, unused by new GL implementation
-	drawer->Draw(dc, GetSize(), editor, canvas);
+	// Smooth Panning Logic
+	int targetX, targetY;
+	canvas->GetScreenCenter(&targetX, &targetY);
 
-	// Glass Overlay
+	// Initialize if first run or reset
+	if (m_smoothX == 0 && m_smoothY == 0) {
+		m_smoothX = targetX;
+		m_smoothY = targetY;
+	}
+
+	// Calculate Delta Time
+	wxLongLong now = wxGetLocalTimeMillis();
+	double dt = 0.016; // Default to ~60 FPS
+	if (m_lastFrameTime > 0) {
+		dt = (now - m_lastFrameTime).ToDouble() / 1000.0;
+		if (dt > 0.1) dt = 0.1; // Cap at 100ms to prevent huge jumps
+	}
+	m_lastFrameTime = now;
+
+	// Smooth Damp
+	// Higher speed = snappier, Lower = smoother
+	double speed = 15.0;
+
+	// Snap if very close to avoid jitter
+	if (std::abs(targetX - m_smoothX) < 0.5) m_smoothX = targetX;
+	else m_smoothX += (targetX - m_smoothX) * speed * dt;
+
+	if (std::abs(targetY - m_smoothY) < 0.5) m_smoothY = targetY;
+	else m_smoothY += (targetY - m_smoothY) * speed * dt;
+
+	// Draw Minimap with interpolated center
+	drawer->Draw(dc, GetSize(), editor, canvas, Position(static_cast<int>(m_smoothX), static_cast<int>(m_smoothY), 0));
+
+	// Glass Overlay & HUD
 	NVGcontext* vg = nvg.get();
 	if (vg) {
 		glClear(GL_STENCIL_BUFFER_BIT);
@@ -148,15 +185,71 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, GetContentScaleFactor());
 
-		// Subtle glass border
+		// 1. Draw View Box (Camera HUD)
+		// Get View Box logic (borrowed from MinimapDrawer but adapted for NanoVG)
+		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
+			int screensize_x, screensize_y;
+			int view_scroll_x, view_scroll_y;
+			canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
+
+			int floor = g_gui.GetCurrentFloor();
+			// Typically TileSize is 32. Using constant 32 as per MinimapDrawer implementation assumption.
+			// Ideally should use TileSize constant.
+			const int TS = 32;
+			int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
+
+			int view_start_x = view_scroll_x / TS + floor_offset;
+			int view_start_y = view_scroll_y / TS + floor_offset;
+
+			int tile_size = int(TS / canvas->GetZoom());
+			if (tile_size < 1) tile_size = 1;
+			int view_w = screensize_x / tile_size + 1;
+			int view_h = screensize_y / tile_size + 1;
+
+			// Convert to local minimap coords
+			// We need the start_x/y that was just used for drawing
+			int map_start_x = drawer->GetLastStartX();
+			int map_start_y = drawer->GetLastStartY();
+
+			float box_x = (float)(view_start_x - map_start_x);
+			float box_y = (float)(view_start_y - map_start_y);
+			float box_w = (float)view_w;
+			float box_h = (float)view_h;
+
+			// Draw View Box
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, box_x, box_y, box_w, box_h, 3.0f);
+
+			// Inner Glow
+			NVGpaint boxGlow = nvgBoxGradient(vg, box_x, box_y, box_w, box_h, 3.0f, 4.0f, nvgRGBA(255, 255, 255, 32), nvgRGBA(0, 0, 0, 0));
+			nvgPathWinding(vg, NVG_HOLE);
+			nvgFillPaint(vg, boxGlow);
+			nvgFill(vg);
+
+			// Stroke
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, box_x, box_y, box_w, box_h, 3.0f);
+			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 128));
+			nvgStrokeWidth(vg, 1.5f);
+			nvgStroke(vg);
+		}
+
+		// 2. Glass Overlay (Enhanced)
+		// Outer border
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
-		nvgStrokeWidth(vg, 2.0f);
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 40));
+		nvgStrokeWidth(vg, 3.0f);
 		nvgStroke(vg);
 
-		// Inner glow
-		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 80));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
+
+		// Inner glow (Vignette)
+		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 80));
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
 		nvgFillPaint(vg, glow);
@@ -166,18 +259,64 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	}
 
 	SwapBuffers();
+
+	// If we are animating (not at target), request another frame
+	if (std::abs(targetX - m_smoothX) > 0.1 || std::abs(targetY - m_smoothY) > 0.1) {
+		Refresh();
+	}
 }
 
 void MinimapWindow::OnMouseClick(wxMouseEvent& event) {
 	if (!g_gui.IsEditorOpen()) {
 		return;
 	}
+
+	m_dragging = true;
+	m_lastMousePos = event.GetPosition();
+
+	// Jump to position on click
 	int new_map_x, new_map_y;
 	drawer->ScreenToMap(event.GetX(), event.GetY(), new_map_x, new_map_y);
-
 	g_gui.SetScreenCenterPosition(Position(new_map_x, new_map_y, g_gui.GetCurrentFloor()));
+
+	// Force refresh to start animation/update immediately
 	Refresh();
 	g_gui.RefreshView();
+}
+
+void MinimapWindow::OnMouseMove(wxMouseEvent& event) {
+	if (m_dragging && event.Dragging() && event.LeftIsDown()) {
+		if (!g_gui.IsEditorOpen()) return;
+
+		wxPoint currentPos = event.GetPosition();
+		int dx = currentPos.x - m_lastMousePos.x;
+		int dy = currentPos.y - m_lastMousePos.y;
+
+		if (dx != 0 || dy != 0) {
+			// Calculate new center
+			int currentCenterX, currentCenterY;
+			g_gui.GetCurrentMapTab()->GetCanvas()->GetScreenCenter(&currentCenterX, &currentCenterY);
+
+			// Minimap scale is typically 1:1, so move by dx/dy
+			// If I click and drag the camera box, it should follow the mouse.
+			// So if mouse moves RIGHT, camera center should move RIGHT.
+			int newCenterX = currentCenterX + dx;
+			int newCenterY = currentCenterY + dy;
+
+			g_gui.SetScreenCenterPosition(Position(newCenterX, newCenterY, g_gui.GetCurrentFloor()));
+			m_lastMousePos = currentPos;
+			g_gui.RefreshView();
+			Refresh();
+		}
+	}
+	event.Skip();
+}
+
+void MinimapWindow::OnMouseUp(wxMouseEvent& event) {
+	if (m_dragging) {
+		m_dragging = false;
+	}
+	event.Skip();
 }
 
 void MinimapWindow::OnKey(wxKeyEvent& event) {

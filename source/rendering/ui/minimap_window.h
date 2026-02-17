@@ -32,6 +32,8 @@ public:
 	void OnPaint(wxPaintEvent&);
 	void OnEraseBackground(wxEraseEvent&) { }
 	void OnMouseClick(wxMouseEvent&);
+	void OnMouseMove(wxMouseEvent&);
+	void OnMouseUp(wxMouseEvent&);
 	void OnSize(wxSizeEvent&);
 	void OnClose(wxCloseEvent&);
 
@@ -44,6 +46,14 @@ protected:
 	wxTimer update_timer;
 	std::unique_ptr<wxGLContext> context;
 	std::unique_ptr<NVGcontext, NVGDeleter> nvg;
+
+	// Smooth Panning & Interaction
+	double m_smoothX = 0.0;
+	double m_smoothY = 0.0;
+	wxLongLong m_lastFrameTime = 0;
+
+	bool m_dragging = false;
+	wxPoint m_lastMousePos;
 };
 
 #endif

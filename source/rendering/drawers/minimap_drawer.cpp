@@ -20,7 +20,7 @@ MinimapDrawer::MinimapDrawer() :
 MinimapDrawer::~MinimapDrawer() {
 }
 
-void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanvas* canvas) {
+void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanvas* canvas, std::optional<Position> center) {
 	// We no longer use wxDC for drawing the map content, as we render via OpenGL.
 	// However, we might need to conform to existing architecture.
 	// The caller likely sets up GL context if we are in GLCanvas?
@@ -62,7 +62,12 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	int center_x, center_y;
-	canvas->GetScreenCenter(&center_x, &center_y);
+	if (center) {
+		center_x = center->x;
+		center_y = center->y;
+	} else {
+		canvas->GetScreenCenter(&center_x, &center_y);
+	}
 
 	int start_x, start_y;
 	int end_x, end_y;
@@ -115,6 +120,8 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
 
 		// Draw View Box (Overlay)
+		// Disabling legacy OpenGL view box in favor of NanoVG overlay in MinimapWindow
+		/*
 		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
 			// Compute box coordinates
 			int screensize_x, screensize_y;
@@ -151,6 +158,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 
 			primitive_renderer->flush();
 		}
+		*/
 	}
 }
 
