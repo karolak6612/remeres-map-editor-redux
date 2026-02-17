@@ -399,6 +399,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/io/item_otbm_io.cpp
     #${CMAKE_CURRENT_LIST_DIR}/io/iomap_otmm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_action.cpp
     ${CMAKE_CURRENT_LIST_DIR}/live/live_client.cpp

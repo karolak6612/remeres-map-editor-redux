@@ -20,6 +20,7 @@
 #include "game/complexitem.h"
 
 #include "io/iomap.h"
+#include "brushes/wall/wall_brush.h"
 
 // Container
 Container::Container(const uint16_t type) :
@@ -81,6 +82,30 @@ std::unique_ptr<Item> Door::deepCopy() const {
 		door_copy->doorId = doorId;
 	}
 	return copy;
+}
+
+DoorType Door::getDoorType() const {
+	WallBrush* wb = getWallBrush();
+	if (!wb) {
+		return WALL_UNDEFINED;
+	}
+
+	return wb->getDoorTypeFromID(id);
+}
+
+bool Door::isRealDoor() const {
+	const DoorType& dt = getDoorType();
+	// doors with no wallbrush will appear as WALL_UNDEFINED
+	// this is for compatibility
+	return dt == WALL_UNDEFINED || dt == WALL_DOOR_NORMAL || dt == WALL_DOOR_LOCKED || dt == WALL_DOOR_QUEST || dt == WALL_DOOR_MAGIC || dt == WALL_DOOR_NORMAL_ALT;
+}
+
+uint8_t Door::getDoorID() const {
+	return isRealDoor() ? doorId : 0;
+}
+
+void Door::setDoorID(uint8_t id) {
+	doorId = isRealDoor() ? id : 0;
 }
 
 // Depot
