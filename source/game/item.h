@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-/*
+/**
  * @file item.h
  * @brief Base class for all game items.
  *
@@ -40,24 +40,24 @@ class Tile;
 
 struct SpriteLight;
 
-/*
+/**
  * @brief Enumeration of specific item properties.
  *
  * Used to query boolean flags about an item's behavior.
  */
 enum ITEMPROPERTY {
-	BLOCKSOLID, /* Blocks solid objects (creatures). */
-	HASHEIGHT, /* Has elevation (elevation > 0). */
-	BLOCKPROJECTILE, /* Blocks projectiles. */
-	BLOCKPATHFIND, /* Blocks pathfinding. */
-	PROTECTIONZONE, /* Acts as a protection zone. */
-	HOOK_SOUTH, /* Has a south-facing hook. */
-	HOOK_EAST, /* Has an east-facing hook. */
-	MOVEABLE, /* Can be moved by players. */
+	BLOCKSOLID, ///< Blocks solid objects (creatures).
+	HASHEIGHT, ///< Has elevation (elevation > 0).
+	BLOCKPROJECTILE, ///< Blocks projectiles.
+	BLOCKPATHFIND, ///< Blocks pathfinding.
+	PROTECTIONZONE, ///< Acts as a protection zone.
+	HOOK_SOUTH, ///< Has a south-facing hook.
+	HOOK_EAST, ///< Has an east-facing hook.
+	MOVEABLE, ///< Can be moved by players.
 	BLOCKINGANDNOTMOVEABLE /* Blocks movement and cannot be moved. */
 };
 
-/*
+/**
  * @brief Types of liquid splashes.
  *
  * Defines the color and behavior of fluid containers and splashes.
@@ -93,7 +93,7 @@ enum SplashType {
 
 IMPLEMENT_INCREMENT_OP(SplashType)
 
-/*
+/**
  * @brief Represents an item in the game world.
  *
  * Items are the main content of tiles. This class handles item attributes,
@@ -110,7 +110,7 @@ public:
 	inline static const std::string ATTR_TIER = "tier";
 
 	// Factory member to create item of right type based on type
-	/*
+	/**
 	 * @brief Factory method to create an item by type ID.
 	 * @param _type The item type ID (server ID).
 	 * @param _subtype The subtype (count, charges, fluid type).
@@ -118,14 +118,14 @@ public:
 	 */
 	static std::unique_ptr<Item> Create(uint16_t _type, uint16_t _subtype = 0xFFFF);
 
-	/*
+	/**
 	 * @brief Factory method to create an item from an XML node.
 	 * @param node The XML node configuration.
 	 * @return Unique pointer to the new Item.
 	 */
 	static std::unique_ptr<Item> Create(pugi::xml_node node);
 
-	/*
+	/**
 	 * @brief Factory method to create an item from OTBM stream.
 	 * @param maphandle Map I/O context.
 	 * @param stream Binary stream to read from.
@@ -136,7 +136,7 @@ public:
 
 public:
 	// Constructor for items
-	/*
+	/**
 	 * @brief Constructs an item with a specific type and count.
 	 * @param _type The item type ID.
 	 * @param _count The item subtype/count.
@@ -146,14 +146,14 @@ public:
 	virtual ~Item();
 
 	// Deep copy thingy
-	/*
+	/**
 	 * @brief Creates a deep copy of this item.
 	 * @return Unique pointer to the copy.
 	 */
 	virtual std::unique_ptr<Item> deepCopy() const;
 
 	// Get memory footprint size
-	/*
+	/**
 	 * @brief Calculates the memory usage of this item.
 	 * @return Size in bytes.
 	 */
@@ -199,7 +199,7 @@ public:
 	// OTBM map interface
 	// Serialize and unserialize (for save/load)
 	// Used internally
-	/*
+	/**
 	 * @brief Reads a single OTBM attribute.
 	 * @param maphandle Map I/O context.
 	 * @param attr Attribute ID.
@@ -208,7 +208,7 @@ public:
 	 */
 	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* stream);
 
-	/*
+	/**
 	 * @brief Unserializes attributes from OTBM stream.
 	 * @param maphandle Map I/O context.
 	 * @param stream Data stream.
@@ -216,7 +216,7 @@ public:
 	 */
 	virtual bool unserializeAttributes_OTBM(const IOMap& maphandle, BinaryNode* stream);
 
-	/*
+	/**
 	 * @brief Unserializes an item node from OTBM.
 	 * @param maphandle Map I/O context.
 	 * @param node Binary node.
@@ -225,7 +225,7 @@ public:
 	virtual bool unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* node);
 
 	// Will return a node containing this item
-	/*
+	/**
 	 * @brief Serializes this item to an OTBM node.
 	 * @param maphandle Map I/O context.
 	 * @param f File write handle.
@@ -234,14 +234,14 @@ public:
 	virtual bool serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	// Will write this item to the stream supplied in the argument
 
-	/*
+	/**
 	 * @brief Serializes item in compact format (without children).
 	 * @param maphandle Map I/O context.
 	 * @param f File write handle.
 	 */
 	virtual void serializeItemCompact_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
-	/*
+	/**
 	 * @brief Serializes item attributes.
 	 * @param maphandle Map I/O context.
 	 * @param f File write handle.
@@ -264,14 +264,14 @@ public:
 	*/
 
 	// Static conversions
-	/*
+	/**
 	 * @brief Converts liquid ID to string name.
 	 * @param id Liquid ID.
 	 * @return Liquid name.
 	 */
 	static std::string LiquidID2Name(uint16_t id);
 
-	/*
+	/**
 	 * @brief Converts liquid name to ID.
 	 * @param id Liquid name string.
 	 * @return Liquid ID.
@@ -279,7 +279,7 @@ public:
 	static uint16_t LiquidName2ID(std::string id);
 
 	// IDs
-	/*
+	/**
 	 * @brief Gets the item's server ID.
 	 * @return The item ID.
 	 */
@@ -287,7 +287,7 @@ public:
 		return id;
 	}
 
-	/*
+	/**
 	 * @brief Gets the item's client ID (for display).
 	 * @return The client ID.
 	 */
@@ -296,14 +296,14 @@ public:
 	}
 	// NOTE: This is very volatile, do NOT use this unless you know exactly what you're doing
 	// which you probably don't so avoid it like the plague!
-	/*
+	/**
 	 * @brief Sets the item ID directly.
 	 * @warning This is dangerous and can break item state if not used carefully.
 	 * @param id New item ID.
 	 */
 	void setID(uint16_t id);
 
-	/*
+	/**
 	 * @brief Checks if the item type exists in the definitions.
 	 * @return true if valid type.
 	 */
@@ -345,7 +345,7 @@ public:
 		return g_items[id].maxTextLen;
 	}
 
-	/*
+	/**
 	 * @brief Gets the generic brush associated with this item.
 	 * @return Pointer to Brush.
 	 */
@@ -377,45 +377,45 @@ public:
 	}
 
 	// Drawing related
-	/*
+	/**
 	 * @brief Gets the minimap color index.
 	 * @return Color index.
 	 */
 	uint8_t getMiniMapColor() const;
 
-	/*
+	/**
 	 * @brief Gets the height of the item in pixels/units.
 	 * @return Height.
 	 */
 	int getHeight() const;
 
-	/*
+	/**
 	 * @brief Gets drawing offset.
 	 * @return (x, y) offset pair.
 	 */
 	std::pair<int, int> getDrawOffset() const;
 
-	/*
+	/**
 	 * @brief Checks if the item emits light.
 	 * @return true if it has a light source.
 	 */
 	bool hasLight() const;
 
-	/*
+	/**
 	 * @brief Gets the light properties.
 	 * @return SpriteLight struct.
 	 */
 	SpriteLight getLight() const;
 
 	// Item types
-	/*
+	/**
 	 * @brief Checks if the item has a specific property.
 	 * @param prop The property to check.
 	 * @return true if property is set.
 	 */
 	bool hasProperty(enum ITEMPROPERTY prop) const;
 
-	/*
+	/**
 	 * @brief Checks if the item blocks movement.
 	 * @return true if blocking.
 	 */
@@ -423,7 +423,7 @@ public:
 		return g_items[id].unpassable;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the item is stackable.
 	 * @return true if stackable.
 	 */
@@ -515,7 +515,7 @@ public:
 	}
 
 	// Logic for UI overlays
-	/*
+	/**
 	 * @brief Checks if the item is locked (UI state).
 	 * @return true if locked.
 	 */
@@ -542,7 +542,7 @@ public:
 	BorderType getBorderAlignment() const;
 
 	// Get the name!
-	/*
+	/**
 	 * @brief Gets the item name.
 	 * @return Name string view.
 	 */
@@ -550,7 +550,7 @@ public:
 		return g_items[id].name;
 	}
 
-	/*
+	/**
 	 * @brief Gets full name including editor suffix.
 	 * @return Full name string.
 	 */
@@ -559,7 +559,7 @@ public:
 	}
 
 	// Selection
-	/*
+	/**
 	 * @brief Checks if item is selected.
 	 * @return true if selected.
 	 */
@@ -577,7 +577,7 @@ public:
 	}
 
 	// Item properties!
-	/*
+	/**
 	 * @brief Checks if item has complex attributes requiring full save.
 	 * @return true if complex.
 	 */
@@ -592,51 +592,51 @@ public:
 	virtual double getWeight();
 
 	// Subtype (count, fluid, charges)
-	/*
+	/**
 	 * @brief Gets the item count or subtype value.
 	 * @return Count/subtype.
 	 */
 	int getCount() const;
 
-	/*
+	/**
 	 * @brief Gets the raw subtype value.
 	 * @return Subtype.
 	 */
 	uint16_t getSubtype() const;
 
-	/*
+	/**
 	 * @brief Sets the subtype value.
 	 * @param n New subtype.
 	 */
 	void setSubtype(uint16_t n);
 
-	/*
+	/**
 	 * @brief Checks if item uses subtype.
 	 * @return true if applicable.
 	 */
 	bool hasSubtype() const;
 
 	// Unique ID
-	/*
+	/**
 	 * @brief Sets the unique ID attribute.
 	 * @param n Unique ID.
 	 */
 	void setUniqueID(uint16_t n);
 
-	/*
+	/**
 	 * @brief Gets the unique ID.
 	 * @return Unique ID.
 	 */
 	uint16_t getUniqueID() const;
 
 	// Action ID
-	/*
+	/**
 	 * @brief Sets the action ID attribute.
 	 * @param n Action ID.
 	 */
 	void setActionID(uint16_t n);
 
-	/*
+	/**
 	 * @brief Gets the action ID.
 	 * @return Action ID.
 	 */
@@ -647,26 +647,26 @@ public:
 	uint16_t getTier() const;
 
 	// Text
-	/*
+	/**
 	 * @brief Sets the text content of the item (e.g., sign or book).
 	 * @param str Text content.
 	 */
 	void setText(const std::string& str);
 
-	/*
+	/**
 	 * @brief Gets the text content.
 	 * @return Text string view.
 	 */
 	std::string_view getText() const;
 
 	// Description
-	/*
+	/**
 	 * @brief Sets the description attribute.
 	 * @param str Description text.
 	 */
 	void setDescription(const std::string& str);
 
-	/*
+	/**
 	 * @brief Gets the description attribute.
 	 * @return Description string view.
 	 */

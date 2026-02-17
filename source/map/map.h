@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-/*
+/**
  * @file map.h
  * @brief Main map class representing the entire world.
  *
@@ -35,7 +35,7 @@
 #include "game/waypoints.h"
 #include "io/templates.h"
 
-/*
+/**
  * @brief Represents the entire editable map.
  *
  * The Map class extends BaseMap to include high-level game structures
@@ -52,7 +52,7 @@ public:
 
 	// Operations on the entire map
 
-	/*
+	/**
 	 * @brief Scans the map for invalid tiles and optionally cleans them.
 	 *
 	 * Checks for tiles with invalid items or states.
@@ -61,7 +61,7 @@ public:
 	 */
 	void cleanInvalidTiles(bool showdialog = false);
 
-	/*
+	/**
 	 * @brief Converts all house tiles from one ID to another.
 	 * @param fromId The original house ID.
 	 * @param toId The new house ID.
@@ -71,7 +71,7 @@ public:
 	// Save a bmp image of the minimap
 
 	//
-	/*
+	/**
 	 * @brief Converts the map to a different version format.
 	 * @param to The target MapVersion.
 	 * @param showdialog If true, shows progress/confirmation.
@@ -79,7 +79,7 @@ public:
 	 */
 	bool convert(MapVersion to, bool showdialog = false);
 
-	/*
+	/**
 	 * @brief Converts the map using a specific conversion map.
 	 * @param cm The conversion rules.
 	 * @param showdialog If true, shows progress/confirmation.
@@ -89,19 +89,19 @@ public:
 
 	// Query information about the map
 
-	/*
+	/**
 	 * @brief Gets the current version of the map format.
 	 * @return The MapVersion.
 	 */
 	MapVersion getVersion() const;
 
-	/*
+	/**
 	 * @brief Checks if the map has unsaved changes.
 	 * @return true if modified since last save.
 	 */
 	bool hasChanged() const;
 
-	/*
+	/**
 	 * @brief Marks the map as changed.
 	 *
 	 * Triggers the "modified" state (e.g., adding a * to the window title).
@@ -110,14 +110,14 @@ public:
 	 */
 	bool doChange();
 
-	/*
+	/**
 	 * @brief Clears the modified state.
 	 * @return true.
 	 */
 	bool clearChanges();
 
 	// Errors/warnings
-	/*
+	/**
 	 * @brief Checks if there are any warnings from recent operations.
 	 * @return true if warnings exist.
 	 */
@@ -125,7 +125,7 @@ public:
 		return warnings.size() != 0;
 	}
 
-	/*
+	/**
 	 * @brief Gets the list of current warnings.
 	 * @return Vector of warning strings.
 	 */
@@ -133,7 +133,7 @@ public:
 		return warnings;
 	}
 
-	/*
+	/**
 	 * @brief Checks if there is a critical error.
 	 * @return true if error exists.
 	 */
@@ -141,7 +141,7 @@ public:
 		return error.size() != 0;
 	}
 
-	/*
+	/**
 	 * @brief Gets the current error message.
 	 * @return The error string.
 	 */
@@ -150,20 +150,20 @@ public:
 	}
 
 	// Mess with spawns
-	/*
+	/**
 	 * @brief Adds a spawn to the specified tile.
 	 * @param spawn The tile where the spawn is located.
 	 * @return true if successful.
 	 */
 	bool addSpawn(Tile* spawn);
 
-	/*
+	/**
 	 * @brief Removes a spawn from the specified tile.
 	 * @param tile The tile containing the spawn.
 	 */
 	void removeSpawn(Tile* tile);
 
-	/*
+	/**
 	 * @brief Removes a spawn from the specified position.
 	 * @param position The world position.
 	 */
@@ -172,14 +172,14 @@ public:
 	}
 
 	// Returns all possible spawns on the target tile
-	/*
+	/**
 	 * @brief Gets all spawns located on a specific tile.
 	 * @param t The tile to check.
 	 * @return List of spawns.
 	 */
 	SpawnList getSpawnList(Tile* t);
 
-	/*
+	/**
 	 * @brief Gets all spawns at a specific position.
 	 * @param position The world position.
 	 * @return List of spawns.
@@ -188,7 +188,7 @@ public:
 		return getSpawnList(getTile(position));
 	}
 
-	/*
+	/**
 	 * @brief Gets all spawns at specific coordinates.
 	 * @param x X coordinate.
 	 * @param y Y coordinate.
@@ -201,13 +201,13 @@ public:
 
 	// Returns true if the map has been saved
 	// ie. it knows which file it should be saved to
-	/*
+	/**
 	 * @brief Checks if the map is associated with a file.
 	 * @return true if a filename is set.
 	 */
 	bool hasFile() const;
 
-	/*
+	/**
 	 * @brief Gets the filename associated with the map.
 	 * @return The filename string.
 	 */
@@ -215,7 +215,7 @@ public:
 		return filename;
 	}
 
-	/*
+	/**
 	 * @brief Gets the logical name of the map.
 	 * @return The map name.
 	 */
@@ -223,7 +223,7 @@ public:
 		return name;
 	}
 
-	/*
+	/**
 	 * @brief Sets the logical name of the map.
 	 * @param n The new name.
 	 */
@@ -232,7 +232,7 @@ public:
 	}
 
 	// Get map data
-	/*
+	/**
 	 * @brief Gets the defined width of the map.
 	 * @return Width in tiles.
 	 */
@@ -240,7 +240,7 @@ public:
 		return width;
 	}
 
-	/*
+	/**
 	 * @brief Gets the defined height of the map.
 	 * @return Height in tiles.
 	 */
@@ -248,7 +248,7 @@ public:
 		return height;
 	}
 
-	/*
+	/**
 	 * @brief Gets the map description.
 	 * @return Description string.
 	 */
@@ -256,7 +256,7 @@ public:
 		return description;
 	}
 
-	/*
+	/**
 	 * @brief Gets the filename of the external house file.
 	 * @return House filename.
 	 */
@@ -264,7 +264,7 @@ public:
 		return housefile;
 	}
 
-	/*
+	/**
 	 * @brief Gets the filename of the external spawn file.
 	 * @return Spawn filename.
 	 */
@@ -273,51 +273,51 @@ public:
 	}
 
 	// Set some map data
-	/*
+	/**
 	 * @brief Sets the map width.
 	 * @param new_width New width.
 	 */
 	void setWidth(int new_width);
 
-	/*
+	/**
 	 * @brief Sets the map height.
 	 * @param new_height New height.
 	 */
 	void setHeight(int new_height);
 
-	/*
+	/**
 	 * @brief Sets the map description.
 	 * @param new_description New description.
 	 */
 	void setMapDescription(const std::string& new_description);
 
-	/*
+	/**
 	 * @brief Sets the external house filename.
 	 * @param new_housefile New filename.
 	 */
 	void setHouseFilename(const std::string& new_housefile);
 
-	/*
+	/**
 	 * @brief Sets the external spawn filename.
 	 * @param new_spawnfile New filename.
 	 */
 	void setSpawnFilename(const std::string& new_spawnfile);
 
-	/*
+	/**
 	 * @brief Marks the map as having a name (not unnamed).
 	 */
 	void flagAsNamed() {
 		unnamed = false;
 	}
 
-	/*
+	/**
 	 * @brief Initializes the map as an empty map.
 	 */
 	void initializeEmpty();
 
 protected:
 	// Loads a map
-	/*
+	/**
 	 * @brief Opens and loads a map file.
 	 * @param identifier The path to the map file.
 	 * @return true if successful.
@@ -363,7 +363,7 @@ public:
 	Waypoints waypoints;
 };
 
-/*
+/**
  * @brief Iterates over items on the map.
  * @tparam ForeachType The type of the callback function/functor.
  * @param map The map to iterate over.
@@ -418,7 +418,7 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 	});
 }
 
-/*
+/**
  * @brief Iterates over all tiles on the map.
  * @tparam ForeachType The type of the callback.
  * @param map The map to iterate.
@@ -433,7 +433,7 @@ inline void foreach_TileOnMap(Map& map, ForeachType& foreach) {
 	});
 }
 
-/*
+/**
  * @brief Removes tiles from the map based on a condition.
  * @tparam RemoveIfType The type of the predicate.
  * @param map The map to modify.
@@ -458,7 +458,7 @@ inline long long remove_if_TileOnMap(Map& map, RemoveIfType& remove_if) {
 	return removed;
 }
 
-/*
+/**
  * @brief Removes items from the map based on a condition.
  * @tparam RemoveIfType The type of the predicate.
  * @param map The map to modify.

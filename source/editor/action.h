@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-/*
+/**
  * @file action.h
  * @brief Defines the action and undo/redo system.
  *
@@ -45,17 +45,17 @@ class Action;
 class BatchAction;
 class ActionQueue;
 
-/*
+/**
  * @brief Identifies the type of modification in a Change object.
  */
 enum ChangeType {
 	CHANGE_NONE,
-	CHANGE_TILE, /* Modification to a tile (items, ground, etc.). */
-	CHANGE_MOVE_HOUSE_EXIT, /* Relocation of a house exit. */
-	CHANGE_MOVE_WAYPOINT, /* Relocation of a waypoint. */
+	CHANGE_TILE, ///< Modification to a tile (items, ground, etc.).
+	CHANGE_MOVE_HOUSE_EXIT, ///< Relocation of a house exit.
+	CHANGE_MOVE_WAYPOINT, ///< Relocation of a waypoint.
 };
 
-/*
+/**
  * @brief Data payload for a house exit change.
  */
 struct HouseExitChangeData {
@@ -63,7 +63,7 @@ struct HouseExitChangeData {
 	Position pos;
 };
 
-/*
+/**
  * @brief Data payload for a waypoint change.
  */
 struct WaypointChangeData {
@@ -71,7 +71,7 @@ struct WaypointChangeData {
 	Position pos;
 };
 
-/*
+/**
  * @brief Represents a single atomic modification to the map state.
  *
  * A Change object holds the data necessary to reverse a specific operation,
@@ -86,13 +86,13 @@ private:
 	Change();
 
 public:
-	/*
+	/**
 	 * @brief Constructs a change based on a tile's state.
 	 * @param tile The tile being modified.
 	 */
 	Change(Tile* tile);
 
-	/*
+	/**
 	 * @brief Creates a change for a house exit move.
 	 * @param house The house.
 	 * @param where The old position of the exit.
@@ -100,7 +100,7 @@ public:
 	 */
 	static Change* Create(House* house, const Position& where);
 
-	/*
+	/**
 	 * @brief Creates a change for a waypoint move.
 	 * @param wp The waypoint.
 	 * @param where The old position.
@@ -109,12 +109,12 @@ public:
 	static Change* Create(Waypoint* wp, const Position& where);
 	~Change();
 
-	/*
+	/**
 	 * @brief Clears the change data.
 	 */
 	void clear();
 
-	/*
+	/**
 	 * @brief Gets the type of change.
 	 * @return ChangeType enum.
 	 */
@@ -122,26 +122,26 @@ public:
 		return type;
 	}
 
-	/*
+	/**
 	 * @brief Gets the stored tile snapshot (if applicable).
 	 * @return Const pointer to Tile.
 	 */
 	const Tile* getTile() const;
 
-	/*
+	/**
 	 * @brief Gets the house exit data (if applicable).
 	 * @return Const pointer to HouseExitChangeData.
 	 */
 	const HouseExitChangeData* getHouseExitData() const;
 
-	/*
+	/**
 	 * @brief Gets the waypoint data (if applicable).
 	 * @return Const pointer to WaypointChangeData.
 	 */
 	const WaypointChangeData* getWaypointData() const;
 
 	// Get memory footprint
-	/*
+	/**
 	 * @brief Calculates memory usage of this change.
 	 * @return Size in bytes.
 	 */
@@ -154,7 +154,7 @@ using ChangeList = std::vector<std::unique_ptr<Change>>;
 
 class DirtyList;
 
-/*
+/**
  * @brief Identifies the high-level user action being performed.
  */
 enum ActionIdentifier {
@@ -173,7 +173,7 @@ enum ActionIdentifier {
 	ACTION_CHANGE_PROPERTIES,
 };
 
-/*
+/**
  * @brief Represents a user command that can be undone/redone.
  *
  * An Action consists of a list of Change objects.
@@ -182,7 +182,7 @@ class Action {
 public:
 	virtual ~Action();
 
-	/*
+	/**
 	 * @brief Adds a change to this action.
 	 * @param t The change to add.
 	 */
@@ -191,19 +191,19 @@ public:
 	}
 
 	// Get memory footprint
-	/*
+	/**
 	 * @brief Estimates approximate memory usage.
 	 * @return Size in bytes.
 	 */
 	size_t approx_memsize() const;
 
-	/*
+	/**
 	 * @brief Calculates exact memory usage.
 	 * @return Size in bytes.
 	 */
 	size_t memsize() const;
 
-	/*
+	/**
 	 * @brief Gets the number of changes in this action.
 	 * @return Change count.
 	 */
@@ -211,7 +211,7 @@ public:
 		return changes.size();
 	}
 
-	/*
+	/**
 	 * @brief Gets the type of action.
 	 * @return ActionIdentifier enum.
 	 */
@@ -219,13 +219,13 @@ public:
 		return type;
 	}
 
-	/*
+	/**
 	 * @brief Commits the action (redo).
 	 * @param dirty_list List to track modified areas.
 	 */
 	void commit(DirtyList* dirty_list);
 
-	/*
+	/**
 	 * @brief Checks if the action is currently committed.
 	 * @return true if committed.
 	 */
@@ -233,13 +233,13 @@ public:
 		return commited;
 	}
 
-	/*
+	/**
 	 * @brief Reverses the action (undo).
 	 * @param dirty_list List to track modified areas.
 	 */
 	void undo(DirtyList* dirty_list);
 
-	/*
+	/**
 	 * @brief Re-applies the action (redo).
 	 * @param dirty_list List to track modified areas.
 	 */
@@ -260,7 +260,7 @@ protected:
 
 using ActionVector = std::vector<std::unique_ptr<Action>>;
 
-/*
+/**
  * @brief Group of actions treated as a single undo/redo step.
  *
  * Used for complex operations like "smearing" a brush where multiple
@@ -270,7 +270,7 @@ class BatchAction {
 public:
 	virtual ~BatchAction();
 
-	/*
+	/**
 	 * @brief Resets the merge timer.
 	 */
 	void resetTimer() {
@@ -278,14 +278,14 @@ public:
 	}
 
 	// Get memory footprint
-	/*
+	/**
 	 * @brief Calculates memory usage.
 	 * @param resize Whether to compact internal storage.
 	 * @return Size in bytes.
 	 */
 	size_t memsize(bool resize = false) const;
 
-	/*
+	/**
 	 * @brief Gets number of sub-actions.
 	 * @return Action count.
 	 */
@@ -293,7 +293,7 @@ public:
 		return batch.size();
 	}
 
-	/*
+	/**
 	 * @brief Gets the batch action type.
 	 * @return ActionIdentifier.
 	 */
@@ -301,13 +301,13 @@ public:
 		return type;
 	}
 
-	/*
+	/**
 	 * @brief Adds an action to the batch.
 	 * @param action The action to add.
 	 */
 	virtual void addAction(std::unique_ptr<Action> action);
 
-	/*
+	/**
 	 * @brief Adds an action and immediately commits it.
 	 * @param action The action to add and commit.
 	 */

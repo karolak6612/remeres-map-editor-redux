@@ -10,7 +10,7 @@ class Map;
 class Tile;
 class Item;
 
-/*
+/**
  * @file map_search.h
  * @brief Utilities for searching the map for items or tiles.
  *
@@ -18,21 +18,21 @@ class Item;
  * for tiles matching specific criteria.
  */
 
-/*
+/**
  * @brief Structure holding the result of a map search.
  */
 struct SearchResult {
-	Tile* tile; /* The tile where the match was found. */
-	Item* item; /* The specific item that matched (if any). */
-	std::string description; /* Text description of the match. */
+	Tile* tile; ///< The tile where the match was found.
+	Item* item; ///< The specific item that matched (if any).
+	std::string description; ///< Text description of the match.
 };
 
-/*
+/**
  * @brief Static utility class for performing map searches.
  */
 class MapSearchUtility {
 public:
-	/*
+	/**
 	 * @brief Searches the map for items matching the specified criteria.
 	 *
 	 * Scans all tiles (or selected ones) for items that match the flags provided.

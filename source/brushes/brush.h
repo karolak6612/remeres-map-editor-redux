@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-/*
+/**
  * @file brush.h
  * @brief Base classes and management for the brush system.
  *
@@ -71,7 +71,7 @@ class EraserBrush;
 
 using BrushMap = std::multimap<std::string, std::unique_ptr<Brush>, std::less<>>;
 
-/*
+/**
  * @brief Container class managing all available brushes.
  *
  * Handles loading, storing, and retrieving brushes by name or ID.
@@ -82,30 +82,30 @@ public:
 	Brushes();
 	~Brushes();
 
-	/*
+	/**
 	 * @brief Initializes the brush system.
 	 */
 	void init();
 
-	/*
+	/**
 	 * @brief Clears all loaded brushes.
 	 */
 	void clear();
 
-	/*
+	/**
 	 * @brief Retrieves a brush by its name.
 	 * @param name The name of the brush.
 	 * @return Pointer to the brush, or nullptr if not found.
 	 */
 	Brush* getBrush(std::string_view name) const;
 
-	/*
+	/**
 	 * @brief Adds a new brush to the collection.
 	 * @param brush The brush to add. Ownership is transferred to the Brushes object.
 	 */
 	void addBrush(Brush* brush);
 
-	/*
+	/**
 	 * @brief Loads border configuration from XML.
 	 * @param node The XML node.
 	 * @param warnings Vector to store warning messages.
@@ -113,7 +113,7 @@ public:
 	 */
 	bool unserializeBorder(pugi::xml_node node, std::vector<std::string>& warnings);
 
-	/*
+	/**
 	 * @brief Loads a brush definition from XML.
 	 * @param node The XML node.
 	 * @param warnings Vector to store warning messages.
@@ -121,7 +121,7 @@ public:
 	 */
 	bool unserializeBrush(pugi::xml_node node, std::vector<std::string>& warnings);
 
-	/*
+	/**
 	 * @brief Gets the underlying map of all brushes.
 	 * @return Reference to the BrushMap.
 	 */
@@ -144,7 +144,7 @@ extern Brushes g_brushes;
 //=============================================================================
 // Common brush interface
 
-/*
+/**
  * @brief Abstract base class for all map editor brushes.
  *
  * A Brush defines how user input is translated into map modifications.
@@ -155,7 +155,7 @@ public:
 	Brush();
 	virtual ~Brush();
 
-	/*
+	/**
 	 * @brief Loads brush data from an XML node.
 	 * @param node The XML configuration.
 	 * @param warnings Output warnings.
@@ -165,7 +165,7 @@ public:
 		return true;
 	}
 
-	/*
+	/**
 	 * @brief Applies the brush to a specific tile.
 	 * @param map The map being edited.
 	 * @param tile The target tile.
@@ -173,14 +173,14 @@ public:
 	 */
 	virtual void draw(BaseMap* map, Tile* tile, void* parameter = nullptr) = 0;
 
-	/*
+	/**
 	 * @brief Removes the brush's effect from a tile (erasing).
 	 * @param map The map being edited.
 	 * @param tile The target tile.
 	 */
 	virtual void undraw(BaseMap* map, Tile* tile) = 0;
 
-	/*
+	/**
 	 * @brief Checks if the brush can be applied at the given position.
 	 * @param map The map context.
 	 * @param position The target coordinates.
@@ -189,7 +189,7 @@ public:
 	virtual bool canDraw(BaseMap* map, const Position& position) const = 0;
 
 	//
-	/*
+	/**
 	 * @brief Gets the unique ID of this brush instance.
 	 * @return The brush ID.
 	 */
@@ -197,13 +197,13 @@ public:
 		return id;
 	}
 
-	/*
+	/**
 	 * @brief Gets the name of the brush.
 	 * @return The name string.
 	 */
 	virtual std::string getName() const = 0;
 
-	/*
+	/**
 	 * @brief Sets the name of the brush.
 	 * @param newName The new name.
 	 */
@@ -211,13 +211,13 @@ public:
 		ASSERT(_MSG("setName attempted on nameless brush!"));
 	}
 
-	/*
+	/**
 	 * @brief Gets the look ID (often item ID) associated with the brush.
 	 * @return The look ID.
 	 */
 	virtual int getLookID() const = 0;
 
-	/*
+	/**
 	 * @brief Gets the sprite used for rendering the brush cursor.
 	 * @return Pointer to the Sprite object.
 	 */
@@ -225,7 +225,7 @@ public:
 		return nullptr;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the brush triggers auto-border logic.
 	 * @return true if borders are needed.
 	 */
@@ -233,7 +233,7 @@ public:
 		return false;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the brush supports drag-and-drop operations.
 	 * @return true if draggable.
 	 */
@@ -241,7 +241,7 @@ public:
 		return false;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the brush can be "smeared" (drawn continuously while dragging mouse).
 	 * @return true if smearable.
 	 */
@@ -249,7 +249,7 @@ public:
 		return true;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the brush applies to all sizes equally.
 	 * @return true if one size fits all.
 	 */
@@ -257,7 +257,7 @@ public:
 		return false;
 	}
 
-	/*
+	/**
 	 * @brief Gets the maximum variation index supported by the brush.
 	 * @return Max variation count.
 	 */
@@ -265,7 +265,7 @@ public:
 		return 0;
 	}
 
-	/*
+	/**
 	 * @brief Dynamic cast helper to convert to a specific brush type.
 	 * @tparam T Target type.
 	 * @return Pointer to T or nullptr.
@@ -275,7 +275,7 @@ public:
 		return dynamic_cast<T*>(this);
 	}
 
-	/*
+	/**
 	 * @brief Dynamic cast helper (const version).
 	 * @tparam T Target type.
 	 * @return Const pointer to T or nullptr.
@@ -285,7 +285,7 @@ public:
 		return dynamic_cast<const T*>(this);
 	}
 
-	/*
+	/**
 	 * @brief Type check helper.
 	 * @tparam T Type to check against.
 	 * @return true if this brush is of type T.
@@ -295,7 +295,7 @@ public:
 		return dynamic_cast<const T*>(this) != nullptr;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the brush should appear in the palette UI.
 	 * @return true if visible.
 	 */
@@ -303,14 +303,14 @@ public:
 		return visible;
 	}
 
-	/*
+	/**
 	 * @brief Flags the brush as visible in the palette.
 	 */
 	void flagAsVisible() {
 		visible = true;
 	}
 
-	/*
+	/**
 	 * @brief Checks if the brush uses the collection system.
 	 * @return true if it uses collections.
 	 */
@@ -318,14 +318,14 @@ public:
 		return usesCollection;
 	}
 
-	/*
+	/**
 	 * @brief Marks the brush as using the collection system.
 	 */
 	void setCollection() {
 		usesCollection = true;
 	}
 
-	/*
+	/**
 	 * @brief Gets list of items related to this brush (e.g. for palette display).
 	 * @param items Vector to populate with item IDs.
 	 */
@@ -341,7 +341,7 @@ protected:
 //=============================================================================
 // Terrain brush interface
 
-/*
+/**
  * @brief Base class for brushes that paint terrain (ground, etc.).
  *
  * Handles common logic for terrain brushes, including friendship/hate logic
@@ -377,7 +377,7 @@ public:
 		return true;
 	}
 
-	/*
+	/**
 	 * @brief Checks if this brush is "friends" with another brush (for bordering).
 	 * @param other The other brush.
 	 * @return true if they are friends.
@@ -394,7 +394,7 @@ protected:
 //=============================================================================
 // Rampbrush, add ramps to mountains.
 
-/*
+/**
  * @brief Special brush for erasing items from the map.
  *
  * Removes items on the target tile.

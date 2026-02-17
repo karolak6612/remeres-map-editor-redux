@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-/*
+/**
  * @file iomap.h
  * @brief Abstract interface for map file input/output.
  *
@@ -28,19 +28,19 @@
 
 #include "app/client_version.h"
 
-/*
+/**
  * @brief Strategy for importing map data.
  */
 enum ImportType {
-	IMPORT_DONT, /* Do not import. */
-	IMPORT_MERGE, /* Merge imported map into current map. */
-	IMPORT_SMART_MERGE, /* Merge with conflict resolution. */
-	IMPORT_INSERT, /* Insert imported map at specific coordinates. */
+	IMPORT_DONT, ///< Do not import.
+	IMPORT_MERGE, ///< Merge imported map into current map.
+	IMPORT_SMART_MERGE, ///< Merge with conflict resolution.
+	IMPORT_INSERT, ///< Insert imported map at specific coordinates.
 };
 
 class Map;
 
-/*
+/**
  * @brief Base class for map serialization (Load/Save).
  *
  * IOMap provides a uniform interface for reading and writing maps in various
@@ -65,7 +65,7 @@ public:
 
 	MapVersion version;
 
-	/*
+	/**
 	 * @brief Gets the list of warnings generated during I/O.
 	 * @return Vector of warning strings.
 	 */
@@ -73,7 +73,7 @@ public:
 		return warnings;
 	}
 
-	/*
+	/**
 	 * @brief Gets the last error message.
 	 * @return Error string.
 	 */
@@ -81,7 +81,7 @@ public:
 		return errorstr;
 	}
 
-	/*
+	/**
 	 * @brief Loads a map from a file.
 	 * @param map The target Map object to populate.
 	 * @param identifier The file path or identifier.
@@ -89,7 +89,7 @@ public:
 	 */
 	virtual bool loadMap(Map& map, const FileName& identifier) = 0;
 
-	/*
+	/**
 	 * @brief Saves a map to a file.
 	 * @param map The source Map object.
 	 * @param identifier The target file path.
@@ -98,7 +98,7 @@ public:
 	virtual bool saveMap(Map& map, const FileName& identifier) = 0;
 };
 
-/*
+/**
  * @brief Null implementation of IOMap for testing or default initialization.
  *
  * Always fails to load or save.

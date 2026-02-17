@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-/*
+/**
  * @file map_allocator.h
  * @brief Memory allocation helper for map structures.
  *
@@ -31,7 +31,7 @@
 
 class BaseMap;
 
-/*
+/**
  * @brief Factory class for allocating map elements.
  *
  * Provides methods to create unique pointers for Tiles, Floors, and MapNodes.
@@ -44,7 +44,7 @@ public:
 	~MapAllocator() { }
 
 	// shorthands for tiles
-	/*
+	/**
 	 * @brief Functor operator to allocate a tile.
 	 * @param location The location to initialize the tile with.
 	 * @return Unique pointer to the new Tile.
@@ -54,7 +54,7 @@ public:
 	}
 
 	//
-	/*
+	/**
 	 * @brief Allocates a new Tile.
 	 * @param location The memory location where the tile will reside.
 	 * @return Unique pointer to the new Tile.
@@ -64,7 +64,7 @@ public:
 	}
 
 	//
-	/*
+	/**
 	 * @brief Allocates a new Floor.
 	 * @param x X coordinate.
 	 * @param y Y coordinate.
@@ -76,7 +76,7 @@ public:
 	}
 
 	//
-	/*
+	/**
 	 * @brief Allocates a new MapNode (region).
 	 * @param map The map instance this node belongs to.
 	 * @return Unique pointer to the new MapNode.
