@@ -29,16 +29,16 @@ DirtyList::~DirtyList() {
 }
 
 void DirtyList::AddPosition(int x, int y, int z) {
-	uint32_t m = ((x >> 2) << 18) | ((y >> 2) << 4);
+	uint32_t m = ((uint32_t(x) >> 2) << 18) | ((uint32_t(y) >> 2) << 4);
 	ValueType fi = { m, 0 };
 	SetType::iterator s = iset.find(fi);
 	if (s != iset.end()) {
 		ValueType v = *s;
 		iset.erase(s);
-		v.floors = (1 << z) | v.floors;
+		v.floors = (1u << z) | v.floors;
 		iset.insert(v);
 	} else {
-		ValueType v = { m, (uint32_t)(1 << z) };
+		ValueType v = { m, (uint32_t)(1u << z) };
 		iset.insert(v);
 	}
 }
