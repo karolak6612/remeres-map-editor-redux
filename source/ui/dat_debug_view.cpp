@@ -88,7 +88,7 @@ DatDebugView::DatDebugView(wxWindow* parent) :
 	sizer->Add(search_field, 0, wxEXPAND, 2);
 
 	item_list = newd DatDebugViewListBox(this, wxID_ANY);
-	item_list->SetMinSize(wxSize(470, 400));
+	item_list->SetMinSize(FromDIP(wxSize(470, 400)));
 	sizer->Add(item_list, 1, wxEXPAND | wxALL, 2);
 
 	SetSizerAndFit(sizer);

@@ -21,6 +21,7 @@
 #include "app/main.h"
 #include "ui/controls/item_buttons.h"
 #include "editor/editor.h"
+#include <wx/bmpbndl.h>
 
 struct ReplacingItem {
 	ReplacingItem() :
@@ -78,8 +79,8 @@ public:
 
 private:
 	std::vector<ReplacingItem> m_items;
-	wxBitmap m_arrow_bitmap;
-	wxBitmap m_flag_bitmap;
+	wxBitmapBundle m_arrow_bitmap;
+	wxBitmapBundle m_flag_bitmap;
 };
 
 // ============================================================================
