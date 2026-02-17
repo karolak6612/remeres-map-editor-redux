@@ -132,12 +132,17 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 	unsigned char* alpha = tinted.GetAlpha();
 	int size = tinted.GetWidth() * tinted.GetHeight();
 
-	for (int i = 0; i < size; ++i) {
-		// Silhouette tinting: replace existing color with the tint color.
-		// The original alpha channel handles the shape and anti-aliasing.
-		data[i * 3 + 0] = r;
-		data[i * 3 + 1] = g;
-		data[i * 3 + 2] = b;
+	// Modernize: Treat data as a span of bytes (though structure is R,G,B,R,G,B...)
+	// Since we are replacing every pixel with the same color, we iterate pixels.
+	// Using a struct for casting might violate strict aliasing if not careful,
+	// so we stick to index iteration but cleaner types.
+
+	size_t pixelCount = static_cast<size_t>(size);
+	for (size_t i = 0; i < pixelCount; ++i) {
+		size_t baseIdx = i * 3;
+		data[baseIdx + 0] = r;
+		data[baseIdx + 1] = g;
+		data[baseIdx + 2] = b;
 	}
 
 	return tinted;
@@ -196,11 +201,14 @@ int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& im
 	unsigned char* alpha = image.GetAlpha();
 	bool hasAlpha = image.HasAlpha();
 
-	for (int i = 0; i < w * h; ++i) {
-		rgba[i * 4 + 0] = data[i * 3 + 0];
-		rgba[i * 4 + 1] = data[i * 3 + 1];
-		rgba[i * 4 + 2] = data[i * 3 + 2];
-		rgba[i * 4 + 3] = (hasAlpha && alpha) ? alpha[i] : 255;
+	size_t pixelCount = static_cast<size_t>(w * h);
+	for (size_t i = 0; i < pixelCount; ++i) {
+		size_t rgbaIdx = i * 4;
+		size_t rgbIdx = i * 3;
+		rgba[rgbaIdx + 0] = data[rgbIdx + 0];
+		rgba[rgbaIdx + 1] = data[rgbIdx + 1];
+		rgba[rgbaIdx + 2] = data[rgbIdx + 2];
+		rgba[rgbaIdx + 3] = (hasAlpha && alpha) ? alpha[i] : 255;
 	}
 	return nvgCreateImageRGBA(vg, w, h, 0, rgba.data());
 }

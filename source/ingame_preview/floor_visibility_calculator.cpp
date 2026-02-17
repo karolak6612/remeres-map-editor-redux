@@ -66,7 +66,7 @@ namespace IngamePreview {
 		int first_floor = 0;
 
 		if (camera_z > GROUND_LAYER) {
-			first_floor = std::max(camera_z - AWARE_UNDERGROUND_FLOOR_RANGE, (int)GROUND_LAYER + 1);
+			first_floor = std::max<int>(camera_z - AWARE_UNDERGROUND_FLOOR_RANGE, GROUND_LAYER + 1);
 		}
 
 		// Check 3x3 area around camera for blocking tiles
@@ -107,7 +107,7 @@ namespace IngamePreview {
 			}
 		}
 
-		return std::clamp(first_floor, 0, (int)MAP_MAX_LAYER);
+		return std::clamp<int>(first_floor, 0, MAP_MAX_LAYER);
 	}
 
 	int FloorVisibilityCalculator::CalcLastVisibleFloor(int camera_z) const {
@@ -117,7 +117,7 @@ namespace IngamePreview {
 		} else {
 			z = GROUND_LAYER;
 		}
-		return std::clamp(z, 0, (int)MAP_MAX_LAYER);
+		return std::clamp<int>(z, 0, MAP_MAX_LAYER);
 	}
 
 } // namespace IngamePreview

@@ -4,6 +4,7 @@
 #include <nanovg.h>
 #include <memory>
 #include <algorithm>
+#include <iterator>
 
 RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxNO_BORDER | wxWANTS_CHARS),
 																		 m_listener(listener) {
@@ -59,7 +60,7 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	wxSize clientSize = GetClientSize();
 
 	int startIdx = scrollPos / m_itemHeight;
-	int endIdx = std::min((int)m_ruleSetNames.size() - 1, (scrollPos + clientSize.y) / m_itemHeight + 1);
+	int endIdx = std::min(static_cast<int>(std::ssize(m_ruleSetNames)) - 1, (scrollPos + clientSize.y) / m_itemHeight + 1);
 
 	static const float padding = 4.0f;
 	static const float radius = 4.0f;
@@ -126,7 +127,7 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 }
 
 wxRect RuleListControl::GetItemRect(int index) const {
-	if (index < 0 || index >= (int)m_ruleSetNames.size()) {
+	if (index < 0 || index >= static_cast<int>(std::ssize(m_ruleSetNames))) {
 		return wxRect();
 	}
 	wxSize clientSize = GetClientSize();
@@ -144,7 +145,7 @@ void RuleListControl::OnMouse(wxMouseEvent& event) {
 		int y = event.GetY() + scrollPos;
 		int idx = y / m_itemHeight;
 
-		if (idx >= 0 && idx < (int)m_ruleSetNames.size()) {
+		if (idx >= 0 && idx < static_cast<int>(std::ssize(m_ruleSetNames))) {
 			m_hoveredIndex = idx;
 		} else {
 			m_hoveredIndex = -1;
@@ -215,7 +216,7 @@ void RuleListControl::OnContextMenu(wxContextMenuEvent& event) {
 	menu.Append(wxID_DELETE, "Delete")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 
 	menu.Bind(wxEVT_MENU, [this, menuIdx](wxCommandEvent& e) {
-		if (menuIdx < 0 || menuIdx >= (int)m_ruleSetNames.size()) {
+		if (menuIdx < 0 || menuIdx >= static_cast<int>(std::ssize(m_ruleSetNames))) {
 			return;
 		}
 
