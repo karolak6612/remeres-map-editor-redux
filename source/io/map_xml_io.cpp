@@ -340,7 +340,7 @@ bool MapXMLIO::saveHouses(const Map& map, pugi::xml_document& doc) {
 	return true;
 }
 
-bool MapXMLIO::loadWaypoints(Map& map, const wxFileName& dir) {
+bool MapXMLIO::loadWaypoints(Map& map, const wxFileName& dir, bool replace) {
 	auto paths = normalizeMapFilePaths(dir, map.waypointfile);
 	if (!FileName(wxstr(paths.first)).FileExists()) {
 		return false;
@@ -350,10 +350,10 @@ bool MapXMLIO::loadWaypoints(Map& map, const wxFileName& dir) {
 	if (!doc.load_file(paths.second.c_str())) {
 		return false;
 	}
-	return loadWaypoints(map, doc);
+	return loadWaypoints(map, doc, replace);
 }
 
-bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_node node) {
+bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_node node, bool replace) {
 	if (!node) {
 		return false;
 	}
@@ -371,13 +371,13 @@ bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_node node) {
 			continue;
 		}
 
-		map.waypoints.addWaypoint(std::make_unique<Waypoint>(name, pos));
+		map.waypoints.addWaypoint(std::make_unique<Waypoint>(name, pos), replace);
 	}
 	return true;
 }
 
-bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_document& doc) {
-	return loadWaypoints(map, doc.child("waypoints"));
+bool MapXMLIO::loadWaypoints(Map& map, pugi::xml_document& doc, bool replace) {
+	return loadWaypoints(map, doc.child("waypoints"), replace);
 }
 
 bool MapXMLIO::saveWaypoints(const Map& map, const wxFileName& dir) {

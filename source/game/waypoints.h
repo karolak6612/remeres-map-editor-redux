@@ -39,7 +39,7 @@ public:
 		map(map) { }
 	~Waypoints() = default;
 
-	void addWaypoint(std::unique_ptr<Waypoint> wp);
+	void addWaypoint(std::unique_ptr<Waypoint> wp, bool replace = true);
 	Waypoint* getWaypoint(std::string name);
 	Waypoint* getWaypoint(TileLocation* location);
 	void removeWaypoint(std::string name);
