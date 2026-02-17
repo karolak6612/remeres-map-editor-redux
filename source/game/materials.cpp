@@ -40,12 +40,12 @@ Materials::~Materials() {
 }
 
 void Materials::clear() {
-	for (TilesetContainer::iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
-		delete iter->second;
+	for (auto& [name, tileset] : tilesets) {
+		delete tileset;
 	}
 
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		delete *iter;
+	for (auto& extension : extensions) {
+		delete extension;
 	}
 
 	tilesets.clear();
@@ -58,9 +58,9 @@ const MaterialsExtensionList& Materials::getExtensions() {
 
 MaterialsExtensionList Materials::getExtensionsByVersion(uint16_t version_id) {
 	MaterialsExtensionList ret_list;
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		if ((*iter)->isForVersion(version_id)) {
-			ret_list.push_back(*iter);
+	for (const auto& extension : extensions) {
+		if (extension->isForVersion(version_id)) {
+			ret_list.push_back(extension);
 		}
 	}
 	return ret_list;
@@ -277,9 +277,7 @@ void Materials::createOtherTileset() {
 		}
 	}
 
-	for (CreatureMap::iterator iter = g_creatures.begin(); iter != g_creatures.end(); ++iter) {
-		CreatureType* type = iter->second;
-
+	for (auto& [name, type] : g_creatures) {
 		if (type->brush == nullptr) {
 			type->brush = newd CreatureBrush(type);
 			g_brushes.addBrush(type->brush);

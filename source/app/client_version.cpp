@@ -355,9 +355,9 @@ ClientVersion* ClientVersion::get(ClientVersionID id) {
 }
 
 ClientVersion* ClientVersion::get(std::string id) {
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->getName() == id) {
-			return i->second.get();
+	for (const auto& [versionId, version] : client_versions) {
+		if (version->getName() == id) {
+			return version.get();
 		}
 	}
 	return nullptr;
@@ -365,17 +365,17 @@ ClientVersion* ClientVersion::get(std::string id) {
 
 ClientVersionList ClientVersion::getAll() {
 	ClientVersionList l;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		l.push_back(i->second.get());
+	for (const auto& [versionId, version] : client_versions) {
+		l.push_back(version.get());
 	}
 	return l;
 }
 
 ClientVersionList ClientVersion::getAllVisible() {
 	ClientVersionList l;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->isVisible()) {
-			l.push_back(i->second.get());
+	for (const auto& [versionId, version] : client_versions) {
+		if (version->isVisible()) {
+			l.push_back(version.get());
 		}
 	}
 	return l;
@@ -383,11 +383,11 @@ ClientVersionList ClientVersion::getAllVisible() {
 
 ClientVersionList ClientVersion::getAllForOTBMVersion(MapVersionID id) {
 	ClientVersionList list;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->isVisible()) {
-			for (std::vector<MapVersionID>::iterator v = i->second->map_versions_supported.begin(); v != i->second->map_versions_supported.end(); ++v) {
-				if (*v == id) {
-					list.push_back(i->second.get());
+	for (const auto& [versionId, version] : client_versions) {
+		if (version->isVisible()) {
+			for (const auto& supportedVersion : version->map_versions_supported) {
+				if (supportedVersion == id) {
+					list.push_back(version.get());
 				}
 			}
 		}
@@ -522,9 +522,9 @@ bool ClientVersion::loadValidPaths() {
 }
 
 DatFormat ClientVersion::getDatFormatForSignature(uint32_t signature) const {
-	for (std::vector<ClientData>::const_iterator iter = data_versions.begin(); iter != data_versions.end(); ++iter) {
-		if (iter->datSignature == signature) {
-			return iter->datFormat;
+	for (const auto& clientData : data_versions) {
+		if (clientData.datSignature == signature) {
+			return clientData.datFormat;
 		}
 	}
 

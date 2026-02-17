@@ -233,8 +233,8 @@ CreatureDatabase::~CreatureDatabase() {
 }
 
 void CreatureDatabase::clear() {
-	for (CreatureMap::iterator iter = creature_map.begin(); iter != creature_map.end(); ++iter) {
-		delete iter->second;
+	for (auto& [name, type] : creature_map) {
+		delete type;
 	}
 	creature_map.clear();
 }
@@ -279,8 +279,8 @@ CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool is
 }
 
 bool CreatureDatabase::hasMissing() const {
-	for (CreatureMap::const_iterator iter = creature_map.begin(); iter != creature_map.end(); ++iter) {
-		if (iter->second->missing) {
+	for (const auto& [name, type] : creature_map) {
+		if (type->missing) {
 			return true;
 		}
 	}
