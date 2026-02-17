@@ -6,13 +6,13 @@
 void WaypointSerializationOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
 	spdlog::debug("Reading OTBM_WAYPOINTS...");
 	for (BinaryNode* waypointNode = mapNode->getChild(); waypointNode != nullptr; waypointNode = waypointNode->advance()) {
-		uint8_t waypoint_type;
-		if (!waypointNode->getByte(waypoint_type)) {
+		uint8_t waypointType;
+		if (!waypointNode->getByte(waypointType)) {
 			spdlog::warn("Invalid waypoint node: failed to read type byte");
 			continue;
 		}
-		if (waypoint_type != OTBM_WAYPOINT) {
-			spdlog::warn("Invalid waypoint node type: {} (expected {})", static_cast<int>(waypoint_type), static_cast<int>(OTBM_WAYPOINT));
+		if (waypointType != OTBM_WAYPOINT) {
+			spdlog::warn("Invalid waypoint node type: {} (expected {})", static_cast<int>(waypointType), static_cast<int>(OTBM_WAYPOINT));
 			continue;
 		}
 
@@ -34,26 +34,25 @@ void WaypointSerializationOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
 	}
 }
 
-IOMapOTBM::WriteResult WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
-	IOMapOTBM::WriteResult result = IOMapOTBM::WriteResult::Success;
+OTBMWriteResult WaypointSerializationOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
+	if (map.waypoints.begin() == map.waypoints.end()) {
+		return OTBMWriteResult::Success;
+	}
+
+	if (mapVersion.otbm < MAP_OTBM_2) {
+		return OTBMWriteResult::SuccessWithUnsupportedVersion;
+	}
 	const bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
 
-	if (map.waypoints.begin() != map.waypoints.end()) {
-		if (!supportWaypoints) {
-			result = IOMapOTBM::WriteResult::SuccessWithUnsupportedVersion;
-		}
-
-		f.addNode(OTBM_WAYPOINTS);
-		for (const auto& [name, waypoint_ptr] : map.waypoints) {
-			const Waypoint* waypoint = waypoint_ptr.get();
-			f.addNode(OTBM_WAYPOINT);
-			f.addString(waypoint->name);
-			f.addU16(waypoint->pos.x);
-			f.addU16(waypoint->pos.y);
-			f.addU8(waypoint->pos.z);
-			f.endNode();
-		}
+	f.addNode(OTBM_WAYPOINTS);
+	for (const auto& [name, waypoint_ptr] : map.waypoints) {
+		const Waypoint* waypoint = waypoint_ptr.get();
+		f.addNode(OTBM_WAYPOINT);
+		f.addString(waypoint->name);
+		f.addU16(waypoint->pos.x);
+		f.addU16(waypoint->pos.y);
+		f.addU8(waypoint->pos.z);
 		f.endNode();
 	}
-	return result;
+	f.endNode();
 }

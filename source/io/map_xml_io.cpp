@@ -294,6 +294,7 @@ bool MapXMLIO::loadHouses(Map& map, pugi::xml_document& doc) {
 		} else {
 			spdlog::warn("MapXMLIO: House {} has no town! Removed.", house->getID());
 			map.houses.removeHouse(house);
+			continue;
 		}
 	}
 	return true;

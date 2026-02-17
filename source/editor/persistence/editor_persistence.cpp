@@ -56,11 +56,11 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		_name.SetExt("xml");
 
 		_name.SetName(filename.GetName() + "-spawn");
-		editor.map.spawnfile = nstr(_name.GetFullName());
+		editor.map.setSpawnFilename(nstr(_name.GetFullName()));
 		_name.SetName(filename.GetName() + "-house");
-		editor.map.housefile = nstr(_name.GetFullName());
+		editor.map.setHouseFilename(nstr(_name.GetFullName()));
 		_name.SetName(filename.GetName() + "-waypoint");
-		editor.map.waypointfile = nstr(_name.GetFullName());
+		editor.map.setWaypointFilename(nstr(_name.GetFullName()));
 
 		editor.map.unnamed = false;
 	}

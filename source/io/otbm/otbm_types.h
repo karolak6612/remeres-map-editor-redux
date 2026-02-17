@@ -71,4 +71,10 @@ enum OTBM_NodeTypes_t : uint8_t {
 	OTBM_WAYPOINT = 16,
 };
 
+enum class OTBMWriteResult {
+	Success,
+	SuccessWithUnsupportedVersion,
+	Failure
+};
+
 #endif // RME_OTBM_TYPES_H_

@@ -28,7 +28,7 @@ public:
 
 	// Writing
 	static bool serializeItemNode(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
-	static void serializeItemCompact(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
+	static void serializeItemCompact(const IOMap& /*maphandle*/, NodeFileWriteHandle& f, const Item& item);
 	static void serializeItemAttributes(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
 };
 

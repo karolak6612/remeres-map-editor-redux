@@ -5,7 +5,7 @@
 #include "map/map.h"
 #include "ui/dialog_util.h"
 #include <spdlog/spdlog.h>
-#include <format>
+#include <spdlog/spdlog.h>
 
 bool HeaderSerializationOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 	BinaryNode* root = f->getRootNode();

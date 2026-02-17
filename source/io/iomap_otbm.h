@@ -79,11 +79,7 @@ public:
 	}
 	~IOMapOTBM() override = default;
 
-	enum class WriteResult {
-		Success,
-		SuccessWithUnsupportedVersion,
-		Failure
-	};
+	using WriteResult = OTBMWriteResult;
 
 	static bool getVersionInfo(const FileName& identifier, MapVersion& out_ver);
 
@@ -111,8 +107,6 @@ protected:
 	void writeTileData(const Map& map, NodeFileWriteHandle& f);
 	void writeTowns(const Map& map, NodeFileWriteHandle& f);
 	WriteResult writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
-
-	static void serializeTile_OTBM(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& handle);
 };
 
 #endif

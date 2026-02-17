@@ -182,81 +182,47 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 		}
 		case OTBM_ATTR_PODIUMOUTFIT: {
 			if (auto podium = dynamic_cast<Podium*>(&item)) {
-				uint8_t flags, direction;
-				uint16_t lookType, lookMount;
-				uint8_t lookHead, lookBody, lookLegs, lookFeet, lookAddon;
-				uint8_t lookMountHead, lookMountBody, lookMountLegs, lookMountFeet;
+#pragma pack(push, 1)
+				struct PodiumData {
+					uint8_t flags;
+					uint8_t direction;
+					uint16_t lookType;
+					uint8_t lookHead;
+					uint8_t lookBody;
+					uint8_t lookLegs;
+					uint8_t lookFeet;
+					uint8_t lookAddon;
+					uint16_t lookMount;
+					uint8_t lookMountHead;
+					uint8_t lookMountBody;
+					uint8_t lookMountLegs;
+					uint8_t lookMountFeet;
+				};
+#pragma pack(pop)
 
-				if (!stream->getU8(flags)) {
-					spdlog::error("Podium read failed: flags");
-					return false;
-				}
-				if (!stream->getU8(direction)) {
-					spdlog::error("Podium read failed: direction");
-					return false;
-				}
-				if (!stream->getU16(lookType)) {
-					spdlog::error("Podium read failed: lookType");
-					return false;
-				}
-				if (!stream->getU8(lookHead)) {
-					spdlog::error("Podium read failed: lookHead");
-					return false;
-				}
-				if (!stream->getU8(lookBody)) {
-					spdlog::error("Podium read failed: lookBody");
-					return false;
-				}
-				if (!stream->getU8(lookLegs)) {
-					spdlog::error("Podium read failed: lookLegs");
-					return false;
-				}
-				if (!stream->getU8(lookFeet)) {
-					spdlog::error("Podium read failed: lookFeet");
-					return false;
-				}
-				if (!stream->getU8(lookAddon)) {
-					spdlog::error("Podium read failed: lookAddon");
-					return false;
-				}
-				if (!stream->getU16(lookMount)) {
-					spdlog::error("Podium read failed: lookMount");
-					return false;
-				}
-				if (!stream->getU8(lookMountHead)) {
-					spdlog::error("Podium read failed: lookMountHead");
-					return false;
-				}
-				if (!stream->getU8(lookMountBody)) {
-					spdlog::error("Podium read failed: lookMountBody");
-					return false;
-				}
-				if (!stream->getU8(lookMountLegs)) {
-					spdlog::error("Podium read failed: lookMountLegs");
-					return false;
-				}
-				if (!stream->getU8(lookMountFeet)) {
-					spdlog::error("Podium read failed: lookMountFeet");
+				PodiumData podiumData;
+				if (!stream->getRAW(reinterpret_cast<uint8_t*>(&podiumData), sizeof(PodiumData))) {
+					spdlog::error("Failed to read podium data block.");
 					return false;
 				}
 
-				podium->setShowOutfit((flags & PODIUM_SHOW_OUTFIT) != 0);
-				podium->setShowMount((flags & PODIUM_SHOW_MOUNT) != 0);
-				podium->setShowPlatform((flags & PODIUM_SHOW_PLATFORM) != 0);
-				podium->setDirection(direction);
+				podium->setShowOutfit((podiumData.flags & PODIUM_SHOW_OUTFIT) != 0);
+				podium->setShowMount((podiumData.flags & PODIUM_SHOW_MOUNT) != 0);
+				podium->setShowPlatform((podiumData.flags & PODIUM_SHOW_PLATFORM) != 0);
+				podium->setDirection(podiumData.direction);
 
 				Outfit newOutfit;
-				newOutfit.lookType = lookType;
-				newOutfit.lookHead = lookHead;
-				newOutfit.lookBody = lookBody;
-				newOutfit.lookLegs = lookLegs;
-				newOutfit.lookFeet = lookFeet;
-				newOutfit.lookAddon = lookAddon;
-				newOutfit.lookMount = lookMount;
-				newOutfit.lookMountHead = lookMountHead;
-				newOutfit.lookMountBody = lookMountBody;
-				newOutfit.lookMountLegs = lookMountLegs;
-				newOutfit.lookMountFeet = lookMountFeet;
+				newOutfit.lookType = podiumData.lookType;
+				newOutfit.lookHead = podiumData.lookHead;
+				newOutfit.lookBody = podiumData.lookBody;
+				newOutfit.lookLegs = podiumData.lookLegs;
+				newOutfit.lookFeet = podiumData.lookFeet;
+				newOutfit.lookAddon = podiumData.lookAddon;
+				newOutfit.lookMount = podiumData.lookMount;
+				newOutfit.lookMountHead = podiumData.lookMountHead;
+				newOutfit.lookMountBody = podiumData.lookMountBody;
+				newOutfit.lookMountLegs = podiumData.lookMountLegs;
+				newOutfit.lookMountFeet = podiumData.lookMountFeet;
 				podium->setOutfit(newOutfit);
 			} else {
 				return stream->skip(15);
@@ -291,7 +257,7 @@ bool ItemSerializationOTBM::serializeItemNode(const IOMap& maphandle, NodeFileWr
 	return true;
 }
 
-void ItemSerializationOTBM::serializeItemCompact(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item) {
+void ItemSerializationOTBM::serializeItemCompact(const IOMap& /*maphandle*/, NodeFileWriteHandle& f, const Item& item) {
 	f.addU16(item.getID());
 }
 

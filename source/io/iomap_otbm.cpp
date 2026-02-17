@@ -365,7 +365,3 @@ void IOMapOTBM::writeTowns(const Map& map, NodeFileWriteHandle& f) {
 IOMapOTBM::WriteResult IOMapOTBM::writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion) {
 	return WaypointSerializationOTBM::writeWaypoints(map, f, mapVersion);
 }
-
-void IOMapOTBM::serializeTile_OTBM(const IOMapOTBM& iomap, Tile* save_tile, NodeFileWriteHandle& f) {
-	TileSerializationOTBM::serializeTile(iomap, save_tile, f);
-}

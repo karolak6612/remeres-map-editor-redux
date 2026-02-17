@@ -48,8 +48,12 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 		House* house = nullptr;
 
 		if (tile_type == OTBM_HOUSETILE) {
-			uint32_t house_id = 0;
-			if (tileNode->getU32(house_id) && house_id != 0) {
+			uint32_t house_id;
+			if (!tileNode->getU32(house_id)) {
+				spdlog::warn("Failed to read house ID for tile {},{},{}", pos.x, pos.y, pos.z);
+			} else if (house_id == 0) {
+				spdlog::warn("House ID is zero for tile {},{},{}", pos.x, pos.y, pos.z);
+			} else {
 				house = map.houses.getHouse(house_id);
 				if (!house) {
 					auto new_house = std::make_unique<House>(map);
@@ -57,8 +61,6 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					new_house->setID(house_id);
 					map.houses.addHouse(std::move(new_house));
 				}
-			} else {
-				spdlog::warn("Invalid house ID 0 for tile {},{},{}", pos.x, pos.y, pos.z);
 			}
 		}
 
@@ -183,7 +185,7 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 	}
 }
 
-void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, Tile* save_tile, NodeFileWriteHandle& f) {
+void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* save_tile, NodeFileWriteHandle& f) {
 	f.addNode(save_tile->isHouseTile() ? OTBM_HOUSETILE : OTBM_TILE);
 
 	f.addU8(save_tile->getX() & 0xFF);
