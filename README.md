@@ -1,21 +1,7 @@
 <p align="left">
-  <a href="https://suppi.pl/karolak6612" style="text-decoration: none; background-color: #FFFFFF; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center;">
-    <img src="https://github.com/user-attachments/assets/00d8d2f1-91b5-4ec5-8baa-a5fa5619c1a4"
-         alt="Suppi"
-         width="160"
-         height="90">
-  </a>
-
-
-
-
-  <a href="https://ko-fi.com/karolak6612" style="text-decoration: none;">
-    <img src="https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white"
-         alt="Ko-fi"
-         width="160"
-         height="90">
-  </a>
+  <a href="https://suppi.pl/karolak6612" style="text-decoration: none; border: none;"><img src="https://github.com/user-attachments/assets/39c46c55-bcdb-42d0-9f2a-b23bb05b4019" alt="Suppi" width="160" height="90" style="display: inline-block; vertical-align: middle;"></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://ko-fi.com/karolak6612" style="text-decoration: none; border: none;"><img src="https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-fi" width="160" height="90" style="display: inline-block; vertical-align: middle;"></a>
 </p>
+
 
 # Remere's Map Editor: Redux
 
