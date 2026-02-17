@@ -145,6 +145,13 @@ public:
 
 	std::unique_ptr<Item> deepCopy() const;
 
+	Depot* asDepot() override {
+		return this;
+	}
+	const Depot* asDepot() const override {
+		return this;
+	}
+
 	uint8_t getDepotID() const {
 		return depotId;
 	}
@@ -164,6 +171,13 @@ public:
 	Podium(const uint16_t _type);
 
 	std::unique_ptr<Item> deepCopy() const;
+
+	Podium* asPodium() override {
+		return this;
+	}
+	const Podium* asPodium() const override {
+		return this;
+	}
 
 	const Outfit& getOutfit() const {
 		return outfit;

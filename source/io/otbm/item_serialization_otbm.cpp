@@ -165,7 +165,7 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 			break;
 		}
 		case OTBM_ATTR_DEPOT_ID: {
-			if (auto depot = dynamic_cast<Depot*>(&item)) {
+			if (auto depot = item.asDepot()) {
 				uint16_t id;
 				if (!stream->getU16(id)) {
 					return false;
@@ -181,7 +181,7 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 			break;
 		}
 		case OTBM_ATTR_PODIUMOUTFIT: {
-			if (auto podium = dynamic_cast<Podium*>(&item)) {
+			if (auto podium = item.asPodium()) {
 #pragma pack(push, 1)
 				struct PodiumData {
 					uint8_t flags;
@@ -329,12 +329,12 @@ void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, Node
 			f.addU8(OTBM_ATTR_HOUSEDOORID);
 			f.addU8(door->getDoorID());
 		}
-	} else if (auto depot = dynamic_cast<const Depot*>(&item)) {
+	} else if (auto depot = item.asDepot()) {
 		if (depot->getDepotID() != 0) {
 			f.addU8(OTBM_ATTR_DEPOT_ID);
 			f.addU16(depot->getDepotID());
 		}
-	} else if (auto podium = dynamic_cast<const Podium*>(&item)) {
+	} else if (auto podium = item.asPodium()) {
 		uint8_t flags = 0;
 		if (podium->getShowOutfit()) {
 			flags |= PODIUM_SHOW_OUTFIT;

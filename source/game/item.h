@@ -28,6 +28,8 @@
 class Creature;
 class Border;
 class Tile;
+class Depot;
+class Podium;
 
 struct SpriteLight;
 
@@ -133,6 +135,18 @@ public:
 		return nullptr;
 	}
 	virtual const class MagicField* asMagicField() const {
+		return nullptr;
+	}
+	virtual class Depot* asDepot() {
+		return nullptr;
+	}
+	virtual const class Depot* asDepot() const {
+		return nullptr;
+	}
+	virtual class Podium* asPodium() {
+		return nullptr;
+	}
+	virtual const class Podium* asPodium() const {
 		return nullptr;
 	}
 
