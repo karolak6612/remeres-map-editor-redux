@@ -30,6 +30,7 @@
 
 #include <wx/grid.h>
 #include <wx/wrapsizer.h>
+#include <wx/settings.h>
 
 PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(parent, "Item Properties", map, tile_parent, item, pos),
@@ -37,6 +38,7 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	unique_id_field(nullptr),
 	count_field(nullptr),
 	tier_field(nullptr),
+	attributesGrid(nullptr),
 	currentPanel(nullptr) {
 	ASSERT(edit_item);
 
@@ -47,6 +49,7 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickRemoveAttribute, this, ITEM_PROPERTIES_REMOVE_ATTRIBUTE);
 
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
+	Bind(wxEVT_SIZE, &PropertiesWindow::OnResize, this);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
 
@@ -189,10 +192,10 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 }
 
 wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
-	wxPanel* panel = newd wxPanel(parent, wxID_ANY);
+	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_ADVANCED_TAB);
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 
-	attributesGrid = newd wxGrid(panel, ITEM_PROPERTIES_ADVANCED_TAB, wxDefaultPosition, wxSize(-1, FromDIP(160)));
+	attributesGrid = newd wxGrid(panel, wxID_ANY, wxDefaultPosition, wxSize(-1, FromDIP(160)));
 	topSizer->Add(attributesGrid, wxSizerFlags(1).Expand());
 
 	wxFont time_font(*wxSWISS_FONT);
@@ -244,17 +247,26 @@ void PropertiesWindow::SetGridValue(wxGrid* grid, int rowIndex, std::string labe
 }
 
 void PropertiesWindow::OnResize(wxSizeEvent& evt) {
-	/*
-	if(wxGrid* grid = (wxGrid*)currentPanel->FindWindowByName("AdvancedGrid")) {
-		int tWidth = 0;
-		for(int i = 0; i < 3; ++i)
-			tWidth += grid->GetColumnWidth(i);
-
-		int wWidth = grid->GetParent()->GetSize().GetWidth();
-
-		grid->SetColumnWidth(2, wWidth - 100 - 80);
+	evt.Skip();
+	if (!attributesGrid) {
+		return;
 	}
-	*/
+
+	if (attributesGrid->GetParent() == notebook->GetCurrentPage()) {
+		int width = attributesGrid->GetClientSize().GetWidth();
+		if (width <= 0) {
+			return;
+		}
+
+		int col0 = attributesGrid->GetColSize(0);
+		int col1 = attributesGrid->GetColSize(1);
+		int scrollbarWidth = wxSystemSettings::GetMetric(wxSYS_VSCROLL_X);
+
+		int newWidth = width - col0 - col1 - scrollbarWidth - 4;
+		if (newWidth > 50) {
+			attributesGrid->SetColSize(2, newWidth);
+		}
+	}
 }
 
 void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
@@ -263,17 +275,16 @@ void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
 	// TODO: Save
 
 	switch (page->GetId()) {
-		case ITEM_PROPERTIES_GENERAL_TAB: {
-			// currentPanel = createGeneralPanel(page);
-			break;
-		}
 		case ITEM_PROPERTIES_ADVANCED_TAB: {
-			// currentPanel = createAttributesPanel(page);
+			wxSizeEvent event(GetSize(), GetId());
+			event.SetEventObject(this);
+			OnResize(event);
 			break;
 		}
 		default:
 			break;
 	}
+	evt.Skip();
 }
 
 void PropertiesWindow::saveGeneralPanel() {
