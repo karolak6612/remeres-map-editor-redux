@@ -53,11 +53,11 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Jump to selected item/brush");
+	okBtn->SetToolTip("Jump to selected item/brush (Enter)");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Close this window");
+	cancelBtn->SetToolTip("Close this window (Esc)");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
 

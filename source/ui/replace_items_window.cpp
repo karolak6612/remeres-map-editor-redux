@@ -183,6 +183,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	items_sizer->SetMinSize(wxSize(-1, FromDIP(40)));
 
 	replace_button = new ReplaceItemsButton(this);
+	replace_button->SetToolTip("Click to select item");
 	items_sizer->Add(replace_button, 0, wxALL, 5);
 
 	wxBitmap bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FromDIP(wxSize(16, 16)));
@@ -190,6 +191,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	items_sizer->Add(arrow_bitmap, 0, wxTOP, 15);
 
 	with_button = new ReplaceItemsButton(this);
+	with_button->SetToolTip("Click to select item");
 	items_sizer->Add(with_button, 0, wxALL, 5);
 
 	items_sizer->Add(0, 0, 1, wxEXPAND, 5);
@@ -224,7 +226,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 
 	close_button = new wxButton(this, wxID_ANY, "Close");
 	close_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	close_button->SetToolTip("Close this window");
+	close_button->SetToolTip("Close this window (Esc)");
 	buttons_sizer->Add(close_button, 0, wxALL, 5);
 
 	sizer->Add(buttons_sizer, 1, wxALL | wxLEFT | wxRIGHT | wxSHAPED, 5);

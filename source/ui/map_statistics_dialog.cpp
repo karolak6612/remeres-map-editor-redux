@@ -95,11 +95,11 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	wxButton* export_button = newd wxButton(dg, wxID_OK, "Export as XML");
 	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
 	choicesizer->Add(export_button, wxSizerFlags(1).Center());
-	export_button->SetToolTip("Not implemented yet");
+	export_button->SetToolTip("Coming soon: Export statistics to XML");
 	export_button->Enable(false);
 	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Close this window");
+	okBtn->SetToolTip("Close this window (Esc)");
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(1).Center());
 	dg->SetSizerAndFit(topsizer);
