@@ -207,6 +207,7 @@ bool MapXMLIO::saveSpawns(const Map& map, pugi::xml_document& doc) {
 					creatureNode.append_attribute("name") = creature->getName().c_str();
 					creatureNode.append_attribute("x") = x;
 					creatureNode.append_attribute("y") = y;
+					creatureNode.append_attribute("z") = spawnPosition.z;
 					creatureNode.append_attribute("spawntime") = creature->getSpawnTime();
 
 					if (creature->getDirection() != NORTH) {
