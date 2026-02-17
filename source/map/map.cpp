@@ -420,7 +420,9 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
-			while (found != tile_loc->getSpawnCount()) {
+			int search_radius = 1;
+			// Limit search to prevent infinite loops if spawnCount is corrupted
+			while (found != tile_loc->getSpawnCount() && search_radius < 512) {
 				for (int x = start_x; x <= end_x; ++x) {
 					Tile* tile = getTile(x, start_y, z);
 					if (tile && tile->spawn) {
@@ -448,6 +450,12 @@ SpawnList Map::getSpawnList(Tile* where) {
 				}
 				--start_x, --start_y;
 				++end_x, ++end_y;
+				++search_radius;
+			}
+
+			if (found != tile_loc->getSpawnCount()) {
+				spdlog::warn("Map::getSpawnList: Could not find all spawns (found {}/{}) at {},{},{}",
+					found, tile_loc->getSpawnCount(), where->getX(), where->getY(), where->getZ());
 			}
 		}
 	}

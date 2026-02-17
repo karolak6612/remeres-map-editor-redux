@@ -247,12 +247,16 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		if (tex > 0) {
 			// Fixed 32x32 rendering area
 			float iconSize = 32.0f;
-			int tw, th;
+			int tw = 0;
+			int th = 0;
 			nvgImageSize(vg, tex, &tw, &th);
 
-			float scale = iconSize / std::max(tw, th);
-			if (scale > 1.0f && std::max(tw, th) >= 32) {
-				scale = 1.0f;
+			float scale = 1.0f;
+			if (tw > 0 && th > 0) {
+				scale = iconSize / std::max(tw, th);
+				if (scale > 1.0f && std::max(tw, th) >= 32) {
+					scale = 1.0f;
+				}
 			}
 
 			float dw = tw * scale;
