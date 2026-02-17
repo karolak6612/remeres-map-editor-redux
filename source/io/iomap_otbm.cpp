@@ -194,7 +194,62 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 	loadAux(&MapXMLIO::loadHouses, "house", map.housefile);
 	loadAux(&MapXMLIO::loadSpawns, "spawn", map.spawnfile);
-	loadAux(&MapXMLIO::loadWaypoints, "waypoint", map.waypointfile);
+	// loadAux(&MapXMLIO::loadWaypoints, "waypoint", map.waypointfile);
+
+	// Waypoint migration and loading logic
+	if (map.waypoints.size() > 0) {
+		// Case: OTBM has waypoints
+
+		std::string waypointFile = map.waypointfile;
+		// If no external file linked, check the default one
+		if (waypointFile.empty()) {
+			waypointFile = nstr(filename.GetName()) + "-waypoint.xml";
+		}
+
+		auto paths = MapXMLIO::normalizeMapFilePaths(filename, waypointFile);
+		if (FileName(wxstr(paths.first)).FileExists()) {
+			// Case 3: Both exist - Merge and warn
+			// Ensure map knows about the file
+			if (map.waypointfile.empty()) {
+				map.waypointfile = waypointFile;
+			}
+
+			// Load from XML to merge with existing OTBM waypoints
+			if (MapXMLIO::loadWaypoints(map, filename)) {
+				DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints detected in both OTBM and external XML file.\n"
+															   "They have been merged, but this may cause duplicates.\n"
+															   "Future saves will ONLY use the XML file.",
+										wxOK | wxICON_WARNING);
+			}
+		} else {
+			// Case 2: OTBM has waypoints, XML does not - Migrate
+			// Set the default filename if not set
+			if (map.waypointfile.empty()) {
+				map.waypointfile = waypointFile;
+			}
+
+			DialogUtil::PopupDialog(g_gui.root, "Waypoint Migration", std::format("Waypoints detected in OTBM file.\n\nThey have been migrated to the external file:\n{}\n\nThey will be removed from the OTBM file on the next save.", map.waypointfile), wxOK | wxICON_INFORMATION);
+
+			// Save immediately to XML
+			MapXMLIO::saveWaypoints(map, filename);
+			// Next save will skip OTBM writing because map.waypointfile is now set
+		}
+	} else {
+		// OTBM has no waypoints
+
+		// If map.waypointfile is empty (not set in OTBM), we should try to look for the default file
+		// effectively auto-associating it if it exists.
+		if (map.waypointfile.empty()) {
+			std::string defaultFile = nstr(filename.GetName()) + "-waypoint.xml";
+			auto paths = MapXMLIO::normalizeMapFilePaths(filename, defaultFile);
+			if (FileName(wxstr(paths.first)).FileExists()) {
+				map.waypointfile = defaultFile;
+			}
+		}
+
+		// Try to load from XML (standard behavior)
+		loadAux(&MapXMLIO::loadWaypoints, "waypoint", map.waypointfile);
+	}
 
 	return true;
 }
@@ -300,9 +355,11 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 		return false;
 	}
 
-	if (!MapXMLIO::saveWaypoints(map, identifier)) {
-		spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save waypoints");
-		return false;
+	if (!map.waypointfile.empty()) {
+		if (!MapXMLIO::saveWaypoints(map, identifier)) {
+			spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save waypoints");
+			return false;
+		}
 	}
 
 	return true;
@@ -343,8 +400,11 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			writeTileData(map, f);
 			writeTowns(map, f);
 
-			if (writeWaypoints(map, f, mapVersion) == WriteResult::SuccessWithUnsupportedVersion) {
-				DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints were saved, but they are not supported in OTBM 2!\nIf your map fails to load, consider removing all waypoints and saving again.\n\nThis warning can be disabled in file->preferences.", wxOK);
+			// Only write waypoints to OTBM if NO external file is configured
+			if (map.waypointfile.empty()) {
+				if (writeWaypoints(map, f, mapVersion) == WriteResult::SuccessWithUnsupportedVersion) {
+					DialogUtil::PopupDialog(g_gui.root, "Warning", "Waypoints were saved, but they are not supported in OTBM 2!\nIf your map fails to load, consider removing all waypoints and saving again.\n\nThis warning can be disabled in file->preferences.", wxOK);
+				}
 			}
 		}
 		f.endNode();

@@ -58,6 +58,14 @@ public:
 	WaypointMap::const_iterator end() const {
 		return waypoints.end();
 	}
+
+	size_t size() const {
+		return waypoints.size();
+	}
+
+	bool empty() const {
+		return waypoints.empty();
+	}
 };
 
 #endif
