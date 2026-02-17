@@ -174,7 +174,7 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		wxRect rect = GetItemRect(i);
 
 		int lookType = is_favorites ? favorite_items[i].outfit.lookType : filtered_outfits[i].lookType;
-		wxString name = is_favorites ? favorite_items[i].label : filtered_outfits[i].name;
+		const std::string& name = is_favorites ? favorite_items[i].label : filtered_outfits[i].name_utf8;
 
 		// Card background
 		nvgBeginPath(vg);
@@ -228,10 +228,15 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 		// Name
 		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-		if (name.length() > 14) {
-			name = name.Mid(0, 12) + "..";
+		std::string displayName = name;
+		if (displayName.length() > 14) {
+			size_t cut = 12;
+			while (cut > 0 && (displayName[cut] & 0xC0) == 0x80) {
+				cut--;
+			}
+			displayName = displayName.substr(0, cut) + "..";
 		}
-		nvgText(vg, rect.x + rect.width / 2, rect.y + 75, name.ToUTF8().data(), nullptr);
+		nvgText(vg, rect.x + rect.width / 2, rect.y + 75, displayName.c_str(), nullptr);
 
 		// ID
 		const std::string idStr = std::format("#{}", lookType);

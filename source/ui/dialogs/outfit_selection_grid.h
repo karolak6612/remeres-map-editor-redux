@@ -13,6 +13,7 @@ class OutfitChooserDialog; // Forward declaration
 struct OutfitItem {
 	int lookType;
 	wxString name;
+	std::string name_utf8;
 	int layers;
 };
 
