@@ -168,7 +168,7 @@ public:
 	const Outfit& getOutfit() const {
 		return outfit;
 	}
-	void setOutfit(Outfit& newOutfit) {
+	void setOutfit(const Outfit& newOutfit) {
 		outfit = newOutfit;
 	}
 
@@ -186,6 +186,16 @@ public:
 		return showMount && outfit.lookMount != 0;
 	}
 	bool hasShowPlatform() const {
+		return showPlatform;
+	}
+
+	bool getShowOutfit() const {
+		return showOutfit;
+	}
+	bool getShowMount() const {
+		return showMount;
+	}
+	bool getShowPlatform() const {
 		return showPlatform;
 	}
 

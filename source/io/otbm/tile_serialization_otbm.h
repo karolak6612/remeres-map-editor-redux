@@ -8,11 +8,13 @@ class BinaryNode;
 class NodeFileWriteHandle;
 class Tile;
 
+#include <functional>
+
 class TileSerializationOTBM {
 public:
 	static void readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode* mapNode);
-	static void writeTileData(const IOMapOTBM& iomap, const Map& map, NodeFileWriteHandle& f);
-	static void serializeTile_OTBM(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& f);
+	static void writeTileData(const IOMapOTBM& iomap, const Map& map, NodeFileWriteHandle& f, std::function<void(int)> progressCb = nullptr);
+	static void serializeTile(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& f);
 };
 
 #endif

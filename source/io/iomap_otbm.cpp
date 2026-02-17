@@ -186,7 +186,9 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	auto loadAux = [&](bool (*func)(Map&, const FileName&), const std::string& suffix, std::string& target) {
 		if (!func(map, filename)) {
 			spdlog::warn("Failed to load {}", suffix);
-			target = nstr(filename.GetName()) + "-" + suffix + ".xml";
+			if (target.empty()) {
+				target = nstr(filename.GetName()) + "-" + suffix + ".xml";
+			}
 		}
 	};
 
@@ -360,5 +362,5 @@ IOMapOTBM::WriteResult IOMapOTBM::writeWaypoints(const Map& map, NodeFileWriteHa
 }
 
 void IOMapOTBM::serializeTile_OTBM(const IOMapOTBM& iomap, Tile* save_tile, NodeFileWriteHandle& f) {
-	TileSerializationOTBM::serializeTile_OTBM(iomap, save_tile, f);
+	TileSerializationOTBM::serializeTile(iomap, save_tile, f);
 }

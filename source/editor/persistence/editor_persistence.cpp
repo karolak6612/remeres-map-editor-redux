@@ -152,7 +152,7 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 			}
 
 			if (!backup_waypoint.empty()) {
-				converter.SetFullName(wxstr(editor.map.waypointfile));
+				converter.SetFullName(wxstr(editor.map.getWaypointFilename()));
 				std::string waypoint_filename = map_path + nstr(converter.GetName());
 				std::rename(backup_waypoint.c_str(), std::string(waypoint_filename + ".xml").c_str());
 			}

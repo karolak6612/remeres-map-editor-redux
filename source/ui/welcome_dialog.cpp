@@ -1,4 +1,5 @@
 #include "app/main.h"
+#include "app/definitions.h"
 #include "ui/welcome_dialog.h"
 #include "app/settings.h"
 #include "app/preferences.h"
@@ -196,7 +197,7 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 		QueueEvent(newEvent);
 	} else if (id == wxID_OPEN) {
 		// Open file dialog
-		wxString wildcard = "(*.otbm)|*.otbm";
+		wxString wildcard = MAP_LOAD_FILE_WILDCARD;
 
 		wxString filePath;
 		{

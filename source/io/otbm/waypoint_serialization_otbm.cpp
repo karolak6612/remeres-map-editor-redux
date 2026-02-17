@@ -31,7 +31,7 @@ void WaypointSerializationOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
 		}
 		wp.pos = { x, y, z };
 
-		map.waypoints.addWaypoint(std::make_unique<Waypoint>(wp));
+		map.waypoints.addWaypoint(std::make_unique<Waypoint>(std::move(wp)));
 	}
 }
 
@@ -39,7 +39,7 @@ IOMapOTBM::WriteResult WaypointSerializationOTBM::writeWaypoints(const Map& map,
 	IOMapOTBM::WriteResult result = IOMapOTBM::WriteResult::Success;
 	const bool supportWaypoints = mapVersion.otbm >= MAP_OTBM_3;
 
-	if (!map.waypoints.waypoints.empty()) {
+	if (map.waypoints.begin() != map.waypoints.end()) {
 		if (!supportWaypoints) {
 			result = IOMapOTBM::WriteResult::SuccessWithUnsupportedVersion;
 		}

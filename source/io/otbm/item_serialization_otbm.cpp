@@ -30,7 +30,11 @@ std::unique_ptr<Item> ItemSerializationOTBM::createFromStream(const IOMap& mapha
 	return Item::Create(_id, _count);
 }
 
-bool ItemSerializationOTBM::unserializeItemNode(const IOMap& maphandle, BinaryNode* node, Item& item) {
+bool ItemSerializationOTBM::unserializeItemNode(const IOMap& maphandle, BinaryNode* node, Item& item, int depth) {
+	if (depth >= MAX_CONTAINER_DEPTH) {
+		return false;
+	}
+
 	if (!unserializeAttributes(maphandle, node, item)) {
 		return false;
 	}
@@ -52,7 +56,7 @@ bool ItemSerializationOTBM::unserializeItemNode(const IOMap& maphandle, BinaryNo
 					return false;
 				}
 
-				if (!unserializeItemNode(maphandle, child, *childItem)) {
+				if (!unserializeItemNode(maphandle, child, *childItem, depth + 1)) {
 					return false;
 				}
 
@@ -366,13 +370,13 @@ void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, Node
 		}
 	} else if (auto podium = dynamic_cast<const Podium*>(&item)) {
 		uint8_t flags = 0;
-		if (podium->hasShowOutfit()) {
+		if (podium->getShowOutfit()) {
 			flags |= PODIUM_SHOW_OUTFIT;
 		}
-		if (podium->hasShowMount()) {
+		if (podium->getShowMount()) {
 			flags |= PODIUM_SHOW_MOUNT;
 		}
-		if (podium->hasShowPlatform()) {
+		if (podium->getShowPlatform()) {
 			flags |= PODIUM_SHOW_PLATFORM;
 		}
 

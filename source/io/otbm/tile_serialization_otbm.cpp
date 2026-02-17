@@ -9,6 +9,7 @@
 #include <spdlog/spdlog.h>
 #include <format>
 #include <ranges>
+#include <functional>
 
 void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode* mapNode) {
 	uint16_t base_x, base_y;
@@ -48,7 +49,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 		House* house = nullptr;
 
 		if (tile_type == OTBM_HOUSETILE) {
-			uint32_t house_id;
+			uint32_t house_id = 0;
 			if (tileNode->getU32(house_id) && house_id != 0) {
 				house = map.houses.getHouse(house_id);
 				if (!house) {
@@ -57,13 +58,14 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					new_house->setID(house_id);
 					map.houses.addHouse(std::move(new_house));
 				}
-			} else if (house_id == 0) {
+			} else {
 				spdlog::warn("Invalid house ID 0 for tile {},{},{}", pos.x, pos.y, pos.z);
 			}
 		}
 
 		uint8_t attribute;
-		while (tileNode->getU8(attribute)) {
+		bool stop_attributes = false;
+		while (!stop_attributes && tileNode->getU8(attribute)) {
 			switch (attribute) {
 				case OTBM_ATTR_TILE_FLAGS: {
 					uint32_t flags = 0;
@@ -85,6 +87,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 				}
 				default:
 					spdlog::warn("Unknown tile attribute {} at {},{},{}", static_cast<int>(attribute), pos.x, pos.y, pos.z);
+					stop_attributes = true;
 					break;
 			}
 		}
@@ -117,7 +120,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 	}
 }
 
-void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map, NodeFileWriteHandle& f) {
+void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map, NodeFileWriteHandle& f, std::function<void(int)> progressCb) {
 	uint32_t tiles_saved = 0;
 	bool first = true;
 	int local_x = -1, local_y = -1, local_z = -1;
@@ -151,8 +154,8 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 					}
 
 					++tiles_saved;
-					if (tiles_saved % 8192 == 0 && total_tiles > 0) {
-						g_gui.SetLoadDone(std::min(100, static_cast<int>(100.0 * tiles_saved / total_tiles)));
+					if (tiles_saved % 8192 == 0 && total_tiles > 0 && progressCb) {
+						progressCb(std::min(100, static_cast<int>(100.0 * tiles_saved / total_tiles)));
 					}
 
 					const Position& pos = save_tile->getPosition();
@@ -170,7 +173,7 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 						f.addU8(local_z = pos.z);
 					}
 
-					serializeTile_OTBM(iomap, save_tile, f);
+					serializeTile(iomap, save_tile, f);
 				}
 			}
 		}
@@ -181,7 +184,7 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 	}
 }
 
-void TileSerializationOTBM::serializeTile_OTBM(const IOMapOTBM& iomap, Tile* save_tile, NodeFileWriteHandle& f) {
+void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, Tile* save_tile, NodeFileWriteHandle& f) {
 	f.addNode(save_tile->isHouseTile() ? OTBM_HOUSETILE : OTBM_TILE);
 
 	f.addU8(save_tile->getX() & 0xFF);

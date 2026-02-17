@@ -28,19 +28,11 @@ void TownSerializationOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 			continue;
 		}
 
-		auto new_town = std::make_unique<Town>(town_id);
-		Town* town = new_town.get();
-		if (!map.towns.addTown(std::move(new_town))) {
-			spdlog::error("Failed to add town {} to map", town_id);
-			continue;
-		}
-
 		std::string town_name;
 		if (!townNode->getString(town_name) || town_name.empty()) {
 			spdlog::warn("Failed to read valid town name for ID {}", town_id);
 			continue;
 		}
-		town->setName(town_name);
 
 		Position pos;
 		uint16_t x, y;
@@ -54,7 +46,15 @@ void TownSerializationOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 			spdlog::warn("Invalid temple position {}:{}:{} for town '{}' (ID {})", pos.x, pos.y, pos.z, town_name, town_id);
 			continue;
 		}
-		town->setTemplePosition(pos);
+
+		auto new_town = std::make_unique<Town>(town_id);
+		new_town->setName(town_name);
+		new_town->setTemplePosition(pos);
+
+		if (!map.towns.addTown(std::move(new_town))) {
+			spdlog::error("Failed to add town {} to map", town_id);
+			continue;
+		}
 
 		if (auto* tile = map.getOrCreateTile(pos)) {
 			if (auto* location = tile->getLocation()) {

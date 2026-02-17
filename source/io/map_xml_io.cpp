@@ -235,6 +235,7 @@ bool MapXMLIO::loadHouses(Map& map, const FileName& dir) {
 	pugi::xml_document doc;
 	if (!doc.load_file(paths.second.c_str())) {
 #if defined(OTSERV_DEBUG_XML)
+		spdlog::warn("MapXMLIO::loadHouses: load_file failed for {}", paths.second);
 		return true;
 #else
 		return false;

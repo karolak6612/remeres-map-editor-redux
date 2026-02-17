@@ -146,7 +146,7 @@ bool HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderN
 			}
 			default: {
 				spdlog::warn("Unknown header attribute: {}", static_cast<int>(attribute));
-				break;
+				return false;
 			}
 		}
 	}

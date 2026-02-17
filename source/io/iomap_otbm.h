@@ -114,10 +114,16 @@ protected:
 
 	static void serializeTile_OTBM(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& handle);
 
-	friend class HeaderSerializationOTBM;
-	friend class TownSerializationOTBM;
-	friend class WaypointSerializationOTBM;
-	friend class TileSerializationOTBM;
+	struct SerializationAccess {
+	private:
+		friend class HeaderSerializationOTBM;
+		friend class TownSerializationOTBM;
+		friend class WaypointSerializationOTBM;
+		friend class TileSerializationOTBM;
+		friend class ItemSerializationOTBM;
+	};
+
+	friend struct SerializationAccess;
 };
 
 #endif
