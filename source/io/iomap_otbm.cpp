@@ -1132,7 +1132,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 }
 
 bool IOMapOTBM::loadSpawns(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	std::string fn = std::string(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).ToUTF8());
 	fn += map.spawnfile;
 
 	FileName filename(wxstr(fn));
@@ -1142,7 +1142,7 @@ bool IOMapOTBM::loadSpawns(Map& map, const FileName& dir) {
 	}
 
 	// has to be declared again as encoding-specific characters break loading there
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
+	std::string encoded_path = std::string(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).ToUTF8());
 	encoded_path += map.spawnfile;
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(encoded_path.c_str());
@@ -1284,7 +1284,7 @@ bool IOMapOTBM::loadSpawns(Map& map, pugi::xml_document& doc) {
 }
 
 bool IOMapOTBM::loadHouses(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	std::string fn = std::string(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).ToUTF8());
 	fn += map.housefile;
 
 	FileName filename(wxstr(fn));
@@ -1294,7 +1294,7 @@ bool IOMapOTBM::loadHouses(Map& map, const FileName& dir) {
 	}
 
 	// has to be declared again as encoding-specific characters break loading there
-	std::string encoded_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvWhateverWorks));
+	std::string encoded_path = std::string(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).ToUTF8());
 	encoded_path += map.housefile;
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(encoded_path.c_str());
@@ -1360,7 +1360,7 @@ bool IOMapOTBM::loadHouses(Map& map, pugi::xml_document& doc) {
 }
 
 bool IOMapOTBM::loadWaypoints(Map& map, const FileName& dir) {
-	std::string fn = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
+	std::string fn = std::string(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).ToUTF8());
 	fn += map.waypointfile;
 	FileName filename(wxstr(fn));
 	if (!filename.FileExists()) {
@@ -1504,7 +1504,7 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	);
 
 	if (!f.isOk()) {
-		error("Can not open file %s for writing", (const char*)identifier.GetFullPath().mb_str(wxConvUTF8));
+		error("Can not open file %s for writing", std::string(identifier.GetFullPath().ToUTF8()).c_str());
 		return false;
 	}
 

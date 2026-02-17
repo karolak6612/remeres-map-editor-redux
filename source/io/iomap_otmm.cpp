@@ -278,7 +278,7 @@ IOMapOTMM::~IOMapOTMM() {
 
 ClientVersionID IOMapOTMM::getVersionInfo(const FileName& filename) {
 	wxString wpath = filename.GetFullPath();
-	DiskNodeFileReadHandle f((const char*)wpath.mb_str(wxConvUTF8));
+	DiskNodeFileReadHandle f(std::string(wpath.ToUTF8()));
 	if (f.isOk() == false) {
 		return CLIENT_VERSION_NONE;
 	}
@@ -739,10 +739,10 @@ bool IOMapOTMM::loadMap(Map& map, NodeFileReadHandle& f, const FileName& identif
 }
 
 bool IOMapOTMM::saveMap(Map& map, const FileName& identifier, bool showdialog) {
-	DiskNodeFileWriteHandle f(std::string(identifier.GetFullPath().mb_str(wxConvUTF8)));
+	DiskNodeFileWriteHandle f(std::string(identifier.GetFullPath().ToUTF8()));
 
 	if (f.isOk() == false) {
-		error("Can not open file %s for writing", (const char*)identifier.GetFullPath().mb_str(wxConvUTF8));
+		error("Can not open file %s for writing", std::string(identifier.GetFullPath().ToUTF8()).c_str());
 		return false;
 	}
 

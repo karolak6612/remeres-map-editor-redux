@@ -28,16 +28,16 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	}
 
 	// Town list
-	town_listbox = newd wxListBox(this, EDIT_TOWNS_LISTBOX, wxDefaultPosition, FROM_DIP(this, wxSize(240, 100)));
+	town_listbox = newd wxListBox(this, EDIT_TOWNS_LISTBOX, wxDefaultPosition, wxDefaultSize);
 	sizer->Add(town_listbox, 1, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 10);
 
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto addBtn = newd wxButton(this, EDIT_TOWNS_ADD, "Add");
-	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	addBtn->SetToolTip("Add a new town");
 	tmpsizer->Add(addBtn, 0, wxTOP, 5);
 	remove_button = newd wxButton(this, EDIT_TOWNS_REMOVE, "Remove");
-	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
 	remove_button->SetToolTip("Remove selected town");
 	tmpsizer->Add(remove_button, 0, wxRIGHT | wxTOP, 5);
 	sizer->Add(tmpsizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
@@ -57,7 +57,7 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	// Temple position
 	temple_position = newd PositionCtrl(this, "Temple Position", 0, 0, 0, map.getWidth(), map.getHeight());
 	select_position_button = newd wxButton(this, EDIT_TOWNS_SELECT_TEMPLE, "Go To");
-	select_position_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, wxSize(16, 16)));
+	select_position_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_LOCATION_ARROW));
 	select_position_button->SetToolTip("Jump to temple position");
 	temple_position->Add(select_position_button, 0, wxLEFT | wxRIGHT | wxBOTTOM, 5);
 	sizer->Add(temple_position, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
@@ -65,11 +65,11 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	// OK/Cancel buttons
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Save changes");
 	tmpsizer->Add(okBtn, wxSizerFlags(1).Center());
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Cancel");
 	tmpsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(tmpsizer, 0, wxCENTER | wxALL, 10);
@@ -86,7 +86,7 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	cancelBtn->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickCancel, this);
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CITY, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CITY).GetBitmap(wxSize(32, 32)));
 	SetIcon(icon);
 }
 

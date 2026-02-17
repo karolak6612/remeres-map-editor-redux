@@ -150,13 +150,13 @@ int random(int high) {
 }
 
 std::wstring string2wstring(const std::string& utf8string) {
-	wxString s(utf8string.c_str(), wxConvUTF8);
-	return std::wstring((const wchar_t*)s.c_str());
+	wxString s = wxString::FromUTF8(utf8string);
+	return s.ToStdWstring();
 }
 
 std::string wstring2string(const std::wstring& widestring) {
-	wxString s(widestring.c_str());
-	return std::string((const char*)s.mb_str(wxConvUTF8));
+	wxString s(widestring);
+	return std::string(s.ToUTF8());
 }
 
 bool posFromClipboard(Position& position, const int mapWidth /* = MAP_MAX_WIDTH */, const int mapHeight /* = MAP_MAX_HEIGHT */) {
