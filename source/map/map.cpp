@@ -357,6 +357,11 @@ void Map::setSpawnFilename(const std::string& new_spawnfile) {
 	unnamed = false;
 }
 
+void Map::setWaypointFilename(const std::string& new_waypointfile) {
+	waypointfile = new_waypointfile;
+	unnamed = false;
+}
+
 bool Map::addSpawn(Tile* tile) {
 	Spawn* spawn = tile->spawn.get();
 	if (spawn) {

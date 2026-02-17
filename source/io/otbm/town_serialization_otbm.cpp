@@ -3,7 +3,6 @@
 #include "map/map.h"
 #include "game/town.h"
 #include <spdlog/spdlog.h>
-#include <format>
 
 void TownSerializationOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 	spdlog::debug("Reading OTBM_TOWNS...");

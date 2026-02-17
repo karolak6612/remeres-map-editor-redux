@@ -119,6 +119,7 @@ public:
 	void setMapDescription(const std::string& new_description);
 	void setHouseFilename(const std::string& new_housefile);
 	void setSpawnFilename(const std::string& new_spawnfile);
+	void setWaypointFilename(const std::string& new_waypointfile);
 
 	std::string getWaypointFilename() const {
 		return waypointfile;

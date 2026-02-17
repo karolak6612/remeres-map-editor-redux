@@ -113,17 +113,6 @@ protected:
 	WriteResult writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
 
 	static void serializeTile_OTBM(const IOMapOTBM& iomap, Tile* tile, NodeFileWriteHandle& handle);
-
-	struct SerializationAccess {
-	private:
-		friend class HeaderSerializationOTBM;
-		friend class TownSerializationOTBM;
-		friend class WaypointSerializationOTBM;
-		friend class TileSerializationOTBM;
-		friend class ItemSerializationOTBM;
-	};
-
-	friend struct SerializationAccess;
 };
 
 #endif

@@ -1,14 +1,13 @@
 #ifndef RME_TILE_SERIALIZATION_OTBM_H_
 #define RME_TILE_SERIALIZATION_OTBM_H_
 
-#include "io/iomap_otbm.h"
+#include <functional>
 
 class Map;
 class BinaryNode;
 class NodeFileWriteHandle;
 class Tile;
-
-#include <functional>
+class IOMapOTBM;
 
 class TileSerializationOTBM {
 public:

@@ -177,7 +177,16 @@ class Item {
 
 ## I/O System
 
-### Map Formats
+### Map I/O (`io/`)
+The map I/O system has been refactored to separate concerns:
+- **`IOMapOTBM`**: Main coordinator for OTBM map loading/saving.
+- **`MapXMLIO`**: Handles auxiliary XML files (spawns, houses, waypoints).
+- **`HeaderSerializationOTBM`**: Handles OTBM header, version checks, and map attributes.
+- **`TileSerializationOTBM`**: Handles tile and item serialization.
+- **`TownSerializationOTBM`**: Handles town data.
+- **`WaypointSerializationOTBM`**: Handles waypoint data (OTBM node).
+- **`ItemSerializationOTBM`**: Handles complex item logic (containers, depots).
+
 | Format | Files | Description |
 |--------|-------|-------------|
 | OTBM | `io/iomap_otbm.*` | Binary map format (primary) |

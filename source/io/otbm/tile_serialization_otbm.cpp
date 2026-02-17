@@ -7,7 +7,6 @@
 #include "io/otbm/item_serialization_otbm.h"
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
-#include <format>
 #include <ranges>
 #include <functional>
 

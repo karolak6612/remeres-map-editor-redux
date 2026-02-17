@@ -2,7 +2,6 @@
 
 #include "map/map.h"
 #include <spdlog/spdlog.h>
-#include <format>
 
 void WaypointSerializationOTBM::readWaypoints(Map& map, BinaryNode* mapNode) {
 	spdlog::debug("Reading OTBM_WAYPOINTS...");

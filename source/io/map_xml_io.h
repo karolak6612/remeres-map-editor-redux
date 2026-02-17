@@ -36,7 +36,7 @@ public:
 	static bool saveWaypoints(const Map& map, pugi::xml_document& doc);
 	static bool loadWaypoints(Map& map, pugi::xml_node node);
 
-	static std::pair<std::string, std::string> NormalizeMapFilePaths(const FileName& dir, const std::string& filename);
+	static std::pair<std::string, std::string> normalizeMapFilePaths(const FileName& dir, const std::string& filename);
 };
 
 #endif // RME_MAP_XML_IO_H_

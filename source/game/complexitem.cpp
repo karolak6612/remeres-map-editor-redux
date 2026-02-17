@@ -94,7 +94,7 @@ uint8_t Door::getDoorID() const {
 }
 
 bool Door::isRealDoor() const {
-	const DoorType& dt = getDoorType();
+	const DoorType dt = getDoorType();
 	// doors with no wallbrush will appear as WALL_UNDEFINED
 	// this is for compatibility
 	switch (dt) {
@@ -137,7 +137,7 @@ std::unique_ptr<Item> Depot::deepCopy() const {
 // Podium
 Podium::Podium(const uint16_t type) :
 	Item(type, 0),
-	outfit(Outfit()), showOutfit(true), showMount(true), showPlatform(true), direction(0) {
+	outfit(Outfit()), direction(0), showOutfit(true), showMount(true), showPlatform(true) {
 	////
 }
 

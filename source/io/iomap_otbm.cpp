@@ -296,7 +296,12 @@ bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 
 	g_gui.SetLoadDone(99, "Saving houses...");
 	if (!MapXMLIO::saveHouses(map, identifier)) {
-		spdlog::error("Failed to save houses!");
+		spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save houses");
+		return false;
+	}
+
+	if (!MapXMLIO::saveWaypoints(map, identifier)) {
+		spdlog::error("IOMapOTBM::saveMapToDisk: Failed to save waypoints");
 		return false;
 	}
 

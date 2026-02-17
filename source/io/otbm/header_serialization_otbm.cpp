@@ -1,5 +1,7 @@
 #include "header_serialization_otbm.h"
 
+#include "io/iomap_otbm.h"
+
 #include "map/map.h"
 #include "ui/dialog_util.h"
 #include <spdlog/spdlog.h>

@@ -1,8 +1,7 @@
 #ifndef RME_HEADER_SERIALIZATION_OTBM_H_
 #define RME_HEADER_SERIALIZATION_OTBM_H_
 
-#include "io/iomap_otbm.h"
-
+struct MapVersion;
 class Map;
 class NodeFileReadHandle;
 class BinaryNode;
