@@ -1,79 +1,55 @@
 import os
 import re
 
-files_to_fix = [
-    "source/map/tile.h",
-    "source/map/map.h",
-    "source/brushes/brush.h",
-    "source/game/item.h",
-    "source/io/iomap.h",
-    "source/map/basemap.h",
-    "source/map/position.h",
-    "source/game/creature.h",
-    "source/editor/editor.h",
-    "source/editor/action.h",
-    "source/map/map_region.h",
-    "source/map/map_allocator.h",
-    "source/map/map_search.h"
-]
+def fix_content(content):
+    # 1. Fix block comments starting with /* that contain @tag
+    content = re.sub(r'(?m)^(\s*)/\*(\s*\n\s*\*\s*@)', r'\1/**\2', content)
 
-def fix_file(filepath):
-    if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
-        return
+    # 2. Fix single line comments: /* @tag ... */ -> /** @tag ... */
+    content = re.sub(r'(?m)^(\s*)/\*(\s*@)', r'\1/**\2', content)
 
-    with open(filepath, 'r') as f:
-        lines = f.readlines()
+    # 3. Fix trailing comments on enums or members
+    # Pattern: Code ending in , or ; then whitespace then /* then text then */ then EOL
+    # We convert /* ... */ to ///< ...
+    # We must ensure we don't match /** ... */ or /// ...
 
-    new_lines = []
-    i = 0
-    while i < len(lines):
-        line = lines[i]
+    def replace_trailing(match):
+        prefix = match.group(1)
+        comment_body = match.group(3).strip() # Fixed: Use group 3 for content
+        return f'{prefix} ///< {comment_body}'
 
-        # 1. Check for `/**` line that might have caused broken indentation on the NEXT line
-        match_start_new = re.match(r'^(\s*)/\*\*', line)
+    # Regex:
+    # Group 1: Non-comment content ending in , or ; and whitespace
+    # Match /* but not /** (captured as group 2, which is just the first *)
+    # Group 3: Comment body
+    # Match */
+    # End of line
+    content = re.sub(r'([,;]\s*)/(\*)[^*](.*?)\*/\s*$', replace_trailing, content, flags=re.MULTILINE)
 
-        # 2. Check for `/*` line that needs conversion
-        match_start_old = re.match(r'^(\s*)/\*', line)
+    return content
 
-        if match_start_new:
-            indent = match_start_new.group(1)
-            # Check next line
-            if i + 1 < len(lines):
-                next_line = lines[i+1]
-                # If next line starts with " * @" (broken indent from previous script)
-                if next_line.startswith(" * @"):
-                    lines[i+1] = indent + next_line
+def main():
+    root_dir = 'source'
+    extensions = ('.h', '.cpp')
 
-        elif match_start_old:
-            indent = match_start_old.group(1)
-            # Check if this is a doxygen block (next line has @tag)
-            if i + 1 < len(lines):
-                # We look for ` * @` with any indentation
-                if re.search(r'^\s*\*\s*@', lines[i+1]):
-                    # Convert to /**
-                    line = line.replace('/*', '/**', 1)
-                    # Ensure next line has correct indent
-                    # If next line indentation matches `indent` + ` *`, good.
-                    # If not, fix it.
-                    next_line = lines[i+1]
-                    next_match = re.match(r'^(\s*)\*\s*@', next_line)
-                    if next_match:
-                        current_next_indent = next_match.group(1)
-                        if current_next_indent != indent + " ": # Assume 1 space align? Or same indent?
-                            # Usually:
-                            # /**
-                            #  * @brief
-                            # So indent should be `indent` + ` ` (space).
-                            # Or if tabs, `\t` -> `\t `
-                            pass
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename.endswith(extensions):
+                filepath = os.path.join(dirpath, filename)
 
-        new_lines.append(line)
-        i += 1
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
 
-    with open(filepath, 'w') as f:
-        f.writelines(new_lines)
-    print(f"Refixed {filepath}")
+                    new_content = fix_content(content)
 
-for filepath in files_to_fix:
-    fix_file(filepath)
+                    if new_content != content:
+                        with open(filepath, 'w', encoding='utf-8') as f:
+                            f.write(new_content)
+                        print(f"Fixed: {filepath}")
+
+                except Exception as e:
+                    print(f"Error processing {filepath}: {e}")
+
+if __name__ == '__main__':
+    main()

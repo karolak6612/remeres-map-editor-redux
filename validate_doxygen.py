@@ -2,65 +2,56 @@ import os
 import re
 import sys
 
-files_to_check = [
-    "source/map/tile.h",
-    "source/map/map.h",
-    "source/brushes/brush.h",
-    "source/game/item.h",
-    "source/io/iomap.h",
-    "source/map/basemap.h",
-    "source/map/position.h",
-    "source/game/creature.h",
-    "source/editor/editor.h",
-    "source/editor/action.h",
-    "source/map/map_region.h",
-    "source/map/map_allocator.h",
-    "source/map/map_search.h"
-]
-
-def validate_file(filepath):
-    if not os.path.exists(filepath):
-        print(f"File not found: {filepath}")
-        return False
-
-    with open(filepath, 'r') as f:
-        content = f.read()
-
+def validate_content(filepath, content):
     errors = 0
+    # Optimized regex for C-style comments using dotall
+    # Matches /* followed by anything (non-greedy) until */
+    comment_pattern = re.compile(r'/\*.*?\*/', re.DOTALL)
 
-    # Regex for /* ... @tag ... */ (multi-line)
-    # We look for /* that is NOT followed by * (so exclude /**)
-    # Then containing @param, @brief, @return, @file, @class
-    tags = r'@(param|brief|return|file|class|enum|struct|union|typedef|var|fn)'
-
-    # This pattern attempts to find /* ... @tag
-    # We want to match /* followed by anything until @tag, but stopping at */ if no tag found first.
-    # Actually simpler: Find all /* ... */ blocks. Check if they contain @tag.
-
-    comment_pattern = re.compile(r'/\*([^*]|[\r\n]|(\*+([^*/]|[\r\n])))*\*+/')
+    tags_pattern = re.compile(r'@(param|brief|return|file|class|enum|struct|union|typedef|var|fn|see|note|warning)')
 
     for match in comment_pattern.finditer(content):
         comment = match.group(0)
-        if comment.startswith("/**"):
-            continue # Correct style
 
-        # Check for tags
-        if re.search(tags, comment):
-            print(f"Error in {filepath}: Found old-style comment with Doxygen tag at index {match.start()}")
-            print(f"Context: {comment[:100]}...")
+        if comment.startswith("/**"):
+            continue
+
+        if tags_pattern.search(comment):
+            # Calculate line number
+            lineno = content[:match.start()].count('\n') + 1
+            print(f"Error in {filepath}:{lineno}: Found old-style comment '/*' with Doxygen tag.")
+            # print(f"Context: {comment[:50]}...")
             errors += 1
 
-    if errors == 0:
-        print(f"Validated {filepath}: OK")
-        return True
+    return errors
+
+def main():
+    root_dir = 'source'
+    extensions = ('.h', '.cpp')
+    total_errors = 0
+
+    # Pre-compile to check for obvious non-issues faster?
+    # No, compiling once is enough.
+
+    file_count = 0
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        for filename in filenames:
+            if filename.endswith(extensions):
+                filepath = os.path.join(dirpath, filename)
+                file_count += 1
+                try:
+                    with open(filepath, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    total_errors += validate_content(filepath, content)
+                except Exception as e:
+                    print(f"Error processing {filepath}: {e}")
+
+    print(f"Scanned {file_count} files.")
+    if total_errors > 0:
+        print(f"Validation FAILED: Found {total_errors} errors.")
+        sys.exit(1)
     else:
-        print(f"Validated {filepath}: FAILED with {errors} errors")
-        return False
+        print("Validation PASSED: No issues found.")
 
-success = True
-for filepath in files_to_check:
-    if not validate_file(filepath):
-        success = False
-
-if not success:
-    sys.exit(1)
+if __name__ == '__main__':
+    main()

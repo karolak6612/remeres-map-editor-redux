@@ -30,7 +30,7 @@ struct ConversionMap {
 	STM stm;
 };
 
-/* Legacy conversion functions removed */
+// Legacy conversion functions removed
 // ConversionMap getReplacementMapFrom800To810();
 // ConversionMap getReplacementMapFrom760To740();
 // ConversionMap getReplacementMapFrom854To854();
