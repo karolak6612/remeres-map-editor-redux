@@ -1,5 +1,5 @@
 <p align="left">
-  <a href="https://suppi.pl/karolak6612" style="text-decoration: none;">
+  <a href="https://suppi.pl/karolak6612" style="text-decoration: none; background-color: #FFFFFF; padding: 2px 6px; border-radius: 4px; display: inline-flex; align-items: center;">
     <img src="https://suppi.pl/assets/img/suppi-logo.svg"
          alt="Suppi"
          width="180"
@@ -13,7 +13,6 @@
          height="40">
   </a>
 </p>
-
 
 # Remere's Map Editor: Redux
 
