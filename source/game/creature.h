@@ -15,11 +15,22 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+/*
+ * @file creature.h
+ * @brief Represents a creature or NPC in the game world.
+ *
+ * Defines the Creature class and related enumerations for handling
+ * player-facing entities, monsters, and NPCs within the editor.
+ */
+
 #ifndef RME_CREATURE_H_
 #define RME_CREATURE_H_
 
 #include "game/creatures.h"
 
+/*
+ * @brief Cardinal directions for creature facing.
+ */
 enum Direction {
 	NORTH = 0,
 	EAST = 1,
@@ -32,49 +43,138 @@ enum Direction {
 
 IMPLEMENT_INCREMENT_OP(Direction)
 
+/*
+ * @brief Represents an instance of a creature placed on the map.
+ *
+ * A Creature holds instance-specific data like spawn time, direction, and name,
+ * while referencing a shared CreatureType definition for common properties.
+ */
 class Creature {
 public:
+	/*
+	 * @brief Constructs a creature from a type definition.
+	 * @param ctype The creature type definition (e.g., "Dragon").
+	 */
 	Creature(CreatureType* ctype);
+
+	/*
+	 * @brief Constructs a creature by type name.
+	 * @param type_name The name of the creature type.
+	 */
 	Creature(std::string type_name);
 	~Creature();
 
 	// Static conversions
+	/*
+	 * @brief Converts a direction ID to its string representation.
+	 * @param id The direction ID (0-3).
+	 * @return The direction name (e.g., "North").
+	 */
 	static std::string DirID2Name(uint16_t id);
+
+	/*
+	 * @brief Converts a direction name string to its ID.
+	 * @param id The direction name.
+	 * @return The direction ID.
+	 */
 	static uint16_t DirName2ID(std::string id);
 
+	/*
+	 * @brief Creates a deep copy of this creature instance.
+	 * @return Unique pointer to the new creature.
+	 */
 	std::unique_ptr<Creature> deepCopy() const;
 
+	/*
+	 * @brief Gets the visual outfit of the creature.
+	 * @return Reference to the Outfit.
+	 */
 	const Outfit& getLookType() const;
 
+	/*
+	 * @brief Checks if the creature has been saved to disk.
+	 * @return true if saved.
+	 */
 	bool isSaved();
+
+	/*
+	 * @brief Marks the creature as saved.
+	 */
 	void save();
+
+	/*
+	 * @brief Resets the saved status (marks as unsaved).
+	 */
 	void reset();
 
+	/*
+	 * @brief Checks if the creature is currently selected in the editor.
+	 * @return true if selected.
+	 */
 	bool isSelected() const {
 		return selected;
 	}
+
+	/*
+	 * @brief Deselects the creature.
+	 */
 	void deselect() {
 		selected = false;
 	}
+
+	/*
+	 * @brief Selects the creature.
+	 */
 	void select() {
 		selected = true;
 	}
 
+	/*
+	 * @brief Checks if the creature is an NPC.
+	 * @return true if NPC.
+	 */
 	bool isNpc() const;
 
+	/*
+	 * @brief Gets the name of the creature.
+	 * @return The name string.
+	 */
 	std::string getName() const;
+
+	/*
+	 * @brief Gets the editor brush associated with this creature type.
+	 * @return Pointer to CreatureBrush.
+	 */
 	CreatureBrush* getBrush() const;
 
+	/*
+	 * @brief Gets the spawn time interval for this creature instance.
+	 * @return Spawn time in seconds.
+	 */
 	int getSpawnTime() const {
 		return spawntime;
 	}
+
+	/*
+	 * @brief Sets the spawn time interval.
+	 * @param spawntime Time in seconds.
+	 */
 	void setSpawnTime(int spawntime) {
 		this->spawntime = spawntime;
 	}
 
+	/*
+	 * @brief Gets the facing direction of the creature.
+	 * @return The Direction enum.
+	 */
 	Direction getDirection() const {
 		return direction;
 	}
+
+	/*
+	 * @brief Sets the facing direction.
+	 * @param direction The new direction.
+	 */
 	void setDirection(Direction direction) {
 		this->direction = direction;
 	}

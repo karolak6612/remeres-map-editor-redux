@@ -15,6 +15,14 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+/*
+ * @file position.h
+ * @brief Defines the 3D coordinate system for the map.
+ *
+ * The Position class represents a specific location in the game world
+ * using (x, y, z) coordinates, where z typically denotes the floor/layer.
+ */
+
 #ifndef __POSITION_HPP__
 #define __POSITION_HPP__
 
@@ -42,6 +50,15 @@
 
 class SmallPosition;
 
+/*
+ * @brief Represents a 3D coordinate in the map world.
+ *
+ * Uses integer coordinates (x, y, z).
+ * Typically:
+ * - X: Horizontal position (West -> East)
+ * - Y: Vertical position (North -> South)
+ * - Z: Layer/Floor (0 is highest/surface, 7 is ground level, 15 is deep underground)
+ */
 class Position {
 public:
 	// We use int since it's the native machine type and can be several times faster than
@@ -49,11 +66,29 @@ public:
 	// cases
 	int x, y, z;
 
+	/*
+	 * @brief Default constructor. Initializes to (0, 0, 0).
+	 */
 	Position() :
 		x(0), y(0), z(0) { }
+
+	/*
+	 * @brief Constructs a position with specific coordinates.
+	 * @param _x X coordinate.
+	 * @param _y Y coordinate.
+	 * @param _z Z coordinate.
+	 */
 	Position(int _x, int _y, int _z) :
 		x(_x), y(_y), z(_z) { }
 
+	/*
+	 * @brief Less-than operator for sorting.
+	 *
+	 * Orders primarily by Z, then Y, then X.
+	 *
+	 * @param p The other position.
+	 * @return true if this position is "less than" p.
+	 */
 	bool operator<(const Position& p) const {
 		if (z < p.z) {
 			return true;
@@ -78,10 +113,20 @@ public:
 		return false;
 	}
 
+	/*
+	 * @brief Greater-than operator.
+	 * @param p The other position.
+	 * @return true if this position is "greater than" p.
+	 */
 	bool operator>(const Position& p) const {
 		return !(*this < p);
 	}
 
+	/*
+	 * @brief Subtraction operator.
+	 * @param p The position to subtract.
+	 * @return A new Position representing the difference (vector).
+	 */
 	Position operator-(const Position& p) const {
 		Position newpos;
 		newpos.x = x - p.x;
@@ -90,6 +135,11 @@ public:
 		return newpos;
 	}
 
+	/*
+	 * @brief Addition operator.
+	 * @param p The position to add.
+	 * @return A new Position representing the sum.
+	 */
 	Position operator+(const Position& p) const {
 		Position newpos;
 		newpos.x = x + p.x;
@@ -98,27 +148,64 @@ public:
 		return newpos;
 	}
 
+	/*
+	 * @brief In-place addition.
+	 * @param p The position to add.
+	 * @return Reference to self.
+	 */
 	Position& operator+=(const Position& p) {
 		*this = *this + p;
 		return *this;
 	}
 
+	/*
+	 * @brief Equality operator.
+	 * @param p The other position.
+	 * @return true if coordinates match exactly.
+	 */
 	bool operator==(const Position& p) const {
 		return p.x == x && p.y == y && p.z == z;
 	}
 
+	/*
+	 * @brief Inequality operator.
+	 * @param p The other position.
+	 * @return true if coordinates differ.
+	 */
 	bool operator!=(const Position& p) const {
 		return !(*this == p);
 	}
 
+	/*
+	 * @brief Checks if the position is within valid map bounds.
+	 * @return true if valid.
+	 */
 	bool isValid() const;
 };
 
+/*
+ * @brief Stream output operator for Position.
+ *
+ * Formats as "x:y:z".
+ *
+ * @param os Output stream.
+ * @param pos The position.
+ * @return The stream.
+ */
 inline std::ostream& operator<<(std::ostream& os, const Position& pos) {
 	os << pos.x << ':' << pos.y << ':' << pos.z;
 	return os;
 }
 
+/*
+ * @brief Stream input operator for Position.
+ *
+ * Parses format "x:y:z".
+ *
+ * @param is Input stream.
+ * @param pos The position to populate.
+ * @return The stream.
+ */
 inline std::istream& operator>>(std::istream& is, Position& pos) {
 	char a, b;
 	int x, y, z;
@@ -154,6 +241,11 @@ inline bool Position::isValid() const {
 	return x >= 0 && x <= MAP_MAX_WIDTH && y >= 0 && y <= MAP_MAX_HEIGHT && z >= 0 && z <= MAP_MAX_LAYER;
 }
 
+/*
+ * @brief Calculates the absolute values of a position's coordinates.
+ * @param position The input position.
+ * @return New Position with absolute coordinates.
+ */
 inline Position abs(const Position& position) {
 	return Position(
 		std::abs(position.x),
