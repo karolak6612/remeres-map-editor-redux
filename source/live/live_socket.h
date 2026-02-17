@@ -62,7 +62,7 @@ public:
 	//
 	virtual void receiveHeader() = 0;
 	virtual void receive(uint32_t packetSize) = 0;
-	virtual void send(NetworkMessage& message) = 0;
+	virtual void send(const NetworkMessage& message) = 0;
 
 	//
 	virtual void updateCursor(const Position& position) = 0;

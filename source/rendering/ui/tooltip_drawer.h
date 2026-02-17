@@ -30,6 +30,7 @@
 
 class Item;
 class Waypoint;
+class NanoVGImage;
 struct NVGcontext;
 
 struct ContainerItem {
@@ -179,8 +180,7 @@ protected:
 	std::vector<TooltipData> tooltips;
 	size_t active_count = 0;
 
-	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
-	NVGcontext* lastContext = nullptr;
+	std::unordered_map<uint32_t, std::unique_ptr<NanoVGImage>> spriteCache; // sprite_id -> nvg image handle
 
 	// Helper to get or load sprite image
 	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
