@@ -20,6 +20,31 @@ static std::atomic<uint32_t> template_id_generator(0x1000000);
 constexpr int RGB_COMPONENTS = 3;
 constexpr int RGBA_COMPONENTS = 4;
 
+namespace {
+	// Helper for blending pixels manually
+	// dest/src are 4-byte RGBA pointers
+	inline void BlendPixel(uint8_t* dest, const uint8_t* src) {
+		uint8_t sa = src[3];
+		if (sa == 0) return; // Fully transparent source
+
+		if (sa == 255) {
+			// Fully opaque source replaces destination
+			dest[0] = src[0];
+			dest[1] = src[1];
+			dest[2] = src[2];
+			dest[3] = 255;
+		} else {
+			float a = sa / 255.0f;
+			float inv_a = 1.0f - a;
+
+			dest[0] = static_cast<uint8_t>(src[0] * a + dest[0] * inv_a);
+			dest[1] = static_cast<uint8_t>(src[1] * a + dest[1] * inv_a);
+			dest[2] = static_cast<uint8_t>(src[2] * a + dest[2] * inv_a);
+			dest[3] = std::max(dest[3], sa);
+		}
+	}
+}
+
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :
 	parent(parent),
 	outfit(outfit) {
@@ -52,6 +77,22 @@ void CreatureSprite::unloadDC() {
 		key.size = SPRITE_SIZE_32x32;
 		parent->colored_dc.erase(key);
 	}
+}
+
+std::unique_ptr<uint8_t[]> CreatureSprite::GetRGBAData(int& width, int& height) {
+	if (parent) {
+		// Use standard size (32x32 usually, but parent determines generation size)
+		auto rgba = SpriteIconGenerator::GenerateRGBA(parent, SPRITE_SIZE_32x32, outfit, false, SOUTH, true);
+		if (rgba) {
+			int dim = std::max<uint8_t>(parent->width, parent->height) * 32;
+			width = dim;
+			height = dim;
+			return rgba;
+		}
+	}
+	width = 0;
+	height = 0;
+	return nullptr;
 }
 
 GameSprite::GameSprite() :
@@ -315,6 +356,67 @@ void GameSprite::DrawTo(wxDC* dc, SpriteSize sz, const Outfit& outfit, int start
 		dc->DrawRectangle(start_x, start_y, width, height);
 		dc->SetBrush(b);
 	}
+}
+
+std::unique_ptr<uint8_t[]> GameSprite::GetRGBAData(int& outW, int& outH) {
+	outW = width * 32;
+	outH = height * 32;
+
+	if (outW <= 0 || outH <= 0) {
+		return nullptr;
+	}
+
+	size_t bufferSize = static_cast<size_t>(outW) * outH * 4;
+	auto composite = std::make_unique<uint8_t[]>(bufferSize);
+	std::fill(composite.get(), composite.get() + bufferSize, 0);
+
+	int pattern_x = (this->pattern_x >= 3) ? 2 : 0;
+	int pattern_y = 0;
+	int pattern_z = 0;
+	int frame = 0;
+
+	for (int l = 0; l < layers; ++l) {
+		for (int w = 0; w < width; ++w) {
+			for (int h = 0; h < height; ++h) {
+				int spriteIdx = getIndex(w, h, l, pattern_x, pattern_y, pattern_z, frame);
+				if (spriteIdx < 0 || (size_t)spriteIdx >= spriteList.size()) {
+					continue;
+				}
+
+				auto spriteData = spriteList[spriteIdx]->getRGBAData();
+				if (!spriteData) {
+					continue;
+				}
+
+				// Right-to-left, bottom-to-top arrangement
+				int part_x = (width - w - 1) * 32;
+				int part_y = (height - h - 1) * 32;
+
+				for (int sy = 0; sy < 32; ++sy) {
+					for (int sx = 0; sx < 32; ++sx) {
+						int dy = part_y + sy;
+						int dx = part_x + sx;
+
+						if (dx < 0 || dx >= outW || dy < 0 || dy >= outH) {
+							continue;
+						}
+
+						int src_idx = (sy * 32 + sx) * 4;
+						int dst_idx = (dy * outW + dx) * 4;
+
+						uint8_t rgba[4] = {
+							spriteData[src_idx + 0],
+							spriteData[src_idx + 1],
+							spriteData[src_idx + 2],
+							spriteData[src_idx + 3]
+						};
+						BlendPixel(&composite[dst_idx], rgba);
+					}
+				}
+			}
+		}
+	}
+	return composite;
 }
 
 GameSprite::Image::Image() :

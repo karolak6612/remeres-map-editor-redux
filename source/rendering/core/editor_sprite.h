@@ -19,6 +19,8 @@ public:
 		return wxSize(32, 32);
 	}
 
+	std::unique_ptr<uint8_t[]> GetRGBAData(int& width, int& height) override;
+
 protected:
 	std::unique_ptr<wxBitmap> bm[SPRITE_SIZE_COUNT];
 };

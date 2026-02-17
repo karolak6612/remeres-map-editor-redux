@@ -44,6 +44,14 @@ public:
 	virtual void unloadDC() = 0;
 	virtual wxSize GetSize() const = 0;
 
+	/**
+	 * @brief Returns the RGBA pixel data for the sprite.
+	 * @param width Output width in pixels.
+	 * @param height Output height in pixels.
+	 * @return Unique pointer to the RGBA buffer.
+	 */
+	virtual std::unique_ptr<uint8_t[]> GetRGBAData(int& width, int& height) = 0;
+
 private:
 	Sprite(const Sprite&);
 	Sprite& operator=(const Sprite&);
@@ -60,6 +68,8 @@ public:
 	wxSize GetSize() const override {
 		return wxSize(32, 32);
 	}
+
+	std::unique_ptr<uint8_t[]> GetRGBAData(int& width, int& height) override;
 
 	GameSprite* parent;
 	Outfit outfit;
@@ -84,6 +94,8 @@ public:
 	wxSize GetSize() const override {
 		return wxSize(width * 32, height * 32);
 	}
+
+	std::unique_ptr<uint8_t[]> GetRGBAData(int& width, int& height) override;
 
 	void clean(time_t time, int longevity = -1);
 

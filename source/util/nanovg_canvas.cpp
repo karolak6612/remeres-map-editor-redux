@@ -217,122 +217,21 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
 }
 
 int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64_t spriteId) {
-	// Calculate composite size
-	int w = gs->width * 32;
-	int h = gs->height * 32;
-	if (w <= 0 || h <= 0) {
+	int w, h;
+	auto data = gs->GetRGBAData(w, h);
+	if (!data) {
 		return 0;
 	}
-
-	// Create composite RGBA buffer
-	size_t bufferSize = static_cast<size_t>(w) * h * 4;
-	std::vector<uint8_t> composite(bufferSize, 0);
-
-	// Composite all layers
-	int px = (gs->pattern_x >= 3) ? 2 : 0;
-	for (int l = 0; l < gs->layers; ++l) {
-		for (int sw = 0; sw < gs->width; ++sw) {
-			for (int sh = 0; sh < gs->height; ++sh) {
-				int idx = gs->getIndex(sw, sh, l, px, 0, 0, 0);
-				if (idx < 0 || static_cast<size_t>(idx) >= gs->spriteList.size()) {
-					continue;
-				}
-
-				auto image = gs->spriteList[idx];
-				if (!image) {
-					continue;
-				}
-
-				auto data = image->getRGBAData();
-				if (!data) {
-					continue;
-				}
-
-				int part_x = (gs->width - sw - 1) * 32;
-				int part_y = (gs->height - sh - 1) * 32;
-
-				for (int sy = 0; sy < 32; ++sy) {
-					for (int sx = 0; sx < 32; ++sx) {
-						int dy = part_y + sy;
-						int dx = part_x + sx;
-						int di = (dy * w + dx) * 4;
-						int si = (sy * 32 + sx) * 4;
-
-						uint8_t sa = data[si + 3];
-						if (sa == 0) {
-							continue;
-						}
-
-						if (sa == 255) {
-							composite[di + 0] = data[si + 0];
-							composite[di + 1] = data[si + 1];
-							composite[di + 2] = data[si + 2];
-							composite[di + 3] = 255;
-						} else {
-							float a = sa / 255.0f;
-							float ia = 1.0f - a;
-							composite[di + 0] = static_cast<uint8_t>(data[si + 0] * a + composite[di + 0] * ia);
-							composite[di + 1] = static_cast<uint8_t>(data[si + 1] * a + composite[di + 1] * ia);
-							composite[di + 2] = static_cast<uint8_t>(data[si + 2] * a + composite[di + 2] * ia);
-							composite[di + 3] = std::max(composite[di + 3], sa);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Create NanoVG image
-	return GetOrCreateImage(spriteId, composite.data(), w, h);
+	return GetOrCreateImage(spriteId, data.get(), w, h);
 }
 
 int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uint64_t spriteId) {
-	wxSize sz = sprite->GetSize();
-	int w = sz.x;
-	int h = sz.y;
-
-	// Determine best SpriteSize for DrawTo
-	SpriteSize drawSize = SPRITE_SIZE_32x32;
-	if (w <= 16 && h <= 16) {
-		drawSize = SPRITE_SIZE_16x16;
-	} else if (w > 32 || h > 32) {
-		drawSize = SPRITE_SIZE_64x64;
-	}
-
-	wxBitmap bmp(w, h);
-	// Need a DC to draw
-	{
-		wxMemoryDC mdc(bmp);
-		// Initialize with transparent background
-		mdc.SetBackground(wxBrush(wxColor(0, 0, 0), wxBRUSHSTYLE_TRANSPARENT));
-		mdc.Clear();
-		// Draw at 0,0 with its size
-		sprite->DrawTo(&mdc, drawSize, 0, 0, w, h);
-	}
-
-	wxImage img = bmp.ConvertToImage();
-	if (!img.IsOk()) {
+	int w, h;
+	auto data = sprite->GetRGBAData(w, h);
+	if (!data) {
 		return 0;
 	}
-
-	// Convert to RGBA
-	std::vector<uint8_t> rgba(w * h * 4);
-	const uint8_t* data = img.GetData();
-	const uint8_t* alpha = img.GetAlpha();
-	bool hasAlpha = img.HasAlpha();
-
-	for (int i = 0; i < w * h; ++i) {
-		rgba[i * 4 + 0] = data[i * 3 + 0];
-		rgba[i * 4 + 1] = data[i * 3 + 1];
-		rgba[i * 4 + 2] = data[i * 3 + 2];
-		if (hasAlpha && alpha) {
-			rgba[i * 4 + 3] = alpha[i];
-		} else {
-			rgba[i * 4 + 3] = 255;
-		}
-	}
-
-	return GetOrCreateImage(spriteId, rgba.data(), w, h);
+	return GetOrCreateImage(spriteId, data.get(), w, h);
 }
 
 void NanoVGCanvas::UpdateScrollbar(int contentHeight) {
