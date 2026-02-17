@@ -59,7 +59,6 @@
 #endif
 // OS
 
-#define OTGZ_SUPPORT 1
 #define ASSETS_NAME "Tibia"
 
 #ifdef __VISUALC__
@@ -144,9 +143,6 @@ constexpr int PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS = TileSize * 6;
 
 constexpr int ClientMapWidth = 17;
 constexpr int ClientMapHeight = 13;
-
-#define MAP_LOAD_FILE_WILDCARD_OTGZ "OpenTibia Binary Map (*.otbm;*.otgz)|*.otbm;*.otgz"
-#define MAP_SAVE_FILE_WILDCARD_OTGZ "OpenTibia Binary Map (*.otbm)|*.otbm|Compressed OpenTibia Binary Map (*.otgz)|*.otgz"
 
 #define MAP_LOAD_FILE_WILDCARD "OpenTibia Binary Map (*.otbm)|*.otbm"
 #define MAP_SAVE_FILE_WILDCARD "OpenTibia Binary Map (*.otbm)|*.otbm"

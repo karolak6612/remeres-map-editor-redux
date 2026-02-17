@@ -1,0 +1,42 @@
+//////////////////////////////////////////////////////////////////////
+// This file is part of Remere's Map Editor
+//////////////////////////////////////////////////////////////////////
+
+#ifndef RME_MAP_XML_IO_H_
+#define RME_MAP_XML_IO_H_
+
+#include <string>
+#include <utility>
+#include "ext/pugixml.hpp"
+
+class Map;
+class wxFileName;
+
+/**
+ * @brief Helper class to handle XML auxiliary map files (Houses, Spawns, Waypoints)
+ */
+class MapXMLIO {
+public:
+	// Spawns
+	static bool loadSpawns(Map& map, const wxFileName& dir);
+	static bool loadSpawns(Map& map, pugi::xml_document& doc);
+	static bool saveSpawns(const Map& map, const wxFileName& dir);
+	static bool saveSpawns(const Map& map, pugi::xml_document& doc);
+
+	// Houses
+	static bool loadHouses(Map& map, const wxFileName& dir);
+	static bool loadHouses(Map& map, pugi::xml_document& doc);
+	static bool saveHouses(const Map& map, const wxFileName& dir);
+	static bool saveHouses(const Map& map, pugi::xml_document& doc);
+
+	// Waypoints
+	static bool loadWaypoints(Map& map, const wxFileName& dir);
+	static bool loadWaypoints(Map& map, pugi::xml_document& doc);
+	static bool saveWaypoints(const Map& map, const wxFileName& dir);
+	static bool saveWaypoints(const Map& map, pugi::xml_document& doc);
+	static bool loadWaypoints(Map& map, pugi::xml_node node);
+
+	static std::pair<std::string, std::string> normalizeMapFilePaths(const wxFileName& dir, const std::string& filename);
+};
+
+#endif // RME_MAP_XML_IO_H_

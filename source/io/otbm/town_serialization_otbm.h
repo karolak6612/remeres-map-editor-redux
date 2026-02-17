@@ -15,49 +15,17 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_WAYPOINTS_H_
-#define RME_WAYPOINTS_H_
+#ifndef RME_TOWN_SERIALIZATION_OTBM_H_
+#define RME_TOWN_SERIALIZATION_OTBM_H_
 
-#include "map/position.h"
+class Map;
+class BinaryNode;
+class NodeFileWriteHandle;
 
-class Waypoint {
+class TownSerializationOTBM {
 public:
-	Waypoint() = default;
-	Waypoint(std::string name, Position pos) : name(std::move(name)), pos(pos) { }
-
-	std::string name;
-	Position pos;
-};
-
-using WaypointMap = std::map<std::string, std::unique_ptr<Waypoint>>;
-
-class Waypoints {
-	Map& map;
-
-public:
-	Waypoints(Map& map) :
-		map(map) { }
-	~Waypoints() = default;
-
-	void addWaypoint(std::unique_ptr<Waypoint> wp);
-	Waypoint* getWaypoint(std::string name);
-	Waypoint* getWaypoint(TileLocation* location);
-	void removeWaypoint(std::string name);
-
-	WaypointMap waypoints;
-
-	WaypointMap::iterator begin() {
-		return waypoints.begin();
-	}
-	WaypointMap::const_iterator begin() const {
-		return waypoints.begin();
-	}
-	WaypointMap::iterator end() {
-		return waypoints.end();
-	}
-	WaypointMap::const_iterator end() const {
-		return waypoints.end();
-	}
+	static void readTowns(Map& map, BinaryNode* mapNode);
+	static void writeTowns(const Map& map, NodeFileWriteHandle& f);
 };
 
 #endif

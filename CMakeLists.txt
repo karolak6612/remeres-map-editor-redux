@@ -29,10 +29,6 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
-if(APPLE)
-    set(CMAKE_PREFIX_PATH /usr/local/opt/libarchive)
-endif()
-find_package(LibArchive REQUIRED)
 
 if(WIN32)
     set(Boost_THREADAPI win32)
@@ -96,7 +92,6 @@ endif()
 # Include directories (for legacy find modules)
 target_include_directories(rme PRIVATE
 	${Boost_INCLUDE_DIRS}
-	${LibArchive_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 
 	${ZLIB_INCLUDE_DIR}
@@ -109,13 +104,6 @@ if(TARGET Boost::boost)
 else()
 	target_link_libraries(rme PRIVATE ${Boost_LIBRARIES})
 endif()
-
-if(TARGET LibArchive::LibArchive)
-	target_link_libraries(rme PRIVATE LibArchive::LibArchive)
-else()
-	target_link_libraries(rme PRIVATE ${LibArchive_LIBRARIES})
-endif()
-
 
 
 if(TARGET ZLIB::ZLIB)
@@ -144,7 +132,6 @@ if(RME_BUILD_TESTS)
 	# Include directories
 	target_include_directories(test_autoborder_preview PRIVATE
 		${Boost_INCLUDE_DIRS}
-		${LibArchive_INCLUDE_DIRS}
 		${OPENGL_INCLUDE_DIR}
 		${ZLIB_INCLUDE_DIR}
 		${CMAKE_CURRENT_SOURCE_DIR}/source
@@ -163,11 +150,6 @@ if(RME_BUILD_TESTS)
 		target_link_libraries(test_autoborder_preview PRIVATE ${Boost_LIBRARIES})
 	endif()
 
-	if(TARGET LibArchive::LibArchive)
-		target_link_libraries(test_autoborder_preview PRIVATE LibArchive::LibArchive)
-	else()
-		target_link_libraries(test_autoborder_preview PRIVATE ${LibArchive_LIBRARIES})
-	endif()
 
 	if(TARGET ZLIB::ZLIB)
 		target_link_libraries(test_autoborder_preview PRIVATE ZLIB::ZLIB)

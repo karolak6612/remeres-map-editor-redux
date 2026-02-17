@@ -14,71 +14,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
+#ifndef RME_IOMAP_OTBM_H_
+#define RME_IOMAP_OTBM_H_
 
-#ifndef RME_OTBM_MAP_IO_H_
-#define RME_OTBM_MAP_IO_H_
-
+#include <vector>
 #include "io/iomap.h"
+#include "io/filehandle.h"
+#include "io/otbm/otbm_types.h"
 
 class BinaryNode;
 
 // Pragma pack is VERY important since otherwise it won't be able to load the structs correctly
 #pragma pack(1)
-
-enum OTBM_ItemAttribute {
-	OTBM_ATTR_DESCRIPTION = 1,
-	OTBM_ATTR_EXT_FILE = 2,
-	OTBM_ATTR_TILE_FLAGS = 3,
-	OTBM_ATTR_ACTION_ID = 4,
-	OTBM_ATTR_UNIQUE_ID = 5,
-	OTBM_ATTR_TEXT = 6,
-	OTBM_ATTR_DESC = 7,
-	OTBM_ATTR_TELE_DEST = 8,
-	OTBM_ATTR_ITEM = 9,
-	OTBM_ATTR_DEPOT_ID = 10,
-	OTBM_ATTR_EXT_SPAWN_FILE = 11,
-	OTBM_ATTR_RUNE_CHARGES = 12,
-	OTBM_ATTR_EXT_HOUSE_FILE = 13,
-	OTBM_ATTR_HOUSEDOORID = 14,
-	OTBM_ATTR_COUNT = 15,
-	OTBM_ATTR_DURATION = 16,
-	OTBM_ATTR_DECAYING_STATE = 17,
-	OTBM_ATTR_WRITTENDATE = 18,
-	OTBM_ATTR_WRITTENBY = 19,
-	OTBM_ATTR_SLEEPERGUID = 20,
-	OTBM_ATTR_SLEEPSTART = 21,
-	OTBM_ATTR_CHARGES = 22,
-
-	// Canary RME (parse without loading only)
-	OTBM_ATTR_EXT_SPAWN_NPC_FILE = 23,
-
-	OTBM_ATTR_PODIUMOUTFIT = 40,
-	OTBM_ATTR_TIER = 41,
-	OTBM_ATTR_ATTRIBUTE_MAP = 128
-};
-
-enum OTBM_NodeTypes_t {
-	OTBM_ROOTV1 = 1,
-	OTBM_MAP_DATA = 2,
-	OTBM_ITEM_DEF = 3,
-	OTBM_TILE_AREA = 4,
-	OTBM_TILE = 5,
-	OTBM_ITEM = 6,
-	OTBM_TILE_SQUARE = 7,
-	OTBM_TILE_REF = 8,
-	OTBM_SPAWNS = 9,
-	OTBM_SPAWN_AREA = 10,
-	OTBM_MONSTER = 11,
-	OTBM_TOWNS = 12,
-	OTBM_TOWN = 13,
-	OTBM_HOUSETILE = 14,
-	OTBM_WAYPOINTS = 15,
-	OTBM_WAYPOINT = 16,
-
-	// Canary RME (unused)
-	// OTBM_SPAWN_NPC_AREA = 17,
-	// OTBM_SPAWNS_NPC = 18,
-};
 
 enum PodiumFlags : uint8_t {
 	PODIUM_SHOW_PLATFORM = 1 << 0, // show the platform below the outfit
@@ -132,6 +79,8 @@ public:
 	}
 	~IOMapOTBM() override = default;
 
+	using WriteResult = OTBMWriteResult;
+
 	static bool getVersionInfo(const FileName& identifier, MapVersion& out_ver);
 
 	bool loadMap(Map& map, const FileName& identifier) override;
@@ -140,41 +89,24 @@ public:
 protected:
 	static bool getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver);
 
-	bool loadMapFromOTGZ(Map& map, const FileName& identifier);
 	bool loadMapFromDisk(Map& map, const FileName& identifier);
 
 	bool loadMap(Map& map, NodeFileReadHandle& handle);
 	bool loadMapRoot(Map& map, NodeFileReadHandle& f, BinaryNode*& root, BinaryNode*& mapHeaderNode);
-	void readMapAttributes(Map& map, BinaryNode* mapHeaderNode);
+	bool readMapAttributes(Map& map, BinaryNode* mapHeaderNode);
 	void readMapNodes(Map& map, NodeFileReadHandle& f, BinaryNode* mapHeaderNode);
 
 	void readTileArea(Map& map, BinaryNode* mapNode);
 	void readTowns(Map& map, BinaryNode* mapNode);
 	void readWaypoints(Map& map, BinaryNode* mapNode);
 
-	bool loadSpawns(Map& map, const FileName& dir);
-	bool loadSpawns(Map& map, pugi::xml_document& doc);
-	bool loadHouses(Map& map, const FileName& dir);
-	bool loadHouses(Map& map, pugi::xml_document& doc);
-	bool loadWaypoints(Map& map, const FileName& dir);
-	bool loadWaypoints(Map& map, pugi::xml_document& doc);
-
-	bool saveMapToOTGZ(Map& map, const FileName& identifier);
 	bool saveMapToDisk(Map& map, const FileName& identifier);
 
 	bool saveMap(Map& map, NodeFileWriteHandle& handle);
 
 	void writeTileData(const Map& map, NodeFileWriteHandle& f);
 	void writeTowns(const Map& map, NodeFileWriteHandle& f);
-	bool writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
-
-	bool saveSpawns(Map& map, const FileName& dir);
-	bool saveSpawns(Map& map, pugi::xml_document& doc);
-	bool saveHouses(Map& map, const FileName& dir);
-	bool saveHouses(Map& map, pugi::xml_document& doc);
-	bool saveWaypoints(Map& map, const FileName& dir);
-	bool saveWaypoints(Map& map, pugi::xml_document& doc);
-	void serializeTile_OTBM(Tile* tile, NodeFileWriteHandle& handle, const IOMapOTBM& self);
+	WriteResult writeWaypoints(const Map& map, NodeFileWriteHandle& f, MapVersion mapVersion);
 };
 
 #endif

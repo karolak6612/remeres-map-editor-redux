@@ -64,8 +64,6 @@ public:
 
 	virtual bool unserializeItemNode_OTBM(const IOMap& maphandle, BinaryNode* node);
 	virtual bool serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	// virtual bool unserializeItemNode_OTMM(const IOMap& maphandle, BinaryNode* node);
-	// virtual bool serializeItemNode_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
 protected:
 	std::vector<std::unique_ptr<Item>> contents;
@@ -86,8 +84,6 @@ public:
 
 	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
-	// virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	// virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* node);
 
 	int32_t getX() const {
 		return destination.x;
@@ -135,8 +131,6 @@ public:
 
 	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
-	// virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	// virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* node);
 
 	DoorType getDoorType() const;
 	bool isRealDoor() const;
@@ -151,6 +145,13 @@ public:
 
 	std::unique_ptr<Item> deepCopy() const;
 
+	Depot* asDepot() override {
+		return this;
+	}
+	const Depot* asDepot() const override {
+		return this;
+	}
+
 	uint8_t getDepotID() const {
 		return depotId;
 	}
@@ -160,8 +161,6 @@ public:
 
 	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 	virtual bool readItemAttribute_OTBM(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* node);
-	// virtual void serializeItemAttributes_OTMM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
-	// virtual bool readItemAttribute_OTMM(const IOMap& maphandle, OTMM_ItemAttribute attr, BinaryNode* node);
 
 protected:
 	uint8_t depotId;
@@ -173,27 +172,44 @@ public:
 
 	std::unique_ptr<Item> deepCopy() const;
 
+	Podium* asPodium() override {
+		return this;
+	}
+	const Podium* asPodium() const override {
+		return this;
+	}
+
 	const Outfit& getOutfit() const {
 		return outfit;
 	}
-	void setOutfit(Outfit& newOutfit) {
+	void setOutfit(const Outfit& newOutfit) {
 		outfit = newOutfit;
 	}
 
-	const uint8_t getDirection() {
+	uint8_t getDirection() const {
 		return direction;
 	}
 	void setDirection(uint8_t newDirection) {
 		direction = newDirection;
 	}
 
-	bool hasShowOutfit() {
+	bool hasShowOutfit() const {
 		return showOutfit && outfit.lookType != 0;
 	}
-	bool hasShowMount() {
+	bool hasShowMount() const {
 		return showMount && outfit.lookMount != 0;
 	}
-	bool hasShowPlatform() {
+	bool hasShowPlatform() const {
+		return showPlatform;
+	}
+
+	bool getShowOutfit() const {
+		return showOutfit;
+	}
+	bool getShowMount() const {
+		return showMount;
+	}
+	bool getShowPlatform() const {
 		return showPlatform;
 	}
 

@@ -119,6 +119,11 @@ public:
 	void setMapDescription(const std::string& new_description);
 	void setHouseFilename(const std::string& new_housefile);
 	void setSpawnFilename(const std::string& new_spawnfile);
+	void setWaypointFilename(const std::string& new_waypointfile);
+
+	std::string getWaypointFilename() const {
+		return waypointfile;
+	}
 
 	void flagAsNamed() {
 		unnamed = false;
@@ -159,11 +164,12 @@ protected:
 	bool unnamed; // If the map has yet to receive a name
 
 	friend class IOMapOTBM;
-	friend class IOMapOTMM;
 	friend class Editor;
 	friend class SelectionOperations;
 	friend class MapProcessor;
 	friend class EditorPersistence;
+	friend class MapXMLIO;
+	friend class HeaderSerializationOTBM;
 
 public:
 	Waypoints waypoints;

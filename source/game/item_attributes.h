@@ -102,6 +102,10 @@ public:
 	bool hasFloatAttribute(const std::string& key) const;
 	bool hasBooleanAttribute(const std::string& key) const;
 
+	bool hasAttributes() const {
+		return attributes && !attributes->empty();
+	}
+
 	void eraseAttribute(const std::string& key);
 
 	void clearAllAttributes();
