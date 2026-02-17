@@ -33,6 +33,373 @@
 
 ItemDatabase g_items;
 
+namespace {
+
+void parseItemTypeAttribute(ItemType& it, std::string_view value) {
+	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
+		{ "depot", [](ItemType& i) { i.type = ITEM_TYPE_DEPOT; } },
+		{ "mailbox", [](ItemType& i) { i.type = ITEM_TYPE_MAILBOX; } },
+		{ "trashholder", [](ItemType& i) { i.type = ITEM_TYPE_TRASHHOLDER; } },
+		{ "container", [](ItemType& i) { i.type = ITEM_TYPE_CONTAINER; } },
+		{ "door", [](ItemType& i) { i.type = ITEM_TYPE_DOOR; } },
+		{ "magicfield", [](ItemType& i) { i.group = ITEM_GROUP_MAGICFIELD; i.type = ITEM_TYPE_MAGICFIELD; } },
+		{ "teleport", [](ItemType& i) { i.type = ITEM_TYPE_TELEPORT; } },
+		{ "bed", [](ItemType& i) { i.type = ITEM_TYPE_BED; } },
+		{ "key", [](ItemType& i) { i.type = ITEM_TYPE_KEY; } },
+		{ "podium", [](ItemType& i) { i.type = ITEM_TYPE_PODIUM; } },
+	};
+
+	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
+		it_parser->second(it);
+	}
+}
+
+void parseSlotTypeAttribute(ItemType& it, std::string_view value) {
+	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
+		{ "head", [](ItemType& i) { i.slot_position |= SLOTP_HEAD; } },
+		{ "body", [](ItemType& i) { i.slot_position |= SLOTP_ARMOR; } },
+		{ "legs", [](ItemType& i) { i.slot_position |= SLOTP_LEGS; } },
+		{ "feet", [](ItemType& i) { i.slot_position |= SLOTP_FEET; } },
+		{ "backpack", [](ItemType& i) { i.slot_position |= SLOTP_BACKPACK; } },
+		{ "two-handed", [](ItemType& i) { i.slot_position |= SLOTP_TWO_HAND; } },
+		{ "right-hand", [](ItemType& i) { i.slot_position &= ~SLOTP_LEFT; } },
+		{ "left-hand", [](ItemType& i) { i.slot_position &= ~SLOTP_RIGHT; } },
+		{ "necklace", [](ItemType& i) { i.slot_position |= SLOTP_NECKLACE; } },
+		{ "ring", [](ItemType& i) { i.slot_position |= SLOTP_RING; } },
+		{ "ammo", [](ItemType& i) { i.slot_position |= SLOTP_AMMO; } },
+		{ "hand", [](ItemType& i) { i.slot_position |= SLOTP_HAND; } },
+	};
+
+	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
+		it_parser->second(it);
+	}
+}
+
+void parseWeaponTypeAttribute(ItemType& it, std::string_view value) {
+	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
+		{ "sword", [](ItemType& i) { i.weapon_type = WEAPON_SWORD; } },
+		{ "club", [](ItemType& i) { i.weapon_type = WEAPON_CLUB; } },
+		{ "axe", [](ItemType& i) { i.weapon_type = WEAPON_AXE; } },
+		{ "shield", [](ItemType& i) { i.weapon_type = WEAPON_SHIELD; } },
+		{ "distance", [](ItemType& i) { i.weapon_type = WEAPON_DISTANCE; } },
+		{ "wand", [](ItemType& i) { i.weapon_type = WEAPON_WAND; } },
+		{ "ammunition", [](ItemType& i) { i.weapon_type = WEAPON_AMMO; } },
+	};
+
+	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
+		it_parser->second(it);
+	}
+}
+
+void parseFloorChangeAttribute(ItemType& it, std::string_view value) {
+	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
+		{ "down", [](ItemType& i) { i.floorChangeDown = true; i.floorChange = true; } },
+		{ "north", [](ItemType& i) { i.floorChangeNorth = true; i.floorChange = true; } },
+		{ "south", [](ItemType& i) { i.floorChangeSouth = true; i.floorChange = true; } },
+		{ "west", [](ItemType& i) { i.floorChangeWest = true; i.floorChange = true; } },
+		{ "east", [](ItemType& i) { i.floorChangeEast = true; i.floorChange = true; } },
+		{ "northex", [](ItemType& i) { i.floorChange = true; } },
+		{ "southex", [](ItemType& i) { i.floorChange = true; } },
+		{ "westex", [](ItemType& i) { i.floorChange = true; } },
+		{ "eastex", [](ItemType& i) { i.floorChange = true; } },
+		{ "southalt", [](ItemType& i) { i.floorChange = true; } },
+		{ "eastalt", [](ItemType& i) { i.floorChange = true; } },
+	};
+
+	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
+		it_parser->second(it);
+	}
+}
+
+// OTB Handlers
+bool skipAttribute(ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, wxString&, std::vector<std::string>&) {
+	node->skip(len);
+	return true;
+}
+
+bool parseOtbServerId(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint16_t)) {
+		err = std::format("items.otb: Unexpected data length of server id block (Should be {} bytes)", sizeof(uint16_t));
+		return false;
+	}
+	if (!node->getU16(it.id)) {
+		warnings.push_back("Invalid item type property (serverID)");
+		return true;
+	}
+	return true;
+}
+
+bool parseOtbClientId(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint16_t)) {
+		err = std::format("items.otb: Unexpected data length of client id block (Should be {} bytes)", sizeof(uint16_t));
+		return false;
+	}
+	if (!node->getU16(it.clientID)) {
+		warnings.push_back("Invalid item type property (clientID)");
+	}
+	it.sprite = static_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientID));
+	return true;
+}
+
+bool parseOtbSpeed(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint16_t)) {
+		err = std::format("items.otb: Unexpected data length of speed block (Should be {} bytes)", sizeof(uint16_t));
+		return false;
+	}
+	uint16_t speed = 0;
+	if (!node->getU16(speed)) {
+		warnings.push_back("Invalid item type property (speed)");
+	}
+	it.way_speed = speed;
+	return true;
+}
+
+bool parseOtbLight2(ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	const size_t expected_len = 4; // sizeof(lightBlock2)
+	if (len != expected_len) {
+		warnings.push_back(std::format("items.otb: Unexpected data length of item light (2) block (Should be {} bytes)", expected_len));
+		return true;
+	}
+	if (!node->skip(4)) {
+		warnings.push_back("Invalid item type property (light2)");
+	}
+	return true;
+}
+
+bool parseOtbTopOrder(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint8_t)) {
+		warnings.push_back("items.otb: Unexpected data length of item toporder block (Should be 1 byte)");
+		return true;
+	}
+	uint8_t u8_top = 0;
+	if (!node->getU8(u8_top)) {
+		warnings.push_back("Invalid item type property (topOrder)");
+	}
+	it.alwaysOnTopOrder = u8_top;
+	return true;
+}
+
+bool parseOtbName(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len >= 128) {
+		warnings.push_back("items.otb: Unexpected data length of item name block (Should be < 128 bytes)");
+		return true;
+	}
+	uint8_t name[128] = { 0 };
+	if (!node->getRAW(name, len)) {
+		warnings.push_back("Invalid item type property (name)");
+	}
+	it.name = reinterpret_cast<const char*>(name);
+	return true;
+}
+
+bool parseOtbDescr(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len >= 128) {
+		warnings.push_back("items.otb: Unexpected data length of item descr block (Should be < 128 bytes)");
+		return true;
+	}
+	uint8_t description[128] = { 0 };
+	if (!node->getRAW(description, len)) {
+		warnings.push_back("Invalid item type property (description)");
+	}
+	it.description = reinterpret_cast<const char*>(description);
+	return true;
+}
+
+bool parseOtbMaxItems(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint16_t)) {
+		warnings.push_back("items.otb: Unexpected data length of item volume block (Should be 2 bytes)");
+		return true;
+	}
+	if (!node->getU16(it.volume)) {
+		warnings.push_back("Invalid item type property (volume)");
+	}
+	return true;
+}
+
+bool parseOtbWeight(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(double)) {
+		warnings.push_back("items.otb: Unexpected data length of item weight block (Should be 8 bytes)");
+		return true;
+	}
+	uint8_t raw_weight[sizeof(double)];
+	if (!node->getRAW(raw_weight, sizeof(double))) {
+		warnings.push_back("Invalid item type property (weight)");
+		return true;
+	}
+	memcpy(&it.weight, raw_weight, sizeof(double));
+	return true;
+}
+
+bool parseOtbRotateTo(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint16_t)) {
+		warnings.push_back("items.otb: Unexpected data length of item rotateTo block (Should be 2 bytes)");
+		return true;
+	}
+	uint16_t rotate = 0;
+	if (!node->getU16(rotate)) {
+		warnings.push_back("Invalid item type property (rotateTo)");
+	}
+	it.rotateTo = rotate;
+	return true;
+}
+
+bool parseOtbWriteable3(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	const size_t expected_len = 4; // sizeof(writeableBlock3)
+	if (len != expected_len) {
+		warnings.push_back(std::format("items.otb: Unexpected data length of item writeable (3) block (Should be {} bytes)", expected_len));
+		return true;
+	}
+	uint16_t readOnlyID = 0;
+	uint16_t maxTextLen = 0;
+	if (!node->getU16(readOnlyID)) {
+		warnings.push_back("Invalid item type property (writeable3_readOnlyID)");
+	}
+	if (!node->getU16(maxTextLen)) {
+		warnings.push_back("Invalid item type property (writeable3_maxTextLen)");
+	}
+	it.maxTextLen = maxTextLen;
+	return true;
+}
+
+bool parseOtbClassification(ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString& err, std::vector<std::string>& warnings) {
+	if (len != sizeof(uint8_t)) {
+		warnings.push_back("items.otb: Unexpected data length of item classification block (Should be 1 byte)");
+		return true;
+	}
+	uint8_t cls = 0;
+	if (!node->getU8(cls)) {
+		warnings.push_back("Invalid item type property (classification)");
+	}
+	it.classification = cls;
+	return true;
+}
+
+// XML Parsers
+void parseXmlType(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 std::string val = attr.as_string();
+		 to_lower_str(val);
+		 parseItemTypeAttribute(it, val);
+	 }
+}
+
+void parseXmlName(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.name = attr.as_string();
+	 }
+}
+
+void parseXmlDescription(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.description = attr.as_string();
+	 }
+}
+
+void parseXmlSpeed(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.way_speed = attr.as_uint();
+	 }
+}
+
+void parseXmlWeight(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.weight = attr.as_int() / 100.f;
+	 }
+}
+
+void parseXmlArmor(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.armor = attr.as_int();
+	 }
+}
+
+void parseXmlDefense(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.defense = attr.as_int();
+	 }
+}
+
+void parseXmlSlotType(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 std::string val = attr.as_string();
+		 to_lower_str(val);
+		 parseSlotTypeAttribute(it, val);
+	 }
+}
+
+void parseXmlWeaponType(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 std::string val = attr.as_string();
+		 to_lower_str(val);
+		 parseWeaponTypeAttribute(it, val);
+	 }
+}
+
+void parseXmlRotateTo(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.rotateTo = attr.as_ushort();
+	 }
+}
+
+void parseXmlContainerSize(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.volume = attr.as_ushort();
+	 }
+}
+
+void parseXmlReadable(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.canReadText = attr.as_bool();
+	 }
+}
+
+void parseXmlWriteable(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.canWriteText = it.canReadText = attr.as_bool();
+	 }
+}
+
+void parseXmlDecayTo(ItemType& it, [[maybe_unused]] pugi::xml_node node) {
+	 it.decays = true;
+}
+
+void parseXmlMaxTextLen(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.maxTextLen = attr.as_ushort();
+		 it.canReadText = it.maxTextLen > 0;
+	 }
+}
+
+void parseXmlMaxTextLength(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.maxTextLen = attr.as_ushort();
+		 it.canReadText = it.maxTextLen > 0;
+	 }
+}
+
+void parseXmlAllowDistRead(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.allowDistRead = attr.as_bool();
+	 }
+}
+
+void parseXmlCharges(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 it.charges = attr.as_uint();
+		 it.extra_chargeable = true;
+	 }
+}
+
+void parseXmlFloorChange(ItemType& it, pugi::xml_node node) {
+	 if (auto attr = node.attribute("value")) {
+		 std::string val = attr.as_string();
+		 to_lower_str(val);
+		 parseFloorChangeAttribute(it, val);
+	 }
+}
+
+} // namespace
+
 ItemType::ItemType() :
 	sprite(nullptr),
 	id(0),
@@ -226,171 +593,19 @@ bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion
 		using AttributeHandler = bool (*)(ItemDatabase&, ItemType&, BinaryNode*, uint16_t, wxString&, std::vector<std::string>&);
 		static const auto handlers = [] {
 			std::array<AttributeHandler, std::numeric_limits<uint8_t>::max() + 1> h {};
-			h.fill([](ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, [[maybe_unused]] std::vector<std::string>&) {
-				node->skip(len);
-				return true;
-			});
-
-			h[ITEM_ATTR_SERVERID] = [](ItemDatabase& db, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					err = std::format("items.otb: Unexpected data length of server id block (Should be {} bytes)", sizeof(uint16_t));
-					return false;
-				}
-				if (!node->getU16(it.id)) {
-					warnings.push_back("Invalid item type property (serverID)");
-					return true;
-				}
-				if (db.max_item_id < it.id) {
-					db.max_item_id = it.id;
-				}
-				return true;
-			};
-
-			h[ITEM_ATTR_CLIENTID] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					err = std::format("items.otb: Unexpected data length of client id block (Should be {} bytes)", sizeof(uint16_t));
-					return false;
-				}
-				if (!node->getU16(it.clientID)) {
-					warnings.push_back("Invalid item type property (clientID)");
-				}
-				it.sprite = static_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientID));
-				return true;
-			};
-
-			h[ITEM_ATTR_SPEED] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					err = std::format("items.otb: Unexpected data length of speed block (Should be {} bytes)", sizeof(uint16_t));
-					return false;
-				}
-				uint16_t speed = 0;
-				if (!node->getU16(speed)) {
-					warnings.push_back("Invalid item type property (speed)");
-				}
-				it.way_speed = speed;
-				return true;
-			};
-
-			h[ITEM_ATTR_LIGHT2] = [](ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				const size_t expected_len = 4; // sizeof(lightBlock2)
-				if (len != expected_len) {
-					warnings.push_back(std::format("items.otb: Unexpected data length of item light (2) block (Should be {} bytes)", expected_len));
-					return true;
-				}
-				if (!node->skip(4)) {
-					warnings.push_back("Invalid item type property (light2)");
-				}
-				return true;
-			};
-
-			h[ITEM_ATTR_TOPORDER] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint8_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item toporder block (Should be 1 byte)");
-					return true;
-				}
-				uint8_t u8_top = 0;
-				if (!node->getU8(u8_top)) {
-					warnings.push_back("Invalid item type property (topOrder)");
-				}
-				it.alwaysOnTopOrder = u8_top;
-				return true;
-			};
-
-			h[ITEM_ATTR_NAME] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len >= 128) {
-					warnings.push_back("items.otb: Unexpected data length of item name block (Should be < 128 bytes)");
-					return true;
-				}
-				uint8_t name[128] = { 0 };
-				if (!node->getRAW(name, len)) {
-					warnings.push_back("Invalid item type property (name)");
-				}
-				it.name = reinterpret_cast<const char*>(name);
-				return true;
-			};
-
-			h[ITEM_ATTR_DESCR] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len >= 128) {
-					warnings.push_back("items.otb: Unexpected data length of item descr block (Should be < 128 bytes)");
-					return true;
-				}
-				uint8_t description[128] = { 0 };
-				if (!node->getRAW(description, len)) {
-					warnings.push_back("Invalid item type property (description)");
-				}
-				it.description = reinterpret_cast<const char*>(description);
-				return true;
-			};
-
-			h[ITEM_ATTR_MAXITEMS] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item volume block (Should be 2 bytes)");
-					return true;
-				}
-				if (!node->getU16(it.volume)) {
-					warnings.push_back("Invalid item type property (volume)");
-				}
-				return true;
-			};
-
-			h[ITEM_ATTR_WEIGHT] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(double)) {
-					warnings.push_back("items.otb: Unexpected data length of item weight block (Should be 8 bytes)");
-					return true;
-				}
-				uint8_t raw_weight[sizeof(double)];
-				if (!node->getRAW(raw_weight, sizeof(double))) {
-					warnings.push_back("Invalid item type property (weight)");
-					return true;
-				}
-				memcpy(&it.weight, raw_weight, sizeof(double));
-				return true;
-			};
-
-			h[ITEM_ATTR_ROTATETO] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item rotateTo block (Should be 2 bytes)");
-					return true;
-				}
-				uint16_t rotate = 0;
-				if (!node->getU16(rotate)) {
-					warnings.push_back("Invalid item type property (rotateTo)");
-				}
-				it.rotateTo = rotate;
-				return true;
-			};
-
-			h[ITEM_ATTR_WRITEABLE3] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				const size_t expected_len = 4; // sizeof(writeableBlock3)
-				if (len != expected_len) {
-					warnings.push_back(std::format("items.otb: Unexpected data length of item writeable (3) block (Should be {} bytes)", expected_len));
-					return true;
-				}
-				uint16_t readOnlyID = 0;
-				uint16_t maxTextLen = 0;
-				if (!node->getU16(readOnlyID)) {
-					warnings.push_back("Invalid item type property (writeable3_readOnlyID)");
-				}
-				if (!node->getU16(maxTextLen)) {
-					warnings.push_back("Invalid item type property (writeable3_maxTextLen)");
-				}
-				it.maxTextLen = maxTextLen;
-				return true;
-			};
-
-			h[ITEM_ATTR_CLASSIFICATION] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint8_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item classification block (Should be 1 byte)");
-					return true;
-				}
-				uint8_t cls = 0;
-				if (!node->getU8(cls)) {
-					warnings.push_back("Invalid item type property (classification)");
-				}
-				it.classification = cls;
-				return true;
-			};
-
+			h.fill(skipAttribute);
+			h[ITEM_ATTR_SERVERID] = parseOtbServerId;
+			h[ITEM_ATTR_CLIENTID] = parseOtbClientId;
+			h[ITEM_ATTR_SPEED] = parseOtbSpeed;
+			h[ITEM_ATTR_LIGHT2] = parseOtbLight2;
+			h[ITEM_ATTR_TOPORDER] = parseOtbTopOrder;
+			h[ITEM_ATTR_NAME] = parseOtbName;
+			h[ITEM_ATTR_DESCR] = parseOtbDescr;
+			h[ITEM_ATTR_MAXITEMS] = parseOtbMaxItems;
+			h[ITEM_ATTR_WEIGHT] = parseOtbWeight;
+			h[ITEM_ATTR_ROTATETO] = parseOtbRotateTo;
+			h[ITEM_ATTR_WRITEABLE3] = parseOtbWriteable3;
+			h[ITEM_ATTR_CLASSIFICATION] = parseOtbClassification;
 			return h;
 		}();
 
@@ -416,6 +631,11 @@ bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion
 				items.resize(static_cast<size_t>(t->id) + 1);
 			}
 			items[t->id] = std::move(owned_t);
+
+            // Added: Update max_item_id here
+            if (t->id > max_item_id) {
+                max_item_id = t->id;
+            }
 		}
 	}
 	return true;
@@ -495,81 +715,7 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
 	return false;
 }
 
-void ItemDatabase::parseItemTypeAttribute(ItemType& it, std::string_view value) {
-	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
-		{ "depot", [](ItemType& i) { i.type = ITEM_TYPE_DEPOT; } },
-		{ "mailbox", [](ItemType& i) { i.type = ITEM_TYPE_MAILBOX; } },
-		{ "trashholder", [](ItemType& i) { i.type = ITEM_TYPE_TRASHHOLDER; } },
-		{ "container", [](ItemType& i) { i.type = ITEM_TYPE_CONTAINER; } },
-		{ "door", [](ItemType& i) { i.type = ITEM_TYPE_DOOR; } },
-		{ "magicfield", [](ItemType& i) { i.group = ITEM_GROUP_MAGICFIELD; i.type = ITEM_TYPE_MAGICFIELD; } },
-		{ "teleport", [](ItemType& i) { i.type = ITEM_TYPE_TELEPORT; } },
-		{ "bed", [](ItemType& i) { i.type = ITEM_TYPE_BED; } },
-		{ "key", [](ItemType& i) { i.type = ITEM_TYPE_KEY; } },
-		{ "podium", [](ItemType& i) { i.type = ITEM_TYPE_PODIUM; } },
-	};
-
-	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
-		it_parser->second(it);
-	}
-}
-
-void ItemDatabase::parseSlotTypeAttribute(ItemType& it, std::string_view value) {
-	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
-		{ "head", [](ItemType& i) { i.slot_position |= SLOTP_HEAD; } },
-		{ "body", [](ItemType& i) { i.slot_position |= SLOTP_ARMOR; } },
-		{ "legs", [](ItemType& i) { i.slot_position |= SLOTP_LEGS; } },
-		{ "feet", [](ItemType& i) { i.slot_position |= SLOTP_FEET; } },
-		{ "backpack", [](ItemType& i) { i.slot_position |= SLOTP_BACKPACK; } },
-		{ "two-handed", [](ItemType& i) { i.slot_position |= SLOTP_TWO_HAND; } },
-		{ "right-hand", [](ItemType& i) { i.slot_position &= ~SLOTP_LEFT; } },
-		{ "left-hand", [](ItemType& i) { i.slot_position &= ~SLOTP_RIGHT; } },
-		{ "necklace", [](ItemType& i) { i.slot_position |= SLOTP_NECKLACE; } },
-		{ "ring", [](ItemType& i) { i.slot_position |= SLOTP_RING; } },
-		{ "ammo", [](ItemType& i) { i.slot_position |= SLOTP_AMMO; } },
-		{ "hand", [](ItemType& i) { i.slot_position |= SLOTP_HAND; } },
-	};
-
-	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
-		it_parser->second(it);
-	}
-}
-
-void ItemDatabase::parseWeaponTypeAttribute(ItemType& it, std::string_view value) {
-	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
-		{ "sword", [](ItemType& i) { i.weapon_type = WEAPON_SWORD; } },
-		{ "club", [](ItemType& i) { i.weapon_type = WEAPON_CLUB; } },
-		{ "axe", [](ItemType& i) { i.weapon_type = WEAPON_AXE; } },
-		{ "shield", [](ItemType& i) { i.weapon_type = WEAPON_SHIELD; } },
-		{ "distance", [](ItemType& i) { i.weapon_type = WEAPON_DISTANCE; } },
-		{ "wand", [](ItemType& i) { i.weapon_type = WEAPON_WAND; } },
-		{ "ammunition", [](ItemType& i) { i.weapon_type = WEAPON_AMMO; } },
-	};
-
-	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
-		it_parser->second(it);
-	}
-}
-
-void ItemDatabase::parseFloorChangeAttribute(ItemType& it, std::string_view value) {
-	static const std::unordered_map<std::string_view, void (*)(ItemType&)> parsers = {
-		{ "down", [](ItemType& i) { i.floorChangeDown = true; i.floorChange = true; } },
-		{ "north", [](ItemType& i) { i.floorChangeNorth = true; i.floorChange = true; } },
-		{ "south", [](ItemType& i) { i.floorChangeSouth = true; i.floorChange = true; } },
-		{ "west", [](ItemType& i) { i.floorChangeWest = true; i.floorChange = true; } },
-		{ "east", [](ItemType& i) { i.floorChangeEast = true; i.floorChange = true; } },
-		{ "northex", [](ItemType& i) { i.floorChange = true; } },
-		{ "southex", [](ItemType& i) { i.floorChange = true; } },
-		{ "westex", [](ItemType& i) { i.floorChange = true; } },
-		{ "eastex", [](ItemType& i) { i.floorChange = true; } },
-		{ "southalt", [](ItemType& i) { i.floorChange = true; } },
-		{ "eastalt", [](ItemType& i) { i.floorChange = true; } },
-	};
-
-	if (auto it_parser = parsers.find(value); it_parser != parsers.end()) {
-		it_parser->second(it);
-	}
-}
+// Private methods removed (now in anonymous namespace)
 
 bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id) {
 	ClientVersionID clientVersion = g_version.GetCurrentVersionID();
@@ -588,110 +734,25 @@ bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id) {
 
 	using ParserFunc = void (*)(ItemType&, pugi::xml_node);
 	static const std::unordered_map<std::string_view, ParserFunc> parsers = {
-		{ "type", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 std::string val = attr.as_string();
-				 to_lower_str(val);
-				 ItemDatabase::parseItemTypeAttribute(it, val);
-			 }
-		 } },
-		{ "name", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.name = attr.as_string();
-			 }
-		 } },
-		{ "description", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.description = attr.as_string();
-			 }
-		 } },
-		{ "speed", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.way_speed = attr.as_uint();
-			 }
-		 } },
-		{ "weight", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.weight = attr.as_int() / 100.f;
-			 }
-		 } },
-		{ "armor", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.armor = attr.as_int();
-			 }
-		 } },
-		{ "defense", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.defense = attr.as_int();
-			 }
-		 } },
-		{ "slottype", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 std::string val = attr.as_string();
-				 to_lower_str(val);
-				 ItemDatabase::parseSlotTypeAttribute(it, val);
-			 }
-		 } },
-		{ "weapontype", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 std::string val = attr.as_string();
-				 to_lower_str(val);
-				 ItemDatabase::parseWeaponTypeAttribute(it, val);
-			 }
-		 } },
-		{ "rotateto", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.rotateTo = attr.as_ushort();
-			 }
-		 } },
-		{ "containersize", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.volume = attr.as_ushort();
-			 }
-		 } },
-		{ "readable", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.canReadText = attr.as_bool();
-			 }
-		 } },
-		{ "writeable", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.canWriteText = it.canReadText = attr.as_bool();
-			 }
-		 } },
-		{ "decayto", [](ItemType& it, [[maybe_unused]] pugi::xml_node node) {
-			 it.decays = true;
-		 } },
-		{ "maxtextlen", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.maxTextLen = attr.as_ushort();
-				 it.canReadText = it.maxTextLen > 0;
-			 }
-		 } },
-		{ "maxtextlength", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.maxTextLen = attr.as_ushort();
-				 it.canReadText = it.maxTextLen > 0;
-			 }
-		 } },
-		{ "allowdistread", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.allowDistRead = attr.as_bool();
-			 }
-		 } },
-		{ "charges", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 it.charges = attr.as_uint();
-				 it.extra_chargeable = true;
-			 }
-		 } },
-		{ "floorchange", [](ItemType& it, pugi::xml_node node) {
-			 if (auto attr = node.attribute("value")) {
-				 std::string val = attr.as_string();
-				 to_lower_str(val);
-				 ItemDatabase::parseFloorChangeAttribute(it, val);
-			 }
-		 } }
+		{ "type", parseXmlType },
+		{ "name", parseXmlName },
+		{ "description", parseXmlDescription },
+		{ "speed", parseXmlSpeed },
+		{ "weight", parseXmlWeight },
+		{ "armor", parseXmlArmor },
+		{ "defense", parseXmlDefense },
+		{ "slottype", parseXmlSlotType },
+		{ "weapontype", parseXmlWeaponType },
+		{ "rotateto", parseXmlRotateTo },
+		{ "containersize", parseXmlContainerSize },
+		{ "readable", parseXmlReadable },
+		{ "writeable", parseXmlWriteable },
+		{ "decayto", parseXmlDecayTo },
+		{ "maxtextlen", parseXmlMaxTextLen },
+		{ "maxtextlength", parseXmlMaxTextLength },
+		{ "allowdistread", parseXmlAllowDistRead },
+		{ "charges", parseXmlCharges },
+		{ "floorchange", parseXmlFloorChange }
 	};
 
 	for (auto attributeNode : itemNode.children()) {
