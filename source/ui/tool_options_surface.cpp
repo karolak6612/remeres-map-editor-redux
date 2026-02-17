@@ -364,10 +364,6 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 			break;
 		}
 	}
-	if (!hover_brush && prev_hover) {
-		UnsetToolTip();
-	}
-
 	// Sliders Interaction
 	if (evt.LeftDown()) {
 		if (interactables.size_slider_rect.Contains(m_hoverPos)) {
@@ -446,18 +442,33 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 		interactables.dragging_thickness = false;
 	}
 
-	// Hover states for checkboxes
-	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
-		interactables.hover_preview = true;
-		hand_cursor = true;
-	}
-	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
-		interactables.hover_lock = true;
-		hand_cursor = true;
-	}
+	// Hover states and tooltips
+	if (!hover_brush) {
+		bool tooltip_set = false;
 
-	if (interactables.size_slider_rect.Contains(m_hoverPos) || interactables.thickness_slider_rect.Contains(m_hoverPos)) {
-		hand_cursor = true;
+		if (interactables.preview_check_rect.Contains(m_hoverPos)) {
+			interactables.hover_preview = true;
+			SetToolTip("Toggle auto-border preview");
+			hand_cursor = true;
+			tooltip_set = true;
+		} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
+			interactables.hover_lock = true;
+			SetToolTip("Toggle door locking (Shift)");
+			hand_cursor = true;
+			tooltip_set = true;
+		} else if (interactables.size_slider_rect.Contains(m_hoverPos)) {
+			SetToolTip("Adjust brush size");
+			hand_cursor = true;
+			tooltip_set = true;
+		} else if (interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+			SetToolTip("Adjust brush thickness/variability");
+			hand_cursor = true;
+			tooltip_set = true;
+		}
+
+		if (!tooltip_set) {
+			UnsetToolTip();
+		}
 	}
 
 	SetCursor(hand_cursor ? wxCursor(wxCURSOR_HAND) : wxCursor(wxCURSOR_ARROW));
