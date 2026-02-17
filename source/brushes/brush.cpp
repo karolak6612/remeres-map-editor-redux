@@ -118,6 +118,8 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 	}
 
 	Brush* brush = getBrush(brushName);
+	std::unique_ptr<Brush> newBrush;
+
 	if (!brush) {
 		attribute = node.attribute("type");
 		if (!attribute) {
@@ -127,18 +129,19 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 
 		const std::string_view brushType = attribute.as_string();
 
-		static const std::unordered_map<std::string_view, std::function<Brush*()>> typeMap = {
-			{ "border", [] { return newd GroundBrush(); } },
-			{ "ground", [] { return newd GroundBrush(); } },
-			{ "wall", [] { return newd WallBrush(); } },
-			{ "wall decoration", [] { return newd WallDecorationBrush(); } },
-			{ "carpet", [] { return newd CarpetBrush(); } },
-			{ "table", [] { return newd TableBrush(); } },
-			{ "doodad", [] { return newd DoodadBrush(); } }
+		static const std::unordered_map<std::string_view, std::function<std::unique_ptr<Brush>()>> typeMap = {
+			{ "border", [] { return std::make_unique<GroundBrush>(); } },
+			{ "ground", [] { return std::make_unique<GroundBrush>(); } },
+			{ "wall", [] { return std::make_unique<WallBrush>(); } },
+			{ "wall decoration", [] { return std::make_unique<WallDecorationBrush>(); } },
+			{ "carpet", [] { return std::make_unique<CarpetBrush>(); } },
+			{ "table", [] { return std::make_unique<TableBrush>(); } },
+			{ "doodad", [] { return std::make_unique<DoodadBrush>(); } }
 		};
 
 		if (auto it = typeMap.find(brushType); it != typeMap.end()) {
-			brush = it->second();
+			newBrush = it->second();
+			brush = newBrush.get();
 		} else {
 			warnings.push_back(std::format("Unknown brush type {}", brushType));
 			return false;
@@ -149,7 +152,9 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 	}
 
 	if (!node.first_child()) {
-		brushes.insert(std::make_pair(brush->getName(), brush));
+		if (newBrush) {
+			brushes.emplace(brush->getName(), std::move(newBrush));
+		}
 		return true;
 	}
 
@@ -163,7 +168,7 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 
 	if (brush->getName() == "all" || brush->getName() == "none") {
 		warnings.push_back(std::format("Using reserved brushname '{}'.", brush->getName()));
-		delete brush;
+		// newBrush will delete automatically if set
 		return false;
 	}
 
@@ -177,7 +182,9 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 		}
 	}
 
-	brushes.insert(std::make_pair(brush->getName(), brush));
+	if (newBrush) {
+		brushes.emplace(brush->getName(), std::move(newBrush));
+	}
 	return true;
 }
 
