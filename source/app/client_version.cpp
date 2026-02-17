@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include <toml++/toml.h>
 #include "app/main.h"
 
 #include "app/settings.h"
@@ -46,21 +47,21 @@ void ClientVersion::loadVersions() {
 		latest_version = client_versions.front().get();
 	}
 
-	// Load the data directory info
-	try {
-		std::string jsonStr = g_settings.getString(Config::ASSETS_DATA_DIRS);
-		if (!jsonStr.empty()) {
-			auto vers_array = nlohmann::json::parse(jsonStr);
-			for (const auto& ver_obj : vers_array) {
-				ClientVersion* version = get(ver_obj["id"].get<std::string>());
-				if (version == nullptr) {
-					continue;
+	// Load the user-configured data directory paths from g_settings
+	toml::table& table = g_settings.getTable();
+	if (auto clients = table["clients"].as_array()) {
+		for (auto&& node : *clients) {
+			if (auto client = node.as_table()) {
+				std::string name = (*client)["name"].value_or("");
+				std::string path = (*client)["path"].value_or("");
+				if (!name.empty() && !path.empty()) {
+					ClientVersion* version = get(name);
+					if (version) {
+						version->setClientPath(wxstr(path));
+					}
 				}
-				version->setClientPath(wxstr(ver_obj["path"].get<std::string>()));
 			}
 		}
-	} catch (const nlohmann::json::exception&) {
-		// pass
 	}
 }
 
@@ -220,13 +221,42 @@ DatFormat ClientVersion::getDatFormatForVersion(int version) {
 	return DAT_FORMAT_UNKNOWN;
 }
 
-void ClientVersion::saveVersions() {
-	nlohmann::json vers_array = nlohmann::json::array();
+bool ClientVersion::isDefaultPath() const {
+	wxFileName clientPath = getClientPath();
+	wxFileName dataPath = getDataPath();
 
+	// Normalize both to ensure matching comparison and clean strings
+	clientPath.Normalize();
+	dataPath.Normalize();
+
+	return clientPath.GetFullPath() == dataPath.GetFullPath();
+}
+
+void ClientVersion::saveVersions() {
+	toml::table& table = g_settings.getTable();
+	toml::array clients_array;
+
+	bool hasOverrides = false;
 	for (const auto& version : client_versions) {
-		vers_array.push_back({ { "id", version->getName() }, { "path", nstr(version->getClientPath().GetFullPath()) } });
+		// Only save if the path is actually different from the internal data/ directory
+		if (!version->isDefaultPath()) {
+			toml::table client_obj;
+			client_obj.insert_or_assign("name", version->getName());
+			// Use normalized path for saving
+			wxFileName cp = version->getClientPath();
+			cp.Normalize();
+			client_obj.insert_or_assign("path", nstr(cp.GetFullPath()));
+			clients_array.push_back(std::move(client_obj));
+			hasOverrides = true;
+		}
 	}
-	g_settings.setString(Config::ASSETS_DATA_DIRS, vers_array.dump());
+
+	if (hasOverrides) {
+		table.insert_or_assign("clients", std::move(clients_array));
+	} else {
+		table.erase("clients");
+	}
+	g_settings.save();
 }
 
 // Client version class

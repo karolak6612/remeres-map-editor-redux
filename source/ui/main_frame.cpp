@@ -346,11 +346,11 @@ void MainFrame::AddRecentFile(const FileName& file) {
 }
 
 void MainFrame::LoadRecentFiles() {
-	menu_bar->recentFilesManager.Load(&g_settings.getConfigObject());
+	menu_bar->recentFilesManager.Load();
 }
 
 void MainFrame::SaveRecentFiles() {
-	menu_bar->recentFilesManager.Save(&g_settings.getConfigObject());
+	menu_bar->recentFilesManager.Save();
 }
 
 std::vector<wxString> MainFrame::GetRecentFiles() {

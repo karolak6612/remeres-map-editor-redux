@@ -20,6 +20,8 @@
 
 #include "app/main.h"
 
+#include <toml++/toml.h>
+
 namespace Config {
 	enum Key {
 		NONE,
@@ -223,7 +225,7 @@ public:
 	void setFloat(uint32_t key, float newval);
 	void setString(uint32_t key, std::string newval);
 
-	wxConfigBase& getConfigObject();
+	toml::table& getTable();
 	void setDefaults() {
 		IO(DEFAULT);
 	}
@@ -294,9 +296,6 @@ private:
 	};
 	void IO(IOMode mode);
 	std::vector<DynamicValue> store;
-#ifdef __WINDOWS__
-	bool use_file_cfg;
-#endif
 };
 
 extern Settings g_settings;

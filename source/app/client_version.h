@@ -213,6 +213,7 @@ public:
 
 	bool hasValidPaths();
 	bool loadValidPaths();
+	bool isDefaultPath() const;
 	void setClientPath(const FileName& dir);
 
 	bool isVisible() const;

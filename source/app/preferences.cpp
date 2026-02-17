@@ -548,7 +548,11 @@ wxNotebookPage* PreferencesWindow::CreateClientPage() {
 		wxStaticText* tmp_text = newd wxStaticText(client_list_window, wxID_ANY, wxString(version->getName()));
 		client_list_sizer->Add(tmp_text, wxSizerFlags(0).Expand());
 
-		wxDirPickerCtrl* dir_picker = newd wxDirPickerCtrl(client_list_window, wxID_ANY, version->getClientPath().GetFullPath());
+		wxString path;
+		if (!version->isDefaultPath()) {
+			path = version->getClientPath().GetFullPath();
+		}
+		wxDirPickerCtrl* dir_picker = newd wxDirPickerCtrl(client_list_window, wxID_ANY, path);
 		version_dir_pickers.push_back(dir_picker);
 		client_list_sizer->Add(dir_picker, wxSizerFlags(0).Border(wxRIGHT, 10).Expand());
 
@@ -717,10 +721,14 @@ void PreferencesWindow::Apply() {
 	int version_counter = 0;
 	for (auto version : versions) {
 		wxString dir = version_dir_pickers[version_counter]->GetPath();
-		if (dir.Length() > 0 && dir.Last() != '/' && dir.Last() != '\\') {
-			dir.Append("/");
+		if (dir.IsEmpty()) {
+			version->setClientPath(version->getDataPath());
+		} else {
+			if (dir.Last() != '/' && dir.Last() != '\\') {
+				dir.Append("/");
+			}
+			version->setClientPath(FileName(dir));
 		}
-		version->setClientPath(FileName(dir));
 
 		if (version->getName() == default_version_choice->GetStringSelection()) {
 			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, version->getID());

@@ -11,8 +11,8 @@ public:
 	RecentFilesManager();
 	~RecentFilesManager();
 
-	void Load(wxConfigBase* config);
-	void Save(wxConfigBase* config);
+	void Load();
+	void Save();
 	void AddFile(const FileName& file);
 	void UseMenu(wxMenu* menu);
 
