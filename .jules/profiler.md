@@ -12,3 +12,8 @@ Learning: Single-entry caching in nested loops must respect the iteration order.
 Finding: `GraphicManager::getSpriteFile()` returned `std::string` by value, causing a heap allocation and copy for every item in the render loop during sprite preloading checks.
 Impact: Reduced memory allocations per frame significantly (thousands of allocations avoided per frame).
 Learning: Returning `std::string` by value from a getter called in a hot loop is a major performance killer. Always use `const std::string&` or `std::string_view` for members.
+
+## 2026-02-14 - Redundant Sprite Pattern Calculation
+Finding: `ItemDrawer::BlitItem` calls `PatternCalculator::Calculate` for every item every frame, even for simple sprites (1x1, no anim, no pattern) where the result is constant (0 offsets).
+Impact: 10,000+ redundant calculations per frame on complex maps. Fixing it by checking `isSimpleAndLoaded` saves these calls.
+Learning: Simple "getter-like" functions in hot paths can hide significant overhead when called thousands of times.

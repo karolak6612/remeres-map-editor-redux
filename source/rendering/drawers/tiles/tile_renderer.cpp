@@ -261,10 +261,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
 			}
 
+			bool show_tooltips_this_floor = options.show_tooltips && map_z == view.floor;
+
 			// items on tile
 			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (show_tooltips_this_floor) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {

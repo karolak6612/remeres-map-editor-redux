@@ -118,7 +118,14 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
 
-	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+	SpritePatterns patterns;
+	if (spr->isSimpleAndLoaded()) {
+		// Optimization: Use default patterns for simple loaded sprites to avoid recalculation
+		// patterns are already default initialized to 0,0,0,0,-1
+	} else {
+		patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+	}
+
 	int subtype = patterns.subtype;
 	int pattern_x = patterns.x;
 	int pattern_y = patterns.y;
