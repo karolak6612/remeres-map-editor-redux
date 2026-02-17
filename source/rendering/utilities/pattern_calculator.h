@@ -5,14 +5,7 @@
 #include "game/items.h"
 #include "game/item.h"
 #include "map/tile.h"
-
-struct SpritePatterns {
-	int x = 0;
-	int y = 0;
-	int z = 0;
-	int frame = 0;
-	int subtype = -1;
-};
+#include "rendering/utilities/sprite_patterns.h"
 
 class PatternCalculator {
 public:
