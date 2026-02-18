@@ -293,18 +293,25 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 			throw std::runtime_error(std::format("Could not open file \"{}\".\nThis is not a valid OTBM file or it does not exist.", nstr(fileName.GetFullPath())));
 		}
 
-		if (g_version.GetCurrentVersionID() != ver.client) {
+		ClientVersion* current = g_version.getLoadedVersion();
+		if (!current || current->getProtocolID() != ver.client) {
 			wxString error;
 			std::vector<std::string> warnings;
 			if (CloseAllEditors()) {
-				if (!g_version.LoadVersion(ver.client, error, warnings)) {
+				ClientVersion* target = ClientVersion::getBestMatch(ver.client);
+				if (!target) {
+					throw std::runtime_error(std::format("Unsupported client version (OtbId: {})", static_cast<int>(ver.client)));
+				}
+				if (!g_version.LoadVersion(target->getID(), error, warnings)) {
 					g_status.SetStatusText("Failed to load map.");
 					DialogUtil::PopupDialog("Error", error, wxOK);
 					return false;
 				}
-				DialogUtil::ListDialog("Warnings", warnings);
+				if (!warnings.empty()) {
+					DialogUtil::ListDialog("Warnings", warnings);
+				}
 			} else {
-				throw std::runtime_error("All maps of different versions were not closed.");
+				return false;
 			}
 		}
 

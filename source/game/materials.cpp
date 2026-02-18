@@ -56,7 +56,7 @@ const MaterialsExtensionList& Materials::getExtensions() {
 	return extensions;
 }
 
-MaterialsExtensionList Materials::getExtensionsByVersion(uint16_t version_id) {
+MaterialsExtensionList Materials::getExtensionsByVersion(const ClientVersionID& version_id) {
 	MaterialsExtensionList ret_list;
 	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
 		if ((*iter)->isForVersion(version_id)) {

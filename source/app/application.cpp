@@ -45,6 +45,7 @@
 #include "ingame_preview/ingame_preview_manager.h"
 
 #include <wx/snglinst.h>
+#include <wx/stdpaths.h>
 #include <spdlog/spdlog.h>
 #include <thread>
 #include <chrono>
@@ -79,7 +80,6 @@ bool Application::OnInit() {
 #if defined __DEBUG_MODE__ && defined __WINDOWS__
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-
 	// #ifdef __WINDOWS__
 	// 	// Allocate console for debug output
 	// 	AllocConsole();
@@ -98,7 +98,7 @@ bool Application::OnInit() {
 	spdlog::info("Review COPYING in RME distribution for details.");
 
 	// Discover data directory
-	FileSystem::DiscoverDataDirectory("clients.xml");
+	FileSystem::DiscoverDataDirectory("menubar.xml");
 
 	// Tell that we are the real thing
 	wxAppConsole::SetInstance(this);
@@ -291,15 +291,22 @@ void Application::FixVersionDiscrapencies() {
 	}
 
 	if (g_settings.getInteger(Config::VERSION_ID) < __RME_VERSION_ID__ && ClientVersion::getLatestVersion() != nullptr) {
-		g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, ClientVersion::getLatestVersion()->getID());
+		g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, ClientVersion::getLatestVersion()->getProtocolID());
 	}
 
 	wxString ss = wxstr(g_settings.getString(Config::SCREENSHOT_DIRECTORY));
 	if (ss.empty()) {
-		ss = wxStandardPaths::Get().GetDocumentsDir();
-#ifdef __WINDOWS__
-		ss += "/My Pictures/RME/";
-#endif
+		wxFileName fn(wxStandardPaths::Get().GetDocumentsDir(), "");
+		if (fn.GetDirCount() > 0) {
+			fn.RemoveLastDir(); // Move from "Documents" to user root
+		}
+		fn.AppendDir("Pictures");
+		fn.AppendDir("RME");
+
+		if (!fn.DirExists()) {
+			fn.Mkdir(wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
+		}
+		ss = fn.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
 	}
 	g_settings.setString(Config::SCREENSHOT_DIRECTORY, nstr(ss));
 
