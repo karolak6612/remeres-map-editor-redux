@@ -18,7 +18,7 @@
 #include "rendering/ui/brush_selector.h"
 #include "brushes/creature/creature_brush.h"
 #include "brushes/raw/raw_brush.h"
-#include "ui/dialog_helper.h"
+#include "ui/dialogs/dialog_helper.h"
 
 SelectionController::SelectionController(MapCanvas* canvas, Editor& editor) :
 	canvas(canvas),

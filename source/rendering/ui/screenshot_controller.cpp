@@ -20,7 +20,7 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/io/screenshot_saver.h"
 #include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 
 ScreenshotController::ScreenshotController(MapCanvas* canvas) :
 	canvas(canvas) {

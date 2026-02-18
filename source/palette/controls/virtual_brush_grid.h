@@ -4,7 +4,7 @@
 #include "app/main.h"
 #include "util/nanovg_canvas.h"
 #include "palette/panels/brush_panel.h"
-#include "ui/dcbutton.h" // For RenderSize
+#include "ui/controls/dcbutton.h" // For RenderSize
 
 /**
  * @class VirtualBrushGrid

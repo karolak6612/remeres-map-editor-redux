@@ -3,7 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include <wx/app.h>
 #include "ui/gui.h"
 #include "util/image_manager.h"

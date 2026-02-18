@@ -23,7 +23,7 @@
 #include "map/tile.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
-#include "ui/browse_tile_window.h"
+#include "ui/windows/browse_tile_window.h"
 #include "util/image_manager.h"
 
 // ============================================================================

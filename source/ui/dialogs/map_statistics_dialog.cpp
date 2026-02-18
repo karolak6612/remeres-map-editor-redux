@@ -4,9 +4,9 @@
 
 #include "app/main.h"
 
-#include "ui/map_statistics_dialog.h"
+#include "ui/dialogs/map_statistics_dialog.h"
 #include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "map/map_statistics.h"
 #include "map/map.h"
 #include "game/town.h"

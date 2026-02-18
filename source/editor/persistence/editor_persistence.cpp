@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "util/file_system.h"
 #include "editor/persistence/editor_persistence.h"
 #include "editor/editor.h"

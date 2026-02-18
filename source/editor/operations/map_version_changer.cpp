@@ -3,7 +3,7 @@
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "app/managers/version_manager.h"
 #include "app/application.h"
 #include "game/creature.h"

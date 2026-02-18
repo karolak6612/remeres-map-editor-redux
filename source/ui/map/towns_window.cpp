@@ -3,9 +3,9 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "game/town.h"
-#include "ui/positionctrl.h"
+#include "ui/controls/positionctrl.h"
 #include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "util/image_manager.h"
 
 #include <algorithm>

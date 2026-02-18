@@ -19,15 +19,15 @@
 #define RME_APPLICATION_H_
 
 #include "ui/gui.h"
-#include "ui/main_toolbar.h"
+#include "ui/toolbar/main_toolbar.h"
 #include "editor/action.h"
 #include "app/settings.h"
 
 #include "net/process_com.h"
 #include "rendering/ui/map_display.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 
-#include "ui/main_frame.h"
+#include "ui/windows/main_frame.h"
 
 class Item;
 class Creature;

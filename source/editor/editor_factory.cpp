@@ -1,5 +1,5 @@
 #include "app/main.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "editor/editor_factory.h"
 #include "editor/editor.h"
 #include "editor/persistence/editor_persistence.h"

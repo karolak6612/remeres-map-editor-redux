@@ -29,7 +29,7 @@
 #include "app/settings.h"
 #include "ext/pugixml.hpp"
 #include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 
 #include "game/creatures.h"
 #include "game/creature.h"

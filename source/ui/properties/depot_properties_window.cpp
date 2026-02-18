@@ -9,7 +9,7 @@
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "map/map.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "ui/properties/depot_properties_window.h"
 #include "util/image_manager.h"
 

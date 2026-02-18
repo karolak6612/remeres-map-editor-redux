@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include <wx/wx.h>
 
-#include "ui/dialog_helper.h"
+#include "ui/dialogs/dialog_helper.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "map/tile.h"

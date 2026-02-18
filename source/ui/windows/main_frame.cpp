@@ -3,9 +3,9 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/main_frame.h"
+#include "ui/windows/main_frame.h"
 
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "app/application.h"
 #include "util/file_system.h"
 #include "editor/hotkey_manager.h"
@@ -15,10 +15,10 @@
 #include "ui/dialogs/goto_position_dialog.h"
 #include "palette/palette_window.h"
 #include "app/preferences.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 #include "rendering/ui/minimap_window.h"
-#include "ui/about_window.h"
-#include "ui/main_menubar.h"
+#include "ui/windows/about_window.h"
+#include "ui/menubar/main_menubar.h"
 #include "app/updater.h"
 #include "ui/map/export_tilesets_window.h"
 #include <wx/stattext.h>
