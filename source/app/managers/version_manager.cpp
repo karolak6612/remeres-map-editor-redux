@@ -74,7 +74,7 @@ ClientVersionID VersionManager::GetCurrentVersionID() const {
 }
 
 const ClientVersion& VersionManager::GetCurrentVersion() const {
-	assert(loaded_version);
+	assert(!loaded_version.empty());
 	return *getLoadedVersion();
 }
 

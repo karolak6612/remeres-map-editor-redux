@@ -107,7 +107,7 @@ PreferencesWindow::~PreferencesWindow() {
 
 // Event handlers!
 
-void PreferencesWindow::OnClickOK(wxCommandEvent& event) {
+void PreferencesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (!client_version_page->ValidateData()) {
 		return;
 	}

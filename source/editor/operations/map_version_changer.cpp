@@ -71,6 +71,9 @@ bool MapVersionChanger::changeMapVersion(wxWindow* parent, Editor& editor, MapVe
 			ClientVersion* target = ClientVersion::getBestMatch(new_ver.client);
 			if (!target || !g_version.LoadVersion(target->getID(), error, warnings)) {
 				DialogUtil::ListDialog(parent, "Warnings", warnings);
+				if (error.empty() && !target) {
+					error = "No compatible client version found for this protocol.";
+				}
 				DialogUtil::PopupDialog(parent, "Map Loader Error", error, wxOK);
 				DialogUtil::PopupDialog(parent, "Conversion Error", "Could not convert map. The map will now be closed.", wxOK);
 

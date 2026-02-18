@@ -132,6 +132,8 @@ wxChoice* InterfacePage::AddPaletteStyleChoice(wxSizer* sizer, const wxString& s
 		choice->SetSelection(1);
 	} else if (setting == "listbox") {
 		choice->SetSelection(2);
+	} else {
+		choice->SetSelection(0);
 	}
 
 	return choice;

@@ -325,7 +325,7 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 	headerSizer->Add(titleSizer, 1, wxALL | wxEXPAND, 10);
 
 	ConvexButton* prefBtn = new ConvexButton(headerPanel, wxID_PREFERENCES, "Preferences");
-	prefBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_REDO, wxART_BUTTON, wxSize(16, 16)));
+	prefBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_BUTTON, FromDIP(wxSize(24, 24))));
 	prefBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Right: 10px total
@@ -340,11 +340,16 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
-	exitBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON, wxSize(16, 16)));
+	exitBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON, FromDIP(wxSize(24, 24))));
 	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Left: 10px total
 	footerSizer->Add(exitBtn, 0, wxALL, 8);
+
+	ConvexButton* newBtn = new ConvexButton(footerPanel, wxID_NEW, "New Map");
+	newBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON, FromDIP(wxSize(24, 24))));
+	newBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
+	footerSizer->Add(newBtn, 0, wxALL, 8);
 
 	footerSizer->AddStretchSpacer();
 	wxStaticText* version = new wxStaticText(footerPanel, wxID_ANY, versionText);
@@ -354,7 +359,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	footerSizer->AddStretchSpacer();
 
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
-	loadBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_UP, wxART_BUTTON, wxSize(16, 16)));
+	loadBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_BUTTON, FromDIP(wxSize(24, 24))));
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 		long item = -1;
 		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);

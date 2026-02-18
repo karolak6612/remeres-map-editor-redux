@@ -458,7 +458,11 @@ void ClientVersionPage::OnDeleteClient(wxCommandEvent& WXUNUSED(event)) {
 
 	if (wxMessageBox("Are you sure you want to delete " + cv->getName() + "?", "Confirm Delete", wxYES_NO | wxICON_WARNING) == wxYES) {
 		ClientVersion::removeVersion(cv->getName());
-		ClientVersion::saveVersions();
+		if (!ClientVersion::saveVersions()) {
+			wxMessageBox("Could not save client versions to disk.\nThe changes will be reverted.", "Error", wxOK | wxICON_ERROR);
+			// Revert by reloading from disk
+			ClientVersion::loadVersions();
+		}
 		PopulateClientTree();
 	}
 }

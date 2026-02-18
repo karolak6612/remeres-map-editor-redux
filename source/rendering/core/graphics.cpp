@@ -94,6 +94,11 @@ void GraphicManager::clear() {
 
 	client_version = nullptr;
 	unloaded = true;
+	dat_format = DAT_FORMAT_UNKNOWN;
+	is_extended = false;
+	has_transparency = false;
+	has_frame_durations = false;
+	has_frame_groups = false;
 }
 
 void GraphicManager::cleanSoftwareSprites() {

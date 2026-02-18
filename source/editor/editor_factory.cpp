@@ -42,7 +42,10 @@ std::unique_ptr<Editor> EditorFactory::CreateEmpty(CopyBuffer& copybuffer) {
 	}
 
 	if (defaultVersion == CLIENT_VERSION_NONE) {
-		defaultVersion = ClientVersion::getLatestVersion()->getID();
+		ClientVersion* latest = ClientVersion::getLatestVersion();
+		if (latest) {
+			defaultVersion = latest->getID();
+		}
 	}
 
 	if (!EnsureVersion(defaultVersion)) {

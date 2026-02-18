@@ -100,6 +100,9 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 	if (u32 > static_cast<uint32_t>(g_items.MinorVersion)) {
 		spdlog::warn("This editor needs an updated items.otb version (found minor {})", u32);
 	}
+	if (u32 == 0) {
+		spdlog::warn("Invalid OTB version ID (0) in map header.");
+	}
 	version.client = static_cast<OtbVersionID>(u32);
 
 	mapHeaderNode = root->getChild();

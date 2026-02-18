@@ -307,9 +307,11 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 					DialogUtil::PopupDialog("Error", error, wxOK);
 					return false;
 				}
-				DialogUtil::ListDialog("Warnings", warnings);
+				if (!warnings.empty()) {
+					DialogUtil::ListDialog("Warnings", warnings);
+				}
 			} else {
-				throw std::runtime_error("All maps of different versions were not closed.");
+				return false;
 			}
 		}
 
