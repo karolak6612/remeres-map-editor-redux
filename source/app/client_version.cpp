@@ -47,7 +47,7 @@ void ClientVersion::loadVersions() {
 		latest_version = client_versions.front().get();
 	}
 
-	// Load the user-configured data directory paths from g_settings
+	// Load user-specific paths from config.toml
 	toml::table& table = g_settings.getTable();
 	if (auto clients = table["clients"].as_array()) {
 		for (auto&& node : *clients) {
@@ -58,50 +58,9 @@ void ClientVersion::loadVersions() {
 				}
 
 				ClientVersion* version = get(name);
-				if (!version) {
-					// If it doesn't exist, we might be adding a new custom version
-					// However, for now let's just update existing ones
-					continue;
-				}
-
-				// Update properties from config.toml
-				version->setClientPath(wxstr((*client)["clientPath"].value_or("")));
-				version->version = (*client)["version"].value_or(version->version);
-				version->description = (*client)["description"].value_or(version->description);
-				version->config_type = (*client)["configType"].value_or(version->config_type);
-				version->metadata_file = (*client)["metadataFile"].value_or(version->metadata_file);
-				version->sprites_file = (*client)["spritesFile"].value_or(version->sprites_file);
-				version->is_transparent = (*client)["transparency"].value_or(version->is_transparent);
-				version->is_extended = (*client)["extended"].value_or(version->is_extended);
-				version->has_frame_durations = (*client)["frameDurations"].value_or(version->has_frame_durations);
-				version->has_frame_groups = (*client)["frameGroups"].value_or(version->has_frame_groups);
-
-				if (auto otbId = (*client)["otbId"].value<int>()) {
-					version->otb.id = static_cast<OtbVersionID>(*otbId);
-				}
-				if (auto otbMajor = (*client)["otbMajor"].value<int>()) {
-					version->otb.format_version = static_cast<OtbFormatVersion>(*otbMajor);
-				}
-
-				if (auto sig = (*client)["datSignature"].value<std::string>()) {
-					if (!version->data_versions.empty()) {
-						std::from_chars(sig->data(), sig->data() + sig->size(), version->data_versions[0].datSignature, 16);
-					}
-				}
-				if (auto sig = (*client)["sprSignature"].value<std::string>()) {
-					if (!version->data_versions.empty()) {
-						std::from_chars(sig->data(), sig->data() + sig->size(), version->data_versions[0].sprSignature, 16);
-					}
-				}
-
-				if (auto otbmVers = (*client)["otbmVersions"].as_array()) {
-					version->map_versions_supported.clear();
-					for (auto&& v : *otbmVers) {
-						int ver = v.value_or(-1);
-						if (ver >= 1 && ver <= 4) {
-							version->map_versions_supported.push_back(static_cast<MapVersionID>(ver - 1));
-						}
-					}
+				if (version) {
+					// ONLY override the user-specific path
+					version->setClientPath(wxstr((*client)["clientPath"].value_or("")));
 				}
 			}
 		}
@@ -123,9 +82,9 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 	work_dir_client_toml.Assign(FileSystem::GetFoundDataDirectory());
 	work_dir_client_toml.SetFullName(configName);
 
-	file_to_load = exec_dir_client_toml;
+	file_to_load = data_dir_client_toml; // Primary location
 	if (!file_to_load.FileExists()) {
-		file_to_load = data_dir_client_toml;
+		file_to_load = exec_dir_client_toml;
 		if (!file_to_load.FileExists()) {
 			file_to_load = work_dir_client_toml;
 			if (!file_to_load.FileExists()) {
@@ -135,7 +94,7 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 	}
 
 	if (!file_to_load.FileExists()) {
-		wxLogError(wxString() + "Could not load " + configName + ", editor will NOT be able to load any client data files.\n" + "Checked paths:\n" + exec_dir_client_toml.GetFullPath() + "\n" + data_dir_client_toml.GetFullPath() + "\n" + work_dir_client_toml.GetFullPath());
+		wxLogDebug("Missing %s at %s", configName, data_dir_client_toml.GetFullPath());
 		return;
 	}
 
@@ -143,7 +102,7 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 	try {
 		config = toml::parse_file(file_to_load.GetFullPath().ToStdString());
 	} catch (const toml::parse_error& err) {
-		wxLogError("Parsing failed: %s", err.description());
+		wxLogError("Parsing failed for %s: %s", configName, err.description());
 		return;
 	}
 
@@ -166,23 +125,13 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			otb.name = name;
 			otb.id = static_cast<OtbVersionID>(otbId);
 			otb.format_version = static_cast<OtbFormatVersion>(otbMajor);
-			if (otb.format_version < OTB_VERSION_1) {
-				otb.format_version = OTB_VERSION_1;
-			}
-			if (otb.format_version > OTB_VERSION_3) {
-				otb.format_version = OTB_VERSION_3;
-			}
 
 			// Data Directory
 			std::string dataDirectory = client["dataDirectory"].value_or("");
 			std::unique_ptr<ClientVersion> cv = std::make_unique<ClientVersion>(otb, name, wxstr(dataDirectory));
 
-			// Use a raw pointer for configuration while we still own the unique_ptr
 			ClientVersion* cv_ptr = cv.get();
 			cv_ptr->version = version;
-			// NO default client path here!
-
-			// Description & Config Type
 			cv_ptr->description = client["description"].value_or("");
 			cv_ptr->config_type = client["configType"].value_or("");
 
@@ -192,7 +141,6 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 				auto& otbmVers = *client["otbmVersions"].as_array();
 				for (auto&& v : otbmVers) {
 					int ver = v.value_or(-1);
-					// Adjust 1-based TOML version to 0-based enum
 					if (ver >= 1 && ver <= 4) {
 						int enumVer = ver - 1;
 						cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
@@ -203,20 +151,26 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 				}
 			}
 
-			// Data / Signatures
-			std::string datSigStr = client["datSignature"].value_or("0");
-			std::string sprSigStr = client["sprSignature"].value_or("0");
-
+			// Data / Signatures - Robust parsing
 			ClientData client_data;
-			if (std::from_chars(datSigStr.data(), datSigStr.data() + datSigStr.size(), client_data.datSignature, 16).ec != std::errc()) {
-				client_data.datSignature = 0;
-			}
-			if (std::from_chars(sprSigStr.data(), sprSigStr.data() + sprSigStr.size(), client_data.sprSignature, 16).ec != std::errc()) {
-				client_data.sprSignature = 0;
-			}
+			client_data.datSignature = 0;
+			client_data.sprSignature = 0;
+
+			auto parseHex = [](const toml::node_view<toml::node>& node) -> uint32_t {
+				uint32_t val = 0;
+				if (node.is_string()) {
+					std::string s = node.as_string()->get();
+					std::from_chars(s.data(), s.data() + s.size(), val, 16);
+				} else if (node.is_integer()) {
+					val = (uint32_t)node.as_integer()->get();
+				}
+				return val;
+			};
+
+			client_data.datSignature = parseHex(client["datSignature"]);
+			client_data.sprSignature = parseHex(client["sprSignature"]);
 			client_data.datFormat = getDatFormatForVersion(version);
 
-			// OTFI Replacement Fields
 			cv_ptr->metadata_file = client["metadataFile"].value_or("Tibia.dat");
 			cv_ptr->sprites_file = client["spritesFile"].value_or("Tibia.spr");
 
@@ -225,7 +179,6 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			cv_ptr->has_frame_durations = client["frameDurations"].value_or(version >= 1050);
 			cv_ptr->has_frame_groups = client["frameGroups"].value_or(version >= 1057);
 
-			// Update the default ClientData created in constructor instead of pushing a new one
 			if (!cv_ptr->data_versions.empty()) {
 				cv_ptr->data_versions[0] = client_data;
 			} else {
@@ -300,51 +253,63 @@ bool ClientVersion::isDefaultPath() const {
 }
 
 void ClientVersion::saveVersions() {
-	toml::table& table = g_settings.getTable();
-	toml::array clients_array;
+	// 1. Save technical database to data/clients.toml
+	toml::table db_table;
+	toml::array db_clients_array;
+
+	// 2. Save user-specific config to config.toml (g_settings)
+	toml::array config_clients_array;
 
 	for (const auto& version : client_versions) {
-		toml::table client_obj;
-		client_obj.insert_or_assign("name", version->getName());
-
-		// Always save these as they might be modified or added
-		client_obj.insert_or_assign("version", (int)version->version);
-		client_obj.insert_or_assign("otbId", (int)version->otb.id);
-		client_obj.insert_or_assign("otbMajor", (int)version->otb.format_version);
-		client_obj.insert_or_assign("description", version->description);
-		client_obj.insert_or_assign("configType", version->config_type);
-		client_obj.insert_or_assign("metadataFile", version->metadata_file);
-		client_obj.insert_or_assign("spritesFile", version->sprites_file);
-		client_obj.insert_or_assign("transparency", version->is_transparent);
-		client_obj.insert_or_assign("extended", version->is_extended);
-		client_obj.insert_or_assign("frameDurations", version->has_frame_durations);
-		client_obj.insert_or_assign("frameGroups", version->has_frame_groups);
+		// Technical database object
+		toml::table db_obj;
+		db_obj.insert_or_assign("name", version->name);
+		db_obj.insert_or_assign("version", (int)version->version);
+		db_obj.insert_or_assign("otbId", (int)version->otb.id);
+		db_obj.insert_or_assign("otbMajor", (int)version->otb.format_version);
+		db_obj.insert_or_assign("description", version->description);
+		db_obj.insert_or_assign("configType", version->config_type);
+		db_obj.insert_or_assign("metadataFile", version->metadata_file);
+		db_obj.insert_or_assign("spritesFile", version->sprites_file);
+		db_obj.insert_or_assign("transparency", version->is_transparent);
+		db_obj.insert_or_assign("extended", version->is_extended);
+		db_obj.insert_or_assign("frameDurations", version->has_frame_durations);
+		db_obj.insert_or_assign("frameGroups", version->has_frame_groups);
+		db_obj.insert_or_assign("dataDirectory", nstr(version->data_path));
 
 		if (!version->data_versions.empty()) {
-			client_obj.insert_or_assign("datSignature", fmt::format("{:X}", version->data_versions[0].datSignature));
-			client_obj.insert_or_assign("sprSignature", fmt::format("{:X}", version->data_versions[0].sprSignature));
+			db_obj.insert_or_assign("datSignature", fmt::format("{:X}", version->data_versions[0].datSignature));
+			db_obj.insert_or_assign("sprSignature", fmt::format("{:X}", version->data_versions[0].sprSignature));
 		}
 
 		toml::array otbmVers;
 		for (auto v : version->map_versions_supported) {
 			otbmVers.push_back((int)v + 1);
 		}
-		client_obj.insert_or_assign("otbmVersions", std::move(otbmVers));
+		db_obj.insert_or_assign("otbmVersions", std::move(otbmVers));
+		db_clients_array.push_back(std::move(db_obj));
 
-		// Path
+		// User config object (ONLY path)
+		toml::table config_obj;
+		config_obj.insert_or_assign("name", version->name);
 		wxFileName cp = version->getClientPath();
-		// If path is empty, save as empty string, don't normalize to anything else
 		if (cp.IsOk() && !cp.GetFullPath().IsEmpty()) {
 			cp.Normalize();
-			client_obj.insert_or_assign("clientPath", nstr(cp.GetFullPath()));
+			config_obj.insert_or_assign("clientPath", nstr(cp.GetFullPath()));
 		} else {
-			client_obj.insert_or_assign("clientPath", "");
+			config_obj.insert_or_assign("clientPath", "");
 		}
-
-		clients_array.push_back(std::move(client_obj));
+		config_clients_array.push_back(std::move(config_obj));
 	}
 
-	table.insert_or_assign("clients", std::move(clients_array));
+	// Save Database
+	db_table.insert_or_assign("clients", std::move(db_clients_array));
+	wxFileName db_file(FileSystem::GetDataDirectory(), "clients.toml");
+	std::ofstream db_stream(db_file.GetFullPath().ToStdString());
+	db_stream << db_table;
+
+	// Save User Config
+	g_settings.getTable().insert_or_assign("clients", std::move(config_clients_array));
 	g_settings.save();
 }
 
