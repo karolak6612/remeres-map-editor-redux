@@ -103,11 +103,12 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 }
 
 void ClientVersionPage::PopulateClientTree() {
+	// Store the currently selected client to re-select it after repopulating
+	ClientVersion* current_selected_client = GetSelectedClient();
+
 	client_tree_ctrl->DeleteAllItems();
 	wxTreeItemId root = client_tree_ctrl->AddRoot("Clients");
 
-	// Store the currently selected client to re-select it after repopulating
-	ClientVersion* current_selected_client = GetSelectedClient();
 	wxTreeItemId item_to_select;
 
 	// Group clients by major version

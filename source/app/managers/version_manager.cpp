@@ -31,7 +31,7 @@ bool VersionManager::LoadVersion(ClientVersionID version, wxString& error, std::
 		return false;
 	}
 
-	if (version.empty() || version != loaded_version || force) {
+	if (version != loaded_version || force) {
 		if (getLoadedVersion() != nullptr) {
 			// There is another version loaded right now, save window layout
 			g_gui.SavePerspective();

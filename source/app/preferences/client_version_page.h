@@ -7,6 +7,7 @@
 #include <wx/propgrid/propgrid.h>
 #include <wx/splitter.h>
 #include <wx/choice.h>
+#include <wx/checkbox.h>
 
 class ClientVersionPage : public PreferencesPage {
 public:

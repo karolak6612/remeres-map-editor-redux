@@ -120,7 +120,9 @@ private:
 			m_hover = true;
 		} else if (evt.Leaving()) {
 			m_hover = false;
-			m_pressed = false;
+			if (!HasCapture()) {
+				m_pressed = false;
+			}
 		} else if (evt.LeftDown()) {
 			m_pressed = true;
 			CaptureMouse();

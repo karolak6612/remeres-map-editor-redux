@@ -45,6 +45,7 @@
 #include "ingame_preview/ingame_preview_manager.h"
 
 #include <wx/snglinst.h>
+#include <wx/stdpaths.h>
 #include <spdlog/spdlog.h>
 #include <thread>
 #include <chrono>
@@ -295,15 +296,15 @@ void Application::FixVersionDiscrapencies() {
 
 	wxString ss = wxstr(g_settings.getString(Config::SCREENSHOT_DIRECTORY));
 	if (ss.empty()) {
-		wxFileName fn;
-		fn.AssignDir(wxStandardPaths::Get().GetDocumentsDir());
-
-#ifdef __WINDOWS__
-		fn.AppendDir("My Pictures");
+		wxFileName fn(wxStandardPaths::Get().GetDocumentsDir(), "");
+		if (fn.GetDirCount() > 0) {
+			fn.RemoveLastDir(); // Move from "Documents" to user root
+		}
+		fn.AppendDir("Pictures");
 		fn.AppendDir("RME");
-#endif
+
 		if (!fn.DirExists()) {
-			fn.Mkdir();
+			fn.Mkdir(wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
 		}
 		ss = fn.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
 	}

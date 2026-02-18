@@ -32,7 +32,7 @@
 #include "app/preferences.h"
 #include "util/image_manager.h"
 
-PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false) :
+PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected) :
 	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(600, 500), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 

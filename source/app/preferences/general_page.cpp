@@ -68,7 +68,7 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 	position_format = newd wxRadioBox(this, wxID_ANY, "Copy Position Format", wxDefaultPosition, wxDefaultSize, radio_choices, position_choices, 1, wxRA_SPECIFY_COLS);
 	position_format->SetSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT));
 	sizer->Add(position_format, 0, wxALL | wxEXPAND, 5);
-	SetWindowToolTip(position_format, position_format, "The position format when copying from the map.");
+	SetWindowToolTip(position_format, "The position format when copying from the map.");
 
 	SetSizerAndFit(sizer);
 }

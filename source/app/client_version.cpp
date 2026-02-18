@@ -220,30 +220,21 @@ void ClientVersion::removeVersion(const ClientVersionID& id) {
 }
 
 DatFormat ClientVersion::getDatFormatForVersion(int version) {
-	// Logic to infer DatFormat from version integer
-	if (version >= 1057) {
-		return DAT_FORMAT_1057;
-	}
-	if (version >= 1050) {
-		return DAT_FORMAT_1050;
-	}
-	if (version >= 1010) {
-		return DAT_FORMAT_1010;
-	}
-	if (version >= 960) {
-		return DAT_FORMAT_96;
-	}
-	if (version >= 860) {
-		return DAT_FORMAT_86;
-	}
-	if (version >= 780) {
-		return DAT_FORMAT_78;
-	}
-	if (version >= 750) {
-		return DAT_FORMAT_755;
-	}
-	if (version >= 710) {
-		return DAT_FORMAT_74;
+	// Using a map makes this more data-driven and easier to maintain.
+	static const std::map<int, DatFormat, std::greater<int>> version_to_format = {
+		{ 1057, DAT_FORMAT_1057 },
+		{ 1050, DAT_FORMAT_1050 },
+		{ 1010, DAT_FORMAT_1010 },
+		{ 960, DAT_FORMAT_96 },
+		{ 860, DAT_FORMAT_86 },
+		{ 780, DAT_FORMAT_78 },
+		{ 750, DAT_FORMAT_755 },
+		{ 710, DAT_FORMAT_74 },
+	};
+
+	auto it = version_to_format.lower_bound(version);
+	if (it != version_to_format.end()) {
+		return it->second;
 	}
 
 	return DAT_FORMAT_UNKNOWN;
@@ -587,6 +578,8 @@ void ClientVersion::backup() {
 	backup_data.has_frame_durations = has_frame_durations;
 	backup_data.has_frame_groups = has_frame_groups;
 	backup_data.client_path = client_path;
+	backup_data.data_path = data_path;
+	backup_data.preferred_map_version = preferred_map_version;
 	backup_data.otb = otb;
 	backup_data.data_versions = data_versions;
 	backup_data.map_versions_supported = map_versions_supported;
@@ -605,6 +598,8 @@ void ClientVersion::restore() {
 	has_frame_durations = backup_data.has_frame_durations;
 	has_frame_groups = backup_data.has_frame_groups;
 	client_path = backup_data.client_path;
+	data_path = backup_data.data_path;
+	preferred_map_version = backup_data.preferred_map_version;
 	otb = backup_data.otb;
 	data_versions = backup_data.data_versions;
 	map_versions_supported = backup_data.map_versions_supported;

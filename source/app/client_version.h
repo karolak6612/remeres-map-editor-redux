@@ -409,6 +409,8 @@ private:
 		bool has_frame_durations;
 		bool has_frame_groups;
 		FileName client_path;
+		wxString data_path;
+		MapVersionID preferred_map_version;
 		OtbVersion otb;
 		std::vector<ClientData> data_versions;
 		std::vector<MapVersionID> map_versions_supported;
