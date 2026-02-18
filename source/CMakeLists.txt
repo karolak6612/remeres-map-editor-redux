@@ -5,6 +5,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/app/extension.h
     ${CMAKE_CURRENT_LIST_DIR}/app/main.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/preferences_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/general_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/editor_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/interface_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/client_version_page.h
     ${CMAKE_CURRENT_LIST_DIR}/app/rme_forward_declarations.h
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.h
     ${CMAKE_CURRENT_LIST_DIR}/app/threads.h
@@ -318,6 +324,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/app/client_version.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/extension.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/general_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/editor_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/interface_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/client_version_page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/managers/version_manager.cpp
