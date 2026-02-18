@@ -27,6 +27,7 @@
 #include <string_view>
 #include <sstream>
 #include <unordered_map>
+#include <list>
 
 class Item;
 class Waypoint;
@@ -159,36 +160,32 @@ public:
 	// Add a waypoint tooltip
 	void addWaypointTooltip(Position pos, std::string_view name);
 
+	// Computes a unique hash for the tooltip based on item properties and zoom
+	static uint64_t computeHash(const Item* item, bool isHouseTile, float zoom);
+
+	// Checks if a tooltip with the given hash is already cached
+	bool hasTooltip(uint64_t hash) const;
+
+	// Adds an active tooltip for the current frame using a cached hash
+	void addActiveTooltip(uint64_t hash, const Position& pos);
+
+	// Defines a new cached tooltip (copies data)
+	void defineTooltip(uint64_t hash, const TooltipData& data);
+
 	// Draw all tooltips
 	void draw(NVGcontext* vg, const RenderView& view);
 
-	// Clear all tooltips
+	// Clear active tooltips (but keep cache)
 	void clear();
 
 protected:
-	struct FieldLine {
-		std::string_view label;
-		std::string_view value;
+	struct CachedFieldLine {
+		std::string label;
+		std::string value;
 		uint8_t r, g, b;
-		std::vector<std::string_view> wrappedLines; // For multi-line values
+		std::vector<std::string> wrappedLines; // For multi-line values
 	};
-	std::vector<FieldLine> scratch_fields;
-	size_t scratch_fields_count = 0;
-	std::string storage; // Scratch buffer for text generation
 
-	std::vector<TooltipData> tooltips;
-	size_t active_count = 0;
-
-	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
-	NVGcontext* lastContext = nullptr;
-
-	// Helper to get or load sprite image
-	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
-
-	// Helper to get header color based on category
-	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
-
-	// Refactored drawing helpers
 	struct LayoutMetrics {
 		float width;
 		float height;
@@ -202,11 +199,80 @@ protected:
 		int numContainerItems;
 	};
 
-	void prepareFields(const TooltipData& tooltip);
+	// Helper struct to own strings in cache
+	struct CachedTooltipData {
+		TooltipCategory category = TooltipCategory::ITEM;
+		uint16_t itemId = 0;
+		std::string itemName;
+		uint16_t actionId = 0;
+		uint16_t uniqueId = 0;
+		uint8_t doorId = 0;
+		std::string text;
+		std::string description;
+		Position destination;
+		std::string waypointName;
+		std::vector<ContainerItem> containerItems;
+		uint8_t containerCapacity = 0;
+
+		CachedTooltipData() = default;
+		CachedTooltipData(const TooltipData& other);
+	};
+
+	struct CachedTooltip {
+		CachedTooltipData data;
+		LayoutMetrics layout;
+		std::vector<CachedFieldLine> fields;
+	};
+
+	// Active tooltip instance for current frame
+	struct ActiveTooltip {
+		uint64_t hash;
+		Position pos;
+	};
+
+	// Legacy scratch fields (for non-cached path if needed, or temporary use)
+	struct FieldLine {
+		std::string_view label;
+		std::string_view value;
+		uint8_t r, g, b;
+		std::vector<std::string_view> wrappedLines;
+	};
+
+	std::vector<FieldLine> scratch_fields;
+	size_t scratch_fields_count = 0;
+	std::string storage; // Scratch buffer for text generation
+
+	std::vector<TooltipData> tooltips; // Legacy pool
+	size_t active_count = 0; // Legacy count
+
+	std::vector<ActiveTooltip> active_tooltips;
+
+	std::unordered_map<uint64_t, CachedTooltip> cache;
+	std::list<uint64_t> lru_list; // For eviction
+	static constexpr size_t MAX_CACHE_SIZE = 1000;
+
+	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
+	NVGcontext* lastContext = nullptr;
+
+	// Helper to get or load sprite image
+	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
+
+	// Helper to get header color based on category
+	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
+
+	void prepareFields(const TooltipData& tooltip); // Populates scratch_fields
+	void prepareCachedFields(CachedTooltip& cached); // Populates cached.fields
+
 	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
+	LayoutMetrics calculateCachedLayout(NVGcontext* vg, const CachedTooltip& cached, float maxWidth, float minWidth, float padding, float fontSize);
+
 	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
+	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const CachedTooltipData& tooltip);
+
 	void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
-	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
+	void drawCachedFields(NVGcontext* vg, float x, float y, const CachedTooltip& cached, float lineHeight, float padding, float fontSize);
+
+	void drawContainerGrid(NVGcontext* vg, float x, float y, const CachedTooltip& cached);
 };
 
 #endif

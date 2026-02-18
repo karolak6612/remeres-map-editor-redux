@@ -219,10 +219,16 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
+		uint64_t hash = TooltipDrawer::computeHash(tile->ground.get(), tile->isHouseTile(), view.zoom);
+		if (tooltip_drawer->hasTooltip(hash)) {
+			tooltip_drawer->addActiveTooltip(hash, location->getPosition());
+		} else {
+			TooltipData& groundData = tooltip_drawer->requestTooltipData();
+			if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+				if (groundData.hasVisibleFields()) {
+					tooltip_drawer->defineTooltip(hash, groundData);
+					tooltip_drawer->addActiveTooltip(hash, location->getPosition());
+				}
 			}
 		}
 	}
@@ -265,10 +271,16 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+					uint64_t hash = TooltipDrawer::computeHash(item.get(), tile->isHouseTile(), view.zoom);
+					if (tooltip_drawer->hasTooltip(hash)) {
+						tooltip_drawer->addActiveTooltip(hash, location->getPosition());
+					} else {
+						TooltipData& itemData = tooltip_drawer->requestTooltipData();
+						if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+							if (itemData.hasVisibleFields()) {
+								tooltip_drawer->defineTooltip(hash, itemData);
+								tooltip_drawer->addActiveTooltip(hash, location->getPosition());
+							}
 						}
 					}
 				}
