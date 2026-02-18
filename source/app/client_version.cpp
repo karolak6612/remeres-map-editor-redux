@@ -290,6 +290,9 @@ bool ClientVersion::saveVersions() {
 			otbmVers.push_back((int)v + 1);
 		}
 		db_obj.insert_or_assign("otbmVersions", std::move(otbmVers));
+		if (version.get() == latest_version) {
+			db_obj.insert_or_assign("default", true);
+		}
 		db_clients_array.push_back(std::move(db_obj));
 
 		// User config object (ONLY path)
@@ -505,7 +508,10 @@ bool ClientVersion::loadValidPaths() {
 		client_path.Assign(file_dlg.GetPath() + FileName::GetPathSeparator());
 	}
 
-	ClientVersion::saveVersions();
+	if (!ClientVersion::saveVersions()) {
+		wxLogError("Failed to save client versions after locating valid paths.");
+		return false;
+	}
 
 	return true;
 }

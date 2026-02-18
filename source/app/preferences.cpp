@@ -31,9 +31,7 @@
 #include "app/managers/version_manager.h"
 #include "app/preferences.h"
 #include "util/image_manager.h"
-#include <charconv>
-#include <wx/tokenzr.h>
-#include <wx/propgrid/advprops.h>
+#include "util/image_manager.h"
 
 PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false) :
 	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(600, 500), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
@@ -119,7 +117,7 @@ void PreferencesWindow::OnClickOK(wxCommandEvent& event) {
 }
 
 void PreferencesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
-	EndModal(0);
+	EndModal(wxID_CANCEL);
 }
 
 void PreferencesWindow::OnClickApply(wxCommandEvent& WXUNUSED(event)) {

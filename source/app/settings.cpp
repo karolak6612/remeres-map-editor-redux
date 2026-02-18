@@ -151,12 +151,12 @@ static std::string toLower(std::string s) {
 
 void Settings::IO(IOMode mode) {
 	if (mode == LOAD) {
-		if (std::ifstream("config.toml")) {
-			try {
-				g_settings_table = toml::parse_file("config.toml");
-			} catch (const toml::parse_error& err) {
-				spdlog::error("Failed to parse config.toml: {}", err.description());
-			}
+		try {
+			g_settings_table = toml::parse_file("config.toml");
+		} catch (const toml::parse_error& err) {
+			spdlog::error("Failed to parse config.toml: {}", err.description());
+		} catch (const std::exception& err) {
+			spdlog::error("Failed to load config.toml: {}", err.what());
 		}
 	}
 

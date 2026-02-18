@@ -180,11 +180,13 @@ void GraphicsPage::Apply() {
 	g_settings.setInteger(Config::CURSOR_RED, clr.Red());
 	g_settings.setInteger(Config::CURSOR_GREEN, clr.Green());
 	g_settings.setInteger(Config::CURSOR_BLUE, clr.Blue());
+	g_settings.setInteger(Config::CURSOR_ALPHA, clr.Alpha());
 
 	clr = cursor_alt_color_pick->GetColour();
 	g_settings.setInteger(Config::CURSOR_ALT_RED, clr.Red());
 	g_settings.setInteger(Config::CURSOR_ALT_GREEN, clr.Green());
 	g_settings.setInteger(Config::CURSOR_ALT_BLUE, clr.Blue());
+	g_settings.setInteger(Config::CURSOR_ALT_ALPHA, clr.Alpha());
 
 	g_settings.setInteger(Config::HIDE_ITEMS_WHEN_ZOOMED, hide_items_when_zoomed_chkbox->GetValue());
 

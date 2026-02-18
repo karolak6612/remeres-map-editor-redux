@@ -79,8 +79,13 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 		if (current && current->isDirty()) {
 			int res = wxMessageBox("Save changes to " + current->getName() + "?", "Unsaved Changes", wxYES_NO | wxCANCEL | wxICON_QUESTION);
 			if (res == wxYES) {
-				current->clearDirty();
-				ClientVersion::saveVersions();
+				if (ClientVersion::saveVersions()) {
+					current->clearDirty();
+				} else {
+					wxMessageBox("Failed to save client versions. Changes not saved.", "Save Error", wxOK | wxICON_ERROR);
+					event.Veto();
+					return;
+				}
 			} else if (res == wxNO) {
 				current->restore();
 				current->clearDirty();
