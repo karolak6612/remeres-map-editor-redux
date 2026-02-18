@@ -450,14 +450,19 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_preview = true;
 		hand_cursor = true;
-	}
-	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
+		if (!prev_preview) SetToolTip("Toggle border preview");
+	} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_lock = true;
 		hand_cursor = true;
-	}
-
-	if (interactables.size_slider_rect.Contains(m_hoverPos) || interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		if (!prev_lock) SetToolTip("Toggle door lock (Shift)");
+	} else if (interactables.size_slider_rect.Contains(m_hoverPos)) {
 		hand_cursor = true;
+		SetToolTip("Adjust brush size");
+	} else if (interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		hand_cursor = true;
+		SetToolTip("Adjust brush thickness");
+	} else if (!hover_brush) {
+		UnsetToolTip();
 	}
 
 	SetCursor(hand_cursor ? wxCursor(wxCURSOR_HAND) : wxCursor(wxCURSOR_ARROW));

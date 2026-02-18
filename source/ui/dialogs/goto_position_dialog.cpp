@@ -53,6 +53,8 @@ void GotoPositionDialog::OnClickCancel(wxCommandEvent&) {
 }
 
 void GotoPositionDialog::OnClickOK(wxCommandEvent&) {
-	g_gui.SetScreenCenterPosition(posctrl->GetPosition());
+	Position pos = posctrl->GetPosition();
+	g_gui.SetScreenCenterPosition(pos);
+	g_gui.SetStatusText(std::format("Jumped to position {}, {}, {}", pos.x, pos.y, pos.z));
 	EndModal(1);
 }

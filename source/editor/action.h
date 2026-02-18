@@ -102,6 +102,8 @@ enum ActionIdentifier {
 	ACTION_CHANGE_PROPERTIES,
 };
 
+std::string GetActionName(ActionIdentifier ident);
+
 class Action {
 public:
 	virtual ~Action();

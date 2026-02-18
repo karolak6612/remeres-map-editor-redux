@@ -77,6 +77,11 @@ void ViewSettingsHandler::OnChangeViewSettings(wxCommandEvent& event) {
 
 	bool old_grid = g_settings.getBoolean(Config::SHOW_GRID);
 	bool old_ghost = g_settings.getBoolean(Config::TRANSPARENT_ITEMS);
+	bool old_all_floors = g_settings.getBoolean(Config::SHOW_ALL_FLOORS);
+	bool old_creatures = g_settings.getBoolean(Config::SHOW_CREATURES);
+	bool old_spawns = g_settings.getBoolean(Config::SHOW_SPAWNS);
+	bool old_houses = g_settings.getBoolean(Config::SHOW_HOUSES);
+	bool old_highlight = g_settings.getBoolean(Config::HIGHLIGHT_ITEMS);
 
 	g_settings.setInteger(Config::SHOW_ALL_FLOORS, menuBar->IsItemChecked(SHOW_ALL_FLOORS));
 	if (menuBar->IsItemChecked(SHOW_ALL_FLOORS)) {
@@ -126,6 +131,22 @@ void ViewSettingsHandler::OnChangeViewSettings(wxCommandEvent& event) {
 	bool new_ghost = g_settings.getBoolean(Config::TRANSPARENT_ITEMS);
 	if (old_ghost != new_ghost) {
 		g_gui.SetStatusText(std::format("Ghost Mode: {}", new_ghost ? "On" : "Off"));
+	}
+
+	if (old_all_floors != g_settings.getBoolean(Config::SHOW_ALL_FLOORS)) {
+		g_gui.SetStatusText(std::format("Show All Floors: {}", g_settings.getBoolean(Config::SHOW_ALL_FLOORS) ? "On" : "Off"));
+	}
+	if (old_creatures != g_settings.getBoolean(Config::SHOW_CREATURES)) {
+		g_gui.SetStatusText(std::format("Show Creatures: {}", g_settings.getBoolean(Config::SHOW_CREATURES) ? "On" : "Off"));
+	}
+	if (old_spawns != g_settings.getBoolean(Config::SHOW_SPAWNS)) {
+		g_gui.SetStatusText(std::format("Show Spawns: {}", g_settings.getBoolean(Config::SHOW_SPAWNS) ? "On" : "Off"));
+	}
+	if (old_houses != g_settings.getBoolean(Config::SHOW_HOUSES)) {
+		g_gui.SetStatusText(std::format("Show Houses: {}", g_settings.getBoolean(Config::SHOW_HOUSES) ? "On" : "Off"));
+	}
+	if (old_highlight != g_settings.getBoolean(Config::HIGHLIGHT_ITEMS)) {
+		g_gui.SetStatusText(std::format("Highlight Items: {}", g_settings.getBoolean(Config::HIGHLIGHT_ITEMS) ? "On" : "Off"));
 	}
 
 	g_gui.RefreshView();

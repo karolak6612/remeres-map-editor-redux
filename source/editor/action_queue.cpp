@@ -136,3 +136,17 @@ void ActionQueue::clear() {
 	actions.clear();
 	current = 0;
 }
+
+std::string ActionQueue::getLastUndoActionName() {
+	if (current > 0) {
+		return GetActionName(actions[current - 1]->getType());
+	}
+	return "Action";
+}
+
+std::string ActionQueue::getLastRedoActionName() {
+	if (current < actions.size()) {
+		return GetActionName(actions[current]->getType());
+	}
+	return "Action";
+}

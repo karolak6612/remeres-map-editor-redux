@@ -47,6 +47,9 @@ public:
 	void redo();
 	void clear();
 
+	std::string getLastUndoActionName();
+	std::string getLastRedoActionName();
+
 	bool canUndo() {
 		return current > 0;
 	}

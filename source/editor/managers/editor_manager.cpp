@@ -423,11 +423,12 @@ bool EditorManager::CanRedo() {
 bool EditorManager::DoUndo() {
 	Editor* editor = GetCurrentEditor();
 	if (editor && editor->actionQueue->canUndo()) {
+		std::string actionName = editor->actionQueue->getLastUndoActionName();
 		editor->actionQueue->undo();
 		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
-		g_status.SetStatusText("Undo action");
+		g_status.SetStatusText("Undid " + wxstr(actionName));
 		g_gui.UpdateMinimap();
 		g_gui.root->UpdateMenubar();
 		g_gui.root->Refresh();
@@ -439,11 +440,12 @@ bool EditorManager::DoUndo() {
 bool EditorManager::DoRedo() {
 	Editor* editor = GetCurrentEditor();
 	if (editor && editor->actionQueue->canRedo()) {
+		std::string actionName = editor->actionQueue->getLastRedoActionName();
 		editor->actionQueue->redo();
 		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
-		g_status.SetStatusText("Redo action");
+		g_status.SetStatusText("Redid " + wxstr(actionName));
 		g_gui.UpdateMinimap();
 		g_gui.root->UpdateMenubar();
 		g_gui.root->Refresh();

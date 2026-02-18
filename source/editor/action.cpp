@@ -88,6 +88,39 @@ uint32_t Change::memsize() const {
 	return mem;
 }
 
+std::string GetActionName(ActionIdentifier ident) {
+	switch (ident) {
+		case ACTION_MOVE:
+			return "Move";
+		case ACTION_REMOTE:
+			return "Remote Action";
+		case ACTION_SELECT:
+			return "Select";
+		case ACTION_DELETE_TILES:
+			return "Delete";
+		case ACTION_CUT_TILES:
+			return "Cut";
+		case ACTION_PASTE_TILES:
+			return "Paste";
+		case ACTION_RANDOMIZE:
+			return "Randomize";
+		case ACTION_BORDERIZE:
+			return "Borderize";
+		case ACTION_DRAW:
+			return "Draw";
+		case ACTION_SWITCHDOOR:
+			return "Switch Door";
+		case ACTION_ROTATE_ITEM:
+			return "Rotate Item";
+		case ACTION_REPLACE_ITEMS:
+			return "Replace Items";
+		case ACTION_CHANGE_PROPERTIES:
+			return "Change Properties";
+		default:
+			return "Action";
+	}
+}
+
 Action::Action(Editor& editor, ActionIdentifier ident) :
 	commited(false),
 	editor(editor),
