@@ -32,12 +32,14 @@ ItemDrawer::~ItemDrawer() {
 
 void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha) {
 	const Position& pos = tile->getPosition();
-	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile);
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, g_items[item->getID()], options, ephemeral, red, green, blue, alpha, tile);
 }
 
 void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
-	ItemType& it = g_items[item->getID()];
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, g_items[item->getID()], options, ephemeral, red, green, blue, alpha, tile);
+}
 
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const ItemType& it, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
 		bool locked = item->isLocked();
@@ -118,12 +120,23 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
 
-	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
-	int subtype = patterns.subtype;
-	int pattern_x = patterns.x;
-	int pattern_y = patterns.y;
-	int pattern_z = patterns.z;
-	int frame = patterns.frame;
+	int subtype = -1;
+	int pattern_x = 0;
+	int pattern_y = 0;
+	int pattern_z = 0;
+	int frame = 0;
+
+	if (!ephemeral && spr->isSimpleAndLoaded() && !it.isSplash() && !it.isFluidContainer() && !it.isHangable && !it.stackable) {
+		// Optimization: Skip expensive PatternCalculator for simple sprites
+		// Uses default initialized values (0, 0, 0, 0, -1)
+	} else {
+		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+		subtype = patterns.subtype;
+		pattern_x = patterns.x;
+		pattern_y = patterns.y;
+		pattern_z = patterns.z;
+		frame = patterns.frame;
+	}
 
 	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.isBorder || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;

@@ -13,6 +13,7 @@
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "ui/map_tab.h"
+#include "game/items.h"
 
 PreviewDrawer::PreviewDrawer() {
 }
@@ -89,17 +90,19 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							g /= 2;
 						}
 						if (tile->ground) {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, true, r, g, b, 255);
+							const ItemType& groundType = g_items[tile->ground->getID()];
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), groundType, options, true, r, g, b, 255);
 						}
 					}
 
 					// Draw items on the tile
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
+							const ItemType& it = g_items[item->getID()];
 							if (item->isBorder()) {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, r, g, b);
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), it, options, true, 255, r, g, b);
 							} else {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, 255, 255, 255);
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), it, options, true, 255, 255, 255, 255);
 							}
 						}
 						if (tile->creature && options.show_creatures) {

@@ -19,6 +19,9 @@ class TooltipDrawer;
 struct LightBuffer;
 class SpriteBatch;
 class PrimitiveRenderer;
+class Tile;
+class Item;
+struct ItemType;
 
 class TileRenderer {
 public:
@@ -28,7 +31,7 @@ public:
 	void AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
-	void PreloadItem(const Tile* tile, Item* item);
+	void PreloadItem(const Tile* tile, Item* item, const ItemType& it);
 
 	ItemDrawer* item_drawer;
 	SpriteDrawer* sprite_drawer;
