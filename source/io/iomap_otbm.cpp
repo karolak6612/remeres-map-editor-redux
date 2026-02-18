@@ -190,10 +190,7 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 		if (expected) {
 			// Validate/sanitize OTBM-provided target
 			auto paths = MapXMLIO::normalizeMapFilePaths(filename, target);
-			if (FileName(wxstr(paths.first)).FileExists()) {
-				// Use normalized name
-				target = paths.second;
-			} else {
+			if (!FileName(wxstr(paths.first)).FileExists()) {
 				// File does not exist or invalid, try default
 				expected = false;
 			}

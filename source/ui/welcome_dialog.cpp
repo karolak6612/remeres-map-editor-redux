@@ -27,6 +27,7 @@ public:
 		Bind(wxEVT_LEAVE_WINDOW, &ConvexButton::OnMouse, this);
 		Bind(wxEVT_LEFT_DOWN, &ConvexButton::OnMouse, this);
 		Bind(wxEVT_LEFT_UP, &ConvexButton::OnMouse, this);
+		Bind(wxEVT_MOUSE_CAPTURE_LOST, &ConvexButton::OnMouseCaptureLost, this);
 	}
 
 	void SetBitmap(const wxBitmap& bitmap) {
@@ -134,6 +135,14 @@ private:
 			}
 			m_pressed = false;
 		}
+		Refresh();
+	}
+
+	void OnMouseCaptureLost(wxMouseCaptureLostEvent& evt) {
+		if (HasCapture()) {
+			ReleaseMouse();
+		}
+		m_pressed = false;
 		Refresh();
 	}
 };
@@ -503,6 +512,6 @@ void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
 	}
 }
 
-void WelcomeDialog::OnRecentFileSelected(wxCommandEvent& event) {
+void WelcomeDialog::OnRecentFileSelected(wxListEvent& event) {
 	// Placeholder
 }

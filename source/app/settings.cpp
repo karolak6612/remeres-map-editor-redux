@@ -389,8 +389,6 @@ void Settings::IO(IOMode mode) {
 	Bool(WINDOW_MAXIMIZED, false);
 	Bool(WELCOME_DIALOG, true);
 
-	Bool(WELCOME_DIALOG, true);
-
 	section("Hotkeys");
 	String(NUMERICAL_HOTKEYS, "");
 

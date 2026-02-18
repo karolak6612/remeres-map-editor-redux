@@ -20,7 +20,7 @@ private:
 	// Event Handlers
 	void OnButtonClicked(wxCommandEvent& event);
 	void OnRecentFileActivated(wxListEvent& event);
-	void OnRecentFileSelected(wxCommandEvent& event);
+	void OnRecentFileSelected(wxListEvent& event);
 
 	void AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol = wxNullColour);
 
