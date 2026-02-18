@@ -289,10 +289,6 @@ private:
 	using VersionList = std::vector<std::unique_ptr<ClientVersion>>;
 	static VersionList client_versions;
 	static ClientVersion* latest_version;
-
-	// All otbs
-	using OtbMap = std::map<std::string, OtbVersion>;
-	static OtbMap otb_versions;
 };
 
 inline int VersionComparisonPredicate(ClientVersion* a, ClientVersion* b) {

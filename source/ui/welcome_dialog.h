@@ -25,6 +25,7 @@ private:
 
 	wxImageList* m_imageList;
 	wxListCtrl* m_recentList;
+	wxListCtrl* m_clientList;
 };
 
 #endif // WELCOME_DIALOG_H

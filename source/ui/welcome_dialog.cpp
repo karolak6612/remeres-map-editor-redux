@@ -77,11 +77,11 @@ private:
 
 		// Draw Inner Highlight/Shadow for 3D effect
 		if (!m_pressed) {
-			dc.SetPen(wxPen(wxColour(255, 255, 255, 50))); // Highlight top/left
+			dc.SetPen(wxPen(wxColour(255, 255, 255))); // Highlight top/left
 			dc.DrawLine(1, 1, sz.x - 1, 1);
 			dc.DrawLine(1, 1, 1, sz.y - 1);
 
-			dc.SetPen(wxPen(wxColour(0, 0, 0, 50))); // Shadow bottom/right
+			dc.SetPen(wxPen(wxColour(0, 0, 0))); // Shadow bottom/right
 			dc.DrawLine(1, sz.y - 2, sz.x - 1, sz.y - 2);
 			dc.DrawLine(sz.x - 2, 1, sz.x - 2, sz.y - 2);
 		}
@@ -222,7 +222,7 @@ private:
 };
 
 WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionText, const wxSize& size, const wxBitmap& rmeLogo, const std::vector<wxString>& recentFiles) :
-	wxDialog(nullptr, wxID_ANY, "Remere's Map Editor: Redux", wxDefaultPosition, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+	wxDialog(nullptr, wxID_ANY, titleText, wxDefaultPosition, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
 
 	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 	SetForegroundColour(Theme::Get(Theme::Role::Text));
@@ -249,7 +249,7 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 	headerSizer->Add(iconBtn, 0, wxALL | wxCENTER, 8);
 
 	wxBoxSizer* titleSizer = new wxBoxSizer(wxVERTICAL);
-	wxStaticText* title = new wxStaticText(headerPanel, wxID_ANY, "Remere's Map Editor: Redux");
+	wxStaticText* title = new wxStaticText(headerPanel, wxID_ANY, titleText);
 	wxFont titleFont = title->GetFont();
 	titleFont.SetPointSize(14);
 	titleFont.SetWeight(wxFONTWEIGHT_BOLD);
@@ -350,20 +350,20 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 
 	// Column 5: Available Clients
 	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
-	wxListCtrl* clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	clientList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
-	clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
-	clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, 150);
+	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
+	m_clientList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
+	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
+	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, 150);
 
-	clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	clientList->SetTextColour(Theme::Get(Theme::Role::Text));
+	m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
+	m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));
 
-	long ph1 = clientList->InsertItem(0, "", 3);
-	clientList->SetItem(ph1, 1, "Placeholder Client 1");
-	long ph2 = clientList->InsertItem(1, "", 3);
-	clientList->SetItem(ph2, 1, "Placeholder Client 2");
+	long ph1 = m_clientList->InsertItem(0, "", 3);
+	m_clientList->SetItem(ph1, 1, "Placeholder Client 1");
+	long ph2 = m_clientList->InsertItem(1, "", 3);
+	m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
 
-	col5->GetSizer()->Add(clientList, 1, wxEXPAND | wxALL, 1);
+	col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
 	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
 
 	contentPanel->SetSizer(contentSizer);
@@ -414,6 +414,12 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 }
 
 WelcomeDialog::~WelcomeDialog() {
+	if (m_recentList) {
+		m_recentList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
+	}
+	if (m_clientList) {
+		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
+	}
 	delete m_imageList;
 }
 

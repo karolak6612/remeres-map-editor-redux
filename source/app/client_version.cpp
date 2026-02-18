@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include <toml++/toml.h>
+#include <charconv>
 #include "app/main.h"
 
 #include "app/settings.h"
@@ -34,7 +35,6 @@
 
 ClientVersion::VersionList ClientVersion::client_versions;
 ClientVersion* ClientVersion::latest_version = nullptr;
-ClientVersion::OtbMap ClientVersion::otb_versions;
 
 void ClientVersion::loadVersions() {
 	// Clean up old stuff
@@ -133,15 +133,19 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			// Data Directory
 			std::string dataDirectory = client["dataDirectory"].value_or("");
 
-			std::unique_ptr<ClientVersion> cv = std::unique_ptr<ClientVersion>(newd ClientVersion(otb, name, wxstr(dataDirectory)));
-			cv->setClientPath(cv->getDataPath());
+			std::unique_ptr<ClientVersion> cv = std::make_unique<ClientVersion>(otb, name, wxstr(dataDirectory));
+
+			// Use a raw pointer for configuration while we still own the unique_ptr
+			ClientVersion* cv_ptr = cv.get();
+
+			cv_ptr->setClientPath(cv_ptr->getDataPath());
 
 			// Description & Config Type
-			cv->description = client["description"].value_or("");
-			cv->config_type = client["configType"].value_or("");
+			cv_ptr->description = client["description"].value_or("");
+			cv_ptr->config_type = client["configType"].value_or("");
 
 			// OTBM Versions
-			cv->preferred_map_version = MAP_OTBM_UNKNOWN;
+			cv_ptr->preferred_map_version = MAP_OTBM_UNKNOWN;
 			if (client["otbmVersions"].as_array()) {
 				auto& otbmVers = *client["otbmVersions"].as_array();
 				for (auto&& v : otbmVers) {
@@ -149,9 +153,9 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 					// Adjust 1-based TOML version to 0-based enum
 					if (ver >= 1 && ver <= 4) {
 						int enumVer = ver - 1;
-						cv->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
-						if (cv->preferred_map_version == MAP_OTBM_UNKNOWN) {
-							cv->preferred_map_version = static_cast<MapVersionID>(enumVer);
+						cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
+						if (cv_ptr->preferred_map_version == MAP_OTBM_UNKNOWN) {
+							cv_ptr->preferred_map_version = static_cast<MapVersionID>(enumVer);
 						}
 					}
 				}
@@ -162,25 +166,25 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			std::string sprSigStr = client["sprSignature"].value_or("0");
 
 			ClientData client_data;
-			client_data.datSignature = std::strtoul(datSigStr.c_str(), nullptr, 16);
-			client_data.sprSignature = std::strtoul(sprSigStr.c_str(), nullptr, 16);
+			std::from_chars(datSigStr.data(), datSigStr.data() + datSigStr.size(), client_data.datSignature, 16);
+			std::from_chars(sprSigStr.data(), sprSigStr.data() + sprSigStr.size(), client_data.sprSignature, 16);
 			client_data.datFormat = getDatFormatForVersion(version);
 
 			// OTFI Replacement Fields
-			cv->metadata_file = client["metadataFile"].value_or("Tibia.dat");
-			cv->sprites_file = client["spritesFile"].value_or("Tibia.spr");
+			cv_ptr->metadata_file = client["metadataFile"].value_or("Tibia.dat");
+			cv_ptr->sprites_file = client["spritesFile"].value_or("Tibia.spr");
 
-			cv->is_transparent = client["transparency"].value_or(version >= 1010);
-			cv->is_extended = client["extended"].value_or(version >= 860);
-			cv->has_frame_durations = client["frameDurations"].value_or(version >= 1050);
-			cv->has_frame_groups = client["frameGroups"].value_or(version >= 1057);
+			cv_ptr->is_transparent = client["transparency"].value_or(version >= 1010);
+			cv_ptr->is_extended = client["extended"].value_or(version >= 860);
+			cv_ptr->has_frame_durations = client["frameDurations"].value_or(version >= 1050);
+			cv_ptr->has_frame_groups = client["frameGroups"].value_or(version >= 1057);
 
-			cv->data_versions.push_back(client_data);
-			cv->visible = true;
+			cv_ptr->data_versions.push_back(client_data);
+			cv_ptr->visible = true;
 
 			bool isDefault = client["default"].value_or(false);
 			if (isDefault) {
-				latest_version = cv.get();
+				latest_version = cv_ptr;
 			}
 
 			client_versions.push_back(std::move(cv));
@@ -191,13 +195,18 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 void ClientVersion::unloadVersions() {
 	client_versions.clear();
 	latest_version = nullptr;
-	otb_versions.clear();
 }
 
 DatFormat ClientVersion::getDatFormatForVersion(int version) {
 	// Logic to infer DatFormat from version integer
 	if (version >= 1077) {
 		return DAT_FORMAT_1057;
+	}
+	if (version >= 1057) {
+		return DAT_FORMAT_1057;
+	}
+	if (version >= 1050) {
+		return DAT_FORMAT_1050;
 	}
 	if (version >= 1010) {
 		return DAT_FORMAT_1010;
@@ -315,11 +324,8 @@ ClientVersionList ClientVersion::getAllForOTBMVersion(MapVersionID id) {
 	ClientVersionList list;
 	for (const auto& cv : client_versions) {
 		if (cv->isVisible()) {
-			for (const auto& v : cv->map_versions_supported) {
-				if (v == id) {
-					list.push_back(cv.get());
-					break;
-				}
+			if (std::ranges::find(cv->map_versions_supported, id) != cv->map_versions_supported.end()) {
+				list.push_back(cv.get());
 			}
 		}
 	}
@@ -350,7 +356,6 @@ bool ClientVersion::hasValidPaths() {
 	}
 
 	wxDir dir(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
-	wxString otfi_file;
 
 	// OTFI loading removed (deprecated)
 	// Metadata and sprites paths are now set in loadVersionsFromTOML or defaulted.

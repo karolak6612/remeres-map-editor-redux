@@ -250,7 +250,6 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 			DialogUtil::PopupDialog(g_gui.root, "Waypoint Migration", std::format("Waypoints detected in OTBM file.\n\nThey have been migrated to the external file:\n{}\n\nThey will be removed from the OTBM file on the next save.", map.waypointfile), wxOK | wxICON_INFORMATION);
 
 			// Save immediately to XML
-			// Save immediately to XML
 			if (!MapXMLIO::saveWaypoints(map, filename)) {
 				// Migration failed
 				map.waypointfile.clear();

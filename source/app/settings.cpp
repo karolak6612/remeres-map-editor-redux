@@ -20,6 +20,8 @@
 #include "app/client_version.h"
 #include "app/main.h"
 
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 #include <toml++/toml.h>
 
 #include <iostream>
@@ -143,11 +145,8 @@ std::string Settings::DynamicValue::str() {
 }
 
 static std::string to_snake_case(std::string s) {
-	std::string result;
-	for (unsigned char c : s) {
-		result += (char)std::tolower(c);
-	}
-	return result;
+	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+	return s;
 }
 
 void Settings::IO(IOMode mode) {
@@ -155,8 +154,8 @@ void Settings::IO(IOMode mode) {
 		if (std::ifstream("config.toml")) {
 			try {
 				g_settings_table = toml::parse_file("config.toml");
-			} catch (const toml::parse_error&) {
-				// Handle parse error
+			} catch (const toml::parse_error& err) {
+				spdlog::error("Failed to parse config.toml: {}", err.description());
 			}
 		}
 	}
