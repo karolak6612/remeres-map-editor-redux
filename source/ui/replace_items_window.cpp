@@ -19,6 +19,7 @@
 #include "ui/replace_items_window.h"
 #include "ui/find_item_window.h"
 #include "editor/action_queue.h"
+#include "editor/selection_util.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "util/image_manager.h"
@@ -357,7 +358,11 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		ItemFinder finder(info.replaceId, (uint32_t)g_settings.getInteger(Config::REPLACE_SIZE));
 
 		// search on map
-		foreach_ItemOnMap(editor->map, finder, selectionOnly);
+		if (selectionOnly) {
+			foreach_ItemInSelection(*editor, finder);
+		} else {
+			foreach_ItemOnMap(editor->map, finder, false);
+		}
 
 		uint32_t total = 0;
 		std::vector<std::pair<Tile*, Item*>>& result = finder.result;
