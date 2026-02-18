@@ -6,6 +6,10 @@
 #include <wx/tokenzr.h>
 #include <charconv>
 
+namespace {
+	constexpr char kDefaultDataDirectory[] = "1287";
+}
+
 ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent) {
 	wxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
 
@@ -380,12 +384,18 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 		std::string s = nstr(value.As<wxString>());
 		if (std::from_chars(s.data(), s.data() + s.size(), sig, 16).ec == std::errc()) {
 			cv->setDatSignature(sig);
+		} else {
+			prop->SetValue(wxString::Format("%X", cv->getDatSignature()));
+			UpdatePropertyValidation(prop);
 		}
 	} else if (propName == "sprSignature") {
 		uint32_t sig;
 		std::string s = nstr(value.As<wxString>());
 		if (std::from_chars(s.data(), s.data() + s.size(), sig, 16).ec == std::errc()) {
 			cv->setSprSignature(sig);
+		} else {
+			prop->SetValue(wxString::Format("%X", cv->getSprSignature()));
+			UpdatePropertyValidation(prop);
 		}
 	} else if (propName == "description") {
 		cv->setDescription(nstr(value.As<wxString>()));
@@ -421,8 +431,8 @@ void ClientVersionPage::OnAddClient(wxCommandEvent& WXUNUSED(event)) {
 	otb.id = PROTOCOL_VERSION_NONE;
 	otb.format_version = OTB_VERSION_1;
 
-	auto cv = std::make_unique<ClientVersion>(otb, newName, "1287");
-	cv->setName(newName);
+	auto cv = std::make_unique<ClientVersion>(otb, newName, kDefaultDataDirectory);
+	// cv->setName(newName); // Redundant, set in constructor
 	cv->setMetadataFile("Tibia.dat");
 	cv->setSpritesFile("Tibia.spr");
 	cv->markDirty();
@@ -487,6 +497,14 @@ void ClientVersionPage::Apply() {
 		}
 	}
 	if (anyDirty) {
-		ClientVersion::saveVersions();
+		if (ClientVersion::saveVersions()) {
+			for (auto* cv : ClientVersion::getAll()) {
+				if (cv->isDirty()) {
+					cv->clearDirty();
+				}
+			}
+		} else {
+			wxMessageBox("Failed to save client versions. Check log for details.", "Save Error", wxOK | wxICON_ERROR);
+		}
 	}
 }

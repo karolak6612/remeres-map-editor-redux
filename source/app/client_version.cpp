@@ -255,7 +255,7 @@ bool ClientVersion::isDefaultPath() const {
 	return clientPath.GetFullPath() == dataPath.GetFullPath();
 }
 
-void ClientVersion::saveVersions() {
+bool ClientVersion::saveVersions() {
 	// 1. Save technical database to data/clients.toml
 	toml::table db_table;
 	toml::array db_clients_array;
@@ -324,6 +324,7 @@ void ClientVersion::saveVersions() {
 	std::ofstream db_stream(db_file.GetFullPath().ToStdString());
 	if (!db_stream.is_open()) {
 		wxLogError("Failed to open clients.toml for writing: %s", db_file.GetFullPath());
+		return false;
 	}
 	db_stream << db_table;
 	db_stream.close();
@@ -331,6 +332,7 @@ void ClientVersion::saveVersions() {
 	// Save User Config
 	g_settings.getTable().insert_or_assign("clients", std::move(config_clients_array));
 	g_settings.save();
+	return true;
 }
 
 // Client version class
@@ -434,6 +436,7 @@ bool ClientVersion::hasValidPaths() {
 	// Metadata and sprites paths are now set in loadVersionsFromTOML or defaulted.
 	// We just verify they exist here.
 	metadata_path = wxFileName(client_path.GetFullPath(), wxString(metadata_file));
+	sprites_path = wxFileName(client_path.GetFullPath(), wxString(sprites_file));
 
 	if (!metadata_path.FileExists() || !sprites_path.FileExists()) {
 		// Fallback to "Tibia.dat" / "Tibia.spr" if the configured files don't exist

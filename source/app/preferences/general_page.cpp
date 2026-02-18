@@ -44,7 +44,7 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 	grid_sizer->Add(tmptext = newd wxStaticText(this, wxID_ANY, "Undo maximum memory size (MB): "), 0);
 	undo_mem_size_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::UNDO_MEM_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 4096);
 	grid_sizer->Add(undo_mem_size_spin, 0);
-	SetWindowToolTip(tmptext, undo_mem_size_spin, "The approximite limit for the memory usage of the undo queue.");
+	SetWindowToolTip(tmptext, undo_mem_size_spin, "The approximate limit for the memory usage of the undo queue.");
 
 	grid_sizer->Add(tmptext = newd wxStaticText(this, wxID_ANY, "Worker Threads: "), 0);
 	worker_threads_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::WORKER_THREADS)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 64);
@@ -68,7 +68,7 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 	position_format = newd wxRadioBox(this, wxID_ANY, "Copy Position Format", wxDefaultPosition, wxDefaultSize, radio_choices, position_choices, 1, wxRA_SPECIFY_COLS);
 	position_format->SetSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT));
 	sizer->Add(position_format, 0, wxALL | wxEXPAND, 5);
-	SetWindowToolTip(tmptext, position_format, "The position format when copying from the map.");
+	SetWindowToolTip(position_format, position_format, "The position format when copying from the map.");
 
 	SetSizerAndFit(sizer);
 }

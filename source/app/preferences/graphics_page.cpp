@@ -74,12 +74,12 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
 	// Cursor colors
 	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Cursor color: "), 0);
 	subsizer->Add(cursor_color_pick = newd wxColourPickerCtrl(this, wxID_ANY, wxColor(g_settings.getInteger(Config::CURSOR_RED), g_settings.getInteger(Config::CURSOR_GREEN), g_settings.getInteger(Config::CURSOR_BLUE), g_settings.getInteger(Config::CURSOR_ALPHA))), 0);
-	SetWindowToolTip(icon_background_choice, tmp, "The color of the main cursor on the map (while in drawing mode).");
+	SetWindowToolTip(cursor_color_pick, tmp, "The color of the main cursor on the map (while in drawing mode).");
 
 	// Alternate cursor color
 	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Secondary cursor color: "), 0);
 	subsizer->Add(cursor_alt_color_pick = newd wxColourPickerCtrl(this, wxID_ANY, wxColor(g_settings.getInteger(Config::CURSOR_ALT_RED), g_settings.getInteger(Config::CURSOR_ALT_GREEN), g_settings.getInteger(Config::CURSOR_ALT_BLUE), g_settings.getInteger(Config::CURSOR_ALT_ALPHA))), 0);
-	SetWindowToolTip(icon_background_choice, tmp, "The color of the secondary cursor on the map (for houses and flags).");
+	SetWindowToolTip(cursor_alt_color_pick, tmp, "The color of the secondary cursor on the map (for houses and flags).");
 
 	// Screenshot dir
 	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Screenshot directory: "), 0);

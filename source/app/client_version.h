@@ -215,7 +215,7 @@ public:
 
 	static void loadVersions();
 	static void unloadVersions();
-	static void saveVersions();
+	static bool saveVersions();
 
 	static void addVersion(std::unique_ptr<ClientVersion> version);
 	static void removeVersion(const ClientVersionID& id);
@@ -444,11 +444,11 @@ private:
 	static std::string loaded_file_path;
 };
 
-inline int VersionComparisonPredicate(ClientVersion* a, ClientVersion* b) {
-	if (a->getID() < b->getID()) {
-		return 1;
+inline bool VersionComparisonPredicate(ClientVersion* a, ClientVersion* b) {
+	if (a->getProtocolID() < b->getProtocolID()) {
+		return true;
 	}
-	return 0;
+	return false;
 }
 
 #endif

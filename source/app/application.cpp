@@ -295,10 +295,17 @@ void Application::FixVersionDiscrapencies() {
 
 	wxString ss = wxstr(g_settings.getString(Config::SCREENSHOT_DIRECTORY));
 	if (ss.empty()) {
-		ss = wxStandardPaths::Get().GetDocumentsDir();
+		wxFileName fn;
+		fn.AssignDir(wxStandardPaths::Get().GetDocumentsDir());
+
 #ifdef __WINDOWS__
-		ss += "\\My Pictures\\RME\\";
+		fn.AppendDir("My Pictures");
+		fn.AppendDir("RME");
 #endif
+		if (!fn.DirExists()) {
+			fn.Mkdir();
+		}
+		ss = fn.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
 	}
 	g_settings.setString(Config::SCREENSHOT_DIRECTORY, nstr(ss));
 

@@ -86,7 +86,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	if (w > 0 && h > 0) {
 		SetSize(w, h);
 	} else {
-		SetSize(1200, 500);
+		SetSize(600, 500);
 	}
 
 	Centre(wxBOTH);

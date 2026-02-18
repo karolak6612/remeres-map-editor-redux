@@ -270,14 +270,17 @@ void Settings::IO(IOMode mode) {
 	Bool(ALWAYS_SHOW_ZONES, true);
 	Bool(EXT_HOUSE_SHADER, true);
 	Bool(DRAW_LOCKED_DOOR, false);
+	Bool(SHOW_AS_MINIMAP, true);
 
 	section("General");
 	Bool(GOTO_WEBSITE_ON_BOOT, false);
 	Bool(USE_UPDATER, true);
+	Bool(AUTOCHECK_FOR_UPDATES, false);
 
 	section("Version");
 	Int(VERSION_ID, 0);
 	Int(CHECK_SIGNATURES, 1);
+	Int(INDIRECTORY_INSTALLATION, 0);
 	Int(USE_CUSTOM_DATA_DIRECTORY, 0);
 	String(DATA_DIRECTORY, "");
 	String(EXTENSIONS_DIRECTORY, "");
@@ -333,7 +336,7 @@ void Settings::IO(IOMode mode) {
 	Int(TEXTURE_CLEAN_THRESHOLD, 2500);
 	Int(SOFTWARE_CLEAN_THRESHOLD, 1800);
 	Int(SOFTWARE_CLEAN_SIZE, 500);
-	Bool(ICON_BACKGROUND, false);
+	Int(ICON_BACKGROUND, 0);
 	Int(HARD_REFRESH_RATE, 200);
 	Bool(HIDE_ITEMS_WHEN_ZOOMED, true);
 	String(SCREENSHOT_DIRECTORY, "");
@@ -373,6 +376,7 @@ void Settings::IO(IOMode mode) {
 	String(PALETTE_DOODAD_STYLE, "large icons");
 	String(PALETTE_ITEM_STYLE, "listbox");
 	String(PALETTE_RAW_STYLE, "listbox");
+	Int(PALETTE_CREATURE_STYLE, 0);
 
 	section("Window");
 	String(PALETTE_LAYOUT, "");
@@ -393,6 +397,16 @@ void Settings::IO(IOMode mode) {
 
 	section("Hotkeys");
 	String(NUMERICAL_HOTKEYS, "");
+	String(HOTKEY_0, "");
+	String(HOTKEY_1, "");
+	String(HOTKEY_2, "");
+	String(HOTKEY_3, "");
+	String(HOTKEY_4, "");
+	String(HOTKEY_5, "");
+	String(HOTKEY_6, "");
+	String(HOTKEY_7, "");
+	String(HOTKEY_8, "");
+	String(HOTKEY_9, "");
 
 	section("Toolbars");
 	Bool(SHOW_TOOLBAR_STANDARD, true);
