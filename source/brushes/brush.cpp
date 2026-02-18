@@ -78,25 +78,77 @@ void Brushes::clear() {
 }
 
 void Brushes::init() {
-	addBrush(g_brush_manager.optional_brush = newd OptionalBorderBrush());
-	addBrush(g_brush_manager.eraser = newd EraserBrush());
-	addBrush(g_brush_manager.spawn_brush = newd SpawnBrush());
-	addBrush(g_brush_manager.normal_door_brush = newd DoorBrush(WALL_DOOR_NORMAL));
-	addBrush(g_brush_manager.locked_door_brush = newd DoorBrush(WALL_DOOR_LOCKED));
-	addBrush(g_brush_manager.magic_door_brush = newd DoorBrush(WALL_DOOR_MAGIC));
-	addBrush(g_brush_manager.quest_door_brush = newd DoorBrush(WALL_DOOR_QUEST));
-	addBrush(g_brush_manager.hatch_door_brush = newd DoorBrush(WALL_HATCH_WINDOW));
-	addBrush(g_brush_manager.archway_door_brush = newd DoorBrush(WALL_ARCHWAY));
-	addBrush(g_brush_manager.normal_door_alt_brush = newd DoorBrush(WALL_DOOR_NORMAL_ALT));
-	addBrush(g_brush_manager.window_door_brush = newd DoorBrush(WALL_WINDOW));
-	addBrush(g_brush_manager.house_brush = newd HouseBrush());
-	addBrush(g_brush_manager.house_exit_brush = newd HouseExitBrush());
-	addBrush(g_brush_manager.waypoint_brush = newd WaypointBrush());
+	auto optional_brush = std::make_unique<OptionalBorderBrush>();
+	g_brush_manager.optional_brush = optional_brush.get();
+	addBrush(std::move(optional_brush));
 
-	addBrush(g_brush_manager.pz_brush = newd FlagBrush(TILESTATE_PROTECTIONZONE));
-	addBrush(g_brush_manager.rook_brush = newd FlagBrush(TILESTATE_NOPVP));
-	addBrush(g_brush_manager.nolog_brush = newd FlagBrush(TILESTATE_NOLOGOUT));
-	addBrush(g_brush_manager.pvp_brush = newd FlagBrush(TILESTATE_PVPZONE));
+	auto eraser = std::make_unique<EraserBrush>();
+	g_brush_manager.eraser = eraser.get();
+	addBrush(std::move(eraser));
+
+	auto spawn_brush = std::make_unique<SpawnBrush>();
+	g_brush_manager.spawn_brush = spawn_brush.get();
+	addBrush(std::move(spawn_brush));
+
+	auto normal_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_NORMAL);
+	g_brush_manager.normal_door_brush = normal_door_brush.get();
+	addBrush(std::move(normal_door_brush));
+
+	auto locked_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_LOCKED);
+	g_brush_manager.locked_door_brush = locked_door_brush.get();
+	addBrush(std::move(locked_door_brush));
+
+	auto magic_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_MAGIC);
+	g_brush_manager.magic_door_brush = magic_door_brush.get();
+	addBrush(std::move(magic_door_brush));
+
+	auto quest_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_QUEST);
+	g_brush_manager.quest_door_brush = quest_door_brush.get();
+	addBrush(std::move(quest_door_brush));
+
+	auto hatch_door_brush = std::make_unique<DoorBrush>(WALL_HATCH_WINDOW);
+	g_brush_manager.hatch_door_brush = hatch_door_brush.get();
+	addBrush(std::move(hatch_door_brush));
+
+	auto archway_door_brush = std::make_unique<DoorBrush>(WALL_ARCHWAY);
+	g_brush_manager.archway_door_brush = archway_door_brush.get();
+	addBrush(std::move(archway_door_brush));
+
+	auto normal_door_alt_brush = std::make_unique<DoorBrush>(WALL_DOOR_NORMAL_ALT);
+	g_brush_manager.normal_door_alt_brush = normal_door_alt_brush.get();
+	addBrush(std::move(normal_door_alt_brush));
+
+	auto window_door_brush = std::make_unique<DoorBrush>(WALL_WINDOW);
+	g_brush_manager.window_door_brush = window_door_brush.get();
+	addBrush(std::move(window_door_brush));
+
+	auto house_brush = std::make_unique<HouseBrush>();
+	g_brush_manager.house_brush = house_brush.get();
+	addBrush(std::move(house_brush));
+
+	auto house_exit_brush = std::make_unique<HouseExitBrush>();
+	g_brush_manager.house_exit_brush = house_exit_brush.get();
+	addBrush(std::move(house_exit_brush));
+
+	auto waypoint_brush = std::make_unique<WaypointBrush>();
+	g_brush_manager.waypoint_brush = waypoint_brush.get();
+	addBrush(std::move(waypoint_brush));
+
+	auto pz_brush = std::make_unique<FlagBrush>(TILESTATE_PROTECTIONZONE);
+	g_brush_manager.pz_brush = pz_brush.get();
+	addBrush(std::move(pz_brush));
+
+	auto rook_brush = std::make_unique<FlagBrush>(TILESTATE_NOPVP);
+	g_brush_manager.rook_brush = rook_brush.get();
+	addBrush(std::move(rook_brush));
+
+	auto nolog_brush = std::make_unique<FlagBrush>(TILESTATE_NOLOGOUT);
+	g_brush_manager.nolog_brush = nolog_brush.get();
+	addBrush(std::move(nolog_brush));
+
+	auto pvp_brush = std::make_unique<FlagBrush>(TILESTATE_PVPZONE);
+	g_brush_manager.pvp_brush = pvp_brush.get();
+	addBrush(std::move(pvp_brush));
 
 	GroundBrush::init();
 	WallBrush::init();
@@ -127,29 +179,33 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 
 		const std::string_view brushType = attribute.as_string();
 
-		static const std::unordered_map<std::string_view, std::function<Brush*()>> typeMap = {
-			{ "border", [] { return newd GroundBrush(); } },
-			{ "ground", [] { return newd GroundBrush(); } },
-			{ "wall", [] { return newd WallBrush(); } },
-			{ "wall decoration", [] { return newd WallDecorationBrush(); } },
-			{ "carpet", [] { return newd CarpetBrush(); } },
-			{ "table", [] { return newd TableBrush(); } },
-			{ "doodad", [] { return newd DoodadBrush(); } }
+		static const std::unordered_map<std::string_view, std::function<std::unique_ptr<Brush>()>> typeMap = {
+			{ "border", [] { return std::make_unique<GroundBrush>(); } },
+			{ "ground", [] { return std::make_unique<GroundBrush>(); } },
+			{ "wall", [] { return std::make_unique<WallBrush>(); } },
+			{ "wall decoration", [] { return std::make_unique<WallDecorationBrush>(); } },
+			{ "carpet", [] { return std::make_unique<CarpetBrush>(); } },
+			{ "table", [] { return std::make_unique<TableBrush>(); } },
+			{ "doodad", [] { return std::make_unique<DoodadBrush>(); } }
 		};
 
+		std::unique_ptr<Brush> newBrush;
 		if (auto it = typeMap.find(brushType); it != typeMap.end()) {
-			brush = it->second();
+			newBrush = it->second();
 		} else {
 			warnings.push_back(std::format("Unknown brush type {}", brushType));
 			return false;
 		}
 
-		ASSERT(brush);
+		ASSERT(newBrush);
+		brush = newBrush.get();
 		brush->setName(brushName);
 	}
 
 	if (!node.first_child()) {
-		brushes.insert(std::make_pair(brush->getName(), brush));
+		if (newBrush) {
+			addBrush(std::move(newBrush));
+		}
 		return true;
 	}
 
@@ -163,21 +219,17 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 
 	if (brush->getName() == "all" || brush->getName() == "none") {
 		warnings.push_back(std::format("Using reserved brushname '{}'.", brush->getName()));
-		delete brush;
 		return false;
 	}
 
-	Brush* otherBrush = getBrush(brush->getName());
-	if (otherBrush) {
-		if (otherBrush != brush) {
+	if (newBrush) {
+		Brush* otherBrush = getBrush(brush->getName());
+		if (otherBrush) {
 			warnings.push_back(std::string(wxstr(std::format("Duplicate brush name {}. Undefined behaviour may ensue.", brush->getName())).mb_str()));
-		} else {
-			// Don't insert
-			return true;
 		}
+		addBrush(std::move(newBrush));
 	}
 
-	brushes.insert(std::make_pair(brush->getName(), brush));
 	return true;
 }
 
@@ -200,8 +252,8 @@ bool Brushes::unserializeBorder(pugi::xml_node node, std::vector<std::string>& w
 	return true;
 }
 
-void Brushes::addBrush(Brush* brush) {
-	brushes.emplace(brush->getName(), std::unique_ptr<Brush>(brush));
+void Brushes::addBrush(std::unique_ptr<Brush> brush) {
+	brushes.emplace(brush->getName(), std::move(brush));
 }
 
 Brush* Brushes::getBrush(std::string_view name) const {

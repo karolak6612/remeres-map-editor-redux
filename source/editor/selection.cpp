@@ -252,6 +252,7 @@ void Selection::flush() {
 		result.reserve(tiles.size());
 		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), tilePositionLessThan);
 		tiles = std::move(result);
+		pending_removes.clear();
 	}
 
 	if (!pending_adds.empty()) {
@@ -261,14 +262,12 @@ void Selection::flush() {
 		});
 		pending_adds.erase(first, last);
 
-		std::vector<Tile*> merged;
-		merged.reserve(tiles.size() + pending_adds.size());
-		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), tilePositionLessThan);
-		tiles = std::move(merged);
+		std::vector<Tile*> result;
+		result.reserve(tiles.size() + pending_adds.size());
+		std::ranges::set_union(tiles, pending_adds, std::back_inserter(result), tilePositionLessThan);
+		tiles = std::move(result);
+		pending_adds.clear();
 	}
-
-	pending_adds.clear();
-	pending_removes.clear();
 }
 
 void Selection::clear() {

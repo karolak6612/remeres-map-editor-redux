@@ -33,7 +33,7 @@ conan install "$SCRIPT_DIR" -of "$BUILD_DIR" --build=missing -s build_type=Relea
 echo "[3/4] Configuring CMake with Ninja..."
 echo "[3/4] Configuring CMake with Ninja..." >> "$LOG_FILE"
 
-cmake --preset conan-release >> "$LOG_FILE" 2>&1
+cmake --preset conan-release -DRME_BUILD_TESTS=ON >> "$LOG_FILE" 2>&1
 
 echo "[4/4] Building Release with Ninja..."
 echo "[4/4] Building Release with Ninja..." >> "$LOG_FILE"

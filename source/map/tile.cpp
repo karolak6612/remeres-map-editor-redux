@@ -481,23 +481,22 @@ void Tile::update() {
 			minimapColor = i->getMiniMapColor();
 		}
 
-		ItemType& it_type = g_items[i->getID()];
-		if (it_type.unpassable) {
+		if (i->isBlocking()) {
 			statflags |= TILESTATE_BLOCKING;
 		}
-		if (it_type.isOptionalBorder) {
+		if (i->isOptionalBorder()) {
 			statflags |= TILESTATE_OP_BORDER;
 		}
-		if (it_type.isTable) {
+		if (i->isTable()) {
 			statflags |= TILESTATE_HAS_TABLE;
 		}
-		if (it_type.isCarpet) {
+		if (i->isCarpet()) {
 			statflags |= TILESTATE_HAS_CARPET;
 		}
-		if (it_type.hookSouth) {
+		if (i->hasProperty(HOOK_SOUTH)) {
 			statflags |= TILESTATE_HOOK_SOUTH;
 		}
-		if (it_type.hookEast) {
+		if (i->hasProperty(HOOK_EAST)) {
 			statflags |= TILESTATE_HOOK_EAST;
 		}
 	});
