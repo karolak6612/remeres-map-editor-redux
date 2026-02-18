@@ -31,9 +31,12 @@
 #include "app/managers/version_manager.h"
 #include "app/preferences.h"
 #include "util/image_manager.h"
+#include <charconv>
+#include <wx/tokenzr.h>
+#include <wx/propgrid/advprops.h>
 
 PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false) :
-	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(400, 400), wxCAPTION | wxCLOSE_BOX) {
+	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(600, 500), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	book = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBK_TOP);
@@ -505,75 +508,89 @@ wxNotebookPage* PreferencesWindow::CreateUIPage() {
 
 wxNotebookPage* PreferencesWindow::CreateClientPage() {
 	wxNotebookPage* client_page = newd wxPanel(book, wxID_ANY);
+	wxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
 
-	// Refresh g_settings
-	ClientVersion::saveVersions();
-	ClientVersionList versions = ClientVersion::getAllVisible();
+	// Splitter for Tree and Property Grid
+	client_splitter = newd wxSplitterWindow(client_page, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE);
 
-	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
+	// Left side: List and Buttons
+	wxPanel* left_panel = newd wxPanel(client_splitter, wxID_ANY);
+	wxStaticBoxSizer* left_static_sizer = newd wxStaticBoxSizer(wxVERTICAL, left_panel, "Client List");
+	wxSizer* left_inner_sizer = newd wxBoxSizer(wxVERTICAL);
 
-	auto* options_sizer = newd wxFlexGridSizer(2, 10, 10);
-	options_sizer->AddGrowableCol(1);
+	client_tree_ctrl = newd wxTreeCtrl(left_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_HAS_BUTTONS | wxTR_SINGLE);
+	left_inner_sizer->Add(client_tree_ctrl, 1, wxEXPAND | wxBOTTOM, 5);
 
-	// Default client version choice control
+	wxSizer* btn_outer_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	add_client_btn = newd wxButton(left_panel, wxID_ANY, "+ Add");
+	delete_client_btn = newd wxButton(left_panel, wxID_ANY, "- Remove");
+
+	// Equal width for buttons
+	btn_outer_sizer->AddStretchSpacer(1);
+	btn_outer_sizer->Add(add_client_btn, 4, wxEXPAND | wxRIGHT, 2);
+	btn_outer_sizer->Add(delete_client_btn, 4, wxEXPAND | wxLEFT, 2);
+	btn_outer_sizer->AddStretchSpacer(1);
+
+	left_inner_sizer->Add(btn_outer_sizer, 0, wxEXPAND);
+	left_static_sizer->Add(left_inner_sizer, 1, wxEXPAND | wxALL, 5);
+	left_panel->SetSizer(left_static_sizer);
+
+	// Right side: Property Grid
+	wxPanel* right_panel = newd wxPanel(client_splitter, wxID_ANY);
+	wxStaticBoxSizer* right_static_sizer = newd wxStaticBoxSizer(wxVERTICAL, right_panel, "Client Properties");
+
+	client_prop_grid = newd wxPropertyGrid(right_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxPG_SPLITTER_AUTO_CENTER | wxPG_BOLD_MODIFIED | wxPG_DESCRIPTION);
+
+	right_static_sizer->Add(client_prop_grid, 1, wxEXPAND | wxALL, 5);
+	right_panel->SetSizer(right_static_sizer);
+
+	client_splitter->SplitVertically(left_panel, right_panel, 250);
+	client_splitter->SetSashGravity(0.25);
+	client_splitter->SetMinimumPaneSize(150);
+
+	main_sizer->Add(client_splitter, 1, wxEXPAND | wxALL, 5);
+
+	// General Settings (at the bottom)
+	wxStaticBoxSizer* settings_sizer = newd wxStaticBoxSizer(wxVERTICAL, client_page, "Global Options");
+
+	wxBoxSizer* def_version_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	def_version_sizer->Add(newd wxStaticText(client_page, wxID_ANY, "Default Client Version:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
 	default_version_choice = newd wxChoice(client_page, wxID_ANY);
-	wxStaticText* default_client_tooltip = newd wxStaticText(client_page, wxID_ANY, "Default client version:");
-	options_sizer->Add(default_client_tooltip, 0, wxLEFT | wxTOP, 5);
-	options_sizer->Add(default_version_choice, 0, wxTOP, 5);
-	SetWindowToolTip(default_client_tooltip, default_version_choice, "This will decide what client version will be used when new maps are created.");
+	def_version_sizer->Add(default_version_choice, 1, wxEXPAND);
 
-	// Check file sigs checkbox
+	settings_sizer->Add(def_version_sizer, 0, wxEXPAND | wxALL, 5);
+
 	check_sigs_chkbox = newd wxCheckBox(client_page, wxID_ANY, "Check file signatures");
-	check_sigs_chkbox->SetValue(g_settings.getBoolean(Config::CHECK_SIGNATURES));
-	check_sigs_chkbox->SetToolTip("When this option is not checked, the editor will load any OTB/DAT/SPR combination without complaints. This may cause graphics bugs.");
-	options_sizer->Add(check_sigs_chkbox, 0, wxLEFT | wxRIGHT | wxTOP, 5);
+	check_sigs_chkbox->SetValue(g_settings.getInteger(Config::CHECK_SIGNATURES));
+	settings_sizer->Add(check_sigs_chkbox, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 
-	// Add the grid sizer
-	topsizer->Add(options_sizer, wxSizerFlags(0).Expand());
-	topsizer->AddSpacer(10);
+	main_sizer->Add(settings_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
-	wxScrolledWindow* client_list_window = newd wxScrolledWindow(client_page, wxID_ANY, wxDefaultPosition, wxDefaultSize);
-	client_list_window->SetMinSize(FROM_DIP(this, wxSize(450, 450)));
-	auto* client_list_sizer = newd wxFlexGridSizer(2, 10, 10);
-	client_list_sizer->AddGrowableCol(1);
+	client_page->SetSizer(main_sizer);
 
-	int version_counter = 0;
-	for (auto version : versions) {
-		if (!version->isVisible()) {
-			continue;
+	PopulateClientTree();
+
+	// Binds
+	client_tree_ctrl->Bind(wxEVT_TREE_SEL_CHANGING, [this](wxTreeEvent& event) {
+		ClientVersion* current = GetSelectedClient();
+		if (current && current->isDirty()) {
+			int res = wxMessageBox("Save changes to " + current->getName() + "?", "Unsaved Changes", wxYES_NO | wxCANCEL | wxICON_QUESTION);
+			if (res == wxYES) {
+				current->clearDirty();
+				ClientVersion::saveVersions();
+			} else if (res == wxNO) {
+				current->restore();
+				current->clearDirty();
+			} else {
+				event.Veto();
+				return;
+			}
 		}
-
-		default_version_choice->Append(wxstr(version->getName()));
-
-		wxStaticText* tmp_text = newd wxStaticText(client_list_window, wxID_ANY, wxString(version->getName()));
-		client_list_sizer->Add(tmp_text, wxSizerFlags(0).Expand());
-
-		wxString path;
-		if (!version->isDefaultPath()) {
-			path = version->getClientPath().GetFullPath();
-		}
-		wxDirPickerCtrl* dir_picker = newd wxDirPickerCtrl(client_list_window, wxID_ANY, path);
-		version_dir_pickers.push_back(dir_picker);
-		client_list_sizer->Add(dir_picker, wxSizerFlags(0).Border(wxRIGHT, 10).Expand());
-
-		wxString tooltip;
-		tooltip << "The editor will look for " << wxstr(version->getName()) << " DAT & SPR here.";
-		tmp_text->SetToolTip(tooltip);
-		dir_picker->SetToolTip(tooltip);
-
-		if (version->getProtocolID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
-			default_version_choice->SetSelection(version_counter);
-		}
-
-		version_counter++;
-	}
-
-	// Set the sizers
-	client_list_window->SetSizer(client_list_sizer);
-	client_list_window->FitInside();
-	client_list_window->SetScrollRate(5, 5);
-	topsizer->Add(client_list_window, 0, wxALL, 5);
-	client_page->SetSizerAndFit(topsizer);
+	});
+	client_tree_ctrl->Bind(wxEVT_TREE_SEL_CHANGED, &PreferencesWindow::OnClientSelected, this);
+	client_prop_grid->Bind(wxEVT_PG_CHANGED, &PreferencesWindow::OnPropertyChanged, this);
+	add_client_btn->Bind(wxEVT_BUTTON, &PreferencesWindow::OnAddClient, this);
+	delete_client_btn->Bind(wxEVT_BUTTON, &PreferencesWindow::OnDeleteClient, this);
 
 	return client_page;
 }
@@ -596,6 +613,267 @@ void PreferencesWindow::OnClickApply(wxCommandEvent& WXUNUSED(event)) {
 void PreferencesWindow::OnCollapsiblePane(wxCollapsiblePaneEvent& event) {
 	auto* win = (wxWindow*)event.GetEventObject();
 	win->GetParent()->Fit();
+}
+
+void PreferencesWindow::PopulateClientTree() {
+	client_tree_ctrl->DeleteAllItems();
+	wxTreeItemId root = client_tree_ctrl->AddRoot("Clients");
+
+	std::map<int, wxTreeItemId> groups;
+	ClientVersionList versions = ClientVersion::getAll();
+
+	default_version_choice->Clear();
+
+	for (auto* version : versions) {
+		int protocol = version->getVersion();
+		int major;
+		if (protocol >= 10000) {
+			major = protocol / 1000;
+		} else {
+			major = protocol / 100;
+		}
+
+		if (major == 0) {
+			major = protocol / 10; // For very old versions if any
+		}
+
+		if (groups.find(major) == groups.end()) {
+			groups[major] = client_tree_ctrl->AppendItem(root, wxString::Format("%d.x", major));
+		}
+		client_tree_ctrl->AppendItem(groups[major], wxstr(version->getName()), -1, -1, new TreeItemData(version));
+
+		default_version_choice->Append(wxstr(version->getName()));
+		if (version->getProtocolID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
+			default_version_choice->SetSelection(default_version_choice->GetCount() - 1);
+		}
+	}
+	client_tree_ctrl->ExpandAll();
+
+	// Do not auto-select the first child if a specific client is expected to be selected later (e.g., after adding a new one).
+	// The SelectClient method will handle selection if needed.
+}
+
+ClientVersion* PreferencesWindow::GetSelectedClient() {
+	wxTreeItemId selection = client_tree_ctrl->GetSelection();
+	if (!selection.IsOk()) {
+		return nullptr;
+	}
+
+	TreeItemData* data = (TreeItemData*)client_tree_ctrl->GetItemData(selection);
+	return data ? data->cv : nullptr;
+}
+
+void PreferencesWindow::SelectClient(ClientVersion* version) {
+	// Helper to find and select in tree
+	// For now we just refresh if needed, usually we select from UI
+}
+
+void PreferencesWindow::OnClientSelected(wxTreeEvent& WXUNUSED(event)) {
+	// First, check if we need to save changes to the PREVIOUSLY selected client
+	// This is a bit tricky because the selection has ALREADY changed in the tree,
+	// but we can track the current client in a member variable.
+
+	static ClientVersion* lastSelected = nullptr;
+	if (lastSelected && lastSelected->isDirty()) {
+		int res = wxMessageBox("The client '" + lastSelected->getName() + "' has unsaved changes.\nWould you like to save them?", "Unsaved Changes", wxYES_NO | wxCANCEL | wxICON_EXCLAMATION);
+		if (res == wxYES) {
+			lastSelected->clearDirty();
+			ClientVersion::saveVersions();
+		} else if (res == wxNO) {
+			lastSelected->restore(); // Revert back to backup
+			lastSelected->clearDirty();
+		} else if (res == wxCANCEL) {
+			// Selection has already changed in the tree, we can't easily "cancel" the tree selection
+			// without complex logic. For now we just allow the switch but maybe we should've used OnSelChanging.
+		}
+	}
+
+	ClientVersion* cv = GetSelectedClient();
+	lastSelected = cv;
+
+	if (!cv) {
+		client_prop_grid->Clear();
+		return;
+	}
+
+	cv->backup(); // Cache current values for "Discard"
+
+	client_prop_grid->Clear();
+
+	// Group: General
+	client_prop_grid->Append(new wxPropertyCategory("General Info", "General"));
+	client_prop_grid->Append(new wxIntProperty("Version ID", "Version", cv->getVersion()))
+		->SetHelpString("The internal numeric version of the client (e.g., 860, 1077, 1285).");
+	client_prop_grid->Append(new wxStringProperty("Display Name", "Name", cv->getName()))
+		->SetHelpString("The name displayed in lists and menus.");
+	client_prop_grid->Append(new wxStringProperty("Description", "description", cv->getDescription()))
+		->SetHelpString("Provide an optional description for this client.");
+
+	// Group: Files & Paths
+	client_prop_grid->Append(new wxPropertyCategory("Files & Paths", "Files"));
+
+	client_prop_grid->Append(new wxDirProperty("Client Path", "clientPath", cv->getClientPath().GetFullPath()))
+		->SetHelpString("Selection of the client folder (where Tibia.dat and Tibia.spr are located).");
+
+	client_prop_grid->Append(new wxStringProperty("Data Directory", "dataDirectory", cv->getDataDirectory()))
+		->SetHelpString("RME's internal folder for this client's data.");
+	client_prop_grid->Append(new wxStringProperty("Metadata File (.dat)", "metadataFile", cv->getMetadataFile()));
+	client_prop_grid->Append(new wxStringProperty("Sprites File (.spr)", "spritesFile", cv->getSpritesFile()));
+
+	// Group: Signatures
+	client_prop_grid->Append(new wxPropertyCategory("Signatures", "Signatures"));
+
+	wxString datSig = wxString::Format("%X", cv->getDatSignature());
+	wxString sprSig = wxString::Format("%X", cv->getSprSignature());
+
+	client_prop_grid->Append(new wxStringProperty("DAT Signature", "datSignature", datSig))
+		->SetHelpString("Hex signature of the Tibia.dat file.");
+	client_prop_grid->Append(new wxStringProperty("SPR Signature", "sprSignature", sprSig))
+		->SetHelpString("Hex signature of the Tibia.spr file.");
+
+	// Group: OTB Settings
+	client_prop_grid->Append(new wxPropertyCategory("OTB & Map Compatibility", "OTB"));
+	client_prop_grid->Append(new wxIntProperty("OTB ID", "otbId", cv->getOtbId()));
+	client_prop_grid->Append(new wxIntProperty("OTB Major Version", "otbMajor", cv->getOtbMajor()));
+
+	wxString otbmVersStr;
+	for (auto v : cv->getMapVersionsSupported()) {
+		if (!otbmVersStr.IsEmpty()) {
+			otbmVersStr << ", ";
+		}
+		otbmVersStr << ((int)v + 1);
+	}
+	client_prop_grid->Append(new wxStringProperty("Supported OTBM Versions", "otbmVersions", otbmVersStr))
+		->SetHelpString("The list of OTBM formats this client supports (1-4).");
+
+	wxArrayString configTypes;
+	configTypes.Add("otb");
+	configTypes.Add("dat");
+	configTypes.Add("assets");
+	configTypes.Add("srv");
+	client_prop_grid->Append(new wxEnumProperty("Configuration Type", "configType", configTypes));
+	client_prop_grid->SetPropertyValue("configType", wxString(cv->getConfigType()));
+
+	// Group: Rendering Options
+	client_prop_grid->Append(new wxPropertyCategory("Rendering & Engine Options", "Rendering"));
+	client_prop_grid->Append(new wxBoolProperty("Use Transparency", "transparency", cv->isTransparent()));
+	client_prop_grid->Append(new wxBoolProperty("Use Extended Sprites", "extended", cv->isExtended()));
+	client_prop_grid->Append(new wxBoolProperty("Support Frame Durations", "frameDurations", cv->hasFrameDurations()));
+	client_prop_grid->Append(new wxBoolProperty("Support Frame Groups", "frameGroups", cv->hasFrameGroups()));
+
+	// Use checkboxes for booleans
+	client_prop_grid->SetPropertyAttributeAll(wxPG_BOOL_USE_CHECKBOX, true);
+}
+
+void PreferencesWindow::OnPropertyChanged(wxPropertyGridEvent& event) {
+	ClientVersion* cv = GetSelectedClient();
+	if (!cv) {
+		return;
+	}
+
+	wxPGProperty* prop = event.GetProperty();
+	wxString propName = prop->GetName();
+	wxAny value = prop->GetValue();
+
+	if (propName == "Version") {
+		cv->setVersion(value.As<int>());
+	} else if (propName == "Name") {
+		cv->setName(nstr(value.As<wxString>()));
+		wxTreeItemId sel = client_tree_ctrl->GetSelection();
+		if (sel.IsOk()) {
+			client_tree_ctrl->SetItemText(sel, value.As<wxString>());
+		}
+	} else if (propName == "otbId") {
+		cv->setOtbId(value.As<int>());
+	} else if (propName == "otbMajor") {
+		cv->setOtbMajor(value.As<int>());
+	} else if (propName == "otbmVersions") {
+		wxString s = value.As<wxString>();
+		cv->getMapVersionsSupported().clear();
+		wxStringTokenizer tokenizer(s, ", ");
+		while (tokenizer.HasMoreTokens()) {
+			long v;
+			if (tokenizer.GetNextToken().ToLong(&v)) {
+				if (v >= 1 && v <= 4) {
+					cv->getMapVersionsSupported().push_back(static_cast<MapVersionID>(v - 1));
+				}
+			}
+		}
+	} else if (propName == "dataDirectory") {
+		cv->setDataDirectory(nstr(value.As<wxString>()));
+	} else if (propName == "clientPath") {
+		cv->setClientPath(FileName(value.As<wxString>()));
+	} else if (propName == "datSignature") {
+		uint32_t sig;
+		std::string s = nstr(value.As<wxString>());
+		if (std::from_chars(s.data(), s.data() + s.size(), sig, 16).ec == std::errc()) {
+			cv->setDatSignature(sig);
+		}
+	} else if (propName == "sprSignature") {
+		uint32_t sig;
+		std::string s = nstr(value.As<wxString>());
+		if (std::from_chars(s.data(), s.data() + s.size(), sig, 16).ec == std::errc()) {
+			cv->setSprSignature(sig);
+		}
+	} else if (propName == "description") {
+		cv->setDescription(nstr(value.As<wxString>()));
+	} else if (propName == "configType") {
+		cv->setConfigType(nstr(prop->GetValueAsString()));
+	} else if (propName == "metadataFile") {
+		cv->setMetadataFile(nstr(value.As<wxString>()));
+	} else if (propName == "spritesFile") {
+		cv->setSpritesFile(nstr(value.As<wxString>()));
+	} else if (propName == "transparency") {
+		cv->setTransparent(value.As<bool>());
+	} else if (propName == "extended") {
+		cv->setExtended(value.As<bool>());
+	} else if (propName == "frameDurations") {
+		cv->setFrameDurations(value.As<bool>());
+	} else if (propName == "frameGroups") {
+		cv->setFrameGroups(value.As<bool>());
+	}
+
+	cv->markDirty();
+}
+
+void PreferencesWindow::OnAddClient(wxCommandEvent& WXUNUSED(event)) {
+	std::string newName = "New Client";
+	int counter = 1;
+	while (ClientVersion::get(newName)) {
+		newName = "New Client " + std::to_string(counter++);
+	}
+
+	OtbVersion otb;
+	otb.name = newName;
+	otb.id = PROTOCOL_VERSION_NONE;
+	otb.format_version = OTB_VERSION_1;
+
+	auto cv = std::make_unique<ClientVersion>(otb, newName, "1287");
+	cv->setName(newName);
+	cv->setMetadataFile("Tibia.dat");
+	cv->setSpritesFile("Tibia.spr");
+	cv->markDirty();
+
+	ClientVersion* cv_ptr = cv.get();
+	ClientVersion::addVersion(std::move(cv));
+
+	PopulateClientTree();
+
+	// Select the newly added client
+	SelectClient(cv_ptr);
+}
+
+void PreferencesWindow::OnDeleteClient(wxCommandEvent& WXUNUSED(event)) {
+	ClientVersion* cv = GetSelectedClient();
+	if (!cv) {
+		return;
+	}
+
+	if (wxMessageBox("Are you sure you want to delete " + cv->getName() + "?", "Confirm Delete", wxYES_NO | wxICON_WARNING) == wxYES) {
+		ClientVersion::removeVersion(cv->getName());
+		ClientVersion::saveVersions();
+		PopulateClientTree();
+	}
 }
 
 // Stuff
@@ -716,48 +994,36 @@ void PreferencesWindow::Apply() {
 	g_settings.setFloat(Config::SCROLL_SPEED, scroll_mul * scroll_speed_slider->GetValue() / 10.f);
 	g_settings.setFloat(Config::ZOOM_SPEED, zoom_speed_slider->GetValue() / 10.f);
 
-	// Client
-	ClientVersionList versions = ClientVersion::getAllVisible();
-	int version_counter = 0;
-	for (auto version : versions) {
-		wxString dir = version_dir_pickers[version_counter]->GetPath();
-		if (dir.IsEmpty()) {
-			version->setClientPath(version->getDataPath());
-		} else {
-			if (dir.Last() != '/' && dir.Last() != '\\') {
-				dir.Append("/");
-			}
-			version->setClientPath(FileName(dir));
-		}
-
-		if (version->getName() == default_version_choice->GetStringSelection()) {
-			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, version->getProtocolID());
-		}
-
-		version_counter++;
-	}
+	// General Client settings
 	g_settings.setInteger(Config::CHECK_SIGNATURES, check_sigs_chkbox->GetValue());
 
-	// Make sure to reload client paths
-	ClientVersion::saveVersions();
-	ClientVersion::loadVersions();
+	if (default_version_choice->GetSelection() != wxNOT_FOUND) {
+		std::string defName = nstr(default_version_choice->GetStringSelection());
+		ClientVersion* defCv = ClientVersion::get(defName);
+		if (defCv) {
+			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, defCv->getProtocolID());
+		}
+	}
+
+	// Save any dirty client versions
+	bool anyDirty = false;
+	for (auto* cv : ClientVersion::getAll()) {
+		if (cv->isDirty()) {
+			cv->clearDirty();
+			anyDirty = true;
+		}
+	}
+	if (anyDirty) {
+		ClientVersion::saveVersions();
+	}
 
 	g_settings.save();
 
-	if (must_restart) {
-		DialogUtil::PopupDialog(this, "Notice", "You must restart the editor for the changes to take effect.", wxOK);
+	if (palette_update_needed) {
+		g_gui.RebuildPalettes();
 	}
 
-	if (!palette_update_needed) {
-		// update palette icons
-		g_gui.RebuildPalettes();
-	} else {
-		// change palette structure
-
-		wxString error;
-		std::vector<std::string> warnings;
-		g_version.LoadVersion(g_version.GetCurrentVersionID(), error, warnings, true);
-		DialogUtil::PopupDialog("Error", error, wxOK);
-		DialogUtil::ListDialog("Warnings", warnings);
+	if (must_restart) {
+		wxMessageBox("Some changes require a restart of the application to take effect.", "Restart Required", wxOK | wxICON_INFORMATION);
 	}
 }

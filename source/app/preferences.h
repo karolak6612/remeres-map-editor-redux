@@ -19,10 +19,15 @@
 #define RME_PREFERENCES_WINDOW_H_
 
 #include "app/main.h"
+#include "app/client_version.h"
 #include <wx/listbook.h>
 #include <wx/collpane.h>
 #include <wx/clrpicker.h>
 #include <wx/spinctrl.h>
+#include <wx/propgrid/propgrid.h>
+#include <wx/treectrl.h>
+#include <wx/splitter.h>
+#include <wx/notebook.h>
 
 class PreferencesWindow : public wxDialog {
 public:
@@ -37,6 +42,13 @@ public:
 	void OnClickCancel(wxCommandEvent&);
 
 	void OnCollapsiblePane(wxCollapsiblePaneEvent&);
+
+	// Client Version Tab handlers
+	void OnClientSelected(wxTreeEvent&);
+	void OnPropertyChanged(wxPropertyGridEvent&);
+	void OnAddClient(wxCommandEvent&);
+	void OnDeleteClient(wxCommandEvent&);
+	void OnClientPathChanged(wxCommandEvent&);
 
 protected:
 	void SetDefaults();
@@ -120,8 +132,22 @@ protected:
 
 	// Client info
 	wxChoice* default_version_choice;
-	std::vector<wxDirPickerCtrl*> version_dir_pickers;
 	wxCheckBox* check_sigs_chkbox;
+
+	wxSplitterWindow* client_splitter;
+	wxTreeCtrl* client_tree_ctrl;
+	wxPropertyGrid* client_prop_grid;
+	wxButton* add_client_btn;
+	wxButton* delete_client_btn;
+
+	struct TreeItemData : public wxTreeItemData {
+		ClientVersion* cv;
+		TreeItemData(ClientVersion* v) : cv(v) { }
+	};
+
+	void PopulateClientTree();
+	void SelectClient(ClientVersion* version);
+	ClientVersion* GetSelectedClient();
 
 	// Create controls
 	wxChoice* AddPaletteStyleChoice(wxWindow* parent, wxSizer* sizer, const wxString& short_description, const wxString& description, const std::string& setting);

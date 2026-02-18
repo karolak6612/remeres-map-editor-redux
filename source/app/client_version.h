@@ -217,6 +217,9 @@ public:
 	static void unloadVersions();
 	static void saveVersions();
 
+	static void addVersion(std::unique_ptr<ClientVersion> version);
+	static void removeVersion(const ClientVersionID& id);
+
 	static ClientVersion* get(const ClientVersionID& id);
 	static ClientVersion* getBestMatch(OtbVersionID id);
 	static ClientVersionList getVisible(std::string from, std::string to);
@@ -246,23 +249,128 @@ public:
 	static DatFormat getDatFormatForVersion(int version);
 	ClientVersionList getExtensionsSupported() const;
 
+	void markDirty() {
+		is_dirty = true;
+	}
+	void clearDirty() {
+		is_dirty = false;
+	}
+	bool isDirty() const {
+		return is_dirty;
+	}
+
+	void backup();
+	void restore();
+
 	bool isTransparent() const {
 		return is_transparent;
 	}
+	void setTransparent(bool v) {
+		is_transparent = v;
+	}
+
 	bool isExtended() const {
 		return is_extended;
 	}
+	void setExtended(bool v) {
+		is_extended = v;
+	}
+
 	bool hasFrameDurations() const {
 		return has_frame_durations;
 	}
+	void setFrameDurations(bool v) {
+		has_frame_durations = v;
+	}
+
 	bool hasFrameGroups() const {
 		return has_frame_groups;
 	}
+	void setFrameGroups(bool v) {
+		has_frame_groups = v;
+	}
+
 	std::string getMetadataFile() const {
 		return metadata_file;
 	}
+	void setMetadataFile(const std::string& v) {
+		metadata_file = v;
+	}
+
 	std::string getSpritesFile() const {
 		return sprites_file;
+	}
+	void setSpritesFile(const std::string& v) {
+		sprites_file = v;
+	}
+
+	uint32_t getVersion() const {
+		return version;
+	}
+	void setVersion(uint32_t v);
+
+	void setName(const std::string& v) {
+		name = v;
+	}
+
+	uint32_t getOtbId() const {
+		return otb.id;
+	}
+	void setOtbId(uint32_t v) {
+		otb.id = static_cast<OtbVersionID>(v);
+	}
+
+	uint32_t getOtbMajor() const {
+		return otb.format_version;
+	}
+	void setOtbMajor(uint32_t v) {
+		otb.format_version = static_cast<OtbFormatVersion>(v);
+	}
+
+	std::vector<MapVersionID>& getMapVersionsSupported() {
+		return map_versions_supported;
+	}
+	void setMapVersionsSupported(const std::vector<MapVersionID>& v) {
+		map_versions_supported = v;
+	}
+
+	std::string getDataDirectory() const {
+		return data_path.ToStdString();
+	}
+	void setDataDirectory(const std::string& v) {
+		data_path = wxstr(v);
+	}
+
+	uint32_t getDatSignature() const {
+		return data_versions.empty() ? 0 : data_versions[0].datSignature;
+	}
+	void setDatSignature(uint32_t v) {
+		if (!data_versions.empty()) {
+			data_versions[0].datSignature = v;
+		}
+	}
+
+	uint32_t getSprSignature() const {
+		return data_versions.empty() ? 0 : data_versions[0].sprSignature;
+	}
+	void setSprSignature(uint32_t v) {
+		if (!data_versions.empty()) {
+			data_versions[0].sprSignature = v;
+		}
+	}
+
+	std::string getDescription() const {
+		return description;
+	}
+	void setDescription(const std::string& v) {
+		description = v;
+	}
+
+	std::string getConfigType() const {
+		return config_type;
+	}
+	void setConfigType(const std::string& v) {
+		config_type = v;
 	}
 
 	FileName getDataPath() const;
@@ -278,8 +386,29 @@ public:
 	}
 
 private:
+	bool is_dirty = false;
+
+	struct BackupData {
+		uint32_t version;
+		std::string name;
+		std::string description;
+		std::string config_type;
+		std::string metadata_file;
+		std::string sprites_file;
+		bool is_transparent;
+		bool is_extended;
+		bool has_frame_durations;
+		bool has_frame_groups;
+		FileName client_path;
+		OtbVersion otb;
+		std::vector<ClientData> data_versions;
+		std::vector<MapVersionID> map_versions_supported;
+	} backup_data;
+
+private:
 	OtbVersion otb;
 
+	uint32_t version;
 	std::string name;
 	bool visible;
 	bool is_transparent;
