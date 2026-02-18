@@ -74,6 +74,15 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	sizer->Add(subsizer, 0, wxCENTER | wxLEFT | wxBOTTOM | wxRIGHT, 10);
 
 	SetSizerAndFit(sizer);
+
+	int w = g_settings.getInteger(Config::PREFERENCES_WINDOW_WIDTH);
+	int h = g_settings.getInteger(Config::PREFERENCES_WINDOW_HEIGHT);
+	if (w > 0 && h > 0) {
+		SetSize(w, h);
+	} else {
+		SetSize(1200, 500);
+	}
+
 	Centre(wxBOTH);
 	// FindWindowById(PANE_ADVANCED_GRAPHICS, this)->GetParent()->Fit();
 
@@ -88,7 +97,10 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 }
 
 PreferencesWindow::~PreferencesWindow() {
-	////
+	int w, h;
+	GetSize(&w, &h);
+	g_settings.setInteger(Config::PREFERENCES_WINDOW_WIDTH, w);
+	g_settings.setInteger(Config::PREFERENCES_WINDOW_HEIGHT, h);
 }
 
 wxNotebookPage* PreferencesWindow::CreateGeneralPage() {
@@ -588,6 +600,7 @@ wxNotebookPage* PreferencesWindow::CreateClientPage() {
 		}
 	});
 	client_tree_ctrl->Bind(wxEVT_TREE_SEL_CHANGED, &PreferencesWindow::OnClientSelected, this);
+	client_tree_ctrl->Bind(wxEVT_TREE_ITEM_MENU, &PreferencesWindow::OnTreeContextMenu, this);
 	client_prop_grid->Bind(wxEVT_PG_CHANGED, &PreferencesWindow::OnPropertyChanged, this);
 	add_client_btn->Bind(wxEVT_BUTTON, &PreferencesWindow::OnAddClient, this);
 	delete_client_btn->Bind(wxEVT_BUTTON, &PreferencesWindow::OnDeleteClient, this);
@@ -597,9 +610,26 @@ wxNotebookPage* PreferencesWindow::CreateClientPage() {
 
 // Event handlers!
 
-void PreferencesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
+void PreferencesWindow::OnClickOK(wxCommandEvent& event) {
+	// Validation Check before closing
+	for (auto* cv : ClientVersion::getAll()) {
+		if (!cv->isValid()) {
+			wxMessageBox("Client '" + cv->getName() + "' has invalid data (Name cannot be empty).\nPlease fix it before saving.", "Invalid Client Data", wxOK | wxICON_ERROR);
+			SelectClient(cv);
+			return;
+		}
+
+		// Check for duplicates
+		for (auto* other : ClientVersion::getAll()) {
+			if (cv != other && cv->getName() == other->getName()) {
+				wxMessageBox("Client '" + cv->getName() + "' has a duplicate name.\nPlease rename one of them before saving.", "Duplicate Client Name", wxOK | wxICON_ERROR);
+				SelectClient(cv);
+				return;
+			}
+		}
+	}
 	Apply();
-	EndModal(0);
+	EndModal(wxID_OK);
 }
 
 void PreferencesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
@@ -607,6 +637,23 @@ void PreferencesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void PreferencesWindow::OnClickApply(wxCommandEvent& WXUNUSED(event)) {
+	// Validation Check
+	for (auto* cv : ClientVersion::getAll()) {
+		if (!cv->isValid()) {
+			wxMessageBox("Client '" + cv->getName() + "' has invalid data (Name cannot be empty).\nPlease fix it before saving.", "Invalid Client Data", wxOK | wxICON_ERROR);
+			SelectClient(cv);
+			return;
+		}
+
+		// Check for duplicates
+		for (auto* other : ClientVersion::getAll()) {
+			if (cv != other && cv->getName() == other->getName()) {
+				wxMessageBox("Client '" + cv->getName() + "' has a duplicate name.\nPlease rename one of them before saving.", "Duplicate Client Name", wxOK | wxICON_ERROR);
+				SelectClient(cv);
+				return;
+			}
+		}
+	}
 	Apply();
 }
 
@@ -619,38 +666,59 @@ void PreferencesWindow::PopulateClientTree() {
 	client_tree_ctrl->DeleteAllItems();
 	wxTreeItemId root = client_tree_ctrl->AddRoot("Clients");
 
-	std::map<int, wxTreeItemId> groups;
-	ClientVersionList versions = ClientVersion::getAll();
+	// Store the currently selected client to re-select it after repopulating
+	ClientVersion* current_selected_client = GetSelectedClient();
+	wxTreeItemId item_to_select;
+
+	// Group clients by major version
+	std::map<int, std::vector<ClientVersion*>> grouped_versions;
+	ClientVersionList all_versions = ClientVersion::getAll();
+	for (auto* version : all_versions) {
+		int protocol = version->getVersion();
+		int major;
+		if (protocol >= 10000) { // e.g., 12850 -> 12
+			major = protocol / 1000;
+		} else if (protocol >= 1000) { // e.g., 1098 -> 10
+			major = protocol / 100;
+		} else if (protocol >= 100) { // e.g., 860 -> 8
+			major = protocol / 100;
+		} else { // For very old versions if any, e.g., 740 -> 7
+			major = protocol / 10;
+		}
+		grouped_versions[major].push_back(version);
+	}
 
 	default_version_choice->Clear();
 
-	for (auto* version : versions) {
-		int protocol = version->getVersion();
-		int major;
-		if (protocol >= 10000) {
-			major = protocol / 1000;
-		} else {
-			major = protocol / 100;
-		}
+	// Populate the tree and default version choice
+	for (const auto& [major_version, versions_in_group] : grouped_versions) {
+		wxTreeItemId group = client_tree_ctrl->AppendItem(root, wxString::Format("%d.x", major_version));
+		for (auto* version : versions_in_group) {
+			default_version_choice->Append(wxstr(version->getName()));
+			if (version->getProtocolID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
+				default_version_choice->SetSelection(default_version_choice->GetCount() - 1);
+			}
 
-		if (major == 0) {
-			major = protocol / 10; // For very old versions if any
+			wxTreeItemId item = client_tree_ctrl->AppendItem(group, wxstr(version->getName()), -1, -1, new TreeItemData(version));
+			if (version == current_selected_client) {
+				item_to_select = item;
+			}
 		}
+		// Collapse the group by default
+		client_tree_ctrl->Collapse(group);
+	}
 
-		if (groups.find(major) == groups.end()) {
-			groups[major] = client_tree_ctrl->AppendItem(root, wxString::Format("%d.x", major));
-		}
-		client_tree_ctrl->AppendItem(groups[major], wxstr(version->getName()), -1, -1, new TreeItemData(version));
-
-		default_version_choice->Append(wxstr(version->getName()));
-		if (version->getProtocolID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
-			default_version_choice->SetSelection(default_version_choice->GetCount() - 1);
+	if (item_to_select.IsOk()) {
+		client_tree_ctrl->EnsureVisible(item_to_select);
+		client_tree_ctrl->SelectItem(item_to_select);
+	} else {
+		// If nothing specific selected, maybe expand the first group so it's not empty
+		wxTreeItemIdValue cookie;
+		wxTreeItemId firstGroup = client_tree_ctrl->GetFirstChild(root, cookie);
+		if (firstGroup.IsOk()) {
+			client_tree_ctrl->Expand(firstGroup);
 		}
 	}
-	client_tree_ctrl->ExpandAll();
-
-	// Do not auto-select the first child if a specific client is expected to be selected later (e.g., after adding a new one).
-	// The SelectClient method will handle selection if needed.
 }
 
 ClientVersion* PreferencesWindow::GetSelectedClient() {
@@ -664,8 +732,33 @@ ClientVersion* PreferencesWindow::GetSelectedClient() {
 }
 
 void PreferencesWindow::SelectClient(ClientVersion* version) {
-	// Helper to find and select in tree
-	// For now we just refresh if needed, usually we select from UI
+	if (!version) {
+		client_tree_ctrl->UnselectAll();
+		return;
+	}
+
+	wxTreeItemId root = client_tree_ctrl->GetRootItem();
+	if (!root.IsOk()) {
+		return;
+	}
+
+	wxTreeItemIdValue cookie;
+	wxTreeItemId group_item = client_tree_ctrl->GetFirstChild(root, cookie);
+	while (group_item.IsOk()) {
+		wxTreeItemIdValue child_cookie;
+		wxTreeItemId client_item = client_tree_ctrl->GetFirstChild(group_item, child_cookie);
+		while (client_item.IsOk()) {
+			TreeItemData* data = (TreeItemData*)client_tree_ctrl->GetItemData(client_item);
+			if (data && data->cv == version) {
+				client_tree_ctrl->Expand(group_item); // Expand the group to make it visible
+				client_tree_ctrl->SelectItem(client_item);
+				client_tree_ctrl->EnsureVisible(client_item);
+				return;
+			}
+			client_item = client_tree_ctrl->GetNextChild(group_item, child_cookie);
+		}
+		group_item = client_tree_ctrl->GetNextSibling(group_item);
+	}
 }
 
 void PreferencesWindow::OnClientSelected(wxTreeEvent& WXUNUSED(event)) {
@@ -739,30 +832,114 @@ void PreferencesWindow::OnClientSelected(wxTreeEvent& WXUNUSED(event)) {
 	wxString otbmVersStr;
 	for (auto v : cv->getMapVersionsSupported()) {
 		if (!otbmVersStr.IsEmpty()) {
-			otbmVersStr << ", ";
+			otbmVersStr += ", ";
 		}
-		otbmVersStr << ((int)v + 1);
+		otbmVersStr += std::to_string((int)v + 1);
 	}
 	client_prop_grid->Append(new wxStringProperty("Supported OTBM Versions", "otbmVersions", otbmVersStr))
-		->SetHelpString("The list of OTBM formats this client supports (1-4).");
+		->SetHelpString("Comma separated list of OTBM versions supporting this client (1, 2, 3, 4).");
 
-	wxArrayString configTypes;
-	configTypes.Add("otb");
-	configTypes.Add("dat");
-	configTypes.Add("assets");
-	configTypes.Add("srv");
-	client_prop_grid->Append(new wxEnumProperty("Configuration Type", "configType", configTypes));
-	client_prop_grid->SetPropertyValue("configType", wxString(cv->getConfigType()));
+	// Group: Config / Flags
+	client_prop_grid->Append(new wxPropertyCategory("Configuration & Flags", "Config"));
+	client_prop_grid->Append(new wxStringProperty("Configuration Type", "configType", cv->getConfigType()));
 
-	// Group: Rendering Options
-	client_prop_grid->Append(new wxPropertyCategory("Rendering & Engine Options", "Rendering"));
-	client_prop_grid->Append(new wxBoolProperty("Use Transparency", "transparency", cv->isTransparent()));
-	client_prop_grid->Append(new wxBoolProperty("Use Extended Sprites", "extended", cv->isExtended()));
-	client_prop_grid->Append(new wxBoolProperty("Support Frame Durations", "frameDurations", cv->hasFrameDurations()));
-	client_prop_grid->Append(new wxBoolProperty("Support Frame Groups", "frameGroups", cv->hasFrameGroups()));
+	client_prop_grid->Append(new wxBoolProperty("Transparency", "transparency", cv->isTransparent()));
+	client_prop_grid->Append(new wxBoolProperty("Extended", "extended", cv->isExtended()));
+	client_prop_grid->Append(new wxBoolProperty("Frame Durations", "frameDurations", cv->hasFrameDurations()));
+	client_prop_grid->Append(new wxBoolProperty("Frame Groups", "frameGroups", cv->hasFrameGroups()));
 
-	// Use checkboxes for booleans
-	client_prop_grid->SetPropertyAttributeAll(wxPG_BOOL_USE_CHECKBOX, true);
+	// Perform initial validation coloring
+	wxPropertyGridIterator it = client_prop_grid->GetIterator();
+	for (; !it.AtEnd(); it++) {
+		UpdatePropertyValidation(*it);
+	}
+}
+
+void PreferencesWindow::UpdatePropertyValidation(wxPGProperty* prop) {
+	if (!prop) {
+		return;
+	}
+	wxString name = prop->GetName();
+	wxAny value = prop->GetValue();
+	bool invalid = false;
+
+	if (name == "Name") {
+		wxString valStr = value.As<wxString>();
+		if (valStr.IsEmpty()) {
+			invalid = true;
+		} else {
+			// Check internal duplicate
+			// Note: This is an O(N) check inside a property update, but N is small (clients < 100 usually).
+			// We need the current client version pointer to exclude self.
+			// The property doesn't give us the client pointer directly easily, but we know GetSelectedClient() is the one being edited.
+			ClientVersion* current = GetSelectedClient();
+			if (current) {
+				for (auto* other : ClientVersion::getAll()) {
+					if (other != current && other->getName() == nstr(valStr)) {
+						invalid = true;
+						break;
+					}
+				}
+			}
+		}
+	}
+	// Removed checks for Version/OtbId as requested
+
+	if (invalid) {
+		prop->SetBackgroundColour(wxColour(255, 200, 200)); // Light Red
+	} else {
+		// Reset to default (white or whatever theme)
+		prop->SetBackgroundColour(wxNullColour);
+	}
+}
+
+void PreferencesWindow::OnTreeContextMenu(wxTreeEvent& event) {
+	wxTreeItemId item = event.GetItem();
+	if (!item.IsOk()) {
+		return;
+	}
+
+	// Check if it is a client item (has data)
+	TreeItemData* data = (TreeItemData*)client_tree_ctrl->GetItemData(item);
+	if (!data || !data->cv) {
+		return;
+	}
+
+	wxMenu menu;
+	menu.Append(wxID_COPY, "Duplicate");
+	menu.Bind(wxEVT_MENU, &PreferencesWindow::OnDuplicateClient, this, wxID_COPY);
+
+	PopupMenu(&menu);
+}
+
+void PreferencesWindow::OnDuplicateClient(wxCommandEvent& WXUNUSED(event)) {
+	ClientVersion* current = GetSelectedClient();
+	if (!current) {
+		return;
+	}
+
+	// Use clone
+	std::unique_ptr<ClientVersion> new_cv = current->clone();
+
+	// Modify fields as requested
+	new_cv->setName(current->getName() + " (Copy)");
+	// new_cv->setDescription(""); // Don't clear Description
+	// new_cv->setClientPath(FileName()); // Don't clear path
+	// new_cv->setDataDirectory(""); // Don't clear data directory
+	// new_cv->setDatSignature(0); // Don't clear signatures
+	// new_cv->setSprSignature(0); // Don't clear signatures
+	// new_cv->visible = true; // Clone sets visible
+
+	ClientVersion* ptr = new_cv.get();
+
+	// Add to list
+	ClientVersion::addVersion(std::move(new_cv));
+
+	// Refresh tree
+	PopulateClientTree();
+
+	// Select the new client
+	SelectClient(ptr);
 }
 
 void PreferencesWindow::OnPropertyChanged(wxPropertyGridEvent& event) {
@@ -834,6 +1011,7 @@ void PreferencesWindow::OnPropertyChanged(wxPropertyGridEvent& event) {
 	}
 
 	cv->markDirty();
+	UpdatePropertyValidation(prop);
 }
 
 void PreferencesWindow::OnAddClient(wxCommandEvent& WXUNUSED(event)) {

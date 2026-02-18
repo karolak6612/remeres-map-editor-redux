@@ -45,10 +45,14 @@ public:
 
 	// Client Version Tab handlers
 	void OnClientSelected(wxTreeEvent&);
+	void OnTreeContextMenu(wxTreeEvent&);
+	void OnDuplicateClient(wxCommandEvent&);
 	void OnPropertyChanged(wxPropertyGridEvent&);
 	void OnAddClient(wxCommandEvent&);
 	void OnDeleteClient(wxCommandEvent&);
 	void OnClientPathChanged(wxCommandEvent&);
+
+	void UpdatePropertyValidation(wxPGProperty* prop);
 
 protected:
 	void SetDefaults();

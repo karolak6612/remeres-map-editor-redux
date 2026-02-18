@@ -30,11 +30,13 @@
 #include "app/client_version.h"
 
 #include <wx/dir.h>
+#include <wx/filename.h>
 
 // Static methods to load/save
 
 ClientVersion::VersionList ClientVersion::client_versions;
 ClientVersion* ClientVersion::latest_version = nullptr;
+std::string ClientVersion::loaded_file_path;
 
 void ClientVersion::loadVersions() {
 	// Clean up old stuff
@@ -94,9 +96,10 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 	}
 
 	if (!file_to_load.FileExists()) {
-		wxLogDebug("Missing %s at %s", configName, data_dir_client_toml.GetFullPath());
 		return;
 	}
+
+	loaded_file_path = file_to_load.GetFullPath().ToStdString();
 
 	toml::table config;
 	try {
@@ -304,9 +307,26 @@ void ClientVersion::saveVersions() {
 
 	// Save Database
 	db_table.insert_or_assign("clients", std::move(db_clients_array));
-	wxFileName db_file(FileSystem::GetDataDirectory(), "clients.toml");
+
+	wxFileName db_file;
+	if (!loaded_file_path.empty()) {
+		db_file.Assign(loaded_file_path);
+	} else {
+		db_file.Assign(FileSystem::GetDataDirectory(), "clients.toml");
+	}
+
+	if (!db_file.DirExists()) {
+		if (!db_file.Mkdir(0755, wxPATH_MKDIR_FULL)) {
+			wxLogError("Failed to create directory for clients.toml: %s", db_file.GetPath());
+		}
+	}
+
 	std::ofstream db_stream(db_file.GetFullPath().ToStdString());
+	if (!db_stream.is_open()) {
+		wxLogError("Failed to open clients.toml for writing: %s", db_file.GetFullPath());
+	}
 	db_stream << db_table;
+	db_stream.close();
 
 	// Save User Config
 	g_settings.getTable().insert_or_assign("clients", std::move(config_clients_array));
@@ -576,4 +596,30 @@ void ClientVersion::restore() {
 	data_versions = backup_data.data_versions;
 	map_versions_supported = backup_data.map_versions_supported;
 	is_dirty = false;
+}
+
+std::unique_ptr<ClientVersion> ClientVersion::clone() const {
+	auto new_cv = std::make_unique<ClientVersion>(otb, name, data_path.ToStdString());
+	new_cv->version = version;
+	new_cv->visible = visible;
+	new_cv->is_transparent = is_transparent;
+	new_cv->is_extended = is_extended;
+	new_cv->has_frame_durations = has_frame_durations;
+	new_cv->has_frame_groups = has_frame_groups;
+	new_cv->metadata_file = metadata_file;
+	new_cv->sprites_file = sprites_file;
+	new_cv->map_versions_supported = map_versions_supported;
+	new_cv->preferred_map_version = preferred_map_version;
+	new_cv->data_versions = data_versions;
+	new_cv->client_path = client_path;
+	new_cv->description = description;
+	new_cv->config_type = config_type;
+	return new_cv;
+}
+
+bool ClientVersion::isValid() const {
+	if (name.empty()) {
+		return false;
+	}
+	return true;
 }

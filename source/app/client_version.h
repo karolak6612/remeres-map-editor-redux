@@ -229,6 +229,9 @@ public:
 	static ClientVersionList getAllVersionsSupportedForClientVersion(ClientVersion* v);
 	static ClientVersion* getLatestVersion();
 
+	std::unique_ptr<ClientVersion> clone() const;
+	bool isValid() const;
+
 	bool operator==(const ClientVersion& o) const {
 		return name == o.name;
 	}
@@ -438,6 +441,7 @@ private:
 	using VersionList = std::vector<std::unique_ptr<ClientVersion>>;
 	static VersionList client_versions;
 	static ClientVersion* latest_version;
+	static std::string loaded_file_path;
 };
 
 inline int VersionComparisonPredicate(ClientVersion* a, ClientVersion* b) {

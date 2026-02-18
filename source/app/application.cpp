@@ -97,7 +97,7 @@ bool Application::OnInit() {
 	spdlog::info("Review COPYING in RME distribution for details.");
 
 	// Discover data directory
-	FileSystem::DiscoverDataDirectory("clients.toml");
+	FileSystem::DiscoverDataDirectory("menubar.xml");
 
 	// Tell that we are the real thing
 	wxAppConsole::SetInstance(this);
@@ -297,7 +297,7 @@ void Application::FixVersionDiscrapencies() {
 	if (ss.empty()) {
 		ss = wxStandardPaths::Get().GetDocumentsDir();
 #ifdef __WINDOWS__
-		ss += "/My Pictures/RME/";
+		ss += "\\My Pictures\\RME\\";
 #endif
 	}
 	g_settings.setString(Config::SCREENSHOT_DIRECTORY, nstr(ss));
