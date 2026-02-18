@@ -92,6 +92,7 @@ void GraphicManager::clear() {
 		atlas_manager_.reset();
 	}
 
+	client_version = nullptr;
 	unloaded = true;
 }
 

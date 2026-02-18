@@ -3,7 +3,6 @@
 
 #include "app/main.h"
 #include <wx/docview.h>
-#include <wx/fileconf.h>
 #include <vector>
 
 class RecentFilesManager {

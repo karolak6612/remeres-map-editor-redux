@@ -28,9 +28,9 @@ private:
 	wxPanel* CreateContentPanel(wxWindow* parent, const std::vector<wxString>& recentFiles);
 	wxPanel* CreateFooterPanel(wxWindow* parent, const wxString& versionText);
 
-	wxImageList* m_imageList;
-	wxListCtrl* m_recentList;
-	wxListCtrl* m_clientList;
+	wxImageList* m_imageList = nullptr;
+	wxListCtrl* m_recentList = nullptr;
+	wxListCtrl* m_clientList = nullptr;
 };
 
 #endif // WELCOME_DIALOG_H
