@@ -23,6 +23,8 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "game/items.h"
+#include <glad/glad.h>
+#include <nanovg.h>
 
 // ============================================================================
 // ReplaceItemsButton
@@ -65,9 +67,9 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 // ReplaceItemsListBox
 
 ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
-	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+	NanoVGListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
+	// Bitmaps not needed for NanoVG drawing (we use primitives or textures), but kept if we want to use them as textures later.
+	// m_arrow_bitmap = ...
 }
 
 bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
@@ -119,7 +121,7 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const {
+void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) {
 	ASSERT(index < m_items.size());
 
 	const ReplacingItem& item = m_items.at(index);
@@ -131,30 +133,61 @@ void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index)
 	if (sprite1 && sprite2) {
 		int x = rect.GetX();
 		int y = rect.GetY();
-		sprite1->DrawTo(&dc, SPRITE_SIZE_32x32, x + 4, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawBitmap(m_arrow_bitmap, x + 38, y + 10, true);
-		sprite2->DrawTo(&dc, SPRITE_SIZE_32x32, x + 56, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawText(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId), x + 104, y + 10);
+
+		// Sprite 1
+		int tex1 = GetOrCreateSpriteTexture(vg, sprite1);
+		if (tex1 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 4, y + 4, 32, 32, 0, tex1, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 4, y + 4, 32, 32);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Arrow
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, x + 38, y + 20);
+		nvgLineTo(vg, x + 50, y + 20); // Shaft
+		nvgMoveTo(vg, x + 46, y + 16);
+		nvgLineTo(vg, x + 50, y + 20);
+		nvgLineTo(vg, x + 46, y + 24); // Head
+		nvgStrokeColor(vg, nvgRGBA(100, 100, 100, 255));
+		nvgStrokeWidth(vg, 2.0f);
+		nvgStroke(vg);
+
+		// Sprite 2
+		int tex2 = GetOrCreateSpriteTexture(vg, sprite2);
+		if (tex2 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 56, y + 4, 32, 32, 0, tex2, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 56, y + 4, 32, 32);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		// Text
+		nvgFontSize(vg, 14.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+		// Text Color (reset fill paint)
+		if (IsSelected(index)) {
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		} else {
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+		}
+
+		std::string text = std::string(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId).ToUTF8());
+		nvgText(vg, x + 104, y + 20, text.c_str(), nullptr);
 
 		if (item.complete) {
-			x = rect.GetWidth() - 100;
-			dc.DrawBitmap(m_flag_bitmap, x + 70, y + 10, true);
-			dc.DrawText(wxString::Format("Total: %d", item.total), x, y + 10);
+			float tx = rect.width - 100;
+			nvgText(vg, tx, y + 20, std::string(wxString::Format("Total: %d", item.total).ToUTF8()).c_str(), nullptr);
 		}
-	}
-
-	if (IsSelected(index)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		} else {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		}
-	} else {
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
 	}
 }
 
-wxCoord ReplaceItemsListBox::OnMeasureItem(size_t WXUNUSED(index)) const {
+int ReplaceItemsListBox::OnMeasureItem(size_t WXUNUSED(index)) const {
 	return FromDIP(40);
 }
 
