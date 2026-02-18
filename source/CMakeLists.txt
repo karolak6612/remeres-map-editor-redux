@@ -70,6 +70,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/game/house.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/item_loaders.h
     ${CMAKE_CURRENT_LIST_DIR}/game/items.h
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.h
     ${CMAKE_CURRENT_LIST_DIR}/game/outfit.h
@@ -382,6 +383,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/house.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/item_loaders.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/items.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.cpp
