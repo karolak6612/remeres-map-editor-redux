@@ -343,7 +343,9 @@ bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion
 					warnings.push_back("Invalid item type property (weight)");
 					return true;
 				}
-				memcpy(&it.weight, raw_weight, sizeof(double));
+				double weight_val;
+				memcpy(&weight_val, raw_weight, sizeof(double));
+				it.weight = static_cast<float>(weight_val);
 				return true;
 			};
 
