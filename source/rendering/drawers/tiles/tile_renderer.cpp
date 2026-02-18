@@ -32,6 +32,79 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
 }
 
+static void hash_combine(uint64_t& seed, uint64_t value) {
+	seed ^= value + 0x9e3779b97f4a7c15 + (seed << 6) + (seed >> 2);
+}
+
+static void hash_combine_str(uint64_t& seed, std::string_view str) {
+	for (char c : str) {
+		hash_combine(seed, static_cast<uint64_t>(c));
+	}
+}
+
+static uint64_t ComputeTooltipHash(Item* item, bool isHouseTile, float zoom) {
+	uint64_t seed = 0;
+	hash_combine(seed, item->getID());
+	hash_combine(seed, isHouseTile ? 1 : 0);
+
+	// Zoom affects container capacity preview?
+	// FillItemTooltipData: `if (g_items[id].isContainer() && zoom <= 1.5f)`
+	// So if it's a container, zoom matters (threshold 1.5f).
+	bool showContainerContent = g_items[item->getID()].isContainer() && zoom <= 1.5f;
+	hash_combine(seed, showContainerContent ? 1 : 0);
+
+	if (item->isComplex()) {
+		hash_combine(seed, item->getUniqueID());
+		hash_combine(seed, item->getActionID());
+		hash_combine_str(seed, item->getText());
+		hash_combine_str(seed, item->getDescription());
+	}
+
+	if (isHouseTile && item->isDoor()) {
+		 if (const Door* door = item->asDoor()) {
+			if (door->isRealDoor()) {
+				hash_combine(seed, door->getDoorID());
+			}
+		}
+	}
+
+	if (item->isTeleport()) {
+		Teleport* tp = static_cast<Teleport*>(item);
+		if (tp->hasDestination()) {
+			Position dest = tp->getDestination();
+			hash_combine(seed, dest.x);
+			hash_combine(seed, dest.y);
+			hash_combine(seed, dest.z);
+		}
+	}
+
+	if (showContainerContent) {
+		if (const Container* container = item->asContainer()) {
+			 hash_combine(seed, container->getVolume()); // Capacity
+			 // Hashing content
+			 // We only show up to 32 items
+			 const auto& items = container->getVector();
+			 int count = 0;
+			 for (const auto& subItem : items) {
+				 if (subItem) {
+					 hash_combine(seed, subItem->getID());
+					 hash_combine(seed, subItem->getSubtype());
+					 hash_combine(seed, subItem->getCount());
+					 count++;
+					 if (count >= 32) break;
+				 }
+			 }
+		}
+	} else if (g_items[item->getID()].isContainer()) {
+		 // Even if not showing content, we check hasContent
+		 if (const Container* container = item->asContainer()) {
+			hash_combine(seed, container->getItemCount() > 0 ? 1 : 0);
+		 }
+	}
+
+	return seed;
+}
+
 // Helper function to populate tooltip data from an item (in-place)
 static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& pos, bool isHouseTile, float zoom) {
 	if (!item) {
@@ -219,11 +292,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
-			}
+		Item* item = tile->ground.get();
+		if (item && (item->isComplex() || g_items[item->getID()].isTooltipable())) {
+			uint64_t hash = ComputeTooltipHash(item, tile->isHouseTile(), view.zoom);
+			tooltip_drawer->addCachedTooltip(hash, location->getPosition(), [&](TooltipData& data) {
+				return FillItemTooltipData(data, item, location->getPosition(), tile->isHouseTile(), view.zoom);
+			});
 		}
 	}
 
@@ -265,11 +339,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			for (const auto& item : tile->items) {
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
-						}
+					Item* raw_item = item.get();
+					if (raw_item && (raw_item->isComplex() || g_items[raw_item->getID()].isTooltipable())) {
+						uint64_t hash = ComputeTooltipHash(raw_item, tile->isHouseTile(), view.zoom);
+						tooltip_drawer->addCachedTooltip(hash, location->getPosition(), [&](TooltipData& data) {
+							return FillItemTooltipData(data, raw_item, location->getPosition(), tile->isHouseTile(), view.zoom);
+						});
 					}
 				}
 

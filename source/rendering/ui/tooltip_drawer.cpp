@@ -43,6 +43,7 @@ TooltipDrawer::~TooltipDrawer() {
 
 void TooltipDrawer::clear() {
 	active_count = 0;
+	active_tooltips.clear();
 }
 
 TooltipData& TooltipDrawer::requestTooltipData() {
@@ -85,6 +86,44 @@ void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name) {
 	data.category = TooltipCategory::WAYPOINT;
 	data.waypointName = name;
 	commitTooltip();
+}
+
+void TooltipDrawer::addCachedTooltip(uint64_t hash, Position pos, std::function<bool(TooltipData&)> generator) {
+	auto it = layoutCache.find(hash);
+	if (it != layoutCache.end()) {
+		// LRU: Move to front
+		// Optimization: Check if already at front to avoid linear search in remove()
+		if (!layoutFifoList.empty() && layoutFifoList.front() != hash) {
+			layoutFifoList.remove(hash);
+			layoutFifoList.push_front(hash);
+		}
+
+		ActiveTooltip active;
+		active.cached = it->second;
+		active.pos = pos;
+		active_tooltips.push_back(active);
+	} else {
+		TooltipData temp;
+		if (generator(temp)) {
+			// Check cache limit (LRU eviction)
+			if (layoutCache.size() >= 1000) {
+				uint64_t lru = layoutFifoList.back();
+				layoutFifoList.pop_back();
+				layoutCache.erase(lru);
+			}
+
+			auto cached = std::make_shared<CachedTooltip>();
+			cached->fromData(temp);
+
+			layoutCache[hash] = cached;
+			layoutFifoList.push_front(hash);
+
+			ActiveTooltip active;
+			active.cached = cached;
+			active.pos = pos;
+			active_tooltips.push_back(active);
+		}
+	}
 }
 
 void TooltipDrawer::getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const {
@@ -274,6 +313,176 @@ void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
 			addField("Text", std::string_view(storage.data() + start, storage.size() - start), TEXT_R, TEXT_G, TEXT_B);
 		}
 	}
+}
+
+void TooltipDrawer::prepareCachedFields(CachedTooltip& cached) {
+	using namespace TooltipColors;
+	cached.cachedFields.clear();
+	cached.cachedFields.reserve(8);
+
+	auto addField = [&](std::string label, std::string value, uint8_t r, uint8_t g, uint8_t b) {
+		CachedFieldLine field;
+		field.label = label;
+		field.value = value;
+		field.r = r;
+		field.g = g;
+		field.b = b;
+		cached.cachedFields.push_back(field);
+	};
+
+	if (cached.category == TooltipCategory::WAYPOINT) {
+		addField("Waypoint", cached.waypointName, WAYPOINT_HEADER_R, WAYPOINT_HEADER_G, WAYPOINT_HEADER_B);
+	} else {
+		if (cached.actionId > 0) {
+			addField("Action ID", std::to_string(cached.actionId), ACTION_ID_R, ACTION_ID_G, ACTION_ID_B);
+		}
+		if (cached.uniqueId > 0) {
+			addField("Unique ID", std::to_string(cached.uniqueId), UNIQUE_ID_R, UNIQUE_ID_G, UNIQUE_ID_B);
+		}
+		if (cached.doorId > 0) {
+			addField("Door ID", std::to_string(cached.doorId), DOOR_ID_R, DOOR_ID_G, DOOR_ID_B);
+		}
+		if (cached.destination.x > 0) {
+			addField("Destination", std::format("{}, {}, {}", cached.destination.x, cached.destination.y, cached.destination.z), TELEPORT_DEST_R, TELEPORT_DEST_G, TELEPORT_DEST_B);
+		}
+		if (!cached.description.empty()) {
+			addField("Description", cached.description, BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B);
+		}
+		if (!cached.text.empty()) {
+			addField("Text", "\"" + cached.text + "\"", TEXT_R, TEXT_G, TEXT_B);
+		}
+	}
+}
+
+TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const std::vector<CachedFieldLine>& fields, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize) {
+	LayoutMetrics lm = {};
+
+	// Set up font for measurements
+	nvgFontSize(vg, fontSize);
+	nvgFontFace(vg, "sans");
+
+	// Measure label widths
+	float maxLabelWidth = 0.0f;
+	for (const auto& field : fields) {
+		float labelBounds[4];
+		nvgTextBounds(vg, 0, 0, field.label.c_str(), nullptr, labelBounds);
+		float lw = labelBounds[2] - labelBounds[0];
+		if (lw > maxLabelWidth) {
+			maxLabelWidth = lw;
+		}
+	}
+
+	lm.valueStartX = maxLabelWidth + 12.0f; // Gap between label and value
+	float maxValueWidth = maxWidth - lm.valueStartX - padding * 2;
+
+	// Word wrap values that are too long
+	int totalLines = 0;
+	float actualMaxWidth = minWidth;
+
+	// I'll cast away const for now, as it's logically part of layout calculation to update wrapped lines cache.
+	std::vector<CachedFieldLine>& mutable_fields = const_cast<std::vector<CachedFieldLine>&>(fields);
+
+	for (auto& field : mutable_fields) {
+		field.wrappedLines.clear(); // Reset previous wrapping
+		const char* start = field.value.c_str();
+		const char* end = start + field.value.length();
+
+		// Check if value fits on one line
+		float valueBounds[4];
+		nvgTextBounds(vg, 0, 0, start, end, valueBounds);
+		float valueWidth = valueBounds[2] - valueBounds[0];
+
+		if (valueWidth <= maxValueWidth) {
+			// Single line
+			field.wrappedLines.push_back(field.value);
+			totalLines++;
+			float lineWidth = lm.valueStartX + valueWidth + padding * 2;
+			if (lineWidth > actualMaxWidth) {
+				actualMaxWidth = lineWidth;
+			}
+		} else {
+			// Need to wrap - use NanoVG text breaking
+			NVGtextRow rows[16];
+			int nRows = nvgTextBreakLines(vg, start, end, maxValueWidth, rows, 16);
+
+			for (int i = 0; i < nRows; i++) {
+				std::string line(rows[i].start, rows[i].end - rows[i].start);
+				field.wrappedLines.push_back(line);
+				totalLines++;
+
+				float lineWidth = lm.valueStartX + rows[i].width + padding * 2;
+				if (lineWidth > actualMaxWidth) {
+					actualMaxWidth = lineWidth;
+				}
+			}
+
+			if (nRows == 0) {
+				// Fallback if breaking failed
+				field.wrappedLines.push_back(field.value);
+				totalLines++;
+			}
+		}
+	}
+
+	// Calculate container grid dimensions
+	lm.containerCols = 0;
+	lm.containerRows = 0;
+	lm.gridSlotSize = 34.0f; // 32px + padding
+	lm.containerHeight = 0.0f;
+
+	lm.numContainerItems = static_cast<int>(tooltip.containerItems.size());
+	int capacity = static_cast<int>(tooltip.containerCapacity);
+	lm.emptyContainerSlots = std::max(0, capacity - lm.numContainerItems);
+	lm.totalContainerSlots = lm.numContainerItems;
+
+	if (lm.emptyContainerSlots > 0) {
+		lm.totalContainerSlots++; // Add one slot for the summary
+	}
+
+	// Apply a hard cap for visual safety
+	if (lm.totalContainerSlots > 33) {
+		lm.totalContainerSlots = 33;
+	}
+
+	if (capacity > 0 || lm.numContainerItems > 0) {
+		// Heuristic: try to keep it somewhat square but matching width
+		lm.containerCols = std::min(4, lm.totalContainerSlots);
+		if (lm.totalContainerSlots > 4) {
+			lm.containerCols = 5;
+		}
+		if (lm.totalContainerSlots > 10) {
+			lm.containerCols = 6;
+		}
+		if (lm.totalContainerSlots > 15) {
+			lm.containerCols = 8;
+		}
+
+		if (lm.containerCols == 0 && lm.totalContainerSlots > 0) {
+			lm.containerCols = 1;
+		}
+
+		if (lm.containerCols > 0) {
+			lm.containerRows = (lm.totalContainerSlots + lm.containerCols - 1) / lm.containerCols;
+			lm.containerHeight = lm.containerRows * lm.gridSlotSize + 4.0f; // + top margin
+		}
+	}
+
+	// Calculate final box dimensions
+	lm.width = std::min(maxWidth + padding * 2, std::max(minWidth, actualMaxWidth));
+
+	bool hasContainer = lm.totalContainerSlots > 0;
+	if (hasContainer) {
+		float gridWidth = lm.containerCols * lm.gridSlotSize;
+		lm.width = std::max(lm.width, gridWidth + padding * 2);
+	}
+
+	float lineHeight = fontSize * 1.4f;
+	lm.height = totalLines * lineHeight + padding * 2;
+	if (hasContainer) {
+		lm.height += lm.containerHeight + 4.0f;
+	}
+
+	return lm;
 }
 
 TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize) {
@@ -467,26 +676,53 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	}
 }
 
+void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize, const std::vector<CachedFieldLine>& fields) {
+	using namespace TooltipColors;
+
+	float contentX = x + padding;
+	float cursorY = y + padding;
+
+	nvgFontSize(vg, fontSize);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+
+	for (const auto& field : fields) {
+		bool firstLine = true;
+		for (const auto& line : field.wrappedLines) {
+			if (firstLine) {
+				// Draw label on first line
+				nvgFillColor(vg, nvgRGBA(BODY_TEXT_R, BODY_TEXT_G, BODY_TEXT_B, 160));
+				nvgText(vg, contentX, cursorY, field.label.c_str(), nullptr);
+				firstLine = false;
+			}
+
+			// Draw value line in semantic color
+			nvgFillColor(vg, nvgRGBA(field.r, field.g, field.b, 255));
+			nvgText(vg, contentX + valueStartX, cursorY, line.c_str(), nullptr);
+
+			cursorY += lineHeight;
+		}
+	}
+}
+
 void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout) {
 	using namespace TooltipColors;
+	constexpr float padding = 10.0f;
 
 	if (layout.totalContainerSlots <= 0) {
 		return;
 	}
 
-	// Calculate cursorY after text fields
-	// We need to re-calculate text height or pass it, but simpler to deduce from logic:
-	// The grid is at the bottom. We can just use the bottom of the box minus grid height minus padding.
-	// But let's calculate exact start Y based on text content for precision
-	float fontSize = 11.0f;
-	float lineHeight = fontSize * 1.4f;
-	float textBlockHeight = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
-		textBlockHeight += field.wrappedLines.size() * lineHeight;
-	}
+	// Calculate cursorY for container grid
+	// In calculateLayout: lm.height = textHeight + padding*2 + (hasContainer ? containerHeight + 4.0f : 0)
+	// Container starts after text block and padding.
+	// Container Y = y + (totalHeight - containerHeight - 4.0f)?
+	// But 4.0f is top margin for container?
 
-	float startY = y + 10.0f + textBlockHeight + 8.0f; // Padding + Text + Spacer
+	float startY = y + layout.height - layout.containerHeight - 4.0f;
+	// We need to subtract padding?
+	// If `layout.height` includes bottom padding of text, and container is appended...
+
 	float startX = x + 10.0f; // Padding
 
 	for (int idx = 0; idx < layout.totalContainerSlots; ++idx) {
@@ -559,6 +795,54 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		return;
 	}
 
+	// Constants
+	float fontSize = 11.0f;
+	float padding = 10.0f;
+	float minWidth = 120.0f;
+	float maxWidth = 220.0f;
+
+	// Draw Cached Tooltips
+	for (const auto& active : active_tooltips) {
+		auto cached = active.cached;
+		if (!cached) continue;
+
+		int unscaled_x, unscaled_y;
+		view.getScreenPosition(active.pos.x, active.pos.y, active.pos.z, unscaled_x, unscaled_y);
+
+		float zoom = view.zoom < 0.01f ? 1.0f : view.zoom;
+		float screen_x = unscaled_x / zoom;
+		float screen_y = unscaled_y / zoom;
+		float tile_size_screen = 32.0f / zoom;
+
+		// Center on tile
+		screen_x += tile_size_screen / 2.0f;
+		screen_y += tile_size_screen / 2.0f;
+
+		// Check if we need to calculate layout
+		if (!cached->layoutValid) {
+			prepareCachedFields(*cached);
+			// We iterate through cached fields to calculate layout
+			// Need to convert cached fields for layout calculation or use cached version
+			cached->layout = calculateLayout(vg, cached->cachedFields, cached->toData(active.pos), maxWidth, minWidth, padding, fontSize);
+			cached->layoutValid = true;
+		}
+
+		// Check if tooltip is effectively empty (e.g. if zoom level hid container items and no other text exists)
+		if (cached->cachedFields.empty() && cached->containerItems.empty()) {
+			continue;
+		}
+
+		// Position tooltip above tile
+		float tooltipX = screen_x - (cached->layout.width / 2.0f);
+		float tooltipY = screen_y - cached->layout.height - 12.0f;
+
+		// Draw
+		drawBackground(vg, tooltipX, tooltipY, cached->layout.width, cached->layout.height, 4.0f, cached->toData(active.pos));
+		drawFields(vg, tooltipX, tooltipY, cached->layout.valueStartX, fontSize * 1.4f, padding, fontSize, cached->cachedFields);
+		drawContainerGrid(vg, tooltipX, tooltipY, cached->toData(active.pos), cached->layout);
+	}
+
+	// Draw Legacy Tooltips
 	for (size_t i = 0; i < active_count; ++i) {
 		const auto& tooltip = tooltips[i];
 		int unscaled_x, unscaled_y;
@@ -573,12 +857,6 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		// Center on tile
 		screen_x += tile_size_screen / 2.0f;
 		screen_y += tile_size_screen / 2.0f;
-
-		// Constants
-		float fontSize = 11.0f;
-		float padding = 10.0f;
-		float minWidth = 120.0f;
-		float maxWidth = 220.0f;
 
 		// 1. Prepare Content
 		prepareFields(tooltip);
