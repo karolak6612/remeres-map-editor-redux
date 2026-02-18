@@ -17,7 +17,7 @@
 
 #include <toml++/toml.hpp>
 #include <charconv>
-#include <spdlog/fmt/fmt.h>
+#include <string>
 #include "app/main.h"
 
 #include "app/settings.h"
@@ -63,6 +63,11 @@ void ClientVersion::loadVersions() {
 				if (version) {
 					// ONLY override the user-specific path
 					version->setClientPath(wxstr((*client)["clientPath"].value_or("")));
+
+					bool isDefault = (*client)["default"].value_or(false);
+					if (isDefault) {
+						latest_version = version;
+					}
 				}
 			}
 		}
@@ -290,9 +295,7 @@ bool ClientVersion::saveVersions() {
 			otbmVers.push_back((int)v + 1);
 		}
 		db_obj.insert_or_assign("otbmVersions", std::move(otbmVers));
-		if (version.get() == latest_version) {
-			db_obj.insert_or_assign("default", true);
-		}
+		// (Moved to config_obj below)
 		db_clients_array.push_back(std::move(db_obj));
 
 		// User config object (ONLY path)
@@ -305,6 +308,7 @@ bool ClientVersion::saveVersions() {
 		} else {
 			config_obj.insert_or_assign("clientPath", "");
 		}
+		config_obj.insert_or_assign("default", version.get() == latest_version);
 		config_clients_array.push_back(std::move(config_obj));
 	}
 

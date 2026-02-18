@@ -2,6 +2,7 @@
 configType = 'otb'
 datSignature = '41BF619C'
 dataDirectory = '740'
+default = true
 description = 'sample description'
 extended = false
 frameDurations = false

@@ -493,20 +493,17 @@ void ClientVersionPage::Apply() {
 		}
 	}
 
-	// Save any dirty client versions
 	bool anyDirty = false;
 	for (auto* cv : ClientVersion::getAll()) {
 		if (cv->isDirty()) {
-			cv->clearDirty();
 			anyDirty = true;
+			break;
 		}
 	}
 	if (anyDirty) {
 		if (ClientVersion::saveVersions()) {
 			for (auto* cv : ClientVersion::getAll()) {
-				if (cv->isDirty()) {
-					cv->clearDirty();
-				}
+				cv->clearDirty();
 			}
 		} else {
 			wxMessageBox("Failed to save client versions. Check log for details.", "Save Error", wxOK | wxICON_ERROR);

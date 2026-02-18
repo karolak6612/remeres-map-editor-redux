@@ -18,6 +18,12 @@
 #ifndef RME_CLIENT_VERSION_H_
 #define RME_CLIENT_VERSION_H_
 
+#include <string>
+#include <vector>
+#include <memory>
+#include <wx/string.h>
+#include <wx/filename.h>
+
 #include "app/main.h"
 #include "app/settings.h"
 

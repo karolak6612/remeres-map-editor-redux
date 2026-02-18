@@ -31,7 +31,6 @@
 #include "app/managers/version_manager.h"
 #include "app/preferences.h"
 #include "util/image_manager.h"
-#include "util/image_manager.h"
 
 PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false) :
 	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(600, 500), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
