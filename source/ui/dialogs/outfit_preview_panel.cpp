@@ -5,12 +5,8 @@
 #include <wx/dcbuffer.h>
 #include <wx/graphics.h>
 
-namespace {
-	const int PREVIEW_SIZE = 192;
-}
-
 OutfitPreviewPanel::OutfitPreviewPanel(wxWindow* parent, const Outfit& outfit) :
-	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(PREVIEW_SIZE, PREVIEW_SIZE), wxBORDER_NONE),
+	wxPanel(parent, wxID_ANY, wxDefaultPosition, parent->FromDIP(wxSize(192, 192)), wxBORDER_NONE),
 	preview_outfit(outfit),
 	preview_direction(0) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -53,14 +49,18 @@ void OutfitPreviewPanel::OnPaint(wxPaintEvent& event) {
 				int sw = bmp.GetWidth();
 				int sh = bmp.GetHeight();
 
-				double scale = std::min<double>((double)PREVIEW_SIZE / sw, (double)PREVIEW_SIZE / sh);
+				wxSize clientSize = GetClientSize();
+				int w = clientSize.GetWidth();
+				int h = clientSize.GetHeight();
+
+				double scale = std::min<double>((double)w / sw, (double)h / sh);
 				// Hero scale - make it fit nicely
 				scale *= 0.9;
 
 				double drawW = sw * scale;
 				double drawH = sh * scale;
-				double x = (PREVIEW_SIZE - drawW) / 2.0;
-				double y = (PREVIEW_SIZE - drawH) / 2.0;
+				double x = (w - drawW) / 2.0;
+				double y = (h - drawH) / 2.0;
 
 				gc->DrawBitmap(bmp, x, y, drawW, drawH);
 			} else {

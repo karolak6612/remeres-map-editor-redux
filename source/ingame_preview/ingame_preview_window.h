@@ -32,7 +32,7 @@ namespace IngamePreview {
 		void UpdateState();
 
 	private:
-		std::unique_ptr<IngamePreviewCanvas> canvas;
+		IngamePreviewCanvas* canvas;
 		wxTimer update_timer;
 
 		// UI Controls

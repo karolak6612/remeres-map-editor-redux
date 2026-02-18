@@ -14,23 +14,9 @@
 class OutfitChooserDialog : public wxDialog {
 public:
 	enum {
-		ID_SEARCH = 30000,
-		ID_ADDON1,
-		ID_ADDON2,
-		ID_COLOR_HEAD,
-		ID_COLOR_BODY,
-		ID_COLOR_LEGS,
-		ID_COLOR_FEET,
-		ID_COLOR_START,
-		ID_SPEED,
-		ID_NAME,
-		ID_RANDOMIZE,
-		ID_ADD_FAVORITE,
-		ID_FAVORITE_RENAME,
+		ID_FAVORITE_RENAME = wxID_HIGHEST + 1,
 		ID_FAVORITE_EDIT,
-		ID_FAVORITE_DELETE,
-		ID_OUTFIT_START = 31000,
-		ID_FAVORITE_START = 32000
+		ID_FAVORITE_DELETE
 	};
 
 	OutfitChooserDialog(wxWindow* parent, const Outfit& current_outfit);
