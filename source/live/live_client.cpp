@@ -255,7 +255,7 @@ void LiveClient::sendHello() {
 	message.write<uint8_t>(PACKET_HELLO_FROM_CLIENT);
 	message.write<uint32_t>(__RME_VERSION_ID__);
 	message.write<uint32_t>(__LIVE_NET_VERSION__);
-	message.write<uint32_t>(g_version.GetCurrentVersionID());
+	message.write<uint32_t>(g_version.GetCurrentVersion().getProtocolID());
 	message.write<std::string>(nstr(name));
 	message.write<std::string>(nstr(password));
 
@@ -395,7 +395,14 @@ void LiveClient::parseClientAccepted(NetworkMessage& message) {
 }
 
 void LiveClient::parseChangeClientVersion(NetworkMessage& message) {
-	ClientVersionID clientVersion = static_cast<ClientVersionID>(message.read<uint32_t>());
+	OtbVersionID protocolId = message.read<uint32_t>();
+	ClientVersion* target = ClientVersion::getBestMatch(protocolId);
+	if (!target) {
+		logMessage("Received unsupported client version from server.");
+		close();
+		return;
+	}
+	ClientVersionID clientVersion = target->getID();
 	if (!g_gui.CloseAllEditors()) {
 		close();
 		return;

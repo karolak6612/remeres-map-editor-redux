@@ -290,7 +290,7 @@ void Application::FixVersionDiscrapencies() {
 	}
 
 	if (g_settings.getInteger(Config::VERSION_ID) < __RME_VERSION_ID__ && ClientVersion::getLatestVersion() != nullptr) {
-		g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, ClientVersion::getLatestVersion()->getID());
+		g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, ClientVersion::getLatestVersion()->getProtocolID());
 	}
 
 	wxString ss = wxstr(g_settings.getString(Config::SCREENSHOT_DIRECTORY));

@@ -561,7 +561,7 @@ wxNotebookPage* PreferencesWindow::CreateClientPage() {
 		tmp_text->SetToolTip(tooltip);
 		dir_picker->SetToolTip(tooltip);
 
-		if (version->getID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
+		if (version->getProtocolID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
 			default_version_choice->SetSelection(version_counter);
 		}
 
@@ -731,7 +731,7 @@ void PreferencesWindow::Apply() {
 		}
 
 		if (version->getName() == default_version_choice->GetStringSelection()) {
-			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, version->getID());
+			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, version->getProtocolID());
 		}
 
 		version_counter++;

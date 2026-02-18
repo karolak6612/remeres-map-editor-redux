@@ -572,8 +572,7 @@ void ItemDatabase::parseFloorChangeAttribute(ItemType& it, std::string_view valu
 }
 
 bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id) {
-	ClientVersionID clientVersion = g_version.GetCurrentVersionID();
-	if (clientVersion < CLIENT_VERSION_980 && id > 20000 && id < 20100) {
+	if (g_version.GetCurrentVersion().getProtocolID() < CLIENT_VERSION_980 && id > 20000 && id < 20100) {
 		itemNode = itemNode.next_sibling();
 		return true;
 	} else if (id > 30000 && id < 30100) {

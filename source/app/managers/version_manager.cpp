@@ -31,7 +31,7 @@ bool VersionManager::LoadVersion(ClientVersionID version, wxString& error, std::
 		return false;
 	}
 
-	if (version != loaded_version || force) {
+	if (version.empty() || version != loaded_version || force) {
 		if (getLoadedVersion() != nullptr) {
 			// There is another version loaded right now, save window layout
 			g_gui.SavePerspective();
@@ -67,7 +67,7 @@ bool VersionManager::LoadVersion(ClientVersionID version, wxString& error, std::
 }
 
 ClientVersionID VersionManager::GetCurrentVersionID() const {
-	if (loaded_version != CLIENT_VERSION_NONE) {
+	if (!loaded_version.empty()) {
 		return getLoadedVersion()->getID();
 	}
 	return CLIENT_VERSION_NONE;
@@ -167,7 +167,7 @@ void VersionManager::UnloadVersion() {
 	g_gui.gfx.clear();
 	g_brush_manager.Clear();
 
-	if (loaded_version != CLIENT_VERSION_NONE) {
+	if (!loaded_version.empty()) {
 		g_materials.clear();
 		g_brushes.clear();
 		g_items.clear();

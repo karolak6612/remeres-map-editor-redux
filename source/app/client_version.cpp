@@ -120,7 +120,7 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 
 			OtbVersion otb;
 			otb.name = name;
-			otb.id = static_cast<ClientVersionID>(otbId);
+			otb.id = static_cast<OtbVersionID>(otbId);
 			otb.format_version = static_cast<OtbFormatVersion>(otbMajor);
 			if (otb.format_version < OTB_VERSION_1) {
 				otb.format_version = OTB_VERSION_1;
@@ -284,18 +284,20 @@ ClientVersion::ClientVersion(OtbVersion otb, std::string versionName, wxString p
 	// Default transparency check (can be updated later or in load)
 }
 
-ClientVersion* ClientVersion::get(ClientVersionID id) {
+ClientVersion* ClientVersion::get(const ClientVersionID& id) {
 	for (const auto& cv : client_versions) {
-		if (cv->getID() == id) {
+		if (cv->name == id) {
 			return cv.get();
 		}
 	}
 	return nullptr;
 }
 
-ClientVersion* ClientVersion::get(std::string id) {
+ClientVersion* ClientVersion::getBestMatch(OtbVersionID id) {
+	// Try to find a default one first
 	for (const auto& cv : client_versions) {
-		if (cv->getName() == id) {
+		if (cv->otb.id == id) {
+			// We could check for a 'default' flag here if we wanted to be more precise
 			return cv.get();
 		}
 	}
@@ -450,6 +452,10 @@ std::string ClientVersion::getName() const {
 }
 
 ClientVersionID ClientVersion::getID() const {
+	return name;
+}
+
+OtbVersionID ClientVersion::getProtocolID() const {
 	return otb.id;
 }
 

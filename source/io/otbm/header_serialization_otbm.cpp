@@ -32,7 +32,7 @@ bool HeaderSerializationOTBM::getVersionInfo(NodeFileReadHandle& f, MapVersion& 
 		return false;
 	}
 
-	out_ver.client = static_cast<ClientVersionID>(u32);
+	out_ver.client = static_cast<OtbVersionID>(u32);
 	return true;
 }
 
@@ -100,7 +100,7 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 	if (u32 > static_cast<uint32_t>(g_items.MinorVersion)) {
 		spdlog::warn("This editor needs an updated items.otb version (found minor {})", u32);
 	}
-	version.client = static_cast<ClientVersionID>(u32);
+	version.client = static_cast<OtbVersionID>(u32);
 
 	mapHeaderNode = root->getChild();
 	uint8_t u8;

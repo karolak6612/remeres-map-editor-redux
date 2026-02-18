@@ -26,7 +26,7 @@ public:
 	}
 
 	ClientVersion* getLoadedVersion() const {
-		return loaded_version == CLIENT_VERSION_NONE ? nullptr : ClientVersion::get(loaded_version);
+		return loaded_version.empty() ? nullptr : ClientVersion::get(loaded_version);
 	}
 
 private:

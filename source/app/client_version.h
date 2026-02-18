@@ -21,12 +21,13 @@
 #include "app/main.h"
 #include "app/settings.h"
 
-using ClientVersionID = int;
+using ClientVersionID = std::string;
+using OtbVersionID = int;
 
-// Client versions
-enum ClientVersions {
-	CLIENT_VERSION_NONE = -1,
-	CLIENT_VERSION_ALL = -2,
+// Protocol versions (Legacy/OTB IDs)
+enum ProtocolVersions : OtbVersionID {
+	PROTOCOL_VERSION_NONE = 0,
+	PROTOCOL_VERSION_ALL = -1,
 	CLIENT_VERSION_750 = 1,
 	CLIENT_VERSION_755 = 2,
 	CLIENT_VERSION_760 = 3,
@@ -97,6 +98,9 @@ enum ClientVersions {
 
 };
 
+#define CLIENT_VERSION_NONE ""
+#define OTB_VERSION_NONE 0
+
 // OTBM versions
 enum MapVersionID {
 	MAP_OTBM_UNKNOWN = -1,
@@ -109,11 +113,11 @@ enum MapVersionID {
 // The composed version of a otbm file (otbm version, client version)
 struct MapVersion {
 	MapVersion() :
-		otbm(MAP_OTBM_1), client(CLIENT_VERSION_NONE) { }
-	MapVersion(MapVersionID m, ClientVersionID c) :
+		otbm(MAP_OTBM_1), client(0) { }
+	MapVersion(MapVersionID m, OtbVersionID c) :
 		otbm(m), client(c) { }
 	MapVersionID otbm;
-	ClientVersionID client;
+	OtbVersionID client;
 };
 
 enum OtbFormatVersion : uint32_t {
@@ -129,7 +133,7 @@ struct OtbVersion {
 	// What file format the OTB is in (version 1..3)
 	OtbFormatVersion format_version;
 	// The minor version ID of the OTB (maps to CLIENT_VERSION in OTServ)
-	ClientVersionID id;
+	OtbVersionID id;
 };
 
 // Formats for the metadata file
@@ -213,8 +217,8 @@ public:
 	static void unloadVersions();
 	static void saveVersions();
 
-	static ClientVersion* get(ClientVersionID id);
-	static ClientVersion* get(std::string name);
+	static ClientVersion* get(const ClientVersionID& id);
+	static ClientVersion* getBestMatch(OtbVersionID id);
 	static ClientVersionList getVisible(std::string from, std::string to);
 	static ClientVersionList getAll();
 	static ClientVersionList getAllVisible();
@@ -223,7 +227,7 @@ public:
 	static ClientVersion* getLatestVersion();
 
 	bool operator==(const ClientVersion& o) const {
-		return otb.id == o.otb.id;
+		return name == o.name;
 	}
 
 	bool hasValidPaths();
@@ -235,6 +239,7 @@ public:
 	std::string getName() const;
 
 	ClientVersionID getID() const;
+	OtbVersionID getProtocolID() const;
 	MapVersionID getPrefferedMapVersionID() const;
 	OtbVersion getOTBVersion() const;
 	DatFormat getDatFormatForSignature(uint32_t signature) const;
