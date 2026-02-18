@@ -184,10 +184,22 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 	// Read auxiliary files
 	auto loadAux = [&](bool (*func)(Map&, const FileName&), const std::string& suffix, std::string& target) {
+		std::string defaultFile = nstr(filename.GetName()) + "-" + suffix + ".xml";
 		bool expected = !target.empty();
 
-		if (target.empty()) {
-			std::string defaultFile = nstr(filename.GetName()) + "-" + suffix + ".xml";
+		if (expected) {
+			// Validate/sanitize OTBM-provided target
+			auto paths = MapXMLIO::normalizeMapFilePaths(filename, target);
+			if (FileName(wxstr(paths.first)).FileExists()) {
+				// Use normalized name
+				target = paths.second;
+			} else {
+				// File does not exist or invalid, try default
+				expected = false;
+			}
+		}
+
+		if (!expected) {
 			auto paths = MapXMLIO::normalizeMapFilePaths(filename, defaultFile);
 			if (FileName(wxstr(paths.first)).FileExists()) {
 				target = defaultFile;
@@ -202,7 +214,7 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 		} else {
 			// No file specified in OTBM and no default file found.
 			// Set the default filename for future saves so we don't end up with empty strings.
-			target = nstr(filename.GetName()) + "-" + suffix + ".xml";
+			target = defaultFile;
 		}
 	};
 

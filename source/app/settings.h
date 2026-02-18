@@ -209,8 +209,6 @@ namespace Config {
 	};
 }
 
-class wxConfigBase;
-
 class Settings {
 public:
 	Settings();

@@ -239,8 +239,56 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-	// --- Header Section ---
-	wxPanel* headerPanel = new BorderedDarkPanel(this);
+	mainSizer->Add(CreateHeaderPanel(this, titleText, rmeLogo), 0, wxEXPAND | wxALL, 2);
+	mainSizer->Add(CreateContentPanel(this, recentFiles), 1, wxEXPAND | wxALL, 2);
+	mainSizer->Add(CreateFooterPanel(this, versionText), 0, wxEXPAND | wxALL, 2);
+
+	SetSizer(mainSizer);
+	Layout();
+	Centre();
+}
+
+WelcomeDialog::~WelcomeDialog() {
+	if (m_recentList) {
+		m_recentList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
+	}
+	if (m_clientList) {
+		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
+	}
+	delete m_imageList;
+}
+
+void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
+	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
+
+	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, wxArtProvider::GetBitmap(artId, wxART_OTHER, wxSize(14, 14)));
+	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
+
+	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);
+	wxFont f = lbl->GetFont();
+	f.SetPointSize(8);
+	lbl->SetFont(f);
+	lbl->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	row->Add(lbl, 0, wxCENTER, 0);
+
+	sizer->Add(row, 0, wxTOP | wxLEFT | wxRIGHT, 2);
+
+	wxStaticText* val = new wxStaticText(parent, wxID_ANY, value);
+	wxFont vf = val->GetFont();
+	vf.SetWeight(wxFONTWEIGHT_BOLD);
+	val->SetFont(vf);
+
+	if (!valCol.IsOk()) {
+		val->SetForegroundColour(Theme::Get(Theme::Role::Text));
+	} else {
+		val->SetForegroundColour(valCol);
+	}
+
+	sizer->Add(val, 0, wxBOTTOM | wxLEFT | wxRIGHT, 4);
+}
+
+wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titleText, const wxBitmap& rmeLogo) {
+	wxPanel* headerPanel = new BorderedDarkPanel(parent);
 	wxBoxSizer* headerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	// Icon Button - Align Left: 10px total
@@ -273,10 +321,50 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 	headerSizer->Add(prefBtn, 0, wxCENTER | wxALL, 8);
 
 	headerPanel->SetSizer(headerSizer);
-	mainSizer->Add(headerPanel, 0, wxEXPAND | wxALL, 2);
+	return headerPanel;
+}
 
-	// --- Main Content Area ---
-	wxPanel* contentPanel = new wxPanel(this, wxID_ANY);
+wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& versionText) {
+	wxPanel* footerPanel = new BorderedDarkPanel(parent);
+	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
+
+	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
+	exitBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON, wxSize(16, 16)));
+	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
+
+	// Align Left: 10px total
+	footerSizer->Add(exitBtn, 0, wxALL, 8);
+
+	footerSizer->AddStretchSpacer();
+	wxStaticText* version = new wxStaticText(footerPanel, wxID_ANY, versionText);
+	version->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	version->SetBackgroundColour(Theme::Get(Theme::Role::Background));
+	footerSizer->Add(version, 0, wxCENTER | wxALL, 5);
+	footerSizer->AddStretchSpacer();
+
+	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
+	loadBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_UP, wxART_BUTTON, wxSize(16, 16)));
+	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+		long item = -1;
+		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
+		if (item != -1) {
+			wxString path = m_recentList->GetItemText(item, 1);
+			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
+			newEvent->SetId(wxID_OPEN);
+			newEvent->SetString(path);
+			QueueEvent(newEvent);
+		}
+	});
+
+	// Align Right: 10px total
+	footerSizer->Add(loadBtn, 0, wxALL, 8);
+
+	footerPanel->SetSizer(footerSizer);
+	return footerPanel;
+}
+
+wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<wxString>& recentFiles) {
+	wxPanel* contentPanel = new wxPanel(parent, wxID_ANY);
 	contentPanel->SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 	wxBoxSizer* contentSizer = new wxBoxSizer(wxHORIZONTAL);
 
@@ -367,89 +455,7 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
 
 	contentPanel->SetSizer(contentSizer);
-	mainSizer->Add(contentPanel, 1, wxEXPAND | wxALL, 2);
-
-	// --- Footer Section ---
-	wxPanel* footerPanel = new BorderedDarkPanel(this);
-	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
-
-	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
-	exitBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON, wxSize(16, 16)));
-	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-
-	// Align Left: 10px total
-	footerSizer->Add(exitBtn, 0, wxALL, 8);
-
-	footerSizer->AddStretchSpacer();
-	wxStaticText* version = new wxStaticText(footerPanel, wxID_ANY, versionText);
-	version->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	version->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	footerSizer->Add(version, 0, wxCENTER | wxALL, 5);
-	footerSizer->AddStretchSpacer();
-
-	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
-	loadBtn->SetId(9999);
-	loadBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_GO_UP, wxART_BUTTON, wxSize(16, 16)));
-	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-		long item = -1;
-		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-		if (item != -1) {
-			wxString path = m_recentList->GetItemText(item, 1);
-			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-			newEvent->SetId(wxID_OPEN);
-			newEvent->SetString(path);
-			QueueEvent(newEvent);
-		}
-	});
-
-	// Align Right: 10px total
-	footerSizer->Add(loadBtn, 0, wxALL, 8);
-
-	footerPanel->SetSizer(footerSizer);
-	mainSizer->Add(footerPanel, 0, wxEXPAND | wxALL, 2);
-
-	SetSizer(mainSizer);
-	Layout();
-	Centre();
-}
-
-WelcomeDialog::~WelcomeDialog() {
-	if (m_recentList) {
-		m_recentList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
-	}
-	if (m_clientList) {
-		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
-	}
-	delete m_imageList;
-}
-
-void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
-	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
-
-	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, wxArtProvider::GetBitmap(artId, wxART_OTHER, wxSize(14, 14)));
-	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
-
-	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);
-	wxFont f = lbl->GetFont();
-	f.SetPointSize(8);
-	lbl->SetFont(f);
-	lbl->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	row->Add(lbl, 0, wxCENTER, 0);
-
-	sizer->Add(row, 0, wxTOP | wxLEFT | wxRIGHT, 2);
-
-	wxStaticText* val = new wxStaticText(parent, wxID_ANY, value);
-	wxFont vf = val->GetFont();
-	vf.SetWeight(wxFONTWEIGHT_BOLD);
-	val->SetFont(vf);
-
-	if (valCol == wxColour(0, 0, 0)) {
-		val->SetForegroundColour(Theme::Get(Theme::Role::Text));
-	} else {
-		val->SetForegroundColour(valCol);
-	}
-
-	sizer->Add(val, 0, wxBOTTOM | wxLEFT | wxRIGHT, 4);
+	return contentPanel;
 }
 
 void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
@@ -482,10 +488,9 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 	}
 }
 
-void WelcomeDialog::OnRecentFileActivated(wxCommandEvent& event) {
-	wxListEvent& listEvent = static_cast<wxListEvent&>(event);
+void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
 	wxListItem item;
-	item.SetId(listEvent.GetIndex());
+	item.SetId(event.GetIndex());
 	item.SetColumn(1);
 	item.SetMask(wxLIST_MASK_TEXT);
 

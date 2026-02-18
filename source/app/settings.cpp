@@ -144,7 +144,7 @@ std::string Settings::DynamicValue::str() {
 	}
 }
 
-static std::string to_snake_case(std::string s) {
+static std::string toLower(std::string s) {
 	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
 	return s;
 }
@@ -170,7 +170,7 @@ void Settings::IO(IOMode mode) {
 		if (s[0] == '\0') {                                       \
 			cur_sec = root;                                       \
 		} else if (mode != DEFAULT) {                             \
-			std::string sec_name = to_snake_case(s);              \
+			std::string sec_name = toLower(s);                    \
 			cur_sec = root->get_as<toml::table>(sec_name);        \
 			if (!cur_sec) {                                       \
 				root->insert_or_assign(sec_name, toml::table {}); \
@@ -181,7 +181,7 @@ void Settings::IO(IOMode mode) {
 
 #define Bool(key, dflt)                                                  \
 	do {                                                                 \
-		std::string k = to_snake_case(#key);                             \
+		std::string k = toLower(#key);                                   \
 		if (mode == DEFAULT) {                                           \
 			setInteger(key, dflt ? 1 : 0);                               \
 		} else if (mode == SAVE) {                                       \
@@ -193,7 +193,7 @@ void Settings::IO(IOMode mode) {
 
 #define Int(key, dflt)                                               \
 	do {                                                             \
-		std::string k = to_snake_case(#key);                         \
+		std::string k = toLower(#key);                               \
 		if (mode == DEFAULT) {                                       \
 			setInteger(key, dflt);                                   \
 		} else if (mode == SAVE) {                                   \
@@ -205,7 +205,7 @@ void Settings::IO(IOMode mode) {
 
 #define IntToSave(key, dflt)                                         \
 	do {                                                             \
-		std::string k = to_snake_case(#key);                         \
+		std::string k = toLower(#key);                               \
 		if (mode == DEFAULT) {                                       \
 			setInteger(key, dflt);                                   \
 		} else if (mode == SAVE) {                                   \
@@ -218,7 +218,7 @@ void Settings::IO(IOMode mode) {
 
 #define Float(key, dflt)                                               \
 	do {                                                               \
-		std::string k = to_snake_case(#key);                           \
+		std::string k = toLower(#key);                                 \
 		if (mode == DEFAULT) {                                         \
 			setFloat(key, dflt);                                       \
 		} else if (mode == SAVE) {                                     \
@@ -230,7 +230,7 @@ void Settings::IO(IOMode mode) {
 
 #define String(key, dflt)                                              \
 	do {                                                               \
-		std::string k = to_snake_case(#key);                           \
+		std::string k = toLower(#key);                                 \
 		if (mode == DEFAULT) {                                         \
 			setString(key, dflt);                                      \
 		} else if (mode == SAVE) {                                     \
@@ -269,6 +269,11 @@ void Settings::IO(IOMode mode) {
 	Bool(SHOW_TOWNS, false);
 	Bool(ALWAYS_SHOW_ZONES, true);
 	Bool(EXT_HOUSE_SHADER, true);
+	Bool(DRAW_LOCKED_DOOR, false);
+
+	section("General");
+	Bool(GOTO_WEBSITE_ON_BOOT, false);
+	Bool(USE_UPDATER, true);
 
 	section("Version");
 	Int(VERSION_ID, 0);
@@ -316,6 +321,10 @@ void Settings::IO(IOMode mode) {
 	Bool(SAVE_WITH_OTB_MAGIC_NUMBER, false);
 	Int(REPLACE_SIZE, 500);
 	Int(COPY_POSITION_FORMAT, 0);
+	String(RECENT_EDITED_MAP_PATH, "");
+	String(RECENT_EDITED_MAP_POSITION, "");
+	Int(FIND_ITEM_MODE, 0);
+	Int(JUMP_TO_ITEM_MODE, 0);
 
 	section("Graphics");
 	Bool(TEXTURE_MANAGEMENT, true);
@@ -380,9 +389,12 @@ void Settings::IO(IOMode mode) {
 	Bool(WINDOW_MAXIMIZED, false);
 	Bool(WELCOME_DIALOG, true);
 
+	Bool(WELCOME_DIALOG, true);
+
 	section("Hotkeys");
 	String(NUMERICAL_HOTKEYS, "");
 
+	section("Toolbars");
 	Bool(SHOW_TOOLBAR_STANDARD, true);
 	Bool(SHOW_TOOLBAR_BRUSHES, false);
 	Bool(SHOW_TOOLBAR_POSITION, false);
@@ -396,21 +408,17 @@ void Settings::IO(IOMode mode) {
 	section("experimental");
 	Int(EXPERIMENTAL_FOG, 0);
 
-	section("");
-	Bool(GOTO_WEBSITE_ON_BOOT, false);
-	Bool(USE_UPDATER, true);
-	String(RECENT_EDITED_MAP_PATH, "");
-	String(RECENT_EDITED_MAP_POSITION, "");
-
-	Int(FIND_ITEM_MODE, 0);
-	Int(JUMP_TO_ITEM_MODE, 0);
-
-	// checkbox in terrain palette
-	Bool(DRAW_LOCKED_DOOR, false);
-
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");
-		file << g_settings_table;
+		if (file.is_open()) {
+			file << g_settings_table;
+			if (file.fail()) {
+				spdlog::error("Failed to write to config.toml");
+			}
+			file.close();
+		} else {
+			spdlog::error("Failed to open config.toml for writing");
+		}
 	}
 
 #undef section

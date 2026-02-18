@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include <toml++/toml.h>
+#include <toml++/toml.hpp>
 #include <charconv>
 #include "app/main.h"
 
@@ -29,7 +29,6 @@
 #include "app/client_version.h"
 
 #include <wx/dir.h>
-#include <toml++/toml.h>
 
 // Static methods to load/save
 
@@ -166,8 +165,12 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			std::string sprSigStr = client["sprSignature"].value_or("0");
 
 			ClientData client_data;
-			std::from_chars(datSigStr.data(), datSigStr.data() + datSigStr.size(), client_data.datSignature, 16);
-			std::from_chars(sprSigStr.data(), sprSigStr.data() + sprSigStr.size(), client_data.sprSignature, 16);
+			if (std::from_chars(datSigStr.data(), datSigStr.data() + datSigStr.size(), client_data.datSignature, 16).ec != std::errc()) {
+				client_data.datSignature = 0;
+			}
+			if (std::from_chars(sprSigStr.data(), sprSigStr.data() + sprSigStr.size(), client_data.sprSignature, 16).ec != std::errc()) {
+				client_data.sprSignature = 0;
+			}
 			client_data.datFormat = getDatFormatForVersion(version);
 
 			// OTFI Replacement Fields
@@ -199,9 +202,6 @@ void ClientVersion::unloadVersions() {
 
 DatFormat ClientVersion::getDatFormatForVersion(int version) {
 	// Logic to infer DatFormat from version integer
-	if (version >= 1077) {
-		return DAT_FORMAT_1057;
-	}
 	if (version >= 1057) {
 		return DAT_FORMAT_1057;
 	}

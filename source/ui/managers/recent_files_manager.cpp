@@ -1,4 +1,6 @@
 #include "ui/managers/recent_files_manager.h"
+#include <toml++/toml.hpp>
+#include "app/settings.h"
 
 RecentFilesManager::RecentFilesManager() :
 	recentFiles(10) {
@@ -6,10 +8,6 @@ RecentFilesManager::RecentFilesManager() :
 
 RecentFilesManager::~RecentFilesManager() {
 }
-
-#include <sstream>
-#include <toml++/toml.h>
-#include "app/settings.h"
 
 void RecentFilesManager::Load() {
 	toml::table& table = g_settings.getTable();
