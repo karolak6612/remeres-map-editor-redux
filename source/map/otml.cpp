@@ -113,7 +113,7 @@ void OTMLNode::addChild(const OTMLNodePtr& newChild) {
 }
 
 bool OTMLNode::removeChild(const OTMLNodePtr& oldChild) {
-	OTMLNodeList::iterator it = std::find(m_children.begin(), m_children.end(), oldChild);
+	auto it = std::ranges::find(m_children, oldChild);
 	if (it != m_children.end()) {
 		m_children.erase(it);
 		oldChild->setParent(OTMLNodePtr());
@@ -123,7 +123,7 @@ bool OTMLNode::removeChild(const OTMLNodePtr& oldChild) {
 }
 
 bool OTMLNode::replaceChild(const OTMLNodePtr& oldChild, const OTMLNodePtr& newChild) {
-	OTMLNodeList::iterator it = std::find(m_children.begin(), m_children.end(), oldChild);
+	auto it = std::ranges::find(m_children, oldChild);
 	if (it != m_children.end()) {
 		oldChild->setParent(OTMLNodePtr());
 		newChild->setParent(shared_from_this());
