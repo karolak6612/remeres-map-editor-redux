@@ -130,10 +130,10 @@ constexpr double RAD2DEG = 180.0 / PI;
 constexpr std::uint32_t MAX_SPRITES = 3000000;
 
 // The size of the tile in pixels
-constexpr int TileSize = 32;
+constexpr int TILE_SIZE = 32;
 
 // Safety margin to respect the Painter's Algorithm for large items (up to 6x6) and draw offsets.
-constexpr int PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS = TileSize * 6;
+constexpr int PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS = TILE_SIZE * 6;
 
 // The default size of sprites
 #define SPRITE_PIXELS 32

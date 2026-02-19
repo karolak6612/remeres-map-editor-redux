@@ -32,13 +32,13 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 				if (tile) {
 					int offset;
 					if (map_z <= GROUND_LAYER) {
-						offset = (GROUND_LAYER - map_z) * TileSize;
+						offset = (GROUND_LAYER - map_z) * TILE_SIZE;
 					} else {
-						offset = TileSize * (view.floor - map_z);
+						offset = TILE_SIZE * (view.floor - map_z);
 					}
 
-					int draw_x = ((map_x * TileSize) - view.view_scroll_x) - offset;
-					int draw_y = ((map_y * TileSize) - view.view_scroll_y) - offset;
+					int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
+					int draw_y = ((map_y * TILE_SIZE) - view.view_scroll_y) - offset;
 
 					// Position pos = tile->getPosition();
 
@@ -59,3 +59,4 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 		}
 	}
 }
+

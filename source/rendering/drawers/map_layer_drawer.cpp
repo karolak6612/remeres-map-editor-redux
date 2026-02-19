@@ -51,8 +51,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	// We also skip IsTileVisible because visitLeaves already bounds us to the visible area (with 4-tile alignment),
 	// which is well within IsTileVisible's 6-tile margin.
 	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TileSize
-		: TileSize * (view.floor - map_z);
+		? (GROUND_LAYER - map_z) * TILE_SIZE
+		: TILE_SIZE * (view.floor - map_z);
 
 	int base_screen_x = -view.view_scroll_x - offset;
 	int base_screen_y = -view.view_scroll_y - offset;
@@ -71,11 +71,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 	// Common lambda to draw a node
 	auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
-		int node_draw_x = nd_map_x * TileSize + base_screen_x;
-		int node_draw_y = nd_map_y * TileSize + base_screen_y;
+		int node_draw_x = nd_map_x * TILE_SIZE + base_screen_x;
+		int node_draw_y = nd_map_y * TILE_SIZE + base_screen_y;
 
 		// Node level culling
-		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 			return;
 		}
 
@@ -91,7 +91,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			return;
 		}
 
-		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TileSize, 4 * TileSize);
+		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
 
 		Floor* floor = nd->getFloor(map_z);
 		if (!floor) {
@@ -100,9 +100,9 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 		TileLocation* location = floor->locs;
 		int draw_x_base = node_draw_x;
-		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TileSize) {
+		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
 			int draw_y = node_draw_y;
-			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TileSize) {
+			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
 				// Culling: Skip tiles that are far outside the viewport.
 				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 					continue;
@@ -131,13 +131,14 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	} else {
 		// Use SpatialHashGrid::visitLeaves which handles O(1) viewport query internally
 		// Expand the query range slightly to handle the 4-tile alignment and safety margin
-		int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TileSize;
-		int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TileSize;
-		int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TileSize;
-		int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TileSize;
+		int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 
 		editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
 			drawNode(nd, nd_map_x, nd_map_y, false);
 		});
 	}
 }
+

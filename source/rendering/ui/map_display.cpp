@@ -347,7 +347,7 @@ void MapCanvas::ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y) 
 }
 #if 0
 
-*map_y = int(start_y + (screen_y * zoom)) / TileSize;
+*map_y = int(start_y + (screen_y * zoom)) / TILE_SIZE;
 }
 
 if (floor <= GROUND_LAYER) {
@@ -665,3 +665,4 @@ void MapCanvas::Reset() {
 	editor.selection.clear();
 	editor.actionQueue->clear();
 }
+

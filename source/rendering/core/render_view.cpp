@@ -3,7 +3,7 @@
 
 #include "rendering/ui/map_display.h"
 #include "rendering/core/drawing_options.h"
-#include "app/definitions.h" // For TileSize, GROUND_LAYER, MAP_MAX_LAYER
+#include "app/definitions.h" // For TILE_SIZE, GROUND_LAYER, MAP_MAX_LAYER
 #include <algorithm> // For std::min
 
 void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
@@ -13,7 +13,7 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	viewport_y = 0;
 
 	zoom = static_cast<float>(canvas->GetZoom());
-	tile_size = std::max(1, static_cast<int>(TileSize / zoom)); // after zoom
+	tile_size = std::max(1, static_cast<int>(TILE_SIZE / zoom)); // after zoom
 	floor = canvas->GetFloor();
 	camera_pos.z = floor;
 
@@ -30,8 +30,8 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	end_z = floor;
 	superend_z = (floor > GROUND_LAYER ? 8 : 0);
 
-	start_x = view_scroll_x / TileSize;
-	start_y = view_scroll_y / TileSize;
+	start_x = view_scroll_x / TILE_SIZE;
+	start_y = view_scroll_y / TILE_SIZE;
 
 	if (floor > GROUND_LAYER) {
 		start_x -= 2;
@@ -50,16 +50,16 @@ int RenderView::getFloorAdjustment() const {
 	if (floor > GROUND_LAYER) { // Underground
 		return 0; // No adjustment
 	} else {
-		return TileSize * (GROUND_LAYER - floor);
+		return TILE_SIZE * (GROUND_LAYER - floor);
 	}
 }
 
 bool RenderView::IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
 	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TileSize
-		: TileSize * (floor - map_z);
-	out_x = (map_x * TileSize) - view_scroll_x - offset;
-	out_y = (map_y * TileSize) - view_scroll_y - offset;
+		? (GROUND_LAYER - map_z) * TILE_SIZE
+		: TILE_SIZE * (floor - map_z);
+	out_x = (map_x * TILE_SIZE) - view_scroll_x - offset;
+	out_y = (map_y * TILE_SIZE) - view_scroll_y - offset;
 	const int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
 
 	// Use cached logical dimensions
@@ -71,11 +71,11 @@ bool RenderView::IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int&
 
 bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	// Logic matches IsTileVisible but uses pre-calculated draw coordinates.
-	// screensize_x * zoom gives the logical viewport size (since TileSize is constant 32).
+	// screensize_x * zoom gives the logical viewport size (since TILE_SIZE is constant 32).
 	// See SetupGL: glOrtho(0, width * zoom, ...)
 
 	// Use cached logical dimensions
-	if (draw_x + TileSize + margin < 0 || draw_x - margin > logical_width || draw_y + TileSize + margin < 0 || draw_y - margin > logical_height) {
+	if (draw_x + TILE_SIZE + margin < 0 || draw_x - margin > logical_width || draw_y + TILE_SIZE + margin < 0 || draw_y - margin > logical_height) {
 		return false;
 	}
 	return true;
@@ -94,10 +94,10 @@ bool RenderView::IsRectFullyInside(int draw_x, int draw_y, int width, int height
 
 void RenderView::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
 	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TileSize
-		: TileSize * (floor - map_z);
-	out_x = (map_x * TileSize) - view_scroll_x - offset;
-	out_y = (map_y * TileSize) - view_scroll_y - offset;
+		? (GROUND_LAYER - map_z) * TILE_SIZE
+		: TILE_SIZE * (floor - map_z);
+	out_x = (map_x * TILE_SIZE) - view_scroll_x - offset;
+	out_y = (map_y * TILE_SIZE) - view_scroll_y - offset;
 }
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -132,3 +132,4 @@ void RenderView::Clear() {
 	// glLoadIdentity(); // Legacy
 	// Blending and State management is now handled by individual renderers
 }
+

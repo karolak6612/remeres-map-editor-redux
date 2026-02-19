@@ -171,13 +171,13 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 		if (g_gui.IsSelectionMode()) {
 			int view_start_x, view_start_y;
 			static_cast<MapWindow*>(canvas->GetParent())->GetViewStart(&view_start_x, &view_start_y);
-			int view_start_map_x = view_start_x / TileSize, view_start_map_y = view_start_y / TileSize;
+			int view_start_map_x = view_start_x / TILE_SIZE, view_start_map_y = view_start_y / TILE_SIZE;
 
 			int view_screensize_x, view_screensize_y;
 			static_cast<MapWindow*>(canvas->GetParent())->GetViewSize(&view_screensize_x, &view_screensize_y);
 
-			int map_x = int(view_start_map_x + (view_screensize_x * canvas->zoom) / TileSize / 2);
-			int map_y = int(view_start_map_y + (view_screensize_y * canvas->zoom) / TileSize / 2);
+			int map_x = int(view_start_map_x + (view_screensize_x * canvas->zoom) / TILE_SIZE / 2);
+			int map_y = int(view_start_map_y + (view_screensize_y * canvas->zoom) / TILE_SIZE / 2);
 
 			hk = Hotkey(Position(map_x, map_y, canvas->floor));
 		} else if (g_gui.GetCurrentBrush()) {
@@ -195,7 +195,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			int map_y = hk.GetPosition().y;
 			int map_z = hk.GetPosition().z;
 
-			static_cast<MapWindow*>(canvas->GetParent())->Scroll(TileSize * map_x, TileSize * map_y, true);
+			static_cast<MapWindow*>(canvas->GetParent())->Scroll(TILE_SIZE * map_x, TILE_SIZE * map_y, true);
 			canvas->floor = map_z;
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
@@ -222,3 +222,4 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 		}
 	}
 }
+
