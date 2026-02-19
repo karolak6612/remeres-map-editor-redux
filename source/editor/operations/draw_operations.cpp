@@ -282,13 +282,13 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 				}
 				if (dodraw) {
 					if (brush->is<GroundBrush>() && alt) {
-						std::pair<bool, GroundBrush*> param;
+						GroundBrush::GroundBrushParameter param;
 						if (editor.replace_brush) {
-							param.first = false;
-							param.second = editor.replace_brush;
+							param.volatile_brush = false;
+							param.specific_brush = editor.replace_brush;
 						} else {
-							param.first = true;
-							param.second = nullptr;
+							param.volatile_brush = true;
+							param.specific_brush = nullptr;
 						}
 						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), &param);
 					} else {
@@ -302,13 +302,13 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
 				if (brush->is<GroundBrush>() && alt) {
-					std::pair<bool, GroundBrush*> param;
+					GroundBrush::GroundBrushParameter param;
 					if (editor.replace_brush) {
-						param.first = false;
-						param.second = editor.replace_brush;
+						param.volatile_brush = false;
+						param.specific_brush = editor.replace_brush;
 					} else {
-						param.first = true;
-						param.second = nullptr;
+						param.volatile_brush = true;
+						param.specific_brush = nullptr;
 					}
 					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), &param);
 				} else {

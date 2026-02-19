@@ -248,10 +248,10 @@ void Selection::flush() {
 		});
 		pending_removes.erase(first, last);
 
-		std::vector<Tile*> result;
-		result.reserve(tiles.size());
-		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), tilePositionLessThan);
-		tiles = std::move(result);
+		auto it = std::remove_if(tiles.begin(), tiles.end(), [&](Tile* tile) {
+			return std::ranges::binary_search(pending_removes, tile, tilePositionLessThan);
+		});
+		tiles.erase(it, tiles.end());
 	}
 
 	if (!pending_adds.empty()) {
@@ -261,10 +261,15 @@ void Selection::flush() {
 		});
 		pending_adds.erase(first, last);
 
-		std::vector<Tile*> merged;
-		merged.reserve(tiles.size() + pending_adds.size());
-		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), tilePositionLessThan);
-		tiles = std::move(merged);
+		size_t original_size = tiles.size();
+		tiles.reserve(original_size + pending_adds.size());
+		tiles.insert(tiles.end(), pending_adds.begin(), pending_adds.end());
+		std::inplace_merge(tiles.begin(), tiles.begin() + original_size, tiles.end(), tilePositionLessThan);
+
+		auto it = std::unique(tiles.begin(), tiles.end(), [](Tile* a, Tile* b) {
+			return a->getPosition() == b->getPosition();
+		});
+		tiles.erase(it, tiles.end());
 	}
 
 	pending_adds.clear();

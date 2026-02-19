@@ -26,6 +26,12 @@ class GroundBrush : public TerrainBrush {
 	friend class GroundBrushLoader;
 	friend class GroundBorderCalculator;
 
+public:
+	struct GroundBrushParameter {
+		bool volatile_brush;
+		GroundBrush* specific_brush;
+	};
+
 protected:
 	struct BorderBlock;
 

@@ -79,13 +79,17 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 	while (memory_size > size_t(1024 * 1024 * g_settings.getInteger(Config::UNDO_MEM_SIZE)) && !actions.empty()) {
 		memory_size -= actions.front()->memsize();
 		actions.pop_front();
-		current--;
+		if (current > 0) {
+			current--;
+		}
 	}
 
 	if (actions.size() > size_t(g_settings.getInteger(Config::UNDO_SIZE)) && !actions.empty()) {
 		memory_size -= actions.front()->memsize();
 		actions.pop_front();
-		current--;
+		if (current > 0) {
+			current--;
+		}
 	}
 
 	do {

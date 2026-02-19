@@ -61,13 +61,13 @@ void GroundBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	}
 
 	if (parameter != nullptr) {
-		std::pair<bool, GroundBrush*>& param = *reinterpret_cast<std::pair<bool, GroundBrush*>*>(parameter);
+		GroundBrushParameter& param = *reinterpret_cast<GroundBrushParameter*>(parameter);
 		GroundBrush* other = tile->getGroundBrush();
-		if (param.first) { // Volatile? :)
+		if (param.volatile_brush) {
 			if (other != nullptr) {
 				return;
 			}
-		} else if (other != param.second) {
+		} else if (other != param.specific_brush) {
 			return;
 		}
 	}

@@ -121,10 +121,10 @@ void AutoborderPreviewManager::SimulateBrush(Editor& editor, const Position& pos
 		// Handle ALT key for ground brushes (replace mode)
 		if (is_ground && alt_pressed) {
 			if (editor.replace_brush) {
-				std::pair<bool, GroundBrush*> param(false, editor.replace_brush);
+				GroundBrush::GroundBrushParameter param{false, editor.replace_brush};
 				brush->draw(preview_buffer_map.get(), tile, &param);
 			} else {
-				std::pair<bool, GroundBrush*> param(true, nullptr);
+				GroundBrush::GroundBrushParameter param{true, nullptr};
 				brush->draw(preview_buffer_map.get(), tile, &param);
 			}
 		} else {
