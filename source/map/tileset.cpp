@@ -135,8 +135,9 @@ void Tileset::loadCategory(pugi::xml_node node, std::vector<std::string>& warnin
 				if (ctype->brush) {
 					brush = ctype->brush;
 				} else {
-					brush = ctype->brush = newd CreatureBrush(ctype);
-					brushes.addBrush(brush);
+					auto creature_brush = std::make_unique<CreatureBrush>(ctype);
+					brush = ctype->brush = creature_brush.get();
+					brushes.addBrush(std::move(creature_brush));
 				}
 				brush->flagAsVisible();
 				category->brushlist.push_back(brush);
@@ -236,12 +237,13 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 					it.raw_brush->setCollection();
 				}
 			} else {
-				brush = it.raw_brush = newd RAWBrush(it.id);
+				auto raw_brush = std::make_unique<RAWBrush>(it.id);
+				brush = it.raw_brush = raw_brush.get();
 				it.has_raw = true;
 				if (type == TILESET_COLLECTION) {
 					it.raw_brush->setCollection();
 				}
-				tileset.brushes.addBrush(brush); // This will take care of cleaning up afterwards
+				tileset.brushes.addBrush(std::move(raw_brush)); // This will take care of cleaning up afterwards
 			}
 
 			if (type == TILESET_COLLECTION) {

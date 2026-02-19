@@ -354,12 +354,10 @@ void Selection::updateSelectionCount() {
 	}
 }
 
-void Selection::join(SelectionThread* thread) {
+void Selection::join(std::unique_ptr<SelectionThread> thread) {
 	thread->Wait();
 
 	ASSERT(session);
 	session->addAction(std::move(thread->result));
 	thread->selection.subsession = nullptr;
-
-	delete thread;
 }

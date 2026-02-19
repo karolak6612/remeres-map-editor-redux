@@ -83,8 +83,8 @@ public:
 	void finish(SessionFlags flags = NONE);
 
 	// Joins the selection instance in this thread with this instance
-	// This deletes the thread
-	void join(SelectionThread* thread);
+	// Ownership of the thread is transferred to join
+	void join(std::unique_ptr<SelectionThread> thread);
 
 	size_t size() {
 		return tiles.size();
