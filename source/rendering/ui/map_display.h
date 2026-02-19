@@ -43,6 +43,9 @@ class ScreenshotController;
 class MapMenuHandler;
 
 class MapCanvas : public wxGLCanvas {
+	std::unique_ptr<wxGLContext> m_glContext;
+	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
+
 public:
 	MapCanvas(MapWindow* parent, Editor& editor, int* attriblist);
 	~MapCanvas() override;
@@ -181,8 +184,6 @@ public:
 private:
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
-	std::unique_ptr<wxGLContext> m_glContext;
-	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 };
 
 #endif
