@@ -12,3 +12,8 @@ Learning: Single-entry caching in nested loops must respect the iteration order.
 Finding: `GraphicManager::getSpriteFile()` returned `std::string` by value, causing a heap allocation and copy for every item in the render loop during sprite preloading checks.
 Impact: Reduced memory allocations per frame significantly (thousands of allocations avoided per frame).
 Learning: Returning `std::string` by value from a getter called in a hot loop is a major performance killer. Always use `const std::string&` or `std::string_view` for members.
+
+## 2024-10-27 - Optimization of Tooltip Generation in Render Loop
+Finding: `TileRenderer::DrawTile` generated full tooltip data (string allocations, layout calculations) for *every* item on a tile, causing massive CPU overhead (esp. `FillItemTooltipData`) even for items completely covered by others.
+Impact: Reduced tooltip generation overhead from O(items_per_tile) to O(1) per tile. Eliminated thousands of redundant string allocations and layout passes per frame.
+Learning: Even if a function (like `FillItemTooltipData`) is efficient, calling it inside a hot loop for invisible items is a major bottleneck. Pre-checking visibility/relevance (e.g. "is this the top item?") is crucial before doing expensive UI data preparation.
