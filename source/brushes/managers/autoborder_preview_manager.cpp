@@ -112,7 +112,7 @@ void AutoborderPreviewManager::SimulateBrush(Editor& editor, const Position& pos
 		ASSERT(tile->getLocation() != nullptr);
 
 		if (is_wall) {
-			TileOperations::cleanWalls(tile, false);
+			TileOperations::cleanWalls(tile);
 		} else if (is_ground) {
 			TileOperations::cleanBorders(tile);
 		}

@@ -33,6 +33,20 @@ void ImageManager::ClearCache() {
 	m_glTextureCache.clear();
 }
 
+void ImageManager::ReleaseContext(NVGcontext* vg) {
+	if (!vg) {
+		return;
+	}
+	for (auto it = m_nvgImageCache.begin(); it != m_nvgImageCache.end();) {
+		if (std::get<2>(it->first) == vg) {
+			nvgDeleteImage(vg, it->second);
+			it = m_nvgImageCache.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+
 std::string ImageManager::ResolvePath(const std::string& assetPath) {
 	// The path should be relative to the executable's "assets" directory
 	static wxString executablePath = wxStandardPaths::Get().GetExecutablePath();
@@ -144,7 +158,7 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 }
 
 int ImageManager::GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, const wxColour& tint) {
-	std::pair<std::string, uint32_t> cacheKey = { assetPath, tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
+	std::tuple<std::string, uint32_t, NVGcontext*> cacheKey = { assetPath, tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF, vg };
 	auto it = m_nvgImageCache.find(cacheKey);
 	if (it != m_nvgImageCache.end()) {
 		return it->second;

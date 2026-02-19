@@ -19,14 +19,9 @@ namespace TileOperations {
 	namespace {
 
 		template <typename Predicate>
-		void cleanItems(Tile* tile, Predicate p, bool delete_items) {
+		void cleanItems(Tile* tile, Predicate p) {
 			auto& items = tile->items;
 			auto first_to_remove = std::stable_partition(items.begin(), items.end(), std::not_fn(p));
-
-			if (delete_items) {
-				// With unique_ptr, elements are automatically deleted when the vector is erased or items are replaced.
-				// We don't need to manually delete them here.
-			}
 			items.erase(first_to_remove, items.end());
 		}
 
@@ -37,27 +32,27 @@ namespace TileOperations {
 	}
 
 	void cleanBorders(Tile* tile) {
-		cleanItems(tile, [](const auto& item) { return item->isBorder(); }, true);
+		cleanItems(tile, [](const auto& item) { return item->isBorder(); });
 	}
 
 	void wallize(Tile* tile, BaseMap* map) {
 		WallBrush::doWalls(map, tile);
 	}
 
-	void cleanWalls(Tile* tile, bool dontdelete) {
-		cleanItems(tile, [](const auto& item) { return item->isWall(); }, !dontdelete);
+	void cleanWalls(Tile* tile) {
+		cleanItems(tile, [](const auto& item) { return item->isWall(); });
 	}
 
 	void cleanWalls(Tile* tile, WallBrush* wb) {
-		cleanItems(tile, [wb](const auto& item) { return item->isWall() && wb->hasWall(item.get()); }, true);
+		cleanItems(tile, [wb](const auto& item) { return item->isWall() && wb->hasWall(item.get()); });
 	}
 
 	void tableize(Tile* tile, BaseMap* map) {
 		TableBrush::doTables(map, tile);
 	}
 
-	void cleanTables(Tile* tile, bool dontdelete) {
-		cleanItems(tile, [](const auto& item) { return item->isTable(); }, !dontdelete);
+	void cleanTables(Tile* tile) {
+		cleanItems(tile, [](const auto& item) { return item->isTable(); });
 	}
 
 	void carpetize(Tile* tile, BaseMap* map) {

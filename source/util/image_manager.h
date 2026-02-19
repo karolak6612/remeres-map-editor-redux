@@ -15,6 +15,7 @@
 #include <cstdint>
 #include <vector>
 #include <utility>
+#include <tuple>
 
 struct NVGcontext;
 
@@ -28,6 +29,7 @@ public:
 
 	// NanoVG support
 	int GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, const wxColour& tint = wxNullColour);
+	void ReleaseContext(NVGcontext* vg);
 
 	// OpenGL support
 	uint32_t GetGLTexture(const std::string& assetPath);
@@ -44,7 +46,7 @@ private:
 	// Caches
 	std::map<std::string, wxBitmapBundle> m_bitmapBundleCache;
 	std::map<std::pair<std::string, uint32_t>, wxBitmap> m_tintedBitmapCache;
-	std::map<std::pair<std::string, uint32_t>, int> m_nvgImageCache;
+	std::map<std::tuple<std::string, uint32_t, NVGcontext*>, int> m_nvgImageCache;
 	std::map<std::string, uint32_t> m_glTextureCache;
 
 	// Helper for tinting

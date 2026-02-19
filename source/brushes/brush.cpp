@@ -78,25 +78,32 @@ void Brushes::clear() {
 }
 
 void Brushes::init() {
-	addBrush(g_brush_manager.optional_brush = newd OptionalBorderBrush());
-	addBrush(g_brush_manager.eraser = newd EraserBrush());
-	addBrush(g_brush_manager.spawn_brush = newd SpawnBrush());
-	addBrush(g_brush_manager.normal_door_brush = newd DoorBrush(WALL_DOOR_NORMAL));
-	addBrush(g_brush_manager.locked_door_brush = newd DoorBrush(WALL_DOOR_LOCKED));
-	addBrush(g_brush_manager.magic_door_brush = newd DoorBrush(WALL_DOOR_MAGIC));
-	addBrush(g_brush_manager.quest_door_brush = newd DoorBrush(WALL_DOOR_QUEST));
-	addBrush(g_brush_manager.hatch_door_brush = newd DoorBrush(WALL_HATCH_WINDOW));
-	addBrush(g_brush_manager.archway_door_brush = newd DoorBrush(WALL_ARCHWAY));
-	addBrush(g_brush_manager.normal_door_alt_brush = newd DoorBrush(WALL_DOOR_NORMAL_ALT));
-	addBrush(g_brush_manager.window_door_brush = newd DoorBrush(WALL_WINDOW));
-	addBrush(g_brush_manager.house_brush = newd HouseBrush());
-	addBrush(g_brush_manager.house_exit_brush = newd HouseExitBrush());
-	addBrush(g_brush_manager.waypoint_brush = newd WaypointBrush());
+	auto add = [this](auto& slot, std::unique_ptr<Brush> brush) {
+		using SlotType = std::remove_reference_t<decltype(slot)>;
+		slot = dynamic_cast<SlotType>(brush.get());
+		ASSERT(slot);
+		addBrush(std::move(brush));
+	};
 
-	addBrush(g_brush_manager.pz_brush = newd FlagBrush(TILESTATE_PROTECTIONZONE));
-	addBrush(g_brush_manager.rook_brush = newd FlagBrush(TILESTATE_NOPVP));
-	addBrush(g_brush_manager.nolog_brush = newd FlagBrush(TILESTATE_NOLOGOUT));
-	addBrush(g_brush_manager.pvp_brush = newd FlagBrush(TILESTATE_PVPZONE));
+	add(g_brush_manager.optional_brush, std::make_unique<OptionalBorderBrush>());
+	add(g_brush_manager.eraser, std::make_unique<EraserBrush>());
+	add(g_brush_manager.spawn_brush, std::make_unique<SpawnBrush>());
+	add(g_brush_manager.normal_door_brush, std::make_unique<DoorBrush>(WALL_DOOR_NORMAL));
+	add(g_brush_manager.locked_door_brush, std::make_unique<DoorBrush>(WALL_DOOR_LOCKED));
+	add(g_brush_manager.magic_door_brush, std::make_unique<DoorBrush>(WALL_DOOR_MAGIC));
+	add(g_brush_manager.quest_door_brush, std::make_unique<DoorBrush>(WALL_DOOR_QUEST));
+	add(g_brush_manager.hatch_door_brush, std::make_unique<DoorBrush>(WALL_HATCH_WINDOW));
+	add(g_brush_manager.archway_door_brush, std::make_unique<DoorBrush>(WALL_ARCHWAY));
+	add(g_brush_manager.normal_door_alt_brush, std::make_unique<DoorBrush>(WALL_DOOR_NORMAL_ALT));
+	add(g_brush_manager.window_door_brush, std::make_unique<DoorBrush>(WALL_WINDOW));
+	add(g_brush_manager.house_brush, std::make_unique<HouseBrush>());
+	add(g_brush_manager.house_exit_brush, std::make_unique<HouseExitBrush>());
+	add(g_brush_manager.waypoint_brush, std::make_unique<WaypointBrush>());
+
+	add(g_brush_manager.pz_brush, std::make_unique<FlagBrush>(TILESTATE_PROTECTIONZONE));
+	add(g_brush_manager.rook_brush, std::make_unique<FlagBrush>(TILESTATE_NOPVP));
+	add(g_brush_manager.nolog_brush, std::make_unique<FlagBrush>(TILESTATE_NOLOGOUT));
+	add(g_brush_manager.pvp_brush, std::make_unique<FlagBrush>(TILESTATE_PVPZONE));
 
 	GroundBrush::init();
 	WallBrush::init();
@@ -200,8 +207,8 @@ bool Brushes::unserializeBorder(pugi::xml_node node, std::vector<std::string>& w
 	return true;
 }
 
-void Brushes::addBrush(Brush* brush) {
-	brushes.emplace(brush->getName(), std::unique_ptr<Brush>(brush));
+void Brushes::addBrush(std::unique_ptr<Brush> brush) {
+	brushes.emplace(brush->getName(), std::move(brush));
 }
 
 Brush* Brushes::getBrush(std::string_view name) const {
