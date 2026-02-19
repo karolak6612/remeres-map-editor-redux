@@ -3,6 +3,7 @@
 #include "brushes/brush.h"
 #include "game/items.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
 #include <glad/glad.h>
@@ -355,7 +356,7 @@ Brush* FindDialogListBox::GetSelectedBrush() {
 }
 
 void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
-	wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+	wxColour textColour = Theme::Get(Theme::Role::Text);
 	if (no_matches) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
@@ -384,10 +385,10 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		}
 
 		if (IsSelected(n)) {
-			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+			wxColour textColour = Theme::Get(Theme::Role::TextOnAccent);
 			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		} else {
-			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+			wxColour textColour = Theme::Get(Theme::Role::Text);
 			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		}
 

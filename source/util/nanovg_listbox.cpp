@@ -1,4 +1,5 @@
 #include "util/nanovg_listbox.h"
+#include "ui/theme.h"
 #include <wx/vlbox.h> // For styles like wxLB_MULTIPLE
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -216,16 +217,15 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		if (selected || hover || focused) {
 			nvgBeginPath(vg);
 			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+			wxColour c;
 			if (selected) {
-				wxColour selColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
-				nvgFillColor(vg, nvgRGBA(selColour.Red(), selColour.Green(), selColour.Blue(), 255));
+				c = Theme::Get(Theme::Role::Accent);
 			} else if (focused) {
-				wxColour focusColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT).ChangeLightness(90); // A lighter highlight for focus
-				nvgFillColor(vg, nvgRGBA(focusColour.Red(), focusColour.Green(), focusColour.Blue(), 255));
+				c = Theme::Get(Theme::Role::Selected);
 			} else {
-				wxColour hoverColour = GetBackgroundColour().ChangeLightness(120);
-				nvgFillColor(vg, nvgRGBA(hoverColour.Red(), hoverColour.Green(), hoverColour.Blue(), 255));
+				c = Theme::Get(Theme::Role::CardBaseHover);
 			}
+			nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
 			nvgFill(vg);
 		}
 

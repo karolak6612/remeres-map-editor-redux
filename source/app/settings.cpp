@@ -394,6 +394,7 @@ void Settings::IO(IOMode mode) {
 	Bool(WELCOME_DIALOG, true);
 	Int(PREFERENCES_WINDOW_WIDTH, 1200);
 	Int(PREFERENCES_WINDOW_HEIGHT, 500);
+	Int(THEME, 0);
 
 	section("Hotkeys");
 	String(NUMERICAL_HOTKEYS, "");

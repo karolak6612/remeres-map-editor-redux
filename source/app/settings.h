@@ -186,6 +186,8 @@ namespace Config {
 		PREFERENCES_WINDOW_WIDTH,
 		PREFERENCES_WINDOW_HEIGHT,
 
+		THEME,
+
 		// add new settings at the end to make sure nothing gets misread
 		DRAW_LOCKED_DOOR,
 		HIGHLIGHT_LOCKED_DOORS,
