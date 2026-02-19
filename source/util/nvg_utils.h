@@ -13,6 +13,10 @@ namespace NvgUtils {
 	// Generates RGBA pixel data for a given item ID.
 	// Returns a texture ID created in the given NanoVG context.
 	// Returns 0 if generation fails.
+	inline NVGcolor ToNvColor(const wxColour& c) {
+		return nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha());
+	}
+
 	// Creates a composite RGBA buffer from a GameSprite.
 	// Returns a unique_ptr to the buffer, or nullptr on failure.
 	inline std::unique_ptr<uint8_t[]> CreateCompositeRGBA(GameSprite& gs, int& outW, int& outH) {

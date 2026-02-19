@@ -223,12 +223,14 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		if (isSelected) {
-			nvgFillColor(vg, nvgRGBA(80, 100, 120, 255));
+			wxColour selCol = Theme::Get(Theme::Role::Accent);
+			nvgFillColor(vg, nvgRGBA(selCol.Red(), selCol.Green(), selCol.Blue(), 200));
 		} else if (isHovered) {
-			nvgFillColor(vg, nvgRGBA(70, 70, 75, 255));
+			wxColour hoverCol = Theme::Get(Theme::Role::CardBaseHover);
+			nvgFillColor(vg, nvgRGBA(hoverCol.Red(), hoverCol.Green(), hoverCol.Blue(), 255));
 		} else {
-			NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
-			nvgFillPaint(vg, bgPaint);
+			wxColour baseCol = Theme::Get(Theme::Role::CardBase);
+			nvgFillColor(vg, nvgRGBA(baseCol.Red(), baseCol.Green(), baseCol.Blue(), 255));
 		}
 		nvgFill(vg);
 
@@ -236,7 +238,8 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		if (isSelected) {
 			nvgBeginPath(vg);
 			nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, 4.0f);
-			nvgStrokeColor(vg, nvgRGBA(100, 180, 255, 255));
+			wxColour accentCol = Theme::Get(Theme::Role::Accent);
+			nvgStrokeColor(vg, nvgRGBA(accentCol.Red(), accentCol.Green(), accentCol.Blue(), 255));
 			nvgStrokeWidth(vg, 2.0f);
 			nvgStroke(vg);
 		}
@@ -274,9 +277,11 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 			nvgFontFace(vg, "sans");
 			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 			if (isSelected) {
-				nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+				wxColour textOnAccent = Theme::Get(Theme::Role::TextOnAccent);
+				nvgFillColor(vg, nvgRGBA(textOnAccent.Red(), textOnAccent.Green(), textOnAccent.Blue(), 255));
 			} else {
-				nvgFillColor(vg, nvgRGBA(200, 200, 200, 255));
+				wxColour textCol = Theme::Get(Theme::Role::TextSubtle);
+				nvgFillColor(vg, nvgRGBA(textCol.Red(), textCol.Green(), textCol.Blue(), 230));
 			}
 
 			float textY = y + 44.0f; // Below the 32px icon area + padding

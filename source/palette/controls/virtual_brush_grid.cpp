@@ -8,6 +8,9 @@
 #include <nanovg.h>
 #include <nanovg_gl.h>
 
+#include "util/nvg_utils.h"
+#include "ui/theme.h"
+
 #include <spdlog/spdlog.h>
 
 VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
@@ -116,13 +119,14 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	nvgRoundedRect(vg, x, y, w, h, 4.0f);
 
 	if (i == selected_index) {
-		nvgFillColor(vg, nvgRGBA(80, 100, 120, 255));
+		NVGcolor selCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+		selCol.a = 1.0f; // Force opaque for background
+		nvgFillColor(vg, selCol);
 	} else if (i == hover_index) {
-		nvgFillColor(vg, nvgRGBA(70, 70, 75, 255));
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover)));
 	} else {
-		// Normal - dark card with subtle gradient
-		NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
-		nvgFillPaint(vg, bgPaint);
+		// Normal - theme card base
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase)));
 	}
 	nvgFill(vg);
 
@@ -130,7 +134,7 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	if (i == selected_index) {
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(100, 180, 255, 255));
+		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
 		nvgStrokeWidth(vg, 2.0f);
 		nvgStroke(vg);
 	}
@@ -165,7 +169,7 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 			nvgFontSize(vg, 14.0f);
 			nvgFontFace(vg, "sans");
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
 
 			auto it = m_utf8NameCache.find(brush);
 			if (it == m_utf8NameCache.end()) {

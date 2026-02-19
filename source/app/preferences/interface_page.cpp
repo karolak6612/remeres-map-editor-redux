@@ -3,6 +3,7 @@
 #include "app/settings.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
+#include "ui/theme.h"
 
 InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
@@ -43,6 +44,25 @@ InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 	sizer->Add(subsizer, 0, wxALL, 6);
 
 	sizer->AddSpacer(10);
+
+	// Theme selection
+	wxBoxSizer* themeSizer = newd wxBoxSizer(wxHORIZONTAL);
+	themeSizer->Add(newd wxStaticText(this, wxID_ANY, wxString("Theme: ")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, 5));
+
+	theme_choice = newd wxChoice(this, wxID_ANY);
+	theme_choice->Append(wxString("System Default"));
+	theme_choice->Append(wxString("Dark"));
+	theme_choice->Append(wxString("Light"));
+
+	int currentTheme = g_settings.getInteger(Config::THEME);
+	if (currentTheme >= 0 && currentTheme <= 2) {
+		theme_choice->SetSelection(currentTheme);
+	} else {
+		theme_choice->SetSelection(0);
+	}
+
+	themeSizer->Add(theme_choice, 0);
+	sizer->Add(themeSizer, 0, wxLEFT | wxTOP, 5);
 
 	large_terrain_tools_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large terrain palette tool && size icons");
 	large_terrain_tools_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_TERRAIN_TOOLBAR));
@@ -119,9 +139,9 @@ wxChoice* InterfacePage::AddPaletteStyleChoice(wxSizer* sizer, const wxString& s
 	wxChoice* choice = newd wxChoice(this, wxID_ANY);
 	sizer->Add(choice, 0);
 
-	choice->Append("Large Icons");
-	choice->Append("Small Icons");
-	choice->Append("Listbox with Icons");
+	choice->Append(wxString("Large Icons"));
+	choice->Append(wxString("Small Icons"));
+	choice->Append(wxString("Listbox with Icons"));
 
 	text->SetToolTip(description);
 	choice->SetToolTip(description);
@@ -222,5 +242,12 @@ void InterfacePage::Apply() {
 
 	if (palette_update_needed) {
 		g_gui.RebuildPalettes();
+	}
+
+	int selectedTheme = theme_choice->GetSelection();
+	if (selectedTheme != wxNOT_FOUND && g_settings.getInteger(Config::THEME) != selectedTheme) {
+		g_settings.setInteger(Config::THEME, selectedTheme);
+		Theme::setType(static_cast<Theme::Type>(selectedTheme));
+		DialogUtil::PopupDialog(wxString("Theme Changed"), wxString("Theme changed. Please restart the application for all changes to take effect."), wxOK);
 	}
 }

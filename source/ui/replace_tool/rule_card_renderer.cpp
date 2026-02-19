@@ -27,7 +27,7 @@ void RuleCardRenderer::DrawTrashIcon(NVGcontext* vg, float x, float y, float siz
 }
 
 void RuleCardRenderer::DrawHeader(NVGcontext* vg, float width) {
-	NVGcolor subTextCol = nvgRGBA(150, 150, 150, 255);
+	NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
 
 	nvgFontSize(vg, 10.0f);
 	nvgFillColor(vg, subTextCol);
@@ -118,9 +118,9 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 	// 1. Card Background
 	nvgBeginPath(vg);
 	nvgRoundedRect(vg, CARD_MARGIN_X, y, width - CARD_MARGIN_X * 2, ruleH, 4);
-	nvgFillColor(vg, nvgRGBA(50, 50, 50, 255));
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase)));
 	nvgFill(vg);
-	nvgStrokeColor(vg, nvgRGBA(70, 70, 70, 255));
+	nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBorder)));
 	nvgStrokeWidth(vg, 1.0f);
 	nvgStroke(vg);
 
@@ -161,7 +161,7 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 
 		// HitResult::AddTarget is 3
 		bool hoverAdd = (dragHoverType == 3);
-		NVGcolor accentCol = nvgRGBA(Theme::Get(Theme::Role::Accent).Red(), Theme::Get(Theme::Role::Accent).Green(), Theme::Get(Theme::Role::Accent).Blue(), 255);
+		NVGcolor accentCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
 
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, tx, ty, CARD_W, ITEM_H, 4);
@@ -169,7 +169,7 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 			nvgStrokeColor(vg, accentCol);
 			nvgStrokeWidth(vg, 2.0f);
 		} else {
-			nvgStrokeColor(vg, nvgRGBA(80, 80, 80, 255));
+			nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBorder)));
 			nvgStrokeWidth(vg, 1.0f);
 		}
 		nvgStroke(vg);
@@ -182,14 +182,14 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 			nvgText(vg, tx + CARD_W / 2, ty + 44, "REMOVE", nullptr);
 		} else {
 			nvgFontSize(vg, 30.0f);
-			nvgFillColor(vg, hoverAdd ? accentCol : nvgRGBA(100, 100, 100, 255));
+			nvgFillColor(vg, hoverAdd ? accentCol : NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle)));
 			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 			nvgText(vg, tx + CARD_W / 2, ty + ITEM_H / 2, "+", nullptr);
 		}
 	}
 
 	// 6. Delete Rule Button (Top Right)
-	NVGcolor subTextCol = nvgRGBA(150, 150, 150, 255);
+	NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
 	nvgFillColor(vg, hoverDelete ? nvgRGBA(255, 80, 80, 255) : subTextCol);
 	nvgFontSize(vg, 16.0f);
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
@@ -198,7 +198,7 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 
 void RuleCardRenderer::DrawRuleArrow(NVGcontext* vg, float x, float y, float h) {
 	float arrowYCenter = y + h / 2.0f;
-	NVGcolor subTextCol = nvgRGBA(150, 150, 150, 255);
+	NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
 
 	nvgBeginPath(vg);
 	nvgMoveTo(vg, x, arrowYCenter);
@@ -216,11 +216,11 @@ void RuleCardRenderer::DrawRuleArrow(NVGcontext* vg, float x, float y, float h) 
 }
 
 void RuleCardRenderer::DrawNewRuleArea(NVGcontext* vg, float width, float y, bool isHovered) {
-	NVGcolor cardBgTop = nvgRGBA(45, 45, 50, 255);
-	NVGcolor cardBgBot = nvgRGBA(40, 40, 45, 255);
-	NVGcolor borderColor = nvgRGBA(100, 100, 100, 255);
-	NVGcolor accentCol = nvgRGBA(Theme::Get(Theme::Role::Accent).Red(), Theme::Get(Theme::Role::Accent).Green(), Theme::Get(Theme::Role::Accent).Blue(), 255);
-	NVGcolor subTextCol = nvgRGBA(150, 150, 150, 255);
+	NVGcolor cardBgTop = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase));
+	NVGcolor cardBgBot = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover));
+	NVGcolor borderColor = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBorder));
+	NVGcolor accentCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+	NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
 
 	float dropH = 60.0f;
 	float cardX = CARD_MARGIN_X;
@@ -250,17 +250,17 @@ void RuleCardRenderer::DrawNewRuleArea(NVGcontext* vg, float width, float y, boo
 }
 
 void RuleCardRenderer::DrawRuleItemCard(NanoVGCanvas* canvas, NVGcontext* vg, float x, float y, float w, float h, uint16_t id, bool highlight, bool isTrash, bool showDeleteOverlay, int probability) {
-	NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, nvgRGBA(60, 60, 65, 255), nvgRGBA(50, 50, 55, 255));
+	NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase)), NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover)));
 	nvgBeginPath(vg);
 	nvgRoundedRect(vg, x, y, w, h, 4.0f);
 	nvgFillPaint(vg, bgPaint);
 	nvgFill(vg);
 
 	if (highlight) {
-		nvgStrokeColor(vg, nvgRGBA(0, 120, 215, 255));
+		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
 		nvgStrokeWidth(vg, 2.0f);
 	} else {
-		nvgStrokeColor(vg, nvgRGBA(60, 60, 70, 255));
+		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBorder)));
 		nvgStrokeWidth(vg, 1.0f);
 	}
 	nvgStroke(vg);
@@ -296,7 +296,7 @@ void RuleCardRenderer::DrawRuleItemCard(NanoVGCanvas* canvas, NVGcontext* vg, fl
 		ItemType& it = g_items[id];
 		std::string label = std::format("{} - {}", id, it.name);
 
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
 		nvgFontSize(vg, 11.0f);
 		nvgFontFace(vg, "sans");
 		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
@@ -304,7 +304,7 @@ void RuleCardRenderer::DrawRuleItemCard(NanoVGCanvas* canvas, NVGcontext* vg, fl
 
 		if (probability >= 0) {
 			std::string probLabel = std::format("Chance: {}%", probability);
-			nvgFillColor(vg, nvgRGBA(160, 160, 160, 255));
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle)));
 			nvgFontSize(vg, 11.0f);
 			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 			nvgText(vg, x + w / 2, y + 84, probLabel.c_str(), nullptr);

@@ -264,6 +264,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/welcome_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/gl_context_manager.h
 
+    ${CMAKE_CURRENT_LIST_DIR}/ui/theme.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_frame.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_menubar.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/menubar_action_manager.h
@@ -617,6 +618,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/replace_tool/visual_similarity_service.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/theme.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.cpp

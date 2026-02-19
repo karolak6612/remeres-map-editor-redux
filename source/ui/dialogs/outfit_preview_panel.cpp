@@ -2,6 +2,7 @@
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
 #include <wx/dcbuffer.h>
 #include <wx/graphics.h>
 
@@ -28,7 +29,7 @@ void OutfitPreviewPanel::SetOutfit(const Outfit& outfit) {
 
 void OutfitPreviewPanel::OnPaint(wxPaintEvent& event) {
 	wxAutoBufferedPaintDC dc(this);
-	dc.SetBackground(wxBrush(wxColour(230, 230, 230)));
+	dc.SetBackground(wxBrush(Theme::Get(Theme::Role::Surface)));
 	dc.Clear();
 
 	GameSprite* spr = g_gui.gfx.getCreatureSprite(preview_outfit.lookType);

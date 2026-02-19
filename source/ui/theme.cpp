@@ -1,0 +1,160 @@
+#include "ui/theme.h"
+
+Theme::Type Theme::current_type = Theme::Type::System;
+
+void Theme::setType(Theme::Type type) {
+	current_type = type;
+}
+
+Theme::Type Theme::getType() {
+	return current_type;
+}
+
+wxColour Theme::Get(Role role) {
+	bool is_dark;
+	switch (current_type) {
+		case Type::Dark:
+			is_dark = true;
+			break;
+		case Type::Light:
+			is_dark = false;
+			break;
+		case Type::System:
+		default:
+			is_dark = wxSystemSettings::GetAppearance().IsDark();
+			break;
+	}
+	return is_dark ? GetDark(role) : GetLight(role);
+}
+
+wxColour Theme::GetDark(Role role) {
+	switch (role) {
+		case Role::Surface:
+			return wxColour(45, 45, 48);
+		case Role::Background:
+			return wxColour(30, 30, 30);
+		case Role::Header:
+			return wxColour(25, 25, 25);
+		case Role::Accent:
+			return wxColour(0, 120, 215);
+		case Role::AccentHover:
+			return wxColour(0, 150, 255);
+		case Role::Text:
+			return wxColour(230, 230, 230);
+		case Role::TextSubtle:
+			return wxColour(150, 150, 150);
+		case Role::TextOnAccent:
+			return wxColour(255, 255, 255);
+		case Role::Border:
+			return wxColour(60, 60, 60);
+		case Role::Selected:
+			return wxColour(0, 120, 215, 60); // Alpha translucency
+		case Role::Error:
+			return wxColour(200, 50, 50);
+		case Role::CardBase:
+			return wxColour(50, 50, 55);
+		case Role::CardBaseHover:
+			return wxColour(60, 60, 65);
+		case Role::CardBorder:
+			return wxColour(80, 80, 80);
+		// Tooltip colors (vibrant on dark background)
+		case Role::TooltipBg:
+			return wxColour(30, 30, 35);
+		case Role::TooltipLabel:
+			return wxColour(220, 220, 220);
+		case Role::TooltipActionId:
+			return wxColour(255, 165, 0); // Orange
+		case Role::TooltipUniqueId:
+			return wxColour(100, 149, 237); // Cornflower Blue
+		case Role::TooltipDoorId:
+			return wxColour(0, 139, 139); // Dark Cyan
+		case Role::TooltipTextValue:
+			return wxColour(255, 215, 0); // Gold
+		case Role::TooltipTeleport:
+			return wxColour(186, 85, 211); // Medium Orchid
+		case Role::TooltipWaypoint:
+			return wxColour(50, 205, 50); // Lime Green
+		case Role::TooltipBodyText:
+			return wxColour(220, 220, 220); // Light Gray
+		case Role::TooltipCountText:
+			return wxColour(200, 200, 200); // Light Gray
+		case Role::TooltipBorderWaypoint:
+			return wxColour(50, 205, 50); // Lime Green
+		case Role::TooltipBorderItem:
+			return wxColour(58, 58, 64); // Charcoal
+		case Role::TooltipBorderDoor:
+			return wxColour(139, 69, 19); // Saddle Brown
+		case Role::TooltipBorderTeleport:
+			return wxColour(153, 50, 204); // Dark Orchid
+		case Role::TooltipBorderText:
+			return wxColour(218, 165, 32); // Goldenrod
+		default:
+			return *wxWHITE;
+	}
+}
+
+wxColour Theme::GetLight(Role role) {
+	switch (role) {
+		case Role::Surface:
+			return wxColour(240, 240, 240); // Standard dialog background
+		case Role::Background:
+			return *wxWHITE; // Lists, entries
+		case Role::Header:
+			return wxColour(220, 220, 220);
+		case Role::Accent:
+			return wxColour(0, 120, 215); // Keep blue
+		case Role::AccentHover:
+			return wxColour(0, 100, 180);
+		case Role::Text:
+			return *wxBLACK;
+		case Role::TextSubtle:
+			return wxColour(100, 100, 100);
+		case Role::TextOnAccent:
+			return *wxWHITE;
+		case Role::Border:
+			return wxColour(200, 200, 200);
+		case Role::Selected:
+			return wxColour(0, 120, 215, 60);
+		case Role::Error:
+			return wxColour(200, 0, 0);
+		case Role::CardBase:
+			return *wxWHITE;
+		case Role::CardBaseHover:
+			return wxColour(245, 245, 245);
+		case Role::CardBorder:
+			return wxColour(200, 200, 200);
+		// Tooltip colors (readable on light background)
+		case Role::TooltipBg:
+			return wxColour(240, 240, 240);
+		case Role::TooltipLabel:
+			return wxColour(80, 80, 80);
+		case Role::TooltipActionId:
+			return wxColour(180, 100, 0); // Dark Orange
+		case Role::TooltipUniqueId:
+			return wxColour(30, 80, 180); // Dark Blue
+		case Role::TooltipDoorId:
+			return wxColour(0, 100, 100); // Teal
+		case Role::TooltipTextValue:
+			return wxColour(50, 50, 50); // Near Black
+		case Role::TooltipTeleport:
+			return wxColour(120, 40, 160); // Dark Purple
+		case Role::TooltipWaypoint:
+			return wxColour(20, 130, 20); // Dark Green
+		case Role::TooltipBodyText:
+			return wxColour(30, 30, 30); // Near Black
+		case Role::TooltipCountText:
+			return wxColour(60, 60, 60); // Dark Gray
+		case Role::TooltipBorderWaypoint:
+			return wxColour(50, 205, 50); // Lime Green
+		case Role::TooltipBorderItem:
+			return wxColour(58, 58, 64); // Charcoal
+		case Role::TooltipBorderDoor:
+			return wxColour(139, 69, 19); // Saddle Brown
+		case Role::TooltipBorderTeleport:
+			return wxColour(153, 50, 204); // Dark Orchid
+		case Role::TooltipBorderText:
+			return wxColour(218, 165, 32); // Goldenrod
+		default:
+			return *wxBLACK;
+	}
+}

@@ -3,7 +3,9 @@
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
 #include "util/image_manager.h"
+#include "util/nvg_utils.h"
 
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -145,9 +147,6 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 	int scrollPos = GetScrollPosition();
 
-	// Draw background
-	nvgBeginPath(vg);
-	nvgRect(vg, 0, 0, width, height); // Note: height here is canvas height, not content height. But scroll is handled by transform.
 	// Actually, width and height passed to OnNanoVGPaint are client size.
 	// Coordinate system is shifted by -scrollPos.
 	// So to fill the visible background, we need to draw at (0, scrollPos, width, height).
@@ -160,7 +159,7 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, scrollPos, width, height);
-	nvgFillColor(vg, nvgRGBA(45, 45, 45, 255));
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Surface)));
 	nvgFill(vg);
 
 	int start_row = scrollPos / (item_height + padding);
@@ -181,11 +180,11 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		nvgRoundedRect(vg, rect.x, rect.y, rect.width, rect.height, 4.0f);
 
 		if (i == selected_index) {
-			nvgFillColor(vg, nvgRGBA(80, 80, 80, 255));
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Selected)));
 		} else if (i == hover_index) {
-			nvgFillColor(vg, nvgRGBA(60, 60, 60, 255));
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover)));
 		} else {
-			nvgFillColor(vg, nvgRGBA(50, 50, 50, 255));
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase)));
 		}
 		nvgFill(vg);
 
@@ -193,10 +192,10 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, rect.x + 0.5f, rect.y + 0.5f, rect.width - 1.0f, rect.height - 1.0f, 4.0f);
 		if (i == selected_index) {
-			nvgStrokeColor(vg, nvgRGBA(200, 200, 200, 255));
+			nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
 			nvgStrokeWidth(vg, 2.0f);
 		} else {
-			nvgStrokeColor(vg, nvgRGBA(60, 60, 60, 255));
+			nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBorder)));
 			nvgStrokeWidth(vg, 1.0f);
 		}
 		nvgStroke(vg);
@@ -227,7 +226,7 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
 		// Name
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
 		if (name.length() > 14) {
 			name = name.Mid(0, 12) + "..";
 		}
@@ -235,7 +234,7 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 		// ID
 		const std::string idStr = std::format("#{}", lookType);
-		nvgFillColor(vg, nvgRGBA(180, 180, 180, 255));
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle)));
 		nvgText(vg, rect.x + rect.width / 2, rect.y + 92, idStr.c_str(), nullptr);
 	}
 }

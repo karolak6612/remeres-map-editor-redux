@@ -21,6 +21,8 @@ private:
 	wxChoice* item_palette_style_choice;
 	wxChoice* raw_palette_style_choice;
 
+	wxChoice* theme_choice;
+
 	wxCheckBox* large_terrain_tools_chkbox;
 	wxCheckBox* large_collection_tools_chkbox;
 	wxCheckBox* large_doodad_sizebar_chkbox;

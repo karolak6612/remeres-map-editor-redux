@@ -27,6 +27,7 @@
 #include "rendering/core/outfit_colors.h"
 #include "rendering/core/outfit_colorizer.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
 #include "util/json.h"
 #include "util/image_manager.h"
 #include <fstream>
@@ -59,7 +60,7 @@ namespace {
 	private:
 		void OnPaint(wxPaintEvent&) {
 			wxAutoBufferedPaintDC dc(this);
-			dc.SetBackground(*wxBLACK_BRUSH);
+			dc.SetBackground(wxBrush(Theme::Get(Theme::Role::Surface)));
 			dc.Clear();
 
 			wxRect rect = GetClientRect();
@@ -69,7 +70,7 @@ namespace {
 
 			if (selected) {
 				dc.SetBrush(*wxTRANSPARENT_BRUSH);
-				dc.SetPen(wxPen(*wxWHITE, 2));
+				dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent), 2));
 				dc.DrawRectangle(rect.Inflate(-1, -1));
 			}
 		}
@@ -147,7 +148,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 		font.SetWeight(wxFONTWEIGHT_BOLD);
 		font.SetPointSize(font.GetPointSize() + 1);
 		header->SetFont(font);
-		header->SetForegroundColour(wxColour(110, 110, 110)); // Subtle grey for headers
+		header->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle)); // Subtle grey for headers
 		return header;
 	};
 

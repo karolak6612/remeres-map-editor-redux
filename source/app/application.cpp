@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 
+#include "ui/theme.h"
 #include "ui/dialog_util.h"
 #include "app/application.h"
 #include "util/file_system.h"
@@ -67,16 +68,6 @@ Application::~Application() {
 }
 
 bool Application::OnInit() {
-	// Enable modern appearance handling (wxWidgets 3.3+)
-#if wxCHECK_VERSION(3, 3, 0)
-	SetAppearance(wxApp::Appearance::System);
-#endif
-
-#ifdef __WXMSW__
-	// Enable dark mode support for Windows
-	MSWEnableDarkMode(wxApp::DarkMode_Always);
-#endif
-
 #if defined __DEBUG_MODE__ && defined __WINDOWS__
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
@@ -97,6 +88,53 @@ bool Application::OnInit() {
 	spdlog::info("There is NO WARRANTY, to the extent permitted by law.");
 	spdlog::info("Review COPYING in RME distribution for details.");
 
+	// Load settings early for theme support
+	g_settings.load();
+
+	int rawTheme = g_settings.getInteger(Config::THEME);
+	Theme::Type theme = Theme::Type::System;
+	if (rawTheme >= static_cast<int>(Theme::Type::System) && rawTheme <= static_cast<int>(Theme::Type::Light)) {
+		theme = static_cast<Theme::Type>(rawTheme);
+	}
+	Theme::setType(theme);
+
+	// Enable modern appearance handling (wxWidgets 3.3+)
+#if wxCHECK_VERSION(3, 3, 0)
+	switch (theme) {
+		case Theme::Type::Dark:
+			SetAppearance(wxApp::Appearance::Dark);
+			break;
+		case Theme::Type::Light:
+			SetAppearance(wxApp::Appearance::Light);
+			break;
+		case Theme::Type::System:
+		default:
+			SetAppearance(wxApp::Appearance::System);
+			break;
+	}
+#endif
+
+#ifdef __WXMSW__
+	#if wxCHECK_VERSION(3, 3, 0)
+	// Enable dark mode support for Windows
+	// Note: SetAppearance() above handles this internally in newer versions,
+	// but explicit calls here ensure improved behavior on some system configurations.
+	switch (theme) {
+		case Theme::Type::Dark:
+			MSWEnableDarkMode(wxApp::DarkMode_Always);
+			break;
+		case Theme::Type::Light:
+			// "DarkMode_Never" is not available in wxWidgets 3.3.1 API.
+			// Light mode is the default on MSW, so no action is required here.
+			break;
+		case Theme::Type::System:
+		default:
+			MSWEnableDarkMode(wxApp::DarkMode_Auto);
+			break;
+	}
+	#endif
+#endif
+
 	// Discover data directory
 	FileSystem::DiscoverDataDirectory("menubar.xml");
 
@@ -110,7 +148,7 @@ bool Application::OnInit() {
 #endif
 
 	// Load some internal stuff
-	g_settings.load();
+	// g_settings.load(); - Already loaded above
 	FixVersionDiscrapencies();
 	g_hotkeys.LoadHotkeys();
 	ClientVersion::loadVersions();
