@@ -24,8 +24,7 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "House Properties");
-	wxFlexGridSizer* housePropContainer = newd wxFlexGridSizer(2, 10, 10);
-	housePropContainer->AddGrowableCol(1);
+	wxBoxSizer* housePropContainer = newd wxBoxSizer(wxHORIZONTAL);
 
 	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
 	subsizer->AddGrowableCol(1);
@@ -73,23 +72,23 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 	rent_field = newd wxTextCtrl(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxSize(160, 20), 0, wxTextValidator(wxFILTER_NUMERIC, &house_rent));
 	subsizer->Add(rent_field, wxSizerFlags(1).Expand());
 
-	wxFlexGridSizer* subsizerRight = newd wxFlexGridSizer(1, 10, 10);
+	wxBoxSizer* subsizerRight = newd wxBoxSizer(wxVERTICAL);
 	wxFlexGridSizer* houseSizer = newd wxFlexGridSizer(2, 10, 10);
 
 	houseSizer->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "ID:"), wxSizerFlags(0).Center());
 	id_field = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxSize(40, 20), wxSP_ARROW_KEYS, 1, 0xFFFF, house->getID());
 	houseSizer->Add(id_field, wxSizerFlags(1).Expand());
-	subsizerRight->Add(houseSizer, wxSizerFlags(1).Expand());
+	subsizerRight->Add(houseSizer, wxSizerFlags(0).Expand());
 
 	wxSizer* checkbox_sub_sizer = newd wxBoxSizer(wxVERTICAL);
 	checkbox_sub_sizer->AddSpacer(4);
 	guildhall_field = newd wxCheckBox(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Guildhall");
 	checkbox_sub_sizer->Add(guildhall_field);
-	subsizerRight->Add(checkbox_sub_sizer);
+	subsizerRight->Add(checkbox_sub_sizer, wxSizerFlags(0).Expand().Border(wxTOP, 10));
 	guildhall_field->SetValue(house->guildhall);
 
-	housePropContainer->Add(subsizer, wxSizerFlags(5).Expand());
-	housePropContainer->Add(subsizerRight, wxSizerFlags(5).Expand());
+	housePropContainer->Add(subsizer, wxSizerFlags(0).Expand().Border(wxRIGHT, 5));
+	housePropContainer->Add(subsizerRight, wxSizerFlags(1).Expand().Border(wxLEFT, 5));
 	boxsizer->Add(housePropContainer, wxSizerFlags(5).Expand().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxRIGHT | wxLEFT, 20));
 

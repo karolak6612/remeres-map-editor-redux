@@ -217,16 +217,10 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 
 	wxBoxSizer* sizer = new wxBoxSizer(wxVERTICAL);
 
-	wxFlexGridSizer* list_sizer = new wxFlexGridSizer(0, 2, 0, 0);
-	list_sizer->SetFlexibleDirection(wxBOTH);
-	list_sizer->SetNonFlexibleGrowMode(wxFLEX_GROWMODE_SPECIFIED);
-	list_sizer->SetMinSize(wxSize(-1, FromDIP(300)));
-
 	list = new ReplaceItemsListBox(this);
 	list->SetMinSize(FromDIP(wxSize(480, 320)));
 
-	list_sizer->Add(list, 0, wxALL | wxEXPAND, 5);
-	sizer->Add(list_sizer, 1, wxALL | wxEXPAND, 5);
+	sizer->Add(list, 1, wxALL | wxEXPAND, 10);
 
 	wxBoxSizer* items_sizer = new wxBoxSizer(wxHORIZONTAL);
 	items_sizer->SetMinSize(wxSize(-1, FromDIP(40)));
