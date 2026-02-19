@@ -9,9 +9,9 @@
 NanoVGListBox::NanoVGListBox(wxWindow* parent, wxWindowID id, long style) :
 	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
 	m_count(0),
-	m_selection(-1),
 	m_style(style),
-	m_hoverIndex(-1) {
+	m_hoverIndex(-1),
+	m_focusIndex(-1) {
 
 	Bind(wxEVT_SIZE, &NanoVGListBox::OnSize, this);
 	Bind(wxEVT_LEFT_DOWN, &NanoVGListBox::OnMouseDown, this);
@@ -32,6 +32,9 @@ void NanoVGListBox::SetItemCount(size_t count) {
 			if (m_selection >= (int)m_count) {
 				m_selection = -1;
 			}
+		}
+		if (m_focusIndex >= (int)m_count) {
+			m_focusIndex = -1;
 		}
 		UpdateScrollbar();
 		Refresh();
@@ -56,6 +59,7 @@ void NanoVGListBox::SetSelection(int index) {
 	} else {
 		m_selection = index;
 	}
+	m_focusIndex = index;
 	Refresh();
 }
 
@@ -94,8 +98,10 @@ void NanoVGListBox::Select(int index, bool select) {
 	} else {
 		if (select) {
 			m_selection = index;
+			m_focusIndex = index; // Sync focus index in single selection mode
 		} else if (m_selection == index) {
 			m_selection = -1;
+			m_focusIndex = -1;
 		}
 		Refresh();
 	}
@@ -114,6 +120,7 @@ void NanoVGListBox::ClearSelection() {
 	} else {
 		m_selection = -1;
 	}
+	m_focusIndex = -1;
 	Refresh();
 }
 
@@ -134,11 +141,7 @@ void NanoVGListBox::EnsureVisible(int line) {
 		return;
 	}
 
-	if (m_count == 0) {
-		return;
-	}
-
-	int itemHeight = OnMeasureItem(0); // Assuming uniform height for simple scrolling logic
+	int itemHeight = std::max(1, OnMeasureItem(0)); // Assuming uniform height for simple scrolling logic
 	int scrollPos = GetScrollPosition();
 	int clientHeight = GetClientSize().y;
 
@@ -165,13 +168,13 @@ void NanoVGListBox::UpdateScrollbar() {
 	// If OnMeasureItem varies, we need a smarter system (like caching positions).
 	// Let's assume OnMeasureItem(0) is representative or we check m_itemHeightCache.
 
-	int itemHeight = OnMeasureItem(0);
+	int itemHeight = std::max(1, OnMeasureItem(0));
 	int totalHeight = (int)m_count * itemHeight;
 
 	int clientHeight = GetClientSize().y;
 	int pageSize = clientHeight;
 
-	SetScrollbar(wxVERTICAL, GetScrollPosition(), pageSize, totalHeight);
+	NanoVGCanvas::UpdateScrollbar(totalHeight);
 }
 
 void NanoVGListBox::OnSize(wxSizeEvent& event) {
@@ -190,7 +193,7 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	}
 
 	int scrollPos = GetScrollPosition();
-	int itemHeight = OnMeasureItem(0); // Simplified assumption
+	int itemHeight = std::max(1, OnMeasureItem(0)); // Simplified assumption
 
 	int startRow = scrollPos / itemHeight;
 	int endRow = (scrollPos + height + itemHeight - 1) / itemHeight;
@@ -208,13 +211,17 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		// Draw background for selection/hover
 		bool selected = IsSelected(i);
 		bool hover = (i == m_hoverIndex);
+		bool focused = (i == m_focusIndex);
 
-		if (selected || hover) {
+		if (selected || hover || focused) {
 			nvgBeginPath(vg);
 			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
 			if (selected) {
 				wxColour selColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
 				nvgFillColor(vg, nvgRGBA(selColour.Red(), selColour.Green(), selColour.Blue(), 255));
+			} else if (focused) {
+				wxColour focusColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT).ChangeLightness(90); // A lighter highlight for focus
+				nvgFillColor(vg, nvgRGBA(focusColour.Red(), focusColour.Green(), focusColour.Blue(), 255));
 			} else {
 				wxColour hoverColour = GetBackgroundColour().ChangeLightness(120);
 				nvgFillColor(vg, nvgRGBA(hoverColour.Red(), hoverColour.Green(), hoverColour.Blue(), 255));
@@ -230,7 +237,7 @@ int NanoVGListBox::HitTest(int x, int y) const {
 	if (m_count == 0) {
 		return -1;
 	}
-	int itemHeight = OnMeasureItem(0);
+	int itemHeight = std::max(1, OnMeasureItem(0));
 	int index = y / itemHeight;
 	if (index >= 0 && index < (int)m_count) {
 		return index;
@@ -239,7 +246,7 @@ int NanoVGListBox::HitTest(int x, int y) const {
 }
 
 wxRect NanoVGListBox::GetItemRect(int index) const {
-	int itemHeight = OnMeasureItem(0);
+	int itemHeight = std::max(1, OnMeasureItem(0));
 	return wxRect(0, index * itemHeight, GetClientSize().x, itemHeight);
 }
 
@@ -249,10 +256,22 @@ void NanoVGListBox::OnMouseDown(wxMouseEvent& event) {
 
 	if (index != -1) {
 		if (m_style & wxLB_MULTIPLE) {
-			// Toggle
-			m_multiSelection[index] = !m_multiSelection[index];
+			if (m_multiSelection.size() != m_count) {
+				m_multiSelection.resize(m_count, false);
+			}
+			if (event.ControlDown()) {
+				Select(index, !IsSelected(index));
+			} else if (event.ShiftDown()) {
+				// Implement shift-selection later if needed
+				// For now, just select the item
+				Select(index, true);
+			} else {
+				ClearSelection();
+				Select(index, true);
+			}
+			m_focusIndex = index; // Set focus to the clicked item
 		} else {
-			m_selection = index;
+			Select(index, true);
 		}
 		SendSelectionEvent();
 		Refresh();
@@ -283,30 +302,13 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 		return;
 	}
 
-	int current = -1;
-	if (m_style & wxLB_MULTIPLE) {
-		// Find first selected or just 0?
-		// Logic for multiple selection navigation is complex.
-		// For now, let's assume we track a "focus" index.
-		// But for simplicity, let's just use m_selection logic if possible or find first.
-		for (size_t i = 0; i < m_count; ++i) {
-			if (m_multiSelection[i]) {
-				current = (int)i;
-				break;
-			}
-		}
-	} else {
-		current = m_selection;
+	int current = (m_style & wxLB_MULTIPLE) ? m_focusIndex : m_selection;
+	if (current == -1 && m_count > 0) {
+		current = 0; // If no item is selected/focused, start from the first item
 	}
-
-	if (current == -1) {
-		current = 0;
-	}
-
 	int next = current;
-	int keyCode = event.GetKeyCode();
 
-	switch (keyCode) {
+	switch (event.GetKeyCode()) {
 		case WXK_UP:
 			next = std::max(0, current - 1);
 			break;

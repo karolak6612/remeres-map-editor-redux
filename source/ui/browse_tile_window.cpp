@@ -28,6 +28,7 @@
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
 #include <glad/glad.h>
+#include <format>
 #include <nanovg.h>
 
 // ============================================================================
@@ -42,6 +43,10 @@ public:
 	int OnMeasureItem(size_t index) const override;
 	Item* GetSelectedItem();
 	void RemoveSelected();
+
+	void SetSelection(int index) override;
+	void Select(int index, bool select = true) override;
+	void ClearSelection() override;
 
 protected:
 	void UpdateItems();
@@ -78,22 +83,19 @@ void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 	}
 
 	if (IsSelected(n)) {
-		item->select();
 		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 	} else {
-		item->deselect();
 		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 	}
 
-	wxString label;
-	label << item->getID() << " - " << wxstr(item->getName());
+	std::string label = std::format("{} - {}", item->getID(), item->getName());
 
 	nvgFontSize(vg, 12.0f);
 	nvgFontFace(vg, "sans");
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-	nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, label.ToUTF8().data(), nullptr);
+	nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, label.c_str(), nullptr);
 }
 
 int BrowseTileListBox::OnMeasureItem(size_t n) const {
@@ -122,6 +124,34 @@ void BrowseTileListBox::RemoveSelected() {
 
 	UpdateItems();
 	Refresh();
+}
+
+void BrowseTileListBox::SetSelection(int index) {
+	if (m_selection != -1 && (size_t)m_selection < items.size()) {
+		items[m_selection]->deselect();
+	}
+	NanoVGListBox::SetSelection(index);
+	if (m_selection != -1 && (size_t)m_selection < items.size()) {
+		items[m_selection]->select();
+	}
+}
+
+void BrowseTileListBox::Select(int index, bool select) {
+	if (index >= 0 && (size_t)index < items.size()) {
+		if (select) {
+			items[index]->select();
+		} else {
+			items[index]->deselect();
+		}
+	}
+	NanoVGListBox::Select(index, select);
+}
+
+void BrowseTileListBox::ClearSelection() {
+	for (Item* item : items) {
+		item->deselect();
+	}
+	NanoVGListBox::ClearSelection();
 }
 
 void BrowseTileListBox::UpdateItems() {

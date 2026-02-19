@@ -27,6 +27,7 @@ public:
 	void Clear();
 	void SetNoMatches();
 	void AddBrush(Brush*);
+	void CommitUpdates();
 	Brush* GetSelectedBrush();
 
 	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;

@@ -24,6 +24,7 @@
 #include "util/image_manager.h"
 #include "game/items.h"
 #include <glad/glad.h>
+#include <format>
 #include <nanovg.h>
 
 // ============================================================================
@@ -121,46 +122,20 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-int ReplaceItemsListBox::GetIcon(const std::string& assetPath) {
-	uint64_t cacheId = 0xFF00000000000000 | (std::hash<std::string> {}(assetPath) & 0x00FFFFFFFFFFFFFF);
-	int img = GetCachedImage(cacheId);
-	if (img > 0) {
-		return img;
-	}
-
-	wxBitmap bmp = IMAGE_MANAGER.GetBitmap(assetPath, wxSize(16, 16));
-	if (!bmp.IsOk()) {
-		return 0;
-	}
-
-	wxImage image = bmp.ConvertToImage();
-	if (!image.IsOk()) {
-		return 0;
-	}
-
-	int w = image.GetWidth();
-	int h = image.GetHeight();
-	std::vector<uint8_t> rgba(w * h * 4);
-	uint8_t* data = image.GetData();
-	uint8_t* alpha = image.GetAlpha();
-
-	for (int i = 0; i < w * h; ++i) {
-		rgba[i * 4 + 0] = data[i * 3 + 0];
-		rgba[i * 4 + 1] = data[i * 3 + 1];
-		rgba[i * 4 + 2] = data[i * 3 + 2];
-		rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
-	}
-	return GetOrCreateImage(cacheId, rgba.data(), w, h);
-}
-
 void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) {
 	ASSERT(index < m_items.size());
 
 	if (m_arrow_image == 0) {
-		m_arrow_image = GetIcon(ICON_LOCATION_ARROW);
+		m_arrow_image = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_LOCATION_ARROW);
+		if (m_arrow_image == 0) {
+			m_arrow_image = -1;
+		}
 	}
 	if (m_flag_image == 0) {
-		m_flag_image = GetIcon(IMAGE_PROTECTION_ZONE_SMALL);
+		m_flag_image = IMAGE_MANAGER.GetNanoVGImage(vg, IMAGE_PROTECTION_ZONE_SMALL);
+		if (m_flag_image == 0) {
+			m_flag_image = -1;
+		}
 	}
 
 	const ReplacingItem& item = m_items.at(index);
@@ -212,10 +187,10 @@ void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t 
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE); // Text alignment inside rect? No, absolute coords.
 		// nvgText expects x, y for baseline or according to align.
 		// NVG_ALIGN_MIDDLE means y is vertical center.
-		nvgText(vg, x + 104, y + 20, wxString::Format("Replace: %d With: %d", item.replaceId, item.withId).ToUTF8().data(), nullptr);
+		nvgText(vg, x + 104, y + 20, std::format("Replace: {} With: {}", item.replaceId, item.withId).c_str(), nullptr);
 
 		if (item.complete) {
-			int rightX = rect.width - 100;
+			int rightX = rect.GetRight() - 100;
 			if (m_flag_image > 0) {
 				NVGpaint flagPaint = nvgImagePattern(vg, rightX + 70, y + 10, 16, 16, 0, m_flag_image, 1.0f);
 				nvgBeginPath(vg);
@@ -223,7 +198,7 @@ void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t 
 				nvgFillPaint(vg, flagPaint);
 				nvgFill(vg);
 			}
-			nvgText(vg, rightX, y + 20, wxString::Format("Total: %d", item.total).ToUTF8().data(), nullptr);
+			nvgText(vg, rightX, y + 20, std::format("Total: {}", item.total).c_str(), nullptr);
 		}
 	}
 }
@@ -277,13 +252,13 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	wxBoxSizer* buttons_sizer = new wxBoxSizer(wxHORIZONTAL);
 
 	add_button = new wxButton(this, wxID_ANY, "Add");
-	add_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	add_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, FromDIP(wxSize(16, 16))));
 	add_button->SetToolTip("Add replacement rule to list");
 	add_button->Enable(false);
 	buttons_sizer->Add(add_button, 0, wxALL, 5);
 
 	remove_button = new wxButton(this, wxID_ANY, "Remove");
-	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, FromDIP(wxSize(16, 16))));
 	remove_button->SetToolTip("Remove selected rule");
 	remove_button->Enable(false);
 	buttons_sizer->Add(remove_button, 0, wxALL, 5);
@@ -291,13 +266,13 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	buttons_sizer->Add(0, 0, 1, wxEXPAND, 5);
 
 	execute_button = new wxButton(this, wxID_ANY, "Execute");
-	execute_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLAY, wxSize(16, 16)));
+	execute_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLAY, FromDIP(wxSize(16, 16))));
 	execute_button->SetToolTip("Execute all replacement rules");
 	execute_button->Enable(false);
 	buttons_sizer->Add(execute_button, 0, wxALL, 5);
 
 	close_button = new wxButton(this, wxID_ANY, "Close");
-	close_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	close_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FromDIP(wxSize(16, 16))));
 	close_button->SetToolTip("Close this window");
 	buttons_sizer->Add(close_button, 0, wxALL, 5);
 
@@ -317,7 +292,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	close_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnCancelButtonClicked, this);
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, FromDIP(wxSize(32, 32))));
 	SetIcon(icon);
 }
 

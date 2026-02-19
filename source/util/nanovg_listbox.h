@@ -23,12 +23,12 @@ public:
 	}
 
 	// Selection
-	void SetSelection(int index);
+	virtual void SetSelection(int index);
 	int GetSelection() const;
 	bool IsSelected(int index) const;
-	void Select(int index, bool select = true);
+	virtual void Select(int index, bool select = true);
 	int GetSelectedCount() const;
-	void ClearSelection();
+	virtual void ClearSelection();
 
 	// Drawing (Virtuals)
 	virtual void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) = 0;
@@ -63,6 +63,7 @@ protected:
 	long m_style; // wxLB_SINGLE, wxLB_MULTIPLE, etc.
 
 	int m_hoverIndex;
+	int m_focusIndex;
 };
 
 #endif

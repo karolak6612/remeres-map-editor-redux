@@ -300,7 +300,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 			item_list->SetNoMatches();
 		}
 	}
-	item_list->Refresh();
+	item_list->CommitUpdates();
 }
 
 // ============================================================================
@@ -332,15 +332,18 @@ void FindDialogListBox::SetNoMatches() {
 }
 
 void FindDialogListBox::AddBrush(Brush* brush) {
-	if (cleared || no_matches) {
-		SetItemCount(0);
-	}
-
 	cleared = false;
 	no_matches = false;
-
-	SetItemCount(GetItemCount() + 1);
 	brushlist.push_back(brush);
+}
+
+void FindDialogListBox::CommitUpdates() {
+	if (cleared || no_matches) {
+		SetItemCount(1);
+	} else {
+		SetItemCount(brushlist.size());
+	}
+	Refresh();
 }
 
 Brush* FindDialogListBox::GetSelectedBrush() {
@@ -352,16 +355,17 @@ Brush* FindDialogListBox::GetSelectedBrush() {
 }
 
 void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
+	wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
 	if (no_matches) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
