@@ -51,6 +51,7 @@ jobs:
           chmod 600 $HOME/.gemini/settings.json
           
           echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gemini/oauth_creds.json" >> $GITHUB_ENV
+          echo "GEMINI_PREVIEW=true" >> $GITHUB_ENV
           
           ls -la $HOME/.gemini/
           echo "✅ Gemini OAuth credentials przywrócone i skonfigurowane"
