@@ -57,6 +57,27 @@ wxColour Theme::GetDark(Role role) {
 			return wxColour(60, 60, 65);
 		case Role::CardBorder:
 			return wxColour(80, 80, 80);
+		// Tooltip colors (vibrant on dark background)
+		case Role::TooltipBg:
+			return wxColour(30, 30, 35);
+		case Role::TooltipLabel:
+			return wxColour(220, 220, 220);
+		case Role::TooltipActionId:
+			return wxColour(255, 165, 0); // Orange
+		case Role::TooltipUniqueId:
+			return wxColour(100, 149, 237); // Cornflower Blue
+		case Role::TooltipDoorId:
+			return wxColour(0, 139, 139); // Dark Cyan
+		case Role::TooltipTextValue:
+			return wxColour(255, 215, 0); // Gold
+		case Role::TooltipTeleport:
+			return wxColour(186, 85, 211); // Medium Orchid
+		case Role::TooltipWaypoint:
+			return wxColour(50, 205, 50); // Lime Green
+		case Role::TooltipBodyText:
+			return wxColour(220, 220, 220); // Light Gray
+		case Role::TooltipCountText:
+			return wxColour(200, 200, 200); // Light Gray
 		default:
 			return *wxWHITE;
 	}
@@ -92,6 +113,27 @@ wxColour Theme::GetLight(Role role) {
 			return wxColour(245, 245, 245);
 		case Role::CardBorder:
 			return wxColour(200, 200, 200);
+		// Tooltip colors (readable on light background)
+		case Role::TooltipBg:
+			return wxColour(240, 240, 240);
+		case Role::TooltipLabel:
+			return wxColour(80, 80, 80);
+		case Role::TooltipActionId:
+			return wxColour(180, 100, 0); // Dark Orange
+		case Role::TooltipUniqueId:
+			return wxColour(30, 80, 180); // Dark Blue
+		case Role::TooltipDoorId:
+			return wxColour(0, 100, 100); // Teal
+		case Role::TooltipTextValue:
+			return wxColour(50, 50, 50); // Near Black
+		case Role::TooltipTeleport:
+			return wxColour(120, 40, 160); // Dark Purple
+		case Role::TooltipWaypoint:
+			return wxColour(20, 130, 20); // Dark Green
+		case Role::TooltipBodyText:
+			return wxColour(30, 30, 30); // Near Black
+		case Role::TooltipCountText:
+			return wxColour(60, 60, 60); // Dark Gray
 		default:
 			return *wxBLACK;
 	}

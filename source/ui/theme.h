@@ -20,7 +20,19 @@ public:
 		Error, // Warning/Error states
 		CardBase, // Rule card background
 		CardBaseHover, // Rule card hover background
-		CardBorder // Rule card default border
+		CardBorder, // Rule card default border
+
+		// Tooltip field value colors
+		TooltipBg, // Tooltip background
+		TooltipLabel, // Tooltip label text
+		TooltipActionId, // Action ID value
+		TooltipUniqueId, // Unique ID value
+		TooltipDoorId, // Door ID value
+		TooltipTextValue, // Readable text (signs, books)
+		TooltipTeleport, // Teleport destination
+		TooltipWaypoint, // Waypoint name
+		TooltipBodyText, // Description / general body text
+		TooltipCountText // Container item count text
 	};
 
 	enum class Type {

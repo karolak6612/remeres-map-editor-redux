@@ -425,7 +425,8 @@ void RuleBuilderPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// Full screen BG (Fixed)
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, 0, width, height);
-	nvgFillColor(vg, nvgRGBA(30, 30, 30, 255)); // Darker background
+	wxColour bg = Theme::Get(Theme::Role::Background);
+	nvgFillColor(vg, nvgRGBA(bg.Red(), bg.Green(), bg.Blue(), 255));
 	nvgFill(vg);
 
 	RuleCardRenderer::DrawHeader(vg, width);

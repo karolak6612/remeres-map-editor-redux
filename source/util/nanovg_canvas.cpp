@@ -2,6 +2,7 @@
 #include "util/nanovg_canvas.h"
 #include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
+#include "ui/theme.h"
 
 #include <glad/glad.h>
 
@@ -93,7 +94,10 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 	GetClientSize(&w, &h);
 
 	glViewport(0, 0, w, h);
-	glClearColor(m_bgRed, m_bgGreen, m_bgBlue, 1.0f);
+
+	// Use theme background
+	wxColour bg = Theme::Get(Theme::Role::Surface);
+	glClearColor(bg.Red() / 255.0f, bg.Green() / 255.0f, bg.Blue() / 255.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
 	NVGcontext* vg = m_nvg.get();
