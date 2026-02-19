@@ -137,3 +137,7 @@ void AtlasManager::clear() {
 	std::fill(direct_lookup_.begin(), direct_lookup_.end(), nullptr);
 	spdlog::info("AtlasManager cleared");
 }
+
+void AtlasManager::flush() {
+	atlas_.flush();
+}

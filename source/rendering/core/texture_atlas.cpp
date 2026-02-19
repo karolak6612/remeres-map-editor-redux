@@ -80,20 +80,71 @@ bool TextureAtlas::initialize(int initial_layers) {
 	next_x_ = 0;
 	next_y_ = 0;
 
-	// Gate PBO because it currently causes random sprite corruption
-#ifdef USE_PBO_FOR_SPRITE_UPLOAD
+	// Initialize PBO for async uploads (Batched, ~1MB buffer for 256 sprites)
+	// This prevents main thread stalls during texture upload
 	pbo_ = std::make_unique<PixelBufferObject>();
-	if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
+	if (!pbo_->initialize(256 * SPRITE_SIZE * SPRITE_SIZE * 4)) {
 		spdlog::error("TextureAtlas: Failed to initialize PBO");
 		return false;
 	}
-#endif
 
 	spdlog::info("TextureAtlas created: {}x{} x {} layers, id={}", ATLAS_SIZE, ATLAS_SIZE, initial_layers, texture_id_->GetID());
 	return true;
 }
 
+void TextureAtlas::flush() {
+	if (pending_uploads_.empty()) {
+		return;
+	}
+
+	if (!pbo_) {
+		// Should not happen if initialized, but safe fallback
+		for (const auto& upload : pending_uploads_) {
+			glTextureSubImage3D(texture_id_->GetID(), 0, upload.pixel_x, upload.pixel_y, upload.layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, staging_buffer_.data() + upload.buffer_offset);
+		}
+		pending_uploads_.clear();
+		staging_buffer_.clear();
+		return;
+	}
+
+	// 1. Map PBO
+	void* ptr = pbo_->mapWrite();
+	if (ptr) {
+		// 2. Copy all pending sprite data to PBO
+		size_t bytes_to_copy = staging_buffer_.size();
+		if (bytes_to_copy > pbo_->getSize()) {
+			spdlog::error("TextureAtlas: Staging buffer overflowed PBO size! {} > {}", bytes_to_copy, pbo_->getSize());
+			bytes_to_copy = pbo_->getSize(); // Truncate to avoid crash, visual artifact better than crash
+		}
+		memcpy(ptr, staging_buffer_.data(), bytes_to_copy);
+
+		pbo_->unmap();
+		pbo_->bind(); // Binds GL_PIXEL_UNPACK_BUFFER
+
+		// 3. Issue upload commands
+		for (const auto& upload : pending_uploads_) {
+			// Offset is relative to PBO start
+			glTextureSubImage3D(texture_id_->GetID(), 0, upload.pixel_x, upload.pixel_y, upload.layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, (void*)upload.buffer_offset);
+		}
+
+		pbo_->unbind();
+		pbo_->advance();
+	} else {
+		// PBO Mapping failed (timeout?), fallback to sync
+		spdlog::warn("TextureAtlas: PBO Map failed, falling back to sync upload");
+		for (const auto& upload : pending_uploads_) {
+			glTextureSubImage3D(texture_id_->GetID(), 0, upload.pixel_x, upload.pixel_y, upload.layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, staging_buffer_.data() + upload.buffer_offset);
+		}
+	}
+
+	pending_uploads_.clear();
+	staging_buffer_.clear();
+}
+
 bool TextureAtlas::addLayer() {
+	// Must flush before adding layer because adding layer copies texture data.
+	// If PBO uploads are pending to the old texture, they must be completed.
+	flush();
 	if (layer_count_ >= MAX_LAYERS) {
 		spdlog::error("TextureAtlas: Max layers ({}) reached", MAX_LAYERS);
 		return false;
@@ -190,29 +241,18 @@ std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
 		total_sprite_count_++;
 	}
 
-	// Upload sprite data to texture array
-	bool uploaded = false;
-	if (pbo_) {
-		void* ptr = pbo_->mapWrite();
-		if (ptr) {
-			memcpy(ptr, rgba_data, SPRITE_SIZE * SPRITE_SIZE * 4);
-			pbo_->unmap();
+	// Buffer sprite data for batched upload
+	size_t sprite_bytes = SPRITE_SIZE * SPRITE_SIZE * 4;
 
-			pbo_->bind(); // Binds GL_PIXEL_UNPACK_BUFFER
-
-			// Offset is 0 in PBO
-			glTextureSubImage3D(texture_id_->GetID(), 0, pixel_x, pixel_y, layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-
-			pbo_->unbind();
-			pbo_->advance();
-			uploaded = true;
-		}
+	// Check if we need to flush first (if buffer would overflow PBO)
+	if (pbo_ && staging_buffer_.size() + sprite_bytes > pbo_->getSize()) {
+		flush();
 	}
 
-	if (!uploaded) {
-		// Fallback synchronously
-		glTextureSubImage3D(texture_id_->GetID(), 0, pixel_x, pixel_y, layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba_data);
-	}
+	size_t current_offset = staging_buffer_.size();
+	staging_buffer_.insert(staging_buffer_.end(), rgba_data, rgba_data + sprite_bytes);
+
+	pending_uploads_.push_back({ pixel_x, pixel_y, layer, current_offset });
 
 	// Calculate UV coordinates with half-texel inset to prevent bleeding
 	const float texel_size = 1.0f / static_cast<float>(ATLAS_SIZE);
@@ -269,4 +309,6 @@ void TextureAtlas::release() {
 	next_x_ = 0;
 	next_y_ = 0;
 	free_slots_.clear();
+	pending_uploads_.clear();
+	staging_buffer_.clear();
 }

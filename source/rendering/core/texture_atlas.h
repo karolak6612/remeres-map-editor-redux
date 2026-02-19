@@ -109,11 +109,27 @@ public:
 	 */
 	void release();
 
+	/**
+	 * Flush pending sprite uploads to GPU.
+	 * Should be called once per frame (e.g. at start of render).
+	 */
+	void flush();
+
 private:
 	bool addLayer();
 
 	// PBO for async uploads
 	std::unique_ptr<PixelBufferObject> pbo_;
+
+	struct PendingUpload {
+		int pixel_x;
+		int pixel_y;
+		int layer;
+		size_t buffer_offset;
+	};
+
+	std::vector<PendingUpload> pending_uploads_;
+	std::vector<uint8_t> staging_buffer_;
 
 	std::unique_ptr<GLTextureResource> texture_id_;
 	int layer_count_ = 0;
