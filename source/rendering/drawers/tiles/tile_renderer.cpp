@@ -33,7 +33,7 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 }
 
 // Helper function to populate tooltip data from an item (in-place)
-static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& pos, bool isHouseTile, float zoom) {
+static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, const Position& pos, bool isHouseTile, float zoom) {
 	if (!item) {
 		return false;
 	}
@@ -54,11 +54,11 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	bool is_complex = item->isComplex();
 	// Early exit for simple items
 	// isTooltipable is cached (isContainer || isDoor || isTeleport)
-	if (!is_complex && !g_items[id].isTooltipable()) {
+	if (!is_complex && !it.isTooltipable()) {
 		return false;
 	}
 
-	bool is_container = g_items[id].isContainer();
+	bool is_container = it.isContainer();
 	bool is_door = isHouseTile && item->isDoor();
 	bool is_teleport = item->isTeleport();
 
@@ -99,7 +99,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	}
 
 	// Get item name from database
-	std::string_view itemName = g_items[id].name;
+	std::string_view itemName = it.name;
 	if (itemName.empty()) {
 		itemName = "Item";
 	}
@@ -116,7 +116,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const Position& p
 	data.destination = destination;
 
 	// Populate container items
-	if (g_items[id].isContainer() && zoom <= 1.5f) {
+	if (it.isContainer() && zoom <= 1.5f) {
 		if (const Container* container = item->asContainer()) {
 			// Set capacity for rendering empty slots
 			data.containerCapacity = static_cast<uint8_t>(container->getVolume());
@@ -209,7 +209,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground) {
-			PreloadItem(tile, tile->ground.get());
+			const ItemType& it = g_items[tile->ground->getID()];
+			PreloadItem(tile, tile->ground.get(), it);
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
@@ -219,8 +220,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground) {
+		const ItemType& it = g_items[tile->ground->getID()];
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -263,17 +265,19 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
+				const ItemType& it = g_items[item->getID()];
+
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), location->getPosition(), tile->isHouseTile(), view.zoom)) {
+					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
 						}
 					}
 				}
 
-				PreloadItem(tile, item.get());
+				PreloadItem(tile, item.get(), it);
 
 				// item sprite
 				if (item->isBorder()) {
@@ -316,12 +320,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 }
 
-void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
+void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it) {
 	if (!item) {
 		return;
 	}
 
-	const ItemType& it = g_items[item->getID()];
 	GameSprite* spr = it.sprite;
 	if (spr && !spr->isSimpleAndLoaded()) {
 		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());

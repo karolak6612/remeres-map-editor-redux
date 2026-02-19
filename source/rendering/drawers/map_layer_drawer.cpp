@@ -94,20 +94,17 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 						continue;
 					}
 
-					for (int map_x = 0; map_x < 4; ++map_x) {
-						for (int map_y = 0; map_y < 4; ++map_y) {
-							// Calculate draw coordinates directly
-							int draw_x = node_draw_x + (map_x * TileSize);
-							int draw_y = node_draw_y + (map_y * TileSize);
-
+					TileLocation* location = floor->locs;
+					int draw_x_base = node_draw_x;
+					for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TileSize) {
+						int draw_y = node_draw_y;
+						for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TileSize) {
 							// Culling: Skip tiles that are far outside the viewport.
-							if (!fully_inside && !view.IsPixelVisible(draw_x, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+							if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 								continue;
 							}
 
-							TileLocation* location = &floor->locs[map_x * 4 + map_y];
-
-							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y);
+							tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
 							// draw light, but only if not zoomed too far
 							if (draw_lights) {
 								tile_renderer->AddLight(location, view, options, light_buffer);

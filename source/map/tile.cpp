@@ -158,6 +158,12 @@ int Tile::size() const {
 	if (spawn) {
 		++sz;
 	}
+	if (house_id != 0) {
+		++sz;
+	}
+	if (mapflags) {
+		++sz;
+	}
 	if (location) {
 		if (location->getHouseExits()) {
 			++sz;
@@ -202,6 +208,12 @@ void Tile::merge(Tile* other) {
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 	if (prop == PROTECTIONZONE && isPZ()) {
 		return true;
+	}
+
+	if (prop == BLOCKSOLID) {
+		// Optimization: Use cached blocking state
+		// Note: isBlocking() returns true for empty tiles (void), but hasProperty checks if *content* has property.
+		return isBlocking() && (ground || !items.empty());
 	}
 
 	if (ground && ground->hasProperty(prop)) {
