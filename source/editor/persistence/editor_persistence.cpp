@@ -238,10 +238,6 @@ void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Pos
 
 		Position oldexit = imported_town->getTemplePosition();
 		Position newexit = oldexit + offset;
-		if (newexit.isValid()) {
-			imported_town->setTemplePosition(newexit);
-			editor.map.getOrCreateTile(newexit)->getLocation()->increaseTownCount();
-		}
 
 		bool skip = false;
 		switch (house_import_type) {
@@ -260,10 +256,11 @@ void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Pos
 						town_id_map[imported_town->getID()] = current_town->getID();
 						skip = true;
 					} else {
-						// Conflict! Find a newd id and replace old
+						// Conflict! Find a new id and replace old
+						uint32_t old_id = imported_town->getID();
 						uint32_t new_id = editor.map.towns.getEmptyID();
 						imported_town->setID(new_id);
-						town_id_map[imported_town->getID()] = new_id;
+						town_id_map[old_id] = new_id;
 					}
 				} else {
 					town_id_map[imported_town->getID()] = imported_town->getID();
@@ -271,10 +268,11 @@ void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Pos
 				break;
 			}
 			case IMPORT_INSERT: {
-				// Find a newd id and replace old
+				// Find a new id and replace old
+				uint32_t old_id = imported_town->getID();
 				uint32_t new_id = editor.map.towns.getEmptyID();
 				imported_town->setID(new_id);
-				town_id_map[imported_town->getID()] = new_id;
+				town_id_map[old_id] = new_id;
 				break;
 			}
 			case IMPORT_DONT: {
@@ -286,6 +284,11 @@ void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Pos
 		if (skip) {
 			++tit;
 			continue;
+		}
+
+		if (newexit.isValid()) {
+			imported_town->setTemplePosition(newexit);
+			editor.map.getOrCreateTile(newexit)->getLocation()->increaseTownCount();
 		}
 
 		uint32_t town_id = imported_town->getID();
@@ -355,14 +358,6 @@ void EditorPersistence::importHouses(Editor& editor, Map& imported_map, const Po
 				uint32_t new_id = editor.map.houses.getEmptyID();
 				house_id_map[imported_house->getID()] = new_id;
 				imported_house->setID(new_id);
-				break;
-			}
-			case IMPORT_DONT: {
-				skip = true;
-				Position newexit = oldexit + offset;
-				if (newexit.isValid()) {
-					imported_house->setExit(&editor.map, newexit);
-				}
 				break;
 			}
 		}
@@ -510,7 +505,11 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 		TileLocation* location = editor.map.createTileL(new_pos);
 
 		// Check if we should update any houses
-		int new_houseid = house_id_map[import_tile->getHouseID()];
+		uint32_t new_houseid = 0;
+		if (auto it = house_id_map.find(import_tile->getHouseID()); it != house_id_map.end()) {
+			new_houseid = it->second;
+		}
+
 		House* house = editor.map.houses.getHouse(new_houseid);
 		if (import_tile->isHouseTile() && house_import_type != IMPORT_DONT && house) {
 			// We need to notify houses of the tile moving

@@ -141,18 +141,6 @@ void ItemDatabase::clear() {
 	items.clear();
 }
 
-bool ItemDatabase::loadFromOtbVer1(BinaryNode* itemNode, wxString& error, std::vector<std::string>& warnings) {
-	return loadFromOtbGeneric(itemNode, OtbFileFormatVersion::V1, error, warnings);
-}
-
-bool ItemDatabase::loadFromOtbVer2(BinaryNode* itemNode, wxString& error, std::vector<std::string>& warnings) {
-	return loadFromOtbGeneric(itemNode, OtbFileFormatVersion::V2, error, warnings);
-}
-
-bool ItemDatabase::loadFromOtbVer3(BinaryNode* itemNode, wxString& error, std::vector<std::string>& warnings) {
-	return loadFromOtbGeneric(itemNode, OtbFileFormatVersion::V3, error, warnings);
-}
-
 bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion version, wxString& error, std::vector<std::string>& warnings) {
 	return OtbLoader::load(*this, itemNode, version, error, warnings);
 }
@@ -211,24 +199,28 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
 		}
 	}
 
-	using OtbLoaderFunc = bool (ItemDatabase::*)(BinaryNode*, wxString&, std::vector<std::string>&);
-	static const std::map<uint32_t, OtbLoaderFunc> loaders = {
-		{ 1, &ItemDatabase::loadFromOtbVer1 },
-		{ 2, &ItemDatabase::loadFromOtbVer2 },
-		{ 3, &ItemDatabase::loadFromOtbVer3 }
-	};
-
 	BinaryNode* itemNode = root->getChild();
-	if (auto it_loader = loaders.find(MajorVersion); it_loader != loaders.end()) {
-		bool res = (this->*(it_loader->second))(itemNode, error, warnings);
-		if (res) {
-			updateAllTooltipableFlags();
-		}
-		return res;
+	OtbFileFormatVersion version = OtbFileFormatVersion::V1;
+	switch (MajorVersion) {
+		case 1:
+			version = OtbFileFormatVersion::V1;
+			break;
+		case 2:
+			version = OtbFileFormatVersion::V2;
+			break;
+		case 3:
+			version = OtbFileFormatVersion::V3;
+			break;
+		default:
+			error = std::format("items.otb: Unsupported version ({})", MajorVersion);
+			return false;
 	}
 
-	error = std::format("items.otb: Unsupported version ({})", MajorVersion);
-	return false;
+	bool res = loadFromOtbGeneric(itemNode, version, error, warnings);
+	if (res) {
+		updateAllTooltipableFlags();
+	}
+	return res;
 }
 
 bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id) {

@@ -280,12 +280,12 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 					warnings.push_back("items.otb: Unexpected data length of item weight block (Should be 8 bytes)");
 					return true;
 				}
-				uint8_t raw_weight[sizeof(double)];
-				if (!node->getRAW(raw_weight, sizeof(double))) {
+				double weight;
+				if (!node->getRAW(reinterpret_cast<uint8_t*>(&weight), sizeof(double))) {
 					warnings.push_back("Invalid item type property (weight)");
 					return true;
 				}
-				memcpy(&it.weight, raw_weight, sizeof(double));
+				it.weight = static_cast<float>(weight);
 				return true;
 			};
 
@@ -349,18 +349,15 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 			}
 		}
 
-		if (t) {
-			// Accessing db.items
-			// items is public in ItemDatabase
-			if (t->id < db.items.size() && db.items[t->id]) {
-				warnings.push_back("items.otb: Duplicate items");
-			}
-
-			if (static_cast<size_t>(t->id) >= db.items.size()) {
-				db.items.resize(static_cast<size_t>(t->id) + 1);
-			}
-			db.items[t->id] = std::move(owned_t);
+		// items is public in ItemDatabase
+		if (t->id < db.items.size() && db.items[t->id]) {
+			warnings.push_back("items.otb: Duplicate items");
 		}
+
+		if (static_cast<size_t>(t->id) >= db.items.size()) {
+			db.items.resize(static_cast<size_t>(t->id) + 1);
+		}
+		db.items[t->id] = std::move(owned_t);
 	}
 	return true;
 }
