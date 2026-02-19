@@ -403,9 +403,9 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
 	// Let's divide!
 	int remainder = width;
 	int cleared = 0;
-	std::vector<SelectionThread*> threads;
+	std::vector<std::unique_ptr<SelectionThread>> threads;
 	if (width == 0) {
-		threads.push_back(newd SelectionThread(editor, Position(s_x, s_y, s_z), Position(s_x, e_y, e_z)));
+		threads.push_back(std::make_unique<SelectionThread>(editor, Position(s_x, s_y, s_z), Position(s_x, e_y, e_z)));
 	} else {
 		for (int i = 0; i < threadcount; ++i) {
 			int chunksize = width / threadcount;
@@ -413,7 +413,7 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
 			if (i == threadcount - 1) {
 				chunksize = remainder;
 			}
-			threads.push_back(newd SelectionThread(editor, Position(s_x + cleared, s_y, s_z), Position(s_x + cleared + chunksize, e_y, e_z)));
+			threads.push_back(std::make_unique<SelectionThread>(editor, Position(s_x + cleared, s_y, s_z), Position(s_x + cleared + chunksize, e_y, e_z)));
 			cleared += chunksize;
 			remainder -= chunksize;
 		}
@@ -422,11 +422,11 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
 	ASSERT(remainder == 0);
 
 	editor.selection.start(); // Start a selection session
-	for (auto* thread : threads) {
+	for (auto& thread : threads) {
 		thread->Start();
 	}
-	for (auto* thread : threads) {
-		editor.selection.join(thread);
+	for (auto& thread : threads) {
+		editor.selection.join(std::move(thread));
 	}
 	editor.selection.finish(); // Finish the selection session
 	editor.selection.updateSelectionCount();

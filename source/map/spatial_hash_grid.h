@@ -10,6 +10,7 @@
 #include <ranges>
 #include <algorithm>
 #include <tuple>
+#include <limits>
 
 class MapNode;
 class BaseMap;
@@ -32,6 +33,7 @@ public:
 
 	struct SortedGridCell {
 		uint64_t key;
+		int cx, cy;
 		GridCell* cell;
 	};
 
@@ -46,7 +48,8 @@ public:
 	void clear();
 	void clearVisible(uint32_t mask);
 
-	std::vector<SortedGridCell> getSortedCells() const;
+	const std::vector<SortedGridCell>& getSortedCells() const;
+	void updateSortedCells() const;
 
 	template <typename Func>
 	void visitLeaves(int min_x, int min_y, int max_x, int max_y, Func&& func) {
@@ -86,6 +89,8 @@ public:
 protected:
 	BaseMap& map;
 	std::unordered_map<uint64_t, std::unique_ptr<GridCell>> cells;
+	mutable std::vector<SortedGridCell> sorted_cells_cache;
+	mutable bool sorted_cells_dirty;
 
 	// Traverses cells by iterating over the viewport coordinates.
 	// Efficient for small or dense viewports.
@@ -138,52 +143,52 @@ protected:
 	// Efficient for huge or sparse viewports.
 	template <typename Func>
 	void visitLeavesByCells(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		struct CellEntry {
-			int cx;
-			int cy;
-			GridCell* cell;
-		};
-		std::vector<CellEntry> visible_cells;
-		visible_cells.reserve(std::min(cells.size(), static_cast<size_t>((static_cast<long long>(end_cx) - start_cx + 1) * (static_cast<long long>(end_cy) - start_cy + 1))));
+		updateSortedCells();
 
-		for (const auto& [key, cell_ptr] : cells) {
-			int cx, cy;
-			getCellCoordsFromKey(key, cx, cy);
-
-			if (cx >= start_cx && cx <= end_cx && cy >= start_cy && cy <= end_cy) {
-				visible_cells.push_back({ .cx = cx, .cy = cy, .cell = cell_ptr.get() });
-			}
-		}
-
-		if (visible_cells.empty()) {
+		if (sorted_cells_cache.empty()) {
 			return;
 		}
 
-		if (visible_cells.size() > 1) {
-			std::sort(visible_cells.begin(), visible_cells.end(), [](const CellEntry& a, const CellEntry& b) {
-				return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
-			});
-		}
+		SortedGridCell search_val { .key = 0, .cx = std::numeric_limits<int>::min(), .cy = start_cy, .cell = nullptr };
 
-		size_t first_in_row_idx = 0;
-		size_t num_visible = visible_cells.size();
+		// Find the first cell that could potentially be in the viewport
+		auto it = std::lower_bound(sorted_cells_cache.begin(), sorted_cells_cache.end(), search_val, [](const SortedGridCell& a, const SortedGridCell& b) {
+			return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
+		});
+
+		int prev_cy = -1;
+
+		std::vector<const SortedGridCell*> row_cells;
+		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int ny : std::views::iota(start_ny, end_ny + 1)) {
 			int current_cy = ny >> NODES_PER_CELL_SHIFT;
 			int local_ny = ny & (NODES_PER_CELL - 1);
 
-			// Advance to current row. This correctly handles gaps in Y coordinates.
-			while (first_in_row_idx < num_visible && visible_cells[first_in_row_idx].cy < current_cy) {
-				first_in_row_idx++;
+			if (current_cy != prev_cy) {
+				row_cells.clear();
+				// Advance 'it' to start of current_cy
+				while (it != sorted_cells_cache.end() && it->cy < current_cy) {
+					++it;
+				}
+
+				// Collect cells for this row
+				auto cell_it = it;
+				while (cell_it != sorted_cells_cache.end() && cell_it->cy == current_cy) {
+					if (cell_it->cx >= start_cx && cell_it->cx <= end_cx) {
+						row_cells.push_back(&(*cell_it));
+					} else if (cell_it->cx > end_cx) {
+						break;
+					}
+					++cell_it;
+				}
+				prev_cy = current_cy;
 			}
 
-			// Iterate cells in current row
-			for (size_t i = first_in_row_idx; i < num_visible && visible_cells[i].cy == current_cy; ++i) {
-				const auto& entry = visible_cells[i];
-				GridCell* cell = entry.cell;
-				int cx = entry.cx;
+			for (const auto* cell_data : row_cells) {
+				GridCell* cell = cell_data->cell;
+				int cell_start_nx = cell_data->cx << NODES_PER_CELL_SHIFT;
 
-				int cell_start_nx = cx << NODES_PER_CELL_SHIFT;
 				int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
 				int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
 
