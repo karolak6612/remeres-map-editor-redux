@@ -310,12 +310,11 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 		return false;
 	}
 
-	if (!manager->otfi_found) {
-		manager->is_extended = manager->dat_format >= DAT_FORMAT_96;
-		manager->has_frame_durations = manager->dat_format >= DAT_FORMAT_1050;
-		manager->has_frame_groups = manager->dat_format >= DAT_FORMAT_1057;
-		manager->has_transparency = manager->client_version->isTransparent();
-	}
+	// Initialize flags from ClientVersion configuration
+	manager->is_extended = manager->client_version->isExtended();
+	manager->has_frame_durations = manager->client_version->hasFrameDurations();
+	manager->has_frame_groups = manager->client_version->hasFrameGroups();
+	manager->has_transparency = manager->client_version->isTransparent();
 
 	uint32_t id = minID;
 	const uint32_t maxID = manager->item_count + manager->creature_count;

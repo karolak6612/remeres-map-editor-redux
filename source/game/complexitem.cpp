@@ -55,6 +55,15 @@ double Container::getWeight() const {
 	return g_items[id].weight;
 }
 
+uint32_t Container::memsize() const {
+	uint32_t size = sizeof(*this);
+	size += sizeof(std::unique_ptr<Item>) * contents.capacity();
+	for (const auto& item : contents) {
+		size += item->memsize();
+	}
+	return size;
+}
+
 // Teleport
 Teleport::Teleport(const uint16_t type) :
 	Item(type, 0),

@@ -125,8 +125,10 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	Centre(wxBOTH);
 	UpdateProtocolList();
 
-	ClientVersion* current_version = ClientVersion::get(map.getVersion().client);
-	protocol_choice->SetStringSelection(wxstr(current_version->getName()));
+	ClientVersion* current_version = ClientVersion::getBestMatch(map.getVersion().client);
+	if (current_version) {
+		protocol_choice->SetStringSelection(wxstr(current_version->getName()));
+	}
 
 	version_choice->Bind(wxEVT_CHOICE, &MapPropertiesWindow::OnChangeVersion, this);
 	okBtn->Bind(wxEVT_BUTTON, &MapPropertiesWindow::OnClickOK, this);
@@ -179,7 +181,7 @@ void MapPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 	wxString ver = version_choice->GetStringSelection();
 
-	new_ver.client = ClientVersion::get(nstr(protocol_choice->GetStringSelection()))->getID();
+	new_ver.client = ClientVersion::get(nstr(protocol_choice->GetStringSelection()))->getProtocolID();
 	if (ver.Contains("0.5.0")) {
 		new_ver.otbm = MAP_OTBM_1;
 	} else if (ver.Contains("0.6.0")) {

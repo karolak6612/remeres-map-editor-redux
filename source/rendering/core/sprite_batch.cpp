@@ -187,8 +187,6 @@ void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& re
 	inst.b = b;
 	inst.a = a;
 	inst.atlas_layer = static_cast<float>(region.atlas_index);
-	// Pad initialized to 0 implicitly or structurally? C++ struct fields not init
-	inst._pad1 = inst._pad2 = inst._pad3 = 0.0f;
 }
 
 void SpriteBatch::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {

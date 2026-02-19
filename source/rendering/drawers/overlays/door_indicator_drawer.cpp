@@ -46,25 +46,26 @@ void DoorIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		const float zoom = view.zoom;
 		const float x = unscaled_x / zoom;
 		const float y = unscaled_y / zoom;
-		const float tileSize = 32.0f / zoom;
+		const float TILE_SIZE = 32.0f / zoom;
 
 		const std::string icon = request.locked ? ICON_LOCK : ICON_LOCK_OPEN;
 		const NVGcolor color = request.locked ? colorLocked : colorUnlocked;
 
 		if (request.south) {
 			// Center of WEST border
-			IconRenderer::DrawIconWithBorder(vg, x, y + tileSize / 2.0f, iconSize, outlineOffset, icon, color);
+			IconRenderer::DrawIconWithBorder(vg, x, y + TILE_SIZE / 2.0f, iconSize, outlineOffset, icon, color);
 		}
 		if (request.east) {
 			// Center of NORTH border
-			IconRenderer::DrawIconWithBorder(vg, x + tileSize / 2.0f, y, iconSize, outlineOffset, icon, color);
+			IconRenderer::DrawIconWithBorder(vg, x + TILE_SIZE / 2.0f, y, iconSize, outlineOffset, icon, color);
 		}
 
 		if (!request.south && !request.east) {
 			// Center of TILE
-			IconRenderer::DrawIconWithBorder(vg, x + tileSize / 2.0f, y + tileSize / 2.0f, iconSize, outlineOffset, icon, color);
+			IconRenderer::DrawIconWithBorder(vg, x + TILE_SIZE / 2.0f, y + TILE_SIZE / 2.0f, iconSize, outlineOffset, icon, color);
 		}
 	}
 
 	nvgRestore(vg);
 }
+

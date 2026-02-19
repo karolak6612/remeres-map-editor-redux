@@ -15,39 +15,34 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include "app/main.h"
-
 #include "app/settings.h"
 #include "ui/gui_ids.h"
 #include "app/client_version.h"
+#include "app/main.h"
 
-#include <wx/confbase.h>
-#include <wx/config.h>
-#include <wx/fileconf.h>
-#include <wx/sstream.h>
-#include <wx/wfstream.h>
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
+#include <toml++/toml.h>
 
 #include <iostream>
 #include <string>
+#include <fstream>
+
+static toml::table g_settings_table;
+
+toml::table& Settings::getTable() {
+	return g_settings_table;
+}
 
 Settings g_settings;
 
 Settings::Settings() :
-	store(Config::LAST)
-#ifdef __WINDOWS__
-	,
-	use_file_cfg(false)
-#endif
-{
+	store(Config::LAST) {
 	setDefaults();
 }
 
 Settings::~Settings() {
 	////
-}
-
-wxConfigBase& Settings::getConfigObject() {
-	return *dynamic_cast<wxConfigBase*>(wxConfig::Get());
 }
 
 bool Settings::getBoolean(uint32_t key) const {
@@ -149,139 +144,193 @@ std::string Settings::DynamicValue::str() {
 	}
 }
 
+static std::string toLower(std::string s) {
+	std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+	return s;
+}
+
 void Settings::IO(IOMode mode) {
-	wxConfigBase* conf = (mode == DEFAULT ? nullptr : dynamic_cast<wxConfigBase*>(wxConfig::Get()));
+	if (mode == LOAD) {
+		try {
+			g_settings_table = toml::parse_file("config.toml");
+		} catch (const toml::parse_error& err) {
+			spdlog::error("Failed to parse config.toml: {}", err.description());
+		} catch (const std::exception& err) {
+			spdlog::error("Failed to load config.toml: {}", err.what());
+		}
+	}
+
+	toml::table* root = &g_settings_table;
+	toml::table* cur_sec = root;
 
 	using namespace Config;
-#define section(s) \
-	if (conf)      \
-	conf->SetPath("/" s)
-#define Int(key, dflt)                                     \
-	do {                                                   \
-		if (mode == DEFAULT) {                             \
-			setInteger(key, dflt);                         \
-		} else if (mode == SAVE) {                         \
-			conf->Write(#key, getInteger(key));            \
-		} else if (mode == LOAD) {                         \
-			setInteger(key, conf->Read(#key, long(dflt))); \
-		}                                                  \
+
+#define section(s)                                                \
+	do {                                                          \
+		if (s[0] == '\0') {                                       \
+			cur_sec = root;                                       \
+		} else if (mode != DEFAULT) {                             \
+			std::string sec_name = toLower(s);                    \
+			cur_sec = root->get_as<toml::table>(sec_name);        \
+			if (!cur_sec) {                                       \
+				root->insert_or_assign(sec_name, toml::table {}); \
+				cur_sec = root->get_as<toml::table>(sec_name);    \
+			}                                                     \
+		}                                                         \
 	} while (false)
-#define IntToSave(key, dflt)                               \
-	do {                                                   \
-		if (mode == DEFAULT) {                             \
-			setInteger(key, dflt);                         \
-		} else if (mode == SAVE) {                         \
-			conf->Write(#key, getInteger(key##_TO_SAVE));  \
-		} else if (mode == LOAD) {                         \
-			setInteger(key, conf->Read(#key, (long)dflt)); \
-			setInteger(key##_TO_SAVE, getInteger(key));    \
-		}                                                  \
+
+#define Bool(key, dflt)                                                  \
+	do {                                                                 \
+		std::string k = toLower(#key);                                   \
+		if (mode == DEFAULT) {                                           \
+			setInteger(key, dflt ? 1 : 0);                               \
+		} else if (mode == SAVE) {                                       \
+			cur_sec->insert_or_assign(k, getBoolean(key));               \
+		} else if (mode == LOAD) {                                       \
+			setInteger(key, (*cur_sec)[k].value_or(bool(dflt)) ? 1 : 0); \
+		}                                                                \
 	} while (false)
-#define Float(key, dflt)                        \
-	do {                                        \
-		if (mode == DEFAULT) {                  \
-			setFloat(key, dflt);                \
-		} else if (mode == SAVE) {              \
-			conf->Write(#key, getFloat(key));   \
-		} else if (mode == LOAD) {              \
-			double tmp_float;                   \
-			conf->Read(#key, &tmp_float, dflt); \
-			setFloat(key, tmp_float);           \
-		}                                       \
+
+#define Int(key, dflt)                                               \
+	do {                                                             \
+		std::string k = toLower(#key);                               \
+		if (mode == DEFAULT) {                                       \
+			setInteger(key, dflt);                                   \
+		} else if (mode == SAVE) {                                   \
+			cur_sec->insert_or_assign(k, getInteger(key));           \
+		} else if (mode == LOAD) {                                   \
+			setInteger(key, (int)(*cur_sec)[k].value_or(int(dflt))); \
+		}                                                            \
 	} while (false)
-#define String(key, dflt)                             \
-	do {                                              \
-		if (mode == DEFAULT) {                        \
-			setString(key, dflt);                     \
-		} else if (mode == SAVE) {                    \
-			conf->Write(#key, wxstr(getString(key))); \
-		} else if (mode == LOAD) {                    \
-			wxString str;                             \
-			conf->Read(#key, &str, dflt);             \
-			setString(key, nstr(str));                \
-		}                                             \
+
+#define IntToSave(key, dflt)                                         \
+	do {                                                             \
+		std::string k = toLower(#key);                               \
+		if (mode == DEFAULT) {                                       \
+			setInteger(key, dflt);                                   \
+		} else if (mode == SAVE) {                                   \
+			cur_sec->insert_or_assign(k, getInteger(key##_TO_SAVE)); \
+		} else if (mode == LOAD) {                                   \
+			setInteger(key, (int)(*cur_sec)[k].value_or((int)dflt)); \
+			setInteger(key##_TO_SAVE, getInteger(key));              \
+		}                                                            \
+	} while (false)
+
+#define Float(key, dflt)                                               \
+	do {                                                               \
+		std::string k = toLower(#key);                                 \
+		if (mode == DEFAULT) {                                         \
+			setFloat(key, dflt);                                       \
+		} else if (mode == SAVE) {                                     \
+			cur_sec->insert_or_assign(k, getFloat(key));               \
+		} else if (mode == LOAD) {                                     \
+			setFloat(key, (float)(*cur_sec)[k].value_or(float(dflt))); \
+		}                                                              \
+	} while (false)
+
+#define String(key, dflt)                                              \
+	do {                                                               \
+		std::string k = toLower(#key);                                 \
+		if (mode == DEFAULT) {                                         \
+			setString(key, dflt);                                      \
+		} else if (mode == SAVE) {                                     \
+			cur_sec->insert_or_assign(k, getString(key));              \
+		} else if (mode == LOAD) {                                     \
+			setString(key, (*cur_sec)[k].value_or(std::string(dflt))); \
+		}                                                              \
 	} while (false)
 
 	section("View");
-	Int(TRANSPARENT_FLOORS, 0);
-	Int(TRANSPARENT_ITEMS, 0);
-	Int(SHOW_ALL_FLOORS, 1);
-	Int(SHOW_INGAME_BOX, 0);
-	Int(SHOW_LIGHTS, 0);
-	Int(SHOW_LIGHT_STR, 1);
-	Int(SHOW_TECHNICAL_ITEMS, 1);
-	Int(SHOW_WAYPOINTS, 1);
-	Int(SHOW_GRID, 0);
-	Int(SHOW_EXTRA, 1);
-	Int(SHOW_SHADE, 1);
-	Int(SHOW_SPECIAL_TILES, 1);
-	Int(SHOW_SPAWNS, 1);
-	Int(SHOW_ITEMS, 1);
-	Int(HIGHLIGHT_ITEMS, 0);
-	Int(HIGHLIGHT_LOCKED_DOORS, 1);
-	Int(SHOW_CREATURES, 1);
-	Int(SHOW_HOUSES, 1);
-	Int(SHOW_BLOCKING, 0);
-	Int(SHOW_TOOLTIPS, 1);
-	Int(SHOW_ONLY_TILEFLAGS, 0);
-	Int(SHOW_ONLY_MODIFIED_TILES, 0);
-	Int(SHOW_PREVIEW, 1);
-	Int(SHOW_AUTOBORDER_PREVIEW, 1);
-	Int(SHOW_WALL_HOOKS, 0);
-	Int(SHOW_TOWNS, 0);
-	Int(ALWAYS_SHOW_ZONES, 1);
-	Int(EXT_HOUSE_SHADER, 1);
+	Bool(TRANSPARENT_FLOORS, false);
+	Bool(TRANSPARENT_ITEMS, false);
+	Bool(SHOW_ALL_FLOORS, true);
+	Bool(SHOW_INGAME_BOX, false);
+	Bool(SHOW_LIGHTS, false);
+	Bool(SHOW_LIGHT_STR, true);
+	Bool(SHOW_TECHNICAL_ITEMS, true);
+	Bool(SHOW_WAYPOINTS, true);
+	Bool(SHOW_GRID, false);
+	Bool(SHOW_EXTRA, true);
+	Bool(SHOW_SHADE, true);
+	Bool(SHOW_SPECIAL_TILES, true);
+	Bool(SHOW_SPAWNS, true);
+	Bool(SHOW_ITEMS, true);
+	Bool(HIGHLIGHT_ITEMS, false);
+	Bool(HIGHLIGHT_LOCKED_DOORS, true);
+	Bool(SHOW_CREATURES, true);
+	Bool(SHOW_HOUSES, true);
+	Bool(SHOW_BLOCKING, false);
+	Bool(SHOW_TOOLTIPS, true);
+	Bool(SHOW_ONLY_TILEFLAGS, false);
+	Bool(SHOW_ONLY_MODIFIED_TILES, false);
+	Bool(SHOW_PREVIEW, true);
+	Bool(SHOW_AUTOBORDER_PREVIEW, true);
+	Bool(SHOW_WALL_HOOKS, false);
+	Bool(SHOW_TOWNS, false);
+	Bool(ALWAYS_SHOW_ZONES, true);
+	Bool(EXT_HOUSE_SHADER, true);
+	Bool(DRAW_LOCKED_DOOR, false);
+	Bool(SHOW_AS_MINIMAP, true);
+
+	section("General");
+	Bool(GOTO_WEBSITE_ON_BOOT, false);
+	Bool(USE_UPDATER, true);
+	Bool(AUTOCHECK_FOR_UPDATES, false);
 
 	section("Version");
 	Int(VERSION_ID, 0);
 	Int(CHECK_SIGNATURES, 1);
+	Int(INDIRECTORY_INSTALLATION, 0);
 	Int(USE_CUSTOM_DATA_DIRECTORY, 0);
 	String(DATA_DIRECTORY, "");
 	String(EXTENSIONS_DIRECTORY, "");
 	String(ASSETS_DATA_DIRS, "");
 
 	section("Editor");
-	String(RECENT_FILES, "");
 	Int(WORKER_THREADS, 1);
-	Int(MERGE_MOVE, 0);
-	Int(MERGE_PASTE, 0);
+	Bool(MERGE_MOVE, false);
+	Bool(MERGE_PASTE, false);
 	Int(UNDO_SIZE, 400);
 	Int(UNDO_MEM_SIZE, 40);
-	Int(GROUP_ACTIONS, 1);
+	Bool(GROUP_ACTIONS, true);
 	Int(SELECTION_TYPE, SELECT_CURRENT_FLOOR);
-	Int(COMPENSATED_SELECT, 1);
+	Bool(COMPENSATED_SELECT, true);
 	Float(SCROLL_SPEED, 3.5f);
 	Float(ZOOM_SPEED, 1.4f);
-	Int(SWITCH_MOUSEBUTTONS, 0);
-	Int(DOUBLECLICK_PROPERTIES, 1);
-	Int(LISTBOX_EATS_ALL_EVENTS, 1);
-	Int(BORDER_IS_GROUND, 1);
-	Int(BORDERIZE_PASTE, 1);
-	Int(BORDERIZE_DRAG, 1);
+	Bool(SWITCH_MOUSEBUTTONS, false);
+	Bool(DOUBLECLICK_PROPERTIES, true);
+	Bool(LISTBOX_EATS_ALL_EVENTS, true);
+	Bool(BORDER_IS_GROUND, true);
+	Bool(BORDERIZE_PASTE, true);
+	Bool(BORDERIZE_DRAG, true);
 	Int(BORDERIZE_DRAG_THRESHOLD, 6000);
 	Int(BORDERIZE_PASTE_THRESHOLD, 10000);
-	Int(ALWAYS_MAKE_BACKUP, 0);
-	Int(USE_AUTOMAGIC, 1);
-	Int(HOUSE_BRUSH_REMOVE_ITEMS, 0);
-	Int(AUTO_ASSIGN_DOORID, 1);
-	Int(ERASER_LEAVE_UNIQUE, 1);
-	Int(DOODAD_BRUSH_ERASE_LIKE, 0);
-	Int(WARN_FOR_DUPLICATE_ID, 1);
-	Int(AUTO_CREATE_SPAWN, 1);
+	Bool(ALWAYS_MAKE_BACKUP, false);
+	Bool(USE_AUTOMAGIC, true);
+	Bool(HOUSE_BRUSH_REMOVE_ITEMS, false);
+	Bool(AUTO_ASSIGN_DOORID, true);
+	Bool(ERASER_LEAVE_UNIQUE, true);
+	Bool(DOODAD_BRUSH_ERASE_LIKE, false);
+	Bool(WARN_FOR_DUPLICATE_ID, true);
+	Bool(AUTO_CREATE_SPAWN, true);
 	Int(DEFAULT_SPAWNTIME, 60);
 	Int(MAX_SPAWN_RADIUS, 30);
 	Int(CURRENT_SPAWN_RADIUS, 5);
-	Int(DEFAULT_CLIENT_VERSION, CLIENT_VERSION_NONE);
-	Int(RAW_LIKE_SIMONE, 1);
-	Int(ONLY_ONE_INSTANCE, 1);
-	Int(SHOW_TILESET_EDITOR, 0);
-	Int(USE_OTBM_4_FOR_ALL_MAPS, 0);
-	Int(SAVE_WITH_OTB_MAGIC_NUMBER, 0);
+	Int(DEFAULT_CLIENT_VERSION, OTB_VERSION_NONE);
+	Bool(RAW_LIKE_SIMONE, true);
+	Bool(ONLY_ONE_INSTANCE, true);
+	Bool(SHOW_TILESET_EDITOR, false);
+	Bool(USE_OTBM_4_FOR_ALL_MAPS, false);
+	Bool(SAVE_WITH_OTB_MAGIC_NUMBER, false);
 	Int(REPLACE_SIZE, 500);
 	Int(COPY_POSITION_FORMAT, 0);
+	String(RECENT_EDITED_MAP_PATH, "");
+	String(RECENT_EDITED_MAP_POSITION, "");
+	Int(FIND_ITEM_MODE, 0);
+	Int(JUMP_TO_ITEM_MODE, 0);
 
 	section("Graphics");
-	Int(TEXTURE_MANAGEMENT, 1);
+	Bool(TEXTURE_MANAGEMENT, true);
 	Int(TEXTURE_CLEAN_PULSE, 15);
 	Int(TEXTURE_LONGEVITY, 20);
 	Int(TEXTURE_CLEAN_THRESHOLD, 2500);
@@ -289,16 +338,16 @@ void Settings::IO(IOMode mode) {
 	Int(SOFTWARE_CLEAN_SIZE, 500);
 	Int(ICON_BACKGROUND, 0);
 	Int(HARD_REFRESH_RATE, 200);
-	Int(HIDE_ITEMS_WHEN_ZOOMED, 1);
+	Bool(HIDE_ITEMS_WHEN_ZOOMED, true);
 	String(SCREENSHOT_DIRECTORY, "");
 	String(SCREENSHOT_FORMAT, "png");
-	IntToSave(USE_MEMCACHED_SPRITES, 0);
+	IntToSave(USE_MEMCACHED_SPRITES, 0); // This is special, keeping as IntToSave for now
 	Int(MINIMAP_UPDATE_DELAY, 333);
-	Int(MINIMAP_VIEW_BOX, 1);
+	Bool(MINIMAP_VIEW_BOX, true);
 	String(MINIMAP_EXPORT_DIR, "");
 	String(TILESET_EXPORT_DIR, "");
 	Int(FRAME_RATE_LIMIT, 144);
-	Int(SHOW_FPS_COUNTER, 0);
+	Bool(SHOW_FPS_COUNTER, false);
 	Int(ANTI_ALIASING, 0);
 	String(SCREEN_SHADER, "None");
 
@@ -312,44 +361,58 @@ void Settings::IO(IOMode mode) {
 	Int(CURSOR_ALT_ALPHA, 128);
 
 	section("UI");
-	Int(USE_LARGE_CONTAINER_ICONS, 1);
-	Int(USE_LARGE_CHOOSE_ITEM_ICONS, 1);
-	Int(USE_LARGE_TERRAIN_TOOLBAR, 1);
-	Int(USE_LARGE_COLLECTION_TOOLBAR, 1);
-	Int(USE_LARGE_DOODAD_SIZEBAR, 1);
-	Int(USE_LARGE_ITEM_SIZEBAR, 1);
-	Int(USE_LARGE_HOUSE_SIZEBAR, 1);
-	Int(USE_LARGE_RAW_SIZEBAR, 1);
-	Int(USE_GUI_SELECTION_SHADOW, 0);
+	Bool(USE_LARGE_CONTAINER_ICONS, true);
+	Bool(USE_LARGE_CHOOSE_ITEM_ICONS, true);
+	Bool(USE_LARGE_TERRAIN_TOOLBAR, true);
+	Bool(USE_LARGE_COLLECTION_TOOLBAR, true);
+	Bool(USE_LARGE_DOODAD_SIZEBAR, true);
+	Bool(USE_LARGE_ITEM_SIZEBAR, true);
+	Bool(USE_LARGE_HOUSE_SIZEBAR, true);
+	Bool(USE_LARGE_RAW_SIZEBAR, true);
+	Bool(USE_GUI_SELECTION_SHADOW, false);
 	Int(PALETTE_COL_COUNT, 8);
 	String(PALETTE_TERRAIN_STYLE, "large icons");
 	String(PALETTE_COLLECTION_STYLE, "large icons");
 	String(PALETTE_DOODAD_STYLE, "large icons");
 	String(PALETTE_ITEM_STYLE, "listbox");
 	String(PALETTE_RAW_STYLE, "listbox");
+	Int(PALETTE_CREATURE_STYLE, 0);
 
 	section("Window");
-	String(PALETTE_LAYOUT, "name=02c30f6048629894000011bc00000002;caption=Palette;state=2099148;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=245;besth=100;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1");
+	String(PALETTE_LAYOUT, "");
 	String(TOOL_OPTIONS_LAYOUT, "");
-	Int(INGAME_PREVIEW_VISIBLE, 0);
+	Bool(INGAME_PREVIEW_VISIBLE, false);
 	String(INGAME_PREVIEW_LAYOUT, "");
 	String(HOUSE_PALETTE_LAYOUT, "");
-	Int(MINIMAP_VISIBLE, 1);
-	String(MINIMAP_LAYOUT, "name=066e2bc8486298990000259a00000003;caption=Minimap;state=2099151;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=170;besth=130;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=221;floath=164");
+	Bool(MINIMAP_VISIBLE, true);
+	String(MINIMAP_LAYOUT, "");
 	Int(WINDOW_HEIGHT, 500);
 	Int(WINDOW_WIDTH, 700);
 	Int(REPLACE_TOOL_WINDOW_WIDTH, 1400);
 	Int(REPLACE_TOOL_WINDOW_HEIGHT, 850);
-	Int(WINDOW_MAXIMIZED, 0);
-	Int(WELCOME_DIALOG, 1);
+	Bool(WINDOW_MAXIMIZED, false);
+	Bool(WELCOME_DIALOG, true);
+	Int(PREFERENCES_WINDOW_WIDTH, 1200);
+	Int(PREFERENCES_WINDOW_HEIGHT, 500);
 
 	section("Hotkeys");
-	String(NUMERICAL_HOTKEYS, "none:{}\nnone:{}\nnone:{}\nnone:{}\nnone:{}\nnone:{}\nnone:{}\nnone:{}\nnone:{}\nnone:{}\n");
+	String(NUMERICAL_HOTKEYS, "");
+	String(HOTKEY_0, "");
+	String(HOTKEY_1, "");
+	String(HOTKEY_2, "");
+	String(HOTKEY_3, "");
+	String(HOTKEY_4, "");
+	String(HOTKEY_5, "");
+	String(HOTKEY_6, "");
+	String(HOTKEY_7, "");
+	String(HOTKEY_8, "");
+	String(HOTKEY_9, "");
 
-	Int(SHOW_TOOLBAR_STANDARD, 1);
-	Int(SHOW_TOOLBAR_BRUSHES, 0);
-	Int(SHOW_TOOLBAR_POSITION, 0);
-	Int(SHOW_TOOLBAR_SIZES, 0);
+	section("Toolbars");
+	Bool(SHOW_TOOLBAR_STANDARD, true);
+	Bool(SHOW_TOOLBAR_BRUSHES, false);
+	Bool(SHOW_TOOLBAR_POSITION, false);
+	Bool(SHOW_TOOLBAR_SIZES, false);
 	String(TOOLBAR_STANDARD_LAYOUT, "");
 	String(TOOLBAR_BRUSHES_LAYOUT, "");
 	String(TOOLBAR_POSITION_LAYOUT, "");
@@ -359,19 +422,21 @@ void Settings::IO(IOMode mode) {
 	section("experimental");
 	Int(EXPERIMENTAL_FOG, 0);
 
-	section("");
-	Int(GOTO_WEBSITE_ON_BOOT, 0);
-	Int(USE_UPDATER, 1);
-	String(RECENT_EDITED_MAP_PATH, "");
-	String(RECENT_EDITED_MAP_POSITION, "");
-
-	Int(FIND_ITEM_MODE, 0);
-	Int(JUMP_TO_ITEM_MODE, 0);
-
-	// checkbox in terrain palette
-	Int(DRAW_LOCKED_DOOR, 0);
+	if (mode == SAVE) {
+		std::ofstream file("config.toml");
+		if (file.is_open()) {
+			file << g_settings_table;
+			if (file.fail()) {
+				spdlog::error("Failed to write to config.toml");
+			}
+			file.close();
+		} else {
+			spdlog::error("Failed to open config.toml for writing");
+		}
+	}
 
 #undef section
+#undef Bool
 #undef Int
 #undef IntToSave
 #undef Float
@@ -379,72 +444,9 @@ void Settings::IO(IOMode mode) {
 }
 
 void Settings::load() {
-	wxConfigBase* conf;
-#ifdef __WINDOWS__
-	FileName filename("editor.cfg");
-	if (filename.FileExists()) { // Use local file if it exists
-		wxFileInputStream file(filename.GetFullPath());
-		conf = newd wxFileConfig(file);
-		use_file_cfg = true;
-		g_settings.setInteger(Config::INDIRECTORY_INSTALLATION, 1);
-	} else { // Use registry
-		conf = newd wxConfig("Mapeditor", "OTAcademy", "", "", wxCONFIG_USE_GLOBAL_FILE);
-		g_settings.setInteger(Config::INDIRECTORY_INSTALLATION, 0);
-	}
-#else
-	FileName filename("./editor.cfg");
-	if (filename.FileExists()) { // Use local file if it exists
-		wxFileInputStream file(filename.GetFullPath());
-		conf = newd wxFileConfig(file);
-		g_settings.setInteger(Config::INDIRECTORY_INSTALLATION, 1);
-	} else { // Else use global (user-specific) conf
-		filename.Assign(wxStandardPaths::Get().GetUserConfigDir() + "/.rme/editor.cfg");
-		if (filename.FileExists()) {
-			wxFileInputStream file(filename.GetFullPath());
-			conf = newd wxFileConfig(file);
-		} else {
-			wxStringInputStream dummy("");
-			conf = newd wxFileConfig(dummy, wxConvAuto());
-		}
-		g_settings.setInteger(Config::INDIRECTORY_INSTALLATION, 0);
-	}
-#endif
-	wxConfig::Set(conf);
 	IO(LOAD);
 }
 
 void Settings::save(bool endoftheworld) {
 	IO(SAVE);
-#ifdef __WINDOWS__
-	if (use_file_cfg) {
-		wxFileConfig* conf = dynamic_cast<wxFileConfig*>(wxConfig::Get());
-		if (!conf) {
-			return;
-		}
-		FileName filename("editor.cfg");
-		wxFileOutputStream file(filename.GetFullPath());
-		conf->Save(file);
-	}
-#else
-	wxFileConfig* conf = dynamic_cast<wxFileConfig*>(wxConfig::Get());
-	if (!conf) {
-		return;
-	}
-	FileName filename("./editor.cfg");
-	if (filename.FileExists()) { // Use local file if it exists
-		wxFileOutputStream file(filename.GetFullPath());
-		conf->Save(file);
-	} else { // Else use global (user-specific) conf
-		wxString path = wxStandardPaths::Get().GetUserConfigDir() + "/.rme/editor.cfg";
-		filename.Assign(path);
-		filename.Mkdir(0755, wxPATH_MKDIR_FULL);
-		wxFileOutputStream file(filename.GetFullPath());
-		conf->Save(file);
-	}
-#endif
-	if (endoftheworld) {
-		wxConfigBase* conf = dynamic_cast<wxConfigBase*>(wxConfig::Get());
-		wxConfig::Set(nullptr);
-		delete conf;
-	}
 }
