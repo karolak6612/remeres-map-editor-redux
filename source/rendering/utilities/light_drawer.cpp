@@ -195,7 +195,7 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 				ScopedGLCapability blendCap(GL_BLEND);
 				ScopedGLBlend blendState(GL_ONE, GL_ONE, GL_MAX); // Factors don't matter much for MAX, but usually 1,1 is safe
 
-				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, (GLsizei)gpu_lights_.size());
+				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, static_cast<GLsizei>(gpu_lights_.size()));
 			}
 
 			glBindVertexArray(0);
