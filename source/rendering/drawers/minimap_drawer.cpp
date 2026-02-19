@@ -122,10 +122,10 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 			canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
 
 			int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
-			int view_start_x = view_scroll_x / TileSize + floor_offset;
-			int view_start_y = view_scroll_y / TileSize + floor_offset;
+			int view_start_x = view_scroll_x / TILE_SIZE + floor_offset;
+			int view_start_y = view_scroll_y / TILE_SIZE + floor_offset;
 
-			int tile_size = int(TileSize / canvas->GetZoom());
+			int tile_size = int(TILE_SIZE / canvas->GetZoom());
 			int view_w = screensize_x / tile_size + 1;
 			int view_h = screensize_y / tile_size + 1;
 
@@ -158,3 +158,4 @@ void MinimapDrawer::ScreenToMap(int screen_x, int screen_y, int& map_x, int& map
 	map_x = last_start_x + screen_x;
 	map_y = last_start_y + screen_y;
 }
+

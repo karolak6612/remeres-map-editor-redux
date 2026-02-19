@@ -161,7 +161,7 @@ void MapWindow::GetViewSize(int* x, int* y) {
 }
 
 void MapWindow::FitToMap() {
-	SetSize(editor.map.getWidth() * TileSize, editor.map.getHeight() * TileSize, true);
+	SetSize(editor.map.getWidth() * TILE_SIZE, editor.map.getHeight() * TILE_SIZE, true);
 }
 
 Position MapWindow::GetScreenCenterPosition() {
@@ -175,12 +175,12 @@ void MapWindow::SetScreenCenterPosition(const Position& position) {
 		return;
 	}
 
-	int x = position.x * TileSize;
-	int y = position.y * TileSize;
+	int x = position.x * TILE_SIZE;
+	int y = position.y * TILE_SIZE;
 	if (position.z <= GROUND_LAYER) {
 		// Compensate for floor offset above ground
-		x -= (GROUND_LAYER - position.z) * TileSize;
-		y -= (GROUND_LAYER - position.z) * TileSize;
+		x -= (GROUND_LAYER - position.z) * TILE_SIZE;
+		y -= (GROUND_LAYER - position.z) * TILE_SIZE;
 	}
 
 	const Position& center = GetScreenCenterPosition();
@@ -266,3 +266,4 @@ void MapWindow::OnScrollPageUp(wxScrollEvent& event) {
 	}
 	canvas->Refresh();
 }
+
