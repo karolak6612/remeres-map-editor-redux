@@ -115,42 +115,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
 
 		// Draw View Box (Overlay)
-		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
-			// Compute box coordinates
-			int screensize_x, screensize_y;
-			int view_scroll_x, view_scroll_y;
-			canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
-
-			int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
-			int view_start_x = view_scroll_x / TILE_SIZE + floor_offset;
-			int view_start_y = view_scroll_y / TILE_SIZE + floor_offset;
-
-			int tile_size = int(TILE_SIZE / canvas->GetZoom());
-			int view_w = screensize_x / tile_size + 1;
-			int view_h = screensize_y / tile_size + 1;
-
-			// Convert to local minimap coords
-			float x = (float)(view_start_x - start_x);
-			float y = (float)(view_start_y - start_y);
-			float w = (float)view_w;
-			float h = (float)view_h;
-
-			// Draw white rectangle using PrimitiveRenderer
-			primitive_renderer->setProjectionMatrix(projection);
-
-			glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-
-			// Top
-			primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x + w, y), color);
-			// Bottom
-			primitive_renderer->drawLine(glm::vec2(x, y + h), glm::vec2(x + w, y + h), color);
-			// Left
-			primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x, y + h), color);
-			// Right
-			primitive_renderer->drawLine(glm::vec2(x + w, y), glm::vec2(x + w, y + h), color);
-
-			primitive_renderer->flush();
-		}
+		// Moved to MinimapWindow::OnPaint (NanoVG) for better visual quality
 	}
 }
 

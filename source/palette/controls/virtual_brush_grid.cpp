@@ -24,6 +24,9 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	padding(4),
 	m_animTimer(this) {
 
+	// Start animation timer (60fps)
+	m_animTimer.Start(16);
+
 	if (icon_size == RENDER_SIZE_16x16) {
 		item_size = 18;
 	} else {
@@ -93,49 +96,75 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
-	// Shadow / Glow
-	if (i == selected_index) {
-		// Glow for selected
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 10.0f, nvgRGBA(100, 150, 255, 128), nvgRGBA(0, 0, 0, 0));
-		nvgBeginPath(vg);
-		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
-		nvgRoundedRect(vg, x, y, w, h, 4.0f);
-		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillPaint(vg, shadowPaint);
-		nvgFill(vg);
-	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
-		nvgBeginPath(vg);
-		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
-		nvgRoundedRect(vg, x, y, w, h, 4.0f);
-		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillPaint(vg, shadowPaint);
-		nvgFill(vg);
+	bool isSelected = (i == selected_index);
+	bool isHovered = (i == hover_index);
+
+	// 1. Card Shadows
+	// Offset dark transparent rect behind card for depth
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x + 2, y + 2, w, h, 4.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 60)); // 2px offset, 50% opacity black equivalent
+	nvgFill(vg);
+
+	// 2. Glow on Hover (Double-render technique)
+	if (isHovered || (isSelected && m_selectionAnim > 0.01f)) {
+		float glowAlpha = isSelected ? m_selectionAnim : m_hoverAnim;
+		if (glowAlpha > 0.0f) {
+			// Larger blurred pass
+			NVGpaint glowPaint = nvgBoxGradient(vg, x, y, w, h, 8.0f, 12.0f, nvgRGBA(100, 150, 255, (unsigned char)(100 * glowAlpha)), nvgRGBA(0, 0, 0, 0));
+			nvgBeginPath(vg);
+			nvgRect(vg, x - 15, y - 15, w + 30, h + 30);
+			nvgRoundedRect(vg, x, y, w, h, 4.0f);
+			nvgPathWinding(vg, NVG_HOLE);
+			nvgFillPaint(vg, glowPaint);
+			nvgFill(vg);
+
+			// Crisp pass (inner glow)
+			if (isSelected) {
+				nvgBeginPath(vg);
+				nvgRoundedRect(vg, x - 1, y - 1, w + 2, h + 2, 5.0f);
+				nvgStrokeColor(vg, nvgRGBA(100, 150, 255, (unsigned char)(180 * glowAlpha)));
+				nvgStrokeWidth(vg, 1.5f);
+				nvgStroke(vg);
+			}
+		}
 	}
 
-	// Card background
+	// 3. Card Background
 	nvgBeginPath(vg);
 	nvgRoundedRect(vg, x, y, w, h, 4.0f);
 
-	if (i == selected_index) {
+	if (isSelected) {
 		NVGcolor selCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
-		selCol.a = 1.0f; // Force opaque for background
+		selCol.a = 1.0f; // Force opaque
 		nvgFillColor(vg, selCol);
-	} else if (i == hover_index) {
-		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover)));
+	} else if (isHovered) {
+		// Use alpha blend for hover transition
+		NVGcolor base = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase));
+		NVGcolor hover = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover));
+		// Simple lerp based on m_hoverAnim
+		NVGcolor finalCol;
+		finalCol.r = base.r + (hover.r - base.r) * m_hoverAnim;
+		finalCol.g = base.g + (hover.g - base.g) * m_hoverAnim;
+		finalCol.b = base.b + (hover.b - base.b) * m_hoverAnim;
+		finalCol.a = 1.0f;
+		nvgFillColor(vg, finalCol);
 	} else {
-		// Normal - theme card base
 		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase)));
 	}
 	nvgFill(vg);
 
-	// Selection border
-	if (i == selected_index) {
+	// 4. Smooth Selection Border
+	if (isSelected) {
+		float strokeAlpha = m_selectionAnim; // 0.0 to 1.0
+		float strokeW = 1.0f + (1.0f * m_selectionAnim); // Animate width 1px -> 2px
+
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
-		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
-		nvgStrokeWidth(vg, 2.0f);
+		NVGcolor borderCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+		borderCol.a = strokeAlpha;
+		nvgStrokeColor(vg, borderCol);
+		nvgStrokeWidth(vg, strokeW);
 		nvgStroke(vg);
 	}
 
@@ -264,6 +293,8 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 
 	if (index != hover_index) {
 		hover_index = index;
+		// Reset hover animation to 0.5 to give a quick pulse up to 1.0
+		if (hover_index != -1) m_hoverAnim = 0.5f;
 		Refresh();
 	}
 
@@ -284,8 +315,27 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 }
 
 void VirtualBrushGrid::OnTimer(wxTimerEvent& event) {
-	// Animation tick for hover effects (optional - can be enhanced later)
-	Refresh();
+	bool dirty = false;
+
+	// Animate Hover
+	float targetHover = (hover_index != -1) ? 1.0f : 0.0f;
+	// If hovering a different item, reset animation for quick feedback or handle per-item anims.
+	// For now, global hover anim is simple.
+	if (std::abs(m_hoverAnim - targetHover) > 0.01f) {
+		m_hoverAnim += (targetHover - m_hoverAnim) * 0.2f;
+		dirty = true;
+	}
+
+	// Animate Selection
+	float targetSelection = (selected_index != -1) ? 1.0f : 0.0f;
+	if (std::abs(m_selectionAnim - targetSelection) > 0.01f) {
+		m_selectionAnim += (targetSelection - m_selectionAnim) * 0.15f;
+		dirty = true;
+	}
+
+	if (dirty) {
+		Refresh();
+	}
 }
 
 void VirtualBrushGrid::OnSize(wxSizeEvent& event) {
