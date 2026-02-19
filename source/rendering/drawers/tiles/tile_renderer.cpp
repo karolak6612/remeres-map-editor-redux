@@ -324,6 +324,9 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item) {
 	const ItemType& it = g_items[item->getID()];
 	GameSprite* spr = it.sprite;
 	if (spr && !spr->isSimpleAndLoaded()) {
+		// Performance Note (Raster): PatternCalculator::Calculate runs every frame for complex items.
+		// Patterns depend on tile position/time (animations), so caching this is difficult without invalidation logic.
+		// Ideally, we'd cache this per-item and invalidate on state change, but current Item architecture makes that tricky.
 		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
