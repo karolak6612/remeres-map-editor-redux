@@ -63,6 +63,7 @@ void NavigationMenuHandler::OnJumpToBrush(wxCommandEvent& WXUNUSED(event)) {
 	const Brush* brush = dlg->getResult();
 	if (brush) {
 		g_gui.SelectBrush(brush, TILESET_UNKNOWN);
+		g_gui.SetStatusText("Jumped to brush: " + wxstr(brush->getName()));
 	}
 	dlg->Destroy();
 }
@@ -80,6 +81,7 @@ void NavigationMenuHandler::OnJumpToItemBrush(wxCommandEvent& WXUNUSED(event)) {
 		const Brush* brush = dialog.getResult();
 		if (brush) {
 			g_gui.SelectBrush(brush, TILESET_RAW);
+			g_gui.SetStatusText("Jumped to item: " + wxstr(brush->getName()));
 		}
 		g_settings.setInteger(Config::JUMP_TO_ITEM_MODE, (int)dialog.getSearchMode());
 	}

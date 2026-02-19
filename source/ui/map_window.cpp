@@ -220,6 +220,11 @@ void MapWindow::ScrollRelative(int x, int y) {
 
 void MapWindow::OnGem(wxCommandEvent& WXUNUSED(event)) {
 	g_gui.SwitchMode();
+	if (g_gui.IsDrawingMode()) {
+		g_gui.SetStatusText("Switched to Drawing Mode");
+	} else {
+		g_gui.SetStatusText("Switched to Selection Mode");
+	}
 }
 
 void MapWindow::OnSize(wxSizeEvent& event) {

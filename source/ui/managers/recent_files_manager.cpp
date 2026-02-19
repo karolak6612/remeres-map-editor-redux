@@ -1,5 +1,5 @@
 #include "ui/managers/recent_files_manager.h"
-#include <toml++/toml.hpp>
+#include <toml++/toml.h>
 #include "app/settings.h"
 
 RecentFilesManager::RecentFilesManager() :

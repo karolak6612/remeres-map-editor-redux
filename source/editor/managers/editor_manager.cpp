@@ -177,6 +177,7 @@ bool EditorManager::ShouldSave() {
 }
 
 void EditorManager::SaveCurrentMap(FileName fileName, bool showdialog) {
+	wxBusyCursor wait;
 	MapTab* mapTab = GetCurrentMapTab();
 	if (mapTab) {
 		Editor* editor = mapTab->GetEditor();
@@ -274,6 +275,7 @@ void EditorManager::SaveMapAs() {
 }
 
 bool EditorManager::LoadMap(const FileName& fileName) {
+	wxBusyCursor wait;
 	spdlog::info("EditorManager::LoadMap - Loading map: {}", nstr(fileName.GetFullPath()));
 	g_status.SetStatusText("Loading map...");
 	if (g_gui.root) {

@@ -15,7 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include <toml++/toml.hpp>
+#include <toml++/toml.h>
 #include <charconv>
 #include <string>
 #include "app/main.h"

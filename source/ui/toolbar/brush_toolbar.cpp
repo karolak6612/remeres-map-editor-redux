@@ -129,6 +129,11 @@ void BrushToolBar::OnToolbarClick(wxCommandEvent& event) {
 		return;
 	}
 
+	wxString help = toolbar->GetToolShortHelp(event.GetId());
+	if (!help.IsEmpty()) {
+		g_gui.SetStatusText("Selected " + help);
+	}
+
 	switch (event.GetId()) {
 		case PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL:
 			g_gui.SelectBrush(g_brush_manager.optional_brush);

@@ -114,12 +114,15 @@ void StandardToolBar::OnButtonClick(wxCommandEvent& event) {
 			break;
 		case wxID_CUT:
 			g_gui.DoCut();
+			g_gui.SetStatusText("Cut selection to clipboard");
 			break;
 		case wxID_COPY:
 			g_gui.DoCopy();
+			g_gui.SetStatusText("Copied selection to clipboard");
 			break;
 		case wxID_PASTE:
 			g_gui.PreparePaste();
+			g_gui.SetStatusText("Paste mode active. Click on map to paste.");
 			break;
 		default:
 			event.Skip();
