@@ -27,6 +27,7 @@
 #include <string_view>
 #include <sstream>
 #include <unordered_map>
+#include <list>
 
 class Item;
 class Waypoint;
@@ -207,6 +208,24 @@ protected:
 	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
 	void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
 	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
+
+private:
+	struct CachedFieldLine {
+		std::string label;
+		std::string value;
+		uint8_t r, g, b;
+		std::vector<std::string> wrappedLines;
+	};
+
+	struct CachedLayout {
+		LayoutMetrics metrics;
+		std::vector<CachedFieldLine> fields;
+	};
+
+	std::list<uint64_t> lruList;
+	std::unordered_map<uint64_t, std::pair<CachedLayout, std::list<uint64_t>::iterator>> layoutCache;
+
+	uint64_t computeHash(const TooltipData& data) const;
 };
 
 #endif

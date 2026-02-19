@@ -580,16 +580,81 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		float minWidth = 120.0f;
 		float maxWidth = 220.0f;
 
-		// 1. Prepare Content
-		prepareFields(tooltip);
+		LayoutMetrics layout;
+		uint64_t hash = computeHash(tooltip);
+		auto it = layoutCache.find(hash);
 
-		// Skip if nothing to show
+		if (it != layoutCache.end()) {
+			// Cache Hit
+			auto& entry = it->second;
+			layout = entry.first.metrics;
+
+			// Move to front (LRU)
+			lruList.splice(lruList.begin(), lruList, entry.second);
+
+			// Populate scratch_fields from cache (reusing existing scratch buffer logic)
+			scratch_fields_count = 0;
+			if (scratch_fields.size() < entry.first.fields.size()) {
+				scratch_fields.resize(entry.first.fields.size());
+			}
+
+			for (const auto& cachedField : entry.first.fields) {
+				FieldLine& field = scratch_fields[scratch_fields_count++];
+				field.label = cachedField.label;
+				field.value = cachedField.value;
+				field.r = cachedField.r;
+				field.g = cachedField.g;
+				field.b = cachedField.b;
+				field.wrappedLines.clear();
+				for (const auto& line : cachedField.wrappedLines) {
+					field.wrappedLines.push_back(line);
+				}
+			}
+		} else {
+			// Cache Miss
+			// 1. Prepare Content
+			prepareFields(tooltip);
+
+			// Skip if nothing to show
+			if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
+				continue;
+			}
+
+			// 2. Calculate Layout
+			layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
+
+			// Store in cache
+			CachedLayout cachedLayout;
+			cachedLayout.metrics = layout;
+			cachedLayout.fields.reserve(scratch_fields_count);
+
+			for (size_t j = 0; j < scratch_fields_count; ++j) {
+				const auto& src = scratch_fields[j];
+				CachedFieldLine dest;
+				dest.label = std::string(src.label);
+				dest.value = std::string(src.value);
+				dest.r = src.r;
+				dest.g = src.g;
+				dest.b = src.b;
+				for (const auto& w : src.wrappedLines) {
+					dest.wrappedLines.emplace_back(std::string(w));
+				}
+				cachedLayout.fields.push_back(std::move(dest));
+			}
+
+			if (layoutCache.size() >= 1000) {
+				uint64_t last = lruList.back();
+				layoutCache.erase(last);
+				lruList.pop_back();
+			}
+
+			lruList.push_front(hash);
+			layoutCache[hash] = { std::move(cachedLayout), lruList.begin() };
+		}
+
 		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
 			continue;
 		}
-
-		// 2. Calculate Layout
-		LayoutMetrics layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
 
 		// Position tooltip above tile
 		float tooltipX = screen_x - (layout.width / 2.0f);
@@ -604,4 +669,44 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		// 5. Draw Container Grid
 		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
 	}
+}
+
+uint64_t TooltipDrawer::computeHash(const TooltipData& data) const {
+	uint64_t hash = 14695981039346656037ULL;
+	auto hash_combine = [&](auto val) {
+		const uint8_t* p = reinterpret_cast<const uint8_t*>(&val);
+		for (size_t i = 0; i < sizeof(val); ++i) {
+			hash ^= p[i];
+			hash *= 1099511628211ULL;
+		}
+	};
+	auto hash_string = [&](std::string_view s) {
+		for (char c : s) {
+			hash ^= static_cast<uint8_t>(c);
+			hash *= 1099511628211ULL;
+		}
+	};
+
+	hash_combine(data.itemId);
+	hash_combine(data.actionId);
+	hash_combine(data.uniqueId);
+	hash_combine(data.doorId);
+	hash_combine(data.containerCapacity);
+	// data.pos is deliberately excluded as layout depends on content, not position
+
+	hash_string(data.itemName);
+	hash_string(data.text);
+	hash_string(data.description);
+	hash_string(data.waypointName);
+	hash_combine(data.destination.x);
+	hash_combine(data.destination.y);
+	hash_combine(data.destination.z);
+
+	for (const auto& item : data.containerItems) {
+		hash_combine(item.id);
+		hash_combine(item.count);
+		hash_combine(item.subtype);
+	}
+
+	return hash;
 }
