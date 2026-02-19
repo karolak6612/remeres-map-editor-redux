@@ -3,7 +3,6 @@
 
 #include "app/main.h"
 #include <wx/docview.h>
-#include <wx/fileconf.h>
 #include <vector>
 
 class RecentFilesManager {
@@ -11,8 +10,8 @@ public:
 	RecentFilesManager();
 	~RecentFilesManager();
 
-	void Load(wxConfigBase* config);
-	void Save(wxConfigBase* config);
+	void Load();
+	void Save();
 	void AddFile(const FileName& file);
 	void UseMenu(wxMenu* menu);
 

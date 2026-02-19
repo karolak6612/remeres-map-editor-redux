@@ -12,8 +12,8 @@
 #include "ui/gui.h"
 
 void BrushCursorDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int x, int y, Brush* brush, uint8_t r, uint8_t g, uint8_t b) {
-	x += (TileSize / 2);
-	y += (TileSize / 2);
+	x += (TILE_SIZE / 2);
+	y += (TILE_SIZE / 2);
 
 	// 7----0----1
 	// |         |
@@ -35,9 +35,9 @@ void BrushCursorDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primi
 	// circle
 	glm::vec4 circleColor(0.0f, 0.0f, 0.0f, 0x50 / 255.0f);
 	// Center: x,y.
-	// Radius: TileSize/2.
+	// Radius: TILE_SIZE/2.
 	// Draw fan as triangles.
-	float radius = TileSize / 2.0f;
+	float radius = TILE_SIZE / 2.0f;
 	int segments = 30;
 	glm::vec2 center(x, y);
 
@@ -85,3 +85,4 @@ void BrushCursorDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primi
 		);
 	}
 }
+

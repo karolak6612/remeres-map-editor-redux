@@ -27,7 +27,7 @@ public:
 	~MaterialsExtension();
 
 	void addVersion(const std::string& versionString);
-	bool isForVersion(uint16_t versionId);
+	bool isForVersion(const ClientVersionID& versionId);
 	std::string getVersionString();
 
 	std::string name;

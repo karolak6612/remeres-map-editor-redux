@@ -61,13 +61,13 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 			if (pos.x + 2 > view.start_x && pos.x < view.end_x && pos.y + 2 > view.start_y && pos.y < view.end_y && (move_x != 0 || move_y != 0 || move_z != 0)) {
 				int offset;
 				if (pos.z <= GROUND_LAYER) {
-					offset = (GROUND_LAYER - pos.z) * TileSize;
+					offset = (GROUND_LAYER - pos.z) * TILE_SIZE;
 				} else {
-					offset = TileSize * (view.floor - pos.z);
+					offset = TILE_SIZE * (view.floor - pos.z);
 				}
 
-				int draw_x = ((pos.x * TileSize) - view.view_scroll_x) - offset;
-				int draw_y = ((pos.y * TileSize) - view.view_scroll_y) - offset;
+				int draw_x = ((pos.x * TILE_SIZE) - view.view_scroll_x) - offset;
+				int draw_y = ((pos.y * TILE_SIZE) - view.view_scroll_y) - offset;
 
 				// save performance when moving large chunks unzoomed
 				ItemVector toRender = tile->getSelectedItems(view.zoom > 3.0);
@@ -93,3 +93,4 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 		}
 	}
 }
+

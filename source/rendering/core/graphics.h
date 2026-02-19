@@ -82,12 +82,10 @@ public:
 	// This fills the item / creature adress space
 
 	// This fills the item / creature adress space
-	bool loadOTFI(const FileName& filename, wxString& error, std::vector<std::string>& warnings);
 	bool loadSpriteMetadata(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
 	bool loadSpriteData(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
 
 	friend class GameSpriteLoader;
-	friend class OtfiLoader;
 	friend class DatLoader;
 	friend class SprLoader;
 
@@ -96,10 +94,10 @@ public:
 	void addSpriteToCleanup(GameSprite* spr);
 
 	wxFileName getMetadataFileName() const {
-		return metadata_file;
+		return client_version ? client_version->getMetadataPath() : wxFileName();
 	}
 	wxFileName getSpritesFileName() const {
-		return sprites_file;
+		return client_version ? client_version->getSpritesPath() : wxFileName();
 	}
 
 	bool hasTransparency() const;
@@ -150,14 +148,10 @@ private:
 	DatFormat dat_format;
 	uint16_t item_count;
 	uint16_t creature_count;
-	bool otfi_found;
 	bool is_extended;
 	bool has_transparency;
 	bool has_frame_durations;
 	bool has_frame_groups;
-	wxFileName metadata_file;
-	wxFileName sprites_file;
-
 	TextureGarbageCollector collector;
 
 	std::unique_ptr<RenderTimer> animation_timer;
