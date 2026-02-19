@@ -201,15 +201,18 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 	int start_row = y / TILE_SIZE;
 	int end_row = (y + h - 1) / TILE_SIZE;
 
-	// Max update size for PBO safety (likely just one tile usually)
-	size_t max_tile_update = TILE_SIZE * TILE_SIZE;
-	if (stage_buffer_.size() < max_tile_update) {
-		stage_buffer_.resize(max_tile_update);
-		if (pbo_->getSize() < max_tile_update) {
-			pbo_->cleanup();
-			pbo_->initialize(max_tile_update);
-		}
-	}
+	// First Pass: Calculate total size
+	size_t total_size = 0;
+	struct UpdateRegion {
+		int r, c;
+		int int_x, int_y;
+		int update_w, update_h;
+		int layer;
+		int offset_x, offset_y;
+		size_t pbo_offset;
+	};
+	std::vector<UpdateRegion> updates;
+	updates.reserve((end_row - start_row + 1) * (end_col - start_col + 1));
 
 	for (int r = start_row; r <= end_row; ++r) {
 		for (int c = start_col; c <= end_col; ++c) {
@@ -228,39 +231,67 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 				continue;
 			}
 
-			// Fill buffer
-			int idx = 0;
-			for (int dy = 0; dy < update_h; ++dy) {
-				for (int dx = 0; dx < update_w; ++dx) {
-					const Tile* tile = map.getTile(int_x + dx, int_y + dy, floor);
-					if (tile) {
-						stage_buffer_[idx++] = tile->getMiniMapColor();
-					} else {
-						stage_buffer_[idx++] = 0;
-					}
+			UpdateRegion region;
+			region.r = r;
+			region.c = c;
+			region.int_x = int_x;
+			region.int_y = int_y;
+			region.update_w = update_w;
+			region.update_h = update_h;
+			region.layer = r * cols_ + c;
+			region.offset_x = int_x - tile_x;
+			region.offset_y = int_y - tile_y;
+			region.pbo_offset = total_size;
+			updates.push_back(region);
+
+			total_size += update_w * update_h;
+		}
+	}
+
+	if (total_size == 0) {
+		return;
+	}
+
+	if (pbo_->getSize() < total_size) {
+		pbo_->cleanup();
+		pbo_->initialize(total_size * 2); // Allocate with some headroom
+	}
+
+	// Map PBO once
+	uint8_t* ptr = static_cast<uint8_t*>(pbo_->mapWrite());
+	if (!ptr) {
+		return;
+	}
+
+	// Fill data
+	for (const auto& reg : updates) {
+		int idx = 0;
+		uint8_t* dst = ptr + reg.pbo_offset;
+
+		for (int dy = 0; dy < reg.update_h; ++dy) {
+			for (int dx = 0; dx < reg.update_w; ++dx) {
+				const Tile* tile = map.getTile(reg.int_x + dx, reg.int_y + dy, floor);
+				if (tile) {
+					dst[idx++] = tile->getMiniMapColor();
+				} else {
+					dst[idx++] = 0;
 				}
-			}
-
-			// Upload to layer
-			void* ptr = pbo_->mapWrite();
-			if (ptr) {
-				memcpy(ptr, stage_buffer_.data(), update_w * update_h);
-				pbo_->unmap();
-				pbo_->bind();
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-				int layer = r * cols_ + c;
-				int offset_x = int_x - tile_x;
-				int offset_y = int_y - tile_y;
-
-				glTextureSubImage3D(texture_id_->GetID(), 0, offset_x, offset_y, layer, update_w, update_h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0);
-
-				glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-				pbo_->unbind();
-				pbo_->advance();
 			}
 		}
 	}
+
+	pbo_->unmap();
+	pbo_->bind();
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+	// Upload
+	for (const auto& reg : updates) {
+		glTextureSubImage3D(texture_id_->GetID(), 0, reg.offset_x, reg.offset_y, reg.layer, reg.update_w, reg.update_h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, (void*)(reg.pbo_offset));
+	}
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	pbo_->unbind();
+	pbo_->advance();
 }
 
 void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, int h, float map_x, float map_y, float map_w, float map_h) {
