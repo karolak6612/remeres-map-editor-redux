@@ -20,6 +20,70 @@ static std::atomic<uint32_t> template_id_generator(0x1000000);
 constexpr int RGB_COMPONENTS = 3;
 constexpr int RGBA_COMPONENTS = 4;
 
+namespace {
+
+// Helper to process a transparency run
+// Returns true if successful, false if overrun detected (and corrected)
+bool ProcessTransparentRun(int transparent, size_t& write, int pixels_data_size, uint8_t* data, int id) {
+	// Integrity check for transparency run
+	if (write + (transparent * 4) > static_cast<size_t>(pixels_data_size)) {
+		spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
+		transparent = (pixels_data_size - write) / 4;
+	}
+
+	for (int i = 0; i < transparent && write < static_cast<size_t>(pixels_data_size); i++) {
+		data[write + 0] = 0x00; // red
+		data[write + 1] = 0x00; // green
+		data[write + 2] = 0x00; // blue
+		data[write + 3] = 0x00; // alpha
+		write += 4; // RGBA_COMPONENTS
+	}
+	return true;
+}
+
+// Helper to process a colored run
+// Returns true if successful, false if overrun detected/stopped
+bool ProcessColoredRun(int colored, size_t& read, size_t& write, const uint8_t* dump, size_t size, int pixels_data_size, uint8_t* data, bool use_alpha, int id, bool& non_zero_alpha_found, bool& non_black_pixel_found) {
+	uint8_t bpp = use_alpha ? 4 : 3;
+
+	// Integrity check for colored run
+	if (write + (colored * 4) > static_cast<size_t>(pixels_data_size)) {
+		spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
+		colored = (pixels_data_size - write) / 4;
+	}
+
+	// Integrity check for read buffer
+	if (read + (colored * bpp) > size) {
+		spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
+		return false;
+	}
+
+	for (int i = 0; i < colored && write < static_cast<size_t>(pixels_data_size); i++) {
+		uint8_t r = dump[read + 0];
+		uint8_t g = dump[read + 1];
+		uint8_t b = dump[read + 2];
+		uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
+
+		data[write + 0] = r;
+		data[write + 1] = g;
+		data[write + 2] = b;
+		data[write + 3] = a;
+
+		if (a > 0) {
+			non_zero_alpha_found = true;
+		}
+		if (r > 0 || g > 0 || b > 0) {
+			non_black_pixel_found = true;
+		}
+
+		write += 4; // RGBA_COMPONENTS
+		read += bpp;
+	}
+	return true;
+}
+
+} // namespace
+
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :
 	parent(parent),
 	outfit(outfit) {
@@ -496,7 +560,6 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
 	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = use_alpha ? 4 : 3;
 	size_t write = 0;
 	size_t read = 0;
 	bool non_zero_alpha_found = false;
@@ -505,21 +568,9 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 	// decompress pixels
 	while (read < size && write < pixels_data_size) {
 		int transparent = dump[read] | dump[read + 1] << 8;
-
-		// Integrity check for transparency run
-		if (write + (transparent * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
-			transparent = (pixels_data_size - write) / 4;
-		}
-
 		read += 2;
-		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
-		}
+
+		ProcessTransparentRun(transparent, write, pixels_data_size, data.get(), id);
 
 		if (read >= size || write >= pixels_data_size) {
 			break;
@@ -528,39 +579,8 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 		int colored = dump[read] | dump[read + 1] << 8;
 		read += 2;
 
-		// Integrity check for colored run
-		if (write + (colored * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
-			colored = (pixels_data_size - write) / 4;
-		}
-
-		// Integrity check for read buffer
-		if (read + (colored * bpp) > size) {
-			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
-			// We can't easily recover here without risking reading garbage, so stop
+		if (!ProcessColoredRun(colored, read, write, dump, size, pixels_data_size, data.get(), use_alpha, id, non_zero_alpha_found, non_black_pixel_found)) {
 			break;
-		}
-
-		for (int i = 0; i < colored && write < pixels_data_size; i++) {
-			uint8_t r = dump[read + 0];
-			uint8_t g = dump[read + 1];
-			uint8_t b = dump[read + 2];
-			uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
-
-			data[write + 0] = r;
-			data[write + 1] = g;
-			data[write + 2] = b;
-			data[write + 3] = a;
-
-			if (a > 0) {
-				non_zero_alpha_found = true;
-			}
-			if (r > 0 || g > 0 || b > 0) {
-				non_black_pixel_found = true;
-			}
-
-			write += RGBA_COMPONENTS;
-			read += bpp;
 		}
 	}
 
@@ -579,14 +599,14 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 		// This sprite is 100% invisible. This might be correct (magic fields?) but worth noting if ALL are invisible.
 		static int empty_log_count = 0;
 		if (empty_log_count++ < 10) {
-			spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, bpp, size);
+			spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, (use_alpha ? 4 : 3), size);
 		}
 	} else if (!non_black_pixel_found && non_zero_alpha_found && id > 100) {
 		// This sprite has alpha but all RGB are 0. It is a "black shadow" or "darkness".
 		// If ALL sprites look like this, we have a problem.
 		static int black_log_count = 0;
 		if (black_log_count++ < 10) {
-			spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!", id, bpp, size);
+			spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!", id, (use_alpha ? 4 : 3), size);
 		}
 	}
 
