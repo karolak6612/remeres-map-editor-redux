@@ -27,13 +27,7 @@ public:
 	}
 
 	~ScopedGLCapability() {
-		if (active_) {
-			if (was_enabled_) {
-				glEnable(capability_);
-			} else {
-				glDisable(capability_);
-			}
-		}
+		restore();
 	}
 
 	ScopedGLCapability(const ScopedGLCapability&) = delete;
@@ -47,18 +41,23 @@ public:
 
 	ScopedGLCapability& operator=(ScopedGLCapability&& other) noexcept {
 		if (this != &other) {
-			if (active_) {
-				if (was_enabled_) {
-					glEnable(capability_);
-				} else {
-					glDisable(capability_);
-				}
-			}
+			restore();
 			capability_ = other.capability_;
 			was_enabled_ = other.was_enabled_;
 			active_ = std::exchange(other.active_, false);
 		}
 		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			if (was_enabled_) {
+				glEnable(capability_);
+			} else {
+				glDisable(capability_);
+			}
+		}
 	}
 
 private:
@@ -86,10 +85,7 @@ public:
 	}
 
 	~ScopedGLBlend() {
-		if (active_) {
-			glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
-			glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
-		}
+		restore();
 	}
 
 	ScopedGLBlend(const ScopedGLBlend&) = delete;
@@ -107,10 +103,7 @@ public:
 
 	ScopedGLBlend& operator=(ScopedGLBlend&& other) noexcept {
 		if (this != &other) {
-			if (active_) {
-				glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
-				glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
-			}
+			restore();
 			prev_src_rgb_ = other.prev_src_rgb_;
 			prev_dst_rgb_ = other.prev_dst_rgb_;
 			prev_src_alpha_ = other.prev_src_alpha_;
@@ -120,6 +113,14 @@ public:
 			active_ = std::exchange(other.active_, false);
 		}
 		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
+			glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
+		}
 	}
 
 private:
@@ -160,14 +161,7 @@ public:
 	}
 
 	~ScopedGLFramebuffer() {
-		if (active_) {
-			if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
-				glBindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
-			}
-			if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
-			}
-		}
+		restore();
 	}
 
 	ScopedGLFramebuffer(const ScopedGLFramebuffer&) = delete;
@@ -182,20 +176,25 @@ public:
 
 	ScopedGLFramebuffer& operator=(ScopedGLFramebuffer&& other) noexcept {
 		if (this != &other) {
-			if (active_) {
-				if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
-					glBindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
-				}
-				if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
-					glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
-				}
-			}
+			restore();
 			target_ = other.target_;
 			prev_read_ = other.prev_read_;
 			prev_draw_ = other.prev_draw_;
 			active_ = std::exchange(other.active_, false);
 		}
 		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
+			}
+			if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
+			}
+		}
 	}
 
 private:
@@ -218,9 +217,7 @@ public:
 	}
 
 	~ScopedGLViewport() {
-		if (active_) {
-			glViewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
-		}
+		restore();
 	}
 
 	ScopedGLViewport(const ScopedGLViewport&) = delete;
@@ -228,18 +225,27 @@ public:
 
 	ScopedGLViewport(ScopedGLViewport&& other) noexcept :
 		active_(std::exchange(other.active_, false)) {
-		for (int i = 0; i < 4; ++i) prev_viewport_[i] = other.prev_viewport_[i];
+		for (int i = 0; i < 4; ++i) {
+			prev_viewport_[i] = other.prev_viewport_[i];
+		}
 	}
 
 	ScopedGLViewport& operator=(ScopedGLViewport&& other) noexcept {
 		if (this != &other) {
-			if (active_) {
-				glViewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
+			restore();
+			for (int i = 0; i < 4; ++i) {
+				prev_viewport_[i] = other.prev_viewport_[i];
 			}
-			for (int i = 0; i < 4; ++i) prev_viewport_[i] = other.prev_viewport_[i];
 			active_ = std::exchange(other.active_, false);
 		}
 		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			glViewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
+		}
 	}
 
 private:
