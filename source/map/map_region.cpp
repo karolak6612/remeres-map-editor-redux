@@ -153,10 +153,10 @@ void SpatialHashGrid::updateSortedCells() const {
 	for (const auto& pair : cells) {
 		int cx, cy;
 		getCellCoordsFromKey(pair.first, cx, cy);
-		sorted_cells_cache.push_back({ pair.first, cx, cy, pair.second.get() });
+		sorted_cells_cache.emplace_back(pair.first, cx, cy, pair.second.get());
 	}
 
-	std::sort(sorted_cells_cache.begin(), sorted_cells_cache.end(), [](const auto& a, const auto& b) {
+	std::ranges::sort(sorted_cells_cache, [](const auto& a, const auto& b) {
 		return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
 	});
 

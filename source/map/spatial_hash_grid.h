@@ -149,9 +149,7 @@ protected:
 			return;
 		}
 
-		SortedGridCell search_val;
-		search_val.cy = start_cy;
-		search_val.cx = std::numeric_limits<int>::min(); // Ensure we find the first element with cy >= start_cy
+		SortedGridCell search_val { .cx = std::numeric_limits<int>::min(), .cy = start_cy };
 
 		// Find the first cell that could potentially be in the viewport
 		auto it = std::lower_bound(sorted_cells_cache.begin(), sorted_cells_cache.end(), search_val, [](const SortedGridCell& a, const SortedGridCell& b) {
