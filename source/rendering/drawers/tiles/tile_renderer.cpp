@@ -190,6 +190,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
+	Item* top_tooltip_item = nullptr;
+	const ItemType* top_tooltip_it = nullptr;
+
 	bool as_minimap = options.show_as_minimap;
 	bool only_colors = as_minimap || options.show_only_colors;
 
@@ -222,13 +225,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
-	// Ground tooltip (one per item)
+	// Ground tooltip logic
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
-			}
+		if (tile->ground->isComplex() || ground_it->isTooltipable()) {
+			top_tooltip_item = tile->ground.get();
+			top_tooltip_it = ground_it;
 		}
 	}
 
@@ -270,13 +271,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
 
-				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
-						}
+					if (item->isComplex() || it.isTooltipable()) {
+						top_tooltip_item = item.get();
+						top_tooltip_it = &it;
 					}
 				}
 
@@ -319,6 +317,16 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		if (view.zoom < 10.0) {
 			// markers (waypoint, house exit, town temple, spawn)
 			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
+		}
+	}
+
+	// Commit topmost tooltip
+	if (top_tooltip_item && top_tooltip_it) {
+		TooltipData& data = tooltip_drawer->requestTooltipData();
+		if (FillItemTooltipData(data, top_tooltip_item, *top_tooltip_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+			if (data.hasVisibleFields()) {
+				tooltip_drawer->commitTooltip();
+			}
 		}
 	}
 }
