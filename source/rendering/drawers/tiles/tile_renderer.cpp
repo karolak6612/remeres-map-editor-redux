@@ -214,8 +214,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground && ground_it) {
-			PreloadItem(tile, tile->ground.get(), *ground_it);
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+			SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, tile->getPosition());
+			PreloadItem(tile, tile->ground.get(), *ground_it, patterns);
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), patterns, options, false, r, g, b);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -260,10 +261,27 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// Hoist house color calculation out of item loop
-			uint8_t house_r = 255, house_g = 255, house_b = 255;
+			uint8_t final_house_r = 255, final_house_g = 255, final_house_b = 255;
 			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
 			if (calculate_house_color) {
-				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
+				uint8_t hr = 255, hg = 255, hb = 255;
+				TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
+
+				// Pre-calculate the base tint
+				// Since ir, ig, ib start at 255, the tint result is just hr, hg, hb.
+				final_house_r = hr;
+				final_house_g = hg;
+				final_house_b = hb;
+
+				// Pre-calculate pulse effect
+				if (static_cast<int>(tile->getHouseID()) == current_house_id) {
+					if (options.highlight_pulse > 0.0f) {
+						float boost = options.highlight_pulse * 0.6f;
+						final_house_r = static_cast<uint8_t>(std::min(255, static_cast<int>(final_house_r + (255 - final_house_r) * boost)));
+						final_house_g = static_cast<uint8_t>(std::min(255, static_cast<int>(final_house_g + (255 - final_house_g) * boost)));
+						final_house_b = static_cast<uint8_t>(std::min(255, static_cast<int>(final_house_b + (255 - final_house_b) * boost)));
+					}
+				}
 			}
 
 			// items on tile
@@ -280,31 +298,22 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				PreloadItem(tile, item.get(), it);
+				SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, tile->getPosition());
+				PreloadItem(tile, item.get(), it, patterns);
 
 				// item sprite
 				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), patterns, options, false, r, g, b);
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
 					if (calculate_house_color) {
-						// Apply house color tint
-						ir = static_cast<uint8_t>(ir * house_r / 255);
-						ig = static_cast<uint8_t>(ig * house_g / 255);
-						ib = static_cast<uint8_t>(ib * house_b / 255);
-
-						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
-							// Pulse effect matching the tile pulse
-							if (options.highlight_pulse > 0.0f) {
-								float boost = options.highlight_pulse * 0.6f;
-								ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
-								ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
-								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
-							}
-						}
+						// Apply pre-calculated house color
+						ir = final_house_r;
+						ig = final_house_g;
+						ib = final_house_b;
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), patterns, options, false, ir, ig, ib);
 				}
 			}
 			// monster/npc on tile
@@ -323,14 +332,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 }
 
-void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it) {
+void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns& patterns) {
 	if (!item) {
 		return;
 	}
 
 	GameSprite* spr = it.sprite;
 	if (spr && !spr->isSimpleAndLoaded()) {
-		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
 }
