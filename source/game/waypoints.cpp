@@ -25,14 +25,17 @@ void Waypoints::addWaypoint(std::unique_ptr<Waypoint> wp, bool replace) {
 		return;
 	}
 	removeWaypoint(wp->name);
-	if (wp->pos != Position()) {
-		Tile* t = map.getTile(wp->pos);
+
+	Waypoint* raw_wp = wp.get();
+	if (raw_wp->pos != Position()) {
+		Tile* t = map.getTile(raw_wp->pos);
 		if (!t) {
-			t = map.createTile(wp->pos.x, wp->pos.y, wp->pos.z);
+			t = map.createTile(raw_wp->pos.x, raw_wp->pos.y, raw_wp->pos.z);
 		}
 		t->getLocation()->increaseWaypointCount();
+		position_index.emplace(raw_wp->pos, raw_wp);
 	}
-	waypoints.insert(std::make_pair(as_lower_str(wp->name), std::move(wp)));
+	waypoints.insert(std::make_pair(as_lower_str(raw_wp->name), std::move(wp)));
 }
 
 Waypoint* Waypoints::getWaypoint(std::string name) {
@@ -48,12 +51,9 @@ Waypoint* Waypoints::getWaypoint(TileLocation* location) {
 	if (!location) {
 		return nullptr;
 	}
-	// TODO find waypoint by position hash.
-	for (WaypointMap::iterator it = waypoints.begin(); it != waypoints.end(); it++) {
-		Waypoint* waypoint = it->second.get();
-		if (waypoint && waypoint->pos == location->position) {
-			return waypoint;
-		}
+	auto it = position_index.find(location->getPosition());
+	if (it != position_index.end()) {
+		return it->second;
 	}
 	return nullptr;
 }
@@ -64,5 +64,57 @@ void Waypoints::removeWaypoint(std::string name) {
 	if (iter == waypoints.end()) {
 		return;
 	}
+
+	Waypoint* wp = iter->second.get();
+	if (wp->pos != Position()) {
+		TileLocation* loc = map.getTileL(wp->pos);
+		if (loc) {
+			loc->decreaseWaypointCount();
+		}
+
+		auto range = position_index.equal_range(wp->pos);
+		for (auto it = range.first; it != range.second; ++it) {
+			if (it->second == wp) {
+				position_index.erase(it);
+				break;
+			}
+		}
+	}
+
 	waypoints.erase(iter);
+}
+
+void Waypoints::updateWaypointPosition(Waypoint* wp, const Position& newPos) {
+	if (!wp || wp->pos == newPos) {
+		return;
+	}
+
+	// Remove from old position
+	if (wp->pos != Position()) {
+		TileLocation* oldLoc = map.getTileL(wp->pos);
+		if (oldLoc) {
+			oldLoc->decreaseWaypointCount();
+		}
+
+		auto range = position_index.equal_range(wp->pos);
+		for (auto it = range.first; it != range.second; ++it) {
+			if (it->second == wp) {
+				position_index.erase(it);
+				break;
+			}
+		}
+	}
+
+	// Update position
+	wp->pos = newPos;
+
+	// Add to new position
+	if (wp->pos != Position()) {
+		Tile* t = map.getTile(wp->pos);
+		if (!t) {
+			t = map.createTile(wp->pos.x, wp->pos.y, wp->pos.z);
+		}
+		t->getLocation()->increaseWaypointCount();
+		position_index.emplace(wp->pos, wp);
+	}
 }

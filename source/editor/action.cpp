@@ -226,22 +226,8 @@ void Action::commit(DirtyList* dirty_list) {
 				Waypoint* wp = editor.map.waypoints.getWaypoint(p.name);
 
 				if (wp) {
-					// Change the tiles
-					TileLocation* oldtile = editor.map.getTileL(wp->pos);
-					TileLocation* newtile = editor.map.getTileL(p.pos);
-
-					// Only need to remove from old if it actually exists
-					if (p.pos != Position()) {
-						if (oldtile && oldtile->getWaypointCount() > 0) {
-							oldtile->decreaseWaypointCount();
-						}
-					}
-
-					newtile->increaseWaypointCount();
-
-					// Update shit
 					Position oldpos = wp->pos;
-					wp->pos = p.pos;
+					editor.map.waypoints.updateWaypointPosition(wp, p.pos);
 					p.pos = oldpos;
 				}
 				break;
@@ -354,24 +340,8 @@ void Action::undo(DirtyList* dirty_list) {
 				Waypoint* wp = editor.map.waypoints.getWaypoint(p.name);
 
 				if (wp) {
-					// Change the tiles
-					TileLocation* oldtile = editor.map.getTileL(wp->pos);
-					TileLocation* newtile = editor.map.getTileL(p.pos);
-
-					// Only need to remove from old if it actually exists
-					if (p.pos != Position()) {
-						if (oldtile && oldtile->getWaypointCount() > 0) {
-							oldtile->decreaseWaypointCount();
-						}
-					}
-
-					if (newtile) {
-						newtile->increaseWaypointCount();
-					}
-
-					// Update shit
 					Position oldpos = wp->pos;
-					wp->pos = p.pos;
+					editor.map.waypoints.updateWaypointPosition(wp, p.pos);
 					p.pos = oldpos;
 				}
 				break;

@@ -19,6 +19,8 @@
 #define RME_WAYPOINTS_H_
 
 #include "map/position.h"
+#include <map>
+#include <memory>
 
 class Waypoint {
 public:
@@ -43,8 +45,10 @@ public:
 	Waypoint* getWaypoint(std::string name);
 	Waypoint* getWaypoint(TileLocation* location);
 	void removeWaypoint(std::string name);
+	void updateWaypointPosition(Waypoint* wp, const Position& newPos);
 
 	WaypointMap waypoints;
+	std::multimap<Position, Waypoint*> position_index;
 
 	WaypointMap::iterator begin() {
 		return waypoints.begin();
