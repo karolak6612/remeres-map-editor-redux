@@ -40,7 +40,7 @@ Map::Map() :
 	// Earliest version possible
 	// Caller is responsible for converting us to proper version
 	mapVersion.otbm = MAP_OTBM_1;
-	mapVersion.client = CLIENT_VERSION_NONE;
+	mapVersion.client = OTB_VERSION_NONE;
 }
 
 void Map::initializeEmpty() {

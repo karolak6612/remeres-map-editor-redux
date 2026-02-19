@@ -1,4 +1,6 @@
 #include "ui/managers/recent_files_manager.h"
+#include <toml++/toml.h>
+#include "app/settings.h"
 
 RecentFilesManager::RecentFilesManager() :
 	recentFiles(10) {
@@ -7,12 +9,36 @@ RecentFilesManager::RecentFilesManager() :
 RecentFilesManager::~RecentFilesManager() {
 }
 
-void RecentFilesManager::Load(wxConfigBase* config) {
-	recentFiles.Load(*config);
+void RecentFilesManager::Load() {
+	toml::table& table = g_settings.getTable();
+	if (auto editor = table["editor"].as_table()) {
+		if (auto files = (*editor)["recent_files"].as_array()) {
+			// Add in reverse order to preserve history ranking
+			for (size_t i = files->size(); i > 0; --i) {
+				auto& node = (*files)[i - 1];
+				if (auto val = node.as_string()) {
+					recentFiles.AddFileToHistory(wxstr(val->get()));
+				}
+			}
+		}
+	}
 }
 
-void RecentFilesManager::Save(wxConfigBase* config) {
-	recentFiles.Save(*config);
+void RecentFilesManager::Save() {
+	toml::table& table = g_settings.getTable();
+	toml::table* editor = table.get_as<toml::table>("editor");
+	if (!editor) {
+		table.insert_or_assign("editor", toml::table {});
+		editor = table.get_as<toml::table>("editor");
+	}
+
+	toml::array files_array;
+	for (size_t i = 0; i < recentFiles.GetCount(); ++i) {
+		files_array.push_back(recentFiles.GetHistoryFile(i).ToStdString());
+	}
+
+	editor->insert_or_assign("recent_files", std::move(files_array));
+	g_settings.save();
 }
 
 void RecentFilesManager::AddFile(const FileName& file) {

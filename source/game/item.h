@@ -100,7 +100,7 @@ public:
 	virtual std::unique_ptr<Item> deepCopy() const;
 
 	// Get memory footprint size
-	uint32_t memsize() const;
+	virtual uint32_t memsize() const;
 	virtual class Container* asContainer() {
 		return nullptr;
 	}

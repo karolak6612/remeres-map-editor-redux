@@ -15,7 +15,8 @@
     "boost-asio",
     "boost-thread",
     "nanovg",
-    "spdlog"
+    "spdlog",
+    "tomlplusplus"
   ],
-  "builtin-baseline": "6bc1613f18f850c60d906575296f982c6dfcc9e0"
+  "builtin-baseline": "1940ee77e81573713c0d364c42f5990172198be1"
 }

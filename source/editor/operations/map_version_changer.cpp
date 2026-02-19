@@ -68,8 +68,12 @@ bool MapVersionChanger::changeMapVersion(wxWindow* parent, Editor& editor, MapVe
 			map.convert(new_ver, true);
 
 			// Load the new version
-			if (!g_version.LoadVersion(new_ver.client, error, warnings)) {
+			ClientVersion* target = ClientVersion::getBestMatch(new_ver.client);
+			if (!target || !g_version.LoadVersion(target->getID(), error, warnings)) {
 				DialogUtil::ListDialog(parent, "Warnings", warnings);
+				if (error.empty() && !target) {
+					error = "No compatible client version found for this protocol.";
+				}
 				DialogUtil::PopupDialog(parent, "Map Loader Error", error, wxOK);
 				DialogUtil::PopupDialog(parent, "Conversion Error", "Could not convert map. The map will now be closed.", wxOK);
 
@@ -93,8 +97,12 @@ bool MapVersionChanger::changeMapVersion(wxWindow* parent, Editor& editor, MapVe
 			map.cleanInvalidTiles(true);
 		} else {
 			UnnamedRenderingLock();
-			if (!g_version.LoadVersion(new_ver.client, error, warnings)) {
+			ClientVersion* target = ClientVersion::getBestMatch(new_ver.client);
+			if (!target || !g_version.LoadVersion(target->getID(), error, warnings)) {
 				DialogUtil::ListDialog(parent, "Warnings", warnings);
+				if (error.empty() && !target) {
+					error = "No compatible client version found for this protocol.";
+				}
 				DialogUtil::PopupDialog(parent, "Map Loader Error", error, wxOK);
 				DialogUtil::PopupDialog(parent, "Conversion Error", "Could not convert map. The map will now be closed.", wxOK);
 

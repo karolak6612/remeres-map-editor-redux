@@ -15,6 +15,9 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include <toml++/toml.h>
+#include <charconv>
+#include <string>
 #include "app/main.h"
 
 #include "app/settings.h"
@@ -25,39 +28,72 @@
 #include "util/file_system.h"
 #include "ui/dialog_util.h"
 #include "app/client_version.h"
-#include "map/otml.h"
+
 #include <wx/dir.h>
+#include <wx/filename.h>
 
 // Static methods to load/save
 
-ClientVersion::VersionMap ClientVersion::client_versions;
+ClientVersion::VersionList ClientVersion::client_versions;
 ClientVersion* ClientVersion::latest_version = nullptr;
-ClientVersion::OtbMap ClientVersion::otb_versions;
+std::string ClientVersion::loaded_file_path;
 
 void ClientVersion::loadVersions() {
 	// Clean up old stuff
 	ClientVersion::unloadVersions();
 
-	// Locate the clients.xml file
+	loadVersionsFromTOML("clients.toml");
+
+	// Assign a default if there isn't one.
+	if (!latest_version && !client_versions.empty()) {
+		latest_version = client_versions.front().get();
+	}
+
+	// Load user-specific paths from config.toml
+	toml::table& table = g_settings.getTable();
+	if (auto clients = table["clients"].as_array()) {
+		for (auto&& node : *clients) {
+			if (auto client = node.as_table()) {
+				std::string name = (*client)["name"].value_or("");
+				if (name.empty()) {
+					continue;
+				}
+
+				ClientVersion* version = get(name);
+				if (version) {
+					// ONLY override the user-specific path
+					version->setClientPath(wxstr((*client)["clientPath"].value_or("")));
+
+					bool isDefault = (*client)["default"].value_or(false);
+					if (isDefault) {
+						latest_version = version;
+					}
+				}
+			}
+		}
+	}
+}
+
+void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 	wxFileName file_to_load;
 
-	wxFileName exec_dir_client_xml;
-	exec_dir_client_xml.Assign(FileSystem::GetExecDirectory());
-	exec_dir_client_xml.SetFullName("clients.xml");
+	wxFileName exec_dir_client_toml;
+	exec_dir_client_toml.Assign(FileSystem::GetExecDirectory());
+	exec_dir_client_toml.SetFullName(configName);
 
-	wxFileName data_dir_client_xml;
-	data_dir_client_xml.Assign(FileSystem::GetDataDirectory());
-	data_dir_client_xml.SetFullName("clients.xml");
+	wxFileName data_dir_client_toml;
+	data_dir_client_toml.Assign(FileSystem::GetDataDirectory());
+	data_dir_client_toml.SetFullName(configName);
 
-	wxFileName work_dir_client_xml;
-	work_dir_client_xml.Assign(FileSystem::GetFoundDataDirectory());
-	work_dir_client_xml.SetFullName("clients.xml");
+	wxFileName work_dir_client_toml;
+	work_dir_client_toml.Assign(FileSystem::GetFoundDataDirectory());
+	work_dir_client_toml.SetFullName(configName);
 
-	file_to_load = exec_dir_client_xml;
+	file_to_load = data_dir_client_toml; // Primary location
 	if (!file_to_load.FileExists()) {
-		file_to_load = data_dir_client_xml;
+		file_to_load = exec_dir_client_toml;
 		if (!file_to_load.FileExists()) {
-			file_to_load = work_dir_client_xml;
+			file_to_load = work_dir_client_toml;
 			if (!file_to_load.FileExists()) {
 				file_to_load.Clear();
 			}
@@ -65,299 +101,275 @@ void ClientVersion::loadVersions() {
 	}
 
 	if (!file_to_load.FileExists()) {
-		wxLogError(wxString() + "Could not load clients.xml, editor will NOT be able to load any client data files.\n" + "Checked paths:\n" + exec_dir_client_xml.GetFullPath() + "\n" + data_dir_client_xml.GetFullPath() + "\n" + work_dir_client_xml.GetFullPath());
 		return;
 	}
 
-	// Parse the file
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(file_to_load.GetFullPath().mb_str());
-	if (result) {
-		pugi::xml_node node = doc.child("client_config");
-		if (!node) {
-			wxLogError("Could not load clients.xml (syntax error), editor will NOT be able to load any client data files.");
-			return;
-		}
+	loaded_file_path = file_to_load.GetFullPath().ToStdString();
 
-		for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
-			const std::string& childName = as_lower_str(childNode.name());
-			if (childName == "otbs") {
-				for (pugi::xml_node otbNode = childNode.first_child(); otbNode; otbNode = otbNode.next_sibling()) {
-					if (as_lower_str(otbNode.name()) == "otb") {
-						loadOTBInfo(otbNode);
-					}
-				}
-			} else if (childName == "clients") {
-				for (pugi::xml_node versionNode = childNode.first_child(); versionNode; versionNode = versionNode.next_sibling()) {
-					if (as_lower_str(versionNode.name()) == "client") {
-						loadVersion(versionNode);
-					}
-				}
-			}
-		}
+	toml::table config;
+	try {
+		config = toml::parse_file(file_to_load.GetFullPath().ToStdString());
+	} catch (const toml::parse_error& err) {
+		wxLogError("Parsing failed for %s: %s", configName, err.description());
+		return;
+	}
 
-		for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
-			if (as_lower_str(childNode.name()) != "clients") {
+	if (config["clients"].as_array()) {
+		auto& clients = *config["clients"].as_array();
+		for (auto&& elem : clients) {
+			if (!elem.is_table()) {
 				continue;
 			}
+			toml::table& client = *elem.as_table();
 
-			for (pugi::xml_node versionNode = childNode.first_child(); versionNode; versionNode = versionNode.next_sibling()) {
-				if (as_lower_str(versionNode.name()) == "client") {
-					loadVersionExtensions(versionNode);
+			int version = client["version"].value_or(0);
+			std::string name = client["name"].value_or("");
+
+			// OTB Info
+			int otbId = client["otbId"].value_or(0);
+			int otbMajor = client["otbMajor"].value_or(0);
+
+			OtbVersion otb;
+			otb.name = name;
+			otb.id = static_cast<OtbVersionID>(otbId);
+			otb.format_version = static_cast<OtbFormatVersion>(otbMajor);
+
+			// Data Directory
+			std::string dataDirectory = client["dataDirectory"].value_or("");
+			std::unique_ptr<ClientVersion> cv = std::make_unique<ClientVersion>(otb, name, wxstr(dataDirectory));
+
+			ClientVersion* cv_ptr = cv.get();
+			cv_ptr->version = version;
+			cv_ptr->description = client["description"].value_or("");
+			cv_ptr->config_type = client["configType"].value_or("");
+
+			// OTBM Versions
+			cv_ptr->preferred_map_version = MAP_OTBM_UNKNOWN;
+			if (client["otbmVersions"].as_array()) {
+				auto& otbmVers = *client["otbmVersions"].as_array();
+				for (auto&& v : otbmVers) {
+					int ver = v.value_or(-1);
+					if (ver >= 1 && ver <= 4) {
+						int enumVer = ver - 1;
+						cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
+						if (cv_ptr->preferred_map_version == MAP_OTBM_UNKNOWN) {
+							cv_ptr->preferred_map_version = static_cast<MapVersionID>(enumVer);
+						}
+					}
 				}
 			}
-		}
-	}
 
-	// Assign a default if there isn't one.
-	if (!latest_version && !client_versions.empty()) {
-		latest_version = client_versions.begin()->second.get();
-	}
+			// Data / Signatures - Robust parsing
+			ClientData client_data;
+			client_data.datSignature = 0;
+			client_data.sprSignature = 0;
 
-	// Load the data directory info
-	try {
-		std::string jsonStr = g_settings.getString(Config::ASSETS_DATA_DIRS);
-		if (!jsonStr.empty()) {
-			auto vers_array = nlohmann::json::parse(jsonStr);
-			for (const auto& ver_obj : vers_array) {
-				ClientVersion* version = get(ver_obj["id"].get<std::string>());
-				if (version == nullptr) {
-					continue;
+			auto parseHex = [](const toml::node_view<toml::node>& node) -> uint32_t {
+				uint32_t val = 0;
+				if (node.is_string()) {
+					std::string s = node.as_string()->get();
+					std::from_chars(s.data(), s.data() + s.size(), val, 16);
+				} else if (node.is_integer()) {
+					val = (uint32_t)node.as_integer()->get();
 				}
-				version->setClientPath(wxstr(ver_obj["path"].get<std::string>()));
+				return val;
+			};
+
+			client_data.datSignature = parseHex(client["datSignature"]);
+			client_data.sprSignature = parseHex(client["sprSignature"]);
+			client_data.datFormat = getDatFormatForVersion(version);
+
+			cv_ptr->metadata_file = client["metadataFile"].value_or("Tibia.dat");
+			cv_ptr->sprites_file = client["spritesFile"].value_or("Tibia.spr");
+
+			cv_ptr->is_transparent = client["transparency"].value_or(version >= 1010);
+			cv_ptr->is_extended = client["extended"].value_or(version >= 860);
+			cv_ptr->has_frame_durations = client["frameDurations"].value_or(version >= 1050);
+			cv_ptr->has_frame_groups = client["frameGroups"].value_or(version >= 1057);
+
+			if (!cv_ptr->data_versions.empty()) {
+				cv_ptr->data_versions[0] = client_data;
+			} else {
+				cv_ptr->data_versions.push_back(client_data);
 			}
+			cv_ptr->visible = true;
+
+			bool isDefault = client["default"].value_or(false);
+			if (isDefault) {
+				latest_version = cv_ptr;
+			}
+
+			client_versions.push_back(std::move(cv));
 		}
-	} catch (const nlohmann::json::exception&) {
-		// pass
 	}
 }
 
 void ClientVersion::unloadVersions() {
 	client_versions.clear();
 	latest_version = nullptr;
-	otb_versions.clear();
 }
 
-void ClientVersion::loadOTBInfo(pugi::xml_node otbNode) {
-	if (as_lower_str(otbNode.name()) != "otb") {
-		return;
-	}
-
-	pugi::xml_attribute attribute;
-	if (!(attribute = otbNode.attribute("client"))) {
-		wxLogError("Node 'otb' must contain 'client' tag.");
-		return;
-	}
-
-	OtbVersion otb = { "", OTB_VERSION_3, CLIENT_VERSION_NONE };
-	otb.name = attribute.as_string();
-	if (!(attribute = otbNode.attribute("id"))) {
-		wxLogError("Node 'otb' must contain 'id' tag.");
-		return;
-	}
-
-	otb.id = static_cast<ClientVersionID>(attribute.as_int());
-	if (!(attribute = otbNode.attribute("version"))) {
-		wxLogError("Node 'otb' must contain 'version' tag.");
-		return;
-	}
-
-	OtbFormatVersion versionId = static_cast<OtbFormatVersion>(attribute.as_uint());
-	if (versionId < OTB_VERSION_1 || versionId > OTB_VERSION_3) {
-		wxLogError("Node 'otb' unrecognized format version (version 1..3 supported).");
-		return;
-	}
-
-	otb.format_version = versionId;
-	otb_versions[otb.name] = otb;
+void ClientVersion::addVersion(std::unique_ptr<ClientVersion> version) {
+	client_versions.push_back(std::move(version));
 }
 
-void ClientVersion::loadVersion(pugi::xml_node versionNode) {
-	pugi::xml_attribute attribute;
-	if (!(attribute = versionNode.attribute("name"))) {
-		wxLogError("Node 'client' must contain 'name', 'data_directory' and 'otb' tags.");
-		return;
-	}
-
-	const std::string& versionName = attribute.as_string();
-	if (!(attribute = versionNode.attribute("data_directory"))) {
-		wxLogError("Node 'client' must contain 'name', 'data_directory' and 'otb' tags.");
-		return;
-	}
-
-	const std::string& dataPath = attribute.as_string();
-	if (!(attribute = versionNode.attribute("otb"))) {
-		wxLogError("Node 'client' must contain 'name', 'data_directory' and 'otb' tags.");
-		return;
-	}
-
-	const std::string& otbVersionName = attribute.as_string();
-	if (otb_versions.find(otbVersionName) == otb_versions.end()) {
-		wxLogError("Node 'client' 'otb' tag is invalid (couldn't find this otb version).");
-		return;
-	}
-
-	std::unique_ptr<ClientVersion> version = std::unique_ptr<ClientVersion>(newd ClientVersion(otb_versions[otbVersionName], versionName, wxstr(dataPath)));
-
-	bool should_be_default = versionNode.attribute("default").as_bool();
-	version->visible = versionNode.attribute("visible").as_bool();
-
-	for (pugi::xml_node childNode = versionNode.first_child(); childNode; childNode = childNode.next_sibling()) {
-		const std::string& childName = as_lower_str(childNode.name());
-		if (childName == "otbm") {
-			if (!(attribute = childNode.attribute("version"))) {
-				wxLogError("Node 'otbm' missing version.");
-				continue;
-			}
-
-			int32_t otbmVersion = attribute.as_int() - 1;
-			if (otbmVersion < MAP_OTBM_1 || otbmVersion > MAP_OTBM_4) {
-				wxLogError("Node 'otbm' unsupported version.");
-				continue;
-			}
-
-			if (childNode.attribute("preffered").as_bool() || version->preferred_map_version == MAP_OTBM_UNKNOWN) {
-				version->preferred_map_version = static_cast<MapVersionID>(otbmVersion);
-			}
-			version->map_versions_supported.push_back(version->preferred_map_version);
-		} else if (childName == "fucked_up_charges") {
-			version->usesFuckedUpCharges = true;
-		} else if (childName == "data") {
-
-			if (!(attribute = childNode.attribute("format"))) {
-				wxLogError("Node 'data' does not have 'format' tag.");
-				continue;
-			}
-
-			const std::string& format = attribute.as_string();
-			ClientData client_data = { DAT_FORMAT_74, 0, 0 };
-			if (format == "7.4") {
-				client_data.datFormat = DAT_FORMAT_74;
-			} else if (format == "7.55") {
-				client_data.datFormat = DAT_FORMAT_755;
-			} else if (format == "7.8") {
-				client_data.datFormat = DAT_FORMAT_78;
-			} else if (format == "8.6") {
-				client_data.datFormat = DAT_FORMAT_86;
-			} else if (format == "9.6") {
-				client_data.datFormat = DAT_FORMAT_96;
-			} else if (format == "10.10") {
-				client_data.datFormat = DAT_FORMAT_1010;
-			} else if (format == "10.50") {
-				client_data.datFormat = DAT_FORMAT_1050;
-			} else if (format == "10.57") {
-				client_data.datFormat = DAT_FORMAT_1057;
-			} else {
-				wxLogError("Node 'data' 'format' is invalid (7.4, 7.55, 7.8, 8.6, 9.6, 10.10, 10.50, 10.57 are supported)");
-				continue;
-			}
-
-			if (!(attribute = childNode.attribute("dat")) || !wxString(attribute.as_string(), wxConvUTF8).ToULong((unsigned long*)&client_data.datSignature, 16)) {
-				wxLogError("Node 'data' 'dat' tag is not hex-formatted.");
-				continue;
-			}
-
-			if (!(attribute = childNode.attribute("spr")) || !wxString(attribute.as_string(), wxConvUTF8).ToULong((unsigned long*)&client_data.sprSignature, 16)) {
-				wxLogError("Node 'data' 'spr' tag is not hex-formatted.");
-				continue;
-			}
-
-			version->data_versions.push_back(client_data);
-		}
-	}
-
-	if (client_versions[version->getID()]) {
-		wxLogError("Duplicate version id %i, discarding version '%s'.", version->getID(), version->name);
-		return;
-	}
-
-	if (should_be_default) {
-		latest_version = version.get();
-	}
-	client_versions[version->getID()] = std::move(version);
+void ClientVersion::removeVersion(const ClientVersionID& id) {
+	std::erase_if(client_versions, [&](const auto& cv) {
+		return cv->getName() == id;
+	});
 }
 
-void ClientVersion::loadVersionExtensions(pugi::xml_node versionNode) {
-	pugi::xml_attribute attribute;
-	if (!(attribute = versionNode.attribute("name"))) {
-		// Error has already been displayed earlier, no need to show another error about the same thing
-		return;
+DatFormat ClientVersion::getDatFormatForVersion(int version) {
+	// Using a map makes this more data-driven and easier to maintain.
+	static const std::map<int, DatFormat, std::greater<int>> version_to_format = {
+		{ 1057, DAT_FORMAT_1057 },
+		{ 1050, DAT_FORMAT_1050 },
+		{ 1010, DAT_FORMAT_1010 },
+		{ 960, DAT_FORMAT_96 },
+		{ 860, DAT_FORMAT_86 },
+		{ 780, DAT_FORMAT_78 },
+		{ 750, DAT_FORMAT_755 },
+		{ 710, DAT_FORMAT_74 },
+	};
+
+	auto it = version_to_format.lower_bound(version);
+	if (it != version_to_format.end()) {
+		return it->second;
 	}
 
-	ClientVersion* version = get(attribute.as_string());
-	if (!version) {
-		// Same rationale as above
-		return;
-	}
-
-	for (pugi::xml_node childNode = versionNode.first_child(); childNode; childNode = childNode.next_sibling()) {
-		if (as_lower_str(childNode.name()) != "extensions") {
-			continue;
-		}
-
-		const std::string& from = childNode.attribute("from").as_string();
-		const std::string& to = childNode.attribute("to").as_string();
-
-		ClientVersion* fromVersion = get(from);
-		ClientVersion* toVersion = get(to);
-
-		if (!fromVersion && !toVersion) {
-			wxLogError("Unknown client extension data.");
-			continue;
-		}
-
-		if (!fromVersion) {
-			fromVersion = client_versions.begin()->second.get();
-		}
-
-		if (!toVersion) {
-			toVersion = client_versions.rbegin()->second.get();
-		}
-
-		for (const auto& versionEntry : client_versions) {
-			ClientVersion* version = versionEntry.second.get();
-			if (version->getID() >= fromVersion->getID() && version->getID() <= toVersion->getID()) {
-				version->extension_versions.push_back(version);
-			}
-		}
-
-		std::sort(version->extension_versions.begin(), version->extension_versions.end(), VersionComparisonPredicate);
-	}
+	return DAT_FORMAT_UNKNOWN;
 }
 
-void ClientVersion::saveVersions() {
-	nlohmann::json vers_array = nlohmann::json::array();
+bool ClientVersion::isDefaultPath() const {
+	wxFileName clientPath = getClientPath();
+	wxFileName dataPath = getDataPath();
 
-	for (const auto& [id, version] : client_versions) {
-		vers_array.push_back({ { "id", version->getName() }, { "path", nstr(version->getClientPath().GetFullPath()) } });
+	// Normalize both to ensure matching comparison and clean strings
+	clientPath.Normalize();
+	dataPath.Normalize();
+
+	return clientPath.GetFullPath() == dataPath.GetFullPath();
+}
+
+bool ClientVersion::saveVersions() {
+	// 1. Save technical database to data/clients.toml
+	toml::table db_table;
+	toml::array db_clients_array;
+
+	// 2. Save user-specific config to config.toml (g_settings)
+	toml::array config_clients_array;
+
+	for (const auto& version : client_versions) {
+		// Technical database object
+		toml::table db_obj;
+		db_obj.insert_or_assign("name", version->name);
+		db_obj.insert_or_assign("version", (int)version->version);
+		db_obj.insert_or_assign("otbId", (int)version->otb.id);
+		db_obj.insert_or_assign("otbMajor", (int)version->otb.format_version);
+		db_obj.insert_or_assign("description", version->description);
+		db_obj.insert_or_assign("configType", version->config_type);
+		db_obj.insert_or_assign("metadataFile", version->metadata_file);
+		db_obj.insert_or_assign("spritesFile", version->sprites_file);
+		db_obj.insert_or_assign("transparency", version->is_transparent);
+		db_obj.insert_or_assign("extended", version->is_extended);
+		db_obj.insert_or_assign("frameDurations", version->has_frame_durations);
+		db_obj.insert_or_assign("frameGroups", version->has_frame_groups);
+		db_obj.insert_or_assign("dataDirectory", nstr(version->data_path));
+
+		if (!version->data_versions.empty()) {
+			db_obj.insert_or_assign("datSignature", fmt::format("{:X}", version->data_versions[0].datSignature));
+			db_obj.insert_or_assign("sprSignature", fmt::format("{:X}", version->data_versions[0].sprSignature));
+		}
+
+		toml::array otbmVers;
+		for (auto v : version->map_versions_supported) {
+			otbmVers.push_back((int)v + 1);
+		}
+		db_obj.insert_or_assign("otbmVersions", std::move(otbmVers));
+		// (Moved to config_obj below)
+		db_clients_array.push_back(std::move(db_obj));
+
+		// User config object (ONLY path)
+		toml::table config_obj;
+		config_obj.insert_or_assign("name", version->name);
+		wxFileName cp = version->getClientPath();
+		if (cp.IsOk() && !cp.GetFullPath().IsEmpty()) {
+			cp.Normalize();
+			config_obj.insert_or_assign("clientPath", nstr(cp.GetFullPath()));
+		} else {
+			config_obj.insert_or_assign("clientPath", "");
+		}
+		config_obj.insert_or_assign("default", version.get() == latest_version);
+		config_clients_array.push_back(std::move(config_obj));
 	}
-	g_settings.setString(Config::ASSETS_DATA_DIRS, vers_array.dump());
+
+	// Save Database
+	db_table.insert_or_assign("clients", std::move(db_clients_array));
+
+	wxFileName db_file;
+	if (!loaded_file_path.empty()) {
+		db_file.Assign(loaded_file_path);
+	} else {
+		db_file.Assign(FileSystem::GetDataDirectory(), "clients.toml");
+	}
+
+	if (!db_file.DirExists()) {
+		if (!db_file.Mkdir(0755, wxPATH_MKDIR_FULL)) {
+			wxLogError("Failed to create directory for clients.toml: %s", db_file.GetPath());
+		}
+	}
+
+	std::ofstream db_stream(db_file.GetFullPath().ToStdString());
+	if (!db_stream.is_open()) {
+		wxLogError("Failed to open clients.toml for writing: %s", db_file.GetFullPath());
+		return false;
+	}
+	db_stream << db_table;
+	db_stream.close();
+
+	// Save User Config
+	g_settings.getTable().insert_or_assign("clients", std::move(config_clients_array));
+	g_settings.save();
+	return true;
 }
 
 // Client version class
 
 ClientVersion::ClientVersion(OtbVersion otb, std::string versionName, wxString path) :
 	otb(otb),
+	version(0),
 	name(versionName),
 	visible(false),
 	is_transparent(false),
+	is_extended(false),
+	has_frame_durations(false),
+	has_frame_groups(false),
 	preferred_map_version(MAP_OTBM_UNKNOWN),
 	data_path(path) {
 	////
+	// Default transparency check (can be updated later or in load)
+	data_versions.push_back(ClientData());
 }
 
-ClientVersion* ClientVersion::get(ClientVersionID id) {
-	VersionMap::iterator i = client_versions.find(id);
-	if (i == client_versions.end()) {
-		return nullptr;
+void ClientVersion::setVersion(uint32_t v) {
+	version = v;
+}
+
+ClientVersion* ClientVersion::get(const ClientVersionID& id) {
+	for (const auto& cv : client_versions) {
+		if (cv->name == id) {
+			return cv.get();
+		}
 	}
-	return i->second.get();
+	return nullptr;
 }
 
-ClientVersion* ClientVersion::get(std::string id) {
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->getName() == id) {
-			return i->second.get();
+ClientVersion* ClientVersion::getBestMatch(OtbVersionID id) {
+	// Try to find a default one first
+	for (const auto& cv : client_versions) {
+		if (cv->otb.id == id) {
+			// We could check for a 'default' flag here if we wanted to be more precise
+			return cv.get();
 		}
 	}
 	return nullptr;
@@ -365,17 +377,17 @@ ClientVersion* ClientVersion::get(std::string id) {
 
 ClientVersionList ClientVersion::getAll() {
 	ClientVersionList l;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		l.push_back(i->second.get());
+	for (const auto& cv : client_versions) {
+		l.push_back(cv.get());
 	}
 	return l;
 }
 
 ClientVersionList ClientVersion::getAllVisible() {
 	ClientVersionList l;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->isVisible()) {
-			l.push_back(i->second.get());
+	for (const auto& cv : client_versions) {
+		if (cv->isVisible()) {
+			l.push_back(cv.get());
 		}
 	}
 	return l;
@@ -383,12 +395,10 @@ ClientVersionList ClientVersion::getAllVisible() {
 
 ClientVersionList ClientVersion::getAllForOTBMVersion(MapVersionID id) {
 	ClientVersionList list;
-	for (VersionMap::iterator i = client_versions.begin(); i != client_versions.end(); ++i) {
-		if (i->second->isVisible()) {
-			for (std::vector<MapVersionID>::iterator v = i->second->map_versions_supported.begin(); v != i->second->map_versions_supported.end(); ++v) {
-				if (*v == id) {
-					list.push_back(i->second.get());
-				}
+	for (const auto& cv : client_versions) {
+		if (cv->isVisible()) {
+			if (std::ranges::find(cv->map_versions_supported, id) != cv->map_versions_supported.end()) {
+				list.push_back(cv.get());
 			}
 		}
 	}
@@ -419,41 +429,18 @@ bool ClientVersion::hasValidPaths() {
 	}
 
 	wxDir dir(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
-	wxString otfi_file;
 
-	metadata_path = wxFileName(client_path.GetFullPath(), wxString(ASSETS_NAME).Lower() + ".dat");
-	sprites_path = wxFileName(client_path.GetFullPath(), wxString(ASSETS_NAME).Lower() + ".spr");
-	if (!metadata_path.FileExists()) {
+	// OTFI loading removed (deprecated)
+	// Metadata and sprites paths are now set in loadVersionsFromTOML or defaulted.
+	// We just verify they exist here.
+	metadata_path = wxFileName(client_path.GetFullPath(), wxString(metadata_file));
+	sprites_path = wxFileName(client_path.GetFullPath(), wxString(sprites_file));
+
+	if (!metadata_path.FileExists() || !sprites_path.FileExists()) {
+		// Fallback to "Tibia.dat" / "Tibia.spr" if the configured files don't exist
+		// This maintains some backward compatibility if the toml config is slightly off but files are standard
 		metadata_path = wxFileName(client_path.GetFullPath(), wxString(ASSETS_NAME) + ".dat");
 		sprites_path = wxFileName(client_path.GetFullPath(), wxString(ASSETS_NAME) + ".spr");
-	}
-
-	if (dir.GetFirst(&otfi_file, "*.otfi", wxDIR_FILES)) {
-		wxFileName otfi(client_path.GetFullPath(), otfi_file);
-		OTMLDocumentPtr doc = OTMLDocument::parse(otfi.GetFullPath().ToStdString());
-		if (doc->size() != 0 && doc->hasChildAt("DatSpr")) {
-			OTMLNodePtr node = doc->get("DatSpr");
-			std::string metadata = node->valueAt<std::string>("metadata-file", std::string(ASSETS_NAME) + ".dat");
-			std::string sprites = node->valueAt<std::string>("sprites-file", std::string(ASSETS_NAME) + ".spr");
-			is_transparent = node->valueAt<bool>("transparency", false);
-			metadata_path = wxFileName(client_path.GetFullPath(), wxString(metadata));
-			sprites_path = wxFileName(client_path.GetFullPath(), wxString(sprites));
-		}
-	} else if (metadata_path.GetFullName().IsSameAs("tibia.dat", false)) {
-		// Fallback for standard clients: 10.10+ are transparent
-		// This is a heuristic since standard clients don't have .otfi
-		// but standard 10.10+ clients are transparent.
-		// If it's a "tibia.dat" but opaque, user should probably use a custom .otfi
-		FileReadHandle dat_file(static_cast<const char*>(metadata_path.GetFullPath().mb_str()));
-		if (dat_file.isOk()) {
-			uint32_t sig;
-			if (dat_file.getU32(sig)) {
-				DatFormat format = getDatFormatForSignature(sig);
-				if (format >= DAT_FORMAT_1010) {
-					is_transparent = true;
-				}
-			}
-		}
 	}
 
 	if (!metadata_path.FileExists() || !sprites_path.FileExists()) {
@@ -516,7 +503,10 @@ bool ClientVersion::loadValidPaths() {
 		client_path.Assign(file_dlg.GetPath() + FileName::GetPathSeparator());
 	}
 
-	ClientVersion::saveVersions();
+	if (!ClientVersion::saveVersions()) {
+		wxLogError("Failed to save client versions after locating valid paths.");
+		return false;
+	}
 
 	return true;
 }
@@ -536,6 +526,10 @@ std::string ClientVersion::getName() const {
 }
 
 ClientVersionID ClientVersion::getID() const {
+	return name;
+}
+
+OtbVersionID ClientVersion::getProtocolID() const {
 	return otb.id;
 }
 
@@ -562,7 +556,7 @@ ClientVersionList ClientVersion::getExtensionsSupported() const {
 ClientVersionList ClientVersion::getAllVersionsSupportedForClientVersion(ClientVersion* clientVersion) {
 	ClientVersionList versionList;
 	for (const auto& versionEntry : client_versions) {
-		ClientVersion* version = versionEntry.second.get();
+		ClientVersion* version = versionEntry.get();
 		for (ClientVersion* checkVersion : version->getExtensionsSupported()) {
 			if (clientVersion == checkVersion) {
 				versionList.push_back(version);
@@ -571,4 +565,69 @@ ClientVersionList ClientVersion::getAllVersionsSupportedForClientVersion(ClientV
 	}
 	std::sort(versionList.begin(), versionList.end(), VersionComparisonPredicate);
 	return versionList;
+}
+void ClientVersion::backup() {
+	backup_data.version = version;
+	backup_data.name = name;
+	backup_data.description = description;
+	backup_data.config_type = config_type;
+	backup_data.metadata_file = metadata_file;
+	backup_data.sprites_file = sprites_file;
+	backup_data.is_transparent = is_transparent;
+	backup_data.is_extended = is_extended;
+	backup_data.has_frame_durations = has_frame_durations;
+	backup_data.has_frame_groups = has_frame_groups;
+	backup_data.client_path = client_path;
+	backup_data.data_path = data_path;
+	backup_data.preferred_map_version = preferred_map_version;
+	backup_data.otb = otb;
+	backup_data.data_versions = data_versions;
+	backup_data.map_versions_supported = map_versions_supported;
+	is_dirty = false;
+}
+
+void ClientVersion::restore() {
+	version = backup_data.version;
+	name = backup_data.name;
+	description = backup_data.description;
+	config_type = backup_data.config_type;
+	metadata_file = backup_data.metadata_file;
+	sprites_file = backup_data.sprites_file;
+	is_transparent = backup_data.is_transparent;
+	is_extended = backup_data.is_extended;
+	has_frame_durations = backup_data.has_frame_durations;
+	has_frame_groups = backup_data.has_frame_groups;
+	client_path = backup_data.client_path;
+	data_path = backup_data.data_path;
+	preferred_map_version = backup_data.preferred_map_version;
+	otb = backup_data.otb;
+	data_versions = backup_data.data_versions;
+	map_versions_supported = backup_data.map_versions_supported;
+	is_dirty = false;
+}
+
+std::unique_ptr<ClientVersion> ClientVersion::clone() const {
+	auto new_cv = std::make_unique<ClientVersion>(otb, name, data_path.ToStdString());
+	new_cv->version = version;
+	new_cv->visible = visible;
+	new_cv->is_transparent = is_transparent;
+	new_cv->is_extended = is_extended;
+	new_cv->has_frame_durations = has_frame_durations;
+	new_cv->has_frame_groups = has_frame_groups;
+	new_cv->metadata_file = metadata_file;
+	new_cv->sprites_file = sprites_file;
+	new_cv->map_versions_supported = map_versions_supported;
+	new_cv->preferred_map_version = preferred_map_version;
+	new_cv->data_versions = data_versions;
+	new_cv->client_path = client_path;
+	new_cv->description = description;
+	new_cv->config_type = config_type;
+	return new_cv;
+}
+
+bool ClientVersion::isValid() const {
+	if (name.empty()) {
+		return false;
+	}
+	return true;
 }

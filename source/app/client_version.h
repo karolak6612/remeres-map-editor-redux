@@ -18,15 +18,22 @@
 #ifndef RME_CLIENT_VERSION_H_
 #define RME_CLIENT_VERSION_H_
 
+#include <string>
+#include <vector>
+#include <memory>
+#include <wx/string.h>
+#include <wx/filename.h>
+
 #include "app/main.h"
 #include "app/settings.h"
 
-using ClientVersionID = int;
+using ClientVersionID = std::string;
+using OtbVersionID = int;
 
-// Client versions
-enum ClientVersions {
-	CLIENT_VERSION_NONE = -1,
-	CLIENT_VERSION_ALL = -2,
+// Protocol versions (Legacy/OTB IDs)
+enum ProtocolVersions : OtbVersionID {
+	PROTOCOL_VERSION_NONE = 0,
+	PROTOCOL_VERSION_ALL = -1,
 	CLIENT_VERSION_750 = 1,
 	CLIENT_VERSION_755 = 2,
 	CLIENT_VERSION_760 = 3,
@@ -43,10 +50,10 @@ enum ClientVersions {
 	CLIENT_VERSION_841 = 13,
 	CLIENT_VERSION_842 = 14,
 	CLIENT_VERSION_850 = 15,
-	CLIENT_VERSION_854_BAD = 16,
+	CLIENT_VERSION_854_BAD = 16, // Legacy
 	CLIENT_VERSION_854 = 17,
 	CLIENT_VERSION_855 = 18,
-	CLIENT_VERSION_860_OLD = 19,
+	CLIENT_VERSION_860_OLD = 19, // Legacy
 	CLIENT_VERSION_860 = 20,
 	CLIENT_VERSION_861 = 21,
 	CLIENT_VERSION_862 = 22,
@@ -58,9 +65,9 @@ enum ClientVersions {
 	CLIENT_VERSION_910 = 28,
 	CLIENT_VERSION_920 = 29,
 	CLIENT_VERSION_940 = 30,
-	CLIENT_VERSION_944_V1 = 31,
-	CLIENT_VERSION_944_V2 = 32,
-	CLIENT_VERSION_944_V3 = 33,
+	CLIENT_VERSION_944_V1 = 31, // Legacy
+	CLIENT_VERSION_944_V2 = 32, // Legacy
+	CLIENT_VERSION_944_V3 = 33, // Legacy
 	CLIENT_VERSION_944_V4 = 34,
 	CLIENT_VERSION_946 = 35,
 	CLIENT_VERSION_950 = 36,
@@ -79,8 +86,26 @@ enum ClientVersions {
 	CLIENT_VERSION_986 = 49,
 	CLIENT_VERSION_1010 = 50,
 	CLIENT_VERSION_1020 = 51,
-	CLIENT_VERSION_1021 = 52
+	CLIENT_VERSION_1021 = 52,
+	CLIENT_VERSION_1030 = 53,
+	CLIENT_VERSION_1031 = 54,
+	CLIENT_VERSION_1041 = 55,
+	CLIENT_VERSION_1077 = 56,
+	CLIENT_VERSION_1098 = 57,
+	CLIENT_VERSION_10100 = 58,
+	CLIENT_VERSION_1271 = 59,
+	CLIENT_VERSION_1281 = 60,
+	CLIENT_VERSION_1285 = 61,
+	CLIENT_VERSION_1286 = 62,
+	CLIENT_VERSION_1287 = 63,
+	CLIENT_VERSION_1290 = 64,
+	CLIENT_VERSION_1310 = 65,
+	CLIENT_VERSION_1320 = 66,
+
 };
+
+#define CLIENT_VERSION_NONE ""
+#define OTB_VERSION_NONE 0
 
 // OTBM versions
 enum MapVersionID {
@@ -94,11 +119,11 @@ enum MapVersionID {
 // The composed version of a otbm file (otbm version, client version)
 struct MapVersion {
 	MapVersion() :
-		otbm(MAP_OTBM_1), client(CLIENT_VERSION_NONE) { }
-	MapVersion(MapVersionID m, ClientVersionID c) :
+		otbm(MAP_OTBM_1), client(0) { }
+	MapVersion(MapVersionID m, OtbVersionID c) :
 		otbm(m), client(c) { }
 	MapVersionID otbm;
-	ClientVersionID client;
+	OtbVersionID client;
 };
 
 enum OtbFormatVersion : uint32_t {
@@ -114,7 +139,7 @@ struct OtbVersion {
 	// What file format the OTB is in (version 1..3)
 	OtbFormatVersion format_version;
 	// The minor version ID of the OTB (maps to CLIENT_VERSION in OTServ)
-	ClientVersionID id;
+	OtbVersionID id;
 };
 
 // Formats for the metadata file
@@ -196,10 +221,13 @@ public:
 
 	static void loadVersions();
 	static void unloadVersions();
-	static void saveVersions();
+	static bool saveVersions();
 
-	static ClientVersion* get(ClientVersionID id);
-	static ClientVersion* get(std::string name);
+	static void addVersion(std::unique_ptr<ClientVersion> version);
+	static void removeVersion(const ClientVersionID& id);
+
+	static ClientVersion* get(const ClientVersionID& id);
+	static ClientVersion* getBestMatch(OtbVersionID id);
 	static ClientVersionList getVisible(std::string from, std::string to);
 	static ClientVersionList getAll();
 	static ClientVersionList getAllVisible();
@@ -207,25 +235,151 @@ public:
 	static ClientVersionList getAllVersionsSupportedForClientVersion(ClientVersion* v);
 	static ClientVersion* getLatestVersion();
 
+	std::unique_ptr<ClientVersion> clone() const;
+	bool isValid() const;
+
 	bool operator==(const ClientVersion& o) const {
-		return otb.id == o.otb.id;
+		return name == o.name;
 	}
 
 	bool hasValidPaths();
 	bool loadValidPaths();
+	bool isDefaultPath() const;
 	void setClientPath(const FileName& dir);
 
 	bool isVisible() const;
 	std::string getName() const;
 
 	ClientVersionID getID() const;
+	OtbVersionID getProtocolID() const;
 	MapVersionID getPrefferedMapVersionID() const;
 	OtbVersion getOTBVersion() const;
 	DatFormat getDatFormatForSignature(uint32_t signature) const;
+	static DatFormat getDatFormatForVersion(int version);
 	ClientVersionList getExtensionsSupported() const;
+
+	void markDirty() {
+		is_dirty = true;
+	}
+	void clearDirty() {
+		is_dirty = false;
+	}
+	bool isDirty() const {
+		return is_dirty;
+	}
+
+	void backup();
+	void restore();
 
 	bool isTransparent() const {
 		return is_transparent;
+	}
+	void setTransparent(bool v) {
+		is_transparent = v;
+	}
+
+	bool isExtended() const {
+		return is_extended;
+	}
+	void setExtended(bool v) {
+		is_extended = v;
+	}
+
+	bool hasFrameDurations() const {
+		return has_frame_durations;
+	}
+	void setFrameDurations(bool v) {
+		has_frame_durations = v;
+	}
+
+	bool hasFrameGroups() const {
+		return has_frame_groups;
+	}
+	void setFrameGroups(bool v) {
+		has_frame_groups = v;
+	}
+
+	std::string getMetadataFile() const {
+		return metadata_file;
+	}
+	void setMetadataFile(const std::string& v) {
+		metadata_file = v;
+	}
+
+	std::string getSpritesFile() const {
+		return sprites_file;
+	}
+	void setSpritesFile(const std::string& v) {
+		sprites_file = v;
+	}
+
+	uint32_t getVersion() const {
+		return version;
+	}
+	void setVersion(uint32_t v);
+
+	void setName(const std::string& v) {
+		name = v;
+	}
+
+	uint32_t getOtbId() const {
+		return otb.id;
+	}
+	void setOtbId(uint32_t v) {
+		otb.id = static_cast<OtbVersionID>(v);
+	}
+
+	uint32_t getOtbMajor() const {
+		return otb.format_version;
+	}
+	void setOtbMajor(uint32_t v) {
+		otb.format_version = static_cast<OtbFormatVersion>(v);
+	}
+
+	std::vector<MapVersionID>& getMapVersionsSupported() {
+		return map_versions_supported;
+	}
+	void setMapVersionsSupported(const std::vector<MapVersionID>& v) {
+		map_versions_supported = v;
+	}
+
+	std::string getDataDirectory() const {
+		return data_path.ToStdString();
+	}
+	void setDataDirectory(const std::string& v) {
+		data_path = wxstr(v);
+	}
+
+	uint32_t getDatSignature() const {
+		return data_versions.empty() ? 0 : data_versions[0].datSignature;
+	}
+	void setDatSignature(uint32_t v) {
+		if (!data_versions.empty()) {
+			data_versions[0].datSignature = v;
+		}
+	}
+
+	uint32_t getSprSignature() const {
+		return data_versions.empty() ? 0 : data_versions[0].sprSignature;
+	}
+	void setSprSignature(uint32_t v) {
+		if (!data_versions.empty()) {
+			data_versions[0].sprSignature = v;
+		}
+	}
+
+	std::string getDescription() const {
+		return description;
+	}
+	void setDescription(const std::string& v) {
+		description = v;
+	}
+
+	std::string getConfigType() const {
+		return config_type;
+	}
+	void setConfigType(const std::string& v) {
+		config_type = v;
 	}
 
 	FileName getDataPath() const;
@@ -241,12 +395,40 @@ public:
 	}
 
 private:
+	bool is_dirty = false;
+
+	struct BackupData {
+		uint32_t version;
+		std::string name;
+		std::string description;
+		std::string config_type;
+		std::string metadata_file;
+		std::string sprites_file;
+		bool is_transparent;
+		bool is_extended;
+		bool has_frame_durations;
+		bool has_frame_groups;
+		FileName client_path;
+		wxString data_path;
+		MapVersionID preferred_map_version;
+		OtbVersion otb;
+		std::vector<ClientData> data_versions;
+		std::vector<MapVersionID> map_versions_supported;
+	} backup_data;
+
+private:
 	OtbVersion otb;
 
+	uint32_t version;
 	std::string name;
 	bool visible;
 	bool is_transparent;
-	bool usesFuckedUpCharges;
+	bool is_extended;
+	bool has_frame_durations;
+	bool has_frame_groups;
+
+	std::string metadata_file;
+	std::string sprites_file;
 
 	std::vector<MapVersionID> map_versions_supported;
 	MapVersionID preferred_map_version;
@@ -257,27 +439,24 @@ private:
 	FileName client_path;
 	wxFileName metadata_path;
 	wxFileName sprites_path;
+	std::string description;
+	std::string config_type;
 
 private:
-	static void loadOTBInfo(pugi::xml_node otb_nodes);
-	static void loadVersion(pugi::xml_node client_node);
-	static void loadVersionExtensions(pugi::xml_node client_node);
+	static void loadVersionsFromTOML(const std::string& configPath);
 
 	// All versions
-	using VersionMap = std::map<ClientVersionID, std::unique_ptr<ClientVersion>>;
-	static VersionMap client_versions;
+	using VersionList = std::vector<std::unique_ptr<ClientVersion>>;
+	static VersionList client_versions;
 	static ClientVersion* latest_version;
-
-	// All otbs
-	using OtbMap = std::map<std::string, OtbVersion>;
-	static OtbMap otb_versions;
+	static std::string loaded_file_path;
 };
 
-inline int VersionComparisonPredicate(ClientVersion* a, ClientVersion* b) {
-	if (a->getID() < b->getID()) {
-		return 1;
+inline bool VersionComparisonPredicate(ClientVersion* a, ClientVersion* b) {
+	if (a->getProtocolID() < b->getProtocolID()) {
+		return true;
 	}
-	return 0;
+	return false;
 }
 
 #endif

@@ -19,6 +19,7 @@
 #define RME_DEFINITIONS_H_
 
 #include <cstdint>
+#include <numbers>
 
 #define __W_RME_APPLICATION_NAME__ wxString("OTAcademy Map Editor")
 #define __RME_APPLICATION_NAME__ std::string("OTAcademy Map Editor")
@@ -114,9 +115,9 @@
 #endif
 
 // Mathematical constants
-#define PI 3.14159265358979323846264338327950288419716939937510
-#define DEG2RAD (PI / 180.0)
-#define RAD2DEG (180.0 / DEG)
+constexpr double PI = std::numbers::pi;
+constexpr double DEG2RAD = PI / 180.0;
+constexpr double RAD2DEG = 180.0 / PI;
 
 // The height of the map (there should be more checks for this...)
 #define MAP_LAYERS 16
@@ -153,7 +154,7 @@ constexpr int PixelFormatRGB = 3;
 constexpr int PixelFormatRGBA = 4;
 
 // wxString conversions
-#define nstr(str) std::string((const char*)(str.mb_str(wxConvUTF8)))
+#define nstr(str) (str).ToStdString()
 
 // increment & decrement definitions
 #define IMPLEMENT_INCREMENT_OP(Type)                     \
