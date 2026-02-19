@@ -35,9 +35,7 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	UpdateLayout();
 }
 
-VirtualBrushGrid::~VirtualBrushGrid() {
-	m_animTimer.Stop();
-}
+VirtualBrushGrid::~VirtualBrushGrid() = default;
 
 void VirtualBrushGrid::SetDisplayMode(DisplayMode mode) {
 	if (display_mode != mode) {
