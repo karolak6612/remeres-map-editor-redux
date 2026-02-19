@@ -519,7 +519,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 		// So this is redundant but safe.
 		import_tile->spawn.reset();
 
-		editor.map.setTile(new_pos, std::move(moved_tile));
+		(void)editor.map.setTile(new_pos, std::move(moved_tile));
 	}
 
 	for (auto& spawn_entry : spawn_map) {
