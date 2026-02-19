@@ -11,6 +11,9 @@ class RMERecipe(ConanFile):
     settings = "os", "compiler", "build_type", "arch"
     
     def requirements(self):
+        # Always require tomlplusplus
+        self.requires("tomlplusplus/3.4.0")
+
         # On Linux, most dependencies come from apt - only need glad from Conan
         # On other platforms, use full Conan dependency tree
         if self.settings.os == "Linux":

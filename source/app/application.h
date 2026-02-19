@@ -25,9 +25,9 @@
 
 #include "net/process_com.h"
 #include "rendering/ui/map_display.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 
-#include "ui/main_frame.h"
+#include "ui/windows/main_frame.h"
 
 class Item;
 class Creature;

@@ -6,7 +6,7 @@
 #define RME_CONTAINER_PROPERTIES_WINDOW_H_
 
 #include "app/main.h"
-#include "ui/dcbutton.h"
+#include "ui/controls/dcbutton.h"
 #include "game/item.h"
 #include "ui/properties/object_properties_base.h"
 
