@@ -78,77 +78,27 @@ void Brushes::clear() {
 }
 
 void Brushes::init() {
-	auto optional_brush = std::make_unique<OptionalBorderBrush>();
-	g_brush_manager.optional_brush = optional_brush.get();
-	addBrush(std::move(optional_brush));
+	addManagedBrush(g_brush_manager.optional_brush);
+	addManagedBrush(g_brush_manager.eraser);
+	addManagedBrush(g_brush_manager.spawn_brush);
 
-	auto eraser_brush = std::make_unique<EraserBrush>();
-	g_brush_manager.eraser = eraser_brush.get();
-	addBrush(std::move(eraser_brush));
+	addManagedBrush(g_brush_manager.normal_door_brush, WALL_DOOR_NORMAL);
+	addManagedBrush(g_brush_manager.locked_door_brush, WALL_DOOR_LOCKED);
+	addManagedBrush(g_brush_manager.magic_door_brush, WALL_DOOR_MAGIC);
+	addManagedBrush(g_brush_manager.quest_door_brush, WALL_DOOR_QUEST);
+	addManagedBrush(g_brush_manager.hatch_door_brush, WALL_HATCH_WINDOW);
+	addManagedBrush(g_brush_manager.archway_door_brush, WALL_ARCHWAY);
+	addManagedBrush(g_brush_manager.normal_door_alt_brush, WALL_DOOR_NORMAL_ALT);
+	addManagedBrush(g_brush_manager.window_door_brush, WALL_WINDOW);
 
-	auto spawn_brush = std::make_unique<SpawnBrush>();
-	g_brush_manager.spawn_brush = spawn_brush.get();
-	addBrush(std::move(spawn_brush));
+	addManagedBrush(g_brush_manager.house_brush);
+	addManagedBrush(g_brush_manager.house_exit_brush);
+	addManagedBrush(g_brush_manager.waypoint_brush);
 
-	auto normal_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_NORMAL);
-	g_brush_manager.normal_door_brush = normal_door_brush.get();
-	addBrush(std::move(normal_door_brush));
-
-	auto locked_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_LOCKED);
-	g_brush_manager.locked_door_brush = locked_door_brush.get();
-	addBrush(std::move(locked_door_brush));
-
-	auto magic_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_MAGIC);
-	g_brush_manager.magic_door_brush = magic_door_brush.get();
-	addBrush(std::move(magic_door_brush));
-
-	auto quest_door_brush = std::make_unique<DoorBrush>(WALL_DOOR_QUEST);
-	g_brush_manager.quest_door_brush = quest_door_brush.get();
-	addBrush(std::move(quest_door_brush));
-
-	auto hatch_door_brush = std::make_unique<DoorBrush>(WALL_HATCH_WINDOW);
-	g_brush_manager.hatch_door_brush = hatch_door_brush.get();
-	addBrush(std::move(hatch_door_brush));
-
-	auto archway_door_brush = std::make_unique<DoorBrush>(WALL_ARCHWAY);
-	g_brush_manager.archway_door_brush = archway_door_brush.get();
-	addBrush(std::move(archway_door_brush));
-
-	auto normal_door_alt_brush = std::make_unique<DoorBrush>(WALL_DOOR_NORMAL_ALT);
-	g_brush_manager.normal_door_alt_brush = normal_door_alt_brush.get();
-	addBrush(std::move(normal_door_alt_brush));
-
-	auto window_door_brush = std::make_unique<DoorBrush>(WALL_WINDOW);
-	g_brush_manager.window_door_brush = window_door_brush.get();
-	addBrush(std::move(window_door_brush));
-
-	auto house_brush = std::make_unique<HouseBrush>();
-	g_brush_manager.house_brush = house_brush.get();
-	addBrush(std::move(house_brush));
-
-	auto house_exit_brush = std::make_unique<HouseExitBrush>();
-	g_brush_manager.house_exit_brush = house_exit_brush.get();
-	addBrush(std::move(house_exit_brush));
-
-	auto waypoint_brush = std::make_unique<WaypointBrush>();
-	g_brush_manager.waypoint_brush = waypoint_brush.get();
-	addBrush(std::move(waypoint_brush));
-
-	auto pz_brush = std::make_unique<FlagBrush>(TILESTATE_PROTECTIONZONE);
-	g_brush_manager.pz_brush = pz_brush.get();
-	addBrush(std::move(pz_brush));
-
-	auto rook_brush = std::make_unique<FlagBrush>(TILESTATE_NOPVP);
-	g_brush_manager.rook_brush = rook_brush.get();
-	addBrush(std::move(rook_brush));
-
-	auto nolog_brush = std::make_unique<FlagBrush>(TILESTATE_NOLOGOUT);
-	g_brush_manager.nolog_brush = nolog_brush.get();
-	addBrush(std::move(nolog_brush));
-
-	auto pvp_brush = std::make_unique<FlagBrush>(TILESTATE_PVPZONE);
-	g_brush_manager.pvp_brush = pvp_brush.get();
-	addBrush(std::move(pvp_brush));
+	addManagedBrush(g_brush_manager.pz_brush, TILESTATE_PROTECTIONZONE);
+	addManagedBrush(g_brush_manager.rook_brush, TILESTATE_NOPVP);
+	addManagedBrush(g_brush_manager.nolog_brush, TILESTATE_NOLOGOUT);
+	addManagedBrush(g_brush_manager.pvp_brush, TILESTATE_PVPZONE);
 
 	GroundBrush::init();
 	WallBrush::init();

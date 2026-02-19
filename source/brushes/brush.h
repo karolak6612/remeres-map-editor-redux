@@ -75,6 +75,13 @@ public:
 
 	void addBrush(std::unique_ptr<Brush> brush);
 
+	template <typename BrushType, typename... Args>
+	void addManagedBrush(BrushType*& manager_ptr, Args&&... args) {
+		auto brush = std::make_unique<BrushType>(std::forward<Args>(args)...);
+		manager_ptr = brush.get();
+		addBrush(std::move(brush));
+	}
+
 	bool unserializeBorder(pugi::xml_node node, std::vector<std::string>& warnings);
 	bool unserializeBrush(pugi::xml_node node, std::vector<std::string>& warnings);
 

@@ -320,6 +320,28 @@ bool CreatureDatabase::loadFromXML(const FileName& filename, bool standard, wxSt
 	return true;
 }
 
+static void ensureCreatureBrush(CreatureType* creatureType) {
+	if (creatureType->brush) {
+		return;
+	}
+
+	Tileset* tileSet = nullptr;
+	if (creatureType->isNpc) {
+		tileSet = g_materials.tilesets["NPCs"];
+	} else {
+		tileSet = g_materials.tilesets["Others"];
+	}
+	ASSERT(tileSet != nullptr);
+
+	auto brush = std::make_unique<CreatureBrush>(creatureType);
+	creatureType->brush = brush.get();
+	g_brushes.addBrush(std::move(brush));
+	creatureType->in_other_tileset = true;
+
+	TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);
+	tileSetCategory->brushlist.push_back(creatureType->brush);
+}
+
 bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error, std::vector<std::string>& warnings) {
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(filename.GetFullPath().mb_str());
@@ -358,21 +380,7 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 				} else {
 					creature_map[as_lower_str(creatureType->name)] = creatureType;
 
-					Tileset* tileSet = nullptr;
-					if (creatureType->isNpc) {
-						tileSet = g_materials.tilesets["NPCs"];
-					} else {
-						tileSet = g_materials.tilesets["Others"];
-					}
-					ASSERT(tileSet != nullptr);
-
-					auto brush = std::make_unique<CreatureBrush>(creatureType);
-					creatureType->brush = brush.get();
-					g_brushes.addBrush(std::move(brush));
-					creatureType->in_other_tileset = true;
-
-					TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);
-					tileSetCategory->brushlist.push_back(creatureType->brush);
+					ensureCreatureBrush(creatureType);
 				}
 			}
 		}
@@ -387,21 +395,7 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			} else {
 				creature_map[as_lower_str(creatureType->name)] = creatureType;
 
-				Tileset* tileSet = nullptr;
-				if (creatureType->isNpc) {
-					tileSet = g_materials.tilesets["NPCs"];
-				} else {
-					tileSet = g_materials.tilesets["Others"];
-				}
-				ASSERT(tileSet != nullptr);
-
-				auto brush = std::make_unique<CreatureBrush>(creatureType);
-				creatureType->brush = brush.get();
-				g_brushes.addBrush(std::move(brush));
-				creatureType->in_other_tileset = true;
-
-				TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);
-				tileSetCategory->brushlist.push_back(creatureType->brush);
+				ensureCreatureBrush(creatureType);
 			}
 		}
 	} else {
