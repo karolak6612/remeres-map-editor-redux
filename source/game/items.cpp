@@ -152,6 +152,226 @@ bool ItemDatabase::loadFromOtbVer3(BinaryNode* itemNode, wxString& error, std::v
 	return loadFromOtbGeneric(itemNode, OtbFileFormatVersion::V3, error, warnings);
 }
 
+void ItemDatabase::parseOtbFlags(ItemType& t, BinaryNode* itemNode, OtbFileFormatVersion version) {
+	uint32_t flags;
+	if (itemNode->getU32(flags)) {
+		t.unpassable = ((flags & FLAG_UNPASSABLE) == FLAG_UNPASSABLE);
+		t.blockMissiles = ((flags & FLAG_BLOCK_MISSILES) == FLAG_BLOCK_MISSILES);
+		t.blockPathfinder = ((flags & FLAG_BLOCK_PATHFINDER) == FLAG_BLOCK_PATHFINDER);
+		t.hasElevation = ((flags & FLAG_HAS_ELEVATION) == FLAG_HAS_ELEVATION);
+		t.pickupable = ((flags & FLAG_PICKUPABLE) == FLAG_PICKUPABLE);
+		t.moveable = ((flags & FLAG_MOVEABLE) == FLAG_MOVEABLE);
+		t.stackable = ((flags & FLAG_STACKABLE) == FLAG_STACKABLE);
+		t.floorChangeDown = ((flags & FLAG_FLOORCHANGEDOWN) == FLAG_FLOORCHANGEDOWN);
+		t.floorChangeNorth = ((flags & FLAG_FLOORCHANGENORTH) == FLAG_FLOORCHANGENORTH);
+		t.floorChangeEast = ((flags & FLAG_FLOORCHANGEEAST) == FLAG_FLOORCHANGEEAST);
+		t.floorChangeSouth = ((flags & FLAG_FLOORCHANGESOUTH) == FLAG_FLOORCHANGESOUTH);
+		t.floorChangeWest = ((flags & FLAG_FLOORCHANGEWEST) == FLAG_FLOORCHANGEWEST);
+		t.floorChange = t.floorChangeDown || t.floorChangeNorth || t.floorChangeEast || t.floorChangeSouth || t.floorChangeWest;
+
+		// The OTB `FLAG_ALWAYSONTOP` is mapped to the editor's `alwaysOnBottom` property.
+		t.alwaysOnBottom = ((flags & FLAG_ALWAYSONTOP) == FLAG_ALWAYSONTOP);
+		t.isHangable = ((flags & FLAG_HANGABLE) == FLAG_HANGABLE);
+		t.hookEast = ((flags & FLAG_HOOK_EAST) == FLAG_HOOK_EAST);
+		t.hookSouth = ((flags & FLAG_HOOK_SOUTH) == FLAG_HOOK_SOUTH);
+		t.allowDistRead = ((flags & FLAG_ALLOWDISTREAD) == FLAG_ALLOWDISTREAD);
+		t.rotable = ((flags & FLAG_ROTABLE) == FLAG_ROTABLE);
+		t.canReadText = ((flags & FLAG_READABLE) == FLAG_READABLE);
+
+		if (version >= OtbFileFormatVersion::V3) {
+			t.client_chargeable = ((flags & FLAG_CLIENTCHARGES) == FLAG_CLIENTCHARGES);
+			t.ignoreLook = ((flags & FLAG_IGNORE_LOOK) == FLAG_IGNORE_LOOK);
+		}
+	}
+}
+
+bool ItemDatabase::parseOtbAttributes(ItemType& t, BinaryNode* itemNode, wxString& error, std::vector<std::string>& warnings) {
+	using AttributeHandler = bool (*)(ItemDatabase&, ItemType&, BinaryNode*, uint16_t, wxString&, std::vector<std::string>&);
+	static const auto handlers = [] {
+		std::array<AttributeHandler, std::numeric_limits<uint8_t>::max() + 1> h {};
+		h.fill([](ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, [[maybe_unused]] std::vector<std::string>&) {
+			node->skip(len);
+			return true;
+		});
+
+		h[ITEM_ATTR_SERVERID] = [](ItemDatabase& db, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint16_t)) {
+				err = std::format("items.otb: Unexpected data length of server id block (Should be {} bytes)", sizeof(uint16_t));
+				return false;
+			}
+			if (!node->getU16(it.id)) {
+				warnings.push_back("Invalid item type property (serverID)");
+				return true;
+			}
+			if (db.max_item_id < it.id) {
+				db.max_item_id = it.id;
+			}
+			return true;
+		};
+
+		h[ITEM_ATTR_CLIENTID] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint16_t)) {
+				err = std::format("items.otb: Unexpected data length of client id block (Should be {} bytes)", sizeof(uint16_t));
+				return false;
+			}
+			if (!node->getU16(it.clientID)) {
+				warnings.push_back("Invalid item type property (clientID)");
+			}
+			it.sprite = static_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientID));
+			return true;
+		};
+
+		h[ITEM_ATTR_SPEED] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint16_t)) {
+				err = std::format("items.otb: Unexpected data length of speed block (Should be {} bytes)", sizeof(uint16_t));
+				return false;
+			}
+			uint16_t speed = 0;
+			if (!node->getU16(speed)) {
+				warnings.push_back("Invalid item type property (speed)");
+			}
+			it.way_speed = speed;
+			return true;
+		};
+
+		h[ITEM_ATTR_LIGHT2] = [](ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			const size_t expected_len = 4; // sizeof(lightBlock2)
+			if (len != expected_len) {
+				warnings.push_back(std::format("items.otb: Unexpected data length of item light (2) block (Should be {} bytes)", expected_len));
+				return true;
+			}
+			if (!node->skip(4)) {
+				warnings.push_back("Invalid item type property (light2)");
+			}
+			return true;
+		};
+
+		h[ITEM_ATTR_TOPORDER] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint8_t)) {
+				warnings.push_back("items.otb: Unexpected data length of item toporder block (Should be 1 byte)");
+				return true;
+			}
+			uint8_t u8_top = 0;
+			if (!node->getU8(u8_top)) {
+				warnings.push_back("Invalid item type property (topOrder)");
+			}
+			it.alwaysOnTopOrder = u8_top;
+			return true;
+		};
+
+		h[ITEM_ATTR_NAME] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len >= 128) {
+				warnings.push_back("items.otb: Unexpected data length of item name block (Should be < 128 bytes)");
+				return true;
+			}
+			uint8_t name[128] = { 0 };
+			if (!node->getRAW(name, len)) {
+				warnings.push_back("Invalid item type property (name)");
+			}
+			it.name = reinterpret_cast<const char*>(name);
+			return true;
+		};
+
+		h[ITEM_ATTR_DESCR] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len >= 128) {
+				warnings.push_back("items.otb: Unexpected data length of item descr block (Should be < 128 bytes)");
+				return true;
+			}
+			uint8_t description[128] = { 0 };
+			if (!node->getRAW(description, len)) {
+				warnings.push_back("Invalid item type property (description)");
+			}
+			it.description = reinterpret_cast<const char*>(description);
+			return true;
+		};
+
+		h[ITEM_ATTR_MAXITEMS] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint16_t)) {
+				warnings.push_back("items.otb: Unexpected data length of item volume block (Should be 2 bytes)");
+				return true;
+			}
+			if (!node->getU16(it.volume)) {
+				warnings.push_back("Invalid item type property (volume)");
+			}
+			return true;
+		};
+
+		h[ITEM_ATTR_WEIGHT] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len != sizeof(double)) {
+				warnings.push_back("items.otb: Unexpected data length of item weight block (Should be 8 bytes)");
+				return true;
+			}
+			uint8_t raw_weight[sizeof(double)];
+			if (!node->getRAW(raw_weight, sizeof(double))) {
+				warnings.push_back("Invalid item type property (weight)");
+				return true;
+			}
+			memcpy(&it.weight, raw_weight, sizeof(double));
+			return true;
+		};
+
+		h[ITEM_ATTR_ROTATETO] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint16_t)) {
+				warnings.push_back("items.otb: Unexpected data length of item rotateTo block (Should be 2 bytes)");
+				return true;
+			}
+			uint16_t rotate = 0;
+			if (!node->getU16(rotate)) {
+				warnings.push_back("Invalid item type property (rotateTo)");
+			}
+			it.rotateTo = rotate;
+			return true;
+		};
+
+		h[ITEM_ATTR_WRITEABLE3] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			const size_t expected_len = 4; // sizeof(writeableBlock3)
+			if (len != expected_len) {
+				warnings.push_back(std::format("items.otb: Unexpected data length of item writeable (3) block (Should be {} bytes)", expected_len));
+				return true;
+			}
+			uint16_t readOnlyID = 0;
+			uint16_t maxTextLen = 0;
+			if (!node->getU16(readOnlyID)) {
+				warnings.push_back("Invalid item type property (writeable3_readOnlyID)");
+			}
+			if (!node->getU16(maxTextLen)) {
+				warnings.push_back("Invalid item type property (writeable3_maxTextLen)");
+			}
+			it.maxTextLen = maxTextLen;
+			return true;
+		};
+
+		h[ITEM_ATTR_CLASSIFICATION] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
+			if (len != sizeof(uint8_t)) {
+				warnings.push_back("items.otb: Unexpected data length of item classification block (Should be 1 byte)");
+				return true;
+			}
+			uint8_t cls = 0;
+			if (!node->getU8(cls)) {
+				warnings.push_back("Invalid item type property (classification)");
+			}
+			it.classification = cls;
+			return true;
+		};
+
+		return h;
+	}();
+
+	uint8_t attribute;
+	while (itemNode->getU8(attribute)) {
+		uint16_t datalen;
+		if (!itemNode->getU16(datalen)) {
+			warnings.push_back("Invalid item type property (premature end)");
+			break;
+		}
+
+		if (!handlers[attribute](*this, t, itemNode, datalen, error, warnings)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion version, wxString& error, std::vector<std::string>& warnings) {
 	uint8_t u8;
 
@@ -192,219 +412,10 @@ bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion
 			warnings.push_back("Unknown item group declaration");
 		}
 
-		uint32_t flags;
-		if (itemNode->getU32(flags)) {
-			t->unpassable = ((flags & FLAG_UNPASSABLE) == FLAG_UNPASSABLE);
-			t->blockMissiles = ((flags & FLAG_BLOCK_MISSILES) == FLAG_BLOCK_MISSILES);
-			t->blockPathfinder = ((flags & FLAG_BLOCK_PATHFINDER) == FLAG_BLOCK_PATHFINDER);
-			t->hasElevation = ((flags & FLAG_HAS_ELEVATION) == FLAG_HAS_ELEVATION);
-			t->pickupable = ((flags & FLAG_PICKUPABLE) == FLAG_PICKUPABLE);
-			t->moveable = ((flags & FLAG_MOVEABLE) == FLAG_MOVEABLE);
-			t->stackable = ((flags & FLAG_STACKABLE) == FLAG_STACKABLE);
-			t->floorChangeDown = ((flags & FLAG_FLOORCHANGEDOWN) == FLAG_FLOORCHANGEDOWN);
-			t->floorChangeNorth = ((flags & FLAG_FLOORCHANGENORTH) == FLAG_FLOORCHANGENORTH);
-			t->floorChangeEast = ((flags & FLAG_FLOORCHANGEEAST) == FLAG_FLOORCHANGEEAST);
-			t->floorChangeSouth = ((flags & FLAG_FLOORCHANGESOUTH) == FLAG_FLOORCHANGESOUTH);
-			t->floorChangeWest = ((flags & FLAG_FLOORCHANGEWEST) == FLAG_FLOORCHANGEWEST);
-			t->floorChange = t->floorChangeDown || t->floorChangeNorth || t->floorChangeEast || t->floorChangeSouth || t->floorChangeWest;
+		parseOtbFlags(*t, itemNode, version);
 
-			// The OTB `FLAG_ALWAYSONTOP` is mapped to the editor's `alwaysOnBottom` property.
-			t->alwaysOnBottom = ((flags & FLAG_ALWAYSONTOP) == FLAG_ALWAYSONTOP);
-			t->isHangable = ((flags & FLAG_HANGABLE) == FLAG_HANGABLE);
-			t->hookEast = ((flags & FLAG_HOOK_EAST) == FLAG_HOOK_EAST);
-			t->hookSouth = ((flags & FLAG_HOOK_SOUTH) == FLAG_HOOK_SOUTH);
-			t->allowDistRead = ((flags & FLAG_ALLOWDISTREAD) == FLAG_ALLOWDISTREAD);
-			t->rotable = ((flags & FLAG_ROTABLE) == FLAG_ROTABLE);
-			t->canReadText = ((flags & FLAG_READABLE) == FLAG_READABLE);
-
-			if (version >= OtbFileFormatVersion::V3) {
-				t->client_chargeable = ((flags & FLAG_CLIENTCHARGES) == FLAG_CLIENTCHARGES);
-				t->ignoreLook = ((flags & FLAG_IGNORE_LOOK) == FLAG_IGNORE_LOOK);
-			}
-		}
-
-		using AttributeHandler = bool (*)(ItemDatabase&, ItemType&, BinaryNode*, uint16_t, wxString&, std::vector<std::string>&);
-		static const auto handlers = [] {
-			std::array<AttributeHandler, std::numeric_limits<uint8_t>::max() + 1> h {};
-			h.fill([](ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, [[maybe_unused]] std::vector<std::string>&) {
-				node->skip(len);
-				return true;
-			});
-
-			h[ITEM_ATTR_SERVERID] = [](ItemDatabase& db, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					err = std::format("items.otb: Unexpected data length of server id block (Should be {} bytes)", sizeof(uint16_t));
-					return false;
-				}
-				if (!node->getU16(it.id)) {
-					warnings.push_back("Invalid item type property (serverID)");
-					return true;
-				}
-				if (db.max_item_id < it.id) {
-					db.max_item_id = it.id;
-				}
-				return true;
-			};
-
-			h[ITEM_ATTR_CLIENTID] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					err = std::format("items.otb: Unexpected data length of client id block (Should be {} bytes)", sizeof(uint16_t));
-					return false;
-				}
-				if (!node->getU16(it.clientID)) {
-					warnings.push_back("Invalid item type property (clientID)");
-				}
-				it.sprite = static_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientID));
-				return true;
-			};
-
-			h[ITEM_ATTR_SPEED] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, wxString& err, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					err = std::format("items.otb: Unexpected data length of speed block (Should be {} bytes)", sizeof(uint16_t));
-					return false;
-				}
-				uint16_t speed = 0;
-				if (!node->getU16(speed)) {
-					warnings.push_back("Invalid item type property (speed)");
-				}
-				it.way_speed = speed;
-				return true;
-			};
-
-			h[ITEM_ATTR_LIGHT2] = [](ItemDatabase&, ItemType&, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				const size_t expected_len = 4; // sizeof(lightBlock2)
-				if (len != expected_len) {
-					warnings.push_back(std::format("items.otb: Unexpected data length of item light (2) block (Should be {} bytes)", expected_len));
-					return true;
-				}
-				if (!node->skip(4)) {
-					warnings.push_back("Invalid item type property (light2)");
-				}
-				return true;
-			};
-
-			h[ITEM_ATTR_TOPORDER] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint8_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item toporder block (Should be 1 byte)");
-					return true;
-				}
-				uint8_t u8_top = 0;
-				if (!node->getU8(u8_top)) {
-					warnings.push_back("Invalid item type property (topOrder)");
-				}
-				it.alwaysOnTopOrder = u8_top;
-				return true;
-			};
-
-			h[ITEM_ATTR_NAME] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len >= 128) {
-					warnings.push_back("items.otb: Unexpected data length of item name block (Should be < 128 bytes)");
-					return true;
-				}
-				uint8_t name[128] = { 0 };
-				if (!node->getRAW(name, len)) {
-					warnings.push_back("Invalid item type property (name)");
-				}
-				it.name = reinterpret_cast<const char*>(name);
-				return true;
-			};
-
-			h[ITEM_ATTR_DESCR] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len >= 128) {
-					warnings.push_back("items.otb: Unexpected data length of item descr block (Should be < 128 bytes)");
-					return true;
-				}
-				uint8_t description[128] = { 0 };
-				if (!node->getRAW(description, len)) {
-					warnings.push_back("Invalid item type property (description)");
-				}
-				it.description = reinterpret_cast<const char*>(description);
-				return true;
-			};
-
-			h[ITEM_ATTR_MAXITEMS] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item volume block (Should be 2 bytes)");
-					return true;
-				}
-				if (!node->getU16(it.volume)) {
-					warnings.push_back("Invalid item type property (volume)");
-				}
-				return true;
-			};
-
-			h[ITEM_ATTR_WEIGHT] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(double)) {
-					warnings.push_back("items.otb: Unexpected data length of item weight block (Should be 8 bytes)");
-					return true;
-				}
-				uint8_t raw_weight[sizeof(double)];
-				if (!node->getRAW(raw_weight, sizeof(double))) {
-					warnings.push_back("Invalid item type property (weight)");
-					return true;
-				}
-				memcpy(&it.weight, raw_weight, sizeof(double));
-				return true;
-			};
-
-			h[ITEM_ATTR_ROTATETO] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint16_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item rotateTo block (Should be 2 bytes)");
-					return true;
-				}
-				uint16_t rotate = 0;
-				if (!node->getU16(rotate)) {
-					warnings.push_back("Invalid item type property (rotateTo)");
-				}
-				it.rotateTo = rotate;
-				return true;
-			};
-
-			h[ITEM_ATTR_WRITEABLE3] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				const size_t expected_len = 4; // sizeof(writeableBlock3)
-				if (len != expected_len) {
-					warnings.push_back(std::format("items.otb: Unexpected data length of item writeable (3) block (Should be {} bytes)", expected_len));
-					return true;
-				}
-				uint16_t readOnlyID = 0;
-				uint16_t maxTextLen = 0;
-				if (!node->getU16(readOnlyID)) {
-					warnings.push_back("Invalid item type property (writeable3_readOnlyID)");
-				}
-				if (!node->getU16(maxTextLen)) {
-					warnings.push_back("Invalid item type property (writeable3_maxTextLen)");
-				}
-				it.maxTextLen = maxTextLen;
-				return true;
-			};
-
-			h[ITEM_ATTR_CLASSIFICATION] = [](ItemDatabase&, ItemType& it, BinaryNode* node, uint16_t len, [[maybe_unused]] wxString&, std::vector<std::string>& warnings) {
-				if (len != sizeof(uint8_t)) {
-					warnings.push_back("items.otb: Unexpected data length of item classification block (Should be 1 byte)");
-					return true;
-				}
-				uint8_t cls = 0;
-				if (!node->getU8(cls)) {
-					warnings.push_back("Invalid item type property (classification)");
-				}
-				it.classification = cls;
-				return true;
-			};
-
-			return h;
-		}();
-
-		uint8_t attribute;
-		while (itemNode->getU8(attribute)) {
-			uint16_t datalen;
-			if (!itemNode->getU16(datalen)) {
-				warnings.push_back("Invalid item type property (premature end)");
-				break;
-			}
-
-			if (!handlers[attribute](*this, *t, itemNode, datalen, error, warnings)) {
-				return false;
-			}
+		if (!parseOtbAttributes(*t, itemNode, error, warnings)) {
+			return false;
 		}
 
 		if (t) {

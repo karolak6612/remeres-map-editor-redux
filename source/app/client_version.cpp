@@ -74,6 +74,82 @@ void ClientVersion::loadVersions() {
 	}
 }
 
+std::unique_ptr<ClientVersion> ClientVersion::parseClientNode(const toml::table& client) {
+	int version = client["version"].value_or(0);
+	std::string name = client["name"].value_or("");
+
+	// OTB Info
+	int otbId = client["otbId"].value_or(0);
+	int otbMajor = client["otbMajor"].value_or(0);
+
+	OtbVersion otb;
+	otb.name = name;
+	otb.id = static_cast<OtbVersionID>(otbId);
+	otb.format_version = static_cast<OtbFormatVersion>(otbMajor);
+
+	// Data Directory
+	std::string dataDirectory = client["dataDirectory"].value_or("");
+	std::unique_ptr<ClientVersion> cv = std::make_unique<ClientVersion>(otb, name, wxstr(dataDirectory));
+
+	ClientVersion* cv_ptr = cv.get();
+	cv_ptr->version = version;
+	cv_ptr->description = client["description"].value_or("");
+	cv_ptr->config_type = client["configType"].value_or("");
+
+	// OTBM Versions
+	cv_ptr->preferred_map_version = MAP_OTBM_UNKNOWN;
+	if (client["otbmVersions"].as_array()) {
+		auto& otbmVers = *client["otbmVersions"].as_array();
+		for (auto&& v : otbmVers) {
+			int ver = v.value_or(-1);
+			if (ver >= 1 && ver <= 4) {
+				int enumVer = ver - 1;
+				cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
+				if (cv_ptr->preferred_map_version == MAP_OTBM_UNKNOWN) {
+					cv_ptr->preferred_map_version = static_cast<MapVersionID>(enumVer);
+				}
+			}
+		}
+	}
+
+	// Data / Signatures - Robust parsing
+	ClientData client_data;
+	client_data.datSignature = 0;
+	client_data.sprSignature = 0;
+
+	auto parseHex = [](const toml::node_view<const toml::node>& node) -> uint32_t {
+		uint32_t val = 0;
+		if (node.is_string()) {
+			std::string s = node.as_string()->get();
+			std::from_chars(s.data(), s.data() + s.size(), val, 16);
+		} else if (node.is_integer()) {
+			val = (uint32_t)node.as_integer()->get();
+		}
+		return val;
+	};
+
+	client_data.datSignature = parseHex(client["datSignature"]);
+	client_data.sprSignature = parseHex(client["sprSignature"]);
+	client_data.datFormat = getDatFormatForVersion(version);
+
+	cv_ptr->metadata_file = client["metadataFile"].value_or("Tibia.dat");
+	cv_ptr->sprites_file = client["spritesFile"].value_or("Tibia.spr");
+
+	cv_ptr->is_transparent = client["transparency"].value_or(version >= 1010);
+	cv_ptr->is_extended = client["extended"].value_or(version >= 860);
+	cv_ptr->has_frame_durations = client["frameDurations"].value_or(version >= 1050);
+	cv_ptr->has_frame_groups = client["frameGroups"].value_or(version >= 1057);
+
+	if (!cv_ptr->data_versions.empty()) {
+		cv_ptr->data_versions[0] = client_data;
+	} else {
+		cv_ptr->data_versions.push_back(client_data);
+	}
+	cv_ptr->visible = true;
+
+	return cv;
+}
+
 void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 	wxFileName file_to_load;
 
@@ -120,83 +196,12 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			if (!elem.is_table()) {
 				continue;
 			}
-			toml::table& client = *elem.as_table();
 
-			int version = client["version"].value_or(0);
-			std::string name = client["name"].value_or("");
+			std::unique_ptr<ClientVersion> cv = parseClientNode(*elem.as_table());
 
-			// OTB Info
-			int otbId = client["otbId"].value_or(0);
-			int otbMajor = client["otbMajor"].value_or(0);
-
-			OtbVersion otb;
-			otb.name = name;
-			otb.id = static_cast<OtbVersionID>(otbId);
-			otb.format_version = static_cast<OtbFormatVersion>(otbMajor);
-
-			// Data Directory
-			std::string dataDirectory = client["dataDirectory"].value_or("");
-			std::unique_ptr<ClientVersion> cv = std::make_unique<ClientVersion>(otb, name, wxstr(dataDirectory));
-
-			ClientVersion* cv_ptr = cv.get();
-			cv_ptr->version = version;
-			cv_ptr->description = client["description"].value_or("");
-			cv_ptr->config_type = client["configType"].value_or("");
-
-			// OTBM Versions
-			cv_ptr->preferred_map_version = MAP_OTBM_UNKNOWN;
-			if (client["otbmVersions"].as_array()) {
-				auto& otbmVers = *client["otbmVersions"].as_array();
-				for (auto&& v : otbmVers) {
-					int ver = v.value_or(-1);
-					if (ver >= 1 && ver <= 4) {
-						int enumVer = ver - 1;
-						cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
-						if (cv_ptr->preferred_map_version == MAP_OTBM_UNKNOWN) {
-							cv_ptr->preferred_map_version = static_cast<MapVersionID>(enumVer);
-						}
-					}
-				}
-			}
-
-			// Data / Signatures - Robust parsing
-			ClientData client_data;
-			client_data.datSignature = 0;
-			client_data.sprSignature = 0;
-
-			auto parseHex = [](const toml::node_view<toml::node>& node) -> uint32_t {
-				uint32_t val = 0;
-				if (node.is_string()) {
-					std::string s = node.as_string()->get();
-					std::from_chars(s.data(), s.data() + s.size(), val, 16);
-				} else if (node.is_integer()) {
-					val = (uint32_t)node.as_integer()->get();
-				}
-				return val;
-			};
-
-			client_data.datSignature = parseHex(client["datSignature"]);
-			client_data.sprSignature = parseHex(client["sprSignature"]);
-			client_data.datFormat = getDatFormatForVersion(version);
-
-			cv_ptr->metadata_file = client["metadataFile"].value_or("Tibia.dat");
-			cv_ptr->sprites_file = client["spritesFile"].value_or("Tibia.spr");
-
-			cv_ptr->is_transparent = client["transparency"].value_or(version >= 1010);
-			cv_ptr->is_extended = client["extended"].value_or(version >= 860);
-			cv_ptr->has_frame_durations = client["frameDurations"].value_or(version >= 1050);
-			cv_ptr->has_frame_groups = client["frameGroups"].value_or(version >= 1057);
-
-			if (!cv_ptr->data_versions.empty()) {
-				cv_ptr->data_versions[0] = client_data;
-			} else {
-				cv_ptr->data_versions.push_back(client_data);
-			}
-			cv_ptr->visible = true;
-
-			bool isDefault = client["default"].value_or(false);
+			bool isDefault = (*elem.as_table())["default"].value_or(false);
 			if (isDefault) {
-				latest_version = cv_ptr;
+				latest_version = cv.get();
 			}
 
 			client_versions.push_back(std::move(cv));

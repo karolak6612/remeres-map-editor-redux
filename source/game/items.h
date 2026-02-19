@@ -480,6 +480,8 @@ private:
 	static void parseWeaponTypeAttribute(ItemType& it, std::string_view value);
 	static void parseFloorChangeAttribute(ItemType& it, std::string_view value);
 	void updateAllTooltipableFlags();
+	void parseOtbFlags(ItemType& t, BinaryNode* itemNode, OtbFileFormatVersion version);
+	bool parseOtbAttributes(ItemType& t, BinaryNode* itemNode, wxString& error, std::vector<std::string>& warnings);
 
 protected:
 	// Count of GameSprite types

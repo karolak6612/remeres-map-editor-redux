@@ -444,6 +444,7 @@ private:
 
 private:
 	static void loadVersionsFromTOML(const std::string& configPath);
+	static std::unique_ptr<ClientVersion> parseClientNode(const toml::table& client);
 
 	// All versions
 	using VersionList = std::vector<std::unique_ptr<ClientVersion>>;
