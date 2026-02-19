@@ -94,7 +94,7 @@ jobs:
             core.setOutput('request', request);
 
             if (eventType === 'pull_request.opened') {
-              core.setOutput('command', 'review');
+              core.setOutput('command', 'review-and-triage');
             } else if (['issues.opened', 'issues.reopened'].includes(eventType)) {
               core.setOutput('command', 'triage');
             } else if (request.startsWith("@gemini-cli /review")) {
@@ -126,7 +126,7 @@ jobs:
   review:
     needs: 'dispatch'
     if: |-
-      ${{ needs.dispatch.outputs.command == 'review' }}
+      contains(fromJSON('["review", "review-and-triage"]'), needs.dispatch.outputs.command)
     uses: './.github/workflows/gemini-review.yml'
     permissions:
       contents: 'read'
@@ -140,7 +140,7 @@ jobs:
   triage:
     needs: 'dispatch'
     if: |-
-      ${{ needs.dispatch.outputs.command == 'triage' }}
+      contains(fromJSON('["triage", "review-and-triage"]'), needs.dispatch.outputs.command)
     uses: './.github/workflows/gemini-triage.yml'
     permissions:
       contents: 'read'

@@ -60,17 +60,18 @@ jobs:
           mkdir -p $HOME/.gemini
           
           # oauth_creds.json
-          cat > $HOME/.gemini/oauth_creds.json << 'EOL'
-          ${{ secrets.GEMINI_OAUTH_CREDS }}
-          EOL
+          echo '${{ secrets.GEMINI_OAUTH_CREDS }}' > $HOME/.gemini/oauth_creds.json
           
           # settings.json
-          cat > $HOME/.gemini/settings.json << 'EOL'
-          ${{ secrets.GEMINI_SETTINGS }}
-          EOL
+          echo '${{ secrets.GEMINI_SETTINGS }}' > $HOME/.gemini/settings.json
 
+          chmod 600 $HOME/.gemini/oauth_creds.json
+          chmod 600 $HOME/.gemini/settings.json
+          
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gemini/oauth_creds.json" >> $GITHUB_ENV
+          
           ls -la $HOME/.gemini/
-          echo "✅ Gemini OAuth credentials przywrócone"
+          echo "✅ Gemini OAuth credentials przywrócone i skonfigurowane"
 
       - name: 'Run Gemini issue analysis'
         id: 'gemini_analysis'
@@ -79,15 +80,15 @@ jobs:
         uses: 'google-github-actions/run-gemini-cli@v0' # ratchet:exclude
         env:
           GITHUB_TOKEN: '' # Do NOT pass any auth tokens here since this runs on untrusted inputs
-          ISSUE_TITLE: '${{ github.event.issue.title }}'
-          ISSUE_BODY: '${{ github.event.issue.body }}'
+          ISSUE_TITLE: '${{ github.event.pull_request.title || github.event.issue.title }}'
+          ISSUE_BODY: '${{ github.event.pull_request.body || github.event.issue.body }}'
           AVAILABLE_LABELS: '${{ steps.get_labels.outputs.available_labels }}'
         with:
           gcp_location: '${{ vars.GOOGLE_CLOUD_LOCATION }}'
           gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
           gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
           gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
-          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_api_key: ' '
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
           gemini_model: '${{ vars.GEMINI_MODEL }}'
@@ -139,7 +140,7 @@ jobs:
 
       - name: 'Apply labels'
         env:
-          ISSUE_NUMBER: '${{ github.event.issue.number }}'
+          ISSUE_NUMBER: '${{ github.event.pull_request.number || github.event.issue.number }}'
           AVAILABLE_LABELS: '${{ needs.triage.outputs.available_labels }}'
           SELECTED_LABELS: '${{ needs.triage.outputs.selected_labels }}'
         uses: 'actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd' # ratchet:actions/github-script@v8.0.0

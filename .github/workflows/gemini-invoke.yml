@@ -42,17 +42,18 @@ jobs:
           mkdir -p $HOME/.gemini
           
           # oauth_creds.json
-          cat > $HOME/.gemini/oauth_creds.json << 'EOL'
-          ${{ secrets.GEMINI_OAUTH_CREDS }}
-          EOL
+          echo '${{ secrets.GEMINI_OAUTH_CREDS }}' > $HOME/.gemini/oauth_creds.json
           
           # settings.json
-          cat > $HOME/.gemini/settings.json << 'EOL'
-          ${{ secrets.GEMINI_SETTINGS }}
-          EOL
+          echo '${{ secrets.GEMINI_SETTINGS }}' > $HOME/.gemini/settings.json
 
+          chmod 600 $HOME/.gemini/oauth_creds.json
+          chmod 600 $HOME/.gemini/settings.json
+          
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/.gemini/oauth_creds.json" >> $GITHUB_ENV
+          
           ls -la $HOME/.gemini/
-          echo "✅ Gemini OAuth credentials przywrócone"
+          echo "✅ Gemini OAuth credentials przywrócone i skonfigurowane"
 
       - name: 'Run Gemini CLI'
         id: 'run_gemini'
@@ -71,7 +72,7 @@ jobs:
           gcp_project_id: '${{ vars.GOOGLE_CLOUD_PROJECT }}'
           gcp_service_account: '${{ vars.SERVICE_ACCOUNT_EMAIL }}'
           gcp_workload_identity_provider: '${{ vars.GCP_WIF_PROVIDER }}'
-          gemini_api_key: '${{ secrets.GEMINI_API_KEY }}'
+          gemini_api_key: ' '
           gemini_cli_version: '${{ vars.GEMINI_CLI_VERSION }}'
           gemini_debug: '${{ fromJSON(vars.GEMINI_DEBUG || vars.ACTIONS_STEP_DEBUG || false) }}'
           gemini_model: '${{ vars.GEMINI_MODEL }}'
