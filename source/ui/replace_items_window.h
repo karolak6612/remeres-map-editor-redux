@@ -21,6 +21,7 @@
 #include "app/main.h"
 #include "ui/controls/item_buttons.h"
 #include "editor/editor.h"
+#include "util/nanovg_listbox.h"
 
 struct ReplacingItem {
 	ReplacingItem() :
@@ -57,7 +58,7 @@ private:
 // ============================================================================
 // ReplaceItemsListBox
 
-class ReplaceItemsListBox : public wxVListBox {
+class ReplaceItemsListBox : public NanoVGListBox {
 public:
 	ReplaceItemsListBox(wxWindow* parent);
 
@@ -66,8 +67,8 @@ public:
 	void RemoveSelected();
 	bool CanAdd(uint16_t replaceId, uint16_t withId) const;
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, const wxRect& rect, int index) const override;
+	int OnMeasureItem(int index) const override;
 
 	const std::vector<ReplacingItem>& GetItems() const {
 		return m_items;
@@ -78,8 +79,6 @@ public:
 
 private:
 	std::vector<ReplacingItem> m_items;
-	wxBitmap m_arrow_bitmap;
-	wxBitmap m_flag_bitmap;
 };
 
 // ============================================================================

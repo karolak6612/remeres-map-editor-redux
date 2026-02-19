@@ -25,17 +25,19 @@
 #include "ui/gui.h"
 #include "ui/browse_tile_window.h"
 #include "util/image_manager.h"
+#include "util/nanovg_listbox.h"
+#include <nanovg.h>
 
 // ============================================================================
 //
 
-class BrowseTileListBox : public wxVListBox {
+class BrowseTileListBox : public NanoVGListBox {
 public:
 	BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile);
 	~BrowseTileListBox();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, const wxRect& rect, int index) const override;
+	int OnMeasureItem(int index) const override;
 	Item* GetSelectedItem();
 	void RemoveSelected();
 
@@ -48,7 +50,9 @@ protected:
 };
 
 BrowseTileListBox::BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile) :
-	wxVListBox(parent, id, wxDefaultPosition, FROM_DIP(parent, wxSize(200, 180)), wxLB_MULTIPLE), edit_tile(tile) {
+	NanoVGListBox(parent, id, wxLB_MULTIPLE), edit_tile(tile) {
+	SetSize(FROM_DIP(parent, wxSize(200, 180)));
+	SetMinSize(FROM_DIP(parent, wxSize(200, 180)));
 	UpdateItems();
 }
 
@@ -56,32 +60,43 @@ BrowseTileListBox::~BrowseTileListBox() {
 	////
 }
 
-void BrowseTileListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, int n) const {
 	Item* item = items[n];
+
+	int x = rect.GetX();
+	int y = rect.GetY();
+	int h = rect.GetHeight();
 
 	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
 	if (sprite) {
-		sprite->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
+		int image = const_cast<BrowseTileListBox*>(this)->GetOrCreateSpriteTexture(vg, sprite);
+		if (image > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x, y, 32, 32, 0, image, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x, y, 32, 32);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
 	}
 
 	if (IsSelected(n)) {
 		item->select();
-		if (HasFocus()) {
-			dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-		}
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 	} else {
 		item->deselect();
-		dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 	}
 
 	wxString label;
 	label << item->getID() << " - " << wxstr(item->getName());
-	dc.DrawText(label, rect.GetX() + 40, rect.GetY() + 6);
+
+	nvgFontSize(vg, 14.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, x + 40, y + h / 2.0f, label.ToUTF8(), nullptr);
 }
 
-wxCoord BrowseTileListBox::OnMeasureItem(size_t n) const {
+int BrowseTileListBox::OnMeasureItem(int n) const {
 	return 32;
 }
 
@@ -98,7 +113,10 @@ void BrowseTileListBox::RemoveSelected() {
 		return;
 	}
 
-	Clear();
+	// NanoVGListBox doesn't have Clear(), but SetItemCount(0) works or we can clear selection
+	DeselectAll(); // Just to be safe with state
+	// Note: Clear() is not implemented in NanoVGListBox, but UpdateItems calls SetItemCount.
+
 	items.clear();
 
 	// Delete the items from the tile

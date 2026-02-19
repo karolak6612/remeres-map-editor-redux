@@ -6,6 +6,7 @@
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
 #include <algorithm>
+#include <nanovg.h>
 
 static bool caseInsensitiveContains(std::string_view haystack, std::string_view needle_lower) {
 	auto it = std::search(
@@ -305,7 +306,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 // Listbox in find item / brush stuff
 
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE),
+	NanoVGListBox(parent, id, wxLB_SINGLE),
 	cleared(false),
 	no_matches(false) {
 	Clear();
@@ -342,40 +343,53 @@ void FindDialogListBox::AddBrush(Brush* brush) {
 }
 
 Brush* FindDialogListBox::GetSelectedBrush() {
-	ssize_t n = GetSelection();
+	int n = GetSelection();
 	if (n == wxNOT_FOUND || no_matches || cleared) {
 		return nullptr;
 	}
 	return brushlist[n];
 }
 
-void FindDialogListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
+void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, int n) const {
+	int x = rect.GetX();
+	int y = rect.GetY();
+	int h = rect.GetHeight();
+
+	nvgFontSize(vg, 14.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
 	if (no_matches) {
-		dc.DrawText("No matches for your search.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+		nvgText(vg, x + FromDIP(40), y + h / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
-		dc.DrawText("Please enter your search string.", rect.GetX() + FROM_DIP(this, 40), rect.GetY() + FROM_DIP(this, 6));
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+		nvgText(vg, x + FromDIP(40), y + h / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
 		if (spr) {
-			int icon_size = rect.GetHeight();
-			spr->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), icon_size, icon_size);
+			int icon_size = h;
+			int image = const_cast<FindDialogListBox*>(this)->GetOrCreateSpriteTexture(vg, spr);
+			if (image > 0) {
+				NVGpaint imgPaint = nvgImagePattern(vg, x, y, icon_size, icon_size, 0, image, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, x, y, icon_size, icon_size);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
 		}
 
 		if (IsSelected(n)) {
-			if (HasFocus()) {
-				dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-			} else {
-				dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
-			}
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
 		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
 		}
 
-		dc.DrawText(wxstr(brushlist[n]->getName()), rect.GetX() + rect.GetHeight() + FROM_DIP(this, 8), rect.GetY() + FROM_DIP(this, 6));
+		nvgText(vg, x + h + FromDIP(8), y + h / 2.0f, wxstr(brushlist[n]->getName()).ToUTF8(), nullptr);
 	}
 }
 
-wxCoord FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FROM_DIP(this, 32);
+int FindDialogListBox::OnMeasureItem(int n) const {
+	return FromDIP(32);
 }
