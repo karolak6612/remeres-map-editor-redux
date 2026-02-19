@@ -32,7 +32,13 @@ public:
 		TooltipTeleport, // Teleport destination
 		TooltipWaypoint, // Waypoint name
 		TooltipBodyText, // Description / general body text
-		TooltipCountText // Container item count text
+		TooltipCountText, // Container item count text
+
+		TooltipBorderWaypoint,
+		TooltipBorderItem,
+		TooltipBorderDoor,
+		TooltipBorderTeleport,
+		TooltipBorderText
 	};
 
 	enum class Type {
@@ -41,8 +47,8 @@ public:
 		Light = 2
 	};
 
-	static void SetType(Type type);
-	static Type GetType();
+	static void setType(Type type);
+	static Type getType();
 
 	static wxColour Get(Role role);
 

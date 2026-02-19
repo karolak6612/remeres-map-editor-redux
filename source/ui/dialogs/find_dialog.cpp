@@ -385,10 +385,10 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		}
 
 		if (IsSelected(n)) {
-			wxColour textColour = Theme::Get(Theme::Role::TextOnAccent);
+			textColour = Theme::Get(Theme::Role::TextOnAccent);
 			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		} else {
-			wxColour textColour = Theme::Get(Theme::Role::Text);
+			textColour = Theme::Get(Theme::Role::Text);
 			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		}
 

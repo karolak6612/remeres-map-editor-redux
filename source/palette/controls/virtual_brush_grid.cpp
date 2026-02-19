@@ -119,10 +119,8 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	nvgRoundedRect(vg, x, y, w, h, 4.0f);
 
 	if (i == selected_index) {
-		NVGcolor selCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Selected));
+		NVGcolor selCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
 		selCol.a = 1.0f; // Force opaque for background
-		// Blend with CardBase to ensure visibility if Selected is transparent
-		NVGcolor baseCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase));
 		nvgFillColor(vg, selCol);
 	} else if (i == hover_index) {
 		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover)));

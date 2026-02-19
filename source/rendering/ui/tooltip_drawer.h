@@ -47,29 +47,6 @@ enum class TooltipCategory {
 	TEXT // Gold - readable text (signs, books)
 };
 
-// Semantic color palette for tooltip rendering
-namespace TooltipColors {
-	// Header colors by category (RGB)
-	constexpr uint8_t WAYPOINT_HEADER_R = 50, WAYPOINT_HEADER_G = 205, WAYPOINT_HEADER_B = 50; // Lime Green
-	constexpr uint8_t ITEM_HEADER_R = 58, ITEM_HEADER_G = 58, ITEM_HEADER_B = 64; // Charcoal
-	constexpr uint8_t DOOR_HEADER_R = 139, DOOR_HEADER_G = 69, DOOR_HEADER_B = 19; // Saddle Brown
-	constexpr uint8_t TELEPORT_HEADER_R = 153, TELEPORT_HEADER_G = 50, TELEPORT_HEADER_B = 204; // Dark Orchid
-	constexpr uint8_t TEXT_HEADER_R = 218, TEXT_HEADER_G = 165, TEXT_HEADER_B = 32; // Goldenrod
-
-	// Field value colors (RGB)
-	constexpr uint8_t ACTION_ID_R = 255, ACTION_ID_G = 165, ACTION_ID_B = 0; // Orange
-	constexpr uint8_t UNIQUE_ID_R = 100, UNIQUE_ID_G = 149, UNIQUE_ID_B = 237; // Cornflower Blue
-	constexpr uint8_t DOOR_ID_R = 0, DOOR_ID_G = 139, DOOR_ID_B = 139; // Dark Cyan
-	constexpr uint8_t TEXT_R = 255, TEXT_G = 215, TEXT_B = 0; // Gold
-	constexpr uint8_t TELEPORT_DEST_R = 186, TELEPORT_DEST_G = 85, TELEPORT_DEST_B = 211; // Medium Orchid
-
-	// Body colors
-	constexpr uint8_t BODY_BG_R = 30, BODY_BG_G = 30, BODY_BG_B = 35; // Near Black
-	constexpr uint8_t BODY_TEXT_R = 220, BODY_TEXT_G = 220, BODY_TEXT_B = 220; // Light Gray
-	constexpr uint8_t HEADER_TEXT_R = 255, HEADER_TEXT_G = 255, HEADER_TEXT_B = 255; // White
-	constexpr uint8_t COUNT_TEXT_R = 200, COUNT_TEXT_G = 200, COUNT_TEXT_B = 200; // Light Gray for counts
-}
-
 // Structured tooltip data for card-based rendering
 struct TooltipData {
 	Position pos;

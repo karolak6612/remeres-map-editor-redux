@@ -264,6 +264,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/welcome_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/gl_context_manager.h
 
+    ${CMAKE_CURRENT_LIST_DIR}/ui/theme.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_frame.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_menubar.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/menubar_action_manager.h

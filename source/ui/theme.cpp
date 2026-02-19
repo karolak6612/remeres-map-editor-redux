@@ -2,11 +2,11 @@
 
 Theme::Type Theme::current_type = Theme::Type::System;
 
-void Theme::SetType(Theme::Type type) {
+void Theme::setType(Theme::Type type) {
 	current_type = type;
 }
 
-Theme::Type Theme::GetType() {
+Theme::Type Theme::getType() {
 	return current_type;
 }
 
@@ -78,6 +78,16 @@ wxColour Theme::GetDark(Role role) {
 			return wxColour(220, 220, 220); // Light Gray
 		case Role::TooltipCountText:
 			return wxColour(200, 200, 200); // Light Gray
+		case Role::TooltipBorderWaypoint:
+			return wxColour(50, 205, 50); // Lime Green
+		case Role::TooltipBorderItem:
+			return wxColour(58, 58, 64); // Charcoal
+		case Role::TooltipBorderDoor:
+			return wxColour(139, 69, 19); // Saddle Brown
+		case Role::TooltipBorderTeleport:
+			return wxColour(153, 50, 204); // Dark Orchid
+		case Role::TooltipBorderText:
+			return wxColour(218, 165, 32); // Goldenrod
 		default:
 			return *wxWHITE;
 	}
@@ -134,6 +144,16 @@ wxColour Theme::GetLight(Role role) {
 			return wxColour(30, 30, 30); // Near Black
 		case Role::TooltipCountText:
 			return wxColour(60, 60, 60); // Dark Gray
+		case Role::TooltipBorderWaypoint:
+			return wxColour(50, 205, 50); // Lime Green
+		case Role::TooltipBorderItem:
+			return wxColour(58, 58, 64); // Charcoal
+		case Role::TooltipBorderDoor:
+			return wxColour(139, 69, 19); // Saddle Brown
+		case Role::TooltipBorderTeleport:
+			return wxColour(153, 50, 204); // Dark Orchid
+		case Role::TooltipBorderText:
+			return wxColour(218, 165, 32); // Goldenrod
 		default:
 			return *wxBLACK;
 	}

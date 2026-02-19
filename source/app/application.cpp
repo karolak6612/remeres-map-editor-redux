@@ -91,10 +91,13 @@ bool Application::OnInit() {
 	// Load settings early for theme support
 	g_settings.load();
 
-	Theme::Type theme = (Theme::Type)g_settings.getInteger(Config::THEME);
-	Theme::SetType(theme);
+	int rawTheme = g_settings.getInteger(Config::THEME);
+	Theme::Type theme = Theme::Type::System;
+	if (rawTheme >= static_cast<int>(Theme::Type::System) && rawTheme <= static_cast<int>(Theme::Type::Light)) {
+		theme = static_cast<Theme::Type>(rawTheme);
+	}
+	Theme::setType(theme);
 
-	// Enable modern appearance handling (wxWidgets 3.3+)
 	// Enable modern appearance handling (wxWidgets 3.3+)
 #if wxCHECK_VERSION(3, 3, 0)
 	switch (theme) {
@@ -112,6 +115,7 @@ bool Application::OnInit() {
 #endif
 
 #ifdef __WXMSW__
+	#if wxCHECK_VERSION(3, 3, 0)
 	// Enable dark mode support for Windows
 	// Note: SetAppearance() above handles this internally in newer versions,
 	// but explicit calls here ensure improved behavior on some system configurations.
@@ -128,6 +132,7 @@ bool Application::OnInit() {
 			MSWEnableDarkMode(wxApp::DarkMode_Auto);
 			break;
 	}
+	#endif
 #endif
 
 	// Discover data directory

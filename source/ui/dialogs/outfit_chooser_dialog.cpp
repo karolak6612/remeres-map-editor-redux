@@ -70,7 +70,7 @@ namespace {
 
 			if (selected) {
 				dc.SetBrush(*wxTRANSPARENT_BRUSH);
-				dc.SetPen(wxPen(Theme::Get(Theme::Role::Text), 2));
+				dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent), 2));
 				dc.DrawRectangle(rect.Inflate(-1, -1));
 			}
 		}

@@ -47,12 +47,12 @@ InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 
 	// Theme selection
 	wxBoxSizer* themeSizer = newd wxBoxSizer(wxHORIZONTAL);
-	themeSizer->Add(newd wxStaticText(this, wxID_ANY, "Theme: "), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, 5));
+	themeSizer->Add(newd wxStaticText(this, wxID_ANY, wxString("Theme: ")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, 5));
 
 	theme_choice = newd wxChoice(this, wxID_ANY);
-	theme_choice->Append("System Default");
-	theme_choice->Append("Dark");
-	theme_choice->Append("Light");
+	theme_choice->Append(wxString("System Default"));
+	theme_choice->Append(wxString("Dark"));
+	theme_choice->Append(wxString("Light"));
 
 	int currentTheme = g_settings.getInteger(Config::THEME);
 	if (currentTheme >= 0 && currentTheme <= 2) {
@@ -139,9 +139,9 @@ wxChoice* InterfacePage::AddPaletteStyleChoice(wxSizer* sizer, const wxString& s
 	wxChoice* choice = newd wxChoice(this, wxID_ANY);
 	sizer->Add(choice, 0);
 
-	choice->Append("Large Icons");
-	choice->Append("Small Icons");
-	choice->Append("Listbox with Icons");
+	choice->Append(wxString("Large Icons"));
+	choice->Append(wxString("Small Icons"));
+	choice->Append(wxString("Listbox with Icons"));
 
 	text->SetToolTip(description);
 	choice->SetToolTip(description);
@@ -245,9 +245,9 @@ void InterfacePage::Apply() {
 	}
 
 	int selectedTheme = theme_choice->GetSelection();
-	if (g_settings.getInteger(Config::THEME) != selectedTheme) {
+	if (selectedTheme != wxNOT_FOUND && g_settings.getInteger(Config::THEME) != selectedTheme) {
 		g_settings.setInteger(Config::THEME, selectedTheme);
-		Theme::SetType((Theme::Type)selectedTheme);
-		DialogUtil::PopupDialog("Theme Changed", "Theme changed. Please restart the application for all changes to take effect.", wxOK);
+		Theme::setType(static_cast<Theme::Type>(selectedTheme));
+		DialogUtil::PopupDialog(wxString("Theme Changed"), wxString("Theme changed. Please restart the application for all changes to take effect."), wxOK);
 	}
 }
