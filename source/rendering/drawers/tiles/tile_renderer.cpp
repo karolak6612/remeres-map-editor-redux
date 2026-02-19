@@ -200,6 +200,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
+	const ItemType* ground_it = nullptr;
+	if (tile->ground) {
+		ground_it = &g_items[tile->ground->getID()];
+	}
+
 	if (only_colors) {
 		if (as_minimap) {
 			TileColorCalculator::GetMinimapColor(tile, r, g, b);
@@ -208,9 +213,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, r, g, b, 128);
 		}
 	} else {
-		if (tile->ground) {
-			const ItemType& it = g_items[tile->ground->getID()];
-			PreloadItem(tile, tile->ground.get(), it);
+		if (tile->ground && ground_it) {
+			PreloadItem(tile, tile->ground.get(), *ground_it);
 			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
@@ -219,10 +223,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground) {
-		const ItemType& it = g_items[tile->ground->getID()];
+	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}

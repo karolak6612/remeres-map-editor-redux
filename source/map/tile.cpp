@@ -203,6 +203,7 @@ void Tile::merge(Tile* other) {
 		addItem(std::move(item));
 	}
 	other->items.clear();
+	update();
 }
 
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
@@ -305,6 +306,7 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		statflags |= TILESTATE_SELECTED;
 	}
 	items.insert(it, std::move(item));
+	update();
 }
 
 void Tile::select() {
@@ -527,6 +529,7 @@ void Tile::addBorderItem(std::unique_ptr<Item> item) {
 	}
 	ASSERT(item->isBorder());
 	items.insert(items.begin(), std::move(item));
+	update();
 }
 
 GroundBrush* Tile::getGroundBrush() const {

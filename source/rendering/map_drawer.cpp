@@ -270,12 +270,12 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 		fbo_resized = true;
 	}
 
-	// Always update filtering parameters (supports toggling AA without resize)
-	if (scale_texture && (fbo_resized || options.anti_aliasing != last_aa_mode_)) {
+	// Update filtering parameters when scaling is enabled and either the FBO was resized or the AA mode changed (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode))
+	if (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode)) {
 		GLenum filter = options.anti_aliasing ? GL_LINEAR : GL_NEAREST;
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MIN_FILTER, filter);
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);
-		last_aa_mode_ = options.anti_aliasing;
+		m_lastAaMode = options.anti_aliasing;
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());
