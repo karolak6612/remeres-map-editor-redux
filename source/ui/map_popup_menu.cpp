@@ -159,7 +159,7 @@ void MapPopupMenu::Update() {
 					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
 				}
 
-				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select as RAW Brush", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
 
 				if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
 					Append(MAP_POPUP_MENU_MOVE_TO_TILESET, "Move To Tileset", "Move this item to any tileset")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHARE_FROM_SQUARE, wxSize(16, 16)));
@@ -209,7 +209,7 @@ void MapPopupMenu::Update() {
 					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
 				}
 
-				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select as RAW Brush", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
 				if (hasWall) {
 					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
 				}
@@ -233,7 +233,7 @@ void MapPopupMenu::Update() {
 
 			AppendSeparator();
 
-			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items");
+			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Navigate Field Items", "Navigate from tile items");
 			browseTile->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
 			browseTile->Enable(anything_selected);
 		}

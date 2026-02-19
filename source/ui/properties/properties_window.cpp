@@ -229,7 +229,7 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
 	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
-	removeBtn->SetToolTip("Remove selected custom attribute");
+	removeBtn->SetToolTip("Remove selected custom attribute (Select a row first)");
 	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
 
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
