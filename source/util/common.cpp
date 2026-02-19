@@ -25,6 +25,7 @@
 #include <random>
 #include <regex>
 #include <algorithm>
+#include <array>
 
 // random generator
 std::mt19937& getRandomGenerator() {
@@ -57,11 +58,19 @@ std::string f2s(const double _d) {
 }
 
 int s2i(const std::string s) {
-	return atoi(s.c_str());
+	try {
+		return std::stoi(s);
+	} catch (...) {
+		return 0;
+	}
 }
 
 double s2f(const std::string s) {
-	return atof(s.c_str());
+	try {
+		return std::stod(s);
+	} catch (...) {
+		return 0.0;
+	}
 }
 
 wxString i2ws(const int _i) {
@@ -79,7 +88,7 @@ wxString f2ws(const double _d) {
 int ws2i(const wxString s) {
 	long _i;
 	if (s.ToLong(&_i)) {
-		return int(_i);
+		return static_cast<int>(_i);
 	}
 	return 0;
 }
@@ -131,10 +140,8 @@ std::string as_upper_str(const std::string& other) {
 }
 
 bool isFalseString(std::string& str) {
-	if (str == "false" || str == "0" || str == "" || str == "no" || str == "not") {
-		return true;
-	}
-	return false;
+	static constexpr std::array<std::string_view, 5> falseStrings = {"false", "0", "", "no", "not"};
+	return std::ranges::any_of(falseStrings, [&](const auto& s) { return s == str; });
 }
 
 bool isTrueString(std::string& str) {
@@ -151,12 +158,12 @@ int random(int high) {
 
 std::wstring string2wstring(const std::string& utf8string) {
 	wxString s(utf8string.c_str(), wxConvUTF8);
-	return std::wstring((const wchar_t*)s.c_str());
+	return s.ToStdWstring();
 }
 
 std::string wstring2string(const std::wstring& widestring) {
 	wxString s(widestring.c_str());
-	return std::string((const char*)s.mb_str(wxConvUTF8));
+	return std::string(s.ToUTF8());
 }
 
 bool posFromClipboard(Position& position, const int mapWidth /* = MAP_MAX_WIDTH */, const int mapHeight /* = MAP_MAX_HEIGHT */) {
@@ -209,8 +216,8 @@ wxColor colorFromEightBit(int color) {
 	if (color <= 0 || color >= 216) {
 		return wxColor(0, 0, 0);
 	}
-	const uint8_t red = (uint8_t)(int(color / 36) % 6 * 51);
-	const uint8_t green = (uint8_t)(int(color / 6) % 6 * 51);
-	const uint8_t blue = (uint8_t)(color % 6 * 51);
+	const uint8_t red = static_cast<uint8_t>(int(color / 36) % 6 * 51);
+	const uint8_t green = static_cast<uint8_t>(int(color / 6) % 6 * 51);
+	const uint8_t blue = static_cast<uint8_t>(color % 6 * 51);
 	return wxColor(red, green, blue);
 }
