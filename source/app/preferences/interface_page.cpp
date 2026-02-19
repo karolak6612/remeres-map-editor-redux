@@ -47,7 +47,7 @@ InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 
 	// Theme selection
 	wxBoxSizer* themeSizer = newd wxBoxSizer(wxHORIZONTAL);
-	themeSizer->Add(newd wxStaticText(this, wxID_ANY, "Theme: "), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	themeSizer->Add(newd wxStaticText(this, wxID_ANY, "Theme: "), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, 5));
 
 	theme_choice = newd wxChoice(this, wxID_ANY);
 	theme_choice->Append("System Default");

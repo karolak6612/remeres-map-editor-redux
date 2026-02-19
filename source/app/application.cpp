@@ -96,21 +96,33 @@ bool Application::OnInit() {
 
 	// Enable modern appearance handling (wxWidgets 3.3+)
 #if wxCHECK_VERSION(3, 3, 0)
-	if (theme == Theme::Type::Dark) {
-		SetAppearance(wxApp::Appearance::Dark);
-	} else if (theme == Theme::Type::Light) {
-		SetAppearance(wxApp::Appearance::Light);
-	} else {
-		SetAppearance(wxApp::Appearance::System);
+	switch (theme) {
+		case Theme::Type::Dark:
+			SetAppearance(wxApp::Appearance::Dark);
+			break;
+		case Theme::Type::Light:
+			SetAppearance(wxApp::Appearance::Light);
+			break;
+		case Theme::Type::System:
+		default:
+			SetAppearance(wxApp::Appearance::System);
+			break;
 	}
 #endif
 
 #ifdef __WXMSW__
 	// Enable dark mode support for Windows
-	if (theme == Theme::Type::Dark) {
-		MSWEnableDarkMode(wxApp::DarkMode_Always);
-	} else if (theme == Theme::Type::System) {
-		MSWEnableDarkMode(wxApp::DarkMode_System);
+	switch (theme) {
+		case Theme::Type::Dark:
+			MSWEnableDarkMode(wxApp::DarkMode_Always);
+			break;
+		case Theme::Type::Light:
+			MSWEnableDarkMode(wxApp::DarkMode_Never);
+			break;
+		case Theme::Type::System:
+		default:
+			MSWEnableDarkMode(wxApp::DarkMode_System);
+			break;
 	}
 #endif
 

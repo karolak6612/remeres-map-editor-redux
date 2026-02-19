@@ -11,18 +11,20 @@ Theme::Type Theme::GetType() {
 }
 
 wxColour Theme::Get(Role role) {
-	if (current_type == Type::Dark) {
-		return GetDark(role);
-	} else if (current_type == Type::Light) {
-		return GetLight(role);
-	} else {
-		// System
-		if (wxSystemSettings::GetAppearance().IsDark()) {
-			return GetDark(role);
-		} else {
-			return GetLight(role);
-		}
+	bool is_dark;
+	switch (current_type) {
+		case Type::Dark:
+			is_dark = true;
+			break;
+		case Type::Light:
+			is_dark = false;
+			break;
+		case Type::System:
+		default:
+			is_dark = wxSystemSettings::GetAppearance().IsDark();
+			break;
 	}
+	return is_dark ? GetDark(role) : GetLight(role);
 }
 
 wxColour Theme::GetDark(Role role) {
