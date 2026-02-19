@@ -8,6 +8,8 @@
 #include <cmath>
 #include <vector>
 #include <memory>
+#include <span>
+#include <ranges>
 
 VisualSimilarityService& VisualSimilarityService::Get() {
 	static VisualSimilarityService instance;
@@ -33,16 +35,16 @@ void VisualSimilarityService::StartIndexing() {
 // CORE ALGORITHM HELPERS (Mappingtool 1:1)
 // ============================================================================
 
-static bool IsFullyOpaqueRGBA(const uint8_t* rgba, int count, uint8_t threshold = 10) {
-	for (int i = 0; i < count; ++i) {
-		if (rgba[i * 4 + 3] <= threshold) {
+static bool IsFullyOpaqueRGBA(std::span<const uint8_t> rgba, uint8_t threshold = 10) {
+	for (size_t i = 3; i < rgba.size(); i += 4) {
+		if (rgba[i] <= threshold) {
 			return false;
 		}
 	}
 	return true;
 }
 
-static uint64_t CalculateAHashRGBA(const uint8_t* rgba, int w, int h) {
+static uint64_t CalculateAHashRGBA(std::span<const uint8_t> rgba, int w, int h) {
 	// mappingtool: 1. Resize to 8x8 using box sampling
 	// grayscale = 0.299*R + 0.587*G + 0.114*B
 	uint8_t gray_8x8[64];
@@ -86,10 +88,11 @@ static uint64_t CalculateAHashRGBA(const uint8_t* rgba, int w, int h) {
 	return hash;
 }
 
-static std::vector<bool> ExtractBinaryMaskRGBA(const uint8_t* rgba, int count, int& outTruePixels) {
+static std::vector<bool> ExtractBinaryMaskRGBA(std::span<const uint8_t> rgba, int& outTruePixels) {
+	size_t count = rgba.size() / 4;
 	std::vector<bool> mask(count);
 	outTruePixels = 0;
-	for (int i = 0; i < count; ++i) {
+	for (size_t i = 0; i < count; ++i) {
 		// Strictly > 10 per mappingtool docs
 		bool val = (rgba[i * 4 + 3] > 10);
 		mask[i] = val;
@@ -100,12 +103,13 @@ static std::vector<bool> ExtractBinaryMaskRGBA(const uint8_t* rgba, int count, i
 	return mask;
 }
 
-static std::vector<float> CalculateHistogramRGBA(const uint8_t* rgba, int count, uint8_t threshold = 10) {
+static std::vector<float> CalculateHistogramRGBA(std::span<const uint8_t> rgba, uint8_t threshold = 10) {
 	const int BINS = 8;
 	std::vector<int> hist(BINS * BINS * BINS, 0);
 	int pixel_count = 0;
+	size_t count = rgba.size() / 4;
 
-	for (int i = 0; i < count; ++i) {
+	for (size_t i = 0; i < count; ++i) {
 		if (rgba[i * 4 + 3] > threshold) {
 			int r_bin = std::min((int)(rgba[i * 4 + 0] * BINS / 256), BINS - 1);
 			int g_bin = std::min((int)(rgba[i * 4 + 1] * BINS / 256), BINS - 1);
@@ -126,7 +130,7 @@ static std::vector<float> CalculateHistogramRGBA(const uint8_t* rgba, int count,
 	return normalized;
 }
 
-static float CompareHistograms(const std::vector<float>& h1, const std::vector<float>& h2) {
+static float CompareHistograms(std::span<const float> h1, std::span<const float> h2) {
 	if (h1.empty() || h2.empty()) {
 		return 0.0f;
 	}
@@ -199,12 +203,12 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 
 	data.width = w;
 	data.height = h;
-	data.isOpaque = IsFullyOpaqueRGBA(composite.get(), w * h);
+	data.isOpaque = IsFullyOpaqueRGBA({composite.get(), static_cast<size_t>(w * h * 4)});
 
 	// Store both for robustness
-	data.aHash = CalculateAHashRGBA(composite.get(), w, h);
-	data.binaryMask = ExtractBinaryMaskRGBA(composite.get(), w * h, data.truePixels);
-	data.histogram = CalculateHistogramRGBA(composite.get(), w * h);
+	data.aHash = CalculateAHashRGBA({composite.get(), static_cast<size_t>(w * h * 4)}, w, h);
+	data.binaryMask = ExtractBinaryMaskRGBA({composite.get(), static_cast<size_t>(w * h * 4)}, data.truePixels);
+	data.histogram = CalculateHistogramRGBA({composite.get(), static_cast<size_t>(w * h * 4)});
 
 	return data;
 }
@@ -345,8 +349,9 @@ std::vector<uint16_t> VisualSimilarityService::FindSimilar(uint16_t itemId, size
 	std::partial_sort(candidates.begin(), candidates.begin() + count, candidates.end());
 
 	std::vector<uint16_t> results;
-	for (size_t i = 0; i < count; ++i) {
-		results.push_back(candidates[i].id);
+	results.reserve(count);
+	for (const auto& candidate : candidates | std::views::take(count)) {
+		results.push_back(candidate.id);
 	}
 	return results;
 }
