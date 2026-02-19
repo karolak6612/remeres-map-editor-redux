@@ -3,6 +3,7 @@
 
 #include <glad/glad.h>
 #include <cassert>
+#include <utility>
 
 /**
  * @brief RAII wrapper for glEnable/glDisable
@@ -26,19 +27,43 @@ public:
 	}
 
 	~ScopedGLCapability() {
-		if (was_enabled_) {
-			glEnable(capability_);
-		} else {
-			glDisable(capability_);
-		}
+		restore();
 	}
 
 	ScopedGLCapability(const ScopedGLCapability&) = delete;
 	ScopedGLCapability& operator=(const ScopedGLCapability&) = delete;
 
+	ScopedGLCapability(ScopedGLCapability&& other) noexcept :
+		capability_(other.capability_),
+		was_enabled_(other.was_enabled_),
+		active_(std::exchange(other.active_, false)) {
+	}
+
+	ScopedGLCapability& operator=(ScopedGLCapability&& other) noexcept {
+		if (this != &other) {
+			restore();
+			capability_ = other.capability_;
+			was_enabled_ = other.was_enabled_;
+			active_ = std::exchange(other.active_, false);
+		}
+		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			if (was_enabled_) {
+				glEnable(capability_);
+			} else {
+				glDisable(capability_);
+			}
+		}
+	}
+
 private:
 	GLenum capability_;
 	GLboolean was_enabled_;
+	bool active_ = true;
 };
 
 /**
@@ -60,12 +85,43 @@ public:
 	}
 
 	~ScopedGLBlend() {
-		glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
-		glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
+		restore();
 	}
 
 	ScopedGLBlend(const ScopedGLBlend&) = delete;
 	ScopedGLBlend& operator=(const ScopedGLBlend&) = delete;
+
+	ScopedGLBlend(ScopedGLBlend&& other) noexcept :
+		prev_src_rgb_(other.prev_src_rgb_),
+		prev_dst_rgb_(other.prev_dst_rgb_),
+		prev_src_alpha_(other.prev_src_alpha_),
+		prev_dst_alpha_(other.prev_dst_alpha_),
+		prev_eq_rgb_(other.prev_eq_rgb_),
+		prev_eq_alpha_(other.prev_eq_alpha_),
+		active_(std::exchange(other.active_, false)) {
+	}
+
+	ScopedGLBlend& operator=(ScopedGLBlend&& other) noexcept {
+		if (this != &other) {
+			restore();
+			prev_src_rgb_ = other.prev_src_rgb_;
+			prev_dst_rgb_ = other.prev_dst_rgb_;
+			prev_src_alpha_ = other.prev_src_alpha_;
+			prev_dst_alpha_ = other.prev_dst_alpha_;
+			prev_eq_rgb_ = other.prev_eq_rgb_;
+			prev_eq_alpha_ = other.prev_eq_alpha_;
+			active_ = std::exchange(other.active_, false);
+		}
+		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
+			glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
+		}
+	}
 
 private:
 	void save_state() {
@@ -77,9 +133,10 @@ private:
 		glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &prev_eq_alpha_);
 	}
 
-	GLint prev_src_rgb_, prev_dst_rgb_;
-	GLint prev_src_alpha_, prev_dst_alpha_;
-	GLint prev_eq_rgb_, prev_eq_alpha_;
+	GLint prev_src_rgb_ = GL_ONE, prev_dst_rgb_ = GL_ZERO;
+	GLint prev_src_alpha_ = GL_ONE, prev_dst_alpha_ = GL_ZERO;
+	GLint prev_eq_rgb_ = GL_FUNC_ADD, prev_eq_alpha_ = GL_FUNC_ADD;
+	bool active_ = true;
 };
 
 /**
@@ -104,21 +161,47 @@ public:
 	}
 
 	~ScopedGLFramebuffer() {
-		if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
-			glBindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
-		}
-		if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
-			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
-		}
+		restore();
 	}
 
 	ScopedGLFramebuffer(const ScopedGLFramebuffer&) = delete;
 	ScopedGLFramebuffer& operator=(const ScopedGLFramebuffer&) = delete;
 
+	ScopedGLFramebuffer(ScopedGLFramebuffer&& other) noexcept :
+		target_(other.target_),
+		prev_read_(other.prev_read_),
+		prev_draw_(other.prev_draw_),
+		active_(std::exchange(other.active_, false)) {
+	}
+
+	ScopedGLFramebuffer& operator=(ScopedGLFramebuffer&& other) noexcept {
+		if (this != &other) {
+			restore();
+			target_ = other.target_;
+			prev_read_ = other.prev_read_;
+			prev_draw_ = other.prev_draw_;
+			active_ = std::exchange(other.active_, false);
+		}
+		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
+				glBindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
+			}
+			if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
+				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
+			}
+		}
+	}
+
 private:
 	GLenum target_;
 	GLint prev_read_ = 0;
 	GLint prev_draw_ = 0;
+	bool active_ = true;
 };
 
 /**
@@ -134,14 +217,40 @@ public:
 	}
 
 	~ScopedGLViewport() {
-		glViewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
+		restore();
 	}
 
 	ScopedGLViewport(const ScopedGLViewport&) = delete;
 	ScopedGLViewport& operator=(const ScopedGLViewport&) = delete;
 
+	ScopedGLViewport(ScopedGLViewport&& other) noexcept :
+		active_(std::exchange(other.active_, false)) {
+		for (int i = 0; i < 4; ++i) {
+			prev_viewport_[i] = other.prev_viewport_[i];
+		}
+	}
+
+	ScopedGLViewport& operator=(ScopedGLViewport&& other) noexcept {
+		if (this != &other) {
+			restore();
+			for (int i = 0; i < 4; ++i) {
+				prev_viewport_[i] = other.prev_viewport_[i];
+			}
+			active_ = std::exchange(other.active_, false);
+		}
+		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			glViewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
+		}
+	}
+
 private:
 	GLint prev_viewport_[4];
+	bool active_ = true;
 };
 
 #endif

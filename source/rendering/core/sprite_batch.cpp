@@ -133,8 +133,10 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	sprite_count_ = 0;
 	global_tint_ = glm::vec4(1.0f);
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Enable Blend State (RAII)
+	// We use emplace to construct the Scoped objects in-place, which saves the previous state
+	blend_capability_.emplace(GL_BLEND);
+	blend_func_.emplace(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	shader_->Use();
 	shader_->SetMat4("uMVP", projection_);
@@ -185,8 +187,6 @@ void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& re
 	inst.b = b;
 	inst.a = a;
 	inst.atlas_layer = static_cast<float>(region.atlas_index);
-	// Pad initialized to 0 implicitly or structurally? C++ struct fields not init
-	inst._pad1 = inst._pad2 = inst._pad3 = 0.0f;
 }
 
 void SpriteBatch::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {
@@ -340,5 +340,10 @@ void SpriteBatch::end(const AtlasManager& atlas_manager) {
 
 	in_batch_ = false;
 	glBindVertexArray(0);
-	glDisable(GL_BLEND);
+
+	// Restore state (reverse order of construction)
+	// blend_func_ was constructed second, so destroy it first
+	blend_func_.reset();
+	// blend_capability_ was constructed first, so destroy it last
+	blend_capability_.reset();
 }

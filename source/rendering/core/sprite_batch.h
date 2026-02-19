@@ -9,9 +9,11 @@
 #include "rendering/core/texture_atlas.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/gl_scoped_state.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
+#include <optional>
 
 /**
  * High-performance batched sprite renderer using instanced drawing.
@@ -111,6 +113,10 @@ private:
 	std::vector<SpriteInstance> pending_sprites_;
 	glm::mat4 projection_ { 1.0f };
 	glm::vec4 global_tint_ { 1.0f };
+
+	// Scoped state for batch duration
+	std::optional<ScopedGLCapability> blend_capability_;
+	std::optional<ScopedGLBlend> blend_func_;
 
 	bool in_batch_ = false;
 	bool use_mdi_ = false;

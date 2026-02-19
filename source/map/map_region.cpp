@@ -121,9 +121,9 @@ bool MapNode::isVisible(uint32_t client, bool underground) {
 	}
 
 	if (underground) {
-		return testFlags(visible, 1u << (position + MAP_LAYERS));
+		return testFlags(visible, 1ULL << (position + MAP_LAYERS));
 	} else {
-		return testFlags(visible, 1u << position);
+		return testFlags(visible, 1ULL << position);
 	}
 }
 
@@ -143,16 +143,29 @@ void MapNode::setVisible(bool underground, bool value) {
 	}
 }
 
-std::vector<SpatialHashGrid::SortedGridCell> SpatialHashGrid::getSortedCells() const {
-	std::vector<SortedGridCell> sorted_cells;
-	sorted_cells.reserve(cells.size());
-	for (const auto& pair : cells) {
-		sorted_cells.emplace_back(pair.first, pair.second.get());
+void SpatialHashGrid::updateSortedCells() const {
+	if (!sorted_cells_dirty) {
+		return;
 	}
-	std::sort(sorted_cells.begin(), sorted_cells.end(), [](const auto& a, const auto& b) {
-		return a.key < b.key;
+
+	sorted_cells_cache.clear();
+	sorted_cells_cache.reserve(cells.size());
+	for (const auto& [key, cell_ptr] : cells) {
+		int cx, cy;
+		getCellCoordsFromKey(key, cx, cy);
+		sorted_cells_cache.emplace_back(key, cx, cy, cell_ptr.get());
+	}
+
+	std::ranges::sort(sorted_cells_cache, [](const auto& a, const auto& b) {
+		return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
 	});
-	return sorted_cells;
+
+	sorted_cells_dirty = false;
+}
+
+const std::vector<SpatialHashGrid::SortedGridCell>& SpatialHashGrid::getSortedCells() const {
+	updateSortedCells();
+	return sorted_cells_cache;
 }
 
 void MapNode::setRequested(bool underground, bool r) {
@@ -240,7 +253,7 @@ SpatialHashGrid::GridCell::~GridCell() {
 	// std::unique_ptr handles cleanup automatically
 }
 
-SpatialHashGrid::SpatialHashGrid(BaseMap& map) : map(map) {
+SpatialHashGrid::SpatialHashGrid(BaseMap& map) : map(map), sorted_cells_dirty(false) {
 	//
 }
 
@@ -250,6 +263,8 @@ SpatialHashGrid::~SpatialHashGrid() {
 
 void SpatialHashGrid::clear() {
 	cells.clear();
+	sorted_cells_cache.clear();
+	sorted_cells_dirty = false;
 }
 
 MapNode* SpatialHashGrid::getLeaf(int x, int y) {
@@ -269,6 +284,7 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	auto& cell = cells[key];
 	if (!cell) {
 		cell = std::make_unique<GridCell>();
+		sorted_cells_dirty = true;
 	}
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);

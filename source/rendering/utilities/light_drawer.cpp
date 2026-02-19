@@ -20,6 +20,7 @@
 #include "rendering/utilities/light_calculator.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <format>
+#include <limits>
 #include "map/tile.h"
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
@@ -88,9 +89,9 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 		return;
 	}
 
-	int TileSize = 32;
-	int pixel_width = w * TileSize;
-	int pixel_height = h * TileSize;
+	// TILE_SIZE is a global constexpr constant
+	int pixel_width = w * TILE_SIZE;
+	int pixel_height = h * TILE_SIZE;
 
 	// 1. Resize FBO if needed (ensure it covers the visible map area)
 	// We check if current buffer is smaller than needed
@@ -106,8 +107,8 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	gpu_lights_.clear();
 	gpu_lights_.reserve(light_buffer.lights.size());
 
-	float map_draw_start_x = (float)(map_x * TileSize - view.view_scroll_x);
-	float map_draw_start_y = (float)(map_y * TileSize - view.view_scroll_y);
+	float map_draw_start_x = static_cast<float>(map_x * TILE_SIZE) - static_cast<float>(view.view_scroll_x);
+	float map_draw_start_y = static_cast<float>(map_y * TILE_SIZE) - static_cast<float>(view.view_scroll_y);
 
 	// Offset logic:
 	// The FBO represents the rectangle [map_x * 32, map_x * 32 + pixel_width] in map coordinates.
@@ -115,15 +116,15 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	// Light Position in FBO = (LightMapX * 32 - FBO_StartX_In_Pixels, ...)
 	// FBO Start X in pure Map Pixel Coords = map_x * 32.
 
-	float fbo_origin_x = (float)(map_x * TileSize);
-	float fbo_origin_y = (float)(map_y * TileSize);
+	float fbo_origin_x = static_cast<float>(map_x * TILE_SIZE);
+	float fbo_origin_y = static_cast<float>(map_y * TILE_SIZE);
 
 	for (const auto& light : light_buffer.lights) {
 		// Cull lights that are definitely out of FBO range
-		// Radius approx light.intensity * TileSize
-		int radius_px = light.intensity * TileSize + 16;
-		int lx_px = light.map_x * TileSize + TileSize / 2;
-		int ly_px = light.map_y * TileSize + TileSize / 2;
+		// Radius approx light.intensity * TILE_SIZE
+		int radius_px = light.intensity * TILE_SIZE + 16;
+		int lx_px = light.map_x * TILE_SIZE + TILE_SIZE / 2;
+		int ly_px = light.map_y * TILE_SIZE + TILE_SIZE / 2;
 
 		// Check overlap with FBO rect
 		if (lx_px + radius_px < fbo_origin_x || lx_px - radius_px > fbo_origin_x + pixel_width || ly_px + radius_px < fbo_origin_y || ly_px - radius_px > fbo_origin_y + pixel_height) {
@@ -183,9 +184,9 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 
 			// Setup Projection for FBO: Ortho 0..buffer_width, buffer_height..0 (Y-down)
 			// This matches screen coordinate system and avoids flips
-			glm::mat4 fbo_projection = glm::ortho(0.0f, (float)buffer_width, (float)buffer_height, 0.0f);
+			glm::mat4 fbo_projection = glm::ortho(0.0f, static_cast<float>(buffer_width), static_cast<float>(buffer_height), 0.0f);
 			shader->SetMat4("uProjection", fbo_projection);
-			shader->SetFloat("uTileSize", (float)TileSize);
+			shader->SetFloat("uTileSize", static_cast<float>(TILE_SIZE));
 
 			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, light_ssbo->GetID());
 			glBindVertexArray(vao->GetID());
@@ -195,7 +196,11 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 				ScopedGLCapability blendCap(GL_BLEND);
 				ScopedGLBlend blendState(GL_ONE, GL_ONE, GL_MAX); // Factors don't matter much for MAX, but usually 1,1 is safe
 
-				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, (GLsizei)gpu_lights_.size());
+				if (gpu_lights_.size() > static_cast<size_t>(std::numeric_limits<GLsizei>::max())) {
+					spdlog::error("Too many lights for glDrawArraysInstanced");
+					return;
+				}
+				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, static_cast<GLsizei>(gpu_lights_.size()));
 			}
 
 			glBindVertexArray(0);
@@ -237,8 +242,8 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	// Quad Transform for Screen
 	float draw_dest_x = map_draw_start_x;
 	float draw_dest_y = map_draw_start_y;
-	float draw_dest_w = (float)pixel_width;
-	float draw_dest_h = (float)pixel_height;
+	float draw_dest_w = static_cast<float>(pixel_width);
+	float draw_dest_h = static_cast<float>(pixel_height);
 
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(draw_dest_x, draw_dest_y, 0.0f));
 	model = glm::scale(model, glm::vec3(draw_dest_w, draw_dest_h, 1.0f));
@@ -253,8 +258,8 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	// If we use Y-down ortho: Y=0 -> V=1, Y=buffer_height -> V=0.
 	// Map Top (Y=0) -> V=1. Map Bottom (Y=pixel_height) -> V = 1.0 - (pixel_height / buffer_height).
 
-	float uv_w = (float)pixel_width / (float)buffer_width;
-	float uv_h = (float)pixel_height / (float)buffer_height;
+	float uv_w = static_cast<float>(pixel_width) / static_cast<float>(buffer_width);
+	float uv_h = static_cast<float>(pixel_height) / static_cast<float>(buffer_height);
 
 	// We pass UV range to shader. Shader should map aPos.y (0..1) to correct range.
 	// If screen aPos.y=0 is Top, it should get texture Map Top.
@@ -310,7 +315,7 @@ void LightDrawer::initRenderResources() {
 				// Radius spans 0..1 in distance math
 				// Quad size should cover the light radius
 				// light.intensity is in 'tiles'. 
-				// The falloff is 1.0 at center, 0.0 at radius = intensity * TileSize.
+				// The falloff is 1.0 at center, 0.0 at radius = intensity * TILE_SIZE.
 				float radiusPx = l.intensity * uTileSize;
 				float size = radiusPx * 2.0;
 				
@@ -390,3 +395,4 @@ void LightDrawer::initRenderResources() {
 
 	glBindVertexArray(0);
 }
+

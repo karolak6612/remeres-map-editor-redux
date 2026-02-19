@@ -25,13 +25,13 @@ void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event)
 
 	int keycode = event.GetKeyCode();
 	if (keycode == WXK_NUMPAD_UP || keycode == WXK_UP) {
-		static_cast<MapWindow*>(canvas->GetParent())->Scroll(start_x, int(start_y - TileSize * tiles * canvas->zoom));
+		static_cast<MapWindow*>(canvas->GetParent())->Scroll(start_x, int(start_y - TILE_SIZE * tiles * canvas->zoom));
 	} else if (keycode == WXK_NUMPAD_DOWN || keycode == WXK_DOWN) {
-		static_cast<MapWindow*>(canvas->GetParent())->Scroll(start_x, int(start_y + TileSize * tiles * canvas->zoom));
+		static_cast<MapWindow*>(canvas->GetParent())->Scroll(start_x, int(start_y + TILE_SIZE * tiles * canvas->zoom));
 	} else if (keycode == WXK_NUMPAD_LEFT || keycode == WXK_LEFT) {
-		static_cast<MapWindow*>(canvas->GetParent())->Scroll(int(start_x - TileSize * tiles * canvas->zoom), start_y);
+		static_cast<MapWindow*>(canvas->GetParent())->Scroll(int(start_x - TILE_SIZE * tiles * canvas->zoom), start_y);
 	} else if (keycode == WXK_NUMPAD_RIGHT || keycode == WXK_RIGHT) {
-		static_cast<MapWindow*>(canvas->GetParent())->Scroll(int(start_x + TileSize * tiles * canvas->zoom), start_y);
+		static_cast<MapWindow*>(canvas->GetParent())->Scroll(int(start_x + TILE_SIZE * tiles * canvas->zoom), start_y);
 	}
 
 	canvas->UpdatePositionStatus();
@@ -112,3 +112,4 @@ void NavigationController::HandleWheel(MapCanvas* canvas, wxMouseEvent& event) {
 		canvas->UpdatePositionStatus();
 	}
 }
+

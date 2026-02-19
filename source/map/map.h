@@ -241,7 +241,7 @@ inline long long remove_if_TileOnMap(Map& map, RemoveIfType& remove_if) {
 	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
 		Tile* tile = tile_loc.get();
 		if (remove_if(map, tile, removed, done, total)) {
-			map.setTile(tile->getPosition(), std::unique_ptr<Tile>());
+			(void)map.setTile(tile->getPosition(), std::unique_ptr<Tile>());
 			++removed;
 		}
 		++done;
