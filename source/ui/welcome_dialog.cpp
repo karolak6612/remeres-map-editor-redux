@@ -1,7 +1,6 @@
 #include <wx/listctrl.h>
 #include <wx/imaglist.h>
 #include <wx/statline.h>
-#include <wx/artprov.h>
 #include <wx/filename.h>
 #include <wx/dcbuffer.h>
 
@@ -30,7 +29,7 @@ public:
 		Bind(wxEVT_MOUSE_CAPTURE_LOST, &ConvexButton::OnMouseCaptureLost, this);
 	}
 
-	void SetBitmap(const wxBitmap& bitmap) {
+	void SetBitmap(const wxBitmapBundle& bitmap) {
 		m_icon = bitmap;
 		InvalidateBestSize();
 		Refresh();
@@ -42,14 +41,14 @@ public:
 		wxSize text = dc.GetTextExtent(GetLabel());
 		int width = text.x + FromDIP(30);
 		if (m_icon.IsOk()) {
-			width += m_icon.GetWidth() + FromDIP(8);
+			width += m_icon.GetPreferredBitmapSizeFor(this).GetWidth() + FromDIP(8);
 		}
-		int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(16);
+		int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetPreferredBitmapSizeFor(this).GetHeight() : 0) + FromDIP(16);
 		return wxSize(std::max(width, FromDIP(100)), std::max(height, FromDIP(30)));
 	}
 
 private:
-	wxBitmap m_icon;
+	wxBitmapBundle m_icon;
 	bool m_hover = false;
 	bool m_pressed = false;
 
@@ -92,9 +91,14 @@ private:
 		dc.SetTextForeground(Theme::Get(Theme::Role::Text));
 		wxSize textSize = dc.GetTextExtent(GetLabel());
 
-		int x = (sz.x - textSize.x) / 2;
+		wxBitmap bitmap;
 		if (m_icon.IsOk()) {
-			x -= (m_icon.GetWidth() + FromDIP(8)) / 2;
+			bitmap = m_icon.GetBitmapFor(this);
+		}
+
+		int x = (sz.x - textSize.x) / 2;
+		if (bitmap.IsOk()) {
+			x -= (bitmap.GetWidth() + FromDIP(8)) / 2;
 		}
 
 		int y = (sz.y - textSize.y) / 2;
@@ -103,13 +107,13 @@ private:
 			y += 1;
 		} // Shift content when pressed
 
-		if (m_icon.IsOk()) {
-			int iy = (sz.y - m_icon.GetHeight()) / 2;
+		if (bitmap.IsOk()) {
+			int iy = (sz.y - bitmap.GetHeight()) / 2;
 			if (m_pressed) {
 				iy += 1;
 			}
-			dc.DrawBitmap(m_icon, x, iy, true);
-			x += m_icon.GetWidth() + FromDIP(8);
+			dc.DrawBitmap(bitmap, x, iy, true);
+			x += bitmap.GetWidth() + FromDIP(8);
 		}
 
 		dc.DrawText(GetLabel(), x, y);
@@ -240,13 +244,13 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 
 	// Image List for Icons
 	m_imageList = new wxImageList(16, 16);
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_OTHER, wxSize(16, 16)));
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_NEW, wxART_OTHER, wxSize(16, 16)));
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_FIND, wxART_OTHER, wxSize(16, 16)));
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_HARDDISK, wxART_OTHER, wxSize(16, 16)));
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_NORMAL_FILE, wxART_OTHER, wxSize(16, 16)));
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_TICK_MARK, wxART_OTHER, wxSize(16, 16)));
-	m_imageList->Add(wxArtProvider::GetBitmap(wxART_FOLDER, wxART_OTHER, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FOLDER_OPEN, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_MAGNIFYING_GLASS, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_HARD_DRIVE, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FOLDER, wxSize(16, 16)));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -269,10 +273,11 @@ WelcomeDialog::~WelcomeDialog() {
 	delete m_imageList;
 }
 
-void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
+void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& iconPath, const wxColour& valCol) {
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 
-	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, wxArtProvider::GetBitmap(artId, wxART_OTHER, wxSize(14, 14)));
+	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, wxBitmapBundle());
+	icon->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(iconPath.ToStdString()));
 	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
 
 	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);
@@ -304,7 +309,7 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 
 	// Icon Button - Align Left: 10px total
 	ConvexButton* iconBtn = new ConvexButton(headerPanel, wxID_ANY, "", wxDefaultPosition, wxSize(48, 48));
-	iconBtn->SetBitmap(rmeLogo.IsOk() ? rmeLogo : wxArtProvider::GetBitmap(wxART_HELP, wxART_OTHER, wxSize(32, 32))); // Fallback if logo invalid
+	iconBtn->SetBitmap(rmeLogo.IsOk() ? wxBitmapBundle::FromBitmap(rmeLogo) : IMAGE_MANAGER.GetBitmapBundle(ICON_QUESTION)); // Fallback if logo invalid
 	headerSizer->Add(iconBtn, 0, wxALL | wxCENTER, 8);
 
 	wxBoxSizer* titleSizer = new wxBoxSizer(wxVERTICAL);
@@ -325,7 +330,7 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 	headerSizer->Add(titleSizer, 1, wxALL | wxEXPAND, 10);
 
 	ConvexButton* prefBtn = new ConvexButton(headerPanel, wxID_PREFERENCES, "Preferences");
-	prefBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_EDIT, wxART_BUTTON, FromDIP(wxSize(24, 24))));
+	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PEN_TO_SQUARE));
 	prefBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Right: 10px total
@@ -340,14 +345,14 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
-	exitBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_QUIT, wxART_BUTTON, FromDIP(wxSize(24, 24))));
+	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_RIGHT_FROM_BRACKET));
 	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Left: 10px total
 	footerSizer->Add(exitBtn, 0, wxALL, 8);
 
 	ConvexButton* newBtn = new ConvexButton(footerPanel, wxID_NEW, "New Map");
-	newBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON, FromDIP(wxSize(24, 24))));
+	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE));
 	newBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	footerSizer->Add(newBtn, 0, wxALL, 8);
 
@@ -359,7 +364,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	footerSizer->AddStretchSpacer();
 
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
-	loadBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_BUTTON, FromDIP(wxSize(24, 24))));
+	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FOLDER_OPEN));
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 		long item = -1;
 		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
@@ -388,13 +393,13 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	wxBoxSizer* col1 = new wxBoxSizer(wxVERTICAL);
 
 	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, wxSize(130, 50));
-	newMapBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_NEW, wxART_BUTTON, wxSize(24, 24)));
+	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE));
 	newMapBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	// Align "New Map" with Icon (8px from left edge of content panel)
 	col1->Add(newMapBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
 
 	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(130, 50));
-	browseBtn->SetBitmap(wxArtProvider::GetBitmap(wxART_FILE_OPEN, wxART_BUTTON, wxSize(24, 24)));
+	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FOLDER_OPEN));
 	browseBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	col1->Add(browseBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
 
@@ -434,22 +439,22 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 3: Selected Map Info
 	DarkCardPanel* col3 = new DarkCardPanel(contentPanel, "Selected Map Info");
-	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", wxART_NORMAL_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", wxART_TICK_MARK);
-	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", wxART_LIST_VIEW);
+	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", ICON_CHECK);
+	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", ICON_LIST);
 	col3->GetSizer()->Add(new wxStaticLine(col3), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", wxART_NORMAL_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", wxART_NORMAL_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", wxART_REPORT_VIEW);
+	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", ICON_LIST);
 	contentSizer->Add(col3, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 3 (Center)
 
 	// Column 4: Client Info
 	DarkCardPanel* col4 = new DarkCardPanel(contentPanel, "Client Information");
-	AddInfoField(col4->GetSizer(), col4, "Client Name", "Placeholder", wxART_HARDDISK);
-	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", wxART_TICK_MARK);
-	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", wxART_FOLDER);
+	AddInfoField(col4->GetSizer(), col4, "Client Name", "Placeholder", ICON_HARD_DRIVE);
+	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", ICON_CHECK);
+	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", ICON_FOLDER);
 	col4->GetSizer()->Add(new wxStaticLine(col4), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", wxART_TICK_MARK, wxColour(0, 200, 0));
+	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, wxColour(0, 200, 0));
 	contentSizer->Add(col4, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 4
 
 	// Column 5: Available Clients

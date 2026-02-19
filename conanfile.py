@@ -17,6 +17,9 @@ class RMERecipe(ConanFile):
             # Only dependencies NOT available via apt
             self.requires("glad/0.1.36")
             self.requires("opengl/system")
+            self.requires("tomlplusplus/3.4.0")
+            self.requires("glm/1.0.1")
+            self.requires("spdlog/1.15.0")
             # Note: nanovg is in ext/nanovg
         else:
             # Full dependency tree for Windows/macOS
