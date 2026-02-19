@@ -228,7 +228,9 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 }
 
 void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Position& offset, ImportType house_import_type, std::unordered_map<uint32_t, uint32_t>& town_id_map) {
-	if (house_import_type == IMPORT_DONT) return;
+	if (house_import_type == IMPORT_DONT) {
+		return;
+	}
 
 	for (auto tit = imported_map.towns.begin(); tit != imported_map.towns.end();) {
 		Town* imported_town = tit->second.get();
@@ -296,18 +298,19 @@ void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Pos
 }
 
 void EditorPersistence::importHouses(Editor& editor, Map& imported_map, const Position& offset, ImportType house_import_type, const std::unordered_map<uint32_t, uint32_t>& town_id_map, std::unordered_map<uint32_t, uint32_t>& house_id_map) {
-	if (house_import_type == IMPORT_DONT) return;
+	if (house_import_type == IMPORT_DONT) {
+		return;
+	}
 
 	for (auto hit = imported_map.houses.begin(); hit != imported_map.houses.end();) {
 		House* imported_house = hit->second.get();
 		House* current_house = editor.map.houses.getHouse(imported_house->getID());
 
-        auto it = town_id_map.find(imported_house->townid);
-        if (it != town_id_map.end()) {
-            imported_house->townid = it->second;
-        } else {
-            imported_house->townid = 0;
-        }
+		if (auto it = town_id_map.find(imported_house->townid); it != town_id_map.end()) {
+			imported_house->townid = it->second;
+		} else {
+			imported_house->townid = 0;
+		}
 
 		Position oldexit = imported_house->getExit();
 		imported_house->setExit(nullptr, Position()); // Reset it
@@ -334,7 +337,7 @@ void EditorPersistence::importHouses(Editor& editor, Map& imported_map, const Po
 						skip = true;
 						Position newexit = oldexit + offset;
 						if (newexit.isValid()) {
-							imported_house->setExit(&editor.map, newexit);
+							current_house->setExit(&editor.map, newexit);
 						}
 					} else {
 						// Conflict! Find a newd id and replace old
@@ -383,7 +386,9 @@ void EditorPersistence::importHouses(Editor& editor, Map& imported_map, const Po
 }
 
 void EditorPersistence::importSpawns(Editor& editor, Map& imported_map, const Position& offset, ImportType spawn_import_type, std::map<Position, std::unique_ptr<Spawn>>& spawn_map) {
-	if (spawn_import_type == IMPORT_DONT) return;
+	if (spawn_import_type == IMPORT_DONT) {
+		return;
+	}
 
 	for (auto siter = imported_map.spawns.begin(); siter != imported_map.spawns.end();) {
 		Position old_spawn_pos = *siter;
@@ -435,11 +440,6 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 
 	Position offset(import_x_offset, import_y_offset, 0);
 
-	bool resizemap = false;
-	bool resize_asked = false;
-	int newsize_x = editor.map.getWidth(), newsize_y = editor.map.getHeight();
-	int discarded_tiles = 0;
-
 	g_gui.CreateLoadBar("Merging maps...");
 
 	std::unordered_map<uint32_t, uint32_t> town_id_map;
@@ -447,11 +447,11 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 	std::unordered_map<uint32_t, uint32_t> house_id_map;
 	house_id_map.reserve(imported_map.houses.count());
 
-    importTowns(editor, imported_map, offset, house_import_type, town_id_map);
-    importHouses(editor, imported_map, offset, house_import_type, town_id_map, house_id_map);
+	importTowns(editor, imported_map, offset, house_import_type, town_id_map);
+	importHouses(editor, imported_map, offset, house_import_type, town_id_map, house_id_map);
 
 	std::map<Position, std::unique_ptr<Spawn>> spawn_map;
-    importSpawns(editor, imported_map, offset, spawn_import_type, spawn_map);
+	importSpawns(editor, imported_map, offset, spawn_import_type, spawn_map);
 
 	// Plain merge of waypoints, very simple! :)
 	for (auto& [name, waypoint] : imported_map.waypoints) {
@@ -462,6 +462,12 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 
 	uint64_t tiles_merged = 0;
 	uint64_t tiles_to_import = imported_map.getTileCount();
+
+	bool resizemap = false;
+	bool resize_asked = false;
+	int newsize_x = editor.map.getWidth(), newsize_y = editor.map.getHeight();
+	int discarded_tiles = 0;
+
 	for (MapIterator mit = imported_map.begin(); mit != imported_map.end(); ++mit) {
 		if (tiles_merged % 8092 == 0) {
 			g_gui.SetLoadDone(int(100.0 * tiles_merged / tiles_to_import));
