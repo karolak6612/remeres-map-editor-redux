@@ -167,10 +167,10 @@ public:
 
 protected:
 	struct FieldLine {
-		std::string_view label;
-		std::string_view value;
+		std::string label;
+		std::string value;
 		uint8_t r, g, b;
-		std::vector<std::string_view> wrappedLines; // For multi-line values
+		std::vector<std::string> wrappedLines; // For multi-line values
 	};
 	std::vector<FieldLine> scratch_fields;
 	size_t scratch_fields_count = 0;
@@ -202,10 +202,21 @@ protected:
 		int numContainerItems;
 	};
 
-	void prepareFields(const TooltipData& tooltip);
-	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
+	struct CachedTooltip {
+		LayoutMetrics layout;
+		std::vector<FieldLine> fields;
+		uint64_t lastFrameUsed;
+	};
+
+	std::unordered_map<size_t, CachedTooltip> cache;
+	uint64_t currentFrame = 0;
+
+	size_t computeHash(const TooltipData& data);
+
+	void prepareFields(const TooltipData& tooltip, std::vector<FieldLine>& outFields);
+	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, std::vector<FieldLine>& fields, float maxWidth, float minWidth, float padding, float fontSize);
 	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
-	void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
+	void drawFields(NVGcontext* vg, float x, float y, const std::vector<FieldLine>& fields, float valueStartX, float lineHeight, float padding, float fontSize);
 	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
 };
 
