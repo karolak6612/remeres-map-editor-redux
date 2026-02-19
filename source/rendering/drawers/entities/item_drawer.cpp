@@ -171,7 +171,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				for (int cf = 0; cf != spr->layers; cf++) {
 					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TileSize, screeny - cy * TileSize, region, red, green, blue, alpha);
+						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, red, green, blue, alpha);
 					}
 				}
 			}
@@ -217,7 +217,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			uint8_t byteA = 255;
 
 			int startOffset = std::max<int>(16, 32 - light.intensity);
-			int sqSize = TileSize - startOffset;
+			int sqSize = TILE_SIZE - startOffset;
 
 			// We need to disable texture 2d for BlitSquare. SpriteDrawer::glBlitSquare does NOT disable texture 2d automatically?
 			// SpriteDrawer::glBlitSquare internally uses BatchRenderer::DrawQuad which sets blank texture if needed.
@@ -281,3 +281,4 @@ void ItemDrawer::DrawDoorIndicator(bool locked, const Position& pos, bool south,
 		door_indicator_drawer->addDoor(pos, locked, south, east);
 	}
 }
+

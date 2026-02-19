@@ -3,6 +3,7 @@
 #include "app/settings.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
+#include "util/image_manager.h"
 #include <wx/tokenzr.h>
 #include <charconv>
 
@@ -26,7 +27,9 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 
 	wxSizer* btn_outer_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_client_btn = newd wxButton(left_panel, wxID_ANY, "+ Add");
+	add_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 	delete_client_btn = newd wxButton(left_panel, wxID_ANY, "- Remove");
+	delete_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
 
 	// Equal width for buttons
 	btn_outer_sizer->AddStretchSpacer(1);
@@ -325,7 +328,7 @@ void ClientVersionPage::OnTreeContextMenu(wxTreeEvent& event) {
 	}
 
 	wxMenu menu;
-	menu.Append(wxID_COPY, "Duplicate");
+	menu.Append(wxID_COPY, "Duplicate")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
 	menu.Bind(wxEVT_MENU, &ClientVersionPage::OnDuplicateClient, this, wxID_COPY);
 
 	PopupMenu(&menu);

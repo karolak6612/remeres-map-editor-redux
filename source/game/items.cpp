@@ -338,12 +338,12 @@ bool ItemDatabase::loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion
 					warnings.push_back("items.otb: Unexpected data length of item weight block (Should be 8 bytes)");
 					return true;
 				}
-				uint8_t raw_weight[sizeof(double)];
-				if (!node->getRAW(raw_weight, sizeof(double))) {
+				double weight = 0.0;
+				if (!node->getRAW(reinterpret_cast<uint8_t*>(&weight), sizeof(double))) {
 					warnings.push_back("Invalid item type property (weight)");
 					return true;
 				}
-				memcpy(&it.weight, raw_weight, sizeof(double));
+				it.weight = static_cast<float>(weight);
 				return true;
 			};
 
