@@ -3,6 +3,7 @@
 #include "app/settings.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
+#include "ui/theme.h"
 #include "util/image_manager.h"
 #include <wx/tokenzr.h>
 #include <charconv>
@@ -23,6 +24,9 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	wxSizer* left_inner_sizer = newd wxBoxSizer(wxVERTICAL);
 
 	client_tree_ctrl = newd wxTreeCtrl(left_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_HAS_BUTTONS | wxTR_SINGLE);
+	client_tree_ctrl->SetBackgroundColour(Theme::Get(Theme::Role::Background));
+	client_tree_ctrl->SetForegroundColour(Theme::Get(Theme::Role::Text));
+
 	left_inner_sizer->Add(client_tree_ctrl, 1, wxEXPAND | wxBOTTOM, 5);
 
 	wxSizer* btn_outer_sizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -46,6 +50,14 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	wxStaticBoxSizer* right_static_sizer = newd wxStaticBoxSizer(wxVERTICAL, right_panel, "Client Properties");
 
 	client_prop_grid = newd wxPropertyGrid(right_panel, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxPG_SPLITTER_AUTO_CENTER | wxPG_BOLD_MODIFIED | wxPG_DESCRIPTION);
+	client_prop_grid->SetBackgroundColour(Theme::Get(Theme::Role::Background));
+	client_prop_grid->SetForegroundColour(Theme::Get(Theme::Role::Text));
+	client_prop_grid->SetCaptionBackgroundColour(Theme::Get(Theme::Role::Header));
+	client_prop_grid->SetCaptionTextColour(Theme::Get(Theme::Role::Text));
+	client_prop_grid->SetMarginColour(Theme::Get(Theme::Role::Background));
+	client_prop_grid->SetCellBackgroundColour(Theme::Get(Theme::Role::Background));
+	client_prop_grid->SetCellTextColour(Theme::Get(Theme::Role::Text));
+	client_prop_grid->SetEmptySpaceColour(Theme::Get(Theme::Role::Background));
 
 	right_static_sizer->Add(client_prop_grid, 1, wxEXPAND | wxALL, 5);
 	right_panel->SetSizer(right_static_sizer);
@@ -311,7 +323,7 @@ void ClientVersionPage::UpdatePropertyValidation(wxPGProperty* prop) {
 		prop->SetBackgroundColour(wxColour(255, 200, 200)); // Light Red
 	} else {
 		// Reset to default
-		prop->SetBackgroundColour(wxNullColour);
+		prop->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	}
 }
 
