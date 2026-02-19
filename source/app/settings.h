@@ -20,6 +20,8 @@
 
 #include "app/main.h"
 
+#include <toml++/toml.h>
+
 namespace Config {
 	enum Key {
 		NONE,
@@ -181,6 +183,9 @@ namespace Config {
 		TOOLBAR_POSITION_LAYOUT,
 		TOOLBAR_SIZES_LAYOUT,
 
+		PREFERENCES_WINDOW_WIDTH,
+		PREFERENCES_WINDOW_HEIGHT,
+
 		// add new settings at the end to make sure nothing gets misread
 		DRAW_LOCKED_DOOR,
 		HIGHLIGHT_LOCKED_DOORS,
@@ -207,8 +212,6 @@ namespace Config {
 	};
 }
 
-class wxConfigBase;
-
 class Settings {
 public:
 	Settings();
@@ -223,7 +226,7 @@ public:
 	void setFloat(uint32_t key, float newval);
 	void setString(uint32_t key, std::string newval);
 
-	wxConfigBase& getConfigObject();
+	toml::table& getTable();
 	void setDefaults() {
 		IO(DEFAULT);
 	}
@@ -294,9 +297,6 @@ private:
 	};
 	void IO(IOMode mode);
 	std::vector<DynamicValue> store;
-#ifdef __WINDOWS__
-	bool use_file_cfg;
-#endif
 };
 
 extern Settings g_settings;

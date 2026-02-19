@@ -28,7 +28,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 
 		sprite_batch.draw(
 			(float)sx, (float)sy,
-			(float)TileSize, (float)TileSize,
+			(float)TILE_SIZE, (float)TILE_SIZE,
 			*region,
 			normalizedR, normalizedG, normalizedB, normalizedA
 		);
@@ -37,7 +37,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 
 void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, int red, int green, int blue, int alpha, int size) {
 	if (size == 0) {
-		size = TileSize;
+		size = TILE_SIZE;
 	}
 
 	float normalizedR = red / 255.0f;
@@ -96,10 +96,11 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
 				if (region) {
-					glBlitAtlasQuad(sprite_batch, screenx - cx * TileSize, screeny - cy * TileSize, region, red, green, blue, alpha);
+					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, red, green, blue, alpha);
 				}
 				// No fallback - if region is null, sprite failed to load
 			}
 		}
 	}
 }
+

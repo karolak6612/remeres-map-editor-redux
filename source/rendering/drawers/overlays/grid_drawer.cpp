@@ -20,16 +20,16 @@ void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, con
 		const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
 		// Batch all horizontal lines
 		for (int y = view.start_y; y < view.end_y; ++y) {
-			float yPos = y * TileSize - view.view_scroll_y;
-			float xStart = view.start_x * TileSize - view.view_scroll_x;
-			float xEnd = view.end_x * TileSize - view.view_scroll_x;
+			float yPos = y * TILE_SIZE - view.view_scroll_y;
+			float xStart = view.start_x * TILE_SIZE - view.view_scroll_x;
+			float xEnd = view.end_x * TILE_SIZE - view.view_scroll_x;
 			sprite_batch.drawRect(xStart, yPos, xEnd - xStart, 1.0f, color, atlas); // 1px height line
 		}
 		// Batch all vertical lines
 		for (int x = view.start_x; x < view.end_x; ++x) {
-			float xPos = x * TileSize - view.view_scroll_x;
-			float yStart = view.start_y * TileSize - view.view_scroll_y;
-			float yEnd = view.end_y * TileSize - view.view_scroll_y;
+			float xPos = x * TILE_SIZE - view.view_scroll_x;
+			float yStart = view.start_y * TILE_SIZE - view.view_scroll_y;
+			float yEnd = view.end_y * TILE_SIZE - view.view_scroll_y;
 			sprite_batch.drawRect(xPos, yStart, 1.0f, yEnd - yStart, color, atlas); // 1px width line
 		}
 	}
@@ -49,10 +49,10 @@ void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view
 	int box_end_map_x = center_x + ClientMapWidth;
 	int box_end_map_y = center_y + ClientMapHeight + offset_y;
 
-	int box_start_x = box_start_map_x * TileSize - view.view_scroll_x;
-	int box_start_y = box_start_map_y * TileSize - view.view_scroll_y;
-	int box_end_x = box_end_map_x * TileSize - view.view_scroll_x;
-	int box_end_y = box_end_map_y * TileSize - view.view_scroll_y;
+	int box_start_x = box_start_map_x * TILE_SIZE - view.view_scroll_x;
+	int box_start_y = box_start_map_y * TILE_SIZE - view.view_scroll_y;
+	int box_end_x = box_end_map_x * TILE_SIZE - view.view_scroll_x;
+	int box_end_y = box_end_map_y * TILE_SIZE - view.view_scroll_y;
 
 	static wxColor side_color(0, 0, 0, 200);
 
@@ -84,28 +84,28 @@ void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view
 	drawRect(sprite_batch, box_start_x, box_start_y, box_end_x - box_start_x, box_end_y - box_start_y, *wxRED);
 
 	// visible tiles
-	box_start_x += TileSize;
-	box_start_y += TileSize;
-	box_end_x -= 1 * TileSize;
-	box_end_y -= 1 * TileSize;
+	box_start_x += TILE_SIZE;
+	box_start_y += TILE_SIZE;
+	box_end_x -= 1 * TILE_SIZE;
+	box_end_y -= 1 * TILE_SIZE;
 	drawRect(sprite_batch, box_start_x, box_start_y, box_end_x - box_start_x, box_end_y - box_start_y, *wxGREEN);
 
 	// player position
-	box_start_x += (ClientMapWidth - 3) / 2 * TileSize;
-	box_start_y += (ClientMapHeight - 3) / 2 * TileSize;
-	box_end_x = box_start_x + TileSize;
-	box_end_y = box_start_y + TileSize;
+	box_start_x += (ClientMapWidth - 3) / 2 * TILE_SIZE;
+	box_start_y += (ClientMapHeight - 3) / 2 * TILE_SIZE;
+	box_end_x = box_start_x + TILE_SIZE;
+	box_end_y = box_start_y + TILE_SIZE;
 	drawRect(sprite_batch, box_start_x, box_start_y, box_end_x - box_start_x, box_end_y - box_start_y, *wxGREEN);
 }
 
 void GridDrawer::DrawNodeLoadingPlaceholder(SpriteBatch& sprite_batch, int nd_map_x, int nd_map_y, const RenderView& view) {
-	int cy = (nd_map_y)*TileSize - view.view_scroll_y - view.getFloorAdjustment();
-	int cx = (nd_map_x)*TileSize - view.view_scroll_x - view.getFloorAdjustment();
+	int cy = (nd_map_y)*TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+	int cx = (nd_map_x)*TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 
 	glm::vec4 color(1.0f, 0.0f, 1.0f, 0.5f); // 255, 0, 255, 128
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.drawRect((float)cx, (float)cy, (float)TileSize * 4, (float)TileSize * 4, color, *g_gui.gfx.getAtlasManager());
+		sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE * 4, (float)TILE_SIZE * 4, color, *g_gui.gfx.getAtlasManager());
 	}
 }
 
@@ -125,3 +125,4 @@ void GridDrawer::drawFilledRect(SpriteBatch& sprite_batch, int x, int y, int w, 
 		sprite_batch.drawRect((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
 	}
 }
+

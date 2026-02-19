@@ -158,6 +158,12 @@ int Tile::size() const {
 	if (spawn) {
 		++sz;
 	}
+	if (house_id != 0) {
+		++sz;
+	}
+	if (mapflags) {
+		++sz;
+	}
 	if (location) {
 		if (location->getHouseExits()) {
 			++sz;
@@ -197,11 +203,18 @@ void Tile::merge(Tile* other) {
 		addItem(std::move(item));
 	}
 	other->items.clear();
+	update();
 }
 
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 	if (prop == PROTECTIONZONE && isPZ()) {
 		return true;
+	}
+
+	if (prop == BLOCKSOLID) {
+		// Optimization: Use cached blocking state
+		// Note: isBlocking() returns true for empty tiles (void), but hasProperty checks if *content* has property.
+		return isBlocking() && (ground || !items.empty());
 	}
 
 	if (ground && ground->hasProperty(prop)) {
@@ -293,6 +306,7 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		statflags |= TILESTATE_SELECTED;
 	}
 	items.insert(it, std::move(item));
+	update();
 }
 
 void Tile::select() {
@@ -515,6 +529,7 @@ void Tile::addBorderItem(std::unique_ptr<Item> item) {
 	}
 	ASSERT(item->isBorder());
 	items.insert(items.begin(), std::move(item));
+	update();
 }
 
 GroundBrush* Tile::getGroundBrush() const {

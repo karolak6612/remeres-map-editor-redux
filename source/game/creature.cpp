@@ -18,6 +18,9 @@
 #include "app/main.h"
 
 #include "game/creature.h"
+#include <array>
+#include <string_view>
+#include <unordered_map>
 
 Creature::Creature(CreatureType* ctype) :
 	direction(SOUTH), spawntime(0), saved(false), selected(false) {
@@ -27,7 +30,7 @@ Creature::Creature(CreatureType* ctype) :
 }
 
 Creature::Creature(std::string ctype_name) :
-	type_name(ctype_name), direction(SOUTH), spawntime(0), saved(false), selected(false) {
+	type_name(std::move(ctype_name)), direction(SOUTH), spawntime(0), saved(false), selected(false) {
 	////
 }
 
@@ -36,33 +39,29 @@ Creature::~Creature() {
 }
 
 std::string Creature::DirID2Name(uint16_t id) {
-	switch (id) {
-		case NORTH:
-			return "North";
-		case EAST:
-			return "East";
-		case SOUTH:
-			return "South";
-		case WEST:
-			return "West";
-		default:
-			return "Unknown";
+	static constexpr std::array<std::string_view, 4> dir_names = {
+		"North", "East", "South", "West"
+	};
+
+	if (id < dir_names.size()) {
+		return std::string(dir_names[id]);
 	}
+	return "Unknown";
 }
 
 uint16_t Creature::DirName2ID(std::string dir) {
 	to_lower_str(dir);
-	if (dir == "north") {
-		return NORTH;
-	}
-	if (dir == "east") {
-		return EAST;
-	}
-	if (dir == "south") {
-		return SOUTH;
-	}
-	if (dir == "west") {
-		return WEST;
+
+	static const std::unordered_map<std::string, uint16_t> dir_map = {
+		{ "north", NORTH },
+		{ "east", EAST },
+		{ "south", SOUTH },
+		{ "west", WEST }
+	};
+
+	auto it = dir_map.find(dir);
+	if (it != dir_map.end()) {
+		return it->second;
 	}
 	return SOUTH;
 }

@@ -1,0 +1,1187 @@
+[[clients]]
+configType = 'otb'
+datSignature = '41BF619C'
+dataDirectory = '740'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.4'
+otbId = 1
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '41B9EA86'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 740
+
+[[clients]]
+configType = 'otb'
+datSignature = '42F81973'
+dataDirectory = '750'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.50'
+otbId = 1
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '42F81949'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 750
+
+[[clients]]
+configType = 'otb'
+datSignature = '437B2B8F'
+dataDirectory = '755'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.55'
+otbId = 2
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '434F9CDE'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 755
+
+[[clients]]
+configType = 'otb'
+datSignature = '439D5A33'
+dataDirectory = '760'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.6'
+otbId = 3
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '439852BE'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 760
+
+[[clients]]
+configType = 'otb'
+datSignature = '439D5A33'
+dataDirectory = '770'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.70'
+otbId = 3
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '439852BE'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 770
+
+[[clients]]
+configType = 'otb'
+datSignature = '44CE4743'
+dataDirectory = '780'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.80'
+otbId = 4
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '44CE4206'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 780
+
+[[clients]]
+configType = 'otb'
+datSignature = '457D854E'
+dataDirectory = '790'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.90'
+otbId = 5
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '457957C8'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 790
+
+[[clients]]
+configType = 'otb'
+datSignature = '459E7B73'
+dataDirectory = '792'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.92'
+otbId = 6
+otbMajor = 1
+otbmVersions = [ 1 ]
+sprSignature = '45880FE8'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 792
+
+[[clients]]
+configType = 'otb'
+datSignature = '467FD7E6'
+dataDirectory = '800'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.00'
+otbId = 7
+otbMajor = 2
+otbmVersions = [ 2 ]
+sprSignature = '467F9E74'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 800
+
+[[clients]]
+configType = 'otb'
+datSignature = '475D3747'
+dataDirectory = '810'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.10'
+otbId = 8
+otbMajor = 2
+otbmVersions = [ 2 ]
+sprSignature = '475D0B01'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 810
+
+[[clients]]
+configType = 'otb'
+datSignature = '47F60E37'
+dataDirectory = '811'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.11'
+otbId = 9
+otbMajor = 2
+otbmVersions = [ 2 ]
+sprSignature = '47EBB9B2'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 811
+
+[[clients]]
+configType = 'otb'
+datSignature = '486905AA'
+dataDirectory = '820'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.20 - 8.31'
+otbId = 10
+otbMajor = 3
+otbmVersions = [ 2 ]
+sprSignature = '4868ECC9'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 820
+
+[[clients]]
+configType = 'otb'
+datSignature = '48DA1FB6'
+dataDirectory = '830'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.30'
+otbId = 11
+otbMajor = 3
+otbmVersions = [ 2 ]
+sprSignature = '48C8E712'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 830
+
+[[clients]]
+configType = 'otb'
+datSignature = '493D607A'
+dataDirectory = '840'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.40'
+otbId = 12
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '493D4E7C'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 840
+
+[[clients]]
+configType = 'otb'
+datSignature = '49B7CC19'
+dataDirectory = '841'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.41'
+otbId = 13
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '49B140EA'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 841
+
+[[clients]]
+configType = 'otb'
+datSignature = '49C233C9'
+dataDirectory = '842'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.42'
+otbId = 14
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '49B140EA'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 842
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A49C5EB'
+dataDirectory = '850'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.50'
+otbId = 15
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4A44FD4E'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 850
+
+[[clients]]
+configType = 'otb'
+datSignature = '4B28B89E'
+dataDirectory = '854'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.54'
+otbId = 17
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4B1E2C87'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 854
+
+[[clients]]
+configType = 'otb'
+datSignature = '4B98FF53'
+dataDirectory = '855'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.55'
+otbId = 18
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4B913871'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 855
+
+[[clients]]
+configType = 'otb'
+datSignature = '4C2C7993'
+dataDirectory = '860'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.60'
+otbId = 20
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4C220594'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 860
+
+[[clients]]
+configType = 'otb'
+datSignature = '4C6A4CBC'
+dataDirectory = '861'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.61'
+otbId = 21
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4C63F145'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 861
+
+[[clients]]
+configType = 'otb'
+datSignature = '4C973450'
+dataDirectory = '862'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.62'
+otbId = 22
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4C63F145'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 862
+
+[[clients]]
+configType = 'otb'
+datSignature = '4CFE22C5'
+dataDirectory = '870'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.70'
+otbId = 23
+otbMajor = 3
+otbmVersions = [ 3, 4 ]
+sprSignature = '4CFD078A'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 870
+
+[[clients]]
+configType = 'otb'
+datSignature = '4D41979E'
+dataDirectory = '871'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.71'
+otbId = 24
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4D3D65D0'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 871
+
+[[clients]]
+configType = 'otb'
+datSignature = '4DAD1A1A'
+dataDirectory = '872'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.72'
+otbId = 25
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4DAD1A32'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 872
+
+[[clients]]
+configType = 'otb'
+datSignature = '4DBAA20B'
+dataDirectory = '873'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '8.73'
+otbId = 26
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4DAD1A32'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 873
+
+[[clients]]
+configType = 'otb'
+datSignature = '4DBAA20B'
+dataDirectory = '900'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.00'
+otbId = 27
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4DAD1A32'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 900
+
+[[clients]]
+configType = 'otb'
+datSignature = '4E12DAFF'
+dataDirectory = '910'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.10'
+otbId = 28
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4E12DB27'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 910
+
+[[clients]]
+configType = 'otb'
+datSignature = '4E807C08'
+dataDirectory = '920'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.20 - 9.31'
+otbId = 29
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4E807C23'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 920
+
+[[clients]]
+configType = 'otb'
+datSignature = '4EE71DE5'
+dataDirectory = '940'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.40'
+otbId = 30
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4EE71E06'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 940
+
+[[clients]]
+configType = 'otb'
+datSignature = '4F3131CF'
+dataDirectory = '944'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.44'
+otbId = 34
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4F3131F6'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 944
+
+[[clients]]
+configType = 'otb'
+datSignature = '4F6B341F'
+dataDirectory = '946'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.46'
+otbId = 35
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4F5DCEF7'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 946
+
+[[clients]]
+configType = 'otb'
+datSignature = '4F75B7AB'
+dataDirectory = '950'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.50'
+otbId = 36
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4F75B7CD'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 950
+
+[[clients]]
+configType = 'otb'
+datSignature = '4F857F6C'
+dataDirectory = '952'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.52'
+otbId = 37
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4F857F8E'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 952
+
+[[clients]]
+configType = 'otb'
+datSignature = '4FA11252'
+dataDirectory = '953'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.53'
+otbId = 38
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4FA11282'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 953
+
+[[clients]]
+configType = 'otb'
+datSignature = '4FD5956B'
+dataDirectory = '954'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.54'
+otbId = 39
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4FD595B7'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 954
+
+[[clients]]
+configType = 'otb'
+datSignature = '4FFA74CC'
+dataDirectory = '960'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.60'
+otbId = 40
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '4FFA74F9'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 960
+
+[[clients]]
+configType = 'otb'
+datSignature = '50226F9D'
+dataDirectory = '961'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.61'
+otbId = 41
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '50226FBD'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 961
+
+[[clients]]
+configType = 'otb'
+datSignature = '503CB933'
+dataDirectory = '963'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.63'
+otbId = 42
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '503CB954'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 963
+
+[[clients]]
+configType = 'otb'
+datSignature = '5072A490'
+dataDirectory = '970'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.70'
+otbId = 43
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '5072A567'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 970
+
+[[clients]]
+configType = 'otb'
+datSignature = '50C70674'
+dataDirectory = '980'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.80'
+otbId = 44
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '50C70753'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 980
+
+[[clients]]
+configType = 'otb'
+datSignature = '50D1C5B6'
+dataDirectory = '981'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.81'
+otbId = 45
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '50D1C685'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 981
+
+[[clients]]
+configType = 'otb'
+datSignature = '512CAD09'
+dataDirectory = '982'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.82'
+otbId = 46
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '512CAD68'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 982
+
+[[clients]]
+configType = 'otb'
+datSignature = '51407B67'
+dataDirectory = '983'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.83'
+otbId = 47
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '51407BC7'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 983
+
+[[clients]]
+configType = 'otb'
+datSignature = '51641A1B'
+dataDirectory = '985'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.85'
+otbId = 48
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '51641A84'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 985
+
+[[clients]]
+configType = 'otb'
+datSignature = '5170E904'
+dataDirectory = '986'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '9.86'
+otbId = 49
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '5170E96F'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 986
+
+[[clients]]
+configType = 'otb'
+datSignature = '51E3F8C3'
+dataDirectory = '1010'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '10.10'
+otbId = 50
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '51E3F8E9'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1010
+
+[[clients]]
+configType = 'otb'
+datSignature = '5236F129'
+dataDirectory = '1020'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '10.20'
+otbId = 51
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '5236F14F'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1020
+
+[[clients]]
+configType = 'otb'
+datSignature = '526A5068'
+dataDirectory = '1021'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '10.21'
+otbId = 52
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '526A5090'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1021
+
+[[clients]]
+configType = 'otb'
+datSignature = '52A59036'
+dataDirectory = '1030'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '10.30'
+otbId = 53
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '52A5905F'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1030
+
+[[clients]]
+configType = 'otb'
+datSignature = '52AED581'
+dataDirectory = '1031'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '10.31'
+otbId = 54
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '52AED5A7'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1031
+
+[[clients]]
+configType = 'otb'
+datSignature = '5383504E'
+dataDirectory = '1041'
+description = 'sample description'
+extended = true
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '10.41'
+otbId = 55
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '53835077'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1041
+
+[[clients]]
+configType = 'otb'
+datSignature = '38DE'
+dataDirectory = '1077'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '10.77'
+otbId = 56
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '5525213D'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1077
+
+[[clients]]
+configType = 'otb'
+datSignature = '42A3'
+dataDirectory = '1098'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '10.98'
+otbId = 57
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '57BBD603'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1098
+
+[[clients]]
+configType = 'otb'
+datSignature = '44BA'
+dataDirectory = '10100'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '10.100'
+otbId = 58
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '585138E5'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 10100
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1271'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.71 - 12.72'
+otbId = 59
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1271
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1281'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.81'
+otbId = 60
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1281
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1285'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.85'
+otbId = 61
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1285
+
+[[clients]]
+configType = 'otb'
+datSignature = '42A3'
+dataDirectory = '1286'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.86'
+otbId = 62
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '57BBD603'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 1286
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1287'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.87'
+otbId = 63
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1287
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1290'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.90'
+otbId = 64
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1290
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1310'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '13.10'
+otbId = 65
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1310
+
+[[clients]]
+configType = 'otb'
+datSignature = '4A10'
+dataDirectory = '1320'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '13.20'
+otbId = 66
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1320
+
+[[clients]]
+configType = 'dat'
+datSignature = '4A10'
+dataDirectory = '1286'
+description = 'sample dat config'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.86-dat'
+otbId = 0
+otbMajor = 0
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1286
+
+[[clients]]
+configType = 'assets'
+datSignature = '4A10'
+dataDirectory = '1286'
+description = 'sample assets config'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '12.86-assets'
+otbId = 0
+otbMajor = 0
+otbmVersions = [ 3 ]
+sprSignature = '59E48E02'
+spritesFile = 'Tibia.spr'
+transparency = true
+version = 1286
+
+[[clients]]
+configType = 'srv'
+datSignature = '439D5A33'
+dataDirectory = '770'
+description = 'sample description'
+extended = false
+frameDurations = false
+frameGroups = false
+metadataFile = 'Tibia.dat'
+name = '7.7-srv'
+otbId = 0
+otbMajor = 0
+otbmVersions = []
+sprSignature = '439852BE'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 77

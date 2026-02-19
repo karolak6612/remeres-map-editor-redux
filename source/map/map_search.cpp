@@ -8,6 +8,7 @@
 #include "editor/editor.h"
 #include "editor/operations/search_operations.h"
 #include <algorithm>
+#include <ranges>
 #include <thread>
 #include <future>
 #include <vector>
@@ -79,15 +80,14 @@ namespace {
 						continue;
 					}
 
-					for (int t = 0; t < SpatialHashGrid::TILES_PER_NODE; ++t) {
-						TileLocation& loc = floor->locs[t];
+					std::ranges::for_each(floor->locs, [&](TileLocation& loc) {
 						Tile* tile = loc.get();
 						if (!tile) {
-							continue;
+							return;
 						}
 
 						ProcessItemsOnTile(map, tile, local_searcher, dummy_done, containers);
-					}
+					});
 				}
 			}
 		}

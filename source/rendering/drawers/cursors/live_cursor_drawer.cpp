@@ -36,13 +36,13 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 
 		int offset;
 		if (cursor.pos.z <= GROUND_LAYER) {
-			offset = (GROUND_LAYER - cursor.pos.z) * TileSize;
+			offset = (GROUND_LAYER - cursor.pos.z) * TILE_SIZE;
 		} else {
-			offset = TileSize * (view.floor - cursor.pos.z);
+			offset = TILE_SIZE * (view.floor - cursor.pos.z);
 		}
 
-		float draw_x = ((cursor.pos.x * TileSize) - view.view_scroll_x) - offset;
-		float draw_y = ((cursor.pos.y * TileSize) - view.view_scroll_y) - offset;
+		float draw_x = ((cursor.pos.x * TILE_SIZE) - view.view_scroll_x) - offset;
+		float draw_y = ((cursor.pos.y * TILE_SIZE) - view.view_scroll_y) - offset;
 
 		glm::vec4 color(
 			cursor.color.Red() / 255.0f,
@@ -52,7 +52,8 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 		);
 
 		if (g_gui.gfx.ensureAtlasManager()) {
-			sprite_batch.drawRect(draw_x, draw_y, (float)TileSize, (float)TileSize, color, *g_gui.gfx.getAtlasManager());
+			sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.gfx.getAtlasManager());
 		}
 	}
 }
+

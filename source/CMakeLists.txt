@@ -5,6 +5,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/app/extension.h
     ${CMAKE_CURRENT_LIST_DIR}/app/main.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/preferences_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/general_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/editor_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/interface_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/client_version_page.h
     ${CMAKE_CURRENT_LIST_DIR}/app/rme_forward_declarations.h
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.h
     ${CMAKE_CURRENT_LIST_DIR}/app/threads.h
@@ -70,6 +76,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/game/house.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.h
+    ${CMAKE_CURRENT_LIST_DIR}/game/item_loaders.h
     ${CMAKE_CURRENT_LIST_DIR}/game/items.h
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.h
     ${CMAKE_CURRENT_LIST_DIR}/game/outfit.h
@@ -90,7 +97,7 @@ set(rme_H
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.h
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.h
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/otfi_loader.h
+
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
@@ -116,7 +123,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.h
-    ${CMAKE_CURRENT_LIST_DIR}/map/otml.h
+
     ${CMAKE_CURRENT_LIST_DIR}/map/position.h
     ${CMAKE_CURRENT_LIST_DIR}/map/spatial_hash_grid.h
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.h
@@ -305,6 +312,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/util/common.h
     ${CMAKE_CURRENT_LIST_DIR}/util/json.h
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_listbox.h
     ${CMAKE_CURRENT_LIST_DIR}/util/virtual_item_grid.h
 )
 
@@ -318,6 +326,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/app/client_version.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/extension.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/general_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/editor_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/interface_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/client_version_page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/managers/version_manager.cpp
@@ -382,6 +395,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/house.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/game/item_loaders.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/items.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.cpp
@@ -400,7 +414,7 @@ set(rme_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/otfi_loader.cpp
+
     ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
@@ -423,7 +437,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/map/otml.cpp
+
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tileset.cpp
@@ -609,6 +623,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_listbox.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/virtual_item_grid.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.cpp

@@ -416,11 +416,11 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 					g_gui.GetCurrentBrush()->draw(draw_map, new_tile.get());
-					draw_map->setTile(*it, std::move(new_tile));
+					(void)draw_map->setTile(*it, std::move(new_tile));
 				} else if (dodraw) {
 					std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
 					g_gui.GetCurrentBrush()->draw(draw_map, new_tile.get());
-					draw_map->setTile(*it, std::move(new_tile));
+					(void)draw_map->setTile(*it, std::move(new_tile));
 				}
 			}
 			// Iterate over the map instead of tilestodraw to avoid duplicates!

@@ -121,9 +121,9 @@ bool MapNode::isVisible(uint32_t client, bool underground) {
 	}
 
 	if (underground) {
-		return testFlags(visible, 1u << (position + MAP_LAYERS));
+		return testFlags(visible, 1ULL << (position + MAP_LAYERS));
 	} else {
-		return testFlags(visible, 1u << position);
+		return testFlags(visible, 1ULL << position);
 	}
 }
 

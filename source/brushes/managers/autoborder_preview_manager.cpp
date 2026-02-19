@@ -85,7 +85,7 @@ void AutoborderPreviewManager::CopyMapArea(Editor& editor, const Position& pos) 
 				// deeply copies tile and its items to buffer map
 				// deepCopy now correctly uses the destination map's TileLocation
 				std::unique_ptr<Tile> new_tile = src_tile->deepCopy(*preview_buffer_map);
-				preview_buffer_map->setTile(std::move(new_tile));
+				(void)preview_buffer_map->setTile(std::move(new_tile));
 			}
 		}
 	}
@@ -206,7 +206,7 @@ void AutoborderPreviewManager::PruneUnchanged(Editor& editor, const Position& po
 
 			if (equal) {
 				// Remove unmodified tile from buffer to prevent ghosting
-				preview_buffer_map->setTile(x, y, z, std::unique_ptr<Tile>());
+				(void)preview_buffer_map->setTile(x, y, z, std::unique_ptr<Tile>());
 			}
 		}
 	}
