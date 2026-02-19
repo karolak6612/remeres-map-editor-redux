@@ -268,10 +268,10 @@ WelcomeDialog::~WelcomeDialog() {
 	delete m_imageList;
 }
 
-void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const std::string& iconPath, const wxColour& valCol) {
+void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 
-	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(iconPath, wxSize(14, 14)));
+	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(nstr(artId), wxSize(14, 14)));
 	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
 
 	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);

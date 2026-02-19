@@ -475,10 +475,6 @@ protected:
 	bool loadFromOtbGeneric(BinaryNode* itemNode, OtbFileFormatVersion version, wxString& error, std::vector<std::string>& warnings);
 
 private:
-	static void parseItemTypeAttribute(ItemType& it, std::string_view value);
-	static void parseSlotTypeAttribute(ItemType& it, std::string_view value);
-	static void parseWeaponTypeAttribute(ItemType& it, std::string_view value);
-	static void parseFloorChangeAttribute(ItemType& it, std::string_view value);
 	void updateAllTooltipableFlags();
 
 protected:
@@ -494,6 +490,7 @@ protected:
 
 	friend class GameSprite;
 	friend class Item;
+	friend class OtbLoader;
 };
 
 #endif
