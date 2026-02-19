@@ -371,8 +371,8 @@ bool Map::addSpawn(Tile* tile) {
 		int end_x = tile->getX() + spawn->getSize();
 		int end_y = tile->getY() + spawn->getSize();
 
-		for (int y = start_y; y <= end_y; ++y) {
-			for (int x = start_x; x <= end_x; ++x) {
+		for (int y : std::views::iota(start_y, end_y + 1)) {
+			for (int x : std::views::iota(start_x, end_x + 1)) {
 				TileLocation* ctile_loc = createTileL(x, y, z);
 				ctile_loc->increaseSpawnCount();
 			}
@@ -393,8 +393,8 @@ void Map::removeSpawnInternal(Tile* tile) {
 	int end_x = tile->getX() + spawn->getSize();
 	int end_y = tile->getY() + spawn->getSize();
 
-	for (int y = start_y; y <= end_y; ++y) {
-		for (int x = start_x; x <= end_x; ++x) {
+	for (int y : std::views::iota(start_y, end_y + 1)) {
+		for (int x : std::views::iota(start_x, end_x + 1)) {
 			TileLocation* ctile_loc = getTileL(x, y, z);
 			if (ctile_loc != nullptr && ctile_loc->getSpawnCount() > 0) {
 				ctile_loc->decreaseSpawnCount();
@@ -425,8 +425,10 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
+
 			while (found != tile_loc->getSpawnCount()) {
-				for (int x = start_x; x <= end_x; ++x) {
+				// Top and Bottom edges
+				for (int x : std::views::iota(start_x, end_x + 1)) {
 					Tile* tile = getTile(x, start_y, z);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn.get());
@@ -439,7 +441,8 @@ SpawnList Map::getSpawnList(Tile* where) {
 					}
 				}
 
-				for (int y = start_y + 1; y < end_y; ++y) {
+				// Left and Right edges (excluding corners already checked)
+				for (int y : std::views::iota(start_y + 1, end_y)) {
 					Tile* tile = getTile(start_x, y, z);
 					if (tile && tile->spawn) {
 						list.push_back(tile->spawn.get());
