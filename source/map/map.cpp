@@ -156,7 +156,8 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 			id_list.push_back(tile->ground->getID());
 		}
 
-		auto border_ids = tile->items | std::views::filter([](const auto& i) { return i->isBorder(); }) | std::views::transform([](const auto& i) { return i->getID(); });
+		auto border_view = tile->items | std::views::filter([](const auto& i) { return i->isBorder(); });
+		auto border_ids = border_view | std::views::transform([](const auto& i) { return i->getID(); });
 		id_list.insert(id_list.end(), border_ids.begin(), border_ids.end());
 
 		std::ranges::sort(id_list);

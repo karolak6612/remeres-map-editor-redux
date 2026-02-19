@@ -183,7 +183,7 @@ public:
 	}
 
 	// Usual attributes
-	virtual double getWeight() const;
+	[[nodiscard]] virtual double getWeight() const;
 	int getAttack() const {
 		return g_items[id].attack;
 	}

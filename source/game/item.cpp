@@ -307,7 +307,7 @@ void Item::setTier(unsigned short n) {
 double Item::getWeight() {
 	ItemType& it = g_items[id];
 	if (it.isStackable()) {
-		return it.weight * subtype;
+		return it.weight * std::max(1, (int)subtype);
 	}
 	return it.weight;
 }
