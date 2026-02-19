@@ -8,6 +8,7 @@
 #include "ui/dialog_util.h"
 #include "app/settings.h"
 #include "ui/gui.h"
+#include "util/image_manager.h"
 
 #include "map/map.h"
 #include "game/house.h"
@@ -94,8 +95,12 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxRIGHT | wxLEFT, 20));
 
 	wxSizer* buttonsSizer = newd wxBoxSizer(wxHORIZONTAL);
-	buttonsSizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
-	buttonsSizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	buttonsSizer->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	buttonsSizer->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(buttonsSizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
 	SetSizerAndFit(topsizer);
