@@ -29,7 +29,9 @@
 
 #include "rendering/drawers/minimap_drawer.h"
 
-#define NANOVG_GL3
+#ifndef NANOVG_GL3
+	#define NANOVG_GL3
+#endif
 #include <nanovg.h>
 #include <nanovg_gl.h>
 
