@@ -57,18 +57,18 @@ std::string f2s(const double _d) {
 	return std::format("{:.6g}", _d);
 }
 
-int s2i(const std::string s) {
+int s2i(const std::string& s) {
 	try {
 		return std::stoi(s);
-	} catch (...) {
+	} catch (const std::exception&) {
 		return 0;
 	}
 }
 
-double s2f(const std::string s) {
+double s2f(const std::string& s) {
 	try {
 		return std::stod(s);
-	} catch (...) {
+	} catch (const std::exception&) {
 		return 0.0;
 	}
 }
@@ -139,12 +139,12 @@ std::string as_upper_str(const std::string& other) {
 	return ret;
 }
 
-bool isFalseString(std::string& str) {
+bool isFalseString(const std::string& str) {
 	static constexpr std::array<std::string_view, 5> falseStrings = {"false", "0", "", "no", "not"};
 	return std::ranges::any_of(falseStrings, [&](const auto& s) { return s == str; });
 }
 
-bool isTrueString(std::string& str) {
+bool isTrueString(const std::string& str) {
 	return !isFalseString(str);
 }
 
@@ -216,8 +216,8 @@ wxColor colorFromEightBit(int color) {
 	if (color <= 0 || color >= 216) {
 		return wxColor(0, 0, 0);
 	}
-	const uint8_t red = static_cast<uint8_t>(int(color / 36) % 6 * 51);
-	const uint8_t green = static_cast<uint8_t>(int(color / 6) % 6 * 51);
+	const uint8_t red = static_cast<uint8_t>((color / 36) % 6 * 51);
+	const uint8_t green = static_cast<uint8_t>((color / 6) % 6 * 51);
 	const uint8_t blue = static_cast<uint8_t>(color % 6 * 51);
 	return wxColor(red, green, blue);
 }
