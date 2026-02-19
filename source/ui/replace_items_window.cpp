@@ -23,6 +23,8 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "game/items.h"
+#include <glad/glad.h>
+#include <nanovg.h>
 
 // ============================================================================
 // ReplaceItemsButton
@@ -65,9 +67,9 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 // ReplaceItemsListBox
 
 ReplaceItemsListBox::ReplaceItemsListBox(wxWindow* parent) :
-	wxVListBox(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	m_arrow_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCATION_ARROW, FROM_DIP(parent, wxSize(16, 16)));
-	m_flag_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, FROM_DIP(parent, wxSize(16, 16)));
+	NanoVGListBox(parent, wxID_ANY, wxLB_SINGLE),
+	m_arrow_image(0),
+	m_flag_image(0) {
 }
 
 bool ReplaceItemsListBox::AddItem(const ReplacingItem& item) {
@@ -97,7 +99,7 @@ void ReplaceItemsListBox::RemoveSelected() {
 	}
 
 	const int index = GetSelection();
-	if (index == wxNOT_FOUND) {
+	if (index == -1) {
 		return;
 	}
 
@@ -119,8 +121,46 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const {
+static int GetIconTexture(NanoVGCanvas* canvas, int iconId) {
+	uint64_t cacheId = 0xFF00000000000000 | iconId;
+	int img = canvas->GetCachedImage(cacheId); // Protected access requires friendship or member? No, GetCachedImage is protected.
+	// But we are in a static function. We can't access protected members.
+	// We need to implement this as member function or logic inside OnDrawItem.
+	return 0; // Placeholder
+}
+
+void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) {
 	ASSERT(index < m_items.size());
+
+	// Helper lambda for loading icons
+	auto GetIcon = [&](int iconId) -> int {
+		uint64_t cacheId = 0xFF00000000000000 | iconId;
+		int img = GetCachedImage(cacheId);
+		if (img > 0) return img;
+
+		wxBitmap bmp = IMAGE_MANAGER.GetBitmap(iconId, wxSize(16, 16));
+		if (!bmp.IsOk()) return 0;
+
+		wxImage image = bmp.ConvertToImage();
+		if (!image.IsOk()) return 0;
+
+		int w = image.GetWidth();
+		int h = image.GetHeight();
+		std::vector<uint8_t> rgba(w * h * 4);
+		uint8_t* data = image.GetData();
+		uint8_t* alpha = image.GetAlpha();
+
+		for (int i = 0; i < w * h; ++i) {
+			rgba[i * 4 + 0] = data[i * 3 + 0];
+			rgba[i * 4 + 1] = data[i * 3 + 1];
+			rgba[i * 4 + 2] = data[i * 3 + 2];
+			rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
+		}
+		return GetOrCreateImage(cacheId, rgba.data(), w, h);
+	};
+
+	if (m_arrow_image == 0) m_arrow_image = GetIcon(ICON_LOCATION_ARROW);
+	if (m_flag_image == 0) m_flag_image = GetIcon(IMAGE_PROTECTION_ZONE_SMALL);
 
 	const ReplacingItem& item = m_items.at(index);
 	const ItemType& type1 = g_items.getItemType(item.replaceId);
@@ -131,31 +171,62 @@ void ReplaceItemsListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t index)
 	if (sprite1 && sprite2) {
 		int x = rect.GetX();
 		int y = rect.GetY();
-		sprite1->DrawTo(&dc, SPRITE_SIZE_32x32, x + 4, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawBitmap(m_arrow_bitmap, x + 38, y + 10, true);
-		sprite2->DrawTo(&dc, SPRITE_SIZE_32x32, x + 56, y + 4, rect.GetWidth(), rect.GetHeight());
-		dc.DrawText(wxString::Format("Replace: %d With: %d", item.replaceId, item.withId), x + 104, y + 10);
+
+		int tex1 = GetOrCreateSpriteTexture(vg, sprite1);
+		if (tex1 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 4, y + 4, 32, 32, 0, tex1, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 4, y + 4, 32, 32);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		if (m_arrow_image > 0) {
+			NVGpaint arrowPaint = nvgImagePattern(vg, x + 38, y + 10, 16, 16, 0, m_arrow_image, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 38, y + 10, 16, 16);
+			nvgFillPaint(vg, arrowPaint);
+			nvgFill(vg);
+		}
+
+		int tex2 = GetOrCreateSpriteTexture(vg, sprite2);
+		if (tex2 > 0) {
+			NVGpaint imgPaint = nvgImagePattern(vg, x + 56, y + 4, 32, 32, 0, tex2, 1.0f);
+			nvgBeginPath(vg);
+			nvgRect(vg, x + 56, y + 4, 32, 32);
+			nvgFillPaint(vg, imgPaint);
+			nvgFill(vg);
+		}
+
+		if (IsSelected(index)) {
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		} else {
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		}
+
+		nvgFontSize(vg, 12.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE); // Text alignment inside rect? No, absolute coords.
+		// nvgText expects x, y for baseline or according to align.
+		// NVG_ALIGN_MIDDLE means y is vertical center.
+		nvgText(vg, x + 104, y + 20, wxString::Format("Replace: %d With: %d", item.replaceId, item.withId).ToUTF8().data(), nullptr);
 
 		if (item.complete) {
-			x = rect.GetWidth() - 100;
-			dc.DrawBitmap(m_flag_bitmap, x + 70, y + 10, true);
-			dc.DrawText(wxString::Format("Total: %d", item.total), x, y + 10);
+			int rightX = rect.width - 100;
+			if (m_flag_image > 0) {
+				NVGpaint flagPaint = nvgImagePattern(vg, rightX + 70, y + 10, 16, 16, 0, m_flag_image, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, rightX + 70, y + 10, 16, 16);
+				nvgFillPaint(vg, flagPaint);
+				nvgFill(vg);
+			}
+			nvgText(vg, rightX, y + 20, wxString::Format("Total: %d", item.total).ToUTF8().data(), nullptr);
 		}
-	}
-
-	if (IsSelected(index)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		} else {
-			dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-		}
-	} else {
-		dc.SetTextForeground(wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT));
 	}
 }
 
-wxCoord ReplaceItemsListBox::OnMeasureItem(size_t WXUNUSED(index)) const {
-	return FromDIP(40);
+int ReplaceItemsListBox::OnMeasureItem(size_t index) const {
+	return 40;
 }
 
 // ============================================================================
