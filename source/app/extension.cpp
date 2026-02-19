@@ -43,7 +43,7 @@ void MaterialsExtension::addVersion(const std::string& versionString) {
 	}
 }
 
-bool MaterialsExtension::isForVersion(uint16_t versionId) {
+bool MaterialsExtension::isForVersion(const ClientVersionID& versionId) {
 	if (for_all_versions) {
 		return true;
 	}

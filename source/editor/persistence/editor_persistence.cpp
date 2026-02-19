@@ -30,8 +30,8 @@ void EditorPersistence::loadMap(Editor& editor, const FileName& fn) {
 		throw std::runtime_error("Could not open file \"" + nstr(fn.GetFullPath()) + "\".\nThis is not a valid OTBM file or it does not exist.");
 	}
 
-	if (g_version.GetCurrentVersionID() != ver.client) {
-		throw std::runtime_error(std::format("Client version mismatch. Expected {} but got {}", ver.client, g_version.GetCurrentVersionID()));
+	if (g_version.GetCurrentVersion().getProtocolID() != ver.client) {
+		throw std::runtime_error(std::format("Client version mismatch. Expected protocol {} but got protocol {}", ver.client, g_version.GetCurrentVersion().getProtocolID()));
 	}
 
 	ScopedLoadingBar loadingBar("Loading OTBM map...");
@@ -519,7 +519,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 		// So this is redundant but safe.
 		import_tile->spawn.reset();
 
-		editor.map.setTile(new_pos, std::move(moved_tile));
+		(void)editor.map.setTile(new_pos, std::move(moved_tile));
 	}
 
 	for (auto& spawn_entry : spawn_map) {

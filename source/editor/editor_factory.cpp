@@ -32,9 +32,20 @@ void SetupCallbacks(Editor* editor) {
 }
 
 std::unique_ptr<Editor> EditorFactory::CreateEmpty(CopyBuffer& copybuffer) {
-	ClientVersionID defaultVersion = ClientVersionID(g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION));
+	ClientVersionID defaultVersion = CLIENT_VERSION_NONE;
+	OtbVersionID protocolId = g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION);
+	if (protocolId != 0) {
+		ClientVersion* match = ClientVersion::getBestMatch(protocolId);
+		if (match) {
+			defaultVersion = match->getID();
+		}
+	}
+
 	if (defaultVersion == CLIENT_VERSION_NONE) {
-		defaultVersion = ClientVersion::getLatestVersion()->getID();
+		ClientVersion* latest = ClientVersion::getLatestVersion();
+		if (latest) {
+			defaultVersion = latest->getID();
+		}
 	}
 
 	if (!EnsureVersion(defaultVersion)) {
@@ -43,7 +54,7 @@ std::unique_ptr<Editor> EditorFactory::CreateEmpty(CopyBuffer& copybuffer) {
 
 	MapVersion mapVersion;
 	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
-	mapVersion.client = g_version.GetCurrentVersionID();
+	mapVersion.client = g_version.GetCurrentVersion().getProtocolID();
 
 	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion);
 	SetupCallbacks(editor.get());
@@ -57,7 +68,7 @@ std::unique_ptr<Editor> EditorFactory::LoadFromFile(CopyBuffer& copybuffer, cons
 
 	MapVersion mapVersion;
 	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
-	mapVersion.client = g_version.GetCurrentVersionID();
+	mapVersion.client = g_version.GetCurrentVersion().getProtocolID();
 
 	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, fn);
 	SetupCallbacks(editor.get());
@@ -67,7 +78,7 @@ std::unique_ptr<Editor> EditorFactory::LoadFromFile(CopyBuffer& copybuffer, cons
 std::unique_ptr<Editor> EditorFactory::JoinLive(CopyBuffer& copybuffer, std::unique_ptr<LiveClient> client) {
 	MapVersion mapVersion;
 	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
-	mapVersion.client = g_version.GetCurrentVersionID();
+	mapVersion.client = g_version.GetCurrentVersion().getProtocolID();
 
 	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, std::move(client));
 	SetupCallbacks(editor.get());
