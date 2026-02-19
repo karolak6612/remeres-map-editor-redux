@@ -311,6 +311,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/util/common.h
     ${CMAKE_CURRENT_LIST_DIR}/util/json.h
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_listbox.h
     ${CMAKE_CURRENT_LIST_DIR}/util/virtual_item_grid.h
 )
 
@@ -620,6 +621,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_listbox.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/virtual_item_grid.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.cpp
