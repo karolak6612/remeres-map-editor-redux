@@ -264,8 +264,11 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message) {
 	Editor& editor = *server->getEditor();
 
 	// -1 on address since we skip the first START_NODE when sending
-	const std::string& data = message.read<std::string>();
-	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str() - 1), data.size());
+	// Fix UB: Don't use pointer arithmetic before the start of the buffer.
+	// Instead, prepend a dummy byte so mapReader can skip it safely.
+	std::string data = message.read<std::string>();
+	data.insert(0, 1, ' ');
+	mapReader.assign(reinterpret_cast<const uint8_t*>(data.c_str()), data.size());
 
 	BinaryNode* rootNode = mapReader.getRootNode();
 	BinaryNode* tileNode = rootNode->getChild();

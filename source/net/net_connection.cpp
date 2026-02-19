@@ -59,7 +59,7 @@ void NetworkMessage::write<std::string>(const std::string& value) {
 	write<uint16_t>(length);
 
 	expand(length);
-	memcpy(&buffer[position], &value[0], length);
+	std::memcpy(&buffer[position], &value[0], length);
 	position += length;
 }
 
