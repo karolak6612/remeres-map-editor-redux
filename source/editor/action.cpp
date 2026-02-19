@@ -115,9 +115,9 @@ size_t Action::memsize() const {
 
 void Action::commit(DirtyList* dirty_list) {
 	editor.selection.start(Selection::INTERNAL);
-	ChangeList::const_iterator it = changes.begin();
-	while (it != changes.end()) {
-		Change* c = it->get();
+
+	for (const auto& change : changes) {
+		Change* c = change.get();
 		switch (c->type) {
 			case CHANGE_TILE: {
 				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
@@ -131,7 +131,6 @@ void Action::commit(DirtyList* dirty_list) {
 						// Delete all changes that affect tiles outside our view
 						c->clear();
 						uptr.reset();
-						++it;
 						continue;
 					}
 				}
@@ -250,7 +249,6 @@ void Action::commit(DirtyList* dirty_list) {
 			default:
 				break;
 		}
-		++it;
 	}
 	editor.selection.finish(Selection::INTERNAL);
 	commited = true;
@@ -262,10 +260,9 @@ void Action::undo(DirtyList* dirty_list) {
 	}
 
 	editor.selection.start(Selection::INTERNAL);
-	ChangeList::reverse_iterator it = changes.rbegin();
 
-	while (it != changes.rend()) {
-		Change* c = it->get();
+	for (const auto& change : changes | std::views::reverse) {
+		Change* c = change.get();
 		switch (c->type) {
 			case CHANGE_TILE: {
 				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
@@ -280,7 +277,6 @@ void Action::undo(DirtyList* dirty_list) {
 						// Delete all changes that affect tiles outside our view
 						c->clear();
 						old_uptr.reset();
-						++it;
 						continue;
 					}
 				}
@@ -380,7 +376,6 @@ void Action::undo(DirtyList* dirty_list) {
 			default:
 				break;
 		}
-		++it;
 	}
 	editor.selection.finish(Selection::INTERNAL);
 	commited = false;

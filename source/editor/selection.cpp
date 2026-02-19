@@ -28,6 +28,7 @@
 
 #include <ranges>
 #include <algorithm>
+#include <limits>
 
 Selection::Selection(Editor& editor) :
 	busy(false),
@@ -49,27 +50,64 @@ void Selection::recalculateBounds() const {
 		return;
 	}
 
-	Position minPos(0x10000, 0x10000, 0x10);
-	Position maxPos(0, 0, 0);
-
 	if (tiles.empty()) {
-		minPos = Position(0, 0, 0);
-		maxPos = Position(0, 0, 0);
-	} else {
-		std::ranges::for_each(tiles, [&](Tile* tile) {
-			const Position& pos = tile->getPosition();
-			minPos.x = std::min(minPos.x, pos.x);
-			minPos.y = std::min(minPos.y, pos.y);
-			minPos.z = std::min(minPos.z, pos.z);
-
-			maxPos.x = std::max(maxPos.x, pos.x);
-			maxPos.y = std::max(maxPos.y, pos.y);
-			maxPos.z = std::max(maxPos.z, pos.z);
-		});
+		cached_min = Position(0, 0, 0);
+		cached_max = Position(0, 0, 0);
+		bounds_dirty = false;
+		return;
 	}
 
-	cached_min = minPos;
-	cached_max = maxPos;
+	ASSERT(std::ranges::is_sorted(tiles, tilePositionLessThan));
+
+	int min_x = std::numeric_limits<int>::max();
+	int max_x = std::numeric_limits<int>::min();
+	int min_y = std::numeric_limits<int>::max();
+	int max_y = std::numeric_limits<int>::min();
+	int min_z = tiles.front()->getZ();
+	int max_z = tiles.back()->getZ();
+
+	// Tiles are sorted by Z, then Y, then X.
+	// We can skip checking Z for every tile.
+	// We can also skip checking Y/X for many tiles by observing structure.
+	// The vector is sorted by addInternal/removeInternal/flush which use std::sort or sorted inserts.
+
+	// Iterate through Z levels
+	auto z_begin = tiles.begin();
+	while (z_begin != tiles.end()) {
+		int current_z = (*z_begin)->getZ();
+		// Find end of this Z level
+		auto z_end = std::ranges::find_if(z_begin, tiles.end(), [current_z](Tile* t) {
+			return t->getZ() != current_z;
+		});
+
+		// Inside this Z level, tiles are sorted by Y, then X.
+		// So min Y for this Z is at z_begin.
+		// Max Y for this Z is at (z_end - 1).
+		min_y = std::min(min_y, (*z_begin)->getY());
+		max_y = std::max(max_y, (*std::prev(z_end))->getY());
+
+		// Now iterate Y levels within this Z level
+		auto y_begin = z_begin;
+		while (y_begin != z_end) {
+			int current_y = (*y_begin)->getY();
+			// Find end of this Y level
+			auto y_end = std::ranges::find_if(y_begin, z_end, [current_y](Tile* t) {
+				return t->getY() != current_y;
+			});
+
+			// Inside this Y level, tiles are sorted by X.
+			// Min X is at y_begin
+			// Max X is at (y_end - 1)
+			min_x = std::min(min_x, (*y_begin)->getX());
+			max_x = std::max(max_x, (*std::prev(y_end))->getX());
+
+			y_begin = y_end;
+		}
+		z_begin = z_end;
+	}
+
+	cached_min = Position(min_x, min_y, min_z);
+	cached_max = Position(max_x, max_y, max_z);
 	bounds_dirty = false;
 }
 
