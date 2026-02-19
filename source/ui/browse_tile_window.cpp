@@ -23,6 +23,7 @@
 #include "map/tile.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include <wx/listbox.h>
 #include "ui/browse_tile_window.h"
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
@@ -51,7 +52,7 @@ protected:
 };
 
 BrowseTileListBox::BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile) :
-	NanoVGListBox(parent, id, wxLB_MULTIPLE), edit_tile(tile) {
+	NanoVGListBox(parent, id, wxLB_SINGLE), edit_tile(tile) {
 	SetMinSize(FromDIP(wxSize(200, 180)));
 	UpdateItems();
 }
@@ -78,10 +79,12 @@ void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 
 	if (IsSelected(n)) {
 		item->select();
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 	} else {
 		item->deselect();
-		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 	}
 
 	wxString label;
@@ -90,11 +93,11 @@ void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 	nvgFontSize(vg, 12.0f);
 	nvgFontFace(vg, "sans");
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-	nvgText(vg, rect.x + 40, rect.y + rect.height/2.0f, label.ToUTF8().data(), nullptr);
+	nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, label.ToUTF8().data(), nullptr);
 }
 
 int BrowseTileListBox::OnMeasureItem(size_t n) const {
-	return 32;
+	return FromDIP(32);
 }
 
 Item* BrowseTileListBox::GetSelectedItem() {
@@ -110,7 +113,7 @@ void BrowseTileListBox::RemoveSelected() {
 		return;
 	}
 
-	Clear();
+	ClearSelection();
 	items.clear();
 
 	// Delete the items from the tile

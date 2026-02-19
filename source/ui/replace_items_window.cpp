@@ -121,46 +121,47 @@ bool ReplaceItemsListBox::CanAdd(uint16_t replaceId, uint16_t withId) const {
 	return true;
 }
 
-static int GetIconTexture(NanoVGCanvas* canvas, int iconId) {
-	uint64_t cacheId = 0xFF00000000000000 | iconId;
-	int img = canvas->GetCachedImage(cacheId); // Protected access requires friendship or member? No, GetCachedImage is protected.
-	// But we are in a static function. We can't access protected members.
-	// We need to implement this as member function or logic inside OnDrawItem.
-	return 0; // Placeholder
+int ReplaceItemsListBox::GetIcon(const std::string& assetPath) {
+	uint64_t cacheId = 0xFF00000000000000 | (std::hash<std::string> {}(assetPath) & 0x00FFFFFFFFFFFFFF);
+	int img = GetCachedImage(cacheId);
+	if (img > 0) {
+		return img;
+	}
+
+	wxBitmap bmp = IMAGE_MANAGER.GetBitmap(assetPath, wxSize(16, 16));
+	if (!bmp.IsOk()) {
+		return 0;
+	}
+
+	wxImage image = bmp.ConvertToImage();
+	if (!image.IsOk()) {
+		return 0;
+	}
+
+	int w = image.GetWidth();
+	int h = image.GetHeight();
+	std::vector<uint8_t> rgba(w * h * 4);
+	uint8_t* data = image.GetData();
+	uint8_t* alpha = image.GetAlpha();
+
+	for (int i = 0; i < w * h; ++i) {
+		rgba[i * 4 + 0] = data[i * 3 + 0];
+		rgba[i * 4 + 1] = data[i * 3 + 1];
+		rgba[i * 4 + 2] = data[i * 3 + 2];
+		rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
+	}
+	return GetOrCreateImage(cacheId, rgba.data(), w, h);
 }
 
 void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) {
 	ASSERT(index < m_items.size());
 
-	// Helper lambda for loading icons
-	auto GetIcon = [&](int iconId) -> int {
-		uint64_t cacheId = 0xFF00000000000000 | iconId;
-		int img = GetCachedImage(cacheId);
-		if (img > 0) return img;
-
-		wxBitmap bmp = IMAGE_MANAGER.GetBitmap(iconId, wxSize(16, 16));
-		if (!bmp.IsOk()) return 0;
-
-		wxImage image = bmp.ConvertToImage();
-		if (!image.IsOk()) return 0;
-
-		int w = image.GetWidth();
-		int h = image.GetHeight();
-		std::vector<uint8_t> rgba(w * h * 4);
-		uint8_t* data = image.GetData();
-		uint8_t* alpha = image.GetAlpha();
-
-		for (int i = 0; i < w * h; ++i) {
-			rgba[i * 4 + 0] = data[i * 3 + 0];
-			rgba[i * 4 + 1] = data[i * 3 + 1];
-			rgba[i * 4 + 2] = data[i * 3 + 2];
-			rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
-		}
-		return GetOrCreateImage(cacheId, rgba.data(), w, h);
-	};
-
-	if (m_arrow_image == 0) m_arrow_image = GetIcon(ICON_LOCATION_ARROW);
-	if (m_flag_image == 0) m_flag_image = GetIcon(IMAGE_PROTECTION_ZONE_SMALL);
+	if (m_arrow_image == 0) {
+		m_arrow_image = GetIcon(ICON_LOCATION_ARROW);
+	}
+	if (m_flag_image == 0) {
+		m_flag_image = GetIcon(IMAGE_PROTECTION_ZONE_SMALL);
+	}
 
 	const ReplacingItem& item = m_items.at(index);
 	const ItemType& type1 = g_items.getItemType(item.replaceId);
@@ -199,9 +200,11 @@ void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t 
 		}
 
 		if (IsSelected(index)) {
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		} else {
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		}
 
 		nvgFontSize(vg, 12.0f);
@@ -226,7 +229,7 @@ void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t 
 }
 
 int ReplaceItemsListBox::OnMeasureItem(size_t index) const {
-	return 40;
+	return FromDIP(40);
 }
 
 // ============================================================================

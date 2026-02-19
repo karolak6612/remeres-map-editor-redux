@@ -380,9 +380,11 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		}
 
 		if (IsSelected(n)) {
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		} else {
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255)); // White text on dark background default
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		}
 
 		nvgFontSize(vg, 12.0f);
@@ -394,5 +396,5 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 }
 
 int FindDialogListBox::OnMeasureItem(size_t n) const {
-	return 32;
+	return FromDIP(32);
 }

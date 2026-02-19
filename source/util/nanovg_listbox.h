@@ -9,6 +9,7 @@
  * @class NanoVGListBox
  * @brief High-performance virtual list box using NanoVG rendering.
  * Mimics wxVListBox behavior but with hardware acceleration.
+ * @note This implementation assumes all list items have a uniform height for performance reasons.
  */
 class NanoVGListBox : public NanoVGCanvas {
 public:
@@ -62,7 +63,6 @@ protected:
 	long m_style; // wxLB_SINGLE, wxLB_MULTIPLE, etc.
 
 	int m_hoverIndex;
-	int m_itemHeightCache; // Simple optimization if all items are same height
 };
 
 #endif

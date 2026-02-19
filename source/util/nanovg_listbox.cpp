@@ -4,14 +4,14 @@
 #include <nanovg.h>
 #include <nanovg_gl.h>
 #include <algorithm>
+#include <iterator>
 
 NanoVGListBox::NanoVGListBox(wxWindow* parent, wxWindowID id, long style) :
 	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
 	m_count(0),
 	m_selection(-1),
 	m_style(style),
-	m_hoverIndex(-1),
-	m_itemHeightCache(-1) {
+	m_hoverIndex(-1) {
 
 	Bind(wxEVT_SIZE, &NanoVGListBox::OnSize, this);
 	Bind(wxEVT_LEFT_DOWN, &NanoVGListBox::OnMouseDown, this);
@@ -39,7 +39,9 @@ void NanoVGListBox::SetItemCount(size_t count) {
 }
 
 void NanoVGListBox::SetSelection(int index) {
-	if (index < -1 || index >= (int)m_count) return;
+	if (index < -1 || index >= (int)m_count) {
+		return;
+	}
 
 	if (m_style & wxLB_MULTIPLE) {
 		if (index == -1) {
@@ -59,8 +61,9 @@ void NanoVGListBox::SetSelection(int index) {
 
 int NanoVGListBox::GetSelection() const {
 	if (m_style & wxLB_MULTIPLE) {
-		for (size_t i = 0; i < m_multiSelection.size(); ++i) {
-			if (m_multiSelection[i]) return (int)i;
+		const auto it = std::find(m_multiSelection.begin(), m_multiSelection.end(), true);
+		if (it != m_multiSelection.end()) {
+			return (int)std::distance(m_multiSelection.begin(), it);
 		}
 		return -1;
 	}
@@ -68,7 +71,9 @@ int NanoVGListBox::GetSelection() const {
 }
 
 bool NanoVGListBox::IsSelected(int index) const {
-	if (index < 0 || index >= (int)m_count) return false;
+	if (index < 0 || index >= (int)m_count) {
+		return false;
+	}
 
 	if (m_style & wxLB_MULTIPLE) {
 		return m_multiSelection[index];
@@ -77,7 +82,9 @@ bool NanoVGListBox::IsSelected(int index) const {
 }
 
 void NanoVGListBox::Select(int index, bool select) {
-	if (index < 0 || index >= (int)m_count) return;
+	if (index < 0 || index >= (int)m_count) {
+		return;
+	}
 
 	if (m_style & wxLB_MULTIPLE) {
 		if (m_multiSelection[index] != select) {
@@ -123,9 +130,13 @@ void NanoVGListBox::ScrollToLine(int line) {
 }
 
 void NanoVGListBox::EnsureVisible(int line) {
-	if (line < 0 || line >= (int)m_count) return;
+	if (line < 0 || line >= (int)m_count) {
+		return;
+	}
 
-	if (m_count == 0) return;
+	if (m_count == 0) {
+		return;
+	}
 
 	int itemHeight = OnMeasureItem(0); // Assuming uniform height for simple scrolling logic
 	int scrollPos = GetScrollPosition();
@@ -174,7 +185,9 @@ wxSize NanoVGListBox::DoGetBestClientSize() const {
 }
 
 void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
-	if (m_count == 0) return;
+	if (m_count == 0) {
+		return;
+	}
 
 	int scrollPos = GetScrollPosition();
 	int itemHeight = OnMeasureItem(0); // Simplified assumption
@@ -200,9 +213,11 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 			nvgBeginPath(vg);
 			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
 			if (selected) {
-				nvgFillColor(vg, nvgRGBA(0, 120, 215, 255)); // Standard blue selection
+				wxColour selColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
+				nvgFillColor(vg, nvgRGBA(selColour.Red(), selColour.Green(), selColour.Blue(), 255));
 			} else {
-				nvgFillColor(vg, nvgRGBA(60, 60, 60, 255)); // Hover gray
+				wxColour hoverColour = GetBackgroundColour().ChangeLightness(120);
+				nvgFillColor(vg, nvgRGBA(hoverColour.Red(), hoverColour.Green(), hoverColour.Blue(), 255));
 			}
 			nvgFill(vg);
 		}
@@ -212,10 +227,14 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 }
 
 int NanoVGListBox::HitTest(int x, int y) const {
-	if (m_count == 0) return -1;
+	if (m_count == 0) {
+		return -1;
+	}
 	int itemHeight = OnMeasureItem(0);
 	int index = y / itemHeight;
-	if (index >= 0 && index < (int)m_count) return index;
+	if (index >= 0 && index < (int)m_count) {
+		return index;
+	}
 	return -1;
 }
 
@@ -260,7 +279,9 @@ void NanoVGListBox::OnLeave(wxMouseEvent& event) {
 }
 
 void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
-	if (m_count == 0) return;
+	if (m_count == 0) {
+		return;
+	}
 
 	int current = -1;
 	if (m_style & wxLB_MULTIPLE) {
@@ -278,7 +299,9 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 		current = m_selection;
 	}
 
-	if (current == -1) current = 0;
+	if (current == -1) {
+		current = 0;
+	}
 
 	int next = current;
 	int keyCode = event.GetKeyCode();

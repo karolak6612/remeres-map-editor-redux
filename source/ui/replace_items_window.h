@@ -79,6 +79,7 @@ public:
 
 private:
 	std::vector<ReplacingItem> m_items;
+	int GetIcon(const std::string& assetPath);
 	int m_arrow_image;
 	int m_flag_image;
 };
