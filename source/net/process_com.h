@@ -21,6 +21,7 @@
 		#define RME_PROCESS_COMMUNICATION_H_
 
 		#include "wx/ipc.h"
+		#include <memory>
 
 class RMEProcessConnection : public wxConnection {
 public:
@@ -39,7 +40,7 @@ public:
 };
 
 class RMEProcessClient : public wxClient {
-	wxConnectionBase* proc;
+	std::unique_ptr<wxConnectionBase> proc;
 
 public:
 	RMEProcessClient();
