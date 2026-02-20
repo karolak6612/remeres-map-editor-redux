@@ -28,6 +28,7 @@
 #include "ui/gui.h"
 
 TooltipDrawer::TooltipDrawer() {
+	tooltips.reserve(1024);
 }
 
 TooltipDrawer::~TooltipDrawer() {
