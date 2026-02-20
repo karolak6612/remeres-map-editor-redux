@@ -425,7 +425,14 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
+			int loop_count = 0;
 			while (found != tile_loc->getSpawnCount()) {
+				if (++loop_count > 4096) {
+					spdlog::warn("Map::getSpawnList infinite loop detected! Found {} of {} spawns at [{}, {}, {}]",
+								 found, tile_loc->getSpawnCount(), where->getX(), where->getY(), where->getZ());
+					break;
+				}
+
 				for (int x = start_x; x <= end_x; ++x) {
 					Tile* tile = getTile(x, start_y, z);
 					if (tile && tile->spawn) {
