@@ -20,6 +20,100 @@ static std::atomic<uint32_t> template_id_generator(0x1000000);
 constexpr int RGB_COMPONENTS = 3;
 constexpr int RGBA_COMPONENTS = 4;
 
+namespace {
+
+void ProcessTransparentRun(size_t& read, size_t& write, const uint8_t* dump, size_t size, uint8_t* data, size_t pixels_data_size, int id) {
+	if (read + 1 >= size) {
+		return;
+	}
+	int transparent = dump[read] | dump[read + 1] << 8;
+
+	// Integrity check for transparency run
+	if (write + (transparent * 4) > pixels_data_size) {
+		spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
+		transparent = (pixels_data_size - write) / 4;
+	}
+
+	read += 2;
+	for (int i = 0; i < transparent && write < pixels_data_size; i++) {
+		data[write + 0] = 0x00; // red
+		data[write + 1] = 0x00; // green
+		data[write + 2] = 0x00; // blue
+		data[write + 3] = 0x00; // alpha
+		write += RGBA_COMPONENTS;
+	}
+}
+
+bool ProcessColoredRun(size_t& read, size_t& write, const uint8_t* dump, size_t size, uint8_t* data, size_t pixels_data_size, uint8_t bpp, bool use_alpha, bool& non_zero_alpha_found, bool& non_black_pixel_found, int id) {
+	if (read + 1 >= size) {
+		return false;
+	}
+	int colored = dump[read] | dump[read + 1] << 8;
+	read += 2;
+
+	// Integrity check for colored run
+	if (write + (colored * 4) > pixels_data_size) {
+		spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
+		colored = (pixels_data_size - write) / 4;
+	}
+
+	// Integrity check for read buffer
+	if (read + (colored * bpp) > size) {
+		spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
+		// We can't easily recover here without risking reading garbage, so stop
+		return false;
+	}
+
+	for (int i = 0; i < colored && write < pixels_data_size; i++) {
+		uint8_t r = dump[read + 0];
+		uint8_t g = dump[read + 1];
+		uint8_t b = dump[read + 2];
+		uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
+
+		data[write + 0] = r;
+		data[write + 1] = g;
+		data[write + 2] = b;
+		data[write + 3] = a;
+
+		if (a > 0) {
+			non_zero_alpha_found = true;
+		}
+		if (r > 0 || g > 0 || b > 0) {
+			non_black_pixel_found = true;
+		}
+
+		write += RGBA_COMPONENTS;
+		read += bpp;
+	}
+	return true;
+}
+
+template <int DestStride>
+void ColorizePixels(uint8_t* dest, const uint8_t* mask, int lookHead, int lookBody, int lookLegs, int lookFeet) {
+	constexpr int SrcStride = RGB_COMPONENTS; // Mask is always RGB (3)
+	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
+		uint8_t& red = dest[i * DestStride + 0];
+		uint8_t& green = dest[i * DestStride + 1];
+		uint8_t& blue = dest[i * DestStride + 2];
+
+		const uint8_t& tred = mask[i * SrcStride + 0];
+		const uint8_t& tgreen = mask[i * SrcStride + 1];
+		const uint8_t& tblue = mask[i * SrcStride + 2];
+
+		if (tred && tgreen && !tblue) { // yellow => head
+			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
+		} else if (tred && !tgreen && !tblue) { // red => body
+			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
+		} else if (!tred && tgreen && !tblue) { // green => legs
+			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
+		} else if (!tred && !tgreen && tblue) { // blue => feet
+			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
+		}
+	}
+}
+
+} // namespace
+
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :
 	parent(parent),
 	outfit(outfit) {
@@ -504,63 +598,14 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 
 	// decompress pixels
 	while (read < size && write < pixels_data_size) {
-		int transparent = dump[read] | dump[read + 1] << 8;
-
-		// Integrity check for transparency run
-		if (write + (transparent * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
-			transparent = (pixels_data_size - write) / 4;
-		}
-
-		read += 2;
-		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
-		}
+		ProcessTransparentRun(read, write, dump, size, data.get(), pixels_data_size, id);
 
 		if (read >= size || write >= pixels_data_size) {
 			break;
 		}
 
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		// Integrity check for colored run
-		if (write + (colored * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
-			colored = (pixels_data_size - write) / 4;
-		}
-
-		// Integrity check for read buffer
-		if (read + (colored * bpp) > size) {
-			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
-			// We can't easily recover here without risking reading garbage, so stop
+		if (!ProcessColoredRun(read, write, dump, size, data.get(), pixels_data_size, bpp, use_alpha, non_zero_alpha_found, non_black_pixel_found, id)) {
 			break;
-		}
-
-		for (int i = 0; i < colored && write < pixels_data_size; i++) {
-			uint8_t r = dump[read + 0];
-			uint8_t g = dump[read + 1];
-			uint8_t b = dump[read + 2];
-			uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
-
-			data[write + 0] = r;
-			data[write + 1] = g;
-			data[write + 2] = b;
-			data[write + 3] = a;
-
-			if (a > 0) {
-				non_zero_alpha_found = true;
-			}
-			if (r > 0 || g > 0 || b > 0) {
-				non_black_pixel_found = true;
-			}
-
-			write += RGBA_COMPONENTS;
-			read += bpp;
 		}
 	}
 
@@ -697,25 +742,7 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBData() {
 		lookFeet = 0;
 	}
 
-	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
-		uint8_t& red = rgbdata[i * RGB_COMPONENTS + 0];
-		uint8_t& green = rgbdata[i * RGB_COMPONENTS + 1];
-		uint8_t& blue = rgbdata[i * RGB_COMPONENTS + 2];
-
-		const uint8_t& tred = template_rgbdata[i * RGB_COMPONENTS + 0];
-		const uint8_t& tgreen = template_rgbdata[i * RGB_COMPONENTS + 1];
-		const uint8_t& tblue = template_rgbdata[i * RGB_COMPONENTS + 2];
-
-		if (tred && tgreen && !tblue) { // yellow => head
-			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
-		} else if (tred && !tgreen && !tblue) { // red => body
-			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
-		} else if (!tred && tgreen && !tblue) { // green => legs
-			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
-		} else if (!tred && !tgreen && tblue) { // blue => feet
-			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
-		}
-	}
+	ColorizePixels<RGB_COMPONENTS>(rgbdata.get(), template_rgbdata.get(), lookHead, lookBody, lookLegs, lookFeet);
 	// template_rgbdata auto-deleted
 	return rgbdata;
 }
@@ -749,25 +776,7 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 	}
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
-		uint8_t& red = rgbadata[i * RGBA_COMPONENTS + 0];
-		uint8_t& green = rgbadata[i * RGBA_COMPONENTS + 1];
-		uint8_t& blue = rgbadata[i * RGBA_COMPONENTS + 2];
-
-		const uint8_t& tred = template_rgbdata[i * RGB_COMPONENTS + 0];
-		const uint8_t& tgreen = template_rgbdata[i * RGB_COMPONENTS + 1];
-		const uint8_t& tblue = template_rgbdata[i * RGB_COMPONENTS + 2];
-
-		if (tred && tgreen && !tblue) { // yellow => head
-			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
-		} else if (tred && !tgreen && !tblue) { // red => body
-			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
-		} else if (!tred && tgreen && !tblue) { // green => legs
-			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
-		} else if (!tred && !tgreen && tblue) { // blue => feet
-			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
-		}
-	}
+	ColorizePixels<RGBA_COMPONENTS>(rgbadata.get(), template_rgbdata.get(), lookHead, lookBody, lookLegs, lookFeet);
 	// template_rgbdata auto-deleted
 	return rgbadata;
 }

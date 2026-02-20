@@ -256,56 +256,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 				drawer->DrawDoorIndicators(vg);
 			}
 
-			// Floating HUD (Selection & Cursor Info)
-			int w = GetSize().x;
-			int h = GetSize().y;
-
-			const float hudFontSize = 16.0f;
-			nvgFontSize(vg, hudFontSize);
-			nvgFontFace(vg, "sans");
-
-			bool needs_update = (editor.selection.size() != hud_cached_selection_count || last_cursor_map_x != hud_cached_x || last_cursor_map_y != hud_cached_y || last_cursor_map_z != hud_cached_z || zoom != hud_cached_zoom);
-
-			if (needs_update || hud_cached_text.empty()) {
-				if (!editor.selection.empty()) {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size());
-				} else {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}%", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100);
-				}
-
-				hud_cached_selection_count = editor.selection.size();
-				hud_cached_x = last_cursor_map_x;
-				hud_cached_y = last_cursor_map_y;
-				hud_cached_z = last_cursor_map_z;
-				hud_cached_zoom = zoom;
-
-				nvgTextBounds(vg, 0, 0, hud_cached_text.c_str(), nullptr, hud_cached_bounds);
-			}
-
-			float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
-			float padding = 8.0f;
-			float hudW = textW + padding * 2;
-			float hudH = 28.0f;
-			float hudX = 10.0f;
-			float hudY = h - hudH - 10.0f;
-
-			// Background
-			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
-			nvgFill(vg);
-
-			// Border
-			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 40));
-			nvgStrokeWidth(vg, 1.0f);
-			nvgStroke(vg);
-
-			// Text
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 220));
-			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-			nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
+			DrawHUD(vg);
 
 			TextRenderer::EndFrame(vg);
 
@@ -335,6 +286,59 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	if (editor.live_manager.GetClient()) {
 		editor.live_manager.GetClient()->sendNodeRequests();
 	}
+}
+
+void MapCanvas::DrawHUD(NVGcontext* vg) {
+	// Floating HUD (Selection & Cursor Info)
+	int w = GetSize().x;
+	int h = GetSize().y;
+
+	const float hudFontSize = 16.0f;
+	nvgFontSize(vg, hudFontSize);
+	nvgFontFace(vg, "sans");
+
+	bool needs_update = (editor.selection.size() != hud_cached_selection_count || last_cursor_map_x != hud_cached_x || last_cursor_map_y != hud_cached_y || last_cursor_map_z != hud_cached_z || zoom != hud_cached_zoom);
+
+	if (needs_update || hud_cached_text.empty()) {
+		if (!editor.selection.empty()) {
+			hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size());
+		} else {
+			hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}%", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100);
+		}
+
+		hud_cached_selection_count = editor.selection.size();
+		hud_cached_x = last_cursor_map_x;
+		hud_cached_y = last_cursor_map_y;
+		hud_cached_z = last_cursor_map_z;
+		hud_cached_zoom = zoom;
+
+		nvgTextBounds(vg, 0, 0, hud_cached_text.c_str(), nullptr, hud_cached_bounds);
+	}
+
+	float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
+	float padding = 8.0f;
+	float hudW = textW + padding * 2;
+	float hudH = 28.0f;
+	float hudX = 10.0f;
+	float hudY = h - hudH - 10.0f;
+
+	// Background
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+	nvgFill(vg);
+
+	// Border
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
+	nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 40));
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStroke(vg);
+
+	// Text
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 220));
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
 }
 
 void MapCanvas::TakeScreenshot(wxFileName path, wxString format) {
