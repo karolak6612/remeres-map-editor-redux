@@ -12,6 +12,7 @@
 #include "game/sprites.h"
 #include "map/map.h"
 #include "map/tile.h"
+#include "map/tile_utils.h"
 #include "util/image_manager.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"
@@ -76,7 +77,7 @@ void MapPopupMenu::Update() {
 	if (anything_selected) {
 		if (editor.selection.size() == 1) {
 			Tile* tile = editor.selection.getSelectedTile();
-			ItemVector selected_items = tile->getSelectedItems();
+			ItemVector selected_items = TileUtils::getSelectedItems(tile);
 
 			bool hasWall = false;
 			bool hasCarpet = false;

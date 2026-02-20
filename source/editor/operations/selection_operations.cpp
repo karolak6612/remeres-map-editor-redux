@@ -11,6 +11,7 @@
 #include "editor/selection.h"
 #include "map/map.h"
 #include "map/tile_operations.h"
+#include "map/tile_utils.h"
 #include "brushes/ground/ground_brush.h"
 #include "app/settings.h"
 #include "ui/gui.h"
@@ -104,7 +105,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 
 		// Get all the selected items from the NEW source tile and iterate through them
 		// This transfers ownership to the temporary tile
-		auto tile_selection = new_src_tile->popSelectedItems();
+		auto tile_selection = TileUtils::popSelectedItems(new_src_tile.get());
 		for (auto& item : tile_selection) {
 			// Add the copied item to the newd destination tile,
 			tmp_storage_tile->addItem(std::move(item));
@@ -226,7 +227,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 			} else {
 				new_dest_tile = editor.map.allocator(location);
 			}
-			new_dest_tile->merge(tile);
+			TileUtils::merge(new_dest_tile.get(), tile);
 			// Removing old tile from memory since we merged it
 			delete tile;
 		} else {
@@ -349,7 +350,7 @@ void SelectionOperations::destroySelection(Editor& editor) {
 
 			std::unique_ptr<Tile> newtile = tile->deepCopy(editor.map);
 
-			auto tile_selection = newtile->popSelectedItems();
+			auto tile_selection = TileUtils::popSelectedItems(newtile.get());
 			for (auto& item : tile_selection) {
 				++item_count;
 				// Items are deleted when the unique_ptr in tile_selection goes out of scope

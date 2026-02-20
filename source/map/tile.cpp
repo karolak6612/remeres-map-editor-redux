@@ -178,33 +178,6 @@ int Tile::size() const {
 	return sz;
 }
 
-void Tile::merge(Tile* other) {
-	if (other->isPZ()) {
-		setPZ(true);
-	}
-	if (other->house_id) {
-		house_id = other->house_id;
-	}
-
-	if (other->ground) {
-		ground = std::move(other->ground);
-	}
-
-	if (other->creature) {
-		creature = std::move(other->creature);
-	}
-
-	if (other->spawn) {
-		spawn = std::move(other->spawn);
-	}
-
-	items.reserve(items.size() + other->items.size());
-	for (auto& item : other->items) {
-		addItem(std::move(item));
-	}
-	other->items.clear();
-	update();
-}
 
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 	if (prop == PROTECTIONZONE && isPZ()) {
@@ -364,47 +337,6 @@ Item* Tile::getTopSelectedItem() {
 	return nullptr;
 }
 
-std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelected) {
-	std::vector<std::unique_ptr<Item>> pop_items;
-
-	if (!ignoreTileSelected && !isSelected()) {
-		return pop_items;
-	}
-
-	if (ground && ground->isSelected()) {
-		pop_items.push_back(std::move(ground));
-	}
-
-	auto split_point = std::stable_partition(items.begin(), items.end(), [](const std::unique_ptr<Item>& i) { return !i->isSelected(); });
-	std::move(split_point, items.end(), std::back_inserter(pop_items));
-	items.erase(split_point, items.end());
-
-	statflags &= ~TILESTATE_SELECTED;
-	return pop_items;
-}
-
-ItemVector Tile::getSelectedItems(bool unzoomed) {
-	ItemVector selected_items;
-
-	if (!isSelected()) {
-		return selected_items;
-	}
-
-	if (ground && ground->isSelected()) {
-		selected_items.push_back(ground.get());
-	}
-
-	// save performance when zoomed out
-	if (!unzoomed) {
-		std::ranges::for_each(items, [&](const auto& item) {
-			if (item->isSelected()) {
-				selected_items.push_back(item.get());
-			}
-		});
-	}
-
-	return selected_items;
-}
 
 uint8_t Tile::getMiniMapColor() const {
 	if (minimapColor != INVALID_MINIMAP_COLOR) {
@@ -639,26 +571,3 @@ void Tile::removeHouseExit(House* h) {
 	std::erase(*house_exits, h->getID());
 }
 
-bool Tile::isContentEqual(const Tile* other) const {
-	if (!other) {
-		return false;
-	}
-
-	// Compare ground
-	if (ground != nullptr && other->ground != nullptr) {
-		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
-			return false;
-		}
-	} else if (ground != other->ground) {
-		return false;
-	}
-
-	// Compare items
-	if (items.size() != other->items.size()) {
-		return false;
-	}
-
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
-		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
-	});
-}

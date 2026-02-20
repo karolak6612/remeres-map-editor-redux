@@ -24,6 +24,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
+#include "map/tile_utils.h"
 #include "app/settings.h"
 
 void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw) {
@@ -66,14 +67,14 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 						std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 						SelectionOperations::removeDuplicateWalls(buffer_tile, new_tile.get());
 						SelectionOperations::doSurroundingBorders(doodad_brush, tilestoborder, buffer_tile, new_tile.get());
-						new_tile->merge(buffer_tile);
+						TileUtils::merge(new_tile.get(), buffer_tile);
 						action->addChange(std::make_unique<Change>(std::move(new_tile)));
 					}
 				} else {
 					std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
 					SelectionOperations::removeDuplicateWalls(buffer_tile, new_tile.get());
 					SelectionOperations::doSurroundingBorders(doodad_brush, tilestoborder, buffer_tile, new_tile.get());
-					new_tile->merge(buffer_tile);
+					TileUtils::merge(new_tile.get(), buffer_tile);
 					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				}
 			} else {
@@ -91,7 +92,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 						std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 						SelectionOperations::removeDuplicateWalls(buffer_tile, new_tile.get());
 						SelectionOperations::doSurroundingBorders(doodad_brush, tilestoborder, buffer_tile, new_tile.get());
-						new_tile->merge(buffer_tile);
+						TileUtils::merge(new_tile.get(), buffer_tile);
 						action->addChange(std::make_unique<Change>(std::move(new_tile)));
 					}
 				}

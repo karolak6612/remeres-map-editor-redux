@@ -9,6 +9,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
+#include "map/tile_utils.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "brushes/brush_utility.h"
@@ -202,7 +203,7 @@ void AutoborderPreviewManager::PruneUnchanged(Editor& editor, const Position& po
 			}
 
 			// Compare tiles
-			bool equal = buf_tile->isContentEqual(src_tile);
+			bool equal = TileUtils::isContentEqual(buf_tile, src_tile);
 
 			if (equal) {
 				// Remove unmodified tile from buffer to prevent ghosting

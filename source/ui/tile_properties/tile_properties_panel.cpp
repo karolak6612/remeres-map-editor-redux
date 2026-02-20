@@ -7,6 +7,7 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "map/tile.h"
+#include "map/tile_utils.h"
 #include "game/item.h"
 #include "ui/tile_properties/browse_field_list.h"
 #include "ui/tile_properties/spawn_creature_panel.h"
@@ -188,7 +189,7 @@ void TilePropertiesPanel::UpdateFromEditor(Editor* editor) {
 		SetTile(tile, &editor->map);
 
 		if (tile) {
-			ItemVector items = tile->getSelectedItems();
+			ItemVector items = TileUtils::getSelectedItems(tile);
 			if (!items.empty()) {
 				SelectItem(items.front());
 			} else if (tile->creature && tile->creature->isSelected()) {

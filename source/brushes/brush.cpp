@@ -31,6 +31,7 @@
 #include "brushes/wall/wall_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "brushes/managers/brush_manager.h"
+#include "brushes/brush_factory.h"
 
 #include "brushes/flag/flag_brush.h"
 #include "brushes/door/door_brush.h"
@@ -100,6 +101,15 @@ void Brushes::init() {
 	addManagedBrush(g_brush_manager.nolog_brush, TILESTATE_NOLOGOUT);
 	addManagedBrush(g_brush_manager.pvp_brush, TILESTATE_PVPZONE);
 
+	auto& factory = BrushFactory::getInstance();
+	factory.registerBrush("border", [] { return std::make_unique<GroundBrush>(); });
+	factory.registerBrush("ground", [] { return std::make_unique<GroundBrush>(); });
+	factory.registerBrush("wall", [] { return std::make_unique<WallBrush>(); });
+	factory.registerBrush("wall decoration", [] { return std::make_unique<WallDecorationBrush>(); });
+	factory.registerBrush("carpet", [] { return std::make_unique<CarpetBrush>(); });
+	factory.registerBrush("table", [] { return std::make_unique<TableBrush>(); });
+	factory.registerBrush("doodad", [] { return std::make_unique<DoodadBrush>(); });
+
 	GroundBrush::init();
 	WallBrush::init();
 	TableBrush::init();
@@ -131,18 +141,9 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 
 		const std::string_view brushType = attribute.as_string();
 
-		static const std::unordered_map<std::string_view, std::function<std::unique_ptr<Brush>()>> typeMap = {
-			{ "border", [] { return std::make_unique<GroundBrush>(); } },
-			{ "ground", [] { return std::make_unique<GroundBrush>(); } },
-			{ "wall", [] { return std::make_unique<WallBrush>(); } },
-			{ "wall decoration", [] { return std::make_unique<WallDecorationBrush>(); } },
-			{ "carpet", [] { return std::make_unique<CarpetBrush>(); } },
-			{ "table", [] { return std::make_unique<TableBrush>(); } },
-			{ "doodad", [] { return std::make_unique<DoodadBrush>(); } }
-		};
+		newBrush = BrushFactory::getInstance().createBrush(brushType);
 
-		if (auto it = typeMap.find(brushType); it != typeMap.end()) {
-			newBrush = it->second();
+		if (newBrush) {
 			brush = newBrush.get();
 		} else {
 			warnings.push_back(std::format("Unknown brush type {}", brushType));

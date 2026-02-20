@@ -20,6 +20,7 @@
 #include "editor/editor.h"
 #include "ui/gui.h"
 #include "map/tile.h"
+#include "map/tile_utils.h"
 #include "game/item.h"
 #include "editor/selection.h"
 #include "app/settings.h"
@@ -103,7 +104,7 @@ void ClipboardHandler::copyServerId(const Selection& selection) {
 
 	if (wxTheClipboard->Open()) {
 		Tile* tile = selection.getSelectedTile();
-		ItemVector selected_items = tile->getSelectedItems();
+		ItemVector selected_items = TileUtils::getSelectedItems(tile);
 		ASSERT(selected_items.size() == 1);
 
 		const Item* item = selected_items.front();
@@ -121,7 +122,7 @@ void ClipboardHandler::copyClientId(const Selection& selection) {
 
 	if (wxTheClipboard->Open()) {
 		Tile* tile = selection.getSelectedTile();
-		ItemVector selected_items = tile->getSelectedItems();
+		ItemVector selected_items = TileUtils::getSelectedItems(tile);
 		ASSERT(selected_items.size() == 1);
 
 		const Item* item = selected_items.front();
@@ -139,7 +140,7 @@ void ClipboardHandler::copyName(const Selection& selection) {
 
 	if (wxTheClipboard->Open()) {
 		Tile* tile = selection.getSelectedTile();
-		ItemVector selected_items = tile->getSelectedItems();
+		ItemVector selected_items = TileUtils::getSelectedItems(tile);
 		ASSERT(selected_items.size() == 1);
 
 		const Item* item = selected_items.front();
