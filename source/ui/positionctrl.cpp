@@ -22,20 +22,23 @@
 
 PositionCtrl::PositionCtrl(wxWindow* parent, const wxString& label, int x, int y, int z, int maxx /*= MAP_MAX_WIDTH*/, int maxy /*= MAP_MAX_HEIGHT*/, int maxz /*= MAP_MAX_LAYER*/) :
 	wxStaticBoxSizer(wxHORIZONTAL, parent, label) {
-	x_field = newd NumberTextCtrl(parent, wxID_ANY, x, 0, maxx, wxTE_PROCESS_ENTER, "X", wxDefaultPosition, wxSize(60, 20));
+	Add(newd wxStaticText(parent, wxID_ANY, "X:"), 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxBOTTOM, FROM_DIP(parent, 5));
+	x_field = newd NumberTextCtrl(parent, wxID_ANY, x, 0, maxx, wxTE_PROCESS_ENTER, "X", wxDefaultPosition, FROM_DIP(parent, wxSize(60, 20)));
 	x_field->SetToolTip("X Coordinate");
 	x_field->Bind(wxEVT_TEXT_PASTE, &PositionCtrl::OnClipboardText, this);
-	Add(x_field, 2, wxEXPAND | wxLEFT | wxBOTTOM, 5);
+	Add(x_field, 2, wxEXPAND | wxLEFT | wxBOTTOM, FROM_DIP(parent, 5));
 
-	y_field = newd NumberTextCtrl(parent, wxID_ANY, y, 0, maxy, wxTE_PROCESS_ENTER, "Y", wxDefaultPosition, wxSize(60, 20));
+	Add(newd wxStaticText(parent, wxID_ANY, "Y:"), 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxBOTTOM, FROM_DIP(parent, 5));
+	y_field = newd NumberTextCtrl(parent, wxID_ANY, y, 0, maxy, wxTE_PROCESS_ENTER, "Y", wxDefaultPosition, FROM_DIP(parent, wxSize(60, 20)));
 	y_field->SetToolTip("Y Coordinate");
 	y_field->Bind(wxEVT_TEXT_PASTE, &PositionCtrl::OnClipboardText, this);
-	Add(y_field, 2, wxEXPAND | wxLEFT | wxBOTTOM, 5);
+	Add(y_field, 2, wxEXPAND | wxLEFT | wxBOTTOM, FROM_DIP(parent, 5));
 
-	z_field = newd NumberTextCtrl(parent, wxID_ANY, z, 0, maxz, wxTE_PROCESS_ENTER, "Z", wxDefaultPosition, wxSize(35, 20));
+	Add(newd wxStaticText(parent, wxID_ANY, "Z:"), 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxBOTTOM, FROM_DIP(parent, 5));
+	z_field = newd NumberTextCtrl(parent, wxID_ANY, z, 0, maxz, wxTE_PROCESS_ENTER, "Z", wxDefaultPosition, FROM_DIP(parent, wxSize(35, 20)));
 	z_field->SetToolTip("Z Coordinate (Layer)");
 	z_field->Bind(wxEVT_TEXT_PASTE, &PositionCtrl::OnClipboardText, this);
-	Add(z_field, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+	Add(z_field, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FROM_DIP(parent, 5));
 
 	maxWidth = maxx;
 	maxHeight = maxy;

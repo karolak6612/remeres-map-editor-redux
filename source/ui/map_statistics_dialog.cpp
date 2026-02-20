@@ -14,6 +14,7 @@
 #include "util/image_manager.h"
 
 #include <wx/wx.h>
+#include <wx/clipbrd.h>
 #include <sstream>
 
 extern GUI g_gui;
@@ -87,18 +88,30 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 
 	wxDialog* dg = newd wxDialog(parent, wxID_ANY, "Map Statistics", wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxTextCtrl* text_field = newd wxTextCtrl(dg, wxID_ANY, wxstr(os.str()), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
-	text_field->SetMinSize(wxSize(400, 300));
+	std::string statsStr = os.str();
+	wxTextCtrl* text_field = newd wxTextCtrl(dg, wxID_ANY, wxstr(statsStr), wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+	text_field->SetMinSize(FROM_DIP(dg, wxSize(400, 300)));
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* export_button = newd wxButton(dg, wxID_OK, "Export as XML");
-	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
+	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, FROM_DIP(dg, wxSize(16, 16))));
 	choicesizer->Add(export_button, wxSizerFlags(1).Center());
 	export_button->SetToolTip("Not implemented yet");
 	export_button->Enable(false);
+
+	wxButton* copy_button = newd wxButton(dg, wxID_ANY, "Copy to Clipboard");
+	copy_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, FROM_DIP(dg, wxSize(16, 16))));
+	copy_button->SetToolTip("Copy statistics to clipboard");
+	copy_button->Bind(wxEVT_BUTTON, [statsStr](wxCommandEvent&) {
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(wxstr(statsStr)));
+			wxTheClipboard->Close();
+		}
+	});
+	choicesizer->Add(copy_button, wxSizerFlags(1).Center().Border(wxLEFT, FROM_DIP(dg, 5)));
 	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FROM_DIP(dg, wxSize(16, 16))));
 	okBtn->SetToolTip("Close this window");
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(1).Center());

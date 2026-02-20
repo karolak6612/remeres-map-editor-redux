@@ -67,11 +67,11 @@ void StandardToolBar::Update() {
 		toolbar->SetToolShortHelp(wxID_PASTE, canPaste ? "Paste (Ctrl+V)" : "Paste (Ctrl+V) - Clipboard empty");
 	} else {
 		toolbar->EnableTool(wxID_UNDO, false);
-		toolbar->SetToolShortHelp(wxID_UNDO, "Undo (Ctrl+Z) - No editor open");
+		toolbar->SetToolShortHelp(wxID_UNDO, "Undo (Ctrl+Z) - No map open");
 		toolbar->EnableTool(wxID_REDO, false);
-		toolbar->SetToolShortHelp(wxID_REDO, "Redo (Ctrl+Shift+Z) - No editor open");
+		toolbar->SetToolShortHelp(wxID_REDO, "Redo (Ctrl+Shift+Z) - No map open");
 		toolbar->EnableTool(wxID_PASTE, false);
-		toolbar->SetToolShortHelp(wxID_PASTE, "Paste (Ctrl+V) - No editor open");
+		toolbar->SetToolShortHelp(wxID_PASTE, "Paste (Ctrl+V) - No map open");
 	}
 
 	bool has_map = editor != nullptr;
@@ -88,6 +88,8 @@ void StandardToolBar::Update() {
 
 	toolbar->EnableTool(wxID_COPY, has_map);
 	toolbar->SetToolShortHelp(wxID_COPY, has_map ? "Copy (Ctrl+C)" : "Copy (Ctrl+C) - No map open");
+
+	toolbar->SetToolShortHelp(MAIN_FRAME_MENU + MenuBar::JUMP_TO_BRUSH, "Search for brushes and items (J)");
 
 	toolbar->Refresh();
 }

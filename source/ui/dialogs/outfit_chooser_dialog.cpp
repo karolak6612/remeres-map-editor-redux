@@ -1,4 +1,5 @@
 #include "ui/dialogs/outfit_chooser_dialog.h"
+#include "app/main.h"
 #include <wx/statline.h>
 #include <wx/sizer.h>
 #include <wx/wrapsizer.h>
@@ -43,7 +44,7 @@ namespace {
 	class ColorSwatch : public wxWindow {
 	public:
 		ColorSwatch(wxWindow* parent, int id, uint32_t color) :
-			wxWindow(parent, id, wxDefaultPosition, wxSize(16, 16), wxBORDER_NONE),
+			wxWindow(parent, id, wxDefaultPosition, FROM_DIP(parent, wxSize(16, 16)), wxBORDER_NONE),
 			color(color), selected(false) {
 			SetBackgroundStyle(wxBG_STYLE_PAINT);
 			Bind(wxEVT_PAINT, &ColorSwatch::OnPaint, this);
@@ -204,8 +205,8 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	check_sizer->Add(addon2, 0, wxALL | wxALIGN_CENTER_VERTICAL, 2);
 
 	wxButton* rand_btn = new wxButton(this, ID_RANDOMIZE, "Random");
-	rand_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHUFFLE, wxSize(16, 16)));
-	rand_btn->SetToolTip("Randomize outfit colors");
+	rand_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHUFFLE, FROM_DIP(this, wxSize(16, 16))));
+	rand_btn->SetToolTip("Surprise me! (Randomize colors)");
 	check_sizer->Add(rand_btn, 0, wxLEFT | wxALIGN_CENTER_VERTICAL, 5);
 
 	col1_sizer->Add(check_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 8);
