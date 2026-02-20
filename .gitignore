@@ -98,3 +98,5 @@ gha-creds-*.json
 /vcproj/_deps
 /vcproj/vcpkg_installed
 /vcproj/rme.dir
+
+.gemini/

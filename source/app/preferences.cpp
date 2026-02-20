@@ -34,6 +34,7 @@
 
 PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected) :
 	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(600, 500), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
+	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	book = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBK_TOP);
