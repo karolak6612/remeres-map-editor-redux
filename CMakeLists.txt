@@ -51,7 +51,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 
 # Lua dependencies
-find_package(lua CONFIG REQUIRED)
+find_package(Lua REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(cpr CONFIG REQUIRED)
 
@@ -106,6 +106,7 @@ target_include_directories(rme PRIVATE
 	${Boost_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIR}
+	${LUA_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
@@ -131,7 +132,7 @@ target_link_libraries(rme PRIVATE spdlog::spdlog)
 target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
 
 # Link Lua dependencies
-target_link_libraries(rme PRIVATE lua::lua)
+target_link_libraries(rme PRIVATE ${LUA_LIBRARIES})
 target_link_libraries(rme PRIVATE sol2::sol2)
 target_link_libraries(rme PRIVATE cpr::cpr)
 
@@ -182,7 +183,7 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE tomlplusplus::tomlplusplus)
 
     # Lua for tests
-    target_link_libraries(test_autoborder_preview PRIVATE lua::lua)
+    target_link_libraries(test_autoborder_preview PRIVATE ${LUA_LIBRARIES})
     target_link_libraries(test_autoborder_preview PRIVATE sol2::sol2)
     target_link_libraries(test_autoborder_preview PRIVATE cpr::cpr)
 

@@ -141,10 +141,10 @@ void LuaEngine::setupSandbox() {
 			throw sol::error(this->getLastError());
 		}
 		if (!result->valid()) {
-			sol::error err = *result;
+			sol::error err = std::move(*result);
 			throw err;
 		}
-		return *result;
+		return std::move(*result);
 	};
 
 	// Secure 'load' to prevent bytecode execution (only allow mode "t")
@@ -254,8 +254,11 @@ sol::optional<sol::protected_function_result> LuaEngine::executeFile(const std::
 			sol::error err = loaded;
 			lastError = std::string("Failed to load script '") + filepath + "': " + err.what();
 			// Restore SCRIPT_DIR
-			if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
-			else lua["SCRIPT_DIR"] = sol::nil;
+			if (oldScriptDir) {
+				lua["SCRIPT_DIR"] = oldScriptDir.value();
+			} else {
+				lua["SCRIPT_DIR"] = sol::nil;
+			}
 			return sol::nullopt;
 		}
 
@@ -268,20 +271,29 @@ sol::optional<sol::protected_function_result> LuaEngine::executeFile(const std::
 		}
 
 		// Restore SCRIPT_DIR
-		if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
-		else lua["SCRIPT_DIR"] = sol::nil;
+		if (oldScriptDir) {
+			lua["SCRIPT_DIR"] = oldScriptDir.value();
+		} else {
+			lua["SCRIPT_DIR"] = sol::nil;
+		}
 
 		return result;
 	} catch (const sol::error& e) {
 		// Restore SCRIPT_DIR
-		if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
-		else lua["SCRIPT_DIR"] = sol::nil;
+		if (oldScriptDir) {
+			lua["SCRIPT_DIR"] = oldScriptDir.value();
+		} else {
+			lua["SCRIPT_DIR"] = sol::nil;
+		}
 		lastError = std::string("Exception executing script '") + filepath + "': " + e.what();
 		return sol::nullopt;
 	} catch (const std::exception& e) {
 		// Restore SCRIPT_DIR
-		if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
-		else lua["SCRIPT_DIR"] = sol::nil;
+		if (oldScriptDir) {
+			lua["SCRIPT_DIR"] = oldScriptDir.value();
+		} else {
+			lua["SCRIPT_DIR"] = sol::nil;
+		}
 
 		lastError = std::string("Exception executing script '") + filepath + "': " + e.what();
 		return sol::nullopt;

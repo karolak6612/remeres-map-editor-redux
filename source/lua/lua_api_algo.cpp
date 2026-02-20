@@ -749,12 +749,11 @@ namespace LuaAPI {
 				int x, y, w, h;
 				std::unique_ptr<BSPNode> left = nullptr;
 				std::unique_ptr<BSPNode> right = nullptr;
-				int roomX, roomY, roomW, roomH;
+				int roomX = 0, roomY = 0, roomW = 0, roomH = 0;
 				bool hasRoom = false;
 			};
 
-			std::function<std::unique_ptr<BSPNode>(int, int, int, int, int)> split;
-			split = [&](int x, int y, int w, int h, int depth) -> std::unique_ptr<BSPNode> {
+			auto split = [&](auto&& self, int x, int y, int w, int h, int depth) -> std::unique_ptr<BSPNode> {
 				auto node = std::make_unique<BSPNode>();
 				node->x = x;
 				node->y = y;
@@ -796,18 +795,18 @@ namespace LuaAPI {
 
 				if (splitHorizontal) {
 					int splitY = y + static_cast<int>(h * splitRatio);
-					node->left = split(x, y, w, splitY - y, depth + 1);
-					node->right = split(x, splitY, w, y + h - splitY, depth + 1);
+					node->left = self(self, x, y, w, splitY - y, depth + 1);
+					node->right = self(self, x, splitY, w, y + h - splitY, depth + 1);
 				} else {
 					int splitX = x + static_cast<int>(w * splitRatio);
-					node->left = split(x, y, splitX - x, h, depth + 1);
-					node->right = split(splitX, y, x + w - splitX, h, depth + 1);
+					node->left = self(self, x, y, splitX - x, h, depth + 1);
+					node->right = self(self, splitX, y, x + w - splitX, h, depth + 1);
 				}
 
 				return node;
 			};
 
-			auto root = split(0, 0, width, height, 0);
+			auto root = split(split, 0, 0, width, height, 0);
 
 			// Carve rooms
 			for (const auto& room : rooms) {
