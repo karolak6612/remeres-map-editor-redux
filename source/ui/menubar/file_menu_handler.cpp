@@ -91,6 +91,10 @@ void FileMenuHandler::OnReloadDataFiles(wxCommandEvent& WXUNUSED(event)) {
 	g_version.LoadVersion(g_version.GetCurrentVersionID(), error, warnings, true);
 	DialogUtil::PopupDialog("Error", error, wxOK);
 	DialogUtil::ListDialog("Warnings", warnings);
+
+	if (error.empty() && warnings.empty()) {
+		DialogUtil::PopupDialog("Reload Data Files", "Data files reloaded successfully.", wxOK);
+	}
 }
 
 void FileMenuHandler::OnPreferences(wxCommandEvent& WXUNUSED(event)) {

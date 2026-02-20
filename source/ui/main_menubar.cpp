@@ -227,7 +227,7 @@ void MainMenuBar::OnImportMonsterData(wxCommandEvent& event) {
 }
 
 void MainMenuBar::OnImportMinimap(wxCommandEvent& event) {
-	fileMenuHandler->OnImportMinimap(event);
+	DialogUtil::PopupDialog("Not implemented", "This feature is not yet implemented.", wxOK | wxICON_INFORMATION);
 }
 
 void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
@@ -409,11 +409,11 @@ void MainMenuBar::OnMapEditTowns(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MainMenuBar::OnMapEditItems(wxCommandEvent& WXUNUSED(event)) {
-	;
+	DialogUtil::PopupDialog("Not implemented", "This feature is not yet implemented.", wxOK | wxICON_INFORMATION);
 }
 
 void MainMenuBar::OnMapEditMonsters(wxCommandEvent& WXUNUSED(event)) {
-	;
+	DialogUtil::PopupDialog("Not implemented", "This feature is not yet implemented.", wxOK | wxICON_INFORMATION);
 }
 
 void MainMenuBar::OnMapStatistics(wxCommandEvent& WXUNUSED(event)) {

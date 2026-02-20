@@ -29,6 +29,7 @@ class ItemAttribute;
 class wxSpinCtrl;
 class wxFlexGridSizer;
 class wxPanel;
+class wxGridRangeSelectEvent;
 
 class PropertiesWindow : public ObjectPropertiesWindowBase {
 public:
@@ -43,6 +44,8 @@ public:
 	void OnResize(wxSizeEvent&);
 	void OnNotebookPageChanged(wxNotebookEvent&);
 	void OnGridValueChanged(wxGridEvent&);
+	void OnGridSelectCell(wxGridEvent&);
+	void OnGridRangeSelect(wxGridRangeSelectEvent&);
 
 	void Update();
 
@@ -58,6 +61,7 @@ protected:
 
 	// Advanced pane
 	wxGrid* attributesGrid;
+	wxButton* removeAttributeBtn;
 	wxWindow* createAttributesPanel(wxWindow* parent);
 	void saveAttributesPanel();
 	void SetGridValue(wxGrid* grid, int rowIndex, std::string name, const ItemAttribute& attr);

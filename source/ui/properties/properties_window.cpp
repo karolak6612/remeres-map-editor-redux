@@ -49,6 +49,8 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	Bind(wxEVT_GRID_SELECT_CELL, &PropertiesWindow::OnGridSelectCell, this);
+	Bind(wxEVT_GRID_RANGE_SELECT, &PropertiesWindow::OnGridRangeSelect, this);
 
 	createUI();
 }
@@ -74,8 +76,14 @@ void PropertiesWindow::createUI() {
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Apply changes and close");
+	okBtn->SetToolTip("Apply changes and close (Ctrl+Enter)");
 	optSizer->Add(okBtn, wxSizerFlags(0).Center());
+
+	wxAcceleratorEntry entries[1];
+	entries[0].Set(wxACCEL_CTRL, WXK_RETURN, wxID_OK);
+	wxAcceleratorTable accel(1, entries);
+	SetAcceleratorTable(accel);
+
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancelBtn->SetToolTip("Discard changes and close");
@@ -227,10 +235,11 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 	addBtn->SetToolTip("Add a new custom attribute");
 	optSizer->Add(addBtn, wxSizerFlags(0).Center());
 
-	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
-	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
-	removeBtn->SetToolTip("Remove selected custom attribute");
-	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
+	removeAttributeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
+	removeAttributeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	removeAttributeBtn->SetToolTip("Remove selected custom attribute");
+	removeAttributeBtn->Enable(false);
+	optSizer->Add(removeAttributeBtn, wxSizerFlags(0).Center());
 
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
 
@@ -307,6 +316,20 @@ void PropertiesWindow::OnGridValueChanged(wxGridEvent& event) {
 	}
 }
 
+void PropertiesWindow::OnGridSelectCell(wxGridEvent& event) {
+	if (removeAttributeBtn) {
+		removeAttributeBtn->Enable(attributesGrid->IsSelection());
+	}
+	event.Skip();
+}
+
+void PropertiesWindow::OnGridRangeSelect(wxGridRangeSelectEvent& event) {
+	if (removeAttributeBtn) {
+		removeAttributeBtn->Enable(attributesGrid->IsSelection());
+	}
+	event.Skip();
+}
+
 void PropertiesWindow::OnClickOK(wxCommandEvent&) {
 	int new_uid = unique_id_field->GetValue();
 	int new_aid = action_id_field->GetValue();
@@ -323,8 +346,17 @@ void PropertiesWindow::OnClickOK(wxCommandEvent&) {
 
 void PropertiesWindow::OnClickAddAttribute(wxCommandEvent&) {
 	attributesGrid->AppendRows(1);
+	int newRow = attributesGrid->GetNumberRows() - 1;
 	ItemAttribute attr(0);
-	SetGridValue(attributesGrid, attributesGrid->GetNumberRows() - 1, "", attr);
+	SetGridValue(attributesGrid, newRow, "", attr);
+
+	attributesGrid->SelectRow(newRow);
+	attributesGrid->SetGridCursor(newRow, 0);
+	attributesGrid->SetFocus();
+
+	if (removeAttributeBtn) {
+		removeAttributeBtn->Enable(true);
+	}
 }
 
 void PropertiesWindow::OnClickRemoveAttribute(wxCommandEvent&) {

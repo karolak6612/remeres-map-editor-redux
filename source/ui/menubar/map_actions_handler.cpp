@@ -134,23 +134,7 @@ void MapActionsHandler::OnClearModifiedState(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MapActionsHandler::OnMapCleanHouseItems(wxCommandEvent& WXUNUSED(event)) {
-	Editor* editor = g_gui.GetCurrentEditor();
-	if (!editor) {
-		return;
-	}
-
-	int ret = DialogUtil::PopupDialog(
-		"Clear Moveable House Items",
-		"Are you sure you want to remove all items inside houses that can be moved (this action cannot be undone)?",
-		wxYES | wxNO
-	);
-
-	if (ret == wxID_YES) {
-		// Editor will do the work
-		// editor->removeHouseItems(true);
-	}
-
-	g_gui.RefreshView();
+	DialogUtil::PopupDialog("Not implemented", "This feature is not yet implemented.", wxOK | wxICON_INFORMATION);
 }
 
 void MapActionsHandler::OnBorderizeSelection(wxCommandEvent& WXUNUSED(event)) {

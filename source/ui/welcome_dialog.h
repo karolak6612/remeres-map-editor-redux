@@ -4,6 +4,7 @@
 #include <wx/wx.h>
 #include <wx/listctrl.h>
 #include <vector>
+#include <map>
 
 // Forward declarations
 class wxListCtrl;
@@ -22,7 +23,7 @@ private:
 	void OnRecentFileActivated(wxListEvent& event);
 	void OnRecentFileSelected(wxListEvent& event);
 
-	void AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol = wxNullColour);
+	void AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol = wxNullColour, const wxString& key = "");
 
 	wxPanel* CreateHeaderPanel(wxWindow* parent, const wxString& titleText, const wxBitmap& rmeLogo);
 	wxPanel* CreateContentPanel(wxWindow* parent, const std::vector<wxString>& recentFiles);
@@ -31,6 +32,7 @@ private:
 	wxImageList* m_imageList = nullptr;
 	wxListCtrl* m_recentList = nullptr;
 	wxListCtrl* m_clientList = nullptr;
+	std::map<wxString, wxStaticText*> m_infoFields;
 };
 
 #endif // WELCOME_DIALOG_H

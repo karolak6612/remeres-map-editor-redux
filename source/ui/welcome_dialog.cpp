@@ -268,7 +268,7 @@ WelcomeDialog::~WelcomeDialog() {
 	delete m_imageList;
 }
 
-void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
+void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol, const wxString& key) {
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 
 	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(artId.ToStdString(), wxSize(14, 14)));
@@ -292,6 +292,10 @@ void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxStrin
 		val->SetForegroundColour(Theme::Get(Theme::Role::Text));
 	} else {
 		val->SetForegroundColour(valCol);
+	}
+
+	if (!key.IsEmpty()) {
+		m_infoFields[key] = val;
 	}
 
 	sizer->Add(val, 0, wxBOTTOM | wxLEFT | wxRIGHT, 4);
@@ -433,13 +437,11 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 3: Selected Map Info
 	DarkCardPanel* col3 = new DarkCardPanel(contentPanel, "Selected Map Info");
-	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", ICON_LIST);
+	AddInfoField(col3->GetSizer(), col3, "Map Name", "-", ICON_FILE, wxNullColour, "map_name");
+	AddInfoField(col3->GetSizer(), col3, "Size", "-", ICON_HARD_DRIVE, wxNullColour, "map_size");
+	AddInfoField(col3->GetSizer(), col3, "Modified", "-", ICON_LIST, wxNullColour, "map_modified");
 	col3->GetSizer()->Add(new wxStaticLine(col3), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", ICON_FILE_LINES);
+	AddInfoField(col3->GetSizer(), col3, "Path", "-", ICON_FOLDER, wxNullColour, "map_path");
 	contentSizer->Add(col3, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 3 (Center)
 
 	// Column 4: Client Info
@@ -461,10 +463,12 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));
 
-	long ph1 = m_clientList->InsertItem(0, "", 3);
-	m_clientList->SetItem(ph1, 1, "Placeholder Client 1");
-	long ph2 = m_clientList->InsertItem(1, "", 3);
-	m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
+	// TODO: Populate with real clients
+	if (m_clientList->GetItemCount() == 0) {
+		long item = m_clientList->InsertItem(0, "", 3);
+		m_clientList->SetItem(item, 1, "No clients found");
+		m_clientList->Enable(false); // Visually indicate empty state
+	}
 
 	col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
 	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
@@ -519,5 +523,30 @@ void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
 }
 
 void WelcomeDialog::OnRecentFileSelected(wxListEvent& event) {
-	// Placeholder
+	wxListItem item;
+	item.SetId(event.GetIndex());
+	item.SetColumn(1);
+	item.SetMask(wxLIST_MASK_TEXT);
+
+	if (m_recentList->GetItem(item)) {
+		wxString path = item.GetText();
+		wxFileName fn(path);
+
+		if (m_infoFields.count("map_name")) m_infoFields["map_name"]->SetLabel(fn.GetName());
+		if (m_infoFields.count("map_path")) m_infoFields["map_path"]->SetLabel(fn.GetPath());
+
+		if (fn.FileExists()) {
+			if (m_infoFields.count("map_size")) m_infoFields["map_size"]->SetLabel(wxFileName::GetHumanReadableSize(fn.GetSize()));
+
+			wxDateTime dt;
+			if (fn.GetTimes(nullptr, &dt, nullptr)) {
+				if (m_infoFields.count("map_modified")) m_infoFields["map_modified"]->SetLabel(dt.Format("%Y-%m-%d %H:%M"));
+			}
+		} else {
+			if (m_infoFields.count("map_size")) m_infoFields["map_size"]->SetLabel("File not found");
+			if (m_infoFields.count("map_modified")) m_infoFields["map_modified"]->SetLabel("-");
+		}
+
+		Layout(); // Re-layout to adjust for text length
+	}
 }

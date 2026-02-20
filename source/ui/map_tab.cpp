@@ -111,7 +111,9 @@ void MapTab::OnSwitchEditorMode(EditorMode mode) {
 	gem->SetSprite(mode == DRAWING_MODE ? EDITOR_SPRITE_DRAWING_GEM : EDITOR_SPRITE_SELECTION_GEM);
 	if (mode == SELECTION_MODE) {
 		canvas->EnterSelectionMode();
+		g_gui.SetStatusText("Switched to Selection Mode");
 	} else {
 		canvas->EnterDrawingMode();
+		g_gui.SetStatusText("Switched to Drawing Mode");
 	}
 }
