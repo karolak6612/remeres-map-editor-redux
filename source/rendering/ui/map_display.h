@@ -182,6 +182,7 @@ public:
 	std::unique_ptr<MapMenuHandler> menu_handler;
 
 private:
+	void DrawHUD(NVGcontext* vg);
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
 };
