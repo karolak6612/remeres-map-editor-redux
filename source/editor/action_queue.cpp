@@ -24,6 +24,9 @@
 #include "map/map.h"
 #include "boost/range/adaptor/reversed.hpp"
 
+#include "game/creature.h"
+#include "game/spawn.h"
+
 ActionQueue::ActionQueue(Editor& editor) :
 	current(0), memory_size(0), editor(editor) {
 	////
@@ -62,7 +65,7 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 	// Commit any uncommited actions...
 	batch->commit();
 
-	// Update title
+	// Update title and notify state change if map changed
 	if (editor.map.doChange()) {
 		editor.notifyStateChange();
 	}
@@ -121,6 +124,7 @@ void ActionQueue::undo() {
 		current--;
 		BatchAction* batch = actions[current].get();
 		batch->undo();
+		editor.notifyStateChange();
 	}
 }
 
@@ -129,6 +133,7 @@ void ActionQueue::redo() {
 		BatchAction* batch = actions[current].get();
 		batch->redo();
 		current++;
+		editor.notifyStateChange();
 	}
 }
 

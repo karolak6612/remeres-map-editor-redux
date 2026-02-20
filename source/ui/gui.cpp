@@ -69,6 +69,7 @@ GUI::GUI() :
 	tabbook(nullptr),
 	root(nullptr),
 	tool_options(nullptr),
+	tile_properties_panel(nullptr),
 	pasting(false),
 	disabled_counter(0),
 	hotkeys_enabled(true) {

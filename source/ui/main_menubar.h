@@ -126,6 +126,7 @@ namespace MenuBar {
 		WIN_MINIMAP,
 		WIN_TOOL_OPTIONS,
 		WIN_INGAME_PREVIEW,
+		WIN_TILE_PROPERTIES,
 		NEW_PALETTE,
 		TAKE_SCREENSHOT,
 		LIVE_START,
@@ -280,6 +281,7 @@ public:
 	void OnMinimapWindow(wxCommandEvent& event);
 	void OnToolOptionsWindow(wxCommandEvent& event);
 	void OnIngamePreviewWindow(wxCommandEvent& event);
+	void OnTilePropertiesWindow(wxCommandEvent& event);
 	void OnNewPalette(wxCommandEvent& event);
 
 	void OnStartLive(wxCommandEvent& event);

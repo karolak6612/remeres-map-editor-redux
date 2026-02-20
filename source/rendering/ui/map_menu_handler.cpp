@@ -21,6 +21,7 @@
 #include "editor/editor.h"
 #include "ui/gui_ids.h"
 #include "ui/gui.h"
+#include "ui/tile_properties/tile_properties_panel.h"
 
 MapMenuHandler::MapMenuHandler(MapCanvas* canvas, Editor& editor) :
 	canvas(canvas),
@@ -57,6 +58,7 @@ void MapMenuHandler::BindEvents() {
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnProperties, this, MAP_POPUP_MENU_PROPERTIES);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnAdvancedReplace, this, MAP_POPUP_MENU_ADVANCED_REPLACE);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnBrowseTile, this, MAP_POPUP_MENU_BROWSE_TILE);
+	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnTileProperties, this, MAP_POPUP_MENU_TILE_PROPERTIES);
 }
 
 void MapMenuHandler::OnCopy(wxCommandEvent& WXUNUSED(event)) {
@@ -93,6 +95,15 @@ void MapMenuHandler::OnCopyName(wxCommandEvent& WXUNUSED(event)) {
 
 void MapMenuHandler::OnBrowseTile(wxCommandEvent& WXUNUSED(event)) {
 	PopupActionHandler::BrowseTile(editor, canvas->cursor_x, canvas->cursor_y);
+}
+
+void MapMenuHandler::OnTileProperties(wxCommandEvent& WXUNUSED(event)) {
+	if (g_gui.tile_properties_panel) {
+		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_gui.tile_properties_panel);
+		info.Show();
+		g_gui.tile_properties_panel->UpdateFromEditor(&editor);
+		g_gui.aui_manager->Update();
+	}
 }
 
 void MapMenuHandler::OnRotateItem(wxCommandEvent& WXUNUSED(event)) {

@@ -51,11 +51,11 @@ protected:
 	wxSpinCtrl* z_field;
 
 private:
-	void createHeaderFields(wxFlexGridSizer* sizer);
-	void createGenericFields(wxFlexGridSizer* sizer);
-	void createClassificationFields(wxFlexGridSizer* sizer);
-	void createDoorFields(wxFlexGridSizer* sizer);
-	void createTeleportFields(wxFlexGridSizer* sizer);
+	void createHeaderFields(wxFlexGridSizer* sizer, wxWindow* parent);
+	void createGenericFields(wxFlexGridSizer* sizer, wxWindow* parent);
+	void createClassificationFields(wxFlexGridSizer* sizer, wxWindow* parent);
+	void createDoorFields(wxFlexGridSizer* sizer, wxWindow* parent);
+	void createTeleportFields(wxFlexGridSizer* sizer, wxWindow* parent);
 };
 
 #endif

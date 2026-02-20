@@ -50,15 +50,16 @@ OldPropertiesWindow::OldPropertiesWindow(wxWindow* win_parent, const Map* map, c
 		description = "Item Properties";
 	}
 
-	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, description);
+	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, description);
 	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
 	subsizer->AddGrowableCol(1);
 
-	createHeaderFields(subsizer);
-	createGenericFields(subsizer);
-	createClassificationFields(subsizer);
-	createDoorFields(subsizer);
-	createTeleportFields(subsizer);
+	wxWindow* static_box = boxsizer->GetStaticBox();
+	createHeaderFields(subsizer, static_box);
+	createGenericFields(subsizer, static_box);
+	createClassificationFields(subsizer, static_box);
+	createDoorFields(subsizer, static_box);
+	createTeleportFields(subsizer, static_box);
 
 	boxsizer->Add(subsizer, wxSizerFlags(1).Expand());
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 20));
@@ -80,13 +81,13 @@ OldPropertiesWindow::OldPropertiesWindow(wxWindow* win_parent, const Map* map, c
 	SetIcon(icon);
 }
 
-void OldPropertiesWindow::createHeaderFields(wxFlexGridSizer* subsizer) {
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "ID " + i2ws(edit_item->getID())));
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "\"" + wxstr(edit_item->getName()) + "\""));
+void OldPropertiesWindow::createHeaderFields(wxFlexGridSizer* subsizer, wxWindow* parent) {
+	subsizer->Add(newd wxStaticText(parent, wxID_ANY, "ID " + i2ws(edit_item->getID())));
+	subsizer->Add(newd wxStaticText(parent, wxID_ANY, "\"" + wxstr(edit_item->getName()) + "\""));
 }
 
-void OldPropertiesWindow::createGenericFields(wxFlexGridSizer* subsizer) {
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, (edit_item->isCharged() ? "Charges" : "Count")));
+void OldPropertiesWindow::createGenericFields(wxFlexGridSizer* subsizer, wxWindow* parent) {
+	subsizer->Add(newd wxStaticText(parent, wxID_ANY, (edit_item->isCharged() ? "Charges" : "Count")));
 	int max_count = 100;
 	if (edit_item->isClientCharged()) {
 		max_count = 250;
@@ -94,38 +95,38 @@ void OldPropertiesWindow::createGenericFields(wxFlexGridSizer* subsizer) {
 	if (edit_item->isExtraCharged()) {
 		max_count = 65500;
 	}
-	count_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getCount()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, max_count, edit_item->getCount());
+	count_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getCount()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, max_count, edit_item->getCount());
 	if (!edit_item->isStackable() && !edit_item->isCharged()) {
 		count_field->Enable(false);
 	}
 	subsizer->Add(count_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Action ID"));
-	action_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
+	subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Action ID"));
+	action_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
 	subsizer->Add(action_id_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Unique ID"));
-	unique_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
+	subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Unique ID"));
+	unique_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
 	subsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 }
 
-void OldPropertiesWindow::createClassificationFields(wxFlexGridSizer* subsizer) {
+void OldPropertiesWindow::createClassificationFields(wxFlexGridSizer* subsizer, wxWindow* parent) {
 	// item classification (12.81+)
 	if (g_items.MajorVersion >= 3 && g_items.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
-		subsizer->Add(newd wxStaticText(this, wxID_ANY, "Classification"));
-		subsizer->Add(newd wxStaticText(this, wxID_ANY, i2ws(edit_item->getClassification())));
+		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Classification"));
+		subsizer->Add(newd wxStaticText(parent, wxID_ANY, i2ws(edit_item->getClassification())));
 
 		// item iter
-		subsizer->Add(newd wxStaticText(this, wxID_ANY, "Tier"));
-		tier_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getTier()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, edit_item->getTier());
+		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Tier"));
+		tier_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getTier()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, edit_item->getTier());
 		subsizer->Add(tier_field, wxSizerFlags(1).Expand());
 	}
 }
 
-void OldPropertiesWindow::createDoorFields(wxFlexGridSizer* subsizer) {
+void OldPropertiesWindow::createDoorFields(wxFlexGridSizer* subsizer, wxWindow* parent) {
 	if (Door* door = dynamic_cast<Door*>(edit_item)) {
-		subsizer->Add(newd wxStaticText(this, wxID_ANY, "Door ID"));
-		door_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(door->getDoorID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, door->getDoorID());
+		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Door ID"));
+		door_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(door->getDoorID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, door->getDoorID());
 		if (!edit_tile || !edit_tile->isHouseTile() || !door->isRealDoor()) {
 			door_id_field->Disable();
 		}
@@ -133,18 +134,18 @@ void OldPropertiesWindow::createDoorFields(wxFlexGridSizer* subsizer) {
 	}
 }
 
-void OldPropertiesWindow::createTeleportFields(wxFlexGridSizer* subsizer) {
+void OldPropertiesWindow::createTeleportFields(wxFlexGridSizer* subsizer, wxWindow* parent) {
 	if (Teleport* teleport = dynamic_cast<Teleport*>(edit_item)) {
-		subsizer->Add(newd wxStaticText(this, wxID_ANY, "Destination"));
+		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Destination"));
 
 		wxSizer* possizer = newd wxBoxSizer(wxHORIZONTAL);
-		x_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(teleport->getX()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, edit_map->getWidth(), teleport->getX());
+		x_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(teleport->getX()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, edit_map->getWidth(), teleport->getX());
 		x_field->Bind(wxEVT_CHAR, &OldPropertiesWindow::OnChar, this);
 		possizer->Add(x_field, wxSizerFlags(3).Expand());
-		y_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(teleport->getY()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, edit_map->getHeight(), teleport->getY());
+		y_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(teleport->getY()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, edit_map->getHeight(), teleport->getY());
 		y_field->Bind(wxEVT_CHAR, &OldPropertiesWindow::OnChar, this);
 		possizer->Add(y_field, wxSizerFlags(3).Expand());
-		z_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(teleport->getZ()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, MAP_MAX_LAYER, teleport->getZ());
+		z_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(teleport->getZ()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, MAP_MAX_LAYER, teleport->getZ());
 		z_field->Bind(wxEVT_CHAR, &OldPropertiesWindow::OnChar, this);
 		possizer->Add(z_field, wxSizerFlags(2).Expand());
 

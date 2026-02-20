@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 // Remere's Map Editor is free software: you can redistribute it and/or modify
@@ -280,7 +280,7 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message) {
 		do {
 			std::unique_ptr<Tile> tile = readTile(tileNode, editor, nullptr);
 			if (tile) {
-				action->addChange(std::make_unique<Change>(tile.release()));
+				action->addChange(std::make_unique<Change>(std::move(tile)));
 			}
 		} while (tileNode->advance());
 	}
