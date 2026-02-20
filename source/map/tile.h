@@ -94,12 +94,6 @@ public:
 	int getZ() const;
 
 public: // Functions
-	// Absorb the other tile into this tile
-	void merge(Tile* other);
-
-	// Compare the content (ground and items) of two tiles
-	bool isContentEqual(const Tile* other) const;
-
 	// Has tile been modified since the map was loaded/created?
 	bool isModified() const {
 		return testFlags(statflags, TILESTATE_MODIFIED);
@@ -156,8 +150,6 @@ public: // Functions
 		return testFlags(statflags, TILESTATE_UNIQUE);
 	}
 
-	std::vector<std::unique_ptr<Item>> popSelectedItems(bool ignoreTileSelected = false);
-	ItemVector getSelectedItems(bool unzoomed = false);
 	Item* getTopSelectedItem();
 
 	// Refresh internal flags (such as selected etc.)

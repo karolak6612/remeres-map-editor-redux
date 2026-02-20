@@ -9,6 +9,7 @@
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "map/tile.h"
+#include "map/tile_utils.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "ui/properties/creature_properties_window.h"
@@ -34,7 +35,7 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 	} else if (new_tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 		w = newd CreaturePropertiesWindow(g_gui.root, &editor.map, new_tile.get(), new_tile->creature.get());
 	} else {
-		ItemVector selected_items = new_tile->getSelectedItems();
+		ItemVector selected_items = TileUtils::getSelectedItems(new_tile.get());
 		Item* item = nullptr;
 
 		for (auto* it : selected_items) {

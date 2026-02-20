@@ -21,6 +21,7 @@
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
 #include "map/tile.h"
+#include "map/tile_utils.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include <wx/listbox.h>
@@ -119,7 +120,7 @@ void BrowseTileListBox::RemoveSelected() {
 	items.clear();
 
 	// Delete the items from the tile
-	auto tile_selection = edit_tile->popSelectedItems(true);
+	auto tile_selection = TileUtils::popSelectedItems(edit_tile, true);
 	// items are automatically deleted when tile_selection goes out of scope
 
 	UpdateItems();

@@ -20,6 +20,7 @@
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "map/tile.h"
+#include "map/tile_utils.h"
 #include "game/item.h"
 #include "ui/gui.h"
 #include "ui/browse_tile_window.h"
@@ -36,7 +37,7 @@ void PopupActionHandler::RotateItem(Editor& editor) {
 
 	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
 
-	ItemVector selected_items = new_tile->getSelectedItems();
+	ItemVector selected_items = TileUtils::getSelectedItems(new_tile.get());
 	ASSERT(!selected_items.empty());
 
 	selected_items.front()->doRotate();
@@ -49,7 +50,7 @@ void PopupActionHandler::RotateItem(Editor& editor) {
 
 void PopupActionHandler::GotoDestination(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
-	ItemVector selected_items = tile->getSelectedItems();
+	ItemVector selected_items = TileUtils::getSelectedItems(tile);
 	ASSERT(!selected_items.empty());
 	Teleport* teleport = dynamic_cast<Teleport*>(selected_items.front());
 	if (teleport) {
@@ -65,7 +66,7 @@ void PopupActionHandler::SwitchDoor(Editor& editor) {
 
 	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
 
-	ItemVector selected_items = new_tile->getSelectedItems();
+	ItemVector selected_items = TileUtils::getSelectedItems(new_tile.get());
 	ASSERT(!selected_items.empty());
 
 	DoorBrush::switchDoor(selected_items.front());
@@ -125,7 +126,7 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 
 	wxDialog* w = nullptr;
 
-	ItemVector selected_items = new_tile->getSelectedItems();
+	ItemVector selected_items = TileUtils::getSelectedItems(new_tile.get());
 
 	Item* item = nullptr;
 	for (auto* item_ptr : std::ranges::reverse_view(selected_items)) {

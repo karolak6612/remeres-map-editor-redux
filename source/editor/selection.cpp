@@ -175,6 +175,41 @@ void Selection::add(Tile* tile) {
 	}
 }
 
+void Selection::add(const std::vector<Tile*>& tiles_to_add) {
+	if (tiles_to_add.empty()) {
+		return;
+	}
+
+	if (subsession) {
+		for (Tile* tile : tiles_to_add) {
+			std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+			new_tile->select();
+			subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		}
+	} else {
+		for (Tile* tile : tiles_to_add) {
+			tile->select();
+		}
+
+		if (deferred) {
+			pending_adds.insert(pending_adds.end(), tiles_to_add.begin(), tiles_to_add.end());
+		} else {
+			std::vector<Tile*> sorted_new = tiles_to_add;
+			std::ranges::sort(sorted_new, tilePositionLessThan);
+			auto [last, end] = std::ranges::unique(sorted_new, [](Tile* a, Tile* b) {
+				return a->getPosition() == b->getPosition();
+			});
+			sorted_new.erase(last, end);
+
+			std::vector<Tile*> merged;
+			merged.reserve(tiles.size() + sorted_new.size());
+			std::ranges::set_union(tiles, sorted_new, std::back_inserter(merged), tilePositionLessThan);
+			tiles = std::move(merged);
+			bounds_dirty = true;
+		}
+	}
+}
+
 void Selection::remove(Tile* tile, Item* item) {
 	ASSERT(tile);
 	ASSERT(item);

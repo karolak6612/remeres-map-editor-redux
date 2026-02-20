@@ -43,6 +43,7 @@ public:
 	void add(Tile* tile, Spawn* spawn);
 	void add(Tile* tile, Creature* creature);
 	void add(Tile* tile);
+	void add(const std::vector<Tile*>& tiles);
 	void remove(Tile* tile, Item* item);
 	void remove(Tile* tile, Spawn* spawn);
 	void remove(Tile* tile, Creature* creature);

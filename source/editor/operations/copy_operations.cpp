@@ -7,6 +7,7 @@
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "map/tile_operations.h"
+#include "map/tile_utils.h"
 #include "ui/gui.h"
 #include "game/creature.h"
 #include "game/spawn.h"
@@ -40,7 +41,7 @@ void CopyOperations::copy(Editor& editor, CopyBuffer& buffer, int floor) {
 			copied_tile->setMapFlags(tile->getMapFlags());
 		}
 
-		auto tile_selection = tile->getSelectedItems();
+		auto tile_selection = TileUtils::getSelectedItems(tile);
 
 		for (auto* item : tile_selection) {
 			++item_count;
@@ -100,7 +101,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 			newtile->setMapFlags(TILESTATE_NONE);
 		}
 
-		auto tile_selection = newtile->popSelectedItems();
+		auto tile_selection = TileUtils::popSelectedItems(newtile.get());
 
 		for (auto& item : tile_selection) {
 			item_count++;
@@ -195,7 +196,7 @@ void CopyOperations::paste(Editor& editor, CopyBuffer& buffer, const Position& t
 				new_dest_tile_ptr = editor.map.allocator(dest_location);
 			}
 			// copy_tile may be partially moved-from after the merge call
-			new_dest_tile_ptr->merge(copy_tile.get());
+			TileUtils::merge(new_dest_tile_ptr.get(), copy_tile.get());
 		} else {
 			// If the copied tile has ground, replace target tile
 			new_dest_tile_ptr = std::move(copy_tile);
