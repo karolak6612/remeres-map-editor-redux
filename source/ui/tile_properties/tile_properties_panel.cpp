@@ -8,7 +8,6 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "game/item.h"
-#include "app/main.h"
 #include "ui/tile_properties/browse_field_list.h"
 #include "ui/tile_properties/spawn_creature_panel.h"
 #include "ui/tile_properties/map_flags_panel.h"
@@ -80,8 +79,11 @@ TilePropertiesPanel::TilePropertiesPanel(wxWindow* parent) :
 	right_sizer->Add(placeholder_text, wxSizerFlags(1).Center().Border(wxALL, 10));
 	right_panel->SetSizer(right_sizer);
 
-	splitter->SplitVertically(left_panel, right_panel, 250);
-	splitter->SetMinimumPaneSize(150);
+	splitter->SplitVertically(left_panel, right_panel, FROM_DIP(this, 250));
+	splitter->SetMinimumPaneSize(FROM_DIP(this, 150));
+
+	HideAllPropertyPanels();
+	placeholder_text->Show();
 
 	wxBoxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
 	main_sizer->Add(splitter, wxSizerFlags(1).Expand());
@@ -96,20 +98,14 @@ void TilePropertiesPanel::SetTile(Tile* tile, Map* map) {
 	current_map = map;
 
 	browse_field_list->SetTile(tile, map);
-	spawn_creature_panel->SetTile(tile, map);
+	spawn_creature_panel->SetTile(tile);
 	map_flags_panel->SetTile(tile, map);
 
 	if (tile) {
-		placeholder_text->SetLabelText(wxString::Format("Selected Tile: %d, %d, %d", tile->getX(), tile->getY(), tile->getZ()));
+		placeholder_text->SetLabelText(wxstr(std::format("Selected Tile: {}, {}, {}", tile->getX(), tile->getY(), tile->getZ())));
 	} else {
 		placeholder_text->SetLabelText("No tile selected");
-		item_property_panel->Hide();
-		container_property_panel->Hide();
-		depot_property_panel->Hide();
-		teleport_property_panel->Hide();
-		door_property_panel->Hide();
-		spawn_property_panel->Hide();
-		creature_property_panel->Hide();
+		HideAllPropertyPanels();
 	}
 	right_panel->Layout();
 }
@@ -148,14 +144,7 @@ void TilePropertiesPanel::OnItemSelected(Item* item) {
 }
 
 void TilePropertiesPanel::OnSpawnSelected() {
-	item_property_panel->Hide();
-	container_property_panel->Hide();
-	depot_property_panel->Hide();
-	teleport_property_panel->Hide();
-	door_property_panel->Hide();
-	spawn_property_panel->Hide();
-	creature_property_panel->Hide();
-	placeholder_text->Hide();
+	HideAllPropertyPanels();
 
 	if (current_tile && current_tile->spawn) {
 		spawn_property_panel->SetSpawn(current_tile->spawn.get(), current_tile, current_map);

@@ -266,7 +266,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 				borderize_tiles.push_back(t);
 				add_me = true;
 			}
-			t = editor.map.getTile(pos.x + 1, pos.y - 1, pos.z);
+			t = editor.map.getTile(pos.x + 1, pos.y + 1, pos.z);
 			if (t && !t->isSelected()) {
 				borderize_tiles.push_back(t);
 				add_me = true;

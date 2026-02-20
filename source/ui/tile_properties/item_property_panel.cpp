@@ -8,6 +8,9 @@
 #include "game/item.h"
 #include "map/tile.h"
 #include "map/map.h"
+#include "editor/editor.h"
+#include "editor/action.h"
+#include "editor/action_queue.h"
 
 ItemPropertyPanel::ItemPropertyPanel(wxWindow* parent) :
 	CustomPropertyPanel(parent), current_item(nullptr), current_tile(nullptr), current_map(nullptr) {
@@ -49,11 +52,6 @@ ItemPropertyPanel::ItemPropertyPanel(wxWindow* parent) :
 	unique_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnUniqueIdChange, this);
 	count_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnCountChange, this);
 	splash_type_choice->Bind(wxEVT_CHOICE, &ItemPropertyPanel::OnSplashTypeChange, this);
-	text_ctrl->Bind(wxEVT_TEXT, &ItemPropertyPanel::OnTextChange, this);
-
-	action_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnActionIdChange, this);
-	unique_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnUniqueIdChange, this);
-	count_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnCountChange, this);
 	text_ctrl->Bind(wxEVT_TEXT, &ItemPropertyPanel::OnTextChange, this);
 }
 
@@ -143,38 +141,103 @@ void ItemPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
 }
 
 void ItemPropertyPanel::OnActionIdChange(wxSpinEvent& event) {
-	if (current_item && current_map) {
-		current_item->setActionID(action_id_spin->GetValue());
-		current_map->doChange();
+	if (current_item && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		int index = current_tile->getIndexOf(current_item);
+		if (index != -1) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setActionID(action_id_spin->GetValue());
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
 	}
 }
 
 void ItemPropertyPanel::OnUniqueIdChange(wxSpinEvent& event) {
-	if (current_item && current_map) {
-		current_item->setUniqueID(unique_id_spin->GetValue());
-		current_map->doChange();
+	if (current_item && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		int index = current_tile->getIndexOf(current_item);
+		if (index != -1) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setUniqueID(unique_id_spin->GetValue());
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
 	}
 }
 
 void ItemPropertyPanel::OnCountChange(wxSpinEvent& event) {
-	if (current_item && current_map) {
-		current_item->setSubtype(count_spin->GetValue());
-		current_map->doChange();
+	if (current_item && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		int index = current_tile->getIndexOf(current_item);
+		if (index != -1) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setSubtype(count_spin->GetValue());
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
 	}
 }
 
 void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
-	if (current_item && current_map) {
-		int new_type = (int)(intptr_t)splash_type_choice->GetClientData(splash_type_choice->GetSelection());
-		current_item->setSubtype(new_type);
-		current_map->doChange();
-		g_gui.RefreshView();
+	if (current_item && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		int index = current_tile->getIndexOf(current_item);
+		if (index != -1) {
+			Item* new_item = new_tile->getItemAt(index);
+			int new_type = (int)(intptr_t)splash_type_choice->GetClientData(splash_type_choice->GetSelection());
+			new_item->setSubtype(new_type);
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+			g_gui.RefreshView();
+		}
 	}
 }
 
 void ItemPropertyPanel::OnTextChange(wxCommandEvent& event) {
-	if (current_item && current_map) {
-		current_item->setText(nstr(text_ctrl->GetValue()));
-		current_map->doChange();
+	if (current_item && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		int index = current_tile->getIndexOf(current_item);
+		if (index != -1) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setText(nstr(text_ctrl->GetValue()));
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
 	}
 }

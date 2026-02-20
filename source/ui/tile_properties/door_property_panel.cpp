@@ -8,6 +8,9 @@
 #include "map/tile.h"
 #include "map/map.h"
 #include "ui/gui.h"
+#include "editor/editor.h"
+#include "editor/action.h"
+#include "editor/action_queue.h"
 
 DoorPropertyPanel::DoorPropertyPanel(wxWindow* parent) :
 	ItemPropertyPanel(parent) {
@@ -45,9 +48,24 @@ void DoorPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
 }
 
 void DoorPropertyPanel::OnDoorIdChange(wxSpinEvent& event) {
-	if (current_item && current_map && current_item->asDoor()) {
-		Door* door = static_cast<Door*>(current_item);
-		door->setDoorID(door_id_spin->GetValue());
-		current_map->doChange();
+	if (current_item && current_tile && current_map && current_item->asDoor()) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		int index = current_tile->getIndexOf(current_item);
+		if (index != -1) {
+			Item* new_item = new_tile->getItemAt(index);
+			if (new_item->asDoor()) {
+				Door* door = static_cast<Door*>(new_item);
+				door->setDoorID(door_id_spin->GetValue());
+
+				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
+				editor->addAction(std::move(action));
+			}
+		}
 	}
 }

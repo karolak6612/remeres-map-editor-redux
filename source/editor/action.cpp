@@ -130,7 +130,6 @@ void Action::commit(DirtyList* dirty_list) {
 					if (!nd || !nd->isVisible(pos.z > GROUND_LAYER)) {
 						// Delete all changes that affect tiles outside our view
 						c->clear();
-						uptr.reset();
 						++it;
 						continue;
 					}

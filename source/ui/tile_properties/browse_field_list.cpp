@@ -218,6 +218,9 @@ void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
 		return;
 	}
 
+	if (!current_tile) {
+		return;
+	}
 	int index_in_items = selection - (current_tile->ground ? 1 : 0);
 	if (index_in_items <= 0) {
 		return;
@@ -253,6 +256,9 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
 		return;
 	}
 
+	if (!current_tile) {
+		return;
+	}
 	int index_in_items = selection - (current_tile->ground ? 1 : 0);
 	if (index_in_items < 0 || index_in_items >= (int)current_tile->items.size() - 1) {
 		return;

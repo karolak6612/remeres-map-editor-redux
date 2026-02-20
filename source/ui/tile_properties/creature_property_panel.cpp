@@ -8,6 +8,9 @@
 #include "map/tile.h"
 #include "map/map.h"
 #include "ui/gui.h"
+#include "editor/editor.h"
+#include "editor/action.h"
+#include "editor/action_queue.h"
 
 CreaturePropertyPanel::CreaturePropertyPanel(wxWindow* parent) :
 	CustomPropertyPanel(parent), current_creature(nullptr), current_tile(nullptr), current_map(nullptr) {
@@ -39,7 +42,7 @@ CreaturePropertyPanel::CreaturePropertyPanel(wxWindow* parent) :
 CreaturePropertyPanel::~CreaturePropertyPanel() {
 }
 
-void CreaturePropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
+void CreaturePropertyPanel::SetItem(Item* /*item*/, Tile* tile, Map* map) {
 	// Not used for items
 	SetCreature(nullptr, tile, map);
 }
@@ -53,7 +56,14 @@ void CreaturePropertyPanel::SetCreature(Creature* creature, Tile* tile, Map* map
 		GetSizer()->Show(time_sizer, true);
 		GetSizer()->Show(dir_sizer, true);
 		spawntime_spin->SetValue(creature->getSpawnTime());
-		direction_choice->SetSelection(creature->getDirection());
+
+		Direction dir = creature->getDirection();
+		for (size_t i = 0; i < direction_choice->GetCount(); ++i) {
+			if ((int)(intptr_t)direction_choice->GetClientData(i) == (int)dir) {
+				direction_choice->SetSelection(i);
+				break;
+			}
+		}
 	} else {
 		GetSizer()->Show(time_sizer, false);
 		GetSizer()->Show(dir_sizer, false);
@@ -63,17 +73,39 @@ void CreaturePropertyPanel::SetCreature(Creature* creature, Tile* tile, Map* map
 }
 
 void CreaturePropertyPanel::OnSpawnTimeChange(wxSpinEvent& event) {
-	if (current_creature && current_map) {
-		current_creature->setSpawnTime(spawntime_spin->GetValue());
-		current_map->doChange();
+	if (current_creature && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		if (new_tile->creature) {
+			new_tile->creature->setSpawnTime(spawntime_spin->GetValue());
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
 	}
 }
 
 void CreaturePropertyPanel::OnDirectionChange(wxCommandEvent& event) {
-	if (current_creature && current_map) {
-		int new_dir = (int)(intptr_t)direction_choice->GetClientData(direction_choice->GetSelection());
-		current_creature->setDirection((Direction)new_dir);
-		current_map->doChange();
-		g_gui.RefreshView(); // Directions alter drawing of creatures
+	if (current_creature && current_tile && current_map) {
+		Editor* editor = g_gui.GetCurrentEditor();
+		if (!editor) {
+			return;
+		}
+
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		if (new_tile->creature) {
+			int new_dir = (int)(intptr_t)direction_choice->GetClientData(direction_choice->GetSelection());
+			new_tile->creature->setDirection((Direction)new_dir);
+
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+			g_gui.RefreshView();
+		}
 	}
 }

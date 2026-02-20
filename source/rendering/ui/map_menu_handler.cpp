@@ -101,6 +101,7 @@ void MapMenuHandler::OnTileProperties(wxCommandEvent& WXUNUSED(event)) {
 	if (g_gui.tile_properties_panel) {
 		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_gui.tile_properties_panel);
 		info.Show();
+		g_gui.tile_properties_panel->UpdateFromEditor(&editor);
 		g_gui.aui_manager->Update();
 	}
 }

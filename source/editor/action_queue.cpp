@@ -24,18 +24,8 @@
 #include "map/map.h"
 #include "boost/range/adaptor/reversed.hpp"
 
-#include "ui/gui.h"
-#include "ui/tile_properties/tile_properties_panel.h"
 #include "game/creature.h"
 #include "game/spawn.h"
-
-namespace {
-	void NotifyPropertyPanel(Editor& editor) {
-		if (g_gui.tile_properties_panel) {
-			g_gui.tile_properties_panel->UpdateFromEditor(&editor);
-		}
-	}
-} // namespace
 
 ActionQueue::ActionQueue(Editor& editor) :
 	current(0), memory_size(0), editor(editor) {
@@ -117,8 +107,6 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 		actions.push_back(std::move(batch));
 		current++;
 	} while (false);
-
-	NotifyPropertyPanel(editor);
 }
 
 void ActionQueue::addAction(std::unique_ptr<Action> action, int stacking_delay) {
@@ -137,7 +125,6 @@ void ActionQueue::undo() {
 		BatchAction* batch = actions[current].get();
 		batch->undo();
 		editor.notifyStateChange();
-		NotifyPropertyPanel(editor);
 	}
 }
 
@@ -147,7 +134,6 @@ void ActionQueue::redo() {
 		batch->redo();
 		current++;
 		editor.notifyStateChange();
-		NotifyPropertyPanel(editor);
 	}
 }
 

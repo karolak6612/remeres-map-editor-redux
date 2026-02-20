@@ -6,6 +6,10 @@
 #include "ui/tile_properties/map_flags_panel.h"
 #include "map/tile.h"
 #include "map/map.h"
+#include "editor/editor.h"
+#include "editor/action.h"
+#include "editor/action_queue.h"
+#include "ui/gui.h"
 
 MapFlagsPanel::MapFlagsPanel(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY), current_tile(nullptr), current_map(nullptr) {
@@ -65,26 +69,33 @@ void MapFlagsPanel::OnToggleFlag(wxCommandEvent& event) {
 		return;
 	}
 
-	// Temporarily set on tile directly until action is implemented
-	current_tile->setPZ(chk_pz->GetValue());
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (!editor) {
+		return;
+	}
+
+	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	new_tile->setPZ(chk_pz->GetValue());
 
 	if (chk_nopvp->GetValue()) {
-		current_tile->setMapFlags(TILESTATE_NOPVP);
+		new_tile->setMapFlags(TILESTATE_NOPVP);
 	} else {
-		current_tile->unsetMapFlags(TILESTATE_NOPVP);
+		new_tile->unsetMapFlags(TILESTATE_NOPVP);
 	}
 
 	if (chk_nologout->GetValue()) {
-		current_tile->setMapFlags(TILESTATE_NOLOGOUT);
+		new_tile->setMapFlags(TILESTATE_NOLOGOUT);
 	} else {
-		current_tile->unsetMapFlags(TILESTATE_NOLOGOUT);
+		new_tile->unsetMapFlags(TILESTATE_NOLOGOUT);
 	}
 
 	if (chk_pvpzone->GetValue()) {
-		current_tile->setMapFlags(TILESTATE_PVPZONE);
+		new_tile->setMapFlags(TILESTATE_PVPZONE);
 	} else {
-		current_tile->unsetMapFlags(TILESTATE_PVPZONE);
+		new_tile->unsetMapFlags(TILESTATE_PVPZONE);
 	}
 
-	current_map->doChange();
+	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+	action->addChange(std::make_unique<Change>(std::move(new_tile)));
+	editor->addAction(std::move(action));
 }

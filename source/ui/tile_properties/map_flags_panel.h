@@ -18,9 +18,9 @@ public:
 
 	void SetTile(Tile* tile, Map* map);
 
+protected:
 	void OnToggleFlag(wxCommandEvent& event);
 
-protected:
 	wxCheckBox* chk_pz;
 	wxCheckBox* chk_nopvp;
 	wxCheckBox* chk_nologout;

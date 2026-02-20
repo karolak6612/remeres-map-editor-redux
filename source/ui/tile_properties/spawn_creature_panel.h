@@ -10,19 +10,21 @@
 
 class Tile;
 class Map;
+class wxStaticBitmap;
+class wxStaticText;
 
 class SpawnCreaturePanel : public wxPanel {
 public:
 	SpawnCreaturePanel(wxWindow* parent);
 	virtual ~SpawnCreaturePanel();
 
-	void SetTile(Tile* tile, Map* map);
+	void SetTile(Tile* tile);
 
 	void SetOnSpawnSelectedCallback(std::function<void()> cb) {
-		on_spawn_selected_cb = cb;
+		on_spawn_selected_cb = std::move(cb);
 	}
 	void SetOnCreatureSelectedCallback(std::function<void()> cb) {
-		on_creature_selected_cb = cb;
+		on_creature_selected_cb = std::move(cb);
 	}
 
 protected:
