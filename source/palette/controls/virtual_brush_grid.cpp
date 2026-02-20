@@ -12,6 +12,7 @@
 #include "ui/theme.h"
 
 #include <spdlog/spdlog.h>
+#include <cmath>
 
 VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
@@ -23,6 +24,8 @@ VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _til
 	item_size(0),
 	padding(4),
 	m_animTimer(this) {
+
+	m_animTimer.Start(33); // ~30fps
 
 	if (icon_size == RENDER_SIZE_16x16) {
 		item_size = 18;
@@ -93,24 +96,39 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
-	// Shadow / Glow
-	if (i == selected_index) {
-		// Glow for selected
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 10.0f, nvgRGBA(100, 150, 255, 128), nvgRGBA(0, 0, 0, 0));
+	// Shadow
+	// Drop shadow for all items (subtle depth)
+	if (display_mode != DisplayMode::List) {
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 8.0f, nvgRGBA(0, 0, 0, 40), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
-		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
+		nvgRect(vg, x - 5, y - 5, w + 10, h + 15);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
-	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
+	}
+
+	// Selection Glow (Animated)
+	if (i == selected_index) {
+		double time = wxGetLocalTimeMillis().ToDouble() / 1000.0;
+		float alpha = 0.6f + 0.4f * static_cast<float>(sin(time * 3.0)); // Pulse between 0.6 and 1.0
+		NVGcolor glowCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+		glowCol.a = alpha * 0.5f;
+
+		NVGpaint glowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 12.0f, glowCol, nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
-		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
+		nvgRect(vg, x - 15, y - 15, w + 30, h + 30);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		nvgPathWinding(vg, NVG_HOLE);
-		nvgFillPaint(vg, shadowPaint);
+		nvgFillPaint(vg, glowPaint);
+		nvgFill(vg);
+	} else if (i == hover_index) {
+		NVGpaint hoverGlow = nvgBoxGradient(vg, x, y, w, h, 4.0f, 8.0f, nvgRGBA(255, 255, 255, 30), nvgRGBA(0, 0, 0, 0));
+		nvgBeginPath(vg);
+		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillPaint(vg, hoverGlow);
 		nvgFill(vg);
 	}
 
@@ -118,26 +136,39 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	nvgBeginPath(vg);
 	nvgRoundedRect(vg, x, y, w, h, 4.0f);
 
+	NVGcolor bgColTop = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase));
+	NVGcolor bgColBot = bgColTop;
+
 	if (i == selected_index) {
-		NVGcolor selCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
-		selCol.a = 1.0f; // Force opaque for background
-		nvgFillColor(vg, selCol);
+		bgColTop = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+		bgColTop.a = 0.9f;
+		bgColBot = bgColTop;
 	} else if (i == hover_index) {
-		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover)));
+		bgColTop = NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBaseHover));
+		bgColBot = bgColTop;
 	} else {
-		// Normal - theme card base
-		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::CardBase)));
+		// Subtle gradient for normal state
+		// Darken bottom slightly
+		bgColBot.r *= 0.9f;
+		bgColBot.g *= 0.9f;
+		bgColBot.b *= 0.9f;
 	}
+
+	NVGpaint bgPaint = nvgLinearGradient(vg, x, y, x, y + h, bgColTop, bgColBot);
+	nvgFillPaint(vg, bgPaint);
 	nvgFill(vg);
 
-	// Selection border
+	// Border
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
 	if (i == selected_index) {
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1.0f, h - 1.0f, 4.0f);
-		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 200));
 		nvgStrokeWidth(vg, 2.0f);
-		nvgStroke(vg);
+	} else {
+		nvgStrokeColor(vg, nvgRGBA(0, 0, 0, 40));
+		nvgStrokeWidth(vg, 1.0f);
 	}
+	nvgStroke(vg);
 
 	// Draw brush sprite
 	Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushlist[i] : nullptr;
