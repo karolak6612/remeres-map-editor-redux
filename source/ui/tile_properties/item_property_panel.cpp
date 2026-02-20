@@ -21,13 +21,13 @@ ItemPropertyPanel::ItemPropertyPanel(wxWindow* parent) :
 	wxFlexGridSizer* action_grid = newd wxFlexGridSizer(2, 2, 5, 5);
 	action_grid->AddGrowableCol(1);
 
-	action_grid->Add(newd wxStaticText(this, wxID_ANY, "Action ID:"), 0, wxALIGN_CENTER_VERTICAL);
-	action_id_spin = newd wxSpinCtrl(this, wxID_ANY);
+	action_grid->Add(newd wxStaticText(action_sizer->GetStaticBox(), wxID_ANY, "Action ID:"), 0, wxALIGN_CENTER_VERTICAL);
+	action_id_spin = newd wxSpinCtrl(action_sizer->GetStaticBox(), wxID_ANY);
 	action_id_spin->SetRange(0, 65535);
 	action_grid->Add(action_id_spin, 1, wxEXPAND);
 
-	action_grid->Add(newd wxStaticText(this, wxID_ANY, "Unique ID:"), 0, wxALIGN_CENTER_VERTICAL);
-	unique_id_spin = newd wxSpinCtrl(this, wxID_ANY);
+	action_grid->Add(newd wxStaticText(action_sizer->GetStaticBox(), wxID_ANY, "Unique ID:"), 0, wxALIGN_CENTER_VERTICAL);
+	unique_id_spin = newd wxSpinCtrl(action_sizer->GetStaticBox(), wxID_ANY);
 	unique_id_spin->SetRange(0, 65535);
 	action_grid->Add(unique_id_spin, 1, wxEXPAND);
 
@@ -35,14 +35,14 @@ ItemPropertyPanel::ItemPropertyPanel(wxWindow* parent) :
 	main_sizer->Add(action_sizer, 0, wxEXPAND | wxALL, 5);
 
 	count_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Quantity");
-	count_spin = newd wxSpinCtrl(this, wxID_ANY);
+	count_spin = newd wxSpinCtrl(count_sizer->GetStaticBox(), wxID_ANY);
 	count_sizer->Add(count_spin, 0, wxEXPAND | wxALL, 5);
-	splash_type_choice = newd wxChoice(this, wxID_ANY);
+	splash_type_choice = newd wxChoice(count_sizer->GetStaticBox(), wxID_ANY);
 	count_sizer->Add(splash_type_choice, 0, wxEXPAND | wxALL, 5);
 	main_sizer->Add(count_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 
 	text_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Text Description");
-	text_ctrl = newd wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(-1, 160)), wxTE_MULTILINE);
+	text_ctrl = newd wxTextCtrl(text_sizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(-1, 160)), wxTE_MULTILINE);
 	text_sizer->Add(text_ctrl, 1, wxEXPAND | wxALL, 5);
 	main_sizer->Add(text_sizer, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 
@@ -52,7 +52,7 @@ ItemPropertyPanel::ItemPropertyPanel(wxWindow* parent) :
 	unique_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnUniqueIdChange, this);
 	count_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnCountChange, this);
 	splash_type_choice->Bind(wxEVT_CHOICE, &ItemPropertyPanel::OnSplashTypeChange, this);
-	text_ctrl->Bind(wxEVT_TEXT, &ItemPropertyPanel::OnTextChange, this);
+	text_ctrl->Bind(wxEVT_KILL_FOCUS, &ItemPropertyPanel::OnTextChange, this);
 }
 
 ItemPropertyPanel::~ItemPropertyPanel() { }
@@ -222,8 +222,12 @@ void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
 	}
 }
 
-void ItemPropertyPanel::OnTextChange(wxCommandEvent& event) {
+void ItemPropertyPanel::OnTextChange(wxEvent& event) {
 	if (current_item && current_tile && current_map) {
+		if (text_ctrl->GetValue() == wxstr(current_item->getText())) {
+			return;
+		}
+
 		Editor* editor = g_gui.GetCurrentEditor();
 		if (!editor) {
 			return;
@@ -240,4 +244,5 @@ void ItemPropertyPanel::OnTextChange(wxCommandEvent& event) {
 			editor->addAction(std::move(action));
 		}
 	}
+	event.Skip();
 }

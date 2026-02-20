@@ -22,7 +22,7 @@ public:
 	void OnUniqueIdChange(wxSpinEvent& event);
 	void OnCountChange(wxSpinEvent& event);
 	void OnSplashTypeChange(wxCommandEvent& event);
-	void OnTextChange(wxCommandEvent& event);
+	void OnTextChange(wxEvent& event);
 
 protected:
 	Item* current_item;

@@ -131,15 +131,15 @@ BrowseFieldList::BrowseFieldList(wxWindow* parent) :
 
 	// Toolbar
 	wxBoxSizer* toolbar_sizer = newd wxBoxSizer(wxHORIZONTAL);
-	btn_up = newd wxButton(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+	btn_up = newd wxButton(main_sizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	btn_up->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ARROW_UP, wxSize(16, 16)));
 	btn_up->SetToolTip("Move item up in stack");
 
-	btn_down = newd wxButton(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+	btn_down = newd wxButton(main_sizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	btn_down->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ARROW_DOWN, wxSize(16, 16)));
 	btn_down->SetToolTip("Move item down in stack");
 
-	btn_delete = newd wxButton(this, wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
+	btn_delete = newd wxButton(main_sizer->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	btn_delete->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 	btn_delete->SetToolTip("Delete item");
 
@@ -151,7 +151,7 @@ BrowseFieldList::BrowseFieldList(wxWindow* parent) :
 	main_sizer->Add(toolbar_sizer, wxSizerFlags(0).Expand().Border(wxALL, 2));
 
 	// Listbox
-	item_list = newd TilePropertiesListBox(this, wxID_ANY);
+	item_list = newd TilePropertiesListBox(main_sizer->GetStaticBox(), wxID_ANY);
 	main_sizer->Add(item_list, wxSizerFlags(1).Expand());
 
 	SetSizer(main_sizer);
@@ -209,6 +209,15 @@ void BrowseFieldList::OnItemSelected(wxCommandEvent& event) {
 		on_item_selected_cb(selected_item);
 	}
 
+	// Issue #3: Sync selection with the editor
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (editor && current_tile && selected_item) {
+		editor->selection.start(Selection::INTERNAL);
+		editor->selection.clear();
+		editor->selection.add(current_tile, selected_item);
+		editor->selection.finish(Selection::INTERNAL);
+	}
+
 	event.Skip(); // Let parent handle property panel swap if needed
 }
 
@@ -231,22 +240,11 @@ void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
 		Position pos = current_tile->getPosition();
 		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items - 1]);
+		new_tile->items[index_in_items - 1]->select();
 
 		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
-
-		Tile* updated_tile = editor->map.getTile(pos);
-		if (updated_tile && g_gui.tile_properties_panel) {
-			Item* new_selection = nullptr;
-			if (index_in_items - 1 < (int)updated_tile->items.size()) {
-				new_selection = updated_tile->items[index_in_items - 1].get();
-			}
-			g_gui.tile_properties_panel->SetTile(updated_tile, &editor->map);
-			if (new_selection) {
-				g_gui.tile_properties_panel->SelectItem(new_selection);
-			}
-		}
 	}
 }
 
@@ -269,22 +267,11 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
 		Position pos = current_tile->getPosition();
 		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
+		new_tile->items[index_in_items + 1]->select();
 
 		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
-
-		Tile* updated_tile = editor->map.getTile(pos);
-		if (updated_tile && g_gui.tile_properties_panel) {
-			Item* new_selection = nullptr;
-			if (index_in_items + 1 < (int)updated_tile->items.size()) {
-				new_selection = updated_tile->items[index_in_items + 1].get();
-			}
-			g_gui.tile_properties_panel->SetTile(updated_tile, &editor->map);
-			if (new_selection) {
-				g_gui.tile_properties_panel->SelectItem(new_selection);
-			}
-		}
 	}
 }
 
@@ -309,20 +296,16 @@ void BrowseFieldList::OnClickDelete(wxCommandEvent& event) {
 		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
 		new_tile->items.erase(new_tile->items.begin() + index_in_items);
 
+		if (index_in_items > 0) {
+			new_tile->items[index_in_items - 1]->select();
+		} else if (new_tile->ground) {
+			new_tile->ground->select();
+		} else if (!new_tile->items.empty()) {
+			new_tile->items[0]->select();
+		}
+
 		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
-
-		Tile* updated_tile = editor->map.getTile(pos);
-		if (updated_tile && g_gui.tile_properties_panel) {
-			Item* new_selection = nullptr;
-			if (!updated_tile->items.empty()) {
-				new_selection = updated_tile->items.back().get();
-			} else if (updated_tile->ground) {
-				new_selection = updated_tile->ground.get();
-			}
-			g_gui.tile_properties_panel->SetTile(updated_tile, &editor->map);
-			g_gui.tile_properties_panel->SelectItem(new_selection);
-		}
 	}
 }

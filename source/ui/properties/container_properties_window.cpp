@@ -33,28 +33,28 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 	Bind(wxEVT_MENU, &ContainerPropertiesWindow::OnRemoveItem, this, CONTAINER_POPUP_MENU_REMOVE);
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Container Properties");
+	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Container Properties");
 
 	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
 	subsizer->AddGrowableCol(1);
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "ID " + i2ws(item->getID())));
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "ID " + i2ws(item->getID())));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Action ID"));
-	action_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Action ID"));
+	action_id_field = newd wxSpinCtrl(boxsizer->GetStaticBox(), wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
 	action_id_field->SetToolTip("Action ID (0-65535). Used for scripting.");
 	subsizer->Add(action_id_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Unique ID"));
-	unique_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Unique ID"));
+	unique_id_field = newd wxSpinCtrl(boxsizer->GetStaticBox(), wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
 	unique_id_field->SetToolTip("Unique ID (0-65535). Must be unique on the map.");
 	subsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 
 	boxsizer->Add(subsizer, wxSizerFlags(0).Expand());
 
 	// Now we add the subitems!
-	wxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
+	wxStaticBoxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
 
 	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
 	wxSizer* horizontal_sizer = nullptr;
@@ -71,7 +71,7 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 		}
 
 		Item* sub_item = container->getItem(index);
-		ContainerItemButton* containerItemButton = newd ContainerItemButton(this, use_large_sprites, index, map, sub_item);
+		ContainerItemButton* containerItemButton = newd ContainerItemButton(contents_sizer->GetStaticBox(), use_large_sprites, index, map, sub_item);
 		containerItemButton->Bind(wxEVT_BUTTON, &ContainerPropertiesWindow::OnContainerItemClick, this);
 		containerItemButton->Bind(wxEVT_RIGHT_UP, &ContainerPropertiesWindow::OnContainerItemRightClick, this);
 

@@ -84,7 +84,7 @@ Position Selection::maxPosition() const {
 }
 
 void Selection::add(Tile* tile, Item* item) {
-	ASSERT(subsession);
+	ASSERT(tile);
 	ASSERT(tile);
 	ASSERT(item);
 
@@ -92,18 +92,29 @@ void Selection::add(Tile* tile, Item* item) {
 		return;
 	}
 
-	// Make a copy of the tile with the item selected
-	item->select();
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	item->deselect();
+	if (subsession) {
+		// Make a copy of the tile with the item selected
+		item->select();
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		item->deselect();
 
-	if (g_settings.getInteger(Config::BORDER_IS_GROUND)) {
-		if (item->isBorder()) {
-			new_tile->selectGround();
+		if (g_settings.getInteger(Config::BORDER_IS_GROUND)) {
+			if (item->isBorder()) {
+				new_tile->selectGround();
+			}
 		}
-	}
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		item->select();
+		if (g_settings.getInteger(Config::BORDER_IS_GROUND)) {
+			if (item->isBorder()) {
+				tile->selectGround();
+			}
+		}
+		tile->update();
+		addInternal(tile);
+	}
 }
 
 void Selection::add(Tile* tile, Spawn* spawn) {
@@ -115,12 +126,18 @@ void Selection::add(Tile* tile, Spawn* spawn) {
 		return;
 	}
 
-	// Make a copy of the tile with the item selected
-	spawn->select();
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	spawn->deselect();
+	if (subsession) {
+		// Make a copy of the tile with the item selected
+		spawn->select();
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		spawn->deselect();
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		spawn->select();
+		tile->update();
+		addInternal(tile);
+	}
 }
 
 void Selection::add(Tile* tile, Creature* creature) {
@@ -132,55 +149,82 @@ void Selection::add(Tile* tile, Creature* creature) {
 		return;
 	}
 
-	// Make a copy of the tile with the item selected
-	creature->select();
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	creature->deselect();
+	if (subsession) {
+		// Make a copy of the tile with the item selected
+		creature->select();
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		creature->deselect();
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		creature->select();
+		tile->update();
+		addInternal(tile);
+	}
 }
 
 void Selection::add(Tile* tile) {
-	ASSERT(subsession);
 	ASSERT(tile);
 
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	new_tile->select();
+	if (subsession) {
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		new_tile->select();
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		tile->select();
+		addInternal(tile);
+	}
 }
 
 void Selection::remove(Tile* tile, Item* item) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(item);
 
-	bool tmp = item->isSelected();
-	item->deselect();
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	if (tmp) {
-		item->select();
-	}
-	if (item->isBorder() && g_settings.getInteger(Config::BORDER_IS_GROUND)) {
-		new_tile->deselectGround();
-	}
+	if (subsession) {
+		bool tmp = item->isSelected();
+		item->deselect();
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		if (tmp) {
+			item->select();
+		}
+		if (item->isBorder() && g_settings.getInteger(Config::BORDER_IS_GROUND)) {
+			new_tile->deselectGround();
+		}
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		item->deselect();
+		if (item->isBorder() && g_settings.getInteger(Config::BORDER_IS_GROUND)) {
+			tile->deselectGround();
+		}
+		tile->update();
+		if (!tile->isSelected()) {
+			removeInternal(tile);
+		}
+	}
 }
 
 void Selection::remove(Tile* tile, Spawn* spawn) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(spawn);
 
-	bool tmp = spawn->isSelected();
-	spawn->deselect();
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	if (tmp) {
-		spawn->select();
-	}
+	if (subsession) {
+		bool tmp = spawn->isSelected();
+		spawn->deselect();
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		if (tmp) {
+			spawn->select();
+		}
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		spawn->deselect();
+		tile->update();
+		if (!tile->isSelected()) {
+			removeInternal(tile);
+		}
+	}
 }
 
 void Selection::remove(Tile* tile, Creature* creature) {
@@ -188,23 +232,36 @@ void Selection::remove(Tile* tile, Creature* creature) {
 	ASSERT(tile);
 	ASSERT(creature);
 
-	bool tmp = creature->isSelected();
-	creature->deselect();
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	if (tmp) {
-		creature->select();
-	}
+	if (subsession) {
+		bool tmp = creature->isSelected();
+		creature->deselect();
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		if (tmp) {
+			creature->select();
+		}
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		creature->deselect();
+		tile->update();
+		if (!tile->isSelected()) {
+			removeInternal(tile);
+		}
+	}
 }
 
 void Selection::remove(Tile* tile) {
 	ASSERT(subsession);
 
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
-	new_tile->deselect();
+	if (subsession) {
+		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+		new_tile->deselect();
 
-	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+		subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
+	} else {
+		tile->deselect();
+		removeInternal(tile);
+	}
 }
 
 void Selection::addInternal(Tile* tile) {

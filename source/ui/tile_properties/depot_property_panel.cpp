@@ -16,7 +16,7 @@ DepotPropertyPanel::DepotPropertyPanel(wxWindow* parent) :
 	ItemPropertyPanel(parent) {
 
 	depot_id_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Depot Town");
-	depot_id_field = newd wxChoice(this, wxID_ANY);
+	depot_id_field = newd wxChoice(depot_id_sizer->GetStaticBox(), wxID_ANY);
 	depot_id_sizer->Add(depot_id_field, 0, wxEXPAND | wxALL, FROM_DIP(this, 5));
 	GetSizer()->Add(depot_id_sizer, 0, wxEXPAND | wxALL, FROM_DIP(this, 5));
 

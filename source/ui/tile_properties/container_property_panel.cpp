@@ -62,7 +62,7 @@ void ContainerPropertyPanel::RebuildGrid() {
 			}
 
 			Item* sub_item = container->getItem(index);
-			ContainerItemButton* btn = newd ContainerItemButton(this, use_large_sprites, index, current_map, sub_item);
+			ContainerItemButton* btn = newd ContainerItemButton(contents_sizer->GetStaticBox(), use_large_sprites, index, current_map, sub_item);
 
 			btn->Bind(wxEVT_BUTTON, &ContainerPropertyPanel::OnContainerItemClick, this);
 			btn->Bind(wxEVT_RIGHT_UP, &ContainerPropertyPanel::OnContainerItemRightClick, this);
@@ -169,23 +169,58 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button || !last_clicked_button->getItem() || !current_map) {
+	if (!last_clicked_button || !last_clicked_button->getItem() || !current_map || !current_tile || !current_item) {
+		return;
+	}
+
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (!editor) {
 		return;
 	}
 
 	Item* sub_item = last_clicked_button->getItem();
+
+	// Create a deep copy of the tile to edit items inside the container
+	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	int container_index = current_tile->getIndexOf(current_item);
+	if (container_index == -1) {
+		return;
+	}
+
+	Item* new_container_base = new_tile->getItemAt(container_index);
+	Container* new_container = new_container_base->asContainer();
+	if (!new_container) {
+		return;
+	}
+
+	Container* container = current_item->asContainer();
+	int sub_item_index = -1;
+	for (size_t i = 0; i < container->getItemCount(); ++i) {
+		if (container->getItem(i) == sub_item) {
+			sub_item_index = i;
+			break;
+		}
+	}
+
+	if (sub_item_index == -1) {
+		return;
+	}
+
+	Item* new_sub_item = new_container->getItem(sub_item_index);
 	wxPoint newDialogAt = GetPosition() + FROM_DIP(this, wxPoint(20, 20));
 
 	wxDialog* d;
 	if (current_map->getVersion().otbm >= MAP_OTBM_4) {
-		d = newd PropertiesWindow(this, current_map, current_tile, sub_item, newDialogAt);
+		d = newd PropertiesWindow(this, current_map, new_tile.get(), new_sub_item, newDialogAt);
 	} else {
-		d = newd OldPropertiesWindow(this, current_map, current_tile, sub_item, newDialogAt);
+		d = newd OldPropertiesWindow(this, current_map, new_tile.get(), new_sub_item, newDialogAt);
 	}
 
 	if (d->ShowModal() == wxID_OK) {
-		current_map->doChange();
-		RebuildGrid();
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor->addAction(std::move(action));
+		// Selection change callback will trigger RebuildGrid
 	}
 	d->Destroy();
 }
