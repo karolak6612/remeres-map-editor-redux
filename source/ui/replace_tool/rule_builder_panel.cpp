@@ -13,6 +13,8 @@
 #include <cmath>
 #include "rendering/core/text_renderer.h"
 #include "ui/replace_tool/rule_card_renderer.h"
+#include <ranges>
+#include <algorithm>
 
 // Layout Constants
 static const int CARD_PADDING = 20;
@@ -67,12 +69,9 @@ bool RuleBuilderPanel::ItemDropTarget::OnDropText(wxCoord x, wxCoord y, const wx
 	} else if (hit.type == RuleBuilderPanel::HitResult::AddTarget) { // Drag to [+] slot
 		if (hit.ruleIndex >= 0 && hit.ruleIndex < (int)m_panel->m_rules.size()) {
 			// TRASH LOGIC: Reject if has trash
-			bool hasTrash = false;
-			for (const auto& t : m_panel->m_rules[hit.ruleIndex].targets) {
-				if (t.id == TRASH_ITEM_ID) {
-					hasTrash = true;
-				}
-			}
+			bool hasTrash = std::ranges::any_of(m_panel->m_rules[hit.ruleIndex].targets, [](const auto& t) {
+				return t.id == TRASH_ITEM_ID;
+			});
 			if (hasTrash) {
 				return false;
 			}
@@ -170,12 +169,9 @@ int RuleBuilderPanel::GetRuleHeight(int index, int width) const {
 	int columns = std::max(1, (int)(availableWidth / (CARD_W + ITEM_SPACING)));
 	int targetCount = m_rules[index].targets.size();
 
-	bool hasTrash = false;
-	for (const auto& t : m_rules[index].targets) {
-		if (t.id == TRASH_ITEM_ID) {
-			hasTrash = true;
-		}
-	}
+	bool hasTrash = std::ranges::any_of(m_rules[index].targets, [](const auto& t) {
+		return t.id == TRASH_ITEM_ID;
+	});
 	if (!hasTrash) {
 		targetCount++; // [+] slot
 	}
@@ -231,11 +227,11 @@ void RuleBuilderPanel::DistributeProbabilities(int ruleIndex) {
 	double step = 100.0 / count;
 	double accumulated = 0.0;
 
-	for (size_t i = 0; i < targets.size(); ++i) {
+	for (auto& target : targets) {
 		accumulated += step;
 		int currentTotal = (int)std::round(accumulated);
 		int prevTotal = (int)std::round(accumulated - step);
-		targets[i].probability = currentTotal - prevTotal;
+		target.probability = currentTotal - prevTotal;
 	}
 }
 
@@ -374,12 +370,9 @@ RuleBuilderPanel::HitResult RuleBuilderPanel::HitTest(int x, int y) const {
 			}
 
 			// Add Target Slot
-			bool hasTrash = false;
-			for (const auto& t : m_rules[i].targets) {
-				if (t.id == TRASH_ITEM_ID) {
-					hasTrash = true;
-				}
-			}
+			bool hasTrash = std::ranges::any_of(m_rules[i].targets, [](const auto& t) {
+				return t.id == TRASH_ITEM_ID;
+			});
 
 			if (!hasTrash) {
 				int tIdx = m_rules[i].targets.size();
