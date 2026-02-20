@@ -266,6 +266,8 @@ public:
 	bool isSimpleAndLoaded() const;
 
 protected:
+	const AtlasRegion* tryGetSimpleAtlasRegion();
+
 	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites
 	mutable const AtlasRegion* cached_default_region = nullptr;
 	uint32_t cached_generation_id = 0;

@@ -20,6 +20,92 @@ static std::atomic<uint32_t> template_id_generator(0x1000000);
 constexpr int RGB_COMPONENTS = 3;
 constexpr int RGBA_COMPONENTS = 4;
 
+namespace {
+
+// Common decompression logic used by both RGB and RGBA loaders
+template <typename PixelWriter>
+void DecompressCore(const uint8_t* dump, size_t size, int bpp, int id, PixelWriter&& writer) {
+	size_t read = 0;
+	size_t write_count = 0; // in pixels
+	const size_t max_pixels = SPRITE_PIXELS * SPRITE_PIXELS;
+
+	bool non_zero_alpha_found = false;
+	bool non_black_pixel_found = false;
+
+	while (read < size && write_count < max_pixels) {
+		// Transparent run
+		int transparent = dump[read] | (dump[read + 1] << 8);
+		read += 2;
+
+		size_t safe_transparent = transparent;
+		if (write_count + transparent > max_pixels) {
+			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, written={}, max={})", id, transparent, write_count, max_pixels);
+			safe_transparent = max_pixels - write_count;
+		}
+
+		for (size_t i = 0; i < safe_transparent; ++i) {
+			writer.writeTransparent();
+		}
+		write_count += safe_transparent;
+
+		if (read >= size || write_count >= max_pixels) {
+			break;
+		}
+
+		// Colored run
+		int colored = dump[read] | (dump[read + 1] << 8);
+		read += 2;
+
+		size_t safe_colored = colored;
+		if (write_count + colored > max_pixels) {
+			spdlog::warn("Sprite {}: Colored run overrun (colored={}, written={}, max={})", id, colored, write_count, max_pixels);
+			safe_colored = max_pixels - write_count;
+		}
+
+		if (read + (safe_colored * bpp) > size) {
+			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
+			break;
+		}
+
+		for (size_t i = 0; i < safe_colored; ++i) {
+			uint8_t r = dump[read + 0];
+			uint8_t g = dump[read + 1];
+			uint8_t b = dump[read + 2];
+			uint8_t a = (bpp == 4) ? dump[read + 3] : 0xFF;
+
+			if (a > 0) non_zero_alpha_found = true;
+			if (r > 0 || g > 0 || b > 0) non_black_pixel_found = true;
+
+			writer.writeColored(r, g, b, a);
+			read += bpp;
+		}
+		write_count += safe_colored;
+	}
+
+	// Fill remaining
+	while (write_count < max_pixels) {
+		writer.writeTransparent();
+		write_count++;
+	}
+
+	// Debug diagnostics (only for RGBA path usually, but harmless here if id provided)
+	if (bpp == 4 && id > 100) {
+		if (!non_zero_alpha_found) {
+			static int empty_log_count = 0;
+			if (empty_log_count++ < 10) {
+				spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, bpp, size);
+			}
+		} else if (!non_black_pixel_found && non_zero_alpha_found) {
+			static int black_log_count = 0;
+			if (black_log_count++ < 10) {
+				spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!", id, bpp, size);
+			}
+		}
+	}
+}
+
+} // namespace
+
 CreatureSprite::CreatureSprite(GameSprite* parent, const Outfit& outfit) :
 	parent(parent),
 	outfit(outfit) {
@@ -136,36 +222,40 @@ size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int
 	return idx;
 }
 
+const AtlasRegion* GameSprite::tryGetSimpleAtlasRegion() {
+	// Check cache
+	// We rely on spriteList[0] being valid for simple sprites
+	// shared Sprite Fix: Verify generation ID matches what we cached.
+	// Wrong Sprite Fix: Verify sprite ID matches what we cached.
+	// Optimization: Check lightweight fields BEFORE calling heavy getAtlasRegion()
+	if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id && cached_sprite_id == spriteList[0]->id) {
+		return cached_default_region;
+	}
+
+	// Cache miss or staleness suspected: Use the getter to ensure self-healing check runs
+	const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
+	if (valid_region && spriteList[0]->isGLLoaded) {
+		cached_default_region = valid_region;
+		cached_generation_id = spriteList[0]->generation_id;
+		cached_sprite_id = spriteList[0]->id;
+	} else {
+		cached_default_region = nullptr;
+		cached_generation_id = 0;
+		cached_sprite_id = 0;
+	}
+
+	// Lazy set parent for cache invalidation (legacy path, kept for safety)
+	spriteList[0]->parent = this;
+	return valid_region;
+}
+
 const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y, int _pattern_z, int _frame) {
 	// Optimization for simple static sprites (1x1, 1 frame, etc.)
 	// Most ground tiles fall into this category.
 	if (_count == -1 && numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1) {
 		// Also check default params
 		if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0) {
-			// Check cache
-			// We rely on spriteList[0] being valid for simple sprites
-			// shared Sprite Fix: Verify generation ID matches what we cached.
-			// Wrong Sprite Fix: Verify sprite ID matches what we cached.
-			// Optimization: Check lightweight fields BEFORE calling heavy getAtlasRegion()
-			if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id && cached_sprite_id == spriteList[0]->id) {
-				return cached_default_region;
-			}
-
-			// Cache miss or staleness suspected: Use the getter to ensure self-healing check runs
-			const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
-			if (valid_region && spriteList[0]->isGLLoaded) {
-				cached_default_region = valid_region;
-				cached_generation_id = spriteList[0]->generation_id;
-				cached_sprite_id = spriteList[0]->id;
-			} else {
-				cached_default_region = nullptr;
-				cached_generation_id = 0;
-				cached_sprite_id = 0;
-			}
-
-			// Lazy set parent for cache invalidation (legacy path, kept for safety)
-			spriteList[0]->parent = this;
-			return valid_region;
+			return tryGetSimpleAtlasRegion();
 		}
 	}
 
@@ -457,138 +547,56 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 
 	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
+
+	// Writer for RGB output (3 bytes), using Magenta for transparency
+	struct RGBWriter {
+		uint8_t* ptr;
+		void writeTransparent() {
+			ptr[0] = 0xFF; // R
+			ptr[1] = 0x00; // G
+			ptr[2] = 0xFF; // B
+			ptr += 3;
+		}
+		void writeColored(uint8_t r, uint8_t g, uint8_t b, uint8_t /*a*/) {
+			ptr[0] = r;
+			ptr[1] = g;
+			ptr[2] = b;
+			ptr += 3;
+		}
+	} writer{ data.get() };
+
 	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
-	int write = 0;
-	int read = 0;
+	DecompressCore(dump.get(), size, bpp, static_cast<int>(id), writer);
 
-	// decompress pixels
-	while (read < size && write < pixels_data_size) {
-		int transparent = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
-			data[write + 0] = 0xFF; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0xFF; // blue
-			write += RGB_COMPONENTS;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int i = 0; i < colored && write < pixels_data_size; i++) {
-			data[write + 0] = dump[read + 0]; // red
-			data[write + 1] = dump[read + 1]; // green
-			data[write + 2] = dump[read + 2]; // blue
-			write += RGB_COMPONENTS;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < pixels_data_size) {
-		data[write + 0] = 0xFF; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0xFF; // blue
-		write += RGB_COMPONENTS;
-	}
 	return data;
 }
 
 std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
-	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
+	// SPRITE_PIXELS_SIZE might be defined in header, assuming equivalent to SPRITE_PIXELS * SPRITE_PIXELS
+	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 4;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
+
+	// Writer for RGBA output (4 bytes), using Transparent Black
+	struct RGBAWriter {
+		uint8_t* ptr;
+		void writeTransparent() {
+			ptr[0] = 0x00;
+			ptr[1] = 0x00;
+			ptr[2] = 0x00;
+			ptr[3] = 0x00;
+			ptr += 4;
+		}
+		void writeColored(uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
+			ptr[0] = r;
+			ptr[1] = g;
+			ptr[2] = b;
+			ptr[3] = a;
+			ptr += 4;
+		}
+	} writer{ data.get() };
+
 	uint8_t bpp = use_alpha ? 4 : 3;
-	size_t write = 0;
-	size_t read = 0;
-	bool non_zero_alpha_found = false;
-	bool non_black_pixel_found = false;
-
-	// decompress pixels
-	while (read < size && write < pixels_data_size) {
-		int transparent = dump[read] | dump[read + 1] << 8;
-
-		// Integrity check for transparency run
-		if (write + (transparent * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
-			transparent = (pixels_data_size - write) / 4;
-		}
-
-		read += 2;
-		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
-		}
-
-		if (read >= size || write >= pixels_data_size) {
-			break;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		// Integrity check for colored run
-		if (write + (colored * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
-			colored = (pixels_data_size - write) / 4;
-		}
-
-		// Integrity check for read buffer
-		if (read + (colored * bpp) > size) {
-			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
-			// We can't easily recover here without risking reading garbage, so stop
-			break;
-		}
-
-		for (int i = 0; i < colored && write < pixels_data_size; i++) {
-			uint8_t r = dump[read + 0];
-			uint8_t g = dump[read + 1];
-			uint8_t b = dump[read + 2];
-			uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
-
-			data[write + 0] = r;
-			data[write + 1] = g;
-			data[write + 2] = b;
-			data[write + 3] = a;
-
-			if (a > 0) {
-				non_zero_alpha_found = true;
-			}
-			if (r > 0 || g > 0 || b > 0) {
-				non_black_pixel_found = true;
-			}
-
-			write += RGBA_COMPONENTS;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < pixels_data_size) {
-		data[write + 0] = 0x00; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0x00; // blue
-		data[write + 3] = 0x00; // alpha
-		write += RGBA_COMPONENTS;
-	}
-
-	// Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
-	// Only log for a few arbitrary IDs to avoid spamming, or if suspicious
-	if (!non_zero_alpha_found && id > 100) {
-		// This sprite is 100% invisible. This might be correct (magic fields?) but worth noting if ALL are invisible.
-		static int empty_log_count = 0;
-		if (empty_log_count++ < 10) {
-			spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, bpp, size);
-		}
-	} else if (!non_black_pixel_found && non_zero_alpha_found && id > 100) {
-		// This sprite has alpha but all RGB are 0. It is a "black shadow" or "darkness".
-		// If ALL sprites look like this, we have a problem.
-		static int black_log_count = 0;
-		if (black_log_count++ < 10) {
-			spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!", id, bpp, size);
-		}
-	}
+	DecompressCore(dump, size, bpp, id, writer);
 
 	return data;
 }
