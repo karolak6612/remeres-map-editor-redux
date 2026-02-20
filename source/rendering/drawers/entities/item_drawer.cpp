@@ -37,7 +37,12 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
 	ItemType& it = g_items[item->getID()];
+	GameSprite* spr = it.sprite;
+	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, it, patterns, options, ephemeral, red, green, blue, alpha, tile);
+}
 
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const ItemType& it, const SpritePatterns& patterns, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
 		bool locked = item->isLocked();
@@ -118,7 +123,6 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
 
-	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
 	int subtype = patterns.subtype;
 	int pattern_x = patterns.x;
 	int pattern_y = patterns.y;
@@ -233,12 +237,14 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	GameSprite* spr = itemType->sprite;
 	uint16_t cid = itemType->clientID;
 
+	static ItemType* cachedZoneItem = &g_items[SPRITE_ZONE];
+
 	switch (cid) {
 		// Yellow invisible stairs tile
 		case 469:
 			b = 0;
 			alpha = (alpha * 171) >> 8;
-			spr = g_items[SPRITE_ZONE].sprite;
+			spr = cachedZoneItem->sprite;
 			break;
 
 		// Red invisible walkable tile
@@ -246,14 +252,14 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 			g = 0;
 			b = 0;
 			alpha = (alpha * 171) >> 8;
-			spr = g_items[SPRITE_ZONE].sprite;
+			spr = cachedZoneItem->sprite;
 			break;
 
 		// Cyan invisible wall
 		case 2187:
 			r = 0;
 			alpha = alpha / 3;
-			spr = g_items[SPRITE_ZONE].sprite;
+			spr = cachedZoneItem->sprite;
 			break;
 
 		default:

@@ -151,7 +151,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
 	}
@@ -185,8 +185,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
 
+	bool do_tooltips = options.show_tooltips && map_z == view.floor;
+
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && waypoint && map_z == view.floor) {
+	if (do_tooltips && waypoint) {
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
@@ -214,16 +216,27 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground && ground_it) {
-			PreloadItem(tile, tile->ground.get(), *ground_it);
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+			GameSprite* spr = ground_it->sprite;
+			SpritePatterns patterns = PatternCalculator::Calculate(spr, *ground_it, tile->ground.get(), tile, tile->getPosition());
+			if (spr && !spr->isSimpleAndLoaded()) {
+				SpritePreloader::get().preload(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
+			}
+
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile->getPosition(), tile->ground.get(), *ground_it, patterns, options, false, r, g, b, 255, tile);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
 		}
 	}
 
+	// Light for ground
+	if (light_buffer && options.isDrawLight() && tile->ground && tile->ground->hasLight()) {
+		const auto& position = location->getPosition();
+		light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+	}
+
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (do_tooltips && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -236,18 +249,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
-	if (options.show_houses && tile->isHouseTile() && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
+	if (options.show_houses && tile->isHouseTile() && tile->getHouseID() == current_house_id && map_z == view.floor) {
 
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
 		float intensity = 0.5f + (0.5f * options.highlight_pulse);
 		glm::vec4 border_color(static_cast<float>(hr) / 255.0f, static_cast<float>(hg) / 255.0f, static_cast<float>(hb) / 255.0f, intensity); // House color border with pulsing alpha
-
-		// Map coordinates to screen coordinates
-		// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
-		// Draw 1px solid border using geometry generation
-		// primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
 
 		// Use SpriteDrawer to keep batching unified (prevents PrimitiveRenderer flush/state change)
 		int br = static_cast<int>(border_color.r * 255.0f);
@@ -261,17 +269,33 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
+			uint8_t house_tint_r = 255, house_tint_g = 255, house_tint_b = 255;
+
 			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
 			if (calculate_house_color) {
 				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
+				// Apply pulse logic once
+				if (tile->getHouseID() == current_house_id && options.highlight_pulse > 0.0f) {
+					float boost = options.highlight_pulse * 0.6f;
+					house_tint_r = static_cast<uint8_t>(std::min(255, static_cast<int>(house_r + (255 - house_r) * boost)));
+					house_tint_g = static_cast<uint8_t>(std::min(255, static_cast<int>(house_g + (255 - house_g) * boost)));
+					house_tint_b = static_cast<uint8_t>(std::min(255, static_cast<int>(house_b + (255 - house_b) * boost)));
+				} else {
+					house_tint_r = house_r;
+					house_tint_g = house_g;
+					house_tint_b = house_b;
+				}
 			}
+
+			bool draw_lights = light_buffer && options.isDrawLight();
+			const auto& position = location->getPosition();
 
 			// items on tile
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
 
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (do_tooltips && (item->isComplex() || it.isTooltipable())) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
@@ -280,31 +304,26 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				PreloadItem(tile, item.get(), it);
+				GameSprite* spr = it.sprite;
+				SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item.get(), tile, position);
+				if (spr && !spr->isSimpleAndLoaded()) {
+					SpritePreloader::get().preload(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
+				}
 
 				// item sprite
 				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, position, item.get(), it, patterns, options, false, r, g, b, 255, tile);
 				} else {
-					uint8_t ir = 255, ig = 255, ib = 255;
-
 					if (calculate_house_color) {
-						// Apply house color tint
-						ir = static_cast<uint8_t>(ir * house_r / 255);
-						ig = static_cast<uint8_t>(ig * house_g / 255);
-						ib = static_cast<uint8_t>(ib * house_b / 255);
-
-						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
-							// Pulse effect matching the tile pulse
-							if (options.highlight_pulse > 0.0f) {
-								float boost = options.highlight_pulse * 0.6f;
-								ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
-								ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
-								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
-							}
-						}
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, position, item.get(), it, patterns, options, false, house_tint_r, house_tint_g, house_tint_b, 255, tile);
+					} else {
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, position, item.get(), it, patterns, options, false, 255, 255, 255, 255, tile);
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
+				}
+
+				// Light
+				if (draw_lights && item->hasLight()) {
+					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
 				}
 			}
 			// monster/npc on tile
@@ -319,46 +338,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		if (view.zoom < 10.0) {
 			// markers (waypoint, house exit, town temple, spawn)
 			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
-		}
-	}
-}
-
-void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it) {
-	if (!item) {
-		return;
-	}
-
-	GameSprite* spr = it.sprite;
-	if (spr && !spr->isSimpleAndLoaded()) {
-		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
-		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
-	}
-}
-
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
 		}
 	}
 }
