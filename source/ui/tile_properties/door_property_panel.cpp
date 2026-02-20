@@ -12,12 +12,10 @@
 DoorPropertyPanel::DoorPropertyPanel(wxWindow* parent) :
 	ItemPropertyPanel(parent) {
 
-	door_sizer = newd wxBoxSizer(wxHORIZONTAL);
-	door_sizer->Add(newd wxStaticText(this, wxID_ANY, "Door ID:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-
+	door_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Door ID");
 	door_id_spin = newd wxSpinCtrl(this, wxID_ANY);
 	door_id_spin->SetRange(0, 255);
-	door_sizer->Add(door_id_spin, 1, wxEXPAND);
+	door_sizer->Add(door_id_spin, 1, wxEXPAND | wxALL, 5);
 
 	GetSizer()->Add(door_sizer, 0, wxEXPAND | wxALL, 5);
 

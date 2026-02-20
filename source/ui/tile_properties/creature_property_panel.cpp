@@ -15,23 +15,19 @@ CreaturePropertyPanel::CreaturePropertyPanel(wxWindow* parent) :
 	wxBoxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
 
 	// Spawn time
-	time_sizer = newd wxBoxSizer(wxHORIZONTAL);
-	time_sizer->Add(newd wxStaticText(this, wxID_ANY, "Spawn Time:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-
+	time_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Spawn Time");
 	spawntime_spin = newd wxSpinCtrl(this, wxID_ANY);
 	spawntime_spin->SetRange(10, 86400); // Max 24 hours
-	time_sizer->Add(spawntime_spin, 1, wxEXPAND);
+	time_sizer->Add(spawntime_spin, 1, wxEXPAND | wxALL, 5);
 	main_sizer->Add(time_sizer, 0, wxEXPAND | wxALL, 5);
 
 	// Direction
-	dir_sizer = newd wxBoxSizer(wxHORIZONTAL);
-	dir_sizer->Add(newd wxStaticText(this, wxID_ANY, "Direction:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
-
+	dir_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Direction");
 	direction_choice = newd wxChoice(this, wxID_ANY);
 	for (Direction dir = DIRECTION_FIRST; dir <= DIRECTION_LAST; ++dir) {
 		direction_choice->Append(wxstr(Creature::DirID2Name(dir)), (void*)(intptr_t)(dir));
 	}
-	dir_sizer->Add(direction_choice, 1, wxEXPAND);
+	dir_sizer->Add(direction_choice, 1, wxEXPAND | wxALL, 5);
 	main_sizer->Add(dir_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
 
 	SetSizer(main_sizer);

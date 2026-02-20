@@ -25,7 +25,7 @@ protected:
 	Tile* current_tile;
 	Map* current_map;
 
-	wxSizer* radius_sizer;
+	wxStaticBoxSizer* radius_sizer;
 	wxSpinCtrl* radius_spin;
 };
 

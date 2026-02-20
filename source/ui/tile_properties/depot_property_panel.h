@@ -18,7 +18,7 @@ public:
 	void OnDepotIdChange(wxCommandEvent& event);
 
 protected:
-	wxStaticText* depot_id_label;
+	wxStaticBoxSizer* depot_id_sizer;
 	wxChoice* depot_id_field;
 };
 

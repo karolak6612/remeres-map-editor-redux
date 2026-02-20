@@ -32,13 +32,11 @@ protected:
 	wxSpinCtrl* action_id_spin;
 	wxSpinCtrl* unique_id_spin;
 
-	wxSizer* count_sizer;
-	wxStaticText* count_label;
+	wxStaticBoxSizer* count_sizer;
 	wxSpinCtrl* count_spin;
 	wxChoice* splash_type_choice;
 
-	wxSizer* text_sizer;
-	wxStaticText* text_label;
+	wxStaticBoxSizer* text_sizer;
 	wxTextCtrl* text_ctrl;
 };
 

@@ -11,11 +11,10 @@
 DepotPropertyPanel::DepotPropertyPanel(wxWindow* parent) :
 	ItemPropertyPanel(parent) {
 
-	depot_id_label = newd wxStaticText(this, wxID_ANY, "Depot Town:");
-	GetSizer()->Add(depot_id_label, 0, wxLEFT | wxTOP, 5);
-
+	depot_id_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Depot Town");
 	depot_id_field = newd wxChoice(this, wxID_ANY);
-	GetSizer()->Add(depot_id_field, 0, wxEXPAND | wxALL, 5);
+	depot_id_sizer->Add(depot_id_field, 0, wxEXPAND | wxALL, 5);
+	GetSizer()->Add(depot_id_sizer, 0, wxEXPAND | wxALL, 5);
 
 	depot_id_field->Bind(wxEVT_CHOICE, &DepotPropertyPanel::OnDepotIdChange, this);
 }
@@ -28,8 +27,7 @@ void DepotPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
 
 	Depot* depot = item ? dynamic_cast<Depot*>(item) : nullptr;
 	if (depot && map) {
-		depot_id_label->Show();
-		depot_id_field->Show();
+		GetSizer()->Show(depot_id_sizer, true);
 
 		depot_id_field->Clear();
 		const Towns& towns = map->towns;
@@ -60,8 +58,7 @@ void DepotPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
 		}
 		depot_id_field->SetSelection(to_select_index);
 	} else {
-		depot_id_label->Hide();
-		depot_id_field->Hide();
+		GetSizer()->Show(depot_id_sizer, false);
 	}
 	Layout();
 }

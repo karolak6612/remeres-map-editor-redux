@@ -27,10 +27,10 @@ protected:
 	Tile* current_tile;
 	Map* current_map;
 
-	wxSizer* time_sizer;
+	wxStaticBoxSizer* time_sizer;
 	wxSpinCtrl* spawntime_spin;
 
-	wxSizer* dir_sizer;
+	wxStaticBoxSizer* dir_sizer;
 	wxChoice* direction_choice;
 };
 

@@ -18,7 +18,7 @@ public:
 	void OnDestChange(wxSpinEvent& event);
 
 protected:
-	wxSizer* dest_sizer;
+	wxStaticBoxSizer* dest_sizer;
 	wxSpinCtrl* x_spin;
 	wxSpinCtrl* y_spin;
 	wxSpinCtrl* z_spin;

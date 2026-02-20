@@ -7,6 +7,10 @@
 #include "map/tile.h"
 #include "map/map.h"
 #include "ui/gui.h"
+#include "ui/gui.h"
+#include "editor/editor.h"
+#include "editor/action_queue.h"
+#include "ui/tile_properties/tile_properties_panel.h"
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
 #include "rendering/core/graphics.h"
@@ -210,13 +214,110 @@ void BrowseFieldList::OnItemSelected(wxCommandEvent& event) {
 }
 
 void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
-	// TODO: Use ActionQueue to modify tile stack
+	int selection = item_list->GetSelection();
+	if (selection == wxNOT_FOUND || selection <= 0) {
+		return;
+	}
+
+	int index_in_items = selection - (current_tile->ground ? 1 : 0);
+	if (index_in_items <= 0) {
+		return;
+	}
+
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (editor && current_tile) {
+		Position pos = current_tile->getPosition();
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
+		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items - 1]);
+
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(new_tile.release()));
+		editor->addAction(std::move(action));
+
+		Tile* updated_tile = editor->map.getTile(pos);
+		if (updated_tile && g_gui.tile_properties_panel) {
+			Item* new_selection = nullptr;
+			if (index_in_items - 1 < (int)updated_tile->items.size()) {
+				new_selection = updated_tile->items[index_in_items - 1].get();
+			}
+			g_gui.tile_properties_panel->SetTile(updated_tile, &editor->map);
+			if (new_selection) {
+				g_gui.tile_properties_panel->SelectItem(new_selection);
+			}
+		}
+	}
 }
 
 void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
-	// TODO: Use ActionQueue to modify tile stack
+	int selection = item_list->GetSelection();
+	if (selection == wxNOT_FOUND) {
+		return;
+	}
+
+	int index_in_items = selection - (current_tile->ground ? 1 : 0);
+	if (index_in_items < 0 || index_in_items >= (int)current_tile->items.size() - 1) {
+		return;
+	}
+
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (editor && current_tile) {
+		Position pos = current_tile->getPosition();
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
+		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
+
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(new_tile.release()));
+		editor->addAction(std::move(action));
+
+		Tile* updated_tile = editor->map.getTile(pos);
+		if (updated_tile && g_gui.tile_properties_panel) {
+			Item* new_selection = nullptr;
+			if (index_in_items + 1 < (int)updated_tile->items.size()) {
+				new_selection = updated_tile->items[index_in_items + 1].get();
+			}
+			g_gui.tile_properties_panel->SetTile(updated_tile, &editor->map);
+			if (new_selection) {
+				g_gui.tile_properties_panel->SelectItem(new_selection);
+			}
+		}
+	}
 }
 
 void BrowseFieldList::OnClickDelete(wxCommandEvent& event) {
-	// TODO: Use ActionQueue to delete item
+	int selection = item_list->GetSelection();
+	if (selection == wxNOT_FOUND) {
+		return;
+	}
+
+	if (current_tile->ground && selection == 0) {
+		return;
+	}
+
+	int index_in_items = selection - (current_tile->ground ? 1 : 0);
+	if (index_in_items < 0 || index_in_items >= (int)current_tile->items.size()) {
+		return;
+	}
+
+	Editor* editor = g_gui.GetCurrentEditor();
+	if (editor && current_tile) {
+		Position pos = current_tile->getPosition();
+		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
+		new_tile->items.erase(new_tile->items.begin() + index_in_items);
+
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(new_tile.release()));
+		editor->addAction(std::move(action));
+
+		Tile* updated_tile = editor->map.getTile(pos);
+		if (updated_tile && g_gui.tile_properties_panel) {
+			Item* new_selection = nullptr;
+			if (!updated_tile->items.empty()) {
+				new_selection = updated_tile->items.back().get();
+			} else if (updated_tile->ground) {
+				new_selection = updated_tile->ground.get();
+			}
+			g_gui.tile_properties_panel->SetTile(updated_tile, &editor->map);
+			g_gui.tile_properties_panel->SelectItem(new_selection);
+		}
+	}
 }

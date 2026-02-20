@@ -10,11 +10,30 @@
 #include "live/live_client.h"
 
 #include "ui/tile_properties/tile_properties_panel.h"
+#include "map/tile.h"
+#include "game/creature.h"
+#include "game/spawn.h"
 
 void SetupCallbacks(Editor* editor) {
-	editor->onStateChange = []() {
+	editor->onStateChange = [editor]() {
 		g_gui.UpdateTitle();
 		g_gui.UpdateMenus();
+
+		if (g_gui.tile_properties_panel && editor->selection.size() == 1) {
+			Tile* tile = editor->selection.getSelectedTile();
+			g_gui.tile_properties_panel->SetTile(tile, &editor->map);
+
+			if (tile) {
+				ItemVector items = tile->getSelectedItems();
+				if (!items.empty()) {
+					g_gui.tile_properties_panel->SelectItem(items.front());
+				} else if (tile->creature && tile->creature->isSelected()) {
+					g_gui.tile_properties_panel->OnCreatureSelected();
+				} else if (tile->spawn && tile->spawn->isSelected()) {
+					g_gui.tile_properties_panel->OnSpawnSelected();
+				}
+			}
+		}
 	};
 
 	editor->selection.onSelectionChange = [editor](size_t count) {
@@ -39,6 +58,10 @@ void SetupCallbacks(Editor* editor) {
 				ItemVector items = tile->getSelectedItems();
 				if (!items.empty()) {
 					g_gui.tile_properties_panel->SelectItem(items.front());
+				} else if (tile->creature && tile->creature->isSelected()) {
+					g_gui.tile_properties_panel->OnCreatureSelected();
+				} else if (tile->spawn && tile->spawn->isSelected()) {
+					g_gui.tile_properties_panel->OnSpawnSelected();
 				}
 			} else {
 				g_gui.tile_properties_panel->SetTile(nullptr, nullptr);

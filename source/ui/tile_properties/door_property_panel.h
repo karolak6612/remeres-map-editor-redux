@@ -18,7 +18,7 @@ public:
 	void OnDoorIdChange(wxSpinEvent& event);
 
 protected:
-	wxSizer* door_sizer;
+	wxStaticBoxSizer* door_sizer;
 	wxSpinCtrl* door_id_spin;
 };
 
