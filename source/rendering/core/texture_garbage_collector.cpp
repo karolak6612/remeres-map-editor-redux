@@ -20,6 +20,7 @@
 #include "rendering/core/graphics.h"
 #include "app/settings.h"
 #include <algorithm>
+#include <ranges>
 
 TextureGarbageCollector::TextureGarbageCollector() :
 	loaded_textures(0),
@@ -54,7 +55,7 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 		const auto software_clean_size = std::max(0, g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE));
 		const auto cleanup_count = std::min(cleanup_list.size(), static_cast<size_t>(software_clean_size));
 
-		for (size_t i = 0; i < cleanup_count; ++i) {
+		for (size_t i : std::views::iota(0u, cleanup_count)) {
 			cleanup_list.front()->unloadDC();
 			cleanup_list.pop_front();
 		}

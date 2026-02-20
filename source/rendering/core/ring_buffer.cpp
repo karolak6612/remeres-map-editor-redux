@@ -4,6 +4,8 @@
 #include <spdlog/spdlog.h>
 #include <cstring>
 #include <utility>
+#include <algorithm>
+#include <ranges>
 
 RingBuffer::~RingBuffer() {
 	cleanup();
@@ -13,9 +15,7 @@ RingBuffer::RingBuffer(RingBuffer&& other) noexcept
 	:
 	buffer_(std::move(other.buffer_)),
 	mapped_ptr_(other.mapped_ptr_), element_size_(other.element_size_), max_elements_(other.max_elements_), section_size_(other.section_size_), current_section_(other.current_section_), use_persistent_mapping_(other.use_persistent_mapping_), initialized_(other.initialized_) {
-	for (size_t i = 0; i < BUFFER_COUNT; ++i) {
-		fences_[i] = std::move(other.fences_[i]);
-	}
+	std::ranges::move(other.fences_, std::begin(fences_));
 	other.mapped_ptr_ = nullptr;
 	other.initialized_ = false;
 }
@@ -25,9 +25,7 @@ RingBuffer& RingBuffer::operator=(RingBuffer&& other) noexcept {
 		cleanup();
 		buffer_ = std::move(other.buffer_);
 		mapped_ptr_ = other.mapped_ptr_;
-		for (size_t i = 0; i < BUFFER_COUNT; ++i) {
-			fences_[i] = std::move(other.fences_[i]);
-		}
+		std::ranges::move(other.fences_, std::begin(fences_));
 		element_size_ = other.element_size_;
 		max_elements_ = other.max_elements_;
 		section_size_ = other.section_size_;
@@ -91,9 +89,7 @@ void RingBuffer::cleanup() {
 	}
 
 	// Reset fences (SyncHandle destructor handles glDeleteSync)
-	for (size_t i = 0; i < BUFFER_COUNT; ++i) {
-		fences_[i].reset();
-	}
+	std::ranges::for_each(fences_, [](auto& fence) { fence.reset(); });
 
 	// Unmap and delete buffer
 	if (buffer_) {

@@ -12,6 +12,7 @@
 #include "game/items.h"
 #include <array>
 #include <algorithm>
+#include <ranges>
 
 void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	static const auto extractGroundBrushFromTile = [](BaseMap* map, int x, int y, int z) -> GroundBrush* {
@@ -43,7 +44,7 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 
 	static constexpr std::array<std::pair<int32_t, int32_t>, 8> offsets = { { { -1, -1 }, { 0, -1 }, { 1, -1 }, { -1, 0 }, { 1, 0 }, { -1, 1 }, { 0, 1 }, { 1, 1 } } };
 
-	for (size_t i = 0; i < offsets.size(); ++i) {
+	for (size_t i : std::views::iota(0u, offsets.size())) {
 		const auto& [dx, dy] = offsets[i];
 
 		int nx = x + dx;
