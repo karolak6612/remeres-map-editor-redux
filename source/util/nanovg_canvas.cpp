@@ -3,6 +3,7 @@
 #include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
+#include "ui/gui.h"
 
 #include <glad/glad.h>
 
@@ -20,8 +21,18 @@ ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
 	}
 }
 
+// Helper to create attributes
+static wxGLAttributes& GetCoreProfileAttributes() {
+	static wxGLAttributes vAttrs = []() {
+		wxGLAttributes a;
+		a.PlatformDefaults().Defaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
+		return a;
+	}();
+	return vAttrs;
+}
+
 NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
-	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
+	wxGLCanvas(parent, GetCoreProfileAttributes(), id, wxDefaultPosition, wxDefaultSize, style) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 	Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);
@@ -52,7 +63,7 @@ void NanoVGCanvas::InitGL() {
 		return;
 	}
 
-	m_glContext = std::make_unique<wxGLContext>(this);
+	m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
 	if (!m_glContext->IsOK()) {
 		m_glContext.reset();
 		return;
