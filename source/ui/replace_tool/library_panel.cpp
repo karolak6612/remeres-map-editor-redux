@@ -14,6 +14,7 @@
 #include "brushes/carpet/carpet_brush.h"
 #include <wx/splitter.h>
 #include <algorithm>
+#include <unordered_map>
 
 LibraryPanel::LibraryPanel(wxWindow* parent, Listener* listener) :
 	wxPanel(parent, wxID_ANY),
@@ -141,7 +142,7 @@ uint16_t LibraryPanel::GetSidFromCid(uint16_t cid) {
 void LibraryPanel::PopulateBrushGrid() {
 	std::vector<uint16_t> brushIds;
 	brushIds.reserve(g_brushes.getMap().size());
-	std::map<uint16_t, wxString> overrides;
+	std::unordered_map<uint16_t, wxString> overrides;
 	m_brushLookup.clear();
 
 	wxString query = m_brushSearch->GetValue().Lower();

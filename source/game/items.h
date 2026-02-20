@@ -24,7 +24,7 @@
 #include <wx/string.h>
 #include <string_view>
 #include <memory>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 class Brush;
@@ -459,7 +459,7 @@ public:
 
 	// using ItemMap = contigous_vector<ItemType*>;
 	using ItemMap = std::vector<std::unique_ptr<ItemType>>;
-	using ItemNameMap = std::map<std::string, ItemType*>;
+	using ItemNameMap = std::unordered_map<std::string, ItemType*>;
 	ItemMap items;
 
 	// Version information

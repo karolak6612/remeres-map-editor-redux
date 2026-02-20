@@ -19,6 +19,8 @@
 #include "map/map.h"
 #include "game/town.h"
 #include <spdlog/spdlog.h>
+#include <vector>
+#include <algorithm>
 
 void TownSerializationOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 	spdlog::debug("Reading OTBM_TOWNS...");
@@ -81,8 +83,17 @@ void TownSerializationOTBM::readTowns(Map& map, BinaryNode* mapNode) {
 
 void TownSerializationOTBM::writeTowns(const Map& map, NodeFileWriteHandle& f) {
 	f.addNode(OTBM_TOWNS);
+
+	std::vector<const Town*> sorted_towns;
+	sorted_towns.reserve(map.towns.count());
 	for (const auto& [town_id, town_ptr] : map.towns) {
-		const Town* town = town_ptr.get();
+		sorted_towns.push_back(town_ptr.get());
+	}
+	std::sort(sorted_towns.begin(), sorted_towns.end(), [](const Town* a, const Town* b) {
+		return a->getID() < b->getID();
+	});
+
+	for (const auto* town : sorted_towns) {
 		const Position& pos = town->getTemplePosition();
 
 		f.addNode(OTBM_TOWN);

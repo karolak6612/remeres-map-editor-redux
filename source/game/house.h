@@ -20,6 +20,7 @@
 
 #include "map/position.h"
 #include <memory>
+#include <unordered_map>
 
 class Map;
 class Tile;
@@ -70,7 +71,7 @@ protected:
 	friend class Houses;
 };
 
-using HouseMap = std::map<uint32_t, std::unique_ptr<House>>;
+using HouseMap = std::unordered_map<uint32_t, std::unique_ptr<House>>;
 
 class Houses {
 public:
