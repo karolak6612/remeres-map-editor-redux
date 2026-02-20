@@ -224,7 +224,11 @@ bool ItemSerializationOTBM::readAttribute(const IOMap& maphandle, OTBM_ItemAttri
 	return true;
 }
 
-bool ItemSerializationOTBM::serializeItemNode(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item) {
+bool ItemSerializationOTBM::serializeItemNode(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item, int depth) {
+	if (depth >= MAX_CONTAINER_DEPTH) {
+		return false;
+	}
+
 	f.addNode(OTBM_ITEM);
 	f.addU16(item.getID());
 	if (maphandle.version.otbm == MAP_OTBM_1) {
@@ -237,7 +241,7 @@ bool ItemSerializationOTBM::serializeItemNode(const IOMap& maphandle, NodeFileWr
 
 	if (auto container = item.asContainer()) {
 		for (const auto& child : container->getVector()) {
-			if (!serializeItemNode(maphandle, f, *child)) {
+			if (!serializeItemNode(maphandle, f, *child, depth + 1)) {
 				return false;
 			}
 		}
