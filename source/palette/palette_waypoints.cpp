@@ -27,22 +27,59 @@
 #include "brushes/waypoint/waypoint_brush.h"
 #include "map/map.h"
 #include "util/image_manager.h"
+#include <vector>
+#include <string>
+
+class WaypointListCtrl : public wxListCtrl {
+public:
+	WaypointListCtrl(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) :
+		wxListCtrl(parent, id, pos, size, style) {
+	}
+
+	void UpdateWaypoints(const Waypoints& waypoints) {
+		m_cache.clear();
+		m_cache.reserve(waypoints.size());
+		for (const auto& [name, wp] : waypoints) {
+			m_cache.push_back(name);
+		}
+		SetItemCount(static_cast<long>(m_cache.size()));
+		Refresh();
+	}
+
+	wxString OnGetItemText(long item, long column) const override {
+		if (item >= 0 && item < static_cast<long>(m_cache.size())) {
+			return wxstr(m_cache[item]);
+		}
+		return "";
+	}
+
+	long FindItemByName(const std::string& name) const {
+		for (size_t i = 0; i < m_cache.size(); ++i) {
+			if (m_cache[i] == name) {
+				return static_cast<long>(i);
+			}
+		}
+		return -1;
+	}
+
+	std::vector<std::string> m_cache;
+};
 
 WaypointPalettePanel::WaypointPalettePanel(wxWindow* parent, wxWindowID id) :
 	PalettePanel(parent, id),
 	map(nullptr) {
 	wxSizer* sidesizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Waypoints");
 
-	waypoint_list = newd wxListCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_LISTBOX, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_EDIT_LABELS | wxLC_NO_HEADER);
+	waypoint_list = newd WaypointListCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_LISTBOX, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_EDIT_LABELS | wxLC_NO_HEADER | wxLC_VIRTUAL);
 	waypoint_list->InsertColumn(0, "UNNAMED", wxLIST_FORMAT_LEFT, 200);
 	sidesizer->Add(waypoint_list, 1, wxEXPAND);
 
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_waypoint_button = newd wxButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_ADD_WAYPOINT, "Add", wxDefaultPosition, wxSize(50, -1));
-	add_waypoint_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	add_waypoint_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	tmpsizer->Add(add_waypoint_button, 1, wxEXPAND);
 	remove_waypoint_button = newd wxButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_REMOVE_WAYPOINT, "Remove", wxDefaultPosition, wxSize(70, -1));
-	remove_waypoint_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	remove_waypoint_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
 	tmpsizer->Add(remove_waypoint_button, 1, wxEXPAND);
 	sidesizer->Add(tmpsizer, 0, wxEXPAND);
 
@@ -75,9 +112,11 @@ void WaypointPalettePanel::SelectFirstBrush() {
 
 Brush* WaypointPalettePanel::GetSelectedBrush() const {
 	long item = waypoint_list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	g_brush_manager.waypoint_brush->setWaypoint(
-		item == -1 ? nullptr : map->waypoints.getWaypoint(nstr(waypoint_list->GetItemText(item)))
-	);
+	if (item != -1) {
+		g_brush_manager.waypoint_brush->setWaypoint(map->waypoints.getWaypoint(nstr(waypoint_list->GetItemText(item))));
+	} else {
+		g_brush_manager.waypoint_brush->setWaypoint(nullptr);
+	}
 	return g_brush_manager.waypoint_brush;
 }
 
@@ -99,19 +138,14 @@ wxString WaypointPalettePanel::GetName() const {
 }
 
 void WaypointPalettePanel::OnUpdate() {
-	if (wxTextCtrl* tc = waypoint_list->GetEditControl()) {
-		Waypoint* wp = map->waypoints.getWaypoint(nstr(tc->GetValue()));
-		if (wp && wp->pos == Position()) {
-			if (map->getTile(wp->pos)) {
-				map->getTileL(wp->pos)->decreaseWaypointCount();
-			}
-			map->waypoints.removeWaypoint(wp->name);
-		}
+	if (waypoint_list->GetEditControl()) {
+		return;
 	}
+
 	waypoint_list->Freeze();
-	waypoint_list->DeleteAllItems();
 
 	if (!map) {
+		waypoint_list->SetItemCount(0);
 		waypoint_list->Enable(false);
 		add_waypoint_button->Enable(false);
 		remove_waypoint_button->Enable(false);
@@ -123,11 +157,8 @@ void WaypointPalettePanel::OnUpdate() {
 	add_waypoint_button->Enable(true);
 	remove_waypoint_button->Enable(true);
 
-	Waypoints& waypoints = map->waypoints;
+	waypoint_list->UpdateWaypoints(map->waypoints);
 
-	for (const auto& [name, wp] : waypoints) {
-		waypoint_list->InsertItem(0, wxstr(wp->name));
-	}
 	waypoint_list->Thaw();
 }
 
@@ -160,7 +191,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 
 	if (wpname == "") {
 		map->waypoints.removeWaypoint(oldwpname);
-		g_gui.RefreshPalettes();
+		OnUpdate();
 	} else if (wp) {
 		if (wpname == oldwpname) {
 			; // do nothing
@@ -171,7 +202,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 				event.Veto();
 				if (oldwpname == "") {
 					map->waypoints.removeWaypoint(oldwpname);
-					g_gui.RefreshPalettes();
+					OnUpdate();
 				}
 			} else {
 				auto nwp_ptr = std::make_unique<Waypoint>(*wp);
@@ -191,6 +222,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 
 				// Refresh other palettes
 				refresh_timer.Start(300, true);
+				OnUpdate();
 			}
 		}
 	}
@@ -203,10 +235,15 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 void WaypointPalettePanel::OnClickAddWaypoint(wxCommandEvent& event) {
 	if (map) {
 		map->waypoints.addWaypoint(std::make_unique<Waypoint>());
-		long i = waypoint_list->InsertItem(0, "");
-		waypoint_list->EditLabel(i);
 
-		// g_gui.RefreshPalettes();
+		OnUpdate();
+
+		long i = waypoint_list->FindItemByName("");
+		if (i != -1) {
+			waypoint_list->EnsureVisible(i);
+			waypoint_list->SetItemState(i, wxLIST_STATE_SELECTED, wxLIST_STATE_SELECTED);
+			waypoint_list->EditLabel(i);
+		}
 	}
 }
 
@@ -224,7 +261,9 @@ void WaypointPalettePanel::OnClickRemoveWaypoint(wxCommandEvent& event) {
 			}
 			map->waypoints.removeWaypoint(wp->name);
 		}
-		waypoint_list->DeleteItem(item);
+
+		OnUpdate();
+
 		refresh_timer.Start(300, true);
 	}
 }
