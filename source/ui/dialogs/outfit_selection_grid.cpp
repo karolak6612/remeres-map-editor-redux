@@ -27,9 +27,9 @@ OutfitSelectionGrid::OutfitSelectionGrid(wxWindow* parent, OutfitChooserDialog* 
 	selected_index(-1),
 	owner(owner),
 	columns(1),
-	item_width(OUTFIT_TILE_WIDTH),
-	item_height(OUTFIT_TILE_HEIGHT),
-	padding(4),
+	item_width(FromDIP(OUTFIT_TILE_WIDTH)),
+	item_height(FromDIP(OUTFIT_TILE_HEIGHT)),
+	padding(FromDIP(4)),
 	hover_index(-1) {
 
 	Bind(wxEVT_SIZE, &OutfitSelectionGrid::OnSize, this);
@@ -95,7 +95,7 @@ void OutfitSelectionGrid::OnSize(wxSizeEvent& event) {
 }
 
 wxSize OutfitSelectionGrid::DoGetBestClientSize() const {
-	return wxSize(430, 300); // Reasonable default
+	return FromDIP(wxSize(430, 300)); // Reasonable default
 }
 
 int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, const Outfit& outfit) {
@@ -319,9 +319,9 @@ void OutfitSelectionGrid::OnContextMenu(wxContextMenuEvent& event) {
 	}
 
 	wxMenu menu;
-	menu.Append(OutfitChooserDialog::ID_FAVORITE_RENAME, "Rename...")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
-	menu.Append(OutfitChooserDialog::ID_FAVORITE_EDIT, "Update with Current")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(16, 16)));
-	menu.Append(OutfitChooserDialog::ID_FAVORITE_DELETE, "Delete")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
+	menu.Append(OutfitChooserDialog::ID_FAVORITE_RENAME, "Rename...")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PEN_TO_SQUARE));
+	menu.Append(OutfitChooserDialog::ID_FAVORITE_EDIT, "Update with Current")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_SYNC));
+	menu.Append(OutfitChooserDialog::ID_FAVORITE_DELETE, "Delete")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_TRASH_CAN));
 
 	PopupMenu(&menu);
 }
