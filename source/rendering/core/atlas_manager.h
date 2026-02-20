@@ -98,6 +98,11 @@ public:
 	 */
 	bool ensureInitialized();
 
+	/**
+	 * Flush pending uploads.
+	 */
+	void flush();
+
 private:
 	TextureAtlas atlas_;
 

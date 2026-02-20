@@ -69,6 +69,9 @@ bool GraphicManager::isUnloaded() const {
 void GraphicManager::updateTime() {
 	cached_time_ = time(nullptr);
 	SpritePreloader::get().update();
+	if (atlas_manager_) {
+		atlas_manager_->flush();
+	}
 }
 
 void GraphicManager::clear() {

@@ -1,23 +1,9 @@
 #include "rendering/core/shared_geometry.h"
 #include <spdlog/spdlog.h>
-#ifdef _WIN32
-	#include <windows.h>
-#elif defined(__linux__)
-	#include <GL/glx.h>
-#elif defined(__APPLE__)
-	#include <OpenGL/OpenGL.h>
-#endif
+#include <wx/glcanvas.h>
 
 void* GetCurrentGLContext() {
-#ifdef _WIN32
-	return (void*)wglGetCurrentContext();
-#elif defined(__linux__)
-	return (void*)glXGetCurrentContext();
-#elif defined(__APPLE__)
-	return (void*)CGLGetCurrentContext();
-#else
-	return nullptr;
-#endif
+	return (void*)wxGLContext::GetCurrent();
 }
 
 bool SharedGeometry::initialize() {
