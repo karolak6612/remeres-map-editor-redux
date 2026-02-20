@@ -55,12 +55,12 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FROM_DIP(this, wxSize(16, 16))));
 	okBtn->SetToolTip("Jump to selected item/brush");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Close this window");
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FROM_DIP(this, wxSize(16, 16))));
+	cancelBtn->SetToolTip("Close search dialog");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
 
@@ -79,7 +79,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	// RefreshContents();
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, FROM_DIP(this, wxSize(32, 32))));
 	SetIcon(icon);
 }
 
@@ -361,14 +361,14 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());

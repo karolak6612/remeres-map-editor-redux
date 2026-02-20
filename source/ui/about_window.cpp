@@ -71,12 +71,12 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Close this window");
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FROM_DIP(this, wxSize(16, 16))));
+	okBtn->SetToolTip("Close About dialog");
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 
 	wxButton* copyBtn = newd wxButton(this, wxID_COPY, "Copy Version Info");
-	copyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	copyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, FROM_DIP(this, wxSize(16, 16))));
 	copyBtn->Bind(wxEVT_BUTTON, [about](wxCommandEvent&) {
 		if (wxTheClipboard->Open()) {
 			wxTheClipboard->SetData(new wxTextDataObject(about));
@@ -87,7 +87,7 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	choicesizer->Add(copyBtn, wxSizerFlags(1).Center().Border(wxLEFT, 10));
 
 	wxButton* websiteBtn = newd wxButton(this, wxID_ANY, "Visit Website");
-	websiteBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GLOBE, wxSize(16, 16)));
+	websiteBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GLOBE, FROM_DIP(this, wxSize(16, 16))));
 	websiteBtn->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
 		::wxLaunchDefaultBrowser(__SITE_URL__, wxBROWSER_NEW_WINDOW);
 	});
@@ -109,7 +109,7 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	Bind(wxEVT_MENU, &AboutWindow::OnClickOK, this, wxID_CANCEL);
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_INFO, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_INFO, FROM_DIP(this, wxSize(32, 32))));
 	SetIcon(icon);
 }
 
