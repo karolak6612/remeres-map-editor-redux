@@ -24,6 +24,17 @@
 #include <memory>
 #include <map>
 
+// ============================================================================
+// OPENGL MODERNIZATION POLICY
+// ============================================================================
+// 1. NO LEGACY GL: Do not use glBegin/glEnd, matrix stack, or fixed function.
+// 2. RAII: All GL resources (buffers, textures, shaders) MUST be wrapped in
+//    RAII classes (GLBuffer, GLTextureResource, etc.) managed by unique_ptr.
+// 3. DSA: Use Direct State Access (glNamedBufferData, glTextureStorage, etc.)
+//    wherever possible (OpenGL 4.5+).
+// 4. BATCHING: Use SpriteBatch or Instanced Rendering for repeated geometry.
+// ============================================================================
+
 struct NVGcontext;
 struct NVGDeleter {
 	void operator()(NVGcontext* nvg) const;
