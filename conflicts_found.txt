@@ -1,2 +1,0 @@
-./README.md
-./source/mkpch.cpp
