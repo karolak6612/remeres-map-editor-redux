@@ -265,31 +265,56 @@ void SpatialHashGrid::clear() {
 	cells.clear();
 	sorted_cells_cache.clear();
 	sorted_cells_dirty = false;
+	last_key = 0;
+	last_cell = nullptr;
 }
 
 MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 	uint64_t key = makeKey(x, y);
+	if (key == last_key && last_cell) {
+		int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+		int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+		return last_cell->nodes[ny * NODES_PER_CELL + nx].get();
+	}
+
 	auto it = cells.find(key);
 	if (it == cells.end()) {
 		return nullptr;
 	}
 
+	last_key = key;
+	last_cell = it->second.get();
+
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-	return it->second->nodes[ny * NODES_PER_CELL + nx].get();
+	return last_cell->nodes[ny * NODES_PER_CELL + nx].get();
 }
 
 MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	uint64_t key = makeKey(x, y);
+
+	if (key == last_key && last_cell) {
+		int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+		int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+		auto& node = last_cell->nodes[ny * NODES_PER_CELL + nx];
+		if (!node) {
+			node = std::make_unique<MapNode>(map);
+		}
+		return node.get();
+	}
+
 	auto& cell = cells[key];
 	if (!cell) {
 		cell = std::make_unique<GridCell>();
 		sorted_cells_dirty = true;
 	}
 
+	last_key = key;
+	last_cell = cell.get();
+
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-	auto& node = cell->nodes[ny * NODES_PER_CELL + nx];
+	auto& node = last_cell->nodes[ny * NODES_PER_CELL + nx];
 	if (!node) {
 		node = std::make_unique<MapNode>(map);
 	}
