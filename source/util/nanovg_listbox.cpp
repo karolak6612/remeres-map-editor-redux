@@ -6,6 +6,7 @@
 #include <nanovg_gl.h>
 #include <algorithm>
 #include <iterator>
+#include <utility>
 
 NanoVGListBox::NanoVGListBox(wxWindow* parent, wxWindowID id, long style) :
 	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
@@ -30,11 +31,11 @@ void NanoVGListBox::SetItemCount(size_t count) {
 		if (m_style & wxLB_MULTIPLE) {
 			m_multiSelection.resize(m_count, false);
 		} else {
-			if (m_selection >= (int)m_count) {
+			if (std::cmp_greater_equal(m_selection, m_count)) {
 				m_selection = -1;
 			}
 		}
-		if (m_focusIndex >= (int)m_count) {
+		if (std::cmp_greater_equal(m_focusIndex, m_count)) {
 			m_focusIndex = -1;
 		}
 		UpdateScrollbar();
@@ -43,7 +44,7 @@ void NanoVGListBox::SetItemCount(size_t count) {
 }
 
 void NanoVGListBox::SetSelection(int index) {
-	if (index < -1 || index >= (int)m_count) {
+	if (index < -1 || std::cmp_greater_equal(index, m_count)) {
 		return;
 	}
 
@@ -68,7 +69,7 @@ int NanoVGListBox::GetSelection() const {
 	if (m_style & wxLB_MULTIPLE) {
 		const auto it = std::find(m_multiSelection.begin(), m_multiSelection.end(), true);
 		if (it != m_multiSelection.end()) {
-			return (int)std::distance(m_multiSelection.begin(), it);
+			return static_cast<int>(std::distance(m_multiSelection.begin(), it));
 		}
 		return -1;
 	}
@@ -76,7 +77,7 @@ int NanoVGListBox::GetSelection() const {
 }
 
 bool NanoVGListBox::IsSelected(int index) const {
-	if (index < 0 || index >= (int)m_count) {
+	if (index < 0 || std::cmp_greater_equal(index, m_count)) {
 		return false;
 	}
 
@@ -87,7 +88,7 @@ bool NanoVGListBox::IsSelected(int index) const {
 }
 
 void NanoVGListBox::Select(int index, bool select) {
-	if (index < 0 || index >= (int)m_count) {
+	if (index < 0 || std::cmp_greater_equal(index, m_count)) {
 		return;
 	}
 
@@ -138,7 +139,7 @@ void NanoVGListBox::ScrollToLine(int line) {
 }
 
 void NanoVGListBox::EnsureVisible(int line) {
-	if (line < 0 || line >= (int)m_count) {
+	if (line < 0 || std::cmp_greater_equal(line, m_count)) {
 		return;
 	}
 
@@ -170,7 +171,7 @@ void NanoVGListBox::UpdateScrollbar() {
 	// Let's assume OnMeasureItem(0) is representative or we check m_itemHeightCache.
 
 	int itemHeight = std::max(1, OnMeasureItem(0));
-	int totalHeight = (int)m_count * itemHeight;
+	int totalHeight = static_cast<int>(m_count) * itemHeight;
 
 	int clientHeight = GetClientSize().y;
 	int pageSize = clientHeight;
@@ -200,7 +201,7 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	int endRow = (scrollPos + height + itemHeight - 1) / itemHeight;
 
 	startRow = std::max(0, startRow);
-	endRow = std::min((int)m_count, endRow);
+	endRow = std::min(static_cast<int>(m_count), endRow);
 
 	// Translate by scroll position is handled by caller (NanoVGCanvas::OnPaint)?
 	// NanoVGCanvas calls OnNanoVGPaint(m_nvg, width, height) after nvgTranslate(m_nvg, 0, -m_scrollPos).
@@ -239,7 +240,7 @@ int NanoVGListBox::HitTest(int x, int y) const {
 	}
 	int itemHeight = std::max(1, OnMeasureItem(0));
 	int index = y / itemHeight;
-	if (index >= 0 && index < (int)m_count) {
+	if (index >= 0 && std::cmp_less(index, m_count)) {
 		return index;
 	}
 	return -1;
@@ -313,13 +314,13 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 			next = std::max(0, current - 1);
 			break;
 		case WXK_DOWN:
-			next = std::min((int)m_count - 1, current + 1);
+			next = std::min(static_cast<int>(m_count) - 1, current + 1);
 			break;
 		case WXK_HOME:
 			next = 0;
 			break;
 		case WXK_END:
-			next = (int)m_count - 1;
+			next = static_cast<int>(m_count) - 1;
 			break;
 		case WXK_PAGEUP: {
 			int itemHeight = OnMeasureItem(0);
@@ -330,7 +331,7 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 		case WXK_PAGEDOWN: {
 			int itemHeight = OnMeasureItem(0);
 			int pageSize = GetClientSize().y / itemHeight;
-			next = std::min((int)m_count - 1, current + pageSize);
+			next = std::min(static_cast<int>(m_count) - 1, current + pageSize);
 			break;
 		}
 		default:

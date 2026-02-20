@@ -58,7 +58,7 @@ void NetworkedBatchAction::addAndCommitAction(std::unique_ptr<Action> action) {
 	}
 
 	// Add it!
-	action->commit(type != (ActionIdentifier)ACTION_SELECT ? &dirty_list : nullptr);
+	action->commit(type != static_cast<ActionIdentifier>(ACTION_SELECT) ? &dirty_list : nullptr);
 	batch.push_back(std::move(action));
 	timestamp = time(nullptr);
 
