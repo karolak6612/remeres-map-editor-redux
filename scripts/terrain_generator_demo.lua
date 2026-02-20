@@ -701,7 +701,7 @@ end
 -- ============================================================================
 
 if not app then
-	app.alert("Error: RME Lua API not found.")
+	print("Error: RME Lua API not found.")
 	return
 end
 

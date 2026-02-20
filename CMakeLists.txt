@@ -73,6 +73,7 @@ endif()
 
 # Define SOL_USING_CXX_LUA_HPP for sol2
 add_compile_definitions(SOL_USING_CXX_LUA_HPP=1)
+add_compile_definitions(SOL_ALL_SAFETIES_ON=1)
 
 include(source/CMakeLists.txt)
 # Removed WIN32 to enable Console subsystem for persistent debugging logs

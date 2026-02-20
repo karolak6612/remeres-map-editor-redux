@@ -23,6 +23,7 @@
 
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
+#include <wx/utils.h>
 
 // Static instance
 LuaScriptsWindow* LuaScriptsWindow::instance = nullptr;
@@ -48,20 +49,30 @@ LuaScriptsWindow::LuaScriptsWindow(wxWindow* parent) :
 	RefreshScriptList();
 
 	// Set up output callback
-	g_luaScripts.setOutputCallback([this](const std::string& msg, bool isError) {
+	std::shared_ptr<bool> alive = std::make_shared<bool>(true);
+	alive_ = alive;
+
+	g_luaScripts.setOutputCallback([this, alive](const std::string& msg, bool isError) {
 		// Must be called from main thread
 		if (wxThread::IsMain()) {
-			LogMessage(wxString::FromUTF8(msg), isError);
+			if (*alive) {
+				LogMessage(wxString::FromUTF8(msg), isError);
+			}
 		} else {
 			// Post event to main thread
-			wxTheApp->CallAfter([this, msg, isError]() {
-				LogMessage(wxString::FromUTF8(msg), isError);
+			wxTheApp->CallAfter([this, alive, msg, isError]() {
+				if (*alive) {
+					LogMessage(wxString::FromUTF8(msg), isError);
+				}
 			});
 		}
 	});
 }
 
 LuaScriptsWindow::~LuaScriptsWindow() {
+	if (alive_) {
+		*alive_ = false;
+	}
 	// Clear the callback
 	g_luaScripts.setOutputCallback(nullptr);
 
@@ -265,13 +276,7 @@ void LuaScriptsWindow::OnOpenFolder(wxCommandEvent& event) {
 		wxMkdir(scriptsPath);
 	}
 
-#ifdef _WIN32
-	wxExecute("explorer \"" + scriptsPath + "\"", wxEXEC_ASYNC);
-#elif defined(__APPLE__)
-	wxExecute("open \"" + scriptsPath + "\"", wxEXEC_ASYNC);
-#else
-	wxExecute("xdg-open \"" + scriptsPath + "\"", wxEXEC_ASYNC);
-#endif
+	wxLaunchDefaultApplication(scriptsPath);
 }
 
 void LuaScriptsWindow::OnClearConsole(wxCommandEvent& event) {

@@ -68,17 +68,7 @@ namespace LuaAPI {
 			"zOrder", sol::property(&Item::getTopOrder),
 
 			// Methods
-			"clone", [](const Item& item) -> Item* { return item.deepCopy().release(); }, "rotate", &Item::doRotate,
-
-			"getName", [](int id) -> std::string {
-			if (g_items.typeExists(id)) {
-				return g_items.getItemType(id).name;
-			}
-			return ""; }, "getDescription", [](int id) -> std::string {
-			if (g_items.typeExists(id)) {
-				return g_items.getItemType(id).description;
-			}
-			return ""; },
+			"clone", [](const Item& item) -> std::unique_ptr<Item> { return item.deepCopy(); }, "rotate", &Item::doRotate,
 
 			// String representation
 			sol::meta_function::to_string, [](const Item& item) { return "Item(id=" + std::to_string(item.getID()) + ", name=\"" + std::string(item.getName()) + "\")"; }
@@ -86,15 +76,6 @@ namespace LuaAPI {
 
 		// Register Items namespace for item lookup
 		sol::table items = lua.create_named_table("Items");
-
-		// Get item type info by ID
-		items["get"] = [](int id) -> sol::optional<sol::table> {
-			if (!g_items.typeExists(id)) {
-				return sol::nullopt;
-			}
-			// Return item info as table (not the actual ItemType pointer)
-			return sol::nullopt; // We'll use getInfo instead
-		};
 
 		// Get item info by ID - returns a table with item properties
 		items["getInfo"] = [](sol::this_state ts, int id) -> sol::object {
