@@ -23,6 +23,8 @@
 #include "game/waypoints.h"
 #include "palette/palette_common.h"
 
+class WaypointListCtrl;
+
 class WaypointPalettePanel : public PalettePanel {
 public:
 	WaypointPalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
@@ -59,7 +61,7 @@ public:
 
 protected:
 	Map* map;
-	wxListCtrl* waypoint_list;
+	WaypointListCtrl* waypoint_list;
 	wxButton* add_waypoint_button;
 	wxButton* remove_waypoint_button;
 };
