@@ -155,14 +155,8 @@ namespace LuaAPI {
 		std::string low = url_str;
 		std::transform(low.begin(), low.end(), low.begin(), ::tolower);
 
-		// Basic string checks
-		if (low.find("localhost") != std::string::npos ||
-			low.find("127.") != std::string::npos ||
-			low.find("::1") != std::string::npos ||
-			low.find("0.0.0.0") != std::string::npos ||
-			low.find("192.168.") != std::string::npos ||
-			low.find("10.") != std::string::npos ||
-			low.find("169.254.") != std::string::npos) {
+		// Check scheme
+		if (low.find("http://") != 0 && low.find("https://") != 0) {
 			return false;
 		}
 
@@ -179,6 +173,33 @@ namespace LuaAPI {
 		size_t portStart = hostname.find(":");
 		if (portStart != std::string::npos) {
 			hostname = hostname.substr(0, portStart);
+		}
+
+		// Basic string checks on hostname
+		if (hostname.find("localhost") != std::string::npos ||
+			hostname.find("127.") != std::string::npos ||
+			hostname.find("::1") != std::string::npos ||
+			hostname.find("0.0.0.0") != std::string::npos ||
+			hostname.find("192.168.") != std::string::npos ||
+			hostname.find("10.") != std::string::npos ||
+			hostname.find("172.16.") != std::string::npos ||
+			hostname.find("172.17.") != std::string::npos ||
+			hostname.find("172.18.") != std::string::npos ||
+			hostname.find("172.19.") != std::string::npos ||
+			hostname.find("172.20.") != std::string::npos ||
+			hostname.find("172.21.") != std::string::npos ||
+			hostname.find("172.22.") != std::string::npos ||
+			hostname.find("172.23.") != std::string::npos ||
+			hostname.find("172.24.") != std::string::npos ||
+			hostname.find("172.25.") != std::string::npos ||
+			hostname.find("172.26.") != std::string::npos ||
+			hostname.find("172.27.") != std::string::npos ||
+			hostname.find("172.28.") != std::string::npos ||
+			hostname.find("172.29.") != std::string::npos ||
+			hostname.find("172.30.") != std::string::npos ||
+			hostname.find("172.31.") != std::string::npos ||
+			hostname.find("169.254.") != std::string::npos) {
+			return false;
 		}
 
 		// DNS resolution check
@@ -214,6 +235,12 @@ namespace LuaAPI {
 					}
 					if (bytes[15] != 1) isLoopback = false;
 					if (isLoopback) safe = false;
+
+					// Check unique-local (fc00::/7)
+					if ((bytes[0] & 0xFE) == 0xFC) safe = false;
+
+					// Check link-local (fe80::/10)
+					if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80) safe = false;
 				}
 			}
 			freeaddrinfo(addrs);
@@ -558,6 +585,14 @@ namespace LuaAPI {
 		}
 
 		return result;
+	}
+
+	void cleanupHttp() {
+		std::lock_guard<std::mutex> lock(g_sessionsMutex);
+		for (auto& pair : g_streamSessions) {
+			pair.second->cancel();
+		}
+		g_streamSessions.clear();
 	}
 
 	void registerHttp(sol::state& lua) {

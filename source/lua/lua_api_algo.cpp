@@ -178,6 +178,10 @@ namespace LuaAPI {
 		algoTable.set_function("generateCave", [](int width, int height, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				return lua.create_table();
+			}
+
 			float fillProbability = 0.45f;
 			int iterations = 4;
 			int birthLimit = 4;
@@ -624,6 +628,10 @@ namespace LuaAPI {
 		algoTable.set_function("generateRandomPoints", [](int width, int height, int count, sol::optional<int> seed, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				return lua.create_table();
+			}
+
 			int sd = seed.value_or(static_cast<int>(time(nullptr)));
 			std::mt19937 rng(sd);
 			std::uniform_int_distribution<int> distX(0, width - 1);
@@ -649,6 +657,10 @@ namespace LuaAPI {
 		// Generate a maze using recursive backtracking
 		algoTable.set_function("generateMaze", [](int width, int height, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
+
+			if (width <= 0 || height <= 0) {
+				return lua.create_table();
+			}
 
 			int seed = static_cast<int>(time(nullptr));
 

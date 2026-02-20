@@ -41,7 +41,7 @@ public:
 	}
 
 	// Script execution
-	bool executeFile(const std::string& filepath);
+	sol::optional<sol::protected_function_result> executeFile(const std::string& filepath);
 	bool executeString(const std::string& code, const std::string& chunkName = "chunk");
 
 	// Get underlying sol state for API registration

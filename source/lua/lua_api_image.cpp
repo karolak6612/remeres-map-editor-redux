@@ -30,7 +30,7 @@ namespace LuaAPI {
 		// Empty image
 	}
 
-	LuaImage::LuaImage(const std::string& path) :
+	LuaImage::LuaImage(const std::string& path, const std::string& scriptDir) :
 		filePath(path), spriteId(0), spriteSource(false) {
 
 		if (path.empty()) {
@@ -74,8 +74,20 @@ namespace LuaAPI {
 					return;
 				}
 			} else {
-				fs::path dataPath = fs::absolute(wxStandardPaths::Get().GetDataDir().ToStdString());
-				p = dataPath / p;
+				// Try resolving against scriptDir
+				bool found = false;
+				if (!scriptDir.empty()) {
+					fs::path sPath = fs::path(scriptDir) / p;
+					if (fs::exists(sPath)) {
+						p = sPath;
+						found = true;
+					}
+				}
+
+				if (!found) {
+					fs::path dataPath = fs::absolute(wxStandardPaths::Get().GetDataDir().ToStdString());
+					p = dataPath / p;
+				}
 				filePath = p.string(); // Update stored path
 			}
 		} catch (...) {
@@ -287,11 +299,20 @@ namespace LuaAPI {
 									   // Default constructor
 									   []() { return LuaImage(); },
 									   // Path constructor
-									   [](const std::string& path) { return LuaImage(path); },
+									   [](const std::string& path, sol::this_state s) {
+										   sol::state_view lua(s);
+										   std::string scriptDir;
+										   if (lua["SCRIPT_DIR"].valid()) scriptDir = lua["SCRIPT_DIR"];
+										   return LuaImage(path, scriptDir);
+									   },
 									   // Table constructor
-									   [](sol::table t) {
+									   [](sol::table t, sol::this_state s) {
+										   sol::state_view lua(s);
+										   std::string scriptDir;
+										   if (lua["SCRIPT_DIR"].valid()) scriptDir = lua["SCRIPT_DIR"];
+
 										   if (t["path"].valid()) {
-											   return LuaImage::loadFromFile(t.get<std::string>("path"));
+											   return LuaImage(t.get<std::string>("path"), scriptDir);
 										   }
 										   if (t["itemid"].valid()) {
 											   return LuaImage::loadFromItemSprite(t.get<int>("itemid"));
@@ -304,7 +325,12 @@ namespace LuaAPI {
 								   ),
 
 			// Static factory methods
-			"fromFile", &LuaImage::loadFromFile,
+			"fromFile", [](const std::string& path, sol::this_state s) {
+				sol::state_view lua(s);
+				std::string scriptDir;
+				if (lua["SCRIPT_DIR"].valid()) scriptDir = lua["SCRIPT_DIR"];
+				return LuaImage(path, scriptDir);
+			},
 			"fromItemSprite", &LuaImage::loadFromItemSprite,
 			"fromSprite", &LuaImage::loadFromSprite,
 

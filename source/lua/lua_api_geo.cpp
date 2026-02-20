@@ -138,6 +138,9 @@ namespace LuaAPI {
 			sol::table result = lua.create_table();
 
 			int numSteps = steps.value_or(20);
+			if (numSteps < 1) {
+				numSteps = 1;
+			}
 
 			// Parse control points
 			std::vector<std::pair<float, float>> points;
@@ -192,6 +195,9 @@ namespace LuaAPI {
 			sol::table result = lua.create_table();
 
 			int numSteps = steps.value_or(20);
+			if (numSteps < 1) {
+				numSteps = 1;
+			}
 
 			// Parse control points
 			std::vector<std::tuple<float, float, float>> points;
@@ -897,6 +903,10 @@ namespace LuaAPI {
 		geoTable.set_function("poissonDiskSampling", [](int x1, int y1, int x2, int y2, float minDistance, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 			sol::table result = lua.create_table();
+
+			if (minDistance <= 0.0f) {
+				return result;
+			}
 
 			int seed = static_cast<int>(time(nullptr));
 			int maxAttempts = 30;
