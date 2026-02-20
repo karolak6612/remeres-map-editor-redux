@@ -1,0 +1,187 @@
+//////////////////////////////////////////////////////////////////////
+// This file is part of Remere's Map Editor
+//////////////////////////////////////////////////////////////////////
+
+#include "app/main.h"
+#include "ui/tile_properties/item_property_panel.h"
+#include "ui/gui.h"
+#include "game/item.h"
+#include "map/tile.h"
+#include "map/map.h"
+
+ItemPropertyPanel::ItemPropertyPanel(wxWindow* parent) :
+	CustomPropertyPanel(parent), current_item(nullptr), current_tile(nullptr), current_map(nullptr) {
+
+	wxBoxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxBoxSizer* action_id_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	action_id_sizer->Add(newd wxStaticText(this, wxID_ANY, "Action ID:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	action_id_spin = newd wxSpinCtrl(this, wxID_ANY);
+	action_id_spin->SetRange(0, 65535);
+	action_id_sizer->Add(action_id_spin, 1, wxEXPAND);
+	main_sizer->Add(action_id_sizer, 0, wxEXPAND | wxALL, 5);
+
+	wxBoxSizer* unique_id_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	unique_id_sizer->Add(newd wxStaticText(this, wxID_ANY, "Unique ID:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	unique_id_spin = newd wxSpinCtrl(this, wxID_ANY);
+	unique_id_spin->SetRange(0, 65535);
+	unique_id_sizer->Add(unique_id_spin, 1, wxEXPAND);
+	main_sizer->Add(unique_id_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+
+	count_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	count_label = newd wxStaticText(this, wxID_ANY, "Count/Charges:");
+	count_sizer->Add(count_label, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	count_spin = newd wxSpinCtrl(this, wxID_ANY);
+	count_sizer->Add(count_spin, 1, wxEXPAND | wxRIGHT, 5);
+	splash_type_choice = newd wxChoice(this, wxID_ANY);
+	count_sizer->Add(splash_type_choice, 1, wxEXPAND);
+	main_sizer->Add(count_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+
+	text_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	text_label = newd wxStaticText(this, wxID_ANY, "Text Description:");
+	text_sizer->Add(text_label, 0, wxALIGN_TOP | wxRIGHT, 5);
+	text_ctrl = newd wxTextCtrl(this, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(-1, 80)), wxTE_MULTILINE);
+	text_sizer->Add(text_ctrl, 1, wxEXPAND);
+	main_sizer->Add(text_sizer, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+
+	SetSizer(main_sizer);
+
+	action_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnActionIdChange, this);
+	unique_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnUniqueIdChange, this);
+	count_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnCountChange, this);
+	splash_type_choice->Bind(wxEVT_CHOICE, &ItemPropertyPanel::OnSplashTypeChange, this);
+	text_ctrl->Bind(wxEVT_TEXT, &ItemPropertyPanel::OnTextChange, this);
+
+	action_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnActionIdChange, this);
+	unique_id_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnUniqueIdChange, this);
+	count_spin->Bind(wxEVT_SPINCTRL, &ItemPropertyPanel::OnCountChange, this);
+	text_ctrl->Bind(wxEVT_TEXT, &ItemPropertyPanel::OnTextChange, this);
+}
+
+ItemPropertyPanel::~ItemPropertyPanel() { }
+
+void ItemPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
+	current_item = item;
+	current_tile = tile;
+	current_map = map;
+
+	if (item) {
+		action_id_spin->SetValue(item->getActionID());
+		unique_id_spin->SetValue(item->getUniqueID());
+		action_id_spin->Enable(true);
+		unique_id_spin->Enable(true);
+
+		if (item->isStackable() || item->isFluidContainer() || item->isSplash() || item->isCharged()) {
+			GetSizer()->Show(count_sizer, true);
+			count_label->Show(true);
+
+			if (item->isSplash() || item->isFluidContainer()) {
+				count_label->SetLabel("Fluid Type:");
+				count_spin->Show(false);
+				splash_type_choice->Show(true);
+
+				splash_type_choice->Clear();
+				if (item->isFluidContainer()) {
+					splash_type_choice->Append(wxstr(Item::LiquidID2Name(LIQUID_NONE)), (void*)(intptr_t)(LIQUID_NONE));
+				}
+				for (SplashType splashType = LIQUID_FIRST; splashType != LIQUID_LAST; ++splashType) {
+					splash_type_choice->Append(wxstr(Item::LiquidID2Name(splashType)), (void*)(intptr_t)(splashType));
+				}
+
+				if (item->getSubtype()) {
+					const std::string& what = Item::LiquidID2Name(item->getSubtype());
+					splash_type_choice->SetStringSelection(wxstr(what));
+				} else {
+					splash_type_choice->SetSelection(0);
+				}
+			} else {
+				if (item->isCharged()) {
+					count_label->SetLabel("Charges:");
+				} else {
+					count_label->SetLabel("Count:");
+				}
+				count_spin->Show(true);
+				splash_type_choice->Show(false);
+				count_spin->Enable(true);
+				int max_val = item->isStackable() ? 100 : 7;
+				if (item->isCharged()) {
+					max_val = item->isClientCharged() ? 250 : max_val;
+				}
+				if (item->isExtraCharged()) {
+					max_val = 65500;
+				}
+				count_spin->SetRange(0, max_val);
+				count_spin->SetValue(item->getCount());
+			}
+		} else {
+			GetSizer()->Show(count_sizer, false);
+			count_label->Show(false);
+			count_spin->Show(false);
+			splash_type_choice->Show(false);
+		}
+
+		if (item->canHoldText() || item->canHoldDescription()) {
+			GetSizer()->Show(text_sizer, true);
+			text_label->Show(true);
+			text_ctrl->Show(true);
+			text_ctrl->Enable(true);
+			text_ctrl->ChangeValue(wxstr(item->getText()));
+		} else {
+			GetSizer()->Show(text_sizer, false);
+			text_label->Show(false);
+			text_ctrl->Show(false);
+			text_ctrl->Enable(false);
+		}
+	} else {
+		action_id_spin->SetValue(0);
+		unique_id_spin->SetValue(0);
+		action_id_spin->Enable(false);
+		unique_id_spin->Enable(false);
+		GetSizer()->Show(count_sizer, false);
+		count_label->Show(false);
+		count_spin->Show(false);
+		splash_type_choice->Show(false);
+		GetSizer()->Show(text_sizer, false);
+		text_label->Show(false);
+		text_ctrl->Show(false);
+	}
+	Layout();
+	GetParent()->Layout();
+}
+
+void ItemPropertyPanel::OnActionIdChange(wxSpinEvent& event) {
+	if (current_item && current_map) {
+		current_item->setActionID(action_id_spin->GetValue());
+		current_map->doChange();
+	}
+}
+
+void ItemPropertyPanel::OnUniqueIdChange(wxSpinEvent& event) {
+	if (current_item && current_map) {
+		current_item->setUniqueID(unique_id_spin->GetValue());
+		current_map->doChange();
+	}
+}
+
+void ItemPropertyPanel::OnCountChange(wxSpinEvent& event) {
+	if (current_item && current_map) {
+		current_item->setSubtype(count_spin->GetValue());
+		current_map->doChange();
+	}
+}
+
+void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
+	if (current_item && current_map) {
+		int new_type = (int)(intptr_t)splash_type_choice->GetClientData(splash_type_choice->GetSelection());
+		current_item->setSubtype(new_type);
+		current_map->doChange();
+		g_gui.RefreshView();
+	}
+}
+
+void ItemPropertyPanel::OnTextChange(wxCommandEvent& event) {
+	if (current_item && current_map) {
+		current_item->setText(nstr(text_ctrl->GetValue()));
+		current_map->doChange();
+	}
+}

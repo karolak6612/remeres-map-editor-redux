@@ -9,13 +9,15 @@
 #include "io/iomap.h"
 #include "live/live_client.h"
 
+#include "ui/tile_properties/tile_properties_panel.h"
+
 void SetupCallbacks(Editor* editor) {
 	editor->onStateChange = []() {
 		g_gui.UpdateTitle();
 		g_gui.UpdateMenus();
 	};
 
-	editor->selection.onSelectionChange = [](size_t count) {
+	editor->selection.onSelectionChange = [editor](size_t count) {
 		if (count > 0) {
 			wxString ss;
 			if (count == 1) {
@@ -27,6 +29,20 @@ void SetupCallbacks(Editor* editor) {
 		} else {
 			// Optional: Clear status text if nothing selected, or keep previous behavior
 			// Previous behavior didn't clear it explicitly in updateSelectionCount if size <= 0
+		}
+
+		if (g_gui.tile_properties_panel) {
+			if (count == 1) {
+				Tile* tile = editor->selection.getSelectedTile();
+				g_gui.tile_properties_panel->SetTile(tile, &editor->map);
+
+				ItemVector items = tile->getSelectedItems();
+				if (!items.empty()) {
+					g_gui.tile_properties_panel->SelectItem(items.front());
+				}
+			} else {
+				g_gui.tile_properties_panel->SetTile(nullptr, nullptr);
+			}
 		}
 	};
 }

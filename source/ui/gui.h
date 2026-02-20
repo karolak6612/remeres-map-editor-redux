@@ -55,6 +55,7 @@ class LiveSocket;
 
 class SidebarWindow;
 class ToolOptionsWindow;
+class TilePropertiesPanel;
 
 wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 
@@ -342,6 +343,7 @@ public:
 	HousePalette* house_palette;
 
 	ToolOptionsWindow* tool_options;
+	TilePropertiesPanel* tile_properties_panel;
 
 	bool pasting;
 
