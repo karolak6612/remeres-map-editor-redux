@@ -77,6 +77,11 @@ void FileMenuHandler::OnImportMinimap(wxCommandEvent& WXUNUSED(event)) {
 	ASSERT(g_gui.IsEditorOpen());
 }
 
+void FileMenuHandler::OnExportMinimap(wxCommandEvent& WXUNUSED(event)) {
+	// Not implemented yet
+	DialogUtil::PopupDialog("Not Implemented", "This feature is not yet implemented.", wxOK | wxICON_INFORMATION);
+}
+
 void FileMenuHandler::OnExportTilesets(wxCommandEvent& WXUNUSED(event)) {
 	if (g_gui.GetCurrentEditor()) {
 		ExportTilesetsWindow dlg(frame, *g_gui.GetCurrentEditor());

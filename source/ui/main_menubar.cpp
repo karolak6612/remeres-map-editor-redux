@@ -230,6 +230,10 @@ void MainMenuBar::OnImportMinimap(wxCommandEvent& event) {
 	fileMenuHandler->OnImportMinimap(event);
 }
 
+void MainMenuBar::OnExportMinimap(wxCommandEvent& event) {
+	fileMenuHandler->OnExportMinimap(event);
+}
+
 void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
 	fileMenuHandler->OnExportTilesets(event);
 }

@@ -18,21 +18,21 @@ const wxString BrushToolBar::PANE_NAME = "brush_toolbar";
 BrushToolBar::BrushToolBar(wxWindow* parent) {
 	wxSize icon_size = FROM_DIP(parent, wxSize(16, 16));
 
-	wxBitmap border_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_OPTIONAL_BORDER_SMALL, icon_size);
-	wxBitmap eraser_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_ERASER_SMALL, icon_size);
-	wxBitmap pz_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PROTECTION_ZONE_SMALL, icon_size);
-	wxBitmap nopvp_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_NO_PVP_ZONE_SMALL, icon_size);
-	wxBitmap nologout_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_NO_LOGOUT_ZONE_SMALL, icon_size);
-	wxBitmap pvp_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_PVP_ZONE_SMALL, icon_size);
-	wxBitmap normal_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_DOOR_NORMAL_SMALL, icon_size);
-	wxBitmap locked_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_DOOR_LOCKED_SMALL, icon_size);
-	wxBitmap magic_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_DOOR_MAGIC_SMALL, icon_size);
-	wxBitmap quest_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_DOOR_QUEST_SMALL, icon_size);
-	wxBitmap normal_alt_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_DOOR_NORMAL_ALT_SMALL, icon_size);
-	wxBitmap archway_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_DOOR_ARCHWAY_SMALL, icon_size);
+	wxBitmap border_bitmap = IMAGE_MANAGER.GetBitmap(ICON_BORDER_ALL, icon_size);
+	wxBitmap eraser_bitmap = IMAGE_MANAGER.GetBitmap(ICON_ERASER, icon_size);
+	wxBitmap pz_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SHIELD, icon_size);
+	wxBitmap nopvp_bitmap = IMAGE_MANAGER.GetBitmap(ICON_DOVE, icon_size);
+	wxBitmap nologout_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCK, icon_size);
+	wxBitmap pvp_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SKULL, icon_size);
+	wxBitmap normal_bitmap = IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, icon_size);
+	wxBitmap locked_bitmap = IMAGE_MANAGER.GetBitmap(ICON_LOCK, icon_size);
+	wxBitmap magic_bitmap = IMAGE_MANAGER.GetBitmap(ICON_WAND_MAGIC, icon_size);
+	wxBitmap quest_bitmap = IMAGE_MANAGER.GetBitmap(ICON_DOOR_OPEN, icon_size);
+	wxBitmap normal_alt_bitmap = IMAGE_MANAGER.GetBitmap(ICON_DOOR_OPEN, icon_size);
+	wxBitmap archway_bitmap = IMAGE_MANAGER.GetBitmap(ICON_ARCHWAY, icon_size);
 
-	wxBitmap hatch_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_WINDOW_HATCH_SMALL, icon_size);
-	wxBitmap window_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_WINDOW_NORMAL_SMALL, icon_size);
+	wxBitmap hatch_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SQUARE, icon_size);
+	wxBitmap window_bitmap = IMAGE_MANAGER.GetBitmap(ICON_WINDOW_MAXIMIZE, icon_size);
 
 	toolbar = newd wxAuiToolBar(parent, TOOLBAR_BRUSHES, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);

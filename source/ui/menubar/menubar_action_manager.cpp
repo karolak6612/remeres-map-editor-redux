@@ -30,6 +30,7 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(IMPORT_MONSTERS, wxITEM_NORMAL, ICON_DRAGON, OnImportMonsterData);
 	MAKE_ACTION_ICON(IMPORT_MINIMAP, wxITEM_NORMAL, ICON_IMAGE, OnImportMinimap);
 
+	MAKE_ACTION_ICON(EXPORT_MINIMAP, wxITEM_NORMAL, ICON_IMAGE, OnExportMinimap);
 	MAKE_ACTION_ICON(EXPORT_TILESETS, wxITEM_NORMAL, ICON_FILE_EXPORT, OnExportTilesets);
 
 	MAKE_ACTION_ICON(RELOAD_DATA, wxITEM_NORMAL, ICON_SYNC, OnReloadDataFiles);
@@ -212,6 +213,7 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(IMPORT_MONSTERS, is_local);
 	mb->EnableItem(IMPORT_MINIMAP, false);
 
+	mb->EnableItem(EXPORT_MINIMAP, is_local);
 	mb->EnableItem(EXPORT_TILESETS, loaded);
 
 	mb->EnableItem(FIND_ITEM, is_host);
