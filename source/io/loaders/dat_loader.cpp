@@ -6,6 +6,7 @@
 #include <memory>
 #include <cstdint>
 #include <climits>
+#include <ranges>
 #if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 	#include <format>
 #endif
@@ -212,7 +213,7 @@ namespace {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
 
-		for (int i = 0; i < DatFlagLast; ++i) {
+		for (int i : std::views::iota(0, static_cast<int>(DatFlagLast))) {
 			previous_flag = flag;
 			if (!file.getU8(flag)) {
 #if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
@@ -447,7 +448,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		}
 
 		if (manager->has_frame_durations) {
-			for (int i = 0; i < frames; i++) {
+			for (int i : std::views::iota(0, static_cast<int>(frames))) {
 				uint32_t min;
 				uint32_t max;
 				if (!file.getU32(min)) {
@@ -474,7 +475,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 	}
 
 	// Read the sprite ids
-	for (uint32_t i = 0; i < numsprites; ++i) {
+	for (uint32_t i : std::views::iota(0u, numsprites)) {
 		uint32_t sprite_id;
 		if (manager->is_extended) {
 			if (!file.getU32(sprite_id)) {

@@ -26,6 +26,8 @@
 #include "game/items.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include <span>
+#include <ranges>
 
 TooltipDrawer::TooltipDrawer() {
 }
@@ -279,8 +281,8 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 
 	// Measure label widths
 	float maxLabelWidth = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	std::span<FieldLine> active_fields(scratch_fields.data(), scratch_fields_count);
+	for (const auto& field : active_fields) {
 		float labelBounds[4];
 		nvgTextBounds(vg, 0, 0, field.label.data(), field.label.data() + field.label.size(), labelBounds);
 		float lw = labelBounds[2] - labelBounds[0];
@@ -296,8 +298,7 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 	int totalLines = 0;
 	float actualMaxWidth = minWidth;
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		auto& field = scratch_fields[i];
+	for (auto& field : active_fields) {
 		const char* start = field.value.data();
 		const char* end = start + field.value.length();
 
@@ -440,8 +441,8 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
 	nvgFontFace(vg, "sans");
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	std::span<FieldLine> active_fields(scratch_fields.data(), scratch_fields_count);
+	for (const auto& field : active_fields) {
 		bool firstLine = true;
 		for (const auto& line : field.wrappedLines) {
 			if (firstLine) {
@@ -474,8 +475,8 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 	float fontSize = 11.0f;
 	float lineHeight = fontSize * 1.4f;
 	float textBlockHeight = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
+	std::span<FieldLine> active_fields(scratch_fields.data(), scratch_fields_count);
+	for (const auto& field : active_fields) {
 		textBlockHeight += field.wrappedLines.size() * lineHeight;
 	}
 

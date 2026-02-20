@@ -3,6 +3,7 @@
 #include "ui/gui.h"
 #include "rendering/core/graphics.h"
 
+#include <algorithm>
 #include <glad/glad.h>
 
 #include <nanovg.h>
@@ -309,24 +310,23 @@ Brush* VirtualBrushGrid::GetSelectedBrush() const {
 }
 
 bool VirtualBrushGrid::SelectBrush(const Brush* brush) {
-	for (size_t i = 0; i < tileset->size(); ++i) {
-		if (tileset->brushlist[i] == brush) {
-			selected_index = static_cast<int>(i);
+	auto it = std::ranges::find(tileset->brushlist, brush);
+	if (it != tileset->brushlist.end()) {
+		selected_index = static_cast<int>(std::distance(tileset->brushlist.begin(), it));
 
-			// Ensure visible
-			wxRect rect = GetItemRect(selected_index);
-			int scrollPos = GetScrollPosition();
-			int clientHeight = GetClientSize().y;
+		// Ensure visible
+		wxRect rect = GetItemRect(selected_index);
+		int scrollPos = GetScrollPosition();
+		int clientHeight = GetClientSize().y;
 
-			if (rect.y < scrollPos) {
-				SetScrollPosition(rect.y - padding);
-			} else if (rect.y + rect.height > scrollPos + clientHeight) {
-				SetScrollPosition(rect.y + rect.height - clientHeight + padding);
-			}
-
-			Refresh();
-			return true;
+		if (rect.y < scrollPos) {
+			SetScrollPosition(rect.y - padding);
+		} else if (rect.y + rect.height > scrollPos + clientHeight) {
+			SetScrollPosition(rect.y + rect.height - clientHeight + padding);
 		}
+
+		Refresh();
+		return true;
 	}
 	selected_index = -1;
 	Refresh();
