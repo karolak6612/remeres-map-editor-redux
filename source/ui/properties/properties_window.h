@@ -44,6 +44,12 @@ public:
 	void OnNotebookPageChanged(wxNotebookEvent&);
 	void OnGridValueChanged(wxGridEvent&);
 
+	void OnContainerItemClick(wxCommandEvent& event);
+	void OnContainerItemRightClick(wxMouseEvent& event);
+	void OnAddItem(wxCommandEvent& event);
+	void OnEditItem(wxCommandEvent& event);
+	void OnRemoveItem(wxCommandEvent& event);
+
 	void Update();
 
 protected:
@@ -53,6 +59,7 @@ protected:
 
 	// Container pane
 	std::vector<ContainerItemButton*> container_items;
+	ContainerItemButton* last_clicked_button;
 	wxWindow* createContainerPanel(wxWindow* parent);
 	void saveContainerPanel();
 
