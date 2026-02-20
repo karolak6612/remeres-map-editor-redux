@@ -18,6 +18,7 @@
 #include "app/main.h"
 
 #include "ui/properties/properties_window.h"
+#include "map/map.h"
 
 #include "util/image_manager.h"
 #include "ui/gui_ids.h"
@@ -27,6 +28,9 @@
 #include "ui/properties/property_validator.h"
 #include "ui/properties/property_applier.h"
 #include "ui/properties/teleport_service.h"
+#include "ui/find_item_window.h"
+#include "ui/dialog_util.h"
+#include "ui/properties/old_properties_window.h"
 
 #include <wx/grid.h>
 #include <wx/wrapsizer.h>
@@ -49,6 +53,11 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
 
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
+	Bind(wxEVT_SIZE, &PropertiesWindow::OnResize, this);
+
+	Bind(wxEVT_MENU, &PropertiesWindow::OnAddItem, this, CONTAINER_POPUP_MENU_ADD);
+	Bind(wxEVT_MENU, &PropertiesWindow::OnEditItem, this, CONTAINER_POPUP_MENU_EDIT);
+	Bind(wxEVT_MENU, &PropertiesWindow::OnRemoveItem, this, CONTAINER_POPUP_MENU_REMOVE);
 
 	createUI();
 }
@@ -170,6 +179,8 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 	for (uint32_t i = 0; i < container->getVolume(); ++i) {
 		Item* item = container->getItem(i);
 		ContainerItemButton* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
+		containerItemButton->Bind(wxEVT_BUTTON, &PropertiesWindow::OnContainerItemClick, this);
+		containerItemButton->Bind(wxEVT_RIGHT_UP, &PropertiesWindow::OnContainerItemRightClick, this);
 
 		container_items.push_back(containerItemButton);
 		gridSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));
@@ -244,17 +255,18 @@ void PropertiesWindow::SetGridValue(wxGrid* grid, int rowIndex, std::string labe
 }
 
 void PropertiesWindow::OnResize(wxSizeEvent& evt) {
-	/*
-	if(wxGrid* grid = (wxGrid*)currentPanel->FindWindowByName("AdvancedGrid")) {
+	if (attributesGrid) {
 		int tWidth = 0;
-		for(int i = 0; i < 3; ++i)
-			tWidth += grid->GetColumnWidth(i);
+		for (int i = 0; i < 2; ++i) {
+			tWidth += attributesGrid->GetColSize(i);
+		}
 
-		int wWidth = grid->GetParent()->GetSize().GetWidth();
-
-		grid->SetColumnWidth(2, wWidth - 100 - 80);
+		int wWidth = attributesGrid->GetClientSize().GetWidth();
+		if (wWidth > tWidth) {
+			attributesGrid->SetColSize(2, wWidth - tWidth);
+		}
 	}
-	*/
+	evt.Skip();
 }
 
 void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
@@ -339,4 +351,125 @@ void PropertiesWindow::OnClickRemoveAttribute(wxCommandEvent&) {
 
 void PropertiesWindow::OnClickCancel(wxCommandEvent&) {
 	EndModal(0);
+}
+
+void PropertiesWindow::OnContainerItemClick(wxCommandEvent& event) {
+	ContainerItemButton* button = dynamic_cast<ContainerItemButton*>(event.GetEventObject());
+	if (!button) {
+		return;
+	}
+
+	last_clicked_button = button;
+
+	if (button->getItem()) {
+		OnEditItem(event);
+	} else {
+		OnAddItem(event);
+	}
+}
+
+void PropertiesWindow::OnContainerItemRightClick(wxMouseEvent& event) {
+	ContainerItemButton* button = dynamic_cast<ContainerItemButton*>(event.GetEventObject());
+	if (!button) {
+		return;
+	}
+
+	last_clicked_button = button;
+
+	wxMenu menu;
+	if (button->getItem()) {
+		menu.Append(CONTAINER_POPUP_MENU_EDIT, "&Edit Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
+		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+		menu.Append(CONTAINER_POPUP_MENU_REMOVE, "&Remove Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	} else {
+		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	}
+
+	Container* container = dynamic_cast<Container*>(edit_item);
+	if (container && container->getVolume() <= (int)container->getVector().size()) {
+		if (wxMenuItem* addItem = menu.FindItem(CONTAINER_POPUP_MENU_ADD)) {
+			addItem->Enable(false);
+		}
+	}
+
+	PopupMenu(&menu);
+}
+
+void PropertiesWindow::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
+	if (!last_clicked_button) {
+		return;
+	}
+
+	Container* container = dynamic_cast<Container*>(edit_item);
+	if (!container) {
+		return;
+	}
+
+	FindItemDialog dialog(this, "Select Item");
+	if (dialog.ShowModal() == wxID_OK) {
+		uint16_t item_id = dialog.getResultID();
+		if (item_id != 0) {
+			auto& contents = container->getVector();
+			uint32_t index = last_clicked_button->getIndex();
+
+			std::unique_ptr<Item> new_item(Item::Create(item_id));
+			if (new_item) {
+				if (index < contents.size()) {
+					contents.insert(contents.begin() + index, std::move(new_item));
+				} else {
+					contents.push_back(std::move(new_item));
+				}
+			}
+			Update();
+		}
+	}
+}
+
+void PropertiesWindow::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
+	if (!last_clicked_button || !last_clicked_button->getItem()) {
+		return;
+	}
+
+	Item* sub_item = last_clicked_button->getItem();
+	wxPoint newDialogAt = GetPosition() + FROM_DIP(this, wxPoint(20, 20));
+
+	wxDialog* d;
+	if (edit_map->getVersion().otbm >= MAP_OTBM_4) {
+		d = newd PropertiesWindow(this, edit_map, nullptr, sub_item, newDialogAt);
+	} else {
+		d = newd OldPropertiesWindow(this, edit_map, nullptr, sub_item, newDialogAt);
+	}
+
+	d->ShowModal();
+	d->Destroy();
+	Update();
+}
+
+void PropertiesWindow::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
+	if (!last_clicked_button || !last_clicked_button->getItem()) {
+		return;
+	}
+
+	int32_t ret = DialogUtil::PopupDialog(this, "Remove Item", "Are you sure you want to remove this item from the container?", wxYES | wxNO);
+
+	if (ret != wxID_YES) {
+		return;
+	}
+
+	Container* container = dynamic_cast<Container*>(edit_item);
+	if (!container) {
+		return;
+	}
+
+	auto& contents = container->getVector();
+	Item* to_remove = last_clicked_button->getItem();
+
+	auto it = std::find_if(contents.begin(), contents.end(), [to_remove](const std::unique_ptr<Item>& item) {
+		return item.get() == to_remove;
+	});
+	if (it != contents.end()) {
+		contents.erase(it);
+	}
+
+	Update();
 }
