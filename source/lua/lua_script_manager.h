@@ -215,6 +215,6 @@ private:
 };
 
 // Global accessor macro
-#define g_luaScripts LuaScriptManager::getInstance()
+extern LuaScriptManager& g_luaScripts;
 
 #endif // RME_LUA_SCRIPT_MANAGER_H

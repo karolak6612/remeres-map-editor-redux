@@ -204,7 +204,7 @@ function DialogClass:label(options) return {} --[[@as Dialog]] end
 
 ---@param options {id: string, label?: string, text?: string, onchange?: fun(val: string)}
 ---@return Dialog
-function DialogClass:entry(options) return {} --[[@as Dialog]] end
+function DialogClass:input(options) return {} --[[@as Dialog]] end
 
 ---@param options {id: string, label?: string, value?: number, min?: number, max?: number, decimals?: number}
 ---@return Dialog

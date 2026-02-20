@@ -18,6 +18,7 @@
 #include "app/main.h"
 #include "lua_script_manager.h"
 #include "lua_api.h"
+#include "lua_api_http.h"
 #include "lua_api_image.h"
 #include "ui/gui.h"
 #include "map/tile.h"
@@ -32,6 +33,8 @@
 	#include <windows.h>
 	#include <shellapi.h>
 #endif
+
+LuaScriptManager& g_luaScripts = LuaScriptManager::getInstance();
 
 LuaScriptManager& LuaScriptManager::getInstance() {
 	static LuaScriptManager instance;
@@ -74,6 +77,7 @@ void LuaScriptManager::shutdown() {
 
 	scripts.clear();
 	clearAllCallbacks();
+	LuaAPI::cleanupHttp();
 	engine.shutdown();
 	initialized = false;
 }
@@ -111,6 +115,7 @@ void LuaScriptManager::clearAllCallbacks() {
 	mapOverlays.clear();
 	mapOverlayShows.clear();
 	mapOverlayHover = MapOverlayHoverState {};
+	LuaAPI::cleanupHttp();
 }
 
 void LuaScriptManager::registerAPIs() {
@@ -541,11 +546,7 @@ void LuaScriptManager::scanDirectory(const std::string& directory) {
 		return;
 	}
 
-#ifdef _WIN32
-	const std::string sep = "\\";
-#else
-	const std::string sep = "/";
-#endif
+	const char sep = static_cast<char>(wxFileName::GetPathSeparator());
 
 	wxString name;
 
@@ -602,11 +603,13 @@ bool LuaScriptManager::executeScript(const std::string& filepath) {
 		return false;
 	}
 
-	bool result = engine.executeFile(filepath);
-	if (!result) {
-		lastError = engine.getLastError();
+	auto result = engine.executeFile(filepath);
+	if (result && result->valid()) {
+		return true;
 	}
-	return result;
+
+	lastError = engine.getLastError();
+	return false;
 }
 
 bool LuaScriptManager::executeScript(LuaScript* script) {

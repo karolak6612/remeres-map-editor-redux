@@ -32,7 +32,7 @@ namespace LuaAPI {
 		LuaImage();
 
 		// Constructor from file path
-		explicit LuaImage(const std::string& path);
+		explicit LuaImage(const std::string& path, const std::string& scriptDir = "");
 
 		// Constructor from item sprite ID
 		LuaImage(int spriteId, bool isItemSprite);

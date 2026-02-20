@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 #include "lua_api_color.h"
+#include <algorithm>
 
 namespace LuaAPI {
 
@@ -26,9 +27,9 @@ namespace LuaAPI {
 		// Constructor rgb
 		Color["rgb"] = [&lua](int r, int g, int b) {
 			sol::table c = lua.create_table();
-			c["r"] = r;
-			c["g"] = g;
-			c["b"] = b;
+			c["r"] = std::clamp(r, 0, 255);
+			c["g"] = std::clamp(g, 0, 255);
+			c["b"] = std::clamp(b, 0, 255);
 			return c;
 		};
 

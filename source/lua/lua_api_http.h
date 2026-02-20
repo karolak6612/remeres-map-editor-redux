@@ -23,6 +23,7 @@
 namespace LuaAPI {
 
 	void registerHttp(sol::state& lua);
+	void cleanupHttp();
 
 } // namespace LuaAPI
 

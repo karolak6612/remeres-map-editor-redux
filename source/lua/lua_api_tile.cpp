@@ -400,23 +400,21 @@ namespace LuaAPI {
 			"removeItem", removeItemFromTile,
 			"applyBrush", applyBrushToTile,
 			"borderize", [](Tile* tile) {
-				if (!tile){ return;
-}
+				if (!tile) return;
 				Editor* editor = g_gui.GetCurrentEditor();
-				if (!editor){ return;
-}
+				if (!editor) return;
 				markTileForUndo(tile);
 				GroundBorderCalculator::calculate(&editor->map, tile);
-				tile->modify(); },
+				tile->modify();
+			},
 			"wallize", [](Tile* tile) {
-				if (!tile){ return;
-}
+				if (!tile) return;
 				Editor* editor = g_gui.GetCurrentEditor();
-				if (!editor){ return;
-}
+				if (!editor) return;
 				markTileForUndo(tile);
 				WallBorderCalculator::doWalls(&editor->map, tile);
-				tile->modify(); },
+				tile->modify();
+			},
 			"moveItem", sol::overload(
 							// Index-based move within same tile
 							// Semantics: Move item at fromIdx so it ends up at toIdx position

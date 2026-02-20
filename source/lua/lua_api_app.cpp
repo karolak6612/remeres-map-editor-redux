@@ -22,6 +22,8 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "brushes/brush.h"
+#include "brushes/ground/ground_brush.h"
+#include "brushes/ground/auto_border.h"
 #include "editor/action.h"
 #include "editor/action_queue.h"
 #include "map/tile.h"
@@ -56,9 +58,6 @@ namespace LuaAPI {
 			return;
 		}
 		Map* map = &editor->map;
-		if (!map) {
-			return;
-		}
 
 		if (adding) {
 			if (tile->spawn) {
@@ -404,11 +403,33 @@ namespace LuaAPI {
 		sol::table bordersTable = lua.create_table();
 
 		for (auto& pair : g_brushes.getMap()) {
-            // Need to check if it's an auto border somehow, but Brushes::borders is protected
-            // Assuming we only expose Brushes::borders directly if possible or iterate
-            // The original code used g_brushes.getBorders() which implies public access
-            // But Brushes::borders is protected in source/brushes/brush.h
-            // We might have to skip this for now or find another way
+			Brush* brush = pair.second.get();
+			if (!brush || !brush->visibleInPalette()) continue;
+
+			if (brush->is<GroundBrush>()) {
+				GroundBrush* gb = brush->as<GroundBrush>();
+				const auto& blocks = gb->getBorderBlocks();
+
+				sol::table brushBorders = lua.create_table();
+				int idx = 1;
+				for (const auto& block : blocks) {
+					sol::table borderInfo = lua.create_table();
+					borderInfo["outer"] = block->outer;
+					borderInfo["super"] = block->super;
+					borderInfo["to"] = block->to;
+
+					if (block->autoborder) {
+						sol::table ab = lua.create_table();
+						ab["id"] = block->autoborder->id;
+						ab["group"] = block->autoborder->group;
+						borderInfo["autoborder"] = ab;
+					}
+					brushBorders[idx++] = borderInfo;
+				}
+				if (idx > 1) {
+					bordersTable[brush->getName()] = brushBorders;
+				}
+			}
 		}
 
 		return bordersTable;
@@ -557,25 +578,35 @@ namespace LuaAPI {
 
 		// Yield to process pending UI events (prevents UI freeze during long operations)
 		app["yield"] = []() {
+			static bool inYield = false;
+			if (inYield) return;
+
 			if (wxTheApp) {
+				inYield = true;
 				wxTheApp->Yield(true);
+				inYield = false;
 			}
 		};
 
 		// Sleep for a given number of milliseconds (use sparingly, blocks the UI)
 		app["sleep"] = [](int milliseconds) {
+			static bool inYield = false;
+			if (inYield) return;
+
 			if (milliseconds <= 0) return;
 			if (milliseconds > 10000) milliseconds = 10000;
 
 			auto start = std::chrono::steady_clock::now();
 			auto end = start + std::chrono::milliseconds(milliseconds);
 
+			inYield = true;
 			while (std::chrono::steady_clock::now() < end) {
 				if (wxTheApp) {
 					wxTheApp->Yield(true);
 				}
 				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
+			inYield = false;
 		};
 
 		// Get elapsed time in milliseconds since application start (high precision timer)

@@ -221,8 +221,9 @@ These variables are automatically set by the engine before your script runs.
 -- Load an image from the script's directory
 local myImage = Image.fromFile(SCRIPT_DIR .. "/my_image.png")
 
--- Load a data file
-local file = io.open(SCRIPT_DIR .. "/config.txt", "r")
+-- Load a data file (use app.storage instead of io.open which is disabled)
+local store = app.storage("config")
+local config = store:load()
 ```
 
 ---

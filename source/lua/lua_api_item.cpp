@@ -56,19 +56,42 @@ namespace LuaAPI {
 			"count", sol::property(&Item::getCount, [](Item& item, int count) {
 				item.setSubtype(static_cast<uint16_t>(count));
 			}),
-			"subtype", sol::property([](const Item& item) -> int { return item.getSubtype(); }, [](Item& item, int subtype) { item.setSubtype(static_cast<uint16_t>(subtype)); }), "actionId", sol::property([](const Item& item) -> int { return item.getActionID(); }, [](Item& item, int aid) { item.setActionID(static_cast<uint16_t>(aid)); }), "uniqueId", sol::property([](const Item& item) -> int { return item.getUniqueID(); }, [](Item& item, int uid) { item.setUniqueID(static_cast<uint16_t>(uid)); }), "tier", sol::property([](const Item& item) -> int { return item.getTier(); }, [](Item& item, int tier) { item.setTier(static_cast<uint16_t>(tier)); }), "text", sol::property(&Item::getText, &Item::setText), "description", sol::property(&Item::getDescription, &Item::setDescription),
+			"subtype", sol::property([](const Item& item) -> int { return item.getSubtype(); }, [](Item& item, int subtype) { item.setSubtype(static_cast<uint16_t>(subtype)); }),
+			"actionId", sol::property([](const Item& item) -> int { return item.getActionID(); }, [](Item& item, int aid) { item.setActionID(static_cast<uint16_t>(aid)); }),
+			"uniqueId", sol::property([](const Item& item) -> int { return item.getUniqueID(); }, [](Item& item, int uid) { item.setUniqueID(static_cast<uint16_t>(uid)); }),
+			"tier", sol::property([](const Item& item) -> int { return item.getTier(); }, [](Item& item, int tier) { item.setTier(static_cast<uint16_t>(tier)); }),
+			"text", sol::property(&Item::getText, &Item::setText),
+			"description", sol::property(&Item::getDescription, &Item::setDescription),
 
 			// Selection
-			"isSelected", sol::property(&Item::isSelected), "select", &Item::select, "deselect", &Item::deselect,
+			"isSelected", sol::property(&Item::isSelected),
+			"select", &Item::select,
+			"deselect", &Item::deselect,
 
 			// Type checks (read-only)
-			"isStackable", sol::property(&Item::isStackable), "isMoveable", sol::property(&Item::isMoveable), "isPickupable", sol::property(&Item::isPickupable), "isBlocking", sol::property(&Item::isBlocking), "isGroundTile", sol::property(&Item::isGroundTile), "isBorder", sol::property(&Item::isBorder), "isWall", sol::property(&Item::isWall), "isDoor", sol::property(&Item::isDoor), "isTable", sol::property(&Item::isTable), "isCarpet", sol::property(&Item::isCarpet), "isHangable", sol::property(&Item::isHangable), "isRoteable", sol::property(&Item::isRoteable), "isFluidContainer", sol::property(&Item::isFluidContainer), "isSplash", sol::property(&Item::isSplash), "hasCharges", sol::property(&Item::hasCharges), "hasElevation", sol::property([](const Item& item) {
+			"isStackable", sol::property(&Item::isStackable),
+			"isMoveable", sol::property(&Item::isMoveable),
+			"isPickupable", sol::property(&Item::isPickupable),
+			"isBlocking", sol::property(&Item::isBlocking),
+			"isGroundTile", sol::property(&Item::isGroundTile),
+			"isBorder", sol::property(&Item::isBorder),
+			"isWall", sol::property(&Item::isWall),
+			"isDoor", sol::property(&Item::isDoor),
+			"isTable", sol::property(&Item::isTable),
+			"isCarpet", sol::property(&Item::isCarpet),
+			"isHangable", sol::property(&Item::isHangable),
+			"isRoteable", sol::property(&Item::isRoteable),
+			"isFluidContainer", sol::property(&Item::isFluidContainer),
+			"isSplash", sol::property(&Item::isSplash),
+			"hasCharges", sol::property(&Item::hasCharges),
+			"hasElevation", sol::property([](const Item& item) {
 				return g_items[item.getID()].hasElevation;
 			}),
 			"zOrder", sol::property(&Item::getTopOrder),
 
 			// Methods
-			"clone", [](const Item& item) -> std::unique_ptr<Item> { return item.deepCopy(); }, "rotate", &Item::doRotate,
+			"clone", [](const Item& item) -> std::unique_ptr<Item> { return item.deepCopy(); },
+			"rotate", &Item::doRotate,
 
 			// String representation
 			sol::meta_function::to_string, [](const Item& item) { return "Item(id=" + std::to_string(item.getID()) + ", name=\"" + std::string(item.getName()) + "\")"; }
@@ -121,8 +144,6 @@ namespace LuaAPI {
 			int limit = maxResults.value_or(50); // Default max 50 results
 			int count = 0;
 			int maxId = g_items.getMaxID();
-
-			std::string searchLower = toLower(searchName);
 
 			for (int id = 1; id <= maxId && count < limit; ++id) {
 				if (!g_items.typeExists(id)) {
