@@ -43,17 +43,16 @@ wxConnectionBase* RMEProcessServer::OnAcceptConnection(const wxString& topic) {
 
 // Client
 
-RMEProcessClient::RMEProcessClient() :
-	proc(nullptr) {
+RMEProcessClient::RMEProcessClient() {
 	////
 }
 
 RMEProcessClient::~RMEProcessClient() {
-	delete proc;
+	////
 }
 
 wxConnectionBase* RMEProcessClient::OnMakeConnection() {
-	return proc = newd RMEProcessConnection();
+	return newd RMEProcessConnection();
 }
 
 // Connection

@@ -27,6 +27,7 @@
 	#include "app/updater.h"
 	#include "app/application.h"
 	#include <thread>
+	#include <memory>
 
 wxDEFINE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);
 
@@ -53,13 +54,15 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 	#ifdef __EXPERIMENTAL__
 	address << "&beta";
 	#endif
-	wxURL* url = newd wxURL(address);
 
-	std::thread([receiver, url]() {
-		wxInputStream* input = url->GetInputStream();
+	// Use unique_ptr for automatic cleanup of wxURL
+	auto url = std::unique_ptr<wxURL>(newd wxURL(address));
+
+	// Move url into the thread lambda
+	std::thread([receiver, url = std::move(url)]() {
+		// Use unique_ptr for wxInputStream. wxURL::GetInputStream returns a new stream that we must delete.
+		std::unique_ptr<wxInputStream> input(url->GetInputStream());
 		if (!input) {
-			delete input;
-			delete url;
 			return;
 		}
 
@@ -67,17 +70,14 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 		while (!input->Eof()) {
 			data += input->GetC();
 		}
+		// input and url are automatically deleted here
 
-		delete input;
-		delete url;
-
-		// We need to be careful with event posting from a detached thread if the receiver might be destroyed.
-		// However, we are replicating existing logic here where UpdateConnectionThread was also detached.
-		// In a real robust app, we'd need weak pointers or valid lifetime guarantees.
+		// Post event to main thread
 		wxGetApp().CallAfter([receiver, data]() {
 			if (receiver) {
 				wxCommandEvent event(EVT_UPDATE_CHECK_FINISHED);
-				event.SetClientData(newd std::string(data));
+				// Use SetString to pass data safely without manual memory management
+				event.SetString(data);
 				receiver->AddPendingEvent(event);
 			}
 		});
