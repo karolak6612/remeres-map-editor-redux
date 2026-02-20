@@ -24,21 +24,22 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "House Properties");
-	wxFlexGridSizer* housePropContainer = newd wxFlexGridSizer(2, 10, 10);
-	housePropContainer->AddGrowableCol(1);
-
-	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
-	subsizer->AddGrowableCol(1);
 
 	house_name = wxstr(house->name);
 	house_id = i2ws(house->getID());
 	house_rent = i2ws(house->rent);
 
-	subsizer->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Name:"), wxSizerFlags(0).Border(wxLEFT, 5));
-	name_field = newd wxTextCtrl(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxSize(160, 20), 0, wxTextValidator(wxFILTER_ASCII, &house_name));
-	subsizer->Add(name_field, wxSizerFlags(1).Expand());
+	wxBoxSizer* housePropContainer = newd wxBoxSizer(wxHORIZONTAL);
 
-	subsizer->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Town:"), wxSizerFlags(0).Border(wxLEFT, 5));
+	// Left Column: Name, Town, Rent
+	wxFlexGridSizer* leftCol = newd wxFlexGridSizer(2, 10, 10);
+	leftCol->AddGrowableCol(1);
+
+	leftCol->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Name:"), wxSizerFlags(0).Border(wxLEFT, 5));
+	name_field = newd wxTextCtrl(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxSize(160, 20), 0, wxTextValidator(wxFILTER_ASCII, &house_name));
+	leftCol->Add(name_field, wxSizerFlags(1).Expand());
+
+	leftCol->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Town:"), wxSizerFlags(0).Border(wxLEFT, 5));
 
 	const Towns& towns = map->towns;
 	town_id_field = newd wxChoice(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY);
@@ -67,29 +68,29 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 		}
 	}
 	town_id_field->SetSelection(to_select_index);
-	subsizer->Add(town_id_field, wxSizerFlags(1).Expand());
+	leftCol->Add(town_id_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Rent:"), wxSizerFlags(0).Border(wxLEFT, 5));
+	leftCol->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Rent:"), wxSizerFlags(0).Border(wxLEFT, 5));
 	rent_field = newd wxTextCtrl(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxSize(160, 20), 0, wxTextValidator(wxFILTER_NUMERIC, &house_rent));
-	subsizer->Add(rent_field, wxSizerFlags(1).Expand());
+	leftCol->Add(rent_field, wxSizerFlags(1).Expand());
 
-	wxFlexGridSizer* subsizerRight = newd wxFlexGridSizer(1, 10, 10);
-	wxFlexGridSizer* houseSizer = newd wxFlexGridSizer(2, 10, 10);
+	// Right Column: ID, Guildhall
+	wxBoxSizer* rightCol = newd wxBoxSizer(wxVERTICAL);
 
-	houseSizer->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "ID:"), wxSizerFlags(0).Center());
+	wxBoxSizer* idSizer = newd wxBoxSizer(wxHORIZONTAL);
+	idSizer->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "ID:"), wxSizerFlags(0).Center().Border(wxRIGHT, 10));
 	id_field = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "", wxDefaultPosition, wxSize(40, 20), wxSP_ARROW_KEYS, 1, 0xFFFF, house->getID());
-	houseSizer->Add(id_field, wxSizerFlags(1).Expand());
-	subsizerRight->Add(houseSizer, wxSizerFlags(1).Expand());
+	idSizer->Add(id_field, wxSizerFlags(1).Expand());
+	rightCol->Add(idSizer, wxSizerFlags(0).Expand());
 
-	wxSizer* checkbox_sub_sizer = newd wxBoxSizer(wxVERTICAL);
-	checkbox_sub_sizer->AddSpacer(4);
+	rightCol->AddSpacer(10);
+
 	guildhall_field = newd wxCheckBox(static_cast<wxStaticBoxSizer*>(boxsizer)->GetStaticBox(), wxID_ANY, "Guildhall");
-	checkbox_sub_sizer->Add(guildhall_field);
-	subsizerRight->Add(checkbox_sub_sizer);
+	rightCol->Add(guildhall_field);
 	guildhall_field->SetValue(house->guildhall);
 
-	housePropContainer->Add(subsizer, wxSizerFlags(5).Expand());
-	housePropContainer->Add(subsizerRight, wxSizerFlags(5).Expand());
+	housePropContainer->Add(leftCol, wxSizerFlags(5).Expand());
+	housePropContainer->Add(rightCol, wxSizerFlags(5).Expand().Border(wxLEFT, 20));
 	boxsizer->Add(housePropContainer, wxSizerFlags(5).Expand().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxRIGHT | wxLEFT, 20));
 

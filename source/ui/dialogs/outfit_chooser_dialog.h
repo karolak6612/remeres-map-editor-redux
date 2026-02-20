@@ -10,6 +10,7 @@
 
 #include "ui/dialogs/outfit_preview_panel.h"
 #include "ui/dialogs/outfit_selection_grid.h"
+#include "ui/dialogs/outfit_color_palette.h"
 
 class OutfitChooserDialog : public wxDialog {
 public:
@@ -54,6 +55,9 @@ public:
 	void OnFavoriteEdit(wxCommandEvent& event);
 	void OnFavoriteDelete(wxCommandEvent& event);
 
+	// Made public for OutfitColorPalette
+	void SelectColor(int color_id);
+
 	Outfit current_outfit; // Made public or keep friend? Friend is messy with circular includes. Let's make it public for now or add getter/setter.
 	// Actually, OutfitSelectionGrid accesses current_outfit. Let's use getter/setter in the grid.
 	// But current_outfit is used extensively. Let's keep it private and add friends or accessors.
@@ -69,7 +73,6 @@ private:
 	void OnOK(wxCommandEvent& event);
 
 	void UpdateColorSelection();
-	void SelectColor(int color_id);
 
 	int current_speed;
 	wxString current_name;
@@ -93,7 +96,7 @@ private:
 	wxButton* legs_btn;
 	wxButton* feet_btn;
 
-	std::vector<wxWindow*> color_buttons;
+	OutfitColorPalette* palette_canvas;
 };
 
 #endif
