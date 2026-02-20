@@ -280,12 +280,15 @@ struct writeableBlock3 {
 #pragma pack()
 
 class ItemType {
-private:
-	ItemType(const ItemType&) { }
-
 public:
 	ItemType();
 	~ItemType();
+
+	ItemType(const ItemType&) = delete;
+	ItemType& operator=(const ItemType&) = delete;
+
+	ItemType(ItemType&&) = default;
+	ItemType& operator=(ItemType&&) = default;
 
 	bool isGroundTile() const {
 		return (group == ITEM_GROUP_GROUND);

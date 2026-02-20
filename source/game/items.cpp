@@ -308,7 +308,8 @@ ItemType& ItemDatabase::getItemType(int id) {
 			return *it;
 		}
 	}
-	static ItemType dummyItemType; // use this for invalid ids
+	static thread_local ItemType dummyItemType; // use this for invalid ids
+	dummyItemType = ItemType(); // Reset to clean state
 	return dummyItemType;
 }
 

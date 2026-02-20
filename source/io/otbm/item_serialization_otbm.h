@@ -27,7 +27,7 @@ public:
 	static bool readAttribute(const IOMap& maphandle, OTBM_ItemAttribute attr, BinaryNode* stream, Item& item);
 
 	// Writing
-	static bool serializeItemNode(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
+	static bool serializeItemNode(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item, int depth = 0);
 	static void serializeItemCompact(const IOMap& /*maphandle*/, NodeFileWriteHandle& f, const Item& item);
 	static void serializeItemAttributes(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item);
 };
