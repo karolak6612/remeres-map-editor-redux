@@ -27,9 +27,9 @@ OutfitSelectionGrid::OutfitSelectionGrid(wxWindow* parent, OutfitChooserDialog* 
 	selected_index(-1),
 	owner(owner),
 	columns(1),
-	item_width(OUTFIT_TILE_WIDTH),
-	item_height(OUTFIT_TILE_HEIGHT),
-	padding(4),
+	item_width(FromDIP(OUTFIT_TILE_WIDTH)),
+	item_height(FromDIP(OUTFIT_TILE_HEIGHT)),
+	padding(FromDIP(4)),
 	hover_index(-1) {
 
 	Bind(wxEVT_SIZE, &OutfitSelectionGrid::OnSize, this);
@@ -95,7 +95,7 @@ void OutfitSelectionGrid::OnSize(wxSizeEvent& event) {
 }
 
 wxSize OutfitSelectionGrid::DoGetBestClientSize() const {
-	return wxSize(430, 300); // Reasonable default
+	return FromDIP(wxSize(430, 300)); // Reasonable default
 }
 
 int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, const Outfit& outfit) {
@@ -169,6 +169,8 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	int start_idx = start_row * columns;
 	int end_idx = std::min(count, (end_row + 1) * columns);
 
+	int icon_size = FromDIP(64);
+
 	for (int i = start_idx; i < end_idx; ++i) {
 		wxRect rect = GetItemRect(i);
 
@@ -210,18 +212,18 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 		int imgId = GetOrCreateOutfitImage(vg, lookType, outfit);
 		if (imgId > 0) {
-			int ix = rect.x + (rect.width - 64) / 2;
-			int iy = rect.y + 8;
+			int ix = rect.x + (rect.width - icon_size) / 2;
+			int iy = rect.y + FromDIP(8);
 
-			NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, 64, 64, 0, imgId, 1.0f);
+			NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, icon_size, icon_size, 0, imgId, 1.0f);
 			nvgBeginPath(vg);
-			nvgRect(vg, ix, iy, 64, 64);
+			nvgRect(vg, ix, iy, icon_size, icon_size);
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 		}
 
 		// Text
-		nvgFontSize(vg, 12.0f);
+		nvgFontSize(vg, FromDIP(12));
 		nvgFontFace(vg, "sans");
 		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 
@@ -230,12 +232,12 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		if (name.length() > 14) {
 			name = name.Mid(0, 12) + "..";
 		}
-		nvgText(vg, rect.x + rect.width / 2, rect.y + 75, name.ToUTF8().data(), nullptr);
+		nvgText(vg, rect.x + rect.width / 2, rect.y + FromDIP(75), name.ToUTF8().data(), nullptr);
 
 		// ID
 		const std::string idStr = std::format("#{}", lookType);
 		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle)));
-		nvgText(vg, rect.x + rect.width / 2, rect.y + 92, idStr.c_str(), nullptr);
+		nvgText(vg, rect.x + rect.width / 2, rect.y + FromDIP(92), idStr.c_str(), nullptr);
 	}
 }
 
@@ -319,9 +321,9 @@ void OutfitSelectionGrid::OnContextMenu(wxContextMenuEvent& event) {
 	}
 
 	wxMenu menu;
-	menu.Append(OutfitChooserDialog::ID_FAVORITE_RENAME, "Rename...")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
-	menu.Append(OutfitChooserDialog::ID_FAVORITE_EDIT, "Update with Current")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(16, 16)));
-	menu.Append(OutfitChooserDialog::ID_FAVORITE_DELETE, "Delete")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
+	menu.Append(OutfitChooserDialog::ID_FAVORITE_RENAME, "Rename...")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PEN_TO_SQUARE));
+	menu.Append(OutfitChooserDialog::ID_FAVORITE_EDIT, "Update with Current")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_SYNC));
+	menu.Append(OutfitChooserDialog::ID_FAVORITE_DELETE, "Delete")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_TRASH_CAN));
 
 	PopupMenu(&menu);
 }
