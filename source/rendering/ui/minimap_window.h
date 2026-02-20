@@ -44,6 +44,16 @@ protected:
 	wxTimer update_timer;
 	std::unique_ptr<wxGLContext> context;
 	std::unique_ptr<NVGcontext, NVGDeleter> nvg;
+
+	// Smooth Panning
+	wxTimer pan_timer;
+	void OnPanTimer(wxTimerEvent& event);
+
+	double target_map_x = 0.0;
+	double target_map_y = 0.0;
+	double current_map_x = 0.0;
+	double current_map_y = 0.0;
+	bool is_panning = false;
 };
 
 #endif

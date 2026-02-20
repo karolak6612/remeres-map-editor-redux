@@ -307,6 +307,55 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 			nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
 
+			// --- NEW: Cursor Tool Hint ---
+			if (cursor_x >= 0 && cursor_y >= 0 && g_gui.IsEditorOpen()) {
+				Brush* brush = g_gui.GetCurrentBrush();
+				if (brush) {
+					std::string brushName = brush->getName();
+					if (!brushName.empty()) {
+						nvgFontSize(vg, 12.0f);
+						nvgFontFace(vg, "sans");
+
+						float txtBounds[4];
+						nvgTextBounds(vg, 0, 0, brushName.c_str(), nullptr, txtBounds);
+						float txtW = txtBounds[2] - txtBounds[0];
+						float ph = 20.0f;
+						float pw = txtW + 16.0f;
+
+						float px = cursor_x + 16.0f;
+						float py = cursor_y + 16.0f;
+
+						// Keep on screen
+						if (px + pw > w) px = w - pw - 4;
+						if (py + ph > h) py = h - ph - 4;
+
+						// Shadow
+						nvgBeginPath(vg);
+						nvgRoundedRect(vg, px + 2, py + 2, pw, ph, ph / 2.0f);
+						nvgFillColor(vg, nvgRGBA(0, 0, 0, 60));
+						nvgFill(vg);
+
+						// Pill background
+						nvgBeginPath(vg);
+						nvgRoundedRect(vg, px, py, pw, ph, ph / 2.0f);
+						nvgFillColor(vg, nvgRGBA(30, 30, 30, 220));
+						nvgFill(vg);
+
+						// Stroke
+						nvgBeginPath(vg);
+						nvgRoundedRect(vg, px, py, pw, ph, ph / 2.0f);
+						nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
+						nvgStrokeWidth(vg, 1.0f);
+						nvgStroke(vg);
+
+						// Text
+						nvgFillColor(vg, nvgRGBA(255, 255, 255, 240));
+						nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+						nvgText(vg, px + 8.0f, py + ph * 0.5f, brushName.c_str(), nullptr);
+					}
+				}
+			}
+
 			TextRenderer::EndFrame(vg);
 
 			// Sanitize state after NanoVG to avoid polluting the next frame or other tabs

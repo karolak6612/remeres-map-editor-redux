@@ -81,6 +81,10 @@ protected:
 
 	// Animation state
 	wxTimer m_animTimer;
+	float m_hoverAnim = 0.0f;
+	float m_selectionAnim = 0.0f;
+	int m_lastHoverIndex = -1;
+
 	void OnTimer(wxTimerEvent& event);
 };
 
