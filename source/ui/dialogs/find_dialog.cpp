@@ -49,17 +49,17 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	sizer->Add(search_field, 0, wxEXPAND);
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
-	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
+	item_list->SetMinSize(FromDIP(wxSize(470, 400)));
 	item_list->SetToolTip("Double click to select.");
 	sizer->Add(item_list, wxSizerFlags(1).Expand().Border());
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Jump to selected item/brush");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Close this window");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
@@ -79,7 +79,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	// RefreshContents();
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, FromDIP(wxSize(32, 32))));
 	SetIcon(icon);
 }
 
@@ -152,7 +152,7 @@ void FindDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void FindDialog::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
-	EndModal(0);
+	EndModal(wxID_CANCEL);
 }
 
 void FindDialog::RefreshContents() {
@@ -174,7 +174,7 @@ void FindBrushDialog::OnClickListInternal(wxCommandEvent& event) {
 	Brush* brush = item_list->GetSelectedBrush();
 	if (brush) {
 		result_brush = brush;
-		EndModal(1);
+		EndModal(wxID_OK);
 	}
 }
 
@@ -238,7 +238,7 @@ void FindBrushDialog::OnClickOKInternal() {
 			result_brush = brush;
 		}
 	}
-	EndModal(1);
+	EndModal(wxID_OK);
 }
 
 void FindBrushDialog::RefreshContentsInternal() {
@@ -362,13 +362,13 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
+		nvgText(vg, rect.x + FromDIP(40), rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
+		nvgText(vg, rect.x + FromDIP(40), rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
@@ -396,7 +396,7 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		nvgFontFace(vg, "sans");
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 		wxString name = wxstr(brushlist[n]->getName());
-		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+		nvgText(vg, rect.x + rect.height + FromDIP(8), rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
 	}
 }
 
