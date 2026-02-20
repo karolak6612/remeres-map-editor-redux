@@ -21,6 +21,7 @@
 #include "app/main.h"
 
 #include <toml++/toml.h>
+#include <variant>
 
 namespace Config {
 	enum Key {
@@ -235,59 +236,18 @@ public:
 	void save(bool endoftheworld = false);
 
 public:
-	enum DynamicType {
-		TYPE_NONE,
-		TYPE_STR,
-		TYPE_INT,
-		TYPE_FLOAT,
-	};
 	class DynamicValue {
 	public:
-		DynamicValue() :
-			type(TYPE_NONE) {
-			intval = 0;
-		};
-		DynamicValue(DynamicType t) :
-			type(t) {
-			if (t == TYPE_STR) {
-				strval = nullptr;
-			} else if (t == TYPE_INT) {
-				intval = 0;
-			} else if (t == TYPE_FLOAT) {
-				floatval = 0.0;
-			} else {
-				intval = 0;
-			}
-		};
-		~DynamicValue() {
-			if (type == TYPE_STR) {
-				delete strval;
-			}
-		}
-		DynamicValue(const DynamicValue& dv) :
-			type(dv.type) {
-			if (dv.type == TYPE_STR) {
-				strval = newd std::string(*dv.strval);
-			} else if (dv.type == TYPE_INT) {
-				intval = dv.intval;
-			} else if (dv.type == TYPE_FLOAT) {
-				floatval = dv.floatval;
-			} else {
-				intval = 0;
-			}
-		};
+		DynamicValue() = default;
+		~DynamicValue() = default;
+		DynamicValue(const DynamicValue&) = default;
+		DynamicValue(DynamicValue&&) = default;
+		DynamicValue& operator=(const DynamicValue&) = default;
+		DynamicValue& operator=(DynamicValue&&) = default;
 
 		std::string str();
 
-	private:
-		DynamicType type;
-		union {
-			int intval;
-			std::string* strval;
-			float floatval;
-		};
-
-		friend class Settings;
+		std::variant<std::monostate, int, float, std::string> value;
 	};
 
 private:
