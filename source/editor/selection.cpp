@@ -248,10 +248,32 @@ void Selection::flush() {
 		});
 		pending_removes.erase(first, last);
 
-		std::vector<Tile*> result;
-		result.reserve(tiles.size());
-		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), tilePositionLessThan);
-		tiles = std::move(result);
+		// Linear in-place set_difference
+		auto tile_it = tiles.begin();
+		auto remove_it = pending_removes.begin();
+		auto result_it = tiles.begin();
+
+		while (tile_it != tiles.end() && remove_it != pending_removes.end()) {
+			if (tilePositionLessThan(*tile_it, *remove_it)) {
+				if (result_it != tile_it) *result_it = *tile_it;
+				++result_it;
+				++tile_it;
+			} else if (tilePositionLessThan(*remove_it, *tile_it)) {
+				++remove_it;
+			} else {
+				// Equal, so remove (skip)
+				++tile_it;
+				// Since we uniqued pending_removes, just advance
+				++remove_it;
+			}
+		}
+		// Copy remaining
+		while (tile_it != tiles.end()) {
+			if (result_it != tile_it) *result_it = *tile_it;
+			++result_it;
+			++tile_it;
+		}
+		tiles.erase(result_it, tiles.end());
 	}
 
 	if (!pending_adds.empty()) {
@@ -261,10 +283,16 @@ void Selection::flush() {
 		});
 		pending_adds.erase(first, last);
 
-		std::vector<Tile*> merged;
-		merged.reserve(tiles.size() + pending_adds.size());
-		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), tilePositionLessThan);
-		tiles = std::move(merged);
+		// In-place merge
+		size_t old_size = tiles.size();
+		tiles.reserve(tiles.size() + pending_adds.size());
+		tiles.insert(tiles.end(), pending_adds.begin(), pending_adds.end());
+		std::inplace_merge(tiles.begin(), tiles.begin() + old_size, tiles.end(), tilePositionLessThan);
+
+		auto [unique_first, unique_last] = std::ranges::unique(tiles, [](Tile* a, Tile* b) {
+			return a->getPosition() == b->getPosition();
+		});
+		tiles.erase(unique_first, unique_last);
 	}
 
 	pending_adds.clear();

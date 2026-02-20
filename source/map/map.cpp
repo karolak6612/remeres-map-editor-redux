@@ -183,9 +183,10 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 				tile->ground.reset();
 			}
 
-			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](const std::unique_ptr<Item>& item) {
+			auto part_result = std::ranges::stable_partition(tile->items, [&ids_to_remove](const std::unique_ptr<Item>& item) {
 				return !ids_to_remove.contains(item->getID());
 			});
+			auto part_iter = part_result.begin();
 
 			tile->items.erase(part_iter, tile->items.end());
 
@@ -425,7 +426,8 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
-			while (found != tile_loc->getSpawnCount()) {
+			int loop_safety = 0;
+			while (found != tile_loc->getSpawnCount() && loop_safety < 4096) {
 				for (int x = start_x; x <= end_x; ++x) {
 					Tile* tile = getTile(x, start_y, z);
 					if (tile && tile->spawn) {
@@ -453,6 +455,12 @@ SpawnList Map::getSpawnList(Tile* where) {
 				}
 				--start_x, --start_y;
 				++end_x, ++end_y;
+				++loop_safety;
+			}
+
+			if (found != tile_loc->getSpawnCount()) {
+				spdlog::warn("Map::getSpawnList: Could not find all spawns for tile at ({}, {}, {}). Found {} of {}.",
+					where->getX(), where->getY(), where->getZ(), found, tile_loc->getSpawnCount());
 			}
 		}
 	}

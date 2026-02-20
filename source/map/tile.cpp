@@ -124,9 +124,9 @@ std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
 	}
 
 	copy->items.reserve(items.size());
-	for (const auto& item : items) {
-		copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
-	}
+	std::ranges::transform(items, std::back_inserter(copy->items), [](const auto& item) {
+		return std::unique_ptr<Item>(item->deepCopy());
+	});
 
 	return copy;
 }
@@ -199,9 +199,9 @@ void Tile::merge(Tile* other) {
 	}
 
 	items.reserve(items.size() + other->items.size());
-	for (auto& item : other->items) {
+	std::ranges::for_each(other->items, [&](auto& item) {
 		addItem(std::move(item));
-	}
+	});
 	other->items.clear();
 	update();
 }
@@ -375,7 +375,8 @@ std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelecte
 		pop_items.push_back(std::move(ground));
 	}
 
-	auto split_point = std::stable_partition(items.begin(), items.end(), [](const std::unique_ptr<Item>& i) { return !i->isSelected(); });
+	auto partition_result = std::ranges::stable_partition(items, [](const std::unique_ptr<Item>& i) { return !i->isSelected(); });
+	auto split_point = partition_result.begin();
 	std::move(split_point, items.end(), std::back_inserter(pop_items));
 	items.erase(split_point, items.end());
 
@@ -396,11 +397,9 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		std::ranges::for_each(items, [&](const auto& item) {
-			if (item->isSelected()) {
-				selected_items.push_back(item.get());
-			}
-		});
+		auto view = items | std::views::filter([](const auto& i) { return i->isSelected(); })
+						  | std::views::transform([](const auto& i) { return i.get(); });
+		selected_items.insert(selected_items.end(), view.begin(), view.end());
 	}
 
 	return selected_items;
@@ -578,14 +577,10 @@ void Tile::selectGround() {
 		selected_ = true;
 	}
 
-	for (const auto& i : items) {
-		if (i->isBorder()) {
-			i->select();
-			selected_ = true;
-		} else {
-			break;
-		}
-	}
+	std::ranges::for_each(items | std::views::take_while([](const auto& i) { return i->isBorder(); }), [&](const auto& i) {
+		i->select();
+		selected_ = true;
+	});
 
 	if (selected_) {
 		statflags |= TILESTATE_SELECTED;
@@ -597,13 +592,9 @@ void Tile::deselectGround() {
 		ground->deselect();
 	}
 
-	for (const auto& i : items) {
-		if (i->isBorder()) {
-			i->deselect();
-		} else {
-			break;
-		}
-	}
+	std::ranges::for_each(items | std::views::take_while([](const auto& i) { return i->isBorder(); }), [](const auto& i) {
+		i->deselect();
+	});
 }
 
 void Tile::setHouse(House* _house) {
@@ -658,7 +649,7 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }
