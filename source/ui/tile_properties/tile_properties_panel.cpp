@@ -4,6 +4,11 @@
 
 #include "app/main.h"
 #include "ui/tile_properties/tile_properties_panel.h"
+#include "editor/editor.h"
+#include "map/map.h"
+#include "map/tile.h"
+#include "game/item.h"
+#include "app/main.h"
 #include "ui/tile_properties/browse_field_list.h"
 #include "ui/tile_properties/spawn_creature_panel.h"
 #include "ui/tile_properties/map_flags_panel.h"
@@ -117,14 +122,7 @@ void TilePropertiesPanel::SelectItem(Item* item) {
 }
 
 void TilePropertiesPanel::OnItemSelected(Item* item) {
-	item_property_panel->Hide();
-	container_property_panel->Hide();
-	depot_property_panel->Hide();
-	teleport_property_panel->Hide();
-	door_property_panel->Hide();
-	spawn_property_panel->Hide();
-	creature_property_panel->Hide();
-	placeholder_text->Hide();
+	HideAllPropertyPanels(); // Use centralized hiding
 
 	if (item) {
 		if (item->asDepot()) {
@@ -169,14 +167,7 @@ void TilePropertiesPanel::OnSpawnSelected() {
 }
 
 void TilePropertiesPanel::OnCreatureSelected() {
-	item_property_panel->Hide();
-	container_property_panel->Hide();
-	depot_property_panel->Hide();
-	teleport_property_panel->Hide();
-	door_property_panel->Hide();
-	spawn_property_panel->Hide();
-	creature_property_panel->Hide();
-	placeholder_text->Hide();
+	HideAllPropertyPanels();
 
 	if (current_tile && current_tile->creature) {
 		creature_property_panel->SetCreature(current_tile->creature.get(), current_tile, current_map);
@@ -185,4 +176,41 @@ void TilePropertiesPanel::OnCreatureSelected() {
 		placeholder_text->Show();
 	}
 	right_panel->Layout();
+}
+
+void TilePropertiesPanel::HideAllPropertyPanels() {
+	item_property_panel->Hide();
+	container_property_panel->Hide();
+	depot_property_panel->Hide();
+	teleport_property_panel->Hide();
+	door_property_panel->Hide();
+	spawn_property_panel->Hide();
+	creature_property_panel->Hide();
+	placeholder_text->Hide();
+}
+
+void TilePropertiesPanel::UpdateFromEditor(Editor* editor) {
+	if (!editor) {
+		return;
+	}
+
+	if (editor->selection.size() == 1) {
+		Tile* tile = editor->selection.getSelectedTile();
+		SetTile(tile, &editor->map);
+
+		if (tile) {
+			ItemVector items = tile->getSelectedItems();
+			if (!items.empty()) {
+				SelectItem(items.front());
+			} else if (tile->creature && tile->creature->isSelected()) {
+				OnCreatureSelected();
+			} else if (tile->spawn && tile->spawn->isSelected()) {
+				OnSpawnSelected();
+			} else {
+				SelectItem(nullptr);
+			}
+		}
+	} else {
+		SetTile(nullptr, nullptr);
+	}
 }

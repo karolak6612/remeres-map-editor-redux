@@ -32,6 +32,8 @@ public:
 	void OnItemSelected(Item* item);
 	void OnSpawnSelected();
 	void OnCreatureSelected();
+	void UpdateFromEditor(Editor* editor);
+	void HideAllPropertyPanels();
 
 protected:
 	wxSplitterWindow* splitter;

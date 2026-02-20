@@ -31,22 +31,8 @@
 
 namespace {
 	void NotifyPropertyPanel(Editor& editor) {
-		if (g_gui.tile_properties_panel && editor.selection.size() == 1) {
-			Tile* tile = editor.selection.getSelectedTile();
-			if (tile) {
-				g_gui.tile_properties_panel->SetTile(tile, &editor.map);
-
-				ItemVector items = tile->getSelectedItems();
-				if (!items.empty()) {
-					g_gui.tile_properties_panel->SelectItem(items.front());
-				} else if (tile->creature && tile->creature->isSelected()) {
-					g_gui.tile_properties_panel->OnCreatureSelected();
-				} else if (tile->spawn && tile->spawn->isSelected()) {
-					g_gui.tile_properties_panel->OnSpawnSelected();
-				} else {
-					g_gui.tile_properties_panel->SelectItem(nullptr);
-				}
-			}
+		if (g_gui.tile_properties_panel) {
+			g_gui.tile_properties_panel->UpdateFromEditor(&editor);
 		}
 	}
 } // namespace
@@ -89,9 +75,10 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 	// Commit any uncommited actions...
 	batch->commit();
 
-	// Update title and notify state change
-	editor.map.doChange();
-	editor.notifyStateChange();
+	// Update title and notify state change if map changed
+	if (editor.map.doChange()) {
+		editor.notifyStateChange();
+	}
 
 	if (batch->getType() == ACTION_REMOTE) {
 		return;

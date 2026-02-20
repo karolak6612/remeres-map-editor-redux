@@ -41,7 +41,7 @@ void PopupActionHandler::RotateItem(Editor& editor) {
 
 	selected_items.front()->doRotate();
 
-	action->addChange(std::make_unique<Change>(new_tile.release()));
+	action->addChange(std::make_unique<Change>(std::move(new_tile)));
 
 	editor.actionQueue->addAction(std::move(action));
 	g_gui.RefreshView();
@@ -70,7 +70,7 @@ void PopupActionHandler::SwitchDoor(Editor& editor) {
 
 	DoorBrush::switchDoor(selected_items.front());
 
-	action->addChange(std::make_unique<Change>(new_tile.release()));
+	action->addChange(std::make_unique<Change>(std::move(new_tile)));
 
 	editor.actionQueue->addAction(std::move(action));
 	g_gui.RefreshView();
@@ -93,7 +93,7 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) 
 	int ret = w->ShowModal();
 	if (ret != 0) {
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DELETE_TILES);
-		action->addChange(std::make_unique<Change>(new_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor.addAction(std::move(action));
 	}
 
@@ -144,7 +144,7 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 	int ret = w->ShowModal();
 	if (ret != 0) {
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-		action->addChange(std::make_unique<Change>(new_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor.addAction(std::move(action));
 
 		g_gui.RebuildPalettes();

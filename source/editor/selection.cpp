@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 // Remere's Map Editor is free software: you can redistribute it and/or modify
@@ -103,7 +103,7 @@ void Selection::add(Tile* tile, Item* item) {
 		}
 	}
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::add(Tile* tile, Spawn* spawn) {
@@ -120,7 +120,7 @@ void Selection::add(Tile* tile, Spawn* spawn) {
 	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 	spawn->deselect();
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::add(Tile* tile, Creature* creature) {
@@ -137,7 +137,7 @@ void Selection::add(Tile* tile, Creature* creature) {
 	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 	creature->deselect();
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::add(Tile* tile) {
@@ -147,7 +147,7 @@ void Selection::add(Tile* tile) {
 	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 	new_tile->select();
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::remove(Tile* tile, Item* item) {
@@ -165,7 +165,7 @@ void Selection::remove(Tile* tile, Item* item) {
 		new_tile->deselectGround();
 	}
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::remove(Tile* tile, Spawn* spawn) {
@@ -180,7 +180,7 @@ void Selection::remove(Tile* tile, Spawn* spawn) {
 		spawn->select();
 	}
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::remove(Tile* tile, Creature* creature) {
@@ -195,7 +195,7 @@ void Selection::remove(Tile* tile, Creature* creature) {
 		creature->select();
 	}
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::remove(Tile* tile) {
@@ -204,7 +204,7 @@ void Selection::remove(Tile* tile) {
 	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 	new_tile->deselect();
 
-	subsession->addChange(std::make_unique<Change>(new_tile.release()));
+	subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 }
 
 void Selection::addInternal(Tile* tile) {
@@ -280,7 +280,7 @@ void Selection::clear() {
 		std::ranges::for_each(tiles, [&](Tile* tile) {
 			std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 			new_tile->deselect();
-			subsession->addChange(std::make_unique<Change>(new_tile.release()));
+			subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 		});
 	} else {
 		std::ranges::for_each(tiles, [](Tile* tile) {

@@ -7,7 +7,6 @@
 #include "map/tile.h"
 #include "map/map.h"
 #include "ui/gui.h"
-#include "ui/gui.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "ui/tile_properties/tile_properties_panel.h"
@@ -231,7 +230,7 @@ void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items - 1]);
 
 		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-		action->addChange(std::make_unique<Change>(new_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 
 		Tile* updated_tile = editor->map.getTile(pos);
@@ -266,7 +265,7 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
 
 		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-		action->addChange(std::make_unique<Change>(new_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 
 		Tile* updated_tile = editor->map.getTile(pos);
@@ -305,7 +304,7 @@ void BrowseFieldList::OnClickDelete(wxCommandEvent& event) {
 		new_tile->items.erase(new_tile->items.begin() + index_in_items);
 
 		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
-		action->addChange(std::make_unique<Change>(new_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 
 		Tile* updated_tile = editor->map.getTile(pos);

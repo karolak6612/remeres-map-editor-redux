@@ -19,20 +19,8 @@ void SetupCallbacks(Editor* editor) {
 		g_gui.UpdateTitle();
 		g_gui.UpdateMenus();
 
-		if (g_gui.tile_properties_panel && editor->selection.size() == 1) {
-			Tile* tile = editor->selection.getSelectedTile();
-			g_gui.tile_properties_panel->SetTile(tile, &editor->map);
-
-			if (tile) {
-				ItemVector items = tile->getSelectedItems();
-				if (!items.empty()) {
-					g_gui.tile_properties_panel->SelectItem(items.front());
-				} else if (tile->creature && tile->creature->isSelected()) {
-					g_gui.tile_properties_panel->OnCreatureSelected();
-				} else if (tile->spawn && tile->spawn->isSelected()) {
-					g_gui.tile_properties_panel->OnSpawnSelected();
-				}
-			}
+		if (g_gui.tile_properties_panel) {
+			g_gui.tile_properties_panel->UpdateFromEditor(editor);
 		}
 	};
 
@@ -51,21 +39,7 @@ void SetupCallbacks(Editor* editor) {
 		}
 
 		if (g_gui.tile_properties_panel) {
-			if (count == 1) {
-				Tile* tile = editor->selection.getSelectedTile();
-				g_gui.tile_properties_panel->SetTile(tile, &editor->map);
-
-				ItemVector items = tile->getSelectedItems();
-				if (!items.empty()) {
-					g_gui.tile_properties_panel->SelectItem(items.front());
-				} else if (tile->creature && tile->creature->isSelected()) {
-					g_gui.tile_properties_panel->OnCreatureSelected();
-				} else if (tile->spawn && tile->spawn->isSelected()) {
-					g_gui.tile_properties_panel->OnSpawnSelected();
-				}
-			} else {
-				g_gui.tile_properties_panel->SetTile(nullptr, nullptr);
-			}
+			g_gui.tile_properties_panel->UpdateFromEditor(editor);
 		}
 	};
 }
