@@ -264,7 +264,6 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
 
 	Editor* editor = g_gui.GetCurrentEditor();
 	if (editor && current_tile) {
-		Position pos = current_tile->getPosition();
 		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
 		new_tile->items[index_in_items + 1]->select();

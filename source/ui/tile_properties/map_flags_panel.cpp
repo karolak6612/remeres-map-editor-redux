@@ -95,7 +95,9 @@ void MapFlagsPanel::OnToggleFlag(wxCommandEvent& event) {
 		new_tile->unsetMapFlags(TILESTATE_PVPZONE);
 	}
 
+	Tile* old_ptr = new_tile.get();
 	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 	action->addChange(std::make_unique<Change>(std::move(new_tile)));
 	editor->addAction(std::move(action));
+	current_tile = editor->map.getTile(old_ptr->getPosition());
 }

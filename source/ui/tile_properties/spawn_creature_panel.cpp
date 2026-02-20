@@ -21,6 +21,7 @@ SpawnCreaturePanel::SpawnCreaturePanel(wxWindow* parent) :
 	// Spawn Node
 	wxBoxSizer* spawn_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	spawn_bitmap = newd wxStaticBitmap(main_sizer->GetStaticBox(), wxID_ANY, wxNullBitmap, wxDefaultPosition, FROM_DIP(this, wxSize(32, 32)), wxBORDER_SIMPLE);
+	spawn_bitmap->Hide();
 	spawn_text = newd wxStaticText(main_sizer->GetStaticBox(), wxID_ANY, "No Spawn");
 	spawn_sizer->Add(spawn_bitmap, wxSizerFlags(0).Center().Border(wxALL, 2));
 	spawn_sizer->Add(spawn_text, wxSizerFlags(1).Center().Border(wxALL, 2));
@@ -28,6 +29,7 @@ SpawnCreaturePanel::SpawnCreaturePanel(wxWindow* parent) :
 	// Creature Node
 	wxBoxSizer* creature_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	creature_bitmap = newd wxStaticBitmap(main_sizer->GetStaticBox(), wxID_ANY, wxNullBitmap, wxDefaultPosition, FROM_DIP(this, wxSize(32, 32)), wxBORDER_SIMPLE);
+	creature_bitmap->Hide();
 	creature_text = newd wxStaticText(main_sizer->GetStaticBox(), wxID_ANY, "No Creature");
 	creature_sizer->Add(creature_bitmap, wxSizerFlags(0).Center().Border(wxALL, 2));
 	creature_sizer->Add(creature_text, wxSizerFlags(1).Center().Border(wxALL, 2));

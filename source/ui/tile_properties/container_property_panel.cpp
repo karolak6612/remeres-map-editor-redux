@@ -114,7 +114,7 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 			int index = current_tile->getIndexOf(current_item);
 			if (index != -1) {
 				Item* new_item_base = new_tile->getItemAt(index);
-				if (new_item_base->asContainer()) {
+				if (new_item_base && new_item_base->asContainer()) {
 					Container* container = static_cast<Container*>(new_item_base);
 					auto& contents = container->getVector();
 					uint32_t sub_index = grid_canvas->GetSelectedIndex();
@@ -168,7 +168,7 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	Item* new_container_base = new_tile->getItemAt(container_index);
-	Container* new_container = new_container_base->asContainer();
+	Container* new_container = new_container_base ? new_container_base->asContainer() : nullptr;
 	if (!new_container) {
 		return;
 	}
@@ -222,7 +222,7 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 	int index = current_tile->getIndexOf(current_item);
 	if (index != -1) {
 		Item* new_item_base = new_tile->getItemAt(index);
-		if (new_item_base->asContainer()) {
+		if (new_item_base && new_item_base->asContainer()) {
 			Container* container = static_cast<Container*>(new_item_base);
 			auto& contents = container->getVector();
 			// Since we know the index from the grid, let's use it.

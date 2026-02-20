@@ -84,7 +84,7 @@ Position Selection::maxPosition() const {
 }
 
 void Selection::add(Tile* tile, Item* item) {
-	ASSERT(tile);
+	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(item);
 
@@ -118,7 +118,6 @@ void Selection::add(Tile* tile, Item* item) {
 }
 
 void Selection::add(Tile* tile, Spawn* spawn) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(spawn);
 
@@ -141,7 +140,6 @@ void Selection::add(Tile* tile, Spawn* spawn) {
 }
 
 void Selection::add(Tile* tile, Creature* creature) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(creature);
 
@@ -228,7 +226,6 @@ void Selection::remove(Tile* tile, Spawn* spawn) {
 }
 
 void Selection::remove(Tile* tile, Creature* creature) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(creature);
 
@@ -251,7 +248,6 @@ void Selection::remove(Tile* tile, Creature* creature) {
 }
 
 void Selection::remove(Tile* tile) {
-	ASSERT(subsession);
 
 	if (subsession) {
 		std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);

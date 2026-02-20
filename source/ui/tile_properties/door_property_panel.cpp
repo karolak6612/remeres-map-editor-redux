@@ -58,7 +58,7 @@ void DoorPropertyPanel::OnDoorIdChange(wxSpinEvent& event) {
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);
-			if (new_item->asDoor()) {
+			if (new_item && new_item->asDoor()) {
 				Door* door = static_cast<Door*>(new_item);
 				door->setDoorID(door_id_spin->GetValue());
 

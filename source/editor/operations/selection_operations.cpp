@@ -393,9 +393,7 @@ void SelectionOperations::destroySelection(Editor& editor) {
 					TileOperations::wallize(new_tile.get(), &editor.map);
 					TileOperations::tableize(new_tile.get(), &editor.map);
 					TileOperations::carpetize(new_tile.get(), &editor.map);
-					if (!new_tile->empty()) {
-						action->addChange(std::make_unique<Change>(std::move(new_tile)));
-					}
+					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				} else {
 					std::unique_ptr<Tile> new_tile = editor.map.allocator(location);
 					TileOperations::borderize(new_tile.get(), &editor.map);
