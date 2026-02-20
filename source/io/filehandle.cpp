@@ -126,11 +126,19 @@ bool FileReadHandle::getLongString(std::string& str) {
 }
 
 bool FileReadHandle::seek(size_t offset) {
-	return fseek(file.get(), long(offset), SEEK_SET) == 0;
+#ifdef _MSC_VER
+	return _fseeki64(file.get(), static_cast<__int64>(offset), SEEK_SET) == 0;
+#else
+	return fseeko(file.get(), static_cast<off_t>(offset), SEEK_SET) == 0;
+#endif
 }
 
 bool FileReadHandle::seekRelative(size_t offset) {
-	return fseek(file.get(), long(offset), SEEK_CUR) == 0;
+#ifdef _MSC_VER
+	return _fseeki64(file.get(), static_cast<__int64>(offset), SEEK_CUR) == 0;
+#else
+	return fseeko(file.get(), static_cast<off_t>(offset), SEEK_CUR) == 0;
+#endif
 }
 
 //=============================================================================

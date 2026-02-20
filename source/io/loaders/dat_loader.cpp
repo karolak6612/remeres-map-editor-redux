@@ -467,7 +467,21 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		}
 	}
 
-	uint32_t numsprites = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * static_cast<uint32_t>(layers) * static_cast<uint32_t>(pattern_x) * static_cast<uint32_t>(pattern_y) * static_cast<uint32_t>(pattern_z) * static_cast<uint32_t>(frames);
+	uint64_t numsprites_u64 = static_cast<uint64_t>(width) * static_cast<uint64_t>(height) * static_cast<uint64_t>(layers) * static_cast<uint64_t>(pattern_x) * static_cast<uint64_t>(pattern_y) * static_cast<uint64_t>(pattern_z) * static_cast<uint64_t>(frames);
+
+	if (numsprites_u64 > UINT32_MAX) {
+#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
+		warnings.push_back(std::format("Sprite group {} for id {}: numsprites overflow (value: {})", group_index, sType->id, numsprites_u64));
+#else
+		wxString err;
+		err.Printf("Sprite group %u for id %u: numsprites overflow", group_index, sType->id);
+		warnings.push_back(err.ToStdString());
+#endif
+		return false;
+	}
+
+	uint32_t numsprites = static_cast<uint32_t>(numsprites_u64);
+
 	if (group_index == 0) {
 		sType->numsprites = numsprites;
 		sType->spriteList.reserve(numsprites);

@@ -169,15 +169,19 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 		}
 	}
 
-	uint32_t v;
+	uint64_t v;
 	if (_count >= 0 && height <= 1 && width <= 1) {
-		v = _count;
+		v = static_cast<uint64_t>(_count);
 	} else {
-		v = ((((((_frame)*pattern_y + _pattern_y) * pattern_x + _pattern_x) * layers + _layer) * height + _y) * width + _x);
+		v = (((((static_cast<uint64_t>(_frame) * pattern_y + _pattern_y) * pattern_x + _pattern_x) * layers + _layer) * height + _y) * width + _x);
 	}
+
 	if (v >= numsprites) {
-		if (numsprites == 1) {
+		if (numsprites <= 1) {
 			v = 0;
+			if (numsprites == 0) {
+				return nullptr;
+			}
 		} else {
 			v %= numsprites;
 		}
