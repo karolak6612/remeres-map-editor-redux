@@ -227,6 +227,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	invalid_item->Bind(wxEVT_COMMAND_CHECKBOX_CLICKED, &FindItemDialog::OnPropertyChange, this);
 
 	input_timer.Bind(wxEVT_TIMER, &FindItemDialog::OnInputTimer, this);
+	items_list->Bind(wxEVT_LISTBOX_DCLICK, &FindItemDialog::OnClickOK, this);
 	ok_button->Bind(wxEVT_BUTTON, &FindItemDialog::OnClickOK, this);
 	cancel_button->Bind(wxEVT_BUTTON, &FindItemDialog::OnClickCancel, this);
 }
