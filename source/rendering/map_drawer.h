@@ -129,6 +129,7 @@ public:
 	void DrawDoorIndicators(NVGcontext* vg);
 	void ClearFrameOverlays();
 	void DrawCreatureNames(NVGcontext* vg);
+	void DrawLuaOverlays(NVGcontext* vg);
 
 	void DrawLight();
 

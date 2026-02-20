@@ -256,6 +256,8 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 				drawer->DrawDoorIndicators(vg);
 			}
 
+			drawer->DrawLuaOverlays(vg);
+
 			// Floating HUD (Selection & Cursor Info)
 			int w = GetSize().x;
 			int h = GetSize().y;

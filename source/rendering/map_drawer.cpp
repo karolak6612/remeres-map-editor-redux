@@ -71,6 +71,10 @@
 #include "rendering/core/shader_program.h"
 #include "rendering/postprocess/post_process_manager.h"
 
+#include "lua/lua_script_manager.h"
+#include "map/map_overlay.h"
+#include <nanovg.h>
+
 // Shader Sources
 const char* screen_vert = R"(
 #version 450 core
@@ -431,4 +435,88 @@ void MapDrawer::ClearFrameOverlays() {
 	tooltip_drawer->clear();
 	hook_indicator_drawer->clear();
 	door_indicator_drawer->clear();
+}
+
+void MapDrawer::DrawLuaOverlays(NVGcontext* vg) {
+	if (!vg) {
+		return;
+	}
+
+	MapViewInfo info;
+	info.start_x = view.start_x;
+	info.start_y = view.start_y;
+	info.end_x = view.end_x;
+	info.end_y = view.end_y;
+	info.floor = view.floor;
+	info.zoom = view.zoom;
+	info.view_scroll_x = view.view_scroll_x;
+	info.view_scroll_y = view.view_scroll_y;
+	info.tile_size = TILE_SIZE;
+	info.screen_width = view.screensize_x;
+	info.screen_height = view.screensize_y;
+
+	std::vector<MapOverlayCommand> commands;
+	g_luaScripts.collectMapOverlayCommands(info, commands);
+
+	if (commands.empty()) {
+		return;
+	}
+
+	for (const auto& cmd : commands) {
+		float x = cmd.x;
+		float y = cmd.y;
+		float w = cmd.w;
+		float h = cmd.h;
+
+		if (!cmd.screen_space) {
+			int sx, sy;
+			view.getScreenPosition(cmd.x, cmd.y, cmd.z, sx, sy);
+			x = sx;
+			y = sy;
+			// Width/Height in map units -> screen pixels
+			// For simplicity assuming w/h are in tiles if !screen_space, but MapOverlayCommand documentation (implied) might say otherwise.
+			// Let's assume w/h are dimensions in whatever space we are.
+			// If we are in map space, w=1 means 1 tile.
+			w = cmd.w * TILE_SIZE * view.zoom;
+			h = cmd.h * TILE_SIZE * view.zoom;
+
+			// If it's a line/rect defined by two points
+			if (cmd.type == MapOverlayCommand::Type::Line || (cmd.type == MapOverlayCommand::Type::Rect && (cmd.x2 != 0 || cmd.y2 != 0))) {
+				int sx2, sy2;
+				view.getScreenPosition(cmd.x2, cmd.y2, cmd.z2, sx2, sy2);
+				w = sx2 - sx; // For Line, this is dx
+				h = sy2 - sy; // For Line, this is dy
+			}
+		}
+
+		nvgBeginPath(vg);
+
+		wxColor c = cmd.color;
+		nvgStrokeColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
+		nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
+		nvgStrokeWidth(vg, cmd.width);
+
+		switch (cmd.type) {
+			case MapOverlayCommand::Type::Rect:
+				nvgRect(vg, x, y, w, h);
+				if (cmd.filled) {
+					nvgFill(vg);
+				} else {
+					nvgStroke(vg);
+				}
+				break;
+			case MapOverlayCommand::Type::Line:
+				nvgMoveTo(vg, x, y);
+				nvgLineTo(vg, x + w, y + h); // w, h are dx, dy here
+				nvgStroke(vg);
+				break;
+			case MapOverlayCommand::Type::Text:
+				nvgFontSize(vg, 14.0f); // Default size
+				nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+				nvgText(vg, x, y, cmd.text.c_str(), nullptr);
+				break;
+			case MapOverlayCommand::Type::Sprite:
+				break;
+		}
+	}
 }

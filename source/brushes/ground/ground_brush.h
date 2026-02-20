@@ -71,17 +71,6 @@ public:
 		return optional_border != nullptr;
 	}
 
-protected: // Members
-	int32_t z_order;
-	bool has_zilch_outer_border;
-	bool has_zilch_inner_border;
-	bool has_outer_border;
-	bool has_inner_border;
-	std::unique_ptr<AutoBorder> owned_optional_border;
-	AutoBorder* optional_border;
-	bool use_only_optional; // If this is true, there will be no normal border under the gravel
-	bool randomize;
-
 	struct SpecificCaseBlock {
 		SpecificCaseBlock() :
 			match_group(0), group_match_alignment(BORDER_NONE), to_replace_id(0), with_id(0), delete_all(false), keepBorder(false) { }
@@ -103,6 +92,21 @@ protected: // Members
 		AutoBorder* autoborder;
 		std::vector<std::unique_ptr<SpecificCaseBlock>> specific_cases;
 	};
+
+	const std::vector<std::unique_ptr<BorderBlock>>& getBorderBlocks() const {
+		return borders;
+	}
+
+protected: // Members
+	int32_t z_order;
+	bool has_zilch_outer_border;
+	bool has_zilch_inner_border;
+	bool has_outer_border;
+	bool has_inner_border;
+	std::unique_ptr<AutoBorder> owned_optional_border;
+	AutoBorder* optional_border;
+	bool use_only_optional; // If this is true, there will be no normal border under the gravel
+	bool randomize;
 
 	struct ItemChanceBlock {
 		int chance;

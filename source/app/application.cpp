@@ -44,6 +44,7 @@
 #include "game/creature.h"
 
 #include "ingame_preview/ingame_preview_manager.h"
+#include "lua/lua_script_manager.h"
 
 #include <wx/snglinst.h>
 #include <wx/stdpaths.h>
@@ -199,6 +200,13 @@ bool Application::OnInit() {
 
 	// Load palette
 	g_gui.LoadPerspective();
+
+	// Initialize Lua scripting system
+	if (!g_luaScripts.initialize()) {
+		spdlog::warn("Failed to initialize Lua scripting: {}", g_luaScripts.getLastError());
+	} else if (g_gui.root && g_gui.root->menu_bar) {
+		// g_gui.root->menu_bar->LoadScriptsMenu(); // TO DO: Implement LoadScriptsMenu in our MainMenuBar
+	}
 
 	wxIcon icon(editor_icon);
 	g_gui.root->SetIcon(icon);
@@ -373,6 +381,9 @@ void Application::Unload() {
 }
 
 int Application::OnExit() {
+	// Shutdown Lua scripting system
+	g_luaScripts.shutdown();
+
 #ifdef _USE_PROCESS_COM
 	wxDELETE(m_proc_server);
 	wxDELETE(m_single_instance_checker);
