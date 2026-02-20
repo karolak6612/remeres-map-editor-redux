@@ -115,7 +115,8 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
 
 		// Draw View Box (Overlay)
-		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
+		// Disabled as it is now handled by MinimapWindow via NanoVG
+		if (false && g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
 			// Compute box coordinates
 			int screensize_x, screensize_y;
 			int view_scroll_x, view_scroll_y;
