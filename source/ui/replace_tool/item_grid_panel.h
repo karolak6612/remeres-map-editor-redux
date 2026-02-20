@@ -3,7 +3,7 @@
 
 #include "util/virtual_item_grid.h"
 #include <vector>
-#include <map>
+#include <unordered_map>
 
 class ItemGridPanel : public VirtualItemGrid {
 public:
@@ -31,7 +31,7 @@ public:
 
 	// Custom properties
 	void SetDraggable(bool check);
-	void SetOverrideNames(const std::map<uint16_t, wxString>& names);
+	void SetOverrideNames(const std::unordered_map<uint16_t, wxString>& names);
 	void SetShowDetails(bool show);
 
 	uint16_t GetSelectedId() const {
@@ -46,7 +46,7 @@ protected:
 
 	bool m_draggable = false;
 	bool m_showDetails = true;
-	std::map<uint16_t, wxString> m_nameOverrides;
+	std::unordered_map<uint16_t, wxString> m_nameOverrides;
 };
 
 #endif

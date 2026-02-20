@@ -21,12 +21,12 @@
 #include "game/outfit.h"
 
 #include <string>
-#include <map>
+#include <unordered_map>
 
 class CreatureType;
 class CreatureBrush;
 
-using CreatureMap = std::map<std::string, CreatureType*>;
+using CreatureMap = std::unordered_map<std::string, CreatureType*>;
 
 class CreatureDatabase {
 protected:

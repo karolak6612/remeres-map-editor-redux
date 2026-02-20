@@ -19,6 +19,8 @@
 
 #include "ui/gui.h"
 #include "game/materials.h"
+#include <vector>
+#include <algorithm>
 #include "brushes/brush.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
@@ -412,8 +414,17 @@ bool CreatureDatabase::saveToXML(const FileName& filename) {
 	decl.append_attribute("version") = "1.0";
 
 	pugi::xml_node creatureNodes = doc.append_child("creatures");
+
+	std::vector<CreatureType*> sorted_creatures;
+	sorted_creatures.reserve(creature_map.size());
 	for (const auto& creatureEntry : creature_map) {
-		CreatureType* creatureType = creatureEntry.second;
+		sorted_creatures.push_back(creatureEntry.second);
+	}
+	std::sort(sorted_creatures.begin(), sorted_creatures.end(), [](CreatureType* a, CreatureType* b) {
+		return a->name < b->name;
+	});
+
+	for (CreatureType* creatureType : sorted_creatures) {
 		if (!creatureType->standard) {
 			pugi::xml_node creatureNode = creatureNodes.append_child("creature");
 

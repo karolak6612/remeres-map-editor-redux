@@ -18,6 +18,8 @@
 #include <format>
 #include <sstream>
 #include <ranges>
+#include <vector>
+#include <algorithm>
 
 std::pair<std::string, std::string> MapXMLIO::normalizeMapFilePaths(const wxFileName& dir, const std::string& filename) {
 	std::string utf8_path = (const char*)(dir.GetPath(wxPATH_GET_SEPARATOR | wxPATH_GET_VOLUME).mb_str(wxConvUTF8));
@@ -317,8 +319,17 @@ bool MapXMLIO::saveHouses(const Map& map, pugi::xml_document& doc) {
 	decl.append_attribute("version") = "1.0";
 
 	pugi::xml_node houseNodes = doc.append_child("houses");
+
+	std::vector<const House*> sorted_houses;
+	sorted_houses.reserve(map.houses.count());
 	for (const auto& [id, housePtr] : map.houses) {
-		const auto* house = housePtr.get();
+		sorted_houses.push_back(housePtr.get());
+	}
+	std::sort(sorted_houses.begin(), sorted_houses.end(), [](const House* a, const House* b) {
+		return a->getID() < b->getID();
+	});
+
+	for (const auto* house : sorted_houses) {
 		pugi::xml_node houseNode = houseNodes.append_child("house");
 
 		houseNode.append_attribute("name") = house->name.c_str();

@@ -95,7 +95,7 @@ void ItemGridPanel::OnMotion(wxMouseEvent& event) {
 	}
 }
 
-void ItemGridPanel::SetOverrideNames(const std::map<uint16_t, wxString>& names) {
+void ItemGridPanel::SetOverrideNames(const std::unordered_map<uint16_t, wxString>& names) {
 	m_nameOverrides = names;
 	Refresh();
 }

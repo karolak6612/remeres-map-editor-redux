@@ -644,6 +644,10 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
+	if (this == other) {
+		return true;
+	}
+
 	// Compare ground
 	if (ground != nullptr && other->ground != nullptr) {
 		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
