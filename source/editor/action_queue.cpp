@@ -89,10 +89,9 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 	// Commit any uncommited actions...
 	batch->commit();
 
-	// Update title
-	if (editor.map.doChange()) {
-		editor.notifyStateChange();
-	}
+	// Update title and notify state change
+	editor.map.doChange();
+	editor.notifyStateChange();
 
 	if (batch->getType() == ACTION_REMOTE) {
 		return;
@@ -150,6 +149,7 @@ void ActionQueue::undo() {
 		current--;
 		BatchAction* batch = actions[current].get();
 		batch->undo();
+		editor.notifyStateChange();
 		NotifyPropertyPanel(editor);
 	}
 }
@@ -159,6 +159,7 @@ void ActionQueue::redo() {
 		BatchAction* batch = actions[current].get();
 		batch->redo();
 		current++;
+		editor.notifyStateChange();
 		NotifyPropertyPanel(editor);
 	}
 }
