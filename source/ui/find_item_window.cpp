@@ -106,7 +106,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 								 "Podium" };
 
 	int types_choices_count = sizeof(types_choices) / sizeof(wxString);
-	types_radio_box = newd wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, types_choices_count, types_choices, 1, wxRA_SPECIFY_COLS);
+	types_radio_box = newd wxRadioBox(type_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, types_choices_count, types_choices, 1, wxRA_SPECIFY_COLS);
 	types_radio_box->SetSelection(0);
 	types_radio_box->Enable(false);
 	type_box_sizer->Add(types_radio_box, 0, wxALL | wxEXPAND, 5);

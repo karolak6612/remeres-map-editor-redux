@@ -6,9 +6,7 @@
 #define RME_UI_CONTAINER_PROPERTY_PANEL_H_
 
 #include "ui/tile_properties/item_property_panel.h"
-#include <vector>
-
-class ContainerItemButton;
+#include "ui/tile_properties/container_grid_canvas.h"
 
 class ContainerPropertyPanel : public ItemPropertyPanel {
 public:
@@ -17,19 +15,18 @@ public:
 
 	void SetItem(Item* item, Tile* tile, Map* map) override;
 
-	void OnContainerItemClick(wxCommandEvent& event);
-	void OnContainerItemRightClick(wxMouseEvent& event);
-
 	void OnAddItem(wxCommandEvent& event);
 	void OnEditItem(wxCommandEvent& event);
 	void OnRemoveItem(wxCommandEvent& event);
 
+	// Needed for ContainerGridCanvas callback
+	void OnContainerItemClick(wxCommandEvent& event);
+	void OnContainerItemRightClick(wxContextMenuEvent& event);
+
 protected:
 	void RebuildGrid();
 
-	wxStaticBoxSizer* contents_sizer;
-	std::vector<ContainerItemButton*> container_items;
-	ContainerItemButton* last_clicked_button;
+	ContainerGridCanvas* grid_canvas;
 };
 
 #endif

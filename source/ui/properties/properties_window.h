@@ -23,7 +23,7 @@
 #include "ui/controls/item_buttons.h"
 #include "ui/properties/object_properties_base.h"
 
-class ContainerItemButton;
+class ContainerGridCanvas;
 class ContainerItemPopupMenu;
 class ItemAttribute;
 class wxSpinCtrl;
@@ -52,7 +52,7 @@ protected:
 	void saveGeneralPanel();
 
 	// Container pane
-	std::vector<ContainerItemButton*> container_items;
+	ContainerGridCanvas* grid_canvas;
 	wxWindow* createContainerPanel(wxWindow* parent);
 	void saveContainerPanel();
 

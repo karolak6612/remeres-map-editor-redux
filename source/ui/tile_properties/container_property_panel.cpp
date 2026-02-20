@@ -21,12 +21,14 @@
 #include "app/settings.h"
 
 ContainerPropertyPanel::ContainerPropertyPanel(wxWindow* parent) :
-	ItemPropertyPanel(parent), last_clicked_button(nullptr) {
+	ItemPropertyPanel(parent), grid_canvas(nullptr) {
 
-	contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
+	grid_canvas = newd ContainerGridCanvas(this, g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
+	grid_canvas->Bind(wxEVT_BUTTON, &ContainerPropertyPanel::OnContainerItemClick, this);
+	grid_canvas->Bind(wxEVT_CONTEXT_MENU, &ContainerPropertyPanel::OnContainerItemRightClick, this);
 
-	// Add contents_sizer to the main sizer (inherited from ItemPropertyPanel)
-	GetSizer()->Add(contents_sizer, wxSizerFlags(1).Expand().Border(wxALL, 5));
+	// Add grid_canvas to the main sizer (inherited from ItemPropertyPanel)
+	GetSizer()->Add(grid_canvas, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
 	// Context menu events
 	Bind(wxEVT_MENU, &ContainerPropertyPanel::OnAddItem, this, CONTAINER_POPUP_MENU_ADD);
@@ -45,70 +47,39 @@ void ContainerPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
 }
 
 void ContainerPropertyPanel::RebuildGrid() {
-	// Clear existing grid
-	contents_sizer->Clear(true);
-	container_items.clear();
-
-	Container* container = current_item ? dynamic_cast<Container*>(current_item) : nullptr;
-
-	if (container) {
-		bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
-		int32_t maxColumns = use_large_sprites ? 6 : 12;
-		wxSizer* horizontal_sizer = nullptr;
-
-		for (uint32_t index = 0; index < container->getVolume(); ++index) {
-			if (!horizontal_sizer) {
-				horizontal_sizer = newd wxBoxSizer(wxHORIZONTAL);
-			}
-
-			Item* sub_item = container->getItem(index);
-			ContainerItemButton* btn = newd ContainerItemButton(contents_sizer->GetStaticBox(), use_large_sprites, index, current_map, sub_item);
-
-			btn->Bind(wxEVT_BUTTON, &ContainerPropertyPanel::OnContainerItemClick, this);
-			btn->Bind(wxEVT_RIGHT_UP, &ContainerPropertyPanel::OnContainerItemRightClick, this);
-
-			container_items.push_back(btn);
-			horizontal_sizer->Add(btn, wxSizerFlags(0).Border(wxALL, 1));
-
-			if (((index + 1) % maxColumns) == 0) {
-				contents_sizer->Add(horizontal_sizer);
-				horizontal_sizer = nullptr;
-			}
-		}
-
-		if (horizontal_sizer != nullptr) {
-			contents_sizer->Add(horizontal_sizer);
-		}
+	if (grid_canvas) {
+		grid_canvas->SetContainer(current_item);
+		// Update icon scaling dynamically explicitly since properties can update
+		grid_canvas->SetLargeSprites(g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
 	}
-
 	Layout();
 }
 
 void ContainerPropertyPanel::OnContainerItemClick(wxCommandEvent& event) {
-	ContainerItemButton* button = dynamic_cast<ContainerItemButton*>(event.GetEventObject());
-	if (!button) {
+	int index = event.GetInt();
+
+	Container* container = current_item ? dynamic_cast<Container*>(current_item) : nullptr;
+	if (!container || !current_tile || !current_map) {
 		return;
 	}
 
-	last_clicked_button = button;
-
-	if (button->getItem()) {
+	if (index < static_cast<int>(container->getItemCount())) {
 		OnEditItem(event);
 	} else {
 		OnAddItem(event);
 	}
 }
 
-void ContainerPropertyPanel::OnContainerItemRightClick(wxMouseEvent& event) {
-	ContainerItemButton* button = dynamic_cast<ContainerItemButton*>(event.GetEventObject());
-	if (!button) {
+void ContainerPropertyPanel::OnContainerItemRightClick(wxContextMenuEvent& event) {
+	int index = grid_canvas->GetSelectedIndex();
+
+	Container* container = current_item ? dynamic_cast<Container*>(current_item) : nullptr;
+	if (!container) {
 		return;
 	}
 
-	last_clicked_button = button;
-
 	wxMenu menu;
-	if (button->getItem()) {
+	if (index < static_cast<int>(container->getItemCount())) {
 		menu.Append(CONTAINER_POPUP_MENU_EDIT, "&Edit Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
 		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 		menu.Append(CONTAINER_POPUP_MENU_REMOVE, "&Remove Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
@@ -116,8 +87,7 @@ void ContainerPropertyPanel::OnContainerItemRightClick(wxMouseEvent& event) {
 		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 	}
 
-	Container* container = dynamic_cast<Container*>(current_item);
-	if (container && container->getVolume() <= (int)container->getVector().size()) {
+	if (container->getVolume() <= (int)container->getVector().size()) {
 		if (wxMenuItem* addItem = menu.FindItem(CONTAINER_POPUP_MENU_ADD)) {
 			addItem->Enable(false);
 		}
@@ -127,7 +97,7 @@ void ContainerPropertyPanel::OnContainerItemRightClick(wxMouseEvent& event) {
 }
 
 void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button || !current_tile || !current_map) {
+	if (!grid_canvas || !current_tile || !current_map) {
 		return;
 	}
 
@@ -147,7 +117,7 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 				if (new_item_base->asContainer()) {
 					Container* container = static_cast<Container*>(new_item_base);
 					auto& contents = container->getVector();
-					uint32_t sub_index = last_clicked_button->getIndex();
+					uint32_t sub_index = grid_canvas->GetSelectedIndex();
 
 					std::unique_ptr<Item> new_sub_item(Item::Create(item_id));
 					if (new_sub_item) {
@@ -169,7 +139,17 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button || !last_clicked_button->getItem() || !current_map || !current_tile || !current_item) {
+	if (!grid_canvas || !current_map || !current_tile || !current_item) {
+		return;
+	}
+
+	int sub_item_index = grid_canvas->GetSelectedIndex();
+	if (sub_item_index == -1) {
+		return;
+	}
+
+	Container* container = current_item->asContainer();
+	if (!container || static_cast<size_t>(sub_item_index) >= container->getItemCount()) {
 		return;
 	}
 
@@ -178,7 +158,7 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	Item* sub_item = last_clicked_button->getItem();
+	Item* sub_item = container->getItem(sub_item_index);
 
 	// Create a deep copy of the tile to edit items inside the container
 	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
@@ -190,19 +170,6 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 	Item* new_container_base = new_tile->getItemAt(container_index);
 	Container* new_container = new_container_base->asContainer();
 	if (!new_container) {
-		return;
-	}
-
-	Container* container = current_item->asContainer();
-	int sub_item_index = -1;
-	for (size_t i = 0; i < container->getItemCount(); ++i) {
-		if (container->getItem(i) == sub_item) {
-			sub_item_index = i;
-			break;
-		}
-	}
-
-	if (sub_item_index == -1) {
 		return;
 	}
 
@@ -226,7 +193,17 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button || !last_clicked_button->getItem() || !current_tile || !current_map) {
+	if (!grid_canvas || !current_tile || !current_map) {
+		return;
+	}
+
+	int sub_item_index = grid_canvas->GetSelectedIndex();
+	if (sub_item_index == -1) {
+		return;
+	}
+
+	Container* container = current_item ? current_item->asContainer() : nullptr;
+	if (!container || static_cast<size_t>(sub_item_index) >= container->getItemCount()) {
 		return;
 	}
 
@@ -248,11 +225,8 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 		if (new_item_base->asContainer()) {
 			Container* container = static_cast<Container*>(new_item_base);
 			auto& contents = container->getVector();
-			Item* to_remove = last_clicked_button->getItem();
-
-			// We need to find the item in the new container that corresponds to 'to_remove'
-			// Since we know the index from the button, let's use it.
-			uint32_t sub_index = last_clicked_button->getIndex();
+			// Since we know the index from the grid, let's use it.
+			uint32_t sub_index = sub_item_index;
 			if (sub_index < contents.size()) {
 				contents.erase(contents.begin() + sub_index);
 

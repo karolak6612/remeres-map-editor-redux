@@ -242,6 +242,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/map_flags_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/custom_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/item_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_grid_canvas.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/depot_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/teleport_property_panel.h
@@ -568,6 +569,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_creature_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/map_flags_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/item_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_grid_canvas.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_property_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/depot_property_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/teleport_property_panel.cpp
