@@ -24,6 +24,33 @@
 #include "map/map.h"
 #include "boost/range/adaptor/reversed.hpp"
 
+#include "ui/gui.h"
+#include "ui/tile_properties/tile_properties_panel.h"
+#include "game/creature.h"
+#include "game/spawn.h"
+
+namespace {
+	void NotifyPropertyPanel(Editor& editor) {
+		if (g_gui.tile_properties_panel && editor.selection.size() == 1) {
+			Tile* tile = editor.selection.getSelectedTile();
+			if (tile) {
+				g_gui.tile_properties_panel->SetTile(tile, &editor.map);
+
+				ItemVector items = tile->getSelectedItems();
+				if (!items.empty()) {
+					g_gui.tile_properties_panel->SelectItem(items.front());
+				} else if (tile->creature && tile->creature->isSelected()) {
+					g_gui.tile_properties_panel->OnCreatureSelected();
+				} else if (tile->spawn && tile->spawn->isSelected()) {
+					g_gui.tile_properties_panel->OnSpawnSelected();
+				} else {
+					g_gui.tile_properties_panel->SelectItem(nullptr);
+				}
+			}
+		}
+	}
+} // namespace
+
 ActionQueue::ActionQueue(Editor& editor) :
 	current(0), memory_size(0), editor(editor) {
 	////
@@ -104,6 +131,8 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 		actions.push_back(std::move(batch));
 		current++;
 	} while (false);
+
+	NotifyPropertyPanel(editor);
 }
 
 void ActionQueue::addAction(std::unique_ptr<Action> action, int stacking_delay) {
@@ -121,6 +150,7 @@ void ActionQueue::undo() {
 		current--;
 		BatchAction* batch = actions[current].get();
 		batch->undo();
+		NotifyPropertyPanel(editor);
 	}
 }
 
@@ -129,6 +159,7 @@ void ActionQueue::redo() {
 		BatchAction* batch = actions[current].get();
 		batch->redo();
 		current++;
+		NotifyPropertyPanel(editor);
 	}
 }
 
