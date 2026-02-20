@@ -18,7 +18,6 @@
 #ifndef RME_LUA_ENGINE_H
 #define RME_LUA_ENGINE_H
 
-#define SOL_ALL_SAFETIES_ON 1
 
 #include <lua.hpp>
 #include <sol/sol.hpp>

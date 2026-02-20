@@ -21,7 +21,6 @@
 #include "lua_engine.h"
 #include "lua_script.h"
 
-#define SOL_ALL_SAFETIES_ON 1
 #include <sol/sol.hpp>
 
 #include <string>
@@ -111,12 +110,17 @@ public:
 			return;
 		}
 
+		// Capture arguments to avoid move-after-use
+		auto argsTuple = std::make_tuple(std::forward<Args>(args)...);
+
 		// Iterate over a copy to allow callbacks to modify the listener list safely
 		std::vector<EventListener> listenersCopy = eventListeners;
 		for (const auto& listener : listenersCopy) {
 			if (listener.eventName == eventName && listener.callback.valid()) {
 				try {
-					listener.callback(std::forward<Args>(args)...);
+					std::apply([&](auto&&... unpackedArgs) {
+						listener.callback(unpackedArgs...);
+					}, argsTuple);
 				} catch (const sol::error& e) {
 					logOutput("Event '" + eventName + "' error: " + std::string(e.what()), true);
 				}
@@ -130,13 +134,19 @@ public:
 			return false;
 		}
 
+		// Capture arguments
+		auto argsTuple = std::make_tuple(std::forward<Args>(args)...);
+
 		// Iterate over a copy to allow callbacks to modify the listener list safely
 		std::vector<EventListener> listenersCopy = eventListeners;
 		bool consumed = false;
 		for (const auto& listener : listenersCopy) {
 			if (listener.eventName == eventName && listener.callback.valid()) {
 				try {
-					sol::object result = listener.callback(std::forward<Args>(args)...);
+					sol::object result = std::apply([&](auto&&... unpackedArgs) {
+						return listener.callback(unpackedArgs...);
+					}, argsTuple);
+
 					if (result.valid() && result.is<bool>() && result.as<bool>()) {
 						consumed = true;
 						break; // Stop propagation

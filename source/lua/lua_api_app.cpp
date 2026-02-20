@@ -95,7 +95,7 @@ namespace LuaAPI {
 		Editor* editor;
 		std::unique_ptr<BatchAction> batch;
 		std::unique_ptr<Action> action;
-		std::unordered_map<uint64_t, Tile*> originalTiles;
+		std::unordered_map<uint64_t, std::unique_ptr<Tile>> originalTiles;
 
 		uint64_t positionKey(const Position& pos) const {
 			return (static_cast<uint64_t>(pos.x) << 32) | (static_cast<uint64_t>(pos.y) << 16) | static_cast<uint64_t>(pos.z);
@@ -133,7 +133,8 @@ namespace LuaAPI {
 
 			// Process each modified tile
 			for (auto& pair : originalTiles) {
-				Tile* originalTile = pair.second;
+				std::unique_ptr<Tile>& originalTilePtr = pair.second;
+				Tile* originalTile = originalTilePtr.get();
 				Position pos = originalTile->getPosition();
 
 				// Get the current (modified) tile from the map
@@ -144,7 +145,7 @@ namespace LuaAPI {
 					Tile* modifiedCopy = modifiedCopyPtr.release();
 
 					// Swap the original back into the map
-					std::unique_ptr<Tile> swappedOutPtr = editor->map.swapTile(pos, std::unique_ptr<Tile>(originalTile));
+					std::unique_ptr<Tile> swappedOutPtr = editor->map.swapTile(pos, std::move(originalTilePtr));
 					Tile* swappedOut = swappedOutPtr.get();
 
 					// swappedOut should be the modifiedTile. We need to clean it up.
@@ -161,13 +162,10 @@ namespace LuaAPI {
 					// The Action system handles metadata updates during its commit/undo.
 					std::unique_ptr<Change> change(new Change(modifiedCopy));
 					action->addChange(std::move(change));
-				} else {
-					// No real change or tile was removed, cleanup
-					delete originalTile;
 				}
 			}
 
-			// Clear - ownership has been transferred
+			// Clear - ownership has been transferred or destroyed
 			originalTiles.clear();
 
 			if (action->size() > 0) {
@@ -191,10 +189,11 @@ namespace LuaAPI {
 
 			// Restore original tiles (discard any changes made)
 			for (auto& pair : originalTiles) {
-				Tile* originalTile = pair.second;
-				if (originalTile) {
+				std::unique_ptr<Tile>& originalTilePtr = pair.second;
+				if (originalTilePtr) {
+					Tile* originalTile = originalTilePtr.get();
 					Position pos = originalTile->getPosition();
-					std::unique_ptr<Tile> modifiedTilePtr = editor->map.swapTile(pos, std::unique_ptr<Tile>(originalTile));
+					std::unique_ptr<Tile> modifiedTilePtr = editor->map.swapTile(pos, std::move(originalTilePtr));
 					Tile* modifiedTile = modifiedTilePtr.get();
 
 					// Clean up modified tile
@@ -227,7 +226,7 @@ namespace LuaAPI {
 			if (originalTiles.find(key) == originalTiles.end()) {
 				// Create a deep copy of the ORIGINAL tile BEFORE modification
 				std::unique_ptr<Tile> originalCopyPtr = tile->deepCopy(editor->map);
-				originalTiles[key] = originalCopyPtr.release();
+				originalTiles[key] = std::move(originalCopyPtr);
 			}
 		}
 
@@ -565,8 +564,17 @@ namespace LuaAPI {
 
 		// Sleep for a given number of milliseconds (use sparingly, blocks the UI)
 		app["sleep"] = [](int milliseconds) {
-			if (milliseconds > 0 && milliseconds <= 10000) { // Max 10 seconds
-				std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+			if (milliseconds <= 0) return;
+			if (milliseconds > 10000) milliseconds = 10000;
+
+			auto start = std::chrono::steady_clock::now();
+			auto end = start + std::chrono::milliseconds(milliseconds);
+
+			while (std::chrono::steady_clock::now() < end) {
+				if (wxTheApp) {
+					wxTheApp->Yield(true);
+				}
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
 			}
 		};
 

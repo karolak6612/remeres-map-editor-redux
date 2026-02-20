@@ -35,6 +35,13 @@ namespace LuaAPI {
 		// Constructor hex
 		Color["hex"] = [&lua](const std::string& hex) {
 			unsigned long value = 0;
+			if (hex.empty()) {
+				sol::table c = lua.create_table();
+				c["r"] = 0;
+				c["g"] = 0;
+				c["b"] = 0;
+				return c;
+			}
 			std::string h = hex[0] == '#' ? hex.substr(1) : hex;
 			if (h.length() == 3) {
 				h = { h[0], h[0], h[1], h[1], h[2], h[2] };

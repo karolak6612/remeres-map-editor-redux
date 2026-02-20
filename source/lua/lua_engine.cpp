@@ -227,6 +227,9 @@ bool LuaEngine::executeFile(const std::string& filepath) {
 		return false;
 	}
 
+	// Save previous SCRIPT_DIR to restore later (for recursive dofile/executeFile calls)
+	sol::optional<std::string> oldScriptDir = lua["SCRIPT_DIR"];
+
 	try {
 		// Extract the directory from the filepath and set SCRIPT_DIR global
 		std::string scriptDir;
@@ -242,6 +245,9 @@ bool LuaEngine::executeFile(const std::string& filepath) {
 		if (!loaded.valid()) {
 			sol::error err = loaded;
 			lastError = std::string("Failed to load script '") + filepath + "': " + err.what();
+			// Restore SCRIPT_DIR
+			if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
+			else lua["SCRIPT_DIR"] = sol::nil;
 			return false;
 		}
 
@@ -251,14 +257,28 @@ bool LuaEngine::executeFile(const std::string& filepath) {
 		if (!result.valid()) {
 			sol::error err = result;
 			lastError = std::string("Error executing script '") + filepath + "': " + err.what();
+			// Restore SCRIPT_DIR
+			if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
+			else lua["SCRIPT_DIR"] = sol::nil;
 			return false;
 		}
 
+		// Restore SCRIPT_DIR
+		if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
+		else lua["SCRIPT_DIR"] = sol::nil;
+
 		return true;
 	} catch (const sol::error& e) {
+		// Restore SCRIPT_DIR
+		if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
+		else lua["SCRIPT_DIR"] = sol::nil;
 		lastError = std::string("Exception executing script '") + filepath + "': " + e.what();
 		return false;
 	} catch (const std::exception& e) {
+		// Restore SCRIPT_DIR
+		if (oldScriptDir) lua["SCRIPT_DIR"] = oldScriptDir.value();
+		else lua["SCRIPT_DIR"] = sol::nil;
+
 		lastError = std::string("Exception executing script '") + filepath + "': " + e.what();
 		return false;
 	}

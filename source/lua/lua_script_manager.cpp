@@ -25,6 +25,7 @@
 #include <wx/dir.h>
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
+#include <wx/utils.h>
 #include <algorithm>
 
 #ifdef _WIN32
@@ -686,11 +687,7 @@ void LuaScriptManager::openScriptsFolder() {
 
 #ifdef _WIN32
 	ShellExecuteA(nullptr, "explore", scriptsDir.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
-#elif defined(__APPLE__)
-	std::string cmd = "open \"" + scriptsDir + "\"";
-	system(cmd.c_str());
 #else
-	std::string cmd = "xdg-open \"" + scriptsDir + "\"";
-	system(cmd.c_str());
+	wxLaunchDefaultApplication(wxString::FromUTF8(scriptsDir));
 #endif
 }

@@ -20,6 +20,7 @@
 
 #include <wx/listctrl.h>
 #include <wx/textctrl.h>
+#include <memory>
 
 class LuaScriptsWindow : public wxPanel {
 public:
@@ -66,6 +67,7 @@ private:
 	wxButton* open_folder_button;
 	wxButton* clear_console_button;
 	wxButton* run_script_button;
+	std::shared_ptr<bool> alive_;
 
 	static LuaScriptsWindow* instance;
 

@@ -131,8 +131,6 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 			g_gui.DestroyLoadBar();
 		}
 
-		g_luaScripts.emit("mapSave", savefile);
-
 		// Check for errors...
 		if (!success) {
 			// Rename the temporary backup files back to their previous names
@@ -174,6 +172,8 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		if (!success) {
 			return;
 		}
+
+		g_luaScripts.emit("mapSave", savefile);
 	}
 
 	// Move to permanent backup

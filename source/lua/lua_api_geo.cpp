@@ -528,15 +528,38 @@ namespace LuaAPI {
 			int index = 1;
 
 			if (filled) {
-				for (int y = -radiusY; y <= radiusY; ++y) {
+				if (radiusX == 0 && radiusY == 0) {
+					sol::table point = lua.create_table();
+					point["x"] = centerX;
+					point["y"] = centerY;
+					result[index++] = point;
+				} else if (radiusX == 0) {
+					// Vertical line
+					for (int y = -radiusY; y <= radiusY; ++y) {
+						sol::table point = lua.create_table();
+						point["x"] = centerX;
+						point["y"] = centerY + y;
+						result[index++] = point;
+					}
+				} else if (radiusY == 0) {
+					// Horizontal line
 					for (int x = -radiusX; x <= radiusX; ++x) {
-						float dx = (float)x / radiusX;
-						float dy = (float)y / radiusY;
-						if (dx * dx + dy * dy <= 1.0f) {
-							sol::table point = lua.create_table();
-							point["x"] = centerX + x;
-							point["y"] = centerY + y;
-							result[index++] = point;
+						sol::table point = lua.create_table();
+						point["x"] = centerX + x;
+						point["y"] = centerY;
+						result[index++] = point;
+					}
+				} else {
+					for (int y = -radiusY; y <= radiusY; ++y) {
+						for (int x = -radiusX; x <= radiusX; ++x) {
+							float dx = (float)x / radiusX;
+							float dy = (float)y / radiusY;
+							if (dx * dx + dy * dy <= 1.0f) {
+								sol::table point = lua.create_table();
+								point["x"] = centerX + x;
+								point["y"] = centerY + y;
+								result[index++] = point;
+							}
 						}
 					}
 				}

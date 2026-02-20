@@ -29,13 +29,40 @@
 #include <string_view>
 #include <functional>
 
+#ifdef _WIN32
+	#include <winsock2.h>
+	#include <ws2tcpip.h>
+#else
+	#include <netdb.h>
+	#include <arpa/inet.h>
+#endif
+
 namespace LuaAPI {
 
 	// StreamSession class for managing streaming HTTP requests
 	class StreamSession {
 	public:
 		StreamSession() :
-			finished_(false), hasError_(false), statusCode_(0) { }
+			finished_(false), hasError_(false), statusCode_(0), cancelled_(false) { }
+
+		~StreamSession() {
+			cancel();
+			if (requestThread_.joinable()) {
+				requestThread_.join();
+			}
+		}
+
+		void startThread(std::function<void()> func) {
+			requestThread_ = std::thread(func);
+		}
+
+		void cancel() {
+			cancelled_ = true;
+		}
+
+		bool isCancelled() const {
+			return cancelled_;
+		}
 
 		void appendChunk(const std::string& chunk) {
 			std::lock_guard<std::mutex> lock(mutex_);
@@ -114,6 +141,8 @@ namespace LuaAPI {
 		std::string errorMessage_;
 		std::atomic<int> statusCode_;
 		cpr::Header responseHeaders_;
+		std::thread requestThread_;
+		std::atomic<bool> cancelled_;
 	};
 
 	// Global map to store active stream sessions
@@ -125,10 +154,73 @@ namespace LuaAPI {
 	static bool isUrlSafe(const std::string& url_str) {
 		std::string low = url_str;
 		std::transform(low.begin(), low.end(), low.begin(), ::tolower);
-		if (low.find("localhost") != std::string::npos || low.find("127.0.0.1") != std::string::npos || low.find("::1") != std::string::npos) {
+
+		// Basic string checks
+		if (low.find("localhost") != std::string::npos ||
+			low.find("127.") != std::string::npos ||
+			low.find("::1") != std::string::npos ||
+			low.find("0.0.0.0") != std::string::npos ||
+			low.find("192.168.") != std::string::npos ||
+			low.find("10.") != std::string::npos ||
+			low.find("169.254.") != std::string::npos) {
 			return false;
 		}
-		return true;
+
+		// Extract hostname
+		std::string hostname;
+		size_t schemeEnd = low.find("://");
+		size_t hostStart = (schemeEnd != std::string::npos) ? schemeEnd + 3 : 0;
+		size_t pathStart = low.find("/", hostStart);
+		if (pathStart != std::string::npos) {
+			hostname = low.substr(hostStart, pathStart - hostStart);
+		} else {
+			hostname = low.substr(hostStart);
+		}
+		size_t portStart = hostname.find(":");
+		if (portStart != std::string::npos) {
+			hostname = hostname.substr(0, portStart);
+		}
+
+		// DNS resolution check
+		struct addrinfo hints = {}, *addrs;
+		hints.ai_family = AF_UNSPEC;
+		hints.ai_socktype = SOCK_STREAM;
+
+		if (getaddrinfo(hostname.c_str(), nullptr, &hints, &addrs) == 0) {
+			bool safe = true;
+			for (struct addrinfo* addr = addrs; addr != nullptr; addr = addr->ai_next) {
+				if (addr->ai_family == AF_INET) {
+					struct sockaddr_in* p = (struct sockaddr_in*)addr->ai_addr;
+					uint32_t ip = ntohl(p->sin_addr.s_addr);
+					// Check 127.0.0.0/8
+					if ((ip & 0xFF000000) == 0x7F000000) safe = false;
+					// Check 10.0.0.0/8
+					if ((ip & 0xFF000000) == 0x0A000000) safe = false;
+					// Check 172.16.0.0/12
+					if ((ip & 0xFFF00000) == 0xAC100000) safe = false;
+					// Check 192.168.0.0/16
+					if ((ip & 0xFFFF0000) == 0xC0A80000) safe = false;
+					// Check 169.254.0.0/16
+					if ((ip & 0xFFFF0000) == 0xA9FE0000) safe = false;
+					// Check 0.0.0.0/8
+					if ((ip & 0xFF000000) == 0x00000000) safe = false;
+				} else if (addr->ai_family == AF_INET6) {
+					struct sockaddr_in6* p = (struct sockaddr_in6*)addr->ai_addr;
+					unsigned char* bytes = p->sin6_addr.s6_addr;
+					// Check ::1 (loopback)
+					bool isLoopback = true;
+					for (int i = 0; i < 15; ++i) {
+						if (bytes[i] != 0) isLoopback = false;
+					}
+					if (bytes[15] != 1) isLoopback = false;
+					if (isLoopback) safe = false;
+				}
+			}
+			freeaddrinfo(addrs);
+			return safe;
+		}
+
+		return true; // Allow if resolution fails (might be internal error, but cpr will fail anyway)
 	}
 
 	// HTTP GET request
@@ -213,58 +305,58 @@ namespace LuaAPI {
 	}
 
 	// Helper function to convert Lua table to JSON
-	static std::function<nlohmann::json(sol::object)> getLuaToJsonConverter() {
-		std::function<nlohmann::json(sol::object)> luaToJson;
-		luaToJson = [&luaToJson](sol::object obj) -> nlohmann::json {
-			if (obj.is<bool>()) {
-				return obj.as<bool>();
-			} else if (obj.is<int>()) {
-				return obj.as<int>();
-			} else if (obj.is<double>()) {
-				return obj.as<double>();
-			} else if (obj.is<std::string>()) {
-				return obj.as<std::string>();
-			} else if (obj.is<sol::table>()) {
-				sol::table tbl = obj.as<sol::table>();
+	static nlohmann::json luaToJsonHelper(sol::object obj) {
+		if (obj.is<bool>()) {
+			return obj.as<bool>();
+		} else if (obj.is<int>()) {
+			return obj.as<int>();
+		} else if (obj.is<double>()) {
+			return obj.as<double>();
+		} else if (obj.is<std::string>()) {
+			return obj.as<std::string>();
+		} else if (obj.is<sol::table>()) {
+			sol::table tbl = obj.as<sol::table>();
 
-				// Check if it's an array (sequential integer keys starting at 1)
-				bool isArray = true;
-				size_t expectedKey = 1;
-				for (auto& pair : tbl) {
-					if (!pair.first.is<size_t>() || pair.first.as<size_t>() != expectedKey) {
-						isArray = false;
-						break;
-					}
-					expectedKey++;
+			// Check if it's an array (sequential integer keys starting at 1)
+			bool isArray = true;
+			size_t expectedKey = 1;
+			for (auto& pair : tbl) {
+				if (!pair.first.is<size_t>() || pair.first.as<size_t>() != expectedKey) {
+					isArray = false;
+					break;
 				}
-
-				if (isArray && expectedKey > 1) {
-					nlohmann::json arr = nlohmann::json::array();
-					for (auto& pair : tbl) {
-						arr.push_back(luaToJson(pair.second));
-					}
-					return arr;
-				} else {
-					nlohmann::json jsonObj = nlohmann::json::object();
-					for (auto& pair : tbl) {
-						std::string key;
-						if (pair.first.is<std::string>()) {
-							key = pair.first.as<std::string>();
-						} else if (pair.first.is<int>()) {
-							key = std::to_string(pair.first.as<int>());
-						} else {
-							continue;
-						}
-						jsonObj[key] = luaToJson(pair.second);
-					}
-					return jsonObj;
-				}
-			} else if (obj.is<sol::nil_t>()) {
-				return nullptr;
+				expectedKey++;
 			}
+
+			if (isArray && expectedKey > 1) {
+				nlohmann::json arr = nlohmann::json::array();
+				for (auto& pair : tbl) {
+					arr.push_back(luaToJsonHelper(pair.second));
+				}
+				return arr;
+			} else {
+				nlohmann::json jsonObj = nlohmann::json::object();
+				for (auto& pair : tbl) {
+					std::string key;
+					if (pair.first.is<std::string>()) {
+						key = pair.first.as<std::string>();
+					} else if (pair.first.is<int>()) {
+						key = std::to_string(pair.first.as<int>());
+					} else {
+						continue;
+					}
+					jsonObj[key] = luaToJsonHelper(pair.second);
+				}
+				return jsonObj;
+			}
+		} else if (obj.is<sol::nil_t>()) {
 			return nullptr;
-		};
-		return luaToJson;
+		}
+		return nullptr;
+	}
+
+	static std::function<nlohmann::json(sol::object)> getLuaToJsonConverter() {
+		return luaToJsonHelper;
 	}
 
 	// HTTP POST with JSON body
@@ -320,8 +412,9 @@ namespace LuaAPI {
 		}
 
 		// Start the streaming request in a separate thread
-		std::thread([session, url, body, headers]() {
+		session->startThread([session, url, body, headers]() {
 			std::function<bool(std::string_view, intptr_t)> writeCallback = [session](std::string_view data, intptr_t /*userdata*/) -> bool {
+				if (session->isCancelled()) return false;
 				session->appendChunk(std::string(data));
 				return true;
 			};
@@ -334,6 +427,8 @@ namespace LuaAPI {
 				cpr::Timeout { 30000 }
 			);
 
+			if (session->isCancelled()) return;
+
 			session->setStatusCode(static_cast<int>(response.status_code));
 			session->setHeaders(response.header);
 
@@ -342,7 +437,7 @@ namespace LuaAPI {
 			} else {
 				session->setFinished();
 			}
-		}).detach();
+		});
 
 		result["sessionId"] = sessionId;
 		result["ok"] = true;

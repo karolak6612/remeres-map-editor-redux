@@ -304,7 +304,11 @@ namespace LuaAPI {
 			std::vector<std::vector<std::pair<int, int>>> brushIndices(erosionRadius * 2 + 1);
 			std::vector<std::vector<float>> brushWeights(erosionRadius * 2 + 1);
 
-			for (int radius = 0; radius <= erosionRadius; ++radius) {
+			// Handle radius 0
+			brushIndices[0].push_back({ 0, 0 });
+			brushWeights[0].push_back(1.0f);
+
+			for (int radius = 1; radius <= erosionRadius; ++radius) {
 				for (int y = -radius; y <= radius; ++y) {
 					for (int x = -radius; x <= radius; ++x) {
 						float sqrDst = (float)(x * x + y * y);
@@ -424,7 +428,8 @@ namespace LuaAPI {
 					// Update position and speed
 					posX = newPosX;
 					posY = newPosY;
-					speed = std::sqrt(speed * speed + deltaHeight * gravity);
+					float speedSq = speed * speed + deltaHeight * gravity;
+					speed = std::sqrt(std::max(0.0f, speedSq));
 					water *= (1 - evaporateSpeed);
 				}
 			}
@@ -665,16 +670,21 @@ namespace LuaAPI {
 			// Initialize grid with walls
 			std::vector<std::vector<int>> grid(height, std::vector<int>(width, 1));
 
-			// Recursive backtracking
-			std::function<void(int, int)> carve = [&](int x, int y) {
-				grid[y][x] = 0;
+			// Iterative backtracking using stack
+			std::vector<std::pair<int, int>> stack;
+			stack.push_back({ 1, 1 });
+			grid[1][1] = 0;
+
+			const int dx[] = { 0, 1, 0, -1 };
+			const int dy[] = { -1, 0, 1, 0 };
+
+			while (!stack.empty()) {
+				auto [x, y] = stack.back();
+				stack.pop_back();
 
 				// Shuffle directions
 				std::vector<int> dirs = { 0, 1, 2, 3 }; // N, E, S, W
 				std::shuffle(dirs.begin(), dirs.end(), rng);
-
-				const int dx[] = { 0, 1, 0, -1 };
-				const int dy[] = { -1, 0, 1, 0 };
 
 				for (int dir : dirs) {
 					int nx = x + dx[dir] * 2;
@@ -683,13 +693,11 @@ namespace LuaAPI {
 					if (nx > 0 && nx < width - 1 && ny > 0 && ny < height - 1 && grid[ny][nx] == 1) {
 						// Carve through wall
 						grid[y + dy[dir]][x + dx[dir]] = 0;
-						carve(nx, ny);
+						grid[ny][nx] = 0;
+						stack.push_back({ nx, ny });
 					}
 				}
-			};
-
-			// Start from (1, 1)
-			carve(1, 1);
+			}
 
 			return gridToTable(grid, lua);
 		});
@@ -727,15 +735,19 @@ namespace LuaAPI {
 			// BSP Node
 			struct BSPNode {
 				int x, y, w, h;
-				BSPNode* left = nullptr;
-				BSPNode* right = nullptr;
+				std::unique_ptr<BSPNode> left = nullptr;
+				std::unique_ptr<BSPNode> right = nullptr;
 				int roomX, roomY, roomW, roomH;
 				bool hasRoom = false;
 			};
 
-			std::function<BSPNode*(int, int, int, int, int)> split;
-			split = [&](int x, int y, int w, int h, int depth) -> BSPNode* {
-				BSPNode* node = new BSPNode { x, y, w, h };
+			std::function<std::unique_ptr<BSPNode>(int, int, int, int, int)> split;
+			split = [&](int x, int y, int w, int h, int depth) -> std::unique_ptr<BSPNode> {
+				auto node = std::make_unique<BSPNode>();
+				node->x = x;
+				node->y = y;
+				node->w = w;
+				node->h = h;
 
 				if (depth >= maxDepth || w < minRoomSize * 2 || h < minRoomSize * 2) {
 					// Check if space is sufficient for a room
@@ -783,7 +795,7 @@ namespace LuaAPI {
 				return node;
 			};
 
-			BSPNode* root = split(0, 0, width, height, 0);
+			auto root = split(0, 0, width, height, 0);
 
 			// Carve rooms
 			for (const auto& room : rooms) {
@@ -833,16 +845,6 @@ namespace LuaAPI {
 					}
 				}
 			}
-
-			// Cleanup BSP
-			std::function<void(BSPNode*)> deleteBSP = [&](BSPNode* node) {
-				if (node) {
-					deleteBSP(node->left);
-					deleteBSP(node->right);
-					delete node;
-				}
-			};
-			deleteBSP(root);
 
 			// Return result
 			sol::table result = lua.create_table();

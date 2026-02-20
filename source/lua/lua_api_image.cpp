@@ -48,19 +48,24 @@ namespace LuaAPI {
 			fs::path p(path);
 			if (p.is_absolute()) {
 				// Normalize directories for comparison
-				fs::path scriptsPath = fs::absolute(LuaScriptManager::getInstance().getScriptsDirectory());
-				fs::path dataPath = fs::absolute(wxStandardPaths::Get().GetDataDir().ToStdString());
-				fs::path absPath = fs::absolute(p);
+				fs::path scriptsPath = fs::weakly_canonical(LuaScriptManager::getInstance().getScriptsDirectory());
+				fs::path dataPath = fs::weakly_canonical(wxStandardPaths::Get().GetDataDir().ToStdString());
+				fs::path absPath = fs::weakly_canonical(p);
 
-				std::string absStr = absPath.string();
-				std::string scriptsStr = scriptsPath.string();
-				std::string dataStr = dataPath.string();
+				auto isInside = [](const fs::path& p, const fs::path& base) {
+					std::error_code ec;
+					auto rel = fs::relative(p, base, ec);
+					if (ec) return false;
+					if (rel.empty()) return false;
+					if (rel == ".") return true;
+					return *rel.begin() != "..";
+				};
 
 				bool allowed = false;
-				if (absStr.find(scriptsStr) == 0) {
+				if (isInside(absPath, scriptsPath)) {
 					allowed = true;
 				}
-				if (absStr.find(dataStr) == 0) {
+				if (isInside(absPath, dataPath)) {
 					allowed = true;
 				}
 
