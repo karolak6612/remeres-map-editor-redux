@@ -16,7 +16,10 @@
     "boost-thread",
     "nanovg",
     "spdlog",
-    "tomlplusplus"
+    "tomlplusplus",
+    "lua",
+    "sol2",
+    "cpr"
   ],
   "builtin-baseline": "1940ee77e81573713c0d364c42f5990172198be1"
 }

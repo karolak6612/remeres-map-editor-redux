@@ -348,6 +348,16 @@ public:
 	Hotkey hotkeys[10];
 	bool hotkeys_enabled;
 
+	bool AreHotkeysEnabled() const {
+		return hotkeys_enabled;
+	}
+	void EnableHotkeys() {
+		hotkeys_enabled = true;
+	}
+	void DisableHotkeys() {
+		hotkeys_enabled = false;
+	}
+
 protected:
 	wxWindowDisabler* winDisabler;
 

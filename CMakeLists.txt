@@ -29,7 +29,6 @@ endif()
 
 find_package(OpenGL REQUIRED)
 
-
 if(WIN32)
     set(Boost_THREADAPI win32)
 endif()
@@ -51,6 +50,11 @@ find_package(glm CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 
+# Lua dependencies
+find_package(lua CONFIG REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+find_package(cpr CONFIG REQUIRED)
+
 # nanovg: try vcpkg/Conan first, fallback to ext/nanovg
 find_package(nanovg CONFIG QUIET)
 if(NOT nanovg_FOUND)
@@ -63,6 +67,12 @@ if(NOT nanovg_FOUND)
 	target_include_directories(nanovg_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/ext/nanovg/src)
 	add_library(nanovg::nanovg ALIAS nanovg_lib)
 endif()
+
+# Add Lua includes to ensure sol2 finds 'lua.hpp' if needed
+# (Conan targets usually handle this via transitive dependencies)
+
+# Define SOL_USING_CXX_LUA_HPP for sol2
+add_compile_definitions(SOL_USING_CXX_LUA_HPP=1)
 
 include(source/CMakeLists.txt)
 # Removed WIN32 to enable Console subsystem for persistent debugging logs
@@ -94,7 +104,6 @@ endif()
 target_include_directories(rme PRIVATE
 	${Boost_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
-
 	${ZLIB_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 )
@@ -119,6 +128,11 @@ target_link_libraries(rme PRIVATE glm::glm)
 target_link_libraries(rme PRIVATE nanovg::nanovg)
 target_link_libraries(rme PRIVATE spdlog::spdlog)
 target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
+
+# Link Lua dependencies
+target_link_libraries(rme PRIVATE lua::lua)
+target_link_libraries(rme PRIVATE sol2::sol2)
+target_link_libraries(rme PRIVATE cpr::cpr)
 
 option(RME_BUILD_TESTS "Build test executables" OFF)
 
@@ -165,5 +179,10 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE nanovg::nanovg)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
 	target_link_libraries(test_autoborder_preview PRIVATE tomlplusplus::tomlplusplus)
+
+    # Lua for tests
+    target_link_libraries(test_autoborder_preview PRIVATE lua::lua)
+    target_link_libraries(test_autoborder_preview PRIVATE sol2::sol2)
+    target_link_libraries(test_autoborder_preview PRIVATE cpr::cpr)
 
 endif()
