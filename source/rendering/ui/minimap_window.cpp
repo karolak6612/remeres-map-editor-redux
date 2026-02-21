@@ -46,7 +46,7 @@ static wxGLAttributes& GetCoreProfileAttributes() {
 }
 
 MinimapWindow::MinimapWindow(wxWindow* parent) :
-	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
+	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, FromDIP(wxSize(205, 130))),
 	update_timer(this),
 	context(nullptr),
 	nvg(nullptr, NVGDeleter()) {
@@ -119,7 +119,7 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		if (!gladLoadGL()) {
 			spdlog::error("MinimapWindow::OnPaint - Failed to load GLAD");
 		} else {
-			spdlog::info("MinimapWindow::OnPaint - GLAD loaded. GL Version: {}", (char*)glGetString(GL_VERSION));
+			spdlog::info("MinimapWindow::OnPaint - GLAD loaded. GL Version: {}", reinterpret_cast<const char*>(glGetString(GL_VERSION)));
 		}
 		gladInitialized = true;
 	}
