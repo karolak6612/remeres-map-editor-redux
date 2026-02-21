@@ -169,18 +169,21 @@ void ReplaceToolWindow::InitLayout() {
 	m_addRuleBtn->SetBackgroundColour(wxColour(40, 180, 40)); // Green
 	m_addRuleBtn->SetForegroundColour(*wxWHITE);
 	m_addRuleBtn->SetFont(Theme::GetFont(9, true));
+	m_addRuleBtn->SetToolTip("Add a new replacement rule");
 
 	m_editRuleBtn = new wxButton(actionsCard, wxID_ANY, "EDIT", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_editRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
 	m_editRuleBtn->SetBackgroundColour(wxColour(80, 80, 80)); // Neutral Dark Gray
 	m_editRuleBtn->SetForegroundColour(*wxWHITE);
 	m_editRuleBtn->SetFont(Theme::GetFont(9, true));
+	m_editRuleBtn->SetToolTip("Rename selected rule set");
 
 	m_deleteRuleBtn = new wxButton(actionsCard, wxID_ANY, "DEL", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_deleteRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 	m_deleteRuleBtn->SetBackgroundColour(wxColour(180, 40, 40)); // Red
 	m_deleteRuleBtn->SetForegroundColour(*wxWHITE);
 	m_deleteRuleBtn->SetFont(Theme::GetFont(9, true));
+	m_deleteRuleBtn->SetToolTip("Delete selected rule set");
 
 	manageBtnsSizer->Add(m_addRuleBtn, wxSizerFlags(1).Border(wxRIGHT, 2));
 	manageBtnsSizer->Add(m_editRuleBtn, wxSizerFlags(1).Border(wxLEFT | wxRIGHT, 2));
@@ -193,6 +196,7 @@ void ReplaceToolWindow::InitLayout() {
 	m_addVisibleBtn->SetBackgroundColour(wxColour(45, 120, 180)); // Sky Blue
 	m_addVisibleBtn->SetForegroundColour(*wxWHITE);
 	m_addVisibleBtn->SetFont(Theme::GetFont(9, true));
+	m_addVisibleBtn->SetToolTip("Add rules for all visible items in the current viewport");
 	actionsSizer->Add(m_addVisibleBtn, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, padding));
 
 	// Scope Selection
@@ -207,6 +211,7 @@ void ReplaceToolWindow::InitLayout() {
 	scopes.Add("ALL MAP");
 	m_scopeChoice = new wxChoice(actionsCard, wxID_ANY, wxDefaultPosition, FromDIP(wxSize(-1, 24)), scopes);
 	m_scopeChoice->SetSelection(0);
+	m_scopeChoice->SetToolTip("Choose where to apply replacements (Selection, Viewport, or Entire Map)");
 	if (editor && editor->selection.empty()) {
 		m_scopeChoice->SetSelection(1); // Default to Viewport if no selection
 	}
@@ -225,6 +230,7 @@ void ReplaceToolWindow::InitLayout() {
 	m_executeBtn->SetBackgroundColour(Theme::Get(Theme::Role::Accent)); // Blue
 	m_executeBtn->SetForegroundColour(*wxWHITE);
 	m_executeBtn->SetFont(Theme::GetFont(10, true));
+	m_executeBtn->SetToolTip("Run replacement on the selected scope");
 	actionsSizer->Add(m_executeBtn, wxSizerFlags(0).Expand().Border(wxALL, padding));
 
 	// Close Button
@@ -233,6 +239,7 @@ void ReplaceToolWindow::InitLayout() {
 	closeBtn->SetBackgroundColour(wxColour(120, 120, 120)); // Gray
 	closeBtn->SetForegroundColour(*wxWHITE);
 	closeBtn->SetFont(Theme::GetFont(10, true));
+	closeBtn->SetToolTip("Close this window");
 	actionsSizer->Add(closeBtn, wxSizerFlags(0).Expand().Border(wxALL, padding));
 
 	actionsCard->GetContentSizer()->Add(actionsSizer, wxSizerFlags(1).Expand());
