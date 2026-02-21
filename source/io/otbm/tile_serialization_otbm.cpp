@@ -19,7 +19,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 	}
 	spdlog::debug("Reading OTBM_TILE_AREA at base_x={}, base_y={}, base_z={}", base_x, base_y, base_z);
 
-	for (BinaryNode* tileNode = mapNode->getChild(); tileNode != nullptr; tileNode = tileNode->advance()) {
+	for (BinaryNode* tileNode : mapNode->children()) {
 		uint8_t tile_type;
 		if (!tileNode->getByte(tile_type)) {
 			spdlog::warn("Invalid tile node: failed to read type byte");
@@ -93,7 +93,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 			}
 		}
 
-		for (BinaryNode* itemNode = tileNode->getChild(); itemNode != nullptr; itemNode = itemNode->advance()) {
+		for (BinaryNode* itemNode : tileNode->children()) {
 			uint8_t item_type;
 			if (!itemNode->getByte(item_type)) {
 				spdlog::warn("Failed to read item type at {},{},{}", pos.x, pos.y, pos.z);
