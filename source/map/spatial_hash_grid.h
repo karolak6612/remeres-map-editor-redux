@@ -28,7 +28,6 @@ public:
 
 	struct GridCell {
 		std::unique_ptr<MapNode> nodes[NODES_IN_CELL];
-		mutable std::shared_mutex mutex;
 		GridCell();
 		~GridCell();
 	};

@@ -54,6 +54,7 @@ void main() {
     if (dist > 1.0) discard;
 
     float alpha = (1.0 - dist) * (1.0 - dist); // Quadratic falloff
+
     // Additive blend: SRC_ALPHA, ONE. Output must be pre-multiplied by alpha logic?
     // Review: "change the output so RGB remains the unmultiplied LightColor and only the alpha carries the falloff value"
     // FragColor = vec4(LightColor.rgb, alpha);
@@ -169,6 +170,10 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	GLint prevFBO;
 	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
 
+	// Save Clear Color
+	GLfloat prevClearColor[4];
+	glGetFloatv(GL_COLOR_CLEAR_VALUE, prevClearColor);
+
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo->GetID());
 	glViewport(0, 0, target_w, target_h);
 
@@ -227,7 +232,7 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE); // Additive blending
 
-	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, instances.size());
+	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instances.size()));
 
 	// Restore GL state
 	glBlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
@@ -237,6 +242,9 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	// Restore FBO and Viewport
 	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
+
+	// Restore Clear Color
+	glClearColor(prevClearColor[0], prevClearColor[1], prevClearColor[2], prevClearColor[3]);
 
 	return texture->GetID();
 }

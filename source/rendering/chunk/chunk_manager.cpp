@@ -7,6 +7,7 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/shared_geometry.h"
 #include "rendering/core/sprite_instance.h"
+#include "rendering/chunk/job_system.h"
 #include <spdlog/spdlog.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "ui/gui.h"
@@ -125,9 +126,6 @@ void ChunkManager::draw(const RenderView& view, Map& map, TileRenderer& renderer
 	// Setup Shader
 	shader->Use();
 
-	// MVP = Projection * View.
-	// Projection is view.projectionMatrix (Ortho).
-	// View is Translation(-scroll_x, -scroll_y).
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-view.view_scroll_x, -view.view_scroll_y, 0.0f));
 	glm::mat4 mvp = view.projectionMatrix * model;
 
@@ -137,26 +135,27 @@ void ChunkManager::draw(const RenderView& view, Map& map, TileRenderer& renderer
 
 	if (g_gui.gfx.ensureAtlasManager()) {
 		g_gui.gfx.getAtlasManager()->bind(0);
-	}
 
-	// Draw visible chunks
-	int start_cx = (view.start_x >> 5);
-	int start_cy = (view.start_y >> 5);
-	int end_cx = ((view.end_x + 31) >> 5);
-	int end_cy = ((view.end_y + 31) >> 5);
+		// Draw visible chunks
+		int start_cx = (view.start_x >> 5);
+		int start_cy = (view.start_y >> 5);
+		int end_cx = ((view.end_x + 31) >> 5);
+		int end_cy = ((view.end_y + 31) >> 5);
 
-	glBindVertexArray(vao->GetID());
+		glBindVertexArray(vao->GetID());
 
-	for (int cy = start_cy; cy <= end_cy; ++cy) {
-		for (int cx = start_cx; cx <= end_cx; ++cx) {
-			auto it = chunks.find(makeKey(cx, cy));
-			if (it != chunks.end()) {
-				it->second->draw(vao->GetID());
+		for (int cy = start_cy; cy <= end_cy; ++cy) {
+			for (int cx = start_cx; cx <= end_cx; ++cx) {
+				auto it = chunks.find(makeKey(cx, cy));
+				if (it != chunks.end()) {
+					it->second->draw(vao->GetID());
+				}
 			}
 		}
+
+		glBindVertexArray(0);
 	}
 
-	glBindVertexArray(0);
 	shader->Unuse();
 }
 
