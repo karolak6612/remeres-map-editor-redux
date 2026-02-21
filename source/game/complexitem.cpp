@@ -37,6 +37,7 @@ std::unique_ptr<Item> Container::deepCopy() const {
 	std::unique_ptr<Item> copy = Item::deepCopy();
 	Container* copyContainer = dynamic_cast<Container*>(copy.get());
 	if (copyContainer) {
+		copyContainer->contents.reserve(contents.size());
 		for (const auto& item : contents) {
 			copyContainer->contents.push_back(item->deepCopy());
 		}

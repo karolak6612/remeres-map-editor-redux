@@ -217,6 +217,14 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		return isBlocking() && (ground || !items.empty());
 	}
 
+	if (prop == HOOK_SOUTH) {
+		return hasHookSouth();
+	}
+
+	if (prop == HOOK_EAST) {
+		return hasHookEast();
+	}
+
 	if (ground && ground->hasProperty(prop)) {
 		return true;
 	}
@@ -331,6 +339,10 @@ void Tile::select() {
 }
 
 void Tile::deselect() {
+	if (!isSelected()) {
+		return;
+	}
+
 	if (ground) {
 		ground->deselect();
 	}
@@ -549,6 +561,9 @@ Item* Tile::getWall() const {
 }
 
 Item* Tile::getCarpet() const {
+	if (!hasCarpet()) {
+		return nullptr;
+	}
 	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isCarpet();
 	});
@@ -556,6 +571,9 @@ Item* Tile::getCarpet() const {
 }
 
 Item* Tile::getTable() const {
+	if (!hasTable()) {
+		return nullptr;
+	}
 	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isTable();
 	});
@@ -642,6 +660,10 @@ void Tile::removeHouseExit(House* h) {
 bool Tile::isContentEqual(const Tile* other) const {
 	if (!other) {
 		return false;
+	}
+
+	if (this == other) {
+		return true;
 	}
 
 	// Compare ground
