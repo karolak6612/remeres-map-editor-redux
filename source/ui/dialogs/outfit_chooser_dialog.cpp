@@ -34,8 +34,6 @@
 #include <nlohmann/json.hpp>
 
 namespace {
-	const int COLOR_COLUMNS = 19;
-	const int COLOR_ROWS = 7;
 	const int PREVIEW_SIZE = 192;
 	const int OUTFIT_TILE_WIDTH = 100;
 	const int OUTFIT_TILE_HEIGHT = 120;
@@ -178,7 +176,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	part_sizer->Add(feet_btn, 1, wxEXPAND);
 	col1_sizer->Add(part_sizer, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 8);
 
-	wxFlexGridSizer* palette_sizer = new wxFlexGridSizer(COLOR_ROWS, COLOR_COLUMNS, 1, 1);
+	wxWrapSizer* palette_sizer = new wxWrapSizer(wxHORIZONTAL);
 	for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
 		uint32_t color = TemplateOutfitLookupTable[i];
 		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color);
