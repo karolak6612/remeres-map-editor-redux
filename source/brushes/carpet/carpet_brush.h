@@ -40,7 +40,7 @@ public:
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 	static void doCarpets(BaseMap* map, Tile* tile);
 

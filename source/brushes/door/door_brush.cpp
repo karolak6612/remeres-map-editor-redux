@@ -153,7 +153,7 @@ bool DoorBrush::canDraw(BaseMap* map, const Position& position) const {
 void DoorBrush::undraw(BaseMap* map, Tile* tile) {
 	for (const auto& item : tile->items) {
 		if (item->isBrushDoor()) {
-			item->getWallBrush()->draw(map, tile, nullptr);
+			item->getWallBrush()->draw(map, tile, {});
 			if (g_settings.getInteger(Config::USE_AUTOMAGIC)) {
 				TileOperations::wallize(tile, map);
 			}
@@ -162,7 +162,7 @@ void DoorBrush::undraw(BaseMap* map, Tile* tile) {
 	}
 }
 
-void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void DoorBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	for (auto it = tile->items.begin(); it != tile->items.end();) {
 		Item* item = it->get();
 		if (!item->isWall()) {
@@ -180,7 +180,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		uint16_t discarded_id = 0;
 		bool close_match = false;
 		bool perfect_match = false;
-		bool open = parameter ? *static_cast<bool*>(parameter) : (item->isBrushDoor() && item->isOpen());
+		bool open = context.extra ? *static_cast<bool*>(context.extra) : (item->isBrushDoor() && item->isOpen());
 		bool prefLocked = g_gui.HasDoorLocked();
 
 		WallBrush* test_brush = wb;

@@ -58,6 +58,13 @@ class WaypointBrush;
 class FlagBrush;
 class EraserBrush;
 
+struct BrushContext {
+	bool alt = false;
+	bool shift = false;
+	bool ctrl = false;
+	void* extra = nullptr;
+};
+
 //=============================================================================
 // Brushes, holds all brushes
 
@@ -113,7 +120,7 @@ public:
 		return true;
 	}
 
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter = nullptr) = 0;
+	virtual void draw(BaseMap* map, Tile* tile, const BrushContext& context = {}) = 0;
 	virtual void undraw(BaseMap* map, Tile* tile) = 0;
 	virtual bool canDraw(BaseMap* map, const Position& position) const = 0;
 
@@ -239,7 +246,7 @@ public:
 	~EraserBrush() override;
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 
 	bool needBorders() const override {

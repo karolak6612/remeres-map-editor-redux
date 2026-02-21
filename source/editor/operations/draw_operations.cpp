@@ -164,7 +164,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 
 		if (dodraw) {
 			bool b = true;
-			brush->as<WallBrush>()->draw(&editor.map, new_tile.get(), &b);
+			brush->as<WallBrush>()->draw(&editor.map, new_tile.get(), BrushContext{.extra = &b});
 		} else {
 			brush->as<WallBrush>()->undraw(&editor.map, new_tile.get());
 		}
@@ -187,7 +187,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 			param = g_gui.GetBrushSize();
 		}
 		if (dodraw) {
-			brush->draw(&editor.map, new_tile.get(), &param);
+			brush->draw(&editor.map, new_tile.get(), BrushContext{.extra = &param});
 		} else {
 			brush->undraw(&editor.map, new_tile.get());
 		}
@@ -247,14 +247,14 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, boo
 			if (tile) {
 				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 				if (dodraw) {
-					brush->draw(&editor.map, new_tile.get(), &alt);
+					brush->draw(&editor.map, new_tile.get(), BrushContext{.alt = alt, .extra = &alt});
 				} else {
 					brush->undraw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				brush->draw(&editor.map, new_tile.get(), &alt);
+				brush->draw(&editor.map, new_tile.get(), BrushContext{.alt = alt, .extra = &alt});
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}
@@ -290,9 +290,9 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 							param.first = true;
 							param.second = nullptr;
 						}
-						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), &param);
+						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), BrushContext{.extra = &param});
 					} else {
-						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), nullptr);
+						g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get());
 					}
 				} else {
 					g_gui.GetCurrentBrush()->undraw(&editor.map, new_tile.get());
@@ -310,9 +310,9 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 						param.first = true;
 						param.second = nullptr;
 					}
-					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), &param);
+					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), BrushContext{.extra = &param});
 				} else {
-					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), nullptr);
+					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
@@ -364,14 +364,14 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 			if (tile) {
 				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 				if (dodraw) {
-					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), nullptr);
+					g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get());
 				} else {
 					g_gui.GetCurrentBrush()->undraw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get(), nullptr);
+				g_gui.GetCurrentBrush()->draw(&editor.map, new_tile.get());
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}
@@ -491,14 +491,14 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 				}
 				if (dodraw) {
-					door_brush->draw(&editor.map, new_tile.get(), &alt);
+					door_brush->draw(&editor.map, new_tile.get(), BrushContext{.alt = alt, .extra = &alt});
 				} else {
 					door_brush->undraw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				door_brush->draw(&editor.map, new_tile.get(), &alt);
+				door_brush->draw(&editor.map, new_tile.get(), BrushContext{.alt = alt, .extra = &alt});
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}

@@ -68,7 +68,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
 		std::unique_ptr<Tile> newTile = tile->deepCopy(editor.map);
 		GroundBrush* groundBrush = newTile->getGroundBrush();
 		if (groundBrush && groundBrush->isReRandomizable()) {
-			groundBrush->draw(&editor.map, newTile.get(), nullptr);
+			groundBrush->draw(&editor.map, newTile.get(), {});
 
 			Item* oldGround = tile->ground.get();
 			Item* newGround = newTile->ground.get();

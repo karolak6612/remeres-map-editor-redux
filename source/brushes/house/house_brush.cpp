@@ -61,7 +61,7 @@ void HouseBrush::undraw(BaseMap* map, Tile* tile) {
 	}
 }
 
-void HouseBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void HouseBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(draw_house);
 	uint32_t old_house_id = tile->getHouseID();
 	tile->setHouse(draw_house);

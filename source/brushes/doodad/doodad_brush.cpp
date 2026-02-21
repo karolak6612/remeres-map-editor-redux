@@ -78,10 +78,10 @@ void DoodadBrush::undraw(BaseMap* map, Tile* tile) {
 	}
 }
 
-void DoodadBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void DoodadBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	int variation = 0;
-	if (parameter) {
-		variation = *reinterpret_cast<int*>(parameter);
+	if (context.extra) {
+		variation = *reinterpret_cast<int*>(context.extra);
 	}
 
 	Item* randomItem = items.getRandomSingleItem(variation);
