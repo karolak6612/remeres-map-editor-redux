@@ -6,6 +6,9 @@
 #include "map/spatial_hash_grid.h"
 #include <chrono>
 #include <shared_mutex>
+#include "ui/gui.h"
+#include "rendering/core/graphics.h"
+#include "rendering/core/atlas_manager.h"
 
 RenderChunk::RenderChunk(int chunk_x, int chunk_y) : chunk_x(chunk_x), chunk_y(chunk_y) {
 	vbo = std::make_unique<GLBuffer>();
@@ -108,7 +111,7 @@ ChunkData RenderChunk::rebuild(int chunk_x, int chunk_y, Map& map, TileRenderer&
 }
 
 void RenderChunk::upload(const ChunkData& data) {
-	instance_count = data.sprites.size();
+	instance_count = static_cast<GLsizei>(data.sprites.size());
 	lights = data.lights;
 
 	if (instance_count > 0) {

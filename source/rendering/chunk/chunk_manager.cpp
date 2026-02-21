@@ -115,6 +115,10 @@ bool ChunkManager::initialize() {
 }
 
 void ChunkManager::draw(const RenderView& view, Map& map, TileRenderer& renderer, const DrawingOptions& options, uint32_t current_house_id) {
+	if (!shader || !vao) {
+		return;
+	}
+
 	processResults();
 	update(view, map, renderer, options, current_house_id);
 
@@ -207,12 +211,8 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 				int start_nx = cx * 8;
 				int start_ny = cy * 8;
 
-				// Optimization: Could cache MapNode pointers in RenderChunk
 				for (int ny = 0; ny < 8; ++ny) {
 					for (int nx = 0; nx < 8; ++nx) {
-						// getLeaf logic is fast (bit shift + array lookup)
-						// But we need to use map.getGrid().getLeaf
-						// Note: We access map in Main Thread here, safe.
 						MapNode* node = map.getGrid().getLeaf((start_nx + nx) * 4, (start_ny + ny) * 4);
 						if (node) {
 							if (node->getLastModified() > chunk->getLastBuildTime()) {
@@ -265,10 +265,9 @@ void ChunkManager::processResults() {
 		if (it != chunks.end()) {
 			it->second->upload(res.data);
 
-			// If missing sprites were found, invalidate this chunk to retry immediately?
-			// Or wait for next update?
-			// If we loaded them, we should rebuild.
-			if (!res.data.missing_sprites.empty() && missing_found) {
+			// If missing sprites were found and we attempted to load them,
+			// invalidate this chunk to retry on the next update cycle.
+			if (!res.data.missing_sprites.empty() && missing_loaded) {
 				it->second->forceDirty();
 			}
 		}

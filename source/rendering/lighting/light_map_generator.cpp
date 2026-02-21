@@ -3,10 +3,11 @@
 #include <spdlog/spdlog.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include "app/definitions.h"
+#include <bit> // C++20 for bit_cast
 
 // Shader to render lights as additive sprites onto the lightmap
 const char* light_vert = R"(
-#version 450 core
+#version 460 core
 layout (location = 0) in vec2 aPos; // Quad vertices
 layout (location = 1) in vec2 aTexCoord; // Quad UVs
 layout (location = 2) in vec2 aLightPos; // Instance Pos
@@ -30,19 +31,9 @@ vec4 unpackColor(float f) {
 
 void main() {
     // Light sprite size depends on intensity.
-    // 32 = intensity 0 (smallest visible circle?)
-    // Actually Tibia lights are large radial gradients.
-    // Let's assume a base size scaling with intensity.
-    // Intensity is usually 0-255? Or smaller?
-    // In RME, intensity is roughly radius in tiles? No, 0-255.
-    // TileRenderer: `int startOffset = std::max<int>(16, 32 - light.intensity);`
-    // This logic is for drawing the marker square.
-
-    // For actual lighting, we need a large radial sprite.
-    // Let's say radius = intensity * something.
     float size = aLightParams.y * 64.0; // Arbitrary scale factor
 
-    vec2 pos = aLightPos + aPos * size;
+    vec2 pos = aLightPos + (aPos - 0.5) * size; // Center quad on position
     gl_Position = uMVP * vec4(pos, 0.0, 1.0);
     TexCoord = aTexCoord;
     LightColor = unpackColor(aLightParams.x);
@@ -51,7 +42,7 @@ void main() {
 )";
 
 const char* light_frag = R"(
-#version 450 core
+#version 460 core
 in vec2 TexCoord;
 in vec4 LightColor;
 in float Intensity;
@@ -63,7 +54,11 @@ void main() {
     if (dist > 1.0) discard;
 
     float alpha = (1.0 - dist) * (1.0 - dist); // Quadratic falloff
-    FragColor = vec4(LightColor.rgb, 1.0) * alpha;
+    // Additive blend: SRC_ALPHA, ONE. Output must be pre-multiplied by alpha logic?
+    // Review: "change the output so RGB remains the unmultiplied LightColor and only the alpha carries the falloff value"
+    // FragColor = vec4(LightColor.rgb, alpha);
+
+    FragColor = vec4(LightColor.rgb, alpha);
 }
 )";
 
@@ -167,8 +162,12 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	int target_h = view.screensize_y;
 	resizeFBO(target_w, target_h);
 
+	// Save GL state
 	GLint prevViewport[4];
 	glGetIntegerv(GL_VIEWPORT, prevViewport);
+
+	GLint prevFBO;
+	glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prevFBO);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo->GetID());
 	glViewport(0, 0, target_w, target_h);
@@ -195,10 +194,10 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 
 		// Resolve the color from the 8-bit index before packing
 		wxColor color = colorFromEightBit(l.color);
-		uint32_t packed_val = (color.Red()) | (color.Green() << 8) | (color.Blue() << 16) | (0xFF << 24);
+		// Fix shift: 0xFFu
+		uint32_t packed_val = (color.Red()) | (color.Green() << 8) | (color.Blue() << 16) | (0xFFu << 24);
 
-		float packed_color_f;
-		std::memcpy(&packed_color_f, &packed_val, sizeof(float));
+		float packed_color_f = std::bit_cast<float>(packed_val);
 
 		instances.push_back({
 			screen_x + TILE_SIZE / 2.0f, // Center of tile
@@ -211,11 +210,13 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	glNamedBufferData(vbo->GetID(), instances.size() * sizeof(GPULightInstance), instances.data(), GL_STREAM_DRAW);
 
 	// Draw
-	// Save GL state
+	// Save Blend state
 	GLboolean blend_enabled = glIsEnabled(GL_BLEND);
-	GLint blend_src, blend_dst;
-	glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
-	glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+	GLint blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha;
+	glGetIntegerv(GL_BLEND_SRC_RGB, &blend_src_rgb);
+	glGetIntegerv(GL_BLEND_DST_RGB, &blend_dst_rgb);
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src_alpha);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst_alpha);
 
 	shader->Use();
 	shader->SetMat4("uMVP", view.projectionMatrix);
@@ -229,10 +230,12 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, instances.size());
 
 	// Restore GL state
-	glBlendFunc(blend_src, blend_dst);
+	glBlendFuncSeparate(blend_src_rgb, blend_dst_rgb, blend_src_alpha, blend_dst_alpha);
 	if (!blend_enabled) glDisable(GL_BLEND);
 	shader->Unuse();
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	// Restore FBO and Viewport
+	glBindFramebuffer(GL_FRAMEBUFFER, prevFBO);
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 
 	return texture->GetID();
