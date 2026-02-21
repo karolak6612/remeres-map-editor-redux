@@ -18,6 +18,10 @@
 #ifndef RME_MAP_H_
 #define RME_MAP_H_
 
+#include <vector>
+#include <unordered_map>
+#include <unordered_set>
+
 #include "map/basemap.h"
 #include "map/tile.h"
 #include "game/town.h"
@@ -137,6 +141,7 @@ protected:
 
 protected:
 	void removeSpawnInternal(Tile* tile);
+	void convertTile(Tile* tile, const ConversionMap& rm, const std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>>& mtm_lookups, std::vector<uint16_t>& id_list);
 
 	std::vector<std::string> warnings;
 	wxString error;

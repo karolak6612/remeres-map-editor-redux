@@ -99,6 +99,7 @@ protected:
 	void readTileArea(Map& map, BinaryNode* mapNode);
 	void readTowns(Map& map, BinaryNode* mapNode);
 	void readWaypoints(Map& map, BinaryNode* mapNode);
+	void loadAuxiliaryFiles(Map& map, const FileName& identifier);
 
 	bool saveMapToDisk(Map& map, const FileName& identifier);
 
