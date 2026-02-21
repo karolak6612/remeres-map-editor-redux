@@ -380,6 +380,9 @@ std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelecte
 	items.erase(split_point, items.end());
 
 	statflags &= ~TILESTATE_SELECTED;
+	if (location) {
+		location->notifyChange();
+	}
 	return pop_items;
 }
 
@@ -521,6 +524,10 @@ void Tile::update() {
 			statflags |= TILESTATE_BLOCKING;
 		}
 	}
+
+	if (location) {
+		location->notifyChange();
+	}
 }
 
 void Tile::addBorderItem(std::unique_ptr<Item> item) {
@@ -608,10 +615,16 @@ void Tile::deselectGround() {
 
 void Tile::setHouse(House* _house) {
 	house_id = (_house ? _house->getID() : 0);
+	if (location) {
+		location->notifyChange();
+	}
 }
 
 void Tile::setHouseID(uint32_t newHouseId) {
 	house_id = newHouseId;
+	if (location) {
+		location->notifyChange();
+	}
 }
 
 bool Tile::isTownExit(Map& map) const {
@@ -624,6 +637,7 @@ void Tile::addHouseExit(House* h) {
 	}
 	HouseExitList* house_exits = location->createHouseExits();
 	house_exits->push_back(h->getID());
+	location->notifyChange();
 }
 
 void Tile::removeHouseExit(House* h) {
@@ -637,6 +651,7 @@ void Tile::removeHouseExit(House* h) {
 	}
 
 	std::erase(*house_exits, h->getID());
+	location->notifyChange();
 }
 
 bool Tile::isContentEqual(const Tile* other) const {

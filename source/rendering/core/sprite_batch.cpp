@@ -347,3 +347,17 @@ void SpriteBatch::end(const AtlasManager& atlas_manager) {
 	// blend_capability_ was constructed first, so destroy it last
 	blend_capability_.reset();
 }
+
+std::vector<SpriteInstance> SpriteBatch::stealInstances() {
+	std::vector<SpriteInstance> instances = std::move(pending_sprites_);
+	pending_sprites_.clear();
+	pending_sprites_.reserve(MAX_SPRITES_PER_BATCH);
+	return instances;
+}
+
+void SpriteBatch::append(const std::vector<SpriteInstance>& instances) {
+	if (!in_batch_) {
+		return;
+	}
+	pending_sprites_.insert(pending_sprites_.end(), instances.begin(), instances.end());
+}

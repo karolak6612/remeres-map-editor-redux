@@ -30,6 +30,9 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
+#include "rendering/core/render_chunk.h"
+#include "ui/gui.h"
+#include <glm/gtc/matrix_transform.hpp>
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
 	tile_renderer(tile_renderer),
@@ -47,15 +50,40 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	int nd_end_y = (view.end_y & ~3) + 4;
 
 	// Optimization: Pre-calculate offset and base coordinates
-	// IsTileVisible does this for every tile, but it's constant per layer/frame.
-	// We also skip IsTileVisible because visitLeaves already bounds us to the visible area (with 4-tile alignment),
-	// which is well within IsTileVisible's 6-tile margin.
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TILE_SIZE
 		: TILE_SIZE * (view.floor - map_z);
 
 	int base_screen_x = -view.view_scroll_x - offset;
 	int base_screen_y = -view.view_scroll_y - offset;
+
+	// Matrix to transform World Coordinates to Screen Coordinates
+	glm::mat4 world_matrix = view.projectionMatrix * glm::translate(glm::mat4(1.0f), glm::vec3((float)base_screen_x, (float)base_screen_y, 0.0f));
+	glm::mat4 original_matrix = view.projectionMatrix;
+
+	// Check for option changes that require cache invalidation
+	uint64_t current_hash = 0;
+	current_hash |= (uint64_t)options.show_houses << 0;
+	current_hash |= (uint64_t)options.show_blocking << 1;
+	current_hash |= (uint64_t)options.show_spawns << 2;
+	current_hash |= (uint64_t)options.show_items << 3;
+	current_hash |= (uint64_t)options.transparent_items << 4;
+	current_hash |= (uint64_t)options.show_special_tiles << 5;
+	current_hash |= (uint64_t)options.isDrawLight() << 6;
+	current_hash |= (uint64_t)options.show_creatures << 7;
+	current_hash |= (uint64_t)options.highlight_items << 8;
+	current_hash ^= (uint64_t)options.current_house_id << 10;
+
+	if (current_hash != last_options_hash) {
+		chunk_manager.Clear();
+		last_options_hash = current_hash;
+	}
+
+	// Switch to World Matrix for chunk rendering
+	if (g_gui.gfx.hasAtlasManager()) {
+		sprite_batch.end(*g_gui.gfx.getAtlasManager());
+	}
+	sprite_batch.begin(world_matrix);
 
 	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
@@ -87,32 +115,35 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 				}
 				nd->setRequested(map_z > GROUND_LAYER, true);
 			}
-			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
+
+			// Switch to Screen Matrix for GridDrawer
+			if (g_gui.gfx.hasAtlasManager()) {
+				sprite_batch.end(*g_gui.gfx.getAtlasManager());
+				sprite_batch.begin(original_matrix);
+				grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
+				sprite_batch.end(*g_gui.gfx.getAtlasManager());
+				sprite_batch.begin(world_matrix);
+			}
 			return;
 		}
 
-		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
+		RenderChunk* chunk = chunk_manager.GetChunk(nd, map_z);
+		bool rebuild = false;
 
-		Floor* floor = nd->getFloor(map_z);
-		if (!floor) {
-			return;
+		if (chunk->getLastRendered() < nd->last_modified.load(std::memory_order_relaxed) || chunk->isDynamic()) {
+			rebuild = true;
 		}
 
-		TileLocation* location = floor->locs;
-		int draw_x_base = node_draw_x;
-		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
-			int draw_y = node_draw_y;
-			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
-				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-					continue;
-				}
+		if (rebuild) {
+			chunk->Rebuild(nd, map_z, tile_renderer, view, options, options.current_house_id);
+		}
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
-				// draw light, but only if not zoomed too far
-				if (draw_lights) {
-					tile_renderer->AddLight(location, view, options, light_buffer);
-				}
+		sprite_batch.append(chunk->getInstances());
+
+		if (draw_lights) {
+			const auto& cached_lights = chunk->getLights();
+			if (!cached_lights.empty()) {
+				light_buffer.lights.insert(light_buffer.lights.end(), cached_lights.begin(), cached_lights.end());
 			}
 		}
 	};
@@ -140,5 +171,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			drawNode(nd, nd_map_x, nd_map_y, false);
 		});
 	}
+
+	// Restore original matrix for subsequent drawers
+	if (g_gui.gfx.hasAtlasManager()) {
+		sprite_batch.end(*g_gui.gfx.getAtlasManager());
+	}
+	sprite_batch.begin(original_matrix);
 }
 
