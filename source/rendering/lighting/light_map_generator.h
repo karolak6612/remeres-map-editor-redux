@@ -21,13 +21,16 @@ public:
 	GLuint generate(const RenderView& view, const std::vector<LightBuffer::Light>& lights, float ambient_light);
 
 private:
-	void resizeFBO(int width, int height);
+	bool resizeFBO(int width, int height);
 
 	std::unique_ptr<GLFramebuffer> fbo;
 	std::unique_ptr<GLTextureResource> texture;
 	std::unique_ptr<ShaderProgram> shader;
 	std::unique_ptr<GLVertexArray> vao; // Dummy VAO for full-screen quad (if using empty VBO trick) or specific geometry
 	std::unique_ptr<GLBuffer> vbo; // Instance buffer for lights
+
+	std::unique_ptr<GLTextureResource> ambient_tex;
+	float last_ambient = -1.0f;
 
 	int width = 0;
 	int height = 0;

@@ -54,12 +54,10 @@ ChunkData RenderChunk::rebuild(int chunk_x, int chunk_y, Map& map, TileRenderer&
 
 			glm::vec4 shade_color(0.0f, 0.0f, 0.0f, 128.0f / 255.0f);
 
-			// Use safe accessor for AtlasManager.
-			// Note: Accessing AtlasManager from background thread is generally unsafe if it reallocates.
-			// However, in the absence of a thread-safe getter, we check validity.
+			// Use safe accessor for AtlasManager or pass white pixel in job.
 			// Ideally, white pixel region should be cached or passed safely.
-			if (g_gui.gfx.hasAtlasManager()) {
-				sprite_collector.drawRect(sx, sy, sw, sh, shade_color, *g_gui.gfx.getAtlasManager());
+			if (options.white_pixel_region) {
+				sprite_collector.draw(sx, sy, sw, sh, *options.white_pixel_region, shade_color.r, shade_color.g, shade_color.b, shade_color.a);
 			}
 		}
 

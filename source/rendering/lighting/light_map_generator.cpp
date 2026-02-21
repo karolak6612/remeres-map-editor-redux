@@ -56,10 +56,9 @@ void main() {
     float alpha = (1.0 - dist) * (1.0 - dist); // Quadratic falloff
 
     // Additive blend: SRC_ALPHA, ONE. Output must be pre-multiplied by alpha logic?
-    // Review: "change the output so RGB remains the unmultiplied LightColor and only the alpha carries the falloff value"
-    // FragColor = vec4(LightColor.rgb, alpha);
+    // FragColor = vec4(LightColor.rgb * Intensity, alpha);
 
-    FragColor = vec4(LightColor.rgb, alpha);
+    FragColor = vec4(LightColor.rgb * Intensity, alpha);
 }
 )";
 
@@ -113,7 +112,7 @@ bool LightMapGenerator::initialize() {
 	return true;
 }
 
-void LightMapGenerator::resizeFBO(int w, int h) {
+bool LightMapGenerator::resizeFBO(int w, int h) {
 	if (width != w || height != h || !fbo) {
 		width = w;
 		height = h;
@@ -131,16 +130,15 @@ void LightMapGenerator::resizeFBO(int w, int h) {
 		GLenum status = glCheckNamedFramebufferStatus(fbo->GetID(), GL_FRAMEBUFFER);
 		if (status != GL_FRAMEBUFFER_COMPLETE) {
 			spdlog::error("LightMapGenerator FBO incomplete: status={}", status);
+			return false;
 		}
 	}
+	return true;
 }
 
 GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<LightBuffer::Light>& lights, float ambient_light) {
 	if (lights.empty()) {
 		// Return 1x1 texture with ambient color
-		static std::unique_ptr<GLTextureResource> ambient_tex;
-		static float last_ambient = -1.0f;
-
 		if (!ambient_tex) {
 			ambient_tex = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
 			glTextureStorage2D(ambient_tex->GetID(), 1, GL_RGBA8, 1, 1);
@@ -161,7 +159,9 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 
 	int target_w = view.screensize_x;
 	int target_h = view.screensize_y;
-	resizeFBO(target_w, target_h);
+	if (!resizeFBO(target_w, target_h)) {
+		return 0;
+	}
 
 	// Save GL state
 	GLint prevViewport[4];

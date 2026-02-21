@@ -182,6 +182,12 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 	int end_cx = ((view.end_x + 31) >> 5);
 	int end_cy = ((view.end_y + 31) >> 5);
 
+	// Retrieve white pixel region safely on main thread
+	DrawingOptions safe_options = options;
+	if (g_gui.gfx.hasAtlasManager()) {
+		safe_options.white_pixel_region = g_gui.gfx.getAtlasManager()->getWhitePixel();
+	}
+
 	for (int cy = start_cy; cy <= end_cy; ++cy) {
 		for (int cx = start_cx; cx <= end_cx; ++cx) {
 			uint64_t key = makeKey(cx, cy);
@@ -210,20 +216,25 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 				int start_nx = cx * 8;
 				int start_ny = cy * 8;
 
-				for (int ny = 0; ny < 8; ++ny) {
-					for (int nx = 0; nx < 8; ++nx) {
-						MapNode* node = map.getGrid().getLeaf((start_nx + nx) * 4, (start_ny + ny) * 4);
-						if (node) {
-							if (node->getLastModified() > chunk->getLastBuildTime()) {
-								dirty = true;
-								goto dirty_found;
+				auto isDirty = [&]() {
+					for (int ny = 0; ny < 8; ++ny) {
+						for (int nx = 0; nx < 8; ++nx) {
+							MapNode* node = map.getGrid().getLeaf((start_nx + nx) * 4, (start_ny + ny) * 4);
+							if (node) {
+								if (node->getLastModified() > chunk->getLastBuildTime()) {
+									return true;
+								}
 							}
 						}
 					}
+					return false;
+				};
+
+				if (isDirty()) {
+					dirty = true;
 				}
 			}
 
-			dirty_found:
 			if (dirty) {
 				ChunkBuildJob job;
 				job.chunk_x = cx;
@@ -231,11 +242,11 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 				job.map = &map;
 				job.renderer = &renderer;
 				job.view = view;
-				job.options = options;
+				job.options = safe_options;
 				job.current_house_id = current_house_id;
 
 				job_system->submit(job);
-				pending_jobs[key] = true;
+				pending_jobs.insert(key);
 			}
 		}
 	}
@@ -266,7 +277,7 @@ void ChunkManager::processResults() {
 
 			// If missing sprites were found and we attempted to load them,
 			// invalidate this chunk to retry on the next update cycle.
-			if (!res.data.missing_sprites.empty() && missing_loaded) {
+			if (missing_loaded) {
 				it->second->forceDirty();
 			}
 		}
