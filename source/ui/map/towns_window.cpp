@@ -10,9 +10,34 @@
 
 #include <algorithm>
 #include <iterator>
+#include <vector>
+
+class TownListCtrl : public wxListCtrl {
+public:
+	TownListCtrl(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) :
+		wxListCtrl(parent, id, pos, size, style | wxLC_VIRTUAL) {
+	}
+
+	wxString OnGetItemText(long item, long column) const override {
+		if (item >= 0 && item < static_cast<long>(m_towns.size())) {
+			if (column == 0) return wxString::Format("%d", m_towns[item].first);
+			if (column == 1) return wxstr(m_towns[item].second);
+		}
+		return "";
+	}
+
+	void SetTowns(std::vector<std::pair<uint32_t, std::string>> towns) {
+		m_towns = std::move(towns);
+		SetItemCount(m_towns.size());
+		Refresh();
+	}
+
+private:
+	std::vector<std::pair<uint32_t, std::string>> m_towns;
+};
 
 EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
-	wxDialog(parent, wxID_ANY, "Towns", wxDefaultPosition, FROM_DIP(parent, wxSize(280, 330))),
+	wxDialog(parent, wxID_ANY, "Towns", wxDefaultPosition, FROM_DIP(parent, wxSize(350, 400))),
 	editor(editor) {
 	Map& map = editor.map;
 
@@ -28,8 +53,11 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	}
 
 	// Town list
-	town_listbox = newd wxListBox(this, EDIT_TOWNS_LISTBOX, wxDefaultPosition, FROM_DIP(this, wxSize(240, 100)));
-	sizer->Add(town_listbox, 1, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 10);
+	town_list_ctrl = newd TownListCtrl(this, wxID_ANY, wxDefaultPosition, FROM_DIP(this, wxSize(310, 150)), wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_HRULES | wxLC_VRULES);
+	town_list_ctrl->InsertColumn(0, "ID", wxLIST_FORMAT_LEFT, 50);
+	town_list_ctrl->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, 240);
+
+	sizer->Add(town_list_ctrl, 1, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 10);
 
 	tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto addBtn = newd wxButton(this, EDIT_TOWNS_ADD, "Add");
@@ -78,7 +106,7 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	Centre(wxBOTH);
 	BuildListBox(true);
 
-	town_listbox->Bind(wxEVT_LISTBOX, &EditTownsDialog::OnListBoxChange, this);
+	town_list_ctrl->Bind(wxEVT_LIST_ITEM_SELECTED, &EditTownsDialog::OnListSelected, this);
 	addBtn->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickAdd, this);
 	remove_button->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickRemove, this);
 	select_position_button->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickSelectTemplePosition, this);
@@ -95,7 +123,7 @@ EditTownsDialog::~EditTownsDialog() = default;
 void EditTownsDialog::BuildListBox(bool doselect) {
 	long tmplong = 0;
 	max_town_id = 0;
-	std::vector<std::string> town_name_list;
+	std::vector<std::pair<uint32_t, std::string>> town_data;
 	uint32_t selection_before = 0;
 
 	if (doselect && id_field->GetValue().ToLong(&tmplong)) {
@@ -110,17 +138,15 @@ void EditTownsDialog::BuildListBox(bool doselect) {
 	}
 
 	for (const auto& town : town_list) {
-		town_name_list.push_back(town->getName());
+		town_data.push_back({town->getID(), town->getName()});
 		if (max_town_id < town->getID()) {
 			max_town_id = town->getID();
 		}
 	}
 
-	town_listbox->Clear();
-	for (const auto& name : town_name_list) {
-		town_listbox->Append(name);
-	}
-	remove_button->Enable(town_listbox->GetCount() != 0);
+	static_cast<TownListCtrl*>(town_list_ctrl)->SetTowns(std::move(town_data));
+
+	remove_button->Enable(town_list_ctrl->GetItemCount() != 0);
 	select_position_button->Enable(false);
 
 	if (doselect) {
@@ -128,7 +154,10 @@ void EditTownsDialog::BuildListBox(bool doselect) {
 			int i = 0;
 			for (const auto& town : town_list) {
 				if (selection_before == town->getID()) {
-					town_listbox->SetSelection(i);
+					// SetSelection(i)
+					town_list_ctrl->Unbind(wxEVT_LIST_ITEM_SELECTED, &EditTownsDialog::OnListSelected, this);
+					town_list_ctrl->SetItemState(i, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
+					town_list_ctrl->Bind(wxEVT_LIST_ITEM_SELECTED, &EditTownsDialog::OnListSelected, this);
 					return;
 				}
 				++i;
@@ -138,7 +167,7 @@ void EditTownsDialog::BuildListBox(bool doselect) {
 	}
 }
 
-void EditTownsDialog::UpdateSelection(int new_selection) {
+void EditTownsDialog::UpdateSelection(long new_selection) {
 	long tmplong;
 
 	// Save old values
@@ -194,7 +223,11 @@ void EditTownsDialog::UpdateSelection(int new_selection) {
 		town_id << long(town->getID());
 		id_field->SetValue(town_id);
 		temple_position->SetPosition(town->getTemplePosition());
-		town_listbox->SetSelection(new_selection);
+
+		// town_listbox->SetSelection(new_selection);
+		town_list_ctrl->Unbind(wxEVT_LIST_ITEM_SELECTED, &EditTownsDialog::OnListSelected, this);
+		town_list_ctrl->SetItemState(new_selection, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED, wxLIST_STATE_SELECTED | wxLIST_STATE_FOCUSED);
+		town_list_ctrl->Bind(wxEVT_LIST_ITEM_SELECTED, &EditTownsDialog::OnListSelected, this);
 	} else {
 		name_field->Enable(false);
 		temple_position->Enable(false);
@@ -203,8 +236,8 @@ void EditTownsDialog::UpdateSelection(int new_selection) {
 	Refresh();
 }
 
-void EditTownsDialog::OnListBoxChange(wxCommandEvent& event) {
-	UpdateSelection(event.GetSelection());
+void EditTownsDialog::OnListSelected(wxListEvent& event) {
+	UpdateSelection(event.GetIndex());
 }
 
 void EditTownsDialog::OnClickSelectTemplePosition(wxCommandEvent& WXUNUSED(event)) {
@@ -222,7 +255,6 @@ void EditTownsDialog::OnClickAdd(wxCommandEvent& WXUNUSED(event)) {
 
 	BuildListBox(false);
 	UpdateSelection(town_list.size() - 1);
-	town_listbox->SetSelection(town_list.size() - 1);
 }
 
 void EditTownsDialog::OnClickRemove(wxCommandEvent& WXUNUSED(event)) {
