@@ -7,6 +7,7 @@
 #include "game/creature.h"
 #include "game/item.h"
 #include "util/common.h" // for wxstr
+#include <format>
 
 wxString TileDescriber::GetDescription(Tile* tile, bool showSpawns, bool showCreatures) {
 	wxString ss;
@@ -27,9 +28,7 @@ wxString TileDescriber::GetDescription(Tile* tile, bool showSpawns, bool showCre
 				ss << " aid:" << item->getActionID();
 			}
 			if (item->hasWeight()) {
-				wxString s;
-				s.Printf("%.2f", item->getWeight());
-				ss << " weight: " << s;
+				ss << " weight: " << wxstr(std::format("{:.2f}", item->getWeight()));
 			}
 		} else {
 			ss << "Nothing";

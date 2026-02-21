@@ -30,15 +30,6 @@
 	#include "../app/definitions.h"
 #endif
 
-#ifndef MAP_MAX_WIDTH
-	#define MAP_MAX_WIDTH 65000
-#endif
-#ifndef MAP_MAX_HEIGHT
-	#define MAP_MAX_HEIGHT 65000
-#endif
-#ifndef MAP_MAX_LAYER
-	#define MAP_MAX_LAYER 15
-#endif
 
 class SmallPosition;
 

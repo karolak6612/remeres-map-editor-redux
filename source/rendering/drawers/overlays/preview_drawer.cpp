@@ -68,7 +68,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							b = b / 3 * 2;
 						}
 						if (tile->isHouseTile() && options.show_houses) {
-							if ((int)tile->getHouseID() == current_house_id) {
+							if (tile->getHouseID() == current_house_id) {
 								r /= 2;
 							} else {
 								r /= 2;

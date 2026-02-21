@@ -120,11 +120,11 @@ constexpr double DEG2RAD = PI / 180.0;
 constexpr double RAD2DEG = 180.0 / PI;
 
 // The height of the map (there should be more checks for this...)
-#define MAP_LAYERS 16
+constexpr int MAP_LAYERS = 16;
 
-#define MAP_MAX_WIDTH 65000
-#define MAP_MAX_HEIGHT 65000
-#define MAP_MAX_LAYER 15
+constexpr int MAP_MAX_WIDTH = 65000;
+constexpr int MAP_MAX_HEIGHT = 65000;
+constexpr int MAP_MAX_LAYER = 15;
 
 // Sanity limit for sprite counts
 constexpr std::uint32_t MAX_SPRITES = 3000000;
@@ -136,11 +136,11 @@ constexpr int TILE_SIZE = 32;
 constexpr int PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS = TILE_SIZE * 6;
 
 // The default size of sprites
-#define SPRITE_PIXELS 32
-#define SPRITE_PIXELS_SIZE SPRITE_PIXELS* SPRITE_PIXELS
+constexpr int SPRITE_PIXELS = 32;
+constexpr int SPRITE_PIXELS_SIZE = SPRITE_PIXELS * SPRITE_PIXELS;
 
 // The sea layer
-#define GROUND_LAYER 7
+constexpr int GROUND_LAYER = 7;
 
 constexpr int ClientMapWidth = 17;
 constexpr int ClientMapHeight = 13;
