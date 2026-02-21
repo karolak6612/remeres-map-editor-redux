@@ -14,6 +14,64 @@
 
 wxDEFINE_EVENT(WELCOME_DIALOG_ACTION, wxCommandEvent);
 
+class RecentMapListCtrl : public wxListCtrl {
+public:
+	struct Entry {
+		wxString path;
+		wxString date;
+		int icon_index;
+	};
+
+	RecentMapListCtrl(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style) :
+		wxListCtrl(parent, id, pos, size, style | wxLC_VIRTUAL) {
+	}
+
+	wxString OnGetItemText(long item, long column) const override {
+		if (item >= 0 && item < static_cast<long>(m_entries.size())) {
+			if (column == 1) return m_entries[item].path;
+			if (column == 2) return m_entries[item].date;
+		}
+		return "";
+	}
+
+	int OnGetItemImage(long item) const override {
+		if (item >= 0 && item < static_cast<long>(m_entries.size())) {
+			return m_entries[item].icon_index;
+		}
+		return -1;
+	}
+
+	void SetRecentMaps(const std::vector<wxString>& files) {
+		m_entries.clear();
+		for (const auto& f : files) {
+			Entry e;
+			e.path = f;
+			e.icon_index = 4; // ICON_FILE index
+
+			wxFileName fn(f);
+			wxDateTime dt;
+			if (fn.GetTimes(nullptr, &dt, nullptr)) {
+				e.date = dt.Format("%Y-%m-%d %H:%M");
+			} else {
+				e.date = "-";
+			}
+			m_entries.push_back(e);
+		}
+		SetItemCount(m_entries.size());
+		Refresh();
+	}
+
+	wxString GetPath(long item) const {
+		if (item >= 0 && item < static_cast<long>(m_entries.size())) {
+			return m_entries[item].path;
+		}
+		return "";
+	}
+
+private:
+	std::vector<Entry> m_entries;
+};
+
 // --- Convex Button Helper Class ---
 class ConvexButton : public wxControl {
 public:
@@ -363,7 +421,9 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 		long item = -1;
 		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
 		if (item != -1) {
-			wxString path = m_recentList->GetItemText(item, 1);
+			RecentMapListCtrl* vlist = static_cast<RecentMapListCtrl*>(m_recentList);
+			wxString path = vlist->GetPath(item);
+
 			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
 			newEvent->SetId(wxID_OPEN);
 			newEvent->SetString(path);
@@ -402,7 +462,7 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
-	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
+	m_recentList = new RecentMapListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
 	m_recentList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
 	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
 	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, 250); // Wider
@@ -411,20 +471,8 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
 
-	for (size_t i = 0; i < recentFiles.size(); ++i) {
-		long idx = m_recentList->InsertItem(i, "", 4);
-		m_recentList->SetItem(idx, 1, recentFiles[i]);
+	static_cast<RecentMapListCtrl*>(m_recentList)->SetRecentMaps(recentFiles);
 
-		// Get modification time
-		wxFileName fn(recentFiles[i]);
-		wxDateTime dt;
-		if (fn.GetTimes(nullptr, &dt, nullptr)) {
-			// Check if valid? GetTimes returns bool success
-			m_recentList->SetItem(idx, 2, dt.Format("%Y-%m-%d %H:%M"));
-		} else {
-			m_recentList->SetItem(idx, 2, "-");
-		}
-	}
 	m_recentList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &WelcomeDialog::OnRecentFileActivated, this);
 	m_recentList->Bind(wxEVT_LIST_ITEM_SELECTED, &WelcomeDialog::OnRecentFileSelected, this);
 
@@ -504,13 +552,10 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 }
 
 void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
-	wxListItem item;
-	item.SetId(event.GetIndex());
-	item.SetColumn(1);
-	item.SetMask(wxLIST_MASK_TEXT);
+	RecentMapListCtrl* vlist = static_cast<RecentMapListCtrl*>(m_recentList);
+	wxString realPath = vlist->GetPath(event.GetIndex());
 
-	if (m_recentList->GetItem(item)) {
-		wxString realPath = item.GetText();
+	if (!realPath.IsEmpty()) {
 		wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
 		newEvent->SetId(wxID_OPEN);
 		newEvent->SetString(realPath);

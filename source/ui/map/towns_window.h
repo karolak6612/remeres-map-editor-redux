@@ -3,6 +3,7 @@
 
 #include "app/main.h"
 #include <wx/wx.h>
+#include <wx/listctrl.h>
 #include <vector>
 #include <memory>
 
@@ -15,7 +16,7 @@ public:
 	EditTownsDialog(wxWindow* parent, Editor& editor);
 	virtual ~EditTownsDialog();
 
-	void OnListBoxChange(wxCommandEvent&);
+	void OnListSelected(wxListEvent&);
 	void OnClickSelectTemplePosition(wxCommandEvent&);
 	void OnClickAdd(wxCommandEvent&);
 	void OnClickRemove(wxCommandEvent&);
@@ -24,14 +25,14 @@ public:
 
 protected:
 	void BuildListBox(bool doselect);
-	void UpdateSelection(int new_selection);
+	void UpdateSelection(long new_selection);
 
 	Editor& editor;
 
 	std::vector<std::unique_ptr<Town>> town_list;
 	uint32_t max_town_id;
 
-	wxListBox* town_listbox;
+	wxListCtrl* town_list_ctrl;
 	wxString town_name, town_id;
 
 	wxTextCtrl* name_field;
