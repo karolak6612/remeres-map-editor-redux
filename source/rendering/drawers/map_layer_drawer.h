@@ -19,6 +19,7 @@
 #define RME_MAP_LAYER_DRAWER_H
 
 #include <iosfwd>
+#include "rendering/core/chunk_manager.h"
 
 class Editor;
 class TileRenderer;
@@ -40,6 +41,8 @@ private:
 	TileRenderer* tile_renderer;
 	GridDrawer* grid_drawer;
 	Editor* editor;
+	ChunkManager chunk_manager;
+	uint64_t last_options_hash = 0;
 };
 
 #endif

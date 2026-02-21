@@ -151,7 +151,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool* out_is_dynamic) {
 	if (!location) {
 		return;
 	}
@@ -159,6 +159,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	if (!tile) {
 		return;
+	}
+
+	if (out_is_dynamic) {
+		*out_is_dynamic = false;
 	}
 
 	if (options.show_only_modified && !tile->isModified()) {
@@ -203,6 +207,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	const ItemType* ground_it = nullptr;
 	if (tile->ground) {
 		ground_it = &g_items[tile->ground->getID()];
+		if (out_is_dynamic && ground_it->sprite && ground_it->sprite->frames > 1) {
+			*out_is_dynamic = true;
+		}
 	}
 
 	if (only_colors) {
@@ -237,6 +244,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
 	if (options.show_houses && tile->isHouseTile() && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
+		if (out_is_dynamic) {
+			*out_is_dynamic = true;
+		}
 
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
@@ -269,6 +279,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// items on tile
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
+				if (out_is_dynamic && it.sprite && it.sprite->frames > 1) {
+					*out_is_dynamic = true;
+				}
 
 				// item tooltip (one per item)
 				if (options.show_tooltips && map_z == view.floor) {
@@ -309,6 +322,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
+				if (out_is_dynamic) {
+					*out_is_dynamic = true;
+				}
 				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
 				if (creature_name_drawer) {
 					creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());

@@ -32,8 +32,15 @@ TileLocation::TileLocation() :
 	position(0, 0, 0),
 	spawn_count(0),
 	waypoint_count(0),
-	town_count(0) {
+	town_count(0),
+	parent_node(nullptr) {
 	////
+}
+
+void TileLocation::notifyChange() {
+	if (parent_node) {
+		parent_node->notifyChange();
+	}
 }
 
 TileLocation::~TileLocation() {
@@ -53,7 +60,7 @@ bool TileLocation::empty() const {
 
 //**************** Floor **********************
 
-Floor::Floor(int sx, int sy, int z) {
+Floor::Floor(int sx, int sy, int z, MapNode* node) {
 	sx = sx & ~3;
 	sy = sy & ~3;
 
@@ -61,6 +68,7 @@ Floor::Floor(int sx, int sy, int z) {
 		locs[i].position.x = sx + (i >> 2);
 		locs[i].position.y = sy + (i & 3);
 		locs[i].position.z = z;
+		locs[i].parent_node = node;
 	}
 }
 
@@ -78,7 +86,7 @@ MapNode::~MapNode() {
 
 Floor* MapNode::createFloor(int x, int y, int z) {
 	if (!array[z]) {
-		array[z] = std::make_unique<Floor>(x, y, z);
+		array[z] = std::make_unique<Floor>(x, y, z, this);
 	}
 	return array[z].get();
 }
@@ -230,6 +238,7 @@ std::unique_ptr<Tile> MapNode::setTile(int x, int y, int z, std::unique_ptr<Tile
 		--map.tilecount;
 	}
 
+	notifyChange();
 	return oldtile;
 }
 
@@ -241,6 +250,7 @@ void MapNode::clearTile(int x, int y, int z) {
 
 	TileLocation* tmp = &f->locs[offset_x * 4 + offset_y];
 	tmp->tile = map.allocator(tmp);
+	notifyChange();
 }
 
 //**************** SpatialHashGrid **********************

@@ -100,6 +100,18 @@ public:
 		return sprite_count_;
 	}
 
+	/**
+	 * Steals the pending sprites vector. Clears the batch.
+	 * Used for caching generated instances.
+	 */
+	std::vector<SpriteInstance> stealInstances();
+
+	/**
+	 * Appends a vector of instances to the pending batch.
+	 * Used for replaying cached instances.
+	 */
+	void append(const std::vector<SpriteInstance>& instances);
+
 private:
 	void flush(const AtlasManager& atlas_manager);
 

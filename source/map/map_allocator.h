@@ -41,7 +41,7 @@ public:
 
 	//
 	std::unique_ptr<Floor> allocateFloor(int x, int y, int z) {
-		return std::make_unique<Floor>(x, y, z);
+		return std::make_unique<Floor>(x, y, z, nullptr);
 	}
 
 	//

@@ -23,6 +23,7 @@
 #include "map/spatial_hash_grid.h"
 #include <utility>
 #include <unordered_map>
+#include <atomic>
 
 class Tile;
 class Floor;
@@ -45,6 +46,7 @@ protected:
 	size_t waypoint_count;
 	size_t town_count;
 	std::unique_ptr<HouseExitList> house_exits; // Any house exits pointing here
+	MapNode* parent_node;
 
 public:
 	// Access tile
@@ -111,6 +113,8 @@ public:
 		return house_exits.get();
 	}
 
+	void notifyChange();
+
 	friend class Floor;
 	friend class MapNode;
 	friend class Waypoints;
@@ -118,7 +122,7 @@ public:
 
 class Floor {
 public:
-	Floor(int x, int y, int z);
+	Floor(int x, int y, int z, MapNode* node);
 	TileLocation locs[MAP_LAYERS];
 };
 
@@ -156,6 +160,11 @@ public:
 		REQUESTED_UNDERGROUND = 1 << 2,
 		REQUESTED_OVERGROUND = 1 << 3,
 	};
+
+	std::atomic<uint64_t> last_modified = 0;
+	void notifyChange() {
+		last_modified++;
+	}
 
 protected:
 	BaseMap& map;
