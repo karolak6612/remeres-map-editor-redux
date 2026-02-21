@@ -11,22 +11,22 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
 
 	hide_items_when_zoomed_chkbox = newd wxCheckBox(this, wxID_ANY, "Hide items when zoomed out");
 	hide_items_when_zoomed_chkbox->SetValue(g_settings.getBoolean(Config::HIDE_ITEMS_WHEN_ZOOMED));
-	sizer->Add(hide_items_when_zoomed_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(hide_items_when_zoomed_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 	SetWindowToolTip(hide_items_when_zoomed_chkbox, "When this option is checked, \"loose\" items will be hidden when you zoom very far out.");
 
 	icon_selection_shadow_chkbox = newd wxCheckBox(this, wxID_ANY, "Use icon selection shadow");
 	icon_selection_shadow_chkbox->SetValue(g_settings.getBoolean(Config::USE_GUI_SELECTION_SHADOW));
-	sizer->Add(icon_selection_shadow_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(icon_selection_shadow_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 	SetWindowToolTip(icon_selection_shadow_chkbox, "When this option is checked, selected items in the palette menu will be shaded.");
 
 	use_memcached_chkbox = newd wxCheckBox(this, wxID_ANY, "Use memcached sprites");
 	use_memcached_chkbox->SetValue(g_settings.getBoolean(Config::USE_MEMCACHED_SPRITES));
-	sizer->Add(use_memcached_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(use_memcached_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 	SetWindowToolTip(use_memcached_chkbox, "When this is checked, sprites will be loaded into memory at startup and unpacked at runtime. This is faster but consumes more memory.\nIf it is not checked, the editor will use less memory but there will be a performance decrease due to reading sprites from the disk.");
 
 	anti_aliasing_chkbox = newd wxCheckBox(this, wxID_ANY, "Enable Anti-Aliasing");
 	anti_aliasing_chkbox->SetValue(g_settings.getBoolean(Config::ANTI_ALIASING));
-	sizer->Add(anti_aliasing_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(anti_aliasing_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 	SetWindowToolTip(anti_aliasing_chkbox, "Smoothens the map rendering using linear interpolation.");
 
 	sizer->AddSpacer(10);
@@ -110,7 +110,7 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
 	subsizer->Add(screenshot_format_choice, 0);
 	SetWindowToolTip(screenshot_format_choice, tmp, "This will affect the screenshot format used by the editor.\nTo take a screenshot, press F11.");
 
-	sizer->Add(subsizer, 1, wxEXPAND | wxALL, 5);
+	sizer->Add(subsizer, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
 	// Advanced g_settings
 
@@ -124,11 +124,11 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
 	fps_sizer->Add(fps_limit_spin, 0);
 	SetWindowToolTip(fps_limit_spin, tmp, "Limits the frame rate to save power. Set to 0 for unlimited.");
 
-	sizer->Add(fps_sizer, 0, wxALL, 5);
+	sizer->Add(fps_sizer, wxSizerFlags().Border(wxALL, 5));
 
 	show_fps_chkbox = newd wxCheckBox(this, wxID_ANY, "Show FPS Counter");
 	show_fps_chkbox->SetValue(g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
-	sizer->Add(show_fps_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(show_fps_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 	SetWindowToolTip(show_fps_chkbox, "Displays the current frame rate in the status bar.");
 
 	SetSizerAndFit(sizer);

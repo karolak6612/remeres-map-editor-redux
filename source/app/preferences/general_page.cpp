@@ -11,25 +11,25 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 	show_welcome_dialog_chkbox = newd wxCheckBox(this, wxID_ANY, "Show welcome dialog on startup");
 	show_welcome_dialog_chkbox->SetValue(g_settings.getInteger(Config::WELCOME_DIALOG) == 1);
 	show_welcome_dialog_chkbox->SetToolTip("Show welcome dialog when starting the editor.");
-	sizer->Add(show_welcome_dialog_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(show_welcome_dialog_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	always_make_backup_chkbox = newd wxCheckBox(this, wxID_ANY, "Always make map backup");
 	always_make_backup_chkbox->SetValue(g_settings.getInteger(Config::ALWAYS_MAKE_BACKUP) == 1);
-	sizer->Add(always_make_backup_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(always_make_backup_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	update_check_on_startup_chkbox = newd wxCheckBox(this, wxID_ANY, "Check for updates on startup");
 	update_check_on_startup_chkbox->SetValue(g_settings.getInteger(Config::USE_UPDATER) == 1);
-	sizer->Add(update_check_on_startup_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(update_check_on_startup_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	only_one_instance_chkbox = newd wxCheckBox(this, wxID_ANY, "Open all maps in the same instance");
 	only_one_instance_chkbox->SetValue(g_settings.getInteger(Config::ONLY_ONE_INSTANCE) == 1);
 	only_one_instance_chkbox->SetToolTip("When checked, maps opened using the shell will all be opened in the same instance.");
-	sizer->Add(only_one_instance_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(only_one_instance_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	enable_tileset_editing_chkbox = newd wxCheckBox(this, wxID_ANY, "Enable tileset editing");
 	enable_tileset_editing_chkbox->SetValue(g_settings.getInteger(Config::SHOW_TILESET_EDITOR) == 1);
 	enable_tileset_editing_chkbox->SetToolTip("Show tileset editing options.");
-	sizer->Add(enable_tileset_editing_chkbox, 0, wxLEFT | wxTOP, 5);
+	sizer->Add(enable_tileset_editing_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	sizer->AddSpacer(10);
 
@@ -56,7 +56,7 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 	grid_sizer->Add(replace_size_spin, 0);
 	SetWindowToolTip(tmptext, replace_size_spin, "How many items you can replace on the map using the Replace Item tool.");
 
-	sizer->Add(grid_sizer, 0, wxALL, 5);
+	sizer->Add(grid_sizer, wxSizerFlags().Border(wxALL, 5));
 	sizer->AddSpacer(10);
 
 	wxString position_choices[] = { "  {x = 0, y = 0, z = 0}",
@@ -67,7 +67,7 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 	int radio_choices = sizeof(position_choices) / sizeof(wxString);
 	position_format = newd wxRadioBox(this, wxID_ANY, "Copy Position Format", wxDefaultPosition, wxDefaultSize, radio_choices, position_choices, 1, wxRA_SPECIFY_COLS);
 	position_format->SetSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT));
-	sizer->Add(position_format, 0, wxALL | wxEXPAND, 5);
+	sizer->Add(position_format, wxSizerFlags().Expand().Border(wxALL, 5));
 	SetWindowToolTip(position_format, "The position format when copying from the map.");
 
 	SetSizerAndFit(sizer);
