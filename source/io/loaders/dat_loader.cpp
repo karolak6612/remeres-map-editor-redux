@@ -6,9 +6,9 @@
 #include <memory>
 #include <cstdint>
 #include <climits>
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
-	#include <format>
-#endif
+#include <format>
+#include <ranges>
+#include <algorithm>
 
 // Anonymous namespace for internal helpers and C++20/23 features
 namespace {
@@ -193,14 +193,8 @@ namespace {
 			}
 
 			default: {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 				std::string err = std::format("Metadata: Unknown flag: {}. Previous flag: {}.", static_cast<int>(flag), static_cast<int>(previous_flag));
 				warnings.push_back(err);
-#else
-				wxString err;
-				err.Printf("Metadata: Unknown flag: %d. Previous flag: %d.", static_cast<int>(flag), static_cast<int>(previous_flag));
-				warnings.push_back(err);
-#endif
 				break;
 			}
 		}
@@ -212,16 +206,10 @@ namespace {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
 
-		for (int i = 0; i < DatFlagLast; ++i) {
+		for (int i : std::views::iota(0, static_cast<int>(DatFlagLast))) {
 			previous_flag = flag;
 			if (!file.getU8(flag)) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 				warnings.push_back(std::format("Metadata: error reading flag for sprite id {}", sprite_id));
-#else
-				wxString err;
-				err.Printf("Metadata: error reading flag for sprite id %u", sprite_id);
-				warnings.push_back(err);
-#endif
 				return false;
 			}
 
@@ -230,24 +218,12 @@ namespace {
 			}
 			flag = RemapFlag(flag, format);
 			if (!ReadFlagData(format, file, sType, flag, previous_flag, warnings)) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 				warnings.push_back(std::format("Metadata: error reading flag data for flag {} for sprite id {}", static_cast<int>(flag), sprite_id));
-#else
-				wxString err;
-				err.Printf("Metadata: error reading flag data for flag %d for sprite id %u", static_cast<int>(flag), sprite_id);
-				warnings.push_back(err);
-#endif
 				return false;
 			}
 		}
 		// Sanity check: If we exit the loop without hitting DatFlagLast, it's potential corruption.
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 		warnings.push_back(std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for sprite id {}", sprite_id));
-#else
-		wxString err;
-		err.Printf("Metadata: corruption warning - flag list exceeded limit (255) without terminator for sprite id %d", sprite_id);
-		warnings.push_back(err);
-#endif
 		return true; // We continue even if there was no terminator, as it's just a warning
 	}
 
@@ -258,12 +234,8 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 	FileReadHandle file(nstr(datafile.GetFullPath()));
 
 	if (!file.isOk()) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 		// C++20 std::format
 		error += std::format("Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().ToStdString(), file.getErrorMessage());
-#else
-		error += "Failed to open " + datafile.GetFullPath() + " for reading\nThe error reported was:" + wxstr(file.getErrorMessage());
-#endif
 		return false;
 	}
 
@@ -300,13 +272,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 	manager->dat_format = manager->client_version->getDatFormatForSignature(datSignature);
 
 	if (manager->dat_format == DAT_FORMAT_UNKNOWN) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 		error = std::format("Unknown dat signature: {:x}", datSignature);
-#else
-		wxString err;
-		err.Printf("Unknown dat signature: %x", datSignature);
-		error = err;
-#endif
 		return false;
 	}
 
@@ -327,13 +293,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 
 		// Load flags
 		if (!LoadMetadataFlags(manager->dat_format, file, sType, id, warnings)) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 			error = std::format("Failed to read metadata flags for id {}", id);
-#else
-			wxString err;
-			err.Printf("Failed to read metadata flags for id %u", id);
-			error = err;
-#endif
 			return false;
 		}
 
@@ -341,26 +301,14 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 		uint8_t group_count = 1;
 		if (manager->has_frame_groups && id > manager->item_count) {
 			if (!file.getU8(group_count)) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 				error = std::format("Failed to read group count for id {}", id);
-#else
-				wxString err;
-				err.Printf("Failed to read group count for id %u", id);
-				error = err;
-#endif
 				return false;
 			}
 		}
 
-		for (uint32_t k = 0; k < group_count; ++k) {
+		for (uint32_t k : std::views::iota(0u, static_cast<unsigned int>(group_count))) {
 			if (!ReadSpriteGroup(manager, file, sType, k, warnings)) {
-#if defined(__cpp_lib_format) && __cpp_lib_format >= 201907L
 				error = std::format("Failed to read sprite group {} for id {}", k, id);
-#else
-				wxString err;
-				err.Printf("Failed to read sprite group %u for id %u", k, id);
-				error = err;
-#endif
 				return false;
 			}
 		}
@@ -447,7 +395,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		}
 
 		if (manager->has_frame_durations) {
-			for (int i = 0; i < frames; i++) {
+			for (int i : std::views::iota(0, static_cast<int>(frames))) {
 				uint32_t min;
 				uint32_t max;
 				if (!file.getU32(min)) {
@@ -474,7 +422,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 	}
 
 	// Read the sprite ids
-	for (uint32_t i = 0; i < numsprites; ++i) {
+	for (uint32_t i : std::views::iota(0u, numsprites)) {
 		uint32_t sprite_id;
 		if (manager->is_extended) {
 			if (!file.getU32(sprite_id)) {

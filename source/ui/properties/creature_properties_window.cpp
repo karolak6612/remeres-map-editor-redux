@@ -37,7 +37,7 @@ CreaturePropertiesWindow::CreaturePropertiesWindow(wxWindow* win_parent, const M
 	direction_field->SetToolTip("Initial facing direction");
 
 	for (Direction dir = DIRECTION_FIRST; dir <= DIRECTION_LAST; ++dir) {
-		direction_field->Append(wxstr(Creature::DirID2Name(dir)), (void*)(intptr_t)(dir));
+		direction_field->Append(wxstr(Creature::DirID2Name(dir)), reinterpret_cast<void*>(static_cast<intptr_t>(dir)));
 	}
 	direction_field->SetSelection(edit_creature->getDirection());
 	subsizer->Add(direction_field, wxSizerFlags(1).Expand());
@@ -74,8 +74,8 @@ void CreaturePropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	edit_creature->setSpawnTime(new_spawntime);
 
 	if (direction_field->GetSelection() != wxNOT_FOUND) {
-		int new_dir = (int)(intptr_t)direction_field->GetClientData(direction_field->GetSelection());
-		edit_creature->setDirection((Direction)new_dir);
+		int new_dir = static_cast<int>(reinterpret_cast<intptr_t>(direction_field->GetClientData(direction_field->GetSelection())));
+		edit_creature->setDirection(static_cast<Direction>(new_dir));
 	}
 	EndModal(1);
 }

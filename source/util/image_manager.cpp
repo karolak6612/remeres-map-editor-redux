@@ -13,6 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <vector>
 #include <cstdint>
+#include <string_view>
 
 ImageManager& ImageManager::GetInstance() {
 	static ImageManager instance;
@@ -46,9 +47,10 @@ std::string ImageManager::ResolvePath(const std::string& assetPath) {
 	return fullPath;
 }
 
-wxBitmapBundle ImageManager::GetBitmapBundle(const std::string& assetPath, const wxColour& tint) {
-	std::string fullPath = ResolvePath(assetPath);
-	std::string cacheKey = assetPath;
+wxBitmapBundle ImageManager::GetBitmapBundle(std::string_view assetPath, const wxColour& tint) {
+	std::string pathStr(assetPath);
+	std::string fullPath = ResolvePath(pathStr);
+	std::string cacheKey = pathStr;
 	if (tint.IsOk()) {
 		cacheKey += "_" + std::to_string(tint.GetRGB());
 	}
@@ -88,7 +90,7 @@ wxBitmapBundle ImageManager::GetBitmapBundle(const std::string& assetPath, const
 	return bundle;
 }
 
-wxBitmap ImageManager::GetBitmap(const std::string& assetPath, const wxSize& size, const wxColour& tint) {
+wxBitmap ImageManager::GetBitmap(std::string_view assetPath, const wxSize& size, const wxColour& tint) {
 	wxBitmapBundle bundle = GetBitmapBundle(assetPath);
 	if (!bundle.IsOk()) {
 		return wxNullBitmap;
@@ -101,7 +103,7 @@ wxBitmap ImageManager::GetBitmap(const std::string& assetPath, const wxSize& siz
 	}
 
 	// For tinted bitmaps, use separate cache
-	std::pair<std::string, uint32_t> cacheKey = { assetPath, (uint32_t)tint.GetRGB() };
+	std::pair<std::string, uint32_t> cacheKey = { std::string(assetPath), (uint32_t)tint.GetRGB() };
 	auto it = m_tintedBitmapCache.find(cacheKey);
 	if (it != m_tintedBitmapCache.end()) {
 		return it->second;
@@ -143,14 +145,15 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 	return tinted;
 }
 
-int ImageManager::GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, const wxColour& tint) {
-	std::pair<std::string, uint32_t> cacheKey = { assetPath, tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
+int ImageManager::GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint) {
+	std::pair<std::string, uint32_t> cacheKey = { std::string(assetPath), tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
 	auto it = m_nvgImageCache.find(cacheKey);
 	if (it != m_nvgImageCache.end()) {
 		return it->second;
 	}
 
-	std::string fullPath = ResolvePath(assetPath);
+	std::string pathStr(assetPath);
+	std::string fullPath = ResolvePath(pathStr);
 	int img = 0;
 
 	if (assetPath.ends_with(".svg")) {
@@ -205,7 +208,7 @@ int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& im
 	return nvgCreateImageRGBA(vg, w, h, 0, rgba.data());
 }
 
-uint32_t ImageManager::GetGLTexture(const std::string& assetPath) {
+uint32_t ImageManager::GetGLTexture(std::string_view assetPath) {
 	// Not implemented yet - usually we can use NanoVG's image as GL texture if we know how it's stored,
 	// or load it via glad.
 	return 0;
