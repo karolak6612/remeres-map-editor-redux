@@ -29,14 +29,9 @@
 #include <unordered_map>
 
 class Item;
+class Container;
 class Waypoint;
 struct NVGcontext;
-
-struct ContainerItem {
-	uint16_t id;
-	uint8_t count;
-	uint8_t subtype;
-};
 
 // Tooltip category determines header color and icon
 enum class TooltipCategory {
@@ -68,7 +63,7 @@ struct TooltipData {
 	std::string_view waypointName;
 
 	// Container contents
-	std::vector<ContainerItem> containerItems;
+	const Container* container = nullptr;
 	uint8_t containerCapacity = 0;
 
 	TooltipData() = default;
@@ -98,7 +93,7 @@ struct TooltipData {
 
 	// Check if this tooltip has any visible fields
 	bool hasVisibleFields() const {
-		return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty() || destination.x > 0 || !containerItems.empty();
+		return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty() || destination.x > 0 || container != nullptr;
 	}
 
 	void clear() {
@@ -115,7 +110,7 @@ struct TooltipData {
 		description = {};
 		destination = Position();
 		waypointName = {};
-		containerItems.clear();
+		container = nullptr;
 		containerCapacity = 0;
 	}
 };
