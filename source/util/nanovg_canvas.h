@@ -56,12 +56,23 @@ class NanoVGCanvas : public wxGLCanvas {
 
 public:
 	/**
-	 * @brief Constructs a NanoVGCanvas control.
+	 * @brief Constructs a NanoVGCanvas control with default legacy attributes.
 	 * @param parent Parent window
 	 * @param id Window ID (default: wxID_ANY)
 	 * @param style Additional window styles (default includes vertical scrollbar)
+	 * @param sharedContext Context to share resources with (optional)
 	 */
-	NanoVGCanvas(wxWindow* parent, wxWindowID id = wxID_ANY, long style = wxVSCROLL | wxWANTS_CHARS);
+	NanoVGCanvas(wxWindow* parent, wxWindowID id = wxID_ANY, long style = wxVSCROLL | wxWANTS_CHARS, wxGLContext* sharedContext = nullptr);
+
+	/**
+	 * @brief Constructs a NanoVGCanvas control with specific GL attributes (e.g. Core Profile).
+	 * @param parent Parent window
+	 * @param dispAttrs GL Attributes
+	 * @param id Window ID
+	 * @param style Additional window styles
+	 * @param sharedContext Context to share resources with (optional)
+	 */
+	NanoVGCanvas(wxWindow* parent, const wxGLAttributes& dispAttrs, wxWindowID id = wxID_ANY, long style = wxVSCROLL | wxWANTS_CHARS, wxGLContext* sharedContext = nullptr);
 
 	/**
 	 * @brief Destructor - cleans up OpenGL and NanoVG resources.
@@ -117,6 +128,21 @@ protected:
 	 * Use GetScrollPosition() if you need the raw scroll value.
 	 */
 	virtual void OnNanoVGPaint(NVGcontext* vg, int width, int height) = 0;
+
+	/**
+	 * @brief Override this to implement custom raw OpenGL drawing before NanoVG frame starts.
+	 * Useful for hybrid rendering (e.g. Minimap, 3D Viewport).
+	 * Context is current and viewport is set to (0, 0, w, h).
+	 */
+	virtual void OnGLPaint() {}
+
+	/**
+	 * @brief Override to control whether NanoVGCanvas should clear the background.
+	 * @return true to clear with theme surface color (default), false to skip clearing.
+	 */
+	virtual bool ShouldClearBackground() const {
+		return true;
+	}
 
 	/**
 	 * @brief Override to return preferred control size.
@@ -189,6 +215,7 @@ private:
 	void OnScroll(wxScrollWinEvent& evt);
 
 	std::unique_ptr<wxGLContext> m_glContext;
+	wxGLContext* m_sharedContext = nullptr;
 	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 	bool m_glInitialized = false;
 

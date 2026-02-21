@@ -12,6 +12,7 @@ class Editor;
 #include <deque>
 #include <string>
 #include "rendering/core/graphics.h"
+#include "util/nanovg_canvas.h"
 
 struct NVGcontext;
 
@@ -19,12 +20,16 @@ namespace IngamePreview {
 
 	class IngamePreviewRenderer;
 
-	class IngamePreviewCanvas : public wxGLCanvas {
+	class IngamePreviewCanvas : public NanoVGCanvas {
 	public:
 		IngamePreviewCanvas(wxWindow* parent);
 		~IngamePreviewCanvas();
 
-		void OnPaint(wxPaintEvent& event);
+		// Hooks from NanoVGCanvas
+		void OnGLPaint() override;
+		void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+		bool ShouldClearBackground() const override { return false; } // Renderer clears or fills
+
 		void OnSize(wxSizeEvent& event);
 		void OnMouseMove(wxMouseEvent& event);
 		void OnKeyDown(wxKeyEvent& event);
@@ -52,15 +57,14 @@ namespace IngamePreview {
 			Refresh();
 		}
 
-		void Render(Editor* current_editor);
 		bool IsWalking() const {
 			return is_walking;
 		}
 
 	private:
+		void Render(Editor* current_editor);
+
 		std::unique_ptr<IngamePreviewRenderer> renderer;
-		std::unique_ptr<wxGLContext> m_glContext;
-		std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 		const void* last_tile_renderer;
 
 		Position camera_pos;

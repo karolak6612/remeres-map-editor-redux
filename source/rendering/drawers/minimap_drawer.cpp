@@ -20,7 +20,7 @@ MinimapDrawer::MinimapDrawer() :
 MinimapDrawer::~MinimapDrawer() {
 }
 
-void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanvas* canvas) {
+void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas* canvas) {
 	// We no longer use wxDC for drawing the map content, as we render via OpenGL.
 	// However, we might need to conform to existing architecture.
 	// The caller likely sets up GL context if we are in GLCanvas?

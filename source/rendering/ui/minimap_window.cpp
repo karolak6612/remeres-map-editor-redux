@@ -46,39 +46,22 @@ static wxGLAttributes& GetCoreProfileAttributes() {
 }
 
 MinimapWindow::MinimapWindow(wxWindow* parent) :
-	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
-	update_timer(this),
-	context(nullptr),
-	nvg(nullptr, NVGDeleter()) {
-	spdlog::info("MinimapWindow::MinimapWindow - Creating context");
-	context = std::make_unique<wxGLContext>(this);
-	if (!context->IsOK()) {
-		spdlog::error("MinimapWindow::MinimapWindow - Context creation failed");
-	}
+	NanoVGCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxWANTS_CHARS),
+	update_timer(this) {
+	SetSize(wxSize(205, 130)); // Set explicit size as we inherit from NanoVGCanvas which defaults to something else
 	SetToolTip("Click to move camera");
 	drawer = std::make_unique<MinimapDrawer>();
 
 	Bind(wxEVT_LEFT_DOWN, &MinimapWindow::OnMouseClick, this);
 	Bind(wxEVT_SIZE, &MinimapWindow::OnSize, this);
-	Bind(wxEVT_PAINT, &MinimapWindow::OnPaint, this);
-	Bind(wxEVT_ERASE_BACKGROUND, &MinimapWindow::OnEraseBackground, this);
 	Bind(wxEVT_CLOSE_WINDOW, &MinimapWindow::OnClose, this);
 	Bind(wxEVT_TIMER, &MinimapWindow::OnDelayedUpdate, this, wxID_ANY);
 	Bind(wxEVT_KEY_DOWN, &MinimapWindow::OnKey, this);
 }
 
 MinimapWindow::~MinimapWindow() {
-	spdlog::debug("MinimapWindow destructor started");
-	spdlog::default_logger()->flush();
-	if (context) {
-		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer/nvg");
-		spdlog::default_logger()->flush();
-		SetCurrent(*context);
-		drawer.reset();
-		nvg.reset();
-	}
-	spdlog::debug("MinimapWindow destructor finished");
-	spdlog::default_logger()->flush();
+	// NanoVGCanvas handles context and resource cleanup
+	drawer.reset();
 }
 
 void MinimapWindow::OnSize(wxSizeEvent& event) {
@@ -101,73 +84,43 @@ void MinimapWindow::OnDelayedUpdate(wxTimerEvent& event) {
 	Refresh();
 }
 
-void MinimapWindow::OnPaint(wxPaintEvent& event) {
-	wxPaintDC dc(this); // validates the paint event
+bool MinimapWindow::ShouldClearBackground() const {
+	// We handle clearing (or the drawer handles it)
+	return false;
+}
 
-	// spdlog::info("MinimapWindow::OnPaint");
-
-	if (!context) {
-		spdlog::error("MinimapWindow::OnPaint - No context!");
-		return;
-	}
-
-	SetCurrent(*context);
-
-	static bool gladInitialized = false;
-	if (!gladInitialized) {
-		spdlog::info("MinimapWindow::OnPaint - Initializing GLAD");
-		if (!gladLoadGL()) {
-			spdlog::error("MinimapWindow::OnPaint - Failed to load GLAD");
-		} else {
-			spdlog::info("MinimapWindow::OnPaint - GLAD loaded. GL Version: {}", (char*)glGetString(GL_VERSION));
-		}
-		gladInitialized = true;
-	}
-
-	if (!nvg) {
-		// Minimap uses a separate NanoVG context to avoid state interference with the main
-		// TextRenderer, as the minimap window has its own GL context and lifecycle.
-		nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
-	}
-
+void MinimapWindow::OnGLPaint() {
 	if (!g_gui.IsEditorOpen()) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		SwapBuffers();
 		return;
 	}
+
 	Editor& editor = *g_gui.GetCurrentEditor();
 	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
 
-	// Mock dc passed to Draw, unused by new GL implementation
-	drawer->Draw(dc, GetSize(), editor, canvas);
+	drawer->Draw(GetSize(), editor, canvas);
+}
 
-	// Glass Overlay
-	NVGcontext* vg = nvg.get();
-	if (vg) {
-		glClear(GL_STENCIL_BUFFER_BIT);
-		int w, h;
-		GetClientSize(&w, &h);
-		nvgBeginFrame(vg, w, h, GetContentScaleFactor());
-
-		// Subtle glass border
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
-		nvgStrokeWidth(vg, 2.0f);
-		nvgStroke(vg);
-
-		// Inner glow
-		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
-		nvgFillPaint(vg, glow);
-		nvgFill(vg);
-
-		nvgEndFrame(vg);
+void MinimapWindow::OnNanoVGPaint(NVGcontext* vg, int w, int h) {
+	if (!g_gui.IsEditorOpen()) {
+		return;
 	}
 
-	SwapBuffers();
+	// Glass Overlay
+	// Subtle glass border
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
+	nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
+	nvgStrokeWidth(vg, 2.0f);
+	nvgStroke(vg);
+
+	// Inner glow
+	NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
+	nvgFillPaint(vg, glow);
+	nvgFill(vg);
 }
 
 void MinimapWindow::OnMouseClick(wxMouseEvent& event) {

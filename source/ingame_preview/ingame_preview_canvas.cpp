@@ -26,7 +26,7 @@ namespace IngamePreview {
 	}
 
 	IngamePreviewCanvas::IngamePreviewCanvas(wxWindow* parent) :
-		wxGLCanvas(parent, GetPreviewGLAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
+		NanoVGCanvas(parent, GetPreviewGLAttributes(), wxID_ANY, wxWANTS_CHARS, g_gui.GetGLContext(parent)),
 		last_tile_renderer(nullptr),
 		camera_pos(0, 0, GROUND_LAYER),
 		zoom(1.0f),
@@ -49,32 +49,26 @@ namespace IngamePreview {
 		last_step_time(0),
 		walk_lock_timer(0),
 		animation_timer(this) {
-		// Context creation must happen on the main/UI thread
-		m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
-		if (!m_glContext->IsOK()) {
-			spdlog::error("IngamePreviewCanvas: Failed to create wxGLContext");
-			m_glContext.reset();
-		}
 
 		preview_outfit.lookType = 128;
 
 		// Bind Events
-		Bind(wxEVT_PAINT, &IngamePreviewCanvas::OnPaint, this);
 		Bind(wxEVT_SIZE, &IngamePreviewCanvas::OnSize, this);
 		Bind(wxEVT_MOTION, &IngamePreviewCanvas::OnMouseMove, this);
 		Bind(wxEVT_KEY_DOWN, &IngamePreviewCanvas::OnKeyDown, this);
 		Bind(wxEVT_TIMER, &IngamePreviewCanvas::OnTimer, this);
-		Bind(wxEVT_ERASE_BACKGROUND, &IngamePreviewCanvas::OnEraseBackground, this);
+		// OnPaint and EraseBackground handled by NanoVGCanvas
 
 		animation_timer.Start(16); // ~60 FPS update
 	}
 
 	IngamePreviewCanvas::~IngamePreviewCanvas() = default;
 
-	void IngamePreviewCanvas::OnPaint(wxPaintEvent& event) {
-		// Validating the paint event prevents infinite paint loops on some platforms
-		wxPaintDC dc(this); // validates the paint event
+	void IngamePreviewCanvas::OnGLPaint() {
+		// Empty - we use NanoVG for rendering
+	}
 
+	void IngamePreviewCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		if (auto* tab = g_gui.GetCurrentMapTab()) {
 			Render(tab->GetEditor());
 		}
@@ -401,20 +395,6 @@ namespace IngamePreview {
 			spdlog::warn("Render: animation_phase={} but is_walking=false! This shouldn't happen.", animation_phase);
 		}
 
-		if (m_glContext) {
-			SetCurrent(*m_glContext);
-		}
-
-		if (!m_nvg) {
-			if (!gladLoadGL()) {
-				spdlog::error("IngamePreviewCanvas: Failed to initialize GLAD");
-			}
-			m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
-			if (m_nvg) {
-				TextRenderer::LoadFont(m_nvg.get());
-			}
-		}
-
 		MapTab* tab = g_gui.GetCurrentMapTab();
 		const void* current_tile_renderer = nullptr;
 
@@ -458,12 +438,10 @@ namespace IngamePreview {
 
 		float calculated_zoom = 1.0f / scale;
 
-		NVGcontext* vg = m_nvg.get();
+		NVGcontext* vg = GetNVGContext();
 		renderer->SetLightIntensity(light_intensity);
 		renderer->SetName(preview_name_str);
 		renderer->Render(vg, current_editor->map, view_x, view_y, view_w, view_h, camera_pos, calculated_zoom, lighting_enabled, ambient_light, preview_outfit, preview_direction, animation_phase, walk_offset_x, walk_offset_y);
-
-		SwapBuffers();
 	}
 
 } // namespace IngamePreview
