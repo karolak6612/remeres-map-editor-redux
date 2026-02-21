@@ -26,6 +26,7 @@
 #include <ranges>
 #include <unordered_set>
 #include <unordered_map>
+#include <format>
 #include <spdlog/spdlog.h>
 
 Map::Map() :
@@ -50,11 +51,11 @@ void Map::initializeEmpty() {
 
 	static int unnamed_counter = 0;
 
-	std::string sname = "Untitled-" + std::to_string(++unnamed_counter);
-	name = sname + ".otbm";
-	spawnfile = sname + "-spawn.xml";
-	housefile = sname + "-house.xml";
-	waypointfile = sname + "-waypoint.xml";
+	std::string sname = std::format("Untitled-{}", ++unnamed_counter);
+	name = std::format("{}.otbm", sname);
+	spawnfile = std::format("{}-spawn.xml", sname);
+	housefile = std::format("{}-house.xml", sname);
+	waypointfile = std::format("{}-waypoint.xml", sname);
 	description = "No map description available.";
 	unnamed = true;
 
@@ -265,12 +266,12 @@ void Map::cleanInvalidTiles(bool showdialog) {
 
 	uint64_t tiles_done = 0;
 
-	for (auto& tile_loc : tiles()) {
+	std::ranges::for_each(tiles(), [&](auto& tile_loc) {
 		Tile* tile = tile_loc.get();
 		ASSERT(tile);
 
 		if (tile->empty()) {
-			continue;
+			return;
 		}
 
 		// Use std::erase_if from C++20 for cleanup
@@ -282,7 +283,7 @@ void Map::cleanInvalidTiles(bool showdialog) {
 		if (showdialog && tiles_done % 0x10000 == 0) {
 			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
 		}
-	}
+	});
 
 	if (showdialog) {
 		g_gui.DestroyLoadBar();
@@ -293,21 +294,18 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	g_gui.CreateLoadBar("Converting house tiles...");
 	uint64_t tiles_done = 0;
 
-	for (auto& tile_loc : tiles()) {
-		Tile* tile = tile_loc.get();
-		ASSERT(tile);
+	auto filtered_tiles = tiles() | std::views::filter([&](const auto& tile_loc) {
+		const Tile* tile = tile_loc.get();
+		return tile && tile->getHouseID() == fromId;
+	});
 
-		uint32_t houseId = tile->getHouseID();
-		if (houseId == 0 || houseId != fromId) {
-			continue;
-		}
-
-		tile->setHouseID(toId);
+	std::ranges::for_each(filtered_tiles, [&](auto& tile_loc) {
+		tile_loc.get()->setHouseID(toId);
 		++tiles_done;
 		if (tiles_done % 0x10000 == 0) {
 			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
 		}
-	}
+	});
 
 	g_gui.DestroyLoadBar();
 }
@@ -371,12 +369,12 @@ bool Map::addSpawn(Tile* tile) {
 		int end_x = tile->getX() + spawn->getSize();
 		int end_y = tile->getY() + spawn->getSize();
 
-		for (int y = start_y; y <= end_y; ++y) {
-			for (int x = start_x; x <= end_x; ++x) {
+		std::ranges::for_each(std::views::iota(start_y, end_y + 1), [&](int y) {
+			std::ranges::for_each(std::views::iota(start_x, end_x + 1), [&](int x) {
 				TileLocation* ctile_loc = createTileL(x, y, z);
 				ctile_loc->increaseSpawnCount();
-			}
-		}
+			});
+		});
 		spawns.addSpawn(tile);
 		return true;
 	}
@@ -393,14 +391,14 @@ void Map::removeSpawnInternal(Tile* tile) {
 	int end_x = tile->getX() + spawn->getSize();
 	int end_y = tile->getY() + spawn->getSize();
 
-	for (int y = start_y; y <= end_y; ++y) {
-		for (int x = start_x; x <= end_x; ++x) {
+	std::ranges::for_each(std::views::iota(start_y, end_y + 1), [&](int y) {
+		std::ranges::for_each(std::views::iota(start_x, end_x + 1), [&](int x) {
 			TileLocation* ctile_loc = getTileL(x, y, z);
 			if (ctile_loc != nullptr && ctile_loc->getSpawnCount() > 0) {
 				ctile_loc->decreaseSpawnCount();
 			}
-		}
-	}
+		});
+	});
 }
 
 void Map::removeSpawn(Tile* tile) {
@@ -425,34 +423,33 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
-			while (found != tile_loc->getSpawnCount()) {
-				for (int x = start_x; x <= end_x; ++x) {
-					Tile* tile = getTile(x, start_y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-					tile = getTile(x, end_y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-				}
 
-				for (int y = start_y + 1; y < end_y; ++y) {
-					Tile* tile = getTile(start_x, y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-					tile = getTile(end_x, y, z);
-					if (tile && tile->spawn) {
+			auto checkTile = [&](int x, int y) {
+				if (Tile* tile = getTile(x, y, z)) {
+					if (tile->spawn) {
 						list.push_back(tile->spawn.get());
 						++found;
 					}
 				}
-				--start_x, --start_y;
-				++end_x, ++end_y;
+			};
+
+			while (found < tile_loc->getSpawnCount()) {
+				// Horizontal sides
+				std::ranges::for_each(std::views::iota(start_x, end_x + 1), [&](int x) {
+					checkTile(x, start_y);
+					checkTile(x, end_y);
+				});
+
+				// Vertical sides
+				std::ranges::for_each(std::views::iota(start_y + 1, end_y), [&](int y) {
+					checkTile(start_x, y);
+					checkTile(end_x, y);
+				});
+
+				--start_x;
+				--start_y;
+				++end_x;
+				++end_y;
 			}
 		}
 	}
