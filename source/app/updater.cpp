@@ -27,6 +27,7 @@
 	#include "app/updater.h"
 	#include "app/application.h"
 	#include <thread>
+	#include <memory>
 
 wxDEFINE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);
 
@@ -53,13 +54,11 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 	#ifdef __EXPERIMENTAL__
 	address << "&beta";
 	#endif
-	wxURL* url = newd wxURL(address);
+	auto url = std::make_unique<wxURL>(address);
 
-	std::thread([receiver, url]() {
-		wxInputStream* input = url->GetInputStream();
+	std::thread([receiver, url = std::move(url)]() {
+		std::unique_ptr<wxInputStream> input(url->GetInputStream());
 		if (!input) {
-			delete input;
-			delete url;
 			return;
 		}
 
@@ -68,8 +67,7 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 			data += input->GetC();
 		}
 
-		delete input;
-		delete url;
+		// input and url are automatically deleted when they go out of scope
 
 		// We need to be careful with event posting from a detached thread if the receiver might be destroyed.
 		// However, we are replicating existing logic here where UpdateConnectionThread was also detached.
