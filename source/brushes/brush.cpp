@@ -65,6 +65,10 @@ Brushes::~Brushes() {
 	////
 }
 
+Brushes& Brushes::getInstance() {
+	return g_brushes;
+}
+
 void Brushes::clear() {
 	for (auto& entry : brushes) {
 		entry.second.reset();

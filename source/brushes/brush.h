@@ -68,10 +68,17 @@ public:
 	Brushes();
 	~Brushes();
 
+	static Brushes& getInstance();
+
 	void init();
 	void clear();
 
 	Brush* getBrush(std::string_view name) const;
+
+	template <typename T>
+	T* getBrushAs(std::string_view name) const {
+		return dynamic_cast<T*>(getBrush(name));
+	}
 
 	void addBrush(std::unique_ptr<Brush> brush);
 

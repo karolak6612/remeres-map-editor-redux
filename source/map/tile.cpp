@@ -37,16 +37,6 @@
 #include <iterator>
 #include <memory>
 
-Tile::Tile(int x, int y, int z) :
-	location(nullptr),
-	ground(nullptr),
-	house_id(0),
-	mapflags(0),
-	statflags(0),
-	minimapColor(INVALID_MINIMAP_COLOR) {
-	////
-}
-
 Tile::Tile(TileLocation& loc) :
 	location(&loc),
 	ground(nullptr),
@@ -124,9 +114,9 @@ std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
 	}
 
 	copy->items.reserve(items.size());
-	for (const auto& item : items) {
-		copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
-	}
+	std::ranges::transform(items, std::back_inserter(copy->items), [](const auto& item) {
+		return std::unique_ptr<Item>(item->deepCopy());
+	});
 
 	return copy;
 }
@@ -199,9 +189,9 @@ void Tile::merge(Tile* other) {
 	}
 
 	items.reserve(items.size() + other->items.size());
-	for (auto& item : other->items) {
+	std::ranges::for_each(other->items, [this](std::unique_ptr<Item>& item) {
 		addItem(std::move(item));
-	}
+	});
 	other->items.clear();
 	update();
 }
@@ -645,11 +635,11 @@ bool Tile::isContentEqual(const Tile* other) const {
 	}
 
 	// Compare ground
-	if (ground != nullptr && other->ground != nullptr) {
+	if (ground && other->ground) {
 		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
 			return false;
 		}
-	} else if (ground != other->ground) {
+	} else if (ground || other->ground) {
 		return false;
 	}
 
@@ -658,7 +648,7 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }
