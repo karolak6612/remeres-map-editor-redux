@@ -20,8 +20,30 @@ ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
 	}
 }
 
-NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
-	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
+NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style, wxGLContext* sharedContext) :
+	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style),
+	m_sharedContext(sharedContext) {
+	SetBackgroundStyle(wxBG_STYLE_PAINT);
+
+	Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);
+	Bind(wxEVT_SIZE, &NanoVGCanvas::OnSize, this);
+	Bind(wxEVT_MOUSEWHEEL, &NanoVGCanvas::OnMouseWheel, this);
+	Bind(wxEVT_ERASE_BACKGROUND, &NanoVGCanvas::OnEraseBackground, this);
+
+	// Scrollbar interaction events
+	Bind(wxEVT_SCROLLWIN_TOP, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_BOTTOM, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_LINEUP, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_LINEDOWN, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_PAGEUP, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_PAGEDOWN, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_THUMBTRACK, &NanoVGCanvas::OnScroll, this);
+	Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &NanoVGCanvas::OnScroll, this);
+}
+
+NanoVGCanvas::NanoVGCanvas(wxWindow* parent, const wxGLAttributes& dispAttrs, wxWindowID id, long style, wxGLContext* sharedContext) :
+	wxGLCanvas(parent, dispAttrs, id, wxDefaultPosition, wxDefaultSize, style),
+	m_sharedContext(sharedContext) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 	Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);
@@ -52,7 +74,7 @@ void NanoVGCanvas::InitGL() {
 		return;
 	}
 
-	m_glContext = std::make_unique<wxGLContext>(this);
+	m_glContext = std::make_unique<wxGLContext>(this, m_sharedContext);
 	if (!m_glContext->IsOK()) {
 		m_glContext.reset();
 		return;
@@ -95,10 +117,18 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 
 	glViewport(0, 0, w, h);
 
-	// Use theme background
-	wxColour bg = Theme::Get(Theme::Role::Surface);
-	glClearColor(bg.Red() / 255.0f, bg.Green() / 255.0f, bg.Blue() / 255.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	if (ShouldClearBackground()) {
+		// Use theme background
+		wxColour bg = Theme::Get(Theme::Role::Surface);
+		glClearColor(bg.Red() / 255.0f, bg.Green() / 255.0f, bg.Blue() / 255.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	} else {
+		// Only clear stencil if background clear is disabled (e.g. Minimap clears color itself)
+		glClear(GL_STENCIL_BUFFER_BIT);
+	}
+
+	// Hybrid Hook
+	OnGLPaint();
 
 	NVGcontext* vg = m_nvg.get();
 	nvgBeginFrame(vg, w, h, GetContentScaleFactor());

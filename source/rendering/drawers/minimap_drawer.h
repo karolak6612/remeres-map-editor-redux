@@ -17,7 +17,7 @@ public:
 	MinimapDrawer();
 	~MinimapDrawer();
 
-	void Draw(wxDC& dc, const wxSize& size, Editor& editor, MapCanvas* canvas);
+	void Draw(const wxSize& size, Editor& editor, MapCanvas* canvas);
 
 	void ScreenToMap(int screen_x, int screen_y, int& map_x, int& map_y);
 

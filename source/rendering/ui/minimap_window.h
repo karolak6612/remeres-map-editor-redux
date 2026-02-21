@@ -18,18 +18,22 @@
 #ifndef RME_MINIMAP_WINDOW_H_
 #define RME_MINIMAP_WINDOW_H_
 
-#include <wx/glcanvas.h>
+#include "util/nanovg_canvas.h"
 #include <memory>
 
 #include "rendering/core/graphics.h"
 
 class MinimapDrawer;
-class MinimapWindow : public wxGLCanvas {
+class MinimapWindow : public NanoVGCanvas {
 public:
 	MinimapWindow(wxWindow* parent);
 	~MinimapWindow() override;
 
-	void OnPaint(wxPaintEvent&);
+	// Hooks from NanoVGCanvas
+	void OnGLPaint() override;
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	bool ShouldClearBackground() const override;
+
 	void OnEraseBackground(wxEraseEvent&) { }
 	void OnMouseClick(wxMouseEvent&);
 	void OnSize(wxSizeEvent&);
@@ -42,8 +46,6 @@ public:
 protected:
 	std::unique_ptr<MinimapDrawer> drawer;
 	wxTimer update_timer;
-	std::unique_ptr<wxGLContext> context;
-	std::unique_ptr<NVGcontext, NVGDeleter> nvg;
 };
 
 #endif
