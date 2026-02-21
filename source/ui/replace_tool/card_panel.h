@@ -13,6 +13,7 @@ public:
 	// Optional: Set specific card style properties if needed
 	void SetShowFooter(bool show);
 	void SetTitle(const wxString& title);
+	void SetIcon(const std::string& iconPath);
 	wxSizer* GetContentSizer() const {
 		return m_contentSizer;
 	}
@@ -30,6 +31,7 @@ protected:
 private:
 	bool m_showFooter = false;
 	wxString m_title;
+	std::string m_iconPath;
 	std::string m_cachedTitleStr;
 
 	wxBoxSizer* m_mainSizer = nullptr;

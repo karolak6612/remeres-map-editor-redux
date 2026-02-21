@@ -4,6 +4,7 @@
 #include "ui/replace_tool/rule_manager.h"
 #include "game/items.h"
 #include "util/nvg_utils.h"
+#include "util/image_manager.h"
 #include <string>
 #include <algorithm>
 #include <format>
@@ -13,21 +14,24 @@
 const int RuleCardRenderer::CARD_W = RuleCardRenderer::ITEM_SIZE + 20;
 
 void RuleCardRenderer::DrawTrashIcon(NVGcontext* vg, float x, float y, float size, bool highlight) {
-	nvgBeginPath(vg);
-	float w = size * 0.6f;
-	float h = size * 0.7f;
-	float ox = x + (size - w) / 2;
-	float oy = y + (size - h) / 2;
+	int icon = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_TRASH_CAN, highlight ? wxColor(255, 80, 80) : wxColor(200, 50, 50));
+	if (icon > 0) {
+		float w = size * 0.6f;
+		float h = size * 0.6f;
+		float ox = x + (size - w) / 2;
+		float oy = y + (size - h) / 2;
 
-	nvgFillColor(vg, highlight ? nvgRGBA(255, 80, 80, 255) : nvgRGBA(200, 50, 50, 255));
-	nvgRect(vg, ox, oy + 5, w, h - 5);
-	nvgRect(vg, ox - 2, oy, w + 4, 3);
-	nvgRect(vg, ox + w / 2 - 3, oy - 2, 6, 2);
-	nvgFill(vg);
+		NVGpaint imgPaint = nvgImagePattern(vg, ox, oy, w, h, 0, icon, 1.0f);
+		nvgBeginPath(vg);
+		nvgRect(vg, ox, oy, w, h);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
+	}
 }
 
 void RuleCardRenderer::DrawHeader(NVGcontext* vg, float width) {
 	NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
+	wxColour wxSubTextCol = Theme::Get(Theme::Role::TextSubtle);
 
 	nvgFontSize(vg, 10.0f);
 	nvgFillColor(vg, subTextCol);
@@ -35,9 +39,30 @@ void RuleCardRenderer::DrawHeader(NVGcontext* vg, float width) {
 
 	float subTextLabelY = HEADER_HEIGHT / 2.0f;
 	float sourceLabelX = CARD_MARGIN_X + CARD_PADDING;
+
+	int searchIcon = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_SEARCH, wxSubTextCol);
+	if (searchIcon > 0) {
+		float iw = 12.0f;
+		NVGpaint imgPaint = nvgImagePattern(vg, sourceLabelX, subTextLabelY - iw/2, iw, iw, 0, searchIcon, 1.0f);
+		nvgBeginPath(vg);
+		nvgRect(vg, sourceLabelX, subTextLabelY - iw/2, iw, iw);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
+		sourceLabelX += iw + 4;
+	}
 	nvgText(vg, sourceLabelX, subTextLabelY, "IF FOUND", nullptr);
 
-	float targetLabelX = sourceLabelX + CARD_W + 10 + ARROW_WIDTH;
+	float targetLabelX = CARD_MARGIN_X + CARD_PADDING + CARD_W + 10 + ARROW_WIDTH; // Fixed calc
+	int syncIcon = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_SYNC, wxSubTextCol);
+	if (syncIcon > 0) {
+		float iw = 12.0f;
+		NVGpaint imgPaint = nvgImagePattern(vg, targetLabelX, subTextLabelY - iw/2, iw, iw, 0, syncIcon, 1.0f);
+		nvgBeginPath(vg);
+		nvgRect(vg, targetLabelX, subTextLabelY - iw/2, iw, iw);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
+		targetLabelX += iw + 4;
+	}
 	nvgText(vg, targetLabelX, subTextLabelY, "REPLACE WITH", nullptr);
 }
 
@@ -181,19 +206,45 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
 			nvgText(vg, tx + CARD_W / 2, ty + 44, "REMOVE", nullptr);
 		} else {
-			nvgFontSize(vg, 30.0f);
-			nvgFillColor(vg, hoverAdd ? accentCol : NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle)));
-			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-			nvgText(vg, tx + CARD_W / 2, ty + ITEM_H / 2, "+", nullptr);
+			wxColour col = hoverAdd ? Theme::Get(Theme::Role::Accent) : Theme::Get(Theme::Role::TextSubtle);
+			int plusIcon = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_PLUS, col);
+			if (plusIcon > 0) {
+				float iw = 24.0f;
+				float ix = tx + (CARD_W - iw) / 2;
+				float iy = ty + (ITEM_H - iw) / 2;
+				NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, iw, iw, 0, plusIcon, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, ix, iy, iw, iw);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			} else {
+				nvgFontSize(vg, 30.0f);
+				nvgFillColor(vg, hoverAdd ? accentCol : NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle)));
+				nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+				nvgText(vg, tx + CARD_W / 2, ty + ITEM_H / 2, "+", nullptr);
+			}
 		}
 	}
 
 	// 6. Delete Rule Button (Top Right)
-	NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
-	nvgFillColor(vg, hoverDelete ? nvgRGBA(255, 80, 80, 255) : subTextCol);
-	nvgFontSize(vg, 16.0f);
-	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-	nvgText(vg, CARD_MARGIN_X + (width - CARD_MARGIN_X * 2) - 15, y + 15, "X", nullptr);
+	wxColour delCol = hoverDelete ? wxColour(255, 80, 80) : Theme::Get(Theme::Role::TextSubtle);
+	int delIcon = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_XMARK, delCol);
+	if (delIcon > 0) {
+		float iw = 16.0f;
+		float ix = CARD_MARGIN_X + (width - CARD_MARGIN_X * 2) - 15 - iw/2;
+		float iy = y + 15 - iw/2;
+		NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, iw, iw, 0, delIcon, 1.0f);
+		nvgBeginPath(vg);
+		nvgRect(vg, ix, iy, iw, iw);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
+	} else {
+		NVGcolor subTextCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextSubtle));
+		nvgFillColor(vg, hoverDelete ? nvgRGBA(255, 80, 80, 255) : subTextCol);
+		nvgFontSize(vg, 16.0f);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgText(vg, CARD_MARGIN_X + (width - CARD_MARGIN_X * 2) - 15, y + 15, "X", nullptr);
+	}
 }
 
 void RuleCardRenderer::DrawRuleArrow(NVGcontext* vg, float x, float y, float h) {
@@ -246,7 +297,30 @@ void RuleCardRenderer::DrawNewRuleArea(NVGcontext* vg, float width, float y, boo
 	nvgFontSize(vg, 14.0f);
 	nvgFillColor(vg, subTextCol);
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-	nvgText(vg, width / 2.0f, y + dropH / 2.0f, "Drop Item Here to Add New Rule", nullptr);
+
+	float centerX = width / 2.0f;
+	float centerY = y + dropH / 2.0f;
+
+	int plusIcon = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_PLUS_SQUARE, Theme::Get(Theme::Role::TextSubtle));
+	if (plusIcon > 0) {
+		float iw = 20.0f;
+		float textW = nvgTextBounds(vg, 0, 0, "Drop Item Here to Add New Rule", nullptr, nullptr);
+		float totalW = textW + iw + 8;
+
+		float iconX = centerX - totalW / 2.0f;
+		float iconY = centerY - iw / 2.0f;
+		float textX = iconX + iw + 8 + textW / 2.0f;
+
+		NVGpaint imgPaint = nvgImagePattern(vg, iconX, iconY, iw, iw, 0, plusIcon, 1.0f);
+		nvgBeginPath(vg);
+		nvgRect(vg, iconX, iconY, iw, iw);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
+
+		nvgText(vg, textX, centerY, "Drop Item Here to Add New Rule", nullptr);
+	} else {
+		nvgText(vg, centerX, centerY, "Drop Item Here to Add New Rule", nullptr);
+	}
 }
 
 void RuleCardRenderer::DrawRuleItemCard(NanoVGCanvas* canvas, NVGcontext* vg, float x, float y, float w, float h, uint16_t id, bool highlight, bool isTrash, bool showDeleteOverlay, int probability) {

@@ -112,6 +112,7 @@ void ReplaceToolWindow::InitLayout() {
 	// ---------------------------------------------------------
 	CardPanel* col1Card = new CardPanel(this, wxID_ANY);
 	col1Card->SetTitle("ITEM LIBRARY");
+	col1Card->SetIcon(ICON_BOOK);
 
 	libraryPanel = new LibraryPanel(col1Card, this);
 	col1Card->GetContentSizer()->Add(libraryPanel, wxSizerFlags(1).Expand().Border(wxALL, padding / 2));
@@ -122,6 +123,7 @@ void ReplaceToolWindow::InitLayout() {
 	// ---------------------------------------------------------
 	CardPanel* col2Card = new CardPanel(this, wxID_ANY);
 	col2Card->SetTitle("RULE BUILDER");
+	col2Card->SetIcon(ICON_WAND_MAGIC);
 
 	ruleBuilder = new RuleBuilderPanel(col2Card, this);
 	col2Card->GetContentSizer()->Add(ruleBuilder, wxSizerFlags(1).Expand().Border(wxALL, padding));
@@ -134,6 +136,7 @@ void ReplaceToolWindow::InitLayout() {
 	// ---------------------------------------------------------
 	CardPanel* col3Card = new CardPanel(this, wxID_ANY);
 	col3Card->SetTitle("SMART SUGGESTIONS");
+	col3Card->SetIcon(ICON_LIGHTBULB);
 
 	similarItemsGrid = new ItemGridPanel(col3Card, this);
 	similarItemsGrid->SetDraggable(true);
@@ -149,6 +152,7 @@ void ReplaceToolWindow::InitLayout() {
 	// -- Top Card: Rules List --
 	CardPanel* savedRulesCard = new CardPanel(splitter, wxID_ANY);
 	savedRulesCard->SetTitle("SAVED RULES");
+	savedRulesCard->SetIcon(ICON_SAVE);
 	savedRulesCard->SetShowFooter(false);
 
 	savedRulesList = new RuleListControl(savedRulesCard, this);
@@ -157,6 +161,7 @@ void ReplaceToolWindow::InitLayout() {
 	// -- Bottom Card: Actions --
 	CardPanel* actionsCard = new CardPanel(splitter, wxID_ANY);
 	actionsCard->SetTitle("ACTIONS");
+	actionsCard->SetIcon(ICON_PLAY);
 	actionsCard->SetShowFooter(false);
 
 	wxBoxSizer* actionsSizer = new wxBoxSizer(wxVERTICAL);
