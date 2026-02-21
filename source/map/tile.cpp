@@ -179,6 +179,12 @@ int Tile::size() const {
 }
 
 void Tile::merge(Tile* other) {
+	// Acquire write lock if attached to map
+	std::unique_lock<std::shared_mutex> lock;
+	if (location && location->node) {
+		lock = location->node->map.getWriteLock();
+	}
+
 	if (other->isPZ()) {
 		setPZ(true);
 	}
@@ -198,14 +204,15 @@ void Tile::merge(Tile* other) {
 		spawn = std::move(other->spawn);
 	}
 
-	if (location) location->notifyChange();
-
 	items.reserve(items.size() + other->items.size());
 	for (auto& item : other->items) {
-		addItem(std::move(item));
+		addItemUnsafe(std::move(item));
 	}
 	other->items.clear();
 	update();
+
+	// Explicit notify at end of batch
+	if (location) location->notifyChange();
 }
 
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
@@ -280,11 +287,17 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
-
 	// Acquire write lock if attached to map
 	std::unique_lock<std::shared_mutex> lock;
 	if (location && location->node) {
 		lock = location->node->map.getWriteLock();
+	}
+	addItemUnsafe(std::move(item));
+}
+
+void Tile::addItemUnsafe(std::unique_ptr<Item> item) {
+	if (!item) {
+		return;
 	}
 
 	if (item->isGroundTile()) {
@@ -538,6 +551,13 @@ void Tile::addBorderItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
+
+	// Acquire write lock if attached to map
+	std::unique_lock<std::shared_mutex> lock;
+	if (location && location->node) {
+		lock = location->node->map.getWriteLock();
+	}
+
 	ASSERT(item->isBorder());
 	items.insert(items.begin(), std::move(item));
 	update();
@@ -580,7 +600,13 @@ void Tile::addWallItem(std::unique_ptr<Item> item) {
 	}
 	ASSERT(item->isWall());
 
-	addItem(std::move(item));
+	// Acquire write lock if attached to map
+	std::unique_lock<std::shared_mutex> lock;
+	if (location && location->node) {
+		lock = location->node->map.getWriteLock();
+	}
+
+	addItemUnsafe(std::move(item));
 }
 
 void Tile::selectGround() {

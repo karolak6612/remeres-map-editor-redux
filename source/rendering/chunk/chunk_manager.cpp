@@ -14,7 +14,7 @@
 #include "rendering/core/atlas_manager.h"
 
 const char* chunk_vert = R"(
-#version 450 core
+#version 460 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
 layout (location = 2) in vec4 aRect;
@@ -36,7 +36,7 @@ void main() {
 )";
 
 const char* chunk_frag = R"(
-#version 450 core
+#version 460 core
 in vec3 TexCoord;
 in vec4 Tint;
 out vec4 FragColor;
@@ -244,16 +244,17 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 
 void ChunkManager::processResults() {
 	auto results = job_system->poll();
-	bool missing_found = false;
 
 	for (const auto& res : results) {
+		bool missing_loaded = false;
+
 		// Handle missing sprites
 		if (!res.data.missing_sprites.empty()) {
 			if (g_gui.gfx.hasAtlasManager()) {
 				for (uint32_t id : res.data.missing_sprites) {
 					// Trigger load
 					if (g_gui.gfx.getAtlasManager()->loadSprite(id)) {
-						missing_found = true;
+						missing_loaded = true;
 					}
 				}
 			}

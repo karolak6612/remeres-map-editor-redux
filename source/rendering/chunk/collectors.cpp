@@ -48,7 +48,7 @@ void LightCollector::AddLight(int map_x, int map_y, int map_z, const SpriteLight
 	}
 
 	// Validate bounds (ClientMapWidth is just a safe max, but we use uint16)
-	if (map_x >= 0 && map_x <= 0xFFFF && map_y >= 0 && map_y <= 0xFFFF) {
+	if (map_x > 0 && map_x <= MAP_MAX_WIDTH && map_y > 0 && map_y <= MAP_MAX_HEIGHT) {
 		LightBuffer::Light l;
 		l.map_x = static_cast<uint16_t>(map_x);
 		l.map_y = static_cast<uint16_t>(map_y);

@@ -32,9 +32,6 @@ ChunkData RenderChunk::rebuild(int chunk_x, int chunk_y, Map& map, TileRenderer&
 	proxy_view.view_scroll_x = 0;
 	proxy_view.view_scroll_y = 0;
 
-	int map_z_start = view.start_z; // e.g. 7
-	int map_z_end = view.end_z; // e.g. 7
-
 	for (int z = view.start_z; z >= view.superend_z; --z) {
 		// Acquire read lock on the grid only for the duration of processing this Z-level (or even per-node if fine-grained)
 		// To balance responsiveness for writers (UI thread), we can lock/unlock per Z level.
@@ -115,7 +112,7 @@ void RenderChunk::upload(const ChunkData& data) {
 	lights = data.lights;
 
 	if (instance_count > 0) {
-		glNamedBufferData(vbo->GetID(), data.sprites.size() * sizeof(SpriteInstance), data.sprites.data(), GL_STATIC_DRAW);
+		glNamedBufferData(vbo->GetID(), data.sprites.size() * sizeof(SpriteInstance), data.sprites.data(), GL_DYNAMIC_DRAW);
 	}
 
 	last_build_time = std::chrono::steady_clock::now().time_since_epoch().count();

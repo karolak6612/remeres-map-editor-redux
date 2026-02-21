@@ -82,7 +82,7 @@ void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite
 					}
 				}
 
-				pattern_z = std::min<int>(1, spr->pattern_z - 1);
+				pattern_z = std::max<int>(0, spr->pattern_z - 1);
 			}
 		}
 

@@ -2,6 +2,7 @@
 #include "rendering/core/shared_geometry.h"
 #include <spdlog/spdlog.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include "app/definitions.h"
 
 // Shader to render lights as additive sprites onto the lightmap
 const char* light_vert = R"(
@@ -192,28 +193,11 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 		float screen_x = l.map_x * TILE_SIZE - view.view_scroll_x;
 		float screen_y = l.map_y * TILE_SIZE - view.view_scroll_y;
 
-		// Safe packed color (uint32_t to float bitcast equivalent)
-		uint32_t color_u32 = l.color; // l.color is uint8_t palette index. Wait, shader unpacks rgba?
-		// "vec4 unpackColor(float f)" in shader unpacks 0xBBGGRR (0-255).
-		// But l.color is 8-bit index.
-		// Old system: LightDrawer uses colorFromEightBit(l.color) then uploads.
-		// Here I need to convert palette index to RGB first?
-		// Or pass index and use palette texture?
-		// To fix the "Dirty Cast UB", I should convert to RGB here and pack into float/uint.
-		// But I don't have access to palette easily? `colorFromEightBit` is global?
-		// Assuming I can include `app/definitions.h` or wherever `colorFromEightBit` is.
-		// Or I just pass the raw uint8 as float (e.g. 155.0f) and shader uses it?
-		// The shader `unpackColor` does: `uint u = floatBitsToUint(f)`. It expects packed RGBA bytes.
-		// So I MUST pack RGBA into the float.
-		// Since I don't want to add palette lookup dependency here, I will just pack the index as RGBA (grayscale) for now,
-		// OR I will trust that `l.color` is actually NOT an index but packed color?
-		// Struct says `uint8_t color`. It IS an index.
-		// I need to resolve the color.
-		// I'll skip color resolution for this patch (rendering it as red or index value).
-		// To fix UB: `std::memcpy` is standard way to cast bits.
+		// Resolve the color from the 8-bit index before packing
+		wxColor color = colorFromEightBit(l.color);
+		uint32_t packed_val = (color.Red()) | (color.Green() << 8) | (color.Blue() << 16) | (0xFF << 24);
 
 		float packed_color_f;
-		uint32_t packed_val = l.color; // Just the index for now (0x000000XX)
 		std::memcpy(&packed_color_f, &packed_val, sizeof(float));
 
 		instances.push_back({
@@ -227,6 +211,12 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	glNamedBufferData(vbo->GetID(), instances.size() * sizeof(GPULightInstance), instances.data(), GL_STREAM_DRAW);
 
 	// Draw
+	// Save GL state
+	GLboolean blend_enabled = glIsEnabled(GL_BLEND);
+	GLint blend_src, blend_dst;
+	glGetIntegerv(GL_BLEND_SRC_ALPHA, &blend_src);
+	glGetIntegerv(GL_BLEND_DST_ALPHA, &blend_dst);
+
 	shader->Use();
 	shader->SetMat4("uMVP", view.projectionMatrix);
 
@@ -238,7 +228,9 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 
 	glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, instances.size());
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Restore default
+	// Restore GL state
+	glBlendFunc(blend_src, blend_dst);
+	if (!blend_enabled) glDisable(GL_BLEND);
 	shader->Unuse();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
