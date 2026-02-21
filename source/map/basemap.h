@@ -110,6 +110,12 @@ public:
 	MapNode* getLeaf(int x, int y) {
 		return grid.getLeaf(x, y);
 	}
+
+	// Thread-safe modification lock
+	// Call this before modifying map structure or tiles
+	std::unique_lock<std::shared_mutex> getWriteLock() {
+		return std::unique_lock<std::shared_mutex>(grid.grid_mutex);
+	}
 	MapNode* createLeaf(int x, int y) {
 		return grid.getLeafForce(x, y);
 	}

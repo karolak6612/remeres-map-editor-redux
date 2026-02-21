@@ -19,6 +19,7 @@
 
 #include <bit>
 #include <algorithm>
+#include <chrono>
 
 #include "map/map_region.h"
 #include "map/basemap.h"
@@ -51,9 +52,15 @@ bool TileLocation::empty() const {
 	return size() == 0;
 }
 
+void TileLocation::notifyChange() {
+	if (node) {
+		node->updateLastModified();
+	}
+}
+
 //**************** Floor **********************
 
-Floor::Floor(int sx, int sy, int z) {
+Floor::Floor(int sx, int sy, int z, MapNode* node) {
 	sx = sx & ~3;
 	sy = sy & ~3;
 
@@ -61,6 +68,7 @@ Floor::Floor(int sx, int sy, int z) {
 		locs[i].position.x = sx + (i >> 2);
 		locs[i].position.y = sy + (i & 3);
 		locs[i].position.z = z;
+		locs[i].node = node;
 	}
 }
 
@@ -78,9 +86,13 @@ MapNode::~MapNode() {
 
 Floor* MapNode::createFloor(int x, int y, int z) {
 	if (!array[z]) {
-		array[z] = std::make_unique<Floor>(x, y, z);
+		array[z] = std::make_unique<Floor>(x, y, z, this);
 	}
 	return array[z].get();
+}
+
+void MapNode::updateLastModified() {
+	last_modified = std::chrono::steady_clock::now().time_since_epoch().count();
 }
 
 bool MapNode::isVisible(bool underground) {
@@ -230,6 +242,7 @@ std::unique_ptr<Tile> MapNode::setTile(int x, int y, int z, std::unique_ptr<Tile
 		--map.tilecount;
 	}
 
+	updateLastModified();
 	return oldtile;
 }
 
@@ -241,6 +254,7 @@ void MapNode::clearTile(int x, int y, int z) {
 
 	TileLocation* tmp = &f->locs[offset_x * 4 + offset_y];
 	tmp->tile = map.allocator(tmp);
+	updateLastModified();
 }
 
 //**************** SpatialHashGrid **********************

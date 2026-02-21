@@ -45,6 +45,7 @@ protected:
 	size_t waypoint_count;
 	size_t town_count;
 	std::unique_ptr<HouseExitList> house_exits; // Any house exits pointing here
+	MapNode* node = nullptr;
 
 public:
 	// Access tile
@@ -111,6 +112,8 @@ public:
 		return house_exits.get();
 	}
 
+	void notifyChange();
+
 	friend class Floor;
 	friend class MapNode;
 	friend class Waypoints;
@@ -118,7 +121,7 @@ public:
 
 class Floor {
 public:
-	Floor(int x, int y, int z);
+	Floor(int x, int y, int z, MapNode* node);
 	TileLocation locs[MAP_LAYERS];
 };
 
@@ -150,6 +153,8 @@ public:
 	void setRequested(bool underground, bool r);
 	bool isVisible(bool underground);
 
+	void updateLastModified();
+
 	enum VisibilityFlags : uint32_t {
 		VISIBLE_OVERGROUND = 1 << 0,
 		VISIBLE_UNDERGROUND = 1 << 1,
@@ -157,9 +162,14 @@ public:
 		REQUESTED_OVERGROUND = 1 << 3,
 	};
 
+	uint64_t getLastModified() const {
+		return last_modified;
+	}
+
 protected:
 	BaseMap& map;
 	uint32_t visible;
+	uint64_t last_modified = 0;
 	std::array<std::unique_ptr<Floor>, MAP_LAYERS> array;
 
 	friend class BaseMap;

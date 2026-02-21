@@ -37,6 +37,8 @@ class DoorIndicatorDrawer;
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
+#include "rendering/chunk/chunk_manager.h"
+#include "rendering/lighting/light_map_generator.h"
 
 class GridDrawer;
 
@@ -88,6 +90,8 @@ class MapDrawer {
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+	std::unique_ptr<ChunkManager> chunk_manager;
+	std::unique_ptr<LightMapGenerator> light_map_generator;
 
 	// Post-processing
 	std::unique_ptr<GLFramebuffer> scale_fbo;

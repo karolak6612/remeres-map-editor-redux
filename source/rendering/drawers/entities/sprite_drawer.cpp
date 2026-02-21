@@ -5,7 +5,7 @@
 
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
-#include "rendering/core/sprite_batch.h"
+#include "rendering/core/sprite_sink.h"
 #include "rendering/core/atlas_manager.h"
 
 SpriteDrawer::SpriteDrawer() :
@@ -19,14 +19,14 @@ void SpriteDrawer::ResetCache() {
 	last_bound_texture_ = 0;
 }
 
-void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, int red, int green, int blue, int alpha) {
+void SpriteDrawer::glBlitAtlasQuad(ISpriteSink& sprite_sink, int sx, int sy, const AtlasRegion* region, int red, int green, int blue, int alpha) {
 	if (region) {
 		float normalizedR = red / 255.0f;
 		float normalizedG = green / 255.0f;
 		float normalizedB = blue / 255.0f;
 		float normalizedA = alpha / 255.0f;
 
-		sprite_batch.draw(
+		sprite_sink.draw(
 			(float)sx, (float)sy,
 			(float)TILE_SIZE, (float)TILE_SIZE,
 			*region,
@@ -35,7 +35,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 	}
 }
 
-void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, int red, int green, int blue, int alpha, int size) {
+void SpriteDrawer::glBlitSquare(ISpriteSink& sprite_sink, int sx, int sy, int red, int green, int blue, int alpha, int size) {
 	if (size == 0) {
 		size = TILE_SIZE;
 	}
@@ -48,18 +48,27 @@ void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, int r
 	// Use Graphics::getAtlasManager() to get the atlas manager for white pixel access
 	// This assumes Graphics and AtlasManager are available
 	if (g_gui.gfx.hasAtlasManager()) {
-		sprite_batch.drawRect((float)sx, (float)sy, (float)size, (float)size, glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+		sprite_sink.drawRect((float)sx, (float)sy, (float)size, (float)size, glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
 	}
 }
 
-void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, int red, int green, int blue, int alpha) {
+void SpriteDrawer::glDrawBox(ISpriteSink& sprite_sink, int sx, int sy, int width, int height, int red, int green, int blue, int alpha) {
 	float normalizedR = red / 255.0f;
 	float normalizedG = green / 255.0f;
 	float normalizedB = blue / 255.0f;
 	float normalizedA = alpha / 255.0f;
 
 	if (g_gui.gfx.hasAtlasManager()) {
-		sprite_batch.drawRectLines((float)sx, (float)sy, (float)width, (float)height, glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+		const AtlasManager& am = *g_gui.gfx.getAtlasManager();
+		glm::vec4 color(normalizedR, normalizedG, normalizedB, normalizedA);
+		// Top
+		sprite_sink.drawRect((float)sx, (float)sy, (float)width, 1.0f, color, am);
+		// Bottom
+		sprite_sink.drawRect((float)sx, (float)sy + height - 1.0f, (float)width, 1.0f, color, am);
+		// Left
+		sprite_sink.drawRect((float)sx, (float)sy + 1.0f, 1.0f, (float)height - 2.0f, color, am);
+		// Right
+		sprite_sink.drawRect((float)sx + width - 1.0f, (float)sy + 1.0f, 1.0f, (float)height - 2.0f, color, am);
 	}
 }
 
@@ -69,19 +78,22 @@ void SpriteDrawer::glSetColor(wxColor color) {
 	// For now, ignoring as glBlitTexture/Square takes explicit color.
 }
 
-void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, uint32_t spriteid, int red, int green, int blue, int alpha) {
+void SpriteDrawer::BlitSprite(ISpriteSink& sprite_sink, int screenx, int screeny, uint32_t spriteid, int red, int green, int blue, int alpha) {
 	GameSprite* spr = g_items[spriteid].sprite;
 	if (spr == nullptr) {
 		return;
 	}
 	// Call the pointer overload
-	BlitSprite(sprite_batch, screenx, screeny, spr, red, green, blue, alpha);
+	BlitSprite(sprite_sink, screenx, screeny, spr, red, green, blue, alpha);
 }
 
-void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, int red, int green, int blue, int alpha) {
+void SpriteDrawer::BlitSprite(ISpriteSink& sprite_sink, int screenx, int screeny, GameSprite* spr, int red, int green, int blue, int alpha) {
 	if (spr == nullptr) {
 		return;
 	}
+	// Note: GameSprite is safe to read on threads if it doesn't trigger lazy loading
+	// But getAtlasRegion might return nullptr if not loaded.
+
 	screenx -= spr->getDrawOffset().first;
 	screeny -= spr->getDrawOffset().second;
 
@@ -96,9 +108,14 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
 				if (region) {
-					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, red, green, blue, alpha);
+					glBlitAtlasQuad(sprite_sink, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, red, green, blue, alpha);
+				} else {
+					// Report missing
+					uint32_t id = spr->getSpriteId(0, cx, cy);
+					if (id != 0) {
+						sprite_sink.reportMissingSprite(id);
+					}
 				}
-				// No fallback - if region is null, sprite failed to load
 			}
 		}
 	}

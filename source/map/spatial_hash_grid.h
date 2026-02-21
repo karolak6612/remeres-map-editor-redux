@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <tuple>
 #include <limits>
+#include <shared_mutex>
 
 class MapNode;
 class BaseMap;
@@ -27,6 +28,7 @@ public:
 
 	struct GridCell {
 		std::unique_ptr<MapNode> nodes[NODES_IN_CELL];
+		mutable std::shared_mutex mutex;
 		GridCell();
 		~GridCell();
 	};
@@ -85,6 +87,8 @@ public:
 	auto end() {
 		return cells.end();
 	}
+
+	mutable std::shared_mutex grid_mutex;
 
 protected:
 	BaseMap& map;

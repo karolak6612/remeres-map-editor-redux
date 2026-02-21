@@ -23,19 +23,19 @@ CreatureDrawer::CreatureDrawer() {
 CreatureDrawer::~CreatureDrawer() {
 }
 
-void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, int red, int green, int blue, int alpha, bool ingame, int animationPhase) {
+void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, int red, int green, int blue, int alpha, bool ingame, int animationPhase) {
 	if (!ingame && c->isSelected()) {
 		red /= 2;
 		green /= 2;
 		blue /= 2;
 	}
-	BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), red, green, blue, alpha, animationPhase);
+	BlitCreature(sprite_sink, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), red, green, blue, alpha, animationPhase);
 }
 
-void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, int red, int green, int blue, int alpha, int animationPhase) {
+void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, int red, int green, int blue, int alpha, int animationPhase) {
 	if (outfit.lookItem != 0) {
 		ItemType& it = g_items[outfit.lookItem];
-		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, it.sprite, red, green, blue, alpha);
+		sprite_drawer->BlitSprite(sprite_sink, screenx, screeny, it.sprite, red, green, blue, alpha);
 	} else {
 		// get outfit sprite
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);

@@ -307,6 +307,7 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	}
 	items.insert(it, std::move(item));
 	update();
+	if (location) location->notifyChange();
 }
 
 void Tile::select() {
@@ -530,6 +531,7 @@ void Tile::addBorderItem(std::unique_ptr<Item> item) {
 	ASSERT(item->isBorder());
 	items.insert(items.begin(), std::move(item));
 	update();
+	if (location) location->notifyChange();
 }
 
 GroundBrush* Tile::getGroundBrush() const {

@@ -114,6 +114,8 @@ TileLocation* BaseMap::createTileL(const Position& pos) {
 }
 
 std::unique_ptr<Tile> BaseMap::setTile(int x, int y, int z, std::unique_ptr<Tile> newtile) {
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
+
 	ASSERT(!newtile || newtile->getX() == int(x));
 	ASSERT(!newtile || newtile->getY() == int(y));
 	ASSERT(!newtile || newtile->getZ() == int(z));
@@ -123,6 +125,8 @@ std::unique_ptr<Tile> BaseMap::setTile(int x, int y, int z, std::unique_ptr<Tile
 }
 
 std::unique_ptr<Tile> BaseMap::swapTile(int x, int y, int z, std::unique_ptr<Tile> newtile) {
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
+
 	ASSERT(z < MAP_LAYERS);
 	ASSERT(!newtile || newtile->getX() == int(x));
 	ASSERT(!newtile || newtile->getY() == int(y));
