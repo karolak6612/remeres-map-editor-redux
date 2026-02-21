@@ -165,12 +165,19 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	wxBoxSizer* part_sizer = new wxBoxSizer(wxHORIZONTAL);
 	head_btn = new wxButton(this, ID_COLOR_HEAD, "Head", wxDefaultPosition, wxSize(50, -1));
 	head_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, wxSize(16, 16)));
+	head_btn->SetToolTip("Select Head Color");
+
 	body_btn = new wxButton(this, ID_COLOR_BODY, "Primary", wxDefaultPosition, wxSize(50, -1));
 	body_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHIRT, wxSize(16, 16)));
+	body_btn->SetToolTip("Select Primary Color");
+
 	legs_btn = new wxButton(this, ID_COLOR_LEGS, "Secondary", wxDefaultPosition, wxSize(50, -1));
 	legs_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SOCKS, wxSize(16, 16)));
+	legs_btn->SetToolTip("Select Secondary Color");
+
 	feet_btn = new wxButton(this, ID_COLOR_FEET, "Detail", wxDefaultPosition, wxSize(50, -1));
 	feet_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHOE_PRINTS, wxSize(16, 16)));
+	feet_btn->SetToolTip("Select Detail Color");
 
 	part_sizer->Add(head_btn, 1, wxEXPAND | wxRIGHT, 2);
 	part_sizer->Add(body_btn, 1, wxEXPAND | wxRIGHT, 2);
@@ -230,6 +237,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 
 	outfit_search = new wxSearchCtrl(this, ID_SEARCH, wxEmptyString, wxDefaultPosition, wxSize(180, -1));
 	outfit_search->SetDescriptiveText("Search...");
+	outfit_search->SetToolTip("Search for outfits by name");
 	outfits_header_row->Add(outfit_search, 0, wxALIGN_BOTTOM | wxRIGHT, 4);
 
 	colorable_only_check = new wxCheckBox(this, wxID_ANY, "Template Only");
