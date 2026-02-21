@@ -125,6 +125,9 @@ uint8_t GameSprite::getMiniMapColor() const {
 }
 
 size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {
+	if (this->frames == 0) {
+		return 0;
+	}
 	size_t idx = frame % this->frames;
 	// Cast operands to size_t to force 64-bit arithmetic and avoid overflow
 	idx = idx * static_cast<size_t>(this->pattern_z) + static_cast<size_t>(pattern_z);
@@ -137,6 +140,10 @@ size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int
 }
 
 const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y, int _pattern_z, int _frame) {
+	if (numsprites == 0) {
+		return nullptr;
+	}
+
 	// Optimization for simple static sprites (1x1, 1 frame, etc.)
 	// Most ground tiles fall into this category.
 	if (_count == -1 && numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1) {
@@ -213,6 +220,10 @@ GameSprite::TemplateImage* GameSprite::getTemplateImage(int sprite_index, const 
 }
 
 const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit, int _frame) {
+	if (numsprites == 0) {
+		return nullptr;
+	}
+
 	uint32_t v = getIndex(_x, _y, 0, _dir, _addon, _pattern_z, _frame);
 	if (v >= numsprites) {
 		if (numsprites == 1) {
@@ -463,6 +474,9 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 
 	// decompress pixels
 	while (read < size && write < pixels_data_size) {
+		if (read + 1 >= size) {
+			break;
+		}
 		int transparent = dump[read] | dump[read + 1] << 8;
 		read += 2;
 		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
@@ -472,8 +486,17 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 			write += RGB_COMPONENTS;
 		}
 
+		if (read + 1 >= size) {
+			break;
+		}
+
 		int colored = dump[read] | dump[read + 1] << 8;
 		read += 2;
+
+		if (read + static_cast<size_t>(colored) * bpp > size) {
+			break;
+		}
+
 		for (int i = 0; i < colored && write < pixels_data_size; i++) {
 			data[write + 0] = dump[read + 0]; // red
 			data[write + 1] = dump[read + 1]; // green
@@ -504,6 +527,9 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 
 	// decompress pixels
 	while (read < size && write < pixels_data_size) {
+		if (read + 1 >= size) {
+			break;
+		}
 		int transparent = dump[read] | dump[read + 1] << 8;
 
 		// Integrity check for transparency run
@@ -525,6 +551,9 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 			break;
 		}
 
+		if (read + 1 >= size) {
+			break;
+		}
 		int colored = dump[read] | dump[read + 1] << 8;
 		read += 2;
 
