@@ -49,6 +49,7 @@ protected:
 	void UpdateScrollbar();
 	void OnSize(wxSizeEvent& event);
 	void OnMouseDown(wxMouseEvent& event);
+	void OnMouseDoubleClick(wxMouseEvent& event);
 	void OnKeyDown(wxKeyEvent& event);
 	void OnMotion(wxMouseEvent& event);
 	void OnLeave(wxMouseEvent& event);
