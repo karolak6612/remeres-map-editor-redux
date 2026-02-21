@@ -120,29 +120,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 		if (const Container* container = item->asContainer()) {
 			// Set capacity for rendering empty slots
 			data.containerCapacity = static_cast<uint8_t>(container->getVolume());
-
-			const auto& items = container->getVector();
-			data.containerItems.clear();
-			data.containerItems.reserve(items.size());
-			for (const auto& subItem : items) {
-				if (subItem) {
-					ContainerItem ci;
-					ci.id = subItem->getID();
-					ci.subtype = subItem->getSubtype();
-					ci.count = subItem->getCount();
-					// Sanity check for count
-					if (ci.count == 0) {
-						ci.count = 1;
-					}
-
-					data.containerItems.push_back(ci);
-
-					// Limit preview items to avoid massive tooltips
-					if (data.containerItems.size() >= 32) {
-						break;
-					}
-				}
-			}
+			data.container = container;
 		}
 	}
 

@@ -25,6 +25,7 @@
 #include <wx/wx.h>
 #include "game/items.h"
 #include "game/sprites.h"
+#include "game/complexitem.h"
 #include "ui/gui.h"
 
 TooltipDrawer::TooltipDrawer() {
@@ -344,7 +345,7 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 	lm.gridSlotSize = 34.0f; // 32px + padding
 	lm.containerHeight = 0.0f;
 
-	lm.numContainerItems = static_cast<int>(tooltip.containerItems.size());
+	lm.numContainerItems = tooltip.container ? std::min(static_cast<int>(tooltip.container->getItemCount()), 32) : 0;
 	int capacity = static_cast<int>(tooltip.containerCapacity);
 	lm.emptyContainerSlots = std::max(0, capacity - lm.numContainerItems);
 	lm.totalContainerSlots = lm.numContainerItems;
@@ -521,10 +522,13 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 
 		} else if (idx < layout.numContainerItems) {
 			// Draw Actual Item
-			const auto& item = tooltip.containerItems[idx];
+			const Item* item = tooltip.container->getItem(idx);
+			if (!item) {
+				continue;
+			}
 
 			// Draw item sprite
-			int img = getSpriteImage(vg, item.id);
+			int img = getSpriteImage(vg, item->getID());
 			if (img > 0) {
 				nvgBeginPath(vg);
 				nvgRect(vg, itemX, itemY, 32, 32);
@@ -533,8 +537,9 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 			}
 
 			// Draw Count
-			if (item.count > 1) {
-				std::string countStr = std::to_string(item.count);
+			int count = item->getCount();
+			if (count > 1) {
+				std::string countStr = std::to_string(count);
 				nvgFontSize(vg, 10.0f);
 				nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
 
@@ -581,7 +586,7 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		prepareFields(tooltip);
 
 		// Skip if nothing to show
-		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
+		if (scratch_fields_count == 0 && !tooltip.container) {
 			continue;
 		}
 
