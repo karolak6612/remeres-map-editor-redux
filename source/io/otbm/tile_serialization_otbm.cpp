@@ -129,7 +129,23 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 	const uint64_t total_tiles = map.getTileCount();
 
 	// Use modern ranges for iteration if possible, but the spatial hash grid iterator is already custom
-	auto sorted_cells = map.getGrid().getSortedCells();
+	auto sorted_cells = map.getGrid().getSortedCells(); // Copy for local sorting
+
+	// Sort primarily by 256x256 areas (OTBM_TILE_AREA size) to prevent fragmentation
+	// This ensures we finish one OTBM_TILE_AREA before moving to the next, reducing node overhead
+	std::sort(sorted_cells.begin(), sorted_cells.end(), [](const auto& a, const auto& b) {
+		int ay_a = a.cy >> 2;
+		int ay_b = b.cy >> 2;
+		if (ay_a != ay_b) return ay_a < ay_b;
+
+		int ax_a = a.cx >> 2;
+		int ax_b = b.cx >> 2;
+		if (ax_a != ax_b) return ax_a < ax_b;
+
+		if (a.cy != b.cy) return a.cy < b.cy;
+		return a.cx < b.cx;
+	});
+
 	for (const auto& sorted_cell : sorted_cells) {
 		SpatialHashGrid::GridCell* cell = sorted_cell.cell;
 		if (!cell) {
@@ -150,7 +166,16 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 
 				for (int k = 0; k < SpatialHashGrid::TILES_PER_NODE; ++k) {
 					Tile* save_tile = floor->locs[k].get();
-					if (!save_tile || save_tile->size() == 0) {
+					if (!save_tile) {
+						continue;
+					}
+
+					// Only save tiles that have actual content for OTBM (ground, items, flags, house)
+					// Spawns, creatures, and exits are saved separately or in location data, so skip "empty" tiles
+					bool has_content = save_tile->ground || !save_tile->items.empty() ||
+									   save_tile->isHouseTile() || save_tile->getMapFlags();
+
+					if (!has_content) {
 						continue;
 					}
 
