@@ -5,6 +5,7 @@
 #include "editor/persistence/editor_persistence.h"
 #include "app/managers/version_manager.h"
 #include "ui/gui.h"
+#include "ui/managers/status_manager.h"
 #include "app/settings.h"
 #include "io/iomap.h"
 #include "live/live_client.h"
@@ -32,10 +33,9 @@ void SetupCallbacks(Editor* editor) {
 			} else {
 				ss << count << " tiles selected.";
 			}
-			g_gui.SetStatusText(ss);
+			g_status.SetStatusText(ss, STATUS_FIELD_SELECTION);
 		} else {
-			// Optional: Clear status text if nothing selected, or keep previous behavior
-			// Previous behavior didn't clear it explicitly in updateSelectionCount if size <= 0
+			g_status.SetStatusText("", STATUS_FIELD_SELECTION);
 		}
 
 		if (g_gui.tile_properties_panel) {

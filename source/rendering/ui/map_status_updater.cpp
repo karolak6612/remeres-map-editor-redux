@@ -24,11 +24,12 @@
 #include "live/live_server.h"
 #include "rendering/utilities/tile_describer.h"
 #include "app/settings.h"
+#include "ui/managers/status_manager.h"
 
 void MapStatusUpdater::Update(Editor& editor, int map_x, int map_y, int map_z) {
 	wxString ss;
-	ss << "x: " << map_x << " y:" << map_y << " z:" << map_z;
-	g_gui.root->SetStatusText(ss, 2);
+	ss << "Pos: " << map_x << ", " << map_y << ", " << map_z;
+	g_status.SetStatusText(ss, STATUS_FIELD_POSITION);
 
 	ss = "";
 	Tile* tile = editor.map.getTile(map_x, map_y, map_z);
@@ -38,12 +39,12 @@ void MapStatusUpdater::Update(Editor& editor, int map_x, int map_y, int map_z) {
 		if (editor.live_manager.IsLive()) {
 			editor.live_manager.GetSocket().updateCursor(Position(map_x, map_y, map_z));
 		}
-		g_gui.root->SetStatusText(ss, 1);
+		g_status.SetStatusText(ss, STATUS_FIELD_DESCRIPTION);
 	} else {
-		g_gui.root->SetStatusText("Nothing", 1);
+		g_status.SetStatusText("Nothing", STATUS_FIELD_DESCRIPTION);
 	}
 }
 
 void MapStatusUpdater::UpdateFPS(const wxString& fps_status) {
-	g_gui.root->SetStatusText(fps_status, 0);
+	g_status.SetStatusText(fps_status, STATUS_FIELD_FPS);
 }

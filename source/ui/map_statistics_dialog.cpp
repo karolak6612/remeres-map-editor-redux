@@ -34,6 +34,7 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	os.setf(std::ios::fixed, std::ios::floatfield);
 	os.precision(2);
 	os << "Map statistics for the map \"" << map->getMapDescription() << "\"\n";
+	os << "\tMap Dimensions: " << map->getWidth() << "x" << map->getHeight() << " (" << MAP_LAYERS << " floors)\n";
 	os << "\tTile data:\n";
 	os << "\t\tTotal number of tiles: " << stats.tile_count << "\n";
 	os << "\t\tNumber of pathable tiles: " << stats.walkable_tile_count << "\n";
@@ -91,17 +92,18 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	text_field->SetMinSize(wxSize(400, 300));
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
-	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
+	wxStdDialogButtonSizer* choicesizer = newd wxStdDialogButtonSizer();
 	wxButton* export_button = newd wxButton(dg, wxID_OK, "Export as XML");
 	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
-	choicesizer->Add(export_button, wxSizerFlags(1).Center());
+	choicesizer->AddButton(export_button);
 	export_button->SetToolTip("Not implemented yet");
 	export_button->Enable(false);
 	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	okBtn->SetToolTip("Close this window");
-	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
-	topsizer->Add(choicesizer, wxSizerFlags(1).Center());
+	choicesizer->AddButton(okBtn);
+	choicesizer->Realize();
+	topsizer->Add(choicesizer, wxSizerFlags(1).Center().Border(wxALL, 10));
 	dg->SetSizerAndFit(topsizer);
 	dg->Centre(wxBOTH);
 

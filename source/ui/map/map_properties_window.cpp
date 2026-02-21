@@ -109,16 +109,17 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 
 	topsizer->Add(grid_sizer, wxSizerFlags(1).Expand().Border(wxALL, 20));
 
-	wxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
+	wxStdDialogButtonSizer* subsizer = newd wxStdDialogButtonSizer();
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	okBtn->SetToolTip("Confirm changes");
-	subsizer->Add(okBtn, wxSizerFlags(1).Center());
+	subsizer->AddButton(okBtn);
 
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancelBtn->SetToolTip("Discard changes");
-	subsizer->Add(cancelBtn, wxSizerFlags(1).Center());
+	subsizer->AddButton(cancelBtn);
+	subsizer->Realize();
 	topsizer->Add(subsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT | wxBOTTOM, 20));
 
 	SetSizerAndFit(topsizer);

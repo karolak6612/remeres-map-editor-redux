@@ -363,6 +363,7 @@ void EditorManager::DoCut() {
 	editor->copybuffer.cut(*editor, g_gui.GetCurrentFloor());
 	g_gui.RefreshView();
 	g_gui.root->UpdateMenubar();
+	g_status.SetStatusText("Cut selection to clipboard", STATUS_FIELD_MESSAGE);
 }
 
 void EditorManager::DoCopy() {
@@ -378,12 +379,14 @@ void EditorManager::DoCopy() {
 	editor->copybuffer.copy(*editor, g_gui.GetCurrentFloor());
 	g_gui.RefreshView();
 	g_gui.root->UpdateMenubar();
+	g_status.SetStatusText("Copied selection to clipboard", STATUS_FIELD_MESSAGE);
 }
 
 void EditorManager::DoPaste() {
 	MapTab* mapTab = GetCurrentMapTab();
 	if (mapTab) {
 		g_gui.copybuffer.paste(*mapTab->GetEditor(), mapTab->GetCanvas()->GetCursorPosition());
+		g_status.SetStatusText("Pasted from clipboard", STATUS_FIELD_MESSAGE);
 	}
 }
 

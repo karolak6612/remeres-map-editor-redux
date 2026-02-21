@@ -327,6 +327,7 @@ void GUI::SetBrushSizeInternal(int nz) {
 	if (tool_options) {
 		tool_options->UpdateBrushSize(GetBrushShape(), nz);
 	}
+	g_status.SetStatusText(std::format("Brush Size: {}", nz), STATUS_FIELD_MESSAGE);
 }
 void GUI::SetBrushShape(BrushShape bs) {
 	g_brush_manager.SetBrushShape(bs);
