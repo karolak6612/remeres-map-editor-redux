@@ -1,5 +1,6 @@
 #include "ui/replace_tool/card_panel.h"
 #include "ui/theme.h"
+#include "util/image_manager.h"
 #include <wx/settings.h>
 #include <numbers>
 #include <nanovg.h>
@@ -34,6 +35,11 @@ void CardPanel::SetShowFooter(bool show) {
 void CardPanel::SetTitle(const wxString& title) {
 	m_title = title;
 	m_cachedTitleStr.clear();
+	Refresh();
+}
+
+void CardPanel::SetIcon(const std::string& iconPath) {
+	m_iconPath = iconPath;
 	Refresh();
 }
 
@@ -139,6 +145,29 @@ void CardPanel::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		if (m_cachedTitleStr.empty() && !m_title.IsEmpty()) {
 			m_cachedTitleStr = m_title.ToStdString();
 		}
+
+		if (!m_iconPath.empty()) {
+			int img = IMAGE_MANAGER.GetNanoVGImage(vg, m_iconPath, titleColor);
+			if (img > 0) {
+				float iconW = 16.0f;
+				float textW = nvgTextBounds(vg, 0, 0, m_cachedTitleStr.c_str(), nullptr, nullptr);
+				float totalW = textW + iconW + 4.0f;
+				float startX = tx - totalW / 2.0f;
+
+				float iconX = startX;
+				float iconY = ty - iconW / 2.0f;
+				float textX = startX + iconW + 4.0f + textW / 2.0f;
+
+				NVGpaint imgPaint = nvgImagePattern(vg, iconX, iconY, iconW, iconW, 0, img, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, iconX, iconY, iconW, iconW);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+
+				tx = textX;
+			}
+		}
+
 		nvgText(vg, tx, ty, m_cachedTitleStr.c_str(), nullptr);
 	}
 
