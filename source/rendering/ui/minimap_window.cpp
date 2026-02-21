@@ -51,9 +51,10 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	context(nullptr),
 	nvg(nullptr, NVGDeleter()) {
 	spdlog::info("MinimapWindow::MinimapWindow - Creating context");
-	context = std::make_unique<wxGLContext>(this);
+	context = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
 	if (!context->IsOK()) {
 		spdlog::error("MinimapWindow::MinimapWindow - Context creation failed");
+		context.reset();
 	}
 	SetToolTip("Click to move camera");
 	drawer = std::make_unique<MinimapDrawer>();
