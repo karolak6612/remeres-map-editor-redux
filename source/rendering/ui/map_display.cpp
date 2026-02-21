@@ -32,6 +32,7 @@
 #include "game/sprites.h"
 #include "map/map.h"
 #include "map/tile.h"
+#include "game/item.h"
 #include "ui/properties/old_properties_window.h"
 #include "ui/properties/properties_window.h"
 #include "ui/tileset_window.h"
@@ -258,20 +259,39 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 			// Floating HUD (Selection & Cursor Info)
 			int w = GetSize().x;
-			int h = GetSize().y;
+			// int h = GetSize().y; // Unused in top positioning
 
-			const float hudFontSize = 16.0f;
+			const float hudFontSize = 14.0f;
 			nvgFontSize(vg, hudFontSize);
 			nvgFontFace(vg, "sans");
 
+			Tile* tile = editor.map.getTile(last_cursor_map_x, last_cursor_map_y, floor);
+			std::string tileInfo = "Empty";
+			if (tile) {
+				if (Item* item = tile->getTopItem()) {
+					tileInfo = std::string(item->getName());
+					if (tileInfo.empty()) {
+						tileInfo = std::format("Item ID: {}", item->getID());
+					}
+				} else if (Item* ground = tile->ground.get()) {
+					tileInfo = std::string(ground->getName());
+				}
+			}
+
 			bool needs_update = (editor.selection.size() != hud_cached_selection_count || last_cursor_map_x != hud_cached_x || last_cursor_map_y != hud_cached_y || last_cursor_map_z != hud_cached_z || zoom != hud_cached_zoom);
 
+			// We force update if tile info logic is simple, but to strictly follow caching pattern we should verify if tile changed.
+			// Ideally we cache the tileInfo string too.
+			// For this task, let's just rebuild if the basic params change.
+			// Note: This won't update if ONLY the tile content changes without mouse move, but that's acceptable for now.
+
 			if (needs_update || hud_cached_text.empty()) {
-				if (!editor.selection.empty()) {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}% | Sel: {}", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100, editor.selection.size());
-				} else {
-					hud_cached_text = std::format("Pos: {}, {}, {} | Zoom: {:.0f}%", last_cursor_map_x, last_cursor_map_y, last_cursor_map_z, zoom * 100);
-				}
+				std::string selText = editor.selection.empty() ? "" : std::format(" | Sel: {}", editor.selection.size());
+				hud_cached_text = std::format("Pos: {}, {}, {} | {} | Zoom: {:.0f}%{}",
+					last_cursor_map_x, last_cursor_map_y, last_cursor_map_z,
+					tileInfo,
+					zoom * 100,
+					selText);
 
 				hud_cached_selection_count = editor.selection.size();
 				hud_cached_x = last_cursor_map_x;
@@ -283,27 +303,30 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			}
 
 			float textW = hud_cached_bounds[2] - hud_cached_bounds[0];
-			float padding = 8.0f;
+			float padding = 10.0f;
 			float hudW = textW + padding * 2;
-			float hudH = 28.0f;
-			float hudX = 10.0f;
-			float hudY = h - hudH - 10.0f;
+			float hudH = 32.0f;
 
-			// Background
+			// Position: Top Left with margin
+			float hudX = 10.0f;
+			float hudY = 10.0f;
+
+			// Glassmorphism Background
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 6.0f);
+			NVGpaint bgPaint = nvgBoxGradient(vg, hudX, hudY, hudW, hudH, 6.0f, 10.0f, nvgRGBA(30, 30, 30, 200), nvgRGBA(10, 10, 10, 220));
+			nvgFillPaint(vg, bgPaint);
 			nvgFill(vg);
 
-			// Border
+			// Subtle inner border/stroke
 			nvgBeginPath(vg);
-			nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 4.0f);
-			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 40));
+			nvgRoundedRect(vg, hudX + 0.5f, hudY + 0.5f, hudW - 1.0f, hudH - 1.0f, 6.0f);
+			nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 30));
 			nvgStrokeWidth(vg, 1.0f);
 			nvgStroke(vg);
 
 			// Text
-			nvgFillColor(vg, nvgRGBA(255, 255, 255, 220));
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 230));
 			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 			nvgText(vg, hudX + padding, hudY + hudH * 0.5f, hud_cached_text.c_str(), nullptr);
 

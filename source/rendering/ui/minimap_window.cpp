@@ -150,19 +150,26 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		GetClientSize(&w, &h);
 		nvgBeginFrame(vg, w, h, GetContentScaleFactor());
 
+		// Vignette (Radial Gradient)
+		NVGpaint vignette = nvgRadialGradient(vg, w / 2.0f, h / 2.0f, std::min(w, h) * 0.3f, std::max(w, h) * 0.8f, nvgRGBA(0, 0, 0, 0), nvgRGBA(0, 0, 0, 100));
+		nvgBeginPath(vg);
+		nvgRect(vg, 0, 0, w, h);
+		nvgFillPaint(vg, vignette);
+		nvgFill(vg);
+
+		// Inner glow / Bevel
+		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 10.0f, nvgRGBA(255, 255, 255, 20), nvgRGBA(0, 0, 0, 40));
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
+		nvgFillPaint(vg, glow);
+		nvgFill(vg);
+
 		// Subtle glass border
 		nvgBeginPath(vg);
 		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
 		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
 		nvgStrokeWidth(vg, 2.0f);
 		nvgStroke(vg);
-
-		// Inner glow
-		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
-		nvgFillPaint(vg, glow);
-		nvgFill(vg);
 
 		nvgEndFrame(vg);
 	}

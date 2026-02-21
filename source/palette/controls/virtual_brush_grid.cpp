@@ -93,6 +93,15 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
+	// Animation scaling
+	if (i == hover_index) {
+		float grow = 2.0f * hover_anim;
+		x -= grow;
+		y -= grow;
+		w += grow * 2.0f;
+		h += grow * 2.0f;
+	}
+
 	// Shadow / Glow
 	if (i == selected_index) {
 		// Glow for selected
@@ -104,10 +113,12 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
 	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
+		// Animated shadow for hover
+		float shadowAlpha = 64.0f * hover_anim + 20.0f;
+		float shadowBlur = 6.0f + 4.0f * hover_anim;
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, shadowBlur, nvgRGBA(0, 0, 0, (int)shadowAlpha), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
-		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
+		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillPaint(vg, shadowPaint);
@@ -264,7 +275,13 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 
 	if (index != hover_index) {
 		hover_index = index;
+		hover_anim = 0.0f; // Reset animation for new target
+		if (!m_animTimer.IsRunning()) {
+			m_animTimer.Start(16);
+		}
 		Refresh();
+	} else if (hover_index != -1 && !m_animTimer.IsRunning()) {
+		m_animTimer.Start(16);
 	}
 
 	// Tooltip
@@ -284,8 +301,16 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 }
 
 void VirtualBrushGrid::OnTimer(wxTimerEvent& event) {
-	// Animation tick for hover effects (optional - can be enhanced later)
-	Refresh();
+	float target = (hover_index != -1) ? 1.0f : 0.0f;
+	if (std::abs(hover_anim - target) > 0.01f) {
+		hover_anim += (target - hover_anim) * 0.2f;
+		Refresh();
+	} else {
+		hover_anim = target;
+		if (hover_index == -1) {
+			m_animTimer.Stop();
+		}
+	}
 }
 
 void VirtualBrushGrid::OnSize(wxSizeEvent& event) {
