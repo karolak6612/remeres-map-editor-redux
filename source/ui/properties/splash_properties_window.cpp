@@ -38,17 +38,17 @@ SplashPropertiesWindow::SplashPropertiesWindow(wxWindow* parent, const Map* map,
 	// Splash types
 	splash_type_field = newd wxChoice(this, wxID_ANY);
 	if (edit_item->isFluidContainer()) {
-		splash_type_field->Append(wxstr(Item::LiquidID2Name(LIQUID_NONE)), (void*)(intptr_t)(LIQUID_NONE));
+		splash_type_field->Append(wxstr(Item::LiquidID2Name(LIQUID_NONE)), reinterpret_cast<void*>(static_cast<intptr_t>(LIQUID_NONE)));
 	}
 
 	for (SplashType splashType = LIQUID_FIRST; splashType != LIQUID_LAST; ++splashType) {
-		splash_type_field->Append(wxstr(Item::LiquidID2Name(splashType)), (void*)(intptr_t)(splashType));
+		splash_type_field->Append(wxstr(Item::LiquidID2Name(splashType)), reinterpret_cast<void*>(static_cast<intptr_t>(splashType)));
 	}
 
 	if (item->getSubtype()) {
 		const std::string& what = Item::LiquidID2Name(item->getSubtype());
 		if (what == "Unknown") {
-			splash_type_field->Append(wxstr(Item::LiquidID2Name(LIQUID_NONE)), (void*)(intptr_t)(LIQUID_NONE));
+			splash_type_field->Append(wxstr(Item::LiquidID2Name(LIQUID_NONE)), reinterpret_cast<void*>(static_cast<intptr_t>(LIQUID_NONE)));
 		}
 		splash_type_field->SetStringSelection(wxstr(what));
 	} else {
@@ -94,7 +94,7 @@ void SplashPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (edit_item) {
 		int new_uid = unique_id_field->GetValue();
 		int new_aid = action_id_field->GetValue();
-		int new_type = (int)(intptr_t)splash_type_field->GetClientData(splash_type_field->GetSelection());
+		int new_type = static_cast<int>(reinterpret_cast<intptr_t>(splash_type_field->GetClientData(splash_type_field->GetSelection())));
 
 		if (!PropertyValidator::validateItemProperties(this, new_uid, new_aid, 0)) {
 			return;
