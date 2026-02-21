@@ -144,106 +144,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 		Tile* tile = tile_loc.get();
 		ASSERT(tile);
 
-		if (tile->empty()) {
-			continue;
-		}
-
-		// id_list try MTM conversion
-		id_list.clear();
-		id_list.reserve(tile->items.size() + 1);
-
-		if (tile->ground) {
-			id_list.push_back(tile->ground->getID());
-		}
-
-		auto border_view = tile->items | std::views::filter([](const auto& i) { return i->isBorder(); });
-		auto border_ids = border_view | std::views::transform([](const auto& i) { return i->getID(); });
-		id_list.insert(id_list.end(), border_ids.begin(), border_ids.end());
-
-		std::ranges::sort(id_list);
-
-		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
-
-		while (!id_list.empty()) {
-			cfmtm = rm.mtm.find(id_list);
-			if (cfmtm != rm.mtm.end()) {
-				break;
-			}
-			id_list.pop_back();
-		}
-
-		// Keep track of how many items have been inserted at the bottom
-		size_t inserted_items = 0;
-
-		if (cfmtm != rm.mtm.end()) {
-			const std::vector<uint16_t>& v = cfmtm->first;
-			const auto& ids_to_remove = mtm_lookups.at(&v);
-
-			if (tile->ground && ids_to_remove.contains(tile->ground->getID())) {
-				tile->ground.reset();
-			}
-
-			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](const std::unique_ptr<Item>& item) {
-				return !ids_to_remove.contains(item->getID());
-			});
-
-			tile->items.erase(part_iter, tile->items.end());
-
-			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (uint16_t new_id : new_items) {
-				std::unique_ptr<Item> item = Item::Create(new_id);
-				if (item->isGroundTile()) {
-					tile->ground = std::move(item);
-				} else {
-					tile->items.insert(tile->items.begin(), std::move(item));
-					++inserted_items;
-				}
-			}
-		}
-
-		if (tile->ground) {
-			ConversionMap::STM::const_iterator cfstm = rm.stm.find(tile->ground->getID());
-			if (cfstm != rm.stm.end()) {
-				uint16_t aid = tile->ground->getActionID();
-				uint16_t uid = tile->ground->getUniqueID();
-				tile->ground.reset();
-
-				const std::vector<uint16_t>& v = cfstm->second;
-				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (uint16_t new_id : v) {
-					std::unique_ptr<Item> item = Item::Create(new_id);
-					// conversions << *iit << " ";
-					if (item->isGroundTile()) {
-						item->setActionID(aid);
-						item->setUniqueID(uid);
-						tile->addItem(std::move(item));
-					} else {
-						tile->items.insert(tile->items.begin(), std::move(item));
-						++inserted_items;
-					}
-				}
-				// conversions << std::endl;
-			}
-		}
-
-		for (auto replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
-			uint16_t id = (*replace_item_iter)->getID();
-			ConversionMap::STM::const_iterator cf = rm.stm.find(id);
-			if (cf != rm.stm.end()) {
-				// uint16_t aid = (*replace_item_iter)->getActionID();
-				// uint16_t uid = (*replace_item_iter)->getUniqueID();
-
-				replace_item_iter = tile->items.erase(replace_item_iter);
-				const std::vector<uint16_t>& v = cf->second;
-				for (uint16_t new_id : v) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_id));
-					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
-					++replace_item_iter;
-				}
-			} else {
-				++replace_item_iter;
-			}
-		}
+		convertTile(tile, rm, mtm_lookups, id_list);
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {
@@ -256,6 +157,109 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 	}
 
 	return true;
+}
+
+void Map::convertTile(Tile* tile, const ConversionMap& rm, const std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>>& mtm_lookups, std::vector<uint16_t>& id_list) {
+	if (tile->empty()) {
+		return;
+	}
+
+	// id_list try MTM conversion
+	id_list.clear();
+	id_list.reserve(tile->items.size() + 1);
+
+	if (tile->ground) {
+		id_list.push_back(tile->ground->getID());
+	}
+
+	auto border_view = tile->items | std::views::filter([](const auto& i) { return i->isBorder(); });
+	auto border_ids = border_view | std::views::transform([](const auto& i) { return i->getID(); });
+	id_list.insert(id_list.end(), border_ids.begin(), border_ids.end());
+
+	std::ranges::sort(id_list);
+
+	ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
+
+	while (!id_list.empty()) {
+		cfmtm = rm.mtm.find(id_list);
+		if (cfmtm != rm.mtm.end()) {
+			break;
+		}
+		id_list.pop_back();
+	}
+
+	// Keep track of how many items have been inserted at the bottom
+	size_t inserted_items = 0;
+
+	if (cfmtm != rm.mtm.end()) {
+		const std::vector<uint16_t>& v = cfmtm->first;
+		const auto& ids_to_remove = mtm_lookups.at(&v);
+
+		if (tile->ground && ids_to_remove.contains(tile->ground->getID())) {
+			tile->ground.reset();
+		}
+
+		auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](const std::unique_ptr<Item>& item) {
+			return !ids_to_remove.contains(item->getID());
+		});
+
+		tile->items.erase(part_iter, tile->items.end());
+
+		const std::vector<uint16_t>& new_items = cfmtm->second;
+		for (uint16_t new_id : new_items) {
+			std::unique_ptr<Item> item = Item::Create(new_id);
+			if (item->isGroundTile()) {
+				tile->ground = std::move(item);
+			} else {
+				tile->items.insert(tile->items.begin(), std::move(item));
+				++inserted_items;
+			}
+		}
+	}
+
+	if (tile->ground) {
+		ConversionMap::STM::const_iterator cfstm = rm.stm.find(tile->ground->getID());
+		if (cfstm != rm.stm.end()) {
+			uint16_t aid = tile->ground->getActionID();
+			uint16_t uid = tile->ground->getUniqueID();
+			tile->ground.reset();
+
+			const std::vector<uint16_t>& v = cfstm->second;
+			// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
+			for (uint16_t new_id : v) {
+				std::unique_ptr<Item> item = Item::Create(new_id);
+				// conversions << *iit << " ";
+				if (item->isGroundTile()) {
+					item->setActionID(aid);
+					item->setUniqueID(uid);
+					tile->addItem(std::move(item));
+				} else {
+					tile->items.insert(tile->items.begin(), std::move(item));
+					++inserted_items;
+				}
+			}
+			// conversions << std::endl;
+		}
+	}
+
+	for (auto replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
+		uint16_t id = (*replace_item_iter)->getID();
+		ConversionMap::STM::const_iterator cf = rm.stm.find(id);
+		if (cf != rm.stm.end()) {
+			// uint16_t aid = (*replace_item_iter)->getActionID();
+			// uint16_t uid = (*replace_item_iter)->getUniqueID();
+
+			replace_item_iter = tile->items.erase(replace_item_iter);
+			const std::vector<uint16_t>& v = cf->second;
+			for (uint16_t new_id : v) {
+				replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_id));
+				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
+				++replace_item_iter;
+			}
+		} else {
+			++replace_item_iter;
+		}
+	}
 }
 
 void Map::cleanInvalidTiles(bool showdialog) {

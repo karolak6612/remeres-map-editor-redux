@@ -182,6 +182,12 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 		}
 	}
 
+	loadAuxiliaryFiles(map, filename);
+
+	return true;
+}
+
+void IOMapOTBM::loadAuxiliaryFiles(Map& map, const FileName& filename) {
 	// Read auxiliary files
 	auto loadAux = [&](bool (*func)(Map&, const FileName&), const std::string& suffix, std::string& target) {
 		std::string defaultFile = nstr(filename.GetName()) + "-" + suffix + ".xml";
@@ -293,8 +299,6 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 			map.waypointfile = nstr(filename.GetName()) + "-waypoint.xml";
 		}
 	}
-
-	return true;
 }
 
 bool IOMapOTBM::loadMap(Map& map, const FileName& filename) {

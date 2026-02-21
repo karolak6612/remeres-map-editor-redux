@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 class TileLocation;
+class Tile;
 struct RenderView;
 struct DrawingOptions;
 class Editor;
@@ -30,6 +31,8 @@ public:
 
 private:
 	void PreloadItem(const Tile* tile, Item* item, const ItemType& it);
+	void DrawHouseHighlight(SpriteBatch& sprite_batch, int draw_x, int draw_y, const Tile* tile, uint32_t current_house_id, const DrawingOptions& options, int map_z, int view_floor);
+	void DrawItems(SpriteBatch& sprite_batch, int draw_x, int draw_y, const Tile* tile, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int map_z, uint8_t r, uint8_t g, uint8_t b);
 
 	ItemDrawer* item_drawer;
 	SpriteDrawer* sprite_drawer;
