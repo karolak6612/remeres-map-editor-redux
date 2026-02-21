@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <tuple>
 #include <limits>
+#include <array>
 
 class MapNode;
 class BaseMap;
@@ -26,7 +27,7 @@ public:
 	static constexpr int NODES_IN_CELL = NODES_PER_CELL * NODES_PER_CELL; // 256 nodes per cell
 
 	struct GridCell {
-		std::unique_ptr<MapNode> nodes[NODES_IN_CELL];
+		std::array<std::unique_ptr<MapNode>, NODES_IN_CELL> nodes;
 		GridCell();
 		~GridCell();
 	};

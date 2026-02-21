@@ -578,13 +578,9 @@ void Tile::selectGround() {
 		selected_ = true;
 	}
 
-	for (const auto& i : items) {
-		if (i->isBorder()) {
-			i->select();
-			selected_ = true;
-		} else {
-			break;
-		}
+	for (const auto& i : items | std::views::take_while([](const auto& i) { return i->isBorder(); })) {
+		i->select();
+		selected_ = true;
 	}
 
 	if (selected_) {
@@ -597,12 +593,8 @@ void Tile::deselectGround() {
 		ground->deselect();
 	}
 
-	for (const auto& i : items) {
-		if (i->isBorder()) {
-			i->deselect();
-		} else {
-			break;
-		}
+	for (const auto& i : items | std::views::take_while([](const auto& i) { return i->isBorder(); })) {
+		i->deselect();
 	}
 }
 
