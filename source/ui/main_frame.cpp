@@ -59,7 +59,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 	}
 
 	wxStatusBar* statusbar = CreateStatusBar();
-	statusbar->SetFieldsCount(4);
+	statusbar->SetFieldsCount(6);
 	SetStatusText(wxString("Welcome to ") << __W_RME_APPLICATION_NAME__ << " " << __W_RME_VERSION__);
 
 	// Le sizer
