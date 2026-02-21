@@ -28,7 +28,7 @@ public:
 	// Draw to the target tile
 	// Note that this actually only puts the first WALL_NORMAL item on the tile.
 	// It's up to the doWalls function to change it to the correct alignment
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 	// Creates walls on the target tile (does not depend on brush in any way)
 	static void doWalls(BaseMap* map, Tile* tile);
@@ -70,7 +70,7 @@ public:
 
 	// We use the exact same loading algorithm as normal walls
 
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 };
 
 #endif

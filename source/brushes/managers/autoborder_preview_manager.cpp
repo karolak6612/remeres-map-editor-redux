@@ -122,13 +122,13 @@ void AutoborderPreviewManager::SimulateBrush(Editor& editor, const Position& pos
 		if (is_ground && alt_pressed) {
 			if (editor.replace_brush) {
 				std::pair<bool, GroundBrush*> param(false, editor.replace_brush);
-				brush->draw(preview_buffer_map.get(), tile, &param);
+				brush->draw(preview_buffer_map.get(), tile, BrushContext{.extra = &param});
 			} else {
 				std::pair<bool, GroundBrush*> param(true, nullptr);
-				brush->draw(preview_buffer_map.get(), tile, &param);
+				brush->draw(preview_buffer_map.get(), tile, BrushContext{.extra = &param});
 			}
 		} else {
-			brush->draw(preview_buffer_map.get(), tile, nullptr);
+			brush->draw(preview_buffer_map.get(), tile);
 		}
 	}
 }

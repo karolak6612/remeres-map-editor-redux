@@ -53,7 +53,7 @@ void TableBrush::undraw(BaseMap* map, Tile* t) {
 	});
 }
 
-void TableBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void TableBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	undraw(map, tile); // Remove old
 
 	const TableNode& tn = items.getItems(0);

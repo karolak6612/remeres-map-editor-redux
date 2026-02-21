@@ -23,6 +23,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <span>
 
 class Action;
 class Editor;
@@ -64,8 +65,8 @@ public:
 	// Returns the bounds of the selection.
 	// NOTE: Bounds queries should only be called from the main thread if
 	// the selection is being modified by another thread (e.g. SelectionThread).
-	Position minPosition() const;
-	Position maxPosition() const;
+	[[nodiscard]] Position minPosition() const;
+	[[nodiscard]] Position maxPosition() const;
 
 	// This manages a "selection session"
 	// Internal session doesn't store the result (eg. no undo)
@@ -103,6 +104,10 @@ public:
 		return tiles.end();
 	}
 	const std::vector<Tile*>& getTiles() const {
+		return tiles;
+	}
+
+	std::span<Tile* const> getTilesSpan() const {
 		return tiles;
 	}
 	Tile* getSelectedTile() {

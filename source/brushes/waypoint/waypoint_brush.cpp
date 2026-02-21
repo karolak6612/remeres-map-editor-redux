@@ -54,7 +54,7 @@ void WaypointBrush::undraw(BaseMap* map, Tile* tile) {
 	ASSERT(false);
 }
 
-void WaypointBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void WaypointBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	// Never called
 	ASSERT(false);
 }

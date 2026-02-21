@@ -60,7 +60,7 @@ void MapProcessor::randomizeMap(Editor& editor, bool showdialog) {
 				actionId = 0;
 				uniqueId = 0;
 			}
-			groundBrush->draw(&editor.map, tile, nullptr);
+			groundBrush->draw(&editor.map, tile, {});
 
 			Item* newGround = tile->ground.get();
 			if (newGround) {
