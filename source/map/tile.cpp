@@ -198,6 +198,8 @@ void Tile::merge(Tile* other) {
 		spawn = std::move(other->spawn);
 	}
 
+	if (location) location->notifyChange();
+
 	items.reserve(items.size() + other->items.size());
 	for (auto& item : other->items) {
 		addItem(std::move(item));
@@ -278,8 +280,16 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
+
+	// Acquire write lock if attached to map
+	std::unique_lock<std::shared_mutex> lock;
+	if (location && location->node) {
+		lock = location->node->map.getWriteLock();
+	}
+
 	if (item->isGroundTile()) {
 		ground = std::move(item);
+		if (location) location->notifyChange();
 		return;
 	}
 

@@ -252,6 +252,7 @@ inline long long remove_if_TileOnMap(Map& map, RemoveIfType& remove_if) {
 
 template <typename RemoveIfType>
 inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedOnly) {
+	auto lock = map.getWriteLock();
 	int64_t done = 0;
 	int64_t removed = 0;
 
@@ -262,10 +263,13 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 			return;
 		}
 
+		bool changed = false;
+
 		if (tile->ground) {
 			if (condition(map, tile->ground.get(), removed, done)) {
 				tile->ground.reset();
 				++removed;
+				changed = true;
 			}
 		}
 
@@ -278,7 +282,7 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 			return false;
 		});
 
-		if (erased_count > 0) {
+		if (erased_count > 0 || changed) {
 			tile_loc.notifyChange();
 		}
 	});

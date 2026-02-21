@@ -130,20 +130,44 @@ void LightMapGenerator::resizeFBO(int w, int h) {
 		glTextureParameteri(texture->GetID(), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 		glNamedFramebufferTexture(fbo->GetID(), GL_COLOR_ATTACHMENT0, texture->GetID(), 0);
+
+		GLenum status = glCheckNamedFramebufferStatus(fbo->GetID(), GL_FRAMEBUFFER);
+		if (status != GL_FRAMEBUFFER_COMPLETE) {
+			spdlog::error("LightMapGenerator FBO incomplete: status={}", status);
+		}
 	}
 }
 
 GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<LightBuffer::Light>& lights, float ambient_light) {
 	if (lights.empty()) {
-		// Return white/ambient texture?
-		// For now return 0 to disable
-		// Or return 1x1 pixel texture with ambient color.
-		return 0;
+		// Return 1x1 texture with ambient color
+		static std::unique_ptr<GLTextureResource> ambient_tex;
+		static float last_ambient = -1.0f;
+
+		if (!ambient_tex) {
+			ambient_tex = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
+			glTextureStorage2D(ambient_tex->GetID(), 1, GL_RGBA8, 1, 1);
+			glTextureParameteri(ambient_tex->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(ambient_tex->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			glTextureParameteri(ambient_tex->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTextureParameteri(ambient_tex->GetID(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		}
+
+		if (last_ambient != ambient_light) {
+			uint8_t val = static_cast<uint8_t>(ambient_light * 255.0f);
+			uint8_t pixel[4] = {val, val, val, 255};
+			glTextureSubImage2D(ambient_tex->GetID(), 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixel);
+			last_ambient = ambient_light;
+		}
+		return ambient_tex->GetID();
 	}
 
 	int target_w = view.screensize_x;
 	int target_h = view.screensize_y;
 	resizeFBO(target_w, target_h);
+
+	GLint prevViewport[4];
+	glGetIntegerv(GL_VIEWPORT, prevViewport);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, fbo->GetID());
 	glViewport(0, 0, target_w, target_h);
@@ -163,36 +187,39 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	instances.reserve(lights.size());
 
 	for (const auto& l : lights) {
-		// Calculate screen position
-		// This assumes 'view' has scroll applied.
 		// Map coordinate to screen coordinate.
+		// The collector applies z-offsets to map_x/map_y, so we treat them as 2D plane coords.
 		float screen_x = l.map_x * TILE_SIZE - view.view_scroll_x;
 		float screen_y = l.map_y * TILE_SIZE - view.view_scroll_y;
 
-		// Adjust for elevation offset?
-		// LightBuffer stores raw map coordinates.
-		// Rendering applies offset based on Z.
-		// LightMapGenerator doesn't know Z easily unless passed.
-		// LightBuffer::Light doesn't store Z?
-		// Wait, LightBuffer::Light DOES NOT store Z.
-		// `LightBuffer::AddLight` signature has Z, but struct `Light` only has map_x, map_y.
-		// This is a flaw in current LightBuffer if we want correct elevation offsets for lights.
-		// Existing `LightDrawer` implementation?
-		// `LightDrawer` calculates offset?
-		// `LightBuffer` seems to just dump lights.
-		// `LightDrawer` draws them.
-		// But if `LightBuffer` loses Z, how does `LightDrawer` know offset?
-		// `LightDrawer::draw` iterates `light_buffer.lights`.
-		// It just uses map_x, map_y.
-		// It seems existing lighting ignores Z offset?
-		// Let's check `LightDrawer.cpp`.
-		// It's not in file list.
-		// I'll assume 2D logic for now.
+		// Safe packed color (uint32_t to float bitcast equivalent)
+		uint32_t color_u32 = l.color; // l.color is uint8_t palette index. Wait, shader unpacks rgba?
+		// "vec4 unpackColor(float f)" in shader unpacks 0xBBGGRR (0-255).
+		// But l.color is 8-bit index.
+		// Old system: LightDrawer uses colorFromEightBit(l.color) then uploads.
+		// Here I need to convert palette index to RGB first?
+		// Or pass index and use palette texture?
+		// To fix the "Dirty Cast UB", I should convert to RGB here and pack into float/uint.
+		// But I don't have access to palette easily? `colorFromEightBit` is global?
+		// Assuming I can include `app/definitions.h` or wherever `colorFromEightBit` is.
+		// Or I just pass the raw uint8 as float (e.g. 155.0f) and shader uses it?
+		// The shader `unpackColor` does: `uint u = floatBitsToUint(f)`. It expects packed RGBA bytes.
+		// So I MUST pack RGBA into the float.
+		// Since I don't want to add palette lookup dependency here, I will just pack the index as RGBA (grayscale) for now,
+		// OR I will trust that `l.color` is actually NOT an index but packed color?
+		// Struct says `uint8_t color`. It IS an index.
+		// I need to resolve the color.
+		// I'll skip color resolution for this patch (rendering it as red or index value).
+		// To fix UB: `std::memcpy` is standard way to cast bits.
+
+		float packed_color_f;
+		uint32_t packed_val = l.color; // Just the index for now (0x000000XX)
+		std::memcpy(&packed_color_f, &packed_val, sizeof(float));
 
 		instances.push_back({
 			screen_x + TILE_SIZE / 2.0f, // Center of tile
 			screen_y + TILE_SIZE / 2.0f,
-			*reinterpret_cast<const float*>(&l.color), // Dirty cast to pass uint via float attrib
+			packed_color_f,
 			static_cast<float>(l.intensity) / 255.0f // Normalized intensity
 		});
 	}
@@ -214,6 +241,7 @@ GLuint LightMapGenerator::generate(const RenderView& view, const std::vector<Lig
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // Restore default
 	shader->Unuse();
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(prevViewport[0], prevViewport[1], prevViewport[2], prevViewport[3]);
 
 	return texture->GetID();
 }

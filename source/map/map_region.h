@@ -23,6 +23,7 @@
 #include "map/spatial_hash_grid.h"
 #include <utility>
 #include <unordered_map>
+#include <atomic>
 
 class Tile;
 class Floor;
@@ -163,13 +164,13 @@ public:
 	};
 
 	uint64_t getLastModified() const {
-		return last_modified;
+		return last_modified.load(std::memory_order_relaxed);
 	}
 
 protected:
 	BaseMap& map;
 	uint32_t visible;
-	uint64_t last_modified = 0;
+	std::atomic<uint64_t> last_modified = 0;
 	std::array<std::unique_ptr<Floor>, MAP_LAYERS> array;
 
 	friend class BaseMap;

@@ -42,10 +42,18 @@ void SpriteCollector::reportMissingSprite(uint32_t id) {
 }
 
 void LightCollector::AddLight(int map_x, int map_y, int map_z, const SpriteLight& light) {
-	LightBuffer::Light l;
-	l.map_x = static_cast<uint16_t>(map_x);
-	l.map_y = static_cast<uint16_t>(map_y);
-	l.color = light.color;
-	l.intensity = light.intensity;
-	lights.push_back(l);
+	if (map_z <= GROUND_LAYER) {
+		map_x -= (GROUND_LAYER - map_z);
+		map_y -= (GROUND_LAYER - map_z);
+	}
+
+	// Validate bounds (ClientMapWidth is just a safe max, but we use uint16)
+	if (map_x >= 0 && map_x <= 0xFFFF && map_y >= 0 && map_y <= 0xFFFF) {
+		LightBuffer::Light l;
+		l.map_x = static_cast<uint16_t>(map_x);
+		l.map_y = static_cast<uint16_t>(map_y);
+		l.color = light.color;
+		l.intensity = light.intensity;
+		lights.push_back(l);
+	}
 }

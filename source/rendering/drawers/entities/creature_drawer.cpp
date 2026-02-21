@@ -77,7 +77,7 @@ void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite
 					for (int cy = 0; cy != mountSpr->height; ++cy) {
 						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, (int)dir, 0, 0, mountOutfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, red, green, blue, alpha);
+							sprite_drawer->glBlitAtlasQuad(sprite_sink, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, red, green, blue, alpha);
 						}
 					}
 				}
@@ -100,7 +100,7 @@ void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite
 				for (int cy = 0; cy != spr->height; ++cy) {
 					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, (int)dir, pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, red, green, blue, alpha);
+						sprite_drawer->glBlitAtlasQuad(sprite_sink, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, red, green, blue, alpha);
 					}
 				}
 			}

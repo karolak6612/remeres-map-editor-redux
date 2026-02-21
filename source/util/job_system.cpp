@@ -10,8 +10,8 @@ JobSystem::~JobSystem() {
 }
 
 void JobSystem::stop() {
-	if (running) {
-		running = false;
+	bool expected = true;
+	if (running.compare_exchange_strong(expected, false)) {
 		queue_cv.notify_all();
 		if (worker_thread.joinable()) {
 			worker_thread.join();

@@ -112,13 +112,19 @@ public:
 	}
 
 	// Thread-safe modification lock
-	// Call this before modifying map structure or tiles
+	// Call this before modifying map structure or tiles.
+	// CAUTION: While holding this lock, you MUST use the *Unsafe variants of setTile/swapTile
+	// to avoid deadlocks, or ensure you do not call standard setTile/swapTile.
 	std::unique_lock<std::shared_mutex> getWriteLock() {
 		return std::unique_lock<std::shared_mutex>(grid.grid_mutex);
 	}
 	MapNode* createLeaf(int x, int y) {
 		return grid.getLeafForce(x, y);
 	}
+
+protected:
+	[[nodiscard]] std::unique_ptr<Tile> setTileUnsafe(int _x, int _y, int _z, std::unique_ptr<Tile> newtile);
+	[[nodiscard]] std::unique_ptr<Tile> swapTileUnsafe(int _x, int _y, int _z, std::unique_ptr<Tile> newtile);
 
 	template <typename Func>
 	void visitLeaves(int min_x, int min_y, int max_x, int max_y, Func&& func) {

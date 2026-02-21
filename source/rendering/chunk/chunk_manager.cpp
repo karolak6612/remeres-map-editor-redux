@@ -268,38 +268,7 @@ void ChunkManager::processResults() {
 			// Or wait for next update?
 			// If we loaded them, we should rebuild.
 			if (!res.data.missing_sprites.empty() && missing_found) {
-				// Mark for rebuild by resetting time?
-				// pending_jobs.erase(key) happens below.
-				// Next update() will check LastBuildTime.
-				// If we don't reset LastBuildTime, it won't rebuild until map changes.
-				// So we must invalidate!
-				// But we just uploaded 'partial' data.
-				// We can force rebuild by setting timestamp to 0.
-				// But RenderChunk::upload sets timestamp.
-				// We should ideally NOT upload partial data if important sprites missing?
-				// But we want to show what we have.
-				// So we upload, but trigger a rebuild next frame?
-				// We can just rely on 'missing_found' logic to invalidate ALL affected chunks?
-				// No, just this one.
-				// I'll add `invalidate()` to RenderChunk or set timestamp to 0.
-				// RenderChunk::upload sets time.
-				// I can force dirty.
-				// But I can't access `it->second` easily after this block if I delete logic.
-				// I will clear `pending_jobs` but NOT count as "done"?
-				// No, `upload` finishes the job.
-				// I will simply `pending_jobs.erase` and let `update` re-submit?
-				// `update` only re-submits if `dirty`.
-				// `dirty` = `last_modified > last_build_time`.
-				// Since `last_build_time` is NOW, it won't rebuild.
-				// I must NOT update `last_build_time` if missing sprites?
-				// But `upload` updates it.
-				// I should add `RenderChunk::forceDirty()`.
-				// For now I'll just accept that it might take a user action or scroll to refresh,
-				// OR I can re-submit the job immediately?
-				// Re-submitting immediately might loop if load fails.
-				// I'll trust standard lazy load behavior: next frame `update` will run.
-				// If I want to force update, I need to invalidate.
-				// I will leave it as is, but ensuring they ARE loaded is key.
+				it->second->forceDirty();
 			}
 		}
 		pending_jobs.erase(key);

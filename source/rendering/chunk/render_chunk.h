@@ -55,6 +55,10 @@ public:
 		return instance_count == 0;
 	}
 
+	void forceDirty() {
+		last_build_time = 0;
+	}
+
 private:
 	int chunk_x;
 	int chunk_y;
