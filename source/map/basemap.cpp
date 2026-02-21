@@ -20,6 +20,8 @@
 #include "map/tile.h"
 #include "map/basemap.h"
 #include "map/spatial_hash_grid.h"
+#include <mutex>
+#include <shared_mutex>
 
 BaseMap::BaseMap() :
 	allocator(),
@@ -99,6 +101,7 @@ const TileLocation* BaseMap::getTileL(const Position& pos) const {
 }
 
 TileLocation* BaseMap::createTileL(int x, int y, int z) {
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
 	ASSERT(z < MAP_LAYERS);
 
 	MapNode* leaf = grid.getLeafForce(x, y);
@@ -114,6 +117,11 @@ TileLocation* BaseMap::createTileL(const Position& pos) {
 }
 
 std::unique_ptr<Tile> BaseMap::setTile(int x, int y, int z, std::unique_ptr<Tile> newtile) {
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
+	return setTileUnsafe(x, y, z, std::move(newtile));
+}
+
+std::unique_ptr<Tile> BaseMap::setTileUnsafe(int x, int y, int z, std::unique_ptr<Tile> newtile) {
 	ASSERT(!newtile || newtile->getX() == int(x));
 	ASSERT(!newtile || newtile->getY() == int(y));
 	ASSERT(!newtile || newtile->getZ() == int(z));
@@ -123,6 +131,11 @@ std::unique_ptr<Tile> BaseMap::setTile(int x, int y, int z, std::unique_ptr<Tile
 }
 
 std::unique_ptr<Tile> BaseMap::swapTile(int x, int y, int z, std::unique_ptr<Tile> newtile) {
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
+	return swapTileUnsafe(x, y, z, std::move(newtile));
+}
+
+std::unique_ptr<Tile> BaseMap::swapTileUnsafe(int x, int y, int z, std::unique_ptr<Tile> newtile) {
 	ASSERT(z < MAP_LAYERS);
 	ASSERT(!newtile || newtile->getX() == int(x));
 	ASSERT(!newtile || newtile->getY() == int(y));

@@ -14,7 +14,7 @@ class ItemDrawer;
 class SpriteDrawer;
 
 class CreatureDrawer;
-class SpriteBatch;
+class ISpriteSink;
 class PrimitiveRenderer;
 
 class FloorDrawer {
@@ -22,7 +22,7 @@ public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(ISpriteSink& sprite_sink, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
 };
 
 #endif

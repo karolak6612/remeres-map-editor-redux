@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <wx/wx.h>
 #include <string>
+#include "rendering/core/texture_atlas.h"
 
 struct DrawingOptions {
 	DrawingOptions();
@@ -59,6 +60,10 @@ struct DrawingOptions {
 	bool anti_aliasing;
 
 	std::string screen_shader_name;
+
+	// Pointer to white pixel region in atlas (for shade drawing)
+	// Must be set on main thread before passing to background jobs
+	const AtlasRegion* white_pixel_region = nullptr;
 };
 
 #endif

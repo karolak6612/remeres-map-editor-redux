@@ -5,9 +5,10 @@
 #include <cstdint>
 #include <algorithm>
 #include "rendering/core/sprite_light.h"
+#include "rendering/core/light_sink.h"
 #include "app/definitions.h"
 
-struct LightBuffer {
+struct LightBuffer : public ILightSink {
 	struct Light {
 		uint16_t map_x = 0;
 		uint16_t map_y = 0;
@@ -17,7 +18,7 @@ struct LightBuffer {
 
 	std::vector<Light> lights;
 
-	void AddLight(int map_x, int map_y, int map_z, const SpriteLight& light);
+	void AddLight(int map_x, int map_y, int map_z, const SpriteLight& light) override;
 	void Clear();
 };
 

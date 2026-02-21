@@ -14,6 +14,7 @@
 #include <atomic>
 #include <algorithm>
 #include <ranges>
+#include <wx/thread.h>
 
 static std::atomic<uint32_t> template_id_generator(0x1000000);
 
@@ -331,6 +332,14 @@ void GameSprite::Image::clean(time_t time, int longevity) {
 }
 
 const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data) {
+	// THREAD SAFETY: EnsureAtlasSprite MUST NOT be called from background threads!
+	// AtlasManager operations (ensureAtlasManager, addSprite) touch OpenGL context.
+	if (!wxThread::IsMain()) {
+		// This is expected during chunk rebuild if a sprite was evicted or never loaded.
+		// Background threads should only access already-loaded sprites.
+		return nullptr;
+	}
+
 	if (g_gui.gfx.ensureAtlasManager()) {
 		AtlasManager* atlas_mgr = g_gui.gfx.getAtlasManager();
 

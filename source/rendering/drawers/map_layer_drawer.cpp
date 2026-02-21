@@ -27,7 +27,9 @@
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
+#include "rendering/core/light_sink.h"
 #include "rendering/core/sprite_batch.h"
+#include "rendering/core/sprite_sink.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
 
@@ -40,7 +42,7 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+void MapLayerDrawer::Draw(ISpriteSink& sprite_sink, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, ILightSink& light_sink) {
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
@@ -87,7 +89,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 				}
 				nd->setRequested(map_z > GROUND_LAYER, true);
 			}
-			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
+			grid_drawer->DrawNodeLoadingPlaceholder(sprite_sink, nd_map_x, nd_map_y, view);
 			return;
 		}
 
@@ -108,10 +110,10 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 					continue;
 				}
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
+				tile_renderer->DrawTile(sprite_sink, location, view, options, options.current_house_id, draw_x_base, draw_y);
 				// draw light, but only if not zoomed too far
 				if (draw_lights) {
-					tile_renderer->AddLight(location, view, options, light_buffer);
+					tile_renderer->AddLight(location, view, options, light_sink);
 				}
 			}
 		}

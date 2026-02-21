@@ -23,19 +23,19 @@ CreatureDrawer::CreatureDrawer() {
 CreatureDrawer::~CreatureDrawer() {
 }
 
-void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, int red, int green, int blue, int alpha, bool ingame, int animationPhase) {
+void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, int red, int green, int blue, int alpha, bool ingame, int animationPhase) {
 	if (!ingame && c->isSelected()) {
 		red /= 2;
 		green /= 2;
 		blue /= 2;
 	}
-	BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), red, green, blue, alpha, animationPhase);
+	BlitCreature(sprite_sink, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), red, green, blue, alpha, animationPhase);
 }
 
-void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, int red, int green, int blue, int alpha, int animationPhase) {
+void CreatureDrawer::BlitCreature(ISpriteSink& sprite_sink, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, int red, int green, int blue, int alpha, int animationPhase) {
 	if (outfit.lookItem != 0) {
 		ItemType& it = g_items[outfit.lookItem];
-		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, it.sprite, red, green, blue, alpha);
+		sprite_drawer->BlitSprite(sprite_sink, screenx, screeny, it.sprite, red, green, blue, alpha);
 	} else {
 		// get outfit sprite
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);
@@ -77,12 +77,12 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					for (int cy = 0; cy != mountSpr->height; ++cy) {
 						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, (int)dir, 0, 0, mountOutfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, red, green, blue, alpha);
+							sprite_drawer->glBlitAtlasQuad(sprite_sink, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, red, green, blue, alpha);
 						}
 					}
 				}
 
-				pattern_z = std::min<int>(1, spr->pattern_z - 1);
+				pattern_z = std::max<int>(0, spr->pattern_z - 1);
 			}
 		}
 
@@ -100,7 +100,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				for (int cy = 0; cy != spr->height; ++cy) {
 					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, (int)dir, pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, red, green, blue, alpha);
+						sprite_drawer->glBlitAtlasQuad(sprite_sink, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, red, green, blue, alpha);
 					}
 				}
 			}

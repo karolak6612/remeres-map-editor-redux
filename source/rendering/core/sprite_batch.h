@@ -10,6 +10,7 @@
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/gl_scoped_state.h"
+#include "rendering/core/sprite_sink.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -24,7 +25,7 @@
  * - Multi-Draw Indirect support (GL 4.3+)
  * - Single draw call per batch (with MDI) or per texture (without MDI)
  */
-class SpriteBatch {
+class SpriteBatch : public ISpriteSink {
 public:
 	// 100k sprites buffer = ~6.4MB
 	static constexpr size_t MAX_SPRITES_PER_BATCH = 100000;
@@ -58,18 +59,18 @@ public:
 	 * @param h Height
 	 * @param region Atlas region for UVs
 	 */
-	void draw(float x, float y, float w, float h, const AtlasRegion& region);
+	void draw(float x, float y, float w, float h, const AtlasRegion& region) override;
 
 	/**
 	 * Queue a sprite with tint.
 	 */
-	void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a);
+	void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a) override;
 
 	/**
 	 * Draw a solid rectangle using the white pixel from the atlas.
 	 * Requires AtlasManager::getWhitePixel() to be valid.
 	 */
-	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager);
+	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) override;
 
 	/**
 	 * Draw a hollow rectangle (outline) using 4 thin rects.
@@ -86,7 +87,7 @@ public:
 	 * Set global tint for subsequent draws in current batch.
 	 * If pending sprites exist, they will be flushed using the provided atlas manager.
 	 */
-	void setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager);
+	void setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) override;
 
 	/**
 	 * Ensure capacity in pending vector.

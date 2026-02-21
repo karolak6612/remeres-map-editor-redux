@@ -1,25 +1,3 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
-#include "app/main.h"
-
-#include <bit>
-#include <algorithm>
-
 #include "map/map_region.h"
 #include "map/basemap.h"
 #include "map/position.h"
@@ -51,9 +29,15 @@ bool TileLocation::empty() const {
 	return size() == 0;
 }
 
+void TileLocation::notifyChange() {
+	if (node) {
+		node->updateLastModified();
+	}
+}
+
 //**************** Floor **********************
 
-Floor::Floor(int sx, int sy, int z) {
+Floor::Floor(int sx, int sy, int z, MapNode* node) {
 	sx = sx & ~3;
 	sy = sy & ~3;
 
@@ -61,6 +45,7 @@ Floor::Floor(int sx, int sy, int z) {
 		locs[i].position.x = sx + (i >> 2);
 		locs[i].position.y = sy + (i & 3);
 		locs[i].position.z = z;
+		locs[i].node = node;
 	}
 }
 
@@ -78,9 +63,13 @@ MapNode::~MapNode() {
 
 Floor* MapNode::createFloor(int x, int y, int z) {
 	if (!array[z]) {
-		array[z] = std::make_unique<Floor>(x, y, z);
+		array[z] = std::make_unique<Floor>(x, y, z, this);
 	}
 	return array[z].get();
+}
+
+void MapNode::updateLastModified() {
+	last_modified = std::chrono::steady_clock::now().time_since_epoch().count();
 }
 
 bool MapNode::isVisible(bool underground) {
@@ -230,6 +219,7 @@ std::unique_ptr<Tile> MapNode::setTile(int x, int y, int z, std::unique_ptr<Tile
 		--map.tilecount;
 	}
 
+	updateLastModified();
 	return oldtile;
 }
 
@@ -241,6 +231,7 @@ void MapNode::clearTile(int x, int y, int z) {
 
 	TileLocation* tmp = &f->locs[offset_x * 4 + offset_y];
 	tmp->tile = map.allocator(tmp);
+	updateLastModified();
 }
 
 //**************** SpatialHashGrid **********************
