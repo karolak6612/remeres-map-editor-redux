@@ -49,11 +49,12 @@ RMEProcessClient::RMEProcessClient() :
 }
 
 RMEProcessClient::~RMEProcessClient() {
-	delete proc;
+	//
 }
 
 wxConnectionBase* RMEProcessClient::OnMakeConnection() {
-	return proc = newd RMEProcessConnection();
+	proc = std::make_unique<RMEProcessConnection>();
+	return proc.get();
 }
 
 // Connection
