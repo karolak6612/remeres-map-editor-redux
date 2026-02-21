@@ -43,7 +43,7 @@ namespace {
 	class ColorSwatch : public wxWindow {
 	public:
 		ColorSwatch(wxWindow* parent, int id, uint32_t color) :
-			wxWindow(parent, id, wxDefaultPosition, wxSize(16, 16), wxBORDER_NONE),
+			wxWindow(parent, id, wxDefaultPosition, FromDIP(wxSize(16, 16)), wxBORDER_NONE),
 			color(color), selected(false) {
 			SetBackgroundStyle(wxBG_STYLE_PAINT);
 			Bind(wxEVT_PAINT, &ColorSwatch::OnPaint, this);
@@ -70,7 +70,7 @@ namespace {
 
 			if (selected) {
 				dc.SetBrush(*wxTRANSPARENT_BRUSH);
-				dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent), 2));
+				dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent), FromDIP(2)));
 				dc.DrawRectangle(rect.Inflate(-1, -1));
 			}
 		}
@@ -94,7 +94,7 @@ namespace {
 // ============================================================================
 
 OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current_outfit) :
-	wxDialog(parent, wxID_ANY, "Customise Character", wxDefaultPosition, wxSize(1200, 850), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+	wxDialog(parent, wxID_ANY, "Customise Character", wxDefaultPosition, FromDIP(wxSize(1200, 850)), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
 	current_outfit(current_outfit),
 	current_speed(220),
 	current_name("You"),
@@ -155,33 +155,33 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	// Column 1: Preview & Appearance (The Hero column)
 	wxBoxSizer* col1_sizer = new wxBoxSizer(wxVERTICAL);
 
-	col1_sizer->Add(CreateHeader("Character Preview"), 0, wxLEFT | wxTOP, 8);
+	col1_sizer->Add(CreateHeader("Character Preview"), wxSizerFlags(0).Border(wxLEFT | wxTOP, 8));
 	preview_panel = new OutfitPreviewPanel(this, current_outfit);
-	col1_sizer->Add(preview_panel, 0, wxALL | wxALIGN_CENTER_HORIZONTAL, 12);
+	col1_sizer->Add(preview_panel, wxSizerFlags(0).CenterHorizontal().Border(wxALL, 12));
 
-	col1_sizer->Add(new wxStaticLine(this, wxID_ANY), 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 8);
+	col1_sizer->Add(new wxStaticLine(this, wxID_ANY), wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, 8));
 
-	col1_sizer->Add(CreateHeader("Appearance"), 0, wxLEFT | wxTOP, 8);
+	col1_sizer->Add(CreateHeader("Appearance"), wxSizerFlags(0).Border(wxLEFT | wxTOP, 8));
 	wxBoxSizer* part_sizer = new wxBoxSizer(wxHORIZONTAL);
-	head_btn = new wxButton(this, ID_COLOR_HEAD, "Head", wxDefaultPosition, wxSize(50, -1));
-	head_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, wxSize(16, 16)));
-	body_btn = new wxButton(this, ID_COLOR_BODY, "Primary", wxDefaultPosition, wxSize(50, -1));
-	body_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHIRT, wxSize(16, 16)));
-	legs_btn = new wxButton(this, ID_COLOR_LEGS, "Secondary", wxDefaultPosition, wxSize(50, -1));
-	legs_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SOCKS, wxSize(16, 16)));
-	feet_btn = new wxButton(this, ID_COLOR_FEET, "Detail", wxDefaultPosition, wxSize(50, -1));
-	feet_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHOE_PRINTS, wxSize(16, 16)));
+	head_btn = new wxButton(this, wxID_ANY, "Head", wxDefaultPosition, FromDIP(wxSize(50, -1)));
+	head_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, FromDIP(wxSize(16, 16))));
+	body_btn = new wxButton(this, wxID_ANY, "Primary", wxDefaultPosition, FromDIP(wxSize(50, -1)));
+	body_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHIRT, FromDIP(wxSize(16, 16))));
+	legs_btn = new wxButton(this, wxID_ANY, "Secondary", wxDefaultPosition, FromDIP(wxSize(50, -1)));
+	legs_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SOCKS, FromDIP(wxSize(16, 16))));
+	feet_btn = new wxButton(this, wxID_ANY, "Detail", wxDefaultPosition, FromDIP(wxSize(50, -1)));
+	feet_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHOE_PRINTS, FromDIP(wxSize(16, 16))));
 
-	part_sizer->Add(head_btn, 1, wxEXPAND | wxRIGHT, 2);
-	part_sizer->Add(body_btn, 1, wxEXPAND | wxRIGHT, 2);
-	part_sizer->Add(legs_btn, 1, wxEXPAND | wxRIGHT, 2);
-	part_sizer->Add(feet_btn, 1, wxEXPAND);
-	col1_sizer->Add(part_sizer, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 8);
+	part_sizer->Add(head_btn, wxSizerFlags(1).Expand().Border(wxRIGHT, 2));
+	part_sizer->Add(body_btn, wxSizerFlags(1).Expand().Border(wxRIGHT, 2));
+	part_sizer->Add(legs_btn, wxSizerFlags(1).Expand().Border(wxRIGHT, 2));
+	part_sizer->Add(feet_btn, wxSizerFlags(1).Expand());
+	col1_sizer->Add(part_sizer, wxSizerFlags(0).Expand().Border(wxTOP | wxLEFT | wxRIGHT, 8));
 
 	wxFlexGridSizer* palette_sizer = new wxFlexGridSizer(COLOR_ROWS, COLOR_COLUMNS, 1, 1);
 	for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
 		uint32_t color = TemplateOutfitLookupTable[i];
-		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color);
+		ColorSwatch* swatch = new ColorSwatch(this, wxID_ANY, color);
 		palette_sizer->Add(swatch, 0);
 		color_buttons.push_back(swatch);
 
@@ -189,89 +189,89 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 			SelectColor(i);
 		});
 	}
-	col1_sizer->Add(palette_sizer, 0, wxALL, 8);
+	col1_sizer->Add(palette_sizer, wxSizerFlags(0).Border(wxALL, 8));
 
-	col1_sizer->Add(CreateHeader("Configuration"), 0, wxLEFT | wxTOP, 8);
+	col1_sizer->Add(CreateHeader("Configuration"), wxSizerFlags(0).Border(wxLEFT | wxTOP, 8));
 	wxWrapSizer* check_sizer = new wxWrapSizer(wxHORIZONTAL);
-	addon1 = new wxCheckBox(this, ID_ADDON1, "Addon 1");
+	addon1 = new wxCheckBox(this, wxID_ANY, "Addon 1");
 	addon1->SetToolTip("Toggle Addon 1");
 	addon1->SetValue((current_outfit.lookAddon & 1) != 0);
-	addon2 = new wxCheckBox(this, ID_ADDON2, "Addon 2");
+	addon2 = new wxCheckBox(this, wxID_ANY, "Addon 2");
 	addon2->SetToolTip("Toggle Addon 2");
 	addon2->SetValue((current_outfit.lookAddon & 2) != 0);
 
-	check_sizer->Add(addon1, 0, wxALL | wxALIGN_CENTER_VERTICAL, 2);
-	check_sizer->Add(addon2, 0, wxALL | wxALIGN_CENTER_VERTICAL, 2);
+	check_sizer->Add(addon1, wxSizerFlags(0).CenterVertical().Border(wxALL, 2));
+	check_sizer->Add(addon2, wxSizerFlags(0).CenterVertical().Border(wxALL, 2));
 
-	wxButton* rand_btn = new wxButton(this, ID_RANDOMIZE, "Random");
-	rand_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHUFFLE, wxSize(16, 16)));
+	wxButton* rand_btn = new wxButton(this, wxID_ANY, "Random");
+	rand_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHUFFLE, FromDIP(wxSize(16, 16))));
 	rand_btn->SetToolTip("Randomize outfit colors");
-	check_sizer->Add(rand_btn, 0, wxLEFT | wxALIGN_CENTER_VERTICAL, 5);
+	check_sizer->Add(rand_btn, wxSizerFlags(0).CenterVertical().Border(wxLEFT, 5));
 
-	col1_sizer->Add(check_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 8);
+	col1_sizer->Add(check_sizer, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 8));
 
 	wxFlexGridSizer* text_fields = new wxFlexGridSizer(2, 2, 4, 8);
-	text_fields->Add(new wxStaticText(this, wxID_ANY, "Speed:"), 0, wxALIGN_CENTER_VERTICAL);
-	speed_ctrl = new wxSpinCtrl(this, ID_SPEED, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 50, 3000, current_speed);
-	text_fields->Add(speed_ctrl, 1, wxEXPAND);
+	text_fields->Add(new wxStaticText(this, wxID_ANY, "Speed:"), wxSizerFlags(0).CenterVertical());
+	speed_ctrl = new wxSpinCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 50, 3000, current_speed);
+	text_fields->Add(speed_ctrl, wxSizerFlags(1).Expand());
 
-	text_fields->Add(new wxStaticText(this, wxID_ANY, "Name:"), 0, wxALIGN_CENTER_VERTICAL);
-	name_ctrl = new wxTextCtrl(this, ID_NAME, current_name);
-	text_fields->Add(name_ctrl, 1, wxEXPAND);
+	text_fields->Add(new wxStaticText(this, wxID_ANY, "Name:"), wxSizerFlags(0).CenterVertical());
+	name_ctrl = new wxTextCtrl(this, wxID_ANY, current_name);
+	text_fields->Add(name_ctrl, wxSizerFlags(1).Expand());
 	text_fields->AddGrowableCol(1);
-	col1_sizer->Add(text_fields, 0, wxEXPAND | wxALL, 8);
+	col1_sizer->Add(text_fields, wxSizerFlags(0).Expand().Border(wxALL, 8));
 
-	main_sizer->Add(col1_sizer, 0, wxEXPAND | wxRIGHT, 10);
+	main_sizer->Add(col1_sizer, wxSizerFlags(0).Expand().Border(wxRIGHT, 10));
 
 	// Column 2: Available Outfits
 	wxBoxSizer* outfits_sizer = new wxBoxSizer(wxVERTICAL);
 	wxBoxSizer* outfits_header_row = new wxBoxSizer(wxHORIZONTAL);
-	outfits_header_row->Add(CreateHeader("Available Outfits"), 1, wxALIGN_BOTTOM | wxLEFT, 4);
+	outfits_header_row->Add(CreateHeader("Available Outfits"), wxSizerFlags(1).Bottom().Border(wxLEFT, 4));
 
-	outfit_search = new wxSearchCtrl(this, ID_SEARCH, wxEmptyString, wxDefaultPosition, wxSize(180, -1));
+	outfit_search = new wxSearchCtrl(this, wxID_ANY, wxEmptyString, wxDefaultPosition, FromDIP(wxSize(180, -1)));
 	outfit_search->SetDescriptiveText("Search...");
-	outfits_header_row->Add(outfit_search, 0, wxALIGN_BOTTOM | wxRIGHT, 4);
+	outfits_header_row->Add(outfit_search, wxSizerFlags(0).Bottom().Border(wxRIGHT, 4));
 
 	colorable_only_check = new wxCheckBox(this, wxID_ANY, "Template Only");
 	colorable_only_check->SetToolTip("Show only colorable outfits");
-	outfits_header_row->Add(colorable_only_check, 0, wxALIGN_BOTTOM | wxRIGHT | wxBOTTOM, 4);
+	outfits_header_row->Add(colorable_only_check, wxSizerFlags(0).Bottom().Border(wxRIGHT | wxBOTTOM, 4));
 
-	outfits_sizer->Add(outfits_header_row, 0, wxEXPAND | wxBOTTOM, 4);
-	outfits_sizer->Add(selection_panel, 1, wxEXPAND);
-	main_sizer->Add(outfits_sizer, 1, wxEXPAND | wxLEFT | wxRIGHT, 5);
+	outfits_sizer->Add(outfits_header_row, wxSizerFlags(0).Expand().Border(wxBOTTOM, 4));
+	outfits_sizer->Add(selection_panel, wxSizerFlags(1).Expand());
+	main_sizer->Add(outfits_sizer, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT, 5));
 
 	// Column 3: Favorites
 	wxBoxSizer* favs_sizer = new wxBoxSizer(wxVERTICAL);
-	favs_sizer->Add(CreateHeader("Favorites"), 0, wxBOTTOM | wxLEFT, 4);
+	favs_sizer->Add(CreateHeader("Favorites"), wxSizerFlags(0).Border(wxBOTTOM | wxLEFT, 4));
 
-	favorites_panel->SetMinSize(wxSize(430, -1)); // Force width for 4 columns of 100px
-	favs_sizer->Add(favorites_panel, 1, wxEXPAND);
+	favorites_panel->SetMinSize(FromDIP(wxSize(430, -1))); // Force width for 4 columns of 100px
+	favs_sizer->Add(favorites_panel, wxSizerFlags(1).Expand());
 
-	wxButton* fav_btn = new wxButton(this, ID_ADD_FAVORITE, "Save Current Outfit as Favorite", wxDefaultPosition, wxSize(-1, 28));
-	fav_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_STAR, wxSize(16, 16)));
-	favs_sizer->Add(fav_btn, 0, wxEXPAND | wxTOP, 8);
+	wxButton* fav_btn = new wxButton(this, wxID_ANY, "Save Current Outfit as Favorite", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
+	fav_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_STAR, FromDIP(wxSize(16, 16))));
+	favs_sizer->Add(fav_btn, wxSizerFlags(0).Expand().Border(wxTOP, 8));
 
-	main_sizer->Add(favs_sizer, 0, wxEXPAND | wxLEFT, 5);
+	main_sizer->Add(favs_sizer, wxSizerFlags(0).Expand().Border(wxLEFT, 5));
 
-	outer_sizer->Add(main_sizer, 1, wxEXPAND | wxALL, 10);
+	outer_sizer->Add(main_sizer, wxSizerFlags(1).Expand().Border(wxALL, 10));
 
 	// Bottom Bar (Actions)
 	wxStaticLine* bottom_line = new wxStaticLine(this, wxID_ANY);
-	outer_sizer->Add(bottom_line, 0, wxEXPAND | wxLEFT | wxRIGHT, 10);
+	outer_sizer->Add(bottom_line, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT, 10));
 
 	wxBoxSizer* bottom_sizer = new wxBoxSizer(wxHORIZONTAL);
 	bottom_sizer->AddStretchSpacer();
 
-	wxButton* ok_btn = new wxButton(this, wxID_OK, "OK", wxDefaultPosition, wxSize(90, 30));
-	ok_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	wxButton* ok_btn = new wxButton(this, wxID_OK, "OK", wxDefaultPosition, FromDIP(wxSize(90, 30)));
+	ok_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
 	ok_btn->SetToolTip("Confirm outfit selection");
-	wxButton* cancel_btn = new wxButton(this, wxID_CANCEL, "Cancel", wxDefaultPosition, wxSize(90, 30));
-	cancel_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	wxButton* cancel_btn = new wxButton(this, wxID_CANCEL, "Cancel", wxDefaultPosition, FromDIP(wxSize(90, 30)));
+	cancel_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FromDIP(wxSize(16, 16))));
 	cancel_btn->SetToolTip("Cancel outfit selection");
-	bottom_sizer->Add(ok_btn, 0, wxALL, 8);
-	bottom_sizer->Add(cancel_btn, 0, wxALL, 8);
+	bottom_sizer->Add(ok_btn, wxSizerFlags(0).Border(wxALL, 8));
+	bottom_sizer->Add(cancel_btn, wxSizerFlags(0).Border(wxALL, 8));
 
-	outer_sizer->Add(bottom_sizer, 0, wxEXPAND);
+	outer_sizer->Add(bottom_sizer, wxSizerFlags(0).Expand());
 
 	SetSizer(outer_sizer);
 
@@ -293,30 +293,31 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	Bind(wxEVT_BUTTON, &OutfitChooserDialog::OnOK, this, wxID_OK);
 
 	// Update initial part selection highlight
-	wxCommandEvent dummy;
-	dummy.SetId(ID_COLOR_HEAD);
-	OnColorPartChange(dummy);
-
+	// Manually trigger highlight update - no need to fake event
+	selected_color_part = 0;
 	UpdateColorSelection();
+	Layout();
 
 	CenterOnParent();
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, FromDIP(wxSize(32, 32))));
 	SetIcon(icon);
 }
 
 OutfitChooserDialog::~OutfitChooserDialog() { }
 
 void OutfitChooserDialog::OnColorPartChange(wxCommandEvent& event) {
-	int id = event.GetId();
-	if (id == ID_COLOR_HEAD) {
+	// Identify source by object pointer
+	wxObject* obj = event.GetEventObject();
+
+	if (obj == head_btn) {
 		selected_color_part = 0;
-	} else if (id == ID_COLOR_BODY) {
+	} else if (obj == body_btn) {
 		selected_color_part = 1;
-	} else if (id == ID_COLOR_LEGS) {
+	} else if (obj == legs_btn) {
 		selected_color_part = 2;
-	} else if (id == ID_COLOR_FEET) {
+	} else if (obj == feet_btn) {
 		selected_color_part = 3;
 	}
 
