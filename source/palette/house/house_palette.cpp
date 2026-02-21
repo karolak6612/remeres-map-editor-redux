@@ -15,6 +15,7 @@
 #include "brushes/managers/brush_manager.h"
 #include "brushes/house/house_brush.h"
 #include "brushes/house/house_exit_brush.h"
+#include "util/image_manager.h"
 
 #include <algorithm>
 
@@ -59,8 +60,11 @@ HousePalette::HousePalette(wxWindow* parent) :
 	// Action buttons (Add, Edit, Remove)
 	wxBoxSizer* action_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_button = newd wxButton(this, ID_ADD_HOUSE, "Add", wxDefaultPosition, wxSize(50, -1));
+	add_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 	edit_button = newd wxButton(this, ID_EDIT_HOUSE, "Edit", wxDefaultPosition, wxSize(50, -1));
+	edit_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
 	remove_button = newd wxButton(this, ID_REMOVE_HOUSE, "Remove", wxDefaultPosition, wxSize(60, -1));
+	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 
 	action_sizer->Add(add_button, 1, wxEXPAND | wxRIGHT, 2);
 	action_sizer->Add(edit_button, 1, wxEXPAND | wxRIGHT, 2);
@@ -72,7 +76,9 @@ HousePalette::HousePalette(wxWindow* parent) :
 	wxStaticBoxSizer* brush_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Brushes");
 
 	house_brush_button = newd wxToggleButton(brush_sizer->GetStaticBox(), ID_HOUSE_BRUSH, "House tiles");
+	house_brush_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
 	select_exit_button = newd wxToggleButton(brush_sizer->GetStaticBox(), ID_EXIT_BRUSH, "Select Exit");
+	select_exit_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_OPEN, wxSize(16, 16)));
 
 	brush_sizer->Add(house_brush_button, 0, wxEXPAND | wxBOTTOM, 2);
 	brush_sizer->Add(select_exit_button, 0, wxEXPAND);
