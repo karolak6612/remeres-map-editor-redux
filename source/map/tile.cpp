@@ -482,6 +482,9 @@ void Tile::update() {
 		if (ground->getMiniMapColor() != 0) {
 			minimapColor = ground->getMiniMapColor();
 		}
+		if (ground->hasLight()) {
+			statflags |= TILESTATE_HAS_LIGHT;
+		}
 	}
 
 	std::ranges::for_each(items, [&](const auto& i) {
@@ -513,6 +516,9 @@ void Tile::update() {
 		}
 		if (it_type.hookEast) {
 			statflags |= TILESTATE_HOOK_EAST;
+		}
+		if (i->hasLight()) {
+			statflags |= TILESTATE_HAS_LIGHT;
 		}
 	});
 

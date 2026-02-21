@@ -214,8 +214,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground && ground_it) {
-			PreloadItem(tile, tile->ground.get(), *ground_it);
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+			SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+			PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b, 255, &patterns);
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -280,11 +281,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				PreloadItem(tile, item.get(), it);
+				SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+				PreloadItem(tile, item.get(), it, &patterns);
 
 				// item sprite
 				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b, 255, &patterns);
 				} else {
 					uint8_t ir = 255, ig = 255, ib = 255;
 
@@ -304,7 +306,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 							}
 						}
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib, 255, &patterns);
 				}
 			}
 			// monster/npc on tile
@@ -323,14 +325,19 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 }
 
-void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it) {
+void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* cached_patterns) {
 	if (!item) {
 		return;
 	}
 
 	GameSprite* spr = it.sprite;
 	if (spr && !spr->isSimpleAndLoaded()) {
-		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		SpritePatterns patterns;
+		if (cached_patterns) {
+			patterns = *cached_patterns;
+		} else {
+			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		}
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
 }
@@ -341,7 +348,7 @@ void TileRenderer::AddLight(TileLocation* location, const RenderView& view, cons
 	}
 
 	auto tile = location->get();
-	if (!tile) {
+	if (!tile || !tile->hasLight()) {
 		return;
 	}
 
