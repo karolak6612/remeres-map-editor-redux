@@ -20,6 +20,7 @@
 
 #include "map/position.h"
 #include "game/item.h"
+#include <cassert>
 
 class TileLocation;
 class GroundBrush;
@@ -66,8 +67,6 @@ public: // Members
 public:
 	// ALWAYS use this constructor if the Tile is EVER going to be placed on a map
 	Tile(TileLocation& location);
-	// Use this when the tile is only used internally by the editor (like in certain brushes)
-	Tile(int x, int y, int z);
 
 	~Tile();
 
@@ -77,6 +76,7 @@ public:
 	// The location of the tile
 	// Stores state that remains between the tile being moved (like house exits)
 	void setLocation(TileLocation* where) {
+		assert(where);
 		location = where;
 	}
 	TileLocation* getLocation() {

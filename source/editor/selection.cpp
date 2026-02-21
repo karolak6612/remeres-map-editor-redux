@@ -293,12 +293,11 @@ void Selection::flush() {
 	}
 
 	bounds_dirty = true;
+	auto posEqual = [](const Tile* a, const Tile* b) { return a->getPosition() == b->getPosition(); };
 
 	if (!pending_removes.empty()) {
 		std::ranges::sort(pending_removes, tilePositionLessThan);
-		auto [first, last] = std::ranges::unique(pending_removes, [](Tile* a, Tile* b) {
-			return a->getPosition() == b->getPosition();
-		});
+		auto [first, last] = std::ranges::unique(pending_removes, posEqual);
 		pending_removes.erase(first, last);
 
 		std::vector<Tile*> result;
@@ -309,9 +308,7 @@ void Selection::flush() {
 
 	if (!pending_adds.empty()) {
 		std::ranges::sort(pending_adds, tilePositionLessThan);
-		auto [first, last] = std::ranges::unique(pending_adds, [](Tile* a, Tile* b) {
-			return a->getPosition() == b->getPosition();
-		});
+		auto [first, last] = std::ranges::unique(pending_adds, posEqual);
 		pending_adds.erase(first, last);
 
 		std::vector<Tile*> merged;
