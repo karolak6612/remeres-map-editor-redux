@@ -115,8 +115,8 @@ namespace IngamePreview {
 		main_sizer->Add(toolbar_sizer, 0, wxEXPAND | wxALL, 2);
 
 		// Canvas
-		canvas = std::make_unique<IngamePreviewCanvas>(this);
-		main_sizer->Add(canvas.get(), 1, wxEXPAND);
+		canvas = new IngamePreviewCanvas(this);
+		main_sizer->Add(canvas, 1, wxEXPAND);
 
 		// Sync UI State to Canvas
 		canvas->SetLightingEnabled(lighting_btn->GetValue());
