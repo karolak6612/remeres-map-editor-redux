@@ -81,6 +81,7 @@ protected:
 
 	// Animation state
 	wxTimer m_animTimer;
+	float hover_anim = 0.0f;
 	void OnTimer(wxTimerEvent& event);
 };
 
