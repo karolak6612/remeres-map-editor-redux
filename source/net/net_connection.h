@@ -26,6 +26,9 @@
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <cstring>
+#include <stdexcept>
+#include <type_traits>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -36,15 +39,24 @@ struct NetworkMessage {
 	//
 	template <typename T>
 	T read() {
-		T& value = *reinterpret_cast<T*>(&buffer[position]);
+		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for NetworkMessage::read");
+
+		if (position + sizeof(T) > buffer.size()) {
+			throw std::runtime_error("NetworkMessage: read out of bounds");
+		}
+
+		T value;
+		std::memcpy(&value, buffer.data() + position, sizeof(T));
 		position += sizeof(T);
 		return value;
 	}
 
 	template <typename T>
 	void write(const T& value) {
+		static_assert(std::is_trivially_copyable_v<T>, "T must be trivially copyable for NetworkMessage::write");
+
 		expand(sizeof(T));
-		memcpy(&buffer[position], &value, sizeof(T));
+		std::memcpy(buffer.data() + position, &value, sizeof(T));
 		position += sizeof(T);
 	}
 

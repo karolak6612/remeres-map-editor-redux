@@ -202,6 +202,10 @@ bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique
 		return true;
 	}
 
+	if (sprite_id < 0) {
+		return false;
+	}
+
 	if (filename.empty()) {
 		return false;
 	}
@@ -212,7 +216,7 @@ bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique
 	}
 
 	uint32_t address_size = extended ? SPRITE_ADDRESS_SIZE_EXTENDED : SPRITE_ADDRESS_SIZE_NORMAL;
-	if (!fh.seek(address_size + sprite_id * sizeof(uint32_t))) {
+	if (!fh.seek(address_size + static_cast<uint64_t>(sprite_id) * sizeof(uint32_t))) {
 		return false;
 	}
 
