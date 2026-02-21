@@ -114,6 +114,7 @@ public:
 	friend class Floor;
 	friend class MapNode;
 	friend class Waypoints;
+	friend class BaseMap;
 };
 
 class Floor {
@@ -137,6 +138,9 @@ public:
 
 	Floor* createFloor(int x, int y, int z);
 	Floor* getFloor(uint32_t z) {
+		return array[z].get();
+	}
+	const Floor* getFloor(uint32_t z) const {
 		return array[z].get();
 	}
 	bool hasFloor(uint32_t z);

@@ -20,6 +20,7 @@ struct LightBuffer;
 class SpriteBatch;
 class PrimitiveRenderer;
 class ItemType;
+struct SpritePatterns;
 
 class TileRenderer {
 public:
@@ -29,7 +30,7 @@ public:
 	void AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
-	void PreloadItem(const Tile* tile, Item* item, const ItemType& it);
+	void PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* patterns = nullptr);
 
 	ItemDrawer* item_drawer;
 	SpriteDrawer* sprite_drawer;

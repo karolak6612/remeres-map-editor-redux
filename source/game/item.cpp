@@ -421,7 +421,7 @@ BorderType Item::getBorderAlignment() const {
 // ============================================================================
 // Static conversions
 
-std::string Item::LiquidID2Name(uint16_t id) {
+std::string_view Item::LiquidID2Name(uint16_t id) {
 	static constexpr std::array<std::string_view, 44> liquid_names = {
 		"None", // LIQUID_NONE (0)
 		"Water", // LIQUID_WATER (1)
@@ -470,7 +470,7 @@ std::string Item::LiquidID2Name(uint16_t id) {
 	};
 
 	if (id < liquid_names.size()) {
-		return std::string(liquid_names[id]);
+		return liquid_names[id];
 	}
 	return "Unknown";
 }

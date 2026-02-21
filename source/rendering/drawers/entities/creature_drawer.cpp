@@ -82,7 +82,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					}
 				}
 
-				pattern_z = std::min<int>(1, spr->pattern_z - 1);
+				pattern_z = std::clamp(spr->pattern_z - 1, 0, 1);
 			}
 		}
 

@@ -29,17 +29,13 @@ BaseMap::BaseMap() :
 }
 
 void BaseMap::clear(bool del) {
-	PositionVector pos_vec;
-	pos_vec.reserve(size());
 	std::ranges::for_each(tiles(), [&](auto& loc) {
-		if (Tile* t = loc.get()) {
-			pos_vec.push_back(t->getPosition());
-		}
-	});
-	std::ranges::for_each(pos_vec, [&](const auto& pos) {
-		std::unique_ptr<Tile> t = setTile(pos, nullptr);
-		if (!del) {
-			t.release();
+		if (loc.tile) {
+			std::unique_ptr<Tile> t = std::move(loc.tile);
+			if (!del) {
+				t.release();
+			}
+			--tilecount;
 		}
 	});
 }
@@ -85,9 +81,16 @@ TileLocation* BaseMap::getTileL(int x, int y, int z) {
 }
 
 const TileLocation* BaseMap::getTileL(int x, int y, int z) const {
-	// Don't create static const maps!
-	BaseMap* self = const_cast<BaseMap*>(this);
-	return self->getTileL(x, y, z);
+	ASSERT(z < MAP_LAYERS);
+	const MapNode* leaf = grid.getLeaf(x, y);
+	if (leaf) {
+		const Floor* floor = leaf->getFloor(z);
+		if (floor) {
+			return &floor->locs[(x & 3) * 4 + (y & 3)];
+		}
+	}
+
+	return nullptr;
 }
 
 TileLocation* BaseMap::getTileL(const Position& pos) {
