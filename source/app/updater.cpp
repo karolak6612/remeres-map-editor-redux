@@ -25,17 +25,21 @@
 	#include "util/json.h"
 
 	#include "app/updater.h"
-	#include "app/application.h"
 	#include <thread>
+	#include <atomic>
+	#include <memory>
 
 wxDEFINE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);
 
-UpdateChecker::UpdateChecker() {
+UpdateChecker::UpdateChecker() :
+	m_alive(std::make_shared<std::atomic<bool>>(true)) {
 	////
 }
 
 UpdateChecker::~UpdateChecker() {
-	////
+	if (m_alive) {
+		*m_alive = false;
+	}
 }
 
 void UpdateChecker::connect(wxEvtHandler* receiver) {
@@ -55,33 +59,37 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 	#endif
 	wxURL* url = newd wxURL(address);
 
-	std::thread([receiver, url]() {
+	m_thread = std::jthread([receiver, url, alive = m_alive](std::stop_token stop_token) {
 		wxInputStream* input = url->GetInputStream();
 		if (!input) {
-			delete input;
 			delete url;
 			return;
 		}
 
 		std::string data;
 		while (!input->Eof()) {
+			if (stop_token.stop_requested()) {
+				delete input;
+				delete url;
+				return;
+			}
 			data += input->GetC();
 		}
 
 		delete input;
 		delete url;
 
-		// We need to be careful with event posting from a detached thread if the receiver might be destroyed.
-		// However, we are replicating existing logic here where UpdateConnectionThread was also detached.
-		// In a real robust app, we'd need weak pointers or valid lifetime guarantees.
-		wxGetApp().CallAfter([receiver, data]() {
-			if (receiver) {
+		// We use raw pointer 'receiver' because Application manages lifetime of UpdateChecker
+		// and ensures thread is joined before receiver (MainFrame) is destroyed.
+		// However, we still check 'alive' flag to be safe.
+		wxGetApp().CallAfter([receiver, data, alive]() {
+			if (*alive && receiver) {
 				wxCommandEvent event(EVT_UPDATE_CHECK_FINISHED);
 				event.SetClientData(newd std::string(data));
 				receiver->AddPendingEvent(event);
 			}
 		});
-	}).detach();
+	});
 }
 
 #endif

@@ -74,6 +74,8 @@ public:
 	Outfit outfit;
 	CreatureBrush* brush;
 
+	static void preserve_assign_creature_fields(CreatureType* dest, const CreatureType& src);
+
 	static CreatureType* loadFromXML(pugi::xml_node node, std::vector<std::string>& warnings);
 	static CreatureType* loadFromOTXML(const FileName& filename, pugi::xml_document& node, std::vector<std::string>& warnings);
 };
