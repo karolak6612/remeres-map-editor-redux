@@ -504,5 +504,9 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		}
 	}
 
+	if (group_index == 0) {
+		sType->updateSimpleStatus();
+	}
+
 	return true;
 }

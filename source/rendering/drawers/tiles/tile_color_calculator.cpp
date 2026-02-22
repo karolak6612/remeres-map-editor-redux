@@ -116,8 +116,19 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 }
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {
+	// Optimization: Use lookup table to avoid division/modulo operations per tile
+	static const auto table = []() {
+		struct { uint8_t r[256], g[256], b[256]; } t;
+		for (int i = 0; i < 256; ++i) {
+			t.r[i] = static_cast<uint8_t>(i / 36 % 6 * 51);
+			t.g[i] = static_cast<uint8_t>(i / 6 % 6 * 51);
+			t.b[i] = static_cast<uint8_t>(i % 6 * 51);
+		}
+		return t;
+	}();
+
 	uint8_t color = tile->getMiniMapColor();
-	r = static_cast<uint8_t>(color / 36 % 6 * 51);
-	g = static_cast<uint8_t>(color / 6 % 6 * 51);
-	b = static_cast<uint8_t>(color % 6 * 51);
+	r = table.r[color];
+	g = table.g[color];
+	b = table.b[color];
 }
