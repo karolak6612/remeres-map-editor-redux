@@ -32,6 +32,7 @@
 #include "util/image_manager.h"
 #include <fstream>
 #include <nlohmann/json.hpp>
+#include <format>
 
 namespace {
 	const int COLOR_COLUMNS = 19;
@@ -113,7 +114,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	std::unordered_map<int, wxString> looktype_to_name;
 	for (const auto& [name, ct] : g_creatures) {
 		if (ct && ct->outfit.lookType != 0) {
-			if (looktype_to_name.find(ct->outfit.lookType) == looktype_to_name.end()) {
+			if (!looktype_to_name.contains(ct->outfit.lookType)) {
 				looktype_to_name[ct->outfit.lookType] = wxstr(ct->name);
 			}
 		}
@@ -127,7 +128,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 		if (it != looktype_to_name.end()) {
 			item.name = it->second;
 		} else {
-			item.name = wxString::Format("Outfit %d", i);
+			item.name = wxstr(std::format("Outfit {}", i));
 		}
 
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(i);

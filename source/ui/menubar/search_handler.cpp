@@ -41,9 +41,7 @@ void SearchHandler::OnSearchForItem(wxCommandEvent& WXUNUSED(event)) {
 
 		SearchResultWindow* window = g_gui.ShowSearchWindow();
 		window->Clear();
-		for (std::vector<std::pair<Tile*, Item*>>::const_iterator iter = result.begin(); iter != result.end(); ++iter) {
-			Tile* tile = iter->first;
-			Item* item = iter->second;
+		for (const auto& [tile, item] : result) {
 			window->AddPosition(wxstr(item->getName()), tile->getPosition());
 		}
 
@@ -128,9 +126,7 @@ void SearchHandler::OnSearchForItemOnSelection(wxCommandEvent& WXUNUSED(event)) 
 
 		SearchResultWindow* window = g_gui.ShowSearchWindow();
 		window->Clear();
-		for (std::vector<std::pair<Tile*, Item*>>::const_iterator iter = result.begin(); iter != result.end(); ++iter) {
-			Tile* tile = iter->first;
-			Item* item = iter->second;
+		for (const auto& [tile, item] : result) {
 			window->AddPosition(wxstr(item->getName()), tile->getPosition());
 		}
 
