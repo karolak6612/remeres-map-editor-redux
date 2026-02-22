@@ -42,6 +42,7 @@ public:
 
 private:
 	std::jthread m_thread;
+	std::shared_ptr<std::atomic<bool>> m_alive;
 };
 
 	#endif
