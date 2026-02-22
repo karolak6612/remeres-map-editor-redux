@@ -10,6 +10,7 @@
 
 #include "ui/dialogs/outfit_preview_panel.h"
 #include "ui/dialogs/outfit_selection_grid.h"
+#include "ui/controls/outfit_color_palette.h"
 
 class OutfitChooserDialog : public wxDialog {
 public:
@@ -93,7 +94,7 @@ private:
 	wxButton* legs_btn;
 	wxButton* feet_btn;
 
-	std::vector<wxWindow*> color_buttons;
+	OutfitColorPalette* m_palette;
 };
 
 #endif
