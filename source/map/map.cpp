@@ -294,7 +294,7 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	g_gui.CreateLoadBar("Converting house tiles...");
 	uint64_t tiles_done = 0;
 
-	auto filtered_tiles = tiles() | std::views::filter([&](const auto& tile_loc) {
+	auto filtered_tiles = tiles() | std::views::filter([fromId](const auto& tile_loc) {
 							  const Tile* tile = tile_loc.get();
 							  return fromId != 0 && tile && tile->getHouseID() == fromId;
 						  });
