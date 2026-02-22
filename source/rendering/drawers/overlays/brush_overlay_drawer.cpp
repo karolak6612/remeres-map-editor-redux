@@ -434,4 +434,3 @@ void BrushOverlayDrawer::get_color(Brush* brush, Editor& editor, const Position&
 		g = 0x00, b = 0x00;
 	}
 }
-
