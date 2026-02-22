@@ -4,7 +4,8 @@
 #include <cstdint>
 #include <wx/wx.h>
 #include <string>
-#include "rendering/core/texture_atlas.h"
+
+struct AtlasRegion;
 
 struct DrawingOptions {
 	DrawingOptions();

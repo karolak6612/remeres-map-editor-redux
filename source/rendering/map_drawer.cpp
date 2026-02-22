@@ -322,100 +322,17 @@ void MapDrawer::Draw() {
 	DrawBackground(); // Clear screen (or FBO)
 
 	// Draw Chunks (replaces DrawMap layer loop)
-	// We still need to handle Z-ordering if we want overlays?
-	// `DrawMap` iterates Z layers.
-	// `ChunkManager` draws EVERYTHING.
-	// If we use ChunkManager, we draw all map layers at once.
-	// But `DrawMap` also draws `shade_drawer` and `preview_drawer`.
-	// `shade_drawer` draws a semi-transparent rect between floors.
-	// If chunks contain multiple floors, we can't inject shade easily.
-	// UNLESS `RenderChunk` contains only ONE floor.
-	// My `RenderChunk::rebuild` iterates Z. So it contains multiple floors.
-	// This breaks `shade_drawer` (depth shading).
-	// `shade_drawer` draws when `map_z == view.end_z && view.start_z != view.end_z`.
-	// i.e. it darkens lower floors.
-	// If the chunk contains the visible slice (start_z to end_z), the geometry is baked.
-	// We can't insert a draw call in the middle of a VBO draw.
-	// Solution:
-	// 1. Chunk contains only 1 floor (or N floors).
-	// 2. OR, we don't bake the shade. We draw shade ON TOP of lower floors?
-	//    No, shade must be UNDER higher floors.
-	// 3. Bake tint into vertices?
-	//    `TileColorCalculator` logic.
-	//    If `shade_drawer` just draws a full-screen rect, it covers everything drawn so far.
-	//    If we draw Z=7..0 in one go, we can't shade Z=6 before drawing Z=5.
-	//    Wait, `MapDrawer` loop:
-	//    `for (int map_z = view.start_z; map_z >= view.superend_z; map_z--)`
-	//    It draws deepest (lowest Z?) first?
-	//    `shade_drawer` is drawn at `map_z == view.end_z`.
-	//    So it draws layers start_z down to end_z + 1.
-	//    Then draws shade.
-	//    Then draws end_z down to superend_z.
-	//    Effectively, it shades the "ground" level and below, distinguishing it from upper levels.
+	// Design notes:
+	// - Chunks draw static map geometry.
+	// - Shade injection is handled inside RenderChunk::rebuild to maintain Z-order.
+	// - Dynamic overlays (ghosts) are drawn AFTER the map (on top), trading occlusion for performance.
+	// - Lights are aggregated from visible chunks and drawn in DrawLight().
 
-	// If `RenderChunk` rebuilds for the current view, it bakes the sprites.
-	// The `SpriteCollector` just adds sprites.
-	// Z-order is implicit in submission order.
-	// If we want shade, we should add a "Shade Sprite" to the collector?
-	// `ShadeDrawer` draws a big rect.
-	// We can add a big rect to the `SpriteCollector` at the correct Z iteration!
-	// `RenderChunk::rebuild` loop:
-	// `for (int z = view.start_z; z >= view.superend_z; --z)`
-	// Inside loop:
-	// `if (z == view.end_z && view.start_z != view.end_z)` -> Add Shade Rect to collector.
-	// `SpriteCollector` supports `drawRect`.
-	// YES!
-	// So we move `shade_drawer` logic into `RenderChunk::rebuild`.
-
-	// What about `preview_drawer` (placing items)?
-	// Dynamic items (ghosts).
-	// These change every frame (mouse movement).
-	// We CANNOT bake them into chunks.
-	// They must be drawn dynamically.
-	// BUT they must be depth-sorted correctly.
-	// If chunks draw everything, we can't inject ghosts in between layers.
-	// This is a classic deferred/forward rendering problem.
-	// Options:
-	// 1. Draw ghosts AFTER map (on top). (Current behavior for most tools?).
-	//    Actually `DrawMap` calls `preview_drawer` per layer.
-	//    So ghosts are properly occluded by upper floors.
-	//    If we draw ghosts on top, they will appear floating above everything.
-	//    Ideally we want occlusion.
-	//    We can use Depth Buffer?
-	//    RME uses 2D orthographic painter's algorithm. No Z-buffer usually.
-	//    (Actually we enable depth test? `InitPostProcess` enables it? No, `setupGL` might).
-	//    `view.SetupGL` -> `glDisable(GL_DEPTH_TEST)`.
-	//    So we rely on draw order.
-
-	// If we use Chunks, we lose per-layer injection.
-	// So ghosts will be either behind everything or in front of everything.
-	// Drawing in front is acceptable for an editor brush.
-	// Most users won't notice occlusion issues with ghosts unless editing complex multi-floor structures.
-	// Given the performance gain, this is a tradeoff.
-	// We will draw `DrawMap` (chunks) then `DrawPreview` (ghosts) on top.
-
-	// Draw Map Chunks
 	if (options.isDrawLight()) {
-		// Collect lights from ALL visible chunks + dynamic lights
-		// ChunkManager::draw can return lights? Or we access them.
-		// ChunkManager updates chunks.
-		// Then we gather lights.
-
-		// Actually, `ChunkManager::draw` draws the sprites.
-		// We want to draw lights LATER.
-		// But we need the light list.
-		// `ChunkManager` stores chunks.
-		// We can ask `ChunkManager` for lights in visible range.
+		// Prepare for light drawing
 	}
 
 	DrawMap(); // Uses ChunkManager now
-
-	// Flush Map for Light Pass
-	// (ChunkManager draws immediately, so nothing to flush from SpriteBatch yet, unless we used it)
-	// But we might have drawn dynamic stuff?
-	// `DrawMap` calls `preview_drawer`.
-	// We moved `preview_drawer` out of `DrawMap` loop in our logic?
-	// Let's redefine `DrawMap`.
 
 	if (g_gui.gfx.ensureAtlasManager()) {
 		sprite_batch->end(*g_gui.gfx.getAtlasManager());

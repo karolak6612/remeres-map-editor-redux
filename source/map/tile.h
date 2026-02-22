@@ -142,7 +142,7 @@ public: // Functions
 	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
 	Item* getItemAt(int index) const;
 	void addItem(std::unique_ptr<Item> item);
-	void addItemUnsafe(std::unique_ptr<Item> item);
+	void addItemUnsafe(std::unique_ptr<Item> item, bool notify = true);
 
 	void select();
 	void deselect();

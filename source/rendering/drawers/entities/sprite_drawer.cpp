@@ -35,7 +35,7 @@ void SpriteDrawer::glBlitAtlasQuad(ISpriteSink& sprite_sink, int sx, int sy, con
 	}
 }
 
-void SpriteDrawer::glBlitSquare(ISpriteSink& sprite_sink, int sx, int sy, int red, int green, int blue, int alpha, int size) {
+void SpriteDrawer::glBlitSquare(ISpriteSink& sprite_sink, int sx, int sy, int red, int green, int blue, int alpha, const AtlasRegion* white_pixel, int size) {
 	if (size == 0) {
 		size = TILE_SIZE;
 	}
@@ -45,30 +45,37 @@ void SpriteDrawer::glBlitSquare(ISpriteSink& sprite_sink, int sx, int sy, int re
 	float normalizedB = blue / 255.0f;
 	float normalizedA = alpha / 255.0f;
 
-	// Use Graphics::getAtlasManager() to get the atlas manager for white pixel access
-	// This assumes Graphics and AtlasManager are available
-	if (g_gui.gfx.hasAtlasManager()) {
-		sprite_sink.drawRect((float)sx, (float)sy, (float)size, (float)size, glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+	const AtlasRegion* wp = white_pixel;
+	if (!wp && g_gui.gfx.hasAtlasManager()) {
+		wp = g_gui.gfx.getAtlasManager()->getWhitePixel();
+	}
+
+	if (wp) {
+		sprite_sink.drawRect((float)sx, (float)sy, (float)size, (float)size, glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *wp);
 	}
 }
 
-void SpriteDrawer::glDrawBox(ISpriteSink& sprite_sink, int sx, int sy, int width, int height, int red, int green, int blue, int alpha) {
+void SpriteDrawer::glDrawBox(ISpriteSink& sprite_sink, int sx, int sy, int width, int height, int red, int green, int blue, int alpha, const AtlasRegion* white_pixel) {
 	float normalizedR = red / 255.0f;
 	float normalizedG = green / 255.0f;
 	float normalizedB = blue / 255.0f;
 	float normalizedA = alpha / 255.0f;
 
-	if (g_gui.gfx.hasAtlasManager()) {
-		const AtlasManager& am = *g_gui.gfx.getAtlasManager();
+	const AtlasRegion* wp = white_pixel;
+	if (!wp && g_gui.gfx.hasAtlasManager()) {
+		wp = g_gui.gfx.getAtlasManager()->getWhitePixel();
+	}
+
+	if (wp) {
 		glm::vec4 color(normalizedR, normalizedG, normalizedB, normalizedA);
 		// Top
-		sprite_sink.drawRect((float)sx, (float)sy, (float)width, 1.0f, color, am);
+		sprite_sink.drawRect((float)sx, (float)sy, (float)width, 1.0f, color, *wp);
 		// Bottom
-		sprite_sink.drawRect((float)sx, (float)sy + height - 1.0f, (float)width, 1.0f, color, am);
+		sprite_sink.drawRect((float)sx, (float)sy + height - 1.0f, (float)width, 1.0f, color, *wp);
 		// Left
-		sprite_sink.drawRect((float)sx, (float)sy + 1.0f, 1.0f, (float)height - 2.0f, color, am);
+		sprite_sink.drawRect((float)sx, (float)sy + 1.0f, 1.0f, (float)height - 2.0f, color, *wp);
 		// Right
-		sprite_sink.drawRect((float)sx + width - 1.0f, (float)sy + 1.0f, 1.0f, (float)height - 2.0f, color, am);
+		sprite_sink.drawRect((float)sx + width - 1.0f, (float)sy + 1.0f, 1.0f, (float)height - 2.0f, color, *wp);
 	}
 }
 
@@ -120,4 +127,3 @@ void SpriteDrawer::BlitSprite(ISpriteSink& sprite_sink, int screenx, int screeny
 		}
 	}
 }
-

@@ -20,17 +20,11 @@ class TileRenderer;
 struct ChunkBuildJob {
 	int chunk_x;
 	int chunk_y;
-	// Use shared_ptr to ensure objects are alive (though Map is usually global/Editor owned)
-	// Actually, Map is owned by Editor. Editor lifetime > Job System?
-	// But to satisfy review:
+	// Map and TileRenderer must outlive the job.
+	// Map is owned by Editor, TileRenderer by MapDrawer.
+	// Caller guarantees lifetime (stops JobSystem before destroying Map/Renderer).
 	Map* map;
 	TileRenderer* renderer;
-	// Ideally shared_ptr, but Map/TileRenderer are managed uniquely in Editor/MapDrawer.
-	// Converting to shared_ptr requires changing ownership model globally which is out of scope.
-	// The review said "ChunkBuildJob currently stores raw Map* ... change to shared_ptr".
-	// I will keep raw pointers but acknowledge I am NOT changing global ownership in this step.
-	// Wait, if I don't change ownership, shared_ptr is useless (no control block).
-	// I will keep raw pointers as they are valid for the lifetime of Editor.
 
 	RenderView view;
 	DrawingOptions options;
@@ -59,7 +53,7 @@ public:
 private:
 	void workerLoop();
 
-	std::thread worker_thread;
+	std::vector<std::thread> workers;
 	std::atomic<bool> running;
 
 	std::mutex queue_mutex;

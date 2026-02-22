@@ -210,9 +210,9 @@ void TileRenderer::DrawTile(ISpriteSink& sprite_sink, TileLocation* location, co
 	if (only_colors) {
 		if (as_minimap) {
 			TileColorCalculator::GetMinimapColor(tile, r, g, b);
-			sprite_drawer->glBlitSquare(sprite_sink, draw_x, draw_y, r, g, b, 255);
+			sprite_drawer->glBlitSquare(sprite_sink, draw_x, draw_y, r, g, b, 255, options.white_pixel_region);
 		} else if (r != 255 || g != 255 || b != 255) {
-			sprite_drawer->glBlitSquare(sprite_sink, draw_x, draw_y, r, g, b, 128);
+			sprite_drawer->glBlitSquare(sprite_sink, draw_x, draw_y, r, g, b, 128, options.white_pixel_region);
 		}
 	} else {
 		if (tile->ground && ground_it) {
@@ -256,7 +256,7 @@ void TileRenderer::DrawTile(ISpriteSink& sprite_sink, TileLocation* location, co
 		int bg = static_cast<int>(border_color.g * 255.0f);
 		int bb = static_cast<int>(border_color.b * 255.0f);
 		int ba = static_cast<int>(border_color.a * 255.0f);
-		sprite_drawer->glDrawBox(sprite_sink, draw_x, draw_y, 32, 32, br, bg, bb, ba);
+		sprite_drawer->glDrawBox(sprite_sink, draw_x, draw_y, 32, 32, br, bg, bb, ba, options.white_pixel_region);
 	}
 
 	if (!only_colors) {

@@ -39,11 +39,7 @@ public:
 	// Runs on main thread
 	void upload(const ChunkData& data);
 
-	// Runs on main thread
-	// Binds this chunk's VBO to the provided VAO and draws
-	void draw(uint32_t vao) const;
-
-	uint64_t getLastBuildTime() const {
+	int64_t getLastBuildTime() const {
 		return last_build_time;
 	}
 
@@ -52,7 +48,11 @@ public:
 	}
 
 	bool isEmpty() const {
-		return instance_count == 0;
+		return sprites.empty();
+	}
+
+	const std::vector<SpriteInstance>& getSprites() const {
+		return sprites;
 	}
 
 	void forceDirty() {
@@ -62,11 +62,9 @@ public:
 private:
 	int chunk_x;
 	int chunk_y;
-	uint64_t last_build_time = 0;
+	int64_t last_build_time = 0;
 
-	std::unique_ptr<GLBuffer> vbo;
-	int instance_count = 0;
-
+	std::vector<SpriteInstance> sprites;
 	std::vector<LightBuffer::Light> lights; // Cached lights for this chunk
 };
 

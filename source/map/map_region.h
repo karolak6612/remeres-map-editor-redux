@@ -164,7 +164,7 @@ public:
 	};
 
 	uint64_t getLastModified() const {
-		return last_modified.load(std::memory_order_relaxed);
+		return last_modified.load(std::memory_order_acquire);
 	}
 
 protected:

@@ -1,8 +1,12 @@
 #include "util/job_system.h"
 #include <chrono>
+#include <algorithm>
 
 JobSystem::JobSystem() : running(true) {
-	worker_thread = std::thread(&JobSystem::workerLoop, this);
+	unsigned int thread_count = std::max(1u, std::thread::hardware_concurrency() / 2);
+	for (unsigned int i = 0; i < thread_count; ++i) {
+		workers.emplace_back(&JobSystem::workerLoop, this);
+	}
 }
 
 JobSystem::~JobSystem() {
@@ -13,8 +17,10 @@ void JobSystem::stop() {
 	bool expected = true;
 	if (running.compare_exchange_strong(expected, false)) {
 		queue_cv.notify_all();
-		if (worker_thread.joinable()) {
-			worker_thread.join();
+		for (auto& worker : workers) {
+			if (worker.joinable()) {
+				worker.join();
+			}
 		}
 	}
 }
@@ -22,7 +28,7 @@ void JobSystem::stop() {
 void JobSystem::submit(ChunkBuildJob job) {
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
-		job_queue.push(job);
+		job_queue.push(std::move(job));
 	}
 	queue_cv.notify_one();
 }
@@ -47,10 +53,11 @@ void JobSystem::workerLoop() {
 			queue_cv.wait(lock, [this] { return !job_queue.empty() || !running; });
 
 			if (!running) {
+				// Drop remaining jobs (intentional)
 				break;
 			}
 
-			job = job_queue.front();
+			job = std::move(job_queue.front());
 			job_queue.pop();
 		}
 

@@ -51,6 +51,7 @@ void BaseMap::clearVisible(uint32_t mask) {
 }
 
 Tile* BaseMap::createTile(int x, int y, int z) {
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
 	ASSERT(z < MAP_LAYERS);
 	MapNode* leaf = grid.getLeafForce(x, y);
 	TileLocation* loc = leaf->createTile(x, y, z);
@@ -64,13 +65,28 @@ Tile* BaseMap::createTile(int x, int y, int z) {
 }
 
 Tile* BaseMap::getOrCreateTile(const Position& pos) {
+	// Optimization: Try getTile (read-lock) first
 	if (Tile* t = getTile(pos)) {
 		return t;
 	}
 
-	Tile* newTile = createTile(pos.x, pos.y, pos.z);
-	newTile->setLocation(createTileL(pos));
-	return newTile;
+	// Acquire write lock to create
+	std::unique_lock<std::shared_mutex> lock(grid.grid_mutex);
+	// Double-check under lock
+	if (TileLocation* loc = getTileL(pos)) {
+		if (loc->get()) return loc->get();
+	}
+
+	// Create
+	MapNode* leaf = grid.getLeafForce(pos.x, pos.y);
+	TileLocation* loc = leaf->createTile(pos.x, pos.y, pos.z);
+	if (loc->get()) {
+		return loc->get();
+	}
+	std::unique_ptr<Tile> t = allocator(loc);
+	Tile* ptr = t.get();
+	leaf->setTile(pos.x, pos.y, pos.z, std::move(t));
+	return ptr;
 }
 
 TileLocation* BaseMap::getTileL(int x, int y, int z) {

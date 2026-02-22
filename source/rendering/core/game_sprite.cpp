@@ -586,15 +586,15 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 	// Only log for a few arbitrary IDs to avoid spamming, or if suspicious
 	if (!non_zero_alpha_found && id > 100) {
 		// This sprite is 100% invisible. This might be correct (magic fields?) but worth noting if ALL are invisible.
-		static int empty_log_count = 0;
-		if (empty_log_count++ < 10) {
+		static std::atomic<int> empty_log_count = 0;
+		if (empty_log_count.fetch_add(1, std::memory_order_relaxed) < 10) {
 			spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, bpp, size);
 		}
 	} else if (!non_black_pixel_found && non_zero_alpha_found && id > 100) {
 		// This sprite has alpha but all RGB are 0. It is a "black shadow" or "darkness".
 		// If ALL sprites look like this, we have a problem.
-		static int black_log_count = 0;
-		if (black_log_count++ < 10) {
+		static std::atomic<int> black_log_count = 0;
+		if (black_log_count.fetch_add(1, std::memory_order_relaxed) < 10) {
 			spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!", id, bpp, size);
 		}
 	}

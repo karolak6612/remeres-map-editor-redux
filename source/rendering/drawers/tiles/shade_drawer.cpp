@@ -3,16 +3,15 @@
 // glut include removed
 
 #include "rendering/drawers/tiles/shade_drawer.h"
+#include "rendering/core/sprite_sink.h"
+#include "rendering/core/graphics.h"
+#include "ui/gui.h"
 
 ShadeDrawer::ShadeDrawer() {
 }
 
 ShadeDrawer::~ShadeDrawer() {
 }
-
-#include "rendering/core/sprite_sink.h"
-#include "rendering/core/graphics.h"
-#include "ui/gui.h"
 
 void ShadeDrawer::draw(ISpriteSink& sprite_sink, const RenderView& view, const DrawingOptions& options) {
 	if (view.start_z != view.end_z && options.show_shade) {
@@ -21,7 +20,9 @@ void ShadeDrawer::draw(ISpriteSink& sprite_sink, const RenderView& view, const D
 		float h = view.screensize_y * view.zoom;
 
 		if (g_gui.gfx.ensureAtlasManager()) {
-			sprite_sink.drawRect(0.0f, 0.0f, w, h, color, *g_gui.gfx.getAtlasManager());
+			if (const auto* wp = g_gui.gfx.getAtlasManager()->getWhitePixel()) {
+				sprite_sink.drawRect(0.0f, 0.0f, w, h, color, *wp);
+			}
 		}
 	}
 }

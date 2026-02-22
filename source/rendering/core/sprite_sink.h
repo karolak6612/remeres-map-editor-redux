@@ -12,8 +12,10 @@ public:
 
 	virtual void draw(float x, float y, float w, float h, const AtlasRegion& region) = 0;
 	virtual void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a) = 0;
-	virtual void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) = 0;
-	virtual void setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) = 0;
+	// Use AtlasRegion for white pixel instead of AtlasManager to allow thread-safe cached access
+	virtual void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel) = 0;
+	// Removed AtlasManager from setGlobalTint as it's implementation detail of SpriteBatch
+	virtual void setGlobalTint(float r, float g, float b, float a) = 0;
 	virtual void reportMissingSprite(uint32_t id) {}
 };
 

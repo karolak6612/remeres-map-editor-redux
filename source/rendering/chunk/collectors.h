@@ -7,7 +7,7 @@
 #include "rendering/core/light_buffer.h"
 #include <vector>
 #include <glm/glm.hpp>
-#include <set>
+#include <unordered_set>
 
 class SpriteCollector : public ISpriteSink {
 public:
@@ -21,8 +21,8 @@ public:
 
 	void draw(float x, float y, float w, float h, const AtlasRegion& region) override;
 	void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a) override;
-	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) override;
-	void setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) override;
+	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel) override;
+	void setGlobalTint(float r, float g, float b, float a) override;
 	void reportMissingSprite(uint32_t id) override;
 
 	const std::vector<SpriteInstance>& getSprites() const {
@@ -30,16 +30,18 @@ public:
 	}
 
 	std::vector<SpriteInstance> takeSprites() {
+		missing_sprites.clear();
+		current_tint = glm::vec4(1.0f);
 		return std::move(sprites);
 	}
 
-	std::vector<uint32_t> getMissingSprites() const {
-		return std::vector<uint32_t>(missing_sprites.begin(), missing_sprites.end());
+	const std::unordered_set<uint32_t>& getMissingSprites() const {
+		return missing_sprites;
 	}
 
 private:
 	std::vector<SpriteInstance> sprites;
-	std::set<uint32_t> missing_sprites;
+	std::unordered_set<uint32_t> missing_sprites;
 	glm::vec4 current_tint = glm::vec4(1.0f);
 };
 
@@ -51,7 +53,7 @@ public:
 		lights.clear();
 	}
 
-	void AddLight(int map_x, int map_y, int map_z, const SpriteLight& light) override;
+	void addLight(int map_x, int map_y, int map_z, const SpriteLight& light) override;
 
 	const std::vector<LightBuffer::Light>& getLights() const {
 		return lights;

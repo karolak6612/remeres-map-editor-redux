@@ -70,12 +70,12 @@ public:
 	 * Draw a solid rectangle using the white pixel from the atlas.
 	 * Requires AtlasManager::getWhitePixel() to be valid.
 	 */
-	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) override;
+	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel) override;
 
 	/**
 	 * Draw a hollow rectangle (outline) using 4 thin rects.
 	 */
-	void drawRectLines(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager);
+	void drawRectLines(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel);
 
 	/**
 	 * End batch. Flushes all sprites to GPU.

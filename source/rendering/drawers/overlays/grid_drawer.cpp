@@ -1,5 +1,4 @@
 #include "rendering/drawers/overlays/grid_drawer.h"
-#include "rendering/drawers/overlays/grid_drawer.h"
 #include "ui/gui.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/sprite_sink.h"
@@ -18,20 +17,22 @@ void GridDrawer::DrawGrid(ISpriteSink& sprite_sink, const RenderView& view, cons
 	glm::vec4 color(1.0f, 1.0f, 1.0f, 0.5f); // 128/255 approx 0.5
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-		// Batch all horizontal lines
-		for (int y = view.start_y; y < view.end_y; ++y) {
-			float yPos = y * TILE_SIZE - view.view_scroll_y;
-			float xStart = view.start_x * TILE_SIZE - view.view_scroll_x;
-			float xEnd = view.end_x * TILE_SIZE - view.view_scroll_x;
-			sprite_sink.drawRect(xStart, yPos, xEnd - xStart, 1.0f, color, atlas); // 1px height line
-		}
-		// Batch all vertical lines
-		for (int x = view.start_x; x < view.end_x; ++x) {
-			float xPos = x * TILE_SIZE - view.view_scroll_x;
-			float yStart = view.start_y * TILE_SIZE - view.view_scroll_y;
-			float yEnd = view.end_y * TILE_SIZE - view.view_scroll_y;
-			sprite_sink.drawRect(xPos, yStart, 1.0f, yEnd - yStart, color, atlas); // 1px width line
+		const AtlasRegion* white_pixel = g_gui.gfx.getAtlasManager()->getWhitePixel();
+		if (white_pixel) {
+			// Batch all horizontal lines
+			for (int y = view.start_y; y < view.end_y; ++y) {
+				float yPos = y * TILE_SIZE - view.view_scroll_y;
+				float xStart = view.start_x * TILE_SIZE - view.view_scroll_x;
+				float xEnd = view.end_x * TILE_SIZE - view.view_scroll_x;
+				sprite_sink.drawRect(xStart, yPos, xEnd - xStart, 1.0f, color, *white_pixel); // 1px height line
+			}
+			// Batch all vertical lines
+			for (int x = view.start_x; x < view.end_x; ++x) {
+				float xPos = x * TILE_SIZE - view.view_scroll_x;
+				float yStart = view.start_y * TILE_SIZE - view.view_scroll_y;
+				float yEnd = view.end_y * TILE_SIZE - view.view_scroll_y;
+				sprite_sink.drawRect(xPos, yStart, 1.0f, yEnd - yStart, color, *white_pixel); // 1px width line
+			}
 		}
 	}
 }
@@ -106,24 +107,26 @@ void GridDrawer::DrawNodeLoadingPlaceholder(ISpriteSink& sprite_sink, int nd_map
 	glm::vec4 color(1.0f, 0.0f, 1.0f, 0.5f); // 255, 0, 255, 128
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_sink.drawRect((float)cx, (float)cy, (float)TILE_SIZE * 4, (float)TILE_SIZE * 4, color, *g_gui.gfx.getAtlasManager());
+		if (const auto* wp = g_gui.gfx.getAtlasManager()->getWhitePixel()) {
+			sprite_sink.drawRect((float)cx, (float)cy, (float)TILE_SIZE * 4, (float)TILE_SIZE * 4, color, *wp);
+		}
 	}
 }
 
-void GridDrawer::drawRect(ISpriteSink& sprite_sink, int x, int y, int w, int h, const wxColor& color, int width) {
-	// glLineWidth(width); // Width ignored for now, BatchRenderer lines are 1px
+void GridDrawer::drawRect(ISpriteSink& sprite_sink, int x, int y, int w, int h, const wxColor& color) {
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		const AtlasManager& am = *g_gui.gfx.getAtlasManager();
-		// Top
-		sprite_sink.drawRect((float)x, (float)y, (float)w, 1.0f, c, am);
-		// Bottom
-		sprite_sink.drawRect((float)x, (float)y + h - 1.0f, (float)w, 1.0f, c, am);
-		// Left
-		sprite_sink.drawRect((float)x, (float)y + 1.0f, 1.0f, (float)h - 2.0f, c, am);
-		// Right
-		sprite_sink.drawRect((float)x + w - 1.0f, (float)y + 1.0f, 1.0f, (float)h - 2.0f, c, am);
+		if (const auto* wp = g_gui.gfx.getAtlasManager()->getWhitePixel()) {
+			// Top
+			sprite_sink.drawRect((float)x, (float)y, (float)w, 1.0f, c, *wp);
+			// Bottom
+			sprite_sink.drawRect((float)x, (float)y + h - 1.0f, (float)w, 1.0f, c, *wp);
+			// Left
+			sprite_sink.drawRect((float)x, (float)y + 1.0f, 1.0f, (float)h - 2.0f, c, *wp);
+			// Right
+			sprite_sink.drawRect((float)x + w - 1.0f, (float)y + 1.0f, 1.0f, (float)h - 2.0f, c, *wp);
+		}
 	}
 }
 
@@ -131,7 +134,8 @@ void GridDrawer::drawFilledRect(ISpriteSink& sprite_sink, int x, int y, int w, i
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_sink.drawRect((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
+		if (const auto* wp = g_gui.gfx.getAtlasManager()->getWhitePixel()) {
+			sprite_sink.drawRect((float)x, (float)y, (float)w, (float)h, c, *wp);
+		}
 	}
 }
-

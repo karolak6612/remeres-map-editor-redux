@@ -26,14 +26,11 @@ void SpriteCollector::draw(float x, float y, float w, float h, const AtlasRegion
 	inst.atlas_layer = static_cast<float>(region.atlas_index);
 }
 
-void SpriteCollector::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {
-	const AtlasRegion* region = atlas_manager.getWhitePixel();
-	if (region) {
-		draw(x, y, w, h, *region, color.r, color.g, color.b, color.a);
-	}
+void SpriteCollector::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel) {
+	draw(x, y, w, h, white_pixel, color.r, color.g, color.b, color.a);
 }
 
-void SpriteCollector::setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) {
+void SpriteCollector::setGlobalTint(float r, float g, float b, float a) {
 	current_tint = glm::vec4(r, g, b, a);
 }
 
@@ -41,7 +38,7 @@ void SpriteCollector::reportMissingSprite(uint32_t id) {
 	missing_sprites.insert(id);
 }
 
-void LightCollector::AddLight(int map_x, int map_y, int map_z, const SpriteLight& light) {
+void LightCollector::addLight(int map_x, int map_y, int map_z, const SpriteLight& light) {
 	if (map_z <= GROUND_LAYER) {
 		map_x -= (GROUND_LAYER - map_z);
 		map_y -= (GROUND_LAYER - map_z);

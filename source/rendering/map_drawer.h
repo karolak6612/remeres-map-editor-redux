@@ -37,8 +37,9 @@ class DoorIndicatorDrawer;
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
-#include "rendering/chunk/chunk_manager.h"
-#include "rendering/lighting/light_map_generator.h"
+
+class ChunkManager;
+class LightMapGenerator;
 
 class GridDrawer;
 

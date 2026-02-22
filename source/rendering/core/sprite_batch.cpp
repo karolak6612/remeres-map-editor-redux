@@ -189,22 +189,19 @@ void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& re
 	inst.atlas_layer = static_cast<float>(region.atlas_index);
 }
 
-void SpriteBatch::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {
-	const AtlasRegion* region = atlas_manager.getWhitePixel();
-	if (region) {
-		draw(x, y, w, h, *region, color.r, color.g, color.b, color.a);
-	}
+void SpriteBatch::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel) {
+	draw(x, y, w, h, white_pixel, color.r, color.g, color.b, color.a);
 }
 
-void SpriteBatch::drawRectLines(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {
+void SpriteBatch::drawRectLines(float x, float y, float w, float h, const glm::vec4& color, const AtlasRegion& white_pixel) {
 	// Top
-	drawRect(x, y, w, 1.0f, color, atlas_manager);
+	drawRect(x, y, w, 1.0f, color, white_pixel);
 	// Bottom
-	drawRect(x, y + h - 1.0f, w, 1.0f, color, atlas_manager);
+	drawRect(x, y + h - 1.0f, w, 1.0f, color, white_pixel);
 	// Left
-	drawRect(x, y + 1.0f, 1.0f, h - 2.0f, color, atlas_manager);
+	drawRect(x, y + 1.0f, 1.0f, h - 2.0f, color, white_pixel);
 	// Right
-	drawRect(x + w - 1.0f, y + 1.0f, 1.0f, h - 2.0f, color, atlas_manager);
+	drawRect(x + w - 1.0f, y + 1.0f, 1.0f, h - 2.0f, color, white_pixel);
 }
 
 void SpriteBatch::flush(const AtlasManager& atlas_manager) {

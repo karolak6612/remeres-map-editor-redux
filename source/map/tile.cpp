@@ -1,20 +1,3 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
 #include "app/main.h"
 
 #include "brushes/brush.h"
@@ -206,7 +189,7 @@ void Tile::merge(Tile* other) {
 
 	items.reserve(items.size() + other->items.size());
 	for (auto& item : other->items) {
-		addItemUnsafe(std::move(item));
+		addItemUnsafe(std::move(item), false); // Pass false to batch updates
 	}
 	other->items.clear();
 	update();
@@ -295,14 +278,17 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	addItemUnsafe(std::move(item));
 }
 
-void Tile::addItemUnsafe(std::unique_ptr<Item> item) {
+// Thread-safety warning: This function is not synchronized internally.
+// Callers must hold the map write lock (e.g. Tile::lockWrite/map.getWriteLock())
+// if this tile is part of a live map structure.
+void Tile::addItemUnsafe(std::unique_ptr<Item> item, bool notify) {
 	if (!item) {
 		return;
 	}
 
 	if (item->isGroundTile()) {
 		ground = std::move(item);
-		if (location) location->notifyChange();
+		if (notify && location) location->notifyChange();
 		return;
 	}
 
@@ -329,8 +315,11 @@ void Tile::addItemUnsafe(std::unique_ptr<Item> item) {
 		statflags |= TILESTATE_SELECTED;
 	}
 	items.insert(it, std::move(item));
-	update();
-	if (location) location->notifyChange();
+
+	if (notify) {
+		update();
+		if (location) location->notifyChange();
+	}
 }
 
 void Tile::select() {

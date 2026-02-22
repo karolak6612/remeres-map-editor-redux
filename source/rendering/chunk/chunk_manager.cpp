@@ -13,8 +13,11 @@
 #include "ui/gui.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/atlas_manager.h"
+#include "util/file_system.h"
+#include <fstream>
+#include <sstream>
 
-const char* chunk_vert = R"(
+constexpr const char* chunk_vert_default = R"(
 #version 460 core
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoord;
@@ -36,7 +39,7 @@ void main() {
 }
 )";
 
-const char* chunk_frag = R"(
+constexpr const char* chunk_frag_default = R"(
 #version 460 core
 in vec3 TexCoord;
 in vec4 Tint;
@@ -49,6 +52,18 @@ void main() {
     FragColor = texture(uAtlas, TexCoord) * Tint * uGlobalTint;
 }
 )";
+
+static std::string LoadShaderSource(const std::string& filename, const char* fallback) {
+	std::string path = FileSystem::GetDataDirectory().ToStdString() + "/shaders/" + filename;
+	std::ifstream file(path);
+	if (file.is_open()) {
+		std::stringstream buffer;
+		buffer << file.rdbuf();
+		return buffer.str();
+	}
+	// Fallback to source dir for dev environment (optional, but good if data dir not populated)
+	return fallback;
+}
 
 ChunkManager::ChunkManager() {
 	job_system = std::make_unique<JobSystem>();
@@ -64,7 +79,10 @@ uint64_t ChunkManager::makeKey(int chunk_x, int chunk_y) {
 
 bool ChunkManager::initialize() {
 	shader = std::make_unique<ShaderProgram>();
-	if (!shader->Load(chunk_vert, chunk_frag)) {
+	std::string vs = LoadShaderSource("chunk.vert", chunk_vert_default);
+	std::string fs = LoadShaderSource("chunk.frag", chunk_frag_default);
+
+	if (!shader->Load(vs, fs)) {
 		spdlog::error("ChunkManager: Failed to load shader");
 		return false;
 	}
@@ -89,8 +107,20 @@ bool ChunkManager::initialize() {
 	glVertexArrayAttribFormat(vao->GetID(), 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
 	glVertexArrayAttribBinding(vao->GetID(), 1, 0);
 
-	// Setup Instance Buffer (Binding 1)
+	// Initialize RingBuffer (1MB sprites per frame buffer?)
+	// 64 bytes per sprite. 100k sprites = 6.4MB.
+	if (!ring_buffer.initialize(sizeof(SpriteInstance), 100000)) {
+		spdlog::error("ChunkManager: Failed to initialize RingBuffer");
+		return false;
+	}
+
+	if (mdi_renderer.initialize()) {
+		use_mdi = true;
+	}
+
+	// Setup Instance Buffer (Binding 1) - Linked to RingBuffer
 	glVertexArrayBindingDivisor(vao->GetID(), 1, 1);
+	glVertexArrayVertexBuffer(vao->GetID(), 1, ring_buffer.getBufferId(), 0, sizeof(SpriteInstance));
 
 	// Loc 2: rect (vec4)
 	glEnableVertexArrayAttrib(vao->GetID(), 2);
@@ -136,20 +166,65 @@ void ChunkManager::draw(const RenderView& view, Map& map, TileRenderer& renderer
 	if (g_gui.gfx.ensureAtlasManager()) {
 		g_gui.gfx.getAtlasManager()->bind(0);
 
-		// Draw visible chunks
-		int start_cx = (view.start_x >> 5);
-		int start_cy = (view.start_y >> 5);
-		int end_cx = ((view.end_x + 31) >> 5);
-		int end_cy = ((view.end_y + 31) >> 5);
+		// Draw visible chunks using RingBuffer and MDI
+		int start_cx = (view.start_x >> CHUNK_SHIFT);
+		int start_cy = (view.start_y >> CHUNK_SHIFT);
+		int end_cx = ((view.end_x + CHUNK_MASK) >> CHUNK_SHIFT);
+		int end_cy = ((view.end_y + CHUNK_MASK) >> CHUNK_SHIFT);
 
 		glBindVertexArray(vao->GetID());
+
+		// Bind RingBuffer (base)
+		glBindBuffer(GL_ARRAY_BUFFER, ring_buffer.getBufferId());
+
+		// Collect chunks to draw
+		std::vector<RenderChunk*> visible_chunks;
+		size_t total_sprites = 0;
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
 			for (int cx = start_cx; cx <= end_cx; ++cx) {
 				auto it = chunks.find(makeKey(cx, cy));
-				if (it != chunks.end()) {
-					it->second->draw(vao->GetID());
+				if (it != chunks.end() && !it->second->isEmpty()) {
+					visible_chunks.push_back(it->second.get());
+					total_sprites += it->second->getSprites().size();
 				}
+			}
+		}
+
+		if (total_sprites > 0) {
+			mdi_renderer.clear();
+
+			// Map RingBuffer
+			// If total sprites exceed buffer size, we should split batch. For simplicity, assume buffer is large enough or cap it.
+			size_t max_capacity = ring_buffer.getMaxElements();
+			if (total_sprites > max_capacity) {
+				// TODO: Implement batch splitting if needed. For now, just cap.
+				total_sprites = max_capacity;
+			}
+
+			void* ptr = ring_buffer.waitAndMap(total_sprites);
+			if (ptr) {
+				size_t processed = 0;
+				for (RenderChunk* chunk : visible_chunks) {
+					const auto& sprites = chunk->getSprites();
+					size_t count = sprites.size();
+					if (processed + count > total_sprites) break;
+
+					memcpy(static_cast<uint8_t*>(ptr) + processed * sizeof(SpriteInstance), sprites.data(), count * sizeof(SpriteInstance));
+					processed += count;
+				}
+				ring_buffer.finishWrite();
+
+				// Issue a single MDI command for the entire batch (since we use a texture array and contiguous instance data)
+				size_t offset = ring_buffer.getCurrentSectionOffset();
+				GLuint baseInstance = static_cast<GLuint>(offset / sizeof(SpriteInstance));
+
+				mdi_renderer.addDrawCommand(6, static_cast<GLuint>(total_sprites), 0, 0, baseInstance);
+
+				mdi_renderer.upload();
+				mdi_renderer.execute();
+
+				ring_buffer.signalFinished();
 			}
 		}
 
@@ -160,10 +235,10 @@ void ChunkManager::draw(const RenderView& view, Map& map, TileRenderer& renderer
 }
 
 void ChunkManager::collectLights(std::vector<LightBuffer::Light>& out_lights, const RenderView& view) {
-	int start_cx = (view.start_x >> 5);
-	int start_cy = (view.start_y >> 5);
-	int end_cx = ((view.end_x + 31) >> 5);
-	int end_cy = ((view.end_y + 31) >> 5);
+	int start_cx = (view.start_x >> CHUNK_SHIFT);
+	int start_cy = (view.start_y >> CHUNK_SHIFT);
+	int end_cx = ((view.end_x + CHUNK_MASK) >> CHUNK_SHIFT);
+	int end_cy = ((view.end_y + CHUNK_MASK) >> CHUNK_SHIFT);
 
 	for (int cy = start_cy; cy <= end_cy; ++cy) {
 		for (int cx = start_cx; cx <= end_cx; ++cx) {
@@ -176,11 +251,29 @@ void ChunkManager::collectLights(std::vector<LightBuffer::Light>& out_lights, co
 	}
 }
 
+bool ChunkManager::checkChunkDirty(int cx, int cy, Map& map, uint64_t last_build_time) {
+	if (last_build_time == 0) {
+		return true;
+	}
+
+	int start_x = cx * CHUNK_SIZE;
+	int start_y = cy * CHUNK_SIZE;
+
+	bool dirty = false;
+	map.getGrid().visitLeaves(start_x, start_y, start_x + CHUNK_SIZE, start_y + CHUNK_SIZE, [&](MapNode* node, int, int) {
+		if (dirty) return; // fast exit
+		if (node->getLastModified() > last_build_time) {
+			dirty = true;
+		}
+	});
+	return dirty;
+}
+
 void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& renderer, const DrawingOptions& options, uint32_t current_house_id) {
-	int start_cx = (view.start_x >> 5);
-	int start_cy = (view.start_y >> 5);
-	int end_cx = ((view.end_x + 31) >> 5);
-	int end_cy = ((view.end_y + 31) >> 5);
+	int start_cx = (view.start_x >> CHUNK_SHIFT);
+	int start_cy = (view.start_y >> CHUNK_SHIFT);
+	int end_cx = ((view.end_x + CHUNK_MASK) >> CHUNK_SHIFT);
+	int end_cy = ((view.end_y + CHUNK_MASK) >> CHUNK_SHIFT);
 
 	// Retrieve white pixel region safely on main thread
 	DrawingOptions safe_options = options;
@@ -202,40 +295,11 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 				chunk = it->second.get();
 			}
 
-			// Check pending
 			if (pending_jobs.count(key)) {
 				continue;
 			}
 
-			// Check dirty
-			bool dirty = false;
-			if (chunk->getLastBuildTime() == 0) {
-				dirty = true;
-			} else {
-				// Check 8x8 nodes
-				int start_nx = cx * 8;
-				int start_ny = cy * 8;
-
-				auto isDirty = [&]() {
-					for (int ny = 0; ny < 8; ++ny) {
-						for (int nx = 0; nx < 8; ++nx) {
-							MapNode* node = map.getGrid().getLeaf((start_nx + nx) * 4, (start_ny + ny) * 4);
-							if (node) {
-								if (node->getLastModified() > chunk->getLastBuildTime()) {
-									return true;
-								}
-							}
-						}
-					}
-					return false;
-				};
-
-				if (isDirty()) {
-					dirty = true;
-				}
-			}
-
-			if (dirty) {
+			if (checkChunkDirty(cx, cy, map, chunk->getLastBuildTime())) {
 				ChunkBuildJob job;
 				job.chunk_x = cx;
 				job.chunk_y = cy;
@@ -245,7 +309,7 @@ void ChunkManager::update(const RenderView& view, Map& map, TileRenderer& render
 				job.options = safe_options;
 				job.current_house_id = current_house_id;
 
-				job_system->submit(job);
+				job_system->submit(std::move(job));
 				pending_jobs.insert(key);
 			}
 		}
@@ -275,8 +339,6 @@ void ChunkManager::processResults() {
 		if (it != chunks.end()) {
 			it->second->upload(res.data);
 
-			// If missing sprites were found and we attempted to load them,
-			// invalidate this chunk to retry on the next update cycle.
 			if (missing_loaded) {
 				it->second->forceDirty();
 			}

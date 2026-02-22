@@ -24,8 +24,8 @@ public:
 	void ResetCache();
 
 	void glBlitAtlasQuad(ISpriteSink& sprite_sink, int sx, int sy, const AtlasRegion* region, int red, int green, int blue, int alpha);
-	void glBlitSquare(ISpriteSink& sprite_sink, int sx, int sy, int red, int green, int blue, int alpha, int size = 0);
-	void glDrawBox(ISpriteSink& sprite_sink, int sx, int sy, int width, int height, int red, int green, int blue, int alpha);
+	void glBlitSquare(ISpriteSink& sprite_sink, int sx, int sy, int red, int green, int blue, int alpha, const AtlasRegion* white_pixel = nullptr, int size = 0);
+	void glDrawBox(ISpriteSink& sprite_sink, int sx, int sy, int width, int height, int red, int green, int blue, int alpha, const AtlasRegion* white_pixel = nullptr);
 	void glSetColor(wxColor color);
 
 	void BlitSprite(ISpriteSink& sprite_sink, int screenx, int screeny, uint32_t spriteid, int red = 255, int green = 255, int blue = 255, int alpha = 255);

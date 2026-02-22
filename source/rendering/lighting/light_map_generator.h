@@ -5,8 +5,11 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/render_view.h"
+#include "rendering/core/ring_buffer.h"
 #include <vector>
 #include <memory>
+
+struct GPULightInstance;
 
 class LightMapGenerator {
 public:
@@ -22,12 +25,16 @@ public:
 
 private:
 	bool resizeFBO(int width, int height);
+	GLuint getAmbientTexture(float ambient_light);
+	void prepareInstances(const std::vector<LightBuffer::Light>& lights, const RenderView& view, std::vector<GPULightInstance>& instances);
 
 	std::unique_ptr<GLFramebuffer> fbo;
 	std::unique_ptr<GLTextureResource> texture;
 	std::unique_ptr<ShaderProgram> shader;
-	std::unique_ptr<GLVertexArray> vao; // Dummy VAO for full-screen quad (if using empty VBO trick) or specific geometry
-	std::unique_ptr<GLBuffer> vbo; // Instance buffer for lights
+	std::unique_ptr<GLVertexArray> vao;
+
+	// Replaced VBO with RingBuffer for streaming
+	RingBuffer ring_buffer;
 
 	std::unique_ptr<GLTextureResource> ambient_tex;
 	float last_ambient = -1.0f;
