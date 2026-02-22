@@ -79,18 +79,10 @@
 
 bool MapCanvas::processed[] = { 0 };
 
-// Helper to create attributes
-static wxGLAttributes& GetCoreProfileAttributes() {
-	static wxGLAttributes vAttrs = []() {
-		wxGLAttributes a;
-		a.PlatformDefaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
-		return a;
-	}();
-	return vAttrs;
-}
+// Removed local GetCoreProfileAttributes in favor of GLContextManager::GetDefaultAttributes()
 
 MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
-	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
+	wxGLCanvas(parent, GLContextManager::GetDefaultAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
 	editor(editor),
 	floor(GROUND_LAYER),
 	zoom(1.0),

@@ -187,7 +187,7 @@ namespace LuaAPI {
 			int iterations = 4;
 			int birthLimit = 4;
 			int deathLimit = 3;
-			int seed = static_cast<int>(time(nullptr));
+			int seed = static_cast<int>(std::random_device {}());
 
 			if (options) {
 				sol::table opts = *options;
@@ -282,7 +282,7 @@ namespace LuaAPI {
 			float depositSpeed = 0.3f;
 			float evaporateSpeed = 0.01f;
 			float gravity = 4.0f;
-			int seed = static_cast<int>(time(nullptr));
+			int seed = static_cast<int>(std::random_device {}());
 			int maxDropletLifetime = 30;
 
 			if (options) {
@@ -521,8 +521,10 @@ namespace LuaAPI {
 		// algo.random(min, max) -> int
 		// Generate random number
 		algoTable.set_function("random", [](int min, int max) -> int {
-			static std::mt19937 rng(std::random_device{}());
-			if (min > max) std::swap(min, max);
+			static std::mt19937 rng(std::random_device {}());
+			if (min > max) {
+				std::swap(min, max);
+			}
 			std::uniform_int_distribution<int> dist(min, max);
 			return dist(rng);
 		});
@@ -642,7 +644,7 @@ namespace LuaAPI {
 				return lua.create_table();
 			}
 
-			int sd = seed.value_or(static_cast<int>(time(nullptr)));
+			int sd = seed.value_or(static_cast<int>(std::random_device {}()));
 			std::mt19937 rng(sd);
 			std::uniform_int_distribution<int> distX(0, width - 1);
 			std::uniform_int_distribution<int> distY(0, height - 1);
@@ -672,7 +674,7 @@ namespace LuaAPI {
 				return lua.create_table();
 			}
 
-			int seed = static_cast<int>(time(nullptr));
+			int seed = static_cast<int>(std::random_device {}());
 
 			if (options) {
 				sol::table opts = *options;
@@ -735,7 +737,7 @@ namespace LuaAPI {
 
 			int minRoomSize = 5;
 			int maxRoomSize = 15;
-			int seed = static_cast<int>(time(nullptr));
+			int seed = static_cast<int>(std::random_device {}());
 			int maxDepth = 4;
 
 			if (options) {

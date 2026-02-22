@@ -28,6 +28,7 @@
 #include <condition_variable>
 #include <string_view>
 #include <functional>
+#include <wx/app.h>
 
 #ifdef _WIN32
 	#include <winsock2.h>
@@ -176,29 +177,7 @@ namespace LuaAPI {
 		}
 
 		// Basic string checks on hostname
-		if (hostname.find("localhost") != std::string::npos ||
-			hostname.find("127.") != std::string::npos ||
-			hostname.find("::1") != std::string::npos ||
-			hostname.find("0.0.0.0") != std::string::npos ||
-			hostname.find("192.168.") != std::string::npos ||
-			hostname.find("10.") != std::string::npos ||
-			hostname.find("172.16.") != std::string::npos ||
-			hostname.find("172.17.") != std::string::npos ||
-			hostname.find("172.18.") != std::string::npos ||
-			hostname.find("172.19.") != std::string::npos ||
-			hostname.find("172.20.") != std::string::npos ||
-			hostname.find("172.21.") != std::string::npos ||
-			hostname.find("172.22.") != std::string::npos ||
-			hostname.find("172.23.") != std::string::npos ||
-			hostname.find("172.24.") != std::string::npos ||
-			hostname.find("172.25.") != std::string::npos ||
-			hostname.find("172.26.") != std::string::npos ||
-			hostname.find("172.27.") != std::string::npos ||
-			hostname.find("172.28.") != std::string::npos ||
-			hostname.find("172.29.") != std::string::npos ||
-			hostname.find("172.30.") != std::string::npos ||
-			hostname.find("172.31.") != std::string::npos ||
-			hostname.find("169.254.") != std::string::npos) {
+		if (hostname.find("localhost") != std::string::npos || hostname.find("127.") != std::string::npos || hostname.find("::1") != std::string::npos || hostname.find("0.0.0.0") != std::string::npos || hostname.find("192.168.") != std::string::npos || hostname.find("10.") != std::string::npos || hostname.find("172.16.") != std::string::npos || hostname.find("172.17.") != std::string::npos || hostname.find("172.18.") != std::string::npos || hostname.find("172.19.") != std::string::npos || hostname.find("172.20.") != std::string::npos || hostname.find("172.21.") != std::string::npos || hostname.find("172.22.") != std::string::npos || hostname.find("172.23.") != std::string::npos || hostname.find("172.24.") != std::string::npos || hostname.find("172.25.") != std::string::npos || hostname.find("172.26.") != std::string::npos || hostname.find("172.27.") != std::string::npos || hostname.find("172.28.") != std::string::npos || hostname.find("172.29.") != std::string::npos || hostname.find("172.30.") != std::string::npos || hostname.find("172.31.") != std::string::npos || hostname.find("169.254.") != std::string::npos) {
 			return false;
 		}
 
@@ -214,33 +193,55 @@ namespace LuaAPI {
 					struct sockaddr_in* p = (struct sockaddr_in*)addr->ai_addr;
 					uint32_t ip = ntohl(p->sin_addr.s_addr);
 					// Check 127.0.0.0/8
-					if ((ip & 0xFF000000) == 0x7F000000) safe = false;
+					if ((ip & 0xFF000000) == 0x7F000000) {
+						safe = false;
+					}
 					// Check 10.0.0.0/8
-					if ((ip & 0xFF000000) == 0x0A000000) safe = false;
+					if ((ip & 0xFF000000) == 0x0A000000) {
+						safe = false;
+					}
 					// Check 172.16.0.0/12
-					if ((ip & 0xFFF00000) == 0xAC100000) safe = false;
+					if ((ip & 0xFFF00000) == 0xAC100000) {
+						safe = false;
+					}
 					// Check 192.168.0.0/16
-					if ((ip & 0xFFFF0000) == 0xC0A80000) safe = false;
+					if ((ip & 0xFFFF0000) == 0xC0A80000) {
+						safe = false;
+					}
 					// Check 169.254.0.0/16
-					if ((ip & 0xFFFF0000) == 0xA9FE0000) safe = false;
+					if ((ip & 0xFFFF0000) == 0xA9FE0000) {
+						safe = false;
+					}
 					// Check 0.0.0.0/8
-					if ((ip & 0xFF000000) == 0x00000000) safe = false;
+					if ((ip & 0xFF000000) == 0x00000000) {
+						safe = false;
+					}
 				} else if (addr->ai_family == AF_INET6) {
 					struct sockaddr_in6* p = (struct sockaddr_in6*)addr->ai_addr;
 					unsigned char* bytes = p->sin6_addr.s6_addr;
 					// Check ::1 (loopback)
 					bool isLoopback = true;
 					for (int i = 0; i < 15; ++i) {
-						if (bytes[i] != 0) isLoopback = false;
+						if (bytes[i] != 0) {
+							isLoopback = false;
+						}
 					}
-					if (bytes[15] != 1) isLoopback = false;
-					if (isLoopback) safe = false;
+					if (bytes[15] != 1) {
+						isLoopback = false;
+					}
+					if (isLoopback) {
+						safe = false;
+					}
 
 					// Check unique-local (fc00::/7)
-					if ((bytes[0] & 0xFE) == 0xFC) safe = false;
+					if ((bytes[0] & 0xFE) == 0xFC) {
+						safe = false;
+					}
 
 					// Check link-local (fe80::/10)
-					if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80) safe = false;
+					if (bytes[0] == 0xFE && (bytes[1] & 0xC0) == 0x80) {
+						safe = false;
+					}
 				}
 			}
 			freeaddrinfo(addrs);
@@ -271,7 +272,13 @@ namespace LuaAPI {
 			}
 		}
 
-		cpr::Response response = cpr::Get(cpr::Url { url }, headers, cpr::Timeout { 10000 });
+		auto future = cpr::GetAsync(cpr::Url { url }, headers, cpr::Timeout { 10000 });
+		while (future.wait_for(std::chrono::milliseconds(10)) != std::future_status::ready) {
+			if (wxTheApp) {
+				wxTheApp->Yield(true);
+			}
+		}
+		cpr::Response response = future.get();
 
 		result["status"] = static_cast<int>(response.status_code);
 		result["body"] = response.text;
@@ -309,12 +316,18 @@ namespace LuaAPI {
 			}
 		}
 
-		cpr::Response response = cpr::Post(
+		auto future = cpr::PostAsync(
 			cpr::Url { url },
 			cpr::Body { body },
 			headers,
 			cpr::Timeout { 10000 }
 		);
+		while (future.wait_for(std::chrono::milliseconds(10)) != std::future_status::ready) {
+			if (wxTheApp) {
+				wxTheApp->Yield(true);
+			}
+		}
+		cpr::Response response = future.get();
 
 		result["status"] = static_cast<int>(response.status_code);
 		result["body"] = response.text;
@@ -441,7 +454,9 @@ namespace LuaAPI {
 		// Start the streaming request in a separate thread
 		session->startThread([session, url, body, headers]() {
 			std::function<bool(std::string_view, intptr_t)> writeCallback = [session](std::string_view data, intptr_t /*userdata*/) -> bool {
-				if (session->isCancelled()) return false;
+				if (session->isCancelled()) {
+					return false;
+				}
 				session->appendChunk(std::string(data));
 				return true;
 			};
@@ -454,7 +469,9 @@ namespace LuaAPI {
 				cpr::Timeout { 30000 }
 			);
 
-			if (session->isCancelled()) return;
+			if (session->isCancelled()) {
+				return;
+			}
 
 			session->setStatusCode(static_cast<int>(response.status_code));
 			session->setHeaders(response.header);

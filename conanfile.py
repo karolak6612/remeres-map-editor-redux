@@ -23,7 +23,6 @@ class RMERecipe(ConanFile):
             # Full dependency tree for Windows/macOS
             self.requires("wxwidgets/3.2.6")
             self.requires("asio/1.32.0")
-            self.requires("nlohmann_json/3.11.3")
             self.requires("libarchive/3.7.7")
             self.requires("boost/1.87.0")
             self.requires("zlib/1.3.1")
@@ -36,6 +35,7 @@ class RMERecipe(ConanFile):
         # Upstream uses Lua 5.x and Sol2
         self.requires("lua/5.4.6")
         self.requires("sol2/3.3.1")
+        self.requires("nlohmann_json/3.11.3")
         # cpr is used for HTTP requests in Lua API
         self.requires("cpr/1.10.5")
     

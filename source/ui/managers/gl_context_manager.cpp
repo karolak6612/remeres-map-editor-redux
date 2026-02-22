@@ -9,18 +9,17 @@ GLContextManager::GLContextManager() :
 }
 
 GLContextManager::~GLContextManager() {
-	delete OGLContext;
 }
 
 wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 	if (OGLContext == nullptr) {
 #ifdef __WXOSX__
-		OGLContext = new wxGLContext(win, nullptr);
+		OGLContext = std::make_unique<wxGLContext>(win, nullptr);
 #else
 		wxGLContextAttrs ctxAttrs;
-		ctxAttrs.PlatformDefaults().CoreProfile().MajorVersion(3).MinorVersion(3).EndList();
-		OGLContext = newd wxGLContext(win, nullptr, &ctxAttrs);
-		spdlog::info("GLContextManager: Created new OpenGL 3.3 Core Profile context");
+		ctxAttrs.PlatformDefaults().CoreProfile().MajorVersion(4).MinorVersion(5).EndList();
+		OGLContext = std::make_unique<wxGLContext>(win, nullptr, &ctxAttrs);
+		spdlog::info("GLContextManager: Created new OpenGL 4.5 Core Profile context");
 #endif
 		if (OGLContext && OGLContext->IsOK()) {
 			// Initialize GLAD for the new context
@@ -35,5 +34,14 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 		}
 	}
 
-	return OGLContext;
+	return OGLContext.get();
+}
+
+wxGLAttributes& GLContextManager::GetDefaultAttributes() {
+	static wxGLAttributes vAttrs = []() {
+		wxGLAttributes a;
+		a.PlatformDefaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
+		return a;
+	}();
+	return vAttrs;
 }

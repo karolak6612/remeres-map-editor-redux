@@ -257,7 +257,7 @@ namespace LuaAPI {
 	// ============================================================================
 
 	// Helper function to show alert dialog
-	static int showAlert(sol::this_state ts, sol::object arg) {
+	static std::string showAlert(sol::this_state ts, sol::object arg) {
 		sol::state_view lua(ts);
 
 		std::string title = "Script";
@@ -323,14 +323,15 @@ namespace LuaAPI {
 
 		switch (result) {
 			case wxID_OK:
+				return "ok";
 			case wxID_YES:
-				return 1;
+				return "yes";
 			case wxID_NO:
-				return 2;
+				return "no";
 			case wxID_CANCEL:
-				return buttons.size() >= 3 ? 3 : 2;
+				return "cancel";
 			default:
-				return 0;
+				return "";
 		}
 	}
 
@@ -403,7 +404,9 @@ namespace LuaAPI {
 
 		for (auto& pair : g_brushes.getMap()) {
 			Brush* brush = pair.second.get();
-			if (!brush || !brush->visibleInPalette()) continue;
+			if (!brush || !brush->visibleInPalette()) {
+				continue;
+			}
 
 			if (brush->is<GroundBrush>()) {
 				GroundBrush* gb = brush->as<GroundBrush>();
@@ -578,7 +581,9 @@ namespace LuaAPI {
 		// Yield to process pending UI events (prevents UI freeze during long operations)
 		app["yield"] = []() {
 			static bool inYield = false;
-			if (inYield) return;
+			if (inYield) {
+				return;
+			}
 
 			if (wxTheApp) {
 				inYield = true;
@@ -590,10 +595,16 @@ namespace LuaAPI {
 		// Sleep for a given number of milliseconds (use sparingly, blocks the UI)
 		app["sleep"] = [](int milliseconds) {
 			static bool inYield = false;
-			if (inYield) return;
+			if (inYield) {
+				return;
+			}
 
-			if (milliseconds <= 0) return;
-			if (milliseconds > 10000) milliseconds = 10000;
+			if (milliseconds <= 0) {
+				return;
+			}
+			if (milliseconds > 10000) {
+				milliseconds = 10000;
+			}
 
 			auto start = std::chrono::steady_clock::now();
 			auto end = start + std::chrono::milliseconds(milliseconds);

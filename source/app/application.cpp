@@ -205,7 +205,7 @@ bool Application::OnInit() {
 	if (!g_luaScripts.initialize()) {
 		spdlog::warn("Failed to initialize Lua scripting: {}", g_luaScripts.getLastError());
 	} else if (g_gui.root && g_gui.root->menu_bar) {
-		// g_gui.root->menu_bar->LoadScriptsMenu(); // TO DO: Implement LoadScriptsMenu in our MainMenuBar
+		g_gui.root->menu_bar->LoadScriptsMenu();
 	}
 
 	wxIcon icon(editor_icon);

@@ -22,7 +22,7 @@ ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
 }
 
 NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
-	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
+	wxGLCanvas(parent, GLContextManager::GetDefaultAttributes(), id, wxDefaultPosition, wxDefaultSize, style) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
 
 	Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);

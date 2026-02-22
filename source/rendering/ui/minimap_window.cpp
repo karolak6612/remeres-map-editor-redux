@@ -35,18 +35,10 @@
 #include <nanovg.h>
 #include <nanovg_gl.h>
 
-// Helper to create attributes
-static wxGLAttributes& GetCoreProfileAttributes() {
-	static wxGLAttributes vAttrs = []() {
-		wxGLAttributes a;
-		a.PlatformDefaults().Defaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
-		return a;
-	}();
-	return vAttrs;
-}
+// Removed local GetCoreProfileAttributes in favor of GLContextManager::GetDefaultAttributes()
 
 MinimapWindow::MinimapWindow(wxWindow* parent) :
-	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
+	wxGLCanvas(parent, GLContextManager::GetDefaultAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
 	update_timer(this),
 	context(nullptr),
 	nvg(nullptr, NVGDeleter()) {
