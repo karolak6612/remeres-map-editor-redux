@@ -60,7 +60,7 @@ void PropertiesWindow::createUI() {
 	wxImageList* imageList = new wxImageList(16, 16);
 	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
 	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_BOX_OPEN, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_TAGS, wxSize(16, 16)));
 	notebook->AssignImageList(imageList);
 
 	notebook->AddPage(createGeneralPanel(notebook), "Simple", true, 0);
