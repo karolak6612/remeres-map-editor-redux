@@ -30,6 +30,8 @@
 #include "ui/theme.h"
 #include "util/json.h"
 #include "util/image_manager.h"
+#include <wx/persist.h>
+#include <wx/persist/toplevel.h>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include <format>
@@ -248,6 +250,9 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	wxIcon icon;
 	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER_SOLID, wxSize(32, 32)));
 	SetIcon(icon);
+
+	SetName("OutfitChooserDialog");
+	wxPersistenceManager::Get().RegisterAndRestore(this);
 }
 
 OutfitChooserDialog::~OutfitChooserDialog() { }

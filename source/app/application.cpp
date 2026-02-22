@@ -53,6 +53,11 @@
 
 #include "../brushes/icon/editor_icon.xpm"
 
+#include <wx/persist.h>
+#include <wx/persist/toplevel.h>
+#include <wx/config.h>
+#include <wx/fileconf.h>
+
 wxIMPLEMENT_APP_NO_MAIN(Application);
 
 int main(int argc, char** argv) {
@@ -87,6 +92,13 @@ bool Application::OnInit() {
 	spdlog::info("This is free software: you are free to change and redistribute it.");
 	spdlog::info("There is NO WARRANTY, to the extent permitted by law.");
 	spdlog::info("Review COPYING in RME distribution for details.");
+
+	// Configure persistence manager
+	// Use a separate file for UI persistence to avoid cluttering system config
+	auto* config = new wxFileConfig("", "",
+		wxStandardPaths::Get().GetUserConfigDir() + "/.rme_persistence"
+	);
+	wxConfigBase::Set(config);
 
 	// Load settings early for theme support
 	g_settings.load();
