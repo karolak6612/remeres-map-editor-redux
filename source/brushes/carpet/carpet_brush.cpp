@@ -57,10 +57,7 @@ void CarpetBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 void CarpetBrush::undraw(BaseMap* map, Tile* tile) {
 	std::erase_if(tile->items, [](const auto& item) {
-		if (item->isCarpet()) {
-			return item->getCarpetBrush() != nullptr;
-		}
-		return false;
+		return item->isCarpet() && item->getCarpetBrush() != nullptr;
 	});
 }
 
