@@ -27,17 +27,10 @@ namespace IngamePreview {
 			}
 		}
 
-		for (const auto& item : tile->items) {
+		return std::ranges::any_of(tile->items, [](const std::unique_ptr<Item>& item) {
 			const ItemType& it = g_items[item->getID()];
-			if (it.isGroundTile()) {
-				return true;
-			}
-			if (it.alwaysOnBottom && it.blockMissiles) {
-				return true;
-			}
-		}
-
-		return false;
+			return it.isGroundTile() || (it.alwaysOnBottom && it.blockMissiles);
+		});
 	}
 
 	bool FloorVisibilityCalculator::IsLookPossible(const Tile* tile) const {
@@ -52,21 +45,16 @@ namespace IngamePreview {
 			}
 		}
 
-		for (const auto& item : tile->items) {
-			const ItemType& it = g_items[item->getID()];
-			if (it.blockMissiles) {
-				return false;
-			}
-		}
-
-		return true;
+		return std::ranges::none_of(tile->items, [](const std::unique_ptr<Item>& item) {
+			return g_items[item->getID()].blockMissiles;
+		});
 	}
 
 	int FloorVisibilityCalculator::CalcFirstVisibleFloor(const BaseMap& map, int camera_x, int camera_y, int camera_z) const {
 		int first_floor = 0;
 
 		if (camera_z > GROUND_LAYER) {
-			first_floor = std::max(camera_z - AWARE_UNDERGROUND_FLOOR_RANGE, (int)GROUND_LAYER + 1);
+			first_floor = std::max(camera_z - AWARE_UNDERGROUND_FLOOR_RANGE, static_cast<int>(GROUND_LAYER) + 1);
 		}
 
 		// Check 3x3 area around camera for blocking tiles
@@ -107,7 +95,7 @@ namespace IngamePreview {
 			}
 		}
 
-		return std::clamp(first_floor, 0, (int)MAP_MAX_LAYER);
+		return std::clamp(first_floor, 0, static_cast<int>(MAP_MAX_LAYER));
 	}
 
 	int FloorVisibilityCalculator::CalcLastVisibleFloor(int camera_z) const {
@@ -117,7 +105,7 @@ namespace IngamePreview {
 		} else {
 			z = GROUND_LAYER;
 		}
-		return std::clamp(z, 0, (int)MAP_MAX_LAYER);
+		return std::clamp(z, 0, static_cast<int>(MAP_MAX_LAYER));
 	}
 
 } // namespace IngamePreview

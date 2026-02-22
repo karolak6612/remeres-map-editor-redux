@@ -153,6 +153,20 @@ constexpr int MaxLightIntensity = 8;
 constexpr int PixelFormatRGB = 3;
 constexpr int PixelFormatRGBA = 4;
 
+struct DrawColor {
+	int r;
+	int g;
+	int b;
+	int a;
+
+	constexpr DrawColor(int red = 255, int green = 255, int blue = 255, int alpha = 255) :
+		r(red),
+		g(green),
+		b(blue),
+		a(alpha) {
+	}
+};
+
 // wxString conversions
 #define nstr(str) (str).ToStdString()
 
