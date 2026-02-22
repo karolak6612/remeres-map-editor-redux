@@ -87,35 +87,43 @@ public:
 	void join(std::unique_ptr<SelectionThread> thread);
 
 	size_t size() {
+		flush();
 		return tiles.size();
 	}
 	size_t size() const {
+		flush();
 		return tiles.size();
 	}
 	bool empty() const {
+		flush();
 		return tiles.empty();
 	}
 	void updateSelectionCount();
 	auto begin() {
+		flush();
 		return tiles.begin();
 	}
 	auto end() {
+		flush();
 		return tiles.end();
 	}
 	const std::vector<Tile*>& getTiles() const {
+		flush();
 		return tiles;
 	}
 	Tile* getSelectedTile() {
-		ASSERT(size() == 1);
+		flush();
+		ASSERT(tiles.size() == 1);
 		return *tiles.begin();
 	}
 	Tile* getSelectedTile() const {
-		ASSERT(size() == 1);
+		flush();
+		ASSERT(tiles.size() == 1);
 		return *tiles.begin();
 	}
 
 private:
-	void flush();
+	void flush() const;
 	void recalculateBounds() const;
 
 	bool busy;
@@ -127,9 +135,9 @@ private:
 	// We use std::vector here instead of std::set for performance reasons.
 	// Selections are typically small, and std::vector provides better cache locality
 	// and fewer allocations. We maintain sorted order to allow O(log n) lookups.
-	std::vector<Tile*> tiles;
-	std::vector<Tile*> pending_adds;
-	std::vector<Tile*> pending_removes;
+	mutable std::vector<Tile*> tiles;
+	mutable std::vector<Tile*> pending_adds;
+	mutable std::vector<Tile*> pending_removes;
 
 	mutable std::atomic<bool> bounds_dirty;
 	mutable Position cached_min;

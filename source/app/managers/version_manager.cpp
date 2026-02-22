@@ -155,7 +155,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	}
 
 	g_loading.SetLoadDone(70, "Finishing...");
-	g_brushes.init();
+	g_brushes().init();
 	g_materials.createOtherTileset();
 
 	g_loading.DestroyLoadBar();
@@ -169,7 +169,7 @@ void VersionManager::UnloadVersion() {
 
 	if (!loaded_version.empty()) {
 		g_materials.clear();
-		g_brushes.clear();
+		g_brushes().clear();
 		g_items.clear();
 		g_gui.gfx.clear();
 

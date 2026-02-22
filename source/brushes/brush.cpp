@@ -55,17 +55,15 @@
 #include <format>
 #include <memory>
 
-Brushes g_brushes;
-
-Brushes::Brushes() {
+BrushRegistry::BrushRegistry() {
 	////
 }
 
-Brushes::~Brushes() {
+BrushRegistry::~BrushRegistry() {
 	////
 }
 
-void Brushes::clear() {
+void BrushRegistry::clear() {
 	for (auto& entry : brushes) {
 		entry.second.reset();
 	}
@@ -77,7 +75,7 @@ void Brushes::clear() {
 	borders.clear();
 }
 
-void Brushes::init() {
+void BrushRegistry::init() {
 	addManagedBrush(g_brush_manager.optional_brush);
 	addManagedBrush(g_brush_manager.eraser);
 	addManagedBrush(g_brush_manager.spawn_brush);
@@ -106,7 +104,7 @@ void Brushes::init() {
 	CarpetBrush::init();
 }
 
-bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& warnings) {
+bool BrushRegistry::unserializeBrush(pugi::xml_node node, std::vector<std::string>& warnings) {
 	pugi::xml_attribute attribute;
 	if (!(attribute = node.attribute("name"))) {
 		warnings.push_back("Brush node without name.");
@@ -190,7 +188,7 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 	return true;
 }
 
-bool Brushes::unserializeBorder(pugi::xml_node node, std::vector<std::string>& warnings) {
+bool BrushRegistry::unserializeBorder(pugi::xml_node node, std::vector<std::string>& warnings) {
 	pugi::xml_attribute attribute = node.attribute("id");
 	if (!attribute) {
 		warnings.push_back("Couldn't read border id node");
@@ -209,12 +207,12 @@ bool Brushes::unserializeBorder(pugi::xml_node node, std::vector<std::string>& w
 	return true;
 }
 
-void Brushes::addBrush(std::unique_ptr<Brush> brush) {
+void BrushRegistry::addBrush(std::unique_ptr<Brush> brush) {
 	const std::string name = brush->getName();
 	brushes.emplace(name, std::move(brush));
 }
 
-Brush* Brushes::getBrush(std::string_view name) const {
+Brush* BrushRegistry::getBrush(std::string_view name) const {
 	if (auto it = brushes.find(name); it != brushes.end()) {
 		return it->second.get();
 	}

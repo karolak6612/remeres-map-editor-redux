@@ -61,12 +61,14 @@ class EraserBrush;
 //=============================================================================
 // Brushes, holds all brushes
 
-using BrushMap = std::multimap<std::string, std::unique_ptr<Brush>, std::less<>>;
+using BrushMap = std::map<std::string, std::unique_ptr<Brush>, std::less<>>;
 
-class Brushes {
+class BrushRegistry {
 public:
-	Brushes();
-	~Brushes();
+	static BrushRegistry& getInstance() {
+		static BrushRegistry instance;
+		return instance;
+	}
 
 	void init();
 	void clear();
@@ -89,6 +91,13 @@ public:
 		return brushes;
 	}
 
+private:
+	BrushRegistry();
+	~BrushRegistry();
+
+	BrushRegistry(const BrushRegistry&) = delete;
+	BrushRegistry& operator=(const BrushRegistry&) = delete;
+
 protected:
 	using BorderMap = std::unordered_map<uint32_t, std::unique_ptr<AutoBorder>>;
 	BrushMap brushes;
@@ -99,7 +108,11 @@ protected:
 	friend class GroundBrushLoader;
 };
 
-extern Brushes g_brushes;
+using Brushes = BrushRegistry; // Alias for backward compatibility if needed, but we prefer BrushRegistry
+
+inline BrushRegistry& g_brushes() {
+	return BrushRegistry::getInstance();
+}
 
 //=============================================================================
 // Common brush interface

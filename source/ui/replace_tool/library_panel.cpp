@@ -140,13 +140,13 @@ uint16_t LibraryPanel::GetSidFromCid(uint16_t cid) {
 
 void LibraryPanel::PopulateBrushGrid() {
 	std::vector<uint16_t> brushIds;
-	brushIds.reserve(g_brushes.getMap().size());
+	brushIds.reserve(g_brushes().getMap().size());
 	std::map<uint16_t, wxString> overrides;
 	m_brushLookup.clear();
 
 	wxString query = m_brushSearch->GetValue().Lower();
 
-	for (const auto& pair : g_brushes.getMap()) {
+	for (const auto& pair : g_brushes().getMap()) {
 		Brush* brush = pair.second.get();
 		if (!brush || brush->is<EraserBrush>() || brush->is<RAWBrush>()) {
 			continue;

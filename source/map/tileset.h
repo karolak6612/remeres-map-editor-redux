@@ -22,7 +22,7 @@
 #include <vector>
 #include "brushes/brush_enums.h"
 
-class Brushes;
+class BrushRegistry;
 class TilesetCategory {
 public:
 	TilesetCategory(Tileset& parent, TilesetCategoryType type);
@@ -52,7 +52,7 @@ private:
 using TilesetCategoryArray = std::vector<std::unique_ptr<TilesetCategory>>;
 class Tileset {
 public:
-	Tileset(Brushes& brushes, const std::string& name);
+	Tileset(BrushRegistry& brushes, const std::string& name);
 	~Tileset();
 	TilesetCategory* getCategory(TilesetCategoryType type);
 	const TilesetCategory* getCategory(TilesetCategoryType type) const;
@@ -66,7 +66,7 @@ public:
 	TilesetCategoryArray categories;
 
 protected:
-	Brushes& brushes;
+	BrushRegistry& brushes;
 
 protected:
 	Tileset(const Tileset&);

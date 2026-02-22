@@ -287,7 +287,7 @@ void Selection::removeInternal(Tile* tile) {
 	}
 }
 
-void Selection::flush() {
+void Selection::flush() const {
 	if (pending_adds.empty() && pending_removes.empty()) {
 		return;
 	}
@@ -352,11 +352,11 @@ void Selection::start(SessionFlags flags) {
 			session = std::move(editor.actionQueue->createBatch(ACTION_SELECT));
 		}
 		subsession = editor.actionQueue->createAction(ACTION_SELECT);
-	} else {
-		deferred = true;
-		pending_adds.clear();
-		pending_removes.clear();
 	}
+
+	deferred = true;
+	pending_adds.clear();
+	pending_removes.clear();
 	busy = true;
 }
 
@@ -377,6 +377,8 @@ void Selection::commit() {
 }
 
 void Selection::finish(SessionFlags flags) {
+	flush();
+	deferred = false;
 	if (!(flags & INTERNAL)) {
 		if (flags & SUBTHREAD) {
 			ASSERT(subsession);
@@ -394,9 +396,6 @@ void Selection::finish(SessionFlags flags) {
 			session = nullptr;
 			subsession = nullptr;
 		}
-	} else {
-		flush();
-		deferred = false;
 	}
 	busy = false;
 }
