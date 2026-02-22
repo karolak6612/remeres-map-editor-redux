@@ -11,14 +11,14 @@ TextureAtlas::~TextureAtlas() {
 
 TextureAtlas::TextureAtlas(TextureAtlas&& other) noexcept
 	:
+	pbo_(std::move(other.pbo_)),
 	texture_id_(std::move(other.texture_id_)),
 	layer_count_(other.layer_count_),
 	allocated_layers_(other.allocated_layers_),
 	total_sprite_count_(other.total_sprite_count_),
 	current_layer_(other.current_layer_), next_x_(other.next_x_),
 	next_y_(other.next_y_),
-	free_slots_(std::move(other.free_slots_)),
-	pbo_(std::move(other.pbo_)) {
+	free_slots_(std::move(other.free_slots_)) {
 	other.layer_count_ = 0;
 	other.allocated_layers_ = 0;
 	other.total_sprite_count_ = 0;

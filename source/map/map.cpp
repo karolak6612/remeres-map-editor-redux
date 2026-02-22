@@ -105,12 +105,12 @@ bool Map::convert(MapVersion to, bool showdialog) {
 		return true;
 	}
 
-	/* TODO
-
-	if(to.otbm == MAP_OTBM_4 && to.client < CLIENT_VERSION_850)
+	/* TODO */
+	if (to.otbm == MAP_OTBM_4 && to.client < CLIENT_VERSION_850) {
 		return false;
+	}
 
-	/* Legacy conversion logic removed */
+	// Legacy conversion logic removed
 #if 0
 	if(mapVersion.client >= CLIENT_VERSION_760 && to.client < CLIENT_VERSION_760)
 		convert(getReplacementMapFrom760To740(), showdialog);

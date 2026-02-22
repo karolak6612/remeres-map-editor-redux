@@ -74,6 +74,8 @@ public:
 	void clear();
 
 	Brush* getBrush(std::string_view name) const;
+	const AutoBorder* getBorder(uint32_t id) const;
+	AutoBorder* getBorder(uint32_t id);
 
 	void addBrush(std::unique_ptr<Brush> brush);
 

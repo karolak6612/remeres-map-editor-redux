@@ -30,7 +30,7 @@ class Map;
 #include <unordered_set>
 #include <memory>
 
-enum {
+enum MapFlags : uint16_t {
 	TILESTATE_NONE = 0x0000,
 	TILESTATE_PROTECTIONZONE = 0x0001,
 	TILESTATE_DEPRECATED = 0x0002, // Reserved
@@ -38,7 +38,10 @@ enum {
 	TILESTATE_NOLOGOUT = 0x0008,
 	TILESTATE_PVPZONE = 0x0010,
 	TILESTATE_REFRESH = 0x0020,
-	// Internal
+};
+
+enum StatFlags : uint16_t {
+	TILESTATE_STAT_NONE = 0x0000,
 	TILESTATE_SELECTED = 0x0001,
 	TILESTATE_UNIQUE = 0x0002,
 	TILESTATE_BLOCKING = 0x0004,

@@ -10,8 +10,9 @@ PixelBufferObject::~PixelBufferObject() {
 
 PixelBufferObject::PixelBufferObject(PixelBufferObject&& other) noexcept
 	:
+	size_(other.size_),
 	current_index_(other.current_index_),
-	size_(other.size_), initialized_(other.initialized_) {
+	initialized_(other.initialized_) {
 	for (int i = 0; i < BUFFER_COUNT; ++i) {
 		buffers_[i] = std::move(other.buffers_[i]);
 		fences_[i] = std::move(other.fences_[i]);

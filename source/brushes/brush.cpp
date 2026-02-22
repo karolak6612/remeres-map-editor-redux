@@ -64,14 +64,7 @@ BrushRegistry::~BrushRegistry() {
 }
 
 void BrushRegistry::clear() {
-	for (auto& entry : brushes) {
-		entry.second.reset();
-	}
 	brushes.clear();
-
-	for (auto& entry : borders) {
-		entry.second.reset();
-	}
 	borders.clear();
 }
 
@@ -111,13 +104,13 @@ bool BrushRegistry::unserializeBrush(pugi::xml_node node, std::vector<std::strin
 		return false;
 	}
 
-	const std::string& brushName = attribute.as_string();
-	if (brushName == "all" || brushName == "none") {
-		warnings.push_back(std::format("Using reserved brushname \"{}\".", brushName));
+	const std::string initialName = attribute.as_string();
+	if (initialName == "all" || initialName == "none") {
+		warnings.push_back(std::format("Using reserved brushname \"{}\".", initialName));
 		return false;
 	}
 
-	Brush* brush = getBrush(brushName);
+	Brush* brush = getBrush(initialName);
 	std::unique_ptr<Brush> newBrush;
 
 	if (!brush) {
@@ -148,12 +141,12 @@ bool BrushRegistry::unserializeBrush(pugi::xml_node node, std::vector<std::strin
 		}
 
 		ASSERT(brush);
-		brush->setName(brushName);
+		brush->setName(initialName);
 	}
 
 	if (!node.first_child()) {
 		if (newBrush) {
-			brushes.emplace(brush->getName(), std::move(newBrush));
+			addBrush(std::move(newBrush));
 		}
 		return true;
 	}
@@ -166,24 +159,36 @@ bool BrushRegistry::unserializeBrush(pugi::xml_node node, std::vector<std::strin
 		warnings.insert(warnings.end(), subWarnings.begin(), subWarnings.end());
 	}
 
-	if (brush->getName() == "all" || brush->getName() == "none") {
-		warnings.push_back(std::format("Using reserved brushname '{}'.", brush->getName()));
-		// newBrush will delete automatically if set
+	const std::string finalName = brush->getName();
+	if (finalName == "all" || finalName == "none") {
+		warnings.push_back(std::format("Brush name '{}' changed to reserved name after loading.", finalName));
+		if (!newBrush) {
+			// If it was an existing brush, we should ideally revert the name change,
+			// but if the brush itself changed its internal state, we're in a bad spot.
+			// For now, we restore the brush to the registry if it was removed, or just warn.
+			brush->setName(initialName);
+		}
 		return false;
 	}
 
-	Brush* otherBrush = getBrush(brush->getName());
-	if (otherBrush) {
-		if (otherBrush != brush) {
-			warnings.push_back(std::string(wxstr(std::format("Duplicate brush name {}. Undefined behaviour may ensue.", brush->getName())).mb_str()));
-		} else {
-			// Don't insert
-			return true;
+	// If name changed, we need to handle the map key update
+	if (finalName != initialName) {
+		if (getBrush(finalName)) {
+			warnings.push_back(std::format("Brush name changed from '{}' to '{}', but '{}' already exists.", initialName, finalName, finalName));
+			brush->setName(initialName);
+		} else if (!newBrush) {
+			// Existing brush changed name - rename in registry
+			auto it = brushes.find(initialName);
+			if (it != brushes.end()) {
+				auto node = brushes.extract(it);
+				node.key() = finalName;
+				brushes.insert(std::move(node));
+			}
 		}
 	}
 
 	if (newBrush) {
-		brushes.emplace(brush->getName(), std::move(newBrush));
+		addBrush(std::move(newBrush));
 	}
 	return true;
 }
@@ -208,8 +213,32 @@ bool BrushRegistry::unserializeBorder(pugi::xml_node node, std::vector<std::stri
 }
 
 void BrushRegistry::addBrush(std::unique_ptr<Brush> brush) {
+	if (!brush) {
+		return;
+	}
 	const std::string name = brush->getName();
-	brushes.emplace(name, std::move(brush));
+	auto it = brushes.find(name);
+	if (it != brushes.end()) {
+		if (it->second == brush) {
+			return;
+		}
+		spdlog::warn("BrushRegistry::addBrush: Replacing existing brush '{}'", name);
+	}
+	brushes[name] = std::move(brush);
+}
+
+AutoBorder* BrushRegistry::getBorder(uint32_t id) {
+	if (auto it = borders.find(id); it != borders.end()) {
+		return it->second.get();
+	}
+	return nullptr;
+}
+
+const AutoBorder* BrushRegistry::getBorder(uint32_t id) const {
+	if (auto it = borders.find(id); it != borders.end()) {
+		return it->second.get();
+	}
+	return nullptr;
 }
 
 Brush* BrushRegistry::getBrush(std::string_view name) const {

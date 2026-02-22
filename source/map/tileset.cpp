@@ -26,7 +26,7 @@
 #include "game/items.h"
 #include "brushes/raw/raw_brush.h"
 
-Tileset::Tileset(Brushes& brushes, const std::string& name) :
+Tileset::Tileset(BrushRegistry& brushes, const std::string& name) :
 	name(name),
 	brushes(brushes) {
 	////

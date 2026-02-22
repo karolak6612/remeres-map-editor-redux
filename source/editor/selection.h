@@ -86,10 +86,6 @@ public:
 	// Ownership of the thread is transferred to join
 	void join(std::unique_ptr<SelectionThread> thread);
 
-	size_t size() {
-		flush();
-		return tiles.size();
-	}
 	size_t size() const {
 		flush();
 		return tiles.size();
@@ -99,22 +95,17 @@ public:
 		return tiles.empty();
 	}
 	void updateSelectionCount();
-	auto begin() {
+	auto begin() const {
 		flush();
 		return tiles.begin();
 	}
-	auto end() {
+	auto end() const {
 		flush();
 		return tiles.end();
 	}
 	const std::vector<Tile*>& getTiles() const {
 		flush();
 		return tiles;
-	}
-	Tile* getSelectedTile() {
-		flush();
-		ASSERT(tiles.size() == 1);
-		return *tiles.begin();
 	}
 	Tile* getSelectedTile() const {
 		flush();
@@ -135,10 +126,15 @@ private:
 	// We use std::vector here instead of std::set for performance reasons.
 	// Selections are typically small, and std::vector provides better cache locality
 	// and fewer allocations. We maintain sorted order to allow O(log n) lookups.
+	// These members are mutable to support a lazy-evaluation/deferred-flush strategy.
+	// pending_adds and pending_removes store changes during a 'deferred' session,
+	// which are merged into 'tiles' by the next call to flush().
+	// This improves performance during batch selections (e.g. drag-select).
 	mutable std::vector<Tile*> tiles;
 	mutable std::vector<Tile*> pending_adds;
 	mutable std::vector<Tile*> pending_removes;
 
+	// Bounds are cached lazily for performance as selection sets can be large.
 	mutable std::atomic<bool> bounds_dirty;
 	mutable Position cached_min;
 	mutable Position cached_max;

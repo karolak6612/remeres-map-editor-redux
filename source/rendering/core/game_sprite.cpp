@@ -110,8 +110,8 @@ uint32_t GameSprite::getDebugImageId(size_t index) const {
 }
 
 uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
-	auto idx = getIndex(width, height, 0, pattern_x, pattern_y, 0, frameIndex); // Assuming layer, pattern_z are 0 for this context
-	if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
+	auto idx = getIndex(width, height, 0, pattern_x, pattern_y, 0, frameIndex);
+	if (idx < spriteList.size() && spriteList[idx] && spriteList[idx]->isNormalImage()) {
 		return static_cast<const NormalImage*>(spriteList[idx])->id;
 	}
 	return 0;
@@ -682,14 +682,14 @@ const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
 }
 
 GameSprite::TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
+	atlas_region(nullptr),
+	texture_id(template_id_generator.fetch_add(1)),
 	parent(parent),
 	sprite_index(v),
 	lookHead(outfit.lookHead),
 	lookBody(outfit.lookBody),
 	lookLegs(outfit.lookLegs),
-	lookFeet(outfit.lookFeet),
-	atlas_region(nullptr),
-	texture_id(template_id_generator.fetch_add(1)) { // Generate unique ID for Atlas
+	lookFeet(outfit.lookFeet) { // Generate unique ID for Atlas
 }
 
 GameSprite::TemplateImage::~TemplateImage() {

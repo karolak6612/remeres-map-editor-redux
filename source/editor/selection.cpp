@@ -325,6 +325,7 @@ void Selection::flush() const {
 }
 
 void Selection::clear() {
+	flush();
 	if (tiles.empty()) {
 		return;
 	}
@@ -345,6 +346,7 @@ void Selection::clear() {
 }
 
 void Selection::start(SessionFlags flags) {
+	ASSERT(!busy);
 	if (!(flags & INTERNAL)) {
 		if (flags & SUBTHREAD) {
 			;
