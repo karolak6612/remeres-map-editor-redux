@@ -41,13 +41,13 @@ InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 		g_settings.getString(Config::PALETTE_RAW_STYLE)
 	);
 
-	sizer->Add(subsizer, wxSizerFlags().Border(wxALL, 6));
+	sizer->Add(subsizer, wxSizerFlags().Border(wxALL, FROM_DIP(this, 6)));
 
 	sizer->AddSpacer(10);
 
 	// Theme selection
 	wxBoxSizer* themeSizer = newd wxBoxSizer(wxHORIZONTAL);
-	themeSizer->Add(newd wxStaticText(this, wxID_ANY, wxString("Theme: ")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, 5));
+	themeSizer->Add(newd wxStaticText(this, wxID_ANY, wxString("Theme: ")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, FROM_DIP(this, 5)));
 
 	theme_choice = newd wxChoice(this, wxID_ANY);
 	theme_choice->Append(wxString("System Default"));
@@ -61,73 +61,73 @@ InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 		theme_choice->SetSelection(0);
 	}
 
-	themeSizer->Add(theme_choice, wxSizerFlags(0));
-	sizer->Add(themeSizer, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	themeSizer->Add(theme_choice, wxSizerFlags());
+	sizer->Add(themeSizer, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_terrain_tools_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large terrain palette tool && size icons");
 	large_terrain_tools_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_TERRAIN_TOOLBAR));
-	sizer->Add(large_terrain_tools_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_terrain_tools_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_collection_tools_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large collections palette tool && size icons");
 	large_collection_tools_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_COLLECTION_TOOLBAR));
-	sizer->Add(large_collection_tools_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_collection_tools_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_doodad_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large doodad size palette icons");
 	large_doodad_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_DOODAD_SIZEBAR));
-	sizer->Add(large_doodad_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_doodad_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_item_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large item size palette icons");
 	large_item_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_ITEM_SIZEBAR));
-	sizer->Add(large_item_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_item_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_house_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large house palette size icons");
 	large_house_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_HOUSE_SIZEBAR));
-	sizer->Add(large_house_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_house_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_raw_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large raw palette size icons");
 	large_raw_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_RAW_SIZEBAR));
-	sizer->Add(large_raw_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_raw_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_container_icons_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large container view icons");
 	large_container_icons_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
-	sizer->Add(large_container_icons_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_container_icons_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	large_pick_item_icons_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large item picker icons");
 	large_pick_item_icons_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_CHOOSE_ITEM_ICONS));
-	sizer->Add(large_pick_item_icons_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(large_pick_item_icons_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	sizer->AddSpacer(10);
 
 	switch_mousebtn_chkbox = newd wxCheckBox(this, wxID_ANY, "Switch mousebuttons");
 	switch_mousebtn_chkbox->SetValue(g_settings.getBoolean(Config::SWITCH_MOUSEBUTTONS));
 	switch_mousebtn_chkbox->SetToolTip("Switches the right and center mouse button.");
-	sizer->Add(switch_mousebtn_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(switch_mousebtn_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	doubleclick_properties_chkbox = newd wxCheckBox(this, wxID_ANY, "Double click for properties");
 	doubleclick_properties_chkbox->SetValue(g_settings.getBoolean(Config::DOUBLECLICK_PROPERTIES));
 	doubleclick_properties_chkbox->SetToolTip("Double clicking on a tile will bring up the properties menu for the top item.");
-	sizer->Add(doubleclick_properties_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(doubleclick_properties_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	inversed_scroll_chkbox = newd wxCheckBox(this, wxID_ANY, "Use inversed scroll");
 	inversed_scroll_chkbox->SetValue(g_settings.getFloat(Config::SCROLL_SPEED) < 0);
 	inversed_scroll_chkbox->SetToolTip("When this checkbox is checked, dragging the map using the center mouse button will be inversed (default RTS behaviour).");
-	sizer->Add(inversed_scroll_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(inversed_scroll_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	sizer->AddSpacer(10);
 
-	sizer->Add(newd wxStaticText(this, wxID_ANY, "Scroll speed: "), wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(newd wxStaticText(this, wxID_ANY, "Scroll speed: "), wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	auto true_scrollspeed = int(std::abs(g_settings.getFloat(Config::SCROLL_SPEED)) * 10);
 	scroll_speed_slider = newd wxSlider(this, wxID_ANY, true_scrollspeed, 1, std::max(true_scrollspeed, 100));
 	scroll_speed_slider->SetToolTip("This controls how fast the map will scroll when you hold down the center mouse button and move it around.");
-	sizer->Add(scroll_speed_slider, wxSizerFlags().Expand().Border(wxALL, 5));
+	sizer->Add(scroll_speed_slider, wxSizerFlags().Expand().Border(wxALL, FROM_DIP(this, 5)));
 
-	sizer->Add(newd wxStaticText(this, wxID_ANY, "Zoom speed: "), wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	sizer->Add(newd wxStaticText(this, wxID_ANY, "Zoom speed: "), wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
 
 	auto true_zoomspeed = int(g_settings.getFloat(Config::ZOOM_SPEED) * 10);
 	zoom_speed_slider = newd wxSlider(this, wxID_ANY, true_zoomspeed, 1, std::max(true_zoomspeed, 100));
 	zoom_speed_slider->SetToolTip("This controls how fast you will zoom when you scroll the center mouse button.");
-	sizer->Add(zoom_speed_slider, wxSizerFlags().Expand().Border(wxALL, 5));
+	sizer->Add(zoom_speed_slider, wxSizerFlags().Expand().Border(wxALL, FROM_DIP(this, 5)));
 
 	SetSizerAndFit(sizer);
 }

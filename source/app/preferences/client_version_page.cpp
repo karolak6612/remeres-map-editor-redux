@@ -27,7 +27,7 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	client_tree_ctrl->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	client_tree_ctrl->SetForegroundColour(Theme::Get(Theme::Role::Text));
 
-	left_inner_sizer->Add(client_tree_ctrl, wxSizerFlags(1).Expand().Border(wxBOTTOM, 5));
+	left_inner_sizer->Add(client_tree_ctrl, wxSizerFlags(1).Expand().Border(wxBOTTOM, FROM_DIP(this, 5)));
 
 	wxSizer* btn_outer_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_client_btn = newd wxButton(left_panel, wxID_ANY, "+ Add");
@@ -37,8 +37,8 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 
 	// Equal width for buttons
 	btn_outer_sizer->AddStretchSpacer(1);
-	btn_outer_sizer->Add(add_client_btn, wxSizerFlags(4).Expand().Border(wxRIGHT, 2));
-	btn_outer_sizer->Add(delete_client_btn, wxSizerFlags(4).Expand().Border(wxLEFT, 2));
+	btn_outer_sizer->Add(add_client_btn, wxSizerFlags(4).Expand().Border(wxRIGHT, FROM_DIP(this, 2)));
+	btn_outer_sizer->Add(delete_client_btn, wxSizerFlags(4).Expand().Border(wxLEFT, FROM_DIP(this, 2)));
 	btn_outer_sizer->AddStretchSpacer(1);
 
 	left_inner_sizer->Add(btn_outer_sizer, wxSizerFlags().Expand());
