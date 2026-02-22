@@ -1,0 +1,72 @@
+[1/242] Building CXX object CMakeFiles/rme.dir/source/brushes/brush_utility.cpp.o
+[2/242] Building CXX object CMakeFiles/rme.dir/source/brushes/door/door_brush.cpp.o
+[3/242] Building CXX object CMakeFiles/rme.dir/source/brushes/brush.cpp.o
+[4/242] Building CXX object CMakeFiles/rme.dir/source/app/managers/version_manager.cpp.o
+[5/242] Building CXX object CMakeFiles/rme.dir/source/brushes/wall/wall_brush.cpp.o
+[6/242] Building CXX object CMakeFiles/rme.dir/source/brushes/creature/creature_brush.cpp.o
+[7/242] Building CXX object CMakeFiles/rme.dir/source/editor/action.cpp.o
+[8/242] Building CXX object CMakeFiles/rme.dir/source/editor/copybuffer.cpp.o
+[9/242] Building CXX object CMakeFiles/rme.dir/source/editor/editor_factory.cpp.o
+[10/242] Building CXX object CMakeFiles/rme.dir/source/editor/editor.cpp.o
+[11/242] Building CXX object CMakeFiles/rme.dir/source/editor/operations/copy_operations.cpp.o
+[12/242] Building CXX object CMakeFiles/rme.dir/source/editor/operations/draw_operations.cpp.o
+[13/242] Building CXX object CMakeFiles/rme.dir/source/editor/operations/selection_operations.cpp.o
+[14/242] Building CXX object CMakeFiles/rme.dir/source/editor/operations/map_version_changer.cpp.o
+[15/242] Building CXX object CMakeFiles/rme.dir/source/editor/persistence/tileset_exporter.cpp.o
+[16/242] Building CXX object CMakeFiles/rme.dir/source/editor/persistence/editor_persistence.cpp.o
+/app/source/editor/persistence/editor_persistence.cpp: In static member function ‘static void EditorPersistence::importHouses(Editor&, Map&, const Position&, ImportType, const std::unordered_map<unsigned int, unsigned int>&, std::unordered_map<unsigned int, unsigned int>&)’:
+/app/source/editor/persistence/editor_persistence.cpp:322:24: warning: enumeration value ‘IMPORT_DONT’ not handled in switch [-Wswitch]
+  322 |                 switch (house_import_type) {
+      |                        ^
+[17/242] Building CXX object CMakeFiles/rme.dir/source/editor/editor_tabs.cpp.o
+[18/242] Building CXX object CMakeFiles/rme.dir/source/editor/selection.cpp.o
+[19/242] Building CXX object CMakeFiles/rme.dir/source/game/creatures.cpp.o
+[20/242] Building CXX object CMakeFiles/rme.dir/source/game/item.cpp.o
+[21/242] Building CXX object CMakeFiles/rme.dir/source/game/item_loaders.cpp.o
+[22/242] Building CXX object CMakeFiles/rme.dir/source/game/items.cpp.o
+[23/242] Building CXX object CMakeFiles/rme.dir/source/game/materials.cpp.o
+/app/source/game/materials.cpp: In member function ‘bool Materials::isInTileset(Item*, std::string) const’:
+/app/source/game/materials.cpp:376:27: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  376 |         return it.id != 0 && (isInTileset(it.brush, tilesetName) || isInTileset(it.doodad_brush, tilesetName) || isInTileset(it.raw_brush, tilesetName)) || isInTileset(it.collection_brush, tilesetName);
+      |                ~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[24/242] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_renderer.cpp.o
+[25/242] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_window.cpp.o
+[26/242] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_canvas.cpp.o
+In file included from /usr/include/c++/13/string:51,
+                 from /usr/include/c++/13/bits/locale_classes.h:40,
+                 from /usr/include/c++/13/bits/ios_base.h:41,
+                 from /usr/include/c++/13/streambuf:43,
+                 from /usr/include/c++/13/bits/streambuf_iterator.h:35,
+                 from /usr/include/c++/13/iterator:66,
+                 from /usr/include/boost/iterator/iterator_traits.hpp:10,
+                 from /usr/include/boost/range/iterator_range_core.hpp:26,
+                 from /usr/include/boost/range/iterator_range.hpp:13,
+                 from /usr/include/boost/range/adaptor/reversed.hpp:14,
+                 from /app/source/app/main.h:53,
+                 from /app/source/ingame_preview/ingame_preview_canvas.h:4,
+                 from /app/source/ingame_preview/ingame_preview_canvas.cpp:1:
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = unsigned int; _Up = unsigned int; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = unsigned int*; _ForwardIterator = unsigned int*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = unsigned int*; _ForwardIterator = unsigned int*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr void fmt::v9::basic_memory_buffer<T, SIZE, Allocator>::grow(size_t) [with T = unsigned int; long unsigned int SIZE = 32; Allocator = std::allocator<unsigned int>]’ at /usr/include/fmt/format.h:925:26,
+    inlined from ‘constexpr void fmt::v9::detail::buffer<T>::try_reserve(size_t) [with T = unsigned int]’ at /usr/include/fmt/core.h:928:39,
+    inlined from ‘constexpr void fmt::v9::detail::buffer<T>::try_resize(size_t) [with T = unsigned int]’ at /usr/include/fmt/core.h:919:16,
+    inlined from ‘constexpr void fmt::v9::basic_memory_buffer<T, SIZE, Allocator>::resize(size_t) [with T = unsigned int; long unsigned int SIZE = 32; Allocator = std::allocator<unsigned int>]’ at /usr/include/fmt/format.h:897:63,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::assign(UInt) [with UInt = long unsigned int; typename std::enable_if<(std::is_same<UInt, long unsigned int>::value || std::is_same<UInt, __int128 unsigned>::value), int>::type <anonymous> = 0]’ at /usr/include/fmt/format.h:2792:19,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::operator=(Int) [with Int = int]’ at /usr/include/fmt/format.h:2813:11,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::assign_pow10(int)’ at /usr/include/fmt/format.h:2893:11,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::assign_pow10(int)’ at /usr/include/fmt/format.h:2884:24,
+    inlined from ‘constexpr void fmt::v9::detail::format_dragon(basic_fp<__int128 unsigned>, unsigned int, int, buffer<char>&, int&)’ at /usr/include/fmt/format.h:3011:29:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memmove(void*, const void*, long unsigned int)’ forming offset 4 is out of the bounds [0, 4] [-Warray-bounds=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[27/242] Building CXX object CMakeFiles/rme.dir/source/ingame_preview/ingame_preview_manager.cpp.o
+[28/242] Building CXX object CMakeFiles/rme.dir/source/ui/dialogs/outfit_chooser_dialog.cpp.o
+[29/242] Building CXX object CMakeFiles/rme.dir/source/ui/dialogs/outfit_preview_panel.cpp.o
+[30/242] Building CXX object CMakeFiles/rme.dir/source/io/iomap.cpp.o
+[31/242] Building CXX object CMakeFiles/rme.dir/source/ui/dialogs/outfit_selection_grid.cpp.o
+ninja: build stopped: interrupted by user.

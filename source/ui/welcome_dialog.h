@@ -4,6 +4,7 @@
 #include <wx/wx.h>
 #include <wx/listctrl.h>
 #include <vector>
+#include <memory>
 
 // Forward declarations
 class wxListCtrl;
@@ -28,7 +29,7 @@ private:
 	wxPanel* CreateContentPanel(wxWindow* parent, const std::vector<wxString>& recentFiles);
 	wxPanel* CreateFooterPanel(wxWindow* parent, const wxString& versionText);
 
-	wxImageList* m_imageList = nullptr;
+	std::unique_ptr<wxImageList> m_imageList;
 	wxListCtrl* m_recentList = nullptr;
 	wxListCtrl* m_clientList = nullptr;
 };
