@@ -29,7 +29,7 @@ public:
 		Bind(wxEVT_MOUSE_CAPTURE_LOST, &ConvexButton::OnMouseCaptureLost, this);
 	}
 
-	void SetBitmap(const wxBitmap& bitmap) {
+	void SetBitmap(const wxBitmapBundle& bitmap) {
 		m_icon = bitmap;
 		InvalidateBestSize();
 		Refresh();
@@ -41,14 +41,14 @@ public:
 		wxSize text = dc.GetTextExtent(GetLabel());
 		int width = text.x + FromDIP(30);
 		if (m_icon.IsOk()) {
-			width += m_icon.GetWidth() + FromDIP(8);
+			width += m_icon.GetDefaultSize().GetWidth() + FromDIP(8);
 		}
-		int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(16);
+		int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetDefaultSize().GetHeight() : 0) + FromDIP(16);
 		return wxSize(std::max(width, FromDIP(100)), std::max(height, FromDIP(30)));
 	}
 
 private:
-	wxBitmap m_icon;
+	wxBitmapBundle m_icon;
 	bool m_hover = false;
 	bool m_pressed = false;
 
@@ -93,7 +93,7 @@ private:
 
 		int x = (sz.x - textSize.x) / 2;
 		if (m_icon.IsOk()) {
-			x -= (m_icon.GetWidth() + FromDIP(8)) / 2;
+			x -= (m_icon.GetDefaultSize().GetWidth() + FromDIP(8)) / 2;
 		}
 
 		int y = (sz.y - textSize.y) / 2;
@@ -103,12 +103,13 @@ private:
 		} // Shift content when pressed
 
 		if (m_icon.IsOk()) {
-			int iy = (sz.y - m_icon.GetHeight()) / 2;
+			wxBitmap bitmap = m_icon.GetBitmap(wxDefaultSize);
+			int iy = (sz.y - bitmap.GetHeight()) / 2;
 			if (m_pressed) {
 				iy += 1;
 			}
-			dc.DrawBitmap(m_icon, x, iy, true);
-			x += m_icon.GetWidth() + FromDIP(8);
+			dc.DrawBitmap(bitmap, x, iy, true);
+			x += bitmap.GetWidth() + FromDIP(8);
 		}
 
 		dc.DrawText(GetLabel(), x, y);
@@ -249,9 +250,9 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
-	mainSizer->Add(CreateHeaderPanel(this, titleText, rmeLogo), 0, wxEXPAND | wxALL, 2);
-	mainSizer->Add(CreateContentPanel(this, recentFiles), 1, wxEXPAND | wxALL, 2);
-	mainSizer->Add(CreateFooterPanel(this, versionText), 0, wxEXPAND | wxALL, 2);
+	mainSizer->Add(CreateHeaderPanel(this, titleText, rmeLogo), wxSizerFlags(0).Expand().Border(wxALL, 2));
+	mainSizer->Add(CreateContentPanel(this, recentFiles), wxSizerFlags(1).Expand().Border(wxALL, 2));
+	mainSizer->Add(CreateFooterPanel(this, versionText), wxSizerFlags(0).Expand().Border(wxALL, 2));
 
 	SetSizer(mainSizer);
 	Layout();
@@ -270,17 +271,17 @@ WelcomeDialog::~WelcomeDialog() {
 void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, std::string_view artId, const wxColour& valCol) {
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 
-	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(artId, wxSize(14, 14)));
-	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
+	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmapBundle(artId));
+	row->Add(icon, wxSizerFlags(0).Center().Border(wxRIGHT, 4));
 
 	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);
 	wxFont f = lbl->GetFont();
 	f.SetPointSize(8);
 	lbl->SetFont(f);
 	lbl->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	row->Add(lbl, 0, wxCENTER, 0);
+	row->Add(lbl, wxSizerFlags(0).Center());
 
-	sizer->Add(row, 0, wxTOP | wxLEFT | wxRIGHT, 2);
+	sizer->Add(row, wxSizerFlags(0).Border(wxTOP | wxLEFT | wxRIGHT, 2));
 
 	wxStaticText* val = new wxStaticText(parent, wxID_ANY, value);
 	wxFont vf = val->GetFont();
@@ -293,7 +294,7 @@ void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxStrin
 		val->SetForegroundColour(valCol);
 	}
 
-	sizer->Add(val, 0, wxBOTTOM | wxLEFT | wxRIGHT, 4);
+	sizer->Add(val, wxSizerFlags(0).Border(wxBOTTOM | wxLEFT | wxRIGHT, 4));
 }
 
 wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titleText, const wxBitmap& rmeLogo) {
@@ -302,8 +303,8 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 
 	// Icon Button - Align Left: 10px total
 	ConvexButton* iconBtn = new ConvexButton(headerPanel, wxID_ANY, "", wxDefaultPosition, wxSize(48, 48));
-	iconBtn->SetBitmap(rmeLogo.IsOk() ? rmeLogo : IMAGE_MANAGER.GetBitmap(ICON_QUESTION_CIRCLE, wxSize(32, 32))); // Fallback if logo invalid
-	headerSizer->Add(iconBtn, 0, wxALL | wxCENTER, 8);
+	iconBtn->SetBitmap(rmeLogo.IsOk() ? wxBitmapBundle(rmeLogo) : IMAGE_MANAGER.GetBitmapBundle(ICON_QUESTION_CIRCLE)); // Fallback if logo invalid
+	headerSizer->Add(iconBtn, wxSizerFlags(0).Center().Border(wxALL, 8));
 
 	wxBoxSizer* titleSizer = new wxBoxSizer(wxVERTICAL);
 	wxStaticText* title = new wxStaticText(headerPanel, wxID_ANY, titleText);
@@ -313,21 +314,21 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 	title->SetFont(titleFont);
 	title->SetForegroundColour(Theme::Get(Theme::Role::Text));
 	title->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	titleSizer->Add(title, 0, wxALL, 2);
+	titleSizer->Add(title, wxSizerFlags(0).Border(wxALL, 2));
 
 	wxStaticText* subtitle = new wxStaticText(headerPanel, wxID_ANY, "Welcome! Start a new project or continue where you left off.");
 	subtitle->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
 	subtitle->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	titleSizer->Add(subtitle, 0, wxALL, 2);
+	titleSizer->Add(subtitle, wxSizerFlags(0).Border(wxALL, 2));
 
-	headerSizer->Add(titleSizer, 1, wxALL | wxEXPAND, 10);
+	headerSizer->Add(titleSizer, wxSizerFlags(1).Expand().Border(wxALL, 10));
 
 	ConvexButton* prefBtn = new ConvexButton(headerPanel, wxID_PREFERENCES, "Preferences");
-	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, FromDIP(wxSize(24, 24))));
+	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_GEAR));
 	prefBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Right: 10px total
-	headerSizer->Add(prefBtn, 0, wxCENTER | wxALL, 8);
+	headerSizer->Add(prefBtn, wxSizerFlags(0).Center().Border(wxALL, 8));
 
 	headerPanel->SetSizer(headerSizer);
 	return headerPanel;
@@ -338,26 +339,26 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
-	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_POWER_OFF, FromDIP(wxSize(24, 24))));
+	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_POWER_OFF));
 	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Left: 10px total
-	footerSizer->Add(exitBtn, 0, wxALL, 8);
+	footerSizer->Add(exitBtn, wxSizerFlags(0).Border(wxALL, 8));
 
 	ConvexButton* newBtn = new ConvexButton(footerPanel, wxID_NEW, "New Map");
-	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(24, 24))));
+	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_NEW));
 	newBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	footerSizer->Add(newBtn, 0, wxALL, 8);
+	footerSizer->Add(newBtn, wxSizerFlags(0).Border(wxALL, 8));
 
 	footerSizer->AddStretchSpacer();
 	wxStaticText* version = new wxStaticText(footerPanel, wxID_ANY, versionText);
 	version->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
 	version->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	footerSizer->Add(version, 0, wxCENTER | wxALL, 5);
+	footerSizer->Add(version, wxSizerFlags(0).Center().Border(wxALL, 5));
 	footerSizer->AddStretchSpacer();
 
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
-	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(24, 24))));
+	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_OPEN));
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 		long item = -1;
 		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
@@ -371,7 +372,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	});
 
 	// Align Right: 10px total
-	footerSizer->Add(loadBtn, 0, wxALL, 8);
+	footerSizer->Add(loadBtn, wxSizerFlags(0).Border(wxALL, 8));
 
 	footerPanel->SetSizer(footerSizer);
 	return footerPanel;
@@ -386,18 +387,18 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	wxBoxSizer* col1 = new wxBoxSizer(wxVERTICAL);
 
 	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, wxSize(130, 50));
-	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(24, 24)));
+	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_NEW));
 	newMapBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	// Align "New Map" with Icon (8px from left edge of content panel)
-	col1->Add(newMapBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
+	col1->Add(newMapBtn, wxSizerFlags(0).Expand().Border(wxTOP | wxBOTTOM | wxRIGHT, 4));
 
 	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(130, 50));
-	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(24, 24)));
+	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_OPEN));
 	browseBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	col1->Add(browseBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
+	col1->Add(browseBtn, wxSizerFlags(0).Expand().Border(wxTOP | wxBOTTOM | wxRIGHT, 4));
 
 	// Add Column 1 to Sizer FIRST (Explicit LEFTmost placement)
-	contentSizer->Add(col1, 0, wxTOP | wxBOTTOM | wxRIGHT | wxLEFT, 8); // Add 8px left margin to whole column
+	contentSizer->Add(col1, wxSizerFlags(0).Border(wxTOP | wxBOTTOM | wxRIGHT | wxLEFT, 8)); // Add 8px left margin to whole column
 
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
@@ -428,28 +429,28 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	m_recentList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &WelcomeDialog::OnRecentFileActivated, this);
 	m_recentList->Bind(wxEVT_LIST_ITEM_SELECTED, &WelcomeDialog::OnRecentFileSelected, this);
 
-	col2->GetSizer()->Add(m_recentList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col2, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 2
+	col2->GetSizer()->Add(m_recentList, wxSizerFlags(1).Expand().Border(wxALL, 1));
+	contentSizer->Add(col2, wxSizerFlags(1).Expand().Border(wxTOP | wxBOTTOM | wxRIGHT, 5)); // Add Column 2
 
 	// Column 3: Selected Map Info
 	DarkCardPanel* col3 = new DarkCardPanel(contentPanel, "Selected Map Info");
 	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", ICON_FILE);
 	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", ICON_CHECK);
 	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", ICON_LIST);
-	col3->GetSizer()->Add(new wxStaticLine(col3), 0, wxEXPAND | wxALL, 4);
+	col3->GetSizer()->Add(new wxStaticLine(col3), wxSizerFlags(0).Expand().Border(wxALL, 4));
 	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", ICON_FILE);
 	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", ICON_FILE);
 	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", ICON_FILE_LINES);
-	contentSizer->Add(col3, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 3 (Center)
+	contentSizer->Add(col3, wxSizerFlags(1).Expand().Border(wxTOP | wxBOTTOM | wxRIGHT, 5)); // Add Column 3 (Center)
 
 	// Column 4: Client Info
 	DarkCardPanel* col4 = new DarkCardPanel(contentPanel, "Client Information");
 	AddInfoField(col4->GetSizer(), col4, "Client Name", "Placeholder", ICON_HARD_DRIVE);
 	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", ICON_CHECK);
 	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", ICON_FOLDER);
-	col4->GetSizer()->Add(new wxStaticLine(col4), 0, wxEXPAND | wxALL, 4);
+	col4->GetSizer()->Add(new wxStaticLine(col4), wxSizerFlags(0).Expand().Border(wxALL, 4));
 	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, wxColour(0, 200, 0));
-	contentSizer->Add(col4, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 4
+	contentSizer->Add(col4, wxSizerFlags(1).Expand().Border(wxTOP | wxBOTTOM | wxRIGHT, 5)); // Add Column 4
 
 	// Column 5: Available Clients
 	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
@@ -467,8 +468,8 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	long ph2 = m_clientList->InsertItem(1, "", 3);
 	m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
 
-	col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
+	col5->GetSizer()->Add(m_clientList, wxSizerFlags(1).Expand().Border(wxALL, 1));
+	contentSizer->Add(col5, wxSizerFlags(1).Expand().Border(wxTOP | wxBOTTOM | wxRIGHT, 5)); // Add Column 5 (Right)
 
 	contentPanel->SetSizer(contentSizer);
 	return contentPanel;
