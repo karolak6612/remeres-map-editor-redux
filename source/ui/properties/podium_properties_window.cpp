@@ -64,26 +64,26 @@ PodiumPropertiesWindow::PodiumPropertiesWindow(wxWindow* win_parent, const Map* 
 	show_outfit = newd wxCheckBox(this, wxID_ANY, "Show outfit");
 	show_outfit->SetValue(podium->hasShowOutfit());
 	show_outfit->SetToolTip("Display outfit on the podium.");
-	subsizer->Add(show_outfit, 0, wxLEFT | wxTOP, 5);
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, ""));
+	subsizer->Add(show_outfit, wxSizerFlags(0).Border(wxLEFT | wxTOP, 5));
+	subsizer->Add(0, 0);
 
 	show_mount = newd wxCheckBox(this, wxID_ANY, "Show mount");
 	show_mount->SetValue(podium->hasShowMount());
 	show_mount->SetToolTip("Display mount on the podium.");
-	subsizer->Add(show_mount, 0, wxLEFT | wxTOP, 5);
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, ""));
+	subsizer->Add(show_mount, wxSizerFlags(0).Border(wxLEFT | wxTOP, 5));
+	subsizer->Add(0, 0);
 
 	show_platform = newd wxCheckBox(this, wxID_ANY, "Show platform");
 	show_platform->SetValue(podium->hasShowPlatform());
 	show_platform->SetToolTip("Display the podium platform.");
-	subsizer->Add(show_platform, 0, wxLEFT | wxTOP, 5);
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, ""));
+	subsizer->Add(show_platform, wxSizerFlags(0).Border(wxLEFT | wxTOP, 5));
+	subsizer->Add(0, 0);
 
 	wxFlexGridSizer* outfitContainer = newd wxFlexGridSizer(2, 10, 10);
 	const Outfit& outfit = podium->getOutfit();
 
 	outfitContainer->Add(newd wxStaticText(this, wxID_ANY, "Outfit"));
-	outfitContainer->Add(newd wxStaticText(this, wxID_ANY, ""));
+	outfitContainer->Add(0, 0);
 
 	outfitContainer->Add(newd wxStaticText(this, wxID_ANY, "LookType"));
 	look_type = newd wxSpinCtrl(this, wxID_ANY, i2ws(outfit.lookType), wxDefaultPosition, FromDIP(wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, std::numeric_limits<uint16_t>::max(), outfit.lookType);
@@ -111,7 +111,7 @@ PodiumPropertiesWindow::PodiumPropertiesWindow(wxWindow* win_parent, const Map* 
 
 	wxFlexGridSizer* mountContainer = newd wxFlexGridSizer(2, 10, 10);
 	mountContainer->Add(newd wxStaticText(this, wxID_ANY, "Mount"));
-	mountContainer->Add(newd wxStaticText(this, wxID_ANY, ""));
+	mountContainer->Add(0, 0);
 
 	mountContainer->Add(newd wxStaticText(this, wxID_ANY, "LookMount"));
 	look_mount = newd wxSpinCtrl(this, wxID_ANY, i2ws(outfit.lookMount), wxDefaultPosition, FromDIP(wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, std::numeric_limits<uint16_t>::max(), outfit.lookMount);
@@ -143,19 +143,17 @@ PodiumPropertiesWindow::PodiumPropertiesWindow(wxWindow* win_parent, const Map* 
 
 	wxSizer* std_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	std_sizer->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	std_sizer->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(std_sizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_TROPHY, wxSize(32, 32)));
-	SetIcon(icon);
+	SetIcon(wxIcon(IMAGE_MANAGER.GetBitmapBundle(ICON_TROPHY)));
 }
 
 PodiumPropertiesWindow::~PodiumPropertiesWindow() {
