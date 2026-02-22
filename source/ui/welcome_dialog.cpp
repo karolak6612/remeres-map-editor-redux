@@ -238,14 +238,14 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 	SetForegroundColour(Theme::Get(Theme::Role::Text));
 
 	// Image List for Icons
-	m_imageList = new wxImageList(16, 16);
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(16, 16)));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(16, 16)));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_HARD_DRIVE, wxSize(16, 16)));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FOLDER, wxSize(16, 16)));
+	m_imageList = std::make_unique<wxImageList>(FromDIP(16), FromDIP(16));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(16, 16))));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(16, 16))));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, FromDIP(wxSize(16, 16))));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_HARD_DRIVE, FromDIP(wxSize(16, 16))));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, FromDIP(wxSize(16, 16))));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
+	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FOLDER, FromDIP(wxSize(16, 16))));
 
 	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
 
@@ -265,13 +265,12 @@ WelcomeDialog::~WelcomeDialog() {
 	if (m_clientList) {
 		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
 	}
-	delete m_imageList;
 }
 
-void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
+void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, std::string_view artId, const wxColour& valCol) {
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 
-	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(artId.ToStdString(), wxSize(14, 14)));
+	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(artId, wxSize(14, 14)));
 	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
 
 	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);
@@ -403,10 +402,11 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
 	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	m_recentList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
-	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
-	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, 250); // Wider
-	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, 150);
+	// SetImageList — ownership retained by m_imageList (do not replace with AssignImageList)
+	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
+	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
+	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
+	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, FromDIP(150));
 
 	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
@@ -454,9 +454,10 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 5: Available Clients
 	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
 	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	m_clientList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
-	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
-	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, 150);
+	// SetImageList — ownership retained by m_imageList (do not replace with AssignImageList)
+	m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
+	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
+	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, FromDIP(150));
 
 	m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));

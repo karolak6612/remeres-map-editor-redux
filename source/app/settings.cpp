@@ -51,8 +51,8 @@ bool Settings::getBoolean(uint32_t key) const {
 	}
 
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_INT) {
-		return dv.intval != 0;
+	if (auto val = std::get_if<int>(&dv.val)) {
+		return *val != 0;
 	}
 	return false;
 }
@@ -62,8 +62,8 @@ int Settings::getInteger(uint32_t key) const {
 		return 0;
 	}
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_INT) {
-		return dv.intval;
+	if (auto val = std::get_if<int>(&dv.val)) {
+		return *val;
 	}
 	return 0;
 }
@@ -73,8 +73,8 @@ float Settings::getFloat(uint32_t key) const {
 		return 0.0;
 	}
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_FLOAT) {
-		return dv.floatval;
+	if (auto val = std::get_if<float>(&dv.val)) {
+		return *val;
 	}
 	return 0.0;
 }
@@ -84,8 +84,8 @@ std::string Settings::getString(uint32_t key) const {
 		return "";
 	}
 	const DynamicValue& dv = store[key];
-	if (dv.type == TYPE_STR && dv.strval != nullptr) {
-		return *dv.strval;
+	if (auto val = std::get_if<std::string>(&dv.val)) {
+		return *val;
 	}
 	return "";
 }
@@ -95,11 +95,8 @@ void Settings::setInteger(uint32_t key, int newval) {
 		return;
 	}
 	DynamicValue& dv = store[key];
-	if (dv.type == TYPE_INT) {
-		dv.intval = newval;
-	} else if (dv.type == TYPE_NONE) {
-		dv.type = TYPE_INT;
-		dv.intval = newval;
+	if (std::holds_alternative<int>(dv.val) || std::holds_alternative<std::monostate>(dv.val)) {
+		dv.val = newval;
 	}
 }
 
@@ -108,11 +105,8 @@ void Settings::setFloat(uint32_t key, float newval) {
 		return;
 	}
 	DynamicValue& dv = store[key];
-	if (dv.type == TYPE_FLOAT) {
-		dv.floatval = newval;
-	} else if (dv.type == TYPE_NONE) {
-		dv.type = TYPE_FLOAT;
-		dv.floatval = newval;
+	if (std::holds_alternative<float>(dv.val) || std::holds_alternative<std::monostate>(dv.val)) {
+		dv.val = newval;
 	}
 }
 
@@ -121,27 +115,25 @@ void Settings::setString(uint32_t key, std::string newval) {
 		return;
 	}
 	DynamicValue& dv = store[key];
-	if (dv.type == TYPE_STR) {
-		delete dv.strval;
-		dv.strval = newd std::string(newval);
-	} else if (dv.type == TYPE_NONE) {
-		dv.type = TYPE_STR;
-		dv.strval = newd std::string(newval);
+	if (std::holds_alternative<std::string>(dv.val) || std::holds_alternative<std::monostate>(dv.val)) {
+		dv.val = std::move(newval);
 	}
 }
 
 std::string Settings::DynamicValue::str() {
-	switch (type) {
-		case TYPE_FLOAT:
-			return f2s(floatval);
-		case TYPE_STR:
-			return std::string(*strval);
-		case TYPE_INT:
-			return i2s(intval);
-		default:
-		case TYPE_NONE:
+	return std::visit([](auto&& arg) -> std::string {
+		using T = std::decay_t<decltype(arg)>;
+		if constexpr (std::is_same_v<T, std::monostate>) {
 			return "";
-	}
+		} else if constexpr (std::is_same_v<T, int>) {
+			return i2s(arg);
+		} else if constexpr (std::is_same_v<T, float>) {
+			return f2s(arg);
+		} else {
+			return arg;
+		}
+	},
+					  val);
 }
 
 static std::string toLower(std::string s) {
@@ -270,7 +262,7 @@ void Settings::IO(IOMode mode) {
 	Bool(ALWAYS_SHOW_ZONES, true);
 	Bool(EXT_HOUSE_SHADER, true);
 	Bool(DRAW_LOCKED_DOOR, false);
-	Bool(SHOW_AS_MINIMAP, true);
+	Bool(SHOW_AS_MINIMAP, false);
 
 	section("General");
 	Bool(GOTO_WEBSITE_ON_BOOT, false);

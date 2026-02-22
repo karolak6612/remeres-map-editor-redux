@@ -74,9 +74,21 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 				Tile* desttile = drawer->editor.map.getTile(pos);
 				for (const auto& item : toRender) {
 					if (desttile) {
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, desttile, item, options, true, 160, 160, 160, 160);
+						BlitItemParams params(desttile, item, options);
+						params.ephemeral = true;
+						params.red = 160;
+						params.green = 160;
+						params.blue = 160;
+						params.alpha = 160;
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, true, 160, 160, 160, 160);
+						BlitItemParams params(pos, item, options);
+						params.ephemeral = true;
+						params.red = 160;
+						params.green = 160;
+						params.blue = 160;
+						params.alpha = 160;
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
 				}
 
@@ -93,4 +105,3 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 		}
 	}
 }
-

@@ -50,9 +50,9 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	update_timer(this),
 	context(nullptr),
 	nvg(nullptr, NVGDeleter()) {
-	spdlog::info("MinimapWindow::MinimapWindow - Creating context");
-	context = std::make_unique<wxGLContext>(this);
-	if (!context->IsOK()) {
+	spdlog::info("MinimapWindow::MinimapWindow - Obtaining shared context");
+	context = g_gui.GetGLContext(this);
+	if (!context || !context->IsOK()) {
 		spdlog::error("MinimapWindow::MinimapWindow - Context creation failed");
 	}
 	SetToolTip("Click to move camera");
@@ -141,31 +141,6 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 
 	// Mock dc passed to Draw, unused by new GL implementation
 	drawer->Draw(dc, GetSize(), editor, canvas);
-
-	// Glass Overlay
-	NVGcontext* vg = nvg.get();
-	if (vg) {
-		glClear(GL_STENCIL_BUFFER_BIT);
-		int w, h;
-		GetClientSize(&w, &h);
-		nvgBeginFrame(vg, w, h, GetContentScaleFactor());
-
-		// Subtle glass border
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 1.5f, 1.5f, w - 3.0f, h - 3.0f, 4.0f);
-		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 60));
-		nvgStrokeWidth(vg, 2.0f);
-		nvgStroke(vg);
-
-		// Inner glow
-		NVGpaint glow = nvgBoxGradient(vg, 0, 0, w, h, 4.0f, 20.0f, nvgRGBA(255, 255, 255, 10), nvgRGBA(0, 0, 0, 40));
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, 0, 0, w, h, 4.0f);
-		nvgFillPaint(vg, glow);
-		nvgFill(vg);
-
-		nvgEndFrame(vg);
-	}
 
 	SwapBuffers();
 }
