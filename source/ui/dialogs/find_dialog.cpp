@@ -39,11 +39,12 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	wxDialog(g_gui.root, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX),
 	idle_input_timer(this),
 	result_brush(nullptr),
-	result_id(0) {
+	result_id(0),
+	baseTitle(title) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	search_field = newd KeyForwardingTextCtrl(this, JUMP_DIALOG_TEXT, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-	search_field->SetHint("Type to search...");
+	search_field->SetHint("Type to search items/brushes...");
 	search_field->SetToolTip("Type at least 2 characters to search for brushes or items.");
 	search_field->SetFocus();
 	sizer->Add(search_field, 0, wxEXPAND);
@@ -302,6 +303,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 		}
 	}
 	item_list->CommitUpdates();
+	SetTitle(wxString::Format("%s (%zu matches)", baseTitle, item_list->GetResultCount()));
 }
 
 // ============================================================================

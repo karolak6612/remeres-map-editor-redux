@@ -30,7 +30,8 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	input_timer(this),
 	result_brush(nullptr),
 	result_id(0),
-	only_pickupables(onlyPickupables) {
+	only_pickupables(onlyPickupables),
+	baseTitle(title) {
 	this->SetSizeHints(wxDefaultSize, wxDefaultSize);
 
 	wxBoxSizer* box_sizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -415,6 +416,7 @@ void FindItemDialog::RefreshContentsInternal() {
 	}
 
 	items_list->Refresh();
+	SetTitle(wxString::Format("%s (%zu matches)", baseTitle, items_list->GetResultCount()));
 }
 
 void FindItemDialog::OnOptionChange(wxCommandEvent& WXUNUSED(event)) {

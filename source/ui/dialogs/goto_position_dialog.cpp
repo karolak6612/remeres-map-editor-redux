@@ -9,6 +9,7 @@
 #include "ui/positionctrl.h"
 #include "ui/gui.h"
 #include "util/image_manager.h"
+#include "ui/theme.h"
 
 // ============================================================================
 // Go To Position Dialog
@@ -24,6 +25,19 @@ GotoPositionDialog::GotoPositionDialog(wxWindow* parent, Editor& editor) :
 
 	posctrl = newd PositionCtrl(this, "Destination", map.getWidth() / 2, map.getHeight() / 2, GROUND_LAYER, map.getWidth(), map.getHeight());
 	sizer->Add(posctrl, 0, wxTOP | wxLEFT | wxRIGHT, 20);
+
+	wxStaticText* pasteHint = newd wxStaticText(this, wxID_ANY, "Tip: You can paste coordinates (x,y,z)");
+	pasteHint->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	sizer->Add(pasteHint, 0, wxALIGN_CENTER | wxTOP, 5);
+
+	MapTab* currentTab = g_gui.GetCurrentMapTab();
+	if (currentTab) {
+		Position currentPos = currentTab->GetScreenCenterPosition();
+		wxString currentPosStr = wxString::Format("Current Position: %d, %d, %d", currentPos.x, currentPos.y, currentPos.z);
+		wxStaticText* currentPosLbl = newd wxStaticText(this, wxID_ANY, currentPosStr);
+		currentPosLbl->SetForegroundColour(Theme::Get(Theme::Role::Text));
+		sizer->Add(currentPosLbl, 0, wxALIGN_CENTER | wxTOP, 10);
+	}
 
 	// OK/Cancel buttons
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);

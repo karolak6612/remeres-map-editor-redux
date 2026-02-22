@@ -111,6 +111,7 @@ private:
 	Brush* result_brush;
 	uint16_t result_id;
 	bool only_pickupables;
+	wxString baseTitle;
 };
 
 #endif // RME_FIND_ITEM_WINDOW_H_

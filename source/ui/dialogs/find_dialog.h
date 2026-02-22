@@ -29,6 +29,9 @@ public:
 	void AddBrush(Brush*);
 	void CommitUpdates();
 	Brush* GetSelectedBrush();
+	size_t GetResultCount() const {
+		return brushlist.size();
+	}
 
 	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;
 	int OnMeasureItem(size_t index) const override;
@@ -69,6 +72,7 @@ protected:
 	wxTimer idle_input_timer;
 	const Brush* result_brush;
 	int result_id;
+	wxString baseTitle;
 };
 
 class FindBrushDialog : public FindDialog {

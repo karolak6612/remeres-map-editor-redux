@@ -42,10 +42,11 @@ namespace {
 
 	class ColorSwatch : public wxWindow {
 	public:
-		ColorSwatch(wxWindow* parent, int id, uint32_t color) :
+		ColorSwatch(wxWindow* parent, int id, uint32_t color, int colorIndex) :
 			wxWindow(parent, id, wxDefaultPosition, wxSize(16, 16), wxBORDER_NONE),
 			color(color), selected(false) {
 			SetBackgroundStyle(wxBG_STYLE_PAINT);
+			SetToolTip(wxString::Format("Color %d", colorIndex));
 			Bind(wxEVT_PAINT, &ColorSwatch::OnPaint, this);
 			Bind(wxEVT_LEFT_DOWN, &ColorSwatch::OnMouse, this);
 		}
@@ -181,7 +182,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	wxFlexGridSizer* palette_sizer = new wxFlexGridSizer(COLOR_ROWS, COLOR_COLUMNS, 1, 1);
 	for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
 		uint32_t color = TemplateOutfitLookupTable[i];
-		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color);
+		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color, i);
 		palette_sizer->Add(swatch, 0);
 		color_buttons.push_back(swatch);
 
@@ -194,10 +195,10 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	col1_sizer->Add(CreateHeader("Configuration"), 0, wxLEFT | wxTOP, 8);
 	wxWrapSizer* check_sizer = new wxWrapSizer(wxHORIZONTAL);
 	addon1 = new wxCheckBox(this, ID_ADDON1, "Addon 1");
-	addon1->SetToolTip("Toggle Addon 1");
+	addon1->SetToolTip("Toggle Addon 1 (Accessory)");
 	addon1->SetValue((current_outfit.lookAddon & 1) != 0);
 	addon2 = new wxCheckBox(this, ID_ADDON2, "Addon 2");
-	addon2->SetToolTip("Toggle Addon 2");
+	addon2->SetToolTip("Toggle Addon 2 (Accessory)");
 	addon2->SetValue((current_outfit.lookAddon & 2) != 0);
 
 	check_sizer->Add(addon1, 0, wxALL | wxALIGN_CENTER_VERTICAL, 2);
@@ -230,6 +231,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 
 	outfit_search = new wxSearchCtrl(this, ID_SEARCH, wxEmptyString, wxDefaultPosition, wxSize(180, -1));
 	outfit_search->SetDescriptiveText("Search...");
+	outfit_search->SetToolTip("Search by outfit name");
 	outfits_header_row->Add(outfit_search, 0, wxALIGN_BOTTOM | wxRIGHT, 4);
 
 	colorable_only_check = new wxCheckBox(this, wxID_ANY, "Template Only");
