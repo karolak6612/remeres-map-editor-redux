@@ -55,7 +55,12 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 	#endif
 	wxURL* url = newd wxURL(address);
 
-	std::thread([receiver, url]() {
+	m_worker = std::jthread([receiver, url](std::stop_token stop_token) {
+		if (stop_token.stop_requested()) {
+			delete url;
+			return;
+		}
+
 		wxInputStream* input = url->GetInputStream();
 		if (!input) {
 			delete input;
@@ -64,12 +69,16 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 		}
 
 		std::string data;
-		while (!input->Eof()) {
+		while (!input->Eof() && !stop_token.stop_requested()) {
 			data += input->GetC();
 		}
 
 		delete input;
 		delete url;
+
+		if (stop_token.stop_requested()) {
+			return;
+		}
 
 		// We need to be careful with event posting from a detached thread if the receiver might be destroyed.
 		// However, we are replicating existing logic here where UpdateConnectionThread was also detached.
@@ -81,7 +90,7 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 				receiver->AddPendingEvent(event);
 			}
 		});
-	}).detach();
+	});
 }
 
 #endif

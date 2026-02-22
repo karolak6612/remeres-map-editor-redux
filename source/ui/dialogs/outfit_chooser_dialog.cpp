@@ -178,18 +178,18 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	part_sizer->Add(feet_btn, 1, wxEXPAND);
 	col1_sizer->Add(part_sizer, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, 8);
 
-	wxFlexGridSizer* palette_sizer = new wxFlexGridSizer(COLOR_ROWS, COLOR_COLUMNS, 1, 1);
+	wxWrapSizer* palette_sizer = new wxWrapSizer(wxHORIZONTAL);
 	for (size_t i = 0; i < TemplateOutfitLookupTableSize; ++i) {
 		uint32_t color = TemplateOutfitLookupTable[i];
 		ColorSwatch* swatch = new ColorSwatch(this, ID_COLOR_START + static_cast<int>(i), color);
-		palette_sizer->Add(swatch, 0);
+		palette_sizer->Add(swatch, 0, wxRIGHT | wxBOTTOM, 1);
 		color_buttons.push_back(swatch);
 
 		swatch->Bind(wxEVT_BUTTON, [this, i](wxCommandEvent&) {
 			SelectColor(i);
 		});
 	}
-	col1_sizer->Add(palette_sizer, 0, wxALL, 8);
+	col1_sizer->Add(palette_sizer, 0, wxEXPAND | wxALL, 8);
 
 	col1_sizer->Add(CreateHeader("Configuration"), 0, wxLEFT | wxTOP, 8);
 	wxWrapSizer* check_sizer = new wxWrapSizer(wxHORIZONTAL);
