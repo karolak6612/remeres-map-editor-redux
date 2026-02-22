@@ -98,7 +98,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			return;
 		}
 
-		TileLocation* location = floor->locs;
+		TileLocation* location = floor->locs.data();
 		int draw_x_base = node_draw_x;
 		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
 			int draw_y = node_draw_y;
@@ -141,4 +141,3 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		});
 	}
 }
-

@@ -265,6 +265,11 @@ public:
 
 	bool isSimpleAndLoaded() const;
 
+	bool is_simple = false;
+	void updateSimpleStatus() {
+		is_simple = (numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1 && !spriteList.empty());
+	}
+
 protected:
 	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites
 	mutable const AtlasRegion* cached_default_region = nullptr;

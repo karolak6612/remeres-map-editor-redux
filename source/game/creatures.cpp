@@ -61,6 +61,18 @@ CreatureType::~CreatureType() {
 	////
 }
 
+void CreatureType::preserve_assign_creature_fields(CreatureType* dest, const CreatureType& src) {
+	CreatureBrush* oldBrush = dest->brush;
+	bool oldInTileset = dest->in_other_tileset;
+	bool oldStandard = dest->standard;
+
+	*dest = src;
+
+	dest->brush = oldBrush;
+	dest->in_other_tileset = oldInTileset;
+	dest->standard = oldStandard;
+}
+
 CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::string>& warnings) {
 	pugi::xml_attribute attribute;
 	if (!(attribute = node.attribute("type"))) {
@@ -375,7 +387,7 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			if (creatureType) {
 				CreatureType* current = (*this)[creatureType->name];
 				if (current) {
-					*current = *creatureType;
+					CreatureType::preserve_assign_creature_fields(current, *creatureType);
 					delete creatureType;
 				} else {
 					creature_map[as_lower_str(creatureType->name)] = creatureType;
@@ -390,7 +402,7 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			CreatureType* current = (*this)[creatureType->name];
 
 			if (current) {
-				*current = *creatureType;
+				CreatureType::preserve_assign_creature_fields(current, *creatureType);
 				delete creatureType;
 			} else {
 				creature_map[as_lower_str(creatureType->name)] = creatureType;

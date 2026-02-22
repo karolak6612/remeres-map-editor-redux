@@ -24,6 +24,8 @@
 #include <format>
 #include <fstream>
 #include <vector>
+#include <filesystem>
+#include <string_view>
 #include <spdlog/spdlog.h>
 
 #include "app/settings.h"
@@ -140,13 +142,15 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 
 bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	spdlog::debug("Loading OTBM map from disk: {}", filename.GetFullPath().ToStdString());
-	std::ifstream file(nstr(filename.GetFullPath()), std::ios::binary | std::ios::ate);
-	if (!file.is_open()) {
-		spdlog::error("Couldn't open file for reading: {}", filename.GetFullPath().ToStdString());
+	std::filesystem::path path(nstr(filename.GetFullPath()));
+
+	std::error_code ec;
+	const auto size = std::filesystem::file_size(path, ec);
+	if (ec) {
+		spdlog::error("Couldn't get file size: {} ({})", path.string(), ec.message());
 		return false;
 	}
 
-	const std::streamsize size = file.tellg();
 	if (size < 4) {
 		spdlog::error("File is too short to be an OTBM file.");
 		return false;
@@ -154,7 +158,6 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 
 	// Memory optimization: larger than 512MB, stream from disk
 	if (size > 512 * 1024 * 1024) {
-		file.close();
 		DiskNodeFileReadHandle f(nstr(filename.GetFullPath()), StringVector(1, "OTBM"));
 		if (!f.isOk()) {
 			spdlog::error("{}", f.getErrorMessage());
@@ -164,14 +167,20 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 			return false;
 		}
 	} else {
-		file.seekg(0, std::ios::beg);
-		std::vector<uint8_t> buffer(size);
-		if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+		std::ifstream file(path, std::ios::binary);
+		if (!file.is_open()) {
+			spdlog::error("Couldn't open file for reading: {}", filename.GetFullPath().ToStdString());
+			return false;
+		}
+
+		std::vector<uint8_t> buffer(static_cast<size_t>(size));
+		if (!file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(size))) {
 			spdlog::error("Failed to read file.");
 			return false;
 		}
 
-		if (memcmp(buffer.data(), "OTBM", 4) != 0 && memcmp(buffer.data(), "\0\0\0\0", 4) != 0) {
+		std::string_view magic(reinterpret_cast<const char*>(buffer.data()), 4);
+		if (magic != "OTBM" && magic != std::string_view("\0\0\0\0", 4)) {
 			spdlog::error("File magic number not recognized");
 			return false;
 		}
@@ -445,10 +454,11 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 			f.addU8(OTBM_ATTR_DESCRIPTION);
 			f.addString(map.description);
 
-			auto addExtFile = [&](uint8_t attr, const std::string& path) {
-				FileName tmp(wxstr(path));
+			auto addExtFile = [&](uint8_t attr, const std::string& path_str) {
+				std::filesystem::path path(path_str);
+				auto fname = path.filename().string();
 				f.addU8(attr);
-				f.addString(nstr(tmp.GetFullName()));
+				f.addString(fname.empty() ? path_str : fname);
 			};
 
 			addExtFile(OTBM_ATTR_EXT_SPAWN_FILE, map.spawnfile);

@@ -110,6 +110,9 @@ public:
 	MapNode* getLeaf(int x, int y) {
 		return grid.getLeaf(x, y);
 	}
+	const MapNode* getLeaf(int x, int y) const {
+		return grid.getLeaf(x, y);
+	}
 	MapNode* createLeaf(int x, int y) {
 		return grid.getLeafForce(x, y);
 	}

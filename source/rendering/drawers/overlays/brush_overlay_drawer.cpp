@@ -151,23 +151,23 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 			if (g_gui.gfx.ensureAtlasManager()) {
 				const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
 				// Top
-				sprite_batch.drawRect((float)last_click_start_sx, (float)last_click_start_sy, (float)(last_click_end_sx - last_click_start_sx), (float)TILE_SIZE, brushColor, atlas);
+				sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), static_cast<float>(last_click_end_sx - last_click_start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
 
 				// Bottom
 				if (delta_y > TILE_SIZE) {
-					sprite_batch.drawRect((float)last_click_start_sx, (float)(last_click_end_sy - TILE_SIZE), (float)(last_click_end_sx - last_click_start_sx), (float)TILE_SIZE, brushColor, atlas);
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_end_sy - TILE_SIZE), static_cast<float>(last_click_end_sx - last_click_start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
 				}
 
 				// Right
 				if (delta_x > TILE_SIZE && delta_y > TILE_SIZE) {
 					float h = (last_click_end_sy - TILE_SIZE) - (last_click_start_sy + TILE_SIZE);
-					sprite_batch.drawRect((float)(last_click_end_sx - TILE_SIZE), (float)(last_click_start_sy + TILE_SIZE), (float)TILE_SIZE, h, brushColor, atlas);
+					sprite_batch.drawRect(static_cast<float>(last_click_end_sx - TILE_SIZE), static_cast<float>(last_click_start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
 				}
 
 				// Left
 				if (delta_y > TILE_SIZE) {
 					float h = (last_click_end_sy - TILE_SIZE) - (last_click_start_sy + TILE_SIZE);
-					sprite_batch.drawRect((float)last_click_start_sx, (float)(last_click_start_sy + TILE_SIZE), (float)TILE_SIZE, h, brushColor, atlas);
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
 				}
 			}
 		} else {
@@ -205,7 +205,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 							if (brush->is<OptionalBorderBrush>()) {
 								if (g_gui.gfx.ensureAtlasManager()) {
 									const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-									sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE, (float)TILE_SIZE, get_check_color(brush, editor, Position(x, y, view.floor)), atlas);
+									sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(x, y, view.floor)), atlas);
 								}
 							} else {
 								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
@@ -233,15 +233,15 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 							float thickness = 1.0f; // Thin border
 
 							// Top
-							sprite_batch.drawRect((float)last_click_start_sx, (float)last_click_start_sy, w, thickness, brushColor, atlas);
+							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), w, thickness, brushColor, atlas);
 							// Bottom
-							sprite_batch.drawRect((float)last_click_start_sx, (float)(last_click_start_sy + h - thickness), w, thickness, brushColor, atlas);
+							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + h - thickness), w, thickness, brushColor, atlas);
 							// Left
-							sprite_batch.drawRect((float)last_click_start_sx, (float)(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
+							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
 							// Right
-							sprite_batch.drawRect((float)(last_click_start_sx + w - thickness), (float)(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
+							sprite_batch.drawRect(static_cast<float>(last_click_start_sx + w - thickness), static_cast<float>(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
 						} else {
-							sprite_batch.drawRect((float)last_click_start_sx, (float)last_click_start_sy, w, h, brushColor, *g_gui.gfx.getAtlasManager());
+							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), w, h, brushColor, *g_gui.gfx.getAtlasManager());
 						}
 					}
 				}
@@ -292,7 +292,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
 							} else {
 								if (g_gui.gfx.ensureAtlasManager()) {
-									sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE, (float)TILE_SIZE, brushColor, *g_gui.gfx.getAtlasManager());
+									sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), brushColor, *g_gui.gfx.getAtlasManager());
 								}
 							}
 						}
@@ -320,23 +320,23 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 			if (g_gui.gfx.ensureAtlasManager()) {
 				const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
 				// Top
-				sprite_batch.drawRect((float)start_sx, (float)start_sy, (float)(end_sx - start_sx), (float)TILE_SIZE, brushColor, atlas);
+				sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(start_sy), static_cast<float>(end_sx - start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
 
 				// Bottom
 				if (delta_y > TILE_SIZE) {
-					sprite_batch.drawRect((float)start_sx, (float)(end_sy - TILE_SIZE), (float)(end_sx - start_sx), (float)TILE_SIZE, brushColor, atlas);
+					sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(end_sy - TILE_SIZE), static_cast<float>(end_sx - start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
 				}
 
 				// Right
 				if (delta_x > TILE_SIZE && delta_y > TILE_SIZE) {
-					float h = (float)(end_sy - start_sy - 2 * TILE_SIZE);
-					sprite_batch.drawRect((float)(end_sx - TILE_SIZE), (float)(start_sy + TILE_SIZE), (float)TILE_SIZE, h, brushColor, atlas);
+					float h = static_cast<float>(end_sy - start_sy - 2 * TILE_SIZE);
+					sprite_batch.drawRect(static_cast<float>(end_sx - TILE_SIZE), static_cast<float>(start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
 				}
 
 				// Left
 				if (delta_y > TILE_SIZE) {
-					float h = (float)(end_sy - start_sy - 2 * TILE_SIZE);
-					sprite_batch.drawRect((float)start_sx, (float)(start_sy + TILE_SIZE), (float)TILE_SIZE, h, brushColor, atlas);
+					float h = static_cast<float>(end_sy - start_sy - 2 * TILE_SIZE);
+					sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
 				}
 			}
 		} else if (brush->is<DoorBrush>()) {
@@ -344,7 +344,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 			int cy = (view.mouse_map_y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 
 			if (g_gui.gfx.ensureAtlasManager()) {
-				sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE, (float)TILE_SIZE, get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor)), *g_gui.gfx.getAtlasManager());
+				sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor)), *g_gui.gfx.getAtlasManager());
 			}
 		} else if (brush->is<CreatureBrush>()) {
 			// glEnable(GL_TEXTURE_2D);
@@ -383,7 +383,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 										c = get_check_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor));
 									}
 									if (g_gui.gfx.ensureAtlasManager()) {
-										sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE, (float)TILE_SIZE, c, *g_gui.gfx.getAtlasManager());
+										sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), c, *g_gui.gfx.getAtlasManager());
 									}
 								}
 							}
@@ -404,7 +404,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 										c = get_check_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor));
 									}
 									if (g_gui.gfx.ensureAtlasManager()) {
-										sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE, (float)TILE_SIZE, c, *g_gui.gfx.getAtlasManager());
+										sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), c, *g_gui.gfx.getAtlasManager());
 									}
 								}
 							}
@@ -434,4 +434,3 @@ void BrushOverlayDrawer::get_color(Brush* brush, Editor& editor, const Position&
 		g = 0x00, b = 0x00;
 	}
 }
-

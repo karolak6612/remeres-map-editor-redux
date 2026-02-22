@@ -483,6 +483,9 @@ void Tile::update() {
 		if (ground->getMiniMapColor() != 0) {
 			minimapColor = ground->getMiniMapColor();
 		}
+		if (ground->hasLight()) {
+			statflags |= TILESTATE_HAS_LIGHT;
+		}
 	}
 
 	std::ranges::for_each(items, [&](const auto& i) {
@@ -514,6 +517,9 @@ void Tile::update() {
 		}
 		if (it_type.hookEast) {
 			statflags |= TILESTATE_HOOK_EAST;
+		}
+		if (i->hasLight()) {
+			statflags |= TILESTATE_HAS_LIGHT;
 		}
 	});
 
@@ -579,13 +585,9 @@ void Tile::selectGround() {
 		selected_ = true;
 	}
 
-	for (const auto& i : items) {
-		if (i->isBorder()) {
-			i->select();
-			selected_ = true;
-		} else {
-			break;
-		}
+	for (const auto& i : items | std::views::take_while([](const auto& item) { return item->isBorder(); })) {
+		i->select();
+		selected_ = true;
 	}
 
 	if (selected_) {
@@ -598,12 +600,8 @@ void Tile::deselectGround() {
 		ground->deselect();
 	}
 
-	for (const auto& i : items) {
-		if (i->isBorder()) {
-			i->deselect();
-		} else {
-			break;
-		}
+	for (const auto& i : items | std::views::take_while([](const auto& item) { return item->isBorder(); })) {
+		i->deselect();
 	}
 }
 
@@ -655,11 +653,7 @@ bool Tile::isContentEqual(const Tile* other) const {
 	}
 
 	// Compare items
-	if (items.size() != other->items.size()) {
-		return false;
-	}
-
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }
