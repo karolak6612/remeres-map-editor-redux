@@ -147,7 +147,7 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	std::error_code ec;
 	const auto size = std::filesystem::file_size(path, ec);
 	if (ec) {
-		spdlog::error("Couldn't get file size: {}", filename.GetFullPath().ToStdString());
+		spdlog::error("Couldn't get file size: {} ({})", filename.GetFullPath().ToStdString(), ec.message());
 		return false;
 	}
 

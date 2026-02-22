@@ -52,10 +52,10 @@ void Map::initializeEmpty() {
 	static int unnamed_counter = 0;
 
 	std::string sname = std::format("Untitled-{}", ++unnamed_counter);
-	name = std::format("{}.otbm", sname);
-	spawnfile = std::format("{}-spawn.xml", sname);
-	housefile = std::format("{}-house.xml", sname);
-	waypointfile = std::format("{}-waypoint.xml", sname);
+	name = sname + ".otbm";
+	spawnfile = sname + "-spawn.xml";
+	housefile = sname + "-house.xml";
+	waypointfile = sname + "-waypoint.xml";
 	description = "No map description available.";
 	unnamed = true;
 
@@ -266,12 +266,12 @@ void Map::cleanInvalidTiles(bool showdialog) {
 
 	uint64_t tiles_done = 0;
 
-	std::ranges::for_each(tiles(), [&](auto& tile_loc) {
+	for (auto& tile_loc : tiles()) {
 		Tile* tile = tile_loc.get();
 		ASSERT(tile);
 
 		if (tile->empty()) {
-			return;
+			continue;
 		}
 
 		// Use std::erase_if from C++20 for cleanup
@@ -283,7 +283,7 @@ void Map::cleanInvalidTiles(bool showdialog) {
 		if (showdialog && tiles_done % 0x10000 == 0) {
 			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
 		}
-	});
+	}
 
 	if (showdialog) {
 		g_gui.DestroyLoadBar();
@@ -295,17 +295,17 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	uint64_t tiles_done = 0;
 
 	auto filtered_tiles = tiles() | std::views::filter([&](const auto& tile_loc) {
-		const Tile* tile = tile_loc.get();
-		return tile && tile->getHouseID() == fromId;
-	});
+							  const Tile* tile = tile_loc.get();
+							  return tile && tile->getHouseID() == fromId;
+						  });
 
-	std::ranges::for_each(filtered_tiles, [&](auto& tile_loc) {
+	for (auto& tile_loc : filtered_tiles) {
 		tile_loc.get()->setHouseID(toId);
 		++tiles_done;
 		if (tiles_done % 0x10000 == 0) {
 			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
 		}
-	});
+	}
 
 	g_gui.DestroyLoadBar();
 }
@@ -369,12 +369,12 @@ bool Map::addSpawn(Tile* tile) {
 		int end_x = tile->getX() + spawn->getSize();
 		int end_y = tile->getY() + spawn->getSize();
 
-		std::ranges::for_each(std::views::iota(start_y, end_y + 1), [&](int y) {
-			std::ranges::for_each(std::views::iota(start_x, end_x + 1), [&](int x) {
+		for (int y = start_y; y <= end_y; ++y) {
+			for (int x = start_x; x <= end_x; ++x) {
 				TileLocation* ctile_loc = createTileL(x, y, z);
 				ctile_loc->increaseSpawnCount();
-			});
-		});
+			}
+		}
 		spawns.addSpawn(tile);
 		return true;
 	}
@@ -391,14 +391,14 @@ void Map::removeSpawnInternal(Tile* tile) {
 	int end_x = tile->getX() + spawn->getSize();
 	int end_y = tile->getY() + spawn->getSize();
 
-	std::ranges::for_each(std::views::iota(start_y, end_y + 1), [&](int y) {
-		std::ranges::for_each(std::views::iota(start_x, end_x + 1), [&](int x) {
+	for (int y = start_y; y <= end_y; ++y) {
+		for (int x = start_x; x <= end_x; ++x) {
 			TileLocation* ctile_loc = getTileL(x, y, z);
 			if (ctile_loc != nullptr && ctile_loc->getSpawnCount() > 0) {
 				ctile_loc->decreaseSpawnCount();
 			}
-		});
-	});
+		}
+	}
 }
 
 void Map::removeSpawn(Tile* tile) {
@@ -433,23 +433,29 @@ SpawnList Map::getSpawnList(Tile* where) {
 				}
 			};
 
+			// Safety bound: limit search radius to prevent infinite expansion with stale spawn counts
+			const int max_radius = std::max(getWidth(), getHeight());
 			while (found < tile_loc->getSpawnCount()) {
 				// Horizontal sides
-				std::ranges::for_each(std::views::iota(start_x, end_x + 1), [&](int x) {
+				for (int x : std::views::iota(start_x, end_x + 1)) {
 					checkTile(x, start_y);
 					checkTile(x, end_y);
-				});
+				}
 
 				// Vertical sides
-				std::ranges::for_each(std::views::iota(start_y + 1, end_y), [&](int y) {
+				for (int y : std::views::iota(start_y + 1, end_y)) {
 					checkTile(start_x, y);
 					checkTile(end_x, y);
-				});
+				}
 
 				--start_x;
 				--start_y;
 				++end_x;
 				++end_y;
+
+				if ((end_x - start_x) / 2 > max_radius) {
+					break;
+				}
 			}
 		}
 	}
