@@ -61,6 +61,7 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
+#include "rendering/drawers/overlays/hud_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
 #include "rendering/drawers/tiles/shade_drawer.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -116,6 +117,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	primitive_renderer = std::make_unique<PrimitiveRenderer>();
 	hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
 	door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
+	hud_drawer = std::make_unique<HUDDrawer>();
 
 	item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
 	item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
@@ -399,6 +401,10 @@ void MapDrawer::DrawGrid() {
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
 	tooltip_drawer->draw(vg, view);
+}
+
+void MapDrawer::DrawHUD(NVGcontext* vg) {
+	hud_drawer->Draw(vg, canvas);
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {

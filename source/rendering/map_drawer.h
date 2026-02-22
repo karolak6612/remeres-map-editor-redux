@@ -24,6 +24,7 @@ struct NVGcontext;
 class TooltipDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
+class HUDDrawer;
 
 // Storage during drawing, for option caching
 #include "rendering/core/drawing_options.h"
@@ -86,6 +87,7 @@ class MapDrawer {
 	std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
 	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
+	std::unique_ptr<HUDDrawer> hud_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
@@ -125,6 +127,7 @@ public:
 
 	void DrawGrid();
 	void DrawTooltips(NVGcontext* vg);
+	void DrawHUD(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
 	void ClearFrameOverlays();

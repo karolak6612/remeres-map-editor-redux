@@ -257,6 +257,8 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 				drawer->DrawDoorIndicators(vg);
 			}
 
+			drawer->DrawHUD(vg);
+
 			TextRenderer::EndFrame(vg);
 
 			// Sanitize state after NanoVG to avoid polluting the next frame or other tabs
