@@ -8,7 +8,7 @@
 #include <climits>
 #include <format>
 #include <ranges>
-#include <algorithm>
+#include <ranges>
 
 // Anonymous namespace for internal helpers and C++20/23 features
 namespace {
@@ -205,7 +205,7 @@ namespace {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
 
-		for (int i : std::views::iota(0, static_cast<int>(DatFlagLast))) {
+		for (int count = 0; count < static_cast<int>(DatFlagLast); ++count) {
 			previous_flag = flag;
 			if (!file.getU8(flag)) {
 				warnings.push_back(std::format("Metadata: error reading flag for sprite id {}", sprite_id));
@@ -234,7 +234,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 
 	if (!file.isOk()) {
 		// C++20 std::format
-		error += wxstr(std::format("Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().ToStdString(), file.getErrorMessage()));
+		error += wxstr(std::format("Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().utf8_string(), file.getErrorMessage()));
 		return false;
 	}
 
@@ -305,7 +305,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 			}
 		}
 
-		for (uint32_t k : std::views::iota(0u, static_cast<unsigned int>(group_count))) {
+		for (uint32_t k = 0; k < static_cast<uint32_t>(group_count); ++k) {
 			if (!ReadSpriteGroup(manager, file, sType, k, warnings)) {
 				error = wxstr(std::format("Failed to read sprite group {} for id {}", k, id));
 				return false;
@@ -394,7 +394,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		}
 
 		if (manager->has_frame_durations) {
-			for (int i : std::views::iota(0, static_cast<int>(frames))) {
+			for (int i = 0; i < static_cast<int>(frames); ++i) {
 				uint32_t min;
 				uint32_t max;
 				if (!file.getU32(min)) {
@@ -421,7 +421,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 	}
 
 	// Read the sprite ids
-	for (uint32_t i : std::views::iota(0u, numsprites)) {
+	for (uint32_t i = 0; i < numsprites; ++i) {
 		uint32_t sprite_id;
 		if (manager->is_extended) {
 			if (!file.getU32(sprite_id)) {
