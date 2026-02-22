@@ -241,13 +241,8 @@ public: // Functions
 	uint16_t getStatFlags() const;
 
 protected:
-	union {
-		struct {
-			uint16_t mapflags;
-			uint16_t statflags;
-		};
-		uint32_t flags;
-	};
+	uint16_t mapflags;
+	uint16_t statflags;
 
 private:
 	uint8_t minimapColor;

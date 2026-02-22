@@ -260,7 +260,7 @@ void Settings::IO(IOMode mode) {
 	Bool(ALWAYS_SHOW_ZONES, true);
 	Bool(EXT_HOUSE_SHADER, true);
 	Bool(DRAW_LOCKED_DOOR, false);
-	Bool(SHOW_AS_MINIMAP, true);
+	Bool(SHOW_AS_MINIMAP, false);
 
 	section("General");
 	Bool(GOTO_WEBSITE_ON_BOOT, false);

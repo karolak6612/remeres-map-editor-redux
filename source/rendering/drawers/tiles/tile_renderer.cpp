@@ -123,7 +123,8 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 
 			const auto& items = container->getVector();
 			data.containerItems.clear();
-			data.containerItems.reserve(items.size());
+			// Reserve only what we need (capped at 32)
+			data.containerItems.reserve(std::min(items.size(), size_t(32)));
 			for (const auto& subItem : items) {
 				if (subItem) {
 					ContainerItem ci;
@@ -242,19 +243,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
 		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		glm::vec4 border_color(static_cast<float>(hr) / 255.0f, static_cast<float>(hg) / 255.0f, static_cast<float>(hb) / 255.0f, intensity); // House color border with pulsing alpha
-
-		// Map coordinates to screen coordinates
-		// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
-		// Draw 1px solid border using geometry generation
-		// primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
-
-		// Use SpriteDrawer to keep batching unified (prevents PrimitiveRenderer flush/state change)
-		int br = static_cast<int>(border_color.r * 255.0f);
-		int bg = static_cast<int>(border_color.g * 255.0f);
-		int bb = static_cast<int>(border_color.b * 255.0f);
-		int ba = static_cast<int>(border_color.a * 255.0f);
-		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, br, bg, bb, ba);
+		// Optimization: Use integer math for border color to avoid vec4 construction and casting
+		int ba = static_cast<int>(intensity * 255.0f);
+		// hr, hg, hb are already uint8_t
+		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, hr, hg, hb, ba);
 	}
 
 	if (!only_colors) {
@@ -262,16 +254,24 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
 			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
+			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
+			float boost = 0.0f;
+
 			if (calculate_house_color) {
 				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
+				if (should_pulse) {
+					boost = options.highlight_pulse * 0.6f;
+				}
 			}
+
+			bool process_tooltips = options.show_tooltips && map_z == view.floor;
 
 			// items on tile
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
 
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (process_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
@@ -294,14 +294,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						ig = static_cast<uint8_t>(ig * house_g / 255);
 						ib = static_cast<uint8_t>(ib * house_b / 255);
 
-						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
+						if (should_pulse) {
 							// Pulse effect matching the tile pulse
-							if (options.highlight_pulse > 0.0f) {
-								float boost = options.highlight_pulse * 0.6f;
-								ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
-								ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
-								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
-							}
+							ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
+							ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
+							ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
 						}
 					}
 					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
