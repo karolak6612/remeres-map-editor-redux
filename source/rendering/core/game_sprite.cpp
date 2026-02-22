@@ -99,7 +99,7 @@ int GameSprite::getDrawHeight() const {
 }
 
 bool GameSprite::isSimpleAndLoaded() const {
-	return is_simple && !spriteList.empty() && spriteList[0]->isGLLoaded;
+	return is_simple && spriteList[0]->isGLLoaded;
 }
 
 uint32_t GameSprite::getDebugImageId(size_t index) const {
