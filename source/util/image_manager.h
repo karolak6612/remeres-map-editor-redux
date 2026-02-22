@@ -27,6 +27,25 @@ struct PairHash {
 	}
 };
 
+struct NvgCacheKey {
+	NVGcontext* ctx;
+	std::string assetPath;
+	uint32_t tint;
+
+	bool operator==(const NvgCacheKey& other) const {
+		return ctx == other.ctx && assetPath == other.assetPath && tint == other.tint;
+	}
+};
+
+struct NvgCacheKeyHash {
+	std::size_t operator()(const NvgCacheKey& k) const {
+		auto h1 = std::hash<NVGcontext*> {}(k.ctx);
+		auto h2 = std::hash<std::string> {}(k.assetPath);
+		auto h3 = std::hash<uint32_t> {}(k.tint);
+		return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2)) ^ (h3 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+	}
+};
+
 class ImageManager {
 public:
 	static ImageManager& GetInstance();
@@ -53,7 +72,7 @@ private:
 	// Caches
 	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;
 	std::unordered_map<std::pair<std::string, uint32_t>, wxBitmap, PairHash> m_tintedBitmapCache;
-	std::unordered_map<std::pair<std::string, uint32_t>, int, PairHash> m_nvgImageCache;
+	std::unordered_map<NvgCacheKey, int, NvgCacheKeyHash> m_nvgImageCache;
 	std::unordered_map<std::string, uint32_t> m_glTextureCache;
 
 	// Helper for tinting
