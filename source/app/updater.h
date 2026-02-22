@@ -39,6 +39,9 @@ public:
 	~UpdateChecker();
 
 	void connect(wxEvtHandler* receiver);
+
+private:
+	std::jthread m_thread;
 };
 
 	#endif

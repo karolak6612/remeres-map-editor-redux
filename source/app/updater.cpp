@@ -55,10 +55,10 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 	#endif
 	wxURL* url = newd wxURL(address);
 
-	std::thread([receiver, url]() {
+	m_thread = std::jthread([receiver, url]() {
 		wxInputStream* input = url->GetInputStream();
 		if (!input) {
-			delete input;
+			delete input; // Safe to delete null? Yes.
 			delete url;
 			return;
 		}
@@ -71,9 +71,8 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 		delete input;
 		delete url;
 
-		// We need to be careful with event posting from a detached thread if the receiver might be destroyed.
-		// However, we are replicating existing logic here where UpdateConnectionThread was also detached.
-		// In a real robust app, we'd need weak pointers or valid lifetime guarantees.
+		// We use raw pointer 'receiver' because Application manages lifetime of UpdateChecker
+		// and ensures thread is joined before receiver (MainFrame) is destroyed.
 		wxGetApp().CallAfter([receiver, data]() {
 			if (receiver) {
 				wxCommandEvent event(EVT_UPDATE_CHECK_FINISHED);
@@ -81,7 +80,7 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 				receiver->AddPendingEvent(event);
 			}
 		});
-	}).detach();
+	});
 }
 
 #endif
