@@ -41,7 +41,7 @@ ExtensionsDialog::ExtensionsDialog(wxWindow* parent) :
 	buttonSizer->Add(okBtn, wxSizerFlags(1).Center());
 	auto openBtn = newd wxButton(this, EXTENSIONS_OPEN_FOLDER_BUTTON, "Open Extensions Folder");
 	openBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FOLDER_OPEN, wxSize(16, 16)));
-	openBtn->SetToolTip("Open the extensions directory in file explorer");
+	openBtn->SetToolTip("Open: " + FileSystem::GetExtensionsDirectory());
 	buttonSizer->Add(openBtn, wxSizerFlags(1).Center());
 	topSizer->Add(buttonSizer, 0, wxCENTER | wxLEFT | wxRIGHT | wxBOTTOM, 20);
 

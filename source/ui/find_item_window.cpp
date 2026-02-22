@@ -456,6 +456,7 @@ void FindItemDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 		if (brush) {
 			result_brush = brush;
 			result_id = brush->as<RAWBrush>()->getItemID();
+			g_gui.SetStatusText("Selected item: " + brush->getName());
 			EndModal(wxID_OK);
 		}
 	}

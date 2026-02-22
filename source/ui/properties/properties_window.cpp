@@ -19,6 +19,7 @@
 
 #include "ui/properties/properties_window.h"
 
+#include "ui/gui.h"
 #include "util/image_manager.h"
 #include "ui/gui_ids.h"
 #include "game/complexitem.h"
@@ -308,6 +309,7 @@ void PropertiesWindow::OnClickOK(wxCommandEvent&) {
 
 	saveGeneralPanel();
 	saveAttributesPanel();
+	g_gui.SetStatusText("Item properties saved.");
 	EndModal(1);
 }
 

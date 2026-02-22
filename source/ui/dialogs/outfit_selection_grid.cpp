@@ -331,6 +331,14 @@ void OutfitSelectionGrid::OnMotion(wxMouseEvent& event) {
 	if (index != hover_index) {
 		hover_index = index;
 		Refresh();
+
+		if (index != -1) {
+			wxString name = is_favorites ? wxString::FromUTF8(favorite_items[index].label) : filtered_outfits[index].name;
+			int lookType = is_favorites ? favorite_items[index].outfit.lookType : filtered_outfits[index].lookType;
+			SetToolTip(name + wxString::Format(" (#%d)", lookType));
+		} else {
+			UnsetToolTip();
+		}
 	}
 
 	if (index != -1) {

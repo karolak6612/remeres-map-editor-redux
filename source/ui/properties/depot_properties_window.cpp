@@ -11,6 +11,7 @@
 #include "map/map.h"
 #include "ui/dialog_util.h"
 #include "ui/properties/depot_properties_window.h"
+#include "ui/gui.h"
 #include "util/image_manager.h"
 
 // ============================================================================
@@ -70,9 +71,11 @@ DepotPropertiesWindow::DepotPropertiesWindow(wxWindow* parent, const Map* map, c
 	wxSizer* buttonsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetToolTip("Apply changes and close");
 	buttonsizer->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetToolTip("Discard changes and close");
 	buttonsizer->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(buttonsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
@@ -92,6 +95,7 @@ void DepotPropertiesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (Depot* depot = dynamic_cast<Depot*>(edit_item)) {
 		int new_depotid = static_cast<int>(reinterpret_cast<intptr_t>(depot_id_field->GetClientData(depot_id_field->GetSelection())));
 		depot->setDepotID(new_depotid);
+		g_gui.SetStatusText("Depot properties saved.");
 	}
 	EndModal(1);
 }
