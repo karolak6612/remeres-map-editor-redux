@@ -116,22 +116,24 @@ void Settings::setString(uint32_t key, std::string newval) {
 	}
 	DynamicValue& dv = store[key];
 	if (std::holds_alternative<std::string>(dv.val) || std::holds_alternative<std::monostate>(dv.val)) {
-		dv.val = newval;
+		dv.val = std::move(newval);
 	}
 }
 
 std::string Settings::DynamicValue::str() {
 	return std::visit([](auto&& arg) -> std::string {
 		using T = std::decay_t<decltype(arg)>;
-		if constexpr (std::is_same_v<T, std::monostate>)
+		if constexpr (std::is_same_v<T, std::monostate>) {
 			return "";
-		else if constexpr (std::is_same_v<T, int>)
+		} else if constexpr (std::is_same_v<T, int>) {
 			return i2s(arg);
-		else if constexpr (std::is_same_v<T, float>)
+		} else if constexpr (std::is_same_v<T, float>) {
 			return f2s(arg);
-		else if constexpr (std::is_same_v<T, std::string>)
+		} else {
 			return arg;
-	}, val);
+		}
+	},
+					  val);
 }
 
 static std::string toLower(std::string s) {
