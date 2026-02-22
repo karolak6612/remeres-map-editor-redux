@@ -89,17 +89,28 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							g /= 2;
 						}
 						if (tile->ground) {
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, true, r, g, b, 255);
+							BlitItemParams params(tile, tile->ground.get(), options);
+							params.ephemeral = true;
+							params.red = r;
+							params.green = g;
+							params.blue = b;
+							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 						}
 					}
 
 					// Draw items on the tile
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
+							BlitItemParams params(tile, item.get(), options);
+							params.ephemeral = true;
 							if (item->isBorder()) {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, r, g, b);
+								params.red = 255;
+								params.green = r;
+								params.blue = g;
+								params.alpha = b;
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 							} else {
-								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, 255, 255, 255);
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 							}
 						}
 						if (tile->creature && options.show_creatures) {
@@ -131,4 +142,3 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 		}
 	}
 }
-

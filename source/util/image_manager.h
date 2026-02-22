@@ -11,6 +11,7 @@
 #include <wx/gdicmn.h>
 #include <unordered_map>
 #include <string>
+#include <string_view>
 #include <memory>
 #include <cstdint>
 #include <vector>
@@ -27,19 +28,38 @@ struct PairHash {
 	}
 };
 
+struct NvgCacheKey {
+	NVGcontext* ctx;
+	std::string assetPath;
+	uint32_t tint;
+
+	bool operator==(const NvgCacheKey& other) const {
+		return ctx == other.ctx && assetPath == other.assetPath && tint == other.tint;
+	}
+};
+
+struct NvgCacheKeyHash {
+	std::size_t operator()(const NvgCacheKey& k) const {
+		auto h1 = std::hash<NVGcontext*> {}(k.ctx);
+		auto h2 = std::hash<std::string> {}(k.assetPath);
+		auto h3 = std::hash<uint32_t> {}(k.tint);
+		return h1 ^ (h2 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2)) ^ (h3 + 0x9e3779b9 + (h1 << 6) + (h1 >> 2));
+	}
+};
+
 class ImageManager {
 public:
 	static ImageManager& GetInstance();
 
 	// wxWidgets support
-	wxBitmapBundle GetBitmapBundle(const std::string& assetPath, const wxColour& tint = wxNullColour);
-	wxBitmap GetBitmap(const std::string& assetPath, const wxSize& size = wxDefaultSize, const wxColour& tint = wxNullColour);
+	wxBitmapBundle GetBitmapBundle(std::string_view assetPath, const wxColour& tint = wxNullColour);
+	wxBitmap GetBitmap(std::string_view assetPath, const wxSize& size = wxDefaultSize, const wxColour& tint = wxNullColour);
 
 	// NanoVG support
-	int GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, const wxColour& tint = wxNullColour);
+	int GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint = wxNullColour);
 
 	// OpenGL support
-	uint32_t GetGLTexture(const std::string& assetPath);
+	uint32_t GetGLTexture(std::string_view assetPath);
 
 	// Cleanup
 	void ClearCache();
@@ -48,12 +68,12 @@ private:
 	ImageManager();
 	~ImageManager();
 
-	std::string ResolvePath(const std::string& assetPath);
+	std::string ResolvePath(std::string_view assetPath);
 
 	// Caches
 	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;
 	std::unordered_map<std::pair<std::string, uint32_t>, wxBitmap, PairHash> m_tintedBitmapCache;
-	std::unordered_map<std::pair<std::string, uint32_t>, int, PairHash> m_nvgImageCache;
+	std::unordered_map<NvgCacheKey, int, NvgCacheKeyHash> m_nvgImageCache;
 	std::unordered_map<std::string, uint32_t> m_glTextureCache;
 
 	// Helper for tinting
@@ -68,1719 +88,1719 @@ private:
 
 // Shortcut macros - Single Source of Truth for all asset paths
 // Common Icons
-#define ICON_SUNNY "svg/solid/sun.svg"
-#define ICON_LOCATION "svg/solid/location-crosshairs.svg"
-#define ICON_ACCOUNT "svg/solid/circle-user.svg"
-#define ICON_MINUS "svg/solid/circle-minus.svg"
-#define ICON_PLUS "svg/solid/circle-plus.svg"
-#define ICON_LOCATION_ARROW "svg/solid/location-arrow.svg"
+constexpr std::string_view ICON_SUNNY = "svg/solid/sun.svg";
+constexpr std::string_view ICON_LOCATION = "svg/solid/location-crosshairs.svg";
+constexpr std::string_view ICON_ACCOUNT = "svg/solid/circle-user.svg";
+constexpr std::string_view ICON_MINUS = "svg/solid/circle-minus.svg";
+constexpr std::string_view ICON_PLUS = "svg/solid/circle-plus.svg";
+constexpr std::string_view ICON_LOCATION_ARROW = "svg/solid/location-arrow.svg";
 
 // Standard Actions
-#define ICON_NEW "svg/regular/file.svg"
-#define ICON_OPEN "svg/regular/folder-open.svg"
-#define ICON_SAVE "svg/regular/floppy-disk.svg"
-#define ICON_UNDO "svg/solid/undo.svg"
-#define ICON_REDO "svg/solid/redo.svg"
-#define ICON_CUT "svg/solid/scissors.svg"
-#define ICON_COPY "svg/regular/copy.svg"
-#define ICON_PASTE "svg/regular/paste.svg"
-#define ICON_FIND "svg/solid/magnifying-glass.svg"
+constexpr std::string_view ICON_NEW = "svg/regular/file.svg";
+constexpr std::string_view ICON_OPEN = "svg/regular/folder-open.svg";
+constexpr std::string_view ICON_SAVE = "svg/regular/floppy-disk.svg";
+constexpr std::string_view ICON_UNDO = "svg/solid/undo.svg";
+constexpr std::string_view ICON_REDO = "svg/solid/redo.svg";
+constexpr std::string_view ICON_CUT = "svg/solid/scissors.svg";
+constexpr std::string_view ICON_COPY = "svg/regular/copy.svg";
+constexpr std::string_view ICON_PASTE = "svg/regular/paste.svg";
+constexpr std::string_view ICON_FIND = "svg/solid/magnifying-glass.svg";
 
 // Additional SVG Icons - Regular
-#define ICON_ADDRESS_BOOK "svg/regular/address-book.svg"
-#define ICON_ADDRESS_CARD "svg/regular/address-card.svg"
-#define ICON_BELL_SLASH "svg/regular/bell-slash.svg"
-#define ICON_BELL "svg/regular/bell.svg"
-#define ICON_BOOKMARK "svg/regular/bookmark.svg"
-#define ICON_BUILDING "svg/regular/building.svg"
-#define ICON_CALENDAR_CHECK "svg/regular/calendar-check.svg"
-#define ICON_CALENDAR_DAYS "svg/regular/calendar-days.svg"
-#define ICON_CALENDAR_MINUS "svg/regular/calendar-minus.svg"
-#define ICON_CALENDAR_PLUS "svg/regular/calendar-plus.svg"
-#define ICON_CALENDAR_XMARK "svg/regular/calendar-xmark.svg"
-#define ICON_CALENDAR "svg/regular/calendar.svg"
-#define ICON_CHART_BAR "svg/regular/chart-bar.svg"
-#define ICON_CHART_CHART "svg/regular/chart-chart.svg"
-#define ICON_CHECK_CIRCLE "svg/regular/check-circle.svg"
-#define ICON_CHECK_SQUARE "svg/regular/check-square.svg"
-#define ICON_CIRCLE "svg/regular/circle.svg"
-#define ICON_CLIPBOARD "svg/regular/clipboard.svg"
-#define ICON_CLOCK "svg/regular/clock.svg"
-#define ICON_CLONE "svg/regular/clone.svg"
-#define ICON_CLOSED_CAPTIONING "svg/regular/closed-captioning.svg"
-#define ICON_COMMENT_DOTS "svg/regular/comment-dots.svg"
-#define ICON_COMMENT "svg/regular/comment.svg"
-#define ICON_COMMENTS "svg/regular/comments.svg"
-#define ICON_COMPASS "svg/regular/compass.svg"
-#define ICON_CREDIT_CARD "svg/regular/credit-card.svg"
-#define ICON_ENVELOPE_OPEN "svg/regular/envelope-open.svg"
-#define ICON_ENVELOPE "svg/regular/envelope.svg"
-#define ICON_EYE_SLASH "svg/regular/eye-slash.svg"
-#define ICON_EYE "svg/regular/eye.svg"
-#define ICON_FACE_ANGRY "svg/regular/face-angry.svg"
-#define ICON_FACE_DIZZY "svg/regular/face-dizzy.svg"
-#define ICON_FACE_FLUSHED "svg/regular/face-flushed.svg"
-#define ICON_FACE_FROWN_OPEN "svg/regular/face-frown-open.svg"
-#define ICON_FACE_FROWN "svg/regular/face-frown.svg"
-#define ICON_FACE_GRIMACE "svg/regular/face-grimace.svg"
-#define ICON_FACE_GRIN_BEAM_SWEAT "svg/regular/face-grin-beam-sweat.svg"
-#define ICON_FACE_GRIN_BEAM "svg/regular/face-grin-beam.svg"
-#define ICON_FACE_GRIN_HEARTS "svg/regular/face-grin-hearts.svg"
-#define ICON_FACE_GRIN_SQUINT_TEARS "svg/regular/face-grin-squint-tears.svg"
-#define ICON_FACE_GRIN_SQUINT "svg/regular/face-grin-squint.svg"
-#define ICON_FACE_GRIN_STARS "svg/regular/face-grin-stars.svg"
-#define ICON_FACE_GRIN_TEARS "svg/regular/face-grin-tears.svg"
-#define ICON_FACE_GRIN_TONGUE_SQUINT "svg/regular/face-grin-tongue-squint.svg"
-#define ICON_FACE_GRIN_TONGUE_WINK "svg/regular/face-grin-tongue-wink.svg"
-#define ICON_FACE_GRIN_TONGUE "svg/regular/face-grin-tongue.svg"
-#define ICON_FACE_GRIN_WIDE "svg/regular/face-grin-wide.svg"
-#define ICON_FACE_GRIN_WINK "svg/regular/face-grin-wink.svg"
-#define ICON_FACE_GRIN "svg/regular/face-grin.svg"
-#define ICON_FACE_KISS_BEAM "svg/regular/face-kiss-beam.svg"
-#define ICON_FACE_KISS_WINK_HEART "svg/regular/face-kiss-wink-heart.svg"
-#define ICON_FACE_KISS "svg/regular/face-kiss.svg"
-#define ICON_FACE_LAUGH_BEAM "svg/regular/face-laugh-beam.svg"
-#define ICON_FACE_LAUGH_SQUINT "svg/regular/face-laugh-squint.svg"
-#define ICON_FACE_LAUGH_WINK "svg/regular/face-laugh-wink.svg"
-#define ICON_FACE_LAUGH "svg/regular/face-laugh.svg"
-#define ICON_FACE_MEH_BLANK "svg/regular/face-meh-blank.svg"
-#define ICON_FACE_MEH "svg/regular/face-meh.svg"
-#define ICON_FACE_ROLLING_EYES "svg/regular/face-rolling-eyes.svg"
-#define ICON_FACE_SAD_CRY "svg/regular/face-sad-cry.svg"
-#define ICON_FACE_SAD_TEAR "svg/regular/face-sad-tear.svg"
-#define ICON_FACE_SMILE_BEAM "svg/regular/face-smile-beam.svg"
-#define ICON_FACE_SMILE_WINK "svg/regular/face-smile-wink.svg"
-#define ICON_FACE_SMILE "svg/regular/face-smile.svg"
-#define ICON_FACE_SURPRISE "svg/regular/face-surprise.svg"
-#define ICON_FACE_TIRED "svg/regular/face-tired.svg"
-#define ICON_FILE_AUDIO "svg/regular/file-audio.svg"
-#define ICON_FILE_CODE "svg/regular/file-code.svg"
-#define ICON_FILE_EXCEL "svg/regular/file-excel.svg"
-#define ICON_FILE_IMAGE "svg/regular/file-image.svg"
-#define ICON_FILE_LINES "svg/regular/file-lines.svg"
-#define ICON_FILE_PDF "svg/regular/file-pdf.svg"
-#define ICON_FILE_POWERPOINT "svg/regular/file-powerpoint.svg"
-#define ICON_FILE_VIDEO "svg/regular/file-video.svg"
-#define ICON_FILE_WORD "svg/regular/file-word.svg"
-#define ICON_FILE_ZIPPER "svg/regular/file-zipper.svg"
-#define ICON_FILE "svg/regular/file.svg"
-#define ICON_FLAG "svg/regular/flag.svg"
-#define ICON_FLOPPY_DISK "svg/regular/floppy-disk.svg"
-#define ICON_FOLDER_CLOSED "svg/regular/folder-closed.svg"
-#define ICON_FOLDER_OPEN "svg/regular/folder-open.svg"
-#define ICON_FOLDER "svg/regular/folder.svg"
-#define ICON_FONT_AWESOME "svg/regular/font-awesome.svg"
-#define ICON_FUTBOL "svg/regular/futbol.svg"
-#define ICON_GEM "svg/regular/gem.svg"
-#define ICON_HAND_BACK_FIST "svg/regular/hand-back-fist.svg"
-#define ICON_HAND_LIZARD "svg/regular/hand-lizard.svg"
-#define ICON_HAND_PAPER "svg/regular/hand-paper.svg"
-#define ICON_HAND_PEACE "svg/regular/hand-peace.svg"
-#define ICON_HAND_POINTER "svg/regular/hand-pointer.svg"
-#define ICON_HAND_SCISSORS "svg/regular/hand-scissors.svg"
-#define ICON_HAND_SPOCK "svg/regular/hand-spock.svg"
-#define ICON_HAND "svg/regular/hand.svg"
-#define ICON_HANDS_ASL_INTERPRETING "svg/regular/hands-asl-interpreting.svg"
-#define ICON_HANDS_BOUND "svg/regular/hands-bound.svg"
-#define ICON_HANDS_BUBBLES "svg/regular/hands-bubbles.svg"
-#define ICON_HANDS_CLAPPING "svg/regular/hands-clapping.svg"
-#define ICON_HANDS_HOLDING_CHILD "svg/regular/hands-holding-child.svg"
-#define ICON_HANDS_HOLDING_CIRCLE "svg/regular/hands-holding-circle.svg"
-#define ICON_HANDS_HOLDING "svg/regular/hands-holding.svg"
-#define ICON_HANDS_PRAYING "svg/regular/hands-praying.svg"
-#define ICON_HANDS "svg/regular/hands.svg"
-#define ICON_HARD_DRIVE "svg/regular/hard-drive.svg"
-#define ICON_HEART "svg/regular/heart.svg"
-#define ICON_HOSPITAL "svg/regular/hospital.svg"
-#define ICON_HOURGLASS_HALF "svg/regular/hourglass-half.svg"
-#define ICON_HOURGLASS "svg/regular/hourglass.svg"
-#define ICON_ID_BADGE "svg/regular/id-badge.svg"
-#define ICON_ID_CARD "svg/regular/id-card.svg"
-#define ICON_IMAGE "svg/regular/image.svg"
-#define ICON_IMAGES "svg/regular/images.svg"
-#define ICON_KEYBOARD "svg/regular/keyboard.svg"
-#define ICON_LEMON "svg/regular/lemon.svg"
-#define ICON_LIFERING "svg/regular/life-ring.svg"
-#define ICON_LIGHTBULB "svg/regular/lightbulb.svg"
-#define ICON_MAP "svg/regular/map.svg"
-#define ICON_MESSAGE "svg/regular/message.svg"
-#define ICON_MONEY_BILL_1 "svg/regular/money-bill-1.svg"
-#define ICON_MOON "svg/regular/moon.svg"
-#define ICON_NEWSPAPER "svg/regular/newspaper.svg"
-#define ICON_NOTE_STICKY "svg/regular/note-sticky.svg"
-#define ICON_OBJECT_GROUP "svg/regular/object-group.svg"
-#define ICON_OBJECT_UNGROUP "svg/regular/object-ungroup.svg"
-#define ICON_PAPER_PLANE "svg/regular/paper-plane.svg"
-#define ICON_PAUSE_CIRCLE "svg/regular/pause-circle.svg"
-#define ICON_PLAY_CIRCLE "svg/regular/play-circle.svg"
-#define ICON_PLUS_SQUARE "svg/regular/plus-square.svg"
-#define ICON_QUESTION_CIRCLE "svg/regular/question-circle.svg"
-#define ICON_RECTANGLE_LIST "svg/regular/rectangle-list.svg"
-#define ICON_RECTANGLE_XMARK "svg/regular/rectangle-xmark.svg"
-#define ICON_REGISTERED "svg/regular/registered.svg"
-#define ICON_SHARE_FROM_SQUARE "svg/regular/share-from-square.svg"
-#define ICON_SNOWFLAKE "svg/regular/snowflake.svg"
-#define ICON_SQUARE_CARET_DOWN "svg/regular/square-caret-down.svg"
-#define ICON_SQUARE_CARET_LEFT "svg/regular/square-caret-left.svg"
-#define ICON_SQUARE_CARET_RIGHT "svg/regular/square-caret-right.svg"
-#define ICON_SQUARE_CARET_UP "svg/regular/square-caret-up.svg"
-#define ICON_SQUARE_CHECK "svg/regular/square-check.svg"
-#define ICON_SQUARE_FULL "svg/regular/square-full.svg"
-#define ICON_SQUARE_MINUS "svg/regular/square-minus.svg"
-#define ICON_SQUARE_PLUS "svg/regular/square-plus.svg"
-#define ICON_SQUARE "svg/regular/square.svg"
-#define ICON_STAR_HALF_STROKE "svg/regular/star-half-stroke.svg"
-#define ICON_STAR_HALF "svg/regular/star-half.svg"
-#define ICON_STAR "svg/regular/star.svg"
-#define ICON_STICKY_NOTE "svg/regular/sticky-note.svg"
-#define ICON_STOP_CIRCLE "svg/regular/stop-circle.svg"
-#define ICON_SUN "svg/regular/sun.svg"
-#define ICON_THUMBS_DOWN "svg/regular/thumbs-down.svg"
-#define ICON_THUMBS_UP "svg/regular/thumbs-up.svg"
-#define ICON_TRASH_CAN "svg/regular/trash-can.svg"
-#define ICON_USER_LARGE "svg/regular/user-large.svg"
-#define ICON_USER "svg/regular/user.svg"
-#define ICON_WINDOW_MAXIMIZE "svg/regular/window-maximize.svg"
-#define ICON_WINDOW_MINIMIZE "svg/regular/window-minimize.svg"
-#define ICON_WINDOW_RESTORE "svg/regular/window-restore.svg"
+constexpr std::string_view ICON_ADDRESS_BOOK = "svg/regular/address-book.svg";
+constexpr std::string_view ICON_ADDRESS_CARD = "svg/regular/address-card.svg";
+constexpr std::string_view ICON_BELL_SLASH = "svg/regular/bell-slash.svg";
+constexpr std::string_view ICON_BELL = "svg/regular/bell.svg";
+constexpr std::string_view ICON_BOOKMARK = "svg/regular/bookmark.svg";
+constexpr std::string_view ICON_BUILDING = "svg/regular/building.svg";
+constexpr std::string_view ICON_CALENDAR_CHECK = "svg/regular/calendar-check.svg";
+constexpr std::string_view ICON_CALENDAR_DAYS = "svg/regular/calendar-days.svg";
+constexpr std::string_view ICON_CALENDAR_MINUS = "svg/regular/calendar-minus.svg";
+constexpr std::string_view ICON_CALENDAR_PLUS = "svg/regular/calendar-plus.svg";
+constexpr std::string_view ICON_CALENDAR_XMARK = "svg/regular/calendar-xmark.svg";
+constexpr std::string_view ICON_CALENDAR = "svg/regular/calendar.svg";
+constexpr std::string_view ICON_CHART_BAR = "svg/regular/chart-bar.svg";
+constexpr std::string_view ICON_CHART_CHART = "svg/regular/chart-chart.svg";
+constexpr std::string_view ICON_CHECK_CIRCLE = "svg/regular/check-circle.svg";
+constexpr std::string_view ICON_CHECK_SQUARE = "svg/regular/check-square.svg";
+constexpr std::string_view ICON_CIRCLE = "svg/regular/circle.svg";
+constexpr std::string_view ICON_CLIPBOARD = "svg/regular/clipboard.svg";
+constexpr std::string_view ICON_CLOCK = "svg/regular/clock.svg";
+constexpr std::string_view ICON_CLONE = "svg/regular/clone.svg";
+constexpr std::string_view ICON_CLOSED_CAPTIONING = "svg/regular/closed-captioning.svg";
+constexpr std::string_view ICON_COMMENT_DOTS = "svg/regular/comment-dots.svg";
+constexpr std::string_view ICON_COMMENT = "svg/regular/comment.svg";
+constexpr std::string_view ICON_COMMENTS = "svg/regular/comments.svg";
+constexpr std::string_view ICON_COMPASS = "svg/regular/compass.svg";
+constexpr std::string_view ICON_CREDIT_CARD = "svg/regular/credit-card.svg";
+constexpr std::string_view ICON_ENVELOPE_OPEN = "svg/regular/envelope-open.svg";
+constexpr std::string_view ICON_ENVELOPE = "svg/regular/envelope.svg";
+constexpr std::string_view ICON_EYE_SLASH = "svg/regular/eye-slash.svg";
+constexpr std::string_view ICON_EYE = "svg/regular/eye.svg";
+constexpr std::string_view ICON_FACE_ANGRY = "svg/regular/face-angry.svg";
+constexpr std::string_view ICON_FACE_DIZZY = "svg/regular/face-dizzy.svg";
+constexpr std::string_view ICON_FACE_FLUSHED = "svg/regular/face-flushed.svg";
+constexpr std::string_view ICON_FACE_FROWN_OPEN = "svg/regular/face-frown-open.svg";
+constexpr std::string_view ICON_FACE_FROWN = "svg/regular/face-frown.svg";
+constexpr std::string_view ICON_FACE_GRIMACE = "svg/regular/face-grimace.svg";
+constexpr std::string_view ICON_FACE_GRIN_BEAM_SWEAT = "svg/regular/face-grin-beam-sweat.svg";
+constexpr std::string_view ICON_FACE_GRIN_BEAM = "svg/regular/face-grin-beam.svg";
+constexpr std::string_view ICON_FACE_GRIN_HEARTS = "svg/regular/face-grin-hearts.svg";
+constexpr std::string_view ICON_FACE_GRIN_SQUINT_TEARS = "svg/regular/face-grin-squint-tears.svg";
+constexpr std::string_view ICON_FACE_GRIN_SQUINT = "svg/regular/face-grin-squint.svg";
+constexpr std::string_view ICON_FACE_GRIN_STARS = "svg/regular/face-grin-stars.svg";
+constexpr std::string_view ICON_FACE_GRIN_TEARS = "svg/regular/face-grin-tears.svg";
+constexpr std::string_view ICON_FACE_GRIN_TONGUE_SQUINT = "svg/regular/face-grin-tongue-squint.svg";
+constexpr std::string_view ICON_FACE_GRIN_TONGUE_WINK = "svg/regular/face-grin-tongue-wink.svg";
+constexpr std::string_view ICON_FACE_GRIN_TONGUE = "svg/regular/face-grin-tongue.svg";
+constexpr std::string_view ICON_FACE_GRIN_WIDE = "svg/regular/face-grin-wide.svg";
+constexpr std::string_view ICON_FACE_GRIN_WINK = "svg/regular/face-grin-wink.svg";
+constexpr std::string_view ICON_FACE_GRIN = "svg/regular/face-grin.svg";
+constexpr std::string_view ICON_FACE_KISS_BEAM = "svg/regular/face-kiss-beam.svg";
+constexpr std::string_view ICON_FACE_KISS_WINK_HEART = "svg/regular/face-kiss-wink-heart.svg";
+constexpr std::string_view ICON_FACE_KISS = "svg/regular/face-kiss.svg";
+constexpr std::string_view ICON_FACE_LAUGH_BEAM = "svg/regular/face-laugh-beam.svg";
+constexpr std::string_view ICON_FACE_LAUGH_SQUINT = "svg/regular/face-laugh-squint.svg";
+constexpr std::string_view ICON_FACE_LAUGH_WINK = "svg/regular/face-laugh-wink.svg";
+constexpr std::string_view ICON_FACE_LAUGH = "svg/regular/face-laugh.svg";
+constexpr std::string_view ICON_FACE_MEH_BLANK = "svg/regular/face-meh-blank.svg";
+constexpr std::string_view ICON_FACE_MEH = "svg/regular/face-meh.svg";
+constexpr std::string_view ICON_FACE_ROLLING_EYES = "svg/regular/face-rolling-eyes.svg";
+constexpr std::string_view ICON_FACE_SAD_CRY = "svg/regular/face-sad-cry.svg";
+constexpr std::string_view ICON_FACE_SAD_TEAR = "svg/regular/face-sad-tear.svg";
+constexpr std::string_view ICON_FACE_SMILE_BEAM = "svg/regular/face-smile-beam.svg";
+constexpr std::string_view ICON_FACE_SMILE_WINK = "svg/regular/face-smile-wink.svg";
+constexpr std::string_view ICON_FACE_SMILE = "svg/regular/face-smile.svg";
+constexpr std::string_view ICON_FACE_SURPRISE = "svg/regular/face-surprise.svg";
+constexpr std::string_view ICON_FACE_TIRED = "svg/regular/face-tired.svg";
+constexpr std::string_view ICON_FILE_AUDIO = "svg/regular/file-audio.svg";
+constexpr std::string_view ICON_FILE_CODE = "svg/regular/file-code.svg";
+constexpr std::string_view ICON_FILE_EXCEL = "svg/regular/file-excel.svg";
+constexpr std::string_view ICON_FILE_IMAGE = "svg/regular/file-image.svg";
+constexpr std::string_view ICON_FILE_LINES = "svg/regular/file-lines.svg";
+constexpr std::string_view ICON_FILE_PDF = "svg/regular/file-pdf.svg";
+constexpr std::string_view ICON_FILE_POWERPOINT = "svg/regular/file-powerpoint.svg";
+constexpr std::string_view ICON_FILE_VIDEO = "svg/regular/file-video.svg";
+constexpr std::string_view ICON_FILE_WORD = "svg/regular/file-word.svg";
+constexpr std::string_view ICON_FILE_ZIPPER = "svg/regular/file-zipper.svg";
+constexpr std::string_view ICON_FILE = "svg/regular/file.svg";
+constexpr std::string_view ICON_FLAG = "svg/regular/flag.svg";
+constexpr std::string_view ICON_FLOPPY_DISK = "svg/regular/floppy-disk.svg";
+constexpr std::string_view ICON_FOLDER_CLOSED = "svg/regular/folder-closed.svg";
+constexpr std::string_view ICON_FOLDER_OPEN = "svg/regular/folder-open.svg";
+constexpr std::string_view ICON_FOLDER = "svg/regular/folder.svg";
+constexpr std::string_view ICON_FONT_AWESOME = "svg/regular/font-awesome.svg";
+constexpr std::string_view ICON_FUTBOL = "svg/regular/futbol.svg";
+constexpr std::string_view ICON_GEM = "svg/regular/gem.svg";
+constexpr std::string_view ICON_HAND_BACK_FIST = "svg/regular/hand-back-fist.svg";
+constexpr std::string_view ICON_HAND_LIZARD = "svg/regular/hand-lizard.svg";
+constexpr std::string_view ICON_HAND_PAPER = "svg/regular/hand-paper.svg";
+constexpr std::string_view ICON_HAND_PEACE = "svg/regular/hand-peace.svg";
+constexpr std::string_view ICON_HAND_POINTER = "svg/regular/hand-pointer.svg";
+constexpr std::string_view ICON_HAND_SCISSORS = "svg/regular/hand-scissors.svg";
+constexpr std::string_view ICON_HAND_SPOCK = "svg/regular/hand-spock.svg";
+constexpr std::string_view ICON_HAND = "svg/regular/hand.svg";
+constexpr std::string_view ICON_HANDS_ASL_INTERPRETING = "svg/regular/hands-asl-interpreting.svg";
+constexpr std::string_view ICON_HANDS_BOUND = "svg/regular/hands-bound.svg";
+constexpr std::string_view ICON_HANDS_BUBBLES = "svg/regular/hands-bubbles.svg";
+constexpr std::string_view ICON_HANDS_CLAPPING = "svg/regular/hands-clapping.svg";
+constexpr std::string_view ICON_HANDS_HOLDING_CHILD = "svg/regular/hands-holding-child.svg";
+constexpr std::string_view ICON_HANDS_HOLDING_CIRCLE = "svg/regular/hands-holding-circle.svg";
+constexpr std::string_view ICON_HANDS_HOLDING = "svg/regular/hands-holding.svg";
+constexpr std::string_view ICON_HANDS_PRAYING = "svg/regular/hands-praying.svg";
+constexpr std::string_view ICON_HANDS = "svg/regular/hands.svg";
+constexpr std::string_view ICON_HARD_DRIVE = "svg/regular/hard-drive.svg";
+constexpr std::string_view ICON_HEART = "svg/regular/heart.svg";
+constexpr std::string_view ICON_HOSPITAL = "svg/regular/hospital.svg";
+constexpr std::string_view ICON_HOURGLASS_HALF = "svg/regular/hourglass-half.svg";
+constexpr std::string_view ICON_HOURGLASS = "svg/regular/hourglass.svg";
+constexpr std::string_view ICON_ID_BADGE = "svg/regular/id-badge.svg";
+constexpr std::string_view ICON_ID_CARD = "svg/regular/id-card.svg";
+constexpr std::string_view ICON_IMAGE = "svg/regular/image.svg";
+constexpr std::string_view ICON_IMAGES = "svg/regular/images.svg";
+constexpr std::string_view ICON_KEYBOARD = "svg/regular/keyboard.svg";
+constexpr std::string_view ICON_LEMON = "svg/regular/lemon.svg";
+constexpr std::string_view ICON_LIFERING = "svg/regular/life-ring.svg";
+constexpr std::string_view ICON_LIGHTBULB = "svg/regular/lightbulb.svg";
+constexpr std::string_view ICON_MAP = "svg/regular/map.svg";
+constexpr std::string_view ICON_MESSAGE = "svg/regular/message.svg";
+constexpr std::string_view ICON_MONEY_BILL_1 = "svg/regular/money-bill-1.svg";
+constexpr std::string_view ICON_MOON = "svg/regular/moon.svg";
+constexpr std::string_view ICON_NEWSPAPER = "svg/regular/newspaper.svg";
+constexpr std::string_view ICON_NOTE_STICKY = "svg/regular/note-sticky.svg";
+constexpr std::string_view ICON_OBJECT_GROUP = "svg/regular/object-group.svg";
+constexpr std::string_view ICON_OBJECT_UNGROUP = "svg/regular/object-ungroup.svg";
+constexpr std::string_view ICON_PAPER_PLANE = "svg/regular/paper-plane.svg";
+constexpr std::string_view ICON_PAUSE_CIRCLE = "svg/regular/pause-circle.svg";
+constexpr std::string_view ICON_PLAY_CIRCLE = "svg/regular/play-circle.svg";
+constexpr std::string_view ICON_PLUS_SQUARE = "svg/regular/plus-square.svg";
+constexpr std::string_view ICON_QUESTION_CIRCLE = "svg/regular/question-circle.svg";
+constexpr std::string_view ICON_RECTANGLE_LIST = "svg/regular/rectangle-list.svg";
+constexpr std::string_view ICON_RECTANGLE_XMARK = "svg/regular/rectangle-xmark.svg";
+constexpr std::string_view ICON_REGISTERED = "svg/regular/registered.svg";
+constexpr std::string_view ICON_SHARE_FROM_SQUARE = "svg/regular/share-from-square.svg";
+constexpr std::string_view ICON_SNOWFLAKE = "svg/regular/snowflake.svg";
+constexpr std::string_view ICON_SQUARE_CARET_DOWN = "svg/regular/square-caret-down.svg";
+constexpr std::string_view ICON_SQUARE_CARET_LEFT = "svg/regular/square-caret-left.svg";
+constexpr std::string_view ICON_SQUARE_CARET_RIGHT = "svg/regular/square-caret-right.svg";
+constexpr std::string_view ICON_SQUARE_CARET_UP = "svg/regular/square-caret-up.svg";
+constexpr std::string_view ICON_SQUARE_CHECK = "svg/regular/square-check.svg";
+constexpr std::string_view ICON_SQUARE_FULL = "svg/regular/square-full.svg";
+constexpr std::string_view ICON_SQUARE_MINUS = "svg/regular/square-minus.svg";
+constexpr std::string_view ICON_SQUARE_PLUS = "svg/regular/square-plus.svg";
+constexpr std::string_view ICON_SQUARE = "svg/regular/square.svg";
+constexpr std::string_view ICON_STAR_HALF_STROKE = "svg/regular/star-half-stroke.svg";
+constexpr std::string_view ICON_STAR_HALF = "svg/regular/star-half.svg";
+constexpr std::string_view ICON_STAR = "svg/regular/star.svg";
+constexpr std::string_view ICON_STICKY_NOTE = "svg/regular/sticky-note.svg";
+constexpr std::string_view ICON_STOP_CIRCLE = "svg/regular/stop-circle.svg";
+constexpr std::string_view ICON_SUN = "svg/regular/sun.svg";
+constexpr std::string_view ICON_THUMBS_DOWN = "svg/regular/thumbs-down.svg";
+constexpr std::string_view ICON_THUMBS_UP = "svg/regular/thumbs-up.svg";
+constexpr std::string_view ICON_TRASH_CAN = "svg/regular/trash-can.svg";
+constexpr std::string_view ICON_USER_LARGE = "svg/regular/user-large.svg";
+constexpr std::string_view ICON_USER = "svg/regular/user.svg";
+constexpr std::string_view ICON_WINDOW_MAXIMIZE = "svg/regular/window-maximize.svg";
+constexpr std::string_view ICON_WINDOW_MINIMIZE = "svg/regular/window-minimize.svg";
+constexpr std::string_view ICON_WINDOW_RESTORE = "svg/regular/window-restore.svg";
 
 // Additional SVG Icons - Solid
-#define ICON_0 "svg/solid/0.svg"
-#define ICON_1 "svg/solid/1.svg"
-#define ICON_2 "svg/solid/2.svg"
-#define ICON_3 "svg/solid/3.svg"
-#define ICON_4 "svg/solid/4.svg"
-#define ICON_5 "svg/solid/5.svg"
-#define ICON_6 "svg/solid/6.svg"
-#define ICON_7 "svg/solid/7.svg"
-#define ICON_8 "svg/solid/8.svg"
-#define ICON_9 "svg/solid/9.svg"
-#define ICON_A "svg/solid/a.svg"
-#define ICON_ADDRESS_BOOK_SOLID "svg/solid/address-book.svg"
-#define ICON_ADDRESS_CARD_SOLID "svg/solid/address-card.svg"
-#define ICON_ALIGN_CENTER "svg/solid/align-center.svg"
-#define ICON_ALIGN_JUSTIFY "svg/solid/align-justify.svg"
-#define ICON_ALIGN_LEFT "svg/solid/align-left.svg"
-#define ICON_ALIGN_RIGHT "svg/solid/align-right.svg"
-#define ICON_ANCHOR_CIRCLE_CHECK "svg/solid/anchor-circle-check.svg"
-#define ICON_ANCHOR_CIRCLE_EXCLAMATION "svg/solid/anchor-circle-exclamation.svg"
-#define ICON_ANCHOR_CIRCLE_XMARK "svg/solid/anchor-circle-xmark.svg"
-#define ICON_ANCHOR_LOCK "svg/solid/anchor-lock.svg"
-#define ICON_ANCHOR "svg/solid/anchor.svg"
-#define ICON_ANGLE_DOWN "svg/solid/angle-down.svg"
-#define ICON_ANGLE_LEFT "svg/solid/angle-left.svg"
-#define ICON_ANGLE_RIGHT "svg/solid/angle-right.svg"
-#define ICON_ANGLE_UP "svg/solid/angle-up.svg"
-#define ICON_ANGLES_DOWN "svg/solid/angles-down.svg"
-#define ICON_ANGLES_LEFT "svg/solid/angles-left.svg"
-#define ICON_ANGLES_RIGHT "svg/solid/angles-right.svg"
-#define ICON_ANGLES_UP "svg/solid/angles-up.svg"
-#define ICON_ANKH "svg/solid/ankh.svg"
-#define ICON_APPLE_WHOLE "svg/solid/apple-whole.svg"
-#define ICON_ARCHWAY "svg/solid/archway.svg"
-#define ICON_ARROW_DOWN_1_9 "svg/solid/arrow-down-1-9.svg"
-#define ICON_ARROW_DOWN_9_1 "svg/solid/arrow-down-9-1.svg"
-#define ICON_ARROW_DOWN_A_Z "svg/solid/arrow-down-a-z.svg"
-#define ICON_ARROW_DOWN_LONG "svg/solid/arrow-down-long.svg"
-#define ICON_ARROW_DOWN_SHORT_WIDE "svg/solid/arrow-down-short-wide.svg"
-#define ICON_ARROW_DOWN_UP_ACROSS_LINE "svg/solid/arrow-down-up-across-line.svg"
-#define ICON_ARROW_DOWN_UP_LOCK "svg/solid/arrow-down-up-lock.svg"
-#define ICON_ARROW_DOWN_WIDE_SHORT "svg/solid/arrow-down-wide-short.svg"
-#define ICON_ARROW_DOWN_Z_A "svg/solid/arrow-down-z-a.svg"
-#define ICON_ARROW_DOWN "svg/solid/arrow-down.svg"
-#define ICON_ARROW_LEFT_LONG "svg/solid/arrow-left-long.svg"
-#define ICON_ARROW_LEFT "svg/solid/arrow-left.svg"
-#define ICON_ARROW_POINTER "svg/solid/arrow-pointer.svg"
-#define ICON_ARROW_RIGHT_ARROW_LEFT "svg/solid/arrow-right-arrow-left.svg"
-#define ICON_ARROW_RIGHT_FROM_BRACKET "svg/solid/arrow-right-from-bracket.svg"
-#define ICON_ARROW_RIGHT_LONG "svg/solid/arrow-right-long.svg"
-#define ICON_ARROW_RIGHT_TO_BRACKET "svg/solid/arrow-right-to-bracket.svg"
-#define ICON_ARROW_RIGHT_TO_CITY "svg/solid/arrow-right-to-city.svg"
-#define ICON_ARROW_RIGHT "svg/solid/arrow-right.svg"
-#define ICON_ARROW_ROTATE_LEFT "svg/solid/arrow-rotate-left.svg"
-#define ICON_ARROW_ROTATE_RIGHT "svg/solid/arrow-rotate-right.svg"
-#define ICON_ARROW_TREND_DOWN "svg/solid/arrow-trend-down.svg"
-#define ICON_ARROW_TREND_UP "svg/solid/arrow-trend-up.svg"
-#define ICON_ARROW_TURN_DOWN "svg/solid/arrow-turn-down.svg"
-#define ICON_ARROW_TURN_UP "svg/solid/arrow-turn-up.svg"
-#define ICON_ARROW_UP_1_9 "svg/solid/arrow-up-1-9.svg"
-#define ICON_ARROW_UP_9_1 "svg/solid/arrow-up-9-1.svg"
-#define ICON_ARROW_UP_A_Z "svg/solid/arrow-up-a-z.svg"
-#define ICON_ARROW_UP_FROM_BRACKET "svg/solid/arrow-up-from-bracket.svg"
-#define ICON_ARROW_UP_FROM_GROUND_WATER "svg/solid/arrow-up-from-ground-water.svg"
-#define ICON_ARROW_UP_FROM_WATER_PUMP "svg/solid/arrow-up-from-water-pump.svg"
-#define ICON_ARROW_UP_LONG "svg/solid/arrow-up-long.svg"
-#define ICON_ARROW_UP_RIGHT_DOTS "svg/solid/arrow-up-right-dots.svg"
-#define ICON_ARROW_UP_RIGHT_FROM_SQUARE "svg/solid/arrow-up-right-from-square.svg"
-#define ICON_ARROW_UP_SHORT_WIDE "svg/solid/arrow-up-short-wide.svg"
-#define ICON_ARROW_UP_WIDE_SHORT "svg/solid/arrow-up-wide-short.svg"
-#define ICON_ARROW_UP_Z_A "svg/solid/arrow-up-z-a.svg"
-#define ICON_ARROW_UP "svg/solid/arrow-up.svg"
-#define ICON_ARROWS_DOWN_TO_LINE "svg/solid/arrows-down-to-line.svg"
-#define ICON_ARROWS_DOWN_TO_PEOPLE "svg/solid/arrows-down-to-people.svg"
-#define ICON_ARROWS_LEFT_RIGHT_TO_LINE "svg/solid/arrows-left-right-to-line.svg"
-#define ICON_ARROWS_LEFT_RIGHT "svg/solid/arrows-left-right.svg"
-#define ICON_ARROWS_ROTATE "svg/solid/arrows-rotate.svg"
-#define ICON_ARROWS_SPIN "svg/solid/arrows-spin.svg"
-#define ICON_ARROWS_SPLIT_UP_AND_LEFT "svg/solid/arrows-split-up-and-left.svg"
-#define ICON_ARROWS_TO_CIRCLE "svg/solid/arrows-to-circle.svg"
-#define ICON_ARROWS_TO_DOT "svg/solid/arrows-to-dot.svg"
-#define ICON_ARROWS_TO_EYE "svg/solid/arrows-to-eye.svg"
-#define ICON_ARROWS_TURN_RIGHT "svg/solid/arrows-turn-right.svg"
-#define ICON_ARROWS_TURN_TO_DOTS "svg/solid/arrows-turn-to-dots.svg"
-#define ICON_ARROWS_UP_DOWN_LEFT_RIGHT "svg/solid/arrows-up-down-left-right.svg"
-#define ICON_ARROWS_UP_DOWN "svg/solid/arrows-up-down.svg"
-#define ICON_ARROWS_UP_TO_LINE "svg/solid/arrows-up-to-line.svg"
-#define ICON_ASTERISK "svg/solid/asterisk.svg"
-#define ICON_AT "svg/solid/at.svg"
-#define ICON_ATOM "svg/solid/atom.svg"
-#define ICON_AUDIO_DESCRIPTION "svg/solid/audio-description.svg"
-#define ICON_AUSTRAL_SIGN "svg/solid/austral-sign.svg"
-#define ICON_AWARD "svg/solid/award.svg"
-#define ICON_B "svg/solid/b.svg"
-#define ICON_BABY_CARRIAGE "svg/solid/baby-carriage.svg"
-#define ICON_BABY "svg/solid/baby.svg"
-#define ICON_BACKWARD_FAST "svg/solid/backward-fast.svg"
-#define ICON_BACKWARD_STEP "svg/solid/backward-step.svg"
-#define ICON_BACKWARD "svg/solid/backward.svg"
-#define ICON_BACON "svg/solid/bacon.svg"
-#define ICON_BACTERIA "svg/solid/bacteria.svg"
-#define ICON_BACTERIUM "svg/solid/bacterium.svg"
-#define ICON_BAG_SHOPPING "svg/solid/bag-shopping.svg"
-#define ICON_BAHAI "svg/solid/bahai.svg"
-#define ICON_BAHT_SIGN "svg/solid/baht-sign.svg"
-#define ICON_BAN_SMOKING "svg/solid/ban-smoking.svg"
-#define ICON_BAN "svg/solid/ban.svg"
-#define ICON_BANDAGE "svg/solid/bandage.svg"
-#define ICON_BANGLADESHI_TAKA_SIGN "svg/solid/bangladeshi-taka-sign.svg"
-#define ICON_BARCODE "svg/solid/barcode.svg"
-#define ICON_BARS_PROGRESS "svg/solid/bars-progress.svg"
-#define ICON_BARS_STAGGERED "svg/solid/bars-staggered.svg"
-#define ICON_BARS "svg/solid/bars.svg"
-#define ICON_BASEBALL_BAT_BALL "svg/solid/baseball-bat-ball.svg"
-#define ICON_BASEBALL "svg/solid/baseball.svg"
-#define ICON_BASKET_SHOPPING "svg/solid/basket-shopping.svg"
-#define ICON_BASKETBALL "svg/solid/basketball.svg"
-#define ICON_BATH "svg/solid/bath.svg"
-#define ICON_BATTERY_EMPTY "svg/solid/battery-empty.svg"
-#define ICON_BATTERY_FULL "svg/solid/battery-full.svg"
-#define ICON_BATTERY_HALF "svg/solid/battery-half.svg"
-#define ICON_BATTERY_QUARTER "svg/solid/battery-quarter.svg"
-#define ICON_BATTERY_THREE_QUARTERS "svg/solid/battery-three-quarters.svg"
-#define ICON_BED_PULSE "svg/solid/bed-pulse.svg"
-#define ICON_BED "svg/solid/bed.svg"
-#define ICON_BEER_MUG_EMPTY "svg/solid/beer-mug-empty.svg"
-#define ICON_BELL_CONCIERGE "svg/solid/bell-concierge.svg"
-#define ICON_BELL_SLASH_SOLID "svg/solid/bell-slash.svg"
-#define ICON_BELL_SOLID "svg/solid/bell.svg"
-#define ICON_BEZIER_CURVE "svg/solid/bezier-curve.svg"
-#define ICON_BICYCLE "svg/solid/bicycle.svg"
-#define ICON_BINOCULARS "svg/solid/binoculars.svg"
-#define ICON_BIOHAZARD "svg/solid/biohazard.svg"
-#define ICON_BITCOIN_SIGN "svg/solid/bitcoin-sign.svg"
-#define ICON_BLENDER_PHONE "svg/solid/blender-phone.svg"
-#define ICON_BLENDER "svg/solid/blender.svg"
-#define ICON_BLIND "svg/solid/blind.svg"
-#define ICON_BLOG "svg/solid/blog.svg"
-#define ICON_BOLD "svg/solid/bold.svg"
-#define ICON_BOLT_LIGHTNING "svg/solid/bolt-lightning.svg"
-#define ICON_BOLT "svg/solid/bolt.svg"
-#define ICON_BOMB "svg/solid/bomb.svg"
-#define ICON_BONE "svg/solid/bone.svg"
-#define ICON_BONG "svg/solid/bong.svg"
-#define ICON_BOOK_ATLAS "svg/solid/book-atlas.svg"
-#define ICON_BOOK_BIBLE "svg/solid/book-bible.svg"
-#define ICON_BOOK_BOOKMARK "svg/solid/book-bookmark.svg"
-#define ICON_BOOK_JOURNAL_WHILLS "svg/solid/book-journal-whills.svg"
-#define ICON_BOOK_MEDICAL "svg/solid/book-medical.svg"
-#define ICON_BOOK_OPEN_READER "svg/solid/book-open-reader.svg"
-#define ICON_BOOK_OPEN "svg/solid/book-open.svg"
-#define ICON_BOOK_QURAN "svg/solid/book-quran.svg"
-#define ICON_BOOK_SKULL "svg/solid/book-skull.svg"
-#define ICON_BOOK_TANAKH "svg/solid/book-tanakh.svg"
-#define ICON_BOOK "svg/solid/book.svg"
-#define ICON_BOOKMARK_SOLID "svg/solid/bookmark.svg"
-#define ICON_BORDER_ALL "svg/solid/border-all.svg"
-#define ICON_BORDER_NONE "svg/solid/border-none.svg"
-#define ICON_BORDER_TOP_LEFT "svg/solid/border-top-left.svg"
-#define ICON_BORE_HOLE "svg/solid/bore-hole.svg"
-#define ICON_BOTTLE_DROPLET "svg/solid/bottle-droplet.svg"
-#define ICON_BOTTLE_WATER "svg/solid/bottle-water.svg"
-#define ICON_BOWL_FOOD "svg/solid/bowl-food.svg"
-#define ICON_BOWL_RICE "svg/solid/bowl-rice.svg"
-#define ICON_BOWLING_BALL "svg/solid/bowling-ball.svg"
-#define ICON_BOX_ARCHIVE "svg/solid/box-archive.svg"
-#define ICON_BOX_OPEN "svg/solid/box-open.svg"
-#define ICON_BOX_TISSUE "svg/solid/box-tissue.svg"
-#define ICON_BOX "svg/solid/box.svg"
-#define ICON_BOXES_PACKING "svg/solid/boxes-packing.svg"
-#define ICON_BOXES_STACKED "svg/solid/boxes-stacked.svg"
-#define ICON_BRAILLE "svg/solid/braille.svg"
-#define ICON_BRAIN "svg/solid/brain.svg"
-#define ICON_BRAZILIAN_REAL_SIGN "svg/solid/brazilian-real-sign.svg"
-#define ICON_BREAD_SLICE "svg/solid/bread-slice.svg"
-#define ICON_BRIDGE_CIRCLE_CHECK "svg/solid/bridge-circle-check.svg"
-#define ICON_BRIDGE_CIRCLE_EXCLAMATION "svg/solid/bridge-circle-exclamation.svg"
-#define ICON_BRIDGE_CIRCLE_XMARK "svg/solid/bridge-circle-xmark.svg"
-#define ICON_BRIDGE_LOCK "svg/solid/bridge-lock.svg"
-#define ICON_BRIDGE_WATER "svg/solid/bridge-water.svg"
-#define ICON_BRIDGE "svg/solid/bridge.svg"
-#define ICON_BRIEFCASE_MEDICAL "svg/solid/briefcase-medical.svg"
-#define ICON_BRIEFCASE "svg/solid/briefcase.svg"
-#define ICON_BROOM_BALL "svg/solid/broom-ball.svg"
-#define ICON_BROOM "svg/solid/broom.svg"
-#define ICON_BRUSH "svg/solid/brush.svg"
-#define ICON_BUCKET "svg/solid/bucket.svg"
-#define ICON_BUG_SLASH "svg/solid/bug-slash.svg"
-#define ICON_BUG "svg/solid/bug.svg"
-#define ICON_BUGS "svg/solid/bugs.svg"
-#define ICON_BUILDING_CIRCLE_ARROW_RIGHT "svg/solid/building-circle-arrow-right.svg"
-#define ICON_BUILDING_CIRCLE_CHECK "svg/solid/building-circle-check.svg"
-#define ICON_BUILDING_CIRCLE_EXCLAMATION "svg/solid/building-circle-exclamation.svg"
-#define ICON_BUILDING_CIRCLE_XMARK "svg/solid/building-circle-xmark.svg"
-#define ICON_BUILDING_COLUMNS "svg/solid/building-columns.svg"
-#define ICON_BUILDING_FLAG "svg/solid/building-flag.svg"
-#define ICON_BUILDING_LOCK "svg/solid/building-lock.svg"
-#define ICON_BUILDING_NGO "svg/solid/building-ngo.svg"
-#define ICON_BUILDING_SHIELD "svg/solid/building-shield.svg"
-#define ICON_BUILDING_UN "svg/solid/building-un.svg"
-#define ICON_BUILDING_USER "svg/solid/building-user.svg"
-#define ICON_BUILDING_WHEAT "svg/solid/building-wheat.svg"
-#define ICON_BUILDING_SOLID "svg/solid/building.svg"
-#define ICON_BULLHORN "svg/solid/bullhorn.svg"
-#define ICON_BULLSEYE "svg/solid/bullseye.svg"
-#define ICON_BURGER "svg/solid/burger.svg"
-#define ICON_BURST "svg/solid/burst.svg"
-#define ICON_BUS_SIMPLE "svg/solid/bus-simple.svg"
-#define ICON_BUS "svg/solid/bus.svg"
-#define ICON_BUSINESS_TIME "svg/solid/business-time.svg"
-#define ICON_C "svg/solid/c.svg"
-#define ICON_CABLE_CAR "svg/solid/cable-car.svg"
-#define ICON_CAKE_CANDLES "svg/solid/cake-candles.svg"
-#define ICON_CALCULATOR "svg/solid/calculator.svg"
-#define ICON_CALENDAR_CHECK_SOLID "svg/solid/calendar-check.svg"
-#define ICON_CALENDAR_DAY "svg/solid/calendar-day.svg"
-#define ICON_CALENDAR_DAYS_SOLID "svg/solid/calendar-days.svg"
-#define ICON_CALENDAR_MINUS_SOLID "svg/solid/calendar-minus.svg"
-#define ICON_CALENDAR_PLUS_SOLID "svg/solid/calendar-plus.svg"
-#define ICON_CALENDAR_WEEK "svg/solid/calendar-week.svg"
-#define ICON_CALENDAR_XMARK_SOLID "svg/solid/calendar-xmark.svg"
-#define ICON_CALENDAR_SOLID "svg/solid/calendar.svg"
-#define ICON_CAMERA_RETRO "svg/solid/camera-retro.svg"
-#define ICON_CAMERA_ROTATE "svg/solid/camera-rotate.svg"
-#define ICON_CAMERA "svg/solid/camera.svg"
-#define ICON_CAMPGROUND "svg/solid/campground.svg"
-#define ICON_CANDY_CANE "svg/solid/candy-cane.svg"
-#define ICON_CANNABIS "svg/solid/cannabis.svg"
-#define ICON_CAPSULES "svg/solid/capsules.svg"
-#define ICON_CAR_BATTERY "svg/solid/car-battery.svg"
-#define ICON_CAR_BURST "svg/solid/car-burst.svg"
-#define ICON_CAR_ON "svg/solid/car-on.svg"
-#define ICON_CAR_REAR "svg/solid/car-rear.svg"
-#define ICON_CAR_SIDE "svg/solid/car-side.svg"
-#define ICON_CAR_TUNNEL "svg/solid/car-tunnel.svg"
-#define ICON_CAR "svg/solid/car.svg"
-#define ICON_CARAVAN "svg/solid/caravan.svg"
-#define ICON_CARET_DOWN "svg/solid/caret-down.svg"
-#define ICON_CARET_LEFT "svg/solid/caret-left.svg"
-#define ICON_CARET_RIGHT "svg/solid/caret-right.svg"
-#define ICON_CARET_UP "svg/solid/caret-up.svg"
-#define ICON_CARROT "svg/solid/carrot.svg"
-#define ICON_CART_ARROW_DOWN "svg/solid/cart-arrow-down.svg"
-#define ICON_CART_FLATBED_SUITCASE "svg/solid/cart-flatbed-suitcase.svg"
-#define ICON_CART_FLATBED "svg/solid/cart-flatbed.svg"
-#define ICON_CART_PLUS "svg/solid/cart-plus.svg"
-#define ICON_CART_SHOPPING "svg/solid/cart-shopping.svg"
-#define ICON_CASH_REGISTER "svg/solid/cash-register.svg"
-#define ICON_CAT "svg/solid/cat.svg"
-#define ICON_CEDI_SIGN "svg/solid/cedi-sign.svg"
-#define ICON_CERTIFICATE "svg/solid/certificate.svg"
-#define ICON_CHAIR "svg/solid/chair.svg"
-#define ICON_CHALKBOARD_USER "svg/solid/chalkboard-user.svg"
-#define ICON_CHALKBOARD "svg/solid/chalkboard.svg"
-#define ICON_CHAMPAGNE_GLASSES "svg/solid/champagne-glasses.svg"
-#define ICON_CHARGING_STATION "svg/solid/charging-station.svg"
-#define ICON_CHART_AREA "svg/solid/chart-area.svg"
-#define ICON_CHART_BAR_SOLID "svg/solid/chart-bar.svg"
-#define ICON_CHART_COLUMN "svg/solid/chart-column.svg"
-#define ICON_CHART_GANTT "svg/solid/chart-gantt.svg"
-#define ICON_CHART_LINE "svg/solid/chart-line.svg"
-#define ICON_CHART_PIE "svg/solid/chart-pie.svg"
-#define ICON_CHART_SIMPLE "svg/solid/chart-simple.svg"
-#define ICON_CHECK_DOUBLE "svg/solid/check-double.svg"
-#define ICON_CHECK_TO_SLOT "svg/solid/check-to-slot.svg"
-#define ICON_CHECK "svg/solid/check.svg"
-#define ICON_CHEESE "svg/solid/cheese.svg"
-#define ICON_CHESS_BISHOP "svg/solid/chess-bishop.svg"
-#define ICON_CHESS_BOARD "svg/solid/chess-board.svg"
-#define ICON_CHESS_KING "svg/solid/chess-king.svg"
-#define ICON_CHESS_KNIGHT "svg/solid/chess-knight.svg"
-#define ICON_CHESS_PAWN "svg/solid/chess-pawn.svg"
-#define ICON_CHESS_QUEEN "svg/solid/chess-queen.svg"
-#define ICON_CHESS_ROOK "svg/solid/chess-rook.svg"
-#define ICON_CHESS "svg/solid/chess.svg"
-#define ICON_CHEVRON_DOWN "svg/solid/chevron-down.svg"
-#define ICON_CHEVRON_LEFT "svg/solid/chevron-left.svg"
-#define ICON_CHEVRON_RIGHT "svg/solid/chevron-right.svg"
-#define ICON_CHEVRON_UP "svg/solid/chevron-up.svg"
-#define ICON_CHILD_COMBATANT "svg/solid/child-combatant.svg"
-#define ICON_CHILD_DRESS "svg/solid/child-dress.svg"
-#define ICON_CHILD_REACHING "svg/solid/child-reaching.svg"
-#define ICON_CHILD "svg/solid/child.svg"
-#define ICON_CHILDREN "svg/solid/children.svg"
-#define ICON_CHURCH "svg/solid/church.svg"
-#define ICON_CIRCLE_ARROW_DOWN "svg/solid/circle-arrow-down.svg"
-#define ICON_CIRCLE_ARROW_LEFT "svg/solid/circle-arrow-left.svg"
-#define ICON_CIRCLE_ARROW_RIGHT "svg/solid/circle-arrow-right.svg"
-#define ICON_CIRCLE_ARROW_UP "svg/solid/circle-arrow-up.svg"
-#define ICON_CIRCLE_CHECK "svg/solid/circle-check.svg"
-#define ICON_CIRCLE_CHEVRON_DOWN "svg/solid/circle-chevron-down.svg"
-#define ICON_CIRCLE_CHEVRON_LEFT "svg/solid/circle-chevron-left.svg"
-#define ICON_CIRCLE_CHEVRON_RIGHT "svg/solid/circle-chevron-right.svg"
-#define ICON_CIRCLE_CHEVRON_UP "svg/solid/circle-chevron-up.svg"
-#define ICON_CIRCLE_DOLLAR_TO_SLOT "svg/solid/circle-dollar-to-slot.svg"
-#define ICON_CIRCLE_DOT "svg/solid/circle-dot.svg"
-#define ICON_CIRCLE_DOWN "svg/solid/circle-down.svg"
-#define ICON_CIRCLE_EXCLAMATION "svg/solid/circle-exclamation.svg"
-#define ICON_CIRCLE_H "svg/solid/circle-h.svg"
-#define ICON_CIRCLE_HALF_STROKE "svg/solid/circle-half-stroke.svg"
-#define ICON_CIRCLE_INFO "svg/solid/circle-info.svg"
-#define ICON_CIRCLE_LEFT "svg/solid/circle-left.svg"
-#define ICON_CIRCLE_MINUS "svg/solid/circle-minus.svg"
-#define ICON_CIRCLE_NODES "svg/solid/circle-nodes.svg"
-#define ICON_CIRCLE_NOTCH "svg/solid/circle-notch.svg"
-#define ICON_CIRCLE_PAUSE "svg/solid/circle-pause.svg"
-#define ICON_CIRCLE_PLAY "svg/solid/circle-play.svg"
-#define ICON_CIRCLE_PLUS "svg/solid/circle-plus.svg"
-#define ICON_CIRCLE_QUESTION "svg/solid/circle-question.svg"
-#define ICON_CIRCLE_RADIATION "svg/solid/circle-radiation.svg"
-#define ICON_CIRCLE_RIGHT "svg/solid/circle-right.svg"
-#define ICON_CIRCLE_STOP "svg/solid/circle-stop.svg"
-#define ICON_CIRCLE_UP "svg/solid/circle-up.svg"
-#define ICON_CIRCLE_USER "svg/solid/circle-user.svg"
-#define ICON_CIRCLE_XMARK "svg/solid/circle-xmark.svg"
-#define ICON_CIRCLE_SOLID "svg/solid/circle.svg"
-#define ICON_CITY "svg/solid/city.svg"
-#define ICON_CLAPPERBOARD "svg/solid/clapperboard.svg"
-#define ICON_CLIPBOARD_CHECK "svg/solid/clipboard-check.svg"
-#define ICON_CLIPBOARD_LIST "svg/solid/clipboard-list.svg"
-#define ICON_CLIPBOARD_QUESTION "svg/solid/clipboard-question.svg"
-#define ICON_CLIPBOARD_USER "svg/solid/clipboard-user.svg"
-#define ICON_CLIPBOARD_SOLID "svg/solid/clipboard.svg"
-#define ICON_CLOCK_ROTATE_LEFT "svg/solid/clock-rotate-left.svg"
-#define ICON_CLOCK_SOLID "svg/solid/clock.svg"
-#define ICON_CLONE_SOLID "svg/solid/clone.svg"
-#define ICON_CLOSED_CAPTIONING_SOLID "svg/solid/closed-captioning.svg"
-#define ICON_CLOUD_ARROW_DOWN "svg/solid/cloud-arrow-down.svg"
-#define ICON_CLOUD_ARROW_UP "svg/solid/cloud-arrow-up.svg"
-#define ICON_CLOUD_BOLT "svg/solid/cloud-bolt.svg"
-#define ICON_CLOUD_MEATBALL "svg/solid/cloud-meatball.svg"
-#define ICON_CLOUD_MOON_RAIN "svg/solid/cloud-moon-rain.svg"
-#define ICON_CLOUD_MOON "svg/solid/cloud-moon.svg"
-#define ICON_CLOUD_RAIN "svg/solid/cloud-rain.svg"
-#define ICON_CLOUD_SHOWERS_HEAVY "svg/solid/cloud-showers-heavy.svg"
-#define ICON_CLOUD_SHOWERS_WATER "svg/solid/cloud-showers-water.svg"
-#define ICON_CLOUD_SUN_RAIN "svg/solid/cloud-sun-rain.svg"
-#define ICON_CLOUD_SUN "svg/solid/cloud-sun.svg"
-#define ICON_CLOUD "svg/solid/cloud.svg"
-#define ICON_CLOVER "svg/solid/clover.svg"
-#define ICON_CODE_BRANCH "svg/solid/code-branch.svg"
-#define ICON_CODE_COMMIT "svg/solid/code-commit.svg"
-#define ICON_CODE_COMPARE "svg/solid/code-compare.svg"
-#define ICON_CODE_FORK "svg/solid/code-fork.svg"
-#define ICON_CODE_MERGE "svg/solid/code-merge.svg"
-#define ICON_CODE_PULL_REQUEST "svg/solid/code-pull-request.svg"
-#define ICON_CODE "svg/solid/code.svg"
-#define ICON_COINS "svg/solid/coins.svg"
-#define ICON_COLON_SIGN "svg/solid/colon-sign.svg"
-#define ICON_COMMENT_DOLLAR "svg/solid/comment-dollar.svg"
-#define ICON_COMMENT_DOTS_SOLID "svg/solid/comment-dots.svg"
-#define ICON_COMMENT_MEDICAL "svg/solid/comment-medical.svg"
-#define ICON_COMMENT_SLASH "svg/solid/comment-slash.svg"
-#define ICON_COMMENT_SMS "svg/solid/comment-sms.svg"
-#define ICON_COMMENT_SOLID "svg/solid/comment.svg"
-#define ICON_COMMENTS_DOLLAR "svg/solid/comments-dollar.svg"
-#define ICON_COMMENTS_SOLID "svg/solid/comments.svg"
-#define ICON_COMPACT_DISC "svg/solid/compact-disc.svg"
-#define ICON_COMPASS_DRAFTING "svg/solid/compass-drafting.svg"
-#define ICON_COMPASS_SOLID "svg/solid/compass.svg"
-#define ICON_COMPRESS "svg/solid/compress.svg"
-#define ICON_COMPUTER_MOUSE "svg/solid/computer-mouse.svg"
-#define ICON_COMPUTER "svg/solid/computer.svg"
-#define ICON_COOKIE_BITE "svg/solid/cookie-bite.svg"
-#define ICON_COOKIE "svg/solid/cookie.svg"
-#define ICON_COPY_SOLID "svg/solid/copy.svg"
-#define ICON_COPYRIGHT "svg/solid/copyright.svg"
-#define ICON_COUCH "svg/solid/couch.svg"
-#define ICON_COW "svg/solid/cow.svg"
-#define ICON_CREDIT_CARD_SOLID "svg/solid/credit-card.svg"
-#define ICON_CROP_SIMPLE "svg/solid/crop-simple.svg"
-#define ICON_CROP "svg/solid/crop.svg"
-#define ICON_CROSSHAIRS "svg/solid/crosshairs.svg"
-#define ICON_CROW "svg/solid/crow.svg"
-#define ICON_CROWN "svg/solid/crown.svg"
-#define ICON_CRUTCH "svg/solid/crutch.svg"
-#define ICON_CRUTCHES "svg/solid/crutches.svg"
-#define ICON_CUBE "svg/solid/cube.svg"
-#define ICON_CUBES_STAKED "svg/solid/cubes-stacked.svg"
-#define ICON_CUBES "svg/solid/cubes.svg"
-#define ICON_D "svg/solid/d.svg"
-#define ICON_DATABASE "svg/solid/database.svg"
-#define ICON_DELETE_LEFT "svg/solid/delete-left.svg"
-#define ICON_DESERT "svg/solid/desert.svg"
-#define ICON_DESKTOP "svg/solid/desktop.svg"
-#define ICON_DHARMACHAKRA "svg/solid/dharmachakra.svg"
-#define ICON_DIAGRAM_NEXT "svg/solid/diagram-next.svg"
-#define ICON_DIAGRAM_PREDECESSOR "svg/solid/diagram-predecessor.svg"
-#define ICON_DIAGRAM_PROJECT "svg/solid/diagram-project.svg"
-#define ICON_DIAGRAM_SUCCESSOR "svg/solid/diagram-successor.svg"
-#define ICON_DIAMOND_TURN_RIGHT "svg/solid/diamond-turn-right.svg"
-#define ICON_DIAMOND "svg/solid/diamond.svg"
-#define ICON_DICE_D20 "svg/solid/dice-d20.svg"
-#define ICON_DICE_D6 "svg/solid/dice-d6.svg"
-#define ICON_DICE_FIVE "svg/solid/dice-five.svg"
-#define ICON_DICE_FOUR "svg/solid/dice-four.svg"
-#define ICON_DICE_ONE "svg/solid/dice-one.svg"
-#define ICON_DICE_SIX "svg/solid/dice-six.svg"
-#define ICON_DICE_THREE "svg/solid/dice-three.svg"
-#define ICON_DICE_TWO "svg/solid/dice-two.svg"
-#define ICON_DICE "svg/solid/dice.svg"
-#define ICON_DISEASE "svg/solid/disease.svg"
-#define ICON_DISPLAY "svg/solid/display.svg"
-#define ICON_DIVIDE "svg/solid/divide.svg"
-#define ICON_DNA "svg/solid/dna.svg"
-#define ICON_DOG "svg/solid/dog.svg"
-#define ICON_DOLLAR_SIGN "svg/solid/dollar-sign.svg"
-#define ICON_DOLLY "svg/solid/dolly.svg"
-#define ICON_DONG_SIGN "svg/solid/dong-sign.svg"
-#define ICON_DOOR_CLOSED "svg/solid/door-closed.svg"
-#define ICON_DOOR_OPEN "svg/solid/door-open.svg"
-#define ICON_DOT_CIRCLE "svg/solid/dot-circle.svg"
-#define ICON_DOVE "svg/solid/dove.svg"
-#define ICON_DOWN_LEFT_AND_UP_RIGHT_TO_CENTER "svg/solid/down-left-and-up-right-to-center.svg"
-#define ICON_DOWN_LONG "svg/solid/down-long.svg"
-#define ICON_DOWNLOAD "svg/solid/download.svg"
-#define ICON_DRAGON "svg/solid/dragon.svg"
-#define ICON_DRAW_POLYGON "svg/solid/draw-polygon.svg"
-#define ICON_DRUM_STEELPAN "svg/solid/drum-steelpan.svg"
-#define ICON_DRUM "svg/solid/drum.svg"
-#define ICON_DRUMSTICK_BITE "svg/solid/drumstick-bite.svg"
-#define ICON_DUMBBELL "svg/solid/dumbbell.svg"
-#define ICON_DUMPSTER_FIRE "svg/solid/dumpster-fire.svg"
-#define ICON_DUMPSTER "svg/solid/dumpster.svg"
-#define ICON_DUNGEON "svg/solid/dungeon.svg"
-#define ICON_E "svg/solid/e.svg"
-#define ICON_EAR_DEAF "svg/solid/ear-deaf.svg"
-#define ICON_EAR_LISTEN "svg/solid/ear-listen.svg"
-#define ICON_EARTH_AFRICA "svg/solid/earth-africa.svg"
-#define ICON_EARTH_AMERICAS "svg/solid/earth-americas.svg"
-#define ICON_EARTH_ASIA "svg/solid/earth-asia.svg"
-#define ICON_EARTH_EUROPE "svg/solid/earth-europe.svg"
-#define ICON_EARTH_OCEANIA "svg/solid/earth-oceania.svg"
-#define ICON_EGG "svg/solid/egg.svg"
-#define ICON_EJECT "svg/solid/eject.svg"
-#define ICON_ELEVATOR "svg/solid/elevator.svg"
-#define ICON_ELLIPSIS_VERTICAL "svg/solid/ellipsis-vertical.svg"
-#define ICON_ELLIPSIS "svg/solid/ellipsis.svg"
-#define ICON_ENVELOPE_CIRCLE_CHECK "svg/solid/envelope-circle-check.svg"
-#define ICON_ENVELOPE_OPEN_TEXT "svg/solid/envelope-open-text.svg"
-#define ICON_ENVELOPE_OPEN_SOLID "svg/solid/envelope-open.svg"
-#define ICON_ENVELOPE_SOLID "svg/solid/envelope.svg"
-#define ICON_ENVELOPES_BULK "svg/solid/envelopes-bulk.svg"
-#define ICON_EQUALS "svg/solid/equals.svg"
-#define ICON_ERASER "svg/solid/eraser.svg"
-#define ICON_ETHERNET "svg/solid/ethernet.svg"
-#define ICON_EURO_SIGN "svg/solid/euro-sign.svg"
-#define ICON_EXCLAMATION "svg/solid/exclamation.svg"
-#define ICON_EXPAND "svg/solid/expand.svg"
-#define ICON_EXPLOSION "svg/solid/explosion.svg"
-#define ICON_EYE_DROPPER "svg/solid/eye-dropper.svg"
-#define ICON_EYE_LOW_VISION "svg/solid/eye-low-vision.svg"
-#define ICON_EYE_SLASH_SOLID "svg/solid/eye-slash.svg"
-#define ICON_EYE_SOLID "svg/solid/eye.svg"
-#define ICON_F "svg/solid/f.svg"
-#define ICON_FACE_ANGRY_SOLID "svg/solid/face-angry.svg"
-#define ICON_FACE_DIZZY_SOLID "svg/solid/face-dizzy.svg"
-#define ICON_FACE_FLUSHED_SOLID "svg/solid/face-flushed.svg"
-#define ICON_FACE_FROWN_OPEN_SOLID "svg/solid/face-frown-open.svg"
-#define ICON_FACE_FROWN_SOLID "svg/solid/face-frown.svg"
-#define ICON_FACE_GRIMACE_SOLID "svg/solid/face-grimace.svg"
-#define ICON_FACE_GRIN_BEAM_SWEAT_SOLID "svg/solid/face-grin-beam-sweat.svg"
-#define ICON_FACE_GRIN_BEAM_SOLID "svg/solid/face-grin-beam.svg"
-#define ICON_FACE_GRIN_HEARTS_SOLID "svg/solid/face-grin-hearts.svg"
-#define ICON_FACE_GRIN_SQUINT_TEARS_SOLID "svg/solid/face-grin-squint-tears.svg"
-#define ICON_FACE_GRIN_SQUINT_SOLID "svg/solid/face-grin-squint.svg"
-#define ICON_FACE_GRIN_STARS_SOLID "svg/solid/face-grin-stars.svg"
-#define ICON_FACE_GRIN_TEARS_SOLID "svg/solid/face-grin-tears.svg"
-#define ICON_FACE_GRIN_TONGUE_SQUINT_SOLID "svg/solid/face-grin-tongue-squint.svg"
-#define ICON_FACE_GRIN_TONGUE_WINK_SOLID "svg/solid/face-grin-tongue-wink.svg"
-#define ICON_FACE_GRIN_TONGUE_SOLID "svg/solid/face-grin-tongue.svg"
-#define ICON_FACE_GRIN_WIDE_SOLID "svg/solid/face-grin-wide.svg"
-#define ICON_FACE_GRIN_WINK_SOLID "svg/solid/face-grin-wink.svg"
-#define ICON_FACE_GRIN_SOLID "svg/solid/face-grin.svg"
-#define ICON_FACE_KISS_BEAM_SOLID "svg/solid/face-kiss-beam.svg"
-#define ICON_FACE_KISS_WINK_HEART_SOLID "svg/solid/face-kiss-wink-heart.svg"
-#define ICON_FACE_KISS_SOLID "svg/solid/face-kiss.svg"
-#define ICON_FACE_LAUGH_BEAM_SOLID "svg/solid/face-laugh-beam.svg"
-#define ICON_FACE_LAUGH_SQUINT_SOLID "svg/solid/face-laugh-squint.svg"
-#define ICON_FACE_LAUGH_WINK_SOLID "svg/solid/face-laugh-wink.svg"
-#define ICON_FACE_LAUGH_SOLID "svg/solid/face-laugh.svg"
-#define ICON_FACE_MEH_BLANK_SOLID "svg/solid/face-meh-blank.svg"
-#define ICON_FACE_MEH_SOLID "svg/solid/face-meh.svg"
-#define ICON_FACE_ROLLING_EYES_SOLID "svg/solid/face-rolling-eyes.svg"
-#define ICON_FACE_SAD_CRY_SOLID "svg/solid/face-sad-cry.svg"
-#define ICON_FACE_SAD_TEAR_SOLID "svg/solid/face-sad-tear.svg"
-#define ICON_FACE_SMILE_BEAM_SOLID "svg/solid/face-smile-beam.svg"
-#define ICON_FACE_SMILE_WINK_SOLID "svg/solid/face-smile-wink.svg"
-#define ICON_FACE_SMILE_SOLID "svg/solid/face-smile.svg"
-#define ICON_FACE_SURPRISE_SOLID "svg/solid/face-surprise.svg"
-#define ICON_FACE_TIRED_SOLID "svg/solid/face-tired.svg"
-#define ICON_FAN "svg/solid/fan.svg"
-#define ICON_FAUCET_DRIP "svg/solid/faucet-drip.svg"
-#define ICON_FAUCET "svg/solid/faucet.svg"
-#define ICON_FAX "svg/solid/fax.svg"
-#define ICON_FEATHER_POINTED "svg/solid/feather-pointed.svg"
-#define ICON_FEATHER "svg/solid/feather.svg"
-#define ICON_FERRY "svg/solid/ferry.svg"
-#define ICON_FILE_ARROW_DOWN "svg/solid/file-arrow-down.svg"
-#define ICON_FILE_ARROW_UP "svg/solid/file-arrow-up.svg"
-#define ICON_FILE_AUDIO_SOLID "svg/solid/file-audio.svg"
-#define ICON_FILE_CIRCLE_CHECK "svg/solid/file-circle-check.svg"
-#define ICON_FILE_CIRCLE_EXCLAMATION "svg/solid/file-circle-exclamation.svg"
-#define ICON_FILE_CIRCLE_MINUS "svg/solid/file-circle-minus.svg"
-#define ICON_FILE_CIRCLE_PLUS "svg/solid/file-circle-plus.svg"
-#define ICON_FILE_CIRCLE_QUESTION "svg/solid/file-circle-question.svg"
-#define ICON_FILE_CIRCLE_XMARK "svg/solid/file-circle-xmark.svg"
-#define ICON_FILE_CODE_SOLID "svg/solid/file-code.svg"
-#define ICON_FILE_CONTRACT "svg/solid/file-contract.svg"
-#define ICON_FILE_CSV "svg/solid/file-csv.svg"
-#define ICON_FILE_EXCEL_SOLID "svg/solid/file-excel.svg"
-#define ICON_FILE_EXPORT "svg/solid/file-export.svg"
-#define ICON_FILE_IMAGE_SOLID "svg/solid/file-image.svg"
-#define ICON_FILE_IMPORT "svg/solid/file-import.svg"
-#define ICON_FILE_INVOICE_DOLLAR "svg/solid/file-invoice-dollar.svg"
-#define ICON_FILE_INVOICE "svg/solid/file-invoice.svg"
-#define ICON_FILE_LINES_SOLID "svg/solid/file-lines.svg"
-#define ICON_FILE_MEDICAL "svg/solid/file-medical.svg"
-#define ICON_FILE_PDF_SOLID "svg/solid/file-pdf.svg"
-#define ICON_FILE_PEN "svg/solid/file-pen.svg"
-#define ICON_FILE_POWERPOINT_SOLID "svg/solid/file-powerpoint.svg"
-#define ICON_FILE_PRESCRIPTION "svg/solid/file-prescription.svg"
-#define ICON_FILE_SHIELD "svg/solid/file-shield.svg"
-#define ICON_FILE_VIDEO_SOLID "svg/solid/file-video.svg"
-#define ICON_FILE_WAVEFORM "svg/solid/file-waveform.svg"
-#define ICON_FILE_WORD_SOLID "svg/solid/file-word.svg"
-#define ICON_FILE_ZIPPER_SOLID "svg/solid/file-zipper.svg"
-#define ICON_FILE_SOLID "svg/solid/file.svg"
-#define ICON_FILL_DRIP "svg/solid/fill-drip.svg"
-#define ICON_FILL "svg/solid/fill.svg"
-#define ICON_FILM "svg/solid/film.svg"
-#define ICON_FILTER_CIRCLE_XMARK "svg/solid/filter-circle-xmark.svg"
-#define ICON_FILTER_CIRCLE "svg/solid/filter-circle.svg"
-#define ICON_FILTER "svg/solid/filter.svg"
-#define ICON_FINGERPRINT "svg/solid/fingerprint.svg"
-#define ICON_FIRE_BURNER "svg/solid/fire-burner.svg"
-#define ICON_FIRE_EXTINGUISHER "svg/solid/fire-extinguisher.svg"
-#define ICON_FIRE_FLAME_CURVED "svg/solid/fire-flame-curved.svg"
-#define ICON_FIRE_FLAME_SIMPLE "svg/solid/fire-flame-simple.svg"
-#define ICON_FIRE "svg/solid/fire.svg"
-#define ICON_FISH_FINS "svg/solid/fish-fins.svg"
-#define ICON_FISH "svg/solid/fish.svg"
-#define ICON_FLAG_CHECKERED "svg/solid/flag-checkered.svg"
-#define ICON_FLAG_USA "svg/solid/flag-usa.svg"
-#define ICON_FLAG_SOLID "svg/solid/flag.svg"
-#define ICON_FLASK_VIAL "svg/solid/flask-vial.svg"
-#define ICON_FLASK "svg/solid/flask.svg"
-#define ICON_FLOPPY_DISK_SOLID "svg/solid/floppy-disk.svg"
-#define ICON_FLORIN_SIGN "svg/solid/florin-sign.svg"
-#define ICON_FOLDER_CLOSED_SOLID "svg/solid/folder-closed.svg"
-#define ICON_FOLDER_MINUS "svg/solid/folder-minus.svg"
-#define ICON_FOLDER_OPEN_SOLID "svg/solid/folder-open.svg"
-#define ICON_FOLDER_PLUS "svg/solid/folder-plus.svg"
-#define ICON_FOLDER_TREE "svg/solid/folder-tree.svg"
-#define ICON_FOLDER_SOLID "svg/solid/folder.svg"
-#define ICON_FONT_AWESOME_SOLID "svg/solid/font-awesome.svg"
-#define ICON_FONT "svg/solid/font.svg"
-#define ICON_FOOTBALL "svg/solid/football.svg"
-#define ICON_FORWARD_FAST "svg/solid/forward-fast.svg"
-#define ICON_FORWARD_STEP "svg/solid/forward-step.svg"
-#define ICON_FORWARD "svg/solid/forward.svg"
-#define ICON_FRANC_SIGN "svg/solid/franc-sign.svg"
-#define ICON_FUNNEL_DOLLAR "svg/solid/funnel-dollar.svg"
-#define ICON_FUTBOL_SOLID "svg/solid/futbol.svg"
-#define ICON_G "svg/solid/g.svg"
-#define ICON_GAMEPAD "svg/solid/gamepad.svg"
-#define ICON_GAS_PUMP "svg/solid/gas-pump.svg"
-#define ICON_GAUGE_HIGH "svg/solid/gauge-high.svg"
-#define ICON_GAUGE_SIMPLE_HIGH "svg/solid/gauge-simple-high.svg"
-#define ICON_GAUGE_SIMPLE "svg/solid/gauge-simple.svg"
-#define ICON_GAUGE "svg/solid/gauge.svg"
-#define ICON_GAVEL "svg/solid/gavel.svg"
-#define ICON_GEAR "svg/solid/gear.svg"
-#define ICON_GEARS "svg/solid/gears.svg"
-#define ICON_GEM_SOLID "svg/solid/gem.svg"
-#define ICON_GENDERLESS "svg/solid/genderless.svg"
-#define ICON_GHOST "svg/solid/ghost.svg"
-#define ICON_GIFT "svg/solid/gift.svg"
-#define ICON_GIFTS "svg/solid/gifts.svg"
-#define ICON_GLASS_WATER_DROPLET "svg/solid/glass-water-droplet.svg"
-#define ICON_GLASS_WATER "svg/solid/glass-water.svg"
-#define ICON_GLASSES "svg/solid/glasses.svg"
-#define ICON_GLOBE "svg/solid/globe.svg"
-#define ICON_GOLF_BALL_TEE "svg/solid/golf-ball-tee.svg"
-#define ICON_GOPURAM "svg/solid/gopuram.svg"
-#define ICON_GRADUATION_CAP "svg/solid/graduation-cap.svg"
-#define ICON_GREATER_THAN_EQUAL "svg/solid/greater-than-equal.svg"
-#define ICON_GREATER_THAN "svg/solid/greater-than.svg"
-#define ICON_GRIP_LINES_VERTICAL "svg/solid/grip-lines-vertical.svg"
-#define ICON_GRIP_LINES "svg/solid/grip-lines.svg"
-#define ICON_GRIP_VERTICAL "svg/solid/grip-vertical.svg"
-#define ICON_GRIP "svg/solid/grip.svg"
-#define ICON_GUARANI_SIGN "svg/solid/guarani-sign.svg"
-#define ICON_GUITAR "svg/solid/guitar.svg"
-#define ICON_GUN "svg/solid/gun.svg"
-#define ICON_H "svg/solid/h.svg"
-#define ICON_HAMMER "svg/solid/hammer.svg"
-#define ICON_HAMSA "svg/solid/hamsa.svg"
-#define ICON_HAND_BACK_FIST_SOLID "svg/solid/hand-back-fist.svg"
-#define ICON_HAND_DOTS "svg/solid/hand-dots.svg"
-#define ICON_HAND_FIST "svg/solid/hand-fist.svg"
-#define ICON_HAND_HOLDING_DOLLAR "svg/solid/hand-holding-dollar.svg"
-#define ICON_HAND_HOLDING_DROPLET "svg/solid/hand-holding-droplet.svg"
-#define ICON_HAND_HOLDING_HEART "svg/solid/hand-holding-heart.svg"
-#define ICON_HAND_HOLDING_MEDICAL "svg/solid/hand-holding-medical.svg"
-#define ICON_HAND_HOLDING "svg/solid/hand-holding.svg"
-#define ICON_HAND_LIZARD_SOLID "svg/solid/hand-lizard.svg"
-#define ICON_HAND_MIDDLE_FINGER "svg/solid/hand-middle-finger.svg"
-#define ICON_HAND_PEACE_SOLID "svg/solid/hand-peace.svg"
-#define ICON_HAND_POINT_DOWN "svg/solid/hand-point-down.svg"
-#define ICON_HAND_POINT_LEFT "svg/solid/hand-point-left.svg"
-#define ICON_HAND_POINT_RIGHT "svg/solid/hand-point-right.svg"
-#define ICON_HAND_POINT_UP "svg/solid/hand-point-up.svg"
-#define ICON_HAND_POINTER_SOLID "svg/solid/hand-pointer.svg"
-#define ICON_HAND_SCISSORS_SOLID "svg/solid/hand-scissors.svg"
-#define ICON_HAND_SPARKLES "svg/solid/hand-sparkles.svg"
-#define ICON_HAND_SPOCK_SOLID "svg/solid/hand-spock.svg"
-#define ICON_HAND_SOLID "svg/solid/hand.svg"
-#define ICON_HANDS_ASL_INTERPRETING_SOLID "svg/solid/hands-asl-interpreting.svg"
-#define ICON_HANDS_BOUND_SOLID "svg/solid/hands-bound.svg"
-#define ICON_HANDS_BUBBLES_SOLID "svg/solid/hands-bubbles.svg"
-#define ICON_HANDS_CLAPPING_SOLID "svg/solid/hands-clapping.svg"
-#define ICON_HANDS_HOLDING_CHILD_SOLID "svg/solid/hands-holding-child.svg"
-#define ICON_HANDS_HOLDING_CIRCLE_SOLID "svg/solid/hands-holding-circle.svg"
-#define ICON_HANDS_HOLDING_SOLID "svg/solid/hands-holding.svg"
-#define ICON_HANDS_PRAYING_SOLID "svg/solid/hands-praying.svg"
-#define ICON_HANDS_SOLID "svg/solid/hands.svg"
-#define ICON_HANDSHAKE_ANGLE "svg/solid/handshake-angle.svg"
-#define ICON_HANDSHAKE_SIMPLE_SLASH "svg/solid/handshake-simple-slash.svg"
-#define ICON_HANDSHAKE_SIMPLE "svg/solid/handshake-simple.svg"
-#define ICON_HANDSHAKE_SLASH "svg/solid/handshake-slash.svg"
-#define ICON_HANDSHAKE "svg/solid/handshake.svg"
-#define ICON_HARD_DRIVE_SOLID "svg/solid/hard-drive.svg"
-#define ICON_HASHTAG "svg/solid/hashtag.svg"
-#define ICON_HAT_COWBOY_SIDE "svg/solid/hat-cowboy-side.svg"
-#define ICON_HAT_COWBOY "svg/solid/hat-cowboy.svg"
-#define ICON_HAT_WIZARD "svg/solid/hat-wizard.svg"
-#define ICON_HEAD_SIDE_COUGH_SLASH "svg/solid/head-side-cough-slash.svg"
-#define ICON_HEAD_SIDE_COUGH "svg/solid/head-side-cough.svg"
-#define ICON_HEAD_SIDE_MASK "svg/solid/head-side-mask.svg"
-#define ICON_HEAD_SIDE_VIRUS "svg/solid/head-side-virus.svg"
-#define ICON_HEADING "svg/solid/heading.svg"
-#define ICON_HEADPHONES_SIMPLE "svg/solid/headphones-simple.svg"
-#define ICON_HEADPHONES "svg/solid/headphones.svg"
-#define ICON_HEADSET "svg/solid/headset.svg"
-#define ICON_HEART_CIRCLE_BOLT "svg/solid/heart-circle-bolt.svg"
-#define ICON_HEART_CIRCLE_CHECK "svg/solid/heart-circle-check.svg"
-#define ICON_HEART_CIRCLE_EXCLAMATION "svg/solid/heart-circle-exclamation.svg"
-#define ICON_HEART_CIRCLE_MINUS "svg/solid/heart-circle-minus.svg"
-#define ICON_HEART_CIRCLE_PLUS "svg/solid/heart-circle-plus.svg"
-#define ICON_HEART_CIRCLE_XMARK "svg/solid/heart-circle-xmark.svg"
-#define ICON_HEART_PULSE "svg/solid/heart-pulse.svg"
-#define ICON_HEART_SOLID "svg/solid/heart.svg"
-#define ICON_HELICOPTER_SYMBOL "svg/solid/helicopter-symbol.svg"
-#define ICON_HELICOPTER "svg/solid/helicopter.svg"
-#define ICON_HELMET_SAFETY "svg/solid/helmet-safety.svg"
-#define ICON_HELMET_UN "svg/solid/helmet-un.svg"
-#define ICON_HIGHLIGHTER "svg/solid/highlighter.svg"
-#define ICON_HILL_AVALANCHE "svg/solid/hill-avalanche.svg"
-#define ICON_HILL_ROCKSLIDE "svg/solid/hill-rockslide.svg"
-#define ICON_HIPPO "svg/solid/hippo.svg"
-#define ICON_HISTORY "svg/solid/history.svg"
-#define ICON_HOCKEY_PUCK "svg/solid/hockey-puck.svg"
-#define ICON_HOLLY_BERRY "svg/solid/holly-berry.svg"
-#define ICON_HORSE_HEAD "svg/solid/horse-head.svg"
-#define ICON_HORSE "svg/solid/horse.svg"
-#define ICON_HOSPITAL_USER "svg/solid/hospital-user.svg"
-#define ICON_HOSPITAL_SOLID "svg/solid/hospital.svg"
-#define ICON_HOT_TUB_PERSON "svg/solid/hot-tub-person.svg"
-#define ICON_HOTDOG "svg/solid/hotdog.svg"
-#define ICON_HOTEL "svg/solid/hotel.svg"
-#define ICON_HOURGLASS_END "svg/solid/hourglass-end.svg"
-#define ICON_HOURGLASS_HALF_SOLID "svg/solid/hourglass-half.svg"
-#define ICON_HOURGLASS_START "svg/solid/hourglass-start.svg"
-#define ICON_HOURGLASS_SOLID "svg/solid/hourglass.svg"
-#define ICON_HOUSE_CHIMNEY_CRACK "svg/solid/house-chimney-crack.svg"
-#define ICON_HOUSE_CHIMNEY_MEDICAL "svg/solid/house-chimney-medical.svg"
-#define ICON_HOUSE_CHIMNEY_USER "svg/solid/house-chimney-user.svg"
-#define ICON_HOUSE_CHIMNEY_WINDOW "svg/solid/house-chimney-window.svg"
-#define ICON_HOUSE_CHIMNEY "svg/solid/house-chimney.svg"
-#define ICON_HOUSE_CIRCLE_CHECK "svg/solid/house-circle-check.svg"
-#define ICON_HOUSE_CIRCLE_EXCLAMATION "svg/solid/house-circle-exclamation.svg"
-#define ICON_HOUSE_CIRCLE_XMARK "svg/solid/house-circle-xmark.svg"
-#define ICON_HOUSE_CRACK "svg/solid/house-crack.svg"
-#define ICON_HOUSE_FIRE "svg/solid/house-fire.svg"
-#define ICON_HOUSE_FLAG "svg/solid/house-flag.svg"
-#define ICON_HOUSE_FLOOD_WATER_CIRCLE_ARROW_RIGHT "svg/solid/house-flood-water-circle-arrow-right.svg"
-#define ICON_HOUSE_FLOOD_WATER "svg/solid/house-flood-water.svg"
-#define ICON_HOUSE_LAPTOP "svg/solid/house-laptop.svg"
-#define ICON_HOUSE_LOCK "svg/solid/house-lock.svg"
-#define ICON_HOUSE_MEDICAL_CIRCLE_CHECK "svg/solid/house-medical-circle-check.svg"
-#define ICON_HOUSE_MEDICAL_CIRCLE_EXCLAMATION "svg/solid/house-medical-circle-exclamation.svg"
-#define ICON_HOUSE_MEDICAL_CIRCLE_XMARK "svg/solid/house-medical-circle-xmark.svg"
-#define ICON_HOUSE_MEDICAL_FLAG "svg/solid/house-medical-flag.svg"
-#define ICON_HOUSE_MEDICAL "svg/solid/house-medical.svg"
-#define ICON_HOUSE_SIGNAL "svg/solid/house-signal.svg"
-#define ICON_HOUSE_TSUNAMI "svg/solid/house-tsunami.svg"
-#define ICON_HOUSE_USER "svg/solid/house-user.svg"
-#define ICON_HOUSE "svg/solid/house.svg"
-#define ICON_HRYVNIA_SIGN "svg/solid/hryvnia-sign.svg"
-#define ICON_HURRICANE "svg/solid/hurricane.svg"
-#define ICON_I_CURSOR "svg/solid/i-cursor.svg"
-#define ICON_I "svg/solid/i.svg"
-#define ICON_ICE_CREAM "svg/solid/ice-cream.svg"
-#define ICON_ICICLES "svg/solid/icicles.svg"
-#define ICON_ICONS "svg/solid/icons.svg"
-#define ICON_ID_BADGE_SOLID "svg/solid/id-badge.svg"
-#define ICON_ID_CARD_CLIP "svg/solid/id-card-clip.svg"
-#define ICON_ID_CARD_SOLID "svg/solid/id-card.svg"
-#define ICON_IGLOO "svg/solid/igloo.svg"
-#define ICON_IMAGE_PORTRAIT "svg/solid/image-portrait.svg"
-#define ICON_IMAGE_SOLID "svg/solid/image.svg"
-#define ICON_IMAGES_SOLID "svg/solid/images.svg"
-#define ICON_INBOX "svg/solid/inbox.svg"
-#define ICON_INDENT "svg/solid/indent.svg"
-#define ICON_INDIAN_RUPEE_SIGN "svg/solid/indian-rupee-sign.svg"
-#define ICON_INDUSTRY "svg/solid/industry.svg"
-#define ICON_INFINITY "svg/solid/infinity.svg"
-#define ICON_INFO "svg/solid/info.svg"
-#define ICON_ITALIC "svg/solid/italic.svg"
-#define ICON_J "svg/solid/j.svg"
-#define ICON_JAR_WHEAT "svg/solid/jar-wheat.svg"
-#define ICON_JAR "svg/solid/jar.svg"
-#define ICON_JEDI "svg/solid/jedi.svg"
-#define ICON_JET_FIGHTER_UP "svg/solid/jet-fighter-up.svg"
-#define ICON_JET_FIGHTER "svg/solid/jet-fighter.svg"
-#define ICON_JOINT "svg/solid/joint.svg"
-#define ICON_JUG_DETERGENT "svg/solid/jug-detergent.svg"
-#define ICON_K "svg/solid/k.svg"
-#define ICON_KAABA "svg/solid/kaaba.svg"
-#define ICON_KEY "svg/solid/key.svg"
-#define ICON_KEYBOARD_SOLID "svg/solid/keyboard.svg"
-#define ICON_KHANDA "svg/solid/khanda.svg"
-#define ICON_KIP_SIGN "svg/solid/kip-sign.svg"
-#define ICON_KIT_MEDICAL "svg/solid/kit-medical.svg"
-#define ICON_KITCHEN_SET "svg/solid/kitchen-set.svg"
-#define ICON_KIWI_BIRD "svg/solid/kiwi-bird.svg"
-#define ICON_L "svg/solid/l.svg"
-#define ICON_LAND_MINE_ON "svg/solid/land-mine-on.svg"
-#define ICON_LANDMARK_DOME "svg/solid/landmark-dome.svg"
-#define ICON_LANDMARK_FLAG "svg/solid/landmark-flag.svg"
-#define ICON_LANDMARK "svg/solid/landmark.svg"
-#define ICON_LANGUAGE "svg/solid/language.svg"
-#define ICON_LAPTOP_CODE "svg/solid/laptop-code.svg"
-#define ICON_LAPTOP_FILE "svg/solid/laptop-file.svg"
-#define ICON_LAPTOP_MEDICAL "svg/solid/laptop-medical.svg"
-#define ICON_LAPTOP "svg/solid/laptop.svg"
-#define ICON_LARI_SIGN "svg/solid/lari-sign.svg"
-#define ICON_LAYER_GROUP "svg/solid/layer-group.svg"
-#define ICON_LEAF "svg/solid/leaf.svg"
-#define ICON_LEFT_LONG "svg/solid/left-long.svg"
-#define ICON_LEFT_RIGHT "svg/solid/left-right.svg"
-#define ICON_LEMON_SOLID "svg/solid/lemon.svg"
-#define ICON_LESS_THAN_EQUAL "svg/solid/less-than-equal.svg"
-#define ICON_LESS_THAN "svg/solid/less-than.svg"
-#define ICON_LIFE_RING "svg/solid/life-ring.svg"
-#define ICON_LIGHTBULB_SOLID "svg/solid/lightbulb.svg"
-#define ICON_LINES_LEARNING "svg/solid/lines-learning.svg"
-#define ICON_LINK_SLASH "svg/solid/link-slash.svg"
-#define ICON_LINK "svg/solid/link.svg"
-#define ICON_LIRA_SIGN "svg/solid/lira-sign.svg"
-#define ICON_LIST_CHECK "svg/solid/list-check.svg"
-#define ICON_LIST_OL "svg/solid/list-ol.svg"
-#define ICON_LIST_UL "svg/solid/list-ul.svg"
-#define ICON_LIST "svg/solid/list.svg"
-#define ICON_LITECOIN_SIGN "svg/solid/litecoin-sign.svg"
-#define ICON_LOCATION_CROSSHAIRS "svg/solid/location-crosshairs.svg"
-#define ICON_LOCATION_DOT "svg/solid/location-dot.svg"
-#define ICON_LOCATION_PIN_LOCK "svg/solid/location-pin-lock.svg"
-#define ICON_LOCATION_PIN "svg/solid/location-pin.svg"
-#define ICON_LOCK_OPEN "svg/solid/lock-open.svg"
-#define ICON_LOCK "svg/solid/lock.svg"
-#define ICON_LOCUST "svg/solid/locust.svg"
-#define ICON_LUNGS_VIRUS "svg/solid/lungs-virus.svg"
-#define ICON_LUNGS "svg/solid/lungs.svg"
-#define ICON_M "svg/solid/m.svg"
-#define ICON_MAGNET "svg/solid/magnet.svg"
-#define ICON_MAGNIFYING_GLASS_ARROW_RIGHT "svg/solid/magnifying-glass-arrow-right.svg"
-#define ICON_MAGNIFYING_GLASS_CHART "svg/solid/magnifying-glass-chart.svg"
-#define ICON_MAGNIFYING_GLASS_DOLLAR "svg/solid/magnifying-glass-dollar.svg"
-#define ICON_MAGNIFYING_GLASS_LOCATION "svg/solid/magnifying-glass-location.svg"
-#define ICON_MAGNIFYING_GLASS_MINUS "svg/solid/magnifying-glass-minus.svg"
-#define ICON_MAGNIFYING_GLASS_PLUS "svg/solid/magnifying-glass-plus.svg"
-#define ICON_MAGNIFYING_GLASS "svg/solid/magnifying-glass.svg"
-#define ICON_MANAT_SIGN "svg/solid/manat-sign.svg"
-#define ICON_MAP_PIN "svg/solid/map-pin.svg"
-#define ICON_MAP_SIGNS "svg/solid/map-signs.svg"
-#define ICON_MAP_SOLID "svg/solid/map.svg"
-#define ICON_MARKER "svg/solid/marker.svg"
-#define ICON_MARS_AND_VENUS_BURST "svg/solid/mars-and-venus-burst.svg"
-#define ICON_MARS_AND_VENUS "svg/solid/mars-and-venus.svg"
-#define ICON_MARS_DOUBLE "svg/solid/mars-double.svg"
-#define ICON_MARS_STROKE_RIGHT "svg/solid/mars-stroke-right.svg"
-#define ICON_MARS_STROKE_UP "svg/solid/mars-stroke-up.svg"
-#define ICON_MARS_STROKE "svg/solid/mars-stroke.svg"
-#define ICON_MARS "svg/solid/mars.svg"
-#define ICON_MASK_FACE "svg/solid/mask-face.svg"
-#define ICON_MASK_VENTILATOR "svg/solid/mask-ventilator.svg"
-#define ICON_MASK "svg/solid/mask.svg"
-#define ICON_MASQUERADE "svg/solid/masquerade.svg"
-#define ICON_MONEY_BILL_1_WAVE "svg/solid/money-bill-1-wave.svg"
-#define ICON_MONEY_BILL_1_SOLID "svg/solid/money-bill-1.svg"
-#define ICON_MONEY_BILL_TRANSFER "svg/solid/money-bill-transfer.svg"
-#define ICON_MONEY_BILL_TREND_UP "svg/solid/money-bill-trend-up.svg"
-#define ICON_MONEY_BILL_WAVE "svg/solid/money-bill-wave.svg"
-#define ICON_MONEY_BILL_WHEAT "svg/solid/money-bill-wheat.svg"
-#define ICON_MONEY_BILL "svg/solid/money-bill.svg"
-#define ICON_MONEY_BILLS "svg/solid/money-bills.svg"
-#define ICON_MONEY_CHECK_DOLLAR "svg/solid/money-check-dollar.svg"
-#define ICON_MONEY_CHECK "svg/solid/money-check.svg"
-#define ICON_MONUMENT "svg/solid/monument.svg"
-#define ICON_MOON_SOLID "svg/solid/moon.svg"
-#define ICON_MORTAR_PESTLE "svg/solid/mortar-pestle.svg"
-#define ICON_MOSQUE "svg/solid/mosque.svg"
-#define ICON_MOSQUITO_NET "svg/solid/mosquito-net.svg"
-#define ICON_MOSQUITO "svg/solid/mosquito.svg"
-#define ICON_MOTORCYCLE "svg/solid/motorcycle.svg"
-#define ICON_MOUND "svg/solid/mound.svg"
-#define ICON_MOUNTAIN_CITY "svg/solid/mountain-city.svg"
-#define ICON_MOUNTAIN_SUN "svg/solid/mountain-sun.svg"
-#define ICON_MOUNTAIN "svg/solid/mountain.svg"
-#define ICON_MUG_HOT "svg/solid/mug-hot.svg"
-#define ICON_MUG_SAUCER "svg/solid/mug-saucer.svg"
-#define ICON_MUSIC "svg/solid/music.svg"
-#define ICON_N "svg/solid/n.svg"
-#define ICON_NAIRA_SIGN "svg/solid/naira-sign.svg"
-#define ICON_NETWORK_WIRED "svg/solid/network-wired.svg"
-#define ICON_NEUTER "svg/solid/neuter.svg"
-#define ICON_NEWSPAPER_SOLID "svg/solid/newspaper.svg"
-#define ICON_NOT_EQUAL "svg/solid/not-equal.svg"
-#define ICON_NOTDEF "svg/solid/notdef.svg"
-#define ICON_NOTE_STICKY_SOLID "svg/solid/note-sticky.svg"
-#define ICON_NOTES_MEDICAL "svg/solid/notes-medical.svg"
-#define ICON_O "svg/solid/o.svg"
-#define ICON_OBJECT_GROUP_SOLID "svg/solid/object-group.svg"
-#define ICON_OBJECT_UNGROUP_SOLID "svg/solid/object-ungroup.svg"
-#define ICON_OIL_CAN "svg/solid/oil-can.svg"
-#define ICON_OIL_WELL "svg/solid/oil-well.svg"
-#define ICON_OM "svg/solid/om.svg"
-#define ICON_OTTER "svg/solid/otter.svg"
-#define ICON_OUTDENT "svg/solid/outdent.svg"
-#define ICON_P "svg/solid/p.svg"
-#define ICON_PACKET "svg/solid/packet.svg"
-#define ICON_PADLET "svg/solid/padlet.svg"
-#define ICON_PAGER "svg/solid/pager.svg"
-#define ICON_PAINT_ROLLER "svg/solid/paint-roller.svg"
-#define ICON_PAINTBRUSH "svg/solid/paintbrush.svg"
-#define ICON_PALETTE "svg/solid/palette.svg"
-#define ICON_PALLET "svg/solid/pallet.svg"
-#define ICON_PANORAMA "svg/solid/panorama.svg"
-#define ICON_PAPER_PLANE_SOLID "svg/solid/paper-plane.svg"
-#define ICON_PAPERCLIP "svg/solid/paperclip.svg"
-#define ICON_PARACHUTE_BOX "svg/solid/parachute-box.svg"
-#define ICON_PARAGRAPH "svg/solid/paragraph.svg"
-#define ICON_PASSPORT "svg/solid/passport.svg"
-#define ICON_PASTE_SOLID "svg/solid/paste.svg"
-#define ICON_PAUSE "svg/solid/pause.svg"
-#define ICON_PAW "svg/solid/paw.svg"
-#define ICON_PEACE "svg/solid/peace.svg"
-#define ICON_PEN_CLIP "svg/solid/pen-clip.svg"
-#define ICON_PEN_FANCY "svg/solid/pen-fancy.svg"
-#define ICON_PEN_NIB "svg/solid/pen-nib.svg"
-#define ICON_PEN_RULER "svg/solid/pen-ruler.svg"
-#define ICON_PEN_TO_SQUARE "svg/solid/pen-to-square.svg"
-#define ICON_PEN "svg/solid/pen.svg"
-#define ICON_PENCIL "svg/solid/pencil.svg"
-#define ICON_PEOPLE_ARROWS_LEFT_RIGHT "svg/solid/people-arrows-left-right.svg"
-#define ICON_PEOPLE_CARRY_BOX "svg/solid/people-carry-box.svg"
-#define ICON_PEOPLE_CARRY "svg/solid/people-carry.svg"
-#define ICON_PEOPLE_GROUP "svg/solid/people-group.svg"
-#define ICON_PEOPLE_LINE "svg/solid/people-line.svg"
-#define ICON_PEOPLE_PULLING "svg/solid/people-pulling.svg"
-#define ICON_PEOPLE_ROBBERY "svg/solid/people-robbery.svg"
-#define ICON_PEOPLE_ROOF "svg/solid/people-roof.svg"
-#define ICON_PEPPER_HOT "svg/solid/pepper-hot.svg"
-#define ICON_PERCENT "svg/solid/percent.svg"
-#define ICON_PERCENTAGE "svg/solid/percentage.svg"
-#define ICON_PERSON_ARROW_DOWN_TO_LINE "svg/solid/person-arrow-down-to-line.svg"
-#define ICON_PERSON_ARROW_UP_FROM_LINE "svg/solid/person-arrow-up-from-line.svg"
-#define ICON_PERSON_BIKING "svg/solid/person-biking.svg"
-#define ICON_PERSON_BOOTH "svg/solid/person-booth.svg"
-#define ICON_PERSON_BREASTFEEDING "svg/solid/person-breastfeeding.svg"
-#define ICON_PERSON_BURST "svg/solid/person-burst.svg"
-#define ICON_PERSON_CANE "svg/solid/person-cane.svg"
-#define ICON_PERSON_CHALKBOARD "svg/solid/person-chalkboard.svg"
-#define ICON_PERSON_CIRCLE_CHECK "svg/solid/person-circle-check.svg"
-#define ICON_PERSON_CIRCLE_EXCLAMATION "svg/solid/person-circle-exclamation.svg"
-#define ICON_PERSON_CIRCLE_MINUS "svg/solid/person-circle-minus.svg"
-#define ICON_PERSON_CIRCLE_PLUS "svg/solid/person-circle-plus.svg"
-#define ICON_PERSON_CIRCLE_QUESTION "svg/solid/person-circle-question.svg"
-#define ICON_PERSON_CIRCLE_XMARK "svg/solid/person-circle-xmark.svg"
-#define ICON_PERSON_DIGGING "svg/solid/person-digging.svg"
-#define ICON_PERSON_DOTS_FROM_LINE "svg/solid/person-dots-from-line.svg"
-#define ICON_PERSON_DRESS_BURST "svg/solid/person-dress-burst.svg"
-#define ICON_PERSON_DRESS "svg/solid/person-dress.svg"
-#define ICON_PERSON_DROWNING "svg/solid/person-drowning.svg"
-#define ICON_PERSON_FALLING_BURST "svg/solid/person-falling-burst.svg"
-#define ICON_PERSON_FALLING "svg/solid/person-falling.svg"
-#define ICON_PERSON_HALF_DRESS "svg/solid/person-half-dress.svg"
-#define ICON_PERSON_HARASSING "svg/solid/person-harassing.svg"
-#define ICON_PERSON_HIKING "svg/solid/person-hiking.svg"
-#define ICON_PERSON_MILITARY_POINTING "svg/solid/person-military-pointing.svg"
-#define ICON_PERSON_MILITARY_RIFLE "svg/solid/person-military-rifle.svg"
-#define ICON_PERSON_MILITARY_TO_PERSON "svg/solid/person-military-to-person.svg"
-#define ICON_PERSON_PRAYING "svg/solid/person-praying.svg"
-#define ICON_PERSON_PREGNANT "svg/solid/person-pregnant.svg"
-#define ICON_PERSON_RAYS "svg/solid/person-rays.svg"
-#define ICON_PERSON_RIFLE "svg/solid/person-rifle.svg"
-#define ICON_PERSON_RUNNING "svg/solid/person-running.svg"
-#define ICON_PERSON_SHOWER "svg/solid/person-shower.svg"
-#define ICON_PERSON_SKATING "svg/solid/person-skating.svg"
-#define ICON_PERSON_SKIING_NORDIC "svg/solid/person-skiing-nordic.svg"
-#define ICON_PERSON_SKIING "svg/solid/person-skiing.svg"
-#define ICON_PERSON_SLEDDING "svg/solid/person-sledding.svg"
-#define ICON_PERSON_SNOWBOARDING "svg/solid/person-snowboarding.svg"
-#define ICON_PERSON_SWIMMING "svg/solid/person-swimming.svg"
-#define ICON_PERSON_THROUGH_WINDOW "svg/solid/person-through-window.svg"
-#define ICON_PERSON_WALKING_ARROW_LOOP_LEFT "svg/solid/person-walking-arrow-loop-left.svg"
-#define ICON_PERSON_WALKING_ARROW_RIGHT "svg/solid/person-walking-arrow-right.svg"
-#define ICON_PERSON_WALKING_DASHED_LINE_ARROW_RIGHT "svg/solid/person-walking-dashed-line-arrow-right.svg"
-#define ICON_PERSON_WALKING_LUGGAGE "svg/solid/person-walking-luggage.svg"
-#define ICON_PERSON_WALKING_WITH_CANE "svg/solid/person-walking-with-cane.svg"
-#define ICON_PERSON_WALKING "svg/solid/person-walking.svg"
-#define ICON_PERSON "svg/solid/person.svg"
-#define ICON_PESETA_SIGN "svg/solid/peseta-sign.svg"
-#define ICON_PESO_SIGN "svg/solid/peso-sign.svg"
-#define ICON_PHONE_FLIP "svg/solid/phone-flip.svg"
-#define ICON_PHONE_SLASH "svg/solid/phone-slash.svg"
-#define ICON_PHONE_VOLUME "svg/solid/phone-volume.svg"
-#define ICON_PHONE "svg/solid/phone.svg"
-#define ICON_PHOTO_FILM "svg/solid/photo-film.svg"
-#define ICON_PIGGY_BANK "svg/solid/piggy-bank.svg"
-#define ICON_PILLS "svg/solid/pills.svg"
-#define ICON_PIZZA_SLICE "svg/solid/pizza-slice.svg"
-#define ICON_PLACE_OF_WORSHIP "svg/solid/place-of-worship.svg"
-#define ICON_PLANE_ARRIVAL "svg/solid/plane-arrival.svg"
-#define ICON_PLANE_CIRCLE_CHECK "svg/solid/plane-circle-check.svg"
-#define ICON_PLANE_CIRCLE_EXCLAMATION "svg/solid/plane-circle-exclamation.svg"
-#define ICON_PLANE_CIRCLE_XMARK "svg/solid/plane-circle-xmark.svg"
-#define ICON_PLANE_DEPARTURE "svg/solid/plane-departure.svg"
-#define ICON_PLANE_LOCK "svg/solid/plane-lock.svg"
-#define ICON_PLANE_PROP "svg/solid/plane-prop.svg"
-#define ICON_PLANE_SLASH "svg/solid/plane-slash.svg"
-#define ICON_PLANE_UP "svg/solid/plane-up.svg"
-#define ICON_PLANE "svg/solid/plane.svg"
-#define ICON_PLANT_WILT "svg/solid/plant-wilt.svg"
-#define ICON_PLATE_WHEAT "svg/solid/plate-wheat.svg"
-#define ICON_PLAY "svg/solid/play.svg"
-#define ICON_PLUG_CIRCLE_BOLT "svg/solid/plug-circle-bolt.svg"
-#define ICON_PLUG_CIRCLE_CHECK "svg/solid/plug-circle-check.svg"
-#define ICON_PLUG_CIRCLE_EXCLAMATION "svg/solid/plug-circle-exclamation.svg"
-#define ICON_PLUG_CIRCLE_MINUS "svg/solid/plug-circle-minus.svg"
-#define ICON_PLUG_CIRCLE_PLUS "svg/solid/plug-circle-plus.svg"
-#define ICON_PLUG_CIRCLE_XMARK "svg/solid/plug-circle-xmark.svg"
-#define ICON_PLUG "svg/solid/plug.svg"
-#define ICON_PLUS_MINUS "svg/solid/plus-minus.svg"
-#define ICON_PLUS_SOLID "svg/solid/plus.svg"
-#define ICON_PODCAST "svg/solid/podcast.svg"
-#define ICON_POO_STORM "svg/solid/poo-storm.svg"
-#define ICON_POO "svg/solid/poo.svg"
-#define ICON_POOP "svg/solid/poop.svg"
-#define ICON_POWER_OFF "svg/solid/power-off.svg"
-#define ICON_PRESCRIPTION_BOTTLE_MEDICAL "svg/solid/prescription-bottle-medical.svg"
-#define ICON_PRESCRIPTION_BOTTLE "svg/solid/prescription-bottle.svg"
-#define ICON_PRESCRIPTION "svg/solid/prescription.svg"
-#define ICON_PRINT "svg/solid/print.svg"
-#define ICON_PUMP_MEDICAL "svg/solid/pump-medical.svg"
-#define ICON_PUMP_SOAP "svg/solid/pump-soap.svg"
-#define ICON_PUZZLE_PIECE "svg/solid/puzzle-piece.svg"
-#define ICON_Q "svg/solid/q.svg"
-#define ICON_QRCODE "svg/solid/qrcode.svg"
-#define ICON_QUESTION "svg/solid/question.svg"
-#define ICON_QUIDDITCH "svg/solid/quidditch.svg"
-#define ICON_QUOTE_LEFT "svg/solid/quote-left.svg"
-#define ICON_QUOTE_RIGHT "svg/solid/quote-right.svg"
-#define ICON_R "svg/solid/r.svg"
-#define ICON_RADIATION "svg/solid/radiation.svg"
-#define ICON_RADIO "svg/solid/radio.svg"
-#define ICON_RAINBOW "svg/solid/rainbow.svg"
-#define ICON_RANKING_STAR "svg/solid/ranking-star.svg"
-#define ICON_RECEIPT "svg/solid/receipt.svg"
-#define ICON_RECORD_VINYL "svg/solid/record-vinyl.svg"
-#define ICON_RECTANGLE_AD "svg/solid/rectangle-ad.svg"
-#define ICON_RECTANGLE_LIST_SOLID "svg/solid/rectangle-list.svg"
-#define ICON_RECTANGLE_XMARK_SOLID "svg/solid/rectangle-xmark.svg"
-#define ICON_RECTANGLE "svg/solid/rectangle.svg"
-#define ICON_RECYCLE "svg/solid/recycle.svg"
-#define ICON_REFRIGERATOR "svg/solid/refrigerator.svg"
-#define ICON_REPEAT "svg/solid/repeat.svg"
-#define ICON_REPLY_ALL "svg/solid/reply-all.svg"
-#define ICON_REPLY "svg/solid/reply.svg"
-#define ICON_REPUBLICAN "svg/solid/republican.svg"
-#define ICON_RESTROOM "svg/solid/restroom.svg"
-#define ICON_RETWEET "svg/solid/retweet.svg"
-#define ICON_RIBBON "svg/solid/ribbon.svg"
-#define ICON_RIGHT_FROM_BRACKET "svg/solid/right-from-bracket.svg"
-#define ICON_RIGHT_LEFT "svg/solid/right-left.svg"
-#define ICON_RIGHT_LONG "svg/solid/right-long.svg"
-#define ICON_RIGHT_TO_BRACKET "svg/solid/right-to-bracket.svg"
-#define ICON_RING "svg/solid/ring.svg"
-#define ICON_ROAD_BARRIER "svg/solid/road-barrier.svg"
-#define ICON_ROAD_BRIDGE "svg/solid/road-bridge.svg"
-#define ICON_ROAD_CIRCLE_CHECK "svg/solid/road-circle-check.svg"
-#define ICON_ROAD_CIRCLE_EXCLAMATION "svg/solid/road-circle-exclamation.svg"
-#define ICON_ROAD_CIRCLE_XMARK "svg/solid/road-circle-xmark.svg"
-#define ICON_ROAD_LOCK "svg/solid/road-lock.svg"
-#define ICON_ROAD_SPIKES "svg/solid/road-spikes.svg"
-#define ICON_ROAD "svg/solid/road.svg"
-#define ICON_ROBOT "svg/solid/robot.svg"
-#define ICON_ROCKET "svg/solid/rocket.svg"
-#define ICON_ROTATE_LEFT "svg/solid/rotate-left.svg"
-#define ICON_ROTATE_RIGHT "svg/solid/rotate-right.svg"
-#define ICON_ROTATE "svg/solid/rotate.svg"
-#define ICON_ROUTE "svg/solid/route.svg"
-#define ICON_RSS "svg/solid/rss.svg"
-#define ICON_RUBLE_SIGN "svg/solid/ruble-sign.svg"
-#define ICON_RUG "svg/solid/rug.svg"
-#define ICON_RULER_COMBINED "svg/solid/ruler-combined.svg"
-#define ICON_RULER_HORIZONTAL "svg/solid/ruler-horizontal.svg"
-#define ICON_RULER_VERTICAL "svg/solid/ruler-vertical.svg"
-#define ICON_RULER "svg/solid/ruler.svg"
-#define ICON_RUNNING "svg/solid/running.svg"
-#define ICON_RUPEE_SIGN "svg/solid/rupee-sign.svg"
-#define ICON_RUPIAH_SIGN "svg/solid/rupiyah-sign.svg"
-#define ICON_S "svg/solid/s.svg"
-#define ICON_SACK_DOLLAR "svg/solid/sack-dollar.svg"
-#define ICON_SACK_XMARK "svg/solid/sack-xmark.svg"
-#define ICON_SAD_CRY "svg/solid/sad-cry.svg"
-#define ICON_SAD_TEAR "svg/solid/sad-tear.svg"
-#define ICON_SAILBOAT "svg/solid/sailboat.svg"
-#define ICON_SATELLITE_DISH "svg/solid/satellite-dish.svg"
-#define ICON_SATELLITE "svg/solid/satellite.svg"
-#define ICON_SCALE_BALANCED "svg/solid/scale-balanced.svg"
-#define ICON_SCALE_UNBALANCED "svg/solid/scale-unbalanced.svg"
-#define ICON_SCHOOL_CIRCLE_CHECK "svg/solid/school-circle-check.svg"
-#define ICON_SCHOOL_CIRCLE_EXCLAMATION "svg/solid/school-circle-exclamation.svg"
-#define ICON_SCHOOL_CIRCLE_XMARK "svg/solid/school-circle-xmark.svg"
-#define ICON_SCHOOL_FLAG "svg/solid/school-flag.svg"
-#define ICON_SCHOOL_LOCK "svg/solid/school-lock.svg"
-#define ICON_SCHOOL "svg/solid/school.svg"
-#define ICON_SCISSORS "svg/solid/scissors.svg"
-#define ICON_SCREWDRIVER_WRENCH "svg/solid/screwdriver-wrench.svg"
-#define ICON_SCREWDRIVER "svg/solid/screwdriver.svg"
-#define ICON_SCROLL_TORAH "svg/solid/scroll-torah.svg"
-#define ICON_SCROLL "svg/solid/scroll.svg"
-#define ICON_SD_CARD "svg/solid/sd-card.svg"
-#define ICON_SEARCH "svg/solid/search.svg"
-#define ICON_SECTION "svg/solid/section.svg"
-#define ICON_SEEDLING "svg/solid/seedling.svg"
-#define ICON_SERVER "svg/solid/server.svg"
-#define ICON_SHAPES "svg/solid/shapes.svg"
-#define ICON_SHARE_FROM_SQUARE_SOLID "svg/solid/share-from-square.svg"
-#define ICON_SHARE_NODES "svg/solid/share-nodes.svg"
-#define ICON_SHARE "svg/solid/share.svg"
-#define ICON_SHEET_PLASTIC "svg/solid/sheet-plastic.svg"
-#define ICON_SHEKEL_SIGN "svg/solid/shekel-sign.svg"
-#define ICON_SHIELD_CAT "svg/solid/shield-cat.svg"
-#define ICON_SHIELD_DOG "svg/solid/shield-dog.svg"
-#define ICON_SHIELD_HALVED "svg/solid/shield-halved.svg"
-#define ICON_SHIELD_HEART "svg/solid/shield-heart.svg"
-#define ICON_SHIELD_VIRUS "svg/solid/shield-virus.svg"
-#define ICON_SHIELD "svg/solid/shield.svg"
-#define ICON_SHIP "svg/solid/ship.svg"
-#define ICON_SHIRT "svg/solid/shirt.svg"
-#define ICON_SHOE_PRINTS "svg/solid/shoe-prints.svg"
-#define ICON_SHOP_LOCK "svg/solid/shop-lock.svg"
-#define ICON_SHOP_SLASH "svg/solid/shop-slash.svg"
-#define ICON_SHOP "svg/solid/shop.svg"
-#define ICON_SHOPPING_BAG "svg/solid/shopping-bag.svg"
-#define ICON_SHOPPING_BASKET "svg/solid/shopping-basket.svg"
-#define ICON_SHOPPING_CART "svg/solid/shopping-cart.svg"
-#define ICON_SHOWER "svg/solid/shower.svg"
-#define ICON_SHRIMP "svg/solid/shrimp.svg"
-#define ICON_SHUFFLE "svg/solid/shuffle.svg"
-#define ICON_SHUTTLE_SPACE "svg/solid/shuttle-space.svg"
-#define ICON_SIGN_HANGING "svg/solid/sign-hanging.svg"
-#define ICON_SIGNAL "svg/solid/signal.svg"
-#define ICON_SIGNATURE "svg/solid/signature.svg"
-#define ICON_SIGNS_POST "svg/solid/signs-post.svg"
-#define ICON_SIM_CARD "svg/solid/sim-card.svg"
-#define ICON_SINK "svg/solid/sink.svg"
-#define ICON_SITEMAP "svg/solid/sitemap.svg"
-#define ICON_SKULL_CROSSBONES "svg/solid/skull-crossbones.svg"
-#define ICON_SKULL "svg/solid/skull.svg"
-#define ICON_SLASH "svg/solid/slash.svg"
-#define ICON_SLEIGH "svg/solid/sleigh.svg"
-#define ICON_SLIDERS "svg/solid/sliders.svg"
-#define ICON_SMOG "svg/solid/smog.svg"
-#define ICON_SMOKING "svg/solid/smoking.svg"
-#define ICON_SNOWFLAKE_SOLID "svg/solid/snowflake.svg"
-#define ICON_SNOWMAN "svg/solid/snowman.svg"
-#define ICON_SNOWPLOW "svg/solid/snowplow.svg"
-#define ICON_SOAP "svg/solid/soap.svg"
-#define ICON_SOCKS "svg/solid/socks.svg"
-#define ICON_SOLAR_PANEL "svg/solid/solar-panel.svg"
-#define ICON_SORT_DOWN "svg/solid/sort-down.svg"
-#define ICON_SORT_UP "svg/solid/sort-up.svg"
-#define ICON_SORT "svg/solid/sort.svg"
-#define ICON_SPA "svg/solid/spa.svg"
-#define ICON_SPAGHETTI_MONSTER_FLYING "svg/solid/spaghetti-monster-flying.svg"
-#define ICON_SPELL_CHECK "svg/solid/spell-check.svg"
-#define ICON_SPIDER "svg/solid/spider.svg"
-#define ICON_SPINNER "svg/solid/spinner.svg"
-#define ICON_SPLOTCH "svg/solid/splotch.svg"
-#define ICON_SPOON "svg/solid/spoon.svg"
-#define ICON_SPRAY_CAN_SPARKLES "svg/solid/spray-can-sparkles.svg"
-#define ICON_SPRAY_CAN "svg/solid/spray-can.svg"
-#define ICON_SQUARE_ARROW_UP_RIGHT "svg/solid/square-arrow-up-right.svg"
-#define ICON_SQUARE_CARET_DOWN_SOLID "svg/solid/square-caret-down.svg"
-#define ICON_SQUARE_CARET_LEFT_SOLID "svg/solid/square-caret-left.svg"
-#define ICON_SQUARE_CARET_RIGHT_SOLID "svg/solid/square-caret-right.svg"
-#define ICON_SQUARE_CARET_UP_SOLID "svg/solid/square-caret-up.svg"
-#define ICON_SQUARE_CHECK_SOLID "svg/solid/square-check.svg"
-#define ICON_SQUARE_ENVELOPE "svg/solid/square-envelope.svg"
-#define ICON_SQUARE_FULL_SOLID "svg/solid/square-full.svg"
-#define ICON_SQUARE_H "svg/solid/square-h.svg"
-#define ICON_SQUARE_MINUS_SOLID "svg/solid/square-minus.svg"
-#define ICON_SQUARE_NFI "svg/solid/square-nfi.svg"
-#define ICON_SQUARE_PARKING "svg/solid/square-parking.svg"
-#define ICON_SQUARE_PEN "svg/solid/square-pen.svg"
-#define ICON_SQUARE_PERSON_CONFINED "svg/solid/square-person-confined.svg"
-#define ICON_SQUARE_PHONE_FLIP "svg/solid/square-phone-flip.svg"
-#define ICON_SQUARE_PHONE "svg/solid/square-phone.svg"
-#define ICON_SQUARE_PLUS_SOLID "svg/solid/square-plus.svg"
-#define ICON_SQUARE_POLL_HORIZONTAL "svg/solid/square-poll-horizontal.svg"
-#define ICON_SQUARE_POLL_VERTICAL "svg/solid/square-poll-vertical.svg"
-#define ICON_SQUARE_ROOT_VARIABLE "svg/solid/square-root-variable.svg"
-#define ICON_SQUARE_ROOT "svg/solid/square-root.svg"
-#define ICON_SQUARE_RSS "svg/solid/square-rss.svg"
-#define ICON_SQUARE_SHARE_NODES "svg/solid/square-share-nodes.svg"
-#define ICON_SQUARE_UP_RIGHT "svg/solid/square-up-right.svg"
-#define ICON_SQUARE_VIRUS "svg/solid/square-virus.svg"
-#define ICON_SQUARE_XMARK "svg/solid/square-xmark.svg"
-#define ICON_SQUARE_SOLID "svg/solid/square.svg"
-#define ICON_STAFF_AESCULAPIUS "svg/solid/staff-aesculapius.svg"
-#define ICON_STAFF_SNAKE "svg/solid/staff-snake.svg"
-#define ICON_STAIRS "svg/solid/stairs.svg"
-#define ICON_STAMP "svg/solid/stamp.svg"
-#define ICON_STAPLER "svg/solid/stapler.svg"
-#define ICON_STAR_AND_CRESCENT "svg/solid/star-and-crescent.svg"
-#define ICON_STAR_HALF_STROKE_SOLID "svg/solid/star-half-stroke.svg"
-#define ICON_STAR_HALF_SOLID "svg/solid/star-half.svg"
-#define ICON_STAR_OF_DAVID "svg/solid/star-of-david.svg"
-#define ICON_STAR_OF_LIFE "svg/solid/star-of-life.svg"
-#define ICON_STAR_SOLID "svg/solid/star.svg"
-#define ICON_STERLING_SIGN "svg/solid/sterling-sign.svg"
-#define ICON_STETHOSCOPE "svg/solid/stethoscope.svg"
-#define ICON_STOP "svg/solid/stop.svg"
-#define ICON_STOPWATCH_20 "svg/solid/stopwatch-20.svg"
-#define ICON_STOPWATCH "svg/solid/stopwatch.svg"
-#define ICON_STORE_SLASH "svg/solid/store-slash.svg"
-#define ICON_STORE "svg/solid/store.svg"
-#define ICON_STREET_VIEW "svg/solid/street-view.svg"
-#define ICON_STRIKETHROUGH "svg/solid/strikethrough.svg"
-#define ICON_STROOPWAFEL "svg/solid/stroopwafel.svg"
-#define ICON_SUBSCRIPT "svg/solid/subscript.svg"
-#define ICON_SUITCASE_MEDICAL "svg/solid/suitcase-medical.svg"
-#define ICON_SUITCASE_ROLLING "svg/solid/suitcase-rolling.svg"
-#define ICON_SUITCASE "svg/solid/suitcase.svg"
-#define ICON_SUN_PLANT_WILT "svg/solid/sun-plant-wilt.svg"
-#define ICON_SUN_SOLID "svg/solid/sun.svg"
-#define ICON_SUPERSCRIPT "svg/solid/superscript.svg"
-#define ICON_SWATCHBOOK "svg/solid/swatchbook.svg"
-#define ICON_SWOOSH "svg/solid/swatchbook.svg"
-#define ICON_SWIMMER "svg/solid/swimmer.svg"
-#define ICON_SWIMMING_POOL "svg/solid/swimming-pool.svg"
-#define ICON_SYNAGOGUE "svg/solid/synagogue.svg"
-#define ICON_SYNC "svg/solid/sync.svg"
-#define ICON_SYRINGE "svg/solid/syringe.svg"
-#define ICON_T "svg/solid/t.svg"
-#define ICON_TABLE_CELLS_LARGE "svg/solid/table-cells-large.svg"
-#define ICON_TABLE_CELLS "svg/solid/table-cells.svg"
-#define ICON_TABLE_COLUMNS "svg/solid/table-columns.svg"
-#define ICON_TABLE_LIST "svg/solid/table-list.svg"
-#define ICON_TABLE_TENNIS_PADDLE_BALL "svg/solid/table-tennis-paddle-ball.svg"
-#define ICON_TABLE "svg/solid/table.svg"
-#define ICON_TABLET_BUTTON "svg/solid/tablet-button.svg"
-#define ICON_TABLET_SCREEN_BUTTON "svg/solid/tablet-screen-button.svg"
-#define ICON_TABLET "svg/solid/tablet.svg"
-#define ICON_TABLETS "svg/solid/tablets.svg"
-#define ICON_TACHOGRAPH_DIGITAL "svg/solid/tachograph-digital.svg"
-#define ICON_TAG "svg/solid/tag.svg"
-#define ICON_TAGS "svg/solid/tags.svg"
-#define ICON_TAPE "svg/solid/tape.svg"
-#define ICON_TARP_DROPLET "svg/solid/tarp-droplet.svg"
-#define ICON_TARP "svg/solid/tarp.svg"
-#define ICON_TAXI "svg/solid/taxi.svg"
-#define ICON_TEETH_OPEN "svg/solid/teeth-open.svg"
-#define ICON_TEETH "svg/solid/teeth.svg"
-#define ICON_TEMPERATURE_ARROW_DOWN "svg/solid/temperature-arrow-down.svg"
-#define ICON_TEMPERATURE_ARROW_UP "svg/solid/temperature-arrow-up.svg"
-#define ICON_TEMPERATURE_EMPTY "svg/solid/temperature-empty.svg"
-#define ICON_TEMPERATURE_FULL "svg/solid/temperature-full.svg"
-#define ICON_TEMPERATURE_HALF "svg/solid/temperature-half.svg"
-#define ICON_TEMPERATURE_HIGH "svg/solid/temperature-high.svg"
-#define ICON_TEMPERATURE_LOW "svg/solid/temperature-low.svg"
-#define ICON_TEMPERATURE_QUARTER "svg/solid/temperature-quarter.svg"
-#define ICON_TEMPERATURE_THREE_QUARTERS "svg/solid/temperature-three-quarters.svg"
-#define ICON_TENGE_SIGN "svg/solid/tenge-sign.svg"
-#define ICON_TENT_ARROW_DOWN_TO_LINE "svg/solid/tent-arrow-down-to-line.svg"
-#define ICON_TENT_ARROW_LEFT_RIGHT "svg/solid/tent-arrow-left-right.svg"
-#define ICON_TENT_ARROW_TURN_LEFT "svg/solid/tent-arrow-turn-left.svg"
-#define ICON_TENT_ARROWS_DOWN "svg/solid/tent-arrows-down.svg"
-#define ICON_TENT "svg/solid/tent.svg"
-#define ICON_TENTS "svg/solid/tents.svg"
-#define ICON_TERMINAL "svg/solid/terminal.svg"
-#define ICON_TEXT_HEIGHT "svg/solid/text-height.svg"
-#define ICON_TEXT_SLASH "svg/solid/text-slash.svg"
-#define ICON_TEXT_WIDTH "svg/solid/text-width.svg"
-#define ICON_THUMBS_DOWN_SOLID "svg/solid/thumbs-down.svg"
-#define ICON_THUMBS_UP_SOLID "svg/solid/thumbs-up.svg"
-#define ICON_THUMBTACK "svg/solid/thumbtack.svg"
-#define ICON_TICKET_SIMPLE "svg/solid/ticket-simple.svg"
-#define ICON_TICKET "svg/solid/ticket.svg"
-#define ICON_TIMELINE "svg/solid/timeline.svg"
-#define ICON_TOGGLE_OFF "svg/solid/toggle-off.svg"
-#define ICON_TOGGLE_ON "svg/solid/toggle-on.svg"
-#define ICON_TOILET_PAPER_SLASH "svg/solid/toilet-paper-slash.svg"
-#define ICON_TOILET_PAPER "svg/solid/toilet-paper.svg"
-#define ICON_TOILET_PORTABLE "svg/solid/toilet-portable.svg"
-#define ICON_TOILET "svg/solid/toilet.svg"
-#define ICON_TOILETS_PORTABLE "svg/solid/toilets-portable.svg"
-#define ICON_TOOLBOX "svg/solid/toolbox.svg"
-#define ICON_TOOLS "svg/solid/tools.svg"
-#define ICON_TOOTH "svg/solid/tooth.svg"
-#define ICON_TORII_GATE "svg/solid/torii-gate.svg"
-#define ICON_TORNADO "svg/solid/tornado.svg"
-#define ICON_TOWER_BROADCAST "svg/solid/tower-broadcast.svg"
-#define ICON_TOWER_CELL "svg/solid/tower-cell.svg"
-#define ICON_TOWER_OBSERVATION "svg/solid/tower-observation.svg"
-#define ICON_TRACTOR "svg/solid/tractor.svg"
-#define ICON_TRADEMARK "svg/solid/trademark.svg"
-#define ICON_TRAFFIC_LIGHT "svg/solid/traffic-light.svg"
-#define ICON_TRAILER "svg/solid/trailer.svg"
-#define ICON_TRAIN_SUBWAY "svg/solid/train-subway.svg"
-#define ICON_TRAIN_TRAM "svg/solid/train-tram.svg"
-#define ICON_TRAIN "svg/solid/train.svg"
-#define ICON_TRANSGENDER "svg/solid/transgender.svg"
-#define ICON_TRASH_ARROW_UP "svg/solid/trash-arrow-up.svg"
-#define ICON_TRASH_CAN_ARROW_UP "svg/solid/trash-can-arrow-up.svg"
-#define ICON_TRASH_CAN_SOLID "svg/solid/trash-can.svg"
-#define ICON_TRASH "svg/solid/trash.svg"
-#define ICON_TREE_CITY "svg/solid/tree-city.svg"
-#define ICON_TREE "svg/solid/tree.svg"
-#define ICON_TRIANGLE_EXCLAMATION "svg/solid/triangle-exclamation.svg"
-#define ICON_TROPHY "svg/solid/trophy.svg"
-#define ICON_TROWEL_BRICKS "svg/solid/trowel-bricks.svg"
-#define ICON_TROWEL "svg/solid/trowel.svg"
-#define ICON_TRUCK_ARROW_RIGHT "svg/solid/truck-arrow-right.svg"
-#define ICON_TRUCK_DROPLET "svg/solid/truck-droplet.svg"
-#define ICON_TRUCK_FAST "svg/solid/truck-fast.svg"
-#define ICON_TRUCK_FIELD_UN "svg/solid/truck-field-un.svg"
-#define ICON_TRUCK_FIELD "svg/solid/truck-field.svg"
-#define ICON_TRUCK_FRONT "svg/solid/truck-front.svg"
-#define ICON_TRUCK_MEDICAL "svg/solid/truck-medical.svg"
-#define ICON_TRUCK_MONSTER "svg/solid/truck-monster.svg"
-#define ICON_TRUCK_MOVING "svg/solid/truck-moving.svg"
-#define ICON_TRUCK_PICKUP "svg/solid/truck-pickup.svg"
-#define ICON_TRUCK_PLANE "svg/solid/truck-plane.svg"
-#define ICON_TRUCK_RAMP_BOX "svg/solid/truck-ramp-box.svg"
-#define ICON_TRUCK "svg/solid/truck.svg"
-#define ICON_TTY "svg/solid/tty.svg"
-#define ICON_TURKISH_LIRA_SIGN "svg/solid/turkish-lira-sign.svg"
-#define ICON_TURN_DOWN "svg/solid/turn-down.svg"
-#define ICON_TURN_UP "svg/solid/turn-up.svg"
-#define ICON_TV "svg/solid/tv.svg"
-#define ICON_U "svg/solid/u.svg"
-#define ICON_UMBRELLA_BEACH "svg/solid/umbrella-beach.svg"
-#define ICON_UMBRELLA "svg/solid/umbrella.svg"
-#define ICON_UNDERLINE "svg/solid/underline.svg"
-#define ICON_UNIVERSAL_ACCESS "svg/solid/universal-access.svg"
-#define ICON_UNLOCK "svg/solid/unlock.svg"
-#define ICON_UP_DOWN_LEFT_RIGHT "svg/solid/up-down-left-right.svg"
-#define ICON_UP_DOWN "svg/solid/up-down.svg"
-#define ICON_UP_LONG "svg/solid/up-long.svg"
-#define ICON_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER "svg/solid/up-right-and-down-left-from-center.svg"
-#define ICON_UP_RIGHT_FROM_SQUARE "svg/solid/up-right-from-square.svg"
-#define ICON_UPLOAD "svg/solid/upload.svg"
-#define ICON_USB_DRIVE "svg/solid/usb-drive.svg"
-#define ICON_USER_ASTRONAUT "svg/solid/user-astronaut.svg"
-#define ICON_USER_CHECK "svg/solid/user-check.svg"
-#define ICON_USER_CLOCK "svg/solid/user-clock.svg"
-#define ICON_USER_DOCTOR "svg/solid/user-doctor.svg"
-#define ICON_USER_GEAR "svg/solid/user-gear.svg"
-#define ICON_USER_GRADUATE "svg/solid/user-graduate.svg"
-#define ICON_USER_GROUP "svg/solid/user-group.svg"
-#define ICON_USER_INJURED "svg/solid/user-injured.svg"
-#define ICON_USER_LARGE_SLASH "svg/solid/user-large-slash.svg"
-#define ICON_USER_LARGE_SOLID "svg/solid/user-large.svg"
-#define ICON_USER_LOCK "svg/solid/user-lock.svg"
-#define ICON_USER_MINUS "svg/solid/user-minus.svg"
-#define ICON_USER_NINJA "svg/solid/user-ninja.svg"
-#define ICON_USER_NURSE "svg/solid/user-nurse.svg"
-#define ICON_USER_PEN "svg/solid/user-pen.svg"
-#define ICON_USER_PLUS "svg/solid/user-plus.svg"
-#define ICON_USER_SECRET "svg/solid/user-secret.svg"
-#define ICON_USER_SHIELD "svg/solid/user-shield.svg"
-#define ICON_USER_SLASH "svg/solid/user-slash.svg"
-#define ICON_USER_TAG "svg/solid/user-tag.svg"
-#define ICON_USER_TIE "svg/solid/user-tie.svg"
-#define ICON_USER_XMARK "svg/solid/user-xmark.svg"
-#define ICON_USER_SOLID "svg/solid/user.svg"
-#define ICON_USERS_BETWEEN_LINES "svg/solid/users-between-lines.svg"
-#define ICON_USERS_GEAR "svg/solid/users-gear.svg"
-#define ICON_USERS_LINE "svg/solid/users-line.svg"
-#define ICON_USERS_RAYS "svg/solid/users-rays.svg"
-#define ICON_USERS_RECTANGLE "svg/solid/users-rectangle.svg"
-#define ICON_USERS_SLASH "svg/solid/users-slash.svg"
-#define ICON_USERS_VIEWFINDER "svg/solid/users-viewfinder.svg"
-#define ICON_USERS "svg/solid/users.svg"
-#define ICON_UTENSILS "svg/solid/utensils.svg"
-#define ICON_V "svg/solid/v.svg"
-#define ICON_VAN_SHUTTLE "svg/solid/van-shuttle.svg"
-#define ICON_VAULT "svg/solid/vault.svg"
-#define ICON_VECTOR_SQUARE "svg/solid/vector-square.svg"
-#define ICON_VENUS_DOUBLE "svg/solid/venus-double.svg"
-#define ICON_VENUS_MARS "svg/solid/venus-mars.svg"
-#define ICON_VENUS "svg/solid/venus.svg"
-#define ICON_VEST_PATCHES "svg/solid/vest-patches.svg"
-#define ICON_VEST "svg/solid/vest.svg"
-#define ICON_VIAL_CIRCLE_CHECK "svg/solid/vial-circle-check.svg"
-#define ICON_VIAL_VIRUS "svg/solid/vial-virus.svg"
-#define ICON_VIAL "svg/solid/vial.svg"
-#define ICON_VIALS "svg/solid/vials.svg"
-#define ICON_VIDEO_SLASH "svg/solid/video-slash.svg"
-#define ICON_VIDEO "svg/solid/video.svg"
-#define ICON_VIHARA "svg/solid/vihara.svg"
-#define ICON_VIRUS_COVID_SLASH "svg/solid/virus-covid-slash.svg"
-#define ICON_VIRUS_COVID "svg/solid/virus-covid.svg"
-#define ICON_VIRUS_SLASH "svg/solid/virus-slash.svg"
-#define ICON_VIRUS "svg/solid/virus.svg"
-#define ICON_VIRUSES "svg/solid/viruses.svg"
-#define ICON_VOICEMAIL "svg/solid/voicemail.svg"
-#define ICON_VOLCANO "svg/solid/volcano.svg"
-#define ICON_VOLLEYBALL "svg/solid/volleyball.svg"
-#define ICON_VOLUME_HIGH "svg/solid/volume-high.svg"
-#define ICON_VOLUME_LOW "svg/solid/volume-low.svg"
-#define ICON_VOLUME_OFF "svg/solid/volume-off.svg"
-#define ICON_VOLUME_XMARK "svg/solid/volume-xmark.svg"
-#define ICON_VR_CARDBOARD "svg/solid/vr-cardboard.svg"
-#define ICON_W "svg/solid/w.svg"
-#define ICON_WALKIE_TALKIE "svg/solid/walkie-talkie.svg"
-#define ICON_WALKING "svg/solid/walking.svg"
-#define ICON_WALLET "svg/solid/wallet.svg"
-#define ICON_WAND_MAGIC_SPARKLES "svg/solid/wand-magic-sparkles.svg"
-#define ICON_WAND_MAGIC "svg/solid/wand-magic.svg"
-#define ICON_WAND_SPARKLES "svg/solid/wand-sparkles.svg"
-#define ICON_WAREHOUSE "svg/solid/warehouse.svg"
-#define ICON_WATER_LADDER "svg/solid/water-ladder.svg"
-#define ICON_WATER "svg/solid/water.svg"
-#define ICON_WAVE_SQUARE "svg/solid/wave-square.svg"
-#define ICON_WEIGHT_HANGING "svg/solid/weight-hanging.svg"
-#define ICON_WEIGHT_SCALE "svg/solid/weight-scale.svg"
-#define ICON_WHEELCHAIR_MOVE "svg/solid/wheelchair-move.svg"
-#define ICON_WHEELCHAIR "svg/solid/wheelchair.svg"
-#define ICON_WHISKEY_GLASS "svg/solid/whiskey-glass.svg"
-#define ICON_WIFI "svg/solid/wifi.svg"
-#define ICON_WIND "svg/solid/wind.svg"
-#define ICON_WINDOW_MAXIMIZE_SOLID "svg/solid/window-maximize.svg"
-#define ICON_WINDOW_MINIMIZE_SOLID "svg/solid/window-minimize.svg"
-#define ICON_WINDOW_RESTORE_SOLID "svg/solid/window-restore.svg"
-#define ICON_WINE_BOTTLE "svg/solid/wine-bottle.svg"
-#define ICON_WINE_GLASS_EMPTY "svg/solid/wine-glass-empty.svg"
-#define ICON_WINE_GLASS "svg/solid/wine-glass.svg"
-#define ICON_WON_SIGN "svg/solid/won-sign.svg"
-#define ICON_WORM "svg/solid/worm.svg"
-#define ICON_WRENCH "svg/solid/wrench.svg"
-#define ICON_X_RAY "svg/solid/x-ray.svg"
-#define ICON_X "svg/solid/x.svg"
-#define ICON_XMARK "svg/solid/xmark.svg"
-#define ICON_XMARKS_LINES "svg/solid/xmarks-lines.svg"
-#define ICON_Y "svg/solid/y.svg"
-#define ICON_YEN_SIGN "svg/solid/yen-sign.svg"
-#define ICON_YIN_YANG "svg/solid/yin-yang.svg"
-#define ICON_Z "svg/solid/z.svg"
+constexpr std::string_view ICON_0 = "svg/solid/0.svg";
+constexpr std::string_view ICON_1 = "svg/solid/1.svg";
+constexpr std::string_view ICON_2 = "svg/solid/2.svg";
+constexpr std::string_view ICON_3 = "svg/solid/3.svg";
+constexpr std::string_view ICON_4 = "svg/solid/4.svg";
+constexpr std::string_view ICON_5 = "svg/solid/5.svg";
+constexpr std::string_view ICON_6 = "svg/solid/6.svg";
+constexpr std::string_view ICON_7 = "svg/solid/7.svg";
+constexpr std::string_view ICON_8 = "svg/solid/8.svg";
+constexpr std::string_view ICON_9 = "svg/solid/9.svg";
+constexpr std::string_view ICON_A = "svg/solid/a.svg";
+constexpr std::string_view ICON_ADDRESS_BOOK_SOLID = "svg/solid/address-book.svg";
+constexpr std::string_view ICON_ADDRESS_CARD_SOLID = "svg/solid/address-card.svg";
+constexpr std::string_view ICON_ALIGN_CENTER = "svg/solid/align-center.svg";
+constexpr std::string_view ICON_ALIGN_JUSTIFY = "svg/solid/align-justify.svg";
+constexpr std::string_view ICON_ALIGN_LEFT = "svg/solid/align-left.svg";
+constexpr std::string_view ICON_ALIGN_RIGHT = "svg/solid/align-right.svg";
+constexpr std::string_view ICON_ANCHOR_CIRCLE_CHECK = "svg/solid/anchor-circle-check.svg";
+constexpr std::string_view ICON_ANCHOR_CIRCLE_EXCLAMATION = "svg/solid/anchor-circle-exclamation.svg";
+constexpr std::string_view ICON_ANCHOR_CIRCLE_XMARK = "svg/solid/anchor-circle-xmark.svg";
+constexpr std::string_view ICON_ANCHOR_LOCK = "svg/solid/anchor-lock.svg";
+constexpr std::string_view ICON_ANCHOR = "svg/solid/anchor.svg";
+constexpr std::string_view ICON_ANGLE_DOWN = "svg/solid/angle-down.svg";
+constexpr std::string_view ICON_ANGLE_LEFT = "svg/solid/angle-left.svg";
+constexpr std::string_view ICON_ANGLE_RIGHT = "svg/solid/angle-right.svg";
+constexpr std::string_view ICON_ANGLE_UP = "svg/solid/angle-up.svg";
+constexpr std::string_view ICON_ANGLES_DOWN = "svg/solid/angles-down.svg";
+constexpr std::string_view ICON_ANGLES_LEFT = "svg/solid/angles-left.svg";
+constexpr std::string_view ICON_ANGLES_RIGHT = "svg/solid/angles-right.svg";
+constexpr std::string_view ICON_ANGLES_UP = "svg/solid/angles-up.svg";
+constexpr std::string_view ICON_ANKH = "svg/solid/ankh.svg";
+constexpr std::string_view ICON_APPLE_WHOLE = "svg/solid/apple-whole.svg";
+constexpr std::string_view ICON_ARCHWAY = "svg/solid/archway.svg";
+constexpr std::string_view ICON_ARROW_DOWN_1_9 = "svg/solid/arrow-down-1-9.svg";
+constexpr std::string_view ICON_ARROW_DOWN_9_1 = "svg/solid/arrow-down-9-1.svg";
+constexpr std::string_view ICON_ARROW_DOWN_A_Z = "svg/solid/arrow-down-a-z.svg";
+constexpr std::string_view ICON_ARROW_DOWN_LONG = "svg/solid/arrow-down-long.svg";
+constexpr std::string_view ICON_ARROW_DOWN_SHORT_WIDE = "svg/solid/arrow-down-short-wide.svg";
+constexpr std::string_view ICON_ARROW_DOWN_UP_ACROSS_LINE = "svg/solid/arrow-down-up-across-line.svg";
+constexpr std::string_view ICON_ARROW_DOWN_UP_LOCK = "svg/solid/arrow-down-up-lock.svg";
+constexpr std::string_view ICON_ARROW_DOWN_WIDE_SHORT = "svg/solid/arrow-down-wide-short.svg";
+constexpr std::string_view ICON_ARROW_DOWN_Z_A = "svg/solid/arrow-down-z-a.svg";
+constexpr std::string_view ICON_ARROW_DOWN = "svg/solid/arrow-down.svg";
+constexpr std::string_view ICON_ARROW_LEFT_LONG = "svg/solid/arrow-left-long.svg";
+constexpr std::string_view ICON_ARROW_LEFT = "svg/solid/arrow-left.svg";
+constexpr std::string_view ICON_ARROW_POINTER = "svg/solid/arrow-pointer.svg";
+constexpr std::string_view ICON_ARROW_RIGHT_ARROW_LEFT = "svg/solid/arrow-right-arrow-left.svg";
+constexpr std::string_view ICON_ARROW_RIGHT_FROM_BRACKET = "svg/solid/arrow-right-from-bracket.svg";
+constexpr std::string_view ICON_ARROW_RIGHT_LONG = "svg/solid/arrow-right-long.svg";
+constexpr std::string_view ICON_ARROW_RIGHT_TO_BRACKET = "svg/solid/arrow-right-to-bracket.svg";
+constexpr std::string_view ICON_ARROW_RIGHT_TO_CITY = "svg/solid/arrow-right-to-city.svg";
+constexpr std::string_view ICON_ARROW_RIGHT = "svg/solid/arrow-right.svg";
+constexpr std::string_view ICON_ARROW_ROTATE_LEFT = "svg/solid/arrow-rotate-left.svg";
+constexpr std::string_view ICON_ARROW_ROTATE_RIGHT = "svg/solid/arrow-rotate-right.svg";
+constexpr std::string_view ICON_ARROW_TREND_DOWN = "svg/solid/arrow-trend-down.svg";
+constexpr std::string_view ICON_ARROW_TREND_UP = "svg/solid/arrow-trend-up.svg";
+constexpr std::string_view ICON_ARROW_TURN_DOWN = "svg/solid/arrow-turn-down.svg";
+constexpr std::string_view ICON_ARROW_TURN_UP = "svg/solid/arrow-turn-up.svg";
+constexpr std::string_view ICON_ARROW_UP_1_9 = "svg/solid/arrow-up-1-9.svg";
+constexpr std::string_view ICON_ARROW_UP_9_1 = "svg/solid/arrow-up-9-1.svg";
+constexpr std::string_view ICON_ARROW_UP_A_Z = "svg/solid/arrow-up-a-z.svg";
+constexpr std::string_view ICON_ARROW_UP_FROM_BRACKET = "svg/solid/arrow-up-from-bracket.svg";
+constexpr std::string_view ICON_ARROW_UP_FROM_GROUND_WATER = "svg/solid/arrow-up-from-ground-water.svg";
+constexpr std::string_view ICON_ARROW_UP_FROM_WATER_PUMP = "svg/solid/arrow-up-from-water-pump.svg";
+constexpr std::string_view ICON_ARROW_UP_LONG = "svg/solid/arrow-up-long.svg";
+constexpr std::string_view ICON_ARROW_UP_RIGHT_DOTS = "svg/solid/arrow-up-right-dots.svg";
+constexpr std::string_view ICON_ARROW_UP_RIGHT_FROM_SQUARE = "svg/solid/arrow-up-right-from-square.svg";
+constexpr std::string_view ICON_ARROW_UP_SHORT_WIDE = "svg/solid/arrow-up-short-wide.svg";
+constexpr std::string_view ICON_ARROW_UP_WIDE_SHORT = "svg/solid/arrow-up-wide-short.svg";
+constexpr std::string_view ICON_ARROW_UP_Z_A = "svg/solid/arrow-up-z-a.svg";
+constexpr std::string_view ICON_ARROW_UP = "svg/solid/arrow-up.svg";
+constexpr std::string_view ICON_ARROWS_DOWN_TO_LINE = "svg/solid/arrows-down-to-line.svg";
+constexpr std::string_view ICON_ARROWS_DOWN_TO_PEOPLE = "svg/solid/arrows-down-to-people.svg";
+constexpr std::string_view ICON_ARROWS_LEFT_RIGHT_TO_LINE = "svg/solid/arrows-left-right-to-line.svg";
+constexpr std::string_view ICON_ARROWS_LEFT_RIGHT = "svg/solid/arrows-left-right.svg";
+constexpr std::string_view ICON_ARROWS_ROTATE = "svg/solid/arrows-rotate.svg";
+constexpr std::string_view ICON_ARROWS_SPIN = "svg/solid/arrows-spin.svg";
+constexpr std::string_view ICON_ARROWS_SPLIT_UP_AND_LEFT = "svg/solid/arrows-split-up-and-left.svg";
+constexpr std::string_view ICON_ARROWS_TO_CIRCLE = "svg/solid/arrows-to-circle.svg";
+constexpr std::string_view ICON_ARROWS_TO_DOT = "svg/solid/arrows-to-dot.svg";
+constexpr std::string_view ICON_ARROWS_TO_EYE = "svg/solid/arrows-to-eye.svg";
+constexpr std::string_view ICON_ARROWS_TURN_RIGHT = "svg/solid/arrows-turn-right.svg";
+constexpr std::string_view ICON_ARROWS_TURN_TO_DOTS = "svg/solid/arrows-turn-to-dots.svg";
+constexpr std::string_view ICON_ARROWS_UP_DOWN_LEFT_RIGHT = "svg/solid/arrows-up-down-left-right.svg";
+constexpr std::string_view ICON_ARROWS_UP_DOWN = "svg/solid/arrows-up-down.svg";
+constexpr std::string_view ICON_ARROWS_UP_TO_LINE = "svg/solid/arrows-up-to-line.svg";
+constexpr std::string_view ICON_ASTERISK = "svg/solid/asterisk.svg";
+constexpr std::string_view ICON_AT = "svg/solid/at.svg";
+constexpr std::string_view ICON_ATOM = "svg/solid/atom.svg";
+constexpr std::string_view ICON_AUDIO_DESCRIPTION = "svg/solid/audio-description.svg";
+constexpr std::string_view ICON_AUSTRAL_SIGN = "svg/solid/austral-sign.svg";
+constexpr std::string_view ICON_AWARD = "svg/solid/award.svg";
+constexpr std::string_view ICON_B = "svg/solid/b.svg";
+constexpr std::string_view ICON_BABY_CARRIAGE = "svg/solid/baby-carriage.svg";
+constexpr std::string_view ICON_BABY = "svg/solid/baby.svg";
+constexpr std::string_view ICON_BACKWARD_FAST = "svg/solid/backward-fast.svg";
+constexpr std::string_view ICON_BACKWARD_STEP = "svg/solid/backward-step.svg";
+constexpr std::string_view ICON_BACKWARD = "svg/solid/backward.svg";
+constexpr std::string_view ICON_BACON = "svg/solid/bacon.svg";
+constexpr std::string_view ICON_BACTERIA = "svg/solid/bacteria.svg";
+constexpr std::string_view ICON_BACTERIUM = "svg/solid/bacterium.svg";
+constexpr std::string_view ICON_BAG_SHOPPING = "svg/solid/bag-shopping.svg";
+constexpr std::string_view ICON_BAHAI = "svg/solid/bahai.svg";
+constexpr std::string_view ICON_BAHT_SIGN = "svg/solid/baht-sign.svg";
+constexpr std::string_view ICON_BAN_SMOKING = "svg/solid/ban-smoking.svg";
+constexpr std::string_view ICON_BAN = "svg/solid/ban.svg";
+constexpr std::string_view ICON_BANDAGE = "svg/solid/bandage.svg";
+constexpr std::string_view ICON_BANGLADESHI_TAKA_SIGN = "svg/solid/bangladeshi-taka-sign.svg";
+constexpr std::string_view ICON_BARCODE = "svg/solid/barcode.svg";
+constexpr std::string_view ICON_BARS_PROGRESS = "svg/solid/bars-progress.svg";
+constexpr std::string_view ICON_BARS_STAGGERED = "svg/solid/bars-staggered.svg";
+constexpr std::string_view ICON_BARS = "svg/solid/bars.svg";
+constexpr std::string_view ICON_BASEBALL_BAT_BALL = "svg/solid/baseball-bat-ball.svg";
+constexpr std::string_view ICON_BASEBALL = "svg/solid/baseball.svg";
+constexpr std::string_view ICON_BASKET_SHOPPING = "svg/solid/basket-shopping.svg";
+constexpr std::string_view ICON_BASKETBALL = "svg/solid/basketball.svg";
+constexpr std::string_view ICON_BATH = "svg/solid/bath.svg";
+constexpr std::string_view ICON_BATTERY_EMPTY = "svg/solid/battery-empty.svg";
+constexpr std::string_view ICON_BATTERY_FULL = "svg/solid/battery-full.svg";
+constexpr std::string_view ICON_BATTERY_HALF = "svg/solid/battery-half.svg";
+constexpr std::string_view ICON_BATTERY_QUARTER = "svg/solid/battery-quarter.svg";
+constexpr std::string_view ICON_BATTERY_THREE_QUARTERS = "svg/solid/battery-three-quarters.svg";
+constexpr std::string_view ICON_BED_PULSE = "svg/solid/bed-pulse.svg";
+constexpr std::string_view ICON_BED = "svg/solid/bed.svg";
+constexpr std::string_view ICON_BEER_MUG_EMPTY = "svg/solid/beer-mug-empty.svg";
+constexpr std::string_view ICON_BELL_CONCIERGE = "svg/solid/bell-concierge.svg";
+constexpr std::string_view ICON_BELL_SLASH_SOLID = "svg/solid/bell-slash.svg";
+constexpr std::string_view ICON_BELL_SOLID = "svg/solid/bell.svg";
+constexpr std::string_view ICON_BEZIER_CURVE = "svg/solid/bezier-curve.svg";
+constexpr std::string_view ICON_BICYCLE = "svg/solid/bicycle.svg";
+constexpr std::string_view ICON_BINOCULARS = "svg/solid/binoculars.svg";
+constexpr std::string_view ICON_BIOHAZARD = "svg/solid/biohazard.svg";
+constexpr std::string_view ICON_BITCOIN_SIGN = "svg/solid/bitcoin-sign.svg";
+constexpr std::string_view ICON_BLENDER_PHONE = "svg/solid/blender-phone.svg";
+constexpr std::string_view ICON_BLENDER = "svg/solid/blender.svg";
+constexpr std::string_view ICON_BLIND = "svg/solid/blind.svg";
+constexpr std::string_view ICON_BLOG = "svg/solid/blog.svg";
+constexpr std::string_view ICON_BOLD = "svg/solid/bold.svg";
+constexpr std::string_view ICON_BOLT_LIGHTNING = "svg/solid/bolt-lightning.svg";
+constexpr std::string_view ICON_BOLT = "svg/solid/bolt.svg";
+constexpr std::string_view ICON_BOMB = "svg/solid/bomb.svg";
+constexpr std::string_view ICON_BONE = "svg/solid/bone.svg";
+constexpr std::string_view ICON_BONG = "svg/solid/bong.svg";
+constexpr std::string_view ICON_BOOK_ATLAS = "svg/solid/book-atlas.svg";
+constexpr std::string_view ICON_BOOK_BIBLE = "svg/solid/book-bible.svg";
+constexpr std::string_view ICON_BOOK_BOOKMARK = "svg/solid/book-bookmark.svg";
+constexpr std::string_view ICON_BOOK_JOURNAL_WHILLS = "svg/solid/book-journal-whills.svg";
+constexpr std::string_view ICON_BOOK_MEDICAL = "svg/solid/book-medical.svg";
+constexpr std::string_view ICON_BOOK_OPEN_READER = "svg/solid/book-open-reader.svg";
+constexpr std::string_view ICON_BOOK_OPEN = "svg/solid/book-open.svg";
+constexpr std::string_view ICON_BOOK_QURAN = "svg/solid/book-quran.svg";
+constexpr std::string_view ICON_BOOK_SKULL = "svg/solid/book-skull.svg";
+constexpr std::string_view ICON_BOOK_TANAKH = "svg/solid/book-tanakh.svg";
+constexpr std::string_view ICON_BOOK = "svg/solid/book.svg";
+constexpr std::string_view ICON_BOOKMARK_SOLID = "svg/solid/bookmark.svg";
+constexpr std::string_view ICON_BORDER_ALL = "svg/solid/border-all.svg";
+constexpr std::string_view ICON_BORDER_NONE = "svg/solid/border-none.svg";
+constexpr std::string_view ICON_BORDER_TOP_LEFT = "svg/solid/border-top-left.svg";
+constexpr std::string_view ICON_BORE_HOLE = "svg/solid/bore-hole.svg";
+constexpr std::string_view ICON_BOTTLE_DROPLET = "svg/solid/bottle-droplet.svg";
+constexpr std::string_view ICON_BOTTLE_WATER = "svg/solid/bottle-water.svg";
+constexpr std::string_view ICON_BOWL_FOOD = "svg/solid/bowl-food.svg";
+constexpr std::string_view ICON_BOWL_RICE = "svg/solid/bowl-rice.svg";
+constexpr std::string_view ICON_BOWLING_BALL = "svg/solid/bowling-ball.svg";
+constexpr std::string_view ICON_BOX_ARCHIVE = "svg/solid/box-archive.svg";
+constexpr std::string_view ICON_BOX_OPEN = "svg/solid/box-open.svg";
+constexpr std::string_view ICON_BOX_TISSUE = "svg/solid/box-tissue.svg";
+constexpr std::string_view ICON_BOX = "svg/solid/box.svg";
+constexpr std::string_view ICON_BOXES_PACKING = "svg/solid/boxes-packing.svg";
+constexpr std::string_view ICON_BOXES_STACKED = "svg/solid/boxes-stacked.svg";
+constexpr std::string_view ICON_BRAILLE = "svg/solid/braille.svg";
+constexpr std::string_view ICON_BRAIN = "svg/solid/brain.svg";
+constexpr std::string_view ICON_BRAZILIAN_REAL_SIGN = "svg/solid/brazilian-real-sign.svg";
+constexpr std::string_view ICON_BREAD_SLICE = "svg/solid/bread-slice.svg";
+constexpr std::string_view ICON_BRIDGE_CIRCLE_CHECK = "svg/solid/bridge-circle-check.svg";
+constexpr std::string_view ICON_BRIDGE_CIRCLE_EXCLAMATION = "svg/solid/bridge-circle-exclamation.svg";
+constexpr std::string_view ICON_BRIDGE_CIRCLE_XMARK = "svg/solid/bridge-circle-xmark.svg";
+constexpr std::string_view ICON_BRIDGE_LOCK = "svg/solid/bridge-lock.svg";
+constexpr std::string_view ICON_BRIDGE_WATER = "svg/solid/bridge-water.svg";
+constexpr std::string_view ICON_BRIDGE = "svg/solid/bridge.svg";
+constexpr std::string_view ICON_BRIEFCASE_MEDICAL = "svg/solid/briefcase-medical.svg";
+constexpr std::string_view ICON_BRIEFCASE = "svg/solid/briefcase.svg";
+constexpr std::string_view ICON_BROOM_BALL = "svg/solid/broom-ball.svg";
+constexpr std::string_view ICON_BROOM = "svg/solid/broom.svg";
+constexpr std::string_view ICON_BRUSH = "svg/solid/brush.svg";
+constexpr std::string_view ICON_BUCKET = "svg/solid/bucket.svg";
+constexpr std::string_view ICON_BUG_SLASH = "svg/solid/bug-slash.svg";
+constexpr std::string_view ICON_BUG = "svg/solid/bug.svg";
+constexpr std::string_view ICON_BUGS = "svg/solid/bugs.svg";
+constexpr std::string_view ICON_BUILDING_CIRCLE_ARROW_RIGHT = "svg/solid/building-circle-arrow-right.svg";
+constexpr std::string_view ICON_BUILDING_CIRCLE_CHECK = "svg/solid/building-circle-check.svg";
+constexpr std::string_view ICON_BUILDING_CIRCLE_EXCLAMATION = "svg/solid/building-circle-exclamation.svg";
+constexpr std::string_view ICON_BUILDING_CIRCLE_XMARK = "svg/solid/building-circle-xmark.svg";
+constexpr std::string_view ICON_BUILDING_COLUMNS = "svg/solid/building-columns.svg";
+constexpr std::string_view ICON_BUILDING_FLAG = "svg/solid/building-flag.svg";
+constexpr std::string_view ICON_BUILDING_LOCK = "svg/solid/building-lock.svg";
+constexpr std::string_view ICON_BUILDING_NGO = "svg/solid/building-ngo.svg";
+constexpr std::string_view ICON_BUILDING_SHIELD = "svg/solid/building-shield.svg";
+constexpr std::string_view ICON_BUILDING_UN = "svg/solid/building-un.svg";
+constexpr std::string_view ICON_BUILDING_USER = "svg/solid/building-user.svg";
+constexpr std::string_view ICON_BUILDING_WHEAT = "svg/solid/building-wheat.svg";
+constexpr std::string_view ICON_BUILDING_SOLID = "svg/solid/building.svg";
+constexpr std::string_view ICON_BULLHORN = "svg/solid/bullhorn.svg";
+constexpr std::string_view ICON_BULLSEYE = "svg/solid/bullseye.svg";
+constexpr std::string_view ICON_BURGER = "svg/solid/burger.svg";
+constexpr std::string_view ICON_BURST = "svg/solid/burst.svg";
+constexpr std::string_view ICON_BUS_SIMPLE = "svg/solid/bus-simple.svg";
+constexpr std::string_view ICON_BUS = "svg/solid/bus.svg";
+constexpr std::string_view ICON_BUSINESS_TIME = "svg/solid/business-time.svg";
+constexpr std::string_view ICON_C = "svg/solid/c.svg";
+constexpr std::string_view ICON_CABLE_CAR = "svg/solid/cable-car.svg";
+constexpr std::string_view ICON_CAKE_CANDLES = "svg/solid/cake-candles.svg";
+constexpr std::string_view ICON_CALCULATOR = "svg/solid/calculator.svg";
+constexpr std::string_view ICON_CALENDAR_CHECK_SOLID = "svg/solid/calendar-check.svg";
+constexpr std::string_view ICON_CALENDAR_DAY = "svg/solid/calendar-day.svg";
+constexpr std::string_view ICON_CALENDAR_DAYS_SOLID = "svg/solid/calendar-days.svg";
+constexpr std::string_view ICON_CALENDAR_MINUS_SOLID = "svg/solid/calendar-minus.svg";
+constexpr std::string_view ICON_CALENDAR_PLUS_SOLID = "svg/solid/calendar-plus.svg";
+constexpr std::string_view ICON_CALENDAR_WEEK = "svg/solid/calendar-week.svg";
+constexpr std::string_view ICON_CALENDAR_XMARK_SOLID = "svg/solid/calendar-xmark.svg";
+constexpr std::string_view ICON_CALENDAR_SOLID = "svg/solid/calendar.svg";
+constexpr std::string_view ICON_CAMERA_RETRO = "svg/solid/camera-retro.svg";
+constexpr std::string_view ICON_CAMERA_ROTATE = "svg/solid/camera-rotate.svg";
+constexpr std::string_view ICON_CAMERA = "svg/solid/camera.svg";
+constexpr std::string_view ICON_CAMPGROUND = "svg/solid/campground.svg";
+constexpr std::string_view ICON_CANDY_CANE = "svg/solid/candy-cane.svg";
+constexpr std::string_view ICON_CANNABIS = "svg/solid/cannabis.svg";
+constexpr std::string_view ICON_CAPSULES = "svg/solid/capsules.svg";
+constexpr std::string_view ICON_CAR_BATTERY = "svg/solid/car-battery.svg";
+constexpr std::string_view ICON_CAR_BURST = "svg/solid/car-burst.svg";
+constexpr std::string_view ICON_CAR_ON = "svg/solid/car-on.svg";
+constexpr std::string_view ICON_CAR_REAR = "svg/solid/car-rear.svg";
+constexpr std::string_view ICON_CAR_SIDE = "svg/solid/car-side.svg";
+constexpr std::string_view ICON_CAR_TUNNEL = "svg/solid/car-tunnel.svg";
+constexpr std::string_view ICON_CAR = "svg/solid/car.svg";
+constexpr std::string_view ICON_CARAVAN = "svg/solid/caravan.svg";
+constexpr std::string_view ICON_CARET_DOWN = "svg/solid/caret-down.svg";
+constexpr std::string_view ICON_CARET_LEFT = "svg/solid/caret-left.svg";
+constexpr std::string_view ICON_CARET_RIGHT = "svg/solid/caret-right.svg";
+constexpr std::string_view ICON_CARET_UP = "svg/solid/caret-up.svg";
+constexpr std::string_view ICON_CARROT = "svg/solid/carrot.svg";
+constexpr std::string_view ICON_CART_ARROW_DOWN = "svg/solid/cart-arrow-down.svg";
+constexpr std::string_view ICON_CART_FLATBED_SUITCASE = "svg/solid/cart-flatbed-suitcase.svg";
+constexpr std::string_view ICON_CART_FLATBED = "svg/solid/cart-flatbed.svg";
+constexpr std::string_view ICON_CART_PLUS = "svg/solid/cart-plus.svg";
+constexpr std::string_view ICON_CART_SHOPPING = "svg/solid/cart-shopping.svg";
+constexpr std::string_view ICON_CASH_REGISTER = "svg/solid/cash-register.svg";
+constexpr std::string_view ICON_CAT = "svg/solid/cat.svg";
+constexpr std::string_view ICON_CEDI_SIGN = "svg/solid/cedi-sign.svg";
+constexpr std::string_view ICON_CERTIFICATE = "svg/solid/certificate.svg";
+constexpr std::string_view ICON_CHAIR = "svg/solid/chair.svg";
+constexpr std::string_view ICON_CHALKBOARD_USER = "svg/solid/chalkboard-user.svg";
+constexpr std::string_view ICON_CHALKBOARD = "svg/solid/chalkboard.svg";
+constexpr std::string_view ICON_CHAMPAGNE_GLASSES = "svg/solid/champagne-glasses.svg";
+constexpr std::string_view ICON_CHARGING_STATION = "svg/solid/charging-station.svg";
+constexpr std::string_view ICON_CHART_AREA = "svg/solid/chart-area.svg";
+constexpr std::string_view ICON_CHART_BAR_SOLID = "svg/solid/chart-bar.svg";
+constexpr std::string_view ICON_CHART_COLUMN = "svg/solid/chart-column.svg";
+constexpr std::string_view ICON_CHART_GANTT = "svg/solid/chart-gantt.svg";
+constexpr std::string_view ICON_CHART_LINE = "svg/solid/chart-line.svg";
+constexpr std::string_view ICON_CHART_PIE = "svg/solid/chart-pie.svg";
+constexpr std::string_view ICON_CHART_SIMPLE = "svg/solid/chart-simple.svg";
+constexpr std::string_view ICON_CHECK_DOUBLE = "svg/solid/check-double.svg";
+constexpr std::string_view ICON_CHECK_TO_SLOT = "svg/solid/check-to-slot.svg";
+constexpr std::string_view ICON_CHECK = "svg/solid/check.svg";
+constexpr std::string_view ICON_CHEESE = "svg/solid/cheese.svg";
+constexpr std::string_view ICON_CHESS_BISHOP = "svg/solid/chess-bishop.svg";
+constexpr std::string_view ICON_CHESS_BOARD = "svg/solid/chess-board.svg";
+constexpr std::string_view ICON_CHESS_KING = "svg/solid/chess-king.svg";
+constexpr std::string_view ICON_CHESS_KNIGHT = "svg/solid/chess-knight.svg";
+constexpr std::string_view ICON_CHESS_PAWN = "svg/solid/chess-pawn.svg";
+constexpr std::string_view ICON_CHESS_QUEEN = "svg/solid/chess-queen.svg";
+constexpr std::string_view ICON_CHESS_ROOK = "svg/solid/chess-rook.svg";
+constexpr std::string_view ICON_CHESS = "svg/solid/chess.svg";
+constexpr std::string_view ICON_CHEVRON_DOWN = "svg/solid/chevron-down.svg";
+constexpr std::string_view ICON_CHEVRON_LEFT = "svg/solid/chevron-left.svg";
+constexpr std::string_view ICON_CHEVRON_RIGHT = "svg/solid/chevron-right.svg";
+constexpr std::string_view ICON_CHEVRON_UP = "svg/solid/chevron-up.svg";
+constexpr std::string_view ICON_CHILD_COMBATANT = "svg/solid/child-combatant.svg";
+constexpr std::string_view ICON_CHILD_DRESS = "svg/solid/child-dress.svg";
+constexpr std::string_view ICON_CHILD_REACHING = "svg/solid/child-reaching.svg";
+constexpr std::string_view ICON_CHILD = "svg/solid/child.svg";
+constexpr std::string_view ICON_CHILDREN = "svg/solid/children.svg";
+constexpr std::string_view ICON_CHURCH = "svg/solid/church.svg";
+constexpr std::string_view ICON_CIRCLE_ARROW_DOWN = "svg/solid/circle-arrow-down.svg";
+constexpr std::string_view ICON_CIRCLE_ARROW_LEFT = "svg/solid/circle-arrow-left.svg";
+constexpr std::string_view ICON_CIRCLE_ARROW_RIGHT = "svg/solid/circle-arrow-right.svg";
+constexpr std::string_view ICON_CIRCLE_ARROW_UP = "svg/solid/circle-arrow-up.svg";
+constexpr std::string_view ICON_CIRCLE_CHECK = "svg/solid/circle-check.svg";
+constexpr std::string_view ICON_CIRCLE_CHEVRON_DOWN = "svg/solid/circle-chevron-down.svg";
+constexpr std::string_view ICON_CIRCLE_CHEVRON_LEFT = "svg/solid/circle-chevron-left.svg";
+constexpr std::string_view ICON_CIRCLE_CHEVRON_RIGHT = "svg/solid/circle-chevron-right.svg";
+constexpr std::string_view ICON_CIRCLE_CHEVRON_UP = "svg/solid/circle-chevron-up.svg";
+constexpr std::string_view ICON_CIRCLE_DOLLAR_TO_SLOT = "svg/solid/circle-dollar-to-slot.svg";
+constexpr std::string_view ICON_CIRCLE_DOT = "svg/solid/circle-dot.svg";
+constexpr std::string_view ICON_CIRCLE_DOWN = "svg/solid/circle-down.svg";
+constexpr std::string_view ICON_CIRCLE_EXCLAMATION = "svg/solid/circle-exclamation.svg";
+constexpr std::string_view ICON_CIRCLE_H = "svg/solid/circle-h.svg";
+constexpr std::string_view ICON_CIRCLE_HALF_STROKE = "svg/solid/circle-half-stroke.svg";
+constexpr std::string_view ICON_CIRCLE_INFO = "svg/solid/circle-info.svg";
+constexpr std::string_view ICON_CIRCLE_LEFT = "svg/solid/circle-left.svg";
+constexpr std::string_view ICON_CIRCLE_MINUS = "svg/solid/circle-minus.svg";
+constexpr std::string_view ICON_CIRCLE_NODES = "svg/solid/circle-nodes.svg";
+constexpr std::string_view ICON_CIRCLE_NOTCH = "svg/solid/circle-notch.svg";
+constexpr std::string_view ICON_CIRCLE_PAUSE = "svg/solid/circle-pause.svg";
+constexpr std::string_view ICON_CIRCLE_PLAY = "svg/solid/circle-play.svg";
+constexpr std::string_view ICON_CIRCLE_PLUS = "svg/solid/circle-plus.svg";
+constexpr std::string_view ICON_CIRCLE_QUESTION = "svg/solid/circle-question.svg";
+constexpr std::string_view ICON_CIRCLE_RADIATION = "svg/solid/circle-radiation.svg";
+constexpr std::string_view ICON_CIRCLE_RIGHT = "svg/solid/circle-right.svg";
+constexpr std::string_view ICON_CIRCLE_STOP = "svg/solid/circle-stop.svg";
+constexpr std::string_view ICON_CIRCLE_UP = "svg/solid/circle-up.svg";
+constexpr std::string_view ICON_CIRCLE_USER = "svg/solid/circle-user.svg";
+constexpr std::string_view ICON_CIRCLE_XMARK = "svg/solid/circle-xmark.svg";
+constexpr std::string_view ICON_CIRCLE_SOLID = "svg/solid/circle.svg";
+constexpr std::string_view ICON_CITY = "svg/solid/city.svg";
+constexpr std::string_view ICON_CLAPPERBOARD = "svg/solid/clapperboard.svg";
+constexpr std::string_view ICON_CLIPBOARD_CHECK = "svg/solid/clipboard-check.svg";
+constexpr std::string_view ICON_CLIPBOARD_LIST = "svg/solid/clipboard-list.svg";
+constexpr std::string_view ICON_CLIPBOARD_QUESTION = "svg/solid/clipboard-question.svg";
+constexpr std::string_view ICON_CLIPBOARD_USER = "svg/solid/clipboard-user.svg";
+constexpr std::string_view ICON_CLIPBOARD_SOLID = "svg/solid/clipboard.svg";
+constexpr std::string_view ICON_CLOCK_ROTATE_LEFT = "svg/solid/clock-rotate-left.svg";
+constexpr std::string_view ICON_CLOCK_SOLID = "svg/solid/clock.svg";
+constexpr std::string_view ICON_CLONE_SOLID = "svg/solid/clone.svg";
+constexpr std::string_view ICON_CLOSED_CAPTIONING_SOLID = "svg/solid/closed-captioning.svg";
+constexpr std::string_view ICON_CLOUD_ARROW_DOWN = "svg/solid/cloud-arrow-down.svg";
+constexpr std::string_view ICON_CLOUD_ARROW_UP = "svg/solid/cloud-arrow-up.svg";
+constexpr std::string_view ICON_CLOUD_BOLT = "svg/solid/cloud-bolt.svg";
+constexpr std::string_view ICON_CLOUD_MEATBALL = "svg/solid/cloud-meatball.svg";
+constexpr std::string_view ICON_CLOUD_MOON_RAIN = "svg/solid/cloud-moon-rain.svg";
+constexpr std::string_view ICON_CLOUD_MOON = "svg/solid/cloud-moon.svg";
+constexpr std::string_view ICON_CLOUD_RAIN = "svg/solid/cloud-rain.svg";
+constexpr std::string_view ICON_CLOUD_SHOWERS_HEAVY = "svg/solid/cloud-showers-heavy.svg";
+constexpr std::string_view ICON_CLOUD_SHOWERS_WATER = "svg/solid/cloud-showers-water.svg";
+constexpr std::string_view ICON_CLOUD_SUN_RAIN = "svg/solid/cloud-sun-rain.svg";
+constexpr std::string_view ICON_CLOUD_SUN = "svg/solid/cloud-sun.svg";
+constexpr std::string_view ICON_CLOUD = "svg/solid/cloud.svg";
+constexpr std::string_view ICON_CLOVER = "svg/solid/clover.svg";
+constexpr std::string_view ICON_CODE_BRANCH = "svg/solid/code-branch.svg";
+constexpr std::string_view ICON_CODE_COMMIT = "svg/solid/code-commit.svg";
+constexpr std::string_view ICON_CODE_COMPARE = "svg/solid/code-compare.svg";
+constexpr std::string_view ICON_CODE_FORK = "svg/solid/code-fork.svg";
+constexpr std::string_view ICON_CODE_MERGE = "svg/solid/code-merge.svg";
+constexpr std::string_view ICON_CODE_PULL_REQUEST = "svg/solid/code-pull-request.svg";
+constexpr std::string_view ICON_CODE = "svg/solid/code.svg";
+constexpr std::string_view ICON_COINS = "svg/solid/coins.svg";
+constexpr std::string_view ICON_COLON_SIGN = "svg/solid/colon-sign.svg";
+constexpr std::string_view ICON_COMMENT_DOLLAR = "svg/solid/comment-dollar.svg";
+constexpr std::string_view ICON_COMMENT_DOTS_SOLID = "svg/solid/comment-dots.svg";
+constexpr std::string_view ICON_COMMENT_MEDICAL = "svg/solid/comment-medical.svg";
+constexpr std::string_view ICON_COMMENT_SLASH = "svg/solid/comment-slash.svg";
+constexpr std::string_view ICON_COMMENT_SMS = "svg/solid/comment-sms.svg";
+constexpr std::string_view ICON_COMMENT_SOLID = "svg/solid/comment.svg";
+constexpr std::string_view ICON_COMMENTS_DOLLAR = "svg/solid/comments-dollar.svg";
+constexpr std::string_view ICON_COMMENTS_SOLID = "svg/solid/comments.svg";
+constexpr std::string_view ICON_COMPACT_DISC = "svg/solid/compact-disc.svg";
+constexpr std::string_view ICON_COMPASS_DRAFTING = "svg/solid/compass-drafting.svg";
+constexpr std::string_view ICON_COMPASS_SOLID = "svg/solid/compass.svg";
+constexpr std::string_view ICON_COMPRESS = "svg/solid/compress.svg";
+constexpr std::string_view ICON_COMPUTER_MOUSE = "svg/solid/computer-mouse.svg";
+constexpr std::string_view ICON_COMPUTER = "svg/solid/computer.svg";
+constexpr std::string_view ICON_COOKIE_BITE = "svg/solid/cookie-bite.svg";
+constexpr std::string_view ICON_COOKIE = "svg/solid/cookie.svg";
+constexpr std::string_view ICON_COPY_SOLID = "svg/solid/copy.svg";
+constexpr std::string_view ICON_COPYRIGHT = "svg/solid/copyright.svg";
+constexpr std::string_view ICON_COUCH = "svg/solid/couch.svg";
+constexpr std::string_view ICON_COW = "svg/solid/cow.svg";
+constexpr std::string_view ICON_CREDIT_CARD_SOLID = "svg/solid/credit-card.svg";
+constexpr std::string_view ICON_CROP_SIMPLE = "svg/solid/crop-simple.svg";
+constexpr std::string_view ICON_CROP = "svg/solid/crop.svg";
+constexpr std::string_view ICON_CROSSHAIRS = "svg/solid/crosshairs.svg";
+constexpr std::string_view ICON_CROW = "svg/solid/crow.svg";
+constexpr std::string_view ICON_CROWN = "svg/solid/crown.svg";
+constexpr std::string_view ICON_CRUTCH = "svg/solid/crutch.svg";
+constexpr std::string_view ICON_CRUTCHES = "svg/solid/crutches.svg";
+constexpr std::string_view ICON_CUBE = "svg/solid/cube.svg";
+constexpr std::string_view ICON_CUBES_STAKED = "svg/solid/cubes-stacked.svg";
+constexpr std::string_view ICON_CUBES = "svg/solid/cubes.svg";
+constexpr std::string_view ICON_D = "svg/solid/d.svg";
+constexpr std::string_view ICON_DATABASE = "svg/solid/database.svg";
+constexpr std::string_view ICON_DELETE_LEFT = "svg/solid/delete-left.svg";
+constexpr std::string_view ICON_DESERT = "svg/solid/desert.svg";
+constexpr std::string_view ICON_DESKTOP = "svg/solid/desktop.svg";
+constexpr std::string_view ICON_DHARMACHAKRA = "svg/solid/dharmachakra.svg";
+constexpr std::string_view ICON_DIAGRAM_NEXT = "svg/solid/diagram-next.svg";
+constexpr std::string_view ICON_DIAGRAM_PREDECESSOR = "svg/solid/diagram-predecessor.svg";
+constexpr std::string_view ICON_DIAGRAM_PROJECT = "svg/solid/diagram-project.svg";
+constexpr std::string_view ICON_DIAGRAM_SUCCESSOR = "svg/solid/diagram-successor.svg";
+constexpr std::string_view ICON_DIAMOND_TURN_RIGHT = "svg/solid/diamond-turn-right.svg";
+constexpr std::string_view ICON_DIAMOND = "svg/solid/diamond.svg";
+constexpr std::string_view ICON_DICE_D20 = "svg/solid/dice-d20.svg";
+constexpr std::string_view ICON_DICE_D6 = "svg/solid/dice-d6.svg";
+constexpr std::string_view ICON_DICE_FIVE = "svg/solid/dice-five.svg";
+constexpr std::string_view ICON_DICE_FOUR = "svg/solid/dice-four.svg";
+constexpr std::string_view ICON_DICE_ONE = "svg/solid/dice-one.svg";
+constexpr std::string_view ICON_DICE_SIX = "svg/solid/dice-six.svg";
+constexpr std::string_view ICON_DICE_THREE = "svg/solid/dice-three.svg";
+constexpr std::string_view ICON_DICE_TWO = "svg/solid/dice-two.svg";
+constexpr std::string_view ICON_DICE = "svg/solid/dice.svg";
+constexpr std::string_view ICON_DISEASE = "svg/solid/disease.svg";
+constexpr std::string_view ICON_DISPLAY = "svg/solid/display.svg";
+constexpr std::string_view ICON_DIVIDE = "svg/solid/divide.svg";
+constexpr std::string_view ICON_DNA = "svg/solid/dna.svg";
+constexpr std::string_view ICON_DOG = "svg/solid/dog.svg";
+constexpr std::string_view ICON_DOLLAR_SIGN = "svg/solid/dollar-sign.svg";
+constexpr std::string_view ICON_DOLLY = "svg/solid/dolly.svg";
+constexpr std::string_view ICON_DONG_SIGN = "svg/solid/dong-sign.svg";
+constexpr std::string_view ICON_DOOR_CLOSED = "svg/solid/door-closed.svg";
+constexpr std::string_view ICON_DOOR_OPEN = "svg/solid/door-open.svg";
+constexpr std::string_view ICON_DOT_CIRCLE = "svg/solid/dot-circle.svg";
+constexpr std::string_view ICON_DOVE = "svg/solid/dove.svg";
+constexpr std::string_view ICON_DOWN_LEFT_AND_UP_RIGHT_TO_CENTER = "svg/solid/down-left-and-up-right-to-center.svg";
+constexpr std::string_view ICON_DOWN_LONG = "svg/solid/down-long.svg";
+constexpr std::string_view ICON_DOWNLOAD = "svg/solid/download.svg";
+constexpr std::string_view ICON_DRAGON = "svg/solid/dragon.svg";
+constexpr std::string_view ICON_DRAW_POLYGON = "svg/solid/draw-polygon.svg";
+constexpr std::string_view ICON_DRUM_STEELPAN = "svg/solid/drum-steelpan.svg";
+constexpr std::string_view ICON_DRUM = "svg/solid/drum.svg";
+constexpr std::string_view ICON_DRUMSTICK_BITE = "svg/solid/drumstick-bite.svg";
+constexpr std::string_view ICON_DUMBBELL = "svg/solid/dumbbell.svg";
+constexpr std::string_view ICON_DUMPSTER_FIRE = "svg/solid/dumpster-fire.svg";
+constexpr std::string_view ICON_DUMPSTER = "svg/solid/dumpster.svg";
+constexpr std::string_view ICON_DUNGEON = "svg/solid/dungeon.svg";
+constexpr std::string_view ICON_E = "svg/solid/e.svg";
+constexpr std::string_view ICON_EAR_DEAF = "svg/solid/ear-deaf.svg";
+constexpr std::string_view ICON_EAR_LISTEN = "svg/solid/ear-listen.svg";
+constexpr std::string_view ICON_EARTH_AFRICA = "svg/solid/earth-africa.svg";
+constexpr std::string_view ICON_EARTH_AMERICAS = "svg/solid/earth-americas.svg";
+constexpr std::string_view ICON_EARTH_ASIA = "svg/solid/earth-asia.svg";
+constexpr std::string_view ICON_EARTH_EUROPE = "svg/solid/earth-europe.svg";
+constexpr std::string_view ICON_EARTH_OCEANIA = "svg/solid/earth-oceania.svg";
+constexpr std::string_view ICON_EGG = "svg/solid/egg.svg";
+constexpr std::string_view ICON_EJECT = "svg/solid/eject.svg";
+constexpr std::string_view ICON_ELEVATOR = "svg/solid/elevator.svg";
+constexpr std::string_view ICON_ELLIPSIS_VERTICAL = "svg/solid/ellipsis-vertical.svg";
+constexpr std::string_view ICON_ELLIPSIS = "svg/solid/ellipsis.svg";
+constexpr std::string_view ICON_ENVELOPE_CIRCLE_CHECK = "svg/solid/envelope-circle-check.svg";
+constexpr std::string_view ICON_ENVELOPE_OPEN_TEXT = "svg/solid/envelope-open-text.svg";
+constexpr std::string_view ICON_ENVELOPE_OPEN_SOLID = "svg/solid/envelope-open.svg";
+constexpr std::string_view ICON_ENVELOPE_SOLID = "svg/solid/envelope.svg";
+constexpr std::string_view ICON_ENVELOPES_BULK = "svg/solid/envelopes-bulk.svg";
+constexpr std::string_view ICON_EQUALS = "svg/solid/equals.svg";
+constexpr std::string_view ICON_ERASER = "svg/solid/eraser.svg";
+constexpr std::string_view ICON_ETHERNET = "svg/solid/ethernet.svg";
+constexpr std::string_view ICON_EURO_SIGN = "svg/solid/euro-sign.svg";
+constexpr std::string_view ICON_EXCLAMATION = "svg/solid/exclamation.svg";
+constexpr std::string_view ICON_EXPAND = "svg/solid/expand.svg";
+constexpr std::string_view ICON_EXPLOSION = "svg/solid/explosion.svg";
+constexpr std::string_view ICON_EYE_DROPPER = "svg/solid/eye-dropper.svg";
+constexpr std::string_view ICON_EYE_LOW_VISION = "svg/solid/eye-low-vision.svg";
+constexpr std::string_view ICON_EYE_SLASH_SOLID = "svg/solid/eye-slash.svg";
+constexpr std::string_view ICON_EYE_SOLID = "svg/solid/eye.svg";
+constexpr std::string_view ICON_F = "svg/solid/f.svg";
+constexpr std::string_view ICON_FACE_ANGRY_SOLID = "svg/solid/face-angry.svg";
+constexpr std::string_view ICON_FACE_DIZZY_SOLID = "svg/solid/face-dizzy.svg";
+constexpr std::string_view ICON_FACE_FLUSHED_SOLID = "svg/solid/face-flushed.svg";
+constexpr std::string_view ICON_FACE_FROWN_OPEN_SOLID = "svg/solid/face-frown-open.svg";
+constexpr std::string_view ICON_FACE_FROWN_SOLID = "svg/solid/face-frown.svg";
+constexpr std::string_view ICON_FACE_GRIMACE_SOLID = "svg/solid/face-grimace.svg";
+constexpr std::string_view ICON_FACE_GRIN_BEAM_SWEAT_SOLID = "svg/solid/face-grin-beam-sweat.svg";
+constexpr std::string_view ICON_FACE_GRIN_BEAM_SOLID = "svg/solid/face-grin-beam.svg";
+constexpr std::string_view ICON_FACE_GRIN_HEARTS_SOLID = "svg/solid/face-grin-hearts.svg";
+constexpr std::string_view ICON_FACE_GRIN_SQUINT_TEARS_SOLID = "svg/solid/face-grin-squint-tears.svg";
+constexpr std::string_view ICON_FACE_GRIN_SQUINT_SOLID = "svg/solid/face-grin-squint.svg";
+constexpr std::string_view ICON_FACE_GRIN_STARS_SOLID = "svg/solid/face-grin-stars.svg";
+constexpr std::string_view ICON_FACE_GRIN_TEARS_SOLID = "svg/solid/face-grin-tears.svg";
+constexpr std::string_view ICON_FACE_GRIN_TONGUE_SQUINT_SOLID = "svg/solid/face-grin-tongue-squint.svg";
+constexpr std::string_view ICON_FACE_GRIN_TONGUE_WINK_SOLID = "svg/solid/face-grin-tongue-wink.svg";
+constexpr std::string_view ICON_FACE_GRIN_TONGUE_SOLID = "svg/solid/face-grin-tongue.svg";
+constexpr std::string_view ICON_FACE_GRIN_WIDE_SOLID = "svg/solid/face-grin-wide.svg";
+constexpr std::string_view ICON_FACE_GRIN_WINK_SOLID = "svg/solid/face-grin-wink.svg";
+constexpr std::string_view ICON_FACE_GRIN_SOLID = "svg/solid/face-grin.svg";
+constexpr std::string_view ICON_FACE_KISS_BEAM_SOLID = "svg/solid/face-kiss-beam.svg";
+constexpr std::string_view ICON_FACE_KISS_WINK_HEART_SOLID = "svg/solid/face-kiss-wink-heart.svg";
+constexpr std::string_view ICON_FACE_KISS_SOLID = "svg/solid/face-kiss.svg";
+constexpr std::string_view ICON_FACE_LAUGH_BEAM_SOLID = "svg/solid/face-laugh-beam.svg";
+constexpr std::string_view ICON_FACE_LAUGH_SQUINT_SOLID = "svg/solid/face-laugh-squint.svg";
+constexpr std::string_view ICON_FACE_LAUGH_WINK_SOLID = "svg/solid/face-laugh-wink.svg";
+constexpr std::string_view ICON_FACE_LAUGH_SOLID = "svg/solid/face-laugh.svg";
+constexpr std::string_view ICON_FACE_MEH_BLANK_SOLID = "svg/solid/face-meh-blank.svg";
+constexpr std::string_view ICON_FACE_MEH_SOLID = "svg/solid/face-meh.svg";
+constexpr std::string_view ICON_FACE_ROLLING_EYES_SOLID = "svg/solid/face-rolling-eyes.svg";
+constexpr std::string_view ICON_FACE_SAD_CRY_SOLID = "svg/solid/face-sad-cry.svg";
+constexpr std::string_view ICON_FACE_SAD_TEAR_SOLID = "svg/solid/face-sad-tear.svg";
+constexpr std::string_view ICON_FACE_SMILE_BEAM_SOLID = "svg/solid/face-smile-beam.svg";
+constexpr std::string_view ICON_FACE_SMILE_WINK_SOLID = "svg/solid/face-smile-wink.svg";
+constexpr std::string_view ICON_FACE_SMILE_SOLID = "svg/solid/face-smile.svg";
+constexpr std::string_view ICON_FACE_SURPRISE_SOLID = "svg/solid/face-surprise.svg";
+constexpr std::string_view ICON_FACE_TIRED_SOLID = "svg/solid/face-tired.svg";
+constexpr std::string_view ICON_FAN = "svg/solid/fan.svg";
+constexpr std::string_view ICON_FAUCET_DRIP = "svg/solid/faucet-drip.svg";
+constexpr std::string_view ICON_FAUCET = "svg/solid/faucet.svg";
+constexpr std::string_view ICON_FAX = "svg/solid/fax.svg";
+constexpr std::string_view ICON_FEATHER_POINTED = "svg/solid/feather-pointed.svg";
+constexpr std::string_view ICON_FEATHER = "svg/solid/feather.svg";
+constexpr std::string_view ICON_FERRY = "svg/solid/ferry.svg";
+constexpr std::string_view ICON_FILE_ARROW_DOWN = "svg/solid/file-arrow-down.svg";
+constexpr std::string_view ICON_FILE_ARROW_UP = "svg/solid/file-arrow-up.svg";
+constexpr std::string_view ICON_FILE_AUDIO_SOLID = "svg/solid/file-audio.svg";
+constexpr std::string_view ICON_FILE_CIRCLE_CHECK = "svg/solid/file-circle-check.svg";
+constexpr std::string_view ICON_FILE_CIRCLE_EXCLAMATION = "svg/solid/file-circle-exclamation.svg";
+constexpr std::string_view ICON_FILE_CIRCLE_MINUS = "svg/solid/file-circle-minus.svg";
+constexpr std::string_view ICON_FILE_CIRCLE_PLUS = "svg/solid/file-circle-plus.svg";
+constexpr std::string_view ICON_FILE_CIRCLE_QUESTION = "svg/solid/file-circle-question.svg";
+constexpr std::string_view ICON_FILE_CIRCLE_XMARK = "svg/solid/file-circle-xmark.svg";
+constexpr std::string_view ICON_FILE_CODE_SOLID = "svg/solid/file-code.svg";
+constexpr std::string_view ICON_FILE_CONTRACT = "svg/solid/file-contract.svg";
+constexpr std::string_view ICON_FILE_CSV = "svg/solid/file-csv.svg";
+constexpr std::string_view ICON_FILE_EXCEL_SOLID = "svg/solid/file-excel.svg";
+constexpr std::string_view ICON_FILE_EXPORT = "svg/solid/file-export.svg";
+constexpr std::string_view ICON_FILE_IMAGE_SOLID = "svg/solid/file-image.svg";
+constexpr std::string_view ICON_FILE_IMPORT = "svg/solid/file-import.svg";
+constexpr std::string_view ICON_FILE_INVOICE_DOLLAR = "svg/solid/file-invoice-dollar.svg";
+constexpr std::string_view ICON_FILE_INVOICE = "svg/solid/file-invoice.svg";
+constexpr std::string_view ICON_FILE_LINES_SOLID = "svg/solid/file-lines.svg";
+constexpr std::string_view ICON_FILE_MEDICAL = "svg/solid/file-medical.svg";
+constexpr std::string_view ICON_FILE_PDF_SOLID = "svg/solid/file-pdf.svg";
+constexpr std::string_view ICON_FILE_PEN = "svg/solid/file-pen.svg";
+constexpr std::string_view ICON_FILE_POWERPOINT_SOLID = "svg/solid/file-powerpoint.svg";
+constexpr std::string_view ICON_FILE_PRESCRIPTION = "svg/solid/file-prescription.svg";
+constexpr std::string_view ICON_FILE_SHIELD = "svg/solid/file-shield.svg";
+constexpr std::string_view ICON_FILE_VIDEO_SOLID = "svg/solid/file-video.svg";
+constexpr std::string_view ICON_FILE_WAVEFORM = "svg/solid/file-waveform.svg";
+constexpr std::string_view ICON_FILE_WORD_SOLID = "svg/solid/file-word.svg";
+constexpr std::string_view ICON_FILE_ZIPPER_SOLID = "svg/solid/file-zipper.svg";
+constexpr std::string_view ICON_FILE_SOLID = "svg/solid/file.svg";
+constexpr std::string_view ICON_FILL_DRIP = "svg/solid/fill-drip.svg";
+constexpr std::string_view ICON_FILL = "svg/solid/fill.svg";
+constexpr std::string_view ICON_FILM = "svg/solid/film.svg";
+constexpr std::string_view ICON_FILTER_CIRCLE_XMARK = "svg/solid/filter-circle-xmark.svg";
+constexpr std::string_view ICON_FILTER_CIRCLE = "svg/solid/filter-circle.svg";
+constexpr std::string_view ICON_FILTER = "svg/solid/filter.svg";
+constexpr std::string_view ICON_FINGERPRINT = "svg/solid/fingerprint.svg";
+constexpr std::string_view ICON_FIRE_BURNER = "svg/solid/fire-burner.svg";
+constexpr std::string_view ICON_FIRE_EXTINGUISHER = "svg/solid/fire-extinguisher.svg";
+constexpr std::string_view ICON_FIRE_FLAME_CURVED = "svg/solid/fire-flame-curved.svg";
+constexpr std::string_view ICON_FIRE_FLAME_SIMPLE = "svg/solid/fire-flame-simple.svg";
+constexpr std::string_view ICON_FIRE = "svg/solid/fire.svg";
+constexpr std::string_view ICON_FISH_FINS = "svg/solid/fish-fins.svg";
+constexpr std::string_view ICON_FISH = "svg/solid/fish.svg";
+constexpr std::string_view ICON_FLAG_CHECKERED = "svg/solid/flag-checkered.svg";
+constexpr std::string_view ICON_FLAG_USA = "svg/solid/flag-usa.svg";
+constexpr std::string_view ICON_FLAG_SOLID = "svg/solid/flag.svg";
+constexpr std::string_view ICON_FLASK_VIAL = "svg/solid/flask-vial.svg";
+constexpr std::string_view ICON_FLASK = "svg/solid/flask.svg";
+constexpr std::string_view ICON_FLOPPY_DISK_SOLID = "svg/solid/floppy-disk.svg";
+constexpr std::string_view ICON_FLORIN_SIGN = "svg/solid/florin-sign.svg";
+constexpr std::string_view ICON_FOLDER_CLOSED_SOLID = "svg/solid/folder-closed.svg";
+constexpr std::string_view ICON_FOLDER_MINUS = "svg/solid/folder-minus.svg";
+constexpr std::string_view ICON_FOLDER_OPEN_SOLID = "svg/solid/folder-open.svg";
+constexpr std::string_view ICON_FOLDER_PLUS = "svg/solid/folder-plus.svg";
+constexpr std::string_view ICON_FOLDER_TREE = "svg/solid/folder-tree.svg";
+constexpr std::string_view ICON_FOLDER_SOLID = "svg/solid/folder.svg";
+constexpr std::string_view ICON_FONT_AWESOME_SOLID = "svg/solid/font-awesome.svg";
+constexpr std::string_view ICON_FONT = "svg/solid/font.svg";
+constexpr std::string_view ICON_FOOTBALL = "svg/solid/football.svg";
+constexpr std::string_view ICON_FORWARD_FAST = "svg/solid/forward-fast.svg";
+constexpr std::string_view ICON_FORWARD_STEP = "svg/solid/forward-step.svg";
+constexpr std::string_view ICON_FORWARD = "svg/solid/forward.svg";
+constexpr std::string_view ICON_FRANC_SIGN = "svg/solid/franc-sign.svg";
+constexpr std::string_view ICON_FUNNEL_DOLLAR = "svg/solid/funnel-dollar.svg";
+constexpr std::string_view ICON_FUTBOL_SOLID = "svg/solid/futbol.svg";
+constexpr std::string_view ICON_G = "svg/solid/g.svg";
+constexpr std::string_view ICON_GAMEPAD = "svg/solid/gamepad.svg";
+constexpr std::string_view ICON_GAS_PUMP = "svg/solid/gas-pump.svg";
+constexpr std::string_view ICON_GAUGE_HIGH = "svg/solid/gauge-high.svg";
+constexpr std::string_view ICON_GAUGE_SIMPLE_HIGH = "svg/solid/gauge-simple-high.svg";
+constexpr std::string_view ICON_GAUGE_SIMPLE = "svg/solid/gauge-simple.svg";
+constexpr std::string_view ICON_GAUGE = "svg/solid/gauge.svg";
+constexpr std::string_view ICON_GAVEL = "svg/solid/gavel.svg";
+constexpr std::string_view ICON_GEAR = "svg/solid/gear.svg";
+constexpr std::string_view ICON_GEARS = "svg/solid/gears.svg";
+constexpr std::string_view ICON_GEM_SOLID = "svg/solid/gem.svg";
+constexpr std::string_view ICON_GENDERLESS = "svg/solid/genderless.svg";
+constexpr std::string_view ICON_GHOST = "svg/solid/ghost.svg";
+constexpr std::string_view ICON_GIFT = "svg/solid/gift.svg";
+constexpr std::string_view ICON_GIFTS = "svg/solid/gifts.svg";
+constexpr std::string_view ICON_GLASS_WATER_DROPLET = "svg/solid/glass-water-droplet.svg";
+constexpr std::string_view ICON_GLASS_WATER = "svg/solid/glass-water.svg";
+constexpr std::string_view ICON_GLASSES = "svg/solid/glasses.svg";
+constexpr std::string_view ICON_GLOBE = "svg/solid/globe.svg";
+constexpr std::string_view ICON_GOLF_BALL_TEE = "svg/solid/golf-ball-tee.svg";
+constexpr std::string_view ICON_GOPURAM = "svg/solid/gopuram.svg";
+constexpr std::string_view ICON_GRADUATION_CAP = "svg/solid/graduation-cap.svg";
+constexpr std::string_view ICON_GREATER_THAN_EQUAL = "svg/solid/greater-than-equal.svg";
+constexpr std::string_view ICON_GREATER_THAN = "svg/solid/greater-than.svg";
+constexpr std::string_view ICON_GRIP_LINES_VERTICAL = "svg/solid/grip-lines-vertical.svg";
+constexpr std::string_view ICON_GRIP_LINES = "svg/solid/grip-lines.svg";
+constexpr std::string_view ICON_GRIP_VERTICAL = "svg/solid/grip-vertical.svg";
+constexpr std::string_view ICON_GRIP = "svg/solid/grip.svg";
+constexpr std::string_view ICON_GUARANI_SIGN = "svg/solid/guarani-sign.svg";
+constexpr std::string_view ICON_GUITAR = "svg/solid/guitar.svg";
+constexpr std::string_view ICON_GUN = "svg/solid/gun.svg";
+constexpr std::string_view ICON_H = "svg/solid/h.svg";
+constexpr std::string_view ICON_HAMMER = "svg/solid/hammer.svg";
+constexpr std::string_view ICON_HAMSA = "svg/solid/hamsa.svg";
+constexpr std::string_view ICON_HAND_BACK_FIST_SOLID = "svg/solid/hand-back-fist.svg";
+constexpr std::string_view ICON_HAND_DOTS = "svg/solid/hand-dots.svg";
+constexpr std::string_view ICON_HAND_FIST = "svg/solid/hand-fist.svg";
+constexpr std::string_view ICON_HAND_HOLDING_DOLLAR = "svg/solid/hand-holding-dollar.svg";
+constexpr std::string_view ICON_HAND_HOLDING_DROPLET = "svg/solid/hand-holding-droplet.svg";
+constexpr std::string_view ICON_HAND_HOLDING_HEART = "svg/solid/hand-holding-heart.svg";
+constexpr std::string_view ICON_HAND_HOLDING_MEDICAL = "svg/solid/hand-holding-medical.svg";
+constexpr std::string_view ICON_HAND_HOLDING = "svg/solid/hand-holding.svg";
+constexpr std::string_view ICON_HAND_LIZARD_SOLID = "svg/solid/hand-lizard.svg";
+constexpr std::string_view ICON_HAND_MIDDLE_FINGER = "svg/solid/hand-middle-finger.svg";
+constexpr std::string_view ICON_HAND_PEACE_SOLID = "svg/solid/hand-peace.svg";
+constexpr std::string_view ICON_HAND_POINT_DOWN = "svg/solid/hand-point-down.svg";
+constexpr std::string_view ICON_HAND_POINT_LEFT = "svg/solid/hand-point-left.svg";
+constexpr std::string_view ICON_HAND_POINT_RIGHT = "svg/solid/hand-point-right.svg";
+constexpr std::string_view ICON_HAND_POINT_UP = "svg/solid/hand-point-up.svg";
+constexpr std::string_view ICON_HAND_POINTER_SOLID = "svg/solid/hand-pointer.svg";
+constexpr std::string_view ICON_HAND_SCISSORS_SOLID = "svg/solid/hand-scissors.svg";
+constexpr std::string_view ICON_HAND_SPARKLES = "svg/solid/hand-sparkles.svg";
+constexpr std::string_view ICON_HAND_SPOCK_SOLID = "svg/solid/hand-spock.svg";
+constexpr std::string_view ICON_HAND_SOLID = "svg/solid/hand.svg";
+constexpr std::string_view ICON_HANDS_ASL_INTERPRETING_SOLID = "svg/solid/hands-asl-interpreting.svg";
+constexpr std::string_view ICON_HANDS_BOUND_SOLID = "svg/solid/hands-bound.svg";
+constexpr std::string_view ICON_HANDS_BUBBLES_SOLID = "svg/solid/hands-bubbles.svg";
+constexpr std::string_view ICON_HANDS_CLAPPING_SOLID = "svg/solid/hands-clapping.svg";
+constexpr std::string_view ICON_HANDS_HOLDING_CHILD_SOLID = "svg/solid/hands-holding-child.svg";
+constexpr std::string_view ICON_HANDS_HOLDING_CIRCLE_SOLID = "svg/solid/hands-holding-circle.svg";
+constexpr std::string_view ICON_HANDS_HOLDING_SOLID = "svg/solid/hands-holding.svg";
+constexpr std::string_view ICON_HANDS_PRAYING_SOLID = "svg/solid/hands-praying.svg";
+constexpr std::string_view ICON_HANDS_SOLID = "svg/solid/hands.svg";
+constexpr std::string_view ICON_HANDSHAKE_ANGLE = "svg/solid/handshake-angle.svg";
+constexpr std::string_view ICON_HANDSHAKE_SIMPLE_SLASH = "svg/solid/handshake-simple-slash.svg";
+constexpr std::string_view ICON_HANDSHAKE_SIMPLE = "svg/solid/handshake-simple.svg";
+constexpr std::string_view ICON_HANDSHAKE_SLASH = "svg/solid/handshake-slash.svg";
+constexpr std::string_view ICON_HANDSHAKE = "svg/solid/handshake.svg";
+constexpr std::string_view ICON_HARD_DRIVE_SOLID = "svg/solid/hard-drive.svg";
+constexpr std::string_view ICON_HASHTAG = "svg/solid/hashtag.svg";
+constexpr std::string_view ICON_HAT_COWBOY_SIDE = "svg/solid/hat-cowboy-side.svg";
+constexpr std::string_view ICON_HAT_COWBOY = "svg/solid/hat-cowboy.svg";
+constexpr std::string_view ICON_HAT_WIZARD = "svg/solid/hat-wizard.svg";
+constexpr std::string_view ICON_HEAD_SIDE_COUGH_SLASH = "svg/solid/head-side-cough-slash.svg";
+constexpr std::string_view ICON_HEAD_SIDE_COUGH = "svg/solid/head-side-cough.svg";
+constexpr std::string_view ICON_HEAD_SIDE_MASK = "svg/solid/head-side-mask.svg";
+constexpr std::string_view ICON_HEAD_SIDE_VIRUS = "svg/solid/head-side-virus.svg";
+constexpr std::string_view ICON_HEADING = "svg/solid/heading.svg";
+constexpr std::string_view ICON_HEADPHONES_SIMPLE = "svg/solid/headphones-simple.svg";
+constexpr std::string_view ICON_HEADPHONES = "svg/solid/headphones.svg";
+constexpr std::string_view ICON_HEADSET = "svg/solid/headset.svg";
+constexpr std::string_view ICON_HEART_CIRCLE_BOLT = "svg/solid/heart-circle-bolt.svg";
+constexpr std::string_view ICON_HEART_CIRCLE_CHECK = "svg/solid/heart-circle-check.svg";
+constexpr std::string_view ICON_HEART_CIRCLE_EXCLAMATION = "svg/solid/heart-circle-exclamation.svg";
+constexpr std::string_view ICON_HEART_CIRCLE_MINUS = "svg/solid/heart-circle-minus.svg";
+constexpr std::string_view ICON_HEART_CIRCLE_PLUS = "svg/solid/heart-circle-plus.svg";
+constexpr std::string_view ICON_HEART_CIRCLE_XMARK = "svg/solid/heart-circle-xmark.svg";
+constexpr std::string_view ICON_HEART_PULSE = "svg/solid/heart-pulse.svg";
+constexpr std::string_view ICON_HEART_SOLID = "svg/solid/heart.svg";
+constexpr std::string_view ICON_HELICOPTER_SYMBOL = "svg/solid/helicopter-symbol.svg";
+constexpr std::string_view ICON_HELICOPTER = "svg/solid/helicopter.svg";
+constexpr std::string_view ICON_HELMET_SAFETY = "svg/solid/helmet-safety.svg";
+constexpr std::string_view ICON_HELMET_UN = "svg/solid/helmet-un.svg";
+constexpr std::string_view ICON_HIGHLIGHTER = "svg/solid/highlighter.svg";
+constexpr std::string_view ICON_HILL_AVALANCHE = "svg/solid/hill-avalanche.svg";
+constexpr std::string_view ICON_HILL_ROCKSLIDE = "svg/solid/hill-rockslide.svg";
+constexpr std::string_view ICON_HIPPO = "svg/solid/hippo.svg";
+constexpr std::string_view ICON_HISTORY = "svg/solid/history.svg";
+constexpr std::string_view ICON_HOCKEY_PUCK = "svg/solid/hockey-puck.svg";
+constexpr std::string_view ICON_HOLLY_BERRY = "svg/solid/holly-berry.svg";
+constexpr std::string_view ICON_HORSE_HEAD = "svg/solid/horse-head.svg";
+constexpr std::string_view ICON_HORSE = "svg/solid/horse.svg";
+constexpr std::string_view ICON_HOSPITAL_USER = "svg/solid/hospital-user.svg";
+constexpr std::string_view ICON_HOSPITAL_SOLID = "svg/solid/hospital.svg";
+constexpr std::string_view ICON_HOT_TUB_PERSON = "svg/solid/hot-tub-person.svg";
+constexpr std::string_view ICON_HOTDOG = "svg/solid/hotdog.svg";
+constexpr std::string_view ICON_HOTEL = "svg/solid/hotel.svg";
+constexpr std::string_view ICON_HOURGLASS_END = "svg/solid/hourglass-end.svg";
+constexpr std::string_view ICON_HOURGLASS_HALF_SOLID = "svg/solid/hourglass-half.svg";
+constexpr std::string_view ICON_HOURGLASS_START = "svg/solid/hourglass-start.svg";
+constexpr std::string_view ICON_HOURGLASS_SOLID = "svg/solid/hourglass.svg";
+constexpr std::string_view ICON_HOUSE_CHIMNEY_CRACK = "svg/solid/house-chimney-crack.svg";
+constexpr std::string_view ICON_HOUSE_CHIMNEY_MEDICAL = "svg/solid/house-chimney-medical.svg";
+constexpr std::string_view ICON_HOUSE_CHIMNEY_USER = "svg/solid/house-chimney-user.svg";
+constexpr std::string_view ICON_HOUSE_CHIMNEY_WINDOW = "svg/solid/house-chimney-window.svg";
+constexpr std::string_view ICON_HOUSE_CHIMNEY = "svg/solid/house-chimney.svg";
+constexpr std::string_view ICON_HOUSE_CIRCLE_CHECK = "svg/solid/house-circle-check.svg";
+constexpr std::string_view ICON_HOUSE_CIRCLE_EXCLAMATION = "svg/solid/house-circle-exclamation.svg";
+constexpr std::string_view ICON_HOUSE_CIRCLE_XMARK = "svg/solid/house-circle-xmark.svg";
+constexpr std::string_view ICON_HOUSE_CRACK = "svg/solid/house-crack.svg";
+constexpr std::string_view ICON_HOUSE_FIRE = "svg/solid/house-fire.svg";
+constexpr std::string_view ICON_HOUSE_FLAG = "svg/solid/house-flag.svg";
+constexpr std::string_view ICON_HOUSE_FLOOD_WATER_CIRCLE_ARROW_RIGHT = "svg/solid/house-flood-water-circle-arrow-right.svg";
+constexpr std::string_view ICON_HOUSE_FLOOD_WATER = "svg/solid/house-flood-water.svg";
+constexpr std::string_view ICON_HOUSE_LAPTOP = "svg/solid/house-laptop.svg";
+constexpr std::string_view ICON_HOUSE_LOCK = "svg/solid/house-lock.svg";
+constexpr std::string_view ICON_HOUSE_MEDICAL_CIRCLE_CHECK = "svg/solid/house-medical-circle-check.svg";
+constexpr std::string_view ICON_HOUSE_MEDICAL_CIRCLE_EXCLAMATION = "svg/solid/house-medical-circle-exclamation.svg";
+constexpr std::string_view ICON_HOUSE_MEDICAL_CIRCLE_XMARK = "svg/solid/house-medical-circle-xmark.svg";
+constexpr std::string_view ICON_HOUSE_MEDICAL_FLAG = "svg/solid/house-medical-flag.svg";
+constexpr std::string_view ICON_HOUSE_MEDICAL = "svg/solid/house-medical.svg";
+constexpr std::string_view ICON_HOUSE_SIGNAL = "svg/solid/house-signal.svg";
+constexpr std::string_view ICON_HOUSE_TSUNAMI = "svg/solid/house-tsunami.svg";
+constexpr std::string_view ICON_HOUSE_USER = "svg/solid/house-user.svg";
+constexpr std::string_view ICON_HOUSE = "svg/solid/house.svg";
+constexpr std::string_view ICON_HRYVNIA_SIGN = "svg/solid/hryvnia-sign.svg";
+constexpr std::string_view ICON_HURRICANE = "svg/solid/hurricane.svg";
+constexpr std::string_view ICON_I_CURSOR = "svg/solid/i-cursor.svg";
+constexpr std::string_view ICON_I = "svg/solid/i.svg";
+constexpr std::string_view ICON_ICE_CREAM = "svg/solid/ice-cream.svg";
+constexpr std::string_view ICON_ICICLES = "svg/solid/icicles.svg";
+constexpr std::string_view ICON_ICONS = "svg/solid/icons.svg";
+constexpr std::string_view ICON_ID_BADGE_SOLID = "svg/solid/id-badge.svg";
+constexpr std::string_view ICON_ID_CARD_CLIP = "svg/solid/id-card-clip.svg";
+constexpr std::string_view ICON_ID_CARD_SOLID = "svg/solid/id-card.svg";
+constexpr std::string_view ICON_IGLOO = "svg/solid/igloo.svg";
+constexpr std::string_view ICON_IMAGE_PORTRAIT = "svg/solid/image-portrait.svg";
+constexpr std::string_view ICON_IMAGE_SOLID = "svg/solid/image.svg";
+constexpr std::string_view ICON_IMAGES_SOLID = "svg/solid/images.svg";
+constexpr std::string_view ICON_INBOX = "svg/solid/inbox.svg";
+constexpr std::string_view ICON_INDENT = "svg/solid/indent.svg";
+constexpr std::string_view ICON_INDIAN_RUPEE_SIGN = "svg/solid/indian-rupee-sign.svg";
+constexpr std::string_view ICON_INDUSTRY = "svg/solid/industry.svg";
+constexpr std::string_view ICON_INFINITY = "svg/solid/infinity.svg";
+constexpr std::string_view ICON_INFO = "svg/solid/info.svg";
+constexpr std::string_view ICON_ITALIC = "svg/solid/italic.svg";
+constexpr std::string_view ICON_J = "svg/solid/j.svg";
+constexpr std::string_view ICON_JAR_WHEAT = "svg/solid/jar-wheat.svg";
+constexpr std::string_view ICON_JAR = "svg/solid/jar.svg";
+constexpr std::string_view ICON_JEDI = "svg/solid/jedi.svg";
+constexpr std::string_view ICON_JET_FIGHTER_UP = "svg/solid/jet-fighter-up.svg";
+constexpr std::string_view ICON_JET_FIGHTER = "svg/solid/jet-fighter.svg";
+constexpr std::string_view ICON_JOINT = "svg/solid/joint.svg";
+constexpr std::string_view ICON_JUG_DETERGENT = "svg/solid/jug-detergent.svg";
+constexpr std::string_view ICON_K = "svg/solid/k.svg";
+constexpr std::string_view ICON_KAABA = "svg/solid/kaaba.svg";
+constexpr std::string_view ICON_KEY = "svg/solid/key.svg";
+constexpr std::string_view ICON_KEYBOARD_SOLID = "svg/solid/keyboard.svg";
+constexpr std::string_view ICON_KHANDA = "svg/solid/khanda.svg";
+constexpr std::string_view ICON_KIP_SIGN = "svg/solid/kip-sign.svg";
+constexpr std::string_view ICON_KIT_MEDICAL = "svg/solid/kit-medical.svg";
+constexpr std::string_view ICON_KITCHEN_SET = "svg/solid/kitchen-set.svg";
+constexpr std::string_view ICON_KIWI_BIRD = "svg/solid/kiwi-bird.svg";
+constexpr std::string_view ICON_L = "svg/solid/l.svg";
+constexpr std::string_view ICON_LAND_MINE_ON = "svg/solid/land-mine-on.svg";
+constexpr std::string_view ICON_LANDMARK_DOME = "svg/solid/landmark-dome.svg";
+constexpr std::string_view ICON_LANDMARK_FLAG = "svg/solid/landmark-flag.svg";
+constexpr std::string_view ICON_LANDMARK = "svg/solid/landmark.svg";
+constexpr std::string_view ICON_LANGUAGE = "svg/solid/language.svg";
+constexpr std::string_view ICON_LAPTOP_CODE = "svg/solid/laptop-code.svg";
+constexpr std::string_view ICON_LAPTOP_FILE = "svg/solid/laptop-file.svg";
+constexpr std::string_view ICON_LAPTOP_MEDICAL = "svg/solid/laptop-medical.svg";
+constexpr std::string_view ICON_LAPTOP = "svg/solid/laptop.svg";
+constexpr std::string_view ICON_LARI_SIGN = "svg/solid/lari-sign.svg";
+constexpr std::string_view ICON_LAYER_GROUP = "svg/solid/layer-group.svg";
+constexpr std::string_view ICON_LEAF = "svg/solid/leaf.svg";
+constexpr std::string_view ICON_LEFT_LONG = "svg/solid/left-long.svg";
+constexpr std::string_view ICON_LEFT_RIGHT = "svg/solid/left-right.svg";
+constexpr std::string_view ICON_LEMON_SOLID = "svg/solid/lemon.svg";
+constexpr std::string_view ICON_LESS_THAN_EQUAL = "svg/solid/less-than-equal.svg";
+constexpr std::string_view ICON_LESS_THAN = "svg/solid/less-than.svg";
+constexpr std::string_view ICON_LIFE_RING = "svg/solid/life-ring.svg";
+constexpr std::string_view ICON_LIGHTBULB_SOLID = "svg/solid/lightbulb.svg";
+constexpr std::string_view ICON_LINES_LEARNING = "svg/solid/lines-learning.svg";
+constexpr std::string_view ICON_LINK_SLASH = "svg/solid/link-slash.svg";
+constexpr std::string_view ICON_LINK = "svg/solid/link.svg";
+constexpr std::string_view ICON_LIRA_SIGN = "svg/solid/lira-sign.svg";
+constexpr std::string_view ICON_LIST_CHECK = "svg/solid/list-check.svg";
+constexpr std::string_view ICON_LIST_OL = "svg/solid/list-ol.svg";
+constexpr std::string_view ICON_LIST_UL = "svg/solid/list-ul.svg";
+constexpr std::string_view ICON_LIST = "svg/solid/list.svg";
+constexpr std::string_view ICON_LITECOIN_SIGN = "svg/solid/litecoin-sign.svg";
+constexpr std::string_view ICON_LOCATION_CROSSHAIRS = "svg/solid/location-crosshairs.svg";
+constexpr std::string_view ICON_LOCATION_DOT = "svg/solid/location-dot.svg";
+constexpr std::string_view ICON_LOCATION_PIN_LOCK = "svg/solid/location-pin-lock.svg";
+constexpr std::string_view ICON_LOCATION_PIN = "svg/solid/location-pin.svg";
+constexpr std::string_view ICON_LOCK_OPEN = "svg/solid/lock-open.svg";
+constexpr std::string_view ICON_LOCK = "svg/solid/lock.svg";
+constexpr std::string_view ICON_LOCUST = "svg/solid/locust.svg";
+constexpr std::string_view ICON_LUNGS_VIRUS = "svg/solid/lungs-virus.svg";
+constexpr std::string_view ICON_LUNGS = "svg/solid/lungs.svg";
+constexpr std::string_view ICON_M = "svg/solid/m.svg";
+constexpr std::string_view ICON_MAGNET = "svg/solid/magnet.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS_ARROW_RIGHT = "svg/solid/magnifying-glass-arrow-right.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS_CHART = "svg/solid/magnifying-glass-chart.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS_DOLLAR = "svg/solid/magnifying-glass-dollar.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS_LOCATION = "svg/solid/magnifying-glass-location.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS_MINUS = "svg/solid/magnifying-glass-minus.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS_PLUS = "svg/solid/magnifying-glass-plus.svg";
+constexpr std::string_view ICON_MAGNIFYING_GLASS = "svg/solid/magnifying-glass.svg";
+constexpr std::string_view ICON_MANAT_SIGN = "svg/solid/manat-sign.svg";
+constexpr std::string_view ICON_MAP_PIN = "svg/solid/map-pin.svg";
+constexpr std::string_view ICON_MAP_SIGNS = "svg/solid/map-signs.svg";
+constexpr std::string_view ICON_MAP_SOLID = "svg/solid/map.svg";
+constexpr std::string_view ICON_MARKER = "svg/solid/marker.svg";
+constexpr std::string_view ICON_MARS_AND_VENUS_BURST = "svg/solid/mars-and-venus-burst.svg";
+constexpr std::string_view ICON_MARS_AND_VENUS = "svg/solid/mars-and-venus.svg";
+constexpr std::string_view ICON_MARS_DOUBLE = "svg/solid/mars-double.svg";
+constexpr std::string_view ICON_MARS_STROKE_RIGHT = "svg/solid/mars-stroke-right.svg";
+constexpr std::string_view ICON_MARS_STROKE_UP = "svg/solid/mars-stroke-up.svg";
+constexpr std::string_view ICON_MARS_STROKE = "svg/solid/mars-stroke.svg";
+constexpr std::string_view ICON_MARS = "svg/solid/mars.svg";
+constexpr std::string_view ICON_MASK_FACE = "svg/solid/mask-face.svg";
+constexpr std::string_view ICON_MASK_VENTILATOR = "svg/solid/mask-ventilator.svg";
+constexpr std::string_view ICON_MASK = "svg/solid/mask.svg";
+constexpr std::string_view ICON_MASQUERADE = "svg/solid/masquerade.svg";
+constexpr std::string_view ICON_MONEY_BILL_1_WAVE = "svg/solid/money-bill-1-wave.svg";
+constexpr std::string_view ICON_MONEY_BILL_1_SOLID = "svg/solid/money-bill-1.svg";
+constexpr std::string_view ICON_MONEY_BILL_TRANSFER = "svg/solid/money-bill-transfer.svg";
+constexpr std::string_view ICON_MONEY_BILL_TREND_UP = "svg/solid/money-bill-trend-up.svg";
+constexpr std::string_view ICON_MONEY_BILL_WAVE = "svg/solid/money-bill-wave.svg";
+constexpr std::string_view ICON_MONEY_BILL_WHEAT = "svg/solid/money-bill-wheat.svg";
+constexpr std::string_view ICON_MONEY_BILL = "svg/solid/money-bill.svg";
+constexpr std::string_view ICON_MONEY_BILLS = "svg/solid/money-bills.svg";
+constexpr std::string_view ICON_MONEY_CHECK_DOLLAR = "svg/solid/money-check-dollar.svg";
+constexpr std::string_view ICON_MONEY_CHECK = "svg/solid/money-check.svg";
+constexpr std::string_view ICON_MONUMENT = "svg/solid/monument.svg";
+constexpr std::string_view ICON_MOON_SOLID = "svg/solid/moon.svg";
+constexpr std::string_view ICON_MORTAR_PESTLE = "svg/solid/mortar-pestle.svg";
+constexpr std::string_view ICON_MOSQUE = "svg/solid/mosque.svg";
+constexpr std::string_view ICON_MOSQUITO_NET = "svg/solid/mosquito-net.svg";
+constexpr std::string_view ICON_MOSQUITO = "svg/solid/mosquito.svg";
+constexpr std::string_view ICON_MOTORCYCLE = "svg/solid/motorcycle.svg";
+constexpr std::string_view ICON_MOUND = "svg/solid/mound.svg";
+constexpr std::string_view ICON_MOUNTAIN_CITY = "svg/solid/mountain-city.svg";
+constexpr std::string_view ICON_MOUNTAIN_SUN = "svg/solid/mountain-sun.svg";
+constexpr std::string_view ICON_MOUNTAIN = "svg/solid/mountain.svg";
+constexpr std::string_view ICON_MUG_HOT = "svg/solid/mug-hot.svg";
+constexpr std::string_view ICON_MUG_SAUCER = "svg/solid/mug-saucer.svg";
+constexpr std::string_view ICON_MUSIC = "svg/solid/music.svg";
+constexpr std::string_view ICON_N = "svg/solid/n.svg";
+constexpr std::string_view ICON_NAIRA_SIGN = "svg/solid/naira-sign.svg";
+constexpr std::string_view ICON_NETWORK_WIRED = "svg/solid/network-wired.svg";
+constexpr std::string_view ICON_NEUTER = "svg/solid/neuter.svg";
+constexpr std::string_view ICON_NEWSPAPER_SOLID = "svg/solid/newspaper.svg";
+constexpr std::string_view ICON_NOT_EQUAL = "svg/solid/not-equal.svg";
+constexpr std::string_view ICON_NOTDEF = "svg/solid/notdef.svg";
+constexpr std::string_view ICON_NOTE_STICKY_SOLID = "svg/solid/note-sticky.svg";
+constexpr std::string_view ICON_NOTES_MEDICAL = "svg/solid/notes-medical.svg";
+constexpr std::string_view ICON_O = "svg/solid/o.svg";
+constexpr std::string_view ICON_OBJECT_GROUP_SOLID = "svg/solid/object-group.svg";
+constexpr std::string_view ICON_OBJECT_UNGROUP_SOLID = "svg/solid/object-ungroup.svg";
+constexpr std::string_view ICON_OIL_CAN = "svg/solid/oil-can.svg";
+constexpr std::string_view ICON_OIL_WELL = "svg/solid/oil-well.svg";
+constexpr std::string_view ICON_OM = "svg/solid/om.svg";
+constexpr std::string_view ICON_OTTER = "svg/solid/otter.svg";
+constexpr std::string_view ICON_OUTDENT = "svg/solid/outdent.svg";
+constexpr std::string_view ICON_P = "svg/solid/p.svg";
+constexpr std::string_view ICON_PACKET = "svg/solid/packet.svg";
+constexpr std::string_view ICON_PADLET = "svg/solid/padlet.svg";
+constexpr std::string_view ICON_PAGER = "svg/solid/pager.svg";
+constexpr std::string_view ICON_PAINT_ROLLER = "svg/solid/paint-roller.svg";
+constexpr std::string_view ICON_PAINTBRUSH = "svg/solid/paintbrush.svg";
+constexpr std::string_view ICON_PALETTE = "svg/solid/palette.svg";
+constexpr std::string_view ICON_PALLET = "svg/solid/pallet.svg";
+constexpr std::string_view ICON_PANORAMA = "svg/solid/panorama.svg";
+constexpr std::string_view ICON_PAPER_PLANE_SOLID = "svg/solid/paper-plane.svg";
+constexpr std::string_view ICON_PAPERCLIP = "svg/solid/paperclip.svg";
+constexpr std::string_view ICON_PARACHUTE_BOX = "svg/solid/parachute-box.svg";
+constexpr std::string_view ICON_PARAGRAPH = "svg/solid/paragraph.svg";
+constexpr std::string_view ICON_PASSPORT = "svg/solid/passport.svg";
+constexpr std::string_view ICON_PASTE_SOLID = "svg/solid/paste.svg";
+constexpr std::string_view ICON_PAUSE = "svg/solid/pause.svg";
+constexpr std::string_view ICON_PAW = "svg/solid/paw.svg";
+constexpr std::string_view ICON_PEACE = "svg/solid/peace.svg";
+constexpr std::string_view ICON_PEN_CLIP = "svg/solid/pen-clip.svg";
+constexpr std::string_view ICON_PEN_FANCY = "svg/solid/pen-fancy.svg";
+constexpr std::string_view ICON_PEN_NIB = "svg/solid/pen-nib.svg";
+constexpr std::string_view ICON_PEN_RULER = "svg/solid/pen-ruler.svg";
+constexpr std::string_view ICON_PEN_TO_SQUARE = "svg/solid/pen-to-square.svg";
+constexpr std::string_view ICON_PEN = "svg/solid/pen.svg";
+constexpr std::string_view ICON_PENCIL = "svg/solid/pencil.svg";
+constexpr std::string_view ICON_PEOPLE_ARROWS_LEFT_RIGHT = "svg/solid/people-arrows-left-right.svg";
+constexpr std::string_view ICON_PEOPLE_CARRY_BOX = "svg/solid/people-carry-box.svg";
+constexpr std::string_view ICON_PEOPLE_CARRY = "svg/solid/people-carry.svg";
+constexpr std::string_view ICON_PEOPLE_GROUP = "svg/solid/people-group.svg";
+constexpr std::string_view ICON_PEOPLE_LINE = "svg/solid/people-line.svg";
+constexpr std::string_view ICON_PEOPLE_PULLING = "svg/solid/people-pulling.svg";
+constexpr std::string_view ICON_PEOPLE_ROBBERY = "svg/solid/people-robbery.svg";
+constexpr std::string_view ICON_PEOPLE_ROOF = "svg/solid/people-roof.svg";
+constexpr std::string_view ICON_PEPPER_HOT = "svg/solid/pepper-hot.svg";
+constexpr std::string_view ICON_PERCENT = "svg/solid/percent.svg";
+constexpr std::string_view ICON_PERCENTAGE = "svg/solid/percentage.svg";
+constexpr std::string_view ICON_PERSON_ARROW_DOWN_TO_LINE = "svg/solid/person-arrow-down-to-line.svg";
+constexpr std::string_view ICON_PERSON_ARROW_UP_FROM_LINE = "svg/solid/person-arrow-up-from-line.svg";
+constexpr std::string_view ICON_PERSON_BIKING = "svg/solid/person-biking.svg";
+constexpr std::string_view ICON_PERSON_BOOTH = "svg/solid/person-booth.svg";
+constexpr std::string_view ICON_PERSON_BREASTFEEDING = "svg/solid/person-breastfeeding.svg";
+constexpr std::string_view ICON_PERSON_BURST = "svg/solid/person-burst.svg";
+constexpr std::string_view ICON_PERSON_CANE = "svg/solid/person-cane.svg";
+constexpr std::string_view ICON_PERSON_CHALKBOARD = "svg/solid/person-chalkboard.svg";
+constexpr std::string_view ICON_PERSON_CIRCLE_CHECK = "svg/solid/person-circle-check.svg";
+constexpr std::string_view ICON_PERSON_CIRCLE_EXCLAMATION = "svg/solid/person-circle-exclamation.svg";
+constexpr std::string_view ICON_PERSON_CIRCLE_MINUS = "svg/solid/person-circle-minus.svg";
+constexpr std::string_view ICON_PERSON_CIRCLE_PLUS = "svg/solid/person-circle-plus.svg";
+constexpr std::string_view ICON_PERSON_CIRCLE_QUESTION = "svg/solid/person-circle-question.svg";
+constexpr std::string_view ICON_PERSON_CIRCLE_XMARK = "svg/solid/person-circle-xmark.svg";
+constexpr std::string_view ICON_PERSON_DIGGING = "svg/solid/person-digging.svg";
+constexpr std::string_view ICON_PERSON_DOTS_FROM_LINE = "svg/solid/person-dots-from-line.svg";
+constexpr std::string_view ICON_PERSON_DRESS_BURST = "svg/solid/person-dress-burst.svg";
+constexpr std::string_view ICON_PERSON_DRESS = "svg/solid/person-dress.svg";
+constexpr std::string_view ICON_PERSON_DROWNING = "svg/solid/person-drowning.svg";
+constexpr std::string_view ICON_PERSON_FALLING_BURST = "svg/solid/person-falling-burst.svg";
+constexpr std::string_view ICON_PERSON_FALLING = "svg/solid/person-falling.svg";
+constexpr std::string_view ICON_PERSON_HALF_DRESS = "svg/solid/person-half-dress.svg";
+constexpr std::string_view ICON_PERSON_HARASSING = "svg/solid/person-harassing.svg";
+constexpr std::string_view ICON_PERSON_HIKING = "svg/solid/person-hiking.svg";
+constexpr std::string_view ICON_PERSON_MILITARY_POINTING = "svg/solid/person-military-pointing.svg";
+constexpr std::string_view ICON_PERSON_MILITARY_RIFLE = "svg/solid/person-military-rifle.svg";
+constexpr std::string_view ICON_PERSON_MILITARY_TO_PERSON = "svg/solid/person-military-to-person.svg";
+constexpr std::string_view ICON_PERSON_PRAYING = "svg/solid/person-praying.svg";
+constexpr std::string_view ICON_PERSON_PREGNANT = "svg/solid/person-pregnant.svg";
+constexpr std::string_view ICON_PERSON_RAYS = "svg/solid/person-rays.svg";
+constexpr std::string_view ICON_PERSON_RIFLE = "svg/solid/person-rifle.svg";
+constexpr std::string_view ICON_PERSON_RUNNING = "svg/solid/person-running.svg";
+constexpr std::string_view ICON_PERSON_SHOWER = "svg/solid/person-shower.svg";
+constexpr std::string_view ICON_PERSON_SKATING = "svg/solid/person-skating.svg";
+constexpr std::string_view ICON_PERSON_SKIING_NORDIC = "svg/solid/person-skiing-nordic.svg";
+constexpr std::string_view ICON_PERSON_SKIING = "svg/solid/person-skiing.svg";
+constexpr std::string_view ICON_PERSON_SLEDDING = "svg/solid/person-sledding.svg";
+constexpr std::string_view ICON_PERSON_SNOWBOARDING = "svg/solid/person-snowboarding.svg";
+constexpr std::string_view ICON_PERSON_SWIMMING = "svg/solid/person-swimming.svg";
+constexpr std::string_view ICON_PERSON_THROUGH_WINDOW = "svg/solid/person-through-window.svg";
+constexpr std::string_view ICON_PERSON_WALKING_ARROW_LOOP_LEFT = "svg/solid/person-walking-arrow-loop-left.svg";
+constexpr std::string_view ICON_PERSON_WALKING_ARROW_RIGHT = "svg/solid/person-walking-arrow-right.svg";
+constexpr std::string_view ICON_PERSON_WALKING_DASHED_LINE_ARROW_RIGHT = "svg/solid/person-walking-dashed-line-arrow-right.svg";
+constexpr std::string_view ICON_PERSON_WALKING_LUGGAGE = "svg/solid/person-walking-luggage.svg";
+constexpr std::string_view ICON_PERSON_WALKING_WITH_CANE = "svg/solid/person-walking-with-cane.svg";
+constexpr std::string_view ICON_PERSON_WALKING = "svg/solid/person-walking.svg";
+constexpr std::string_view ICON_PERSON = "svg/solid/person.svg";
+constexpr std::string_view ICON_PESETA_SIGN = "svg/solid/peseta-sign.svg";
+constexpr std::string_view ICON_PESO_SIGN = "svg/solid/peso-sign.svg";
+constexpr std::string_view ICON_PHONE_FLIP = "svg/solid/phone-flip.svg";
+constexpr std::string_view ICON_PHONE_SLASH = "svg/solid/phone-slash.svg";
+constexpr std::string_view ICON_PHONE_VOLUME = "svg/solid/phone-volume.svg";
+constexpr std::string_view ICON_PHONE = "svg/solid/phone.svg";
+constexpr std::string_view ICON_PHOTO_FILM = "svg/solid/photo-film.svg";
+constexpr std::string_view ICON_PIGGY_BANK = "svg/solid/piggy-bank.svg";
+constexpr std::string_view ICON_PILLS = "svg/solid/pills.svg";
+constexpr std::string_view ICON_PIZZA_SLICE = "svg/solid/pizza-slice.svg";
+constexpr std::string_view ICON_PLACE_OF_WORSHIP = "svg/solid/place-of-worship.svg";
+constexpr std::string_view ICON_PLANE_ARRIVAL = "svg/solid/plane-arrival.svg";
+constexpr std::string_view ICON_PLANE_CIRCLE_CHECK = "svg/solid/plane-circle-check.svg";
+constexpr std::string_view ICON_PLANE_CIRCLE_EXCLAMATION = "svg/solid/plane-circle-exclamation.svg";
+constexpr std::string_view ICON_PLANE_CIRCLE_XMARK = "svg/solid/plane-circle-xmark.svg";
+constexpr std::string_view ICON_PLANE_DEPARTURE = "svg/solid/plane-departure.svg";
+constexpr std::string_view ICON_PLANE_LOCK = "svg/solid/plane-lock.svg";
+constexpr std::string_view ICON_PLANE_PROP = "svg/solid/plane-prop.svg";
+constexpr std::string_view ICON_PLANE_SLASH = "svg/solid/plane-slash.svg";
+constexpr std::string_view ICON_PLANE_UP = "svg/solid/plane-up.svg";
+constexpr std::string_view ICON_PLANE = "svg/solid/plane.svg";
+constexpr std::string_view ICON_PLANT_WILT = "svg/solid/plant-wilt.svg";
+constexpr std::string_view ICON_PLATE_WHEAT = "svg/solid/plate-wheat.svg";
+constexpr std::string_view ICON_PLAY = "svg/solid/play.svg";
+constexpr std::string_view ICON_PLUG_CIRCLE_BOLT = "svg/solid/plug-circle-bolt.svg";
+constexpr std::string_view ICON_PLUG_CIRCLE_CHECK = "svg/solid/plug-circle-check.svg";
+constexpr std::string_view ICON_PLUG_CIRCLE_EXCLAMATION = "svg/solid/plug-circle-exclamation.svg";
+constexpr std::string_view ICON_PLUG_CIRCLE_MINUS = "svg/solid/plug-circle-minus.svg";
+constexpr std::string_view ICON_PLUG_CIRCLE_PLUS = "svg/solid/plug-circle-plus.svg";
+constexpr std::string_view ICON_PLUG_CIRCLE_XMARK = "svg/solid/plug-circle-xmark.svg";
+constexpr std::string_view ICON_PLUG = "svg/solid/plug.svg";
+constexpr std::string_view ICON_PLUS_MINUS = "svg/solid/plus-minus.svg";
+constexpr std::string_view ICON_PLUS_SOLID = "svg/solid/plus.svg";
+constexpr std::string_view ICON_PODCAST = "svg/solid/podcast.svg";
+constexpr std::string_view ICON_POO_STORM = "svg/solid/poo-storm.svg";
+constexpr std::string_view ICON_POO = "svg/solid/poo.svg";
+constexpr std::string_view ICON_POOP = "svg/solid/poop.svg";
+constexpr std::string_view ICON_POWER_OFF = "svg/solid/power-off.svg";
+constexpr std::string_view ICON_PRESCRIPTION_BOTTLE_MEDICAL = "svg/solid/prescription-bottle-medical.svg";
+constexpr std::string_view ICON_PRESCRIPTION_BOTTLE = "svg/solid/prescription-bottle.svg";
+constexpr std::string_view ICON_PRESCRIPTION = "svg/solid/prescription.svg";
+constexpr std::string_view ICON_PRINT = "svg/solid/print.svg";
+constexpr std::string_view ICON_PUMP_MEDICAL = "svg/solid/pump-medical.svg";
+constexpr std::string_view ICON_PUMP_SOAP = "svg/solid/pump-soap.svg";
+constexpr std::string_view ICON_PUZZLE_PIECE = "svg/solid/puzzle-piece.svg";
+constexpr std::string_view ICON_Q = "svg/solid/q.svg";
+constexpr std::string_view ICON_QRCODE = "svg/solid/qrcode.svg";
+constexpr std::string_view ICON_QUESTION = "svg/solid/question.svg";
+constexpr std::string_view ICON_QUIDDITCH = "svg/solid/quidditch.svg";
+constexpr std::string_view ICON_QUOTE_LEFT = "svg/solid/quote-left.svg";
+constexpr std::string_view ICON_QUOTE_RIGHT = "svg/solid/quote-right.svg";
+constexpr std::string_view ICON_R = "svg/solid/r.svg";
+constexpr std::string_view ICON_RADIATION = "svg/solid/radiation.svg";
+constexpr std::string_view ICON_RADIO = "svg/solid/radio.svg";
+constexpr std::string_view ICON_RAINBOW = "svg/solid/rainbow.svg";
+constexpr std::string_view ICON_RANKING_STAR = "svg/solid/ranking-star.svg";
+constexpr std::string_view ICON_RECEIPT = "svg/solid/receipt.svg";
+constexpr std::string_view ICON_RECORD_VINYL = "svg/solid/record-vinyl.svg";
+constexpr std::string_view ICON_RECTANGLE_AD = "svg/solid/rectangle-ad.svg";
+constexpr std::string_view ICON_RECTANGLE_LIST_SOLID = "svg/solid/rectangle-list.svg";
+constexpr std::string_view ICON_RECTANGLE_XMARK_SOLID = "svg/solid/rectangle-xmark.svg";
+constexpr std::string_view ICON_RECTANGLE = "svg/solid/rectangle.svg";
+constexpr std::string_view ICON_RECYCLE = "svg/solid/recycle.svg";
+constexpr std::string_view ICON_REFRIGERATOR = "svg/solid/refrigerator.svg";
+constexpr std::string_view ICON_REPEAT = "svg/solid/repeat.svg";
+constexpr std::string_view ICON_REPLY_ALL = "svg/solid/reply-all.svg";
+constexpr std::string_view ICON_REPLY = "svg/solid/reply.svg";
+constexpr std::string_view ICON_REPUBLICAN = "svg/solid/republican.svg";
+constexpr std::string_view ICON_RESTROOM = "svg/solid/restroom.svg";
+constexpr std::string_view ICON_RETWEET = "svg/solid/retweet.svg";
+constexpr std::string_view ICON_RIBBON = "svg/solid/ribbon.svg";
+constexpr std::string_view ICON_RIGHT_FROM_BRACKET = "svg/solid/right-from-bracket.svg";
+constexpr std::string_view ICON_RIGHT_LEFT = "svg/solid/right-left.svg";
+constexpr std::string_view ICON_RIGHT_LONG = "svg/solid/right-long.svg";
+constexpr std::string_view ICON_RIGHT_TO_BRACKET = "svg/solid/right-to-bracket.svg";
+constexpr std::string_view ICON_RING = "svg/solid/ring.svg";
+constexpr std::string_view ICON_ROAD_BARRIER = "svg/solid/road-barrier.svg";
+constexpr std::string_view ICON_ROAD_BRIDGE = "svg/solid/road-bridge.svg";
+constexpr std::string_view ICON_ROAD_CIRCLE_CHECK = "svg/solid/road-circle-check.svg";
+constexpr std::string_view ICON_ROAD_CIRCLE_EXCLAMATION = "svg/solid/road-circle-exclamation.svg";
+constexpr std::string_view ICON_ROAD_CIRCLE_XMARK = "svg/solid/road-circle-xmark.svg";
+constexpr std::string_view ICON_ROAD_LOCK = "svg/solid/road-lock.svg";
+constexpr std::string_view ICON_ROAD_SPIKES = "svg/solid/road-spikes.svg";
+constexpr std::string_view ICON_ROAD = "svg/solid/road.svg";
+constexpr std::string_view ICON_ROBOT = "svg/solid/robot.svg";
+constexpr std::string_view ICON_ROCKET = "svg/solid/rocket.svg";
+constexpr std::string_view ICON_ROTATE_LEFT = "svg/solid/rotate-left.svg";
+constexpr std::string_view ICON_ROTATE_RIGHT = "svg/solid/rotate-right.svg";
+constexpr std::string_view ICON_ROTATE = "svg/solid/rotate.svg";
+constexpr std::string_view ICON_ROUTE = "svg/solid/route.svg";
+constexpr std::string_view ICON_RSS = "svg/solid/rss.svg";
+constexpr std::string_view ICON_RUBLE_SIGN = "svg/solid/ruble-sign.svg";
+constexpr std::string_view ICON_RUG = "svg/solid/rug.svg";
+constexpr std::string_view ICON_RULER_COMBINED = "svg/solid/ruler-combined.svg";
+constexpr std::string_view ICON_RULER_HORIZONTAL = "svg/solid/ruler-horizontal.svg";
+constexpr std::string_view ICON_RULER_VERTICAL = "svg/solid/ruler-vertical.svg";
+constexpr std::string_view ICON_RULER = "svg/solid/ruler.svg";
+constexpr std::string_view ICON_RUNNING = "svg/solid/running.svg";
+constexpr std::string_view ICON_RUPEE_SIGN = "svg/solid/rupee-sign.svg";
+constexpr std::string_view ICON_RUPIAH_SIGN = "svg/solid/rupiyah-sign.svg";
+constexpr std::string_view ICON_S = "svg/solid/s.svg";
+constexpr std::string_view ICON_SACK_DOLLAR = "svg/solid/sack-dollar.svg";
+constexpr std::string_view ICON_SACK_XMARK = "svg/solid/sack-xmark.svg";
+constexpr std::string_view ICON_SAD_CRY = "svg/solid/sad-cry.svg";
+constexpr std::string_view ICON_SAD_TEAR = "svg/solid/sad-tear.svg";
+constexpr std::string_view ICON_SAILBOAT = "svg/solid/sailboat.svg";
+constexpr std::string_view ICON_SATELLITE_DISH = "svg/solid/satellite-dish.svg";
+constexpr std::string_view ICON_SATELLITE = "svg/solid/satellite.svg";
+constexpr std::string_view ICON_SCALE_BALANCED = "svg/solid/scale-balanced.svg";
+constexpr std::string_view ICON_SCALE_UNBALANCED = "svg/solid/scale-unbalanced.svg";
+constexpr std::string_view ICON_SCHOOL_CIRCLE_CHECK = "svg/solid/school-circle-check.svg";
+constexpr std::string_view ICON_SCHOOL_CIRCLE_EXCLAMATION = "svg/solid/school-circle-exclamation.svg";
+constexpr std::string_view ICON_SCHOOL_CIRCLE_XMARK = "svg/solid/school-circle-xmark.svg";
+constexpr std::string_view ICON_SCHOOL_FLAG = "svg/solid/school-flag.svg";
+constexpr std::string_view ICON_SCHOOL_LOCK = "svg/solid/school-lock.svg";
+constexpr std::string_view ICON_SCHOOL = "svg/solid/school.svg";
+constexpr std::string_view ICON_SCISSORS = "svg/solid/scissors.svg";
+constexpr std::string_view ICON_SCREWDRIVER_WRENCH = "svg/solid/screwdriver-wrench.svg";
+constexpr std::string_view ICON_SCREWDRIVER = "svg/solid/screwdriver.svg";
+constexpr std::string_view ICON_SCROLL_TORAH = "svg/solid/scroll-torah.svg";
+constexpr std::string_view ICON_SCROLL = "svg/solid/scroll.svg";
+constexpr std::string_view ICON_SD_CARD = "svg/solid/sd-card.svg";
+constexpr std::string_view ICON_SEARCH = "svg/solid/search.svg";
+constexpr std::string_view ICON_SECTION = "svg/solid/section.svg";
+constexpr std::string_view ICON_SEEDLING = "svg/solid/seedling.svg";
+constexpr std::string_view ICON_SERVER = "svg/solid/server.svg";
+constexpr std::string_view ICON_SHAPES = "svg/solid/shapes.svg";
+constexpr std::string_view ICON_SHARE_FROM_SQUARE_SOLID = "svg/solid/share-from-square.svg";
+constexpr std::string_view ICON_SHARE_NODES = "svg/solid/share-nodes.svg";
+constexpr std::string_view ICON_SHARE = "svg/solid/share.svg";
+constexpr std::string_view ICON_SHEET_PLASTIC = "svg/solid/sheet-plastic.svg";
+constexpr std::string_view ICON_SHEKEL_SIGN = "svg/solid/shekel-sign.svg";
+constexpr std::string_view ICON_SHIELD_CAT = "svg/solid/shield-cat.svg";
+constexpr std::string_view ICON_SHIELD_DOG = "svg/solid/shield-dog.svg";
+constexpr std::string_view ICON_SHIELD_HALVED = "svg/solid/shield-halved.svg";
+constexpr std::string_view ICON_SHIELD_HEART = "svg/solid/shield-heart.svg";
+constexpr std::string_view ICON_SHIELD_VIRUS = "svg/solid/shield-virus.svg";
+constexpr std::string_view ICON_SHIELD = "svg/solid/shield.svg";
+constexpr std::string_view ICON_SHIP = "svg/solid/ship.svg";
+constexpr std::string_view ICON_SHIRT = "svg/solid/shirt.svg";
+constexpr std::string_view ICON_SHOE_PRINTS = "svg/solid/shoe-prints.svg";
+constexpr std::string_view ICON_SHOP_LOCK = "svg/solid/shop-lock.svg";
+constexpr std::string_view ICON_SHOP_SLASH = "svg/solid/shop-slash.svg";
+constexpr std::string_view ICON_SHOP = "svg/solid/shop.svg";
+constexpr std::string_view ICON_SHOPPING_BAG = "svg/solid/shopping-bag.svg";
+constexpr std::string_view ICON_SHOPPING_BASKET = "svg/solid/shopping-basket.svg";
+constexpr std::string_view ICON_SHOPPING_CART = "svg/solid/shopping-cart.svg";
+constexpr std::string_view ICON_SHOWER = "svg/solid/shower.svg";
+constexpr std::string_view ICON_SHRIMP = "svg/solid/shrimp.svg";
+constexpr std::string_view ICON_SHUFFLE = "svg/solid/shuffle.svg";
+constexpr std::string_view ICON_SHUTTLE_SPACE = "svg/solid/shuttle-space.svg";
+constexpr std::string_view ICON_SIGN_HANGING = "svg/solid/sign-hanging.svg";
+constexpr std::string_view ICON_SIGNAL = "svg/solid/signal.svg";
+constexpr std::string_view ICON_SIGNATURE = "svg/solid/signature.svg";
+constexpr std::string_view ICON_SIGNS_POST = "svg/solid/signs-post.svg";
+constexpr std::string_view ICON_SIM_CARD = "svg/solid/sim-card.svg";
+constexpr std::string_view ICON_SINK = "svg/solid/sink.svg";
+constexpr std::string_view ICON_SITEMAP = "svg/solid/sitemap.svg";
+constexpr std::string_view ICON_SKULL_CROSSBONES = "svg/solid/skull-crossbones.svg";
+constexpr std::string_view ICON_SKULL = "svg/solid/skull.svg";
+constexpr std::string_view ICON_SLASH = "svg/solid/slash.svg";
+constexpr std::string_view ICON_SLEIGH = "svg/solid/sleigh.svg";
+constexpr std::string_view ICON_SLIDERS = "svg/solid/sliders.svg";
+constexpr std::string_view ICON_SMOG = "svg/solid/smog.svg";
+constexpr std::string_view ICON_SMOKING = "svg/solid/smoking.svg";
+constexpr std::string_view ICON_SNOWFLAKE_SOLID = "svg/solid/snowflake.svg";
+constexpr std::string_view ICON_SNOWMAN = "svg/solid/snowman.svg";
+constexpr std::string_view ICON_SNOWPLOW = "svg/solid/snowplow.svg";
+constexpr std::string_view ICON_SOAP = "svg/solid/soap.svg";
+constexpr std::string_view ICON_SOCKS = "svg/solid/socks.svg";
+constexpr std::string_view ICON_SOLAR_PANEL = "svg/solid/solar-panel.svg";
+constexpr std::string_view ICON_SORT_DOWN = "svg/solid/sort-down.svg";
+constexpr std::string_view ICON_SORT_UP = "svg/solid/sort-up.svg";
+constexpr std::string_view ICON_SORT = "svg/solid/sort.svg";
+constexpr std::string_view ICON_SPA = "svg/solid/spa.svg";
+constexpr std::string_view ICON_SPAGHETTI_MONSTER_FLYING = "svg/solid/spaghetti-monster-flying.svg";
+constexpr std::string_view ICON_SPELL_CHECK = "svg/solid/spell-check.svg";
+constexpr std::string_view ICON_SPIDER = "svg/solid/spider.svg";
+constexpr std::string_view ICON_SPINNER = "svg/solid/spinner.svg";
+constexpr std::string_view ICON_SPLOTCH = "svg/solid/splotch.svg";
+constexpr std::string_view ICON_SPOON = "svg/solid/spoon.svg";
+constexpr std::string_view ICON_SPRAY_CAN_SPARKLES = "svg/solid/spray-can-sparkles.svg";
+constexpr std::string_view ICON_SPRAY_CAN = "svg/solid/spray-can.svg";
+constexpr std::string_view ICON_SQUARE_ARROW_UP_RIGHT = "svg/solid/square-arrow-up-right.svg";
+constexpr std::string_view ICON_SQUARE_CARET_DOWN_SOLID = "svg/solid/square-caret-down.svg";
+constexpr std::string_view ICON_SQUARE_CARET_LEFT_SOLID = "svg/solid/square-caret-left.svg";
+constexpr std::string_view ICON_SQUARE_CARET_RIGHT_SOLID = "svg/solid/square-caret-right.svg";
+constexpr std::string_view ICON_SQUARE_CARET_UP_SOLID = "svg/solid/square-caret-up.svg";
+constexpr std::string_view ICON_SQUARE_CHECK_SOLID = "svg/solid/square-check.svg";
+constexpr std::string_view ICON_SQUARE_ENVELOPE = "svg/solid/square-envelope.svg";
+constexpr std::string_view ICON_SQUARE_FULL_SOLID = "svg/solid/square-full.svg";
+constexpr std::string_view ICON_SQUARE_H = "svg/solid/square-h.svg";
+constexpr std::string_view ICON_SQUARE_MINUS_SOLID = "svg/solid/square-minus.svg";
+constexpr std::string_view ICON_SQUARE_NFI = "svg/solid/square-nfi.svg";
+constexpr std::string_view ICON_SQUARE_PARKING = "svg/solid/square-parking.svg";
+constexpr std::string_view ICON_SQUARE_PEN = "svg/solid/square-pen.svg";
+constexpr std::string_view ICON_SQUARE_PERSON_CONFINED = "svg/solid/square-person-confined.svg";
+constexpr std::string_view ICON_SQUARE_PHONE_FLIP = "svg/solid/square-phone-flip.svg";
+constexpr std::string_view ICON_SQUARE_PHONE = "svg/solid/square-phone.svg";
+constexpr std::string_view ICON_SQUARE_PLUS_SOLID = "svg/solid/square-plus.svg";
+constexpr std::string_view ICON_SQUARE_POLL_HORIZONTAL = "svg/solid/square-poll-horizontal.svg";
+constexpr std::string_view ICON_SQUARE_POLL_VERTICAL = "svg/solid/square-poll-vertical.svg";
+constexpr std::string_view ICON_SQUARE_ROOT_VARIABLE = "svg/solid/square-root-variable.svg";
+constexpr std::string_view ICON_SQUARE_ROOT = "svg/solid/square-root.svg";
+constexpr std::string_view ICON_SQUARE_RSS = "svg/solid/square-rss.svg";
+constexpr std::string_view ICON_SQUARE_SHARE_NODES = "svg/solid/square-share-nodes.svg";
+constexpr std::string_view ICON_SQUARE_UP_RIGHT = "svg/solid/square-up-right.svg";
+constexpr std::string_view ICON_SQUARE_VIRUS = "svg/solid/square-virus.svg";
+constexpr std::string_view ICON_SQUARE_XMARK = "svg/solid/square-xmark.svg";
+constexpr std::string_view ICON_SQUARE_SOLID = "svg/solid/square.svg";
+constexpr std::string_view ICON_STAFF_AESCULAPIUS = "svg/solid/staff-aesculapius.svg";
+constexpr std::string_view ICON_STAFF_SNAKE = "svg/solid/staff-snake.svg";
+constexpr std::string_view ICON_STAIRS = "svg/solid/stairs.svg";
+constexpr std::string_view ICON_STAMP = "svg/solid/stamp.svg";
+constexpr std::string_view ICON_STAPLER = "svg/solid/stapler.svg";
+constexpr std::string_view ICON_STAR_AND_CRESCENT = "svg/solid/star-and-crescent.svg";
+constexpr std::string_view ICON_STAR_HALF_STROKE_SOLID = "svg/solid/star-half-stroke.svg";
+constexpr std::string_view ICON_STAR_HALF_SOLID = "svg/solid/star-half.svg";
+constexpr std::string_view ICON_STAR_OF_DAVID = "svg/solid/star-of-david.svg";
+constexpr std::string_view ICON_STAR_OF_LIFE = "svg/solid/star-of-life.svg";
+constexpr std::string_view ICON_STAR_SOLID = "svg/solid/star.svg";
+constexpr std::string_view ICON_STERLING_SIGN = "svg/solid/sterling-sign.svg";
+constexpr std::string_view ICON_STETHOSCOPE = "svg/solid/stethoscope.svg";
+constexpr std::string_view ICON_STOP = "svg/solid/stop.svg";
+constexpr std::string_view ICON_STOPWATCH_20 = "svg/solid/stopwatch-20.svg";
+constexpr std::string_view ICON_STOPWATCH = "svg/solid/stopwatch.svg";
+constexpr std::string_view ICON_STORE_SLASH = "svg/solid/store-slash.svg";
+constexpr std::string_view ICON_STORE = "svg/solid/store.svg";
+constexpr std::string_view ICON_STREET_VIEW = "svg/solid/street-view.svg";
+constexpr std::string_view ICON_STRIKETHROUGH = "svg/solid/strikethrough.svg";
+constexpr std::string_view ICON_STROOPWAFEL = "svg/solid/stroopwafel.svg";
+constexpr std::string_view ICON_SUBSCRIPT = "svg/solid/subscript.svg";
+constexpr std::string_view ICON_SUITCASE_MEDICAL = "svg/solid/suitcase-medical.svg";
+constexpr std::string_view ICON_SUITCASE_ROLLING = "svg/solid/suitcase-rolling.svg";
+constexpr std::string_view ICON_SUITCASE = "svg/solid/suitcase.svg";
+constexpr std::string_view ICON_SUN_PLANT_WILT = "svg/solid/sun-plant-wilt.svg";
+constexpr std::string_view ICON_SUN_SOLID = "svg/solid/sun.svg";
+constexpr std::string_view ICON_SUPERSCRIPT = "svg/solid/superscript.svg";
+constexpr std::string_view ICON_SWATCHBOOK = "svg/solid/swatchbook.svg";
+constexpr std::string_view ICON_SWOOSH = "svg/solid/swatchbook.svg";
+constexpr std::string_view ICON_SWIMMER = "svg/solid/swimmer.svg";
+constexpr std::string_view ICON_SWIMMING_POOL = "svg/solid/swimming-pool.svg";
+constexpr std::string_view ICON_SYNAGOGUE = "svg/solid/synagogue.svg";
+constexpr std::string_view ICON_SYNC = "svg/solid/sync.svg";
+constexpr std::string_view ICON_SYRINGE = "svg/solid/syringe.svg";
+constexpr std::string_view ICON_T = "svg/solid/t.svg";
+constexpr std::string_view ICON_TABLE_CELLS_LARGE = "svg/solid/table-cells-large.svg";
+constexpr std::string_view ICON_TABLE_CELLS = "svg/solid/table-cells.svg";
+constexpr std::string_view ICON_TABLE_COLUMNS = "svg/solid/table-columns.svg";
+constexpr std::string_view ICON_TABLE_LIST = "svg/solid/table-list.svg";
+constexpr std::string_view ICON_TABLE_TENNIS_PADDLE_BALL = "svg/solid/table-tennis-paddle-ball.svg";
+constexpr std::string_view ICON_TABLE = "svg/solid/table.svg";
+constexpr std::string_view ICON_TABLET_BUTTON = "svg/solid/tablet-button.svg";
+constexpr std::string_view ICON_TABLET_SCREEN_BUTTON = "svg/solid/tablet-screen-button.svg";
+constexpr std::string_view ICON_TABLET = "svg/solid/tablet.svg";
+constexpr std::string_view ICON_TABLETS = "svg/solid/tablets.svg";
+constexpr std::string_view ICON_TACHOGRAPH_DIGITAL = "svg/solid/tachograph-digital.svg";
+constexpr std::string_view ICON_TAG = "svg/solid/tag.svg";
+constexpr std::string_view ICON_TAGS = "svg/solid/tags.svg";
+constexpr std::string_view ICON_TAPE = "svg/solid/tape.svg";
+constexpr std::string_view ICON_TARP_DROPLET = "svg/solid/tarp-droplet.svg";
+constexpr std::string_view ICON_TARP = "svg/solid/tarp.svg";
+constexpr std::string_view ICON_TAXI = "svg/solid/taxi.svg";
+constexpr std::string_view ICON_TEETH_OPEN = "svg/solid/teeth-open.svg";
+constexpr std::string_view ICON_TEETH = "svg/solid/teeth.svg";
+constexpr std::string_view ICON_TEMPERATURE_ARROW_DOWN = "svg/solid/temperature-arrow-down.svg";
+constexpr std::string_view ICON_TEMPERATURE_ARROW_UP = "svg/solid/temperature-arrow-up.svg";
+constexpr std::string_view ICON_TEMPERATURE_EMPTY = "svg/solid/temperature-empty.svg";
+constexpr std::string_view ICON_TEMPERATURE_FULL = "svg/solid/temperature-full.svg";
+constexpr std::string_view ICON_TEMPERATURE_HALF = "svg/solid/temperature-half.svg";
+constexpr std::string_view ICON_TEMPERATURE_HIGH = "svg/solid/temperature-high.svg";
+constexpr std::string_view ICON_TEMPERATURE_LOW = "svg/solid/temperature-low.svg";
+constexpr std::string_view ICON_TEMPERATURE_QUARTER = "svg/solid/temperature-quarter.svg";
+constexpr std::string_view ICON_TEMPERATURE_THREE_QUARTERS = "svg/solid/temperature-three-quarters.svg";
+constexpr std::string_view ICON_TENGE_SIGN = "svg/solid/tenge-sign.svg";
+constexpr std::string_view ICON_TENT_ARROW_DOWN_TO_LINE = "svg/solid/tent-arrow-down-to-line.svg";
+constexpr std::string_view ICON_TENT_ARROW_LEFT_RIGHT = "svg/solid/tent-arrow-left-right.svg";
+constexpr std::string_view ICON_TENT_ARROW_TURN_LEFT = "svg/solid/tent-arrow-turn-left.svg";
+constexpr std::string_view ICON_TENT_ARROWS_DOWN = "svg/solid/tent-arrows-down.svg";
+constexpr std::string_view ICON_TENT = "svg/solid/tent.svg";
+constexpr std::string_view ICON_TENTS = "svg/solid/tents.svg";
+constexpr std::string_view ICON_TERMINAL = "svg/solid/terminal.svg";
+constexpr std::string_view ICON_TEXT_HEIGHT = "svg/solid/text-height.svg";
+constexpr std::string_view ICON_TEXT_SLASH = "svg/solid/text-slash.svg";
+constexpr std::string_view ICON_TEXT_WIDTH = "svg/solid/text-width.svg";
+constexpr std::string_view ICON_THUMBS_DOWN_SOLID = "svg/solid/thumbs-down.svg";
+constexpr std::string_view ICON_THUMBS_UP_SOLID = "svg/solid/thumbs-up.svg";
+constexpr std::string_view ICON_THUMBTACK = "svg/solid/thumbtack.svg";
+constexpr std::string_view ICON_TICKET_SIMPLE = "svg/solid/ticket-simple.svg";
+constexpr std::string_view ICON_TICKET = "svg/solid/ticket.svg";
+constexpr std::string_view ICON_TIMELINE = "svg/solid/timeline.svg";
+constexpr std::string_view ICON_TOGGLE_OFF = "svg/solid/toggle-off.svg";
+constexpr std::string_view ICON_TOGGLE_ON = "svg/solid/toggle-on.svg";
+constexpr std::string_view ICON_TOILET_PAPER_SLASH = "svg/solid/toilet-paper-slash.svg";
+constexpr std::string_view ICON_TOILET_PAPER = "svg/solid/toilet-paper.svg";
+constexpr std::string_view ICON_TOILET_PORTABLE = "svg/solid/toilet-portable.svg";
+constexpr std::string_view ICON_TOILET = "svg/solid/toilet.svg";
+constexpr std::string_view ICON_TOILETS_PORTABLE = "svg/solid/toilets-portable.svg";
+constexpr std::string_view ICON_TOOLBOX = "svg/solid/toolbox.svg";
+constexpr std::string_view ICON_TOOLS = "svg/solid/tools.svg";
+constexpr std::string_view ICON_TOOTH = "svg/solid/tooth.svg";
+constexpr std::string_view ICON_TORII_GATE = "svg/solid/torii-gate.svg";
+constexpr std::string_view ICON_TORNADO = "svg/solid/tornado.svg";
+constexpr std::string_view ICON_TOWER_BROADCAST = "svg/solid/tower-broadcast.svg";
+constexpr std::string_view ICON_TOWER_CELL = "svg/solid/tower-cell.svg";
+constexpr std::string_view ICON_TOWER_OBSERVATION = "svg/solid/tower-observation.svg";
+constexpr std::string_view ICON_TRACTOR = "svg/solid/tractor.svg";
+constexpr std::string_view ICON_TRADEMARK = "svg/solid/trademark.svg";
+constexpr std::string_view ICON_TRAFFIC_LIGHT = "svg/solid/traffic-light.svg";
+constexpr std::string_view ICON_TRAILER = "svg/solid/trailer.svg";
+constexpr std::string_view ICON_TRAIN_SUBWAY = "svg/solid/train-subway.svg";
+constexpr std::string_view ICON_TRAIN_TRAM = "svg/solid/train-tram.svg";
+constexpr std::string_view ICON_TRAIN = "svg/solid/train.svg";
+constexpr std::string_view ICON_TRANSGENDER = "svg/solid/transgender.svg";
+constexpr std::string_view ICON_TRASH_ARROW_UP = "svg/solid/trash-arrow-up.svg";
+constexpr std::string_view ICON_TRASH_CAN_ARROW_UP = "svg/solid/trash-can-arrow-up.svg";
+constexpr std::string_view ICON_TRASH_CAN_SOLID = "svg/solid/trash-can.svg";
+constexpr std::string_view ICON_TRASH = "svg/solid/trash.svg";
+constexpr std::string_view ICON_TREE_CITY = "svg/solid/tree-city.svg";
+constexpr std::string_view ICON_TREE = "svg/solid/tree.svg";
+constexpr std::string_view ICON_TRIANGLE_EXCLAMATION = "svg/solid/triangle-exclamation.svg";
+constexpr std::string_view ICON_TROPHY = "svg/solid/trophy.svg";
+constexpr std::string_view ICON_TROWEL_BRICKS = "svg/solid/trowel-bricks.svg";
+constexpr std::string_view ICON_TROWEL = "svg/solid/trowel.svg";
+constexpr std::string_view ICON_TRUCK_ARROW_RIGHT = "svg/solid/truck-arrow-right.svg";
+constexpr std::string_view ICON_TRUCK_DROPLET = "svg/solid/truck-droplet.svg";
+constexpr std::string_view ICON_TRUCK_FAST = "svg/solid/truck-fast.svg";
+constexpr std::string_view ICON_TRUCK_FIELD_UN = "svg/solid/truck-field-un.svg";
+constexpr std::string_view ICON_TRUCK_FIELD = "svg/solid/truck-field.svg";
+constexpr std::string_view ICON_TRUCK_FRONT = "svg/solid/truck-front.svg";
+constexpr std::string_view ICON_TRUCK_MEDICAL = "svg/solid/truck-medical.svg";
+constexpr std::string_view ICON_TRUCK_MONSTER = "svg/solid/truck-monster.svg";
+constexpr std::string_view ICON_TRUCK_MOVING = "svg/solid/truck-moving.svg";
+constexpr std::string_view ICON_TRUCK_PICKUP = "svg/solid/truck-pickup.svg";
+constexpr std::string_view ICON_TRUCK_PLANE = "svg/solid/truck-plane.svg";
+constexpr std::string_view ICON_TRUCK_RAMP_BOX = "svg/solid/truck-ramp-box.svg";
+constexpr std::string_view ICON_TRUCK = "svg/solid/truck.svg";
+constexpr std::string_view ICON_TTY = "svg/solid/tty.svg";
+constexpr std::string_view ICON_TURKISH_LIRA_SIGN = "svg/solid/turkish-lira-sign.svg";
+constexpr std::string_view ICON_TURN_DOWN = "svg/solid/turn-down.svg";
+constexpr std::string_view ICON_TURN_UP = "svg/solid/turn-up.svg";
+constexpr std::string_view ICON_TV = "svg/solid/tv.svg";
+constexpr std::string_view ICON_U = "svg/solid/u.svg";
+constexpr std::string_view ICON_UMBRELLA_BEACH = "svg/solid/umbrella-beach.svg";
+constexpr std::string_view ICON_UMBRELLA = "svg/solid/umbrella.svg";
+constexpr std::string_view ICON_UNDERLINE = "svg/solid/underline.svg";
+constexpr std::string_view ICON_UNIVERSAL_ACCESS = "svg/solid/universal-access.svg";
+constexpr std::string_view ICON_UNLOCK = "svg/solid/unlock.svg";
+constexpr std::string_view ICON_UP_DOWN_LEFT_RIGHT = "svg/solid/up-down-left-right.svg";
+constexpr std::string_view ICON_UP_DOWN = "svg/solid/up-down.svg";
+constexpr std::string_view ICON_UP_LONG = "svg/solid/up-long.svg";
+constexpr std::string_view ICON_UP_RIGHT_AND_DOWN_LEFT_FROM_CENTER = "svg/solid/up-right-and-down-left-from-center.svg";
+constexpr std::string_view ICON_UP_RIGHT_FROM_SQUARE = "svg/solid/up-right-from-square.svg";
+constexpr std::string_view ICON_UPLOAD = "svg/solid/upload.svg";
+constexpr std::string_view ICON_USB_DRIVE = "svg/solid/usb-drive.svg";
+constexpr std::string_view ICON_USER_ASTRONAUT = "svg/solid/user-astronaut.svg";
+constexpr std::string_view ICON_USER_CHECK = "svg/solid/user-check.svg";
+constexpr std::string_view ICON_USER_CLOCK = "svg/solid/user-clock.svg";
+constexpr std::string_view ICON_USER_DOCTOR = "svg/solid/user-doctor.svg";
+constexpr std::string_view ICON_USER_GEAR = "svg/solid/user-gear.svg";
+constexpr std::string_view ICON_USER_GRADUATE = "svg/solid/user-graduate.svg";
+constexpr std::string_view ICON_USER_GROUP = "svg/solid/user-group.svg";
+constexpr std::string_view ICON_USER_INJURED = "svg/solid/user-injured.svg";
+constexpr std::string_view ICON_USER_LARGE_SLASH = "svg/solid/user-large-slash.svg";
+constexpr std::string_view ICON_USER_LARGE_SOLID = "svg/solid/user-large.svg";
+constexpr std::string_view ICON_USER_LOCK = "svg/solid/user-lock.svg";
+constexpr std::string_view ICON_USER_MINUS = "svg/solid/user-minus.svg";
+constexpr std::string_view ICON_USER_NINJA = "svg/solid/user-ninja.svg";
+constexpr std::string_view ICON_USER_NURSE = "svg/solid/user-nurse.svg";
+constexpr std::string_view ICON_USER_PEN = "svg/solid/user-pen.svg";
+constexpr std::string_view ICON_USER_PLUS = "svg/solid/user-plus.svg";
+constexpr std::string_view ICON_USER_SECRET = "svg/solid/user-secret.svg";
+constexpr std::string_view ICON_USER_SHIELD = "svg/solid/user-shield.svg";
+constexpr std::string_view ICON_USER_SLASH = "svg/solid/user-slash.svg";
+constexpr std::string_view ICON_USER_TAG = "svg/solid/user-tag.svg";
+constexpr std::string_view ICON_USER_TIE = "svg/solid/user-tie.svg";
+constexpr std::string_view ICON_USER_XMARK = "svg/solid/user-xmark.svg";
+constexpr std::string_view ICON_USER_SOLID = "svg/solid/user.svg";
+constexpr std::string_view ICON_USERS_BETWEEN_LINES = "svg/solid/users-between-lines.svg";
+constexpr std::string_view ICON_USERS_GEAR = "svg/solid/users-gear.svg";
+constexpr std::string_view ICON_USERS_LINE = "svg/solid/users-line.svg";
+constexpr std::string_view ICON_USERS_RAYS = "svg/solid/users-rays.svg";
+constexpr std::string_view ICON_USERS_RECTANGLE = "svg/solid/users-rectangle.svg";
+constexpr std::string_view ICON_USERS_SLASH = "svg/solid/users-slash.svg";
+constexpr std::string_view ICON_USERS_VIEWFINDER = "svg/solid/users-viewfinder.svg";
+constexpr std::string_view ICON_USERS = "svg/solid/users.svg";
+constexpr std::string_view ICON_UTENSILS = "svg/solid/utensils.svg";
+constexpr std::string_view ICON_V = "svg/solid/v.svg";
+constexpr std::string_view ICON_VAN_SHUTTLE = "svg/solid/van-shuttle.svg";
+constexpr std::string_view ICON_VAULT = "svg/solid/vault.svg";
+constexpr std::string_view ICON_VECTOR_SQUARE = "svg/solid/vector-square.svg";
+constexpr std::string_view ICON_VENUS_DOUBLE = "svg/solid/venus-double.svg";
+constexpr std::string_view ICON_VENUS_MARS = "svg/solid/venus-mars.svg";
+constexpr std::string_view ICON_VENUS = "svg/solid/venus.svg";
+constexpr std::string_view ICON_VEST_PATCHES = "svg/solid/vest-patches.svg";
+constexpr std::string_view ICON_VEST = "svg/solid/vest.svg";
+constexpr std::string_view ICON_VIAL_CIRCLE_CHECK = "svg/solid/vial-circle-check.svg";
+constexpr std::string_view ICON_VIAL_VIRUS = "svg/solid/vial-virus.svg";
+constexpr std::string_view ICON_VIAL = "svg/solid/vial.svg";
+constexpr std::string_view ICON_VIALS = "svg/solid/vials.svg";
+constexpr std::string_view ICON_VIDEO_SLASH = "svg/solid/video-slash.svg";
+constexpr std::string_view ICON_VIDEO = "svg/solid/video.svg";
+constexpr std::string_view ICON_VIHARA = "svg/solid/vihara.svg";
+constexpr std::string_view ICON_VIRUS_COVID_SLASH = "svg/solid/virus-covid-slash.svg";
+constexpr std::string_view ICON_VIRUS_COVID = "svg/solid/virus-covid.svg";
+constexpr std::string_view ICON_VIRUS_SLASH = "svg/solid/virus-slash.svg";
+constexpr std::string_view ICON_VIRUS = "svg/solid/virus.svg";
+constexpr std::string_view ICON_VIRUSES = "svg/solid/viruses.svg";
+constexpr std::string_view ICON_VOICEMAIL = "svg/solid/voicemail.svg";
+constexpr std::string_view ICON_VOLCANO = "svg/solid/volcano.svg";
+constexpr std::string_view ICON_VOLLEYBALL = "svg/solid/volleyball.svg";
+constexpr std::string_view ICON_VOLUME_HIGH = "svg/solid/volume-high.svg";
+constexpr std::string_view ICON_VOLUME_LOW = "svg/solid/volume-low.svg";
+constexpr std::string_view ICON_VOLUME_OFF = "svg/solid/volume-off.svg";
+constexpr std::string_view ICON_VOLUME_XMARK = "svg/solid/volume-xmark.svg";
+constexpr std::string_view ICON_VR_CARDBOARD = "svg/solid/vr-cardboard.svg";
+constexpr std::string_view ICON_W = "svg/solid/w.svg";
+constexpr std::string_view ICON_WALKIE_TALKIE = "svg/solid/walkie-talkie.svg";
+constexpr std::string_view ICON_WALKING = "svg/solid/walking.svg";
+constexpr std::string_view ICON_WALLET = "svg/solid/wallet.svg";
+constexpr std::string_view ICON_WAND_MAGIC_SPARKLES = "svg/solid/wand-magic-sparkles.svg";
+constexpr std::string_view ICON_WAND_MAGIC = "svg/solid/wand-magic.svg";
+constexpr std::string_view ICON_WAND_SPARKLES = "svg/solid/wand-sparkles.svg";
+constexpr std::string_view ICON_WAREHOUSE = "svg/solid/warehouse.svg";
+constexpr std::string_view ICON_WATER_LADDER = "svg/solid/water-ladder.svg";
+constexpr std::string_view ICON_WATER = "svg/solid/water.svg";
+constexpr std::string_view ICON_WAVE_SQUARE = "svg/solid/wave-square.svg";
+constexpr std::string_view ICON_WEIGHT_HANGING = "svg/solid/weight-hanging.svg";
+constexpr std::string_view ICON_WEIGHT_SCALE = "svg/solid/weight-scale.svg";
+constexpr std::string_view ICON_WHEELCHAIR_MOVE = "svg/solid/wheelchair-move.svg";
+constexpr std::string_view ICON_WHEELCHAIR = "svg/solid/wheelchair.svg";
+constexpr std::string_view ICON_WHISKEY_GLASS = "svg/solid/whiskey-glass.svg";
+constexpr std::string_view ICON_WIFI = "svg/solid/wifi.svg";
+constexpr std::string_view ICON_WIND = "svg/solid/wind.svg";
+constexpr std::string_view ICON_WINDOW_MAXIMIZE_SOLID = "svg/solid/window-maximize.svg";
+constexpr std::string_view ICON_WINDOW_MINIMIZE_SOLID = "svg/solid/window-minimize.svg";
+constexpr std::string_view ICON_WINDOW_RESTORE_SOLID = "svg/solid/window-restore.svg";
+constexpr std::string_view ICON_WINE_BOTTLE = "svg/solid/wine-bottle.svg";
+constexpr std::string_view ICON_WINE_GLASS_EMPTY = "svg/solid/wine-glass-empty.svg";
+constexpr std::string_view ICON_WINE_GLASS = "svg/solid/wine-glass.svg";
+constexpr std::string_view ICON_WON_SIGN = "svg/solid/won-sign.svg";
+constexpr std::string_view ICON_WORM = "svg/solid/worm.svg";
+constexpr std::string_view ICON_WRENCH = "svg/solid/wrench.svg";
+constexpr std::string_view ICON_X_RAY = "svg/solid/x-ray.svg";
+constexpr std::string_view ICON_X = "svg/solid/x.svg";
+constexpr std::string_view ICON_XMARK = "svg/solid/xmark.svg";
+constexpr std::string_view ICON_XMARKS_LINES = "svg/solid/xmarks-lines.svg";
+constexpr std::string_view ICON_Y = "svg/solid/y.svg";
+constexpr std::string_view ICON_YEN_SIGN = "svg/solid/yen-sign.svg";
+constexpr std::string_view ICON_YIN_YANG = "svg/solid/yin-yang.svg";
+constexpr std::string_view ICON_Z = "svg/solid/z.svg";
 
 // Additional SVG Icons - Regular
-#define ICON_42_GROUP "svg/brands/42-group.svg"
-#define ICON_500PX "svg/brands/500px.svg"
-#define ICON_ACCESSIBLE_ICON "svg/brands/accessible-icon.svg"
-#define ICON_ACCUSOFT "svg/brands/accusoft.svg"
-#define ICON_ADN "svg/brands/adn.svg"
-#define ICON_ADVERSAL "svg/brands/adversal.svg"
-#define ICON_AFFILIATETHEME "svg/brands/affiliatetheme.svg"
-#define ICON_AIRBNB "svg/brands/airbnb.svg"
-#define ICON_ALGOLIA "svg/brands/algolia.svg"
-#define ICON_ALIPAY "svg/brands/alipay.svg"
-#define ICON_AMAZON "svg/brands/amazon.svg"
-#define ICON_AMAZON_PAY "svg/brands/amazon-pay.svg"
-#define ICON_AMILIA "svg/brands/amilia.svg"
-#define ICON_ANDROID "svg/brands/android.svg"
-#define ICON_ANGELLIST "svg/brands/angellist.svg"
-#define ICON_ANGRYCREATIVE "svg/brands/angrycreative.svg"
-#define ICON_ANGULAR "svg/brands/angular.svg"
-#define ICON_APP_STORE "svg/brands/app-store.svg"
-#define ICON_APP_STORE_IOS "svg/brands/app-store-ios.svg"
-#define ICON_APPER "svg/brands/apper.svg"
-#define ICON_APPLE "svg/brands/apple.svg"
-#define ICON_APPLE_PAY "svg/brands/apple-pay.svg"
-#define ICON_ARTSTATION "svg/brands/artstation.svg"
-#define ICON_ASYMMETRIK "svg/brands/asymmetrik.svg"
-#define ICON_ATLASSIAN "svg/brands/atlassian.svg"
-#define ICON_AUDIBLE "svg/brands/audible.svg"
-#define ICON_AUTOPREFIXER "svg/brands/autoprefixer.svg"
-#define ICON_AVIANEX "svg/brands/avianex.svg"
-#define ICON_AVIATO "svg/brands/aviato.svg"
-#define ICON_AWS "svg/brands/aws.svg"
-#define ICON_BANDCAMP "svg/brands/bandcamp.svg"
-#define ICON_BATTLE_NET "svg/brands/battle-net.svg"
-#define ICON_BEHANCE "svg/brands/behance.svg"
-#define ICON_BEHANCE_SQUARE "svg/brands/behance-square.svg"
-#define ICON_BILIBILI "svg/brands/bilibili.svg"
-#define ICON_BIMOBJECT "svg/brands/bimobject.svg"
-#define ICON_BITBUCKET "svg/brands/bitbucket.svg"
-#define ICON_BITCOIN "svg/brands/bitcoin.svg"
-#define ICON_BITY "svg/brands/bity.svg"
-#define ICON_BLACK_TIE "svg/brands/black-tie.svg"
-#define ICON_BLACKBERRY "svg/brands/blackberry.svg"
-#define ICON_BLOGGER "svg/brands/blogger.svg"
-#define ICON_BLOGGER_B "svg/brands/blogger-b.svg"
-#define ICON_BLUESKY "svg/brands/bluesky.svg"
-#define ICON_BLUETOOTH "svg/brands/bluetooth.svg"
-#define ICON_BLUETOOTH_B "svg/brands/bluetooth-b.svg"
-#define ICON_BOOTSTRAP "svg/brands/bootstrap.svg"
-#define ICON_BOTS "svg/brands/bots.svg"
-#define ICON_BRAVE "svg/brands/brave.svg"
-#define ICON_BRAVE_REVERSE "svg/brands/brave-reverse.svg"
-#define ICON_BTC "svg/brands/btc.svg"
-#define ICON_BUFFER "svg/brands/buffer.svg"
-#define ICON_BUROMOBELEXPERTE "svg/brands/buromobelexperte.svg"
-#define ICON_BUY_N_LARGE "svg/brands/buy-n-large.svg"
-#define ICON_BUYSELLADS "svg/brands/buysellads.svg"
-#define ICON_CANADIAN_MAPLE_LEAF "svg/brands/canadian-maple-leaf.svg"
-#define ICON_CASH_APP "svg/brands/cash-app.svg"
-#define ICON_CC_AMAZON_PAY "svg/brands/cc-amazon-pay.svg"
-#define ICON_CC_AMEX "svg/brands/cc-amex.svg"
-#define ICON_CC_APPLE_PAY "svg/brands/cc-apple-pay.svg"
-#define ICON_CC_DINERS_CLUB "svg/brands/cc-diners-club.svg"
-#define ICON_CC_DISCOVER "svg/brands/cc-discover.svg"
-#define ICON_CC_JCB "svg/brands/cc-jcb.svg"
-#define ICON_CC_MASTERCARD "svg/brands/cc-mastercard.svg"
-#define ICON_CC_PAYPAL "svg/brands/cc-paypal.svg"
-#define ICON_CC_STRIPE "svg/brands/cc-stripe.svg"
-#define ICON_CC_VISA "svg/brands/cc-visa.svg"
-#define ICON_CENTERCODE "svg/brands/centercode.svg"
-#define ICON_CENTOS "svg/brands/centos.svg"
-#define ICON_CHROME "svg/brands/chrome.svg"
-#define ICON_CHROMECAST "svg/brands/chromecast.svg"
-#define ICON_CLOUDFLARE "svg/brands/cloudflare.svg"
-#define ICON_CLOUDSCALE "svg/brands/cloudscale.svg"
-#define ICON_CLOUDSMITH "svg/brands/cloudsmith.svg"
-#define ICON_CLOUDVERSIFY "svg/brands/cloudversify.svg"
-#define ICON_CMPLID "svg/brands/cmplid.svg"
-#define ICON_CODEPEN "svg/brands/codepen.svg"
-#define ICON_CODIEPIE "svg/brands/codiepie.svg"
-#define ICON_CONFLUENCE "svg/brands/confluence.svg"
-#define ICON_CONNECTDEVELOP "svg/brands/connectdevelop.svg"
-#define ICON_CONTAO "svg/brands/contao.svg"
-#define ICON_COTTON_BUREAU "svg/brands/cotton-bureau.svg"
-#define ICON_CPANEL "svg/brands/cpanel.svg"
-#define ICON_CREATIVE_COMMONS "svg/brands/creative-commons.svg"
-#define ICON_CREATIVE_COMMONS_BY "svg/brands/creative-commons-by.svg"
-#define ICON_CREATIVE_COMMONS_NC "svg/brands/creative-commons-nc.svg"
-#define ICON_CREATIVE_COMMONS_NC_EU "svg/brands/creative-commons-nc-eu.svg"
-#define ICON_CREATIVE_COMMONS_NC_JP "svg/brands/creative-commons-nc-jp.svg"
-#define ICON_CREATIVE_COMMONS_ND "svg/brands/creative-commons-nd.svg"
-#define ICON_CREATIVE_COMMONS_PD "svg/brands/creative-commons-pd.svg"
-#define ICON_CREATIVE_COMMONS_PD_ALT "svg/brands/creative-commons-pd-alt.svg"
+constexpr std::string_view ICON_42_GROUP = "svg/brands/42-group.svg";
+constexpr std::string_view ICON_500PX = "svg/brands/500px.svg";
+constexpr std::string_view ICON_ACCESSIBLE_ICON = "svg/brands/accessible-icon.svg";
+constexpr std::string_view ICON_ACCUSOFT = "svg/brands/accusoft.svg";
+constexpr std::string_view ICON_ADN = "svg/brands/adn.svg";
+constexpr std::string_view ICON_ADVERSAL = "svg/brands/adversal.svg";
+constexpr std::string_view ICON_AFFILIATETHEME = "svg/brands/affiliatetheme.svg";
+constexpr std::string_view ICON_AIRBNB = "svg/brands/airbnb.svg";
+constexpr std::string_view ICON_ALGOLIA = "svg/brands/algolia.svg";
+constexpr std::string_view ICON_ALIPAY = "svg/brands/alipay.svg";
+constexpr std::string_view ICON_AMAZON = "svg/brands/amazon.svg";
+constexpr std::string_view ICON_AMAZON_PAY = "svg/brands/amazon-pay.svg";
+constexpr std::string_view ICON_AMILIA = "svg/brands/amilia.svg";
+constexpr std::string_view ICON_ANDROID = "svg/brands/android.svg";
+constexpr std::string_view ICON_ANGELLIST = "svg/brands/angellist.svg";
+constexpr std::string_view ICON_ANGRYCREATIVE = "svg/brands/angrycreative.svg";
+constexpr std::string_view ICON_ANGULAR = "svg/brands/angular.svg";
+constexpr std::string_view ICON_APP_STORE = "svg/brands/app-store.svg";
+constexpr std::string_view ICON_APP_STORE_IOS = "svg/brands/app-store-ios.svg";
+constexpr std::string_view ICON_APPER = "svg/brands/apper.svg";
+constexpr std::string_view ICON_APPLE = "svg/brands/apple.svg";
+constexpr std::string_view ICON_APPLE_PAY = "svg/brands/apple-pay.svg";
+constexpr std::string_view ICON_ARTSTATION = "svg/brands/artstation.svg";
+constexpr std::string_view ICON_ASYMMETRIK = "svg/brands/asymmetrik.svg";
+constexpr std::string_view ICON_ATLASSIAN = "svg/brands/atlassian.svg";
+constexpr std::string_view ICON_AUDIBLE = "svg/brands/audible.svg";
+constexpr std::string_view ICON_AUTOPREFIXER = "svg/brands/autoprefixer.svg";
+constexpr std::string_view ICON_AVIANEX = "svg/brands/avianex.svg";
+constexpr std::string_view ICON_AVIATO = "svg/brands/aviato.svg";
+constexpr std::string_view ICON_AWS = "svg/brands/aws.svg";
+constexpr std::string_view ICON_BANDCAMP = "svg/brands/bandcamp.svg";
+constexpr std::string_view ICON_BATTLE_NET = "svg/brands/battle-net.svg";
+constexpr std::string_view ICON_BEHANCE = "svg/brands/behance.svg";
+constexpr std::string_view ICON_BEHANCE_SQUARE = "svg/brands/behance-square.svg";
+constexpr std::string_view ICON_BILIBILI = "svg/brands/bilibili.svg";
+constexpr std::string_view ICON_BIMOBJECT = "svg/brands/bimobject.svg";
+constexpr std::string_view ICON_BITBUCKET = "svg/brands/bitbucket.svg";
+constexpr std::string_view ICON_BITCOIN = "svg/brands/bitcoin.svg";
+constexpr std::string_view ICON_BITY = "svg/brands/bity.svg";
+constexpr std::string_view ICON_BLACK_TIE = "svg/brands/black-tie.svg";
+constexpr std::string_view ICON_BLACKBERRY = "svg/brands/blackberry.svg";
+constexpr std::string_view ICON_BLOGGER = "svg/brands/blogger.svg";
+constexpr std::string_view ICON_BLOGGER_B = "svg/brands/blogger-b.svg";
+constexpr std::string_view ICON_BLUESKY = "svg/brands/bluesky.svg";
+constexpr std::string_view ICON_BLUETOOTH = "svg/brands/bluetooth.svg";
+constexpr std::string_view ICON_BLUETOOTH_B = "svg/brands/bluetooth-b.svg";
+constexpr std::string_view ICON_BOOTSTRAP = "svg/brands/bootstrap.svg";
+constexpr std::string_view ICON_BOTS = "svg/brands/bots.svg";
+constexpr std::string_view ICON_BRAVE = "svg/brands/brave.svg";
+constexpr std::string_view ICON_BRAVE_REVERSE = "svg/brands/brave-reverse.svg";
+constexpr std::string_view ICON_BTC = "svg/brands/btc.svg";
+constexpr std::string_view ICON_BUFFER = "svg/brands/buffer.svg";
+constexpr std::string_view ICON_BUROMOBELEXPERTE = "svg/brands/buromobelexperte.svg";
+constexpr std::string_view ICON_BUY_N_LARGE = "svg/brands/buy-n-large.svg";
+constexpr std::string_view ICON_BUYSELLADS = "svg/brands/buysellads.svg";
+constexpr std::string_view ICON_CANADIAN_MAPLE_LEAF = "svg/brands/canadian-maple-leaf.svg";
+constexpr std::string_view ICON_CASH_APP = "svg/brands/cash-app.svg";
+constexpr std::string_view ICON_CC_AMAZON_PAY = "svg/brands/cc-amazon-pay.svg";
+constexpr std::string_view ICON_CC_AMEX = "svg/brands/cc-amex.svg";
+constexpr std::string_view ICON_CC_APPLE_PAY = "svg/brands/cc-apple-pay.svg";
+constexpr std::string_view ICON_CC_DINERS_CLUB = "svg/brands/cc-diners-club.svg";
+constexpr std::string_view ICON_CC_DISCOVER = "svg/brands/cc-discover.svg";
+constexpr std::string_view ICON_CC_JCB = "svg/brands/cc-jcb.svg";
+constexpr std::string_view ICON_CC_MASTERCARD = "svg/brands/cc-mastercard.svg";
+constexpr std::string_view ICON_CC_PAYPAL = "svg/brands/cc-paypal.svg";
+constexpr std::string_view ICON_CC_STRIPE = "svg/brands/cc-stripe.svg";
+constexpr std::string_view ICON_CC_VISA = "svg/brands/cc-visa.svg";
+constexpr std::string_view ICON_CENTERCODE = "svg/brands/centercode.svg";
+constexpr std::string_view ICON_CENTOS = "svg/brands/centos.svg";
+constexpr std::string_view ICON_CHROME = "svg/brands/chrome.svg";
+constexpr std::string_view ICON_CHROMECAST = "svg/brands/chromecast.svg";
+constexpr std::string_view ICON_CLOUDFLARE = "svg/brands/cloudflare.svg";
+constexpr std::string_view ICON_CLOUDSCALE = "svg/brands/cloudscale.svg";
+constexpr std::string_view ICON_CLOUDSMITH = "svg/brands/cloudsmith.svg";
+constexpr std::string_view ICON_CLOUDVERSIFY = "svg/brands/cloudversify.svg";
+constexpr std::string_view ICON_CMPLID = "svg/brands/cmplid.svg";
+constexpr std::string_view ICON_CODEPEN = "svg/brands/codepen.svg";
+constexpr std::string_view ICON_CODIEPIE = "svg/brands/codiepie.svg";
+constexpr std::string_view ICON_CONFLUENCE = "svg/brands/confluence.svg";
+constexpr std::string_view ICON_CONNECTDEVELOP = "svg/brands/connectdevelop.svg";
+constexpr std::string_view ICON_CONTAO = "svg/brands/contao.svg";
+constexpr std::string_view ICON_COTTON_BUREAU = "svg/brands/cotton-bureau.svg";
+constexpr std::string_view ICON_CPANEL = "svg/brands/cpanel.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS = "svg/brands/creative-commons.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_BY = "svg/brands/creative-commons-by.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_NC = "svg/brands/creative-commons-nc.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_NC_EU = "svg/brands/creative-commons-nc-eu.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_NC_JP = "svg/brands/creative-commons-nc-jp.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_ND = "svg/brands/creative-commons-nd.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_PD = "svg/brands/creative-commons-pd.svg";
+constexpr std::string_view ICON_CREATIVE_COMMONS_PD_ALT = "svg/brands/creative-commons-pd-alt.svg";
 
 // Brush Assets (PNGs)
-#define IMAGE_CIRCULAR_1 "png/circular_1.png"
-#define IMAGE_CIRCULAR_2 "png/circular_2.png"
-#define IMAGE_CIRCULAR_3 "png/circular_3.png"
-#define IMAGE_CIRCULAR_4 "png/circular_4.png"
-#define IMAGE_CIRCULAR_5 "png/circular_5.png"
-#define IMAGE_CIRCULAR_6 "png/circular_6.png"
-#define IMAGE_CIRCULAR_7 "png/circular_7.png"
-#define IMAGE_CIRCULAR_1_SMALL "png/circular_1_small.png"
-#define IMAGE_CIRCULAR_2_SMALL "png/circular_2_small.png"
-#define IMAGE_CIRCULAR_3_SMALL "png/circular_3_small.png"
-#define IMAGE_CIRCULAR_4_SMALL "png/circular_4_small.png"
-#define IMAGE_CIRCULAR_5_SMALL "png/circular_5_small.png"
-#define IMAGE_CIRCULAR_6_SMALL "png/circular_6_small.png"
-#define IMAGE_CIRCULAR_7_SMALL "png/circular_7_small.png"
+constexpr std::string_view IMAGE_CIRCULAR_1 = "png/circular_1.png";
+constexpr std::string_view IMAGE_CIRCULAR_2 = "png/circular_2.png";
+constexpr std::string_view IMAGE_CIRCULAR_3 = "png/circular_3.png";
+constexpr std::string_view IMAGE_CIRCULAR_4 = "png/circular_4.png";
+constexpr std::string_view IMAGE_CIRCULAR_5 = "png/circular_5.png";
+constexpr std::string_view IMAGE_CIRCULAR_6 = "png/circular_6.png";
+constexpr std::string_view IMAGE_CIRCULAR_7 = "png/circular_7.png";
+constexpr std::string_view IMAGE_CIRCULAR_1_SMALL = "png/circular_1_small.png";
+constexpr std::string_view IMAGE_CIRCULAR_2_SMALL = "png/circular_2_small.png";
+constexpr std::string_view IMAGE_CIRCULAR_3_SMALL = "png/circular_3_small.png";
+constexpr std::string_view IMAGE_CIRCULAR_4_SMALL = "png/circular_4_small.png";
+constexpr std::string_view IMAGE_CIRCULAR_5_SMALL = "png/circular_5_small.png";
+constexpr std::string_view IMAGE_CIRCULAR_6_SMALL = "png/circular_6_small.png";
+constexpr std::string_view IMAGE_CIRCULAR_7_SMALL = "png/circular_7_small.png";
 
-#define IMAGE_RECTANGULAR_1 "png/rectangular_1.png"
-#define IMAGE_RECTANGULAR_2 "png/rectangular_2.png"
-#define IMAGE_RECTANGULAR_3 "png/rectangular_3.png"
-#define IMAGE_RECTANGULAR_4 "png/rectangular_4.png"
-#define IMAGE_RECTANGULAR_5 "png/rectangular_5.png"
-#define IMAGE_RECTANGULAR_6 "png/rectangular_6.png"
-#define IMAGE_RECTANGULAR_7 "png/rectangular_7.png"
-#define IMAGE_RECTANGULAR_1_SMALL "png/rectangular_1_small.png"
-#define IMAGE_RECTANGULAR_2_SMALL "png/rectangular_2_small.png"
-#define IMAGE_RECTANGULAR_3_SMALL "png/rectangular_3_small.png"
-#define IMAGE_RECTANGULAR_4_SMALL "png/rectangular_4_small.png"
-#define IMAGE_RECTANGULAR_5_SMALL "png/rectangular_5_small.png"
-#define IMAGE_RECTANGULAR_6_SMALL "png/rectangular_6_small.png"
-#define IMAGE_RECTANGULAR_7_SMALL "png/rectangular_7_small.png"
+constexpr std::string_view IMAGE_RECTANGULAR_1 = "png/rectangular_1.png";
+constexpr std::string_view IMAGE_RECTANGULAR_2 = "png/rectangular_2.png";
+constexpr std::string_view IMAGE_RECTANGULAR_3 = "png/rectangular_3.png";
+constexpr std::string_view IMAGE_RECTANGULAR_4 = "png/rectangular_4.png";
+constexpr std::string_view IMAGE_RECTANGULAR_5 = "png/rectangular_5.png";
+constexpr std::string_view IMAGE_RECTANGULAR_6 = "png/rectangular_6.png";
+constexpr std::string_view IMAGE_RECTANGULAR_7 = "png/rectangular_7.png";
+constexpr std::string_view IMAGE_RECTANGULAR_1_SMALL = "png/rectangular_1_small.png";
+constexpr std::string_view IMAGE_RECTANGULAR_2_SMALL = "png/rectangular_2_small.png";
+constexpr std::string_view IMAGE_RECTANGULAR_3_SMALL = "png/rectangular_3_small.png";
+constexpr std::string_view IMAGE_RECTANGULAR_4_SMALL = "png/rectangular_4_small.png";
+constexpr std::string_view IMAGE_RECTANGULAR_5_SMALL = "png/rectangular_5_small.png";
+constexpr std::string_view IMAGE_RECTANGULAR_6_SMALL = "png/rectangular_6_small.png";
+constexpr std::string_view IMAGE_RECTANGULAR_7_SMALL = "png/rectangular_7_small.png";
 
-#define IMAGE_PROTECTION_ZONE "png/protection_zone.png"
-#define IMAGE_PROTECTION_ZONE_SMALL "png/protection_zone_small.png"
-#define IMAGE_PVP_ZONE "png/pvp_zone.png"
-#define IMAGE_PVP_ZONE_SMALL "png/pvp_zone_small.png"
-#define IMAGE_NO_PVP_ZONE "png/no_pvp.png"
-#define IMAGE_NO_PVP_ZONE_SMALL "png/no_pvp_small.png"
-#define IMAGE_NO_LOGOUT_ZONE "png/no_logout.png"
-#define IMAGE_NO_LOGOUT_ZONE_SMALL "png/no_logout_small.png"
-#define IMAGE_OPTIONAL_BORDER "png/optional_border.png"
-#define IMAGE_OPTIONAL_BORDER_SMALL "png/optional_border_small.png"
-#define IMAGE_ERASER "png/eraser.png"
-#define IMAGE_ERASER_SMALL "png/eraser_small.png"
+constexpr std::string_view IMAGE_PROTECTION_ZONE = "png/protection_zone.png";
+constexpr std::string_view IMAGE_PROTECTION_ZONE_SMALL = "png/protection_zone_small.png";
+constexpr std::string_view IMAGE_PVP_ZONE = "png/pvp_zone.png";
+constexpr std::string_view IMAGE_PVP_ZONE_SMALL = "png/pvp_zone_small.png";
+constexpr std::string_view IMAGE_NO_PVP_ZONE = "png/no_pvp.png";
+constexpr std::string_view IMAGE_NO_PVP_ZONE_SMALL = "png/no_pvp_small.png";
+constexpr std::string_view IMAGE_NO_LOGOUT_ZONE = "png/no_logout.png";
+constexpr std::string_view IMAGE_NO_LOGOUT_ZONE_SMALL = "png/no_logout_small.png";
+constexpr std::string_view IMAGE_OPTIONAL_BORDER = "png/optional_border.png";
+constexpr std::string_view IMAGE_OPTIONAL_BORDER_SMALL = "png/optional_border_small.png";
+constexpr std::string_view IMAGE_ERASER = "png/eraser.png";
+constexpr std::string_view IMAGE_ERASER_SMALL = "png/eraser_small.png";
 
-#define IMAGE_DOOR_NORMAL "png/door_normal.png"
-#define IMAGE_DOOR_NORMAL_SMALL "png/door_normal_small.png"
-#define IMAGE_DOOR_LOCKED "png/door_locked.png"
-#define IMAGE_DOOR_LOCKED_SMALL "png/door_locked_small.png"
-#define IMAGE_DOOR_MAGIC "png/door_magic.png"
-#define IMAGE_DOOR_MAGIC_SMALL "png/door_magic_small.png"
-#define IMAGE_DOOR_QUEST "png/door_quest.png"
-#define IMAGE_DOOR_QUEST_SMALL "png/door_quest_small.png"
-#define IMAGE_DOOR_NORMAL_ALT "png/door_normal_alt.png"
-#define IMAGE_DOOR_NORMAL_ALT_SMALL "png/door_normal_alt_small.png"
-#define IMAGE_DOOR_ARCHWAY "png/door_archway.png"
-#define IMAGE_DOOR_ARCHWAY_SMALL "png/door_archway_small.png"
+constexpr std::string_view IMAGE_DOOR_NORMAL = "png/door_normal.png";
+constexpr std::string_view IMAGE_DOOR_NORMAL_SMALL = "png/door_normal_small.png";
+constexpr std::string_view IMAGE_DOOR_LOCKED = "png/door_locked.png";
+constexpr std::string_view IMAGE_DOOR_LOCKED_SMALL = "png/door_locked_small.png";
+constexpr std::string_view IMAGE_DOOR_MAGIC = "png/door_magic.png";
+constexpr std::string_view IMAGE_DOOR_MAGIC_SMALL = "png/door_magic_small.png";
+constexpr std::string_view IMAGE_DOOR_QUEST = "png/door_quest.png";
+constexpr std::string_view IMAGE_DOOR_QUEST_SMALL = "png/door_quest_small.png";
+constexpr std::string_view IMAGE_DOOR_NORMAL_ALT = "png/door_normal_alt.png";
+constexpr std::string_view IMAGE_DOOR_NORMAL_ALT_SMALL = "png/door_normal_alt_small.png";
+constexpr std::string_view IMAGE_DOOR_ARCHWAY = "png/door_archway.png";
+constexpr std::string_view IMAGE_DOOR_ARCHWAY_SMALL = "png/door_archway_small.png";
 
-#define IMAGE_WINDOW_NORMAL "png/window_normal.png"
-#define IMAGE_WINDOW_NORMAL_SMALL "png/window_normal_small.png"
-#define IMAGE_WINDOW_HATCH "png/window_hatch.png"
-#define IMAGE_WINDOW_HATCH_SMALL "png/window_hatch_small.png"
+constexpr std::string_view IMAGE_WINDOW_NORMAL = "png/window_normal.png";
+constexpr std::string_view IMAGE_WINDOW_NORMAL_SMALL = "png/window_normal_small.png";
+constexpr std::string_view IMAGE_WINDOW_HATCH = "png/window_hatch.png";
+constexpr std::string_view IMAGE_WINDOW_HATCH_SMALL = "png/window_hatch_small.png";
 
-#define IMAGE_GEM_EDIT "png/gem_edit.png"
-#define IMAGE_GEM_MOVE "png/gem_move.png"
-#define IMAGE_EDITOR_ICON "icon/editor_icon.png"
-#define IMAGE_NO_LOGOUT "png/no_logout.png"
-#define IMAGE_NO_LOGOUT_SMALL "png/no_logout_small.png"
-#define IMAGE_NO_PVP "png/no_pvp.png"
-#define IMAGE_NO_PVP_SMALL "png/no_pvp_small.png"
+constexpr std::string_view IMAGE_GEM_EDIT = "png/gem_edit.png";
+constexpr std::string_view IMAGE_GEM_MOVE = "png/gem_move.png";
+constexpr std::string_view IMAGE_EDITOR_ICON = "icon/editor_icon.png";
+constexpr std::string_view IMAGE_NO_LOGOUT = "png/no_logout.png";
+constexpr std::string_view IMAGE_NO_LOGOUT_SMALL = "png/no_logout_small.png";
+constexpr std::string_view IMAGE_NO_PVP = "png/no_pvp.png";
+constexpr std::string_view IMAGE_NO_PVP_SMALL = "png/no_pvp_small.png";
 
 #endif
