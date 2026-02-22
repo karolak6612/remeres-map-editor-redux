@@ -19,6 +19,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <format>
 #include "map/tileset.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
@@ -225,7 +226,7 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 		for (uint16_t id = fromId; id <= toId; ++id) {
 			ItemType& it = g_items[id];
 			if (it.id == 0) {
-				warnings.push_back(std::string(wxString::Format("Tileset: %s, Brush: %s, Previous %d, From: %d, To: %d", wxstr(tileset.name), wxstr(brushName), tileset.previousId, fromId, toId).mb_str()));
+				warnings.push_back(std::format("Tileset: {}, Brush: {}, Previous {}, From: {}, To: {}", tileset.name, brushName, tileset.previousId, fromId, toId));
 				warnings.push_back("Unknown item id #" + std::to_string(id) + ".");
 				continue;
 			}

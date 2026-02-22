@@ -4,6 +4,7 @@
 
 #include "app/main.h"
 
+#include <format>
 #include "palette/managers/palette_manager.h"
 #include "app/managers/version_manager.h"
 #include "ui/gui.h"
@@ -125,7 +126,7 @@ PaletteWindow* PaletteManager::CreatePalette() {
 	}
 
 	auto* palette = newd PaletteWindow(g_gui.root, g_materials.tilesets);
-	wxString name = wxString::Format("Palette_%llu", ++palette_creation_counter);
+	wxString name = wxstr(std::format("Palette_{}", ++palette_creation_counter));
 	g_gui.aui_manager->AddPane(palette, wxAuiPaneInfo().Name(name).Caption("Palette").TopDockable(true).BottomDockable(true));
 	g_gui.aui_manager->Update();
 
