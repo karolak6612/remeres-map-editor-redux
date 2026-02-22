@@ -15,12 +15,13 @@
 #include "ui/gui_ids.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"
+#include "ui/tile_properties/container_grid_canvas.h"
 
 ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
 	ObjectPropertiesWindowBase(win_parent, "Container Properties", map, tile_parent, item, pos),
 	action_id_field(nullptr),
 	unique_id_field(nullptr),
-	last_clicked_button(nullptr) {
+	grid_canvas(nullptr) {
 	ASSERT(edit_item);
 	Container* container = dynamic_cast<Container*>(edit_item);
 	ASSERT(container);
@@ -33,64 +34,38 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 	Bind(wxEVT_MENU, &ContainerPropertiesWindow::OnRemoveItem, this, CONTAINER_POPUP_MENU_REMOVE);
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Container Properties");
+	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Container Properties");
 
 	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
 	subsizer->AddGrowableCol(1);
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "ID " + i2ws(item->getID())));
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "ID " + i2ws(item->getID())));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Action ID"));
-	action_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Action ID"));
+	action_id_field = newd wxSpinCtrl(boxsizer->GetStaticBox(), wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
 	action_id_field->SetToolTip("Action ID (0-65535). Used for scripting.");
 	subsizer->Add(action_id_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Unique ID"));
-	unique_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Unique ID"));
+	unique_id_field = newd wxSpinCtrl(boxsizer->GetStaticBox(), wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
 	unique_id_field->SetToolTip("Unique ID (0-65535). Must be unique on the map.");
 	subsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 
 	boxsizer->Add(subsizer, wxSizerFlags(0).Expand());
 
 	// Now we add the subitems!
-	wxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
+	wxStaticBoxSizer* contents_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Contents");
 
-	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
-	wxSizer* horizontal_sizer = nullptr;
-	int32_t maxColumns;
-	if (use_large_sprites) {
-		maxColumns = 6;
-	} else {
-		maxColumns = 12;
-	}
+	grid_canvas = newd ContainerGridCanvas(contents_sizer->GetStaticBox(), g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
+	grid_canvas->Bind(wxEVT_BUTTON, &ContainerPropertiesWindow::OnContainerItemClick, this);
+	grid_canvas->Bind(wxEVT_CONTEXT_MENU, &ContainerPropertiesWindow::OnContainerItemRightClick, this);
+	grid_canvas->SetContainer(edit_item);
 
-	for (uint32_t index = 0; index < container->getVolume(); ++index) {
-		if (!horizontal_sizer) {
-			horizontal_sizer = newd wxBoxSizer(wxHORIZONTAL);
-		}
-
-		Item* sub_item = container->getItem(index);
-		ContainerItemButton* containerItemButton = newd ContainerItemButton(this, use_large_sprites, index, map, sub_item);
-		containerItemButton->Bind(wxEVT_BUTTON, &ContainerPropertiesWindow::OnContainerItemClick, this);
-		containerItemButton->Bind(wxEVT_RIGHT_UP, &ContainerPropertiesWindow::OnContainerItemRightClick, this);
-
-		container_items.push_back(containerItemButton);
-		horizontal_sizer->Add(containerItemButton);
-
-		if (((index + 1) % maxColumns) == 0) {
-			contents_sizer->Add(horizontal_sizer);
-			horizontal_sizer = nullptr;
-		}
-	}
-
-	if (horizontal_sizer != nullptr) {
-		contents_sizer->Add(horizontal_sizer);
-	}
-
-	boxsizer->Add(contents_sizer, wxSizerFlags(2).Expand());
+	contents_sizer->Add(grid_canvas, wxSizerFlags(1).Expand().Border(wxALL, 2));
 
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxALL, 20));
+	topsizer->Add(contents_sizer, wxSizerFlags(1).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, 20));
 
 	wxSizer* std_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
@@ -131,41 +106,46 @@ void ContainerPropertiesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ContainerPropertiesWindow::Update() {
-	Container* container = dynamic_cast<Container*>(edit_item);
-	if (container) {
-		for (uint32_t i = 0; i < container->getVolume(); ++i) {
-			container_items[i]->setItem(container->getItem(i));
-		}
+	if (grid_canvas) {
+		grid_canvas->SetContainer(edit_item);
+		grid_canvas->SetLargeSprites(g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
 	}
 	Layout();
 	wxDialog::Update();
 }
 
 void ContainerPropertiesWindow::OnContainerItemClick(wxCommandEvent& event) {
-	ContainerItemButton* button = dynamic_cast<ContainerItemButton*>(event.GetEventObject());
-	if (!button) {
+	int index = event.GetInt();
+
+	Container* container = edit_item ? dynamic_cast<Container*>(edit_item) : nullptr;
+	if (!container || !edit_map) {
 		return;
 	}
 
-	last_clicked_button = button;
-
-	if (button->getItem()) {
+	if (index < static_cast<int>(container->getItemCount())) {
 		OnEditItem(event);
 	} else {
 		OnAddItem(event);
 	}
 }
 
-void ContainerPropertiesWindow::OnContainerItemRightClick(wxMouseEvent& event) {
-	ContainerItemButton* button = dynamic_cast<ContainerItemButton*>(event.GetEventObject());
-	if (!button) {
+void ContainerPropertiesWindow::OnContainerItemRightClick(wxContextMenuEvent& event) {
+	if (!grid_canvas || !edit_item) {
 		return;
 	}
 
-	last_clicked_button = button;
+	int sub_item_index = grid_canvas->GetSelectedIndex();
+	if (sub_item_index == -1) {
+		return;
+	}
+
+	Container* container = dynamic_cast<Container*>(edit_item);
+	if (!container || static_cast<size_t>(sub_item_index) >= container->getVolume()) {
+		return;
+	}
 
 	wxMenu menu;
-	if (button->getItem()) {
+	if (sub_item_index < static_cast<int>(container->getItemCount())) {
 		menu.Append(CONTAINER_POPUP_MENU_EDIT, "&Edit Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
 		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 		menu.Append(CONTAINER_POPUP_MENU_REMOVE, "&Remove Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
@@ -173,7 +153,6 @@ void ContainerPropertiesWindow::OnContainerItemRightClick(wxMouseEvent& event) {
 		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 	}
 
-	Container* container = dynamic_cast<Container*>(edit_item);
 	if (container && container->getVolume() <= (int)container->getVector().size()) {
 		if (wxMenuItem* addItem = menu.FindItem(CONTAINER_POPUP_MENU_ADD)) {
 			addItem->Enable(false);
@@ -184,7 +163,7 @@ void ContainerPropertiesWindow::OnContainerItemRightClick(wxMouseEvent& event) {
 }
 
 void ContainerPropertiesWindow::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button) {
+	if (!grid_canvas || !edit_item) {
 		return;
 	}
 
@@ -198,7 +177,7 @@ void ContainerPropertiesWindow::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 		uint16_t item_id = dialog.getResultID();
 		if (item_id != 0) {
 			auto& contents = container->getVector();
-			uint32_t index = last_clicked_button->getIndex();
+			uint32_t index = grid_canvas->GetSelectedIndex();
 
 			std::unique_ptr<Item> new_item(Item::Create(item_id)); // Wrap locally
 			if (new_item) {
@@ -214,11 +193,21 @@ void ContainerPropertiesWindow::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ContainerPropertiesWindow::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button || !last_clicked_button->getItem()) {
+	if (!grid_canvas || !edit_item) {
 		return;
 	}
 
-	Item* sub_item = last_clicked_button->getItem();
+	int sub_item_index = grid_canvas->GetSelectedIndex();
+	if (sub_item_index == -1) {
+		return;
+	}
+
+	Container* container = dynamic_cast<Container*>(edit_item);
+	if (!container || static_cast<size_t>(sub_item_index) >= container->getItemCount()) {
+		return;
+	}
+
+	Item* sub_item = container->getItem(sub_item_index);
 	wxPoint newDialogAt = GetPosition() + FROM_DIP(this, wxPoint(20, 20));
 
 	wxDialog* d;
@@ -234,7 +223,17 @@ void ContainerPropertiesWindow::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ContainerPropertiesWindow::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
-	if (!last_clicked_button || !last_clicked_button->getItem()) {
+	if (!grid_canvas || !edit_item) {
+		return;
+	}
+
+	int sub_item_index = grid_canvas->GetSelectedIndex();
+	if (sub_item_index == -1) {
+		return;
+	}
+
+	Container* container = dynamic_cast<Container*>(edit_item);
+	if (!container || static_cast<size_t>(sub_item_index) >= container->getItemCount()) {
 		return;
 	}
 
@@ -244,19 +243,10 @@ void ContainerPropertiesWindow::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	Container* container = dynamic_cast<Container*>(edit_item);
-	if (!container) {
-		return;
-	}
-
 	auto& contents = container->getVector();
-	Item* to_remove = last_clicked_button->getItem();
-
-	auto it = std::find_if(contents.begin(), contents.end(), [to_remove](const std::unique_ptr<Item>& item) {
-		return item.get() == to_remove;
-	});
-	if (it != contents.end()) {
-		contents.erase(it);
+	uint32_t sub_index = sub_item_index;
+	if (sub_index < contents.size()) {
+		contents.erase(contents.begin() + sub_index);
 	}
 
 	Update();

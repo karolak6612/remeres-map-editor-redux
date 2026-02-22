@@ -151,7 +151,7 @@ inline std::istream& operator>>(std::istream& is, Position& pos) {
 }
 
 inline bool Position::isValid() const {
-	return x >= 0 && x <= MAP_MAX_WIDTH && y >= 0 && y <= MAP_MAX_HEIGHT && z >= 0 && z <= MAP_MAX_LAYER;
+	return static_cast<unsigned>(x) <= MAP_MAX_WIDTH && static_cast<unsigned>(y) <= MAP_MAX_HEIGHT && static_cast<unsigned>(z) <= MAP_MAX_LAYER;
 }
 
 inline Position abs(const Position& position) {

@@ -22,7 +22,7 @@
 #include "util/image_manager.h"
 #include "ui/gui_ids.h"
 #include "game/complexitem.h"
-#include "ui/properties/container_properties_window.h"
+#include "ui/tile_properties/container_grid_canvas.h"
 #include "ui/properties/attribute_service.h"
 #include "ui/properties/property_validator.h"
 #include "ui/properties/property_applier.h"
@@ -37,6 +37,7 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	unique_id_field(nullptr),
 	count_field(nullptr),
 	tier_field(nullptr),
+	grid_canvas(nullptr),
 	currentPanel(nullptr) {
 	ASSERT(edit_item);
 
@@ -95,11 +96,9 @@ PropertiesWindow::~PropertiesWindow() {
 }
 
 void PropertiesWindow::Update() {
-	Container* container = dynamic_cast<Container*>(edit_item);
-	if (container) {
-		for (uint32_t i = 0; i < container->getVolume(); ++i) {
-			container_items[i]->setItem(container->getItem(i));
-		}
+	if (grid_canvas) {
+		grid_canvas->SetContainer(edit_item);
+		grid_canvas->SetLargeSprites(g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
 	}
 	wxDialog::Update();
 }
@@ -160,22 +159,13 @@ void PropertiesWindow::createClassificationFields(wxFlexGridSizer* gridsizer, wx
 }
 
 wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
-	Container* container = (Container*)edit_item;
 	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_CONTAINER_TAB);
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
 
-	wxSizer* gridSizer = newd wxWrapSizer(wxHORIZONTAL);
+	grid_canvas = newd ContainerGridCanvas(panel, g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
+	grid_canvas->SetContainer(edit_item);
 
-	bool use_large_sprites = g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS);
-	for (uint32_t i = 0; i < container->getVolume(); ++i) {
-		Item* item = container->getItem(i);
-		ContainerItemButton* containerItemButton = newd ContainerItemButton(panel, use_large_sprites, i, edit_map, item);
-
-		container_items.push_back(containerItemButton);
-		gridSizer->Add(containerItemButton, wxSizerFlags(0).Border(wxALL, 2));
-	}
-
-	topSizer->Add(gridSizer, wxSizerFlags(1).Expand());
+	topSizer->Add(grid_canvas, wxSizerFlags(1).Expand().Border(wxALL, 2));
 
 	/*
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);

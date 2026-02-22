@@ -11,6 +11,8 @@ ViewSettingsHandler::ViewSettingsHandler(MainMenuBar* menuBar) :
 void ViewSettingsHandler::LoadValues() {
 	using namespace MenuBar;
 
+	g_settings.setInteger(Config::SHOW_AS_MINIMAP, 0);
+
 	menuBar->CheckItem(VIEW_TOOLBARS_BRUSHES, g_settings.getBoolean(Config::SHOW_TOOLBAR_BRUSHES));
 	menuBar->CheckItem(VIEW_TOOLBARS_POSITION, g_settings.getBoolean(Config::SHOW_TOOLBAR_POSITION));
 	menuBar->CheckItem(VIEW_TOOLBARS_SIZES, g_settings.getBoolean(Config::SHOW_TOOLBAR_SIZES));

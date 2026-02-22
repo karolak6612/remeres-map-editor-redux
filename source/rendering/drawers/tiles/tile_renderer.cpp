@@ -123,7 +123,8 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 
 			const auto& items = container->getVector();
 			data.containerItems.clear();
-			data.containerItems.reserve(items.size());
+			// Reserve only what we need (capped at 32)
+			data.containerItems.reserve(std::min(items.size(), size_t(32)));
 			for (const auto& subItem : items) {
 				if (subItem) {
 					ContainerItem ci;
@@ -214,8 +215,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground && ground_it) {
-			PreloadItem(tile, tile->ground.get(), *ground_it);
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b);
+			if (ground_it->sprite) {
+				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
+
+				BlitItemParams params(tile, tile->ground.get(), options);
+				params.red = r;
+				params.green = g;
+				params.blue = b;
+				params.patterns = &patterns;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -242,19 +252,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
 		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		glm::vec4 border_color(static_cast<float>(hr) / 255.0f, static_cast<float>(hg) / 255.0f, static_cast<float>(hb) / 255.0f, intensity); // House color border with pulsing alpha
-
-		// Map coordinates to screen coordinates
-		// draw_x, draw_y are defined in the beginning of function and are top-left of the tile
-		// Draw 1px solid border using geometry generation
-		// primitive_renderer.drawBox(glm::vec4(x, y, s, s), border_color, 1.0f);
-
-		// Use SpriteDrawer to keep batching unified (prevents PrimitiveRenderer flush/state change)
-		int br = static_cast<int>(border_color.r * 255.0f);
-		int bg = static_cast<int>(border_color.g * 255.0f);
-		int bb = static_cast<int>(border_color.b * 255.0f);
-		int ba = static_cast<int>(border_color.a * 255.0f);
-		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, br, bg, bb, ba);
+		// Optimization: Use integer math for border color to avoid vec4 construction and casting
+		int ba = static_cast<int>(intensity * 255.0f);
+		// hr, hg, hb are already uint8_t
+		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, hr, hg, hb, ba);
 	}
 
 	if (!only_colors) {
@@ -262,16 +263,24 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
 			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
+			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
+			float boost = 0.0f;
+
 			if (calculate_house_color) {
 				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
+				if (should_pulse) {
+					boost = options.highlight_pulse * 0.6f;
+				}
 			}
+
+			bool process_tooltips = options.show_tooltips && map_z == view.floor;
 
 			// items on tile
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
 
 				// item tooltip (one per item)
-				if (options.show_tooltips && map_z == view.floor) {
+				if (process_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
@@ -280,31 +289,40 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				PreloadItem(tile, item.get(), it);
+				if (it.sprite) {
+					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+					PreloadItem(tile, item.get(), it, &patterns);
 
-				// item sprite
-				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b);
-				} else {
-					uint8_t ir = 255, ig = 255, ib = 255;
+					BlitItemParams params(tile, item.get(), options);
+					params.patterns = &patterns;
 
-					if (calculate_house_color) {
-						// Apply house color tint
-						ir = static_cast<uint8_t>(ir * house_r / 255);
-						ig = static_cast<uint8_t>(ig * house_g / 255);
-						ib = static_cast<uint8_t>(ib * house_b / 255);
+					// item sprite
+					if (item->isBorder()) {
+						params.red = r;
+						params.green = g;
+						params.blue = b;
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+					} else {
+						uint8_t ir = 255, ig = 255, ib = 255;
 
-						if (static_cast<int>(tile->getHouseID()) == current_house_id) {
-							// Pulse effect matching the tile pulse
-							if (options.highlight_pulse > 0.0f) {
-								float boost = options.highlight_pulse * 0.6f;
+						if (calculate_house_color) {
+							// Apply house color tint
+							ir = static_cast<uint8_t>(ir * house_r / 255);
+							ig = static_cast<uint8_t>(ig * house_g / 255);
+							ib = static_cast<uint8_t>(ib * house_b / 255);
+
+							if (should_pulse) {
+								// Pulse effect matching the tile pulse
 								ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
 								ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
 								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
 							}
 						}
+						params.red = ir;
+						params.green = ig;
+						params.blue = ib;
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib);
 				}
 			}
 			// monster/npc on tile
@@ -323,14 +341,19 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 }
 
-void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it) {
+void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* cached_patterns) {
 	if (!item) {
 		return;
 	}
 
 	GameSprite* spr = it.sprite;
 	if (spr && !spr->isSimpleAndLoaded()) {
-		SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		SpritePatterns patterns;
+		if (cached_patterns) {
+			patterns = *cached_patterns;
+		} else {
+			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		}
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
 }
@@ -341,7 +364,7 @@ void TileRenderer::AddLight(TileLocation* location, const RenderView& view, cons
 	}
 
 	auto tile = location->get();
-	if (!tile) {
+	if (!tile || !tile->hasLight()) {
 		return;
 	}
 

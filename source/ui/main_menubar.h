@@ -21,6 +21,7 @@
 #include <wx/docview.h>
 #include <memory>
 #include <unordered_map>
+#include <string_view>
 #include "ui/managers/recent_files_manager.h"
 
 namespace MenuBar {
@@ -126,6 +127,7 @@ namespace MenuBar {
 		WIN_MINIMAP,
 		WIN_TOOL_OPTIONS,
 		WIN_INGAME_PREVIEW,
+		WIN_TILE_PROPERTIES,
 		NEW_PALETTE,
 		TAKE_SCREENSHOT,
 		LIVE_START,
@@ -280,6 +282,7 @@ public:
 	void OnMinimapWindow(wxCommandEvent& event);
 	void OnToolOptionsWindow(wxCommandEvent& event);
 	void OnIngamePreviewWindow(wxCommandEvent& event);
+	void OnTilePropertiesWindow(wxCommandEvent& event);
 	void OnNewPalette(wxCommandEvent& event);
 
 	void OnStartLive(wxCommandEvent& event);
@@ -324,10 +327,10 @@ namespace MenuBar {
 	struct Action {
 		Action() :
 			id(0), kind(wxITEM_NORMAL) { }
-		Action(std::string s, int id, wxItemKind kind, wxCommandEventFunction handler) :
+		Action(std::string_view s, int id, wxItemKind kind, wxCommandEventFunction handler) :
 			id(id), setting(0), name(s), kind(kind), handler(handler) { }
-		Action(std::string s, std::string icon, int id, wxItemKind kind, wxCommandEventFunction handler) :
-			id(id), setting(0), name(s), icon(icon), kind(kind), handler(handler) { }
+		Action(std::string_view s, std::string_view iconPath, int id, wxItemKind kind, wxCommandEventFunction handler) :
+			id(id), setting(0), name(s), icon(iconPath), kind(kind), handler(handler) { }
 
 		int id;
 		int setting;

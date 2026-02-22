@@ -2,7 +2,7 @@
 #define RME_ICON_RENDERER_H_
 
 #include <nanovg.h>
-#include <string>
+#include <string_view>
 
 struct NVGcontext;
 struct NVGcolor;
@@ -19,7 +19,7 @@ namespace IconRenderer {
 	 * @param iconMacro The icon identifier (macro string)
 	 * @param tintColor Color to tint the icon with
 	 */
-	void DrawIconWithBorder(NVGcontext* vg, float cx, float cy, float iconSize, float outlineOffset, const std::string& iconMacro, const NVGcolor& tintColor);
+	void DrawIconWithBorder(NVGcontext* vg, float cx, float cy, float iconSize, float outlineOffset, std::string_view iconMacro, const NVGcolor& tintColor);
 }
 
 #endif

@@ -9,13 +9,22 @@
 #include "io/iomap.h"
 #include "live/live_client.h"
 
+#include "ui/tile_properties/tile_properties_panel.h"
+#include "map/tile.h"
+#include "game/creature.h"
+#include "game/spawn.h"
+
 void SetupCallbacks(Editor* editor) {
-	editor->onStateChange = []() {
+	editor->onStateChange = [editor]() {
 		g_gui.UpdateTitle();
 		g_gui.UpdateMenus();
+
+		if (g_gui.tile_properties_panel) {
+			g_gui.tile_properties_panel->UpdateFromEditor(editor);
+		}
 	};
 
-	editor->selection.onSelectionChange = [](size_t count) {
+	editor->selection.onSelectionChange = [editor](size_t count) {
 		if (count > 0) {
 			wxString ss;
 			if (count == 1) {
@@ -27,6 +36,10 @@ void SetupCallbacks(Editor* editor) {
 		} else {
 			// Optional: Clear status text if nothing selected, or keep previous behavior
 			// Previous behavior didn't clear it explicitly in updateSelectionCount if size <= 0
+		}
+
+		if (g_gui.tile_properties_panel) {
+			g_gui.tile_properties_panel->UpdateFromEditor(editor);
 		}
 	};
 }

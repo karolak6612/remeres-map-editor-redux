@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 // Remere's Map Editor is free software: you can redistribute it and/or modify
@@ -160,7 +160,7 @@ void LiveSocket::receiveFloor(NetworkMessage& message, Editor& editor, Action* a
 	if (tileBits == 0) {
 		for (uint_fast8_t x = 0; x < 4; ++x) {
 			for (uint_fast8_t y = 0; y < 4; ++y) {
-				action->addChange(std::make_unique<Change>(map.allocator(node->createTile(ndx * 4 + x, ndy * 4 + y, z)).release()));
+				action->addChange(std::make_unique<Change>(std::move(map.allocator(node->createTile(ndx * 4 + x, ndy * 4 + y, z)))));
 			}
 		}
 		return;
@@ -184,7 +184,7 @@ void LiveSocket::receiveFloor(NetworkMessage& message, Editor& editor, Action* a
 				receiveTile(tileNode, editor, action, &position);
 				tileNode->advance();
 			} else {
-				action->addChange(std::make_unique<Change>(map.allocator(node->createTile(position.x, position.y, z)).release()));
+				action->addChange(std::make_unique<Change>(std::move(map.allocator(node->createTile(position.x, position.y, z)))));
 			}
 		}
 	}
@@ -231,7 +231,7 @@ void LiveSocket::receiveTile(BinaryNode* node, Editor& editor, Action* action, c
 	ASSERT(node != nullptr);
 
 	std::unique_ptr<Tile> tile = readTile(node, editor, position);
-	action->addChange(std::make_unique<Change>(tile.release()));
+	action->addChange(std::make_unique<Change>(std::move(tile)));
 }
 
 void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const Position* position) {
