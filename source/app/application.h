@@ -29,6 +29,10 @@
 
 #include "ui/main_frame.h"
 
+#ifdef _USE_UPDATER_
+class UpdateChecker;
+#endif
+
 class Item;
 class Creature;
 
@@ -59,6 +63,10 @@ private:
 #ifdef _USE_PROCESS_COM
 	RMEProcessServer* m_proc_server;
 	wxSingleInstanceChecker* m_single_instance_checker;
+#endif
+
+#ifdef _USE_UPDATER_
+	std::unique_ptr<UpdateChecker> m_updater;
 #endif
 };
 

@@ -4,6 +4,8 @@
 
 #include "rendering/utilities/fps_counter.h"
 #include <thread>
+#include <format>
+#include "app/main.h"
 
 FPSCounter::FPSCounter() :
 	frame_count(0),
@@ -60,5 +62,5 @@ void FPSCounter::LimitFPS(int limit) {
 }
 
 wxString FPSCounter::GetStatusString() const {
-	return wxString::Format("FPS: %d", current_fps);
+	return wxstr(std::format("FPS: {}", current_fps));
 }

@@ -48,7 +48,7 @@ void DoorIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		const float y = unscaled_y / zoom;
 		const float TILE_SIZE = 32.0f / zoom;
 
-		const std::string icon = request.locked ? ICON_LOCK : ICON_LOCK_OPEN;
+		const std::string_view icon = request.locked ? ICON_LOCK : ICON_LOCK_OPEN;
 		const NVGcolor color = request.locked ? colorLocked : colorUnlocked;
 
 		if (request.south) {
@@ -68,4 +68,3 @@ void DoorIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 
 	nvgRestore(vg);
 }
-
