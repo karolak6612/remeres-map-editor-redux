@@ -8,7 +8,7 @@
 class OutfitColorPalette : public NanoVGCanvas {
 public:
 	OutfitColorPalette(wxWindow* parent, wxWindowID id = wxID_ANY);
-	virtual ~OutfitColorPalette();
+	~OutfitColorPalette() override = default;
 
 	void SetSelectedColor(int index);
 	int GetSelectedColor() const {
@@ -30,10 +30,10 @@ private:
 	int m_hoverIndex = -1;
 
 	// Grid layout constants (logical pixels, handled by NanoVG scaling)
-	static const int ROWS = 7;
-	static const int COLS = 19;
-	static const int CELL_SIZE = 14;
-	static const int PADDING = 2;
+	static constexpr int ROWS = 7;
+	static constexpr int COLS = 19;
+	static constexpr int CELL_SIZE = 14;
+	static constexpr int PADDING = 2;
 };
 
 #endif

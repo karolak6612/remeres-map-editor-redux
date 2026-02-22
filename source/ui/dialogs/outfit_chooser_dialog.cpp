@@ -133,7 +133,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 	m_palette->Bind(wxEVT_BUTTON, [this](wxCommandEvent& evt) {
 		SelectColor(evt.GetInt());
 	});
-	col1_sizer->Add(m_palette, 0, wxALL, 8);
+	col1_sizer->Add(m_palette, wxSizerFlags().Border(wxALL, 8));
 
 	col1_sizer->Add(CreateHeader("Configuration"), 0, wxLEFT | wxTOP, 8);
 	wxWrapSizer* check_sizer = new wxWrapSizer(wxHORIZONTAL);
