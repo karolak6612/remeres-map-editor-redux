@@ -104,12 +104,6 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							BlitItemParams params(tile, item.get(), options);
 							params.ephemeral = true;
 							if (item->isBorder()) {
-								params.green = r;
-								params.blue = g;
-								params.blue = b; // Wait, looking at original code...
-								// Original code was: item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, true, 255, r, g, b);
-								// So red=255, green=r, blue=g, alpha=b? No, alpha is optional.
-								// 255 is red, r is green, g is blue. b is alpha.
 								params.red = 255;
 								params.green = r;
 								params.blue = g;
