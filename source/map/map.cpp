@@ -296,7 +296,7 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 
 	auto filtered_tiles = tiles() | std::views::filter([&](const auto& tile_loc) {
 							  const Tile* tile = tile_loc.get();
-							  return tile && tile->getHouseID() == fromId;
+							  return fromId != 0 && tile && tile->getHouseID() == fromId;
 						  });
 
 	for (auto& tile_loc : filtered_tiles) {
@@ -437,13 +437,13 @@ SpawnList Map::getSpawnList(Tile* where) {
 			const int max_radius = std::max(getWidth(), getHeight());
 			while (found < tile_loc->getSpawnCount()) {
 				// Horizontal sides
-				for (int x : std::views::iota(start_x, end_x + 1)) {
+				for (int x = start_x; x <= end_x; ++x) {
 					checkTile(x, start_y);
 					checkTile(x, end_y);
 				}
 
-				// Vertical sides
-				for (int y : std::views::iota(start_y + 1, end_y)) {
+				// Vertical sides (exclude corners already covered above)
+				for (int y = start_y + 1; y < end_y; ++y) {
 					checkTile(start_x, y);
 					checkTile(end_x, y);
 				}

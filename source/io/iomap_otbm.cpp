@@ -147,7 +147,7 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	std::error_code ec;
 	const auto size = std::filesystem::file_size(path, ec);
 	if (ec) {
-		spdlog::error("Couldn't get file size: {} ({})", filename.GetFullPath().ToStdString(), ec.message());
+		spdlog::error("Couldn't get file size: {} ({})", path.string(), ec.message());
 		return false;
 	}
 
@@ -173,8 +173,8 @@ bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 			return false;
 		}
 
-		std::vector<uint8_t> buffer(size);
-		if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+		std::vector<uint8_t> buffer(static_cast<size_t>(size));
+		if (!file.read(reinterpret_cast<char*>(buffer.data()), static_cast<std::streamsize>(size))) {
 			spdlog::error("Failed to read file.");
 			return false;
 		}
@@ -456,8 +456,9 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 
 			auto addExtFile = [&](uint8_t attr, const std::string& path_str) {
 				std::filesystem::path path(path_str);
+				auto fname = path.filename().string();
 				f.addU8(attr);
-				f.addString(path.filename().string());
+				f.addString(fname.empty() ? path_str : fname);
 			};
 
 			addExtFile(OTBM_ATTR_EXT_SPAWN_FILE, map.spawnfile);
