@@ -24,18 +24,33 @@
 #include "game/sprites.h"
 #include "ui/gui.h"
 
+BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
+	if (t) {
+		pos = t->getPosition();
+	}
+}
+
+BlitItemParams::BlitItemParams(const Position& p, Item* i, const DrawingOptions& o) : pos(p), item(i), options(&o) {
+}
+
 ItemDrawer::ItemDrawer() {
 }
 
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const SpritePatterns* patterns) {
-	const Position& pos = tile->getPosition();
-	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, ephemeral, red, green, blue, alpha, tile, patterns);
-}
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params) {
+	const Position& pos = params.pos;
+	Item* item = params.item;
+	const Tile* tile = params.tile;
+	const DrawingOptions& options = *params.options;
+	bool ephemeral = params.ephemeral;
+	int red = params.red;
+	int green = params.green;
+	int blue = params.blue;
+	int alpha = params.alpha;
+	const SpritePatterns* cached_patterns = params.patterns;
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile, const SpritePatterns* cached_patterns) {
 	ItemType& it = g_items[item->getID()];
 
 	// Locked door indicator
@@ -119,7 +134,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_y -= spr->draw_height;
 
 	SpritePatterns patterns;
-	if (cached_patterns) {
+	if (cached_patterns && spr == it.sprite) {
 		patterns = *cached_patterns;
 	} else {
 		patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
@@ -287,4 +302,3 @@ void ItemDrawer::DrawDoorIndicator(bool locked, const Position& pos, bool south,
 		door_indicator_drawer->addDoor(pos, locked, south, east);
 	}
 }
-

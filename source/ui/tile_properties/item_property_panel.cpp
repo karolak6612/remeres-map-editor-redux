@@ -85,8 +85,8 @@ void ItemPropertyPanel::SetItem(Item* item, Tile* tile, Map* map) {
 				}
 
 				if (item->getSubtype()) {
-					const std::string& what = Item::LiquidID2Name(item->getSubtype());
-					splash_type_choice->SetStringSelection(wxstr(what));
+					const std::string text = std::string(Item::LiquidID2Name(item->getSubtype()));
+					splash_type_choice->SetStringSelection(wxstr(text));
 				} else {
 					splash_type_choice->SetSelection(0);
 				}

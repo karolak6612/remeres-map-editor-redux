@@ -215,9 +215,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground && ground_it) {
-			SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
-			PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
-			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, tile->ground.get(), options, false, r, g, b, 255, &patterns);
+			if (ground_it->sprite) {
+				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
+
+				BlitItemParams params(tile, tile->ground.get(), options);
+				params.red = r;
+				params.green = g;
+				params.blue = b;
+				params.patterns = &patterns;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
@@ -281,29 +289,40 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
-				PreloadItem(tile, item.get(), it, &patterns);
+				if (it.sprite) {
+					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+					PreloadItem(tile, item.get(), it, &patterns);
 
-				// item sprite
-				if (item->isBorder()) {
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, r, g, b, 255, &patterns);
-				} else {
-					uint8_t ir = 255, ig = 255, ib = 255;
+					BlitItemParams params(tile, item.get(), options);
+					params.patterns = &patterns;
 
-					if (calculate_house_color) {
-						// Apply house color tint
-						ir = static_cast<uint8_t>(ir * house_r / 255);
-						ig = static_cast<uint8_t>(ig * house_g / 255);
-						ib = static_cast<uint8_t>(ib * house_b / 255);
+					// item sprite
+					if (item->isBorder()) {
+						params.red = r;
+						params.green = g;
+						params.blue = b;
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+					} else {
+						uint8_t ir = 255, ig = 255, ib = 255;
 
-						if (should_pulse) {
-							// Pulse effect matching the tile pulse
-							ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
-							ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
-							ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
+						if (calculate_house_color) {
+							// Apply house color tint
+							ir = static_cast<uint8_t>(ir * house_r / 255);
+							ig = static_cast<uint8_t>(ig * house_g / 255);
+							ib = static_cast<uint8_t>(ib * house_b / 255);
+
+							if (should_pulse) {
+								// Pulse effect matching the tile pulse
+								ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
+								ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
+								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
+							}
 						}
+						params.red = ir;
+						params.green = ig;
+						params.blue = ib;
+						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
-					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, tile, item.get(), options, false, ir, ig, ib, 255, &patterns);
 				}
 			}
 			// monster/npc on tile

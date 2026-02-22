@@ -98,16 +98,21 @@ protected:
 	// Efficient for small or dense viewports.
 	template <typename Func>
 	void visitLeavesByViewport(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		struct RowCellInfo {
-			GridCell* cell;
-			int start_nx;
-		};
+		visitLeavesByViewportImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
+	}
+
+	struct RowCellInfo {
+		GridCell* cell;
+		int start_nx;
+	};
+
+	template <typename Func>
+	void visitLeavesByViewportImpl(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
 		static thread_local std::vector<RowCellInfo> row_cells;
-		row_cells.clear();
-		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
 			row_cells.clear();
+			row_cells.reserve(end_cx - start_cx + 1);
 
 			for (int cx = start_cx; cx <= end_cx; ++cx) {
 				uint64_t key = makeKeyFromCell(cx, cy);
