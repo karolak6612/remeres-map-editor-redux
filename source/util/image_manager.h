@@ -68,7 +68,7 @@ private:
 	ImageManager();
 	~ImageManager();
 
-	std::string ResolvePath(const std::string& assetPath);
+	std::string ResolvePath(std::string_view assetPath);
 
 	// Caches
 	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;

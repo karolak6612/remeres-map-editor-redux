@@ -34,13 +34,13 @@ void ImageManager::ClearCache() {
 	m_glTextureCache.clear();
 }
 
-std::string ImageManager::ResolvePath(const std::string& assetPath) {
+std::string ImageManager::ResolvePath(std::string_view assetPath) {
 	// The path should be relative to the executable's "assets" directory
 	static wxString executablePath = wxStandardPaths::Get().GetExecutablePath();
 	static wxString assetsRoot = wxFileName(executablePath).GetPath() + wxFileName::GetPathSeparator() + "assets";
 
 	// Use full path joining to avoid stripping subdirectories
-	wxString fullPathLine = assetsRoot + wxFileName::GetPathSeparator() + wxString::FromUTF8(assetPath);
+	wxString fullPathLine = assetsRoot + wxFileName::GetPathSeparator() + wxString::FromUTF8(assetPath.data(), assetPath.size());
 	wxFileName fn(fullPathLine);
 
 	std::string fullPath = fn.GetFullPath().ToStdString();
@@ -48,9 +48,8 @@ std::string ImageManager::ResolvePath(const std::string& assetPath) {
 }
 
 wxBitmapBundle ImageManager::GetBitmapBundle(std::string_view assetPath, const wxColour& tint) {
-	std::string pathStr(assetPath);
-	std::string fullPath = ResolvePath(pathStr);
-	std::string cacheKey = pathStr;
+	std::string fullPath = ResolvePath(assetPath);
+	std::string cacheKey(assetPath);
 	if (tint.IsOk()) {
 		cacheKey += "_" + std::to_string(tint.GetRGB());
 	}
@@ -103,7 +102,8 @@ wxBitmap ImageManager::GetBitmap(std::string_view assetPath, const wxSize& size,
 	}
 
 	// For tinted bitmaps, use separate cache
-	std::pair<std::string, uint32_t> cacheKey = { std::string(assetPath), (uint32_t)tint.GetRGB() };
+	std::string pathStr(assetPath);
+	std::pair<std::string, uint32_t> cacheKey = { pathStr, (uint32_t)tint.GetRGB() };
 	auto it = m_tintedBitmapCache.find(cacheKey);
 	if (it != m_tintedBitmapCache.end()) {
 		return it->second;
@@ -146,13 +146,13 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 }
 
 int ImageManager::GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint) {
-	NvgCacheKey cacheKey = { vg, std::string(assetPath), tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
+	std::string pathStr(assetPath);
+	NvgCacheKey cacheKey = { vg, pathStr, tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
 	auto it = m_nvgImageCache.find(cacheKey);
 	if (it != m_nvgImageCache.end()) {
 		return it->second;
 	}
 
-	std::string pathStr(assetPath);
 	std::string fullPath = ResolvePath(pathStr);
 	int img = 0;
 

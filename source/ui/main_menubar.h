@@ -326,9 +326,9 @@ namespace MenuBar {
 	struct Action {
 		Action() :
 			id(0), kind(wxITEM_NORMAL) { }
-		Action(std::string s, int id, wxItemKind kind, wxCommandEventFunction handler) :
+		Action(std::string_view s, int id, wxItemKind kind, wxCommandEventFunction handler) :
 			id(id), setting(0), name(s), kind(kind), handler(handler) { }
-		Action(std::string s, std::string icon, int id, wxItemKind kind, wxCommandEventFunction handler) :
+		Action(std::string_view s, std::string_view icon, int id, wxItemKind kind, wxCommandEventFunction handler) :
 			id(id), setting(0), name(s), icon(icon), kind(kind), handler(handler) { }
 
 		int id;
