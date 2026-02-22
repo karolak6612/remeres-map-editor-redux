@@ -204,7 +204,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			g_gui.SetDrawingMode();
 
 			std::string name = hk.GetBrushname();
-			Brush* brush = g_brushes.getBrush(name);
+			Brush* brush = g_brushes().getBrush(name);
 			if (brush == nullptr) {
 				g_gui.SetStatusText("Brush \"" + wxstr(name) + "\" not found");
 				return;

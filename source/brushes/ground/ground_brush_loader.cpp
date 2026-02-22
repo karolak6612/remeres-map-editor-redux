@@ -10,7 +10,7 @@
 #include "ext/pugixml.hpp"
 #include <wx/string.h>
 
-extern Brushes g_brushes;
+// extern Brushes g_brushes; // Replaced by g_brushes() accessor
 
 // Helper for C++20 case-insensitive comparison (zero allocation)
 static const auto iequal = [](char a, char b) {
@@ -112,8 +112,8 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				}
 
 				uint16_t id = attribute.as_ushort();
-				auto it = g_brushes.borders.find(id);
-				if (it == g_brushes.borders.end() || !it->second) {
+				auto it = g_brushes().borders.find(id);
+				if (it == g_brushes().borders.end() || !it->second) {
 					warnings.push_back("\nCould not find border id " + std::to_string(id));
 					continue;
 				}
@@ -156,8 +156,8 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				if (id == 0) {
 					autoBorderPtr = nullptr;
 				} else {
-					auto it = g_brushes.borders.find(id);
-					if (it == g_brushes.borders.end() || !it->second) {
+					auto it = g_brushes().borders.find(id);
+					if (it == g_brushes().borders.end() || !it->second) {
 						warnings.push_back("\nCould not find border id " + std::to_string(id));
 						continue;
 					}
@@ -180,7 +180,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				} else if (value == "none") {
 					borderBlock->to = 0;
 				} else {
-					Brush* tobrush = g_brushes.getBrush(value);
+					Brush* tobrush = g_brushes().getBrush(value);
 					if (!tobrush) {
 						warnings.push_back((wxString("To brush ") + wxstr(value) + " doesn't exist.").ToStdString());
 						// newAutoBorder is automatically deleted if borderBlock is destroyed or reset (RAII via std::unique_ptr)
@@ -243,8 +243,8 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 								}
 
 								int32_t edge_id = AutoBorder::edgeNameToID(attribute.as_string());
-								auto it = g_brushes.borders.find(border_id);
-								if (it == g_brushes.borders.end()) {
+								auto it = g_brushes().borders.find(border_id);
+								if (it == g_brushes().borders.end()) {
 									warnings.push_back("Unknown border id in specific case match block " + std::to_string(border_id));
 									continue;
 								}
@@ -308,8 +308,8 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 								}
 
 								int32_t with_id = attribute.as_int();
-								auto itt = g_brushes.borders.find(border_id);
-								if (itt == g_brushes.borders.end()) {
+								auto itt = g_brushes().borders.find(border_id);
+								if (itt == g_brushes().borders.end()) {
 									warnings.push_back("Unknown border id in specific case match block " + std::to_string(border_id));
 									continue;
 								}
@@ -376,7 +376,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				if (name == "all") {
 					brush.friends.push_back(0xFFFFFFFF);
 				} else {
-					Brush* otherBrush = g_brushes.getBrush(name);
+					Brush* otherBrush = g_brushes().getBrush(name);
 					if (otherBrush) {
 						brush.friends.push_back(otherBrush->getID());
 					} else {
@@ -391,7 +391,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				if (name == "all") {
 					brush.friends.push_back(0xFFFFFFFF);
 				} else {
-					Brush* otherBrush = g_brushes.getBrush(name);
+					Brush* otherBrush = g_brushes().getBrush(name);
 					if (otherBrush) {
 						brush.friends.push_back(otherBrush->getID());
 					} else {

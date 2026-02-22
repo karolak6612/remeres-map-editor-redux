@@ -335,7 +335,7 @@ static void ensureCreatureBrush(CreatureType* creatureType) {
 
 	auto brush = std::make_unique<CreatureBrush>(creatureType);
 	creatureType->brush = brush.get();
-	g_brushes.addBrush(std::move(brush));
+	g_brushes().addBrush(std::move(brush));
 	creatureType->in_other_tileset = true;
 
 	TilesetCategory* tileSetCategory = tileSet->getCategory(TILESET_CREATURE);

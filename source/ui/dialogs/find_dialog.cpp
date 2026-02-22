@@ -192,7 +192,7 @@ void FindBrushDialog::OnClickOKInternal() {
 			bool do_search = (search_string.size() >= 2);
 
 			if (do_search) {
-				const BrushMap& map = g_brushes.getMap();
+				const BrushMap& map = g_brushes().getMap();
 				for (const auto& [name, brush_ptr] : map) {
 					const Brush* brush = brush_ptr.get();
 					if (!caseInsensitiveContains(brush->getName(), search_string)) {
@@ -251,7 +251,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 
 		bool found_search_results = false;
 
-		const BrushMap& brushes_map = g_brushes.getMap();
+		const BrushMap& brushes_map = g_brushes().getMap();
 
 		// We store the raws so they display last of all results
 		std::deque<const RAWBrush*> raws;
