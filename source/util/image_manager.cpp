@@ -146,7 +146,7 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 }
 
 int ImageManager::GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint) {
-	std::pair<std::string, uint32_t> cacheKey = { std::string(assetPath), tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
+	NvgCacheKey cacheKey = { vg, std::string(assetPath), tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
 	auto it = m_nvgImageCache.find(cacheKey);
 	if (it != m_nvgImageCache.end()) {
 		return it->second;

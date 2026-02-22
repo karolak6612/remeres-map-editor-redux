@@ -19,6 +19,7 @@
 
 #include <bit>
 #include <algorithm>
+#include <ranges>
 
 #include "map/map_region.h"
 #include "map/basemap.h"
@@ -57,7 +58,7 @@ Floor::Floor(int sx, int sy, int z) {
 	sx = sx & ~3;
 	sy = sy & ~3;
 
-	for (int i = 0; i < MAP_LAYERS; ++i) {
+	for (int i : std::views::iota(0, MAP_LAYERS)) {
 		locs[i].position.x = sx + (i >> 2);
 		locs[i].position.y = sy + (i & 3);
 		locs[i].position.z = z;
@@ -279,6 +280,18 @@ MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 	return it->second->nodes[ny * NODES_PER_CELL + nx].get();
 }
 
+const MapNode* SpatialHashGrid::getLeaf(int x, int y) const {
+	uint64_t key = makeKey(x, y);
+	auto it = cells.find(key);
+	if (it == cells.end()) {
+		return nullptr;
+	}
+
+	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+	return it->second->nodes[ny * NODES_PER_CELL + nx].get();
+}
+
 MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	uint64_t key = makeKey(x, y);
 	auto& cell = cells[key];
@@ -302,9 +315,9 @@ void SpatialHashGrid::clearVisible(uint32_t mask) {
 		if (!cell) {
 			continue;
 		}
-		for (int i = 0; i < NODES_PER_CELL * NODES_PER_CELL; ++i) {
-			if (cell->nodes[i]) {
-				cell->nodes[i]->clearVisible(mask);
+		for (auto& node : cell->nodes) {
+			if (node) {
+				node->clearVisible(mask);
 			}
 		}
 	}

@@ -164,7 +164,7 @@ public:
 	virtual void serializeItemAttributes_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
 	// Static conversions
-	static std::string LiquidID2Name(uint16_t id);
+	static std::string_view LiquidID2Name(uint16_t id);
 	static uint16_t LiquidName2ID(std::string id);
 
 	// IDs
