@@ -203,11 +203,13 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 
 	struct TileUpdate {
 		int layer;
-		int x, y;
+		int dest_x_in_tile, dest_y_in_tile;
+		int map_start_x, map_start_y;
 		int w, h;
-		size_t offset;
+		size_t pbo_offset;
 	};
 	std::vector<TileUpdate> pending_updates;
+	pending_updates.reserve((end_row - start_row + 1) * (end_col - start_col + 1));
 	size_t total_buffer_needed = 0;
 
 	// 1. Calculate total buffer size needed
@@ -232,7 +234,7 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 			int offset_x = int_x - tile_x;
 			int offset_y = int_y - tile_y;
 
-			pending_updates.push_back({ layer, offset_x, offset_y, update_w, update_h, total_buffer_needed });
+			pending_updates.push_back({ .layer = layer, .dest_x_in_tile = offset_x, .dest_y_in_tile = offset_y, .map_start_x = int_x, .map_start_y = int_y, .w = update_w, .h = update_h, .pbo_offset = total_buffer_needed });
 			total_buffer_needed += static_cast<size_t>(update_w) * update_h;
 		}
 	}
@@ -255,24 +257,12 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 
 	// 4. Fill Data
 	for (const auto& update : pending_updates) {
-		// Re-calculate map coordinates from update rect logic
-		// We stored offset_x/y (relative to tile), but to read from Map we need world coordinates.
-		// Map coords = tile_pos + offset.
-		// tile_pos is implicit from layer... wait. Layer = r * cols + c.
-		// We can reconstruct r/c from layer.
-		int r = update.layer / cols_;
-		int c = update.layer % cols_;
-		int tile_x = c * TILE_SIZE;
-		int tile_y = r * TILE_SIZE;
-		int map_start_x = tile_x + update.x;
-		int map_start_y = tile_y + update.y;
-
-		uint8_t* dest = ptr + update.offset;
+		uint8_t* dest = ptr + update.pbo_offset;
 		int idx = 0;
 
 		for (int dy = 0; dy < update.h; ++dy) {
 			for (int dx = 0; dx < update.w; ++dx) {
-				const Tile* tile = map.getTile(map_start_x + dx, map_start_y + dy, floor);
+				const Tile* tile = map.getTile(update.map_start_x + dx, update.map_start_y + dy, floor);
 				if (tile) {
 					dest[idx++] = tile->getMiniMapColor();
 				} else {
@@ -288,7 +278,7 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	for (const auto& update : pending_updates) {
-		glTextureSubImage3D(texture_id_->GetID(), 0, update.x, update.y, update.layer, update.w, update.h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(update.offset));
+		glTextureSubImage3D(texture_id_->GetID(), 0, update.dest_x_in_tile, update.dest_y_in_tile, update.layer, update.w, update.h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(update.pbo_offset));
 	}
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
