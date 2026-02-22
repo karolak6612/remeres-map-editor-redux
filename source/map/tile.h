@@ -48,6 +48,7 @@ enum {
 	TILESTATE_MODIFIED = 0x0040,
 	TILESTATE_HOOK_SOUTH = 0x0080,
 	TILESTATE_HOOK_EAST = 0x0100,
+	TILESTATE_HAS_LIGHT = 0x0200,
 };
 
 enum : uint8_t {
@@ -70,6 +71,9 @@ public:
 	Tile(int x, int y, int z);
 
 	~Tile();
+
+	Tile(const Tile&) = delete;
+	Tile& operator=(const Tile&) = delete;
 
 	// Argument is a the map to allocate the tile from
 	std::unique_ptr<Tile> deepCopy(BaseMap& map);
@@ -197,6 +201,10 @@ public: // Functions
 		return testFlags(statflags, TILESTATE_HOOK_EAST);
 	}
 
+	bool hasLight() const {
+		return testFlags(statflags, TILESTATE_HAS_LIGHT);
+	}
+
 	bool hasOptionalBorder() const {
 		return testFlags(statflags, TILESTATE_OP_BORDER);
 	}
@@ -238,20 +246,11 @@ public: // Functions
 	uint16_t getStatFlags() const;
 
 protected:
-	union {
-		struct {
-			uint16_t mapflags;
-			uint16_t statflags;
-		};
-		uint32_t flags;
-	};
+	uint16_t mapflags;
+	uint16_t statflags;
 
 private:
 	uint8_t minimapColor;
-
-	Tile(const Tile& tile); // No copy
-	Tile& operator=(const Tile& i); // Can't copy
-	Tile& operator==(const Tile& i); // Can't compare
 };
 
 bool tilePositionLessThan(const Tile* a, const Tile* b);

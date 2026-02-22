@@ -149,15 +149,6 @@ public:
 	int last_mmb_click_x;
 	int last_mmb_click_y;
 
-	// HUD cache
-	std::string hud_cached_text;
-	float hud_cached_bounds[4] = { 0 };
-	size_t hud_cached_selection_count = 0;
-	int hud_cached_x = -1;
-	int hud_cached_y = -1;
-	int hud_cached_z = -1;
-	double hud_cached_zoom = -1.0;
-
 	int view_scroll_x;
 	int view_scroll_y;
 
