@@ -60,6 +60,10 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 
 	dlg->SetSizerAndFit(sizer);
 
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(32, 32)));
+	dlg->SetIcon(icon);
+
 	// Show the window
 	dlg->ShowModal();
 	dlg->Destroy();
@@ -78,6 +82,10 @@ void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content)
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(0).Center());
 	dlg->SetSizerAndFit(topsizer);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_LINES, wxSize(32, 32)));
+	dlg->SetIcon(icon);
 
 	dlg->ShowModal();
 	dlg->Destroy();

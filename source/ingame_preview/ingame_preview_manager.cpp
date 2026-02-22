@@ -38,7 +38,7 @@ namespace IngamePreview {
 			// Safety: Listen for window destruction (e.g. if parent is destroyed)
 			window->Bind(wxEVT_DESTROY, &IngamePreviewManager::OnWindowDestroy, this);
 
-			g_gui.aui_manager->AddPane(window, wxAuiPaneInfo().Name("IngamePreview").Caption("In-game Preview").Right().Dockable(true).FloatingSize(FROM_DIP(g_gui.root, 400), FROM_DIP(g_gui.root, 300)).MinSize(FROM_DIP(g_gui.root, 200), FROM_DIP(g_gui.root, 150)).Hide());
+			g_gui.aui_manager->AddPane(window, wxAuiPaneInfo().Name("IngamePreview").Caption("In-game Preview").Icon(IMAGE_MANAGER.GetBitmapBundle(ICON_GAMEPAD)).Right().Dockable(true).FloatingSize(FROM_DIP(g_gui.root, 400), FROM_DIP(g_gui.root, 300)).MinSize(FROM_DIP(g_gui.root, 200), FROM_DIP(g_gui.root, 150)).Hide());
 
 			g_gui.aui_manager->GetPane(window).Show(true);
 		}

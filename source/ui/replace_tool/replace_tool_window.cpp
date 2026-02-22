@@ -292,6 +292,10 @@ void ReplaceToolWindow::InitLayout() {
 
 	SetSizer(rootSizer);
 	Layout();
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_WAND_MAGIC, wxSize(32, 32)));
+	SetIcon(icon);
 }
 
 void ReplaceToolWindow::OnLibraryItemSelected(uint16_t itemId) {

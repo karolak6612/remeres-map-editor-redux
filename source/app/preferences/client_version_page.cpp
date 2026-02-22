@@ -340,8 +340,14 @@ void ClientVersionPage::OnTreeContextMenu(wxTreeEvent& event) {
 	}
 
 	wxMenu menu;
+	menu.Append(wxID_ADD, "Add Client")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	menu.Append(wxID_COPY, "Duplicate")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_COPY));
+	menu.AppendSeparator();
+	menu.Append(wxID_DELETE, "Remove")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
+
+	menu.Bind(wxEVT_MENU, &ClientVersionPage::OnAddClient, this, wxID_ADD);
 	menu.Bind(wxEVT_MENU, &ClientVersionPage::OnDuplicateClient, this, wxID_COPY);
+	menu.Bind(wxEVT_MENU, &ClientVersionPage::OnDeleteClient, this, wxID_DELETE);
 
 	PopupMenu(&menu);
 }
