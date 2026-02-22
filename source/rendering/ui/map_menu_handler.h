@@ -25,6 +25,7 @@ public:
 	void OnCopyClientId(wxCommandEvent& event);
 	void OnCopyName(wxCommandEvent& event);
 	void OnBrowseTile(wxCommandEvent& event);
+	void OnTileProperties(wxCommandEvent& event);
 	void OnPaste(wxCommandEvent& event);
 	void OnDelete(wxCommandEvent& event);
 

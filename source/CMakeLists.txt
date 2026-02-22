@@ -220,6 +220,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/item_buttons.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/outfit_color_palette.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.h
 
@@ -236,6 +237,19 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/writable_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/splash_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/depot_properties_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/tile_properties_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/browse_field_list.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_creature_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/map_flags_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/custom_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/item_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_grid_canvas.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/depot_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/teleport_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/door_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_property_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/creature_property_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.h
@@ -559,6 +573,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/outfit_color_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.cpp
 
@@ -575,6 +590,18 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/writable_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/splash_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/depot_properties_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/tile_properties_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/browse_field_list.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_creature_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/map_flags_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/item_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_grid_canvas.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/container_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/depot_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/teleport_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/door_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/spawn_property_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/tile_properties/creature_property_panel.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dat_debug_view.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dcbutton.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_helper.cpp

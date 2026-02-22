@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
@@ -53,7 +53,7 @@ void SelectionOperations::borderizeSelection(Editor& editor) {
 		std::unique_ptr<Tile> newTile = tile->deepCopy(editor.map);
 		TileOperations::borderize(newTile.get(), &editor.map);
 		newTile->select();
-		action->addChange(std::make_unique<Change>(newTile.release()));
+		action->addChange(std::make_unique<Change>(std::move(newTile)));
 	}
 	editor.addAction(std::move(action));
 }
@@ -78,7 +78,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
 			}
 
 			newTile->select();
-			action->addChange(std::make_unique<Change>(newTile.release()));
+			action->addChange(std::make_unique<Change>(std::move(newTile)));
 		}
 	}
 	editor.addAction(std::move(action));
@@ -129,7 +129,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 
 		tmp_storage.push_back(tmp_storage_tile.release());
 		// Add the tile copy to the action
-		action->addChange(std::make_unique<Change>(new_src_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_src_tile)));
 	}
 	// Commit changes to map
 	batchAction->addAndCommitAction(std::move(action));
@@ -195,7 +195,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 			if (tile->ground && tile->ground->isSelected()) {
 				new_tile->selectGround();
 			}
-			action->addChange(std::make_unique<Change>(new_tile.release()));
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		}
 		// Commit changes to map
 		batchAction->addAndCommitAction(std::move(action));
@@ -235,7 +235,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 			new_dest_tile.reset(tile);
 		}
 
-		action->addChange(std::make_unique<Change>(new_dest_tile.release()));
+		action->addChange(std::make_unique<Change>(std::move(new_dest_tile)));
 	}
 
 	// Commit changes to the map
@@ -266,7 +266,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 				borderize_tiles.push_back(t);
 				add_me = true;
 			}
-			t = editor.map.getTile(pos.x + 1, pos.y - 1, pos.z);
+			t = editor.map.getTile(pos.x + 1, pos.y + 1, pos.z);
 			if (t && !t->isSelected()) {
 				borderize_tiles.push_back(t);
 				add_me = true;
@@ -320,7 +320,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 						new_tile->selectGround();
 					}
 
-					action->addChange(std::make_unique<Change>(new_tile.release()));
+					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				}
 			}
 		}
@@ -372,7 +372,7 @@ void SelectionOperations::destroySelection(Editor& editor) {
 					}
 				}
 			}
-			action->addChange(std::make_unique<Change>(newtile.release()));
+			action->addChange(std::make_unique<Change>(std::move(newtile)));
 		}
 
 		batch->addAndCommitAction(std::move(action));
@@ -393,12 +393,12 @@ void SelectionOperations::destroySelection(Editor& editor) {
 					TileOperations::wallize(new_tile.get(), &editor.map);
 					TileOperations::tableize(new_tile.get(), &editor.map);
 					TileOperations::carpetize(new_tile.get(), &editor.map);
-					action->addChange(std::make_unique<Change>(new_tile.release()));
+					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				} else {
 					std::unique_ptr<Tile> new_tile = editor.map.allocator(location);
 					TileOperations::borderize(new_tile.get(), &editor.map);
-					if (new_tile->size()) {
-						action->addChange(std::make_unique<Change>(new_tile.release()));
+					if (!new_tile->empty()) {
+						action->addChange(std::make_unique<Change>(std::move(new_tile)));
 					}
 				}
 			}

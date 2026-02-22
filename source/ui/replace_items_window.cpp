@@ -413,21 +413,21 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 
 		if (!result.empty()) {
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REPLACE_ITEMS);
-			for (std::vector<std::pair<Tile*, Item*>>::const_iterator rit = result.begin(); rit != result.end(); ++rit) {
-				std::unique_ptr<Tile> new_tile = rit->first->deepCopy(editor->map);
-				int index = rit->first->getIndexOf(rit->second);
+			for (const auto& [tile, itemToReplace] : result) {
+				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor->map);
+				int index = tile->getIndexOf(itemToReplace);
 				ASSERT(index != wxNOT_FOUND);
 				Item* item = new_tile->getItemAt(index);
-				ASSERT(item && item->getID() == rit->second->getID());
+				ASSERT(item && item->getID() == itemToReplace->getID());
 				transformItem(item, info.withId, new_tile.get());
-				action->addChange(std::make_unique<Change>(new_tile.release()));
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				total++;
 			}
 			editor->actionQueue->addAction(std::move(action));
 		}
 
 		done++;
-		const int value = static_cast<int>((done / items.size()) * 100);
+		const int value = static_cast<int>((static_cast<double>(done) / items.size()) * 100);
 		progress->SetValue(std::clamp<int>(value, 0, 100));
 		list->MarkAsComplete(info, total);
 	}

@@ -21,6 +21,7 @@
 #include "ui/dialog_util.h"
 #include "ui/gui.h"
 #include "ui/tool_options_window.h"
+#include "ui/tile_properties/tile_properties_panel.h"
 
 #include "map/map_statistics.h"
 #include "map/map_search.h"
@@ -523,6 +524,18 @@ void MainMenuBar::OnToolOptionsWindow(wxCommandEvent& event) {
 
 void MainMenuBar::OnIngamePreviewWindow(wxCommandEvent& event) {
 	g_preview.Create();
+}
+
+void MainMenuBar::OnTilePropertiesWindow(wxCommandEvent& event) {
+	if (g_gui.tile_properties_panel) {
+		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_gui.tile_properties_panel);
+		if (info.IsShown()) {
+			info.Hide();
+		} else {
+			info.Show();
+		}
+		g_gui.aui_manager->Update();
+	}
 }
 
 void MainMenuBar::OnNewPalette(wxCommandEvent& event) {

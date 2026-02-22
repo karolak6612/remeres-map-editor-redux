@@ -21,6 +21,7 @@
 #include "ui/main_menubar.h"
 #include "app/updater.h"
 #include "ui/map/export_tilesets_window.h"
+#include "ui/tile_properties/tile_properties_panel.h"
 #include <wx/stattext.h>
 #include <wx/slider.h>
 
@@ -71,11 +72,15 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 
 	g_gui.aui_manager->AddPane(g_gui.tabbook, wxAuiPaneInfo().CenterPane().Floatable(false).CloseButton(false).PaneBorder(false));
 
-	// Create Script Manager panel (dockable)
-	LuaScriptsWindow* scriptsWindow = newd LuaScriptsWindow(this);
-	LuaScriptsWindow::SetInstance(scriptsWindow);
-	g_gui.aui_manager->AddPane(scriptsWindow, wxAuiPaneInfo().Name("ScriptManager").Caption("Script Manager").Right().CloseButton(true).MaximizeButton(false).MinimizeButton(false).Floatable(true).BestSize(450, 350).MinSize(300, 200).Hide() // Hidden by default, show from menu
-	);
+// Create Script Manager panel (dockable)
+    LuaScriptsWindow* scriptsWindow = newd LuaScriptsWindow(this);
+    LuaScriptsWindow::SetInstance(scriptsWindow);
+    g_gui.aui_manager->AddPane(scriptsWindow, wxAuiPaneInfo().Name("ScriptManager").Caption("Script Manager").Right().CloseButton(true).MaximizeButton(false).MinimizeButton(false).Floatable(true).BestSize(450, 350).MinSize(300, 200).Hide() // Hidden by default, show from menu
+    );
+
+    // Create Tile Properties panel
+    g_gui.tile_properties_panel = newd TilePropertiesPanel(this);
+    g_gui.aui_manager->AddPane(g_gui.tile_properties_panel, wxAuiPaneInfo().Name("TileProperties").Caption("Tile Properties").Right().Layer(1).Position(1).CloseButton(true).MaximizeButton(true).Hide());
 
 	g_gui.aui_manager->Update();
 

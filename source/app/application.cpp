@@ -243,8 +243,8 @@ bool Application::OnInit() {
 		}
 	}
 	if (g_settings.getInteger(Config::USE_UPDATER) == 1) {
-		// UpdateChecker updater;
-		// updater.connect(g_gui.root);
+		m_updater = std::make_unique<UpdateChecker>();
+		m_updater->connect(g_gui.root);
 	}
 #endif
 
@@ -362,6 +362,11 @@ void Application::FixVersionDiscrapencies() {
 
 void Application::Unload() {
 	spdlog::info("Application::Unload started");
+
+#ifdef _USE_UPDATER_
+	m_updater.reset();
+#endif
+
 	g_gui.CloseAllEditors();
 	g_version.UnloadVersion();
 	g_hotkeys.SaveHotkeys();

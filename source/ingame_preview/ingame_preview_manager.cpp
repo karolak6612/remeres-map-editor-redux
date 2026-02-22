@@ -15,15 +15,13 @@ namespace IngamePreview {
 	}
 
 	IngamePreviewManager::~IngamePreviewManager() {
-		spdlog::debug("IngamePreviewManager destructor started");
-		spdlog::default_logger()->flush();
-		if (window && g_gui.aui_manager) {
-			spdlog::debug("IngamePreviewManager destructor - detaching window from aui_manager");
-			spdlog::default_logger()->flush();
-			g_gui.aui_manager->DetachPane(window.get());
+		if (window) {
+			window->Unbind(wxEVT_DESTROY, &IngamePreviewManager::OnWindowDestroy, this);
+			if (g_gui.aui_manager) {
+				g_gui.aui_manager->DetachPane(window);
+			}
+			// Window is managed by parent (g_gui.root) and nulled via OnWindowDestroy.
 		}
-		spdlog::debug("IngamePreviewManager destructor finished");
-		spdlog::default_logger()->flush();
 	}
 
 	void IngamePreviewManager::Create() {
@@ -33,12 +31,16 @@ namespace IngamePreview {
 		}
 
 		if (window) {
-			g_gui.aui_manager->GetPane(window.get()).Show(true);
+			g_gui.aui_manager->GetPane(window).Show(true);
 		} else {
-			window = std::make_unique<IngamePreviewWindow>(g_gui.root);
-			g_gui.aui_manager->AddPane(window.get(), wxAuiPaneInfo().Name("IngamePreview").Caption("In-game Preview").Right().Dockable(true).FloatingSize(400, 300).MinSize(200, 150).Hide());
+			window = new IngamePreviewWindow(g_gui.root);
 
-			g_gui.aui_manager->GetPane(window.get()).Show(true);
+			// Safety: Listen for window destruction (e.g. if parent is destroyed)
+			window->Bind(wxEVT_DESTROY, &IngamePreviewManager::OnWindowDestroy, this);
+
+			g_gui.aui_manager->AddPane(window, wxAuiPaneInfo().Name("IngamePreview").Caption("In-game Preview").Right().Dockable(true).FloatingSize(FROM_DIP(g_gui.root, 400), FROM_DIP(g_gui.root, 300)).MinSize(FROM_DIP(g_gui.root, 200), FROM_DIP(g_gui.root, 150)).Hide());
+
+			g_gui.aui_manager->GetPane(window).Show(true);
 		}
 		g_gui.aui_manager->Update();
 	}
@@ -49,32 +51,31 @@ namespace IngamePreview {
 		}
 
 		if (window) {
-			g_gui.aui_manager->GetPane(window.get()).Show(false);
+			g_gui.aui_manager->GetPane(window).Show(false);
 			g_gui.aui_manager->Update();
 		}
 	}
 
 	void IngamePreviewManager::Destroy() {
-		spdlog::debug("IngamePreviewManager::Destroy called");
-		spdlog::default_logger()->flush();
 		if (window) {
+			window->Unbind(wxEVT_DESTROY, &IngamePreviewManager::OnWindowDestroy, this);
+
 			if (g_gui.aui_manager) {
-				spdlog::debug("IngamePreviewManager::Destroy - detaching window from aui_manager");
-				spdlog::default_logger()->flush();
-				g_gui.aui_manager->DetachPane(window.get());
+				g_gui.aui_manager->DetachPane(window);
 			}
-			// window->Destroy(); // wxWindow::Destroy calls delete this; which might double free with unique_ptr
-			// However, if we detach from wx parent or AUI first...
-			// The style guide says use unique_ptr. Unique_ptr destructor calls delete.
-			// delete calls ~wxWindow(), which removes from parent. This is safe.
-			// Calling Destroy() queues deletion? No, for normal windows it's effectively delete.
-			// We just reset() the unique_ptr.
-			spdlog::debug("IngamePreviewManager::Destroy - resetting window (unique_ptr)");
-			spdlog::default_logger()->flush();
-			window.reset();
+
+			// Cache window pointer, set to nullptr to avoid reentrancy/handler recursion, then call Destroy().
+			wxWindow* win = window;
+			window = nullptr;
+			win->Destroy();
 		}
-		spdlog::debug("IngamePreviewManager::Destroy finished");
-		spdlog::default_logger()->flush();
+	}
+
+	void IngamePreviewManager::OnWindowDestroy(wxWindowDestroyEvent& e) {
+		if (e.GetEventObject() == window) {
+			window = nullptr;
+		}
+		e.Skip();
 	}
 
 	void IngamePreviewManager::Update() {
@@ -85,7 +86,7 @@ namespace IngamePreview {
 
 	bool IngamePreviewManager::IsVisible() const {
 		if (window && g_gui.aui_manager) {
-			const wxAuiPaneInfo& pi = g_gui.aui_manager->GetPane(window.get());
+			const wxAuiPaneInfo& pi = g_gui.aui_manager->GetPane(window);
 			return pi.IsShown();
 		}
 		return false;

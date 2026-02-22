@@ -131,7 +131,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 				}
 			}
 		}
-		action->addChange(std::make_unique<Change>(newtile.release()));
+		action->addChange(std::make_unique<Change>(std::move(newtile)));
 	}
 
 	batch->addAndCommitAction(std::move(action));
@@ -148,12 +148,12 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 				std::unique_ptr<Tile> new_tile = location->get()->deepCopy(editor.map);
 				TileOperations::borderize(new_tile.get(), &editor.map);
 				TileOperations::wallize(new_tile.get(), &editor.map);
-				action->addChange(std::make_unique<Change>(new_tile.release()));
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
 				TileOperations::borderize(new_tile.get(), &editor.map);
 				if (new_tile->size()) {
-					action->addChange(std::make_unique<Change>(new_tile.release()));
+					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				}
 			}
 		}
@@ -185,20 +185,20 @@ void CopyOperations::paste(Editor& editor, CopyBuffer& buffer, const Position& t
 		TileLocation* dest_location = editor.map.createTileL(pos);
 		std::unique_ptr<Tile> copy_tile = buffer_tile->deepCopy(editor.map);
 		Tile* old_dest_tile = dest_location->get();
-		Tile* new_dest_tile = nullptr;
+		std::unique_ptr<Tile> new_dest_tile_ptr;
 		copy_tile->setLocation(dest_location);
 
 		if (g_settings.getInteger(Config::MERGE_PASTE) || !copy_tile->ground) {
 			if (old_dest_tile) {
-				new_dest_tile = old_dest_tile->deepCopy(editor.map).release();
+				new_dest_tile_ptr = old_dest_tile->deepCopy(editor.map);
 			} else {
-				new_dest_tile = editor.map.allocator(dest_location).release();
+				new_dest_tile_ptr = editor.map.allocator(dest_location);
 			}
 			// copy_tile may be partially moved-from after the merge call
-			new_dest_tile->merge(copy_tile.get());
+			new_dest_tile_ptr->merge(copy_tile.get());
 		} else {
 			// If the copied tile has ground, replace target tile
-			new_dest_tile = copy_tile.release();
+			new_dest_tile_ptr = std::move(copy_tile);
 		}
 
 		// Add all surrounding tiles to the map, so they get borders
@@ -211,7 +211,7 @@ void CopyOperations::paste(Editor& editor, CopyBuffer& buffer, const Position& t
 		editor.map.createTile(pos.x, pos.y + 1, pos.z);
 		editor.map.createTile(pos.x + 1, pos.y + 1, pos.z);
 
-		action->addChange(std::make_unique<Change>(new_dest_tile));
+		action->addChange(std::make_unique<Change>(std::move(new_dest_tile_ptr)));
 	}
 	batchAction->addAndCommitAction(std::move(action));
 
@@ -287,7 +287,7 @@ void CopyOperations::paste(Editor& editor, CopyBuffer& buffer, const Position& t
 				}
 
 				TileOperations::wallize(newTile.get(), &map);
-				action->addChange(std::make_unique<Change>(newTile.release()));
+				action->addChange(std::make_unique<Change>(std::move(newTile)));
 			}
 		}
 
