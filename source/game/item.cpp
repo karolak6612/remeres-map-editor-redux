@@ -102,6 +102,7 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 		return nullptr;
 	}
 
+	uint16_t old_id = old_item->getID();
 	old_item->setID(new_id);
 	// Through the magic of deepCopy, this will now be a pointer to an item of the correct type.
 	std::unique_ptr<Item> new_item_ptr = old_item->deepCopy();
@@ -147,6 +148,9 @@ Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
 		}
 	}
 
+	// If we reached here, the item was not found in the parent or parent was null.
+	// Restore the old ID to keep the object consistent.
+	old_item->setID(old_id);
 	return nullptr;
 }
 
