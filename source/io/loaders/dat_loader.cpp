@@ -7,6 +7,8 @@
 #include <cstdint>
 #include <climits>
 #include <format>
+#include <ranges>
+#include <ranges>
 
 // Anonymous namespace for internal helpers and C++20/23 features
 namespace {
@@ -203,7 +205,7 @@ namespace {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
 
-		for (int i = 0; i < DatFlagLast; ++i) {
+		for (int count = 0; count < static_cast<int>(DatFlagLast); ++count) {
 			previous_flag = flag;
 			if (!file.getU8(flag)) {
 				warnings.push_back(std::format("Metadata: error reading flag for sprite id {}", sprite_id));
@@ -303,7 +305,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 			}
 		}
 
-		for (uint32_t k = 0; k < group_count; ++k) {
+		for (uint32_t k = 0; k < static_cast<uint32_t>(group_count); ++k) {
 			if (!ReadSpriteGroup(manager, file, sType, k, warnings)) {
 				error = wxstr(std::format("Failed to read sprite group {} for id {}", k, id));
 				return false;
@@ -392,7 +394,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		}
 
 		if (manager->has_frame_durations) {
-			for (int i = 0; i < frames; i++) {
+			for (int i = 0; i < static_cast<int>(frames); ++i) {
 				uint32_t min;
 				uint32_t max;
 				if (!file.getU32(min)) {

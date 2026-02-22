@@ -25,6 +25,9 @@
 #include "map/basemap.h"
 #include "game/items.h"
 
+#include <vector>
+#include <algorithm>
+
 //=============================================================================
 // Carpet brush
 
@@ -53,20 +56,9 @@ void CarpetBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 }
 
 void CarpetBrush::undraw(BaseMap* map, Tile* tile) {
-	auto& items = tile->items;
-	for (auto it = items.begin(); it != items.end();) {
-		Item* item = it->get();
-		if (item->isCarpet()) {
-			CarpetBrush* carpetBrush = item->getCarpetBrush();
-			if (carpetBrush) {
-				it = items.erase(it);
-			} else {
-				++it;
-			}
-		} else {
-			++it;
-		}
-	}
+	std::erase_if(tile->items, [](const auto& item) {
+		return item->isCarpet() && item->getCarpetBrush() != nullptr;
+	});
 }
 
 void CarpetBrush::getRelatedItems(std::vector<uint16_t>& items_out) {

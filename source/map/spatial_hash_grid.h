@@ -94,6 +94,9 @@ protected:
 	mutable std::vector<SortedGridCell> sorted_cells_cache;
 	mutable bool sorted_cells_dirty;
 
+	mutable uint64_t last_key = 0;
+	mutable GridCell* last_cell = nullptr;
+
 	// Traverses cells by iterating over the viewport coordinates.
 	// Efficient for small or dense viewports.
 	template <typename Func>

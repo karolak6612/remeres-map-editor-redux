@@ -13,6 +13,7 @@
 #include <spdlog/spdlog.h>
 #include <vector>
 #include <cstdint>
+#include <string_view>
 
 ImageManager& ImageManager::GetInstance() {
 	static ImageManager instance;
@@ -33,22 +34,22 @@ void ImageManager::ClearCache() {
 	m_glTextureCache.clear();
 }
 
-std::string ImageManager::ResolvePath(const std::string& assetPath) {
+std::string ImageManager::ResolvePath(std::string_view assetPath) {
 	// The path should be relative to the executable's "assets" directory
 	static wxString executablePath = wxStandardPaths::Get().GetExecutablePath();
 	static wxString assetsRoot = wxFileName(executablePath).GetPath() + wxFileName::GetPathSeparator() + "assets";
 
 	// Use full path joining to avoid stripping subdirectories
-	wxString fullPathLine = assetsRoot + wxFileName::GetPathSeparator() + wxString::FromUTF8(assetPath);
+	wxString fullPathLine = assetsRoot + wxFileName::GetPathSeparator() + wxString::FromUTF8(assetPath.data(), assetPath.size());
 	wxFileName fn(fullPathLine);
 
 	std::string fullPath = fn.GetFullPath().ToStdString();
 	return fullPath;
 }
 
-wxBitmapBundle ImageManager::GetBitmapBundle(const std::string& assetPath, const wxColour& tint) {
+wxBitmapBundle ImageManager::GetBitmapBundle(std::string_view assetPath, const wxColour& tint) {
 	std::string fullPath = ResolvePath(assetPath);
-	std::string cacheKey = assetPath;
+	std::string cacheKey(assetPath);
 	if (tint.IsOk()) {
 		cacheKey += "_" + std::to_string(tint.GetRGB());
 	}
@@ -88,7 +89,7 @@ wxBitmapBundle ImageManager::GetBitmapBundle(const std::string& assetPath, const
 	return bundle;
 }
 
-wxBitmap ImageManager::GetBitmap(const std::string& assetPath, const wxSize& size, const wxColour& tint) {
+wxBitmap ImageManager::GetBitmap(std::string_view assetPath, const wxSize& size, const wxColour& tint) {
 	wxBitmapBundle bundle = GetBitmapBundle(assetPath);
 	if (!bundle.IsOk()) {
 		return wxNullBitmap;
@@ -101,7 +102,7 @@ wxBitmap ImageManager::GetBitmap(const std::string& assetPath, const wxSize& siz
 	}
 
 	// For tinted bitmaps, use separate cache
-	std::pair<std::string, uint32_t> cacheKey = { assetPath, (uint32_t)tint.GetRGB() };
+	std::pair<std::string, uint32_t> cacheKey = { std::string(assetPath), static_cast<uint32_t>(tint.GetRGB()) };
 	auto it = m_tintedBitmapCache.find(cacheKey);
 	if (it != m_tintedBitmapCache.end()) {
 		return it->second;
@@ -143,8 +144,8 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 	return tinted;
 }
 
-int ImageManager::GetNanoVGImage(NVGcontext* vg, const std::string& assetPath, const wxColour& tint) {
-	NvgCacheKey cacheKey = { vg, assetPath, tint.IsOk() ? (uint32_t)tint.GetRGB() : 0xFFFFFFFF };
+int ImageManager::GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint) {
+	NvgCacheKey cacheKey = { vg, std::string(assetPath), tint.IsOk() ? static_cast<uint32_t>(tint.GetRGB()) : 0xFFFFFFFF };
 	auto it = m_nvgImageCache.find(cacheKey);
 	if (it != m_nvgImageCache.end()) {
 		return it->second;
@@ -205,7 +206,7 @@ int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& im
 	return nvgCreateImageRGBA(vg, w, h, 0, rgba.data());
 }
 
-uint32_t ImageManager::GetGLTexture(const std::string& assetPath) {
+uint32_t ImageManager::GetGLTexture(std::string_view assetPath) {
 	// Not implemented yet - usually we can use NanoVG's image as GL texture if we know how it's stored,
 	// or load it via glad.
 	return 0;

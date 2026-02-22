@@ -174,9 +174,81 @@ public:
 	bool getString(std::string& str);
 	bool getLongString(std::string& str);
 
+	// Diagnostic accessors
+	size_t getDataSize() const {
+		return data.size();
+	}
+	size_t getReadOffset() const {
+		return read_offset;
+	}
+	std::string hexDump(size_t maxBytes = 32) const {
+		std::string result;
+		size_t count = std::min(maxBytes, data.size());
+		for (size_t i = 0; i < count; ++i) {
+			char buf[4];
+			snprintf(buf, sizeof(buf), "%02X ", static_cast<uint8_t>(data[i]));
+			result += buf;
+		}
+		if (data.size() > maxBytes) {
+			result += "...";
+		}
+		return result;
+	}
+
 	BinaryNode* getChild();
 	// Returns this on success, nullptr on failure
 	BinaryNode* advance();
+
+	// Range support (Single-pass input iterator)
+	struct Iterator {
+		using iterator_category = std::input_iterator_tag;
+		using value_type = BinaryNode*;
+		using difference_type = std::ptrdiff_t;
+		using pointer = BinaryNode*;
+		using reference = BinaryNode*;
+
+		BinaryNode* current;
+
+		Iterator(BinaryNode* node) : current(node) { }
+
+		BinaryNode* operator*() const {
+			return current;
+		}
+		BinaryNode* operator->() const {
+			return current;
+		}
+		Iterator& operator++() {
+			if (current) {
+				current = current->advance();
+			}
+			return *this;
+		}
+		Iterator operator++(int) {
+			Iterator tmp = *this;
+			++(*this);
+			return tmp;
+		}
+		bool operator!=(const Iterator& other) const {
+			return current != other.current;
+		}
+		bool operator==(const Iterator& other) const {
+			return current == other.current;
+		}
+	};
+
+	struct ChildRange {
+		BinaryNode* parent;
+		Iterator begin() {
+			return Iterator(parent->getChild());
+		}
+		Iterator end() {
+			return Iterator(nullptr);
+		}
+	};
+
+	ChildRange children() {
+		return ChildRange { this };
+	}
 
 protected:
 	template <class T>

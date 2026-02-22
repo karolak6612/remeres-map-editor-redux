@@ -71,10 +71,13 @@ bool ItemSerializationOTBM::unserializeAttributes(const IOMap& maphandle, Binary
 	while (stream->getU8(attribute)) {
 		if (attribute == OTBM_ATTR_ATTRIBUTE_MAP) {
 			if (!item.unserializeAttributeMap(maphandle, stream)) {
+				spdlog::warn("Failed to read attribute map for item id={} ('{}')", item.getID(), item.getName());
 				return false;
 			}
 		} else if (!readAttribute(maphandle, static_cast<OTBM_ItemAttribute>(attribute), stream, item)) {
-			return false;
+			// Unrecognized or junk byte (e.g. trailing subtype written by some map editors).
+			// Stop reading attributes but don't fail — keep the item as-is.
+			break;
 		}
 	}
 	return true;

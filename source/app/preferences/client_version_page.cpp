@@ -27,22 +27,22 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	client_tree_ctrl->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	client_tree_ctrl->SetForegroundColour(Theme::Get(Theme::Role::Text));
 
-	left_inner_sizer->Add(client_tree_ctrl, 1, wxEXPAND | wxBOTTOM, 5);
+	left_inner_sizer->Add(client_tree_ctrl, wxSizerFlags(1).Expand().Border(wxBOTTOM, FROM_DIP(this, 5)));
 
 	wxSizer* btn_outer_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_client_btn = newd wxButton(left_panel, wxID_ANY, "+ Add");
-	add_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	add_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	delete_client_btn = newd wxButton(left_panel, wxID_ANY, "- Remove");
-	delete_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	delete_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
 
 	// Equal width for buttons
 	btn_outer_sizer->AddStretchSpacer(1);
-	btn_outer_sizer->Add(add_client_btn, 4, wxEXPAND | wxRIGHT, 2);
-	btn_outer_sizer->Add(delete_client_btn, 4, wxEXPAND | wxLEFT, 2);
+	btn_outer_sizer->Add(add_client_btn, wxSizerFlags(4).Expand().Border(wxRIGHT, FROM_DIP(this, 2)));
+	btn_outer_sizer->Add(delete_client_btn, wxSizerFlags(4).Expand().Border(wxLEFT, FROM_DIP(this, 2)));
 	btn_outer_sizer->AddStretchSpacer(1);
 
-	left_inner_sizer->Add(btn_outer_sizer, 0, wxEXPAND);
-	left_static_sizer->Add(left_inner_sizer, 1, wxEXPAND | wxALL, 5);
+	left_inner_sizer->Add(btn_outer_sizer, wxSizerFlags().Expand());
+	left_static_sizer->Add(left_inner_sizer, wxSizerFlags(1).Expand().Border(wxALL, 5));
 	left_panel->SetSizer(left_static_sizer);
 
 	// Right side: Property Grid
@@ -59,30 +59,30 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	client_prop_grid->SetCellTextColour(Theme::Get(Theme::Role::Text));
 	client_prop_grid->SetEmptySpaceColour(Theme::Get(Theme::Role::Background));
 
-	right_static_sizer->Add(client_prop_grid, 1, wxEXPAND | wxALL, 5);
+	right_static_sizer->Add(client_prop_grid, wxSizerFlags(1).Expand().Border(wxALL, 5));
 	right_panel->SetSizer(right_static_sizer);
 
 	client_splitter->SplitVertically(left_panel, right_panel, 250);
 	client_splitter->SetSashGravity(0.25);
 	client_splitter->SetMinimumPaneSize(150);
 
-	main_sizer->Add(client_splitter, 1, wxEXPAND | wxALL, 5);
+	main_sizer->Add(client_splitter, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
 	// General Settings (at the bottom)
 	wxStaticBoxSizer* settings_sizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Global Options");
 
 	wxBoxSizer* def_version_sizer = newd wxBoxSizer(wxHORIZONTAL);
-	def_version_sizer->Add(newd wxStaticText(this, wxID_ANY, "Default Client Version:"), 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, 5);
+	def_version_sizer->Add(newd wxStaticText(this, wxID_ANY, "Default Client Version:"), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, 5));
 	default_version_choice = newd wxChoice(this, wxID_ANY);
-	def_version_sizer->Add(default_version_choice, 1, wxEXPAND);
+	def_version_sizer->Add(default_version_choice, wxSizerFlags(1).Expand());
 
-	settings_sizer->Add(def_version_sizer, 0, wxEXPAND | wxALL, 5);
+	settings_sizer->Add(def_version_sizer, wxSizerFlags().Expand().Border(wxALL, 5));
 
 	check_sigs_chkbox = newd wxCheckBox(this, wxID_ANY, "Check file signatures");
 	check_sigs_chkbox->SetValue(g_settings.getInteger(Config::CHECK_SIGNATURES));
-	settings_sizer->Add(check_sigs_chkbox, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 5);
+	settings_sizer->Add(check_sigs_chkbox, wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, 5));
 
-	main_sizer->Add(settings_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 10);
+	main_sizer->Add(settings_sizer, wxSizerFlags().Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, 10));
 
 	SetSizer(main_sizer);
 
@@ -340,7 +340,7 @@ void ClientVersionPage::OnTreeContextMenu(wxTreeEvent& event) {
 	}
 
 	wxMenu menu;
-	menu.Append(wxID_COPY, "Duplicate")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	menu.Append(wxID_COPY, "Duplicate")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_COPY));
 	menu.Bind(wxEVT_MENU, &ClientVersionPage::OnDuplicateClient, this, wxID_COPY);
 
 	PopupMenu(&menu);

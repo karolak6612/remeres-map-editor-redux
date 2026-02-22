@@ -653,11 +653,7 @@ bool Tile::isContentEqual(const Tile* other) const {
 	}
 
 	// Compare items
-	if (items.size() != other->items.size()) {
-		return false;
-	}
-
-	return std::equal(items.begin(), items.end(), other->items.begin(), other->items.end(), [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }

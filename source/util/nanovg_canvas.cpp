@@ -10,6 +10,7 @@
 #include "util/nvg_utils.h"
 #include <nanovg_gl.h>
 #include "rendering/core/graphics.h"
+#include "ui/gui.h"
 
 #include <wx/dcclient.h>
 #include <algorithm>
@@ -52,7 +53,7 @@ void NanoVGCanvas::InitGL() {
 		return;
 	}
 
-	m_glContext = std::make_unique<wxGLContext>(this);
+	m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
 	if (!m_glContext->IsOK()) {
 		m_glContext.reset();
 		return;
