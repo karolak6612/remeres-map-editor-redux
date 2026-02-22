@@ -59,10 +59,10 @@ namespace LuaAPI {
 			// Read/write properties
 			"getCount", &Item::getCount,
 			"setCount", [](Item& item, int count) {
-				item.setSubtype(static_cast<uint16_t>(count));
+				item.setSubtype(static_cast<uint16_t>(std::clamp(count, 0, 65535)));
 			},
 			"count", sol::property(&Item::getCount, [](Item& item, int count) {
-				item.setSubtype(static_cast<uint16_t>(count));
+				item.setSubtype(static_cast<uint16_t>(std::clamp(count, 0, 65535)));
 			}),
 			"getSubtype", [](const Item& item) -> int { return item.getSubtype(); },
 			"setSubtype", [](Item& item, int subtype) { item.setSubtype(static_cast<uint16_t>(subtype)); },
@@ -120,6 +120,8 @@ namespace LuaAPI {
 					item.setAttribute(key, value.as<double>());
 				} else if (value.is<bool>()) {
 					item.setAttribute(key, value.as<bool>());
+				} else if (value.is<sol::nil_t>()) {
+					item.eraseAttribute(key);
 				}
 			},
 			"getAttribute", [](const Item& item, const std::string& key, sol::this_state ts) -> sol::object {

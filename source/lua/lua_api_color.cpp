@@ -18,6 +18,7 @@
 #include "app/main.h"
 #include "lua_api_color.h"
 #include <algorithm>
+#include <wx/colour.h>
 
 namespace LuaAPI {
 
@@ -26,27 +27,24 @@ namespace LuaAPI {
 
 		ColorStruct(int r = 0, int g = 0, int b = 0, int a = 255) :
 			r(r), g(g), b(b), a(a) { }
+
+		ColorStruct(const ColorStruct& other) = default;
 	};
 
 	void registerColor(sol::state& lua) {
-		sol::table Color = lua.create_named_table("Color");
-
-		// Register the struct as a usertype, but bind it to the table's metatable or constructor
-		// Actually, sol2 makes this cleaner. We can register the type, then attach static methods.
-
+		// Register the struct as a usertype named "Color"
+		// This makes 'Color(r, g, b)' work as a constructor
 		sol::usertype<ColorStruct> colorType = lua.new_usertype<ColorStruct>(
-			"ColorInstance", // Internal name, we'll expose it as 'Color' via the table manually
-			sol::constructors<ColorStruct(int, int, int), ColorStruct(int, int, int, int)>(),
+			"Color",
+			sol::call_constructor, sol::constructors<ColorStruct(int, int, int), ColorStruct(int, int, int, int)>(),
 			"r", &ColorStruct::r,
 			"g", &ColorStruct::g,
 			"b", &ColorStruct::b,
 			"a", &ColorStruct::a
 		);
 
-		// Make the table callable as a constructor
-		Color[sol::meta_function::call] = [](sol::table self, int r, int g, int b, sol::optional<int> a) {
-			return ColorStruct(r, g, b, a.value_or(255));
-		};
+		// Now add static methods to the 'Color' table (which represents the class)
+		sol::table Color = lua["Color"];
 
 		// Helper to create a color struct
 		auto mkColor = [](int r, int g, int b) {
@@ -67,7 +65,7 @@ namespace LuaAPI {
 			} catch (...) {
 				value = 0;
 			}
-			return ColorStruct((int)((value >> 16) & 0xFF), (int)((value >> 8) & 0xFF), (int)(value & 0xFF));
+			return ColorStruct(static_cast<int>((value >> 16) & 0xFF), static_cast<int>((value >> 8) & 0xFF), static_cast<int>(value & 0xFF));
 		};
 
 		Color["lighten"] = [](const ColorStruct& c, int percent) {

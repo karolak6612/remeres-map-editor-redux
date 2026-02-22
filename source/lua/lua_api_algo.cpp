@@ -521,7 +521,8 @@ namespace LuaAPI {
 		// algo.random(min, max) -> int
 		// Generate random number
 		algoTable.set_function("random", [](int min, int max) -> int {
-			static std::mt19937 rng(static_cast<int>(time(nullptr)));
+			static std::mt19937 rng(std::random_device{}());
+			if (min > max) std::swap(min, max);
 			std::uniform_int_distribution<int> dist(min, max);
 			return dist(rng);
 		});

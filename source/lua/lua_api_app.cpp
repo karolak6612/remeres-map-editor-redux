@@ -158,7 +158,7 @@ namespace LuaAPI {
 					// Create Change with the modified copy
 					// When actions commit, they will swap modifiedCopy in and originalTile out.
 					// The Action system handles metadata updates during its commit/undo.
-					std::unique_ptr<Change> change(new Change(std::move(modifiedCopyPtr)));
+					auto change = std::make_unique<Change>(std::move(modifiedCopyPtr));
 					action->addChange(std::move(change));
 				}
 			}

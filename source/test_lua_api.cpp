@@ -19,7 +19,26 @@
 #include "game/creature.h"
 #include "game/spawn.h"
 #include "map/position.h"
-#include "app/application.h"
+
+// We intentionally redefine Application here to inherit from wxAppConsole
+// instead of wxApp to allow running tests in a headless environment.
+#include <wx/app.h>
+
+class Application : public wxAppConsole {
+public:
+	virtual ~Application();
+	virtual bool OnInit() override;
+	virtual void OnEventLoopEnter(wxEventLoopBase* loop) override;
+	virtual void MacOpenFiles(const wxArrayString& fileNames);
+	virtual int OnExit() override;
+	virtual int OnRun() override;
+	void Unload();
+	virtual bool OnExceptionInMainLoop() override;
+	virtual void OnUnhandledException() override;
+	virtual void OnFatalException() override;
+	void FixVersionDiscrapencies();
+	bool ParseCommandLineMap(wxString& fileName);
+};
 
 // Setup minimal item database for testing
 void setup_test_items() {
@@ -128,6 +147,12 @@ void test_item(sol::state& lua) {
 
 		testItem:setAttribute("myInt", 123)
 		assert(testItem:getAttribute("myInt") == 123)
+
+		-- Test removing attribute
+		testItem:setAttribute("toRemove", "value")
+		assert(testItem:getAttribute("toRemove") == "value")
+		testItem:setAttribute("toRemove", nil)
+		assert(testItem:getAttribute("toRemove") == nil)
 	)LUA");
 
 	std::unique_ptr<Item> stackable = Item::Create(101);
@@ -139,6 +164,13 @@ void test_item(sol::state& lua) {
 		assert(stackableItem:getCount() == 50)
 		stackableItem:setCount(75)
 		assert(stackableItem:getCount() == 75)
+
+		-- Test clamp
+		stackableItem:setCount(70000)
+		assert(stackableItem:getCount() == 65535)
+
+		stackableItem.count = 80000
+		assert(stackableItem.count == 65535)
 	)LUA");
 
 	std::cout << "Item API PASSED" << std::endl;
@@ -241,6 +273,9 @@ void test_algo(sol::state& lua) {
 	lua.script(R"LUA(
 		local r = algo.random(1, 10)
 		assert(r >= 1 and r <= 10)
+
+		local r2 = algo.random(10, 1) -- Test swapped args
+		assert(r2 >= 1 and r2 <= 10)
 	)LUA");
 
 	std::cout << "Algo API PASSED" << std::endl;
@@ -282,9 +317,8 @@ void test_noise(sol::state& lua) {
 	std::cout << "Noise API PASSED" << std::endl;
 }
 
-// Implement Application methods to satisfy linker (dummy implementation)
+// Dummy Application implementation
 Application::~Application() {}
-bool Application::OnInit() { return true; }
 void Application::OnEventLoopEnter(wxEventLoopBase* loop) {}
 void Application::MacOpenFiles(const wxArrayString& fileNames) {}
 int Application::OnExit() { return 0; }
@@ -296,20 +330,15 @@ void Application::OnFatalException() {}
 void Application::FixVersionDiscrapencies() {}
 bool Application::ParseCommandLineMap(wxString& fileName) { return false; }
 
-Application& wxGetApp() {
-	static Application app;
-	return app;
-}
-
-int main() {
-	std::cout << "========================================" << std::endl;
-	std::cout << "Lua API Unit Tests" << std::endl;
-	std::cout << "========================================" << std::endl;
-
-	setup_test_items();
-
-	// Scope lua state to ensure destruction before return
+bool Application::OnInit() {
+	// Run tests here
 	try {
+		std::cout << "========================================" << std::endl;
+		std::cout << "Lua API Unit Tests" << std::endl;
+		std::cout << "========================================" << std::endl;
+
+		setup_test_items();
+
 		sol::state lua;
 		lua.open_libraries(sol::lib::base, sol::lib::math, sol::lib::string, sol::lib::table, sol::lib::debug);
 
@@ -330,9 +359,14 @@ int main() {
 		std::cout << "========================================" << std::endl;
 	} catch (const sol::error& e) {
 		std::cerr << "Lua Error: " << e.what() << std::endl;
-		return 1;
+		exit(1);
 	} catch (const std::exception& e) {
 		std::cerr << "Exception: " << e.what() << std::endl;
-		return 1;
+		exit(1);
 	}
+
+	// Return false to exit immediately after tests (and skip message loop)
+	return false;
 }
+
+wxIMPLEMENT_APP_CONSOLE(Application);
