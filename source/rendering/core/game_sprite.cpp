@@ -68,7 +68,8 @@ GameSprite::GameSprite() :
 	draw_height(0),
 	drawoffset_x(0),
 	drawoffset_y(0),
-	minimap_color(0) {
+	minimap_color(0),
+	is_simple(false) {
 	// dc initialized to nullptr by unique_ptr default ctor
 }
 
@@ -98,7 +99,7 @@ int GameSprite::getDrawHeight() const {
 }
 
 bool GameSprite::isSimpleAndLoaded() const {
-	return numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1 && !spriteList.empty() && spriteList[0]->isGLLoaded;
+	return is_simple && spriteList[0]->isGLLoaded;
 }
 
 uint32_t GameSprite::getDebugImageId(size_t index) const {
@@ -125,7 +126,10 @@ uint8_t GameSprite::getMiniMapColor() const {
 }
 
 size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {
-	size_t idx = frame % this->frames;
+	if (is_simple) {
+		return 0;
+	}
+	size_t idx = (this->frames > 1) ? frame % this->frames : 0;
 	// Cast operands to size_t to force 64-bit arithmetic and avoid overflow
 	idx = idx * static_cast<size_t>(this->pattern_z) + static_cast<size_t>(pattern_z);
 	idx = idx * static_cast<size_t>(this->pattern_y) + static_cast<size_t>(pattern_y);
@@ -203,6 +207,11 @@ GameSprite::TemplateImage* GameSprite::getTemplateImage(int sprite_index, const 
 	});
 
 	if (it != instanced_templates.end()) {
+		// Move-to-front optimization
+		if (it != instanced_templates.begin()) {
+			std::iter_swap(it, instanced_templates.begin());
+			return instanced_templates.front().get();
+		}
 		return it->get();
 	}
 

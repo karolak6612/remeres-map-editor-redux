@@ -13,6 +13,17 @@
 
 #include <spdlog/spdlog.h>
 
+namespace {
+	static constexpr float GROW_FACTOR = 2.0f;
+	static constexpr float SHADOW_ALPHA_BASE = 20.0f;
+	static constexpr float SHADOW_ALPHA_FACTOR = 64.0f;
+	static constexpr float SHADOW_BLUR_BASE = 6.0f;
+	static constexpr float SHADOW_BLUR_FACTOR = 4.0f;
+	static constexpr int TIMER_INTERVAL = 16;
+	static constexpr float INTER_THRESHOLD = 0.01f;
+	static constexpr float INTER_FACTOR = 0.2f;
+}
+
 VirtualBrushGrid::VirtualBrushGrid(wxWindow* parent, const TilesetCategory* _tileset, RenderSize rsz) :
 	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS),
 	BrushBoxInterface(_tileset),
@@ -93,6 +104,15 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	float w = static_cast<float>(rect.width);
 	float h = static_cast<float>(rect.height);
 
+	// Animation scaling
+	if (i == hover_index) {
+		float grow = GROW_FACTOR * hover_anim;
+		x -= grow;
+		y -= grow;
+		w += grow * 2.0f;
+		h += grow * 2.0f;
+	}
+
 	// Shadow / Glow
 	if (i == selected_index) {
 		// Glow for selected
@@ -104,10 +124,12 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
 	} else if (i == hover_index) {
-		// Subtle shadow/glow for hover
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, 6.0f, nvgRGBA(0, 0, 0, 64), nvgRGBA(0, 0, 0, 0));
+		// Animated shadow for hover
+		float shadowAlpha = SHADOW_ALPHA_FACTOR * hover_anim + SHADOW_ALPHA_BASE;
+		float shadowBlur = SHADOW_BLUR_BASE + SHADOW_BLUR_FACTOR * hover_anim;
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, shadowBlur, nvgRGBA(0, 0, 0, static_cast<int>(shadowAlpha)), nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
-		nvgRect(vg, x - 5, y - 5, w + 10, h + 10);
+		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillPaint(vg, shadowPaint);
@@ -264,7 +286,15 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 
 	if (index != hover_index) {
 		hover_index = index;
+		if (index != -1) {
+			hover_anim = 0.0f; // Reset animation for new target
+		}
+		if (!m_animTimer.IsRunning()) {
+			m_animTimer.Start(TIMER_INTERVAL);
+		}
 		Refresh();
+	} else if (hover_index != -1 && !m_animTimer.IsRunning()) {
+		m_animTimer.Start(TIMER_INTERVAL);
 	}
 
 	// Tooltip
@@ -284,8 +314,16 @@ void VirtualBrushGrid::OnMotion(wxMouseEvent& event) {
 }
 
 void VirtualBrushGrid::OnTimer(wxTimerEvent& event) {
-	// Animation tick for hover effects (optional - can be enhanced later)
-	Refresh();
+	float target = (hover_index != -1) ? 1.0f : 0.0f;
+	if (std::abs(hover_anim - target) > INTER_THRESHOLD) {
+		hover_anim += (target - hover_anim) * INTER_FACTOR;
+		Refresh();
+	} else {
+		hover_anim = target;
+		if (hover_index == -1) {
+			m_animTimer.Stop();
+		}
+	}
 }
 
 void VirtualBrushGrid::OnSize(wxSizeEvent& event) {

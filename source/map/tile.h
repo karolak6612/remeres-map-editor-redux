@@ -72,6 +72,9 @@ public:
 
 	~Tile();
 
+	Tile(const Tile&) = delete;
+	Tile& operator=(const Tile&) = delete;
+
 	// Argument is a the map to allocate the tile from
 	std::unique_ptr<Tile> deepCopy(BaseMap& map);
 
@@ -243,20 +246,11 @@ public: // Functions
 	uint16_t getStatFlags() const;
 
 protected:
-	union {
-		struct {
-			uint16_t mapflags;
-			uint16_t statflags;
-		};
-		uint32_t flags;
-	};
+	uint16_t mapflags;
+	uint16_t statflags;
 
 private:
 	uint8_t minimapColor;
-
-	Tile(const Tile& tile); // No copy
-	Tile& operator=(const Tile& i); // Can't copy
-	Tile& operator==(const Tile& i); // Can't compare
 };
 
 bool tilePositionLessThan(const Tile* a, const Tile* b);

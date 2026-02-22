@@ -23,6 +23,7 @@
 #include "map/spatial_hash_grid.h"
 #include <utility>
 #include <unordered_map>
+#include <array>
 
 class Tile;
 class Floor;
@@ -30,9 +31,8 @@ class BaseMap;
 class MapNode;
 
 class TileLocation {
-	TileLocation();
-
 public:
+	TileLocation();
 	~TileLocation();
 
 	TileLocation(const TileLocation&) = delete;
@@ -120,7 +120,7 @@ public:
 class Floor {
 public:
 	Floor(int x, int y, int z);
-	TileLocation locs[MAP_LAYERS];
+	std::array<TileLocation, MAP_LAYERS> locs;
 };
 
 class MapNode {
