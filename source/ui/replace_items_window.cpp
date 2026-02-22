@@ -427,7 +427,7 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		}
 
 		done++;
-		const int value = static_cast<int>((done / items.size()) * 100);
+		const int value = static_cast<int>((static_cast<double>(done) / items.size()) * 100);
 		progress->SetValue(std::clamp<int>(value, 0, 100));
 		list->MarkAsComplete(info, total);
 	}

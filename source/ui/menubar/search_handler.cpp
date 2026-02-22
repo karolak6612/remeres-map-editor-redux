@@ -202,11 +202,11 @@ void SearchHandler::SearchItems(bool unique, bool action, bool container, bool w
 	finder.sort();
 
 	std::vector<SearchResult> found;
-	for (const auto& pair : finder.found) {
+	for (const auto& [tile, item] : finder.found) {
 		SearchResult res;
-		res.tile = pair.first;
-		res.item = pair.second;
-		res.description = finder.desc(res.item).ToStdString();
+		res.tile = tile;
+		res.item = item;
+		res.description = finder.desc(item).utf8_string();
 		found.push_back(res);
 	}
 

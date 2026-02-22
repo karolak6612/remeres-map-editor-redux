@@ -191,8 +191,7 @@ namespace {
 			}
 
 			default: {
-				std::string err = std::format("Metadata: Unknown flag: {}. Previous flag: {}.", static_cast<int>(flag), static_cast<int>(previous_flag));
-				warnings.push_back(err);
+				warnings.push_back(std::format("Metadata: Unknown flag: {}. Previous flag: {}.", static_cast<int>(flag), static_cast<int>(previous_flag)));
 				break;
 			}
 		}
@@ -233,7 +232,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 
 	if (!file.isOk()) {
 		// C++20 std::format
-		error += std::format("Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().ToStdString(), file.getErrorMessage());
+		error += wxstr(std::format("Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().utf8_string(), file.getErrorMessage()));
 		return false;
 	}
 
@@ -270,7 +269,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 	manager->dat_format = manager->client_version->getDatFormatForSignature(datSignature);
 
 	if (manager->dat_format == DAT_FORMAT_UNKNOWN) {
-		error = std::format("Unknown dat signature: {:x}", datSignature);
+		error = wxstr(std::format("Unknown dat signature: {:#x}", datSignature));
 		return false;
 	}
 
@@ -291,7 +290,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 
 		// Load flags
 		if (!LoadMetadataFlags(manager->dat_format, file, sType, id, warnings)) {
-			error = std::format("Failed to read metadata flags for id {}", id);
+			error = wxstr(std::format("Failed to read metadata flags for id {}", id));
 			return false;
 		}
 
@@ -299,14 +298,14 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 		uint8_t group_count = 1;
 		if (manager->has_frame_groups && id > manager->item_count) {
 			if (!file.getU8(group_count)) {
-				error = std::format("Failed to read group count for id {}", id);
+				error = wxstr(std::format("Failed to read group count for id {}", id));
 				return false;
 			}
 		}
 
 		for (uint32_t k = 0; k < group_count; ++k) {
 			if (!ReadSpriteGroup(manager, file, sType, k, warnings)) {
-				error = std::format("Failed to read sprite group {} for id {}", k, id);
+				error = wxstr(std::format("Failed to read sprite group {} for id {}", k, id));
 				return false;
 			}
 		}
