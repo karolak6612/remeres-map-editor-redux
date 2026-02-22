@@ -1,5 +1,5 @@
 #include "ui/menubar/view_settings_handler.h"
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "ui/gui.h"
 #include "app/preferences.h"
 #include <format>

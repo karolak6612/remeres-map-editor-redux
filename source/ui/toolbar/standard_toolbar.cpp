@@ -6,7 +6,7 @@
 #include "ui/toolbar/standard_toolbar.h"
 #include "ui/gui.h"
 #include "ui/gui_ids.h"
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "util/image_manager.h"

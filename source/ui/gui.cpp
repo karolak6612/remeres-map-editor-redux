@@ -24,7 +24,7 @@
 
 #include "ui/gui.h"
 #include "util/file_system.h"
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "ui/dialog_util.h"
 
 #include "editor/editor.h"
@@ -41,14 +41,14 @@
 #include "brushes/spawn/spawn_brush.h"
 
 #include "ui/controls/item_buttons.h"
-#include "ui/result_window.h"
+#include "ui/windows/result_window.h"
 #include "rendering/ui/minimap_window.h"
-#include "palette/palette_window.h"
-#include "palette/house/house_palette.h"
+#include "ui/palettes/palette_window.h"
+#include "ui/palettes/house/house_palette.h"
 #include "rendering/ui/map_display.h"
 #include "app/application.h"
-#include "ui/welcome_dialog.h"
-#include "ui/tool_options_window.h"
+#include "ui/dialogs/welcome_dialog.h"
+#include "ui/windows/tool_options_window.h"
 
 #include "live/live_client.h"
 #include "live/live_tab.h"

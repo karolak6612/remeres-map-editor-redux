@@ -1,7 +1,7 @@
 #include "ui/menubar/palette_menu_handler.h"
 #include "app/main.h"
 #include "ui/gui.h"
-#include "palette/house/house_palette.h"
+#include "ui/palettes/house/house_palette.h"
 
 PaletteMenuHandler::PaletteMenuHandler(MainFrame* frame, MainMenuBar* menubar) :
 	frame(frame), menubar(menubar) {

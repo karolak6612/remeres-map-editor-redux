@@ -6,7 +6,7 @@
 #define RME_UI_TOOLBAR_TOOLBAR_PERSISTENCE_H_
 
 #include <wx/aui/aui.h>
-#include "ui/main_toolbar.h"
+#include "ui/toolbar/main_toolbar.h"
 
 class ToolbarPersistence {
 public:

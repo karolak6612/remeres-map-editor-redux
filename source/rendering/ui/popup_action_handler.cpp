@@ -22,8 +22,8 @@
 #include "map/tile.h"
 #include "game/item.h"
 #include "ui/gui.h"
-#include "ui/browse_tile_window.h"
-#include "ui/tileset_window.h"
+#include "ui/windows/browse_tile_window.h"
+#include "ui/windows/tileset_window.h"
 #include "ui/dialog_helper.h"
 #include "brushes/brush.h"
 #include <ranges>

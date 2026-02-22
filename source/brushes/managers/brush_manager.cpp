@@ -9,13 +9,13 @@
 #include "brushes/managers/doodad_preview_manager.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "ui/managers/status_manager.h"
-#include "palette/managers/palette_manager.h"
-#include "palette/palette_window.h"
-#include "palette/house/house_palette.h"
+#include "ui/palettes/managers/palette_manager.h"
+#include "ui/palettes/palette_window.h"
+#include "ui/palettes/house/house_palette.h"
 #include "map/map.h"
 #include "map/basemap.h"
 #include "ui/gui.h"
-#include "ui/main_toolbar.h"
+#include "ui/toolbar/main_toolbar.h"
 #include <algorithm>
 #include <array>
 

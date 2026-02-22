@@ -1,7 +1,7 @@
 #include "ui/menubar/menubar_action_manager.h"
 
 #include "app/main.h"
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "ui/gui.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"

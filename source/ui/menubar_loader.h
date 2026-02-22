@@ -5,7 +5,7 @@
 #ifndef RME_UI_MENUBAR_LOADER_H_
 #define RME_UI_MENUBAR_LOADER_H_
 
-#include "ui/main_menubar.h"
+#include "ui/menubar/main_menubar.h"
 #include "ext/pugixml.hpp"
 #include <unordered_map>
 #include <list>

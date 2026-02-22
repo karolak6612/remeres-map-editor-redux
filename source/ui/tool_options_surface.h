@@ -5,7 +5,7 @@
 #include <wx/wx.h>
 #include <wx/timer.h>
 #include <vector>
-#include "palette/palette_common.h"
+#include "ui/palettes/palette_common.h"
 
 class Brush;
 
