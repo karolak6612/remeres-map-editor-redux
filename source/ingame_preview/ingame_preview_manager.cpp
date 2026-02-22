@@ -58,6 +58,8 @@ namespace IngamePreview {
 
 	void IngamePreviewManager::Destroy() {
 		if (window) {
+			window->Unbind(wxEVT_DESTROY, &IngamePreviewManager::OnWindowDestroy, this);
+
 			if (g_gui.aui_manager) {
 				g_gui.aui_manager->DetachPane(window);
 			}
