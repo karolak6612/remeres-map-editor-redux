@@ -19,6 +19,7 @@
 #include "lua_api_algo.h"
 
 #include <vector>
+#include <ctime>
 #include <random>
 #include <algorithm>
 #include <cmath>
@@ -516,6 +517,15 @@ namespace LuaAPI {
 		// ========================================
 		// SMOOTHING ALGORITHMS
 		// ========================================
+
+		// algo.random(min, max) -> int
+		// Generate random number
+		algoTable.set_function("random", [](int min, int max) -> int {
+			static std::mt19937 rng(std::random_device{}());
+			if (min > max) std::swap(min, max);
+			std::uniform_int_distribution<int> dist(min, max);
+			return dist(rng);
+		});
 
 		// algo.smooth(grid, options) -> grid
 		// Gaussian-like smoothing for grids

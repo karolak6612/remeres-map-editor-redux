@@ -187,4 +187,50 @@ if(RME_BUILD_TESTS)
     target_link_libraries(test_autoborder_preview PRIVATE sol2::sol2)
     target_link_libraries(test_autoborder_preview PRIVATE cpr::cpr)
 
+	# Lua API Test
+	add_executable(test_lua_api ${rme_H} ${rme_SRC_TEST} ${CMAKE_CURRENT_SOURCE_DIR}/source/test_lua_api.cpp)
+	target_compile_definitions(test_lua_api PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
+
+	target_include_directories(test_lua_api PRIVATE
+		${Boost_INCLUDE_DIRS}
+		${OPENGL_INCLUDE_DIR}
+		${ZLIB_INCLUDE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/source
+	)
+
+	if(TARGET wxWidgets::wxWidgets)
+		target_link_libraries(test_lua_api PRIVATE wxWidgets::wxWidgets)
+	else()
+		target_link_libraries(test_lua_api PRIVATE ${wxWidgets_LIBRARIES})
+	endif()
+
+	if(TARGET Boost::boost)
+		target_link_libraries(test_lua_api PRIVATE Boost::boost Boost::thread Boost::system)
+	else()
+		target_link_libraries(test_lua_api PRIVATE ${Boost_LIBRARIES})
+	endif()
+
+	if(TARGET ZLIB::ZLIB)
+		target_link_libraries(test_lua_api PRIVATE ZLIB::ZLIB)
+	else()
+		target_link_libraries(test_lua_api PRIVATE ${ZLIB_LIBRARIES})
+	endif()
+
+	target_link_libraries(test_lua_api PRIVATE ${OPENGL_LIBRARIES})
+	target_link_libraries(test_lua_api PRIVATE glad::glad)
+	target_link_libraries(test_lua_api PRIVATE glm::glm)
+	target_link_libraries(test_lua_api PRIVATE nanovg::nanovg)
+	target_link_libraries(test_lua_api PRIVATE spdlog::spdlog)
+	target_link_libraries(test_lua_api PRIVATE tomlplusplus::tomlplusplus)
+	target_link_libraries(test_lua_api PRIVATE ${LUA_LIBRARIES})
+	target_link_libraries(test_lua_api PRIVATE sol2::sol2)
+	target_link_libraries(test_lua_api PRIVATE cpr::cpr)
+
+	set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+	set_target_properties(test_lua_api PROPERTIES
+		RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+		RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin
+		RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin
+	)
+
 endif()

@@ -340,7 +340,9 @@ namespace LuaAPI {
 			"hasGround", sol::property([](Tile* tile) { return tile && tile->hasGround(); }),
 
 			// Items collection (read-only - use addItem/removeItem to modify)
+			"getItems", getTileItems,
 			"items", sol::property(getTileItems),
+			"getItemCount", [](Tile* tile) { return tile ? tile->size() : 0; },
 			"itemCount", sol::property([](Tile* tile) { return tile ? tile->size() : 0; }),
 
 			// House

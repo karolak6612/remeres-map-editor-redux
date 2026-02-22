@@ -141,7 +141,6 @@ namespace LuaAPI {
 				if (modifiedTile) {
 					// Create a deep copy of the modified tile - this is what we want as the "new" state
 					std::unique_ptr<Tile> modifiedCopyPtr = modifiedTile->deepCopy(editor->map);
-					Tile* modifiedCopy = modifiedCopyPtr.release();
 
 					// Swap the original back into the map
 					std::unique_ptr<Tile> swappedOutPtr = editor->map.swapTile(pos, std::move(originalTilePtr));
@@ -159,7 +158,7 @@ namespace LuaAPI {
 					// Create Change with the modified copy
 					// When actions commit, they will swap modifiedCopy in and originalTile out.
 					// The Action system handles metadata updates during its commit/undo.
-					std::unique_ptr<Change> change(new Change(modifiedCopy));
+					auto change = std::make_unique<Change>(std::move(modifiedCopyPtr));
 					action->addChange(std::move(change));
 				}
 			}
