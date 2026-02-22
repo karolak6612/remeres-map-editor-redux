@@ -47,20 +47,40 @@ namespace LuaAPI {
 			sol::no_constructor,
 
 			// Read-only properties
+			"getID", &Item::getID,
 			"id", sol::property(&Item::getID),
+			"getClientID", &Item::getClientID,
 			"clientId", sol::property(&Item::getClientID),
+			"getName", &Item::getName,
 			"name", sol::property(&Item::getName),
+			"getFullName", &Item::getFullName,
 			"fullName", sol::property(&Item::getFullName),
 
 			// Read/write properties
+			"getCount", &Item::getCount,
+			"setCount", [](Item& item, int count) {
+				item.setSubtype(static_cast<uint16_t>(count));
+			},
 			"count", sol::property(&Item::getCount, [](Item& item, int count) {
 				item.setSubtype(static_cast<uint16_t>(count));
 			}),
+			"getSubtype", [](const Item& item) -> int { return item.getSubtype(); },
+			"setSubtype", [](Item& item, int subtype) { item.setSubtype(static_cast<uint16_t>(subtype)); },
 			"subtype", sol::property([](const Item& item) -> int { return item.getSubtype(); }, [](Item& item, int subtype) { item.setSubtype(static_cast<uint16_t>(subtype)); }),
+			"getActionID", [](const Item& item) -> int { return item.getActionID(); },
+			"setActionID", [](Item& item, int aid) { item.setActionID(static_cast<uint16_t>(aid)); },
 			"actionId", sol::property([](const Item& item) -> int { return item.getActionID(); }, [](Item& item, int aid) { item.setActionID(static_cast<uint16_t>(aid)); }),
+			"getUniqueID", [](const Item& item) -> int { return item.getUniqueID(); },
+			"setUniqueID", [](Item& item, int uid) { item.setUniqueID(static_cast<uint16_t>(uid)); },
 			"uniqueId", sol::property([](const Item& item) -> int { return item.getUniqueID(); }, [](Item& item, int uid) { item.setUniqueID(static_cast<uint16_t>(uid)); }),
+			"getTier", [](const Item& item) -> int { return item.getTier(); },
+			"setTier", [](Item& item, int tier) { item.setTier(static_cast<uint16_t>(tier)); },
 			"tier", sol::property([](const Item& item) -> int { return item.getTier(); }, [](Item& item, int tier) { item.setTier(static_cast<uint16_t>(tier)); }),
+			"getText", &Item::getText,
+			"setText", &Item::setText,
 			"text", sol::property(&Item::getText, &Item::setText),
+			"getDescription", &Item::getDescription,
+			"setDescription", &Item::setDescription,
 			"description", sol::property(&Item::getDescription, &Item::setDescription),
 
 			// Selection
@@ -69,27 +89,47 @@ namespace LuaAPI {
 			"deselect", &Item::deselect,
 
 			// Type checks (read-only)
-			"isStackable", sol::property(&Item::isStackable),
-			"isMoveable", sol::property(&Item::isMoveable),
-			"isPickupable", sol::property(&Item::isPickupable),
-			"isBlocking", sol::property(&Item::isBlocking),
-			"isGroundTile", sol::property(&Item::isGroundTile),
-			"isBorder", sol::property(&Item::isBorder),
-			"isWall", sol::property(&Item::isWall),
-			"isDoor", sol::property(&Item::isDoor),
-			"isTable", sol::property(&Item::isTable),
-			"isCarpet", sol::property(&Item::isCarpet),
-			"isHangable", sol::property(&Item::isHangable),
-			"isRoteable", sol::property(&Item::isRoteable),
-			"isFluidContainer", sol::property(&Item::isFluidContainer),
-			"isSplash", sol::property(&Item::isSplash),
-			"hasCharges", sol::property(&Item::hasCharges),
+			"isStackable", &Item::isStackable,
+			"isMoveable", &Item::isMoveable,
+			"isPickupable", &Item::isPickupable,
+			"isBlocking", &Item::isBlocking,
+			"isGroundTile", &Item::isGroundTile,
+			"isBorder", &Item::isBorder,
+			"isWall", &Item::isWall,
+			"isDoor", &Item::isDoor,
+			"isTable", &Item::isTable,
+			"isCarpet", &Item::isCarpet,
+			"isHangable", &Item::isHangable,
+			"isRoteable", &Item::isRoteable,
+			"isFluidContainer", &Item::isFluidContainer,
+			"isSplash", &Item::isSplash,
+			"hasCharges", &Item::hasCharges,
+			"isContainer", [](const Item& item) { return item.asContainer() != nullptr; },
 			"hasElevation", sol::property([](const Item& item) {
 				return g_items[item.getID()].hasElevation;
 			}),
 			"zOrder", sol::property(&Item::getTopOrder),
 
 			// Methods
+			"setAttribute", [](Item& item, const std::string& key, sol::object value) {
+				if (value.is<std::string>()) {
+					item.setAttribute(key, value.as<std::string>());
+				} else if (value.is<int>()) {
+					item.setAttribute(key, value.as<int>());
+				} else if (value.is<double>()) {
+					item.setAttribute(key, value.as<double>());
+				} else if (value.is<bool>()) {
+					item.setAttribute(key, value.as<bool>());
+				}
+			},
+			"getAttribute", [](const Item& item, const std::string& key, sol::this_state ts) -> sol::object {
+				sol::state_view lua(ts);
+				if (const std::string* s = item.getStringAttribute(key)) return sol::make_object(lua, *s);
+				if (const int32_t* i = item.getIntegerAttribute(key)) return sol::make_object(lua, *i);
+				if (const double* d = item.getFloatAttribute(key)) return sol::make_object(lua, *d);
+				if (const bool* b = item.getBooleanAttribute(key)) return sol::make_object(lua, *b);
+				return sol::make_object(lua, sol::nil);
+			},
 			"clone", [](const Item& item) -> std::unique_ptr<Item> { return item.deepCopy(); },
 			"rotate", &Item::doRotate,
 

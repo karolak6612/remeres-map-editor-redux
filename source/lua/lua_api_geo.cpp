@@ -763,19 +763,33 @@ namespace LuaAPI {
 		// DISTANCE FUNCTIONS
 		// ========================================
 
-		// geo.distance(x1, y1, x2, y2) -> number (Euclidean distance)
-		geoTable.set_function("distance", [](float x1, float y1, float x2, float y2) -> float {
-			float dx = x2 - x1;
-			float dy = y2 - y1;
-			return std::sqrt(dx * dx + dy * dy);
-		});
+		// geo.distance(p1, p2) or (x1, y1, x2, y2) -> number (Euclidean distance)
+		geoTable.set_function("distance", sol::overload(
+			[](float x1, float y1, float x2, float y2) -> float {
+				float dx = x2 - x1;
+				float dy = y2 - y1;
+				return std::sqrt(dx * dx + dy * dy);
+			},
+			[](const Position& p1, const Position& p2) -> float {
+				float dx = static_cast<float>(p2.x - p1.x);
+				float dy = static_cast<float>(p2.y - p1.y);
+				return std::sqrt(dx * dx + dy * dy);
+			}
+		));
 
-		// geo.distanceSq(x1, y1, x2, y2) -> number (Squared distance, faster)
-		geoTable.set_function("distanceSq", [](float x1, float y1, float x2, float y2) -> float {
-			float dx = x2 - x1;
-			float dy = y2 - y1;
-			return dx * dx + dy * dy;
-		});
+		// geo.distanceSq(p1, p2) or (x1, y1, x2, y2) -> number (Squared distance, faster)
+		geoTable.set_function("distanceSq", sol::overload(
+			[](float x1, float y1, float x2, float y2) -> float {
+				float dx = x2 - x1;
+				float dy = y2 - y1;
+				return dx * dx + dy * dy;
+			},
+			[](const Position& p1, const Position& p2) -> float {
+				float dx = static_cast<float>(p2.x - p1.x);
+				float dy = static_cast<float>(p2.y - p1.y);
+				return dx * dx + dy * dy;
+			}
+		));
 
 		// geo.distanceManhattan(x1, y1, x2, y2) -> number
 		geoTable.set_function("distanceManhattan", [](int x1, int y1, int x2, int y2) -> int {

@@ -21,29 +21,44 @@
 
 namespace LuaAPI {
 
-	void registerColor(sol::state& lua) {
-		sol::table Color = lua.create_table();
+	struct ColorStruct {
+		int r, g, b, a;
 
-		// Constructor rgb
-		Color["rgb"] = [&lua](int r, int g, int b) {
-			sol::table c = lua.create_table();
-			c["r"] = std::clamp(r, 0, 255);
-			c["g"] = std::clamp(g, 0, 255);
-			c["b"] = std::clamp(b, 0, 255);
-			return c;
+		ColorStruct(int r = 0, int g = 0, int b = 0, int a = 255) :
+			r(r), g(g), b(b), a(a) { }
+	};
+
+	void registerColor(sol::state& lua) {
+		sol::table Color = lua.create_named_table("Color");
+
+		// Register the struct as a usertype, but bind it to the table's metatable or constructor
+		// Actually, sol2 makes this cleaner. We can register the type, then attach static methods.
+
+		sol::usertype<ColorStruct> colorType = lua.new_usertype<ColorStruct>(
+			"ColorInstance", // Internal name, we'll expose it as 'Color' via the table manually
+			sol::constructors<ColorStruct(int, int, int), ColorStruct(int, int, int, int)>(),
+			"r", &ColorStruct::r,
+			"g", &ColorStruct::g,
+			"b", &ColorStruct::b,
+			"a", &ColorStruct::a
+		);
+
+		// Make the table callable as a constructor
+		Color[sol::meta_function::call] = [](sol::table self, int r, int g, int b, sol::optional<int> a) {
+			return ColorStruct(r, g, b, a.value_or(255));
 		};
 
-		// Constructor hex
-		Color["hex"] = [&lua](const std::string& hex) {
+		// Helper to create a color struct
+		auto mkColor = [](int r, int g, int b) {
+			return ColorStruct(r, g, b);
+		};
+
+		// Static methods (restored)
+		Color["rgb"] = mkColor;
+
+		Color["hex"] = [](const std::string& hex) {
 			unsigned long value = 0;
-			if (hex.empty()) {
-				sol::table c = lua.create_table();
-				c["r"] = 0;
-				c["g"] = 0;
-				c["b"] = 0;
-				return c;
-			}
-			std::string h = hex[0] == '#' ? hex.substr(1) : hex;
+			std::string h = (!hex.empty() && hex[0] == '#') ? hex.substr(1) : hex;
 			if (h.length() == 3) {
 				h = { h[0], h[0], h[1], h[1], h[2], h[2] };
 			}
@@ -52,44 +67,19 @@ namespace LuaAPI {
 			} catch (...) {
 				value = 0;
 			}
-
-			sol::table c = lua.create_table();
-			c["r"] = (int)((value >> 16) & 0xFF);
-			c["g"] = (int)((value >> 8) & 0xFF);
-			c["b"] = (int)(value & 0xFF);
-			return c;
+			return ColorStruct((int)((value >> 16) & 0xFF), (int)((value >> 8) & 0xFF), (int)(value & 0xFF));
 		};
 
-		// Lighten/Darken helper using wxColour
-		Color["lighten"] = [&lua](sol::table c, int percent) {
-			wxColour wx(c.get_or("r", 0), c.get_or("g", 0), c.get_or("b", 0));
+		Color["lighten"] = [](const ColorStruct& c, int percent) {
+			wxColour wx(c.r, c.g, c.b);
 			wxColour result = wx.ChangeLightness(100 + percent);
-
-			sol::table res = lua.create_table();
-			res["r"] = (int)result.Red();
-			res["g"] = (int)result.Green();
-			res["b"] = (int)result.Blue();
-			return res;
+			return ColorStruct(result.Red(), result.Green(), result.Blue(), c.a);
 		};
 
-		Color["darken"] = [&lua](sol::table c, int percent) {
-			wxColour wx(c.get_or("r", 0), c.get_or("g", 0), c.get_or("b", 0));
+		Color["darken"] = [](const ColorStruct& c, int percent) {
+			wxColour wx(c.r, c.g, c.b);
 			wxColour result = wx.ChangeLightness(100 - percent);
-
-			sol::table res = lua.create_table();
-			res["r"] = (int)result.Red();
-			res["g"] = (int)result.Green();
-			res["b"] = (int)result.Blue();
-			return res;
-		};
-
-		// Helper to create a color table
-		auto mkColor = [&lua](int r, int g, int b) {
-			sol::table c = lua.create_table();
-			c["r"] = r;
-			c["g"] = g;
-			c["b"] = b;
-			return c;
+			return ColorStruct(result.Red(), result.Green(), result.Blue(), c.a);
 		};
 
 		// Predefined colors
@@ -103,8 +93,6 @@ namespace LuaAPI {
 		Color["gray"] = mkColor(128, 128, 128);
 		Color["lightGray"] = mkColor(245, 247, 250);
 		Color["darkGray"] = mkColor(45, 55, 72);
-
-		lua["Color"] = Color;
 	}
 
 } // namespace LuaAPI

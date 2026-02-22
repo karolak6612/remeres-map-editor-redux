@@ -18,16 +18,20 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 		OGLContext = new wxGLContext(win, nullptr);
 #else
 		wxGLContextAttrs ctxAttrs;
-		ctxAttrs.PlatformDefaults().CoreProfile().MajorVersion(4).MinorVersion(5).EndList();
+		ctxAttrs.PlatformDefaults().CoreProfile().MajorVersion(3).MinorVersion(3).EndList();
 		OGLContext = newd wxGLContext(win, nullptr, &ctxAttrs);
-		spdlog::info("GLContextManager: Created new OpenGL 4.5 Core Profile context");
+		spdlog::info("GLContextManager: Created new OpenGL 3.3 Core Profile context");
 #endif
-		// Initialize GLAD for the new context
-		win->SetCurrent(*OGLContext);
-		if (!gladLoadGL()) {
-			spdlog::error("GLContextManager: Failed to initialize GLAD!");
+		if (OGLContext && OGLContext->IsOK()) {
+			// Initialize GLAD for the new context
+			win->SetCurrent(*OGLContext);
+			if (!gladLoadGL()) {
+				spdlog::error("GLContextManager: Failed to initialize GLAD!");
+			} else {
+				spdlog::info("GLContextManager: GLAD initialized successfully");
+			}
 		} else {
-			spdlog::info("GLContextManager: GLAD initialized successfully");
+			spdlog::error("GLContextManager: Failed to create OpenGL context!");
 		}
 	}
 

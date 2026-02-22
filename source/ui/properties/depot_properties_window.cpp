@@ -26,16 +26,16 @@ DepotPropertiesWindow::DepotPropertiesWindow(wxWindow* parent, const Map* map, c
 	Bind(wxEVT_BUTTON, &DepotPropertiesWindow::OnClickCancel, this, wxID_CANCEL);
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Depot Properties");
+	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Depot Properties");
 	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
 
 	subsizer->AddGrowableCol(1);
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "ID " + i2ws(item->getID())));
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "ID " + i2ws(item->getID())));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "\"" + wxstr(item->getName()) + "\""));
 
 	const Towns& towns = map->towns;
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Depot ID"));
-	depot_id_field = newd wxChoice(this, wxID_ANY);
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Depot ID"));
+	depot_id_field = newd wxChoice(boxsizer->GetStaticBox(), wxID_ANY);
 	int to_select_index = 0;
 	if (towns.count() > 0) {
 		bool found = false;

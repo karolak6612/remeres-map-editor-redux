@@ -111,11 +111,17 @@ namespace LuaAPI {
 			sol::no_constructor,
 
 			// Properties (read-only)
+			"getName", &Map::getName,
 			"name", sol::property(&Map::getName),
+			"getFilename", &Map::getFilename,
 			"filename", sol::property(&Map::getFilename),
+			"getMapDescription", &Map::getMapDescription,
 			"description", sol::property(&Map::getMapDescription),
+			"getWidth", &Map::getWidth,
 			"width", sol::property(&Map::getWidth),
+			"getHeight", &Map::getHeight,
 			"height", sol::property(&Map::getHeight),
+			"getHouseFilename", &Map::getHouseFilename,
 			"houseFilename", sol::property(&Map::getHouseFilename),
 			"spawnFilename", sol::property(&Map::getSpawnFilename),
 			"hasFile", sol::property(&Map::hasFile),

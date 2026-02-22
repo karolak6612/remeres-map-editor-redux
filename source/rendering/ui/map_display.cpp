@@ -83,7 +83,7 @@ bool MapCanvas::processed[] = { 0 };
 static wxGLAttributes& GetCoreProfileAttributes() {
 	static wxGLAttributes vAttrs = []() {
 		wxGLAttributes a;
-		a.PlatformDefaults().Defaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
+		a.PlatformDefaults().CoreProfile().MajorVersion(3).MinorVersion(3).RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
 		return a;
 	}();
 	return vAttrs;

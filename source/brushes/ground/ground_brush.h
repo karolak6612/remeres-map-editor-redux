@@ -26,10 +26,9 @@ class GroundBrush : public TerrainBrush {
 	friend class GroundBrushLoader;
 	friend class GroundBorderCalculator;
 
-protected:
+public:
 	struct BorderBlock;
 
-public:
 	static void init();
 
 	GroundBrush();
