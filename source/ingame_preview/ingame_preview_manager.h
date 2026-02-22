@@ -3,8 +3,6 @@
 
 #include "app/main.h"
 
-#include <memory>
-
 namespace IngamePreview {
 
 	class IngamePreviewWindow;
@@ -21,11 +19,11 @@ namespace IngamePreview {
 		bool IsVisible() const;
 
 		IngamePreviewWindow* GetWindow() {
-			return window.get();
+			return window;
 		}
 
 	private:
-		std::unique_ptr<IngamePreviewWindow> window;
+		IngamePreviewWindow* window = nullptr;
 	};
 
 } // namespace IngamePreview

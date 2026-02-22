@@ -238,7 +238,7 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 	SetForegroundColour(Theme::Get(Theme::Role::Text));
 
 	// Image List for Icons
-	m_imageList = new wxImageList(16, 16);
+	m_imageList = std::make_unique<wxImageList>(16, 16);
 	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(16, 16)));
 	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(16, 16)));
 	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
@@ -265,7 +265,6 @@ WelcomeDialog::~WelcomeDialog() {
 	if (m_clientList) {
 		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
 	}
-	delete m_imageList;
 }
 
 void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, const wxString& artId, const wxColour& valCol) {
@@ -403,7 +402,7 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
 	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	m_recentList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
+	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
 	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
 	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, 250); // Wider
 	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, 150);
@@ -454,7 +453,7 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 5: Available Clients
 	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
 	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	m_clientList->SetImageList(m_imageList, wxIMAGE_LIST_SMALL);
+	m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
 	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, 24);
 	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, 150);
 
