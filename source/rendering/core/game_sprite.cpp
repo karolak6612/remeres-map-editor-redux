@@ -532,6 +532,77 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 	return data;
 }
 
+namespace {
+
+bool ProcessTransparencyRun(const uint8_t* dump, size_t& read, size_t size, uint8_t* data, size_t& write, size_t pixels_data_size, int id) {
+	if (read + 1 >= size) {
+		return false;
+	}
+	int transparent = dump[read] | dump[read + 1] << 8;
+
+	// Integrity check for transparency run
+	if (write + (transparent * 4) > pixels_data_size) {
+		spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
+		transparent = (pixels_data_size - write) / 4;
+	}
+
+	read += 2;
+	for (int i = 0; i < transparent && write < pixels_data_size; i++) {
+		data[write + 0] = 0x00; // red
+		data[write + 1] = 0x00; // green
+		data[write + 2] = 0x00; // blue
+		data[write + 3] = 0x00; // alpha
+		write += RGBA_COMPONENTS;
+	}
+	return true;
+}
+
+bool ProcessColoredRun(const uint8_t* dump, size_t& read, size_t size, uint8_t* data, size_t& write, size_t pixels_data_size, int id, bool use_alpha, uint8_t bpp, bool& non_zero_alpha_found, bool& non_black_pixel_found) {
+	if (read + 1 >= size) {
+		return false;
+	}
+	int colored = dump[read] | dump[read + 1] << 8;
+	read += 2;
+
+	// Integrity check for colored run
+	if (write + (colored * 4) > pixels_data_size) {
+		spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
+		colored = (pixels_data_size - write) / 4;
+	}
+
+	// Integrity check for read buffer
+	if (read + (colored * bpp) > size) {
+		spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
+		// We can't easily recover here without risking reading garbage, so stop
+		return false;
+	}
+
+	for (int i = 0; i < colored && write < pixels_data_size; i++) {
+		uint8_t r = dump[read + 0];
+		uint8_t g = dump[read + 1];
+		uint8_t b = dump[read + 2];
+		uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
+
+		data[write + 0] = r;
+		data[write + 1] = g;
+		data[write + 2] = b;
+		data[write + 3] = a;
+
+		if (a > 0) {
+			non_zero_alpha_found = true;
+		}
+		if (r > 0 || g > 0 || b > 0) {
+			non_black_pixel_found = true;
+		}
+
+		write += RGBA_COMPONENTS;
+		read += bpp;
+	}
+	return true;
+}
+
+} // namespace
+
 std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
 	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
@@ -543,69 +614,16 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 
 	// decompress pixels
 	while (read < size && write < pixels_data_size) {
-		if (read + 1 >= size) {
+		if (!ProcessTransparencyRun(dump, read, size, data.get(), write, pixels_data_size, id)) {
 			break;
-		}
-		int transparent = dump[read] | dump[read + 1] << 8;
-
-		// Integrity check for transparency run
-		if (write + (transparent * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", id, transparent, write, pixels_data_size);
-			transparent = (pixels_data_size - write) / 4;
-		}
-
-		read += 2;
-		for (int i = 0; i < transparent && write < pixels_data_size; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
 		}
 
 		if (read >= size || write >= pixels_data_size) {
 			break;
 		}
 
-		if (read + 1 >= size) {
+		if (!ProcessColoredRun(dump, read, size, data.get(), write, pixels_data_size, id, use_alpha, bpp, non_zero_alpha_found, non_black_pixel_found)) {
 			break;
-		}
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		// Integrity check for colored run
-		if (write + (colored * 4) > pixels_data_size) {
-			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", id, colored, write, pixels_data_size);
-			colored = (pixels_data_size - write) / 4;
-		}
-
-		// Integrity check for read buffer
-		if (read + (colored * bpp) > size) {
-			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", id, colored, bpp, read, size);
-			// We can't easily recover here without risking reading garbage, so stop
-			break;
-		}
-
-		for (int i = 0; i < colored && write < pixels_data_size; i++) {
-			uint8_t r = dump[read + 0];
-			uint8_t g = dump[read + 1];
-			uint8_t b = dump[read + 2];
-			uint8_t a = use_alpha ? dump[read + 3] : 0xFF;
-
-			data[write + 0] = r;
-			data[write + 1] = g;
-			data[write + 2] = b;
-			data[write + 3] = a;
-
-			if (a > 0) {
-				non_zero_alpha_found = true;
-			}
-			if (r > 0 || g > 0 || b > 0) {
-				non_black_pixel_found = true;
-			}
-
-			write += RGBA_COMPONENTS;
-			read += bpp;
 		}
 	}
 

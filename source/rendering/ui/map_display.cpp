@@ -181,13 +181,7 @@ MapWindow* MapCanvas::GetMapWindow() const {
 	return static_cast<MapWindow*>(GetParent());
 }
 
-void MapCanvas::OnPaint(wxPaintEvent& event) {
-	wxPaintDC dc(this); // validates the paint event
-	if (m_glContext) {
-		SetCurrent(*m_glContext);
-	}
-
-	// proper nvg pointer wrapper
+void MapCanvas::EnsureNanoVG() {
 	if (!m_nvg) {
 		if (!gladLoadGL()) {
 			spdlog::error("MapCanvas: Failed to initialize GLAD");
@@ -199,6 +193,59 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			spdlog::error("MapCanvas: Failed to initialize NanoVG");
 		}
 	}
+}
+
+void MapCanvas::DrawOverlays(NVGcontext* vg, DrawingOptions& options) {
+	if (!vg) return;
+
+	// Sanitize state before handover to NanoVG
+	glUseProgram(0);
+	glBindVertexArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+	glClear(GL_STENCIL_BUFFER_BIT);
+	TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
+
+	if (options.show_creatures) {
+		drawer->DrawCreatureNames(vg);
+	}
+	if (options.show_tooltips) {
+		drawer->DrawTooltips(vg);
+	}
+	if (options.show_hooks) {
+		drawer->DrawHookIndicators(vg);
+	}
+	if (options.highlight_locked_doors) {
+		drawer->DrawDoorIndicators(vg);
+	}
+
+	TextRenderer::EndFrame(vg);
+
+	// Sanitize state after NanoVG to avoid polluting the next frame or other tabs
+	glUseProgram(0);
+	glBindVertexArray(0);
+}
+
+void MapCanvas::PerformGarbageCollection() {
+	// Clean unused textures once every second
+	// Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
+	static long last_gc_time = 0;
+	long current_time = wxGetLocalTime();
+	if (current_time - last_gc_time >= 1 && g_gui.GetCurrentMapTab() == GetParent()) {
+		g_gui.gfx.garbageCollection();
+		last_gc_time = current_time;
+	}
+}
+
+void MapCanvas::OnPaint(wxPaintEvent& event) {
+	wxPaintDC dc(this); // validates the paint event
+	if (m_glContext) {
+		SetCurrent(*m_glContext);
+	}
+
+	EnsureNanoVG();
 
 	if (g_gui.IsRenderingEnabled()) {
 		// Advance graphics clock and drain the preloader queue before rendering
@@ -233,48 +280,12 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		drawer->Release();
 
 		// Draw UI (Tooltips, Overlays & HUD) using NanoVG
-		if (NVGcontext* vg = m_nvg.get()) {
-			// Sanitize state before handover to NanoVG
-			glUseProgram(0);
-			glBindVertexArray(0);
-			glBindBuffer(GL_ARRAY_BUFFER, 0);
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-			glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-			glClear(GL_STENCIL_BUFFER_BIT);
-			TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
-
-			if (options.show_creatures) {
-				drawer->DrawCreatureNames(vg);
-			}
-			if (options.show_tooltips) {
-				drawer->DrawTooltips(vg);
-			}
-			if (options.show_hooks) {
-				drawer->DrawHookIndicators(vg);
-			}
-			if (options.highlight_locked_doors) {
-				drawer->DrawDoorIndicators(vg);
-			}
-
-			TextRenderer::EndFrame(vg);
-
-			// Sanitize state after NanoVG to avoid polluting the next frame or other tabs
-			glUseProgram(0);
-			glBindVertexArray(0);
-		}
+		DrawOverlays(m_nvg.get(), options);
 
 		drawer->ClearFrameOverlays();
 	}
 
-	// Clean unused textures once every second
-	// Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
-	static long last_gc_time = 0;
-	long current_time = wxGetLocalTime();
-	if (current_time - last_gc_time >= 1 && g_gui.GetCurrentMapTab() == GetParent()) {
-		g_gui.gfx.garbageCollection();
-		last_gc_time = current_time;
-	}
+	PerformGarbageCollection();
 
 	SwapBuffers();
 

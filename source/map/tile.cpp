@@ -458,6 +458,45 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
 	return false;
 }
 
+namespace {
+
+void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
+	if (i->isSelected()) {
+		statflags |= TILESTATE_SELECTED;
+	}
+	if (i->getUniqueID() != 0) {
+		statflags |= TILESTATE_UNIQUE;
+	}
+	if (i->getMiniMapColor() != 0) {
+		minimapColor = i->getMiniMapColor();
+	}
+
+	const ItemType& it_type = g_items[i->getID()];
+	if (it_type.unpassable) {
+		statflags |= TILESTATE_BLOCKING;
+	}
+	if (it_type.isOptionalBorder) {
+		statflags |= TILESTATE_OP_BORDER;
+	}
+	if (it_type.isTable) {
+		statflags |= TILESTATE_HAS_TABLE;
+	}
+	if (it_type.isCarpet) {
+		statflags |= TILESTATE_HAS_CARPET;
+	}
+	if (it_type.hookSouth) {
+		statflags |= TILESTATE_HOOK_SOUTH;
+	}
+	if (it_type.hookEast) {
+		statflags |= TILESTATE_HOOK_EAST;
+	}
+	if (i->hasLight()) {
+		statflags |= TILESTATE_HAS_LIGHT;
+	}
+}
+
+} // namespace
+
 void Tile::update() {
 	statflags &= TILESTATE_MODIFIED;
 
@@ -489,38 +528,7 @@ void Tile::update() {
 	}
 
 	std::ranges::for_each(items, [&](const auto& i) {
-		if (i->isSelected()) {
-			statflags |= TILESTATE_SELECTED;
-		}
-		if (i->getUniqueID() != 0) {
-			statflags |= TILESTATE_UNIQUE;
-		}
-		if (i->getMiniMapColor() != 0) {
-			minimapColor = i->getMiniMapColor();
-		}
-
-		ItemType& it_type = g_items[i->getID()];
-		if (it_type.unpassable) {
-			statflags |= TILESTATE_BLOCKING;
-		}
-		if (it_type.isOptionalBorder) {
-			statflags |= TILESTATE_OP_BORDER;
-		}
-		if (it_type.isTable) {
-			statflags |= TILESTATE_HAS_TABLE;
-		}
-		if (it_type.isCarpet) {
-			statflags |= TILESTATE_HAS_CARPET;
-		}
-		if (it_type.hookSouth) {
-			statflags |= TILESTATE_HOOK_SOUTH;
-		}
-		if (it_type.hookEast) {
-			statflags |= TILESTATE_HOOK_EAST;
-		}
-		if (i->hasLight()) {
-			statflags |= TILESTATE_HAS_LIGHT;
-		}
+		UpdateItemFlags(i.get(), statflags, minimapColor);
 	});
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {

@@ -30,6 +30,7 @@
 #include <memory>
 
 struct NVGcontext;
+struct DrawingOptions;
 
 class Item;
 class Creature;
@@ -173,6 +174,10 @@ public:
 	std::unique_ptr<MapMenuHandler> menu_handler;
 
 private:
+	void EnsureNanoVG();
+	void DrawOverlays(NVGcontext* vg, DrawingOptions& options);
+	void PerformGarbageCollection();
+
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
 };
