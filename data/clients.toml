@@ -967,7 +967,7 @@ otbMajor = 3
 otbmVersions = [ 3 ]
 sprSignature = '57BBD603'
 spritesFile = 'Tibia.spr'
-transparency = true
+transparency = false
 version = 1098
 
 [[clients]]
