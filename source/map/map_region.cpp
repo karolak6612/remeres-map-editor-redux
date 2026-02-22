@@ -280,6 +280,18 @@ MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 	return it->second->nodes[ny * NODES_PER_CELL + nx].get();
 }
 
+const MapNode* SpatialHashGrid::getLeaf(int x, int y) const {
+	uint64_t key = makeKey(x, y);
+	auto it = cells.find(key);
+	if (it == cells.end()) {
+		return nullptr;
+	}
+
+	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
+	return it->second->nodes[ny * NODES_PER_CELL + nx].get();
+}
+
 MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	uint64_t key = makeKey(x, y);
 	auto& cell = cells[key];

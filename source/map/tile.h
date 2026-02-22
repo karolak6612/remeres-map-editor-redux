@@ -48,6 +48,7 @@ enum {
 	TILESTATE_MODIFIED = 0x0040,
 	TILESTATE_HOOK_SOUTH = 0x0080,
 	TILESTATE_HOOK_EAST = 0x0100,
+	TILESTATE_HAS_LIGHT = 0x0200,
 };
 
 enum : uint8_t {
@@ -198,6 +199,10 @@ public: // Functions
 
 	bool hasHookEast() const {
 		return testFlags(statflags, TILESTATE_HOOK_EAST);
+	}
+
+	bool hasLight() const {
+		return testFlags(statflags, TILESTATE_HAS_LIGHT);
 	}
 
 	bool hasOptionalBorder() const {

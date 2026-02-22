@@ -43,6 +43,7 @@ public:
 
 	// Returns observer pointer (non-owning)
 	MapNode* getLeaf(int x, int y);
+	const MapNode* getLeaf(int x, int y) const;
 	// Forces leaf creation. Throws std::bad_alloc on memory failure.
 	MapNode* getLeafForce(int x, int y);
 
@@ -97,11 +98,17 @@ protected:
 	// Efficient for small or dense viewports.
 	template <typename Func>
 	void visitLeavesByViewport(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		struct RowCellInfo {
-			GridCell* cell;
-			int start_nx;
-		};
-		std::vector<RowCellInfo> row_cells;
+		visitLeavesByViewportImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
+	}
+
+	struct RowCellInfo {
+		GridCell* cell;
+		int start_nx;
+	};
+
+	template <typename Func>
+	void visitLeavesByViewportImpl(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
+		static thread_local std::vector<RowCellInfo> row_cells;
 		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
@@ -122,12 +129,12 @@ protected:
 			int row_start_ny = std::max(start_ny, cy << NODES_PER_CELL_SHIFT);
 			int row_end_ny = std::min(end_ny, ((cy + 1) << NODES_PER_CELL_SHIFT) - 1);
 
-			for (int ny : std::views::iota(row_start_ny, row_end_ny + 1)) {
-				int local_ny = ny & (NODES_PER_CELL - 1);
+			for (const auto& [cell, cell_start_nx] : row_cells) {
+				int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
+				int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
 
-				for (const auto& [cell, cell_start_nx] : row_cells) {
-					int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
-					int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
+				for (int ny : std::views::iota(row_start_ny, row_end_ny + 1)) {
+					int local_ny = ny & (NODES_PER_CELL - 1);
 
 					for (int lnx = local_start_nx; lnx <= local_end_nx; ++lnx) {
 						int idx = local_ny * NODES_PER_CELL + lnx;
