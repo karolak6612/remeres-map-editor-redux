@@ -23,6 +23,8 @@ namespace IngamePreview {
 		}
 
 	private:
+		void OnWindowDestroy(wxWindowDestroyEvent& e);
+
 		IngamePreviewWindow* window = nullptr;
 	};
 
