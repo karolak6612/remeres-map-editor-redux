@@ -199,6 +199,57 @@ public:
 	// Returns this on success, nullptr on failure
 	BinaryNode* advance();
 
+	// Range support (Single-pass input iterator)
+	struct Iterator {
+		using iterator_category = std::input_iterator_tag;
+		using value_type = BinaryNode*;
+		using difference_type = std::ptrdiff_t;
+		using pointer = BinaryNode*;
+		using reference = BinaryNode*;
+
+		BinaryNode* current;
+
+		Iterator(BinaryNode* node) : current(node) { }
+
+		BinaryNode* operator*() const {
+			return current;
+		}
+		BinaryNode* operator->() const {
+			return current;
+		}
+		Iterator& operator++() {
+			if (current) {
+				current = current->advance();
+			}
+			return *this;
+		}
+		Iterator operator++(int) {
+			Iterator tmp = *this;
+			++(*this);
+			return tmp;
+		}
+		bool operator!=(const Iterator& other) const {
+			return current != other.current;
+		}
+		bool operator==(const Iterator& other) const {
+			return current == other.current;
+		}
+	};
+
+	struct ChildRange {
+		BinaryNode* parent;
+		Iterator begin() {
+			return Iterator(parent->getChild());
+		}
+		Iterator end() {
+			return Iterator(nullptr);
+		}
+	};
+
+	ChildRange children() {
+		return ChildRange { this };
+	}
+
 protected:
 	template <class T>
 	bool getType(T& ref) {
