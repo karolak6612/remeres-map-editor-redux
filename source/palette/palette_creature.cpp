@@ -46,7 +46,7 @@ CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	grid->AddGrowableCol(1);
 
 	grid->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), wxID_ANY, "Spawntime"));
-	creature_spawntime_spin = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_SPAWN_TIME, i2ws(g_settings.getInteger(Config::DEFAULT_SPAWNTIME)), wxDefaultPosition, wxSize(50, 20), wxSP_ARROW_KEYS, 0, 86400, g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
+	creature_spawntime_spin = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_SPAWN_TIME, i2ws(g_settings.getInteger(Config::DEFAULT_SPAWNTIME)), wxDefaultPosition, FROM_DIP(this, wxSize(64, 20)), wxSP_ARROW_KEYS, 0, 86400, g_settings.getInteger(Config::DEFAULT_SPAWNTIME));
 	creature_spawntime_spin->SetToolTip("Spawn time (seconds)");
 	grid->Add(creature_spawntime_spin, 0, wxEXPAND);
 	creature_brush_button = newd wxToggleButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_BRUSH_BUTTON, "Place Creature");
@@ -55,7 +55,7 @@ CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	grid->Add(creature_brush_button, 0, wxEXPAND);
 
 	grid->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), wxID_ANY, "Spawn size"));
-	spawn_size_spin = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_SPAWN_SIZE, i2ws(5), wxDefaultPosition, wxSize(50, 20), wxSP_ARROW_KEYS, 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS), g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
+	spawn_size_spin = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_SPAWN_SIZE, i2ws(5), wxDefaultPosition, FROM_DIP(this, wxSize(64, 20)), wxSP_ARROW_KEYS, 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS), g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
 	spawn_size_spin->SetToolTip("Spawn radius");
 	grid->Add(spawn_size_spin, 0, wxEXPAND);
 	spawn_brush_button = newd wxToggleButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_SPAWN_BRUSH_BUTTON, "Place Spawn");

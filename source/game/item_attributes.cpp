@@ -20,6 +20,7 @@
 #include "game/item_attributes.h"
 #include "io/filehandle.h"
 #include <cstring>
+#include <spdlog/spdlog.h>
 
 ItemAttributes::ItemAttributes() :
 	attributes(nullptr) {
@@ -242,6 +243,7 @@ const bool* ItemAttribute::getBoolean() const {
 bool ItemAttributes::unserializeAttributeMap(const IOMap& maphandle, BinaryNode* stream) {
 	uint16_t n;
 	if (stream->getU16(n)) {
+		spdlog::debug("unserializeAttributeMap: reading {} attributes", n);
 		createAttributes();
 
 		std::string key;
@@ -249,9 +251,11 @@ bool ItemAttributes::unserializeAttributeMap(const IOMap& maphandle, BinaryNode*
 
 		while (n--) {
 			if (!stream->getString(key)) {
+				spdlog::warn("unserializeAttributeMap: failed to read key (remaining={})", n + 1);
 				return false;
 			}
 			if (!attrib.unserialize(maphandle, stream)) {
+				spdlog::warn("unserializeAttributeMap: failed to unserialize value for key='{}' (remaining={})", key, n + 1);
 				return false;
 			}
 			(*attributes)[key] = attrib;

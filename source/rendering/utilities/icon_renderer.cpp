@@ -5,7 +5,7 @@
 
 namespace IconRenderer {
 
-	void DrawIconWithBorder(NVGcontext* vg, float cx, float cy, float iconSize, float outlineOffset, const std::string& iconMacro, const NVGcolor& tintColor) {
+	void DrawIconWithBorder(NVGcontext* vg, float cx, float cy, float iconSize, float outlineOffset, std::string_view iconMacro, const NVGcolor& tintColor) {
 		if (!vg) {
 			return;
 		}

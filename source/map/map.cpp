@@ -26,6 +26,7 @@
 #include <ranges>
 #include <unordered_set>
 #include <unordered_map>
+#include <format>
 #include <spdlog/spdlog.h>
 
 Map::Map() :
@@ -50,7 +51,7 @@ void Map::initializeEmpty() {
 
 	static int unnamed_counter = 0;
 
-	std::string sname = "Untitled-" + std::to_string(++unnamed_counter);
+	std::string sname = std::format("Untitled-{}", ++unnamed_counter);
 	name = sname + ".otbm";
 	spawnfile = sname + "-spawn.xml";
 	housefile = sname + "-house.xml";
@@ -293,16 +294,13 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	g_gui.CreateLoadBar("Converting house tiles...");
 	uint64_t tiles_done = 0;
 
-	for (auto& tile_loc : tiles()) {
-		Tile* tile = tile_loc.get();
-		ASSERT(tile);
+	auto filtered_tiles = tiles() | std::views::filter([fromId](const auto& tile_loc) {
+							  const Tile* tile = tile_loc.get();
+							  return fromId != 0 && tile && tile->getHouseID() == fromId;
+						  });
 
-		uint32_t houseId = tile->getHouseID();
-		if (houseId == 0 || houseId != fromId) {
-			continue;
-		}
-
-		tile->setHouseID(toId);
+	for (auto& tile_loc : filtered_tiles) {
+		tile_loc.get()->setHouseID(toId);
 		++tiles_done;
 		if (tiles_done % 0x10000 == 0) {
 			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
@@ -425,34 +423,39 @@ SpawnList Map::getSpawnList(Tile* where) {
 			int z = where->getZ();
 			int start_x = where->getX() - 1, end_x = where->getX() + 1;
 			int start_y = where->getY() - 1, end_y = where->getY() + 1;
-			while (found != tile_loc->getSpawnCount()) {
+
+			auto checkTile = [&](int x, int y) {
+				if (Tile* tile = getTile(x, y, z)) {
+					if (tile->spawn) {
+						list.push_back(tile->spawn.get());
+						++found;
+					}
+				}
+			};
+
+			// Safety bound: limit search radius to prevent infinite expansion with stale spawn counts
+			const int max_radius = std::max(getWidth(), getHeight());
+			while (found < tile_loc->getSpawnCount()) {
+				// Horizontal sides
 				for (int x = start_x; x <= end_x; ++x) {
-					Tile* tile = getTile(x, start_y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-					tile = getTile(x, end_y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
+					checkTile(x, start_y);
+					checkTile(x, end_y);
 				}
 
+				// Vertical sides (exclude corners already covered above)
 				for (int y = start_y + 1; y < end_y; ++y) {
-					Tile* tile = getTile(start_x, y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-					tile = getTile(end_x, y, z);
-					if (tile && tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
+					checkTile(start_x, y);
+					checkTile(end_x, y);
 				}
-				--start_x, --start_y;
-				++end_x, ++end_y;
+
+				--start_x;
+				--start_y;
+				++end_x;
+				++end_y;
+
+				if ((end_x - start_x) / 2 > max_radius) {
+					break;
+				}
 			}
 		}
 	}

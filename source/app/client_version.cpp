@@ -512,9 +512,9 @@ bool ClientVersion::loadValidPaths() {
 }
 
 DatFormat ClientVersion::getDatFormatForSignature(uint32_t signature) const {
-	for (std::vector<ClientData>::const_iterator iter = data_versions.begin(); iter != data_versions.end(); ++iter) {
-		if (iter->datSignature == signature) {
-			return iter->datFormat;
+	for (const auto& data : data_versions) {
+		if (data.datSignature == signature) {
+			return data.datFormat;
 		}
 	}
 
