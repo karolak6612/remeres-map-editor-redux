@@ -72,20 +72,20 @@ void BrushToolBar::Update() {
 		toolbar->SetToolShortHelp(id, has_map ? name : name + " - No map open");
 	};
 
-	updateTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, "Border (Add borders to ground)");
-	updateTool(PALETTE_TERRAIN_ERASER, "Eraser (Clear tile content)");
-	updateTool(PALETTE_TERRAIN_PZ_TOOL, "Protected Zone (Non-combat area)");
-	updateTool(PALETTE_TERRAIN_NOPVP_TOOL, "No PvP Zone (Non-PvP area)");
-	updateTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, "No Logout Zone (Prevents logout)");
-	updateTool(PALETTE_TERRAIN_PVPZONE_TOOL, "PvP Zone (Combat area)");
-	updateTool(PALETTE_TERRAIN_NORMAL_DOOR, "Normal Door");
-	updateTool(PALETTE_TERRAIN_LOCKED_DOOR, "Locked Door");
-	updateTool(PALETTE_TERRAIN_MAGIC_DOOR, "Magic Door");
-	updateTool(PALETTE_TERRAIN_QUEST_DOOR, "Quest Door");
+	updateTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, "Border (Add borders to ground) [A]");
+	updateTool(PALETTE_TERRAIN_ERASER, "Eraser (Clear tile content) [E]");
+	updateTool(PALETTE_TERRAIN_PZ_TOOL, "Protected Zone (Non-combat area) [P]");
+	updateTool(PALETTE_TERRAIN_NOPVP_TOOL, "No PvP Zone (Non-PvP area) [Z]");
+	updateTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, "No Logout Zone (Prevents logout) [L]");
+	updateTool(PALETTE_TERRAIN_PVPZONE_TOOL, "PvP Zone (Combat area) [Y]");
+	updateTool(PALETTE_TERRAIN_NORMAL_DOOR, "Normal Door [D]");
+	updateTool(PALETTE_TERRAIN_LOCKED_DOOR, "Locked Door [Shift+D]");
+	updateTool(PALETTE_TERRAIN_MAGIC_DOOR, "Magic Door [Ctrl+D]");
+	updateTool(PALETTE_TERRAIN_QUEST_DOOR, "Quest Door [Alt+D]");
 	updateTool(PALETTE_TERRAIN_NORMAL_ALT_DOOR, "Normal Door (alt)");
 	updateTool(PALETTE_TERRAIN_ARCHWAY_DOOR, "Archway");
-	updateTool(PALETTE_TERRAIN_HATCH_DOOR, "Hatch Window");
-	updateTool(PALETTE_TERRAIN_WINDOW_DOOR, "Window");
+	updateTool(PALETTE_TERRAIN_HATCH_DOOR, "Hatch Window [W]");
+	updateTool(PALETTE_TERRAIN_WINDOW_DOOR, "Window [Shift+W]");
 
 	Brush* brush = g_gui.GetCurrentBrush();
 	if (brush) {

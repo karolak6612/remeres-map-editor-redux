@@ -15,10 +15,12 @@ GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
 
 	always_make_backup_chkbox = newd wxCheckBox(this, wxID_ANY, "Always make map backup");
 	always_make_backup_chkbox->SetValue(g_settings.getInteger(Config::ALWAYS_MAKE_BACKUP) == 1);
+	always_make_backup_chkbox->SetToolTip("Automatically create a backup copy when saving the map.");
 	sizer->Add(always_make_backup_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	update_check_on_startup_chkbox = newd wxCheckBox(this, wxID_ANY, "Check for updates on startup");
 	update_check_on_startup_chkbox->SetValue(g_settings.getInteger(Config::USE_UPDATER) == 1);
+	update_check_on_startup_chkbox->SetToolTip("Check for new versions of the editor when starting.");
 	sizer->Add(update_check_on_startup_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
 
 	only_one_instance_chkbox = newd wxCheckBox(this, wxID_ANY, "Open all maps in the same instance");

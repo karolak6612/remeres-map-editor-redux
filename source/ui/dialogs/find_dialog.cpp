@@ -42,11 +42,24 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	result_id(0) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
-	search_field = newd KeyForwardingTextCtrl(this, JUMP_DIALOG_TEXT, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
-	search_field->SetHint("Type to search...");
-	search_field->SetToolTip("Type at least 2 characters to search for brushes or items.");
-	search_field->SetFocus();
-	sizer->Add(search_field, 0, wxEXPAND);
+	{
+		wxBoxSizer* row = newd wxBoxSizer(wxHORIZONTAL);
+		search_field = newd KeyForwardingTextCtrl(this, JUMP_DIALOG_TEXT, "", wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
+		search_field->SetHint("Type to search...");
+		search_field->SetToolTip("Type at least 2 characters to search for brushes or items.");
+		search_field->SetFocus();
+		row->Add(search_field, 1, wxEXPAND);
+
+		wxButton* clearBtn = newd wxButton(this, wxID_ANY, "", wxDefaultPosition, wxSize(30, -1));
+		clearBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+		clearBtn->SetToolTip("Clear search");
+		clearBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+			search_field->Clear();
+			search_field->SetFocus();
+		});
+		row->Add(clearBtn, 0);
+		sizer->Add(row, 0, wxEXPAND);
+	}
 
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));

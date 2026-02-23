@@ -28,6 +28,12 @@
 void MapStatusUpdater::Update(Editor& editor, int map_x, int map_y, int map_z) {
 	wxString ss;
 	ss << "x: " << map_x << " y:" << map_y << " z:" << map_z;
+
+	size_t count = editor.selection.size();
+	if (count > 0) {
+		ss << " | " << count << " selected";
+	}
+
 	g_gui.root->SetStatusText(ss, 2);
 
 	ss = "";

@@ -5,6 +5,7 @@
 #include "app/main.h"
 #include "ui/dialogs/goto_position_dialog.h"
 #include "editor/editor.h"
+#include "util/common.h"
 #include "map/map.h"
 #include "ui/positionctrl.h"
 #include "ui/gui.h"
@@ -24,6 +25,18 @@ GotoPositionDialog::GotoPositionDialog(wxWindow* parent, Editor& editor) :
 
 	posctrl = newd PositionCtrl(this, "Destination", map.getWidth() / 2, map.getHeight() / 2, GROUND_LAYER, map.getWidth(), map.getHeight());
 	sizer->Add(posctrl, 0, wxTOP | wxLEFT | wxRIGHT, 20);
+
+	// Paste Button
+	wxButton* pasteBtn = newd wxButton(this, wxID_ANY, "Paste from Clipboard");
+	pasteBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PASTE, wxSize(16, 16)));
+	pasteBtn->SetToolTip("Paste coordinates from clipboard");
+	pasteBtn->Bind(wxEVT_BUTTON, [this, &map](wxCommandEvent&) {
+		Position pos;
+		if (posFromClipboard(pos, map.getWidth(), map.getHeight())) {
+			posctrl->SetPosition(pos);
+		}
+	});
+	sizer->Add(pasteBtn, wxSizerFlags(0).Center().Border(wxTOP, 10));
 
 	// OK/Cancel buttons
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);

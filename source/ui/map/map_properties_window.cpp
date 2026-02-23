@@ -1,5 +1,6 @@
 #include "ui/map/map_properties_window.h"
 
+#include <wx/filedlg.h>
 #include "editor/editor.h"
 #include "map/map.h"
 #include "editor/operations/map_version_changer.h"
@@ -80,32 +81,62 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	}
 
 	// External files
-	grid_sizer->Add(
-		newd wxStaticText(this, wxID_ANY, "External Housefile")
-	);
+	grid_sizer->Add(newd wxStaticText(this, wxID_ANY, "External Housefile"));
+	{
+		wxSizer* row = newd wxBoxSizer(wxHORIZONTAL);
+		house_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getHouseFilename()));
+		house_filename_ctrl->SetToolTip("External house XML file (leave empty for internal)");
+		row->Add(house_filename_ctrl, wxSizerFlags(1).Expand().RightBorder(5));
 
-	grid_sizer->Add(
-		house_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getHouseFilename())), 1, wxEXPAND
-	);
-	house_filename_ctrl->SetToolTip("External house XML file (leave empty for internal)");
+		wxButton* btn = newd wxButton(this, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+		btn->SetToolTip("Browse for house file...");
+		btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+			wxFileDialog dlg(this, "Select house file", "", "", "XML files (*.xml)|*.xml|All files (*.*)|*.*", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			if (dlg.ShowModal() == wxID_OK) {
+				house_filename_ctrl->SetValue(dlg.GetPath());
+			}
+		});
+		row->Add(btn, wxSizerFlags(0));
+		grid_sizer->Add(row, wxSizerFlags(1).Expand());
+	}
 
-	grid_sizer->Add(
-		newd wxStaticText(this, wxID_ANY, "External Spawnfile")
-	);
+	grid_sizer->Add(newd wxStaticText(this, wxID_ANY, "External Spawnfile"));
+	{
+		wxSizer* row = newd wxBoxSizer(wxHORIZONTAL);
+		spawn_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getSpawnFilename()));
+		spawn_filename_ctrl->SetToolTip("External spawn XML file (leave empty for internal)");
+		row->Add(spawn_filename_ctrl, wxSizerFlags(1).Expand().RightBorder(5));
 
-	grid_sizer->Add(
-		spawn_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getSpawnFilename())), 1, wxEXPAND
-	);
-	spawn_filename_ctrl->SetToolTip("External spawn XML file (leave empty for internal)");
+		wxButton* btn = newd wxButton(this, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+		btn->SetToolTip("Browse for spawn file...");
+		btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+			wxFileDialog dlg(this, "Select spawn file", "", "", "XML files (*.xml)|*.xml|All files (*.*)|*.*", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			if (dlg.ShowModal() == wxID_OK) {
+				spawn_filename_ctrl->SetValue(dlg.GetPath());
+			}
+		});
+		row->Add(btn, wxSizerFlags(0));
+		grid_sizer->Add(row, wxSizerFlags(1).Expand());
+	}
 
-	grid_sizer->Add(
-		newd wxStaticText(this, wxID_ANY, "External Waypointfile")
-	);
+	grid_sizer->Add(newd wxStaticText(this, wxID_ANY, "External Waypointfile"));
+	{
+		wxSizer* row = newd wxBoxSizer(wxHORIZONTAL);
+		waypoint_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getWaypointFilename()));
+		waypoint_filename_ctrl->SetToolTip("External waypoint XML file (leave empty for internal)");
+		row->Add(waypoint_filename_ctrl, wxSizerFlags(1).Expand().RightBorder(5));
 
-	grid_sizer->Add(
-		waypoint_filename_ctrl = newd wxTextCtrl(this, wxID_ANY, wxstr(map.getWaypointFilename())), 1, wxEXPAND
-	);
-	waypoint_filename_ctrl->SetToolTip("External waypoint XML file (leave empty for internal)");
+		wxButton* btn = newd wxButton(this, wxID_ANY, "...", wxDefaultPosition, wxSize(30, -1));
+		btn->SetToolTip("Browse for waypoint file...");
+		btn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+			wxFileDialog dlg(this, "Select waypoint file", "", "", "XML files (*.xml)|*.xml|All files (*.*)|*.*", wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+			if (dlg.ShowModal() == wxID_OK) {
+				waypoint_filename_ctrl->SetValue(dlg.GetPath());
+			}
+		});
+		row->Add(btn, wxSizerFlags(0));
+		grid_sizer->Add(row, wxSizerFlags(1).Expand());
+	}
 
 	topsizer->Add(grid_sizer, wxSizerFlags(1).Expand().Border(wxALL, 20));
 

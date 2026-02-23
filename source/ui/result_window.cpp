@@ -21,6 +21,7 @@
 #include "ui/gui.h"
 #include "map/position.h"
 #include "util/image_manager.h"
+#include <wx/clipbrd.h>
 
 SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY) {
@@ -33,6 +34,23 @@ SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 	exportBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
 	exportBtn->SetToolTip("Export results to text file");
 	buttonsSizer->Add(exportBtn, wxSizerFlags(0).Center());
+
+	wxButton* copyBtn = newd wxButton(this, wxID_COPY, "Copy");
+	copyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	copyBtn->SetToolTip("Copy results to clipboard");
+	copyBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
+		if (result_list->GetCount() > 0) {
+			wxString text;
+			for (unsigned int i = 0; i < result_list->GetCount(); ++i) {
+				text += result_list->GetString(i) + "\n";
+			}
+			if (wxTheClipboard->Open()) {
+				wxTheClipboard->SetData(new wxTextDataObject(text));
+				wxTheClipboard->Close();
+			}
+		}
+	});
+	buttonsSizer->Add(copyBtn, wxSizerFlags(0).Center());
 
 	wxButton* clearBtn = newd wxButton(this, wxID_CLEAR, "Clear");
 	clearBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));

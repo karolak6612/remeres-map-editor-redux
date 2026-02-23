@@ -308,6 +308,7 @@ void PropertiesWindow::OnClickOK(wxCommandEvent&) {
 
 	saveGeneralPanel();
 	saveAttributesPanel();
+	wxLogStatus("Item properties applied.");
 	EndModal(1);
 }
 
