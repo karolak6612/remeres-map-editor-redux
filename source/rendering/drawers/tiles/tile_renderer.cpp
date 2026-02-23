@@ -224,15 +224,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	} else {
 		if (tile->ground && ground_it) {
 			if (ground_it->sprite) {
-				SpritePatterns patterns;
-				// Optimization: Skip expensive pattern calculation when zoomed out significantly
-				// Zoom > 2.0 means we are viewing a large area (minified)
-				if (view.zoom > 2.0f) {
-					patterns = {0, 0, 0, 0};
-				} else {
-					patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
-				}
-
+				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
 				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
 
 				BlitItemParams params(tile, tile->ground.get(), options);
@@ -304,13 +296,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 
 				if (it.sprite) {
-					SpritePatterns patterns;
-					if (view.zoom > 2.0f) {
-						patterns = {0, 0, 0, 0};
-					} else {
-						patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
-					}
-
+					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
 					PreloadItem(tile, item.get(), it, &patterns);
 
 					BlitItemParams params(tile, item.get(), options);

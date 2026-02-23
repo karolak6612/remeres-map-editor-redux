@@ -355,6 +355,23 @@ void GameSprite::Image::clean(time_t time, int longevity) {
 }
 
 const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data) {
+	// Thread Safety: EnsureAtlasSprite may be called from background threads via getAtlasRegion.
+	// We MUST NOT perform GL operations (Atlas allocation) on background threads.
+	// If the sprite is not loaded, we return nullptr. The caching mechanism in getAtlasRegion
+	// usually prevents us from getting here if the sprite is loaded, but if we do get here
+	// on a worker thread, we must bail out.
+	if (!wxIsMainThread()) {
+		// Only check read-only cache if available, but AtlasManager operations might not be safe
+		// for concurrent modification/reading if reallocating.
+		// Assuming AtlasManager::getRegion is thread-safe for reads if no writes happen concurrently.
+		// But here we are in "Ensure", which implies writing.
+		// For safety, assume worker threads only get what's already cached in the GameSprite object.
+		// If we reached here, it means it wasn't cached in GameSprite.
+		// We could try a read-only check on AtlasManager?
+		// Given the risk, returning nullptr is the safest and correct "Parallel" behavior (skip invisible/unloaded).
+		return nullptr;
+	}
+
 	if (g_gui.gfx.ensureAtlasManager()) {
 		AtlasManager* atlas_mgr = g_gui.gfx.getAtlasManager();
 

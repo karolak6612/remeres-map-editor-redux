@@ -133,15 +133,18 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	sprite_count_ = 0;
 	global_tint_ = glm::vec4(1.0f);
 
-	// Enable Blend State (RAII)
-	// We use emplace to construct the Scoped objects in-place, which saves the previous state
-	blend_capability_.emplace(GL_BLEND);
-	blend_func_.emplace(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	// Headless check
+	if (shader_) {
+		// Enable Blend State (RAII)
+		// We use emplace to construct the Scoped objects in-place, which saves the previous state
+		blend_capability_.emplace(GL_BLEND);
+		blend_func_.emplace(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	shader_->Use();
-	shader_->SetMat4("uMVP", projection_);
-	shader_->SetInt("uAtlas", 0);
-	shader_->SetVec4("uGlobalTint", global_tint_);
+		shader_->Use();
+		shader_->SetMat4("uMVP", projection_);
+		shader_->SetInt("uAtlas", 0);
+		shader_->SetVec4("uGlobalTint", global_tint_);
+	}
 }
 
 void SpriteBatch::setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) {
@@ -162,6 +165,14 @@ void SpriteBatch::ensureCapacity(size_t capacity) {
 	if (pending_sprites_.capacity() < capacity) {
 		pending_sprites_.reserve(capacity);
 	}
+}
+
+void SpriteBatch::append(const std::vector<SpriteInstance>& sprites) {
+	if (sprites.empty()) {
+		return;
+	}
+	// Direct insertion
+	pending_sprites_.insert(pending_sprites_.end(), sprites.begin(), sprites.end());
 }
 
 void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& region) {
@@ -209,6 +220,14 @@ void SpriteBatch::drawRectLines(float x, float y, float w, float h, const glm::v
 
 void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 	if (pending_sprites_.empty()) {
+		return;
+	}
+
+	if (!shader_) {
+		// Headless mode - clear pending but do nothing
+		draw_call_count_++; // Simulate
+		sprite_count_ += static_cast<int>(pending_sprites_.size());
+		pending_sprites_.clear();
 		return;
 	}
 
@@ -339,11 +358,13 @@ void SpriteBatch::end(const AtlasManager& atlas_manager) {
 	flush(atlas_manager);
 
 	in_batch_ = false;
-	glBindVertexArray(0);
+	if (shader_) {
+		glBindVertexArray(0);
 
-	// Restore state (reverse order of construction)
-	// blend_func_ was constructed second, so destroy it first
-	blend_func_.reset();
-	// blend_capability_ was constructed first, so destroy it last
-	blend_capability_.reset();
+		// Restore state (reverse order of construction)
+		// blend_func_ was constructed second, so destroy it first
+		blend_func_.reset();
+		// blend_capability_ was constructed first, so destroy it last
+		blend_capability_.reset();
+	}
 }

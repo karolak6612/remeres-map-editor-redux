@@ -93,11 +93,21 @@ public:
 	 */
 	void ensureCapacity(size_t capacity);
 
+	/**
+	 * Append sprites from another vector (e.g. from a thread-local batch).
+	 */
+	void append(const std::vector<SpriteInstance>& sprites);
+
 	int getDrawCallCount() const {
 		return draw_call_count_;
 	}
 	int getSpriteCount() const {
 		return sprite_count_;
+	}
+
+	// Exposed for thread-local batches to extract data
+	const std::vector<SpriteInstance>& getPendingSprites() const {
+		return pending_sprites_;
 	}
 
 private:

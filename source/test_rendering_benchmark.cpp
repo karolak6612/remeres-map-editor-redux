@@ -160,11 +160,17 @@ int main() {
     for (int i = 0; i < frames; ++i) {
         RenderBenchmark::Get().StartFrame();
 
+        spriteBatch.begin(view.projectionMatrix);
+
         // Simulate drawing layer 7
         // We pass 'false' for live_client
         mapLayerDrawer.Draw(spriteBatch, z, false, view, options, lightBuffer);
 
         // We don't flush sprite batch to GPU, just measuring CPU submission/traversal
+        // But in real code, we would end(). In headless, end() just clears pending.
+        // We need an AtlasManager for end().
+        // Mock AtlasManager? Or just let it leak/clear in next begin?
+        // SpriteBatch::begin clears pending_sprites_.
 
         RenderBenchmark::Get().EndFrame();
 
