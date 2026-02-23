@@ -25,6 +25,7 @@
 #include <stack>
 #include <stdio.h>
 #include <memory>
+#include <type_traits>
 #include <vector>
 #include <format>
 #include <iterator>
@@ -414,6 +415,13 @@ public:
 	bool addRAW(const uint8_t* ptr, size_t sz);
 	bool addRAW(const char* c) {
 		return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));
+	}
+
+	template <typename T>
+		requires std::is_trivially_copyable_v<T>
+	bool addValue(T val) {
+		writeBytes(reinterpret_cast<uint8_t*>(&val), sizeof(val));
+		return error_code == FILE_NO_ERROR;
 	}
 
 protected:
