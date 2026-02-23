@@ -234,10 +234,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
-			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
+		if (tile->ground->getID() >= 100 && (tile->ground->isComplex() || ground_it->isTooltipable())) {
+			TooltipData& groundData = tooltip_drawer->requestTooltipData();
+			if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+				if (groundData.hasVisibleFields()) {
+					tooltip_drawer->commitTooltip();
+				}
 			}
 		}
 	}
@@ -265,11 +267,20 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
 			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
 			float boost = 0.0f;
+			uint8_t item_r = 255, item_g = 255, item_b = 255;
 
 			if (calculate_house_color) {
 				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
 				if (should_pulse) {
 					boost = options.highlight_pulse * 0.6f;
+					// Pre-calculate final pulsed item color
+					item_r = static_cast<uint8_t>(std::min(255, static_cast<int>(house_r + (255 - house_r) * boost)));
+					item_g = static_cast<uint8_t>(std::min(255, static_cast<int>(house_g + (255 - house_g) * boost)));
+					item_b = static_cast<uint8_t>(std::min(255, static_cast<int>(house_b + (255 - house_b) * boost)));
+				} else {
+					item_r = house_r;
+					item_g = house_g;
+					item_b = house_b;
 				}
 			}
 
@@ -281,10 +292,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+					if (item->getID() >= 100 && (item->isComplex() || it.isTooltipable())) {
+						TooltipData& itemData = tooltip_drawer->requestTooltipData();
+						if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+							if (itemData.hasVisibleFields()) {
+								tooltip_drawer->commitTooltip();
+							}
 						}
 					}
 				}
@@ -303,24 +316,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.blue = b;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
-						uint8_t ir = 255, ig = 255, ib = 255;
-
 						if (calculate_house_color) {
-							// Apply house color tint
-							ir = static_cast<uint8_t>(ir * house_r / 255);
-							ig = static_cast<uint8_t>(ig * house_g / 255);
-							ib = static_cast<uint8_t>(ib * house_b / 255);
-
-							if (should_pulse) {
-								// Pulse effect matching the tile pulse
-								ir = static_cast<uint8_t>(std::min(255, static_cast<int>(ir + (255 - ir) * boost)));
-								ig = static_cast<uint8_t>(std::min(255, static_cast<int>(ig + (255 - ig) * boost)));
-								ib = static_cast<uint8_t>(std::min(255, static_cast<int>(ib + (255 - ib) * boost)));
-							}
+							params.red = item_r;
+							params.green = item_g;
+							params.blue = item_b;
+						} else {
+							params.red = 255;
+							params.green = 255;
+							params.blue = 255;
 						}
-						params.red = ir;
-						params.green = ig;
-						params.blue = ib;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
 				}

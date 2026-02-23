@@ -49,6 +49,10 @@ enum {
 	TILESTATE_HOOK_SOUTH = 0x0080,
 	TILESTATE_HOOK_EAST = 0x0100,
 	TILESTATE_HAS_LIGHT = 0x0200,
+	TILESTATE_BLOCK_PATHFIND = 0x0400,
+	TILESTATE_BLOCK_PROJECTILE = 0x0800,
+	TILESTATE_MOVEABLE = 0x1000,
+	TILESTATE_HAS_WALL = 0x2000,
 };
 
 enum : uint8_t {
@@ -145,7 +149,7 @@ public: // Functions
 	int getIndexOf(Item* item) const;
 	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
 	Item* getItemAt(int index) const;
-	void addItem(std::unique_ptr<Item> item);
+	void addItem(std::unique_ptr<Item> item, bool do_update = true);
 
 	void select();
 	void deselect();
@@ -262,7 +266,7 @@ using TileSet = std::vector<Tile*>;
 using TileList = std::list<Tile*>;
 
 inline bool Tile::hasWall() const {
-	return getWall() != nullptr;
+	return testFlags(statflags, TILESTATE_HAS_WALL);
 }
 
 inline bool Tile::isHouseTile() const {

@@ -201,7 +201,7 @@ void Tile::merge(Tile* other) {
 
 	items.reserve(items.size() + other->items.size());
 	for (auto& item : other->items) {
-		addItem(std::move(item));
+		addItem(std::move(item), false);
 	}
 	other->items.clear();
 	update();
@@ -216,6 +216,18 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		// Optimization: Use cached blocking state
 		// Note: isBlocking() returns true for empty tiles (void), but hasProperty checks if *content* has property.
 		return isBlocking() && (ground || !items.empty());
+	}
+
+	if (prop == BLOCKPATHFIND) {
+		return testFlags(statflags, TILESTATE_BLOCK_PATHFIND);
+	}
+
+	if (prop == BLOCKPROJECTILE) {
+		return testFlags(statflags, TILESTATE_BLOCK_PROJECTILE);
+	}
+
+	if (prop == MOVEABLE) {
+		return testFlags(statflags, TILESTATE_MOVEABLE);
 	}
 
 	if (ground && ground->hasProperty(prop)) {
@@ -270,12 +282,12 @@ Item* Tile::getItemAt(int index) const {
 		index--;
 	}
 	if (index >= 0 && index < (int)items.size()) {
-		return items.at(index).get();
+		return items[index].get();
 	}
 	return nullptr;
 }
 
-void Tile::addItem(std::unique_ptr<Item> item) {
+void Tile::addItem(std::unique_ptr<Item> item, bool do_update) {
 	if (!item) {
 		return;
 	}
@@ -307,7 +319,9 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		statflags |= TILESTATE_SELECTED;
 	}
 	items.insert(it, std::move(item));
-	update();
+	if (do_update) {
+		update();
+	}
 }
 
 void Tile::select() {
@@ -486,6 +500,15 @@ void Tile::update() {
 		if (ground->hasLight()) {
 			statflags |= TILESTATE_HAS_LIGHT;
 		}
+		if (ground->hasProperty(BLOCKPATHFIND)) {
+			statflags |= TILESTATE_BLOCK_PATHFIND;
+		}
+		if (ground->hasProperty(BLOCKPROJECTILE)) {
+			statflags |= TILESTATE_BLOCK_PROJECTILE;
+		}
+		if (ground->hasProperty(MOVEABLE)) {
+			statflags |= TILESTATE_MOVEABLE;
+		}
 	}
 
 	std::ranges::for_each(items, [&](const auto& i) {
@@ -520,6 +543,18 @@ void Tile::update() {
 		}
 		if (i->hasLight()) {
 			statflags |= TILESTATE_HAS_LIGHT;
+		}
+		if (it_type.blockPathfinder) {
+			statflags |= TILESTATE_BLOCK_PATHFIND;
+		}
+		if (it_type.blockMissiles) {
+			statflags |= TILESTATE_BLOCK_PROJECTILE;
+		}
+		if (it_type.moveable && i->getUniqueID() == 0) {
+			statflags |= TILESTATE_MOVEABLE;
+		}
+		if (it_type.isWall) {
+			statflags |= TILESTATE_HAS_WALL;
 		}
 	});
 
