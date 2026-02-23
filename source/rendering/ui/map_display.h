@@ -175,11 +175,12 @@ public:
 
 private:
 	void EnsureNanoVG();
-	void DrawOverlays(NVGcontext* vg, DrawingOptions& options);
+	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
 	void PerformGarbageCollection();
 
 	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
+	long m_last_gc_time = 0;
 };
 
 #endif
