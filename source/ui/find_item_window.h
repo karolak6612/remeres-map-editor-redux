@@ -104,6 +104,7 @@ private:
 	wxCheckBox* floor_change;
 	wxCheckBox* invalid_item;
 
+	wxStaticBox* result_box;
 	FindDialogListBox* items_list;
 	wxStdDialogButtonSizer* buttons_box_sizer;
 	wxButton* ok_button;

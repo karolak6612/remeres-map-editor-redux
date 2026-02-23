@@ -28,6 +28,7 @@
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
 	input_timer(this),
+	result_box(nullptr),
 	result_brush(nullptr),
 	result_id(0),
 	only_pickupables(onlyPickupables) {
@@ -183,8 +184,10 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	// --------------- Items list ---------------
 
-	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
+	result_box = newd wxStaticBox(this, wxID_ANY, "Result");
+	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(result_box, wxVERTICAL);
 	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
+	items_list->SetToolTip("Double-click to select item");
 	items_list->SetMinSize(wxSize(230, 512));
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
@@ -413,6 +416,7 @@ void FindItemDialog::RefreshContentsInternal() {
 	} else {
 		items_list->SetNoMatches();
 	}
+	result_box->SetLabel(wxString::Format("Result (%d items found)", (int)items_list->GetItemCount()));
 
 	items_list->Refresh();
 }

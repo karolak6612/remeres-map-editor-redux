@@ -202,6 +202,7 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 	attributesGrid->SetColSize(1, FromDIP(80));
 	attributesGrid->SetColLabelValue(2, "Value");
 	attributesGrid->SetColSize(2, FromDIP(410));
+	attributesGrid->SetToolTip("Table of custom attributes. Key is the attribute name, Value is the data.");
 
 	// contents
 	ItemAttributeMap attrs = edit_item->getAttributes();
