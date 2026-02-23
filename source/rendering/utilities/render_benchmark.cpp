@@ -8,38 +8,45 @@ RenderBenchmark& RenderBenchmark::Get() {
 }
 
 void RenderBenchmark::StartFrame() {
-	currentFrame.metrics.clear();
-	currentFrame.startTime = std::chrono::high_resolution_clock::now();
+	for (auto& metric : currentFrameMetrics) {
+		metric.store(0, std::memory_order_relaxed);
+	}
+	startTime = std::chrono::high_resolution_clock::now();
 }
 
 void RenderBenchmark::EndFrame() {
 	auto endTime = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - currentFrame.startTime).count();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime).count();
 	RecordMetric(Metric::TotalFrameTime, duration);
 
-    for (const auto& [metric, value] : currentFrame.metrics) {
-        accumulatedMetrics[metric] += value;
+	std::lock_guard<std::mutex> lock(mutex);
+    for (size_t i = 0; i < static_cast<size_t>(Metric::MetricCount); ++i) {
+        accumulatedMetrics[i] += currentFrameMetrics[i].load(std::memory_order_relaxed);
     }
     frameCount++;
 }
 
 void RenderBenchmark::RecordMetric(Metric metric, int64_t value) {
-	currentFrame.metrics[metric] = value;
+	if (metric < Metric::MetricCount) {
+		currentFrameMetrics[static_cast<size_t>(metric)].store(value, std::memory_order_relaxed);
+	}
 }
 
 void RenderBenchmark::IncrementMetric(Metric metric, int64_t value) {
-	currentFrame.metrics[metric] += value;
+	if (metric < Metric::MetricCount) {
+		currentFrameMetrics[static_cast<size_t>(metric)].fetch_add(value, std::memory_order_relaxed);
+	}
 }
 
 int64_t RenderBenchmark::GetMetric(Metric metric) const {
-	auto it = currentFrame.metrics.find(metric);
-	if (it != currentFrame.metrics.end()) {
-		return it->second;
+	if (metric < Metric::MetricCount) {
+		return currentFrameMetrics[static_cast<size_t>(metric)].load(std::memory_order_relaxed);
 	}
 	return 0;
 }
 
 std::string RenderBenchmark::GetReport() const {
+	std::lock_guard<std::mutex> lock(mutex);
 	std::stringstream ss;
     if (frameCount == 0) return "No frames recorded.";
 
@@ -47,10 +54,11 @@ std::string RenderBenchmark::GetReport() const {
 	ss << "--------------------------------------------------\n";
 
     auto printMetric = [&](const char* name, Metric m) {
-        if (accumulatedMetrics.count(m)) {
+		size_t idx = static_cast<size_t>(m);
+		if (idx < accumulatedMetrics.size()) {
             ss << std::left << std::setw(30) << name << ": "
-               << (accumulatedMetrics.at(m) / frameCount) << "\n";
-        }
+               << (accumulatedMetrics[idx] / frameCount) << "\n";
+		}
     };
 
 	printMetric("Total Frame Time (us)", Metric::TotalFrameTime);
@@ -69,6 +77,7 @@ std::string RenderBenchmark::GetReport() const {
 }
 
 void RenderBenchmark::Reset() {
-    accumulatedMetrics.clear();
+	std::lock_guard<std::mutex> lock(mutex);
+    accumulatedMetrics.fill(0);
     frameCount = 0;
 }

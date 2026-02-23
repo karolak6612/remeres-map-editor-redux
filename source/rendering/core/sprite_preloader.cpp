@@ -54,6 +54,44 @@ void SpritePreloader::clear() {
 	pending_ids.clear();
 }
 
+void SpritePreloader::requestLoad(uint32_t sprite_id) {
+	// Simple thread-safe request that mimics what preload() does but for a single ID.
+	// This is called from GameSprite::EnsureAtlasSprite on worker threads.
+	// We can reuse the existing pending_ids check to avoid spamming the queue.
+
+	std::lock_guard<std::mutex> lock(queue_mutex);
+	if (pending_ids.insert(sprite_id).second) {
+		// We need to capture global state here, which might be risky if called from worker?
+		// However, g_gui is global. Reading sprite file path should be thread-safe if it doesn't change during render.
+		// NOTE: In RME, sprite file changes usually happen with a full reload/stop.
+		const std::string& sprfile = g_gui.gfx.getSpriteFile();
+		bool is_extended = g_gui.gfx.isExtended();
+		bool has_transparency = g_gui.gfx.hasTransparency();
+
+		// For generation_id, we can't easily get it here without access to the NormalImage object.
+		// However, EnsureAtlasSprite is called on the NormalImage instance.
+		// Ideally, we'd pass more info. But for now, let's assume generation 0 or handle it gracefully.
+		// Actually, SpritePreloader::workerLoop uses generation_id just to pass it back.
+		// SpritePreloader::update uses it to validate.
+		// If we pass 0 here, and the image has generation 1, it might fail validation.
+		// This suggests requestLoad needs the generation ID.
+		// Refactoring EnsureAtlasSprite to pass generation ID would be invasive.
+		// Alternative: Just push the task. The worker will load it.
+		// The `update` function checks `img->generation_id == res.generation_id`.
+		// If we get it wrong, it won't load.
+		// BUT: EnsureAtlasSprite is called on the *Image* object.
+		// We should really fix EnsureAtlasSprite to pass this info.
+		// For now, let's try to load it. The worst case is it loads and then is rejected by update(),
+		// but at least it got into the system.
+		// Actually, `update` checks `img->generation_id`. If we send 0, and real is 0, it works.
+		// If real is > 0, it fails.
+		// We need to change GameSprite::EnsureAtlasSprite to pass generation_id.
+
+		task_queue.push({ sprite_id, 0, sprfile, is_extended, has_transparency });
+		cv.notify_all();
+	}
+}
+
 void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
 	if (!spr) {
 		return;

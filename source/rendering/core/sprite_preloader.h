@@ -35,6 +35,10 @@ public:
 	// Explicit shutdown to be called before global destruction
 	void shutdown();
 
+	// Thread-safe method to request a sprite load from a worker thread.
+	// This queues the request for the preloader but does NOT trigger GL operations.
+	void requestLoad(uint32_t sprite_id);
+
 private:
 	SpritePreloader();
 	~SpritePreloader();
