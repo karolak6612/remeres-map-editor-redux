@@ -219,9 +219,7 @@ namespace IngamePreview {
 			// while the map moves smoothly under it.
 			// So we DO NOT add offset_x/y to draw_x/y again.
 
-			CreatureDrawOptions options;
-			options.animationPhase = animation_phase;
-			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, options);
+			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .animationPhase = animation_phase });
 
 			sprite_batch->end(*g_gui.gfx.getAtlasManager());
 		}
@@ -298,4 +296,3 @@ namespace IngamePreview {
 	}
 
 } // namespace IngamePreview
-

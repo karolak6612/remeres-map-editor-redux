@@ -35,15 +35,15 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 	}
 }
 
-void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, int red, int green, int blue, int alpha, int size) {
+void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size) {
 	if (size == 0) {
 		size = TILE_SIZE;
 	}
 
-	float normalizedR = red / 255.0f;
-	float normalizedG = green / 255.0f;
-	float normalizedB = blue / 255.0f;
-	float normalizedA = alpha / 255.0f;
+	float normalizedR = color.r / 255.0f;
+	float normalizedG = color.g / 255.0f;
+	float normalizedB = color.b / 255.0f;
+	float normalizedA = color.a / 255.0f;
 
 	// Use Graphics::getAtlasManager() to get the atlas manager for white pixel access
 	// This assumes Graphics and AtlasManager are available
@@ -52,11 +52,11 @@ void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, int r
 	}
 }
 
-void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, int red, int green, int blue, int alpha) {
-	float normalizedR = red / 255.0f;
-	float normalizedG = green / 255.0f;
-	float normalizedB = blue / 255.0f;
-	float normalizedA = alpha / 255.0f;
+void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color) {
+	float normalizedR = color.r / 255.0f;
+	float normalizedG = color.g / 255.0f;
+	float normalizedB = color.b / 255.0f;
+	float normalizedA = color.a / 255.0f;
 
 	if (g_gui.gfx.hasAtlasManager()) {
 		sprite_batch.drawRectLines(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());

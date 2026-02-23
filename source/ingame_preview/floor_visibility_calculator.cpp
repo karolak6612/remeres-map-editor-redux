@@ -1,4 +1,3 @@
-#include <iostream>
 #include "ingame_preview/floor_visibility_calculator.h"
 #include "map/basemap.h"
 #include "map/tile.h"
@@ -27,7 +26,7 @@ namespace IngamePreview {
 			}
 		}
 
-		return std::ranges::any_of(tile->items, [](const std::unique_ptr<Item>& item) {
+		return std::ranges::any_of(tile->items, [](const auto& item) {
 			const ItemType& it = g_items[item->getID()];
 			return it.isGroundTile() || (it.alwaysOnBottom && it.blockMissiles);
 		});
@@ -45,7 +44,7 @@ namespace IngamePreview {
 			}
 		}
 
-		return std::ranges::none_of(tile->items, [](const std::unique_ptr<Item>& item) {
+		return std::ranges::none_of(tile->items, [](const auto& item) {
 			return g_items[item->getID()].blockMissiles;
 		});
 	}

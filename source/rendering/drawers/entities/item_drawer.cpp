@@ -82,14 +82,14 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	if (!options.ingame && options.show_tech_items) {
 		// Red invalid client id
 		if (it.id == 0) {
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, alpha);
+			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
 			return;
 		}
 
 		switch (it.clientID) {
 			// Yellow invisible stairs tile (459)
 			case 469:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, green, 0, (alpha * 171) >> 8);
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
 				return;
 
 			// Red invisible walkable tile (460)
@@ -97,12 +97,12 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			case 17970:
 			case 20028:
 			case 34168:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, red, 0, 0, (alpha * 171) >> 8);
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
 				return;
 
 			// Cyan invisible wall (1548)
 			case 2187:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, 0, green, blue, 80);
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(0, green, blue, 80));
 				return;
 
 			default:
@@ -219,7 +219,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			outfit.lookMount = 0;
 		}
 
-		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions{.color = DrawColor(red, green, blue, 255)});
+		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
 	}
 
 	// draw wall hook
@@ -244,8 +244,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			// SpriteDrawer::glBlitSquare internally uses BatchRenderer::DrawQuad which sets blank texture if needed.
 			// So we don't need manual enable/disable here anymore.
 
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, 0, 0, 0, byteA, sqSize + 2);
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, byteR, byteG, byteB, byteA, sqSize);
+			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
+			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize);
 		}
 	}
 }

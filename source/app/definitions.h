@@ -154,12 +154,12 @@ constexpr int PixelFormatRGB = 3;
 constexpr int PixelFormatRGBA = 4;
 
 struct DrawColor {
-	int r;
-	int g;
-	int b;
-	int a;
+	uint8_t r;
+	uint8_t g;
+	uint8_t b;
+	uint8_t a;
 
-	constexpr DrawColor(int red = 255, int green = 255, int blue = 255, int alpha = 255) :
+	constexpr DrawColor(uint8_t red = 255, uint8_t green = 255, uint8_t blue = 255, uint8_t alpha = 255) :
 		r(red),
 		g(green),
 		b(blue),

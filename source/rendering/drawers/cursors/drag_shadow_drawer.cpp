@@ -95,7 +95,7 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 				// save performance when moving large chunks unzoomed
 				if (view.zoom <= 3.0) {
 					if (tile->creature && tile->creature->isSelected() && options.show_creatures) {
-						creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
+						creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .color = DrawColor(160, 160, 160, 160) });
 					}
 					if (tile->spawn && tile->spawn->isSelected()) {
 						sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_SPAWN, DrawColor(160, 160, 160, 160));

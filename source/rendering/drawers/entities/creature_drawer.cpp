@@ -49,17 +49,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		// - When > 0: walking (use the provided animation phase)
 		// - When == 0: standing idle (ALWAYS use frame 0, NOT the global animator)
 		// The global animator is for idle creatures on the map, NOT for the player
-		int resolvedFrame = 0;
-		if (options.animationPhase > 0) {
-			// Walking: use the calculated walk animation phase
-			resolvedFrame = options.animationPhase;
-		} else {
-			// Standing still: always use frame 0 (idle)
-			// Do NOT use spr->animator->getFrame() - that's for global idle animations
-			// of creatures on the map, not for the player character
-			resolvedFrame = 0;
-		}
-
+		int resolvedFrame = options.animationPhase > 0 ? options.animationPhase : 0;
 
 		// mount and addon drawing thanks to otc code
 		// mount colors by Zbizu
