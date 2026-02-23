@@ -44,6 +44,7 @@
 #include "rendering/ui/map_status_updater.h"
 #include "rendering/map_drawer.h"
 #include "rendering/core/text_renderer.h"
+#include "rendering/core/gl_state_tracker.h"
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <nanovg_gl.h>
@@ -251,6 +252,9 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	if (g_gui.IsRenderingEnabled()) {
 		// Advance graphics clock and drain the preloader queue before rendering
 		g_gui.gfx.updateTime();
+
+		// Invalidate GL State Tracker because external code (e.g. wxWidgets context switch) might have touched state
+		GLStateTracker::Instance().Invalidate();
 
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_controller->IsCapturing()) {

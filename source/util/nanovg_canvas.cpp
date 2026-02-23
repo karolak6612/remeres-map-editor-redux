@@ -2,6 +2,7 @@
 #include "util/nanovg_canvas.h"
 #include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
+#include "rendering/core/gl_state_tracker.h"
 #include "ui/theme.h"
 
 #include <glad/glad.h>
@@ -90,6 +91,7 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 	}
 
 	SetCurrent(*m_glContext);
+	GLStateTracker::Instance().Invalidate();
 
 	int w, h;
 	GetClientSize(&w, &h);

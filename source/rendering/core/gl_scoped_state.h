@@ -1,12 +1,13 @@
 #ifndef RME_RENDERING_CORE_GL_SCOPED_STATE_H_
 #define RME_RENDERING_CORE_GL_SCOPED_STATE_H_
 
+#include "rendering/core/gl_state_tracker.h"
 #include <glad/glad.h>
 #include <cassert>
 #include <utility>
 
 /**
- * @brief RAII wrapper for glEnable/glDisable
+ * @brief RAII wrapper for glEnable/glDisable using GLStateTracker
  *
  * Intended for short-lived scope-based state changes, not for persistent state modifications.
  */
@@ -14,14 +15,14 @@ class ScopedGLCapability {
 public:
 	[[nodiscard]] explicit ScopedGLCapability(GLenum capability, bool enable = true) :
 		capability_(capability) {
-		was_enabled_ = glIsEnabled(capability);
+		was_enabled_ = GLStateTracker::Instance().IsEnabled(capability);
 		if (enable) {
 			if (!was_enabled_) {
-				glEnable(capability);
+				GLStateTracker::Instance().Enable(capability);
 			}
 		} else {
 			if (was_enabled_) {
-				glDisable(capability);
+				GLStateTracker::Instance().Disable(capability);
 			}
 		}
 	}
@@ -53,21 +54,21 @@ private:
 	void restore() const {
 		if (active_) {
 			if (was_enabled_) {
-				glEnable(capability_);
+				GLStateTracker::Instance().Enable(capability_);
 			} else {
-				glDisable(capability_);
+				GLStateTracker::Instance().Disable(capability_);
 			}
 		}
 	}
 
 private:
 	GLenum capability_;
-	GLboolean was_enabled_;
+	bool was_enabled_;
 	bool active_ = true;
 };
 
 /**
- * @brief RAII wrapper for glBlendFunc and glBlendEquation
+ * @brief RAII wrapper for glBlendFunc and glBlendEquation using GLStateTracker
  *
  * Intended for short-lived scope-based state changes, not for persistent state modifications.
  */
@@ -75,13 +76,13 @@ class ScopedGLBlend {
 public:
 	[[nodiscard]] ScopedGLBlend(GLenum sfactor, GLenum dfactor) {
 		save_state();
-		glBlendFunc(sfactor, dfactor);
+		GLStateTracker::Instance().BlendFunc(sfactor, dfactor);
 	}
 
 	[[nodiscard]] ScopedGLBlend(GLenum sfactor, GLenum dfactor, GLenum equation) {
 		save_state();
-		glBlendFunc(sfactor, dfactor);
-		glBlendEquation(equation);
+		GLStateTracker::Instance().BlendFunc(sfactor, dfactor);
+		GLStateTracker::Instance().BlendEquation(equation);
 	}
 
 	~ScopedGLBlend() {
@@ -118,19 +119,15 @@ public:
 private:
 	void restore() const {
 		if (active_) {
-			glBlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
-			glBlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
+			GLStateTracker::Instance().BlendFuncSeparate(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
+			GLStateTracker::Instance().BlendEquationSeparate(prev_eq_rgb_, prev_eq_alpha_);
 		}
 	}
 
 private:
 	void save_state() {
-		glGetIntegerv(GL_BLEND_SRC_RGB, &prev_src_rgb_);
-		glGetIntegerv(GL_BLEND_DST_RGB, &prev_dst_rgb_);
-		glGetIntegerv(GL_BLEND_SRC_ALPHA, &prev_src_alpha_);
-		glGetIntegerv(GL_BLEND_DST_ALPHA, &prev_dst_alpha_);
-		glGetIntegerv(GL_BLEND_EQUATION_RGB, &prev_eq_rgb_);
-		glGetIntegerv(GL_BLEND_EQUATION_ALPHA, &prev_eq_alpha_);
+		GLStateTracker::Instance().GetBlendFunc(prev_src_rgb_, prev_dst_rgb_, prev_src_alpha_, prev_dst_alpha_);
+		GLStateTracker::Instance().GetBlendEquation(prev_eq_rgb_, prev_eq_alpha_);
 	}
 
 	GLint prev_src_rgb_ = GL_ONE, prev_dst_rgb_ = GL_ZERO;
@@ -140,7 +137,7 @@ private:
 };
 
 /**
- * @brief RAII wrapper for glFramebuffer
+ * @brief RAII wrapper for glFramebuffer using GLStateTracker
  *
  * Saves current READ and DRAW framebuffer bindings on construction and restores them on destruction.
  */
@@ -151,13 +148,13 @@ public:
 		assert(target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER);
 
 		if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
-			glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &prev_read_);
+			prev_read_ = GLStateTracker::Instance().GetFramebufferBinding(GL_READ_FRAMEBUFFER);
 		}
 		if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
-			glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &prev_draw_);
+			prev_draw_ = GLStateTracker::Instance().GetFramebufferBinding(GL_DRAW_FRAMEBUFFER);
 		}
 
-		glBindFramebuffer(target_, framebuffer);
+		GLStateTracker::Instance().BindFramebuffer(target_, framebuffer);
 	}
 
 	~ScopedGLFramebuffer() {
@@ -189,31 +186,31 @@ private:
 	void restore() const {
 		if (active_) {
 			if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
-				glBindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
+				GLStateTracker::Instance().BindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
 			}
 			if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
-				glBindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
+				GLStateTracker::Instance().BindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
 			}
 		}
 	}
 
 private:
 	GLenum target_;
-	GLint prev_read_ = 0;
-	GLint prev_draw_ = 0;
+	GLuint prev_read_ = 0;
+	GLuint prev_draw_ = 0;
 	bool active_ = true;
 };
 
 /**
- * @brief RAII wrapper for glViewport
+ * @brief RAII wrapper for glViewport using GLStateTracker
  *
  * Saves current viewport on construction and restores it on destruction.
  */
 class ScopedGLViewport {
 public:
 	[[nodiscard]] ScopedGLViewport(GLint x, GLint y, GLsizei width, GLsizei height) {
-		glGetIntegerv(GL_VIEWPORT, prev_viewport_);
-		glViewport(x, y, width, height);
+		GLStateTracker::Instance().GetViewport(prev_viewport_);
+		GLStateTracker::Instance().Viewport(x, y, width, height);
 	}
 
 	~ScopedGLViewport() {
@@ -244,7 +241,7 @@ public:
 private:
 	void restore() const {
 		if (active_) {
-			glViewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
+			GLStateTracker::Instance().Viewport(prev_viewport_[0], prev_viewport_[1], prev_viewport_[2], prev_viewport_[3]);
 		}
 	}
 

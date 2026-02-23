@@ -6,6 +6,7 @@
 #include "rendering/map_drawer.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/core/text_renderer.h"
+#include "rendering/core/gl_state_tracker.h"
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -403,6 +404,8 @@ namespace IngamePreview {
 
 		if (m_glContext) {
 			SetCurrent(*m_glContext);
+			// Invalidate GL State Tracker because we switched context
+			GLStateTracker::Instance().Invalidate();
 		}
 
 		if (!m_nvg) {
