@@ -20,6 +20,15 @@
 
 #include <cstdint>
 #include <numbers>
+#include <concepts>
+#include <type_traits>
+
+//
+template <typename T1, typename T2>
+	requires(std::integral<T1> || std::is_enum_v<T1>) && (std::integral<T2> || std::is_enum_v<T2>)
+inline bool testFlags(T1 flags, T2 test) {
+	return (static_cast<uint64_t>(flags) & static_cast<uint64_t>(test)) != 0;
+}
 
 #define __W_RME_APPLICATION_NAME__ wxString("OTAcademy Map Editor")
 #define __RME_APPLICATION_NAME__ std::string("OTAcademy Map Editor")

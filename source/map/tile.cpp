@@ -213,6 +213,14 @@ bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
 		return true;
 	}
 
+	if (prop == HOOK_SOUTH && hasHookSouth()) {
+		return true;
+	}
+
+	if (prop == HOOK_EAST && hasHookEast()) {
+		return true;
+	}
+
 	if (prop == BLOCKSOLID) {
 		// Optimization: Use cached blocking state
 		// Note: isBlocking() returns true for empty tiles (void), but hasProperty checks if *content* has property.
@@ -378,6 +386,7 @@ std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelecte
 	}
 
 	auto split_point = std::stable_partition(items.begin(), items.end(), [](const std::unique_ptr<Item>& i) { return !i->isSelected(); });
+	pop_items.reserve(std::distance(split_point, items.end()));
 	std::move(split_point, items.end(), std::back_inserter(pop_items));
 	items.erase(split_point, items.end());
 
@@ -492,6 +501,9 @@ static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimap
 	if (i->hasLight()) {
 		statflags |= TILESTATE_HAS_LIGHT;
 	}
+	if (it_type.isWall) {
+		statflags |= TILESTATE_HAS_WALL;
+	}
 }
 
 void Tile::update() {
@@ -554,6 +566,9 @@ GroundBrush* Tile::getGroundBrush() const {
 }
 
 Item* Tile::getWall() const {
+	if (!hasWall()) {
+		return nullptr;
+	}
 	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isWall();
 	});
@@ -561,6 +576,9 @@ Item* Tile::getWall() const {
 }
 
 Item* Tile::getCarpet() const {
+	if (!hasCarpet()) {
+		return nullptr;
+	}
 	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isCarpet();
 	});
@@ -568,6 +586,9 @@ Item* Tile::getCarpet() const {
 }
 
 Item* Tile::getTable() const {
+	if (!hasTable()) {
+		return nullptr;
+	}
 	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isTable();
 	});
@@ -579,7 +600,7 @@ void Tile::addWallItem(std::unique_ptr<Item> item) {
 		return;
 	}
 	ASSERT(item->isWall());
-
+	statflags |= TILESTATE_HAS_WALL;
 	addItem(std::move(item));
 }
 

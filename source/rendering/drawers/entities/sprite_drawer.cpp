@@ -91,12 +91,22 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
 	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
 
+	float normalizedR = color.r / 255.0f;
+	float normalizedG = color.g / 255.0f;
+	float normalizedB = color.b / 255.0f;
+	float normalizedA = color.a / 255.0f;
+
 	for (int cx = 0; cx != spr->width; ++cx) {
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
 				if (region) {
-					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
+					sprite_batch.draw(
+						static_cast<float>(screenx - cx * TILE_SIZE), static_cast<float>(screeny - cy * TILE_SIZE),
+						static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
+						*region,
+						normalizedR, normalizedG, normalizedB, normalizedA
+					);
 				}
 				// No fallback - if region is null, sprite failed to load
 			}

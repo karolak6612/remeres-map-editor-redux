@@ -186,8 +186,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
 
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y && map_z == view.floor);
+
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && waypoint && map_z == view.floor) {
+	if (options.show_tooltips && is_hovered && waypoint) {
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
@@ -233,7 +235,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (options.show_tooltips && is_hovered && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -273,7 +275,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
+			bool process_tooltips = options.show_tooltips && is_hovered;
 
 			// items on tile
 			for (const auto& item : tile->items) {

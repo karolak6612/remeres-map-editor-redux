@@ -30,11 +30,6 @@
 #include <type_traits>
 
 //
-template <typename T1, typename T2>
-	requires(std::integral<T1> || std::is_enum_v<T1>) && (std::integral<T2> || std::is_enum_v<T2>)
-inline bool testFlags(T1 flags, T2 test) {
-	return (static_cast<uint64_t>(flags) & static_cast<uint64_t>(test)) != 0;
-}
 
 int32_t uniform_random(int32_t minNumber, int32_t maxNumber);
 int32_t uniform_random(int32_t maxNumber);
