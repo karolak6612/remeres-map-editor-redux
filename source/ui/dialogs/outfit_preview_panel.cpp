@@ -3,8 +3,10 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
+#include "util/image_manager.h"
 #include <wx/dcbuffer.h>
 #include <wx/graphics.h>
+#include <wx/menu.h>
 
 namespace {
 	const int PREVIEW_SIZE = 192;
@@ -18,6 +20,7 @@ OutfitPreviewPanel::OutfitPreviewPanel(wxWindow* parent, const Outfit& outfit) :
 	Bind(wxEVT_PAINT, &OutfitPreviewPanel::OnPaint, this);
 	Bind(wxEVT_LEFT_DOWN, &OutfitPreviewPanel::OnMouse, this);
 	Bind(wxEVT_MOUSEWHEEL, &OutfitPreviewPanel::OnWheel, this);
+	Bind(wxEVT_CONTEXT_MENU, &OutfitPreviewPanel::OnContextMenu, this);
 	SetCursor(wxCursor(wxCURSOR_HAND));
 	SetToolTip("Click or scroll to rotate character");
 }
@@ -83,4 +86,36 @@ void OutfitPreviewPanel::OnWheel(wxMouseEvent& event) {
 		preview_direction = (preview_direction + 3) % 4;
 	}
 	Refresh();
+}
+
+void OutfitPreviewPanel::OnContextMenu(wxContextMenuEvent& event) {
+	wxMenu menu;
+
+	enum {
+		ID_ROTATE_CW = wxID_HIGHEST + 100,
+		ID_ROTATE_CCW,
+		ID_RESET_DIR
+	};
+
+	menu.Append(ID_ROTATE_CW, "Rotate Clockwise")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE_RIGHT, wxSize(16, 16)));
+	menu.Append(ID_ROTATE_CCW, "Rotate Counter-Clockwise")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE_LEFT, wxSize(16, 16)));
+	menu.AppendSeparator();
+	menu.Append(ID_RESET_DIR, "Reset Direction")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_UNDO, wxSize(16, 16)));
+
+	menu.Bind(wxEVT_MENU, [this](wxCommandEvent& e) {
+		switch (e.GetId()) {
+			case ID_ROTATE_CW:
+				preview_direction = (preview_direction + 1) % 4;
+				break;
+			case ID_ROTATE_CCW:
+				preview_direction = (preview_direction + 3) % 4;
+				break;
+			case ID_RESET_DIR:
+				preview_direction = 0;
+				break;
+		}
+		Refresh();
+	}, ID_ROTATE_CW, ID_RESET_DIR);
+
+	PopupMenu(&menu);
 }

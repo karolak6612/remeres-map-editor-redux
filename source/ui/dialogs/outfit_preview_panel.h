@@ -12,6 +12,7 @@ public:
 	void OnPaint(wxPaintEvent& event);
 	void OnMouse(wxMouseEvent& event);
 	void OnWheel(wxMouseEvent& event);
+	void OnContextMenu(wxContextMenuEvent& event);
 
 private:
 	Outfit preview_outfit;
