@@ -117,7 +117,12 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {
 	tileset_field->Clear();
 
-	TilesetCategoryType category = static_cast<TilesetCategoryType>(reinterpret_cast<intptr_t>(palette_field->GetClientData(palette_field->GetSelection())));
+	int selection = palette_field->GetSelection();
+	if (selection == wxNOT_FOUND) {
+		return;
+	}
+
+	TilesetCategoryType category = static_cast<TilesetCategoryType>(reinterpret_cast<intptr_t>(palette_field->GetClientData(selection)));
 
 	for (const auto& tileset : GetSortedTilesets(g_materials.tilesets)) {
 		if (!tileset->getCategory(category)->brushlist.empty()) {
@@ -130,7 +135,11 @@ void TilesetWindow::OnChangePalette(wxCommandEvent& WXUNUSED(event)) {
 
 void TilesetWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (edit_item) {
-		TilesetCategoryType categoryType = static_cast<TilesetCategoryType>(reinterpret_cast<intptr_t>(palette_field->GetClientData(palette_field->GetSelection())));
+		int selection = palette_field->GetSelection();
+		if (selection == wxNOT_FOUND) {
+			return;
+		}
+		TilesetCategoryType categoryType = static_cast<TilesetCategoryType>(reinterpret_cast<intptr_t>(palette_field->GetClientData(selection)));
 		std::string tilesetName = tileset_field->GetStringSelection().ToStdString();
 
 		g_materials.addToTileset(tilesetName, edit_item->getID(), categoryType);
