@@ -246,7 +246,7 @@ CreatureDatabase::~CreatureDatabase() {
 }
 
 void CreatureDatabase::clear() {
-	for (auto& [name, creature] : creature_map) {
+	for (auto& [_, creature] : creature_map) {
 		delete creature;
 	}
 	creature_map.clear();

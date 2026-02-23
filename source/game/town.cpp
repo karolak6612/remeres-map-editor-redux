@@ -45,7 +45,7 @@ bool Towns::addTown(std::unique_ptr<Town> town) {
 
 uint32_t Towns::getEmptyID() {
 	uint32_t empty = 0;
-	for (const auto& [id, town] : towns) {
+	for (const auto& [_, town] : towns) {
 		if (town->getID() > empty) {
 			empty = town->getID();
 		}
@@ -54,7 +54,7 @@ uint32_t Towns::getEmptyID() {
 }
 
 Town* Towns::getTown(std::string& name) {
-	for (const auto& [id, town] : towns) {
+	for (const auto& [_, town] : towns) {
 		if (town->getName() == name) {
 			return town.get();
 		}
