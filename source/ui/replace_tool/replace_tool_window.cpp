@@ -5,7 +5,7 @@
 #include "editor/editor.h"
 #include "game/items.h"
 #include "ui/gui.h"
-#include "ui/gui.h"
+#include "map/map_region.h"
 #include "app/settings.h"
 #include "app/managers/version_manager.h"
 #include <algorithm> // For std::find
@@ -400,11 +400,28 @@ void ReplaceToolWindow::OnExecute(wxCommandEvent&) {
 			int z = canvas->GetFloor();
 
 			std::vector<Position> pv;
-			for (int x = startX; x <= endX; ++x) {
-				for (int y = startY; y <= endY; ++y) {
-					pv.push_back(Position(x, y, z));
+			editor->map.visitLeaves(startX, startY, endX + 1, endY + 1, [&](MapNode* node, int nd_map_x, int nd_map_y) {
+				Floor* floor = node->getFloor(z);
+				if (!floor) {
+					return;
 				}
-			}
+
+				TileLocation* loc = floor->locs.data();
+				for (int dx = 0; dx < 4; ++dx) {
+					for (int dy = 0; dy < 4; ++dy, ++loc) {
+						int tx = nd_map_x + dx;
+						int ty = nd_map_y + dy;
+
+						if (tx < startX || tx > endX || ty < startY || ty > endY) {
+							continue;
+						}
+
+						if (!loc->empty()) {
+							pv.push_back(Position(tx, ty, z));
+						}
+					}
+				}
+			});
 			engine.ExecuteReplacement(editor, rules, scope, &pv);
 		}
 	} else {
@@ -436,19 +453,34 @@ void ReplaceToolWindow::OnAddVisibleTiles(wxCommandEvent&) {
 	int z = canvas->GetFloor();
 
 	std::set<uint16_t> uniqueIds;
-	for (int x = startX; x <= endX; ++x) {
-		for (int y = startY; y <= endY; ++y) {
-			Tile* tile = editor->map.getTile(x, y, z);
-			if (tile) {
-				if (tile->ground) {
-					uniqueIds.insert(tile->ground->getID());
+	editor->map.visitLeaves(startX, startY, endX + 1, endY + 1, [&](MapNode* node, int nd_map_x, int nd_map_y) {
+		Floor* floor = node->getFloor(z);
+		if (!floor) {
+			return;
+		}
+
+		TileLocation* loc = floor->locs.data();
+		for (int dx = 0; dx < 4; ++dx) {
+			for (int dy = 0; dy < 4; ++dy, ++loc) {
+				int tx = nd_map_x + dx;
+				int ty = nd_map_y + dy;
+
+				if (tx < startX || tx > endX || ty < startY || ty > endY) {
+					continue;
 				}
-				for (const auto& item : tile->items) {
-					uniqueIds.insert(item->getID());
+
+				Tile* tile = loc->get();
+				if (tile) {
+					if (tile->ground) {
+						uniqueIds.insert(tile->ground->getID());
+					}
+					for (const auto& item : tile->items) {
+						uniqueIds.insert(item->getID());
+					}
 				}
 			}
 		}
-	}
+	});
 
 	if (uniqueIds.empty()) {
 		return;
