@@ -26,6 +26,7 @@
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <atomic>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -81,7 +82,7 @@ public:
 private:
 	std::unique_ptr<boost::asio::io_context> service;
 	std::thread thread;
-	bool stopped;
+	std::atomic<bool> stopped;
 };
 
 #endif

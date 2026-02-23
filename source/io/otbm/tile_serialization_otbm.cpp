@@ -161,6 +161,15 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 
 					const Position& pos = save_tile->getPosition();
 
+					if (pos.x < 0 || pos.y < 0) {
+						static bool warned = false;
+						if (!warned) {
+							spdlog::warn("Skipping tile at negative coordinates ({}, {}, {}). OTBM format does not support negative coordinates.", pos.x, pos.y, pos.z);
+							warned = true;
+						}
+						continue;
+					}
+
 					// Decide if new node should be created
 					if (pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
 						if (!first) {

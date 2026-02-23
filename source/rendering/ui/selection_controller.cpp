@@ -413,7 +413,8 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
 			if (i == threadcount - 1) {
 				chunksize = remainder;
 			}
-			threads.push_back(std::make_unique<SelectionThread>(editor, Position(s_x + cleared, s_y, s_z), Position(s_x + cleared + chunksize, e_y, e_z)));
+			int end_offset = (i == threadcount - 1) ? chunksize : chunksize - 1;
+			threads.push_back(std::make_unique<SelectionThread>(editor, Position(s_x + cleared, s_y, s_z), Position(s_x + cleared + end_offset, e_y, e_z)));
 			cleared += chunksize;
 			remainder -= chunksize;
 		}
