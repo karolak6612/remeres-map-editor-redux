@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <wx/wx.h>
 #include <string>
+#include "map/position.h"
 
 struct DrawingOptions {
 	DrawingOptions();
@@ -59,6 +60,8 @@ struct DrawingOptions {
 	bool anti_aliasing;
 
 	std::string screen_shader_name;
+
+	Position cursor_position = Position(-1, -1, -1);
 };
 
 #endif

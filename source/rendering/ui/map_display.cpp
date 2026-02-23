@@ -259,6 +259,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 			options.Update();
 		}
 
+		options.cursor_position = GetCursorPosition();
 		options.dragging = selection_controller->IsDragging();
 		options.boundbox_selection = selection_controller->IsBoundboxSelection();
 
