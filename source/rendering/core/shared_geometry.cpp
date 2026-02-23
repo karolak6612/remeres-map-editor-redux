@@ -28,7 +28,7 @@ bool SharedGeometry::initialize() {
 
 	std::lock_guard<std::mutex> lock(mutex_);
 
-	if (auto it = contexts_.find(ctx); it != contexts_.end()) {
+	if (contexts_.contains(ctx)) {
 		return true;
 	}
 
