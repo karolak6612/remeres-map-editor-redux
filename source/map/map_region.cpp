@@ -158,15 +158,15 @@ void SpatialHashGrid::updateSortedCells() const {
 	}
 
 	std::ranges::sort(sorted_cells_cache, [](const auto& a, const auto& b) {
-		return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
+		return a.key < b.key;
 	});
 
 	sorted_cells_dirty = false;
 }
 
 void SpatialHashGrid::getCellCoordsFromKey(uint64_t key, int& cx, int& cy) {
-	cx = static_cast<int32_t>(key >> 32);
-	cy = static_cast<int32_t>(key);
+	cy = static_cast<int32_t>(key >> 32);
+	cx = static_cast<int32_t>(key);
 }
 
 const std::vector<SpatialHashGrid::SortedGridCell>& SpatialHashGrid::getSortedCells() const {
@@ -321,14 +321,14 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 		return node.get();
 	}
 
-	auto& cell = cells[key];
-	if (!cell) {
-		cell = std::make_unique<GridCell>();
+	auto [it, inserted] = cells.try_emplace(key);
+	if (inserted) {
+		it->second = std::make_unique<GridCell>();
 		sorted_cells_dirty = true;
 	}
 
 	last_key = key;
-	last_cell = cell.get();
+	last_cell = it->second.get();
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);

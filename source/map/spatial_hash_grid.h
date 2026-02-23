@@ -161,19 +161,25 @@ protected:
 			return;
 		}
 
-		SortedGridCell search_val { .key = 0, .cx = std::numeric_limits<int>::min(), .cy = start_cy, .cell = nullptr };
+		SortedGridCell search_val { .key = makeKeyFromCell(0, start_cy), .cx = 0, .cy = start_cy, .cell = nullptr };
 
 		// Find the first cell that could potentially be in the viewport
 		auto it = std::lower_bound(sorted_cells_cache.begin(), sorted_cells_cache.end(), search_val, [](const SortedGridCell& a, const SortedGridCell& b) {
-			return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
+			return a.key < b.key;
 		});
 
 		int prev_cy = -1;
 
-		std::vector<const SortedGridCell*> row_cells;
+		struct RowCellInfoHoisted {
+			GridCell* cell;
+			int cell_start_nx;
+			int local_start_nx;
+			int local_end_nx;
+		};
+		static thread_local std::vector<RowCellInfoHoisted> row_cells;
 		row_cells.reserve(end_cx - start_cx + 1);
 
-		for (int ny : std::views::iota(start_ny, end_ny + 1)) {
+		for (int ny = start_ny; ny <= end_ny; ++ny) {
 			int current_cy = ny >> NODES_PER_CELL_SHIFT;
 			int local_ny = ny & (NODES_PER_CELL - 1);
 
@@ -184,11 +190,12 @@ protected:
 					++it;
 				}
 
-				// Collect cells for this row
+				// Collect and hoist calculations for this row
 				auto cell_it = it;
 				while (cell_it != sorted_cells_cache.end() && cell_it->cy == current_cy) {
 					if (cell_it->cx >= start_cx && cell_it->cx <= end_cx) {
-						row_cells.push_back(&(*cell_it));
+						int cell_start_nx = cell_it->cx << NODES_PER_CELL_SHIFT;
+						row_cells.push_back({ .cell = cell_it->cell, .cell_start_nx = cell_start_nx, .local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx, .local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx });
 					} else if (cell_it->cx > end_cx) {
 						break;
 					}
@@ -197,17 +204,11 @@ protected:
 				prev_cy = current_cy;
 			}
 
-			for (const auto* cell_data : row_cells) {
-				GridCell* cell = cell_data->cell;
-				int cell_start_nx = cell_data->cx << NODES_PER_CELL_SHIFT;
-
-				int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
-				int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
-
-				for (int lnx = local_start_nx; lnx <= local_end_nx; ++lnx) {
-					int idx = local_ny * NODES_PER_CELL + lnx;
-					if (MapNode* node = cell->nodes[idx].get()) {
-						func(node, (cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
+			for (const auto& row_cell : row_cells) {
+				int idx_base = local_ny * NODES_PER_CELL;
+				for (int lnx = row_cell.local_start_nx; lnx <= row_cell.local_end_nx; ++lnx) {
+					if (MapNode* node = row_cell.cell->nodes[idx_base + lnx].get()) {
+						func(node, (row_cell.cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
 					}
 				}
 			}
@@ -216,7 +217,7 @@ protected:
 
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		static_assert(sizeof(int) == 4, "Key packing assumes exactly 32-bit integers");
-		return (static_cast<uint64_t>(static_cast<uint32_t>(cx)) << 32) | static_cast<uint32_t>(cy);
+		return (static_cast<uint64_t>(static_cast<uint32_t>(cy)) << 32) | static_cast<uint32_t>(cx);
 	}
 
 	static uint64_t makeKey(int x, int y) {
