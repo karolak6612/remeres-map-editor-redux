@@ -22,8 +22,11 @@
 #include <memory>
 
 #include "rendering/core/graphics.h"
+#include "util/nanovg_canvas.h"
 
 class MinimapDrawer;
+struct NVGcontext;
+
 class MinimapWindow : public wxGLCanvas {
 public:
 	MinimapWindow(wxWindow* parent);
@@ -40,9 +43,12 @@ public:
 	void OnKey(wxKeyEvent& event);
 
 protected:
+	void EnsureNanoVG();
 	std::unique_ptr<MinimapDrawer> drawer;
 	wxTimer update_timer;
 	wxGLContext* context;
+
+	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 };
 
 #endif

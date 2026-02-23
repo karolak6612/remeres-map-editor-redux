@@ -28,6 +28,9 @@
 #include "rendering/ui/minimap_window.h"
 
 #include "rendering/drawers/minimap_drawer.h"
+#include "rendering/core/text_renderer.h"
+#include <nanovg.h>
+#include <nanovg_gl.h>
 
 // Helper to create attributes
 static wxGLAttributes& GetCoreProfileAttributes() {
@@ -71,6 +74,16 @@ MinimapWindow::~MinimapWindow() {
 	}
 	spdlog::debug("MinimapWindow destructor finished");
 	spdlog::default_logger()->flush();
+}
+
+void MinimapWindow::EnsureNanoVG() {
+	if (!m_nvg) {
+		// GLAD should already be loaded by MapCanvas or MinimapWindow OnPaint
+		m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
+		if (!m_nvg) {
+			spdlog::error("MinimapWindow: Failed to initialize NanoVG");
+		}
+	}
 }
 
 void MinimapWindow::OnSize(wxSizeEvent& event) {
@@ -127,6 +140,23 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 
 	// Mock dc passed to Draw, unused by new GL implementation
 	drawer->Draw(dc, GetSize(), editor, canvas);
+
+	EnsureNanoVG();
+	if (m_nvg) {
+		// Reset GL state for NanoVG
+		glUseProgram(0);
+		glBindVertexArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+		TextRenderer::BeginFrame(m_nvg.get(), GetSize().GetWidth(), GetSize().GetHeight(), GetContentScaleFactor());
+		drawer->DrawOverlay(m_nvg.get(), GetSize(), editor, canvas);
+		TextRenderer::EndFrame(m_nvg.get());
+
+		glUseProgram(0);
+		glBindVertexArray(0);
+	}
 
 	SwapBuffers();
 }

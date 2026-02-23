@@ -10,6 +10,9 @@
 // Included for minimap_color
 #include "rendering/core/graphics.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <nanovg.h>
+#include "util/nvg_utils.h"
+#include "ui/theme.h"
 
 MinimapDrawer::MinimapDrawer() :
 	renderer(std::make_unique<MinimapRenderer>()),
@@ -114,44 +117,74 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		// Render
 		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
 
-		// Draw View Box (Overlay)
-		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
-			// Compute box coordinates
-			int screensize_x, screensize_y;
-			int view_scroll_x, view_scroll_y;
-			canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
-
-			int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
-			int view_start_x = view_scroll_x / TILE_SIZE + floor_offset;
-			int view_start_y = view_scroll_y / TILE_SIZE + floor_offset;
-
-			int tile_size = int(TILE_SIZE / canvas->GetZoom());
-			int view_w = screensize_x / tile_size + 1;
-			int view_h = screensize_y / tile_size + 1;
-
-			// Convert to local minimap coords
-			float x = (float)(view_start_x - start_x);
-			float y = (float)(view_start_y - start_y);
-			float w = (float)view_w;
-			float h = (float)view_h;
-
-			// Draw white rectangle using PrimitiveRenderer
-			primitive_renderer->setProjectionMatrix(projection);
-
-			glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-
-			// Top
-			primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x + w, y), color);
-			// Bottom
-			primitive_renderer->drawLine(glm::vec2(x, y + h), glm::vec2(x + w, y + h), color);
-			// Left
-			primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x, y + h), color);
-			// Right
-			primitive_renderer->drawLine(glm::vec2(x + w, y), glm::vec2(x + w, y + h), color);
-
-			primitive_renderer->flush();
-		}
+		// View Box (Overlay) is now drawn by DrawOverlay using NanoVG
 	}
+}
+
+void MinimapDrawer::DrawOverlay(NVGcontext* vg, const wxSize& size, Editor& editor, MapCanvas* canvas) {
+	if (!g_gui.IsRenderingEnabled() || !g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
+		return;
+	}
+
+	int window_width = size.GetWidth();
+	int window_height = size.GetHeight();
+
+	int floor = g_gui.GetCurrentFloor();
+	int center_x, center_y;
+	canvas->GetScreenCenter(&center_x, &center_y);
+
+	int start_x, start_y;
+	int end_x, end_y;
+	start_x = center_x - window_width / 2;
+	start_y = center_y - window_height / 2;
+	end_x = center_x + window_width / 2;
+	end_y = center_y + window_height / 2;
+
+	// Clamp (must match Draw logic)
+	if (start_x < 0) {
+		start_x = 0;
+	} else if (end_x > editor.map.getWidth()) {
+		start_x = editor.map.getWidth() - window_width;
+	}
+	if (start_y < 0) {
+		start_y = 0;
+	} else if (end_y > editor.map.getHeight()) {
+		start_y = editor.map.getHeight() - window_height;
+	}
+	start_x = std::max(start_x, 0);
+	start_y = std::max(start_y, 0);
+
+	// Compute box coordinates
+	int screensize_x, screensize_y;
+	int view_scroll_x, view_scroll_y;
+	canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
+
+	int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
+	int view_start_x = view_scroll_x / TILE_SIZE + floor_offset;
+	int view_start_y = view_scroll_y / TILE_SIZE + floor_offset;
+
+	int tile_size = int(TILE_SIZE / canvas->GetZoom());
+	int view_w = screensize_x / tile_size + 1;
+	int view_h = screensize_y / tile_size + 1;
+
+	// Convert to local minimap coords
+	float x = (float)(view_start_x - start_x);
+	float y = (float)(view_start_y - start_y);
+	float w = (float)view_w;
+	float h = (float)view_h;
+
+	// Draw Glassy Box
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, y, w, h, 2.0f);
+
+	// Semi-transparent fill
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 20));
+	nvgFill(vg);
+
+	// White stroke
+	nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 200));
+	nvgStrokeWidth(vg, 1.5f);
+	nvgStroke(vg);
 }
 
 void MinimapDrawer::ScreenToMap(int screen_x, int screen_y, int& map_x, int& map_y) {

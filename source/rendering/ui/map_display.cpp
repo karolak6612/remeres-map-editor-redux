@@ -222,6 +222,7 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	if (options.highlight_locked_doors) {
 		drawer->DrawDoorIndicators(vg);
 	}
+	drawer->DrawHUD(vg);
 
 	TextRenderer::EndFrame(vg);
 
