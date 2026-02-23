@@ -29,6 +29,12 @@ BaseMap::BaseMap() :
 }
 
 void BaseMap::clear(bool del) {
+	if (del) {
+		grid.clear();
+		tilecount = 0;
+		return;
+	}
+
 	std::ranges::for_each(tiles(), [&](auto& loc) {
 		if (loc.tile) {
 			std::unique_ptr<Tile> t = std::move(loc.tile);

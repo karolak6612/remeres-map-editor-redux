@@ -49,6 +49,7 @@ enum {
 	TILESTATE_HOOK_SOUTH = 0x0080,
 	TILESTATE_HOOK_EAST = 0x0100,
 	TILESTATE_HAS_LIGHT = 0x0200,
+	TILESTATE_HAS_WALL = 0x0400,
 };
 
 enum : uint8_t {
@@ -143,7 +144,15 @@ public: // Functions
 	bool hasProperty(enum ITEMPROPERTY prop) const;
 
 	int getIndexOf(Item* item) const;
-	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
+	Item* getTopItem() const {
+		if (!items.empty() && !items.back()->isMetaItem()) {
+			return items.back().get();
+		}
+		if (ground && !ground->isMetaItem()) {
+			return ground.get();
+		}
+		return nullptr;
+	}
 	Item* getItemAt(int index) const;
 	void addItem(std::unique_ptr<Item> item);
 
@@ -262,7 +271,7 @@ using TileSet = std::vector<Tile*>;
 using TileList = std::list<Tile*>;
 
 inline bool Tile::hasWall() const {
-	return getWall() != nullptr;
+	return testFlags(statflags, TILESTATE_HAS_WALL);
 }
 
 inline bool Tile::isHouseTile() const {

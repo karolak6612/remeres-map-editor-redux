@@ -24,6 +24,7 @@
 #include "game/item_attributes.h"
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/raw/raw_brush.h"
+#include "rendering/core/game_sprite.h"
 
 class Creature;
 class Border;
@@ -247,8 +248,21 @@ public:
 	int getHeight() const;
 	std::pair<int, int> getDrawOffset() const;
 
-	bool hasLight() const;
-	SpriteLight getLight() const;
+	bool hasLight() const {
+		const ItemType& type = g_items[id];
+		if (type.sprite) {
+			return type.sprite->hasLight();
+		}
+		return false;
+	}
+
+	SpriteLight getLight() const {
+		const ItemType& type = g_items[id];
+		if (type.sprite) {
+			return type.sprite->getLight();
+		}
+		return SpriteLight{0, 0};
+	}
 
 	// Item types
 	bool hasProperty(enum ITEMPROPERTY prop) const;

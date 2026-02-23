@@ -142,6 +142,7 @@ void SpriteBatch::begin(const glm::mat4& projection) {
 	shader_->SetMat4("uMVP", projection_);
 	shader_->SetInt("uAtlas", 0);
 	shader_->SetVec4("uGlobalTint", global_tint_);
+	last_flushed_tint_ = global_tint_;
 }
 
 void SpriteBatch::setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager) {
@@ -164,30 +165,6 @@ void SpriteBatch::ensureCapacity(size_t capacity) {
 	}
 }
 
-void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& region) {
-	draw(x, y, w, h, region, 1.0f, 1.0f, 1.0f, 1.0f);
-}
-
-void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a) {
-	if (!in_batch_) {
-		return;
-	}
-
-	SpriteInstance& inst = pending_sprites_.emplace_back();
-	inst.x = x;
-	inst.y = y;
-	inst.w = w;
-	inst.h = h;
-	inst.u_min = region.u_min;
-	inst.v_min = region.v_min;
-	inst.u_max = region.u_max;
-	inst.v_max = region.v_max;
-	inst.r = r;
-	inst.g = g;
-	inst.b = b;
-	inst.a = a;
-	inst.atlas_layer = static_cast<float>(region.atlas_index);
-}
 
 void SpriteBatch::drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {
 	const AtlasRegion* region = atlas_manager.getWhitePixel();
@@ -197,14 +174,19 @@ void SpriteBatch::drawRect(float x, float y, float w, float h, const glm::vec4& 
 }
 
 void SpriteBatch::drawRectLines(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager) {
+	const AtlasRegion* region = atlas_manager.getWhitePixel();
+	if (!region) {
+		return;
+	}
+
 	// Top
-	drawRect(x, y, w, 1.0f, color, atlas_manager);
+	draw(x, y, w, 1.0f, *region, color.r, color.g, color.b, color.a);
 	// Bottom
-	drawRect(x, y + h - 1.0f, w, 1.0f, color, atlas_manager);
+	draw(x, y + h - 1.0f, w, 1.0f, *region, color.r, color.g, color.b, color.a);
 	// Left
-	drawRect(x, y + 1.0f, 1.0f, h - 2.0f, color, atlas_manager);
+	draw(x, y + 1.0f, 1.0f, h - 2.0f, *region, color.r, color.g, color.b, color.a);
 	// Right
-	drawRect(x + w - 1.0f, y + 1.0f, 1.0f, h - 2.0f, color, atlas_manager);
+	draw(x + w - 1.0f, y + 1.0f, 1.0f, h - 2.0f, *region, color.r, color.g, color.b, color.a);
 }
 
 void SpriteBatch::flush(const AtlasManager& atlas_manager) {
@@ -216,7 +198,11 @@ void SpriteBatch::flush(const AtlasManager& atlas_manager) {
 	shader_->Use();
 	shader_->SetMat4("uMVP", projection_);
 	shader_->SetInt("uAtlas", 0);
-	shader_->SetVec4("uGlobalTint", global_tint_);
+
+	if (global_tint_ != last_flushed_tint_) {
+		shader_->SetVec4("uGlobalTint", global_tint_);
+		last_flushed_tint_ = global_tint_;
+	}
 
 	atlas_manager.bind(0);
 

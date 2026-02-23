@@ -41,9 +41,9 @@ public:
 protected:
 	std::unique_ptr<Tile> tile;
 	Position position;
-	size_t spawn_count;
-	size_t waypoint_count;
-	size_t town_count;
+	uint16_t spawn_count;
+	uint16_t waypoint_count;
+	uint16_t town_count;
 	std::unique_ptr<HouseExitList> house_exits; // Any house exits pointing here
 
 public:

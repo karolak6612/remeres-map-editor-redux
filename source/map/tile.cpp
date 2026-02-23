@@ -249,16 +249,6 @@ int Tile::getIndexOf(Item* item) const {
 	return wxNOT_FOUND;
 }
 
-Item* Tile::getTopItem() const {
-	if (!items.empty() && !items.back()->isMetaItem()) {
-		return items.back().get();
-	}
-	if (ground && !ground->isMetaItem()) {
-		return ground.get();
-	}
-	return nullptr;
-}
-
 Item* Tile::getItemAt(int index) const {
 	if (index < 0) {
 		return nullptr;
@@ -521,6 +511,9 @@ void Tile::update() {
 		if (i->hasLight()) {
 			statflags |= TILESTATE_HAS_LIGHT;
 		}
+		if (i->isWall()) {
+			statflags |= TILESTATE_HAS_WALL;
+		}
 	});
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {
@@ -549,6 +542,9 @@ GroundBrush* Tile::getGroundBrush() const {
 }
 
 Item* Tile::getWall() const {
+	if (!hasWall()) {
+		return nullptr;
+	}
 	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
 		return i->isWall();
 	});

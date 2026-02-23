@@ -58,12 +58,33 @@ public:
 	 * @param h Height
 	 * @param region Atlas region for UVs
 	 */
-	void draw(float x, float y, float w, float h, const AtlasRegion& region);
+	inline void draw(float x, float y, float w, float h, const AtlasRegion& region) {
+		draw(x, y, w, h, region, 1.0f, 1.0f, 1.0f, 1.0f);
+	}
 
 	/**
 	 * Queue a sprite with tint.
 	 */
-	void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a);
+	inline void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a) {
+		if (!in_batch_) {
+			return;
+		}
+
+		SpriteInstance& inst = pending_sprites_.emplace_back();
+		inst.x = x;
+		inst.y = y;
+		inst.w = w;
+		inst.h = h;
+		inst.u_min = region.u_min;
+		inst.v_min = region.v_min;
+		inst.u_max = region.u_max;
+		inst.v_max = region.v_max;
+		inst.r = r;
+		inst.g = g;
+		inst.b = b;
+		inst.a = a;
+		inst.atlas_layer = static_cast<float>(region.atlas_index);
+	}
 
 	/**
 	 * Draw a solid rectangle using the white pixel from the atlas.
@@ -113,6 +134,7 @@ private:
 	std::vector<SpriteInstance> pending_sprites_;
 	glm::mat4 projection_ { 1.0f };
 	glm::vec4 global_tint_ { 1.0f };
+	glm::vec4 last_flushed_tint_ { -1.0f };
 
 	// Scoped state for batch duration
 	std::optional<ScopedGLCapability> blend_capability_;
