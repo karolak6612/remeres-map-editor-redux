@@ -123,7 +123,7 @@ void trim_left(std::string& source, const std::string& t) {
 }
 
 void to_lower_str(std::string& source) {
-	std::transform(source.begin(), source.end(), source.begin(), [](unsigned char c) { return std::tolower(c); });
+std::ranges::transform(source, source.begin(), [](unsigned char c) { return std::tolower(c); });
 }
 
 void to_upper_str(std::string& source) {
