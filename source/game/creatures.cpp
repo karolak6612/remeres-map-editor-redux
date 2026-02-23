@@ -22,6 +22,7 @@
 #include "brushes/brush.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
+#include <algorithm>
 
 CreatureDatabase g_creatures;
 
@@ -245,14 +246,14 @@ CreatureDatabase::~CreatureDatabase() {
 }
 
 void CreatureDatabase::clear() {
-	for (CreatureMap::iterator iter = creature_map.begin(); iter != creature_map.end(); ++iter) {
-		delete iter->second;
+	for (auto& [_, creature] : creature_map) {
+		delete creature;
 	}
 	creature_map.clear();
 }
 
 CreatureType* CreatureDatabase::operator[](const std::string& name) {
-	CreatureMap::iterator iter = creature_map.find(as_lower_str(name));
+	auto iter = creature_map.find(as_lower_str(name));
 	if (iter != creature_map.end()) {
 		return iter->second;
 	}
@@ -291,12 +292,9 @@ CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool is
 }
 
 bool CreatureDatabase::hasMissing() const {
-	for (CreatureMap::const_iterator iter = creature_map.begin(); iter != creature_map.end(); ++iter) {
-		if (iter->second->missing) {
-			return true;
-		}
-	}
-	return false;
+	return std::ranges::any_of(creature_map, [](const auto& pair) {
+		return pair.second->missing;
+	});
 }
 
 bool CreatureDatabase::loadFromXML(const FileName& filename, bool standard, wxString& error, std::vector<std::string>& warnings) {

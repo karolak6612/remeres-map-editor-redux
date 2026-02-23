@@ -52,6 +52,7 @@ public:
 
 	const std::vector<SortedGridCell>& getSortedCells() const;
 	void updateSortedCells() const;
+	static void getCellCoordsFromKey(uint64_t key, int& cx, int& cy);
 
 	template <typename Func>
 	void visitLeaves(int min_x, int min_y, int max_x, int max_y, Func&& func) {
@@ -216,11 +217,6 @@ protected:
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		static_assert(sizeof(int) == 4, "Key packing assumes exactly 32-bit integers");
 		return (static_cast<uint64_t>(static_cast<uint32_t>(cx)) << 32) | static_cast<uint32_t>(cy);
-	}
-
-	static void getCellCoordsFromKey(uint64_t key, int& cx, int& cy) {
-		cx = static_cast<int32_t>(key >> 32);
-		cy = static_cast<int32_t>(key);
 	}
 
 	static uint64_t makeKey(int x, int y) {
