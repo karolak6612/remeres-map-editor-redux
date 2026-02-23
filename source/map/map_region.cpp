@@ -321,14 +321,14 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 		return node.get();
 	}
 
-	auto [it, inserted] = cells.try_emplace(key);
-	if (inserted) {
-		it->second = std::make_unique<GridCell>();
+	auto& cell = cells[key];
+	if (!cell) {
+		cell = std::make_unique<GridCell>();
 		sorted_cells_dirty = true;
 	}
 
 	last_key = key;
-	last_cell = it->second.get();
+	last_cell = cell.get();
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
