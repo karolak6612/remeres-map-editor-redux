@@ -394,32 +394,32 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
 		// No point in threading for such a small set.
 		threadcount = 1;
 	}
-	// Subdivide the selection area
-	// We know it's a square, just split it into several areas
-	int width = e_x - s_x;
-	if (width < threadcount) {
-		threadcount = std::min(1, width);
-	}
-	// Let's divide!
-	int remainder = width;
-	int cleared = 0;
+
 	std::vector<std::unique_ptr<SelectionThread>> threads;
-	if (width == 0) {
-		threads.push_back(std::make_unique<SelectionThread>(editor, Position(s_x, s_y, s_z), Position(s_x, e_y, e_z)));
-	} else {
-		for (int i = 0; i < threadcount; ++i) {
-			int chunksize = width / threadcount;
-			// The last threads takes all the remainder
-			if (i == threadcount - 1) {
-				chunksize = remainder;
-			}
-			threads.push_back(std::make_unique<SelectionThread>(editor, Position(s_x + cleared, s_y, s_z), Position(s_x + cleared + chunksize, e_y, e_z)));
-			cleared += chunksize;
-			remainder -= chunksize;
-		}
+
+	// Subdivide the selection area by columns (X axis)
+	// We divide the number of columns (width + 1) among threads
+	int total_columns = (e_x - s_x) + 1;
+
+	if (total_columns < threadcount) {
+		threadcount = total_columns;
 	}
-	ASSERT(cleared == width);
-	ASSERT(remainder == 0);
+
+	int columns_per_thread = total_columns / threadcount;
+	int extra_columns = total_columns % threadcount;
+	int current_offset = 0;
+
+	for (int i = 0; i < threadcount; ++i) {
+		int my_columns = columns_per_thread + (i < extra_columns ? 1 : 0);
+
+		// Calculate range [start, end] inclusive
+		int thread_start_x = s_x + current_offset;
+		int thread_end_x = thread_start_x + my_columns - 1;
+
+		threads.push_back(std::make_unique<SelectionThread>(editor, Position(thread_start_x, s_y, s_z), Position(thread_end_x, e_y, e_z)));
+
+		current_offset += my_columns;
+	}
 
 	editor.selection.start(); // Start a selection session
 	for (auto& thread : threads) {

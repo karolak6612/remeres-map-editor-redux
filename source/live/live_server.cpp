@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 
+#include <atomic>
 #include "live/live_server.h"
 #include "live/live_peer.h"
 #include "live/live_tab.h"
@@ -86,7 +87,7 @@ void LiveServer::close() {
 }
 
 void LiveServer::acceptClient() {
-	static uint32_t id = 0;
+	static std::atomic<uint32_t> id{0};
 	if (stopped) {
 		return;
 	}
