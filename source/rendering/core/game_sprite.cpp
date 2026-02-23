@@ -489,6 +489,155 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 	}
 }
 
+namespace {
+
+	struct DecompressionContext {
+		uint32_t id;
+		uint8_t input_step;
+		uint8_t output_step;
+		std::span<const uint8_t, 4> transparent_color;
+		bool input_has_alpha;
+		bool& non_zero_alpha_found;
+		bool& non_black_pixel_found;
+	};
+
+	bool ProcessTransparencyRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, const DecompressionContext& ctx) {
+		if (read + 1 >= dump.size()) {
+			return false;
+		}
+		int transparent = dump[read] | dump[read + 1] << 8;
+
+		// Integrity check for transparency run
+		if (write + (transparent * ctx.output_step) > data.size()) {
+			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", ctx.id, transparent, write, data.size());
+			transparent = (data.size() - write) / ctx.output_step;
+		}
+
+		read += 2;
+		for (int i = 0; i < transparent; i++) {
+			for (int c = 0; c < ctx.output_step; ++c) {
+				data[write + c] = ctx.transparent_color[c];
+			}
+			write += ctx.output_step;
+		}
+		return true;
+	}
+
+	bool ProcessColoredRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext& ctx) {
+		if (read + 1 >= dump.size()) {
+			return false;
+		}
+		int colored = dump[read] | dump[read + 1] << 8;
+		read += 2;
+
+		// Integrity check for colored run
+		if (write + (colored * ctx.output_step) > data.size()) {
+			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", ctx.id, colored, write, data.size());
+			colored = (data.size() - write) / ctx.output_step;
+		}
+
+		// Integrity check for read buffer
+		if (read + (colored * ctx.input_step) > dump.size()) {
+			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, input_step={}, read={}, size={})", ctx.id, colored, ctx.input_step, read, dump.size());
+			return false;
+		}
+
+		for (int i = 0; i < colored; i++) {
+			uint8_t r = dump[read + 0];
+			uint8_t g = dump[read + 1];
+			uint8_t b = dump[read + 2];
+			uint8_t a = ctx.input_has_alpha ? dump[read + 3] : 0xFF;
+
+			data[write + 0] = r;
+			data[write + 1] = g;
+			data[write + 2] = b;
+			if (ctx.output_step > 3) {
+				data[write + 3] = a;
+			}
+
+			if (a > 0) {
+				ctx.non_zero_alpha_found = true;
+			}
+			if (r > 0 || g > 0 || b > 0) {
+				ctx.non_black_pixel_found = true;
+			}
+
+			write += ctx.output_step;
+			read += ctx.input_step;
+		}
+		return true;
+	}
+
+	void DecompressImpl(std::span<const uint8_t> dump, std::span<uint8_t> data, DecompressionContext& ctx) {
+		size_t write = 0;
+		size_t read = 0;
+
+		// decompress pixels
+		while (read < dump.size() && write < data.size()) {
+			if (!ProcessTransparencyRun(dump, read, data, write, ctx)) {
+				break;
+			}
+
+			if (read >= dump.size() || write >= data.size()) {
+				break;
+			}
+
+			if (!ProcessColoredRun(dump, read, data, write, ctx)) {
+				break;
+			}
+		}
+
+		// fill remaining pixels
+		while (write < data.size()) {
+			for (int c = 0; c < ctx.output_step; ++c) {
+				if (write + c < data.size()) {
+					data[write + c] = ctx.transparent_color[c];
+				}
+			}
+			write += ctx.output_step;
+		}
+	}
+
+} // namespace
+
+std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump, bool use_alpha, uint32_t id) {
+	const int pixels_data_size = SPRITE_PIXELS_SIZE * RGBA_COMPONENTS;
+	auto data_buffer = std::make_unique<uint8_t[]>(pixels_data_size);
+
+	std::span<uint8_t> data(data_buffer.get(), pixels_data_size);
+
+	bool non_zero_alpha_found = false;
+	bool non_black_pixel_found = false;
+	static constexpr uint8_t transparent_rgba[4] = {0, 0, 0, 0};
+
+	DecompressionContext ctx {
+		.id = id,
+		.input_step = static_cast<uint8_t>(use_alpha ? 4 : 3),
+		.output_step = 4,
+		.transparent_color = transparent_rgba,
+		.input_has_alpha = use_alpha,
+		.non_zero_alpha_found = non_zero_alpha_found,
+		.non_black_pixel_found = non_black_pixel_found
+	};
+
+	DecompressImpl(dump, data, ctx);
+
+	// Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
+	if (!non_zero_alpha_found && id > 100) {
+		static int empty_log_count = 0;
+		if (empty_log_count++ < 10) {
+			spdlog::info("Sprite {}: Decoded fully transparent sprite. input_step used: {}, dump size: {}", id, ctx.input_step, dump.size());
+		}
+	} else if (!non_black_pixel_found && non_zero_alpha_found && id > 100) {
+		static int black_log_count = 0;
+		if (black_log_count++ < 10) {
+			spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). input_step used: {}, dump size: {}. Check hasTransparency() config!", id, ctx.input_step, dump.size());
+		}
+	}
+
+	return data_buffer;
+}
+
 std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 	if (id == 0) {
 		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
@@ -507,194 +656,26 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 
 	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
-	size_t write = 0;
-	size_t read = 0;
 
-	// decompress pixels
-	while (read < size && write < static_cast<size_t>(pixels_data_size)) {
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Transparency header truncated (read={}, size={})", read, size);
-			break;
-		}
-		int transparent = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int i = 0; i < transparent && write < static_cast<size_t>(pixels_data_size); i++) {
-			data[write + 0] = 0xFF; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0xFF; // blue
-			write += RGB_COMPONENTS;
-		}
-
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Colored header truncated (read={}, size={})", read, size);
-			break;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		if (read + static_cast<size_t>(colored) * bpp > size) {
-			spdlog::warn("NormalImage::getRGBData: Read buffer overrun (colored={}, bpp={}, read={}, size={})", colored, bpp, read, size);
-			break;
-		}
-
-		for (int i = 0; i < colored && write < static_cast<size_t>(pixels_data_size); i++) {
-			data[write + 0] = dump[read + 0]; // red
-			data[write + 1] = dump[read + 1]; // green
-			data[write + 2] = dump[read + 2]; // blue
-			write += RGB_COMPONENTS;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < static_cast<size_t>(pixels_data_size)) {
-		data[write + 0] = 0xFF; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0xFF; // blue
-		write += RGB_COMPONENTS;
-	}
-	return data;
-}
-
-namespace {
-
-	struct DecompressionContext {
-		int id;
-		uint8_t bpp;
-		bool use_alpha;
-		bool& non_zero_alpha_found;
-		bool& non_black_pixel_found;
-	};
-
-	bool ProcessTransparencyRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx) {
-		if (read + 1 >= dump.size()) {
-			return false;
-		}
-		int transparent = dump[read] | dump[read + 1] << 8;
-
-		// Integrity check for transparency run
-		if (write + (transparent * RGBA_COMPONENTS) > data.size()) {
-			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", ctx.id, transparent, write, data.size());
-			transparent = (data.size() - write) / RGBA_COMPONENTS;
-		}
-
-		read += 2;
-		for (int i = 0; i < transparent; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
-		}
-		return true;
-	}
-
-	bool ProcessColoredRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx) {
-		if (read + 1 >= dump.size()) {
-			return false;
-		}
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		// Integrity check for colored run
-		if (write + (colored * RGBA_COMPONENTS) > data.size()) {
-			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", ctx.id, colored, write, data.size());
-			colored = (data.size() - write) / RGBA_COMPONENTS;
-		}
-
-		// Integrity check for read buffer
-		if (read + (colored * ctx.bpp) > dump.size()) {
-			spdlog::warn("Sprite {}: Read buffer overrun (colored={}, bpp={}, read={}, size={})", ctx.id, colored, ctx.bpp, read, dump.size());
-			// We can't easily recover here without risking reading garbage, so stop
-			return false;
-		}
-
-		for (int i = 0; i < colored; i++) {
-			uint8_t r = dump[read + 0];
-			uint8_t g = dump[read + 1];
-			uint8_t b = dump[read + 2];
-			uint8_t a = ctx.use_alpha ? dump[read + 3] : 0xFF;
-
-			data[write + 0] = r;
-			data[write + 1] = g;
-			data[write + 2] = b;
-			data[write + 3] = a;
-
-			if (a > 0) {
-				ctx.non_zero_alpha_found = true;
-			}
-			if (r > 0 || g > 0 || b > 0) {
-				ctx.non_black_pixel_found = true;
-			}
-
-			write += RGBA_COMPONENTS;
-			read += ctx.bpp;
-		}
-		return true;
-	}
-
-} // namespace
-
-std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump, bool use_alpha, int id) {
-	const int pixels_data_size = SPRITE_PIXELS_SIZE * RGBA_COMPONENTS;
-	auto data_buffer = std::make_unique<uint8_t[]>(pixels_data_size);
-
-	std::span<uint8_t> data(data_buffer.get(), pixels_data_size);
-
-	uint8_t bpp = use_alpha ? 4 : 3;
-	size_t write = 0;
-	size_t read = 0;
 	bool non_zero_alpha_found = false;
 	bool non_black_pixel_found = false;
+	static constexpr uint8_t transparent_rgb[4] = {0xFF, 0x00, 0xFF, 0xFF}; // Magenta
+
+	bool input_has_alpha = g_gui.gfx.hasTransparency();
 
 	DecompressionContext ctx {
 		.id = id,
-		.bpp = bpp,
-		.use_alpha = use_alpha,
+		.input_step = static_cast<uint8_t>(input_has_alpha ? 4 : 3),
+		.output_step = 3,
+		.transparent_color = transparent_rgb,
+		.input_has_alpha = input_has_alpha,
 		.non_zero_alpha_found = non_zero_alpha_found,
 		.non_black_pixel_found = non_black_pixel_found
 	};
 
-	// decompress pixels
-	while (read < dump.size() && write < data.size()) {
-		if (!ProcessTransparencyRun(dump, read, data, write, ctx)) {
-			break;
-		}
+	DecompressImpl({dump.get(), size}, {data.get(), static_cast<size_t>(pixels_data_size)}, ctx);
 
-		if (read >= dump.size() || write >= data.size()) {
-			break;
-		}
-
-		if (!ProcessColoredRun(dump, read, data, write, ctx)) {
-			break;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < data.size()) {
-		data[write + 0] = 0x00; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0x00; // blue
-		data[write + 3] = 0x00; // alpha
-		write += RGBA_COMPONENTS;
-	}
-
-	// Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
-	if (!non_zero_alpha_found && id > 100) {
-		static int empty_log_count = 0;
-		if (empty_log_count++ < 10) {
-			spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, bpp, dump.size());
-		}
-	} else if (!non_black_pixel_found && non_zero_alpha_found && id > 100) {
-		static int black_log_count = 0;
-		if (black_log_count++ < 10) {
-			spdlog::warn("Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!", id, bpp, dump.size());
-		}
-	}
-
-	return data_buffer;
+	return data;
 }
 
 std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBAData() {
