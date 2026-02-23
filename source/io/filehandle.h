@@ -27,6 +27,7 @@
 #include <memory>
 #include <vector>
 #include <format>
+#include <iterator>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER
@@ -183,11 +184,14 @@ public:
 		return read_offset;
 	}
 	std::string hexDump(size_t maxBytes = 32) const {
-		std::string result;
 		size_t count = std::min(maxBytes, data.size());
+		std::string result;
+		result.reserve(count * 3 + (data.size() > maxBytes ? 3 : 0));
+
 		for (size_t i = 0; i < count; ++i) {
-			result += std::format("{:02X} ", static_cast<uint8_t>(data[i]));
+			std::format_to(std::back_inserter(result), "{:02X} ", static_cast<uint8_t>(data[i]));
 		}
+
 		if (data.size() > maxBytes) {
 			result += "...";
 		}

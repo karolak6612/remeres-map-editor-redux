@@ -139,9 +139,9 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	mem = std::accumulate(items.begin(), items.end(), mem, [](uint32_t sum, const auto& i) {
-		return sum + i->memsize();
-	});
+	for (const auto& item : items) {
+		mem += item->memsize();
+	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
 
