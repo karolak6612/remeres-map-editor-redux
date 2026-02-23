@@ -155,6 +155,7 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 	Waypoint* wp = map->waypoints.getWaypoint(oldwpname);
 
 	if (event.IsEditCancelled()) {
+		g_hotkeys.EnableHotkeys();
 		return;
 	}
 
@@ -196,6 +197,8 @@ void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
 	}
 
 	if (event.IsAllowed()) {
+		g_hotkeys.EnableHotkeys();
+	} else {
 		g_hotkeys.EnableHotkeys();
 	}
 }
