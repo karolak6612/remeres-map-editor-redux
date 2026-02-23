@@ -25,22 +25,22 @@ namespace IngamePreview {
 		/**
 		 * Calculate first (topmost) visible floor from camera position.
 		 */
-		int CalcFirstVisibleFloor(const BaseMap& map, int camera_x, int camera_y, int camera_z) const;
+		[[nodiscard]] int CalcFirstVisibleFloor(const BaseMap& map, int camera_x, int camera_y, int camera_z) const;
 
 		/**
 		 * Calculate last (deepest) visible floor from camera position.
 		 */
-		int CalcLastVisibleFloor(int camera_z) const;
+		[[nodiscard]] int CalcLastVisibleFloor(int camera_z) const;
 
 		/**
 		 * Check if a tile limits the view of floors above it (roofs/solid ground).
 		 */
-		bool TileLimitsFloorsView(const Tile* tile) const;
+		[[nodiscard]] bool TileLimitsFloorsView(const Tile* tile) const;
 
 		/**
 		 * Check if a tile allows looking through (windows, certain doors).
 		 */
-		bool IsLookPossible(const Tile* tile) const;
+		[[nodiscard]] bool IsLookPossible(const Tile* tile) const;
 
 	private:
 		static constexpr int AWARE_UNDERGROUND_FLOOR_RANGE = 2;
