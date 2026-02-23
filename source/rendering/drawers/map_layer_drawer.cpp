@@ -30,6 +30,7 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
+#include "rendering/utilities/render_benchmark.h"
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
 	tile_renderer(tile_renderer),
@@ -41,6 +42,8 @@ MapLayerDrawer::~MapLayerDrawer() {
 }
 
 void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+	auto start = std::chrono::high_resolution_clock::now();
+
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
@@ -76,8 +79,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 		// Node level culling
 		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+			RenderBenchmark::Get().IncrementMetric(RenderBenchmark::Metric::VisibleNodesCulled);
 			return;
 		}
+
+		RenderBenchmark::Get().IncrementMetric(RenderBenchmark::Metric::VisibleNodesVisited);
 
 		if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
 			if (!nd->isRequested(map_z > GROUND_LAYER)) {
@@ -140,4 +146,8 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			drawNode(nd, nd_map_x, nd_map_y, false);
 		});
 	}
+
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+	RenderBenchmark::Get().IncrementMetric(RenderBenchmark::Metric::MapTraversalTime, duration);
 }

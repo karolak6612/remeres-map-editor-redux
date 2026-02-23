@@ -1,0 +1,1 @@
+#define TOML_HEADER_ONLY 1

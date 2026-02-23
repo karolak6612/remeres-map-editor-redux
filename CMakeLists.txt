@@ -166,4 +166,43 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE spdlog::spdlog)
 	target_link_libraries(test_autoborder_preview PRIVATE tomlplusplus::tomlplusplus)
 
+	# Test executable for rendering benchmark - uses same sources as main target
+	add_executable(test_rendering_benchmark ${rme_H} ${rme_SRC_TEST} ${CMAKE_CURRENT_SOURCE_DIR}/source/test_rendering_benchmark.cpp)
+	target_compile_definitions(test_rendering_benchmark PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
+
+	# Include directories
+	target_include_directories(test_rendering_benchmark PRIVATE
+		${Boost_INCLUDE_DIRS}
+		${OPENGL_INCLUDE_DIR}
+		${ZLIB_INCLUDE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/source
+	)
+
+	# Link libraries (same as main rme target)
+	if(TARGET wxWidgets::wxWidgets)
+		target_link_libraries(test_rendering_benchmark PRIVATE wxWidgets::wxWidgets)
+	else()
+		target_link_libraries(test_rendering_benchmark PRIVATE ${wxWidgets_LIBRARIES})
+	endif()
+
+	if(TARGET Boost::boost)
+		target_link_libraries(test_rendering_benchmark PRIVATE Boost::boost Boost::thread Boost::system)
+	else()
+		target_link_libraries(test_rendering_benchmark PRIVATE ${Boost_LIBRARIES})
+	endif()
+
+
+	if(TARGET ZLIB::ZLIB)
+		target_link_libraries(test_rendering_benchmark PRIVATE ZLIB::ZLIB)
+	else()
+		target_link_libraries(test_rendering_benchmark PRIVATE ${ZLIB_LIBRARIES})
+	endif()
+
+	target_link_libraries(test_rendering_benchmark PRIVATE ${OPENGL_LIBRARIES})
+	target_link_libraries(test_rendering_benchmark PRIVATE glad::glad)
+	target_link_libraries(test_rendering_benchmark PRIVATE glm::glm)
+	target_link_libraries(test_rendering_benchmark PRIVATE nanovg::nanovg)
+	target_link_libraries(test_rendering_benchmark PRIVATE spdlog::spdlog)
+	target_link_libraries(test_rendering_benchmark PRIVATE tomlplusplus::tomlplusplus)
+
 endif()

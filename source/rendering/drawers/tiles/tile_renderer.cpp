@@ -27,6 +27,7 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/utilities/pattern_calculator.h"
+#include "rendering/utilities/render_benchmark.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
@@ -153,6 +154,8 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 }
 
 void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+	RenderBenchmark::Get().IncrementMetric(RenderBenchmark::Metric::TilesProcessed);
+
 	if (!location) {
 		return;
 	}
@@ -181,13 +184,18 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	RenderBenchmark::Get().IncrementMetric(RenderBenchmark::Metric::TilesDrawn);
+
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y);
+	bool show_tooltips = options.show_tooltips && map_z == view.floor && is_hovered;
+
 	Waypoint* waypoint = nullptr;
 	if (location->getWaypointCount() > 0) {
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
 
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && waypoint && map_z == view.floor) {
+	if (show_tooltips && waypoint) {
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
@@ -216,7 +224,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	} else {
 		if (tile->ground && ground_it) {
 			if (ground_it->sprite) {
-				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+				SpritePatterns patterns;
+				// Optimization: Skip expensive pattern calculation when zoomed out significantly
+				// Zoom > 2.0 means we are viewing a large area (minified)
+				if (view.zoom > 2.0f) {
+					patterns = {0, 0, 0, 0};
+				} else {
+					patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+				}
+
 				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
 
 				BlitItemParams params(tile, tile->ground.get(), options);
@@ -233,7 +249,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (show_tooltips && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -273,14 +289,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
-
 			// items on tile
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
 
 				// item tooltip (one per item)
-				if (process_tooltips) {
+				if (show_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
 					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 						if (itemData.hasVisibleFields()) {
@@ -290,7 +304,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 
 				if (it.sprite) {
-					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+					SpritePatterns patterns;
+					if (view.zoom > 2.0f) {
+						patterns = {0, 0, 0, 0};
+					} else {
+						patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+					}
+
 					PreloadItem(tile, item.get(), it, &patterns);
 
 					BlitItemParams params(tile, item.get(), options);
@@ -362,6 +382,8 @@ void TileRenderer::AddLight(TileLocation* location, const RenderView& view, cons
 	if (!options.isDrawLight() || !location) {
 		return;
 	}
+
+	RenderBenchmark::Get().IncrementMetric(RenderBenchmark::Metric::LightCalculations);
 
 	auto tile = location->get();
 	if (!tile || !tile->hasLight()) {
