@@ -4,6 +4,7 @@
 #include <nanovg.h>
 #include <memory>
 #include <algorithm>
+#include <ranges>
 
 RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxNO_BORDER | wxWANTS_CHARS),
 																		 m_listener(listener) {
@@ -37,7 +38,7 @@ void RuleListControl::SetRuleSets(const std::vector<std::string>& ruleSetNames) 
 
 void RuleListControl::RefreshVirtualSize() {
 	wxSize clientSize = GetClientSize();
-	int totalHeight = m_ruleSetNames.size() * m_itemHeight;
+	int totalHeight = static_cast<int>(m_ruleSetNames.size()) * m_itemHeight;
 	SetScrollbar(wxVERTICAL, GetScrollPos(wxVERTICAL), clientSize.y, totalHeight);
 }
 
@@ -59,7 +60,8 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	wxSize clientSize = GetClientSize();
 
 	int startIdx = scrollPos / m_itemHeight;
-	int endIdx = std::min((int)m_ruleSetNames.size() - 1, (scrollPos + clientSize.y) / m_itemHeight + 1);
+	int count = static_cast<int>(m_ruleSetNames.size());
+	int endIdx = std::min(count - 1, (scrollPos + clientSize.y) / m_itemHeight + 1);
 
 	static const float padding = 4.0f;
 	static const float radius = 4.0f;
@@ -80,7 +82,9 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	}
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-	for (int i = startIdx; i <= endIdx; ++i) {
+	for (int i : std::views::iota(startIdx, endIdx + 1)) {
+		if (i >= count) break;
+
 		float y = i * m_itemHeight + padding;
 		float x = padding;
 		float w = width - 2 * padding;
@@ -126,7 +130,7 @@ void RuleListControl::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 }
 
 wxRect RuleListControl::GetItemRect(int index) const {
-	if (index < 0 || index >= (int)m_ruleSetNames.size()) {
+	if (index < 0 || index >= static_cast<int>(m_ruleSetNames.size())) {
 		return wxRect();
 	}
 	wxSize clientSize = GetClientSize();
@@ -144,7 +148,7 @@ void RuleListControl::OnMouse(wxMouseEvent& event) {
 		int y = event.GetY() + scrollPos;
 		int idx = y / m_itemHeight;
 
-		if (idx >= 0 && idx < (int)m_ruleSetNames.size()) {
+		if (idx >= 0 && idx < static_cast<int>(m_ruleSetNames.size())) {
 			m_hoveredIndex = idx;
 		} else {
 			m_hoveredIndex = -1;
@@ -168,7 +172,7 @@ void RuleListControl::OnMouseWheel(wxMouseEvent& event) {
 	int delta = (rotation / 120) * 3; // 3 items per notch
 	int newPos = GetScrollPos(wxVERTICAL) - delta * m_itemHeight;
 
-	int totalHeight = m_ruleSetNames.size() * m_itemHeight;
+	int totalHeight = static_cast<int>(m_ruleSetNames.size()) * m_itemHeight;
 	int maxScroll = std::max(0, totalHeight - GetClientSize().y);
 	newPos = std::clamp(newPos, 0, maxScroll);
 
@@ -179,7 +183,7 @@ void RuleListControl::OnMouseWheel(wxMouseEvent& event) {
 void RuleListControl::OnScroll(wxScrollWinEvent& event) {
 	int pos = GetScrollPos(wxVERTICAL);
 	int h = GetClientSize().y;
-	int total = m_ruleSetNames.size() * m_itemHeight;
+	int total = static_cast<int>(m_ruleSetNames.size()) * m_itemHeight;
 	int maxScroll = std::max(0, total - h);
 
 	wxEventType type = event.GetEventType();
@@ -215,7 +219,7 @@ void RuleListControl::OnContextMenu(wxContextMenuEvent& event) {
 	menu.Append(wxID_DELETE, "Delete")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 
 	menu.Bind(wxEVT_MENU, [this, menuIdx](wxCommandEvent& e) {
-		if (menuIdx < 0 || menuIdx >= (int)m_ruleSetNames.size()) {
+		if (menuIdx < 0 || menuIdx >= static_cast<int>(m_ruleSetNames.size())) {
 			return;
 		}
 
