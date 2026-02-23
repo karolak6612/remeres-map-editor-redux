@@ -78,11 +78,11 @@ GameSprite::~GameSprite() {
 	// instanced_templates and animator cleaned up automatically by unique_ptr
 }
 
-void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixel_count, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
+void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
 	const int dest_step = destHasAlpha ? RGBA_COMPONENTS : RGB_COMPONENTS;
 	const int mask_step = RGB_COMPONENTS;
 
-	for (size_t i = 0; i < pixel_count; ++i) {
+	for (size_t i = 0; i < pixelCount; ++i) {
 		uint8_t& red = dest[i * dest_step + 0];
 		uint8_t& green = dest[i * dest_step + 1];
 		uint8_t& blue = dest[i * dest_step + 2];
@@ -557,7 +557,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 	return data;
 }
 
-std::unique_ptr<uint8_t[]> GameSprite::DecompressImpl(const uint8_t* dump, size_t size, bool use_alpha, int id) {
+std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
 	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
 	uint8_t bpp = use_alpha ? 4 : 3;
@@ -661,10 +661,6 @@ std::unique_ptr<uint8_t[]> GameSprite::DecompressImpl(const uint8_t* dump, size_
 	}
 
 	return data;
-}
-
-std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
-	return DecompressImpl(dump, size, use_alpha, id);
 }
 
 std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBAData() {

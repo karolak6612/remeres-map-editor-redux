@@ -25,6 +25,7 @@
 #include <stack>
 #include <stdio.h>
 #include <memory>
+#include <type_traits>
 #include <vector>
 
 #ifndef FORCEINLINE
@@ -414,6 +415,7 @@ public:
 	}
 
 	template <typename T>
+		requires std::is_trivially_copyable_v<T>
 	bool addValue(T val) {
 		writeBytes(reinterpret_cast<uint8_t*>(&val), sizeof(val));
 		return error_code == FILE_NO_ERROR;

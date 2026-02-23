@@ -701,13 +701,13 @@ bool NodeFileWriteHandle::addString(const std::string& str) {
 		return false;
 	}
 	addU16(uint16_t(str.size()));
-	addRAW((const uint8_t*)str.c_str(), str.size());
+	addRAW(reinterpret_cast<const uint8_t*>(str.c_str()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 
 bool NodeFileWriteHandle::addLongString(const std::string& str) {
 	addU32(uint32_t(str.size()));
-	addRAW((const uint8_t*)str.c_str(), str.size());
+	addRAW(reinterpret_cast<const uint8_t*>(str.c_str()), str.size());
 	return error_code == FILE_NO_ERROR;
 }
 
