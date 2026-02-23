@@ -37,6 +37,18 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
 	ItemType& it = g_items[item->getID()];
+	GameSprite* spr = it.sprite;
+	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, patterns, ephemeral, red, green, blue, alpha, tile);
+}
+
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Tile* tile, Item* item, const DrawingOptions& options, const SpritePatterns& patterns, bool ephemeral, int red, int green, int blue, int alpha) {
+	const Position& pos = tile->getPosition();
+	BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, pos, item, options, patterns, ephemeral, red, green, blue, alpha, tile);
+}
+
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const Position& pos, Item* item, const DrawingOptions& options, const SpritePatterns& patterns, bool ephemeral, int red, int green, int blue, int alpha, const Tile* tile) {
+	ItemType& it = g_items[item->getID()];
 
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
@@ -118,7 +130,6 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_x -= spr->draw_height;
 	draw_y -= spr->draw_height;
 
-	SpritePatterns patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
 	int subtype = patterns.subtype;
 	int pattern_x = patterns.x;
 	int pattern_y = patterns.y;
@@ -281,4 +292,3 @@ void ItemDrawer::DrawDoorIndicator(bool locked, const Position& pos, bool south,
 		door_indicator_drawer->addDoor(pos, locked, south, east);
 	}
 }
-
