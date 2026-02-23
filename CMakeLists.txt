@@ -51,7 +51,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
 
 # Lua dependencies
-find_package(Lua REQUIRED)
+find_package(Lua 5.4 REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(cpr CONFIG REQUIRED)
 
@@ -132,7 +132,7 @@ target_link_libraries(rme PRIVATE spdlog::spdlog)
 target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
 
 # Link Lua dependencies
-target_link_libraries(rme PRIVATE ${LUA_LIBRARIES})
+target_link_libraries(rme PRIVATE /usr/lib/x86_64-linux-gnu/liblua5.4.so.0)
 target_link_libraries(rme PRIVATE sol2::sol2)
 target_link_libraries(rme PRIVATE cpr::cpr)
 
@@ -183,7 +183,7 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_autoborder_preview PRIVATE tomlplusplus::tomlplusplus)
 
     # Lua for tests
-    target_link_libraries(test_autoborder_preview PRIVATE ${LUA_LIBRARIES})
+	target_link_libraries(test_autoborder_preview PRIVATE /usr/lib/x86_64-linux-gnu/liblua5.4.so.0)
     target_link_libraries(test_autoborder_preview PRIVATE sol2::sol2)
     target_link_libraries(test_autoborder_preview PRIVATE cpr::cpr)
 
@@ -222,7 +222,7 @@ if(RME_BUILD_TESTS)
 	target_link_libraries(test_lua_api PRIVATE nanovg::nanovg)
 	target_link_libraries(test_lua_api PRIVATE spdlog::spdlog)
 	target_link_libraries(test_lua_api PRIVATE tomlplusplus::tomlplusplus)
-	target_link_libraries(test_lua_api PRIVATE ${LUA_LIBRARIES})
+	target_link_libraries(test_lua_api PRIVATE /usr/lib/x86_64-linux-gnu/liblua5.4.so.0)
 	target_link_libraries(test_lua_api PRIVATE sol2::sol2)
 	target_link_libraries(test_lua_api PRIVATE cpr::cpr)
 
