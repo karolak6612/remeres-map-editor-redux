@@ -45,18 +45,18 @@ bool Towns::addTown(std::unique_ptr<Town> town) {
 
 uint32_t Towns::getEmptyID() {
 	uint32_t empty = 0;
-	for (TownMap::iterator it = begin(); it != end(); ++it) {
-		if (it->second->getID() > empty) {
-			empty = it->second->getID();
+	for (const auto& [_, town] : towns) {
+		if (town->getID() > empty) {
+			empty = town->getID();
 		}
 	}
 	return empty + 1;
 }
 
 Town* Towns::getTown(std::string& name) {
-	for (TownMap::iterator it = begin(); it != end(); ++it) {
-		if (it->second->getName() == name) {
-			return it->second.get();
+	for (const auto& [_, town] : towns) {
+		if (town->getName() == name) {
+			return town.get();
 		}
 	}
 	return nullptr;
