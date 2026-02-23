@@ -3,6 +3,7 @@
 
 #include <wx/wx.h>
 #include <wx/glcanvas.h>
+#include <memory>
 
 class GLContextManager {
 public:
@@ -12,7 +13,7 @@ public:
 	wxGLContext* GetGLContext(wxGLCanvas* win);
 
 private:
-	wxGLContext* OGLContext;
+	std::unique_ptr<wxGLContext> OGLContext;
 };
 
 extern GLContextManager g_gl_context;
