@@ -35,7 +35,7 @@ std::mt19937& getRandomGenerator() {
 }
 
 int32_t uniform_random(int32_t minNumber, int32_t maxNumber) {
-	static std::uniform_int_distribution<int32_t> uniformRand;
+	thread_local std::uniform_int_distribution<int32_t> uniformRand;
 	if (minNumber == maxNumber) {
 		return minNumber;
 	} else if (minNumber > maxNumber) {
@@ -102,6 +102,9 @@ double ws2f(const wxString s) {
 }
 
 void replaceString(std::string& str, std::string_view sought, std::string_view replacement) {
+	if (sought.empty()) {
+		return;
+	}
 	size_t pos = 0;
 	size_t soughtLen = sought.length();
 	size_t replaceLen = replacement.length();
@@ -120,11 +123,11 @@ void trim_left(std::string& source, const std::string& t) {
 }
 
 void to_lower_str(std::string& source) {
-	std::transform(source.begin(), source.end(), source.begin(), tolower);
+std::ranges::transform(source, source.begin(), [](unsigned char c) { return std::tolower(c); });
 }
 
 void to_upper_str(std::string& source) {
-	std::transform(source.begin(), source.end(), source.begin(), toupper);
+	std::transform(source.begin(), source.end(), source.begin(), [](unsigned char c) { return std::toupper(c); });
 }
 
 std::string as_lower_str(const std::string& other) {

@@ -43,7 +43,6 @@ protected:
 	std::unique_ptr<MinimapDrawer> drawer;
 	wxTimer update_timer;
 	wxGLContext* context;
-	std::unique_ptr<NVGcontext, NVGDeleter> nvg;
 };
 
 #endif
