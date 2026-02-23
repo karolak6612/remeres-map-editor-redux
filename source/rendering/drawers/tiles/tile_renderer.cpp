@@ -33,7 +33,7 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 }
 
 // Helper function to populate tooltip data from an item (in-place)
-static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, const Position& pos, bool isHouseTile, float zoom) {
+static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, const Position& pos, bool isHouseTile, float zoom, bool full_detail) {
 	if (!item) {
 		return false;
 	}
@@ -116,7 +116,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	data.destination = destination;
 
 	// Populate container items
-	if (it.isContainer() && zoom <= 1.5f) {
+	if (full_detail && it.isContainer() && zoom <= 1.5f) {
 		if (const Container* container = item->asContainer()) {
 			// Set capacity for rendering empty slots
 			data.containerCapacity = static_cast<uint8_t>(container->getVolume());
@@ -148,6 +148,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	}
 
 	data.updateCategory();
+	data.is_mini = !full_detail;
 
 	return true;
 }
@@ -185,6 +186,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	if (location->getWaypointCount() > 0) {
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
+
+	bool is_hovered = (map_x == view.mouse_map_x && map_y == view.mouse_map_y && map_z == view.floor);
 
 	// Waypoint tooltip (one per waypoint)
 	if (options.show_tooltips && waypoint && map_z == view.floor) {
@@ -235,7 +238,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom, is_hovered)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -282,7 +285,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				// item tooltip (one per item)
 				if (process_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom, is_hovered)) {
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
 						}

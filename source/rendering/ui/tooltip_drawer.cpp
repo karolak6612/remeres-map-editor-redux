@@ -577,6 +577,45 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		float minWidth = 120.0f;
 		float maxWidth = 220.0f;
 
+		if (tooltip.is_mini) {
+			std::string label;
+			if (tooltip.category == TooltipCategory::WAYPOINT) {
+				label = tooltip.waypointName;
+			} else {
+				if (tooltip.actionId > 0) label += "AID:" + std::to_string(tooltip.actionId) + " ";
+				if (tooltip.uniqueId > 0) label += "UID:" + std::to_string(tooltip.uniqueId) + " ";
+				if (tooltip.doorId > 0) label += "DID:" + std::to_string(tooltip.doorId) + " ";
+				if (tooltip.destination.x > 0) label += "Teleport ";
+				if (!tooltip.text.empty()) label += "\"...\" ";
+			}
+
+			if (label.empty()) {
+				continue;
+			}
+
+			// Draw label
+			nvgFontSize(vg, 10.0f);
+			nvgFontFace(vg, "sans");
+			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
+
+			float bounds[4];
+			nvgTextBounds(vg, 0, 0, label.c_str(), nullptr, bounds);
+			float w = bounds[2] - bounds[0];
+			float h = bounds[3] - bounds[1];
+
+			// Background
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, screen_x - w / 2 - 2, screen_y - 12 - h - 2, w + 4, h + 4, 2);
+			nvgFillColor(vg, nvgRGBA(0, 0, 0, 160)); // Semi-transparent black
+			nvgFill(vg);
+
+			// Text
+			nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+			nvgText(vg, screen_x, screen_y - 12, label.c_str(), nullptr);
+
+			continue;
+		}
+
 		// 1. Prepare Content
 		prepareFields(tooltip);
 

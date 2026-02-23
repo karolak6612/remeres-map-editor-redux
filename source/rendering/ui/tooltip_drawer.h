@@ -71,6 +71,8 @@ struct TooltipData {
 	std::vector<ContainerItem> containerItems;
 	uint8_t containerCapacity = 0;
 
+	bool is_mini = false;
+
 	TooltipData() = default;
 
 	// Constructor for waypoint
@@ -117,6 +119,7 @@ struct TooltipData {
 		waypointName = {};
 		containerItems.clear();
 		containerCapacity = 0;
+		is_mini = false;
 	}
 };
 
