@@ -35,7 +35,7 @@ public:
 
 private:
 	// -- Logic --
-	PaletteType current_type = TILESET_UNKNOWN;
+	PaletteType current_type = TILESET_TERRAIN;
 
 	// Tool State
 	Brush* hover_brush = nullptr;

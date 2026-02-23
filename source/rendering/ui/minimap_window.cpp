@@ -29,12 +29,6 @@
 
 #include "rendering/drawers/minimap_drawer.h"
 
-#ifndef NANOVG_GL3
-	#define NANOVG_GL3
-#endif
-#include <nanovg.h>
-#include <nanovg_gl.h>
-
 // Helper to create attributes
 static wxGLAttributes& GetCoreProfileAttributes() {
 	static wxGLAttributes vAttrs = []() {
@@ -48,8 +42,7 @@ static wxGLAttributes& GetCoreProfileAttributes() {
 MinimapWindow::MinimapWindow(wxWindow* parent) :
 	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
 	update_timer(this),
-	context(nullptr),
-	nvg(nullptr, NVGDeleter()) {
+	context(nullptr) {
 	spdlog::info("MinimapWindow::MinimapWindow - Obtaining shared context");
 	context = g_gui.GetGLContext(this);
 	if (!context || !context->IsOK()) {
@@ -71,11 +64,10 @@ MinimapWindow::~MinimapWindow() {
 	spdlog::debug("MinimapWindow destructor started");
 	spdlog::default_logger()->flush();
 	if (context) {
-		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer/nvg");
+		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer");
 		spdlog::default_logger()->flush();
 		SetCurrent(*context);
 		drawer.reset();
-		nvg.reset();
 	}
 	spdlog::debug("MinimapWindow destructor finished");
 	spdlog::default_logger()->flush();
@@ -122,12 +114,6 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 			spdlog::info("MinimapWindow::OnPaint - GLAD loaded. GL Version: {}", (char*)glGetString(GL_VERSION));
 		}
 		gladInitialized = true;
-	}
-
-	if (!nvg) {
-		// Minimap uses a separate NanoVG context to avoid state interference with the main
-		// TextRenderer, as the minimap window has its own GL context and lifecycle.
-		nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
 	}
 
 	if (!g_gui.IsEditorOpen()) {
