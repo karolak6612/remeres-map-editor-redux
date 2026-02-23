@@ -109,15 +109,6 @@ public:
 
 	void TakeScreenshot(wxFileName path, wxString format);
 
-	enum {
-		BLOCK_SIZE = 100
-	};
-
-	inline int getFillIndex(int x, int y) const {
-		return x + BLOCK_SIZE * y;
-	}
-
-	static bool processed[BLOCK_SIZE * BLOCK_SIZE];
 	Editor& editor;
 	std::unique_ptr<MapDrawer> drawer;
 	int keyCode;

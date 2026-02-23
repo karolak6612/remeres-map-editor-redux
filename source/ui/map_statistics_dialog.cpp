@@ -92,28 +92,29 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
-	wxButton* export_button = newd wxButton(dg, wxID_OK, "Export as XML");
+	wxButton* export_button = newd wxButton(dg, wxID_SAVE, "Export as XML");
 	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
 	choicesizer->Add(export_button, wxSizerFlags(1).Center());
 	export_button->SetToolTip("Not implemented yet");
 	export_button->Enable(false);
-	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
+	wxButton* okBtn = newd wxButton(dg, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	okBtn->SetToolTip("Close this window");
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(1).Center());
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
+	dg->SetIcon(icon);
+
 	dg->SetSizerAndFit(topsizer);
 	dg->Centre(wxBOTH);
 
 	int ret = dg->ShowModal();
 
-	if (ret == wxID_OK) {
-	} else if (ret == wxID_CANCEL) {
+	if (ret == wxID_SAVE) {
+	} else if (ret == wxID_OK) {
 	}
-
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
-	dg->SetIcon(icon);
 
 	dg->Destroy();
 }

@@ -77,8 +77,6 @@
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/table/table_brush.h"
 
-bool MapCanvas::processed[] = { 0 };
-
 // Helper to create attributes
 static wxGLAttributes& GetCoreProfileAttributes() {
 	static wxGLAttributes vAttrs = []() {
