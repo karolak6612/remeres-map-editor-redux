@@ -81,8 +81,8 @@ bool BrushManager::SelectBrush(const Brush* whatbrush, PaletteType primary) {
 		}
 	}
 
-	if (!g_palettes.palettes.front()->OnSelectBrush(whatbrush, primary)) {
-		return false;
+	if (g_palettes.palettes.front()->OnSelectBrush(whatbrush, primary)) {
+		// Found in a palette, OnSelectBrush handled the focus/switching
 	}
 
 	SelectBrushInternal(const_cast<Brush*>(whatbrush));
