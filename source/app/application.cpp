@@ -18,6 +18,8 @@
 #include "app/main.h"
 
 #include "ui/theme.h"
+#include "ui/managers/theme_manager.h"
+#include "app/managers/crash_recovery_manager.h"
 #include "ui/dialog_util.h"
 #include "app/application.h"
 #include "util/file_system.h"
@@ -88,52 +90,7 @@ bool Application::OnInit() {
 	spdlog::info("There is NO WARRANTY, to the extent permitted by law.");
 	spdlog::info("Review COPYING in RME distribution for details.");
 
-	// Load settings early for theme support
-	g_settings.load();
-
-	int rawTheme = g_settings.getInteger(Config::THEME);
-	Theme::Type theme = Theme::Type::System;
-	if (rawTheme >= static_cast<int>(Theme::Type::System) && rawTheme <= static_cast<int>(Theme::Type::Light)) {
-		theme = static_cast<Theme::Type>(rawTheme);
-	}
-	Theme::setType(theme);
-
-	// Enable modern appearance handling (wxWidgets 3.3+)
-#if wxCHECK_VERSION(3, 3, 0)
-	switch (theme) {
-		case Theme::Type::Dark:
-			SetAppearance(wxApp::Appearance::Dark);
-			break;
-		case Theme::Type::Light:
-			SetAppearance(wxApp::Appearance::Light);
-			break;
-		case Theme::Type::System:
-		default:
-			SetAppearance(wxApp::Appearance::System);
-			break;
-	}
-#endif
-
-#ifdef __WXMSW__
-	#if wxCHECK_VERSION(3, 3, 0)
-	// Enable dark mode support for Windows
-	// Note: SetAppearance() above handles this internally in newer versions,
-	// but explicit calls here ensure improved behavior on some system configurations.
-	switch (theme) {
-		case Theme::Type::Dark:
-			MSWEnableDarkMode(wxApp::DarkMode_Always);
-			break;
-		case Theme::Type::Light:
-			// "DarkMode_Never" is not available in wxWidgets 3.3.1 API.
-			// Light mode is the default on MSW, so no action is required here.
-			break;
-		case Theme::Type::System:
-		default:
-			MSWEnableDarkMode(wxApp::DarkMode_Auto);
-			break;
-	}
-	#endif
-#endif
+	ThemeManager::Initialize();
 
 	// Discover data directory
 	FileSystem::DiscoverDataDirectory("menubar.xml");
@@ -220,74 +177,11 @@ bool Application::OnInit() {
 
 	// Check for updates
 #ifdef _USE_UPDATER_
-	if (g_settings.getInteger(Config::USE_UPDATER) == -1) {
-		int ret = DialogUtil::PopupDialog(
-			"Notice",
-			"Do you want the editor to automatically check for updates?\n"
-			"It will connect to the internet if you choose yes.\n"
-			"You can change this setting in the preferences later.",
-			wxYES | wxNO
-		);
-		if (ret == wxID_YES) {
-			g_settings.setInteger(Config::USE_UPDATER, 1);
-		} else {
-			g_settings.setInteger(Config::USE_UPDATER, 0);
-		}
-	}
-	if (g_settings.getInteger(Config::USE_UPDATER) == 1) {
-		m_updater = std::make_unique<UpdateChecker>();
-		m_updater->connect(g_gui.root);
-	}
+	UpdateChecker::CheckForUpdates(g_gui.root, m_updater);
 #endif
 
-	FileName save_failed_file = FileSystem::GetLocalDataDirectory();
-	save_failed_file.SetName(".saving.txt");
-	if (save_failed_file.FileExists()) {
-		std::ifstream f(nstr(save_failed_file.GetFullPath()).c_str(), std::ios::in);
-
-		std::string backup_otbm, backup_house, backup_spawn;
-
-		getline(f, backup_otbm);
-		getline(f, backup_house);
-		getline(f, backup_spawn);
-
-		// Remove the file
-		f.close();
-		std::remove(nstr(save_failed_file.GetFullPath()).c_str());
-
-		// Query file retrieval if possible
-		if (!backup_otbm.empty()) {
-			long ret = DialogUtil::PopupDialog(
-				"Editor Crashed",
-				wxString(
-					"IMPORTANT! THE EDITOR CRASHED WHILE SAVING!\n\n"
-					"Do you want to recover the lost map? (it will be opened immediately):\n"
-				) << wxstr(backup_otbm)
-				  << "\n"
-				  << wxstr(backup_house) << "\n"
-				  << wxstr(backup_spawn) << "\n",
-				wxYES | wxNO
-			);
-
-			if (ret == wxID_YES) {
-				// Recover if the user so wishes
-				std::remove(backup_otbm.substr(0, backup_otbm.size() - 1).c_str());
-				std::rename(backup_otbm.c_str(), backup_otbm.substr(0, backup_otbm.size() - 1).c_str());
-
-				if (!backup_house.empty()) {
-					std::remove(backup_house.substr(0, backup_house.size() - 1).c_str());
-					std::rename(backup_house.c_str(), backup_house.substr(0, backup_house.size() - 1).c_str());
-				}
-				if (!backup_spawn.empty()) {
-					std::remove(backup_spawn.substr(0, backup_spawn.size() - 1).c_str());
-					std::rename(backup_spawn.c_str(), backup_spawn.substr(0, backup_spawn.size() - 1).c_str());
-				}
-
-				// Load the map
-				g_gui.LoadMap(wxstr(backup_otbm.substr(0, backup_otbm.size() - 1)));
-				return true;
-			}
-		}
+	if (CrashRecoveryManager::CheckAndRecover()) {
+		return true;
 	}
 	// Keep track of first event loop entry
 	m_startup = true;

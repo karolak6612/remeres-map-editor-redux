@@ -21,6 +21,7 @@
 		#define RME_UPDATER_H_
 
 		#include <thread>
+		#include <memory>
 
 wxDECLARE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);
 
@@ -32,6 +33,8 @@ wxDECLARE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);
 			),
 
 class wxURL;
+class wxWindow;
+class wxEvtHandler;
 
 class UpdateChecker {
 public:
@@ -39,6 +42,8 @@ public:
 	~UpdateChecker();
 
 	void connect(wxEvtHandler* receiver);
+
+	static void CheckForUpdates(wxWindow* parent, std::unique_ptr<UpdateChecker>& updater);
 
 private:
 	std::jthread m_thread;

@@ -347,9 +347,6 @@ public:
 
 	bool pasting;
 
-	Hotkey hotkeys[10];
-	bool hotkeys_enabled;
-
 protected:
 	wxWindowDisabler* winDisabler;
 

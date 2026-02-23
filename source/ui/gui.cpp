@@ -71,8 +71,7 @@ GUI::GUI() :
 	tool_options(nullptr),
 	tile_properties_panel(nullptr),
 	pasting(false),
-	disabled_counter(0),
-	hotkeys_enabled(true) {
+	disabled_counter(0) {
 }
 
 GUI::~GUI() {

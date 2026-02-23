@@ -16,6 +16,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/app/threads.h
     ${CMAKE_CURRENT_LIST_DIR}/app/updater.h
     ${CMAKE_CURRENT_LIST_DIR}/app/managers/version_manager.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/managers/crash_recovery_manager.h
 
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush_enums.h
@@ -55,6 +56,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/editor/dirty_list.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/hotkey_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/util/file_system.h
+    ${CMAKE_CURRENT_LIST_DIR}/util/image_constants.h
     ${CMAKE_CURRENT_LIST_DIR}/util/image_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/editor_factory.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/operations/copy_operations.h
@@ -276,6 +278,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/editor/managers/editor_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/search_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/welcome_manager.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/managers/theme_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/gl_context_manager.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/theme.h
@@ -349,6 +352,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/managers/version_manager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/managers/crash_recovery_manager.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/editor/hotkey_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush.cpp
@@ -614,6 +618,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/editor/managers/editor_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/search_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/welcome_manager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/managers/theme_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/gl_context_manager.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_popup_menu.cpp
