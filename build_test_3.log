@@ -1,0 +1,3 @@
+ninja: Entering directory `build_conan/build/Release'
+[1/2] Building CXX object CMakeFiles/test_game_sprite_refactor.dir/source/test_app_stub.cpp.o
+[2/2] Linking CXX executable test_game_sprite_refactor

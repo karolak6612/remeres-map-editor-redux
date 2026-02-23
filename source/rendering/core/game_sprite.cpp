@@ -78,6 +78,31 @@ GameSprite::~GameSprite() {
 	// instanced_templates and animator cleaned up automatically by unique_ptr
 }
 
+void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixel_count, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
+	const int dest_step = destHasAlpha ? RGBA_COMPONENTS : RGB_COMPONENTS;
+	const int mask_step = RGB_COMPONENTS;
+
+	for (size_t i = 0; i < pixel_count; ++i) {
+		uint8_t& red = dest[i * dest_step + 0];
+		uint8_t& green = dest[i * dest_step + 1];
+		uint8_t& blue = dest[i * dest_step + 2];
+
+		const uint8_t& tred = mask[i * mask_step + 0];
+		const uint8_t& tgreen = mask[i * mask_step + 1];
+		const uint8_t& tblue = mask[i * mask_step + 2];
+
+		if (tred && tgreen && !tblue) { // yellow => head
+			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
+		} else if (tred && !tgreen && !tblue) { // red => body
+			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
+		} else if (!tred && tgreen && !tblue) { // green => legs
+			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
+		} else if (!tred && !tgreen && tblue) { // blue => feet
+			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
+		}
+	}
+}
+
 void GameSprite::clean(time_t time, int longevity) {
 	for (auto& iter : instanced_templates) {
 		iter->clean(time, longevity);
@@ -532,7 +557,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 	return data;
 }
 
-std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
+std::unique_ptr<uint8_t[]> GameSprite::DecompressImpl(const uint8_t* dump, size_t size, bool use_alpha, int id) {
 	const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
 	uint8_t bpp = use_alpha ? 4 : 3;
@@ -638,6 +663,10 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t si
 	return data;
 }
 
+std::unique_ptr<uint8_t[]> GameSprite::Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id) {
+	return DecompressImpl(dump, size, use_alpha, id);
+}
+
 std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBAData() {
 	// Robust ID 0 handling
 	if (id == 0) {
@@ -682,14 +711,14 @@ const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
 }
 
 GameSprite::TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
+	atlas_region(nullptr),
+	texture_id(template_id_generator.fetch_add(1)), // Generate unique ID for Atlas
 	parent(parent),
 	sprite_index(v),
 	lookHead(outfit.lookHead),
 	lookBody(outfit.lookBody),
 	lookLegs(outfit.lookLegs),
-	lookFeet(outfit.lookFeet),
-	atlas_region(nullptr),
-	texture_id(template_id_generator.fetch_add(1)) { // Generate unique ID for Atlas
+	lookFeet(outfit.lookFeet) {
 }
 
 GameSprite::TemplateImage::~TemplateImage() {
@@ -742,25 +771,8 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBData() {
 		lookFeet = 0;
 	}
 
-	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
-		uint8_t& red = rgbdata[i * RGB_COMPONENTS + 0];
-		uint8_t& green = rgbdata[i * RGB_COMPONENTS + 1];
-		uint8_t& blue = rgbdata[i * RGB_COMPONENTS + 2];
+	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
 
-		const uint8_t& tred = template_rgbdata[i * RGB_COMPONENTS + 0];
-		const uint8_t& tgreen = template_rgbdata[i * RGB_COMPONENTS + 1];
-		const uint8_t& tblue = template_rgbdata[i * RGB_COMPONENTS + 2];
-
-		if (tred && tgreen && !tblue) { // yellow => head
-			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
-		} else if (tred && !tgreen && !tblue) { // red => body
-			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
-		} else if (!tred && tgreen && !tblue) { // green => legs
-			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
-		} else if (!tred && !tgreen && tblue) { // blue => feet
-			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
-		}
-	}
 	// template_rgbdata auto-deleted
 	return rgbdata;
 }
@@ -794,25 +806,8 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 	}
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	for (int i = 0; i < SPRITE_PIXELS * SPRITE_PIXELS; ++i) {
-		uint8_t& red = rgbadata[i * RGBA_COMPONENTS + 0];
-		uint8_t& green = rgbadata[i * RGBA_COMPONENTS + 1];
-		uint8_t& blue = rgbadata[i * RGBA_COMPONENTS + 2];
+	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
 
-		const uint8_t& tred = template_rgbdata[i * RGB_COMPONENTS + 0];
-		const uint8_t& tgreen = template_rgbdata[i * RGB_COMPONENTS + 1];
-		const uint8_t& tblue = template_rgbdata[i * RGB_COMPONENTS + 2];
-
-		if (tred && tgreen && !tblue) { // yellow => head
-			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
-		} else if (tred && !tgreen && !tblue) { // red => body
-			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
-		} else if (!tred && tgreen && !tblue) { // green => legs
-			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
-		} else if (!tred && !tgreen && tblue) { // blue => feet
-			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
-		}
-	}
 	// template_rgbdata auto-deleted
 	return rgbadata;
 }

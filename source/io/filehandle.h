@@ -413,6 +413,12 @@ public:
 		return addRAW(reinterpret_cast<const uint8_t*>(c), strlen(c));
 	}
 
+	template <typename T>
+	bool addValue(T val) {
+		writeBytes(reinterpret_cast<uint8_t*>(&val), sizeof(val));
+		return error_code == FILE_NO_ERROR;
+	}
+
 protected:
 	virtual bool renewCache() = 0;
 

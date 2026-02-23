@@ -101,6 +101,11 @@ public:
 	// Helper for SpritePreloader to decompress data off-thread
 	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id = 0);
 
+	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixel_count, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+
+private:
+	static std::unique_ptr<uint8_t[]> DecompressImpl(const uint8_t* dump, size_t size, bool use_alpha, int id);
+
 protected:
 	class Image;
 	class NormalImage;
