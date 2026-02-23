@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <numeric>
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
@@ -138,8 +139,8 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	for (const auto& i : items) {
-		mem += i->memsize();
+	for (const auto& item : items) {
+		mem += item->memsize();
 	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();

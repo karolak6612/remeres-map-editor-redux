@@ -26,6 +26,8 @@
 #include <stdio.h>
 #include <memory>
 #include <vector>
+#include <format>
+#include <iterator>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER
@@ -182,13 +184,14 @@ public:
 		return read_offset;
 	}
 	std::string hexDump(size_t maxBytes = 32) const {
-		std::string result;
 		size_t count = std::min(maxBytes, data.size());
+		std::string result;
+		result.reserve(count * 3 + (data.size() > maxBytes ? 3 : 0));
+
 		for (size_t i = 0; i < count; ++i) {
-			char buf[4];
-			snprintf(buf, sizeof(buf), "%02X ", static_cast<uint8_t>(data[i]));
-			result += buf;
+			std::format_to(std::back_inserter(result), "{:02X} ", static_cast<uint8_t>(data[i]));
 		}
+
 		if (data.size() > maxBytes) {
 			result += "...";
 		}
@@ -425,25 +428,23 @@ protected:
 	size_t local_write_index;
 
 	FORCEINLINE void writeBytes(const uint8_t* ptr, size_t sz) {
-		if (sz) {
-			do {
-				if (*ptr == NODE_START || *ptr == NODE_END || *ptr == ESCAPE_CHAR) {
-					cache[local_write_index++] = ESCAPE_CHAR;
-					if (local_write_index >= cache.size()) {
-						if (!renewCache()) {
-							return;
-						}
-					}
-				}
-				cache[local_write_index++] = *ptr;
+		while (sz > 0) {
+			if (*ptr == NODE_START || *ptr == NODE_END || *ptr == ESCAPE_CHAR) {
+				cache[local_write_index++] = ESCAPE_CHAR;
 				if (local_write_index >= cache.size()) {
 					if (!renewCache()) {
 						return;
 					}
 				}
-				++ptr;
-				--sz;
-			} while (sz != 0);
+			}
+			cache[local_write_index++] = *ptr;
+			if (local_write_index >= cache.size()) {
+				if (!renewCache()) {
+					return;
+				}
+			}
+			++ptr;
+			--sz;
 		}
 	}
 };

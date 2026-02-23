@@ -615,7 +615,7 @@ MemoryNodeFileWriteHandle::~MemoryNodeFileWriteHandle() {
 }
 
 void MemoryNodeFileWriteHandle::reset() {
-	std::fill(cache.begin(), cache.end(), 0xAA);
+	std::ranges::fill(cache, 0xAA);
 	local_write_index = 0;
 }
 
