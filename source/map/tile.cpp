@@ -459,9 +459,7 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
 	return false;
 }
 
-namespace {
-
-void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
+static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
 	if (i->isSelected()) {
 		statflags |= TILESTATE_SELECTED;
 	}
@@ -495,8 +493,6 @@ void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) 
 		statflags |= TILESTATE_HAS_LIGHT;
 	}
 }
-
-} // namespace
 
 void Tile::update() {
 	statflags &= TILESTATE_MODIFIED;

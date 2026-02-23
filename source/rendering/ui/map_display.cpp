@@ -112,7 +112,6 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 	last_click_abs_y(-1),
 	last_click_x(-1),
 	last_click_y(-1),
-
 	last_mmb_click_y(-1),
 	m_last_gc_time(0) {
 	// Context creation must happen on the main/UI thread
