@@ -581,7 +581,7 @@ namespace {
 		}
 
 		read += 2;
-		for (int i = 0; i < transparent && write < data.size(); i++) {
+		for (int i = 0; i < transparent; i++) {
 			data[write + 0] = 0x00; // red
 			data[write + 1] = 0x00; // green
 			data[write + 2] = 0x00; // blue
@@ -611,7 +611,7 @@ namespace {
 			return false;
 		}
 
-		for (int i = 0; i < colored && write < data.size(); i++) {
+		for (int i = 0; i < colored; i++) {
 			uint8_t r = dump[read + 0];
 			uint8_t g = dump[read + 1];
 			uint8_t b = dump[read + 2];
