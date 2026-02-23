@@ -31,8 +31,7 @@ void LiveDialogs::ShowHostDialog(wxWindow* parent, Editor* editor) {
 
 	wxSizer* top_sizer = newd wxBoxSizer(wxVERTICAL);
 	wxFlexGridSizer* gsizer = newd wxFlexGridSizer(2, 10, 10);
-	gsizer->AddGrowableCol(0, 2);
-	gsizer->AddGrowableCol(1, 3);
+	gsizer->AddGrowableCol(1);
 
 	// Data fields
 	wxTextCtrl* hostname;
@@ -105,8 +104,7 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 
 	wxSizer* top_sizer = newd wxBoxSizer(wxVERTICAL);
 	wxFlexGridSizer* gsizer = newd wxFlexGridSizer(2, 10, 10);
-	gsizer->AddGrowableCol(0, 2);
-	gsizer->AddGrowableCol(1, 3);
+	gsizer->AddGrowableCol(1);
 
 	// Data fields
 	wxTextCtrl* name;
