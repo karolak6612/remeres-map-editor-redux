@@ -4,11 +4,8 @@
 
 GLContextManager g_gl_context;
 
-GLContextManager::GLContextManager() {
-}
-
-GLContextManager::~GLContextManager() {
-}
+GLContextManager::GLContextManager() = default;
+GLContextManager::~GLContextManager() = default;
 
 wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 	if (!OGLContext) {
