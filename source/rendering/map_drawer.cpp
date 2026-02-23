@@ -358,6 +358,18 @@ void MapDrawer::Draw() {
 	primitive_renderer->flush();
 
 	// Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
+	UpdateHoveredTooltip();
+}
+
+void MapDrawer::UpdateHoveredTooltip() {
+	if (!options.show_tooltips) {
+		return;
+	}
+	Position cursor = canvas->GetCursorPosition();
+
+	if (TileLocation* loc = editor.map.getTileL(cursor)) {
+		tile_renderer->ProcessTooltip(loc, view, options);
+	}
 }
 
 void MapDrawer::DrawBackground() {

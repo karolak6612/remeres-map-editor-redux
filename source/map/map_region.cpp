@@ -324,15 +324,7 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	auto& cell = cells[key];
 	if (!cell) {
 		cell = std::make_unique<GridCell>();
-		if (!sorted_cells_dirty) {
-			int cx, cy;
-			getCellCoordsFromKey(key, cx, cy);
-			SortedGridCell new_cell { key, cx, cy, cell.get() };
-			auto it = std::lower_bound(sorted_cells_cache.begin(), sorted_cells_cache.end(), new_cell, [](const auto& a, const auto& b) {
-				return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
-			});
-			sorted_cells_cache.insert(it, new_cell);
-		}
+		sorted_cells_dirty = true;
 	}
 
 	last_key = key;

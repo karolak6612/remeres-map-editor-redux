@@ -118,6 +118,7 @@ public:
 	void Release();
 
 	void Draw();
+	void UpdateHoveredTooltip();
 	void DrawBackground();
 	void DrawMap();
 	void DrawLiveCursors();
