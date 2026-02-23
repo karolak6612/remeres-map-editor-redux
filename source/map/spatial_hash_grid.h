@@ -98,7 +98,6 @@ protected:
 	mutable uint64_t last_key = 0;
 	mutable GridCell* last_cell = nullptr;
 
-	// Traverses cells by iterating over the viewport coordinates.
 	// Traverses cells by checking every potential cell in the viewport.
 	// Efficient for small viewports on dense maps.
 	template <typename Func>
@@ -108,7 +107,9 @@ protected:
 
 	struct RowCellInfo {
 		GridCell* cell;
-		int start_nx;
+		int cell_start_nx;
+		int local_start_nx;
+		int local_end_nx;
 	};
 
 	// Traverses cells by checking every potential cell in the viewport.
@@ -125,7 +126,8 @@ protected:
 				uint64_t key = makeKeyFromCell(cx, cy);
 				auto it = cells.find(key);
 				if (it != cells.end()) {
-					row_cells.push_back({ .cell = it->second.get(), .start_nx = (cx << NODES_PER_CELL_SHIFT) });
+					int cell_start_nx = cx << NODES_PER_CELL_SHIFT;
+					row_cells.push_back({ .cell = it->second.get(), .cell_start_nx = cell_start_nx, .local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx, .local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx });
 				}
 			}
 
@@ -140,13 +142,10 @@ protected:
 				int local_ny = ny & (NODES_PER_CELL - 1);
 				int idx_base = local_ny * NODES_PER_CELL;
 
-				for (const auto& [cell, cell_start_nx] : row_cells) {
-					int local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx;
-					int local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx;
-
-					for (int lnx = local_start_nx; lnx <= local_end_nx; ++lnx) {
-						if (MapNode* node = cell->nodes[idx_base + lnx].get()) {
-							func(node, (cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
+				for (const auto& row_cell : row_cells) {
+					for (int lnx = row_cell.local_start_nx; lnx <= row_cell.local_end_nx; ++lnx) {
+						if (MapNode* node = row_cell.cell->nodes[idx_base + lnx].get()) {
+							func(node, (row_cell.cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
 						}
 					}
 				}
@@ -164,22 +163,18 @@ protected:
 			return;
 		}
 
+		// INT_MIN for cx produces the minimum biased key for row start_cy,
+		// so lower_bound lands at the first cell for that row (or later).
 		SortedGridCell search_val { .key = makeKeyFromCell(std::numeric_limits<int>::min(), start_cy), .cx = std::numeric_limits<int>::min(), .cy = start_cy, .cell = nullptr };
 
-		// Find the first cell that could potentially be in the viewport
+		// Comparator matches the sort order established in updateSortedCells.
 		auto it = std::lower_bound(sorted_cells_cache.begin(), sorted_cells_cache.end(), search_val, [](const SortedGridCell& a, const SortedGridCell& b) {
 			return a.key < b.key;
 		});
 
 		int prev_cy = std::numeric_limits<int>::min();
 
-		struct RowCellInfoHoisted {
-			GridCell* cell;
-			int cell_start_nx;
-			int local_start_nx;
-			int local_end_nx;
-		};
-		std::vector<RowCellInfoHoisted> row_cells;
+		std::vector<RowCellInfo> row_cells;
 		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int ny = start_ny; ny <= end_ny; ++ny) {
