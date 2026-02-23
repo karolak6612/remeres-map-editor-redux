@@ -28,8 +28,9 @@
 #include <string_view>
 
 //
-inline bool testFlags(size_t flags, size_t test) {
-	return (flags & test) != 0;
+template <typename T1, typename T2>
+inline bool testFlags(T1 flags, T2 test) {
+	return (static_cast<size_t>(flags) & static_cast<size_t>(test)) != 0;
 }
 
 int32_t uniform_random(int32_t minNumber, int32_t maxNumber);
@@ -60,8 +61,8 @@ inline wxString wxstr(const char* str) {
 // replaces all instances of sought in str with replacement
 void replaceString(std::string& str, std::string_view sought, std::string_view replacement);
 // Removes all characters in t from source (from either start or beginning of the string)
-void trim_right(std::string& source, const std::string& t);
-void trim_left(std::string& source, const std::string& t);
+void trim_right(std::string& source, std::string_view t);
+void trim_left(std::string& source, std::string_view t);
 // Converts the argument to lower/uppercase
 void to_lower_str(std::string& source);
 void to_upper_str(std::string& source);
