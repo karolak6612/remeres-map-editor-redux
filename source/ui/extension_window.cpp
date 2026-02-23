@@ -93,7 +93,7 @@ wxString ExtensionsDialog::HTML() const {
 		markup << "<i>No extensions loaded.</i>";
 	} else {
 		for (const auto& me : g_materials.getExtensions()) {
-			markup << HTMLForExtension(me);
+			markup << HTMLForExtension(me.get());
 			markup << "<hr>";
 		}
 	}

@@ -27,7 +27,7 @@ public:
 
 	void clear();
 
-	const MaterialsExtensionList& getExtensions();
+	const MaterialsExtensionOwnerList& getExtensions();
 	MaterialsExtensionList getExtensionsByVersion(const ClientVersionID& version_id);
 
 	TilesetContainer tilesets;
@@ -51,7 +51,7 @@ protected:
 	bool unserializeMaterials(const FileName& filename, pugi::xml_node node, wxString& error, std::vector<std::string>& warnings);
 	bool unserializeTileset(pugi::xml_node node, std::vector<std::string>& warnings);
 
-	MaterialsExtensionList extensions;
+	MaterialsExtensionOwnerList extensions;
 
 private:
 	bool modified = false;

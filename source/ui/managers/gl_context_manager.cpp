@@ -9,17 +9,17 @@ GLContextManager::GLContextManager() :
 }
 
 GLContextManager::~GLContextManager() {
-	delete OGLContext;
+	// OGLContext is automatically deleted
 }
 
 wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 	if (OGLContext == nullptr) {
 #ifdef __WXOSX__
-		OGLContext = new wxGLContext(win, nullptr);
+		OGLContext = std::make_unique<wxGLContext>(win, nullptr);
 #else
 		wxGLContextAttrs ctxAttrs;
 		ctxAttrs.PlatformDefaults().CoreProfile().MajorVersion(4).MinorVersion(5).EndList();
-		OGLContext = newd wxGLContext(win, nullptr, &ctxAttrs);
+		OGLContext = std::make_unique<wxGLContext>(win, nullptr, &ctxAttrs);
 		spdlog::info("GLContextManager: Created new OpenGL 4.5 Core Profile context");
 #endif
 		// Initialize GLAD for the new context
@@ -31,5 +31,5 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 		}
 	}
 
-	return OGLContext;
+	return OGLContext.get();
 }

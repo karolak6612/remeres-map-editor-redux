@@ -20,6 +20,8 @@
 
 #include "map/tileset.h"
 #include "app/client_version.h"
+#include <memory>
+#include <vector>
 
 class MaterialsExtension {
 public:
@@ -44,5 +46,6 @@ private:
 };
 
 using MaterialsExtensionList = std::vector<MaterialsExtension*>;
+using MaterialsExtensionOwnerList = std::vector<std::unique_ptr<MaterialsExtension>>;
 
 #endif

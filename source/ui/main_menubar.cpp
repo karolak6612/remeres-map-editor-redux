@@ -65,12 +65,12 @@ MainMenuBar::MainMenuBar(MainFrame* frame) :
 	using namespace MenuBar;
 	checking_programmaticly = false;
 
-	searchHandler = new SearchHandler(frame);
-	viewSettingsHandler = new ViewSettingsHandler(this);
-	mapActionsHandler = new MapActionsHandler(frame);
-	fileMenuHandler = new FileMenuHandler(frame, this);
-	navigationMenuHandler = new NavigationMenuHandler(frame, this);
-	paletteMenuHandler = new PaletteMenuHandler(frame, this);
+	searchHandler = std::make_unique<SearchHandler>(frame);
+	viewSettingsHandler = std::make_unique<ViewSettingsHandler>(this);
+	mapActionsHandler = std::make_unique<MapActionsHandler>(frame);
+	fileMenuHandler = std::make_unique<FileMenuHandler>(frame, this);
+	navigationMenuHandler = std::make_unique<NavigationMenuHandler>(frame, this);
+	paletteMenuHandler = std::make_unique<PaletteMenuHandler>(frame, this);
 
 	MenuBarActionManager::RegisterActions(this, actions);
 
@@ -91,13 +91,7 @@ MainMenuBar::MainMenuBar(MainFrame* frame) :
 
 MainMenuBar::~MainMenuBar() {
 	// Don't need to delete menubar, it's owned by the frame
-
-	delete searchHandler;
-	delete viewSettingsHandler;
-	delete mapActionsHandler;
-	delete fileMenuHandler;
-	delete navigationMenuHandler;
-	delete paletteMenuHandler;
+	// Handlers are automatically deleted by std::unique_ptr
 }
 
 void MainMenuBar::EnableItem(MenuBar::ActionID id, bool enable) {
