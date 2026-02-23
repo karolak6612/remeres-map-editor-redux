@@ -66,7 +66,7 @@ MinimapWindow::~MinimapWindow() {
 	if (context) {
 		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer");
 		spdlog::default_logger()->flush();
-		SetCurrent(*context);
+		g_gl_context.EnsureContextCurrent(*context, this);
 		drawer.reset();
 	}
 	spdlog::debug("MinimapWindow destructor finished");

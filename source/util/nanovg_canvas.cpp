@@ -43,8 +43,9 @@ NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
 
 NanoVGCanvas::~NanoVGCanvas() {
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
-		ClearImageCache();
+		if (MakeContextCurrent()) {
+			ClearImageCache();
+		}
 	}
 }
 
@@ -77,8 +78,7 @@ bool NanoVGCanvas::MakeContextCurrent() {
 	if (!m_glContext) {
 		return false;
 	}
-	SetCurrent(*m_glContext);
-	return true;
+	return g_gl_context.EnsureContextCurrent(*m_glContext, this);
 }
 
 void NanoVGCanvas::OnPaint(wxPaintEvent&) {

@@ -152,9 +152,9 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 MapCanvas::~MapCanvas() {
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
+		g_gl_context.EnsureContextCurrent(*m_glContext, this);
 	} else if (auto context = g_gui.GetGLContext(this)) {
-		SetCurrent(*context);
+		g_gl_context.EnsureContextCurrent(*context, this);
 	}
 	drawer.reset();
 	m_nvg.reset();

@@ -28,3 +28,39 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 
 	return OGLContext.get();
 }
+
+bool GLContextManager::EnsureContextCurrent(wxGLContext& ctx, wxGLCanvas* preferredCanvas) {
+	// 1. Try preferred canvas if valid and shown
+	if (preferredCanvas && preferredCanvas->IsShown()) {
+		if (preferredCanvas->SetCurrent(ctx)) {
+			return true;
+		}
+	}
+
+	// 2. Try the window associated with the context itself
+	if (wxWindow* ctxWin = ctx.GetWindow()) {
+		if (ctxWin != preferredCanvas && ctxWin->IsShown()) {
+			if (auto* canvas = dynamic_cast<wxGLCanvas*>(ctxWin)) {
+				if (canvas->SetCurrent(ctx)) {
+					return true;
+				}
+			}
+		}
+	}
+
+	// 3. Try global context's window as fallback
+	if (OGLContext) {
+		if (wxWindow* globalWin = OGLContext->GetWindow()) {
+			if (globalWin != preferredCanvas && globalWin != ctx.GetWindow() && globalWin->IsShown()) {
+				if (auto* globalCanvas = dynamic_cast<wxGLCanvas*>(globalWin)) {
+					// Assumes compatible pixel format
+					if (globalCanvas->SetCurrent(ctx)) {
+						return true;
+					}
+				}
+			}
+		}
+	}
+
+	return false;
+}

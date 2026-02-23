@@ -69,7 +69,11 @@ namespace IngamePreview {
 		animation_timer.Start(16); // ~60 FPS update
 	}
 
-	IngamePreviewCanvas::~IngamePreviewCanvas() = default;
+	IngamePreviewCanvas::~IngamePreviewCanvas() {
+		if (m_glContext) {
+			g_gl_context.EnsureContextCurrent(*m_glContext, this);
+		}
+	}
 
 	void IngamePreviewCanvas::OnPaint(wxPaintEvent& event) {
 		// Validating the paint event prevents infinite paint loops on some platforms

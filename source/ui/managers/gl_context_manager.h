@@ -12,6 +12,10 @@ public:
 
 	wxGLContext* GetGLContext(wxGLCanvas* win);
 
+	// Tries to make the context current on the preferred canvas, or falls back to
+	// other available canvases if the preferred one is hidden (to avoid assertions).
+	bool EnsureContextCurrent(wxGLContext& ctx, wxGLCanvas* preferredCanvas = nullptr);
+
 private:
 	std::unique_ptr<wxGLContext> OGLContext;
 };
