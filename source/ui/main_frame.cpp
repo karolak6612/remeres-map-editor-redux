@@ -206,7 +206,6 @@ bool MainFrame::DoQuerySaveTileset(bool doclose) {
 	if (g_gui.GetCurrentEditor()) {
 		ExportTilesetsWindow dlg(this, *g_gui.GetCurrentEditor());
 		dlg.ShowModal();
-		dlg.Destroy();
 	}
 
 	return !g_materials.needSave();
@@ -296,7 +295,7 @@ bool MainFrame::DoQueryImportCreatures() {
 						if (ok) {
 							DialogUtil::ListDialog("Monster loader errors", warnings);
 						} else {
-							wxMessageBox("Error OT data file \"" + paths[i] + "\".\n" + error, "Error", wxOK | wxICON_INFORMATION, g_gui.root);
+							wxLogError("Error OT data file \"%s\".\n%s", paths[i], error);
 						}
 					}
 				} else {

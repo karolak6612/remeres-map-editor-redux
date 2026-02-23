@@ -29,7 +29,7 @@ public:
 		Bind(wxEVT_MOUSE_CAPTURE_LOST, &ConvexButton::OnMouseCaptureLost, this);
 	}
 
-	void SetBitmap(const wxBitmap& bitmap) {
+	void SetBitmap(const wxBitmapBundle& bitmap) {
 		m_icon = bitmap;
 		InvalidateBestSize();
 		Refresh();
@@ -41,14 +41,14 @@ public:
 		wxSize text = dc.GetTextExtent(GetLabel());
 		int width = text.x + FromDIP(30);
 		if (m_icon.IsOk()) {
-			width += m_icon.GetWidth() + FromDIP(8);
+			width += FromDIP(m_icon.GetDefaultSize()).GetWidth() + FromDIP(8);
 		}
-		int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(16);
+		int height = std::max(text.y, m_icon.IsOk() ? FromDIP(m_icon.GetDefaultSize()).GetHeight() : 0) + FromDIP(16);
 		return wxSize(std::max(width, FromDIP(100)), std::max(height, FromDIP(30)));
 	}
 
 private:
-	wxBitmap m_icon;
+	wxBitmapBundle m_icon;
 	bool m_hover = false;
 	bool m_pressed = false;
 
@@ -91,9 +91,14 @@ private:
 		dc.SetTextForeground(Theme::Get(Theme::Role::Text));
 		wxSize textSize = dc.GetTextExtent(GetLabel());
 
-		int x = (sz.x - textSize.x) / 2;
+		wxBitmap bitmap;
 		if (m_icon.IsOk()) {
-			x -= (m_icon.GetWidth() + FromDIP(8)) / 2;
+			bitmap = m_icon.GetBitmapFor(this);
+		}
+
+		int x = (sz.x - textSize.x) / 2;
+		if (bitmap.IsOk()) {
+			x -= (bitmap.GetWidth() + FromDIP(8)) / 2;
 		}
 
 		int y = (sz.y - textSize.y) / 2;
@@ -102,13 +107,13 @@ private:
 			y += 1;
 		} // Shift content when pressed
 
-		if (m_icon.IsOk()) {
-			int iy = (sz.y - m_icon.GetHeight()) / 2;
+		if (bitmap.IsOk()) {
+			int iy = (sz.y - bitmap.GetHeight()) / 2;
 			if (m_pressed) {
 				iy += 1;
 			}
-			dc.DrawBitmap(m_icon, x, iy, true);
-			x += m_icon.GetWidth() + FromDIP(8);
+			dc.DrawBitmap(bitmap, x, iy, true);
+			x += bitmap.GetWidth() + FromDIP(8);
 		}
 
 		dc.DrawText(GetLabel(), x, y);
@@ -301,8 +306,8 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 	wxBoxSizer* headerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	// Icon Button - Align Left: 10px total
-	ConvexButton* iconBtn = new ConvexButton(headerPanel, wxID_ANY, "", wxDefaultPosition, wxSize(48, 48));
-	iconBtn->SetBitmap(rmeLogo.IsOk() ? rmeLogo : IMAGE_MANAGER.GetBitmap(ICON_QUESTION_CIRCLE, wxSize(32, 32))); // Fallback if logo invalid
+	ConvexButton* iconBtn = new ConvexButton(headerPanel, wxID_ANY, "", wxDefaultPosition, FromDIP(wxSize(48, 48)));
+	iconBtn->SetBitmap(rmeLogo.IsOk() ? wxBitmapBundle::FromBitmap(rmeLogo) : IMAGE_MANAGER.GetBitmapBundle(ICON_QUESTION_CIRCLE)); // Fallback if logo invalid
 	headerSizer->Add(iconBtn, 0, wxALL | wxCENTER, 8);
 
 	wxBoxSizer* titleSizer = new wxBoxSizer(wxVERTICAL);
@@ -323,7 +328,7 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 	headerSizer->Add(titleSizer, 1, wxALL | wxEXPAND, 10);
 
 	ConvexButton* prefBtn = new ConvexButton(headerPanel, wxID_PREFERENCES, "Preferences");
-	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, FromDIP(wxSize(24, 24))));
+	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_GEAR));
 	prefBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Right: 10px total
@@ -338,14 +343,14 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
 
 	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
-	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_POWER_OFF, FromDIP(wxSize(24, 24))));
+	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_POWER_OFF));
 	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Left: 10px total
 	footerSizer->Add(exitBtn, 0, wxALL, 8);
 
 	ConvexButton* newBtn = new ConvexButton(footerPanel, wxID_NEW, "New Map");
-	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(24, 24))));
+	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_NEW));
 	newBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	footerSizer->Add(newBtn, 0, wxALL, 8);
 
@@ -357,7 +362,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	footerSizer->AddStretchSpacer();
 
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
-	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(24, 24))));
+	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_OPEN));
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 		long item = -1;
 		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
@@ -385,14 +390,14 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 1: Actions (Buttons directly on panel)
 	wxBoxSizer* col1 = new wxBoxSizer(wxVERTICAL);
 
-	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, wxSize(130, 50));
-	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(24, 24)));
+	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, FromDIP(wxSize(130, 50)));
+	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_NEW));
 	newMapBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	// Align "New Map" with Icon (8px from left edge of content panel)
 	col1->Add(newMapBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
 
-	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(130, 50));
-	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(24, 24)));
+	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, FromDIP(wxSize(130, 50)));
+	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_OPEN));
 	browseBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	col1->Add(browseBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
 

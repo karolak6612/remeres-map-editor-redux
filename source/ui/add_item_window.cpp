@@ -84,11 +84,11 @@ AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryT
 
 	wxSizer* subsizer_ = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "Add");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
 	okBtn->SetToolTip("Add item to tileset");
 	subsizer_->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Close this window");
 	subsizer_->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(subsizer_, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
@@ -142,7 +142,6 @@ void AddItemWindow::OnItemClicked(wxMouseEvent& WXUNUSED(event)) {
 		uint16_t id = dialog.getResultID();
 		SetItemIdToItemButton(id);
 	}
-	dialog.Destroy();
 }
 
 void AddItemWindow::SetItemIdToItemButton(uint16_t id) {
