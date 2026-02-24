@@ -160,10 +160,11 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
 			canvas->Refresh();
 		} else if (boundbox_selection) {
 			// Calculate selection size
-			int move_x = std::abs(canvas->last_click_map_x - mouse_map_pos.x);
-			int move_y = std::abs(canvas->last_click_map_y - mouse_map_pos.y);
+			int move_x = std::abs(canvas->last_click_map_x - mouse_map_pos.x) + 1;
+			int move_y = std::abs(canvas->last_click_map_y - mouse_map_pos.y) + 1;
+			int tiles = move_x * move_y;
 			wxString ss;
-			ss << "Selection " << move_x + 1 << ":" << move_y + 1;
+			ss << "Selection: " << move_x << " x " << move_y << " (" << tiles << " tiles)";
 			g_gui.SetStatusText(ss);
 
 			canvas->Refresh();

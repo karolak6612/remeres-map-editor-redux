@@ -36,6 +36,7 @@ void EditorPersistence::loadMap(Editor& editor, const FileName& fn) {
 
 	ScopedLoadingBar loadingBar("Loading OTBM map...");
 	editor.map.open(nstr(fn.GetFullPath()));
+	g_gui.SetStatusText("Map loaded successfully.");
 }
 
 void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdialog) {
@@ -225,6 +226,7 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 	}
 
 	editor.map.clearChanges();
+	g_gui.SetStatusText("Map saved successfully.");
 }
 
 void EditorPersistence::importTowns(Editor& editor, Map& imported_map, const Position& offset, ImportType house_import_type, std::unordered_map<uint32_t, uint32_t>& town_id_map) {

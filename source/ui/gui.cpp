@@ -33,6 +33,7 @@
 #include "ui/managers/minimap_manager.h"
 #include "brushes/managers/doodad_preview_manager.h"
 #include "ui/managers/status_manager.h"
+#include "rendering/ui/map_status_updater.h"
 #include "brushes/brush.h"
 #include "map/map.h"
 #include "game/sprites.h"
@@ -138,6 +139,7 @@ void GUI::SetSelectionMode() {
 	}
 
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
+	SetStatusText("Switched to Selection Mode");
 }
 
 void GUI::SetDrawingMode() {
@@ -147,6 +149,7 @@ void GUI::SetDrawingMode() {
 	}
 
 	mapTab->OnSwitchEditorMode(DRAWING_MODE);
+	SetStatusText("Switched to Drawing Mode");
 
 	if (GetCurrentBrush() && GetCurrentBrush()->is<DoodadBrush>()) {
 		if (mapTab) {
@@ -195,6 +198,7 @@ void GUI::DoPaste() {
 }
 void GUI::PreparePaste() {
 	g_editors.PreparePaste();
+	SetStatusText("Ready to paste. Click to place.");
 }
 void GUI::StartPasting() {
 	g_editors.StartPasting();
@@ -210,10 +214,18 @@ bool GUI::CanRedo() {
 	return g_editors.CanRedo();
 }
 bool GUI::DoUndo() {
-	return g_editors.DoUndo();
+	bool result = g_editors.DoUndo();
+	if (result) {
+		SetStatusText("Undo performed.");
+	}
+	return result;
 }
 bool GUI::DoRedo() {
-	return g_editors.DoRedo();
+	bool result = g_editors.DoRedo();
+	if (result) {
+		SetStatusText("Redo performed.");
+	}
+	return result;
 }
 
 int GUI::GetCurrentFloor() {
@@ -232,7 +244,7 @@ void GUI::ChangeFloor(int new_floor) {
 
 		if (old_floor != new_floor) {
 			tab->GetCanvas()->ChangeFloor(new_floor);
-			g_status.SetStatusText(std::format("Floor: {} | Zoom: {:.0f}%", new_floor, GetCurrentZoom() * 100), STATUS_FIELD_FLOOR_ZOOM);
+			MapStatusUpdater::UpdateFloor(new_floor);
 		}
 	}
 }
@@ -249,7 +261,7 @@ void GUI::SetCurrentZoom(double zoom) {
 	MapTab* mapTab = GetCurrentMapTab();
 	if (mapTab) {
 		mapTab->GetCanvas()->SetZoom(zoom);
-		g_status.SetStatusText(std::format("Floor: {} | Zoom: {:.0f}%", GetCurrentFloor(), zoom * 100), STATUS_FIELD_FLOOR_ZOOM);
+		MapStatusUpdater::UpdateZoom(zoom);
 	}
 }
 

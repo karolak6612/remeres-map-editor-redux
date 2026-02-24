@@ -26,6 +26,8 @@ class MapStatusUpdater {
 public:
 	static void Update(Editor& editor, int map_x, int map_y, int map_z);
 	static void UpdateFPS(const wxString& fps_status);
+	static void UpdateFloor(int floor);
+	static void UpdateZoom(double zoom);
 };
 
 #endif
