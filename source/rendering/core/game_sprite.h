@@ -14,6 +14,7 @@
 #include "rendering/core/render_timer.h"
 #include <atomic>
 #include <cstdint>
+#include <span>
 
 #include <deque>
 #include <memory>
@@ -99,8 +100,11 @@ public:
 	}
 
 	// Helper for SpritePreloader to decompress data off-thread
-	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(const uint8_t* dump, size_t size, bool use_alpha, int id = 0);
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0);
 
+	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+
+private:
 protected:
 	class Image;
 	class NormalImage;

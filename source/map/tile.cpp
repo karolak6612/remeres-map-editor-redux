@@ -36,6 +36,7 @@
 #include <algorithm>
 #include <iterator>
 #include <memory>
+#include <numeric>
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
@@ -138,8 +139,8 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	for (const auto& i : items) {
-		mem += i->memsize();
+	for (const auto& item : items) {
+		mem += item->memsize();
 	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
@@ -458,6 +459,41 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
 	return false;
 }
 
+static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
+	if (i->isSelected()) {
+		statflags |= TILESTATE_SELECTED;
+	}
+	if (i->getUniqueID() != 0) {
+		statflags |= TILESTATE_UNIQUE;
+	}
+	if (i->getMiniMapColor() != 0) {
+		minimapColor = i->getMiniMapColor();
+	}
+
+	const ItemType& it_type = g_items[i->getID()];
+	if (it_type.unpassable) {
+		statflags |= TILESTATE_BLOCKING;
+	}
+	if (it_type.isOptionalBorder) {
+		statflags |= TILESTATE_OP_BORDER;
+	}
+	if (it_type.isTable) {
+		statflags |= TILESTATE_HAS_TABLE;
+	}
+	if (it_type.isCarpet) {
+		statflags |= TILESTATE_HAS_CARPET;
+	}
+	if (it_type.hookSouth) {
+		statflags |= TILESTATE_HOOK_SOUTH;
+	}
+	if (it_type.hookEast) {
+		statflags |= TILESTATE_HOOK_EAST;
+	}
+	if (i->hasLight()) {
+		statflags |= TILESTATE_HAS_LIGHT;
+	}
+}
+
 void Tile::update() {
 	statflags &= TILESTATE_MODIFIED;
 
@@ -489,38 +525,7 @@ void Tile::update() {
 	}
 
 	std::ranges::for_each(items, [&](const auto& i) {
-		if (i->isSelected()) {
-			statflags |= TILESTATE_SELECTED;
-		}
-		if (i->getUniqueID() != 0) {
-			statflags |= TILESTATE_UNIQUE;
-		}
-		if (i->getMiniMapColor() != 0) {
-			minimapColor = i->getMiniMapColor();
-		}
-
-		ItemType& it_type = g_items[i->getID()];
-		if (it_type.unpassable) {
-			statflags |= TILESTATE_BLOCKING;
-		}
-		if (it_type.isOptionalBorder) {
-			statflags |= TILESTATE_OP_BORDER;
-		}
-		if (it_type.isTable) {
-			statflags |= TILESTATE_HAS_TABLE;
-		}
-		if (it_type.isCarpet) {
-			statflags |= TILESTATE_HAS_CARPET;
-		}
-		if (it_type.hookSouth) {
-			statflags |= TILESTATE_HOOK_SOUTH;
-		}
-		if (it_type.hookEast) {
-			statflags |= TILESTATE_HOOK_EAST;
-		}
-		if (i->hasLight()) {
-			statflags |= TILESTATE_HAS_LIGHT;
-		}
+		UpdateItemFlags(i.get(), statflags, minimapColor);
 	});
 
 	if ((statflags & TILESTATE_BLOCKING) == 0) {

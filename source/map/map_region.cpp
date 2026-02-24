@@ -154,14 +154,21 @@ void SpatialHashGrid::updateSortedCells() const {
 	for (const auto& [key, cell_ptr] : cells) {
 		int cx, cy;
 		getCellCoordsFromKey(key, cx, cy);
-		sorted_cells_cache.emplace_back(key, cx, cy, cell_ptr.get());
+		sorted_cells_cache.push_back({ key, cx, cy, cell_ptr.get() });
 	}
 
 	std::ranges::sort(sorted_cells_cache, [](const auto& a, const auto& b) {
-		return std::tie(a.cy, a.cx) < std::tie(b.cy, b.cx);
+		return a.key < b.key;
 	});
 
 	sorted_cells_dirty = false;
+}
+
+void SpatialHashGrid::getCellCoordsFromKey(uint64_t key, int& cx, int& cy) {
+	uint32_t raw_cy = static_cast<uint32_t>(key >> 32) ^ 0x80000000u;
+	uint32_t raw_cx = static_cast<uint32_t>(key) ^ 0x80000000u;
+	cy = static_cast<int32_t>(raw_cy);
+	cx = static_cast<int32_t>(raw_cx);
 }
 
 const std::vector<SpatialHashGrid::SortedGridCell>& SpatialHashGrid::getSortedCells() const {

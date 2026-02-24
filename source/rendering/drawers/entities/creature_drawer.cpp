@@ -23,19 +23,20 @@ CreatureDrawer::CreatureDrawer() {
 CreatureDrawer::~CreatureDrawer() {
 }
 
-void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, int red, int green, int blue, int alpha, bool ingame, int animationPhase) {
-	if (!ingame && c->isSelected()) {
-		red /= 2;
-		green /= 2;
-		blue /= 2;
+void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options) {
+	CreatureDrawOptions local_opts = options;
+	if (!local_opts.ingame && c->isSelected()) {
+		local_opts.color.r /= 2;
+		local_opts.color.g /= 2;
+		local_opts.color.b /= 2;
 	}
-	BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), red, green, blue, alpha, animationPhase);
+	BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), local_opts);
 }
 
-void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, int red, int green, int blue, int alpha, int animationPhase) {
+void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options) {
 	if (outfit.lookItem != 0) {
 		ItemType& it = g_items[outfit.lookItem];
-		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, it.sprite, red, green, blue, alpha);
+		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, it.sprite, options.color);
 	} else {
 		// get outfit sprite
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);
@@ -48,17 +49,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		// - When > 0: walking (use the provided animation phase)
 		// - When == 0: standing idle (ALWAYS use frame 0, NOT the global animator)
 		// The global animator is for idle creatures on the map, NOT for the player
-		int resolvedFrame = 0;
-		if (animationPhase > 0) {
-			// Walking: use the calculated walk animation phase
-			resolvedFrame = animationPhase;
-		} else {
-			// Standing still: always use frame 0 (idle)
-			// Do NOT use spr->animator->getFrame() - that's for global idle animations
-			// of creatures on the map, not for the player character
-			resolvedFrame = 0;
-		}
-		
+		int resolvedFrame = options.animationPhase > 0 ? options.animationPhase : 0;
 
 		// mount and addon drawing thanks to otc code
 		// mount colors by Zbizu
@@ -75,9 +66,9 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 
 				for (int cx = 0; cx != mountSpr->width; ++cx) {
 					for (int cy = 0; cy != mountSpr->height; ++cy) {
-						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, (int)dir, 0, 0, mountOutfit, resolvedFrame);
+						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, red, green, blue, alpha);
+							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
 						}
 					}
 				}
@@ -98,13 +89,12 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 
 			for (int cx = 0; cx != spr->width; ++cx) {
 				for (int cy = 0; cy != spr->height; ++cy) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, (int)dir, pattern_y, pattern_z, outfit, resolvedFrame);
+					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, red, green, blue, alpha);
+						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
 					}
 				}
 			}
 		}
 	}
 }
-

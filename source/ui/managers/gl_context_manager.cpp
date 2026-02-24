@@ -4,15 +4,11 @@
 
 GLContextManager g_gl_context;
 
-GLContextManager::GLContextManager() :
-	OGLContext(nullptr) {
-}
-
-GLContextManager::~GLContextManager() {
-}
+GLContextManager::GLContextManager() = default;
+GLContextManager::~GLContextManager() = default;
 
 wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
-	if (OGLContext == nullptr) {
+	if (!OGLContext) {
 #ifdef __WXOSX__
 		OGLContext = std::make_unique<wxGLContext>(win, nullptr);
 #else
@@ -21,27 +17,14 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 		OGLContext = std::make_unique<wxGLContext>(win, nullptr, &ctxAttrs);
 		spdlog::info("GLContextManager: Created new OpenGL 4.5 Core Profile context");
 #endif
-		if (OGLContext && OGLContext->IsOK()) {
-			// Initialize GLAD for the new context
-			win->SetCurrent(*OGLContext);
-			if (!gladLoadGL()) {
-				spdlog::error("GLContextManager: Failed to initialize GLAD!");
-			} else {
-				spdlog::info("GLContextManager: GLAD initialized successfully");
-			}
+		// Initialize GLAD for the new context
+		win->SetCurrent(*OGLContext);
+		if (!gladLoadGL()) {
+			spdlog::error("GLContextManager: Failed to initialize GLAD!");
 		} else {
-			spdlog::error("GLContextManager: Failed to create OpenGL context!");
+			spdlog::info("GLContextManager: GLAD initialized successfully");
 		}
 	}
 
 	return OGLContext.get();
-}
-
-wxGLAttributes& GLContextManager::GetDefaultAttributes() {
-	static wxGLAttributes vAttrs = []() {
-		wxGLAttributes a;
-		a.PlatformDefaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
-		return a;
-	}();
-	return vAttrs;
 }
