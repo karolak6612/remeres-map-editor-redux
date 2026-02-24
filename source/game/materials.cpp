@@ -309,21 +309,11 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 
 	const std::string& name = attribute.as_string();
 
-	Tileset* tileset = nullptr;
-	auto it = tilesets.find(name);
-	if (it != tilesets.end()) {
-		tileset = it->second.get();
+	auto& tileset_ptr = tilesets[name];
+	if (!tileset_ptr) {
+		tileset_ptr = std::make_unique<Tileset>(g_brushes, name);
 	}
-
-	if (!tileset) {
-		auto new_tileset = std::make_unique<Tileset>(g_brushes, name);
-		tileset = new_tileset.get();
-		if (it != tilesets.end()) {
-			it->second = std::move(new_tileset);
-		} else {
-			tilesets.emplace(name, std::move(new_tileset));
-		}
-	}
+	Tileset* tileset = tileset_ptr.get();
 
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
 		tileset->loadCategory(childNode, warnings);
@@ -338,15 +328,11 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 		return;
 	}
 
-	Tileset* tileset;
-	auto _it = tilesets.find(tilesetName);
-	if (_it != tilesets.end()) {
-		tileset = _it->second.get();
-	} else {
-		auto new_tileset = std::make_unique<Tileset>(g_brushes, tilesetName);
-		tileset = new_tileset.get();
-		tilesets.emplace(tilesetName, std::move(new_tileset));
+	auto& tileset_ptr = tilesets[tilesetName];
+	if (!tileset_ptr) {
+		tileset_ptr = std::make_unique<Tileset>(g_brushes, tilesetName);
 	}
+	Tileset* tileset = tileset_ptr.get();
 
 	TilesetCategory* category = tileset->getCategory(categoryType);
 

@@ -275,9 +275,9 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 std::vector<Tileset*> GetSortedTilesets(const TilesetContainer& tilesets) {
 	std::vector<Tileset*> sorted;
 	sorted.reserve(tilesets.size());
-	for (const auto& pair : tilesets) {
-		sorted.push_back(pair.second.get());
-	}
+	std::ranges::transform(tilesets, std::back_inserter(sorted), [](const auto& pair) {
+		return pair.second.get();
+	});
 	std::ranges::sort(sorted, {}, &Tileset::name);
 	return sorted;
 }
