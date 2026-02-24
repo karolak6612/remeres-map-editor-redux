@@ -39,7 +39,11 @@ void NetworkMessage::expand(const size_t length) {
 template <>
 std::string NetworkMessage::read<std::string>() {
 	const uint16_t length = read<uint16_t>();
-	char* strBuffer = reinterpret_cast<char*>(&buffer[position]);
+	if (position + length > buffer.size()) {
+		spdlog::error("NetworkMessage::read overflow (string)");
+		return std::string();
+	}
+	char* strBuffer = reinterpret_cast<char*>(buffer.data() + position);
 	position += length;
 	return std::string(strBuffer, length);
 }

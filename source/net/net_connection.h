@@ -26,6 +26,9 @@
 #include <thread>
 #include <mutex>
 #include <memory>
+#include <cstring>
+#include <atomic>
+#include <spdlog/spdlog.h>
 
 struct NetworkMessage {
 	NetworkMessage();
@@ -36,7 +39,12 @@ struct NetworkMessage {
 	//
 	template <typename T>
 	T read() {
-		T& value = *reinterpret_cast<T*>(&buffer[position]);
+		if (position + sizeof(T) > buffer.size()) {
+			spdlog::error("NetworkMessage::read overflow");
+			return T{};
+		}
+		T value;
+		std::memcpy(&value, &buffer[position], sizeof(T));
 		position += sizeof(T);
 		return value;
 	}
@@ -81,7 +89,7 @@ public:
 private:
 	std::unique_ptr<boost::asio::io_context> service;
 	std::thread thread;
-	bool stopped;
+	std::atomic<bool> stopped;
 };
 
 #endif

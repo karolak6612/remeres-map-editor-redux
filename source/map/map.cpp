@@ -23,6 +23,7 @@
 
 #include <sstream>
 #include <algorithm>
+#include <limits>
 #include <ranges>
 #include <unordered_set>
 #include <unordered_map>
@@ -386,14 +387,18 @@ void Map::removeSpawnInternal(Tile* tile) {
 	ASSERT(spawn);
 
 	int z = tile->getZ();
-	int start_x = tile->getX() - spawn->getSize();
-	int start_y = tile->getY() - spawn->getSize();
-	int end_x = tile->getX() + spawn->getSize();
-	int end_y = tile->getY() + spawn->getSize();
+	int64_t start_x = static_cast<int64_t>(tile->getX()) - spawn->getSize();
+	int64_t start_y = static_cast<int64_t>(tile->getY()) - spawn->getSize();
+	int64_t end_x = static_cast<int64_t>(tile->getX()) + spawn->getSize();
+	int64_t end_y = static_cast<int64_t>(tile->getY()) + spawn->getSize();
 
-	for (int y = start_y; y <= end_y; ++y) {
-		for (int x = start_x; x <= end_x; ++x) {
-			TileLocation* ctile_loc = getTileL(x, y, z);
+	for (int64_t y = start_y; y <= end_y; ++y) {
+		for (int64_t x = start_x; x <= end_x; ++x) {
+			if (x < std::numeric_limits<int>::min() || x > std::numeric_limits<int>::max() ||
+				y < std::numeric_limits<int>::min() || y > std::numeric_limits<int>::max()) {
+				continue;
+			}
+			TileLocation* ctile_loc = getTileL(static_cast<int>(x), static_cast<int>(y), z);
 			if (ctile_loc != nullptr && ctile_loc->getSpawnCount() > 0) {
 				ctile_loc->decreaseSpawnCount();
 			}
