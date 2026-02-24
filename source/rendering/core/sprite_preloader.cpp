@@ -7,6 +7,7 @@
 #include "ui/gui.h"
 #include "io/loaders/spr_loader.h"
 #include <mutex>
+#include <span>
 
 namespace {
 	struct PendingTask {
@@ -138,7 +139,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 
 		std::unique_ptr<uint8_t[]> rgba;
 		if (success && dump) {
-			rgba = GameSprite::Decompress(dump.get(), size, task.has_transparency, task.id);
+			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.id);
 		}
 
 		{
