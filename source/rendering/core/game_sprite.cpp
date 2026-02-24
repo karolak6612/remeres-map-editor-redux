@@ -83,14 +83,17 @@ void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size
 	const int dest_step = destHasAlpha ? RGBA_COMPONENTS : RGB_COMPONENTS;
 	const int mask_step = RGB_COMPONENTS;
 
-	for (size_t i = 0; i < pixelCount; ++i) {
-		uint8_t& red = dest[i * dest_step + 0];
-		uint8_t& green = dest[i * dest_step + 1];
-		uint8_t& blue = dest[i * dest_step + 2];
+	std::span<uint8_t> destSpan(dest, pixelCount * dest_step);
+	std::span<const uint8_t> maskSpan(mask, pixelCount * mask_step);
 
-		const uint8_t& tred = mask[i * mask_step + 0];
-		const uint8_t& tgreen = mask[i * mask_step + 1];
-		const uint8_t& tblue = mask[i * mask_step + 2];
+	for (size_t i : std::views::iota(0u, pixelCount)) {
+		uint8_t& red = destSpan[i * dest_step + 0];
+		uint8_t& green = destSpan[i * dest_step + 1];
+		uint8_t& blue = destSpan[i * dest_step + 2];
+
+		const uint8_t& tred = maskSpan[i * mask_step + 0];
+		const uint8_t& tgreen = maskSpan[i * mask_step + 1];
+		const uint8_t& tblue = maskSpan[i * mask_step + 2];
 
 		if (tred && tgreen && !tblue) { // yellow => head
 			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
@@ -412,11 +415,12 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std:
 			// Fallback: Create a magenta texture to distinguish failure from garbage
 			// Use literal 32 to ensure compilation (OT sprites are always 32x32)
 			rgba = std::make_unique<uint8_t[]>(32 * 32 * RGBA_COMPONENTS);
-			for (int i = 0; i < 32 * 32; ++i) {
-				rgba[i * RGBA_COMPONENTS + 0] = 255;
-				rgba[i * RGBA_COMPONENTS + 1] = 0;
-				rgba[i * RGBA_COMPONENTS + 2] = 255;
-				rgba[i * RGBA_COMPONENTS + 3] = 255;
+			std::span<uint8_t> buffer(rgba.get(), 32 * 32 * RGBA_COMPONENTS);
+			for (int i : std::views::iota(0, 32 * 32)) {
+				buffer[i * RGBA_COMPONENTS + 0] = 255;
+				buffer[i * RGBA_COMPONENTS + 1] = 0;
+				buffer[i * RGBA_COMPONENTS + 2] = 255;
+				buffer[i * RGBA_COMPONENTS + 3] = 255;
 			}
 			spdlog::warn("getRGBAData returned null for sprite_id={} - using fallback", sprite_id);
 		}
@@ -519,7 +523,8 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 		}
 		int transparent = dump[read] | dump[read + 1] << 8;
 		read += 2;
-		for (int i = 0; i < transparent && write < static_cast<size_t>(pixels_data_size); i++) {
+		for (int i : std::views::iota(0, transparent)) {
+			if (write >= static_cast<size_t>(pixels_data_size)) break;
 			data[write + 0] = 0xFF; // red
 			data[write + 1] = 0x00; // green
 			data[write + 2] = 0xFF; // blue
@@ -539,7 +544,8 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 			break;
 		}
 
-		for (int i = 0; i < colored && write < static_cast<size_t>(pixels_data_size); i++) {
+		for (int i : std::views::iota(0, colored)) {
+			if (write >= static_cast<size_t>(pixels_data_size)) break;
 			data[write + 0] = dump[read + 0]; // red
 			data[write + 1] = dump[read + 1]; // green
 			data[write + 2] = dump[read + 2]; // blue
@@ -581,13 +587,8 @@ namespace {
 		}
 
 		read += 2;
-		for (int i = 0; i < transparent; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
-		}
+		std::fill_n(data.begin() + write, transparent * RGBA_COMPONENTS, 0);
+		write += transparent * RGBA_COMPONENTS;
 		return true;
 	}
 
@@ -611,7 +612,7 @@ namespace {
 			return false;
 		}
 
-		for (int i = 0; i < colored; i++) {
+		for (int i : std::views::iota(0, colored)) {
 			uint8_t r = dump[read + 0];
 			uint8_t g = dump[read + 1];
 			uint8_t b = dump[read + 2];
