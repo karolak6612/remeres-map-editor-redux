@@ -36,6 +36,12 @@ find_package(Boost 1.34.0 COMPONENTS thread system REQUIRED)
 
 find_package(wxWidgets 3.2 COMPONENTS html aui gl adv core net base propgrid REQUIRED)
 
+# On Linux/GTK, find GTK3 for direct GTK API access (e.g. g_log_set_handler)
+if(UNIX AND NOT APPLE)
+	find_package(PkgConfig REQUIRED)
+	pkg_check_modules(GTK3 REQUIRED gtk+-3.0)
+endif()
+
 
 find_package(ZLIB REQUIRED)
 
@@ -109,6 +115,12 @@ target_include_directories(rme PRIVATE
 	${LUA_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 )
+
+# GTK3 includes for direct GTK API access on Linux
+if(UNIX AND NOT APPLE AND GTK3_FOUND)
+	target_include_directories(rme PRIVATE ${GTK3_INCLUDE_DIRS})
+	target_link_libraries(rme PRIVATE ${GTK3_LIBRARIES})
+endif()
 
 # Link other libraries (works with both vcpkg targets and Conan targets)
 if(TARGET Boost::boost)

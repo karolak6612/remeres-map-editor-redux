@@ -52,6 +52,10 @@
 #include <thread>
 #include <chrono>
 
+#ifdef __WXGTK__
+	#include <gtk/gtk.h>
+#endif
+
 #include "../brushes/icon/editor_icon.xpm"
 
 wxIMPLEMENT_APP_NO_MAIN(Application);
@@ -88,6 +92,22 @@ bool Application::OnInit() {
 	spdlog::info("This is free software: you are free to change and redistribute it.");
 	spdlog::info("There is NO WARRANTY, to the extent permitted by law.");
 	spdlog::info("Review COPYING in RME distribution for details.");
+
+	// Suppress known GTK3 warnings that are caused by wxWidgets limitations:
+	// 1. gtk_image_menu_item - wxWidgets GTK3 backend uses deprecated API (see their GTK4 TODO)
+	// 2. Negative content width/height - GTK3 CSS padding exceeds widget allocation during layout
+	// 3. for_size smaller than min-size - same underlying cause as #2
+#ifdef __WXGTK__
+	g_log_set_handler("Gtk", static_cast<GLogLevelFlags>(G_LOG_LEVEL_CRITICAL | G_LOG_LEVEL_WARNING),
+		[](const gchar* log_domain, GLogLevelFlags log_level, const gchar* message, gpointer /*user_data*/) {
+			if (message && (strstr(message, "gtk_image_menu_item")
+				|| strstr(message, "Negative content")
+				|| strstr(message, "for_size smaller than min-size"))) {
+				return; // Suppress known wxWidgets/GTK3 layout warnings
+			}
+			g_log_default_handler(log_domain, log_level, message, nullptr);
+		}, nullptr);
+#endif
 
 	// Load settings early for theme support
 	g_settings.load();

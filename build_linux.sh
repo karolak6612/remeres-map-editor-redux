@@ -17,6 +17,19 @@ LOG_FILE="$SCRIPT_DIR/build.log"
     echo "========================================"
 } > "$LOG_FILE"
 
+echo "[0/4] Verifying Conan installation..."
+if ! command -v conan &> /dev/null; then
+    echo "========================================"
+    echo " ❌ ERROR: Conan not found in PATH"
+    echo "========================================"
+    echo " If you just ran setup_conan.sh, you may need to:"
+    echo " 1. Restart your terminal"
+    echo " 2. OR run: source ~/.profile"
+    echo " 3. OR add ~/.local/bin to your PATH manually"
+    echo "========================================"
+    exit 1
+fi
+
 echo "[1/4] Checking Conan profile..."
 echo "[1/4] Checking Conan profile..." >> "$LOG_FILE"
 

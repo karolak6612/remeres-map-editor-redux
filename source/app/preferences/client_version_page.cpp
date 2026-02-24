@@ -340,7 +340,9 @@ void ClientVersionPage::OnTreeContextMenu(wxTreeEvent& event) {
 	}
 
 	wxMenu menu;
-	menu.Append(wxID_COPY, "Duplicate")->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_COPY));
+	wxMenuItem* dupItem = new wxMenuItem(&menu, wxID_COPY, "Duplicate");
+	dupItem->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_COPY));
+	menu.Append(dupItem);
 	menu.Bind(wxEVT_MENU, &ClientVersionPage::OnDuplicateClient, this, wxID_COPY);
 
 	PopupMenu(&menu);

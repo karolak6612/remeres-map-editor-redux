@@ -138,7 +138,7 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, MainMenuB
 			warnings.push_back("Invalid hotkey.");
 		}
 
-		wxMenuItem* tmp = parent->Append(
+		wxMenuItem* tmp = new wxMenuItem(parent,
 			MAIN_FRAME_MENU + act.id, // ID
 			wxstr(name), // Title of button
 			wxstr(help), // Help text
@@ -147,6 +147,7 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, MainMenuB
 		if (!act.icon.empty()) {
 			tmp->SetBitmap(IMAGE_MANAGER.GetBitmap(act.icon, wxSize(16, 16)));
 		}
+		parent->Append(tmp);
 		items[MenuBar::ActionID(act.id)].push_back(tmp);
 		return tmp;
 	} else if (nodeName == "separator") {
