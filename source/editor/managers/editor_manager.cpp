@@ -181,7 +181,12 @@ void EditorManager::SaveCurrentMap(FileName fileName, bool showdialog) {
 	if (mapTab) {
 		Editor* editor = mapTab->GetEditor();
 		if (editor) {
-			g_status.SetStatusText("Saving map...");
+			wxString name = wxstr(fileName.GetFullName());
+			if (name.empty()) {
+				name = wxstr(FileName(editor->map.getFilename()).GetFullName());
+			}
+
+			g_status.SetStatusText("Saving map " + name + "...");
 			if (g_gui.root) {
 				g_gui.root->Update();
 			}
@@ -275,7 +280,7 @@ void EditorManager::SaveMapAs() {
 
 bool EditorManager::LoadMap(const FileName& fileName) {
 	spdlog::info("EditorManager::LoadMap - Loading map: {}", nstr(fileName.GetFullPath()));
-	g_status.SetStatusText("Loading map...");
+	g_status.SetStatusText("Loading map " + wxstr(fileName.GetFullName()) + "...");
 	if (g_gui.root) {
 		g_gui.root->Update();
 	}
@@ -434,7 +439,7 @@ bool EditorManager::DoUndo() {
 		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
-		g_status.SetStatusText("Undo action");
+		g_status.SetStatusText("Undid last action");
 		g_gui.UpdateMinimap();
 		g_gui.root->UpdateMenubar();
 		g_gui.root->Refresh();
@@ -450,7 +455,7 @@ bool EditorManager::DoRedo() {
 		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
-		g_status.SetStatusText("Redo action");
+		g_status.SetStatusText("Redid last action");
 		g_gui.UpdateMinimap();
 		g_gui.root->UpdateMenubar();
 		g_gui.root->Refresh();

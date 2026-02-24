@@ -61,6 +61,7 @@ DepotPropertiesWindow::DepotPropertiesWindow(wxWindow* parent, const Map* map, c
 		to_select_index = depot_id_field->GetCount() - 1;
 	}
 	depot_id_field->SetSelection(to_select_index);
+	depot_id_field->SetToolTip("Select the town this depot belongs to");
 
 	subsizer->Add(depot_id_field, wxSizerFlags(1).Expand());
 
@@ -70,9 +71,11 @@ DepotPropertiesWindow::DepotPropertiesWindow(wxWindow* parent, const Map* map, c
 	wxSizer* buttonsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetToolTip("Apply changes");
 	buttonsizer->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetToolTip("Discard changes");
 	buttonsizer->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(buttonsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
