@@ -20,6 +20,8 @@
 
 #include "app/main.h"
 
+class SearchResultListBox;
+
 class SearchResultWindow : public wxPanel {
 public:
 	SearchResultWindow(wxWindow* parent);
@@ -33,7 +35,7 @@ public:
 	void OnClickClear(wxCommandEvent&);
 
 protected:
-	wxListBox* result_list;
+	SearchResultListBox* result_list;
 
 };
 

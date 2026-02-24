@@ -18,10 +18,10 @@
 #ifndef RME_PALETTE_WAYPOINTS_H_
 #define RME_PALETTE_WAYPOINTS_H_
 
-#include <wx/listctrl.h>
-
 #include "game/waypoints.h"
 #include "palette/palette_common.h"
+
+class WaypointListBox;
 
 class WaypointPalettePanel : public PalettePanel {
 public:
@@ -49,9 +49,7 @@ public:
 
 public:
 	// wxWidgets event handling
-	void OnClickWaypoint(wxListEvent& event);
-	void OnBeginEditWaypointLabel(wxListEvent& event);
-	void OnEditWaypointLabel(wxListEvent& event);
+	void OnClickWaypoint(wxCommandEvent& event);
 	void OnClickAddWaypoint(wxCommandEvent& event);
 	void OnClickRemoveWaypoint(wxCommandEvent& event);
 
@@ -59,7 +57,7 @@ public:
 
 protected:
 	Map* map;
-	wxListCtrl* waypoint_list;
+	WaypointListBox* waypoint_list;
 	wxButton* add_waypoint_button;
 	wxButton* remove_waypoint_button;
 };
