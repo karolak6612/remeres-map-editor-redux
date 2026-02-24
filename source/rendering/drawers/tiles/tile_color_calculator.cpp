@@ -40,9 +40,9 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		GetHouseColor(house_id, hr, hg, hb);
 
 		// Apply the house unique color tint to the tile
-		r = static_cast<uint8_t>((static_cast<uint16_t>(r) * hr + 255) >> 8);
-		g = static_cast<uint8_t>((static_cast<uint16_t>(g) * hg + 255) >> 8);
-		b = static_cast<uint8_t>((static_cast<uint16_t>(b) * hb + 255) >> 8);
+		r = static_cast<uint8_t>((static_cast<uint16_t>(r) * hr + r) >> 8);
+		g = static_cast<uint8_t>((static_cast<uint16_t>(g) * hg + g) >> 8);
+		b = static_cast<uint8_t>((static_cast<uint16_t>(b) * hb + b) >> 8);
 
 		if (static_cast<int>(house_id) == current_house_id) {
 			// Pulse Effect on top of the unique color
@@ -78,29 +78,24 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	}
 }
 
-void TileColorCalculator::GetHouseColor(uint32_t houseId, uint8_t& r, uint8_t& g, uint8_t& b) {
-	static thread_local uint32_t cachedHouseId = 0xFFFFFFFF;
-	static thread_local uint8_t cachedR = 0, cachedG = 0, cachedB = 0;
+void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& g, uint8_t& b) {
+	static thread_local uint32_t cached_house_id = 0xFFFFFFFF;
+	static thread_local uint8_t cached_r = 0, cached_g = 0, cached_b = 0;
 
-	if (cachedHouseId == houseId) {
-		r = cachedR;
-		g = cachedG;
-		b = cachedB;
+	if (cached_house_id == house_id) {
+		r = cached_r;
+		g = cached_g;
+		b = cached_b;
 		return;
 	}
 
 	// Use a simple seeded random to get consistent colors
 	// Simple hash
 	// (Cache removed as calculation is faster than hash map lookup)
-	uint32_t hash = houseId;
+	uint32_t hash = house_id;
 	hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
 	hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
 	hash = (hash >> 16) ^ hash;
-
-	// Generate color components
-	r = (hash & 0xFF);
-	g = ((hash >> 8) & 0xFF);
-	b = ((hash >> 16) & 0xFF);
 
 	// Ensure colors aren't too dark (keep at least one channnel reasonably high)
 	if (r < 50 && g < 50 && b < 50) {
@@ -109,10 +104,10 @@ void TileColorCalculator::GetHouseColor(uint32_t houseId, uint8_t& r, uint8_t& g
 		b += 100;
 	}
 
-	cachedHouseId = houseId;
-	cachedR = r;
-	cachedG = g;
-	cachedB = b;
+	cached_house_id = house_id;
+	cached_r = r;
+	cached_g = g;
+	cached_b = b;
 }
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {

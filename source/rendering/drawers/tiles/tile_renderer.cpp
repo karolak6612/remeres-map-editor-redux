@@ -199,7 +199,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// begin filters for ground tile
 	// Optimization: Skip color calculation if no relevant options are enabled
 	bool needs_color_calc = options.highlight_items || options.show_spawns || options.show_houses || options.show_blocking || options.show_special_tiles || options.show_only_colors || options.always_show_zones;
-	if (!as_minimap && (needs_color_calc || options.always_show_zones)) {
+	if (!as_minimap && needs_color_calc) {
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
@@ -261,7 +261,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	if (!only_colors) {
-		bool show_items = (view.zoom <= 10.0 || !options.hide_items_when_zoomed);
+		bool show_items = (view.zoom < 10.0 || !options.hide_items_when_zoomed);
 		if (show_items) {
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
@@ -310,9 +310,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 						if (calculate_house_color) {
 							// Apply house color tint
-							ir = static_cast<uint8_t>((static_cast<uint16_t>(ir) * house_r + 255) >> 8);
-							ig = static_cast<uint8_t>((static_cast<uint16_t>(ig) * house_g + 255) >> 8);
-							ib = static_cast<uint8_t>((static_cast<uint16_t>(ib) * house_b + 255) >> 8);
+							ir = static_cast<uint8_t>((static_cast<uint16_t>(ir) * house_r + ir) >> 8);
+							ig = static_cast<uint8_t>((static_cast<uint16_t>(ig) * house_g + ig) >> 8);
+							ib = static_cast<uint8_t>((static_cast<uint16_t>(ib) * house_b + ib) >> 8);
 
 							if (should_pulse) {
 								// Pulse effect matching the tile pulse
@@ -387,7 +387,7 @@ void TileRenderer::AddLight(TileLocation* location, const RenderView& view, cons
 		}
 	}
 
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
+	bool hidden = options.hide_items_when_zoomed && view.zoom >= 10.f;
 	if (!hidden && !tile->items.empty()) {
 		for (const auto& item : tile->items) {
 			if (item->hasLight()) {

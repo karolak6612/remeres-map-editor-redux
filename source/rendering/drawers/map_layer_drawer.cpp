@@ -57,7 +57,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	int base_screen_x = -view.view_scroll_x - offset;
 	int base_screen_y = -view.view_scroll_y - offset;
 
-	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
+	bool draw_lights = options.isDrawLight() && view.zoom < 10.0;
 
 	// ND visibility
 	auto collectSpriteWithPattern = [&](GameSprite* spr, int tx, int ty) {
