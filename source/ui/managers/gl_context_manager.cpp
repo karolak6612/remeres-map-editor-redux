@@ -66,9 +66,9 @@ bool GLContextManager::EnsureContextCurrent(wxGLContext& ctx, wxGLCanvas* prefer
 	}
 
 	// 3. Try any other registered canvas as a last resort
+	wxLogNull logNo; // Suppress errors during fallback attempts
 	for (auto* canvas : m_canvases) {
 		if (canvas != preferredCanvas && canvas != m_fallbackCanvas && canvas->IsShownOnScreen()) {
-			wxLogNull logNo;
 			if (canvas->SetCurrent(ctx)) {
 				return true;
 			}
