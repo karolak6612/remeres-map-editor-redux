@@ -64,6 +64,8 @@
 #include "rendering/ui/selection_controller.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/map_menu_handler.h"
+#include "rendering/ui/scoped_wx_gl_context.h"
+#include "rendering/core/gl_scoped_state.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/house/house_exit_brush.h"
@@ -152,12 +154,14 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 MapCanvas::~MapCanvas() {
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
+		ScopedWxGLContext ctx(this, m_glContext.get());
+		drawer.reset();
+		m_nvg.reset();
 	} else if (auto context = g_gui.GetGLContext(this)) {
-		SetCurrent(*context);
+		ScopedWxGLContext ctx(this, context);
+		drawer.reset();
+		m_nvg.reset();
 	}
-	drawer.reset();
-	m_nvg.reset();
 }
 
 void MapCanvas::Refresh() {
@@ -205,7 +209,8 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+	ScopedGLPixelStore pixelStore(GL_UNPACK_ALIGNMENT, 4);
 
 	glClear(GL_STENCIL_BUFFER_BIT);
 	TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
@@ -242,9 +247,8 @@ void MapCanvas::PerformGarbageCollection() {
 
 void MapCanvas::OnPaint(wxPaintEvent& event) {
 	wxPaintDC dc(this); // validates the paint event
-	if (m_glContext) {
-		SetCurrent(*m_glContext);
-	}
+
+	ScopedWxGLContext ctx(this, m_glContext.get());
 
 	EnsureNanoVG();
 
@@ -309,21 +313,7 @@ void MapCanvas::ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y) 
 
 	CoordinateMapper::ScreenToMap(screen_x, screen_y, start_x, start_y, zoom, floor, GetContentScaleFactor(), map_x, map_y);
 }
-#if 0
 
-*map_y = int(start_y + (screen_y * zoom)) / TILE_SIZE;
-}
-
-if (floor <= GROUND_LAYER) {
-	*map_x += GROUND_LAYER - floor;
-	*map_y += GROUND_LAYER - floor;
-} /* else {
-	 *map_x += MAP_MAX_LAYER - floor;
-	 *map_y += MAP_MAX_LAYER - floor;
- }*/
-}
-
-#endif
 void MapCanvas::GetScreenCenter(int* map_x, int* map_y) {
 	int width, height;
 	GetMapWindow()->GetViewSize(&width, &height);

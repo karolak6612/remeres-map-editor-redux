@@ -1,7 +1,5 @@
 #include "app/main.h"
 
-// glut include removed
-
 #include "rendering/drawers/tiles/shade_drawer.h"
 
 ShadeDrawer::ShadeDrawer() {

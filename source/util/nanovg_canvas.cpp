@@ -11,15 +11,10 @@
 #include <nanovg_gl.h>
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include "rendering/ui/scoped_wx_gl_context.h"
 
 #include <wx/dcclient.h>
 #include <algorithm>
-
-ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
-	if (m_canvas) {
-		m_canvas->MakeContextCurrent();
-	}
-}
 
 NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
 	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
@@ -347,7 +342,7 @@ void NanoVGCanvas::UpdateScrollbar(int contentHeight) {
 }
 
 int NanoVGCanvas::GetOrCreateImage(uint64_t id, const uint8_t* data, int width, int height) {
-	ScopedGLContext ctx(this);
+	ScopedWxGLContext ctx(this, m_glContext.get());
 	if (!m_nvg) {
 		return 0;
 	}
@@ -368,7 +363,7 @@ int NanoVGCanvas::GetOrCreateImage(uint64_t id, const uint8_t* data, int width, 
 }
 
 void NanoVGCanvas::DeleteCachedImage(uint64_t id) {
-	ScopedGLContext ctx(this);
+	ScopedWxGLContext ctx(this, m_glContext.get());
 	if (!m_nvg) {
 		return;
 	}
@@ -383,7 +378,7 @@ void NanoVGCanvas::DeleteCachedImage(uint64_t id) {
 
 void NanoVGCanvas::AddCachedImage(uint64_t id, int imageHandle) {
 	if (imageHandle > 0) {
-		ScopedGLContext ctx(this);
+		ScopedWxGLContext ctx(this, m_glContext.get());
 		auto it = m_imageCache.find(id);
 		if (it != m_imageCache.end()) {
 			if (m_nvg) {
@@ -411,7 +406,7 @@ void NanoVGCanvas::AddCachedImage(uint64_t id, int imageHandle) {
 }
 
 void NanoVGCanvas::ClearImageCache() {
-	ScopedGLContext ctx(this);
+	ScopedWxGLContext ctx(this, m_glContext.get());
 	if (!m_nvg) {
 		return;
 	}

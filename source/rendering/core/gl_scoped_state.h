@@ -253,4 +253,53 @@ private:
 	bool active_ = true;
 };
 
+/**
+ * @brief RAII wrapper for glPixelStorei
+ *
+ * Saves current pixel store parameter on construction and restores it on destruction.
+ */
+class ScopedGLPixelStore {
+public:
+	[[nodiscard]] ScopedGLPixelStore(GLenum pname, GLint param) :
+		pname_(pname) {
+		glGetIntegerv(pname_, &prev_val_);
+		glPixelStorei(pname_, param);
+	}
+
+	~ScopedGLPixelStore() {
+		restore();
+	}
+
+	ScopedGLPixelStore(const ScopedGLPixelStore&) = delete;
+	ScopedGLPixelStore& operator=(const ScopedGLPixelStore&) = delete;
+
+	ScopedGLPixelStore(ScopedGLPixelStore&& other) noexcept :
+		pname_(other.pname_),
+		prev_val_(other.prev_val_),
+		active_(std::exchange(other.active_, false)) {
+	}
+
+	ScopedGLPixelStore& operator=(ScopedGLPixelStore&& other) noexcept {
+		if (this != &other) {
+			restore();
+			pname_ = other.pname_;
+			prev_val_ = other.prev_val_;
+			active_ = std::exchange(other.active_, false);
+		}
+		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			glPixelStorei(pname_, prev_val_);
+		}
+	}
+
+private:
+	GLenum pname_;
+	GLint prev_val_ = 4;
+	bool active_ = true;
+};
+
 #endif

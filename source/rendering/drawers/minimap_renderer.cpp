@@ -275,13 +275,12 @@ void MinimapRenderer::updateRegion(const Map& map, int floor, int x, int y, int 
 	// 5. Unmap and Upload
 	pbo_->unmap();
 	pbo_->bind();
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	ScopedGLPixelStore pixelStore(GL_UNPACK_ALIGNMENT, 1);
 
 	for (const auto& update : pending_updates) {
 		glTextureSubImage3D(texture_id_->GetID(), 0, update.dest_x_in_tile, update.dest_y_in_tile, update.layer, update.w, update.h, 1, GL_RED_INTEGER, GL_UNSIGNED_BYTE, reinterpret_cast<void*>(update.pbo_offset));
 	}
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	pbo_->unbind();
 	pbo_->advance();
 }

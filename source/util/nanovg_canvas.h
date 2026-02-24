@@ -38,23 +38,8 @@ struct NVGcontext;
  * };
  * ```
  */
-/**
- * @class ScopedGLContext
- * @brief RAII helper to ensure a NanoVGCanvas's OpenGL context is current.
- */
-class ScopedGLContext {
-public:
-	explicit ScopedGLContext(class NanoVGCanvas* canvas);
-	~ScopedGLContext() = default; // Restoration of previous context is not reliably possible in wx without a global tracker
-
-private:
-	class NanoVGCanvas* m_canvas;
-};
 
 class NanoVGCanvas : public wxGLCanvas {
-	friend class ScopedGLContext;
-
-public:
 	/**
 	 * @brief Constructs a NanoVGCanvas control.
 	 * @param parent Parent window
@@ -174,7 +159,7 @@ protected:
 	 */
 	bool MakeContextCurrent();
 
-public: // Public for ScopedGLContext and future extensions
+public:
 	// Background color (can be overridden by subclasses)
 	float m_bgRed = 45.0f / 255.0f;
 	float m_bgGreen = 45.0f / 255.0f;

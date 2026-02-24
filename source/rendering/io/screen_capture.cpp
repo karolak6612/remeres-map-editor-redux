@@ -4,8 +4,6 @@
 #include <cstring>
 #include <algorithm>
 
-// glut include removed
-
 void ScreenCapture::Capture(int width, int height, uint8_t* buffer) {
 	// No glFinish needed, glReadPixels handles synchronization
 	glPixelStorei(GL_PACK_ALIGNMENT, 1); // 1 byte alignment
