@@ -170,6 +170,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	int map_y = location->getY();
 	int map_z = location->getZ();
 
+	bool is_hovered = (map_x == view.mouse_map_x) && (map_y == view.mouse_map_y);
+
 	int draw_x, draw_y;
 	if (in_draw_x != -1 && in_draw_y != -1) {
 		draw_x = in_draw_x;
@@ -233,7 +235,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (options.show_tooltips && map_z == view.floor && is_hovered && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -273,7 +275,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
+			bool process_tooltips = options.show_tooltips && map_z == view.floor && is_hovered;
 
 			// items on tile
 			for (const auto& item : tile->items) {
