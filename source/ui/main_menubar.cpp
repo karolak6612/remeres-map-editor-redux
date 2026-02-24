@@ -59,6 +59,7 @@
 
 #include "editor/operations/search_operations.h"
 #include "editor/operations/clean_operations.h"
+#include "util/image_manager.h"
 
 MainMenuBar::MainMenuBar(MainFrame* frame) :
 	frame(frame) {
@@ -237,6 +238,11 @@ void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
 
 void MainMenuBar::OnDebugViewDat(wxCommandEvent& event) {
 	wxDialog dlg(frame, wxID_ANY, "Debug .dat file", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_BUG, wxSize(32, 32)));
+	dlg.SetIcon(icon);
+
 	new DatDebugView(&dlg);
 	dlg.ShowModal();
 }

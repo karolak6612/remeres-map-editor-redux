@@ -46,6 +46,10 @@ ReplaceToolWindow::ReplaceToolWindow(wxWindow* parent, Editor* editor) : wxDialo
 
 	UpdateSavedRulesList();
 
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_WAND_MAGIC, wxSize(32, 32)));
+	SetIcon(icon);
+
 	Bind(wxEVT_CLOSE_WINDOW, &ReplaceToolWindow::OnClose, this);
 
 	// Restore window size (Physical pixels)
