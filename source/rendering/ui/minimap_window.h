@@ -42,7 +42,7 @@ public:
 protected:
 	std::unique_ptr<MinimapDrawer> drawer;
 	wxTimer update_timer;
-	wxGLContext* context;
+	std::unique_ptr<wxGLContext> m_glContext;
 };
 
 #endif
