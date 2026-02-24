@@ -233,8 +233,8 @@ namespace {
 				}
 			}
 			// Iterate over the map instead of tilestodraw to avoid duplicates!
-			for (MapIterator it = draw_map->begin(); it != draw_map->end(); ++it) {
-				Tile* tile = it->get();
+			for (auto& tile_loc : *draw_map) {
+				Tile* tile = tile_loc.get();
 				if (tile) {
 					TileOperations::wallize(tile, draw_map);
 					action->addChange(std::make_unique<Change>(std::unique_ptr<Tile>(tile)));

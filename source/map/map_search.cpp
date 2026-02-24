@@ -8,6 +8,7 @@
 #include "editor/editor.h"
 #include "editor/operations/search_operations.h"
 #include <algorithm>
+#include <span>
 #include <ranges>
 #include <thread>
 #include <future>
@@ -57,8 +58,9 @@ namespace {
 		std::vector<Container*> containers;
 		containers.reserve(64);
 
-		for (size_t i = start_idx; i < end_idx; ++i) {
-			SpatialHashGrid::GridCell* cell = cells[i].cell;
+		std::span<const SpatialHashGrid::SortedGridCell> cell_span(cells.data() + start_idx, end_idx - start_idx);
+		for (const auto& cell_entry : cell_span) {
+			SpatialHashGrid::GridCell* cell = cell_entry.cell;
 			if (!cell) {
 				continue;
 			}
@@ -70,7 +72,7 @@ namespace {
 				}
 
 				// Iterate all floors (layers)
-				for (int z = 0; z <= MAP_MAX_LAYER; ++z) {
+				for (int z : std::views::iota(0, MAP_MAX_LAYER + 1)) {
 					if (!node->hasFloor(z)) {
 						continue;
 					}
@@ -138,7 +140,7 @@ std::vector<SearchResult> MapSearchUtility::SearchItems(Map& map, bool unique, b
 		std::vector<std::future<std::vector<std::pair<Tile*, Item*>>>> futures;
 
 		// Launch threads
-		for (unsigned int t = 0; t < num_threads; ++t) {
+		for (unsigned int t : std::views::iota(0u, num_threads)) {
 			size_t start = t * chunk_size;
 			size_t end = std::min(start + chunk_size, num_cells);
 

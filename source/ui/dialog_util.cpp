@@ -32,10 +32,10 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 	std::vector<std::string> list_items(param_items);
 
 	// Create the window
-	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
+	wxDialog dlg(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	wxListBox* item_list = newd wxListBox(dlg, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
+	wxListBox* item_list = newd wxListBox(&dlg, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
 	item_list->SetMinSize(wxSize(500, 300));
 
 	for (size_t i = 0; i != list_items.size();) {
@@ -53,32 +53,30 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 	sizer->Add(item_list, 1, wxEXPAND);
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
-	wxButton* okBtn = newd wxButton(dlg, wxID_OK, "OK");
+	wxButton* okBtn = newd wxButton(&dlg, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center());
 
-	dlg->SetSizerAndFit(sizer);
+	dlg.SetSizerAndFit(sizer);
 
 	// Show the window
-	dlg->ShowModal();
-	dlg->Destroy();
+	dlg.ShowModal();
 }
 
 void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content) {
-	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
+	wxDialog dlg(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxTextCtrl* text_field = newd wxTextCtrl(dlg, wxID_ANY, content, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+	wxTextCtrl* text_field = newd wxTextCtrl(&dlg, wxID_ANY, content, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
 	text_field->SetMinSize(wxSize(400, 550));
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
-	wxButton* okBtn = newd wxButton(dlg, wxID_CANCEL, "OK");
+	wxButton* okBtn = newd wxButton(&dlg, wxID_CANCEL, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(0).Center());
-	dlg->SetSizerAndFit(topsizer);
+	dlg.SetSizerAndFit(topsizer);
 
-	dlg->ShowModal();
-	dlg->Destroy();
+	dlg.ShowModal();
 }

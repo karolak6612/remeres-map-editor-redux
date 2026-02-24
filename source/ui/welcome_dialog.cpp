@@ -411,12 +411,13 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
 
-	for (size_t i = 0; i < recentFiles.size(); ++i) {
-		long idx = m_recentList->InsertItem(i, "", 4);
-		m_recentList->SetItem(idx, 1, recentFiles[i]);
+	size_t i = 0;
+	for (const auto& file : recentFiles) {
+		long idx = m_recentList->InsertItem(i++, "", 4);
+		m_recentList->SetItem(idx, 1, file);
 
 		// Get modification time
-		wxFileName fn(recentFiles[i]);
+		wxFileName fn(file);
 		wxDateTime dt;
 		if (fn.GetTimes(nullptr, &dt, nullptr)) {
 			// Check if valid? GetTimes returns bool success
