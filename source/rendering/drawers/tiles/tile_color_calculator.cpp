@@ -78,21 +78,21 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	}
 }
 
-void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& g, uint8_t& b) {
-	static uint32_t cached_house_id = 0xFFFFFFFF;
-	static uint8_t cached_r = 0, cached_g = 0, cached_b = 0;
+void TileColorCalculator::GetHouseColor(uint32_t houseId, uint8_t& r, uint8_t& g, uint8_t& b) {
+	static thread_local uint32_t cachedHouseId = 0xFFFFFFFF;
+	static thread_local uint8_t cachedR = 0, cachedG = 0, cachedB = 0;
 
-	if (cached_house_id == house_id) {
-		r = cached_r;
-		g = cached_g;
-		b = cached_b;
+	if (cachedHouseId == houseId) {
+		r = cachedR;
+		g = cachedG;
+		b = cachedB;
 		return;
 	}
 
 	// Use a simple seeded random to get consistent colors
 	// Simple hash
 	// (Cache removed as calculation is faster than hash map lookup)
-	uint32_t hash = house_id;
+	uint32_t hash = houseId;
 	hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
 	hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
 	hash = (hash >> 16) ^ hash;
@@ -109,16 +109,18 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 		b += 100;
 	}
 
-	cached_house_id = house_id;
-	cached_r = r;
-	cached_g = g;
-	cached_b = b;
+	cachedHouseId = houseId;
+	cachedR = r;
+	cachedG = g;
+	cachedB = b;
 }
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {
 	// Optimization: Use lookup table to avoid division/modulo operations per tile
 	static const auto table = []() {
-		struct { uint8_t r[256], g[256], b[256]; } t;
+		struct {
+			uint8_t r[256], g[256], b[256];
+		} t;
 		for (int i = 0; i < 256; ++i) {
 			t.r[i] = static_cast<uint8_t>(i / 36 % 6 * 51);
 			t.g[i] = static_cast<uint8_t>(i / 6 % 6 * 51);

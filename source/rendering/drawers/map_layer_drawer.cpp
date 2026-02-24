@@ -103,7 +103,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
 			// Fast Column Culling: If the column is completely off-screen horizontally, skip 4 tiles.
 			if (!fully_inside) {
-				if (draw_x_base < view.min_visible_x || draw_x_base > view.max_visible_x) {
+				if (draw_x_base < view.minVisibleX || draw_x_base > view.maxVisibleX) {
 					location += 4;
 					continue;
 				}
@@ -112,14 +112,14 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			int draw_y = node_draw_y;
 			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
 				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisibleFast(draw_x_base, draw_y)) {
+				if (!fully_inside && !view.isPixelVisibleFast(draw_x_base, draw_y)) {
 					continue;
 				}
 
 				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
 				// draw light, but only if not zoomed too far
 				if (draw_lights) {
-					tile_renderer->AddLight(location, view, options, light_buffer);
+					tile_renderer->addLight(location, view, options, light_buffer);
 				}
 			}
 		}

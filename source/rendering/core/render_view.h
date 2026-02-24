@@ -37,9 +37,8 @@ struct RenderView {
 
 	// Faster visibility check using precomputed bounds (avoids additions/subtractions)
 	// Assumes standard margin (PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)
-	bool IsPixelVisibleFast(int draw_x, int draw_y) const {
-		return draw_x >= min_visible_x && draw_x <= max_visible_x &&
-			   draw_y >= min_visible_y && draw_y <= max_visible_y;
+	bool isPixelVisibleFast(int draw_x, int draw_y) const {
+		return draw_x >= minVisibleX && draw_x <= maxVisibleX && draw_y >= minVisibleY && draw_y <= maxVisibleY;
 	}
 
 	// Checks if a rectangle (e.g. a node) is visible
@@ -53,10 +52,10 @@ struct RenderView {
 	float logical_height = 0.0f;
 
 	// Precomputed visibility bounds including margin
-	int min_visible_x = 0;
-	int max_visible_x = 0;
-	int min_visible_y = 0;
-	int max_visible_y = 0;
+	int minVisibleX = 0;
+	int maxVisibleX = 0;
+	int minVisibleY = 0;
+	int maxVisibleY = 0;
 };
 
 #endif

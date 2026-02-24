@@ -363,7 +363,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				int cy = (view.mouse_map_y + y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 
 				// Fast Culling: Skip rows that are completely off-screen
-				if (cy < view.min_visible_y || cy > view.max_visible_y) {
+				if (cy < view.minVisibleY || cy > view.maxVisibleY) {
 					continue;
 				}
 
@@ -371,7 +371,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 					int cx = (view.mouse_map_x + x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 
 					// Fast Culling: Skip columns that are completely off-screen
-					if (cx < view.min_visible_x || cx > view.max_visible_x) {
+					if (cx < view.minVisibleX || cx > view.maxVisibleX) {
 						continue;
 					}
 
