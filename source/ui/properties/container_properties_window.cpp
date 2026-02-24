@@ -11,7 +11,7 @@
 #include "ui/properties/property_validator.h"
 #include "util/image_manager.h"
 #include "app/application.h"
-#include "ui/find_item_window.h"
+#include "ui/windows/find_item_window.h"
 #include "ui/gui_ids.h"
 #include "ui/properties/properties_window.h"
 #include "ui/properties/old_properties_window.h"

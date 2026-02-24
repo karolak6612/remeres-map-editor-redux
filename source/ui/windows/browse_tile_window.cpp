@@ -24,7 +24,7 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include <wx/listbox.h>
-#include "ui/browse_tile_window.h"
+#include "ui/windows/browse_tile_window.h"
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
 #include <glad/glad.h>

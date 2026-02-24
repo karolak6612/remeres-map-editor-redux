@@ -25,14 +25,12 @@
 
 #include "net/process_com.h"
 #include "rendering/ui/map_display.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 
 #include "ui/main_frame.h"
+#include <memory>
 
-#ifdef _USE_UPDATER_
-class UpdateChecker;
-#endif
-
+class UpdateManager;
 class Item;
 class Creature;
 
@@ -65,9 +63,7 @@ private:
 	wxSingleInstanceChecker* m_single_instance_checker;
 #endif
 
-#ifdef _USE_UPDATER_
-	std::unique_ptr<UpdateChecker> m_updater;
-#endif
+	std::unique_ptr<UpdateManager> m_update_manager;
 };
 
 class MainMenuBar;

@@ -13,7 +13,7 @@
 #include "editor/editor_factory.h"
 #include "editor/action_queue.h"
 #include "ui/dialog_util.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 #include "app/application.h"
 #include "app/managers/version_manager.h"
 #include "ui/managers/status_manager.h"

@@ -6,7 +6,7 @@
 
 #include "app/main.h"
 #include "app/definitions.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 #include "app/settings.h"
 #include "app/preferences.h"
 #include "util/image_manager.h"

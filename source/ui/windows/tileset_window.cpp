@@ -33,7 +33,7 @@
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "app/application.h"
-#include "ui/tileset_window.h"
+#include "ui/windows/tileset_window.h"
 #include "ui/properties/container_properties_window.h"
 #include "util/image_manager.h"
 
