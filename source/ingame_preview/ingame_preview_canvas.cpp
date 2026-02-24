@@ -73,6 +73,7 @@ namespace IngamePreview {
 		if (m_glContext) {
 			g_gl_context.EnsureContextCurrent(*m_glContext, this);
 		}
+		g_gl_context.UnregisterCanvas(this);
 	}
 
 	void IngamePreviewCanvas::OnPaint(wxPaintEvent& event) {

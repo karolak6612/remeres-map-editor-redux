@@ -49,6 +49,7 @@ NanoVGCanvas::~NanoVGCanvas() {
 			ClearImageCache();
 		}
 	}
+	g_gl_context.UnregisterCanvas(this);
 }
 
 void NanoVGCanvas::InitGL() {

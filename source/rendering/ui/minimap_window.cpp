@@ -41,11 +41,10 @@ static wxGLAttributes& GetCoreProfileAttributes() {
 
 MinimapWindow::MinimapWindow(wxWindow* parent) :
 	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
-	update_timer(this),
-	context(nullptr) {
-	spdlog::info("MinimapWindow::MinimapWindow - Obtaining shared context");
-	context = g_gui.GetGLContext(this);
-	if (!context || !context->IsOK()) {
+	update_timer(this) {
+	spdlog::info("MinimapWindow::MinimapWindow - Creating own context shared with global");
+	m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
+	if (!m_glContext || !m_glContext->IsOK()) {
 		spdlog::error("MinimapWindow::MinimapWindow - Context creation failed");
 	}
 	SetToolTip("Click to move camera");
@@ -62,15 +61,19 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 
 MinimapWindow::~MinimapWindow() {
 	spdlog::debug("MinimapWindow destructor started");
-	spdlog::default_logger()->flush();
-	if (context) {
-		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer");
-		spdlog::default_logger()->flush();
-		g_gl_context.EnsureContextCurrent(*context, this);
-		drawer.reset();
+	bool context_ok = false;
+	if (m_glContext) {
+		context_ok = g_gl_context.EnsureContextCurrent(*m_glContext, this);
 	}
+
+	if (context_ok) {
+		drawer.reset();
+	} else {
+		spdlog::warn("MinimapWindow: Destroying without a current OpenGL context. Cleanup might be incomplete.");
+	}
+
+	g_gl_context.UnregisterCanvas(this);
 	spdlog::debug("MinimapWindow destructor finished");
-	spdlog::default_logger()->flush();
 }
 
 void MinimapWindow::OnSize(wxSizeEvent& event) {
@@ -96,14 +99,12 @@ void MinimapWindow::OnDelayedUpdate(wxTimerEvent& event) {
 void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	wxPaintDC dc(this); // validates the paint event
 
-	// spdlog::info("MinimapWindow::OnPaint");
-
-	if (!context) {
+	if (!m_glContext) {
 		spdlog::error("MinimapWindow::OnPaint - No context!");
 		return;
 	}
 
-	SetCurrent(*context);
+	SetCurrent(*m_glContext);
 
 	static bool gladInitialized = false;
 	if (!gladInitialized) {
