@@ -32,3 +32,19 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 
 	return OGLContext.get();
 }
+
+wxGLAttributes& GLContextManager::GetDefaultAttributes() {
+	static wxGLAttributes attrs;
+	static bool initialized = false;
+	if (!initialized) {
+		attrs.PlatformDefaults()
+			.RGBA()
+			.MinRGBA(8, 8, 8, 8)
+			.DoubleBuffer()
+			.Depth(24)
+			.Stencil(8)
+			.EndList();
+		initialized = true;
+	}
+	return attrs;
+}

@@ -57,7 +57,7 @@ class RMERecipe(ConanFile):
     def configure(self):
         self.options["glad/*"].gl_profile = "core"
         self.options["glad/*"].gl_version = "4.6"
-        self.options["cpr/*"].with_ssl = "openssl" # Enable SSL for secure HTTPS requests
+        self.options["cpr/*"].with_ssl = "openssl"
 
         if self.settings.os != "Linux":
             # Boost components needed
