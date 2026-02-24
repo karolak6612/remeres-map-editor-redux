@@ -331,11 +331,20 @@ int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uin
 	std::span<uint8_t> dest(rgba);
 	std::span<const uint8_t> src(data, w * h * 3);
 
-	for (int i : std::views::iota(0, w * h)) {
-		dest[i * 4 + 0] = src[i * 3 + 0];
-		dest[i * 4 + 1] = src[i * 3 + 1];
-		dest[i * 4 + 2] = src[i * 3 + 2];
-		dest[i * 4 + 3] = (hasAlpha && alpha) ? alpha[i] : 255;
+	if (hasAlpha && alpha) {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = alpha[i];
+		}
+	} else {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = 255;
+		}
 	}
 
 	return GetOrCreateImage(spriteId, rgba.data(), w, h);

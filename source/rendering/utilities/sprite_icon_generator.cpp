@@ -8,6 +8,7 @@
 #include "ui/gui.h"
 #include <algorithm>
 #include <ranges>
+#include <span>
 
 wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool rescale) {
 	ASSERT(sprite->width >= 1 && sprite->height >= 1);
@@ -34,7 +35,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 		bgData[i * 3 + 1] = g;
 		bgData[i * 3 + 2] = b;
 	}
-	std::fill_n(alphaData.data(), count, 255);
+	std::ranges::fill(alphaData, 255);
 
 	for (uint8_t l = 0; l < sprite->layers; l++) {
 		for (uint8_t w = 0; w < sprite->width; w++) {
@@ -89,7 +90,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 		bgData[i * 3 + 1] = g;
 		bgData[i * 3 + 2] = b;
 	}
-	std::fill_n(alphaData.data(), count, 255);
+	std::ranges::fill(alphaData, 255);
 
 	int frame_index = 0;
 	if (sprite->pattern_x == 4) {

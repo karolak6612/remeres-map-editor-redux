@@ -585,7 +585,7 @@ namespace {
 		}
 
 		read += 2;
-		std::fill_n(data.begin() + write, transparent * RGBA_COMPONENTS, 0);
+		std::ranges::fill(data.subspan(write, transparent * RGBA_COMPONENTS), 0);
 		write += transparent * RGBA_COMPONENTS;
 		return true;
 	}

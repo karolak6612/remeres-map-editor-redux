@@ -205,11 +205,20 @@ int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& im
 	// srcAlpha might be null, so we must be careful.
 	// We only access it if hasAlpha && alpha is true.
 
-	for (int i : std::views::iota(0, w * h)) {
-		dest[i * 4 + 0] = src[i * 3 + 0];
-		dest[i * 4 + 1] = src[i * 3 + 1];
-		dest[i * 4 + 2] = src[i * 3 + 2];
-		dest[i * 4 + 3] = (hasAlpha && alpha) ? alpha[i] : 255;
+	if (hasAlpha && alpha) {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = alpha[i];
+		}
+	} else {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = 255;
+		}
 	}
 	return nvgCreateImageRGBA(vg, w, h, 0, rgba.data());
 }
