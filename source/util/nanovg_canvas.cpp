@@ -42,7 +42,7 @@ NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
 }
 
 NanoVGCanvas::~NanoVGCanvas() {
-	if (m_glContext) {
+	if (m_glContext && IsShownOnScreen()) {
 		SetCurrent(*m_glContext);
 		ClearImageCache();
 	}
@@ -74,7 +74,7 @@ void NanoVGCanvas::InitGL() {
 }
 
 bool NanoVGCanvas::MakeContextCurrent() {
-	if (!m_glContext) {
+	if (!m_glContext || !IsShownOnScreen()) {
 		return false;
 	}
 	SetCurrent(*m_glContext);
@@ -342,6 +342,9 @@ int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uin
 
 void NanoVGCanvas::UpdateScrollbar(int contentHeight) {
 	m_contentHeight = contentHeight;
+	if (!(GetWindowStyleFlag() & wxVSCROLL)) {
+		return;
+	}
 	int h = GetClientSize().y;
 	SetScrollbar(wxVERTICAL, m_scrollPos, h, contentHeight);
 }

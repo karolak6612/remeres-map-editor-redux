@@ -30,6 +30,14 @@
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/table/table_brush.h"
 
+// Helper: create a menu item with bitmap set BEFORE appending (required for GTK3)
+static wxMenuItem* AppendWithBitmap(wxMenu* menu, int id, const wxString& text, const wxString& help, std::string_view icon) {
+	wxMenuItem* item = new wxMenuItem(menu, id, text, help);
+	item->SetBitmap(IMAGE_MANAGER.GetBitmap(icon, wxSize(16, 16)));
+	menu->Append(item);
+	return item;
+}
+
 MapPopupMenu::MapPopupMenu(Editor& editor) :
 	wxMenu(""), editor(editor) {
 	////
@@ -49,28 +57,23 @@ void MapPopupMenu::Update() {
 
 	bool anything_selected = editor.selection.size() != 0;
 
-	wxMenuItem* cutItem = Append(MAP_POPUP_MENU_CUT, "&Cut\tCTRL+X", "Cut out all selected items");
-	cutItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUT, wxSize(16, 16)));
+	wxMenuItem* cutItem = AppendWithBitmap(this, MAP_POPUP_MENU_CUT, "&Cut\tCTRL+X", "Cut out all selected items", ICON_CUT);
 	cutItem->Enable(anything_selected);
 
-	wxMenuItem* copyItem = Append(MAP_POPUP_MENU_COPY, "&Copy\tCTRL+C", "Copy all selected items");
-	copyItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
+	wxMenuItem* copyItem = AppendWithBitmap(this, MAP_POPUP_MENU_COPY, "&Copy\tCTRL+C", "Copy all selected items", ICON_COPY);
 	copyItem->Enable(anything_selected);
 
-	wxMenuItem* copyPositionItem = Append(MAP_POPUP_MENU_COPY_POSITION, "&Copy Position", "Copy the position as a lua table");
-	copyPositionItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LOCATION, wxSize(16, 16)));
+	wxMenuItem* copyPositionItem = AppendWithBitmap(this, MAP_POPUP_MENU_COPY_POSITION, "&Copy Position", "Copy the position as a lua table", ICON_LOCATION);
 	copyPositionItem->Enable(anything_selected);
 
-	wxMenuItem* pasteItem = Append(MAP_POPUP_MENU_PASTE, "&Paste\tCTRL+V", "Paste items in the copybuffer here");
-	pasteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PASTE, wxSize(16, 16)));
+	wxMenuItem* pasteItem = AppendWithBitmap(this, MAP_POPUP_MENU_PASTE, "&Paste\tCTRL+V", "Paste items in the copybuffer here", ICON_PASTE);
 	pasteItem->Enable(editor.copybuffer.canPaste());
 
-	wxMenuItem* deleteItem = Append(MAP_POPUP_MENU_DELETE, "&Delete\tDEL", "Removes all seleceted items");
-	deleteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
+	wxMenuItem* deleteItem = AppendWithBitmap(this, MAP_POPUP_MENU_DELETE, "&Delete\tDEL", "Removes all seleceted items", ICON_TRASH_CAN);
 	deleteItem->Enable(anything_selected);
 
 	if (anything_selected) {
-		Append(MAP_POPUP_MENU_ADVANCED_REPLACE, "Replace tiles...", "Open Advanced Replace Tool for selected items")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_WAND_MAGIC, wxSize(16, 16)));
+		AppendWithBitmap(this, MAP_POPUP_MENU_ADVANCED_REPLACE, "Replace tiles...", "Open Advanced Replace Tool for selected items", ICON_WAND_MAGIC);
 	}
 
 	if (anything_selected) {
@@ -123,9 +126,9 @@ void MapPopupMenu::Update() {
 			AppendSeparator();
 
 			if (topSelectedItem) {
-				Append(MAP_POPUP_MENU_COPY_SERVER_ID, "Copy Item Server Id", "Copy the server id of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SERVER, wxSize(16, 16)));
-				Append(MAP_POPUP_MENU_COPY_CLIENT_ID, "Copy Item Client Id", "Copy the client id of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DESKTOP, wxSize(16, 16)));
-				Append(MAP_POPUP_MENU_COPY_NAME, "Copy Item Name", "Copy the name of this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TAG, wxSize(16, 16)));
+				AppendWithBitmap(this, MAP_POPUP_MENU_COPY_SERVER_ID, "Copy Item Server Id", "Copy the server id of this item", ICON_SERVER);
+				AppendWithBitmap(this, MAP_POPUP_MENU_COPY_CLIENT_ID, "Copy Item Client Id", "Copy the client id of this item", ICON_DESKTOP);
+				AppendWithBitmap(this, MAP_POPUP_MENU_COPY_NAME, "Copy Item Name", "Copy the name of this item", ICON_TAG);
 				AppendSeparator();
 			}
 
@@ -134,111 +137,109 @@ void MapPopupMenu::Update() {
 				if (topSelectedItem && (topSelectedItem->isBrushDoor() || topSelectedItem->isRoteable() || teleport)) {
 
 					if (topSelectedItem->isRoteable()) {
-						Append(MAP_POPUP_MENU_ROTATE, "&Rotate item", "Rotate this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE, wxSize(16, 16)));
+						AppendWithBitmap(this, MAP_POPUP_MENU_ROTATE, "&Rotate item", "Rotate this item", ICON_ROTATE);
 					}
 
 					if (teleport && teleport->hasDestination()) {
-						Append(MAP_POPUP_MENU_GOTO, "&Go To Destination", "Go to the destination of this teleport")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ARROW_RIGHT_TO_BRACKET, wxSize(16, 16)));
+						AppendWithBitmap(this, MAP_POPUP_MENU_GOTO, "&Go To Destination", "Go to the destination of this teleport", ICON_ARROW_RIGHT_TO_BRACKET);
 					}
 
 					if (topSelectedItem->isDoor()) {
 						if (topSelectedItem->isOpen()) {
-							Append(MAP_POPUP_MENU_SWITCH_DOOR, "&Close door", "Close this door")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, wxSize(16, 16)));
+							AppendWithBitmap(this, MAP_POPUP_MENU_SWITCH_DOOR, "&Close door", "Close this door", ICON_DOOR_CLOSED);
 						} else {
-							Append(MAP_POPUP_MENU_SWITCH_DOOR, "&Open door", "Open this door")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_OPEN, wxSize(16, 16)));
+							AppendWithBitmap(this, MAP_POPUP_MENU_SWITCH_DOOR, "&Open door", "Open this door", ICON_DOOR_OPEN);
 						}
 						AppendSeparator();
 					}
 				}
 
 				if (topCreature) {
-					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush", ICON_DRAGON);
 				}
 
 				if (topSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush", ICON_FIRE);
 				}
 
-				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+				AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush", ICON_CUBE);
 
 				if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
-					Append(MAP_POPUP_MENU_MOVE_TO_TILESET, "Move To Tileset", "Move this item to any tileset")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHARE_FROM_SQUARE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_MOVE_TO_TILESET, "Move To Tileset", "Move this item to any tileset", ICON_SHARE_FROM_SQUARE);
 				}
 
 				if (hasWall) {
-					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush", ICON_DUNGEON);
 				}
 
 				if (hasCarpet) {
-					Append(MAP_POPUP_MENU_SELECT_CARPET_BRUSH, "Select Carpetbrush", "Uses the current item as a carpetbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_RUG, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_CARPET_BRUSH, "Select Carpetbrush", "Uses the current item as a carpetbrush", ICON_RUG);
 				}
 
 				if (hasTable) {
-					Append(MAP_POPUP_MENU_SELECT_TABLE_BRUSH, "Select Tablebrush", "Uses the current item as a tablebrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TABLE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_TABLE_BRUSH, "Select Tablebrush", "Uses the current item as a tablebrush", ICON_TABLE);
 				}
 
 				if (topSelectedItem && topSelectedItem->getDoodadBrush() && topSelectedItem->getDoodadBrush()->visibleInPalette()) {
-					Append(MAP_POPUP_MENU_SELECT_DOODAD_BRUSH, "Select Doodadbrush", "Use this doodad brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TREE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_DOODAD_BRUSH, "Select Doodadbrush", "Use this doodad brush", ICON_TREE);
 				}
 
 				if (topSelectedItem && topSelectedItem->isBrushDoor() && topSelectedItem->getDoorBrush()) {
-					Append(MAP_POPUP_MENU_SELECT_DOOR_BRUSH, "Select Doorbrush", "Use this door brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_DOOR_BRUSH, "Select Doorbrush", "Use this door brush", ICON_DOOR_CLOSED);
 				}
 
 				if (tile->hasGround() && tile->getGroundBrush() && tile->getGroundBrush()->visibleInPalette()) {
-					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current item as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current item as a groundbrush", ICON_LAYER_GROUP);
 				}
 
 				if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
-					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection", ICON_LAYER_GROUP);
 				}
 
 				if (tile->isHouseTile()) {
-					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.", ICON_HOUSE);
 				}
 
 				AppendSeparator();
-				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+				AppendWithBitmap(this, MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object", ICON_GEAR);
 			} else {
 
 				if (topCreature) {
-					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush", ICON_DRAGON);
 				}
 
 				if (topSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush", ICON_FIRE);
 				}
 
-				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+				AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush", ICON_CUBE);
 				if (hasWall) {
-					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush", ICON_DUNGEON);
 				}
 				if (tile->hasGround() && tile->getGroundBrush() && tile->getGroundBrush()->visibleInPalette()) {
-					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current tile as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current tile as a groundbrush", ICON_LAYER_GROUP);
 				}
 
 				if (hasCollection || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
-					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection", ICON_LAYER_GROUP);
 				}
 
 				if (tile->isHouseTile()) {
-					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.", ICON_HOUSE);
 				}
 
 				if (tile->hasGround() || topCreature || topSpawn) {
 					AppendSeparator();
-					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+					AppendWithBitmap(this, MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object", ICON_GEAR);
 				}
 			}
 
 			AppendSeparator();
 
-			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items");
-			browseTile->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
+			wxMenuItem* browseTile = AppendWithBitmap(this, MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items", ICON_SEARCH);
 			browseTile->Enable(anything_selected);
 
-			wxMenuItem* tileProps = Append(MAP_POPUP_MENU_TILE_PROPERTIES, "Tile Properties", "Show tile properties panel");
-			tileProps->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
+			wxMenuItem* tileProps = AppendWithBitmap(this, MAP_POPUP_MENU_TILE_PROPERTIES, "Tile Properties", "Show tile properties panel", ICON_LIST);
 			tileProps->Enable(anything_selected);
 		}
 	}

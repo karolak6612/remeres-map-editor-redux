@@ -80,11 +80,19 @@ void ContainerPropertyPanel::OnContainerItemRightClick(wxContextMenuEvent& event
 
 	wxMenu menu;
 	if (index < static_cast<int>(container->getItemCount())) {
-		menu.Append(CONTAINER_POPUP_MENU_EDIT, "&Edit Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
-		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
-		menu.Append(CONTAINER_POPUP_MENU_REMOVE, "&Remove Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+		auto* editMI = new wxMenuItem(&menu, CONTAINER_POPUP_MENU_EDIT, "&Edit Item");
+		editMI->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
+		menu.Append(editMI);
+		auto* addMI = new wxMenuItem(&menu, CONTAINER_POPUP_MENU_ADD, "&Add Item");
+		addMI->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+		menu.Append(addMI);
+		auto* removeMI = new wxMenuItem(&menu, CONTAINER_POPUP_MENU_REMOVE, "&Remove Item");
+		removeMI->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+		menu.Append(removeMI);
 	} else {
-		menu.Append(CONTAINER_POPUP_MENU_ADD, "&Add Item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+		auto* addMI = new wxMenuItem(&menu, CONTAINER_POPUP_MENU_ADD, "&Add Item");
+		addMI->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+		menu.Append(addMI);
 	}
 
 	if (container->getVolume() <= (int)container->getVector().size()) {
