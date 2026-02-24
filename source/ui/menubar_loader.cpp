@@ -9,7 +9,7 @@
 #include <wx/wx.h>
 #include <algorithm>
 
-bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, RecentFilesManager& recentFilesManager, std::vector<std::string>& warnings, wxString& error) {
+bool MenuBarLoader::Load(const FileName& path, MainMenuBar* mainMenuBar, wxMenuBar* menubar, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, std::vector<std::string>& warnings, wxString& error) {
 	// Open the XML file
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(path.GetFullPath().mb_str());
@@ -32,7 +32,7 @@ bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, std::unordere
 	// Load succeded
 	for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
 		// For each child node, load it
-		wxObject* i = LoadItem(menuNode, nullptr, items, actions, recentFilesManager, warnings, error);
+		wxObject* i = LoadItem(menuNode, nullptr, mainMenuBar, items, actions, warnings, error);
 		wxMenu* m = dynamic_cast<wxMenu*>(i);
 		if (m) {
 			menubar->Append(m, m->GetTitle());
@@ -50,7 +50,7 @@ bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, std::unordere
 	return true;
 }
 
-wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, RecentFilesManager& recentFilesManager, std::vector<std::string>& warnings, wxString& error) {
+wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, MainMenuBar* mainMenuBar, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, std::vector<std::string>& warnings, wxString& error) {
 	pugi::xml_attribute attribute;
 
 	const std::string& nodeName = as_lower_str(node.name());
@@ -61,15 +61,35 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unor
 
 		std::string name = attribute.as_string();
 		std::replace(name.begin(), name.end(), '$', '&');
+		std::string menuName = name;
 
 		wxMenu* menu = newd wxMenu;
-		if ((attribute = node.attribute("special")) && std::string(attribute.as_string()) == "RECENT_FILES") {
-			recentFilesManager.UseMenu(menu);
+		if ((attribute = node.attribute("special"))) {
+			std::string special = attribute.as_string();
+			if (special == "RECENT_FILES") {
+				mainMenuBar->recentFilesManager.UseMenu(menu);
+			} else if (special == "SCRIPTS") {
+				// Store reference to scripts menu for dynamic population
+				mainMenuBar->scriptsMenu = menu;
+				// Add static items
+				for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
+					LoadItem(menuNode, menu, mainMenuBar, items, actions, warnings, error);
+				}
+				// Load script entries
+				mainMenuBar->LoadScriptsMenu();
+			}
 		} else {
 			for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
 				// Load an add each item in order
-				LoadItem(menuNode, menu, items, actions, recentFilesManager, warnings, error);
+				LoadItem(menuNode, menu, mainMenuBar, items, actions, warnings, error);
 			}
+		}
+
+		if (menuName == "Show") {
+			mainMenuBar->showMenu = menu;
+			mainMenuBar->showMenuCount = 0;
+			mainMenuBar->showMenuHasSeparator = false;
+			mainMenuBar->LoadShowMenu();
 		}
 
 		// If we have a parent, add ourselves.
@@ -118,7 +138,7 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unor
 			warnings.push_back("Invalid hotkey.");
 		}
 
-		wxMenuItem* tmp = parent->Append(
+		wxMenuItem* tmp = new wxMenuItem(parent,
 			MAIN_FRAME_MENU + act.id, // ID
 			wxstr(name), // Title of button
 			wxstr(help), // Help text
@@ -127,6 +147,7 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unor
 		if (!act.icon.empty()) {
 			tmp->SetBitmap(IMAGE_MANAGER.GetBitmap(act.icon, wxSize(16, 16)));
 		}
+		parent->Append(tmp);
 		items[MenuBar::ActionID(act.id)].push_back(tmp);
 		return tmp;
 	} else if (nodeName == "separator") {

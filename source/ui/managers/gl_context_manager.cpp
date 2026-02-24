@@ -17,14 +17,34 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 		OGLContext = std::make_unique<wxGLContext>(win, nullptr, &ctxAttrs);
 		spdlog::info("GLContextManager: Created new OpenGL 4.5 Core Profile context");
 #endif
-		// Initialize GLAD for the new context
+	}
+
+	// Initialize GLAD once the window is actually shown (has a valid XID)
+	if (!m_gladInitialized && win->IsShownOnScreen()) {
 		win->SetCurrent(*OGLContext);
 		if (!gladLoadGL()) {
 			spdlog::error("GLContextManager: Failed to initialize GLAD!");
 		} else {
+			m_gladInitialized = true;
 			spdlog::info("GLContextManager: GLAD initialized successfully");
 		}
 	}
 
 	return OGLContext.get();
+}
+
+wxGLAttributes& GLContextManager::GetDefaultAttributes() {
+	static wxGLAttributes attrs;
+	static bool initialized = false;
+	if (!initialized) {
+		attrs.PlatformDefaults()
+			.RGBA()
+			.MinRGBA(8, 8, 8, 8)
+			.DoubleBuffer()
+			.Depth(24)
+			.Stencil(8)
+			.EndList();
+		initialized = true;
+	}
+	return attrs;
 }

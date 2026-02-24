@@ -23,7 +23,6 @@ class RMERecipe(ConanFile):
             # Full dependency tree for Windows/macOS
             self.requires("wxwidgets/3.2.6")
             self.requires("asio/1.32.0")
-            self.requires("nlohmann_json/3.11.3")
             self.requires("libarchive/3.7.7")
             self.requires("boost/1.87.0")
             self.requires("zlib/1.3.1")
@@ -32,6 +31,13 @@ class RMERecipe(ConanFile):
             self.requires("glm/1.0.1")
             self.requires("spdlog/1.15.0")
 
+        # Lua dependencies for all platforms (unless Linux has them in apt, but let's be safe)
+        # Upstream uses Lua 5.x and Sol2
+        self.requires("lua/5.4.6")
+        self.requires("sol2/3.3.1")
+        self.requires("nlohmann_json/3.11.3")
+        # cpr is used for HTTP requests in Lua API
+        self.requires("cpr/1.10.5")
     
     def layout(self):
         cmake_layout(self)
@@ -51,6 +57,7 @@ class RMERecipe(ConanFile):
     def configure(self):
         self.options["glad/*"].gl_profile = "core"
         self.options["glad/*"].gl_version = "4.6"
+        self.options["cpr/*"].with_ssl = "openssl"
 
         if self.settings.os != "Linux":
             # Boost components needed

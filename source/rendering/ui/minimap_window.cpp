@@ -63,7 +63,7 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 MinimapWindow::~MinimapWindow() {
 	spdlog::debug("MinimapWindow destructor started");
 	spdlog::default_logger()->flush();
-	if (context) {
+	if (context && IsShownOnScreen()) {
 		spdlog::debug("MinimapWindow destructor - setting context and resetting drawer");
 		spdlog::default_logger()->flush();
 		SetCurrent(*context);

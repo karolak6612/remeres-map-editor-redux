@@ -12,8 +12,11 @@ public:
 
 	wxGLContext* GetGLContext(wxGLCanvas* win);
 
+	static wxGLAttributes& GetDefaultAttributes();
+
 private:
 	std::unique_ptr<wxGLContext> OGLContext;
+	bool m_gladInitialized = false;
 };
 
 extern GLContextManager g_gl_context;

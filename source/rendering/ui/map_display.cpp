@@ -79,18 +79,10 @@
 
 bool MapCanvas::processed[] = { 0 };
 
-// Helper to create attributes
-static wxGLAttributes& GetCoreProfileAttributes() {
-	static wxGLAttributes vAttrs = []() {
-		wxGLAttributes a;
-		a.PlatformDefaults().Defaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
-		return a;
-	}();
-	return vAttrs;
-}
+// Removed local GetCoreProfileAttributes in favor of GLContextManager::GetDefaultAttributes()
 
 MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
-	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
+	wxGLCanvas(parent, GLContextManager::GetDefaultAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
 	editor(editor),
 	floor(GROUND_LAYER),
 	zoom(1.0),
@@ -151,10 +143,12 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 }
 
 MapCanvas::~MapCanvas() {
-	if (m_glContext) {
-		SetCurrent(*m_glContext);
-	} else if (auto context = g_gui.GetGLContext(this)) {
-		SetCurrent(*context);
+	if (IsShownOnScreen()) {
+		if (m_glContext) {
+			SetCurrent(*m_glContext);
+		} else if (auto context = g_gui.GetGLContext(this)) {
+			SetCurrent(*context);
+		}
 	}
 	drawer.reset();
 	m_nvg.reset();

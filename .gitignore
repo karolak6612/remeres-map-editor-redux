@@ -4,10 +4,10 @@ CMakeFiles
 cmake_install.cmake
 Makefile
 build/
-build.*/
 build-debug
 build-release
 CMakeLists.txt.user*
+CMakeUserPresets.json
 
 # RME
 rme
@@ -65,13 +65,11 @@ cmake-build-debug/
 # vcpkg
 /vcpkg_installed/
 
-/.agent/rules
 build.log
 /ext/nanovg/example
 
 # Conan
 build_conan/
-CMakeUserPresets.json
 verify_logic.py
 source/brushes/legacy_brush_arrays.cpp
 source/brushes/carpet/backup.cpp
@@ -90,13 +88,9 @@ analyze_legacy.py
 /test_iterator_mock
 /test_selection_mock
 /test_variant_logic
-build_output*.txt
-build_script.log
-
-.qwen/
+build*.txt
 gha-creds-*.json
 /vcproj/_deps
 /vcproj/vcpkg_installed
 /vcproj/rme.dir
 
-.gemini/
