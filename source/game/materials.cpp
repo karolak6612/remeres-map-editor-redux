@@ -40,14 +40,6 @@ Materials::~Materials() {
 }
 
 void Materials::clear() {
-	for (TilesetContainer::iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
-		delete iter->second;
-	}
-
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		delete *iter;
-	}
-
 	tilesets.clear();
 	extensions.clear();
 }
@@ -56,11 +48,11 @@ const MaterialsExtensionList& Materials::getExtensions() {
 	return extensions;
 }
 
-MaterialsExtensionList Materials::getExtensionsByVersion(const ClientVersionID& version_id) {
-	MaterialsExtensionList ret_list;
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		if ((*iter)->isForVersion(version_id)) {
-			ret_list.push_back(*iter);
+std::vector<MaterialsExtension*> Materials::getExtensionsByVersion(const ClientVersionID& version_id) {
+	std::vector<MaterialsExtension*> ret_list;
+	for (const auto& extension : extensions) {
+		if (extension->isForVersion(version_id)) {
+			ret_list.push_back(extension.get());
 		}
 	}
 	return ret_list;
@@ -151,7 +143,8 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 		std::string extensionAuthorLink = extensionNode.attribute("authorurl").as_string();
 		extensionAuthorLink.erase(std::remove(extensionAuthorLink.begin(), extensionAuthorLink.end(), '\''));
 
-		MaterialsExtension* materialExtension = newd MaterialsExtension(extensionName, extensionAuthor, extensionDescription);
+		auto extension_ptr = std::make_unique<MaterialsExtension>(extensionName, extensionAuthor, extensionDescription);
+		MaterialsExtension* materialExtension = extension_ptr.get();
 		materialExtension->url = extensionUrl;
 		materialExtension->author_url = extensionAuthorLink;
 
@@ -183,10 +176,10 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 			warnings.push_back((filename + ": Extension is not available for any version.").ToStdString());
 		}
 
-		extensions.push_back(materialExtension);
 		if (materialExtension->isForVersion(g_version.GetCurrentVersionID())) {
 			unserializeMaterials(filename, extensionNode, error, warnings);
 		}
+		extensions.push_back(std::move(extension_ptr));
 	} while (ext_dir.GetNext(&filename));
 
 	return true;
@@ -244,19 +237,21 @@ void Materials::createOtherTileset() {
 	Tileset* npc_tileset;
 
 	if (tilesets.find("Others") != tilesets.end()) {
-		others = tilesets["Others"];
+		others = tilesets["Others"].get();
 		others->clear();
 	} else {
-		others = newd Tileset(g_brushes, "Others");
-		tilesets["Others"] = others;
+		auto new_tileset = std::make_unique<Tileset>(g_brushes, "Others");
+		others = new_tileset.get();
+		tilesets["Others"] = std::move(new_tileset);
 	}
 
 	if (tilesets.find("NPCs") != tilesets.end()) {
-		npc_tileset = tilesets["NPCs"];
+		npc_tileset = tilesets["NPCs"].get();
 		npc_tileset->clear();
 	} else {
-		npc_tileset = newd Tileset(g_brushes, "NPCs");
-		tilesets["NPCs"] = npc_tileset;
+		auto new_tileset = std::make_unique<Tileset>(g_brushes, "NPCs");
+		npc_tileset = new_tileset.get();
+		tilesets["NPCs"] = std::move(new_tileset);
 	}
 
 	// There should really be an iterator to do this
@@ -317,15 +312,16 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 	Tileset* tileset = nullptr;
 	auto it = tilesets.find(name);
 	if (it != tilesets.end()) {
-		tileset = it->second;
+		tileset = it->second.get();
 	}
 
 	if (!tileset) {
-		tileset = newd Tileset(g_brushes, name);
+		auto new_tileset = std::make_unique<Tileset>(g_brushes, name);
+		tileset = new_tileset.get();
 		if (it != tilesets.end()) {
-			it->second = tileset;
+			it->second = std::move(new_tileset);
 		} else {
-			tilesets.insert(std::make_pair(name, tileset));
+			tilesets.emplace(name, std::move(new_tileset));
 		}
 	}
 
@@ -345,10 +341,11 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 	Tileset* tileset;
 	auto _it = tilesets.find(tilesetName);
 	if (_it != tilesets.end()) {
-		tileset = _it->second;
+		tileset = _it->second.get();
 	} else {
-		tileset = newd Tileset(g_brushes, tilesetName);
-		tilesets.insert(std::make_pair(tilesetName, tileset));
+		auto new_tileset = std::make_unique<Tileset>(g_brushes, tilesetName);
+		tileset = new_tileset.get();
+		tilesets.emplace(tilesetName, std::move(new_tileset));
 	}
 
 	TilesetCategory* category = tileset->getCategory(categoryType);
@@ -385,7 +382,7 @@ bool Materials::isInTileset(Brush* brush, std::string tilesetName) const {
 	if (tilesetiter == tilesets.end()) {
 		return false;
 	}
-	Tileset* tileset = tilesetiter->second;
+	Tileset* tileset = tilesetiter->second.get();
 
 	return tileset->containsBrush(brush);
 }

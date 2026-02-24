@@ -20,6 +20,7 @@
 
 #include "map/tileset.h"
 #include "app/client_version.h"
+#include <memory>
 
 class MaterialsExtension {
 public:
@@ -43,6 +44,6 @@ private:
 	MaterialsExtension& operator=(const MaterialsExtension&);
 };
 
-using MaterialsExtensionList = std::vector<MaterialsExtension*>;
+using MaterialsExtensionList = std::vector<std::unique_ptr<MaterialsExtension>>;
 
 #endif

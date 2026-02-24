@@ -30,6 +30,12 @@ ImageManager::~ImageManager() {
 void ImageManager::ClearCache() {
 	m_bitmapBundleCache.clear();
 	m_tintedBitmapCache.clear();
+
+	for (const auto& [key, imageID] : m_nvgImageCache) {
+		if (key.ctx && imageID > 0) {
+			nvgDeleteImage(key.ctx, imageID);
+		}
+	}
 	m_nvgImageCache.clear();
 	m_glTextureCache.clear();
 }

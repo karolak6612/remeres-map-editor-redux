@@ -73,7 +73,7 @@ protected:
 	Tileset operator=(const Tileset&);
 	friend class TilesetCategory;
 };
-using TilesetContainer = std::unordered_map<std::string, Tileset*>;
+using TilesetContainer = std::unordered_map<std::string, std::unique_ptr<Tileset>>;
 // Returns tilesets sorted alphabetically by name for UI display.
 std::vector<Tileset*> GetSortedTilesets(const TilesetContainer& tilesets);
 #endif

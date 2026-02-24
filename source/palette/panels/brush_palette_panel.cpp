@@ -246,7 +246,7 @@ void BrushPalettePanel::OnClickAddItemToTileset(wxCommandEvent& WXUNUSED(event))
 
 	auto _it = g_materials.tilesets.find(tilesetName);
 	if (_it != g_materials.tilesets.end()) {
-		wxDialog* w = newd AddItemWindow(g_gui.root, palette_type, _it->second);
+		wxDialog* w = newd AddItemWindow(g_gui.root, palette_type, _it->second.get());
 		int ret = w->ShowModal();
 		w->Destroy();
 
