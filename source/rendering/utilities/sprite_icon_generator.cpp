@@ -6,6 +6,9 @@
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "app/settings.h"
 #include "ui/gui.h"
+#include <algorithm>
+#include <ranges>
+#include <span>
 
 wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool rescale) {
 	ASSERT(sprite->width >= 1 && sprite->height >= 1);
@@ -16,10 +19,23 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 	wxImage image(image_size, image_size);
 	image.Create(image_size, image_size);
 	image.InitAlpha();
-	for (int i = 0; i < image_size * image_size; ++i) {
-		image.SetRGB(i % image_size, i / image_size, (bgshade >> 16) & 0xFF, (bgshade >> 8) & 0xFF, bgshade & 0xFF);
-		image.SetAlpha(i % image_size, i / image_size, 255);
+
+	unsigned char r = (bgshade >> 16) & 0xFF;
+	unsigned char g = (bgshade >> 8) & 0xFF;
+	unsigned char b = bgshade & 0xFF;
+	unsigned char* rawData = image.GetData();
+	unsigned char* rawAlpha = image.GetAlpha();
+	int count = image_size * image_size;
+
+	std::span<unsigned char> bgData(rawData, static_cast<size_t>(count) * 3);
+	std::span<unsigned char> alphaData(rawAlpha, count);
+
+	for (int i : std::views::iota(0, count)) {
+		bgData[i * 3 + 0] = r;
+		bgData[i * 3 + 1] = g;
+		bgData[i * 3 + 2] = b;
 	}
+	std::ranges::fill(alphaData, 255);
 
 	for (uint8_t l = 0; l < sprite->layers; l++) {
 		for (uint8_t w = 0; w < sprite->width; w++) {
@@ -58,10 +74,23 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 	wxImage image(image_size, image_size);
 	image.Create(image_size, image_size);
 	image.InitAlpha();
-	for (int i = 0; i < image_size * image_size; ++i) {
-		image.SetRGB(i % image_size, i / image_size, (bgshade >> 16) & 0xFF, (bgshade >> 8) & 0xFF, bgshade & 0xFF);
-		image.SetAlpha(i % image_size, i / image_size, 255);
+
+	unsigned char r = (bgshade >> 16) & 0xFF;
+	unsigned char g = (bgshade >> 8) & 0xFF;
+	unsigned char b = bgshade & 0xFF;
+	unsigned char* rawData = image.GetData();
+	unsigned char* rawAlpha = image.GetAlpha();
+	int count = image_size * image_size;
+
+	std::span<unsigned char> bgData(rawData, static_cast<size_t>(count) * 3);
+	std::span<unsigned char> alphaData(rawAlpha, count);
+
+	for (int i : std::views::iota(0, count)) {
+		bgData[i * 3 + 0] = r;
+		bgData[i * 3 + 1] = g;
+		bgData[i * 3 + 2] = b;
 	}
+	std::ranges::fill(alphaData, 255);
 
 	int frame_index = 0;
 	if (sprite->pattern_x == 4) {
