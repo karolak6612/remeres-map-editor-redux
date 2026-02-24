@@ -18,6 +18,9 @@
 #include "app/main.h"
 
 #include <wx/dir.h>
+#include <memory>
+#include <format>
+#include <algorithm>
 
 #include "editor/editor.h"
 #include "game/items.h"
@@ -40,14 +43,7 @@ Materials::~Materials() {
 }
 
 void Materials::clear() {
-	for (TilesetContainer::iterator iter = tilesets.begin(); iter != tilesets.end(); ++iter) {
-		delete iter->second;
-	}
-
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		delete *iter;
-	}
-
+	// Unique pointers handle memory cleanup automatically.
 	tilesets.clear();
 	extensions.clear();
 }
@@ -56,11 +52,11 @@ const MaterialsExtensionList& Materials::getExtensions() {
 	return extensions;
 }
 
-MaterialsExtensionList Materials::getExtensionsByVersion(const ClientVersionID& version_id) {
-	MaterialsExtensionList ret_list;
-	for (MaterialsExtensionList::iterator iter = extensions.begin(); iter != extensions.end(); ++iter) {
-		if ((*iter)->isForVersion(version_id)) {
-			ret_list.push_back(*iter);
+std::vector<MaterialsExtension*> Materials::getExtensionsByVersion(const ClientVersionID& version_id) {
+	std::vector<MaterialsExtension*> ret_list;
+	for (const auto& extension : extensions) {
+		if (extension->isForVersion(version_id)) {
+			ret_list.push_back(extension.get());
 		}
 	}
 	return ret_list;
@@ -70,13 +66,13 @@ bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(identifier.GetFullPath().mb_str());
 	if (!result) {
-		warnings.push_back((wxString("Could not open ") + identifier.GetFullName() + " (file not found or syntax error)").ToStdString());
+		warnings.push_back(std::format("Could not open {} (file not found or syntax error)", identifier.GetFullName().ToStdString()));
 		return false;
 	}
 
 	pugi::xml_node node = doc.child("materials");
 	if (!node) {
-		warnings.push_back((identifier.GetFullName() + ": Invalid rootheader.").ToStdString());
+		warnings.push_back(std::format("{}: Invalid rootheader.", identifier.GetFullName().ToStdString()));
 		return false;
 	}
 
@@ -111,47 +107,47 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 		pugi::xml_document doc;
 		pugi::xml_parse_result result = doc.load_file(fn.GetFullPath().mb_str());
 		if (!result) {
-			warnings.push_back((wxString("Could not open ") + filename + " (file not found or syntax error)").ToStdString());
+			warnings.push_back(std::format("Could not open {} (file not found or syntax error)", filename.ToStdString()));
 			continue;
 		}
 
 		pugi::xml_node extensionNode = doc.child("materialsextension");
 		if (!extensionNode) {
-			warnings.push_back((filename + ": Invalid rootheader.").ToStdString());
+			warnings.push_back(std::format("{}: Invalid rootheader.", filename.ToStdString()));
 			continue;
 		}
 
 		pugi::xml_attribute attribute;
 		if (!(attribute = extensionNode.attribute("name"))) {
-			warnings.push_back((filename + ": Couldn't read extension name.").ToStdString());
+			warnings.push_back(std::format("{}: Couldn't read extension name.", filename.ToStdString()));
 			continue;
 		}
 
 		const std::string& extensionName = attribute.as_string();
 		if (!(attribute = extensionNode.attribute("author"))) {
-			warnings.push_back((filename + ": Couldn't read extension author.").ToStdString());
+			warnings.push_back(std::format("{}: Couldn't read extension author.", filename.ToStdString()));
 			continue;
 		}
 
 		const std::string& extensionAuthor = attribute.as_string();
 		if (!(attribute = extensionNode.attribute("description"))) {
-			warnings.push_back((filename + ": Couldn't read extension description.").ToStdString());
+			warnings.push_back(std::format("{}: Couldn't read extension description.", filename.ToStdString()));
 			continue;
 		}
 
 		const std::string& extensionDescription = attribute.as_string();
 		if (extensionName.empty() || extensionAuthor.empty() || extensionDescription.empty()) {
-			warnings.push_back((filename + ": Couldn't read extension attributes (name, author, description).").ToStdString());
+			warnings.push_back(std::format("{}: Couldn't read extension attributes (name, author, description).", filename.ToStdString()));
 			continue;
 		}
 
 		std::string extensionUrl = extensionNode.attribute("url").as_string();
-		extensionUrl.erase(std::remove(extensionUrl.begin(), extensionUrl.end(), '\''));
+		extensionUrl.erase(std::remove(extensionUrl.begin(), extensionUrl.end(), '\''), extensionUrl.end());
 
 		std::string extensionAuthorLink = extensionNode.attribute("authorurl").as_string();
-		extensionAuthorLink.erase(std::remove(extensionAuthorLink.begin(), extensionAuthorLink.end(), '\''));
+		extensionAuthorLink.erase(std::remove(extensionAuthorLink.begin(), extensionAuthorLink.end(), '\''), extensionAuthorLink.end());
 
-		MaterialsExtension* materialExtension = newd MaterialsExtension(extensionName, extensionAuthor, extensionDescription);
+		auto materialExtension = std::make_unique<MaterialsExtension>(extensionName, extensionAuthor, extensionDescription);
 		materialExtension->url = extensionUrl;
 		materialExtension->author_url = extensionAuthorLink;
 
@@ -176,15 +172,17 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 
 			auto duplicate = std::unique(materialExtension->version_list.begin(), materialExtension->version_list.end());
 			while (duplicate != materialExtension->version_list.end()) {
-				materialExtension->version_list.erase(duplicate);
+				materialExtension->version_list.erase(duplicate, materialExtension->version_list.end());
 				duplicate = std::unique(materialExtension->version_list.begin(), materialExtension->version_list.end());
 			}
 		} else {
-			warnings.push_back((filename + ": Extension is not available for any version.").ToStdString());
+			warnings.push_back(std::format("{}: Extension is not available for any version.", filename.ToStdString()));
 		}
 
-		extensions.push_back(materialExtension);
-		if (materialExtension->isForVersion(g_version.GetCurrentVersionID())) {
+		bool isForVersion = materialExtension->isForVersion(g_version.GetCurrentVersionID());
+		extensions.push_back(std::move(materialExtension));
+
+		if (isForVersion) {
 			unserializeMaterials(filename, extensionNode, error, warnings);
 		}
 	} while (ext_dir.GetNext(&filename));
@@ -208,19 +206,19 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 
 			wxString subError;
 			if (!loadMaterials(includeName, subError, warnings)) {
-				warnings.push_back((wxString("Error while loading file \"") + includeName.GetFullName() + "\": " + subError).ToStdString());
+				warnings.push_back(std::format("Error while loading file \"{}\": {}", includeName.GetFullName().ToStdString(), subError.ToStdString()));
 			}
 		} else if (childName == "metaitem") {
 			g_items.loadMetaItem(childNode);
 		} else if (childName == "border") {
 			g_brushes.unserializeBorder(childNode, warnings);
 			if (warning.size()) {
-				warnings.push_back((wxString("materials.xml: ") + warning).ToStdString());
+				warnings.push_back(std::format("materials.xml: {}", warning.ToStdString()));
 			}
 		} else if (childName == "brush") {
 			g_brushes.unserializeBrush(childNode, warnings);
 			if (warning.size()) {
-				warnings.push_back((wxString("materials.xml: ") + warning).ToStdString());
+				warnings.push_back(std::format("materials.xml: {}", warning.ToStdString()));
 			}
 		} else if (childName == "tileset") {
 			unserializeTileset(childNode, warnings);
@@ -240,23 +238,25 @@ static RAWBrush* ensureRawBrush(ItemType& it) {
 }
 
 void Materials::createOtherTileset() {
-	Tileset* others;
-	Tileset* npc_tileset;
+	Tileset* others = nullptr;
+	Tileset* npc_tileset = nullptr;
 
-	if (tilesets.find("Others") != tilesets.end()) {
-		others = tilesets["Others"];
+	if (auto it = tilesets.find("Others"); it != tilesets.end()) {
+		others = it->second.get();
 		others->clear();
 	} else {
-		others = newd Tileset(g_brushes, "Others");
-		tilesets["Others"] = others;
+		auto ptr = std::make_unique<Tileset>(g_brushes, "Others");
+		others = ptr.get();
+		tilesets.emplace("Others", std::move(ptr));
 	}
 
-	if (tilesets.find("NPCs") != tilesets.end()) {
-		npc_tileset = tilesets["NPCs"];
+	if (auto it = tilesets.find("NPCs"); it != tilesets.end()) {
+		npc_tileset = it->second.get();
 		npc_tileset->clear();
 	} else {
-		npc_tileset = newd Tileset(g_brushes, "NPCs");
-		tilesets["NPCs"] = npc_tileset;
+		auto ptr = std::make_unique<Tileset>(g_brushes, "NPCs");
+		npc_tileset = ptr.get();
+		tilesets.emplace("NPCs", std::move(ptr));
 	}
 
 	// There should really be an iterator to do this
@@ -285,9 +285,7 @@ void Materials::createOtherTileset() {
 		}
 	}
 
-	for (CreatureMap::iterator iter = g_creatures.begin(); iter != g_creatures.end(); ++iter) {
-		CreatureType* type = iter->second;
-
+	for (auto& [id, type] : g_creatures) {
 		if (type->brush == nullptr) {
 			auto creature_brush = std::make_unique<CreatureBrush>(type);
 			type->brush = creature_brush.get();
@@ -317,15 +315,16 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 	Tileset* tileset = nullptr;
 	auto it = tilesets.find(name);
 	if (it != tilesets.end()) {
-		tileset = it->second;
+		tileset = it->second.get();
 	}
 
 	if (!tileset) {
-		tileset = newd Tileset(g_brushes, name);
+		auto ptr = std::make_unique<Tileset>(g_brushes, name);
+		tileset = ptr.get();
 		if (it != tilesets.end()) {
-			it->second = tileset;
+			it->second = std::move(ptr);
 		} else {
-			tilesets.insert(std::make_pair(name, tileset));
+			tilesets.emplace(name, std::move(ptr));
 		}
 	}
 
@@ -342,13 +341,14 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 		return;
 	}
 
-	Tileset* tileset;
+	Tileset* tileset = nullptr;
 	auto _it = tilesets.find(tilesetName);
 	if (_it != tilesets.end()) {
-		tileset = _it->second;
+		tileset = _it->second.get();
 	} else {
-		tileset = newd Tileset(g_brushes, tilesetName);
-		tilesets.insert(std::make_pair(tilesetName, tileset));
+		auto ptr = std::make_unique<Tileset>(g_brushes, tilesetName);
+		tileset = ptr.get();
+		tilesets.emplace(tilesetName, std::move(ptr));
 	}
 
 	TilesetCategory* category = tileset->getCategory(categoryType);
@@ -381,11 +381,11 @@ bool Materials::isInTileset(Brush* brush, std::string tilesetName) const {
 		return false;
 	}
 
-	TilesetContainer::const_iterator tilesetiter = tilesets.find(tilesetName);
-	if (tilesetiter == tilesets.end()) {
+	auto it = tilesets.find(tilesetName);
+	if (it == tilesets.end()) {
 		return false;
 	}
-	Tileset* tileset = tilesetiter->second;
+	Tileset* tileset = it->second.get();
 
 	return tileset->containsBrush(brush);
 }

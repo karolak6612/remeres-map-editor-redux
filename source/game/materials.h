@@ -28,7 +28,7 @@ public:
 	void clear();
 
 	const MaterialsExtensionList& getExtensions();
-	MaterialsExtensionList getExtensionsByVersion(const ClientVersionID& version_id);
+	std::vector<MaterialsExtension*> getExtensionsByVersion(const ClientVersionID& version_id);
 
 	TilesetContainer tilesets;
 

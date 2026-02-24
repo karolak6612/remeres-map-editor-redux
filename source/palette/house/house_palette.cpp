@@ -137,11 +137,11 @@ void HousePalette::UpdateHouses() {
 	}
 
 	// Populate towns
-	town_choice->Append("All Towns", (void*)nullptr);
+	town_choice->Append("All Towns", static_cast<void*>(nullptr));
 	for (auto& it : map->towns) {
 		town_choice->Append(wxstr(it.second->getName()), it.second.get());
 	}
-	town_choice->Append("No Town", (void*)nullptr);
+	town_choice->Append("No Town", static_cast<void*>(nullptr));
 	town_choice->SetSelection(0);
 
 	FilterHouses();
@@ -161,9 +161,9 @@ void HousePalette::FilterHouses() {
 	bool filter_no_town = false;
 
 	if (town_idx != wxNOT_FOUND) {
-		if (town_idx > 0 && town_idx < (int)town_choice->GetCount() - 1) {
-			selected_town = (Town*)town_choice->GetClientData(town_idx);
-		} else if (town_idx == (int)town_choice->GetCount() - 1) {
+		if (town_idx > 0 && town_idx < static_cast<int>(town_choice->GetCount()) - 1) {
+			selected_town = static_cast<Town*>(town_choice->GetClientData(town_idx));
+		} else if (town_idx == static_cast<int>(town_choice->GetCount()) - 1) {
 			filter_no_town = true;
 		}
 	}
@@ -195,7 +195,7 @@ void HousePalette::FilterHouses() {
 			// Store pointer to house as client data if possible?
 			// wxDataViewListCtrl doesn't directly store client data per row easily like wxListBox.
 			// We can use the ID to find it.
-			house_list->AppendItem(data, (wxUIntPtr)house);
+			house_list->AppendItem(data, reinterpret_cast<wxUIntPtr>(house));
 		}
 	}
 	house_list->Thaw();
@@ -204,7 +204,7 @@ void HousePalette::FilterHouses() {
 House* HousePalette::GetSelectedHouse() const {
 	wxDataViewItem item = house_list->GetSelection();
 	if (item.IsOk()) {
-		return (House*)house_list->GetItemData(item);
+		return reinterpret_cast<House*>(house_list->GetItemData(item));
 	}
 	return nullptr;
 }
@@ -284,8 +284,8 @@ void HousePalette::OnAddHouse(wxCommandEvent& event) {
 
 	// Assign to selected town if any
 	int town_idx = town_choice->GetSelection();
-	if (town_idx > 0 && town_idx < (int)town_choice->GetCount() - 1) {
-		Town* town = (Town*)town_choice->GetClientData(town_idx);
+	if (town_idx > 0 && town_idx < static_cast<int>(town_choice->GetCount()) - 1) {
+		Town* town = static_cast<Town*>(town_choice->GetClientData(town_idx));
 		new_house->townid = town->getID();
 	}
 
@@ -294,9 +294,9 @@ void HousePalette::OnAddHouse(wxCommandEvent& event) {
 	FilterHouses();
 
 	// Select the new house
-	for (int i = 0; i < (int)house_list->GetItemCount(); ++i) {
+	for (int i = 0; i < static_cast<int>(house_list->GetItemCount()); ++i) {
 		wxDataViewItem item = house_list->RowToItem(i);
-		if ((House*)house_list->GetItemData(item) == house_ptr) {
+		if (reinterpret_cast<House*>(house_list->GetItemData(item)) == house_ptr) {
 			house_list->Select(item);
 			break;
 		}

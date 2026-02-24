@@ -43,6 +43,6 @@ private:
 	MaterialsExtension& operator=(const MaterialsExtension&);
 };
 
-using MaterialsExtensionList = std::vector<MaterialsExtension*>;
+using MaterialsExtensionList = std::vector<std::unique_ptr<MaterialsExtension>>;
 
 #endif
