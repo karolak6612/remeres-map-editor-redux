@@ -91,50 +91,41 @@ const GroundBrush::BorderBlock* GroundBrush::getBrushTo(GroundBrush* first, Grou
 		if (second) {
 			if (first->getZ() < second->getZ() && second->hasOuterBorder()) {
 				if (first->hasInnerBorder()) {
-					for (const auto& bb : first->borders) {
-						if (bb->outer) {
-							continue;
-						} else if (bb->to == second->getID() || bb->to == 0xFFFFFFFF) {
-							return bb.get();
-						}
+					auto it = std::ranges::find_if(first->borders, [&](const auto& bb) {
+						return !bb->outer && (bb->to == second->getID() || bb->to == 0xFFFFFFFF);
+					});
+					if (it != first->borders.end()) {
+						return it->get();
 					}
 				}
-				for (const auto& bb : second->borders) {
-					if (!bb->outer) {
-						continue;
-					} else if (bb->to == first->getID()) {
-						return bb.get();
-					} else if (bb->to == 0xFFFFFFFF) {
-						return bb.get();
-					}
+				auto it = std::ranges::find_if(second->borders, [&](const auto& bb) {
+					return bb->outer && (bb->to == first->getID() || bb->to == 0xFFFFFFFF);
+				});
+				if (it != second->borders.end()) {
+					return it->get();
 				}
 			} else if (first->hasInnerBorder()) {
-				for (const auto& bb : first->borders) {
-					if (bb->outer) {
-						continue;
-					} else if (bb->to == second->getID()) {
-						return bb.get();
-					} else if (bb->to == 0xFFFFFFFF) {
-						return bb.get();
-					}
+				auto it = std::ranges::find_if(first->borders, [&](const auto& bb) {
+					return !bb->outer && (bb->to == second->getID() || bb->to == 0xFFFFFFFF);
+				});
+				if (it != first->borders.end()) {
+					return it->get();
 				}
 			}
 		} else if (first->hasInnerZilchBorder()) {
-			for (const auto& bb : first->borders) {
-				if (bb->outer) {
-					continue;
-				} else if (bb->to == 0) {
-					return bb.get();
-				}
+			auto it = std::ranges::find_if(first->borders, [](const auto& bb) {
+				return !bb->outer && bb->to == 0;
+			});
+			if (it != first->borders.end()) {
+				return it->get();
 			}
 		}
 	} else if (second && second->hasOuterZilchBorder()) {
-		for (const auto& bb : second->borders) {
-			if (!bb->outer) {
-				continue;
-			} else if (bb->to == 0) {
-				return bb.get();
-			}
+		auto it = std::ranges::find_if(second->borders, [](const auto& bb) {
+			return bb->outer && bb->to == 0;
+		});
+		if (it != second->borders.end()) {
+			return it->get();
 		}
 	}
 	return nullptr;
@@ -149,27 +140,27 @@ void GroundBrush::doBorders(BaseMap* map, Tile* tile) {
 	GroundBorderCalculator::calculate(map, tile);
 }
 void GroundBrush::getRelatedItems(std::vector<uint16_t>& items) {
-	for (const auto& item_block : border_items) {
+	std::ranges::for_each(border_items, [&](const auto& item_block) {
 		if (item_block.id != 0) {
 			items.push_back(item_block.id);
 		}
-	}
+	});
 
-	for (const auto& bb : borders) {
+	std::ranges::for_each(borders, [&](const auto& bb) {
 		if (bb->autoborder) {
-			for (uint32_t tile_id : bb->autoborder->tiles) {
+			std::ranges::for_each(bb->autoborder->tiles, [&](uint32_t tile_id) {
 				if (tile_id != 0) {
 					items.push_back(static_cast<uint16_t>(tile_id));
 				}
-			}
+			});
 		}
-		for (const auto& sc : bb->specific_cases) {
+		std::ranges::for_each(bb->specific_cases, [&](const auto& sc) {
 			if (sc->to_replace_id != 0) {
 				items.push_back(sc->to_replace_id);
 			}
 			if (sc->with_id != 0) {
 				items.push_back(sc->with_id);
 			}
-		}
-	}
+		});
+	});
 }

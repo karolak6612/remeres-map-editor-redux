@@ -38,43 +38,46 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	bool b = (parameter ? *reinterpret_cast<bool*>(parameter) : false);
 	if (b) {
 		// Find a matching wall item on this tile, and shift the id
-		for (const auto& item : tile->items) {
-			if (item->isWall()) {
-				WallBrush* wb = item->getWallBrush();
-				if (wb == this) {
-					// Ok, shift alignment
-					BorderType alignment = item->getWallAlignment();
-					uint16_t id = 0;
-					WallBrush* try_brush = this;
-					while (true) {
-						if (id != 0) {
-							break;
-						}
-						if (try_brush == nullptr) {
-							return;
-						}
+		auto it = std::ranges::find_if(tile->items, [this](const auto& item) {
+			if (!item->isWall()) {
+				return false;
+			}
+			return item->getWallBrush() == this;
+		});
 
-						for (int i = alignment + 1; i != alignment; ++i) {
-							if (i == WallBrushItems::WALL_ALIGNMENT_COUNT) {
-								i = 0;
-							}
-							id = try_brush->items.getRandomWallId(i);
-							if (id != 0) {
-								break;
-							}
-						}
-
-						try_brush = try_brush->redirect_to;
-						if (try_brush == this) {
-							break;
-						}
-					}
-					if (id != 0) {
-						item->setID(id);
-					}
+		if (it != tile->items.end()) {
+			Item* item = it->get();
+			// Ok, shift alignment
+			BorderType alignment = item->getWallAlignment();
+			uint16_t id = 0;
+			WallBrush* try_brush = this;
+			while (true) {
+				if (id != 0) {
+					break;
+				}
+				if (try_brush == nullptr) {
 					return;
 				}
+
+				for (int i = alignment + 1; i != alignment; ++i) {
+					if (i == WallBrushItems::WALL_ALIGNMENT_COUNT) {
+						i = 0;
+					}
+					id = try_brush->items.getRandomWallId(i);
+					if (id != 0) {
+						break;
+					}
+				}
+
+				try_brush = try_brush->redirect_to;
+				if (try_brush == this) {
+					break;
+				}
 			}
+			if (id != 0) {
+				item->setID(id);
+			}
+			return;
 		}
 	}
 
@@ -115,17 +118,18 @@ void WallBrush::doWalls(BaseMap* map, Tile* tile) {
 void WallBrush::getRelatedItems(std::vector<uint16_t>& items_out) {
 	for (int i = 0; i < WallBrushItems::WALL_ALIGNMENT_COUNT; ++i) {
 		const auto& node = items.getWallNode(i);
-		for (const auto& item : node.items) {
+		std::ranges::for_each(node.items, [&](const auto& item) {
 			if (item.id != 0) {
 				items_out.push_back(item.id);
 			}
-		}
+		});
+
 		const auto& doors = items.getDoorItems(i);
-		for (const auto& door : doors) {
+		std::ranges::for_each(doors, [&](const auto& door) {
 			if (door.id != 0) {
 				items_out.push_back(door.id);
 			}
-		}
+		});
 	}
 }
 

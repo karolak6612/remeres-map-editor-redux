@@ -49,27 +49,33 @@ void Selection::recalculateBounds() const {
 		return;
 	}
 
-	Position minPos(0x10000, 0x10000, 0x10);
-	Position maxPos(0, 0, 0);
-
 	if (tiles.empty()) {
-		minPos = Position(0, 0, 0);
-		maxPos = Position(0, 0, 0);
-	} else {
-		std::ranges::for_each(tiles, [&](Tile* tile) {
-			const Position& pos = tile->getPosition();
-			minPos.x = std::min(minPos.x, pos.x);
-			minPos.y = std::min(minPos.y, pos.y);
-			minPos.z = std::min(minPos.z, pos.z);
-
-			maxPos.x = std::max(maxPos.x, pos.x);
-			maxPos.y = std::max(maxPos.y, pos.y);
-			maxPos.z = std::max(maxPos.z, pos.z);
-		});
+		cached_min = Position(0, 0, 0);
+		cached_max = Position(0, 0, 0);
+		bounds_dirty = false;
+		return;
 	}
 
-	cached_min = minPos;
-	cached_max = maxPos;
+	int min_x = 0x10000;
+	int min_y = 0x10000;
+	int min_z = 0x10;
+	int max_x = 0;
+	int max_y = 0;
+	int max_z = 0;
+
+	for (const Tile* tile : tiles) {
+		const Position& pos = tile->getPosition();
+		min_x = std::min(min_x, pos.x);
+		min_y = std::min(min_y, pos.y);
+		min_z = std::min(min_z, pos.z);
+
+		max_x = std::max(max_x, pos.x);
+		max_y = std::max(max_y, pos.y);
+		max_z = std::max(max_z, pos.z);
+	}
+
+	cached_min = Position(min_x, min_y, min_z);
+	cached_max = Position(max_x, max_y, max_z);
 	bounds_dirty = false;
 }
 
@@ -296,9 +302,7 @@ void Selection::flush() {
 
 	if (!pending_removes.empty()) {
 		std::ranges::sort(pending_removes, tilePositionLessThan);
-		auto [first, last] = std::ranges::unique(pending_removes, [](Tile* a, Tile* b) {
-			return a->getPosition() == b->getPosition();
-		});
+		auto [first, last] = std::ranges::unique(pending_removes);
 		pending_removes.erase(first, last);
 
 		std::vector<Tile*> result;
@@ -309,9 +313,7 @@ void Selection::flush() {
 
 	if (!pending_adds.empty()) {
 		std::ranges::sort(pending_adds, tilePositionLessThan);
-		auto [first, last] = std::ranges::unique(pending_adds, [](Tile* a, Tile* b) {
-			return a->getPosition() == b->getPosition();
-		});
+		auto [first, last] = std::ranges::unique(pending_adds);
 		pending_adds.erase(first, last);
 
 		std::vector<Tile*> merged;

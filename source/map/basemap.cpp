@@ -202,40 +202,54 @@ bool MapIterator::operator==(const MapIterator& other) const noexcept {
 }
 
 bool MapIterator::findNext() {
-	while (cell_it != map->grid.cells.end()) {
-		SpatialHashGrid::GridCell* cell = cell_it->second.get();
+	// Cache end iterator to avoid repeated calls
+	const auto cells_end = map->grid.cells.end();
+
+	while (cell_it != cells_end) {
+		const SpatialHashGrid::GridCell* cell = cell_it->second.get();
 		if (!cell) {
 			++cell_it;
-			continue;
-		}
-		while (node_i < SpatialHashGrid::NODES_PER_CELL * SpatialHashGrid::NODES_PER_CELL) {
-			MapNode* node = cell->nodes[node_i].get();
-			if (node) {
-				while (floor_i < MAP_LAYERS) {
-					Floor* floor = node->array[floor_i].get();
-					if (floor) {
-						while (tile_i < SpatialHashGrid::TILES_PER_NODE) {
-							TileLocation& t = floor->locs[tile_i];
-							if (t.get()) {
-								current_tile = &t;
-								return true;
-							}
-							tile_i++;
-						}
-					}
-					floor_i++;
-					tile_i = 0;
-				}
-			}
-			node_i++;
+			node_i = 0;
 			floor_i = 0;
 			tile_i = 0;
+			continue;
 		}
-		++cell_it;
+
+		while (node_i < SpatialHashGrid::NODES_IN_CELL) {
+			const MapNode* node = cell->nodes[node_i].get();
+			if (!node) {
+				++node_i;
+				floor_i = 0;
+				tile_i = 0;
+				continue;
+			}
+
+			while (floor_i < MAP_LAYERS) {
+				const Floor* floor = node->array[floor_i].get();
+				if (!floor) {
+					++floor_i;
+					tile_i = 0;
+					continue;
+				}
+
+				while (tile_i < SpatialHashGrid::TILES_PER_NODE) {
+					TileLocation& t = const_cast<TileLocation&>(floor->locs[tile_i]);
+					if (t.get()) {
+						current_tile = &t;
+						return true;
+					}
+					++tile_i;
+				}
+				tile_i = 0;
+				++floor_i;
+			}
+			floor_i = 0;
+			++node_i;
+		}
 		node_i = 0;
-		floor_i = 0;
-		tile_i = 0;
+		++cell_it;
 	}
+
 	current_tile = nullptr;
 	return false;
 }
