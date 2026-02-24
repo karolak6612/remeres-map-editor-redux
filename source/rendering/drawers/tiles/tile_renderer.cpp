@@ -149,6 +149,14 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 
 	data.updateCategory();
 
+	// Optimization: Use lightweight LABEL style for simple properties
+	// If it has no container items, no text, and no description, it's just a label (ActionID, UniqueID, Destination, etc.)
+	if (data.containerItems.empty() && data.text.empty() && data.description.empty()) {
+		data.style = TooltipStyle::LABEL;
+	} else {
+		data.style = TooltipStyle::FULL;
+	}
+
 	return true;
 }
 

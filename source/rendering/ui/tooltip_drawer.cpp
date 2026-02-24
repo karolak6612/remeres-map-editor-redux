@@ -84,6 +84,7 @@ void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name) {
 	TooltipData& data = requestTooltipData();
 	data.pos = pos;
 	data.category = TooltipCategory::WAYPOINT;
+	data.style = TooltipStyle::LABEL;
 	data.waypointName = name;
 	commitTooltip();
 }
@@ -401,6 +402,15 @@ TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, cons
 
 void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip) {
 
+	if (tooltip.style == TooltipStyle::LABEL) {
+		// Lightweight background for labels
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, y, width, height, 3.0f);
+		nvgFillColor(vg, nvgRGBA(0, 0, 0, 160)); // Transparent black, similar to CreatureNameDrawer
+		nvgFill(vg);
+		return;
+	}
+
 	// Get border color based on category
 	uint8_t borderR, borderG, borderB;
 	getHeaderColor(tooltip.category, borderR, borderG, borderB);
@@ -573,8 +583,8 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 
 		// Constants
 		float fontSize = 11.0f;
-		float padding = 10.0f;
-		float minWidth = 120.0f;
+		float padding = (tooltip.style == TooltipStyle::LABEL) ? 4.0f : 10.0f;
+		float minWidth = (tooltip.style == TooltipStyle::LABEL) ? 0.0f : 120.0f;
 		float maxWidth = 220.0f;
 
 		// 1. Prepare Content
@@ -599,6 +609,8 @@ void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
 
 		// 5. Draw Container Grid
-		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
+		if (tooltip.style == TooltipStyle::FULL) {
+			drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
+		}
 	}
 }

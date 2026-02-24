@@ -47,10 +47,16 @@ enum class TooltipCategory {
 	TEXT // Gold - readable text (signs, books)
 };
 
+enum class TooltipStyle {
+	FULL, // Full card with shadow, border, and container grid
+	LABEL // Lightweight label (text only, simple background)
+};
+
 // Structured tooltip data for card-based rendering
 struct TooltipData {
 	Position pos;
 	TooltipCategory category = TooltipCategory::ITEM;
+	TooltipStyle style = TooltipStyle::FULL;
 
 	// Header info
 	uint16_t itemId = 0;
@@ -105,6 +111,7 @@ struct TooltipData {
 		// Reset scalars
 		pos = Position();
 		category = TooltipCategory::ITEM;
+		style = TooltipStyle::FULL;
 		itemId = 0;
 		// clear strings
 		itemName = {};
