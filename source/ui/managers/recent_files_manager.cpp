@@ -1,5 +1,6 @@
 #include "ui/managers/recent_files_manager.h"
 #include <toml++/toml.h>
+#include <wx/filename.h>
 #include "app/settings.h"
 
 RecentFilesManager::RecentFilesManager() :
@@ -11,16 +12,27 @@ RecentFilesManager::~RecentFilesManager() {
 
 void RecentFilesManager::Load() {
 	toml::table& table = g_settings.getTable();
+	bool changed = false;
 	if (auto editor = table["editor"].as_table()) {
 		if (auto files = (*editor)["recent_files"].as_array()) {
 			// Add in reverse order to preserve history ranking
 			for (size_t i = files->size(); i > 0; --i) {
 				auto& node = (*files)[i - 1];
 				if (auto val = node.as_string()) {
-					recentFiles.AddFileToHistory(wxstr(val->get()));
+					wxString path = wxstr(val->get());
+					if (wxFileName::FileExists(path)) {
+						recentFiles.AddFileToHistory(path);
+					} else {
+						files->erase(files->begin() + (i - 1));
+						changed = true;
+					}
 				}
 			}
 		}
+	}
+
+	if (changed) {
+		g_settings.save();
 	}
 }
 

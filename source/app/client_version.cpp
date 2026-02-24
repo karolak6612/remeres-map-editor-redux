@@ -51,26 +51,42 @@ void ClientVersion::loadVersions() {
 
 	// Load user-specific paths from config.toml
 	toml::table& table = g_settings.getTable();
+	bool changed = false;
 	if (auto clients = table["clients"].as_array()) {
-		for (auto&& node : *clients) {
-			if (auto client = node.as_table()) {
+		for (auto it = clients->begin(); it != clients->end();) {
+			if (auto client = (*it).as_table()) {
 				std::string name = (*client)["name"].value_or("");
 				if (name.empty()) {
+					++it;
+					continue;
+				}
+
+				wxString client_path = wxstr((*client)["clientPath"].value_or(""));
+				if (!client_path.empty() && !wxFileName::DirExists(client_path)) {
+					it = clients->erase(it);
+					changed = true;
 					continue;
 				}
 
 				ClientVersion* version = get(name);
 				if (version) {
 					// ONLY override the user-specific path
-					version->setClientPath(wxstr((*client)["clientPath"].value_or("")));
+					version->setClientPath(FileName(client_path));
 
 					bool isDefault = (*client)["default"].value_or(false);
 					if (isDefault) {
 						latest_version = version;
 					}
 				}
+				++it;
+			} else {
+				++it;
 			}
 		}
+	}
+
+	if (changed) {
+		g_settings.save();
 	}
 }
 

@@ -14,6 +14,8 @@
 
 #include <wx/dcclient.h>
 #include <algorithm>
+#include <span>
+#include <ranges>
 
 ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
 	if (m_canvas) {
@@ -43,9 +45,11 @@ NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
 
 NanoVGCanvas::~NanoVGCanvas() {
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
-		ClearImageCache();
+		if (MakeContextCurrent()) {
+			ClearImageCache();
+		}
 	}
+	g_gl_context.UnregisterCanvas(this);
 }
 
 void NanoVGCanvas::InitGL() {
@@ -77,8 +81,7 @@ bool NanoVGCanvas::MakeContextCurrent() {
 	if (!m_glContext) {
 		return false;
 	}
-	SetCurrent(*m_glContext);
-	return true;
+	return g_gl_context.EnsureContextCurrent(*m_glContext, this);
 }
 
 void NanoVGCanvas::OnPaint(wxPaintEvent&) {
@@ -326,14 +329,22 @@ int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uin
 	const uint8_t* alpha = img.GetAlpha();
 	bool hasAlpha = img.HasAlpha();
 
-	for (int i = 0; i < w * h; ++i) {
-		rgba[i * 4 + 0] = data[i * 3 + 0];
-		rgba[i * 4 + 1] = data[i * 3 + 1];
-		rgba[i * 4 + 2] = data[i * 3 + 2];
-		if (hasAlpha && alpha) {
-			rgba[i * 4 + 3] = alpha[i];
-		} else {
-			rgba[i * 4 + 3] = 255;
+	std::span<uint8_t> dest(rgba);
+	std::span<const uint8_t> src(data, w * h * 3);
+
+	if (hasAlpha && alpha) {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = alpha[i];
+		}
+	} else {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = 255;
 		}
 	}
 
