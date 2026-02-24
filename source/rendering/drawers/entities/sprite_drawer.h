@@ -21,6 +21,8 @@ public:
 	SpriteDrawer();
 	~SpriteDrawer();
 
+	void ResetCache();
+
 	void glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color = {});
 	void glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size = 0);
 	void glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color);
@@ -29,6 +31,9 @@ public:
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, uint32_t spriteid, DrawColor color = {});
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, DrawColor color = {});
 
+private:
+	// Texture bind caching for performance
+	GLuint last_bound_texture_ = 0;
 };
 
 #endif

@@ -361,20 +361,8 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 
 			for (int y = -g_gui.GetBrushSize() - 1; y <= g_gui.GetBrushSize() + 1; y++) {
 				int cy = (view.mouse_map_y + y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-
-				// Fast Culling: Skip rows that are completely off-screen
-				if (cy < view.minVisibleY || cy > view.maxVisibleY) {
-					continue;
-				}
-
 				for (int x = -g_gui.GetBrushSize() - 1; x <= g_gui.GetBrushSize() + 1; x++) {
 					int cx = (view.mouse_map_x + x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-
-					// Fast Culling: Skip columns that are completely off-screen
-					if (cx < view.minVisibleX || cx > view.maxVisibleX) {
-						continue;
-					}
-
 					if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
 						if (x >= -g_gui.GetBrushSize() && x <= g_gui.GetBrushSize() && y >= -g_gui.GetBrushSize() && y <= g_gui.GetBrushSize()) {
 							if (brush->is<RAWBrush>()) {

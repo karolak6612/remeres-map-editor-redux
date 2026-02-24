@@ -34,13 +34,6 @@ struct RenderView {
 	int getFloorAdjustment() const;
 	bool IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
 	bool IsPixelVisible(int draw_x, int draw_y, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
-
-	// Faster visibility check using precomputed bounds (avoids additions/subtractions)
-	// Assumes standard margin (PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)
-	bool IsPixelVisibleFast(int draw_x, int draw_y) const {
-		return draw_x >= minVisibleX && draw_x <= maxVisibleX && draw_y >= minVisibleY && draw_y <= maxVisibleY;
-	}
-
 	// Checks if a rectangle (e.g. a node) is visible
 	bool IsRectVisible(int draw_x, int draw_y, int width, int height, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
 	// Checks if a rectangle is fully inside the viewport (no clipping needed)
@@ -50,12 +43,6 @@ struct RenderView {
 	// Cached logical viewport dimensions for optimization
 	float logical_width = 0.0f;
 	float logical_height = 0.0f;
-
-	// Precomputed visibility bounds including margin
-	int minVisibleX = INT_MIN;
-	int maxVisibleX = INT_MAX;
-	int minVisibleY = INT_MIN;
-	int maxVisibleY = INT_MAX;
 };
 
 #endif

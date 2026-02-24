@@ -44,12 +44,6 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	// Calculate logical dimensions
 	logical_width = screensize_x * zoom;
 	logical_height = screensize_y * zoom;
-
-	// Calculate visibility bounds
-	minVisibleX = -TILE_SIZE - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
-	maxVisibleX = static_cast<int>(logical_width) + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
-	minVisibleY = -TILE_SIZE - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
-	maxVisibleY = static_cast<int>(logical_height) + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
 }
 
 int RenderView::getFloorAdjustment() const {
@@ -79,11 +73,6 @@ bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	// Logic matches IsTileVisible but uses pre-calculated draw coordinates.
 	// screensize_x * zoom gives the logical viewport size (since TILE_SIZE is constant 32).
 	// See SetupGL: glOrtho(0, width * zoom, ...)
-
-	// Use fast path if default margin
-	if (margin == PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) {
-		return IsPixelVisibleFast(draw_x, draw_y);
-	}
 
 	// Use cached logical dimensions
 	if (draw_x + TILE_SIZE + margin < 0 || draw_x - margin > logical_width || draw_y + TILE_SIZE + margin < 0 || draw_y - margin > logical_height) {
@@ -143,3 +132,4 @@ void RenderView::Clear() {
 	// glLoadIdentity(); // Legacy
 	// Blending and State management is now handled by individual renderers
 }
+

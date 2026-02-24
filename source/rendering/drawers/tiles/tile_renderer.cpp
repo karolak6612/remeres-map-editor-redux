@@ -197,9 +197,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	uint8_t r = 255, g = 255, b = 255;
 
 	// begin filters for ground tile
-	// Optimization: Skip color calculation if no relevant options are enabled
-	bool needs_color_calc = options.highlight_items || options.show_spawns || options.show_houses || options.show_blocking || options.show_special_tiles || options.show_only_colors || options.always_show_zones;
-	if (!as_minimap && needs_color_calc) {
+	if (!as_minimap) {
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
@@ -261,8 +259,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	if (!only_colors) {
-		bool show_items = (view.zoom < 10.0 || !options.hide_items_when_zoomed);
-		if (show_items) {
+		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
 			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
@@ -310,9 +307,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 						if (calculate_house_color) {
 							// Apply house color tint
-							ir = static_cast<uint8_t>((static_cast<uint16_t>(ir) * house_r + ir) >> 8);
-							ig = static_cast<uint8_t>((static_cast<uint16_t>(ig) * house_g + ig) >> 8);
-							ib = static_cast<uint8_t>((static_cast<uint16_t>(ib) * house_b + ib) >> 8);
+							ir = static_cast<uint8_t>(ir * house_r / 255);
+							ig = static_cast<uint8_t>(ig * house_g / 255);
+							ib = static_cast<uint8_t>(ib * house_b / 255);
 
 							if (should_pulse) {
 								// Pulse effect matching the tile pulse
@@ -373,25 +370,17 @@ void TileRenderer::AddLight(TileLocation* location, const RenderView& view, cons
 
 	const auto& position = location->getPosition();
 
-	int lx = position.x;
-	int ly = position.y;
-	if (position.z <= GROUND_LAYER) {
-		int offset = GROUND_LAYER - position.z;
-		lx -= offset;
-		ly -= offset;
-	}
-
 	if (tile->ground) {
 		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(lx, ly, tile->ground->getLight());
+			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
 		}
 	}
 
-	bool hidden = options.hide_items_when_zoomed && view.zoom >= 10.f;
+	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
 	if (!hidden && !tile->items.empty()) {
 		for (const auto& item : tile->items) {
 			if (item->hasLight()) {
-				light_buffer.AddLight(lx, ly, item->getLight());
+				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
 			}
 		}
 	}

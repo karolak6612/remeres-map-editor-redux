@@ -57,7 +57,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	int base_screen_x = -view.view_scroll_x - offset;
 	int base_screen_y = -view.view_scroll_y - offset;
 
-	bool draw_lights = options.isDrawLight() && view.zoom < 10.0;
+	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
 	// ND visibility
 	auto collectSpriteWithPattern = [&](GameSprite* spr, int tx, int ty) {
@@ -101,18 +101,10 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		TileLocation* location = floor->locs.data();
 		int draw_x_base = node_draw_x;
 		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
-			// Fast Column Culling: If the column is completely off-screen horizontally, skip 4 tiles.
-			if (!fully_inside) {
-				if (draw_x_base < view.minVisibleX || draw_x_base > view.maxVisibleX) {
-					location += 4;
-					continue;
-				}
-			}
-
 			int draw_y = node_draw_y;
 			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
 				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisibleFast(draw_x_base, draw_y)) {
+				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 					continue;
 				}
 
