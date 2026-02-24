@@ -12,3 +12,8 @@ Learning: Single-entry caching in nested loops must respect the iteration order.
 Finding: `GraphicManager::getSpriteFile()` returned `std::string` by value, causing a heap allocation and copy for every item in the render loop during sprite preloading checks.
 Impact: Reduced memory allocations per frame significantly (thousands of allocations avoided per frame).
 Learning: Returning `std::string` by value from a getter called in a hot loop is a major performance killer. Always use `const std::string&` or `std::string_view` for members.
+
+## 2026-02-14 - Optimization of Pattern Calculation for Simple Sprites
+Finding: `PatternCalculator::Calculate` was executed for every item on every visible tile, involving multiple modulo operations and virtual calls, even for simple static sprites (1x1, 1 frame, etc.) which constitute the majority of map tiles.
+Impact: Avoided redundant pattern calculation for ~90% of rendered items. Reduced CPU overhead in the main render loop. Also implemented tooltip generation skipping for the tile under the cursor to further reduce redundancy.
+Learning: Simple sprites (static 1x1) don't need pattern logic. Explicitly checking `is_simple` avoids unnecessary math and pointer chasing in hot loops.

@@ -5,6 +5,8 @@
 #include <wx/wx.h>
 #include <string>
 
+#include "map/position.h"
+
 struct DrawingOptions {
 	DrawingOptions();
 
@@ -59,6 +61,8 @@ struct DrawingOptions {
 	bool anti_aliasing;
 
 	std::string screen_shader_name;
+
+	Position cursor_position;
 };
 
 #endif

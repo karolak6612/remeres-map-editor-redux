@@ -186,8 +186,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
 
+	bool skip_tooltips = (location->getPosition() == options.cursor_position);
+
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && waypoint && map_z == view.floor) {
+	if (options.show_tooltips && !skip_tooltips && waypoint && map_z == view.floor) {
 		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
 	}
 
@@ -216,7 +218,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	} else {
 		if (tile->ground && ground_it) {
 			if (ground_it->sprite) {
-				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+				SpritePatterns patterns;
+				if (ground_it->sprite->is_simple && !ground_it->isSplash() && !ground_it->isFluidContainer() && !ground_it->isHangable && !ground_it->stackable) {
+					// patterns is default constructed (0,0,0,0,-1)
+				} else {
+					patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
+				}
+
 				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
 
 				BlitItemParams params(tile, tile->ground.get(), options);
@@ -233,7 +241,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (options.show_tooltips && !skip_tooltips && map_z == view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -273,7 +281,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
+			bool process_tooltips = options.show_tooltips && !skip_tooltips && map_z == view.floor;
 
 			// items on tile
 			for (const auto& item : tile->items) {
@@ -290,7 +298,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 
 				if (it.sprite) {
-					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+					SpritePatterns patterns;
+					if (it.sprite->is_simple && !it.isSplash() && !it.isFluidContainer() && !it.isHangable && !it.stackable) {
+						// patterns is default constructed
+					} else {
+						patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
+					}
+
 					PreloadItem(tile, item.get(), it, &patterns);
 
 					BlitItemParams params(tile, item.get(), options);

@@ -45,6 +45,7 @@ void DrawingOptions::SetDefault() {
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = ShaderNames::NONE;
+	cursor_position = Position(-1, -1, -1);
 }
 
 void DrawingOptions::SetIngame() {
@@ -79,6 +80,7 @@ void DrawingOptions::SetIngame() {
 	show_hooks = false;
 	hide_items_when_zoomed = false;
 	current_house_id = 0;
+	cursor_position = Position(-1, -1, -1);
 }
 
 #include "app/settings.h"
