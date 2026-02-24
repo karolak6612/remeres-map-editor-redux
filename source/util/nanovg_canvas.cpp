@@ -335,11 +335,7 @@ int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uin
 		dest[i * 4 + 0] = src[i * 3 + 0];
 		dest[i * 4 + 1] = src[i * 3 + 1];
 		dest[i * 4 + 2] = src[i * 3 + 2];
-		if (hasAlpha && alpha) {
-			dest[i * 4 + 3] = alpha[i];
-		} else {
-			dest[i * 4 + 3] = 255;
-		}
+		dest[i * 4 + 3] = (hasAlpha && alpha) ? alpha[i] : 255;
 	}
 
 	return GetOrCreateImage(spriteId, rgba.data(), w, h);

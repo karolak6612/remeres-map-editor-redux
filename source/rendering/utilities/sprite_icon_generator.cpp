@@ -22,16 +22,19 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 	unsigned char r = (bgshade >> 16) & 0xFF;
 	unsigned char g = (bgshade >> 8) & 0xFF;
 	unsigned char b = bgshade & 0xFF;
-	unsigned char* data = image.GetData();
-	unsigned char* alpha = image.GetAlpha();
+	unsigned char* rawData = image.GetData();
+	unsigned char* rawAlpha = image.GetAlpha();
 	int count = image_size * image_size;
 
+	std::span<unsigned char> bgData(rawData, static_cast<size_t>(count) * 3);
+	std::span<unsigned char> alphaData(rawAlpha, count);
+
 	for (int i : std::views::iota(0, count)) {
-		data[i * 3 + 0] = r;
-		data[i * 3 + 1] = g;
-		data[i * 3 + 2] = b;
+		bgData[i * 3 + 0] = r;
+		bgData[i * 3 + 1] = g;
+		bgData[i * 3 + 2] = b;
 	}
-	std::fill_n(alpha, count, 255);
+	std::fill_n(alphaData.data(), count, 255);
 
 	for (uint8_t l = 0; l < sprite->layers; l++) {
 		for (uint8_t w = 0; w < sprite->width; w++) {
@@ -74,16 +77,19 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 	unsigned char r = (bgshade >> 16) & 0xFF;
 	unsigned char g = (bgshade >> 8) & 0xFF;
 	unsigned char b = bgshade & 0xFF;
-	unsigned char* data = image.GetData();
-	unsigned char* alpha = image.GetAlpha();
+	unsigned char* rawData = image.GetData();
+	unsigned char* rawAlpha = image.GetAlpha();
 	int count = image_size * image_size;
 
+	std::span<unsigned char> bgData(rawData, static_cast<size_t>(count) * 3);
+	std::span<unsigned char> alphaData(rawAlpha, count);
+
 	for (int i : std::views::iota(0, count)) {
-		data[i * 3 + 0] = r;
-		data[i * 3 + 1] = g;
-		data[i * 3 + 2] = b;
+		bgData[i * 3 + 0] = r;
+		bgData[i * 3 + 1] = g;
+		bgData[i * 3 + 2] = b;
 	}
-	std::fill_n(alpha, count, 255);
+	std::fill_n(alphaData.data(), count, 255);
 
 	int frame_index = 0;
 	if (sprite->pattern_x == 4) {

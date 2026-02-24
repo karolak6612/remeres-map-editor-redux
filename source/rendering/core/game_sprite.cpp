@@ -523,8 +523,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 		}
 		int transparent = dump[read] | dump[read + 1] << 8;
 		read += 2;
-		for (int i : std::views::iota(0, transparent)) {
-			if (write >= static_cast<size_t>(pixels_data_size)) break;
+		for (int cnt = 0; cnt < transparent && write < static_cast<size_t>(pixels_data_size); ++cnt) {
 			data[write + 0] = 0xFF; // red
 			data[write + 1] = 0x00; // green
 			data[write + 2] = 0xFF; // blue
@@ -544,8 +543,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 			break;
 		}
 
-		for (int i : std::views::iota(0, colored)) {
-			if (write >= static_cast<size_t>(pixels_data_size)) break;
+		for (int cnt = 0; cnt < colored && write < static_cast<size_t>(pixels_data_size); ++cnt) {
 			data[write + 0] = dump[read + 0]; // red
 			data[write + 1] = dump[read + 1]; // green
 			data[write + 2] = dump[read + 2]; // blue
@@ -612,7 +610,7 @@ namespace {
 			return false;
 		}
 
-		for (int i : std::views::iota(0, colored)) {
+		for (int cnt = 0; cnt < colored; ++cnt) {
 			uint8_t r = dump[read + 0];
 			uint8_t g = dump[read + 1];
 			uint8_t b = dump[read + 2];
