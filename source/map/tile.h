@@ -226,14 +226,13 @@ public: // Functions
 	bool isHouseTile() const;
 	uint32_t getHouseID() const;
 	void setHouseID(uint32_t newHouseId);
-	void addHouseExit(House* h);
-	void removeHouseExit(House* h);
+	void addHouseExit(uint32_t houseId);
+	void removeHouseExit(uint32_t houseId);
 	bool isHouseExit() const;
 	bool isTownExit(Map& map) const;
 	const HouseExitList* getHouseExits() const;
 	HouseExitList* getHouseExits();
 	bool hasHouseExit(uint32_t exit) const;
-	void setHouse(House* house);
 
 	// Mapflags (PZ, PVPZONE etc.)
 	void setMapFlags(uint16_t _flags);

@@ -137,7 +137,7 @@ void DoodadPreviewManager::FillBuffer() {
 						tile = doodad_buffer_map->createTile(pos.x, pos.y, pos.z);
 					}
 					int variation = g_brush_manager.GetBrushVariation();
-					brush->draw(doodad_buffer_map.get(), tile, &variation);
+					brush->draw(doodad_buffer_map.get(), tile, { .variation = variation });
 					exit = true;
 				}
 				if (fail) {
@@ -167,7 +167,7 @@ void DoodadPreviewManager::FillBuffer() {
 		} else if (brush->hasSingleObjects(g_brush_manager.GetBrushVariation())) {
 			Tile* tile = doodad_buffer_map->createTile(center_pos.x, center_pos.y, center_pos.z);
 			int variation = g_brush_manager.GetBrushVariation();
-			brush->draw(doodad_buffer_map.get(), tile, &variation);
+			brush->draw(doodad_buffer_map.get(), tile, { .variation = variation });
 		}
 	}
 }

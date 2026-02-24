@@ -33,9 +33,9 @@ void WallBrush::undraw(BaseMap* map, Tile* tile) {
 	TileOperations::cleanWalls(tile, this);
 }
 
-void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void WallBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(tile);
-	bool b = (parameter ? *reinterpret_cast<bool*>(parameter) : false);
+	bool b = context.alternative;
 	if (b) {
 		// Find a matching wall item on this tile, and shift the id
 		for (const auto& item : tile->items) {
@@ -163,7 +163,7 @@ WallDecorationBrush::~WallDecorationBrush() {
 	////
 }
 
-void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void WallDecorationBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(tile);
 
 	auto iter = tile->items.begin();

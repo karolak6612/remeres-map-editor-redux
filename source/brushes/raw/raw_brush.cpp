@@ -74,12 +74,12 @@ void RAWBrush::undraw(BaseMap* map, Tile* tile) {
 	});
 }
 
-void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void RAWBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	if (!itemtype) {
 		return;
 	}
 
-	bool b = parameter ? *reinterpret_cast<bool*>(parameter) : false;
+	bool b = context.alternative;
 	if ((g_settings.getInteger(Config::RAW_LIKE_SIMONE) && !b) && itemtype->alwaysOnBottom && itemtype->alwaysOnTopOrder == 2) {
 		std::erase_if(tile->items, [topOrder = itemtype->alwaysOnTopOrder](const auto& item) {
 			return item->getTopOrder() == topOrder;

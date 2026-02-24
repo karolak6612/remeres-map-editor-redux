@@ -610,10 +610,6 @@ void Tile::deselectGround() {
 	}
 }
 
-void Tile::setHouse(House* _house) {
-	house_id = (_house ? _house->getID() : 0);
-}
-
 void Tile::setHouseID(uint32_t newHouseId) {
 	house_id = newHouseId;
 }
@@ -622,16 +618,16 @@ bool Tile::isTownExit(Map& map) const {
 	return location->getTownCount() > 0;
 }
 
-void Tile::addHouseExit(House* h) {
-	if (!h) {
+void Tile::addHouseExit(uint32_t houseId) {
+	if (houseId == 0) {
 		return;
 	}
 	HouseExitList* house_exits = location->createHouseExits();
-	house_exits->push_back(h->getID());
+	house_exits->push_back(houseId);
 }
 
-void Tile::removeHouseExit(House* h) {
-	if (!h) {
+void Tile::removeHouseExit(uint32_t houseId) {
+	if (houseId == 0) {
 		return;
 	}
 
@@ -640,7 +636,7 @@ void Tile::removeHouseExit(House* h) {
 		return;
 	}
 
-	std::erase(*house_exits, h->getID());
+	std::erase(*house_exits, houseId);
 }
 
 bool Tile::isContentEqual(const Tile* other) const {

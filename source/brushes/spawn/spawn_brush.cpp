@@ -55,10 +55,10 @@ void SpawnBrush::undraw(BaseMap* map, Tile* tile) {
 	tile->spawn.reset();
 }
 
-void SpawnBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void SpawnBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(tile);
-	ASSERT(parameter); // Should contain an int which is the size of the newd spawn
+	// context.size should contain the size of the new spawn
 	if (tile->spawn == nullptr) {
-		tile->spawn = std::make_unique<Spawn>(std::max(1, *(int*)parameter));
+		tile->spawn = std::make_unique<Spawn>(std::max(1, context.size));
 	}
 }

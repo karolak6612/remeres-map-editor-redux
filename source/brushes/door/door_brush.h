@@ -16,7 +16,7 @@ public:
 	static void switchDoor(Item* door);
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 
 	int getLookID() const override;

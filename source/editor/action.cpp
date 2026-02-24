@@ -306,7 +306,7 @@ void Action::undo(DirtyList* dirty_list) {
 						house->removeTile(newtile);
 					} else {
 						// Set tile house to 0, house has been removed
-						newtile->setHouse(nullptr);
+						newtile->setHouseID(0);
 					}
 
 					house = editor.map.houses.getHouse(oldtile->getHouseID());

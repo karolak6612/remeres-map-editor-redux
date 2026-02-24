@@ -129,14 +129,17 @@ namespace {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
-		std::pair<bool, GroundBrush*> param_obj;
-		std::pair<bool, GroundBrush*>* param = nullptr;
+		BrushContext context;
 		if constexpr (std::is_same_v<T, GroundBrush>) {
 			if (alt) {
-				param_obj = editor.replace_brush
-					? std::pair<bool, GroundBrush*> { false, editor.replace_brush }
-					: std::pair<bool, GroundBrush*> { true, nullptr };
-				param = &param_obj;
+				context.replaceMode = true;
+				if (editor.replace_brush) {
+					context.onlyOnEmpty = false;
+					context.replaceBrush = editor.replace_brush;
+				} else {
+					context.onlyOnEmpty = true;
+					context.replaceBrush = nullptr;
+				}
 			}
 		}
 
@@ -150,7 +153,7 @@ namespace {
 				}
 
 				if (dodraw) {
-					brush->draw(&editor.map, new_tile.get(), param);
+					brush->draw(&editor.map, new_tile.get(), context);
 				} else {
 					brush->undraw(&editor.map, new_tile.get());
 					tilestoborder.push_back(drawPos);
@@ -158,7 +161,7 @@ namespace {
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				brush->draw(&editor.map, new_tile.get(), param);
+				brush->draw(&editor.map, new_tile.get(), context);
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}
@@ -224,11 +227,11 @@ namespace {
 				if (tile) {
 					std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 					TileOperations::cleanWalls(new_tile.get(), brush);
-					brush->draw(draw_map, new_tile.get(), nullptr);
+					brush->draw(draw_map, new_tile.get());
 					draw_map->setTile(drawPos, std::move(new_tile));
 				} else {
 					std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-					brush->draw(draw_map, new_tile.get(), nullptr);
+					brush->draw(draw_map, new_tile.get());
 					draw_map->setTile(drawPos, std::move(new_tile));
 				}
 			}
@@ -252,14 +255,14 @@ namespace {
 					// Wall cleaning is exempt from automagic
 					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 					if (dodraw) {
-						brush->draw(&editor.map, new_tile.get(), nullptr);
+						brush->draw(&editor.map, new_tile.get());
 					} else {
 						brush->undraw(&editor.map, new_tile.get());
 					}
 					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				} else if (dodraw) {
 					std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-					brush->draw(&editor.map, new_tile.get(), nullptr);
+					brush->draw(&editor.map, new_tile.get());
 					action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				}
 			}
@@ -341,8 +344,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		}
 
 		if (dodraw) {
-			bool b = true;
-			brush->as<WallBrush>()->draw(&editor.map, new_tile.get(), &b);
+			brush->as<WallBrush>()->draw(&editor.map, new_tile.get(), { .alternative = true });
 		} else {
 			brush->as<WallBrush>()->undraw(&editor.map, new_tile.get());
 		}
@@ -360,12 +362,12 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		} else {
 			new_tile = editor.map.allocator(editor.map.createTileL(offset));
 		}
-		int param;
+		int param = 0;
 		if (!brush->is<CreatureBrush>()) {
 			param = g_gui.GetBrushSize();
 		}
 		if (dodraw) {
-			brush->draw(&editor.map, new_tile.get(), &param);
+			brush->draw(&editor.map, new_tile.get(), { .size = param });
 		} else {
 			brush->undraw(&editor.map, new_tile.get());
 		}
@@ -425,14 +427,14 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, boo
 			if (tile) {
 				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 				if (dodraw) {
-					brush->draw(&editor.map, new_tile.get(), &alt);
+					brush->draw(&editor.map, new_tile.get(), { .alternative = alt, .hasAlternative = true });
 				} else {
 					brush->undraw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				brush->draw(&editor.map, new_tile.get(), &alt);
+				brush->draw(&editor.map, new_tile.get(), { .alternative = alt, .hasAlternative = true });
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}
@@ -514,14 +516,14 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 					TileOperations::cleanWalls(new_tile.get(), brush->as<WallBrush>());
 				}
 				if (dodraw) {
-					door_brush->draw(&editor.map, new_tile.get(), &alt);
+					door_brush->draw(&editor.map, new_tile.get(), { .alternative = alt, .hasAlternative = true });
 				} else {
 					door_brush->undraw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				door_brush->draw(&editor.map, new_tile.get(), &alt);
+				door_brush->draw(&editor.map, new_tile.get(), { .alternative = alt, .hasAlternative = true });
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}
@@ -553,14 +555,14 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
 			if (tile) {
 				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 				if (dodraw) {
-					brush->draw(&editor.map, new_tile.get());
+					brush->draw(&editor.map, new_tile.get(), { .alternative = alt, .hasAlternative = true });
 				} else {
 					brush->undraw(&editor.map, new_tile.get());
 				}
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			} else if (dodraw) {
 				std::unique_ptr<Tile> new_tile(editor.map.allocator(location));
-				brush->draw(&editor.map, new_tile.get());
+				brush->draw(&editor.map, new_tile.get(), { .alternative = alt, .hasAlternative = true });
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			}
 		}

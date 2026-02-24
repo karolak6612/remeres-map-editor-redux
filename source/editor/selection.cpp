@@ -266,8 +266,8 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
-		if (it == tiles.end() || *it != tile) {
+		if (lookup.insert(tile).second) {
+			auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 			tiles.insert(it, tile);
 			bounds_dirty = true;
 		}
@@ -279,10 +279,12 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
-		if (it != tiles.end() && *it == tile) {
-			tiles.erase(it);
-			bounds_dirty = true;
+		if (lookup.erase(tile)) {
+			auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
+			if (it != tiles.end() && *it == tile) {
+				tiles.erase(it);
+				bounds_dirty = true;
+			}
 		}
 	}
 }
@@ -322,6 +324,10 @@ void Selection::flush() {
 
 	pending_adds.clear();
 	pending_removes.clear();
+
+	// Rebuild lookup set
+	lookup.clear();
+	lookup.insert(tiles.begin(), tiles.end());
 }
 
 void Selection::clear() {
@@ -341,6 +347,7 @@ void Selection::clear() {
 		});
 	}
 	tiles.clear();
+	lookup.clear();
 	bounds_dirty = true;
 }
 

@@ -92,9 +92,8 @@ void CreatureBrush::undraw(BaseMap* map, Tile* tile) {
 	tile->creature.reset();
 }
 
-void CreatureBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void CreatureBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(tile);
-	ASSERT(parameter);
 	draw_creature(map, tile);
 }
 

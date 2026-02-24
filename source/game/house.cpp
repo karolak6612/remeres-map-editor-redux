@@ -119,13 +119,13 @@ void House::clean() {
 	for (const auto& pos : tiles) {
 		Tile* tile = map->getTile(pos);
 		if (tile) {
-			tile->setHouse(nullptr);
+			tile->setHouseID(0);
 		}
 	}
 
 	Tile* tile = map->getTile(exit);
 	if (tile) {
-		tile->removeHouseExit(this);
+		tile->removeHouseExit(id);
 	}
 }
 
@@ -142,7 +142,7 @@ size_t House::size() const {
 
 void House::addTile(Tile* tile) {
 	ASSERT(tile);
-	tile->setHouse(this);
+	tile->setHouseID(id);
 	tiles.push_back(tile->getPosition());
 }
 
@@ -151,7 +151,7 @@ void House::removeTile(Tile* tile) {
 	auto it = std::ranges::find(tiles, tile->getPosition());
 	if (it != tiles.end()) {
 		tiles.erase(it);
-		tile->setHouse(nullptr);
+		tile->setHouseID(0);
 	}
 }
 
@@ -204,7 +204,7 @@ void House::setExit(Map* targetmap, const Position& pos) {
 	if (exit != Position()) {
 		Tile* oldexit = targetmap->getTile(exit);
 		if (oldexit) {
-			oldexit->removeHouseExit(this);
+			oldexit->removeHouseExit(id);
 		}
 	}
 
@@ -213,7 +213,7 @@ void House::setExit(Map* targetmap, const Position& pos) {
 		newexit = targetmap->createTile(pos.x, pos.y, pos.z);
 	}
 
-	newexit->addHouseExit(this);
+	newexit->addHouseExit(id);
 	exit = pos;
 }
 

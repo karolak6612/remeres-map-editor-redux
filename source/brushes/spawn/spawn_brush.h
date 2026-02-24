@@ -30,7 +30,7 @@ public:
 
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
-	void draw(BaseMap* map, Tile* tile, void* parameter) override; // parameter is brush size
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override; // parameter is brush size
 	void undraw(BaseMap* map, Tile* tile) override;
 
 	int getLookID() const override; // We don't have a look, sorry!

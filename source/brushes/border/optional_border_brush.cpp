@@ -52,6 +52,6 @@ void OptionalBorderBrush::undraw(BaseMap* /*map*/, Tile* tile) {
 	tile->setOptionalBorder(false);
 }
 
-void OptionalBorderBrush::draw(BaseMap* /*map*/, Tile* tile, void* /*parameter*/) {
+void OptionalBorderBrush::draw(BaseMap* /*map*/, Tile* tile, const BrushContext& context) {
 	tile->setOptionalBorder(true);
 }

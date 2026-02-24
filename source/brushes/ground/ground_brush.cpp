@@ -54,20 +54,19 @@ void GroundBrush::undraw(BaseMap* map, Tile* tile) {
 	}
 }
 
-void GroundBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void GroundBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(tile);
 	if (border_items.empty()) {
 		return;
 	}
 
-	if (parameter != nullptr) {
-		std::pair<bool, GroundBrush*>& param = *reinterpret_cast<std::pair<bool, GroundBrush*>*>(parameter);
+	if (context.replaceMode) {
 		GroundBrush* other = tile->getGroundBrush();
-		if (param.first) { // Volatile? :)
+		if (context.onlyOnEmpty) {
 			if (other != nullptr) {
 				return;
 			}
-		} else if (other != param.second) {
+		} else if (other != context.replaceBrush) {
 			return;
 		}
 	}

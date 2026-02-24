@@ -38,7 +38,7 @@ public:
 
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 	void getRelatedItems(std::vector<uint16_t>& items) override;
 

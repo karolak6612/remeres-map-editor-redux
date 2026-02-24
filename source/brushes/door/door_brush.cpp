@@ -162,7 +162,7 @@ void DoorBrush::undraw(BaseMap* map, Tile* tile) {
 	}
 }
 
-void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void DoorBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	for (auto it = tile->items.begin(); it != tile->items.end();) {
 		Item* item = it->get();
 		if (!item->isWall()) {
@@ -180,7 +180,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		uint16_t discarded_id = 0;
 		bool close_match = false;
 		bool perfect_match = false;
-		bool open = parameter ? *static_cast<bool*>(parameter) : (item->isBrushDoor() && item->isOpen());
+		bool open = context.hasAlternative ? context.alternative : (item->isBrushDoor() && item->isOpen());
 		bool prefLocked = g_gui.HasDoorLocked();
 
 		WallBrush* test_brush = wb;

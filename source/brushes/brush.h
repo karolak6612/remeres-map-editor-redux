@@ -40,6 +40,7 @@ class Tile;
 using TileVector = std::vector<Tile*>;
 class AutoBorder;
 class Brush;
+class GroundBrush;
 class RAWBrush;
 class DoodadBrush;
 class TerrainBrush;
@@ -104,6 +105,17 @@ extern Brushes g_brushes;
 //=============================================================================
 // Common brush interface
 
+struct BrushContext {
+	uint32_t houseId = 0;
+	int size = 0;
+	bool alternative = false;
+	bool hasAlternative = false;
+	int variation = 0;
+	bool replaceMode = false;
+	bool onlyOnEmpty = false;
+	GroundBrush* replaceBrush = nullptr;
+};
+
 class Brush {
 public:
 	Brush();
@@ -113,7 +125,7 @@ public:
 		return true;
 	}
 
-	virtual void draw(BaseMap* map, Tile* tile, void* parameter = nullptr) = 0;
+	virtual void draw(BaseMap* map, Tile* tile, const BrushContext& context = {}) = 0;
 	virtual void undraw(BaseMap* map, Tile* tile) = 0;
 	virtual bool canDraw(BaseMap* map, const Position& position) const = 0;
 
@@ -239,7 +251,7 @@ public:
 	~EraserBrush() override;
 
 	bool canDraw(BaseMap* map, const Position& position) const override;
-	void draw(BaseMap* map, Tile* tile, void* parameter) override;
+	void draw(BaseMap* map, Tile* tile, const BrushContext& context) override;
 	void undraw(BaseMap* map, Tile* tile) override;
 
 	bool needBorders() const override {

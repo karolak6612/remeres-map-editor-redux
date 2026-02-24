@@ -55,7 +55,7 @@ void FlagBrush::undraw(BaseMap* /*map*/, Tile* tile) {
 	tile->unsetMapFlags(static_cast<uint16_t>(flag));
 }
 
-void FlagBrush::draw(BaseMap* /*map*/, Tile* tile, void* /*parameter*/) {
+void FlagBrush::draw(BaseMap* /*map*/, Tile* tile, const BrushContext& context) {
 	if (tile->hasGround()) {
 		tile->setMapFlags(static_cast<uint16_t>(flag));
 	}

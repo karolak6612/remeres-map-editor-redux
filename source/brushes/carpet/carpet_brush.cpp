@@ -50,7 +50,7 @@ bool CarpetBrush::canDraw(BaseMap* map, const Position& position) const {
 	return true;
 }
 
-void CarpetBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void CarpetBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	undraw(map, tile); // Remove old
 	tile->addItem(Item::Create(getRandomCarpet(CARPET_CENTER)));
 }

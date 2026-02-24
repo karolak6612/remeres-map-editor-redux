@@ -50,7 +50,7 @@ void HouseBrush::undraw(BaseMap* map, Tile* tile) {
 	if (tile->isHouseTile()) {
 		tile->setPZ(false);
 	}
-	tile->setHouse(nullptr);
+	tile->setHouseID(0);
 	if (g_settings.getInteger(Config::AUTO_ASSIGN_DOORID)) {
 		// Is there a door? If so, remove any door id it has
 		for (const auto& item : tile->items) {
@@ -61,10 +61,10 @@ void HouseBrush::undraw(BaseMap* map, Tile* tile) {
 	}
 }
 
-void HouseBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+void HouseBrush::draw(BaseMap* map, Tile* tile, const BrushContext& context) {
 	ASSERT(draw_house);
 	uint32_t old_house_id = tile->getHouseID();
-	tile->setHouse(draw_house);
+	tile->setHouseID(draw_house->getID());
 	tile->setPZ(true);
 	if (g_settings.getInteger(Config::HOUSE_BRUSH_REMOVE_ITEMS)) {
 		// Remove loose items
