@@ -166,12 +166,14 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
 
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
-		const AtlasRegion* region;
-		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
-			region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
-		} else {
-			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
-		}
+		GameSprite::SpriteAtlasRequest req;
+		req.subtype = subtype;
+		req.pattern_x = pattern_x;
+		req.pattern_y = pattern_y;
+		req.pattern_z = pattern_z;
+		req.frame = frame;
+
+		const AtlasRegion* region = spr->getAtlasRegion(req);
 
 		if (region) {
 #ifdef DEBUG
@@ -190,7 +192,17 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		for (int cx = 0; cx != spr->width; cx++) {
 			for (int cy = 0; cy != spr->height; cy++) {
 				for (int cf = 0; cf != spr->layers; cf++) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
+					GameSprite::SpriteAtlasRequest req;
+					req.x = cx;
+					req.y = cy;
+					req.layer = cf;
+					req.subtype = subtype;
+					req.pattern_x = pattern_x;
+					req.pattern_y = pattern_y;
+					req.pattern_z = pattern_z;
+					req.frame = frame;
+
+					const AtlasRegion* region = spr->getAtlasRegion(req);
 					if (region) {
 						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
 					}

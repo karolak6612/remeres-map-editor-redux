@@ -94,7 +94,12 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	for (int cx = 0; cx != spr->width; ++cx) {
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
-				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
+				GameSprite::SpriteAtlasRequest req;
+				req.x = cx;
+				req.y = cy;
+				req.layer = cf;
+				req.frame = tme;
+				const AtlasRegion* region = spr->getAtlasRegion(req);
 				if (region) {
 					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
 				}

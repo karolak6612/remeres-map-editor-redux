@@ -79,9 +79,14 @@ GameSprite::~GameSprite() {
 	// instanced_templates and animator cleaned up automatically by unique_ptr
 }
 
-void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
+void GameSprite::ColorizeTemplatePixels(std::span<uint8_t> dest, std::span<const uint8_t> mask, const Outfit& outfit, bool destHasAlpha) {
 	const int dest_step = destHasAlpha ? RGBA_COMPONENTS : RGB_COMPONENTS;
 	const int mask_step = RGB_COMPONENTS;
+
+	size_t pixelCount = mask.size() / mask_step;
+	if (pixelCount * dest_step > dest.size()) {
+		pixelCount = dest.size() / dest_step;
+	}
 
 	for (size_t i = 0; i < pixelCount; ++i) {
 		uint8_t& red = dest[i * dest_step + 0];
@@ -93,13 +98,13 @@ void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size
 		const uint8_t& tblue = mask[i * mask_step + 2];
 
 		if (tred && tgreen && !tblue) { // yellow => head
-			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
+			OutfitColorizer::ColorizePixel(outfit.lookHead, red, green, blue);
 		} else if (tred && !tgreen && !tblue) { // red => body
-			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
+			OutfitColorizer::ColorizePixel(outfit.lookBody, red, green, blue);
 		} else if (!tred && tgreen && !tblue) { // green => legs
-			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
+			OutfitColorizer::ColorizePixel(outfit.lookLegs, red, green, blue);
 		} else if (!tred && !tgreen && tblue) { // blue => feet
-			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
+			OutfitColorizer::ColorizePixel(outfit.lookFeet, red, green, blue);
 		}
 	}
 }
@@ -169,16 +174,16 @@ size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int
 	return idx;
 }
 
-const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y, int _pattern_z, int _frame) {
+const AtlasRegion* GameSprite::getAtlasRegion(const SpriteAtlasRequest& req) {
 	if (numsprites == 0) {
 		return nullptr;
 	}
 
 	// Optimization for simple static sprites (1x1, 1 frame, etc.)
 	// Most ground tiles fall into this category.
-	if (_count == -1 && numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1) {
+	if (req.subtype == -1 && numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1) {
 		// Also check default params
-		if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0) {
+		if (req.x == 0 && req.y == 0 && req.layer == 0 && req.frame == 0 && req.pattern_x == 0 && req.pattern_y == 0 && req.pattern_z == 0) {
 			// Check cache
 			// We rely on spriteList[0] being valid for simple sprites
 			// shared Sprite Fix: Verify generation ID matches what we cached.
@@ -207,10 +212,10 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 	}
 
 	uint32_t v;
-	if (_count >= 0 && height <= 1 && width <= 1) {
-		v = _count;
+	if (req.subtype >= 0 && height <= 1 && width <= 1) {
+		v = req.subtype;
 	} else {
-		v = ((((((_frame)*pattern_y + _pattern_y) * pattern_x + _pattern_x) * layers + _layer) * height + _y) * width + _x);
+		v = ((((((req.frame) * pattern_y + req.pattern_y) * pattern_x + req.pattern_x) * layers + req.layer) * height + req.y) * width + req.x);
 	}
 	if (v >= numsprites) {
 		if (numsprites == 1) {
@@ -505,57 +510,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 		}
 	}
 
-	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
-	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
-	size_t write = 0;
-	size_t read = 0;
-
-	// decompress pixels
-	while (read < size && write < static_cast<size_t>(pixels_data_size)) {
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Transparency header truncated (read={}, size={})", read, size);
-			break;
-		}
-		int transparent = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int i = 0; i < transparent && write < static_cast<size_t>(pixels_data_size); i++) {
-			data[write + 0] = 0xFF; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0xFF; // blue
-			write += RGB_COMPONENTS;
-		}
-
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Colored header truncated (read={}, size={})", read, size);
-			break;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		if (read + static_cast<size_t>(colored) * bpp > size) {
-			spdlog::warn("NormalImage::getRGBData: Read buffer overrun (colored={}, bpp={}, read={}, size={})", colored, bpp, read, size);
-			break;
-		}
-
-		for (int i = 0; i < colored && write < static_cast<size_t>(pixels_data_size); i++) {
-			data[write + 0] = dump[read + 0]; // red
-			data[write + 1] = dump[read + 1]; // green
-			data[write + 2] = dump[read + 2]; // blue
-			write += RGB_COMPONENTS;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < static_cast<size_t>(pixels_data_size)) {
-		data[write + 0] = 0xFF; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0xFF; // blue
-		write += RGB_COMPONENTS;
-	}
-	return data;
+	return GameSprite::Decompress(std::span { dump.get(), size }, 3, true, g_gui.gfx.hasTransparency(), id);
 }
 
 namespace {
@@ -563,9 +518,11 @@ namespace {
 	struct DecompressionContext {
 		int id;
 		uint8_t bpp;
-		bool use_alpha;
+		bool source_has_alpha;
 		bool& non_zero_alpha_found;
 		bool& non_black_pixel_found;
+		int output_channels;
+		bool use_magic_pink;
 	};
 
 	bool ProcessTransparencyRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx) {
@@ -575,18 +532,26 @@ namespace {
 		int transparent = dump[read] | dump[read + 1] << 8;
 
 		// Integrity check for transparency run
-		if (write + (transparent * RGBA_COMPONENTS) > data.size()) {
+		if (write + (transparent * ctx.output_channels) > data.size()) {
 			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", ctx.id, transparent, write, data.size());
-			transparent = (data.size() - write) / RGBA_COMPONENTS;
+			transparent = (data.size() - write) / ctx.output_channels;
 		}
 
 		read += 2;
 		for (int i = 0; i < transparent; i++) {
-			data[write + 0] = 0x00; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0x00; // blue
-			data[write + 3] = 0x00; // alpha
-			write += RGBA_COMPONENTS;
+			if (ctx.use_magic_pink) {
+				data[write + 0] = 0xFF; // red
+				data[write + 1] = 0x00; // green
+				data[write + 2] = 0xFF; // blue
+			} else {
+				data[write + 0] = 0x00; // red
+				data[write + 1] = 0x00; // green
+				data[write + 2] = 0x00; // blue
+				if (ctx.output_channels > 3) {
+					data[write + 3] = 0x00; // alpha
+				}
+			}
+			write += ctx.output_channels;
 		}
 		return true;
 	}
@@ -599,9 +564,9 @@ namespace {
 		read += 2;
 
 		// Integrity check for colored run
-		if (write + (colored * RGBA_COMPONENTS) > data.size()) {
+		if (write + (colored * ctx.output_channels) > data.size()) {
 			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", ctx.id, colored, write, data.size());
-			colored = (data.size() - write) / RGBA_COMPONENTS;
+			colored = (data.size() - write) / ctx.output_channels;
 		}
 
 		// Integrity check for read buffer
@@ -615,12 +580,15 @@ namespace {
 			uint8_t r = dump[read + 0];
 			uint8_t g = dump[read + 1];
 			uint8_t b = dump[read + 2];
-			uint8_t a = ctx.use_alpha ? dump[read + 3] : 0xFF;
+			uint8_t a = ctx.source_has_alpha ? dump[read + 3] : 0xFF;
 
 			data[write + 0] = r;
 			data[write + 1] = g;
 			data[write + 2] = b;
-			data[write + 3] = a;
+
+			if (ctx.output_channels > 3) {
+				data[write + 3] = a;
+			}
 
 			if (a > 0) {
 				ctx.non_zero_alpha_found = true;
@@ -629,7 +597,7 @@ namespace {
 				ctx.non_black_pixel_found = true;
 			}
 
-			write += RGBA_COMPONENTS;
+			write += ctx.output_channels;
 			read += ctx.bpp;
 		}
 		return true;
@@ -637,13 +605,13 @@ namespace {
 
 } // namespace
 
-std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump, bool use_alpha, int id) {
-	const int pixels_data_size = SPRITE_PIXELS_SIZE * RGBA_COMPONENTS;
+std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump, int output_channels, bool use_magic_pink, bool source_has_alpha, int id) {
+	const int pixels_data_size = SPRITE_PIXELS_SIZE * output_channels;
 	auto data_buffer = std::make_unique<uint8_t[]>(pixels_data_size);
 
 	std::span<uint8_t> data(data_buffer.get(), pixels_data_size);
 
-	uint8_t bpp = use_alpha ? 4 : 3;
+	uint8_t bpp = source_has_alpha ? 4 : 3;
 	size_t write = 0;
 	size_t read = 0;
 	bool non_zero_alpha_found = false;
@@ -652,9 +620,11 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump,
 	DecompressionContext ctx {
 		.id = id,
 		.bpp = bpp,
-		.use_alpha = use_alpha,
+		.source_has_alpha = source_has_alpha,
 		.non_zero_alpha_found = non_zero_alpha_found,
-		.non_black_pixel_found = non_black_pixel_found
+		.non_black_pixel_found = non_black_pixel_found,
+		.output_channels = output_channels,
+		.use_magic_pink = use_magic_pink
 	};
 
 	// decompress pixels
@@ -674,11 +644,19 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump,
 
 	// fill remaining pixels
 	while (write < data.size()) {
-		data[write + 0] = 0x00; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0x00; // blue
-		data[write + 3] = 0x00; // alpha
-		write += RGBA_COMPONENTS;
+		if (use_magic_pink) {
+			data[write + 0] = 0xFF; // red
+			data[write + 1] = 0x00; // green
+			data[write + 2] = 0xFF; // blue
+		} else {
+			data[write + 0] = 0x00; // red
+			data[write + 1] = 0x00; // green
+			data[write + 2] = 0x00; // blue
+			if (output_channels > 3) {
+				data[write + 3] = 0x00; // alpha
+			}
+		}
+		write += output_channels;
 	}
 
 	// Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
@@ -716,7 +694,7 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBAData() {
 		}
 	}
 
-	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id);
+	return GameSprite::Decompress(std::span { dump.get(), size }, 4, false, g_gui.gfx.hasTransparency(), id);
 }
 
 const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
@@ -801,7 +779,16 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBData() {
 		lookFeet = 0;
 	}
 
-	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
+	Outfit outfit;
+	outfit.lookHead = lookHead;
+	outfit.lookBody = lookBody;
+	outfit.lookLegs = lookLegs;
+	outfit.lookFeet = lookFeet;
+
+	const size_t pixel_count = SPRITE_PIXELS * SPRITE_PIXELS;
+	const size_t rgb_size = pixel_count * RGB_COMPONENTS;
+
+	GameSprite::ColorizeTemplatePixels(std::span<uint8_t>(rgbdata.get(), rgb_size), std::span<uint8_t>(template_rgbdata.get(), rgb_size), outfit, false);
 
 	// template_rgbdata auto-deleted
 	return rgbdata;
@@ -835,8 +822,18 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 		lookFeet = 0;
 	}
 
+	Outfit outfit;
+	outfit.lookHead = lookHead;
+	outfit.lookBody = lookBody;
+	outfit.lookLegs = lookLegs;
+	outfit.lookFeet = lookFeet;
+
+	const size_t pixel_count = SPRITE_PIXELS * SPRITE_PIXELS;
+	const size_t rgba_size = pixel_count * RGBA_COMPONENTS;
+	const size_t rgb_size = pixel_count * RGB_COMPONENTS;
+
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
+	GameSprite::ColorizeTemplatePixels(std::span<uint8_t>(rgbadata.get(), rgba_size), std::span<uint8_t>(template_rgbdata.get(), rgb_size), outfit, true);
 
 	// template_rgbdata auto-deleted
 	return rgbadata;

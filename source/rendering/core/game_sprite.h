@@ -73,8 +73,19 @@ public:
 
 	size_t getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
 
+	struct SpriteAtlasRequest {
+		int x = 0;
+		int y = 0;
+		int layer = 0;
+		int subtype = -1;
+		int pattern_x = 0;
+		int pattern_y = 0;
+		int pattern_z = 0;
+		int frame = 0;
+	};
+
 	// Phase 2: Get atlas region for texture array rendering
-	const AtlasRegion* getAtlasRegion(int _x, int _y, int _layer, int _subtype, int _pattern_x, int _pattern_y, int _pattern_z, int _frame);
+	const AtlasRegion* getAtlasRegion(const SpriteAtlasRequest& request);
 	const AtlasRegion* getAtlasRegion(int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit, int _frame);
 
 	void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) override;
@@ -100,9 +111,9 @@ public:
 	}
 
 	// Helper for SpritePreloader to decompress data off-thread
-	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0);
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, int output_channels, bool use_magic_pink, bool source_has_alpha, int id = 0);
 
-	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+	static void ColorizeTemplatePixels(std::span<uint8_t> dest, std::span<const uint8_t> mask, const Outfit& outfit, bool destHasAlpha);
 
 private:
 protected:
