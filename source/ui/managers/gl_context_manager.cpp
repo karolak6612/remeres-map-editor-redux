@@ -23,11 +23,12 @@ wxGLContext* GLContextManager::GetGLContext(wxGLCanvas* win) {
 #endif
 		// Initialize GLAD for the new context
 		if (win) {
-			win->SetCurrent(*OGLContext);
-			if (!gladLoadGL()) {
-				spdlog::error("GLContextManager: Failed to initialize GLAD!");
-			} else {
-				spdlog::info("GLContextManager: GLAD initialized successfully");
+			if (EnsureContextCurrent(*OGLContext, win)) {
+				if (!gladLoadGL()) {
+					spdlog::error("GLContextManager: Failed to initialize GLAD!");
+				} else {
+					spdlog::info("GLContextManager: GLAD initialized successfully");
+				}
 			}
 		}
 	}

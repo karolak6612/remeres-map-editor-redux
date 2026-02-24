@@ -251,7 +251,7 @@ void MapCanvas::PerformGarbageCollection() {
 void MapCanvas::OnPaint(wxPaintEvent& event) {
 	wxPaintDC dc(this); // validates the paint event
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
+		g_gl_context.EnsureContextCurrent(*m_glContext, this);
 		g_gl_context.SetFallbackCanvas(this);
 	}
 
