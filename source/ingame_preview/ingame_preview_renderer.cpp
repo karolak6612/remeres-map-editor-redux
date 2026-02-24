@@ -173,7 +173,7 @@ namespace IngamePreview {
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
 						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y);
 						if (lighting_enabled) {
-							tile_renderer->addLight(tile->location, view, options, *light_buffer);
+							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
 						}
 						// Add names of creatures on this floor
 						if (creature_name_drawer && z == camera_pos.z) {

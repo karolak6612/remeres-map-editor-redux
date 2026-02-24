@@ -40,9 +40,9 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		GetHouseColor(house_id, hr, hg, hb);
 
 		// Apply the house unique color tint to the tile
-		r = static_cast<uint8_t>((r * hr + r) >> 8);
-		g = static_cast<uint8_t>((g * hg + g) >> 8);
-		b = static_cast<uint8_t>((b * hb + b) >> 8);
+		r = static_cast<uint8_t>((static_cast<uint16_t>(r) * hr + 255) >> 8);
+		g = static_cast<uint8_t>((static_cast<uint16_t>(g) * hg + 255) >> 8);
+		b = static_cast<uint8_t>((static_cast<uint16_t>(b) * hb + 255) >> 8);
 
 		if (static_cast<int>(house_id) == current_house_id) {
 			// Pulse Effect on top of the unique color

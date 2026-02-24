@@ -199,7 +199,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// begin filters for ground tile
 	// Optimization: Skip color calculation if no relevant options are enabled
 	bool needs_color_calc = options.highlight_items || options.show_spawns || options.show_houses || options.show_blocking || options.show_special_tiles || options.show_only_colors || options.always_show_zones;
-	if (!as_minimap && needs_color_calc) {
+	if (!as_minimap && (needs_color_calc || options.always_show_zones)) {
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
@@ -310,9 +310,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 						if (calculate_house_color) {
 							// Apply house color tint
-							ir = house_r;
-							ig = house_g;
-							ib = house_b;
+							ir = static_cast<uint8_t>((static_cast<uint16_t>(ir) * house_r + 255) >> 8);
+							ig = static_cast<uint8_t>((static_cast<uint16_t>(ig) * house_g + 255) >> 8);
+							ib = static_cast<uint8_t>((static_cast<uint16_t>(ib) * house_b + 255) >> 8);
 
 							if (should_pulse) {
 								// Pulse effect matching the tile pulse
@@ -361,7 +361,7 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 	}
 }
 
-void TileRenderer::addLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
 	if (!options.isDrawLight() || !location) {
 		return;
 	}
@@ -383,7 +383,7 @@ void TileRenderer::addLight(TileLocation* location, const RenderView& view, cons
 
 	if (tile->ground) {
 		if (tile->ground->hasLight()) {
-			light_buffer.addLight(lx, ly, tile->ground->getLight());
+			light_buffer.AddLight(lx, ly, tile->ground->getLight());
 		}
 	}
 
@@ -391,7 +391,7 @@ void TileRenderer::addLight(TileLocation* location, const RenderView& view, cons
 	if (!hidden && !tile->items.empty()) {
 		for (const auto& item : tile->items) {
 			if (item->hasLight()) {
-				light_buffer.addLight(lx, ly, item->getLight());
+				light_buffer.AddLight(lx, ly, item->getLight());
 			}
 		}
 	}

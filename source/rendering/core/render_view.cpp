@@ -82,7 +82,7 @@ bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 
 	// Use fast path if default margin
 	if (margin == PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) {
-		return isPixelVisibleFast(draw_x, draw_y);
+		return IsPixelVisibleFast(draw_x, draw_y);
 	}
 
 	// Use cached logical dimensions
