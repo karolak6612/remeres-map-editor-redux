@@ -62,6 +62,7 @@ public:
 	uint32_t GetGLTexture(std::string_view assetPath);
 
 	// Cleanup
+	void RemoveContextResources(NVGcontext* vg);
 	void ClearCache();
 
 private:

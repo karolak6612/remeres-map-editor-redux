@@ -64,6 +64,7 @@
 #include "rendering/ui/selection_controller.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/map_menu_handler.h"
+#include "util/image_manager.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/house/house_exit_brush.h"
@@ -163,6 +164,10 @@ MapCanvas::~MapCanvas() {
 	}
 
 	drawer.reset();
+
+	if (m_nvg) {
+		IMAGE_MANAGER.RemoveContextResources(m_nvg.get());
+	}
 	m_nvg.reset();
 
 	g_gl_context.UnregisterCanvas(this);

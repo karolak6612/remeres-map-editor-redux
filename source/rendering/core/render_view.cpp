@@ -115,12 +115,10 @@ void RenderView::SetupGL() {
 	projectionMatrix = glm::ortho(0.0f, width * zoom, height * zoom, 0.0f, -1.0f, 1.0f);
 
 	// Calculate ModelView
-	// glTranslatef(0.375f, 0.375f, 0.0f);
 	viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
 }
 
 void RenderView::ReleaseGL() {
-	// No legacy matrix stack to cleanup
 }
 
 void RenderView::Clear() {
@@ -129,7 +127,6 @@ void RenderView::Clear() {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	// glLoadIdentity(); // Legacy
 	// Blending and State management is now handled by individual renderers
 }
 

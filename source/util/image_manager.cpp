@@ -29,9 +29,26 @@ ImageManager::~ImageManager() {
 	ClearCache();
 }
 
+void ImageManager::RemoveContextResources(NVGcontext* vg) {
+	if (!vg) {
+		return;
+	}
+
+	for (auto it = m_nvgImageCache.begin(); it != m_nvgImageCache.end();) {
+		if (it->first.ctx == vg) {
+			nvgDeleteImage(vg, it->second);
+			it = m_nvgImageCache.erase(it);
+		} else {
+			++it;
+		}
+	}
+}
+
 void ImageManager::ClearCache() {
 	m_bitmapBundleCache.clear();
 	m_tintedBitmapCache.clear();
+	// Note: We cannot safely delete NVG images here because we don't know if the contexts are still valid.
+	// Contexts should clean up their own resources via RemoveContextResources() before destruction.
 	m_nvgImageCache.clear();
 	m_glTextureCache.clear();
 }
