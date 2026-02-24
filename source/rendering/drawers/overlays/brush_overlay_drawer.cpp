@@ -193,9 +193,15 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 						raw_brush = brush->as<RAWBrush>();
 					}
 
-					for (int y = start_y; y <= end_y; y++) {
+					// Viewport culling optimization
+					int loop_start_x = std::max(start_x, view.start_x);
+					int loop_end_x = std::min(end_x, view.end_x);
+					int loop_start_y = std::max(start_y, view.start_y);
+					int loop_end_y = std::min(end_y, view.end_y);
+
+					for (int y = loop_start_y; y <= loop_end_y; y++) {
 						int cy = y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-						for (int x = start_x; x <= end_x; x++) {
+						for (int x = loop_start_x; x <= loop_end_x; x++) {
 							int cx = x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 							if (brush->is<OptionalBorderBrush>()) {
 								if (g_gui.gfx.ensureAtlasManager()) {
@@ -274,10 +280,16 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 					raw_brush = brush->as<RAWBrush>();
 				}
 
-				for (int y = start_y - 1; y <= end_y + 1; y++) {
+				// Viewport culling optimization
+				int loop_start_x = std::max(start_x - 1, view.start_x);
+				int loop_end_x = std::min(end_x + 1, view.end_x);
+				int loop_start_y = std::max(start_y - 1, view.start_y);
+				int loop_end_y = std::min(end_y + 1, view.end_y);
+
+				for (int y = loop_start_y; y <= loop_end_y; y++) {
 					int cy = y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 					float dy = center_y - y;
-					for (int x = start_x - 1; x <= end_x + 1; x++) {
+					for (int x = loop_start_x; x <= loop_end_x; x++) {
 						int cx = x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 
 						float dx = center_x - x;
