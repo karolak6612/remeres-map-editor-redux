@@ -79,6 +79,7 @@ protected:
 	Editor* editor;
 
 	uint32_t clientIds;
+	uint32_t nextClientId;
 	uint16_t port;
 
 	mutable std::mutex clientMutex;

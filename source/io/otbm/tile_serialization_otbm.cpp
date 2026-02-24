@@ -162,7 +162,7 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 					const Position& pos = save_tile->getPosition();
 
 					// Decide if new node should be created
-					if (pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
+					if (first || pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
 						if (!first) {
 							f.endNode();
 						}

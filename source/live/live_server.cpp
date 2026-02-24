@@ -28,7 +28,7 @@
 LiveServer::LiveServer(Editor& editor) :
 	LiveSocket(),
 	clients(), acceptor(nullptr), socket(nullptr), editor(&editor),
-	clientIds(0), port(0), stopped(false) {
+	clientIds(0), nextClientId(0), port(0), stopped(false) {
 	//
 }
 
@@ -86,7 +86,6 @@ void LiveServer::close() {
 }
 
 void LiveServer::acceptClient() {
-	static uint32_t id = 0;
 	if (stopped) {
 		return;
 	}
@@ -106,7 +105,7 @@ void LiveServer::acceptClient() {
 			peer->receiveHeader();
 
 			std::lock_guard<std::mutex> lock(clientMutex);
-			clients.emplace(id++, std::move(peer));
+			clients.emplace(nextClientId++, std::move(peer));
 		}
 		acceptClient();
 	});
@@ -123,7 +122,9 @@ void LiveServer::removeClient(uint32_t id) {
 		const uint32_t clientId = it->second->getClientId();
 		if (clientId != 0) {
 			clientIds &= ~clientId;
-			editor->map.clearVisible(clientIds);
+			wxTheApp->CallAfter([this, mask = clientIds]() {
+				editor->map.clearVisible(mask);
+			});
 		}
 
 		clients.erase(it);
