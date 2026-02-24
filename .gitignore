@@ -7,6 +7,7 @@ build/
 build-debug
 build-release
 CMakeLists.txt.user*
+CMakeUserPresets.json
 
 # RME
 rme
