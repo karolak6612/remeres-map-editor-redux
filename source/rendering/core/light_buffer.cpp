@@ -5,7 +5,10 @@ void LightBuffer::AddLight(int map_x, int map_y, int map_z, const SpriteLight& l
 		map_x -= (GROUND_LAYER - map_z);
 		map_y -= (GROUND_LAYER - map_z);
 	}
+	AddLight(map_x, map_y, light);
+}
 
+void LightBuffer::AddLight(int map_x, int map_y, const SpriteLight& light) {
 	if (map_x <= 0 || map_x >= MAP_MAX_WIDTH || map_y <= 0 || map_y >= MAP_MAX_HEIGHT) {
 		return;
 	}

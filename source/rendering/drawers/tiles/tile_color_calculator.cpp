@@ -79,8 +79,8 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 }
 
 void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& g, uint8_t& b) {
-	static thread_local uint32_t cached_house_id = 0xFFFFFFFF;
-	static thread_local uint8_t cached_r = 0, cached_g = 0, cached_b = 0;
+	static uint32_t cached_house_id = 0xFFFFFFFF;
+	static uint8_t cached_r = 0, cached_g = 0, cached_b = 0;
 
 	if (cached_house_id == house_id) {
 		r = cached_r;

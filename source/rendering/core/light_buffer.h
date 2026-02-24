@@ -18,6 +18,7 @@ struct LightBuffer {
 	std::vector<Light> lights;
 
 	void AddLight(int map_x, int map_y, int map_z, const SpriteLight& light);
+	void AddLight(int map_x, int map_y, const SpriteLight& light);
 	void Clear();
 };
 
