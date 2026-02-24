@@ -20,6 +20,7 @@
 #include <wx/msgdlg.h>
 #include <wx/textdlg.h>
 #include <wx/artprov.h>
+#include <wx/log.h>
 
 // Brush includes
 #include "brushes/brush.h"
@@ -320,7 +321,7 @@ void ReplaceToolWindow::OnRuleDeleted(const std::string& name) {
 void ReplaceToolWindow::OnRuleRenamed(const std::string& oldName, const std::string& newName) {
 	std::vector<std::string> existing = RuleManager::Get().GetAvailableRuleSets();
 	if (std::find(existing.begin(), existing.end(), newName) != existing.end()) {
-		wxMessageBox("A rule set with this name already exists.", "Rename Error", wxOK | wxICON_ERROR);
+		wxLogError("A rule set with this name already exists.");
 		return;
 	}
 
@@ -335,7 +336,7 @@ void ReplaceToolWindow::OnRuleRenamed(const std::string& oldName, const std::str
 			}
 			UpdateSavedRulesList();
 		} else {
-			wxMessageBox("Failed to save the renamed rule set.", "Rename Error", wxOK | wxICON_ERROR);
+			wxLogError("Failed to save the renamed rule set.");
 		}
 	}
 }
@@ -352,7 +353,7 @@ void ReplaceToolWindow::OnRuleChanged() {
 void ReplaceToolWindow::OnExecute(wxCommandEvent&) {
 	std::vector<ReplacementRule> rules = ruleBuilder->GetRules();
 	if (rules.empty()) {
-		wxMessageBox("No rules defined. Add some rules first.", "Replace", wxOK | wxICON_INFORMATION);
+		wxLogError("No rules defined. Add some rules first.");
 		return;
 	}
 
@@ -365,17 +366,18 @@ void ReplaceToolWindow::OnExecute(wxCommandEvent&) {
 	}
 
 	if (scope == ReplaceScope::Selection && editor->selection.empty()) {
-		wxMessageBox("No selection active. Please select an area first or change scope.", "Replace", wxOK | wxICON_WARNING);
+		wxLogError("No selection active. Please select an area first or change scope.");
 		return;
 	}
 
-	int confirm = wxMessageBox(
+	wxMessageDialog dlg(this,
 		"Are you sure you want to execute replacements on the map?",
 		"Confirm Bulk Replacement",
 		wxYES_NO | wxNO_DEFAULT | wxICON_WARNING
 	);
+	dlg.CenterOnParent();
 
-	if (confirm != wxYES) {
+	if (dlg.ShowModal() != wxID_YES) {
 		return;
 	}
 
@@ -492,7 +494,7 @@ void ReplaceToolWindow::OnSaveRule() {
 
 	std::vector<std::string> existing = RuleManager::Get().GetAvailableRuleSets();
 	if (std::find(existing.begin(), existing.end(), name.ToStdString()) != existing.end()) {
-		wxMessageBox("A rule set with this name already exists. Please choose a different name.", "Name Collision", wxOK | wxICON_ERROR);
+		wxLogError("A rule set with this name already exists. Please choose a different name.");
 		return;
 	}
 
