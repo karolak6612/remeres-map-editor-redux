@@ -40,9 +40,9 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		GetHouseColor(house_id, hr, hg, hb);
 
 		// Apply the house unique color tint to the tile
-		r = static_cast<uint8_t>((r * hr + r) >> 8);
-		g = static_cast<uint8_t>((g * hg + g) >> 8);
-		b = static_cast<uint8_t>((b * hb + b) >> 8);
+		r = static_cast<uint8_t>((static_cast<uint16_t>(r) * hr + r) >> 8);
+		g = static_cast<uint8_t>((static_cast<uint16_t>(g) * hg + g) >> 8);
+		b = static_cast<uint8_t>((static_cast<uint16_t>(b) * hb + b) >> 8);
 
 		if (static_cast<int>(house_id) == current_house_id) {
 			// Pulse Effect on top of the unique color
@@ -97,11 +97,6 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 	hash = ((hash >> 16) ^ hash) * 0x45d9f3b;
 	hash = (hash >> 16) ^ hash;
 
-	// Generate color components
-	r = (hash & 0xFF);
-	g = ((hash >> 8) & 0xFF);
-	b = ((hash >> 16) & 0xFF);
-
 	// Ensure colors aren't too dark (keep at least one channnel reasonably high)
 	if (r < 50 && g < 50 && b < 50) {
 		r += 100;
@@ -118,7 +113,9 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {
 	// Optimization: Use lookup table to avoid division/modulo operations per tile
 	static const auto table = []() {
-		struct { uint8_t r[256], g[256], b[256]; } t;
+		struct {
+			uint8_t r[256], g[256], b[256];
+		} t;
 		for (int i = 0; i < 256; ++i) {
 			t.r[i] = static_cast<uint8_t>(i / 36 % 6 * 51);
 			t.g[i] = static_cast<uint8_t>(i / 6 % 6 * 51);

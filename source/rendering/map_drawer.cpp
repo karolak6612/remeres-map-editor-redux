@@ -150,9 +150,6 @@ void MapDrawer::SetupVars() {
 }
 
 void MapDrawer::SetupGL() {
-	// Reset texture cache at the start of each frame
-	sprite_drawer->ResetCache();
-
 	view.SetupGL();
 
 	// Ensure renderers are initialized
