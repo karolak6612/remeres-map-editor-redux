@@ -293,7 +293,7 @@ void MapDrawer::Draw() {
 	creature_name_drawer->clear();
 
 	// Begin Batches
-	sprite_batch->begin(view.projectionMatrix);
+	sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
 	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 
 	// Check Framebuffer Logic
@@ -329,7 +329,7 @@ void MapDrawer::Draw() {
 	}
 
 	// Resume Batch for Overlays
-	sprite_batch->begin(view.projectionMatrix);
+	sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
 
 	if (drag_shadow_drawer) {
 		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);

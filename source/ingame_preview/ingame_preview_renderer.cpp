@@ -129,7 +129,7 @@ namespace IngamePreview {
 			}
 
 			// Sync viewport and start batch for this floor
-			sprite_batch->begin(view.projectionMatrix);
+			sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
 			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *g_gui.gfx.getAtlasManager());
 
 			// Pre-calculate view offsets for this floor
@@ -191,7 +191,7 @@ namespace IngamePreview {
 		// Only if on the camera Z floor (or always visible as "player"?) - Request says "center of the screen".
 		// Assuming always drawn on top.
 		{
-			sprite_batch->begin(view.projectionMatrix);
+			sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
 
 			// Calculate center position in logical coordinates
 			int center_x = static_cast<int>((viewport_width * zoom) / 2.0f);
