@@ -1,7 +1,9 @@
 #include "ui/managers/recent_files_manager.h"
 #include <toml++/toml.h>
 #include <wx/filename.h>
+#include <wx/menu.h>
 #include "app/settings.h"
+#include "util/image_manager.h"
 
 RecentFilesManager::RecentFilesManager() :
 	recentFiles(10) {
@@ -60,6 +62,14 @@ void RecentFilesManager::AddFile(const FileName& file) {
 void RecentFilesManager::UseMenu(wxMenu* menu) {
 	recentFiles.UseMenu(menu);
 	recentFiles.AddFilesToMenu();
+
+	for (size_t i = 0; i < recentFiles.GetCount(); ++i) {
+		int id = recentFiles.GetBaseId() + i;
+		wxMenuItem* item = menu->FindItem(id);
+		if (item) {
+			item->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
+		}
+	}
 }
 
 std::vector<wxString> RecentFilesManager::GetFiles() const {
