@@ -356,50 +356,74 @@ Brush* FindDialogListBox::GetSelectedBrush() {
 }
 
 void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
-	wxColour textColour = Theme::Get(Theme::Role::Text);
+	float x = static_cast<float>(rect.x);
+	float y = static_cast<float>(rect.y);
+	float w = static_cast<float>(rect.width);
+	float h = static_cast<float>(rect.height);
+
+	// Background
+	bool isSelected = IsSelected(n);
+	if (isSelected) {
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x + 2, y + 1, w - 4, h - 2, 4.0f);
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
+		nvgFill(vg);
+	} else if (n == m_hoverIndex) { // Requires m_hoverIndex which NanoVGListBox exposes
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x + 2, y + 1, w - 4, h - 2, 4.0f);
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 20));
+		nvgFill(vg);
+	}
+
+	NVGcolor textColor = isSelected ? NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextOnAccent)) : NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text));
+
 	if (no_matches) {
-		nvgFontSize(vg, 12.0f);
+		nvgFontSize(vg, 13.0f);
 		nvgFontFace(vg, "sans");
-		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+		nvgFillColor(vg, textColor);
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
+		nvgText(vg, x + 12, y + h / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
-		nvgFontSize(vg, 12.0f);
+		nvgFontSize(vg, 13.0f);
 		nvgFontFace(vg, "sans");
-		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+		nvgFillColor(vg, textColor);
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
+		nvgText(vg, x + 12, y + h / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+
+		// Icon area
+		float iconSize = 32.0f;
+		float iconX = x + 4.0f;
+		float iconY = y + (h - iconSize) / 2.0f;
+
+		Sprite* spr = brushlist[n]->getSprite();
+		if (!spr && brushlist[n]->getLookID() != 0) {
+			spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+		}
+
 		if (spr) {
 			int tex = GetOrCreateSpriteTexture(vg, spr);
 			if (tex > 0) {
-				int icon_size = rect.height;
-				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+				NVGpaint imgPaint = nvgImagePattern(vg, iconX, iconY, iconSize, iconSize, 0.0f, tex, 1.0f);
 				nvgBeginPath(vg);
-				nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
+				nvgRoundedRect(vg, iconX, iconY, iconSize, iconSize, 2.0f);
 				nvgFillPaint(vg, imgPaint);
 				nvgFill(vg);
 			}
 		}
 
-		if (IsSelected(n)) {
-			textColour = Theme::Get(Theme::Role::TextOnAccent);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		} else {
-			textColour = Theme::Get(Theme::Role::Text);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		}
-
-		nvgFontSize(vg, 12.0f);
+		// Text
+		nvgFontSize(vg, 13.0f);
 		nvgFontFace(vg, "sans");
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgFillColor(vg, textColor);
+
 		wxString name = wxstr(brushlist[n]->getName());
-		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+		nvgText(vg, iconX + iconSize + 12.0f, y + h / 2.0f, name.ToUTF8().data(), nullptr);
 	}
 }
 
 int FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FromDIP(32);
+	return FromDIP(40); // Slightly taller for better spacing
 }

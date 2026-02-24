@@ -115,19 +115,25 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 
 	// Shadow / Glow
 	if (i == selected_index) {
-		// Glow for selected
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 10.0f, nvgRGBA(100, 150, 255, 128), nvgRGBA(0, 0, 0, 0));
+		// Strong Glow for selected
+		NVGcolor glowCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+		glowCol.a = 0.6f;
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y, w, h, 4.0f, 12.0f, glowCol, nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
-		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
+		nvgRect(vg, x - 15, y - 15, w + 30, h + 30);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
 		nvgPathWinding(vg, NVG_HOLE);
 		nvgFillPaint(vg, shadowPaint);
 		nvgFill(vg);
 	} else if (i == hover_index) {
-		// Animated shadow for hover
-		float shadowAlpha = SHADOW_ALPHA_FACTOR * hover_anim + SHADOW_ALPHA_BASE;
+		// Animated colored glow for hover
+		float shadowAlpha = (SHADOW_ALPHA_FACTOR * hover_anim + SHADOW_ALPHA_BASE) / 255.0f;
 		float shadowBlur = SHADOW_BLUR_BASE + SHADOW_BLUR_FACTOR * hover_anim;
-		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, shadowBlur, nvgRGBA(0, 0, 0, static_cast<int>(shadowAlpha)), nvgRGBA(0, 0, 0, 0));
+
+		NVGcolor glowCol = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent));
+		glowCol.a = shadowAlpha * 0.5f;
+
+		NVGpaint shadowPaint = nvgBoxGradient(vg, x, y + 2, w, h, 4.0f, shadowBlur, glowCol, nvgRGBA(0, 0, 0, 0));
 		nvgBeginPath(vg);
 		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
 		nvgRoundedRect(vg, x, y, w, h, 4.0f);
