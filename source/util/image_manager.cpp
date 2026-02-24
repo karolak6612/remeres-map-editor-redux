@@ -14,6 +14,8 @@
 #include <vector>
 #include <cstdint>
 #include <string_view>
+#include <span>
+#include <ranges>
 
 ImageManager& ImageManager::GetInstance() {
 	static ImageManager instance;
@@ -139,12 +141,13 @@ wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 	unsigned char* alpha = tinted.GetAlpha();
 	int size = tinted.GetWidth() * tinted.GetHeight();
 
-	for (int i = 0; i < size; ++i) {
+	std::span<unsigned char> pixels(data, size * 3);
+	for (int i : std::views::iota(0, size)) {
 		// Silhouette tinting: replace existing color with the tint color.
 		// The original alpha channel handles the shape and anti-aliasing.
-		data[i * 3 + 0] = r;
-		data[i * 3 + 1] = g;
-		data[i * 3 + 2] = b;
+		pixels[i * 3 + 0] = r;
+		pixels[i * 3 + 1] = g;
+		pixels[i * 3 + 2] = b;
 	}
 
 	return tinted;
@@ -203,11 +206,25 @@ int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& im
 	unsigned char* alpha = image.GetAlpha();
 	bool hasAlpha = image.HasAlpha();
 
-	for (int i = 0; i < w * h; ++i) {
-		rgba[i * 4 + 0] = data[i * 3 + 0];
-		rgba[i * 4 + 1] = data[i * 3 + 1];
-		rgba[i * 4 + 2] = data[i * 3 + 2];
-		rgba[i * 4 + 3] = (hasAlpha && alpha) ? alpha[i] : 255;
+	std::span<uint8_t> dest(rgba);
+	std::span<const uint8_t> src(data, w * h * 3);
+	// srcAlpha might be null, so we must be careful.
+	// We only access it if hasAlpha && alpha is true.
+
+	if (hasAlpha && alpha) {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = alpha[i];
+		}
+	} else {
+		for (int i : std::views::iota(0, w * h)) {
+			dest[i * 4 + 0] = src[i * 3 + 0];
+			dest[i * 4 + 1] = src[i * 3 + 1];
+			dest[i * 4 + 2] = src[i * 3 + 2];
+			dest[i * 4 + 3] = 255;
+		}
 	}
 	return nvgCreateImageRGBA(vg, w, h, 0, rgba.data());
 }
