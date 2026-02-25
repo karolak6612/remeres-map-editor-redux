@@ -23,6 +23,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <unordered_set>
 
 class Action;
 class Editor;
@@ -128,6 +129,7 @@ private:
 	// Selections are typically small, and std::vector provides better cache locality
 	// and fewer allocations. We maintain sorted order to allow O(log n) lookups.
 	std::vector<Tile*> tiles;
+	std::unordered_set<Tile*> lookup;
 	std::vector<Tile*> pending_adds;
 	std::vector<Tile*> pending_removes;
 

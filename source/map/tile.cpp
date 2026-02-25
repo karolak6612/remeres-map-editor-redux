@@ -126,9 +126,9 @@ std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
 	}
 
 	copy->items.reserve(items.size());
-	for (const auto& item : items) {
-		copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
-	}
+	std::ranges::transform(items, std::back_inserter(copy->items), [](const auto& item) {
+		return std::unique_ptr<Item>(item->deepCopy());
+	});
 
 	return copy;
 }
@@ -139,9 +139,9 @@ uint32_t Tile::memsize() const {
 		mem += ground->memsize();
 	}
 
-	for (const auto& item : items) {
-		mem += item->memsize();
-	}
+	mem += std::accumulate(items.begin(), items.end(), 0u, [](uint32_t sum, const auto& item) {
+		return sum + item->memsize();
+	});
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
 
@@ -398,11 +398,8 @@ ItemVector Tile::getSelectedItems(bool unzoomed) {
 
 	// save performance when zoomed out
 	if (!unzoomed) {
-		std::ranges::for_each(items, [&](const auto& item) {
-			if (item->isSelected()) {
-				selected_items.push_back(item.get());
-			}
-		});
+		auto selected_view = items | std::views::filter([](const auto& item) { return item->isSelected(); });
+		std::ranges::transform(selected_view, std::back_inserter(selected_items), [](const auto& item) { return item.get(); });
 	}
 
 	return selected_items;
