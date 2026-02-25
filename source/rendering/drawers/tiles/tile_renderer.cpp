@@ -307,9 +307,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 						if (calculate_house_color) {
 							// Apply house color tint
-							ir = static_cast<uint8_t>(ir * house_r / 255);
-							ig = static_cast<uint8_t>(ig * house_g / 255);
-							ib = static_cast<uint8_t>(ib * house_b / 255);
+							ir = static_cast<uint8_t>((ir * house_r + ir) >> 8);
+							ig = static_cast<uint8_t>((ig * house_g + ig) >> 8);
+							ib = static_cast<uint8_t>((ib * house_b + ib) >> 8);
 
 							if (should_pulse) {
 								// Pulse effect matching the tile pulse
