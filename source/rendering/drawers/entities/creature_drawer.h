@@ -13,6 +13,7 @@
 
 class SpriteDrawer;
 class SpriteBatch;
+class RenderList;
 
 struct CreatureDrawOptions {
 	DrawColor color;
@@ -27,6 +28,9 @@ public:
 
 	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
 	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
+
+	void BlitCreature(RenderList& list, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
+	void BlitCreature(RenderList& list, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
 };
 
 #endif

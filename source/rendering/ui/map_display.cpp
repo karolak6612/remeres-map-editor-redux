@@ -43,6 +43,7 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/ui/map_status_updater.h"
 #include "rendering/map_drawer.h"
+#include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/text_renderer.h"
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -248,6 +249,51 @@ void MapCanvas::PerformGarbageCollection() {
 	}
 }
 
+void MapCanvas::QueryVisibleNodes() {
+	if (!editor.live_manager.GetClient()) {
+		return;
+	}
+
+	LiveClient* client = editor.live_manager.GetClient();
+	int start_x, start_y, screensize_x, screensize_y;
+	GetViewBox(&start_x, &start_y, &screensize_x, &screensize_y);
+
+	int tile_size = std::max(1, static_cast<int>(TILE_SIZE / zoom));
+	int map_start_x = start_x / TILE_SIZE;
+	int map_start_y = start_y / TILE_SIZE;
+
+	if (floor > GROUND_LAYER) {
+		map_start_x -= 2;
+		map_start_y -= 2;
+	}
+
+	int map_end_x = map_start_x + screensize_x / tile_size + 2;
+	int map_end_y = map_start_y + screensize_y / tile_size + 2;
+
+	int nd_start_x = map_start_x & ~3;
+	int nd_start_y = map_start_y & ~3;
+	int nd_end_x = (map_end_x & ~3) + 4;
+	int nd_end_y = (map_end_y & ~3) + 4;
+
+	bool underground = floor > GROUND_LAYER;
+	int request_floor = underground ? 8 : 7; // simplified check for request bounding
+
+	for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
+		for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
+			MapNode* nd = editor.map.getLeaf(nd_map_x, nd_map_y);
+			if (nd && !nd->isVisible(underground) && !nd->isRequested(underground)) {
+				client->queryNode(nd_map_x, nd_map_y, underground);
+				nd->setRequested(underground, true);
+			} else if (!nd) {
+				nd = editor.map.createLeaf(nd_map_x, nd_map_y);
+				nd->setVisible(false, false);
+				client->queryNode(nd_map_x, nd_map_y, underground);
+				nd->setRequested(underground, true);
+			}
+		}
+	}
+}
+
 void MapCanvas::OnPaint(wxPaintEvent& event) {
 	wxPaintDC dc(this); // validates the paint event
 	if (m_glContext) {
@@ -280,6 +326,10 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		// BatchRenderer calls removed - MapDrawer handles its own renderers
 
 		drawer->SetupVars();
+
+		// Pre-render query for Live Client nodes (decoupled from render pass)
+		QueryVisibleNodes();
+
 		drawer->SetupGL();
 		drawer->Draw();
 
@@ -381,6 +431,54 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event) {
 	if (map_update) {
 		g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
 		UpdatePositionStatus(cursor_x, cursor_y);
+
+		// Clear and repopulate tooltips for the hovered tile
+		if (g_settings.getBoolean(Config::SHOW_TOOLTIPS) && drawer) {
+			TooltipDrawer* td = drawer->GetTooltipDrawer();
+			if (td) {
+				td->clear();
+				Tile* tile = editor.map.getTile(mouse_map_x, mouse_map_y, floor);
+				if (tile) {
+					bool is_house = tile->isHouseTile();
+
+					// 1. Waypoint
+					Waypoint* waypoint = nullptr;
+					TileLocation* loc = editor.map.getTileL(mouse_map_x, mouse_map_y, floor);
+					if (loc && loc->getWaypointCount() > 0) {
+						waypoint = editor.map.waypoints.getWaypoint(loc);
+						if (waypoint) {
+							td->addWaypointTooltip(tile->getPosition(), waypoint->name);
+						}
+					}
+
+					// 2. Ground
+					if (tile->ground) {
+						const ItemType& it = g_items[tile->ground->getID()];
+						TooltipData& groundData = td->requestTooltipData();
+						if (TooltipDrawer::FillItemTooltipData(groundData, tile->ground.get(), it, tile->getPosition(), is_house, zoom)) {
+							if (groundData.hasVisibleFields()) {
+								td->commitTooltip();
+							}
+						}
+					}
+
+					// 3. Items (Top to Bottom visually, so reverse iterate or regular iterate depending on Z-order)
+					// In RME, items are drawn bottom-up. So the top-most item is at the end of the list.
+					// Users expect tooltips for the top-most items first usually, but let's just populate all of them.
+					for (auto it = tile->items.rbegin(); it != tile->items.rend(); ++it) {
+						const auto& item = *it;
+						const ItemType& item_type = g_items[item->getID()];
+						TooltipData& itemData = td->requestTooltipData();
+						if (TooltipDrawer::FillItemTooltipData(itemData, item.get(), item_type, tile->getPosition(), is_house, zoom)) {
+							if (itemData.hasVisibleFields()) {
+								td->commitTooltip();
+							}
+						}
+					}
+				}
+			}
+		}
+
 		UpdateZoomStatus();
 		Refresh();
 	}

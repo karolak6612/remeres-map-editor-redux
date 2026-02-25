@@ -7,6 +7,7 @@
 #include "rendering/utilities/light_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/creature_name_drawer.h"
+#include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/outfit.h"
 #include "map/basemap.h"
@@ -171,7 +172,7 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y);
+						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, MarkerFlags {}, draw_x, draw_y);
 						if (lighting_enabled) {
 							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
 						}

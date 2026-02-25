@@ -15,6 +15,7 @@ class SpriteDrawer;
 
 class CreatureDrawer;
 class SpriteBatch;
+class RenderList;
 class PrimitiveRenderer;
 
 class FloorDrawer {
@@ -23,6 +24,7 @@ public:
 	~FloorDrawer();
 
 	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(RenderList& list, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
 };
 
 #endif

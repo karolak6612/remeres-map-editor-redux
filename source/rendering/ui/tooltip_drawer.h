@@ -29,6 +29,7 @@
 #include <unordered_map>
 
 class Item;
+class ItemType;
 class Waypoint;
 struct NVGcontext;
 
@@ -141,6 +142,9 @@ public:
 
 	// Clear all tooltips
 	void clear();
+
+	// Static helper to populate tooltip data from an item (in-place)
+	static bool FillItemTooltipData(TooltipData& data, const Item* item, const ItemType& it, const Position& pos, bool isHouseTile, float zoom);
 
 protected:
 	struct FieldLine {

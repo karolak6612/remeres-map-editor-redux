@@ -24,6 +24,8 @@
 #include "live/live_client.h"
 #include "map/map.h"
 #include "map/map_region.h"
+#include "map/tile.h"
+#include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
@@ -40,16 +42,92 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+void MapLayerDrawer::Extract(int map_z, bool live_client, const RenderView& view, const DrawingOptions& options) {
 	int nd_start_x = view.start_x & ~3;
 	int nd_start_y = view.start_y & ~3;
 	int nd_end_x = (view.end_x & ~3) + 4;
 	int nd_end_y = (view.end_y & ~3) + 4;
 
-	// Optimization: Pre-calculate offset and base coordinates
-	// IsTileVisible does this for every tile, but it's constant per layer/frame.
-	// We also skip IsTileVisible because visitLeaves already bounds us to the visible area (with 4-tile alignment),
-	// which is well within IsTileVisible's 6-tile margin.
+	auto extractNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
+		Floor* floor = nd->getFloor(map_z);
+		if (!floor) {
+			return;
+		}
+
+		// Only re-evaluate if the map data in this chunk changed.
+		if (!floor->is_render_dirty && floor->cached_render_list) {
+			return; // Cache is still warm and valid.
+		}
+
+		if (!floor->cached_render_list) {
+			floor->cached_render_list = std::make_unique<RenderList>();
+		}
+		floor->cached_render_list->clear();
+
+		TileLocation* location = floor->locs.data();
+		int map_base_x = nd_map_x * TILE_SIZE;
+		int draw_x_base = map_base_x;
+
+		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
+			int draw_y = nd_map_y * TILE_SIZE;
+			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
+
+				MarkerFlags marker_flags;
+				// Markers are usually dynamic or zoom-dependent, but for now we bake them into the Extract phase using the current view.
+				// In a truly decoupled system, markers might be drawn in a separate dynamic pass.
+				if (view.zoom < 10.0) {
+					if (location->getWaypointCount() > 0) {
+						marker_flags.has_waypoint = true;
+					}
+					Tile* tile = location->get();
+					if (tile) {
+						marker_flags.is_house_exit = tile->isHouseExit();
+						marker_flags.has_house_exit_match = tile->hasHouseExit(options.current_house_id);
+						marker_flags.is_town_exit = tile->isTownExit(editor->map);
+						marker_flags.has_spawn = tile->spawn != nullptr;
+						if (tile->spawn) {
+							marker_flags.is_spawn_selected = tile->spawn->isSelected();
+						}
+					}
+				}
+
+				// The TileRenderer now appends to the RenderList instead of immediately drawing!
+				tile_renderer->DrawTile(*(floor->cached_render_list), location, view, options, options.current_house_id, marker_flags, draw_x_base, draw_y);
+			}
+		}
+
+		floor->is_render_dirty = false;
+	};
+
+	if (live_client) {
+		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
+			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
+				MapNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
+				if (!nd) {
+					// We don't create nodes during extraction if they don't exist
+					continue;
+				}
+				extractNode(nd, nd_map_x, nd_map_y, true);
+			}
+		}
+	} else {
+		int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+
+		editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+			extractNode(nd, nd_map_x, nd_map_y, false);
+		});
+	}
+}
+
+void MapLayerDrawer::Submit(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+	int nd_start_x = view.start_x & ~3;
+	int nd_start_y = view.start_y & ~3;
+	int nd_end_x = (view.end_x & ~3) + 4;
+	int nd_end_y = (view.end_y & ~3) + 4;
+
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TILE_SIZE
 		: TILE_SIZE * (view.floor - map_z);
@@ -59,58 +137,34 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
-	// ND visibility
-	auto collectSpriteWithPattern = [&](GameSprite* spr, int tx, int ty) {
-		if (spr && !spr->isSimpleAndLoaded()) {
-			int pattern_x = (spr->pattern_x > 1) ? tx % spr->pattern_x : 0;
-			int pattern_y = (spr->pattern_y > 1) ? ty % spr->pattern_y : 0;
-			int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
-			rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
-		}
-	};
-
-	// Common lambda to draw a node
-	auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
+	auto submitNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
 		int node_draw_x = nd_map_x * TILE_SIZE + base_screen_x;
 		int node_draw_y = nd_map_y * TILE_SIZE + base_screen_y;
 
-		// Node level culling
+		// Node level culling: skip chunks entirely outside the viewport
 		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 			return;
 		}
 
 		if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
-			if (!nd->isRequested(map_z > GROUND_LAYER)) {
-				// Request the node
-				if (editor->live_manager.GetClient()) {
-					editor->live_manager.GetClient()->queryNode(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
-				}
-				nd->setRequested(map_z > GROUND_LAYER, true);
-			}
 			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
 			return;
 		}
 
-		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
-
 		Floor* floor = nd->getFloor(map_z);
-		if (!floor) {
+		if (!floor || !floor->cached_render_list) {
 			return;
 		}
 
-		TileLocation* location = floor->locs.data();
-		int draw_x_base = node_draw_x;
-		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
-			int draw_y = node_draw_y;
-			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
-				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-					continue;
-				}
+		// Fast path: Just blit the pre-calculated display list directly into the hardware batch.
+		// All heavy memory lookups and branch logic were already executed in the Extract phase!
+		floor->cached_render_list->submit(sprite_batch, base_screen_x, base_screen_y);
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
-				// draw light, but only if not zoomed too far
-				if (draw_lights) {
+		// Lights are evaluated dynamically for now based on the locations array
+		if (draw_lights) {
+			TileLocation* location = floor->locs.data();
+			for (int map_x = 0; map_x < 4; ++map_x) {
+				for (int map_y = 0; map_y < 4; ++map_y, ++location) {
 					tile_renderer->AddLight(location, view, options, light_buffer);
 				}
 			}
@@ -121,23 +175,24 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
 			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
 				MapNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
-				if (!nd) {
-					nd = editor->map.createLeaf(nd_map_x, nd_map_y);
-					nd->setVisible(false, false);
+				if (nd) {
+					submitNode(nd, nd_map_x, nd_map_y, true);
 				}
-				drawNode(nd, nd_map_x, nd_map_y, true);
 			}
 		}
 	} else {
-		// Use SpatialHashGrid::visitLeaves which handles O(1) viewport query internally
-		// Expand the query range slightly to handle the 4-tile alignment and safety margin
 		int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 		int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 		int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 		int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 
 		editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
-			drawNode(nd, nd_map_x, nd_map_y, false);
+			submitNode(nd, nd_map_x, nd_map_y, false);
 		});
 	}
+}
+
+void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
+	Extract(map_z, live_client, view, options);
+	Submit(sprite_batch, map_z, live_client, view, options, light_buffer);
 }

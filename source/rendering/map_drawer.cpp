@@ -99,7 +99,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 
 	creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 
-	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
+	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get());
 
 	grid_drawer = std::make_unique<GridDrawer>();
 	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
@@ -369,8 +369,35 @@ void MapDrawer::DrawMap() {
 
 	bool only_colors = options.show_as_minimap || options.show_only_colors;
 
-	// Enable texture mode
+	// Phase 1: Extraction
+	// Evaluate all dirty chunks and bake them into display lists without making any GL calls.
+	// We iterate backwards to match drawing order for consistency, though extraction order doesn't strictly matter.
+	int current_start_x = view.start_x;
+	int current_start_y = view.start_y;
+	int current_end_x = view.end_x;
+	int current_end_y = view.end_y;
 
+	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
+		if (map_z >= view.end_z) {
+
+			// We need to pass a copy of view to Extract since the view bounds strictly shrink/expand per layer
+			RenderView extract_view = view;
+			extract_view.start_x = current_start_x;
+			extract_view.start_y = current_start_y;
+			extract_view.end_x = current_end_x;
+			extract_view.end_y = current_end_y;
+
+			map_layer_drawer->Extract(map_z, live_client, extract_view, options);
+		}
+
+		--current_start_x;
+		--current_start_y;
+		++current_end_x;
+		++current_end_y;
+	}
+
+	// Phase 2: Submission
+	// Now that all RenderLists are prepared, rapidly dispatch them into the SpriteBatch.
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
 		if (map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(*sprite_batch, view, options);

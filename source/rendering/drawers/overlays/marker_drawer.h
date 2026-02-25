@@ -4,19 +4,27 @@
 #include "rendering/core/drawing_options.h"
 #include <cstdint>
 
-class SpriteDrawer;
-class Tile;
-class Waypoint;
-
-class Editor;
 class SpriteBatch;
+class SpriteDrawer;
+class RenderList;
+struct DrawingOptions;
+
+struct MarkerFlags {
+	bool has_waypoint = false;
+	bool is_house_exit = false;
+	bool has_house_exit_match = false;
+	bool is_town_exit = false;
+	bool has_spawn = false;
+	bool is_spawn_selected = false;
+};
 
 class MarkerDrawer {
 public:
 	MarkerDrawer();
 	~MarkerDrawer();
 
-	void draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id, Editor& editor, const DrawingOptions& options);
+	void draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const MarkerFlags& flags, const DrawingOptions& options);
+	void draw(RenderList& list, SpriteDrawer* drawer, int draw_x, int draw_y, const MarkerFlags& flags, const DrawingOptions& options);
 };
 
 #endif

@@ -26,6 +26,7 @@
 #include "map/position.h"
 #include "map/tile.h"
 #include "map/spatial_hash_grid.h"
+#include "rendering/core/render_list.h"
 
 //**************** Tile Location **********************
 
@@ -238,6 +239,8 @@ std::unique_ptr<Tile> MapNode::setTile(int x, int y, int z, std::unique_ptr<Tile
 		--map.tilecount;
 	}
 
+	f->is_render_dirty = true;
+
 	return oldtile;
 }
 
@@ -249,6 +252,7 @@ void MapNode::clearTile(int x, int y, int z) {
 
 	TileLocation* tmp = &f->locs[offset_x * 4 + offset_y];
 	tmp->tile = map.allocator(tmp);
+	f->is_render_dirty = true;
 }
 
 //**************** SpatialHashGrid **********************

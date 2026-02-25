@@ -150,6 +150,9 @@ public:
 	DoorIndicatorDrawer* getDoorIndicatorDrawer() {
 		return door_indicator_drawer.get();
 	}
+	TooltipDrawer* GetTooltipDrawer() {
+		return tooltip_drawer.get();
+	}
 
 private:
 	void DrawMapLayer(int map_z, bool live_client);

@@ -8,7 +8,7 @@
 class TileLocation;
 struct RenderView;
 struct DrawingOptions;
-class Editor;
+struct MarkerFlags;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
@@ -18,15 +18,17 @@ class MarkerDrawer;
 class TooltipDrawer;
 struct LightBuffer;
 class SpriteBatch;
+class RenderList;
 class PrimitiveRenderer;
 class ItemType;
 struct SpritePatterns;
 
 class TileRenderer {
 public:
-	TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed);
+	TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md);
 
-	void DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1);
+	void DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, const MarkerFlags& marker_flags, int in_draw_x = -1, int in_draw_y = -1);
+	void DrawTile(RenderList& list, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, const MarkerFlags& marker_flags, int in_draw_x = -1, int in_draw_y = -1);
 	void AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
@@ -37,9 +39,7 @@ private:
 	CreatureDrawer* creature_drawer;
 	FloorDrawer* floor_drawer;
 	MarkerDrawer* marker_drawer;
-	TooltipDrawer* tooltip_drawer;
 	CreatureNameDrawer* creature_name_drawer;
-	Editor* editor;
 };
 
 #endif

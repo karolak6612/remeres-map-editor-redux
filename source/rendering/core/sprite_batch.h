@@ -66,6 +66,15 @@ public:
 	void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a);
 
 	/**
+	 * Push a pre-built SpriteInstance.
+	 */
+	void push(SpriteInstance instance, float offset_x = 0.0f, float offset_y = 0.0f) {
+		instance.x += offset_x;
+		instance.y += offset_y;
+		pending_sprites_.push_back(instance);
+	}
+
+	/**
 	 * Draw a solid rectangle using the white pixel from the atlas.
 	 * Requires AtlasManager::getWhitePixel() to be valid.
 	 */

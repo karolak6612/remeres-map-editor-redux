@@ -174,6 +174,7 @@ public:
 	std::unique_ptr<MapMenuHandler> menu_handler;
 
 private:
+	void QueryVisibleNodes();
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
 	void PerformGarbageCollection();

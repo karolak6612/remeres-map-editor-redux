@@ -34,6 +34,10 @@ public:
 	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
 	~MapLayerDrawer();
 
+	void Extract(int map_z, bool live_client, const RenderView& view, const DrawingOptions& options);
+	void Submit(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
+
+	// Legacy helper that calls Extract then Submit for backwards compatibility where needed
 	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
 private:
