@@ -36,7 +36,7 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 	wxListBox* item_list = newd wxListBox(dlg, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
-	item_list->SetMinSize(wxSize(500, 300));
+	item_list->SetMinSize(dlg->FromDIP(wxSize(500, 300)));
 
 	for (size_t i = 0; i != list_items.size();) {
 		wxString str = list_items[i];
@@ -54,7 +54,7 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(dlg, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center());
 
@@ -69,12 +69,12 @@ void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content)
 	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxTextCtrl* text_field = newd wxTextCtrl(dlg, wxID_ANY, content, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
-	text_field->SetMinSize(wxSize(400, 550));
+	text_field->SetMinSize(dlg->FromDIP(wxSize(400, 550)));
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(dlg, wxID_CANCEL, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(0).Center());
 	dlg->SetSizerAndFit(topsizer);
