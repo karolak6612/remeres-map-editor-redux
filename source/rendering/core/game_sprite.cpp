@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "app/settings.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/outfit_colorizer.h"

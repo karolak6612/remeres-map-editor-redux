@@ -10,7 +10,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "brushes/brush.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/brush_utility.h"
 #include "app/settings.h"
 

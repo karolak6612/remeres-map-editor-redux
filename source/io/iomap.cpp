@@ -16,8 +16,8 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/core/gui.h"
+#include "ui/util/dialog_util.h"
 
 void IOMap::error(const wxString format, ...) {
 	va_list argp;

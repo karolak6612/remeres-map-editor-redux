@@ -7,7 +7,7 @@
 #include <format>
 #include "palette/managers/palette_manager.h"
 #include "app/managers/version_manager.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "palette/palette_window.h"
 #include "game/materials.h"
 #include "brushes/managers/brush_manager.h"

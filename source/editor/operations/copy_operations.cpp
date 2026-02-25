@@ -7,7 +7,7 @@
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "map/tile_operations.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/creature.h"
 #include "game/spawn.h"
 #include "map/map.h"

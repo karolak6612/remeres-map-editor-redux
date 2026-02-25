@@ -22,7 +22,7 @@
 
 #include "app/settings.h"
 #include "brushes/brush.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/managers/brush_manager.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "game/materials.h"

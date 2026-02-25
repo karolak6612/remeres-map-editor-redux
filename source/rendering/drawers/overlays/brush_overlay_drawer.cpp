@@ -18,7 +18,7 @@
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/graphics.h"
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/sprites.h"
 #include "app/settings.h"
 #include "game/outfit.h"

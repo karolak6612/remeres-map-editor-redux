@@ -20,7 +20,7 @@
 #include <algorithm>
 
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/sprites.h"
 
 #include "rendering/map_drawer.h"

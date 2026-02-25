@@ -3,7 +3,7 @@
 #include "game/sprites.h"
 #include "game/items.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <spdlog/spdlog.h>
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"

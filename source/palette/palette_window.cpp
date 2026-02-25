@@ -19,7 +19,7 @@
 
 #include "app/settings.h"
 #include <spdlog/spdlog.h>
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/brush.h"
 #include "rendering/ui/map_display.h"
 

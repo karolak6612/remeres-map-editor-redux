@@ -9,8 +9,8 @@
 #include "map/map.h"
 #include "game/house.h"
 #include "game/town.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/core/gui.h"
+#include "ui/util/dialog_util.h"
 
 #include "brushes/managers/brush_manager.h"
 #include "brushes/house/house_brush.h"

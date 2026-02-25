@@ -1,5 +1,5 @@
 #include "app/main.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/postprocess/post_process_manager.h"
 

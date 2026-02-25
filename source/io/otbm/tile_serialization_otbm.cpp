@@ -5,7 +5,7 @@
 #include "game/item.h"
 #include "game/house.h"
 #include "io/otbm/item_serialization_otbm.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <spdlog/spdlog.h>
 #include <ranges>
 #include <functional>

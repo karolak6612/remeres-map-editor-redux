@@ -19,7 +19,7 @@
 
 #ifdef _USE_PROCESS_COM
 
-	#include "ui/gui.h"
+	#include "ui/core/gui.h"
 	#include "net/process_com.h"
 
 // Server

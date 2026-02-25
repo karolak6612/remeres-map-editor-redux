@@ -25,7 +25,7 @@
 #include <wx/wfstream.h>
 #include <spdlog/spdlog.h>
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "brushes/brush.h"
@@ -35,7 +35,7 @@
 #include "game/item.h"
 #include "ui/properties/old_properties_window.h"
 #include "ui/properties/properties_window.h"
-#include "ui/tileset_window.h"
+#include "ui/windows/tileset_window.h"
 #include "palette/palette_window.h"
 #include "rendering/ui/screenshot_controller.h"
 #include "rendering/utilities/tile_describer.h"
@@ -50,10 +50,10 @@
 #include "app/application.h"
 #include "live/live_server.h"
 #include "live/live_client.h"
-#include "ui/browse_tile_window.h"
-#include "ui/dialog_helper.h"
+#include "ui/windows/browse_tile_window.h"
+#include "ui/util/dialog_helper.h"
 #include "game/animation_timer.h"
-#include "ui/map_popup_menu.h"
+#include "ui/map/map_popup_menu.h"
 #include "brushes/brush_utility.h"
 #include "rendering/ui/clipboard_handler.h"
 #include "rendering/ui/keyboard_handler.h"

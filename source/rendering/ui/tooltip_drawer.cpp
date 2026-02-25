@@ -18,14 +18,14 @@
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/text_renderer.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 #include <nanovg.h>
 #include <format>
 #include "rendering/core/coordinate_mapper.h"
 #include <wx/wx.h>
 #include "game/items.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 TooltipDrawer::TooltipDrawer() {
 }

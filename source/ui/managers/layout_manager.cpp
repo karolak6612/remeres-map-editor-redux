@@ -5,21 +5,21 @@
 #include "app/main.h"
 #include "ui/managers/layout_manager.h"
 #include "app/managers/version_manager.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "app/application.h"
 #include "palette/palette_window.h"
 #include "palette/house/house_palette.h"
 #include "palette/managers/palette_manager.h"
 
 #include "rendering/ui/minimap_window.h"
-#include "ui/main_menubar.h"
-#include "ui/main_toolbar.h"
+#include "ui/menubar/main_menubar.h"
+#include "ui/toolbar/main_toolbar.h"
 #include <wx/display.h>
 #include "ui/managers/minimap_manager.h"
 #include "ingame_preview/ingame_preview_manager.h"
 #include "ingame_preview/ingame_preview_window.h"
 #include "ui/managers/status_manager.h"
-#include "ui/tool_options_window.h"
+#include "ui/windows/tool_options_window.h"
 
 LayoutManager g_layout;
 

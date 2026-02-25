@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "ui/dialog_util.h"
+#include "ui/util/dialog_util.h"
 #include "app/managers/version_manager.h"
 #include "live/live_client.h"
 #include "live/live_tab.h"

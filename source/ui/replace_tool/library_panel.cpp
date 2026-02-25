@@ -2,7 +2,7 @@
 #include <wx/log.h>
 #include "ui/replace_tool/library_panel.h"
 #include "ui/replace_tool/visual_similarity_service.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 #include "game/items.h"
 #include "game/item.h"
 #include "brushes/brush.h"

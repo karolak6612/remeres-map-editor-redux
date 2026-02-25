@@ -14,8 +14,8 @@
 #include "palette/house/house_palette.h"
 #include "map/map.h"
 #include "map/basemap.h"
-#include "ui/gui.h"
-#include "ui/main_toolbar.h"
+#include "ui/core/gui.h"
+#include "ui/toolbar/main_toolbar.h"
 #include <algorithm>
 #include <array>
 

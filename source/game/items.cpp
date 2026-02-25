@@ -25,7 +25,7 @@
 
 #include "game/materials.h"
 #include "app/managers/version_manager.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <string.h> // memcpy
 
 #include "game/items.h"

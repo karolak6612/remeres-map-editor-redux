@@ -9,7 +9,7 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 void BrushCursorDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, int x, int y, Brush* brush, uint8_t r, uint8_t g, uint8_t b) {
 	x += (TILE_SIZE / 2);

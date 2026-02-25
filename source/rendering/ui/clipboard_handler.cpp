@@ -18,7 +18,7 @@
 #include "app/main.h"
 #include "rendering/ui/clipboard_handler.h"
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "map/tile.h"
 #include "game/item.h"
 #include "editor/selection.h"

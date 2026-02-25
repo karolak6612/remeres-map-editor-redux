@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 #include "rendering/core/animator.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 Animator::Animator(int frame_count, int start_frame, int loop_count, bool async) :
 	frame_count(frame_count),

@@ -13,8 +13,8 @@
 #include "editor/editor.h"
 #include "game/creature.h"
 
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/core/gui.h"
+#include "ui/util/dialog_util.h"
 #include "app/application.h"
 #include "ui/properties/old_properties_window.h"
 #include "ui/properties/property_validator.h"

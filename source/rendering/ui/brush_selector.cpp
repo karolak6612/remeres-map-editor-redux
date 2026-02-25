@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 #include "rendering/ui/brush_selector.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/managers/brush_manager.h"
 #include "editor/editor.h"
 #include "map/tile.h"

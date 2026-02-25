@@ -24,7 +24,7 @@
 #include "brushes/border/optional_border_brush.h"
 #include "brushes/managers/brush_manager.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "ui/controls/item_buttons.h"
 #include "app/application.h"
 #include "palette/palette_waypoints.h"

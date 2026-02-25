@@ -9,7 +9,7 @@
 #include "editor/editor.h"
 #include "editor/action.h"
 #include "editor/action_queue.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 MapFlagsPanel::MapFlagsPanel(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY), current_tile(nullptr), current_map(nullptr) {

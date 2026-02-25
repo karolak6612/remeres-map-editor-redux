@@ -3,8 +3,8 @@
 
 #include "editor/editor.h"
 #include "editor/persistence/editor_persistence.h"
-#include "ui/dialog_util.h"
-#include "ui/gui_ids.h"
+#include "ui/util/dialog_util.h"
+#include "ui/core/gui_ids.h"
 #include "map/map.h"
 #include "util/image_manager.h"
 

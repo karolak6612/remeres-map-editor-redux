@@ -6,8 +6,8 @@
 #include "ui/dialogs/goto_position_dialog.h"
 #include "editor/editor.h"
 #include "map/map.h"
-#include "ui/positionctrl.h"
-#include "ui/gui.h"
+#include "ui/controls/positionctrl.h"
+#include "ui/core/gui.h"
 #include "util/image_manager.h"
 
 // ============================================================================

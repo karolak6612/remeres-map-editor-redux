@@ -11,8 +11,8 @@
 #include "game/complexitem.h"
 #include "game/items.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/core/theme.h"
 
 ContainerGridCanvas::ContainerGridCanvas(wxWindow* parent, bool large) :
 	NanoVGCanvas(parent, wxID_ANY, 0),

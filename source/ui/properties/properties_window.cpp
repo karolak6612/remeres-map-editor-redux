@@ -20,7 +20,7 @@
 #include "ui/properties/properties_window.h"
 
 #include "util/image_manager.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 #include "game/complexitem.h"
 #include "ui/tile_properties/container_grid_canvas.h"
 #include "ui/properties/attribute_service.h"

@@ -8,7 +8,7 @@
 #include "brushes/wall/wall_brush_loader.h"
 #include "brushes/wall/wall_border_calculator.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/items.h"
 #include "map/basemap.h"
 #include "map/tile_operations.h"

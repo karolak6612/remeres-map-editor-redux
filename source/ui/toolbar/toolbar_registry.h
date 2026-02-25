@@ -9,7 +9,7 @@
 #include <wx/aui/aui.h>
 #include <memory>
 
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 #include "ui/toolbar/standard_toolbar.h"
 #include "ui/toolbar/brush_toolbar.h"
 #include "ui/toolbar/position_toolbar.h"

@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "ui/managers/minimap_manager.h"
 #include "app/managers/version_manager.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/ui/minimap_window.h"
 #include <wx/aui/aui.h>
 

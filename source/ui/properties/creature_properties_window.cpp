@@ -6,7 +6,7 @@
 #include "ui/properties/creature_properties_window.h"
 
 #include "game/creature.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "util/image_manager.h"
 
 CreaturePropertiesWindow::CreaturePropertiesWindow(wxWindow* win_parent, const Map* map, const Tile* tile_parent, Creature* creature, wxPoint pos) :

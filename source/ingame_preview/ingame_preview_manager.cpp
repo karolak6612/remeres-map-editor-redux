@@ -3,7 +3,7 @@
 #include "ingame_preview/ingame_preview_window.h"
 #include "util/image_manager.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include <wx/aui/aui.h>
 

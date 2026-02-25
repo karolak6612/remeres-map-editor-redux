@@ -8,7 +8,7 @@
 #include "live/live_socket.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, Editor& editor, const DrawingOptions& options) {
 	if (options.ingame || !editor.live_manager.IsLive()) {

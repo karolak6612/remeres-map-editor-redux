@@ -8,7 +8,7 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 void SelectionDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, const MapCanvas* canvas, const DrawingOptions& options) {
 	if (options.ingame) {

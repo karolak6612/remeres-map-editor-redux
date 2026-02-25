@@ -2,8 +2,8 @@
 
 #include "brushes/brush.h"
 #include "game/items.h"
-#include "ui/gui.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/core/theme.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
 #include <glad/glad.h>

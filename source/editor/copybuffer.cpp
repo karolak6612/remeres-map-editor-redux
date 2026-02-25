@@ -20,7 +20,7 @@
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "editor/operations/copy_operations.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/creature.h"
 
 CopyBuffer::CopyBuffer() :

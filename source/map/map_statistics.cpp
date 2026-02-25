@@ -3,7 +3,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "game/items.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <sstream>
 #include <unordered_map>
 

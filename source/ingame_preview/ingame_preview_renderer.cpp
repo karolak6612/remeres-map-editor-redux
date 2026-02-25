@@ -12,7 +12,7 @@
 #include "map/basemap.h"
 #include "map/tile.h"
 #include "game/creature.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/core/text_renderer.h"
 #include <glad/glad.h>
 #include <nanovg.h>

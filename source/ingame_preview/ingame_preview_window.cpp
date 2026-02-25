@@ -6,7 +6,7 @@
 #include "util/image_manager.h"
 
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/ui/map_display.h"
 #include <wx/tglbtn.h>
 

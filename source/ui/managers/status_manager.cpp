@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "ui/managers/status_manager.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor_tabs.h"
 
 StatusManager g_status;

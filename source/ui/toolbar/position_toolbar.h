@@ -7,7 +7,7 @@
 
 #include <wx/wx.h>
 #include <wx/aui/auibar.h>
-#include "ui/numbertextctrl.h"
+#include "ui/controls/numbertextctrl.h"
 
 class PositionToolBar : public wxEvtHandler {
 public:

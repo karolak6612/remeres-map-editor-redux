@@ -5,7 +5,7 @@
 #include "map/tile.h"
 #include "game/item.h"
 #include "game/materials.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <algorithm>
 #include <limits>
 

@@ -19,8 +19,8 @@
 #include "rendering/ui/screenshot_controller.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/io/screenshot_saver.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/core/gui.h"
+#include "ui/util/dialog_util.h"
 
 ScreenshotController::ScreenshotController(MapCanvas* canvas) :
 	canvas(canvas) {

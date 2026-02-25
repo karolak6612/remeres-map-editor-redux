@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "ui/properties/property_validator.h"
-#include "ui/dialog_util.h"
+#include "ui/util/dialog_util.h"
 #include "game/house.h"
 #include "map/map.h"
 #include "map/tile.h"

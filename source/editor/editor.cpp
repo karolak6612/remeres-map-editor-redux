@@ -23,7 +23,7 @@
 #include "map/map.h"
 #include "game/complexitem.h"
 #include "app/settings.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/ui/map_display.h"
 #include "brushes/brush.h"
 #include "brushes/ground/ground_brush.h"

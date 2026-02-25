@@ -1,7 +1,7 @@
 #include "app/main.h"
 #include "ui/replace_tool/visual_similarity_service.h"
 #include "util/nvg_utils.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/items.h"
 #include "rendering/core/graphics.h"
 #include <algorithm>

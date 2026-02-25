@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 #include "rendering/ui/map_status_updater.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include "map/map.h"
 #include "map/tile.h"

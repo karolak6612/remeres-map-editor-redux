@@ -1,6 +1,6 @@
 #include "ui/controls/outfit_color_palette.h"
 #include "rendering/core/outfit_colors.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 #include "util/nvg_utils.h"
 
 #include <nanovg.h>

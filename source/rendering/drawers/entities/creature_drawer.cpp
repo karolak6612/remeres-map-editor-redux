@@ -9,7 +9,7 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/creature.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/items.h"
 #include "game/sprites.h"
 #include "rendering/core/sprite_batch.h"

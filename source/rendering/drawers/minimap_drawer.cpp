@@ -5,7 +5,7 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "map/tile.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 // Included for minimap_color
 #include "rendering/core/graphics.h"

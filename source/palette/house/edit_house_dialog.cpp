@@ -5,9 +5,9 @@
 #include "app/main.h"
 #include "palette/house/edit_house_dialog.h"
 
-#include "ui/dialog_util.h"
+#include "ui/util/dialog_util.h"
 #include "app/settings.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include "map/map.h"
 #include "game/house.h"

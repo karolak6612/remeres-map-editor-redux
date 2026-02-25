@@ -13,14 +13,14 @@
 #include "rendering/ui/popup_action_handler.h"
 #include "rendering/ui/brush_selector.h"
 
-#include "ui/map_tab.h"
-#include "ui/map_popup_menu.h"
-#include "ui/map_window.h"
+#include "ui/map/map_tab.h"
+#include "ui/map/map_popup_menu.h"
+#include "ui/windows/map_window.h"
 #include "map/tile.h"
 #include "game/item.h"
 #include "editor/editor.h"
-#include "ui/gui_ids.h"
-#include "ui/gui.h"
+#include "ui/core/gui_ids.h"
+#include "ui/core/gui.h"
 #include "ui/tile_properties/tile_properties_panel.h"
 
 MapMenuHandler::MapMenuHandler(MapCanvas* canvas, Editor& editor) :

@@ -4,7 +4,7 @@
 
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "io/loaders/spr_loader.h"
 #include <mutex>
 #include <span>

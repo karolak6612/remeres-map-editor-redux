@@ -5,9 +5,9 @@
 #include "app/main.h"
 #include "ui/managers/loading_manager.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
-#include "ui/map_tab.h"
+#include "ui/map/map_tab.h"
 #include "live/live_server.h"
 
 LoadingManager g_loading;

@@ -1,9 +1,9 @@
 #include "app/preferences/client_version_page.h"
 #include "app/main.h"
 #include "app/settings.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/util/dialog_util.h"
+#include "ui/core/theme.h"
 #include "util/image_manager.h"
 #include <wx/tokenzr.h>
 #include <charconv>

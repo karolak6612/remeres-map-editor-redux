@@ -5,7 +5,7 @@
 #include "map/tile.h"
 #include "game/item.h"
 #include "game/complexitem.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 namespace EditorOperations {
 

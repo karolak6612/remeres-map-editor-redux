@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "app/settings.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <algorithm>
 #include <ranges>
 #include <span>

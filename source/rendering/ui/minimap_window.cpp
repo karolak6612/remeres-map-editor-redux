@@ -23,7 +23,7 @@
 #include "editor/editor.h"
 #include "map/map.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/ui/minimap_window.h"
 

@@ -37,7 +37,7 @@ bool ReplacementEngine::ResolveReplacement(uint16_t& resultId, const Replacement
 }
 
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "map/tile.h"
 #include "game/item.h"
 #include <algorithm>
