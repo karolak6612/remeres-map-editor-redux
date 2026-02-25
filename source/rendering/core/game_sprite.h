@@ -274,6 +274,11 @@ public:
 		is_simple = (numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1 && !spriteList.empty());
 	}
 
+	// Optimization: Tracks if ALL images in spriteList are loaded in GL.
+	// If true, SpritePreloader can skip iteration.
+	bool is_fully_loaded = false;
+	void updateFullyLoadedStatus();
+
 protected:
 	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites
 	mutable const AtlasRegion* cached_default_region = nullptr;

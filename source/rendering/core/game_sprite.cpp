@@ -70,7 +70,8 @@ GameSprite::GameSprite() :
 	drawoffset_x(0),
 	drawoffset_y(0),
 	minimap_color(0),
-	is_simple(false) {
+	is_simple(false),
+	is_fully_loaded(false) {
 	// dc initialized to nullptr by unique_ptr default ctor
 }
 
@@ -129,6 +130,20 @@ int GameSprite::getDrawHeight() const {
 
 bool GameSprite::isSimpleAndLoaded() const {
 	return is_simple && spriteList[0]->isGLLoaded;
+}
+
+void GameSprite::updateFullyLoadedStatus() {
+	if (spriteList.empty()) {
+		is_fully_loaded = false;
+		return;
+	}
+	for (const auto* img : spriteList) {
+		if (img && !img->isGLLoaded) {
+			is_fully_loaded = false;
+			return;
+		}
+	}
+	is_fully_loaded = true;
 }
 
 uint32_t GameSprite::getDebugImageId(size_t index) const {
@@ -462,6 +477,9 @@ GameSprite::NormalImage::~NormalImage() {
 
 void GameSprite::NormalImage::fulfillPreload(std::unique_ptr<uint8_t[]> data) {
 	atlas_region = EnsureAtlasSprite(id, std::move(data));
+	if (isGLLoaded && parent) {
+		parent->updateFullyLoadedStatus();
+	}
 }
 
 void GameSprite::NormalImage::clean(time_t time, int longevity) {
@@ -480,6 +498,9 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 		}
 
 		isGLLoaded = false;
+		if (parent) {
+			parent->is_fully_loaded = false;
+		}
 		atlas_region = nullptr;
 
 		// Invalidate any pending preloads for this sprite ID
@@ -734,6 +755,9 @@ const AtlasRegion* GameSprite::NormalImage::getAtlasRegion() {
 
 	if (!isGLLoaded) {
 		atlas_region = EnsureAtlasSprite(id);
+		if (isGLLoaded && parent) {
+			parent->updateFullyLoadedStatus();
+		}
 	}
 	visit();
 	return atlas_region;
