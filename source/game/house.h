@@ -68,6 +68,7 @@ protected:
 	Position exit;
 
 	friend class Houses;
+	friend class Map;
 };
 
 using HouseMap = std::map<uint32_t, std::unique_ptr<House>>;

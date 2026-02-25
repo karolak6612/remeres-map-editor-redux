@@ -197,7 +197,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	uint8_t r = 255, g = 255, b = 255;
 
 	// begin filters for ground tile
-	if (!as_minimap) {
+	if (!as_minimap && options.hasActiveOverlays()) {
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
@@ -214,7 +214,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
-		if (tile->ground && ground_it) {
+		if (ground_it) {
 			if (ground_it->sprite) {
 				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
 				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
@@ -233,7 +233,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (options.show_tooltips && map_z == view.floor && map_x == view.mouse_map_x && map_y == view.mouse_map_y && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
 		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
 			if (groundData.hasVisibleFields()) {
@@ -273,7 +273,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
+			bool process_tooltips = options.show_tooltips && map_z == view.floor && map_x == view.mouse_map_x && map_y == view.mouse_map_y;
 
 			// items on tile
 			for (const auto& item : tile->items) {

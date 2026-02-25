@@ -137,6 +137,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 	}
 
 	uint64_t tiles_done = 0;
+	double total_tiles = static_cast<double>(getTileCount());
 	std::vector<uint16_t> id_list;
 
 	// std::ofstream conversions("converted_items.txt");
@@ -248,7 +249,7 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {
-			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
+			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / total_tiles));
 		}
 	}
 
@@ -294,6 +295,28 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	g_gui.CreateLoadBar("Converting house tiles...");
 	uint64_t tiles_done = 0;
 
+	if (House* house = houses.getHouse(fromId)) {
+		// Optimization: Iterate only the tiles belonging to the house
+		// This avoids scanning the entire map (O(N) -> O(H))
+		double total_house_tiles = static_cast<double>(house->size());
+
+		for (const auto& pos : house->tiles) {
+			if (Tile* tile = getTile(pos)) {
+				if (tile->getHouseID() == fromId) {
+					tile->setHouseID(toId);
+				}
+			}
+			++tiles_done;
+			if (tiles_done % 256 == 0) {
+				g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / total_house_tiles));
+			}
+		}
+		g_gui.DestroyLoadBar();
+		return;
+	}
+
+	double total_tiles = static_cast<double>(getTileCount());
+
 	auto filtered_tiles = tiles() | std::views::filter([fromId](const auto& tile_loc) {
 							  const Tile* tile = tile_loc.get();
 							  return fromId != 0 && tile && tile->getHouseID() == fromId;
@@ -303,7 +326,7 @@ void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 		tile_loc.get()->setHouseID(toId);
 		++tiles_done;
 		if (tiles_done % 0x10000 == 0) {
-			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
+			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / total_tiles));
 		}
 	}
 

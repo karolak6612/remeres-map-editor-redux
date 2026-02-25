@@ -151,7 +151,7 @@ void MapDrawer::SetupVars() {
 
 void MapDrawer::SetupGL() {
 	// Reset texture cache at the start of each frame
-	sprite_drawer->ResetCache();
+	// sprite_drawer->ResetCache(); // Removed optimization
 
 	view.SetupGL();
 

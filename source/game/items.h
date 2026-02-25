@@ -448,8 +448,18 @@ public:
 		return max_item_id;
 	}
 
-	bool typeExists(int id) const;
-	ItemType& getItemType(int id);
+	bool typeExists(int id) const {
+		return static_cast<size_t>(id) < items.size() && items[id] != nullptr;
+	}
+	ItemType& getItemType(int id) {
+		if (static_cast<size_t>(id) < items.size()) {
+			if (auto& it = items[id]) {
+				return *it;
+			}
+		}
+		static ItemType dummyItemType; // use this for invalid ids
+		return dummyItemType;
+	}
 	ItemType& getItemIdByClientID(int spriteId);
 
 	bool loadFromOtb(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);

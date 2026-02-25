@@ -59,6 +59,8 @@ struct DrawingOptions {
 	bool anti_aliasing;
 
 	std::string screen_shader_name;
+
+	bool hasActiveOverlays() const;
 };
 
 #endif

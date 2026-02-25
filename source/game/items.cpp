@@ -302,20 +302,6 @@ bool ItemDatabase::loadMetaItem(pugi::xml_node node) {
 	return false;
 }
 
-ItemType& ItemDatabase::getItemType(int id) {
-	if (static_cast<size_t>(id) < items.size()) {
-		if (auto& it = items[id]) {
-			return *it;
-		}
-	}
-	static ItemType dummyItemType; // use this for invalid ids
-	return dummyItemType;
-}
-
-bool ItemDatabase::typeExists(int id) const {
-	return static_cast<size_t>(id) < items.size() && items[id] != nullptr;
-}
-
 void ItemDatabase::updateAllTooltipableFlags() {
 	for (auto& it_ptr : items) {
 		if (it_ptr) {

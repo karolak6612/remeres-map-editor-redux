@@ -124,3 +124,12 @@ void DrawingOptions::Update() {
 bool DrawingOptions::isDrawLight() const noexcept {
 	return show_lights;
 }
+
+bool DrawingOptions::hasActiveOverlays() const {
+	return show_houses ||
+		show_spawns ||
+		show_blocking ||
+		highlight_items ||
+		show_special_tiles ||
+		show_only_colors;
+}
