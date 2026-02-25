@@ -88,16 +88,14 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) 
 	ASSERT(tile->isSelected());
 	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
 
-	wxDialog* w = new BrowseTileWindow(g_gui.root, new_tile.get(), wxPoint(cursor_x, cursor_y));
+	BrowseTileWindow w(g_gui.root, new_tile.get(), wxPoint(cursor_x, cursor_y));
 
-	int ret = w->ShowModal();
+	int ret = w.ShowModal();
 	if (ret != 0) {
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DELETE_TILES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor.addAction(std::move(action));
 	}
-
-	w->Destroy();
 }
 
 void PopupActionHandler::OpenProperties(Editor& editor) {
@@ -123,8 +121,6 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 	ASSERT(tile->isSelected());
 	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
 
-	wxDialog* w = nullptr;
-
 	ItemVector selected_items = new_tile->getSelectedItems();
 
 	Item* item = nullptr;
@@ -135,13 +131,13 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 		}
 	}
 
-	if (item) {
-		w = newd TilesetWindow(g_gui.root, &editor.map, new_tile.get(), item);
-	} else {
+	if (!item) {
 		return;
 	}
 
-	int ret = w->ShowModal();
+	TilesetWindow w(g_gui.root, &editor.map, new_tile.get(), item);
+
+	int ret = w.ShowModal();
 	if (ret != 0) {
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
@@ -149,5 +145,4 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 
 		g_gui.RebuildPalettes();
 	}
-	w->Destroy();
 }

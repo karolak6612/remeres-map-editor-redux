@@ -27,6 +27,7 @@
 #include <string_view>
 #include <sstream>
 #include <unordered_map>
+#include "util/nvg_utils.h"
 
 class Item;
 class Waypoint;
@@ -156,7 +157,7 @@ protected:
 	std::vector<TooltipData> tooltips;
 	size_t active_count = 0;
 
-	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
+	std::unordered_map<uint32_t, NvgUtils::ScopedNvgImage> spriteCache; // sprite_id -> nvg image handle
 	NVGcontext* lastContext = nullptr;
 
 	// Helper to get or load sprite image

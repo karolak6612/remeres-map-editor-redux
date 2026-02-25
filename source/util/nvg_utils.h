@@ -1,14 +1,69 @@
 #ifndef RME_UTIL_NVG_UTILS_H_
 #define RME_UTIL_NVG_UTILS_H_
 
+#include "app/main.h"
 #include "game/items.h"
 #include "ui/gui.h"
 #include <nanovg.h>
 #include <vector>
 #include <algorithm>
 #include <memory>
+#include <utility>
 
 namespace NvgUtils {
+
+	// RAII wrapper for NanoVG images
+	class ScopedNvgImage {
+	public:
+		ScopedNvgImage() = default;
+
+		ScopedNvgImage(NVGcontext* context, int imageId) :
+			vg(context), id(imageId) {
+		}
+
+		~ScopedNvgImage() {
+			reset();
+		}
+
+		// Disable copy
+		ScopedNvgImage(const ScopedNvgImage&) = delete;
+		ScopedNvgImage& operator=(const ScopedNvgImage&) = delete;
+
+		// Enable move
+		ScopedNvgImage(ScopedNvgImage&& other) noexcept :
+			vg(std::exchange(other.vg, nullptr)),
+			id(std::exchange(other.id, 0)) {
+		}
+
+		ScopedNvgImage& operator=(ScopedNvgImage&& other) noexcept {
+			if (this != &other) {
+				reset();
+				vg = std::exchange(other.vg, nullptr);
+				id = std::exchange(other.id, 0);
+			}
+			return *this;
+		}
+
+		void reset() {
+			if (id > 0 && vg) {
+				nvgDeleteImage(vg, id);
+			}
+			id = 0;
+			vg = nullptr;
+		}
+
+		operator int() const {
+			return id;
+		}
+
+		int get() const {
+			return id;
+		}
+
+	private:
+		NVGcontext* vg = nullptr;
+		int id = 0;
+	};
 
 	// Generates RGBA pixel data for a given item ID.
 	// Returns a texture ID created in the given NanoVG context.
