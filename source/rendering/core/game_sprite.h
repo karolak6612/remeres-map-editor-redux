@@ -15,6 +15,7 @@
 #include <atomic>
 #include <cstdint>
 #include <span>
+#include <array>
 
 #include <deque>
 #include <memory>
@@ -99,10 +100,17 @@ public:
 		return light;
 	}
 
-	// Helper for SpritePreloader to decompress data off-thread
-	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0);
+	struct OutfitColors {
+		int head;
+		int body;
+		int legs;
+		int feet;
+	};
 
-	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+	// Helper for SpritePreloader to decompress data off-thread
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0, int output_channels = 4, std::array<uint8_t, 4> clear_color = {0, 0, 0, 0});
+
+	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, OutfitColors colors, bool destHasAlpha);
 
 private:
 protected:

@@ -268,6 +268,8 @@ protected:
 	}
 
 	void load();
+	void scanForControlChar(uint8_t*& p, uint8_t* end);
+	void handleControlChar(uint8_t op, uint8_t*& cache, size_t& local_read_index, size_t& cache_length);
 	std::string data;
 	size_t read_offset;
 	NodeFileReadHandle* file;

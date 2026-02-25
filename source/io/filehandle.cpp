@@ -420,6 +420,31 @@ BinaryNode* BinaryNode::advance() {
 	}
 }
 
+void BinaryNode::scanForControlChar(uint8_t*& p, uint8_t* end) {
+	for (; p < end; ++p) {
+		uint8_t c = *p;
+		if (c == NODE_START || c == NODE_END || c == ESCAPE_CHAR) {
+			break;
+		}
+	}
+}
+
+void BinaryNode::handleControlChar(uint8_t op, uint8_t*& cache, size_t& local_read_index, size_t& cache_length) {
+	if (op == ESCAPE_CHAR) {
+		if (local_read_index >= cache_length) {
+			if (!file->renewCache()) {
+				// Failed to renew, exit
+				file->error_code = FILE_PREMATURE_END;
+				return;
+			}
+		}
+
+		op = cache[local_read_index];
+		++local_read_index;
+		data.append(1, static_cast<char>(op));
+	}
+}
+
 void BinaryNode::load() {
 	ASSERT(file);
 	// Read until next node starts
@@ -440,14 +465,7 @@ void BinaryNode::load() {
 		uint8_t* end = cache + cache_length;
 		uint8_t* p = start;
 
-		// Scan for special characters using a tight loop
-		// This avoids checking conditions and switch cases for every byte
-		for (; p < end; ++p) {
-			uint8_t c = *p;
-			if (c == NODE_START || c == NODE_END || c == ESCAPE_CHAR) {
-				break;
-			}
-		}
+		scanForControlChar(p, end);
 
 		// Append the chunk we scanned
 		size_t count = p - start;
@@ -477,17 +495,10 @@ void BinaryNode::load() {
 			}
 
 			case ESCAPE_CHAR: {
-				if (local_read_index >= cache_length) {
-					if (!file->renewCache()) {
-						// Failed to renew, exit
-						file->error_code = FILE_PREMATURE_END;
-						return;
-					}
+				handleControlChar(op, cache, local_read_index, cache_length);
+				if (file->error_code != FILE_NO_ERROR) {
+					return;
 				}
-
-				op = cache[local_read_index];
-				++local_read_index;
-				data.append(1, static_cast<char>(op));
 				break;
 			}
 		}

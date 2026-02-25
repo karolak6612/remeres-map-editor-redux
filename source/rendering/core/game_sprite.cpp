@@ -79,7 +79,7 @@ GameSprite::~GameSprite() {
 	// instanced_templates and animator cleaned up automatically by unique_ptr
 }
 
-void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
+void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, OutfitColors colors, bool destHasAlpha) {
 	const int dest_step = destHasAlpha ? RGBA_COMPONENTS : RGB_COMPONENTS;
 	const int mask_step = RGB_COMPONENTS;
 
@@ -96,13 +96,13 @@ void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size
 		const uint8_t& tblue = maskSpan[i * mask_step + 2];
 
 		if (tred && tgreen && !tblue) { // yellow => head
-			OutfitColorizer::ColorizePixel(lookHead, red, green, blue);
+			OutfitColorizer::ColorizePixel(colors.head, red, green, blue);
 		} else if (tred && !tgreen && !tblue) { // red => body
-			OutfitColorizer::ColorizePixel(lookBody, red, green, blue);
+			OutfitColorizer::ColorizePixel(colors.body, red, green, blue);
 		} else if (!tred && tgreen && !tblue) { // green => legs
-			OutfitColorizer::ColorizePixel(lookLegs, red, green, blue);
+			OutfitColorizer::ColorizePixel(colors.legs, red, green, blue);
 		} else if (!tred && !tgreen && tblue) { // blue => feet
-			OutfitColorizer::ColorizePixel(lookFeet, red, green, blue);
+			OutfitColorizer::ColorizePixel(colors.feet, red, green, blue);
 		}
 	}
 }
@@ -509,57 +509,8 @@ std::unique_ptr<uint8_t[]> GameSprite::NormalImage::getRGBData() {
 		}
 	}
 
-	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
-	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
-	size_t write = 0;
-	size_t read = 0;
-
-	// decompress pixels
-	while (read < size && write < static_cast<size_t>(pixels_data_size)) {
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Transparency header truncated (read={}, size={})", read, size);
-			break;
-		}
-		int transparent = dump[read] | dump[read + 1] << 8;
-		read += 2;
-		for (int cnt = 0; cnt < transparent && write < static_cast<size_t>(pixels_data_size); ++cnt) {
-			data[write + 0] = 0xFF; // red
-			data[write + 1] = 0x00; // green
-			data[write + 2] = 0xFF; // blue
-			write += RGB_COMPONENTS;
-		}
-
-		if (read + 1 >= size) {
-			spdlog::warn("NormalImage::getRGBData: Colored header truncated (read={}, size={})", read, size);
-			break;
-		}
-
-		int colored = dump[read] | dump[read + 1] << 8;
-		read += 2;
-
-		if (read + static_cast<size_t>(colored) * bpp > size) {
-			spdlog::warn("NormalImage::getRGBData: Read buffer overrun (colored={}, bpp={}, read={}, size={})", colored, bpp, read, size);
-			break;
-		}
-
-		for (int cnt = 0; cnt < colored && write < static_cast<size_t>(pixels_data_size); ++cnt) {
-			data[write + 0] = dump[read + 0]; // red
-			data[write + 1] = dump[read + 1]; // green
-			data[write + 2] = dump[read + 2]; // blue
-			write += RGB_COMPONENTS;
-			read += bpp;
-		}
-	}
-
-	// fill remaining pixels
-	while (write < static_cast<size_t>(pixels_data_size)) {
-		data[write + 0] = 0xFF; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0xFF; // blue
-		write += RGB_COMPONENTS;
-	}
-	return data;
+	std::array<uint8_t, 4> magenta = {255, 0, 255, 255};
+	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id, 3, magenta);
 }
 
 namespace {
@@ -572,25 +523,29 @@ namespace {
 		bool& non_black_pixel_found;
 	};
 
-	bool ProcessTransparencyRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx) {
+	bool ProcessTransparencyRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx, int output_channels, const std::array<uint8_t, 4>& clear_color) {
 		if (read + 1 >= dump.size()) {
 			return false;
 		}
 		int transparent = dump[read] | dump[read + 1] << 8;
 
 		// Integrity check for transparency run
-		if (write + (transparent * RGBA_COMPONENTS) > data.size()) {
+		if (write + (transparent * output_channels) > data.size()) {
 			spdlog::warn("Sprite {}: Transparency run overrun (transparent={}, write={}, max={})", ctx.id, transparent, write, data.size());
-			transparent = (data.size() - write) / RGBA_COMPONENTS;
+			transparent = (data.size() - write) / output_channels;
 		}
 
 		read += 2;
-		std::ranges::fill(data.subspan(write, transparent * RGBA_COMPONENTS), 0);
-		write += transparent * RGBA_COMPONENTS;
+		for (int i = 0; i < transparent; ++i) {
+			for (int c = 0; c < output_channels; ++c) {
+				data[write + c] = clear_color[c];
+			}
+			write += output_channels;
+		}
 		return true;
 	}
 
-	bool ProcessColoredRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx) {
+	bool ProcessColoredRun(std::span<const uint8_t> dump, size_t& read, std::span<uint8_t> data, size_t& write, DecompressionContext ctx, int output_channels, const std::array<uint8_t, 4>& clear_color) {
 		if (read + 1 >= dump.size()) {
 			return false;
 		}
@@ -598,9 +553,9 @@ namespace {
 		read += 2;
 
 		// Integrity check for colored run
-		if (write + (colored * RGBA_COMPONENTS) > data.size()) {
+		if (write + (colored * output_channels) > data.size()) {
 			spdlog::warn("Sprite {}: Colored run overrun (colored={}, write={}, max={})", ctx.id, colored, write, data.size());
-			colored = (data.size() - write) / RGBA_COMPONENTS;
+			colored = (data.size() - write) / output_channels;
 		}
 
 		// Integrity check for read buffer
@@ -619,7 +574,9 @@ namespace {
 			data[write + 0] = r;
 			data[write + 1] = g;
 			data[write + 2] = b;
-			data[write + 3] = a;
+			if (output_channels >= 4) {
+				data[write + 3] = a;
+			}
 
 			if (a > 0) {
 				ctx.non_zero_alpha_found = true;
@@ -628,7 +585,7 @@ namespace {
 				ctx.non_black_pixel_found = true;
 			}
 
-			write += RGBA_COMPONENTS;
+			write += output_channels;
 			read += ctx.bpp;
 		}
 		return true;
@@ -636,8 +593,8 @@ namespace {
 
 } // namespace
 
-std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump, bool use_alpha, int id) {
-	const int pixels_data_size = SPRITE_PIXELS_SIZE * RGBA_COMPONENTS;
+std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump, bool use_alpha, int id, int output_channels, std::array<uint8_t, 4> clear_color) {
+	const int pixels_data_size = SPRITE_PIXELS_SIZE * output_channels;
 	auto data_buffer = std::make_unique<uint8_t[]>(pixels_data_size);
 
 	std::span<uint8_t> data(data_buffer.get(), pixels_data_size);
@@ -658,7 +615,7 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump,
 
 	// decompress pixels
 	while (read < dump.size() && write < data.size()) {
-		if (!ProcessTransparencyRun(dump, read, data, write, ctx)) {
+		if (!ProcessTransparencyRun(dump, read, data, write, ctx, output_channels, clear_color)) {
 			break;
 		}
 
@@ -666,18 +623,17 @@ std::unique_ptr<uint8_t[]> GameSprite::Decompress(std::span<const uint8_t> dump,
 			break;
 		}
 
-		if (!ProcessColoredRun(dump, read, data, write, ctx)) {
+		if (!ProcessColoredRun(dump, read, data, write, ctx, output_channels, clear_color)) {
 			break;
 		}
 	}
 
 	// fill remaining pixels
 	while (write < data.size()) {
-		data[write + 0] = 0x00; // red
-		data[write + 1] = 0x00; // green
-		data[write + 2] = 0x00; // blue
-		data[write + 3] = 0x00; // alpha
-		write += RGBA_COMPONENTS;
+		for (int c = 0; c < output_channels; ++c) {
+			data[write + c] = clear_color[c];
+		}
+		write += output_channels;
 	}
 
 	// Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
@@ -800,7 +756,8 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBData() {
 		lookFeet = 0;
 	}
 
-	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
+	GameSprite::OutfitColors colors = {lookHead, lookBody, lookLegs, lookFeet};
+	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, colors, false);
 
 	// template_rgbdata auto-deleted
 	return rgbdata;
@@ -835,7 +792,8 @@ std::unique_ptr<uint8_t[]> GameSprite::TemplateImage::getRGBAData() {
 	}
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
+	GameSprite::OutfitColors colors = {lookHead, lookBody, lookLegs, lookFeet};
+	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, colors, true);
 
 	// template_rgbdata auto-deleted
 	return rgbadata;
