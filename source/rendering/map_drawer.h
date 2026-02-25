@@ -94,6 +94,8 @@ class MapDrawer {
 	std::unique_ptr<GLTextureResource> scale_texture;
 	int fbo_width = 0;
 	int fbo_height = 0;
+	int fbo_allocated_width = 0;
+	int fbo_allocated_height = 0;
 	bool m_lastAaMode = false;
 
 	std::unique_ptr<GLVertexArray> pp_vao;

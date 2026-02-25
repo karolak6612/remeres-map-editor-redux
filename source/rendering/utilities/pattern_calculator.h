@@ -23,10 +23,15 @@ public:
 			return patterns;
 		}
 
-		patterns.x = (spr->pattern_x > 1) ? pos.x % spr->pattern_x : 0;
-		patterns.y = (spr->pattern_y > 1) ? pos.y % spr->pattern_y : 0;
-		patterns.z = (spr->pattern_z > 1) ? pos.z % spr->pattern_z : 0;
-		patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
+		if (spr->is_simple) {
+			// Fast path for simple sprites: patterns initialized to 0/default by struct ctor
+			// Only subtype logic below might change them
+		} else {
+			patterns.x = (spr->pattern_x > 1) ? pos.x % spr->pattern_x : 0;
+			patterns.y = (spr->pattern_y > 1) ? pos.y % spr->pattern_y : 0;
+			patterns.z = (spr->pattern_z > 1) ? pos.z % spr->pattern_z : 0;
+			patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
+		}
 
 		if (it.isSplash() || it.isFluidContainer()) {
 			patterns.subtype = item->getSubtype();

@@ -152,6 +152,23 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
+inline void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* cached_patterns) {
+	if (!item) {
+		return;
+	}
+
+	GameSprite* spr = it.sprite;
+	if (spr && !spr->isSimpleAndLoaded()) {
+		SpritePatterns patterns;
+		if (cached_patterns) {
+			patterns = *cached_patterns;
+		} else {
+			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
+		}
+		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
+	}
+}
+
 void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
 	if (!location) {
 		return;
@@ -281,15 +298,21 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
-						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+					if (item->isComplex() || it.isTooltipable()) {
+						TooltipData& itemData = tooltip_drawer->requestTooltipData();
+						if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+							if (itemData.hasVisibleFields()) {
+								tooltip_drawer->commitTooltip();
+							}
 						}
 					}
 				}
 
 				if (it.sprite) {
+					if (!options.show_items && it.pickupable) {
+						continue;
+					}
+
 					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
 					PreloadItem(tile, item.get(), it, &patterns);
 
@@ -338,23 +361,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// markers (waypoint, house exit, town temple, spawn)
 			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
 		}
-	}
-}
-
-void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* cached_patterns) {
-	if (!item) {
-		return;
-	}
-
-	GameSprite* spr = it.sprite;
-	if (spr && !spr->isSimpleAndLoaded()) {
-		SpritePatterns patterns;
-		if (cached_patterns) {
-			patterns = *cached_patterns;
-		} else {
-			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
-		}
-		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
 }
 

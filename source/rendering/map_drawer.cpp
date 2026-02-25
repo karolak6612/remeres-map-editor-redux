@@ -78,10 +78,11 @@ layout(location = 0) in vec2 aPos; // -1..1
 layout(location = 1) in vec2 aTexCoord; // 0..1
 
 out vec2 vTexCoord;
+uniform vec2 u_TexMax;
 
 void main() {
     gl_Position = vec4(aPos, 0.0, 1.0);
-    vTexCoord = aTexCoord;
+    vTexCoord = aTexCoord * u_TexMax;
 }
 )";
 
@@ -229,6 +230,12 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 	// Set TextureSize uniform if shader needs it
 	shader->SetVec2("u_TextureSize", glm::vec2(fbo_width, fbo_height));
 
+	if (fbo_allocated_width > 0 && fbo_allocated_height > 0) {
+		shader->SetVec2("u_TexMax", glm::vec2((float)fbo_width / fbo_allocated_width, (float)fbo_height / fbo_allocated_height));
+	} else {
+		shader->SetVec2("u_TexMax", glm::vec2(1.0f, 1.0f));
+	}
+
 	glBindTextureUnit(0, scale_texture->GetID());
 	glBindVertexArray(pp_vao->GetID());
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -248,13 +255,13 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 	int target_h = std::max(1, static_cast<int>(view.screensize_y * scale_factor));
 
 	bool fbo_resized = false;
-	if (fbo_width != target_w || fbo_height != target_h || !scale_fbo) {
-		fbo_width = target_w;
-		fbo_height = target_h;
+	if (target_w > fbo_allocated_width || target_h > fbo_allocated_height || !scale_fbo) {
+		fbo_allocated_width = target_w;
+		fbo_allocated_height = target_h;
 		scale_fbo = std::make_unique<GLFramebuffer>();
 		scale_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
 
-		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_width, fbo_height);
+		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_allocated_width, fbo_allocated_height);
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -263,12 +270,14 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 		glNamedFramebufferDrawBuffers(scale_fbo->GetID(), 1, drawBuffers);
 
 		// Sanity check for division by zero risk in shaders
-		if (fbo_width < 1 || fbo_height < 1) {
+		if (fbo_allocated_width < 1 || fbo_allocated_height < 1) {
 			// This should be impossible due to std::max, but good for invariant documentation
-			spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
+			spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_allocated_width, fbo_allocated_height);
 		}
 		fbo_resized = true;
 	}
+	fbo_width = target_w;
+	fbo_height = target_h;
 
 	// Update filtering parameters when scaling is enabled and either the FBO was resized or the AA mode changed (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode))
 	if (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode)) {

@@ -148,6 +148,24 @@ uint32_t Tile::memsize() const {
 	return mem;
 }
 
+bool Tile::empty() const {
+	if (ground || !items.empty() || creature || spawn || house_id != 0 || mapflags != 0) {
+		return false;
+	}
+	if (location) {
+		if (location->getHouseExits() && !location->getHouseExits()->empty()) {
+			return false;
+		}
+		if (location->getSpawnCount() > 0) {
+			return false;
+		}
+		if (location->getWaypointCount() > 0) {
+			return false;
+		}
+	}
+	return true;
+}
+
 int Tile::size() const {
 	int sz = 0;
 	if (ground) {

@@ -267,7 +267,9 @@ public:
 	// DEBUG: Get the actual image ID that would be rendered for these coordinates
 	uint32_t getSpriteId(int frameIndex, int pattern_x, int pattern_y) const;
 
-	bool isSimpleAndLoaded() const;
+	bool isSimpleAndLoaded() const {
+		return is_simple && spriteList[0]->isGLLoaded;
+	}
 
 	bool is_simple = false;
 	void updateSimpleStatus() {

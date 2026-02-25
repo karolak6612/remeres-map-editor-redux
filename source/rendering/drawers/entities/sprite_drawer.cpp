@@ -91,6 +91,17 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
 	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
 
+	if (spr->is_simple) {
+		const AtlasRegion* region = spr->getCachedDefaultRegion();
+		if (!region) {
+			region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+		}
+		if (region) {
+			glBlitAtlasQuad(sprite_batch, screenx, screeny, region, color);
+		}
+		return;
+	}
+
 	for (int cx = 0; cx != spr->width; ++cx) {
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
