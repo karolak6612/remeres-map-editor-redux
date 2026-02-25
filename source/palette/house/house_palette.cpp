@@ -137,11 +137,11 @@ void HousePalette::UpdateHouses() {
 	}
 
 	// Populate towns
-	town_choice->Append("All Towns", (void*)nullptr);
+	town_choice->Append("All Towns");
 	for (auto& it : map->towns) {
 		town_choice->Append(wxstr(it.second->getName()), it.second.get());
 	}
-	town_choice->Append("No Town", (void*)nullptr);
+	town_choice->Append("No Town");
 	town_choice->SetSelection(0);
 
 	FilterHouses();

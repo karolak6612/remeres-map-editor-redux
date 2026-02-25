@@ -165,12 +165,8 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 			}
 
 			std::sort(extension->version_list.begin(), extension->version_list.end(), VersionComparisonPredicate);
-
 			auto duplicate = std::unique(extension->version_list.begin(), extension->version_list.end());
-			while (duplicate != extension->version_list.end()) {
-				extension->version_list.erase(duplicate);
-				duplicate = std::unique(extension->version_list.begin(), extension->version_list.end());
-			}
+			extension->version_list.erase(duplicate, extension->version_list.end());
 		} else {
 			warnings.push_back((filename + ": Extension is not available for any version.").ToStdString());
 		}
