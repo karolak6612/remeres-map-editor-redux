@@ -113,7 +113,7 @@ void SearchHandler::OnSearchForItemOnSelection(wxCommandEvent& WXUNUSED(event)) 
 		EditorOperations::ItemSearcher finder(dialog.getResultID(), (uint32_t)g_settings.getInteger(Config::REPLACE_SIZE));
 		g_gui.CreateLoadBar("Searching on selected area...");
 
-		foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, true);
+		foreach_ItemOnRange(g_gui.GetCurrentMap(), g_gui.GetCurrentEditor()->selection.getTiles(), finder);
 		std::vector<std::pair<Tile*, Item*>>& result = finder.result;
 
 		g_gui.DestroyLoadBar();
@@ -158,7 +158,7 @@ void SearchHandler::OnRemoveItemOnSelection(wxCommandEvent& WXUNUSED(event)) {
 		g_gui.GetCurrentEditor()->actionQueue->clear();
 		g_gui.CreateLoadBar("Searching item on selection to remove...");
 		EditorOperations::RemoveItemCondition condition(dialog.getResultID());
-		int64_t count = RemoveItemOnMap(g_gui.GetCurrentMap(), condition, true);
+		int64_t count = RemoveItemOnRange(g_gui.GetCurrentMap(), g_gui.GetCurrentEditor()->selection.getTiles(), condition);
 		g_gui.DestroyLoadBar();
 
 		wxString msg;
@@ -198,7 +198,11 @@ void SearchHandler::SearchItems(bool unique, bool action, bool container, bool w
 	finder.search_container = container;
 	finder.search_writeable = writable;
 
-	foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, onSelection);
+	if (onSelection) {
+		foreach_ItemOnRange(g_gui.GetCurrentMap(), g_gui.GetCurrentEditor()->selection.getTiles(), finder);
+	} else {
+		foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, false);
+	}
 	finder.sort();
 
 	std::vector<SearchResult> found;

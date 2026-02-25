@@ -281,4 +281,81 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 	return removed;
 }
 
+template <typename RangeType, typename ForeachType>
+inline void foreach_ItemOnRange(Map& map, const RangeType& tiles, ForeachType& foreach) {
+	long long done = 0;
+
+	std::vector<Container*> containers;
+	containers.reserve(32);
+
+	std::ranges::for_each(tiles, [&map, &foreach, &done, &containers](Tile* tile) {
+		++done;
+		if (!tile) {
+			return;
+		}
+
+		if (tile->ground) {
+			foreach (map, tile, tile->ground.get(), done)
+				;
+		}
+
+		for (const auto& item : tile->items) {
+			containers.clear();
+			Container* container = item->asContainer();
+			foreach (map, tile, item.get(), done)
+				;
+
+			if (container) {
+				containers.push_back(container);
+
+				size_t index = 0;
+				while (index < containers.size()) {
+					container = containers[index++];
+
+					auto& contents = container->getVector();
+					for (const auto& i : contents) {
+						Container* c = i->asContainer();
+						foreach (map, tile, i.get(), done)
+							;
+
+						if (c) {
+							containers.push_back(c);
+						}
+					}
+				}
+			}
+		}
+	});
+}
+
+template <typename RangeType, typename RemoveIfType>
+inline int64_t RemoveItemOnRange(Map& map, const RangeType& tiles, RemoveIfType& condition) {
+	int64_t done = 0;
+	int64_t removed = 0;
+
+	std::ranges::for_each(tiles, [&](Tile* tile) {
+		++done;
+		if (!tile) {
+			return;
+		}
+
+		if (tile->ground) {
+			if (condition(map, tile->ground.get(), removed, done)) {
+				tile->ground.reset();
+				++removed;
+			}
+		}
+
+		// Use C++20's std::erase_if for a safer and more idiomatic way to remove elements.
+		std::erase_if(tile->items, [&](const auto& item) {
+			if (condition(map, item.get(), removed, done)) {
+				++removed;
+				return true;
+			}
+			return false;
+		});
+	});
+	return removed;
+}
+
 #endif
