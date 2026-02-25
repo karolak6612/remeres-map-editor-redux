@@ -6,6 +6,8 @@
 #include "ui/theme.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include <wx/persist.h>
+#include <wx/persist/toplevel.h>
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <algorithm>
@@ -65,7 +67,11 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
 
 	SetSizerAndFit(sizer);
-	Centre(wxBOTH);
+
+	SetName("FindDialog");
+	if (!wxPersistenceManager::Get().RegisterAndRestore(this)) {
+		Centre(wxBOTH);
+	}
 
 	Bind(wxEVT_TIMER, &FindDialog::OnTextIdle, this, wxID_ANY);
 	Bind(wxEVT_TEXT, &FindDialog::OnTextChange, this, JUMP_DIALOG_TEXT);

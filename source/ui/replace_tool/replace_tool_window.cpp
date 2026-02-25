@@ -19,7 +19,8 @@
 #include <wx/srchctrl.h>
 #include <wx/msgdlg.h>
 #include <wx/textdlg.h>
-#include <wx/artprov.h>
+#include <wx/persist.h>
+#include <wx/persist/toplevel.h>
 
 // Brush includes
 #include "brushes/brush.h"
@@ -46,35 +47,13 @@ ReplaceToolWindow::ReplaceToolWindow(wxWindow* parent, Editor* editor) : wxDialo
 
 	UpdateSavedRulesList();
 
-	Bind(wxEVT_CLOSE_WINDOW, &ReplaceToolWindow::OnClose, this);
-
-	// Restore window size (Physical pixels)
-	int w = g_settings.getInteger(Config::REPLACE_TOOL_WINDOW_WIDTH);
-	int h = g_settings.getInteger(Config::REPLACE_TOOL_WINDOW_HEIGHT);
-
-	if (w < 600 || h < 400) {
-		// Default size (Logical -> Physical)
+	SetName("ReplaceToolWindow");
+	if (!wxPersistenceManager::Get().RegisterAndRestore(this)) {
 		SetSize(FromDIP(wxSize(1400, 850)));
-	} else {
-		// Restored size (Already Physical)
-		SetSize(wxSize(w, h));
 	}
 }
 
 ReplaceToolWindow::~ReplaceToolWindow() {
-	// Unbind to be safe, though destructor usually handles cleanup
-	Unbind(wxEVT_CLOSE_WINDOW, &ReplaceToolWindow::OnClose, this);
-}
-
-void ReplaceToolWindow::OnClose(wxCloseEvent& event) {
-	if (!IsMaximized()) {
-		// GetSize returns Physical pixels on Windows
-		wxSize size = GetSize();
-		g_settings.setInteger(Config::REPLACE_TOOL_WINDOW_WIDTH, size.GetWidth());
-		g_settings.setInteger(Config::REPLACE_TOOL_WINDOW_HEIGHT, size.GetHeight());
-		g_settings.save();
-	}
-	event.Skip(); // Allow window to close
 }
 
 void ReplaceToolWindow::InitializeWithIDs(const std::vector<uint16_t>& ids) {

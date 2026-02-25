@@ -38,8 +38,6 @@ public:
 	// ItemGridPanel::Listener
 	virtual void OnItemSelected(ItemGridPanel* source, uint16_t itemId) override;
 
-	void OnClose(wxCloseEvent& event);
-
 private:
 	void InitLayout();
 	void UpdateSavedRulesList();
