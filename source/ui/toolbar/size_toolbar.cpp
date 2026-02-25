@@ -15,15 +15,15 @@ const wxString SizeToolBar::PANE_NAME = "sizes_toolbar";
 SizeToolBar::SizeToolBar(wxWindow* parent) {
 	wxSize icon_size = FROM_DIP(parent, wxSize(16, 16));
 
-	wxBitmap circular_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_4_SMALL, icon_size);
-	wxBitmap rectangular_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_4_SMALL, icon_size);
-	wxBitmap size1_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_1_SMALL, icon_size);
-	wxBitmap size2_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_2_SMALL, icon_size);
-	wxBitmap size3_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_3_SMALL, icon_size);
-	wxBitmap size4_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_4_SMALL, icon_size);
-	wxBitmap size5_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_5_SMALL, icon_size);
-	wxBitmap size6_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_6_SMALL, icon_size);
-	wxBitmap size7_bitmap = IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_7_SMALL, icon_size);
+	wxBitmap circular_bitmap = IMAGE_MANAGER.GetBitmap(ICON_CIRCLE, icon_size);
+	wxBitmap rectangular_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SQUARE, icon_size);
+	wxBitmap size1_bitmap = IMAGE_MANAGER.GetBitmap(ICON_1, icon_size);
+	wxBitmap size2_bitmap = IMAGE_MANAGER.GetBitmap(ICON_2, icon_size);
+	wxBitmap size3_bitmap = IMAGE_MANAGER.GetBitmap(ICON_3, icon_size);
+	wxBitmap size4_bitmap = IMAGE_MANAGER.GetBitmap(ICON_4, icon_size);
+	wxBitmap size5_bitmap = IMAGE_MANAGER.GetBitmap(ICON_5, icon_size);
+	wxBitmap size6_bitmap = IMAGE_MANAGER.GetBitmap(ICON_6, icon_size);
+	wxBitmap size7_bitmap = IMAGE_MANAGER.GetBitmap(ICON_7, icon_size);
 
 	toolbar = newd wxAuiToolBar(parent, TOOLBAR_SIZES, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);
@@ -69,27 +69,9 @@ void SizeToolBar::UpdateBrushSize(BrushShape shape, int size) {
 	if (shape == BRUSHSHAPE_CIRCLE) {
 		toolbar->ToggleTool(TOOLBAR_SIZES_CIRCULAR, true);
 		toolbar->ToggleTool(TOOLBAR_SIZES_RECTANGULAR, false);
-
-		wxSize icon_size = wxSize(16, 16);
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_1, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_1_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_2, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_2_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_3, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_3_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_4, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_4_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_5, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_5_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_6, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_6_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_7, IMAGE_MANAGER.GetBitmap(IMAGE_CIRCULAR_7_SMALL, icon_size));
 	} else {
 		toolbar->ToggleTool(TOOLBAR_SIZES_CIRCULAR, false);
 		toolbar->ToggleTool(TOOLBAR_SIZES_RECTANGULAR, true);
-
-		wxSize icon_size = wxSize(16, 16);
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_1, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_1_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_2, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_2_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_3, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_3_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_4, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_4_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_5, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_5_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_6, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_6_SMALL, icon_size));
-		toolbar->SetToolBitmap(TOOLBAR_SIZES_7, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_7_SMALL, icon_size));
 	}
 
 	toolbar->ToggleTool(TOOLBAR_SIZES_1, size == 0);

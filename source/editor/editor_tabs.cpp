@@ -20,6 +20,8 @@
 #include "editor/editor_tabs.h"
 #include "editor/editor.h"
 #include "live/live_tab.h"
+#include "util/image_manager.h"
+#include "ui/map_tab.h"
 
 EditorTab::EditorTab() {
 	;
@@ -133,7 +135,15 @@ void MapTabbook::OnAllowNotebookDND(wxAuiNotebookEvent& evt) {
 
 void MapTabbook::AddTab(EditorTab* tab, bool select) {
 	tab->GetWindow()->Reparent(notebook);
-	notebook->AddPage(tab->GetWindow(), tab->GetTitle(), select);
+
+	wxBitmap icon = wxNullBitmap;
+	if (dynamic_cast<MapTab*>(tab)) {
+		icon = IMAGE_MANAGER.GetBitmap(ICON_MAP, wxSize(16, 16));
+	} else if (dynamic_cast<LiveLogTab*>(tab)) {
+		icon = IMAGE_MANAGER.GetBitmap(ICON_TERMINAL, wxSize(16, 16));
+	}
+
+	notebook->AddPage(tab->GetWindow(), tab->GetTitle(), select, icon);
 	conv[tab->GetWindow()] = tab;
 }
 
