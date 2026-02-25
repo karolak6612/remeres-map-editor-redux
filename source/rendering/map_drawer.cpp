@@ -70,6 +70,7 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/systems/live_system.h"
 
 // Shader Sources
 const char* screen_vert = R"(
@@ -287,6 +288,11 @@ void MapDrawer::Release() {
 }
 
 void MapDrawer::Draw() {
+	// Pre-render updates (Logic outside render loop)
+	if (editor.live_manager.IsClient()) {
+		LiveSystem::UpdateRequestedNodes(editor, view, view.floor);
+	}
+
 	g_gui.gfx.updateTime();
 
 	light_buffer.Clear();

@@ -24,32 +24,23 @@
 #include "game/sprites.h"
 #include "ui/gui.h"
 
-BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
-	if (t) {
-		pos = t->getPosition();
-	}
-}
-
-BlitItemParams::BlitItemParams(const Position& p, Item* i, const DrawingOptions& o) : pos(p), item(i), options(&o) {
-}
-
 ItemDrawer::ItemDrawer() {
 }
 
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params) {
-	const Position& pos = params.pos;
-	Item* item = params.item;
-	const Tile* tile = params.tile;
-	const DrawingOptions& options = *params.options;
-	bool ephemeral = params.ephemeral;
-	int red = params.red;
-	int green = params.green;
-	int blue = params.blue;
-	int alpha = params.alpha;
-	const SpritePatterns* cached_patterns = params.patterns;
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const RenderItem& render_item) {
+	const Position& pos = render_item.pos;
+	Item* item = render_item.item;
+	const Tile* tile = render_item.tile;
+	const DrawingOptions& options = *render_item.options;
+	bool ephemeral = render_item.ephemeral;
+	int red = render_item.red;
+	int green = render_item.green;
+	int blue = render_item.blue;
+	int alpha = render_item.alpha;
+	const SpritePatterns* cached_patterns = render_item.patterns;
 
 	ItemType& it = g_items[item->getID()];
 

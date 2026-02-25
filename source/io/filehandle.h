@@ -29,6 +29,8 @@
 #include <vector>
 #include <format>
 #include <iterator>
+#include <cstring>
+#include <boost/noncopyable.hpp>
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER

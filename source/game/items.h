@@ -22,10 +22,13 @@
 #include "brushes/brush_enums.h"
 #include "ext/pugixml.hpp"
 #include <wx/string.h>
+#include <wx/filename.h>
 #include <string_view>
 #include <memory>
 #include <map>
 #include <vector>
+
+using FileName = wxFileName;
 
 class Brush;
 class GroundBrush;

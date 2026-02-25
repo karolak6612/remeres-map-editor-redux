@@ -80,13 +80,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		}
 
 		if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
-			if (!nd->isRequested(map_z > GROUND_LAYER)) {
-				// Request the node
-				if (editor->live_manager.GetClient()) {
-					editor->live_manager.GetClient()->queryNode(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
-				}
-				nd->setRequested(map_z > GROUND_LAYER, true);
-			}
+			// Requesting is now handled by LiveSystem::UpdateRequestedNodes
 			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
 			return;
 		}
