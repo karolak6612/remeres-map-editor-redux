@@ -40,8 +40,6 @@ public:
 	void OnClickAddAttribute(wxCommandEvent&);
 	void OnClickRemoveAttribute(wxCommandEvent&);
 
-	void OnResize(wxSizeEvent&);
-	void OnNotebookPageChanged(wxNotebookEvent&);
 	void OnGridValueChanged(wxGridEvent&);
 
 	void Update();

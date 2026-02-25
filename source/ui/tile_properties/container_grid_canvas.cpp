@@ -29,6 +29,7 @@ ContainerGridCanvas::ContainerGridCanvas(wxWindow* parent, bool large) :
 	Bind(wxEVT_LEFT_DOWN, &ContainerGridCanvas::OnLeftDown, this);
 	Bind(wxEVT_RIGHT_DOWN, &ContainerGridCanvas::OnRightDown, this);
 	Bind(wxEVT_LEAVE_WINDOW, &ContainerGridCanvas::OnMouseLeave, this);
+	Bind(wxEVT_SIZE, &ContainerGridCanvas::OnResize, this);
 
 	RecalculateLayout();
 }
@@ -66,7 +67,13 @@ void ContainerGridCanvas::RecalculateLayout() {
 		Container* container = m_container->asContainer();
 		int capacity = static_cast<int>(container->getVolume());
 
-		m_cols = m_large ? 6 : 12;
+		int w, h;
+		GetClientSize(&w, &h);
+		if (w > 0) {
+			m_cols = std::max(1, static_cast<int>((w - 2 * m_padding) / m_slot_size));
+		} else {
+			m_cols = m_large ? 6 : 12;
+		}
 
 		if (capacity > 0) {
 			m_rows = (capacity + m_cols - 1) / m_cols;
@@ -75,8 +82,37 @@ void ContainerGridCanvas::RecalculateLayout() {
 		}
 	}
 
-	SetMinSize(DoGetBestClientSize());
+	// Set a minimal size to allow shrinking
+	SetMinSize(FromDIP(wxSize(50, 50)));
 	GetParent()->Layout();
+}
+
+void ContainerGridCanvas::OnResize(wxSizeEvent& event) {
+	int width = event.GetSize().GetWidth();
+	if (width > 0) {
+		float available_width = width - 2 * m_padding;
+		int new_cols = std::max(1, static_cast<int>(available_width / m_slot_size));
+
+		if (new_cols != m_cols) {
+			m_cols = new_cols;
+
+			if (m_container && m_container->asContainer()) {
+				int capacity = static_cast<int>(m_container->asContainer()->getVolume());
+				if (capacity > 0) {
+					m_rows = (capacity + m_cols - 1) / m_cols;
+				} else {
+					m_rows = 1;
+				}
+			} else {
+				m_rows = 1;
+			}
+		}
+
+		int contentHeight = static_cast<int>(std::ceil(m_rows * m_slot_size));
+		UpdateScrollbar(contentHeight);
+		Refresh();
+	}
+	event.Skip();
 }
 
 wxSize ContainerGridCanvas::DoGetBestClientSize() const {

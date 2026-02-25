@@ -47,8 +47,6 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickAddAttribute, this, ITEM_PROPERTIES_ADD_ATTRIBUTE);
 	Bind(wxEVT_BUTTON, &PropertiesWindow::OnClickRemoveAttribute, this, ITEM_PROPERTIES_REMOVE_ATTRIBUTE);
 
-	Bind(wxEVT_NOTEBOOK_PAGE_CHANGED, &PropertiesWindow::OnNotebookPageChanged, this, wxID_ANY);
-
 	Bind(wxEVT_GRID_CELL_CHANGED, &PropertiesWindow::OnGridValueChanged, this);
 
 	createUI();
@@ -231,39 +229,6 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 void PropertiesWindow::SetGridValue(wxGrid* grid, int rowIndex, std::string label, const ItemAttribute& attr) {
 	AttributeService::setGridValue(grid, rowIndex, label, attr);
-}
-
-void PropertiesWindow::OnResize(wxSizeEvent& evt) {
-	/*
-	if(wxGrid* grid = (wxGrid*)currentPanel->FindWindowByName("AdvancedGrid")) {
-		int tWidth = 0;
-		for(int i = 0; i < 3; ++i)
-			tWidth += grid->GetColumnWidth(i);
-
-		int wWidth = grid->GetParent()->GetSize().GetWidth();
-
-		grid->SetColumnWidth(2, wWidth - 100 - 80);
-	}
-	*/
-}
-
-void PropertiesWindow::OnNotebookPageChanged(wxNotebookEvent& evt) {
-	wxWindow* page = notebook->GetCurrentPage();
-
-	// TODO: Save
-
-	switch (page->GetId()) {
-		case ITEM_PROPERTIES_GENERAL_TAB: {
-			// currentPanel = createGeneralPanel(page);
-			break;
-		}
-		case ITEM_PROPERTIES_ADVANCED_TAB: {
-			// currentPanel = createAttributesPanel(page);
-			break;
-		}
-		default:
-			break;
-	}
 }
 
 void PropertiesWindow::saveGeneralPanel() {

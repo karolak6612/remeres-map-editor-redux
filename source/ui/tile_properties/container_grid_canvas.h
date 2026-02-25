@@ -45,6 +45,7 @@ protected:
 
 	int HitTest(int x, int y) const;
 	void RecalculateLayout();
+	void OnResize(wxSizeEvent& event);
 
 	Item* m_container;
 
