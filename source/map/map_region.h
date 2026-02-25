@@ -21,7 +21,6 @@
 #include "map/position.h"
 #include "map/tile.h"
 #include "map/spatial_hash_grid.h"
-#include "rendering/core/render_list.h"
 #include <unordered_map>
 #include <array>
 
@@ -122,8 +121,6 @@ public:
 	Floor(int x, int y, int z);
 	std::array<TileLocation, MAP_LAYERS> locs;
 
-	// Cache for extracted drawing operations.
-	std::unique_ptr<RenderList> cached_render_list;
 	bool is_render_dirty = true;
 };
 

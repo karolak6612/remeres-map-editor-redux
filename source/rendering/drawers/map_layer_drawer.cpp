@@ -55,14 +55,15 @@ void MapLayerDrawer::Extract(int map_z, bool live_client, const RenderView& view
 		}
 
 		// Only re-evaluate if the map data in this chunk changed.
-		if (!floor->is_render_dirty && floor->cached_render_list) {
+		RenderList* list = render_cache.Get(floor);
+		if (!floor->is_render_dirty && list) {
 			return; // Cache is still warm and valid.
 		}
 
-		if (!floor->cached_render_list) {
-			floor->cached_render_list = std::make_unique<RenderList>();
+		if (!list) {
+			list = render_cache.GetOrCreate(floor);
 		}
-		floor->cached_render_list->clear();
+		list->clear();
 
 		TileLocation* location = floor->locs.data();
 		int map_base_x = nd_map_x * TILE_SIZE;
@@ -92,7 +93,7 @@ void MapLayerDrawer::Extract(int map_z, bool live_client, const RenderView& view
 				}
 
 				// The TileRenderer now appends to the RenderList instead of immediately drawing!
-				tile_renderer->DrawTile(*(floor->cached_render_list), location, view, options, options.current_house_id, marker_flags, draw_x_base, draw_y);
+				tile_renderer->DrawTile(*list, location, view, options, options.current_house_id, marker_flags, draw_x_base, draw_y);
 			}
 		}
 
@@ -152,13 +153,18 @@ void MapLayerDrawer::Submit(SpriteBatch& sprite_batch, int map_z, bool live_clie
 		}
 
 		Floor* floor = nd->getFloor(map_z);
-		if (!floor || !floor->cached_render_list) {
+		if (!floor) {
+			return;
+		}
+
+		RenderList* list = render_cache.Get(floor);
+		if (!list) {
 			return;
 		}
 
 		// Fast path: Just blit the pre-calculated display list directly into the hardware batch.
 		// All heavy memory lookups and branch logic were already executed in the Extract phase!
-		floor->cached_render_list->submit(sprite_batch, base_screen_x, base_screen_y);
+		list->submit(sprite_batch, base_screen_x, base_screen_y);
 
 		// Lights are evaluated dynamically for now based on the locations array
 		if (draw_lights) {

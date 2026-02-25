@@ -193,7 +193,7 @@ void MapDrawer::InitPostProcess() {
 		0, 2, 3
 	};
 
-	glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, 0);
+	glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, GL_DYNAMIC_STORAGE_BIT);
 	glNamedBufferStorage(pp_ebo->GetID(), sizeof(quadIndices), quadIndices, 0);
 
 	glVertexArrayVertexBuffer(pp_vao->GetID(), 0, pp_vbo->GetID(), 0, 4 * sizeof(float));
@@ -229,6 +229,19 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 	// Set TextureSize uniform if shader needs it
 	shader->SetVec2("u_TextureSize", glm::vec2(fbo_width, fbo_height));
 
+	// Update UVs based on used portion of the texture
+	float u_max = (float)fbo_width / fbo_allocated_width;
+	float v_max = (float)fbo_height / fbo_allocated_height;
+
+	float quadVertices[] = {
+		// positions   // texCoords
+		-1.0f, 1.0f, 0.0f, v_max,
+		-1.0f, -1.0f, 0.0f, 0.0f,
+		1.0f, -1.0f, u_max, 0.0f,
+		1.0f, 1.0f, u_max, v_max
+	};
+	glNamedBufferSubData(pp_vbo->GetID(), 0, sizeof(quadVertices), quadVertices);
+
 	glBindTextureUnit(0, scale_texture->GetID());
 	glBindVertexArray(pp_vao->GetID());
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -247,14 +260,22 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 	int target_w = std::max(1, static_cast<int>(view.screensize_x * scale_factor));
 	int target_h = std::max(1, static_cast<int>(view.screensize_y * scale_factor));
 
+	// Always allocate at least the screen size to avoid reallocation during minor zooms
+	// But respect target_w if it somehow exceeds screen (shouldn't happen with zoom <= 1.0 logic, but good for safety)
+	int needed_w = std::max(view.screensize_x, target_w);
+	int needed_h = std::max(view.screensize_y, target_h);
+
 	bool fbo_resized = false;
-	if (fbo_width != target_w || fbo_height != target_h || !scale_fbo) {
-		fbo_width = target_w;
-		fbo_height = target_h;
+
+	// Only reallocate if we need more space than currently allocated
+	if (needed_w > fbo_allocated_width || needed_h > fbo_allocated_height || !scale_fbo) {
+		fbo_allocated_width = needed_w;
+		fbo_allocated_height = needed_h;
+
 		scale_fbo = std::make_unique<GLFramebuffer>();
 		scale_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
 
-		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_width, fbo_height);
+		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_allocated_width, fbo_allocated_height);
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
@@ -262,12 +283,15 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
 		glNamedFramebufferDrawBuffers(scale_fbo->GetID(), 1, drawBuffers);
 
-		// Sanity check for division by zero risk in shaders
-		if (fbo_width < 1 || fbo_height < 1) {
-			// This should be impossible due to std::max, but good for invariant documentation
-			spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
-		}
 		fbo_resized = true;
+	}
+
+	fbo_width = target_w;
+	fbo_height = target_h;
+
+	// Sanity check for division by zero risk in shaders
+	if (fbo_width < 1 || fbo_height < 1) {
+		spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
 	}
 
 	// Update filtering parameters when scaling is enabled and either the FBO was resized or the AA mode changed (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode))
@@ -283,7 +307,14 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 }
 
 void MapDrawer::Release() {
+	ClearCache();
 	// tooltip_drawer->clear(); // Moved to ClearTooltips(), called explicitly after UI draw
+}
+
+void MapDrawer::ClearCache() {
+	if (map_layer_drawer) {
+		map_layer_drawer->ClearCache();
+	}
 }
 
 void MapDrawer::Draw() {

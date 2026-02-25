@@ -19,6 +19,7 @@
 #define RME_MAP_LAYER_DRAWER_H
 
 #include <iosfwd>
+#include "rendering/core/render_chunk_cache.h"
 
 class Editor;
 class TileRenderer;
@@ -40,10 +41,15 @@ public:
 	// Legacy helper that calls Extract then Submit for backwards compatibility where needed
 	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
 
+	void ClearCache() {
+		render_cache.Clear();
+	}
+
 private:
 	TileRenderer* tile_renderer;
 	GridDrawer* grid_drawer;
 	Editor* editor;
+	RenderChunkCache render_cache;
 };
 
 #endif

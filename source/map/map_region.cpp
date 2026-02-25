@@ -26,7 +26,6 @@
 #include "map/position.h"
 #include "map/tile.h"
 #include "map/spatial_hash_grid.h"
-#include "rendering/core/render_list.h"
 
 //**************** Tile Location **********************
 
