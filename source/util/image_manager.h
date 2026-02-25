@@ -10,6 +10,7 @@
 #include <wx/colour.h>
 #include <wx/gdicmn.h>
 #include <unordered_map>
+#include <set>
 #include <string>
 #include <string_view>
 #include <memory>
@@ -61,6 +62,9 @@ public:
 	// OpenGL support
 	uint32_t GetGLTexture(std::string_view assetPath);
 
+	// Context lifecycle support
+	void OnContextDestroyed(NVGcontext* ctx);
+
 	// Cleanup
 	void ClearCache();
 
@@ -75,6 +79,9 @@ private:
 	std::unordered_map<std::pair<std::string, uint32_t>, wxBitmap, PairHash> m_tintedBitmapCache;
 	std::unordered_map<NvgCacheKey, int, NvgCacheKeyHash> m_nvgImageCache;
 	std::unordered_map<std::string, uint32_t> m_glTextureCache;
+
+	// Keep track of active NanoVG contexts to prevent nvgDeleteImage on dangling pointers
+	std::set<NVGcontext*> m_activeContexts;
 
 	// Helper for tinting
 	wxImage TintImage(const wxImage& image, const wxColour& tint);

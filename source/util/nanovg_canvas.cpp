@@ -46,6 +46,9 @@ NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
 NanoVGCanvas::~NanoVGCanvas() {
 	if (m_glContext) {
 		if (MakeContextCurrent()) {
+			if (m_nvg) {
+				IMAGE_MANAGER.OnContextDestroyed(m_nvg.get());
+			}
 			ClearImageCache();
 		}
 	}

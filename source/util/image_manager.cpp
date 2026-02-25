@@ -34,11 +34,12 @@ void ImageManager::ClearCache() {
 	m_tintedBitmapCache.clear();
 
 	for (const auto& [key, imageID] : m_nvgImageCache) {
-		if (key.ctx && imageID > 0) {
+		if (m_activeContexts.contains(key.ctx) && imageID > 0) {
 			nvgDeleteImage(key.ctx, imageID);
 		}
 	}
 	m_nvgImageCache.clear();
+	m_activeContexts.clear();
 	m_glTextureCache.clear();
 }
 
@@ -160,6 +161,8 @@ int ImageManager::GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, con
 		return it->second;
 	}
 
+	m_activeContexts.insert(vg);
+
 	std::string fullPath = ResolvePath(assetPath);
 	int img = 0;
 
@@ -233,4 +236,23 @@ uint32_t ImageManager::GetGLTexture(std::string_view assetPath) {
 	// Not implemented yet - usually we can use NanoVG's image as GL texture if we know how it's stored,
 	// or load it via glad.
 	return 0;
+}
+
+void ImageManager::OnContextDestroyed(NVGcontext* ctx) {
+	if (!m_activeContexts.contains(ctx)) {
+		return;
+	}
+
+	// Remove all entries from cache that belong to this context
+	std::erase_if(m_nvgImageCache, [ctx](const auto& item) {
+		if (item.first.ctx == ctx) {
+			if (item.second > 0) {
+				nvgDeleteImage(ctx, item.second);
+			}
+			return true;
+		}
+		return false;
+	});
+
+	m_activeContexts.erase(ctx);
 }

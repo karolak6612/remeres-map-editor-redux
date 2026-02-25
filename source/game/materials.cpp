@@ -143,10 +143,9 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 		std::string extensionAuthorLink = extensionNode.attribute("authorurl").as_string();
 		extensionAuthorLink.erase(std::remove(extensionAuthorLink.begin(), extensionAuthorLink.end(), '\''));
 
-		auto extension_ptr = std::make_unique<MaterialsExtension>(extensionName, extensionAuthor, extensionDescription);
-		MaterialsExtension* materialExtension = extension_ptr.get();
-		materialExtension->url = extensionUrl;
-		materialExtension->author_url = extensionAuthorLink;
+		auto extension = std::make_unique<MaterialsExtension>(extensionName, extensionAuthor, extensionDescription);
+		extension->url = extensionUrl;
+		extension->author_url = extensionAuthorLink;
 
 		if ((attribute = extensionNode.attribute("client"))) {
 			clientVersions.clear();
@@ -162,24 +161,24 @@ bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vec
 
 			clientVersions.push_back(extensionClientString.substr(lastPosition));
 			for (const std::string& version : clientVersions) {
-				materialExtension->addVersion(version);
+				extension->addVersion(version);
 			}
 
-			std::sort(materialExtension->version_list.begin(), materialExtension->version_list.end(), VersionComparisonPredicate);
+			std::sort(extension->version_list.begin(), extension->version_list.end(), VersionComparisonPredicate);
 
-			auto duplicate = std::unique(materialExtension->version_list.begin(), materialExtension->version_list.end());
-			while (duplicate != materialExtension->version_list.end()) {
-				materialExtension->version_list.erase(duplicate);
-				duplicate = std::unique(materialExtension->version_list.begin(), materialExtension->version_list.end());
+			auto duplicate = std::unique(extension->version_list.begin(), extension->version_list.end());
+			while (duplicate != extension->version_list.end()) {
+				extension->version_list.erase(duplicate);
+				duplicate = std::unique(extension->version_list.begin(), extension->version_list.end());
 			}
 		} else {
 			warnings.push_back((filename + ": Extension is not available for any version.").ToStdString());
 		}
 
-		if (materialExtension->isForVersion(g_version.GetCurrentVersionID())) {
+		if (extension->isForVersion(g_version.GetCurrentVersionID())) {
 			unserializeMaterials(filename, extensionNode, error, warnings);
 		}
-		extensions.push_back(std::move(extension_ptr));
+		extensions.push_back(std::move(extension));
 	} while (ext_dir.GetNext(&filename));
 
 	return true;
@@ -309,11 +308,11 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 
 	const std::string& name = attribute.as_string();
 
-	auto& tileset_ptr = tilesets[name];
-	if (!tileset_ptr) {
-		tileset_ptr = std::make_unique<Tileset>(g_brushes, name);
+	auto [it, inserted] = tilesets.try_emplace(name, nullptr);
+	if (inserted) {
+		it->second = std::make_unique<Tileset>(g_brushes, name);
 	}
-	Tileset* tileset = tileset_ptr.get();
+	Tileset* tileset = it->second.get();
 
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
 		tileset->loadCategory(childNode, warnings);
@@ -328,11 +327,11 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 		return;
 	}
 
-	auto& tileset_ptr = tilesets[tilesetName];
-	if (!tileset_ptr) {
-		tileset_ptr = std::make_unique<Tileset>(g_brushes, tilesetName);
+	auto [tilesetIt, inserted] = tilesets.try_emplace(tilesetName, nullptr);
+	if (inserted) {
+		tilesetIt->second = std::make_unique<Tileset>(g_brushes, tilesetName);
 	}
-	Tileset* tileset = tileset_ptr.get();
+	Tileset* tileset = tilesetIt->second.get();
 
 	TilesetCategory* category = tileset->getCategory(categoryType);
 
