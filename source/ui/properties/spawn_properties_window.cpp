@@ -20,13 +20,12 @@ SpawnPropertiesWindow::SpawnPropertiesWindow(wxWindow* win_parent, const Map* ma
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Spawn Properties");
 
-	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
-	subsizer->AddGrowableCol(1);
+	wxBoxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Spawn size"));
+	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Spawn size"), wxSizerFlags(0).CenterVertical().Border(wxRIGHT, 10));
 	count_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_spawn->getSize()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS), edit_spawn->getSize());
 	count_field->SetToolTip("Radius of the spawn area");
-	subsizer->Add(count_field, wxSizerFlags(1).Expand());
+	subsizer->Add(count_field, wxSizerFlags(1).CenterVertical());
 
 	boxsizer->Add(subsizer, wxSizerFlags(1).Expand());
 

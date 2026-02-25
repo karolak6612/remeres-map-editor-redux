@@ -407,6 +407,7 @@ void FindItemDialog::RefreshContentsInternal() {
 	}
 
 	if (found_search_results) {
+		items_list->CommitUpdates();
 		items_list->SetSelection(0);
 		ok_button->Enable(true);
 		ok_button->SetToolTip("Confirm selection");
