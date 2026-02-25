@@ -125,6 +125,7 @@ public:
 
 	void DrawGrid();
 	void DrawTooltips(NVGcontext* vg);
+	void DrawHUD(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
 	void ClearFrameOverlays();

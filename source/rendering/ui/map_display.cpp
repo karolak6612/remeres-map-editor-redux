@@ -231,6 +231,8 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 		drawer->DrawDoorIndicators(vg);
 	}
 
+	drawer->DrawHUD(vg);
+
 	TextRenderer::EndFrame(vg);
 
 	// Sanitize state after NanoVG to avoid polluting the next frame or other tabs

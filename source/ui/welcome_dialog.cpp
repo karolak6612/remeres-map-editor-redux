@@ -12,6 +12,8 @@
 #include "util/image_manager.h"
 #include "ui/theme.h"
 
+#include "ui/controls/recent_file_listbox.h"
+
 wxDEFINE_EVENT(WELCOME_DIALOG_ACTION, wxCommandEvent);
 
 // --- Convex Button Helper Class ---
@@ -259,12 +261,10 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 }
 
 WelcomeDialog::~WelcomeDialog() {
-	if (m_recentList) {
-		m_recentList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
-	}
 	if (m_clientList) {
 		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
 	}
+	// m_recentList is now NanoVGListBox, no image list handling needed
 }
 
 void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, std::string_view artId, const wxColour& valCol) {
@@ -359,10 +359,8 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
 	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(24, 24))));
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-		long item = -1;
-		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-		if (item != -1) {
-			wxString path = m_recentList->GetItemText(item, 1);
+		wxString path = m_recentList->GetSelectedFile();
+		if (!path.IsEmpty()) {
 			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
 			newEvent->SetId(wxID_OPEN);
 			newEvent->SetString(path);
@@ -401,32 +399,18 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
-	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList — ownership retained by m_imageList (do not replace with AssignImageList)
-	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
-	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
-	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, FromDIP(150));
-
-	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
-
-	for (size_t i = 0; i < recentFiles.size(); ++i) {
-		long idx = m_recentList->InsertItem(i, "", 4);
-		m_recentList->SetItem(idx, 1, recentFiles[i]);
-
-		// Get modification time
-		wxFileName fn(recentFiles[i]);
-		wxDateTime dt;
-		if (fn.GetTimes(nullptr, &dt, nullptr)) {
-			// Check if valid? GetTimes returns bool success
-			m_recentList->SetItem(idx, 2, dt.Format("%Y-%m-%d %H:%M"));
-		} else {
-			m_recentList->SetItem(idx, 2, "-");
+	m_recentList = new RecentFileListBox(col2, wxID_ANY);
+	m_recentList->SetRecentFiles(recentFiles);
+	m_recentList->Bind(wxEVT_LISTBOX, &WelcomeDialog::OnRecentFileSelected, this);
+	m_recentList->Bind(wxEVT_LISTBOX_DCLICK, [this](wxCommandEvent&){
+		wxString path = m_recentList->GetSelectedFile();
+		if (!path.IsEmpty()) {
+			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
+			newEvent->SetId(wxID_OPEN);
+			newEvent->SetString(path);
+			QueueEvent(newEvent);
 		}
-	}
-	m_recentList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &WelcomeDialog::OnRecentFileActivated, this);
-	m_recentList->Bind(wxEVT_LIST_ITEM_SELECTED, &WelcomeDialog::OnRecentFileSelected, this);
+	});
 
 	col2->GetSizer()->Add(m_recentList, 1, wxEXPAND | wxALL, 1);
 	contentSizer->Add(col2, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 2
@@ -504,21 +488,6 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 	}
 }
 
-void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
-	wxListItem item;
-	item.SetId(event.GetIndex());
-	item.SetColumn(1);
-	item.SetMask(wxLIST_MASK_TEXT);
-
-	if (m_recentList->GetItem(item)) {
-		wxString realPath = item.GetText();
-		wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-		newEvent->SetId(wxID_OPEN);
-		newEvent->SetString(realPath);
-		QueueEvent(newEvent);
-	}
-}
-
-void WelcomeDialog::OnRecentFileSelected(wxListEvent& event) {
-	// Placeholder
+void WelcomeDialog::OnRecentFileSelected(wxCommandEvent& event) {
+	// Placeholder for when a file is selected (e.g. update side info panel)
 }

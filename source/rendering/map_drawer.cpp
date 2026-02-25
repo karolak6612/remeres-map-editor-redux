@@ -70,6 +70,8 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include <nanovg.h>
+#include "util/nvg_utils.h"
 
 // Shader Sources
 const char* screen_vert = R"(
@@ -425,6 +427,61 @@ void MapDrawer::DrawLight() {
 
 void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 	ScreenCapture::Capture(view.screensize_x, view.screensize_y, screenshot_buffer);
+}
+
+void MapDrawer::DrawHUD(NVGcontext* vg) {
+	if (!vg) return;
+
+	Position cursor = canvas->GetCursorPosition();
+	size_t selectionCount = editor.selection.size();
+	Brush* currentBrush = g_gui.GetCurrentBrush();
+	wxString toolName = currentBrush ? wxstr(currentBrush->getName()) : "None";
+
+	float hudW = 220.0f;
+	float hudH = 100.0f;
+	float padding = 10.0f;
+	float screenH = (float)canvas->GetSize().y;
+
+	// Bottom-Left positioning
+	float x = padding;
+	float y = screenH - hudH - padding;
+
+	// Background
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, y, hudW, hudH, 5.0f);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 180));
+	nvgFill(vg);
+
+	// Border
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, y, hudW, hudH, 5.0f);
+	nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 50));
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStroke(vg);
+
+	// Info Text
+	nvgFontFace(vg, "sans");
+	nvgFontSize(vg, 14.0f);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+
+	// Cursor Position
+	wxString coords = wxString::Format("Pos: %d, %d, %d", cursor.x, cursor.y, cursor.z);
+	nvgText(vg, x + 10, y + 10, coords.ToUTF8(), nullptr);
+
+	// Tool
+	wxString toolStr = wxString::Format("Tool: %s", toolName);
+	nvgText(vg, x + 10, y + 30, toolStr.ToUTF8(), nullptr);
+
+	// Selection
+	if (selectionCount > 0) {
+		wxString selStr = wxString::Format("Selection: %zu items", selectionCount);
+		nvgText(vg, x + 10, y + 50, selStr.ToUTF8(), nullptr);
+	}
+
+	// Floor/Zoom info could also go here
+	wxString viewStr = wxString::Format("Floor: %d | Zoom: %.2f", canvas->GetFloor(), canvas->GetZoom());
+	nvgText(vg, x + 10, y + 70, viewStr.ToUTF8(), nullptr);
 }
 
 void MapDrawer::ClearFrameOverlays() {

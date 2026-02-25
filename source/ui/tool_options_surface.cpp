@@ -7,27 +7,31 @@
 #include "brushes/managers/brush_manager.h"
 #include "brushes/brush.h"
 #include "game/sprites.h"
+#include "util/nvg_utils.h"
 #include <format>
 #include <algorithm>
+#include <nanovg.h>
 
 // Bring in specific brushes for identification/selection
 #include "brushes/border/optional_border_brush.h"
 #include "brushes/door/door_brush.h"
 #include "brushes/flag/flag_brush.h"
 
-ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) : wxControl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxWANTS_CHARS) {
-	SetBackgroundStyle(wxBG_STYLE_PAINT);
+ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) :
+	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxWANTS_CHARS) {
+	// SetBackgroundStyle(wxBG_STYLE_PAINT); // NanoVGCanvas handles this
 	m_animTimer.SetOwner(this);
 
-	Bind(wxEVT_PAINT, &ToolOptionsSurface::OnPaint, this);
-	Bind(wxEVT_ERASE_BACKGROUND, &ToolOptionsSurface::OnEraseBackground, this);
+	// NanoVGCanvas binds Paint, Size, etc. We override virtuals or bind others.
 	Bind(wxEVT_LEFT_DOWN, &ToolOptionsSurface::OnMouse, this);
 	Bind(wxEVT_LEFT_DCLICK, &ToolOptionsSurface::OnMouse, this);
 	Bind(wxEVT_LEFT_UP, &ToolOptionsSurface::OnMouse, this);
 	Bind(wxEVT_MOTION, &ToolOptionsSurface::OnMouse, this);
 	Bind(wxEVT_LEAVE_WINDOW, &ToolOptionsSurface::OnLeave, this);
-	Bind(wxEVT_SIZE, &ToolOptionsSurface::OnSize, this);
 	Bind(wxEVT_TIMER, &ToolOptionsSurface::OnTimer, this);
+
+	// Unbind NanoVGCanvas default wheel if we want custom handling?
+	// NanoVGCanvas OnScroll handles it. We should be fine.
 }
 
 ToolOptionsSurface::~ToolOptionsSurface() {
@@ -79,6 +83,7 @@ void ToolOptionsSurface::RebuildLayout() {
 	interactables.lock_check_rect = wxRect();
 
 	if (current_type == TILESET_UNKNOWN) {
+		UpdateScrollbar(0);
 		return;
 	}
 
@@ -181,61 +186,83 @@ void ToolOptionsSurface::RebuildLayout() {
 		interactables.preview_check_rect = wxRect(x, y, slider_w, FromDIP(20));
 		y += FromDIP(24);
 		interactables.lock_check_rect = wxRect(x, y, slider_w, FromDIP(20));
+		y += FromDIP(24); // Add height for last element
 	}
 
+	UpdateScrollbar(y + FromDIP(8));
 	InvalidateBestSize();
 }
 
-void ToolOptionsSurface::OnPaint(wxPaintEvent& evt) {
-	wxAutoBufferedPaintDC dc(this);
-	PrepareDC(dc);
-
-	// Background
-	wxColour bg = Theme::Get(Theme::Role::Surface);
-	dc.SetBackground(wxBrush(bg));
-	dc.Clear();
+void ToolOptionsSurface::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	// Background handled by NanoVGCanvas clear?
+	// No, NanoVGCanvas just clears GL. We should draw background if we want specific color.
+	// But standard theme background is fine.
 
 	// 1. Draw Tools
 	for (const auto& tr : tool_rects) {
-		DrawToolIcon(dc, tr);
+		DrawToolIcon(vg, tr);
 	}
 
 	// 2. Draw Sliders
 	if (interactables.size_slider_rect.height > 0) {
-		DrawSlider(dc, interactables.size_slider_rect, "Size", current_size, MIN_BRUSH_SIZE, MAX_BRUSH_SIZE, true);
+		DrawSlider(vg, interactables.size_slider_rect, "Size", current_size, MIN_BRUSH_SIZE, MAX_BRUSH_SIZE, true);
 	}
 	if (interactables.thickness_slider_rect.height > 0) {
-		// Doodad thickness logic usually 0-100% or similar? No, old code was just "Thickness".
-		DrawSlider(dc, interactables.thickness_slider_rect, "Thickness", current_thickness, MIN_BRUSH_THICKNESS, MAX_BRUSH_THICKNESS, true);
+		DrawSlider(vg, interactables.thickness_slider_rect, "Thickness", current_thickness, MIN_BRUSH_THICKNESS, MAX_BRUSH_THICKNESS, true);
 	}
 
 	// 3. Checkboxes
 	if (interactables.preview_check_rect.height > 0) {
-		DrawCheckbox(dc, interactables.preview_check_rect, "Preview Border", show_preview, interactables.hover_preview);
+		DrawCheckbox(vg, interactables.preview_check_rect, "Preview Border", show_preview, interactables.hover_preview);
 	}
 	if (interactables.lock_check_rect.height > 0) {
-		DrawCheckbox(dc, interactables.lock_check_rect, "Lock Doors (Shift)", lock_doors, interactables.hover_lock);
+		DrawCheckbox(vg, interactables.lock_check_rect, "Lock Doors (Shift)", lock_doors, interactables.hover_lock);
 	}
-
-	// Debug Focus
-	// if (HasFocus()) { wxPen p(*wxRED, 1); dc.SetPen(p); dc.SetBrush(*wxTRANSPARENT_BRUSH); dc.DrawRectangle(GetClientSize()); }
 }
 
-void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
+void ToolOptionsSurface::DrawToolIcon(NVGcontext* vg, const ToolRect& tr) {
 	bool is_selected = (active_brush == tr.brush);
 	bool is_hover = (hover_brush == tr.brush);
 
 	wxRect r = tr.rect;
+	float x = r.x;
+	float y = r.y;
+	float w = r.width;
+	float h = r.height;
 
 	// Background
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, y, w, h, 4.0f);
+
 	if (is_selected) {
-		dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent)));
-		dc.SetBrush(wxBrush(Theme::Get(Theme::Role::Selected)));
-		dc.DrawRectangle(r);
+		// Glow effect
+		NVGpaint glow = nvgBoxGradient(vg, x, y, w, h, 4, 8, nvgRGBA(100, 150, 255, 100), nvgRGBA(0, 0, 0, 0));
+		nvgBeginPath(vg);
+		nvgRect(vg, x - 10, y - 10, w + 20, h + 20);
+		nvgRoundedRect(vg, x, y, w, h, 4);
+		nvgPathWinding(vg, NVG_HOLE);
+		nvgFillPaint(vg, glow);
+		nvgFill(vg);
+
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, x, y, w, h, 4.0f);
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Selected)));
+		nvgFill(vg);
+
+		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
+		nvgStrokeWidth(vg, 2.0f);
+		nvgStroke(vg);
 	} else if (is_hover) {
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.SetBrush(wxBrush(wxColour(255, 255, 255, 30))); // Transparent white
-		dc.DrawRectangle(r);
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 30));
+		nvgFill(vg);
+
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 50));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
+	} else {
+		nvgStrokeColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border)));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
 	}
 
 	// Draw Brush Sprite
@@ -246,101 +273,133 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 		}
 
 		if (s) {
-			// Center the sprite in the rect
-			// Assuming 32x32 icon size for now, which matches SPRITE_SIZE_32x32 (32x32)
-			int x_off = r.x + (r.width - 32) / 2;
-			int y_off = r.y + (r.height - 32) / 2;
-			s->DrawTo(&dc, SPRITE_SIZE_32x32, x_off, y_off);
+			int tex = GetOrCreateSpriteTexture(vg, s);
+			if (tex > 0) {
+				// Center sprite
+				float ix = x + (w - 32) / 2;
+				float iy = y + (h - 32) / 2;
+				NVGpaint imgPaint = nvgImagePattern(vg, ix, iy, 32, 32, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, ix, iy, 32, 32);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
 		} else {
-			// Fallback text/color if no sprite
+			// Fallback text
 			wxString label = tr.tooltip.Left(1);
-			dc.SetTextForeground(Theme::Get(Theme::Role::Text));
-			dc.DrawLabel(label, r, wxALIGN_CENTER);
+			nvgFontSize(vg, 16.0f);
+			nvgFontFace(vg, "sans-bold");
+			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
+			nvgText(vg, x + w/2, y + h/2, label.ToUTF8(), nullptr);
 		}
 	}
-
-	// Border
-	dc.SetBrush(*wxTRANSPARENT_BRUSH);
-	if (is_selected) {
-		dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent)));
-	} else {
-		dc.SetPen(wxPen(Theme::Get(Theme::Role::Border)));
-	}
-	dc.DrawRectangle(r);
 }
 
-void ToolOptionsSurface::DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active) {
-	// Label
-	dc.SetFont(GetFont());
-	dc.SetTextForeground(Theme::Get(Theme::Role::Text));
+void ToolOptionsSurface::DrawSlider(NVGcontext* vg, const wxRect& rect, const wxString& label, int value, int min, int max, bool active) {
+	float x = rect.x;
+	float y = rect.y;
+	float w = rect.width;
+	float h = rect.height;
 
-	wxSize extent = dc.GetTextExtent(label);
-	dc.DrawText(label, rect.GetLeft(), rect.GetTop() + (rect.height - extent.y) / 2);
+	// Label
+	nvgFontSize(vg, 12.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
+	nvgText(vg, x, y + h/2, label.ToUTF8(), nullptr);
 
 	// Track
-	int label_w = FromDIP(SLIDER_LABEL_WIDTH);
-	int track_x = rect.GetLeft() + label_w;
-	int track_w = rect.width - label_w - FromDIP(SLIDER_TEXT_MARGIN); // Room for value text
-	int track_h = FromDIP(4);
-	int track_y = rect.GetTop() + (rect.height - track_h) / 2;
+	float label_w = FromDIP(SLIDER_LABEL_WIDTH);
+	float track_x = x + label_w;
+	float track_w = w - label_w - FromDIP(SLIDER_TEXT_MARGIN);
+	float track_h = FromDIP(4);
+	float track_y = y + (h - track_h) / 2;
 
-	wxRect track_rect(track_x, track_y, track_w, track_h);
-
-	dc.SetPen(*wxTRANSPARENT_PEN);
-	dc.SetBrush(wxBrush(Theme::Get(Theme::Role::Border)));
-	dc.DrawRectangle(track_rect);
+	// Track Background
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, track_x, track_y, track_w, track_h, 2.0f);
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border)));
+	nvgFill(vg);
 
 	// Fill
 	if (value > min && max > min) {
 		float pct = std::clamp(static_cast<float>(value - min) / static_cast<float>(max - min), 0.0f, 1.0f);
-		int fill_w = static_cast<int>(track_w * pct);
-		wxRect fill_rect(track_x, track_y, fill_w, track_h);
-		dc.SetBrush(wxBrush(Theme::Get(Theme::Role::Accent)));
-		dc.DrawRectangle(fill_rect);
+		float fill_w = track_w * pct;
 
-		// Thumb
-		dc.SetBrush(wxBrush(Theme::Get(Theme::Role::Text)));
-		dc.DrawCircle(track_x + fill_w, track_y + track_h / 2, FromDIP(SLIDER_THUMB_RADIUS));
+		nvgBeginPath(vg);
+		nvgRoundedRect(vg, track_x, track_y, fill_w, track_h, 2.0f);
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
+		nvgFill(vg);
+
+		// Thumb with glow
+		float thumbX = track_x + fill_w;
+		float thumbY = track_y + track_h / 2;
+		float radius = FromDIP(SLIDER_THUMB_RADIUS);
+
+		NVGpaint glow = nvgRadialGradient(vg, thumbX, thumbY, radius, radius + 4, nvgRGBA(100, 150, 255, 100), nvgRGBA(0, 0, 0, 0));
+		nvgBeginPath(vg);
+		nvgCircle(vg, thumbX, thumbY, radius + 4);
+		nvgFillPaint(vg, glow);
+		nvgFill(vg);
+
+		nvgBeginPath(vg);
+		nvgCircle(vg, thumbX, thumbY, radius);
+		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgFill(vg);
 	}
 
 	// Value Text
 	wxString val_str = std::format("{}", value);
-	dc.DrawText(val_str, track_x + track_w + FromDIP(SLIDER_VALUE_MARGIN), rect.GetTop() + (rect.height - extent.y) / 2);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
+	nvgText(vg, track_x + track_w + FromDIP(SLIDER_VALUE_MARGIN), y + h/2, val_str.ToUTF8(), nullptr);
 }
 
-void ToolOptionsSurface::DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover) {
+void ToolOptionsSurface::DrawCheckbox(NVGcontext* vg, const wxRect& rect, const wxString& label, bool value, bool hover) {
+	float x = rect.x;
+	float y = rect.y;
+	float box_sz = FromDIP(14);
+	float box_y = y + (rect.height - box_sz) / 2;
+
 	// Box
-	int box_sz = FromDIP(14);
-	int box_y = rect.GetTop() + (rect.height - box_sz) / 2;
-	wxRect box(rect.GetLeft(), box_y, box_sz, box_sz);
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x, box_y, box_sz, box_sz, 3.0f);
 
-	if (hover) {
-		dc.SetPen(wxPen(Theme::Get(Theme::Role::AccentHover)));
-	} else {
-		dc.SetPen(wxPen(Theme::Get(Theme::Role::Border)));
-	}
-
-	dc.SetBrush(value ? wxBrush(Theme::Get(Theme::Role::Accent)) : wxBrush(Theme::Get(Theme::Role::Background)));
-	dc.DrawRectangle(box);
-
-	// Checkmark (simple)
 	if (value) {
-		dc.SetPen(*wxWHITE_PEN);
-		dc.DrawLine(box.GetLeft() + 3, box.GetTop() + 7, box.GetLeft() + 6, box.GetTop() + 10);
-		dc.DrawLine(box.GetLeft() + 6, box.GetTop() + 10, box.GetRight() - 3, box.GetTop() + 4);
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
+		nvgFill(vg);
+
+		// Checkmark
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, x + 3, box_y + 7);
+		nvgLineTo(vg, x + 6, box_y + 10);
+		nvgLineTo(vg, x + box_sz - 3, box_y + 4);
+		nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 255));
+		nvgStrokeWidth(vg, 2.0f);
+		nvgStroke(vg);
+	} else {
+		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Background)));
+		nvgFill(vg);
+
+		wxColour borderCol = hover ? Theme::Get(Theme::Role::AccentHover) : Theme::Get(Theme::Role::Border);
+		nvgStrokeColor(vg, NvgUtils::ToNvColor(borderCol));
+		nvgStrokeWidth(vg, 1.0f);
+		nvgStroke(vg);
 	}
 
 	// Label
-	dc.SetTextForeground(Theme::Get(Theme::Role::Text));
-	dc.DrawText(label, box.GetRight() + FromDIP(8), box_y - 1);
-}
-
-void ToolOptionsSurface::OnEraseBackground(wxEraseEvent& evt) {
-	// No-op
+	nvgFontSize(vg, 12.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
+	nvgText(vg, x + box_sz + FromDIP(8), box_y + box_sz/2, label.ToUTF8(), nullptr);
 }
 
 void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	m_hoverPos = evt.GetPosition();
+	// Adjust for scrolling
+	m_hoverPos.y += GetScrollPosition();
 
 	// Hit testing
 	Brush* prev_hover = hover_brush;
@@ -478,6 +537,8 @@ void ToolOptionsSurface::OnTimer(wxTimerEvent& evt) {
 
 void ToolOptionsSurface::OnSize(wxSizeEvent& evt) {
 	RebuildLayout();
+	// NanoVGCanvas handles OnSize internally but we also need to trigger RebuildLayout
+	// NanoVGCanvas::OnSize calls UpdateScrollbar.
 	Refresh();
 	evt.Skip();
 }

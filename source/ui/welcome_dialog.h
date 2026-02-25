@@ -7,6 +7,8 @@
 #include <string_view>
 #include <memory>
 
+#include "ui/controls/recent_file_listbox.h"
+
 // Forward declarations
 class wxListCtrl;
 class wxImageList;
@@ -21,8 +23,7 @@ public:
 private:
 	// Event Handlers
 	void OnButtonClicked(wxCommandEvent& event);
-	void OnRecentFileActivated(wxListEvent& event);
-	void OnRecentFileSelected(wxListEvent& event);
+	void OnRecentFileSelected(wxCommandEvent& event); // Changed event type
 
 	void AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, std::string_view artId, const wxColour& valCol = wxNullColour);
 
@@ -31,7 +32,7 @@ private:
 	wxPanel* CreateFooterPanel(wxWindow* parent, const wxString& versionText);
 
 	std::unique_ptr<wxImageList> m_imageList;
-	wxListCtrl* m_recentList = nullptr;
+	RecentFileListBox* m_recentList = nullptr; // Changed type
 	wxListCtrl* m_clientList = nullptr;
 };
 
