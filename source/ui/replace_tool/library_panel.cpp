@@ -12,6 +12,7 @@
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/carpet/carpet_brush.h"
+#include "util/image_manager.h"
 #include <wx/splitter.h>
 #include <algorithm>
 
@@ -43,6 +44,11 @@ void LibraryPanel::InitLayout() {
 
 	m_notebook = new wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxNB_TOP | wxBORDER_NONE);
 
+	wxImageList* imageList = new wxImageList(16, 16);
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_PAINTBRUSH, wxSize(16, 16)));
+	m_notebook->AssignImageList(imageList);
+
 	// PAGE 1: Item List
 	wxPanel* itemListPage = new wxPanel(m_notebook);
 	wxBoxSizer* itemListSizer = new wxBoxSizer(wxVERTICAL);
@@ -59,7 +65,7 @@ void LibraryPanel::InitLayout() {
 	itemListSizer->Add(m_allItemsGrid, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, padding);
 
 	itemListPage->SetSizer(itemListSizer);
-	m_notebook->AddPage(itemListPage, "Items");
+	m_notebook->AddPage(itemListPage, "Items", true, 0);
 
 	// PAGE 2: Brush List
 	wxPanel* brushListPage = new wxPanel(m_notebook);
@@ -97,7 +103,7 @@ void LibraryPanel::InitLayout() {
 	brushListSizer->Add(brushSplitter, 1, wxEXPAND | wxALL, padding);
 
 	brushListPage->SetSizer(brushListSizer);
-	m_notebook->AddPage(brushListPage, "Brushes");
+	m_notebook->AddPage(brushListPage, "Brushes", false, 1);
 
 	mainSizer->Add(m_notebook, 1, wxEXPAND);
 	SetSizer(mainSizer);

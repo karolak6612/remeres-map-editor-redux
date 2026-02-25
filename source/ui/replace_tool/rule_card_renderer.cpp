@@ -9,21 +9,39 @@
 #include <format>
 #include "ui/replace_tool/rule_builder_panel.h"
 #include "ui/theme.h"
+#include "util/image_manager.h"
 
 const int RuleCardRenderer::CARD_W = RuleCardRenderer::ITEM_SIZE + 20;
 
 void RuleCardRenderer::DrawTrashIcon(NVGcontext* vg, float x, float y, float size, bool highlight) {
-	nvgBeginPath(vg);
-	float w = size * 0.6f;
-	float h = size * 0.7f;
-	float ox = x + (size - w) / 2;
-	float oy = y + (size - h) / 2;
+	wxColour tint = highlight ? wxColour(255, 80, 80) : wxColour(200, 50, 50);
+	int image = IMAGE_MANAGER.GetNanoVGImage(vg, ICON_TRASH_CAN, tint);
 
-	nvgFillColor(vg, highlight ? nvgRGBA(255, 80, 80, 255) : nvgRGBA(200, 50, 50, 255));
-	nvgRect(vg, ox, oy + 5, w, h - 5);
-	nvgRect(vg, ox - 2, oy, w + 4, 3);
-	nvgRect(vg, ox + w / 2 - 3, oy - 2, 6, 2);
-	nvgFill(vg);
+	if (image > 0) {
+		float padding = size * 0.2f;
+		float iconSize = size - padding * 2;
+		float ox = x + padding;
+		float oy = y + padding;
+
+		NVGpaint imgPaint = nvgImagePattern(vg, ox, oy, iconSize, iconSize, 0, image, 1.0f);
+		nvgBeginPath(vg);
+		nvgRect(vg, ox, oy, iconSize, iconSize);
+		nvgFillPaint(vg, imgPaint);
+		nvgFill(vg);
+	} else {
+		// Fallback
+		nvgBeginPath(vg);
+		float w = size * 0.6f;
+		float h = size * 0.7f;
+		float ox = x + (size - w) / 2;
+		float oy = y + (size - h) / 2;
+
+		nvgFillColor(vg, highlight ? nvgRGBA(255, 80, 80, 255) : nvgRGBA(200, 50, 50, 255));
+		nvgRect(vg, ox, oy + 5, w, h - 5);
+		nvgRect(vg, ox - 2, oy, w + 4, 3);
+		nvgRect(vg, ox + w / 2 - 3, oy - 2, 6, 2);
+		nvgFill(vg);
+	}
 }
 
 void RuleCardRenderer::DrawHeader(NVGcontext* vg, float width) {
