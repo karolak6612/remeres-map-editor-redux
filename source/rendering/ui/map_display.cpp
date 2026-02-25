@@ -231,6 +231,53 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 		drawer->DrawDoorIndicators(vg);
 	}
 
+	// Draw HUD Overlay
+	// Bottom-left corner
+	float hudW = 220.0f;
+	float hudH = 70.0f;
+	float hudX = 10.0f;
+	float hudY = GetSize().y - hudH - 10.0f;
+
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, hudX, hudY, hudW, hudH, 5.0f);
+	nvgFillColor(vg, nvgRGBA(30, 30, 30, 200)); // Semi-transparent dark background
+	nvgFill(vg);
+
+	// Border
+	nvgStrokeColor(vg, nvgRGBA(255, 255, 255, 50));
+	nvgStrokeWidth(vg, 1.0f);
+	nvgStroke(vg);
+
+	// Text
+	nvgFontSize(vg, 12.0f);
+	nvgFontFace(vg, "sans");
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+	nvgFillColor(vg, nvgRGBA(220, 220, 220, 255));
+
+	float textX = hudX + 10.0f;
+	float textY = hudY + 10.0f;
+	float lineHeight = 18.0f;
+
+	// Coords
+	std::string coords = std::format("Pos: {}, {}, {}", last_cursor_map_x, last_cursor_map_y, floor);
+	nvgText(vg, textX, textY, coords.c_str(), nullptr);
+
+	// Zoom
+	std::string zoomStr = std::format("Zoom: {:.0f}%", zoom * 100.0);
+	nvgText(vg, textX, textY + lineHeight, zoomStr.c_str(), nullptr);
+
+	// Tool
+	std::string toolStr = "Tool: None";
+	if (g_gui.IsSelectionMode()) {
+		toolStr = "Tool: Selection";
+	} else {
+		Brush* b = g_gui.GetCurrentBrush();
+		if (b) {
+			toolStr = std::format("Tool: {}", b->getName());
+		}
+	}
+	nvgText(vg, textX, textY + lineHeight * 2, toolStr.c_str(), nullptr);
+
 	TextRenderer::EndFrame(vg);
 
 	// Sanitize state after NanoVG to avoid polluting the next frame or other tabs

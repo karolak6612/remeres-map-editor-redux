@@ -6,23 +6,23 @@
 #include <wx/timer.h>
 #include <vector>
 #include "palette/palette_common.h"
+#include "util/nanovg_canvas.h"
 
 class Brush;
+struct NVGcontext;
 
 // A custom-drawn, high-density surface for tool options.
 // Replaces the old panel-based layout with a unified, paint-optimized control.
-class ToolOptionsSurface : public wxControl {
+class ToolOptionsSurface : public NanoVGCanvas {
 public:
 	ToolOptionsSurface(wxWindow* parent);
-	~ToolOptionsSurface();
+	~ToolOptionsSurface() override;
 
 	// Mandatory overrides for custom controls
 	wxSize DoGetBestClientSize() const override;
 	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
 
 	// Event Handlers
-	void OnPaint(wxPaintEvent& evt);
-	void OnEraseBackground(wxEraseEvent& evt); // No-op
 	void OnMouse(wxMouseEvent& evt);
 	void OnLeave(wxMouseEvent& evt);
 	void OnSize(wxSizeEvent& evt);
@@ -32,6 +32,9 @@ public:
 	void SetPaletteType(PaletteType type);
 	void UpdateBrushSize(BrushShape shape, int size); // Called when size changes externally (e.g. shortcuts)
 	void ReloadSettings();
+
+protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
 
 private:
 	// -- Logic --
@@ -50,7 +53,7 @@ private:
 	const int SLIDER_LABEL_WIDTH = 70;
 	const int SLIDER_TEXT_MARGIN = 40;
 	const int SLIDER_VALUE_MARGIN = 8;
-	const int SLIDER_THUMB_RADIUS = 5;
+	const int SLIDER_THUMB_RADIUS = 6;
 
 	const int MIN_BRUSH_SIZE = 1;
 	const int MAX_BRUSH_SIZE = 15;
@@ -92,9 +95,9 @@ private:
 
 	// Internal Helpers
 	void RebuildLayout();
-	void DrawToolIcon(wxDC& dc, const ToolRect& tr);
-	void DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
-	void DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover);
+	void DrawToolIcon(NVGcontext* vg, const ToolRect& tr);
+	void DrawSlider(NVGcontext* vg, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
+	void DrawCheckbox(NVGcontext* vg, const wxRect& rect, const wxString& label, bool value, bool hover);
 
 	int CalculateSliderValue(const wxRect& sliderRect, int min, int max) const;
 

@@ -189,7 +189,11 @@ void EditorManager::SaveCurrentMap(FileName fileName, bool showdialog) {
 			EditorPersistence::saveMap(*editor, fileName, showdialog);
 
 			if (!editor->map.hasChanged()) {
-				g_status.SetStatusText("Map saved successfully.");
+				std::string fname = editor->map.getFilename();
+				if (fname.empty()) {
+					fname = "untitled";
+				}
+				g_status.SetStatusText(std::format("Map saved successfully to '{}'.", fname));
 			}
 
 			const std::string& path = editor->map.getFilename();
@@ -346,7 +350,7 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 		}
 	}
 
-	g_status.SetStatusText("Map loaded successfully.");
+	g_status.SetStatusText(std::format("Map loaded successfully: '{}'", nstr(fileName.GetFullPath())));
 	return true;
 }
 
@@ -434,7 +438,7 @@ bool EditorManager::DoUndo() {
 		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
-		g_status.SetStatusText("Undo action");
+		g_status.SetStatusText("Undid last action");
 		g_gui.UpdateMinimap();
 		g_gui.root->UpdateMenubar();
 		g_gui.root->Refresh();
@@ -450,7 +454,7 @@ bool EditorManager::DoRedo() {
 		if (!editor->selection.empty()) {
 			g_gui.SetSelectionMode();
 		}
-		g_status.SetStatusText("Redo action");
+		g_status.SetStatusText("Redid last action");
 		g_gui.UpdateMinimap();
 		g_gui.root->UpdateMenubar();
 		g_gui.root->Refresh();
