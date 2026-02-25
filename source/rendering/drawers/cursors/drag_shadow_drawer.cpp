@@ -23,6 +23,7 @@
 #include "game/creature.h"
 #include "game/spawn.h"
 #include "rendering/ui/selection_controller.h"
+#include "rendering/core/render_data.h"
 
 DragShadowDrawer::DragShadowDrawer() {
 }
@@ -74,7 +75,7 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 				Tile* desttile = drawer->editor.map.getTile(pos);
 				for (const auto& item : toRender) {
 					if (desttile) {
-						BlitItemParams params(desttile, item, options);
+						RenderItem params(desttile, item, options);
 						params.ephemeral = true;
 						params.red = 160;
 						params.green = 160;
@@ -82,7 +83,7 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 						params.alpha = 160;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
-						BlitItemParams params(pos, item, options);
+						RenderItem params(pos, item, options);
 						params.ephemeral = true;
 						params.red = 160;
 						params.green = 160;

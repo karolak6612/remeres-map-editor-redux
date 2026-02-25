@@ -13,6 +13,7 @@
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "ui/map_tab.h"
+#include "rendering/core/render_data.h"
 
 PreviewDrawer::PreviewDrawer() {
 }
@@ -89,7 +90,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							g /= 2;
 						}
 						if (tile->ground) {
-							BlitItemParams params(tile, tile->ground.get(), options);
+							RenderItem params(tile, tile->ground.get(), options);
 							params.ephemeral = true;
 							params.red = r;
 							params.green = g;
@@ -101,7 +102,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 					// Draw items on the tile
 					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
-							BlitItemParams params(tile, item.get(), options);
+							RenderItem params(tile, item.get(), options);
 							params.ephemeral = true;
 							if (item->isBorder()) {
 								params.red = 255;
