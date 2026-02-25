@@ -18,6 +18,7 @@
 #include <toml++/toml.h>
 #include <charconv>
 #include <string>
+#include <format>
 #include "app/main.h"
 
 #include "app/settings.h"
@@ -494,20 +495,18 @@ bool ClientVersion::hasValidPaths() {
 		}
 	}
 
-	wxString message = "Signatures are incorrect.\n";
-	message << "Metadata signature: %X\n";
-	message << "Sprites signature: %X";
-	wxLogError(wxString::Format(message, datSignature, sprSignature));
+	std::string message = std::format("Signatures are incorrect.\nMetadata signature: {:X}\nSprites signature: {:X}", datSignature, sprSignature);
+	wxLogError(wxstr(message));
 	return false;
 }
 
 bool ClientVersion::loadValidPaths() {
 	while (!hasValidPaths()) {
-		wxString message = "Could not locate metadata and/or sprite files, please navigate to your client assets %s installation folder.\n";
-		message << "Attempted metadata file: %s\n";
-		message << "Attempted sprites file: %s\n";
+		std::string message = std::format("Could not locate metadata and/or sprite files, please navigate to your client assets {} installation folder.\n", name);
+		message += std::format("Attempted metadata file: {}\n", metadata_path.GetFullPath().ToStdString());
+		message += std::format("Attempted sprites file: {}\n", sprites_path.GetFullPath().ToStdString());
 
-		DialogUtil::PopupDialog("Error", wxString::Format(message, name, metadata_path.GetFullPath(), sprites_path.GetFullPath()), wxOK);
+		DialogUtil::PopupDialog("Error", wxstr(message), wxOK);
 
 		wxString dirHelpText("Select assets directory.");
 		wxDirDialog file_dlg(nullptr, dirHelpText, "", wxDD_DIR_MUST_EXIST);

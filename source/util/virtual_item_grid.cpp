@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <format>
 #include <cmath>
+#include <ranges>
 
 VirtualItemGrid::VirtualItemGrid(wxWindow* parent, wxWindowID id) :
 	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
@@ -186,7 +187,7 @@ void VirtualItemGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	int startIdx = startRow * m_columns;
 	int endIdx = std::min(static_cast<int>(count), (endRow + 1) * m_columns);
 
-	for (int i = startIdx; i < endIdx; ++i) {
+	for (int i : std::views::iota(startIdx, endIdx)) {
 		if (i < 0) {
 			continue;
 		}

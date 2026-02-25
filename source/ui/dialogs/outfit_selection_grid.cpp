@@ -15,6 +15,7 @@
 #include <iterator>
 #include <format>
 #include <string>
+#include <ranges>
 
 namespace {
 	const int OUTFIT_TILE_WIDTH = 100;
@@ -169,7 +170,7 @@ void OutfitSelectionGrid::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	int start_idx = start_row * columns;
 	int end_idx = std::min(count, (end_row + 1) * columns);
 
-	for (int i = start_idx; i < end_idx; ++i) {
+	for (int i : std::views::iota(start_idx, end_idx)) {
 		wxRect rect = GetItemRect(i);
 
 		int lookType = is_favorites ? favorite_items[i].outfit.lookType : filtered_outfits[i].lookType;

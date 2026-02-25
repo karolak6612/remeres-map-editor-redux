@@ -51,6 +51,8 @@
 #include "ingame_preview/ingame_preview_manager.h"
 
 #include <wx/chartype.h>
+#include <ranges>
+#include <algorithm>
 
 #include "editor/editor.h"
 #include "game/materials.h"
@@ -108,9 +110,9 @@ void MainMenuBar::EnableItem(MenuBar::ActionID id, bool enable) {
 
 	std::list<wxMenuItem*>& li = fi->second;
 
-	for (std::list<wxMenuItem*>::iterator i = li.begin(); i != li.end(); ++i) {
-		(*i)->Enable(enable);
-	}
+	std::ranges::for_each(li, [enable](wxMenuItem* item) {
+		item->Enable(enable);
+	});
 }
 
 void MainMenuBar::CheckItem(MenuBar::ActionID id, bool enable) {
@@ -122,9 +124,9 @@ void MainMenuBar::CheckItem(MenuBar::ActionID id, bool enable) {
 	std::list<wxMenuItem*>& li = fi->second;
 
 	checking_programmaticly = true;
-	for (std::list<wxMenuItem*>::iterator i = li.begin(); i != li.end(); ++i) {
-		(*i)->Check(enable);
-	}
+	std::ranges::for_each(li, [enable](wxMenuItem* item) {
+		item->Check(enable);
+	});
 	checking_programmaticly = false;
 }
 

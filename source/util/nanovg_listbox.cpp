@@ -6,6 +6,7 @@
 #include <nanovg_gl.h>
 #include <algorithm>
 #include <iterator>
+#include <ranges>
 
 NanoVGListBox::NanoVGListBox(wxWindow* parent, wxWindowID id, long style) :
 	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
@@ -206,7 +207,7 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// NanoVGCanvas calls OnNanoVGPaint(m_nvg, width, height) after nvgTranslate(m_nvg, 0, -m_scrollPos).
 	// So (0,0) is top of content.
 
-	for (int i = startRow; i < endRow; ++i) {
+	for (int i : std::views::iota(startRow, endRow)) {
 		wxRect rect(0, i * itemHeight, width, itemHeight);
 
 		// Draw background for selection/hover

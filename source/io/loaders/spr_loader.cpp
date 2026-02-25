@@ -6,6 +6,7 @@
 #include <vector>
 #include <format>
 #include <memory>
+#include <ranges>
 
 // Anonymous namespace for constants
 namespace {
@@ -84,7 +85,7 @@ std::vector<uint32_t> SprLoader::ReadSpriteIndexes(FileReadHandle& fh, uint32_t 
 	std::vector<uint32_t> sprite_indexes;
 	sprite_indexes.reserve(total_pics);
 
-	for (uint32_t i = 0; i < total_pics; ++i) {
+	for (uint32_t i : std::views::iota(0u, total_pics)) {
 		uint32_t index;
 		if (!fh.getU32(index)) {
 			error = wxstr(fh.getErrorMessage());

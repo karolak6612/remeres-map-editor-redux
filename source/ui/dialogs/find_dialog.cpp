@@ -9,6 +9,7 @@
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <algorithm>
+#include <ranges>
 
 static bool caseInsensitiveContains(std::string_view haystack, std::string_view needle_lower) {
 	auto it = std::search(
@@ -212,7 +213,7 @@ void FindBrushDialog::OnClickOKInternal() {
 				// Did we not find a matching brush?
 				if (!result_brush) {
 					// Then let's search the RAWs
-					for (int id = 0; id <= g_items.getMaxID(); ++id) {
+					for (int id : std::views::iota(0, g_items.getMaxID() + 1)) {
 						ItemType& it = g_items[id];
 						if (it.id == 0) {
 							continue;
@@ -271,7 +272,7 @@ void FindBrushDialog::RefreshContentsInternal() {
 			item_list->AddBrush(const_cast<Brush*>(brush));
 		}
 
-		for (int id = 0; id <= g_items.getMaxID(); ++id) {
+		for (int id : std::views::iota(0, g_items.getMaxID() + 1)) {
 			ItemType& it = g_items[id];
 			if (it.id == 0) {
 				continue;

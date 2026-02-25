@@ -37,9 +37,9 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 	}
 	std::ranges::fill(alphaData, 255);
 
-	for (uint8_t l = 0; l < sprite->layers; l++) {
-		for (uint8_t w = 0; w < sprite->width; w++) {
-			for (uint8_t h = 0; h < sprite->height; h++) {
+	for (int l : std::views::iota(0, (int)sprite->layers)) {
+		for (int w : std::views::iota(0, (int)sprite->width)) {
+			for (int h : std::views::iota(0, (int)sprite->height)) {
 				const int i = sprite->getIndex(w, h, l, 0, 0, 0, 0);
 				std::unique_ptr<uint8_t[]> data = sprite->spriteList[i]->getRGBData();
 				if (data) {
@@ -116,9 +116,9 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 				mount_frame_index = direction;
 			}
 
-			for (uint8_t l = 0; l < mountSpr->layers; l++) {
-				for (uint8_t w = 0; w < mountSpr->width; w++) {
-					for (uint8_t h = 0; h < mountSpr->height; h++) {
+			for (int l : std::views::iota(0, (int)mountSpr->layers)) {
+				for (int w : std::views::iota(0, (int)mountSpr->width)) {
+					for (int h : std::views::iota(0, (int)mountSpr->height)) {
 						std::unique_ptr<uint8_t[]> data = nullptr;
 						// Handle mount sprite layers/templates similar to main sprite
 						// (Usually mounts are standard creatures)
@@ -154,9 +154,9 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 			}
 		}
 
-		for (uint8_t l = 0; l < sprite->layers; l++) {
-			for (uint8_t w = 0; w < sprite->width; w++) {
-				for (uint8_t h = 0; h < sprite->height; h++) {
+		for (int l : std::views::iota(0, (int)sprite->layers)) {
+			for (int w : std::views::iota(0, (int)sprite->width)) {
+				for (int h : std::views::iota(0, (int)sprite->height)) {
 					std::unique_ptr<uint8_t[]> data = nullptr;
 
 					if (sprite->layers == 2) {

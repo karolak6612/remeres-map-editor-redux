@@ -24,6 +24,7 @@
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include <ranges>
 
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
@@ -313,7 +314,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		}
 	} else if (selection == SearchMode::ClientIDs) {
 		uint16_t clientID = (uint16_t)client_id_spin->GetValue();
-		for (int id = 100; id <= g_items.getMaxID(); ++id) {
+		for (int id : std::views::iota(100, g_items.getMaxID() + 1)) {
 			ItemType& item = g_items.getItemType(id);
 			if (item.id == 0 || item.clientID != clientID) {
 				continue;
@@ -334,7 +335,7 @@ void FindItemDialog::RefreshContentsInternal() {
 	} else if (selection == SearchMode::Names) {
 		std::string search_string = as_lower_str(nstr(name_text_input->GetValue()));
 		if (search_string.size() >= 2) {
-			for (int id = 100; id <= g_items.getMaxID(); ++id) {
+			for (int id : std::views::iota(100, g_items.getMaxID() + 1)) {
 				ItemType& item = g_items.getItemType(id);
 				if (item.id == 0) {
 					continue;
@@ -358,7 +359,7 @@ void FindItemDialog::RefreshContentsInternal() {
 			}
 		}
 	} else if (selection == SearchMode::Types) {
-		for (int id = 100; id <= g_items.getMaxID(); ++id) {
+		for (int id : std::views::iota(100, g_items.getMaxID() + 1)) {
 			ItemType& item = g_items.getItemType(id);
 			if (item.id == 0) {
 				continue;
@@ -385,7 +386,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		bool has_selected = (unpassable->GetValue() || unmovable->GetValue() || block_missiles->GetValue() || block_pathfinder->GetValue() || readable->GetValue() || writeable->GetValue() || pickupable->GetValue() || stackable->GetValue() || rotatable->GetValue() || hangable->GetValue() || hook_east->GetValue() || hook_south->GetValue() || has_elevation->GetValue() || ignore_look->GetValue() || floor_change->GetValue());
 
 		if (has_selected) {
-			for (int id = 100; id <= g_items.getMaxID(); ++id) {
+			for (int id : std::views::iota(100, g_items.getMaxID() + 1)) {
 				ItemType& item = g_items.getItemType(id);
 				if (item.id == 0) {
 					continue;
