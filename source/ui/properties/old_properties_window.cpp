@@ -103,10 +103,12 @@ void OldPropertiesWindow::createGenericFields(wxFlexGridSizer* subsizer, wxWindo
 
 	subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Action ID"));
 	action_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getActionID()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getActionID());
+	action_id_field->SetToolTip("Action ID (0-65535). Used for scripting.");
 	subsizer->Add(action_id_field, wxSizerFlags(1).Expand());
 
 	subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Unique ID"));
 	unique_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
+	unique_id_field->SetToolTip("Unique ID (0-65535). Must be unique on the map.");
 	subsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 }
 
@@ -119,6 +121,7 @@ void OldPropertiesWindow::createClassificationFields(wxFlexGridSizer* subsizer, 
 		// item iter
 		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Tier"));
 		tier_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(edit_item->getTier()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, edit_item->getTier());
+		tier_field->SetToolTip("Item tier (0-255)");
 		subsizer->Add(tier_field, wxSizerFlags(1).Expand());
 	}
 }
@@ -127,6 +130,7 @@ void OldPropertiesWindow::createDoorFields(wxFlexGridSizer* subsizer, wxWindow* 
 	if (Door* door = dynamic_cast<Door*>(edit_item)) {
 		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Door ID"));
 		door_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(door->getDoorID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, door->getDoorID());
+		door_id_field->SetToolTip("Door ID (0-255). Key needed to open the door.");
 		if (!edit_tile || !edit_tile->isHouseTile() || !door->isRealDoor()) {
 			door_id_field->Disable();
 		}
@@ -140,12 +144,15 @@ void OldPropertiesWindow::createTeleportFields(wxFlexGridSizer* subsizer, wxWind
 
 		wxSizer* possizer = newd wxBoxSizer(wxHORIZONTAL);
 		x_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(teleport->getX()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, edit_map->getWidth(), teleport->getX());
+		x_field->SetToolTip("X coordinate of destination");
 		x_field->Bind(wxEVT_CHAR, &OldPropertiesWindow::OnChar, this);
 		possizer->Add(x_field, wxSizerFlags(3).Expand());
 		y_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(teleport->getY()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, edit_map->getHeight(), teleport->getY());
+		y_field->SetToolTip("Y coordinate of destination");
 		y_field->Bind(wxEVT_CHAR, &OldPropertiesWindow::OnChar, this);
 		possizer->Add(y_field, wxSizerFlags(3).Expand());
 		z_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(teleport->getZ()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, MAP_MAX_LAYER, teleport->getZ());
+		z_field->SetToolTip("Z coordinate of destination (0-15)");
 		z_field->Bind(wxEVT_CHAR, &OldPropertiesWindow::OnChar, this);
 		possizer->Add(z_field, wxSizerFlags(2).Expand());
 
