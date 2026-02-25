@@ -57,27 +57,21 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 	#ifdef __EXPERIMENTAL__
 	address << "&beta";
 	#endif
-	wxURL* url = newd wxURL(address);
+	auto url = std::make_unique<wxURL>(address);
 
-	m_thread = std::jthread([receiver, url, alive = m_alive](std::stop_token stop_token) {
-		wxInputStream* input = url->GetInputStream();
+	m_thread = std::jthread([receiver, url = std::move(url), alive = m_alive](std::stop_token stop_token) {
+		std::unique_ptr<wxInputStream> input(url->GetInputStream());
 		if (!input) {
-			delete url;
 			return;
 		}
 
 		std::string data;
 		while (!input->Eof()) {
 			if (stop_token.stop_requested()) {
-				delete input;
-				delete url;
 				return;
 			}
 			data += input->GetC();
 		}
-
-		delete input;
-		delete url;
 
 		// We use raw pointer 'receiver' because Application manages lifetime of UpdateChecker
 		// and ensures thread is joined before receiver (MainFrame) is destroyed.
@@ -85,7 +79,7 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 		wxGetApp().CallAfter([receiver, data, alive]() {
 			if (*alive && receiver) {
 				wxCommandEvent event(EVT_UPDATE_CHECK_FINISHED);
-				event.SetClientData(newd std::string(data));
+				event.SetString(data);
 				receiver->AddPendingEvent(event);
 			}
 		});
