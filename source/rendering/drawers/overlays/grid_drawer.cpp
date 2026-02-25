@@ -40,8 +40,8 @@ void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view
 		return;
 	}
 
-	int center_x = view.start_x + int(view.screensize_x * view.zoom / 64);
-	int center_y = view.start_y + int(view.screensize_y * view.zoom / 64);
+	int center_x = view.start_x + static_cast<int>(view.screensize_x * view.zoom / 64);
+	int center_y = view.start_y + static_cast<int>(view.screensize_y * view.zoom / 64);
 
 	int offset_y = 2;
 	int box_start_map_x = center_x;
@@ -105,7 +105,7 @@ void GridDrawer::DrawNodeLoadingPlaceholder(SpriteBatch& sprite_batch, int nd_ma
 	glm::vec4 color(1.0f, 0.0f, 1.0f, 0.5f); // 255, 0, 255, 128
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE * 4, (float)TILE_SIZE * 4, color, *g_gui.gfx.getAtlasManager());
+		sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE) * 4, static_cast<float>(TILE_SIZE) * 4, color, *g_gui.gfx.getAtlasManager());
 	}
 }
 
@@ -114,7 +114,7 @@ void GridDrawer::drawRect(SpriteBatch& sprite_batch, int x, int y, int w, int h,
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.drawRectLines((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
+		sprite_batch.drawRectLines(static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h), c, *g_gui.gfx.getAtlasManager());
 	}
 }
 
@@ -122,7 +122,7 @@ void GridDrawer::drawFilledRect(SpriteBatch& sprite_batch, int x, int y, int w, 
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
 	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.drawRect((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
+		sprite_batch.drawRect(static_cast<float>(x), static_cast<float>(y), static_cast<float>(w), static_cast<float>(h), c, *g_gui.gfx.getAtlasManager());
 	}
 }
 

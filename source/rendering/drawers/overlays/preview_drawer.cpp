@@ -68,7 +68,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							b = b / 3 * 2;
 						}
 						if (tile->isHouseTile() && options.show_houses) {
-							if ((int)tile->getHouseID() == current_house_id) {
+							if (static_cast<int>(tile->getHouseID()) == current_house_id) {
 								r /= 2;
 							} else {
 								r /= 2;
@@ -137,7 +137,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 			if (g_gui.gfx.ensureAtlasManager()) {
 				// Draw a semi-transparent white box over the tile
 				glm::vec4 highlightColor(1.0f, 1.0f, 1.0f, 0.25f); // 25% white
-				sprite_batch.drawRect((float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE, highlightColor, *g_gui.gfx.getAtlasManager());
+				sprite_batch.drawRect(static_cast<float>(draw_x), static_cast<float>(draw_y), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), highlightColor, *g_gui.gfx.getAtlasManager());
 			}
 		}
 	}
