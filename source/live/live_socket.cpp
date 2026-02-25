@@ -113,6 +113,12 @@ void LiveSocket::receiveNode(NetworkMessage& message, Editor& editor, Action* ac
 }
 
 void LiveSocket::sendNode(uint32_t clientId, MapNode* node, int32_t ndx, int32_t ndy, uint32_t floorMask) {
+	if (ndx < 0 || ndx >= 16384 || ndy < 0 || ndy >= 16384) {
+		// Prevent overflow/truncation when packing coordinates into 14 bits.
+		// 16384 * 4 = 65536, so this supports map coordinates up to 65536.
+		return;
+	}
+
 	bool underground;
 	if (floorMask & 0xFF00) {
 		if (floorMask & 0x00FF) {

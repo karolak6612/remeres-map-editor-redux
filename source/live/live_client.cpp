@@ -322,6 +322,12 @@ void LiveClient::sendReady() {
 }
 
 void LiveClient::queryNode(int32_t ndx, int32_t ndy, bool underground) {
+	if (ndx < 0 || ndx >= 65536 || ndy < 0 || ndy >= 65536) {
+		// Prevent overflow/truncation when packing coordinates into 14 bits (shifted by 2).
+		// 14 bits can hold up to 16383. 16383 * 4 + 3 = 65535.
+		return;
+	}
+
 	uint32_t nd = 0;
 	nd |= (static_cast<uint32_t>(ndx >> 2) << 18);
 	nd |= (static_cast<uint32_t>(ndy >> 2) << 4);
