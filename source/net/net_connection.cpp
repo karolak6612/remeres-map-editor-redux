@@ -39,9 +39,12 @@ void NetworkMessage::expand(const size_t length) {
 template <>
 std::string NetworkMessage::read<std::string>() {
 	const uint16_t length = read<uint16_t>();
-	char* strBuffer = reinterpret_cast<char*>(&buffer[position]);
+	if (position + length > buffer.size()) {
+		throw std::runtime_error("Buffer overflow in NetworkMessage::read<string>");
+	}
+	std::string result(reinterpret_cast<const char*>(buffer.data() + position), length);
 	position += length;
-	return std::string(strBuffer, length);
+	return result;
 }
 
 template <>
@@ -59,7 +62,9 @@ void NetworkMessage::write<std::string>(const std::string& value) {
 	write<uint16_t>(length);
 
 	expand(length);
-	memcpy(&buffer[position], &value[0], length);
+	if (length > 0) {
+		std::memcpy(buffer.data() + position, value.data(), length);
+	}
 	position += length;
 }
 
