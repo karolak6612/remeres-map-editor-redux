@@ -15,26 +15,29 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_RESULT_WINDOW_H_
-#define RME_RESULT_WINDOW_H_
+#ifndef RME_UI_RESULT_WINDOW_H_
+#define RME_UI_RESULT_WINDOW_H_
 
-#include "app/main.h"
+#include <wx/panel.h>
+#include "map/position.h"
+#include "util/nanovg_listbox.h"
+
+class SearchResultListBox;
 
 class SearchResultWindow : public wxPanel {
 public:
 	SearchResultWindow(wxWindow* parent);
-	virtual ~SearchResultWindow();
+	~SearchResultWindow();
 
-	void Clear();
 	void AddPosition(wxString description, Position pos);
+	void Clear();
 
-	void OnClickResult(wxCommandEvent&);
-	void OnClickExport(wxCommandEvent&);
-	void OnClickClear(wxCommandEvent&);
+	void OnClickResult(wxCommandEvent& event);
+	void OnClickExport(wxCommandEvent& event);
+	void OnClickClear(wxCommandEvent& event);
 
 protected:
-	wxListBox* result_list;
-
+	SearchResultListBox* result_list;
 };
 
 #endif

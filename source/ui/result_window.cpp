@@ -21,11 +21,86 @@
 #include "ui/gui.h"
 #include "map/position.h"
 #include "util/image_manager.h"
+#include "util/nanovg_listbox.h"
+#include "ui/theme.h"
+#include "util/nvg_utils.h"
+
+struct SearchResultItem {
+	wxString description;
+	Position pos;
+};
+
+class SearchResultListBox : public NanoVGListBox {
+public:
+	SearchResultListBox(wxWindow* parent, wxWindowID id) :
+		NanoVGListBox(parent, id, wxLB_SINGLE) {
+	}
+
+	void AddPosition(wxString description, Position pos) {
+		m_items.push_back({description, pos});
+		SetItemCount(m_items.size());
+		Refresh();
+	}
+
+	void Clear() {
+		m_items.clear();
+		SetItemCount(0);
+		Refresh();
+	}
+
+	Position GetPosition(int index) const {
+		if (index >= 0 && index < (int)m_items.size()) {
+			return m_items[index].pos;
+		}
+		return Position();
+	}
+
+	wxString GetString(int index) const {
+		if (index >= 0 && index < (int)m_items.size()) {
+			return m_items[index].description;
+		}
+		return "";
+	}
+
+	size_t GetCount() const {
+		return m_items.size();
+	}
+
+	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override {
+		if (index >= m_items.size()) {
+			return;
+		}
+
+		// Selection background
+		if (IsSelected(static_cast<int>(index))) {
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Accent)));
+			nvgBeginPath(vg);
+			nvgRect(vg, static_cast<float>(rect.x), static_cast<float>(rect.y), static_cast<float>(rect.width), static_cast<float>(rect.height));
+			nvgFill(vg);
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::TextOnAccent)));
+		} else {
+			nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
+		}
+
+		nvgFontSize(vg, 12.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgText(vg, static_cast<float>(rect.x + 5), rect.y + rect.height / 2.0f, m_items[index].description.ToUTF8().data(), nullptr);
+	}
+
+	int OnMeasureItem(size_t index) const override {
+		return 20;
+	}
+
+private:
+	std::vector<SearchResultItem> m_items;
+};
 
 SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	result_list = newd wxListBox(this, wxID_ANY, wxDefaultPosition, FromDIP(wxSize(200, 330)), 0, nullptr, wxLB_SINGLE | wxLB_ALWAYS_SB);
+	result_list = newd SearchResultListBox(this, wxID_ANY);
+	result_list->SetMinSize(FromDIP(wxSize(200, 330)));
 	sizer->Add(result_list, wxSizerFlags(1).Expand());
 
 	wxSizer* buttonsSizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -51,20 +126,20 @@ SearchResultWindow::~SearchResultWindow() {
 }
 
 void SearchResultWindow::Clear() {
-	for (uint32_t n = 0; n < result_list->GetCount(); ++n) {
-		delete reinterpret_cast<Position*>(result_list->GetClientData(n));
-	}
 	result_list->Clear();
 }
 
 void SearchResultWindow::AddPosition(wxString description, Position pos) {
-	result_list->Append(description << " (" << pos.x << "," << pos.y << "," << pos.z << ")", newd Position(pos));
+	result_list->AddPosition(description << " (" << pos.x << "," << pos.y << "," << pos.z << ")", pos);
 }
 
 void SearchResultWindow::OnClickResult(wxCommandEvent& event) {
-	Position* pos = reinterpret_cast<Position*>(event.GetClientData());
-	if (pos) {
-		g_gui.SetScreenCenterPosition(*pos);
+	int selection = result_list->GetSelection();
+	if (selection != -1) {
+		Position pos = result_list->GetPosition(selection);
+		if (pos != Position()) {
+			g_gui.SetScreenCenterPosition(pos);
+		}
 	}
 }
 
