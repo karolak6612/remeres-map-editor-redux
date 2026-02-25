@@ -31,6 +31,7 @@
 #include "brushes/wall/wall_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "brushes/managers/brush_manager.h"
+#include "brushes/managers/brush_factory.h"
 
 #include "brushes/flag/flag_brush.h"
 #include "brushes/door/door_brush.h"
@@ -78,6 +79,8 @@ void Brushes::clear() {
 }
 
 void Brushes::init() {
+	BrushFactory::registerStandardBrushes();
+
 	addManagedBrush(g_brush_manager.optional_brush);
 	addManagedBrush(g_brush_manager.eraser);
 	addManagedBrush(g_brush_manager.spawn_brush);
@@ -131,24 +134,14 @@ bool Brushes::unserializeBrush(pugi::xml_node node, std::vector<std::string>& wa
 
 		const std::string_view brushType = attribute.as_string();
 
-		static const std::unordered_map<std::string_view, std::function<std::unique_ptr<Brush>()>> typeMap = {
-			{ "border", [] { return std::make_unique<GroundBrush>(); } },
-			{ "ground", [] { return std::make_unique<GroundBrush>(); } },
-			{ "wall", [] { return std::make_unique<WallBrush>(); } },
-			{ "wall decoration", [] { return std::make_unique<WallDecorationBrush>(); } },
-			{ "carpet", [] { return std::make_unique<CarpetBrush>(); } },
-			{ "table", [] { return std::make_unique<TableBrush>(); } },
-			{ "doodad", [] { return std::make_unique<DoodadBrush>(); } }
-		};
+		newBrush = BrushFactory::getInstance().createBrush(brushType);
 
-		if (auto it = typeMap.find(brushType); it != typeMap.end()) {
-			newBrush = it->second();
-			brush = newBrush.get();
-		} else {
+		if (!newBrush) {
 			warnings.push_back(std::format("Unknown brush type {}", brushType));
 			return false;
 		}
 
+		brush = newBrush.get();
 		ASSERT(brush);
 		brush->setName(brushName);
 	}
