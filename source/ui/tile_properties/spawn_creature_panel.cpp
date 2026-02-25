@@ -60,7 +60,7 @@ void SpawnCreaturePanel::SetTile(Tile* tile) {
 	}
 
 	if (tile && tile->creature) {
-		creature_text->SetLabelText(wxString(tile->creature->getName()));
+		creature_text->SetLabelText(wxstr(tile->creature->getName()));
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(tile->creature->getLookType().lookType);
 		if (spr) {
 			wxBitmap bmp = SpriteIconGenerator::Generate(spr, SPRITE_SIZE_32x32, tile->creature->getLookType(), false, SOUTH);

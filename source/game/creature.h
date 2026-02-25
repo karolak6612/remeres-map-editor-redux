@@ -19,6 +19,7 @@
 #define RME_CREATURE_H_
 
 #include "game/creatures.h"
+#include <string_view>
 
 enum Direction {
 	NORTH = 0,
@@ -62,7 +63,7 @@ public:
 
 	bool isNpc() const;
 
-	std::string getName() const;
+	std::string_view getName() const;
 	CreatureBrush* getBrush() const;
 
 	int getSpawnTime() const {
@@ -107,7 +108,7 @@ inline bool Creature::isNpc() const {
 	return false;
 }
 
-inline std::string Creature::getName() const {
+inline std::string_view Creature::getName() const {
 	CreatureType* type = g_creatures[type_name];
 	if (type) {
 		return type->name;

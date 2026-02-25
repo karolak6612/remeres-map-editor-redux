@@ -23,14 +23,15 @@ struct MapConversionContext {
 
 	void operator()(Map& map, Tile* tile, long long done) {
 		if (tile->creature) {
-			CreatureMap::iterator f = creature_types.find(tile->creature->getName());
+			std::string name(tile->creature->getName());
+			CreatureMap::iterator f = creature_types.find(name);
 			if (f == creature_types.end()) {
 				CreatureInfo info = {
-					tile->creature->getName(),
+					name,
 					tile->creature->isNpc(),
 					tile->creature->getLookType()
 				};
-				creature_types[tile->creature->getName()] = info;
+				creature_types[std::move(name)] = info;
 			}
 		}
 	}

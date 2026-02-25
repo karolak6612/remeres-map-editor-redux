@@ -214,7 +214,7 @@ bool MapXMLIO::saveSpawns(const Map& map, pugi::xml_document& doc) {
 					Creature* creature = creatureTile->creature.get();
 					pugi::xml_node creatureNode = spawnNode.append_child(creature->isNpc() ? "npc" : "monster");
 
-					creatureNode.append_attribute("name") = creature->getName().c_str();
+					creatureNode.append_attribute("name") = creature->getName().data();
 					creatureNode.append_attribute("x") = x;
 					creatureNode.append_attribute("y") = y;
 					creatureNode.append_attribute("spawntime") = creature->getSpawnTime();

@@ -21,7 +21,7 @@ void CreatureNameDrawer::clear() {
 	labels.clear();
 }
 
-void CreatureNameDrawer::addLabel(const Position& pos, const std::string& name, const Creature* c) {
+void CreatureNameDrawer::addLabel(const Position& pos, std::string_view name, const Creature* c) {
 	if (name.empty()) {
 		return;
 	}
@@ -63,7 +63,7 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		float labelY = screen_y - 2.0f; // slight gap above tile top
 
 		float textBounds[4];
-		nvgTextBounds(vg, 0, 0, label.name.c_str(), nullptr, textBounds);
+		nvgTextBounds(vg, 0, 0, label.name.data(), label.name.data() + label.name.size(), textBounds);
 		float textWidth = textBounds[2] - textBounds[0];
 		float textHeight = textBounds[3] - textBounds[1];
 
@@ -78,6 +78,6 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
 
 		// Draw Text (White)
 		nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-		nvgText(vg, labelX, labelY - paddingY, label.name.c_str(), nullptr);
+		nvgText(vg, labelX, labelY - paddingY, label.name.data(), label.name.data() + label.name.size());
 	}
 }

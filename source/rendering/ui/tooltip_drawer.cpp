@@ -405,16 +405,11 @@ void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width
 	uint8_t borderR, borderG, borderB;
 	getHeaderColor(tooltip.category, borderR, borderG, borderB);
 
-	// Shadow (multi-layer soft shadow)
-	for (int i = 3; i >= 0; i--) {
-		float alpha = 35.0f + (3 - i) * 20.0f;
-		float spread = i * 2.0f;
-		float offsetY = 3.0f + i * 1.0f;
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, x - spread, y + offsetY - spread, width + spread * 2, height + spread * 2, cornerRadius + spread);
-		nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<unsigned char>(alpha)));
-		nvgFill(vg);
-	}
+	// Shadow (optimized single-layer)
+	nvgBeginPath(vg);
+	nvgRoundedRect(vg, x + 2.0f, y + 2.0f, width, height, cornerRadius);
+	nvgFillColor(vg, nvgRGBA(0, 0, 0, 100));
+	nvgFill(vg);
 
 	// Main background - use theme
 	wxColour bgCol = Theme::Get(Theme::Role::TooltipBg);
