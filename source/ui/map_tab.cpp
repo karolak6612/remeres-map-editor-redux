@@ -27,11 +27,16 @@
 
 #include <spdlog/spdlog.h>
 
+MapTab::InternalReference::~InternalReference() {
+	spdlog::info("MapTab internal reference destroying editor [Editor={}]", (void*)session.editor);
+	delete session.editor;
+}
+
 MapTab::MapTab(MapTabbook* aui, Editor* editor) :
 	EditorTab(),
 	MapWindow(aui, *editor),
 	aui(aui) {
-	iref = newd InternalReference(editor);
+	iref = std::make_shared<InternalReference>(editor);
 
 	spdlog::info("MapTab created (New Editor) [Tab={}]", (void*)this);
 
@@ -44,7 +49,6 @@ MapTab::MapTab(const MapTab* other) :
 	MapWindow(other->aui, *other->iref->session.editor),
 	aui(other->aui),
 	iref(other->iref) {
-	iref->owner_count++;
 	spdlog::info("MapTab created (Shared Editor) [Tab={}]", (void*)this);
 	aui->AddTab(this, true);
 	FitToMap();
@@ -54,17 +58,11 @@ MapTab::MapTab(const MapTab* other) :
 }
 
 MapTab::~MapTab() {
-	spdlog::info("MapTab destroying [Tab={}] (Owner count: {})", (void*)this, iref->owner_count);
-	iref->owner_count--;
-	if (iref->owner_count <= 0) {
-		spdlog::info("MapTab destroying editor [Editor={}]", (void*)iref->session.editor);
-		delete iref->session.editor;
-		delete iref;
-	}
+	spdlog::info("MapTab destroying [Tab={}] (Ref count: {})", (void*)this, iref.use_count());
 }
 
 bool MapTab::IsUniqueReference() const {
-	return iref->owner_count == 1;
+	return iref.use_count() == 1;
 }
 
 wxWindow* MapTab::GetWindow() const {

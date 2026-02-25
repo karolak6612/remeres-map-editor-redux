@@ -103,12 +103,10 @@ void MainFrame::OnIdle(wxIdleEvent& event) {
 
 #ifdef _USE_UPDATER_
 void MainFrame::OnUpdateReceived(wxCommandEvent& event) {
-	void* clientData = event.GetClientData();
-	if (!clientData) {
+	std::string data = event.GetString().ToStdString();
+	if (data.empty()) {
 		return;
 	}
-	std::string data = *static_cast<std::string*>(clientData);
-	delete static_cast<std::string*>(clientData);
 
 	size_t first_colon = data.find(':');
 	size_t second_colon = data.find(':', first_colon + 1);

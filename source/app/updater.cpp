@@ -85,7 +85,7 @@ void UpdateChecker::connect(wxEvtHandler* receiver) {
 		wxGetApp().CallAfter([receiver, data, alive]() {
 			if (*alive && receiver) {
 				wxCommandEvent event(EVT_UPDATE_CHECK_FINISHED);
-				event.SetClientData(newd std::string(data));
+				event.SetString(data);
 				receiver->AddPendingEvent(event);
 			}
 		});

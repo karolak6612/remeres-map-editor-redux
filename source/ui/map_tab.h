@@ -57,12 +57,12 @@ protected:
 	// Session data
 	// Moved to MapSession
 	struct InternalReference {
-		InternalReference(Editor* editor) : session(editor), owner_count(1) { }
+		InternalReference(Editor* editor) : session(editor) { }
+		~InternalReference();
 		MapSession session;
-		int owner_count;
 	};
 	MapTabbook* aui;
-	InternalReference* iref;
+	std::shared_ptr<InternalReference> iref;
 };
 
 inline bool MapTab::HasSameReference(const MapTab* other) const {
