@@ -223,6 +223,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/outfit_color_palette.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/recent_file_listbox.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/goto_position_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/object_properties_base.h
@@ -552,6 +553,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/outfit_color_palette.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/sortable_list_box.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/modern_button.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/controls/recent_file_listbox.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/goto_position_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/properties/object_properties_base.cpp

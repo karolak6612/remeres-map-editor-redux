@@ -16,6 +16,7 @@ NanoVGListBox::NanoVGListBox(wxWindow* parent, wxWindowID id, long style) :
 
 	Bind(wxEVT_SIZE, &NanoVGListBox::OnSize, this);
 	Bind(wxEVT_LEFT_DOWN, &NanoVGListBox::OnMouseDown, this);
+	Bind(wxEVT_LEFT_DCLICK, &NanoVGListBox::OnMouseDoubleClick, this);
 	Bind(wxEVT_KEY_DOWN, &NanoVGListBox::OnKeyDown, this);
 	Bind(wxEVT_MOTION, &NanoVGListBox::OnMotion, this);
 	Bind(wxEVT_LEAVE_WINDOW, &NanoVGListBox::OnLeave, this);
@@ -277,6 +278,18 @@ void NanoVGListBox::OnMouseDown(wxMouseEvent& event) {
 		Refresh();
 	}
 	SetFocus(); // Ensure we get key events
+}
+
+void NanoVGListBox::OnMouseDoubleClick(wxMouseEvent& event) {
+	int scrollPos = GetScrollPosition();
+	int index = HitTest(event.GetX(), event.GetY() + scrollPos);
+
+	if (index != -1) {
+		wxCommandEvent evt(wxEVT_LISTBOX_DCLICK, GetId());
+		evt.SetEventObject(this);
+		evt.SetInt(GetSelection());
+		ProcessWindowEvent(evt);
+	}
 }
 
 void NanoVGListBox::OnMotion(wxMouseEvent& event) {
