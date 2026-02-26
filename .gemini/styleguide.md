@@ -1,367 +1,263 @@
-# RME Project Guidelines - C++20 wxWidgets Map Editor
+# RME Redux — Project Styleguide
 
-## 🎯 PROJECT VISION
+## 🎯 CORE PRINCIPLES
 
-**Modernization Goals:**
-1. **C++20** - Modern language features, concepts, ranges, format
-2. **wxWidgets Best Practices** - Responsive UI with wxWrapSizer
-3. **SOLID Principles** - Single Responsibility, Dependency Inversion
-4. **OpenGL Modernization** - Incremental upgrade from 1.x to 4.5
-5. **Codebase Decoupling** - Split monolithic files, organize in folders
+| Priority | Principle | Meaning |
+|---|---|---|
+| 0 | **C++20/23** | **MANDATORY.** Every new and modified file MUST use modern C++20/23 features. No exceptions. |
+| 1 | **DOD** | Data-Oriented Design — flat structs, contiguous storage, cache-friendly layouts |
+| 2 | **SRP** | Single Responsibility — one reason to change per file/class/function |
+| 3 | **KISS** | Keep It Simple — prefer simple solutions over clever abstractions |
+| 4 | **DRY** | Don't Repeat Yourself — search before coding, reuse existing utilities |
+
+> [!IMPORTANT]
+> This is a **2D tile-based map editor for Tibia** (rewrite of Remere's Map Editor).
+> **C++20/23 MANDATORY** · wxWidgets 3.3.x · OpenGL 4.5 · CMake
+>
+> Every line of code you write or modify **MUST** use C++20/23 features. If you see pre-C++20 patterns while editing a file, **upgrade them**. This is not optional — it is the #1 technical requirement.
 
 ---
 
 ## 🚫 CRITICAL RULES
 
-### 1. APPLICATION.CPP IS OFF-LIMITS
-- ONLY app initialization and main loop coordination
-- Business logic → proper module/controller
-
-### 2. SEARCH BEFORE CODING
-```
-☐ Search codebase for similar functionality
-☐ Check common/ and utilities
-☐ Reuse, don't duplicate
-```
-
-### 3. SINGLE RESPONSIBILITY
-- File > 500 lines → **SPLIT IT**
-- Function > 50 lines → **SPLIT IT**
-- Class doing multiple things → **SPLIT IT**
+1. **`application.cpp` is OFF-LIMITS** — Only app init and main loop. Business logic → proper module.
+2. **SEARCH BEFORE CODING** — Check existing utilities, helpers, managers before creating new ones.
+3. **SRP LIMITS** — File > 500 lines → split. Function > 50 lines → split. Class doing multiple things → split.
+4. **NO FRUSTUM CULLING** — We use `SpatialHashGrid` with optimized dual-strategy `visitLeaves()`. Never add frustum.
+5. **NO TOOLTIPS ON HOVER** — Tooltips are always-visible information panels. This is a map editor — quick info matters.
+6. **NO STATUS BAR INFO / ON-MOUSE INFO** — Don't add new status bars or mouse-position info panels.
 
 ---
 
-## 🏗️ C++20 MODERNIZATION
+## 🏗️ DATA-ORIENTED DESIGN
 
-### Use Modern Features
+### Value Types Over Pointers
 ```cpp
-// ✅ std::format instead of sprintf/wxString::Format
-std::format("Position: {}, {}", x, y)
+// ✅ Flat data struct
+struct TileData {
+    uint16_t ground_id;
+    uint16_t mapflags;
+    uint16_t statflags;
+    uint8_t minimap_color;
+};
+
+// ❌ Pointer chasing
+struct Tile {
+    TileLocation* location;   // pointer chase
+    std::unique_ptr<Item> ground;  // another chase
+};
+```
+
+### Contiguous Storage
+```cpp
+// ✅ Cache-friendly iteration
+std::vector<SpriteInstance> pending_sprites_;  // flat, contiguous
+
+// ❌ Pointer-per-element
+std::vector<std::unique_ptr<Item>> items;  // each element is a heap chase
+```
+
+### Separate Data From Behavior
+```cpp
+// ✅ Free functions operating on data
+bool tile_has_ground(const TileData& data);
+void tile_set_flag(TileData& data, TileFlag flag);
+
+// ❌ God class with 40+ methods
+class Tile {
+    bool hasGround() const;
+    bool hasBorders() const;
+    bool hasTable() const;
+    // ... 37 more methods
+};
+```
+
+---
+
+## 🔧 C++20/23 — MANDATORY STANDARD
+
+> [!CAUTION]
+> **C++20/23 is NOT optional.** Every new file, every modified function, every touched line MUST use modern C++. If you encounter legacy C++ while editing, you MUST upgrade it in the same commit. Pre-C++17 patterns are technical debt — eliminate on contact.
+
+### Required C++20/23 Patterns (use these EVERYWHERE)
+```cpp
+// ✅ std::format over sprintf/wxString::Format
+auto msg = std::format("Position: {}, {}", x, y);
+
+// ✅ std::span for non-owning ranges
+void process_tiles(std::span<Tile*> tiles);
 
 // ✅ Concepts for templates
 template<typename T> requires std::integral<T>
 void snap_to_grid(T& value, T grid_size);
 
-// ✅ std::span instead of pointer+size
-void process_tiles(std::span<Tile*> tiles);
-
 // ✅ Designated initializers
 Position pos{.x = 10, .y = 20, .z = 7};
 
-// ✅ Range-based algorithms
-std::ranges::for_each(items, [](auto& item) { ... });
-
-// ✅ auto + structured bindings
+// ✅ Structured bindings
 auto [x, y, z] = position.get_coords();
+
+// ✅ enum class (not raw enum)
+enum class TileState : uint16_t { None = 0, Selected = 0x01 };
+
+// ✅ = delete over private copy ctors
+MyClass(const MyClass&) = delete;
+
+// ✅ C++23: std::expected for error handling
+std::expected<Map, LoadError> load_map(const std::filesystem::path& path);
+
+// ✅ C++23: std::print when available
+std::print("Loaded {} tiles\n", count);
+
+// ✅ constexpr everywhere possible
+constexpr int CELL_SIZE = 1 << 6;
 ```
 
 ### Memory Management
 ```cpp
 // ✅ Smart pointers for ownership
-std::unique_ptr<Tile> tile = std::make_unique<Tile>(...);
+auto tile = std::make_unique<Tile>(...);
 
-// ✅ Raw pointers for observation only
-Tile* observe(const Tile& source);
+// ✅ Raw pointers for observation only (non-owning)
+Tile* observed = container.get();
 
-// ❌ BANNED - raw new/delete
-Tile* t = new Tile();  // NO!
-delete t;              // NO!
+// ❌ BANNED
+Tile* t = new Tile();  // raw new
+delete t;              // raw delete
+```
+
+### Threading
+```cpp
+// ✅ Standard C++ threading
+std::jthread worker([](std::stop_token st) { /* ... */ });
+
+// ✅ UI updates from threads
+wxGetApp().CallAfter([result]() { panel->Update(result); });
+
+// ❌ BANNED
+wxThread* thread = new MyThread();  // use std::thread/jthread
 ```
 
 ---
 
-## 🖼️ wxWidgets Best Practices
+## 🖼️ wxWidgets Rules
 
-**Feature 1: Event Handling**
-- **MANDATORY:** Use `Bind()` with lambdas or class methods.
-- **FORBIDDEN:** Use `DECLARE_EVENT_TABLE` or `Connect()`.
-- **Why?** Type safety, flexibility, and cleaner code.
+### Event Handling
+- **USE:** `Bind()` with lambdas or method pointers
+- **BANNED:** `DECLARE_EVENT_TABLE`, `Connect()`
 
-**Feature 2: Object Deletion**
-- **MANDATORY:** Use `window->Destroy()`.
-- **FORBIDDEN:** Use `delete window`.
-- **Why?** Destroy prevents crashes by waiting for the event queue to empty.
+### Object Lifecycle
+- **USE:** `window->Destroy()` for windows
+- **BANNED:** `delete window`
+- Parent owns children — trust the hierarchy.
 
-**Feature 3: Smart Pointers**
-- **MANDATORY:** Use `std::unique_ptr` for non-window data.
-- **FORBIDDEN:** Use `std::shared_ptr` for UI controls.
-- **Why?** wxWidgets handles UI parent-child cleanup; shared pointers fight the internal logic.
+### Strings
+- **USE:** Standard literals `"text"`
+- **BANNED:** `wxT("text")`, `L"text"`
 
-**Feature 4: String Handling**
-- **MANDATORY:** Use standard literals `"text"`.
-- **FORBIDDEN:** Use `wxT("text")` or `L"text"`.
-- **Why?** Modern wxWidgets is Unicode-only; macros are redundant.
+### Layout
+- **USE:** `wxSizer` + `wxSizerFlags` for all layouts
+- **USE:** `FromDIP()` for any pixel values
+- **USE:** `sizer->AddSpacer(n)` for spacing
+- **BANNED:** Hardcoded `wxPoint`/`wxSize` pixels, empty `wxStaticText` for padding
 
-**Feature 5: App Startup**
-- **MANDATORY:** Use `wxIMPLEMENT_APP(MyApp)`.
-- **FORBIDDEN:** Use `main()` or `WinMain()`.
-- **Why?** The macro handles cross-platform initialization and cleanup for you.
+### High DPI & Theming
+- **USE:** `wxBitmapBundle` (SVG preferred)
+- **USE:** `wxSystemSettings::GetColour()` for colors
+- **USE:** `wxAutoBufferedPaintDC` for custom paint
+- **BANNED:** `wxBitmap`/`wxIcon` directly, hardcoded colors (`*wxWHITE`, `*wxBLACK`), `wxPaintDC` without buffering
 
-## Layout and UI Design
+### Icons & Assets
+- **USE:** `IMAGE_MANAGER.GetBitmap(ICON_*)` for loading icons
+- **USE:** `wxBitmapBundle` for new icon integration
+- **BANNED:** `wxEmbeddedFile`, loose file assumptions
 
-**Feature 6: Sizing**
-- **MANDATORY:** Use `wxSizer` for everything.
-- **FORBIDDEN:** Hardcode `wxPoint` or `wxSize` pixels.
-- **Why?** Hardcoded pixels break on different screen resolutions/DPIs.
+### IDs
+- **USE:** `wxID_ANY` for dynamic IDs
+- **USE:** `wxID_OK`, `wxID_CANCEL`, `wxID_EXIT` for standard actions
+- **BANNED:** Hardcoded magic numbers (`10001`)
 
-**Feature 7: Sizer Syntax**
-- **MANDATORY:** Use `wxSizerFlags`.
-- **FORBIDDEN:** Use bitwise OR flags (e.g., `1, wxALL | wxEXPAND, 5`).
-- **Why?** Flags are much easier to read and less prone to errors.
+### Containers
+- **USE:** `std::vector`, `std::string`, `std::thread`
+- **BANNED:** `wxList`, `wxArrayInt`, `wxThread` (prefer std equivalents)
 
-**Feature 8: High DPI**
-- **MANDATORY:** Use `wxBitmapBundle`.
-- **FORBIDDEN:** Use `wxBitmap` or `wxIcon` directly.
-- **Why?** Bundles store multiple sizes to keep icons crisp on 4K/Retina displays.
+### Data Validation
+- **USE:** `wxTextValidator` for input filtering
+- **BANNED:** Manual `OnChar` key filtering
 
-**Feature 9: Spacing**
-- **MANDATORY:** Use `sizer->AddSpacer(n)`.
-- **FORBIDDEN:** Use empty `wxStaticText` for padding.
-- **Why?** Spacers are lightweight and designed specifically for layout gaps.
-
-**Feature 10: Theming**
-- **MANDATORY:** Support System Dark Mode.
-- **FORBIDDEN:** Hardcode `*wxWHITE` or `*wxBLACK` backgrounds.
-- **Why?** Users expect apps to follow the system theme (Windows 11 / macOS / GTK).
-
-## Threading and Performance
-
-**Feature 11: UI Updates**
-- **MANDATORY:** Use `CallAfter()` to update UI from threads.
-- **FORBIDDEN:** Access UI elements directly from a background thread.
-- **Why?** GUI operations are not thread-safe and will cause random crashes.
-
-**Feature 12: Heavy Tasks**
-- **MANDATORY:** Use `wxThread` or `wxTaskBarIcon`.
-- **FORBIDDEN:** Run long loops in the main event thread.
-- **Why?** Long loops "freeze" the window, making it non-responsive (Not Responding).
-
-**Feature 13: Paint Events**
-- **MANDATORY:** Use `wxAutoBufferedPaintDC`.
-- **FORBIDDEN:** Use `wxPaintDC` without double-buffering.
-- **Why?** Prevents flickering when resizing or redrawing complex custom controls.
-
-## Containers and Data Types
-
-**Feature 14: Containers**
-- **MANDATORY:** Use `std::vector` or `std::list`.
-- **FORBIDDEN:** Use `wxList` or `wxArrayInt`.
-- **Why?** Since 3.0, wx containers are mostly wrappers. Standard C++ containers are faster and work with modern algorithms.
-
-**Feature 15: String Conversion**
-- **MANDATORY:** Use `.ToStdString()` or `wxString::FromUTF8()`.
-- **FORBIDDEN:** Use `(const char*)mystring` casts.
-- **Why?** Casting is unsafe and fails if the string contains multi-byte characters or if the encoding doesn't match.
-
-**Feature 16: File Paths**
-- **MANDATORY:** Use `wxFileName`.
-- **FORBIDDEN:** Use raw string paths (e.g., `C:\\temp\\`).
-- **Why?** wxFileName handles cross-platform separator differences (slash vs backslash) automatically.
-
-**Feature 17: Numbers**
-- **MANDATORY:** Use `wxString::Format("%d", val)`.
-- **FORBIDDEN:** Use `sprintf` or `itoa`.
-- **Why?** wxString::Format is type-safe and handles Unicode characters in the format string correctly.
-
-## UI Components and Dialogs
-
-**Feature 18: Dialogs**
-- **MANDATORY:** Use `wxMessageDialog` with `ShowModal()`.
-- **FORBIDDEN:** Create custom frames for simple "OK/Cancel" alerts.
-- **Why?** System dialogs look native and handle screen readers/accessibility better than custom ones.
-
-**Feature 19: Input**
-- **MANDATORY:** Use `wxTextValidator`.
-- **FORBIDDEN:** Manually filter key events in `OnChar`.
-- **Why?** Validators are cleaner and can automatically filter for "Numeric only" or "Alpha only" without complex logic.
-
-**Feature 20: IDs**
-- **MANDATORY:** Use `wxID_ANY`.
-- **FORBIDDEN:** Hardcode magic numbers like `10001`.
-- **Why?** Using wxID_ANY lets the library generate unique IDs, preventing accidental ID collisions in large apps.
-
-**Feature 21: Standard IDs**
-- **MANDATORY:** Use `wxID_OK`, `wxID_CANCEL`, `wxID_EXIT`.
-- **FORBIDDEN:** Define your own `ID_MY_EXIT_BTN`.
-- **Why?** Standard IDs automatically hook into platform-specific behaviors (like the "Escape" key closing a dialog).
-
-## Build and Performance Optimization
-
-**Feature 22: Precompiled Headers**
-- **MANDATORY:** Use `wx/wxprec.h`.
-- **FORBIDDEN:** Include every individual header in every file.
-- **Why?** wxWidgets is massive; using precompiled headers can cut your build time by 50-80%.
-
-**Feature 23: Asset Loading**
-- **MANDATORY:** Use `wxEmbeddedFile` or Resources.
-- **FORBIDDEN:** Assume icons are in the same folder as the EXE.
-- **Why?** Apps are often installed in "Program Files" where they don't have permission to read local loose files easily.
-
-**Feature 24: Logging**
-- **MANDATORY:** Use `wxLogMessage()` or `wxLogError()`.
-- **FORBIDDEN:** Use `std::cout` or `printf`.
-- **Why?** wxLog automatically redirects to a neat dialog box in GUI mode but stays in the console for terminal apps.
-
-## Modern Features (3.3.x)
-
-**Feature 25: Dark Mode (Win)**
-- **MANDATORY:** Use `wxApp::SetAppearance(wxAppearance::System)`.
-- **FORBIDDEN:** Try to manually color every window background.
-- **Why?** 3.3.x introduces native opt-in dark mode for Windows. Manual coloring usually misses scrollbars and menus.
-
-**Feature 26: Dark Mode Colors**
-- **MANDATORY:** Use `wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW)`.
-- **FORBIDDEN:** Hardcode `*wxWHITE` or `wxColour(255, 255, 255)`.
-- **Why?** System colors automatically swap when the user toggles Dark/Light mode.
-
-**Feature 27: App Identity**
-- **MANDATORY:** Use `SetAppDisplayName()` and `SetVendorName()`.
-- **FORBIDDEN:** Hardcode "Untitled" or ignore these metadata fields.
-- **Why?** This information is used by the OS for task manager grouping and config file locations.
-
-**Feature 28: Bitmaps**
-- **MANDATORY:** Use `wxBitmapBundle` with SVG support.
-- **FORBIDDEN:** Use `.ico` or `.bmp` files for icons.
-- **Why?** SVG bundles scale perfectly from 100% to 400% DPI without blurring.
-
-## UI Best Practices
-
-**Feature 29: Panel Usage**
-- **MANDATORY:** Always put a `wxPanel` inside a `wxFrame`.
-- **FORBIDDEN:** Put buttons and text directly on the `wxFrame`.
-- **Why?** Frames don't handle tab-traversal (keyboard navigation) or background colors correctly on all platforms.
-
-**Feature 30: Enums/Flags**
-- **MANDATORY:** Use symbolic flags (e.g., `wxEXEC_ASYNC`).
-- **FORBIDDEN:** Use `true` or `false` for mystery boolean args.
-- **Why?** Functions like `wxExecute(true)` are unreadable. `wxExecute(wxEXEC_ASYNC)` is self-documenting.
-
-**Feature 31: Virtual Methods**
-- **MANDATORY:** Use the `override` keyword.
-- **FORBIDDEN:** Omit `override` for `OnPaint` or `OnSize`.
-- **Why?** override prevents bugs where you think you're overriding a function but actually have a slight typo in the signature.
-
-**Feature 32: Event Propagation**
-- **MANDATORY:** Use `event.Skip()` to let parents see the event.
-- **FORBIDDEN:** Forget `event.Skip()` in a `wxEVT_PAINT` handler.
-- **Why?** If you don't `Skip()`, the default system behavior (like highlighting a button) might be blocked.
-
-## Build Tools and Project Structure
-
-**Feature 33: Build Tools**
-- **MANDATORY:** Use CMake.
-- **FORBIDDEN:** Manually maintain `.vcxproj` or Makefiles.
-- **Why?** wxWidgets 3.3.x has vastly improved CMake support, making it the fastest way to link the library.
-
-**Feature 34: PCH**
-- **MANDATORY:** Use Precompiled Headers (`wx/wxprec.h`).
-- **FORBIDDEN:** Include `<wx/wx.h>` in every single file.
-- **Why?** Using wxprec.h can reduce compilation time by over 60% on large projects.
-
-**Feature 35: Resources**
-- **MANDATORY:** Use XRC (XML Resources) for UI.
-- **FORBIDDEN:** Code every single wxButton placement in C++.
-- **Why?** XRC separates your logic from your layout, allowing you to tweak the UI without recompiling.
-
-## Key Principles
-
-### Visualizing the Lifecycle
-
-One of the biggest "Don'ts" is trying to manage the application lifecycle manually. wxWidgets uses a specific startup and shutdown sequence.
-
-### The "Golden Rule" for 3.3.x
-
-If you find yourself writing a Macro, stop and check if there is a Template alternative. Modern wxWidgets has replaced almost all the old macro-based logic with template-based logic that is easier for the compiler to optimize and easier for you to debug.
-
-### Visualizing the UI Hierarchy
-
-In wxWidgets, the relationship between windows is a tree. Understanding this helps you avoid manual memory management.
-
-### Pro-Tip: The "Parent" Rule
-
-When you create a control (like a `wxButton`), you pass a `this` pointer as the parent:
-```cpp
-new wxButton(this, wxID_ANY, "OK");
-```
-
-**The "Do":** Trust the parent. When you `Destroy()` the parent frame, wxWidgets automatically iterates through the children and deletes them properly. You don't need to track them yourself!
-
-### Critical Lifecycle Diagram
-
-If you find yourself wondering "where do I put my cleanup code?" or "why is my frame not showing?", refer to this order of operations.
-
-### The "Golden Rule" for 2026
-
-**Think "Standard C++" first.** In the old days (version 2.4 - 2.8), wxWidgets had to reinvent the wheel because C++ didn't have a standard library for strings, threads, or containers.
-
-- **Today:** If you need a list, use `std::vector`.
-- **Today:** If you need a thread, use `std::thread` (and `CallAfter` to talk to the UI).
-- **Today:** Use `nullptr` instead of `NULL` or `0`.
+### Logging
+- **USE:** `wxLogMessage()`, `wxLogError()`
+- **BANNED:** `std::cout`, `printf` in GUI code
 
 ---
 
-## 🎮 OpenGL Modernization (1.x → 4.5)
+## 🎮 RENDERING ARCHITECTURE
 
-### Current State (Legacy)
-```cpp
-// Existing code uses immediate mode (OpenGL 1.x)
-glBegin(GL_QUADS);
-glVertex2f(...);
-glEnd();
-```
+### Current System (Already Modernized)
+The rendering pipeline uses **OpenGL 4.5** with:
 
-### Target State (Modern)
-```cpp
-// ✅ VAO/VBO approach (OpenGL 3.3+)
-GLuint vao, vbo;
-glGenVertexArrays(1, &vao);
-glBindVertexArray(vao);
-glGenBuffers(1, &vbo);
-// ...batch geometry upload
+| Component | File | Purpose |
+|---|---|---|
+| `SpriteBatch` | `rendering/core/sprite_batch.h` | Instanced rendering, MDI, RingBuffer (100k sprites, 6.4MB) |
+| `TextureAtlas` | `rendering/core/texture_atlas.h` | Dynamic texture atlas with packing |
+| `RingBuffer` | `rendering/core/ring_buffer.h` | Triple-buffered persistent mapping |
+| `MultiDrawIndirectRenderer` | `rendering/core/multi_draw_indirect_renderer.h` | GL 4.3+ MDI batching |
+| `GLResources` | `rendering/core/gl_resources.h` | RAII wrappers for VAO/VBO/FBO/textures |
+| `ScopedGLState` | `rendering/core/gl_scoped_state.h` | Scoped GL state management |
+| `SyncHandle` | `rendering/core/sync_handle.h` | Fence sync for ring buffer |
+| `MapDrawer` | `rendering/map_drawer.h` | Orchestrates 18+ specialized drawers |
 
-// ✅ RAII wrappers
-class VertexBuffer {
-    GLuint id;
-public:
-    VertexBuffer() { glGenBuffers(1, &id); }
-    ~VertexBuffer() { glDeleteBuffers(1, &id); }
-};
-```
-
-### Migration Strategy
-1. **Phase 1:** Add RAII wrappers for GL objects
-2. **Phase 2:** Create shader abstraction layer
-3. **Phase 3:** Migrate rendering to batched VBOs
-4. **Phase 4:** Add modern effects (lighting, etc.)
+### Rendering Rules
+- **USE:** `SpriteBatch` for all sprite rendering — never raw GL draw calls
+- **USE:** RAII wrappers from `gl_resources.h` for all GL objects
+- **USE:** `SpatialHashGrid::visitLeaves()` for visibility queries
+- **BANNED:** `glBegin`/`glEnd` (immediate mode)
+- **BANNED:** `glFinish()` in render loops
+- **BANNED:** Per-tile texture binds — batch through atlas
 
 ---
 
 ## 📁 FILE ORGANIZATION
 
-### Target Structure
+### Actual Structure
 ```
 source/
-├── core/           # Application, Editor, Map
-├── brushes/        # All brush implementations
-├── ui/
-│   ├── windows/    # Dialog windows
-│   ├── palettes/   # Palette panels
-│   └── controls/   # Custom controls
-├── io/             # File I/O (OTBM, etc.)
-├── rendering/      # OpenGL, drawing
-├── data/           # Item, Creature, Tile
-├── network/        # Live editing
-└── utils/          # Common utilities
+├── app/            # Application, main, definitions
+├── brushes/        # Brush implementations (15 subdirs by type)
+│   ├── ground/     carpet/  table/  wall/  door/
+│   ├── creature/   spawn/   doodad/ house/
+│   └── managers/   raw/     eraser/ flag/  waypoint/
+├── editor/         # Actions, selection, undo, copy, hotkeys
+│   ├── operations/ # Editor operations (10 files)
+│   └── persistence/
+├── game/           # Items, creatures, houses, towns, materials
+├── io/             # File I/O, loaders
+│   ├── loaders/    # DAT/SPR loaders
+│   └── otbm/       # OTBM serialization (decomposed)
+├── map/            # Tiles, position, spatial hash grid, regions
+├── net/            # Live editing / network
+├── palette/        # Palette panels and managers
+├── rendering/
+│   ├── core/       # SpriteBatch, atlas, ring buffer, shaders, GL wrappers
+│   ├── drawers/    # Specialized drawers (tiles, entities, overlays, minimap)
+│   ├── postprocess/
+│   ├── shaders/
+│   ├── ui/         # Rendering UI components
+│   └── utilities/
+├── ui/             # wxWidgets UI (200+ files)
+│   ├── controls/   dialogs/   menubar/   toolbar/
+│   ├── properties/ tile_properties/  map/  replace_tool/
+│   └── managers/
+└── util/           # Common utilities, image manager
 ```
 
 ### File Naming
 | Pattern | Location |
 |---------|----------|
-| `*_window.cpp` | `ui/windows/` |
-| `*_brush.cpp` | `brushes/` |
-| `palette_*.cpp` | `ui/palettes/` |
-| `iomap_*.cpp` | `io/` |
-| `live_*.cpp` | `network/` |
+| `*_window.cpp` | `ui/` |
+| `*_drawer.cpp` | `rendering/drawers/` |
+| `*_brush.cpp` | `brushes/<type>/` |
+| `*_serialization_otbm.cpp` | `io/otbm/` |
 
 ---
 
@@ -369,30 +265,33 @@ source/
 
 ```
 ☐ No code added to application.cpp
-☐ No duplicate code created
+☐ No duplicate code (searched first)
 ☐ Functions < 50 lines
-☐ Files < 500 lines (or has refactoring plan)
+☐ Files < 500 lines (or has splitting plan)
 ☐ Smart pointers for new allocations
-☐ wxWrapSizer for tileset layouts
-☐ C++20 features where applicable
+☐ enum class (not raw enum) for new enums
 ☐ RAII for any new OpenGL resources
+☐ Bind() for new event handling (no event tables)
+☐ FromDIP() for any new pixel values
+☐ wxBitmapBundle for new icons
+☐ Builds clean with no new warnings
 ```
 
----
+## 🔄 WHEN TOUCHING A FILE
 
-## 🔄 INCREMENTAL IMPROVEMENTS
-
-When touching a file, apply these improvements:
-1. Replace `NULL` with `nullptr`
-2. Use `auto` where type is obvious
-3. Use range-based for loops
-4. Add `const` to non-mutating methods
-5. Replace C-style casts with C++ casts
-6. Use `override` on virtual functions
-7. Use `= default` and `= delete`
+Apply these incremental improvements:
+1. `NULL` → `nullptr`
+2. `auto` where type is obvious
+3. Range-based `for` loops
+4. `const` on non-mutating methods
+5. C-style casts → `static_cast`/`dynamic_cast`
+6. `override` on virtual functions
+7. `= default` / `= delete` on special members
+8. `enum` → `enum class`
+9. Separate data structs from behavior methods
 
 ---
 
 ## 📌 THE MANTRA
 
-**SEARCH → REUSE → ORGANIZE → MODERNIZE → IMPLEMENT**
+**SEARCH → REUSE → FLATTEN → SIMPLIFY → IMPLEMENT**
