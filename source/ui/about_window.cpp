@@ -77,10 +77,11 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 
 	wxButton* copyBtn = newd wxButton(this, wxID_COPY, "Copy Version Info");
 	copyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
-	copyBtn->Bind(wxEVT_BUTTON, [about](wxCommandEvent&) {
+	copyBtn->Bind(wxEVT_BUTTON, [about, this](wxCommandEvent&) {
 		if (wxTheClipboard->Open()) {
 			wxTheClipboard->SetData(new wxTextDataObject(about));
 			wxTheClipboard->Close();
+			wxMessageBox("Version info copied to clipboard.", "Info", wxOK | wxICON_INFORMATION, this);
 		}
 	});
 	copyBtn->SetToolTip("Copy version information to clipboard");

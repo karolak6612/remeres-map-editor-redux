@@ -15,6 +15,8 @@
 
 #include <wx/wx.h>
 #include <sstream>
+#include <wx/clipbrd.h>
+#include <wx/dataobj.h>
 
 extern GUI g_gui;
 
@@ -92,28 +94,33 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 
 	wxSizer* choicesizer = newd wxBoxSizer(wxHORIZONTAL);
-	wxButton* export_button = newd wxButton(dg, wxID_OK, "Export as XML");
-	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
+	wxButton* export_button = newd wxButton(dg, wxID_COPY, "Copy to Clipboard");
+	export_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
 	choicesizer->Add(export_button, wxSizerFlags(1).Center());
-	export_button->SetToolTip("Not implemented yet");
-	export_button->Enable(false);
-	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	export_button->SetToolTip("Copy statistics to clipboard");
+
+	std::string statsStr = os.str();
+	export_button->Bind(wxEVT_BUTTON, [statsStr, dg](wxCommandEvent&) {
+		if (wxTheClipboard->Open()) {
+			wxTheClipboard->SetData(new wxTextDataObject(wxstr(statsStr)));
+			wxTheClipboard->Close();
+			wxMessageBox("Statistics copied to clipboard.", "Info", wxOK | wxICON_INFORMATION, dg);
+		}
+	});
+
+	wxButton* okBtn = newd wxButton(dg, wxID_CANCEL, "Close");
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	okBtn->SetToolTip("Close this window");
 	choicesizer->Add(okBtn, wxSizerFlags(1).Center());
 	topsizer->Add(choicesizer, wxSizerFlags(1).Center());
-	dg->SetSizerAndFit(topsizer);
-	dg->Centre(wxBOTH);
-
-	int ret = dg->ShowModal();
-
-	if (ret == wxID_OK) {
-	} else if (ret == wxID_CANCEL) {
-	}
 
 	wxIcon icon;
 	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHART_BAR, wxSize(32, 32)));
 	dg->SetIcon(icon);
 
+	dg->SetSizerAndFit(topsizer);
+	dg->Centre(wxBOTH);
+
+	dg->ShowModal();
 	dg->Destroy();
 }

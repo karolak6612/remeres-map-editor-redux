@@ -62,7 +62,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 
 	subsizer->Add(newd wxStaticText(boxParent, wxID_ANY, "Palette"));
 	palette_field = newd wxChoice(boxParent, wxID_ANY);
-	palette_field->SetToolTip("Select the palette category");
+	palette_field->SetToolTip("Select the palette category (Terrain, Doodad, etc.)");
 
 	palette_field->Append("Terrain", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_TERRAIN)));
 	palette_field->Append("Collections", reinterpret_cast<void*>(static_cast<intptr_t>(TILESET_COLLECTION)));
@@ -76,7 +76,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 
 	subsizer->Add(newd wxStaticText(boxParent, wxID_ANY, "Tileset"));
 	tileset_field = newd wxChoice(boxParent, wxID_ANY);
-	tileset_field->SetToolTip("Select the target tileset");
+	tileset_field->SetToolTip("Select the target tileset to add this item to");
 
 	for (const auto& tileset : GetSortedTilesets(g_materials.tilesets)) {
 		tileset_field->Append(wxstr(tileset->name));
