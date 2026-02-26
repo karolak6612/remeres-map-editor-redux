@@ -87,7 +87,7 @@ void RuleCardRenderer::DrawSaveButton(NVGcontext* vg, float width, bool isHovere
 
 void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int ruleIndex, int y, int width, bool hoverDelete, int dragHoverTargetIdx, int dragHoverType, bool isExternalDrag) {
 	const auto& rules = panel->GetRules();
-	if (ruleIndex < 0 || ruleIndex >= rules.size()) {
+	if (ruleIndex < 0 || ruleIndex >= static_cast<int>(rules.size())) {
 		return;
 	}
 	const auto& rule = rules[ruleIndex];
@@ -99,7 +99,7 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 	if (availableWidth < CARD_W) {
 		availableWidth = CARD_W;
 	}
-	int columns = std::max(1, (int)(availableWidth / (CARD_W + ITEM_SPACING)));
+	int columns = std::max(1, static_cast<int>(availableWidth / (CARD_W + ITEM_SPACING)));
 
 	int targetCount = rule.targets.size();
 	bool hasTrash = false;
@@ -145,7 +145,7 @@ void RuleCardRenderer::DrawRuleCard(RuleBuilderPanel* panel, NVGcontext* vg, int
 		float ty = y + CARD_PADDING + row * (ITEM_H + ITEM_SPACING);
 
 		// HitResult::Target is 2, DeleteTarget is 8
-		bool isThisHovered = (dragHoverTargetIdx == (int)j && (dragHoverType == 2 || dragHoverType == 8));
+		bool isThisHovered = (dragHoverTargetIdx == static_cast<int>(j) && (dragHoverType == 2 || dragHoverType == 8));
 		bool isTargetTrash = (target.id == TRASH_ITEM_ID);
 
 		DrawRuleItemCard(panel, vg, tx, ty, CARD_W, ITEM_H, target.id, isThisHovered, isTargetTrash, isThisHovered, target.probability);

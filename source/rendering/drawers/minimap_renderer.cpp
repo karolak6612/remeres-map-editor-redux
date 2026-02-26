@@ -292,8 +292,8 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	}
 
 	// Constants
-	float scale_x = (float)w / map_w;
-	float scale_y = (float)h / map_h;
+	float scale_x = static_cast<float>(w) / map_w;
+	float scale_y = static_cast<float>(h) / map_h;
 
 	// Determine visible tiles
 	// Clamp to integer grid

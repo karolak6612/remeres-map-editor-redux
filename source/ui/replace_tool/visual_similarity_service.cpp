@@ -58,10 +58,10 @@ static uint64_t CalculateAHashRGBA(std::span<const uint8_t> rgba, int w, int h) 
 			double block_sum = 0;
 			int pixel_count = 0;
 
-			int start_x = (int)(x * block_w);
-			int start_y = (int)(y * block_h);
-			int end_x = (int)((x + 1) * block_w);
-			int end_y = (int)((y + 1) * block_h);
+			int start_x = static_cast<int>(x * block_w);
+			int start_y = static_cast<int>(y * block_h);
+			int end_x = static_cast<int>((x + 1) * block_w);
+			int end_y = static_cast<int>((y + 1) * block_h);
 
 			for (int py = start_y; py < end_y && py < h; ++py) {
 				for (int px = start_x; px < end_x && px < w; ++px) {
@@ -72,13 +72,13 @@ static uint64_t CalculateAHashRGBA(std::span<const uint8_t> rgba, int w, int h) 
 				}
 			}
 
-			uint8_t avg = (uint8_t)((pixel_count > 0) ? (block_sum / pixel_count) : 0);
+			uint8_t avg = static_cast<uint8_t>((pixel_count > 0) ? (block_sum / pixel_count) : 0);
 			gray_8x8[y * 8 + x] = avg;
 			total_brightness += avg;
 		}
 	}
 
-	uint8_t global_avg = (uint8_t)(total_brightness / 64.0);
+	uint8_t global_avg = static_cast<uint8_t>(total_brightness / 64.0);
 	uint64_t hash = 0;
 	for (int i = 0; i < 64; ++i) {
 		if (gray_8x8[i] >= global_avg) {
@@ -111,9 +111,9 @@ static std::vector<float> CalculateHistogramRGBA(std::span<const uint8_t> rgba, 
 
 	for (size_t i = 0; i < count; ++i) {
 		if (rgba[i * 4 + 3] > threshold) {
-			int r_bin = std::min((int)(rgba[i * 4 + 0] * BINS / 256), BINS - 1);
-			int g_bin = std::min((int)(rgba[i * 4 + 1] * BINS / 256), BINS - 1);
-			int b_bin = std::min((int)(rgba[i * 4 + 2] * BINS / 256), BINS - 1);
+			int r_bin = std::min(static_cast<int>(rgba[i * 4 + 0] * BINS / 256), BINS - 1);
+			int g_bin = std::min(static_cast<int>(rgba[i * 4 + 1] * BINS / 256), BINS - 1);
+			int b_bin = std::min(static_cast<int>(rgba[i * 4 + 2] * BINS / 256), BINS - 1);
 
 			int bin_idx = r_bin * BINS * BINS + g_bin * BINS + b_bin;
 			hist[bin_idx]++;

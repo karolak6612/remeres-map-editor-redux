@@ -53,8 +53,8 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		int unscaled_x, unscaled_y;
 		view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
 
-		float screen_x = (float)unscaled_x / zoom;
-		float screen_y = (float)unscaled_y / zoom;
+		float screen_x = static_cast<float>(unscaled_x) / zoom;
+		float screen_y = static_cast<float>(unscaled_y) / zoom;
 
 		// Center on tile, position slightly above the creature head
 		// Standard creature is 32x32, but might be tall.

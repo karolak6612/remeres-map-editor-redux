@@ -64,9 +64,9 @@ namespace EditorOperations {
 
 			Position pos = tile->getPosition();
 			int sx = std::max(pos.x - UNREACHABLE_SEARCH_RADIUS_X, 0);
-			int ex = std::min(pos.x + UNREACHABLE_SEARCH_RADIUS_X, (int)std::numeric_limits<uint16_t>::max());
+			int ex = std::min(pos.x + UNREACHABLE_SEARCH_RADIUS_X, static_cast<int>(std::numeric_limits<uint16_t>::max()));
 			int sy = std::max(pos.y - UNREACHABLE_SEARCH_RADIUS_Y, 0);
-			int ey = std::min(pos.y + UNREACHABLE_SEARCH_RADIUS_Y, (int)std::numeric_limits<uint16_t>::max());
+			int ey = std::min(pos.y + UNREACHABLE_SEARCH_RADIUS_Y, static_cast<int>(std::numeric_limits<uint16_t>::max()));
 			int sz, ez;
 
 			if (pos.z <= GROUND_LAYER) {

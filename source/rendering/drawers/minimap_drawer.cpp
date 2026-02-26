@@ -55,7 +55,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 
 	// Prepare view
 	glViewport(0, 0, window_width, window_height);
-	glm::mat4 projection = glm::ortho(0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
+	glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(window_width), static_cast<float>(window_height), 0.0f, -1.0f, 1.0f);
 
 	// Clear background
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -112,7 +112,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		renderer->updateRegion(editor.map, floor, start_x, start_y, map_draw_w, map_draw_h);
 
 		// Render
-		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
+		renderer->render(projection, 0, 0, window_width, window_height, static_cast<float>(start_x), static_cast<float>(start_y), static_cast<float>(map_draw_w), static_cast<float>(map_draw_h));
 
 		// Draw View Box (Overlay)
 		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
@@ -130,10 +130,10 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 			int view_h = screensize_y / tile_size + 1;
 
 			// Convert to local minimap coords
-			float x = (float)(view_start_x - start_x);
-			float y = (float)(view_start_y - start_y);
-			float w = (float)view_w;
-			float h = (float)view_h;
+			float x = static_cast<float>(view_start_x - start_x);
+			float y = static_cast<float>(view_start_y - start_y);
+			float w = static_cast<float>(view_w);
+			float h = static_cast<float>(view_h);
 
 			// Draw white rectangle using PrimitiveRenderer
 			primitive_renderer->setProjectionMatrix(projection);
@@ -158,4 +158,3 @@ void MinimapDrawer::ScreenToMap(int screen_x, int screen_y, int& map_x, int& map
 	map_x = last_start_x + screen_x;
 	map_y = last_start_y + screen_y;
 }
-

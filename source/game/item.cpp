@@ -272,7 +272,7 @@ SpriteLight Item::getLight() const {
 double Item::getWeight() const {
 	ItemType& it = g_items[id];
 	if (it.stackable) {
-		return it.weight * std::max(1, (int)subtype);
+		return it.weight * std::max(1, static_cast<int>(subtype));
 	}
 
 	return it.weight;
