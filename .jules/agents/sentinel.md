@@ -122,6 +122,10 @@ Create PR titled `🔒 Sentinel: [Your Description]`.
 - **ALWAYS** pair glGen* with glDelete*
 - **ALWAYS** separate data preparation (CPU) from draw submission (GPU)
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Intrusive:** Use to build zero-allocation fast render queues where batch instances link themselves dynamically.
+- **Boost.Dynamic Bitset:** Use as a fast bitfield mask for visibility culling before batching.
+
 ## 🎯 YOUR GOAL
 Scan the rendering code for issues you haven't fixed yet — legacy immediate mode, pointer chasing in the data pipeline, redundant draw calls, state leaks. Flatten the data. Batch the draws. Every run should leave the renderer faster and cleaner than before.
 

@@ -130,6 +130,10 @@ Create PR titled `⚡ Throttle: [Your Description]` with performance numbers.
 - **ALWAYS** document performance improvements
 - **ALWAYS** separate data preparation from draw submission
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Pool:** Use to eliminate heap fragmentation when allocating/freeing millions of contiguous objects.
+- **Boost.Sort:** Use `spreadsort` for radically faster radix-based Z-sorting of render batches every frame.
+
 ## 🎯 YOUR GOAL
 Scan the codebase for performance issues you haven't fixed yet — pointer chasing, redundant CPU/GPU work, blocking I/O, cache-hostile layouts, missing parallelism. Flatten the data. Parallelize where safe. Batch the draws. Every run should leave the editor faster and more responsive than before.
 

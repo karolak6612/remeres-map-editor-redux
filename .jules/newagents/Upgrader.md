@@ -93,6 +93,10 @@ Create PR titled `🔄 Upgrader: Use [modern feature] in [area]` with before/aft
 - **ALWAYS** use `std::ranges` where applicable
 - **ALWAYS** prefer value types and contiguous storage over pointer indirection
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Container:** Use `flat_map` and `flat_set` to modernize old node-based allocations in flat architectures.
+- **Boost.PolyCollection:** Use to successfully modernize old `std::vector<Base*>` arrays.
+
 ## 🎯 YOUR GOAL
 Scan the codebase for legacy C++ patterns you haven't modernized yet — raw loops, C-style casts, missing attributes, outdated containers, raw pointer ownership. Modernize them. Every run should leave the codebase more modern, safer, and more expressive than before.
 

@@ -108,6 +108,10 @@ Create PR titled `🗝️ Keeper: [Your Description]`.
 - **ALWAYS** use raw pointers for observation only (non-owning)
 - **ALWAYS** prefer contiguous value storage over scattered pointer-owned objects
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Pool:** Use to eliminate system allocator fragmentation for millions of small objects.
+- **Boost.Container:** Use `small_vector` to keep arrays inline instead of chasing heap pointers.
+
 ## 🎯 YOUR GOAL
 Find the memory issues — leaks, unclear ownership, unnecessary indirection. Eliminate pointers where values suffice. Wrap the rest in RAII. Ship leak-free, cache-friendly, safe code.
 

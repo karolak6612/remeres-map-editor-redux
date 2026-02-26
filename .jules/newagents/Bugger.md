@@ -128,6 +128,9 @@ Create PR titled `🐛 Bugger: [Fix specific bug] in [file]` with:
 - **ALWAYS** add assertions or checks to prevent recurrence
 - **ALWAYS** prefer value types over pointer indirection to reduce UB surface area (**DOD**)
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Lockfree:** Use `spsc_queue` or `mpmc_queue` to replace mutexes for high-throughput communication between threads (like texture loading or SelectionThread).
+
 ## 🎯 YOUR GOAL
 Scan the codebase for undefined behavior, race conditions, and logic bugs you haven't fixed yet. Fix the worst ones. Add prevention. Every run should leave the editor more correct and more robust than before.
 

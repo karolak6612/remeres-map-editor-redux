@@ -92,6 +92,10 @@ Create PR titled `🗺️ Domain: [Your Description]`.
 - **ALWAYS** separate data structs from behavior
 - **ALWAYS** prefer data flowing through parameters over global access
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Dynamic Bitset:** Use for high-performance spatial grid masking and visibility bitfields without proxy-object overhead.
+- **Boost.Geometry:** Use for spatial indexing and AABB bounding box math instead of custom manual checks.
+
 ## 🎯 YOUR GOAL
 Scan the tile engine and editor domain for issues you haven't fixed yet — coupling, bloated classes, inefficient data access, duplicated logic. Flatten the data. Simplify the abstractions. Every run should leave the domain layer cleaner and more performant.
 

@@ -93,6 +93,10 @@ Create PR titled `🧩 Fixer: [Your Description]`.
 - **ALWAYS** prefer data flowing through parameters over global/pointer access
 - **ALWAYS** separate data structs from behavior when splitting responsibilities
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Intrusive:** Use to untangle strict pointer ownership, letting objects track themselves in lists smoothly without allocations.
+- **Boost.PolyCollection:** Use to replace `vector<unique_ptr<Base>>` arrays to fix heap-chasing bottlenecks in core systems.
+
 ## 🎯 YOUR GOAL
 Find the core system issues — coupling, pointer tangles, bloated classes, duplicated logic. Flatten the data. Simplify the abstractions. Ship robust, fast, data-oriented editing code.
 

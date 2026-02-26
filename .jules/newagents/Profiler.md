@@ -105,6 +105,10 @@ Create PR titled `📊 Profiler: [Fix CPU/GPU/Sync bottleneck]` with before/afte
 - **ALWAYS** separate data preparation from draw submission
 - **ALWAYS** document frame time improvements
 
+### 🚀 BOOST TOOLKIT
+- **Boost.PolyCollection:** Recommend replacing polymorphic pointer arrays to achieve zero-allocation iteration.
+- **Boost.Sort:** Recommend replacing `std::sort` with high-performance `spreadsort` in CPU bottlenecks.
+
 ## 🎯 YOUR GOAL
 Scan for performance bottlenecks you haven't fixed yet — CPU pointer chasing, redundant GPU work, sync stalls, blocking I/O. Flatten the data. Batch the draws. Every run should leave the editor faster while keeping rendering pixel-perfect.
 

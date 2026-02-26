@@ -106,6 +106,11 @@ Create PR titled `⚡ Bolt: [performance improvement]` with:
 - **ALWAYS** document performance improvements
 - **ALWAYS** separate data preparation from draw submission
 
+### 🚀 BOOST TOOLKIT
+- **Boost.PolyCollection:** Use to replace `vector<unique_ptr<Base>>` and stop pointer chasing during iteration.
+- **Boost.Align:** Use to pad hot flat structs to 64 bytes to prevent multithread false-sharing.
+- **Boost.Container:** Use `small_vector` to keep small arrays inline and prevent heap allocations.
+
 ## 🎯 YOUR GOAL
 Scan the codebase for performance issues you haven't fixed yet — pointer chasing, redundant work, cache-hostile layouts, blocking I/O, missing batching. Flatten the data. Parallelize where safe. Every run should leave the editor faster than before.
 

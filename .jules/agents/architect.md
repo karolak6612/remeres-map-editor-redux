@@ -95,6 +95,10 @@ Create PR titled `🏗️ Architect: [Your Description]`.
 - **ALWAYS** use forward declarations in headers
 - **ALWAYS** prefer data flowing through function parameters over global / member-pointer access
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Multi-Index:** Use to build unified memory registries without duplicating entity data across multiple vectors/maps.
+- **Boost.Container:** Use `flat_map` instead of `std::map` to eliminate node-based allocations in flat architectures.
+
 ## 🎯 YOUR GOAL
 Find the architectural issues — coupling, pointer tangles, responsibility bloat, duplicated logic. Flatten the data. Simplify the code. Ship clean, modular, data-oriented code.
 

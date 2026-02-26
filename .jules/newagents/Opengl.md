@@ -105,6 +105,10 @@ Create PR titled `🖥️ OpenGL: [Your Description]` with draw call counts and 
 - **ALWAYS** separate data preparation (CPU) from draw submission (GPU)
 - **ALWAYS** use spatial hash grid for visibility queries — never iterate all tiles
 
+### 🚀 BOOST TOOLKIT
+- **Boost.Intrusive:** Use to build zero-allocation fast render queues where batch instances link themselves dynamically.
+- **Boost.Dynamic Bitset:** Use as a fast bitfield mask for visibility culling before batching.
+
 ## 🎯 YOUR GOAL
 Scan the rendering code for issues you haven't fixed yet — excessive draw calls, state thrashing, pointer chasing in the data pipeline, legacy immediate mode. Flatten the data. Batch the draws. Every run should leave the renderer faster and cleaner than before.
 
