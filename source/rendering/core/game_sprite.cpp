@@ -70,13 +70,22 @@ GameSprite::GameSprite() :
 	drawoffset_x(0),
 	drawoffset_y(0),
 	minimap_color(0),
-	is_simple(false) {
+	is_simple(false),
+	loaded_count(0) {
 	// dc initialized to nullptr by unique_ptr default ctor
 }
 
 GameSprite::~GameSprite() {
 	unloadDC();
 	// instanced_templates and animator cleaned up automatically by unique_ptr
+}
+
+void GameSprite::updateLoadedStatus(bool loaded) {
+	if (loaded) {
+		loaded_count++;
+	} else if (loaded_count > 0) {
+		loaded_count--;
+	}
 }
 
 void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
@@ -431,6 +440,9 @@ const AtlasRegion* GameSprite::Image::EnsureAtlasSprite(uint32_t sprite_id, std:
 
 			if (region) {
 				isGLLoaded = true;
+				if (dynamic_cast<NormalImage*>(this) && static_cast<NormalImage*>(this)->parent) {
+					static_cast<NormalImage*>(this)->parent->updateLoadedStatus(true);
+				}
 				g_gui.gfx.resident_images.push_back(this); // Add to resident set
 				g_gui.gfx.collector.NotifyTextureLoaded();
 				return region;
@@ -480,6 +492,9 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 		}
 
 		isGLLoaded = false;
+		if (parent) {
+			parent->updateLoadedStatus(false);
+		}
 		atlas_region = nullptr;
 
 		// Invalidate any pending preloads for this sprite ID

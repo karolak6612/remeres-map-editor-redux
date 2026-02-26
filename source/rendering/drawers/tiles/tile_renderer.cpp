@@ -347,7 +347,7 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 	}
 
 	GameSprite* spr = it.sprite;
-	if (spr && !spr->isSimpleAndLoaded()) {
+	if (spr && !spr->isFullyLoaded()) {
 		SpritePatterns patterns;
 		if (cached_patterns) {
 			patterns = *cached_patterns;

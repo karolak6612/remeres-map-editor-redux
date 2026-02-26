@@ -104,6 +104,11 @@ public:
 
 	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
 
+	bool isFullyLoaded() const {
+		return loaded_count >= numsprites;
+	}
+	void updateLoadedStatus(bool loaded);
+
 private:
 protected:
 	class Image;
@@ -279,6 +284,7 @@ protected:
 	mutable const AtlasRegion* cached_default_region = nullptr;
 	uint32_t cached_generation_id = 0;
 	uint32_t cached_sprite_id = 0;
+	std::atomic<uint32_t> loaded_count = 0;
 };
 
 #endif
