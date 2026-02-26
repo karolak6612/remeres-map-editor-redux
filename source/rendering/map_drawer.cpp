@@ -282,6 +282,26 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 	glViewport(0, 0, fbo_width, fbo_height);
 }
 
+void MapDrawer::UpdateVisibleNodes() {
+	visible_nodes_cache.clear();
+
+	int nd_start_x = view.start_x & ~3;
+	int nd_start_y = view.start_y & ~3;
+	int nd_end_x = (view.end_x & ~3) + 4;
+	int nd_end_y = (view.end_y & ~3) + 4;
+
+	// Use SpatialHashGrid::visitLeaves which handles O(1) viewport query internally
+	// Expand the query range slightly to handle the 4-tile alignment and safety margin
+	int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+	int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+	int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+	int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+
+	editor.map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+		visible_nodes_cache.push_back({ nd, nd_map_x, nd_map_y });
+	});
+}
+
 void MapDrawer::Release() {
 	// tooltip_drawer->clear(); // Moved to ClearTooltips(), called explicitly after UI draw
 }
@@ -367,6 +387,10 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
+	if (!live_client) {
+		UpdateVisibleNodes();
+	}
+
 	bool only_colors = options.show_as_minimap || options.show_only_colors;
 
 	// Enable texture mode
@@ -377,7 +401,13 @@ void MapDrawer::DrawMap() {
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			if (live_client) {
+				// Fallback to old behavior for live client (iterates full range + requests nodes)
+				DrawMapLayer(map_z, live_client);
+			} else {
+				// Use hoisted cache for standard rendering
+				map_layer_drawer->DrawNodes(*sprite_batch, map_z, live_client, view, options, light_buffer, visible_nodes_cache);
+			}
 		}
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);

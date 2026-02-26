@@ -28,6 +28,14 @@ struct DrawingOptions;
 struct LightBuffer;
 class SpriteBatch;
 class PrimitiveRenderer;
+class MapNode;
+#include <vector>
+
+struct VisibleNode {
+	MapNode* node;
+	int x;
+	int y;
+};
 
 class MapLayerDrawer {
 public:
@@ -35,6 +43,8 @@ public:
 	~MapLayerDrawer();
 
 	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
+	void DrawNodes(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer, const std::vector<VisibleNode>& nodes);
+	void DrawSingleNode(MapNode* nd, int nd_map_x, int nd_map_y, int map_z, bool live, SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer, int base_screen_x, int base_screen_y, bool draw_lights);
 
 private:
 	TileRenderer* tile_renderer;

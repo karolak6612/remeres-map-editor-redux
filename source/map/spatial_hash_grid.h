@@ -95,6 +95,16 @@ protected:
 	mutable std::vector<SortedGridCell> sorted_cells_cache;
 	mutable bool sorted_cells_dirty;
 
+	struct RowCellInfo {
+		GridCell* cell;
+		int cell_start_nx;
+		int local_start_nx;
+		int local_end_nx;
+	};
+
+	// Use member variable to avoid reallocation every frame
+	mutable std::vector<RowCellInfo> row_cells_cache;
+
 	mutable uint64_t last_key = 0;
 	mutable GridCell* last_cell = nullptr;
 
@@ -105,33 +115,25 @@ protected:
 		visitLeavesByViewportImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
 	}
 
-	struct RowCellInfo {
-		GridCell* cell;
-		int cell_start_nx;
-		int local_start_nx;
-		int local_end_nx;
-	};
-
 	// Traverses cells by checking every potential cell in the viewport.
 	// Efficient for small viewports on dense maps.
 	template <typename Func>
 	void visitLeavesByViewportImpl(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		std::vector<RowCellInfo> row_cells;
-		row_cells.reserve(end_cx - start_cx + 1);
+		row_cells_cache.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
-			row_cells.clear();
+			row_cells_cache.clear();
 
 			for (int cx = start_cx; cx <= end_cx; ++cx) {
 				uint64_t key = makeKeyFromCell(cx, cy);
 				auto it = cells.find(key);
 				if (it != cells.end()) {
 					int cell_start_nx = cx << NODES_PER_CELL_SHIFT;
-					row_cells.push_back({ .cell = it->second.get(), .cell_start_nx = cell_start_nx, .local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx, .local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx });
+					row_cells_cache.push_back({ .cell = it->second.get(), .cell_start_nx = cell_start_nx, .local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx, .local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx });
 				}
 			}
 
-			if (row_cells.empty()) {
+			if (row_cells_cache.empty()) {
 				continue;
 			}
 
@@ -142,7 +144,7 @@ protected:
 				int local_ny = ny & (NODES_PER_CELL - 1);
 				int idx_base = local_ny * NODES_PER_CELL;
 
-				for (const auto& row_cell : row_cells) {
+				for (const auto& row_cell : row_cells_cache) {
 					for (int lnx = row_cell.local_start_nx; lnx <= row_cell.local_end_nx; ++lnx) {
 						if (MapNode* node = row_cell.cell->nodes[idx_base + lnx].get()) {
 							func(node, (row_cell.cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);

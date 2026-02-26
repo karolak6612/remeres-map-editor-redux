@@ -59,6 +59,7 @@ class TileRenderer;
 class CreatureNameDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
+struct VisibleNode;
 
 class MapDrawer {
 	MapCanvas* canvas;
@@ -100,9 +101,12 @@ class MapDrawer {
 	std::unique_ptr<GLBuffer> pp_vbo;
 	std::unique_ptr<GLBuffer> pp_ebo;
 
+	std::vector<VisibleNode> visible_nodes_cache;
+
 	void InitPostProcess();
 	void DrawPostProcess(const RenderView& view, const DrawingOptions& options);
 	void UpdateFBO(const RenderView& view, const DrawingOptions& options);
+	void UpdateVisibleNodes();
 
 protected:
 	friend class BrushOverlayDrawer;
