@@ -434,7 +434,8 @@ SpawnList Map::getSpawnList(Tile* where) {
 			};
 
 			// Safety bound: limit search radius to prevent infinite expansion with stale spawn counts
-			const int max_radius = std::max(getWidth(), getHeight());
+			// Spawns are capped at size 100 in Spawn::setSize
+			const int max_radius = 100;
 			while (found < tile_loc->getSpawnCount()) {
 				// Horizontal sides
 				for (int x = start_x; x <= end_x; ++x) {

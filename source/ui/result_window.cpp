@@ -21,11 +21,84 @@
 #include "ui/gui.h"
 #include "map/position.h"
 #include "util/image_manager.h"
+#include "util/nanovg_list_box.h"
+
+struct SearchResultItem {
+	wxString description;
+	Position pos;
+};
+
+class SearchResultListBox : public NanoVGListBox {
+public:
+	SearchResultListBox(wxWindow* parent, wxWindowID id);
+	~SearchResultListBox();
+
+	void AddItem(const wxString& desc, const Position& pos);
+	void ClearItems();
+	const SearchResultItem& GetItem(int index) const;
+	size_t GetCount() const {
+		return items.size();
+	}
+	wxString GetString(int index) const {
+		if (index >= 0 && index < (int)items.size()) {
+			return items[index].description;
+		}
+		return "";
+	}
+
+protected:
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) override;
+	int GetItemHeight() const override {
+		return 20;
+	}
+
+private:
+	std::vector<SearchResultItem> items;
+};
+
+SearchResultListBox::SearchResultListBox(wxWindow* parent, wxWindowID id) :
+	NanoVGListBox(parent, id) {
+}
+
+SearchResultListBox::~SearchResultListBox() {
+}
+
+void SearchResultListBox::AddItem(const wxString& desc, const Position& pos) {
+	items.push_back({desc, pos});
+	SetItemCount(items.size());
+}
+
+void SearchResultListBox::ClearItems() {
+	items.clear();
+	SetItemCount(0);
+}
+
+const SearchResultItem& SearchResultListBox::GetItem(int index) const {
+	static SearchResultItem empty;
+	if (index >= 0 && index < (int)items.size()) {
+		return items[index];
+	}
+	return empty;
+}
+
+void SearchResultListBox::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) {
+	if (index < 0 || index >= (int)items.size()) {
+		return;
+	}
+	const auto& item = items[index];
+
+	nvgFillColor(vg, selected ? nvgRGB(255, 255, 255) : nvgRGB(0, 0, 0));
+	nvgFontSize(vg, 14.0f);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+
+	std::string text = item.description.ToStdString();
+	nvgText(vg, rect.GetX() + 5, rect.GetY() + rect.GetHeight() / 2, text.c_str(), nullptr);
+}
 
 SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	result_list = newd wxListBox(this, wxID_ANY, wxDefaultPosition, FromDIP(wxSize(200, 330)), 0, nullptr, wxLB_SINGLE | wxLB_ALWAYS_SB);
+	result_list = newd SearchResultListBox(this, wxID_ANY);
 	sizer->Add(result_list, wxSizerFlags(1).Expand());
 
 	wxSizer* buttonsSizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -51,20 +124,20 @@ SearchResultWindow::~SearchResultWindow() {
 }
 
 void SearchResultWindow::Clear() {
-	for (uint32_t n = 0; n < result_list->GetCount(); ++n) {
-		delete reinterpret_cast<Position*>(result_list->GetClientData(n));
+	if (result_list) {
+		result_list->ClearItems();
 	}
-	result_list->Clear();
 }
 
 void SearchResultWindow::AddPosition(wxString description, Position pos) {
-	result_list->Append(description << " (" << pos.x << "," << pos.y << "," << pos.z << ")", newd Position(pos));
+	result_list->AddItem(description << " (" << pos.x << "," << pos.y << "," << pos.z << ")", pos);
 }
 
 void SearchResultWindow::OnClickResult(wxCommandEvent& event) {
-	Position* pos = reinterpret_cast<Position*>(event.GetClientData());
-	if (pos) {
-		g_gui.SetScreenCenterPosition(*pos);
+	int index = event.GetInt();
+	if (index >= 0) {
+		const SearchResultItem& item = result_list->GetItem(index);
+		g_gui.SetScreenCenterPosition(item.pos);
 	}
 }
 

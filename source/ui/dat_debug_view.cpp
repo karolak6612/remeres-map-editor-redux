@@ -1,37 +1,23 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
 #include "app/main.h"
 
 #include "ui/dat_debug_view.h"
 
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include "util/nanovg_list_box.h"
 
 // ============================================================================
 //
 
-class DatDebugViewListBox : public wxVListBox {
+class DatDebugViewListBox : public NanoVGListBox {
 public:
 	DatDebugViewListBox(wxWindow* parent, wxWindowID id);
 	~DatDebugViewListBox();
 
-	void OnDrawItem(wxDC& dc, const wxRect& rect, size_t index) const;
-	wxCoord OnMeasureItem(size_t index) const;
+	void OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) override;
+	int GetItemHeight() const override {
+		return 32;
+	}
 
 protected:
 	using SpriteMap = std::vector<Sprite*>;
@@ -39,7 +25,7 @@ protected:
 };
 
 DatDebugViewListBox::DatDebugViewListBox(wxWindow* parent, wxWindowID id) :
-	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
+	NanoVGListBox(parent, id) {
 	sprites.reserve(g_gui.gfx.getItemSpriteMaxID());
 	for (int id = 0; id < g_gui.gfx.getItemSpriteMaxID(); ++id) {
 		Sprite* spr = g_gui.gfx.getSprite(id);
@@ -54,26 +40,43 @@ DatDebugViewListBox::~DatDebugViewListBox() {
 	////
 }
 
-void DatDebugViewListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
-	if (n < sprites.size()) {
-		sprites[n]->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
+void DatDebugViewListBox::OnDrawItem(NVGcontext* vg, int index, const wxRect& rect, bool selected) {
+	if (index < 0 || index >= (int)sprites.size()) {
+		return;
 	}
 
-	if (IsSelected(n)) {
-		if (HasFocus()) {
-			dc.SetTextForeground(wxColor(0xFF, 0xFF, 0xFF));
-		} else {
-			dc.SetTextForeground(wxColor(0x00, 0x00, 0xFF));
+	Sprite* spr = sprites[index];
+	if (spr) {
+		int img = GetOrCreateSpriteTexture(vg, spr);
+		if (img > 0) {
+			int w, h;
+			nvgImageSize(vg, img, &w, &h);
+
+			// Fit to 32x32 if larger, center if smaller
+			float scale = 1.0f;
+			if (w > 32 || h > 32) {
+				scale = 32.0f / std::max(w, h);
+			}
+
+			float drawW = w * scale;
+			float drawH = h * scale;
+			float x = rect.GetX() + (32 - drawW) / 2; // Center in first 32px slot
+			float y = rect.GetY() + (32 - drawH) / 2;
+
+			nvgBeginPath(vg);
+			nvgRect(vg, x, y, drawW, drawH);
+			nvgFillPaint(vg, nvgImagePattern(vg, x, y, drawW, drawH, 0, img, 1.0f));
+			nvgFill(vg);
 		}
-	} else {
-		dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
 	}
 
-	dc.DrawText(wxString() << n, rect.GetX() + 40, rect.GetY() + 6);
-}
+	// Draw text
+	nvgFillColor(vg, selected ? nvgRGB(255, 255, 255) : nvgRGB(0, 0, 0));
+	nvgFontSize(vg, 16.0f);
+	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
 
-wxCoord DatDebugViewListBox::OnMeasureItem(size_t n) const {
-	return 32;
+	std::string text = std::to_string(index);
+	nvgText(vg, rect.GetX() + 40, rect.GetY() + rect.GetHeight() / 2, text.c_str(), nullptr);
 }
 
 // ============================================================================
