@@ -1,6 +1,7 @@
 #ifndef RME_UTIL_NVG_UTILS_H_
 #define RME_UTIL_NVG_UTILS_H_
 
+#include "app/main.h"
 #include "game/items.h"
 #include "ui/gui.h"
 #include <nanovg.h>
@@ -109,6 +110,59 @@ namespace NvgUtils {
 
 		return nvgCreateImageRGBA(vg, w, h, 0, composite.get());
 	}
+
+	class ScopedNvgImage {
+	public:
+		ScopedNvgImage() :
+			vg(nullptr), image(0) {
+		}
+		ScopedNvgImage(NVGcontext* ctx, int img) :
+			vg(ctx), image(img) {
+		}
+		~ScopedNvgImage() {
+			reset();
+		}
+
+		ScopedNvgImage(ScopedNvgImage&& other) noexcept :
+			vg(other.vg), image(other.image) {
+			other.vg = nullptr;
+			other.image = 0;
+		}
+
+		ScopedNvgImage& operator=(ScopedNvgImage&& other) noexcept {
+			if (this != &other) {
+				reset();
+				vg = other.vg;
+				image = other.image;
+				other.vg = nullptr;
+				other.image = 0;
+			}
+			return *this;
+		}
+
+		// Disable copy
+		ScopedNvgImage(const ScopedNvgImage&) = delete;
+		ScopedNvgImage& operator=(const ScopedNvgImage&) = delete;
+
+		void reset() {
+			if (vg && image > 0) {
+				nvgDeleteImage(vg, image);
+			}
+			vg = nullptr;
+			image = 0;
+		}
+
+		int get() const {
+			return image;
+		}
+		operator int() const {
+			return image;
+		}
+
+	private:
+		NVGcontext* vg;
+		int image;
+	};
 
 } // namespace NvgUtils
 

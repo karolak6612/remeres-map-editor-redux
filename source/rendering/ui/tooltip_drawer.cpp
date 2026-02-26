@@ -32,14 +32,7 @@ TooltipDrawer::TooltipDrawer() {
 
 TooltipDrawer::~TooltipDrawer() {
 	clear();
-	if (lastContext) {
-		for (auto& pair : spriteCache) {
-			if (pair.second > 0) {
-				nvgDeleteImage(lastContext, pair.second);
-			}
-		}
-		spriteCache.clear();
-	}
+	spriteCache.clear();
 }
 
 void TooltipDrawer::clear() {
@@ -120,16 +113,6 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 	// Detect context change and clear cache
 	if (vg != lastContext) {
-		// If we had a previous context, we'd ideally delete images from it,
-		// but if the context pointer changed, the old one might be invalid.
-		// However, adhering to the request to clear cache with nvgDeleteImage:
-		if (lastContext) {
-			for (auto& pair : spriteCache) {
-				if (pair.second > 0) {
-					nvgDeleteImage(lastContext, pair.second);
-				}
-			}
-		}
 		spriteCache.clear();
 		lastContext = vg;
 	}
@@ -198,11 +181,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 					// nvgCreateImageRGBA failed
 				} else {
 					// Success
-					// Check if we are overwriting an existing valid image (shouldn't happen given find() above, but safest)
-					if (spriteCache.contains(itemId) && spriteCache[itemId] > 0) {
-						nvgDeleteImage(vg, spriteCache[itemId]);
-					}
-					spriteCache[itemId] = image;
+					spriteCache[itemId] = NvgUtils::ScopedNvgImage(vg, image);
 					return image;
 				}
 			}
