@@ -1,5 +1,6 @@
 #include "rendering/core/primitive_renderer.h"
 #include <iostream>
+#include <cstring>
 #include <spdlog/spdlog.h>
 #include "rendering/core/gl_scoped_state.h"
 
@@ -43,13 +44,14 @@ void PrimitiveRenderer::initialize() {
 	}
 
 	vao_ = std::make_unique<GLVertexArray>();
-	vbo_ = std::make_unique<GLBuffer>();
 
-	// Allocate buffer
-	glNamedBufferStorage(vbo_->GetID(), MAX_VERTICES * sizeof(Vertex), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	if (!ring_buffer_.initialize(sizeof(Vertex), MAX_VERTICES)) {
+		spdlog::error("PrimitiveRenderer: Failed to initialize RingBuffer");
+	}
 
 	// DSA setup
-	glVertexArrayVertexBuffer(vao_->GetID(), 0, vbo_->GetID(), 0, sizeof(Vertex));
+	// Initial binding to section 0 (will be updated per-draw)
+	glVertexArrayVertexBuffer(vao_->GetID(), 0, ring_buffer_.getBufferId(), 0, sizeof(Vertex));
 
 	// Pos
 	glEnableVertexArrayAttrib(vao_->GetID(), 0);
@@ -61,12 +63,12 @@ void PrimitiveRenderer::initialize() {
 	glVertexArrayAttribFormat(vao_->GetID(), 1, 4, GL_FLOAT, GL_FALSE, offsetof(Vertex, color));
 	glVertexArrayAttribBinding(vao_->GetID(), 1, 0);
 
-	spdlog::info("PrimitiveRenderer initialized (VAO: {}, VBO: {})", vao_->GetID(), vbo_->GetID());
+	spdlog::info("PrimitiveRenderer initialized (VAO: {}, Buffer: {})", vao_->GetID(), ring_buffer_.getBufferId());
 }
 
 void PrimitiveRenderer::shutdown() {
 	vao_.reset();
-	vbo_.reset();
+	ring_buffer_.cleanup();
 }
 
 void PrimitiveRenderer::setProjectionMatrix(const glm::mat4& projection) {
@@ -141,6 +143,15 @@ void PrimitiveRenderer::flushTriangles() {
 		return;
 	}
 
+	void* ptr = ring_buffer_.waitAndMap(triangle_verts_.size());
+	if (!ptr) {
+		spdlog::error("PrimitiveRenderer: RingBuffer mapping failed (Triangles).");
+		triangle_verts_.clear();
+		return;
+	}
+
+	std::memcpy(ptr, triangle_verts_.data(), triangle_verts_.size() * sizeof(Vertex));
+
 	{
 		ScopedGLCapability blendCap(GL_BLEND);
 		ScopedGLBlend blendState(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -148,13 +159,15 @@ void PrimitiveRenderer::flushTriangles() {
 		shader_->Use();
 		shader_->SetMat4("uMVP", projection_);
 
-		glNamedBufferSubData(vbo_->GetID(), 0, triangle_verts_.size() * sizeof(Vertex), triangle_verts_.data());
+		size_t offset = ring_buffer_.getCurrentSectionOffset();
+		glVertexArrayVertexBuffer(vao_->GetID(), 0, ring_buffer_.getBufferId(), offset, sizeof(Vertex));
 
 		glBindVertexArray(vao_->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)triangle_verts_.size());
 		glBindVertexArray(0);
 	}
 
+	ring_buffer_.signalFinished();
 	triangle_verts_.clear();
 }
 
@@ -163,6 +176,15 @@ void PrimitiveRenderer::flushLines() {
 		return;
 	}
 
+	void* ptr = ring_buffer_.waitAndMap(line_verts_.size());
+	if (!ptr) {
+		spdlog::error("PrimitiveRenderer: RingBuffer mapping failed (Lines).");
+		line_verts_.clear();
+		return;
+	}
+
+	std::memcpy(ptr, line_verts_.data(), line_verts_.size() * sizeof(Vertex));
+
 	{
 		ScopedGLCapability blendCap(GL_BLEND);
 		ScopedGLBlend blendState(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -170,12 +192,14 @@ void PrimitiveRenderer::flushLines() {
 		shader_->Use();
 		shader_->SetMat4("uMVP", projection_);
 
-		glNamedBufferSubData(vbo_->GetID(), 0, line_verts_.size() * sizeof(Vertex), line_verts_.data());
+		size_t offset = ring_buffer_.getCurrentSectionOffset();
+		glVertexArrayVertexBuffer(vao_->GetID(), 0, ring_buffer_.getBufferId(), offset, sizeof(Vertex));
 
 		glBindVertexArray(vao_->GetID());
 		glDrawArrays(GL_LINES, 0, (GLsizei)line_verts_.size());
 		glBindVertexArray(0);
 	}
 
+	ring_buffer_.signalFinished();
 	line_verts_.clear();
 }

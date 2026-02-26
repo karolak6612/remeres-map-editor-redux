@@ -4,6 +4,7 @@
 #include "app/main.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/ring_buffer.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
@@ -47,7 +48,7 @@ private:
 
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<GLVertexArray> vao_;
-	std::unique_ptr<GLBuffer> vbo_;
+	RingBuffer ring_buffer_;
 
 	std::vector<Vertex> triangle_verts_;
 	std::vector<Vertex> line_verts_;
