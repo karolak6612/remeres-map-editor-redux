@@ -163,147 +163,7 @@ void MapDrawer::SetupGL() {
 		renderers_initialized = true;
 	}
 
-	InitPostProcess();
-}
-
-void MapDrawer::InitPostProcess() {
-	if (pp_vao) {
-		return;
-	}
-
-	// Load Shaders
-	// Load Shaders
-	PostProcessManager::Instance().Initialize(screen_vert);
-
-	// Setup Screen Quad
-	pp_vao = std::make_unique<GLVertexArray>();
-	pp_vbo = std::make_unique<GLBuffer>();
-	pp_ebo = std::make_unique<GLBuffer>();
-
-	float quadVertices[] = {
-		// positions   // texCoords
-		-1.0f, 1.0f, 0.0f, 1.0f,
-		-1.0f, -1.0f, 0.0f, 0.0f,
-		1.0f, -1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 1.0f
-	};
-
-	unsigned int quadIndices[] = {
-		0, 1, 2,
-		0, 2, 3
-	};
-
-	glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, GL_DYNAMIC_STORAGE_BIT);
-	glNamedBufferStorage(pp_ebo->GetID(), sizeof(quadIndices), quadIndices, 0);
-
-	glVertexArrayVertexBuffer(pp_vao->GetID(), 0, pp_vbo->GetID(), 0, 4 * sizeof(float));
-	glVertexArrayElementBuffer(pp_vao->GetID(), pp_ebo->GetID());
-
-	glEnableVertexArrayAttrib(pp_vao->GetID(), 0);
-	glVertexArrayAttribFormat(pp_vao->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);
-	glVertexArrayAttribBinding(pp_vao->GetID(), 0, 0);
-
-	glEnableVertexArrayAttrib(pp_vao->GetID(), 1);
-	glVertexArrayAttribFormat(pp_vao->GetID(), 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
-	glVertexArrayAttribBinding(pp_vao->GetID(), 1, 0);
-}
-
-void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& options) {
-	if (!scale_fbo || !pp_vao) {
-		return;
-	}
-
-	ShaderProgram* shader = PostProcessManager::Instance().GetEffect(options.screen_shader_name);
-	if (!shader) {
-		// Manager already tries fallback to NONE, but if even that is missing:
-		return;
-	}
-
-	// Only clear and bind main screen once we know we can draw the result
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear main screen
-
-	shader->Use();
-	shader->SetInt("u_Texture", 0);
-	// Set TextureSize uniform if shader needs it
-	shader->SetVec2("u_TextureSize", glm::vec2(fbo_width, fbo_height));
-
-	// Update UVs based on used portion of the texture
-	float u_max = (float)fbo_width / fbo_allocated_width;
-	float v_max = (float)fbo_height / fbo_allocated_height;
-
-	float quadVertices[] = {
-		// positions   // texCoords
-		-1.0f, 1.0f, 0.0f, v_max,
-		-1.0f, -1.0f, 0.0f, 0.0f,
-		1.0f, -1.0f, u_max, 0.0f,
-		1.0f, 1.0f, u_max, v_max
-	};
-	glNamedBufferSubData(pp_vbo->GetID(), 0, sizeof(quadVertices), quadVertices);
-
-	glBindTextureUnit(0, scale_texture->GetID());
-	glBindVertexArray(pp_vao->GetID());
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-	shader->Unuse();
-}
-
-void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options) {
-	// Determine FBO size.
-	// If upscaling (Zoom < 1.0, e.g. 0.25), we want 1 pixel = 1 map unit.
-	// width_pixels = screen_width * zoom.
-	float scale_factor = view.zoom < 1.0f ? view.zoom : 1.0f;
-	// If zoom > 1.0 (minified), we render at screen res (or native map size?)
-	// Rendering at screen res with Zoom > 1.0 means primitives are small.
-
-	int target_w = std::max(1, static_cast<int>(view.screensize_x * scale_factor));
-	int target_h = std::max(1, static_cast<int>(view.screensize_y * scale_factor));
-
-	// Always allocate at least the screen size to avoid reallocation during minor zooms
-	// But respect target_w if it somehow exceeds screen (shouldn't happen with zoom <= 1.0 logic, but good for safety)
-	int needed_w = std::max(view.screensize_x, target_w);
-	int needed_h = std::max(view.screensize_y, target_h);
-
-	bool fbo_resized = false;
-
-	// Only reallocate if we need more space than currently allocated
-	if (needed_w > fbo_allocated_width || needed_h > fbo_allocated_height || !scale_fbo) {
-		fbo_allocated_width = needed_w;
-		fbo_allocated_height = needed_h;
-
-		scale_fbo = std::make_unique<GLFramebuffer>();
-		scale_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
-
-		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_allocated_width, fbo_allocated_height);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glNamedFramebufferTexture(scale_fbo->GetID(), GL_COLOR_ATTACHMENT0, scale_texture->GetID(), 0);
-		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-		glNamedFramebufferDrawBuffers(scale_fbo->GetID(), 1, drawBuffers);
-
-		fbo_resized = true;
-	}
-
-	fbo_width = target_w;
-	fbo_height = target_h;
-
-	// Sanity check for division by zero risk in shaders
-	if (fbo_width < 1 || fbo_height < 1) {
-		spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
-	}
-
-	// Update filtering parameters when scaling is enabled and either the FBO was resized or the AA mode changed (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode))
-	if (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode)) {
-		GLenum filter = options.anti_aliasing ? GL_LINEAR : GL_NEAREST;
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MIN_FILTER, filter);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);
-		m_lastAaMode = options.anti_aliasing;
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());
-	glViewport(0, 0, fbo_width, fbo_height);
+	post_process_pipeline->Initialize();
 }
 
 void MapDrawer::Release() {
@@ -328,14 +188,10 @@ void MapDrawer::Draw() {
 	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 
 	// Check Framebuffer Logic
-	// Check Framebuffer Logic
-	bool use_fbo = (options.screen_shader_name != ShaderNames::NONE) || options.anti_aliasing;
-	// Use FBO if zooming IN (zoom < 1.0) for upscaling, OR if AA is requested.
-	// If zooming OUT (zoom > 1.0), FBO resolution logic needs care.
-	// Current logic: Always use FBO if shading enabled.
+	bool use_fbo = post_process_pipeline->IsActive(options);
 
 	if (use_fbo) {
-		UpdateFBO(view, options);
+		post_process_pipeline->UpdateFBO(view, options);
 	}
 
 	DrawBackground(); // Clear screen (or FBO)
@@ -353,7 +209,7 @@ void MapDrawer::Draw() {
 
 	// If using FBO, we must now Resolve to Screen
 	if (use_fbo) {
-		DrawPostProcess(view, options);
+		post_process_pipeline->Draw(view, options);
 		// Reset to default FBO for overlays
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);

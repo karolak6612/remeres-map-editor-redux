@@ -28,6 +28,7 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/utilities/pattern_calculator.h"
+#include "rendering/systems/house_highlight_system.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), creature_name_drawer(cnd), floor_drawer(fd), marker_drawer(md) {
@@ -110,42 +111,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
-	if (options.show_houses && tile->isHouseTile() && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
-
-		uint8_t hr, hg, hb;
-		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
-
-		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		// Optimization: Use integer math for border color to avoid vec4 construction and casting
-		int ba = static_cast<int>(intensity * 255.0f);
-		// hr, hg, hb are already uint8_t
-		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
+	if (map_z == view.floor && tile->isHouseTile()) {
+		HouseHighlightSystem::DrawBorder(sprite_batch, sprite_drawer, draw_x, draw_y, tile->getHouseID(), options);
 	}
 
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// Hoist house color calculation out of item loop
 			uint8_t house_tint_r = 255, house_tint_g = 255, house_tint_b = 255;
-			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
-
-			if (calculate_house_color) {
-				uint8_t house_r = 255, house_g = 255, house_b = 255;
-				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
-
-				// Apply house color tint
-				house_tint_r = house_r;
-				house_tint_g = house_g;
-				house_tint_b = house_b;
-
-				bool should_pulse = (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
-				if (should_pulse) {
-					float boost = options.highlight_pulse * 0.6f;
-					// Pulse effect matching the tile pulse
-					house_tint_r = static_cast<uint8_t>(std::min(255, static_cast<int>(house_tint_r + (255 - house_tint_r) * boost)));
-					house_tint_g = static_cast<uint8_t>(std::min(255, static_cast<int>(house_tint_g + (255 - house_tint_g) * boost)));
-					house_tint_b = static_cast<uint8_t>(std::min(255, static_cast<int>(house_tint_b + (255 - house_tint_b) * boost)));
-				}
-			}
+			bool has_tint = HouseHighlightSystem::CalculateTint(tile, options, house_tint_r, house_tint_g, house_tint_b);
 
 			bool process_tooltips = options.show_tooltips && map_z == view.floor;
 
@@ -260,36 +234,14 @@ void TileRenderer::DrawTile(RenderList& list, TileLocation* location, const Rend
 		}
 	}
 
-	if (options.show_houses && tile->isHouseTile() && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
-		uint8_t hr, hg, hb;
-		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
-
-		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		int ba = static_cast<int>(intensity * 255.0f);
-		sprite_drawer->glDrawBox(list, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
+	if (map_z == view.floor && tile->isHouseTile()) {
+		HouseHighlightSystem::DrawBorder(list, sprite_drawer, draw_x, draw_y, tile->getHouseID(), options);
 	}
 
 	if (!only_colors) {
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			uint8_t house_tint_r = 255, house_tint_g = 255, house_tint_b = 255;
-			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
-
-			if (calculate_house_color) {
-				uint8_t house_r = 255, house_g = 255, house_b = 255;
-				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
-
-				house_tint_r = house_r;
-				house_tint_g = house_g;
-				house_tint_b = house_b;
-
-				bool should_pulse = (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
-				if (should_pulse) {
-					float boost = options.highlight_pulse * 0.6f;
-					house_tint_r = static_cast<uint8_t>(std::min(255, static_cast<int>(house_tint_r + (255 - house_tint_r) * boost)));
-					house_tint_g = static_cast<uint8_t>(std::min(255, static_cast<int>(house_tint_g + (255 - house_tint_g) * boost)));
-					house_tint_b = static_cast<uint8_t>(std::min(255, static_cast<int>(house_tint_b + (255 - house_tint_b) * boost)));
-				}
-			}
+			bool has_tint = HouseHighlightSystem::CalculateTint(tile, options, house_tint_r, house_tint_g, house_tint_b);
 
 			bool process_tooltips = options.show_tooltips && map_z == view.floor;
 
