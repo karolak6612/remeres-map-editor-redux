@@ -2,7 +2,7 @@
 #define RME_UI_DIALOGS_FIND_DIALOG_H_
 
 #include "app/main.h"
-#include "util/nanovg_listbox.h"
+#include "util/nanovg_canvas.h"
 #include <wx/wx.h>
 #include <vector>
 
@@ -19,7 +19,7 @@ public:
 	void OnKeyDown(wxKeyEvent&);
 };
 
-class FindDialogListBox : public NanoVGListBox {
+class FindDialogListBox : public NanoVGCanvas {
 public:
 	FindDialogListBox(wxWindow* parent, wxWindowID id);
 	~FindDialogListBox();
@@ -30,13 +30,42 @@ public:
 	void CommitUpdates();
 	Brush* GetSelectedBrush();
 
-	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;
-	int OnMeasureItem(size_t index) const override;
+	size_t GetItemCount() const {
+		return brushlist.size();
+	}
+
+	void SetSelection(int n);
+	int GetSelection() const {
+		return m_selection;
+	}
+
+	void GetSize(int* w, int* h) const {
+		*w = m_columns;
+		*h = (brushlist.size() + m_columns - 1) / std::max(1, m_columns);
+	}
 
 protected:
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	wxSize DoGetBestClientSize() const override;
+
+	void OnSize(wxSizeEvent& event);
+	void OnMouseDown(wxMouseEvent& event);
+	void OnKeyDown(wxKeyEvent& event);
+	void OnMotion(wxMouseEvent& event);
+	void OnLeave(wxMouseEvent& event);
+
+	void UpdateGrid();
+	void EnsureVisible(int index);
+
 	bool cleared;
 	bool no_matches;
 	std::vector<Brush*> brushlist;
+
+	int m_columns = 1;
+	int m_item_width;
+	int m_item_height;
+	int m_selection = -1;
+	int m_hoverIndex = -1;
 };
 
 class FindDialog : public wxDialog {

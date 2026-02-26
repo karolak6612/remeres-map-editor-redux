@@ -270,6 +270,9 @@ WelcomeDialog::~WelcomeDialog() {
 void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, std::string_view artId, const wxColour& valCol) {
 	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
 
+	// Create a unique name for the value field so we can find it later
+	wxString valName = "val_" + label;
+
 	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(artId, wxSize(14, 14)));
 	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
 
@@ -282,7 +285,7 @@ void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxStrin
 
 	sizer->Add(row, 0, wxTOP | wxLEFT | wxRIGHT, 2);
 
-	wxStaticText* val = new wxStaticText(parent, wxID_ANY, value);
+	wxStaticText* val = new wxStaticText(parent, wxID_ANY, value, wxDefaultPosition, wxDefaultSize, 0, valName);
 	wxFont vf = val->GetFont();
 	vf.SetWeight(wxFONTWEIGHT_BOLD);
 	val->SetFont(vf);
@@ -401,12 +404,12 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
-	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
+	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL | wxBORDER_NONE);
 	// SetImageList — ownership retained by m_imageList (do not replace with AssignImageList)
 	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
 	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
-	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, FromDIP(150));
+	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(300)); // Wider
+	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, FromDIP(140));
 
 	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
@@ -433,42 +436,43 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 3: Selected Map Info
 	DarkCardPanel* col3 = new DarkCardPanel(contentPanel, "Selected Map Info");
-	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", ICON_LIST);
+	AddInfoField(col3->GetSizer(), col3, "Map Name", "-", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Client Version", "-", ICON_CHECK);
+	AddInfoField(col3->GetSizer(), col3, "Dimensions", "-", ICON_LIST);
 	col3->GetSizer()->Add(new wxStaticLine(col3), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", ICON_FILE_LINES);
+	AddInfoField(col3->GetSizer(), col3, "House File", "-", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Spawn File", "-", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Description", "Select a map to view details.", ICON_FILE_LINES);
 	contentSizer->Add(col3, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 3 (Center)
 
 	// Column 4: Client Info
 	DarkCardPanel* col4 = new DarkCardPanel(contentPanel, "Client Information");
-	AddInfoField(col4->GetSizer(), col4, "Client Name", "Placeholder", ICON_HARD_DRIVE);
-	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", ICON_FOLDER);
+	AddInfoField(col4->GetSizer(), col4, "Client Name", "Generic 8.60", ICON_HARD_DRIVE);
+	AddInfoField(col4->GetSizer(), col4, "Client Version", "8.60", ICON_CHECK);
+	AddInfoField(col4->GetSizer(), col4, "Data Directory", "/data/860", ICON_FOLDER);
 	col4->GetSizer()->Add(new wxStaticLine(col4), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, wxColour(0, 200, 0));
+	AddInfoField(col4->GetSizer(), col4, "Status", "Ready", ICON_CHECK, wxColour(0, 200, 0));
 	contentSizer->Add(col4, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 4
 
 	// Column 5: Available Clients
-	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
-	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
+	// DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
+	// m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
 	// SetImageList — ownership retained by m_imageList (do not replace with AssignImageList)
-	m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
-	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, FromDIP(150));
+	// m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
+	// m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
+	// m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, FromDIP(150));
 
-	m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));
+	// m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
+	// m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));
 
-	long ph1 = m_clientList->InsertItem(0, "", 3);
-	m_clientList->SetItem(ph1, 1, "Placeholder Client 1");
-	long ph2 = m_clientList->InsertItem(1, "", 3);
-	m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
+	// long ph1 = m_clientList->InsertItem(0, "", 3);
+	// m_clientList->SetItem(ph1, 1, "Placeholder Client 1");
+	// long ph2 = m_clientList->InsertItem(1, "", 3);
+	// m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
 
-	col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
+	// col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
+	// contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
+	// Remove Available Clients column for now to give more space to Recent Maps
 
 	contentPanel->SetSizer(contentSizer);
 	return contentPanel;
@@ -520,5 +524,35 @@ void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
 }
 
 void WelcomeDialog::OnRecentFileSelected(wxListEvent& event) {
-	// Placeholder
+	wxListItem item;
+	item.SetId(event.GetIndex());
+	item.SetColumn(1);
+	item.SetMask(wxLIST_MASK_TEXT);
+
+	if (m_recentList->GetItem(item)) {
+		wxString realPath = item.GetText();
+		wxString dateStr = m_recentList->GetItemText(event.GetIndex(), 2);
+
+		wxFileName fn(realPath);
+
+		auto updateVal = [&](const wxString& label, const wxString& value) {
+			wxWindow* w = FindWindowByName("val_" + label);
+			if (w) {
+				wxStaticText* txt = wxDynamicCast(w, wxStaticText);
+				if (txt) {
+					txt->SetLabel(value);
+				}
+			}
+		};
+
+		updateVal("Map Name", fn.GetName());
+		updateVal("Description", realPath); // Show full path in description
+		// updateVal("Date Modified", dateStr); // Not in the fields list but implicit in recent list
+
+		// Reset others to placeholder or clear
+		updateVal("Client Version", "-");
+		updateVal("Dimensions", "-");
+		updateVal("House File", "-");
+		updateVal("Spawn File", "-");
+	}
 }
