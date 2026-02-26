@@ -56,20 +56,25 @@ void LiveDialogs::ShowHostDialog(wxWindow* parent, Editor* editor) {
 
 	wxSizer* ok_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(live_host_dlg, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Start server");
 	ok_sizer->Add(okBtn, 1, wxCENTER);
 	auto cancelBtn = newd wxButton(live_host_dlg, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Cancel");
 	ok_sizer->Add(cancelBtn, wxCENTER, 1);
 	top_sizer->Add(ok_sizer, 0, wxCENTER | wxALL, 20);
 
 	live_host_dlg->SetSizerAndFit(top_sizer);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SIGNAL, wxSize(32, 32)));
-	live_host_dlg->SetIcon(icon);
+	wxIconBundle icons;
+	wxIcon icon16;
+	icon16.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SIGNAL, live_host_dlg->FromDIP(wxSize(16, 16))));
+	icons.AddIcon(icon16);
+	wxIcon icon32;
+	icon32.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SIGNAL, live_host_dlg->FromDIP(wxSize(32, 32))));
+	icons.AddIcon(icon32);
+	live_host_dlg->SetIcons(icons);
 
 	while (true) {
 		int ret = live_host_dlg->ShowModal();
@@ -130,20 +135,25 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 
 	wxSizer* ok_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(live_join_dlg, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Connect to server");
 	ok_sizer->Add(okBtn, 1, wxRIGHT);
 	auto cancelBtn = newd wxButton(live_join_dlg, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Cancel");
 	ok_sizer->Add(cancelBtn, 1, wxRIGHT);
 	top_sizer->Add(ok_sizer, 0, wxCENTER | wxALL, 20);
 
 	live_join_dlg->SetSizerAndFit(top_sizer);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_NETWORK_WIRED, wxSize(32, 32)));
-	live_join_dlg->SetIcon(icon);
+	wxIconBundle icons;
+	wxIcon icon16;
+	icon16.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_NETWORK_WIRED, live_join_dlg->FromDIP(wxSize(16, 16))));
+	icons.AddIcon(icon16);
+	wxIcon icon32;
+	icon32.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_NETWORK_WIRED, live_join_dlg->FromDIP(wxSize(32, 32))));
+	icons.AddIcon(icon32);
+	live_join_dlg->SetIcons(icons);
 
 	while (true) {
 		int ret = live_join_dlg->ShowModal();
