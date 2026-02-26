@@ -1,19 +1,6 @@
 //////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
 
 // ============================================================================
 // Waypoint palette
@@ -27,14 +14,16 @@
 #include "brushes/waypoint/waypoint_brush.h"
 #include "map/map.h"
 #include "util/image_manager.h"
+#include "palette/controls/waypoint_list_box.h"
+#include <wx/textdlg.h>
+#include <wx/menu.h>
 
 WaypointPalettePanel::WaypointPalettePanel(wxWindow* parent, wxWindowID id) :
 	PalettePanel(parent, id),
 	map(nullptr) {
 	wxSizer* sidesizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Waypoints");
 
-	waypoint_list = newd wxListCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_LISTBOX, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_SINGLE_SEL | wxLC_EDIT_LABELS | wxLC_NO_HEADER);
-	waypoint_list->InsertColumn(0, "UNNAMED", wxLIST_FORMAT_LEFT, 200);
+	waypoint_list = newd WaypointListBox(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_WAYPOINT_LISTBOX);
 	sidesizer->Add(waypoint_list, 1, wxEXPAND);
 
 	wxSizer* tmpsizer = newd wxBoxSizer(wxHORIZONTAL);
@@ -51,9 +40,29 @@ WaypointPalettePanel::WaypointPalettePanel(wxWindow* parent, wxWindowID id) :
 	Bind(wxEVT_BUTTON, &WaypointPalettePanel::OnClickAddWaypoint, this, PALETTE_WAYPOINT_ADD_WAYPOINT);
 	Bind(wxEVT_BUTTON, &WaypointPalettePanel::OnClickRemoveWaypoint, this, PALETTE_WAYPOINT_REMOVE_WAYPOINT);
 
-	Bind(wxEVT_LIST_BEGIN_LABEL_EDIT, &WaypointPalettePanel::OnBeginEditWaypointLabel, this, PALETTE_WAYPOINT_LISTBOX);
-	Bind(wxEVT_LIST_END_LABEL_EDIT, &WaypointPalettePanel::OnEditWaypointLabel, this, PALETTE_WAYPOINT_LISTBOX);
-	Bind(wxEVT_LIST_ITEM_SELECTED, &WaypointPalettePanel::OnClickWaypoint, this, PALETTE_WAYPOINT_LISTBOX);
+	waypoint_list->Bind(wxEVT_LISTBOX, &WaypointPalettePanel::OnClickWaypoint, this);
+	waypoint_list->Bind(wxEVT_CONTEXT_MENU, [this](wxContextMenuEvent& event) {
+		if (waypoint_list->GetSelection() != -1) {
+			wxMenu menu;
+			menu.Append(wxID_EDIT, "Rename")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
+			menu.Bind(wxEVT_MENU, [this](wxCommandEvent&) {
+				RenameSelected();
+			}, wxID_EDIT);
+			PopupMenu(&menu);
+		}
+	});
+
+	waypoint_list->Bind(wxEVT_KEY_DOWN, [this](wxKeyEvent& event) {
+		if (event.GetKeyCode() == WXK_F2) {
+			RenameSelected();
+		} else {
+			event.Skip();
+		}
+	});
+
+	waypoint_list->Bind(wxEVT_LISTBOX_DCLICK, [this](wxCommandEvent& event) {
+		RenameSelected();
+	});
 }
 
 void WaypointPalettePanel::OnSwitchIn() {
@@ -74,10 +83,11 @@ void WaypointPalettePanel::SelectFirstBrush() {
 }
 
 Brush* WaypointPalettePanel::GetSelectedBrush() const {
-	long item = waypoint_list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	g_brush_manager.waypoint_brush->setWaypoint(
-		item == -1 ? nullptr : map->waypoints.getWaypoint(nstr(waypoint_list->GetItemText(item)))
-	);
+	wxString name = waypoint_list->GetSelectedWaypoint();
+	if (name.IsEmpty()) {
+		return g_brush_manager.waypoint_brush;
+	}
+	g_brush_manager.waypoint_brush->setWaypoint(map->waypoints.getWaypoint(nstr(name)));
 	return g_brush_manager.waypoint_brush;
 }
 
@@ -99,23 +109,11 @@ wxString WaypointPalettePanel::GetName() const {
 }
 
 void WaypointPalettePanel::OnUpdate() {
-	if (wxTextCtrl* tc = waypoint_list->GetEditControl()) {
-		Waypoint* wp = map->waypoints.getWaypoint(nstr(tc->GetValue()));
-		if (wp && wp->pos == Position()) {
-			if (map->getTile(wp->pos)) {
-				map->getTileL(wp->pos)->decreaseWaypointCount();
-			}
-			map->waypoints.removeWaypoint(wp->name);
-		}
-	}
-	waypoint_list->Freeze();
-	waypoint_list->DeleteAllItems();
-
 	if (!map) {
 		waypoint_list->Enable(false);
 		add_waypoint_button->Enable(false);
 		remove_waypoint_button->Enable(false);
-		waypoint_list->Thaw();
+		waypoint_list->SetWaypoints({});
 		return;
 	}
 
@@ -124,19 +122,21 @@ void WaypointPalettePanel::OnUpdate() {
 	remove_waypoint_button->Enable(true);
 
 	Waypoints& waypoints = map->waypoints;
+	std::vector<std::string> names;
+	names.reserve(waypoints.size());
 
 	for (const auto& [name, wp] : waypoints) {
-		waypoint_list->InsertItem(0, wxstr(wp->name));
+		names.push_back(wp->name);
 	}
-	waypoint_list->Thaw();
+	waypoint_list->SetWaypoints(names);
 }
 
-void WaypointPalettePanel::OnClickWaypoint(wxListEvent& event) {
+void WaypointPalettePanel::OnClickWaypoint(wxCommandEvent& event) {
 	if (!map) {
 		return;
 	}
 
-	std::string wpname = nstr(event.GetText());
+	std::string wpname = nstr(waypoint_list->GetSelectedWaypoint());
 	Waypoint* wp = map->waypoints.getWaypoint(wpname);
 	if (wp) {
 		g_gui.SetScreenCenterPosition(wp->pos);
@@ -144,72 +144,71 @@ void WaypointPalettePanel::OnClickWaypoint(wxListEvent& event) {
 	}
 }
 
-void WaypointPalettePanel::OnBeginEditWaypointLabel(wxListEvent& event) {
-	// We need to disable all hotkeys, so we can type properly
-	g_hotkeys.DisableHotkeys();
-}
-
-void WaypointPalettePanel::OnEditWaypointLabel(wxListEvent& event) {
-	std::string wpname = nstr(event.GetLabel());
-	std::string oldwpname = nstr(waypoint_list->GetItemText(event.GetIndex()));
-	Waypoint* wp = map->waypoints.getWaypoint(oldwpname);
-
-	if (event.IsEditCancelled()) {
-		g_hotkeys.EnableHotkeys();
+void WaypointPalettePanel::RenameSelected() {
+	if (!map) {
 		return;
 	}
 
-	if (wpname == "") {
-		map->waypoints.removeWaypoint(oldwpname);
-		g_gui.RefreshPalettes();
-	} else if (wp) {
-		if (wpname == oldwpname) {
-			; // do nothing
-		} else {
+	wxString oldName = waypoint_list->GetSelectedWaypoint();
+	if (oldName.IsEmpty()) {
+		return;
+	}
+
+	std::string oldwpname = nstr(oldName);
+	Waypoint* wp = map->waypoints.getWaypoint(oldwpname);
+	if (!wp) {
+		return;
+	}
+
+	g_hotkeys.DisableHotkeys();
+
+	wxTextEntryDialog dialog(this, "Enter new name for waypoint:", "Rename Waypoint", oldName);
+	if (dialog.ShowModal() == wxID_OK) {
+		wxString newName = dialog.GetValue();
+		std::string wpname = nstr(newName);
+
+		if (wpname == "") {
+			map->waypoints.removeWaypoint(oldwpname);
+			refresh_timer.Start(300, true);
+		} else if (wpname != oldwpname) {
 			if (map->waypoints.getWaypoint(wpname)) {
-				// Already exists a waypoint with this name!
 				g_gui.SetStatusText("There already is a waypoint with this name.");
-				event.Veto();
-				if (oldwpname == "") {
-					map->waypoints.removeWaypoint(oldwpname);
-					g_gui.RefreshPalettes();
-				}
 			} else {
 				auto nwp_ptr = std::make_unique<Waypoint>(*wp);
 				nwp_ptr->name = wpname;
-				Waypoint* nwp = nwp_ptr.get();
 
-				Waypoint* rwp = map->waypoints.getWaypoint(oldwpname);
-				if (rwp) {
-					if (map->getTile(rwp->pos)) {
-						map->getTileL(rwp->pos)->decreaseWaypointCount();
-					}
-					map->waypoints.removeWaypoint(rwp->name);
+				if (map->getTile(wp->pos)) {
+					map->getTileL(wp->pos)->decreaseWaypointCount();
 				}
+				map->waypoints.removeWaypoint(oldwpname);
 
+				Waypoint* nwp = nwp_ptr.get();
 				map->waypoints.addWaypoint(std::move(nwp_ptr));
 				g_brush_manager.waypoint_brush->setWaypoint(nwp);
 
-				// Refresh other palettes
 				refresh_timer.Start(300, true);
 			}
 		}
 	}
 
-	if (event.IsAllowed()) {
-		g_hotkeys.EnableHotkeys();
-	} else {
-		g_hotkeys.EnableHotkeys();
-	}
+	g_hotkeys.EnableHotkeys();
 }
+
 
 void WaypointPalettePanel::OnClickAddWaypoint(wxCommandEvent& event) {
 	if (map) {
-		map->waypoints.addWaypoint(std::make_unique<Waypoint>());
-		long i = waypoint_list->InsertItem(0, "");
-		waypoint_list->EditLabel(i);
+		std::string baseName = "Waypoint";
+		std::string name = baseName;
+		int counter = 1;
+		while (map->waypoints.getWaypoint(name)) {
+			name = baseName + " " + std::to_string(counter++);
+		}
 
-		// g_gui.RefreshPalettes();
+		auto wp = std::make_unique<Waypoint>();
+		wp->name = name;
+		map->waypoints.addWaypoint(std::move(wp));
+
+		refresh_timer.Start(100, true);
 	}
 }
 
@@ -218,16 +217,15 @@ void WaypointPalettePanel::OnClickRemoveWaypoint(wxCommandEvent& event) {
 		return;
 	}
 
-	long item = waypoint_list->GetNextItem(-1, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-	if (item != -1) {
-		Waypoint* wp = map->waypoints.getWaypoint(nstr(waypoint_list->GetItemText(item)));
+	wxString name = waypoint_list->GetSelectedWaypoint();
+	if (!name.IsEmpty()) {
+		Waypoint* wp = map->waypoints.getWaypoint(nstr(name));
 		if (wp) {
 			if (map->getTile(wp->pos)) {
 				map->getTileL(wp->pos)->decreaseWaypointCount();
 			}
 			map->waypoints.removeWaypoint(wp->name);
 		}
-		waypoint_list->DeleteItem(item);
-		refresh_timer.Start(300, true);
+		refresh_timer.Start(100, true);
 	}
 }

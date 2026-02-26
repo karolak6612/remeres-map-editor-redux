@@ -18,7 +18,7 @@
 #ifndef RME_DAT_DEBUG_VIEW_H_
 #define RME_DAT_DEBUG_VIEW_H_
 
-class DatDebugViewListBox;
+class DatDebugListBox;
 
 class DatDebugView : public wxPanel {
 public:
@@ -29,7 +29,7 @@ public:
 	void OnClickList(wxCommandEvent&);
 
 protected:
-	DatDebugViewListBox* item_list;
+	DatDebugListBox* item_list;
 	wxTextCtrl* search_field;
 
 };

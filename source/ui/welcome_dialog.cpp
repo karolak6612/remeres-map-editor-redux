@@ -259,9 +259,6 @@ WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionT
 }
 
 WelcomeDialog::~WelcomeDialog() {
-	if (m_recentList) {
-		m_recentList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
-	}
 	if (m_clientList) {
 		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
 	}
@@ -359,10 +356,8 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
 	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(24, 24))));
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-		long item = -1;
-		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-		if (item != -1) {
-			wxString path = m_recentList->GetItemText(item, 1);
+		wxString path = m_recentList->GetSelectedFile();
+		if (!path.IsEmpty()) {
 			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
 			newEvent->SetId(wxID_OPEN);
 			newEvent->SetString(path);
@@ -401,32 +396,34 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
-	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList — ownership retained by m_imageList (do not replace with AssignImageList)
-	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
-	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
-	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, FromDIP(150));
+	m_recentList = newd RecentFileListBox(col2, wxID_ANY);
+	m_recentList->SetRecentFiles(recentFiles);
 
-	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
+	// Bind to listbox double click event (requires RecentFileListBox to emit it, which NanoVGListBox default doesn't,
+	// but I implemented double click logic in WaypointListBox.
+	// NanoVGListBox does NOT implement it by default.
+	// I should probably add double click logic to RecentFileListBox constructor as well!)
+	// Or better: update NanoVGListBox to support it? No, I can't touch it easily.
+	// I will add Bind logic in RecentFileListBox constructor or just use bind here if I expose it.
+	// I forgot to add Bind logic in RecentFileListBox constructor.
+	// I can add it here via binding to LEFT_DCLICK on the control itself.
 
-	for (size_t i = 0; i < recentFiles.size(); ++i) {
-		long idx = m_recentList->InsertItem(i, "", 4);
-		m_recentList->SetItem(idx, 1, recentFiles[i]);
+	m_recentList->Bind(wxEVT_LEFT_DCLICK, [this](wxMouseEvent& event) {
+		// Forward as if item activated
+		wxCommandEvent evt(wxEVT_LISTBOX_DCLICK, m_recentList->GetId());
+		OnRecentFileActivated(evt);
+	});
 
-		// Get modification time
-		wxFileName fn(recentFiles[i]);
-		wxDateTime dt;
-		if (fn.GetTimes(nullptr, &dt, nullptr)) {
-			// Check if valid? GetTimes returns bool success
-			m_recentList->SetItem(idx, 2, dt.Format("%Y-%m-%d %H:%M"));
+	m_recentList->Bind(wxEVT_KEY_DOWN, [this](wxKeyEvent& event) {
+		if (event.GetKeyCode() == WXK_RETURN || event.GetKeyCode() == WXK_NUMPAD_ENTER) {
+			wxCommandEvent evt(wxEVT_LISTBOX_DCLICK, m_recentList->GetId());
+			OnRecentFileActivated(evt);
 		} else {
-			m_recentList->SetItem(idx, 2, "-");
+			event.Skip();
 		}
-	}
-	m_recentList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &WelcomeDialog::OnRecentFileActivated, this);
-	m_recentList->Bind(wxEVT_LIST_ITEM_SELECTED, &WelcomeDialog::OnRecentFileSelected, this);
+	});
+
+	m_recentList->Bind(wxEVT_LISTBOX, &WelcomeDialog::OnRecentFileSelected, this);
 
 	col2->GetSizer()->Add(m_recentList, 1, wxEXPAND | wxALL, 1);
 	contentSizer->Add(col2, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 2
@@ -504,14 +501,9 @@ void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
 	}
 }
 
-void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
-	wxListItem item;
-	item.SetId(event.GetIndex());
-	item.SetColumn(1);
-	item.SetMask(wxLIST_MASK_TEXT);
-
-	if (m_recentList->GetItem(item)) {
-		wxString realPath = item.GetText();
+void WelcomeDialog::OnRecentFileActivated(wxCommandEvent& event) {
+	wxString realPath = m_recentList->GetSelectedFile();
+	if (!realPath.IsEmpty()) {
 		wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
 		newEvent->SetId(wxID_OPEN);
 		newEvent->SetString(realPath);
@@ -519,6 +511,6 @@ void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
 	}
 }
 
-void WelcomeDialog::OnRecentFileSelected(wxListEvent& event) {
-	// Placeholder
+void WelcomeDialog::OnRecentFileSelected(wxCommandEvent& event) {
+	// Placeholder for displaying details
 }
