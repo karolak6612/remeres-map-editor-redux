@@ -144,3 +144,17 @@ Create PR titled `✨ Designer: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Scan the UI for areas you haven't improved yet — missing panels, poor workflows, hidden information, cluttered layouts. Make it organized, intuitive, and information-rich. Every run should leave the editor feeling more like a professional creative tool (GIMP, Godot, Unity) and less like a legacy application.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/welcome_dialog.cpp`** (19KB) — First thing users see. Needs modern grid layout, recent files, quick actions.
+- **`ui/find_item_window.cpp`** (20KB) — Largest UI file. Complex search/results/filtering in one class. Needs grid results, virtual list for 1000+ items.
+- **`ui/browse_tile_window.cpp`** (9KB) — Tile browsing. Needs grid layout with thumbnails.
+- **`ui/tool_options_surface.cpp`** (16KB) — Tool options. Needs collapsible sections, labeled groups.
+- **`ui/properties/`** (28 files) + **`ui/tile_properties/`** (25 files) — Two scattered property systems. Could be unified into single organized Inspector panel.
+- **`ui/main_menubar.cpp`** (16KB) — Large menu file. Check for missing icons, shortcuts, organization.
+- **`ui/map_popup_menu.cpp`** (11KB) — Context menu. Check for missing icons and grouping.
+- **`palette/`** (22 files) — Dedicated palette system. Check for grid layouts, search/filter.
+<!-- CODEBASE HINTS END -->

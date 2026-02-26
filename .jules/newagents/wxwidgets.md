@@ -98,3 +98,17 @@ Create PR titled `🔧 WxFixer: Fix [count] wxWidgets violations`.
 
 ## 🎯 YOUR GOAL
 Scan the codebase for wxWidgets violations you haven't fixed yet. Fix them. Every run should leave the UI more correct, more DPI-aware, and more professional than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/gui.h`** — `EVT_ON_UPDATE_MENUS` uses `DECLARE_EVENT_TABLE_ENTRY` macro. Must migrate to `Bind()`.
+- **`ui/welcome_dialog.cpp`** (19KB) — Check for hardcoded pixel sizes, missing `FromDIP()`.
+- **`ui/dcbutton.cpp`** (7KB) — Custom drawn button. Check for `wxAutoBufferedPaintDC` and system theme colors.
+- **`ui/tool_options_surface.cpp`** (16KB) — Bulk widget updates. Check for `Freeze()`/`Thaw()`.
+- **`ui/find_item_window.cpp`** (20KB) — Large item list. Should use virtual `wxListCtrl` if >1000 items.
+- **`ui/controls/`** (7 files) — Custom controls. Check for proper DPI handling and `wxAutoBufferedPaintDC`.
+- **`ui/gui_ids.h`** (4.8KB) — Hardcoded IDs. Check for `wxID_ANY` opportunities.
+- **`ui/main_menubar.cpp`** (16KB) — Check for `wxT()` macros and hardcoded colors.
+<!-- CODEBASE HINTS END -->

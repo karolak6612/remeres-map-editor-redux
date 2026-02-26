@@ -107,3 +107,17 @@ Create PR titled `📊 Profiler: [Fix CPU/GPU/Sync bottleneck]` with before/afte
 
 ## 🎯 YOUR GOAL
 Scan for performance bottlenecks you haven't fixed yet — CPU pointer chasing, redundant GPU work, sync stalls, blocking I/O. Flatten the data. Batch the draws. Every run should leave the editor faster while keeping rendering pixel-perfect.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`rendering/core/sprite_batch.cpp`** (11KB) — SpriteBatch flush. Profile for GPU stalls at `end()`. Check ring buffer fence waits.
+- **`rendering/map_drawer.cpp`** (15KB) — `DrawMapLayer()` orchestrates all tile drawing. Profile per-layer overhead.
+- **`map/spatial_hash_grid.h`** — `visitLeaves()` dual-strategy heuristic. Profile both paths to verify threshold is optimal.
+- **`rendering/core/texture_atlas.cpp`** (8.6KB) — Atlas management. Profile memory usage and atlas packing efficiency.
+- **`rendering/core/sprite_preloader.cpp`** (6.5KB) — Async sprite preloading. Profile I/O throughput and thread contention.
+- **`rendering/drawers/minimap_renderer.cpp`** (11.7KB) — Minimap rendering. Check for unnecessary full-map redraws.
+- **`editor/selection.cpp`** (10.2KB) — Selection operations. Profile `recalculateBounds()` frequency.
+- **`rendering/core/game_sprite.cpp`** (28KB) — Largest rendering file. Sprite decoding and atlas upload. Profile decode times.
+<!-- CODEBASE HINTS END -->

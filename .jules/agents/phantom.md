@@ -119,3 +119,16 @@ Create PR titled `👻 Phantom: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Scan the codebase for wxWidgets violations you haven't fixed yet. Upgrade them. Every run should leave the UI more professional, more responsive, and more DPI-aware than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/gui.h`** — `EVT_ON_UPDATE_MENUS` uses `DECLARE_EVENT_TABLE_ENTRY` macro. Must migrate to `Bind()`.
+- **`ui/welcome_dialog.cpp`** (19KB) — Check for hardcoded sizes, missing `FromDIP()`, missing Dark Mode support.
+- **`ui/dcbutton.cpp`** (7KB) — Custom drawn button. Check for `wxAutoBufferedPaintDC`, proper theming colors.
+- **`ui/tool_options_surface.cpp`** (16KB) — Check for `Freeze()`/`Thaw()` around bulk widget updates.
+- **`ui/gui.h`** — `RenderingLock` class accesses global `g_gui` directly. Manual RAII that touches a global.
+- **`ui/find_item_window.cpp`** (20KB) — If listing 1000+ items, should use virtual `wxListCtrl` to avoid lag.
+- **`ui/controls/`** (7 files) — Custom controls. Check for proper DPI, theming, `wxAutoBufferedPaintDC`.
+<!-- CODEBASE HINTS END -->

@@ -99,3 +99,16 @@ Create PR titled `👃 Smeller: Fix [smell type] in [file/class]` with before/af
 
 ## 🎯 YOUR GOAL
 Scan the codebase for code smells you haven't fixed yet — bloated functions, coupling, duplication, dead code, legacy patterns. Fix the worst ones. Every run should leave the codebase cleaner and simpler than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`rendering/core/game_sprite.h`** (285 lines) — 3 nested classes (`Image`, `NormalImage`, `TemplateImage`) with inheritance. Extract.
+- **`ui/gui.h`** — Global singleton `extern GUI g_gui` accessed everywhere. Coupling smell.
+- **`map/tile.h`** (301 lines, 40+ methods) — God class tendencies. Data + queries + mutations + selection + house + flags.
+- **`ui/gui_ids.h`** (4.8KB) — Large enum of hardcoded IDs. Should use `wxID_ANY` where possible.
+- **`map/tile.h`** — `TILESTATE_` enums: unnamed, overlapping value ranges. Should be `enum class`.
+- **`rendering/core/game_sprite.cpp`** (28KB) — Largest file in rendering. Check for functions that should be extracted.
+- **`io/iomap_otbm.cpp`** — OTBM loading. Check for long functions that mix parsing with map construction.
+<!-- CODEBASE HINTS END -->

@@ -97,3 +97,16 @@ Create PR titled `🏗️ Architect: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Find the architectural issues — coupling, pointer tangles, responsibility bloat, duplicated logic. Flatten the data. Simplify the code. Ship clean, modular, data-oriented code.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/gui.h`** — `GUI` god object (413 lines, `extern GUI g_gui`). Owns GL context, minimap, load bar, search, menus, editors, perspectives, brushes, palettes, hotkeys. Prime SRP violation — split by responsibility.
+- **`map/tile.h`** — `Tile` class has public `TileLocation* location` raw pointer coupling. `TileVector`/`TileSet`/`TileList` are all raw pointer aliases (`vector<Tile*>`, `list<Tile*>`).
+- **`rendering/map_drawer.h`** — `MapDrawer` owns 18+ `unique_ptr` drawers (sprite_batch, light_drawer, grid_drawer, selection_drawer, etc.). Each pointer is chased on every frame.
+- **`rendering/core/game_sprite.h`** — `GameSprite` has 3 nested classes (`Image`, `NormalImage`, `TemplateImage`) with deep inheritance. Could be flattened to data structs + `std::variant`.
+- **`editor/editor.h`** — `Editor` couples map, selection, action queue, copy buffer. Data should flow through parameters.
+- **`brushes/brush.h`** — 15 brush subdirectories. Check if brush data is separated from brush behavior.
+- **`game/item.h`** — Items have attributes. Check `ItemAttributes` for data vs behavior separation.
+<!-- CODEBASE HINTS END -->

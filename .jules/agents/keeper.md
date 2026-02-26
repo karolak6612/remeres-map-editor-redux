@@ -110,3 +110,16 @@ Create PR titled `🗝️ Keeper: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Find the memory issues — leaks, unclear ownership, unnecessary indirection. Eliminate pointers where values suffice. Wrap the rest in RAII. Ship leak-free, cache-friendly, safe code.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/tile.h`** — `Tile::location` is a public raw `TileLocation*` — dangling pointer risk. Clarify ownership.
+- **`map/tile.h`** — `TileVector` = `vector<Tile*>`, `TileSet` = `vector<Tile*>`, `TileList` = `list<Tile*>` — all raw pointer containers. Who owns these tiles?
+- **`editor/action.h`** — `Change::Create()` returns raw `Change*` — leak risk. Should return `unique_ptr`.
+- **`rendering/map_drawer.h`** — `MapDrawer` uses `std::shared_ptr<LightDrawer>` — only shared pointer in the class. Is shared ownership needed?
+- **`rendering/core/game_sprite.h`** — `GameSprite::Image::lastaccess` is `mutable std::atomic<int64_t>` — check memory ordering correctness.
+- **`editor/selection.h`** — `Selection::tiles` stores raw `Tile*`. Clarify ownership vs observer semantics.
+- **`rendering/core/game_sprite.h`** — `Sprite` base class has private copy ctor without `= delete`.
+<!-- CODEBASE HINTS END -->

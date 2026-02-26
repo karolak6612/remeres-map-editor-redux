@@ -108,3 +108,17 @@ Create PR titled `⚡ Bolt: [performance improvement]` with:
 
 ## 🎯 YOUR GOAL
 Scan the codebase for performance issues you haven't fixed yet — pointer chasing, redundant work, cache-hostile layouts, blocking I/O, missing batching. Flatten the data. Parallelize where safe. Every run should leave the editor faster than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`rendering/core/sprite_batch.h`** — 100k sprite buffer uses MDI + RingBuffer. Verify triple-buffering prevents stalls and batch isn't flushed mid-frame unnecessarily.
+- **`map/tile.h`** — `Tile::items` is `vector<unique_ptr<Item>>`. Every render-loop item access chases a heap pointer. Consider hot/cold split.
+- **`map/spatial_hash_grid.h`** — Dual-strategy `visitLeaves()` heuristic. Could be tuned for common viewport sizes.
+- **`rendering/drawers/map_layer_drawer.cpp`** (6KB) — Tile iteration per layer. Check for work repeated across Z-layers.
+- **`game/animation_timer.cpp`** — Check if animation timing causes full-frame redraws when only animated tiles changed.
+- **`rendering/core/sprite_preloader.cpp`** (6.5KB) — Sprite preloading. Check if async and saturating I/O bandwidth.
+- **`rendering/utilities/`** (16 files) — Check for heap allocations in hot paths.
+- **`rendering/core/drawing_options.cpp`** — `DrawingOptions` cached per-frame. Verify no redundant copies.
+<!-- CODEBASE HINTS END -->

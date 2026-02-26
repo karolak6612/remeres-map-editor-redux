@@ -132,3 +132,17 @@ Create PR titled `⚡ Throttle: [Your Description]` with performance numbers.
 
 ## 🎯 YOUR GOAL
 Scan the codebase for performance issues you haven't fixed yet — pointer chasing, redundant CPU/GPU work, blocking I/O, cache-hostile layouts, missing parallelism. Flatten the data. Parallelize where safe. Batch the draws. Every run should leave the editor faster and more responsive than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/spatial_hash_grid.h`** — `visitLeaves()` uses dual-strategy: by-viewport vs by-cells. The heuristic threshold could be tuned.
+- **`map/spatial_hash_grid.h`** — `RowCellInfo` struct allocated in `std::vector` per-visit. Could be preallocated as member.
+- **`map/tile.h`** — `Tile::items` is `vector<unique_ptr<Item>>`. Every item in render loop chases a heap pointer. Hot/cold split would help.
+- **`editor/selection.h`** — `Selection::recalculateBounds()` on `mutable` cached bounds. Verify not called redundantly.
+- **`rendering/core/sprite_preloader.cpp`** (6.5KB) — Check if sprite preloading is async and saturates I/O bandwidth.
+- **`rendering/drawers/map_layer_drawer.cpp`** (6KB) — Iterates tiles per layer. Check for repeated work across layers.
+- **`game/animation_timer.cpp`** — Check if animation timing causes redundant redraws.
+- **`rendering/utilities/`** (16 files) — Utility functions. Check for allocations in hot paths.
+<!-- CODEBASE HINTS END -->

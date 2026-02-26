@@ -92,3 +92,16 @@ Create PR titled `🔧 Refactor: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Scan the codebase for SRP violations you haven't fixed yet — bloated files, tangled responsibilities, duplicated logic, unnecessary abstractions. Split them. Flatten the data. Every run should leave the codebase more modular and easier to work with.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/gui.h`**/**`gui.cpp`** (413 lines header, 13KB impl) — GUI god object with GL context, minimap, load bar, search, menus, editors, perspectives, brushes, palettes, hotkeys. Prime split target.
+- **`ui/find_item_window.cpp`** (20KB) — Search + results + filtering all in one class. Separate.
+- **`ui/main_menubar.cpp`** (16KB) — Huge menu construction. Already has `ui/menubar/` (14 files) — continue decomposition.
+- **`ui/map_popup_menu.cpp`** (11KB) — Context menu. Could be simplified.
+- **`ui/replace_items_window.cpp`** (14KB) — Complex dialog. Check for mixed concerns.
+- **`map/tile.h`** (301 lines, 40+ methods) — `Tile` is a god class. Data + queries + mutations + selection + house + flags all in one.
+- **`rendering/core/game_sprite.h`** (285 lines) — 3 nested classes with inheritance. Extract to separate files.
+<!-- CODEBASE HINTS END -->

@@ -95,3 +95,17 @@ Create PR titled `🔄 Upgrader: Use [modern feature] in [area]` with before/aft
 
 ## 🎯 YOUR GOAL
 Scan the codebase for legacy C++ patterns you haven't modernized yet — raw loops, C-style casts, missing attributes, outdated containers, raw pointer ownership. Modernize them. Every run should leave the codebase more modern, safer, and more expressive than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/tile.h`** — `TileVector = vector<Tile*>` — raw pointer typedef. Consider `std::span<Tile*>` for function parameters.
+- **`rendering/core/game_sprite.h`** — `Sprite` base class: private copy ctor/assignment without `= delete`. Modernize.
+- **`editor/action.h`** — `ChangeType` and `ActionIdentifier` are unscoped enums. Should be `enum class`.
+- **`ui/gui.h`** — `#define EVT_ON_UPDATE_MENUS` macro. Should be refactored away.
+- **`rendering/core/game_sprite.h`** — `GameSprite::Image::visit()` uses `mutable atomic`. Check `memory_order` specification.
+- **`io/filehandle.h`**/**`filehandle.cpp`** — File I/O. Check for C-style patterns that should use RAII.
+- **`game/item_attributes.h`** — Item attribute system. Check for `std::any` or variant usage opportunities.
+- **`map/tile.h`** — `TILESTATE_` enums: unnamed. Should be `enum class` with `std::underlying_type`.
+<!-- CODEBASE HINTS END -->

@@ -130,3 +130,16 @@ Create PR titled `🐛 Bugger: [Fix specific bug] in [file]` with:
 
 ## 🎯 YOUR GOAL
 Scan the codebase for undefined behavior, race conditions, and logic bugs you haven't fixed yet. Fix the worst ones. Add prevention. Every run should leave the editor more correct and more robust than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/tile.h`** — `statflags` and `mapflags` enums share value ranges (both use 0x0001-0x0020). If accidentally mixed, silent data corruption.
+- **`editor/selection.h`** — `Selection::getSelectedTile()` calls `ASSERT(size() == 1)`. In release builds with ASSERT disabled → UB on empty selection.
+- **`map/spatial_hash_grid.h`** — `makeKeyFromCell` uses `0x80000000` XOR trick. Verify no signed overflow on `INT_MIN`/`INT_MAX` inputs.
+- **`rendering/core/game_sprite.h`** — `GameSprite::Image::lastaccess` is `mutable atomic<int64_t>`. Check memory ordering in `visit()` and `clean()` across threads.
+- **`editor/selection_thread.h`** — `SelectionThread` shares state with main thread. Check race conditions on `bounds_dirty` atomic.
+- **`editor/action.h`** — `Change::Create()` returns raw `Change*`. Caller must remember to wrap — easy leak/double-free.
+- **`map/tile.h`** — `Tile::location` is public raw `TileLocation*`. Dangling pointer if location destroyed while tile references it.
+<!-- CODEBASE HINTS END -->

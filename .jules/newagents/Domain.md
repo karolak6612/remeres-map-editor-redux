@@ -94,3 +94,17 @@ Create PR titled `🗺️ Domain: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Scan the tile engine and editor domain for issues you haven't fixed yet — coupling, bloated classes, inefficient data access, duplicated logic. Flatten the data. Simplify the abstractions. Every run should leave the domain layer cleaner and more performant.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/tile.h`** — `Tile` has 6+ data members mixing hot/cold data: `location`, `ground`, `items`, `creature`, `spawn`, `house_id`, `mapflags`, `statflags`, `minimapColor`. Consider splitting.
+- **`map/tile_operations.cpp`** (2KB) — Very thin. Most tile ops are Tile class methods. Extract more as free functions.
+- **`map/map_region.cpp`** (9.4KB) — Region management. Check for coupling with tile data.
+- **`map/tileset.cpp`** (9KB) — Tileset management. Check for duplicated classification logic vs `brushes/`.
+- **`map/basemap.cpp`** (6.3KB) — Base map with spatial hash grid. Check if map iteration is efficient.
+- **`brushes/`** (15 subdirs) — Brush system per-type. Check if base `Brush` class in `brush.h` mixes data and behavior.
+- **`editor/operations/`** (10 files) — Editor operations that manipulate tiles. Check for duplicated logic across operations.
+- **`io/otbm/tile_serialization_otbm.cpp`** — Tile serialization. Check if it handles empty/default tiles efficiently.
+<!-- CODEBASE HINTS END -->

@@ -64,3 +64,17 @@ Create PR titled `🎨 Icon: Add icons to [area]`.
 
 ## 🎯 YOUR GOAL
 Scan the UI for surfaces missing icons that you haven't covered yet. Add them using ImageManager. Every run should leave the editor more visually polished and easier to navigate.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/main_menubar.cpp`** (16KB) + **`ui/menubar/`** (14 files) — Main menus. Scan for `Append()` calls without `SetBitmap()`.
+- **`ui/map_popup_menu.cpp`** (11KB) — Right-click context menu. Check all menu items for missing icons.
+- **`palette/`** (22 files) — Palette UI with potential icon gaps.
+- **`ui/toolbar/`** (18 files) — Toolbar system. Check for buttons without icons.
+- **`ui/properties/`** (28 files) + **`ui/tile_properties/`** (25 files) — Property panels. Check buttons and actions.
+- **`ui/dialogs/`** (10 files) — Dialog windows. Check for missing title bar icons and button icons.
+- **`ui/welcome_dialog.cpp`** (19KB) — Welcome panel. Check for quick-action buttons without icons.
+- **`ui/replace_items_window.cpp`** (14KB) — Replace items dialog. Check action buttons.
+<!-- CODEBASE HINTS END -->

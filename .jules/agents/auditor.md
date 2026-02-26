@@ -122,3 +122,16 @@ Create PR titled `📜 Auditor: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Find the smells, coupling, and legacy code. Flatten the data. Simplify the abstractions. Ship clean, modern, data-oriented C++20 code.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/tile.h`** — `mapflags` and `statflags` use raw unnamed enums with overlapping values (both use 0x0001-0x0020 range: `TILESTATE_PROTECTIONZONE` = 0x0001 vs `TILESTATE_SELECTED` = 0x0001). Use separate `enum class` with distinct ranges.
+- **`map/tile.h`** — `tilePositionLessThan`/`tilePositionVisualLessThan` are free functions taking raw `Tile*`. Should accept `std::span` or be methods.
+- **`editor/action.h`** — `Change::Create()` returns raw `Change*`. Should return `std::unique_ptr<Change>`.
+- **`rendering/core/game_sprite.h`** — `Sprite` base class has private copy ctor but no `= delete`. Modernize.
+- **`editor/action.h`** — `ChangeType` and `ActionIdentifier` are unscoped enums. Should be `enum class`.
+- **`ui/gui.h`** — uses `DECLARE_EVENT_TABLE_ENTRY` macro. Should use `Bind()`.
+- **`ui/gui_ids.h`** (4.8KB) — large enum of hardcoded IDs. Should use `wxID_ANY` where possible.
+<!-- CODEBASE HINTS END -->

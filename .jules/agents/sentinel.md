@@ -124,3 +124,17 @@ Create PR titled `🔒 Sentinel: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Scan the rendering code for issues you haven't fixed yet — legacy immediate mode, pointer chasing in the data pipeline, redundant draw calls, state leaks. Flatten the data. Batch the draws. Every run should leave the renderer faster and cleaner than before.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`rendering/core/sprite_batch.h`** — `MAX_SPRITES_PER_BATCH = 100000` (6.4MB). Uses MDI + RingBuffer triple-buffering. Verify no GPU stalls.
+- **`rendering/map_drawer.h`** — `MapDrawer::Draw()` calls 18+ drawers sequentially. Check if CPU prep can overlap GPU draw.
+- **`rendering/core/texture_garbage_collector.h`** — Check that it runs asynchronously, not blocking render.
+- **`rendering/core/sync_handle.h`** — Fence sync for ring buffer. Verify no `glFinish()` in hot paths.
+- **`rendering/drawers/tiles/`** (8 files) — Tile rendering. Check for per-tile state changes.
+- **`rendering/core/light_buffer.h`** + `LightDrawer` — Lights disappear on large viewports (known issue area).
+- **`rendering/core/gl_resources.h`** (5.5KB) — RAII wrappers for GL objects. Verify all `glGen*` are wrapped.
+- **`rendering/shaders/`** (2 files) — Shader management. Check for compile-time error handling.
+<!-- CODEBASE HINTS END -->

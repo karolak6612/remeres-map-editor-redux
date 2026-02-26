@@ -80,3 +80,17 @@ Create PR titled `🎨 Palette: [UX improvement]`.
 
 ## 🎯 YOUR GOAL
 Scan the UI for rough edges you haven't polished yet — missing tooltips, no feedback, poor accessibility, hidden features. Fix them. Every run should leave the editor more polished and more pleasant to use.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`ui/toolbar/`** (18 files) — Toolbar buttons. Check all have tooltips with keyboard shortcut hints.
+- **`palette/`** (22 files) — Palette panels. Check for missing tooltips, keyboard navigation, disabled-state explanations.
+- **`ui/properties/`** (28 files) + **`ui/tile_properties/`** (25 files) — Property panels. Check for clear labeling and step-by-step info.
+- **`ui/tool_options_surface.cpp`** (16KB) — Tool options. Check for missing feedback when tools change.
+- **`ui/welcome_dialog.cpp`** (19KB) — First-run experience. Check for keyboard accessibility and helpful text.
+- **`ui/main_menubar.cpp`** (16KB) — Menus. Check for missing accelerator hints in menu items.
+- **`ui/map_popup_menu.cpp`** (11KB) — Context menu. Check for keyboard shortcut hints.
+- **`ui/find_item_window.cpp`** (20KB) — Search. Check for feedback during long searches, clear empty-state messaging.
+<!-- CODEBASE HINTS END -->

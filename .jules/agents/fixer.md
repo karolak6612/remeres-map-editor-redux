@@ -95,3 +95,16 @@ Create PR titled `🧩 Fixer: [Your Description]`.
 
 ## 🎯 YOUR GOAL
 Find the core system issues — coupling, pointer tangles, bloated classes, duplicated logic. Flatten the data. Simplify the abstractions. Ship robust, fast, data-oriented editing code.
+
+---
+<!-- CODEBASE HINTS START — Replace this section when re-indexing the codebase -->
+## 🔍 CODEBASE HINTS (auto-generated from source analysis)
+
+- **`map/tile.h`** — `Tile::items` is `vector<unique_ptr<Item>>` — every item access chases a heap pointer. Hot-path iteration (rendering, selection) suffers.
+- **`map/tile.h`** — `Tile::deepCopy()` requires `BaseMap&` parameter — couples tile data to map allocator.
+- **`editor/selection.h`** — `Selection` uses `vector<Tile*>` with separate `pending_adds`/`pending_removes`. Flush pattern could be optimized.
+- **`editor/operations/`** (10 files) — editor operations. Check for duplicated tile manipulation logic.
+- **`brushes/managers/brush_manager.h`** — Check if brush data is separated from brush behavior.
+- **`map/tile_operations.cpp`** (2KB) — Very thin. Most tile ops are methods on `Tile` class. Should extract more as free functions (**SRP**).
+- **`editor/action.h`** — `Change` stores `unique_ptr<Tile>` for undo — full deep copy per change. Consider lightweight diffs.
+<!-- CODEBASE HINTS END -->
