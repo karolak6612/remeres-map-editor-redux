@@ -7,7 +7,7 @@
 
 #include <spdlog/spdlog.h>
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "util/file_system.h"
 #include "game/sprites.h"
 #include "game/materials.h"

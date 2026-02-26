@@ -2,7 +2,7 @@
 #include "ingame_preview/ingame_preview_renderer.h"
 #include "ingame_preview/ingame_preview_window.h"
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/core/text_renderer.h"

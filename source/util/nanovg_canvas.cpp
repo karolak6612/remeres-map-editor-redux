@@ -2,7 +2,7 @@
 #include "util/nanovg_canvas.h"
 #include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 
 #include <glad/glad.h>
 
@@ -10,7 +10,7 @@
 #include "util/nvg_utils.h"
 #include <nanovg_gl.h>
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <wx/dcclient.h>
 #include <algorithm>

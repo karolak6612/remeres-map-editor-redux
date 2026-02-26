@@ -9,7 +9,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "app/settings.h"
 #include "brushes/brush_utility.h"
 #include "editor/editor.h"

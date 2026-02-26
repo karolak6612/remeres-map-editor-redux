@@ -7,7 +7,7 @@
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "map/map.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include "editor/action.h"
 #include "editor/action_queue.h"

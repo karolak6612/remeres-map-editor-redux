@@ -1,6 +1,6 @@
 #include "app/main.h"
 #include "palette/controls/virtual_brush_grid.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/core/graphics.h"
 
 #include <glad/glad.h>
@@ -9,7 +9,7 @@
 #include <nanovg_gl.h>
 
 #include "util/nvg_utils.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 
 #include <spdlog/spdlog.h>
 

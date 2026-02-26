@@ -23,8 +23,8 @@
 #include "game/creature.h"
 #include "rendering/utilities/frame_pacer.h"
 
-#include "ui/map_popup_menu.h"
-#include "ui/map_popup_menu.h"
+#include "ui/menubar/map_popup_menu.h"
+#include "ui/menubar/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
 #include <memory>

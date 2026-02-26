@@ -23,7 +23,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "editor/editor.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <ranges>
 #include <ctime>

@@ -3,7 +3,7 @@
 
 #include <wx/panel.h>
 
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 
 class PreferencesPage : public wxPanel {
 public:

@@ -1,8 +1,8 @@
 #include "ui/dialogs/outfit_preview_panel.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/core/theme.h"
 #include <wx/dcbuffer.h>
 #include <wx/graphics.h>
 

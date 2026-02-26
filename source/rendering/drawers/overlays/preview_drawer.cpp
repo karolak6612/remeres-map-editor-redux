@@ -8,11 +8,11 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/brush.h"
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
-#include "ui/map_tab.h"
+#include "ui/map/map_tab.h"
 
 PreviewDrawer::PreviewDrawer() {
 }

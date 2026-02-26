@@ -18,16 +18,16 @@
 #ifndef RME_APPLICATION_H_
 #define RME_APPLICATION_H_
 
-#include "ui/gui.h"
-#include "ui/main_toolbar.h"
+#include "ui/core/gui.h"
+#include "ui/toolbar/main_toolbar.h"
 #include "editor/action.h"
 #include "app/settings.h"
 
 #include "net/process_com.h"
 #include "rendering/ui/map_display.h"
-#include "ui/welcome_dialog.h"
+#include "ui/dialogs/welcome_dialog.h"
 
-#include "ui/main_frame.h"
+#include "ui/core/main_frame.h"
 
 #ifdef _USE_UPDATER_
 class UpdateChecker;

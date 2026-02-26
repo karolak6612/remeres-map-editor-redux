@@ -8,7 +8,7 @@
 #include <algorithm>
 #include <format>
 #include "ui/replace_tool/rule_builder_panel.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 
 const int RuleCardRenderer::CARD_W = RuleCardRenderer::ITEM_SIZE + 20;
 

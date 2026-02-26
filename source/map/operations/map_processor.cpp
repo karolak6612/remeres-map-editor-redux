@@ -8,7 +8,7 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "map/tile_operations.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/ground/ground_brush.h"
 
 void MapProcessor::borderizeMap(Editor& editor, bool showdialog) {

@@ -25,9 +25,9 @@
 #include "editor/editor.h"
 #include "rendering/postprocess/post_process_manager.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "app/managers/version_manager.h"
 #include "app/preferences.h"
 #include "util/image_manager.h"

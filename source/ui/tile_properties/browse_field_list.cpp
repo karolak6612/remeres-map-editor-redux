@@ -6,7 +6,7 @@
 #include "ui/tile_properties/browse_field_list.h"
 #include "map/tile.h"
 #include "map/map.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "ui/tile_properties/tile_properties_panel.h"

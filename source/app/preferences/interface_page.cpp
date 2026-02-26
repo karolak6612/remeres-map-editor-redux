@@ -1,9 +1,9 @@
 #include "app/preferences/interface_page.h"
 #include "app/main.h"
 #include "app/settings.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/dialogs/dialog_util.h"
+#include "ui/core/theme.h"
 
 InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);

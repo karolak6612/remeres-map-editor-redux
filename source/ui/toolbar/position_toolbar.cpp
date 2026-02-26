@@ -4,8 +4,8 @@
 
 #include "app/main.h"
 #include "ui/toolbar/position_toolbar.h"
-#include "ui/gui.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui.h"
+#include "ui/core/gui_ids.h"
 #include "editor/editor.h"
 #include "util/image_manager.h"
 #include <wx/artprov.h>

@@ -12,7 +12,7 @@
 #include "game/town.h"
 #include "game/house.h"
 #include "app/settings.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <spdlog/spdlog.h>
 #include <format>

@@ -7,8 +7,8 @@
 
 #include "game/complexitem.h"
 #include "game/creature.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/core/gui.h"
+#include "ui/dialogs/dialog_util.h"
 #include "util/image_manager.h"
 
 #include "ui/properties/property_validator.h"

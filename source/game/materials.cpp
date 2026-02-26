@@ -23,7 +23,7 @@
 #include "game/items.h"
 #include "game/creatures.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/materials.h"
 #include "brushes/brush.h"
 #include "brushes/creature/creature_brush.h"

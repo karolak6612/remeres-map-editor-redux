@@ -18,7 +18,7 @@
 #ifndef RME_EDITOR_TABS_H_
 #define RME_EDITOR_TABS_H_
 
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 
 class EditorTab;
 

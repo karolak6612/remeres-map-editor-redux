@@ -2,8 +2,8 @@
 #include "ui/dialogs/outfit_chooser_dialog.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/core/theme.h"
 #include "util/image_manager.h"
 #include "util/nvg_utils.h"
 

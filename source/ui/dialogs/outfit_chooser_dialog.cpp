@@ -26,8 +26,8 @@
 #include "rendering/core/graphics.h"
 #include "rendering/core/outfit_colors.h"
 #include "rendering/core/outfit_colorizer.h"
-#include "ui/gui.h"
-#include "ui/theme.h"
+#include "ui/core/gui.h"
+#include "ui/core/theme.h"
 #include "util/json.h"
 #include "util/image_manager.h"
 #include <fstream>

@@ -13,7 +13,7 @@
 #include "map/tile_operations.h"
 #include "brushes/ground/ground_brush.h"
 #include "app/settings.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include "brushes/doodad/doodad_brush.h"
 

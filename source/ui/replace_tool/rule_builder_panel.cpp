@@ -1,7 +1,7 @@
 #include "ui/replace_tool/rule_builder_panel.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 #include "game/items.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include "app/managers/version_manager.h"
 #include "util/nvg_utils.h"

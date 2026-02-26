@@ -2,7 +2,7 @@
 #define RME_UTIL_NVG_UTILS_H_
 
 #include "game/items.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include <nanovg.h>
 #include <vector>
 #include <algorithm>

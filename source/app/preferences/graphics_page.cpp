@@ -1,8 +1,8 @@
 #include "app/preferences/graphics_page.h"
 #include "app/main.h"
 #include "app/settings.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
+#include "ui/core/gui.h"
+#include "ui/dialogs/dialog_util.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {

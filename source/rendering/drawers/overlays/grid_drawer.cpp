@@ -1,6 +1,6 @@
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "rendering/drawers/overlays/grid_drawer.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/graphics.h"
 

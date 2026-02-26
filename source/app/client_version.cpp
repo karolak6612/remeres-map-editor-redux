@@ -23,10 +23,10 @@
 #include "app/settings.h"
 #include "io/filehandle.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include "util/file_system.h"
-#include "ui/dialog_util.h"
+#include "ui/dialogs/dialog_util.h"
 #include "app/client_version.h"
 
 #include <wx/dir.h>

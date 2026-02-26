@@ -12,7 +12,7 @@ ShadeDrawer::~ShadeDrawer() {
 
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 void ShadeDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options) {
 	if (view.start_z != view.end_z && options.show_shade) {

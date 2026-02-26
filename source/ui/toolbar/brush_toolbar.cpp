@@ -4,8 +4,8 @@
 
 #include "app/main.h"
 #include "ui/toolbar/brush_toolbar.h"
-#include "ui/gui.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui.h"
+#include "ui/core/gui_ids.h"
 #include "editor/editor.h"
 #include "brushes/managers/brush_manager.h"
 #include "brushes/flag/flag_brush.h"

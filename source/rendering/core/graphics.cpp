@@ -25,7 +25,7 @@
 #include <nanovg_gl.h>
 #include "io/filehandle.h"
 #include "app/settings.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include "rendering/io/editor_sprite_loader.h"
 

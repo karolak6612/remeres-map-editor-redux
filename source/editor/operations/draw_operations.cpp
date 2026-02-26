@@ -6,7 +6,7 @@
 #include "editor/operations/draw_operations.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/managers/doodad_preview_manager.h"
 #include "brushes/brush.h"
 #include "brushes/doodad/doodad_brush.h"

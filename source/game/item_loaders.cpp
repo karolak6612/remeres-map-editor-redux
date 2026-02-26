@@ -4,7 +4,7 @@
 #include "game/item.h"
 #include "io/filehandle.h"
 #include "ext/pugixml.hpp"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <array>
 #include <format>

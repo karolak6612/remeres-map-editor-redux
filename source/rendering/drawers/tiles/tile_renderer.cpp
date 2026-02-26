@@ -2,7 +2,7 @@
 #include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include "editor/editor.h"
 #include "map/tile.h"

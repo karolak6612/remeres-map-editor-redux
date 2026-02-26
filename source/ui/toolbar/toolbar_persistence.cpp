@@ -5,7 +5,7 @@
 #include "app/main.h"
 #include "ui/toolbar/toolbar_persistence.h"
 #include "app/settings.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 #include "ui/toolbar/brush_toolbar.h"
 #include "ui/toolbar/position_toolbar.h"
 #include "ui/toolbar/size_toolbar.h"

@@ -4,7 +4,7 @@
 #include "map/tile.h"
 #include "map/map_region.h" // For MapNode, Floor
 #include "map/spatial_hash_grid.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include "editor/operations/search_operations.h"
 #include <algorithm>

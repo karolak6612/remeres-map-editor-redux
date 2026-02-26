@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 
-#include "ui/gui.h" // loadbar
+#include "ui/core/gui.h" // loadbar
 
 #include "map/map.h"
 

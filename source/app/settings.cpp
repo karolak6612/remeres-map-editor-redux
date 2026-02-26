@@ -16,7 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/settings.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 #include "app/client_version.h"
 #include "app/main.h"
 

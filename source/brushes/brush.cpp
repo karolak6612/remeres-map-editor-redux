@@ -46,7 +46,7 @@
 #include "game/creature.h"
 #include "map/map.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <ranges>
 #include <algorithm>

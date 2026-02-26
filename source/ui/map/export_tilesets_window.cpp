@@ -3,7 +3,7 @@
 
 #include "editor/editor.h"
 #include "editor/persistence/tileset_exporter.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 #include "app/application.h"
 #include "util/image_manager.h"
 

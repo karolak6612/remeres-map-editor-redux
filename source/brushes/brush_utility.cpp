@@ -5,7 +5,7 @@
 #include "app/main.h"
 
 #include "brushes/brush_utility.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "editor/editor.h"
 #include "brushes/brush.h"
 #include "brushes/ground/ground_brush.h"

@@ -1,5 +1,5 @@
 #include "ui/replace_tool/rule_list_control.h"
-#include "ui/theme.h"
+#include "ui/core/theme.h"
 #include "util/image_manager.h"
 #include <nanovg.h>
 #include <memory>

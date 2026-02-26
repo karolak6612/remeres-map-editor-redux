@@ -18,7 +18,7 @@
 #include "app/main.h"
 
 #include "brushes/creature/creature_brush.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "app/settings.h"
 #include "map/tile.h"
 #include "game/creature.h"

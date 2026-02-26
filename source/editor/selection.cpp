@@ -24,7 +24,7 @@
 #include "game/item.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <ranges>
 #include <algorithm>

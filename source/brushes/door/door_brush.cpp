@@ -13,7 +13,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 #include <ranges>
 #include <array>

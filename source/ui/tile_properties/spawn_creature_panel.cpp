@@ -9,9 +9,9 @@
 #include "util/image_manager.h"
 #include "game/spawn.h"
 #include "game/creature.h"
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 #include "rendering/utilities/sprite_icon_generator.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 SpawnCreaturePanel::SpawnCreaturePanel(wxWindow* parent) :
 	wxPanel(parent, wxID_ANY) {

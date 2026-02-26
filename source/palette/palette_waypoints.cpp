@@ -20,7 +20,7 @@
 
 #include "app/main.h"
 
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "brushes/managers/brush_manager.h"
 #include "editor/hotkey_manager.h"
 #include "palette/palette_waypoints.h"

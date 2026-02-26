@@ -1,7 +1,7 @@
 #ifndef RME_MAP_SESSION_H_
 #define RME_MAP_SESSION_H_
 
-#include "ui/gui_ids.h"
+#include "ui/core/gui_ids.h"
 
 class Editor;
 

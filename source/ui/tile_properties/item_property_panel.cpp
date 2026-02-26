@@ -4,7 +4,7 @@
 
 #include "app/main.h"
 #include "ui/tile_properties/item_property_panel.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 #include "game/item.h"
 #include "map/tile.h"
 #include "map/map.h"

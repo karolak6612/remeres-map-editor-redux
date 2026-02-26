@@ -22,7 +22,7 @@
 #include "game/items.h"
 #include "game/complexitem.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
+#include "ui/core/gui.h"
 
 BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
 	if (t) {
