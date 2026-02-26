@@ -18,7 +18,7 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 
-	wxFlexGridSizer* grid_sizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* grid_sizer = newd wxFlexGridSizer(2, FromDIP(10), FromDIP(10));
 	grid_sizer->AddGrowableCol(1);
 
 	// Description
@@ -107,7 +107,7 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	);
 	waypoint_filename_ctrl->SetToolTip("External waypoint XML file (leave empty for internal)");
 
-	topsizer->Add(grid_sizer, wxSizerFlags(1).Expand().Border(wxALL, 20));
+	topsizer->Add(grid_sizer, wxSizerFlags(1).Expand().Border(wxALL, FromDIP(20)));
 
 	wxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
@@ -119,7 +119,7 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancelBtn->SetToolTip("Discard changes");
 	subsizer->Add(cancelBtn, wxSizerFlags(1).Center());
-	topsizer->Add(subsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT | wxBOTTOM, 20));
+	topsizer->Add(subsizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(20)));
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);

@@ -54,7 +54,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, description);
 	wxWindow* boxParent = boxsizer->GetStaticBox();
 
-	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, FromDIP(10), FromDIP(10));
 	subsizer->AddGrowableCol(1);
 
 	subsizer->Add(newd wxStaticText(boxParent, wxID_ANY, "ID " + i2ws(item->getID())));
@@ -86,7 +86,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 
 	boxsizer->Add(subsizer, wxSizerFlags(1).Expand());
 
-	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT | wxTOP, 20));
+	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT | wxTOP, FromDIP(20)));
 
 	wxStdDialogButtonSizer* buttonsizer = newd wxStdDialogButtonSizer();
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
@@ -104,7 +104,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 	buttonsizer->SetCancelButton(cancelBtn);
 	buttonsizer->Realize();
 
-	topsizer->Add(buttonsizer, wxSizerFlags(0).Center().Border(wxALL, 20));
+	topsizer->Add(buttonsizer, wxSizerFlags(0).Center().Border(wxALL, FromDIP(20)));
 
 	SetSizerAndFit(topsizer);
 	Centre(wxBOTH);

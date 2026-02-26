@@ -125,18 +125,9 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		return;
 	}
 
-	int size_x = 20, size_y = 20;
-
-	if (size == RENDER_SIZE_16x16) {
-		size_x = 20;
-		size_y = 20;
-	} else if (size == RENDER_SIZE_32x32) {
-		size_x = 36;
-		size_y = 36;
-	} else if (size == RENDER_SIZE_64x64) {
-		size_x = 68;
-		size_y = 68;
-	}
+	// Use passed dimensions directly - NanoVGCanvas handles logical units
+	float size_x = static_cast<float>(width);
+	float size_y = static_cast<float>(height);
 
 	// Background
 	nvgBeginPath(vg);
@@ -145,22 +136,15 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	nvgFill(vg);
 
 	if (type == DC_BTN_TOGGLE && GetValue()) {
-		DrawSunkenBorder(vg, static_cast<float>(size_x), static_cast<float>(size_y));
+		DrawSunkenBorder(vg, size_x, size_y);
 	} else {
-		DrawRaisedBorder(vg, static_cast<float>(size_x), static_cast<float>(size_y));
+		DrawRaisedBorder(vg, size_x, size_y);
 	}
 
 	if (sprite) {
 		int tex = GetOrCreateSpriteTexture(vg, sprite);
 		if (tex > 0) {
-			int imgSize = 32;
-			if (size == RENDER_SIZE_16x16) {
-				imgSize = 16;
-			} else if (size == RENDER_SIZE_32x32) {
-				imgSize = 32;
-			} else if (size == RENDER_SIZE_64x64) {
-				imgSize = 64; // Not supported in original?
-			}
+			float imgSize = size_x - 4.0f;
 
 			NVGpaint imgPaint = nvgImagePattern(vg, 2, 2, imgSize, imgSize, 0, tex, 1.0f);
 			nvgBeginPath(vg);
