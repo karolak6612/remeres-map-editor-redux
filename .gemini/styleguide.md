@@ -261,6 +261,30 @@ source/
 
 ---
 
+## 🚀 RECOMMENDED BOOST LIBRARIES
+
+To achieve maximum performance and adhere to Data-Oriented Design, we selectively use the following **Top 10 Boost Libraries**. Avoid reinventing the wheel if these can solve the problem.
+
+### 1. Data-Oriented Containers (DOD)
+- **Boost.PolyCollection** — Replaces `std::vector<std::unique_ptr<Base>>`. Stores polymorphic objects in contiguous, type-specific arrays. **Use for:** Iterating over heterogeneous items or drawers without pointer chasing.
+- **Boost.Container** — Provides `flat_map`, `flat_set`, and `small_vector`. **Use for:** Avoiding node-based allocations of `std::map`. `small_vector` is perfect for inline tile item arrays that rarely exceed 2-4 items.
+- **Boost.Intrusive** — Zero-allocation intrusive containers. **Use for:** Highly dynamic collections like active animation lists or render queues where objects can link themselves without heap allocations.
+- **Boost.Dynamic Bitset** — High-performance runtime bitsets. **Use for:** Spatial grid masking, visibility bitfields, or pathfinding "visited" maps, avoiding the proxy-object overhead of `std::vector<bool>`.
+
+### 2. Memory & Architecture
+- **Boost.Pool** — Fast memory pooling. **Use for:** Allocating and freeing millions of `Tile` or `Item` objects quickly while avoiding heap fragmentation.
+- **Boost.Align** — Memory alignment functions and allocators. **Use for:** Aligning flat structs strictly to CPU cache lines (64 bytes) to prevent false-sharing in multithreaded iterations.
+- **Boost.Lockfree** — Lock-free data structures (`spsc_queue`, `mpmc_queue`). **Use for:** High-throughput communication between the main thread and background threads (like `SelectionThread` or async texture loaders) without mutex contention.
+
+### 3. Math, Sorting & Data Structures
+- **Boost.Sort** — High-performance templated sort functions (e.g., `spreadsort`). **Use for:** Radically faster radix-based Z-sorting of the 100k+ instances in the `SpriteBatch` every frame.
+- **Boost.Multi-Index** — Containers maintaining multiple indices. **Use for:** Complex memory registries (e.g., looking up a Creature by ID, by Name, or by Position) without duplicating the underlying entity data.
+- **Boost.Geometry** — Geometric algorithms and primitives. **Use for:** Spatial indexing, bounding box intersections (AABB), and selection area math.
+
+> **Note:** Do NOT use Boost libraries that overlap with C++20/23 features (e.g., do not use Boost.Thread, Boost.Variant, Boost.Filesystem, Boost.Format). Use the `std::` equivalents.
+
+---
+
 ## ✅ PRE-COMMIT CHECKLIST
 
 ```
