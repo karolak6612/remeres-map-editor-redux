@@ -5,7 +5,12 @@
 #include "app/main.h"
 #include "map/tile_operations.h"
 #include "map/tile.h"
+#include "map/map_region.h"
+#include "map/map_allocator.h"
+#include "map/basemap.h"
 #include "game/item.h"
+#include "game/spawn.h"
+#include "game/creature.h"
 #include "brushes/ground/ground_brush.h"
 #include "brushes/wall/wall_brush.h"
 #include "brushes/table/table_brush.h"
@@ -31,6 +36,87 @@ namespace TileOperations {
 		}
 
 	} // anonymous namespace
+
+	void merge(Tile* tile, Tile* other) {
+		if (other->isPZ()) {
+			tile->setPZ(true);
+		}
+		if (other->house_id) {
+			tile->house_id = other->house_id;
+		}
+
+		if (other->ground) {
+			tile->ground = std::move(other->ground);
+		}
+
+		if (other->creature) {
+			tile->creature = std::move(other->creature);
+		}
+
+		if (other->spawn) {
+			tile->spawn = std::move(other->spawn);
+		}
+
+		tile->items.reserve(tile->items.size() + other->items.size());
+		for (auto& item : other->items) {
+			tile->addItem(std::move(item));
+		}
+		other->items.clear();
+		tile->update();
+	}
+
+	bool isContentEqual(const Tile* tile, const Tile* other) {
+		if (!other || !tile) {
+			return false;
+		}
+
+		// Compare ground
+		if (tile->ground != nullptr && other->ground != nullptr) {
+			if (tile->ground->getID() != other->ground->getID() || tile->ground->getSubtype() != other->ground->getSubtype()) {
+				return false;
+			}
+		} else if (tile->ground != other->ground) {
+			return false;
+		}
+
+		// Compare items
+		return std::ranges::equal(tile->items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+			return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
+		});
+	}
+
+	std::unique_ptr<Tile> deepCopy(const Tile* tile, BaseMap& map) {
+		// Use the destination map's TileLocation at the same position
+		TileLocation* dest_location = map.getTileL(tile->getX(), tile->getY(), tile->getZ());
+		if (!dest_location) {
+			dest_location = map.createTileL(tile->getX(), tile->getY(), tile->getZ());
+		}
+		std::unique_ptr<Tile> copy(map.allocator.allocateTile(dest_location));
+		copy->setMapFlags(tile->getMapFlags());
+		copy->setStatFlags(tile->getStatFlags());
+
+		copy->setHouseID(tile->getHouseID());
+		if (tile->spawn) {
+			copy->spawn = tile->spawn->deepCopy();
+		}
+		if (tile->creature) {
+			copy->creature = tile->creature->deepCopy();
+		}
+		// Spawncount & exits are not transferred on copy!
+		if (tile->ground) {
+			copy->ground = tile->ground->deepCopy();
+		}
+
+		copy->items.reserve(tile->items.size());
+		for (const auto& item : tile->items) {
+			copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
+		}
+
+		// Ensure minimapColor and other derived flags are updated
+		copy->update();
+
+		return copy;
+	}
 
 	void borderize(Tile* tile, BaseMap* map) {
 		GroundBrush::doBorders(map, tile);
@@ -62,6 +148,24 @@ namespace TileOperations {
 
 	void carpetize(Tile* tile, BaseMap* map) {
 		CarpetBrush::doCarpets(map, tile);
+	}
+
+	void addBorderItem(Tile* tile, std::unique_ptr<Item> item) {
+		if (!item) {
+			return;
+		}
+		ASSERT(item->isBorder());
+		tile->items.insert(tile->items.begin(), std::move(item));
+		tile->update();
+	}
+
+	void addWallItem(Tile* tile, std::unique_ptr<Item> item) {
+		if (!item) {
+			return;
+		}
+		ASSERT(item->isWall());
+
+		tile->addItem(std::move(item));
 	}
 
 } // namespace TileOperations

@@ -9,6 +9,7 @@
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "map/tile.h"
+#include "map/tile_operations.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "ui/properties/creature_properties_window.h"
@@ -26,7 +27,7 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 		return;
 	}
 
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(tile, editor.map);
 	wxDialog* w = nullptr;
 
 	if (new_tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {

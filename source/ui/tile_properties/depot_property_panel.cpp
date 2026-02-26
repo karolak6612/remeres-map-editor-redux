@@ -7,6 +7,7 @@
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "map/map.h"
+#include "map/tile_operations.h"
 #include "ui/gui.h"
 #include "editor/editor.h"
 #include "editor/action.h"
@@ -76,7 +77,7 @@ void DepotPropertyPanel::OnDepotIdChange(wxCommandEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item_base = new_tile->getItemAt(index);

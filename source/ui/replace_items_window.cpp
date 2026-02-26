@@ -23,6 +23,7 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "game/items.h"
+#include "map/tile_operations.h"
 #include <glad/glad.h>
 #include <format>
 #include <nanovg.h>
@@ -414,7 +415,7 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		if (!result.empty()) {
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REPLACE_ITEMS);
 			for (const auto& [tile, itemToReplace] : result) {
-				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor->map);
+				std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(tile, editor->map);
 				int index = tile->getIndexOf(itemToReplace);
 				ASSERT(index != wxNOT_FOUND);
 				Item* item = new_tile->getItemAt(index);

@@ -103,36 +103,6 @@ Tile::~Tile() {
 	// Smart pointers handle deletion
 }
 
-std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
-	// Use the destination map's TileLocation at the same position
-	TileLocation* dest_location = map.getTileL(getX(), getY(), getZ());
-	if (!dest_location) {
-		dest_location = map.createTileL(getX(), getY(), getZ());
-	}
-	std::unique_ptr<Tile> copy(map.allocator.allocateTile(dest_location));
-	copy->mapflags = mapflags;
-	copy->statflags = statflags;
-	copy->minimapColor = minimapColor;
-	copy->house_id = house_id;
-	if (spawn) {
-		copy->spawn = spawn->deepCopy();
-	}
-	if (creature) {
-		copy->creature = creature->deepCopy();
-	}
-	// Spawncount & exits are not transferred on copy!
-	if (ground) {
-		copy->ground = ground->deepCopy();
-	}
-
-	copy->items.reserve(items.size());
-	for (const auto& item : items) {
-		copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
-	}
-
-	return copy;
-}
-
 uint32_t Tile::memsize() const {
 	uint32_t mem = sizeof(*this);
 	if (ground) {
@@ -178,34 +148,6 @@ int Tile::size() const {
 		}
 	}
 	return sz;
-}
-
-void Tile::merge(Tile* other) {
-	if (other->isPZ()) {
-		setPZ(true);
-	}
-	if (other->house_id) {
-		house_id = other->house_id;
-	}
-
-	if (other->ground) {
-		ground = std::move(other->ground);
-	}
-
-	if (other->creature) {
-		creature = std::move(other->creature);
-	}
-
-	if (other->spawn) {
-		spawn = std::move(other->spawn);
-	}
-
-	items.reserve(items.size() + other->items.size());
-	for (auto& item : other->items) {
-		addItem(std::move(item));
-	}
-	other->items.clear();
-	update();
 }
 
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
@@ -535,15 +477,6 @@ void Tile::update() {
 	}
 }
 
-void Tile::addBorderItem(std::unique_ptr<Item> item) {
-	if (!item) {
-		return;
-	}
-	ASSERT(item->isBorder());
-	items.insert(items.begin(), std::move(item));
-	update();
-}
-
 GroundBrush* Tile::getGroundBrush() const {
 	if (ground) {
 		if (ground->getGroundBrush()) {
@@ -572,15 +505,6 @@ Item* Tile::getTable() const {
 		return i->isTable();
 	});
 	return (it != items.end()) ? it->get() : nullptr;
-}
-
-void Tile::addWallItem(std::unique_ptr<Item> item) {
-	if (!item) {
-		return;
-	}
-	ASSERT(item->isWall());
-
-	addItem(std::move(item));
 }
 
 void Tile::selectGround() {
@@ -641,24 +565,4 @@ void Tile::removeHouseExit(House* h) {
 	}
 
 	std::erase(*house_exits, h->getID());
-}
-
-bool Tile::isContentEqual(const Tile* other) const {
-	if (!other) {
-		return false;
-	}
-
-	// Compare ground
-	if (ground != nullptr && other->ground != nullptr) {
-		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
-			return false;
-		}
-	} else if (ground != other->ground) {
-		return false;
-	}
-
-	// Compare items
-	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
-		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
-	});
 }

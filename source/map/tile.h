@@ -75,9 +75,6 @@ public:
 	Tile(const Tile&) = delete;
 	Tile& operator=(const Tile&) = delete;
 
-	// Argument is a the map to allocate the tile from
-	std::unique_ptr<Tile> deepCopy(BaseMap& map);
-
 	// The location of the tile
 	// Stores state that remains between the tile being moved (like house exits)
 	void setLocation(TileLocation* where) {
@@ -98,12 +95,6 @@ public:
 	int getZ() const;
 
 public: // Functions
-	// Absorb the other tile into this tile
-	void merge(Tile* other);
-
-	// Compare the content (ground and items) of two tiles
-	bool isContentEqual(const Tile* other) const;
-
 	// Has tile been modified since the map was loaded/created?
 	bool isModified() const {
 		return testFlags(statflags, TILESTATE_MODIFIED);
@@ -180,9 +171,6 @@ public: // Functions
 	// Get the border brush of this tile
 	GroundBrush* getGroundBrush() const;
 
-	// Add a border item (added at the bottom of all items)
-	void addBorderItem(std::unique_ptr<Item> item);
-
 	bool hasTable() const {
 		return testFlags(statflags, TILESTATE_HAS_TABLE);
 	}
@@ -219,8 +207,6 @@ public: // Functions
 	// Get the (first) wall of this tile
 	Item* getWall() const;
 	bool hasWall() const;
-	// Add a wall item (same as just addItem, but an additional check to verify that it is a wall)
-	void addWallItem(std::unique_ptr<Item> item);
 
 	// Has to do with houses
 	bool isHouseTile() const;

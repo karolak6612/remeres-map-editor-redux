@@ -8,6 +8,7 @@
 #include "game/complexitem.h"
 #include "map/tile.h"
 #include "map/map.h"
+#include "map/tile_operations.h"
 #include "ui/dialog_util.h"
 #include "ui/find_item_window.h"
 #include "ui/gui_ids.h"
@@ -161,7 +162,7 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 	Item* sub_item = container->getItem(sub_item_index);
 
 	// Create a deep copy of the tile to edit items inside the container
-	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	int container_index = current_tile->getIndexOf(current_item);
 	if (container_index == -1) {
 		return;
@@ -218,7 +219,7 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	int index = current_tile->getIndexOf(current_item);
 	if (index != -1) {
 		Item* new_item_base = new_tile->getItemAt(index);

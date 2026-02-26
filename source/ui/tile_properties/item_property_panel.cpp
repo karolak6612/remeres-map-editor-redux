@@ -8,6 +8,7 @@
 #include "game/item.h"
 #include "map/tile.h"
 #include "map/map.h"
+#include "map/tile_operations.h"
 #include "editor/editor.h"
 #include "editor/action.h"
 #include "editor/action_queue.h"
@@ -147,7 +148,7 @@ void ItemPropertyPanel::OnActionIdChange(wxSpinEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);
@@ -167,7 +168,7 @@ void ItemPropertyPanel::OnUniqueIdChange(wxSpinEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);
@@ -187,7 +188,7 @@ void ItemPropertyPanel::OnCountChange(wxSpinEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);
@@ -207,7 +208,7 @@ void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);
@@ -233,7 +234,7 @@ void ItemPropertyPanel::OnTextChange(wxEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);

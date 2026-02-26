@@ -7,6 +7,7 @@
 #include "game/creature.h"
 #include "map/tile.h"
 #include "map/map.h"
+#include "map/tile_operations.h"
 #include "ui/gui.h"
 #include "editor/editor.h"
 #include "editor/action.h"
@@ -79,7 +80,7 @@ void CreaturePropertyPanel::OnSpawnTimeChange(wxSpinEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		if (new_tile->creature) {
 			new_tile->creature->setSpawnTime(spawntime_spin->GetValue());
 
@@ -97,7 +98,7 @@ void CreaturePropertyPanel::OnDirectionChange(wxCommandEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		if (new_tile->creature) {
 			int new_dir = (int)(intptr_t)direction_choice->GetClientData(direction_choice->GetSelection());
 			new_tile->creature->setDirection((Direction)new_dir);
