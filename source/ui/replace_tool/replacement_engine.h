@@ -6,6 +6,8 @@
 #include "map/position.h"
 #include <random>
 #include <vector>
+#include <map>
+#include <memory>
 
 enum class ReplaceScope {
 	Selection,
@@ -27,6 +29,10 @@ public:
 
 private:
 	std::mt19937 rng;
+
+	void ProcessTile(class Tile* tile, const std::map<uint16_t, const ReplacementRule*>& ruleMap);
+	void ProcessContainer(class Container* container, const std::map<uint16_t, const ReplacementRule*>& ruleMap);
+	void ProcessItemRef(std::unique_ptr<class Item>& itemRef, const std::map<uint16_t, const ReplacementRule*>& ruleMap);
 };
 
 #endif

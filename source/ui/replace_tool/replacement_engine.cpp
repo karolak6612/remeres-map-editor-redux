@@ -1,6 +1,15 @@
 #include "app/main.h"
 #include "replacement_engine.h"
 
+#include "editor/editor.h"
+#include "ui/gui.h"
+#include "map/tile.h"
+#include "game/item.h"
+#include "game/complexitem.h"
+#include <algorithm>
+#include <map>
+#include <string>
+
 ReplacementEngine::ReplacementEngine() : rng(std::random_device {}()) { }
 
 bool ReplacementEngine::ResolveReplacement(uint16_t& resultId, const ReplacementRule& rule) {
@@ -36,13 +45,68 @@ bool ReplacementEngine::ResolveReplacement(uint16_t& resultId, const Replacement
 	return false;
 }
 
-#include "editor/editor.h"
-#include "ui/gui.h"
-#include "map/tile.h"
-#include "game/item.h"
-#include <algorithm>
-#include <map>
-#include <string>
+void ReplacementEngine::ProcessItemRef(std::unique_ptr<Item>& itemRef, const std::map<uint16_t, const ReplacementRule*>& ruleMap) {
+	if (!itemRef) {
+		return;
+	}
+
+	Item* item = itemRef.get();
+	auto it = ruleMap.find(item->getID());
+
+	if (it != ruleMap.end()) {
+		uint16_t newId;
+		if (ResolveReplacement(newId, *it->second)) {
+			if (newId == TRASH_ITEM_ID || newId == 0) {
+				// Keep existing object but set ID to 0 (Trash)
+				item->setID(0);
+				// Do not recurse into trash items
+				return;
+			} else {
+				// Create new item of correct class
+				const uint16_t oldId = item->getID();
+				item->setID(newId);
+				std::unique_ptr<Item> newItem = item->deepCopy();
+				item->setID(oldId); // Restore old ID before destruction (good practice)
+
+				if (newItem) {
+					itemRef = std::move(newItem);
+				}
+			}
+		}
+	}
+
+	// If replaced, we have a new item in itemRef (or same if not replaced).
+	// If new item is a container, recurse.
+	// If old item was a container and we replaced it, we lost its contents (expected behavior).
+	if (itemRef) {
+		if (Container* c = itemRef->asContainer()) {
+			ProcessContainer(c, ruleMap);
+		}
+	}
+}
+
+void ReplacementEngine::ProcessContainer(Container* container, const std::map<uint16_t, const ReplacementRule*>& ruleMap) {
+	if (!container) return;
+	auto& items = container->getVector();
+	for (auto& itemRef : items) {
+		ProcessItemRef(itemRef, ruleMap);
+	}
+}
+
+void ReplacementEngine::ProcessTile(Tile* tile, const std::map<uint16_t, const ReplacementRule*>& ruleMap) {
+	if (!tile) return;
+	if (tile->ground) {
+		ProcessItemRef(tile->ground, ruleMap);
+	}
+
+	// Iterate over items. Note: ProcessItemRef might replace the unique_ptr in place.
+	// It does not change vector size or invalid iterators (as long as we don't insert/erase).
+	// But std::vector iterators are invalidated by reallocation.
+	// Replacement in place (assignment to unique_ptr) does NOT reallocate vector.
+	for (auto& itemRef : tile->items) {
+		ProcessItemRef(itemRef, ruleMap);
+	}
+}
 
 void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<ReplacementRule>& rules, ReplaceScope scope, const std::vector<Position>* posVec) {
 	if (rules.empty()) {
@@ -56,79 +120,22 @@ void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<Rep
 		}
 	}
 
-	auto tileProcessor = [this, &ruleMap, editor](Tile* tile) {
-		auto finder = [this, &ruleMap](Map&, Tile*, Item* item, long long) {
-			auto it = ruleMap.find(item->getID());
-			if (it != ruleMap.end()) {
-				uint16_t newId;
-				if (ResolveReplacement(newId, *it->second)) {
-					if (newId == TRASH_ITEM_ID) {
-						item->setID(0);
-					} else {
-						item->setID(newId);
-					}
-				}
-			}
-		};
-
-		long long dummy = 0;
-		if (tile->ground) {
-			finder(editor->map, tile, tile->ground.get(), ++dummy);
-		}
-
-		std::vector<Container*> containers;
-		for (const auto& item : tile->items) {
-			containers.clear();
-			Container* container = item->asContainer();
-			finder(editor->map, tile, item.get(), ++dummy);
-
-			if (container) {
-				containers.push_back(container);
-				size_t index = 0;
-				while (index < containers.size()) {
-					container = containers[index++];
-					auto& v = container->getVector();
-					for (const auto& i : v) {
-						Container* c = i->asContainer();
-						finder(editor->map, tile, i.get(), ++dummy);
-						if (c) {
-							containers.push_back(c);
-						}
-					}
-				}
-			}
-		}
-	};
-
 	if (scope == ReplaceScope::Viewport && posVec) {
 		// Use Viewport scope
 		for (const auto& pos : *posVec) {
 			Tile* tile = editor->map.getTile(pos);
-			if (tile) {
-				tileProcessor(tile);
-			}
+			ProcessTile(tile, ruleMap);
 		}
 	} else if (scope == ReplaceScope::Selection && !editor->selection.empty()) {
 		// Use Selection scope
 		for (Tile* tile : editor->selection.getTiles()) {
-			tileProcessor(tile);
+			ProcessTile(tile, ruleMap);
 		}
 	} else if (scope == ReplaceScope::AllMap) {
 		// Use All Map scope
-		auto globalFinder = [this, &ruleMap](Map&, Tile*, Item* item, long long) {
-			auto it = ruleMap.find(item->getID());
-			if (it != ruleMap.end()) {
-				uint16_t newId;
-				if (ResolveReplacement(newId, *it->second)) {
-					if (newId == TRASH_ITEM_ID) {
-						item->setID(0);
-					} else {
-						item->setID(newId);
-					}
-				}
-			}
-		};
-		foreach_ItemOnMap(editor->map, globalFinder, false);
+		for (auto& tile_loc : editor->map.tiles()) {
+			ProcessTile(tile_loc.get(), ruleMap);
+		}
 	}
 
 	editor->map.doChange();
