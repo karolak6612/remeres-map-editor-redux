@@ -165,13 +165,6 @@ bool SprLoader::LoadDump(GraphicManager* manager, std::unique_ptr<uint8_t[]>& ta
 }
 
 bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
-	if (sprite_id == 0) {
-		// Empty GameSprite
-		size = 0;
-		target.reset();
-		return true;
-	}
-
 	if (filename.empty()) {
 		return false;
 	}
@@ -179,6 +172,17 @@ bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique
 	FileReadHandle fh(filename);
 	if (!fh.isOk()) {
 		return false;
+	}
+
+	return LoadDump(fh, extended, target, size, sprite_id);
+}
+
+bool SprLoader::LoadDump(FileReadHandle& fh, bool extended, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
+	if (sprite_id == 0) {
+		// Empty GameSprite
+		size = 0;
+		target.reset();
+		return true;
 	}
 
 	uint32_t address_size = extended ? SPRITE_ADDRESS_SIZE_EXTENDED : SPRITE_ADDRESS_SIZE_NORMAL;

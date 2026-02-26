@@ -22,9 +22,12 @@ SpritePreloader& SpritePreloader::get() {
 }
 
 SpritePreloader::SpritePreloader() : stopping(false) {
-	worker = std::jthread([this](std::stop_token stop_token) {
-		this->workerLoop(stop_token);
-	});
+	size_t thread_count = std::max(2u, std::min(8u, std::thread::hardware_concurrency()));
+	for (size_t i = 0; i < thread_count; ++i) {
+		workers.emplace_back([this](std::stop_token stop_token) {
+			this->workerLoop(stop_token);
+		});
+	}
 }
 
 SpritePreloader::~SpritePreloader() {
@@ -39,7 +42,9 @@ void SpritePreloader::shutdown() {
 		}
 		stopping = true;
 	}
-	worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+	for (auto& worker : workers) {
+		worker.request_stop();
+	}
 	cv.notify_all();
 }
 
@@ -117,6 +122,9 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 }
 
 void SpritePreloader::workerLoop(std::stop_token stop_token) {
+	thread_local std::unique_ptr<FileReadHandle> fh = nullptr;
+	thread_local std::string fh_filename;
+
 	while (!stop_token.stop_requested()) {
 		Task task;
 		{
@@ -134,7 +142,14 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 		bool success = false;
 
 		if (!task.spritefile.empty()) {
-			success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump, size, task.id);
+			if (task.spritefile != fh_filename || !fh || !fh->isOk()) {
+				fh = std::make_unique<FileReadHandle>(task.spritefile);
+				fh_filename = task.spritefile;
+			}
+
+			if (fh && fh->isOk()) {
+				success = SprLoader::LoadDump(*fh, task.is_extended, dump, size, task.id);
+			}
 		}
 
 		std::unique_ptr<uint8_t[]> rgba;
