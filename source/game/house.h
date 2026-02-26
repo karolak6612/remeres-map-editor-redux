@@ -60,6 +60,9 @@ public:
 	Position getDoorPositionByID(uint8_t id) const;
 
 private:
+	void addExitTo(Tile* tile);
+	void removeExitFrom(Tile* tile);
+
 	uint32_t id;
 
 protected:

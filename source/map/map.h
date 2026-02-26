@@ -179,10 +179,18 @@ template <typename ForeachType>
 inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles) {
 	long long done = 0;
 
-	std::vector<Container*> containers;
-	containers.reserve(32);
+	// Recursive lambda for traversing items and nested containers
+	auto traverse_item = [&](auto& self, Tile* tile, Item* item) -> void {
+		foreach(map, tile, item, done);
 
-	std::ranges::for_each(map.tiles(), [&map, &foreach, &done, &containers, selectedTiles](auto& tile_loc) {
+		if (Container* container = item->asContainer()) {
+			for (const auto& inner_item : container->getVector()) {
+				self(self, tile, inner_item.get());
+			}
+		}
+	};
+
+	std::ranges::for_each(map.tiles(), [&](auto& tile_loc) {
 		++done;
 		Tile* tile = tile_loc.get();
 		if (selectedTiles && !tile->isSelected()) {
@@ -190,35 +198,11 @@ inline void foreach_ItemOnMap(Map& map, ForeachType& foreach, bool selectedTiles
 		}
 
 		if (tile->ground) {
-			foreach (map, tile, tile->ground.get(), done)
-				;
+			foreach(map, tile, tile->ground.get(), done);
 		}
 
 		for (const auto& item : tile->items) {
-			containers.clear();
-			Container* container = item->asContainer();
-			foreach (map, tile, item.get(), done)
-				;
-
-			if (container) {
-				containers.push_back(container);
-
-				size_t index = 0;
-				while (index < containers.size()) {
-					container = containers[index++];
-
-					auto& contents = container->getVector();
-					for (const auto& i : contents) {
-						Container* c = i->asContainer();
-						foreach (map, tile, i.get(), done)
-							;
-
-						if (c) {
-							containers.push_back(c);
-						}
-					}
-				}
-			}
+			traverse_item(traverse_item, tile, item.get());
 		}
 	});
 }

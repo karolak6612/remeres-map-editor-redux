@@ -21,6 +21,7 @@
 #include "game/house.h"
 #include "map/tile.h"
 #include "map/map.h"
+#include "map/map_region.h"
 
 #include <format>
 #include <algorithm>
@@ -125,7 +126,7 @@ void House::clean() {
 
 	Tile* tile = map->getTile(exit);
 	if (tile) {
-		tile->removeHouseExit(this);
+		removeExitFrom(tile);
 	}
 }
 
@@ -204,7 +205,7 @@ void House::setExit(Map* targetmap, const Position& pos) {
 	if (exit != Position()) {
 		Tile* oldexit = targetmap->getTile(exit);
 		if (oldexit) {
-			oldexit->removeHouseExit(this);
+			removeExitFrom(oldexit);
 		}
 	}
 
@@ -213,10 +214,31 @@ void House::setExit(Map* targetmap, const Position& pos) {
 		newexit = targetmap->createTile(pos.x, pos.y, pos.z);
 	}
 
-	newexit->addHouseExit(this);
+	addExitTo(newexit);
 	exit = pos;
 }
 
 void House::setExit(const Position& pos) {
 	setExit(map, pos);
+}
+
+void House::addExitTo(Tile* tile) {
+	if (!tile) {
+		return;
+	}
+	HouseExitList* house_exits = tile->getLocation()->createHouseExits();
+	house_exits->push_back(getID());
+}
+
+void House::removeExitFrom(Tile* tile) {
+	if (!tile) {
+		return;
+	}
+
+	HouseExitList* house_exits = tile->getLocation()->getHouseExits();
+	if (!house_exits) {
+		return;
+	}
+
+	std::erase(*house_exits, getID());
 }

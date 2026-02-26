@@ -21,6 +21,7 @@
 #include "map/position.h"
 #include <functional>
 #include <vector>
+#include <unordered_set>
 #include <algorithm>
 #include <atomic>
 
@@ -51,6 +52,8 @@ public:
 	// The tile will be added to the list of selected tiles, however, the items on the tile won't be selected
 	void addInternal(Tile* tile);
 	void removeInternal(Tile* tile);
+
+	bool contains(Tile* tile) const;
 
 	// Clears the selection completely
 	void clear();
@@ -128,6 +131,7 @@ private:
 	// Selections are typically small, and std::vector provides better cache locality
 	// and fewer allocations. We maintain sorted order to allow O(log n) lookups.
 	std::vector<Tile*> tiles;
+	std::unordered_set<Tile*> lookup;
 	std::vector<Tile*> pending_adds;
 	std::vector<Tile*> pending_removes;
 

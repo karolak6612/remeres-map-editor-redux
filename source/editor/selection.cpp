@@ -260,22 +260,35 @@ void Selection::remove(Tile* tile) {
 	}
 }
 
+bool Selection::contains(Tile* tile) const {
+	return lookup.contains(tile);
+}
+
 void Selection::addInternal(Tile* tile) {
 	ASSERT(tile);
+
+	if (lookup.contains(tile)) {
+		return;
+	}
+	lookup.insert(tile);
 
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
-		if (it == tiles.end() || *it != tile) {
-			tiles.insert(it, tile);
-			bounds_dirty = true;
-		}
+		tiles.insert(it, tile);
+		bounds_dirty = true;
 	}
 }
 
 void Selection::removeInternal(Tile* tile) {
 	ASSERT(tile);
+
+	if (!lookup.contains(tile)) {
+		return;
+	}
+	lookup.erase(tile);
+
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
@@ -325,22 +338,31 @@ void Selection::flush() {
 }
 
 void Selection::clear() {
-	if (tiles.empty()) {
+	if (tiles.empty() && lookup.empty()) {
 		return;
 	}
 
 	if (session) {
+		// Only deselect tiles that are currently confirmed selected
 		std::ranges::for_each(tiles, [&](Tile* tile) {
 			std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
 			new_tile->deselect();
 			subsession->addChange(std::make_unique<Change>(std::move(new_tile)));
 		});
+		// Also handle pending adds? No, they haven't been committed yet
 	} else {
 		std::ranges::for_each(tiles, [](Tile* tile) {
 			tile->deselect();
 		});
+		// Also deselect pending adds as they were selected in add()
+		std::ranges::for_each(pending_adds, [](Tile* tile) {
+			tile->deselect();
+		});
 	}
 	tiles.clear();
+	lookup.clear();
+	pending_adds.clear();
+	pending_removes.clear();
 	bounds_dirty = true;
 }
 

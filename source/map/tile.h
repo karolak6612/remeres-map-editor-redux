@@ -226,8 +226,6 @@ public: // Functions
 	bool isHouseTile() const;
 	uint32_t getHouseID() const;
 	void setHouseID(uint32_t newHouseId);
-	void addHouseExit(House* h);
-	void removeHouseExit(House* h);
 	bool isHouseExit() const;
 	bool isTownExit(Map& map) const;
 	const HouseExitList* getHouseExits() const;

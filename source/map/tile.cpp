@@ -622,27 +622,6 @@ bool Tile::isTownExit(Map& map) const {
 	return location->getTownCount() > 0;
 }
 
-void Tile::addHouseExit(House* h) {
-	if (!h) {
-		return;
-	}
-	HouseExitList* house_exits = location->createHouseExits();
-	house_exits->push_back(h->getID());
-}
-
-void Tile::removeHouseExit(House* h) {
-	if (!h) {
-		return;
-	}
-
-	HouseExitList* house_exits = location->getHouseExits();
-	if (!house_exits) {
-		return;
-	}
-
-	std::erase(*house_exits, h->getID());
-}
-
 bool Tile::isContentEqual(const Tile* other) const {
 	if (!other) {
 		return false;
