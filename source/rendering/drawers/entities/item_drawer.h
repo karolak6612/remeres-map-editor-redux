@@ -58,14 +58,14 @@ struct BlitItemParams {
 
 class ItemDrawer {
 public:
-	ItemDrawer();
+	ItemDrawer(SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer);
 	~ItemDrawer();
 
-	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
-	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
+	void BlitItem(SpriteBatch& sprite_batch, int& draw_x, int& draw_y, const BlitItemParams& params);
+	void DrawRawBrush(SpriteBatch& sprite_batch, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
 
-	void BlitItem(RenderList& list, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
-	void DrawRawBrush(RenderList& list, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
+	void BlitItem(RenderList& list, int& draw_x, int& draw_y, const BlitItemParams& params);
+	void DrawRawBrush(RenderList& list, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
 	void DrawHookIndicator(const ItemType& type, const Position& pos);
 	void DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east);
 
@@ -77,6 +77,8 @@ public:
 	}
 
 private:
+	SpriteDrawer* sprite_drawer;
+	CreatureDrawer* creature_drawer;
 	HookIndicatorDrawer* hook_indicator_drawer = nullptr;
 	DoorIndicatorDrawer* door_indicator_drawer = nullptr;
 };

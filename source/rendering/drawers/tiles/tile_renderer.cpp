@@ -98,11 +98,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				params.blue = b;
 				params.patterns = patterns;
 				params.has_patterns = true;
-				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+				item_drawer->BlitItem(sprite_batch, draw_x, draw_y, params);
 			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
-			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
+			item_drawer->DrawRawBrush(sprite_batch, draw_x, draw_y, zoneItem, r, g, b, 60);
 		}
 	}
 
@@ -166,18 +166,18 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.red = r;
 						params.green = g;
 						params.blue = b;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(sprite_batch, draw_x, draw_y, params);
 					} else {
 						params.red = house_tint_r;
 						params.green = house_tint_g;
 						params.blue = house_tint_b;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(sprite_batch, draw_x, draw_y, params);
 					}
 				}
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
+				creature_drawer->BlitCreature(sprite_batch, draw_x, draw_y, tile->creature.get());
 				if (creature_name_drawer) {
 					creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
 				}
@@ -252,11 +252,11 @@ void TileRenderer::DrawTile(RenderList& list, TileLocation* location, const Rend
 				params.blue = b;
 				params.patterns = patterns;
 				params.has_patterns = true;
-				item_drawer->BlitItem(list, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+				item_drawer->BlitItem(list, draw_x, draw_y, params);
 			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
-			item_drawer->DrawRawBrush(list, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
+			item_drawer->DrawRawBrush(list, draw_x, draw_y, zoneItem, r, g, b, 60);
 		}
 	}
 
@@ -308,17 +308,17 @@ void TileRenderer::DrawTile(RenderList& list, TileLocation* location, const Rend
 						params.red = r;
 						params.green = g;
 						params.blue = b;
-						item_drawer->BlitItem(list, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(list, draw_x, draw_y, params);
 					} else {
 						params.red = house_tint_r;
 						params.green = house_tint_g;
 						params.blue = house_tint_b;
-						item_drawer->BlitItem(list, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(list, draw_x, draw_y, params);
 					}
 				}
 			}
 			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(list, sprite_drawer, draw_x, draw_y, tile->creature.get());
+				creature_drawer->BlitCreature(list, draw_x, draw_y, tile->creature.get());
 				if (creature_name_drawer) {
 					creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
 				}

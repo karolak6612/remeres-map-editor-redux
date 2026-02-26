@@ -58,13 +58,13 @@ BlitItemParams::BlitItemParams(const Position& p, Item* i, const DrawingOptions&
 	ExtractItemData(*this, nullptr, i);
 }
 
-ItemDrawer::ItemDrawer() {
+ItemDrawer::ItemDrawer(SpriteDrawer* sd, CreatureDrawer* cd) : sprite_drawer(sd), creature_drawer(cd) {
 }
 
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params) {
+void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, int& draw_x, int& draw_y, const BlitItemParams& params) {
 	const Position& pos = params.pos;
 	const DrawingOptions& options = *params.options;
 	bool ephemeral = params.ephemeral;
@@ -232,7 +232,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			outfit.lookMount = 0;
 		}
 
-		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(params.podium_direction), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
+		creature_drawer->BlitCreature(sprite_batch, draw_x, draw_y, outfit, static_cast<Direction>(params.podium_direction), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
 	}
 
 	// draw wall hook
@@ -263,7 +263,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 }
 
-void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
+void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
 	GameSprite* spr = itemType->sprite;
 	uint16_t cid = itemType->clientID;
 
@@ -304,7 +304,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, DrawColor(r, g, b, alpha));
 }
 
-void ItemDrawer::BlitItem(RenderList& list, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params) {
+void ItemDrawer::BlitItem(RenderList& list, int& draw_x, int& draw_y, const BlitItemParams& params) {
 	const Position& pos = params.pos;
 	const DrawingOptions& options = *params.options;
 	bool ephemeral = params.ephemeral;
@@ -446,7 +446,7 @@ void ItemDrawer::BlitItem(RenderList& list, SpriteDrawer* sprite_drawer, Creatur
 			outfit.lookMount = 0;
 		}
 
-		creature_drawer->BlitCreature(list, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(params.podium_direction), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
+		creature_drawer->BlitCreature(list, draw_x, draw_y, outfit, static_cast<Direction>(params.podium_direction), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
 	}
 
 	if (!options.ingame && options.show_hooks && (it.hookSouth || it.hookEast)) {
@@ -471,7 +471,7 @@ void ItemDrawer::BlitItem(RenderList& list, SpriteDrawer* sprite_drawer, Creatur
 	}
 }
 
-void ItemDrawer::DrawRawBrush(RenderList& list, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
+void ItemDrawer::DrawRawBrush(RenderList& list, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
 	GameSprite* spr = itemType->sprite;
 	uint16_t cid = itemType->clientID;
 

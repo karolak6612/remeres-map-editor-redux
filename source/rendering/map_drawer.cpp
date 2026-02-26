@@ -92,9 +92,9 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	tooltip_drawer = std::make_unique<TooltipDrawer>();
 
 	sprite_drawer = std::make_unique<SpriteDrawer>();
-	creature_drawer = std::make_unique<CreatureDrawer>();
+	creature_drawer = std::make_unique<CreatureDrawer>(sprite_drawer.get());
 	floor_drawer = std::make_unique<FloorDrawer>();
-	item_drawer = std::make_unique<ItemDrawer>();
+	item_drawer = std::make_unique<ItemDrawer>(sprite_drawer.get(), creature_drawer.get());
 	marker_drawer = std::make_unique<MarkerDrawer>();
 
 	creature_name_drawer = std::make_unique<CreatureNameDrawer>();

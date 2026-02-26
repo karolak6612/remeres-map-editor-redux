@@ -23,14 +23,17 @@ struct CreatureDrawOptions {
 
 class CreatureDrawer {
 public:
-	CreatureDrawer();
+	CreatureDrawer(SpriteDrawer* sprite_drawer);
 	~CreatureDrawer();
 
-	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
-	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
+	void BlitCreature(SpriteBatch& sprite_batch, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
+	void BlitCreature(SpriteBatch& sprite_batch, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
 
-	void BlitCreature(RenderList& list, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
-	void BlitCreature(RenderList& list, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
+	void BlitCreature(RenderList& list, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
+	void BlitCreature(RenderList& list, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
+
+private:
+	SpriteDrawer* sprite_drawer;
 };
 
 #endif
