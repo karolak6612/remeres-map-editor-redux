@@ -364,10 +364,16 @@ bool Map::addSpawn(Tile* tile) {
 	Spawn* spawn = tile->spawn.get();
 	if (spawn) {
 		int z = tile->getZ();
-		int start_x = tile->getX() - spawn->getSize();
-		int start_y = tile->getY() - spawn->getSize();
-		int end_x = tile->getX() + spawn->getSize();
-		int end_y = tile->getY() + spawn->getSize();
+		int size = spawn->getSize();
+		long long start_x_l = static_cast<long long>(tile->getX()) - size;
+		long long start_y_l = static_cast<long long>(tile->getY()) - size;
+		long long end_x_l = static_cast<long long>(tile->getX()) + size;
+		long long end_y_l = static_cast<long long>(tile->getY()) + size;
+
+		int start_x = static_cast<int>(std::clamp(start_x_l, 0LL, static_cast<long long>(MAP_MAX_WIDTH)));
+		int start_y = static_cast<int>(std::clamp(start_y_l, 0LL, static_cast<long long>(MAP_MAX_HEIGHT)));
+		int end_x = static_cast<int>(std::clamp(end_x_l, 0LL, static_cast<long long>(MAP_MAX_WIDTH)));
+		int end_y = static_cast<int>(std::clamp(end_y_l, 0LL, static_cast<long long>(MAP_MAX_HEIGHT)));
 
 		for (int y = start_y; y <= end_y; ++y) {
 			for (int x = start_x; x <= end_x; ++x) {
@@ -386,10 +392,16 @@ void Map::removeSpawnInternal(Tile* tile) {
 	ASSERT(spawn);
 
 	int z = tile->getZ();
-	int start_x = tile->getX() - spawn->getSize();
-	int start_y = tile->getY() - spawn->getSize();
-	int end_x = tile->getX() + spawn->getSize();
-	int end_y = tile->getY() + spawn->getSize();
+	int size = spawn->getSize();
+	long long start_x_l = static_cast<long long>(tile->getX()) - size;
+	long long start_y_l = static_cast<long long>(tile->getY()) - size;
+	long long end_x_l = static_cast<long long>(tile->getX()) + size;
+	long long end_y_l = static_cast<long long>(tile->getY()) + size;
+
+	int start_x = static_cast<int>(std::clamp(start_x_l, 0LL, static_cast<long long>(MAP_MAX_WIDTH)));
+	int start_y = static_cast<int>(std::clamp(start_y_l, 0LL, static_cast<long long>(MAP_MAX_HEIGHT)));
+	int end_x = static_cast<int>(std::clamp(end_x_l, 0LL, static_cast<long long>(MAP_MAX_WIDTH)));
+	int end_y = static_cast<int>(std::clamp(end_y_l, 0LL, static_cast<long long>(MAP_MAX_HEIGHT)));
 
 	for (int y = start_y; y <= end_y; ++y) {
 		for (int x = start_x; x <= end_x; ++x) {

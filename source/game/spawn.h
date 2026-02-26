@@ -18,6 +18,11 @@
 #ifndef RME_SPAWN_H_
 #define RME_SPAWN_H_
 
+#include <algorithm>
+#include <memory>
+#include <set>
+#include <list>
+
 class Tile;
 
 class Spawn {
@@ -53,8 +58,7 @@ public:
 	}
 
 	void setSize(int newsize) {
-		ASSERT(size < 100);
-		size = newsize;
+		size = std::clamp(newsize, 1, 100);
 	}
 	int getSize() const {
 		return size;

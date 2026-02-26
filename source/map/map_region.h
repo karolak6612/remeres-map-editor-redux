@@ -120,7 +120,7 @@ public:
 class Floor {
 public:
 	Floor(int x, int y, int z);
-	std::array<TileLocation, MAP_LAYERS> locs;
+	std::array<TileLocation, SpatialHashGrid::TILES_PER_NODE> locs;
 };
 
 class MapNode {

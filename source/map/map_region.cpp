@@ -58,7 +58,7 @@ Floor::Floor(int sx, int sy, int z) {
 	sx = sx & ~3;
 	sy = sy & ~3;
 
-	for (int i : std::views::iota(0, MAP_LAYERS)) {
+	for (int i : std::views::iota(0, SpatialHashGrid::TILES_PER_NODE)) {
 		locs[i].position.x = sx + (i >> 2);
 		locs[i].position.y = sy + (i & 3);
 		locs[i].position.z = z;
