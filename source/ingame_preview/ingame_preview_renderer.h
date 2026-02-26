@@ -64,7 +64,7 @@ namespace IngamePreview {
 		std::unique_ptr<SpriteBatch> sprite_batch;
 		std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 		std::unique_ptr<LightBuffer> light_buffer;
-		std::shared_ptr<LightDrawer> light_drawer;
+		std::unique_ptr<LightDrawer> light_drawer;
 
 		// Drawers
 		std::unique_ptr<CreatureDrawer> creature_drawer;

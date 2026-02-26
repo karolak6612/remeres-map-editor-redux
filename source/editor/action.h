@@ -65,8 +65,8 @@ private:
 
 public:
 	explicit Change(std::unique_ptr<Tile> tile);
-	static Change* Create(House* house, const Position& where);
-	static Change* Create(Waypoint* wp, const Position& where);
+	static std::unique_ptr<Change> Create(House* house, const Position& where);
+	static std::unique_ptr<Change> Create(Waypoint* wp, const Position& where);
 	~Change();
 	void clear();
 

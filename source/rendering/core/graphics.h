@@ -60,10 +60,6 @@ public:
 	void updateTime();
 	GameSprite* getCreatureSprite(int id);
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
-	// Overload for compatibility with existing raw pointer calls (takes ownership)
-	void insertSprite(int id, Sprite* sprite) {
-		insertSprite(id, std::unique_ptr<Sprite>(sprite));
-	}
 
 	long getElapsedTime() const {
 		return animation_timer->getElapsedTime();
