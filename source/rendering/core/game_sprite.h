@@ -66,6 +66,10 @@ public:
 	Outfit outfit;
 };
 
+class Image;
+class NormalImage;
+class TemplateImage;
+
 class GameSprite : public Sprite {
 public:
 	GameSprite();
@@ -104,90 +108,14 @@ public:
 
 	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
 
+    // Exposed for NormalImage::clean to invalidate cache
+    void invalidateCache(const AtlasRegion* region);
+
 private:
 protected:
-	class Image;
-	class NormalImage;
-	class TemplateImage;
-
 	wxMemoryDC* getDC(SpriteSize size);
 	wxMemoryDC* getDC(SpriteSize size, const Outfit& outfit);
 	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
-
-	class Image {
-	public:
-		Image();
-		virtual ~Image() = default;
-
-		bool isGLLoaded = false;
-		mutable std::atomic<int64_t> lastaccess;
-		uint32_t generation_id = 0;
-
-		void visit() const;
-		virtual void clean(time_t time, int longevity);
-
-		virtual std::unique_ptr<uint8_t[]> getRGBData() = 0;
-		virtual std::unique_ptr<uint8_t[]> getRGBAData() = 0;
-
-		virtual bool isNormalImage() const {
-			return false;
-		}
-
-	protected:
-		// Helper to handle atlas interactions
-		const AtlasRegion* EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data = nullptr);
-	};
-
-	class NormalImage : public Image {
-	public:
-		NormalImage();
-		~NormalImage() override;
-
-		bool isNormalImage() const override {
-			return true;
-		}
-
-		const AtlasRegion* getAtlasRegion();
-
-		// We use the sprite id as key
-		uint32_t id;
-		const AtlasRegion* atlas_region;
-
-		// This contains the pixel data
-		uint16_t size;
-		std::unique_ptr<uint8_t[]> dump;
-
-		void clean(time_t time, int longevity) override;
-
-		std::unique_ptr<uint8_t[]> getRGBData() override;
-		std::unique_ptr<uint8_t[]> getRGBAData() override;
-
-		void fulfillPreload(std::unique_ptr<uint8_t[]> preloaded_data);
-
-		GameSprite* parent = nullptr;
-	};
-
-	class TemplateImage : public Image {
-	public:
-		TemplateImage(GameSprite* parent, int v, const Outfit& outfit);
-		~TemplateImage() override;
-
-		void clean(time_t time, int longevity) override;
-
-		virtual std::unique_ptr<uint8_t[]> getRGBData() override;
-		virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
-
-		const AtlasRegion* getAtlasRegion();
-		const AtlasRegion* atlas_region;
-
-		uint32_t texture_id; // Unique ID for AtlasManager key
-		GameSprite* parent;
-		int sprite_index;
-		uint8_t lookHead;
-		uint8_t lookBody;
-		uint8_t lookLegs;
-		uint8_t lookFeet;
-	};
 
 	uint32_t id;
 	std::unique_ptr<wxMemoryDC> dc[SPRITE_SIZE_COUNT];
@@ -258,6 +186,7 @@ public:
 	friend class TextureGarbageCollector;
 	friend class TooltipDrawer;
 	friend class SpritePreloader;
+    friend class NormalImage; // To access cached_default_region, though we are adding invalidateCache
 
 	// Exposed for fast-path rendering (BlitItem)
 	const AtlasRegion* getCachedDefaultRegion() const {
