@@ -171,10 +171,7 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y);
-						if (lighting_enabled) {
-							tile_renderer->AddLight(tile->location, view, options, *light_buffer);
-						}
+						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, lighting_enabled ? light_buffer.get() : nullptr, draw_x, draw_y);
 						// Add names of creatures on this floor
 						if (creature_name_drawer && z == camera_pos.z) {
 							if (tile->creature) {
@@ -219,7 +216,7 @@ namespace IngamePreview {
 			// while the map moves smoothly under it.
 			// So we DO NOT add offset_x/y to draw_x/y again.
 
-			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .animationPhase = animation_phase });
+			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .color = 0xFFFFFFFF, .animationPhase = animation_phase });
 
 			sprite_batch->end(*g_gui.gfx.getAtlasManager());
 		}

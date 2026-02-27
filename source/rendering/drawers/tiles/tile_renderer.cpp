@@ -152,7 +152,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, LightBuffer* light_buffer, int in_draw_x, int in_draw_y) {
 	if (!location) {
 		return;
 	}
@@ -204,6 +204,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	const ItemType* ground_it = nullptr;
 	if (tile->ground) {
 		ground_it = &g_items[tile->ground->getID()];
+		if (light_buffer && tile->ground->hasLight()) {
+			light_buffer->AddLight(map_x, map_y, map_z, tile->ground->getLight());
+		}
 	}
 
 	if (only_colors) {
@@ -289,6 +292,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
+				if (light_buffer && item->hasLight()) {
+					light_buffer->AddLight(map_x, map_y, map_z, item->getLight());
+				}
+
 				if (it.sprite) {
 					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
 					PreloadItem(tile, item.get(), it, &patterns);
@@ -358,30 +365,3 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 	}
 }
 
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile || !tile->hasLight()) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
-		}
-	}
-}
