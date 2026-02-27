@@ -22,9 +22,12 @@ SpritePreloader& SpritePreloader::get() {
 }
 
 SpritePreloader::SpritePreloader() : stopping(false) {
-	worker = std::jthread([this](std::stop_token stop_token) {
-		this->workerLoop(stop_token);
-	});
+	unsigned int num_threads = std::max(2u, std::min(8u, std::thread::hardware_concurrency()));
+	for (unsigned int i = 0; i < num_threads; ++i) {
+		workers.emplace_back([this](std::stop_token stop_token) {
+			this->workerLoop(stop_token);
+		});
+	}
 }
 
 SpritePreloader::~SpritePreloader() {
@@ -39,7 +42,9 @@ void SpritePreloader::shutdown() {
 		}
 		stopping = true;
 	}
-	worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+	for (auto& worker : workers) {
+		worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+	}
 	cv.notify_all();
 }
 

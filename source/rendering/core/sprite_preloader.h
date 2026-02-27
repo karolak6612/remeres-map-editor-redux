@@ -61,7 +61,7 @@ private:
 	std::mutex queue_mutex;
 	std::condition_variable cv;
 	bool stopping = false;
-	std::jthread worker;
+	std::vector<std::jthread> workers;
 
 	std::queue<Task> task_queue;
 	std::queue<Result> result_queue;
