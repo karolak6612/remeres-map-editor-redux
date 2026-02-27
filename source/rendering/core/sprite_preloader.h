@@ -24,6 +24,10 @@ public:
 	// This corresponds to the loop logic previously in collectTileSprites.
 	void preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame);
 
+	// Pushes any pending thread-local tasks to the main queue.
+	// Must be called at the end of the frame/draw pass.
+	void flushThreadLocal();
+
 	// Processes finished preload tasks and uploads data to the GPU.
 	// Should be called on the main thread.
 	void update();

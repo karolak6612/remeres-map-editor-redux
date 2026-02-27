@@ -14,6 +14,11 @@ namespace {
 		uint32_t id;
 		uint32_t generation_id;
 	};
+
+	// Thread-local buffer for batching tasks
+	// Access: Accessible by both preload() and flushThreadLocal() if they run on the same thread (which they do, the render thread)
+	// We make it static here so it's translation-unit visible, but since it's thread_local, it's unique per thread.
+	static thread_local std::vector<PendingTask> ids_to_enqueue;
 }
 
 SpritePreloader& SpritePreloader::get() {
@@ -60,15 +65,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		return;
 	}
 
-	// Capture global state once per preload call (one item)
-	const std::string& sprfile = g_gui.gfx.getSpriteFile();
-	const bool is_extended = g_gui.gfx.isExtended();
-	const bool has_transparency = g_gui.gfx.hasTransparency();
-
-	static thread_local std::vector<PendingTask> ids_to_enqueue;
-	ids_to_enqueue.clear();
-
-	// Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize allocations
+	// Reserve for typical sprite sizes to minimize allocations
 	if (ids_to_enqueue.capacity() < 64) {
 		ids_to_enqueue.reserve(64);
 	}
@@ -101,19 +98,36 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		}
 	}
 
-	if (!ids_to_enqueue.empty()) {
-		std::lock_guard<std::mutex> lock(queue_mutex);
-		if (task_queue.size() > MAX_QUEUE_SIZE) {
-			return; // Drop requests if queue is slammed
-		}
-
-		for (const auto& pending : ids_to_enqueue) {
-			if (pending_ids.insert(pending.id).second) {
-				task_queue.push({ pending.id, pending.generation_id, sprfile, is_extended, has_transparency });
-			}
-		}
-		cv.notify_all();
+	// Batch push if buffer is large enough
+	if (ids_to_enqueue.size() >= 64) {
+		flushThreadLocal();
 	}
+}
+
+void SpritePreloader::flushThreadLocal() {
+	if (ids_to_enqueue.empty()) {
+		return;
+	}
+
+	// Capture global state once per flush
+	// Note: We access global state here, assuming it hasn't changed mid-frame in a way that breaks this.
+	const std::string& sprfile = g_gui.gfx.getSpriteFile();
+	const bool is_extended = g_gui.gfx.isExtended();
+	const bool has_transparency = g_gui.gfx.hasTransparency();
+
+	std::lock_guard<std::mutex> lock(queue_mutex);
+	if (task_queue.size() > MAX_QUEUE_SIZE) {
+		ids_to_enqueue.clear(); // Drop tasks if queue is full
+		return;
+	}
+
+	for (const auto& pending : ids_to_enqueue) {
+		if (pending_ids.insert(pending.id).second) {
+			task_queue.push({ pending.id, pending.generation_id, sprfile, is_extended, has_transparency });
+		}
+	}
+	ids_to_enqueue.clear();
+	cv.notify_all();
 }
 
 void SpritePreloader::workerLoop(std::stop_token stop_token) {

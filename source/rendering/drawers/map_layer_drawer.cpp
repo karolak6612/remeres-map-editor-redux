@@ -108,11 +108,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 					continue;
 				}
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
-				// draw light, but only if not zoomed too far
-				if (draw_lights) {
-					tile_renderer->AddLight(location, view, options, light_buffer);
-				}
+				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y, draw_lights ? &light_buffer : nullptr);
 			}
 		}
 	};
@@ -140,4 +136,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			drawNode(nd, nd_map_x, nd_map_y, false);
 		});
 	}
+
+	// Flush any pending sprite preloads collected during this layer's draw
+	SpritePreloader::get().flushThreadLocal();
 }
