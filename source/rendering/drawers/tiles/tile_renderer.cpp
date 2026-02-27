@@ -152,7 +152,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
 	}
@@ -232,6 +232,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	// Collect light from ground
+	// Note: We check if tile->ground exists inside the branch, but `ground_it` check above implies tile->ground
+	if (light_buffer && options.isDrawLight()) {
+		if (tile->ground && tile->ground->hasLight()) {
+			const auto& position = location->getPosition();
+			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+		}
+	}
+
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
@@ -258,27 +267,37 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
 	}
 
-	if (!only_colors) {
-		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
-			// Hoist house color calculation out of item loop
-			uint8_t house_r = 255, house_g = 255, house_b = 255;
-			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
-			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
-			float boost = 0.0f;
+	// Check if we need to iterate items for rendering OR light collection
+	bool should_render_items = !only_colors && (view.zoom < 10.0 || !options.hide_items_when_zoomed);
+	bool collect_lights = (light_buffer != nullptr) && options.isDrawLight() && (!options.hide_items_when_zoomed || view.zoom <= 10.f);
 
-			if (calculate_house_color) {
-				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
-				if (should_pulse) {
-					boost = options.highlight_pulse * 0.6f;
-				}
+	if (should_render_items || collect_lights) {
+		// Hoist house color calculation out of item loop
+		uint8_t house_r = 255, house_g = 255, house_b = 255;
+		bool calculate_house_color = should_render_items && options.extended_house_shader && options.show_houses && tile->isHouseTile();
+		bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
+		float boost = 0.0f;
+
+		if (calculate_house_color) {
+			TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
+			if (should_pulse) {
+				boost = options.highlight_pulse * 0.6f;
+			}
+		}
+
+		bool process_tooltips = should_render_items && options.show_tooltips && map_z == view.floor;
+
+		// items on tile
+		for (const auto& item : tile->items) {
+			const ItemType& it = g_items[item->getID()];
+
+			// Collect light from item
+			if (collect_lights && item->hasLight()) {
+				const auto& position = location->getPosition();
+				light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
-
-			// items on tile
-			for (const auto& item : tile->items) {
-				const ItemType& it = g_items[item->getID()];
-
+			if (should_render_items) {
 				// item tooltip (one per item)
 				if (process_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
@@ -325,19 +344,20 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 			}
-			// monster/npc on tile
-			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
-				if (creature_name_drawer) {
-					creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
-				}
-			}
 		}
 
-		if (view.zoom < 10.0) {
-			// markers (waypoint, house exit, town temple, spawn)
-			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
+		// monster/npc on tile
+		if (should_render_items && tile->creature && options.show_creatures) {
+			creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
+			if (creature_name_drawer) {
+				creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
+			}
 		}
+	}
+
+	if (!only_colors && view.zoom < 10.0) {
+		// markers (waypoint, house exit, town temple, spawn)
+		marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
 	}
 }
 
@@ -355,33 +375,5 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		}
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
-	}
-}
-
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile || !tile->hasLight()) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
-		}
 	}
 }
