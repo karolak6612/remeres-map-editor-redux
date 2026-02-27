@@ -269,7 +269,21 @@ void Selection::addInternal(Tile* tile) {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
-			bounds_dirty = true;
+			if (!bounds_dirty) {
+				const Position& pos = tile->getPosition();
+				if (tiles.size() == 1) {
+					cached_min = pos;
+					cached_max = pos;
+				} else {
+					cached_min.x = std::min(cached_min.x, pos.x);
+					cached_min.y = std::min(cached_min.y, pos.y);
+					cached_min.z = std::min(cached_min.z, pos.z);
+
+					cached_max.x = std::max(cached_max.x, pos.x);
+					cached_max.y = std::max(cached_max.y, pos.y);
+					cached_max.z = std::max(cached_max.z, pos.z);
+				}
+			}
 		}
 	}
 }
@@ -282,7 +296,14 @@ void Selection::removeInternal(Tile* tile) {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
-			bounds_dirty = true;
+			if (!bounds_dirty) {
+				const Position& pos = tile->getPosition();
+				if (pos.x == cached_min.x || pos.x == cached_max.x ||
+				    pos.y == cached_min.y || pos.y == cached_max.y ||
+				    pos.z == cached_min.z || pos.z == cached_max.z) {
+					bounds_dirty = true;
+				}
+			}
 		}
 	}
 }
@@ -292,14 +313,24 @@ void Selection::flush() {
 		return;
 	}
 
-	bounds_dirty = true;
-
 	if (!pending_removes.empty()) {
 		std::ranges::sort(pending_removes, tilePositionLessThan);
 		auto [first, last] = std::ranges::unique(pending_removes, [](Tile* a, Tile* b) {
 			return a->getPosition() == b->getPosition();
 		});
 		pending_removes.erase(first, last);
+
+		if (!bounds_dirty) {
+			for (Tile* tile : pending_removes) {
+				const Position& pos = tile->getPosition();
+				if (pos.x == cached_min.x || pos.x == cached_max.x ||
+				    pos.y == cached_min.y || pos.y == cached_max.y ||
+				    pos.z == cached_min.z || pos.z == cached_max.z) {
+					bounds_dirty = true;
+					break;
+				}
+			}
+		}
 
 		std::vector<Tile*> result;
 		result.reserve(tiles.size());
@@ -313,6 +344,26 @@ void Selection::flush() {
 			return a->getPosition() == b->getPosition();
 		});
 		pending_adds.erase(first, last);
+
+		if (!bounds_dirty) {
+			bool is_empty = tiles.empty();
+			for (Tile* tile : pending_adds) {
+				const Position& pos = tile->getPosition();
+				if (is_empty) {
+					cached_min = pos;
+					cached_max = pos;
+					is_empty = false;
+				} else {
+					cached_min.x = std::min(cached_min.x, pos.x);
+					cached_min.y = std::min(cached_min.y, pos.y);
+					cached_min.z = std::min(cached_min.z, pos.z);
+
+					cached_max.x = std::max(cached_max.x, pos.x);
+					cached_max.y = std::max(cached_max.y, pos.y);
+					cached_max.z = std::max(cached_max.z, pos.z);
+				}
+			}
+		}
 
 		std::vector<Tile*> merged;
 		merged.reserve(tiles.size() + pending_adds.size());
@@ -341,7 +392,10 @@ void Selection::clear() {
 		});
 	}
 	tiles.clear();
-	bounds_dirty = true;
+
+	cached_min = Position(0, 0, 0);
+	cached_max = Position(0, 0, 0);
+	bounds_dirty = false;
 }
 
 void Selection::start(SessionFlags flags) {
