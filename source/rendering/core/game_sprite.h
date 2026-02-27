@@ -46,8 +46,8 @@ public:
 	virtual wxSize GetSize() const = 0;
 
 private:
-	Sprite(const Sprite&);
-	Sprite& operator=(const Sprite&);
+	Sprite(const Sprite&) = delete;
+	Sprite& operator=(const Sprite&) = delete;
 };
 
 class GameSprite;
@@ -120,6 +120,7 @@ protected:
 		virtual ~Image() = default;
 
 		bool isGLLoaded = false;
+		// std::atomic with relaxed memory ordering since it's only used for caching eviction heuristic
 		mutable std::atomic<int64_t> lastaccess;
 		uint32_t generation_id = 0;
 

@@ -57,6 +57,7 @@ enum : uint8_t {
 
 class Tile {
 public: // Members
+	// Raw back-pointer to the owner. Non-owning.
 	TileLocation* location;
 	std::unique_ptr<Item> ground;
 	std::vector<std::unique_ptr<Item>> items;
@@ -257,6 +258,7 @@ bool tilePositionLessThan(const Tile* a, const Tile* b);
 // This sorts them by draw order
 bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
 
+// Non-owning containers used to observe or reference tiles owned by Map (TileLocation)
 using TileVector = std::vector<Tile*>;
 using TileSet = std::vector<Tile*>;
 using TileList = std::list<Tile*>;
