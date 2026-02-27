@@ -22,6 +22,8 @@
 #include "ui/dcbutton.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
+#include "util/nvg_utils.h"
 
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -138,6 +140,9 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		size_y = 68;
 	}
 
+	size_x = FROM_DIP(this, size_x);
+	size_y = FROM_DIP(this, size_y);
+
 	// Background
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, 0, size_x, size_y);
@@ -162,18 +167,21 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 				imgSize = 64; // Not supported in original?
 			}
 
-			NVGpaint imgPaint = nvgImagePattern(vg, 2, 2, imgSize, imgSize, 0, tex, 1.0f);
+			imgSize = FROM_DIP(this, imgSize);
+			float padding = FROM_DIP(this, 2);
+
+			NVGpaint imgPaint = nvgImagePattern(vg, padding, padding, imgSize, imgSize, 0, tex, 1.0f);
 			nvgBeginPath(vg);
-			nvgRect(vg, 2, 2, imgSize, imgSize);
+			nvgRect(vg, padding, padding, imgSize, imgSize);
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 
 			if (overlay && type == DC_BTN_TOGGLE && GetValue()) {
 				int overlayTex = GetOrCreateSpriteTexture(vg, overlay);
 				if (overlayTex > 0) {
-					NVGpaint ovPaint = nvgImagePattern(vg, 2, 2, imgSize, imgSize, 0, overlayTex, 1.0f);
+					NVGpaint ovPaint = nvgImagePattern(vg, padding, padding, imgSize, imgSize, 0, overlayTex, 1.0f);
 					nvgBeginPath(vg);
-					nvgRect(vg, 2, 2, imgSize, imgSize);
+					nvgRect(vg, padding, padding, imgSize, imgSize);
 					nvgFillPaint(vg, ovPaint);
 					nvgFill(vg);
 				}
@@ -195,10 +203,10 @@ void DCButton::OnClick(wxMouseEvent& WXUNUSED(evt)) {
 }
 
 void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	NVGcolor dark_highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor light_shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Background));
 
 	nvgStrokeWidth(vg, 1.0f);
 
@@ -232,10 +240,10 @@ void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
 }
 
 void DCButton::DrawRaisedBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	NVGcolor dark_highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor light_shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Surface));
+	NVGcolor shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Background));
 
 	nvgStrokeWidth(vg, 1.0f);
 

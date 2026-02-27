@@ -26,7 +26,7 @@
 #include "util/image_manager.h"
 
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
-	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
+	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, FromDIP(wxSize(800, 600)), wxDEFAULT_DIALOG_STYLE),
 	input_timer(this),
 	result_brush(nullptr),
 	result_id(0),
@@ -185,7 +185,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
 	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
-	items_list->SetMinSize(wxSize(230, 512));
+	items_list->SetMinSize(FromDIP(wxSize(230, 512)));
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
 

@@ -248,8 +248,8 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 		if (s) {
 			// Center the sprite in the rect
 			// Assuming 32x32 icon size for now, which matches SPRITE_SIZE_32x32 (32x32)
-			int x_off = r.x + (r.width - 32) / 2;
-			int y_off = r.y + (r.height - 32) / 2;
+			int x_off = r.x + (r.width - FromDIP(32)) / 2;
+			int y_off = r.y + (r.height - FromDIP(32)) / 2;
 			s->DrawTo(&dc, SPRITE_SIZE_32x32, x_off, y_off);
 		} else {
 			// Fallback text/color if no sprite
@@ -326,8 +326,8 @@ void ToolOptionsSurface::DrawCheckbox(wxDC& dc, const wxRect& rect, const wxStri
 	// Checkmark (simple)
 	if (value) {
 		dc.SetPen(*wxWHITE_PEN);
-		dc.DrawLine(box.GetLeft() + 3, box.GetTop() + 7, box.GetLeft() + 6, box.GetTop() + 10);
-		dc.DrawLine(box.GetLeft() + 6, box.GetTop() + 10, box.GetRight() - 3, box.GetTop() + 4);
+		dc.DrawLine(box.GetLeft() + FromDIP(3), box.GetTop() + FromDIP(7), box.GetLeft() + FromDIP(6), box.GetTop() + FromDIP(10));
+		dc.DrawLine(box.GetLeft() + FromDIP(6), box.GetTop() + FromDIP(10), box.GetRight() - FromDIP(3), box.GetTop() + FromDIP(4));
 	}
 
 	// Label
