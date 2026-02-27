@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 
 #include "map/map.h"
@@ -107,7 +108,7 @@ Item* BrowseTileListBox::GetSelectedItem() {
 		return nullptr;
 	}
 
-	return edit_tile->getTopSelectedItem();
+	return TileOperations::getTopSelectedItem(edit_tile);
 }
 
 void BrowseTileListBox::RemoveSelected() {
@@ -119,7 +120,7 @@ void BrowseTileListBox::RemoveSelected() {
 	items.clear();
 
 	// Delete the items from the tile
-	auto tile_selection = edit_tile->popSelectedItems(true);
+	auto tile_selection = TileOperations::popSelectedItems(edit_tile, true);
 	// items are automatically deleted when tile_selection goes out of scope
 
 	UpdateItems();

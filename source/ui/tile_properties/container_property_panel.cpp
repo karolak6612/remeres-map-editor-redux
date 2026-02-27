@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/tile_properties/container_property_panel.h"
 #include "ui/properties/container_properties_window.h" // For ContainerItemButton
@@ -110,7 +111,7 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 	if (dialog.ShowModal() == wxID_OK) {
 		uint16_t item_id = dialog.getResultID();
 		if (item_id != 0) {
-			std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+			std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 			int index = current_tile->getIndexOf(current_item);
 			if (index != -1) {
 				Item* new_item_base = new_tile->getItemAt(index);
@@ -161,7 +162,7 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 	Item* sub_item = container->getItem(sub_item_index);
 
 	// Create a deep copy of the tile to edit items inside the container
-	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	int container_index = current_tile->getIndexOf(current_item);
 	if (container_index == -1) {
 		return;
@@ -218,7 +219,7 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	int index = current_tile->getIndexOf(current_item);
 	if (index != -1) {
 		Item* new_item_base = new_tile->getItemAt(index);

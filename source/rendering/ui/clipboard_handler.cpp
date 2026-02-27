@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "rendering/ui/clipboard_handler.h"
 #include "editor/editor.h"
@@ -103,7 +104,7 @@ void ClipboardHandler::copyServerId(const Selection& selection) {
 
 	if (wxTheClipboard->Open()) {
 		Tile* tile = selection.getSelectedTile();
-		ItemVector selected_items = tile->getSelectedItems();
+		ItemVector selected_items = TileOperations::getSelectedItems(tile, false);
 		ASSERT(selected_items.size() == 1);
 
 		const Item* item = selected_items.front();
@@ -121,7 +122,7 @@ void ClipboardHandler::copyClientId(const Selection& selection) {
 
 	if (wxTheClipboard->Open()) {
 		Tile* tile = selection.getSelectedTile();
-		ItemVector selected_items = tile->getSelectedItems();
+		ItemVector selected_items = TileOperations::getSelectedItems(tile, false);
 		ASSERT(selected_items.size() == 1);
 
 		const Item* item = selected_items.front();
@@ -139,7 +140,7 @@ void ClipboardHandler::copyName(const Selection& selection) {
 
 	if (wxTheClipboard->Open()) {
 		Tile* tile = selection.getSelectedTile();
-		ItemVector selected_items = tile->getSelectedItems();
+		ItemVector selected_items = TileOperations::getSelectedItems(tile, false);
 		ASSERT(selected_items.size() == 1);
 
 		const Item* item = selected_items.front();

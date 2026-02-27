@@ -1,3 +1,4 @@
+#include "map/tile_operations.h"
 #include "tile_serialization_otbm.h"
 
 #include "map/map.h"
@@ -114,7 +115,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 			}
 		}
 
-		tile->update();
+		TileOperations::update(tile);
 		if (house) {
 			house->addTile(tile);
 		}
