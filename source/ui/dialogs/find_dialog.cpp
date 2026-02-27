@@ -55,11 +55,11 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 
 	wxSizer* stdsizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
 	okBtn->SetToolTip("Jump to selected item/brush");
 	stdsizer->Add(okBtn, wxSizerFlags(1).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FromDIP(wxSize(16, 16))));
 	cancelBtn->SetToolTip("Close this window");
 	stdsizer->Add(cancelBtn, wxSizerFlags(1).Center());
 	sizer->Add(stdsizer, wxSizerFlags(0).Center().Border());
@@ -79,7 +79,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	// RefreshContents();
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, FromDIP(wxSize(32, 32))));
 	SetIcon(icon);
 }
 
