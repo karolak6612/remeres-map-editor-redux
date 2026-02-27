@@ -28,25 +28,30 @@
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
 #include <glad/glad.h>
+#include "ui/theme.h"
 #include <format>
 #include <nanovg.h>
 
 // ============================================================================
 //
 
-class BrowseTileListBox : public NanoVGListBox {
+class BrowseTileListBox : public NanoVGCanvas {
 public:
 	BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile);
 	~BrowseTileListBox();
 
-	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;
-	int OnMeasureItem(size_t index) const override;
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	void OnSize(wxSizeEvent& event);
+	void OnMouse(wxMouseEvent& event);
+
 	Item* GetSelectedItem();
 	void RemoveSelected();
 
-	void SetSelection(int index) override;
-	void Select(int index, bool select = true) override;
-	void ClearSelection() override;
+	void SetSelection(int index);
+	void ClearSelection();
+
+	int GetItemCount() const { return items.size(); }
+	int GetSelectedCount() const { return m_selection != -1 ? 1 : 0; }
 
 protected:
 	void UpdateItems();
@@ -54,11 +59,24 @@ protected:
 	using ItemsMap = std::vector<Item*>;
 	ItemsMap items;
 	Tile* edit_tile;
+
+	int m_selection = -1;
+	int m_columns = 1;
+	int m_item_width;
+	int m_item_height;
 };
 
 BrowseTileListBox::BrowseTileListBox(wxWindow* parent, wxWindowID id, Tile* tile) :
-	NanoVGListBox(parent, id, wxLB_SINGLE), edit_tile(tile) {
+	NanoVGCanvas(parent, id), edit_tile(tile) {
 	SetMinSize(FromDIP(wxSize(200, 180)));
+
+	m_item_width = FromDIP(80);
+	m_item_height = FromDIP(80);
+
+	Bind(wxEVT_SIZE, &BrowseTileListBox::OnSize, this);
+	Bind(wxEVT_LEFT_DOWN, &BrowseTileListBox::OnMouse, this);
+	Bind(wxEVT_LEFT_DCLICK, &BrowseTileListBox::OnMouse, this);
+
 	UpdateItems();
 }
 
@@ -66,44 +84,89 @@ BrowseTileListBox::~BrowseTileListBox() {
 	////
 }
 
-void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
-	Item* item = items[n];
+void BrowseTileListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	// NanoVGCanvas automatically translates by -GetScrollPosition() on Y axis
+	// so we don't need to manually translate it.
 
-	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
-	if (sprite) {
-		int tex = GetOrCreateSpriteTexture(vg, sprite);
-		if (tex > 0) {
-			int icon_size = 32;
-			NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+	for (size_t n = 0; n < items.size(); ++n) {
+		int col = n % m_columns;
+		int row = n / m_columns;
+		wxRect rect(col * m_item_width, row * m_item_height, m_item_width, m_item_height);
+
+		if (m_selection == n) {
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
 			nvgBeginPath(vg);
-			nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
-			nvgFillPaint(vg, imgPaint);
+			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 			nvgFill(vg);
 		}
-	}
 
-	if (IsSelected(n)) {
-		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+		Item* item = items[n];
+		Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
+		if (sprite) {
+			int tex = GetOrCreateSpriteTexture(vg, sprite);
+			if (tex > 0) {
+				int icon_size = 32;
+				int dx = rect.x + (rect.width - icon_size) / 2;
+				int dy = rect.y + FromDIP(8);
+				NVGpaint imgPaint = nvgImagePattern(vg, dx, dy, icon_size, icon_size, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, dx, dy, icon_size, icon_size);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
+		}
+
+		wxColour textColour = (m_selection == n) ? wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT) : Theme::Get(Theme::Role::Text);
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-	} else {
-		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
-		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+
+		std::string label = std::format("{} - {}", item->getID(), item->getName());
+
+		nvgFontSize(vg, 11.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+		nvgTextBox(vg, rect.x + FromDIP(4), rect.y + FromDIP(44), rect.width - FromDIP(8), label.c_str(), nullptr);
 	}
-
-	std::string label = std::format("{} - {}", item->getID(), item->getName());
-
-	nvgFontSize(vg, 12.0f);
-	nvgFontFace(vg, "sans");
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-	nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, label.c_str(), nullptr);
 }
 
-int BrowseTileListBox::OnMeasureItem(size_t n) const {
-	return FromDIP(32);
+void BrowseTileListBox::OnSize(wxSizeEvent& event) {
+	int width = GetClientSize().x;
+	m_columns = std::max(1, width / m_item_width);
+	int rows = std::ceil((float)items.size() / m_columns);
+	SetVirtualSize(wxSize(width, rows * m_item_height));
+	event.Skip();
+}
+
+void BrowseTileListBox::OnMouse(wxMouseEvent& event) {
+	if (event.LeftDown() || event.LeftDClick()) {
+		int x = event.GetX();
+		int y = event.GetY();
+
+		int scroll_y = GetScrollPosition();
+		y += scroll_y;
+
+		int col = x / m_item_width;
+		int row = y / m_item_height;
+		int index = row * m_columns + col;
+
+		if (col < m_columns && index < items.size()) {
+			SetSelection(index);
+			if (event.LeftDClick()) {
+				wxCommandEvent ev(wxEVT_BUTTON, wxID_FIND);
+				ev.SetEventObject(this);
+				ProcessWindowEvent(ev);
+			} else {
+				wxCommandEvent ev(wxEVT_LISTBOX, GetId());
+				ev.SetEventObject(this);
+				ev.SetInt(index);
+				ProcessWindowEvent(ev);
+			}
+		}
+	}
 }
 
 Item* BrowseTileListBox::GetSelectedItem() {
-	if (GetItemCount() == 0 || GetSelectedCount() == 0) {
+	if (items.empty() || m_selection == -1) {
 		return nullptr;
 	}
 
@@ -111,7 +174,7 @@ Item* BrowseTileListBox::GetSelectedItem() {
 }
 
 void BrowseTileListBox::RemoveSelected() {
-	if (GetItemCount() == 0 || GetSelectedCount() == 0) {
+	if (items.empty() || m_selection == -1) {
 		return;
 	}
 
@@ -130,28 +193,19 @@ void BrowseTileListBox::SetSelection(int index) {
 	if (m_selection != -1 && (size_t)m_selection < items.size()) {
 		items[m_selection]->deselect();
 	}
-	NanoVGListBox::SetSelection(index);
+	m_selection = index;
 	if (m_selection != -1 && (size_t)m_selection < items.size()) {
 		items[m_selection]->select();
 	}
-}
-
-void BrowseTileListBox::Select(int index, bool select) {
-	if (index >= 0 && (size_t)index < items.size()) {
-		if (select) {
-			items[index]->select();
-		} else {
-			items[index]->deselect();
-		}
-	}
-	NanoVGListBox::Select(index, select);
+	Refresh();
 }
 
 void BrowseTileListBox::ClearSelection() {
 	for (Item* item : items) {
 		item->deselect();
 	}
-	NanoVGListBox::ClearSelection();
+	m_selection = -1;
+	Refresh();
 }
 
 void BrowseTileListBox::UpdateItems() {
@@ -165,7 +219,12 @@ void BrowseTileListBox::UpdateItems() {
 		items.push_back(edit_tile->ground.get());
 	}
 
-	SetItemCount(items.size());
+	// Update Virtual Size
+	int width = GetClientSize().x;
+	m_columns = std::max(1, width / m_item_width);
+	int rows = std::ceil((float)items.size() / m_columns);
+	SetVirtualSize(wxSize(width, rows * m_item_height));
+	SetScrollStep(FromDIP(20));
 }
 
 // ============================================================================
@@ -173,51 +232,62 @@ void BrowseTileListBox::UpdateItems() {
 
 BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint position /* = wxDefaultPosition */) :
 	wxDialog(parent, wxID_ANY, "Browse Field", position, FROM_DIP(parent, wxSize(600, 400)), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
-	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
+	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
+	wxSizer* sizer = newd wxBoxSizer(wxHORIZONTAL);
+
 	item_list = newd BrowseTileListBox(this, wxID_ANY, tile);
-	sizer->Add(item_list, wxSizerFlags(1).Expand());
+	sizer->Add(item_list, wxSizerFlags(1).Expand().Border(wxRIGHT, 5));
 
 	wxString pos;
 	pos << "x=" << tile->getX() << ",  y=" << tile->getY() << ",  z=" << tile->getZ();
 
 	wxSizer* infoSizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxStaticBoxSizer* actionsBox = newd wxStaticBoxSizer(wxVERTICAL, this, "Actions");
 	wxBoxSizer* buttons = newd wxBoxSizer(wxHORIZONTAL);
-	delete_button = newd wxButton(this, wxID_REMOVE, "Delete");
+	delete_button = newd wxButton(actionsBox->GetStaticBox(), wxID_REMOVE, "Delete");
 	delete_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 	delete_button->SetToolTip("Delete selected item");
 	delete_button->Enable(false);
-	buttons->Add(delete_button);
-	buttons->AddSpacer(5);
-	select_raw_button = newd wxButton(this, wxID_FIND, "Select RAW");
+	buttons->Add(delete_button, wxSizerFlags(1).Expand().Border(wxRIGHT, 5));
+
+	select_raw_button = newd wxButton(actionsBox->GetStaticBox(), wxID_FIND, "Select RAW");
 	select_raw_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
 	select_raw_button->SetToolTip("Select this item in RAW palette");
 	select_raw_button->Enable(false);
-	buttons->Add(select_raw_button);
-	infoSizer->Add(buttons);
-	infoSizer->AddSpacer(5);
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left());
-	infoSizer->Add(item_count_txt = newd wxStaticText(this, wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Protection zone:  " + b2yn(tile->isPZ())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left());
+	buttons->Add(select_raw_button, wxSizerFlags(1).Expand());
+	actionsBox->Add(buttons, wxSizerFlags(1).Expand().Border(wxALL, 5));
+	infoSizer->Add(actionsBox, wxSizerFlags(0).Expand().Border(wxBOTTOM, 10));
 
-	sizer->Add(infoSizer, wxSizerFlags(0).Left().DoubleBorder());
+	wxStaticBoxSizer* tileInfoBox = newd wxStaticBoxSizer(wxVERTICAL, this, "Tile Information");
+	tileInfoBox->Add(newd wxStaticText(tileInfoBox->GetStaticBox(), wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left().Border(wxALL, 5));
+	tileInfoBox->Add(item_count_txt = newd wxStaticText(tileInfoBox->GetStaticBox(), wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left().Border(wxALL, 5));
+	infoSizer->Add(tileInfoBox, wxSizerFlags(0).Expand().Border(wxBOTTOM, 10));
+
+	wxStaticBoxSizer* flagsBox = newd wxStaticBoxSizer(wxVERTICAL, this, "Flags");
+	flagsBox->Add(newd wxStaticText(flagsBox->GetStaticBox(), wxID_ANY, "Protection zone:  " + b2yn(tile->isPZ())), wxSizerFlags(0).Left().Border(wxALL, 2));
+	flagsBox->Add(newd wxStaticText(flagsBox->GetStaticBox(), wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left().Border(wxALL, 2));
+	flagsBox->Add(newd wxStaticText(flagsBox->GetStaticBox(), wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left().Border(wxALL, 2));
+	flagsBox->Add(newd wxStaticText(flagsBox->GetStaticBox(), wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left().Border(wxALL, 2));
+	flagsBox->Add(newd wxStaticText(flagsBox->GetStaticBox(), wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left().Border(wxALL, 2));
+	infoSizer->Add(flagsBox, wxSizerFlags(0).Expand());
+
+	sizer->Add(infoSizer, wxSizerFlags(0).Expand().Border(wxALL, 5));
+	topSizer->Add(sizer, wxSizerFlags(1).Expand().Border(wxALL, 5));
 
 	// OK/Cancel buttons
 	wxSizer* btnSizer = newd wxBoxSizer(wxHORIZONTAL);
 	auto okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
 	okBtn->SetToolTip("Confirm selection");
-	btnSizer->Add(okBtn, wxSizerFlags(0).Center());
+	btnSizer->Add(okBtn, wxSizerFlags(0).Center().Border(wxRIGHT, 5));
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	cancelBtn->SetToolTip("Cancel");
 	btnSizer->Add(cancelBtn, wxSizerFlags(0).Center());
-	sizer->Add(btnSizer, wxSizerFlags(0).Center().DoubleBorder());
+	topSizer->Add(btnSizer, wxSizerFlags(0).Center().DoubleBorder());
 
-	SetSizerAndFit(sizer);
+	SetSizerAndFit(topSizer);
 
 	// Connect Events
 	item_list->Bind(wxEVT_LISTBOX, &BrowseTileWindow::OnItemSelected, this);

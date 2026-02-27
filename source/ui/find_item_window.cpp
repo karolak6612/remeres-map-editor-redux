@@ -24,6 +24,159 @@
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include "ui/theme.h"
+#include <format>
+#include <nanovg.h>
+
+FindItemGridCanvas::FindItemGridCanvas(wxWindow* parent, wxWindowID id) :
+	NanoVGCanvas(parent, id),
+	cleared(false),
+	no_matches(false) {
+
+	m_item_width = FromDIP(80);
+	m_item_height = FromDIP(80);
+
+	Bind(wxEVT_SIZE, &FindItemGridCanvas::OnSize, this);
+	Bind(wxEVT_LEFT_DOWN, &FindItemGridCanvas::OnMouse, this);
+	Bind(wxEVT_LEFT_DCLICK, &FindItemGridCanvas::OnMouse, this);
+
+	Clear();
+}
+
+FindItemGridCanvas::~FindItemGridCanvas() {}
+
+void FindItemGridCanvas::Clear() {
+	cleared = true;
+	no_matches = false;
+	brushlist.clear();
+	m_selection = -1;
+	Refresh();
+}
+
+void FindItemGridCanvas::SetNoMatches() {
+	cleared = false;
+	no_matches = true;
+	brushlist.clear();
+	m_selection = -1;
+	Refresh();
+}
+
+void FindItemGridCanvas::AddBrush(Brush* brush) {
+	cleared = false;
+	no_matches = false;
+	brushlist.push_back(brush);
+}
+
+Brush* FindItemGridCanvas::GetSelectedBrush() {
+	if (m_selection == -1 || no_matches || cleared || (size_t)m_selection >= brushlist.size()) {
+		return nullptr;
+	}
+	return brushlist[m_selection];
+}
+
+void FindItemGridCanvas::SetSelection(int index) {
+	m_selection = index;
+	Refresh();
+}
+
+void FindItemGridCanvas::OnSize(wxSizeEvent& event) {
+	int width = GetClientSize().x;
+	m_columns = std::max(1, width / m_item_width);
+	int items_count = no_matches || cleared ? 1 : brushlist.size();
+	int rows = std::ceil((float)items_count / m_columns);
+	SetVirtualSize(wxSize(width, rows * m_item_height));
+	SetScrollStep(FromDIP(20));
+	event.Skip();
+}
+
+void FindItemGridCanvas::OnMouse(wxMouseEvent& event) {
+	if (no_matches || cleared) {
+		return;
+	}
+
+	if (event.LeftDown() || event.LeftDClick()) {
+		int x = event.GetX();
+		int y = event.GetY();
+		int scroll_y = GetScrollPosition();
+		y += scroll_y;
+
+		int col = x / m_item_width;
+		int row = y / m_item_height;
+		int index = row * m_columns + col;
+
+		if (col < m_columns && index < (int)brushlist.size()) {
+			SetSelection(index);
+			if (event.LeftDClick()) {
+				// Send an OK command when double clicking
+				wxCommandEvent ev(wxEVT_BUTTON, wxID_OK);
+				ev.SetEventObject(this);
+				// we need to send it to the dialog
+				GetParent()->GetParent()->ProcessWindowEvent(ev);
+			} else {
+				// We don't really have listbox events, just refresh
+				Refresh();
+			}
+		}
+	}
+}
+
+void FindItemGridCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	wxColour textColour = Theme::Get(Theme::Role::Text);
+	if (no_matches) {
+		nvgFontSize(vg, 12.0f);
+		nvgFontFace(vg, "sans");
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgText(vg, FromDIP(4), FromDIP(16), "No matches.", nullptr);
+		return;
+	} else if (cleared) {
+		nvgFontSize(vg, 12.0f);
+		nvgFontFace(vg, "sans");
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgText(vg, FromDIP(4), FromDIP(16), "No results.", nullptr);
+		return;
+	}
+
+	for (size_t n = 0; n < brushlist.size(); ++n) {
+		int col = n % m_columns;
+		int row = n / m_columns;
+		wxRect rect(col * m_item_width, row * m_item_height, m_item_width, m_item_height);
+
+		if (m_selection == n) {
+			wxColour selColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHT);
+			nvgBeginPath(vg);
+			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+			nvgFillColor(vg, nvgRGBA(selColour.Red(), selColour.Green(), selColour.Blue(), 255));
+			nvgFill(vg);
+		}
+
+		Brush* brush = brushlist[n];
+		Sprite* sprite = g_gui.gfx.getSprite(brush->getLookID());
+		if (sprite) {
+			int tex = GetOrCreateSpriteTexture(vg, sprite);
+			if (tex > 0) {
+				int icon_size = 32;
+				int dx = rect.x + (rect.width - icon_size) / 2;
+				int dy = rect.y + FromDIP(8);
+				NVGpaint imgPaint = nvgImagePattern(vg, dx, dy, icon_size, icon_size, 0, tex, 1.0f);
+				nvgBeginPath(vg);
+				nvgRect(vg, dx, dy, icon_size, icon_size);
+				nvgFillPaint(vg, imgPaint);
+				nvgFill(vg);
+			}
+		}
+
+		wxColour txtCol = (m_selection == n) ? wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT) : textColour;
+		nvgFillColor(vg, nvgRGBA(txtCol.Red(), txtCol.Green(), txtCol.Blue(), 255));
+
+		std::string label = brush->getName();
+		nvgFontSize(vg, 11.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+		nvgTextBox(vg, rect.x + FromDIP(4), rect.y + FromDIP(44), rect.width - FromDIP(8), label.c_str(), nullptr);
+	}
+}
 
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
@@ -184,9 +337,9 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	// --------------- Items list ---------------
 
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
-	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
-	items_list->SetMinSize(wxSize(230, 512));
-	result_box_sizer->Add(items_list, 0, wxALL, 5);
+	items_list = newd FindItemGridCanvas(result_box_sizer->GetStaticBox(), wxID_ANY);
+	items_list->SetMinSize(FromDIP(wxSize(230, 512)));
+	result_box_sizer->Add(items_list, 1, wxEXPAND | wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
 
 	this->SetSizer(box_sizer);

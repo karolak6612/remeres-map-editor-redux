@@ -26,8 +26,38 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include "util/nanovg_canvas.h"
 
-class FindDialogListBox;
+class Brush;
+
+class FindItemGridCanvas : public NanoVGCanvas {
+public:
+	FindItemGridCanvas(wxWindow* parent, wxWindowID id);
+	~FindItemGridCanvas();
+
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	void OnSize(wxSizeEvent& event);
+	void OnMouse(wxMouseEvent& event);
+
+	void Clear();
+	void SetNoMatches();
+	void AddBrush(Brush* brush);
+
+	Brush* GetSelectedBrush();
+	void SetSelection(int index);
+
+	int GetItemCount() const { return brushlist.size(); }
+
+protected:
+	bool cleared;
+	bool no_matches;
+	std::vector<Brush*> brushlist;
+
+	int m_selection = -1;
+	int m_columns = 1;
+	int m_item_width;
+	int m_item_height;
+};
 
 class FindItemDialog : public wxDialog {
 public:
@@ -104,7 +134,7 @@ private:
 	wxCheckBox* floor_change;
 	wxCheckBox* invalid_item;
 
-	FindDialogListBox* items_list;
+	FindItemGridCanvas* items_list;
 	wxStdDialogButtonSizer* buttons_box_sizer;
 	wxButton* ok_button;
 	wxButton* cancel_button;
