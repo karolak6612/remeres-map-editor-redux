@@ -26,6 +26,7 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/gl_scoped_state.h"
+#include "rendering/core/shared_geometry.h"
 
 // GPULight struct moved to header
 
@@ -197,10 +198,10 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 				ScopedGLBlend blendState(GL_ONE, GL_ONE, GL_MAX); // Factors don't matter much for MAX, but usually 1,1 is safe
 
 				if (gpu_lights_.size() > static_cast<size_t>(std::numeric_limits<GLsizei>::max())) {
-					spdlog::error("Too many lights for glDrawArraysInstanced");
+					spdlog::error("Too many lights for glDrawElementsInstanced");
 					return;
 				}
-				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, static_cast<GLsizei>(gpu_lights_.size()));
+				glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(gpu_lights_.size()));
 			}
 
 			glBindVertexArray(0);
@@ -274,7 +275,7 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 		ScopedGLBlend blendState(GL_DST_COLOR, GL_ZERO);
 
 		glBindVertexArray(vao->GetID());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		glBindVertexArray(0);
 	}
 
@@ -374,20 +375,21 @@ void LightDrawer::initRenderResources() {
 	shader = std::make_unique<ShaderProgram>();
 	shader->Load(vs, fs);
 
-	float vertices[] = {
-		0.0f, 0.0f, // BL
-		1.0f, 0.0f, // BR
-		1.0f, 1.0f, // TR
-		0.0f, 1.0f // TL
-	};
-
 	vao = std::make_unique<GLVertexArray>();
-	vbo = std::make_unique<GLBuffer>();
 	light_ssbo = std::make_unique<GLBuffer>();
 
-	glNamedBufferData(vbo->GetID(), sizeof(vertices), vertices, GL_STATIC_DRAW);
+	// Initialize SharedGeometry if not already
+	if (!SharedGeometry::Instance().initialize()) {
+		spdlog::error("LightDrawer: Failed to initialize SharedGeometry");
+		return;
+	}
 
-	glVertexArrayVertexBuffer(vao->GetID(), 0, vbo->GetID(), 0, 2 * sizeof(float));
+	GLuint shared_vbo = SharedGeometry::Instance().getQuadVBO();
+	GLuint shared_ebo = SharedGeometry::Instance().getQuadEBO();
+
+	// Bind shared VBO and EBO
+	glVertexArrayVertexBuffer(vao->GetID(), 0, shared_vbo, 0, 4 * sizeof(float));
+	glVertexArrayElementBuffer(vao->GetID(), shared_ebo);
 
 	glEnableVertexArrayAttrib(vao->GetID(), 0);
 	glVertexArrayAttribFormat(vao->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);
