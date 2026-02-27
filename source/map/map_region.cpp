@@ -26,6 +26,9 @@
 #include "map/position.h"
 #include "map/tile.h"
 #include "map/spatial_hash_grid.h"
+#include <atomic>
+
+static std::atomic<uint64_t> global_grid_instance_counter = 0;
 
 //**************** Tile Location **********************
 
@@ -262,7 +265,7 @@ SpatialHashGrid::GridCell::~GridCell() {
 }
 
 SpatialHashGrid::SpatialHashGrid(BaseMap& map) : map(map), sorted_cells_dirty(false) {
-	//
+	instance_id = ++global_grid_instance_counter;
 }
 
 SpatialHashGrid::~SpatialHashGrid() {
@@ -273,16 +276,20 @@ void SpatialHashGrid::clear() {
 	cells.clear();
 	sorted_cells_cache.clear();
 	sorted_cells_dirty = false;
-	last_key = 0;
-	last_cell = nullptr;
+	generation_id++;
 }
 
 MapNode* SpatialHashGrid::getLeaf(int x, int y) {
+	static thread_local uint64_t tl_last_instance_id = 0;
+	static thread_local uint32_t tl_last_gen = 0;
+	static thread_local uint64_t tl_last_key = 0;
+	static thread_local GridCell* tl_last_cell = nullptr;
+
 	uint64_t key = makeKey(x, y);
-	if (key == last_key && last_cell) {
+	if (tl_last_instance_id == instance_id && tl_last_gen == generation_id && key == tl_last_key && tl_last_cell) {
 		int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 		int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-		return last_cell->nodes[ny * NODES_PER_CELL + nx].get();
+		return tl_last_cell->nodes[ny * NODES_PER_CELL + nx].get();
 	}
 
 	auto it = cells.find(key);
@@ -290,12 +297,14 @@ MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 		return nullptr;
 	}
 
-	last_key = key;
-	last_cell = it->second.get();
+	tl_last_instance_id = instance_id;
+	tl_last_gen = generation_id;
+	tl_last_key = key;
+	tl_last_cell = it->second.get();
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-	return last_cell->nodes[ny * NODES_PER_CELL + nx].get();
+	return tl_last_cell->nodes[ny * NODES_PER_CELL + nx].get();
 }
 
 const MapNode* SpatialHashGrid::getLeaf(int x, int y) const {
@@ -311,12 +320,17 @@ const MapNode* SpatialHashGrid::getLeaf(int x, int y) const {
 }
 
 MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
+	static thread_local uint64_t tl_last_instance_id = 0;
+	static thread_local uint32_t tl_last_gen = 0;
+	static thread_local uint64_t tl_last_key = 0;
+	static thread_local GridCell* tl_last_cell = nullptr;
+
 	uint64_t key = makeKey(x, y);
 
-	if (key == last_key && last_cell) {
+	if (tl_last_instance_id == instance_id && tl_last_gen == generation_id && key == tl_last_key && tl_last_cell) {
 		int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 		int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-		auto& node = last_cell->nodes[ny * NODES_PER_CELL + nx];
+		auto& node = tl_last_cell->nodes[ny * NODES_PER_CELL + nx];
 		if (!node) {
 			node = std::make_unique<MapNode>(map);
 		}
@@ -329,12 +343,14 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 		sorted_cells_dirty = true;
 	}
 
-	last_key = key;
-	last_cell = cell.get();
+	tl_last_instance_id = instance_id;
+	tl_last_gen = generation_id;
+	tl_last_key = key;
+	tl_last_cell = cell.get();
 
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
-	auto& node = last_cell->nodes[ny * NODES_PER_CELL + nx];
+	auto& node = tl_last_cell->nodes[ny * NODES_PER_CELL + nx];
 	if (!node) {
 		node = std::make_unique<MapNode>(map);
 	}
