@@ -45,7 +45,7 @@ namespace {
 // ============================================================================
 
 OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current_outfit) :
-	wxDialog(parent, wxID_ANY, "Customise Character", wxDefaultPosition, wxSize(1200, 850), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
+	wxDialog(parent, wxID_ANY, "Customise Character", wxDefaultPosition, FromDIP(wxSize(1200, 850)), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
 	current_outfit(current_outfit),
 	current_speed(220),
 	current_name("You"),
@@ -154,7 +154,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 
 	col1_sizer->Add(check_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT, 8);
 
-	wxFlexGridSizer* text_fields = new wxFlexGridSizer(2, 2, 4, 8);
+	wxFlexGridSizer* text_fields = new wxFlexGridSizer(2, FromDIP(4), FromDIP(8));
 	text_fields->Add(new wxStaticText(this, wxID_ANY, "Speed:"), 0, wxALIGN_CENTER_VERTICAL);
 	speed_ctrl = new wxSpinCtrl(this, ID_SPEED, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 50, 3000, current_speed);
 	text_fields->Add(speed_ctrl, 1, wxEXPAND);

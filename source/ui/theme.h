@@ -18,6 +18,8 @@ public:
 		Border, // Outline/Separator colors
 		Selected, // Selection fill
 		Error, // Warning/Error states
+		Success, // Success states (Green)
+		Warning, // Warning states (Yellow/Orange)
 		CardBase, // Rule card background
 		CardBaseHover, // Rule card hover background
 		CardBorder, // Rule card default border

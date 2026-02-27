@@ -51,6 +51,10 @@ wxColour Theme::GetDark(Role role) {
 			return wxColour(0, 120, 215, 60); // Alpha translucency
 		case Role::Error:
 			return wxColour(200, 50, 50);
+		case Role::Success:
+			return wxColour(40, 180, 40);
+		case Role::Warning:
+			return wxColour(255, 165, 0);
 		case Role::CardBase:
 			return wxColour(50, 50, 55);
 		case Role::CardBaseHover:
@@ -117,6 +121,10 @@ wxColour Theme::GetLight(Role role) {
 			return wxColour(0, 120, 215, 60);
 		case Role::Error:
 			return wxColour(200, 0, 0);
+		case Role::Success:
+			return wxColour(0, 180, 0);
+		case Role::Warning:
+			return wxColour(255, 140, 0);
 		case Role::CardBase:
 			return *wxWHITE;
 		case Role::CardBaseHover:

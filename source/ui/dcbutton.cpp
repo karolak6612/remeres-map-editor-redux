@@ -22,6 +22,7 @@
 #include "ui/dcbutton.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
 
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -141,7 +142,8 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// Background
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, 0, size_x, size_y);
-	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	wxColour bg = Theme::Get(Theme::Role::Surface);
+	nvgFillColor(vg, nvgRGBA(bg.Red(), bg.Green(), bg.Blue(), 255));
 	nvgFill(vg);
 
 	if (type == DC_BTN_TOGGLE && GetValue()) {
@@ -195,10 +197,17 @@ void DCButton::OnClick(wxMouseEvent& WXUNUSED(evt)) {
 }
 
 void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	// Use Theme Colors and derived shades for 3D effect
+	wxColour base = Theme::Get(Theme::Role::Surface);
+	wxColour shadowCol = base.ChangeLightness(50);
+	wxColour highlightCol = base.ChangeLightness(150);
+	wxColour lightShadowCol = base.ChangeLightness(80);
+	wxColour darkHighlightCol = base.ChangeLightness(120);
+
+	NVGcolor shadow = nvgRGBA(shadowCol.Red(), shadowCol.Green(), shadowCol.Blue(), 255);
+	NVGcolor highlight = nvgRGBA(highlightCol.Red(), highlightCol.Green(), highlightCol.Blue(), 255);
+	NVGcolor light_shadow = nvgRGBA(lightShadowCol.Red(), lightShadowCol.Green(), lightShadowCol.Blue(), 255);
+	NVGcolor dark_highlight = nvgRGBA(darkHighlightCol.Red(), darkHighlightCol.Green(), darkHighlightCol.Blue(), 255);
 
 	nvgStrokeWidth(vg, 1.0f);
 
@@ -232,10 +241,17 @@ void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
 }
 
 void DCButton::DrawRaisedBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	// Use Theme Colors and derived shades for 3D effect
+	wxColour base = Theme::Get(Theme::Role::Surface);
+	wxColour shadowCol = base.ChangeLightness(50);
+	wxColour highlightCol = base.ChangeLightness(150);
+	wxColour lightShadowCol = base.ChangeLightness(80);
+	wxColour darkHighlightCol = base.ChangeLightness(120);
+
+	NVGcolor shadow = nvgRGBA(shadowCol.Red(), shadowCol.Green(), shadowCol.Blue(), 255);
+	NVGcolor highlight = nvgRGBA(highlightCol.Red(), highlightCol.Green(), highlightCol.Blue(), 255);
+	NVGcolor light_shadow = nvgRGBA(lightShadowCol.Red(), lightShadowCol.Green(), lightShadowCol.Blue(), 255);
+	NVGcolor dark_highlight = nvgRGBA(darkHighlightCol.Red(), darkHighlightCol.Green(), darkHighlightCol.Blue(), 255);
 
 	nvgStrokeWidth(vg, 1.0f);
 

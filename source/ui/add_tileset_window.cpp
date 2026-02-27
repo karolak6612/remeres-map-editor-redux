@@ -59,7 +59,7 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 
 	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, description);
 
-	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, FromDIP(10), FromDIP(10));
 	subsizer->AddGrowableCol(1);
 
 	uint16_t itemId = 0;

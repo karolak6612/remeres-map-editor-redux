@@ -105,7 +105,7 @@ void PropertiesWindow::Update() {
 
 wxWindow* PropertiesWindow::createGeneralPanel(wxWindow* parent) {
 	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_GENERAL_TAB);
-	wxFlexGridSizer* gridsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* gridsizer = newd wxFlexGridSizer(2, FromDIP(10), FromDIP(10));
 	gridsizer->AddGrowableCol(1);
 
 	createGeneralFields(gridsizer, panel);

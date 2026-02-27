@@ -77,11 +77,11 @@ private:
 
 		// Draw Inner Highlight/Shadow for 3D effect
 		if (!m_pressed) {
-			dc.SetPen(wxPen(wxColour(255, 255, 255))); // Highlight top/left
+			dc.SetPen(wxPen(Theme::Get(Theme::Role::Surface).ChangeLightness(150))); // Highlight top/left
 			dc.DrawLine(1, 1, sz.x - 1, 1);
 			dc.DrawLine(1, 1, 1, sz.y - 1);
 
-			dc.SetPen(wxPen(wxColour(0, 0, 0))); // Shadow bottom/right
+			dc.SetPen(wxPen(Theme::Get(Theme::Role::Surface).ChangeLightness(50))); // Shadow bottom/right
 			dc.DrawLine(1, sz.y - 2, sz.x - 1, sz.y - 2);
 			dc.DrawLine(sz.x - 2, 1, sz.x - 2, sz.y - 2);
 		}
@@ -448,7 +448,7 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", ICON_CHECK);
 	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", ICON_FOLDER);
 	col4->GetSizer()->Add(new wxStaticLine(col4), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, wxColour(0, 200, 0));
+	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, Theme::Get(Theme::Role::Success));
 	contentSizer->Add(col4, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 4
 
 	// Column 5: Available Clients

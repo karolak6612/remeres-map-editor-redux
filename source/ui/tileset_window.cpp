@@ -54,7 +54,7 @@ TilesetWindow::TilesetWindow(wxWindow* win_parent, const Map* map, const Tile* t
 	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, description);
 	wxWindow* boxParent = boxsizer->GetStaticBox();
 
-	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, FromDIP(10), FromDIP(10));
 	subsizer->AddGrowableCol(1);
 
 	subsizer->Add(newd wxStaticText(boxParent, wxID_ANY, "ID " + i2ws(item->getID())));
