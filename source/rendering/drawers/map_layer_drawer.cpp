@@ -59,16 +59,6 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
-	// ND visibility
-	auto collectSpriteWithPattern = [&](GameSprite* spr, int tx, int ty) {
-		if (spr && !spr->isSimpleAndLoaded()) {
-			int pattern_x = (spr->pattern_x > 1) ? tx % spr->pattern_x : 0;
-			int pattern_y = (spr->pattern_y > 1) ? ty % spr->pattern_y : 0;
-			int pattern_z = (spr->pattern_z > 1) ? map_z % spr->pattern_z : 0;
-			rme::collectTileSprites(spr, pattern_x, pattern_y, pattern_z, 0);
-		}
-	};
-
 	// Common lambda to draw a node
 	auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
 		int node_draw_x = nd_map_x * TILE_SIZE + base_screen_x;
@@ -108,7 +98,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 					continue;
 				}
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y);
+				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y, false);
 				// draw light, but only if not zoomed too far
 				if (draw_lights) {
 					tile_renderer->AddLight(location, view, options, light_buffer);

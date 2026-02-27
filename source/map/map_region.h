@@ -121,6 +121,7 @@ class Floor {
 public:
 	Floor(int x, int y, int z);
 	std::array<TileLocation, MAP_LAYERS> locs;
+	mutable bool is_render_dirty = true;
 };
 
 class MapNode {

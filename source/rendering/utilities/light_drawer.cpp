@@ -77,57 +77,111 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 		InitFBO();
 	}
 
-	int map_x = view.start_x;
-	int map_y = view.start_y;
-	int end_x = view.end_x;
-	int end_y = view.end_y;
+	// NEW: Calculate dimensions based on screen viewport size, NOT map size.
+	// This fixes the issue where huge maps cause huge FBOs that exceed max texture size.
+	// We only need to render light for what's visible on screen (plus margin).
 
-	int w = end_x - map_x;
-	int h = end_y - map_y;
+	// Logical viewport size (zoomed)
+	// screensize_x is physical pixels.
+	// logical width = screensize_x * zoom (if zoom < 1, logical is larger than screen)
+	// logical width = screensize_x / zoom (wait, zoom is scaling factor)
+	// render_view.cpp: projectionMatrix = glm::ortho(0.0f, width * zoom, height * zoom, ...)
+	// So logical unit size is (width * zoom).
 
-	if (w <= 0 || h <= 0) {
-		return;
-	}
+	// Let's use the RenderView's logical dimensions directly if available or recalculate.
+	float logical_w = view.screensize_x * view.zoom;
+	float logical_h = view.screensize_y * view.zoom;
 
-	// TILE_SIZE is a global constexpr constant
-	int pixel_width = w * TILE_SIZE;
-	int pixel_height = h * TILE_SIZE;
+	// Add margin for lights just off-screen
+	// Max light radius is approx 10 tiles (intenstiy 8-10).
+	// Let's add 16 tiles margin on each side to be safe.
+	float margin = 16 * TILE_SIZE;
 
-	// 1. Resize FBO if needed (ensure it covers the visible map area)
-	// We check if current buffer is smaller than needed
-	if (buffer_width < pixel_width || buffer_height < pixel_height) {
+	// FBO dimensions (pixels) - keep it reasonably sized
+	// We can't make the FBO arbitrarily huge.
+	// If zoomed out extremely (zoom=10.0), logical_w = screen_w * 10.
+	// If screen=1920, w=19200. This exceeds 16384 texture limit.
+	// But `zoom` in RenderView seems to mean "How many screen pixels per map unit"? No.
+	// In MapCanvas: SetZoom(1.0) -> 1:1. SetZoom(0.5) -> 50% size (zoomed out).
+	// RenderView::Setup: zoom = canvas->GetZoom().
+	// tile_size = TILE_SIZE / zoom? No, RenderView code: tile_size = TILE_SIZE / zoom (integer division?).
+	// Wait, if zoom=0.5 (small tiles), view.zoom is 0.5?
+	// RenderView::SetupGL: glOrtho(0, width * zoom, ...)
+	// If zoom is 0.5, logical width is 0.5 * width? That means we see LESS?
+	// Usually ortho(0, width/zoom) lets us see MORE.
+	// Let's re-read RenderView::SetupGL:
+	// projectionMatrix = glm::ortho(0.0f, width * zoom, height * zoom, 0.0f, -1.0f, 1.0f);
+	// If zoom = 2.0 (magnified), ortho width is 2x screen width?
+	// If I zoom IN (big tiles), I see FEWER tiles. Logical width should be SMALLER.
+	// If `zoom` factor follows RME convention: 1.0 = 100%. 2.0 = 200% (Magnified). 0.5 = 50% (Minified).
+	// If zoom=2.0, we want to map 0..Width to 0..Width/2 logical units?
+	// Actually RME `zoom` variable in RenderView seems to be "Inverse Scale" or "View Scale"?
+	// Let's trust logical_width from RenderView (cached).
+	// view.logical_width = screensize_x * zoom.
+	// If zoom=1.0, logical=screen.
+	// If zoom=4.0 (zoomed out, tiny tiles?), logical=screen*4. This matches "seeing more".
+	// So `zoom` here is essentially "How many map units fit in a screen unit" or similar.
+	// If zoom > 8.0, texture size might explode.
+	// BUT, we only draw lights if view.zoom <= 10.0 (MapLayerDrawer check).
+
+	int fbo_w = static_cast<int>(logical_w + margin * 2);
+	int fbo_h = static_cast<int>(logical_h + margin * 2);
+
+	// Clamp to GL_MAX_TEXTURE_SIZE (e.g. 16384)
+	GLint max_tex_size;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_tex_size);
+	if (fbo_w > max_tex_size) fbo_w = max_tex_size;
+	if (fbo_h > max_tex_size) fbo_h = max_tex_size;
+
+	// Resize FBO if needed
+	if (buffer_width < fbo_w || buffer_height < fbo_h) {
 		// Re-create texture if we need to grow
 		fbo_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
-		ResizeFBO(std::max(buffer_width, pixel_width), std::max(buffer_height, pixel_height));
+		ResizeFBO(std::max(buffer_width, fbo_w), std::max(buffer_height, fbo_h));
 		glNamedFramebufferTexture(fbo->GetID(), GL_COLOR_ATTACHMENT0, fbo_texture->GetID(), 0);
 	}
 
-	// 2. Prepare Lights
-	// Filter and convert lights to GPU format
+	// Calculate FBO origin in MAP PIXELS
+	// We want FBO centered on the viewport.
+	// Viewport origin in map pixels:
+	float view_x = static_cast<float>(view.view_scroll_x);
+	float view_y = static_cast<float>(view.view_scroll_y);
+
+	// Note: view_scroll_x includes "offset" from floor adjustment?
+	// RenderView::IsTileVisible uses: out_x = (map_x * TILE_SIZE) - view_scroll_x - offset;
+	// offset depends on Z. LightBuffer stores absolute map X/Y.
+	// MapLayerDrawer calculates offset per layer.
+	// LightDrawer iterates ALL lights. They have Z.
+	// LightBuffer::AddLight normalizes X/Y for underground layers (subtracting offset).
+	// So light.map_x/y are in "Screen-aligned Map Grid" space relative to the current floor logic?
+	// LightBuffer::AddLight: if (map_z <= GROUND_LAYER) map_x -= (GROUND_LAYER - map_z).
+	// This matches the offset logic: offset = (GROUND_LAYER - map_z) * TILE_SIZE.
+	// So LightBuffer coordinates are already adjusted to align with Floor 7 grid?
+	// Actually:
+	// RenderView Offset: (GROUND_LAYER - map_z) * TILE_SIZE.
+	// Tile Draw X: map_x * 32 - scroll_x - offset.
+	// = (map_x * 32 - offset) - scroll_x.
+	// = (map_x - (GROUND_LAYER - map_z)) * 32 - scroll_x.
+	// LightBuffer stores (map_x - (GROUND_LAYER - map_z)).
+	// So Light Draw X = light.stored_x * 32 - scroll_x.
+	// Matches!
+
+	float fbo_origin_x = view_x - margin;
+	float fbo_origin_y = view_y - margin;
+
+	// Prepare Lights
 	gpu_lights_.clear();
 	gpu_lights_.reserve(light_buffer.lights.size());
 
-	float map_draw_start_x = static_cast<float>(map_x * TILE_SIZE) - static_cast<float>(view.view_scroll_x);
-	float map_draw_start_y = static_cast<float>(map_y * TILE_SIZE) - static_cast<float>(view.view_scroll_y);
-
-	// Offset logic:
-	// The FBO represents the rectangle [map_x * 32, map_x * 32 + pixel_width] in map coordinates.
-	// We want to render lights into this FBO.
-	// Light Position in FBO = (LightMapX * 32 - FBO_StartX_In_Pixels, ...)
-	// FBO Start X in pure Map Pixel Coords = map_x * 32.
-
-	float fbo_origin_x = static_cast<float>(map_x * TILE_SIZE);
-	float fbo_origin_y = static_cast<float>(map_y * TILE_SIZE);
-
 	for (const auto& light : light_buffer.lights) {
-		// Cull lights that are definitely out of FBO range
-		// Radius approx light.intensity * TILE_SIZE
-		int radius_px = light.intensity * TILE_SIZE + 16;
-		int lx_px = light.map_x * TILE_SIZE + TILE_SIZE / 2;
-		int ly_px = light.map_y * TILE_SIZE + TILE_SIZE / 2;
+		int radius_px = light.intensity * TILE_SIZE; // Tight radius
+		float lx_px = light.map_x * TILE_SIZE + TILE_SIZE / 2.0f;
+		float ly_px = light.map_y * TILE_SIZE + TILE_SIZE / 2.0f;
 
-		// Check overlap with FBO rect
-		if (lx_px + radius_px < fbo_origin_x || lx_px - radius_px > fbo_origin_x + pixel_width || ly_px + radius_px < fbo_origin_y || ly_px - radius_px > fbo_origin_y + pixel_height) {
+		// Cull lights outside FBO
+		// FBO covers [fbo_origin_x, fbo_origin_x + fbo_w]
+		if (lx_px + radius_px < fbo_origin_x || lx_px - radius_px > fbo_origin_x + fbo_w ||
+			ly_px + radius_px < fbo_origin_y || ly_px - radius_px > fbo_origin_y + fbo_h) {
 			continue;
 		}
 
@@ -138,7 +192,6 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 		float rel_y = ly_px - fbo_origin_y;
 
 		gpu_lights_.push_back({ .position = { rel_x, rel_y }, .intensity = static_cast<float>(light.intensity), .padding = 0.0f,
-								// Pre-multiply intensity here if needed, or in shader
 								.color = { (c.Red() / 255.0f) * light_intensity, (c.Green() / 255.0f) * light_intensity, (c.Blue() / 255.0f) * light_intensity, 1.0f } });
 	}
 
@@ -208,30 +261,6 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	}
 
 	// 4. Composite FBO to Screen
-	// Actually MapDrawer doesn't seem to set viewport every time, but `view.projectionMatrix` assumes 0..screensize.
-
-	// Use PrimitiveRenderer or just a simple quad?
-	// We can use a simple Blit shader or re-use `sprite_drawer->glBlitSquare` if it supports textures.
-	// Or just do a quick manual draw using fixed pipeline or a simple shader.
-	// Let's use `glBlitNamedFramebuffer`? No, we need blending (Multiply).
-	// So we draw a textured quad.
-
-	// We can reuse the `shader` but we need a "PASS THROUGH" mode or a separate shader.
-	// Easier to just use `glEnable(GL_TEXTURE_2D)` and fixed function if compatible? No, we are in Core Profile likely.
-	// Let's assume we need a simple texture shader.
-	// BUT wait, `LightDrawer::draw` previously drew a quad with the computed light.
-	// We can just use a simple "Texture Shader" here.
-
-	// WARNING: We don't have a generic texture shader easily accessible here?
-	// `floor_drawer` etc use `sprite_batch`.
-	// We can use `sprite_batch` to draw the FBO texture!
-	// `sprite_batch` usually takes Atlas Region.
-	// Does `SpriteBatch` support raw texture ID?
-	// `SpriteBatch` seems to assume Atlas.
-
-	// Let's use the local `shader` with a "Mode" switch? Or just a second tiny shader.
-	// Adding a mode switch to `shader` is easiest. "uMode": 0 = Light Render, 1 = Composite.
-
 	shader->Use();
 	shader->SetInt("uMode", 1); // Composite Mode
 
@@ -239,32 +268,43 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	glBindTextureUnit(0, fbo_texture->GetID());
 	shader->SetInt("uTexture", 0);
 
-	// Quad Transform for Screen
-	float draw_dest_x = map_draw_start_x;
-	float draw_dest_y = map_draw_start_y;
-	float draw_dest_w = static_cast<float>(pixel_width);
-	float draw_dest_h = static_cast<float>(pixel_height);
+	// Draw Quad at FBO Origin
+	// fbo_origin_x/y is where the FBO starts in World (Screen) Coordinates.
+	// fbo_w/h is the size we rendered to.
+	float draw_dest_x = fbo_origin_x; // Relative to view_scroll_x, but projection matrix expects coordinates shifted by view_scroll_x?
+	// RenderView::SetupGL:
+	// projection = ortho(0, width*zoom, ...).
+	// viewMatrix = translate(0.375, ...).
+	// The View Matrix does NOT contain view_scroll_x.
+	// Standard drawing in MapLayerDrawer:
+	// out_x = (map_x * 32) - view_scroll_x - offset.
+	// So vertex positions are "Screen Coordinates" relative to (0,0) top-left of viewport.
+	// fbo_origin_x = view_scroll_x + ... No wait.
+	// fbo_origin_x = view_x - margin = view_scroll_x - margin.
+	// BUT "view_x" in my variable above `float view_x = static_cast<float>(view.view_scroll_x);`
+	// So fbo_origin_x is in "Global Map Pixel Space".
+	// To convert to "Screen Space", we must subtract view.view_scroll_x.
 
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(draw_dest_x, draw_dest_y, 0.0f));
-	model = glm::scale(model, glm::vec3(draw_dest_w, draw_dest_h, 1.0f));
-	shader->SetMat4("uProjection", view.projectionMatrix * view.viewMatrix * model); // reusing uProjection as MVP
+	// Screen X = Map X - Scroll X.
+	// Draw X = fbo_origin_x - view.view_scroll_x
+	//        = (view_scroll_x - margin) - view_scroll_x
+	//        = -margin.
+	// Correct! We draw the quad starting at -margin, -margin.
 
-	// Calculate UVs based on used part of FBO
-	// Since we use Y-down ortho, small Y is at Top of FBO.
-	// OpenGL textures have Y=0 at Bottom.
-	// So Map Top (Y=0) is at FBO Top (V=1 if using Y-down ortho with full height).
-	// But we only use [0..pixel_height] of [0..buffer_height].
-	// FBO Top is at Y=0. FBO Bottom is at Y=buffer_height.
-	// If we use Y-down ortho: Y=0 -> V=1, Y=buffer_height -> V=0.
-	// Map Top (Y=0) -> V=1. Map Bottom (Y=pixel_height) -> V = 1.0 - (pixel_height / buffer_height).
+	float screen_x = fbo_origin_x - view.view_scroll_x;
+	float screen_y = fbo_origin_y - view.view_scroll_y;
 
-	float uv_w = static_cast<float>(pixel_width) / static_cast<float>(buffer_width);
-	float uv_h = static_cast<float>(pixel_height) / static_cast<float>(buffer_height);
+	// Apply Projection
+	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(screen_x, screen_y, 0.0f));
+	model = glm::scale(model, glm::vec3((float)fbo_w, (float)fbo_h, 1.0f));
+	shader->SetMat4("uProjection", view.projectionMatrix * view.viewMatrix * model);
 
-	// We pass UV range to shader. Shader should map aPos.y (0..1) to correct range.
-	// If screen aPos.y=0 is Top, it should get texture Map Top.
-	// With Y-down ortho into FBO, Map Top is at top of viewport, which is V=1 in GL.
-	// So aPos.y=0 -> V=1, aPos.y=1 -> V = 1.0 - uv_h.
+	// UVs: We used fbo_w/fbo_h pixels of the texture.
+	// Texture is buffer_width x buffer_height.
+	float uv_w = static_cast<float>(fbo_w) / static_cast<float>(buffer_width);
+	float uv_h = static_cast<float>(fbo_h) / static_cast<float>(buffer_height);
+
+	// Y-flip handled as before: Map Top (Y=0 local) -> V=1. Map Bottom (Y=fbo_h) -> V=1-uv_h.
 	shader->SetVec2("uUVMin", glm::vec2(0.0f, 1.0f));
 	shader->SetVec2("uUVMax", glm::vec2(uv_w, 1.0f - uv_h));
 

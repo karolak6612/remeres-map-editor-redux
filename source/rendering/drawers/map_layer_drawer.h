@@ -19,6 +19,8 @@
 #define RME_MAP_LAYER_DRAWER_H
 
 #include <iosfwd>
+#include <memory>
+#include "rendering/core/render_chunk_cache.h"
 
 class Editor;
 class TileRenderer;
@@ -40,6 +42,7 @@ private:
 	TileRenderer* tile_renderer;
 	GridDrawer* grid_drawer;
 	Editor* editor;
+	RenderChunkCache chunk_cache;
 };
 
 #endif

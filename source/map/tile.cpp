@@ -662,3 +662,11 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
 	});
 }
+
+void Tile::modify() {
+	statflags |= TILESTATE_MODIFIED;
+}
+
+void Tile::unmodify() {
+	statflags &= ~TILESTATE_MODIFIED;
+}
