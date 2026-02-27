@@ -152,7 +152,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
 	}
@@ -181,6 +181,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	// Prepare for lights
+	bool collect_lights = (light_buffer != nullptr) && options.isDrawLight() && tile->hasLight();
+	const Position& position = location->getPosition();
+
 	Waypoint* waypoint = nullptr;
 	if (location->getWaypointCount() > 0) {
 		waypoint = editor->map.waypoints.getWaypoint(location);
@@ -204,6 +208,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	const ItemType* ground_it = nullptr;
 	if (tile->ground) {
 		ground_it = &g_items[tile->ground->getID()];
+
+		if (collect_lights && tile->ground->hasLight()) {
+			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+		}
 	}
 
 	if (only_colors) {
@@ -213,6 +221,23 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		} else if (r != 255 || g != 255 || b != 255) {
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
+
+		// Even in only_colors mode, if light_buffer is provided, we should probably collect lights
+		// because lighting might be rendered as an overlay or post-process effect.
+		// However, in the original code, AddLight iterates items separately.
+		// If we are in 'only_colors', we skip the main item loop.
+		// So we must iterate items for lights if requested.
+		if (collect_lights && !tile->items.empty()) {
+			bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
+			if (!hidden) {
+				for (const auto& item : tile->items) {
+					if (item->hasLight()) {
+						light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+					}
+				}
+			}
+		}
+
 	} else {
 		if (tile->ground && ground_it) {
 			if (ground_it->sprite) {
@@ -278,6 +303,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			// items on tile
 			for (const auto& item : tile->items) {
 				const ItemType& it = g_items[item->getID()];
+
+				// Collect light
+				if (collect_lights && item->hasLight()) {
+					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				}
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
@@ -355,33 +385,5 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		}
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
-	}
-}
-
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile || !tile->hasLight()) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
-		}
 	}
 }
