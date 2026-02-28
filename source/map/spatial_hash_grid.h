@@ -98,13 +98,6 @@ protected:
 	mutable uint64_t last_key = 0;
 	mutable GridCell* last_cell = nullptr;
 
-	// Traverses cells by checking every potential cell in the viewport.
-	// Efficient for small viewports on dense maps.
-	template <typename Func>
-	void visitLeavesByViewport(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		visitLeavesByViewportImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
-	}
-
 	struct RowCellInfo {
 		GridCell* cell;
 		int cell_start_nx;
@@ -115,11 +108,35 @@ protected:
 	// Traverses cells by checking every potential cell in the viewport.
 	// Efficient for small viewports on dense maps.
 	template <typename Func>
+	void visitLeavesByViewport(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
+		visitLeavesByViewportImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
+	}
+
+	// Traverses cells by checking every potential cell in the viewport.
+	// Efficient for small viewports on dense maps.
+	template <typename Func>
 	void visitLeavesByViewportImpl(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
-		std::vector<RowCellInfo> row_cells;
+		static thread_local std::vector<RowCellInfo> row_cells_cache;
+		static thread_local bool row_cells_in_use = false;
+
+		std::vector<RowCellInfo> local_row_cells;
+		std::vector<RowCellInfo>& row_cells = row_cells_in_use ? local_row_cells : row_cells_cache;
+
+		struct ReentrancyGuard {
+			bool& flag;
+			bool was_in_use;
+			ReentrancyGuard(bool& f) : flag(f), was_in_use(f) {
+				flag = true;
+			}
+			~ReentrancyGuard() {
+				flag = was_in_use;
+			}
+		} guard(row_cells_in_use);
+
 		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
+			// Clear per-row to reuse capacity
 			row_cells.clear();
 
 			for (int cx = start_cx; cx <= end_cx; ++cx) {
@@ -216,7 +233,7 @@ protected:
 
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		static_assert(sizeof(int) == 4, "Key packing assumes exactly 32-bit integers");
-		return (static_cast<uint64_t>(static_cast<uint32_t>(cy ^ 0x80000000)) << 32) | static_cast<uint32_t>(cx ^ 0x80000000);
+		return (static_cast<uint64_t>(static_cast<uint32_t>(cy) ^ 0x80000000u) << 32) | (static_cast<uint32_t>(cx) ^ 0x80000000u);
 	}
 
 	static uint64_t makeKey(int x, int y) {

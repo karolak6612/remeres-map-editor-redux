@@ -1,8 +1,10 @@
 @echo off
 REM ============================================================
-REM  RME Windows Build Script
-REM  Checks prerequisites, configures CMake, builds Release.
-REM  Logs everything to build.log.
+REM  RME Standalone VS Solution Generator
+REM  Generates a Visual Studio 2022/2026 solution in vcproj\
+REM
+REM  This script checks ALL common prerequisites before running
+REM  CMake, and attempts to fix issues automatically where it can.
 REM ============================================================
 
 setlocal enabledelayedexpansion
@@ -17,30 +19,42 @@ set "RESET=%ESC%[0m"
 set "BOLD=%ESC%[1m"
 
 set "SCRIPT_DIR=%~dp0"
-set "PROJECT_ROOT=%SCRIPT_DIR:~0,-1%"
-set "BUILD_DIR=%PROJECT_ROOT%\build"
-set "LOG_FILE=%PROJECT_ROOT%\build.log"
+
+REM Determine output directory based on current working directory name
+set "CWD=%CD%"
+for %%F in ("%CWD%") do set "CWD_NAME=%%~nxF"
+
+if /i "%CWD_NAME%"=="vcproj" (
+    set "IDE_DIR=%CD%"
+    set "PROJECT_ROOT=%CD%\.."
+) else (
+    set "IDE_DIR=%CD%\vcproj"
+    set "PROJECT_ROOT=%CD%"
+)
+
 set "REQUIRED_CMAKE_MAJOR=3"
 set "REQUIRED_CMAKE_MINOR=28"
-set "TOTAL_CHECKS=7"
+set "TOTAL_STEPS=7"
 
 echo.
 echo %BOLD%%CYAN%========================================================%RESET%
-echo %BOLD%%CYAN%  RME Windows Build Script%RESET%
+echo %BOLD%%CYAN%  RME Visual Studio Solution Generator%RESET%
 echo %BOLD%%CYAN%========================================================%RESET%
 echo.
+
+
 
 REM ==========================================================
 REM  CHECK 1: CMake is installed and on PATH
 REM ==========================================================
-echo %BOLD%[1/%TOTAL_CHECKS%] Checking for CMake...%RESET%
+echo %BOLD%[1/%TOTAL_STEPS%] Checking for CMake...%RESET%
 
 where cmake >nul 2>&1
 if %ERRORLEVEL% neq 0 (
     echo.
     echo   %RED%ERROR: CMake was not found on your PATH.%RESET%
     echo.
-    echo   CMake is required to configure and build the project.
+    echo   CMake is required to generate the Visual Studio solution.
     echo   Please download and install it from:
     echo.
     echo     %CYAN%https://cmake.org/download/%RESET%
@@ -58,7 +72,7 @@ echo   %GREEN%OK%RESET% - CMake found.
 REM ==========================================================
 REM  CHECK 2: CMake version >= 3.28
 REM ==========================================================
-echo %BOLD%[2/%TOTAL_CHECKS%] Checking CMake version ^(^>= %REQUIRED_CMAKE_MAJOR%.%REQUIRED_CMAKE_MINOR% required^)...%RESET%
+echo %BOLD%[2/%TOTAL_STEPS%] Checking CMake version ^(^>= %REQUIRED_CMAKE_MAJOR%.%REQUIRED_CMAKE_MINOR% required^)...%RESET%
 
 for /f "tokens=3" %%v in ('cmake --version') do (
     if not defined CMAKE_VER set "CMAKE_VER=%%v"
@@ -99,12 +113,12 @@ if "%CMAKE_OK%"=="0" (
     pause
     exit /b 1
 )
-echo   %GREEN%OK%RESET% - CMake !CMAKE_VER! found.
+echo   %GREEN%OK%RESET% - CMake %CMAKE_VER% found.
 
 REM ==========================================================
 REM  CHECK 3: Visual Studio C++ toolchain (latest version)
 REM ==========================================================
-echo %BOLD%[3/%TOTAL_CHECKS%] Checking for Visual Studio C++ toolchain...%RESET%
+echo %BOLD%[3/%TOTAL_STEPS%] Checking for Visual Studio C++ toolchain...%RESET%
 
 set "VS_FOUND=0"
 set "VS_PATH="
@@ -118,15 +132,15 @@ if exist "%VSWHERE%" (
     for /f "usebackq tokens=*" %%i in (`"%VSWHERE%" -latest -products * -property installationPath 2^>nul`) do (
         set "VS_PATH=%%i"
     )
-    REM Get major version number (e.g. 17 for VS 2022, 18 for VS 2026)
+    REM Get major version number (e.g. 17 for VS 2022, 18 for next)
     for /f "usebackq tokens=1 delims=." %%v in (`"%VSWHERE%" -latest -products * -property installationVersion 2^>nul`) do (
         set "VS_MAJOR=%%v"
     )
-    REM Get product year (e.g. 2022, 2026)
+    REM Get product year (e.g. 2022, 2025, 2026)
     for /f "usebackq tokens=*" %%y in (`"%VSWHERE%" -latest -products * -property catalog_productLineVersion 2^>nul`) do (
         set "VS_YEAR=%%y"
     )
-
+    
     REM Normalize year if vswhere returns a major version number instead of a year
     if "!VS_YEAR!"=="16" set "VS_YEAR=2019"
     if "!VS_YEAR!"=="17" set "VS_YEAR=2022"
@@ -177,7 +191,7 @@ echo   %GREEN%OK%RESET% - Visual Studio !VS_YEAR! found ^(version !VS_MAJOR!^): 
 REM ==========================================================
 REM  CHECK 4: Locate vcpkg root
 REM ==========================================================
-echo %BOLD%[4/%TOTAL_CHECKS%] Locating vcpkg...%RESET%
+echo %BOLD%[4/%TOTAL_STEPS%] Locating vcpkg...%RESET%
 
 set "VCPKG_DIR="
 
@@ -232,7 +246,7 @@ echo   %GREEN%OK%RESET% - vcpkg found at: %VCPKG_DIR%
 REM ==========================================================
 REM  CHECK 5: vcpkg is bootstrapped (vcpkg.exe exists)
 REM ==========================================================
-echo %BOLD%[5/%TOTAL_CHECKS%] Checking vcpkg is bootstrapped...%RESET%
+echo %BOLD%[5/%TOTAL_STEPS%] Checking vcpkg is bootstrapped...%RESET%
 
 if not exist "%VCPKG_DIR%\vcpkg.exe" (
     echo   %YELLOW%vcpkg.exe not found. Running bootstrap...%RESET%
@@ -266,7 +280,7 @@ echo   %GREEN%OK%RESET% - vcpkg.exe is present.
 REM ==========================================================
 REM  CHECK 6: vcpkg integrate install
 REM ==========================================================
-echo %BOLD%[6/%TOTAL_CHECKS%] Running vcpkg integrate install...%RESET%
+echo %BOLD%[6/%TOTAL_STEPS%] Running vcpkg integrate install...%RESET%
 
 "%VCPKG_DIR%\vcpkg.exe" integrate install >nul 2>&1
 if %ERRORLEVEL% neq 0 (
@@ -281,11 +295,11 @@ if %ERRORLEVEL% neq 0 (
 REM ==========================================================
 REM  CHECK 7: vcpkg baseline freshness
 REM ==========================================================
-echo %BOLD%[7/%TOTAL_CHECKS%] Checking vcpkg baseline freshness...%RESET%
+echo %BOLD%[7/%TOTAL_STEPS%] Checking vcpkg baseline freshness...%RESET%
 
 REM Parse the builtin-baseline commit hash from vcpkg.json
 set "REQUIRED_BASELINE="
-for /f "tokens=2 delims=:" %%a in ('findstr /C:"builtin-baseline" "!PROJECT_ROOT!\vcpkg.json"') do (
+for /f "tokens=2 delims=:" %%a in ('findstr /C:"builtin-baseline" "%PROJECT_ROOT%\vcpkg.json"') do (
     set "RAW=%%a"
 )
 REM Strip quotes, spaces, and trailing characters
@@ -346,105 +360,61 @@ if defined REQUIRED_BASELINE (
 )
 
 REM ==========================================================
-REM  All checks passed — start building
+REM  Create output directory
 REM ==========================================================
 echo.
-echo %BOLD%%CYAN%========================================================%RESET%
-echo %BOLD%%CYAN%  All checks passed! Starting build...%RESET%
-echo %BOLD%%CYAN%========================================================%RESET%
+echo %BOLD%Creating output directory...%RESET%
+if not exist "%IDE_DIR%" mkdir "%IDE_DIR%"
+echo   %GREEN%OK%RESET% - %IDE_DIR%
+
+REM ==========================================================
+REM  Generate Visual Studio solution
+REM ==========================================================
 echo.
-
-REM --- Init log file ---
-echo ======================================== > "%LOG_FILE%"
-echo  RME Windows Build Script >> "%LOG_FILE%"
-echo  Started: %date% %time% >> "%LOG_FILE%"
-echo  VS: !VS_YEAR! ^(version !VS_MAJOR!^) >> "%LOG_FILE%"
-echo  vcpkg: !VCPKG_DIR! >> "%LOG_FILE%"
-echo ======================================== >> "%LOG_FILE%"
-
-REM ==========================================================
-REM  Step 1/3: Configure CMake
-REM ==========================================================
 set "VS_GENERATOR=Visual Studio !VS_MAJOR! !VS_YEAR!"
-echo %BOLD%[Build 1/3]%RESET% Configuring CMake with !VS_GENERATOR!...
-echo [1/3] Configuring CMake with !VS_GENERATOR!... >> "%LOG_FILE%"
+echo %BOLD%%CYAN%========================================================%RESET%
+echo %BOLD%%CYAN%  All checks passed! Generating !VS_GENERATOR! solution...%RESET%
+echo %BOLD%%CYAN%========================================================%RESET%
+echo.
 
-if not exist "!BUILD_DIR!" mkdir "!BUILD_DIR!"
+cmake -S "!PROJECT_ROOT!" -B "!IDE_DIR!" -G "!VS_GENERATOR!" -A x64 "-DCMAKE_TOOLCHAIN_FILE=!VCPKG_DIR!\scripts\buildsystems\vcpkg.cmake" "-DVCPKG_TARGET_TRIPLET=x64-windows"
 
-cmake -S "!PROJECT_ROOT!" -B "!BUILD_DIR!" -G "!VS_GENERATOR!" -A x64 "-DCMAKE_TOOLCHAIN_FILE=!VCPKG_DIR!\scripts\buildsystems\vcpkg.cmake" "-DVCPKG_TARGET_TRIPLET=x64-windows" >> "%LOG_FILE%" 2>&1
-
-if !ERRORLEVEL! neq 0 (
+if %ERRORLEVEL% neq 0 (
     echo.
-    echo   %RED%ERROR: CMake configuration failed.%RESET%
+    echo %RED%========================================================%RESET%
+    echo %RED%  ERROR: Solution generation failed.%RESET%
+    echo %RED%========================================================%RESET%
     echo.
-    echo   Common causes:
-    echo     1. %BOLD%Missing vcpkg packages%RESET% - Try:
-    echo          %CYAN%"!VCPKG_DIR!\vcpkg.exe" install --triplet x64-windows%RESET%
-    echo     2. %BOLD%Stale CMake cache%RESET% - Try:
-    echo          %CYAN%rmdir /s /q "!BUILD_DIR!"%RESET%
-    echo     3. %BOLD%Toolchain mismatch%RESET% - Don't mix VS installations.
+    echo   CMake returned an error. Common causes:
     echo.
-    echo   See %CYAN%!LOG_FILE!%RESET% for full output.
+    echo   1. %BOLD%Missing vcpkg packages%RESET% - Try running:
+    echo        %CYAN%"%VCPKG_DIR%\vcpkg.exe" install --triplet x64-windows%RESET%
+    echo      from the project root directory.
+    echo.
+    echo   2. %BOLD%Stale CMake cache%RESET% - Try deleting the output folder:
+    echo        %CYAN%rmdir /s /q "%IDE_DIR%"%RESET%
+    echo      and running this script again.
+    echo.
+    echo   3. %BOLD%Toolchain mismatch%RESET% - Make sure you are not mixing
+    echo      different Visual Studio or vcpkg installations.
+    echo.
+    echo   Scroll up to see the full CMake error output for details.
     echo.
     pause
     exit /b 1
 )
-echo   %GREEN%OK%RESET% - Configuration complete.
-
-REM ==========================================================
-REM  Step 2/3: Build Release
-REM ==========================================================
-echo %BOLD%[Build 2/3]%RESET% Building Release...
-echo [2/3] Building Release... >> "%LOG_FILE%"
-
-cmake --build "!BUILD_DIR!" --config Release --target rme --parallel >> "%LOG_FILE%" 2>&1
-
-if !ERRORLEVEL! neq 0 (
-    echo.
-    echo   %RED%ERROR: Build failed.%RESET%
-    echo.
-    echo   Common causes:
-    echo     1. %BOLD%Compiler errors%RESET% - Check the build.log for C++ errors.
-    echo.
-    echo   See %CYAN%!LOG_FILE!%RESET% for full compiler output.
-    echo.
-    pause
-    exit /b 1
-)
-echo   %GREEN%OK%RESET% - Build complete.
-
-REM ==========================================================
-REM  Step 3/3: Done!
-REM ==========================================================
-echo %BOLD%[Build 3/3]%RESET% Verifying output...
-
-if not exist "!BUILD_DIR!\Release\rme.exe" (
-    echo.
-    echo   %YELLOW%WARNING: rme.exe was not found at expected location.%RESET%
-    echo   %YELLOW%         Build may have placed it elsewhere.%RESET%
-    echo   %YELLOW%         Check: !BUILD_DIR!%RESET%
-    echo.
-) else (
-    echo   %GREEN%OK%RESET% - rme.exe found.
-)
-
-REM --- Finalize log ---
-echo ======================================== >> "%LOG_FILE%"
-echo  BUILD SUCCESSFUL >> "%LOG_FILE%"
-echo  Output: !BUILD_DIR!\Release\rme.exe >> "%LOG_FILE%"
-echo  Finished: %date% %time% >> "%LOG_FILE%"
-echo ======================================== >> "%LOG_FILE%"
 
 echo.
 echo %GREEN%========================================================%RESET%
-echo %GREEN%  BUILD SUCCESSFUL!%RESET%
+echo %GREEN%  SUCCESS! Solution generated successfully.%RESET%
 echo %GREEN%========================================================%RESET%
 echo.
-echo   Output:    %BOLD%!BUILD_DIR!\Release\rme.exe%RESET%
-echo   Solution:  !BUILD_DIR!\rme.sln
-echo   Log:       !LOG_FILE!
-echo   vcpkg:     !VCPKG_DIR!
+echo   Solution file:  %BOLD%%IDE_DIR%\rme.sln%RESET%
+echo   vcpkg root:     %VCPKG_DIR%
 echo.
-
+echo   To open the solution, run:
+echo     %CYAN%start "" "%IDE_DIR%\rme.sln"%RESET%
+echo.
+pause
 
 endlocal

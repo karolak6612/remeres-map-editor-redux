@@ -524,3 +524,15 @@ int ToolOptionsSurface::CalculateSliderValue(const wxRect& sliderRect, int min, 
 
 	return min + static_cast<int>(pct * (max - min));
 }
+
+void ToolOptionsSurface::Clear() {
+	current_type = TILESET_UNKNOWN;
+	active_brush = nullptr;
+	hover_brush = nullptr;
+	tool_rects.clear();
+	interactables.size_slider_rect = wxRect();
+	interactables.thickness_slider_rect = wxRect();
+	interactables.preview_check_rect = wxRect();
+	interactables.lock_check_rect = wxRect();
+	Refresh();
+}

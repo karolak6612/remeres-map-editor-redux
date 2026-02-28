@@ -123,6 +123,8 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.h
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.h
+    ${CMAKE_CURRENT_LIST_DIR}/map/map_converter.h
+    ${CMAKE_CURRENT_LIST_DIR}/map/map_spawn_manager.h
 
     ${CMAKE_CURRENT_LIST_DIR}/map/position.h
     ${CMAKE_CURRENT_LIST_DIR}/map/spatial_hash_grid.h
@@ -148,6 +150,9 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/minimap_colors.h
@@ -452,6 +457,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/map/map_region.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_search.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/map_statistics.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/map/map_converter.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/map/map_spawn_manager.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/map/tile.cpp
     ${CMAKE_CURRENT_LIST_DIR}/map/tile_operations.cpp
@@ -476,6 +483,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/multi_draw_indirect_renderer.cpp

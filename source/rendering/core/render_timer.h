@@ -14,10 +14,13 @@ public:
 	~RenderTimer();
 
 	void Start();
+	void Pause();
+	void Resume();
 	long getElapsedTime() const;
 
 private:
 	std::unique_ptr<wxStopWatch> timer;
+	bool is_paused = false;
 };
 
 #endif

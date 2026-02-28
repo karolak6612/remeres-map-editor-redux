@@ -14,6 +14,7 @@ public:
 	void SetPaletteType(PaletteType type);
 	void UpdateBrushSize(BrushShape shape, int size);
 	void ReloadSettings();
+	void Clear();
 
 protected:
 	wxSizer* main_sizer;
