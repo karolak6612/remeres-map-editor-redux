@@ -141,7 +141,8 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	// Background
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, 0, size_x, size_y);
-	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	wxColour bgCol = wxSystemSettings::GetColour(wxSYS_COLOUR_APPWORKSPACE);
+	nvgFillColor(vg, nvgRGBA(bgCol.Red(), bgCol.Green(), bgCol.Blue(), bgCol.Alpha()));
 	nvgFill(vg);
 
 	if (type == DC_BTN_TOGGLE && GetValue()) {
@@ -195,10 +196,15 @@ void DCButton::OnClick(wxMouseEvent& WXUNUSED(evt)) {
 }
 
 void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	wxColour dhCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT);
+	wxColour lsCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+	wxColour hCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DHIGHLIGHT);
+	wxColour sCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DDKSHADOW);
+
+	NVGcolor dark_highlight = nvgRGBA(dhCol.Red(), dhCol.Green(), dhCol.Blue(), dhCol.Alpha());
+	NVGcolor light_shadow = nvgRGBA(lsCol.Red(), lsCol.Green(), lsCol.Blue(), lsCol.Alpha());
+	NVGcolor highlight = nvgRGBA(hCol.Red(), hCol.Green(), hCol.Blue(), hCol.Alpha());
+	NVGcolor shadow = nvgRGBA(sCol.Red(), sCol.Green(), sCol.Blue(), sCol.Alpha());
 
 	nvgStrokeWidth(vg, 1.0f);
 
@@ -232,10 +238,15 @@ void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
 }
 
 void DCButton::DrawRaisedBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	wxColour dhCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DLIGHT);
+	wxColour lsCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DSHADOW);
+	wxColour hCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DHIGHLIGHT);
+	wxColour sCol = wxSystemSettings::GetColour(wxSYS_COLOUR_3DDKSHADOW);
+
+	NVGcolor dark_highlight = nvgRGBA(dhCol.Red(), dhCol.Green(), dhCol.Blue(), dhCol.Alpha());
+	NVGcolor light_shadow = nvgRGBA(lsCol.Red(), lsCol.Green(), lsCol.Blue(), lsCol.Alpha());
+	NVGcolor highlight = nvgRGBA(hCol.Red(), hCol.Green(), hCol.Blue(), hCol.Alpha());
+	NVGcolor shadow = nvgRGBA(sCol.Red(), sCol.Green(), sCol.Blue(), sCol.Alpha());
 
 	nvgStrokeWidth(vg, 1.0f);
 

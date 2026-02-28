@@ -125,7 +125,7 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unor
 			act.kind // Kind of item
 		);
 		if (!act.icon.empty()) {
-			tmp->SetBitmap(IMAGE_MANAGER.GetBitmap(act.icon, wxSize(16, 16)));
+			tmp->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(act.icon));
 		}
 		items[MenuBar::ActionID(act.id)].push_back(tmp);
 		return tmp;
