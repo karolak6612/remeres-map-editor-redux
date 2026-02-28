@@ -18,9 +18,12 @@
 #ifndef RME_TILE_H
 #define RME_TILE_H
 
-#include "map/tile_operations.h"
 #include "map/position.h"
 #include "game/item.h"
+
+namespace TileOperations {
+	void update(class Tile* tile);
+}
 
 class TileLocation;
 class GroundBrush;
@@ -32,23 +35,7 @@ class Map;
 #include <memory>
 #include <vector>
 
-// Forward declaration of TileOperations functions
-namespace TileOperations {
-	std::unique_ptr<Tile> deepCopy(const Tile* tile, BaseMap& map);
-	void merge(Tile* dest, Tile* src);
-	void select(Tile* tile);
-	void deselect(Tile* tile);
-	void selectGround(Tile* tile);
-	void deselectGround(Tile* tile);
-	std::vector<std::unique_ptr<Item>> popSelectedItems(Tile* tile, bool ignoreTileSelected);
-	ItemVector getSelectedItems(Tile* tile, bool unzoomed);
-	Item* getTopSelectedItem(Tile* tile);
-	void addBorderItem(Tile* tile, std::unique_ptr<Item> item);
-	void addWallItem(Tile* tile, std::unique_ptr<Item> item);
-	void addHouseExit(Tile* tile, House* h);
-	void removeHouseExit(Tile* tile, House* h);
-	void update(Tile* tile);
-}
+// TileOperations functions are now in tile_operations.h
 
 enum {
 	TILESTATE_NONE = 0x0000,
@@ -83,6 +70,9 @@ public: // Members
 	std::unique_ptr<Creature> creature;
 	std::unique_ptr<Spawn> spawn;
 	uint32_t house_id; // House id for this tile (pointer not safe)
+	uint16_t mapflags;
+	uint16_t statflags;
+	uint8_t minimapColor;
 
 public:
 	// ALWAYS use this constructor if the Tile is EVER going to be placed on a map
@@ -115,7 +105,6 @@ public:
 	int getZ() const;
 
 public: // Functions
-
 	// Compare the content (ground and items) of two tiles
 	bool isContentEqual(const Tile* other) const;
 
@@ -240,29 +229,6 @@ public: // Functions
 	void setStatFlags(uint16_t _flags);
 	void unsetStatFlags(uint16_t _flags);
 	uint16_t getStatFlags() const;
-
-protected:
-	uint16_t mapflags;
-	uint16_t statflags;
-
-private:
-	uint8_t minimapColor;
-
-	// Friend methods for TileOperations
-	friend std::unique_ptr<Tile> TileOperations::deepCopy(const Tile* tile, BaseMap& map);
-	friend void TileOperations::merge(Tile* dest, Tile* src);
-	friend void TileOperations::select(Tile* tile);
-	friend void TileOperations::deselect(Tile* tile);
-	friend void TileOperations::selectGround(Tile* tile);
-	friend void TileOperations::deselectGround(Tile* tile);
-	friend std::vector<std::unique_ptr<Item>> TileOperations::popSelectedItems(Tile* tile, bool ignoreTileSelected);
-	friend ItemVector TileOperations::getSelectedItems(Tile* tile, bool unzoomed);
-	friend Item* TileOperations::getTopSelectedItem(Tile* tile);
-	friend void TileOperations::addBorderItem(Tile* tile, std::unique_ptr<Item> item);
-	friend void TileOperations::addWallItem(Tile* tile, std::unique_ptr<Item> item);
-	friend void TileOperations::addHouseExit(Tile* tile, House* h);
-	friend void TileOperations::removeHouseExit(Tile* tile, House* h);
-	friend void TileOperations::update(Tile* tile);
 };
 
 bool tilePositionLessThan(const Tile* a, const Tile* b);

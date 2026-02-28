@@ -23,6 +23,9 @@
 #include <stdexcept>
 #include <string>
 #include <stack>
+
+class wxFileName;
+using FileName = wxFileName;
 #include <stdio.h>
 #include <memory>
 #include <type_traits>
@@ -64,8 +67,11 @@ struct FileDeleter {
 };
 using FilePtr = std::unique_ptr<FILE, FileDeleter>;
 
-class FileHandle : boost::noncopyable {
+class FileHandle {
 public:
+	FileHandle(const FileHandle&) = delete;
+	FileHandle& operator=(const FileHandle&) = delete;
+
 	FileHandle() :
 		error_code(FILE_NO_ERROR), file(nullptr) { }
 	virtual ~FileHandle() {

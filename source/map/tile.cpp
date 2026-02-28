@@ -20,6 +20,7 @@
 #include "brushes/brush.h"
 
 #include "map/tile.h"
+#include "map/tile_operations.h"
 #include "game/creature.h"
 #include "game/house.h"
 #include "map/basemap.h"
@@ -224,6 +225,7 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	}
 	if (item->isGroundTile()) {
 		ground = std::move(item);
+		TileOperations::update(this);
 		return;
 	}
 
@@ -232,6 +234,8 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 
 	if (gid != 0) {
 		ground = Item::Create(gid);
+		TileOperations::update(this);
+		return;
 		// At the very bottom!
 	} else if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
