@@ -8,6 +8,7 @@
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
+#include <string_view>
 
 /**
  * Batched renderer for 2D primitives (lines, triangles).
@@ -45,7 +46,7 @@ private:
 
 	void flushTriangles();
 	void flushLines();
-	void flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, const char* primitive_type_name);
+	void flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, std::string_view primitive_type_name);
 
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<GLVertexArray> vao_;

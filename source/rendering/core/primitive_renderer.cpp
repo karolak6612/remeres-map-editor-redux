@@ -171,9 +171,8 @@ void PrimitiveRenderer::flushLines() {
 	flushPrimitives(line_verts_, GL_LINES, "Lines");
 }
 
-void PrimitiveRenderer::flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, const char* primitive_type_name) {
-	if (!initialized_ || vertices.empty()) {
-		vertices.clear();
+void PrimitiveRenderer::flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, std::string_view primitive_type_name) {
+	if (vertices.empty()) {
 		return;
 	}
 
