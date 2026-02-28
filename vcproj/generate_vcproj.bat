@@ -140,6 +140,12 @@ if exist "%VSWHERE%" (
     for /f "usebackq tokens=*" %%y in (`"%VSWHERE%" -latest -products * -property catalog_productLineVersion 2^>nul`) do (
         set "VS_YEAR=%%y"
     )
+    
+    REM Normalize year if vswhere returns a major version number instead of a year
+    if "!VS_YEAR!"=="16" set "VS_YEAR=2019"
+    if "!VS_YEAR!"=="17" set "VS_YEAR=2022"
+    if "!VS_YEAR!"=="18" set "VS_YEAR=2026"
+
     if defined VS_MAJOR if defined VS_YEAR set "VS_FOUND=1"
 )
 

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.28)
 
 project(rme)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -20,6 +20,7 @@ if(MSVC)
 	set(CMAKE_CXX_FLAGS_MINSIZEREL     "/O1 /DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELEASE        "/O2 /DNDEBUG")
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "/O2 /Zi /DNDEBUG")
+	set(CMAKE_INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 else()
 	set(CMAKE_CXX_FLAGS                "-Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result")
 	set(CMAKE_CXX_FLAGS_DEBUG          "-O0 -g -D__DEBUG__")
