@@ -4,6 +4,7 @@
 
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/normal_image.h"
 #include "ui/gui.h"
 #include "io/loaders/spr_loader.h"
 #include <mutex>
@@ -22,9 +23,13 @@ SpritePreloader& SpritePreloader::get() {
 }
 
 SpritePreloader::SpritePreloader() : stopping(false) {
-	worker = std::jthread([this](std::stop_token stop_token) {
-		this->workerLoop(stop_token);
-	});
+	unsigned int num_threads = std::clamp(std::thread::hardware_concurrency(), MIN_WORKER_THREADS, MAX_WORKER_THREADS);
+	workers.reserve(num_threads);
+	for (unsigned int i = 0; i < num_threads; ++i) {
+		workers.emplace_back([this](std::stop_token stop_token) {
+			this->workerLoop(stop_token);
+		});
+	}
 }
 
 SpritePreloader::~SpritePreloader() {
@@ -39,7 +44,9 @@ void SpritePreloader::shutdown() {
 		}
 		stopping = true;
 	}
-	worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+	for (auto& worker : workers) {
+		worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+	}
 	cv.notify_all();
 }
 
@@ -90,7 +97,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 					continue;
 				}
 
-				GameSprite::NormalImage* img = spr->spriteList[idx];
+				NormalImage* img = spr->spriteList[idx];
 				if (img && !img->isGLLoaded) {
 					// Ensure parent is set so GC can invalidate cached_default_region
 					// when evicting this sprite later (prevents stale cache -> wrong sprite)
@@ -193,7 +200,7 @@ void SpritePreloader::update() {
 			auto& img_ptr = g_gui.gfx.image_space[id];
 			if (img_ptr && img_ptr->isNormalImage()) {
 				// Use static_cast for performance, as we know the type from loaders
-				auto* img = static_cast<GameSprite::NormalImage*>(img_ptr.get());
+				auto* img = static_cast<NormalImage*>(img_ptr.get());
 
 				// Validate Sprite Identity & Generation
 				// Check ID match, Generation match, and GLLoaded state

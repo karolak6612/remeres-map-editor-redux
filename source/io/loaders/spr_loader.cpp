@@ -1,6 +1,7 @@
 #include "io/loaders/spr_loader.h"
 
 #include "rendering/core/graphics.h"
+#include "rendering/core/normal_image.h"
 #include "io/filehandle.h"
 #include "app/settings.h"
 #include <vector>
@@ -117,7 +118,7 @@ bool SprLoader::ReadSprites(GraphicManager* manager, FileReadHandle& fh, const s
 		}
 
 		if (id < manager->image_space.size() && manager->image_space[id]) {
-			GameSprite::NormalImage* spr = dynamic_cast<GameSprite::NormalImage*>(manager->image_space[id].get());
+			NormalImage* spr = dynamic_cast<NormalImage*>(manager->image_space[id].get());
 			if (spr) {
 				if (size > 0) {
 					if (spr->size > 0) {

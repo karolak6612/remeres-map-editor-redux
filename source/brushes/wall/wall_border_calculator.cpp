@@ -200,6 +200,6 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 	}
 	TileOperations::cleanWalls(tile);
 	for (auto& item : items_to_add) {
-		tile->addWallItem(std::move(item));
+		TileOperations::addWallItem(tile, std::move(item));
 	}
 }

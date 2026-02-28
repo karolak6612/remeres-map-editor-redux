@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/tile_properties/teleport_property_panel.h"
 #include "game/complexitem.h"
@@ -68,7 +69,7 @@ void TeleportPropertyPanel::OnDestChange(wxSpinEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		int index = current_tile->getIndexOf(current_item);
 		if (index != -1) {
 			Item* new_item = new_tile->getItemAt(index);

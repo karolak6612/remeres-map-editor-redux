@@ -49,7 +49,7 @@ bool MultiDrawIndirectRenderer::initialize() {
 	command_buffer_ = std::make_unique<GLBuffer>();
 
 	// Pre-allocate buffer storage
-	glNamedBufferData(command_buffer_->GetID(), MAX_COMMANDS * sizeof(DrawElementsIndirectCommand), nullptr, GL_DYNAMIC_DRAW);
+	glNamedBufferStorage(command_buffer_->GetID(), MAX_COMMANDS * sizeof(DrawElementsIndirectCommand), nullptr, GL_DYNAMIC_STORAGE_BIT);
 
 	initialized_ = true;
 	return true;

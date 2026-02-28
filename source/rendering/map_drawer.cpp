@@ -305,6 +305,10 @@ void MapDrawer::Draw() {
 	}
 
 	DrawBackground(); // Clear screen (or FBO)
+
+	// Save original view bounds before DrawMap modifies them per-floor
+	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
+
 	DrawMap();
 
 	// Flush Map for Light Pass
@@ -340,10 +344,10 @@ void MapDrawer::Draw() {
 	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
 
 	if (options.show_grid) {
-		DrawGrid();
+		DrawGrid(original_bounds);
 	}
 	if (options.show_ingame_box) {
-		DrawIngameBox();
+		DrawIngameBox(original_bounds);
 	}
 
 	// Draw creature names (Overlay) moved to DrawCreatureNames()
@@ -386,12 +390,12 @@ void MapDrawer::DrawMap() {
 	}
 }
 
-void MapDrawer::DrawIngameBox() {
-	grid_drawer->DrawIngameBox(*sprite_batch, view, options);
+void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
+	grid_drawer->DrawIngameBox(*sprite_batch, view, options, bounds);
 }
 
-void MapDrawer::DrawGrid() {
-	grid_drawer->DrawGrid(*sprite_batch, view, options);
+void MapDrawer::DrawGrid(const ViewBounds& bounds) {
+	grid_drawer->DrawGrid(*sprite_batch, view, options, bounds);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {

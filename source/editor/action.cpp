@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 
 #include "editor/action.h"
@@ -144,7 +145,7 @@ void Action::commit(DirtyList* dirty_list) {
 					dirty_list->AddPosition(pos.x, pos.y, pos.z);
 				}
 
-				newtile->update();
+				TileOperations::update(newtile);
 
 				if (newtile->isSelected()) {
 					editor.selection.addInternal(newtile);

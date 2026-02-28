@@ -3,6 +3,7 @@
 // This test verifies the fix for the crash when AutoBorder is enabled with ground brush
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include <iostream>
 #include <cassert>
 #include <memory>
@@ -27,7 +28,7 @@ void test_deepCopy_uses_destination_location() {
 	std::cout << "  Source tile location: " << source_loc << std::endl;
 
 	// Deep copy to preview map
-	std::unique_ptr<Tile> copied = source_tile->deepCopy(preview_map);
+	std::unique_ptr<Tile> copied = TileOperations::deepCopy(source_tile, preview_map);
 
 	// The copied tile should use the preview map's TileLocation, not source map's
 	TileLocation* copy_loc = copied->getLocation();
@@ -60,7 +61,7 @@ void test_copied_tile_after_setTile() {
 	assert(source_tile != nullptr);
 
 	// Deep copy
-	std::unique_ptr<Tile> copied = source_tile->deepCopy(preview_map);
+	std::unique_ptr<Tile> copied = TileOperations::deepCopy(source_tile, preview_map);
 
 	// Verify location is correct before setTile
 	assert(copied->getLocation() == preview_map.getTileL(200, 200, 7));
@@ -98,7 +99,7 @@ void test_getPosition_on_copied_tile() {
 	assert(source_tile != nullptr);
 
 	// Copy and place in preview map
-	std::unique_ptr<Tile> copied = source_tile->deepCopy(preview_map);
+	std::unique_ptr<Tile> copied = TileOperations::deepCopy(source_tile, preview_map);
 	preview_map.setTile(std::move(copied));
 
 	Tile* preview_tile = preview_map.getTile(300, 300, 7);
@@ -130,7 +131,7 @@ void test_edge_case_zero_position() {
 	assert(source_tile != nullptr);
 
 	// Deep copy
-	std::unique_ptr<Tile> copied = source_tile->deepCopy(preview_map);
+	std::unique_ptr<Tile> copied = TileOperations::deepCopy(source_tile, preview_map);
 
 	// Verify location is in preview map
 	assert(copied->getLocation() != nullptr);
@@ -176,7 +177,7 @@ void test_copyMapArea_scenario() {
 		for (int x = center_x - range; x <= center_x + range; ++x) {
 			Tile* src_tile = source_map.getTile(x, y, z);
 			if (src_tile) {
-				std::unique_ptr<Tile> new_tile = src_tile->deepCopy(preview_map);
+				std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(src_tile, preview_map);
 
 				// Verify the copy has correct location BEFORE setTile
 				assert(new_tile->getLocation() != nullptr);

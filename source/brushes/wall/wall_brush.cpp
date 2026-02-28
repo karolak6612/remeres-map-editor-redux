@@ -105,7 +105,7 @@ void WallBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		}
 	}
 
-	tile->addWallItem(Item::Create(id));
+	TileOperations::addWallItem(tile, Item::Create(id));
 }
 
 void WallBrush::doWalls(BaseMap* map, Tile* tile) {

@@ -1,5 +1,4 @@
 #include "rendering/drawers/overlays/grid_drawer.h"
-#include "rendering/drawers/overlays/grid_drawer.h"
 #include "ui/gui.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/graphics.h"
@@ -9,39 +8,48 @@
 #include "app/definitions.h"
 #include <wx/gdicmn.h>
 
-void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options) {
+void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options, const ViewBounds& bounds) {
 	if (!options.show_grid) {
 		return;
 	}
 
-	glm::vec4 color(1.0f, 1.0f, 1.0f, 0.5f); // 128/255 approx 0.5
+	glm::vec4 color(0.0f, 0.0f, 0.0f, 0.50f); // Subtle dark overlay
+
+	// Use zoom as line thickness so lines are always ~1 screen pixel
+	const float line_thickness = view.zoom;
 
 	if (g_gui.gfx.ensureAtlasManager()) {
 		const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-		// Batch all horizontal lines
-		for (int y = view.start_y; y < view.end_y; ++y) {
+
+		// Hoisted invariants for horizontal lines
+		const float h_xStart = bounds.start_x * TILE_SIZE - view.view_scroll_x;
+		const float h_xEnd = bounds.end_x * TILE_SIZE - view.view_scroll_x;
+		const float h_width = h_xEnd - h_xStart;
+
+		for (int y = bounds.start_y; y <= bounds.end_y; ++y) {
 			float yPos = y * TILE_SIZE - view.view_scroll_y;
-			float xStart = view.start_x * TILE_SIZE - view.view_scroll_x;
-			float xEnd = view.end_x * TILE_SIZE - view.view_scroll_x;
-			sprite_batch.drawRect(xStart, yPos, xEnd - xStart, 1.0f, color, atlas); // 1px height line
+			sprite_batch.drawRect(h_xStart, yPos, h_width, line_thickness, color, atlas);
 		}
-		// Batch all vertical lines
-		for (int x = view.start_x; x < view.end_x; ++x) {
+
+		// Hoisted invariants for vertical lines
+		const float v_yStart = bounds.start_y * TILE_SIZE - view.view_scroll_y;
+		const float v_yEnd = bounds.end_y * TILE_SIZE - view.view_scroll_y;
+		const float v_height = v_yEnd - v_yStart;
+
+		for (int x = bounds.start_x; x <= bounds.end_x; ++x) {
 			float xPos = x * TILE_SIZE - view.view_scroll_x;
-			float yStart = view.start_y * TILE_SIZE - view.view_scroll_y;
-			float yEnd = view.end_y * TILE_SIZE - view.view_scroll_y;
-			sprite_batch.drawRect(xPos, yStart, 1.0f, yEnd - yStart, color, atlas); // 1px width line
+			sprite_batch.drawRect(xPos, v_yStart, line_thickness, v_height, color, atlas);
 		}
 	}
 }
 
-void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options) {
+void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options, const ViewBounds& bounds) {
 	if (!options.show_ingame_box) {
 		return;
 	}
 
-	int center_x = view.start_x + int(view.screensize_x * view.zoom / 64);
-	int center_y = view.start_y + int(view.screensize_y * view.zoom / 64);
+	int center_x = bounds.start_x + int(view.screensize_x * view.zoom / 64);
+	int center_y = bounds.start_y + int(view.screensize_y * view.zoom / 64);
 
 	int offset_y = 2;
 	int box_start_map_x = center_x;
@@ -61,22 +69,22 @@ void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view
 	// DrawQuad uses whiteTextureID by default.
 
 	// left side
-	if (box_start_map_x >= view.start_x) {
+	if (box_start_map_x >= bounds.start_x) {
 		drawFilledRect(sprite_batch, 0, 0, box_start_x, view.screensize_y * view.zoom, side_color);
 	}
 
 	// right side
-	if (box_end_map_x < view.end_x) {
+	if (box_end_map_x < bounds.end_x) {
 		drawFilledRect(sprite_batch, box_end_x, 0, view.screensize_x * view.zoom, view.screensize_y * view.zoom, side_color);
 	}
 
 	// top side
-	if (box_start_map_y >= view.start_y) {
+	if (box_start_map_y >= bounds.start_y) {
 		drawFilledRect(sprite_batch, box_start_x, 0, box_end_x - box_start_x, box_start_y, side_color);
 	}
 
 	// bottom side
-	if (box_end_map_y < view.end_y) {
+	if (box_end_map_y < bounds.end_y) {
 		drawFilledRect(sprite_batch, box_start_x, box_end_y, box_end_x - box_start_x, view.screensize_y * view.zoom, side_color);
 	}
 
@@ -125,4 +133,3 @@ void GridDrawer::drawFilledRect(SpriteBatch& sprite_batch, int x, int y, int w, 
 		sprite_batch.drawRect((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
 	}
 }
-
