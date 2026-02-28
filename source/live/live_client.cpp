@@ -288,7 +288,7 @@ void LiveClient::sendChanges(DirtyList& dirtyList) {
 	mapWriter.reset();
 	for (const auto& change : changeList) {
 		switch (change->getType()) {
-			case CHANGE_TILE: {
+			case ChangeType::TILE: {
 				const Position& position = change->getTile()->getPosition();
 				sendTile(mapWriter, editor->map.getTile(position), &position);
 				break;
@@ -432,7 +432,7 @@ void LiveClient::parseNode(NetworkMessage& message) {
 	int32_t ndy = (ind >> 4) & 0x3FFF;
 	bool underground = ind & 1;
 
-	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REMOTE);
+	std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::REMOTE);
 	receiveNode(message, *editor, action.get(), ndx, ndy, underground);
 	editor->actionQueue->addAction(std::move(action));
 

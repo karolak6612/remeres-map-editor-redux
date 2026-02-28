@@ -48,7 +48,7 @@ void SelectionOperations::borderizeSelection(Editor& editor) {
 		g_gui.SetStatusText("No items selected. Can't borderize.");
 	}
 
-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_BORDERIZE);
+	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::BORDERIZE);
 	for (Tile* tile : editor.selection) {
 		std::unique_ptr<Tile> newTile = tile->deepCopy(editor.map);
 		TileOperations::borderize(newTile.get(), &editor.map);
@@ -63,7 +63,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
 		g_gui.SetStatusText("No items selected. Can't randomize.");
 	}
 
-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_RANDOMIZE);
+	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::RANDOMIZE);
 	for (Tile* tile : editor.selection) {
 		std::unique_ptr<Tile> newTile = tile->deepCopy(editor.map);
 		GroundBrush* groundBrush = newTile->getGroundBrush();
@@ -85,7 +85,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
 }
 
 void SelectionOperations::moveSelection(Editor& editor, Position offset) {
-	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ACTION_MOVE); // Our saved action batch, for undo!
+	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ActionIdentifier::MOVE); // Our saved action batch, for undo!
 	std::unique_ptr<Action> action;
 
 	// Remove tiles from the map
@@ -123,7 +123,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 			tmp_storage_tile->house_id = new_src_tile->house_id;
 			new_src_tile->house_id = 0;
 			tmp_storage_tile->setMapFlags(new_src_tile->getMapFlags());
-			new_src_tile->setMapFlags(TILESTATE_NONE);
+			new_src_tile->setMapFlags(TileMapState::NONE);
 			doborders = true;
 		}
 
@@ -341,7 +341,7 @@ void SelectionOperations::destroySelection(Editor& editor) {
 		int item_count = 0;
 		PositionList tilestoborder;
 
-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DELETE_TILES);
+		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DELETE_TILES);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
 		for (Tile* tile : editor.selection) {

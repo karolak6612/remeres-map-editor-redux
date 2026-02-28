@@ -59,12 +59,6 @@ class TilePropertiesPanel;
 
 wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 
-#define EVT_ON_UPDATE_MENUS(id, fn)                                                             \
-	DECLARE_EVENT_TABLE_ENTRY(                                                                  \
-		EVT_UPDATE_MENUS, id, wxID_ANY,                                                         \
-		(wxObjectEventFunction)(wxEventFunction)wxStaticCastEvent(wxCommandEventFunction, &fn), \
-		(wxObject*)nullptr                                                                      \
-	),
 
 #include <mutex>
 #include "brushes/managers/brush_manager.h"

@@ -62,7 +62,7 @@ void DoorPropertyPanel::OnDoorIdChange(wxSpinEvent& event) {
 				Door* door = static_cast<Door*>(new_item);
 				door->setDoorID(door_id_spin->GetValue());
 
-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				editor->addAction(std::move(action));
 			}

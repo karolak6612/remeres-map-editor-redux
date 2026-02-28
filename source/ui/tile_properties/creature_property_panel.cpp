@@ -83,7 +83,7 @@ void CreaturePropertyPanel::OnSpawnTimeChange(wxSpinEvent& event) {
 		if (new_tile->creature) {
 			new_tile->creature->setSpawnTime(spawntime_spin->GetValue());
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 		}
@@ -102,7 +102,7 @@ void CreaturePropertyPanel::OnDirectionChange(wxCommandEvent& event) {
 			int new_dir = (int)(intptr_t)direction_choice->GetClientData(direction_choice->GetSelection());
 			new_tile->creature->setDirection((Direction)new_dir);
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 			g_gui.RefreshView();

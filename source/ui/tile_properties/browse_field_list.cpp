@@ -242,7 +242,7 @@ void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items - 1]);
 		new_tile->items[index_in_items - 1]->select();
 
-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 	}
@@ -268,7 +268,7 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
 		new_tile->items[index_in_items + 1]->select();
 
-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 	}
@@ -303,7 +303,7 @@ void BrowseFieldList::OnClickDelete(wxCommandEvent& event) {
 			new_tile->items[0]->select();
 		}
 
-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 	}

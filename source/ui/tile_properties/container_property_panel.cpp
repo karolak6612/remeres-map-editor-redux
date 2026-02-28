@@ -127,7 +127,7 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 							contents.push_back(std::move(new_sub_item));
 						}
 
-						std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+						std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 						action->addChange(std::make_unique<Change>(std::move(new_tile)));
 						editor->addAction(std::move(action));
 					}
@@ -184,7 +184,7 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	if (d->ShowModal() == wxID_OK) {
-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor->addAction(std::move(action));
 		// Selection change callback will trigger RebuildGrid
@@ -230,7 +230,7 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 			if (sub_index < contents.size()) {
 				contents.erase(contents.begin() + sub_index);
 
-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				editor->addAction(std::move(action));
 			}

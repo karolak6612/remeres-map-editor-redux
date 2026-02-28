@@ -1,0 +1,1567 @@
+diff --git a/source/app/updater.h b/source/app/updater.h
+index 74f9146..bf1dd69 100644
+--- a/source/app/updater.h
++++ b/source/app/updater.h
+@@ -24,12 +24,6 @@
+
+ wxDECLARE_EVENT(EVT_UPDATE_CHECK_FINISHED, wxCommandEvent);
+
+-		#define EVT_ON_UPDATE_CHECK_FINISHED(id, fn)                                                    \
+-			DECLARE_EVENT_TABLE_ENTRY(                                                                  \
+-				EVT_UPDATE_CHECK_FINISHED, id, wxID_ANY,                                                \
+-				(wxObjectEventFunction)(wxEventFunction)wxStaticCastEvent(wxCommandEventFunction, &fn), \
+-				(wxObject*)nullptr                                                                      \
+-			),
+
+ class wxURL;
+
+diff --git a/source/brushes/brush.cpp b/source/brushes/brush.cpp
+index b231692..07d3ea7 100644
+--- a/source/brushes/brush.cpp
++++ b/source/brushes/brush.cpp
+@@ -95,10 +95,10 @@ void Brushes::init() {
+	addManagedBrush(g_brush_manager.house_exit_brush);
+	addManagedBrush(g_brush_manager.waypoint_brush);
+
+-	addManagedBrush(g_brush_manager.pz_brush, TILESTATE_PROTECTIONZONE);
+-	addManagedBrush(g_brush_manager.rook_brush, TILESTATE_NOPVP);
+-	addManagedBrush(g_brush_manager.nolog_brush, TILESTATE_NOLOGOUT);
+-	addManagedBrush(g_brush_manager.pvp_brush, TILESTATE_PVPZONE);
++	addManagedBrush(g_brush_manager.pz_brush, static_cast<uint16_t>(TileMapState::PROTECTIONZONE));
++	addManagedBrush(g_brush_manager.rook_brush, static_cast<uint16_t>(TileMapState::NOPVP));
++	addManagedBrush(g_brush_manager.nolog_brush, static_cast<uint16_t>(TileMapState::NOLOGOUT));
++	addManagedBrush(g_brush_manager.pvp_brush, static_cast<uint16_t>(TileMapState::PVPZONE));
+
+	GroundBrush::init();
+	WallBrush::init();
+diff --git a/source/brushes/doodad/doodad_brush.cpp b/source/brushes/doodad/doodad_brush.cpp
+index 833d018..a5efe0a 100644
+--- a/source/brushes/doodad/doodad_brush.cpp
++++ b/source/brushes/doodad/doodad_brush.cpp
+@@ -90,8 +90,8 @@ void DoodadBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
+	}
+
+	if (settings.clear_mapflags || settings.clear_statflags) {
+-		tile->setMapFlags(tile->getMapFlags() & (~settings.clear_mapflags));
+-		tile->setStatFlags(tile->getStatFlags() & (~settings.clear_statflags));
++		tile->setMapFlags(tile->getMapFlags() & static_cast<TileMapState>(~settings.clear_mapflags));
++		tile->setStatFlags(tile->getStatFlags() & static_cast<TileInternalState>(~settings.clear_statflags));
+	}
+ }
+
+diff --git a/source/brushes/doodad/doodad_brush_loader.cpp b/source/brushes/doodad/doodad_brush_loader.cpp
+index ae10aa6..817648b 100644
+--- a/source/brushes/doodad/doodad_brush_loader.cpp
++++ b/source/brushes/doodad/doodad_brush_loader.cpp
+@@ -65,7 +65,7 @@ bool DoodadBrushLoader::load(pugi::xml_node node, DoodadBrushItems& items, Dooda
+		if (!settings.do_new_borders) {
+			warnings.push_back("remove_optional_border will not work without redo_borders\n");
+		}
+-		settings.clear_statflags |= TILESTATE_OP_BORDER;
++		settings.clear_statflags |= static_cast<uint16_t>(TileInternalState::OP_BORDER);
+	}
+
+	const std::string& thicknessString = node.attribute("thickness").as_string();
+diff --git a/source/brushes/flag/flag_brush.cpp b/source/brushes/flag/flag_brush.cpp
+index 1991029..0417417 100644
+--- a/source/brushes/flag/flag_brush.cpp
++++ b/source/brushes/flag/flag_brush.cpp
+@@ -19,12 +19,12 @@ FlagBrush::FlagBrush(uint32_t flag) :
+ }
+
+ std::string FlagBrush::getName() const {
+-	static constexpr std::array<std::pair<uint32_t, std::string_view>, 4> flagNames = { { { TILESTATE_PROTECTIONZONE, "PZ brush (0x01)" },
+-																						  { TILESTATE_NOPVP, "No combat zone brush (0x04)" },
+-																						  { TILESTATE_NOLOGOUT, "No logout zone brush (0x08)" },
+-																						  { TILESTATE_PVPZONE, "PVP Zone brush (0x10)" } } };
++	static constexpr std::array<std::pair<TileMapState, std::string_view>, 4> flagNames = { { { TileMapState::PROTECTIONZONE, "PZ brush (0x01)" },
++																						  { TileMapState::NOPVP, "No combat zone brush (0x04)" },
++																						  { TileMapState::NOLOGOUT, "No logout zone brush (0x08)" },
++																						  { TileMapState::PVPZONE, "PVP Zone brush (0x10)" } } };
+
+-	auto it = std::ranges::find_if(flagNames, [this](const auto& p) { return p.first == flag; });
++	auto it = std::ranges::find_if(flagNames, [this](const auto& p) { return static_cast<uint32_t>(p.first) == flag; });
+	if (it != flagNames.end()) {
+		return std::string(it->second);
+	}
+@@ -32,12 +32,12 @@ std::string FlagBrush::getName() const {
+ }
+
+ int FlagBrush::getLookID() const {
+-	static constexpr std::array<std::pair<uint32_t, int>, 4> flagSprites = { { { TILESTATE_PROTECTIONZONE, EDITOR_SPRITE_PZ_TOOL },
+-																			   { TILESTATE_NOPVP, EDITOR_SPRITE_NOPVP_TOOL },
+-																			   { TILESTATE_NOLOGOUT, EDITOR_SPRITE_NOLOG_TOOL },
+-																			   { TILESTATE_PVPZONE, EDITOR_SPRITE_PVPZ_TOOL } } };
++	static constexpr std::array<std::pair<TileMapState, int>, 4> flagSprites = { { { TileMapState::PROTECTIONZONE, EDITOR_SPRITE_PZ_TOOL },
++																			   { TileMapState::NOPVP, EDITOR_SPRITE_NOPVP_TOOL },
++																			   { TileMapState::NOLOGOUT, EDITOR_SPRITE_NOLOG_TOOL },
++																			   { TileMapState::PVPZONE, EDITOR_SPRITE_PVPZ_TOOL } } };
+
+-	auto it = std::ranges::find_if(flagSprites, [this](const auto& p) { return p.first == flag; });
++	auto it = std::ranges::find_if(flagSprites, [this](const auto& p) { return static_cast<uint32_t>(p.first) == flag; });
+	if (it != flagSprites.end()) {
+		return it->second;
+	}
+@@ -52,11 +52,11 @@ bool FlagBrush::canDraw(BaseMap* map, const Position& position) const {
+ }
+
+ void FlagBrush::undraw(BaseMap* /*map*/, Tile* tile) {
+-	tile->unsetMapFlags(static_cast<uint16_t>(flag));
++	tile->unsetMapFlags(static_cast<TileMapState>(flag));
+ }
+
+ void FlagBrush::draw(BaseMap* /*map*/, Tile* tile, void* /*parameter*/) {
+	if (tile->hasGround()) {
+-		tile->setMapFlags(static_cast<uint16_t>(flag));
++		tile->setMapFlags(static_cast<TileMapState>(flag));
+	}
+ }
+diff --git a/source/editor/action.cpp b/source/editor/action.cpp
+index da84aba..2c886e9 100644
+--- a/source/editor/action.cpp
++++ b/source/editor/action.cpp
+@@ -29,25 +29,25 @@
+ #include <ctime>
+
+ Change::Change() :
+-	type(CHANGE_NONE), data(std::monostate {}) {
++	type(ChangeType::NONE), data(std::monostate {}) {
+	////
+ }
+
+ Change::Change(std::unique_ptr<Tile> t) :
+-	type(CHANGE_TILE), data(std::move(t)) {
++	type(ChangeType::TILE), data(std::move(t)) {
+	ASSERT(std::get<std::unique_ptr<Tile>>(data));
+ }
+
+-Change* Change::Create(House* house, const Position& where) {
+-	Change* c = newd Change();
+-	c->type = CHANGE_MOVE_HOUSE_EXIT;
++std::unique_ptr<Change> Change::Create(House* house, const Position& where) {
++	std::unique_ptr<Change> c(newd Change());
++	c->type = ChangeType::MOVE_HOUSE_EXIT;
+	c->data = HouseExitChangeData { .houseId = house->getID(), .pos = where };
+	return c;
+ }
+
+-Change* Change::Create(Waypoint* wp, const Position& where) {
+-	Change* c = newd Change();
+-	c->type = CHANGE_MOVE_WAYPOINT;
++std::unique_ptr<Change> Change::Create(Waypoint* wp, const Position& where) {
++	std::unique_ptr<Change> c(newd Change());
++	c->type = ChangeType::MOVE_WAYPOINT;
+	c->data = WaypointChangeData { .name = wp->name, .pos = where };
+	return c;
+ }
+@@ -57,7 +57,7 @@ Change::~Change() {
+ }
+
+ void Change::clear() {
+-	type = CHANGE_NONE;
++	type = ChangeType::NONE;
+	data = std::monostate {};
+ }
+
+@@ -119,7 +119,7 @@ void Action::commit(DirtyList* dirty_list) {
+	while (it != changes.end()) {
+		Change* c = it->get();
+		switch (c->type) {
+-			case CHANGE_TILE: {
++			case ChangeType::TILE: {
+				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
+				ASSERT(uptr);
+				Tile* newtile = uptr.get();
+@@ -201,14 +201,14 @@ void Action::commit(DirtyList* dirty_list) {
+				newtile->modify();
+
+				// Update client dirty list
+-				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
++				if (editor.live_manager.IsClient() && dirty_list && type != ActionIdentifier::REMOTE) {
+					// Local action, assemble changes
+					dirty_list->AddChange(c);
+				}
+				break;
+			}
+
+-			case CHANGE_MOVE_HOUSE_EXIT: {
++			case ChangeType::MOVE_HOUSE_EXIT: {
+				auto& p = std::get<HouseExitChangeData>(c->data);
+				House* whathouse = editor.map.houses.getHouse(p.houseId);
+
+@@ -220,7 +220,7 @@ void Action::commit(DirtyList* dirty_list) {
+				break;
+			}
+
+-			case CHANGE_MOVE_WAYPOINT: {
++			case ChangeType::MOVE_WAYPOINT: {
+				auto& p = std::get<WaypointChangeData>(c->data);
+				Waypoint* wp = editor.map.waypoints.getWaypoint(p.name);
+
+@@ -266,7 +266,7 @@ void Action::undo(DirtyList* dirty_list) {
+	while (it != changes.rend()) {
+		Change* c = it->get();
+		switch (c->type) {
+-			case CHANGE_TILE: {
++			case ChangeType::TILE: {
+				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
+				std::unique_ptr<Tile> old_uptr = std::move(uptr);
+				ASSERT(old_uptr);
+@@ -330,14 +330,14 @@ void Action::undo(DirtyList* dirty_list) {
+				uptr = std::move(newtile_uptr);
+
+				// Update client dirty list
+-				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
++				if (editor.live_manager.IsClient() && dirty_list && type != ActionIdentifier::REMOTE) {
+					// Local action, assemble changes
+					dirty_list->AddChange(c);
+				}
+				break;
+			}
+
+-			case CHANGE_MOVE_HOUSE_EXIT: {
++			case ChangeType::MOVE_HOUSE_EXIT: {
+				auto& p = std::get<HouseExitChangeData>(c->data);
+				House* whathouse = editor.map.houses.getHouse(p.houseId);
+				if (whathouse) {
+@@ -348,7 +348,7 @@ void Action::undo(DirtyList* dirty_list) {
+				break;
+			}
+
+-			case CHANGE_MOVE_WAYPOINT: {
++			case ChangeType::MOVE_WAYPOINT: {
+				auto& p = std::get<WaypointChangeData>(c->data);
+				Waypoint* wp = editor.map.waypoints.getWaypoint(p.name);
+
+diff --git a/source/editor/action.h b/source/editor/action.h
+index 82fe92a..f6c29ed 100644
+--- a/source/editor/action.h
++++ b/source/editor/action.h
+@@ -38,11 +38,11 @@ class Action;
+ class BatchAction;
+ class ActionQueue;
+
+-enum ChangeType {
+-	CHANGE_NONE,
+-	CHANGE_TILE,
+-	CHANGE_MOVE_HOUSE_EXIT,
+-	CHANGE_MOVE_WAYPOINT,
++enum class ChangeType {
++	NONE,
++	TILE,
++	MOVE_HOUSE_EXIT,
++	MOVE_WAYPOINT,
+ };
+
+ struct HouseExitChangeData {
+@@ -65,8 +65,8 @@ private:
+
+ public:
+	explicit Change(std::unique_ptr<Tile> tile);
+-	static Change* Create(House* house, const Position& where);
+-	static Change* Create(Waypoint* wp, const Position& where);
++	static std::unique_ptr<Change> Create(House* house, const Position& where);
++	static std::unique_ptr<Change> Create(Waypoint* wp, const Position& where);
+	~Change();
+	void clear();
+
+@@ -87,20 +87,20 @@ using ChangeList = std::vector<std::unique_ptr<Change>>;
+
+ class DirtyList;
+
+-enum ActionIdentifier {
+-	ACTION_MOVE,
+-	ACTION_REMOTE,
+-	ACTION_SELECT,
+-	ACTION_DELETE_TILES,
+-	ACTION_CUT_TILES,
+-	ACTION_PASTE_TILES,
+-	ACTION_RANDOMIZE,
+-	ACTION_BORDERIZE,
+-	ACTION_DRAW,
+-	ACTION_SWITCHDOOR,
+-	ACTION_ROTATE_ITEM,
+-	ACTION_REPLACE_ITEMS,
+-	ACTION_CHANGE_PROPERTIES,
++enum class ActionIdentifier {
++	MOVE,
++	REMOTE,
++	SELECT,
++	DELETE_TILES,
++	CUT_TILES,
++	PASTE_TILES,
++	RANDOMIZE,
++	BORDERIZE,
++	DRAW,
++	SWITCHDOOR,
++	ROTATE_ITEM,
++	REPLACE_ITEMS,
++	CHANGE_PROPERTIES,
+ };
+
+ class Action {
+diff --git a/source/editor/action_queue.cpp b/source/editor/action_queue.cpp
+index 1998ad7..1dc6614 100644
+--- a/source/editor/action_queue.cpp
++++ b/source/editor/action_queue.cpp
+@@ -70,7 +70,7 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
+		editor.notifyStateChange();
+	}
+
+-	if (batch->getType() == ACTION_REMOTE) {
++	if (batch->getType() == ActionIdentifier::REMOTE) {
+		return;
+	}
+
+diff --git a/source/editor/operations/copy_operations.cpp b/source/editor/operations/copy_operations.cpp
+index fa5e114..e5bb5c6 100644
+--- a/source/editor/operations/copy_operations.cpp
++++ b/source/editor/operations/copy_operations.cpp
+@@ -82,7 +82,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
+	int item_count = 0;
+	buffer.copyPos = Position(0xFFFF, 0xFFFF, floor);
+
+-	std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_CUT_TILES);
++	std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::CUT_TILES);
+	std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+	PositionList tilestoborder;
+@@ -97,7 +97,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
+			copied_tile->house_id = newtile->house_id;
+			newtile->house_id = 0;
+			copied_tile->setMapFlags(tile->getMapFlags());
+-			newtile->setMapFlags(TILESTATE_NONE);
++			newtile->setMapFlags(TileMapState::NONE);
+		}
+
+		auto tile_selection = newtile->popSelectedItems();
+@@ -172,7 +172,7 @@ void CopyOperations::paste(Editor& editor, CopyBuffer& buffer, const Position& t
+		return;
+	}
+
+-	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ACTION_PASTE_TILES);
++	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ActionIdentifier::PASTE_TILES);
+	std::unique_ptr<Action> action = editor.actionQueue->createAction(batchAction.get());
+	for (TileLocation& location : *buffer.tiles) {
+		Tile* buffer_tile = location.get();
+diff --git a/source/editor/operations/draw_operations.cpp b/source/editor/operations/draw_operations.cpp
+index 4722e22..66b5e59 100644
+--- a/source/editor/operations/draw_operations.cpp
++++ b/source/editor/operations/draw_operations.cpp
+@@ -28,7 +28,7 @@
+ namespace {
+
+	void drawDoodad(Editor& editor, DoodadBrush* brush, Position offset, bool alt, bool dodraw) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+		BaseMap* buffer_map = g_doodad_preview.GetBufferMap();
+
+@@ -126,7 +126,7 @@ namespace {
+
+	template <typename T>
+	void drawGroundOrEraserImpl(Editor& editor, T* brush, const PositionVector& tilestodraw, PositionVector& tilestoborder, bool alt, bool dodraw) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+		std::pair<bool, GroundBrush*> param_obj;
+@@ -210,7 +210,7 @@ namespace {
+	}
+
+	void drawWall(Editor& editor, WallBrush* brush, const PositionVector& tilestodraw, PositionVector& tilestoborder, bool alt, bool dodraw) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+		if (alt && dodraw) {
+@@ -307,9 +307,9 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
+			return;
+		}
+
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+-		action->addChange(std::unique_ptr<Change>(Change::Create(house, offset)));
++		action->addChange(Change::Create(house, offset));
+		batch->addAndCommitAction(std::move(action));
+		editor.addBatch(std::move(batch), 2);
+	} else if (brush->is<WaypointBrush>()) {
+@@ -323,13 +323,13 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
+			return;
+		}
+
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+-		action->addChange(std::unique_ptr<Change>(Change::Create(waypoint, offset)));
++		action->addChange(Change::Create(waypoint, offset));
+		batch->addAndCommitAction(std::move(action));
+		editor.addBatch(std::move(batch), 2);
+	} else if (brush->is<WallBrush>()) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+		// This will only occur with a size 0, when clicking on a tile (not drawing)
+		Tile* tile = editor.map.getTile(offset);
+@@ -350,7 +350,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
+		batch->addAndCommitAction(std::move(action));
+		editor.addBatch(std::move(batch), 2);
+	} else if (brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+		Tile* tile = editor.map.getTile(offset);
+@@ -388,7 +388,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, boo
+	}
+ #endif
+
+-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DRAW);
++	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::DRAW);
+
+	if (brush->is<OptionalBorderBrush>()) {
+		// We actually need to do borders, but on the same tiles we draw to
+@@ -451,7 +451,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
+	} else if (brush->is<EraserBrush>()) {
+		drawGroundOrEraser(editor, brush->as<EraserBrush>(), tilestodraw, tilestoborder, alt, dodraw);
+	} else if (brush->is<TableBrush>() || brush->is<CarpetBrush>()) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+		for (const auto& drawPos : tilestodraw) {
+@@ -499,7 +499,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
+	} else if (brush->is<WallBrush>()) {
+		drawWall(editor, brush->as<WallBrush>(), tilestodraw, tilestoborder, alt, dodraw);
+	} else if (brush->is<DoorBrush>()) {
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+		DoorBrush* door_brush = brush->as<DoorBrush>();
+
+@@ -546,7 +546,7 @@ void DrawOperations::draw(Editor& editor, const PositionVector& tilestodraw, Pos
+
+		editor.addBatch(std::move(batch), 2);
+	} else {
+-		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DRAW);
++		std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::DRAW);
+		for (const auto& drawPos : tilestodraw) {
+			auto* location = editor.map.createTileL(drawPos);
+			auto* tile = location->get();
+diff --git a/source/editor/operations/selection_operations.cpp b/source/editor/operations/selection_operations.cpp
+index aa18bb7..b901165 100644
+--- a/source/editor/operations/selection_operations.cpp
++++ b/source/editor/operations/selection_operations.cpp
+@@ -48,7 +48,7 @@ void SelectionOperations::borderizeSelection(Editor& editor) {
+		g_gui.SetStatusText("No items selected. Can't borderize.");
+	}
+
+-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_BORDERIZE);
++	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::BORDERIZE);
+	for (Tile* tile : editor.selection) {
+		std::unique_ptr<Tile> newTile = tile->deepCopy(editor.map);
+		TileOperations::borderize(newTile.get(), &editor.map);
+@@ -63,7 +63,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
+		g_gui.SetStatusText("No items selected. Can't randomize.");
+	}
+
+-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_RANDOMIZE);
++	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::RANDOMIZE);
+	for (Tile* tile : editor.selection) {
+		std::unique_ptr<Tile> newTile = tile->deepCopy(editor.map);
+		GroundBrush* groundBrush = newTile->getGroundBrush();
+@@ -85,7 +85,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
+ }
+
+ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
+-	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ACTION_MOVE); // Our saved action batch, for undo!
++	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ActionIdentifier::MOVE); // Our saved action batch, for undo!
+	std::unique_ptr<Action> action;
+
+	// Remove tiles from the map
+@@ -123,7 +123,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
+			tmp_storage_tile->house_id = new_src_tile->house_id;
+			new_src_tile->house_id = 0;
+			tmp_storage_tile->setMapFlags(new_src_tile->getMapFlags());
+-			new_src_tile->setMapFlags(TILESTATE_NONE);
++			new_src_tile->setMapFlags(TileMapState::NONE);
+			doborders = true;
+		}
+
+@@ -341,7 +341,7 @@ void SelectionOperations::destroySelection(Editor& editor) {
+		int item_count = 0;
+		PositionList tilestoborder;
+
+-		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DELETE_TILES);
++		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::DELETE_TILES);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+		for (Tile* tile : editor.selection) {
+diff --git a/source/editor/selection.cpp b/source/editor/selection.cpp
+index 9ae835d..60bbc4e 100644
+--- a/source/editor/selection.cpp
++++ b/source/editor/selection.cpp
+@@ -266,7 +266,7 @@ void Selection::addInternal(Tile* tile) {
+	if (deferred) {
+		pending_adds.push_back(tile);
+	} else {
+-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
++		auto it = std::ranges::lower_bound(tiles, tile, Tile::positionLessThan);
+		if (it == tiles.end() || *it != tile) {
+			tiles.insert(it, tile);
+			bounds_dirty = true;
+@@ -279,7 +279,7 @@ void Selection::removeInternal(Tile* tile) {
+	if (deferred) {
+		pending_removes.push_back(tile);
+	} else {
+-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
++		auto it = std::ranges::lower_bound(tiles, tile, Tile::positionLessThan);
+		if (it != tiles.end() && *it == tile) {
+			tiles.erase(it);
+			bounds_dirty = true;
+@@ -295,7 +295,7 @@ void Selection::flush() {
+	bounds_dirty = true;
+
+	if (!pending_removes.empty()) {
+-		std::ranges::sort(pending_removes, tilePositionLessThan);
++		std::ranges::sort(pending_removes, Tile::positionLessThan);
+		auto [first, last] = std::ranges::unique(pending_removes, [](Tile* a, Tile* b) {
+			return a->getPosition() == b->getPosition();
+		});
+@@ -303,12 +303,12 @@ void Selection::flush() {
+
+		std::vector<Tile*> result;
+		result.reserve(tiles.size());
+-		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), tilePositionLessThan);
++		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), Tile::positionLessThan);
+		tiles = std::move(result);
+	}
+
+	if (!pending_adds.empty()) {
+-		std::ranges::sort(pending_adds, tilePositionLessThan);
++		std::ranges::sort(pending_adds, Tile::positionLessThan);
+		auto [first, last] = std::ranges::unique(pending_adds, [](Tile* a, Tile* b) {
+			return a->getPosition() == b->getPosition();
+		});
+@@ -316,7 +316,7 @@ void Selection::flush() {
+
+		std::vector<Tile*> merged;
+		merged.reserve(tiles.size() + pending_adds.size());
+-		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), tilePositionLessThan);
++		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), Tile::positionLessThan);
+		tiles = std::move(merged);
+	}
+
+@@ -349,9 +349,9 @@ void Selection::start(SessionFlags flags) {
+		if (flags & SUBTHREAD) {
+			;
+		} else {
+-			session = std::move(editor.actionQueue->createBatch(ACTION_SELECT));
++			session = std::move(editor.actionQueue->createBatch(ActionIdentifier::SELECT));
+		}
+-		subsession = editor.actionQueue->createAction(ACTION_SELECT);
++		subsession = editor.actionQueue->createAction(ActionIdentifier::SELECT);
+	} else {
+		deferred = true;
+		pending_adds.clear();
+@@ -371,7 +371,7 @@ void Selection::commit() {
+		tmp->addAndCommitAction(std::move(subsession));
+
+		// Create a newd action for subsequent selects
+-		subsession = editor.actionQueue->createAction(ACTION_SELECT);
++		subsession = editor.actionQueue->createAction(ActionIdentifier::SELECT);
+		session = std::move(tmp);
+	}
+ }
+diff --git a/source/io/otbm/tile_serialization_otbm.cpp b/source/io/otbm/tile_serialization_otbm.cpp
+index 88c2e23..1488432 100644
+--- a/source/io/otbm/tile_serialization_otbm.cpp
++++ b/source/io/otbm/tile_serialization_otbm.cpp
+@@ -71,7 +71,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
+				case OTBM_ATTR_TILE_FLAGS: {
+					uint32_t flags = 0;
+					if (tileNode->getU32(flags)) {
+-						tile->setMapFlags(flags);
++						tile->setMapFlags(static_cast<TileMapState>(flags));
+					} else {
+						spdlog::warn("Invalid tile flags at {},{},{}", pos.x, pos.y, pos.z);
+					}
+@@ -195,9 +195,9 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
+		f.addU32(save_tile->getHouseID());
+	}
+
+-	if (save_tile->getMapFlags()) {
++	if (save_tile->getMapFlags() != TileMapState::NONE) {
+		f.addU8(OTBM_ATTR_TILE_FLAGS);
+-		f.addU32(save_tile->getMapFlags());
++		f.addU32(static_cast<uint32_t>(save_tile->getMapFlags()));
+	}
+
+	if (save_tile->ground) {
+diff --git a/source/live/live_action.cpp b/source/live/live_action.cpp
+index 9edc407..e445d65 100644
+--- a/source/live/live_action.cpp
++++ b/source/live/live_action.cpp
+@@ -58,7 +58,7 @@ void NetworkedBatchAction::addAndCommitAction(std::unique_ptr<Action> action) {
+	}
+
+	// Add it!
+-	action->commit(type != (ActionIdentifier)ACTION_SELECT ? &dirty_list : nullptr);
++	action->commit(type != (ActionIdentifier)ActionIdentifier::SELECT ? &dirty_list : nullptr);
+	batch.push_back(std::move(action));
+	timestamp = time(nullptr);
+
+@@ -73,7 +73,7 @@ void NetworkedBatchAction::commit() {
+	for (const auto& action_ptr : batch) {
+		NetworkedAction* action = static_cast<NetworkedAction*>(action_ptr.get());
+		if (!action->isCommited()) {
+-			action->commit(type != ACTION_SELECT ? &dirty_list : nullptr);
++			action->commit(type != ActionIdentifier::SELECT ? &dirty_list : nullptr);
+			if (action->owner != 0) {
+				dirty_list.owner = action->owner;
+			}
+@@ -88,7 +88,7 @@ void NetworkedBatchAction::undo() {
+	DirtyList dirty_list;
+
+	for (auto& action_ptr : std::ranges::reverse_view(batch)) {
+-		action_ptr->undo(type != ACTION_SELECT ? &dirty_list : nullptr);
++		action_ptr->undo(type != ActionIdentifier::SELECT ? &dirty_list : nullptr);
+	}
+	// Broadcast changes!
+	queue.broadcast(dirty_list);
+diff --git a/source/live/live_client.cpp b/source/live/live_client.cpp
+index 876ef8e..2bb6728 100644
+--- a/source/live/live_client.cpp
++++ b/source/live/live_client.cpp
+@@ -288,7 +288,7 @@ void LiveClient::sendChanges(DirtyList& dirtyList) {
+	mapWriter.reset();
+	for (const auto& change : changeList) {
+		switch (change->getType()) {
+-			case CHANGE_TILE: {
++			case ChangeType::TILE: {
+				const Position& position = change->getTile()->getPosition();
+				sendTile(mapWriter, editor->map.getTile(position), &position);
+				break;
+@@ -432,7 +432,7 @@ void LiveClient::parseNode(NetworkMessage& message) {
+	int32_t ndy = (ind >> 4) & 0x3FFF;
+	bool underground = ind & 1;
+
+-	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REMOTE);
++	std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::REMOTE);
+	receiveNode(message, *editor, action.get(), ndx, ndy, underground);
+	editor->actionQueue->addAction(std::move(action));
+
+diff --git a/source/live/live_peer.cpp b/source/live/live_peer.cpp
+index d2f37fd..5cb5e42 100644
+--- a/source/live/live_peer.cpp
++++ b/source/live/live_peer.cpp
+@@ -272,7 +272,7 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message) {
+
+	// We need ownership of the action, but createAction returns unique_ptr.
+	// We'll move it into a temporary unique_ptr, get the raw pointer for metadata, then move to queue.
+-	std::unique_ptr<Action> rawAction = editor.actionQueue->createAction(ACTION_REMOTE);
++	std::unique_ptr<Action> rawAction = editor.actionQueue->createAction(ActionIdentifier::REMOTE);
+	NetworkedAction* action = static_cast<NetworkedAction*>(rawAction.get());
+	action->owner = clientId;
+
+diff --git a/source/live/live_socket.cpp b/source/live/live_socket.cpp
+index 37b9b68..665c972 100644
+--- a/source/live/live_socket.cpp
++++ b/source/live/live_socket.cpp
+@@ -246,9 +246,9 @@ void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const P
+		writer.addU32(tile->getHouseID());
+	}
+
+-	if (tile->getMapFlags()) {
++	if (tile->getMapFlags() != TileMapState::NONE) {
+		writer.addByte(OTBM_ATTR_TILE_FLAGS);
+-		writer.addU32(tile->getMapFlags());
++		writer.addU32(static_cast<uint32_t>(tile->getMapFlags()));
+	}
+
+	Item* ground = tile->ground.get();
+@@ -324,7 +324,7 @@ std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, con
+				if (!node->getU32(flags)) {
+					// warning("Invalid tile flags of tile on %d:%d:%d", pos.x, pos.y, pos.z);
+				}
+-				tile->setMapFlags(flags);
++				tile->setMapFlags(static_cast<TileMapState>(flags));
+				break;
+			}
+			case OTBM_ATTR_ITEM: {
+diff --git a/source/map/tile.cpp b/source/map/tile.cpp
+index 8833134..07ada8f 100644
+--- a/source/map/tile.cpp
++++ b/source/map/tile.cpp
+@@ -42,8 +42,8 @@ Tile::Tile(int x, int y, int z) :
+	location(nullptr),
+	ground(nullptr),
+	house_id(0),
+-	mapflags(0),
+-	statflags(0),
++	mapflags(TileMapState::NONE),
++	statflags(TileInternalState::NONE),
+	minimapColor(INVALID_MINIMAP_COLOR) {
+	////
+ }
+@@ -52,8 +52,8 @@ Tile::Tile(TileLocation& loc) :
+	location(&loc),
+	ground(nullptr),
+	house_id(0),
+-	mapflags(0),
+-	statflags(0),
++	mapflags(TileMapState::NONE),
++	statflags(TileInternalState::NONE),
+	minimapColor(INVALID_MINIMAP_COLOR) {
+	////
+ }
+@@ -163,7 +163,7 @@ int Tile::size() const {
+	if (house_id != 0) {
+		++sz;
+	}
+-	if (mapflags) {
++	if (mapflags != TileMapState::NONE) {
+		++sz;
+	}
+	if (location) {
+@@ -305,7 +305,7 @@ void Tile::addItem(std::unique_ptr<Item> item) {
+	}
+
+	if (item->isSelected()) {
+-		statflags |= TILESTATE_SELECTED;
++		statflags |= TileInternalState::SELECTED;
+	}
+	items.insert(it, std::move(item));
+	update();
+@@ -329,7 +329,7 @@ void Tile::select() {
+		i->select();
+	});
+
+-	statflags |= TILESTATE_SELECTED;
++	statflags |= TileInternalState::SELECTED;
+ }
+
+ void Tile::deselect() {
+@@ -347,7 +347,7 @@ void Tile::deselect() {
+		i->deselect();
+	});
+
+-	statflags &= ~TILESTATE_SELECTED;
++	statflags &= ~TileInternalState::SELECTED;
+ }
+
+ Item* Tile::getTopSelectedItem() {
+@@ -381,7 +381,7 @@ std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelecte
+	std::move(split_point, items.end(), std::back_inserter(pop_items));
+	items.erase(split_point, items.end());
+
+-	statflags &= ~TILESTATE_SELECTED;
++	statflags &= ~TileInternalState::SELECTED;
+	return pop_items;
+ }
+
+@@ -430,11 +430,11 @@ uint8_t Tile::getMiniMapColor() const {
+	return 0;
+ }
+
+-bool tilePositionLessThan(const Tile* a, const Tile* b) {
++bool Tile::positionLessThan(const Tile* a, const Tile* b) {
+	return a->getPosition() < b->getPosition();
+ }
+
+-bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
++bool Tile::positionVisualLessThan(const Tile* a, const Tile* b) {
+	Position pa = a->getPosition();
+	Position pb = b->getPosition();
+
+@@ -459,12 +459,12 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
+	return false;
+ }
+
+-static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
++static void UpdateItemFlags(const Item* i, TileInternalState& statflags, uint8_t& minimapColor) {
+	if (i->isSelected()) {
+-		statflags |= TILESTATE_SELECTED;
++		statflags |= TileInternalState::SELECTED;
+	}
+	if (i->getUniqueID() != 0) {
+-		statflags |= TILESTATE_UNIQUE;
++		statflags |= TileInternalState::UNIQUE;
+	}
+	if (i->getMiniMapColor() != 0) {
+		minimapColor = i->getMiniMapColor();
+@@ -472,55 +472,55 @@ static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimap
+
+	const ItemType& it_type = g_items[i->getID()];
+	if (it_type.unpassable) {
+-		statflags |= TILESTATE_BLOCKING;
++		statflags |= TileInternalState::BLOCKING;
+	}
+	if (it_type.isOptionalBorder) {
+-		statflags |= TILESTATE_OP_BORDER;
++		statflags |= TileInternalState::OP_BORDER;
+	}
+	if (it_type.isTable) {
+-		statflags |= TILESTATE_HAS_TABLE;
++		statflags |= TileInternalState::HAS_TABLE;
+	}
+	if (it_type.isCarpet) {
+-		statflags |= TILESTATE_HAS_CARPET;
++		statflags |= TileInternalState::HAS_CARPET;
+	}
+	if (it_type.hookSouth) {
+-		statflags |= TILESTATE_HOOK_SOUTH;
++		statflags |= TileInternalState::HOOK_SOUTH;
+	}
+	if (it_type.hookEast) {
+-		statflags |= TILESTATE_HOOK_EAST;
++		statflags |= TileInternalState::HOOK_EAST;
+	}
+	if (i->hasLight()) {
+-		statflags |= TILESTATE_HAS_LIGHT;
++		statflags |= TileInternalState::HAS_LIGHT;
+	}
+ }
+
+ void Tile::update() {
+-	statflags &= TILESTATE_MODIFIED;
++	statflags &= TileInternalState::MODIFIED;
+
+	if (spawn && spawn->isSelected()) {
+-		statflags |= TILESTATE_SELECTED;
++		statflags |= TileInternalState::SELECTED;
+	}
+	if (creature && creature->isSelected()) {
+-		statflags |= TILESTATE_SELECTED;
++		statflags |= TileInternalState::SELECTED;
+	}
+
+	minimapColor = 0; // Reset to "no color" (valid)
+
+	if (ground) {
+		if (ground->isSelected()) {
+-			statflags |= TILESTATE_SELECTED;
++			statflags |= TileInternalState::SELECTED;
+		}
+		if (ground->isBlocking()) {
+-			statflags |= TILESTATE_BLOCKING;
++			statflags |= TileInternalState::BLOCKING;
+		}
+		if (ground->getUniqueID() != 0) {
+-			statflags |= TILESTATE_UNIQUE;
++			statflags |= TileInternalState::UNIQUE;
+		}
+		if (ground->getMiniMapColor() != 0) {
+			minimapColor = ground->getMiniMapColor();
+		}
+		if (ground->hasLight()) {
+-			statflags |= TILESTATE_HAS_LIGHT;
++			statflags |= TileInternalState::HAS_LIGHT;
+		}
+	}
+
+@@ -528,9 +528,9 @@ void Tile::update() {
+		UpdateItemFlags(i.get(), statflags, minimapColor);
+	});
+
+-	if ((statflags & TILESTATE_BLOCKING) == 0) {
++	if ((statflags & TileInternalState::BLOCKING) == TileInternalState::NONE) {
+		if (ground == nullptr && items.empty()) {
+-			statflags |= TILESTATE_BLOCKING;
++			statflags |= TileInternalState::BLOCKING;
+		}
+	}
+ }
+@@ -596,7 +596,7 @@ void Tile::selectGround() {
+	}
+
+	if (selected_) {
+-		statflags |= TILESTATE_SELECTED;
++		statflags |= TileInternalState::SELECTED;
+	}
+ }
+
+diff --git a/source/map/tile.h b/source/map/tile.h
+index fd3f7cb..7de51c9 100644
+--- a/source/map/tile.h
++++ b/source/map/tile.h
+@@ -30,27 +30,74 @@ class Map;
+ #include <unordered_set>
+ #include <memory>
+
+-enum {
+-	TILESTATE_NONE = 0x0000,
+-	TILESTATE_PROTECTIONZONE = 0x0001,
+-	TILESTATE_DEPRECATED = 0x0002, // Reserved
+-	TILESTATE_NOPVP = 0x0004,
+-	TILESTATE_NOLOGOUT = 0x0008,
+-	TILESTATE_PVPZONE = 0x0010,
+-	TILESTATE_REFRESH = 0x0020,
+-	// Internal
+-	TILESTATE_SELECTED = 0x0001,
+-	TILESTATE_UNIQUE = 0x0002,
+-	TILESTATE_BLOCKING = 0x0004,
+-	TILESTATE_OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
+-	TILESTATE_HAS_TABLE = 0x0010,
+-	TILESTATE_HAS_CARPET = 0x0020,
+-	TILESTATE_MODIFIED = 0x0040,
+-	TILESTATE_HOOK_SOUTH = 0x0080,
+-	TILESTATE_HOOK_EAST = 0x0100,
+-	TILESTATE_HAS_LIGHT = 0x0200,
++enum class TileMapState : uint16_t {
++	NONE = 0x0000,
++	PROTECTIONZONE = 0x0001,
++	DEPRECATED = 0x0002, // Reserved
++	NOPVP = 0x0004,
++	NOLOGOUT = 0x0008,
++	PVPZONE = 0x0010,
++	REFRESH = 0x0020,
+ };
+
++enum class TileInternalState : uint16_t {
++	NONE = 0x0000,
++	SELECTED = 0x0001,
++	UNIQUE = 0x0002,
++	BLOCKING = 0x0004,
++	OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
++	HAS_TABLE = 0x0010,
++	HAS_CARPET = 0x0020,
++	MODIFIED = 0x0040,
++	HOOK_SOUTH = 0x0080,
++	HOOK_EAST = 0x0100,
++	HAS_LIGHT = 0x0200,
++};
++
++inline constexpr TileMapState operator|(TileMapState a, TileMapState b) {
++	return static_cast<TileMapState>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
++}
++
++inline constexpr TileMapState operator&(TileMapState a, TileMapState b) {
++	return static_cast<TileMapState>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
++}
++
++inline constexpr TileMapState operator~(TileMapState a) {
++	return static_cast<TileMapState>(~static_cast<uint16_t>(a));
++}
++
++inline TileMapState& operator|=(TileMapState& a, TileMapState b) {
++	a = a | b;
++	return a;
++}
++
++inline TileMapState& operator&=(TileMapState& a, TileMapState b) {
++	a = a & b;
++	return a;
++}
++
++inline constexpr TileInternalState operator|(TileInternalState a, TileInternalState b) {
++	return static_cast<TileInternalState>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
++}
++
++inline constexpr TileInternalState operator&(TileInternalState a, TileInternalState b) {
++	return static_cast<TileInternalState>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
++}
++
++inline constexpr TileInternalState operator~(TileInternalState a) {
++	return static_cast<TileInternalState>(~static_cast<uint16_t>(a));
++}
++
++inline TileInternalState& operator|=(TileInternalState& a, TileInternalState b) {
++	a = a | b;
++	return a;
++}
++
++inline TileInternalState& operator&=(TileInternalState& a, TileInternalState b) {
++	a = a & b;
++	return a;
++}
++
+ enum : uint8_t {
+	INVALID_MINIMAP_COLOR = 0xFF
+ };
+@@ -98,6 +145,8 @@ public:
+	int getZ() const;
+
+ public: // Functions
++	static bool positionLessThan(const Tile* a, const Tile* b);
++	static bool positionVisualLessThan(const Tile* a, const Tile* b);
+	// Absorb the other tile into this tile
+	void merge(Tile* other);
+
+@@ -106,13 +155,13 @@ public: // Functions
+
+	// Has tile been modified since the map was loaded/created?
+	bool isModified() const {
+-		return testFlags(statflags, TILESTATE_MODIFIED);
++		return (statflags & TileInternalState::MODIFIED) != TileInternalState::NONE;
+	}
+	void modify() {
+-		statflags |= TILESTATE_MODIFIED;
++		statflags |= TileInternalState::MODIFIED;
+	}
+	void unmodify() {
+-		statflags &= ~TILESTATE_MODIFIED;
++		statflags &= ~TileInternalState::MODIFIED;
+	}
+
+	// Get memory footprint size
+@@ -125,18 +174,18 @@ public: // Functions
+
+	// Blocking?
+	bool isBlocking() const {
+-		return testFlags(statflags, TILESTATE_BLOCKING);
++		return (statflags & TileInternalState::BLOCKING) != TileInternalState::NONE;
+	}
+
+	// PZ
+	bool isPZ() const {
+-		return testFlags(mapflags, TILESTATE_PROTECTIONZONE);
++		return (mapflags & TileMapState::PROTECTIONZONE) != TileMapState::NONE;
+	}
+	void setPZ(bool pz) {
+		if (pz) {
+-			mapflags |= TILESTATE_PROTECTIONZONE;
++			mapflags |= TileMapState::PROTECTIONZONE;
+		} else {
+-			mapflags &= ~TILESTATE_PROTECTIONZONE;
++			mapflags &= ~TileMapState::PROTECTIONZONE;
+		}
+	}
+
+@@ -154,10 +203,10 @@ public: // Functions
+	void deselectGround();
+
+	bool isSelected() const {
+-		return testFlags(statflags, TILESTATE_SELECTED);
++		return (statflags & TileInternalState::SELECTED) != TileInternalState::NONE;
+	}
+	bool hasUniqueItem() const {
+-		return testFlags(statflags, TILESTATE_UNIQUE);
++		return (statflags & TileInternalState::UNIQUE) != TileInternalState::NONE;
+	}
+
+	std::vector<std::unique_ptr<Item>> popSelectedItems(bool ignoreTileSelected = false);
+@@ -184,35 +233,35 @@ public: // Functions
+	void addBorderItem(std::unique_ptr<Item> item);
+
+	bool hasTable() const {
+-		return testFlags(statflags, TILESTATE_HAS_TABLE);
++		return (statflags & TileInternalState::HAS_TABLE) != TileInternalState::NONE;
+	}
+	Item* getTable() const;
+
+	bool hasCarpet() const {
+-		return testFlags(statflags, TILESTATE_HAS_CARPET);
++		return (statflags & TileInternalState::HAS_CARPET) != TileInternalState::NONE;
+	}
+	Item* getCarpet() const;
+
+	bool hasHookSouth() const {
+-		return testFlags(statflags, TILESTATE_HOOK_SOUTH);
++		return (statflags & TileInternalState::HOOK_SOUTH) != TileInternalState::NONE;
+	}
+
+	bool hasHookEast() const {
+-		return testFlags(statflags, TILESTATE_HOOK_EAST);
++		return (statflags & TileInternalState::HOOK_EAST) != TileInternalState::NONE;
+	}
+
+	bool hasLight() const {
+-		return testFlags(statflags, TILESTATE_HAS_LIGHT);
++		return (statflags & TileInternalState::HAS_LIGHT) != TileInternalState::NONE;
+	}
+
+	bool hasOptionalBorder() const {
+-		return testFlags(statflags, TILESTATE_OP_BORDER);
++		return (statflags & TileInternalState::OP_BORDER) != TileInternalState::NONE;
+	}
+	void setOptionalBorder(bool b) {
+		if (b) {
+-			statflags |= TILESTATE_OP_BORDER;
++			statflags |= TileInternalState::OP_BORDER;
+		} else {
+-			statflags &= ~TILESTATE_OP_BORDER;
++			statflags &= ~TileInternalState::OP_BORDER;
+		}
+	}
+
+@@ -236,26 +285,26 @@ public: // Functions
+	void setHouse(House* house);
+
+	// Mapflags (PZ, PVPZONE etc.)
+-	void setMapFlags(uint16_t _flags);
+-	void unsetMapFlags(uint16_t _flags);
+-	uint16_t getMapFlags() const;
++	void setMapFlags(TileMapState _flags);
++	void unsetMapFlags(TileMapState _flags);
++	TileMapState getMapFlags() const;
+
+	// Statflags (You really ought not to touch this)
+-	void setStatFlags(uint16_t _flags);
+-	void unsetStatFlags(uint16_t _flags);
+-	uint16_t getStatFlags() const;
++	void setStatFlags(TileInternalState _flags);
++	void unsetStatFlags(TileInternalState _flags);
++	TileInternalState getStatFlags() const;
+
+ protected:
+-	uint16_t mapflags;
+-	uint16_t statflags;
++	TileMapState mapflags;
++	TileInternalState statflags;
+
+ private:
+	uint8_t minimapColor;
+ };
+
+-bool tilePositionLessThan(const Tile* a, const Tile* b);
+-// This sorts them by draw order
+-bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
++
++
++
+
+ using TileVector = std::vector<Tile*>;
+ using TileSet = std::vector<Tile*>;
+@@ -273,27 +322,27 @@ inline uint32_t Tile::getHouseID() const {
+	return house_id;
+ }
+
+-inline void Tile::setMapFlags(uint16_t _flags) {
++inline void Tile::setMapFlags(TileMapState _flags) {
+	mapflags = _flags | mapflags;
+ }
+
+-inline void Tile::unsetMapFlags(uint16_t _flags) {
++inline void Tile::unsetMapFlags(TileMapState _flags) {
+	mapflags &= ~_flags;
+ }
+
+-inline uint16_t Tile::getMapFlags() const {
++inline TileMapState Tile::getMapFlags() const {
+	return mapflags;
+ }
+
+-inline void Tile::setStatFlags(uint16_t _flags) {
++inline void Tile::setStatFlags(TileInternalState _flags) {
+	statflags = _flags | statflags;
+ }
+
+-inline void Tile::unsetStatFlags(uint16_t _flags) {
++inline void Tile::unsetStatFlags(TileInternalState _flags) {
+	statflags &= ~_flags;
+ }
+
+-inline uint16_t Tile::getStatFlags() const {
++inline TileInternalState Tile::getStatFlags() const {
+	return statflags;
+ }
+
+diff --git a/source/rendering/core/game_sprite.h b/source/rendering/core/game_sprite.h
+index 2452553..80f982a 100644
+--- a/source/rendering/core/game_sprite.h
++++ b/source/rendering/core/game_sprite.h
+@@ -45,9 +45,9 @@ public:
+	virtual void unloadDC() = 0;
+	virtual wxSize GetSize() const = 0;
+
+-private:
+-	Sprite(const Sprite&);
+-	Sprite& operator=(const Sprite&);
++public:
++	Sprite(const Sprite&) = delete;
++	Sprite& operator=(const Sprite&) = delete;
+ };
+
+ class GameSprite;
+@@ -104,7 +104,7 @@ public:
+
+	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+
+-private:
++public:
+ protected:
+	class Image;
+	class NormalImage;
+diff --git a/source/rendering/drawers/overlays/preview_drawer.cpp b/source/rendering/drawers/overlays/preview_drawer.cpp
+index 74fc08a..cf4e30b 100644
+--- a/source/rendering/drawers/overlays/preview_drawer.cpp
++++ b/source/rendering/drawers/overlays/preview_drawer.cpp
+@@ -78,14 +78,14 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
+							r /= 2;
+							b /= 2;
+						}
+-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
++						if (options.show_special_tiles && (tile->getMapFlags() & TileMapState::PVPZONE) != TileMapState::NONE) {
+							r = r / 3 * 2;
+							b = r / 3 * 2;
+						}
+-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
++						if (options.show_special_tiles && (tile->getMapFlags() & TileMapState::NOLOGOUT) != TileMapState::NONE) {
+							b /= 2;
+						}
+-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
++						if (options.show_special_tiles && (tile->getMapFlags() & TileMapState::NOPVP) != TileMapState::NONE) {
+							g /= 2;
+						}
+						if (tile->ground) {
+diff --git a/source/rendering/drawers/tiles/tile_color_calculator.cpp b/source/rendering/drawers/tiles/tile_color_calculator.cpp
+index b0e4ece..5196367 100644
+--- a/source/rendering/drawers/tiles/tile_color_calculator.cpp
++++ b/source/rendering/drawers/tiles/tile_color_calculator.cpp
+@@ -64,16 +64,16 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
+		b >>= 1;
+	}
+
+-	if (showspecial && tile->getMapFlags() & TILESTATE_PVPZONE) {
++	if (showspecial && (tile->getMapFlags() & TileMapState::PVPZONE) != TileMapState::NONE) {
+		g = r >> 2;
+		b = (b * 171) >> 8;
+	}
+
+-	if (showspecial && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
++	if (showspecial && (tile->getMapFlags() & TileMapState::NOLOGOUT) != TileMapState::NONE) {
+		b >>= 1;
+	}
+
+-	if (showspecial && tile->getMapFlags() & TILESTATE_NOPVP) {
++	if (showspecial && (tile->getMapFlags() & TileMapState::NOPVP) != TileMapState::NONE) {
+		g >>= 1;
+	}
+ }
+diff --git a/source/rendering/ui/popup_action_handler.cpp b/source/rendering/ui/popup_action_handler.cpp
+index 911f708..a24cfbd 100644
+--- a/source/rendering/ui/popup_action_handler.cpp
++++ b/source/rendering/ui/popup_action_handler.cpp
+@@ -32,7 +32,7 @@
+ void PopupActionHandler::RotateItem(Editor& editor) {
+	Tile* tile = editor.selection.getSelectedTile();
+
+-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_ROTATE_ITEM);
++	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::ROTATE_ITEM);
+
+	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
+
+@@ -61,7 +61,7 @@ void PopupActionHandler::GotoDestination(Editor& editor) {
+ void PopupActionHandler::SwitchDoor(Editor& editor) {
+	Tile* tile = editor.selection.getSelectedTile();
+
+-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_SWITCHDOOR);
++	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::SWITCHDOOR);
+
+	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
+
+@@ -92,7 +92,7 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y)
+
+	int ret = w->ShowModal();
+	if (ret != 0) {
+-		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DELETE_TILES);
++		std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::DELETE_TILES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor.addAction(std::move(action));
+	}
+@@ -143,7 +143,7 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
+
+	int ret = w->ShowModal();
+	if (ret != 0) {
+-		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++		std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor.addAction(std::move(action));
+
+diff --git a/source/ui/browse_tile_window.cpp b/source/ui/browse_tile_window.cpp
+index dd0a2d7..977e783 100644
+--- a/source/ui/browse_tile_window.cpp
++++ b/source/ui/browse_tile_window.cpp
+@@ -198,9 +198,9 @@ BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint positio
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left());
+	infoSizer->Add(item_count_txt = newd wxStaticText(this, wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left());
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Protection zone:  " + b2yn(tile->isPZ())), wxSizerFlags(0).Left());
+-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left());
+-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left());
+-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left());
++	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn((tile->getMapFlags() & TileMapState::NOPVP) != TileMapState::NONE)), wxSizerFlags(0).Left());
++	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn((tile->getMapFlags() & TileMapState::NOLOGOUT) != TileMapState::NONE)), wxSizerFlags(0).Left());
++	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn((tile->getMapFlags() & TileMapState::PVPZONE) != TileMapState::NONE)), wxSizerFlags(0).Left());
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left());
+
+	sizer->Add(infoSizer, wxSizerFlags(0).Left().DoubleBorder());
+diff --git a/source/ui/dialog_helper.cpp b/source/ui/dialog_helper.cpp
+index 592a790..478cdf3 100644
+--- a/source/ui/dialog_helper.cpp
++++ b/source/ui/dialog_helper.cpp
+@@ -72,7 +72,7 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
+	if (w) {
+		int ret = w->ShowModal();
+		if (ret != 0) {
+-			std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor.addAction(std::move(action));
+		}
+diff --git a/source/ui/gui.h b/source/ui/gui.h
+index f69bdde..8a024fe 100644
+--- a/source/ui/gui.h
++++ b/source/ui/gui.h
+@@ -59,12 +59,6 @@ class TilePropertiesPanel;
+
+ wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
+
+-#define EVT_ON_UPDATE_MENUS(id, fn)                                                             \
+-	DECLARE_EVENT_TABLE_ENTRY(                                                                  \
+-		EVT_UPDATE_MENUS, id, wxID_ANY,                                                         \
+-		(wxObjectEventFunction)(wxEventFunction)wxStaticCastEvent(wxCommandEventFunction, &fn), \
+-		(wxObject*)nullptr                                                                      \
+-	),
+
+ #include <mutex>
+ #include "brushes/managers/brush_manager.h"
+diff --git a/source/ui/replace_items_window.cpp b/source/ui/replace_items_window.cpp
+index 43d64d4..f1731c7 100644
+--- a/source/ui/replace_items_window.cpp
++++ b/source/ui/replace_items_window.cpp
+@@ -412,7 +412,7 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
+		std::vector<std::pair<Tile*, Item*>>& result = finder.result;
+
+		if (!result.empty()) {
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REPLACE_ITEMS);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::REPLACE_ITEMS);
+			for (const auto& [tile, itemToReplace] : result) {
+				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor->map);
+				int index = tile->getIndexOf(itemToReplace);
+diff --git a/source/ui/tile_properties/browse_field_list.cpp b/source/ui/tile_properties/browse_field_list.cpp
+index 3ceea85..f7f1ca2 100644
+--- a/source/ui/tile_properties/browse_field_list.cpp
++++ b/source/ui/tile_properties/browse_field_list.cpp
+@@ -242,7 +242,7 @@ void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
+		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items - 1]);
+		new_tile->items[index_in_items - 1]->select();
+
+-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor->addAction(std::move(action));
+	}
+@@ -268,7 +268,7 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
+		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
+		new_tile->items[index_in_items + 1]->select();
+
+-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor->addAction(std::move(action));
+	}
+@@ -303,7 +303,7 @@ void BrowseFieldList::OnClickDelete(wxCommandEvent& event) {
+			new_tile->items[0]->select();
+		}
+
+-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor->addAction(std::move(action));
+	}
+diff --git a/source/ui/tile_properties/container_property_panel.cpp b/source/ui/tile_properties/container_property_panel.cpp
+index 02d462b..4b2347b 100644
+--- a/source/ui/tile_properties/container_property_panel.cpp
++++ b/source/ui/tile_properties/container_property_panel.cpp
+@@ -127,7 +127,7 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
+							contents.push_back(std::move(new_sub_item));
+						}
+
+-						std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++						std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+						action->addChange(std::make_unique<Change>(std::move(new_tile)));
+						editor->addAction(std::move(action));
+					}
+@@ -184,7 +184,7 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
+	}
+
+	if (d->ShowModal() == wxID_OK) {
+-		std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++		std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		editor->addAction(std::move(action));
+		// Selection change callback will trigger RebuildGrid
+@@ -230,7 +230,7 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
+			if (sub_index < contents.size()) {
+				contents.erase(contents.begin() + sub_index);
+
+-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
+				editor->addAction(std::move(action));
+			}
+diff --git a/source/ui/tile_properties/creature_property_panel.cpp b/source/ui/tile_properties/creature_property_panel.cpp
+index c23748b..cd3b63b 100644
+--- a/source/ui/tile_properties/creature_property_panel.cpp
++++ b/source/ui/tile_properties/creature_property_panel.cpp
+@@ -83,7 +83,7 @@ void CreaturePropertyPanel::OnSpawnTimeChange(wxSpinEvent& event) {
+		if (new_tile->creature) {
+			new_tile->creature->setSpawnTime(spawntime_spin->GetValue());
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
+@@ -102,7 +102,7 @@ void CreaturePropertyPanel::OnDirectionChange(wxCommandEvent& event) {
+			int new_dir = (int)(intptr_t)direction_choice->GetClientData(direction_choice->GetSelection());
+			new_tile->creature->setDirection((Direction)new_dir);
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+			g_gui.RefreshView();
+diff --git a/source/ui/tile_properties/depot_property_panel.cpp b/source/ui/tile_properties/depot_property_panel.cpp
+index 25d0cf5..5a2fafe 100644
+--- a/source/ui/tile_properties/depot_property_panel.cpp
++++ b/source/ui/tile_properties/depot_property_panel.cpp
+@@ -85,7 +85,7 @@ void DepotPropertyPanel::OnDepotIdChange(wxCommandEvent& event) {
+				int new_depotid = (int)(intptr_t)depot_id_field->GetClientData(depot_id_field->GetSelection());
+				depot->setDepotID(new_depotid);
+
+-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
+				editor->addAction(std::move(action));
+			}
+diff --git a/source/ui/tile_properties/door_property_panel.cpp b/source/ui/tile_properties/door_property_panel.cpp
+index aca3d0b..ac54c0f 100644
+--- a/source/ui/tile_properties/door_property_panel.cpp
++++ b/source/ui/tile_properties/door_property_panel.cpp
+@@ -62,7 +62,7 @@ void DoorPropertyPanel::OnDoorIdChange(wxSpinEvent& event) {
+				Door* door = static_cast<Door*>(new_item);
+				door->setDoorID(door_id_spin->GetValue());
+
+-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
+				editor->addAction(std::move(action));
+			}
+diff --git a/source/ui/tile_properties/item_property_panel.cpp b/source/ui/tile_properties/item_property_panel.cpp
+index d1e9a09..5c0dfcb 100644
+--- a/source/ui/tile_properties/item_property_panel.cpp
++++ b/source/ui/tile_properties/item_property_panel.cpp
+@@ -153,7 +153,7 @@ void ItemPropertyPanel::OnActionIdChange(wxSpinEvent& event) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setActionID(action_id_spin->GetValue());
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
+@@ -173,7 +173,7 @@ void ItemPropertyPanel::OnUniqueIdChange(wxSpinEvent& event) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setUniqueID(unique_id_spin->GetValue());
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
+@@ -193,7 +193,7 @@ void ItemPropertyPanel::OnCountChange(wxSpinEvent& event) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setSubtype(count_spin->GetValue());
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
+@@ -214,7 +214,7 @@ void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
+			int new_type = (int)(intptr_t)splash_type_choice->GetClientData(splash_type_choice->GetSelection());
+			new_item->setSubtype(new_type);
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+			g_gui.RefreshView();
+@@ -239,7 +239,7 @@ void ItemPropertyPanel::OnTextChange(wxEvent& event) {
+			Item* new_item = new_tile->getItemAt(index);
+			new_item->setText(nstr(text_ctrl->GetValue()));
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+		}
+diff --git a/source/ui/tile_properties/map_flags_panel.cpp b/source/ui/tile_properties/map_flags_panel.cpp
+index f45f6e5..527ed69 100644
+--- a/source/ui/tile_properties/map_flags_panel.cpp
++++ b/source/ui/tile_properties/map_flags_panel.cpp
+@@ -43,9 +43,9 @@ void MapFlagsPanel::SetTile(Tile* tile, Map* map) {
+
+	if (tile) {
+		chk_pz->SetValue(tile->isPZ());
+-		chk_nopvp->SetValue(tile->getMapFlags() & TILESTATE_NOPVP);
+-		chk_nologout->SetValue(tile->getMapFlags() & TILESTATE_NOLOGOUT);
+-		chk_pvpzone->SetValue(tile->getMapFlags() & TILESTATE_PVPZONE);
++		chk_nopvp->SetValue((tile->getMapFlags() & TileMapState::NOPVP) != TileMapState::NONE);
++		chk_nologout->SetValue((tile->getMapFlags() & TileMapState::NOLOGOUT) != TileMapState::NONE);
++		chk_pvpzone->SetValue((tile->getMapFlags() & TileMapState::PVPZONE) != TileMapState::NONE);
+
+		chk_pz->Enable(true);
+		chk_nopvp->Enable(true);
+@@ -78,25 +78,25 @@ void MapFlagsPanel::OnToggleFlag(wxCommandEvent& event) {
+	new_tile->setPZ(chk_pz->GetValue());
+
+	if (chk_nopvp->GetValue()) {
+-		new_tile->setMapFlags(TILESTATE_NOPVP);
++		new_tile->setMapFlags(TileMapState::NOPVP);
+	} else {
+-		new_tile->unsetMapFlags(TILESTATE_NOPVP);
++		new_tile->unsetMapFlags(TileMapState::NOPVP);
+	}
+
+	if (chk_nologout->GetValue()) {
+-		new_tile->setMapFlags(TILESTATE_NOLOGOUT);
++		new_tile->setMapFlags(TileMapState::NOLOGOUT);
+	} else {
+-		new_tile->unsetMapFlags(TILESTATE_NOLOGOUT);
++		new_tile->unsetMapFlags(TileMapState::NOLOGOUT);
+	}
+
+	if (chk_pvpzone->GetValue()) {
+-		new_tile->setMapFlags(TILESTATE_PVPZONE);
++		new_tile->setMapFlags(TileMapState::PVPZONE);
+	} else {
+-		new_tile->unsetMapFlags(TILESTATE_PVPZONE);
++		new_tile->unsetMapFlags(TileMapState::PVPZONE);
+	}
+
+	Tile* old_ptr = new_tile.get();
+-	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++	std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+	action->addChange(std::make_unique<Change>(std::move(new_tile)));
+	editor->addAction(std::move(action));
+	current_tile = editor->map.getTile(old_ptr->getPosition());
+diff --git a/source/ui/tile_properties/spawn_property_panel.cpp b/source/ui/tile_properties/spawn_property_panel.cpp
+index c0f57ca..ecd34c4 100644
+--- a/source/ui/tile_properties/spawn_property_panel.cpp
++++ b/source/ui/tile_properties/spawn_property_panel.cpp
+@@ -62,7 +62,7 @@ void SpawnPropertyPanel::OnRadiusChange(wxSpinEvent& event) {
+		if (new_tile->spawn) {
+			new_tile->spawn->setSize(radius_spin->GetValue());
+
+-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+			action->addChange(std::make_unique<Change>(std::move(new_tile)));
+			editor->addAction(std::move(action));
+			g_gui.RefreshView();
+diff --git a/source/ui/tile_properties/teleport_property_panel.cpp b/source/ui/tile_properties/teleport_property_panel.cpp
+index a25b816..43856f0 100644
+--- a/source/ui/tile_properties/teleport_property_panel.cpp
++++ b/source/ui/tile_properties/teleport_property_panel.cpp
+@@ -77,7 +77,7 @@ void TeleportPropertyPanel::OnDestChange(wxSpinEvent& event) {
+				Position dest(x_spin->GetValue(), y_spin->GetValue(), z_spin->GetValue());
+				teleport->setDestination(dest);
+
+-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
++				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
+				action->addChange(std::make_unique<Change>(std::move(new_tile)));
+				editor->addAction(std::move(action));
+			}

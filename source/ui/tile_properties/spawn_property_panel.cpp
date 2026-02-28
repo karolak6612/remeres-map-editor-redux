@@ -62,7 +62,7 @@ void SpawnPropertyPanel::OnRadiusChange(wxSpinEvent& event) {
 		if (new_tile->spawn) {
 			new_tile->spawn->setSize(radius_spin->GetValue());
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 			g_gui.RefreshView();

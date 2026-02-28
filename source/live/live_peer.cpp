@@ -272,7 +272,7 @@ void LivePeer::parseReceiveChanges(NetworkMessage& message) {
 
 	// We need ownership of the action, but createAction returns unique_ptr.
 	// We'll move it into a temporary unique_ptr, get the raw pointer for metadata, then move to queue.
-	std::unique_ptr<Action> rawAction = editor.actionQueue->createAction(ACTION_REMOTE);
+	std::unique_ptr<Action> rawAction = editor.actionQueue->createAction(ActionIdentifier::REMOTE);
 	NetworkedAction* action = static_cast<NetworkedAction*>(rawAction.get());
 	action->owner = clientId;
 

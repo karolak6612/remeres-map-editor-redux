@@ -45,9 +45,9 @@ public:
 	virtual void unloadDC() = 0;
 	virtual wxSize GetSize() const = 0;
 
-private:
-	Sprite(const Sprite&);
-	Sprite& operator=(const Sprite&);
+public:
+	Sprite(const Sprite&) = delete;
+	Sprite& operator=(const Sprite&) = delete;
 };
 
 class GameSprite;
@@ -104,7 +104,7 @@ public:
 
 	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
 
-private:
+public:
 protected:
 	class Image;
 	class NormalImage;

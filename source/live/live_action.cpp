@@ -58,7 +58,7 @@ void NetworkedBatchAction::addAndCommitAction(std::unique_ptr<Action> action) {
 	}
 
 	// Add it!
-	action->commit(type != (ActionIdentifier)ACTION_SELECT ? &dirty_list : nullptr);
+	action->commit(type != (ActionIdentifier)ActionIdentifier::SELECT ? &dirty_list : nullptr);
 	batch.push_back(std::move(action));
 	timestamp = time(nullptr);
 
@@ -73,7 +73,7 @@ void NetworkedBatchAction::commit() {
 	for (const auto& action_ptr : batch) {
 		NetworkedAction* action = static_cast<NetworkedAction*>(action_ptr.get());
 		if (!action->isCommited()) {
-			action->commit(type != ACTION_SELECT ? &dirty_list : nullptr);
+			action->commit(type != ActionIdentifier::SELECT ? &dirty_list : nullptr);
 			if (action->owner != 0) {
 				dirty_list.owner = action->owner;
 			}
@@ -88,7 +88,7 @@ void NetworkedBatchAction::undo() {
 	DirtyList dirty_list;
 
 	for (auto& action_ptr : std::ranges::reverse_view(batch)) {
-		action_ptr->undo(type != ACTION_SELECT ? &dirty_list : nullptr);
+		action_ptr->undo(type != ActionIdentifier::SELECT ? &dirty_list : nullptr);
 	}
 	// Broadcast changes!
 	queue.broadcast(dirty_list);

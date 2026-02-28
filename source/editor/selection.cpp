@@ -266,7 +266,7 @@ void Selection::addInternal(Tile* tile) {
 	if (deferred) {
 		pending_adds.push_back(tile);
 	} else {
-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
+		auto it = std::ranges::lower_bound(tiles, tile, Tile::positionLessThan);
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
 			bounds_dirty = true;
@@ -279,7 +279,7 @@ void Selection::removeInternal(Tile* tile) {
 	if (deferred) {
 		pending_removes.push_back(tile);
 	} else {
-		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
+		auto it = std::ranges::lower_bound(tiles, tile, Tile::positionLessThan);
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
 			bounds_dirty = true;
@@ -295,7 +295,7 @@ void Selection::flush() {
 	bounds_dirty = true;
 
 	if (!pending_removes.empty()) {
-		std::ranges::sort(pending_removes, tilePositionLessThan);
+		std::ranges::sort(pending_removes, Tile::positionLessThan);
 		auto [first, last] = std::ranges::unique(pending_removes, [](Tile* a, Tile* b) {
 			return a->getPosition() == b->getPosition();
 		});
@@ -303,12 +303,12 @@ void Selection::flush() {
 
 		std::vector<Tile*> result;
 		result.reserve(tiles.size());
-		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), tilePositionLessThan);
+		std::ranges::set_difference(tiles, pending_removes, std::back_inserter(result), Tile::positionLessThan);
 		tiles = std::move(result);
 	}
 
 	if (!pending_adds.empty()) {
-		std::ranges::sort(pending_adds, tilePositionLessThan);
+		std::ranges::sort(pending_adds, Tile::positionLessThan);
 		auto [first, last] = std::ranges::unique(pending_adds, [](Tile* a, Tile* b) {
 			return a->getPosition() == b->getPosition();
 		});
@@ -316,7 +316,7 @@ void Selection::flush() {
 
 		std::vector<Tile*> merged;
 		merged.reserve(tiles.size() + pending_adds.size());
-		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), tilePositionLessThan);
+		std::ranges::set_union(tiles, pending_adds, std::back_inserter(merged), Tile::positionLessThan);
 		tiles = std::move(merged);
 	}
 
@@ -349,9 +349,9 @@ void Selection::start(SessionFlags flags) {
 		if (flags & SUBTHREAD) {
 			;
 		} else {
-			session = std::move(editor.actionQueue->createBatch(ACTION_SELECT));
+			session = std::move(editor.actionQueue->createBatch(ActionIdentifier::SELECT));
 		}
-		subsession = editor.actionQueue->createAction(ACTION_SELECT);
+		subsession = editor.actionQueue->createAction(ActionIdentifier::SELECT);
 	} else {
 		deferred = true;
 		pending_adds.clear();
@@ -371,7 +371,7 @@ void Selection::commit() {
 		tmp->addAndCommitAction(std::move(subsession));
 
 		// Create a newd action for subsequent selects
-		subsession = editor.actionQueue->createAction(ACTION_SELECT);
+		subsession = editor.actionQueue->createAction(ActionIdentifier::SELECT);
 		session = std::move(tmp);
 	}
 }

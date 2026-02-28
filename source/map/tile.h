@@ -30,26 +30,73 @@ class Map;
 #include <unordered_set>
 #include <memory>
 
-enum {
-	TILESTATE_NONE = 0x0000,
-	TILESTATE_PROTECTIONZONE = 0x0001,
-	TILESTATE_DEPRECATED = 0x0002, // Reserved
-	TILESTATE_NOPVP = 0x0004,
-	TILESTATE_NOLOGOUT = 0x0008,
-	TILESTATE_PVPZONE = 0x0010,
-	TILESTATE_REFRESH = 0x0020,
-	// Internal
-	TILESTATE_SELECTED = 0x0001,
-	TILESTATE_UNIQUE = 0x0002,
-	TILESTATE_BLOCKING = 0x0004,
-	TILESTATE_OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
-	TILESTATE_HAS_TABLE = 0x0010,
-	TILESTATE_HAS_CARPET = 0x0020,
-	TILESTATE_MODIFIED = 0x0040,
-	TILESTATE_HOOK_SOUTH = 0x0080,
-	TILESTATE_HOOK_EAST = 0x0100,
-	TILESTATE_HAS_LIGHT = 0x0200,
+enum class TileMapState : uint16_t {
+	NONE = 0x0000,
+	PROTECTIONZONE = 0x0001,
+	DEPRECATED = 0x0002, // Reserved
+	NOPVP = 0x0004,
+	NOLOGOUT = 0x0008,
+	PVPZONE = 0x0010,
+	REFRESH = 0x0020,
 };
+
+enum class TileInternalState : uint16_t {
+	NONE = 0x0000,
+	SELECTED = 0x0001,
+	UNIQUE = 0x0002,
+	BLOCKING = 0x0004,
+	OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
+	HAS_TABLE = 0x0010,
+	HAS_CARPET = 0x0020,
+	MODIFIED = 0x0040,
+	HOOK_SOUTH = 0x0080,
+	HOOK_EAST = 0x0100,
+	HAS_LIGHT = 0x0200,
+};
+
+inline constexpr TileMapState operator|(TileMapState a, TileMapState b) {
+	return static_cast<TileMapState>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
+}
+
+inline constexpr TileMapState operator&(TileMapState a, TileMapState b) {
+	return static_cast<TileMapState>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
+}
+
+inline constexpr TileMapState operator~(TileMapState a) {
+	return static_cast<TileMapState>(~static_cast<uint16_t>(a));
+}
+
+inline TileMapState& operator|=(TileMapState& a, TileMapState b) {
+	a = a | b;
+	return a;
+}
+
+inline TileMapState& operator&=(TileMapState& a, TileMapState b) {
+	a = a & b;
+	return a;
+}
+
+inline constexpr TileInternalState operator|(TileInternalState a, TileInternalState b) {
+	return static_cast<TileInternalState>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
+}
+
+inline constexpr TileInternalState operator&(TileInternalState a, TileInternalState b) {
+	return static_cast<TileInternalState>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
+}
+
+inline constexpr TileInternalState operator~(TileInternalState a) {
+	return static_cast<TileInternalState>(~static_cast<uint16_t>(a));
+}
+
+inline TileInternalState& operator|=(TileInternalState& a, TileInternalState b) {
+	a = a | b;
+	return a;
+}
+
+inline TileInternalState& operator&=(TileInternalState& a, TileInternalState b) {
+	a = a & b;
+	return a;
+}
 
 enum : uint8_t {
 	INVALID_MINIMAP_COLOR = 0xFF
@@ -98,6 +145,8 @@ public:
 	int getZ() const;
 
 public: // Functions
+	static bool positionLessThan(const Tile* a, const Tile* b);
+	static bool positionVisualLessThan(const Tile* a, const Tile* b);
 	// Absorb the other tile into this tile
 	void merge(Tile* other);
 
@@ -106,13 +155,13 @@ public: // Functions
 
 	// Has tile been modified since the map was loaded/created?
 	bool isModified() const {
-		return testFlags(statflags, TILESTATE_MODIFIED);
+		return (statflags & TileInternalState::MODIFIED) != TileInternalState::NONE;
 	}
 	void modify() {
-		statflags |= TILESTATE_MODIFIED;
+		statflags |= TileInternalState::MODIFIED;
 	}
 	void unmodify() {
-		statflags &= ~TILESTATE_MODIFIED;
+		statflags &= ~TileInternalState::MODIFIED;
 	}
 
 	// Get memory footprint size
@@ -125,18 +174,18 @@ public: // Functions
 
 	// Blocking?
 	bool isBlocking() const {
-		return testFlags(statflags, TILESTATE_BLOCKING);
+		return (statflags & TileInternalState::BLOCKING) != TileInternalState::NONE;
 	}
 
 	// PZ
 	bool isPZ() const {
-		return testFlags(mapflags, TILESTATE_PROTECTIONZONE);
+		return (mapflags & TileMapState::PROTECTIONZONE) != TileMapState::NONE;
 	}
 	void setPZ(bool pz) {
 		if (pz) {
-			mapflags |= TILESTATE_PROTECTIONZONE;
+			mapflags |= TileMapState::PROTECTIONZONE;
 		} else {
-			mapflags &= ~TILESTATE_PROTECTIONZONE;
+			mapflags &= ~TileMapState::PROTECTIONZONE;
 		}
 	}
 
@@ -154,10 +203,10 @@ public: // Functions
 	void deselectGround();
 
 	bool isSelected() const {
-		return testFlags(statflags, TILESTATE_SELECTED);
+		return (statflags & TileInternalState::SELECTED) != TileInternalState::NONE;
 	}
 	bool hasUniqueItem() const {
-		return testFlags(statflags, TILESTATE_UNIQUE);
+		return (statflags & TileInternalState::UNIQUE) != TileInternalState::NONE;
 	}
 
 	std::vector<std::unique_ptr<Item>> popSelectedItems(bool ignoreTileSelected = false);
@@ -184,35 +233,35 @@ public: // Functions
 	void addBorderItem(std::unique_ptr<Item> item);
 
 	bool hasTable() const {
-		return testFlags(statflags, TILESTATE_HAS_TABLE);
+		return (statflags & TileInternalState::HAS_TABLE) != TileInternalState::NONE;
 	}
 	Item* getTable() const;
 
 	bool hasCarpet() const {
-		return testFlags(statflags, TILESTATE_HAS_CARPET);
+		return (statflags & TileInternalState::HAS_CARPET) != TileInternalState::NONE;
 	}
 	Item* getCarpet() const;
 
 	bool hasHookSouth() const {
-		return testFlags(statflags, TILESTATE_HOOK_SOUTH);
+		return (statflags & TileInternalState::HOOK_SOUTH) != TileInternalState::NONE;
 	}
 
 	bool hasHookEast() const {
-		return testFlags(statflags, TILESTATE_HOOK_EAST);
+		return (statflags & TileInternalState::HOOK_EAST) != TileInternalState::NONE;
 	}
 
 	bool hasLight() const {
-		return testFlags(statflags, TILESTATE_HAS_LIGHT);
+		return (statflags & TileInternalState::HAS_LIGHT) != TileInternalState::NONE;
 	}
 
 	bool hasOptionalBorder() const {
-		return testFlags(statflags, TILESTATE_OP_BORDER);
+		return (statflags & TileInternalState::OP_BORDER) != TileInternalState::NONE;
 	}
 	void setOptionalBorder(bool b) {
 		if (b) {
-			statflags |= TILESTATE_OP_BORDER;
+			statflags |= TileInternalState::OP_BORDER;
 		} else {
-			statflags &= ~TILESTATE_OP_BORDER;
+			statflags &= ~TileInternalState::OP_BORDER;
 		}
 	}
 
@@ -236,26 +285,26 @@ public: // Functions
 	void setHouse(House* house);
 
 	// Mapflags (PZ, PVPZONE etc.)
-	void setMapFlags(uint16_t _flags);
-	void unsetMapFlags(uint16_t _flags);
-	uint16_t getMapFlags() const;
+	void setMapFlags(TileMapState _flags);
+	void unsetMapFlags(TileMapState _flags);
+	TileMapState getMapFlags() const;
 
 	// Statflags (You really ought not to touch this)
-	void setStatFlags(uint16_t _flags);
-	void unsetStatFlags(uint16_t _flags);
-	uint16_t getStatFlags() const;
+	void setStatFlags(TileInternalState _flags);
+	void unsetStatFlags(TileInternalState _flags);
+	TileInternalState getStatFlags() const;
 
 protected:
-	uint16_t mapflags;
-	uint16_t statflags;
+	TileMapState mapflags;
+	TileInternalState statflags;
 
 private:
 	uint8_t minimapColor;
 };
 
-bool tilePositionLessThan(const Tile* a, const Tile* b);
-// This sorts them by draw order
-bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
+
+
+
 
 using TileVector = std::vector<Tile*>;
 using TileSet = std::vector<Tile*>;
@@ -273,27 +322,27 @@ inline uint32_t Tile::getHouseID() const {
 	return house_id;
 }
 
-inline void Tile::setMapFlags(uint16_t _flags) {
+inline void Tile::setMapFlags(TileMapState _flags) {
 	mapflags = _flags | mapflags;
 }
 
-inline void Tile::unsetMapFlags(uint16_t _flags) {
+inline void Tile::unsetMapFlags(TileMapState _flags) {
 	mapflags &= ~_flags;
 }
 
-inline uint16_t Tile::getMapFlags() const {
+inline TileMapState Tile::getMapFlags() const {
 	return mapflags;
 }
 
-inline void Tile::setStatFlags(uint16_t _flags) {
+inline void Tile::setStatFlags(TileInternalState _flags) {
 	statflags = _flags | statflags;
 }
 
-inline void Tile::unsetStatFlags(uint16_t _flags) {
+inline void Tile::unsetStatFlags(TileInternalState _flags) {
 	statflags &= ~_flags;
 }
 
-inline uint16_t Tile::getStatFlags() const {
+inline TileInternalState Tile::getStatFlags() const {
 	return statflags;
 }
 
