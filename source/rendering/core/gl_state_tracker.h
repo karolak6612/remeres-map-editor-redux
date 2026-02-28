@@ -3,8 +3,6 @@
 
 #include <glad/glad.h>
 #include <array>
-#include <bitset>
-#include <vector>
 #include <memory>
 #include <unordered_map>
 
@@ -60,11 +58,7 @@ private:
 	// Viewport (-1 means unknown)
 	std::array<GLint, 4> viewport_ = { -1, -1, -1, -1 };
 
-	// Framebuffer Bindings (-1 means unknown, though GLuint is unsigned, we handle with separate flag or cast)
-	// Actually 0 is default. We can use -1 cast to GLuint (MAX_UINT) as unknown?
-	// Valid FBO IDs are > 0. 0 is default.
-	// We'll use a separate boolean or strict checking.
-	// Let's use a struct.
+	// Framebuffer Bindings
 	struct CachedBinding {
 		GLuint id = 0;
 		bool valid = false;

@@ -1,5 +1,6 @@
 #include "rendering/core/gl_state_tracker.h"
-#include <spdlog/spdlog.h>
+#include <algorithm>
+#include <ranges>
 #include <stdexcept>
 
 GLStateTracker& GLStateTracker::Instance() {
@@ -138,7 +139,7 @@ void GLStateTracker::Viewport(GLint x, GLint y, GLsizei width, GLsizei height) {
 }
 
 void GLStateTracker::GetViewport(GLint* viewport) {
-	if (viewport_[0] != -1) {
+	if (viewport_[2] != -1) {
 		viewport[0] = viewport_[0];
 		viewport[1] = viewport_[1];
 		viewport[2] = viewport_[2];
@@ -153,57 +154,51 @@ void GLStateTracker::GetViewport(GLint* viewport) {
 }
 
 void GLStateTracker::BindFramebuffer(GLenum target, GLuint framebuffer) {
-	bool updated = false;
-
-	if (target == GL_FRAMEBUFFER || target == GL_READ_FRAMEBUFFER) {
+	if (target == GL_FRAMEBUFFER) {
+		if (!read_framebuffer_.valid || read_framebuffer_.id != framebuffer || !draw_framebuffer_.valid || draw_framebuffer_.id != framebuffer) {
+			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+			read_framebuffer_ = { .id = framebuffer, .valid = true };
+			draw_framebuffer_ = { .id = framebuffer, .valid = true };
+		}
+	} else if (target == GL_READ_FRAMEBUFFER) {
 		if (!read_framebuffer_.valid || read_framebuffer_.id != framebuffer) {
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer);
-			read_framebuffer_.id = framebuffer;
-			read_framebuffer_.valid = true;
-			updated = true;
+			read_framebuffer_ = { .id = framebuffer, .valid = true };
 		}
-	}
-	if (target == GL_FRAMEBUFFER || target == GL_DRAW_FRAMEBUFFER) {
+	} else if (target == GL_DRAW_FRAMEBUFFER) {
 		if (!draw_framebuffer_.valid || draw_framebuffer_.id != framebuffer) {
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
-			draw_framebuffer_.id = framebuffer;
-			draw_framebuffer_.valid = true;
-			updated = true;
+			draw_framebuffer_ = { .id = framebuffer, .valid = true };
 		}
 	}
 }
 
 GLuint GLStateTracker::GetFramebufferBinding(GLenum target) {
 	if (target == GL_READ_FRAMEBUFFER) {
-		if (read_framebuffer_.valid) return read_framebuffer_.id;
-	}
-	if (target == GL_DRAW_FRAMEBUFFER) {
-		if (draw_framebuffer_.valid) return draw_framebuffer_.id;
-	}
-	// GL_FRAMEBUFFER returns DRAW binding usually
-	if (target == GL_FRAMEBUFFER) {
-		if (draw_framebuffer_.valid) return draw_framebuffer_.id;
+		if (!read_framebuffer_.valid) {
+			GLint binding = 0;
+			glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
+			read_framebuffer_ = { .id = static_cast<GLuint>(binding), .valid = true };
+		}
+		return read_framebuffer_.id;
 	}
 
-	// Fallback
-	GLint binding = 0;
-	if (target == GL_READ_FRAMEBUFFER) {
-		glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &binding);
-		read_framebuffer_.id = static_cast<GLuint>(binding);
-		read_framebuffer_.valid = true;
-	} else if (target == GL_DRAW_FRAMEBUFFER) {
-		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &binding);
-		draw_framebuffer_.id = static_cast<GLuint>(binding);
-		draw_framebuffer_.valid = true;
-	} else {
-		glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &binding); // Default for GL_FRAMEBUFFER
-		draw_framebuffer_.id = static_cast<GLuint>(binding);
-		draw_framebuffer_.valid = true;
+	if (target == GL_DRAW_FRAMEBUFFER || target == GL_FRAMEBUFFER) {
+		if (!draw_framebuffer_.valid) {
+			GLint binding = 0;
+			glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &binding);
+			draw_framebuffer_ = { .id = static_cast<GLuint>(binding), .valid = true };
+		}
+		return draw_framebuffer_.id;
 	}
-	return static_cast<GLuint>(binding);
+
+	throw std::invalid_argument("Invalid target for GetFramebufferBinding");
 }
 
 bool GLStateTracker::IsTracked(GLenum capability) const {
 	// Only track specific capabilities for now
-	return capability == GL_BLEND || capability == GL_DEPTH_TEST || capability == GL_CULL_FACE || capability == GL_SCISSOR_TEST || capability == GL_STENCIL_TEST;
+	static constexpr std::array<GLenum, 5> tracked_capabilities = {
+		GL_BLEND, GL_DEPTH_TEST, GL_CULL_FACE, GL_SCISSOR_TEST, GL_STENCIL_TEST
+	};
+	return std::ranges::any_of(tracked_capabilities, [capability](GLenum cap) { return cap == capability; });
 }

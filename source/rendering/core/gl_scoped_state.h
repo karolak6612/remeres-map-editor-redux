@@ -185,10 +185,16 @@ public:
 private:
 	void restore() const {
 		if (active_) {
-			if (target_ == GL_FRAMEBUFFER || target_ == GL_READ_FRAMEBUFFER) {
+			if (target_ == GL_FRAMEBUFFER) {
+				if (prev_read_ == prev_draw_) {
+					GLStateTracker::Instance().BindFramebuffer(GL_FRAMEBUFFER, prev_read_);
+				} else {
+					GLStateTracker::Instance().BindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
+					GLStateTracker::Instance().BindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
+				}
+			} else if (target_ == GL_READ_FRAMEBUFFER) {
 				GLStateTracker::Instance().BindFramebuffer(GL_READ_FRAMEBUFFER, prev_read_);
-			}
-			if (target_ == GL_FRAMEBUFFER || target_ == GL_DRAW_FRAMEBUFFER) {
+			} else { // GL_DRAW_FRAMEBUFFER
 				GLStateTracker::Instance().BindFramebuffer(GL_DRAW_FRAMEBUFFER, prev_draw_);
 			}
 		}
