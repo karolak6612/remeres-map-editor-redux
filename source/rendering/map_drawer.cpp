@@ -340,7 +340,7 @@ void MapDrawer::Draw() {
 	}
 
 	if (options.boundbox_selection) {
-		selection_drawer->draw(*sprite_batch, view, canvas, options);
+		selection_drawer->draw(*primitive_renderer, view, canvas, options);
 	}
 	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
 
