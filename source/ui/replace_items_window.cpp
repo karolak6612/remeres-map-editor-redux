@@ -420,7 +420,7 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 				ASSERT(index != wxNOT_FOUND);
 				Item* item = new_tile->getItemAt(index);
 				ASSERT(item && item->getID() == itemToReplace->getID());
-				transformItem(item, info.withId, new_tile.get());
+				TileOperations::transformItem(item, info.withId, new_tile.get());
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				total++;
 			}
