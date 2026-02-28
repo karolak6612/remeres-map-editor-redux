@@ -22,6 +22,8 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 	ASSERT(map);
 	ASSERT(house);
 
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_HOUSE));
+
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "House Properties");
 	wxFlexGridSizer* housePropContainer = newd wxFlexGridSizer(2, 10, 10);

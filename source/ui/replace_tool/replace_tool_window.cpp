@@ -40,6 +40,7 @@ ReplaceToolWindow::ReplaceToolWindow(wxWindow* parent, Editor* editor) : wxDialo
 																		 editor(editor) {
 
 	VisualSimilarityService::Get().StartIndexing();
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_WAND_MAGIC));
 	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 
 	InitLayout();

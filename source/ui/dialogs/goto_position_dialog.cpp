@@ -43,9 +43,7 @@ GotoPositionDialog::GotoPositionDialog(wxWindow* parent, Editor& editor) :
 	okBtn->Bind(wxEVT_BUTTON, &GotoPositionDialog::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &GotoPositionDialog::OnClickCancel, this);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_LOCATION, wxSize(32, 32)));
-	SetIcon(icon);
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_LOCATION));
 }
 
 void GotoPositionDialog::OnClickCancel(wxCommandEvent&) {

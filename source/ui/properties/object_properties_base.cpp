@@ -15,7 +15,7 @@ ObjectPropertiesWindowBase::ObjectPropertiesWindowBase(wxWindow* parent, wxStrin
 	edit_item(item),
 	edit_creature(nullptr),
 	edit_spawn(nullptr) {
-	////
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_GEAR));
 }
 
 ObjectPropertiesWindowBase::ObjectPropertiesWindowBase(wxWindow* parent, wxString title, const Map* map, const Tile* tile, Creature* creature, wxPoint position /* = wxDefaultPosition */) :
@@ -25,7 +25,7 @@ ObjectPropertiesWindowBase::ObjectPropertiesWindowBase(wxWindow* parent, wxStrin
 	edit_item(nullptr),
 	edit_creature(creature),
 	edit_spawn(nullptr) {
-	////
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_GEAR));
 }
 
 ObjectPropertiesWindowBase::ObjectPropertiesWindowBase(wxWindow* parent, wxString title, const Map* map, const Tile* tile, Spawn* spawn, wxPoint position /* = wxDefaultPosition */) :
@@ -35,12 +35,12 @@ ObjectPropertiesWindowBase::ObjectPropertiesWindowBase(wxWindow* parent, wxStrin
 	edit_item(nullptr),
 	edit_creature(nullptr),
 	edit_spawn(spawn) {
-	////
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_GEAR));
 }
 
 ObjectPropertiesWindowBase::ObjectPropertiesWindowBase(wxWindow* parent, wxString title, wxPoint position /* = wxDefaultPosition */) :
 	wxDialog(parent, wxID_ANY, title, position, wxSize(600, 400), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
-	////
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_GEAR));
 }
 
 Item* ObjectPropertiesWindowBase::getItemBeingEdited() {

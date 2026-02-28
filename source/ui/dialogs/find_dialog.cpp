@@ -78,9 +78,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	// We can't call it here since it calls an abstract function, call in child constructors instead.
 	// RefreshContents();
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(32, 32)));
-	SetIcon(icon);
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_SEARCH));
 }
 
 FindDialog::~FindDialog() = default;
