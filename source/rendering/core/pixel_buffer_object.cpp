@@ -48,7 +48,7 @@ bool PixelBufferObject::initialize(size_t size) {
 	for (int i = 0; i < BUFFER_COUNT; ++i) {
 		buffers_[i] = std::make_unique<GLBuffer>();
 		// Allocate generic storage - we map it later
-		glNamedBufferData(buffers_[i]->GetID(), size, nullptr, GL_STREAM_DRAW);
+		glNamedBufferStorage(buffers_[i]->GetID(), size, nullptr, GL_MAP_WRITE_BIT | GL_CLIENT_STORAGE_BIT);
 	}
 
 	current_index_ = 0;

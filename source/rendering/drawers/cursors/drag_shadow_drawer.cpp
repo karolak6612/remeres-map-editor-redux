@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 
 // glut include removed
@@ -70,7 +71,7 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 				int draw_y = ((pos.y * TILE_SIZE) - view.view_scroll_y) - offset;
 
 				// save performance when moving large chunks unzoomed
-				ItemVector toRender = tile->getSelectedItems(view.zoom > 3.0);
+				ItemVector toRender = TileOperations::getSelectedItems(tile, view.zoom > 3.0);
 				Tile* desttile = drawer->editor.map.getTile(pos);
 				for (const auto& item : toRender) {
 					if (desttile) {

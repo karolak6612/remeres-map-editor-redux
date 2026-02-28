@@ -1,0 +1,20 @@
+# ============================================================
+#  Line endings
+# ============================================================
+# Ensure batch scripts always use Windows CRLF line endings
+*.bat    text eol=crlf
+*.cmd    text eol=crlf
+
+# Shell scripts use LF
+*.sh     text eol=lf
+
+# ============================================================
+#  Binary files (do not diff / do not normalize)
+# ============================================================
+*.spr    binary
+*.dat    binary
+*.png    binary
+*.bmp    binary
+*.ico    binary
+*.exe    binary
+*.dll    binary

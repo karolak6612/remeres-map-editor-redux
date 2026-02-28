@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "rendering/ui/popup_action_handler.h"
 #include "editor/editor.h"
@@ -34,9 +35,9 @@ void PopupActionHandler::RotateItem(Editor& editor) {
 
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_ROTATE_ITEM);
 
-	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
+	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
-	ItemVector selected_items = new_tile->getSelectedItems();
+	ItemVector selected_items = TileOperations::getSelectedItems(new_tile.get());
 	ASSERT(!selected_items.empty());
 
 	selected_items.front()->doRotate();
@@ -49,7 +50,7 @@ void PopupActionHandler::RotateItem(Editor& editor) {
 
 void PopupActionHandler::GotoDestination(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
-	ItemVector selected_items = tile->getSelectedItems();
+	ItemVector selected_items = TileOperations::getSelectedItems(tile);
 	ASSERT(!selected_items.empty());
 	Teleport* teleport = dynamic_cast<Teleport*>(selected_items.front());
 	if (teleport) {
@@ -63,9 +64,9 @@ void PopupActionHandler::SwitchDoor(Editor& editor) {
 
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_SWITCHDOOR);
 
-	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
+	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
-	ItemVector selected_items = new_tile->getSelectedItems();
+	ItemVector selected_items = TileOperations::getSelectedItems(new_tile.get());
 	ASSERT(!selected_items.empty());
 
 	DoorBrush::switchDoor(selected_items.front());
@@ -86,7 +87,7 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) 
 		return;
 	}
 	ASSERT(tile->isSelected());
-	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
+	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
 	wxDialog* w = new BrowseTileWindow(g_gui.root, new_tile.get(), wxPoint(cursor_x, cursor_y));
 
@@ -121,11 +122,11 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 		return;
 	}
 	ASSERT(tile->isSelected());
-	std::unique_ptr<Tile> new_tile(tile->deepCopy(editor.map));
+	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
 	wxDialog* w = nullptr;
 
-	ItemVector selected_items = new_tile->getSelectedItems();
+	ItemVector selected_items = TileOperations::getSelectedItems(new_tile.get());
 
 	Item* item = nullptr;
 	for (auto* item_ptr : std::ranges::reverse_view(selected_items)) {

@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/tile_properties/spawn_property_panel.h"
 #include "game/spawn.h"
@@ -58,7 +59,7 @@ void SpawnPropertyPanel::OnRadiusChange(wxSpinEvent& event) {
 			return;
 		}
 
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 		if (new_tile->spawn) {
 			new_tile->spawn->setSize(radius_spin->GetValue());
 

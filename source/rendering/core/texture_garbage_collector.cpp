@@ -18,6 +18,7 @@
 #include "app/main.h"
 #include "rendering/core/texture_garbage_collector.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/image.h"
 #include "app/settings.h"
 #include <algorithm>
 
@@ -67,7 +68,7 @@ void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_
 
 			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 			for (size_t i = resident_images.size(); i > 0; --i) {
-				GameSprite::Image* img = static_cast<GameSprite::Image*>(resident_images[i - 1]);
+				Image* img = static_cast<Image*>(resident_images[i - 1]);
 				img->clean(current_time, longevity);
 
 				if (!img->isGLLoaded) {

@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/tile_properties/tile_properties_panel.h"
 #include "editor/editor.h"
@@ -188,7 +189,7 @@ void TilePropertiesPanel::UpdateFromEditor(Editor* editor) {
 		SetTile(tile, &editor->map);
 
 		if (tile) {
-			ItemVector items = tile->getSelectedItems();
+			ItemVector items = TileOperations::getSelectedItems(tile);
 			if (!items.empty()) {
 				SelectItem(items.front());
 			} else if (tile->creature && tile->creature->isSelected()) {

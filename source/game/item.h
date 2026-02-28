@@ -439,8 +439,6 @@ private:
 using ItemVector = std::vector<Item*>;
 using ItemList = std::list<Item*>;
 
-Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent = nullptr);
-
 inline int Item::getCount() const {
 	if (isStackable() || isExtraCharged() || isClientCharged()) {
 		return subtype;

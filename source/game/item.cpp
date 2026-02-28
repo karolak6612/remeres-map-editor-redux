@@ -97,63 +97,6 @@ std::unique_ptr<Item> Item::deepCopy() const {
 	return copy;
 }
 
-Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
-	if (old_item == nullptr) {
-		return nullptr;
-	}
-
-	const uint16_t old_id = old_item->getID();
-	old_item->setID(new_id);
-	// Through the magic of deepCopy, this will now be a pointer to an item of the correct type.
-	std::unique_ptr<Item> new_item_ptr = old_item->deepCopy();
-	Item* new_item = new_item_ptr.get();
-
-	if (parent) {
-		// Find the old item and remove it from the tile, insert this one instead!
-		if (old_item == parent->ground.get()) {
-			parent->ground = std::move(new_item_ptr);
-			return new_item;
-		}
-
-		std::queue<Container*> containers;
-		for (auto it = parent->items.begin(); it != parent->items.end(); ++it) {
-			if (it->get() == old_item) {
-				*it = std::move(new_item_ptr);
-				return new_item;
-			}
-
-			Container* c = (*it)->asContainer();
-			if (c) {
-				containers.push(c);
-			}
-		}
-
-		while (containers.size() != 0) {
-			Container* container = containers.front();
-			auto& v = container->getVector();
-			for (auto it = v.begin(); it != v.end(); ++it) {
-				Item* i = it->get();
-				Container* c = i->asContainer();
-				if (c) {
-					containers.push(c);
-				}
-
-				if (i == old_item) {
-					// Found it!
-					*it = std::move(new_item_ptr);
-					return new_item;
-				}
-			}
-			containers.pop();
-		}
-	}
-
-	// If we reached here, the item was not found in the parent or parent was null.
-	// Restore the old ID to keep the object consistent.
-	old_item->setID(old_id);
-	return nullptr;
-}
-
 uint32_t Item::memsize() const {
 	uint32_t mem = sizeof(*this);
 	return mem;
