@@ -27,7 +27,8 @@ void AnimationTimer::Notify() {
 void AnimationTimer::Start() {
 	if (!started) {
 		started = true;
-		wxTimer::Start(1000 / 60);
+		constexpr int TARGET_FPS = 60;
+		wxTimer::Start(1000 / TARGET_FPS);
 	}
 };
 
