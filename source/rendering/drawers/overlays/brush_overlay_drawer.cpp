@@ -371,7 +371,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 								if (brush->is<WaypointBrush>()) {
 									uint8_t r, g, b;
 									get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
-									drawer->brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
+										drawer->brush_cursor_drawer.draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
 								} else {
 									glm::vec4 c = brushColor;
 									if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
@@ -392,7 +392,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 								if (brush->is<WaypointBrush>()) {
 									uint8_t r, g, b;
 									get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
-									drawer->brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
+										drawer->brush_cursor_drawer.draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
 								} else {
 									glm::vec4 c = brushColor;
 									if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
