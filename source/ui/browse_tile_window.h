@@ -22,7 +22,7 @@
 #include "map/map.h"
 #include "map/tile.h"
 
-class BrowseTileListBox;
+class BrowseTileGridCanvas;
 
 class BrowseTileWindow : public wxDialog {
 public:
@@ -36,7 +36,7 @@ public:
 	void OnClickCancel(wxCommandEvent&);
 
 protected:
-	BrowseTileListBox* item_list;
+	BrowseTileGridCanvas* item_grid;
 	wxStaticText* item_count_txt;
 	wxButton* delete_button;
 	wxButton* select_raw_button;
