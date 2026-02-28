@@ -41,3 +41,9 @@ void ToolOptionsWindow::ReloadSettings() {
 		surface->ReloadSettings();
 	}
 }
+
+void ToolOptionsWindow::Clear() {
+	if (surface) {
+		surface->Clear();
+	}
+}

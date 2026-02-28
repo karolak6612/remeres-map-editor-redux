@@ -113,3 +113,4 @@ data/user/
 /test_iterator_mock/
 /test_selection_mock/
 /test_variant_logic/
+/.agents/rules
