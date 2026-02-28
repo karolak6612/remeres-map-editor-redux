@@ -38,7 +38,8 @@
         {
             "name": "vs-vcpkg",
             "displayName": "Visual Studio vcpkg",
-            "description": "Build for Windows x64 using Visual Studio and vcpkg",
+            "description": "Build for Windows x64 using Visual Studio and vcpkg. The generate_vcproj.bat script overrides the generator dynamically.",
+            "generator": "Visual Studio 17 2022",
             "binaryDir": "${sourceDir}/build",
             "architecture": "x64",
             "cacheVariables": {
