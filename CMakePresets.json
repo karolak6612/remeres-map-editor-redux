@@ -13,12 +13,12 @@
             "generator": "Ninja",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "c:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
             }
         },
         {
             "name": "windows-vcpkg",
-            "displayName": "Windows x64 vcpkg",
+            "displayName": "Windows x64 vcpkg (Ninja)",
             "description": "Build for Windows x64 using vcpkg and Ninja",
             "inherits": "base-vcpkg",
             "cacheVariables": {
@@ -37,13 +37,12 @@
         },
         {
             "name": "vs-vcpkg",
-            "displayName": "Visual Studio 2022 vcpkg",
-            "description": "Build for Windows x64 using Visual Studio 2022 and vcpkg",
-            "generator": "Visual Studio 17 2022",
+            "displayName": "Visual Studio vcpkg",
+            "description": "Build for Windows x64 using Visual Studio and vcpkg",
             "binaryDir": "${sourceDir}/build",
             "architecture": "x64",
             "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "c:/vcpkg/scripts/buildsystems/vcpkg.cmake",
+                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
                 "VCPKG_TARGET_TRIPLET": "x64-windows"
             }
         }
