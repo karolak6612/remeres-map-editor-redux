@@ -250,9 +250,6 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		it = items.end();
 	}
 
-	if (item->isSelected()) {
-		statflags |= TILESTATE_SELECTED;
-	}
 	items.insert(it, std::move(item));
 	TileOperations::update(this);
 }

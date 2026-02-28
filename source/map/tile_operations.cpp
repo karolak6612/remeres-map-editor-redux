@@ -75,6 +75,7 @@ namespace TileOperations {
 
 	void cleanBorders(Tile* tile) {
 		cleanItems(tile, [](const auto& item) { return item->isBorder(); });
+		TileOperations::update(tile);
 	}
 
 	void wallize(Tile* tile, BaseMap* map) {
@@ -83,10 +84,12 @@ namespace TileOperations {
 
 	void cleanWalls(Tile* tile) {
 		cleanItems(tile, [](const auto& item) { return item->isWall(); });
+		TileOperations::update(tile);
 	}
 
 	void cleanWalls(Tile* tile, WallBrush* wb) {
 		cleanItems(tile, [wb](const auto& item) { return item->isWall() && wb->hasWall(item.get()); });
+		TileOperations::update(tile);
 	}
 
 	void tableize(Tile* tile, BaseMap* map) {
@@ -95,6 +98,7 @@ namespace TileOperations {
 
 	void cleanTables(Tile* tile) {
 		cleanItems(tile, [](const auto& item) { return item->isTable(); });
+		TileOperations::update(tile);
 	}
 
 	void carpetize(Tile* tile, BaseMap* map) {
@@ -181,37 +185,34 @@ namespace TileOperations {
 			}
 
 			std::queue<Container*> containers;
-			for (auto it = parent->items.begin(); it != parent->items.end(); ++it) {
-				if (it->get() == old_item) {
-					*it = std::move(new_item_ptr);
+			for (auto& item_ptr : parent->items) {
+				if (item_ptr.get() == old_item) {
+					item_ptr = std::move(new_item_ptr);
 					TileOperations::update(parent);
 					return new_item;
 				}
 
-				Container* c = (*it)->asContainer();
-				if (c) {
+				if (Container* c = item_ptr->asContainer()) {
 					containers.push(c);
 				}
 			}
 
 			while (!containers.empty()) {
 				Container* container = containers.front();
-				auto& v = container->getVector();
-				for (auto it = v.begin(); it != v.end(); ++it) {
-					Item* i = it->get();
-					Container* c = i->asContainer();
-					if (c) {
-						containers.push(c);
-					}
+				containers.pop();
 
-					if (i == old_item) {
+				for (auto& item_ptr : container->getVector()) {
+					if (item_ptr.get() == old_item) {
 						// Found it!
-						*it = std::move(new_item_ptr);
+						item_ptr = std::move(new_item_ptr);
 						TileOperations::update(parent);
 						return new_item;
 					}
+
+					if (Container* c = item_ptr->asContainer()) {
+						containers.push(c);
+					}
 				}
-				containers.pop();
 			}
 		}
 

@@ -196,8 +196,9 @@ void Selection::remove(Tile* tile, Item* item) {
 		item->deselect();
 		if (item->isBorder() && g_settings.getInteger(Config::BORDER_IS_GROUND)) {
 			TileOperations::deselectGround(tile);
+		} else {
+			TileOperations::update(tile);
 		}
-		TileOperations::update(tile);
 		if (!tile->isSelected()) {
 			removeInternal(tile);
 		}

@@ -24,14 +24,15 @@
 #include <string>
 #include <stack>
 
-class wxFileName;
-using FileName = wxFileName;
 #include <stdio.h>
 #include <memory>
 #include <type_traits>
 #include <vector>
 #include <format>
 #include <iterator>
+
+class wxFileName;
+using FileName = wxFileName;
 
 #ifndef FORCEINLINE
 	#ifdef _MSV_VER
