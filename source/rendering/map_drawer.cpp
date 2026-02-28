@@ -299,8 +299,13 @@ void MapDrawer::Draw() {
 		};
 	}
 
+	if (!g_gui.gfx.ensureAtlasManager()) {
+		return;
+	}
+	auto* atlas = g_gui.gfx.getAtlasManager();
+
 	// Begin Batches
-	sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
+	sprite_batch->begin(view.projectionMatrix, *atlas);
 	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 
 	// Check Framebuffer Logic
@@ -322,9 +327,7 @@ void MapDrawer::Draw() {
 	DrawMap();
 
 	// Flush Map for Light Pass
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch->end(*g_gui.gfx.getAtlasManager());
-	}
+	sprite_batch->end(*atlas);
 	primitive_renderer->flush();
 
 	if (options.isDrawLight()) {
@@ -340,7 +343,7 @@ void MapDrawer::Draw() {
 	}
 
 	// Resume Batch for Overlays
-	sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
+	sprite_batch->begin(view.projectionMatrix, *atlas);
 
 	if (drag_shadow_drawer) {
 		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
@@ -360,9 +363,7 @@ void MapDrawer::Draw() {
 	// Draw creature names (Overlay) moved to DrawCreatureNames()
 
 	// End Batches and Flush
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch->end(*g_gui.gfx.getAtlasManager());
-	}
+	sprite_batch->end(*atlas);
 	primitive_renderer->flush();
 
 	// Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)

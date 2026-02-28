@@ -292,7 +292,7 @@ ReplaceItemsDialog::ReplaceItemsDialog(wxWindow* parent, bool selectionOnly) :
 	execute_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnExecuteButtonClicked, this);
 	close_button->Bind(wxEVT_BUTTON, &ReplaceItemsDialog::OnCancelButtonClicked, this);
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_SYNC)));
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_SYNC));
 }
 
 ReplaceItemsDialog::~ReplaceItemsDialog() {
