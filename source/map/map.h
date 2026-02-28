@@ -139,8 +139,6 @@ protected:
 	bool open(const std::string& identifier);
 
 protected:
-	void removeSpawnInternal(Tile* tile);
-
 	std::vector<std::string> warnings;
 	wxString error;
 

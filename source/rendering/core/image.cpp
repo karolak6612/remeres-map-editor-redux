@@ -60,17 +60,17 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 		}
 
 		// 3. Add to Atlas
-		if (rgba) {
-			region = atlas_mgr->addSprite(sprite_id, rgba.get());
+		region = atlas_mgr->addSprite(sprite_id, rgba.get());
 
-			if (region) {
+		if (region) {
+			if (!isGLLoaded) {
 				isGLLoaded = true;
 				g_gui.gfx.resident_images.push_back(this); // Add to resident set
-				g_gui.gfx.collector.NotifyTextureLoaded();
-				return region;
-			} else {
-				spdlog::warn("Atlas addSprite failed for sprite_id={}", sprite_id);
 			}
+			g_gui.gfx.collector.NotifyTextureLoaded();
+			return region;
+		} else {
+			spdlog::warn("Atlas addSprite failed for sprite_id={}", sprite_id);
 		}
 	} else {
 		spdlog::error("AtlasManager not available for sprite_id={}", sprite_id);

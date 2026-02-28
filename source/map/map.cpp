@@ -169,10 +169,6 @@ bool Map::addSpawn(Tile* tile) {
 	return MapSpawnManager::addSpawn(*this, tile);
 }
 
-void Map::removeSpawnInternal(Tile* tile) {
-	MapSpawnManager::removeSpawnInternal(*this, tile);
-}
-
 void Map::removeSpawn(Tile* tile) {
 	MapSpawnManager::removeSpawn(*this, tile);
 }

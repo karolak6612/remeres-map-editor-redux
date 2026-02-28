@@ -45,8 +45,24 @@ void TemplateImage::clean(time_t time, int longevity) {
 }
 
 std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
+	if (!parent) {
+		spdlog::warn("TemplateImage (texture_id={}): Invalid parent reference.", texture_id);
+		return nullptr;
+	}
+
+	if (parent->width <= 0 || parent->height <= 0) {
+		spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", texture_id, parent->width, parent->height);
+		return nullptr;
+	}
+
+	size_t mask_index = sprite_index + parent->height * parent->width;
+	if (sprite_index >= parent->spriteList.size() || mask_index >= parent->spriteList.size()) {
+		spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", texture_id, sprite_index, mask_index, parent->spriteList.size());
+		return nullptr;
+	}
+
 	auto rgbdata = parent->spriteList[sprite_index]->getRGBData();
-	auto template_rgbdata = parent->spriteList[sprite_index + parent->height * parent->width]->getRGBData();
+	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
 
 	if (!rgbdata) {
 		// template_rgbdata auto-deleted
@@ -77,8 +93,24 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 }
 
 std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
+	if (!parent) {
+		spdlog::warn("TemplateImage (texture_id={}): Invalid parent reference.", texture_id);
+		return nullptr;
+	}
+
+	if (parent->width <= 0 || parent->height <= 0) {
+		spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", texture_id, parent->width, parent->height);
+		return nullptr;
+	}
+
+	size_t mask_index = sprite_index + parent->height * parent->width;
+	if (sprite_index >= parent->spriteList.size() || mask_index >= parent->spriteList.size()) {
+		spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", texture_id, sprite_index, mask_index, parent->spriteList.size());
+		return nullptr;
+	}
+
 	auto rgbadata = parent->spriteList[sprite_index]->getRGBAData();
-	auto template_rgbdata = parent->spriteList[sprite_index + parent->height * parent->width]->getRGBData();
+	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
 
 	if (!rgbadata) {
 		spdlog::warn("TemplateImage: Failed to load BASE sprite data for sprite_index={} (template_id={}). Parent width={}, height={}", sprite_index, texture_id, parent->width, parent->height);

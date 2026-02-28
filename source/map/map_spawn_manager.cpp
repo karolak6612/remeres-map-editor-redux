@@ -3,6 +3,10 @@
 #include "map/map_region.h"
 
 bool MapSpawnManager::addSpawn(Map& map, Tile* tile) {
+	if (!tile) {
+		return false;
+	}
+
 	Spawn* spawn = tile->spawn.get();
 	if (spawn) {
 		int z = tile->getZ();
@@ -24,6 +28,10 @@ bool MapSpawnManager::addSpawn(Map& map, Tile* tile) {
 }
 
 void MapSpawnManager::removeSpawnInternal(Map& map, Tile* tile) {
+	if (!tile || !tile->spawn) {
+		return;
+	}
+
 	Spawn* spawn = tile->spawn.get();
 	ASSERT(spawn);
 
@@ -44,6 +52,10 @@ void MapSpawnManager::removeSpawnInternal(Map& map, Tile* tile) {
 }
 
 void MapSpawnManager::removeSpawn(Map& map, Tile* tile) {
+	if (!tile) {
+		return;
+	}
+
 	if (tile->spawn) {
 		removeSpawnInternal(map, tile);
 		map.spawns.removeSpawn(tile);
@@ -52,6 +64,10 @@ void MapSpawnManager::removeSpawn(Map& map, Tile* tile) {
 
 SpawnList MapSpawnManager::getSpawnList(Map& map, Tile* where) {
 	SpawnList list;
+	if (!where) {
+		return list;
+	}
+
 	TileLocation* tile_loc = where->getLocation();
 	if (tile_loc) {
 		if (tile_loc->getSpawnCount() > 0) {
@@ -69,8 +85,12 @@ SpawnList MapSpawnManager::getSpawnList(Map& map, Tile* where) {
 			auto checkTile = [&](int x, int y) {
 				if (Tile* tile = map.getTile(x, y, z)) {
 					if (tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
+						int dx = std::abs(where->getX() - tile->getX());
+						int dy = std::abs(where->getY() - tile->getY());
+						if (dx <= tile->spawn->getSize() && dy <= tile->spawn->getSize()) {
+							list.push_back(tile->spawn.get());
+							++found;
+						}
 					}
 				}
 			};
