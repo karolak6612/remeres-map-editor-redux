@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/replace_items_window.h"
 #include "ui/find_item_window.h"
@@ -414,12 +415,12 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		if (!result.empty()) {
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REPLACE_ITEMS);
 			for (const auto& [tile, itemToReplace] : result) {
-				std::unique_ptr<Tile> new_tile = tile->deepCopy(editor->map);
+				std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(tile, editor->map);
 				int index = tile->getIndexOf(itemToReplace);
 				ASSERT(index != wxNOT_FOUND);
 				Item* item = new_tile->getItemAt(index);
 				ASSERT(item && item->getID() == itemToReplace->getID());
-				transformItem(item, info.withId, new_tile.get());
+				TileOperations::transformItem(item, info.withId, new_tile.get());
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				total++;
 			}

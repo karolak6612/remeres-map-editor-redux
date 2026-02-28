@@ -20,6 +20,7 @@
 #include "brushes/brush.h"
 
 #include "map/tile.h"
+#include "map/tile_operations.h"
 #include "game/creature.h"
 #include "game/house.h"
 #include "map/basemap.h"
@@ -103,36 +104,6 @@ Tile::~Tile() {
 	// Smart pointers handle deletion
 }
 
-std::unique_ptr<Tile> Tile::deepCopy(BaseMap& map) {
-	// Use the destination map's TileLocation at the same position
-	TileLocation* dest_location = map.getTileL(getX(), getY(), getZ());
-	if (!dest_location) {
-		dest_location = map.createTileL(getX(), getY(), getZ());
-	}
-	std::unique_ptr<Tile> copy(map.allocator.allocateTile(dest_location));
-	copy->mapflags = mapflags;
-	copy->statflags = statflags;
-	copy->minimapColor = minimapColor;
-	copy->house_id = house_id;
-	if (spawn) {
-		copy->spawn = spawn->deepCopy();
-	}
-	if (creature) {
-		copy->creature = creature->deepCopy();
-	}
-	// Spawncount & exits are not transferred on copy!
-	if (ground) {
-		copy->ground = ground->deepCopy();
-	}
-
-	copy->items.reserve(items.size());
-	for (const auto& item : items) {
-		copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
-	}
-
-	return copy;
-}
-
 uint32_t Tile::memsize() const {
 	uint32_t mem = sizeof(*this);
 	if (ground) {
@@ -178,34 +149,6 @@ int Tile::size() const {
 		}
 	}
 	return sz;
-}
-
-void Tile::merge(Tile* other) {
-	if (other->isPZ()) {
-		setPZ(true);
-	}
-	if (other->house_id) {
-		house_id = other->house_id;
-	}
-
-	if (other->ground) {
-		ground = std::move(other->ground);
-	}
-
-	if (other->creature) {
-		creature = std::move(other->creature);
-	}
-
-	if (other->spawn) {
-		spawn = std::move(other->spawn);
-	}
-
-	items.reserve(items.size() + other->items.size());
-	for (auto& item : other->items) {
-		addItem(std::move(item));
-	}
-	other->items.clear();
-	update();
 }
 
 bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
@@ -282,6 +225,7 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 	}
 	if (item->isGroundTile()) {
 		ground = std::move(item);
+		TileOperations::update(this);
 		return;
 	}
 
@@ -290,6 +234,8 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 
 	if (gid != 0) {
 		ground = Item::Create(gid);
+		TileOperations::update(this);
+		return;
 		// At the very bottom!
 	} else if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
@@ -304,108 +250,8 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		it = items.end();
 	}
 
-	if (item->isSelected()) {
-		statflags |= TILESTATE_SELECTED;
-	}
 	items.insert(it, std::move(item));
-	update();
-}
-
-void Tile::select() {
-	if (empty()) {
-		return;
-	}
-	if (ground) {
-		ground->select();
-	}
-	if (spawn) {
-		spawn->select();
-	}
-	if (creature) {
-		creature->select();
-	}
-
-	std::ranges::for_each(items, [](const auto& i) {
-		i->select();
-	});
-
-	statflags |= TILESTATE_SELECTED;
-}
-
-void Tile::deselect() {
-	if (ground) {
-		ground->deselect();
-	}
-	if (spawn) {
-		spawn->deselect();
-	}
-	if (creature) {
-		creature->deselect();
-	}
-
-	std::ranges::for_each(items, [](const auto& i) {
-		i->deselect();
-	});
-
-	statflags &= ~TILESTATE_SELECTED;
-}
-
-Item* Tile::getTopSelectedItem() {
-	auto view = std::ranges::reverse_view(items);
-	auto it = std::ranges::find_if(view, [](const std::unique_ptr<Item>& i) {
-		return i->isSelected() && !i->isMetaItem();
-	});
-
-	if (it != view.end()) {
-		return it->get();
-	}
-
-	if (ground && ground->isSelected() && !ground->isMetaItem()) {
-		return ground.get();
-	}
-	return nullptr;
-}
-
-std::vector<std::unique_ptr<Item>> Tile::popSelectedItems(bool ignoreTileSelected) {
-	std::vector<std::unique_ptr<Item>> pop_items;
-
-	if (!ignoreTileSelected && !isSelected()) {
-		return pop_items;
-	}
-
-	if (ground && ground->isSelected()) {
-		pop_items.push_back(std::move(ground));
-	}
-
-	auto split_point = std::stable_partition(items.begin(), items.end(), [](const std::unique_ptr<Item>& i) { return !i->isSelected(); });
-	std::move(split_point, items.end(), std::back_inserter(pop_items));
-	items.erase(split_point, items.end());
-
-	statflags &= ~TILESTATE_SELECTED;
-	return pop_items;
-}
-
-ItemVector Tile::getSelectedItems(bool unzoomed) {
-	ItemVector selected_items;
-
-	if (!isSelected()) {
-		return selected_items;
-	}
-
-	if (ground && ground->isSelected()) {
-		selected_items.push_back(ground.get());
-	}
-
-	// save performance when zoomed out
-	if (!unzoomed) {
-		std::ranges::for_each(items, [&](const auto& item) {
-			if (item->isSelected()) {
-				selected_items.push_back(item.get());
-			}
-		});
-	}
-
-	return selected_items;
+	TileOperations::update(this);
 }
 
 uint8_t Tile::getMiniMapColor() const {
@@ -459,91 +305,6 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
 	return false;
 }
 
-static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
-	if (i->isSelected()) {
-		statflags |= TILESTATE_SELECTED;
-	}
-	if (i->getUniqueID() != 0) {
-		statflags |= TILESTATE_UNIQUE;
-	}
-	if (i->getMiniMapColor() != 0) {
-		minimapColor = i->getMiniMapColor();
-	}
-
-	const ItemType& it_type = g_items[i->getID()];
-	if (it_type.unpassable) {
-		statflags |= TILESTATE_BLOCKING;
-	}
-	if (it_type.isOptionalBorder) {
-		statflags |= TILESTATE_OP_BORDER;
-	}
-	if (it_type.isTable) {
-		statflags |= TILESTATE_HAS_TABLE;
-	}
-	if (it_type.isCarpet) {
-		statflags |= TILESTATE_HAS_CARPET;
-	}
-	if (it_type.hookSouth) {
-		statflags |= TILESTATE_HOOK_SOUTH;
-	}
-	if (it_type.hookEast) {
-		statflags |= TILESTATE_HOOK_EAST;
-	}
-	if (i->hasLight()) {
-		statflags |= TILESTATE_HAS_LIGHT;
-	}
-}
-
-void Tile::update() {
-	statflags &= TILESTATE_MODIFIED;
-
-	if (spawn && spawn->isSelected()) {
-		statflags |= TILESTATE_SELECTED;
-	}
-	if (creature && creature->isSelected()) {
-		statflags |= TILESTATE_SELECTED;
-	}
-
-	minimapColor = 0; // Reset to "no color" (valid)
-
-	if (ground) {
-		if (ground->isSelected()) {
-			statflags |= TILESTATE_SELECTED;
-		}
-		if (ground->isBlocking()) {
-			statflags |= TILESTATE_BLOCKING;
-		}
-		if (ground->getUniqueID() != 0) {
-			statflags |= TILESTATE_UNIQUE;
-		}
-		if (ground->getMiniMapColor() != 0) {
-			minimapColor = ground->getMiniMapColor();
-		}
-		if (ground->hasLight()) {
-			statflags |= TILESTATE_HAS_LIGHT;
-		}
-	}
-
-	std::ranges::for_each(items, [&](const auto& i) {
-		UpdateItemFlags(i.get(), statflags, minimapColor);
-	});
-
-	if ((statflags & TILESTATE_BLOCKING) == 0) {
-		if (ground == nullptr && items.empty()) {
-			statflags |= TILESTATE_BLOCKING;
-		}
-	}
-}
-
-void Tile::addBorderItem(std::unique_ptr<Item> item) {
-	if (!item) {
-		return;
-	}
-	ASSERT(item->isBorder());
-	items.insert(items.begin(), std::move(item));
-	update();
-}
-
 GroundBrush* Tile::getGroundBrush() const {
 	if (ground) {
 		if (ground->getGroundBrush()) {
@@ -574,42 +335,6 @@ Item* Tile::getTable() const {
 	return (it != items.end()) ? it->get() : nullptr;
 }
 
-void Tile::addWallItem(std::unique_ptr<Item> item) {
-	if (!item) {
-		return;
-	}
-	ASSERT(item->isWall());
-
-	addItem(std::move(item));
-}
-
-void Tile::selectGround() {
-	bool selected_ = false;
-	if (ground) {
-		ground->select();
-		selected_ = true;
-	}
-
-	for (const auto& i : items | std::views::take_while([](const auto& item) { return item->isBorder(); })) {
-		i->select();
-		selected_ = true;
-	}
-
-	if (selected_) {
-		statflags |= TILESTATE_SELECTED;
-	}
-}
-
-void Tile::deselectGround() {
-	if (ground) {
-		ground->deselect();
-	}
-
-	for (const auto& i : items | std::views::take_while([](const auto& item) { return item->isBorder(); })) {
-		i->deselect();
-	}
-}
-
 void Tile::setHouse(House* _house) {
 	house_id = (_house ? _house->getID() : 0);
 }
@@ -620,27 +345,6 @@ void Tile::setHouseID(uint32_t newHouseId) {
 
 bool Tile::isTownExit(Map& map) const {
 	return location->getTownCount() > 0;
-}
-
-void Tile::addHouseExit(House* h) {
-	if (!h) {
-		return;
-	}
-	HouseExitList* house_exits = location->createHouseExits();
-	house_exits->push_back(h->getID());
-}
-
-void Tile::removeHouseExit(House* h) {
-	if (!h) {
-		return;
-	}
-
-	HouseExitList* house_exits = location->getHouseExits();
-	if (!house_exits) {
-		return;
-	}
-
-	std::erase(*house_exits, h->getID());
 }
 
 bool Tile::isContentEqual(const Tile* other) const {

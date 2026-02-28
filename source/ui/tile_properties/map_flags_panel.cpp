@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/tile_properties/map_flags_panel.h"
 #include "map/tile.h"
@@ -74,7 +75,7 @@ void MapFlagsPanel::OnToggleFlag(wxCommandEvent& event) {
 		return;
 	}
 
-	std::unique_ptr<Tile> new_tile = current_tile->deepCopy(*current_map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	new_tile->setPZ(chk_pz->GetValue());
 
 	if (chk_nopvp->GetValue()) {
