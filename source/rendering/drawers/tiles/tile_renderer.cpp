@@ -182,10 +182,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Light Processing (Integrated)
-	if (light_buffer) {
+	if (light_buffer && tile->hasLight()) {
 		const auto& position = location->getPosition();
 		if (tile->ground && tile->ground->hasLight()) {
 			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+		}
+		for (const auto& item : tile->items) {
+			if (item->hasLight()) {
+				light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+			}
 		}
 	}
 
@@ -285,11 +290,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
-				if (light_buffer && item->hasLight()) {
-					const auto& position = location->getPosition();
-					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
-				}
-
 				const ItemType& it = g_items[item->getID()];
 
 				// item tooltip (one per item)
@@ -370,4 +370,3 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
 	}
 }
-

@@ -117,77 +117,27 @@ protected:
 	template <typename Func>
 	void visitLeavesByViewportImpl(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) {
 		static thread_local std::vector<RowCellInfo> row_cells_cache;
-		auto& row_cells = row_cells_cache;
+		static thread_local bool row_cells_in_use = false;
+
+		std::vector<RowCellInfo> local_row_cells;
+		std::vector<RowCellInfo>& row_cells = row_cells_in_use ? local_row_cells : row_cells_cache;
+
+		struct ReentrancyGuard {
+			bool& flag;
+			bool was_in_use;
+			ReentrancyGuard(bool& f) : flag(f), was_in_use(f) {
+				flag = true;
+			}
+			~ReentrancyGuard() {
+				flag = was_in_use;
+			}
+		} guard(row_cells_in_use);
+
 		row_cells.clear();
 		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
-			// We cannot clear here as we are accumulating cells for the *row*?
-			// Wait, the original logic cleared per row?
-			// Let's re-read the original logic.
-			// "for (int cy = start_cy; cy <= end_cy; ++cy) { row_cells.clear(); ..."
-			// Yes, it processes row by row.
-			// So clearing at the start of the function is actually NOT enough if we reuse it per row loop?
-			// No, wait. The loop structure is:
-			//   outer loop (cy)
-			//     clear row_cells
-			//     fill row_cells for this row (cx)
-			//     inner loop (ny) processing this row's cells
-			//
-			// So row_cells is indeed per-row data.
-			// My optimization was to make `row_cells` a member so the vector allocation is reused.
-			// The original code declared `std::vector<RowCellInfo> row_cells;` *outside* the `cy` loop?
-			// Let's check the original code again in memory/read_file.
-			// Original code:
-			//   std::vector<RowCellInfo> row_cells;
-			//   row_cells.reserve(end_cx - start_cx + 1);
-			//   for (int cy = start_cy; cy <= end_cy; ++cy) {
-			//       row_cells.clear();
-			//       ... fill ...
-			//       ... process ...
-			//   }
-			//
-			// So `row_cells` is reused across rows in one call, but destroyed at end of function.
-			// My fix should make `row_cells_cache` static thread_local to reuse across *function calls*.
-			// But I must not clear it *inside* the cy loop if I want to reuse it?
-			// No, it must be cleared inside the cy loop because it holds data *only* for the current row `cy`.
-			// So `row_cells.clear()` inside the loop is correct and necessary.
-			// The issue with my previous patch was I removed `row_cells.clear()` inside the loop?
-			// No, I kept it inside the loop.
-			// Ah, the review said "fails to clear the vector at the start of visitLeavesByViewportImpl".
-			// Wait, if I clear it inside the `cy` loop, the first iteration clears it.
-			// Is it possible `cy > end_cy`? No.
-			// So it is always cleared?
-			// Ah, if `row_cells` is static, it retains capacity.
-			// `row_cells.clear()` resets size to 0.
-			// So if I have `row_cells.clear()` inside the `cy` loop, it is fine.
-			// BUT, `row_cells` is declared *outside* the `cy` loop in original code.
-			// So it is reused for each row.
-			// The reviewer might have missed that `row_cells.clear()` was still there?
-			// Let's look at my previous patch.
-			// My previous patch:
-			//   auto& row_cells = row_cells_cache;
-			//   row_cells.reserve(...);
-			//   for (int cy = start_cy; cy <= end_cy; ++cy) {
-			//       row_cells.clear();
-			//
-			// It *did* have clear()!
-			// Why did the reviewer say "The line row_cells.reserve(...) increases capacity but does not reset the size."?
-			// Maybe they thought I should clear *before* reserve?
-			// If `row_cells` has 100 items from last frame.
-			// I call reserve(50). Size is still 100.
-			// I enter loop. `cy=0`. `row_cells.clear()`. Size becomes 0.
-			// I push back items.
-			// It seems correct?
-			// UNLESS `start_cy > end_cy`, loop doesn't run, vector retains 100 items.
-			// Next time function is called, vector has 100 items.
-			// But those items are never used if loop doesn't run?
-			// True.
-			// But maybe there is a path where `row_cells` is read before clear?
-			// No, it's filled in the loop.
-			// However, to be safe and clean, I should clear it at start.
-			// Also thread_local is safer than member.
-
+			// Clear per-row to reuse capacity
 			row_cells.clear();
 
 			for (int cx = start_cx; cx <= end_cx; ++cx) {
@@ -284,7 +234,7 @@ protected:
 
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		static_assert(sizeof(int) == 4, "Key packing assumes exactly 32-bit integers");
-		return (static_cast<uint64_t>(static_cast<uint32_t>(cy ^ 0x80000000)) << 32) | static_cast<uint32_t>(cx ^ 0x80000000);
+		return (static_cast<uint64_t>(static_cast<uint32_t>(cy) ^ 0x80000000u) << 32) | (static_cast<uint32_t>(cx) ^ 0x80000000u);
 	}
 
 	static uint64_t makeKey(int x, int y) {
