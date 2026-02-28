@@ -12,6 +12,7 @@
 #include <tuple>
 #include <limits>
 #include <array>
+#include <cstring>
 
 class MapNode;
 class BaseMap;
@@ -233,7 +234,11 @@ protected:
 
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		static_assert(sizeof(int) == 4, "Key packing assumes exactly 32-bit integers");
-		return (static_cast<uint64_t>(static_cast<uint32_t>(cy) ^ 0x80000000u) << 32) | (static_cast<uint32_t>(cx) ^ 0x80000000u);
+		uint32_t u_cx;
+		std::memcpy(&u_cx, &cx, sizeof(u_cx));
+		uint32_t u_cy;
+		std::memcpy(&u_cy, &cy, sizeof(u_cy));
+		return (static_cast<uint64_t>(u_cy ^ 0x80000000u) << 32) | (u_cx ^ 0x80000000u);
 	}
 
 	static uint64_t makeKey(int x, int y) {

@@ -23,6 +23,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <mutex>
 
 class Action;
 class Editor;
@@ -107,11 +108,11 @@ public:
 	}
 	Tile* getSelectedTile() {
 		ASSERT(size() == 1);
-		return *tiles.begin();
+		return empty() ? nullptr : *tiles.begin();
 	}
 	Tile* getSelectedTile() const {
 		ASSERT(size() == 1);
-		return *tiles.begin();
+		return empty() ? nullptr : *tiles.begin();
 	}
 
 private:
@@ -132,6 +133,7 @@ private:
 	std::vector<Tile*> pending_removes;
 
 	mutable std::atomic<bool> bounds_dirty;
+	mutable std::mutex bounds_mutex;
 	mutable Position cached_min;
 	mutable Position cached_max;
 
