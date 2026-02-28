@@ -1,3 +1,4 @@
+#include "map/tile_operations.h"
 #include "tile_serialization_otbm.h"
 
 #include "map/map.h"
@@ -114,7 +115,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 			}
 		}
 
-		tile->update();
+		TileOperations::update(tile);
 		if (house) {
 			house->addTile(tile);
 		}
@@ -162,7 +163,7 @@ void TileSerializationOTBM::writeTileData(const IOMapOTBM& iomap, const Map& map
 					const Position& pos = save_tile->getPosition();
 
 					// Decide if new node should be created
-					if (pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
+					if (first || pos.x < local_x || pos.x >= local_x + 256 || pos.y < local_y || pos.y >= local_y + 256 || pos.z != local_z) {
 						if (!first) {
 							f.endNode();
 						}

@@ -152,13 +152,21 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 }
 
 MapCanvas::~MapCanvas() {
+	bool context_ok = false;
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
+		context_ok = g_gl_context.EnsureContextCurrent(*m_glContext, this);
 	} else if (auto context = g_gui.GetGLContext(this)) {
-		SetCurrent(*context);
+		context_ok = g_gl_context.EnsureContextCurrent(*context, this);
 	}
+
+	if (!context_ok) {
+		spdlog::warn("MapCanvas: Destroying canvas without a current OpenGL context. Cleanup might fail or assert.");
+	}
+
 	drawer.reset();
 	m_nvg.reset();
+
+	g_gl_context.UnregisterCanvas(this);
 }
 
 void MapCanvas::Refresh() {
@@ -244,7 +252,8 @@ void MapCanvas::PerformGarbageCollection() {
 void MapCanvas::OnPaint(wxPaintEvent& event) {
 	wxPaintDC dc(this); // validates the paint event
 	if (m_glContext) {
-		SetCurrent(*m_glContext);
+		g_gl_context.EnsureContextCurrent(*m_glContext, this);
+		g_gl_context.SetFallbackCanvas(this);
 	}
 
 	EnsureNanoVG();
@@ -268,8 +277,10 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		if (options.show_preview) {
 			animation_timer->Start();
+			g_gui.gfx.resumeAnimation();
 		} else {
 			animation_timer->Stop();
+			g_gui.gfx.pauseAnimation();
 		}
 
 		// BatchRenderer calls removed - MapDrawer handles its own renderers

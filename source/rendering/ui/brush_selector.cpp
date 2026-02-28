@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "rendering/ui/brush_selector.h"
 #include "ui/gui.h"
@@ -41,7 +42,7 @@ void BrushSelector::SelectRAWBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	Item* item = tile->getTopSelectedItem();
+	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item && item->getRAWBrush()) {
 		g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
@@ -71,7 +72,7 @@ void BrushSelector::SelectDoodadBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	Item* item = tile->getTopSelectedItem();
+	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item) {
 		g_gui.SelectBrush(item->getDoodadBrush(), TILESET_DOODAD);
@@ -86,7 +87,7 @@ void BrushSelector::SelectDoorBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	Item* item = tile->getTopSelectedItem();
+	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item) {
 		g_gui.SelectBrush(item->getDoorBrush(), TILESET_TERRAIN);

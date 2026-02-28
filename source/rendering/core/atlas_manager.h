@@ -109,6 +109,9 @@ private:
 
 	// O(1) direct lookup for sprite IDs < DIRECT_LOOKUP_SIZE
 	std::vector<AtlasRegion*> direct_lookup_ { DIRECT_LOOKUP_SIZE, nullptr };
+
+	// Cache for white pixel region to avoid hash map lookup
+	const AtlasRegion* white_pixel_cache_ = nullptr;
 };
 
 #endif

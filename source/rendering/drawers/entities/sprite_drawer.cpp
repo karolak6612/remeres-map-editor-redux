@@ -8,15 +8,10 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"
 
-SpriteDrawer::SpriteDrawer() :
-	last_bound_texture_(0) {
+SpriteDrawer::SpriteDrawer() {
 }
 
 SpriteDrawer::~SpriteDrawer() {
-}
-
-void SpriteDrawer::ResetCache() {
-	last_bound_texture_ = 0;
 }
 
 void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color) {

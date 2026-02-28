@@ -25,7 +25,7 @@ CreatureDrawer::~CreatureDrawer() {
 
 void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options) {
 	CreatureDrawOptions local_opts = options;
-	if (!local_opts.ingame && c->isSelected()) {
+	if (!local_opts.ingame && (c->isSelected() || (local_opts.transient_selection_bounds.has_value() && local_opts.transient_selection_bounds->contains(local_opts.map_pos.x, local_opts.map_pos.y)))) {
 		local_opts.color.r /= 2;
 		local_opts.color.g /= 2;
 		local_opts.color.b /= 2;

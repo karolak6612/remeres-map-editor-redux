@@ -67,7 +67,7 @@ void MapProcessor::randomizeMap(Editor& editor, bool showdialog) {
 				newGround->setActionID(actionId);
 				newGround->setUniqueID(uniqueId);
 			}
-			tile->update();
+			TileOperations::update(tile);
 		}
 		++tiles_done;
 	}

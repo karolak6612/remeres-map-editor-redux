@@ -4,11 +4,11 @@
 struct RenderView;
 class MapCanvas;
 struct DrawingOptions;
-class SpriteBatch;
+class PrimitiveRenderer;
 
 class SelectionDrawer {
 public:
-	void draw(SpriteBatch& sprite_batch, const RenderView& view, const MapCanvas* canvas, const DrawingOptions& options);
+	void draw(PrimitiveRenderer& primitive_renderer, const RenderView& view, const MapCanvas* canvas, const DrawingOptions& options);
 };
 
 #endif

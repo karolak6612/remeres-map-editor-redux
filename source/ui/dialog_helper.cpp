@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include <wx/wx.h>
 
@@ -26,7 +27,7 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 		return;
 	}
 
-	std::unique_ptr<Tile> new_tile = tile->deepCopy(editor.map);
+	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(tile, editor.map);
 	wxDialog* w = nullptr;
 
 	if (new_tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
@@ -34,7 +35,7 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 	} else if (new_tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 		w = newd CreaturePropertiesWindow(g_gui.root, &editor.map, new_tile.get(), new_tile->creature.get());
 	} else {
-		ItemVector selected_items = new_tile->getSelectedItems();
+		ItemVector selected_items = TileOperations::getSelectedItems(new_tile.get());
 		Item* item = nullptr;
 
 		for (auto* it : selected_items) {

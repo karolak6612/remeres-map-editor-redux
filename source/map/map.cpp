@@ -20,6 +20,8 @@
 #include "ui/gui.h" // loadbar
 
 #include "map/map.h"
+#include "map/map_converter.h"
+#include "map/map_spawn_manager.h"
 
 #include <sstream>
 #include <algorithm>
@@ -98,216 +100,19 @@ bool Map::open(const std::string& file) {
 }
 
 bool Map::convert(MapVersion to, bool showdialog) {
-	if (mapVersion.client == to.client) {
-		// Only OTBM version differs
-		// No changes necessary
-		mapVersion = to;
-		return true;
-	}
-
-	/* TODO
-
-	if(to.otbm == MAP_OTBM_4 && to.client < CLIENT_VERSION_850)
-		return false;
-
-	/* Legacy conversion logic removed */
-#if 0
-	if(mapVersion.client >= CLIENT_VERSION_760 && to.client < CLIENT_VERSION_760)
-		convert(getReplacementMapFrom760To740(), showdialog);
-
-	if(mapVersion.client < CLIENT_VERSION_810 && to.client >= CLIENT_VERSION_810)
-		convert(getReplacementMapFrom800To810(), showdialog);
-
-	if(mapVersion.client == CLIENT_VERSION_854_BAD && to.client >= CLIENT_VERSION_854)
-		convert(getReplacementMapFrom854To854(), showdialog);
-#endif
-	mapVersion = to;
-
-	return true;
+	return MapConverter::convert(*this, to, showdialog);
 }
 
 bool Map::convert(const ConversionMap& rm, bool showdialog) {
-	if (showdialog) {
-		g_gui.CreateLoadBar("Converting map ...");
-	}
-
-	std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>> mtm_lookups;
-	for (const auto& entry : rm.mtm) {
-		mtm_lookups.emplace(&entry.first, std::unordered_set<uint16_t>(entry.first.begin(), entry.first.end()));
-	}
-
-	uint64_t tiles_done = 0;
-	std::vector<uint16_t> id_list;
-
-	// std::ofstream conversions("converted_items.txt");
-
-	for (auto& tile_loc : tiles()) {
-		Tile* tile = tile_loc.get();
-		ASSERT(tile);
-
-		if (tile->empty()) {
-			continue;
-		}
-
-		// id_list try MTM conversion
-		id_list.clear();
-		id_list.reserve(tile->items.size() + 1);
-
-		if (tile->ground) {
-			id_list.push_back(tile->ground->getID());
-		}
-
-		auto border_view = tile->items | std::views::filter([](const auto& i) { return i->isBorder(); });
-		auto border_ids = border_view | std::views::transform([](const auto& i) { return i->getID(); });
-		id_list.insert(id_list.end(), border_ids.begin(), border_ids.end());
-
-		std::ranges::sort(id_list);
-
-		ConversionMap::MTM::const_iterator cfmtm = rm.mtm.end();
-
-		while (!id_list.empty()) {
-			cfmtm = rm.mtm.find(id_list);
-			if (cfmtm != rm.mtm.end()) {
-				break;
-			}
-			id_list.pop_back();
-		}
-
-		// Keep track of how many items have been inserted at the bottom
-		size_t inserted_items = 0;
-
-		if (cfmtm != rm.mtm.end()) {
-			const std::vector<uint16_t>& v = cfmtm->first;
-			const auto& ids_to_remove = mtm_lookups.at(&v);
-
-			if (tile->ground && ids_to_remove.contains(tile->ground->getID())) {
-				tile->ground.reset();
-			}
-
-			auto part_iter = std::stable_partition(tile->items.begin(), tile->items.end(), [&ids_to_remove](const std::unique_ptr<Item>& item) {
-				return !ids_to_remove.contains(item->getID());
-			});
-
-			tile->items.erase(part_iter, tile->items.end());
-
-			const std::vector<uint16_t>& new_items = cfmtm->second;
-			for (uint16_t new_id : new_items) {
-				std::unique_ptr<Item> item = Item::Create(new_id);
-				if (item->isGroundTile()) {
-					tile->ground = std::move(item);
-				} else {
-					tile->items.insert(tile->items.begin(), std::move(item));
-					++inserted_items;
-				}
-			}
-		}
-
-		if (tile->ground) {
-			ConversionMap::STM::const_iterator cfstm = rm.stm.find(tile->ground->getID());
-			if (cfstm != rm.stm.end()) {
-				uint16_t aid = tile->ground->getActionID();
-				uint16_t uid = tile->ground->getUniqueID();
-				tile->ground.reset();
-
-				const std::vector<uint16_t>& v = cfstm->second;
-				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
-				for (uint16_t new_id : v) {
-					std::unique_ptr<Item> item = Item::Create(new_id);
-					// conversions << *iit << " ";
-					if (item->isGroundTile()) {
-						item->setActionID(aid);
-						item->setUniqueID(uid);
-						tile->addItem(std::move(item));
-					} else {
-						tile->items.insert(tile->items.begin(), std::move(item));
-						++inserted_items;
-					}
-				}
-				// conversions << std::endl;
-			}
-		}
-
-		for (auto replace_item_iter = tile->items.begin() + inserted_items; replace_item_iter != tile->items.end();) {
-			uint16_t id = (*replace_item_iter)->getID();
-			ConversionMap::STM::const_iterator cf = rm.stm.find(id);
-			if (cf != rm.stm.end()) {
-				// uint16_t aid = (*replace_item_iter)->getActionID();
-				// uint16_t uid = (*replace_item_iter)->getUniqueID();
-
-				replace_item_iter = tile->items.erase(replace_item_iter);
-				const std::vector<uint16_t>& v = cf->second;
-				for (uint16_t new_id : v) {
-					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_id));
-					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
-					++replace_item_iter;
-				}
-			} else {
-				++replace_item_iter;
-			}
-		}
-
-		++tiles_done;
-		if (showdialog && tiles_done % 0x10000 == 0) {
-			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
-		}
-	}
-
-	if (showdialog) {
-		g_gui.DestroyLoadBar();
-	}
-
-	return true;
+	return MapConverter::convert(*this, rm, showdialog);
 }
 
 void Map::cleanInvalidTiles(bool showdialog) {
-	if (showdialog) {
-		g_gui.CreateLoadBar("Removing invalid tiles...");
-	}
-
-	uint64_t tiles_done = 0;
-
-	for (auto& tile_loc : tiles()) {
-		Tile* tile = tile_loc.get();
-		ASSERT(tile);
-
-		if (tile->empty()) {
-			continue;
-		}
-
-		// Use std::erase_if from C++20 for cleanup
-		std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
-			return !g_items.typeExists(item->getID());
-		});
-
-		++tiles_done;
-		if (showdialog && tiles_done % 0x10000 == 0) {
-			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
-		}
-	}
-
-	if (showdialog) {
-		g_gui.DestroyLoadBar();
-	}
+	MapConverter::cleanInvalidTiles(*this, showdialog);
 }
 
 void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
-	g_gui.CreateLoadBar("Converting house tiles...");
-	uint64_t tiles_done = 0;
-
-	auto filtered_tiles = tiles() | std::views::filter([fromId](const auto& tile_loc) {
-							  const Tile* tile = tile_loc.get();
-							  return fromId != 0 && tile && tile->getHouseID() == fromId;
-						  });
-
-	for (auto& tile_loc : filtered_tiles) {
-		tile_loc.get()->setHouseID(toId);
-		++tiles_done;
-		if (tiles_done % 0x10000 == 0) {
-			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(getTileCount())));
-		}
-	}
-
-	g_gui.DestroyLoadBar();
+	MapConverter::convertHouseTiles(*this, fromId, toId);
 }
 
 MapVersion Map::getVersion() const {
@@ -361,103 +166,13 @@ void Map::setWaypointFilename(const std::string& new_waypointfile) {
 }
 
 bool Map::addSpawn(Tile* tile) {
-	Spawn* spawn = tile->spawn.get();
-	if (spawn) {
-		int z = tile->getZ();
-		int start_x = tile->getX() - spawn->getSize();
-		int start_y = tile->getY() - spawn->getSize();
-		int end_x = tile->getX() + spawn->getSize();
-		int end_y = tile->getY() + spawn->getSize();
-
-		for (int y = start_y; y <= end_y; ++y) {
-			for (int x = start_x; x <= end_x; ++x) {
-				TileLocation* ctile_loc = createTileL(x, y, z);
-				ctile_loc->increaseSpawnCount();
-			}
-		}
-		spawns.addSpawn(tile);
-		return true;
-	}
-	return false;
-}
-
-void Map::removeSpawnInternal(Tile* tile) {
-	Spawn* spawn = tile->spawn.get();
-	ASSERT(spawn);
-
-	int z = tile->getZ();
-	int start_x = tile->getX() - spawn->getSize();
-	int start_y = tile->getY() - spawn->getSize();
-	int end_x = tile->getX() + spawn->getSize();
-	int end_y = tile->getY() + spawn->getSize();
-
-	for (int y = start_y; y <= end_y; ++y) {
-		for (int x = start_x; x <= end_x; ++x) {
-			TileLocation* ctile_loc = getTileL(x, y, z);
-			if (ctile_loc != nullptr && ctile_loc->getSpawnCount() > 0) {
-				ctile_loc->decreaseSpawnCount();
-			}
-		}
-	}
+	return MapSpawnManager::addSpawn(*this, tile);
 }
 
 void Map::removeSpawn(Tile* tile) {
-	if (tile->spawn) {
-		removeSpawnInternal(tile);
-		spawns.removeSpawn(tile);
-	}
+	MapSpawnManager::removeSpawn(*this, tile);
 }
 
 SpawnList Map::getSpawnList(Tile* where) {
-	SpawnList list;
-	TileLocation* tile_loc = where->getLocation();
-	if (tile_loc) {
-		if (tile_loc->getSpawnCount() > 0) {
-			uint32_t found = 0;
-			if (where->spawn) {
-				++found;
-				list.push_back(where->spawn.get());
-			}
-
-			// Scans the border tiles in an expanding square around the original spawn
-			int z = where->getZ();
-			int start_x = where->getX() - 1, end_x = where->getX() + 1;
-			int start_y = where->getY() - 1, end_y = where->getY() + 1;
-
-			auto checkTile = [&](int x, int y) {
-				if (Tile* tile = getTile(x, y, z)) {
-					if (tile->spawn) {
-						list.push_back(tile->spawn.get());
-						++found;
-					}
-				}
-			};
-
-			// Safety bound: limit search radius to prevent infinite expansion with stale spawn counts
-			const int max_radius = std::max(getWidth(), getHeight());
-			while (found < tile_loc->getSpawnCount()) {
-				// Horizontal sides
-				for (int x = start_x; x <= end_x; ++x) {
-					checkTile(x, start_y);
-					checkTile(x, end_y);
-				}
-
-				// Vertical sides (exclude corners already covered above)
-				for (int y = start_y + 1; y < end_y; ++y) {
-					checkTile(start_x, y);
-					checkTile(end_x, y);
-				}
-
-				--start_x;
-				--start_y;
-				++end_x;
-				++end_y;
-
-				if ((end_x - start_x) / 2 > max_radius) {
-					break;
-				}
-			}
-		}
-	}
-	return list;
+	return MapSpawnManager::getSpawnList(*this, where);
 }

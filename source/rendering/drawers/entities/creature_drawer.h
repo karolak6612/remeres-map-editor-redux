@@ -14,10 +14,15 @@
 class SpriteDrawer;
 class SpriteBatch;
 
+#include <optional>
+#include "map/position.h"
+
 struct CreatureDrawOptions {
 	DrawColor color;
 	bool ingame = false;
 	int animationPhase = 0;
+	Position map_pos;
+	std::optional<MapBounds> transient_selection_bounds;
 };
 
 class CreatureDrawer {

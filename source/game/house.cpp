@@ -15,6 +15,7 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 
 #include "game/complexitem.h" // Door
@@ -125,7 +126,7 @@ void House::clean() {
 
 	Tile* tile = map->getTile(exit);
 	if (tile) {
-		tile->removeHouseExit(this);
+		TileOperations::removeHouseExit(tile, this);
 	}
 }
 
@@ -204,7 +205,7 @@ void House::setExit(Map* targetmap, const Position& pos) {
 	if (exit != Position()) {
 		Tile* oldexit = targetmap->getTile(exit);
 		if (oldexit) {
-			oldexit->removeHouseExit(this);
+			TileOperations::removeHouseExit(oldexit, this);
 		}
 	}
 
@@ -213,7 +214,7 @@ void House::setExit(Map* targetmap, const Position& pos) {
 		newexit = targetmap->createTile(pos.x, pos.y, pos.z);
 	}
 
-	newexit->addHouseExit(this);
+	TileOperations::addHouseExit(newexit, this);
 	exit = pos;
 }
 

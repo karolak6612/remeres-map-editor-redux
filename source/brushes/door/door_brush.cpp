@@ -157,6 +157,7 @@ void DoorBrush::undraw(BaseMap* map, Tile* tile) {
 			if (g_settings.getInteger(Config::USE_AUTOMAGIC)) {
 				TileOperations::wallize(tile, map);
 			}
+			TileOperations::update(tile);
 			return;
 		}
 	}
@@ -194,7 +195,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 					if (i_type.isOpen == open) {
 						if (open || dt.locked == prefLocked) {
-							item = transformItem(item, dt.id, tile);
+							item = TileOperations::transformItem(item, dt.id, tile);
 							perfect_match = true;
 							break;
 						}
@@ -213,7 +214,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		} while (test_brush != wb && test_brush != nullptr);
 
 		if (!perfect_match && discarded_id) {
-			item = transformItem(item, discarded_id, tile);
+			item = TileOperations::transformItem(item, discarded_id, tile);
 		}
 
 		if (g_settings.getInteger(Config::AUTO_ASSIGN_DOORID) && tile->isHouseTile()) {
@@ -254,7 +255,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 							if (i_type.isOpen == open) {
 								if (open || dt.locked == prefLocked) {
-									item = transformItem(item, dt.id, tile);
+									item = TileOperations::transformItem(item, dt.id, tile);
 									perfect_match = true;
 									break;
 								}
@@ -270,7 +271,7 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 						}
 					}
 					if (!perfect_match && discarded_id) {
-						item = transformItem(item, discarded_id, tile);
+						item = TileOperations::transformItem(item, discarded_id, tile);
 					}
 					continue;
 				}

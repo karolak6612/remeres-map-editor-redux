@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 #include "ui/tile_properties/browse_field_list.h"
 #include "map/tile.h"
@@ -238,7 +239,7 @@ void BrowseFieldList::OnClickUp(wxCommandEvent& event) {
 	Editor* editor = g_gui.GetCurrentEditor();
 	if (editor && current_tile) {
 		Position pos = current_tile->getPosition();
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, editor->map);
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items - 1]);
 		new_tile->items[index_in_items - 1]->select();
 
@@ -264,7 +265,7 @@ void BrowseFieldList::OnClickDown(wxCommandEvent& event) {
 
 	Editor* editor = g_gui.GetCurrentEditor();
 	if (editor && current_tile) {
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, editor->map);
 		std::swap(new_tile->items[index_in_items], new_tile->items[index_in_items + 1]);
 		new_tile->items[index_in_items + 1]->select();
 
@@ -292,7 +293,7 @@ void BrowseFieldList::OnClickDelete(wxCommandEvent& event) {
 	Editor* editor = g_gui.GetCurrentEditor();
 	if (editor && current_tile) {
 		Position pos = current_tile->getPosition();
-		std::unique_ptr<Tile> new_tile = current_tile->deepCopy(editor->map);
+		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, editor->map);
 		new_tile->items.erase(new_tile->items.begin() + index_in_items);
 
 		if (index_in_items > 0) {

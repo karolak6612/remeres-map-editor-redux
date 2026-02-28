@@ -2,6 +2,7 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
+#include "map/tile_operations.h"
 #include "app/main.h"
 
 #include "ui/map_popup_menu.h"
@@ -76,7 +77,7 @@ void MapPopupMenu::Update() {
 	if (anything_selected) {
 		if (editor.selection.size() == 1) {
 			Tile* tile = editor.selection.getSelectedTile();
-			ItemVector selected_items = tile->getSelectedItems();
+			ItemVector selected_items = TileOperations::getSelectedItems(tile);
 
 			bool hasWall = false;
 			bool hasCarpet = false;

@@ -30,12 +30,12 @@ SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 
 	wxSizer* buttonsSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* exportBtn = newd wxButton(this, wxID_FILE, "Export");
-	exportBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_EXPORT, wxSize(16, 16)));
+	exportBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_EXPORT));
 	exportBtn->SetToolTip("Export results to text file");
 	buttonsSizer->Add(exportBtn, wxSizerFlags(0).Center());
 
 	wxButton* clearBtn = newd wxButton(this, wxID_CLEAR, "Clear");
-	clearBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
+	clearBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_TRASH_CAN));
 	clearBtn->SetToolTip("Clear search results");
 	buttonsSizer->Add(clearBtn, wxSizerFlags(0).Center());
 	sizer->Add(buttonsSizer, wxSizerFlags(0).Center().DoubleBorder());
