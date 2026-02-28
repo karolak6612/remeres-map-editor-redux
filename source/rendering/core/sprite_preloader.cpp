@@ -4,6 +4,7 @@
 
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/normal_image.h"
 #include "ui/gui.h"
 #include "io/loaders/spr_loader.h"
 #include <mutex>
@@ -96,7 +97,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 					continue;
 				}
 
-				GameSprite::NormalImage* img = spr->spriteList[idx];
+				NormalImage* img = spr->spriteList[idx];
 				if (img && !img->isGLLoaded) {
 					// Ensure parent is set so GC can invalidate cached_default_region
 					// when evicting this sprite later (prevents stale cache -> wrong sprite)
@@ -199,7 +200,7 @@ void SpritePreloader::update() {
 			auto& img_ptr = g_gui.gfx.image_space[id];
 			if (img_ptr && img_ptr->isNormalImage()) {
 				// Use static_cast for performance, as we know the type from loaders
-				auto* img = static_cast<GameSprite::NormalImage*>(img_ptr.get());
+				auto* img = static_cast<NormalImage*>(img_ptr.get());
 
 				// Validate Sprite Identity & Generation
 				// Check ID match, Generation match, and GLLoaded state

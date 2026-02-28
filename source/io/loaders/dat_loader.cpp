@@ -1,6 +1,7 @@
 #include "io/loaders/dat_loader.h"
 
 #include "rendering/core/graphics.h"
+#include "rendering/core/normal_image.h"
 #include "io/filehandle.h"
 #include "util/common.h"
 #include <memory>
@@ -443,11 +444,11 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 
 			auto& imgPtr = manager->image_space[sprite_id];
 			if (!imgPtr) {
-				auto img = std::make_unique<GameSprite::NormalImage>();
+				auto img = std::make_unique<NormalImage>();
 				img->id = sprite_id;
 				imgPtr = std::move(img);
 			}
-			sType->spriteList.push_back(static_cast<GameSprite::NormalImage*>(imgPtr.get()));
+			sType->spriteList.push_back(static_cast<NormalImage*>(imgPtr.get()));
 		}
 	}
 

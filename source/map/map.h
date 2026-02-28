@@ -27,6 +27,9 @@
 #include "game/waypoints.h"
 #include "io/templates.h"
 
+class MapConverter;
+class MapSpawnManager;
+
 class Map : public BaseMap {
 public:
 	// ctor and dtor
@@ -136,8 +139,6 @@ protected:
 	bool open(const std::string& identifier);
 
 protected:
-	void removeSpawnInternal(Tile* tile);
-
 	std::vector<std::string> warnings;
 	wxString error;
 
@@ -170,6 +171,8 @@ protected:
 	friend class EditorPersistence;
 	friend class MapXMLIO;
 	friend class HeaderSerializationOTBM;
+	friend class MapConverter;
+	friend class MapSpawnManager;
 
 public:
 	Waypoints waypoints;

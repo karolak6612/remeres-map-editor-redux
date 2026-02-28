@@ -47,6 +47,9 @@ class Animator;
 #include "rendering/core/render_timer.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/image.h"
+#include "rendering/core/normal_image.h"
+#include "rendering/core/template_image.h"
 
 class GraphicManager {
 public:
@@ -141,7 +144,7 @@ private:
 	// These are indexed by ID for O(1) access
 	using SpriteVector = std::vector<std::unique_ptr<Sprite>>;
 	SpriteVector sprite_space;
-	using ImageVector = std::vector<std::unique_ptr<GameSprite::Image>>;
+	using ImageVector = std::vector<std::unique_ptr<Image>>;
 	ImageVector image_space;
 
 	// Editor sprites use negative IDs, so they need a separate map
@@ -164,9 +167,9 @@ private:
 	std::unique_ptr<RenderTimer> animation_timer;
 	time_t cached_time_ = 0;
 
-	friend class GameSprite::Image;
-	friend class GameSprite::NormalImage;
-	friend class GameSprite::TemplateImage;
+	friend class Image;
+	friend class NormalImage;
+	friend class TemplateImage;
 	friend class SpritePreloader;
 };
 
