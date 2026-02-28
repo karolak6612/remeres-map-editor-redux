@@ -66,7 +66,7 @@ namespace IngamePreview {
 		Bind(wxEVT_TIMER, &IngamePreviewCanvas::OnTimer, this);
 		Bind(wxEVT_ERASE_BACKGROUND, &IngamePreviewCanvas::OnEraseBackground, this);
 
-		animation_timer.Start(16); // ~60 FPS update
+		animation_timer.Start(1000 / 60); // ~60 FPS update
 	}
 
 	IngamePreviewCanvas::~IngamePreviewCanvas() {

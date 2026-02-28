@@ -56,6 +56,9 @@ private:
 
 	void workerLoop(std::stop_token stop_token);
 
+	static constexpr unsigned int MIN_WORKER_THREADS = 2u;
+	static constexpr unsigned int MAX_WORKER_THREADS = 8u;
+
 	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
 
 	std::mutex queue_mutex;
