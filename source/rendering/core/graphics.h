@@ -61,6 +61,13 @@ public:
 
 	Sprite* getSprite(int id);
 	void updateTime();
+
+	void pauseAnimation() {
+		animation_timer->Pause();
+	}
+	void resumeAnimation() {
+		animation_timer->Resume();
+	}
 	GameSprite* getCreatureSprite(int id);
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
 	// Overload for compatibility with existing raw pointer calls (takes ownership)

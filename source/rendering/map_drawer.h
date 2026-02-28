@@ -121,9 +121,9 @@ public:
 	void DrawBackground();
 	void DrawMap();
 	void DrawLiveCursors();
-	void DrawIngameBox();
+	void DrawIngameBox(const ViewBounds& bounds);
 
-	void DrawGrid();
+	void DrawGrid(const ViewBounds& bounds);
 	void DrawTooltips(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
