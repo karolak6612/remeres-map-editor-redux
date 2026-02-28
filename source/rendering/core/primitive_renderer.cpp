@@ -41,12 +41,14 @@ void PrimitiveRenderer::initialize() {
 	shader_ = std::make_unique<ShaderProgram>();
 	if (!shader_->Load(primitive_vert, primitive_frag)) {
 		spdlog::error("PrimitiveRenderer: Shader load failed");
+		return;
 	}
 
 	vao_ = std::make_unique<GLVertexArray>();
 
 	if (!ring_buffer_.initialize(sizeof(Vertex), MAX_VERTICES)) {
 		spdlog::error("PrimitiveRenderer: Failed to initialize RingBuffer");
+		return;
 	}
 
 	// DSA setup
@@ -63,12 +65,15 @@ void PrimitiveRenderer::initialize() {
 	glVertexArrayAttribFormat(vao_->GetID(), 1, 4, GL_FLOAT, GL_FALSE, offsetof(Vertex, color));
 	glVertexArrayAttribBinding(vao_->GetID(), 1, 0);
 
+	initialized_ = true;
 	spdlog::info("PrimitiveRenderer initialized (VAO: {}, Buffer: {})", vao_->GetID(), ring_buffer_.getBufferId());
 }
 
 void PrimitiveRenderer::shutdown() {
 	vao_.reset();
+	shader_.reset();
 	ring_buffer_.cleanup();
+	initialized_ = false;
 }
 
 void PrimitiveRenderer::setProjectionMatrix(const glm::mat4& projection) {
@@ -76,6 +81,10 @@ void PrimitiveRenderer::setProjectionMatrix(const glm::mat4& projection) {
 }
 
 void PrimitiveRenderer::drawTriangle(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, const glm::vec4& color) {
+	if (!initialized_) {
+		return;
+	}
+
 	if (triangle_verts_.size() + 3 > MAX_VERTICES) {
 		flushTriangles();
 	}
@@ -85,6 +94,10 @@ void PrimitiveRenderer::drawTriangle(const glm::vec2& p1, const glm::vec2& p2, c
 }
 
 void PrimitiveRenderer::drawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color) {
+	if (!initialized_) {
+		return;
+	}
+
 	if (line_verts_.size() + 2 > MAX_VERTICES) {
 		flushLines();
 	}
@@ -93,6 +106,10 @@ void PrimitiveRenderer::drawLine(const glm::vec2& p1, const glm::vec2& p2, const
 }
 
 void PrimitiveRenderer::drawRect(const glm::vec4& rect, const glm::vec4& color) {
+	if (!initialized_) {
+		return;
+	}
+
 	// rect: x, y, w, h
 	float x = rect.x;
 	float y = rect.y;
@@ -111,6 +128,10 @@ void PrimitiveRenderer::drawRect(const glm::vec4& rect, const glm::vec4& color) 
 }
 
 void PrimitiveRenderer::drawBox(const glm::vec4& rect, const glm::vec4& color, float thickness) {
+	if (!initialized_) {
+		return;
+	}
+
 	float x = rect.x;
 	float y = rect.y;
 	float w = rect.z;
@@ -134,56 +155,37 @@ void PrimitiveRenderer::drawBox(const glm::vec4& rect, const glm::vec4& color, f
 }
 
 void PrimitiveRenderer::flush() {
+	if (!initialized_) {
+		return;
+	}
+
 	flushTriangles();
 	flushLines();
 }
 
 void PrimitiveRenderer::flushTriangles() {
-	if (triangle_verts_.empty()) {
-		return;
-	}
-
-	void* ptr = ring_buffer_.waitAndMap(triangle_verts_.size());
-	if (!ptr) {
-		spdlog::error("PrimitiveRenderer: RingBuffer mapping failed (Triangles).");
-		triangle_verts_.clear();
-		return;
-	}
-
-	std::memcpy(ptr, triangle_verts_.data(), triangle_verts_.size() * sizeof(Vertex));
-
-	{
-		ScopedGLCapability blendCap(GL_BLEND);
-		ScopedGLBlend blendState(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		shader_->Use();
-		shader_->SetMat4("uMVP", projection_);
-
-		size_t offset = ring_buffer_.getCurrentSectionOffset();
-		glVertexArrayVertexBuffer(vao_->GetID(), 0, ring_buffer_.getBufferId(), offset, sizeof(Vertex));
-
-		glBindVertexArray(vao_->GetID());
-		glDrawArrays(GL_TRIANGLES, 0, (GLsizei)triangle_verts_.size());
-		glBindVertexArray(0);
-	}
-
-	ring_buffer_.signalFinished();
-	triangle_verts_.clear();
+	flushPrimitives(triangle_verts_, GL_TRIANGLES, "Triangles");
 }
 
 void PrimitiveRenderer::flushLines() {
-	if (line_verts_.empty()) {
+	flushPrimitives(line_verts_, GL_LINES, "Lines");
+}
+
+void PrimitiveRenderer::flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, const char* primitive_type_name) {
+	if (!initialized_ || vertices.empty()) {
+		vertices.clear();
 		return;
 	}
 
-	void* ptr = ring_buffer_.waitAndMap(line_verts_.size());
+	auto* ptr = ring_buffer_.waitAndMap(vertices.size());
 	if (!ptr) {
-		spdlog::error("PrimitiveRenderer: RingBuffer mapping failed (Lines).");
-		line_verts_.clear();
+		spdlog::error("PrimitiveRenderer: RingBuffer mapping failed ({}).", primitive_type_name);
+		vertices.clear();
 		return;
 	}
 
-	std::memcpy(ptr, line_verts_.data(), line_verts_.size() * sizeof(Vertex));
+	std::memcpy(ptr, vertices.data(), vertices.size() * sizeof(Vertex));
+	ring_buffer_.finishWrite();
 
 	{
 		ScopedGLCapability blendCap(GL_BLEND);
@@ -192,14 +194,14 @@ void PrimitiveRenderer::flushLines() {
 		shader_->Use();
 		shader_->SetMat4("uMVP", projection_);
 
-		size_t offset = ring_buffer_.getCurrentSectionOffset();
+		const auto offset = ring_buffer_.getCurrentSectionOffset();
 		glVertexArrayVertexBuffer(vao_->GetID(), 0, ring_buffer_.getBufferId(), offset, sizeof(Vertex));
 
 		glBindVertexArray(vao_->GetID());
-		glDrawArrays(GL_LINES, 0, (GLsizei)line_verts_.size());
+		glDrawArrays(mode, 0, (GLsizei)vertices.size());
 		glBindVertexArray(0);
 	}
 
 	ring_buffer_.signalFinished();
-	line_verts_.clear();
+	vertices.clear();
 }

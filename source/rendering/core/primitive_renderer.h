@@ -45,6 +45,7 @@ private:
 
 	void flushTriangles();
 	void flushLines();
+	void flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, const char* primitive_type_name);
 
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<GLVertexArray> vao_;
@@ -54,6 +55,7 @@ private:
 	std::vector<Vertex> line_verts_;
 
 	glm::mat4 projection_ { 1.0f };
+	bool initialized_ = false;
 
 	static constexpr size_t MAX_VERTICES = 10000;
 };
