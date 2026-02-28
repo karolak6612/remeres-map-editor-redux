@@ -4,9 +4,11 @@
 #include "app/main.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/ring_buffer.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
+#include <string_view>
 
 /**
  * Batched renderer for 2D primitives (lines, triangles).
@@ -44,15 +46,17 @@ private:
 
 	void flushTriangles();
 	void flushLines();
+	void flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, std::string_view primitive_type_name);
 
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<GLVertexArray> vao_;
-	std::unique_ptr<GLBuffer> vbo_;
+	RingBuffer ring_buffer_;
 
 	std::vector<Vertex> triangle_verts_;
 	std::vector<Vertex> line_verts_;
 
 	glm::mat4 projection_ { 1.0f };
+	bool initialized_ = false;
 
 	static constexpr size_t MAX_VERTICES = 10000;
 };
