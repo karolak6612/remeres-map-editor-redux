@@ -20,7 +20,6 @@
 #include "brushes/brush.h"
 
 #include "map/tile.h"
-#include "map/tile_operations.h"
 #include "game/creature.h"
 #include "game/house.h"
 #include "map/basemap.h"

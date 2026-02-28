@@ -6,7 +6,6 @@
 #include "map/tile_operations.h"
 #include "map/tile.h"
 #include "map/basemap.h"
-#include "map/map_region.h"
 #include "game/item.h"
 #include "game/house.h"
 #include "game/spawn.h"
@@ -35,7 +34,7 @@ namespace TileOperations {
 			items.erase(first_to_remove, items.end());
 		}
 
-		static void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
+		void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
 			if (i->isSelected()) {
 				statflags |= TILESTATE_SELECTED;
 			}
@@ -130,7 +129,7 @@ namespace TileOperations {
 
 		copy->items.reserve(tile->items.size());
 		for (const auto& item : tile->items) {
-			copy->items.push_back(std::unique_ptr<Item>(item->deepCopy()));
+			copy->items.push_back(item->deepCopy());
 		}
 
 		return copy;

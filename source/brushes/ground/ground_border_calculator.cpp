@@ -313,25 +313,22 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 			if (borderCluster.border->tiles[direction] != 0) {
 				TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[direction]));
 			} else {
-				if (direction == NORTHWEST_DIAGONAL) {
-					if (borderCluster.border->tiles[WEST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
-					}
-				} else if (direction == NORTHEAST_DIAGONAL) {
-					if (borderCluster.border->tiles[EAST_HORIZONTAL] != 0 && borderCluster.border->tiles[NORTH_HORIZONTAL] != 0) {
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[NORTH_HORIZONTAL]));
-					}
-				} else if (direction == SOUTHWEST_DIAGONAL) {
-					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[WEST_HORIZONTAL] != 0) {
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[WEST_HORIZONTAL]));
-					}
-				} else if (direction == SOUTHEAST_DIAGONAL) {
-					if (borderCluster.border->tiles[SOUTH_HORIZONTAL] != 0 && borderCluster.border->tiles[EAST_HORIZONTAL] != 0) {
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[SOUTH_HORIZONTAL]));
-						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[EAST_HORIZONTAL]));
+				struct DiagonalComponent {
+					BorderType diagonal;
+					BorderType h1;
+					BorderType h2;
+				};
+				static constexpr std::array<DiagonalComponent, 4> diagonal_map = { {
+					{ NORTHWEST_DIAGONAL, WEST_HORIZONTAL, NORTH_HORIZONTAL },
+					{ NORTHEAST_DIAGONAL, EAST_HORIZONTAL, NORTH_HORIZONTAL },
+					{ SOUTHWEST_DIAGONAL, SOUTH_HORIZONTAL, WEST_HORIZONTAL },
+					{ SOUTHEAST_DIAGONAL, SOUTH_HORIZONTAL, EAST_HORIZONTAL },
+				} };
+
+				if (auto it = std::ranges::find_if(diagonal_map, [direction](const auto& d) { return d.diagonal == direction; }); it != diagonal_map.end()) {
+					if (borderCluster.border->tiles[it->h1] != 0 && borderCluster.border->tiles[it->h2] != 0) {
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[it->h1]));
+						TileOperations::addBorderItem(tile, Item::Create(borderCluster.border->tiles[it->h2]));
 					}
 				}
 			}
