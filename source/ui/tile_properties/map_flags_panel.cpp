@@ -43,9 +43,9 @@ void MapFlagsPanel::SetTile(Tile* tile, Map* map) {
 
 	if (tile) {
 		chk_pz->SetValue(tile->isPZ());
-		chk_nopvp->SetValue(tile->getMapFlags() & TILESTATE_NOPVP);
-		chk_nologout->SetValue(tile->getMapFlags() & TILESTATE_NOLOGOUT);
-		chk_pvpzone->SetValue(tile->getMapFlags() & TILESTATE_PVPZONE);
+		chk_nopvp->SetValue(testFlags(tile->getMapFlags(), TileMapState::NOPVP));
+		chk_nologout->SetValue(testFlags(tile->getMapFlags(), TileMapState::NOLOGOUT));
+		chk_pvpzone->SetValue(testFlags(tile->getMapFlags(), TileMapState::PVPZONE));
 
 		chk_pz->Enable(true);
 		chk_nopvp->Enable(true);
@@ -78,21 +78,21 @@ void MapFlagsPanel::OnToggleFlag(wxCommandEvent& event) {
 	new_tile->setPZ(chk_pz->GetValue());
 
 	if (chk_nopvp->GetValue()) {
-		new_tile->setMapFlags(TILESTATE_NOPVP);
+		new_tile->setMapFlags(TileMapState::NOPVP);
 	} else {
-		new_tile->unsetMapFlags(TILESTATE_NOPVP);
+		new_tile->unsetMapFlags(TileMapState::NOPVP);
 	}
 
 	if (chk_nologout->GetValue()) {
-		new_tile->setMapFlags(TILESTATE_NOLOGOUT);
+		new_tile->setMapFlags(TileMapState::NOLOGOUT);
 	} else {
-		new_tile->unsetMapFlags(TILESTATE_NOLOGOUT);
+		new_tile->unsetMapFlags(TileMapState::NOLOGOUT);
 	}
 
 	if (chk_pvpzone->GetValue()) {
-		new_tile->setMapFlags(TILESTATE_PVPZONE);
+		new_tile->setMapFlags(TileMapState::PVPZONE);
 	} else {
-		new_tile->unsetMapFlags(TILESTATE_PVPZONE);
+		new_tile->unsetMapFlags(TileMapState::PVPZONE);
 	}
 
 	Tile* old_ptr = new_tile.get();

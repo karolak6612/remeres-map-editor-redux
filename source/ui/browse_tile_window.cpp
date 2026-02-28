@@ -198,9 +198,9 @@ BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint positio
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left());
 	infoSizer->Add(item_count_txt = newd wxStaticText(this, wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left());
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Protection zone:  " + b2yn(tile->isPZ())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left());
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(testFlags(tile->getMapFlags(), TileMapState::NOPVP))), wxSizerFlags(0).Left());
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(testFlags(tile->getMapFlags(), TileMapState::NOLOGOUT))), wxSizerFlags(0).Left());
+	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(testFlags(tile->getMapFlags(), TileMapState::PVPZONE))), wxSizerFlags(0).Left());
 	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left());
 
 	sizer->Add(infoSizer, wxSizerFlags(0).Left().DoubleBorder());

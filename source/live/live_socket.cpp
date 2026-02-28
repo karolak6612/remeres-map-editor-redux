@@ -246,9 +246,9 @@ void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const P
 		writer.addU32(tile->getHouseID());
 	}
 
-	if (tile->getMapFlags()) {
+	if (tile->getMapFlags() != TileMapState::NONE) {
 		writer.addByte(OTBM_ATTR_TILE_FLAGS);
-		writer.addU32(tile->getMapFlags());
+		writer.addU32(static_cast<uint32_t>(tile->getMapFlags()));
 	}
 
 	Item* ground = tile->ground.get();
@@ -324,7 +324,7 @@ std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, con
 				if (!node->getU32(flags)) {
 					// warning("Invalid tile flags of tile on %d:%d:%d", pos.x, pos.y, pos.z);
 				}
-				tile->setMapFlags(flags);
+				tile->setMapFlags(static_cast<TileMapState>(flags));
 				break;
 			}
 			case OTBM_ATTR_ITEM: {

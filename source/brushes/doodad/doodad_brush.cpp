@@ -90,8 +90,8 @@ void DoodadBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	}
 
 	if (settings.clear_mapflags || settings.clear_statflags) {
-		tile->setMapFlags(tile->getMapFlags() & (~settings.clear_mapflags));
-		tile->setStatFlags(tile->getStatFlags() & (~settings.clear_statflags));
+		tile->setMapFlags(tile->getMapFlags() & (~static_cast<TileMapState>(settings.clear_mapflags)));
+		tile->setStatFlags(tile->getStatFlags() & (~static_cast<TileInternalState>(settings.clear_statflags)));
 	}
 }
 

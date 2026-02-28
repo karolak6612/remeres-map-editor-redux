@@ -71,7 +71,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 				case OTBM_ATTR_TILE_FLAGS: {
 					uint32_t flags = 0;
 					if (tileNode->getU32(flags)) {
-						tile->setMapFlags(flags);
+						tile->setMapFlags(static_cast<TileMapState>(flags));
 					} else {
 						spdlog::warn("Invalid tile flags at {},{},{}", pos.x, pos.y, pos.z);
 					}
@@ -195,9 +195,9 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 		f.addU32(save_tile->getHouseID());
 	}
 
-	if (save_tile->getMapFlags()) {
+	if (save_tile->getMapFlags() != TileMapState::NONE) {
 		f.addU8(OTBM_ATTR_TILE_FLAGS);
-		f.addU32(save_tile->getMapFlags());
+		f.addU32(static_cast<uint32_t>(save_tile->getMapFlags()));
 	}
 
 	if (save_tile->ground) {
