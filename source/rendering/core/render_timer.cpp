@@ -15,6 +15,21 @@ RenderTimer::~RenderTimer() {
 
 void RenderTimer::Start() {
 	timer->Start();
+	is_paused = false;
+}
+
+void RenderTimer::Pause() {
+	if (!is_paused) {
+		timer->Pause();
+		is_paused = true;
+	}
+}
+
+void RenderTimer::Resume() {
+	if (is_paused) {
+		timer->Resume();
+		is_paused = false;
+	}
 }
 
 long RenderTimer::getElapsedTime() const {

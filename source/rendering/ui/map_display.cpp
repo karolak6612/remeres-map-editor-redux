@@ -273,8 +273,10 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		if (options.show_preview) {
 			animation_timer->Start();
+			g_gui.gfx.resumeAnimation();
 		} else {
 			animation_timer->Stop();
+			g_gui.gfx.pauseAnimation();
 		}
 
 		// BatchRenderer calls removed - MapDrawer handles its own renderers

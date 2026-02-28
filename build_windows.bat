@@ -398,10 +398,7 @@ if !ERRORLEVEL! neq 0 (
     echo   %RED%ERROR: Build failed.%RESET%
     echo.
     echo   Common causes:
-    echo     1. %BOLD%Compiler errors%RESET% - Check the log for C++ errors.
-    echo     2. %BOLD%Missing dependencies%RESET% - A vcpkg package may have
-    echo        failed to install. Re-run this script.
-    echo     3. %BOLD%Disk space%RESET% - Ensure you have enough free space.
+    echo     1. %BOLD%Compiler errors%RESET% - Check the build.log for C++ errors.
     echo.
     echo   See %CYAN%!LOG_FILE!%RESET% for full compiler output.
     echo.
@@ -442,6 +439,6 @@ echo   Solution:  !BUILD_DIR!\rme.sln
 echo   Log:       !LOG_FILE!
 echo   vcpkg:     !VCPKG_DIR!
 echo.
-pause
+
 
 endlocal
