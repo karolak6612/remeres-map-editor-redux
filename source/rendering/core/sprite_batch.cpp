@@ -125,8 +125,9 @@ bool SpriteBatch::initialize() {
 	return true;
 }
 
-void SpriteBatch::begin(const glm::mat4& projection) {
+void SpriteBatch::begin(const glm::mat4& projection, const AtlasManager& atlas_manager) {
 	projection_ = projection;
+	current_atlas_manager_ = &atlas_manager;
 	pending_sprites_.clear();
 	in_batch_ = true;
 	draw_call_count_ = 0;
@@ -171,6 +172,10 @@ void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& re
 void SpriteBatch::draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a) {
 	if (!in_batch_) {
 		return;
+	}
+
+	if (pending_sprites_.size() >= MAX_SPRITES_PER_BATCH && current_atlas_manager_) {
+		flush(*current_atlas_manager_);
 	}
 
 	SpriteInstance& inst = pending_sprites_.emplace_back();
@@ -339,6 +344,7 @@ void SpriteBatch::end(const AtlasManager& atlas_manager) {
 	flush(atlas_manager);
 
 	in_batch_ = false;
+	current_atlas_manager_ = nullptr;
 	glBindVertexArray(0);
 
 	// Restore state (reverse order of construction)

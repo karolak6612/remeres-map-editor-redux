@@ -121,6 +121,16 @@ wxBitmap ImageManager::GetBitmap(std::string_view assetPath, const wxSize& size,
 	return wxNullBitmap;
 }
 
+wxIconBundle ImageManager::GetIconBundle(std::string_view assetPath, const wxColour& tint) {
+	wxIconBundle bundle;
+	wxIcon icon;
+	icon.CopyFromBitmap(GetBitmap(assetPath, wxDefaultSize, tint));
+	if (icon.IsOk()) {
+		bundle.AddIcon(icon);
+	}
+	return bundle;
+}
+
 wxImage ImageManager::TintImage(const wxImage& image, const wxColour& tint) {
 	wxImage tinted = image.Copy();
 	if (!tinted.HasAlpha()) {

@@ -120,6 +120,7 @@ namespace IngamePreview {
 		if (!g_gui.gfx.ensureAtlasManager()) {
 			return;
 		}
+		auto* atlas = g_gui.gfx.getAtlasManager();
 
 		// Render floors from bottom to top
 		for (int z = last_visible; z >= 0; z--) {
@@ -129,8 +130,8 @@ namespace IngamePreview {
 			}
 
 			// Sync viewport and start batch for this floor
-			sprite_batch->begin(view.projectionMatrix);
-			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *g_gui.gfx.getAtlasManager());
+			sprite_batch->begin(view.projectionMatrix, *atlas);
+			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
 
 			// Pre-calculate view offsets for this floor
 			int floor_offset = (z <= GROUND_LAYER)
@@ -182,14 +183,14 @@ namespace IngamePreview {
 					}
 				}
 			}
-			sprite_batch->end(*g_gui.gfx.getAtlasManager());
+			sprite_batch->end(*atlas);
 		}
 
 		// Draw Preview Character (Center Screen)
 		// Only if on the camera Z floor (or always visible as "player"?) - Request says "center of the screen".
 		// Assuming always drawn on top.
 		{
-			sprite_batch->begin(view.projectionMatrix);
+			sprite_batch->begin(view.projectionMatrix, *atlas);
 
 			// Calculate center position in logical coordinates
 			int center_x = static_cast<int>((viewport_width * zoom) / 2.0f);
@@ -219,7 +220,7 @@ namespace IngamePreview {
 
 			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .animationPhase = animation_phase });
 
-			sprite_batch->end(*g_gui.gfx.getAtlasManager());
+			sprite_batch->end(*atlas);
 		}
 
 		if (lighting_enabled && light_drawer) {

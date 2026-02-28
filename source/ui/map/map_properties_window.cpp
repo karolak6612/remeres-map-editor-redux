@@ -134,7 +134,7 @@ MapPropertiesWindow::MapPropertiesWindow(wxWindow* parent, MapTab* view, Editor&
 	okBtn->Bind(wxEVT_BUTTON, &MapPropertiesWindow::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &MapPropertiesWindow::OnClickCancel, this);
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_GEAR)));
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_GEAR));
 }
 
 void MapPropertiesWindow::UpdateProtocolList() {

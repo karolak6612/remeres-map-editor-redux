@@ -47,8 +47,9 @@ public:
 	/**
 	 * Begin a new batch. Clears pending sprites.
 	 * @param projection The orthographic projection matrix
+	 * @param atlas_manager Atlas manager to use for flushing
 	 */
-	void begin(const glm::mat4& projection);
+	void begin(const glm::mat4& projection, const AtlasManager& atlas_manager);
 
 	/**
 	 * Queue a sprite for rendering.
@@ -113,6 +114,7 @@ private:
 	std::vector<SpriteInstance> pending_sprites_;
 	glm::mat4 projection_ { 1.0f };
 	glm::vec4 global_tint_ { 1.0f };
+	const AtlasManager* current_atlas_manager_ = nullptr;
 
 	// Scoped state for batch duration
 	std::optional<ScopedGLCapability> blend_capability_;
