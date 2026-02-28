@@ -376,7 +376,7 @@ GameSprite::Image::Image() :
 }
 
 void GameSprite::Image::visit() const {
-	lastaccess = static_cast<int64_t>(g_gui.gfx.getCachedTime());
+	lastaccess.store(static_cast<int64_t>(g_gui.gfx.getCachedTime()), std::memory_order_relaxed);
 }
 
 void GameSprite::Image::clean(time_t time, int longevity) {
@@ -469,7 +469,7 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
+	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(id);
 		}
@@ -488,7 +488,7 @@ void GameSprite::NormalImage::clean(time_t time, int longevity) {
 		g_gui.gfx.collector.NotifyTextureUnloaded();
 	}
 
-	if (time - static_cast<time_t>(lastaccess.load()) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
+	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
 		dump.reset();
 	}
 }
@@ -763,7 +763,7 @@ void GameSprite::TemplateImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
+	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
 		}

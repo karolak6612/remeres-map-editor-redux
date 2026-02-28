@@ -45,6 +45,7 @@ Selection::~Selection() {
 }
 
 void Selection::recalculateBounds() const {
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	if (!bounds_dirty) {
 		return;
 	}
@@ -75,11 +76,13 @@ void Selection::recalculateBounds() const {
 
 Position Selection::minPosition() const {
 	recalculateBounds();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	return cached_min;
 }
 
 Position Selection::maxPosition() const {
 	recalculateBounds();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	return cached_max;
 }
 
@@ -269,6 +272,7 @@ void Selection::addInternal(Tile* tile) {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
+			std::lock_guard<std::mutex> lock(bounds_mutex);
 			bounds_dirty = true;
 		}
 	}
@@ -282,6 +286,7 @@ void Selection::removeInternal(Tile* tile) {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
+			std::lock_guard<std::mutex> lock(bounds_mutex);
 			bounds_dirty = true;
 		}
 	}
@@ -292,7 +297,10 @@ void Selection::flush() {
 		return;
 	}
 
-	bounds_dirty = true;
+	{
+		std::lock_guard<std::mutex> lock(bounds_mutex);
+		bounds_dirty = true;
+	}
 
 	if (!pending_removes.empty()) {
 		std::ranges::sort(pending_removes, tilePositionLessThan);
@@ -341,6 +349,7 @@ void Selection::clear() {
 		});
 	}
 	tiles.clear();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	bounds_dirty = true;
 }
 
