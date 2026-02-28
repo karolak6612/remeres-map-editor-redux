@@ -231,8 +231,8 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	float uv_w = static_cast<float>(buffer_w) / static_cast<float>(buffer_width);
 	float uv_h = static_cast<float>(buffer_h) / static_cast<float>(buffer_height);
 
-	shader->SetVec2("uUVMin", glm::vec2(0.0f, 1.0f));
-	shader->SetVec2("uUVMax", glm::vec2(uv_w, 1.0f - uv_h));
+	shader->SetVec2("uUVMin", glm::vec2(0.0f, uv_h));
+	shader->SetVec2("uUVMax", glm::vec2(uv_w, 0.0f));
 
 	// Blending: Dst * Src
 	{
