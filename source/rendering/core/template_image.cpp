@@ -44,20 +44,51 @@ void TemplateImage::clean(time_t time, int longevity) {
 	}
 }
 
+namespace {
+	bool validateTemplateParentAndIndices(const TemplateImage* img, int sprite_index, size_t& mask_index) {
+		if (!img->parent) {
+			spdlog::warn("TemplateImage (texture_id={}): Invalid parent reference.", img->texture_id);
+			return false;
+		}
+
+		if (img->parent->width <= 0 || img->parent->height <= 0) {
+			spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", img->texture_id, img->parent->width, img->parent->height);
+			return false;
+		}
+
+		if (sprite_index < 0) {
+			spdlog::warn("TemplateImage (texture_id={}): Sprite index is negative (sprite_index={})", img->texture_id, sprite_index);
+			return false;
+		}
+
+		mask_index = static_cast<size_t>(sprite_index) + static_cast<size_t>(img->parent->height * img->parent->width);
+		if (static_cast<size_t>(sprite_index) >= img->parent->spriteList.size() || mask_index >= img->parent->spriteList.size()) {
+			spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", img->texture_id, sprite_index, mask_index, img->parent->spriteList.size());
+			return false;
+		}
+
+		return true;
+	}
+
+	void clampTemplateLookValues(TemplateImage* img) {
+		if (img->lookHead > TemplateOutfitLookupTableSize) {
+			img->lookHead = 0;
+		}
+		if (img->lookBody > TemplateOutfitLookupTableSize) {
+			img->lookBody = 0;
+		}
+		if (img->lookLegs > TemplateOutfitLookupTableSize) {
+			img->lookLegs = 0;
+		}
+		if (img->lookFeet > TemplateOutfitLookupTableSize) {
+			img->lookFeet = 0;
+		}
+	}
+} // namespace
+
 std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
-	if (!parent) {
-		spdlog::warn("TemplateImage (texture_id={}): Invalid parent reference.", texture_id);
-		return nullptr;
-	}
-
-	if (parent->width <= 0 || parent->height <= 0) {
-		spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", texture_id, parent->width, parent->height);
-		return nullptr;
-	}
-
-	size_t mask_index = sprite_index + parent->height * parent->width;
-	if (sprite_index >= parent->spriteList.size() || mask_index >= parent->spriteList.size()) {
-		spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", texture_id, sprite_index, mask_index, parent->spriteList.size());
+	size_t mask_index = 0;
+	if (!validateTemplateParentAndIndices(this, sprite_index, mask_index)) {
 		return nullptr;
 	}
 
@@ -65,47 +96,22 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
 
 	if (!rgbdata) {
-		// template_rgbdata auto-deleted
 		return nullptr;
 	}
 	if (!template_rgbdata) {
-		// rgbdata auto-deleted
 		return nullptr;
 	}
 
-	if (lookHead > TemplateOutfitLookupTableSize) {
-		lookHead = 0;
-	}
-	if (lookBody > TemplateOutfitLookupTableSize) {
-		lookBody = 0;
-	}
-	if (lookLegs > TemplateOutfitLookupTableSize) {
-		lookLegs = 0;
-	}
-	if (lookFeet > TemplateOutfitLookupTableSize) {
-		lookFeet = 0;
-	}
+	clampTemplateLookValues(this);
 
 	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
 
-	// template_rgbdata auto-deleted
 	return rgbdata;
 }
 
 std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
-	if (!parent) {
-		spdlog::warn("TemplateImage (texture_id={}): Invalid parent reference.", texture_id);
-		return nullptr;
-	}
-
-	if (parent->width <= 0 || parent->height <= 0) {
-		spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", texture_id, parent->width, parent->height);
-		return nullptr;
-	}
-
-	size_t mask_index = sprite_index + parent->height * parent->width;
-	if (sprite_index >= parent->spriteList.size() || mask_index >= parent->spriteList.size()) {
-		spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", texture_id, sprite_index, mask_index, parent->spriteList.size());
+	size_t mask_index = 0;
+	if (!validateTemplateParentAndIndices(this, sprite_index, mask_index)) {
 		return nullptr;
 	}
 
@@ -114,32 +120,18 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 
 	if (!rgbadata) {
 		spdlog::warn("TemplateImage: Failed to load BASE sprite data for sprite_index={} (template_id={}). Parent width={}, height={}", sprite_index, texture_id, parent->width, parent->height);
-		// template_rgbdata auto-deleted
 		return nullptr;
 	}
 	if (!template_rgbdata) {
-		spdlog::warn("TemplateImage: Failed to load MASK sprite data for sprite_index={} (template_id={}) (mask_index={})", sprite_index, texture_id, sprite_index + parent->height * parent->width);
-		// rgbadata auto-deleted
+		spdlog::warn("TemplateImage: Failed to load MASK sprite data for sprite_index={} (template_id={}) (mask_index={})", sprite_index, texture_id, mask_index);
 		return nullptr;
 	}
 
-	if (lookHead > TemplateOutfitLookupTableSize) {
-		lookHead = 0;
-	}
-	if (lookBody > TemplateOutfitLookupTableSize) {
-		lookBody = 0;
-	}
-	if (lookLegs > TemplateOutfitLookupTableSize) {
-		lookLegs = 0;
-	}
-	if (lookFeet > TemplateOutfitLookupTableSize) {
-		lookFeet = 0;
-	}
+	clampTemplateLookValues(this);
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
 	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
 
-	// template_rgbdata auto-deleted
 	return rgbadata;
 }
 

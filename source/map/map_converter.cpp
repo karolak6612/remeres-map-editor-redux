@@ -17,21 +17,10 @@ bool MapConverter::convert(Map& map, MapVersion to, bool showdialog) {
 	}
 
 	/* TODO
-
 	if(to.otbm == MAP_OTBM_4 && to.client < CLIENT_VERSION_850)
 		return false;
+	*/
 
-	/* Legacy conversion logic removed */
-#if 0
-	if(map.mapVersion.client >= CLIENT_VERSION_760 && to.client < CLIENT_VERSION_760)
-		convert(map, map.getReplacementMapFrom760To740(), showdialog);
-
-	if(map.mapVersion.client < CLIENT_VERSION_810 && to.client >= CLIENT_VERSION_810)
-		convert(map, map.getReplacementMapFrom800To810(), showdialog);
-
-	if(map.mapVersion.client == CLIENT_VERSION_854_BAD && to.client >= CLIENT_VERSION_854)
-		convert(map, map.getReplacementMapFrom854To854(), showdialog);
-#endif
 	map.mapVersion = to;
 
 	return true;

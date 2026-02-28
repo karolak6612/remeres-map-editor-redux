@@ -545,7 +545,7 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 		if (!tile) {
 			tile = editor.map.createTile(pos.x, pos.y, pos.z);
 		} else if (tile->spawn) {
-			editor.map.removeSpawnInternal(tile);
+			editor.map.removeSpawn(tile);
 			tile->spawn.reset();
 		}
 		tile->spawn = std::move(spawn_entry.second);
