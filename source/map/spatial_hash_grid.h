@@ -133,7 +133,6 @@ protected:
 			}
 		} guard(row_cells_in_use);
 
-		row_cells.clear();
 		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {
