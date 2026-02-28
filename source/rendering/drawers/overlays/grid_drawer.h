@@ -9,7 +9,7 @@ class SpriteBatch;
 
 class GridDrawer {
 public:
-	void DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options);
+	void DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options, int grid_start_x, int grid_start_y, int grid_end_x, int grid_end_y);
 	void DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options);
 	void DrawNodeLoadingPlaceholder(SpriteBatch& sprite_batch, int nd_map_x, int nd_map_y, const RenderView& view);
 

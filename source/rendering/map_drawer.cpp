@@ -308,6 +308,13 @@ void MapDrawer::Draw() {
 	}
 
 	DrawBackground(); // Clear screen (or FBO)
+
+	// Save original view bounds before DrawMap modifies them per-floor
+	orig_start_x = view.start_x;
+	orig_start_y = view.start_y;
+	orig_end_x = view.end_x;
+	orig_end_y = view.end_y;
+
 	DrawMap();
 
 	// Flush Map for Light Pass
@@ -394,7 +401,7 @@ void MapDrawer::DrawIngameBox() {
 }
 
 void MapDrawer::DrawGrid() {
-	grid_drawer->DrawGrid(*sprite_batch, view, options);
+	grid_drawer->DrawGrid(*sprite_batch, view, options, orig_start_x, orig_start_y, orig_end_x, orig_end_y);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
