@@ -62,6 +62,8 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 
 					// Draw ground
 					uint8_t r = 255, g = 255, b = 255;
+					uint8_t base_alpha = canvas->isPasting() ? 128 : 255;
+
 					if (tile->ground) {
 						if (tile->isBlocking() && options.show_blocking) {
 							g = g / 3 * 2;
@@ -94,6 +96,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							params.red = r;
 							params.green = g;
 							params.blue = b;
+							params.alpha = base_alpha;
 							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 						}
 					}
@@ -103,11 +106,12 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 						for (const auto& item : tile->items) {
 							BlitItemParams params(tile, item.get(), options);
 							params.ephemeral = true;
+							params.alpha = base_alpha;
 							if (item->isBorder()) {
 								params.red = 255;
 								params.green = r;
 								params.blue = g;
-								params.alpha = b;
+								params.alpha = (base_alpha == 255) ? b : base_alpha;
 								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 							} else {
 								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
