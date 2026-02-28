@@ -223,12 +223,12 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	// Quad Transform for Screen
 	float draw_dest_x = 0.0f;
 	float draw_dest_y = 0.0f;
-	float draw_dest_w = static_cast<float>(buffer_w) * view.zoom;
-	float draw_dest_h = static_cast<float>(buffer_h) * view.zoom;
+	float draw_dest_w = static_cast<float>(buffer_w);
+	float draw_dest_h = static_cast<float>(buffer_h);
 
 	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(draw_dest_x, draw_dest_y, 0.0f));
 	model = glm::scale(model, glm::vec3(draw_dest_w, draw_dest_h, 1.0f));
-	shader->SetMat4("uProjection", view.projectionMatrix * view.viewMatrix * model); // reusing uProjection as MVP
+	shader->SetMat4("uProjection", view.projectionMatrix * model); // reusing uProjection as MVP, FBO is already screen space
 
 	float uv_w = static_cast<float>(buffer_w) / static_cast<float>(buffer_width);
 	float uv_h = static_cast<float>(buffer_h) / static_cast<float>(buffer_height);

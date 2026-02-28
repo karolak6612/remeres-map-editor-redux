@@ -64,30 +64,44 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 
 void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
 	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
-		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
-
+		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD)) {
 			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
-			for (size_t i = resident_images.size(); i > 0; --i) {
-				Image* img = static_cast<Image*>(resident_images[i - 1]);
+			size_t batch_size = 500;
+
+			static size_t image_idx = 0;
+			size_t images_processed = 0;
+			while (!resident_images.empty() && images_processed < batch_size) {
+				if (image_idx >= resident_images.size()) {
+					image_idx = 0;
+				}
+
+				Image* img = static_cast<Image*>(resident_images[image_idx]);
 				img->clean(current_time, longevity);
 
 				if (!img->isGLLoaded) {
 					// Image evicted itself during clean()
-					if (i - 1 < resident_images.size() - 1) {
-						resident_images[i - 1] = resident_images.back();
+					if (image_idx < resident_images.size() - 1) {
+						resident_images[image_idx] = resident_images.back();
 					}
 					resident_images.pop_back();
+				} else {
+					image_idx++;
 				}
+				images_processed++;
 			}
 
 			// 2. Clean GameSprites (Software caches/animators)
-			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
-				GameSprite* gs = resident_game_sprites[i - 1];
-				gs->clean(current_time, longevity);
+			static size_t sprite_idx = 0;
+			size_t sprites_processed = 0;
+			while (!resident_game_sprites.empty() && sprites_processed < batch_size) {
+				if (sprite_idx >= resident_game_sprites.size()) {
+					sprite_idx = 0;
+				}
 
-				// Optional: Add logic to check if GameSprite is still "active"
-				// For now, GameSprites stay resident if they have software DC/animator state
-				// This part of the refactor is more subtle; we'll keep it simple first.
+				GameSprite* gs = resident_game_sprites[sprite_idx];
+				gs->clean(current_time, longevity);
+				sprite_idx++;
+				sprites_processed++;
 			}
 
 			lastclean = current_time;
