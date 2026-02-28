@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <wx/wx.h>
 #include <string>
+#include <optional>
+#include "map/position.h"
 
 struct DrawingOptions {
 	DrawingOptions();
@@ -23,6 +25,8 @@ struct DrawingOptions {
 	bool ingame;
 	bool dragging;
 	bool boundbox_selection;
+
+	std::optional<MapBounds> transient_selection_bounds;
 
 	int show_grid;
 	bool show_all_floors;

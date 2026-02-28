@@ -10,6 +10,8 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
+#include <algorithm>
+#include <cmath>
 
 void SelectionDrawer::draw(PrimitiveRenderer& primitive_renderer, const RenderView& view, const MapCanvas* canvas, const DrawingOptions& options) {
 	if (options.ingame) {
@@ -28,15 +30,15 @@ void SelectionDrawer::draw(PrimitiveRenderer& primitive_renderer, const RenderVi
 	const float w = std::abs(cursor_rx - last_click_rx);
 	const float h = std::abs(cursor_ry - last_click_ry);
 
-	if (w <= 0.0f || h <= 0.0f) {
-		return;
-	}
+	// Restore axis-aligned feedback by removing w/h requirement
+	// w=0 or h=0 will just draw lines
 
 	const glm::vec4 rect(x, y, w, h);
 
 	// Draw semi-transparent fill
 	primitive_renderer.drawRect(rect, glm::vec4(1.0f, 1.0f, 1.0f, 0.2f));
 
-	// Draw white outline (1px thickness)
-	primitive_renderer.drawBox(rect, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), 1.0f);
+	// Draw white outline (physical 1px thickness)
+	// thickness is in logical units, so thickness=view.zoom results in 1 physical pixel
+	primitive_renderer.drawBox(rect, glm::vec4(1.0f, 1.0f, 1.0f, 1.0f), view.zoom);
 }
