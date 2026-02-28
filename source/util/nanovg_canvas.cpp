@@ -431,6 +431,7 @@ void NanoVGCanvas::ClearImageCache() {
 		nvgDeleteImage(m_nvg.get(), tex);
 	}
 	m_imageCache.clear();
+	m_lruList.clear();
 }
 
 int NanoVGCanvas::GetCachedImage(uint64_t id) const {
