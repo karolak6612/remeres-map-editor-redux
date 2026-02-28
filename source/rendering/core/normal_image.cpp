@@ -4,6 +4,8 @@
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
 
+constexpr int RGB_COMPONENTS = 3;
+
 NormalImage::NormalImage() :
 	id(0),
 	atlas_region(nullptr),
@@ -34,17 +36,13 @@ void NormalImage::clean(time_t time, int longevity) {
 			g_gui.gfx.getAtlasManager()->removeSprite(id);
 		}
 		if (parent) {
-            parent->invalidateCache(atlas_region);
+			parent->invalidateCache(atlas_region);
 		}
 	}
 }
-
-// ... rest of implementation ...
-// I need to copy `getRGBData` and `getRGBAData` implementation.
-
 std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 	if (id == 0) {
-		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
+		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
 		return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
 	}
 
@@ -58,9 +56,9 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 		}
 	}
 
-	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * 3;
+	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : 3;
+	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : RGB_COMPONENTS;
 	size_t write = 0;
 	size_t read = 0;
 
@@ -76,7 +74,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 			data[write + 0] = 0xFF; // red
 			data[write + 1] = 0x00; // green
 			data[write + 2] = 0xFF; // blue
-			write += 3; // RGB_COMPONENTS
+			write += RGB_COMPONENTS;
 		}
 
 		if (read + 1 >= size) {
@@ -96,7 +94,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 			data[write + 0] = dump[read + 0]; // red
 			data[write + 1] = dump[read + 1]; // green
 			data[write + 2] = dump[read + 2]; // blue
-			write += 3; // RGB_COMPONENTS
+			write += RGB_COMPONENTS;
 			read += bpp;
 		}
 	}
@@ -106,7 +104,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 		data[write + 0] = 0xFF; // red
 		data[write + 1] = 0x00; // green
 		data[write + 2] = 0xFF; // blue
-		write += 3; // RGB_COMPONENTS
+		write += RGB_COMPONENTS;
 	}
 	return data;
 }

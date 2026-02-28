@@ -170,47 +170,7 @@ bool Map::addSpawn(Tile* tile) {
 }
 
 void Map::removeSpawnInternal(Tile* tile) {
-	// Private method exposed via friend class MapSpawnManager, but MapSpawnManager has its own version now.
-	// We can't easily call MapSpawnManager::removeSpawnInternal from here because it's private there too.
-	// But `Map::removeSpawn` calls `MapSpawnManager::removeSpawn`.
-	// Does anything else call `removeSpawnInternal`?
-	// It is protected in `Map`.
-	// Let's check who calls it.
-	// If only `removeSpawn` calls it, we can remove it or delegate it.
-	// But `removeSpawnInternal` logic is now in `MapSpawnManager`.
-	// For API compatibility, if something calls `removeSpawnInternal`, we should delegate?
-	// But `MapSpawnManager` has it private.
-	// Let's assume for now we don't need to implement it fully if it's only used by `removeSpawn`.
-	// Wait, if it's protected, subclasses might use it (BaseMap subclasses? Map inherits BaseMap).
-	// But `Map` is the main class.
-	// Let's look at `Map::removeSpawn` implementation I wrote above:
-	/*
-	void Map::removeSpawn(Tile* tile) {
-		if (tile->spawn) {
-			removeSpawnInternal(tile);
-			spawns.removeSpawn(tile);
-		}
-	}
-	*/
-	// I replaced `removeSpawn` to call `MapSpawnManager::removeSpawn`.
-	// `MapSpawnManager::removeSpawn` calls `MapSpawnManager::removeSpawnInternal`.
-	// So `Map::removeSpawnInternal` might be dead code unless called elsewhere.
-	// I'll leave an empty implementation or one that logs a warning, or replicate logic if needed?
-	// Replicating logic violates DRY.
-	// Since I moved the logic, I should probably remove the method from `Map` or deprecate it.
-	// But I kept it in the header.
-	// Let's make it delegate to `MapSpawnManager::removeSpawn` (which handles the whole thing)
-	// No, `removeSpawnInternal` does only the TileLocation update part.
-	// I'll leave it as is (empty/deprecated) or just remove the body if I'm sure.
-	// Safest is to just call `MapSpawnManager::removeSpawn(this, tile)` but that does more than internal.
-	// Actually, I can just use the public API of `MapSpawnManager`.
-	// For now, let's assume it's unused or I can leave it empty.
-	// Better: Keep the logic here for safety if I can't be sure, OR use the new class.
-	// BUT I can't access `MapSpawnManager::removeSpawnInternal`.
-	// I will just leave the old implementation here for `removeSpawnInternal` to avoid breaking protected API usage
-	// IF it is used by derived classes (unlikely for `Map`).
-	// Actually, `Map` is final-ish.
-	// I'll just clear it out.
+	MapSpawnManager::removeSpawnInternal(*this, tile);
 }
 
 void Map::removeSpawn(Tile* tile) {

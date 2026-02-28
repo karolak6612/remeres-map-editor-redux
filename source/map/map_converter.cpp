@@ -37,30 +37,8 @@ bool MapConverter::convert(Map& map, MapVersion to, bool showdialog) {
 	return true;
 }
 
-bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
-	if (showdialog) {
-		g_gui.CreateLoadBar("Converting map ...");
-	}
-
-	std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>> mtm_lookups;
-	for (const auto& entry : rm.mtm) {
-		mtm_lookups.emplace(&entry.first, std::unordered_set<uint16_t>(entry.first.begin(), entry.first.end()));
-	}
-
-	uint64_t tiles_done = 0;
-	std::vector<uint16_t> id_list;
-
-	// std::ofstream conversions("converted_items.txt");
-
-	for (auto& tile_loc : map.tiles()) {
-		Tile* tile = tile_loc.get();
-		ASSERT(tile);
-
-		if (tile->empty()) {
-			continue;
-		}
-
-		// id_list try MTM conversion
+namespace {
+	size_t applyMTMConversion(Tile* tile, const ConversionMap& rm, const std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>>& mtm_lookups, std::vector<uint16_t>& id_list) {
 		id_list.clear();
 		id_list.reserve(tile->items.size() + 1);
 
@@ -84,7 +62,6 @@ bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
 			id_list.pop_back();
 		}
 
-		// Keep track of how many items have been inserted at the bottom
 		size_t inserted_items = 0;
 
 		if (cfmtm != rm.mtm.end()) {
@@ -113,6 +90,10 @@ bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
 			}
 		}
 
+		return inserted_items;
+	}
+
+	void applySTMConversion(Tile* tile, const ConversionMap& rm, size_t inserted_items) {
 		if (tile->ground) {
 			ConversionMap::STM::const_iterator cfstm = rm.stm.find(tile->ground->getID());
 			if (cfstm != rm.stm.end()) {
@@ -121,10 +102,8 @@ bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
 				tile->ground.reset();
 
 				const std::vector<uint16_t>& v = cfstm->second;
-				// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> ";
 				for (uint16_t new_id : v) {
 					std::unique_ptr<Item> item = Item::Create(new_id);
-					// conversions << *iit << " ";
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
 						item->setUniqueID(uid);
@@ -134,7 +113,6 @@ bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
 						++inserted_items;
 					}
 				}
-				// conversions << std::endl;
 			}
 		}
 
@@ -142,20 +120,43 @@ bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
 			uint16_t id = (*replace_item_iter)->getID();
 			ConversionMap::STM::const_iterator cf = rm.stm.find(id);
 			if (cf != rm.stm.end()) {
-				// uint16_t aid = (*replace_item_iter)->getActionID();
-				// uint16_t uid = (*replace_item_iter)->getUniqueID();
-
 				replace_item_iter = tile->items.erase(replace_item_iter);
 				const std::vector<uint16_t>& v = cf->second;
 				for (uint16_t new_id : v) {
 					replace_item_iter = tile->items.insert(replace_item_iter, Item::Create(new_id));
-					// conversions << "Converted " << tile->getX() << ":" << tile->getY() << ":" << tile->getZ() << " " << id << " -> " << *iit << std::endl;
 					++replace_item_iter;
 				}
 			} else {
 				++replace_item_iter;
 			}
 		}
+	}
+
+} // namespace
+
+bool MapConverter::convert(Map& map, const ConversionMap& rm, bool showdialog) {
+	if (showdialog) {
+		g_gui.CreateLoadBar("Converting map ...");
+	}
+
+	std::unordered_map<const std::vector<uint16_t>*, std::unordered_set<uint16_t>> mtm_lookups;
+	for (const auto& entry : rm.mtm) {
+		mtm_lookups.emplace(&entry.first, std::unordered_set<uint16_t>(entry.first.begin(), entry.first.end()));
+	}
+
+	uint64_t tiles_done = 0;
+	std::vector<uint16_t> id_list;
+
+	for (auto& tile_loc : map.tiles()) {
+		Tile* tile = tile_loc.get();
+		ASSERT(tile);
+
+		if (tile->empty()) {
+			continue;
+		}
+
+		size_t inserted_items = applyMTMConversion(tile, rm, mtm_lookups, id_list);
+		applySTMConversion(tile, rm, inserted_items);
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {

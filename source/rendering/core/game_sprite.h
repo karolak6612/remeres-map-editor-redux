@@ -108,8 +108,8 @@ public:
 
 	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
 
-    // Exposed for NormalImage::clean to invalidate cache
-    void invalidateCache(const AtlasRegion* region);
+	// Exposed for NormalImage::clean to invalidate cache
+	void invalidateCache(const AtlasRegion* region);
 
 private:
 protected:
@@ -186,7 +186,6 @@ public:
 	friend class TextureGarbageCollector;
 	friend class TooltipDrawer;
 	friend class SpritePreloader;
-    friend class NormalImage; // To access cached_default_region, though we are adding invalidateCache
 
 	// Exposed for fast-path rendering (BlitItem)
 	const AtlasRegion* getCachedDefaultRegion() const {

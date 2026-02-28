@@ -4,6 +4,8 @@
 #include "map/map.h"
 
 class MapSpawnManager {
+	friend class Map;
+
 public:
 	static bool addSpawn(Map& map, Tile* spawn);
 	static void removeSpawn(Map& map, Tile* tile);
