@@ -7,6 +7,7 @@
 
 #include <wx/wx.h>
 #include <wx/bmpbndl.h>
+#include <wx/iconbndl.h>
 #include <wx/colour.h>
 #include <wx/gdicmn.h>
 #include <unordered_map>
@@ -54,6 +55,7 @@ public:
 	// wxWidgets support
 	wxBitmapBundle GetBitmapBundle(std::string_view assetPath, const wxColour& tint = wxNullColour);
 	wxBitmap GetBitmap(std::string_view assetPath, const wxSize& size = wxDefaultSize, const wxColour& tint = wxNullColour);
+	wxIconBundle GetIconBundle(std::string_view assetPath, const wxColour& tint = wxNullColour);
 
 	// NanoVG support
 	int GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint = wxNullColour);
