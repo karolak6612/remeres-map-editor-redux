@@ -414,6 +414,9 @@ namespace TileOperations {
 			if (tile->ground->hasLight()) {
 				tile->statflags |= TILESTATE_HAS_LIGHT;
 			}
+		} else {
+			tile->mapflags = TILESTATE_NONE;
+			tile->house_id = 0;
 		}
 
 		std::ranges::for_each(tile->items, [&](const auto& i) {
