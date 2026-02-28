@@ -32,6 +32,7 @@ public:
 	void SetPaletteType(PaletteType type);
 	void UpdateBrushSize(BrushShape shape, int size); // Called when size changes externally (e.g. shortcuts)
 	void ReloadSettings();
+	void Clear();
 
 private:
 	// -- Logic --
