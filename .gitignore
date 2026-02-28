@@ -1,102 +1,115 @@
-# CMake
-CMakeCache.txt
-CMakeFiles
-cmake_install.cmake
-Makefile
+# ============================================================
+#  Build outputs
+# ============================================================
 build/
 build.*/
-build-debug
-build-release
+build-debug/
+build-release/
+build_conan/
+build.log
+build_script.log
+build_output*.txt
+
+# ============================================================
+#  CMake
+# ============================================================
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
 CMakeLists.txt.user*
+CMakeUserPresets.json
+Makefile
 
-# RME
-rme
-rme.cfg
-data/user
+# ============================================================
+#  vcproj (generated VS solution)
+# ============================================================
+vcproj/*
+!vcproj/generate_vcproj.bat
 
-# exe and dll
-*.dll
-*.exe
+# ============================================================
+#  vcpkg
+# ============================================================
+/vcpkg_installed/
 
-# assets
-*.spr
-*.dat
-
-# Visual Studio
-*.MAP
+# ============================================================
+#  Visual Studio / MSBuild
+# ============================================================
+*.obj
+*.pdb
+*.ilk
 *.user
-*.APS
+*.aps
 *.opensdf
 *.sdf
 *.suo
-*.obj
 *.db
 *.opendb
-
-vcproj/ipch/
-vcproj/Beta Release/
-vcproj/Debug/
-vcproj/Release/
-vcproj/x64/
-vcproj/Project/Beta Release/
-vcproj/Project/Debug/
-vcproj/Project/Release/
-vcproj/Project/x64/
-vcproj/Installer/Beta Release/
-vcproj/Installer/Debug/
-vcproj/Installer/Release/
-.vscode/
 .vs/
 
-# Xcode
-xcuserdata
-.DS_STORE
+# ============================================================
+#  Binaries
+# ============================================================
+*.exe
+*.dll
 
-# CLion
+# ============================================================
+#  Xcode / macOS
+# ============================================================
+xcuserdata/
+.DS_Store
+
+# ============================================================
+#  JetBrains (CLion, Rider)
+# ============================================================
 .idea/
-cmake-build-debug/
+cmake-build-*/
 
-# Local History Extension
-/.history
+# ============================================================
+#  VS Code
+# ============================================================
+.vscode/
 
-# Notepad++
+# ============================================================
+#  Editor temp files
+# ============================================================
 *.bak
+*.swp
+*~
 
-# vcpkg
-/vcpkg_installed/
-
-/.agent/rules
-build.log
-/ext/nanovg/example
-
-# Conan
-build_conan/
-CMakeUserPresets.json
-verify_logic.py
-source/brushes/legacy_brush_arrays.cpp
-source/brushes/carpet/backup.cpp
-organize_brushes.py
-full_ui_file_list.txt
-carpet_rules_analysis.txt
-carpet_legacy_table.txt
-analyze_legacy.py
-/ImguiMapEditor
-/source/ext/wxMaterialDesignArtProvider-main
-/legacy
-/MapViewerClient
-/data/1098 — kopia
-/Assets Editor
-/mappingtool
-/test_iterator_mock
-/test_selection_mock
-/test_variant_logic
-build_output*.txt
-build_script.log
-
-.qwen/
-gha-creds-*.json
-/vcproj/_deps
-/vcproj/vcpkg_installed
-/vcproj/rme.dir
-
+# ============================================================
+#  AI / agent config
+# ============================================================
 .gemini/
+.qwen/
+.agent/
+/.agent/rules
+gha-creds-*.json
+
+# ============================================================
+#  Local History (VS Code extension)
+# ============================================================
+/.history/
+
+# ============================================================
+#  Project-specific ignores
+# ============================================================
+# RME runtime config & user data
+rme
+rme.cfg
+data/user/
+
+# Tibia asset files (not shipped in repo)
+*.spr
+*.dat
+*.MAP
+
+# External / experimental directories
+/ext/nanovg/example/
+/ImguiMapEditor/
+/legacy/
+/MapViewerClient/
+/Assets Editor/
+/mappingtool/
+/test_iterator_mock/
+/test_selection_mock/
+/test_variant_logic/
