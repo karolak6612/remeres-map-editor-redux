@@ -102,7 +102,7 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 	item_id_field->Bind(wxEVT_SPINCTRL, &AddTilesetWindow::OnChangeItemId, this);
 	item_button->Bind(wxEVT_LEFT_DOWN, &AddTilesetWindow::OnItemClicked, this);
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS)));
+	SetIcons(wxIconBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS).GetIcon(wxDefaultSize)));
 }
 
 void AddTilesetWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {

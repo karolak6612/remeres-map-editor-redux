@@ -195,7 +195,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	this->EnableProperties(false);
 	this->RefreshContentsInternal();
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_SEARCH)));
+	SetIcons(wxIconBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_SEARCH).GetIcon(wxDefaultSize)));
 
 	// Connect Events
 	options_radio_box->Bind(wxEVT_COMMAND_RADIOBOX_SELECTED, &FindItemDialog::OnOptionChange, this);

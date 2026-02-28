@@ -66,7 +66,7 @@ ExportTilesetsWindow::ExportTilesetsWindow(wxWindow* parent, Editor& editor) :
 	ok_button->Bind(wxEVT_BUTTON, &ExportTilesetsWindow::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &ExportTilesetsWindow::OnClickCancel, this);
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_EXPORT)));
+	SetIcons(wxIconBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_EXPORT).GetIcon(wxDefaultSize)));
 }
 
 ExportTilesetsWindow::~ExportTilesetsWindow() = default;
