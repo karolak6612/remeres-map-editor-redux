@@ -69,8 +69,6 @@ class MapDrawer {
 	LightBuffer light_buffer;
 	std::unique_ptr<TooltipDrawer> tooltip_drawer;
 	std::unique_ptr<GridDrawer> grid_drawer;
-	// Original view bounds saved before DrawMap modifies them per-floor
-	int orig_start_x = 0, orig_start_y = 0, orig_end_x = 0, orig_end_y = 0;
 	std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
 	std::unique_ptr<SelectionDrawer> selection_drawer;
 	std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
@@ -123,9 +121,9 @@ public:
 	void DrawBackground();
 	void DrawMap();
 	void DrawLiveCursors();
-	void DrawIngameBox();
+	void DrawIngameBox(const ViewBounds& bounds);
 
-	void DrawGrid();
+	void DrawGrid(const ViewBounds& bounds);
 	void DrawTooltips(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
