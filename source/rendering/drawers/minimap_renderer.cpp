@@ -362,8 +362,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 		glBindTextureUnit(1, palette_texture_id_->GetID());
 		shader_->SetInt("uPaletteTexture", 1);
 
-		glBindVertexArray(vao_->GetID());
+		ScopedGLVertexArray vaoBind(vao_->GetID());
 		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instance_data_.size()));
-		glBindVertexArray(0);
 	}
 }

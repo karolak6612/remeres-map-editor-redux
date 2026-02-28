@@ -216,9 +216,7 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 		return;
 	}
 
-	// Only clear and bind main screen once we know we can draw the result
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
+	// Only clear main screen once we know we can draw the result
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear main screen
 
 	shader->Use();
@@ -227,9 +225,10 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 	shader->SetVec2("u_TextureSize", glm::vec2(fbo_width, fbo_height));
 
 	glBindTextureUnit(0, scale_texture->GetID());
-	glBindVertexArray(pp_vao->GetID());
+
+	ScopedGLVertexArray vaoBind(pp_vao->GetID());
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+
 	shader->Unuse();
 }
 
@@ -274,9 +273,6 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);
 		m_lastAaMode = options.anti_aliasing;
 	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());
-	glViewport(0, 0, fbo_width, fbo_height);
 }
 
 void MapDrawer::Release() {
@@ -314,29 +310,35 @@ void MapDrawer::Draw() {
 		UpdateFBO(view, options);
 	}
 
-	DrawBackground(); // Clear screen (or FBO)
-
 	// Save original view bounds before DrawMap modifies them per-floor
 	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
 
-	DrawMap();
+	{
+		std::optional<ScopedGLFramebuffer> fbo_scope;
+		std::optional<ScopedGLViewport> viewport_scope;
 
-	// Flush Map for Light Pass
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch->end(*g_gui.gfx.getAtlasManager());
-	}
-	primitive_renderer->flush();
+		if (use_fbo) {
+			fbo_scope.emplace(GL_FRAMEBUFFER, scale_fbo->GetID());
+			viewport_scope.emplace(0, 0, fbo_width, fbo_height);
+		}
 
-	if (options.isDrawLight()) {
-		DrawLight();
-	}
+		DrawBackground(); // Clear screen (or FBO)
+		DrawMap();
+
+		// Flush Map for Light Pass
+		if (g_gui.gfx.ensureAtlasManager()) {
+			sprite_batch->end(*g_gui.gfx.getAtlasManager());
+		}
+		primitive_renderer->flush();
+
+		if (options.isDrawLight()) {
+			DrawLight();
+		}
+	} // FBO and Viewport automatically restored here!
 
 	// If using FBO, we must now Resolve to Screen
 	if (use_fbo) {
 		DrawPostProcess(view, options);
-		// Reset to default FBO for overlays
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
 	}
 
 	// Resume Batch for Overlays

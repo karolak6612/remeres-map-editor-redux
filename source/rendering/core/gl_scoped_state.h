@@ -140,6 +140,49 @@ private:
 };
 
 /**
+ * @brief RAII wrapper for glBindVertexArray
+ */
+class ScopedGLVertexArray {
+public:
+	explicit ScopedGLVertexArray(GLuint vao) {
+		glGetIntegerv(GL_VERTEX_ARRAY_BINDING, &prev_vao_);
+		glBindVertexArray(vao);
+	}
+
+	~ScopedGLVertexArray() {
+		restore();
+	}
+
+	ScopedGLVertexArray(const ScopedGLVertexArray&) = delete;
+	ScopedGLVertexArray& operator=(const ScopedGLVertexArray&) = delete;
+
+	ScopedGLVertexArray(ScopedGLVertexArray&& other) noexcept :
+		prev_vao_(other.prev_vao_),
+		active_(std::exchange(other.active_, false)) {
+	}
+
+	ScopedGLVertexArray& operator=(ScopedGLVertexArray&& other) noexcept {
+		if (this != &other) {
+			restore();
+			prev_vao_ = other.prev_vao_;
+			active_ = std::exchange(other.active_, false);
+		}
+		return *this;
+	}
+
+private:
+	void restore() const {
+		if (active_) {
+			glBindVertexArray(prev_vao_);
+		}
+	}
+
+private:
+	GLint prev_vao_ = 0;
+	bool active_ = true;
+};
+
+/**
  * @brief RAII wrapper for glFramebuffer
  *
  * Saves current READ and DRAW framebuffer bindings on construction and restores them on destruction.

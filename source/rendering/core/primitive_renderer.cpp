@@ -196,9 +196,8 @@ void PrimitiveRenderer::flushPrimitives(std::vector<Vertex>& vertices, GLenum mo
 		const auto offset = ring_buffer_.getCurrentSectionOffset();
 		glVertexArrayVertexBuffer(vao_->GetID(), 0, ring_buffer_.getBufferId(), offset, sizeof(Vertex));
 
-		glBindVertexArray(vao_->GetID());
+		ScopedGLVertexArray vaoBind(vao_->GetID());
 		glDrawArrays(mode, 0, (GLsizei)vertices.size());
-		glBindVertexArray(0);
 	}
 
 	ring_buffer_.signalFinished();
