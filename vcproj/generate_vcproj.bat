@@ -1,7 +1,7 @@
 @echo off
 REM ============================================================
 REM  RME Standalone VS Solution Generator
-REM  Generates a Visual Studio 2022/2026 solution in vcproj\vcproj\
+REM  Generates a Visual Studio 2022/2026 solution in vcproj\
 REM
 REM  This script checks ALL common prerequisites before running
 REM  CMake, and attempts to fix issues automatically where it can.

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 
+
 project(rme)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -119,5 +120,8 @@ target_link_libraries(rme PRIVATE glm::glm)
 target_link_libraries(rme PRIVATE nanovg::nanovg)
 target_link_libraries(rme PRIVATE spdlog::spdlog)
 target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "rme")
+
 
 
