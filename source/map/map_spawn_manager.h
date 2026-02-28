@@ -7,7 +7,7 @@ class MapSpawnManager {
 	friend class Map;
 
 public:
-	static bool addSpawn(Map& map, Tile* spawn);
+	static bool addSpawn(Map& map, Tile* tile);
 	static void removeSpawn(Map& map, Tile* tile);
 	static SpawnList getSpawnList(Map& map, Tile* t);
 

@@ -46,13 +46,15 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 		if (!rgba) {
 			// Fallback: Create a magenta texture to distinguish failure from garbage
 			// Use literal 32 to ensure compilation (OT sprites are always 32x32)
-			rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
-			std::span<uint8_t> buffer(rgba.get(), 32 * 32 * 4);
-			for (int i : std::views::iota(0, 32 * 32)) {
-				buffer[i * 4 + 0] = 255;
-				buffer[i * 4 + 1] = 0;
-				buffer[i * 4 + 2] = 255;
-				buffer[i * 4 + 3] = 255;
+			constexpr int SPRITE_DIMENSION = 32;
+			constexpr int RGBA_COMPONENTS = 4;
+			rgba = std::make_unique<uint8_t[]>(SPRITE_DIMENSION * SPRITE_DIMENSION * RGBA_COMPONENTS);
+			std::span<uint8_t> buffer(rgba.get(), SPRITE_DIMENSION * SPRITE_DIMENSION * RGBA_COMPONENTS);
+			for (int i : std::views::iota(0, SPRITE_DIMENSION * SPRITE_DIMENSION)) {
+				buffer[i * RGBA_COMPONENTS + 0] = 255;
+				buffer[i * RGBA_COMPONENTS + 1] = 0;
+				buffer[i * RGBA_COMPONENTS + 2] = 255;
+				buffer[i * RGBA_COMPONENTS + 3] = 255;
 			}
 			spdlog::warn("getRGBAData returned null for sprite_id={} - using fallback", sprite_id);
 		}

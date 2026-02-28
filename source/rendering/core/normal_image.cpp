@@ -38,6 +38,18 @@ void NormalImage::clean(time_t time, int longevity) {
 		if (parent) {
 			parent->invalidateCache(atlas_region);
 		}
+
+		isGLLoaded = false;
+		atlas_region = nullptr;
+
+		// Invalidate any pending preloads for this sprite ID
+		generation_id++;
+
+		g_gui.gfx.collector.NotifyTextureUnloaded();
+	}
+
+	if (time - static_cast<time_t>(lastaccess.load()) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
+		dump.reset();
 	}
 }
 std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {

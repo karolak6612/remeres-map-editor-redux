@@ -93,7 +93,7 @@ namespace {
 		return inserted_items;
 	}
 
-	void applySTMConversion(Tile* tile, const ConversionMap& rm, size_t inserted_items) {
+	void applySTMConversion(Tile* tile, const ConversionMap& rm, size_t& inserted_items) {
 		if (tile->ground) {
 			ConversionMap::STM::const_iterator cfstm = rm.stm.find(tile->ground->getID());
 			if (cfstm != rm.stm.end()) {

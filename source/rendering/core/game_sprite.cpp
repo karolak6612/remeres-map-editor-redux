@@ -80,11 +80,11 @@ GameSprite::~GameSprite() {
 }
 
 void GameSprite::invalidateCache(const AtlasRegion* region) {
-    if (cached_default_region == region) {
-        cached_default_region = nullptr;
-        cached_generation_id = 0;
-        cached_sprite_id = 0;
-    }
+	if (cached_default_region == region) {
+		cached_default_region = nullptr;
+		cached_generation_id = 0;
+		cached_sprite_id = 0;
+	}
 }
 
 void GameSprite::ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
