@@ -24,6 +24,11 @@ bool AtlasManager::ensureInitialized() {
 	std::vector<uint8_t> white_data(32 * 32 * 4, 255);
 	white_pixel_cache_ = addSprite(WHITE_PIXEL_ID, white_data.data());
 
+	if (!white_pixel_cache_) {
+		spdlog::error("AtlasManager: Failed to register white pixel sprite");
+		return false;
+	}
+
 	return true;
 }
 
@@ -72,6 +77,10 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 }
 
 void AtlasManager::removeSprite(uint32_t sprite_id) {
+	if (sprite_id == WHITE_PIXEL_ID) {
+		white_pixel_cache_ = nullptr;
+	}
+
 	AtlasRegion* region = nullptr;
 
 	if (sprite_id < DIRECT_LOOKUP_SIZE) {
@@ -101,6 +110,10 @@ void AtlasManager::removeSprite(uint32_t sprite_id) {
 }
 
 void AtlasManager::clearMapping(uint32_t sprite_id) {
+	if (sprite_id == WHITE_PIXEL_ID) {
+		white_pixel_cache_ = nullptr;
+	}
+
 	if (sprite_id < DIRECT_LOOKUP_SIZE) {
 		direct_lookup_[sprite_id] = nullptr;
 	}
