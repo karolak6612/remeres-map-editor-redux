@@ -132,7 +132,9 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 			if (light_ssbo_capacity_ < 1024) {
 				light_ssbo_capacity_ = 1024;
 			}
-			glNamedBufferData(light_ssbo->GetID(), light_ssbo_capacity_, nullptr, GL_DYNAMIC_DRAW);
+			// Destroy and recreate buffer for Immutable Storage
+			light_ssbo = std::make_unique<GLBuffer>();
+			glNamedBufferStorage(light_ssbo->GetID(), light_ssbo_capacity_, nullptr, GL_DYNAMIC_STORAGE_BIT);
 		}
 		glNamedBufferSubData(light_ssbo->GetID(), 0, needed_size, gpu_lights_.data());
 	}
@@ -351,7 +353,7 @@ void LightDrawer::initRenderResources() {
 	vbo = std::make_unique<GLBuffer>();
 	light_ssbo = std::make_unique<GLBuffer>();
 
-	glNamedBufferData(vbo->GetID(), sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glNamedBufferStorage(vbo->GetID(), sizeof(vertices), vertices, 0);
 
 	glVertexArrayVertexBuffer(vao->GetID(), 0, vbo->GetID(), 0, 2 * sizeof(float));
 
