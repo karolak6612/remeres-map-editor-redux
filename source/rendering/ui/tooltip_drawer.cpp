@@ -17,6 +17,7 @@
 
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/normal_image.h"
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
 #include <nanovg.h>
@@ -151,7 +152,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 	if (gameSprite && !gameSprite->spriteList.empty()) {
 		// Use the first frame/part of the sprite
-		GameSprite::NormalImage* img = gameSprite->spriteList[0];
+		NormalImage* img = gameSprite->spriteList[0];
 		if (img) {
 			std::unique_ptr<uint8_t[]> rgba;
 

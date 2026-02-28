@@ -22,7 +22,12 @@ bool AtlasManager::ensureInitialized() {
 
 	// Ensure white pixel exists (ID AtlasRegion::INVALID_SENTINEL)
 	std::vector<uint8_t> white_data(32 * 32 * 4, 255);
-	addSprite(WHITE_PIXEL_ID, white_data.data());
+	white_pixel_cache_ = addSprite(WHITE_PIXEL_ID, white_data.data());
+
+	if (!white_pixel_cache_) {
+		spdlog::error("AtlasManager: Failed to register white pixel sprite");
+		return false;
+	}
 
 	return true;
 }
@@ -72,6 +77,10 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 }
 
 void AtlasManager::removeSprite(uint32_t sprite_id) {
+	if (sprite_id == WHITE_PIXEL_ID) {
+		white_pixel_cache_ = nullptr;
+	}
+
 	AtlasRegion* region = nullptr;
 
 	if (sprite_id < DIRECT_LOOKUP_SIZE) {
@@ -101,6 +110,10 @@ void AtlasManager::removeSprite(uint32_t sprite_id) {
 }
 
 void AtlasManager::clearMapping(uint32_t sprite_id) {
+	if (sprite_id == WHITE_PIXEL_ID) {
+		white_pixel_cache_ = nullptr;
+	}
+
 	if (sprite_id < DIRECT_LOOKUP_SIZE) {
 		direct_lookup_[sprite_id] = nullptr;
 	}
@@ -108,6 +121,9 @@ void AtlasManager::clearMapping(uint32_t sprite_id) {
 }
 
 const AtlasRegion* AtlasManager::getWhitePixel() const {
+	if (white_pixel_cache_) {
+		return white_pixel_cache_;
+	}
 	if (sprite_regions_.count(WHITE_PIXEL_ID)) {
 		return sprite_regions_.at(WHITE_PIXEL_ID);
 	}
@@ -135,5 +151,6 @@ void AtlasManager::clear() {
 	region_storage_.clear();
 	sprite_regions_.clear();
 	std::fill(direct_lookup_.begin(), direct_lookup_.end(), nullptr);
+	white_pixel_cache_ = nullptr;
 	spdlog::info("AtlasManager cleared");
 }

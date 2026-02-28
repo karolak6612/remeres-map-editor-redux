@@ -84,7 +84,7 @@ void AutoborderPreviewManager::CopyMapArea(Editor& editor, const Position& pos) 
 			if (src_tile) {
 				// deeply copies tile and its items to buffer map
 				// deepCopy now correctly uses the destination map's TileLocation
-				std::unique_ptr<Tile> new_tile = src_tile->deepCopy(*preview_buffer_map);
+				std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(src_tile, *preview_buffer_map);
 				(void)preview_buffer_map->setTile(std::move(new_tile));
 			}
 		}
@@ -112,7 +112,7 @@ void AutoborderPreviewManager::SimulateBrush(Editor& editor, const Position& pos
 		ASSERT(tile->getLocation() != nullptr);
 
 		if (is_wall) {
-			TileOperations::cleanWalls(tile, false);
+			TileOperations::cleanWalls(tile);
 		} else if (is_ground) {
 			TileOperations::cleanBorders(tile);
 		}

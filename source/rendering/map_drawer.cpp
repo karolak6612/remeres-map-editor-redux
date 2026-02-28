@@ -150,9 +150,6 @@ void MapDrawer::SetupVars() {
 }
 
 void MapDrawer::SetupGL() {
-	// Reset texture cache at the start of each frame
-	sprite_drawer->ResetCache();
-
 	view.SetupGL();
 
 	// Ensure renderers are initialized
@@ -291,6 +288,16 @@ void MapDrawer::Draw() {
 
 	light_buffer.Clear();
 	creature_name_drawer->clear();
+	options.transient_selection_bounds = std::nullopt;
+
+	if (options.boundbox_selection) {
+		options.transient_selection_bounds = MapBounds {
+			.x1 = std::min(canvas->last_click_map_x, canvas->last_cursor_map_x),
+			.y1 = std::min(canvas->last_click_map_y, canvas->last_cursor_map_y),
+			.x2 = std::max(canvas->last_click_map_x, canvas->last_cursor_map_x),
+			.y2 = std::max(canvas->last_click_map_y, canvas->last_cursor_map_y)
+		};
+	}
 
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *g_gui.gfx.getAtlasManager());
@@ -308,6 +315,10 @@ void MapDrawer::Draw() {
 	}
 
 	DrawBackground(); // Clear screen (or FBO)
+
+	// Save original view bounds before DrawMap modifies them per-floor
+	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
+
 	DrawMap();
 
 	// Flush Map for Light Pass
@@ -335,18 +346,15 @@ void MapDrawer::Draw() {
 		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
 	}
 
-	if (options.boundbox_selection) {
-		selection_drawer->draw(*sprite_batch, view, canvas, options);
-	}
 	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
 
 	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
 
 	if (options.show_grid) {
-		DrawGrid();
+		DrawGrid(original_bounds);
 	}
 	if (options.show_ingame_box) {
-		DrawIngameBox();
+		DrawIngameBox(original_bounds);
 	}
 
 	// Draw creature names (Overlay) moved to DrawCreatureNames()
@@ -389,12 +397,12 @@ void MapDrawer::DrawMap() {
 	}
 }
 
-void MapDrawer::DrawIngameBox() {
-	grid_drawer->DrawIngameBox(*sprite_batch, view, options);
+void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
+	grid_drawer->DrawIngameBox(*sprite_batch, view, options, bounds);
 }
 
-void MapDrawer::DrawGrid() {
-	grid_drawer->DrawGrid(*sprite_batch, view, options);
+void MapDrawer::DrawGrid(const ViewBounds& bounds) {
+	grid_drawer->DrawGrid(*sprite_batch, view, options, bounds);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {

@@ -152,7 +152,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
 	}
@@ -178,6 +178,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		// Early viewport culling - skip tiles that are completely off-screen
 		if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
 			return;
+		}
+	}
+
+	const auto& position = location->getPosition();
+
+	// Light Processing (Ground)
+	if (light_buffer && tile->hasLight()) {
+		if (tile->ground && tile->ground->hasLight()) {
+			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
 		}
 	}
 
@@ -277,6 +286,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
+				if (light_buffer && item->hasLight()) {
+					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				}
+
 				const ItemType& it = g_items[item->getID()];
 
 				// item tooltip (one per item)
@@ -327,7 +340,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
+				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = location->getPosition(), .transient_selection_bounds = options.transient_selection_bounds });
 				if (creature_name_drawer) {
 					creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
 				}
@@ -355,33 +368,5 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
 			patterns = PatternCalculator::Calculate(spr, it, item, tile, tile->getPosition());
 		}
 		rme::collectTileSprites(spr, patterns.x, patterns.y, patterns.z, patterns.frame);
-	}
-}
-
-void TileRenderer::AddLight(TileLocation* location, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	if (!options.isDrawLight() || !location) {
-		return;
-	}
-
-	auto tile = location->get();
-	if (!tile || !tile->hasLight()) {
-		return;
-	}
-
-	const auto& position = location->getPosition();
-
-	if (tile->ground) {
-		if (tile->ground->hasLight()) {
-			light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
-		}
-	}
-
-	bool hidden = options.hide_items_when_zoomed && view.zoom > 10.f;
-	if (!hidden && !tile->items.empty()) {
-		for (const auto& item : tile->items) {
-			if (item->hasLight()) {
-				light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
-			}
-		}
 	}
 }

@@ -68,7 +68,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		}
 	}
 
-	if (!options.ingame && !ephemeral && item->isSelected()) {
+	bool is_transient_selected = !ephemeral && options.transient_selection_bounds && options.transient_selection_bounds->contains(pos.x, pos.y);
+	if (!options.ingame && (item->isSelected() || is_transient_selected)) {
 		red /= 2;
 		blue /= 2;
 		green /= 2;

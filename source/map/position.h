@@ -162,6 +162,13 @@ inline Position abs(const Position& position) {
 	);
 }
 
+struct MapBounds {
+	int x1, y1, x2, y2;
+	bool contains(int px, int py) const {
+		return px >= x1 && px <= x2 && py >= y1 && py <= y2;
+	}
+};
+
 using PositionVector = std::vector<Position>;
 using PositionList = std::list<Position>;
 

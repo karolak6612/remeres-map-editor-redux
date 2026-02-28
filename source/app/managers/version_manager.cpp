@@ -14,6 +14,7 @@
 #include "brushes/brush.h"
 #include "brushes/managers/brush_manager.h"
 #include "ui/managers/loading_manager.h"
+#include "ui/tool_options_window.h"
 
 VersionManager g_version;
 
@@ -22,7 +23,9 @@ VersionManager::VersionManager() :
 }
 
 VersionManager::~VersionManager() {
-	UnloadVersion();
+	// UnloadVersion is handled explicitly by Application::Unload() during graceful shutdown.
+	// Calling it here during static deinitialization causes use-after-free for singletons
+	// like SpritePreloader that may have already been destructed.
 }
 
 bool VersionManager::LoadVersion(ClientVersionID version, wxString& error, std::vector<std::string>& warnings, bool force) {
@@ -165,6 +168,9 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 void VersionManager::UnloadVersion() {
 	UnnamedRenderingLock();
 	g_gui.gfx.clear();
+	if (g_gui.tool_options) {
+		g_gui.tool_options->Clear();
+	}
 	g_brush_manager.Clear();
 
 	if (!loaded_version.empty()) {

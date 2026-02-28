@@ -8,6 +8,13 @@ struct DrawingOptions;
 #include "map/position.h"
 #include "app/definitions.h"
 
+struct ViewBounds {
+	int start_x = 0;
+	int start_y = 0;
+	int end_x = 0;
+	int end_y = 0;
+};
+
 struct RenderView {
 	float zoom;
 	int tile_size;
