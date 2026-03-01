@@ -59,8 +59,11 @@ HousePalette::HousePalette(wxWindow* parent) :
 	// Action buttons (Add, Edit, Remove)
 	wxBoxSizer* action_sizer = newd wxBoxSizer(wxHORIZONTAL);
 	add_button = newd wxButton(this, ID_ADD_HOUSE, "Add", wxDefaultPosition, wxSize(50, -1));
+	add_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 	edit_button = newd wxButton(this, ID_EDIT_HOUSE, "Edit", wxDefaultPosition, wxSize(50, -1));
+	edit_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
 	remove_button = newd wxButton(this, ID_REMOVE_HOUSE, "Remove", wxDefaultPosition, wxSize(60, -1));
+	remove_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
 
 	action_sizer->Add(add_button, 1, wxEXPAND | wxRIGHT, 2);
 	action_sizer->Add(edit_button, 1, wxEXPAND | wxRIGHT, 2);
