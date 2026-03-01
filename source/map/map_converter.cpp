@@ -175,10 +175,9 @@ void MapConverter::cleanInvalidTiles(Map& map, bool showdialog) {
 			continue;
 		}
 
-		// Use std::erase_if from C++20 for cleanup
-		std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
+		tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [](const std::unique_ptr<Item>& item) {
 			return !g_items.typeExists(item->getID());
-		});
+		}), tile->items.end());
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {

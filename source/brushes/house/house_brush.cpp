@@ -68,9 +68,9 @@ void HouseBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	tile->setPZ(true);
 	if (g_settings.getInteger(Config::HOUSE_BRUSH_REMOVE_ITEMS)) {
 		// Remove loose items
-		std::erase_if(tile->items, [](const auto& item) {
+		tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [](const auto& item) {
 			return item->isNotMoveable() == 0;
-		});
+		}), tile->items.end());
 	}
 	if (g_settings.getInteger(Config::AUTO_ASSIGN_DOORID)) {
 		// Is there a door? If so, find an empty ID and assign it (if the door doesn't already have an id.

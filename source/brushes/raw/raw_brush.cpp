@@ -69,9 +69,9 @@ void RAWBrush::undraw(BaseMap* map, Tile* tile) {
 	if (tile->ground && tile->ground->getID() == itemtype->id) {
 		tile->ground = nullptr;
 	}
-	std::erase_if(tile->items, [item_id = itemtype->id](const auto& item) {
+	tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [item_id = itemtype->id](const auto& item) {
 		return item->getID() == item_id;
-	});
+	}), tile->items.end());
 }
 
 void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
@@ -81,9 +81,9 @@ void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 	bool b = parameter ? *reinterpret_cast<bool*>(parameter) : false;
 	if ((g_settings.getInteger(Config::RAW_LIKE_SIMONE) && !b) && itemtype->alwaysOnBottom && itemtype->alwaysOnTopOrder == 2) {
-		std::erase_if(tile->items, [topOrder = itemtype->alwaysOnTopOrder](const auto& item) {
+		tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [topOrder = itemtype->alwaysOnTopOrder](const auto& item) {
 			return item->getTopOrder() == topOrder;
-		});
+		}), tile->items.end());
 	}
 	tile->addItem(Item::Create(itemtype->id));
 }

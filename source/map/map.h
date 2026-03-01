@@ -272,14 +272,13 @@ inline int64_t RemoveItemOnMap(Map& map, RemoveIfType& condition, bool selectedO
 			}
 		}
 
-		// Use C++20's std::erase_if for a safer and more idiomatic way to remove elements.
-		std::erase_if(tile->items, [&](const auto& item) {
+		tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [&](const auto& item) {
 			if (condition(map, item.get(), removed, done)) {
 				++removed;
 				return true;
 			}
 			return false;
-		});
+		}), tile->items.end());
 	});
 	return removed;
 }
