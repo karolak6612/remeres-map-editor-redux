@@ -107,11 +107,11 @@ public:
 	}
 	Tile* getSelectedTile() {
 		ASSERT(size() == 1);
-		return *tiles.begin();
+		return empty() ? nullptr : *tiles.begin();
 	}
 	Tile* getSelectedTile() const {
 		ASSERT(size() == 1);
-		return *tiles.begin();
+		return empty() ? nullptr : *tiles.begin();
 	}
 
 private:
