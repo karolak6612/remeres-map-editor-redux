@@ -54,7 +54,7 @@ private:
 	int clean_software_counter = 0;
 	std::deque<GameSprite*> cleanup_list;
 
-	mutable std::mutex resident_images_mutex_;
+	mutable std::recursive_mutex resident_images_mutex_;
 	std::vector<Image*> resident_images;
 	std::vector<GameSprite*> resident_game_sprites;
 };

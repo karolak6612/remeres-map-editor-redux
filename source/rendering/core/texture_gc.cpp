@@ -27,13 +27,13 @@ void TextureGC::updateTime() {
 }
 
 void TextureGC::addResidentImage(Image* img) {
-	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	resident_images.push_back(img);
 	loaded_textures++;
 }
 
 void TextureGC::removeResidentImage(Image* img) {
-	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	auto it = std::find(resident_images.begin(), resident_images.end(), img);
 	if (it != resident_images.end()) {
 		resident_images.erase(it);
@@ -44,25 +44,27 @@ void TextureGC::removeResidentImage(Image* img) {
 }
 
 bool TextureGC::containsResidentImage(Image* img) const {
-	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	return std::find(resident_images.begin(), resident_images.end(), img) != resident_images.end();
 }
 
 void TextureGC::addResidentGameSprite(GameSprite* gs) {
-	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	resident_game_sprites.push_back(gs);
+	gs->is_resident = true;
 }
 
 void TextureGC::removeResidentGameSprite(GameSprite* gs) {
-	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	auto it = std::find(resident_game_sprites.begin(), resident_game_sprites.end(), gs);
 	if (it != resident_game_sprites.end()) {
 		resident_game_sprites.erase(it);
+		gs->is_resident = false;
 	}
 }
 
 bool TextureGC::containsResidentGameSprite(GameSprite* gs) const {
-	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	return std::find(resident_game_sprites.begin(), resident_game_sprites.end(), gs) != resident_game_sprites.end();
 }
 
@@ -87,24 +89,25 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && cached_time_ - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 
 			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
-			std::lock_guard<std::mutex> lock(resident_images_mutex_);
-			for (size_t i = resident_images.size(); i > 0; --i) {
-				Image* img = resident_images[i - 1];
-				img->clean(cached_time_, longevity);
+			
+			// We iterate backwards and handle the fact that img->clean() might call removeResidentImage()
+			// which would remove the element from the vector.
+			{
+				std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
+				for (size_t i = resident_images.size(); i > 0; --i) {
+					Image* img = resident_images[i - 1];
+					img->clean(cached_time_, longevity);
 
-				if (!img->isGLLoaded) {
-					if (i - 1 < resident_images.size() - 1) {
-						resident_images[i - 1] = resident_images.back();
-					}
-					resident_images.pop_back();
+					// If the image chose to unload, it already removed itself from resident_images
+					// via the recursive removeResidentImage call. We don't need to do anything else
+					// but the loop continues safely because its size-based and we are going backwards.
 				}
-			}
 
-			// Call clean on resident_game_sprites to preserve software cache/animator state.
-			// Memory bounds are managed elsewhere, ensuring they remain resident.
-			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
-				GameSprite* gs = resident_game_sprites[i - 1];
-				gs->clean(cached_time_, longevity);
+				// Call clean on resident_game_sprites to preserve software cache/animator state.
+				for (size_t i = resident_game_sprites.size(); i > 0; --i) {
+					GameSprite* gs = resident_game_sprites[i - 1];
+					gs->clean(cached_time_, longevity);
+				}
 			}
 			
 			// Clean software sprites occasionally
