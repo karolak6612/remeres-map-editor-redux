@@ -1,13 +1,15 @@
 #include "app/main.h"
 #include "rendering/core/texture_gc.h"
+#include "ui/gui.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/image.h"
 #include "rendering/core/game_sprite.h"
 #include "app/settings.h"
 #include <algorithm>
 
-TextureGC::TextureGC() {
-	animation_timer = std::make_unique<RenderTimer>();
+TextureGC::TextureGC() :
+	animation_timer(std::make_unique<RenderTimer>())
+{
 	animation_timer->Start();
 }
 
@@ -36,10 +38,12 @@ void TextureGC::removeResidentImage(Image* img) {
 	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	auto it = std::find(resident_images.begin(), resident_images.end(), img);
 	if (it != resident_images.end()) {
-		resident_images.erase(it);
-		if (loaded_textures > 0) {
-			loaded_textures--;
+		// O(1) removal via swap-and-pop
+		if (it != resident_images.end() - 1) {
+			*it = resident_images.back();
 		}
+		resident_images.pop_back();
+		loaded_textures.fetch_sub(1, std::memory_order_relaxed);
 	}
 }
 
@@ -70,16 +74,20 @@ bool TextureGC::containsResidentGameSprite(GameSprite* gs) const {
 
 constexpr int MIN_CLEAN_THRESHOLD = 100;
 
-void TextureGC::addSpriteToCleanup(GameSprite* spr) {
-	cleanup_list.push_back(spr);
+void TextureGC::addSpriteToCleanup(uint32_t spr_id) {
+	cleanup_list.push_back(spr_id);
 	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD)));
 	if (cleanup_list.size() > clean_threshold) {
 		int software_clean_size = g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE);
 		const size_t cleanup_count = (software_clean_size <= 0) ? cleanup_list.size() : std::min(cleanup_list.size(), static_cast<size_t>(software_clean_size));
 
 		for (size_t i = 0; i < cleanup_count; ++i) {
-			cleanup_list.front()->unloadDC();
+			uint32_t id = cleanup_list.front();
 			cleanup_list.pop_front();
+			
+			if (auto* spr = g_gui.sprites.getSprite(id)) {
+				spr->unloadDC();
+			}
 		}
 	}
 }
@@ -109,16 +117,15 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 					gs->clean(cached_time_, longevity);
 				}
 			}
-			
-			// Clean software sprites occasionally
-			if (++clean_software_counter >= 10) {
-				cleanSoftwareSprites(db);
-				clean_software_counter = 0;
-			}
 
 			lastclean = cached_time_;
 		}
 	}
+}
+
+void TextureGC::onSettingsChanged(SpriteDatabase& db) {
+	// Clean software sprites on-demand when settings change (e.g. toggling texture management)
+	cleanSoftwareSprites(db);
 }
 
 void TextureGC::cleanSoftwareSprites(SpriteDatabase& db) {

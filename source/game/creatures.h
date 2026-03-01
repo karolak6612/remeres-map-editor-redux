@@ -64,6 +64,9 @@ public:
     bool importXMLFromOT(const FileName& filename, wxString& error, std::vector<std::string>& warnings);
 
     bool saveToXML(const FileName& filename);
+
+private:
+    void processLoadedCreature(std::unique_ptr<CreatureType> creatureType);
 };
 
 class CreatureType {

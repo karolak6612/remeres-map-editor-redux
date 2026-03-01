@@ -213,15 +213,7 @@ CreatureType* CreatureType::loadFromOTXML(const FileName& filename, pugi::xml_do
             ct->outfit.lookType = attribute.as_int();
         }
 
-        attribute = optionNode.attribute("item");
-        if (!attribute) {
-            attribute = optionNode.attribute("lookex");
-        }
-        if (!attribute) {
-            attribute = optionNode.attribute("typeex");
-        }
-
-        if (attribute) {
+        if ((attribute = optionNode.attribute("item")) || (attribute = optionNode.attribute("lookex")) || (attribute = optionNode.attribute("typeex"))) {
             ct->outfit.lookItem = attribute.as_int();
         }
 
@@ -304,21 +296,23 @@ CreatureType* CreatureDatabase::operator[](const std::string& name)
 
 CreatureType* CreatureDatabase::addMissingCreatureType(const std::string& name, bool isNpc)
 {
-    assert((*this)[name] == nullptr);
+	if (CreatureType* existing = (*this)[name]) {
+		return existing;
+	}
 
-    auto ct = std::make_unique<CreatureType>();
-    ct->name = name;
-    ct->isNpc = isNpc;
-    ct->missing = true;
-    ct->outfit.lookType = 128;
-    ct->outfit.lookHead = 78;
-    ct->outfit.lookBody = 69;
-    ct->outfit.lookLegs = 58;
-    ct->outfit.lookFeet = 76;
-    ct->outfit.lookAddon = 0;
+	auto ct = std::make_unique<CreatureType>();
+	ct->name = name;
+	ct->isNpc = isNpc;
+	ct->missing = true;
+	ct->outfit.lookType = 128;
+	ct->outfit.lookHead = 78;
+	ct->outfit.lookBody = 69;
+	ct->outfit.lookLegs = 58;
+	ct->outfit.lookFeet = 76;
+	ct->outfit.lookAddon = 0;
 
-    auto [it, inserted] = creature_map.emplace(as_lower_str(name), std::move(ct));
-    return it->second.get();
+	auto [it, inserted] = creature_map.emplace(as_lower_str(name), std::move(ct));
+	return it->second.get();
 }
 
 CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool isNpc, const Outfit& outfit)
@@ -401,6 +395,20 @@ static void ensureCreatureBrush(CreatureType* creatureType)
     tileSetCategory->brushlist.push_back(creatureType->brush);
 }
 
+void CreatureDatabase::processLoadedCreature(std::unique_ptr<CreatureType> creatureType) {
+	if (!creatureType) {
+		return;
+	}
+	CreatureType* current = (*this)[creatureType->name];
+	if (current) {
+		CreatureType::preserve_assign_creature_fields(current, *creatureType);
+	} else {
+		CreatureType* ptr = creatureType.get();
+		creature_map[as_lower_str(ptr->name)] = std::move(creatureType);
+		ensureCreatureBrush(ptr);
+	}
+}
+
 bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error, std::vector<std::string>& warnings)
 {
     pugi::xml_document doc;
@@ -431,19 +439,8 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
                 continue;
             }
 
-            CreatureType* creatureTypeRaw = CreatureType::loadFromOTXML(monsterFile, monsterDoc, warnings);
-            if (creatureTypeRaw) {
-                std::unique_ptr<CreatureType> creatureType(creatureTypeRaw);
-                CreatureType* current = (*this)[creatureType->name];
-                if (current) {
-                    CreatureType::preserve_assign_creature_fields(current, *creatureType);
-                } else {
-                    CreatureType* ptr = creatureType.get();
-                    creature_map[as_lower_str(ptr->name)] = std::move(creatureType);
-
-                    ensureCreatureBrush(ptr);
-                }
-            }
+			CreatureType* creatureTypeRaw = CreatureType::loadFromOTXML(monsterFile, monsterDoc, warnings);
+			processLoadedCreature(std::unique_ptr<CreatureType>(creatureTypeRaw));
         }
     } else {
         node = doc.child("monster");
@@ -452,20 +449,8 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
         }
 
         if (node) {
-            CreatureType* creatureTypeRaw = CreatureType::loadFromOTXML(filename, doc, warnings);
-            if (creatureTypeRaw) {
-                std::unique_ptr<CreatureType> creatureType(creatureTypeRaw);
-                CreatureType* current = (*this)[creatureType->name];
-
-                if (current) {
-                    CreatureType::preserve_assign_creature_fields(current, *creatureType);
-                } else {
-                    CreatureType* ptr = creatureType.get();
-                    creature_map[as_lower_str(ptr->name)] = std::move(creatureType);
-
-                    ensureCreatureBrush(ptr);
-                }
-            }
+			CreatureType* creatureTypeRaw = CreatureType::loadFromOTXML(filename, doc, warnings);
+			processLoadedCreature(std::unique_ptr<CreatureType>(creatureTypeRaw));
         }
     }
     return true;

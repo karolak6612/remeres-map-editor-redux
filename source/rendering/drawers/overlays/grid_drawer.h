@@ -17,6 +17,8 @@ public:
 private:
 	void drawRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color, const AtlasManager& atlas, int width = 1);
 	void drawFilledRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color, const AtlasManager& atlas);
+
+	const AtlasManager* ensureAtlasManager() const;
 };
 
 #endif

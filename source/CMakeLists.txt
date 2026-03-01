@@ -511,7 +511,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/text_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_array.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_atlas.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/brush_cursor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/drag_shadow_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/live_cursor_drawer.cpp

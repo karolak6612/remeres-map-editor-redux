@@ -115,6 +115,11 @@ namespace NvgUtils {
 			return 0;
 		}
 
+		if (!vg) {
+			spdlog::error("NanoVG context is null in CreateItemTexture");
+			return 0;
+		}
+
 		return nvgCreateImageRGBA(vg, w, h, 0, composite.get());
 	}
 }

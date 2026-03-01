@@ -1,10 +1,9 @@
 #ifndef RME_RENDERING_CORE_TEXTURE_GC_H_
 #define RME_RENDERING_CORE_TEXTURE_GC_H_
 
-#include <vector>
+#include <atomic>
 #include <deque>
 #include <memory>
-#include <ctime>
 #include <mutex>
 #include "rendering/core/render_timer.h"
 
@@ -32,9 +31,10 @@ public:
 
 	void garbageCollection(SpriteDatabase& db);
 	void cleanSoftwareSprites(SpriteDatabase& db);
-	void addSpriteToCleanup(GameSprite* spr);
+	void onSettingsChanged(SpriteDatabase& db);
+	void addSpriteToCleanup(uint32_t spr_id);
 	
-	int getLoadedTexturesCount() const { return loaded_textures; }
+	int getLoadedTexturesCount() const { return loaded_textures.load(std::memory_order_relaxed); }
 
 	// Controlled API for resident sets
 	void addResidentImage(Image* img);
@@ -49,10 +49,10 @@ private:
 	std::unique_ptr<RenderTimer> animation_timer;
 	std::time_t cached_time_ = 0;
 
-	int loaded_textures = 0;
+	std::atomic<int> loaded_textures = 0;
 	std::time_t lastclean = 0;
 	int clean_software_counter = 0;
-	std::deque<GameSprite*> cleanup_list;
+	std::deque<uint32_t> cleanup_list;
 
 	mutable std::recursive_mutex resident_images_mutex_;
 	std::vector<Image*> resident_images;

@@ -15,6 +15,8 @@ public:
 	// Non-copyable/movable to prevent accidental copies of the god object replacement
 	SpriteDatabase(const SpriteDatabase&) = delete;
 	SpriteDatabase& operator=(const SpriteDatabase&) = delete;
+	SpriteDatabase(SpriteDatabase&&) = delete;
+	SpriteDatabase& operator=(SpriteDatabase&&) = delete;
 
 	void clear();
 

@@ -149,9 +149,14 @@ const AtlasRegion* TemplateImage::getAtlasRegion() {
 	}
 
 	if (!isGLLoaded) {
-		isGLLoaded = true;
-		atlas_region = EnsureAtlasSprite(texture_id);
-		g_gui.gc.addResidentImage(this);
+		const AtlasRegion* region = EnsureAtlasSprite(texture_id);
+		if (region) {
+			isGLLoaded = true;
+			atlas_region = region;
+			g_gui.gc.addResidentImage(this);
+		} else {
+			return nullptr;
+		}
 	}
 	visit();
 	return atlas_region;

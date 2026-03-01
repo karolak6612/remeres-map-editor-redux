@@ -1,3 +1,4 @@
+#include "rendering/core/render_timer.h"
 #include "app/main.h"
 #include "ui/replace_tool/visual_similarity_service.h"
 #include "util/nvg_utils.h"
@@ -224,11 +225,9 @@ void VisualSimilarityService::OnTimer(wxTimerEvent&) {
 	// Process fewer items per tick to prevent UI lag and handle spikes
 	while (processed < 100 && (m_nextIdToIndex <= maxId || !m_retryQueue.empty())) {
 		uint16_t id;
-		bool is_retry = false;
 		if (!m_retryQueue.empty()) {
 			id = m_retryQueue.front();
 			m_retryQueue.pop_front();
-			is_retry = true;
 		} else {
 			id = m_nextIdToIndex++;
 		}
@@ -237,11 +236,21 @@ void VisualSimilarityService::OnTimer(wxTimerEvent&) {
 		if (it.id != 0 && it.clientID != 0) {
 			VisualItemData data = CalculateData(id);
 			if (data.width > 0) {
-				std::lock_guard<std::mutex> lock(dataMutex);
-				itemDataCache[id] = std::move(data);
-			} else if (!is_retry) {
+				{
+					std::lock_guard<std::mutex> lock(dataMutex);
+					itemDataCache[id] = std::move(data);
+				}
+				m_retryAttempts.erase(id); // Success, clear attempts
+			} else {
 				// Transient failure: likely sprite not loaded yet
-				m_retryQueue.push_back(id);
+				uint8_t& attempts = m_retryAttempts[id];
+				if (++attempts < kMaxIndexRetries) {
+					m_retryQueue.push_back(id);
+				} else {
+					// Attempts exhausted, mark as indexed anyway to avoid infinite retries
+					// (the item will have empty/invalid data in the cache)
+					m_retryAttempts.erase(id);
+				}
 			}
 		}
 		processed++;

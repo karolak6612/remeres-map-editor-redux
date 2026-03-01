@@ -42,11 +42,10 @@ void NormalImage::clean(time_t time, int longevity) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		unloadGL();
-		
 		if (parent) {
 			parent->invalidateCache(atlas_region);
 		}
+		unloadGL();
 	}
 
 	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
