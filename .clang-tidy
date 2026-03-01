@@ -22,7 +22,6 @@ Checks: >
   -cppcoreguidelines-no-suspend-with-lock,
   -cppcoreguidelines-avoid-non-const-global-variables,
   -cppcoreguidelines-rvalue-reference-param-not-moved,
-  -cppcoreguidelines-explicit-virtual-functions,
   -cppcoreguidelines-missing-std-forward,
   -cppcoreguidelines-macro-to-enum,
   -cppcoreguidelines-avoid-const-or-ref-data-members,
@@ -62,9 +61,7 @@ Checks: >
   -readability-duplicate-include,
   -readability-redundant-member-init,
   -readability-redundant-inline-specifier,
-  -readability-qualified-auto,
   -readability-implicit-bool-conversion,
-  -readability-else-after-return,
   -readability-container-contains
 
 # Treat warnings as errors (optional - uncomment to enable)
@@ -180,14 +177,12 @@ CheckOptions:
   - key:   bugprone-argument-comment.StrictMode
     value: '0'
   - key:   bugprone-dangling-handle.HandleClasses
-    value: 'std::basic_string_view;std::experimental::basic_string_view'
+    value: 'std::basic_string_view;std::span;std::string_view;std::experimental::basic_string_view'
 
   # Exception checks
   - key:   bugprone-exception-escape.FunctionsThatShouldNotThrow
     value: 'WinMain;wWinMain;WinMainCRTStartup;wWinMainCRTStartup'
 
-  # Special member functions
-  - key:   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
-    value: '0'
-  - key:   cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions
+  # C++20 specific
+  - key:   cppcoreguidelines-pro-type-member-init.UseDesignatedInitializers
     value: '1'
