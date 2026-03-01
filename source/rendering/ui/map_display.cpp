@@ -64,6 +64,7 @@
 #include "rendering/ui/selection_controller.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/map_menu_handler.h"
+#include "rendering/core/sprite_preloader.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/house/house_exit_brush.h"
@@ -260,6 +261,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 	if (g_gui.IsRenderingEnabled()) {
 		// Advance graphics clock and drain the preloader queue before rendering
 		g_gui.gc.updateTime();
+		SpritePreloader::get().update();
 
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_controller->IsCapturing()) {
