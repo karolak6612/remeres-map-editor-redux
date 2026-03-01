@@ -94,7 +94,9 @@ ImportMapWindow::ImportMapWindow(wxWindow* parent, Editor& editor) :
 	okBtn->Bind(wxEVT_BUTTON, &ImportMapWindow::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &ImportMapWindow::OnClickCancel, this);
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_IMPORT)));
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_FILE_IMPORT));
+	SetIcon(icon);
 }
 
 ImportMapWindow::~ImportMapWindow() = default;

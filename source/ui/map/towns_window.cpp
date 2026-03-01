@@ -86,7 +86,9 @@ EditTownsDialog::EditTownsDialog(wxWindow* parent, Editor& editor) :
 	okBtn->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickOK, this);
 	cancelBtn->Bind(wxEVT_BUTTON, &EditTownsDialog::OnClickCancel, this);
 
-	SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_CITY)));
+	wxIcon icon;
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_CITY));
+	SetIcon(icon);
 }
 
 EditTownsDialog::~EditTownsDialog() = default;
