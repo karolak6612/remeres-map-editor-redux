@@ -271,7 +271,21 @@ void Selection::addInternal(Tile* tile) {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
-			bounds_dirty = true;
+
+			if (!bounds_dirty) {
+				if (tiles.size() == 1) {
+					cached_min = tile->getPosition();
+					cached_max = tile->getPosition();
+				} else {
+					const Position& pos = tile->getPosition();
+					cached_min.x = std::min(cached_min.x, pos.x);
+					cached_min.y = std::min(cached_min.y, pos.y);
+					cached_min.z = std::min(cached_min.z, pos.z);
+					cached_max.x = std::max(cached_max.x, pos.x);
+					cached_max.y = std::max(cached_max.y, pos.y);
+					cached_max.z = std::max(cached_max.z, pos.z);
+				}
+			}
 		}
 	}
 }
@@ -284,7 +298,16 @@ void Selection::removeInternal(Tile* tile) {
 		auto it = std::ranges::lower_bound(tiles, tile, tilePositionLessThan);
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
-			bounds_dirty = true;
+
+			if (!bounds_dirty) {
+				const Position& pos = tile->getPosition();
+				if (pos.x == cached_min.x || pos.x == cached_max.x ||
+				    pos.y == cached_min.y || pos.y == cached_max.y ||
+				    pos.z == cached_min.z || pos.z == cached_max.z ||
+					tiles.empty()) {
+					bounds_dirty = true;
+				}
+			}
 		}
 	}
 }
@@ -294,7 +317,34 @@ void Selection::flush() {
 		return;
 	}
 
-	bounds_dirty = true;
+	if (!bounds_dirty) {
+		for (Tile* tile : pending_removes) {
+			const Position& pos = tile->getPosition();
+			if (pos.x == cached_min.x || pos.x == cached_max.x ||
+			    pos.y == cached_min.y || pos.y == cached_max.y ||
+			    pos.z == cached_min.z || pos.z == cached_max.z) {
+				bounds_dirty = true;
+				break;
+			}
+		}
+
+		if (!bounds_dirty) {
+			for (Tile* tile : pending_adds) {
+				if (tiles.empty()) {
+					bounds_dirty = true;
+					break;
+				} else {
+					const Position& pos = tile->getPosition();
+					cached_min.x = std::min(cached_min.x, pos.x);
+					cached_min.y = std::min(cached_min.y, pos.y);
+					cached_min.z = std::min(cached_min.z, pos.z);
+					cached_max.x = std::max(cached_max.x, pos.x);
+					cached_max.y = std::max(cached_max.y, pos.y);
+					cached_max.z = std::max(cached_max.z, pos.z);
+				}
+			}
+		}
+	}
 
 	if (!pending_removes.empty()) {
 		std::ranges::sort(pending_removes, tilePositionLessThan);
