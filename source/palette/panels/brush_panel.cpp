@@ -137,4 +137,3 @@ void BrushPanel::OnSwitchIn() {
 void BrushPanel::OnSwitchOut() {
 	////
 }
-

@@ -1,7 +1,8 @@
 #include "app/main.h"
 #include "replacement_engine.h"
 
-ReplacementEngine::ReplacementEngine() : rng(std::random_device {}()) { }
+ReplacementEngine::ReplacementEngine() :
+	rng(std::random_device {}()) { }
 
 bool ReplacementEngine::ResolveReplacement(uint16_t& resultId, const ReplacementRule& rule) {
 	if (rule.targets.empty()) {

@@ -35,7 +35,6 @@ public:
 	GroundBrush();
 	~GroundBrush() override;
 
-
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;

@@ -158,4 +158,3 @@ void MinimapDrawer::ScreenToMap(int screen_x, int screen_y, int& map_x, int& map
 	map_x = last_start_x + screen_x;
 	map_y = last_start_y + screen_y;
 }
-

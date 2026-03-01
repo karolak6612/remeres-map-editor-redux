@@ -247,7 +247,8 @@ SpatialHashGrid::GridCell::~GridCell() {
 	// std::unique_ptr handles cleanup automatically
 }
 
-SpatialHashGrid::SpatialHashGrid(BaseMap& map) : map(map) {
+SpatialHashGrid::SpatialHashGrid(BaseMap& map) :
+	map(map) {
 	//
 }
 

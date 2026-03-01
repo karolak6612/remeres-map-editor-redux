@@ -30,7 +30,6 @@ public:
 	CreatureBrush(CreatureType* type); // Create a RAWBrush of the specified type
 	~CreatureBrush() override;
 
-
 	bool canDraw(BaseMap* map, const Position& position) const override;
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;
 	void draw_creature(BaseMap* map, Tile* tile);

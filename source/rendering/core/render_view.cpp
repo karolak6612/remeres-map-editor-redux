@@ -132,4 +132,3 @@ void RenderView::Clear() {
 	// glLoadIdentity(); // Legacy
 	// Blending and State management is now handled by individual renderers
 }
-

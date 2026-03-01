@@ -14,7 +14,8 @@ class Item;
 
 class CustomPropertyPanel : public wxPanel {
 public:
-	CustomPropertyPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY) { }
+	CustomPropertyPanel(wxWindow* parent) :
+		wxPanel(parent, wxID_ANY) { }
 	virtual ~CustomPropertyPanel() { }
 
 	virtual void SetItem(Item* item, Tile* tile, Map* map) = 0;

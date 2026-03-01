@@ -12,7 +12,6 @@ public:
 	explicit DoorBrush(DoorType doortype);
 	~DoorBrush() override = default;
 
-
 	static void switchDoor(Item* door);
 
 	bool canDraw(BaseMap* map, const Position& position) const override;

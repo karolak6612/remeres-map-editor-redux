@@ -30,7 +30,6 @@ public:
 
 private:
 	wxSizer* topsizer;
-
 };
 
 #endif

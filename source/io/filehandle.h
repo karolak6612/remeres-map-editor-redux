@@ -30,6 +30,7 @@
 #include <vector>
 #include <format>
 #include <iterator>
+#include <cstring>
 
 class wxFileName;
 using FileName = wxFileName;
@@ -220,7 +221,8 @@ public:
 
 		BinaryNode* current;
 
-		Iterator(BinaryNode* node) : current(node) { }
+		Iterator(BinaryNode* node) :
+			current(node) { }
 
 		BinaryNode* operator*() const {
 			return current;

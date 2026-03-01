@@ -16,7 +16,8 @@ VisualSimilarityService& VisualSimilarityService::Get() {
 	return instance;
 }
 
-VisualSimilarityService::VisualSimilarityService() : m_timer(this), m_nextIdToIndex(1), isIndexed(false) {
+VisualSimilarityService::VisualSimilarityService() :
+	m_timer(this), m_nextIdToIndex(1), isIndexed(false) {
 	Bind(wxEVT_TIMER, &VisualSimilarityService::OnTimer, this, m_timer.GetId());
 }
 
@@ -203,12 +204,12 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 
 	data.width = w;
 	data.height = h;
-	data.isOpaque = IsFullyOpaqueRGBA({composite.get(), static_cast<size_t>(w * h * 4)});
+	data.isOpaque = IsFullyOpaqueRGBA({ composite.get(), static_cast<size_t>(w * h * 4) });
 
 	// Store both for robustness
-	data.aHash = CalculateAHashRGBA({composite.get(), static_cast<size_t>(w * h * 4)}, w, h);
-	data.binaryMask = ExtractBinaryMaskRGBA({composite.get(), static_cast<size_t>(w * h * 4)}, data.truePixels);
-	data.histogram = CalculateHistogramRGBA({composite.get(), static_cast<size_t>(w * h * 4)});
+	data.aHash = CalculateAHashRGBA({ composite.get(), static_cast<size_t>(w * h * 4) }, w, h);
+	data.binaryMask = ExtractBinaryMaskRGBA({ composite.get(), static_cast<size_t>(w * h * 4) }, data.truePixels);
+	data.histogram = CalculateHistogramRGBA({ composite.get(), static_cast<size_t>(w * h * 4) });
 
 	return data;
 }
