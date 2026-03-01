@@ -1,8 +1,4 @@
 #include "ui/dialogs/outfit_selection_grid.h"
-#include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "ui/dialogs/outfit_chooser_dialog.h"
 #include "ui/gui.h"

@@ -15,10 +15,19 @@ NormalImage::NormalImage() :
 
 NormalImage::~NormalImage() {
 	// dump auto-deleted
+	unloadGL();
+}
+
+void NormalImage::unloadGL() {
 	if (isGLLoaded) {
 		if (g_gui.atlas.hasAtlasManager()) {
 			g_gui.atlas.getAtlasManager()->removeSprite(id);
 		}
+		
+		isGLLoaded = false;
+		atlas_region = nullptr;
+		generation_id++;
+
 		g_gui.gc.notifyTextureUnloaded();
 	}
 }
@@ -33,40 +42,39 @@ void NormalImage::clean(time_t time, int longevity) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		if (g_gui.atlas.hasAtlasManager()) {
-			g_gui.atlas.getAtlasManager()->removeSprite(id);
-		}
+		unloadGL();
+		
 		if (parent) {
 			parent->invalidateCache(atlas_region);
 		}
-
-		isGLLoaded = false;
-		atlas_region = nullptr;
-
-		// Invalidate any pending preloads for this sprite ID
-		generation_id++;
-
-		g_gui.gc.notifyTextureUnloaded();
 	}
 
 	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
 		dump.reset();
 	}
 }
+
+bool NormalImage::ensureDumpLoaded() {
+	if (!dump) {
+		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
+			return false;
+		}
+
+		if (!g_gui.loader.loadSpriteDump(dump, size, id)) {
+			return false;
+		}
+	}
+	return true;
+}
+
 std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 	if (id == 0) {
 		const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
 		return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
 	}
 
-	if (!dump) {
-		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
-			return nullptr;
-		}
-
-		if (!g_gui.loader.loadSpriteDump(dump, size, id)) {
-			return nullptr;
-		}
+	if (!ensureDumpLoaded()) {
+		return nullptr;
 	}
 
 	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
@@ -129,16 +137,10 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 		return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
 	}
 
-	if (!dump) {
-		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
-			return nullptr;
-		}
-
-		if (!g_gui.loader.loadSpriteDump(dump, size, id)) {
-			// This is the only case where we return nullptr for non-zero ID
-			// effectively warning the caller that the sprite is missing from file
-			return nullptr;
-		}
+	if (!ensureDumpLoaded()) {
+		// This is the only case where we return nullptr for non-zero ID
+		// effectively warning the caller that the sprite is missing from file
+		return nullptr;
 	}
 
 	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.loader.hasTransparency(), id);

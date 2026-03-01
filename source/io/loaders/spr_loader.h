@@ -14,8 +14,8 @@ class FileReadHandle;
 
 class SprLoader {
 public:
-	static bool LoadData(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
-	static bool LoadDump(SpriteLoader* loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
+	static bool LoadData(SpriteLoader& loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
+	static bool LoadDump(SpriteLoader& loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
 	static bool LoadDump(const std::string& filename, bool extended, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
 
 private:

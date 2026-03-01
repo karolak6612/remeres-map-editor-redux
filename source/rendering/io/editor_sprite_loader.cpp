@@ -19,7 +19,7 @@
 	nullptr                                                         \
 )
 
-bool EditorSpriteLoader::Load(SpriteLoader* loader, SpriteDatabase& db) {
+bool EditorSpriteLoader::Load([[maybe_unused]] SpriteLoader* loader, SpriteDatabase& db) {
 	// Unused graphics MIGHT be loaded here, but it's a neglectable loss
 	db.insertSprite(EDITOR_SPRITE_SELECTION_MARKER, std::make_unique<EditorSprite>(std::make_unique<wxBitmap>(selection_marker_xpm16x16), std::make_unique<wxBitmap>(selection_marker_xpm32x32)));
 	db.insertSprite(EDITOR_SPRITE_BRUSH_CD_1x1, getEditorSprite(IMAGE_CIRCULAR_1_SMALL, IMAGE_CIRCULAR_1));

@@ -6,10 +6,6 @@
 #include "rendering/core/floor_view_params.h"
 #include "rendering/core/view_state.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
 ShadeDrawer::ShadeDrawer() {

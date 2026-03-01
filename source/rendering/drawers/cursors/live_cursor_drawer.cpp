@@ -8,10 +8,6 @@
 #include "editor/editor.h"
 #include "live/live_socket.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
 void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {

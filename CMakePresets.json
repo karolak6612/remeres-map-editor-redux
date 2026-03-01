@@ -1,8 +1,8 @@
 {
   "version": 8,
   "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 28,
+    "major": 4,
+    "minor": 2,
     "patch": 0
   },
   "configurePresets": [
@@ -99,7 +99,7 @@
     {
       "name": "ninja-debug",
       "displayName": "Ninja Debug",
-      "configurePreset": "ninja-vcpkg",
+      "configurePreset": "ninja-vcpkg-debug",
       "configuration": "Debug"
     },
     {

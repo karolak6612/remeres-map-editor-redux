@@ -16,7 +16,7 @@ namespace {
 	constexpr uint32_t SPRITE_ADDRESS_SIZE_NORMAL = 2;
 }
 
-bool SprLoader::LoadData(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
+bool SprLoader::LoadData(SpriteLoader& loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
 	FileReadHandle fh(nstr(datafile.GetFullPath()));
 
 	if (!fh.isOk()) {
@@ -46,7 +46,7 @@ bool SprLoader::LoadData(SpriteLoader* loader, SpriteDatabase& db, const wxFileN
 	}
 
 	uint32_t total_pics = 0;
-	if (loader->isExtended()) {
+	if (loader.isExtended()) {
 		if (!safe_get_u32(total_pics)) {
 			return false;
 		}
@@ -63,8 +63,8 @@ bool SprLoader::LoadData(SpriteLoader* loader, SpriteDatabase& db, const wxFileN
 		return false;
 	}
 
-	loader->setSpriteFile(nstr(datafile.GetFullPath()));
-	loader->setUnloaded(false);
+	loader.setSpriteFile(nstr(datafile.GetFullPath()));
+	loader.setUnloaded(false);
 
 	if (!g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
 		return true;
@@ -159,11 +159,8 @@ bool SprLoader::ReadSprites(SpriteDatabase& db, FileReadHandle& fh, const std::v
 	return true;
 }
 
-bool SprLoader::LoadDump(SpriteLoader* loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
-	if (!loader) {
-		return false;
-	}
-	return LoadDump(loader->getSpriteFile(), loader->isExtended(), target, size, sprite_id);
+bool SprLoader::LoadDump(SpriteLoader& loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
+	return LoadDump(loader.getSpriteFile(), loader.isExtended(), target, size, sprite_id);
 }
 
 bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {

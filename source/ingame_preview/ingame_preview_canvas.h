@@ -13,7 +13,7 @@ class Editor;
 #include <string>
 
 #include "util/nvg_utils.h"
-// struct NVGcontext; // replaced with nvg_utils
+
 
 namespace IngamePreview {
 

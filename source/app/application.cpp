@@ -180,7 +180,10 @@ bool Application::OnInit() {
 	// Image handlers
 	wxInitAllImageHandlers();
 
-	g_gui.loader.loadEditorSprites(g_gui.sprites);
+	if (!g_gui.loader.loadEditorSprites(g_gui.sprites)) {
+		spdlog::error("Application::OnInit - Failed to load editor sprites!");
+		return false;
+	}
 
 	// wxHandleFatalExceptions(true);
 	wxHandleFatalExceptions(true);

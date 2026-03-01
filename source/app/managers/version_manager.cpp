@@ -177,7 +177,7 @@ void VersionManager::UnloadVersion() {
 		g_materials.clear();
 		g_brushes.clear();
 		g_items.clear();
-		g_gui.sprites.clear(); g_gui.atlas.clear(); g_gui.gc.clear(); g_gui.loader.clear();
+
 
 		// FileName cdb = getLoadedVersion()->getLocalDataPath();
 		// cdb.SetFullName("creatures.xml");

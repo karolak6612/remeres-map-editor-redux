@@ -318,9 +318,8 @@ CreatureType* CreatureDatabase::addMissingCreatureType(const std::string& name, 
     ct->outfit.lookFeet = 76;
     ct->outfit.lookAddon = 0;
 
-    CreatureType* ptr = ct.get();
-    creature_map.insert(std::make_pair(as_lower_str(name), std::move(ct)));
-    return ptr;
+    auto [it, inserted] = creature_map.emplace(as_lower_str(name), std::move(ct));
+    return it->second.get();
 }
 
 CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool isNpc, const Outfit& outfit)
@@ -333,9 +332,8 @@ CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool is
     ct->missing = false;
     ct->outfit = outfit;
 
-    CreatureType* ptr = ct.get();
-    creature_map.insert(std::make_pair(as_lower_str(name), std::move(ct)));
-    return ptr;
+    auto [it, inserted] = creature_map.emplace(as_lower_str(name), std::move(ct));
+    return it->second.get();
 }
 
 bool CreatureDatabase::hasMissing() const

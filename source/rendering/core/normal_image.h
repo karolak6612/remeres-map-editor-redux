@@ -31,6 +31,9 @@ public:
 
 	void fulfillPreload(std::unique_ptr<uint8_t[]> preloaded_data);
 
+	bool ensureDumpLoaded();
+	void unloadGL();
+
 	GameSprite* parent = nullptr;
 };
 

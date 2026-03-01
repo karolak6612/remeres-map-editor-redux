@@ -164,10 +164,6 @@ void ItemDrawer::BlitItem(const DrawContext& ctx, SpriteDrawer* sprite_drawer, C
 		}
 	}
 
-	// Atlas-only rendering
-	// g_gui.atlas.ensureAtlasManager();
-	// BatchRenderer::SetAtlasManager(g_gui.atlas.getAtlasManager());
-
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
 		const AtlasRegion* region;
 		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {

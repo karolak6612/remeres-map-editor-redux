@@ -176,23 +176,15 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 
 			if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
 				if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
-					int start_x, end_x;
-					int start_y, end_y;
+					const int click_x = drawer->canvas.last_click_map_x;
+					const int click_y = drawer->canvas.last_click_map_y;
+					const int mouse_x = ctx.view.mouse_map_x;
+					const int mouse_y = ctx.view.mouse_map_y;
 
-					if (ctx.view.mouse_map_x < drawer->canvas.last_click_map_x) {
-						start_x = ctx.view.mouse_map_x;
-						end_x = drawer->canvas.last_click_map_x;
-					} else {
-						start_x = drawer->canvas.last_click_map_x;
-						end_x = ctx.view.mouse_map_x;
-					}
-					if (ctx.view.mouse_map_y < drawer->canvas.last_click_map_y) {
-						start_y = ctx.view.mouse_map_y;
-						end_y = drawer->canvas.last_click_map_y;
-					} else {
-						start_y = drawer->canvas.last_click_map_y;
-						end_y = ctx.view.mouse_map_y;
-					}
+					int start_x = std::min(click_x, mouse_x);
+					int end_x = std::max(click_x, mouse_x);
+					int start_y = std::min(click_y, mouse_y);
+					int end_y = std::max(click_y, mouse_y);
 
 					RAWBrush* raw_brush = nullptr;
 					if (brush->is<RAWBrush>()) {

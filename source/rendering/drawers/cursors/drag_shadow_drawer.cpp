@@ -40,15 +40,14 @@ void DragShadowDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawe
 
 	// Draw dragging shadow
 	if (!drawer->editor.selection.isBusy() && ctx.options.dragging && !ctx.options.ingame) {
+		Position drag_start = drawer->canvas.selection_controller->GetDragStartPosition();
+		int move_x = drag_start.x - ctx.view.mouse_map_x;
+		int move_y = drag_start.y - ctx.view.mouse_map_y;
+		int move_z = drag_start.z - ctx.view.floor;
+
 		for (auto tit = drawer->editor.selection.begin(); tit != drawer->editor.selection.end(); tit++) {
 			Tile* tile = *tit;
 			Position pos = tile->getPosition();
-
-			int move_x, move_y, move_z;
-			Position drag_start = drawer->canvas.selection_controller->GetDragStartPosition();
-			move_x = drag_start.x - ctx.view.mouse_map_x;
-			move_y = drag_start.y - ctx.view.mouse_map_y;
-			move_z = drag_start.z - ctx.view.floor;
 
 			pos.x -= move_x;
 			pos.y -= move_y;

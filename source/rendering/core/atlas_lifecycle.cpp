@@ -13,6 +13,10 @@ void AtlasLifecycle::clear() {
 }
 
 bool AtlasLifecycle::ensureAtlasManager() {
+	if (atlas_manager_ && !atlas_manager_->isValid()) {
+		atlas_manager_.reset();
+	}
+
 	if (atlas_manager_ && atlas_manager_->isValid()) {
 		return true;
 	}

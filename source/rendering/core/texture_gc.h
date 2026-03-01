@@ -5,6 +5,7 @@
 #include <deque>
 #include <memory>
 #include <ctime>
+#include <mutex>
 #include "rendering/core/render_timer.h"
 
 class GameSprite;
@@ -38,6 +39,7 @@ public:
 	int getLoadedTexturesCount() const { return loaded_textures; }
 
 	// Allow preloader/loaders to track resident sets
+	std::mutex& getResidentImagesMutex() { return resident_images_mutex_; }
 	std::vector<Image*>& getResidentImages() { return resident_images; }
 	std::vector<GameSprite*>& getResidentGameSprites() { return resident_game_sprites; }
 
@@ -45,6 +47,7 @@ private:
 	std::unique_ptr<RenderTimer> animation_timer;
 	std::time_t cached_time_ = 0;
 
+	std::mutex resident_images_mutex_;
 	std::vector<Image*> resident_images;
 	std::vector<GameSprite*> resident_game_sprites;
 

@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <cstdint>
 #include <memory>
 #include <wx/string.h>
 #include <wx/filename.h>
@@ -40,9 +41,9 @@ public:
 	bool isExtended() const { return is_extended; }
 
 	DatFormat getDatFormat() const { return dat_format; }
-	ClientVersion* getClientVersion() const { return client_version; }
+	const ClientVersion* getClientVersion() const { return client_version; }
 
-	void setClientVersion(ClientVersion* version) { client_version = version; }
+	void setClientVersion(const ClientVersion* version) { client_version = version; }
 	void setDatFormat(DatFormat format) { dat_format = format; }
 	void setIsExtended(bool extended) { is_extended = extended; }
 	void setHasTransparency(bool trans) { has_transparency = trans; }
@@ -55,7 +56,7 @@ public:
 	bool hasFrameGroups() const { return has_frame_groups; }
 
 private:
-	ClientVersion* client_version = nullptr;
+	const ClientVersion* client_version = nullptr;
 	std::string spritefile;
 	std::atomic<bool> unloaded{true};
 

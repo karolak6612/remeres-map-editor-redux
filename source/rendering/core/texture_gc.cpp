@@ -56,6 +56,7 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && cached_time_ - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 
 			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+			std::lock_guard<std::mutex> lock(resident_images_mutex_);
 			for (size_t i = resident_images.size(); i > 0; --i) {
 				Image* img = resident_images[i - 1];
 				img->clean(cached_time_, longevity);
@@ -86,7 +87,13 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 void TextureGC::cleanSoftwareSprites(SpriteDatabase& db) {
 	for (auto& sprite_ptr : db.getSpriteSpace()) {
 		if (sprite_ptr) {
-			sprite_ptr->unloadDC();
+			if (auto* gs = dynamic_cast<GameSprite*>(sprite_ptr.get())) {
+				if (!gs->is_resident) {
+					gs->unloadDC();
+				}
+			} else {
+				sprite_ptr->unloadDC();
+			}
 		}
 	}
 }

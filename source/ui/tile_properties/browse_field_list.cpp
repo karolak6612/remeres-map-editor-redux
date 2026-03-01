@@ -14,9 +14,6 @@
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
 #include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <format>

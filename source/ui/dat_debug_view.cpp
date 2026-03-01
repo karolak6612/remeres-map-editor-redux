@@ -43,8 +43,9 @@ protected:
 
 DatDebugViewListBox::DatDebugViewListBox(wxWindow* parent, wxWindowID id) :
 	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	sprites.reserve(g_gui.sprites.getItemSpriteMaxID());
-	for (int id = 0; id < g_gui.sprites.getItemSpriteMaxID(); ++id) {
+	const int max_id = g_gui.sprites.getItemSpriteMaxID();
+	sprites.reserve(max_id);
+	for (int id = 1; id <= max_id; ++id) {
 		Sprite* spr = g_gui.sprites.getSprite(id);
 		if (spr) {
 			sprites.push_back(spr);
