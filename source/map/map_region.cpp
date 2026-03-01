@@ -299,6 +299,9 @@ const MapNode* SpatialHashGrid::getLeaf(int x, int y) const {
 		return nullptr;
 	}
 
+	if (!cells_[idx].cell) {
+		return nullptr;
+	}
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	return cells_[idx].cell->nodes[ny * NODES_PER_CELL + nx].get();
@@ -318,13 +321,7 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 		return node.get();
 	}
 
-	auto& cell_ptr = findOrInsertCell(key);
-	if (!cell_ptr) {
-		cell_ptr = std::make_unique<GridCell>();
-	}
-
-	// Re-find the index after potential insertion (findOrInsertCell may invalidate)
-	size_t idx = findCellIndex(key);
+	size_t idx = findOrInsertCell(key);
 	last_key_ = key;
 	last_idx_ = idx;
 	last_valid_ = true;

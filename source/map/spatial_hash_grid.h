@@ -120,18 +120,19 @@ protected:
 		return cells_.size();
 	}
 
-	// Find or insert a cell, returning a reference to the GridCell unique_ptr at the key.
+	// Find or insert a cell, returning its index.
+	// Allocates GridCell immediately on insertion — no null entries left behind.
 	// Maintains sorted order via insertion at the correct position.
-	std::unique_ptr<GridCell>& findOrInsertCell(uint64_t key) {
+	size_t findOrInsertCell(uint64_t key) {
 		auto it = std::lower_bound(cells_.begin(), cells_.end(), key, [](const CellEntry& entry, uint64_t k) { return entry.key < k; });
 		if (it != cells_.end() && it->key == key) {
-			return it->cell;
+			return static_cast<size_t>(it - cells_.begin());
 		}
-		// Insert at sorted position
-		auto inserted = cells_.insert(it, CellEntry { key, nullptr });
+		// Insert at sorted position with a fully allocated GridCell
+		auto inserted = cells_.insert(it, CellEntry { key, std::make_unique<GridCell>() });
 		// Invalidate cache since vector may have reallocated
 		last_valid_ = false;
-		return inserted->cell;
+		return static_cast<size_t>(inserted - cells_.begin());
 	}
 
 	// Single unified traversal using binary search per row instead of hash lookups.
@@ -141,7 +142,8 @@ protected:
 			return;
 		}
 
-		std::vector<RowCellInfo> row_cells;
+		static thread_local std::vector<RowCellInfo> row_cells;
+		row_cells.clear();
 		row_cells.reserve(end_cx - start_cx + 1);
 
 		for (int cy = start_cy; cy <= end_cy; ++cy) {

@@ -460,7 +460,7 @@ public:
 	bool loadMetaItem(pugi::xml_node node);
 
 	using ItemMap = std::vector<ItemType>;
-	using ItemNameMap = std::map<std::string, ItemType*>;
+	using ItemNameMap = std::map<std::string, uint16_t>;
 	ItemMap items;
 
 	// Version information
