@@ -199,7 +199,7 @@ void MapPopupMenu::Update() {
 				}
 
 				AppendSeparator();
-				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties\tCTRL+P", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
 			} else {
 
 				if (topCreature) {
@@ -228,7 +228,7 @@ void MapPopupMenu::Update() {
 
 				if (tile->hasGround() || topCreature || topSpawn) {
 					AppendSeparator();
-					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties\tCTRL+P", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
 				}
 			}
 

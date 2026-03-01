@@ -213,12 +213,12 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* addBtn = newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute");
-	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, FromDIP(wxSize(16, 16))));
 	addBtn->SetToolTip("Add a new custom attribute");
 	optSizer->Add(addBtn, wxSizerFlags(0).Center());
 
 	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
-	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, FromDIP(wxSize(16, 16))));
 	removeBtn->SetToolTip("Remove selected custom attribute");
 	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
 

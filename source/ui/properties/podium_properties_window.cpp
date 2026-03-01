@@ -54,6 +54,7 @@ PodiumPropertiesWindow::PodiumPropertiesWindow(wxWindow* win_parent, const Map* 
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Direction"));
 	direction_field = newd wxChoice(this, wxID_ANY);
+	direction_field->SetToolTip("Direction the podium faces.");
 
 	for (Direction dir = DIRECTION_FIRST; dir <= DIRECTION_LAST; ++dir) {
 		direction_field->Append(wxstr(Creature::DirID2Name(dir)), (void*)(intptr_t)(dir));

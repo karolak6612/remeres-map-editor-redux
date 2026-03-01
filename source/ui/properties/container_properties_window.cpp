@@ -61,6 +61,7 @@ ContainerPropertiesWindow::ContainerPropertiesWindow(wxWindow* win_parent, const
 	grid_canvas->Bind(wxEVT_BUTTON, &ContainerPropertiesWindow::OnContainerItemClick, this);
 	grid_canvas->Bind(wxEVT_CONTEXT_MENU, &ContainerPropertiesWindow::OnContainerItemRightClick, this);
 	grid_canvas->SetContainer(edit_item);
+	grid_canvas->SetToolTip("Right-click items to edit or remove.\nRight-click empty space to add.");
 
 	contents_sizer->Add(grid_canvas, wxSizerFlags(1).Expand().Border(wxALL, 2));
 

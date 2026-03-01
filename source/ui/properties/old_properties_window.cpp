@@ -129,6 +129,7 @@ void OldPropertiesWindow::createDoorFields(wxFlexGridSizer* subsizer, wxWindow* 
 		door_id_field = newd wxSpinCtrl(parent, wxID_ANY, i2ws(door->getDoorID()), wxDefaultPosition, FROM_DIP(this, wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFF, door->getDoorID());
 		if (!edit_tile || !edit_tile->isHouseTile() || !door->isRealDoor()) {
 			door_id_field->Disable();
+			door_id_field->SetToolTip("Only available for valid house doors.");
 		}
 		subsizer->Add(door_id_field, wxSizerFlags(1).Expand());
 	}

@@ -186,7 +186,11 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
 	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
 	items_list->SetMinSize(wxSize(230, 512));
-	result_box_sizer->Add(items_list, 0, wxALL, 5);
+	result_box_sizer->Add(items_list, 1, wxALL | wxEXPAND, 5);
+
+	result_label = newd wxStaticText(result_box_sizer->GetStaticBox(), wxID_ANY, "");
+	result_box_sizer->Add(result_label, 0, wxALL, 5);
+
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
 
 	this->SetSizer(box_sizer);
@@ -408,8 +412,10 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetSelection(0);
 		ok_button->Enable(true);
 		ok_button->SetToolTip("Confirm selection");
+		result_label->SetLabel(wxString::Format("Found %d items", items_list->GetItemCount()));
 	} else {
 		items_list->SetNoMatches();
+		result_label->SetLabel("No items found");
 	}
 
 	items_list->Refresh();
