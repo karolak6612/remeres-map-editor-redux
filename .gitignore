@@ -114,6 +114,5 @@ data/user/
 /test_selection_mock/
 /test_variant_logic/
 /.agents/rules
+/build-ninja
 compile_commands.json
-/.cache
-/clang-build
