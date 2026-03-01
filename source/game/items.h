@@ -283,8 +283,8 @@ class ItemType {
 public:
 	ItemType(const ItemType&) = delete;
 	ItemType& operator=(const ItemType&) = delete;
-	ItemType(ItemType&&) = default;
-	ItemType& operator=(ItemType&&) = default;
+	ItemType(ItemType&&) noexcept = default;
+	ItemType& operator=(ItemType&&) noexcept = default;
 
 	ItemType();
 	~ItemType();

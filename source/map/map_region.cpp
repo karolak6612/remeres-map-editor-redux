@@ -311,7 +311,7 @@ MapNode* SpatialHashGrid::getLeafForce(int x, int y) {
 	uint64_t key = makeKey(x, y);
 
 	// 1-element cache for hot path
-	if (last_valid_ && key == last_key_ && last_idx_ < cells_.size() && cells_[last_idx_].key == key) {
+	if (last_valid_ && key == last_key_ && last_idx_ < cells_.size() && cells_[last_idx_].key == key && cells_[last_idx_].cell) {
 		int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 		int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 		auto& node = cells_[last_idx_].cell->nodes[ny * NODES_PER_CELL + nx];

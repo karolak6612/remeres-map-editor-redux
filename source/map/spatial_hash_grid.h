@@ -82,18 +82,12 @@ public:
 		visitLeavesImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
 	}
 
-	// Iterator support for MapIterator — iterates over cells_
-	auto begin() {
-		return cells_.begin();
-	}
-	auto end() {
-		return cells_.end();
-	}
+	// Iterator support for MapIterator — const-only to protect sorted invariant
 	auto begin() const {
-		return cells_.begin();
+		return cells_.cbegin();
 	}
 	auto end() const {
-		return cells_.end();
+		return cells_.cend();
 	}
 
 protected:
