@@ -212,7 +212,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	const ItemType* ground_it = nullptr;
 	if (tile->ground) {
-		ground_it = &g_items[tile->ground->getID()];
+		ground_it = &tile->ground->getType();
 	}
 
 	if (only_colors) {
@@ -299,7 +299,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
 				}
 
-				const ItemType& it = g_items[item->getID()];
+				const ItemType& it = item->getType();
 
 				// item tooltip (one per item)
 				if (process_tooltips) {

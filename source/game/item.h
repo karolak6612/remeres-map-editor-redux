@@ -171,8 +171,12 @@ public:
 	[[nodiscard]] uint16_t getID() const {
 		return id;
 	}
+	// Fast type access — cached pointer, no array lookup
+	[[nodiscard]] ItemType& getType() const {
+		return *cached_type_;
+	}
 	[[nodiscard]] uint16_t getClientID() const {
-		return g_items[id].clientID;
+		return cached_type_->clientID;
 	}
 	// NOTE: This is very volatile, do NOT use this unless you know exactly what you're doing
 	// which you probably don't so avoid it like the plague!
@@ -429,6 +433,7 @@ protected:
 	// Subtype is either fluid type, count, subtype or charges
 	uint16_t subtype;
 	bool selected;
+	ItemType* cached_type_; // Cached pointer into g_items — eliminates array lookup in hot paths
 
 private:
 	Item& operator=(const Item& i); // Can't copy
