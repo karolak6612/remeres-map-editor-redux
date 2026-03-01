@@ -234,7 +234,8 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 		dc.DrawRectangle(r);
 	} else if (is_hover) {
 		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.SetBrush(wxBrush(wxColour(255, 255, 255, 30))); // Transparent white
+		wxColour hoverCol = Theme::Get(Theme::Role::Text);
+		dc.SetBrush(wxBrush(wxColour(hoverCol.Red(), hoverCol.Green(), hoverCol.Blue(), 30))); // Transparent text color
 		dc.DrawRectangle(r);
 	}
 
@@ -325,7 +326,7 @@ void ToolOptionsSurface::DrawCheckbox(wxDC& dc, const wxRect& rect, const wxStri
 
 	// Checkmark (simple)
 	if (value) {
-		dc.SetPen(*wxWHITE_PEN);
+		dc.SetPen(wxPen(Theme::Get(Theme::Role::Text)));
 		dc.DrawLine(box.GetLeft() + 3, box.GetTop() + 7, box.GetLeft() + 6, box.GetTop() + 10);
 		dc.DrawLine(box.GetLeft() + 6, box.GetTop() + 10, box.GetRight() - 3, box.GetTop() + 4);
 	}

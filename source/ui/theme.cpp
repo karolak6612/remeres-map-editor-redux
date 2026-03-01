@@ -44,7 +44,7 @@ wxColour Theme::GetDark(Role role) {
 		case Role::TextSubtle:
 			return wxColour(150, 150, 150);
 		case Role::TextOnAccent:
-			return wxColour(255, 255, 255);
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
 		case Role::Border:
 			return wxColour(60, 60, 60);
 		case Role::Selected:
@@ -89,16 +89,16 @@ wxColour Theme::GetDark(Role role) {
 		case Role::TooltipBorderText:
 			return wxColour(218, 165, 32); // Goldenrod
 		default:
-			return *wxWHITE;
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 	}
 }
 
 wxColour Theme::GetLight(Role role) {
 	switch (role) {
 		case Role::Surface:
-			return wxColour(240, 240, 240); // Standard dialog background
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_3DFACE); // Standard dialog background
 		case Role::Background:
-			return *wxWHITE; // Lists, entries
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW); // Lists, entries
 		case Role::Header:
 			return wxColour(220, 220, 220);
 		case Role::Accent:
@@ -108,17 +108,17 @@ wxColour Theme::GetLight(Role role) {
 		case Role::Text:
 			return *wxBLACK;
 		case Role::TextSubtle:
-			return wxColour(100, 100, 100);
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_GRAYTEXT);
 		case Role::TextOnAccent:
-			return *wxWHITE;
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
 		case Role::Border:
-			return wxColour(200, 200, 200);
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_ACTIVEBORDER);
 		case Role::Selected:
 			return wxColour(0, 120, 215, 60);
 		case Role::Error:
 			return wxColour(200, 0, 0);
 		case Role::CardBase:
-			return *wxWHITE;
+			return wxSystemSettings::GetColour(wxSYS_COLOUR_WINDOW);
 		case Role::CardBaseHover:
 			return wxColour(245, 245, 245);
 		case Role::CardBorder:
