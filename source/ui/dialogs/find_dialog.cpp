@@ -48,7 +48,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	search_field->SetFocus();
 	sizer->Add(search_field, 0, wxEXPAND);
 
-	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
+	item_list = newd FindDialogGridCanvas(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
 	item_list->SetToolTip("Double click to select.");
 	sizer->Add(item_list, wxSizerFlags(1).Expand().Border());
@@ -307,99 +307,272 @@ void FindBrushDialog::RefreshContentsInternal() {
 // ============================================================================
 // Listbox in find item / brush stuff
 
-FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
-	NanoVGListBox(parent, id, wxLB_SINGLE),
+FindDialogGridCanvas::FindDialogGridCanvas(wxWindow* parent, wxWindowID id) :
+	NanoVGCanvas(parent, id, wxVSCROLL | wxWANTS_CHARS),
 	cleared(false),
-	no_matches(false) {
+	no_matches(false),
+	m_selection(-1),
+	m_hoverIndex(-1),
+	m_columns(1),
+	m_itemSize(32),
+	m_padding(8) {
+
+	Bind(wxEVT_SIZE, &FindDialogGridCanvas::OnSize, this);
+	Bind(wxEVT_LEFT_DOWN, &FindDialogGridCanvas::OnMouseDown, this);
+	Bind(wxEVT_LEFT_DCLICK, &FindDialogGridCanvas::OnMouseDown, this);
+	Bind(wxEVT_MOTION, &FindDialogGridCanvas::OnMotion, this);
+	Bind(wxEVT_LEAVE_WINDOW, &FindDialogGridCanvas::OnLeave, this);
+	Bind(wxEVT_KEY_DOWN, &FindDialogGridCanvas::OnKeyDown, this);
+
 	Clear();
 }
 
-FindDialogListBox::~FindDialogListBox() {
-	////
-}
+FindDialogGridCanvas::~FindDialogGridCanvas() {}
 
-void FindDialogListBox::Clear() {
+void FindDialogGridCanvas::Clear() {
 	cleared = true;
 	no_matches = false;
 	brushlist.clear();
-	SetItemCount(1);
+	m_selection = -1;
+	m_hoverIndex = -1;
+	UpdateLayout();
 }
 
-void FindDialogListBox::SetNoMatches() {
+void FindDialogGridCanvas::SetNoMatches() {
 	cleared = false;
 	no_matches = true;
 	brushlist.clear();
-	SetItemCount(1);
+	m_selection = -1;
+	m_hoverIndex = -1;
+	UpdateLayout();
 }
 
-void FindDialogListBox::AddBrush(Brush* brush) {
+void FindDialogGridCanvas::AddBrush(Brush* brush) {
 	cleared = false;
 	no_matches = false;
 	brushlist.push_back(brush);
 }
 
-void FindDialogListBox::CommitUpdates() {
-	if (cleared || no_matches) {
-		SetItemCount(1);
-	} else {
-		SetItemCount(brushlist.size());
-	}
+void FindDialogGridCanvas::CommitUpdates() {
+	UpdateLayout();
 	Refresh();
 }
 
-Brush* FindDialogListBox::GetSelectedBrush() {
-	int n = GetSelection();
-	if (n == -1 || no_matches || cleared) {
+Brush* FindDialogGridCanvas::GetSelectedBrush() {
+	if (m_selection == -1 || no_matches || cleared) {
 		return nullptr;
 	}
-	return brushlist[n];
+	if (m_selection >= 0 && m_selection < static_cast<int>(brushlist.size())) {
+		return brushlist[m_selection];
+	}
+	return nullptr;
 }
 
-void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
+void FindDialogGridCanvas::SetSelection(int index) {
+	if (index != m_selection) {
+		m_selection = index;
+		SendSelectionEvent();
+
+		if (index >= 0 && index < static_cast<int>(brushlist.size())) {
+			wxRect rect = GetItemRect(index);
+			int scrollPos = GetScrollPosition();
+			int clientH = GetClientSize().y;
+
+			if (rect.y < scrollPos) {
+				SetScrollPosition(rect.y - m_padding);
+			} else if (rect.y + rect.height > scrollPos + clientH) {
+				SetScrollPosition(rect.y + rect.height - clientH + m_padding);
+			}
+		}
+		Refresh();
+	}
+}
+
+void FindDialogGridCanvas::UpdateLayout() {
+	int width = GetClientSize().x;
+	if (width <= 0) width = 200;
+
+	m_columns = std::max(1, (width - m_padding) / (m_itemSize + m_padding));
+	int count = GetItemCount();
+	if (count == 0) count = 1; // for no match / cleared message
+
+	int rows = (count + m_columns - 1) / m_columns;
+	int contentHeight = rows * (m_itemSize + m_padding) + m_padding;
+
+	UpdateScrollbar(contentHeight);
+}
+
+wxSize FindDialogGridCanvas::DoGetBestClientSize() const {
+	return FromDIP(wxSize(470, 400));
+}
+
+int FindDialogGridCanvas::HitTest(int x, int y) const {
+	if (cleared || no_matches) return -1;
+
+	int scrollPos = GetScrollPosition();
+	int realY = y + scrollPos;
+	int col = (x - m_padding) / (m_itemSize + m_padding);
+	int row = (realY - m_padding) / (m_itemSize + m_padding);
+
+	if (col < 0 || col >= m_columns || row < 0) {
+		return -1;
+	}
+
+	int index = row * m_columns + col;
+	if (index < static_cast<int>(GetItemCount())) {
+		wxRect r = GetItemRect(index);
+		r.y -= scrollPos; // Convert back to local
+		if (r.Contains(x, y)) {
+			return index;
+		}
+	}
+	return -1;
+}
+
+wxRect FindDialogGridCanvas::GetItemRect(int index) const {
+	int row = index / m_columns;
+	int col = index % m_columns;
+	return wxRect(
+		m_padding + col * (m_itemSize + m_padding),
+		m_padding + row * (m_itemSize + m_padding),
+		m_itemSize,
+		m_itemSize
+	);
+}
+
+void FindDialogGridCanvas::SendSelectionEvent() {
+	wxCommandEvent event(wxEVT_LISTBOX, GetId());
+	event.SetEventObject(this);
+	event.SetInt(m_selection);
+	GetEventHandler()->ProcessEvent(event);
+}
+
+void FindDialogGridCanvas::OnSize(wxSizeEvent& event) {
+	UpdateLayout();
+	Refresh();
+	event.Skip();
+}
+
+void FindDialogGridCanvas::OnMouseDown(wxMouseEvent& event) {
+	int index = HitTest(event.GetX(), event.GetY());
+	if (index != -1) {
+		SetSelection(index);
+		if (event.LeftDClick()) {
+			wxCommandEvent dclickEvent(wxEVT_LISTBOX_DCLICK, GetId());
+			dclickEvent.SetEventObject(this);
+			dclickEvent.SetInt(index);
+			GetEventHandler()->ProcessEvent(dclickEvent);
+		}
+	}
+	event.Skip();
+}
+
+void FindDialogGridCanvas::OnMotion(wxMouseEvent& event) {
+	int index = HitTest(event.GetX(), event.GetY());
+	if (index != m_hoverIndex) {
+		m_hoverIndex = index;
+		if (m_hoverIndex != -1) {
+			SetCursor(wxCursor(wxCURSOR_HAND));
+			SetToolTip(wxstr(brushlist[m_hoverIndex]->getName()));
+		} else {
+			SetCursor(wxNullCursor);
+			SetToolTip("");
+		}
+		Refresh();
+	}
+	event.Skip();
+}
+
+void FindDialogGridCanvas::OnLeave(wxMouseEvent& event) {
+	if (m_hoverIndex != -1) {
+		m_hoverIndex = -1;
+		Refresh();
+	}
+	event.Skip();
+}
+
+void FindDialogGridCanvas::OnKeyDown(wxKeyEvent& event) {
+	// Forward some keys to parent if needed or handle up/down
+	event.Skip();
+}
+
+void FindDialogGridCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	wxColour textColour = Theme::Get(Theme::Role::Text);
 	if (no_matches) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
+		nvgText(vg, m_padding, m_padding + 16, "No matches for your search.", nullptr);
 	} else if (cleared) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
+		nvgText(vg, m_padding, m_padding + 16, "Please enter your search string.", nullptr);
 	} else {
-		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
-		if (spr) {
-			int tex = GetOrCreateSpriteTexture(vg, spr);
-			if (tex > 0) {
-				int icon_size = rect.height;
-				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+		int scrollPos = GetScrollPosition();
+		int rowHeight = m_itemSize + m_padding;
+		int startRow = scrollPos / rowHeight;
+		int endRow = (scrollPos + height + rowHeight - 1) / rowHeight;
+		int startIdx = startRow * m_columns;
+		int endIdx = std::min(static_cast<int>(brushlist.size()), (endRow + 1) * m_columns);
+
+		for (int i = startIdx; i < endIdx; ++i) {
+			if (i < 0) continue;
+
+			wxRect r = GetItemRect(i);
+			float x = r.x;
+			float y = r.y;
+			float w = r.width;
+			float h = r.height;
+
+			bool isSelected = (i == m_selection);
+			bool isHovered = (i == m_hoverIndex);
+
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, x, y, w, h, 4.0f);
+			if (isSelected) {
+				wxColour selCol = Theme::Get(Theme::Role::Accent);
+				nvgFillColor(vg, nvgRGBA(selCol.Red(), selCol.Green(), selCol.Blue(), 200));
+			} else if (isHovered) {
+				wxColour hoverCol = Theme::Get(Theme::Role::CardBaseHover);
+				nvgFillColor(vg, nvgRGBA(hoverCol.Red(), hoverCol.Green(), hoverCol.Blue(), 255));
+			} else {
+				wxColour baseCol = Theme::Get(Theme::Role::CardBase);
+				nvgFillColor(vg, nvgRGBA(baseCol.Red(), baseCol.Green(), baseCol.Blue(), 255));
+			}
+			nvgFill(vg);
+
+			if (isSelected) {
 				nvgBeginPath(vg);
-				nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
-				nvgFillPaint(vg, imgPaint);
-				nvgFill(vg);
+				nvgRoundedRect(vg, x + 0.5f, y + 0.5f, w - 1, h - 1, 4.0f);
+				wxColour accentCol = Theme::Get(Theme::Role::Accent);
+				nvgStrokeColor(vg, nvgRGBA(accentCol.Red(), accentCol.Green(), accentCol.Blue(), 255));
+				nvgStrokeWidth(vg, 2.0f);
+				nvgStroke(vg);
+			}
+
+			Sprite* spr = g_gui.gfx.getSprite(brushlist[i]->getLookID());
+			if (spr) {
+				int tex = GetOrCreateSpriteTexture(vg, spr);
+				if (tex > 0) {
+					int tw, th;
+					nvgImageSize(vg, tex, &tw, &th);
+					float scale = std::min(w / tw, h / th);
+					if (scale > 1.0f && std::max(tw, th) >= 32) scale = 1.0f;
+					float dw = tw * scale;
+					float dh = th * scale;
+					float dx = x + (w - dw) / 2.0f;
+					float dy = y + (h - dh) / 2.0f;
+
+					NVGpaint imgPaint = nvgImagePattern(vg, dx, dy, dw, dh, 0.0f, tex, 1.0f);
+					nvgBeginPath(vg);
+					nvgRect(vg, dx, dy, dw, dh);
+					nvgFillPaint(vg, imgPaint);
+					nvgFill(vg);
+				}
 			}
 		}
-
-		if (IsSelected(n)) {
-			textColour = Theme::Get(Theme::Role::TextOnAccent);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		} else {
-			textColour = Theme::Get(Theme::Role::Text);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		}
-
-		nvgFontSize(vg, 12.0f);
-		nvgFontFace(vg, "sans");
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		wxString name = wxstr(brushlist[n]->getName());
-		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
 	}
-}
-
-int FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FromDIP(32);
 }

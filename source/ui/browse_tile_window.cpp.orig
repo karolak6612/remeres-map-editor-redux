@@ -17,7 +17,6 @@
 
 #include "map/tile_operations.h"
 #include "app/main.h"
-#include "ui/theme.h"
 
 #include "map/map.h"
 #include "ui/gui.h"
@@ -387,7 +386,7 @@ BrowseTileWindow::~BrowseTileWindow() {
 }
 
 void BrowseTileWindow::OnItemSelected(wxCommandEvent& WXUNUSED(event)) {
-	const size_t count = item_list->GetSelectedCount() > 0 ? 1 : 0;
+	const size_t count = item_list->GetSelectedCount();
 	delete_button->Enable(count != 0);
 	select_raw_button->Enable(count == 1);
 }

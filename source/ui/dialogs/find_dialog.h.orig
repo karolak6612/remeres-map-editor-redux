@@ -19,10 +19,10 @@ public:
 	void OnKeyDown(wxKeyEvent&);
 };
 
-class FindDialogGridCanvas : public NanoVGCanvas {
+class FindDialogListBox : public NanoVGListBox {
 public:
-	FindDialogGridCanvas(wxWindow* parent, wxWindowID id);
-	~FindDialogGridCanvas();
+	FindDialogListBox(wxWindow* parent, wxWindowID id);
+	~FindDialogListBox();
 
 	void Clear();
 	void SetNoMatches();
@@ -30,34 +30,13 @@ public:
 	void CommitUpdates();
 	Brush* GetSelectedBrush();
 
-	int GetItemCount() const { return brushlist.size(); }
-	void SetSelection(int index);
-	int GetSelection() const { return m_selection; }
+	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;
+	int OnMeasureItem(size_t index) const override;
 
 protected:
-	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
-	wxSize DoGetBestClientSize() const override;
-
-	void OnSize(wxSizeEvent& event);
-	void OnMouseDown(wxMouseEvent& event);
-	void OnMotion(wxMouseEvent& event);
-	void OnLeave(wxMouseEvent& event);
-	void OnKeyDown(wxKeyEvent& event);
-
-	void UpdateLayout();
-	int HitTest(int x, int y) const;
-	wxRect GetItemRect(int index) const;
-	void SendSelectionEvent();
-
 	bool cleared;
 	bool no_matches;
 	std::vector<Brush*> brushlist;
-
-	int m_selection;
-	int m_hoverIndex;
-	int m_columns;
-	int m_itemSize;
-	int m_padding;
 };
 
 class FindDialog : public wxDialog {
@@ -85,7 +64,7 @@ protected:
 	virtual void OnClickListInternal(wxCommandEvent&) = 0;
 	virtual void OnClickOKInternal() = 0;
 
-	FindDialogGridCanvas* item_list;
+	FindDialogListBox* item_list;
 	KeyForwardingTextCtrl* search_field;
 	wxTimer idle_input_timer;
 	const Brush* result_brush;

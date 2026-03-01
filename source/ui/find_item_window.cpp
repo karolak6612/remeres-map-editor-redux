@@ -184,7 +184,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	// --------------- Items list ---------------
 
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
-	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
+	items_list = newd FindDialogGridCanvas(result_box_sizer->GetStaticBox(), wxID_ANY);
 	items_list->SetMinSize(wxSize(230, 512));
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
