@@ -67,7 +67,7 @@ void LiveDialogs::ShowHostDialog(wxWindow* parent, Editor* editor) {
 
 	live_host_dlg->SetSizerAndFit(top_sizer);
 
-	live_host_dlg->SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_SIGNAL)));
+	live_host_dlg->SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_SIGNAL));
 
 	while (true) {
 		int ret = live_host_dlg->ShowModal();
@@ -139,7 +139,7 @@ void LiveDialogs::ShowJoinDialog(wxWindow* parent) {
 
 	live_join_dlg->SetSizerAndFit(top_sizer);
 
-	live_join_dlg->SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_NETWORK_WIRED)));
+	live_join_dlg->SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_NETWORK_WIRED));
 
 	while (true) {
 		int ret = live_join_dlg->ShowModal();

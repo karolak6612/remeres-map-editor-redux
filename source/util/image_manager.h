@@ -54,6 +54,13 @@ public:
 	// wxWidgets support
 	wxBitmapBundle GetBitmapBundle(std::string_view assetPath, const wxColour& tint = wxNullColour);
 	wxBitmap GetBitmap(std::string_view assetPath, const wxSize& size = wxDefaultSize, const wxColour& tint = wxNullColour);
+	wxIconBundle GetIconBundle(std::string_view assetPath, const wxColour& tint = wxNullColour) {
+		wxIconBundle bundle;
+		wxIcon icon;
+		icon.CopyFromBitmap(GetBitmap(assetPath, wxDefaultSize, tint));
+		bundle.AddIcon(icon);
+		return bundle;
+	}
 
 	// NanoVG support
 	int GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint = wxNullColour);

@@ -105,7 +105,7 @@ void MapStatisticsDialog::Show(wxWindow* parent) {
 	dg->SetSizerAndFit(topsizer);
 	dg->Centre(wxBOTH);
 
-	dg->SetIcons(wxIconBundle::FromBitmapBundle(IMAGE_MANAGER.GetBitmapBundle(ICON_CHART_BAR)));
+	dg->SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_CHART_BAR));
 
 	int ret = dg->ShowModal();
 
