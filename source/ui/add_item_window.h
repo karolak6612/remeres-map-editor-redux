@@ -47,7 +47,6 @@ protected:
 
 	TilesetCategoryType category_type;
 	Tileset* tileset_item;
-
 };
 
 #endif

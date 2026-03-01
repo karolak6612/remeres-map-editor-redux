@@ -6,16 +6,18 @@
 #include <string>
 
 class BinaryNode;
-namespace pugi { class xml_node; }
+namespace pugi {
+	class xml_node;
+}
 
 class OtbLoader {
 public:
-    static bool load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersion version, wxString& error, std::vector<std::string>& warnings);
+	static bool load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersion version, wxString& error, std::vector<std::string>& warnings);
 };
 
 class XmlLoader {
 public:
-    static void loadAttributes(ItemType& it, pugi::xml_node node);
+	static void loadAttributes(ItemType& it, pugi::xml_node node);
 };
 
 #endif

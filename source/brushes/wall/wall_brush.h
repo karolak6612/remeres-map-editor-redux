@@ -18,7 +18,6 @@ public:
 	WallBrush();
 	~WallBrush() override;
 
-
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 
 	bool canDraw(BaseMap* map, const Position& position) const override {
@@ -66,7 +65,6 @@ class WallDecorationBrush : public WallBrush {
 public:
 	WallDecorationBrush();
 	~WallDecorationBrush() override;
-
 
 	// We use the exact same loading algorithm as normal walls
 

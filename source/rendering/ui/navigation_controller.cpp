@@ -112,4 +112,3 @@ void NavigationController::HandleWheel(MapCanvas* canvas, wxMouseEvent& event) {
 		canvas->UpdatePositionStatus();
 	}
 }
-

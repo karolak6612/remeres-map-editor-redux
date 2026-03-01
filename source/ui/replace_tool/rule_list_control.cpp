@@ -5,8 +5,9 @@
 #include <memory>
 #include <algorithm>
 
-RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) : NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxNO_BORDER | wxWANTS_CHARS),
-																		 m_listener(listener) {
+RuleListControl::RuleListControl(wxWindow* parent, Listener* listener) :
+	NanoVGCanvas(parent, wxID_ANY, wxVSCROLL | wxNO_BORDER | wxWANTS_CHARS),
+	m_listener(listener) {
 	// NanoVGCanvas handles background style
 	m_itemHeight = FromDIP(56);
 

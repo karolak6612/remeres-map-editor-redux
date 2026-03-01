@@ -22,7 +22,8 @@ SpritePreloader& SpritePreloader::get() {
 	return instance;
 }
 
-SpritePreloader::SpritePreloader() : stopping(false) {
+SpritePreloader::SpritePreloader() :
+	stopping(false) {
 	unsigned int num_threads = std::clamp(std::thread::hardware_concurrency(), MIN_WORKER_THREADS, MAX_WORKER_THREADS);
 	workers.reserve(num_threads);
 	for (unsigned int i = 0; i < num_threads; ++i) {

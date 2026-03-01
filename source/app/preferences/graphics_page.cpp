@@ -5,7 +5,8 @@
 #include "ui/dialog_util.h"
 #include "rendering/postprocess/post_process_manager.h"
 
-GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
+GraphicsPage::GraphicsPage(wxWindow* parent) :
+	PreferencesPage(parent) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 	wxWindow* tmp;
 

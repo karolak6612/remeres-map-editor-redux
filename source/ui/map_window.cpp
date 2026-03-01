@@ -266,4 +266,3 @@ void MapWindow::OnScrollPageUp(wxScrollEvent& event) {
 	}
 	canvas->Refresh();
 }
-

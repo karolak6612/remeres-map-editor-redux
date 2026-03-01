@@ -34,7 +34,6 @@ public:
 
 protected:
 	wxListBox* result_list;
-
 };
 
 #endif

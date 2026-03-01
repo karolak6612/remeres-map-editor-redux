@@ -24,13 +24,15 @@
 #include "game/sprites.h"
 #include "ui/gui.h"
 
-BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
+BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) :
+	tile(t), item(i), options(&o) {
 	if (t) {
 		pos = t->getPosition();
 	}
 }
 
-BlitItemParams::BlitItemParams(const Position& p, Item* i, const DrawingOptions& o) : pos(p), item(i), options(&o) {
+BlitItemParams::BlitItemParams(const Position& p, Item* i, const DrawingOptions& o) :
+	pos(p), item(i), options(&o) {
 }
 
 ItemDrawer::ItemDrawer() {

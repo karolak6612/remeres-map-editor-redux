@@ -123,7 +123,7 @@ void trim_left(std::string& source, std::string_view t) {
 }
 
 void to_lower_str(std::string& source) {
-std::ranges::transform(source, source.begin(), [](unsigned char c) { return std::tolower(c); });
+	std::ranges::transform(source, source.begin(), [](unsigned char c) { return std::tolower(c); });
 }
 
 void to_upper_str(std::string& source) {
@@ -143,7 +143,7 @@ std::string as_upper_str(const std::string& other) {
 }
 
 bool isFalseString(const std::string& str) {
-	static constexpr std::array<std::string_view, 5> falseStrings = {"false", "0", "", "no", "not"};
+	static constexpr std::array<std::string_view, 5> falseStrings = { "false", "0", "", "no", "not" };
 	return std::ranges::any_of(falseStrings, [&](const auto& s) { return s == str; });
 }
 

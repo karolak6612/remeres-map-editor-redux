@@ -5,7 +5,8 @@
 #include <nanovg.h>
 #include <memory>
 
-CardPanel::CardPanel(wxWindow* parent, wxWindowID id) : NanoVGCanvas(parent, id) {
+CardPanel::CardPanel(wxWindow* parent, wxWindowID id) :
+	NanoVGCanvas(parent, id) {
 	Bind(wxEVT_SIZE, &CardPanel::OnSize, this);
 
 	m_mainSizer = new wxBoxSizer(wxVERTICAL);

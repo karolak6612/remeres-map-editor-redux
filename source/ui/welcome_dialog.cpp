@@ -151,7 +151,8 @@ private:
 // --- Dark Card Panel Helper Class ---
 class DarkCardPanel : public wxPanel {
 public:
-	DarkCardPanel(wxWindow* parent, const wxString& title) : wxPanel(parent, wxID_ANY) {
+	DarkCardPanel(wxWindow* parent, const wxString& title) :
+		wxPanel(parent, wxID_ANY) {
 		SetBackgroundStyle(wxBG_STYLE_PAINT);
 		Bind(wxEVT_PAINT, &DarkCardPanel::OnPaint, this);
 
@@ -211,7 +212,8 @@ private:
 // --- Bordered Dark Panel (for Header/Footer) ---
 class BorderedDarkPanel : public wxPanel {
 public:
-	BorderedDarkPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
+	BorderedDarkPanel(wxWindow* parent) :
+		wxPanel(parent, wxID_ANY) {
 		// Set actual background colour so children inherit it
 		wxPanel::SetBackgroundColour(Theme::Get(Theme::Role::Background));
 		SetBackgroundStyle(wxBG_STYLE_PAINT);

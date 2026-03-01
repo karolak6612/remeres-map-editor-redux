@@ -5,7 +5,8 @@
 #include "ui/dialog_util.h"
 #include "ui/theme.h"
 
-InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
+InterfacePage::InterfacePage(wxWindow* parent) :
+	PreferencesPage(parent) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	auto* subsizer = newd wxFlexGridSizer(2, 10, 10);

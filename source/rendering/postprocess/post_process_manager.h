@@ -16,7 +16,8 @@ struct PostProcessEffect {
 	std::shared_ptr<ShaderProgram> shader;
 
 	// Constructor for easy registration
-	PostProcessEffect(std::string n, std::string frag, std::string vert = "") : name(n), fragment_source(frag), vertex_source(vert) { }
+	PostProcessEffect(std::string n, std::string frag, std::string vert = "") :
+		name(n), fragment_source(frag), vertex_source(vert) { }
 };
 
 class PostProcessManager {
