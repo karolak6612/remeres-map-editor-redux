@@ -20,7 +20,7 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		// Fixed point factors (x/256)
 		// 0.75 -> 192, 0.6 -> 154, 0.48 -> 123, 0.40 -> 102, 0.33 -> 84
 		static constexpr std::array<int, 5> factor = { 192, 154, 123, 102, 84 };
-		int idx = (item_count < 5 ? item_count : 5) - 1;
+		int idx = std::clamp(item_count, 1, 5) - 1;
 		g = (g * factor[idx]) >> 8;
 		r = (r * factor[idx]) >> 8;
 	}
@@ -28,7 +28,7 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	if (options.show_spawns && spawn_count > 0) {
 		// Precomputed 0.7^n * 256 for n=1..9
 		static constexpr std::array<int, 9> spawn_factor = { 179, 125, 88, 61, 43, 30, 21, 15, 10 };
-		int f = (spawn_count > 0 && spawn_count <= 9) ? spawn_factor[spawn_count - 1] : 10;
+		int f = spawn_factor[std::clamp(spawn_count, 1, 9) - 1];
 		g = (g * f) >> 8;
 		b = (b * f) >> 8;
 	}

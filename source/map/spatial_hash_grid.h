@@ -105,9 +105,11 @@ protected:
 		int local_end_nx;
 	};
 
+	static constexpr auto cell_key_less = [](const CellEntry& entry, uint64_t k) { return entry.key < k; };
+
 	// Binary search for a cell by key. Returns index, or cells_.size() if not found.
 	[[nodiscard]] size_t findCellIndex(uint64_t key) const {
-		auto it = std::lower_bound(cells_.begin(), cells_.end(), key, [](const CellEntry& entry, uint64_t k) { return entry.key < k; });
+		auto it = std::lower_bound(cells_.begin(), cells_.end(), key, cell_key_less);
 		if (it != cells_.end() && it->key == key) {
 			return static_cast<size_t>(it - cells_.begin());
 		}
@@ -118,7 +120,7 @@ protected:
 	// Allocates GridCell immediately on insertion — no null entries left behind.
 	// Maintains sorted order via insertion at the correct position.
 	size_t findOrInsertCell(uint64_t key) {
-		auto it = std::lower_bound(cells_.begin(), cells_.end(), key, [](const CellEntry& entry, uint64_t k) { return entry.key < k; });
+		auto it = std::lower_bound(cells_.begin(), cells_.end(), key, cell_key_less);
 		if (it != cells_.end() && it->key == key) {
 			return static_cast<size_t>(it - cells_.begin());
 		}
@@ -147,7 +149,7 @@ protected:
 			uint64_t row_start_key = makeKeyFromCell(start_cx, cy);
 			uint64_t row_end_key = makeKeyFromCell(end_cx, cy);
 
-			auto it = std::lower_bound(cells_.begin(), cells_.end(), row_start_key, [](const CellEntry& entry, uint64_t k) { return entry.key < k; });
+			auto it = std::lower_bound(cells_.begin(), cells_.end(), row_start_key, cell_key_less);
 
 			// Scan linearly through matching cells in this row (contiguous in sorted order!)
 			while (it != cells_.end() && it->key <= row_end_key) {
