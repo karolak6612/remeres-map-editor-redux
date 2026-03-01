@@ -94,8 +94,12 @@ EditHouseDialog::EditHouseDialog(wxWindow* parent, Map* map, House* house) :
 	topsizer->Add(boxsizer, wxSizerFlags(0).Expand().Border(wxRIGHT | wxLEFT, 20));
 
 	wxSizer* buttonsSizer = newd wxBoxSizer(wxHORIZONTAL);
-	buttonsSizer->Add(newd wxButton(this, wxID_OK, "OK"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
-	buttonsSizer->Add(newd wxButton(this, wxID_CANCEL, "Cancel"), wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
+	buttonsSizer->Add(okBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
+	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
+	buttonsSizer->Add(cancelBtn, wxSizerFlags(1).Center().Border(wxTOP | wxBOTTOM, 10));
 	topsizer->Add(buttonsSizer, wxSizerFlags(0).Center().Border(wxLEFT | wxRIGHT, 20));
 
 	SetSizerAndFit(topsizer);
