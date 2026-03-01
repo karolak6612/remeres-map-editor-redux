@@ -24,8 +24,8 @@ PreviewDrawer::PreviewDrawer() {
 PreviewDrawer::~PreviewDrawer() {
 }
 
-void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_params, MapCanvas* canvas, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
-	MapTab* mapTab = dynamic_cast<MapTab*>(canvas->GetMapWindow());
+void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_params, MapCanvas& canvas, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
+	MapTab* mapTab = dynamic_cast<MapTab*>(canvas.GetMapWindow());
 	BaseMap* secondary_map = mapTab ? mapTab->GetSession()->secondary_map : nullptr;
 
 	if (secondary_map != nullptr && !ctx.options.ingame) {
@@ -34,7 +34,7 @@ void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_pa
 		Position normalPos;
 		Position to(ctx.view.mouse_map_x, ctx.view.mouse_map_y, ctx.view.floor);
 
-		if (canvas->isPasting()) {
+		if (canvas.isPasting()) {
 			normalPos = editor.copybuffer.getPosition();
 		} else if (brush && brush->is<DoodadBrush>()) {
 			normalPos = Position(0x8000, 0x8000, 0x8);
@@ -58,7 +58,7 @@ void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_pa
 
 					// Draw ground
 					uint8_t r = 255, g = 255, b = 255;
-					uint8_t base_alpha = canvas->isPasting() ? 128 : 255;
+					uint8_t base_alpha = canvas.isPasting() ? 128 : 255;
 
 					if (tile->ground) {
 						if (tile->isBlocking() && ctx.options.show_blocking) {

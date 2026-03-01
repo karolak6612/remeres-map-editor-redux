@@ -467,7 +467,7 @@ void MapDrawer::DrawMap() {
 			DrawMapLayer(ctx, floor_params, live_client);
 		}
 
-		preview_drawer->draw(ctx, floor_params, &canvas, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
+		preview_drawer->draw(ctx, floor_params, canvas, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 
 		--current_start_x;
 		--current_start_y;
