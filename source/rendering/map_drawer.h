@@ -32,7 +32,7 @@ class DoorIndicatorDrawer;
 #include "game/outfit.h"
 #include "game/creature.h"
 
-#include "rendering/core/render_view.h"
+#include "rendering/core/view_state.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/gl_resources.h"
@@ -59,12 +59,14 @@ class TileRenderer;
 class CreatureNameDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
+struct FloorViewParams;
+struct DrawContext;
 
 class MapDrawer {
 	MapCanvas* canvas;
 	Editor& editor;
 	DrawingOptions options;
-	RenderView view;
+	ViewState view;
 	std::shared_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
 	std::unique_ptr<TooltipDrawer> tooltip_drawer;
@@ -101,8 +103,8 @@ class MapDrawer {
 	std::unique_ptr<GLBuffer> pp_ebo;
 
 	void InitPostProcess();
-	void DrawPostProcess(const RenderView& view, const DrawingOptions& options);
-	void UpdateFBO(const RenderView& view, const DrawingOptions& options);
+	void DrawPostProcess(const ViewState& view, const DrawingOptions& options);
+	void UpdateFBO(const ViewState& view, const DrawingOptions& options);
 
 protected:
 	friend class BrushOverlayDrawer;
@@ -121,9 +123,9 @@ public:
 	void DrawBackground();
 	void DrawMap();
 	void DrawLiveCursors();
-	void DrawIngameBox(const ViewBounds& bounds);
+	void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
 
-	void DrawGrid(const ViewBounds& bounds);
+	void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
 	void DrawTooltips(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
@@ -152,7 +154,8 @@ public:
 	}
 
 private:
-	void DrawMapLayer(int map_z, bool live_client);
+	void DrawMapLayer(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client);
+	DrawContext MakeDrawContext();
 	bool renderers_initialized = false;
 };
 

@@ -4,7 +4,8 @@
 
 #include "app/main.h"
 #include "rendering/drawers/entities/creature_name_drawer.h"
-#include "rendering/core/render_view.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/view_state.h"
 #include "rendering/core/text_renderer.h"
 #include <nanovg.h>
 #include "rendering/core/coordinate_mapper.h"
@@ -28,7 +29,7 @@ void CreatureNameDrawer::addLabel(const Position& pos, const std::string& name, 
 	labels.push_back({ pos, name, c });
 }
 
-void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void CreatureNameDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	if (!vg) {
 		return;
 	}
@@ -37,7 +38,7 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
 		return;
 	}
 
-	float zoom = view.zoom;
+	float zoom = ctx.view.zoom;
 	float tile_size_screen = 32.0f / zoom;
 	float fontSize = 11.0f; // Original size or slightly larger if preferred, reverting to 11.0f
 
@@ -46,12 +47,12 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
 
 	for (const auto& label : labels) {
-		if (label.pos.z != view.camera_pos.z) {
+		if (label.pos.z != ctx.view.floor) {
 			continue;
 		}
 
 		int unscaled_x, unscaled_y;
-		view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
+		ctx.view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
 
 		float screen_x = (float)unscaled_x / zoom;
 		float screen_y = (float)unscaled_y / zoom;

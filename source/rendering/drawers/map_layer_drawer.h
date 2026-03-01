@@ -23,9 +23,8 @@
 class Editor;
 class TileRenderer;
 class GridDrawer;
-struct RenderView;
-struct DrawingOptions;
-struct LightBuffer;
+#include "rendering/core/draw_context.h"
+#include "rendering/core/floor_view_params.h"
 class SpriteBatch;
 class PrimitiveRenderer;
 
@@ -34,7 +33,7 @@ public:
 	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
 	~MapLayerDrawer();
 
-	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
+	void Draw(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client);
 
 private:
 	TileRenderer* tile_renderer;

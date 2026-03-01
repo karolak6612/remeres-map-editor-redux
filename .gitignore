@@ -114,3 +114,6 @@ data/user/
 /test_selection_mock/
 /test_variant_logic/
 /.agents/rules
+compile_commands.json
+/.cache
+/clang-build

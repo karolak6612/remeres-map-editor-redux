@@ -1,6 +1,7 @@
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
 #include <nanovg.h>
-#include "rendering/core/render_view.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/view_state.h"
 #include "rendering/utilities/icon_renderer.h"
 #include "util/image_manager.h"
 
@@ -18,7 +19,7 @@ void DoorIndicatorDrawer::clear() {
 	requests.clear();
 }
 
-void DoorIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void DoorIndicatorDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	if (requests.empty() || !vg) {
 		return;
 	}
@@ -28,22 +29,22 @@ void DoorIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 	const NVGcolor colorLocked = nvgRGBA(255, 0, 0, 255); // Red
 	const NVGcolor colorUnlocked = nvgRGBA(102, 255, 0, 255); // Green (#66ff00)
 
-	const float zoomFactor = 1.0f / view.zoom;
+	const float zoomFactor = 1.0f / ctx.view.zoom;
 	const float iconSize = 12.0f * zoomFactor;
 	const float outlineOffset = 1.0f * zoomFactor;
 
 	for (const auto& request : requests) {
 		// Only render doors on the current floor
-		if (request.pos.z != view.floor) {
+		if (request.pos.z != ctx.view.floor) {
 			continue;
 		}
 
 		int unscaled_x, unscaled_y;
-		if (!view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
+		if (!ctx.view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
 			continue;
 		}
 
-		const float zoom = view.zoom;
+		const float zoom = ctx.view.zoom;
 		const float x = unscaled_x / zoom;
 		const float y = unscaled_y / zoom;
 		const float TILE_SIZE = 32.0f / zoom;

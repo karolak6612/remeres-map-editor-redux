@@ -21,7 +21,7 @@
 #include "app/definitions.h"
 #include <iostream>
 #include "map/position.h"
-#include "rendering/core/render_view.h"
+#include "rendering/core/view_state.h"
 #include <vector>
 #include <string>
 #include <string_view>
@@ -120,6 +120,8 @@ struct TooltipData {
 	}
 };
 
+struct DrawContext;
+
 class TooltipDrawer {
 public:
 	TooltipDrawer();
@@ -137,7 +139,7 @@ public:
 	void addWaypointTooltip(Position pos, std::string_view name);
 
 	// Draw all tooltips
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(NVGcontext* vg, const DrawContext& ctx);
 
 	// Clear all tooltips
 	void clear();

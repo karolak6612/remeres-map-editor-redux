@@ -1,17 +1,15 @@
 #ifndef RME_SHADE_DRAWER_H_
 #define RME_SHADE_DRAWER_H_
 
-#include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
-
-class SpriteBatch;
+#include "rendering/core/draw_context.h"
+#include "rendering/core/floor_view_params.h"
 
 class ShadeDrawer {
 public:
 	ShadeDrawer();
 	~ShadeDrawer();
 
-	void draw(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options);
+	void draw(const DrawContext& ctx, const FloorViewParams& floor_params);
 };
 
 #endif
