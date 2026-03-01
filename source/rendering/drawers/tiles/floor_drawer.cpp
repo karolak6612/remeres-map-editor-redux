@@ -32,15 +32,8 @@ void FloorDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_para
 			for (int map_y = floor_params.start_y; map_y <= floor_params.end_y; map_y++) {
 				Tile* tile = editor.map.getTile(map_x, map_y, map_z);
 				if (tile) {
-					int offset;
-					if (map_z <= GROUND_LAYER) {
-						offset = (GROUND_LAYER - map_z) * TILE_SIZE;
-					} else {
-						offset = TILE_SIZE * (ctx.view.floor - map_z);
-					}
-
-					int draw_x = ((map_x * TILE_SIZE) - ctx.view.view_scroll_x) - offset;
-					int draw_y = ((map_y * TILE_SIZE) - ctx.view.view_scroll_y) - offset;
+					int draw_x, draw_y;
+					ctx.view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
 
 					// Position pos = tile->getPosition();
 

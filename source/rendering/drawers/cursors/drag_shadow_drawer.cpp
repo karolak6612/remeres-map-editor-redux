@@ -60,15 +60,8 @@ void DragShadowDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawe
 
 			// On screen and dragging?
 			if (pos.x + 2 > ctx.view.camera_start_x && pos.x < ctx.view.camera_end_x && pos.y + 2 > ctx.view.camera_start_y && pos.y < ctx.view.camera_end_y && (move_x != 0 || move_y != 0 || move_z != 0)) {
-				int offset;
-				if (pos.z <= GROUND_LAYER) {
-					offset = (GROUND_LAYER - pos.z) * TILE_SIZE;
-				} else {
-					offset = TILE_SIZE * (ctx.view.floor - pos.z);
-				}
-
-				int draw_x = ((pos.x * TILE_SIZE) - ctx.view.view_scroll_x) - offset;
-				int draw_y = ((pos.y * TILE_SIZE) - ctx.view.view_scroll_y) - offset;
+				int draw_x, draw_y;
+				ctx.view.getScreenPosition(pos.x, pos.y, pos.z, draw_x, draw_y);
 
 				// save performance when moving large chunks unzoomed
 				ItemVector toRender = TileOperations::getSelectedItems(tile, ctx.view.zoom > 3.0);

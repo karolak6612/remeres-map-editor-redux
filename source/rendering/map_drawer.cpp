@@ -430,8 +430,7 @@ void MapDrawer::Draw() {
 }
 
 void MapDrawer::DrawBackground() {
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	GLViewport::ClearBackground(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), true);
 }
 
 void MapDrawer::DrawMap() {
@@ -446,6 +445,8 @@ void MapDrawer::DrawMap() {
 	int current_end_x = view.camera_end_x;
 	int current_end_y = view.camera_end_y;
 
+	DrawContext ctx = MakeDrawContext();
+
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
 		FloorViewParams floor_params {
 			.current_z = map_z,
@@ -454,7 +455,6 @@ void MapDrawer::DrawMap() {
 			.end_x = current_end_x,
 			.end_y = current_end_y
 		};
-		DrawContext ctx = MakeDrawContext();
 
 		if (map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(ctx, floor_params);
@@ -482,7 +482,10 @@ void MapDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds) {
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
-	tooltip_drawer->draw(vg, view);
+	if (options.show_tooltips) {
+		DrawContext ctx = MakeDrawContext();
+		tooltip_drawer->draw(vg, ctx);
+	}
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
@@ -511,7 +514,10 @@ DrawContext MapDrawer::MakeDrawContext() {
 }
 
 void MapDrawer::DrawLight() {
-	light_drawer->draw(view, options.experimental_fog, light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+	if (options.isDrawLight()) {
+		DrawContext ctx = MakeDrawContext();
+		light_drawer->draw(ctx);
+	}
 }
 
 void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {

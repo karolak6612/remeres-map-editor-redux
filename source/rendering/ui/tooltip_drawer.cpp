@@ -20,6 +20,7 @@
 #include "rendering/core/normal_image.h"
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
+#include "rendering/core/draw_context.h"
 #include <nanovg.h>
 #include <format>
 #include "rendering/core/coordinate_mapper.h"
@@ -552,10 +553,11 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 	}
 }
 
-void TooltipDrawer::draw(NVGcontext* vg, const ViewState& view) {
+void TooltipDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	if (!vg) {
 		return;
 	}
+	const auto& view = ctx.view;
 
 	for (size_t i = 0; i < active_count; ++i) {
 		const auto& tooltip = tooltips[i];

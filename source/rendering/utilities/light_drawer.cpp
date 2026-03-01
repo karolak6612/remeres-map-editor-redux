@@ -25,6 +25,7 @@
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/view_state.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/gl_scoped_state.h"
 
 // GPULight struct moved to header
@@ -68,7 +69,7 @@ void LightDrawer::ResizeFBO(int width, int height) {
 	glTextureParameteri(fbo_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
-void LightDrawer::draw(const ViewState& view, bool fog, const LightBuffer& light_buffer, const wxColor& global_color, float light_intensity, float ambient_light_level) {
+void LightDrawer::draw(const DrawContext& ctx) {
 	if (!shader) {
 		initRenderResources();
 	}
@@ -76,6 +77,12 @@ void LightDrawer::draw(const ViewState& view, bool fog, const LightBuffer& light
 	if (!fbo) {
 		InitFBO();
 	}
+
+	const auto& view = ctx.view;
+	const auto& light_buffer = ctx.light_buffer;
+	const auto& global_color = ctx.options.global_light_color;
+	float light_intensity = ctx.options.light_intensity;
+	float ambient_light_level = ctx.options.ambient_light_level;
 
 	int buffer_w = view.screensize_x;
 	int buffer_h = view.screensize_y;

@@ -30,7 +30,8 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	// Style
 	const NVGcolor tintColor = nvgRGBA(204, 255, 0, 255); // Fluorescent Yellow-Green (#ccff00)
 
-	const float zoomFactor = 1.0f / ctx.view.zoom;
+	const float zoom = std::max(0.01f, ctx.view.zoom);
+	const float zoomFactor = 1.0f / zoom;
 	const float iconSize = 24.0f * zoomFactor;
 	const float outlineOffset = 1.0f * zoomFactor;
 
@@ -45,7 +46,6 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 			continue;
 		}
 
-		const float zoom = ctx.view.zoom;
 		const float x = unscaled_x / zoom;
 		const float y = unscaled_y / zoom;
 		const float TILE_SIZE = 32.0f / zoom;

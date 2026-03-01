@@ -69,14 +69,17 @@ void GridDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds)
 	// but DrawQuad uses white texture if no texture ID is provided or if specific non-textured method used.
 	// DrawQuad uses whiteTextureID by default.
 
+	float screen_w = ctx.view.screensize_x * ctx.view.zoom;
+	float screen_h = ctx.view.screensize_y * ctx.view.zoom;
+
 	// left side
 	if (box_start_map_x >= bounds.start_x) {
-		drawFilledRect(ctx.sprite_batch, 0, 0, box_start_x, ctx.view.screensize_y * ctx.view.zoom, side_color);
+		drawFilledRect(ctx.sprite_batch, 0, 0, box_start_x, screen_h, side_color);
 	}
 
 	// right side
 	if (box_end_map_x < bounds.end_x) {
-		drawFilledRect(ctx.sprite_batch, box_end_x, 0, ctx.view.screensize_x * ctx.view.zoom, ctx.view.screensize_y * ctx.view.zoom, side_color);
+		drawFilledRect(ctx.sprite_batch, box_end_x, 0, screen_w - box_end_x, screen_h, side_color);
 	}
 
 	// top side
@@ -86,7 +89,7 @@ void GridDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds)
 
 	// bottom side
 	if (box_end_map_y < bounds.end_y) {
-		drawFilledRect(ctx.sprite_batch, box_start_x, box_end_y, box_end_x - box_start_x, ctx.view.screensize_y * ctx.view.zoom, side_color);
+		drawFilledRect(ctx.sprite_batch, box_start_x, box_end_y, box_end_x - box_start_x, screen_h - box_end_y, side_color);
 	}
 
 	// hidden tiles

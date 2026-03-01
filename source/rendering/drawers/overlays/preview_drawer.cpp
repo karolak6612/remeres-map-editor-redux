@@ -53,16 +53,8 @@ void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_pa
 
 				Tile* tile = secondary_map->getTile(pos);
 				if (tile) {
-					// Compensate for underground/overground
-					int offset;
-					if (map_z <= GROUND_LAYER) {
-						offset = (GROUND_LAYER - map_z) * TILE_SIZE;
-					} else {
-						offset = TILE_SIZE * (ctx.view.floor - map_z);
-					}
-
-					int draw_x = ((map_x * TILE_SIZE) - ctx.view.view_scroll_x) - offset;
-					int draw_y = ((map_y * TILE_SIZE) - ctx.view.view_scroll_y) - offset;
+					int draw_x, draw_y;
+					ctx.view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
 
 					// Draw ground
 					uint8_t r = 255, g = 255, b = 255;
@@ -132,15 +124,8 @@ void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_pa
 		// This helps user see where they are pointing in the "chaos"
 		Position mousePos(ctx.view.mouse_map_x, ctx.view.mouse_map_y, ctx.view.floor);
 		if (mousePos.z == map_z) {
-			// Use correct offset logic
-			int offset;
-			if (map_z <= GROUND_LAYER) {
-				offset = (GROUND_LAYER - map_z) * TILE_SIZE;
-			} else {
-				offset = TILE_SIZE * (ctx.view.floor - map_z);
-			}
-			int draw_x = ((mousePos.x * TILE_SIZE) - ctx.view.view_scroll_x) - offset;
-			int draw_y = ((mousePos.y * TILE_SIZE) - ctx.view.view_scroll_y) - offset;
+			int draw_x, draw_y;
+			ctx.view.getScreenPosition(mousePos.x, mousePos.y, mousePos.z, draw_x, draw_y);
 
 			if (g_gui.gfx.ensureAtlasManager()) {
 				// Draw a semi-transparent white box over the tile

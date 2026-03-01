@@ -120,6 +120,8 @@ struct TooltipData {
 	}
 };
 
+struct DrawContext;
+
 class TooltipDrawer {
 public:
 	TooltipDrawer();
@@ -137,7 +139,7 @@ public:
 	void addWaypointTooltip(Position pos, std::string_view name);
 
 	// Draw all tooltips
-	void draw(NVGcontext* vg, const ViewState& view);
+	void draw(NVGcontext* vg, const DrawContext& ctx);
 
 	// Clear all tooltips
 	void clear();

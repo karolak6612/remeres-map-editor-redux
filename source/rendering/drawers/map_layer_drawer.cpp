@@ -50,9 +50,7 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, const FloorViewParams& floor_p
 	// IsTileVisible does this for every tile, but it's constant per layer/frame.
 	// We also skip IsTileVisible because visitLeaves already bounds us to the visible area (with 4-tile alignment),
 	// which is well within IsTileVisible's 6-tile margin.
-	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TILE_SIZE
-		: TILE_SIZE * (ctx.view.floor - map_z);
+	int offset = ctx.view.CalculateLayerOffset(map_z);
 
 	int base_screen_x = -ctx.view.view_scroll_x - offset;
 	int base_screen_y = -ctx.view.view_scroll_y - offset;

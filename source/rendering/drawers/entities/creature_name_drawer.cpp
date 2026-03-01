@@ -47,7 +47,7 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
 
 	for (const auto& label : labels) {
-		if (label.pos.z != ctx.view.camera_pos.z) {
+		if (label.pos.z != ctx.view.floor) {
 			continue;
 		}
 

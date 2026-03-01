@@ -124,11 +124,11 @@ namespace IngamePreview {
 		auto* atlas = g_gui.gfx.getAtlasManager();
 
 		DrawContext ctx {
-			*sprite_batch,
-			*primitive_renderer,
-			view,
-			options,
-			*light_buffer
+			.sprite_batch = *sprite_batch,
+			.primitive_renderer = *primitive_renderer,
+			.view = view,
+			.options = options,
+			.light_buffer = *light_buffer
 		};
 
 		// Render floors from bottom to top
@@ -142,35 +142,16 @@ namespace IngamePreview {
 			sprite_batch->begin(view.projectionMatrix, *atlas);
 			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
 
-			// Pre-calculate view offsets for this floor
-			int floor_offset = (z <= GROUND_LAYER)
-				? (GROUND_LAYER - z) * TILE_SIZE
-				: TILE_SIZE * (view.floor - z);
-			int camera_offset = (camera_pos.z <= GROUND_LAYER)
-				? (GROUND_LAYER - camera_pos.z) * TILE_SIZE
-				: 0;
-			// offset_diff accounts for the diagonal shift between the camera floor and this floor
-			int offset_diff = floor_offset - camera_offset;
+			// Pre-calculate view offsets for this floor using CalculateLayerOffset
+			int floor_offset = view.CalculateLayerOffset(z);
 
-			// Dynamic viewport culling — adjusted per floor
-			// Use EXTREMELY large margins to guarantee no tiles are ever culled
-			// The camera floor (z == camera_pos.z) uses view_scroll directly
-			// Other floors are shifted by floor_offset, so we need to expand bounds
-			constexpr int margin = TILE_SIZE * 16; // 16 tiles margin = 512 pixels
+			// Dynamic viewport culling — calculated perfectly per floor
+			constexpr int margin = TILE_SIZE * 2; // 2 tiles margin for multi-tile objects and off-by-one
 
-			// For viewport bounds, we need to consider the camera floor's coordinate system
-			// The camera floor uses view_scroll directly (floor_offset = camera_offset)
-			// For other floors, tiles are drawn at different positions due to floor_offset
-			// To ensure ALL visible tiles on ANY floor are rendered, we expand bounds by max possible offset
-			int max_floor_offset = std::max(
-				std::abs(floor_offset - camera_offset),
-				TILE_SIZE * MAP_MAX_LAYER // Maximum possible floor offset
-			);
-
-			int start_x = static_cast<int>(std::floor((view.view_scroll_x - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
-			int start_y = static_cast<int>(std::floor((view.view_scroll_y - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
-			int end_x = static_cast<int>(std::ceil((view.view_scroll_x + viewport_width * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
-			int end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
+			int start_x = static_cast<int>(std::floor((view.view_scroll_x + floor_offset - margin) / static_cast<float>(TILE_SIZE)));
+			int start_y = static_cast<int>(std::floor((view.view_scroll_y + floor_offset - margin) / static_cast<float>(TILE_SIZE)));
+			int end_x = static_cast<int>(std::ceil((view.view_scroll_x + floor_offset + viewport_width * zoom + margin) / static_cast<float>(TILE_SIZE)));
+			int end_y = static_cast<int>(std::ceil((view.view_scroll_y + floor_offset + viewport_height * zoom + margin) / static_cast<float>(TILE_SIZE)));
 
 			int base_draw_x = -view.view_scroll_x - floor_offset;
 			int base_draw_y = -view.view_scroll_y - floor_offset;
@@ -234,9 +215,9 @@ namespace IngamePreview {
 
 		if (lighting_enabled && light_drawer) {
 			// Ensure light options are fully initialized to avoid black screen from garbage values
-			options.experimental_fog = false;
-			options.global_light_color = wxColor(255, 255, 255); // Full light color
-			light_drawer->draw(view, options.experimental_fog, *light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+			if (options.isDrawLight()) {
+				light_drawer->draw(ctx);
+			}
 		}
 
 		// Draw Names
