@@ -51,7 +51,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int alpha = params.alpha;
 	const SpritePatterns* cached_patterns = params.patterns;
 
-	ItemType& it = g_items[item->getID()];
+	ItemType& it = params.item_type ? const_cast<ItemType&>(*params.item_type) : g_items[item->getID()];
 
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {

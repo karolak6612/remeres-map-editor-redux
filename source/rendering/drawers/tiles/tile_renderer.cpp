@@ -197,7 +197,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Waypoint tooltip (one per waypoint)
 	if (options.show_tooltips && waypoint && map_z == view.floor) {
-		tooltip_drawer->addWaypointTooltip(location->getPosition(), waypoint->name);
+		tooltip_drawer->addWaypointTooltip(position, waypoint->name);
 	}
 
 	bool as_minimap = options.show_as_minimap;
@@ -225,10 +225,16 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	} else {
 		if (tile->ground && ground_it) {
 			if (ground_it->sprite) {
-				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, location->getPosition());
-				PreloadItem(tile, tile->ground.get(), *ground_it, &patterns);
+				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, position);
 
-				BlitItemParams params(tile, tile->ground.get(), options);
+				// Inline preload check — skip function call when sprite is simple and loaded (95%+ case)
+				if (!ground_it->sprite->isSimpleAndLoaded()) {
+					rme::collectTileSprites(ground_it->sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+				}
+
+				BlitItemParams params(position, tile->ground.get(), options);
+				params.tile = tile;
+				params.item_type = ground_it;
 				params.red = r;
 				params.green = g;
 				params.blue = b;
@@ -241,10 +247,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	// Cache isHouseTile — used multiple times below
+	const bool is_house_tile = tile->isHouseTile();
+
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, position, is_house_tile, view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -255,7 +264,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
-	if (options.show_houses && tile->isHouseTile() && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
+	if (options.show_houses && is_house_tile && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
 
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
@@ -271,7 +280,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
-			bool calculate_house_color = options.extended_house_shader && options.show_houses && tile->isHouseTile();
+			bool calculate_house_color = options.extended_house_shader && options.show_houses && is_house_tile;
 			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
 			float boost = 0.0f;
 
@@ -295,7 +304,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				// item tooltip (one per item)
 				if (process_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), it, location->getPosition(), tile->isHouseTile(), view.zoom)) {
+					if (FillItemTooltipData(itemData, item.get(), it, position, is_house_tile, view.zoom)) {
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
 						}
@@ -303,10 +312,16 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 
 				if (it.sprite) {
-					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, location->getPosition());
-					PreloadItem(tile, item.get(), it, &patterns);
+					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, position);
 
-					BlitItemParams params(tile, item.get(), options);
+					// Inline preload check — skip function call when sprite is simple and loaded
+					if (!it.sprite->isSimpleAndLoaded()) {
+						rme::collectTileSprites(it.sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+					}
+
+					BlitItemParams params(position, item.get(), options);
+					params.tile = tile;
+					params.item_type = &it;
 					params.patterns = &patterns;
 
 					// item sprite
@@ -340,9 +355,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = location->getPosition(), .transient_selection_bounds = options.transient_selection_bounds });
+				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = options.transient_selection_bounds });
 				if (creature_name_drawer) {
-					creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
+					creature_name_drawer->addLabel(position, tile->creature->getName(), tile->creature.get());
 				}
 			}
 		}

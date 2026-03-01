@@ -25,6 +25,7 @@ struct BlitItemParams {
 	const Tile* tile = nullptr;
 	Position pos;
 	Item* item = nullptr;
+	const ItemType* item_type = nullptr;
 	const DrawingOptions* options = nullptr;
 	const SpritePatterns* patterns = nullptr;
 	bool ephemeral = false;
