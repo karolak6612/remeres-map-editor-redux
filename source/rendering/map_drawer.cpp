@@ -24,7 +24,10 @@
 #include "game/sprites.h"
 
 #include "rendering/map_drawer.h"
+#include "rendering/core/gl_viewport.h"
+#include "rendering/core/floor_view_params.h"
 #include "brushes/brush.h"
+#include <glm/gtc/matrix_transform.hpp>
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/ui/map_display.h"
 #include "editor/copybuffer.h"
@@ -44,7 +47,8 @@
 #include "rendering/utilities/light_drawer.h"
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/render_view.h"
+#include "rendering/core/view_state.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 
@@ -101,7 +105,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 
 	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
 
-	grid_drawer = std::make_unique<GridDrawer>();
+	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
 	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
 	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
 	selection_drawer = std::make_unique<SelectionDrawer>();
@@ -146,11 +150,65 @@ void MapDrawer::SetupVars() {
 	const double speed = 0.005;
 	options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
 
-	view.Setup(canvas, options);
+	// Setup ViewState from canvas
+	view.zoom = static_cast<float>(canvas->GetZoom());
+	view.floor = canvas->GetFloor();
+	canvas->GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
+
+	view.viewport_x = 0;
+	view.viewport_y = 0;
+
+	view.mouse_map_x = canvas->last_cursor_map_x;
+	view.mouse_map_y = canvas->last_cursor_map_y;
+
+	view.tile_size = std::max(1, static_cast<int>(TILE_SIZE / view.zoom));
+	view.camera_pos.z = view.floor;
+
+	// Calculate bounds based on options and map layers
+	if (options.show_all_floors) {
+		if (view.floor <= GROUND_LAYER) {
+			view.start_z = GROUND_LAYER;
+		} else {
+			view.start_z = std::min(MAP_MAX_LAYER, view.floor + 2);
+		}
+	} else {
+		view.start_z = view.floor;
+	}
+
+	view.end_z = view.floor;
+	view.superend_z = (view.floor > GROUND_LAYER ? 8 : 0);
+
+	if (options.show_shade) {
+		if (view.end_z < view.start_z && view.end_z == view.superend_z && view.end_z >= 0) {
+			view.superend_z--;
+		}
+		if (view.superend_z < 0) {
+			view.superend_z = 0;
+		}
+	}
+
+	view.camera_start_x = view.view_scroll_x / TILE_SIZE;
+	view.camera_start_y = view.view_scroll_y / TILE_SIZE;
+
+	if (view.floor > GROUND_LAYER) {
+		view.camera_start_x -= 2;
+		view.camera_start_y -= 2;
+	}
+
+	view.camera_end_x = view.camera_start_x + view.screensize_x / view.tile_size + 2;
+	view.camera_end_y = view.camera_start_y + view.screensize_y / view.tile_size + 2;
+
+	// Calculate logical dimensions (matching RenderView behavior)
+	view.logical_width = view.screensize_x * view.zoom;
+	view.logical_height = view.screensize_y * view.zoom;
+
+	// Metrics update for OpenGL transformations
+	view.projectionMatrix = glm::ortho(0.0f, static_cast<float>(view.screensize_x) * view.zoom, static_cast<float>(view.screensize_y) * view.zoom, 0.0f, -1.0f, 1.0f);
+	view.viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
 }
 
 void MapDrawer::SetupGL() {
-	view.SetupGL();
+	GLViewport::Apply(view);
 
 	// Ensure renderers are initialized
 	if (!renderers_initialized) {
@@ -205,7 +263,7 @@ void MapDrawer::InitPostProcess() {
 	glVertexArrayAttribBinding(pp_vao->GetID(), 1, 0);
 }
 
-void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& options) {
+void MapDrawer::DrawPostProcess(const ViewState& view, const DrawingOptions& options) {
 	if (!scale_fbo || !pp_vao) {
 		return;
 	}
@@ -233,7 +291,7 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 	shader->Unuse();
 }
 
-void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options) {
+void MapDrawer::UpdateFBO(const ViewState& view, const DrawingOptions& options) {
 	// Determine FBO size.
 	// If upscaling (Zoom < 1.0, e.g. 0.25), we want 1 pixel = 1 map unit.
 	// width_pixels = screen_width * zoom.
@@ -322,7 +380,7 @@ void MapDrawer::Draw() {
 	DrawBackground(); // Clear screen (or FBO)
 
 	// Save original view bounds before DrawMap modifies them per-floor
-	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
+	const ViewBounds original_bounds { view.camera_start_x, view.camera_start_y, view.camera_end_x, view.camera_end_y };
 
 	DrawMap();
 
@@ -345,13 +403,21 @@ void MapDrawer::Draw() {
 	// Resume Batch for Overlays
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 
+	DrawContext ctx {
+		.sprite_batch = *sprite_batch,
+		.primitive_renderer = *primitive_renderer,
+		.view = view,
+		.options = options,
+		.light_buffer = light_buffer
+	};
+
 	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
+		drag_shadow_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get());
 	}
 
-	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
+	live_cursor_drawer->draw(ctx, editor);
 
-	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
+	brush_overlay_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor);
 
 	if (options.show_grid) {
 		DrawGrid(original_bounds);
@@ -370,7 +436,8 @@ void MapDrawer::Draw() {
 }
 
 void MapDrawer::DrawBackground() {
-	view.Clear();
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
 void MapDrawer::DrawMap() {
@@ -380,30 +447,46 @@ void MapDrawer::DrawMap() {
 
 	// Enable texture mode
 
+	int current_start_x = view.camera_start_x;
+	int current_start_y = view.camera_start_y;
+	int current_end_x = view.camera_end_x;
+	int current_end_y = view.camera_end_y;
+
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
+		FloorViewParams floor_params {
+			.current_z = map_z,
+			.start_x = current_start_x,
+			.start_y = current_start_y,
+			.end_x = current_end_x,
+			.end_y = current_end_y
+		};
+		DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+
 		if (map_z == view.end_z && view.start_z != view.end_z) {
-			shade_drawer->draw(*sprite_batch, view, options);
+			shade_drawer->draw(ctx, floor_params);
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			DrawMapLayer(ctx, floor_params, live_client);
 		}
 
-		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
+		preview_drawer->draw(ctx, floor_params, canvas, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 
-		--view.start_x;
-		--view.start_y;
-		++view.end_x;
-		++view.end_y;
+		--current_start_x;
+		--current_start_y;
+		++current_end_x;
+		++current_end_y;
 	}
 }
 
 void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
-	grid_drawer->DrawIngameBox(*sprite_batch, view, options, bounds);
+	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	grid_drawer->DrawIngameBox(ctx, bounds);
 }
 
 void MapDrawer::DrawGrid(const ViewBounds& bounds) {
-	grid_drawer->DrawGrid(*sprite_batch, view, options, bounds);
+	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	grid_drawer->DrawGrid(ctx, bounds);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
@@ -411,21 +494,24 @@ void MapDrawer::DrawTooltips(NVGcontext* vg) {
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
-	hook_indicator_drawer->draw(vg, view);
+	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	hook_indicator_drawer->draw(vg, ctx);
 }
 
 void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
 	if (options.highlight_locked_doors) {
-		door_indicator_drawer->draw(vg, view);
+		DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+		door_indicator_drawer->draw(vg, ctx);
 	}
 }
 
 void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
-	creature_name_drawer->draw(vg, view);
+	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	creature_name_drawer->draw(vg, ctx);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawMapLayer(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client) {
+	map_layer_drawer->Draw(ctx, floor_params, live_client);
 }
 
 void MapDrawer::DrawLight() {

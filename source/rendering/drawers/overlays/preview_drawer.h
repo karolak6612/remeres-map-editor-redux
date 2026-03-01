@@ -1,8 +1,8 @@
 #ifndef RME_PREVIEW_DRAWER_H_
 #define RME_PREVIEW_DRAWER_H_
 
-#include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/floor_view_params.h"
 #include <cstdint>
 
 class MapCanvas;
@@ -19,7 +19,7 @@ public:
 	PreviewDrawer();
 	~PreviewDrawer();
 
-	void draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const RenderView& view, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
+	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, MapCanvas* canvas, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
 };
 
 #endif

@@ -24,11 +24,10 @@
 #include "live/live_client.h"
 #include "map/map.h"
 #include "map/map_region.h"
-#include "rendering/core/render_view.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/floor_view_params.h"
+#include "rendering/core/view_state.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/light_buffer.h"
-#include "rendering/core/sprite_batch.h"
-#include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
@@ -40,11 +39,12 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	int nd_start_x = view.start_x & ~3;
-	int nd_start_y = view.start_y & ~3;
-	int nd_end_x = (view.end_x & ~3) + 4;
-	int nd_end_y = (view.end_y & ~3) + 4;
+void MapLayerDrawer::Draw(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client) {
+	int map_z = floor_params.current_z;
+	int nd_start_x = floor_params.start_x & ~3;
+	int nd_start_y = floor_params.start_y & ~3;
+	int nd_end_x = (floor_params.end_x & ~3) + 4;
+	int nd_end_y = (floor_params.end_y & ~3) + 4;
 
 	// Optimization: Pre-calculate offset and base coordinates
 	// IsTileVisible does this for every tile, but it's constant per layer/frame.
@@ -52,12 +52,12 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	// which is well within IsTileVisible's 6-tile margin.
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TILE_SIZE
-		: TILE_SIZE * (view.floor - map_z);
+		: TILE_SIZE * (ctx.view.floor - map_z);
 
-	int base_screen_x = -view.view_scroll_x - offset;
-	int base_screen_y = -view.view_scroll_y - offset;
+	int base_screen_x = -ctx.view.view_scroll_x - offset;
+	int base_screen_y = -ctx.view.view_scroll_y - offset;
 
-	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
+	bool draw_lights = ctx.options.isDrawLight() && ctx.view.zoom <= 10.0;
 
 	// Common lambda to draw a node
 	auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
@@ -65,7 +65,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		int node_draw_y = nd_map_y * TILE_SIZE + base_screen_y;
 
 		// Node level culling
-		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+		if (!ctx.view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 			return;
 		}
 
@@ -77,11 +77,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 				}
 				nd->setRequested(map_z > GROUND_LAYER, true);
 			}
-			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
+			grid_drawer->DrawNodeLoadingPlaceholder(ctx, nd_map_x, nd_map_y);
 			return;
 		}
 
-		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
+		bool fully_inside = ctx.view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
 
 		Floor* floor = nd->getFloor(map_z);
 		if (!floor) {
@@ -94,11 +94,11 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			int draw_y = node_draw_y;
 			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
 				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+				if (!fully_inside && !ctx.view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
 					continue;
 				}
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y, draw_lights ? &light_buffer : nullptr);
+				tile_renderer->DrawTile(ctx, location, ctx.options.current_house_id, draw_x_base, draw_y, draw_lights);
 			}
 		}
 	};

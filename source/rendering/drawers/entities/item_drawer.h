@@ -17,8 +17,7 @@ class ItemType;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
-struct DrawingOptions;
-class SpriteBatch;
+#include "rendering/core/draw_context.h"
 struct SpritePatterns;
 
 struct BlitItemParams {
@@ -43,9 +42,9 @@ public:
 	ItemDrawer();
 	~ItemDrawer();
 
-	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
+	void BlitItem(const DrawContext& ctx, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
 
-	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
+	void DrawRawBrush(const DrawContext& ctx, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
 	void DrawHookIndicator(const ItemType& type, const Position& pos);
 	void DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east);
 

@@ -5,7 +5,8 @@
 #include <string>
 #include <vector>
 
-struct RenderView;
+#include "rendering/core/draw_context.h"
+
 struct NVGcontext;
 class Creature;
 
@@ -24,7 +25,7 @@ public:
 
 	void clear();
 	void addLabel(const Position& pos, const std::string& name, const Creature* c);
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(NVGcontext* vg, const DrawContext& ctx);
 
 private:
 	std::vector<CreatureLabel> labels;

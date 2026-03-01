@@ -1,0 +1,7 @@
+---
+# This enables standard diagnostics, static analysis, bug-catching, 
+# modern C++ suggestions, performance tweaks, and readability rules.
+Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cppcoreguidelines-*,modernize-*,performance-*,readability-*,-cppcoreguidelines-owning-memory,-readability-magic-numbers'
+WarningsAsErrors: ''
+HeaderFilterRegex: '.*'
+...

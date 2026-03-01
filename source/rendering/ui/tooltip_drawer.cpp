@@ -552,7 +552,7 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 	}
 }
 
-void TooltipDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void TooltipDrawer::draw(NVGcontext* vg, const ViewState& view) {
 	if (!vg) {
 		return;
 	}

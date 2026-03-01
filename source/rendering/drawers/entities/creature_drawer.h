@@ -12,7 +12,7 @@
 // Forward declarations
 
 class SpriteDrawer;
-class SpriteBatch;
+#include "rendering/core/draw_context.h"
 
 #include <optional>
 #include "map/position.h"
@@ -30,8 +30,8 @@ public:
 	CreatureDrawer();
 	~CreatureDrawer();
 
-	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
-	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
+	void BlitCreature(const DrawContext& ctx, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
+	void BlitCreature(const DrawContext& ctx, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
 };
 
 #endif

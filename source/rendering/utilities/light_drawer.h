@@ -30,7 +30,7 @@
 #include "rendering/core/gl_resources.h"
 
 struct DrawingOptions;
-struct RenderView;
+struct ViewState;
 class TileLocation;
 
 struct GPULight {
@@ -44,7 +44,7 @@ class LightDrawer {
 public:
 	LightDrawer();
 	~LightDrawer();
-	void draw(const RenderView& view, bool fog, const LightBuffer& light_buffer, const wxColor& global_color, float light_intensity = 1.0f, float ambient_light_level = 0.5f);
+	void draw(const ViewState& view, bool fog, const LightBuffer& light_buffer, const wxColor& global_color, float light_intensity = 1.0f, float ambient_light_level = 0.5f);
 
 private:
 	// wxColor global_color; // Removed state

@@ -162,7 +162,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/pixel_buffer_object.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/primitive_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_timer.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_view.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/view_state.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/gl_viewport.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/floor_view_params.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/ring_buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/shader_program.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/shared_geometry.h
@@ -494,7 +497,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/pixel_buffer_object.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/primitive_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_timer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_view.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/view_state.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/gl_viewport.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/ring_buffer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/shader_program.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/shared_geometry.cpp

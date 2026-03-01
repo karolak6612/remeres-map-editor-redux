@@ -1,6 +1,7 @@
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include <nanovg.h>
-#include "rendering/core/render_view.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/view_state.h"
 #include "app/definitions.h"
 #include "util/image_manager.h"
 #include "rendering/utilities/icon_renderer.h"
@@ -19,7 +20,7 @@ void HookIndicatorDrawer::clear() {
 	requests.clear();
 }
 
-void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void HookIndicatorDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	if (requests.empty() || !vg) {
 		return;
 	}
@@ -29,22 +30,22 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 	// Style
 	const NVGcolor tintColor = nvgRGBA(204, 255, 0, 255); // Fluorescent Yellow-Green (#ccff00)
 
-	const float zoomFactor = 1.0f / view.zoom;
+	const float zoomFactor = 1.0f / ctx.view.zoom;
 	const float iconSize = 24.0f * zoomFactor;
 	const float outlineOffset = 1.0f * zoomFactor;
 
 	for (const auto& request : requests) {
 		// Only render hooks on the current floor
-		if (request.pos.z != view.floor) {
+		if (request.pos.z != ctx.view.floor) {
 			continue;
 		}
 
 		int unscaled_x, unscaled_y;
-		if (!view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
+		if (!ctx.view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
 			continue;
 		}
 
-		const float zoom = view.zoom;
+		const float zoom = ctx.view.zoom;
 		const float x = unscaled_x / zoom;
 		const float y = unscaled_y / zoom;
 		const float TILE_SIZE = 32.0f / zoom;
@@ -62,4 +63,3 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 
 	nvgRestore(vg);
 }
-

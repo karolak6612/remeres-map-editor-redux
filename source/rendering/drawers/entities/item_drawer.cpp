@@ -39,7 +39,7 @@ ItemDrawer::ItemDrawer() {
 ItemDrawer::~ItemDrawer() {
 }
 
-void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params) {
+void ItemDrawer::BlitItem(const DrawContext& ctx, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params) {
 	const Position& pos = params.pos;
 	Item* item = params.item;
 	const Tile* tile = params.tile;
@@ -83,14 +83,14 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	if (!options.ingame && options.show_tech_items) {
 		// Red invalid client id
 		if (it.id == 0) {
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
+			sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
 			return;
 		}
 
 		switch (it.clientID) {
 			// Yellow invisible stairs tile (459)
 			case 469:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
+				sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
 				return;
 
 			// Red invisible walkable tile (460)
@@ -98,12 +98,12 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			case 17970:
 			case 20028:
 			case 34168:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
+				sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
 				return;
 
 			// Cyan invisible wall (1548)
 			case 2187:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(0, green, blue, 80));
+				sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(0, green, blue, 80));
 				return;
 
 			default:
@@ -185,7 +185,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				}
 			}
 #endif
-			sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
+			sprite_drawer->glBlitAtlasQuad(ctx, screenx, screeny, region, DrawColor(red, green, blue, alpha));
 		}
 	} else {
 		for (int cx = 0; cx != spr->width; cx++) {
@@ -193,7 +193,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				for (int cf = 0; cf != spr->layers; cf++) {
 					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
+						sprite_drawer->glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
 					}
 				}
 			}
@@ -220,7 +220,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			outfit.lookMount = 0;
 		}
 
-		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
+		creature_drawer->BlitCreature(ctx, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
 	}
 
 	// draw wall hook
@@ -245,13 +245,13 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			// SpriteDrawer::glBlitSquare internally uses BatchRenderer::DrawQuad which sets blank texture if needed.
 			// So we don't need manual enable/disable here anymore.
 
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize);
+			sprite_drawer->glBlitSquare(ctx, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
+			sprite_drawer->glBlitSquare(ctx, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize);
 		}
 	}
 }
 
-void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
+void ItemDrawer::DrawRawBrush(const DrawContext& ctx, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
 	GameSprite* spr = itemType->sprite;
 	uint16_t cid = itemType->clientID;
 
@@ -289,7 +289,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 		alpha = (alpha * 171) >> 8;
 	}
 
-	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, DrawColor(r, g, b, alpha));
+	sprite_drawer->BlitSprite(ctx, screenx, screeny, spr, DrawColor(r, g, b, alpha));
 }
 
 void ItemDrawer::DrawHookIndicator(const ItemType& type, const Position& pos) {

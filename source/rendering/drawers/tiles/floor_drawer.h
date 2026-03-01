@@ -5,24 +5,20 @@
 #ifndef RME_RENDERING_FLOOR_DRAWER_H_
 #define RME_RENDERING_FLOOR_DRAWER_H_
 
-class MapDrawer;
-struct RenderView;
-struct DrawingOptions;
-class Editor;
+#include "rendering/core/draw_context.h"
+#include "rendering/core/floor_view_params.h"
 
+class Editor;
 class ItemDrawer;
 class SpriteDrawer;
-
 class CreatureDrawer;
-class SpriteBatch;
-class PrimitiveRenderer;
 
 class FloorDrawer {
 public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Editor& editor);
 };
 
 #endif

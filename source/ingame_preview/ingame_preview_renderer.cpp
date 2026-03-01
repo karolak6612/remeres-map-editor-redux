@@ -73,8 +73,8 @@ namespace IngamePreview {
 
 		UpdateOpacity(dt, first_visible, last_visible);
 
-		// Setup RenderView and DrawingOptions
-		RenderView view;
+		// Setup ViewState and DrawingOptions
+		ViewState view;
 		view.zoom = zoom;
 		view.tile_size = TILE_SIZE;
 		view.floor = camera_pos.z;
@@ -122,6 +122,14 @@ namespace IngamePreview {
 		}
 		auto* atlas = g_gui.gfx.getAtlasManager();
 
+		DrawContext ctx {
+			*sprite_batch,
+			*primitive_renderer,
+			view,
+			options,
+			*light_buffer
+		};
+
 		// Render floors from bottom to top
 		for (int z = last_visible; z >= 0; z--) {
 			float alpha = floor_opacity[z];
@@ -158,21 +166,21 @@ namespace IngamePreview {
 				TILE_SIZE * MAP_MAX_LAYER // Maximum possible floor offset
 			);
 
-			view.start_x = static_cast<int>(std::floor((view.view_scroll_x - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
-			view.start_y = static_cast<int>(std::floor((view.view_scroll_y - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
-			view.end_x = static_cast<int>(std::ceil((view.view_scroll_x + viewport_width * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
-			view.end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
+			int start_x = static_cast<int>(std::floor((view.view_scroll_x - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
+			int start_y = static_cast<int>(std::floor((view.view_scroll_y - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
+			int end_x = static_cast<int>(std::ceil((view.view_scroll_x + viewport_width * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
+			int end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
 
 			int base_draw_x = -view.view_scroll_x - floor_offset;
 			int base_draw_y = -view.view_scroll_y - floor_offset;
 
-			for (int x = view.start_x; x <= view.end_x; ++x) {
-				for (int y = view.start_y; y <= view.end_y; ++y) {
+			for (int x = start_x; x <= end_x; ++x) {
+				for (int y = start_y; y <= end_y; ++y) {
 					const Tile* tile = map.getTile(x, y, z);
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y, lighting_enabled ? light_buffer.get() : nullptr);
+						tile_renderer->DrawTile(ctx, tile->location, 0, draw_x, draw_y, lighting_enabled);
 
 						// Add names of creatures on this floor
 						if (creature_name_drawer && z == camera_pos.z) {
@@ -218,7 +226,7 @@ namespace IngamePreview {
 			// while the map moves smoothly under it.
 			// So we DO NOT add offset_x/y to draw_x/y again.
 
-			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .animationPhase = animation_phase });
+			creature_drawer->BlitCreature(ctx, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .animationPhase = animation_phase });
 
 			sprite_batch->end(*atlas);
 		}
@@ -235,7 +243,7 @@ namespace IngamePreview {
 			TextRenderer::BeginFrame(vg, viewport_width, viewport_height, 1.0f); // Ingame preview doesn't use scale factor yet
 
 			// 1. Draw creatures on map
-			creature_name_drawer->draw(vg, view);
+			creature_name_drawer->draw(vg, ctx);
 
 			// 2. Draw our own label at precise center
 			if (vg) {

@@ -11,8 +11,9 @@
 #include "brushes/waypoint/waypoint_brush.h"
 #include "game/complexitem.h"
 
+#include "rendering/core/draw_context.h"
+#include "rendering/core/view_state.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/render_view.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
 #include "app/definitions.h"
 #include "game/sprites.h"
@@ -152,7 +153,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
+void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights) {
 	if (!location) {
 		return;
 	}
@@ -162,7 +163,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		return;
 	}
 
-	if (options.show_only_modified && !tile->isModified()) {
+	if (ctx.options.show_only_modified && !tile->isModified()) {
 		return;
 	}
 
@@ -176,7 +177,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		draw_y = in_draw_y;
 	} else {
 		// Early viewport culling - skip tiles that are completely off-screen
-		if (!view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
+		if (!ctx.view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
 			return;
 		}
 	}
@@ -184,9 +185,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	const auto& position = location->getPosition();
 
 	// Light Processing (Ground)
-	if (light_buffer && tile->hasLight()) {
+	if (draw_lights && tile->hasLight()) {
 		if (tile->ground && tile->ground->hasLight()) {
-			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+			ctx.light_buffer.AddLight(position.x, position.y, position.z, tile->ground->getLight());
 		}
 	}
 
@@ -196,18 +197,18 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	// Waypoint tooltip (one per waypoint)
-	if (options.show_tooltips && waypoint && map_z == view.floor) {
+	if (ctx.options.show_tooltips && waypoint && map_z == ctx.view.floor) {
 		tooltip_drawer->addWaypointTooltip(position, waypoint->name);
 	}
 
-	bool as_minimap = options.show_as_minimap;
-	bool only_colors = as_minimap || options.show_only_colors;
+	bool as_minimap = ctx.options.show_as_minimap;
+	bool only_colors = as_minimap || ctx.options.show_only_colors;
 
 	uint8_t r = 255, g = 255, b = 255;
 
 	// begin filters for ground tile
 	if (!as_minimap) {
-		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
+		TileColorCalculator::Calculate(tile, ctx.options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
 	const ItemType* ground_it = nullptr;
@@ -218,9 +219,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	if (only_colors) {
 		if (as_minimap) {
 			TileColorCalculator::GetMinimapColor(tile, r, g, b);
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 255));
+			sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(r, g, b, 255));
 		} else if (r != 255 || g != 255 || b != 255) {
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
+			sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
 		if (tile->ground && ground_it) {
@@ -232,18 +233,18 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					rme::collectTileSprites(ground_it->sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
 				}
 
-				BlitItemParams params(position, tile->ground.get(), options);
+				BlitItemParams params(position, tile->ground.get(), ctx.options);
 				params.tile = tile;
 				params.item_type = ground_it;
 				params.red = r;
 				params.green = g;
 				params.blue = b;
 				params.patterns = &patterns;
-				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+				item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 			}
-		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
+		} else if (ctx.options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			ItemType* zoneItem = &g_items[SPRITE_ZONE];
-			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
+			item_drawer->DrawRawBrush(ctx, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
 		}
 	}
 
@@ -251,9 +252,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	const bool is_house_tile = tile->isHouseTile();
 
 	// Ground tooltip (one per item)
-	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
+	if (ctx.options.show_tooltips && map_z == ctx.view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, position, is_house_tile, view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, position, is_house_tile, ctx.view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -264,47 +265,45 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
-	if (options.show_houses && is_house_tile && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
+	if (ctx.options.show_houses && is_house_tile && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == ctx.view.floor) {
 
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
-		float intensity = 0.5f + (0.5f * options.highlight_pulse);
+		float intensity = 0.5f + (0.5f * ctx.options.highlight_pulse);
 		// Optimization: Use integer math for border color to avoid vec4 construction and casting
 		int ba = static_cast<int>(intensity * 255.0f);
 		// hr, hg, hb are already uint8_t
-		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
+		sprite_drawer->glDrawBox(ctx, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
 	}
 
 	if (!only_colors) {
-		if (view.zoom < 10.0 || !options.hide_items_when_zoomed) {
+		if (ctx.view.zoom < 10.0 || !ctx.options.hide_items_when_zoomed) {
 			// Hoist house color calculation out of item loop
 			uint8_t house_r = 255, house_g = 255, house_b = 255;
-			bool calculate_house_color = options.extended_house_shader && options.show_houses && is_house_tile;
-			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (options.highlight_pulse > 0.0f);
+			bool calculate_house_color = ctx.options.extended_house_shader && ctx.options.show_houses && is_house_tile;
+			bool should_pulse = calculate_house_color && (static_cast<int>(tile->getHouseID()) == current_house_id) && (ctx.options.highlight_pulse > 0.0f);
 			float boost = 0.0f;
 
 			if (calculate_house_color) {
 				TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g, house_b);
 				if (should_pulse) {
-					boost = options.highlight_pulse * 0.6f;
+					boost = ctx.options.highlight_pulse * 0.6f;
 				}
 			}
 
-			bool process_tooltips = options.show_tooltips && map_z == view.floor;
+			bool process_tooltips = ctx.options.show_tooltips && map_z == ctx.view.floor;
 
-			// items on tile
 			for (const auto& item : tile->items) {
-				if (light_buffer && item->hasLight()) {
-					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				if (draw_lights && item->hasLight()) {
+					ctx.light_buffer.AddLight(position.x, position.y, position.z, item->getLight());
 				}
 
 				const ItemType& it = item->getType();
 
-				// item tooltip (one per item)
 				if (process_tooltips) {
 					TooltipData& itemData = tooltip_drawer->requestTooltipData();
-					if (FillItemTooltipData(itemData, item.get(), it, position, is_house_tile, view.zoom)) {
+					if (FillItemTooltipData(itemData, item.get(), it, position, is_house_tile, ctx.view.zoom)) {
 						if (itemData.hasVisibleFields()) {
 							tooltip_drawer->commitTooltip();
 						}
@@ -319,7 +318,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						rme::collectTileSprites(it.sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
 					}
 
-					BlitItemParams params(position, item.get(), options);
+					BlitItemParams params(position, item.get(), ctx.options);
 					params.tile = tile;
 					params.item_type = &it;
 					params.patterns = &patterns;
@@ -329,7 +328,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.red = r;
 						params.green = g;
 						params.blue = b;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
 						uint8_t ir = 255, ig = 255, ib = 255;
 
@@ -349,22 +348,22 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.red = ir;
 						params.green = ig;
 						params.blue = ib;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
 				}
 			}
 			// monster/npc on tile
-			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = options.transient_selection_bounds });
+			if (tile->creature && ctx.options.show_creatures) {
+				creature_drawer->BlitCreature(ctx, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = ctx.options.transient_selection_bounds });
 				if (creature_name_drawer) {
 					creature_name_drawer->addLabel(position, tile->creature->getName(), tile->creature.get());
 				}
 			}
 		}
 
-		if (view.zoom < 10.0) {
+		if (ctx.view.zoom < 10.0) {
 			// markers (waypoint, house exit, town temple, spawn)
-			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, options);
+			marker_drawer->draw(ctx, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor);
 		}
 	}
 }
