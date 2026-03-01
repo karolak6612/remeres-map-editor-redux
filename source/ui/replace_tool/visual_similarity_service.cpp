@@ -220,7 +220,7 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 
 void VisualSimilarityService::OnTimer(wxTimerEvent&) {
 	int processed = 0;
-	int maxId = g_items.getMaxID();
+	uint32_t maxId = static_cast<uint32_t>(g_items.getMaxID());
 
 	// Process fewer items per tick to prevent UI lag and handle spikes
 	while (processed < 100 && (m_nextIdToIndex <= maxId || !m_retryQueue.empty())) {

@@ -16,6 +16,7 @@ TextureGC::TextureGC() :
 TextureGC::~TextureGC() = default;
 
 void TextureGC::clear() {
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	resident_images.clear();
 	resident_game_sprites.clear();
 	cleanup_list.clear();
@@ -75,6 +76,7 @@ bool TextureGC::containsResidentGameSprite(GameSprite* gs) const {
 constexpr int MIN_CLEAN_THRESHOLD = 100;
 
 void TextureGC::addSpriteToCleanup(uint32_t spr_id) {
+	std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
 	cleanup_list.push_back(spr_id);
 	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD)));
 	if (cleanup_list.size() > clean_threshold) {

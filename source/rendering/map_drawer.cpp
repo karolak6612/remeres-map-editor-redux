@@ -345,7 +345,8 @@ void MapDrawer::Release() {
 }
 
 void MapDrawer::Draw() {
-	g_gui.gc.updateTime();
+	// Redundant update removed: MapCanvas::OnPaint advances timing BEFORE calling drawer->Draw()
+	// g_gui.gc.updateTime();
 
 	light_buffer.Clear();
 	creature_name_drawer->clear();

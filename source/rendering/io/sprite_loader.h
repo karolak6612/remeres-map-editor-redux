@@ -28,37 +28,31 @@ public:
 	bool loadSpriteData(SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
 	bool loadSpriteDump(std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
 
-	wxFileName getMetadataFileName() const {
-		return client_version ? client_version->getMetadataPath() : wxFileName();
-	}
-	wxFileName getSpritesFileName() const {
-		return client_version ? client_version->getSpritesPath() : wxFileName();
-	}
+	bool hasFrameDurations() const { std::lock_guard<std::mutex> lock(mutex_); return has_frame_durations; }
+	bool hasFrameGroups() const { std::lock_guard<std::mutex> lock(mutex_); return has_frame_groups; }
 
-	bool hasTransparency() const { return has_transparency; }
-	bool isUnloaded() const { return unloaded.load(); }
-	const std::string& getSpriteFile() const { return spritefile; }
-	bool isExtended() const { return is_extended; }
+	bool hasTransparency() const { std::lock_guard<std::mutex> lock(mutex_); return has_transparency; }
+	bool isUnloaded() const { std::lock_guard<std::mutex> lock(mutex_); return unloaded; }
+	std::string getSpriteFile() const { std::lock_guard<std::mutex> lock(mutex_); return spritefile; }
+	bool isExtended() const { std::lock_guard<std::mutex> lock(mutex_); return is_extended; }
 
-	DatFormat getDatFormat() const { return dat_format; }
-	const ClientVersion* getClientVersion() const { return client_version; }
+	DatFormat getDatFormat() const { std::lock_guard<std::mutex> lock(mutex_); return dat_format; }
+	const ClientVersion* getClientVersion() const { std::lock_guard<std::mutex> lock(mutex_); return client_version; }
 
-	void setClientVersion(const ClientVersion* version) { client_version = version; }
-	void setDatFormat(DatFormat format) { dat_format = format; }
-	void setIsExtended(bool extended) { is_extended = extended; }
-	void setHasTransparency(bool trans) { has_transparency = trans; }
-	void setHasFrameDurations(bool framedurs) { has_frame_durations = framedurs; }
-	void setHasFrameGroups(bool framegrps) { has_frame_groups = framegrps; }
-	void setSpriteFile(const std::string& file) { spritefile = file; }
-	void setUnloaded(bool st) { unloaded.store(st); }
-	
-	bool hasFrameDurations() const { return has_frame_durations; }
-	bool hasFrameGroups() const { return has_frame_groups; }
+	void setClientVersion(const ClientVersion* version) { std::lock_guard<std::mutex> lock(mutex_); client_version = version; }
+	void setDatFormat(DatFormat format) { std::lock_guard<std::mutex> lock(mutex_); dat_format = format; }
+	void setIsExtended(bool extended) { std::lock_guard<std::mutex> lock(mutex_); is_extended = extended; }
+	void setHasTransparency(bool trans) { std::lock_guard<std::mutex> lock(mutex_); has_transparency = trans; }
+	void setHasFrameDurations(bool framedurs) { std::lock_guard<std::mutex> lock(mutex_); has_frame_durations = framedurs; }
+	void setHasFrameGroups(bool framegrps) { std::lock_guard<std::mutex> lock(mutex_); has_frame_groups = framegrps; }
+	void setSpriteFile(const std::string& file) { std::lock_guard<std::mutex> lock(mutex_); spritefile = file; }
+	void setUnloaded(bool st) { std::lock_guard<std::mutex> lock(mutex_); unloaded = st; }
 
 private:
+	mutable std::mutex mutex_;
 	const ClientVersion* client_version = nullptr;
 	std::string spritefile;
-	std::atomic<bool> unloaded{true};
+	bool unloaded = true;
 
 	DatFormat dat_format = DAT_FORMAT_UNKNOWN;
 	bool is_extended = false;

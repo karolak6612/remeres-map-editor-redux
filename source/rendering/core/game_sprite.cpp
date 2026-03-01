@@ -301,7 +301,9 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size) {
 			bm[size] = std::make_unique<wxBitmap>(bmp);
 			dc[size] = std::make_unique<wxMemoryDC>(*bm[size]);
 		}
-		g_gui.gc.addSpriteToCleanup(id);
+		if (id != 0) {
+			g_gui.gc.addSpriteToCleanup(id);
+		}
 	}
 	return dc[size].get();
 }
@@ -329,7 +331,9 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size, const Outfit& outfit) {
 			cache->dc = std::make_unique<wxMemoryDC>(*cache->bm);
 
 			auto res = colored_dc.insert(std::make_pair(key, std::move(cache)));
-			g_gui.gc.addSpriteToCleanup(id);
+			if (id != 0) {
+				g_gui.gc.addSpriteToCleanup(id);
+			}
 			return res.first->second->dc.get();
 		}
 		return nullptr;

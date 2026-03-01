@@ -4,6 +4,7 @@
 #include "rendering/io/game_sprite_loader.h"
 
 void SpriteLoader::clear() {
+	std::lock_guard<std::mutex> lock(mutex_);
 	client_version = nullptr;
 	spritefile = "";
 	unloaded = true;
