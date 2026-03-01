@@ -221,7 +221,8 @@ public:
 
 		BinaryNode* current;
 
-		Iterator(BinaryNode* node) : current(node) { }
+		Iterator(BinaryNode* node) :
+			current(node) { }
 
 		BinaryNode* operator*() const {
 			return current;

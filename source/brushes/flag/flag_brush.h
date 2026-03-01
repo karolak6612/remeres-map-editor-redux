@@ -12,7 +12,6 @@ public:
 	explicit FlagBrush(uint32_t flag);
 	~FlagBrush() override = default;
 
-
 	bool canDraw(BaseMap* map, const Position& position) const override;
 	void draw(BaseMap* map, Tile* tile, void* parameter) override;
 	void undraw(BaseMap* map, Tile* tile) override;

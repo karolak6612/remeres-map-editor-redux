@@ -17,7 +17,8 @@
 #include <span>
 #include <ranges>
 
-ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas) {
+ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) :
+	m_canvas(canvas) {
 	if (m_canvas) {
 		m_canvas->MakeContextCurrent();
 	}

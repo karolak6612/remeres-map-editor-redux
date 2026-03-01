@@ -23,7 +23,8 @@
 class Waypoint {
 public:
 	Waypoint() = default;
-	Waypoint(std::string name, Position pos) : name(std::move(name)), pos(pos) { }
+	Waypoint(std::string name, Position pos) :
+		name(std::move(name)), pos(pos) { }
 
 	std::string name;
 	Position pos;

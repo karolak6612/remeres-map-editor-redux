@@ -85,4 +85,3 @@ void BrushCursorDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primi
 		);
 	}
 }
-

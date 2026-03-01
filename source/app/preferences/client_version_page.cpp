@@ -12,7 +12,8 @@ namespace {
 	constexpr char kDefaultDataDirectory[] = "1287";
 }
 
-ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent) {
+ClientVersionPage::ClientVersionPage(wxWindow* parent) :
+	PreferencesPage(parent) {
 	wxSizer* main_sizer = newd wxBoxSizer(wxVERTICAL);
 
 	// Splitter for Tree and Property Grid

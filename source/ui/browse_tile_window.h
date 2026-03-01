@@ -40,7 +40,6 @@ protected:
 	wxStaticText* item_count_txt;
 	wxButton* delete_button;
 	wxButton* select_raw_button;
-
 };
 
 #endif

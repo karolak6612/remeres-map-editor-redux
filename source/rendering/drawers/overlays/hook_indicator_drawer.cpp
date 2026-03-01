@@ -62,4 +62,3 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
 
 	nvgRestore(vg);
 }
-

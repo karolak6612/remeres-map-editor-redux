@@ -18,7 +18,6 @@ public:
 	DoodadBrush();
 	~DoodadBrush() override;
 
-
 public:
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override;
 

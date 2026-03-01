@@ -4,7 +4,8 @@
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 
-EditorPage::EditorPage(wxWindow* parent) : PreferencesPage(parent) {
+EditorPage::EditorPage(wxWindow* parent) :
+	PreferencesPage(parent) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 
 	group_actions_chkbox = newd wxCheckBox(this, wxID_ANY, "Group same-type actions");

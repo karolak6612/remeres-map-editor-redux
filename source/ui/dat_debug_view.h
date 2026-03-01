@@ -31,7 +31,6 @@ public:
 protected:
 	DatDebugViewListBox* item_list;
 	wxTextCtrl* search_field;
-
 };
 
 #endif

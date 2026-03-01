@@ -113,7 +113,7 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 
 		static const auto group_handlers = [] {
 			std::array<void (*)(ItemType&, OtbFileFormatVersion), ITEM_GROUP_LAST + 1> h {};
-			h.fill([](ItemType&, OtbFileFormatVersion) { });
+			h.fill([](ItemType&, OtbFileFormatVersion) {});
 			h[ITEM_GROUP_DOOR] = [](ItemType& i, [[maybe_unused]] OtbFileFormatVersion v) { i.type = ITEM_TYPE_DOOR; };
 			h[ITEM_GROUP_CONTAINER] = [](ItemType& i, [[maybe_unused]] OtbFileFormatVersion v) { i.type = ITEM_TYPE_CONTAINER; };
 			h[ITEM_GROUP_RUNE] = [](ItemType& i, [[maybe_unused]] OtbFileFormatVersion v) { i.client_chargeable = true; };

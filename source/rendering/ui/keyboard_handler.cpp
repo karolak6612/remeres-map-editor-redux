@@ -222,4 +222,3 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 		}
 	}
 }
-

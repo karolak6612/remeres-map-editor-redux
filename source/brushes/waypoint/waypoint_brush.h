@@ -30,7 +30,6 @@ public:
 	WaypointBrush();
 	~WaypointBrush() override;
 
-
 	// Not used
 	bool load(pugi::xml_node node, std::vector<std::string>& warnings) override {
 		return true;

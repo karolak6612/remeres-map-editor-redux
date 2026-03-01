@@ -33,7 +33,8 @@ static const int GHOST_SLOT_WIDTH = CARD_W;
 // ItemDropTarget
 // ----------------------------------------------------------------------------
 
-RuleBuilderPanel::ItemDropTarget::ItemDropTarget(RuleBuilderPanel* panel) : m_panel(panel) { }
+RuleBuilderPanel::ItemDropTarget::ItemDropTarget(RuleBuilderPanel* panel) :
+	m_panel(panel) { }
 
 bool RuleBuilderPanel::ItemDropTarget::OnDropText(wxCoord x, wxCoord y, const wxString& data) {
 	m_panel->m_isExternalDrag = false;

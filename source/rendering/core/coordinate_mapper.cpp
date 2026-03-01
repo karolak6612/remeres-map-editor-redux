@@ -26,4 +26,3 @@ void CoordinateMapper::ScreenToMap(int screen_x, int screen_y, int view_start_x,
 		*map_y += GROUND_LAYER - floor;
 	}
 }
-

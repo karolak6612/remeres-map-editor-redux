@@ -28,7 +28,6 @@ public:
 	RAWBrush(uint16_t itemid); // Create a RAWBrush of the specified type
 	~RAWBrush() override;
 
-
 	bool canDraw(BaseMap* map, const Position& position) const override {
 		return true;
 	}

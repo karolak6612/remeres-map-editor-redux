@@ -29,7 +29,8 @@ private:
 
 	struct TreeItemData : public wxTreeItemData {
 		ClientVersion* cv;
-		TreeItemData(ClientVersion* v) : cv(v) { }
+		TreeItemData(ClientVersion* v) :
+			cv(v) { }
 	};
 
 	void PopulateClientTree();

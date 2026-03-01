@@ -4,7 +4,8 @@
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 
-GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
+GeneralPage::GeneralPage(wxWindow* parent) :
+	PreferencesPage(parent) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 	wxStaticText* tmptext;
 

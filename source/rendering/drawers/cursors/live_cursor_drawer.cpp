@@ -56,4 +56,3 @@ void LiveCursorDrawer::draw(SpriteBatch& sprite_batch, const RenderView& view, E
 		}
 	}
 }
-
