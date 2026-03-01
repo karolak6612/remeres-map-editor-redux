@@ -1,7 +1,193 @@
 ---
-# This enables standard diagnostics, static analysis, bug-catching, 
-# modern C++ suggestions, performance tweaks, and readability rules.
-Checks: 'clang-diagnostic-*,clang-analyzer-*,bugprone-*,cppcoreguidelines-*,modernize-*,performance-*,readability-*,-cppcoreguidelines-owning-memory,-readability-magic-numbers'
-WarningsAsErrors: ''
+Checks: >
+  clang-diagnostic-*,
+  clang-analyzer-*,
+  bugprone-*,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-exception-escape,
+  cppcoreguidelines-*,
+  -cppcoreguidelines-avoid-c-arrays,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-do-while,
+  -cppcoreguidelines-owning-memory,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-static-cast-downcast,
+  -cppcoreguidelines-pro-type-union-access,
+  -cppcoreguidelines-pro-type-vararg,
+  -cppcoreguidelines-special-member-functions,
+  -cppcoreguidelines-use-default-member-init,
+  -cppcoreguidelines-no-malloc,
+  -cppcoreguidelines-no-suspend-with-lock,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -cppcoreguidelines-rvalue-reference-param-not-moved,
+  -cppcoreguidelines-explicit-virtual-functions,
+  -cppcoreguidelines-missing-std-forward,
+  -cppcoreguidelines-macro-to-enum,
+  -cppcoreguidelines-avoid-const-or-ref-data-members,
+  -cppcoreguidelines-avoid-reference-coroutine-parameters,
+  concurrency-*,
+  -concurrency-mt-unsafe,
+  modernize-*,
+  -modernize-avoid-c-arrays,
+  -modernize-use-auto,
+  -modernize-use-default-member-init,
+  -modernize-use-trailing-return-type,
+  -modernize-use-equals-default,
+  -modernize-use-equals-delete,
+  -modernize-use-nodiscard,
+  -modernize-use-std-numbers,
+  -modernize-use-std-format,
+  -modernize-use-constraints,
+  -modernize-type-traits,
+  -modernize-macro-to-enum,
+  performance-*,
+  -performance-no-int-to-ptr,
+  portability-*,
+  readability-*,
+  -readability-avoid-nested-conditional-operator,
+  -readability-braces-around-statements,
+  -readability-convert-member-functions-to-static,
+  -readability-function-cognitive-complexity,
+  -readability-function-size,
+  -readability-identifier-length,
+  -readability-magic-numbers,
+  -readability-named-parameter,
+  -readability-simplify-boolean-expr,
+  -readability-static-accessed-through-instance,
+  -readability-static-definition-in-anonymous-namespace,
+  -readability-uppercase-literal-suffix,
+  -readability-use-anyofallof,
+  -readability-duplicate-include,
+  -readability-redundant-member-init,
+  -readability-redundant-inline-specifier,
+  -readability-qualified-auto,
+  -readability-implicit-bool-conversion,
+  -readability-else-after-return,
+  -readability-container-contains
+
+# Treat warnings as errors (optional - uncomment to enable)
+# WarningsAsErrors: ''
+
 HeaderFilterRegex: '.*'
-...
+ExcludeHeaderFilterRegex: '.*(vcpkg_installed|_deps|vendor|external|third_party|ext|nanovg|stb).*'
+
+CheckOptions:
+  # Naming conventions
+  - key:   readability-identifier-naming.ClassCase
+    value: CamelCase
+  - key:   readability-identifier-naming.ClassMemberCase
+    value: lower_case
+  - key:   readability-identifier-naming.ClassMemberPrefix
+    value: 'm_'
+  - key:   readability-identifier-naming.ConstexprVariableCase
+    value: CamelCase
+  - key:   readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key:   readability-identifier-naming.EnumConstantCase
+    value: UPPER_CASE
+  - key:   readability-identifier-naming.FunctionCase
+    value: camelBack
+  - key:   readability-identifier-naming.GlobalConstantCase
+    value: CamelCase
+  - key:   readability-identifier-naming.GlobalVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key:   readability-identifier-naming.MemberCase
+    value: lower_case
+  - key:   readability-identifier-naming.MemberPrefix
+    value: 'm_'
+  - key:   readability-identifier-naming.NamespaceCase
+    value: lower_case
+  - key:   readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key:   readability-identifier-naming.PrivateMemberCase
+    value: lower_case
+  - key:   readability-identifier-naming.PrivateMemberPrefix
+    value: 'm_'
+  - key:   readability-identifier-naming.ProtectedMemberCase
+    value: lower_case
+  - key:   readability-identifier-naming.ProtectedMemberPrefix
+    value: 'm_'
+  - key:   readability-identifier-naming.StaticConstantCase
+    value: CamelCase
+  - key:   readability-identifier-naming.StaticVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.StructCase
+    value: CamelCase
+  - key:   readability-identifier-naming.TemplateParameterCase
+    value: CamelCase
+  - key:   readability-identifier-naming.TypeAliasCase
+    value: CamelCase
+  - key:   readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key:   readability-identifier-naming.UnionCase
+    value: CamelCase
+  - key:   readability-identifier-naming.ValueTemplateParameterCase
+    value: CamelCase
+  - key:   readability-identifier-naming.VariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.VirtualMethodCase
+    value: camelBack
+
+  # Function complexity limits
+  - key:   readability-function-cognitive-complexity.Threshold
+    value: '25'
+  - key:   readability-function-size.StatementThreshold
+    value: '800'
+  - key:   readability-function-size.LineThreshold
+    value: '200'
+
+  # Magic numbers
+  - key:   readability-magic-numbers.IgnoredIntegerValues
+    value: '0;1;2;3;4;5;6;7;8;9;10;16;32;64;100;128;256;512;1024'
+  - key:   readability-magic-numbers.IgnorePowersOf2IntegerValues
+    value: '1'
+
+  # Identifier length
+  - key:   readability-identifier-length.IgnoredVariableNames
+    value: 'x|y|z|i|j|k|it|id|os|is|fn'
+  - key:   readability-identifier-length.IgnoredParameterNames
+    value: 'x|y|z|i|j|k|it|id|os|is'
+
+  # Modernize settings
+  - key:   modernize-loop-convert.MaxCopySize
+    value: '16'
+  - key:   modernize-loop-convert.MinConfidence
+    value: reasonable
+  - key:   modernize-loop-convert.NamingStyle
+    value: CamelCase
+  - key:   modernize-pass-by-value.IncludeStyle
+    value: llvm
+  - key:   modernize-replace-auto-ptr.IncludeStyle
+    value: llvm
+  - key:   modernize-use-nullptr.NullMacros
+    value: 'NULL'
+
+  # Performance settings
+  - key:   performance-for-range-copy.WarnOnAllAutoCopies
+    value: '1'
+  - key:   performance-inefficient-string-concatenation.StrictMode
+    value: '0'
+
+  # C++ standard
+  - key:   modernize-use-auto.MinTypeNameLength
+    value: '5'
+
+  # Bugprone settings
+  - key:   bugprone-argument-comment.StrictMode
+    value: '0'
+  - key:   bugprone-dangling-handle.HandleClasses
+    value: 'std::basic_string_view;std::experimental::basic_string_view'
+
+  # Exception checks
+  - key:   bugprone-exception-escape.FunctionsThatShouldNotThrow
+    value: 'WinMain;wWinMain;WinMainCRTStartup;wWinMainCRTStartup'
+
+  # Special member functions
+  - key:   cppcoreguidelines-special-member-functions.AllowSoleDefaultDtor
+    value: '0'
+  - key:   cppcoreguidelines-special-member-functions.AllowMissingMoveFunctions
+    value: '1'
