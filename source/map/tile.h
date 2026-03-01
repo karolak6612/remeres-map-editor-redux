@@ -252,6 +252,7 @@ inline uint32_t Tile::getHouseID() const {
 }
 
 inline void Tile::setMapFlags(uint16_t _flags) {
+	ASSERT((_flags & ~(TILESTATE_PROTECTIONZONE | TILESTATE_DEPRECATED | TILESTATE_NOPVP | TILESTATE_NOLOGOUT | TILESTATE_PVPZONE | TILESTATE_REFRESH)) == 0);
 	mapflags = _flags | mapflags;
 }
 
@@ -264,6 +265,7 @@ inline uint16_t Tile::getMapFlags() const {
 }
 
 inline void Tile::setStatFlags(uint16_t _flags) {
+	ASSERT((_flags & ~(TILESTATE_SELECTED | TILESTATE_UNIQUE | TILESTATE_BLOCKING | TILESTATE_OP_BORDER | TILESTATE_HAS_TABLE | TILESTATE_HAS_CARPET | TILESTATE_MODIFIED | TILESTATE_HOOK_SOUTH | TILESTATE_HOOK_EAST | TILESTATE_HAS_LIGHT)) == 0);
 	statflags = _flags | statflags;
 }
 

@@ -147,8 +147,8 @@ void MapNode::setVisible(bool underground, bool value) {
 void SpatialHashGrid::getCellCoordsFromKey(uint64_t key, int& cx, int& cy) {
 	uint32_t raw_cy = static_cast<uint32_t>(key >> 32) ^ 0x80000000u;
 	uint32_t raw_cx = static_cast<uint32_t>(key) ^ 0x80000000u;
-	cy = static_cast<int32_t>(raw_cy);
-	cx = static_cast<int32_t>(raw_cx);
+	cy = std::bit_cast<int32_t>(raw_cy);
+	cx = std::bit_cast<int32_t>(raw_cx);
 }
 
 std::vector<SpatialHashGrid::SortedGridCell> SpatialHashGrid::getSortedCells() const {
@@ -216,6 +216,9 @@ std::unique_ptr<Tile> MapNode::setTile(int x, int y, int z, std::unique_ptr<Tile
 		newtile->setLocation(tmp);
 	}
 	std::unique_ptr<Tile> oldtile = std::move(tmp->tile);
+	if (oldtile) {
+		oldtile->setLocation(nullptr);
+	}
 	tmp->tile = std::move(newtile);
 
 	if (tmp->tile && !oldtile) {
@@ -234,6 +237,9 @@ void MapNode::clearTile(int x, int y, int z) {
 	int offset_y = y & 3;
 
 	TileLocation* tmp = &f->locs[offset_x * 4 + offset_y];
+	if (tmp->tile) {
+		tmp->tile->setLocation(nullptr);
+	}
 	tmp->tile = map.allocator(tmp);
 }
 
