@@ -89,7 +89,7 @@ void DoodadBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		tile->addItem(randomItem->deepCopy());
 	}
 
-	if (settings.clear_mapflags || settings.clear_statflags) {
+	if (settings.clear_mapflags != MapFlags::None || settings.clear_statflags != StatFlags::None) {
 		tile->setMapFlags(tile->getMapFlags() & (~settings.clear_mapflags));
 		tile->setStatFlags(tile->getStatFlags() & (~settings.clear_statflags));
 	}

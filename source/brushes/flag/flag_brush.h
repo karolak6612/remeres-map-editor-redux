@@ -24,7 +24,7 @@ public:
 	std::string getName() const override;
 
 protected:
-	uint32_t flag;
+	MapFlags flag;
 };
 
 #endif

@@ -97,7 +97,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 			copied_tile->house_id = newtile->house_id;
 			newtile->house_id = 0;
 			copied_tile->setMapFlags(tile->getMapFlags());
-			newtile->setMapFlags(TILESTATE_NONE);
+			newtile->setMapFlags(MapFlags::None);
 		}
 
 		auto tile_selection = TileOperations::popSelectedItems(newtile.get());
