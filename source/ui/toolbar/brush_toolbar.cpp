@@ -37,7 +37,7 @@ BrushToolBar::BrushToolBar(wxWindow* parent) {
 	toolbar = newd wxAuiToolBar(parent, TOOLBAR_BRUSHES, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);
 	toolbar->AddTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, wxEmptyString, border_bitmap, wxNullBitmap, wxITEM_CHECK, "Border (Add borders to ground)", "Add automatic borders to ground tiles", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_ERASER, wxEmptyString, eraser_bitmap, wxNullBitmap, wxITEM_CHECK, "Eraser (Clear tile content)", "Clear content from tiles", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_ERASER, wxEmptyString, eraser_bitmap, wxNullBitmap, wxITEM_CHECK, "Eraser (Clear tile content) (E)", "Clear content from tiles", nullptr);
 	toolbar->AddSeparator();
 	toolbar->AddTool(PALETTE_TERRAIN_PZ_TOOL, wxEmptyString, pz_bitmap, wxNullBitmap, wxITEM_CHECK, "Protected Zone (Non-combat area)", "Mark area as Protected Zone (Non-combat)", nullptr);
 	toolbar->AddTool(PALETTE_TERRAIN_NOPVP_TOOL, wxEmptyString, nopvp_bitmap, wxNullBitmap, wxITEM_CHECK, "No PvP Zone (Non-PvP area)", "Mark area as No PvP Zone", nullptr);
@@ -73,7 +73,7 @@ void BrushToolBar::Update() {
 	};
 
 	updateTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, "Border (Add borders to ground)");
-	updateTool(PALETTE_TERRAIN_ERASER, "Eraser (Clear tile content)");
+	updateTool(PALETTE_TERRAIN_ERASER, "Eraser (Clear tile content) (E)");
 	updateTool(PALETTE_TERRAIN_PZ_TOOL, "Protected Zone (Non-combat area)");
 	updateTool(PALETTE_TERRAIN_NOPVP_TOOL, "No PvP Zone (Non-PvP area)");
 	updateTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, "No Logout Zone (Prevents logout)");
