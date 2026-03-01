@@ -33,7 +33,7 @@ void TemplateImage::clean(time_t time, int longevity) {
 	if (longevity == -1) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
-	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load()) > longevity) {
+	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
 		}

@@ -46,16 +46,16 @@ enum {
 	TILESTATE_PVPZONE = 0x0010,
 	TILESTATE_REFRESH = 0x0020,
 	// Internal
-	TILESTATE_SELECTED = 0x0001,
-	TILESTATE_UNIQUE = 0x0002,
-	TILESTATE_BLOCKING = 0x0004,
-	TILESTATE_OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
-	TILESTATE_HAS_TABLE = 0x0010,
-	TILESTATE_HAS_CARPET = 0x0020,
-	TILESTATE_MODIFIED = 0x0040,
-	TILESTATE_HOOK_SOUTH = 0x0080,
-	TILESTATE_HOOK_EAST = 0x0100,
-	TILESTATE_HAS_LIGHT = 0x0200,
+	TILESTATE_SELECTED = 0x0040,
+	TILESTATE_UNIQUE = 0x0080,
+	TILESTATE_BLOCKING = 0x0100,
+	TILESTATE_OP_BORDER = 0x0200, // If this is true, gravel will be placed on the tile!
+	TILESTATE_HAS_TABLE = 0x0400,
+	TILESTATE_HAS_CARPET = 0x0800,
+	TILESTATE_MODIFIED = 0x1000,
+	TILESTATE_HOOK_SOUTH = 0x2000,
+	TILESTATE_HOOK_EAST = 0x4000,
+	TILESTATE_HAS_LIGHT = 0x8000,
 };
 
 enum : uint8_t {
@@ -65,6 +65,7 @@ enum : uint8_t {
 class Tile {
 public: // Members
 	TileLocation* location;
+	Position position;
 	std::unique_ptr<Item> ground;
 	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
@@ -89,6 +90,7 @@ public:
 	// Stores state that remains between the tile being moved (like house exits)
 	void setLocation(TileLocation* where) {
 		location = where;
+		if (where) position = where->getPosition();
 	}
 	TileLocation* getLocation() {
 		return location;

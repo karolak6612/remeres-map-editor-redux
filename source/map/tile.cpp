@@ -41,6 +41,7 @@
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
+	position(x, y, z),
 	ground(nullptr),
 	house_id(0),
 	mapflags(0),
@@ -51,6 +52,7 @@ Tile::Tile(int x, int y, int z) :
 
 Tile::Tile(TileLocation& loc) :
 	location(&loc),
+	position(loc.getPosition()),
 	ground(nullptr),
 	house_id(0),
 	mapflags(0),
@@ -60,23 +62,23 @@ Tile::Tile(TileLocation& loc) :
 }
 
 Position Tile::getPosition() {
-	return location->getPosition();
+	return position;
 }
 
 const Position Tile::getPosition() const {
-	return location->getPosition();
+	return position;
 }
 
 int Tile::getX() const {
-	return location->getPosition().x;
+	return position.x;
 }
 
 int Tile::getY() const {
-	return location->getPosition().y;
+	return position.y;
 }
 
 int Tile::getZ() const {
-	return location->getPosition().z;
+	return position.z;
 }
 
 HouseExitList* Tile::getHouseExits() {
