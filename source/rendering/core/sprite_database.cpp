@@ -43,5 +43,5 @@ GameSprite* SpriteDatabase::getCreatureSprite(int id) {
 	if (target_id >= sprite_space.size()) {
 		return nullptr;
 	}
-	return static_cast<GameSprite*>(sprite_space[target_id].get());
+	return dynamic_cast<GameSprite*>(sprite_space[target_id].get());
 }

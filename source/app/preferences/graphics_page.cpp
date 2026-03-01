@@ -148,17 +148,17 @@ void GraphicsPage::Apply() {
 
 	if (icon_background_choice->GetSelection() == 0) {
 		if (g_settings.getInteger(Config::ICON_BACKGROUND) != 0) {
-			;
+			g_gui.gc.cleanSoftwareSprites(g_gui.sprites);
 		}
 		g_settings.setInteger(Config::ICON_BACKGROUND, 0);
 	} else if (icon_background_choice->GetSelection() == 1) {
 		if (g_settings.getInteger(Config::ICON_BACKGROUND) != 88) {
-			;
+			g_gui.gc.cleanSoftwareSprites(g_gui.sprites);
 		}
 		g_settings.setInteger(Config::ICON_BACKGROUND, 88);
 	} else if (icon_background_choice->GetSelection() == 2) {
 		if (g_settings.getInteger(Config::ICON_BACKGROUND) != 255) {
-			;
+			g_gui.gc.cleanSoftwareSprites(g_gui.sprites);
 		}
 		g_settings.setInteger(Config::ICON_BACKGROUND, 255);
 	}

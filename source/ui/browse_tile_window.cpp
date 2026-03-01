@@ -23,9 +23,6 @@
 #include "brushes/raw/raw_brush.h"
 #include "map/tile.h"
 #include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 #include <wx/listbox.h>
 #include "ui/browse_tile_window.h"

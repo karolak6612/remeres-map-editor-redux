@@ -4,6 +4,7 @@
 #include <wx/colour.h>
 #include <nanovg.h>
 #include <memory>
+#include <cstdint>
 
 struct NVGcontext;
 struct NVGDeleter {

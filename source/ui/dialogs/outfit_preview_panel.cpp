@@ -1,9 +1,6 @@
 #include "ui/dialogs/outfit_preview_panel.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
 #include <wx/dcbuffer.h>

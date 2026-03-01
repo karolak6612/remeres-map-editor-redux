@@ -92,8 +92,8 @@ void main() {
 }
 )";
 
-MapDrawer::MapDrawer(MapCanvas* canvas) :
-	canvas(canvas), editor(canvas->editor) {
+MapDrawer::MapDrawer(MapCanvas& canvas, Editor& editor) :
+	canvas(canvas), editor(editor) {
 
 	light_drawer = std::make_shared<LightDrawer>();
 	tooltip_drawer = std::make_unique<TooltipDrawer>();
@@ -154,15 +154,15 @@ void MapDrawer::SetupVars() {
 	options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
 
 	// Setup ViewState from canvas
-	view.zoom = static_cast<float>(canvas->GetZoom());
-	view.floor = canvas->GetFloor();
-	canvas->GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
+	view.zoom = static_cast<float>(canvas.GetZoom());
+	view.floor = canvas.GetFloor();
+	canvas.GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
 
 	view.viewport_x = 0;
 	view.viewport_y = 0;
 
-	view.mouse_map_x = canvas->last_cursor_map_x;
-	view.mouse_map_y = canvas->last_cursor_map_y;
+	view.mouse_map_x = canvas.last_cursor_map_x;
+	view.mouse_map_y = canvas.last_cursor_map_y;
 
 	view.tile_size = std::max(1, static_cast<int>(TILE_SIZE / view.zoom));
 	view.camera_pos.z = view.floor;
@@ -353,10 +353,10 @@ void MapDrawer::Draw() {
 
 	if (options.boundbox_selection) {
 		options.transient_selection_bounds = MapBounds {
-			.x1 = std::min(canvas->last_click_map_x, canvas->last_cursor_map_x),
-			.y1 = std::min(canvas->last_click_map_y, canvas->last_cursor_map_y),
-			.x2 = std::max(canvas->last_click_map_x, canvas->last_cursor_map_x),
-			.y2 = std::max(canvas->last_click_map_y, canvas->last_cursor_map_y)
+			.x1 = std::min(canvas.last_click_map_x, canvas.last_cursor_map_x),
+			.y1 = std::min(canvas.last_click_map_y, canvas.last_cursor_map_y),
+			.x2 = std::max(canvas.last_click_map_x, canvas.last_cursor_map_x),
+			.y2 = std::max(canvas.last_click_map_y, canvas.last_cursor_map_y)
 		};
 	}
 
@@ -467,7 +467,7 @@ void MapDrawer::DrawMap() {
 			DrawMapLayer(ctx, floor_params, live_client);
 		}
 
-		preview_drawer->draw(ctx, floor_params, canvas, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
+		preview_drawer->draw(ctx, floor_params, &canvas, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 
 		--current_start_x;
 		--current_start_y;

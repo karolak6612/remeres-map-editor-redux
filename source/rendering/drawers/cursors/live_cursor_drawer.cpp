@@ -19,6 +19,11 @@ void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 		return;
 	}
 
+	if (!g_gui.atlas.ensureAtlasManager()) {
+		return;
+	}
+	const AtlasManager& atlas = *g_gui.atlas.getAtlasManager();
+
 	LiveSocket& live = editor.live_manager.GetSocket();
 	for (const LiveCursor& cursor : live.getCursorList()) {
 		if (cursor.pos.z <= GROUND_LAYER && ctx.view.floor > GROUND_LAYER) {
@@ -51,8 +56,6 @@ void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 			draw_color.Alpha() / 255.0f
 		);
 
-		if (g_gui.atlas.ensureAtlasManager()) {
-			ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.atlas.getAtlasManager());
-		}
+		ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, atlas);
 	}
 }

@@ -19,12 +19,8 @@
 #define RME_MINIMAP_WINDOW_H_
 
 #include <wx/glcanvas.h>
+#include <wx/timer.h>
 #include <memory>
-
-#include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 
 class MinimapDrawer;
 class MinimapWindow : public wxGLCanvas {

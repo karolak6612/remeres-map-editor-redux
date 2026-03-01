@@ -18,11 +18,11 @@ void TextureGC::clear() {
 	resident_game_sprites.clear();
 	cleanup_list.clear();
 	loaded_textures = 0;
-	lastclean = time(nullptr);
+	lastclean = std::time(nullptr);
 }
 
 void TextureGC::updateTime() {
-	cached_time_ = time(nullptr);
+	cached_time_ = std::time(nullptr);
 }
 
 void TextureGC::notifyTextureLoaded() {
@@ -30,10 +30,12 @@ void TextureGC::notifyTextureLoaded() {
 }
 
 void TextureGC::notifyTextureUnloaded() {
-	loaded_textures--;
+	if (loaded_textures > 0) {
+		loaded_textures--;
+	}
 }
 
-const int MIN_CLEAN_THRESHOLD = 100;
+constexpr int MIN_CLEAN_THRESHOLD = 100;
 
 void TextureGC::addSpriteToCleanup(GameSprite* spr) {
 	cleanup_list.push_back(spr);
@@ -55,7 +57,7 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 
 			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 			for (size_t i = resident_images.size(); i > 0; --i) {
-				Image* img = static_cast<Image*>(resident_images[i - 1]);
+				Image* img = resident_images[i - 1];
 				img->clean(cached_time_, longevity);
 
 				if (!img->isGLLoaded) {
@@ -66,19 +68,25 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 				}
 			}
 
+			// Call clean on resident_game_sprites to preserve software cache/animator state.
+			// Memory bounds are managed elsewhere, ensuring they remain resident.
 			for (size_t i = resident_game_sprites.size(); i > 0; --i) {
 				GameSprite* gs = resident_game_sprites[i - 1];
 				gs->clean(cached_time_, longevity);
 			}
 			
 			// Clean software sprites
-			for (auto& sprite_ptr : db.getSpriteSpace()) {
-				if (sprite_ptr) {
-					sprite_ptr->unloadDC();
-				}
-			}
+			cleanSoftwareSprites(db);
 
 			lastclean = cached_time_;
+		}
+	}
+}
+
+void TextureGC::cleanSoftwareSprites(SpriteDatabase& db) {
+	for (auto& sprite_ptr : db.getSpriteSpace()) {
+		if (sprite_ptr) {
+			sprite_ptr->unloadDC();
 		}
 	}
 }

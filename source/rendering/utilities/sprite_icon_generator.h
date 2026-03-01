@@ -5,11 +5,9 @@
 #ifndef RME_RENDERING_UTILITIES_SPRITE_ICON_GENERATOR_H_
 #define RME_RENDERING_UTILITIES_SPRITE_ICON_GENERATOR_H_
 
-#include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
 #include "game/creature.h"
+#include "rendering/core/game_sprite.h"
+#include <wx/bitmap.h>
 
 class SpriteIconGenerator {
 public:

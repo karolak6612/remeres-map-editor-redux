@@ -1,8 +1,6 @@
 #include "io/loaders/spr_loader.h"
 
 #include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
 #include "rendering/io/sprite_loader.h"
 #include "rendering/core/normal_image.h"
 #include "io/filehandle.h"

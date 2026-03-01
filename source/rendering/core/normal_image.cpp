@@ -19,6 +19,7 @@ NormalImage::~NormalImage() {
 		if (g_gui.atlas.hasAtlasManager()) {
 			g_gui.atlas.getAtlasManager()->removeSprite(id);
 		}
+		g_gui.gc.notifyTextureUnloaded();
 	}
 }
 

@@ -43,8 +43,8 @@ void SpriteDrawer::glBlitSquare(const DrawContext& ctx, int sx, int sy, DrawColo
 	float normalizedB = color.b / 255.0f;
 	float normalizedA = color.a / 255.0f;
 
-	// Use Graphics::getAtlasManager() to get the atlas manager for white pixel access
-	// This assumes Graphics and AtlasManager are available
+	// Use g_gui.atlas to get the atlas manager for white pixel access
+	// This assumes g_gui.atlas and AtlasManager are available
 	if (g_gui.atlas.hasAtlasManager()) {
 		ctx.sprite_batch.drawRect(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager());
 	}

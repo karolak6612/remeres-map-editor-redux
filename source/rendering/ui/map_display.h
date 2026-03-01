@@ -24,7 +24,6 @@
 #include "rendering/utilities/frame_pacer.h"
 
 #include "ui/map_popup_menu.h"
-#include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/atlas_lifecycle.h"
@@ -39,7 +38,6 @@ struct DrawingOptions;
 class Item;
 class Creature;
 class MapWindow;
-class AnimationTimer;
 class AnimationTimer;
 class MapDrawer;
 class SelectionController;

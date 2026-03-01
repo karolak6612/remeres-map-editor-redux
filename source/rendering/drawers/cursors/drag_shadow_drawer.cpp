@@ -34,7 +34,7 @@ DragShadowDrawer::~DragShadowDrawer() {
 #include "rendering/core/primitive_renderer.h"
 
 void DragShadowDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer) {
-	if (!drawer || !drawer->canvas) {
+	if (!drawer) {
 		return;
 	}
 
@@ -45,7 +45,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawe
 			Position pos = tile->getPosition();
 
 			int move_x, move_y, move_z;
-			Position drag_start = drawer->canvas->selection_controller->GetDragStartPosition();
+			Position drag_start = drawer->canvas.selection_controller->GetDragStartPosition();
 			move_x = drag_start.x - ctx.view.mouse_map_x;
 			move_y = drag_start.y - ctx.view.mouse_map_y;
 			move_z = drag_start.z - ctx.view.floor;

@@ -123,7 +123,7 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 	popup_menu = std::make_unique<MapPopupMenu>(editor);
 	animation_timer = std::make_unique<AnimationTimer>(this);
-	drawer = std::make_unique<MapDrawer>(this);
+	drawer = std::make_unique<MapDrawer>(*this, editor);
 	selection_controller = std::make_unique<SelectionController>(this, editor);
 	drawing_controller = std::make_unique<DrawingController>(this, editor);
 	screenshot_controller = std::make_unique<ScreenshotController>(this);

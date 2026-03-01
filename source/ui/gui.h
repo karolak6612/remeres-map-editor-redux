@@ -71,6 +71,10 @@ wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 #include "palette/managers/palette_manager.h"
 #include "editor/managers/editor_manager.h"
 #include "editor/hotkey_manager.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/io/sprite_loader.h"
+#include "rendering/core/texture_gc.h"
 
 class GUI {
 public: // dtor and ctor

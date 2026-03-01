@@ -61,7 +61,7 @@ class Creature;
 class Editor;
 
 class MapDrawer {
-    MapCanvas* canvas;
+    MapCanvas& canvas;
     Editor& editor;
     DrawingOptions options;
     ViewState view;
@@ -110,7 +110,7 @@ protected:
     friend class FloorDrawer;
 
 public:
-    MapDrawer(MapCanvas* canvas);
+    MapDrawer(MapCanvas& canvas, Editor& editor);
     ~MapDrawer();
 
     void SetupVars();

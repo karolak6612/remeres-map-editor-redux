@@ -1,8 +1,6 @@
 #include "app/definitions.h"
 #include "rendering/io/editor_sprite_loader.h"
 #include "rendering/core/sprite_database.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/texture_gc.h"
 #include "rendering/io/sprite_loader.h"
 #include "rendering/core/editor_sprite.h"
 #include "game/sprites.h"
