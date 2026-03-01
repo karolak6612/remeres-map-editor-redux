@@ -16,592 +16,634 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "rendering/ui/tooltip_drawer.h"
-#include "rendering/core/graphics.h"
-#include "rendering/core/normal_image.h"
-#include "rendering/core/text_renderer.h"
-#include "ui/theme.h"
-#include "rendering/core/draw_context.h"
-#include <nanovg.h>
-#include <format>
-#include "rendering/core/coordinate_mapper.h"
-#include <wx/wx.h>
 #include "game/items.h"
 #include "game/sprites.h"
+#include "rendering/core/coordinate_mapper.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/game_sprite.h"
+#include "rendering/core/normal_image.h"
+#include "rendering/core/text_renderer.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
+#include <format>
+#include <nanovg.h>
+#include <wx/wx.h>
 
-TooltipDrawer::TooltipDrawer() {
-}
+TooltipDrawer::TooltipDrawer() {}
 
 TooltipDrawer::~TooltipDrawer() {
-	clear();
-	if (lastContext) {
-		for (auto& pair : spriteCache) {
-			if (pair.second > 0) {
-				nvgDeleteImage(lastContext, pair.second);
-			}
-		}
-		spriteCache.clear();
-	}
+  clear();
+  if (lastContext) {
+    for (auto &pair : spriteCache) {
+      if (pair.second > 0) {
+        nvgDeleteImage(lastContext, pair.second);
+      }
+    }
+    spriteCache.clear();
+  }
 }
 
-void TooltipDrawer::clear() {
-	active_count = 0;
+void TooltipDrawer::clear() { active_count = 0; }
+
+TooltipData &TooltipDrawer::requestTooltipData() {
+  if (active_count >= tooltips.size()) {
+    tooltips.emplace_back();
+  }
+  TooltipData &data = tooltips[active_count];
+  data.clear();
+  return data;
 }
 
-TooltipData& TooltipDrawer::requestTooltipData() {
-	if (active_count >= tooltips.size()) {
-		tooltips.emplace_back();
-	}
-	TooltipData& data = tooltips[active_count];
-	data.clear();
-	return data;
+void TooltipDrawer::commitTooltip() { active_count++; }
+
+void TooltipDrawer::addItemTooltip(const TooltipData &data) {
+  if (!data.hasVisibleFields()) {
+    return;
+  }
+  TooltipData &dest = requestTooltipData();
+  dest = data;
+  commitTooltip();
 }
 
-void TooltipDrawer::commitTooltip() {
-	active_count++;
-}
-
-void TooltipDrawer::addItemTooltip(const TooltipData& data) {
-	if (!data.hasVisibleFields()) {
-		return;
-	}
-	TooltipData& dest = requestTooltipData();
-	dest = data;
-	commitTooltip();
-}
-
-void TooltipDrawer::addItemTooltip(TooltipData&& data) {
-	if (!data.hasVisibleFields()) {
-		return;
-	}
-	TooltipData& dest = requestTooltipData();
-	dest = std::move(data);
-	commitTooltip();
+void TooltipDrawer::addItemTooltip(TooltipData &&data) {
+  if (!data.hasVisibleFields()) {
+    return;
+  }
+  TooltipData &dest = requestTooltipData();
+  dest = std::move(data);
+  commitTooltip();
 }
 
 void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name) {
-	if (name.empty()) {
-		return;
-	}
-	TooltipData& data = requestTooltipData();
-	data.pos = pos;
-	data.category = TooltipCategory::WAYPOINT;
-	data.waypointName = name;
-	commitTooltip();
+  if (name.empty()) {
+    return;
+  }
+  TooltipData &data = requestTooltipData();
+  data.pos = pos;
+  data.category = TooltipCategory::WAYPOINT;
+  data.waypointName = name;
+  commitTooltip();
 }
 
-void TooltipDrawer::getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const {
-	wxColour color;
-	switch (cat) {
-		case TooltipCategory::WAYPOINT:
-			color = Theme::Get(Theme::Role::TooltipBorderWaypoint);
-			break;
-		case TooltipCategory::DOOR:
-			color = Theme::Get(Theme::Role::TooltipBorderDoor);
-			break;
-		case TooltipCategory::TELEPORT:
-			color = Theme::Get(Theme::Role::TooltipBorderTeleport);
-			break;
-		case TooltipCategory::TEXT:
-			color = Theme::Get(Theme::Role::TooltipBorderText);
-			break;
-		case TooltipCategory::ITEM:
-		default:
-			color = Theme::Get(Theme::Role::TooltipBorderItem);
-			break;
-	}
-	r = color.Red();
-	g = color.Green();
-	b = color.Blue();
+void TooltipDrawer::getHeaderColor(TooltipCategory cat, uint8_t &r, uint8_t &g,
+                                   uint8_t &b) const {
+  wxColour color;
+  switch (cat) {
+  case TooltipCategory::WAYPOINT:
+    color = Theme::Get(Theme::Role::TooltipBorderWaypoint);
+    break;
+  case TooltipCategory::DOOR:
+    color = Theme::Get(Theme::Role::TooltipBorderDoor);
+    break;
+  case TooltipCategory::TELEPORT:
+    color = Theme::Get(Theme::Role::TooltipBorderTeleport);
+    break;
+  case TooltipCategory::TEXT:
+    color = Theme::Get(Theme::Role::TooltipBorderText);
+    break;
+  case TooltipCategory::ITEM:
+  default:
+    color = Theme::Get(Theme::Role::TooltipBorderItem);
+    break;
+  }
+  r = color.Red();
+  g = color.Green();
+  b = color.Blue();
 }
 
-int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
-	if (itemId == 0) {
-		return 0;
-	}
+int TooltipDrawer::getSpriteImage(NVGcontext *vg, uint16_t itemId) {
+  if (itemId == 0) {
+    return 0;
+  }
 
-	// Detect context change and clear cache
-	if (vg != lastContext) {
-		// If we had a previous context, we'd ideally delete images from it,
-		// but if the context pointer changed, the old one might be invalid.
-		// However, adhering to the request to clear cache with nvgDeleteImage:
-		if (lastContext) {
-			for (auto& pair : spriteCache) {
-				if (pair.second > 0) {
-					nvgDeleteImage(lastContext, pair.second);
-				}
-			}
-		}
-		spriteCache.clear();
-		lastContext = vg;
-	}
+  // Detect context change and clear cache
+  if (vg != lastContext) {
+    // If we had a previous context, we'd ideally delete images from it,
+    // but if the context pointer changed, the old one might be invalid.
+    // However, adhering to the request to clear cache with nvgDeleteImage:
+    if (lastContext) {
+      for (auto &pair : spriteCache) {
+        if (pair.second > 0) {
+          nvgDeleteImage(lastContext, pair.second);
+        }
+      }
+    }
+    spriteCache.clear();
+    lastContext = vg;
+  }
 
-	// Resolve Item ID
-	ItemType& it = g_items[itemId];
-	if (!it.sprite) {
-		return 0;
-	}
+  // Resolve Item ID
+  ItemType &it = g_items[itemId];
+  if (!it.sprite) {
+    return 0;
+  }
 
-	// We use the item ID as the cache key since it's unique and stable
-	auto itCache = spriteCache.find(itemId);
-	if (itCache != spriteCache.end()) {
-		return itCache->second;
-	}
+  // We use the item ID as the cache key since it's unique and stable
+  auto itCache = spriteCache.find(itemId);
+  if (itCache != spriteCache.end()) {
+    return itCache->second;
+  }
 
-	// Use the sprite directly from ItemType
-	GameSprite* gameSprite = it.sprite;
+  // Use the sprite directly from ItemType
+  GameSprite *gameSprite = it.sprite;
 
-	if (gameSprite && !gameSprite->spriteList.empty()) {
-		// Use the first frame/part of the sprite
-		NormalImage* img = gameSprite->spriteList[0];
-		if (img) {
-			std::unique_ptr<uint8_t[]> rgba;
+  if (gameSprite && !gameSprite->spriteList.empty()) {
+    // Use the first frame/part of the sprite
+    NormalImage *img = gameSprite->spriteList[0];
+    if (img) {
+      std::unique_ptr<uint8_t[]> rgba;
 
-			// For legacy sprites (no transparency), use getRGBData + Magenta Masking
-			// This matches how WxWidgets/SpriteIconGenerator renders icons
-			if (!g_gui.gfx.hasTransparency()) {
-				std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
-				if (rgb) {
-					rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
-					for (int i = 0; i < 32 * 32; ++i) {
-						uint8_t r = rgb[i * 3 + 0];
-						uint8_t g = rgb[i * 3 + 1];
-						uint8_t b = rgb[i * 3 + 2];
+      // For legacy sprites (no transparency), use getRGBData + Magenta Masking
+      // This matches how WxWidgets/SpriteIconGenerator renders icons
+      if (!g_gui.sprite_database.hasTransparency()) {
+        std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
+        if (rgb) {
+          rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
+          for (int i = 0; i < 32 * 32; ++i) {
+            uint8_t r = rgb[i * 3 + 0];
+            uint8_t g = rgb[i * 3 + 1];
+            uint8_t b = rgb[i * 3 + 2];
 
-						// Magic Pink (Magenta) is transparent for legacy sprites
-						if (r == 0xFF && g == 0x00 && b == 0xFF) {
-							rgba[i * 4 + 0] = 0;
-							rgba[i * 4 + 1] = 0;
-							rgba[i * 4 + 2] = 0;
-							rgba[i * 4 + 3] = 0;
-						} else {
-							rgba[i * 4 + 0] = r;
-							rgba[i * 4 + 1] = g;
-							rgba[i * 4 + 2] = b;
-							rgba[i * 4 + 3] = 255;
-						}
-					}
-				} else {
-					// getRGBData failed, should ideally not happen if sprite exists logic is correct
-				}
-			}
+            // Magic Pink (Magenta) is transparent for legacy sprites
+            if (r == 0xFF && g == 0x00 && b == 0xFF) {
+              rgba[i * 4 + 0] = 0;
+              rgba[i * 4 + 1] = 0;
+              rgba[i * 4 + 2] = 0;
+              rgba[i * 4 + 3] = 0;
+            } else {
+              rgba[i * 4 + 0] = r;
+              rgba[i * 4 + 1] = g;
+              rgba[i * 4 + 2] = b;
+              rgba[i * 4 + 3] = 255;
+            }
+          }
+        } else {
+          // getRGBData failed, should ideally not happen if sprite exists logic
+          // is correct
+        }
+      }
 
-			// Fallback/Standard path for alpha sprites or if RGB failed
-			if (!rgba) {
-				rgba = img->getRGBAData();
-				if (!rgba) {
-					// getRGBAData failed
-				}
-			}
+      // Fallback/Standard path for alpha sprites or if RGB failed
+      if (!rgba) {
+        rgba = img->getRGBAData();
+        if (!rgba) {
+          // getRGBAData failed
+        }
+      }
 
-			if (rgba) {
-				int image = nvgCreateImageRGBA(vg, 32, 32, 0, rgba.get());
-				if (image == 0) {
-					// nvgCreateImageRGBA failed
-				} else {
-					// Success
-					// Check if we are overwriting an existing valid image (shouldn't happen given find() above, but safest)
-					if (spriteCache.contains(itemId) && spriteCache[itemId] > 0) {
-						nvgDeleteImage(vg, spriteCache[itemId]);
-					}
-					spriteCache[itemId] = image;
-					return image;
-				}
-			}
-		}
-	} else {
-		// GameSprite missing or empty list
-	}
+      if (rgba) {
+        int image = nvgCreateImageRGBA(vg, 32, 32, 0, rgba.get());
+        if (image == 0) {
+          // nvgCreateImageRGBA failed
+        } else {
+          // Success
+          // Check if we are overwriting an existing valid image (shouldn't
+          // happen given find() above, but safest)
+          if (spriteCache.contains(itemId) && spriteCache[itemId] > 0) {
+            nvgDeleteImage(vg, spriteCache[itemId]);
+          }
+          spriteCache[itemId] = image;
+          return image;
+        }
+      }
+    }
+  } else {
+    // GameSprite missing or empty list
+  }
 
-	return 0;
+  return 0;
 }
 
-void TooltipDrawer::prepareFields(const TooltipData& tooltip) {
-	// Build content lines with word wrapping support
-	scratch_fields_count = 0;
-	storage.clear();
-	if (storage.capacity() < 4096) {
-		storage.reserve(4096);
-	}
+void TooltipDrawer::prepareFields(const TooltipData &tooltip) {
+  // Build content lines with word wrapping support
+  scratch_fields_count = 0;
+  storage.clear();
+  if (storage.capacity() < 4096) {
+    storage.reserve(4096);
+  }
 
-	auto addField = [&](std::string_view label, std::string_view value, Theme::Role colorRole) {
-		if (scratch_fields_count >= scratch_fields.size()) {
-			scratch_fields.emplace_back();
-		}
-		FieldLine& field = scratch_fields[scratch_fields_count++];
-		field.label = label;
-		field.value = value;
-		wxColour c = Theme::Get(colorRole);
-		field.r = c.Red();
-		field.g = c.Green();
-		field.b = c.Blue();
-		field.wrappedLines.clear();
-	};
+  auto addField = [&](std::string_view label, std::string_view value,
+                      Theme::Role colorRole) {
+    if (scratch_fields_count >= scratch_fields.size()) {
+      scratch_fields.emplace_back();
+    }
+    FieldLine &field = scratch_fields[scratch_fields_count++];
+    field.label = label;
+    field.value = value;
+    wxColour c = Theme::Get(colorRole);
+    field.r = c.Red();
+    field.g = c.Green();
+    field.b = c.Blue();
+    field.wrappedLines.clear();
+  };
 
-	if (tooltip.category == TooltipCategory::WAYPOINT) {
-		addField("Waypoint", tooltip.waypointName, Theme::Role::TooltipWaypoint);
-	} else {
-		if (tooltip.actionId > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}", tooltip.actionId);
-			addField("Action ID", std::string_view(storage.data() + start, storage.size() - start), Theme::Role::TooltipActionId);
-		}
-		if (tooltip.uniqueId > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}", tooltip.uniqueId);
-			addField("Unique ID", std::string_view(storage.data() + start, storage.size() - start), Theme::Role::TooltipUniqueId);
-		}
-		if (tooltip.doorId > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}", tooltip.doorId);
-			addField("Door ID", std::string_view(storage.data() + start, storage.size() - start), Theme::Role::TooltipDoorId);
-		}
-		if (tooltip.destination.x > 0) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "{}, {}, {}", tooltip.destination.x, tooltip.destination.y, tooltip.destination.z);
-			addField("Destination", std::string_view(storage.data() + start, storage.size() - start), Theme::Role::TooltipTeleport);
-		}
-		if (!tooltip.description.empty()) {
-			addField("Description", tooltip.description, Theme::Role::TooltipBodyText);
-		}
-		if (!tooltip.text.empty()) {
-			size_t start = storage.size();
-			std::format_to(std::back_inserter(storage), "\"{}\"", tooltip.text);
-			addField("Text", std::string_view(storage.data() + start, storage.size() - start), Theme::Role::TooltipTextValue);
-		}
-	}
+  if (tooltip.category == TooltipCategory::WAYPOINT) {
+    addField("Waypoint", tooltip.waypointName, Theme::Role::TooltipWaypoint);
+  } else {
+    if (tooltip.actionId > 0) {
+      size_t start = storage.size();
+      std::format_to(std::back_inserter(storage), "{}", tooltip.actionId);
+      addField("Action ID",
+               std::string_view(storage.data() + start, storage.size() - start),
+               Theme::Role::TooltipActionId);
+    }
+    if (tooltip.uniqueId > 0) {
+      size_t start = storage.size();
+      std::format_to(std::back_inserter(storage), "{}", tooltip.uniqueId);
+      addField("Unique ID",
+               std::string_view(storage.data() + start, storage.size() - start),
+               Theme::Role::TooltipUniqueId);
+    }
+    if (tooltip.doorId > 0) {
+      size_t start = storage.size();
+      std::format_to(std::back_inserter(storage), "{}", tooltip.doorId);
+      addField("Door ID",
+               std::string_view(storage.data() + start, storage.size() - start),
+               Theme::Role::TooltipDoorId);
+    }
+    if (tooltip.destination.x > 0) {
+      size_t start = storage.size();
+      std::format_to(std::back_inserter(storage), "{}, {}, {}",
+                     tooltip.destination.x, tooltip.destination.y,
+                     tooltip.destination.z);
+      addField("Destination",
+               std::string_view(storage.data() + start, storage.size() - start),
+               Theme::Role::TooltipTeleport);
+    }
+    if (!tooltip.description.empty()) {
+      addField("Description", tooltip.description,
+               Theme::Role::TooltipBodyText);
+    }
+    if (!tooltip.text.empty()) {
+      size_t start = storage.size();
+      std::format_to(std::back_inserter(storage), "\"{}\"", tooltip.text);
+      addField("Text",
+               std::string_view(storage.data() + start, storage.size() - start),
+               Theme::Role::TooltipTextValue);
+    }
+  }
 }
 
-TooltipDrawer::LayoutMetrics TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize) {
-	LayoutMetrics lm = {};
+TooltipDrawer::LayoutMetrics
+TooltipDrawer::calculateLayout(NVGcontext *vg, const TooltipData &tooltip,
+                               float maxWidth, float minWidth, float padding,
+                               float fontSize) {
+  LayoutMetrics lm = {};
 
-	// Set up font for measurements
-	nvgFontSize(vg, fontSize);
-	nvgFontFace(vg, "sans");
+  // Set up font for measurements
+  nvgFontSize(vg, fontSize);
+  nvgFontFace(vg, "sans");
 
-	// Measure label widths
-	float maxLabelWidth = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
-		float labelBounds[4];
-		nvgTextBounds(vg, 0, 0, field.label.data(), field.label.data() + field.label.size(), labelBounds);
-		float lw = labelBounds[2] - labelBounds[0];
-		if (lw > maxLabelWidth) {
-			maxLabelWidth = lw;
-		}
-	}
+  // Measure label widths
+  float maxLabelWidth = 0.0f;
+  for (size_t i = 0; i < scratch_fields_count; ++i) {
+    const auto &field = scratch_fields[i];
+    float labelBounds[4];
+    nvgTextBounds(vg, 0, 0, field.label.data(),
+                  field.label.data() + field.label.size(), labelBounds);
+    float lw = labelBounds[2] - labelBounds[0];
+    if (lw > maxLabelWidth) {
+      maxLabelWidth = lw;
+    }
+  }
 
-	lm.valueStartX = maxLabelWidth + 12.0f; // Gap between label and value
-	float maxValueWidth = maxWidth - lm.valueStartX - padding * 2;
+  lm.valueStartX = maxLabelWidth + 12.0f; // Gap between label and value
+  float maxValueWidth = maxWidth - lm.valueStartX - padding * 2;
 
-	// Word wrap values that are too long
-	int totalLines = 0;
-	float actualMaxWidth = minWidth;
+  // Word wrap values that are too long
+  int totalLines = 0;
+  float actualMaxWidth = minWidth;
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		auto& field = scratch_fields[i];
-		const char* start = field.value.data();
-		const char* end = start + field.value.length();
+  for (size_t i = 0; i < scratch_fields_count; ++i) {
+    auto &field = scratch_fields[i];
+    const char *start = field.value.data();
+    const char *end = start + field.value.length();
 
-		// Check if value fits on one line
-		float valueBounds[4];
-		nvgTextBounds(vg, 0, 0, start, end, valueBounds);
-		float valueWidth = valueBounds[2] - valueBounds[0];
+    // Check if value fits on one line
+    float valueBounds[4];
+    nvgTextBounds(vg, 0, 0, start, end, valueBounds);
+    float valueWidth = valueBounds[2] - valueBounds[0];
 
-		if (valueWidth <= maxValueWidth) {
-			// Single line
-			field.wrappedLines.push_back(field.value);
-			totalLines++;
-			float lineWidth = lm.valueStartX + valueWidth + padding * 2;
-			if (lineWidth > actualMaxWidth) {
-				actualMaxWidth = lineWidth;
-			}
-		} else {
-			// Need to wrap - use NanoVG text breaking
-			NVGtextRow rows[16];
-			int nRows = nvgTextBreakLines(vg, start, end, maxValueWidth, rows, 16);
+    if (valueWidth <= maxValueWidth) {
+      // Single line
+      field.wrappedLines.push_back(field.value);
+      totalLines++;
+      float lineWidth = lm.valueStartX + valueWidth + padding * 2;
+      if (lineWidth > actualMaxWidth) {
+        actualMaxWidth = lineWidth;
+      }
+    } else {
+      // Need to wrap - use NanoVG text breaking
+      NVGtextRow rows[16];
+      int nRows = nvgTextBreakLines(vg, start, end, maxValueWidth, rows, 16);
 
-			for (int i = 0; i < nRows; i++) {
-				std::string_view line(rows[i].start, rows[i].end - rows[i].start);
-				field.wrappedLines.push_back(line);
-				totalLines++;
+      for (int i = 0; i < nRows; i++) {
+        std::string_view line(rows[i].start, rows[i].end - rows[i].start);
+        field.wrappedLines.push_back(line);
+        totalLines++;
 
-				float lineWidth = lm.valueStartX + rows[i].width + padding * 2;
-				if (lineWidth > actualMaxWidth) {
-					actualMaxWidth = lineWidth;
-				}
-			}
+        float lineWidth = lm.valueStartX + rows[i].width + padding * 2;
+        if (lineWidth > actualMaxWidth) {
+          actualMaxWidth = lineWidth;
+        }
+      }
 
-			if (nRows == 0) {
-				// Fallback if breaking failed
-				field.wrappedLines.push_back(field.value);
-				totalLines++;
-			}
-		}
-	}
+      if (nRows == 0) {
+        // Fallback if breaking failed
+        field.wrappedLines.push_back(field.value);
+        totalLines++;
+      }
+    }
+  }
 
-	// Calculate container grid dimensions
-	lm.containerCols = 0;
-	lm.containerRows = 0;
-	lm.gridSlotSize = 34.0f; // 32px + padding
-	lm.containerHeight = 0.0f;
+  // Calculate container grid dimensions
+  lm.containerCols = 0;
+  lm.containerRows = 0;
+  lm.gridSlotSize = 34.0f; // 32px + padding
+  lm.containerHeight = 0.0f;
 
-	lm.numContainerItems = static_cast<int>(tooltip.containerItems.size());
-	int capacity = static_cast<int>(tooltip.containerCapacity);
-	lm.emptyContainerSlots = std::max(0, capacity - lm.numContainerItems);
-	lm.totalContainerSlots = lm.numContainerItems;
+  lm.numContainerItems = static_cast<int>(tooltip.containerItems.size());
+  int capacity = static_cast<int>(tooltip.containerCapacity);
+  lm.emptyContainerSlots = std::max(0, capacity - lm.numContainerItems);
+  lm.totalContainerSlots = lm.numContainerItems;
 
-	if (lm.emptyContainerSlots > 0) {
-		lm.totalContainerSlots++; // Add one slot for the summary
-	}
+  if (lm.emptyContainerSlots > 0) {
+    lm.totalContainerSlots++; // Add one slot for the summary
+  }
 
-	// Apply a hard cap for visual safety
-	if (lm.totalContainerSlots > 33) {
-		lm.totalContainerSlots = 33;
-	}
+  // Apply a hard cap for visual safety
+  if (lm.totalContainerSlots > 33) {
+    lm.totalContainerSlots = 33;
+  }
 
-	if (capacity > 0 || lm.numContainerItems > 0) {
-		// Heuristic: try to keep it somewhat square but matching width
-		lm.containerCols = std::min(4, lm.totalContainerSlots);
-		if (lm.totalContainerSlots > 4) {
-			lm.containerCols = 5;
-		}
-		if (lm.totalContainerSlots > 10) {
-			lm.containerCols = 6;
-		}
-		if (lm.totalContainerSlots > 15) {
-			lm.containerCols = 8;
-		}
+  if (capacity > 0 || lm.numContainerItems > 0) {
+    // Heuristic: try to keep it somewhat square but matching width
+    lm.containerCols = std::min(4, lm.totalContainerSlots);
+    if (lm.totalContainerSlots > 4) {
+      lm.containerCols = 5;
+    }
+    if (lm.totalContainerSlots > 10) {
+      lm.containerCols = 6;
+    }
+    if (lm.totalContainerSlots > 15) {
+      lm.containerCols = 8;
+    }
 
-		if (lm.containerCols == 0 && lm.totalContainerSlots > 0) {
-			lm.containerCols = 1;
-		}
+    if (lm.containerCols == 0 && lm.totalContainerSlots > 0) {
+      lm.containerCols = 1;
+    }
 
-		if (lm.containerCols > 0) {
-			lm.containerRows = (lm.totalContainerSlots + lm.containerCols - 1) / lm.containerCols;
-			lm.containerHeight = lm.containerRows * lm.gridSlotSize + 4.0f; // + top margin
-		}
-	}
+    if (lm.containerCols > 0) {
+      lm.containerRows =
+          (lm.totalContainerSlots + lm.containerCols - 1) / lm.containerCols;
+      lm.containerHeight =
+          lm.containerRows * lm.gridSlotSize + 4.0f; // + top margin
+    }
+  }
 
-	// Calculate final box dimensions
-	lm.width = std::min(maxWidth + padding * 2, std::max(minWidth, actualMaxWidth));
+  // Calculate final box dimensions
+  lm.width =
+      std::min(maxWidth + padding * 2, std::max(minWidth, actualMaxWidth));
 
-	bool hasContainer = lm.totalContainerSlots > 0;
-	if (hasContainer) {
-		float gridWidth = lm.containerCols * lm.gridSlotSize;
-		lm.width = std::max(lm.width, gridWidth + padding * 2);
-	}
+  bool hasContainer = lm.totalContainerSlots > 0;
+  if (hasContainer) {
+    float gridWidth = lm.containerCols * lm.gridSlotSize;
+    lm.width = std::max(lm.width, gridWidth + padding * 2);
+  }
 
-	float lineHeight = fontSize * 1.4f;
-	lm.height = totalLines * lineHeight + padding * 2;
-	if (hasContainer) {
-		lm.height += lm.containerHeight + 4.0f;
-	}
+  float lineHeight = fontSize * 1.4f;
+  lm.height = totalLines * lineHeight + padding * 2;
+  if (hasContainer) {
+    lm.height += lm.containerHeight + 4.0f;
+  }
 
-	return lm;
+  return lm;
 }
 
-void TooltipDrawer::drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip) {
+void TooltipDrawer::drawBackground(NVGcontext *vg, float x, float y,
+                                   float width, float height,
+                                   float cornerRadius,
+                                   const TooltipData &tooltip) {
 
-	// Get border color based on category
-	uint8_t borderR, borderG, borderB;
-	getHeaderColor(tooltip.category, borderR, borderG, borderB);
+  // Get border color based on category
+  uint8_t borderR, borderG, borderB;
+  getHeaderColor(tooltip.category, borderR, borderG, borderB);
 
-	// Shadow (multi-layer soft shadow)
-	for (int i = 3; i >= 0; i--) {
-		float alpha = 35.0f + (3 - i) * 20.0f;
-		float spread = i * 2.0f;
-		float offsetY = 3.0f + i * 1.0f;
-		nvgBeginPath(vg);
-		nvgRoundedRect(vg, x - spread, y + offsetY - spread, width + spread * 2, height + spread * 2, cornerRadius + spread);
-		nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<unsigned char>(alpha)));
-		nvgFill(vg);
-	}
+  // Shadow (multi-layer soft shadow)
+  for (int i = 3; i >= 0; i--) {
+    float alpha = 35.0f + (3 - i) * 20.0f;
+    float spread = i * 2.0f;
+    float offsetY = 3.0f + i * 1.0f;
+    nvgBeginPath(vg);
+    nvgRoundedRect(vg, x - spread, y + offsetY - spread, width + spread * 2,
+                   height + spread * 2, cornerRadius + spread);
+    nvgFillColor(vg, nvgRGBA(0, 0, 0, static_cast<unsigned char>(alpha)));
+    nvgFill(vg);
+  }
 
-	// Main background - use theme
-	wxColour bgCol = Theme::Get(Theme::Role::TooltipBg);
-	nvgBeginPath(vg);
-	nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-	nvgFillColor(vg, nvgRGBA(bgCol.Red(), bgCol.Green(), bgCol.Blue(), 250));
-	nvgFill(vg);
+  // Main background - use theme
+  wxColour bgCol = Theme::Get(Theme::Role::TooltipBg);
+  nvgBeginPath(vg);
+  nvgRoundedRect(vg, x, y, width, height, cornerRadius);
+  nvgFillColor(vg, nvgRGBA(bgCol.Red(), bgCol.Green(), bgCol.Blue(), 250));
+  nvgFill(vg);
 
-	// Full colored border around entire frame
-	nvgBeginPath(vg);
-	nvgRoundedRect(vg, x, y, width, height, cornerRadius);
-	nvgStrokeColor(vg, nvgRGBA(borderR, borderG, borderB, 255));
-	nvgStrokeWidth(vg, 1.0f);
-	nvgStroke(vg);
+  // Full colored border around entire frame
+  nvgBeginPath(vg);
+  nvgRoundedRect(vg, x, y, width, height, cornerRadius);
+  nvgStrokeColor(vg, nvgRGBA(borderR, borderG, borderB, 255));
+  nvgStrokeWidth(vg, 1.0f);
+  nvgStroke(vg);
 }
 
-void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize) {
+void TooltipDrawer::drawFields(NVGcontext *vg, float x, float y,
+                               float valueStartX, float lineHeight,
+                               float padding, float fontSize) {
 
-	float contentX = x + padding;
-	float cursorY = y + padding;
+  float contentX = x + padding;
+  float cursorY = y + padding;
 
-	nvgFontSize(vg, fontSize);
-	nvgFontFace(vg, "sans");
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+  nvgFontSize(vg, fontSize);
+  nvgFontFace(vg, "sans");
+  nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
-		bool firstLine = true;
-		for (const auto& line : field.wrappedLines) {
-			if (firstLine) {
-				// Draw label - use theme tooltip label color
-				wxColour labelCol = Theme::Get(Theme::Role::TooltipLabel);
-				nvgFillColor(vg, nvgRGBA(labelCol.Red(), labelCol.Green(), labelCol.Blue(), 200));
-				nvgText(vg, contentX, cursorY, field.label.data(), field.label.data() + field.label.size());
-				firstLine = false;
-			}
+  for (size_t i = 0; i < scratch_fields_count; ++i) {
+    const auto &field = scratch_fields[i];
+    bool firstLine = true;
+    for (const auto &line : field.wrappedLines) {
+      if (firstLine) {
+        // Draw label - use theme tooltip label color
+        wxColour labelCol = Theme::Get(Theme::Role::TooltipLabel);
+        nvgFillColor(vg, nvgRGBA(labelCol.Red(), labelCol.Green(),
+                                 labelCol.Blue(), 200));
+        nvgText(vg, contentX, cursorY, field.label.data(),
+                field.label.data() + field.label.size());
+        firstLine = false;
+      }
 
-			// Draw value line in theme-defined semantic color
-			nvgFillColor(vg, nvgRGBA(field.r, field.g, field.b, 255));
-			nvgText(vg, contentX + valueStartX, cursorY, line.data(), line.data() + line.size());
+      // Draw value line in theme-defined semantic color
+      nvgFillColor(vg, nvgRGBA(field.r, field.g, field.b, 255));
+      nvgText(vg, contentX + valueStartX, cursorY, line.data(),
+              line.data() + line.size());
 
-			cursorY += lineHeight;
-		}
-	}
+      cursorY += lineHeight;
+    }
+  }
 }
 
-void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout) {
+void TooltipDrawer::drawContainerGrid(NVGcontext *vg, float x, float y,
+                                      const TooltipData &tooltip,
+                                      const LayoutMetrics &layout) {
 
-	if (layout.totalContainerSlots <= 0) {
-		return;
-	}
+  if (layout.totalContainerSlots <= 0) {
+    return;
+  }
 
-	// Calculate cursorY after text fields
-	// We need to re-calculate text height or pass it, but simpler to deduce from logic:
-	// The grid is at the bottom. We can just use the bottom of the box minus grid height minus padding.
-	// But let's calculate exact start Y based on text content for precision
-	float fontSize = 11.0f;
-	float lineHeight = fontSize * 1.4f;
-	float textBlockHeight = 0.0f;
-	for (size_t i = 0; i < scratch_fields_count; ++i) {
-		const auto& field = scratch_fields[i];
-		textBlockHeight += field.wrappedLines.size() * lineHeight;
-	}
+  // Calculate cursorY after text fields
+  // We need to re-calculate text height or pass it, but simpler to deduce from
+  // logic: The grid is at the bottom. We can just use the bottom of the box
+  // minus grid height minus padding. But let's calculate exact start Y based on
+  // text content for precision
+  float fontSize = 11.0f;
+  float lineHeight = fontSize * 1.4f;
+  float textBlockHeight = 0.0f;
+  for (size_t i = 0; i < scratch_fields_count; ++i) {
+    const auto &field = scratch_fields[i];
+    textBlockHeight += field.wrappedLines.size() * lineHeight;
+  }
 
-	float startY = y + 10.0f + textBlockHeight + 8.0f; // Padding + Text + Spacer
-	float startX = x + 10.0f; // Padding
+  float startY = y + 10.0f + textBlockHeight + 8.0f; // Padding + Text + Spacer
+  float startX = x + 10.0f;                          // Padding
 
-	for (int idx = 0; idx < layout.totalContainerSlots; ++idx) {
-		int col = idx % layout.containerCols;
-		int row = idx / layout.containerCols;
+  for (int idx = 0; idx < layout.totalContainerSlots; ++idx) {
+    int col = idx % layout.containerCols;
+    int row = idx / layout.containerCols;
 
-		float itemX = startX + col * layout.gridSlotSize;
-		float itemY = startY + row * layout.gridSlotSize;
+    float itemX = startX + col * layout.gridSlotSize;
+    float itemY = startY + row * layout.gridSlotSize;
 
-		// Draw slot background (always)
-		nvgBeginPath(vg);
-		wxColour baseCol = Theme::Get(Theme::Role::CardBase);
-		wxColour borderCol = Theme::Get(Theme::Role::Border);
+    // Draw slot background (always)
+    nvgBeginPath(vg);
+    wxColour baseCol = Theme::Get(Theme::Role::CardBase);
+    wxColour borderCol = Theme::Get(Theme::Role::Border);
 
-		nvgFillColor(vg, nvgRGBA(baseCol.Red(), baseCol.Green(), baseCol.Blue(), 100)); // Dark slot placeholder
-		nvgStrokeColor(vg, nvgRGBA(borderCol.Red(), borderCol.Green(), borderCol.Blue(), 100)); // Light border
-		nvgStrokeWidth(vg, 1.0f);
-		nvgFill(vg);
-		nvgStroke(vg);
+    nvgFillColor(vg, nvgRGBA(baseCol.Red(), baseCol.Green(), baseCol.Blue(),
+                             100)); // Dark slot placeholder
+    nvgStrokeColor(vg, nvgRGBA(borderCol.Red(), borderCol.Green(),
+                               borderCol.Blue(), 100)); // Light border
+    nvgStrokeWidth(vg, 1.0f);
+    nvgFill(vg);
+    nvgStroke(vg);
 
-		// Check if this is the summary info slot (last slot if we have empty spaces)
-		bool isSummarySlot = (layout.emptyContainerSlots > 0 && idx == layout.totalContainerSlots - 1);
+    // Check if this is the summary info slot (last slot if we have empty
+    // spaces)
+    bool isSummarySlot = (layout.emptyContainerSlots > 0 &&
+                          idx == layout.totalContainerSlots - 1);
 
-		if (isSummarySlot) {
-			// Draw empty slots count: "+N"
-			std::string summary = "+" + std::to_string(layout.emptyContainerSlots);
+    if (isSummarySlot) {
+      // Draw empty slots count: "+N"
+      std::string summary = "+" + std::to_string(layout.emptyContainerSlots);
 
-			nvgFontSize(vg, 12.0f);
-			nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+      nvgFontSize(vg, 12.0f);
+      nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
 
-			// Text shadow
-			nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-			nvgText(vg, itemX + 17, itemY + 17, summary.c_str(), nullptr);
+      // Text shadow
+      nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+      nvgText(vg, itemX + 17, itemY + 17, summary.c_str(), nullptr);
 
-			// Text
-			wxColour countCol = Theme::Get(Theme::Role::TooltipCountText);
-			nvgFillColor(vg, nvgRGBA(countCol.Red(), countCol.Green(), countCol.Blue(), 255));
-			nvgText(vg, itemX + 16, itemY + 16, summary.c_str(), nullptr);
+      // Text
+      wxColour countCol = Theme::Get(Theme::Role::TooltipCountText);
+      nvgFillColor(
+          vg, nvgRGBA(countCol.Red(), countCol.Green(), countCol.Blue(), 255));
+      nvgText(vg, itemX + 16, itemY + 16, summary.c_str(), nullptr);
 
-		} else if (idx < layout.numContainerItems) {
-			// Draw Actual Item
-			const auto& item = tooltip.containerItems[idx];
+    } else if (idx < layout.numContainerItems) {
+      // Draw Actual Item
+      const auto &item = tooltip.containerItems[idx];
 
-			// Draw item sprite
-			int img = getSpriteImage(vg, item.id);
-			if (img > 0) {
-				nvgBeginPath(vg);
-				nvgRect(vg, itemX, itemY, 32, 32);
-				nvgFillPaint(vg, nvgImagePattern(vg, itemX, itemY, 32, 32, 0, img, 1.0f));
-				nvgFill(vg);
-			}
+      // Draw item sprite
+      int img = getSpriteImage(vg, item.id);
+      if (img > 0) {
+        nvgBeginPath(vg);
+        nvgRect(vg, itemX, itemY, 32, 32);
+        nvgFillPaint(vg,
+                     nvgImagePattern(vg, itemX, itemY, 32, 32, 0, img, 1.0f));
+        nvgFill(vg);
+      }
 
-			// Draw Count
-			if (item.count > 1) {
-				std::string countStr = std::to_string(item.count);
-				nvgFontSize(vg, 10.0f);
-				nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
+      // Draw Count
+      if (item.count > 1) {
+        std::string countStr = std::to_string(item.count);
+        nvgFontSize(vg, 10.0f);
+        nvgTextAlign(vg, NVG_ALIGN_RIGHT | NVG_ALIGN_BOTTOM);
 
-				// Text shadow
-				nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
-				nvgText(vg, itemX + 33, itemY + 33, countStr.c_str(), nullptr);
+        // Text shadow
+        nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+        nvgText(vg, itemX + 33, itemY + 33, countStr.c_str(), nullptr);
 
-				// Text
-				wxColour countCol = Theme::Get(Theme::Role::TooltipCountText);
-				nvgFillColor(vg, nvgRGBA(countCol.Red(), countCol.Green(), countCol.Blue(), 255));
-				nvgText(vg, itemX + 32, itemY + 32, countStr.c_str(), nullptr);
-			}
-		}
-	}
+        // Text
+        wxColour countCol = Theme::Get(Theme::Role::TooltipCountText);
+        nvgFillColor(vg, nvgRGBA(countCol.Red(), countCol.Green(),
+                                 countCol.Blue(), 255));
+        nvgText(vg, itemX + 32, itemY + 32, countStr.c_str(), nullptr);
+      }
+    }
+  }
 }
 
-void TooltipDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
-	if (!vg) {
-		return;
-	}
-	const auto& view = ctx.view;
+void TooltipDrawer::draw(NVGcontext *vg, const DrawContext &ctx) {
+  if (!vg) {
+    return;
+  }
+  const auto &view = ctx.view;
 
-	for (size_t i = 0; i < active_count; ++i) {
-		const auto& tooltip = tooltips[i];
-		int unscaled_x, unscaled_y;
-		view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
+  for (size_t i = 0; i < active_count; ++i) {
+    const auto &tooltip = tooltips[i];
+    int unscaled_x, unscaled_y;
+    view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z,
+                           unscaled_x, unscaled_y);
 
-		float zoom = view.zoom < 0.01f ? 1.0f : view.zoom;
+    float zoom = view.zoom < 0.01f ? 1.0f : view.zoom;
 
-		float screen_x = unscaled_x / zoom;
-		float screen_y = unscaled_y / zoom;
-		float tile_size_screen = 32.0f / zoom;
+    float screen_x = unscaled_x / zoom;
+    float screen_y = unscaled_y / zoom;
+    float tile_size_screen = 32.0f / zoom;
 
-		// Center on tile
-		screen_x += tile_size_screen / 2.0f;
-		screen_y += tile_size_screen / 2.0f;
+    // Center on tile
+    screen_x += tile_size_screen / 2.0f;
+    screen_y += tile_size_screen / 2.0f;
 
-		// Constants
-		float fontSize = 11.0f;
-		float padding = 10.0f;
-		float minWidth = 120.0f;
-		float maxWidth = 220.0f;
+    // Constants
+    float fontSize = 11.0f;
+    float padding = 10.0f;
+    float minWidth = 120.0f;
+    float maxWidth = 220.0f;
 
-		// 1. Prepare Content
-		prepareFields(tooltip);
+    // 1. Prepare Content
+    prepareFields(tooltip);
 
-		// Skip if nothing to show
-		if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
-			continue;
-		}
+    // Skip if nothing to show
+    if (scratch_fields_count == 0 && tooltip.containerItems.empty()) {
+      continue;
+    }
 
-		// 2. Calculate Layout
-		LayoutMetrics layout = calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
+    // 2. Calculate Layout
+    LayoutMetrics layout =
+        calculateLayout(vg, tooltip, maxWidth, minWidth, padding, fontSize);
 
-		// Position tooltip above tile
-		float tooltipX = screen_x - (layout.width / 2.0f);
-		float tooltipY = screen_y - layout.height - 12.0f;
+    // Position tooltip above tile
+    float tooltipX = screen_x - (layout.width / 2.0f);
+    float tooltipY = screen_y - layout.height - 12.0f;
 
-		// 3. Draw Background & Shadow
-		drawBackground(vg, tooltipX, tooltipY, layout.width, layout.height, 4.0f, tooltip);
+    // 3. Draw Background & Shadow
+    drawBackground(vg, tooltipX, tooltipY, layout.width, layout.height, 4.0f,
+                   tooltip);
 
-		// 4. Draw Text Fields
-		drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
+    // 4. Draw Text Fields
+    drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f,
+               padding, fontSize);
 
-		// 5. Draw Container Grid
-		drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
-	}
+    // 5. Draw Container Grid
+    drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
+  }
 }

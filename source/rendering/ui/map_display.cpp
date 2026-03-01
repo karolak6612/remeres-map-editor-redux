@@ -17,308 +17,309 @@
 
 #include "app/main.h"
 
-#include <format>
-#include <sstream>
-#include <time.h>
-#include <thread>
 #include <chrono>
-#include <wx/wfstream.h>
+#include <format>
 #include <spdlog/spdlog.h>
+#include <sstream>
+#include <thread>
+#include <time.h>
+#include <wx/wfstream.h>
 
-#include "ui/gui.h"
-#include "editor/editor.h"
-#include "editor/action_queue.h"
+#include "app/application.h"
 #include "brushes/brush.h"
+#include "brushes/brush_utility.h"
+#include "editor/action_queue.h"
+#include "editor/editor.h"
+#include "game/animation_timer.h"
+#include "game/item.h"
 #include "game/sprites.h"
+#include "live/live_client.h"
+#include "live/live_server.h"
 #include "map/map.h"
 #include "map/tile.h"
-#include "game/item.h"
+#include "palette/palette_window.h"
+#include "rendering/core/coordinate_mapper.h"
+#include "rendering/core/gl_viewport.h"
+#include "rendering/core/text_renderer.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/map_drawer.h"
+#include "rendering/ui/brush_selector.h"
+#include "rendering/ui/clipboard_handler.h"
+#include "rendering/ui/drawing_controller.h"
+#include "rendering/ui/keyboard_handler.h"
+#include "rendering/ui/map_display.h"
+#include "rendering/ui/map_menu_handler.h"
+#include "rendering/ui/map_status_updater.h"
+#include "rendering/ui/navigation_controller.h"
+#include "rendering/ui/popup_action_handler.h"
+#include "rendering/ui/screenshot_controller.h"
+#include "rendering/ui/selection_controller.h"
+#include "rendering/ui/zoom_controller.h"
+#include "rendering/utilities/tile_describer.h"
+#include "ui/browse_tile_window.h"
+#include "ui/dialog_helper.h"
+#include "ui/gui.h"
+#include "ui/map_popup_menu.h"
 #include "ui/properties/old_properties_window.h"
 #include "ui/properties/properties_window.h"
 #include "ui/tileset_window.h"
-#include "palette/palette_window.h"
-#include "rendering/ui/screenshot_controller.h"
-#include "rendering/utilities/tile_describer.h"
-#include "rendering/core/coordinate_mapper.h"
-#include "rendering/ui/map_display.h"
-#include "rendering/ui/map_status_updater.h"
-#include "rendering/map_drawer.h"
-#include "rendering/core/text_renderer.h"
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <nanovg_gl.h>
-#include "app/application.h"
-#include "live/live_server.h"
-#include "live/live_client.h"
-#include "ui/browse_tile_window.h"
-#include "ui/dialog_helper.h"
-#include "game/animation_timer.h"
-#include "ui/map_popup_menu.h"
-#include "brushes/brush_utility.h"
-#include "rendering/ui/clipboard_handler.h"
-#include "rendering/ui/keyboard_handler.h"
-#include "rendering/ui/brush_selector.h"
-#include "rendering/ui/popup_action_handler.h"
-#include "rendering/ui/zoom_controller.h"
-#include "rendering/ui/navigation_controller.h"
-#include "rendering/ui/selection_controller.h"
-#include "rendering/ui/drawing_controller.h"
-#include "rendering/ui/map_menu_handler.h"
 
-#include "brushes/doodad/doodad_brush.h"
-#include "brushes/house/house_exit_brush.h"
-#include "brushes/house/house_brush.h"
-#include "brushes/wall/wall_brush.h"
-#include "brushes/spawn/spawn_brush.h"
-#include "brushes/creature/creature_brush.h"
-#include "brushes/ground/ground_brush.h"
-#include "brushes/waypoint/waypoint_brush.h"
-#include "brushes/raw/raw_brush.h"
 #include "brushes/carpet/carpet_brush.h"
+#include "brushes/creature/creature_brush.h"
+#include "brushes/doodad/doodad_brush.h"
+#include "brushes/ground/ground_brush.h"
+#include "brushes/house/house_brush.h"
+#include "brushes/house/house_exit_brush.h"
+#include "brushes/raw/raw_brush.h"
+#include "brushes/spawn/spawn_brush.h"
 #include "brushes/table/table_brush.h"
+#include "brushes/wall/wall_brush.h"
+#include "brushes/waypoint/waypoint_brush.h"
 
-bool MapCanvas::processed[] = { 0 };
+bool MapCanvas::processed[] = {0};
 
 // Helper to create attributes
-static wxGLAttributes& GetCoreProfileAttributes() {
-	static wxGLAttributes vAttrs = []() {
-		wxGLAttributes a;
-		a.PlatformDefaults().Defaults().RGBA().DoubleBuffer().Depth(24).Stencil(8).EndList();
-		return a;
-	}();
-	return vAttrs;
+static wxGLAttributes &GetCoreProfileAttributes() {
+  static wxGLAttributes vAttrs = []() {
+    wxGLAttributes a;
+    a.PlatformDefaults()
+        .Defaults()
+        .RGBA()
+        .DoubleBuffer()
+        .Depth(24)
+        .Stencil(8)
+        .EndList();
+    return a;
+  }();
+  return vAttrs;
 }
 
-MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
-	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
-	editor(editor),
-	floor(GROUND_LAYER),
-	zoom(1.0),
-	renderer_initialized(false),
-	cursor_x(-1),
-	cursor_y(-1),
-	dragging(false),
-	boundbox_selection(false),
-	screendragging(false),
+MapCanvas::MapCanvas(MapWindow *parent, Editor &editor, int *attriblist)
+    : wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY,
+                 wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
+      editor(editor), floor(GROUND_LAYER), zoom(1.0),
+      renderer_initialized(false), cursor_x(-1), cursor_y(-1), dragging(false),
+      boundbox_selection(false), screendragging(false),
 
-	last_cursor_map_x(-1),
-	last_cursor_map_y(-1),
-	last_cursor_map_z(-1),
+      last_cursor_map_x(-1), last_cursor_map_y(-1), last_cursor_map_z(-1),
 
-	last_click_map_x(-1),
-	last_click_map_y(-1),
-	last_click_map_z(-1),
-	last_click_abs_x(-1),
-	last_click_abs_y(-1),
-	last_click_x(-1),
-	last_click_y(-1),
-	last_mmb_click_y(-1),
-	m_last_gc_time(0) {
-	// Context creation must happen on the main/UI thread
-	m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
-	if (!m_glContext->IsOK()) {
-		spdlog::error("MapCanvas: Failed to create wxGLContext");
-		m_glContext.reset();
-	}
+      last_click_map_x(-1), last_click_map_y(-1), last_click_map_z(-1),
+      last_click_abs_x(-1), last_click_abs_y(-1), last_click_x(-1),
+      last_click_y(-1), last_mmb_click_y(-1), m_last_gc_time(0) {
+  // Context creation must happen on the main/UI thread
+  m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
+  if (!m_glContext->IsOK()) {
+    spdlog::error("MapCanvas: Failed to create wxGLContext");
+    m_glContext.reset();
+  }
 
-	popup_menu = std::make_unique<MapPopupMenu>(editor);
-	animation_timer = std::make_unique<AnimationTimer>(this);
-	drawer = std::make_unique<MapDrawer>(this);
-	selection_controller = std::make_unique<SelectionController>(this, editor);
-	drawing_controller = std::make_unique<DrawingController>(this, editor);
-	screenshot_controller = std::make_unique<ScreenshotController>(this);
-	menu_handler = std::make_unique<MapMenuHandler>(this, editor);
-	menu_handler->BindEvents();
-	keyCode = WXK_NONE;
+  popup_menu = std::make_unique<MapPopupMenu>(editor);
+  animation_timer = std::make_unique<AnimationTimer>(this);
+  drawer = std::make_unique<MapDrawer>(this);
+  selection_controller = std::make_unique<SelectionController>(this, editor);
+  drawing_controller = std::make_unique<DrawingController>(this, editor);
+  screenshot_controller = std::make_unique<ScreenshotController>(this);
+  menu_handler = std::make_unique<MapMenuHandler>(this, editor);
+  menu_handler->BindEvents();
+  keyCode = WXK_NONE;
 
-	Bind(wxEVT_KEY_DOWN, &MapCanvas::OnKeyDown, this);
-	Bind(wxEVT_KEY_UP, &MapCanvas::OnKeyUp, this);
+  Bind(wxEVT_KEY_DOWN, &MapCanvas::OnKeyDown, this);
+  Bind(wxEVT_KEY_UP, &MapCanvas::OnKeyUp, this);
 
-	Bind(wxEVT_MOTION, &MapCanvas::OnMouseMove, this);
-	Bind(wxEVT_LEFT_UP, &MapCanvas::OnMouseLeftRelease, this);
-	Bind(wxEVT_LEFT_DOWN, &MapCanvas::OnMouseLeftClick, this);
-	Bind(wxEVT_LEFT_DCLICK, &MapCanvas::OnMouseLeftDoubleClick, this);
-	Bind(wxEVT_MIDDLE_DOWN, &MapCanvas::OnMouseCenterClick, this);
-	Bind(wxEVT_MIDDLE_UP, &MapCanvas::OnMouseCenterRelease, this);
-	Bind(wxEVT_RIGHT_DOWN, &MapCanvas::OnMouseRightClick, this);
-	Bind(wxEVT_RIGHT_UP, &MapCanvas::OnMouseRightRelease, this);
-	Bind(wxEVT_MOUSEWHEEL, &MapCanvas::OnWheel, this);
-	Bind(wxEVT_ENTER_WINDOW, &MapCanvas::OnGainMouse, this);
-	Bind(wxEVT_LEAVE_WINDOW, &MapCanvas::OnLoseMouse, this);
+  Bind(wxEVT_MOTION, &MapCanvas::OnMouseMove, this);
+  Bind(wxEVT_LEFT_UP, &MapCanvas::OnMouseLeftRelease, this);
+  Bind(wxEVT_LEFT_DOWN, &MapCanvas::OnMouseLeftClick, this);
+  Bind(wxEVT_LEFT_DCLICK, &MapCanvas::OnMouseLeftDoubleClick, this);
+  Bind(wxEVT_MIDDLE_DOWN, &MapCanvas::OnMouseCenterClick, this);
+  Bind(wxEVT_MIDDLE_UP, &MapCanvas::OnMouseCenterRelease, this);
+  Bind(wxEVT_RIGHT_DOWN, &MapCanvas::OnMouseRightClick, this);
+  Bind(wxEVT_RIGHT_UP, &MapCanvas::OnMouseRightRelease, this);
+  Bind(wxEVT_MOUSEWHEEL, &MapCanvas::OnWheel, this);
+  Bind(wxEVT_ENTER_WINDOW, &MapCanvas::OnGainMouse, this);
+  Bind(wxEVT_LEAVE_WINDOW, &MapCanvas::OnLoseMouse, this);
 
-	Bind(wxEVT_PAINT, &MapCanvas::OnPaint, this);
-	Bind(wxEVT_ERASE_BACKGROUND, &MapCanvas::OnEraseBackground, this);
+  Bind(wxEVT_PAINT, &MapCanvas::OnPaint, this);
+  Bind(wxEVT_ERASE_BACKGROUND, &MapCanvas::OnEraseBackground, this);
 }
 
 MapCanvas::~MapCanvas() {
-	bool context_ok = false;
-	if (m_glContext) {
-		context_ok = g_gl_context.EnsureContextCurrent(*m_glContext, this);
-	} else if (auto context = g_gui.GetGLContext(this)) {
-		context_ok = g_gl_context.EnsureContextCurrent(*context, this);
-	}
+  bool context_ok = false;
+  if (m_glContext) {
+    context_ok = g_gl_context.EnsureContextCurrent(*m_glContext, this);
+  } else if (auto context = g_gui.GetGLContext(this)) {
+    context_ok = g_gl_context.EnsureContextCurrent(*context, this);
+  }
 
-	if (!context_ok) {
-		spdlog::warn("MapCanvas: Destroying canvas without a current OpenGL context. Cleanup might fail or assert.");
-	}
+  if (!context_ok) {
+    spdlog::warn("MapCanvas: Destroying canvas without a current OpenGL "
+                 "context. Cleanup might fail or assert.");
+  }
 
-	drawer.reset();
-	m_nvg.reset();
+  drawer.reset();
+  m_nvg.reset();
 
-	g_gl_context.UnregisterCanvas(this);
+  g_gl_context.UnregisterCanvas(this);
 }
 
 void MapCanvas::Refresh() {
-	if (refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
-		refresh_watch.Start();
-		wxGLCanvas::Update();
-	}
-	wxGLCanvas::Refresh();
+  if (refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
+    refresh_watch.Start();
+    wxGLCanvas::Update();
+  }
+  wxGLCanvas::Refresh();
 }
 
-void MapCanvas::SetZoom(double value) {
-	ZoomController::SetZoom(this, value);
+void MapCanvas::SetZoom(double value) { ZoomController::SetZoom(this, value); }
+
+void MapCanvas::GetViewBox(int *view_scroll_x, int *view_scroll_y,
+                           int *screensize_x, int *screensize_y) const {
+  GetMapWindow()->GetViewSize(screensize_x, screensize_y);
+  GetMapWindow()->GetViewStart(view_scroll_x, view_scroll_y);
 }
 
-void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const {
-	GetMapWindow()->GetViewSize(screensize_x, screensize_y);
-	GetMapWindow()->GetViewStart(view_scroll_x, view_scroll_y);
-}
-
-MapWindow* MapCanvas::GetMapWindow() const {
-	return static_cast<MapWindow*>(GetParent());
+MapWindow *MapCanvas::GetMapWindow() const {
+  return static_cast<MapWindow *>(GetParent());
 }
 
 void MapCanvas::EnsureNanoVG() {
-	if (!m_nvg) {
-		if (!gladLoadGL()) {
-			spdlog::error("MapCanvas: Failed to initialize GLAD");
-		}
-		m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
-		if (m_nvg) {
-			TextRenderer::LoadFont(m_nvg.get());
-		} else {
-			spdlog::error("MapCanvas: Failed to initialize NanoVG");
-		}
-	}
+  if (!m_nvg) {
+    if (!gladLoadGL()) {
+      spdlog::error("MapCanvas: Failed to initialize GLAD");
+    }
+    m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
+    if (m_nvg) {
+      TextRenderer::LoadFont(m_nvg.get());
+    } else {
+      spdlog::error("MapCanvas: Failed to initialize NanoVG");
+    }
+  }
 }
 
-void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
-	if (!vg) {
-		return;
-	}
+void MapCanvas::DrawOverlays(NVGcontext *vg, const DrawingOptions &options) {
+  if (!vg) {
+    return;
+  }
 
-	// Sanitize state before handover to NanoVG
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+  // Sanitize state before handover to NanoVG
+  glUseProgram(0);
+  glBindVertexArray(0);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
-	glClear(GL_STENCIL_BUFFER_BIT);
-	TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
+  glClear(GL_STENCIL_BUFFER_BIT);
+  TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y,
+                           GetContentScaleFactor());
 
-	if (options.show_creatures) {
-		drawer->DrawCreatureNames(vg);
-	}
-	if (options.show_tooltips) {
-		drawer->DrawTooltips(vg);
-	}
-	if (options.show_hooks) {
-		drawer->DrawHookIndicators(vg);
-	}
-	if (options.highlight_locked_doors) {
-		drawer->DrawDoorIndicators(vg);
-	}
+  if (options.show_creatures) {
+    drawer->DrawCreatureNames(vg);
+  }
+  if (options.show_tooltips) {
+    drawer->DrawTooltips(vg);
+  }
+  if (options.show_hooks) {
+    drawer->DrawHookIndicators(vg);
+  }
+  if (options.highlight_locked_doors) {
+    drawer->DrawDoorIndicators(vg);
+  }
 
-	TextRenderer::EndFrame(vg);
+  TextRenderer::EndFrame(vg);
 
-	// Sanitize state after NanoVG to avoid polluting the next frame or other tabs
-	glUseProgram(0);
-	glBindVertexArray(0);
+  // Sanitize state after NanoVG to avoid polluting the next frame or other tabs
+  glUseProgram(0);
+  glBindVertexArray(0);
 }
 
 void MapCanvas::PerformGarbageCollection() {
-	// Clean unused textures once every second
-	// Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
-	long current_time = wxGetLocalTime();
-	if (current_time - m_last_gc_time >= 1 && g_gui.GetCurrentMapTab() == GetParent()) {
-		g_gui.gfx.garbageCollection();
-		m_last_gc_time = current_time;
-	}
+  // Clean unused textures once every second
+  // Only run GC if this is the active tab to prevent multiple tabs from
+  // fighting over resources
+  long current_time = wxGetLocalTime();
+  if (current_time - m_last_gc_time >= 1 &&
+      g_gui.GetCurrentMapTab() == GetParent()) {
+    g_gui.texture_gc.garbageCollection();
+    m_last_gc_time = current_time;
+  }
 }
 
-void MapCanvas::OnPaint(wxPaintEvent& event) {
-	wxPaintDC dc(this); // validates the paint event
-	if (m_glContext) {
-		g_gl_context.EnsureContextCurrent(*m_glContext, this);
-		g_gl_context.SetFallbackCanvas(this);
-	}
+void MapCanvas::OnPaint(wxPaintEvent &event) {
+  wxPaintDC dc(this); // validates the paint event
+  if (m_glContext) {
+    g_gl_context.EnsureContextCurrent(*m_glContext, this);
+    g_gl_context.SetFallbackCanvas(this);
+  }
 
-	EnsureNanoVG();
+  EnsureNanoVG();
 
-	if (g_gui.IsRenderingEnabled()) {
-		// Advance graphics clock and drain the preloader queue before rendering
-		g_gui.gfx.updateTime();
+  if (g_gui.IsRenderingEnabled()) {
+    // Advance graphics clock and drain the preloader queue before rendering
+    g_gui.texture_gc.updateTime();
 
-		DrawingOptions& options = drawer->getOptions();
-		if (screenshot_controller->IsCapturing()) {
-			options.SetIngame();
-		} else {
-			options.Update();
-		}
+    DrawingOptions &options = drawer->getOptions();
+    if (screenshot_controller->IsCapturing()) {
+      options.SetIngame();
+    } else {
+      options.Update();
+    }
 
-		options.dragging = selection_controller->IsDragging();
-		options.boundbox_selection = selection_controller->IsBoundboxSelection();
+    options.dragging = selection_controller->IsDragging();
+    options.boundbox_selection = selection_controller->IsBoundboxSelection();
 
-		if (options.show_preview) {
-			animation_timer->Start();
-			g_gui.gfx.resumeAnimation();
-		} else {
-			animation_timer->Stop();
-			g_gui.gfx.pauseAnimation();
-		}
+    if (options.show_preview) {
+      animation_timer->Start();
+      g_gui.texture_gc.resumeAnimation();
+    } else {
+      animation_timer->Stop();
+      g_gui.texture_gc.pauseAnimation();
+    }
 
-		// BatchRenderer calls removed - MapDrawer handles its own renderers
+    // BatchRenderer calls removed - MapDrawer handles its own renderers
 
-		drawer->SetupVars();
-		drawer->SetupGL();
-		drawer->Draw();
+    drawer->SetupVars();
+    drawer->SetupGL();
+    drawer->Draw();
 
-		if (screenshot_controller->IsCapturing()) {
-			drawer->TakeScreenshot(screenshot_controller->GetBuffer());
-		}
+    if (screenshot_controller->IsCapturing()) {
+      drawer->TakeScreenshot(screenshot_controller->GetBuffer());
+    }
 
-		drawer->Release();
+    drawer->Release();
 
-		// Draw UI (Tooltips, Overlays & HUD) using NanoVG
-		DrawOverlays(m_nvg.get(), options);
+    // Draw UI (Tooltips, Overlays & HUD) using NanoVG
+    DrawOverlays(m_nvg.get(), options);
 
-		drawer->ClearFrameOverlays();
-	}
+    drawer->ClearFrameOverlays();
+  }
 
-	PerformGarbageCollection();
+  PerformGarbageCollection();
 
-	SwapBuffers();
+  SwapBuffers();
 
-	// FPS tracking and limiting
-	frame_pacer.UpdateAndLimit(g_settings.getInteger(Config::FRAME_RATE_LIMIT), g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
+  // FPS tracking and limiting
+  frame_pacer.UpdateAndLimit(g_settings.getInteger(Config::FRAME_RATE_LIMIT),
+                             g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
 
-	// Send newd node requests
-	if (editor.live_manager.GetClient()) {
-		editor.live_manager.GetClient()->sendNodeRequests();
-	}
+  // Send newd node requests
+  if (editor.live_manager.GetClient()) {
+    editor.live_manager.GetClient()->sendNodeRequests();
+  }
 }
 
 void MapCanvas::TakeScreenshot(wxFileName path, wxString format) {
-	screenshot_controller->TakeScreenshot(path, format);
+  screenshot_controller->TakeScreenshot(path, format);
 }
 
-void MapCanvas::ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y) {
-	int start_x, start_y;
-	GetMapWindow()->GetViewStart(&start_x, &start_y);
+void MapCanvas::ScreenToMap(int screen_x, int screen_y, int *map_x,
+                            int *map_y) {
+  int start_x, start_y;
+  GetMapWindow()->GetViewStart(&start_x, &start_y);
 
-	CoordinateMapper::ScreenToMap(screen_x, screen_y, start_x, start_y, zoom, floor, GetContentScaleFactor(), map_x, map_y);
+  CoordinateMapper::ScreenToMap(screen_x, screen_y, start_x, start_y, zoom,
+                                floor, GetContentScaleFactor(), map_x, map_y);
 }
 #if 0
 
@@ -335,308 +336,317 @@ if (floor <= GROUND_LAYER) {
 }
 
 #endif
-void MapCanvas::GetScreenCenter(int* map_x, int* map_y) {
-	int width, height;
-	GetMapWindow()->GetViewSize(&width, &height);
-	ScreenToMap(width / 2, height / 2, map_x, map_y);
+void MapCanvas::GetScreenCenter(int *map_x, int *map_y) {
+  int width, height;
+  GetMapWindow()->GetViewSize(&width, &height);
+  ScreenToMap(width / 2, height / 2, map_x, map_y);
 }
 
 Position MapCanvas::GetCursorPosition() const {
-	return Position(last_cursor_map_x, last_cursor_map_y, floor);
+  return Position(last_cursor_map_x, last_cursor_map_y, floor);
 }
 
 void MapCanvas::UpdatePositionStatus(int x, int y) {
-	if (x == -1) {
-		x = cursor_x;
-	}
-	if (y == -1) {
-		y = cursor_y;
-	}
+  if (x == -1) {
+    x = cursor_x;
+  }
+  if (y == -1) {
+    y = cursor_y;
+  }
 
-	int map_x, map_y;
-	ScreenToMap(x, y, &map_x, &map_y);
+  int map_x, map_y;
+  ScreenToMap(x, y, &map_x, &map_y);
 
-	MapStatusUpdater::Update(editor, map_x, map_y, floor);
+  MapStatusUpdater::Update(editor, map_x, map_y, floor);
 }
 
-void MapCanvas::UpdateZoomStatus() {
-	ZoomController::UpdateStatus(this);
+void MapCanvas::UpdateZoomStatus() { ZoomController::UpdateStatus(this); }
+
+void MapCanvas::OnMouseMove(wxMouseEvent &event) {
+  NavigationController::HandleMouseDrag(this, event);
+
+  cursor_x = event.GetX();
+  cursor_y = event.GetY();
+
+  int mouse_map_x, mouse_map_y;
+  MouseToMap(&mouse_map_x, &mouse_map_y);
+
+  bool map_update = false;
+  if (last_cursor_map_x != mouse_map_x || last_cursor_map_y != mouse_map_y ||
+      last_cursor_map_z != floor) {
+    map_update = true;
+  }
+  last_cursor_map_x = mouse_map_x;
+  last_cursor_map_y = mouse_map_y;
+  last_cursor_map_z = floor;
+
+  if (map_update) {
+    g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
+    UpdatePositionStatus(cursor_x, cursor_y);
+    UpdateZoomStatus();
+    Refresh();
+  }
+
+  if (g_gui.IsSelectionMode()) {
+    selection_controller->HandleDrag(Position(mouse_map_x, mouse_map_y, floor),
+                                     event.ShiftDown(), event.ControlDown(),
+                                     event.AltDown());
+  } else { // Drawing mode
+    drawing_controller->HandleDrag(Position(mouse_map_x, mouse_map_y, floor),
+                                   event.ShiftDown(), event.ControlDown(),
+                                   event.AltDown());
+  }
 }
 
-void MapCanvas::OnMouseMove(wxMouseEvent& event) {
-	NavigationController::HandleMouseDrag(this, event);
-
-	cursor_x = event.GetX();
-	cursor_y = event.GetY();
-
-	int mouse_map_x, mouse_map_y;
-	MouseToMap(&mouse_map_x, &mouse_map_y);
-
-	bool map_update = false;
-	if (last_cursor_map_x != mouse_map_x || last_cursor_map_y != mouse_map_y || last_cursor_map_z != floor) {
-		map_update = true;
-	}
-	last_cursor_map_x = mouse_map_x;
-	last_cursor_map_y = mouse_map_y;
-	last_cursor_map_z = floor;
-
-	if (map_update) {
-		g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
-		UpdatePositionStatus(cursor_x, cursor_y);
-		UpdateZoomStatus();
-		Refresh();
-	}
-
-	if (g_gui.IsSelectionMode()) {
-		selection_controller->HandleDrag(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	} else { // Drawing mode
-		drawing_controller->HandleDrag(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	}
+void MapCanvas::OnMouseLeftRelease(wxMouseEvent &event) {
+  OnMouseActionRelease(event);
 }
 
-void MapCanvas::OnMouseLeftRelease(wxMouseEvent& event) {
-	OnMouseActionRelease(event);
+void MapCanvas::OnMouseLeftClick(wxMouseEvent &event) {
+  OnMouseActionClick(event);
 }
 
-void MapCanvas::OnMouseLeftClick(wxMouseEvent& event) {
-	OnMouseActionClick(event);
+void MapCanvas::OnMouseLeftDoubleClick(wxMouseEvent &event) {
+  int mouse_map_x, mouse_map_y;
+  ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
+  selection_controller->HandleDoubleClick(
+      Position(mouse_map_x, mouse_map_y, floor));
 }
 
-void MapCanvas::OnMouseLeftDoubleClick(wxMouseEvent& event) {
-	int mouse_map_x, mouse_map_y;
-	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
-	selection_controller->HandleDoubleClick(Position(mouse_map_x, mouse_map_y, floor));
+void MapCanvas::OnMouseCenterClick(wxMouseEvent &event) {
+  if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
+    OnMousePropertiesClick(event);
+  } else {
+    OnMouseCameraClick(event);
+  }
 }
 
-void MapCanvas::OnMouseCenterClick(wxMouseEvent& event) {
-	if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
-		OnMousePropertiesClick(event);
-	} else {
-		OnMouseCameraClick(event);
-	}
+void MapCanvas::OnMouseCenterRelease(wxMouseEvent &event) {
+  if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
+    OnMousePropertiesRelease(event);
+  } else {
+    OnMouseCameraRelease(event);
+  }
 }
 
-void MapCanvas::OnMouseCenterRelease(wxMouseEvent& event) {
-	if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
-		OnMousePropertiesRelease(event);
-	} else {
-		OnMouseCameraRelease(event);
-	}
+void MapCanvas::OnMouseRightClick(wxMouseEvent &event) {
+  if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
+    OnMouseCameraClick(event);
+  } else {
+    OnMousePropertiesClick(event);
+  }
 }
 
-void MapCanvas::OnMouseRightClick(wxMouseEvent& event) {
-	if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
-		OnMouseCameraClick(event);
-	} else {
-		OnMousePropertiesClick(event);
-	}
+void MapCanvas::OnMouseRightRelease(wxMouseEvent &event) {
+  if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
+    OnMouseCameraRelease(event);
+  } else {
+    OnMousePropertiesRelease(event);
+  }
 }
 
-void MapCanvas::OnMouseRightRelease(wxMouseEvent& event) {
-	if (g_settings.getInteger(Config::SWITCH_MOUSEBUTTONS)) {
-		OnMouseCameraRelease(event);
-	} else {
-		OnMousePropertiesRelease(event);
-	}
+void MapCanvas::OnMouseActionClick(wxMouseEvent &event) {
+  SetFocus();
+
+  int mouse_map_x, mouse_map_y;
+  ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
+
+  if (event.ControlDown() && event.AltDown()) {
+    Tile *tile = editor.map.getTile(mouse_map_x, mouse_map_y, floor);
+    BrushSelector::SelectSmartBrush(editor, tile);
+  } else if (g_gui.IsSelectionMode()) {
+    selection_controller->HandleClick(Position(mouse_map_x, mouse_map_y, floor),
+                                      event.ShiftDown(), event.ControlDown(),
+                                      event.AltDown());
+  } else if (g_gui.GetCurrentBrush()) { // Drawing mode
+    drawing_controller->HandleClick(Position(mouse_map_x, mouse_map_y, floor),
+                                    event.ShiftDown(), event.ControlDown(),
+                                    event.AltDown());
+  }
+  last_click_x = int(event.GetX() * zoom);
+  last_click_y = int(event.GetY() * zoom);
+
+  int start_x, start_y;
+  static_cast<MapWindow *>(GetParent())->GetViewStart(&start_x, &start_y);
+  last_click_abs_x = last_click_x + start_x;
+  last_click_abs_y = last_click_y + start_y;
+
+  last_click_map_x = mouse_map_x;
+  last_click_map_y = mouse_map_y;
+  last_click_map_z = floor;
+  g_gui.RefreshView();
+  g_gui.UpdateMinimap();
 }
 
-void MapCanvas::OnMouseActionClick(wxMouseEvent& event) {
-	SetFocus();
+void MapCanvas::OnMouseActionRelease(wxMouseEvent &event) {
+  int mouse_map_x, mouse_map_y;
+  ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
 
-	int mouse_map_x, mouse_map_y;
-	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
+  int move_x = last_click_map_x - mouse_map_x;
+  int move_y = last_click_map_y - mouse_map_y;
+  int move_z = last_click_map_z - floor;
 
-	if (event.ControlDown() && event.AltDown()) {
-		Tile* tile = editor.map.getTile(mouse_map_x, mouse_map_y, floor);
-		BrushSelector::SelectSmartBrush(editor, tile);
-	} else if (g_gui.IsSelectionMode()) {
-		selection_controller->HandleClick(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	} else if (g_gui.GetCurrentBrush()) { // Drawing mode
-		drawing_controller->HandleClick(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	}
-	last_click_x = int(event.GetX() * zoom);
-	last_click_y = int(event.GetY() * zoom);
-
-	int start_x, start_y;
-	static_cast<MapWindow*>(GetParent())->GetViewStart(&start_x, &start_y);
-	last_click_abs_x = last_click_x + start_x;
-	last_click_abs_y = last_click_y + start_y;
-
-	last_click_map_x = mouse_map_x;
-	last_click_map_y = mouse_map_y;
-	last_click_map_z = floor;
-	g_gui.RefreshView();
-	g_gui.UpdateMinimap();
+  if (g_gui.IsSelectionMode()) {
+    selection_controller->HandleRelease(
+        Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(),
+        event.ControlDown(), event.AltDown());
+  } else if (g_gui.GetCurrentBrush()) { // Drawing mode
+    drawing_controller->HandleRelease(Position(mouse_map_x, mouse_map_y, floor),
+                                      event.ShiftDown(), event.ControlDown(),
+                                      event.AltDown());
+  }
+  g_gui.RefreshView();
+  g_gui.UpdateMinimap();
 }
 
-void MapCanvas::OnMouseActionRelease(wxMouseEvent& event) {
-	int mouse_map_x, mouse_map_y;
-	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
+void MapCanvas::OnMouseCameraClick(wxMouseEvent &event) {
+  SetFocus();
 
-	int move_x = last_click_map_x - mouse_map_x;
-	int move_y = last_click_map_y - mouse_map_y;
-	int move_z = last_click_map_z - floor;
-
-	if (g_gui.IsSelectionMode()) {
-		selection_controller->HandleRelease(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	} else if (g_gui.GetCurrentBrush()) { // Drawing mode
-		drawing_controller->HandleRelease(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	}
-	g_gui.RefreshView();
-	g_gui.UpdateMinimap();
+  last_mmb_click_x = event.GetX();
+  last_mmb_click_y = event.GetY();
+  if (event.ControlDown()) {
+    ZoomController::ApplyRelativeZoom(this, 1.0 - zoom);
+  } else {
+    NavigationController::HandleCameraClick(this, event);
+  }
 }
 
-void MapCanvas::OnMouseCameraClick(wxMouseEvent& event) {
-	SetFocus();
-
-	last_mmb_click_x = event.GetX();
-	last_mmb_click_y = event.GetY();
-	if (event.ControlDown()) {
-		ZoomController::ApplyRelativeZoom(this, 1.0 - zoom);
-	} else {
-		NavigationController::HandleCameraClick(this, event);
-	}
+void MapCanvas::OnMouseCameraRelease(wxMouseEvent &event) {
+  NavigationController::HandleCameraRelease(this, event);
 }
 
-void MapCanvas::OnMouseCameraRelease(wxMouseEvent& event) {
-	NavigationController::HandleCameraRelease(this, event);
+void MapCanvas::OnMousePropertiesClick(wxMouseEvent &event) {
+  SetFocus();
+
+  int mouse_map_x, mouse_map_y;
+  ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
+  Tile *tile = editor.map.getTile(mouse_map_x, mouse_map_y, floor);
+
+  if (g_gui.IsDrawingMode()) {
+    g_gui.SetSelectionMode();
+  }
+
+  selection_controller->HandlePropertiesClick(
+      Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(),
+      event.ControlDown(), event.AltDown());
+  last_click_y = int(event.GetY() * zoom);
+
+  int start_x, start_y;
+  static_cast<MapWindow *>(GetParent())->GetViewStart(&start_x, &start_y);
+  last_click_abs_x = last_click_x + start_x;
+  last_click_abs_y = last_click_y + start_y;
+
+  last_click_map_x = mouse_map_x;
+  last_click_map_y = mouse_map_y;
+  g_gui.RefreshView();
 }
 
-void MapCanvas::OnMousePropertiesClick(wxMouseEvent& event) {
-	SetFocus();
+void MapCanvas::OnMousePropertiesRelease(wxMouseEvent &event) {
+  int mouse_map_x, mouse_map_y;
+  ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
 
-	int mouse_map_x, mouse_map_y;
-	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
-	Tile* tile = editor.map.getTile(mouse_map_x, mouse_map_y, floor);
+  if (g_gui.IsDrawingMode()) {
+    g_gui.SetSelectionMode();
+  }
 
-	if (g_gui.IsDrawingMode()) {
-		g_gui.SetSelectionMode();
-	}
+  selection_controller->HandlePropertiesRelease(
+      Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(),
+      event.ControlDown(), event.AltDown());
 
-	selection_controller->HandlePropertiesClick(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-	last_click_y = int(event.GetY() * zoom);
+  popup_menu->Update();
+  PopupMenu(popup_menu.get());
 
-	int start_x, start_y;
-	static_cast<MapWindow*>(GetParent())->GetViewStart(&start_x, &start_y);
-	last_click_abs_x = last_click_x + start_x;
-	last_click_abs_y = last_click_y + start_y;
+  editor.actionQueue->resetTimer();
+  dragging = false;
+  boundbox_selection = false;
 
-	last_click_map_x = mouse_map_x;
-	last_click_map_y = mouse_map_y;
-	g_gui.RefreshView();
+  last_cursor_map_x = mouse_map_x;
+  last_cursor_map_y = mouse_map_y;
+  last_cursor_map_z = floor;
+
+  g_gui.RefreshView();
 }
 
-void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event) {
-	int mouse_map_x, mouse_map_y;
-	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
+void MapCanvas::OnWheel(wxMouseEvent &event) {
+  if (event.ControlDown()) {
+    NavigationController::HandleWheel(this, event);
+  } else if (event.AltDown()) {
+    drawing_controller->HandleWheel(event.GetWheelRotation(), event.AltDown(),
+                                    event.ControlDown());
+  } else {
+    ZoomController::OnWheel(this, event);
+  }
 
-	if (g_gui.IsDrawingMode()) {
-		g_gui.SetSelectionMode();
-	}
-
-	selection_controller->HandlePropertiesRelease(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
-
-	popup_menu->Update();
-	PopupMenu(popup_menu.get());
-
-	editor.actionQueue->resetTimer();
-	dragging = false;
-	boundbox_selection = false;
-
-	last_cursor_map_x = mouse_map_x;
-	last_cursor_map_y = mouse_map_y;
-	last_cursor_map_z = floor;
-
-	g_gui.RefreshView();
+  Refresh();
 }
 
-void MapCanvas::OnWheel(wxMouseEvent& event) {
-	if (event.ControlDown()) {
-		NavigationController::HandleWheel(this, event);
-	} else if (event.AltDown()) {
-		drawing_controller->HandleWheel(event.GetWheelRotation(), event.AltDown(), event.ControlDown());
-	} else {
-		ZoomController::OnWheel(this, event);
-	}
+void MapCanvas::OnLoseMouse(wxMouseEvent &event) { Refresh(); }
 
-	Refresh();
+void MapCanvas::OnGainMouse(wxMouseEvent &event) {
+  if (!event.LeftIsDown()) {
+    dragging = false;
+    boundbox_selection = false;
+    drawing_controller->Reset();
+  }
+  if (!event.MiddleIsDown()) {
+    screendragging = false;
+  }
+
+  Refresh();
 }
 
-void MapCanvas::OnLoseMouse(wxMouseEvent& event) {
-	Refresh();
+void MapCanvas::OnKeyDown(wxKeyEvent &event) {
+  KeyboardHandler::OnKeyDown(this, event);
 }
 
-void MapCanvas::OnGainMouse(wxMouseEvent& event) {
-	if (!event.LeftIsDown()) {
-		dragging = false;
-		boundbox_selection = false;
-		drawing_controller->Reset();
-	}
-	if (!event.MiddleIsDown()) {
-		screendragging = false;
-	}
-
-	Refresh();
-}
-
-void MapCanvas::OnKeyDown(wxKeyEvent& event) {
-	KeyboardHandler::OnKeyDown(this, event);
-}
-
-void MapCanvas::OnKeyUp(wxKeyEvent& event) {
-	KeyboardHandler::OnKeyUp(this, event);
+void MapCanvas::OnKeyUp(wxKeyEvent &event) {
+  KeyboardHandler::OnKeyUp(this, event);
 }
 
 void MapCanvas::ChangeFloor(int new_floor) {
-	NavigationController::ChangeFloor(this, new_floor);
+  NavigationController::ChangeFloor(this, new_floor);
 }
 
 void MapCanvas::EnterDrawingMode() {
-	dragging = false;
-	boundbox_selection = false;
-	EndPasting();
-	Refresh();
+  dragging = false;
+  boundbox_selection = false;
+  EndPasting();
+  Refresh();
 }
 
 void MapCanvas::EnterSelectionMode() {
-	drawing_controller->Reset();
-	editor.replace_brush = nullptr;
-	Refresh();
+  drawing_controller->Reset();
+  editor.replace_brush = nullptr;
+  Refresh();
 }
 
-bool MapCanvas::isPasting() const {
-	return g_gui.IsPasting();
-}
+bool MapCanvas::isPasting() const { return g_gui.IsPasting(); }
 
-void MapCanvas::StartPasting() {
-	g_gui.StartPasting();
-}
+void MapCanvas::StartPasting() { g_gui.StartPasting(); }
 
-void MapCanvas::EndPasting() {
-	g_gui.EndPasting();
-}
+void MapCanvas::EndPasting() { g_gui.EndPasting(); }
 
 void MapCanvas::Reset() {
-	cursor_x = 0;
-	cursor_y = 0;
+  cursor_x = 0;
+  cursor_y = 0;
 
-	zoom = 1.0;
-	floor = GROUND_LAYER;
+  zoom = 1.0;
+  floor = GROUND_LAYER;
 
-	dragging = false;
-	boundbox_selection = false;
-	screendragging = false;
-	drawing_controller->Reset();
+  dragging = false;
+  boundbox_selection = false;
+  screendragging = false;
+  drawing_controller->Reset();
 
-	editor.replace_brush = nullptr;
+  editor.replace_brush = nullptr;
 
-	last_click_map_x = -1;
-	last_click_map_y = -1;
-	last_click_map_z = -1;
+  last_click_map_x = -1;
+  last_click_map_y = -1;
+  last_click_map_z = -1;
 
-	last_mmb_click_x = -1;
-	last_mmb_click_y = -1;
+  last_mmb_click_x = -1;
+  last_mmb_click_y = -1;
 
-	editor.selection.clear();
-	editor.actionQueue->clear();
+  editor.selection.clear();
+  editor.actionQueue->clear();
 }

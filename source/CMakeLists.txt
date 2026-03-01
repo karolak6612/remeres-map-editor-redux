@@ -144,6 +144,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_palette_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
@@ -170,6 +171,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/shader_program.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/shared_geometry.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_batch.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_instance.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_light.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sync_handle.h
@@ -177,6 +179,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_array.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_atlas.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_garbage_collector.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/brush_cursor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/drag_shadow_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/live_cursor_drawer.h
@@ -489,6 +492,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/multi_draw_indirect_renderer.cpp

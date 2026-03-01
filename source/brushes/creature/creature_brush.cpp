@@ -17,97 +17,97 @@
 
 #include "app/main.h"
 
-#include "brushes/creature/creature_brush.h"
-#include "ui/gui.h"
 #include "app/settings.h"
-#include "map/tile.h"
+#include "brushes/creature/creature_brush.h"
 #include "game/creature.h"
-#include "map/basemap.h"
-#include "game/spawn.h"
 #include "game/items.h"
+#include "game/spawn.h"
+#include "map/basemap.h"
+#include "map/tile.h"
+#include "rendering/core/game_sprite.h"
+#include "rendering/core/sprite_database.h"
+#include "ui/gui.h"
 
 //=============================================================================
 // Creature brush
 
-CreatureBrush::CreatureBrush(CreatureType* type) :
-	Brush(),
-	creature_type(type) {
-	ASSERT(type->brush == nullptr);
-	type->brush = this;
+CreatureBrush::CreatureBrush(CreatureType *type)
+    : Brush(), creature_type(type) {
+  ASSERT(type->brush == nullptr);
+  type->brush = this;
 }
 
 CreatureBrush::~CreatureBrush() {
-	////
+  ////
 }
 
-int CreatureBrush::getLookID() const {
-	return 0;
-}
+int CreatureBrush::getLookID() const { return 0; }
 
-Sprite* CreatureBrush::getSprite() const {
-	if (creature_type) {
-		const Outfit& outfit = creature_type->outfit;
-		if (outfit.lookItem != 0) {
-			ItemType& it = g_items[outfit.lookItem];
-			return it.sprite;
-		}
+Sprite *CreatureBrush::getSprite() const {
+  if (creature_type) {
+    const Outfit &outfit = creature_type->outfit;
+    if (outfit.lookItem != 0) {
+      ItemType &it = g_items[outfit.lookItem];
+      return it.sprite;
+    }
 
-		if (outfit.lookType != 0) {
-			if (!creature_sprite_wrapper) {
-				GameSprite* gs = g_gui.gfx.getCreatureSprite(outfit.lookType);
-				if (gs) {
-					creature_sprite_wrapper = std::make_unique<CreatureSprite>(gs, outfit);
-				}
-			}
-			return creature_sprite_wrapper.get();
-		}
-	}
-	return nullptr;
+    if (outfit.lookType != 0) {
+      if (!creature_sprite_wrapper) {
+        GameSprite *gs =
+            g_gui.sprite_database.getCreatureSprite(outfit.lookType);
+        if (gs) {
+          creature_sprite_wrapper =
+              std::make_unique<CreatureSprite>(gs, outfit);
+        }
+      }
+      return creature_sprite_wrapper.get();
+    }
+  }
+  return nullptr;
 }
 
 std::string CreatureBrush::getName() const {
-	if (creature_type) {
-		return creature_type->name;
-	}
-	return "Creature Brush";
+  if (creature_type) {
+    return creature_type->name;
+  }
+  return "Creature Brush";
 }
 
-bool CreatureBrush::canDraw(BaseMap* map, const Position& position) const {
-	Tile* tile = map->getTile(position);
-	if (creature_type && tile && !tile->isBlocking()) {
-		if (tile->getLocation()->getSpawnCount() != 0 || g_settings.getInteger(Config::AUTO_CREATE_SPAWN)) {
-			if (tile->isPZ()) {
-				if (creature_type->isNpc) {
-					return true;
-				}
-			} else {
-				return true;
-			}
-		}
-	}
-	return false;
+bool CreatureBrush::canDraw(BaseMap *map, const Position &position) const {
+  Tile *tile = map->getTile(position);
+  if (creature_type && tile && !tile->isBlocking()) {
+    if (tile->getLocation()->getSpawnCount() != 0 ||
+        g_settings.getInteger(Config::AUTO_CREATE_SPAWN)) {
+      if (tile->isPZ()) {
+        if (creature_type->isNpc) {
+          return true;
+        }
+      } else {
+        return true;
+      }
+    }
+  }
+  return false;
 }
 
-void CreatureBrush::undraw(BaseMap* map, Tile* tile) {
-	tile->creature.reset();
+void CreatureBrush::undraw(BaseMap *map, Tile *tile) { tile->creature.reset(); }
+
+void CreatureBrush::draw(BaseMap *map, Tile *tile, void *parameter) {
+  ASSERT(tile);
+  ASSERT(parameter);
+  draw_creature(map, tile);
 }
 
-void CreatureBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
-	ASSERT(tile);
-	ASSERT(parameter);
-	draw_creature(map, tile);
-}
-
-void CreatureBrush::draw_creature(BaseMap* map, Tile* tile) {
-	if (canDraw(map, tile->getPosition())) {
-		undraw(map, tile);
-		if (creature_type) {
-			if (tile->spawn == nullptr && tile->getLocation()->getSpawnCount() == 0) {
-				// manually place spawn on location
-				tile->spawn = std::make_unique<Spawn>(1);
-			}
-			tile->creature = std::make_unique<Creature>(creature_type);
-			tile->creature->setSpawnTime(g_gui.GetSpawnTime());
-		}
-	}
+void CreatureBrush::draw_creature(BaseMap *map, Tile *tile) {
+  if (canDraw(map, tile->getPosition())) {
+    undraw(map, tile);
+    if (creature_type) {
+      if (tile->spawn == nullptr && tile->getLocation()->getSpawnCount() == 0) {
+        // manually place spawn on location
+        tile->spawn = std::make_unique<Spawn>(1);
+      }
+      tile->creature = std::make_unique<Creature>(creature_type);
+      tile->creature->setSpawnTime(g_gui.GetSpawnTime());
+    }
+  }
 }

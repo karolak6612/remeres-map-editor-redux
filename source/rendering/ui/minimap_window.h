@@ -18,31 +18,32 @@
 #ifndef RME_MINIMAP_WINDOW_H_
 #define RME_MINIMAP_WINDOW_H_
 
-#include <wx/glcanvas.h>
 #include <memory>
+#include <wx/glcanvas.h>
 
-#include "rendering/core/graphics.h"
+
+#include "rendering/core/gl_resources.h"
 
 class MinimapDrawer;
 class MinimapWindow : public wxGLCanvas {
 public:
-	MinimapWindow(wxWindow* parent);
-	~MinimapWindow() override;
+  MinimapWindow(wxWindow *parent);
+  ~MinimapWindow() override;
 
-	void OnPaint(wxPaintEvent&);
-	void OnEraseBackground(wxEraseEvent&) { }
-	void OnMouseClick(wxMouseEvent&);
-	void OnSize(wxSizeEvent&);
-	void OnClose(wxCloseEvent&);
+  void OnPaint(wxPaintEvent &);
+  void OnEraseBackground(wxEraseEvent &) {}
+  void OnMouseClick(wxMouseEvent &);
+  void OnSize(wxSizeEvent &);
+  void OnClose(wxCloseEvent &);
 
-	void DelayedUpdate();
-	void OnDelayedUpdate(wxTimerEvent& event);
-	void OnKey(wxKeyEvent& event);
+  void DelayedUpdate();
+  void OnDelayedUpdate(wxTimerEvent &event);
+  void OnKey(wxKeyEvent &event);
 
 protected:
-	std::unique_ptr<MinimapDrawer> drawer;
-	wxTimer update_timer;
-	std::unique_ptr<wxGLContext> m_glContext;
+  std::unique_ptr<MinimapDrawer> drawer;
+  wxTimer update_timer;
+  std::unique_ptr<wxGLContext> m_glContext;
 };
 
 #endif

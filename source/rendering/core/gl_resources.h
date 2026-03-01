@@ -2,277 +2,257 @@
 #define RME_RENDERING_CORE_GL_RESOURCES_H_
 
 #include <glad/glad.h>
-#include <utility> // for std::exchange
 #include <spdlog/spdlog.h>
+#include <utility> // for std::exchange
+
+struct NVGcontext;
+struct NVGDeleter {
+  void operator()(NVGcontext *nvg) const;
+};
+
+// RAII wrapper for OpenGL Shaders
 
 // RAII wrapper for OpenGL Shaders
 class GLShader {
 public:
-	explicit GLShader(GLenum type) {
-		id = glCreateShader(type);
-		spdlog::info("GLShader created [ID={}]", id);
-	}
+  explicit GLShader(GLenum type) {
+    id = glCreateShader(type);
+    spdlog::info("GLShader created [ID={}]", id);
+  }
 
-	~GLShader() {
-		if (id) {
-			spdlog::info("GLShader deleted [ID={}]", id);
-			glDeleteShader(id);
-		}
-	}
+  ~GLShader() {
+    if (id) {
+      spdlog::info("GLShader deleted [ID={}]", id);
+      glDeleteShader(id);
+    }
+  }
 
-	// Disable copy
-	GLShader(const GLShader&) = delete;
-	GLShader& operator=(const GLShader&) = delete;
+  // Disable copy
+  GLShader(const GLShader &) = delete;
+  GLShader &operator=(const GLShader &) = delete;
 
-	// Enable move
-	GLShader(GLShader&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
+  // Enable move
+  GLShader(GLShader &&other) noexcept : id(std::exchange(other.id, 0)) {}
 
-	GLShader& operator=(GLShader&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteShader(id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
+  GLShader &operator=(GLShader &&other) noexcept {
+    if (this != &other) {
+      if (id) {
+        glDeleteShader(id);
+      }
+      id = std::exchange(other.id, 0);
+    }
+    return *this;
+  }
 
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
+  // Explicit conversion
+  explicit operator GLuint() const { return id; }
+  GLuint GetID() const { return id; }
 
 private:
-	GLuint id = 0;
+  GLuint id = 0;
 };
 
 // RAII wrapper for OpenGL Shader Programs
 class GLProgram {
 public:
-	GLProgram() {
-		id = glCreateProgram();
-		spdlog::info("GLProgram created [ID={}]", id);
-	}
+  GLProgram() {
+    id = glCreateProgram();
+    spdlog::info("GLProgram created [ID={}]", id);
+  }
 
-	~GLProgram() {
-		if (id) {
-			spdlog::info("GLProgram deleted [ID={}]", id);
-			glDeleteProgram(id);
-		}
-	}
+  ~GLProgram() {
+    if (id) {
+      spdlog::info("GLProgram deleted [ID={}]", id);
+      glDeleteProgram(id);
+    }
+  }
 
-	// Disable copy
-	GLProgram(const GLProgram&) = delete;
-	GLProgram& operator=(const GLProgram&) = delete;
+  // Disable copy
+  GLProgram(const GLProgram &) = delete;
+  GLProgram &operator=(const GLProgram &) = delete;
 
-	// Enable move
-	GLProgram(GLProgram&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
+  // Enable move
+  GLProgram(GLProgram &&other) noexcept : id(std::exchange(other.id, 0)) {}
 
-	GLProgram& operator=(GLProgram&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteProgram(id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
+  GLProgram &operator=(GLProgram &&other) noexcept {
+    if (this != &other) {
+      if (id) {
+        glDeleteProgram(id);
+      }
+      id = std::exchange(other.id, 0);
+    }
+    return *this;
+  }
 
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
+  // Explicit conversion
+  explicit operator GLuint() const { return id; }
+  GLuint GetID() const { return id; }
 
 private:
-	GLuint id = 0;
+  GLuint id = 0;
 };
 
 // RAII wrapper for OpenGL Buffers (VBO, EBO, UBO, SSBO)
 class GLBuffer {
 public:
-	GLBuffer() {
-		glCreateBuffers(1, &id);
-		spdlog::info("GLBuffer created [ID={}]", id);
-	}
+  GLBuffer() {
+    glCreateBuffers(1, &id);
+    spdlog::info("GLBuffer created [ID={}]", id);
+  }
 
-	~GLBuffer() {
-		if (id) {
-			spdlog::info("GLBuffer deleted [ID={}]", id);
-			glDeleteBuffers(1, &id);
-		}
-	}
+  ~GLBuffer() {
+    if (id) {
+      spdlog::info("GLBuffer deleted [ID={}]", id);
+      glDeleteBuffers(1, &id);
+    }
+  }
 
-	// Disable copy
-	GLBuffer(const GLBuffer&) = delete;
-	GLBuffer& operator=(const GLBuffer&) = delete;
+  // Disable copy
+  GLBuffer(const GLBuffer &) = delete;
+  GLBuffer &operator=(const GLBuffer &) = delete;
 
-	// Enable move
-	GLBuffer(GLBuffer&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
+  // Enable move
+  GLBuffer(GLBuffer &&other) noexcept : id(std::exchange(other.id, 0)) {}
 
-	GLBuffer& operator=(GLBuffer&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteBuffers(1, &id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
+  GLBuffer &operator=(GLBuffer &&other) noexcept {
+    if (this != &other) {
+      if (id) {
+        glDeleteBuffers(1, &id);
+      }
+      id = std::exchange(other.id, 0);
+    }
+    return *this;
+  }
 
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
+  // Explicit conversion
+  explicit operator GLuint() const { return id; }
+  GLuint GetID() const { return id; }
 
 private:
-	GLuint id = 0;
+  GLuint id = 0;
 };
 
 // RAII wrapper for OpenGL Vertex Arrays (VAO)
 class GLVertexArray {
 public:
-	GLVertexArray() {
-		glCreateVertexArrays(1, &id);
-		spdlog::info("GLVertexArray created [ID={}]", id);
-	}
+  GLVertexArray() {
+    glCreateVertexArrays(1, &id);
+    spdlog::info("GLVertexArray created [ID={}]", id);
+  }
 
-	~GLVertexArray() {
-		if (id) {
-			spdlog::info("GLVertexArray deleted [ID={}]", id);
-			glDeleteVertexArrays(1, &id);
-		}
-	}
+  ~GLVertexArray() {
+    if (id) {
+      spdlog::info("GLVertexArray deleted [ID={}]", id);
+      glDeleteVertexArrays(1, &id);
+    }
+  }
 
-	// Disable copy
-	GLVertexArray(const GLVertexArray&) = delete;
-	GLVertexArray& operator=(const GLVertexArray&) = delete;
+  // Disable copy
+  GLVertexArray(const GLVertexArray &) = delete;
+  GLVertexArray &operator=(const GLVertexArray &) = delete;
 
-	// Enable move
-	GLVertexArray(GLVertexArray&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
+  // Enable move
+  GLVertexArray(GLVertexArray &&other) noexcept
+      : id(std::exchange(other.id, 0)) {}
 
-	GLVertexArray& operator=(GLVertexArray&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteVertexArrays(1, &id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
+  GLVertexArray &operator=(GLVertexArray &&other) noexcept {
+    if (this != &other) {
+      if (id) {
+        glDeleteVertexArrays(1, &id);
+      }
+      id = std::exchange(other.id, 0);
+    }
+    return *this;
+  }
 
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
+  // Explicit conversion
+  explicit operator GLuint() const { return id; }
+  GLuint GetID() const { return id; }
 
 private:
-	GLuint id = 0;
+  GLuint id = 0;
 };
 
 // RAII wrapper for OpenGL Textures
 class GLTextureResource {
 public:
-	explicit GLTextureResource(GLenum target) {
-		glCreateTextures(target, 1, &id);
-		spdlog::info("GLTextureResource created [ID={}]", id);
-	}
+  explicit GLTextureResource(GLenum target) {
+    glCreateTextures(target, 1, &id);
+    spdlog::info("GLTextureResource created [ID={}]", id);
+  }
 
-	~GLTextureResource() {
-		if (id) {
-			spdlog::info("GLTextureResource deleted [ID={}]", id);
-			glDeleteTextures(1, &id);
-		}
-	}
+  ~GLTextureResource() {
+    if (id) {
+      spdlog::info("GLTextureResource deleted [ID={}]", id);
+      glDeleteTextures(1, &id);
+    }
+  }
 
-	// Disable copy
-	GLTextureResource(const GLTextureResource&) = delete;
-	GLTextureResource& operator=(const GLTextureResource&) = delete;
+  // Disable copy
+  GLTextureResource(const GLTextureResource &) = delete;
+  GLTextureResource &operator=(const GLTextureResource &) = delete;
 
-	// Enable move
-	GLTextureResource(GLTextureResource&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
+  // Enable move
+  GLTextureResource(GLTextureResource &&other) noexcept
+      : id(std::exchange(other.id, 0)) {}
 
-	GLTextureResource& operator=(GLTextureResource&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteTextures(1, &id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
+  GLTextureResource &operator=(GLTextureResource &&other) noexcept {
+    if (this != &other) {
+      if (id) {
+        glDeleteTextures(1, &id);
+      }
+      id = std::exchange(other.id, 0);
+    }
+    return *this;
+  }
 
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
+  // Explicit conversion
+  explicit operator GLuint() const { return id; }
+  GLuint GetID() const { return id; }
 
 private:
-	GLuint id = 0;
+  GLuint id = 0;
 };
 
 // RAII wrapper for OpenGL Framebuffers (FBO)
 class GLFramebuffer {
 public:
-	GLFramebuffer() {
-		glCreateFramebuffers(1, &id);
-		spdlog::info("GLFramebuffer created [ID={}]", id);
-	}
+  GLFramebuffer() {
+    glCreateFramebuffers(1, &id);
+    spdlog::info("GLFramebuffer created [ID={}]", id);
+  }
 
-	~GLFramebuffer() {
-		if (id) {
-			spdlog::info("GLFramebuffer deleted [ID={}]", id);
-			glDeleteFramebuffers(1, &id);
-		}
-	}
+  ~GLFramebuffer() {
+    if (id) {
+      spdlog::info("GLFramebuffer deleted [ID={}]", id);
+      glDeleteFramebuffers(1, &id);
+    }
+  }
 
-	// Disable copy
-	GLFramebuffer(const GLFramebuffer&) = delete;
-	GLFramebuffer& operator=(const GLFramebuffer&) = delete;
+  // Disable copy
+  GLFramebuffer(const GLFramebuffer &) = delete;
+  GLFramebuffer &operator=(const GLFramebuffer &) = delete;
 
-	// Enable move
-	GLFramebuffer(GLFramebuffer&& other) noexcept :
-		id(std::exchange(other.id, 0)) { }
+  // Enable move
+  GLFramebuffer(GLFramebuffer &&other) noexcept
+      : id(std::exchange(other.id, 0)) {}
 
-	GLFramebuffer& operator=(GLFramebuffer&& other) noexcept {
-		if (this != &other) {
-			if (id) {
-				glDeleteFramebuffers(1, &id);
-			}
-			id = std::exchange(other.id, 0);
-		}
-		return *this;
-	}
+  GLFramebuffer &operator=(GLFramebuffer &&other) noexcept {
+    if (this != &other) {
+      if (id) {
+        glDeleteFramebuffers(1, &id);
+      }
+      id = std::exchange(other.id, 0);
+    }
+    return *this;
+  }
 
-	// Explicit conversion
-	explicit operator GLuint() const {
-		return id;
-	}
-	GLuint GetID() const {
-		return id;
-	}
+  // Explicit conversion
+  explicit operator GLuint() const { return id; }
+  GLuint GetID() const { return id; }
 
 private:
-	GLuint id = 0;
+  GLuint id = 0;
 };
 
 #endif

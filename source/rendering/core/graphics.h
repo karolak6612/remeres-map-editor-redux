@@ -21,17 +21,14 @@
 #include "game/outfit.h"
 #include "util/common.h"
 #include <deque>
-#include <memory>
 #include <map>
+#include <memory>
 
-struct NVGcontext;
-struct NVGDeleter {
-	void operator()(NVGcontext* nvg) const;
-};
 
-#include <unordered_map>
 #include <list>
+#include <unordered_map>
 #include <vector>
+
 
 #include "app/client_version.h"
 
@@ -42,135 +39,126 @@ class GraphicManager;
 class FileReadHandle;
 class Animator;
 
-#include "rendering/core/sprite_light.h"
-#include "rendering/core/texture_garbage_collector.h"
-#include "rendering/core/render_timer.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/image.h"
 #include "rendering/core/normal_image.h"
+#include "rendering/core/render_timer.h"
+#include "rendering/core/sprite_light.h"
 #include "rendering/core/template_image.h"
+#include "rendering/core/texture_garbage_collector.h"
+
 
 class GraphicManager {
 public:
-	GraphicManager();
-	~GraphicManager();
+  GraphicManager();
+  ~GraphicManager();
 
-	void clear();
-	void cleanSoftwareSprites();
+  void clear();
+  void cleanSoftwareSprites();
 
-	Sprite* getSprite(int id);
-	void updateTime();
+  Sprite *getSprite(int id);
+  void updateTime();
 
-	void pauseAnimation() {
-		animation_timer->Pause();
-	}
-	void resumeAnimation() {
-		animation_timer->Resume();
-	}
-	GameSprite* getCreatureSprite(int id);
-	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
-	// Overload for compatibility with existing raw pointer calls (takes ownership)
-	void insertSprite(int id, Sprite* sprite) {
-		insertSprite(id, std::unique_ptr<Sprite>(sprite));
-	}
+  void pauseAnimation() { animation_timer->Pause(); }
+  void resumeAnimation() { animation_timer->Resume(); }
+  GameSprite *getCreatureSprite(int id);
+  void insertSprite(int id, std::unique_ptr<Sprite> sprite);
+  // Overload for compatibility with existing raw pointer calls (takes
+  // ownership)
+  void insertSprite(int id, Sprite *sprite) {
+    insertSprite(id, std::unique_ptr<Sprite>(sprite));
+  }
 
-	long getElapsedTime() const {
-		return animation_timer->getElapsedTime();
-	}
+  long getElapsedTime() const { return animation_timer->getElapsedTime(); }
 
-	time_t getCachedTime() const {
-		return cached_time_;
-	}
+  time_t getCachedTime() const { return cached_time_; }
 
-	uint16_t getItemSpriteMaxID() const;
-	uint16_t getCreatureSpriteMaxID() const;
+  uint16_t getItemSpriteMaxID() const;
+  uint16_t getCreatureSpriteMaxID() const;
 
-	// This is part of the binary
-	bool loadEditorSprites();
-	// Metadata should be loaded first
-	// This fills the item / creature adress space
+  // This is part of the binary
+  bool loadEditorSprites();
+  // Metadata should be loaded first
+  // This fills the item / creature adress space
 
-	// This fills the item / creature adress space
-	bool loadSpriteMetadata(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
-	bool loadSpriteData(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
+  // This fills the item / creature adress space
+  bool loadSpriteMetadata(const FileName &datafile, wxString &error,
+                          std::vector<std::string> &warnings);
+  bool loadSpriteData(const FileName &datafile, wxString &error,
+                      std::vector<std::string> &warnings);
 
-	friend class GameSpriteLoader;
-	friend class DatLoader;
-	friend class SprLoader;
+  friend class GameSpriteLoader;
+  friend class DatLoader;
+  friend class SprLoader;
 
-	// Cleans old & unused textures according to config settings
-	void garbageCollection();
-	void addSpriteToCleanup(GameSprite* spr);
+  // Cleans old & unused textures according to config settings
+  void garbageCollection();
+  void addSpriteToCleanup(GameSprite *spr);
 
-	wxFileName getMetadataFileName() const {
-		return client_version ? client_version->getMetadataPath() : wxFileName();
-	}
-	wxFileName getSpritesFileName() const {
-		return client_version ? client_version->getSpritesPath() : wxFileName();
-	}
+  wxFileName getMetadataFileName() const {
+    return client_version ? client_version->getMetadataPath() : wxFileName();
+  }
+  wxFileName getSpritesFileName() const {
+    return client_version ? client_version->getSpritesPath() : wxFileName();
+  }
 
-	bool hasTransparency() const;
-	bool isUnloaded() const;
+  bool hasTransparency() const;
+  bool isUnloaded() const;
 
-	const std::string& getSpriteFile() const {
-		return spritefile;
-	}
-	bool isExtended() const {
-		return is_extended;
-	}
+  const std::string &getSpriteFile() const { return spritefile; }
+  bool isExtended() const { return is_extended; }
 
-	ClientVersion* client_version;
+  ClientVersion *client_version;
 
-	// Sprite Atlas (Phase 2) - manages all game sprites in a texture array
-	AtlasManager* getAtlasManager() {
-		return atlas_manager_.get();
-	}
-	bool hasAtlasManager() const {
-		return atlas_manager_ != nullptr && atlas_manager_->isValid();
-	}
-	// Lazy initialization of atlas
-	bool ensureAtlasManager();
+  // Sprite Atlas (Phase 2) - manages all game sprites in a texture array
+  AtlasManager *getAtlasManager() { return atlas_manager_.get(); }
+  bool hasAtlasManager() const {
+    return atlas_manager_ != nullptr && atlas_manager_->isValid();
+  }
+  // Lazy initialization of atlas
+  bool ensureAtlasManager();
 
 private:
-	std::atomic<bool> unloaded;
-	// This is used if memcaching is NOT on
-	std::string spritefile;
-	bool loadSpriteDump(std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
+  std::atomic<bool> unloaded;
+  // This is used if memcaching is NOT on
+  std::string spritefile;
+  bool loadSpriteDump(std::unique_ptr<uint8_t[]> &target, uint16_t &size,
+                      int sprite_id);
 
-	// Atlas manager for Phase 2 texture array rendering
-	std::unique_ptr<AtlasManager> atlas_manager_ = nullptr;
+  // Atlas manager for Phase 2 texture array rendering
+  std::unique_ptr<AtlasManager> atlas_manager_ = nullptr;
 
-	// These are indexed by ID for O(1) access
-	using SpriteVector = std::vector<std::unique_ptr<Sprite>>;
-	SpriteVector sprite_space;
-	using ImageVector = std::vector<std::unique_ptr<Image>>;
-	ImageVector image_space;
+  // These are indexed by ID for O(1) access
+  using SpriteVector = std::vector<std::unique_ptr<Sprite>>;
+  SpriteVector sprite_space;
+  using ImageVector = std::vector<std::unique_ptr<Image>>;
+  ImageVector image_space;
 
-	// Editor sprites use negative IDs, so they need a separate map
-	std::unordered_map<int, std::unique_ptr<Sprite>> editor_sprite_space;
+  // Editor sprites use negative IDs, so they need a separate map
+  std::unordered_map<int, std::unique_ptr<Sprite>> editor_sprite_space;
 
-	// Active Resident Sets: Track only what's currently occupying memory/VRAM
-	// This avoids O(N) scans of the entire database.
-	std::vector<void*> resident_images;
-	std::vector<GameSprite*> resident_game_sprites;
+  // Active Resident Sets: Track only what's currently occupying memory/VRAM
+  // This avoids O(N) scans of the entire database.
+  std::vector<void *> resident_images;
+  std::vector<GameSprite *> resident_game_sprites;
 
-	DatFormat dat_format;
-	uint16_t item_count;
-	uint16_t creature_count;
-	bool is_extended;
-	bool has_transparency;
-	bool has_frame_durations;
-	bool has_frame_groups;
-	TextureGarbageCollector collector;
+  DatFormat dat_format;
+  uint16_t item_count;
+  uint16_t creature_count;
+  bool is_extended;
+  bool has_transparency;
+  bool has_frame_durations;
+  bool has_frame_groups;
+  TextureGarbageCollector collector;
 
-	std::unique_ptr<RenderTimer> animation_timer;
-	time_t cached_time_ = 0;
+  std::unique_ptr<RenderTimer> animation_timer;
+  time_t cached_time_ = 0;
 
-	friend class Image;
-	friend class NormalImage;
-	friend class TemplateImage;
-	friend class SpritePreloader;
+  friend class Image;
+  friend class NormalImage;
+  friend class TemplateImage;
+  friend class SpritePreloader;
 };
 
 #include "minimap_colors.h"

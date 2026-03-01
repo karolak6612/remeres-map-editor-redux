@@ -5,11 +5,11 @@
 #ifndef RME_RENDERING_EDITOR_SPRITE_LOADER_H_
 #define RME_RENDERING_EDITOR_SPRITE_LOADER_H_
 
-class GraphicManager;
+class SpriteDatabase;
 
 class EditorSpriteLoader {
 public:
-	static bool Load(GraphicManager* specific_gm);
+  static bool Load(SpriteDatabase *database);
 };
 
 #endif
