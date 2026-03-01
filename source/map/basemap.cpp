@@ -145,7 +145,7 @@ MapIterator::MapIterator(BaseMap* _map) :
 	current_tile(nullptr),
 	map(_map) {
 	if (map) {
-		cell_it = map->grid.cells.begin();
+		cell_it = map->grid.cells_.begin();
 	}
 }
 
@@ -161,13 +161,13 @@ MapIterator::MapIterator(const MapIterator& other) :
 
 MapIterator BaseMap::begin() {
 	MapIterator it(this);
-	it.cell_it = grid.cells.begin();
+	it.cell_it = grid.cells_.begin();
 	it.node_i = 0;
 	it.floor_i = 0;
 	it.tile_i = 0;
 	it.current_tile = nullptr;
 
-	if (it.cell_it != grid.cells.end()) {
+	if (it.cell_it != grid.cells_.end()) {
 		if (!it.findNext()) {
 			return end();
 		}
@@ -179,7 +179,7 @@ MapIterator BaseMap::begin() {
 
 MapIterator BaseMap::end() {
 	MapIterator it(this);
-	it.cell_it = grid.cells.end();
+	it.cell_it = grid.cells_.end();
 	it.current_tile = nullptr;
 	return it;
 }
@@ -193,7 +193,7 @@ bool MapIterator::operator==(const MapIterator& other) const noexcept {
 		return false;
 	}
 	if (cell_it == other.cell_it) {
-		if (map && cell_it == map->getGrid().cells.end()) {
+		if (map && cell_it == map->getGrid().cells_.end()) {
 			return true;
 		}
 		return node_i == other.node_i && floor_i == other.floor_i && tile_i == other.tile_i;
@@ -202,8 +202,8 @@ bool MapIterator::operator==(const MapIterator& other) const noexcept {
 }
 
 bool MapIterator::findNext() {
-	while (cell_it != map->grid.cells.end()) {
-		SpatialHashGrid::GridCell* cell = cell_it->second.get();
+	while (cell_it != map->grid.cells_.end()) {
+		SpatialHashGrid::GridCell* cell = cell_it->cell.get();
 		if (!cell) {
 			++cell_it;
 			continue;

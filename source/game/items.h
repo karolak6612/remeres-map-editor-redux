@@ -280,10 +280,12 @@ struct writeableBlock3 {
 #pragma pack()
 
 class ItemType {
-private:
-	ItemType(const ItemType&) { }
-
 public:
+	ItemType(const ItemType&) = delete;
+	ItemType& operator=(const ItemType&) = delete;
+	ItemType(ItemType&&) noexcept = default;
+	ItemType& operator=(ItemType&&) noexcept = default;
+
 	ItemType();
 	~ItemType();
 
@@ -457,9 +459,8 @@ public:
 	bool loadItemFromGameXml(pugi::xml_node itemNode, int id);
 	bool loadMetaItem(pugi::xml_node node);
 
-	// using ItemMap = contigous_vector<ItemType*>;
-	using ItemMap = std::vector<std::unique_ptr<ItemType>>;
-	using ItemNameMap = std::map<std::string, ItemType*>;
+	using ItemMap = std::vector<ItemType>;
+	using ItemNameMap = std::map<std::string, uint16_t>;
 	ItemMap items;
 
 	// Version information

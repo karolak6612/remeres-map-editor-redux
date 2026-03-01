@@ -171,6 +171,13 @@ public:
 	[[nodiscard]] uint16_t getID() const {
 		return id;
 	}
+	// Type access via stable index — no cached pointer, safe across vector resizes
+	[[nodiscard]] const ItemType& getType() const {
+		return g_items[id];
+	}
+	[[nodiscard]] ItemType& getType() {
+		return g_items[id];
+	}
 	[[nodiscard]] uint16_t getClientID() const {
 		return g_items[id].clientID;
 	}

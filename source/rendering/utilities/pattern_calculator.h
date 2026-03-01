@@ -5,6 +5,8 @@
 #include "game/items.h"
 #include "game/item.h"
 #include "map/tile.h"
+#include <bit>
+#include <cstdint>
 
 struct SpritePatterns {
 	int x = 0;
@@ -15,6 +17,17 @@ struct SpritePatterns {
 };
 
 class PatternCalculator {
+private:
+	static constexpr int calculatePatternOffset(int coord, uint8_t pattern_size) {
+		if (pattern_size <= 1) {
+			return 0;
+		}
+		if (std::has_single_bit(static_cast<uint32_t>(pattern_size))) {
+			return coord & (pattern_size - 1);
+		}
+		return coord % pattern_size;
+	}
+
 public:
 	static SpritePatterns Calculate(const GameSprite* spr, const ItemType& it, const Item* item, const Tile* tile, const Position& pos) {
 		SpritePatterns patterns;
@@ -23,9 +36,10 @@ public:
 			return patterns;
 		}
 
-		patterns.x = (spr->pattern_x > 1) ? pos.x % spr->pattern_x : 0;
-		patterns.y = (spr->pattern_y > 1) ? pos.y % spr->pattern_y : 0;
-		patterns.z = (spr->pattern_z > 1) ? pos.z % spr->pattern_z : 0;
+		patterns.x = calculatePatternOffset(pos.x, spr->pattern_x);
+		patterns.y = calculatePatternOffset(pos.y, spr->pattern_y);
+		patterns.z = calculatePatternOffset(pos.z, spr->pattern_z);
+
 		patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
 
 		if (it.isSplash() || it.isFluidContainer()) {

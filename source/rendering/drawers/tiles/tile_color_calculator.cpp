@@ -4,6 +4,7 @@
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h"
+#include <array>
 
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
@@ -18,16 +19,16 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 	if (options.highlight_items && item_count > 0 && !tile->items.back()->isBorder()) {
 		// Fixed point factors (x/256)
 		// 0.75 -> 192, 0.6 -> 154, 0.48 -> 123, 0.40 -> 102, 0.33 -> 84
-		static const int factor[5] = { 192, 154, 123, 102, 84 };
-		int idx = (item_count < 5 ? item_count : 5) - 1;
+		static constexpr std::array<int, 5> factor = { 192, 154, 123, 102, 84 };
+		int idx = std::clamp(item_count, 1, 5) - 1;
 		g = (g * factor[idx]) >> 8;
 		r = (r * factor[idx]) >> 8;
 	}
 
 	if (options.show_spawns && spawn_count > 0) {
 		// Precomputed 0.7^n * 256 for n=1..9
-		static const int spawn_factor[] = { 179, 125, 88, 61, 43, 30, 21, 15, 10 };
-		int f = (spawn_count > 0 && spawn_count <= 9) ? spawn_factor[spawn_count - 1] : 10;
+		static constexpr std::array<int, 9> spawn_factor = { 179, 125, 88, 61, 43, 30, 21, 15, 10 };
+		int f = spawn_factor[std::clamp(spawn_count, 1, 9) - 1];
 		g = (g * f) >> 8;
 		b = (b * f) >> 8;
 	}
@@ -117,8 +118,10 @@ void TileColorCalculator::GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& 
 
 void TileColorCalculator::GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b) {
 	// Optimization: Use lookup table to avoid division/modulo operations per tile
-	static const auto table = []() {
-		struct { uint8_t r[256], g[256], b[256]; } t;
+	static constexpr auto table = []() {
+		struct {
+			uint8_t r[256], g[256], b[256];
+		} t {};
 		for (int i = 0; i < 256; ++i) {
 			t.r[i] = static_cast<uint8_t>(i / 36 % 6 * 51);
 			t.g[i] = static_cast<uint8_t>(i / 6 % 6 * 51);
