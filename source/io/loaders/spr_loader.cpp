@@ -1,6 +1,9 @@
 #include "io/loaders/spr_loader.h"
 
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "rendering/core/normal_image.h"
 #include "io/filehandle.h"
 #include "app/settings.h"
@@ -15,7 +18,7 @@ namespace {
 	constexpr uint32_t SPRITE_ADDRESS_SIZE_NORMAL = 2;
 }
 
-bool SprLoader::LoadData(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
+bool SprLoader::LoadData(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
 	FileReadHandle fh(nstr(datafile.GetFullPath()));
 
 	if (!fh.isOk()) {
@@ -45,7 +48,7 @@ bool SprLoader::LoadData(GraphicManager* manager, const wxFileName& datafile, wx
 	}
 
 	uint32_t total_pics = 0;
-	if (manager->is_extended) {
+	if (loader->isExtended()) {
 		if (!safe_get_u32(total_pics)) {
 			return false;
 		}
@@ -62,8 +65,8 @@ bool SprLoader::LoadData(GraphicManager* manager, const wxFileName& datafile, wx
 		return false;
 	}
 
-	manager->spritefile = nstr(datafile.GetFullPath());
-	manager->unloaded = false;
+	loader->setSpriteFile(nstr(datafile.GetFullPath()));
+	loader->setUnloaded(false);
 
 	if (!g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
 		return true;
@@ -71,14 +74,14 @@ bool SprLoader::LoadData(GraphicManager* manager, const wxFileName& datafile, wx
 
 	// Pre-allocate image_space if total_pics is known
 	// Resize image_space to match exact sprite count, removing potential stale entries
-	manager->image_space.resize(total_pics + 1);
+	db.getImageSpace().resize(total_pics + 1);
 
 	std::vector<uint32_t> sprite_indexes = ReadSpriteIndexes(fh, total_pics, error);
 	if (sprite_indexes.empty() && total_pics > 0) {
 		return false;
 	}
 
-	return ReadSprites(manager, fh, sprite_indexes, warnings, error);
+	return ReadSprites(db, fh, sprite_indexes, warnings, error);
 }
 
 std::vector<uint32_t> SprLoader::ReadSpriteIndexes(FileReadHandle& fh, uint32_t total_pics, wxString& error) {
@@ -96,7 +99,7 @@ std::vector<uint32_t> SprLoader::ReadSpriteIndexes(FileReadHandle& fh, uint32_t 
 	return sprite_indexes;
 }
 
-bool SprLoader::ReadSprites(GraphicManager* manager, FileReadHandle& fh, const std::vector<uint32_t>& sprite_indexes, std::vector<std::string>& warnings, wxString& error) {
+bool SprLoader::ReadSprites(SpriteDatabase& db, FileReadHandle& fh, const std::vector<uint32_t>& sprite_indexes, std::vector<std::string>& warnings, wxString& error) {
 	int id = 1;
 	for (uint32_t index : sprite_indexes) {
 		if (index == 0) {
@@ -117,8 +120,8 @@ bool SprLoader::ReadSprites(GraphicManager* manager, FileReadHandle& fh, const s
 			return false;
 		}
 
-		if (id < manager->image_space.size() && manager->image_space[id]) {
-			NormalImage* spr = dynamic_cast<NormalImage*>(manager->image_space[id].get());
+		if (id < db.getImageSpace().size() && db.getImageSpace()[id]) {
+			NormalImage* spr = dynamic_cast<NormalImage*>(db.getImageSpace()[id].get());
 			if (spr) {
 				if (size > 0) {
 					if (spr->size > 0) {
@@ -158,11 +161,11 @@ bool SprLoader::ReadSprites(GraphicManager* manager, FileReadHandle& fh, const s
 	return true;
 }
 
-bool SprLoader::LoadDump(GraphicManager* manager, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
-	if (!manager) {
+bool SprLoader::LoadDump(SpriteLoader* loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
+	if (!loader) {
 		return false;
 	}
-	return LoadDump(manager->getSpriteFile(), manager->isExtended(), target, size, sprite_id);
+	return LoadDump(loader->getSpriteFile(), loader->isExtended(), target, size, sprite_id);
 }
 
 bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {

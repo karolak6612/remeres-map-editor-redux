@@ -3,7 +3,10 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "rendering/core/sprite_preloader.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "rendering/core/normal_image.h"
 #include "ui/gui.h"
 #include "io/loaders/spr_loader.h"
@@ -69,9 +72,9 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	}
 
 	// Capture global state once per preload call (one item)
-	const std::string& sprfile = g_gui.gfx.getSpriteFile();
-	const bool is_extended = g_gui.gfx.isExtended();
-	const bool has_transparency = g_gui.gfx.hasTransparency();
+	const std::string& sprfile = g_gui.loader.getSpriteFile();
+	const bool is_extended = g_gui.loader.isExtended();
+	const bool has_transparency = g_gui.loader.hasTransparency();
 
 	static thread_local std::vector<PendingTask> ids_to_enqueue;
 	ids_to_enqueue.clear();
@@ -181,8 +184,8 @@ void SpritePreloader::update() {
 	ids_processed.clear();
 	ids_processed.reserve(results.size());
 
-	const std::string& current_sprfile = g_gui.gfx.getSpriteFile();
-	const bool graphics_unloaded = g_gui.gfx.isUnloaded();
+	const std::string& current_sprfile = g_gui.loader.getSpriteFile();
+	const bool graphics_unloaded = g_gui.loader.isUnloaded();
 
 	while (!results.empty()) {
 		Result res = std::move(results.front());
@@ -197,8 +200,8 @@ void SpritePreloader::update() {
 		}
 
 		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-		if (res.spritefile == current_sprfile && !graphics_unloaded && id < g_gui.gfx.image_space.size()) {
-			auto& img_ptr = g_gui.gfx.image_space[id];
+		if (res.spritefile == current_sprfile && !graphics_unloaded && id < g_gui.sprites.getImageSpace().size()) {
+			auto& img_ptr = g_gui.sprites.getImageSpace()[id];
 			if (img_ptr && img_ptr->isNormalImage()) {
 				// Use static_cast for performance, as we know the type from loaders
 				auto* img = static_cast<NormalImage*>(img_ptr.get());

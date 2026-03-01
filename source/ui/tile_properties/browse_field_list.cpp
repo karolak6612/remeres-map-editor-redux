@@ -13,7 +13,10 @@
 #include "ui/tile_properties/tile_properties_panel.h"
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <format>
@@ -83,7 +86,7 @@ void TilePropertiesListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_
 	}
 	Item* item = items[n];
 
-	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
+	Sprite* sprite = g_gui.sprites.getSprite(item->getClientID());
 	if (sprite) {
 		int tex = GetOrCreateSpriteTexture(vg, sprite);
 		if (tex > 0) {

@@ -1,7 +1,10 @@
 #include "app/main.h"
 #include "palette/controls/virtual_brush_grid.h"
 #include "ui/gui.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 
 #include <glad/glad.h>
 
@@ -166,7 +169,7 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect) 
 	if (brush) {
 		Sprite* spr = brush->getSprite();
 		if (!spr) {
-			spr = g_gui.gfx.getSprite(brush->getLookID());
+			spr = g_gui.sprites.getSprite(brush->getLookID());
 		}
 
 		if (!spr) {

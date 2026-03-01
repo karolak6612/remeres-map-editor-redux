@@ -54,7 +54,7 @@ Sprite* CreatureBrush::getSprite() const {
 
 		if (outfit.lookType != 0) {
 			if (!creature_sprite_wrapper) {
-				GameSprite* gs = g_gui.gfx.getCreatureSprite(outfit.lookType);
+				GameSprite* gs = g_gui.sprites.getCreatureSprite(outfit.lookType);
 				if (gs) {
 					creature_sprite_wrapper = std::make_unique<CreatureSprite>(gs, outfit);
 				}

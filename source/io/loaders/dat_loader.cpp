@@ -1,6 +1,9 @@
 #include "io/loaders/dat_loader.h"
 
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "rendering/core/normal_image.h"
 #include "io/filehandle.h"
 #include "util/common.h"
@@ -229,7 +232,7 @@ namespace {
 
 } // namespace
 
-bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
+bool DatLoader::LoadMetadata(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
 	// items.otb has most of the info we need. This only loads the GameSprite metadata
 	FileReadHandle file(nstr(datafile.GetFullPath()));
 
@@ -248,58 +251,62 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 	}
 
 	// get max id
-	if (!file.getU16(manager->item_count) || !file.getU16(manager->creature_count) || !file.getU16(effect_count) || !file.getU16(distance_count)) {
+	uint16_t item_count = 0, creature_count = 0;
+	if (!file.getU16(item_count) || !file.getU16(creature_count) || !file.getU16(effect_count) || !file.getU16(distance_count)) {
 		error = "Failed to read dat header counts";
 		return false;
 	}
 
-	if (manager->item_count == 0 || manager->creature_count == 0) {
+	if (item_count == 0 || creature_count == 0) {
 		error = "Invalid dat header counts (zero items or creatures)";
 		return false;
 	}
 
+	db.setItemSpriteMaxID(item_count);
+	db.setCreatureSpriteMaxID(creature_count);
+
 	constexpr uint32_t minID = 100; // items start with id 100
-	const uint32_t max_id_needed = manager->item_count + manager->creature_count + 1;
+	const uint32_t max_id_needed = item_count + creature_count + 1;
 
 	// Pre-size containers to avoid rehashing and frequent allocations
-	manager->sprite_space.resize(max_id_needed);
+	db.getSpriteSpace().resize(max_id_needed);
 	// Resize image_space to MAX_SPRITES to ensure OOB access doesn't happen during sprite id reading.
 	// SprLoader will later resize it to the exact count, but we need it safe now.
-	if (manager->image_space.size() < MAX_SPRITES) {
-		manager->image_space.resize(MAX_SPRITES);
+	if (db.getImageSpace().size() < MAX_SPRITES) {
+		db.getImageSpace().resize(MAX_SPRITES);
 	}
 
-	manager->dat_format = manager->client_version->getDatFormatForSignature(datSignature);
+	loader->setDatFormat(loader->getClientVersion()->getDatFormatForSignature(datSignature));
 
-	if (manager->dat_format == DAT_FORMAT_UNKNOWN) {
+	if (loader->getDatFormat() == DAT_FORMAT_UNKNOWN) {
 		error = wxstr(std::format("Unknown dat signature: {:#x}", datSignature));
 		return false;
 	}
 
 	// Initialize flags from ClientVersion configuration
-	manager->is_extended = manager->client_version->isExtended();
-	manager->has_frame_durations = manager->client_version->hasFrameDurations();
-	manager->has_frame_groups = manager->client_version->hasFrameGroups();
-	manager->has_transparency = manager->client_version->isTransparent();
+	loader->setIsExtended(loader->getClientVersion()->isExtended());
+	loader->setHasFrameDurations(loader->getClientVersion()->hasFrameDurations());
+	loader->setHasFrameGroups(loader->getClientVersion()->hasFrameGroups());
+	loader->setHasTransparency(loader->getClientVersion()->isTransparent());
 
 	uint32_t id = minID;
-	const uint32_t maxID = manager->item_count + manager->creature_count;
+	const uint32_t maxID = item_count + creature_count;
 	while (id <= maxID) {
 		auto sTypeUnique = std::make_unique<GameSprite>();
 		GameSprite* sType = sTypeUnique.get();
-		manager->sprite_space[id] = std::move(sTypeUnique);
+		db.getSpriteSpace()[id] = std::move(sTypeUnique);
 
 		sType->id = id;
 
 		// Load flags
-		if (!LoadMetadataFlags(manager->dat_format, file, sType, id, warnings)) {
+		if (!LoadMetadataFlags(loader->getDatFormat(), file, sType, id, warnings)) {
 			error = wxstr(std::format("Failed to read metadata flags for id {}", id));
 			return false;
 		}
 
 		// Reads the group count
 		uint8_t group_count = 1;
-		if (manager->has_frame_groups && id > manager->item_count) {
+		if (loader->hasFrameGroups() && id > item_count) {
 			if (!file.getU8(group_count)) {
 				error = wxstr(std::format("Failed to read group count for id {}", id));
 				return false;
@@ -307,7 +314,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 		}
 
 		for (uint32_t k = 0; k < static_cast<uint32_t>(group_count); ++k) {
-			if (!ReadSpriteGroup(manager, file, sType, k, warnings)) {
+			if (!ReadSpriteGroup(loader, db, file, sType, k, warnings)) {
 				error = wxstr(std::format("Failed to read sprite group {} for id {}", k, id));
 				return false;
 			}
@@ -318,10 +325,10 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 	return true;
 }
 
-bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, GameSprite* sType, uint32_t group_index, std::vector<std::string>& warnings) {
+bool DatLoader::ReadSpriteGroup(SpriteLoader* loader, SpriteDatabase& db, FileReadHandle& file, GameSprite* sType, uint32_t group_index, std::vector<std::string>& warnings) {
 
 	// Skipping the group type
-	if (manager->has_frame_groups && sType->id > manager->item_count) {
+	if (loader->hasFrameGroups() && sType->id > db.getItemSpriteMaxID()) {
 		if (!file.skip(1)) {
 			return false;
 		}
@@ -353,7 +360,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 	if (!file.getU8(pattern_y)) {
 		return false;
 	}
-	if (manager->dat_format <= DAT_FORMAT_74) {
+	if (loader->getDatFormat() <= DAT_FORMAT_74) {
 		pattern_z = 1;
 	} else {
 		if (!file.getU8(pattern_z)) {
@@ -378,7 +385,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 		uint8_t async = 0;
 		int loop_count = 0;
 		int8_t start_frame = 0;
-		if (manager->has_frame_durations) {
+		if (loader->hasFrameDurations()) {
 			if (!file.getByte(async)) {
 				return false;
 			}
@@ -394,7 +401,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 			sType->animator = std::make_unique<Animator>(frames, start_frame, loop_count, async == 1);
 		}
 
-		if (manager->has_frame_durations) {
+		if (loader->hasFrameDurations()) {
 			for (int i = 0; i < static_cast<int>(frames); ++i) {
 				uint32_t min;
 				uint32_t max;
@@ -424,7 +431,7 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 	// Read the sprite ids
 	for (uint32_t i = 0; i < numsprites; ++i) {
 		uint32_t sprite_id;
-		if (manager->is_extended) {
+		if (loader->isExtended()) {
 			if (!file.getU32(sprite_id)) {
 				return false;
 			}
@@ -438,11 +445,11 @@ bool DatLoader::ReadSpriteGroup(GraphicManager* manager, FileReadHandle& file, G
 
 		if (group_index == 0) {
 			// Validate sprite_id
-			if (sprite_id == UINT32_MAX || sprite_id >= MAX_SPRITES || sprite_id >= manager->image_space.size()) {
+			if (sprite_id == UINT32_MAX || sprite_id >= MAX_SPRITES || sprite_id >= db.getImageSpace().size()) {
 				return false;
 			}
 
-			auto& imgPtr = manager->image_space[sprite_id];
+			auto& imgPtr = db.getImageSpace()[sprite_id];
 			if (!imgPtr) {
 				auto img = std::make_unique<NormalImage>();
 				img->id = sprite_id;

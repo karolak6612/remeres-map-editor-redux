@@ -8,14 +8,14 @@
 #include "io/loaders/dat_loader.h"
 #include "io/loaders/spr_loader.h"
 
-bool GameSpriteLoader::LoadSpriteMetadata(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
-	return DatLoader::LoadMetadata(manager, datafile, error, warnings);
+bool GameSpriteLoader::LoadSpriteMetadata(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
+	return DatLoader::LoadMetadata(loader, db, datafile, error, warnings);
 }
 
-bool GameSpriteLoader::LoadSpriteData(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
-	return SprLoader::LoadData(manager, datafile, error, warnings);
+bool GameSpriteLoader::LoadSpriteData(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
+	return SprLoader::LoadData(loader, db, datafile, error, warnings);
 }
 
-bool GameSpriteLoader::LoadSpriteDump(GraphicManager* manager, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
-	return SprLoader::LoadDump(manager, target, size, sprite_id);
+bool GameSpriteLoader::LoadSpriteDump(SpriteLoader* loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
+	return SprLoader::LoadDump(loader, target, size, sprite_id);
 }

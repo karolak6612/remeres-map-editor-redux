@@ -1,6 +1,9 @@
 #include "ui/dialogs/outfit_preview_panel.h"
 #include "rendering/utilities/sprite_icon_generator.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
 #include <wx/dcbuffer.h>
@@ -32,7 +35,7 @@ void OutfitPreviewPanel::OnPaint(wxPaintEvent& event) {
 	dc.SetBackground(wxBrush(Theme::Get(Theme::Role::Surface)));
 	dc.Clear();
 
-	GameSprite* spr = g_gui.gfx.getCreatureSprite(preview_outfit.lookType);
+	GameSprite* spr = g_gui.sprites.getCreatureSprite(preview_outfit.lookType);
 	if (spr) {
 		Outfit draw_outfit = preview_outfit;
 		// Map our internal 0-3 to Direction enum

@@ -20,7 +20,10 @@
 #include "ui/replace_items_window.h"
 #include "ui/find_item_window.h"
 #include "editor/action_queue.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "game/items.h"
@@ -141,9 +144,9 @@ void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t 
 
 	const ReplacingItem& item = m_items.at(index);
 	const ItemType& type1 = g_items.getItemType(item.replaceId);
-	Sprite* sprite1 = g_gui.gfx.getSprite(type1.clientID);
+	Sprite* sprite1 = g_gui.sprites.getSprite(type1.clientID);
 	const ItemType& type2 = g_items.getItemType(item.withId);
-	Sprite* sprite2 = g_gui.gfx.getSprite(type2.clientID);
+	Sprite* sprite2 = g_gui.sprites.getSprite(type2.clientID);
 
 	if (sprite1 && sprite2) {
 		int x = rect.GetX();

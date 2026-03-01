@@ -1,5 +1,8 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "game/sprites.h"
 #include "game/items.h"
 
@@ -42,8 +45,8 @@ void SpriteDrawer::glBlitSquare(const DrawContext& ctx, int sx, int sy, DrawColo
 
 	// Use Graphics::getAtlasManager() to get the atlas manager for white pixel access
 	// This assumes Graphics and AtlasManager are available
-	if (g_gui.gfx.hasAtlasManager()) {
-		ctx.sprite_batch.drawRect(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+	if (g_gui.atlas.hasAtlasManager()) {
+		ctx.sprite_batch.drawRect(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager());
 	}
 }
 
@@ -53,8 +56,8 @@ void SpriteDrawer::glDrawBox(const DrawContext& ctx, int sx, int sy, int width, 
 	float normalizedB = color.b / 255.0f;
 	float normalizedA = color.a / 255.0f;
 
-	if (g_gui.gfx.hasAtlasManager()) {
-		ctx.sprite_batch.drawRectLines(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+	if (g_gui.atlas.hasAtlasManager()) {
+		ctx.sprite_batch.drawRectLines(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager());
 	}
 }
 

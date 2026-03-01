@@ -149,7 +149,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/io/sprite_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.h
@@ -485,7 +488,10 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/io/sprite_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp

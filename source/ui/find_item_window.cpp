@@ -60,7 +60,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	options_box_sizer->Add(server_id_box_sizer, 1, wxALL | wxEXPAND, 5);
 
 	wxStaticBoxSizer* client_id_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Client ID"), wxVERTICAL);
-	client_id_spin = newd wxSpinCtrl(client_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_gui.gfx.getItemSpriteMaxID(), 100);
+	client_id_spin = newd wxSpinCtrl(client_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_gui.sprites.getItemSpriteMaxID(), 100);
 	client_id_spin->SetToolTip("Search by client ID");
 	client_id_spin->Enable(false);
 	client_id_box_sizer->Add(client_id_spin, 0, wxALL | wxEXPAND, 5);

@@ -180,7 +180,7 @@ bool Application::OnInit() {
 	// Image handlers
 	wxInitAllImageHandlers();
 
-	g_gui.gfx.loadEditorSprites();
+	g_gui.loader.loadEditorSprites(g_gui.sprites);
 
 	// wxHandleFatalExceptions(true);
 	wxHandleFatalExceptions(true);

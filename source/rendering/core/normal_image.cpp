@@ -16,8 +16,8 @@ NormalImage::NormalImage() :
 NormalImage::~NormalImage() {
 	// dump auto-deleted
 	if (isGLLoaded) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(id);
+		if (g_gui.atlas.hasAtlasManager()) {
+			g_gui.atlas.getAtlasManager()->removeSprite(id);
 		}
 	}
 }
@@ -32,8 +32,8 @@ void NormalImage::clean(time_t time, int longevity) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(id);
+		if (g_gui.atlas.hasAtlasManager()) {
+			g_gui.atlas.getAtlasManager()->removeSprite(id);
 		}
 		if (parent) {
 			parent->invalidateCache(atlas_region);
@@ -45,7 +45,7 @@ void NormalImage::clean(time_t time, int longevity) {
 		// Invalidate any pending preloads for this sprite ID
 		generation_id++;
 
-		g_gui.gfx.collector.NotifyTextureUnloaded();
+		g_gui.gc.notifyTextureUnloaded();
 	}
 
 	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
@@ -63,14 +63,14 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 			return nullptr;
 		}
 
-		if (!g_gui.gfx.loadSpriteDump(dump, size, id)) {
+		if (!g_gui.loader.loadSpriteDump(dump, size, id)) {
 			return nullptr;
 		}
 	}
 
 	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : RGB_COMPONENTS;
+	uint8_t bpp = g_gui.loader.hasTransparency() ? 4 : RGB_COMPONENTS;
 	size_t write = 0;
 	size_t read = 0;
 
@@ -133,14 +133,14 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 			return nullptr;
 		}
 
-		if (!g_gui.gfx.loadSpriteDump(dump, size, id)) {
+		if (!g_gui.loader.loadSpriteDump(dump, size, id)) {
 			// This is the only case where we return nullptr for non-zero ID
 			// effectively warning the caller that the sprite is missing from file
 			return nullptr;
 		}
 	}
 
-	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id);
+	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.loader.hasTransparency(), id);
 }
 
 const AtlasRegion* NormalImage::getAtlasRegion() {

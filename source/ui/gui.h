@@ -1,7 +1,7 @@
 #ifndef RME_GUI_H_
 #define RME_GUI_H_
 
-#include "rendering/core/graphics.h"
+
 #include "map/position.h"
 
 #include "editor/copybuffer.h"
@@ -338,7 +338,10 @@ public:
 	MainFrame* root; // The main frame
 	CopyBuffer copybuffer;
 
-	GraphicManager gfx;
+	SpriteDatabase sprites;
+	AtlasLifecycle atlas;
+	SpriteLoader loader;
+	TextureGC gc;
 
 	HousePalette* house_palette;
 

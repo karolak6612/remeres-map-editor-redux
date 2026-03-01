@@ -127,10 +127,10 @@ void PreviewDrawer::draw(const DrawContext& ctx, const FloorViewParams& floor_pa
 			int draw_x, draw_y;
 			ctx.view.getScreenPosition(mousePos.x, mousePos.y, mousePos.z, draw_x, draw_y);
 
-			if (g_gui.gfx.ensureAtlasManager()) {
+			if (g_gui.atlas.ensureAtlasManager()) {
 				// Draw a semi-transparent white box over the tile
 				glm::vec4 highlightColor(1.0f, 1.0f, 1.0f, 0.25f); // 25% white
-				ctx.sprite_batch.drawRect((float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE, highlightColor, *g_gui.gfx.getAtlasManager());
+				ctx.sprite_batch.drawRect((float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE, highlightColor, *g_gui.atlas.getAtlasManager());
 			}
 		}
 	}

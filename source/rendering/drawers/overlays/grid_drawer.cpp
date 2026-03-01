@@ -1,7 +1,10 @@
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "ui/gui.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 
 #include "rendering/core/draw_context.h"
 #include "rendering/core/view_state.h"
@@ -19,8 +22,8 @@ void GridDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds) {
 	// Use zoom as line thickness so lines are always ~1 screen pixel
 	const float line_thickness = ctx.view.zoom;
 
-	if (g_gui.gfx.ensureAtlasManager()) {
-		const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
+	if (g_gui.atlas.ensureAtlasManager()) {
+		const AtlasManager& atlas = *g_gui.atlas.getAtlasManager();
 
 		// Hoisted invariants for horizontal lines
 		const float h_xStart = bounds.start_x * TILE_SIZE - ctx.view.view_scroll_x;
@@ -116,8 +119,8 @@ void GridDrawer::DrawNodeLoadingPlaceholder(const DrawContext& ctx, int nd_map_x
 
 	glm::vec4 color(1.0f, 0.0f, 1.0f, 0.5f); // 255, 0, 255, 128
 
-	if (g_gui.gfx.ensureAtlasManager()) {
-		ctx.sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE * 4, (float)TILE_SIZE * 4, color, *g_gui.gfx.getAtlasManager());
+	if (g_gui.atlas.ensureAtlasManager()) {
+		ctx.sprite_batch.drawRect((float)cx, (float)cy, (float)TILE_SIZE * 4, (float)TILE_SIZE * 4, color, *g_gui.atlas.getAtlasManager());
 	}
 }
 
@@ -125,15 +128,15 @@ void GridDrawer::drawRect(SpriteBatch& sprite_batch, int x, int y, int w, int h,
 	// glLineWidth(width); // Width ignored for now, BatchRenderer lines are 1px
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.drawRectLines((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
+	if (g_gui.atlas.ensureAtlasManager()) {
+		sprite_batch.drawRectLines((float)x, (float)y, (float)w, (float)h, c, *g_gui.atlas.getAtlasManager());
 	}
 }
 
 void GridDrawer::drawFilledRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color) {
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
-	if (g_gui.gfx.ensureAtlasManager()) {
-		sprite_batch.drawRect((float)x, (float)y, (float)w, (float)h, c, *g_gui.gfx.getAtlasManager());
+	if (g_gui.atlas.ensureAtlasManager()) {
+		sprite_batch.drawRect((float)x, (float)y, (float)w, (float)h, c, *g_gui.atlas.getAtlasManager());
 	}
 }

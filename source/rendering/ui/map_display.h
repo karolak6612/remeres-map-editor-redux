@@ -26,7 +26,11 @@
 #include "ui/map_popup_menu.h"
 #include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
+#include "util/nvg_utils.h"
 #include <memory>
 
 struct NVGcontext;

@@ -3,7 +3,10 @@
 #include "util/nvg_utils.h"
 #include "ui/gui.h"
 #include "game/items.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -186,7 +189,7 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 		return data;
 	}
 
-	Sprite* sprite = g_gui.gfx.getSprite(it.clientID);
+	Sprite* sprite = g_gui.sprites.getSprite(it.clientID);
 	if (!sprite) {
 		return data;
 	}

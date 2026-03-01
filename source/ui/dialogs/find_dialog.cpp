@@ -371,7 +371,7 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
-		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+		Sprite* spr = g_gui.sprites.getSprite(brushlist[n]->getLookID());
 		if (spr) {
 			int tex = GetOrCreateSpriteTexture(vg, spr);
 			if (tex > 0) {

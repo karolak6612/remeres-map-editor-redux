@@ -13,15 +13,16 @@
 #include <memory>
 #include <cstdint>
 
-class GraphicManager;
+class SpriteLoader;
+class SpriteDatabase;
 class FileReadHandle;
 class GameSprite;
 
 class GameSpriteLoader {
 public:
-	static bool LoadSpriteMetadata(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
-	static bool LoadSpriteData(GraphicManager* manager, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
-	static bool LoadSpriteDump(GraphicManager* manager, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
+	static bool LoadSpriteMetadata(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
+	static bool LoadSpriteData(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings);
+	static bool LoadSpriteDump(SpriteLoader* loader, std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
 };
 
 #endif

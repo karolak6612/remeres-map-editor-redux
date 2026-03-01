@@ -8,7 +8,10 @@
 
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
 void BrushCursorDrawer::draw(const DrawContext& ctx, int x, int y, Brush* brush, uint8_t r, uint8_t g, uint8_t b) {
@@ -60,8 +63,8 @@ void BrushCursorDrawer::draw(const DrawContext& ctx, int x, int y, Brush* brush,
 	// Box: (-15, -20) to (15, -5). width=30, height=15.
 	// Top Left of box relative to x,y: (-15, -20).
 	// But coordinates seem to be relative offset.
-	if (g_gui.gfx.ensureAtlasManager()) {
-		const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
+	if (g_gui.atlas.ensureAtlasManager()) {
+		const AtlasManager& atlas = *g_gui.atlas.getAtlasManager();
 		ctx.sprite_batch.drawRect((float)(x - 15), (float)(y - 20), (float)30, (float)15, bgColor, atlas);
 	}
 

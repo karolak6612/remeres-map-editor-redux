@@ -86,7 +86,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	FileName client_path = getLoadedVersion()->getClientPath();
 	FileName extension_path = FileSystem::GetExtensionsDirectory();
 
-	g_gui.gfx.client_version = getLoadedVersion();
+	g_gui.loader.setClientVersion( getLoadedVersion() );
 
 	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
 
@@ -94,7 +94,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	g_loading.SetLoadDone(0, "Loading metadata file...");
 
 	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
-	if (!g_gui.gfx.loadSpriteMetadata(metadata_path, error, warnings)) {
+	if (!g_gui.loader.loadSpriteMetadata(g_gui.sprites, metadata_path, error, warnings)) {
 		error = "Couldn't load metadata: " + error;
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
@@ -104,7 +104,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	g_loading.SetLoadDone(10, "Loading sprites file...");
 
 	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
-	if (!g_gui.gfx.loadSpriteData(sprites_path, error, warnings)) {
+	if (!g_gui.loader.loadSpriteData(g_gui.sprites, sprites_path, error, warnings)) {
 		error = "Couldn't load sprites: " + error;
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
@@ -167,7 +167,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 void VersionManager::UnloadVersion() {
 	UnnamedRenderingLock();
-	g_gui.gfx.clear();
+	g_gui.sprites.clear(); g_gui.atlas.clear(); g_gui.gc.clear(); g_gui.loader.clear();
 	if (g_gui.tool_options) {
 		g_gui.tool_options->Clear();
 	}
@@ -177,7 +177,7 @@ void VersionManager::UnloadVersion() {
 		g_materials.clear();
 		g_brushes.clear();
 		g_items.clear();
-		g_gui.gfx.clear();
+		g_gui.sprites.clear(); g_gui.atlas.clear(); g_gui.gc.clear(); g_gui.loader.clear();
 
 		// FileName cdb = getLoadedVersion()->getLocalDataPath();
 		// cdb.SetFullName("creatures.xml");

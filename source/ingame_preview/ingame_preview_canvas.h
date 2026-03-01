@@ -11,9 +11,13 @@ class Editor;
 
 #include <deque>
 #include <string>
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 
-struct NVGcontext;
+#include "util/nvg_utils.h"
+// struct NVGcontext; // replaced with nvg_utils
 
 namespace IngamePreview {
 

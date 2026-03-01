@@ -74,7 +74,7 @@ DCButton::~DCButton() {
 
 void DCButton::SetSprite(int _sprid) {
 	if (_sprid != 0) {
-		sprite = g_gui.gfx.getSprite(_sprid);
+		sprite = g_gui.sprites.getSprite(_sprid);
 	} else {
 		sprite = nullptr;
 	}
@@ -97,7 +97,7 @@ void DCButton::SetValue(bool val) {
 	state = val;
 	if (state != oldval) {
 		if (GetValue() && g_settings.getInteger(Config::USE_GUI_SELECTION_SHADOW)) {
-			SetOverlay(g_gui.gfx.getSprite(EDITOR_SPRITE_SELECTION_MARKER));
+			SetOverlay(g_gui.sprites.getSprite(EDITOR_SPRITE_SELECTION_MARKER));
 		} else {
 			SetOverlay(nullptr);
 		}
@@ -121,7 +121,7 @@ wxSize DCButton::DoGetBestClientSize() const {
 }
 
 void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
-	if (g_gui.gfx.isUnloaded()) {
+	if (g_gui.loader.isUnloaded()) {
 		return;
 	}
 

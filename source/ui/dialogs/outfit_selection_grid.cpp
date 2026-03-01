@@ -1,5 +1,8 @@
 #include "ui/dialogs/outfit_selection_grid.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "ui/dialogs/outfit_chooser_dialog.h"
 #include "ui/gui.h"
@@ -111,7 +114,7 @@ int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, co
         return existing;
     }
 
-    GameSprite* spr = g_gui.gfx.getCreatureSprite(lookType);
+    GameSprite* spr = g_gui.sprites.getCreatureSprite(lookType);
     if (!spr) {
         return 0;
     }

@@ -22,8 +22,8 @@ TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
 
 TemplateImage::~TemplateImage() {
 	if (isGLLoaded) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
+		if (g_gui.atlas.hasAtlasManager()) {
+			g_gui.atlas.getAtlasManager()->removeSprite(texture_id);
 		}
 	}
 }
@@ -34,13 +34,13 @@ void TemplateImage::clean(time_t time, int longevity) {
 		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
+		if (g_gui.atlas.hasAtlasManager()) {
+			g_gui.atlas.getAtlasManager()->removeSprite(texture_id);
 		}
 		isGLLoaded = false;
 		atlas_region = nullptr;
 		generation_id++;
-		g_gui.gfx.collector.NotifyTextureUnloaded();
+		g_gui.gc.notifyTextureUnloaded();
 	}
 }
 

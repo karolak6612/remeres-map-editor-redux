@@ -32,7 +32,10 @@
 #include "rendering/ui/map_display.h"
 #include "editor/copybuffer.h"
 #include "live/live_socket.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/creature/creature_brush.h"
@@ -342,7 +345,7 @@ void MapDrawer::Release() {
 }
 
 void MapDrawer::Draw() {
-	g_gui.gfx.updateTime();
+	g_gui.gc.updateTime();
 
 	light_buffer.Clear();
 	creature_name_drawer->clear();
@@ -357,10 +360,10 @@ void MapDrawer::Draw() {
 		};
 	}
 
-	if (!g_gui.gfx.ensureAtlasManager()) {
+	if (!g_gui.atlas.ensureAtlasManager()) {
 		return;
 	}
-	auto* atlas = g_gui.gfx.getAtlasManager();
+	auto* atlas = g_gui.atlas.getAtlasManager();
 
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *atlas);

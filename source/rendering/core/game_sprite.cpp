@@ -4,7 +4,10 @@
 
 #include "app/main.h"
 #include "rendering/core/game_sprite.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "rendering/utilities/sprite_icon_generator.h"
@@ -298,7 +301,7 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size) {
 			bm[size] = std::make_unique<wxBitmap>(bmp);
 			dc[size] = std::make_unique<wxMemoryDC>(*bm[size]);
 		}
-		g_gui.gfx.addSpriteToCleanup(this);
+		g_gui.gc.addSpriteToCleanup(this);
 	}
 	return dc[size].get();
 }
@@ -326,7 +329,7 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size, const Outfit& outfit) {
 			cache->dc = std::make_unique<wxMemoryDC>(*cache->bm);
 
 			auto res = colored_dc.insert(std::make_pair(key, std::move(cache)));
-			g_gui.gfx.addSpriteToCleanup(this);
+			g_gui.gc.addSpriteToCleanup(this);
 			return res.first->second->dc.get();
 		}
 		return nullptr;

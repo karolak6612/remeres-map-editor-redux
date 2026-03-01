@@ -8,7 +8,10 @@
 #include "editor/editor.h"
 #include "live/live_socket.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
 void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
@@ -48,8 +51,8 @@ void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 			draw_color.Alpha() / 255.0f
 		);
 
-		if (g_gui.gfx.ensureAtlasManager()) {
-			ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.gfx.getAtlasManager());
+		if (g_gui.atlas.ensureAtlasManager()) {
+			ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.atlas.getAtlasManager());
 		}
 	}
 }
