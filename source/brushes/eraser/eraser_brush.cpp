@@ -46,12 +46,12 @@ bool EraserBrush::canDraw(BaseMap* map, const Position& position) const {
 }
 
 void EraserBrush::undraw(BaseMap* map, Tile* tile) {
-	std::erase_if(tile->items, [](const auto& item) {
+	tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [](const auto& item) {
 		if (item->isComplex() && g_settings.getInteger(Config::ERASER_LEAVE_UNIQUE)) {
 			return false;
 		}
 		return true;
-	});
+	}), tile->items.end());
 
 	if (tile->ground) {
 		if (g_settings.getInteger(Config::ERASER_LEAVE_UNIQUE)) {
@@ -66,10 +66,10 @@ void EraserBrush::undraw(BaseMap* map, Tile* tile) {
 
 void EraserBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	// Draw is undraw, undraw is super-undraw!
-	std::erase_if(tile->items, [](const auto& item) {
+	tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [](const auto& item) {
 		if ((item->isComplex() || item->isBorder()) && g_settings.getInteger(Config::ERASER_LEAVE_UNIQUE)) {
 			return false;
 		}
 		return true;
-	});
+	}), tile->items.end());
 }
