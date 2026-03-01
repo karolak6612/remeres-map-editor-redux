@@ -5,6 +5,8 @@
 #include "game/items.h"
 #include "game/item.h"
 #include "map/tile.h"
+#include <bit>
+#include <cstdint>
 
 struct SpritePatterns {
 	int x = 0;
@@ -23,9 +25,21 @@ public:
 			return patterns;
 		}
 
-		patterns.x = (spr->pattern_x > 1) ? pos.x % spr->pattern_x : 0;
-		patterns.y = (spr->pattern_y > 1) ? pos.y % spr->pattern_y : 0;
-		patterns.z = (spr->pattern_z > 1) ? pos.z % spr->pattern_z : 0;
+		patterns.x = 0;
+		if (spr->pattern_x > 1) {
+			patterns.x = std::has_single_bit(static_cast<uint32_t>(spr->pattern_x)) ? (pos.x & (spr->pattern_x - 1)) : (pos.x % spr->pattern_x);
+		}
+
+		patterns.y = 0;
+		if (spr->pattern_y > 1) {
+			patterns.y = std::has_single_bit(static_cast<uint32_t>(spr->pattern_y)) ? (pos.y & (spr->pattern_y - 1)) : (pos.y % spr->pattern_y);
+		}
+
+		patterns.z = 0;
+		if (spr->pattern_z > 1) {
+			patterns.z = std::has_single_bit(static_cast<uint32_t>(spr->pattern_z)) ? (pos.z & (spr->pattern_z - 1)) : (pos.z % spr->pattern_z);
+		}
+
 		patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
 
 		if (it.isSplash() || it.isFluidContainer()) {

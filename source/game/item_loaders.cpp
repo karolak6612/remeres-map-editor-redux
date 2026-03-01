@@ -108,9 +108,8 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 			continue;
 		}
 
-		auto owned_t = std::make_unique<ItemType>();
-		ItemType* t = owned_t.get();
-		t->group = ItemGroup_t(u8);
+		ItemType t;
+		t.group = ItemGroup_t(u8);
 
 		static const auto group_handlers = [] {
 			std::array<void (*)(ItemType&, OtbFileFormatVersion), ITEM_GROUP_LAST + 1> h {};
@@ -128,40 +127,40 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 			return h;
 		}();
 
-		if (t->group <= ITEM_GROUP_LAST) {
-			group_handlers[t->group](*t, version);
+		if (t.group <= ITEM_GROUP_LAST) {
+			group_handlers[t.group](t, version);
 		} else {
 			warnings.push_back("Unknown item group declaration");
 		}
 
 		uint32_t flags;
 		if (itemNode->getU32(flags)) {
-			t->unpassable = ((flags & FLAG_UNPASSABLE) == FLAG_UNPASSABLE);
-			t->blockMissiles = ((flags & FLAG_BLOCK_MISSILES) == FLAG_BLOCK_MISSILES);
-			t->blockPathfinder = ((flags & FLAG_BLOCK_PATHFINDER) == FLAG_BLOCK_PATHFINDER);
-			t->hasElevation = ((flags & FLAG_HAS_ELEVATION) == FLAG_HAS_ELEVATION);
-			t->pickupable = ((flags & FLAG_PICKUPABLE) == FLAG_PICKUPABLE);
-			t->moveable = ((flags & FLAG_MOVEABLE) == FLAG_MOVEABLE);
-			t->stackable = ((flags & FLAG_STACKABLE) == FLAG_STACKABLE);
-			t->floorChangeDown = ((flags & FLAG_FLOORCHANGEDOWN) == FLAG_FLOORCHANGEDOWN);
-			t->floorChangeNorth = ((flags & FLAG_FLOORCHANGENORTH) == FLAG_FLOORCHANGENORTH);
-			t->floorChangeEast = ((flags & FLAG_FLOORCHANGEEAST) == FLAG_FLOORCHANGEEAST);
-			t->floorChangeSouth = ((flags & FLAG_FLOORCHANGESOUTH) == FLAG_FLOORCHANGESOUTH);
-			t->floorChangeWest = ((flags & FLAG_FLOORCHANGEWEST) == FLAG_FLOORCHANGEWEST);
-			t->floorChange = t->floorChangeDown || t->floorChangeNorth || t->floorChangeEast || t->floorChangeSouth || t->floorChangeWest;
+			t.unpassable = ((flags & FLAG_UNPASSABLE) == FLAG_UNPASSABLE);
+			t.blockMissiles = ((flags & FLAG_BLOCK_MISSILES) == FLAG_BLOCK_MISSILES);
+			t.blockPathfinder = ((flags & FLAG_BLOCK_PATHFINDER) == FLAG_BLOCK_PATHFINDER);
+			t.hasElevation = ((flags & FLAG_HAS_ELEVATION) == FLAG_HAS_ELEVATION);
+			t.pickupable = ((flags & FLAG_PICKUPABLE) == FLAG_PICKUPABLE);
+			t.moveable = ((flags & FLAG_MOVEABLE) == FLAG_MOVEABLE);
+			t.stackable = ((flags & FLAG_STACKABLE) == FLAG_STACKABLE);
+			t.floorChangeDown = ((flags & FLAG_FLOORCHANGEDOWN) == FLAG_FLOORCHANGEDOWN);
+			t.floorChangeNorth = ((flags & FLAG_FLOORCHANGENORTH) == FLAG_FLOORCHANGENORTH);
+			t.floorChangeEast = ((flags & FLAG_FLOORCHANGEEAST) == FLAG_FLOORCHANGEEAST);
+			t.floorChangeSouth = ((flags & FLAG_FLOORCHANGESOUTH) == FLAG_FLOORCHANGESOUTH);
+			t.floorChangeWest = ((flags & FLAG_FLOORCHANGEWEST) == FLAG_FLOORCHANGEWEST);
+			t.floorChange = t.floorChangeDown || t.floorChangeNorth || t.floorChangeEast || t.floorChangeSouth || t.floorChangeWest;
 
 			// The OTB `FLAG_ALWAYSONTOP` is mapped to the editor's `alwaysOnBottom` property.
-			t->alwaysOnBottom = ((flags & FLAG_ALWAYSONTOP) == FLAG_ALWAYSONTOP);
-			t->isHangable = ((flags & FLAG_HANGABLE) == FLAG_HANGABLE);
-			t->hookEast = ((flags & FLAG_HOOK_EAST) == FLAG_HOOK_EAST);
-			t->hookSouth = ((flags & FLAG_HOOK_SOUTH) == FLAG_HOOK_SOUTH);
-			t->allowDistRead = ((flags & FLAG_ALLOWDISTREAD) == FLAG_ALLOWDISTREAD);
-			t->rotable = ((flags & FLAG_ROTABLE) == FLAG_ROTABLE);
-			t->canReadText = ((flags & FLAG_READABLE) == FLAG_READABLE);
+			t.alwaysOnBottom = ((flags & FLAG_ALWAYSONTOP) == FLAG_ALWAYSONTOP);
+			t.isHangable = ((flags & FLAG_HANGABLE) == FLAG_HANGABLE);
+			t.hookEast = ((flags & FLAG_HOOK_EAST) == FLAG_HOOK_EAST);
+			t.hookSouth = ((flags & FLAG_HOOK_SOUTH) == FLAG_HOOK_SOUTH);
+			t.allowDistRead = ((flags & FLAG_ALLOWDISTREAD) == FLAG_ALLOWDISTREAD);
+			t.rotable = ((flags & FLAG_ROTABLE) == FLAG_ROTABLE);
+			t.canReadText = ((flags & FLAG_READABLE) == FLAG_READABLE);
 
 			if (version >= OtbFileFormatVersion::V3) {
-				t->client_chargeable = ((flags & FLAG_CLIENTCHARGES) == FLAG_CLIENTCHARGES);
-				t->ignoreLook = ((flags & FLAG_IGNORE_LOOK) == FLAG_IGNORE_LOOK);
+				t.client_chargeable = ((flags & FLAG_CLIENTCHARGES) == FLAG_CLIENTCHARGES);
+				t.ignoreLook = ((flags & FLAG_IGNORE_LOOK) == FLAG_IGNORE_LOOK);
 			}
 		}
 
@@ -344,20 +343,20 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 				break;
 			}
 
-			if (!handlers[attribute](db, *t, itemNode, datalen, error, warnings)) {
+			if (!handlers[attribute](db, t, itemNode, datalen, error, warnings)) {
 				return false;
 			}
 		}
 
 		// items is public in ItemDatabase
-		if (t->id < db.items.size() && db.items[t->id]) {
+		if (t.id < db.items.size() && db.items[t.id].id != 0) {
 			warnings.push_back("items.otb: Duplicate items");
 		}
 
-		if (static_cast<size_t>(t->id) >= db.items.size()) {
-			db.items.resize(static_cast<size_t>(t->id) + 1);
+		if (static_cast<size_t>(t.id) >= db.items.size()) {
+			db.items.resize(static_cast<size_t>(t.id) + 1);
 		}
-		db.items[t->id] = std::move(owned_t);
+		db.items[t.id] = std::move(t);
 	}
 	return true;
 }

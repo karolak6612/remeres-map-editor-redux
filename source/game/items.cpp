@@ -287,16 +287,15 @@ bool ItemDatabase::loadFromGameXml(const FileName& identifier, wxString& error, 
 bool ItemDatabase::loadMetaItem(pugi::xml_node node) {
 	if (const pugi::xml_attribute attribute = node.attribute("id")) {
 		const uint16_t id = attribute.as_ushort();
-		if (id == 0 || (id < items.size() && items[id])) {
+		if (id == 0 || (id < items.size() && items[id].id != 0)) {
 			return false;
 		}
 
 		if (id >= items.size()) {
 			items.resize(id + 1);
 		}
-		items[id] = std::make_unique<ItemType>();
-		items[id]->is_metaitem = true;
-		items[id]->id = id;
+		items[id].is_metaitem = true;
+		items[id].id = id;
 		return true;
 	}
 	return false;
@@ -304,22 +303,21 @@ bool ItemDatabase::loadMetaItem(pugi::xml_node node) {
 
 ItemType& ItemDatabase::getItemType(int id) {
 	if (static_cast<size_t>(id) < items.size()) {
-		if (auto& it = items[id]) {
-			return *it;
-		}
+		// Fast retrieval - no pointer indirection
+		return items[id];
 	}
 	static ItemType dummyItemType; // use this for invalid ids
 	return dummyItemType;
 }
 
 bool ItemDatabase::typeExists(int id) const {
-	return static_cast<size_t>(id) < items.size() && items[id] != nullptr;
+	return static_cast<size_t>(id) < items.size() && items[id].id != 0;
 }
 
 void ItemDatabase::updateAllTooltipableFlags() {
-	for (auto& it_ptr : items) {
-		if (it_ptr) {
-			it_ptr->updateTooltipable();
+	for (auto& item : items) {
+		if (item.id != 0) {
+			item.updateTooltipable();
 		}
 	}
 }
