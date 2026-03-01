@@ -76,8 +76,7 @@ std::unique_ptr<Item> Item::Create(uint16_t _type, uint16_t _subtype /*= 0xFFFF*
 Item::Item(unsigned short _type, unsigned short _count) :
 	id(_type),
 	subtype(1),
-	selected(false),
-	cached_type_(&g_items[_type]) {
+	selected(false) {
 	if (hasSubtype()) {
 		subtype = _count;
 	}
@@ -105,7 +104,6 @@ uint32_t Item::memsize() const {
 
 void Item::setID(uint16_t newid) {
 	id = newid;
-	cached_type_ = &g_items[newid];
 }
 
 void Item::setSubtype(uint16_t n) {

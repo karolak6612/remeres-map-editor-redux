@@ -65,6 +65,10 @@ public:
 
 	template <typename Func>
 	void visitLeaves(int min_x, int min_y, int max_x, int max_y, Func&& func) {
+		if (max_x <= min_x || max_y <= min_y) {
+			return;
+		}
+
 		int start_nx = min_x >> NODE_SHIFT;
 		int start_ny = min_y >> NODE_SHIFT;
 		int end_nx = (max_x - 1) >> NODE_SHIFT;

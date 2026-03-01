@@ -267,6 +267,9 @@ MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 
 	// 1-element cache
 	if (last_valid_ && key == last_key_ && last_idx_ < cells_.size() && cells_[last_idx_].key == key) {
+		if (!cells_[last_idx_].cell) {
+			return nullptr;
+		}
 		int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 		int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 		return cells_[last_idx_].cell->nodes[ny * NODES_PER_CELL + nx].get();
@@ -281,6 +284,9 @@ MapNode* SpatialHashGrid::getLeaf(int x, int y) {
 	last_idx_ = idx;
 	last_valid_ = true;
 
+	if (!cells_[idx].cell) {
+		return nullptr;
+	}
 	int nx = (x >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	int ny = (y >> NODE_SHIFT) & (NODES_PER_CELL - 1);
 	return cells_[idx].cell->nodes[ny * NODES_PER_CELL + nx].get();
