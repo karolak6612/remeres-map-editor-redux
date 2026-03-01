@@ -44,7 +44,7 @@ void CreatureDrawer::BlitCreature(const DrawContext& ctx, SpriteDrawer* sprite_d
 		sprite_drawer->BlitSprite(ctx, screenx, screeny, it.sprite, options.color);
 	} else {
 		// get outfit sprite
-		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);
+		GameSprite* spr = g_gui.sprites.getCreatureSprite(outfit.lookType);
 		if (!spr || outfit.lookType == 0) {
 			return;
 		}
@@ -60,7 +60,7 @@ void CreatureDrawer::BlitCreature(const DrawContext& ctx, SpriteDrawer* sprite_d
 		// mount colors by Zbizu
 		int pattern_z = 0;
 		if (outfit.lookMount != 0) {
-			if (GameSprite* mountSpr = g_gui.gfx.getCreatureSprite(outfit.lookMount)) {
+			if (GameSprite* mountSpr = g_gui.sprites.getCreatureSprite(outfit.lookMount)) {
 				// generate mount colors
 				Outfit mountOutfit;
 				mountOutfit.lookType = outfit.lookMount;

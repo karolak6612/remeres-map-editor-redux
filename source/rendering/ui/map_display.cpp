@@ -64,6 +64,7 @@
 #include "rendering/ui/selection_controller.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/map_menu_handler.h"
+#include "rendering/core/sprite_preloader.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/house/house_exit_brush.h"
@@ -123,7 +124,7 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 	popup_menu = std::make_unique<MapPopupMenu>(editor);
 	animation_timer = std::make_unique<AnimationTimer>(this);
-	drawer = std::make_unique<MapDrawer>(this);
+	drawer = std::make_unique<MapDrawer>(*this, editor);
 	selection_controller = std::make_unique<SelectionController>(this, editor);
 	drawing_controller = std::make_unique<DrawingController>(this, editor);
 	screenshot_controller = std::make_unique<ScreenshotController>(this);
@@ -243,7 +244,7 @@ void MapCanvas::PerformGarbageCollection() {
 	// Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
 	long current_time = wxGetLocalTime();
 	if (current_time - m_last_gc_time >= 1 && g_gui.GetCurrentMapTab() == GetParent()) {
-		g_gui.gfx.garbageCollection();
+		g_gui.gc.garbageCollection(g_gui.sprites);
 		m_last_gc_time = current_time;
 	}
 }
@@ -259,7 +260,8 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 	if (g_gui.IsRenderingEnabled()) {
 		// Advance graphics clock and drain the preloader queue before rendering
-		g_gui.gfx.updateTime();
+		g_gui.gc.updateTime();
+		SpritePreloader::get().update();
 
 		DrawingOptions& options = drawer->getOptions();
 		if (screenshot_controller->IsCapturing()) {
@@ -273,10 +275,10 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		if (options.show_preview) {
 			animation_timer->Start();
-			g_gui.gfx.resumeAnimation();
+			g_gui.gc.resumeAnimation();
 		} else {
 			animation_timer->Stop();
-			g_gui.gfx.pauseAnimation();
+			g_gui.gc.pauseAnimation();
 		}
 
 		// BatchRenderer calls removed - MapDrawer handles its own renderers

@@ -195,7 +195,7 @@ bool OtbLoader::load(ItemDatabase& db, BinaryNode* itemNode, OtbFileFormatVersio
 				if (!node->getU16(it.clientID)) {
 					warnings.push_back("Invalid item type property (clientID)");
 				}
-				it.sprite = static_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientID));
+				it.sprite = static_cast<GameSprite*>(g_gui.sprites.getSprite(it.clientID));
 				return true;
 			};
 

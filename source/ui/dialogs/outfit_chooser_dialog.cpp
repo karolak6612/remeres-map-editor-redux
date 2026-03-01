@@ -23,7 +23,7 @@
 #include "game/creatures.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/utilities/sprite_icon_generator.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
 #include "rendering/core/outfit_colors.h"
 #include "rendering/core/outfit_colorizer.h"
 #include "ui/gui.h"
@@ -70,7 +70,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 		}
 	}
 
-	int maxLookType = g_gui.gfx.getCreatureSpriteMaxID();
+	int maxLookType = g_gui.sprites.getCreatureSpriteMaxID();
 	for (int i = 1; i <= maxLookType; ++i) {
 		OutfitItem item;
 		item.lookType = i;
@@ -81,7 +81,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 			item.name = wxstr(std::format("Outfit {}", i));
 		}
 
-		GameSprite* spr = g_gui.gfx.getCreatureSprite(i);
+		GameSprite* spr = g_gui.sprites.getCreatureSprite(i);
 		item.layers = spr ? spr->layers : 1;
 
 		selection_panel->all_outfits.push_back(item);

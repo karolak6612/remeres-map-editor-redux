@@ -32,7 +32,10 @@
 #include "rendering/ui/map_display.h"
 #include "editor/copybuffer.h"
 #include "live/live_socket.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/creature/creature_brush.h"
@@ -89,8 +92,8 @@ void main() {
 }
 )";
 
-MapDrawer::MapDrawer(MapCanvas* canvas) :
-	canvas(canvas), editor(canvas->editor) {
+MapDrawer::MapDrawer(MapCanvas& canvas, Editor& editor) :
+	canvas(canvas), editor(editor) {
 
 	light_drawer = std::make_shared<LightDrawer>();
 	tooltip_drawer = std::make_unique<TooltipDrawer>();
@@ -151,15 +154,15 @@ void MapDrawer::SetupVars() {
 	options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
 
 	// Setup ViewState from canvas
-	view.zoom = static_cast<float>(canvas->GetZoom());
-	view.floor = canvas->GetFloor();
-	canvas->GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
+	view.zoom = static_cast<float>(canvas.GetZoom());
+	view.floor = canvas.GetFloor();
+	canvas.GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
 
 	view.viewport_x = 0;
 	view.viewport_y = 0;
 
-	view.mouse_map_x = canvas->last_cursor_map_x;
-	view.mouse_map_y = canvas->last_cursor_map_y;
+	view.mouse_map_x = canvas.last_cursor_map_x;
+	view.mouse_map_y = canvas.last_cursor_map_y;
 
 	view.tile_size = std::max(1, static_cast<int>(TILE_SIZE / view.zoom));
 	view.camera_pos.z = view.floor;
@@ -342,7 +345,8 @@ void MapDrawer::Release() {
 }
 
 void MapDrawer::Draw() {
-	g_gui.gfx.updateTime();
+	// Redundant update removed: MapCanvas::OnPaint advances timing BEFORE calling drawer->Draw()
+	// g_gui.gc.updateTime();
 
 	light_buffer.Clear();
 	creature_name_drawer->clear();
@@ -350,17 +354,17 @@ void MapDrawer::Draw() {
 
 	if (options.boundbox_selection) {
 		options.transient_selection_bounds = MapBounds {
-			.x1 = std::min(canvas->last_click_map_x, canvas->last_cursor_map_x),
-			.y1 = std::min(canvas->last_click_map_y, canvas->last_cursor_map_y),
-			.x2 = std::max(canvas->last_click_map_x, canvas->last_cursor_map_x),
-			.y2 = std::max(canvas->last_click_map_y, canvas->last_cursor_map_y)
+			.x1 = std::min(canvas.last_click_map_x, canvas.last_cursor_map_x),
+			.y1 = std::min(canvas.last_click_map_y, canvas.last_cursor_map_y),
+			.x2 = std::max(canvas.last_click_map_x, canvas.last_cursor_map_x),
+			.y2 = std::max(canvas.last_click_map_y, canvas.last_cursor_map_y)
 		};
 	}
 
-	if (!g_gui.gfx.ensureAtlasManager()) {
+	if (!g_gui.atlas.ensureAtlasManager()) {
 		return;
 	}
-	auto* atlas = g_gui.gfx.getAtlasManager();
+	auto* atlas = g_gui.atlas.getAtlasManager();
 
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *atlas);

@@ -1,9 +1,13 @@
+#include "rendering/core/render_timer.h"
 #include "app/main.h"
 #include "ui/replace_tool/visual_similarity_service.h"
 #include "util/nvg_utils.h"
 #include "ui/gui.h"
 #include "game/items.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include <algorithm>
 #include <cmath>
 #include <vector>
@@ -186,7 +190,7 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 		return data;
 	}
 
-	Sprite* sprite = g_gui.gfx.getSprite(it.clientID);
+	Sprite* sprite = g_gui.sprites.getSprite(it.clientID);
 	if (!sprite) {
 		return data;
 	}
@@ -216,23 +220,43 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 
 void VisualSimilarityService::OnTimer(wxTimerEvent&) {
 	int processed = 0;
-	int maxId = g_items.getMaxID();
+	uint32_t maxId = static_cast<uint32_t>(g_items.getMaxID());
 
 	// Process fewer items per tick to prevent UI lag and handle spikes
-	while (processed < 100 && m_nextIdToIndex <= maxId) {
-		uint16_t id = m_nextIdToIndex++;
+	while (processed < 100 && (m_nextIdToIndex <= maxId || !m_retryQueue.empty())) {
+		uint16_t id;
+		if (!m_retryQueue.empty()) {
+			id = m_retryQueue.front();
+			m_retryQueue.pop_front();
+		} else {
+			id = m_nextIdToIndex++;
+		}
+
 		const ItemType& it = g_items.getItemType(id);
 		if (it.id != 0 && it.clientID != 0) {
 			VisualItemData data = CalculateData(id);
 			if (data.width > 0) {
-				std::lock_guard<std::mutex> lock(dataMutex);
-				itemDataCache[id] = std::move(data);
+				{
+					std::lock_guard<std::mutex> lock(dataMutex);
+					itemDataCache[id] = std::move(data);
+				}
+				m_retryAttempts.erase(id); // Success, clear attempts
+			} else {
+				// Transient failure: likely sprite not loaded yet
+				uint8_t& attempts = m_retryAttempts[id];
+				if (++attempts < kMaxIndexRetries) {
+					m_retryQueue.push_back(id);
+				} else {
+					// Attempts exhausted, mark as indexed anyway to avoid infinite retries
+					// (the item will have empty/invalid data in the cache)
+					m_retryAttempts.erase(id);
+				}
 			}
 		}
 		processed++;
 	}
 
-	if (m_nextIdToIndex > maxId) {
+	if (m_nextIdToIndex > maxId && m_retryQueue.empty()) {
 		m_timer.Stop();
 		std::lock_guard<std::mutex> lock(dataMutex);
 		isIndexed = true;

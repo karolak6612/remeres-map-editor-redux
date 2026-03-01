@@ -1,6 +1,11 @@
 #include "rendering/core/image.h"
 #include "ui/gui.h" // For g_gui
-#include "rendering/core/graphics.h" // For GraphicManager
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h" // For GraphicManager
+#include "rendering/core/draw_context.h"
+#include <mutex>
 
 Image::Image() :
 	isGLLoaded(false),
@@ -8,7 +13,7 @@ Image::Image() :
 }
 
 void Image::visit() const {
-	lastaccess.store(static_cast<int64_t>(g_gui.gfx.getCachedTime()), std::memory_order_relaxed);
+	lastaccess.store(static_cast<int64_t>(g_gui.gc.getCachedTime()), std::memory_order_relaxed);
 }
 
 void Image::clean(time_t time, int longevity) {
@@ -16,8 +21,8 @@ void Image::clean(time_t time, int longevity) {
 }
 
 const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data) {
-	if (g_gui.gfx.ensureAtlasManager()) {
-		AtlasManager* atlas_mgr = g_gui.gfx.getAtlasManager();
+	if (g_gui.atlas.ensureAtlasManager()) {
+		AtlasManager* atlas_mgr = g_gui.atlas.getAtlasManager();
 
 		// 1. Check if already loaded
 		const AtlasRegion* region = atlas_mgr->getRegion(sprite_id);
@@ -65,9 +70,8 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 		if (region) {
 			if (!isGLLoaded) {
 				isGLLoaded = true;
-				g_gui.gfx.resident_images.push_back(this); // Add to resident set
+				g_gui.gc.addResidentImage(this); // Add to resident set
 			}
-			g_gui.gfx.collector.NotifyTextureLoaded();
 			return region;
 		} else {
 			spdlog::warn("Atlas addSprite failed for sprite_id={}", sprite_id);

@@ -251,7 +251,7 @@ void ContainerGridCanvas::DrawHoverEffects(NVGcontext* vg, float x, float y, flo
 }
 
 void ContainerGridCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
-	if (g_gui.gfx.isUnloaded()) {
+	if (g_gui.loader.isUnloaded()) {
 		return;
 	}
 
@@ -311,7 +311,7 @@ void ContainerGridCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		}
 
 		if (item) {
-			Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
+			Sprite* sprite = g_gui.sprites.getSprite(item->getClientID());
 			if (sprite) {
 				int tex = GetOrCreateSpriteTexture(vg, sprite);
 				if (tex > 0) {
@@ -323,7 +323,7 @@ void ContainerGridCanvas::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 					// Overlays for selected
 					if (is_selected && g_settings.getInteger(Config::USE_GUI_SELECTION_SHADOW)) {
-						Sprite* overlay = g_gui.gfx.getSprite(EDITOR_SPRITE_SELECTION_MARKER);
+						Sprite* overlay = g_gui.sprites.getSprite(EDITOR_SPRITE_SELECTION_MARKER);
 						if (overlay) {
 							int overlayTex = GetOrCreateSpriteTexture(vg, overlay);
 							if (overlayTex > 0) {

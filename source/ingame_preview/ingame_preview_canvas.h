@@ -11,9 +11,9 @@ class Editor;
 
 #include <deque>
 #include <string>
-#include "rendering/core/graphics.h"
 
-struct NVGcontext;
+#include "util/nvg_utils.h"
+
 
 namespace IngamePreview {
 

@@ -9,7 +9,7 @@
 #include "util/common.h"
 #include "rendering/core/animator.h"
 #include "rendering/core/sprite_light.h"
-#include "rendering/core/texture_garbage_collector.h"
+#include "rendering/core/texture_gc.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/render_timer.h"
 #include <atomic>
@@ -183,7 +183,7 @@ public:
 	friend class DatLoader;
 	friend class SprLoader;
 	friend class SpriteIconGenerator;
-	friend class TextureGarbageCollector;
+	friend class TextureGC;
 	friend class TooltipDrawer;
 	friend class SpritePreloader;
 

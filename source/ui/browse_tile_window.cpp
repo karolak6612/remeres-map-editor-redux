@@ -22,7 +22,7 @@
 #include "ui/gui.h"
 #include "brushes/raw/raw_brush.h"
 #include "map/tile.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
 #include "ui/gui.h"
 #include <wx/listbox.h>
 #include "ui/browse_tile_window.h"
@@ -70,7 +70,7 @@ BrowseTileListBox::~BrowseTileListBox() {
 void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
 	Item* item = items[n];
 
-	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
+	Sprite* sprite = g_gui.sprites.getSprite(item->getClientID());
 	if (sprite) {
 		int tex = GetOrCreateSpriteTexture(vg, sprite);
 		if (tex > 0) {

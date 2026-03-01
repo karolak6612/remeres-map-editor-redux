@@ -19,7 +19,6 @@
 
 #include <spdlog/spdlog.h>
 
-#include "rendering/core/graphics.h"
 #include "editor/editor.h"
 #include "map/map.h"
 

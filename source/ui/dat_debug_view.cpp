@@ -19,7 +19,10 @@
 
 #include "ui/dat_debug_view.h"
 
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
 // ============================================================================
@@ -40,9 +43,10 @@ protected:
 
 DatDebugViewListBox::DatDebugViewListBox(wxWindow* parent, wxWindowID id) :
 	wxVListBox(parent, id, wxDefaultPosition, wxDefaultSize, wxLB_SINGLE) {
-	sprites.reserve(g_gui.gfx.getItemSpriteMaxID());
-	for (int id = 0; id < g_gui.gfx.getItemSpriteMaxID(); ++id) {
-		Sprite* spr = g_gui.gfx.getSprite(id);
+	const int max_id = g_gui.sprites.getItemSpriteMaxID();
+	sprites.reserve(max_id);
+	for (int id = 1; id <= max_id; ++id) {
+		Sprite* spr = g_gui.sprites.getSprite(id);
 		if (spr) {
 			sprites.push_back(spr);
 		}

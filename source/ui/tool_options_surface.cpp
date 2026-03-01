@@ -3,7 +3,7 @@
 #include "app/settings.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
 #include "brushes/managers/brush_manager.h"
 #include "brushes/brush.h"
 #include "game/sprites.h"
@@ -243,7 +243,7 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 	if (tr.brush) {
 		Sprite* s = tr.brush->getSprite();
 		if (!s && tr.brush->getLookID() != 0) {
-			s = g_gui.gfx.getSprite(tr.brush->getLookID());
+			s = g_gui.sprites.getSprite(tr.brush->getLookID());
 		}
 
 		if (s) {

@@ -4,6 +4,9 @@
 
 #include "app/main.h"
 #include "rendering/utilities/sprite_icon_generator.h"
+#include "rendering/core/normal_image.h"
+#include "rendering/core/template_image.h"
+#include "rendering/core/game_sprite.h"
 #include "app/settings.h"
 #include "ui/gui.h"
 #include <algorithm>
@@ -100,7 +103,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 	// Mounts
 	int pattern_z = 0;
 	if (outfit.lookMount != 0) {
-		if (GameSprite* mountSpr = g_gui.gfx.getCreatureSprite(outfit.lookMount)) {
+		if (GameSprite* mountSpr = g_gui.sprites.getCreatureSprite(outfit.lookMount)) {
 			// Mount outfit
 			Outfit mountOutfit;
 			mountOutfit.lookType = outfit.lookMount;

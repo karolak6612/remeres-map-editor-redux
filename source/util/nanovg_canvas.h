@@ -7,10 +7,11 @@
 #include <list>
 #include <cstdint>
 #include <memory>
+#include <wx/glcanvas.h>
+#include "util/nvg_utils.h"
 
-#include "rendering/core/graphics.h"
-
-struct NVGcontext;
+class Sprite;
+class GameSprite;
 
 /**
  * @class NanoVGCanvas
@@ -50,6 +51,8 @@ public:
 private:
 	class NanoVGCanvas* m_canvas;
 };
+
+
 
 class NanoVGCanvas : public wxGLCanvas {
 	friend class ScopedGLContext;

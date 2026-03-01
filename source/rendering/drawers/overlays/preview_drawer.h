@@ -16,7 +16,7 @@ public:
 	PreviewDrawer();
 	~PreviewDrawer();
 
-	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, MapCanvas* canvas, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
+	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, MapCanvas& canvas, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
 };
 
 #endif

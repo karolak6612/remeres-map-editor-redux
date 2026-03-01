@@ -1,7 +1,7 @@
 #ifndef RME_GUI_H_
 #define RME_GUI_H_
 
-#include "rendering/core/graphics.h"
+
 #include "map/position.h"
 
 #include "editor/copybuffer.h"
@@ -71,6 +71,10 @@ wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 #include "palette/managers/palette_manager.h"
 #include "editor/managers/editor_manager.h"
 #include "editor/hotkey_manager.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/io/sprite_loader.h"
+#include "rendering/core/texture_gc.h"
 
 class GUI {
 public: // dtor and ctor
@@ -338,7 +342,10 @@ public:
 	MainFrame* root; // The main frame
 	CopyBuffer copybuffer;
 
-	GraphicManager gfx;
+	SpriteDatabase sprites;
+	AtlasLifecycle atlas;
+	SpriteLoader loader;
+	TextureGC gc;
 
 	HousePalette* house_palette;
 

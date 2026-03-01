@@ -1,83 +1,142 @@
 {
-    "version": 3,
-    "cmakeMinimumRequired": {
-        "major": 3,
-        "minor": 28,
-        "patch": 0
+  "version": 8,
+  "cmakeMinimumRequired": {
+    "major": 4,
+    "minor": 2,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "base",
+      "displayName": "Base Configuration",
+      "description": "Common settings for all configurations",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
     },
-    "configurePresets": [
+    {
+      "name": "vcpkg-base",
+      "displayName": "vcpkg Base",
+      "description": "vcpkg toolchain integration",
+      "hidden": true,
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": {
+          "type": "FILEPATH",
+          "value": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
+        },
+        "VCPKG_TARGET_TRIPLET": "x64-windows"
+      }
+    },
+    {
+      "name": "ninja-base",
+      "displayName": "Ninja Base",
+      "description": "Ninja generator settings",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-ninja"
+    },
+    {
+      "name": "msvc-base",
+      "displayName": "MSVC Base",
+      "description": "Microsoft Visual C++ settings",
+      "hidden": true,
+      "architecture": {
+        "value": "x64",
+        "strategy": "external"
+      },
+      "toolset": {
+        "value": "host=x64",
+        "strategy": "external"
+      }
+    },
+    {
+      "name": "ninja-vcpkg",
+      "displayName": "Ninja + vcpkg",
+      "description": "Build using Ninja and vcpkg (Modern default)",
+      "inherits": [
+        "base",
+        "vcpkg-base",
+        "ninja-base",
+        "msvc-base"
+      ],
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "ninja-vcpkg-debug",
+      "displayName": "Ninja + vcpkg Debug",
+      "description": "Build using Ninja and vcpkg (Debug)",
+      "inherits": "ninja-vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "vs2022-vcpkg",
+      "displayName": "Visual Studio 2022 + vcpkg",
+      "description": "Build using Visual Studio 2022 and vcpkg",
+      "inherits": [
+        "base",
+        "vcpkg-base",
+        "msvc-base"
+      ],
+      "generator": "Visual Studio 17 2022",
+      "binaryDir": "${sourceDir}/build-vs2022"
+    },
+    {
+      "name": "vs2026-vcpkg",
+      "displayName": "Visual Studio 2026 + vcpkg",
+      "description": "Build using Visual Studio 2026 and vcpkg",
+      "inherits": [
+        "base",
+        "vcpkg-base",
+        "msvc-base"
+      ],
+      "generator": "Visual Studio 18 2026",
+      "binaryDir": "${sourceDir}/build-vs2026"
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ninja-release",
+      "displayName": "Ninja Release",
+      "configurePreset": "ninja-vcpkg",
+      "configuration": "Release"
+    },
+    {
+      "name": "ninja-debug",
+      "displayName": "Ninja Debug",
+      "configurePreset": "ninja-vcpkg-debug",
+      "configuration": "Debug"
+    },
+    {
+      "name": "vs2022-release",
+      "displayName": "VS 2022 Release",
+      "configurePreset": "vs2022-vcpkg",
+      "configuration": "Release"
+    },
+    {
+      "name": "vs2022-debug",
+      "displayName": "VS 2022 Debug",
+      "configurePreset": "vs2022-vcpkg",
+      "configuration": "Debug"
+    }
+  ],
+  "workflowPresets": [
+    {
+      "name": "full-build-ninja",
+      "steps": [
         {
-            "name": "base-vcpkg",
-            "description": "Base preset for vcpkg integration",
-            "hidden": true,
-            "generator": "Ninja",
-            "binaryDir": "${sourceDir}/build/${presetName}",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake"
-            }
+          "type": "configure",
+          "name": "ninja-vcpkg"
         },
         {
-            "name": "windows-vcpkg",
-            "displayName": "Windows x64 vcpkg (Ninja)",
-            "description": "Build for Windows x64 using vcpkg and Ninja",
-            "inherits": "base-vcpkg",
-            "cacheVariables": {
-                "CMAKE_C_COMPILER": "cl.exe",
-                "CMAKE_CXX_COMPILER": "cl.exe",
-                "VCPKG_TARGET_TRIPLET": "x64-windows"
-            },
-            "architecture": {
-                "value": "x64",
-                "strategy": "external"
-            },
-            "toolset": {
-                "value": "host=x64",
-                "strategy": "external"
-            }
-        },
-        {
-            "name": "vs-vcpkg",
-            "displayName": "Visual Studio vcpkg",
-            "description": "Build for Windows x64 using Visual Studio and vcpkg. The generate_vcproj.bat script overrides the generator dynamically.",
-            "generator": "Visual Studio 17 2022",
-            "binaryDir": "${sourceDir}/build",
-            "architecture": "x64",
-            "cacheVariables": {
-                "CMAKE_TOOLCHAIN_FILE": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
-                "VCPKG_TARGET_TRIPLET": "x64-windows"
-            }
+          "type": "build",
+          "name": "ninja-release"
         }
-    ],
-    "buildPresets": [
-        {
-            "name": "debug",
-            "configurePreset": "windows-vcpkg",
-            "configuration": "Debug"
-        },
-        {
-            "name": "release",
-            "configurePreset": "windows-vcpkg",
-            "configuration": "Release"
-        },
-        {
-            "name": "relwithdebinfo",
-            "configurePreset": "windows-vcpkg",
-            "configuration": "RelWithDebInfo"
-        },
-        {
-            "name": "vs-debug",
-            "configurePreset": "vs-vcpkg",
-            "configuration": "Debug"
-        },
-        {
-            "name": "vs-release",
-            "configurePreset": "vs-vcpkg",
-            "configuration": "Release"
-        },
-        {
-            "name": "vs-relwithdebinfo",
-            "configurePreset": "vs-vcpkg",
-            "configuration": "RelWithDebInfo"
-        }
-    ]
+      ]
+    }
+  ]
 }

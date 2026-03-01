@@ -11,7 +11,7 @@
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
@@ -163,10 +163,6 @@ void ItemDrawer::BlitItem(const DrawContext& ctx, SpriteDrawer* sprite_drawer, C
 			}
 		}
 	}
-
-	// Atlas-only rendering
-	// g_gui.gfx.ensureAtlasManager();
-	// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
 
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
 		const AtlasRegion* region;

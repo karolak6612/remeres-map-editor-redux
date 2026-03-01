@@ -3,13 +3,19 @@
 #include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
+#include "game/items.h"
+#include "rendering/core/game_sprite.h"
+#include "rendering/core/normal_image.h"
 
 #include <glad/glad.h>
 
 #define NANOVG_GL3_IMPLEMENTATION
 #include "util/nvg_utils.h"
 #include <nanovg_gl.h>
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
 #include <wx/dcclient.h>
@@ -23,6 +29,14 @@ ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) :
 		m_canvas->MakeContextCurrent();
 	}
 }
+
+void NVGDeleter::operator()(NVGcontext* nvg) const {
+	if (nvg) {
+		nvgDeleteGL3(nvg);
+	}
+}
+
+
 
 NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
 	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
@@ -226,73 +240,12 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
 }
 
 int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64_t spriteId) {
-	// Calculate composite size
-	int w = gs->width * 32;
-	int h = gs->height * 32;
-	if (w <= 0 || h <= 0) {
+	int w, h;
+	auto composite = NvgUtils::CreateCompositeRGBA(*gs, w, h);
+	if (!composite) {
 		return 0;
 	}
-
-	// Create composite RGBA buffer
-	size_t bufferSize = static_cast<size_t>(w) * h * 4;
-	std::vector<uint8_t> composite(bufferSize, 0);
-
-	// Composite all layers
-	int px = (gs->pattern_x >= 3) ? 2 : 0;
-	for (int l = 0; l < gs->layers; ++l) {
-		for (int sw = 0; sw < gs->width; ++sw) {
-			for (int sh = 0; sh < gs->height; ++sh) {
-				int idx = gs->getIndex(sw, sh, l, px, 0, 0, 0);
-				if (idx < 0 || static_cast<size_t>(idx) >= gs->spriteList.size()) {
-					continue;
-				}
-
-				auto image = gs->spriteList[idx];
-				if (!image) {
-					continue;
-				}
-
-				auto data = image->getRGBAData();
-				if (!data) {
-					continue;
-				}
-
-				int part_x = (gs->width - sw - 1) * 32;
-				int part_y = (gs->height - sh - 1) * 32;
-
-				for (int sy = 0; sy < 32; ++sy) {
-					for (int sx = 0; sx < 32; ++sx) {
-						int dy = part_y + sy;
-						int dx = part_x + sx;
-						int di = (dy * w + dx) * 4;
-						int si = (sy * 32 + sx) * 4;
-
-						uint8_t sa = data[si + 3];
-						if (sa == 0) {
-							continue;
-						}
-
-						if (sa == 255) {
-							composite[di + 0] = data[si + 0];
-							composite[di + 1] = data[si + 1];
-							composite[di + 2] = data[si + 2];
-							composite[di + 3] = 255;
-						} else {
-							float a = sa / 255.0f;
-							float ia = 1.0f - a;
-							composite[di + 0] = static_cast<uint8_t>(data[si + 0] * a + composite[di + 0] * ia);
-							composite[di + 1] = static_cast<uint8_t>(data[si + 1] * a + composite[di + 1] * ia);
-							composite[di + 2] = static_cast<uint8_t>(data[si + 2] * a + composite[di + 2] * ia);
-							composite[di + 3] = std::max(composite[di + 3], sa);
-						}
-					}
-				}
-			}
-		}
-	}
-
-	// Create NanoVG image
-	return GetOrCreateImage(spriteId, composite.data(), w, h);
+	return GetOrCreateImage(spriteId, composite.get(), w, h);
 }
 
 int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uint64_t spriteId) {

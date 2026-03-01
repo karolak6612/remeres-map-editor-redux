@@ -16,7 +16,10 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "rendering/ui/tooltip_drawer.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
@@ -159,7 +162,7 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 			// For legacy sprites (no transparency), use getRGBData + Magenta Masking
 			// This matches how WxWidgets/SpriteIconGenerator renders icons
-			if (!g_gui.gfx.hasTransparency()) {
+			if (!g_gui.loader.hasTransparency()) {
 				std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
 				if (rgb) {
 					rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);

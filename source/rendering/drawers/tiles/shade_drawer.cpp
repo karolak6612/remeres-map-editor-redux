@@ -6,7 +6,6 @@
 #include "rendering/core/floor_view_params.h"
 #include "rendering/core/view_state.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/graphics.h"
 #include "ui/gui.h"
 
 ShadeDrawer::ShadeDrawer() {
@@ -21,8 +20,8 @@ void ShadeDrawer::draw(const DrawContext& ctx, [[maybe_unused]] const FloorViewP
 		float w = ctx.view.screensize_x * ctx.view.zoom;
 		float h = ctx.view.screensize_y * ctx.view.zoom;
 
-		if (g_gui.gfx.ensureAtlasManager()) {
-			ctx.sprite_batch.drawRect(0.0f, 0.0f, w, h, color, *g_gui.gfx.getAtlasManager());
+		if (g_gui.atlas.ensureAtlasManager()) {
+			ctx.sprite_batch.drawRect(0.0f, 0.0f, w, h, color, *g_gui.atlas.getAtlasManager());
 		}
 	}
 }

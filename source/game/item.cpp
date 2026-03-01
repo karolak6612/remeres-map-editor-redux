@@ -18,7 +18,10 @@
 #include "app/main.h"
 
 #include "brushes/brush.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 #include "map/tile.h"
 #include "game/complexitem.h"

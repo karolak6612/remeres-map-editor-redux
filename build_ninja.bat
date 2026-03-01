@@ -20,7 +20,7 @@ echo [1/6] Checking for Ninja...
 ninja --version >nul 2>&1
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Ninja was not found.
-    pause
+    
     exit /b 1
 )
 echo OK - Ninja found.
@@ -29,7 +29,7 @@ echo [2/6] Finding Visual C++ toolchain...
 set "VW=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 if not exist "%VW%" (
     echo ERROR: vswhere.exe not found.
-    pause
+    
     exit /b 1
 )
 
@@ -40,7 +40,7 @@ for /f "usebackq tokens=*" %%i in (`"%VW%" -latest -products * -property install
 
 if "%VSP%"=="" (
     echo ERROR: Visual Studio installation not found.
-    pause
+    
     exit /b 1
 )
 
@@ -50,14 +50,14 @@ echo Initializing x64 environment...
 set "VV=%VSP%\VC\Auxiliary\Build\vcvarsall.bat"
 if not exist "%VV%" (
     echo ERROR: vcvarsall.bat not found.
-    pause
+    
     exit /b 1
 )
 
 call "%VV%" x64 >nul
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Failed to initialize x64 environment.
-    pause
+    
     exit /b 1
 )
 echo OK - Environment initialized.
@@ -74,7 +74,7 @@ if not defined VKD (
 )
 if not defined VKD (
     echo ERROR: vcpkg not found. Set VCPKG_ROOT environment variable.
-    pause
+    
     exit /b 1
 )
 echo OK - vcpkg found at: %VKD%
@@ -92,7 +92,7 @@ cmake -G Ninja ^
 
 if !ERRORLEVEL! neq 0 (
     echo ERROR: CMake configuration failed.
-    pause
+    
     exit /b 1
 )
 echo OK - Configuration complete.
@@ -101,7 +101,7 @@ echo [5/6] Building rme...
 cmake --build "%BUILD_DIR%" --target rme --parallel
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Build failed.
-    pause
+    
     exit /b 1
 )
 echo OK - Build complete.
@@ -124,4 +124,4 @@ echo   Linter:    %PROJECT_ROOT%\compile_commands.json
 echo.
 
 endlocal
-pause
+

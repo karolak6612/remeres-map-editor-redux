@@ -8,13 +8,17 @@
 #include "editor/editor.h"
 #include "live/live_socket.h"
 #include "rendering/core/drawing_options.h"
-#include "rendering/core/graphics.h"
 #include "ui/gui.h"
 
 void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 	if (ctx.options.ingame || !editor.live_manager.IsLive()) {
 		return;
 	}
+
+	if (!g_gui.atlas.ensureAtlasManager()) {
+		return;
+	}
+	const AtlasManager& atlas = *g_gui.atlas.getAtlasManager();
 
 	LiveSocket& live = editor.live_manager.GetSocket();
 	for (const LiveCursor& cursor : live.getCursorList()) {
@@ -48,8 +52,6 @@ void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 			draw_color.Alpha() / 255.0f
 		);
 
-		if (g_gui.gfx.ensureAtlasManager()) {
-			ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.gfx.getAtlasManager());
-		}
+		ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, atlas);
 	}
 }

@@ -149,7 +149,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/io/sprite_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.h
@@ -176,7 +179,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/text_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_array.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_atlas.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_garbage_collector.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/brush_cursor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/drag_shadow_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/live_cursor_drawer.h
@@ -485,7 +487,10 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/io/sprite_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
@@ -506,7 +511,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/text_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_array.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_atlas.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_garbage_collector.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/brush_cursor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/drag_shadow_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/cursors/live_cursor_drawer.cpp
@@ -666,6 +670,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/common.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_canvas.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/util/nvg_utils.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/nanovg_listbox.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/virtual_item_grid.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_window.cpp

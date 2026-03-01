@@ -63,7 +63,7 @@ namespace IngamePreview {
 
 	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y) {
 		// CRITICAL: Update animation time for all sprite animations to work
-		g_gui.gfx.updateTime();
+		g_gui.gc.updateTime();
 
 		auto now = std::chrono::steady_clock::now();
 		double dt = std::chrono::duration<double>(now - last_time).count();
@@ -118,10 +118,10 @@ namespace IngamePreview {
 			creature_name_drawer->clear(); // Clear old labels
 		}
 
-		if (!g_gui.gfx.ensureAtlasManager()) {
+		if (!g_gui.atlas.ensureAtlasManager()) {
 			return;
 		}
-		auto* atlas = g_gui.gfx.getAtlasManager();
+		auto* atlas = g_gui.atlas.getAtlasManager();
 
 		DrawContext ctx {
 			.sprite_batch = *sprite_batch,

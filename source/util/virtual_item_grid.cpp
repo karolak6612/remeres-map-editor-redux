@@ -1,6 +1,7 @@
 #include "util/virtual_item_grid.h"
 #include "util/nvg_utils.h"
 #include "ui/theme.h"
+#include "game/items.h"
 #include <algorithm>
 #include <format>
 #include <cmath>

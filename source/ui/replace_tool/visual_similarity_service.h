@@ -9,6 +9,7 @@
 #include <mutex>
 #include <cstdint>
 #include <atomic>
+#include <deque>
 
 class VisualSimilarityService : public wxEvtHandler {
 public:
@@ -44,7 +45,10 @@ private:
 	std::mutex dataMutex;
 
 	wxTimer m_timer;
-	uint16_t m_nextIdToIndex;
+	uint32_t m_nextIdToIndex;
+	std::deque<uint16_t> m_retryQueue;
+	std::unordered_map<uint16_t, uint8_t> m_retryAttempts;
+	static constexpr uint8_t kMaxIndexRetries = 5;
 	bool isIndexed;
 };
 

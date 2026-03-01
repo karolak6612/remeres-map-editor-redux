@@ -74,6 +74,13 @@ bool TextureAtlas::initialize(int initial_layers) {
 	// Allocate texture array storage (Immutable)
 	glTextureStorage3D(texture_id_->GetID(), 1, GL_RGBA8, ATLAS_SIZE, ATLAS_SIZE, initial_layers);
 
+	GLenum err = glGetError();
+	if (err != GL_NO_ERROR) {
+		spdlog::error("TextureAtlas: glTextureStorage3D failed during intialization (err={}).", err);
+		texture_id_.reset();
+		return false;
+	}
+
 	allocated_layers_ = initial_layers;
 	layer_count_ = 1; // Start with one active layer
 	current_layer_ = 0;

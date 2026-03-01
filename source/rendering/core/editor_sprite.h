@@ -5,7 +5,10 @@
 #ifndef RME_RENDERING_CORE_EDITOR_SPRITE_H_
 #define RME_RENDERING_CORE_EDITOR_SPRITE_H_
 
-#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include <memory>
 
 class EditorSprite : public Sprite {

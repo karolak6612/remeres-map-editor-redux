@@ -62,7 +62,8 @@ Checks: >
   -readability-redundant-member-init,
   -readability-redundant-inline-specifier,
   -readability-implicit-bool-conversion,
-  -readability-container-contains
+  -readability-container-contains,
+  -readability-identifier-naming
 
 # Treat warnings as errors (optional - uncomment to enable)
 # WarningsAsErrors: ''
@@ -71,63 +72,10 @@ HeaderFilterRegex: '.*'
 ExcludeHeaderFilterRegex: '.*(vcpkg_installed|_deps|vendor|external|third_party|ext|nanovg|stb).*'
 
 CheckOptions:
-  # Naming conventions
-  - key:   readability-identifier-naming.ClassCase
-    value: CamelCase
-  - key:   readability-identifier-naming.ClassMemberCase
-    value: lower_case
-  - key:   readability-identifier-naming.ClassMemberPrefix
-    value: 'm_'
-  - key:   readability-identifier-naming.ConstexprVariableCase
-    value: CamelCase
-  - key:   readability-identifier-naming.EnumCase
-    value: CamelCase
-  - key:   readability-identifier-naming.EnumConstantCase
-    value: UPPER_CASE
-  - key:   readability-identifier-naming.FunctionCase
-    value: camelBack
-  - key:   readability-identifier-naming.GlobalConstantCase
-    value: CamelCase
-  - key:   readability-identifier-naming.GlobalVariableCase
-    value: lower_case
-  - key:   readability-identifier-naming.MacroDefinitionCase
-    value: UPPER_CASE
-  - key:   readability-identifier-naming.MemberCase
-    value: lower_case
-  - key:   readability-identifier-naming.MemberPrefix
-    value: 'm_'
-  - key:   readability-identifier-naming.NamespaceCase
-    value: lower_case
-  - key:   readability-identifier-naming.ParameterCase
-    value: lower_case
-  - key:   readability-identifier-naming.PrivateMemberCase
-    value: lower_case
-  - key:   readability-identifier-naming.PrivateMemberPrefix
-    value: 'm_'
-  - key:   readability-identifier-naming.ProtectedMemberCase
-    value: lower_case
-  - key:   readability-identifier-naming.ProtectedMemberPrefix
-    value: 'm_'
-  - key:   readability-identifier-naming.StaticConstantCase
-    value: CamelCase
-  - key:   readability-identifier-naming.StaticVariableCase
-    value: lower_case
-  - key:   readability-identifier-naming.StructCase
-    value: CamelCase
-  - key:   readability-identifier-naming.TemplateParameterCase
-    value: CamelCase
-  - key:   readability-identifier-naming.TypeAliasCase
-    value: CamelCase
-  - key:   readability-identifier-naming.TypedefCase
-    value: CamelCase
-  - key:   readability-identifier-naming.UnionCase
-    value: CamelCase
-  - key:   readability-identifier-naming.ValueTemplateParameterCase
-    value: CamelCase
-  - key:   readability-identifier-naming.VariableCase
-    value: lower_case
-  - key:   readability-identifier-naming.VirtualMethodCase
-    value: camelBack
+  # Naming conventions: DONT CHECK. Too many false positives in existing codebase.
+  # If we want to re-enable them later, we should do so cautiously.
+  # - key:   readability-identifier-naming.ClassCase
+  #   value: CamelCase
 
   # Function complexity limits
   - key:   readability-function-cognitive-complexity.Threshold
