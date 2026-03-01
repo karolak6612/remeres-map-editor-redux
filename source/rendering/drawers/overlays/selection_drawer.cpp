@@ -15,6 +15,9 @@
 #include <cmath>
 
 void SelectionDrawer::draw(const DrawContext& ctx, const MapCanvas* canvas) {
+	if (!canvas) {
+		return;
+	}
 	if (ctx.options.ingame) {
 		return;
 	}

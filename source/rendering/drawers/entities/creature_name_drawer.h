@@ -6,7 +6,6 @@
 #include <vector>
 
 #include "rendering/core/draw_context.h"
-
 struct NVGcontext;
 class Creature;
 

@@ -11,12 +11,19 @@ int ViewState::getFloorAdjustment() const {
 	}
 }
 
+int ViewState::CalculateLayerOffset(int map_z) const {
+	if (map_z <= GROUND_LAYER) {
+		return (GROUND_LAYER - map_z) * TILE_SIZE;
+	} else {
+		return TILE_SIZE * (floor - map_z);
+	}
+}
+
 bool ViewState::IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
-	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TILE_SIZE
-		: TILE_SIZE * (floor - map_z);
-	out_x = (map_x * TILE_SIZE) - view_scroll_x - offset;
-	out_y = (map_y * TILE_SIZE) - view_scroll_y - offset;
+	int offset = CalculateLayerOffset(map_z);
+
+	out_x = ((map_x * TILE_SIZE) - view_scroll_x) - offset;
+	out_y = ((map_y * TILE_SIZE) - view_scroll_y) - offset;
 	const int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
 
 	// Use cached logical dimensions
@@ -49,9 +56,8 @@ bool ViewState::IsRectFullyInside(int draw_x, int draw_y, int width, int height)
 }
 
 void ViewState::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
-	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TILE_SIZE
-		: TILE_SIZE * (floor - map_z);
-	out_x = (map_x * TILE_SIZE) - view_scroll_x - offset;
-	out_y = (map_y * TILE_SIZE) - view_scroll_y - offset;
+	int offset = CalculateLayerOffset(map_z);
+
+	out_x = ((map_x * TILE_SIZE) - view_scroll_x) - offset;
+	out_y = ((map_y * TILE_SIZE) - view_scroll_y) - offset;
 }

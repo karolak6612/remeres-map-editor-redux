@@ -105,7 +105,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 
 	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
 
-	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
+	grid_drawer = std::make_unique<GridDrawer>();
 	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
 	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
 	selection_drawer = std::make_unique<SelectionDrawer>();
@@ -403,13 +403,7 @@ void MapDrawer::Draw() {
 	// Resume Batch for Overlays
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 
-	DrawContext ctx {
-		.sprite_batch = *sprite_batch,
-		.primitive_renderer = *primitive_renderer,
-		.view = view,
-		.options = options,
-		.light_buffer = light_buffer
-	};
+	DrawContext ctx = MakeDrawContext();
 
 	if (drag_shadow_drawer) {
 		drag_shadow_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get());
@@ -420,10 +414,10 @@ void MapDrawer::Draw() {
 	brush_overlay_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor);
 
 	if (options.show_grid) {
-		DrawGrid(original_bounds);
+		DrawGrid(ctx, original_bounds);
 	}
 	if (options.show_ingame_box) {
-		DrawIngameBox(original_bounds);
+		DrawIngameBox(ctx, original_bounds);
 	}
 
 	// Draw creature names (Overlay) moved to DrawCreatureNames()
@@ -460,7 +454,7 @@ void MapDrawer::DrawMap() {
 			.end_x = current_end_x,
 			.end_y = current_end_y
 		};
-		DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+		DrawContext ctx = MakeDrawContext();
 
 		if (map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(ctx, floor_params);
@@ -479,13 +473,11 @@ void MapDrawer::DrawMap() {
 	}
 }
 
-void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
-	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+void MapDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds) {
 	grid_drawer->DrawIngameBox(ctx, bounds);
 }
 
-void MapDrawer::DrawGrid(const ViewBounds& bounds) {
-	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+void MapDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds) {
 	grid_drawer->DrawGrid(ctx, bounds);
 }
 
@@ -494,24 +486,28 @@ void MapDrawer::DrawTooltips(NVGcontext* vg) {
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
-	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	DrawContext ctx = MakeDrawContext();
 	hook_indicator_drawer->draw(vg, ctx);
 }
 
 void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
 	if (options.highlight_locked_doors) {
-		DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+		DrawContext ctx = MakeDrawContext();
 		door_indicator_drawer->draw(vg, ctx);
 	}
 }
 
 void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
-	DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	DrawContext ctx = MakeDrawContext();
 	creature_name_drawer->draw(vg, ctx);
 }
 
 void MapDrawer::DrawMapLayer(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client) {
 	map_layer_drawer->Draw(ctx, floor_params, live_client);
+}
+
+DrawContext MapDrawer::MakeDrawContext() {
+	return DrawContext { *sprite_batch, *primitive_renderer, view, options, light_buffer };
 }
 
 void MapDrawer::DrawLight() {

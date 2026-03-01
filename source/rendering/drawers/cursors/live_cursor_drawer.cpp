@@ -22,7 +22,7 @@ void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 			continue;
 		}
 
-		if (cursor.pos.z > GROUND_LAYER && ctx.view.floor <= 8) {
+		if (cursor.pos.z > GROUND_LAYER && ctx.view.floor <= (GROUND_LAYER + 1)) {
 			continue;
 		}
 

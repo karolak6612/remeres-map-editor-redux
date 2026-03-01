@@ -6,10 +6,12 @@
 #include "app/definitions.h"
 
 struct ViewBounds {
-	int start_x;
-	int start_y;
-	int end_x;
-	int end_y;
+	int start_x = 0;
+	int start_y = 0;
+	int end_x = 0;
+	int end_y = 0;
+	int start_z = 0;
+	int end_z = 0;
 };
 
 struct ViewState {
@@ -54,6 +56,8 @@ struct ViewState {
 	// Checks if a rectangle is fully inside the viewport (no clipping needed)
 	bool IsRectFullyInside(int draw_x, int draw_y, int width, int height) const;
 	void getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
+	// Computes the visual offset in pixels for a given map_z relative to the current floor
+	int CalculateLayerOffset(int map_z) const;
 };
 
 #endif

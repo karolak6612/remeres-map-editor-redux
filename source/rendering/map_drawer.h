@@ -123,9 +123,9 @@ public:
 	void DrawBackground();
 	void DrawMap();
 	void DrawLiveCursors();
-	void DrawIngameBox(const ViewBounds& bounds);
+	void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
 
-	void DrawGrid(const ViewBounds& bounds);
+	void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
 	void DrawTooltips(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
@@ -155,6 +155,7 @@ public:
 
 private:
 	void DrawMapLayer(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client);
+	DrawContext MakeDrawContext();
 	bool renderers_initialized = false;
 };
 

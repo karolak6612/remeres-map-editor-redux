@@ -16,9 +16,6 @@ class CreatureNameDrawer;
 class FloorDrawer;
 class MarkerDrawer;
 class TooltipDrawer;
-struct LightBuffer;
-class SpriteBatch;
-class PrimitiveRenderer;
 class ItemType;
 struct SpritePatterns;
 

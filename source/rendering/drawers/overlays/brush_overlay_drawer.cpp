@@ -203,6 +203,8 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 									const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
 									ctx.sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(x, y, ctx.view.floor)), atlas);
 								}
+							} else if (brush->is<RAWBrush>()) {
+								item_drawer->DrawRawBrush(ctx, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
 							} else {
 								DrawColor color = DrawColor(128, 128, 255, 64);
 								sprite_drawer->glDrawBox(ctx, cx, cy, TILE_SIZE, TILE_SIZE, color);

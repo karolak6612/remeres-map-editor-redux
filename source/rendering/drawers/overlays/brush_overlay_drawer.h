@@ -6,7 +6,6 @@
 #define RME_RENDERING_BRUSH_OVERLAY_DRAWER_H_
 
 #include "map/position.h"
-#include "map/position.h"
 #include <wx/colour.h>
 #include <glm/glm.hpp>
 

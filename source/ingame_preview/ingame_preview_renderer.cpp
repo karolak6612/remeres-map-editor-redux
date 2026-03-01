@@ -20,6 +20,7 @@
 #include <spdlog/spdlog.h>
 #include <algorithm> // For std::max
 #include <cstdlib> // For std::abs
+#include <cmath> // For std::floor, std::ceil
 
 namespace IngamePreview {
 

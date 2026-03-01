@@ -9,12 +9,12 @@
 
 #include <wx/colour.h>
 #include "app/definitions.h"
+#include "rendering/core/draw_context.h"
 
 // Forward declarations
 class GameSprite;
-struct AtlasRegion;
-#include "rendering/core/draw_context.h"
 class AtlasManager;
+struct AtlasRegion;
 
 class SpriteDrawer {
 public:

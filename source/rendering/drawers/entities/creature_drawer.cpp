@@ -96,7 +96,7 @@ void CreatureDrawer::BlitCreature(const DrawContext& ctx, SpriteDrawer* sprite_d
 				for (int cy = 0; cy != spr->height; ++cy) {
 					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, options.color);
+						sprite_drawer->glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
 					}
 				}
 			}

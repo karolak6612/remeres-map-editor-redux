@@ -10,9 +10,6 @@ class Editor;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
-class SpriteBatch;
-
-class PrimitiveRenderer;
 
 class PreviewDrawer {
 public:
