@@ -90,6 +90,12 @@ CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::st
         return nullptr;
     }
 
+    attribute = node.attribute("name");
+    if (!attribute) {
+        warnings.push_back("Couldn't read name tag of creature node.");
+        return nullptr;
+    }
+
     auto ct = std::make_unique<CreatureType>();
     ct->name = attribute.as_string();
     ct->isNpc = tmpType == "npc";
