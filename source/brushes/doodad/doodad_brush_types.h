@@ -23,8 +23,8 @@ struct DoodadBrushSettings {
 	bool do_new_borders = false;
 	bool one_size = false;
 	bool draggable = false;
-	uint16_t clear_mapflags = 0;
-	uint16_t clear_statflags = 0;
+	MapFlags clear_mapflags = MapFlags::None;
+	StatFlags clear_statflags = StatFlags::None;
 	int thickness = 0;
 	int thickness_ceiling = 0;
 	uint16_t look_id = 0;
