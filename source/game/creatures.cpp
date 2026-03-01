@@ -173,7 +173,6 @@ CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::st
 
 CreatureType* CreatureType::loadFromOTXML(const FileName& filename, pugi::xml_document& doc, std::vector<std::string>& warnings)
 {
-    ASSERT(doc != nullptr);
 
     bool isNpc = false;
     pugi::xml_node node = doc.child("monster");
@@ -324,7 +323,9 @@ CreatureType* CreatureDatabase::addMissingCreatureType(const std::string& name, 
 
 CreatureType* CreatureDatabase::addCreatureType(const std::string& name, bool isNpc, const Outfit& outfit)
 {
-    assert((*this)[name] == nullptr);
+    if (CreatureType* ct = (*this)[name]) {
+        return ct;
+    }
 
     auto ct = std::make_unique<CreatureType>();
     ct->name = name;

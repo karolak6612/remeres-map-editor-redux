@@ -65,6 +65,15 @@
       }
     },
     {
+      "name": "ninja-vcpkg-debug",
+      "displayName": "Ninja + vcpkg Debug",
+      "description": "Build using Ninja and vcpkg (Debug)",
+      "inherits": "ninja-vcpkg",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
       "name": "vs2022-vcpkg",
       "displayName": "Visual Studio 2022 + vcpkg",
       "description": "Build using Visual Studio 2022 and vcpkg",

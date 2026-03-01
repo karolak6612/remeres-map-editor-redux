@@ -9,6 +9,7 @@
 #include <mutex>
 #include <cstdint>
 #include <atomic>
+#include <deque>
 
 class VisualSimilarityService : public wxEvtHandler {
 public:
@@ -45,6 +46,7 @@ private:
 
 	wxTimer m_timer;
 	uint16_t m_nextIdToIndex;
+	std::deque<uint16_t> m_retryQueue;
 	bool isIndexed;
 };
 

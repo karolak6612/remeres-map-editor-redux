@@ -183,7 +183,7 @@ public:
 	friend class DatLoader;
 	friend class SprLoader;
 	friend class SpriteIconGenerator;
-	friend class TextureGarbageCollector;
+	friend class TextureGC;
 	friend class TooltipDrawer;
 	friend class SpritePreloader;
 

@@ -222,20 +222,32 @@ void VisualSimilarityService::OnTimer(wxTimerEvent&) {
 	int maxId = g_items.getMaxID();
 
 	// Process fewer items per tick to prevent UI lag and handle spikes
-	while (processed < 100 && m_nextIdToIndex <= maxId) {
-		uint16_t id = m_nextIdToIndex++;
+	while (processed < 100 && (m_nextIdToIndex <= maxId || !m_retryQueue.empty())) {
+		uint16_t id;
+		bool is_retry = false;
+		if (!m_retryQueue.empty()) {
+			id = m_retryQueue.front();
+			m_retryQueue.pop_front();
+			is_retry = true;
+		} else {
+			id = m_nextIdToIndex++;
+		}
+
 		const ItemType& it = g_items.getItemType(id);
 		if (it.id != 0 && it.clientID != 0) {
 			VisualItemData data = CalculateData(id);
 			if (data.width > 0) {
 				std::lock_guard<std::mutex> lock(dataMutex);
 				itemDataCache[id] = std::move(data);
+			} else if (!is_retry) {
+				// Transient failure: likely sprite not loaded yet
+				m_retryQueue.push_back(id);
 			}
 		}
 		processed++;
 	}
 
-	if (m_nextIdToIndex > maxId) {
+	if (m_nextIdToIndex > maxId && m_retryQueue.empty()) {
 		m_timer.Stop();
 		std::lock_guard<std::mutex> lock(dataMutex);
 		isIndexed = true;

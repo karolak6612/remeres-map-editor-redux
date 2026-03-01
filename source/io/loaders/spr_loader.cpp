@@ -64,9 +64,9 @@ bool SprLoader::LoadData(SpriteLoader& loader, SpriteDatabase& db, const wxFileN
 	}
 
 	loader.setSpriteFile(nstr(datafile.GetFullPath()));
-	loader.setUnloaded(false);
 
 	if (!g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
+		loader.setUnloaded(false);
 		return true;
 	}
 
@@ -79,7 +79,12 @@ bool SprLoader::LoadData(SpriteLoader& loader, SpriteDatabase& db, const wxFileN
 		return false;
 	}
 
-	return ReadSprites(db, fh, sprite_indexes, warnings, error);
+	if (!ReadSprites(db, fh, sprite_indexes, warnings, error)) {
+		return false;
+	}
+
+	loader.setUnloaded(false);
+	return true;
 }
 
 std::vector<uint32_t> SprLoader::ReadSpriteIndexes(FileReadHandle& fh, uint32_t total_pics, wxString& error) {

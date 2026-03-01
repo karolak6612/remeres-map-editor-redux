@@ -21,9 +21,7 @@ public:
 	Sprite* getSprite(int id);
 	GameSprite* getCreatureSprite(int id);
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
-	void insertSprite(int id, Sprite* sprite) {
-		insertSprite(id, std::unique_ptr<Sprite>(sprite));
-	}
+
 
 	uint16_t getItemSpriteMaxID() const { return item_count; }
 	uint16_t getCreatureSpriteMaxID() const { return creature_count; }

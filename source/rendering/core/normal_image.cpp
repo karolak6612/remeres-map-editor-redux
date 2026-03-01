@@ -28,7 +28,7 @@ void NormalImage::unloadGL() {
 		atlas_region = nullptr;
 		generation_id++;
 
-		g_gui.gc.notifyTextureUnloaded();
+		g_gui.gc.removeResidentImage(this);
 	}
 }
 

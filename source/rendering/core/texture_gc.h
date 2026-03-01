@@ -34,26 +34,29 @@ public:
 	void cleanSoftwareSprites(SpriteDatabase& db);
 	void addSpriteToCleanup(GameSprite* spr);
 	
-	void notifyTextureLoaded();
-	void notifyTextureUnloaded();
 	int getLoadedTexturesCount() const { return loaded_textures; }
 
-	// Allow preloader/loaders to track resident sets
-	std::mutex& getResidentImagesMutex() { return resident_images_mutex_; }
-	std::vector<Image*>& getResidentImages() { return resident_images; }
-	std::vector<GameSprite*>& getResidentGameSprites() { return resident_game_sprites; }
+	// Controlled API for resident sets
+	void addResidentImage(Image* img);
+	void removeResidentImage(Image* img);
+	bool containsResidentImage(Image* img) const;
+
+	void addResidentGameSprite(GameSprite* gs);
+	void removeResidentGameSprite(GameSprite* gs);
+	bool containsResidentGameSprite(GameSprite* gs) const;
 
 private:
 	std::unique_ptr<RenderTimer> animation_timer;
 	std::time_t cached_time_ = 0;
 
-	std::mutex resident_images_mutex_;
-	std::vector<Image*> resident_images;
-	std::vector<GameSprite*> resident_game_sprites;
-
 	int loaded_textures = 0;
 	std::time_t lastclean = 0;
+	int clean_software_counter = 0;
 	std::deque<GameSprite*> cleanup_list;
+
+	mutable std::mutex resident_images_mutex_;
+	std::vector<Image*> resident_images;
+	std::vector<GameSprite*> resident_game_sprites;
 };
 
 #endif

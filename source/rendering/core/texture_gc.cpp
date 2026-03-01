@@ -19,20 +19,51 @@ void TextureGC::clear() {
 	cleanup_list.clear();
 	loaded_textures = 0;
 	lastclean = std::time(nullptr);
+	cached_time_ = 0;
 }
 
 void TextureGC::updateTime() {
 	cached_time_ = std::time(nullptr);
 }
 
-void TextureGC::notifyTextureLoaded() {
+void TextureGC::addResidentImage(Image* img) {
+	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	resident_images.push_back(img);
 	loaded_textures++;
 }
 
-void TextureGC::notifyTextureUnloaded() {
-	if (loaded_textures > 0) {
-		loaded_textures--;
+void TextureGC::removeResidentImage(Image* img) {
+	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	auto it = std::find(resident_images.begin(), resident_images.end(), img);
+	if (it != resident_images.end()) {
+		resident_images.erase(it);
+		if (loaded_textures > 0) {
+			loaded_textures--;
+		}
 	}
+}
+
+bool TextureGC::containsResidentImage(Image* img) const {
+	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	return std::find(resident_images.begin(), resident_images.end(), img) != resident_images.end();
+}
+
+void TextureGC::addResidentGameSprite(GameSprite* gs) {
+	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	resident_game_sprites.push_back(gs);
+}
+
+void TextureGC::removeResidentGameSprite(GameSprite* gs) {
+	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	auto it = std::find(resident_game_sprites.begin(), resident_game_sprites.end(), gs);
+	if (it != resident_game_sprites.end()) {
+		resident_game_sprites.erase(it);
+	}
+}
+
+bool TextureGC::containsResidentGameSprite(GameSprite* gs) const {
+	std::lock_guard<std::mutex> lock(resident_images_mutex_);
+	return std::find(resident_game_sprites.begin(), resident_game_sprites.end(), gs) != resident_game_sprites.end();
 }
 
 constexpr int MIN_CLEAN_THRESHOLD = 100;
@@ -41,8 +72,8 @@ void TextureGC::addSpriteToCleanup(GameSprite* spr) {
 	cleanup_list.push_back(spr);
 	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD)));
 	if (cleanup_list.size() > clean_threshold) {
-		const auto software_clean_size = std::max(0, g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE));
-		const auto cleanup_count = std::min(cleanup_list.size(), static_cast<size_t>(software_clean_size));
+		int software_clean_size = g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE);
+		const size_t cleanup_count = (software_clean_size <= 0) ? cleanup_list.size() : std::min(cleanup_list.size(), static_cast<size_t>(software_clean_size));
 
 		for (size_t i = 0; i < cleanup_count; ++i) {
 			cleanup_list.front()->unloadDC();
@@ -76,8 +107,11 @@ void TextureGC::garbageCollection(SpriteDatabase& db) {
 				gs->clean(cached_time_, longevity);
 			}
 			
-			// Clean software sprites
-			cleanSoftwareSprites(db);
+			// Clean software sprites occasionally
+			if (++clean_software_counter >= 10) {
+				cleanSoftwareSprites(db);
+				clean_software_counter = 0;
+			}
 
 			lastclean = cached_time_;
 		}

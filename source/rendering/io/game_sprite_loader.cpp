@@ -9,7 +9,11 @@
 #include "io/loaders/spr_loader.h"
 
 bool GameSpriteLoader::LoadSpriteMetadata(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
-	return DatLoader::LoadMetadata(loader, db, datafile, error, warnings);
+	if (!loader) {
+		error = "SpriteLoader is null in LoadSpriteMetadata";
+		return false;
+	}
+	return DatLoader::LoadMetadata(*loader, db, datafile, error, warnings);
 }
 
 bool GameSpriteLoader::LoadSpriteData(SpriteLoader* loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
