@@ -167,19 +167,19 @@ void ReplaceToolWindow::InitLayout() {
 	m_addRuleBtn = new wxButton(actionsCard, wxID_ANY, "ADD", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_addRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
 	m_addRuleBtn->SetBackgroundColour(wxColour(40, 180, 40)); // Green
-	m_addRuleBtn->SetForegroundColour(*wxWHITE);
+	m_addRuleBtn->SetForegroundColour(Theme::Get(Theme::Role::TextOnAccent));
 	m_addRuleBtn->SetFont(Theme::GetFont(9, true));
 
 	m_editRuleBtn = new wxButton(actionsCard, wxID_ANY, "EDIT", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_editRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
 	m_editRuleBtn->SetBackgroundColour(wxColour(80, 80, 80)); // Neutral Dark Gray
-	m_editRuleBtn->SetForegroundColour(*wxWHITE);
+	m_editRuleBtn->SetForegroundColour(Theme::Get(Theme::Role::TextOnAccent));
 	m_editRuleBtn->SetFont(Theme::GetFont(9, true));
 
 	m_deleteRuleBtn = new wxButton(actionsCard, wxID_ANY, "DEL", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_deleteRuleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 	m_deleteRuleBtn->SetBackgroundColour(wxColour(180, 40, 40)); // Red
-	m_deleteRuleBtn->SetForegroundColour(*wxWHITE);
+	m_deleteRuleBtn->SetForegroundColour(Theme::Get(Theme::Role::TextOnAccent));
 	m_deleteRuleBtn->SetFont(Theme::GetFont(9, true));
 
 	manageBtnsSizer->Add(m_addRuleBtn, wxSizerFlags(1).Border(wxRIGHT, 2));
@@ -191,7 +191,7 @@ void ReplaceToolWindow::InitLayout() {
 	m_addVisibleBtn = new wxButton(actionsCard, wxID_ANY, "ADD VISIBLE FROM VIEWPORT", wxDefaultPosition, FromDIP(wxSize(-1, 28)));
 	m_addVisibleBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS_SQUARE, wxSize(16, 16)));
 	m_addVisibleBtn->SetBackgroundColour(wxColour(45, 120, 180)); // Sky Blue
-	m_addVisibleBtn->SetForegroundColour(*wxWHITE);
+	m_addVisibleBtn->SetForegroundColour(Theme::Get(Theme::Role::TextOnAccent));
 	m_addVisibleBtn->SetFont(Theme::GetFont(9, true));
 	actionsSizer->Add(m_addVisibleBtn, wxSizerFlags(0).Expand().Border(wxLEFT | wxRIGHT | wxBOTTOM, padding));
 
@@ -223,7 +223,7 @@ void ReplaceToolWindow::InitLayout() {
 	m_executeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLAY, wxSize(16, 16)));
 	m_executeBtn->SetDefault();
 	m_executeBtn->SetBackgroundColour(Theme::Get(Theme::Role::Accent)); // Blue
-	m_executeBtn->SetForegroundColour(*wxWHITE);
+	m_executeBtn->SetForegroundColour(Theme::Get(Theme::Role::TextOnAccent));
 	m_executeBtn->SetFont(Theme::GetFont(10, true));
 	actionsSizer->Add(m_executeBtn, wxSizerFlags(0).Expand().Border(wxALL, padding));
 
@@ -231,7 +231,7 @@ void ReplaceToolWindow::InitLayout() {
 	wxButton* closeBtn = new wxButton(actionsCard, wxID_ANY, "CLOSE", wxDefaultPosition, FromDIP(wxSize(-1, 32)));
 	closeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
 	closeBtn->SetBackgroundColour(wxColour(120, 120, 120)); // Gray
-	closeBtn->SetForegroundColour(*wxWHITE);
+	closeBtn->SetForegroundColour(Theme::Get(Theme::Role::TextOnAccent));
 	closeBtn->SetFont(Theme::GetFont(10, true));
 	actionsSizer->Add(closeBtn, wxSizerFlags(0).Expand().Border(wxALL, padding));
 

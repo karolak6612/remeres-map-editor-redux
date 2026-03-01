@@ -61,7 +61,7 @@ DCButton::DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, Rende
 	SetSize(winSize);
 	SetMinSize(winSize);
 	if (pos != wxDefaultPosition) {
-		SetPosition(pos);
+		SetPosition(FromDIP(pos));
 	}
 
 	Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
