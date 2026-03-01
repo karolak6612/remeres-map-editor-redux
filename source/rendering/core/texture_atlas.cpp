@@ -117,17 +117,18 @@ bool TextureAtlas::addLayer() {
 
 		glTextureStorage3D(new_texture->GetID(), 1, GL_RGBA8, ATLAS_SIZE, ATLAS_SIZE, new_allocated);
 
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR) {
+		GLenum err;
+		bool has_error = false;
+		while ((err = glGetError()) != GL_NO_ERROR) {
 			spdlog::error("TextureAtlas: glTextureStorage3D failed during expansion (err={}). VRAM might be full.", err);
-			return false;
+			has_error = true;
 		}
+		if (has_error) return false;
 
 		// Copy existing layers using glCopyImageSubData (GL 4.3+)
 		glCopyImageSubData(texture_id_->GetID(), GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, new_texture->GetID(), GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, ATLAS_SIZE, ATLAS_SIZE, allocated_layers_);
 
-		err = glGetError();
-		if (err != GL_NO_ERROR) {
+		while ((err = glGetError()) != GL_NO_ERROR) {
 			spdlog::error("TextureAtlas: glCopyImageSubData failed (err={}). Texture data lost!", err);
 			// We can't easily recover here, but at least we know why sprites are black.
 		}
