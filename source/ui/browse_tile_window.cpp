@@ -175,36 +175,69 @@ void BrowseTileListBox::UpdateItems() {
 BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint position /* = wxDefaultPosition */) :
 	wxDialog(parent, wxID_ANY, "Browse Field", position, FROM_DIP(parent, wxSize(600, 400)), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	item_list = newd BrowseTileListBox(this, wxID_ANY, tile);
-	sizer->Add(item_list, wxSizerFlags(1).Expand());
 
-	wxString pos;
-	pos << "x=" << tile->getX() << ",  y=" << tile->getY() << ",  z=" << tile->getZ();
+	wxSizer* splitSizer = newd wxBoxSizer(wxHORIZONTAL);
 
-	wxSizer* infoSizer = newd wxBoxSizer(wxVERTICAL);
+	// Left side: Items List and Actions
+	wxSizer* leftSizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxStaticBoxSizer* listSizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Items on Tile");
+	item_list = newd BrowseTileListBox(listSizer->GetStaticBox(), wxID_ANY, tile);
+	listSizer->Add(item_list, wxSizerFlags(1).Expand().Border(wxALL, 2));
+
 	wxBoxSizer* buttons = newd wxBoxSizer(wxHORIZONTAL);
-	delete_button = newd wxButton(this, wxID_REMOVE, "Delete");
+	delete_button = newd wxButton(listSizer->GetStaticBox(), wxID_REMOVE, "Delete");
 	delete_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_TRASH_CAN));
 	delete_button->SetToolTip("Delete selected item");
 	delete_button->Enable(false);
-	buttons->Add(delete_button);
-	buttons->AddSpacer(5);
-	select_raw_button = newd wxButton(this, wxID_FIND, "Select RAW");
+	buttons->Add(delete_button, wxSizerFlags(1).Expand().Border(wxRIGHT, 2));
+
+	select_raw_button = newd wxButton(listSizer->GetStaticBox(), wxID_FIND, "Select RAW");
 	select_raw_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_SEARCH));
 	select_raw_button->SetToolTip("Select this item in RAW palette");
 	select_raw_button->Enable(false);
-	buttons->Add(select_raw_button);
-	infoSizer->Add(buttons);
-	infoSizer->AddSpacer(5);
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left());
-	infoSizer->Add(item_count_txt = newd wxStaticText(this, wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Protection zone:  " + b2yn(tile->isPZ())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left());
+	buttons->Add(select_raw_button, wxSizerFlags(1).Expand().Border(wxLEFT, 2));
 
-	sizer->Add(infoSizer, wxSizerFlags(0).Left().DoubleBorder());
+	listSizer->Add(buttons, wxSizerFlags(0).Expand().Border(wxALL, 2));
+	leftSizer->Add(listSizer, wxSizerFlags(1).Expand().DoubleBorder());
+
+	splitSizer->Add(leftSizer, wxSizerFlags(2).Expand());
+
+	// Right side: Tile Stats & Properties
+	wxSizer* rightSizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxString pos;
+	pos << "x=" << tile->getX() << ", y=" << tile->getY() << ", z=" << tile->getZ();
+
+	wxStaticBoxSizer* statsSizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Tile Stats");
+	statsSizer->Add(newd wxStaticText(statsSizer->GetStaticBox(), wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left().Border(wxALL, 4));
+	statsSizer->Add(item_count_txt = newd wxStaticText(statsSizer->GetStaticBox(), wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left().Border(wxALL, 4));
+	rightSizer->Add(statsSizer, wxSizerFlags(0).Expand().DoubleBorder(wxTOP | wxRIGHT | wxBOTTOM));
+
+	wxStaticBoxSizer* flagsSizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Flags");
+	wxFlexGridSizer* flagsGrid = newd wxFlexGridSizer(2, 5, 5); // 2 columns, gaps
+
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, "Protection zone:"), wxSizerFlags(0).Right().Align(wxALIGN_CENTER_VERTICAL));
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, b2yn(tile->isPZ())), wxSizerFlags(0).Left().Align(wxALIGN_CENTER_VERTICAL));
+
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, "No PvP:"), wxSizerFlags(0).Right().Align(wxALIGN_CENTER_VERTICAL));
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left().Align(wxALIGN_CENTER_VERTICAL));
+
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, "No logout:"), wxSizerFlags(0).Right().Align(wxALIGN_CENTER_VERTICAL));
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left().Align(wxALIGN_CENTER_VERTICAL));
+
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, "PvP zone:"), wxSizerFlags(0).Right().Align(wxALIGN_CENTER_VERTICAL));
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left().Align(wxALIGN_CENTER_VERTICAL));
+
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, "House:"), wxSizerFlags(0).Right().Align(wxALIGN_CENTER_VERTICAL));
+	flagsGrid->Add(newd wxStaticText(flagsSizer->GetStaticBox(), wxID_ANY, b2yn(tile->isHouseTile())), wxSizerFlags(0).Left().Align(wxALIGN_CENTER_VERTICAL));
+
+	flagsSizer->Add(flagsGrid, wxSizerFlags(1).Expand().Border(wxALL, 4));
+	rightSizer->Add(flagsSizer, wxSizerFlags(0).Expand().DoubleBorder(wxRIGHT | wxBOTTOM));
+
+	splitSizer->Add(rightSizer, wxSizerFlags(1).Expand());
+
+	sizer->Add(splitSizer, wxSizerFlags(1).Expand());
 
 	// OK/Cancel buttons
 	wxSizer* btnSizer = newd wxBoxSizer(wxHORIZONTAL);
