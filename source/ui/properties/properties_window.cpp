@@ -57,10 +57,10 @@ PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile*
 void PropertiesWindow::createUI() {
 	notebook = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize);
 
-	wxImageList* imageList = new wxImageList(16, 16);
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_BOX_OPEN, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
+	wxImageList* imageList = new wxImageList(FromDIP(16), FromDIP(16));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, FromDIP(wxSize(16, 16))));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_BOX_OPEN, FromDIP(wxSize(16, 16))));
+	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_LIST, FromDIP(wxSize(16, 16))));
 	notebook->AssignImageList(imageList);
 
 	notebook->AddPage(createGeneralPanel(notebook), "Simple", true, 0);
@@ -74,11 +74,11 @@ void PropertiesWindow::createUI() {
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
 	okBtn->SetToolTip("Apply changes and close");
 	optSizer->Add(okBtn, wxSizerFlags(0).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, FromDIP(wxSize(16, 16))));
 	cancelBtn->SetToolTip("Discard changes and close");
 	optSizer->Add(cancelBtn, wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
@@ -87,7 +87,7 @@ void PropertiesWindow::createUI() {
 	Centre(wxBOTH);
 
 	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
+	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, FromDIP(wxSize(32, 32))));
 	SetIcon(icon);
 }
 
@@ -105,7 +105,7 @@ void PropertiesWindow::Update() {
 
 wxWindow* PropertiesWindow::createGeneralPanel(wxWindow* parent) {
 	wxPanel* panel = newd wxPanel(parent, ITEM_PROPERTIES_GENERAL_TAB);
-	wxFlexGridSizer* gridsizer = newd wxFlexGridSizer(2, 10, 10);
+	wxFlexGridSizer* gridsizer = newd wxFlexGridSizer(2, FromDIP(10), FromDIP(10));
 	gridsizer->AddGrowableCol(1);
 
 	createGeneralFields(gridsizer, panel);
@@ -213,12 +213,12 @@ wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* addBtn = newd wxButton(panel, ITEM_PROPERTIES_ADD_ATTRIBUTE, "Add Attribute");
-	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, wxSize(16, 16)));
+	addBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PLUS, FromDIP(wxSize(16, 16))));
 	addBtn->SetToolTip("Add a new custom attribute");
 	optSizer->Add(addBtn, wxSizerFlags(0).Center());
 
 	wxButton* removeBtn = newd wxButton(panel, ITEM_PROPERTIES_REMOVE_ATTRIBUTE, "Remove Attribute");
-	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, wxSize(16, 16)));
+	removeBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MINUS, FromDIP(wxSize(16, 16))));
 	removeBtn->SetToolTip("Remove selected custom attribute");
 	optSizer->Add(removeBtn, wxSizerFlags(0).Center());
 
