@@ -66,7 +66,7 @@ public:
 private:
 	bool findNext();
 
-	using CellIterator = std::unordered_map<uint64_t, std::unique_ptr<SpatialHashGrid::GridCell>>::iterator;
+	using CellIterator = std::vector<SpatialHashGrid::CellEntry>::iterator;
 	CellIterator cell_it;
 	int node_i, floor_i, tile_i;
 
