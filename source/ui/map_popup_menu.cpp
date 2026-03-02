@@ -50,11 +50,11 @@ void MapPopupMenu::Update() {
 
 	bool anything_selected = editor.selection.size() != 0;
 
-	wxMenuItem* cutItem = Append(MAP_POPUP_MENU_CUT, "&Cut\tCTRL+X", "Cut out all selected items");
+	wxMenuItem* cutItem = Append(MAP_POPUP_MENU_CUT, "&Cut\tCTRL+X", "Cut out all selected items (Ctrl+X)");
 	cutItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUT, wxSize(16, 16)));
 	cutItem->Enable(anything_selected);
 
-	wxMenuItem* copyItem = Append(MAP_POPUP_MENU_COPY, "&Copy\tCTRL+C", "Copy all selected items");
+	wxMenuItem* copyItem = Append(MAP_POPUP_MENU_COPY, "&Copy\tCTRL+C", "Copy all selected items (Ctrl+C)");
 	copyItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_COPY, wxSize(16, 16)));
 	copyItem->Enable(anything_selected);
 
@@ -62,11 +62,11 @@ void MapPopupMenu::Update() {
 	copyPositionItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LOCATION, wxSize(16, 16)));
 	copyPositionItem->Enable(anything_selected);
 
-	wxMenuItem* pasteItem = Append(MAP_POPUP_MENU_PASTE, "&Paste\tCTRL+V", "Paste items in the copybuffer here");
+	wxMenuItem* pasteItem = Append(MAP_POPUP_MENU_PASTE, "&Paste\tCTRL+V", "Paste items in the copybuffer here (Ctrl+V)");
 	pasteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_PASTE, wxSize(16, 16)));
 	pasteItem->Enable(editor.copybuffer.canPaste());
 
-	wxMenuItem* deleteItem = Append(MAP_POPUP_MENU_DELETE, "&Delete\tDEL", "Removes all seleceted items");
+	wxMenuItem* deleteItem = Append(MAP_POPUP_MENU_DELETE, "&Delete\tDEL", "Removes all seleceted items (Del)");
 	deleteItem->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TRASH_CAN, wxSize(16, 16)));
 	deleteItem->Enable(anything_selected);
 

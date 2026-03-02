@@ -282,7 +282,7 @@ void FindItemDialog::EnableProperties(bool enable) {
 void FindItemDialog::RefreshContentsInternal() {
 	items_list->Clear();
 	ok_button->Enable(false);
-	ok_button->SetToolTip("Select an item to continue");
+	ok_button->SetToolTip("Select an item to confirm");
 
 	SearchMode selection = (SearchMode)options_radio_box->GetSelection();
 	bool found_search_results = false;
@@ -410,6 +410,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		ok_button->SetToolTip("Confirm selection");
 	} else {
 		items_list->SetNoMatches();
+		ok_button->SetToolTip("No matches found for the current search criteria");
 	}
 
 	items_list->Refresh();
