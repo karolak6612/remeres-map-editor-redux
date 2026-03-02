@@ -65,7 +65,7 @@ class MapDrawer {
 	Editor& editor;
 	DrawingOptions options;
 	RenderView view;
-	std::shared_ptr<LightDrawer> light_drawer;
+	std::unique_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
 	std::unique_ptr<TooltipDrawer> tooltip_drawer;
 	std::unique_ptr<GridDrawer> grid_drawer;

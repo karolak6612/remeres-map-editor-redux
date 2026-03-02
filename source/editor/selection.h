@@ -127,6 +127,7 @@ private:
 	// We use std::vector here instead of std::set for performance reasons.
 	// Selections are typically small, and std::vector provides better cache locality
 	// and fewer allocations. We maintain sorted order to allow O(log n) lookups.
+	// Observer pointers: the actual tiles are owned by the map (BaseMap / MapAllocator)
 	std::vector<Tile*> tiles;
 	std::vector<Tile*> pending_adds;
 	std::vector<Tile*> pending_removes;

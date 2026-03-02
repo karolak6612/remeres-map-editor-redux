@@ -29,7 +29,7 @@ namespace IngamePreview {
 		sprite_batch = std::make_unique<SpriteBatch>();
 		primitive_renderer = std::make_unique<PrimitiveRenderer>();
 		light_buffer = std::make_unique<LightBuffer>();
-		light_drawer = std::make_shared<LightDrawer>();
+		light_drawer = std::make_unique<LightDrawer>();
 		creature_drawer = std::make_unique<CreatureDrawer>();
 		creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 		sprite_drawer = std::make_unique<SpriteDrawer>();
