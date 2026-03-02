@@ -32,6 +32,18 @@ namespace TileOperations {
 	void merge(Tile* dest, Tile* src);
 	Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent = nullptr);
 
+	// Tile queries / accessors
+	bool hasProperty(const Tile* tile, enum ITEMPROPERTY prop);
+	int getIndexOf(const Tile* tile, Item* item);
+	Item* getTopItem(const Tile* tile);
+	Item* getItemAt(const Tile* tile, int index);
+	void addItem(Tile* tile, std::unique_ptr<Item> item);
+	GroundBrush* getGroundBrush(const Tile* tile);
+	Item* getWall(const Tile* tile);
+	Item* getCarpet(const Tile* tile);
+	Item* getTable(const Tile* tile);
+	bool isContentEqual(const Tile* tile, const Tile* other);
+
 	void select(Tile* tile);
 	void deselect(Tile* tile);
 	void selectGround(Tile* tile);

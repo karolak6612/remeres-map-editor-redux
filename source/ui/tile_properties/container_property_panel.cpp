@@ -112,9 +112,9 @@ void ContainerPropertyPanel::OnAddItem(wxCommandEvent& WXUNUSED(event)) {
 		uint16_t item_id = dialog.getResultID();
 		if (item_id != 0) {
 			std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-			int index = current_tile->getIndexOf(current_item);
+			int index = TileOperations::getIndexOf(current_tile, current_item);
 			if (index != -1) {
-				Item* new_item_base = new_tile->getItemAt(index);
+				Item* new_item_base = TileOperations::getItemAt(new_tile.get(), index);
 				if (new_item_base && new_item_base->asContainer()) {
 					Container* container = static_cast<Container*>(new_item_base);
 					auto& contents = container->getVector();
@@ -163,12 +163,12 @@ void ContainerPropertyPanel::OnEditItem(wxCommandEvent& WXUNUSED(event)) {
 
 	// Create a deep copy of the tile to edit items inside the container
 	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-	int container_index = current_tile->getIndexOf(current_item);
+	int container_index = TileOperations::getIndexOf(current_tile, current_item);
 	if (container_index == -1) {
 		return;
 	}
 
-	Item* new_container_base = new_tile->getItemAt(container_index);
+	Item* new_container_base = TileOperations::getItemAt(new_tile.get(), container_index);
 	Container* new_container = new_container_base ? new_container_base->asContainer() : nullptr;
 	if (!new_container) {
 		return;
@@ -220,9 +220,9 @@ void ContainerPropertyPanel::OnRemoveItem(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-	int index = current_tile->getIndexOf(current_item);
+	int index = TileOperations::getIndexOf(current_tile, current_item);
 	if (index != -1) {
-		Item* new_item_base = new_tile->getItemAt(index);
+		Item* new_item_base = TileOperations::getItemAt(new_tile.get(), index);
 		if (new_item_base && new_item_base->asContainer()) {
 			Container* container = static_cast<Container*>(new_item_base);
 			auto& contents = container->getVector();

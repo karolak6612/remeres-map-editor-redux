@@ -46,7 +46,7 @@ void DialogHelper::OpenProperties(Editor& editor, Tile* tile) {
 		}
 
 		if (!item) {
-			item = new_tile->getTopItem();
+			item = TileOperations::getTopItem(new_tile.get());
 		}
 
 		if (item) {

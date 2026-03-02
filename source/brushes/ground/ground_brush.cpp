@@ -62,7 +62,7 @@ void GroundBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 	if (parameter != nullptr) {
 		std::pair<bool, GroundBrush*>& param = *reinterpret_cast<std::pair<bool, GroundBrush*>*>(parameter);
-		GroundBrush* other = tile->getGroundBrush();
+		GroundBrush* other = TileOperations::getGroundBrush(tile);
 		if (param.first) { // Volatile? :)
 			if (other != nullptr) {
 				return;
@@ -83,7 +83,7 @@ void GroundBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 		id = border_items.front().id;
 	}
 
-	tile->addItem(Item::Create(id));
+	TileOperations::addItem(tile, Item::Create(id));
 }
 
 const GroundBrush::BorderBlock* GroundBrush::getBrushTo(GroundBrush* first, GroundBrush* second) {
@@ -142,7 +142,7 @@ const GroundBrush::BorderBlock* GroundBrush::getBrushTo(GroundBrush* first, Grou
 
 inline GroundBrush* extractGroundBrushFromTile(BaseMap* map, uint32_t x, uint32_t y, uint32_t z) {
 	Tile* t = map->getTile(x, y, z);
-	return t ? t->getGroundBrush() : nullptr;
+	return t ? TileOperations::getGroundBrush(t) : nullptr;
 }
 
 void GroundBrush::doBorders(BaseMap* map, Tile* tile) {

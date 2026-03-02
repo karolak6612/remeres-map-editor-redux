@@ -81,7 +81,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 				case OTBM_ATTR_ITEM: {
 					auto item = ItemSerializationOTBM::createFromStream(iomap, tileNode);
 					if (item) {
-						tile->addItem(std::move(item));
+						TileOperations::addItem(tile, std::move(item));
 					} else {
 						spdlog::warn("Failed to read item attribute at {},{},{}", pos.x, pos.y, pos.z);
 					}
@@ -107,7 +107,7 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 					if (!ItemSerializationOTBM::unserializeItemNode(iomap, itemNode, *item)) {
 						spdlog::warn("Failed to unserialize item at {},{},{}", pos.x, pos.y, pos.z);
 					} else {
-						tile->addItem(std::move(item));
+						TileOperations::addItem(tile, std::move(item));
 					}
 				}
 			} else {

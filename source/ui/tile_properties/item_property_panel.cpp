@@ -149,9 +149,9 @@ void ItemPropertyPanel::OnActionIdChange(wxSpinEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		int index = current_tile->getIndexOf(current_item);
+		int index = TileOperations::getIndexOf(current_tile, current_item);
 		if (index != -1) {
-			Item* new_item = new_tile->getItemAt(index);
+			Item* new_item = TileOperations::getItemAt(new_tile.get(), index);
 			new_item->setActionID(action_id_spin->GetValue());
 
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
@@ -169,9 +169,9 @@ void ItemPropertyPanel::OnUniqueIdChange(wxSpinEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		int index = current_tile->getIndexOf(current_item);
+		int index = TileOperations::getIndexOf(current_tile, current_item);
 		if (index != -1) {
-			Item* new_item = new_tile->getItemAt(index);
+			Item* new_item = TileOperations::getItemAt(new_tile.get(), index);
 			new_item->setUniqueID(unique_id_spin->GetValue());
 
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
@@ -189,9 +189,9 @@ void ItemPropertyPanel::OnCountChange(wxSpinEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		int index = current_tile->getIndexOf(current_item);
+		int index = TileOperations::getIndexOf(current_tile, current_item);
 		if (index != -1) {
-			Item* new_item = new_tile->getItemAt(index);
+			Item* new_item = TileOperations::getItemAt(new_tile.get(), index);
 			new_item->setSubtype(count_spin->GetValue());
 
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
@@ -209,9 +209,9 @@ void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		int index = current_tile->getIndexOf(current_item);
+		int index = TileOperations::getIndexOf(current_tile, current_item);
 		if (index != -1) {
-			Item* new_item = new_tile->getItemAt(index);
+			Item* new_item = TileOperations::getItemAt(new_tile.get(), index);
 			int new_type = (int)(intptr_t)splash_type_choice->GetClientData(splash_type_choice->GetSelection());
 			new_item->setSubtype(new_type);
 
@@ -235,9 +235,9 @@ void ItemPropertyPanel::OnTextChange(wxEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		int index = current_tile->getIndexOf(current_item);
+		int index = TileOperations::getIndexOf(current_tile, current_item);
 		if (index != -1) {
-			Item* new_item = new_tile->getItemAt(index);
+			Item* new_item = TileOperations::getItemAt(new_tile.get(), index);
 			new_item->setText(nstr(text_ctrl->GetValue()));
 
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);

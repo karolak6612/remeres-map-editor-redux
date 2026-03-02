@@ -16,7 +16,7 @@ wxString TileDescriber::GetDescription(Tile* tile, bool showSpawns, bool showCre
 		} else if (tile->creature && showCreatures) {
 			ss << (tile->creature->isNpc() ? "NPC" : "Monster");
 			ss << " \"" << wxstr(tile->creature->getName()) << "\" spawntime: " << tile->creature->getSpawnTime();
-		} else if (Item* item = tile->getTopItem()) {
+		} else if (Item* item = TileOperations::getTopItem(tile)) {
 			ss << "Item \"" << wxstr(item->getName()) << "\"";
 			ss << " id:" << item->getID();
 			ss << " cid:" << item->getClientID();

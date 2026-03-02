@@ -57,7 +57,7 @@ void BrushSelector::SelectGroundBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	GroundBrush* bb = tile->getGroundBrush();
+	GroundBrush* bb = TileOperations::getGroundBrush(tile);
 
 	if (bb) {
 		g_gui.SelectBrush(bb, TILESET_TERRAIN);
@@ -102,7 +102,7 @@ void BrushSelector::SelectWallBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	Item* wall = tile->getWall();
+	Item* wall = TileOperations::getWall(tile);
 	WallBrush* wb = wall->getWallBrush();
 
 	if (wb) {
@@ -118,7 +118,7 @@ void BrushSelector::SelectCarpetBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	Item* wall = tile->getCarpet();
+	Item* wall = TileOperations::getCarpet(tile);
 	CarpetBrush* cb = wall->getCarpetBrush();
 
 	if (cb) {
@@ -134,7 +134,7 @@ void BrushSelector::SelectTableBrush(Selection& selection) {
 	if (!tile) {
 		return;
 	}
-	Item* wall = tile->getTable();
+	Item* wall = TileOperations::getTable(tile);
 	TableBrush* tb = wall->getTableBrush();
 
 	if (tb) {
@@ -199,7 +199,7 @@ void BrushSelector::SelectCollectionBrush(Selection& selection) {
 			}
 		}
 	}
-	GroundBrush* gb = tile->getGroundBrush();
+	GroundBrush* gb = TileOperations::getGroundBrush(tile);
 	if (gb && gb->visibleInPalette() && gb->hasCollection()) {
 		g_gui.SelectBrush(gb, TILESET_COLLECTION);
 		return;
@@ -232,7 +232,7 @@ void BrushSelector::SelectSmartBrush(Editor& editor, Tile* tile) {
 			}
 		}
 		// Fall back to item selection
-		Item* item = tile->getTopItem();
+		Item* item = TileOperations::getTopItem(tile);
 		if (item && item->getRAWBrush()) {
 			g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
 		}

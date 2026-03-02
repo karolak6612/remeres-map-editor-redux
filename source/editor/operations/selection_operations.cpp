@@ -26,7 +26,7 @@ void SelectionOperations::doSurroundingBorders(DoodadBrush* doodad_brush, Positi
 					tilestoborder.push_back(Position(new_tile->getPosition().x + x, new_tile->getPosition().y + y, new_tile->getPosition().z));
 				}
 			}
-		} else if (buffer_tile->hasWall()) {
+		} else if (TileOperations::getWall(buffer_tile) != nullptr) {
 			tilestoborder.push_back(Position(new_tile->getPosition().x, new_tile->getPosition().y - 1, new_tile->getPosition().z));
 			tilestoborder.push_back(Position(new_tile->getPosition().x - 1, new_tile->getPosition().y, new_tile->getPosition().z));
 			tilestoborder.push_back(Position(new_tile->getPosition().x + 1, new_tile->getPosition().y, new_tile->getPosition().z));
@@ -66,7 +66,7 @@ void SelectionOperations::randomizeSelection(Editor& editor) {
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_RANDOMIZE);
 	for (Tile* tile : editor.selection) {
 		std::unique_ptr<Tile> newTile = TileOperations::deepCopy(tile, editor.map);
-		GroundBrush* groundBrush = newTile->getGroundBrush();
+		GroundBrush* groundBrush = TileOperations::getGroundBrush(newTile.get());
 		if (groundBrush && groundBrush->isReRandomizable()) {
 			groundBrush->draw(&editor.map, newTile.get(), nullptr);
 
@@ -107,7 +107,7 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		auto tile_selection = TileOperations::popSelectedItems(new_src_tile.get());
 		for (auto& item : tile_selection) {
 			// Add the copied item to the newd destination tile,
-			tmp_storage_tile->addItem(std::move(item));
+			TileOperations::addItem(tmp_storage_tile.get(), std::move(item));
 		}
 		// Move spawns
 		if (new_src_tile->spawn && new_src_tile->spawn->isSelected()) {

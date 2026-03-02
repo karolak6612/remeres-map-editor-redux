@@ -34,6 +34,7 @@ class Map;
 #include <unordered_set>
 #include <memory>
 #include <vector>
+#include <boost/container/small_vector.hpp>
 
 // TileOperations functions are now in tile_operations.h
 
@@ -66,7 +67,7 @@ class Tile {
 public: // Members
 	TileLocation* location;
 	std::unique_ptr<Item> ground;
-	std::vector<std::unique_ptr<Item>> items;
+	boost::container::small_vector<std::unique_ptr<Item>, 4> items;
 	std::unique_ptr<Creature> creature;
 	std::unique_ptr<Spawn> spawn;
 	uint32_t house_id; // House id for this tile (pointer not safe)
@@ -105,8 +106,6 @@ public:
 	int getZ() const;
 
 public: // Functions
-	// Compare the content (ground and items) of two tiles
-	bool isContentEqual(const Tile* other) const;
 
 	// Has tile been modified since the map was loaded/created?
 	bool isModified() const {
@@ -144,13 +143,6 @@ public: // Functions
 		}
 	}
 
-	bool hasProperty(enum ITEMPROPERTY prop) const;
-
-	int getIndexOf(Item* item) const;
-	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
-	Item* getItemAt(int index) const;
-	void addItem(std::unique_ptr<Item> item);
-
 	bool isSelected() const {
 		return testFlags(statflags, TILESTATE_SELECTED);
 	}
@@ -168,18 +160,13 @@ public: // Functions
 		return items.size() && items[0]->isBorder();
 	}
 
-	// Get the border brush of this tile
-	GroundBrush* getGroundBrush() const;
-
 	bool hasTable() const {
 		return testFlags(statflags, TILESTATE_HAS_TABLE);
 	}
-	Item* getTable() const;
 
 	bool hasCarpet() const {
 		return testFlags(statflags, TILESTATE_HAS_CARPET);
 	}
-	Item* getCarpet() const;
 
 	bool hasHookSouth() const {
 		return testFlags(statflags, TILESTATE_HOOK_SOUTH);
@@ -203,10 +190,6 @@ public: // Functions
 			statflags &= ~TILESTATE_OP_BORDER;
 		}
 	}
-
-	// Get the (first) wall of this tile
-	Item* getWall() const;
-	bool hasWall() const;
 
 	// Has to do with houses
 	bool isHouseTile() const;
@@ -238,10 +221,6 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
 using TileVector = std::vector<Tile*>;
 using TileSet = std::vector<Tile*>;
 using TileList = std::list<Tile*>;
-
-inline bool Tile::hasWall() const {
-	return getWall() != nullptr;
-}
 
 inline bool Tile::isHouseTile() const {
 	return house_id != 0;

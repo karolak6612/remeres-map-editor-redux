@@ -186,11 +186,11 @@ void MapPopupMenu::Update() {
 					Append(MAP_POPUP_MENU_SELECT_DOOR_BRUSH, "Select Doorbrush", "Use this door brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, wxSize(16, 16)));
 				}
 
-				if (tile->hasGround() && tile->getGroundBrush() && tile->getGroundBrush()->visibleInPalette()) {
+				if (tile->hasGround() && TileOperations::getGroundBrush(tile) && TileOperations::getGroundBrush(tile)->visibleInPalette()) {
 					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current item as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
-				if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+				if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || TileOperations::getGroundBrush(tile) && TileOperations::getGroundBrush(tile)->hasCollection()) {
 					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
@@ -214,11 +214,11 @@ void MapPopupMenu::Update() {
 				if (hasWall) {
 					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
 				}
-				if (tile->hasGround() && tile->getGroundBrush() && tile->getGroundBrush()->visibleInPalette()) {
+				if (tile->hasGround() && TileOperations::getGroundBrush(tile) && TileOperations::getGroundBrush(tile)->visibleInPalette()) {
 					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current tile as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
-				if (hasCollection || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+				if (hasCollection || TileOperations::getGroundBrush(tile) && TileOperations::getGroundBrush(tile)->hasCollection()) {
 					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 

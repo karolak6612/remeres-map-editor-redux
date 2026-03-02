@@ -78,9 +78,9 @@ void DepotPropertyPanel::OnDepotIdChange(wxCommandEvent& event) {
 		}
 
 		std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(current_tile, *current_map);
-		int index = current_tile->getIndexOf(current_item);
+		int index = TileOperations::getIndexOf(current_tile, current_item);
 		if (index != -1) {
-			Item* new_item_base = new_tile->getItemAt(index);
+			Item* new_item_base = TileOperations::getItemAt(new_tile.get(), index);
 			if (new_item_base->asDepot()) {
 				Depot* depot = static_cast<Depot*>(new_item_base);
 				int new_depotid = (int)(intptr_t)depot_id_field->GetClientData(depot_id_field->GetSelection());

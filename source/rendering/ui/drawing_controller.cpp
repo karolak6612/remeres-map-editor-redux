@@ -137,7 +137,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					replace_dragging = true;
 					Tile* draw_tile = editor.map.getTile(mouse_map_pos);
 					if (draw_tile) {
-						editor.replace_brush = draw_tile->getGroundBrush();
+						editor.replace_brush = TileOperations::getGroundBrush(draw_tile);
 					} else {
 						editor.replace_brush = nullptr;
 					}

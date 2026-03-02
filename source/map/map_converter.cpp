@@ -96,7 +96,7 @@ namespace {
 					if (item->isGroundTile()) {
 						item->setActionID(aid);
 						item->setUniqueID(uid);
-						tile->addItem(std::move(item));
+						TileOperations::addItem(tile, std::move(item));
 					} else {
 						tile->items.insert(tile->items.begin(), std::move(item));
 						++inserted_items;

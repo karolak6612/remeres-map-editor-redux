@@ -26,7 +26,7 @@ int OptionalBorderBrush::getLookID() const {
 
 bool OptionalBorderBrush::canDraw(BaseMap* map, const Position& position) const {
 	if (Tile* tile = map->getTile(position)) {
-		if (GroundBrush* bb = tile->getGroundBrush()) {
+		if (GroundBrush* bb = TileOperations::getGroundBrush(tile)) {
 			if (bb->hasOptionalBorder()) {
 				return false;
 			}
@@ -37,7 +37,7 @@ bool OptionalBorderBrush::canDraw(BaseMap* map, const Position& position) const 
 
 	for (const auto& [dx, dy] : offsets) {
 		if (Tile* tile = map->getTile(position.x + dx, position.y + dy, position.z)) {
-			if (GroundBrush* bb = tile->getGroundBrush()) {
+			if (GroundBrush* bb = TileOperations::getGroundBrush(tile)) {
 				if (bb->hasOptionalBorder()) {
 					return true;
 				}

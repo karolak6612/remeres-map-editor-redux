@@ -414,9 +414,9 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REPLACE_ITEMS);
 			for (const auto& [tile, itemToReplace] : result) {
 				std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(tile, editor->map);
-				int index = tile->getIndexOf(itemToReplace);
+				int index = TileOperations::getIndexOf(tile, itemToReplace);
 				ASSERT(index != wxNOT_FOUND);
-				Item* item = new_tile->getItemAt(index);
+				Item* item = TileOperations::getItemAt(new_tile.get(), index);
 				ASSERT(item && item->getID() == itemToReplace->getID());
 				TileOperations::transformItem(item, info.withId, new_tile.get());
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));

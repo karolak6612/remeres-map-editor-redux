@@ -107,7 +107,7 @@ bool DoorBrush::canDraw(BaseMap* map, const Position& position) const {
 		return false;
 	}
 
-	Item* item = tile->getWall();
+	Item* item = TileOperations::getWall(tile);
 	if (!item) {
 		return false;
 	}

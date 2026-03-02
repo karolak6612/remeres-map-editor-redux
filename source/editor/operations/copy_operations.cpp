@@ -45,7 +45,7 @@ void CopyOperations::copy(Editor& editor, CopyBuffer& buffer, int floor) {
 		for (auto* item : tile_selection) {
 			++item_count;
 			// Copy items to copybuffer
-			copied_tile->addItem(item->deepCopy());
+			TileOperations::addItem(copied_tile.get(), item->deepCopy());
 		}
 
 		if (tile->creature && tile->creature->isSelected()) {
@@ -105,7 +105,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 		for (auto& item : tile_selection) {
 			item_count++;
 			// Add items to copybuffer
-			copied_tile->addItem(std::move(item));
+			TileOperations::addItem(copied_tile.get(), std::move(item));
 		}
 
 		if (newtile->creature && newtile->creature->isSelected()) {

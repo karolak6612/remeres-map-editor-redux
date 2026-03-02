@@ -48,7 +48,7 @@ void MapProcessor::randomizeMap(Editor& editor, bool showdialog) {
 		Tile* tile = tileLocation.get();
 		ASSERT(tile);
 
-		GroundBrush* groundBrush = tile->getGroundBrush();
+		GroundBrush* groundBrush = TileOperations::getGroundBrush(tile);
 		if (groundBrush) {
 			Item* oldGround = tile->ground.get();
 

@@ -202,7 +202,7 @@ void AutoborderPreviewManager::PruneUnchanged(Editor& editor, const Position& po
 			}
 
 			// Compare tiles
-			bool equal = buf_tile->isContentEqual(src_tile);
+			bool equal = TileOperations::isContentEqual(buf_tile, src_tile);
 
 			if (equal) {
 				// Remove unmodified tile from buffer to prevent ghosting

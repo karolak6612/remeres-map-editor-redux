@@ -332,7 +332,7 @@ std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, con
 				if (!item) {
 					// warning("Invalid item at tile %d:%d:%d", pos.x, pos.y, pos.z);
 				}
-				tile->addItem(std::move(item));
+				TileOperations::addItem(tile, std::move(item));
 				break;
 			}
 			default:
@@ -357,7 +357,7 @@ std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode* node, Editor& editor, con
 					if (!item->unserializeItemNode_OTBM(mapVersion, itemNode)) {
 						// warning("Couldn't unserialize item attributes at %d:%d:%d", pos.x, pos.y, pos.z);
 					}
-					tile->addItem(std::move(item));
+					TileOperations::addItem(tile, std::move(item));
 				}
 			} else {
 				// warning("Unknown type of tile child node");

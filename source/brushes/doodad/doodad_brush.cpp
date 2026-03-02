@@ -86,7 +86,7 @@ void DoodadBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 	Item* randomItem = items.getRandomSingleItem(variation);
 	if (randomItem) {
-		tile->addItem(randomItem->deepCopy());
+		TileOperations::addItem(tile, randomItem->deepCopy());
 	}
 
 	if (settings.clear_mapflags || settings.clear_statflags) {

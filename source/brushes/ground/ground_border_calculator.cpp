@@ -17,7 +17,7 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	static const auto extractGroundBrushFromTile = [](BaseMap* map, int x, int y, int z) -> GroundBrush* {
 		Tile* tile = map->getTile(x, y, z);
 		if (tile) {
-			return tile->getGroundBrush();
+			return TileOperations::getGroundBrush(tile);
 		}
 		return nullptr;
 	};

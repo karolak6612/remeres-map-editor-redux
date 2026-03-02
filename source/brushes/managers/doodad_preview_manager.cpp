@@ -121,7 +121,7 @@ void DoodadPreviewManager::FillBuffer() {
 						}
 
 						for (const auto& item : items) {
-							tile->addItem(item->deepCopy());
+							TileOperations::addItem(tile, item->deepCopy());
 						}
 					}
 					exit = true;
@@ -161,7 +161,7 @@ void DoodadPreviewManager::FillBuffer() {
 				Tile* tile = doodad_buffer_map->createTile(pos.x, pos.y, pos.z);
 
 				for (const auto& item : items) {
-					tile->addItem(item->deepCopy());
+					TileOperations::addItem(tile, item->deepCopy());
 				}
 			}
 		} else if (brush->hasSingleObjects(g_brush_manager.GetBrushVariation())) {

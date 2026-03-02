@@ -85,5 +85,5 @@ void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 			return item->getTopOrder() == topOrder;
 		});
 	}
-	tile->addItem(Item::Create(itemtype->id));
+	TileOperations::addItem(tile, Item::Create(itemtype->id));
 }

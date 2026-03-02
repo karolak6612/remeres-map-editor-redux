@@ -151,109 +151,6 @@ int Tile::size() const {
 	return sz;
 }
 
-bool Tile::hasProperty(enum ITEMPROPERTY prop) const {
-	if (prop == PROTECTIONZONE && isPZ()) {
-		return true;
-	}
-
-	if (prop == BLOCKSOLID) {
-		// Optimization: Use cached blocking state
-		// Note: isBlocking() returns true for empty tiles (void), but hasProperty checks if *content* has property.
-		return isBlocking() && (ground || !items.empty());
-	}
-
-	if (ground && ground->hasProperty(prop)) {
-		return true;
-	}
-
-	return std::ranges::any_of(items, [prop](const auto& i) {
-		return i->hasProperty(prop);
-	});
-}
-
-int Tile::getIndexOf(Item* item) const {
-	if (!item) {
-		return wxNOT_FOUND;
-	}
-
-	int index = 0;
-	if (ground) {
-		if (ground.get() == item) {
-			return index;
-		}
-		index++;
-	}
-
-	if (!items.empty()) {
-		if (auto it = std::ranges::find_if(items, [item](const std::unique_ptr<Item>& i) { return i.get() == item; }); it != items.end()) {
-			index += std::distance(items.begin(), it);
-			return index;
-		}
-	}
-	return wxNOT_FOUND;
-}
-
-Item* Tile::getTopItem() const {
-	if (!items.empty() && !items.back()->isMetaItem()) {
-		return items.back().get();
-	}
-	if (ground && !ground->isMetaItem()) {
-		return ground.get();
-	}
-	return nullptr;
-}
-
-Item* Tile::getItemAt(int index) const {
-	if (index < 0) {
-		return nullptr;
-	}
-	if (ground) {
-		if (index == 0) {
-			return ground.get();
-		}
-		index--;
-	}
-	if (index >= 0 && index < (int)items.size()) {
-		return items.at(index).get();
-	}
-	return nullptr;
-}
-
-void Tile::addItem(std::unique_ptr<Item> item) {
-	if (!item) {
-		return;
-	}
-	if (item->isGroundTile()) {
-		ground = std::move(item);
-		TileOperations::update(this);
-		return;
-	}
-
-	uint16_t gid = item->getGroundEquivalent();
-	auto it = items.begin();
-
-	if (gid != 0) {
-		ground = Item::Create(gid);
-		TileOperations::update(this);
-		return;
-		// At the very bottom!
-	} else if (item->isAlwaysOnBottom()) {
-		// Find insertion point for always-on-bottom items
-		// They are sorted by TopOrder, and come before normal items.
-		it = std::ranges::find_if(items, [&](const std::unique_ptr<Item>& i) {
-			if (!i->isAlwaysOnBottom()) {
-				return true; // Found a normal item, insert before it
-			}
-			return item->getTopOrder() < i->getTopOrder(); // Found a bottom item with higher order
-		});
-	} else {
-		it = items.end();
-	}
-
-	items.insert(it, std::move(item));
-	TileOperations::update(this);
-}
-
 uint8_t Tile::getMiniMapColor() const {
 	if (minimapColor != INVALID_MINIMAP_COLOR) {
 		return minimapColor;
@@ -305,36 +202,6 @@ bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
 	return false;
 }
 
-GroundBrush* Tile::getGroundBrush() const {
-	if (ground) {
-		if (ground->getGroundBrush()) {
-			return ground->getGroundBrush();
-		}
-	}
-	return nullptr;
-}
-
-Item* Tile::getWall() const {
-	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
-		return i->isWall();
-	});
-	return (it != items.end()) ? it->get() : nullptr;
-}
-
-Item* Tile::getCarpet() const {
-	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
-		return i->isCarpet();
-	});
-	return (it != items.end()) ? it->get() : nullptr;
-}
-
-Item* Tile::getTable() const {
-	auto it = std::ranges::find_if(items, [](const std::unique_ptr<Item>& i) {
-		return i->isTable();
-	});
-	return (it != items.end()) ? it->get() : nullptr;
-}
-
 void Tile::setHouse(House* _house) {
 	house_id = (_house ? _house->getID() : 0);
 }
@@ -345,24 +212,4 @@ void Tile::setHouseID(uint32_t newHouseId) {
 
 bool Tile::isTownExit(Map& map) const {
 	return location->getTownCount() > 0;
-}
-
-bool Tile::isContentEqual(const Tile* other) const {
-	if (!other) {
-		return false;
-	}
-
-	// Compare ground
-	if (ground != nullptr && other->ground != nullptr) {
-		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
-			return false;
-		}
-	} else if (ground != other->ground) {
-		return false;
-	}
-
-	// Compare items
-	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
-		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
-	});
 }

@@ -44,7 +44,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 				}
 			}
 			// Fall back to item selection
-			Item* item = tile->getTopItem();
+			Item* item = TileOperations::getTopItem(tile);
 			if (item && item->getRAWBrush()) {
 				g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
 			}
@@ -93,7 +93,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 						editor.selection.finish(); // Finish selection session
 						editor.selection.updateSelectionCount();
 					} else {
-						Item* item = tile->getTopItem();
+						Item* item = TileOperations::getTopItem(tile);
 						if (item) {
 							editor.selection.start(); // Start selection session
 							if (item->isSelected()) {
@@ -129,7 +129,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 						dragging = true;
 						drag_start_pos = mouse_map_pos;
 					} else {
-						Item* item = tile->getTopItem();
+						Item* item = TileOperations::getTopItem(tile);
 						if (item) {
 							editor.selection.add(tile, item);
 							dragging = true;
@@ -218,7 +218,7 @@ void SelectionController::HandleRelease(const Position& mouse_map_pos, bool shif
 							editor.selection.updateSelectionCount();
 						}
 					} else {
-						Item* item = tile->getTopItem();
+						Item* item = TileOperations::getTopItem(tile);
 						if (item && !item->isSelected()) {
 							editor.selection.start(); // Start a selection session
 							editor.selection.add(tile, item);
@@ -270,7 +270,7 @@ void SelectionController::HandlePropertiesClick(const Position& mouse_map_pos, b
 		} else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 			editor.selection.add(tile, tile->creature.get());
 		} else {
-			Item* item = tile->getTopItem();
+			Item* item = TileOperations::getTopItem(tile);
 			if (item) {
 				editor.selection.add(tile, item);
 			}

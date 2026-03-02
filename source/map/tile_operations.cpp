@@ -159,10 +159,163 @@ namespace TileOperations {
 
 		dest->items.reserve(dest->items.size() + src->items.size());
 		for (auto& item : src->items) {
-			dest->addItem(std::move(item));
+			TileOperations::addItem(dest, std::move(item));
 		}
 		src->items.clear();
 		TileOperations::update(dest);
+	}
+
+	bool hasProperty(const Tile* tile, enum ITEMPROPERTY prop) {
+		if (prop == PROTECTIONZONE && tile->isPZ()) {
+			return true;
+		}
+
+		if (prop == BLOCKSOLID) {
+			// Optimization: Use cached blocking state
+			// Note: isBlocking() returns true for empty tiles (void), but hasProperty checks if *content* has property.
+			return tile->isBlocking() && (tile->ground || !tile->items.empty());
+		}
+
+		if (tile->ground && tile->ground->hasProperty(prop)) {
+			return true;
+		}
+
+		return std::ranges::any_of(tile->items, [prop](const auto& i) {
+			return i->hasProperty(prop);
+		});
+	}
+
+	int getIndexOf(const Tile* tile, Item* item) {
+		if (!item) {
+			return wxNOT_FOUND;
+		}
+
+		int index = 0;
+		if (tile->ground) {
+			if (tile->ground.get() == item) {
+				return index;
+			}
+			index++;
+		}
+
+		if (!tile->items.empty()) {
+			if (auto it = std::ranges::find_if(tile->items, [item](const std::unique_ptr<Item>& i) { return i.get() == item; }); it != tile->items.end()) {
+				index += std::distance(tile->items.begin(), it);
+				return index;
+			}
+		}
+		return wxNOT_FOUND;
+	}
+
+	Item* getTopItem(const Tile* tile) {
+		if (!tile->items.empty() && !tile->items.back()->isMetaItem()) {
+			return tile->items.back().get();
+		}
+		if (tile->ground && !tile->ground->isMetaItem()) {
+			return tile->ground.get();
+		}
+		return nullptr;
+	}
+
+	Item* getItemAt(const Tile* tile, int index) {
+		if (index < 0) {
+			return nullptr;
+		}
+		if (tile->ground) {
+			if (index == 0) {
+				return tile->ground.get();
+			}
+			index--;
+		}
+		if (index >= 0 && index < (int)tile->items.size()) {
+			return tile->items.at(index).get();
+		}
+		return nullptr;
+	}
+
+	void addItem(Tile* tile, std::unique_ptr<Item> item) {
+		if (!item) {
+			return;
+		}
+		if (item->isGroundTile()) {
+			tile->ground = std::move(item);
+			TileOperations::update(tile);
+			return;
+		}
+
+		uint16_t gid = item->getGroundEquivalent();
+		auto it = tile->items.begin();
+
+		if (gid != 0) {
+			tile->ground = Item::Create(gid);
+			TileOperations::update(tile);
+			return;
+			// At the very bottom!
+		} else if (item->isAlwaysOnBottom()) {
+			// Find insertion point for always-on-bottom items
+			// They are sorted by TopOrder, and come before normal items.
+			it = std::ranges::find_if(tile->items, [&](const std::unique_ptr<Item>& i) {
+				if (!i->isAlwaysOnBottom()) {
+					return true; // Found a normal item, insert before it
+				}
+				return item->getTopOrder() < i->getTopOrder(); // Found a bottom item with higher order
+			});
+		} else {
+			it = tile->items.end();
+		}
+
+		tile->items.insert(it, std::move(item));
+		TileOperations::update(tile);
+	}
+
+	GroundBrush* getGroundBrush(const Tile* tile) {
+		if (tile->ground) {
+			if (tile->ground->getGroundBrush()) {
+				return tile->ground->getGroundBrush();
+			}
+		}
+		return nullptr;
+	}
+
+	Item* getWall(const Tile* tile) {
+		auto it = std::ranges::find_if(tile->items, [](const std::unique_ptr<Item>& i) {
+			return i->isWall();
+		});
+		return (it != tile->items.end()) ? it->get() : nullptr;
+	}
+
+	Item* getCarpet(const Tile* tile) {
+		auto it = std::ranges::find_if(tile->items, [](const std::unique_ptr<Item>& i) {
+			return i->isCarpet();
+		});
+		return (it != tile->items.end()) ? it->get() : nullptr;
+	}
+
+	Item* getTable(const Tile* tile) {
+		auto it = std::ranges::find_if(tile->items, [](const std::unique_ptr<Item>& i) {
+			return i->isTable();
+		});
+		return (it != tile->items.end()) ? it->get() : nullptr;
+	}
+
+	bool isContentEqual(const Tile* tile, const Tile* other) {
+		if (!other || !tile) {
+			return false;
+		}
+
+		// Compare ground
+		if (tile->ground != nullptr && other->ground != nullptr) {
+			if (tile->ground->getID() != other->ground->getID() || tile->ground->getSubtype() != other->ground->getSubtype()) {
+				return false;
+			}
+		} else if (tile->ground != other->ground) {
+			return false;
+		}
+
+		// Compare items
+		return std::ranges::equal(tile->items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
+			return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
+		});
 	}
 
 	Item* transformItem(Item* old_item, uint16_t new_id, Tile* parent) {
@@ -362,7 +515,7 @@ namespace TileOperations {
 			return;
 		}
 		ASSERT(item->isWall());
-		tile->addItem(std::move(item));
+		TileOperations::addItem(tile, std::move(item));
 	}
 
 	void addHouseExit(Tile* tile, House* h) {

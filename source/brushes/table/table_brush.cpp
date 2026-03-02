@@ -72,7 +72,7 @@ void TableBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	}
 
 	if (type != 0) {
-		tile->addItem(Item::Create(type));
+		TileOperations::addItem(tile, Item::Create(type));
 	}
 }
 

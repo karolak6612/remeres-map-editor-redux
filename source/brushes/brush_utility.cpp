@@ -28,7 +28,7 @@ void BrushUtility::GetTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, s
 		Tile* tile = g_gui.GetCurrentMap().getTile(position);
 		GroundBrush* oldBrush = nullptr;
 		if (tile) {
-			oldBrush = tile->getGroundBrush();
+			oldBrush = TileOperations::getGroundBrush(tile);
 		}
 
 		if (oldBrush && oldBrush->getID() == newBrush->getID()) {
@@ -40,7 +40,7 @@ void BrushUtility::GetTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, s
 		}
 
 		if (tile && oldBrush) {
-			GroundBrush* groundBrush = tile->getGroundBrush();
+			GroundBrush* groundBrush = TileOperations::getGroundBrush(tile);
 			if (!groundBrush || groundBrush->getID() != oldBrush->getID()) {
 				return;
 			}
@@ -110,7 +110,7 @@ bool BrushUtility::FloodFill(Map* map, const Position& center, int x, int y, Gro
 	}
 
 	if (tile && brush) {
-		GroundBrush* groundBrush = tile->getGroundBrush();
+		GroundBrush* groundBrush = TileOperations::getGroundBrush(tile);
 		if (!groundBrush || groundBrush->getID() != brush->getID()) {
 			return false;
 		}
