@@ -450,14 +450,19 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_preview = true;
 		hand_cursor = true;
-	}
-	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
+		SetToolTip("Toggle autoborder preview");
+	} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_lock = true;
 		hand_cursor = true;
-	}
-
-	if (interactables.size_slider_rect.Contains(m_hoverPos) || interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		SetToolTip("Toggle drawing locked doors");
+	} else if (interactables.size_slider_rect.Contains(m_hoverPos)) {
 		hand_cursor = true;
+		SetToolTip("Adjust brush size");
+	} else if (interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		hand_cursor = true;
+		SetToolTip("Adjust brush thickness");
+	} else if (!hover_brush) {
+		UnsetToolTip();
 	}
 
 	SetCursor(hand_cursor ? wxCursor(wxCURSOR_HAND) : wxCursor(wxCURSOR_ARROW));
