@@ -52,6 +52,7 @@ class ReplaceToolWindow;
 #include <vector>
 
 using HouseExitList = std::vector<uint32_t>;
+// Observer containers, elements are owned by MapNode
 using TileVector = std::vector<Tile*>;
 using TileSet = std::vector<Tile*>;
 using ItemVector = std::vector<Item*>;
