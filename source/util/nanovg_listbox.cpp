@@ -24,6 +24,19 @@ NanoVGListBox::NanoVGListBox(wxWindow* parent, wxWindowID id, long style) :
 NanoVGListBox::~NanoVGListBox() {
 }
 
+void NanoVGListBox::EnableGridMode(int itemWidth) {
+	m_gridMode = true;
+	m_itemWidth = std::max(1, itemWidth);
+	UpdateScrollbar();
+	Refresh();
+}
+
+int NanoVGListBox::GetColumns() const {
+	if (!m_gridMode || m_itemWidth <= 0) return 1;
+	int cols = GetClientSize().x / m_itemWidth;
+	return std::max(1, cols);
+}
+
 void NanoVGListBox::SetItemCount(size_t count) {
 	if (m_count != count) {
 		m_count = count;
@@ -137,8 +150,8 @@ void NanoVGListBox::ScrollToLine(int line) {
 	EnsureVisible(line);
 }
 
-void NanoVGListBox::EnsureVisible(int line) {
-	if (line < 0 || line >= static_cast<int>(m_count)) {
+void NanoVGListBox::EnsureVisible(int index) {
+	if (index < 0 || index >= static_cast<int>(m_count)) {
 		return;
 	}
 
@@ -146,7 +159,8 @@ void NanoVGListBox::EnsureVisible(int line) {
 	int scrollPos = GetScrollPosition();
 	int clientHeight = GetClientSize().y;
 
-	int itemTop = line * itemHeight;
+	int row = m_gridMode ? (index / GetColumns()) : index;
+	int itemTop = row * itemHeight;
 	int itemBottom = itemTop + itemHeight;
 
 	if (itemTop < scrollPos) {
@@ -170,10 +184,9 @@ void NanoVGListBox::UpdateScrollbar() {
 	// Let's assume OnMeasureItem(0) is representative or we check m_itemHeightCache.
 
 	int itemHeight = std::max(1, OnMeasureItem(0));
-	int totalHeight = static_cast<int>(m_count) * itemHeight;
 
-	int clientHeight = GetClientSize().y;
-	int pageSize = clientHeight;
+	int totalRows = m_gridMode ? ((static_cast<int>(m_count) + GetColumns() - 1) / GetColumns()) : static_cast<int>(m_count);
+	int totalHeight = totalRows * itemHeight;
 
 	NanoVGCanvas::UpdateScrollbar(totalHeight);
 }
@@ -195,19 +208,28 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 
 	int scrollPos = GetScrollPosition();
 	int itemHeight = std::max(1, OnMeasureItem(0)); // Simplified assumption
+	int cols = GetColumns();
 
 	int startRow = scrollPos / itemHeight;
 	int endRow = (scrollPos + height + itemHeight - 1) / itemHeight;
 
-	startRow = std::max(0, startRow);
-	endRow = std::min(static_cast<int>(m_count), endRow);
+	int startIndex = startRow * cols;
+	int endIndex = (endRow + 1) * cols;
+
+	startIndex = std::max(0, startIndex);
+	endIndex = std::min(static_cast<int>(m_count), endIndex);
 
 	// Translate by scroll position is handled by caller (NanoVGCanvas::OnPaint)?
 	// NanoVGCanvas calls OnNanoVGPaint(m_nvg, width, height) after nvgTranslate(m_nvg, 0, -m_scrollPos).
 	// So (0,0) is top of content.
 
-	for (int i = startRow; i < endRow; ++i) {
-		wxRect rect(0, i * itemHeight, width, itemHeight);
+	for (int i = startIndex; i < endIndex; ++i) {
+		int row = m_gridMode ? (i / cols) : i;
+		int col = m_gridMode ? (i % cols) : 0;
+		int rectWidth = m_gridMode ? m_itemWidth : width;
+		int rectX = col * rectWidth;
+
+		wxRect rect(rectX, row * itemHeight, rectWidth, itemHeight);
 
 		// Draw background for selection/hover
 		bool selected = IsSelected(i);
@@ -238,7 +260,15 @@ int NanoVGListBox::HitTest(int x, int y) const {
 		return -1;
 	}
 	int itemHeight = std::max(1, OnMeasureItem(0));
-	int index = y / itemHeight;
+	int cols = GetColumns();
+
+	int row = y / itemHeight;
+	int col = m_gridMode ? (x / std::max(1, m_itemWidth)) : 0;
+
+	if (col >= cols) return -1;
+
+	int index = row * cols + col;
+
 	if (index >= 0 && index < static_cast<int>(m_count)) {
 		return index;
 	}
@@ -247,7 +277,11 @@ int NanoVGListBox::HitTest(int x, int y) const {
 
 wxRect NanoVGListBox::GetItemRect(int index) const {
 	int itemHeight = std::max(1, OnMeasureItem(0));
-	return wxRect(0, index * itemHeight, GetClientSize().x, itemHeight);
+	int cols = GetColumns();
+	int row = m_gridMode ? (index / cols) : index;
+	int col = m_gridMode ? (index % cols) : 0;
+	int rectWidth = m_gridMode ? m_itemWidth : GetClientSize().x;
+	return wxRect(col * rectWidth, row * itemHeight, rectWidth, itemHeight);
 }
 
 void NanoVGListBox::OnMouseDown(wxMouseEvent& event) {
@@ -308,12 +342,30 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 	}
 	int next = current;
 
+	int cols = GetColumns();
+
 	switch (event.GetKeyCode()) {
+		case WXK_LEFT:
+			if (m_gridMode) {
+				next = std::max(0, current - 1);
+			} else {
+				event.Skip();
+				return;
+			}
+			break;
+		case WXK_RIGHT:
+			if (m_gridMode) {
+				next = std::min(static_cast<int>(m_count) - 1, current + 1);
+			} else {
+				event.Skip();
+				return;
+			}
+			break;
 		case WXK_UP:
-			next = std::max(0, current - 1);
+			next = std::max(0, current - cols);
 			break;
 		case WXK_DOWN:
-			next = std::min(static_cast<int>(m_count) - 1, current + 1);
+			next = std::min(static_cast<int>(m_count) - 1, current + cols);
 			break;
 		case WXK_HOME:
 			next = 0;
@@ -323,14 +375,14 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 			break;
 		case WXK_PAGEUP: {
 			int itemHeight = OnMeasureItem(0);
-			int pageSize = GetClientSize().y / itemHeight;
-			next = std::max(0, current - pageSize);
+			int pageSizeRows = GetClientSize().y / itemHeight;
+			next = std::max(0, current - (pageSizeRows * cols));
 			break;
 		}
 		case WXK_PAGEDOWN: {
 			int itemHeight = OnMeasureItem(0);
-			int pageSize = GetClientSize().y / itemHeight;
-			next = std::min(static_cast<int>(m_count) - 1, current + pageSize);
+			int pageSizeRows = GetClientSize().y / itemHeight;
+			next = std::min(static_cast<int>(m_count) - 1, current + (pageSizeRows * cols));
 			break;
 		}
 		default:

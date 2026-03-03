@@ -26,6 +26,7 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/notebook.h>
 
 class FindDialogListBox;
 
@@ -69,7 +70,7 @@ private:
 	void EnableProperties(bool enable);
 	void RefreshContentsInternal();
 
-	void OnOptionChange(wxCommandEvent& event);
+	void OnTabChange(wxBookCtrlEvent& event);
 	void OnServerIdChange(wxCommandEvent& event);
 	void OnClientIdChange(wxCommandEvent& event);
 	void OnText(wxCommandEvent& event);
@@ -79,9 +80,9 @@ private:
 	void OnClickOK(wxCommandEvent& event);
 	void OnClickCancel(wxCommandEvent& event);
 
-	wxRadioBox* options_radio_box;
+	wxNotebook* notebook;
 
-	wxRadioBox* types_radio_box;
+	wxChoice* types_choice;
 
 	wxSpinCtrl* server_id_spin;
 	wxSpinCtrl* client_id_spin;

@@ -362,23 +362,27 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
+		nvgText(vg, rect.x + 10, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
+		nvgText(vg, rect.x + 10, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+
+		int icon_size = std::min(rect.width, rect.height) - FromDIP(4);
+		int icon_x = rect.x + (rect.width - icon_size) / 2;
+		int icon_y = rect.y + (rect.height - icon_size) / 2;
+
 		if (spr) {
 			int tex = GetOrCreateSpriteTexture(vg, spr);
 			if (tex > 0) {
-				int icon_size = rect.height;
-				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+				NVGpaint imgPaint = nvgImagePattern(vg, icon_x, icon_y, icon_size, icon_size, 0, tex, 1.0f);
 				nvgBeginPath(vg);
-				nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
+				nvgRect(vg, icon_x, icon_y, icon_size, icon_size);
 				nvgFillPaint(vg, imgPaint);
 				nvgFill(vg);
 			}
@@ -386,20 +390,21 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 
 		if (IsSelected(n)) {
 			textColour = Theme::Get(Theme::Role::TextOnAccent);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		} else {
 			textColour = Theme::Get(Theme::Role::Text);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		}
 
-		nvgFontSize(vg, 12.0f);
-		nvgFontFace(vg, "sans");
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		wxString name = wxstr(brushlist[n]->getName());
-		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+		if (!IsGridMode()) {
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+			nvgFontSize(vg, 12.0f);
+			nvgFontFace(vg, "sans");
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+			wxString name = wxstr(brushlist[n]->getName());
+			nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+		}
 	}
 }
 
 int FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FromDIP(32);
+	return m_gridMode ? m_itemWidth : FromDIP(32);
 }

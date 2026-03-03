@@ -22,6 +22,10 @@ public:
 		return m_count;
 	}
 
+	// Layout Mode
+	void EnableGridMode(int itemWidth);
+	bool IsGridMode() const { return m_gridMode; }
+
 	// Selection
 	virtual void SetSelection(int index);
 	int GetSelection() const;
@@ -64,6 +68,11 @@ protected:
 
 	int m_hoverIndex;
 	int m_focusIndex;
+
+	bool m_gridMode = false;
+	int m_itemWidth = 0;
+
+	int GetColumns() const;
 };
 
 #endif

@@ -70,37 +70,42 @@ BrowseTileListBox::~BrowseTileListBox() {
 void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n) {
 	Item* item = items[n];
 
+	int icon_size = std::min(rect.width, rect.height) - FromDIP(4);
+	int icon_x = rect.x + (rect.width - icon_size) / 2;
+	int icon_y = rect.y + (rect.height - icon_size) / 2;
+
 	Sprite* sprite = g_gui.gfx.getSprite(item->getClientID());
 	if (sprite) {
 		int tex = GetOrCreateSpriteTexture(vg, sprite);
 		if (tex > 0) {
-			int icon_size = 32;
-			NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+			NVGpaint imgPaint = nvgImagePattern(vg, icon_x, icon_y, icon_size, icon_size, 0, tex, 1.0f);
 			nvgBeginPath(vg);
-			nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
+			nvgRect(vg, icon_x, icon_y, icon_size, icon_size);
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 		}
 	}
 
-	if (IsSelected(n)) {
-		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
-		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-	} else {
-		wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
-		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+	if (!IsGridMode()) {
+		if (IsSelected(n)) {
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+		} else {
+			wxColour textColour = wxSystemSettings::GetColour(wxSYS_COLOUR_LISTBOXTEXT);
+			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+		}
+
+		std::string label = std::format("{} - {}", item->getID(), item->getName());
+
+		nvgFontSize(vg, 12.0f);
+		nvgFontFace(vg, "sans");
+		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, label.c_str(), nullptr);
 	}
-
-	std::string label = std::format("{} - {}", item->getID(), item->getName());
-
-	nvgFontSize(vg, 12.0f);
-	nvgFontFace(vg, "sans");
-	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-	nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, label.c_str(), nullptr);
 }
 
 int BrowseTileListBox::OnMeasureItem(size_t n) const {
-	return FromDIP(32);
+	return m_gridMode ? m_itemWidth : FromDIP(32);
 }
 
 Item* BrowseTileListBox::GetSelectedItem() {
@@ -174,51 +179,89 @@ void BrowseTileListBox::UpdateItems() {
 
 BrowseTileWindow::BrowseTileWindow(wxWindow* parent, Tile* tile, wxPoint position /* = wxDefaultPosition */) :
 	wxDialog(parent, wxID_ANY, "Browse Field", position, FROM_DIP(parent, wxSize(600, 400)), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
-	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	item_list = newd BrowseTileListBox(this, wxID_ANY, tile);
-	sizer->Add(item_list, wxSizerFlags(1).Expand());
 
-	wxString pos;
-	pos << "x=" << tile->getX() << ",  y=" << tile->getY() << ",  z=" << tile->getZ();
+	wxBoxSizer* main_sizer = newd wxBoxSizer(wxHORIZONTAL);
 
-	wxSizer* infoSizer = newd wxBoxSizer(wxVERTICAL);
-	wxBoxSizer* buttons = newd wxBoxSizer(wxHORIZONTAL);
-	delete_button = newd wxButton(this, wxID_REMOVE, "Delete");
+	// Left Side: List and item buttons
+	wxBoxSizer* left_sizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxStaticBoxSizer* items_box = newd wxStaticBoxSizer(wxVERTICAL, this, "Items on Tile");
+	item_list = newd BrowseTileListBox(items_box->GetStaticBox(), wxID_ANY, tile);
+	item_list->EnableGridMode(FromDIP(48)); // Enable grid layout with thumbnails
+	items_box->Add(item_list, 1, wxEXPAND | wxALL, 2);
+
+	wxBoxSizer* items_buttons = newd wxBoxSizer(wxHORIZONTAL);
+	delete_button = newd wxButton(items_box->GetStaticBox(), wxID_REMOVE, "Delete");
 	delete_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_TRASH_CAN));
 	delete_button->SetToolTip("Delete selected item");
 	delete_button->Enable(false);
-	buttons->Add(delete_button);
-	buttons->AddSpacer(5);
-	select_raw_button = newd wxButton(this, wxID_FIND, "Select RAW");
+	items_buttons->Add(delete_button, 1, wxEXPAND | wxRIGHT, 2);
+
+	select_raw_button = newd wxButton(items_box->GetStaticBox(), wxID_FIND, "Select RAW");
 	select_raw_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_SEARCH));
 	select_raw_button->SetToolTip("Select this item in RAW palette");
 	select_raw_button->Enable(false);
-	buttons->Add(select_raw_button);
-	infoSizer->Add(buttons);
-	infoSizer->AddSpacer(5);
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Position:  " + pos), wxSizerFlags(0).Left());
-	infoSizer->Add(item_count_txt = newd wxStaticText(this, wxID_ANY, "Item count:  " + i2ws(item_list->GetItemCount())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "Protection zone:  " + b2yn(tile->isPZ())), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No PvP:  " + b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "No logout:  " + b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "PvP zone:  " + b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), wxSizerFlags(0).Left());
-	infoSizer->Add(newd wxStaticText(this, wxID_ANY, "House:  " + b2yn(tile->isHouseTile())), wxSizerFlags(0).Left());
+	items_buttons->Add(select_raw_button, 1, wxEXPAND | wxLEFT, 2);
 
-	sizer->Add(infoSizer, wxSizerFlags(0).Left().DoubleBorder());
+	items_box->Add(items_buttons, 0, wxEXPAND | wxALL, 2);
+	left_sizer->Add(items_box, 1, wxEXPAND | wxALL, 5);
+
+	main_sizer->Add(left_sizer, 1, wxEXPAND | wxALL, 5);
+
+	// Right Side: Info and Dialog Buttons
+	wxBoxSizer* right_sizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxStaticBoxSizer* info_box = newd wxStaticBoxSizer(wxVERTICAL, this, "Tile Information");
+	wxFlexGridSizer* info_grid = newd wxFlexGridSizer(2, FromDIP(5), FromDIP(15));
+
+	wxString pos;
+	pos << "x=" << tile->getX() << ", y=" << tile->getY() << ", z=" << tile->getZ();
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "Position:"), 0, wxALIGN_CENTER_VERTICAL);
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, pos), 0, wxALIGN_CENTER_VERTICAL);
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "Item count:"), 0, wxALIGN_CENTER_VERTICAL);
+	item_count_txt = newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, i2ws(item_list->GetItemCount()));
+	info_grid->Add(item_count_txt, 0, wxALIGN_CENTER_VERTICAL);
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "Protection zone:"), 0, wxALIGN_CENTER_VERTICAL);
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, b2yn(tile->isPZ())), 0, wxALIGN_CENTER_VERTICAL);
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "No PvP:"), 0, wxALIGN_CENTER_VERTICAL);
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, b2yn(tile->getMapFlags() & TILESTATE_NOPVP)), 0, wxALIGN_CENTER_VERTICAL);
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "No logout:"), 0, wxALIGN_CENTER_VERTICAL);
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, b2yn(tile->getMapFlags() & TILESTATE_NOLOGOUT)), 0, wxALIGN_CENTER_VERTICAL);
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "PvP zone:"), 0, wxALIGN_CENTER_VERTICAL);
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, b2yn(tile->getMapFlags() & TILESTATE_PVPZONE)), 0, wxALIGN_CENTER_VERTICAL);
+
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, "House:"), 0, wxALIGN_CENTER_VERTICAL);
+	info_grid->Add(newd wxStaticText(info_box->GetStaticBox(), wxID_ANY, b2yn(tile->isHouseTile())), 0, wxALIGN_CENTER_VERTICAL);
+
+	info_box->Add(info_grid, 1, wxEXPAND | wxALL, 5);
+	right_sizer->Add(info_box, 0, wxEXPAND | wxALL, 5);
+
+	right_sizer->AddStretchSpacer(1);
 
 	// OK/Cancel buttons
-	wxSizer* btnSizer = newd wxBoxSizer(wxHORIZONTAL);
+	wxStdDialogButtonSizer* btnSizer = newd wxStdDialogButtonSizer();
 	auto okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
 	okBtn->SetToolTip("Confirm selection");
-	btnSizer->Add(okBtn, wxSizerFlags(0).Center());
+	btnSizer->AddButton(okBtn);
 	auto cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
 	cancelBtn->SetToolTip("Cancel");
-	btnSizer->Add(cancelBtn, wxSizerFlags(0).Center());
-	sizer->Add(btnSizer, wxSizerFlags(0).Center().DoubleBorder());
+	btnSizer->AddButton(cancelBtn);
+	btnSizer->Realize();
 
-	SetSizerAndFit(sizer);
+	right_sizer->Add(btnSizer, 0, wxALIGN_RIGHT | wxALL, 5);
+
+	main_sizer->Add(right_sizer, 0, wxEXPAND | wxALL, 5);
+
+	SetSizer(main_sizer);
+	Layout();
 
 	// Connect Events
 	item_list->Bind(wxEVT_LISTBOX, &BrowseTileWindow::OnItemSelected, this);
@@ -239,7 +282,7 @@ void BrowseTileWindow::OnItemSelected(wxCommandEvent& WXUNUSED(event)) {
 
 void BrowseTileWindow::OnClickDelete(wxCommandEvent& WXUNUSED(event)) {
 	item_list->RemoveSelected();
-	item_count_txt->SetLabelText("Item count:  " + i2ws(item_list->GetItemCount()));
+	item_count_txt->SetLabelText(i2ws(item_list->GetItemCount()));
 }
 
 void BrowseTileWindow::OnClickSelectRaw(wxCommandEvent& WXUNUSED(event)) {
