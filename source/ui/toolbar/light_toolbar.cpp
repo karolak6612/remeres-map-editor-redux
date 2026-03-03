@@ -33,7 +33,7 @@ LightToolBar::LightToolBar(wxWindow* parent) {
 	toolbar->AddSeparator();
 
 	wxBitmap light_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SUNNY, icon_size, wxColour(255, 235, 59));
-	toolbar->AddTool(ID_LIGHT_TOGGLE, "Toggle Lighting", light_bitmap, "Toggle Lighting", wxITEM_CHECK);
+	toolbar->AddTool(ID_LIGHT_TOGGLE, "Toggle Lighting", light_bitmap, "Toggle Map Lighting Preview", wxITEM_CHECK);
 	toolbar->ToggleTool(ID_LIGHT_TOGGLE, g_settings.getBoolean(Config::SHOW_LIGHTS));
 
 	toolbar->Realize();

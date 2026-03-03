@@ -364,9 +364,6 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 			break;
 		}
 	}
-	if (!hover_brush && prev_hover) {
-		UnsetToolTip();
-	}
 
 	// Sliders Interaction
 	if (evt.LeftDown()) {
@@ -447,17 +444,25 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	}
 
 	// Hover states for checkboxes
+	bool has_tooltip = false;
 	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_preview = true;
 		hand_cursor = true;
-	}
-	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
+		SetToolTip("Toggle automatic border preview on/off");
+		has_tooltip = true;
+	} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_lock = true;
 		hand_cursor = true;
+		SetToolTip("Lock doors automatically when placed");
+		has_tooltip = true;
 	}
 
 	if (interactables.size_slider_rect.Contains(m_hoverPos) || interactables.thickness_slider_rect.Contains(m_hoverPos)) {
 		hand_cursor = true;
+	}
+
+	if (!has_tooltip && !hover_brush) {
+		UnsetToolTip();
 	}
 
 	SetCursor(hand_cursor ? wxCursor(wxCURSOR_HAND) : wxCursor(wxCURSOR_ARROW));

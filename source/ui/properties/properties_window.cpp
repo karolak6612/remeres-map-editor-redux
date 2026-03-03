@@ -27,6 +27,7 @@
 #include "ui/properties/property_validator.h"
 #include "ui/properties/property_applier.h"
 #include "ui/properties/teleport_service.h"
+#include "ui/theme.h"
 
 #include <wx/grid.h>
 #include <wx/wrapsizer.h>
@@ -181,6 +182,10 @@ wxWindow* PropertiesWindow::createContainerPanel(wxWindow* parent) {
 wxWindow* PropertiesWindow::createAttributesPanel(wxWindow* parent) {
 	wxPanel* panel = newd wxPanel(parent, wxID_ANY);
 	wxSizer* topSizer = newd wxBoxSizer(wxVERTICAL);
+
+	wxStaticText* instruction_label = newd wxStaticText(panel, wxID_ANY, "Edit custom attributes below. Double-click a value to change it.");
+	instruction_label->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	topSizer->Add(instruction_label, wxSizerFlags(0).Expand().Border(wxALL, FromDIP(4)));
 
 	attributesGrid = newd wxGrid(panel, ITEM_PROPERTIES_ADVANCED_TAB, wxDefaultPosition, wxSize(-1, FromDIP(160)));
 	topSizer->Add(attributesGrid, wxSizerFlags(1).Expand());

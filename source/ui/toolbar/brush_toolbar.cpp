@@ -45,15 +45,15 @@ BrushToolBar::BrushToolBar(wxWindow* parent) {
 	toolbar->AddTool(PALETTE_TERRAIN_PVPZONE_TOOL, wxEmptyString, pvp_bitmap, wxNullBitmap, wxITEM_CHECK, "PvP Zone (Combat area)", "Mark area as PvP Zone", nullptr);
 	toolbar->AddSeparator();
 
-	toolbar->AddTool(PALETTE_TERRAIN_NORMAL_DOOR, wxEmptyString, normal_bitmap, wxNullBitmap, wxITEM_CHECK, "Normal Door", "Place normal door", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_LOCKED_DOOR, wxEmptyString, locked_bitmap, wxNullBitmap, wxITEM_CHECK, "Locked Door", "Place locked door", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_MAGIC_DOOR, wxEmptyString, magic_bitmap, wxNullBitmap, wxITEM_CHECK, "Magic Door", "Place magic door (Level dependent)", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_QUEST_DOOR, wxEmptyString, quest_bitmap, wxNullBitmap, wxITEM_CHECK, "Quest Door", "Place quest door", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_NORMAL_ALT_DOOR, wxEmptyString, normal_alt_bitmap, wxNullBitmap, wxITEM_CHECK, "Normal Door (alt)", "Place alternative normal door", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_ARCHWAY_DOOR, wxEmptyString, archway_bitmap, wxNullBitmap, wxITEM_CHECK, "Archway", "Place archway", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_NORMAL_DOOR, wxEmptyString, normal_bitmap, wxNullBitmap, wxITEM_CHECK, "Normal Door", "Place a standard normal door", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_LOCKED_DOOR, wxEmptyString, locked_bitmap, wxNullBitmap, wxITEM_CHECK, "Locked Door", "Place a door locked with a key", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_MAGIC_DOOR, wxEmptyString, magic_bitmap, wxNullBitmap, wxITEM_CHECK, "Magic Door", "Place a door requiring a specific level", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_QUEST_DOOR, wxEmptyString, quest_bitmap, wxNullBitmap, wxITEM_CHECK, "Quest Door", "Place a door for quests", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_NORMAL_ALT_DOOR, wxEmptyString, normal_alt_bitmap, wxNullBitmap, wxITEM_CHECK, "Normal Door (alt)", "Place an alternative normal door", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_ARCHWAY_DOOR, wxEmptyString, archway_bitmap, wxNullBitmap, wxITEM_CHECK, "Archway", "Place an archway", nullptr);
 	toolbar->AddSeparator();
-	toolbar->AddTool(PALETTE_TERRAIN_HATCH_DOOR, wxEmptyString, hatch_bitmap, wxNullBitmap, wxITEM_CHECK, "Hatch Window", "Place hatch window", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_WINDOW_DOOR, wxEmptyString, window_bitmap, wxNullBitmap, wxITEM_CHECK, "Window", "Place window", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_HATCH_DOOR, wxEmptyString, hatch_bitmap, wxNullBitmap, wxITEM_CHECK, "Hatch Window", "Place a horizontal hatch window", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_WINDOW_DOOR, wxEmptyString, window_bitmap, wxNullBitmap, wxITEM_CHECK, "Window", "Place a standard window", nullptr);
 	toolbar->Realize();
 
 	toolbar->Bind(wxEVT_COMMAND_MENU_SELECTED, &BrushToolBar::OnToolbarClick, this);
