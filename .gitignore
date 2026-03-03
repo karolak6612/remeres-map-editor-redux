@@ -117,3 +117,4 @@ data/user/
 /.agents/rules
 /build-ninja
 compile_commands.json
+/.cache
