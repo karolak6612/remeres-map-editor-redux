@@ -39,15 +39,15 @@ Change::Change(std::unique_ptr<Tile> t) :
 	ASSERT(std::get<std::unique_ptr<Tile>>(data));
 }
 
-Change* Change::Create(House* house, const Position& where) {
-	Change* c = newd Change();
+std::unique_ptr<Change> Change::Create(House* house, const Position& where) {
+	std::unique_ptr<Change> c(newd Change());
 	c->type = CHANGE_MOVE_HOUSE_EXIT;
 	c->data = HouseExitChangeData { .houseId = house->getID(), .pos = where };
 	return c;
 }
 
-Change* Change::Create(Waypoint* wp, const Position& where) {
-	Change* c = newd Change();
+std::unique_ptr<Change> Change::Create(Waypoint* wp, const Position& where) {
+	std::unique_ptr<Change> c(newd Change());
 	c->type = CHANGE_MOVE_WAYPOINT;
 	c->data = WaypointChangeData { .name = wp->name, .pos = where };
 	return c;

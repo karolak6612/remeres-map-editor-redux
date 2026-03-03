@@ -50,6 +50,11 @@ void Selection::recalculateBounds() const {
 		return;
 	}
 
+	std::lock_guard<std::mutex> lock(bounds_mutex);
+	if (!bounds_dirty) {
+		return;
+	}
+
 	Position minPos(0x10000, 0x10000, 0x10);
 	Position maxPos(0, 0, 0);
 
@@ -76,11 +81,13 @@ void Selection::recalculateBounds() const {
 
 Position Selection::minPosition() const {
 	recalculateBounds();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	return cached_min;
 }
 
 Position Selection::maxPosition() const {
 	recalculateBounds();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	return cached_max;
 }
 
