@@ -82,7 +82,7 @@ public:
 		visitLeavesImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
 	}
 
-	// Iterator support for MapIterator — const-only to protect sorted invariant
+	// Iterator support for MapIterator â€” const-only to protect sorted invariant
 	auto begin() const {
 		return cells_.cbegin();
 	}
@@ -92,7 +92,7 @@ public:
 
 protected:
 	BaseMap& map;
-	std::vector<CellEntry> cells_; // Sorted by key — contiguous, cache-friendly
+	std::vector<CellEntry> cells_; // Sorted by key â€” contiguous, cache-friendly
 
 	mutable uint64_t last_key_ = 0;
 	mutable size_t last_idx_ = 0; // Index into cells_ for 1-element cache
@@ -117,7 +117,7 @@ protected:
 	}
 
 	// Find or insert a cell, returning its index.
-	// Allocates GridCell immediately on insertion — no null entries left behind.
+	// Allocates GridCell immediately on insertion â€” no null entries left behind.
 	// Maintains sorted order via insertion at the correct position.
 	size_t findOrInsertCell(uint64_t key) {
 		auto it = std::lower_bound(cells_.begin(), cells_.end(), key, cell_key_less);

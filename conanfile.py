@@ -43,9 +43,9 @@ class RMERecipe(ConanFile):
         tc = CMakeToolchain(self, generator="Ninja")
         tc.cache_variables["CMAKE_CXX_STANDARD"] = "20"
         tc.cache_variables["CMAKE_CXX_STANDARD_REQUIRED"] = "ON"
-        # Ensure Unicode mode on Windows
-        tc.preprocessor_definitions["UNICODE"] = ""
-        tc.preprocessor_definitions["_UNICODE"] = ""
+        # Ensure Unicode mode
+        tc.preprocessor_definitions["UNICODE"] = "1"
+        tc.preprocessor_definitions["_UNICODE"] = "1"
         tc.generate()
     
     def configure(self):

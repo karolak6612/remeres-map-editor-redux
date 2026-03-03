@@ -30,6 +30,7 @@
 #include <vector>
 #include <format>
 #include <iterator>
+#include <cstring>
 
 class wxFileName;
 using FileName = wxFileName;

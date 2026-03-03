@@ -144,10 +144,7 @@ namespace IngamePreview {
 
 			// Pre-calculate view offsets for this floor using CalculateLayerOffset
 			int floor_offset = view.CalculateLayerOffset(z);
-
-			// Dynamic viewport culling — calculated perfectly per floor
 			constexpr int margin = TILE_SIZE * 2; // 2 tiles margin for multi-tile objects and off-by-one
-
 			int start_x = static_cast<int>(std::floor((view.view_scroll_x + floor_offset - margin) / static_cast<float>(TILE_SIZE)));
 			int start_y = static_cast<int>(std::floor((view.view_scroll_y + floor_offset - margin) / static_cast<float>(TILE_SIZE)));
 			int end_x = static_cast<int>(std::ceil((view.view_scroll_x + floor_offset + viewport_width * zoom + margin) / static_cast<float>(TILE_SIZE)));

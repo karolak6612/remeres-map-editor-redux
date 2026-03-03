@@ -76,7 +76,7 @@ bool ItemSerializationOTBM::unserializeAttributes(const IOMap& maphandle, Binary
 			}
 		} else if (!readAttribute(maphandle, static_cast<OTBM_ItemAttribute>(attribute), stream, item)) {
 			// Unrecognized or junk byte (e.g. trailing subtype written by some map editors).
-			// Stop reading attributes but don't fail — keep the item as-is.
+			// Stop reading attributes but don't fail â€” keep the item as-is.
 			break;
 		}
 	}

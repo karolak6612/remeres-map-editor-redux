@@ -15,7 +15,7 @@ namespace IngamePreview {
 	 *
 	 * Implements OTClient's floor visibility algorithm:
 	 * - On surface (Z <= 7): Sees floors 0-7, upper floors hidden by roofs
-	 * - Underground (Z > 7): Sees Z ± 2 floors
+	 * - Underground (Z > 7): Sees Z Â± 2 floors
 	 */
 	class FloorVisibilityCalculator {
 	public:
