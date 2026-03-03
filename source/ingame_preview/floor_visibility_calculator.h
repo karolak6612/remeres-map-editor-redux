@@ -1,4 +1,4 @@
-#ifndef RME_INGAME_PREVIEW_FLOOR_VISIBILITY_CALCULATOR_H_
+﻿#ifndef RME_INGAME_PREVIEW_FLOOR_VISIBILITY_CALCULATOR_H_
 #define RME_INGAME_PREVIEW_FLOOR_VISIBILITY_CALCULATOR_H_
 
 #include "app/main.h"
@@ -15,7 +15,7 @@ namespace IngamePreview {
 	 *
 	 * Implements OTClient's floor visibility algorithm:
 	 * - On surface (Z <= 7): Sees floors 0-7, upper floors hidden by roofs
-	 * - Underground (Z > 7): Sees Z Â± 2 floors
+	 * - Underground (Z > 7): Sees Z Ă‚Â± 2 floors
 	 */
 	class FloorVisibilityCalculator {
 	public:

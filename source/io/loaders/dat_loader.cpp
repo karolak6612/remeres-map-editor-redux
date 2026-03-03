@@ -1,473 +1,499 @@
 #include "io/loaders/dat_loader.h"
 
-#include "rendering/core/sprite_database.h"
+#include "io/filehandle.h"
 #include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/normal_image.h"
+#include "rendering/core/sprite_database.h"
 #include "rendering/core/texture_gc.h"
 #include "rendering/io/sprite_loader.h"
-#include "rendering/core/normal_image.h"
-#include "io/filehandle.h"
 #include "util/common.h"
-#include <memory>
-#include <cstdint>
 #include <climits>
+#include <cstdint>
 #include <format>
-#include <ranges>
+#include <memory>
 #include <ranges>
 
 // Anonymous namespace for internal helpers and C++20/23 features
 namespace {
 
-	constexpr uint8_t RemapFlag(uint8_t flag, DatFormat format) {
-		if (format >= DAT_FORMAT_1010) {
-			if (flag == 16) {
-				return DatFlagNoMoveAnimation;
-			}
-			if (flag > 16) {
-				return flag - 1;
-			}
-		} else if (format >= DAT_FORMAT_86) {
-			// No changes
-		} else if (format >= DAT_FORMAT_78) {
-			if (flag == 8) {
-				return DatFlagChargeable;
-			}
-			if (flag > 8) {
-				return flag - 1;
-			}
-		} else if (format >= DAT_FORMAT_755) {
-			if (flag == 23) {
-				return DatFlagFloorChange;
-			}
-		} else if (format >= DAT_FORMAT_74) {
-			if (flag > 0 && flag <= 15) {
-				return flag + 1;
-			}
-			switch (flag) {
-				case 16:
-					return DatFlagLight;
-				case 17:
-					return DatFlagFloorChange;
-				case 18:
-					return DatFlagFullGround;
-				case 19:
-					return DatFlagElevation;
-				case 20:
-					return DatFlagDisplacement;
-				case 22:
-					return DatFlagMinimapColor;
-				case 23:
-					return DatFlagRotateable;
-				case 24:
-					return DatFlagLyingCorpse;
-				case 25:
-					return DatFlagHangable;
-				case 26:
-					return DatFlagHookSouth;
-				case 27:
-					return DatFlagHookEast;
-				case 28:
-					return DatFlagAnimateAlways;
-				case DatFlagMultiUse:
-					return DatFlagForceUse;
-				case DatFlagForceUse:
-					return DatFlagMultiUse;
-			}
-		}
-		return flag;
-	}
+    constexpr uint8_t RemapFlag(uint8_t flag, DatFormat format)
+    {
+        if (format >= DAT_FORMAT_1010) {
+            if (flag == 16) {
+                return DatFlagNoMoveAnimation;
+            }
+            if (flag > 16) {
+                return flag - 1;
+            }
+        } else if (format >= DAT_FORMAT_86) {
+            // No changes
+        } else if (format >= DAT_FORMAT_78) {
+            if (flag == 8) {
+                return DatFlagChargeable;
+            }
+            if (flag > 8) {
+                return flag - 1;
+            }
+        } else if (format >= DAT_FORMAT_755) {
+            if (flag == 23) {
+                return DatFlagFloorChange;
+            }
+        } else if (format >= DAT_FORMAT_74) {
+            if (flag > 0 && flag <= 15) {
+                return flag + 1;
+            }
+            switch (flag) {
+                case 16:
+                    return DatFlagLight;
+                case 17:
+                    return DatFlagFloorChange;
+                case 18:
+                    return DatFlagFullGround;
+                case 19:
+                    return DatFlagElevation;
+                case 20:
+                    return DatFlagDisplacement;
+                case 22:
+                    return DatFlagMinimapColor;
+                case 23:
+                    return DatFlagRotateable;
+                case 24:
+                    return DatFlagLyingCorpse;
+                case 25:
+                    return DatFlagHangable;
+                case 26:
+                    return DatFlagHookSouth;
+                case 27:
+                    return DatFlagHookEast;
+                case 28:
+                    return DatFlagAnimateAlways;
+                case DatFlagMultiUse:
+                    return DatFlagForceUse;
+                case DatFlagForceUse:
+                    return DatFlagMultiUse;
+            }
+        }
+        return flag;
+    }
 
-	// Helper to read flag data associated with a specific flag
-	bool ReadFlagData(DatFormat format, FileReadHandle& file, GameSprite* sType, uint8_t flag, uint8_t previous_flag, std::vector<std::string>& warnings) {
-		switch (flag) {
-			case DatFlagGroundBorder:
-			case DatFlagOnBottom:
-			case DatFlagOnTop:
-			case DatFlagContainer:
-			case DatFlagStackable:
-			case DatFlagForceUse:
-			case DatFlagMultiUse:
-			case DatFlagFluidContainer:
-			case DatFlagSplash:
-			case DatFlagNotWalkable:
-			case DatFlagNotMoveable:
-			case DatFlagBlockProjectile:
-			case DatFlagNotPathable:
-			case DatFlagPickupable:
-			case DatFlagHangable:
-			case DatFlagHookSouth:
-			case DatFlagHookEast:
-			case DatFlagRotateable:
-			case DatFlagDontHide:
-			case DatFlagTranslucent:
-			case DatFlagLyingCorpse:
-			case DatFlagAnimateAlways:
-			case DatFlagFullGround:
-			case DatFlagLook:
-			case DatFlagWrappable:
-			case DatFlagUnwrappable:
-			case DatFlagTopEffect:
-			case DatFlagFloorChange:
-			case DatFlagNoMoveAnimation:
-			case DatFlagChargeable:
-			case DatFlagDefault:
-				break;
+    // Helper to read flag data associated with a specific flag
+    bool ReadFlagData(
+        DatFormat format, FileReadHandle& file, SpriteMetadata& metadata, uint8_t flag, uint8_t previous_flag,
+        std::vector<std::string>& warnings
+    )
+    {
+        switch (flag) {
+            case DatFlagGroundBorder:
+            case DatFlagOnBottom:
+            case DatFlagOnTop:
+            case DatFlagContainer:
+            case DatFlagStackable:
+            case DatFlagForceUse:
+            case DatFlagMultiUse:
+            case DatFlagFluidContainer:
+            case DatFlagSplash:
+            case DatFlagNotWalkable:
+            case DatFlagNotMoveable:
+            case DatFlagBlockProjectile:
+            case DatFlagNotPathable:
+            case DatFlagPickupable:
+            case DatFlagHangable:
+            case DatFlagHookSouth:
+            case DatFlagHookEast:
+            case DatFlagRotateable:
+            case DatFlagDontHide:
+            case DatFlagTranslucent:
+            case DatFlagLyingCorpse:
+            case DatFlagAnimateAlways:
+            case DatFlagFullGround:
+            case DatFlagLook:
+            case DatFlagWrappable:
+            case DatFlagUnwrappable:
+            case DatFlagTopEffect:
+            case DatFlagFloorChange:
+            case DatFlagNoMoveAnimation:
+            case DatFlagChargeable:
+            case DatFlagDefault:
+                break;
 
-			case DatFlagGround:
-			case DatFlagWritable:
-			case DatFlagWritableOnce:
-			case DatFlagCloth:
-			case DatFlagLensHelp:
-			case DatFlagUsable:
-				if (!file.skip(2)) {
-					return false;
-				}
-				break;
+            case DatFlagGround:
+            case DatFlagWritable:
+            case DatFlagWritableOnce:
+            case DatFlagCloth:
+            case DatFlagLensHelp:
+            case DatFlagUsable:
+                if (!file.skip(2)) {
+                    return false;
+                }
+                break;
 
-			case DatFlagLight: {
-				uint16_t intensity = 0;
-				uint16_t color = 0;
-				if (!file.getU16(intensity)) {
-					return false;
-				}
-				if (!file.getU16(color)) {
-					return false;
-				}
-				sType->has_light = true;
-				sType->light = SpriteLight { static_cast<uint8_t>(intensity), static_cast<uint8_t>(color) };
-				break;
-			}
+            case DatFlagLight: {
+                uint16_t intensity = 0;
+                uint16_t color = 0;
+                if (!file.getU16(intensity)) {
+                    return false;
+                }
+                if (!file.getU16(color)) {
+                    return false;
+                }
+                metadata.has_light = true;
+                metadata.light = SpriteLight {static_cast<uint8_t>(intensity), static_cast<uint8_t>(color)};
+                break;
+            }
 
-			case DatFlagDisplacement: {
-				if (format >= DAT_FORMAT_755) {
-					uint16_t offset_x = 0;
-					uint16_t offset_y = 0;
-					if (!file.getU16(offset_x)) {
-						return false;
-					}
-					if (!file.getU16(offset_y)) {
-						return false;
-					}
+            case DatFlagDisplacement: {
+                if (format >= DAT_FORMAT_755) {
+                    uint16_t offset_x = 0;
+                    uint16_t offset_y = 0;
+                    if (!file.getU16(offset_x)) {
+                        return false;
+                    }
+                    if (!file.getU16(offset_y)) {
+                        return false;
+                    }
 
-					sType->drawoffset_x = offset_x;
-					sType->drawoffset_y = offset_y;
-				} else {
-					sType->drawoffset_x = 8;
-					sType->drawoffset_y = 8;
-				}
-				break;
-			}
+                    metadata.drawoffset_x = offset_x;
+                    metadata.drawoffset_y = offset_y;
+                } else {
+                    metadata.drawoffset_x = 8;
+                    metadata.drawoffset_y = 8;
+                }
+                break;
+            }
 
-			case DatFlagElevation: {
-				uint16_t draw_height = 0;
-				if (!file.getU16(draw_height)) {
-					return false;
-				}
-				sType->draw_height = draw_height;
-				break;
-			}
+            case DatFlagElevation: {
+                uint16_t draw_height = 0;
+                if (!file.getU16(draw_height)) {
+                    return false;
+                }
+                metadata.draw_height = draw_height;
+                break;
+            }
 
-			case DatFlagMinimapColor: {
-				uint16_t minimap_color = 0;
-				if (!file.getU16(minimap_color)) {
-					return false;
-				}
-				sType->minimap_color = minimap_color;
-				break;
-			}
+            case DatFlagMinimapColor: {
+                uint16_t minimap_color = 0;
+                if (!file.getU16(minimap_color)) {
+                    return false;
+                }
+                metadata.minimap_color = minimap_color;
+                break;
+            }
 
-			case DatFlagMarket: {
-				if (!file.skip(6)) {
-					return false;
-				}
-				std::string marketName;
-				if (!file.getString(marketName)) {
-					return false;
-				}
-				if (!file.skip(4)) {
-					return false;
-				}
-				break;
-			}
+            case DatFlagMarket: {
+                if (!file.skip(6)) {
+                    return false;
+                }
+                std::string marketName;
+                if (!file.getString(marketName)) {
+                    return false;
+                }
+                if (!file.skip(4)) {
+                    return false;
+                }
+                break;
+            }
 
-			case DatFlagWings: {
-				if (!file.skip(16)) {
-					return false;
-				}
-				break;
-			}
+            case DatFlagWings: {
+                if (!file.skip(16)) {
+                    return false;
+                }
+                break;
+            }
 
-			default: {
-				warnings.push_back(std::format("Metadata: Unknown flag: {}. Previous flag: {}.", static_cast<int>(flag), static_cast<int>(previous_flag)));
-				break;
-			}
-		}
-		return true;
-	}
+            default: {
+                warnings.push_back(
+                    std::format("Metadata: Unknown flag: {}. Previous flag: {}.", static_cast<int>(flag), static_cast<int>(previous_flag))
+                );
+                break;
+            }
+        }
+        return true;
+    }
 
-	// Helper loop to read all flags for a sprite
-	bool LoadMetadataFlags(DatFormat format, FileReadHandle& file, GameSprite* sType, uint32_t sprite_id, std::vector<std::string>& warnings) {
-		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
-		uint8_t previous_flag = 0xFF;
+    // Helper loop to read all flags for a sprite
+    bool LoadMetadataFlags(
+        DatFormat format, FileReadHandle& file, SpriteMetadata& metadata, uint32_t sprite_id, std::vector<std::string>& warnings
+    )
+    {
+        uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
+        uint8_t previous_flag = 0xFF;
 
-		for (int count = 0; count < static_cast<int>(DatFlagLast); ++count) {
-			previous_flag = flag;
-			if (!file.getU8(flag)) {
-				warnings.push_back(std::format("Metadata: error reading flag for sprite id {}", sprite_id));
-				return false;
-			}
+        for (int count = 0; count < static_cast<int>(DatFlagLast); ++count) {
+            previous_flag = flag;
+            if (!file.getU8(flag)) {
+                warnings.push_back(std::format("Metadata: error reading flag for sprite id {}", sprite_id));
+                return false;
+            }
 
-			if (flag == DatFlagLast) {
-				return true;
-			}
-			flag = RemapFlag(flag, format);
-			if (!ReadFlagData(format, file, sType, flag, previous_flag, warnings)) {
-				warnings.push_back(std::format("Metadata: error reading flag data for flag {} for sprite id {}", static_cast<int>(flag), sprite_id));
-				return false;
-			}
-		}
-		// Sanity check: If we exit the loop without hitting DatFlagLast, it's potential corruption.
-		warnings.push_back(std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for sprite id {}", sprite_id));
-		return true; // We continue even if there was no terminator, as it's just a warning
-	}
+            if (flag == DatFlagLast) {
+                return true;
+            }
+            flag = RemapFlag(flag, format);
+            if (!ReadFlagData(format, file, metadata, flag, previous_flag, warnings)) {
+                warnings.push_back(
+                    std::format("Metadata: error reading flag data for flag {} for sprite id {}", static_cast<int>(flag), sprite_id)
+                );
+                return false;
+            }
+        }
+        // Sanity check: If we exit the loop without hitting DatFlagLast, it's potential corruption.
+        warnings.push_back(
+            std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for sprite id {}", sprite_id)
+        );
+        return true; // We continue even if there was no terminator, as it's just a warning
+    }
 
 } // namespace
 
-bool DatLoader::LoadMetadata(SpriteLoader& loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings) {
-	// items.otb has most of the info we need. This only loads the GameSprite metadata
-	FileReadHandle file(nstr(datafile.GetFullPath()));
+bool DatLoader::LoadMetadata(
+    SpriteLoader& loader, SpriteDatabase& db, const wxFileName& datafile, wxString& error, std::vector<std::string>& warnings
+)
+{
+    // items.otb has most of the info we need. This only loads the GameSprite metadata
+    FileReadHandle file(nstr(datafile.GetFullPath()));
 
-	if (!file.isOk()) {
-		// C++20 std::format
-		error += wxstr(std::format("Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().utf8_string(), file.getErrorMessage()));
-		return false;
-	}
+    if (!file.isOk()) {
+        // C++20 std::format
+        error += wxstr(
+            std::format(
+                "Failed to open {} for reading\nThe error reported was: {}", datafile.GetFullPath().utf8_string(), file.getErrorMessage()
+            )
+        );
+        return false;
+    }
 
-	uint16_t effect_count, distance_count;
+    uint16_t effect_count, distance_count;
 
-	uint32_t datSignature;
-	if (!file.getU32(datSignature)) {
-		error = "Failed to read dat signature";
-		return false;
-	}
+    uint32_t datSignature;
+    if (!file.getU32(datSignature)) {
+        error = "Failed to read dat signature";
+        return false;
+    }
 
-	// get max id
-	uint16_t item_count = 0, creature_count = 0;
-	if (!file.getU16(item_count) || !file.getU16(creature_count) || !file.getU16(effect_count) || !file.getU16(distance_count)) {
-		error = "Failed to read dat header counts";
-		return false;
-	}
+    // get max id
+    uint16_t item_count = 0, creature_count = 0;
+    if (!file.getU16(item_count) || !file.getU16(creature_count) || !file.getU16(effect_count) || !file.getU16(distance_count)) {
+        error = "Failed to read dat header counts";
+        return false;
+    }
 
-	if (item_count == 0 || creature_count == 0) {
-		error = "Invalid dat header counts (zero items or creatures)";
-		return false;
-	}
+    if (item_count == 0 || creature_count == 0) {
+        error = "Invalid dat header counts (zero items or creatures)";
+        return false;
+    }
 
-	db.setItemSpriteMaxID(item_count);
-	db.setCreatureSpriteMaxID(creature_count);
+    db.setItemSpriteMaxID(item_count);
+    db.setCreatureSpriteMaxID(creature_count);
 
-	constexpr uint32_t minID = 100; // items start with id 100
-	const uint32_t max_id_needed = item_count + creature_count + 1;
+    constexpr uint32_t minID = 100; // items start with id 100
+    const uint32_t max_id_needed = item_count + creature_count + 1;
 
-	// Pre-size containers to avoid rehashing and frequent allocations
-	db.getSpriteSpace().resize(max_id_needed);
-	// Resize image_space to MAX_SPRITES to ensure OOB access doesn't happen during sprite id reading.
-	// SprLoader will later resize it to the exact count, but we need it safe now.
-	if (db.getImageSpace().size() < MAX_SPRITES) {
-		db.getImageSpace().resize(MAX_SPRITES);
-	}
+    // Pre-size containers to avoid rehashing and frequent allocations
+    db.getMetadataSpace().resize(max_id_needed);
+    db.getAtlasCacheSpace().resize(max_id_needed);
+    // Resize image_space to MAX_SPRITES to ensure OOB access doesn't happen during sprite id reading.
+    // SprLoader will later resize it to the exact count, but we need it safe now.
+    if (db.getImageSpace().size() < MAX_SPRITES) {
+        db.getImageSpace().resize(MAX_SPRITES);
+    }
 
-	const ClientVersion* cv = loader.getClientVersion();
-	if (!cv) {
-		error = "Client version is not set in loader";
-		return false;
-	}
+    const ClientVersion* cv = loader.getClientVersion();
+    if (!cv) {
+        error = "Client version is not set in loader";
+        return false;
+    }
 
-	loader.setDatFormat(cv->getDatFormatForSignature(datSignature));
+    loader.setDatFormat(cv->getDatFormatForSignature(datSignature));
 
-	if (loader.getDatFormat() == DAT_FORMAT_UNKNOWN) {
-		error = wxstr(std::format("Unknown dat signature: {:#x}", datSignature));
-		return false;
-	}
+    if (loader.getDatFormat() == DAT_FORMAT_UNKNOWN) {
+        error = wxstr(std::format("Unknown dat signature: {:#x}", datSignature));
+        return false;
+    }
 
-	// Initialize flags from ClientVersion configuration
-	loader.setIsExtended(cv->isExtended());
-	loader.setHasFrameDurations(cv->hasFrameDurations());
-	loader.setHasFrameGroups(cv->hasFrameGroups());
-	loader.setHasTransparency(cv->isTransparent());
+    // Initialize flags from ClientVersion configuration
+    loader.setIsExtended(cv->isExtended());
+    loader.setHasFrameDurations(cv->hasFrameDurations());
+    loader.setHasFrameGroups(cv->hasFrameGroups());
+    loader.setHasTransparency(cv->isTransparent());
 
-	uint32_t id = minID;
-	const uint32_t maxID = item_count + creature_count;
-	while (id <= maxID) {
-		auto sTypeUnique = std::make_unique<GameSprite>();
-		GameSprite* sType = sTypeUnique.get();
-		db.getSpriteSpace()[id] = std::move(sTypeUnique);
+    uint32_t id = minID;
+    const uint32_t maxID = item_count + creature_count;
+    while (id <= maxID) {
+        db.getMetadataSpace()[id].id = id;
+        SpriteMetadata& metadata = db.getMetadataSpace()[id];
 
-		sType->id = id;
+        // Load flags
+        if (!LoadMetadataFlags(loader.getDatFormat(), file, metadata, id, warnings)) {
+            error = wxstr(std::format("Failed to read metadata flags for id {}", id));
+            return false;
+        }
 
-		// Load flags
-		if (!LoadMetadataFlags(loader.getDatFormat(), file, sType, id, warnings)) {
-			error = wxstr(std::format("Failed to read metadata flags for id {}", id));
-			return false;
-		}
+        // Reads the group count
+        uint8_t group_count = 1;
+        if (loader.hasFrameGroups() && id > item_count) {
+            if (!file.getU8(group_count)) {
+                error = wxstr(std::format("Failed to read group count for id {}", id));
+                return false;
+            }
+        }
 
-		// Reads the group count
-		uint8_t group_count = 1;
-		if (loader.hasFrameGroups() && id > item_count) {
-			if (!file.getU8(group_count)) {
-				error = wxstr(std::format("Failed to read group count for id {}", id));
-				return false;
-			}
-		}
+        for (uint32_t k = 0; k < static_cast<uint32_t>(group_count); ++k) {
+            if (!ReadSpriteGroup(loader, db, file, id, k, warnings)) {
+                error = wxstr(std::format("Failed to read sprite group {} for id {}", k, id));
+                return false;
+            }
+        }
+        ++id;
+    }
 
-		for (uint32_t k = 0; k < static_cast<uint32_t>(group_count); ++k) {
-			if (!ReadSpriteGroup(loader, db, file, sType, k, warnings)) {
-				error = wxstr(std::format("Failed to read sprite group {} for id {}", k, id));
-				return false;
-			}
-		}
-		++id;
-	}
-
-	return true;
+    return true;
 }
 
-bool DatLoader::ReadSpriteGroup(SpriteLoader& loader, SpriteDatabase& db, FileReadHandle& file, GameSprite* sType, uint32_t group_index, std::vector<std::string>& warnings) {
+bool DatLoader::ReadSpriteGroup(
+    SpriteLoader& loader, SpriteDatabase& db, FileReadHandle& file, uint32_t id, uint32_t group_index, std::vector<std::string>& warnings
+)
+{
 
-	// Skipping the group type
-	if (loader.hasFrameGroups() && sType->id > db.getItemSpriteMaxID()) {
-		if (!file.skip(1)) {
-			return false;
-		}
-	}
+    SpriteMetadata& metadata = db.getMetadataSpace()[id];
+    SpriteAtlasCache& atlas_cache = db.getAtlasCacheSpace()[id];
 
-	uint8_t width = 0, height = 0, layers = 0, pattern_x = 0, pattern_y = 0, pattern_z = 0, frames = 0;
+    // Skipping the group type
+    if (loader.hasFrameGroups() && id > db.getItemSpriteMaxID()) {
+        if (!file.skip(1)) {
+            return false;
+        }
+    }
 
-	// Size and GameSprite data
-	if (!file.getByte(width)) {
-		return false;
-	}
-	if (!file.getByte(height)) {
-		return false;
-	}
+    uint8_t width = 0, height = 0, layers = 0, pattern_x = 0, pattern_y = 0, pattern_z = 0, frames = 0;
 
-	// Skipping the exact size
-	if ((width > 1) || (height > 1)) {
-		if (!file.skip(1)) {
-			return false;
-		}
-	}
+    // Size and GameSprite data
+    if (!file.getByte(width)) {
+        return false;
+    }
+    if (!file.getByte(height)) {
+        return false;
+    }
 
-	if (!file.getU8(layers)) {
-		return false;
-	}
-	if (!file.getU8(pattern_x)) {
-		return false;
-	}
-	if (!file.getU8(pattern_y)) {
-		return false;
-	}
-	if (loader.getDatFormat() <= DAT_FORMAT_74) {
-		pattern_z = 1;
-	} else {
-		if (!file.getU8(pattern_z)) {
-			return false;
-		}
-	}
-	if (!file.getU8(frames)) {
-		return false; // Length of animation
-	}
+    // Skipping the exact size
+    if ((width > 1) || (height > 1)) {
+        if (!file.skip(1)) {
+            return false;
+        }
+    }
 
-	if (group_index == 0) {
-		sType->width = width;
-		sType->height = height;
-		sType->layers = layers;
-		sType->pattern_x = pattern_x;
-		sType->pattern_y = pattern_y;
-		sType->pattern_z = pattern_z;
-		sType->frames = frames;
-	}
+    if (!file.getU8(layers)) {
+        return false;
+    }
+    if (!file.getU8(pattern_x)) {
+        return false;
+    }
+    if (!file.getU8(pattern_y)) {
+        return false;
+    }
+    if (loader.getDatFormat() <= DAT_FORMAT_74) {
+        pattern_z = 1;
+    } else {
+        if (!file.getU8(pattern_z)) {
+            return false;
+        }
+    }
+    if (!file.getU8(frames)) {
+        return false; // Length of animation
+    }
 
-	if (frames > 1) {
-		uint8_t async = 0;
-		int loop_count = 0;
-		int8_t start_frame = 0;
-		if (loader.hasFrameDurations()) {
-			if (!file.getByte(async)) {
-				return false;
-			}
-			if (!file.get32(loop_count)) {
-				return false;
-			}
-			if (!file.getSByte(start_frame)) {
-				return false;
-			}
-		}
+    if (group_index == 0) {
+        metadata.width = width;
+        metadata.height = height;
+        metadata.layers = layers;
+        metadata.pattern_x = pattern_x;
+        metadata.pattern_y = pattern_y;
+        metadata.pattern_z = pattern_z;
+        metadata.frames = frames;
+    }
 
-		if (group_index == 0) {
-			sType->animator = std::make_unique<Animator>(frames, start_frame, loop_count, async == 1);
-		}
+    if (frames > 1) {
+        uint8_t async = 0;
+        int loop_count = 0;
+        int8_t start_frame = 0;
+        if (loader.hasFrameDurations()) {
+            if (!file.getByte(async)) {
+                return false;
+            }
+            if (!file.get32(loop_count)) {
+                return false;
+            }
+            if (!file.getSByte(start_frame)) {
+                return false;
+            }
+        }
 
-		if (loader.hasFrameDurations()) {
-			for (int i = 0; i < static_cast<int>(frames); ++i) {
-				uint32_t min;
-				uint32_t max;
-				if (!file.getU32(min)) {
-					return false;
-				}
-				if (!file.getU32(max)) {
-					return false;
-				}
-				if (group_index == 0) {
-					FrameDuration* frame_duration = sType->animator->getFrameDuration(i);
-					frame_duration->setValues(static_cast<int>(min), static_cast<int>(max));
-				}
-			}
-			if (group_index == 0) {
-				sType->animator->reset();
-			}
-		}
-	}
+        if (group_index == 0) {
+            metadata.animator = std::make_unique<Animator>(frames, start_frame, loop_count, async == 1);
+        }
 
-	uint32_t numsprites = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * static_cast<uint32_t>(layers) * static_cast<uint32_t>(pattern_x) * static_cast<uint32_t>(pattern_y) * static_cast<uint32_t>(pattern_z) * static_cast<uint32_t>(frames);
-	if (group_index == 0) {
-		sType->numsprites = numsprites;
-		sType->spriteList.reserve(numsprites);
-	}
+        if (loader.hasFrameDurations()) {
+            for (int i = 0; i < static_cast<int>(frames); ++i) {
+                uint32_t min;
+                uint32_t max;
+                if (!file.getU32(min)) {
+                    return false;
+                }
+                if (!file.getU32(max)) {
+                    return false;
+                }
+                if (group_index == 0) {
+                    FrameDuration* frame_duration = metadata.animator->getFrameDuration(i);
+                    frame_duration->setValues(static_cast<int>(min), static_cast<int>(max));
+                }
+            }
+            if (group_index == 0) {
+                metadata.animator->reset();
+            }
+        }
+    }
 
-	// Read the sprite ids
-	for (uint32_t i = 0; i < numsprites; ++i) {
-		uint32_t sprite_id;
-		if (loader.isExtended()) {
-			if (!file.getU32(sprite_id)) {
-				return false;
-			}
-		} else {
-			uint16_t u16 = 0;
-			if (!file.getU16(u16)) {
-				return false;
-			}
-			sprite_id = u16;
-		}
+    uint32_t numsprites = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * static_cast<uint32_t>(layers)
+        * static_cast<uint32_t>(pattern_x) * static_cast<uint32_t>(pattern_y) * static_cast<uint32_t>(pattern_z)
+        * static_cast<uint32_t>(frames);
+    if (group_index == 0) {
+        metadata.numsprites = numsprites;
+        atlas_cache.spriteList.reserve(numsprites);
+    }
 
-		if (group_index == 0) {
-			// Validate sprite_id
-			if (sprite_id == UINT32_MAX || sprite_id >= MAX_SPRITES || sprite_id >= db.getImageSpace().size()) {
-				return false;
-			}
+    // Read the sprite ids
+    for (uint32_t i = 0; i < numsprites; ++i) {
+        uint32_t sprite_id;
+        if (loader.isExtended()) {
+            if (!file.getU32(sprite_id)) {
+                return false;
+            }
+        } else {
+            uint16_t u16 = 0;
+            if (!file.getU16(u16)) {
+                return false;
+            }
+            sprite_id = u16;
+        }
 
-			auto& imgPtr = db.getImageSpace()[sprite_id];
-			if (!imgPtr) {
-				auto img = std::make_unique<NormalImage>();
-				img->id = sprite_id;
-				imgPtr = std::move(img);
-			}
-			sType->spriteList.push_back(static_cast<NormalImage*>(imgPtr.get()));
-		}
-	}
+        if (group_index == 0) {
+            // Validate sprite_id
+            if (sprite_id == UINT32_MAX || sprite_id >= MAX_SPRITES || sprite_id >= db.getImageSpace().size()) {
+                return false;
+            }
 
-	if (group_index == 0) {
-		sType->updateSimpleStatus();
-	}
+            auto& imgPtr = db.getImageSpace()[sprite_id];
+            if (!imgPtr) {
+                auto img = std::make_unique<NormalImage>();
+                img->id = sprite_id;
+                imgPtr = std::move(img);
+            }
+            atlas_cache.spriteList.push_back(static_cast<NormalImage*>(imgPtr.get()));
+        }
+    }
 
-	return true;
+    if (group_index == 0) {
+        metadata.updateSimpleStatus();
+    }
+
+    return true;
 }

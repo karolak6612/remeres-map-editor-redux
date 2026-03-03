@@ -1,4 +1,4 @@
-#ifndef RME_RENDERING_CORE_MULTI_DRAW_INDIRECT_RENDERER_H_
+﻿#ifndef RME_RENDERING_CORE_MULTI_DRAW_INDIRECT_RENDERER_H_
 #define RME_RENDERING_CORE_MULTI_DRAW_INDIRECT_RENDERER_H_
 
 #include "app/main.h"
@@ -11,7 +11,7 @@
  * GPU command buffer for glMultiDrawElementsIndirect (GL 4.3+).
  *
  * Reduces 2-5 draw calls (one per atlas) to ONE draw call total.
- * GPU executes command buffer directly, eliminating CPUâ†’GPU sync per draw.
+ * GPU executes command buffer directly, eliminating CPUĂ˘â€ â€™GPU sync per draw.
  */
 class MultiDrawIndirectRenderer {
 public:

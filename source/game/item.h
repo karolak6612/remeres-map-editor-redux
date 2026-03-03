@@ -1,4 +1,4 @@
-//////////////////////////////////////////////////////////////////////
+﻿//////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 // Remere's Map Editor is free software: you can redistribute it and/or modify
@@ -171,7 +171,7 @@ public:
 	[[nodiscard]] uint16_t getID() const {
 		return id;
 	}
-	// Type access via stable index â€” no cached pointer, safe across vector resizes
+	// Type access via stable index Ă˘â‚¬â€ť no cached pointer, safe across vector resizes
 	[[nodiscard]] const ItemType& getType() const {
 		return g_items[id];
 	}

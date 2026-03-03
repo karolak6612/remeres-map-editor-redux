@@ -1,4 +1,4 @@
-#include <wx/listctrl.h>
+﻿#include <wx/listctrl.h>
 #include <wx/imaglist.h>
 #include <wx/statline.h>
 #include <wx/filename.h>
@@ -404,7 +404,7 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 2: Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
 	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList â€” ownership retained by m_imageList (do not replace with AssignImageList)
+	// SetImageList Ă˘â‚¬â€ť ownership retained by m_imageList (do not replace with AssignImageList)
 	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
 	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
 	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
@@ -456,7 +456,7 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	// Column 5: Available Clients
 	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
 	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList â€” ownership retained by m_imageList (do not replace with AssignImageList)
+	// SetImageList Ă˘â‚¬â€ť ownership retained by m_imageList (do not replace with AssignImageList)
 	m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
 	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
 	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, FromDIP(150));

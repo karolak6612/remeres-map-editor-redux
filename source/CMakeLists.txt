@@ -149,6 +149,11 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_metadata.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_atlas_cache.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/sprite_icon_renderer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/sprite_size.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.h
@@ -486,7 +491,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_atlas_cache.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/sprite_icon_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.cpp

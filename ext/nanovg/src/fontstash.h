@@ -1,4 +1,4 @@
-//
+﻿//
 // Copyright (c) 2009-2013 Mikko Mononen memon@inside.org
 //
 // This software is provided 'as-is', without any express or implied
@@ -528,7 +528,7 @@ static unsigned int fons__decutf8(unsigned int* state, unsigned int* codep, unsi
 	return *state;
 }
 
-// Atlas based on Skyline Bin Packer by Jukka JylĂ¤nki
+// Atlas based on Skyline Bin Packer by Jukka JylÄ‚Â¤nki
 
 static void fons__deleteAtlas(FONSatlas* atlas)
 {

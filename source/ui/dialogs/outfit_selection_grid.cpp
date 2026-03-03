@@ -110,12 +110,11 @@ int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, co
         return existing;
     }
 
-    GameSprite* spr = g_gui.sprites.getCreatureSprite(lookType);
-    if (!spr) {
+    if (lookType == 0 || lookType >= g_gui.sprites.getMetadataSpace().size()) {
         return 0;
     }
 
-    wxBitmap bmp = SpriteIconGenerator::Generate(spr, SPRITE_SIZE_64x64, outfit);
+    wxBitmap bmp = SpriteIconGenerator::Generate(lookType, SPRITE_SIZE_64x64, outfit);
     wxImage img = bmp.ConvertToImage();
 
     if (!img.IsOk()) {
