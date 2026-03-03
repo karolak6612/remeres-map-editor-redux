@@ -57,7 +57,7 @@ void Selection::recalculateBounds() const {
 		minPos = Position(0, 0, 0);
 		maxPos = Position(0, 0, 0);
 	} else {
-		std::ranges::for_each(tiles, [&](Tile* tile) {
+		for (Tile* tile : tiles) {
 			const Position& pos = tile->getPosition();
 			minPos.x = std::min(minPos.x, pos.x);
 			minPos.y = std::min(minPos.y, pos.y);
@@ -66,7 +66,7 @@ void Selection::recalculateBounds() const {
 			maxPos.x = std::max(maxPos.x, pos.x);
 			maxPos.y = std::max(maxPos.y, pos.y);
 			maxPos.z = std::max(maxPos.z, pos.z);
-		});
+		}
 	}
 
 	cached_min = minPos;
