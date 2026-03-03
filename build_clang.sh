@@ -5,6 +5,7 @@
 # ========================================
 
 set -e
+set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Using local build_clang directory (gitignored)
@@ -93,10 +94,15 @@ run_quiet cmake -S "$SCRIPT_DIR" -B "$BUILD_DIR/build/Debug" \
     -DCMAKE_C_COMPILER_LAUNCHER=ccache \
     -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS="$SCAN_DEPS"
 
-# Step 5: Building with Ninja (Limited Parallelism)
-echo "[5/5] Building with Ninja (j2 to avoid OOM)..."
-# Jules has 8GB RAM, so -j2 is safe for RME (which can be memory heavy)
-run_quiet ninja -C "$BUILD_DIR/build/Debug" -j2
+# Step 5: Building with Ninja (Output to screen AND log)
+echo "[5/5] Building with Ninja (j2 to avoid OOM)..." | tee -a "$LOG_FILE"
+
+if ! ninja -C "$BUILD_DIR/build/Debug" -j2 2>&1 | tee -a "$LOG_FILE"; then
+    echo "========================================" | tee -a "$LOG_FILE"
+    echo " BUILD FAILED. COPY THE ERRORS ABOVE TO THE AI." | tee -a "$LOG_FILE"
+    echo "========================================" | tee -a "$LOG_FILE"
+    exit 1
+fi
 
 {
     echo "========================================"

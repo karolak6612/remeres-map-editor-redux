@@ -6,6 +6,7 @@ build.*/
 build-debug/
 build-release/
 build_conan/
+linux_build/
 build.log
 build_script.log
 build_output*.txt
