@@ -98,7 +98,7 @@ run_quiet cmake -S "$SCRIPT_DIR" -B "$BUILD_DIR/build/Debug" \
 # Step 5: Building with Ninja (Output to screen AND log)
 echo "[5/5] Building with Ninja (j2 to avoid OOM)..." | tee -a "$LOG_FILE"
 
-if ! ninja -C "$BUILD_DIR/build/Debug" -j2 2>&1 | tee -a "$LOG_FILE"; then
+if ! ninja -C "$BUILD_DIR/build/Debug" -j2 2>&1 | grep -v "Scanning .* for CXX dependencies" | tee -a "$LOG_FILE"; then
     echo "========================================" | tee -a "$LOG_FILE"
     echo " BUILD FAILED. COPY THE ERRORS ABOVE TO THE AI." | tee -a "$LOG_FILE"
     echo "========================================" | tee -a "$LOG_FILE"
