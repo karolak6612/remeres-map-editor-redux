@@ -291,6 +291,7 @@ bool DatLoader::LoadMetadata(
     // Pre-size containers to avoid rehashing and frequent allocations
     db.getMetadataSpace().resize(max_id_needed);
     db.getAtlasCacheSpace().resize(max_id_needed);
+    db.getIconRendererSpace().resize(max_id_needed);
     // Resize image_space to MAX_SPRITES to ensure OOB access doesn't happen during sprite id reading.
     // SprLoader will later resize it to the exact count, but we need it safe now.
     if (db.getImageSpace().size() < MAX_SPRITES) {

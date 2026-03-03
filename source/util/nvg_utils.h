@@ -11,8 +11,6 @@ struct NVGDeleter {
     void operator()(NVGcontext* nvg) const;
 };
 
-class GameSprite;
-
 namespace NvgUtils {
 
     // Generates RGBA pixel data for a given item ID.

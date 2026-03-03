@@ -27,7 +27,6 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, bool 
 
     int image_size = std::max<uint8_t>(metadata.width, metadata.height) * SPRITE_PIXELS;
     wxImage image(image_size, image_size);
-    image.Create(image_size, image_size);
     image.InitAlpha();
 
     unsigned char r = (bgshade >> 16) & 0xFF;
@@ -50,8 +49,8 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, bool 
     for (uint8_t l = 0; l < metadata.layers; l++) {
         for (uint8_t w = 0; w < metadata.width; w++) {
             for (uint8_t h = 0; h < metadata.height; h++) {
-                const int i = metadata.getIndex(w, h, l, 0, 0, 0, 0);
-                if (i < 0 || static_cast<size_t>(i) >= atlas_cache.spriteList.size() || !atlas_cache.spriteList[i]) {
+                const size_t i = metadata.getIndex(w, h, l, 0, 0, 0, 0);
+                if (i >= atlas_cache.spriteList.size() || !atlas_cache.spriteList[i]) {
                     continue;
                 }
                 std::unique_ptr<uint8_t[]> data = atlas_cache.spriteList[i]->getRGBData();
@@ -94,7 +93,6 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
 
     int image_size = std::max<uint8_t>(metadata.width, metadata.height) * SPRITE_PIXELS;
     wxImage image(image_size, image_size);
-    image.Create(image_size, image_size);
     image.InitAlpha();
 
     unsigned char r = (bgshade >> 16) & 0xFF;
@@ -121,9 +119,10 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
 
     // Mounts
     int pattern_z = 0;
-    if (outfit.lookMount != 0 && outfit.lookMount < g_gui.sprites.getMetadataSpace().size()) {
-        const SpriteMetadata& mountMeta = g_gui.sprites.getMetadata(outfit.lookMount);
-        SpriteAtlasCache& mountAtlas = g_gui.sprites.getAtlasCache(outfit.lookMount);
+    uint32_t mountClientID = static_cast<uint32_t>(outfit.lookMount) + g_gui.sprites.getItemSpriteMaxID();
+    if (outfit.lookMount != 0 && mountClientID < g_gui.sprites.getMetadataSpace().size()) {
+        const SpriteMetadata& mountMeta = g_gui.sprites.getMetadata(mountClientID);
+        SpriteAtlasCache& mountAtlas = g_gui.sprites.getAtlasCache(mountClientID);
 
         // Mount outfit
         Outfit mountOutfit;
@@ -145,7 +144,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                 for (uint8_t h = 0; h < mountMeta.height; h++) {
                     std::unique_ptr<uint8_t[]> data = nullptr;
 
-                    int mountIdx = mountMeta.getIndex(w, h, 0, mount_frame_index, 0, 0, 0);
+                    size_t mountIdx = mountMeta.getIndex(w, h, 0, mount_frame_index, 0, 0, 0);
 
                     // Handle mount sprite layers/templates similar to main sprite
                     // (Usually mounts are standard creatures)
@@ -154,17 +153,16 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             continue;
                         }
 
-                        if (mountIdx >= 0 && static_cast<size_t>(mountIdx) < mountAtlas.spriteList.size()
-                            && mountAtlas.spriteList[mountIdx]) {
-                            auto tmplImg = mountAtlas.getTemplateImage(mountOutfit.lookMount, mountMeta, mountIdx, mountOutfit);
+                        if (mountIdx < mountAtlas.spriteList.size() && mountAtlas.spriteList[mountIdx]) {
+                            auto tmplImg = mountAtlas.getTemplateImage(mountClientID, mountMeta, mountIdx, mountOutfit);
                             if (tmplImg) {
                                 data = tmplImg->getRGBData();
                             }
                         }
                     } else {
                         // Standard mount
-                        int idx = mountMeta.getIndex(w, h, l, mount_frame_index, 0, 0, 0);
-                        if (idx >= 0 && static_cast<size_t>(idx) < mountAtlas.spriteList.size() && mountAtlas.spriteList[idx]) {
+                        size_t idx = mountMeta.getIndex(w, h, l, mount_frame_index, 0, 0, 0);
+                        if (idx < mountAtlas.spriteList.size() && mountAtlas.spriteList[idx]) {
                             data = mountAtlas.spriteList[idx]->getRGBData();
                         }
                     }
@@ -195,15 +193,15 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                 for (uint8_t h = 0; h < metadata.height; h++) {
                     std::unique_ptr<uint8_t[]> data = nullptr;
 
-                    int idx0 = metadata.getIndex(w, h, 0, frame_index, pattern_y, pattern_z, 0);
-                    int idx2 = metadata.getIndex(w, h, 2, frame_index, pattern_y, pattern_z, 0);
-                    int idxl = metadata.getIndex(w, h, l, frame_index, pattern_y, pattern_z, 0);
+                    size_t idx0 = metadata.getIndex(w, h, 0, frame_index, pattern_y, pattern_z, 0);
+                    size_t idx2 = metadata.getIndex(w, h, 2, frame_index, pattern_y, pattern_z, 0);
+                    size_t idxl = metadata.getIndex(w, h, l, frame_index, pattern_y, pattern_z, 0);
 
                     if (metadata.layers == 2) {
                         if (l == 1) {
                             continue;
                         }
-                        if (idx0 >= 0 && static_cast<size_t>(idx0) < atlas_cache.spriteList.size() && atlas_cache.spriteList[idx0]) {
+                        if (idx0 < atlas_cache.spriteList.size() && atlas_cache.spriteList[idx0]) {
                             auto tmplImg = atlas_cache.getTemplateImage(clientID, metadata, idx0, outfit);
                             if (tmplImg) {
                                 data = tmplImg->getRGBData();
@@ -214,7 +212,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             continue;
                         }
                         if (l == 0) {
-                            if (idx0 >= 0 && static_cast<size_t>(idx0) < atlas_cache.spriteList.size() && atlas_cache.spriteList[idx0]) {
+                            if (idx0 < atlas_cache.spriteList.size() && atlas_cache.spriteList[idx0]) {
                                 auto tmplImg = atlas_cache.getTemplateImage(clientID, metadata, idx0, outfit);
                                 if (tmplImg) {
                                     data = tmplImg->getRGBData();
@@ -222,7 +220,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             }
                         }
                         if (l == 2) {
-                            if (idx2 >= 0 && static_cast<size_t>(idx2) < atlas_cache.spriteList.size() && atlas_cache.spriteList[idx2]) {
+                            if (idx2 < atlas_cache.spriteList.size() && atlas_cache.spriteList[idx2]) {
                                 auto tmplImg = atlas_cache.getTemplateImage(clientID, metadata, idx2, outfit);
                                 if (tmplImg) {
                                     data = tmplImg->getRGBData();
@@ -230,7 +228,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             }
                         }
                     } else {
-                        if (idxl >= 0 && static_cast<size_t>(idxl) < atlas_cache.spriteList.size() && atlas_cache.spriteList[idxl]) {
+                        if (idxl < atlas_cache.spriteList.size() && atlas_cache.spriteList[idxl]) {
                             data = atlas_cache.spriteList[idxl]->getRGBData();
                         }
                     }

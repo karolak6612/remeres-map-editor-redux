@@ -147,6 +147,7 @@ void TextureGC::onSettingsChanged(SpriteDatabase& db)
 
 void TextureGC::cleanSoftwareSprites(SpriteDatabase& db)
 {
-    // Software sprites are now cleaned through SpriteIconRenderer::clean
-    // GameSprite cache will be handled incrementally elsewhere
+    for (auto& icon : db.getIconRendererSpace()) {
+        icon.unloadDC();
+    }
 }

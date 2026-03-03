@@ -41,7 +41,7 @@ uint32_t SpriteAtlasCache::getDebugImageId(size_t index) const
 uint32_t SpriteAtlasCache::getSpriteId(const SpriteMetadata& metadata, int frameIndex, int pattern_x, int pattern_y) const
 {
     auto idx = metadata.getIndex(metadata.width, metadata.height, 0, pattern_x, pattern_y, 0, frameIndex);
-    if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
+    if (idx < spriteList.size() && spriteList[idx]->isNormalImage()) {
         return static_cast<const NormalImage*>(spriteList[idx])->id;
     }
     return 0;
@@ -139,7 +139,7 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
         return nullptr;
     }
 
-    uint32_t v = metadata.getIndex(metadata.width, metadata.height, 0, _dir, _addon, _pattern_z, _frame);
+    uint32_t v = metadata.getIndex(_x, _y, 0, _dir, _addon, _pattern_z, _frame);
     if (v >= metadata.numsprites) {
         if (metadata.numsprites == 1) {
             v = 0;

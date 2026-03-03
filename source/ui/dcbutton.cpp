@@ -148,7 +148,7 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height)
                 tex = GetOrCreateSpriteTexture(vg, spr);
             }
         } else {
-            tex = GetOrCreateItemImage(sprite_id);
+            tex = GetOrCreateClientSpriteImage(sprite_id);
         }
 
         if (tex > 0) {
@@ -175,7 +175,7 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height)
                         overlayTex = GetOrCreateSpriteTexture(vg, spr);
                     }
                 } else {
-                    overlayTex = GetOrCreateItemImage(overlay_id);
+                    overlayTex = GetOrCreateClientSpriteImage(overlay_id);
                 }
 
                 if (overlayTex > 0) {

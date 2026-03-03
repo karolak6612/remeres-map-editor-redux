@@ -72,6 +72,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
     }
 
     int maxLookType = g_gui.sprites.getCreatureSpriteMaxID();
+    uint32_t item_sprite_max = g_gui.sprites.getItemSpriteMaxID();
     for (int i = 1; i <= maxLookType; ++i) {
         OutfitItem item;
         item.lookType = i;
@@ -82,8 +83,9 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
             item.name = wxstr(std::format("Outfit {}", i));
         }
 
-        if (i < g_gui.sprites.getMetadataSpace().size()) {
-            item.layers = g_gui.sprites.getMetadata(i).layers;
+        uint32_t clientID = static_cast<uint32_t>(i) + item_sprite_max;
+        if (clientID < g_gui.sprites.getMetadataSpace().size()) {
+            item.layers = g_gui.sprites.getMetadata(clientID).layers;
         } else {
             item.layers = 1;
         }

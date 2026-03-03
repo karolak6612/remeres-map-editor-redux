@@ -110,11 +110,12 @@ int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, co
         return existing;
     }
 
-    if (lookType == 0 || lookType >= g_gui.sprites.getMetadataSpace().size()) {
+    uint32_t clientID = static_cast<uint32_t>(lookType) + g_gui.sprites.getItemSpriteMaxID();
+    if (lookType == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
         return 0;
     }
 
-    wxBitmap bmp = SpriteIconGenerator::Generate(lookType, SPRITE_SIZE_64x64, outfit);
+    wxBitmap bmp = SpriteIconGenerator::Generate(clientID, SPRITE_SIZE_64x64, outfit);
     wxImage img = bmp.ConvertToImage();
 
     if (!img.IsOk()) {

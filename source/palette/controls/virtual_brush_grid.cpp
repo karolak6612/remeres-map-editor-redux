@@ -1,5 +1,7 @@
 #include "palette/controls/virtual_brush_grid.h"
 #include "app/main.h"
+#include "brushes/creature/creature_brush.h"
+#include "game/creature.h"
 #include "rendering/core/atlas_lifecycle.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/texture_gc.h"
@@ -175,10 +177,17 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect)
     Brush* brush = (i < static_cast<int>(tileset->size())) ? tileset->brushlist[i] : nullptr;
     if (brush) {
         int tex = 0;
-        if (Sprite* spr = brush->getSprite()) {
+        // Fast path: creature brushes with outfit lookType bypass wxDC entirely
+        if (auto* creature_brush = dynamic_cast<CreatureBrush*>(brush)) {
+            if (auto* ct = creature_brush->getType(); ct && ct->outfit.lookType != 0 && ct->outfit.lookItem == 0) {
+                tex = GetOrCreateCreatureTexture(vg, ct->outfit.lookType, ct->outfit);
+            } else if (brush->getLookID() != 0) {
+                tex = GetOrCreateClientSpriteImage(brush->getLookID());
+            }
+        } else if (Sprite* spr = brush->getSprite()) {
             tex = GetOrCreateSpriteTexture(vg, spr);
         } else if (brush->getLookID() != 0) {
-            tex = GetOrCreateItemImage(brush->getLookID());
+            tex = GetOrCreateClientSpriteImage(brush->getLookID());
         }
 
         if (tex > 0) {

@@ -1,7 +1,10 @@
 #include "util/nanovg_canvas.h"
 #include "app/main.h"
+#include "game/outfit.h"
 #include "rendering/core/normal_image.h"
+#include "rendering/core/sprite_database.h"
 #include "rendering/core/text_renderer.h"
+#include "ui/gui.h"
 #include "ui/theme.h"
 #include "util/image_manager.h"
 
@@ -214,6 +217,36 @@ int NanoVGCanvas::GetOrCreateItemImage(uint16_t itemId)
     return tex;
 }
 
+int NanoVGCanvas::GetOrCreateClientSpriteImage(uint32_t clientID)
+{
+    // Cache using a distinct key range that won't collide with serverID cache entries
+    constexpr uint64_t kClientIDOffset = 0x1'0000'0000ULL;
+    uint64_t cache_key = kClientIDOffset + clientID;
+
+    int tex = GetCachedImage(cache_key);
+    if (tex > 0) {
+        return tex;
+    }
+
+    NVGcontext* vg = GetNVGContext();
+    if (!vg) {
+        return 0;
+    }
+
+    int w = 0;
+    int h = 0;
+    auto composite = NvgUtils::CreateCompositeRGBA(clientID, w, h);
+    if (!composite || w <= 0 || h <= 0) {
+        return 0;
+    }
+
+    tex = nvgCreateImageRGBA(vg, w, h, 0, composite.get());
+    if (tex > 0) {
+        AddCachedImage(cache_key, tex);
+    }
+    return tex;
+}
+
 int NanoVGCanvas::GetOrCreateStaticImage(const std::string& assetPath)
 {
     NVGcontext* vg = GetNVGContext();
@@ -241,6 +274,35 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite)
 
     // Generic Fallback (Slow Path via wxDC)
     return CreateGenericSpriteTexture(vg, sprite, spriteId);
+}
+
+int NanoVGCanvas::GetOrCreateCreatureTexture(NVGcontext* vg, uint32_t lookType, const Outfit& outfit)
+{
+    if (lookType == 0) {
+        return 0;
+    }
+
+    uint32_t clientID = lookType + g_gui.sprites.getItemSpriteMaxID();
+    if (clientID >= g_gui.sprites.getMetadataSpace().size()) {
+        return 0;
+    }
+
+    // Stable cache key: high 32 bits = clientID, low 32 bits = outfit color hash
+    uint64_t key = (static_cast<uint64_t>(clientID) << 32) | outfit.getColorHash();
+
+    int existing = GetCachedImage(key);
+    if (existing > 0) {
+        return existing;
+    }
+
+    int w = 0;
+    int h = 0;
+    auto composite = NvgUtils::CreateCompositeRGBA(clientID, w, h);
+    if (!composite || w <= 0 || h <= 0) {
+        return 0;
+    }
+
+    return GetOrCreateImage(key, composite.get(), w, h);
 }
 
 int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uint64_t spriteId)

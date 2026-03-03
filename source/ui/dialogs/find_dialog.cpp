@@ -387,7 +387,7 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
         nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
     } else {
         ASSERT(n < brushlist.size());
-        int tex = GetOrCreateItemImage(brushlist[n]->getLookID());
+        int tex = GetOrCreateClientSpriteImage(brushlist[n]->getLookID());
         if (tex > 0) {
             int icon_size = rect.height;
             NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);

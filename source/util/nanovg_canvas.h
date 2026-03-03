@@ -11,6 +11,7 @@
 #include <unordered_map>
 
 class Sprite;
+struct Outfit;
 
 /**
  * @class NanoVGCanvas
@@ -100,6 +101,7 @@ public:
     }
 
     int GetOrCreateItemImage(uint16_t itemId);
+    int GetOrCreateClientSpriteImage(uint32_t clientID);
 
     /**
      * @brief Gets or creates a cached NanoVG image for a static asset.
@@ -111,6 +113,12 @@ public:
      * generic).
      */
     int GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite);
+
+    /**
+     * @brief Fast path for creature sprites — composites RGBA directly, no wxDC.
+     * Uses a stable cache key based on clientID + outfit color hash.
+     */
+    int GetOrCreateCreatureTexture(NVGcontext* vg, uint32_t lookType, const Outfit& outfit);
 
 protected:
     /**

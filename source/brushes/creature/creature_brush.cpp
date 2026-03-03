@@ -42,6 +42,12 @@ CreatureBrush::~CreatureBrush()
 
 int CreatureBrush::getLookID() const
 {
+    if (creature_type) {
+        const Outfit& outfit = creature_type->outfit;
+        if (outfit.lookItem != 0) {
+            return outfit.lookItem;
+        }
+    }
     return 0;
 }
 
