@@ -234,6 +234,7 @@ private:
 WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionText, const wxSize& size, const wxBitmap& rmeLogo, const std::vector<wxString>& recentFiles) :
 	wxDialog(nullptr, wxID_ANY, titleText, wxDefaultPosition, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
 
+	SetIcon(IMAGE_MANAGER.GetIcon(ICON_MAP));
 	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 	SetForegroundColour(Theme::Get(Theme::Role::Text));
 

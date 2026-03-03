@@ -39,6 +39,7 @@
 ReplaceToolWindow::ReplaceToolWindow(wxWindow* parent, Editor* editor) : wxDialog(parent, wxID_ANY, "Advanced Replace Tool", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
 																		 editor(editor) {
 
+	SetIcon(IMAGE_MANAGER.GetIcon(ICON_WAND_MAGIC));
 	VisualSimilarityService::Get().StartIndexing();
 	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 
