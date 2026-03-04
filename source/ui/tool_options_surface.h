@@ -72,6 +72,13 @@ private:
 	};
 	std::vector<ToolRect> tool_rects;
 
+	// Layout Headers
+	struct HeaderRect {
+		wxRect rect;
+		wxString label;
+	};
+	std::vector<HeaderRect> header_rects;
+
 	// UI Elements State
 	struct {
 		wxRect size_slider_rect;

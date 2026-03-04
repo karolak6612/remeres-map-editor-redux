@@ -382,27 +382,30 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	contentPanel->SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 	wxBoxSizer* contentSizer = new wxBoxSizer(wxHORIZONTAL);
 
-	// Column 1: Actions (Buttons directly on panel)
-	wxBoxSizer* col1 = new wxBoxSizer(wxVERTICAL);
+	// Main split: Left Side (Actions + Map list) and Right Side (Info panels)
+	wxBoxSizer* leftSplit = new wxBoxSizer(wxVERTICAL);
+	wxBoxSizer* rightSplit = new wxBoxSizer(wxVERTICAL);
 
-	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, wxSize(130, 50));
-	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(24, 24)));
+	// Quick Actions (Horizontal at top of left split)
+	wxBoxSizer* quickActions = new wxBoxSizer(wxHORIZONTAL);
+
+	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New Map", wxDefaultPosition, wxSize(120, 40));
+	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(20, 20)));
+	newMapBtn->SetToolTip("Start a new map project");
 	newMapBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	// Align "New Map" with Icon (8px from left edge of content panel)
-	col1->Add(newMapBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
+	quickActions->Add(newMapBtn, 0, wxRIGHT, 8);
 
-	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(130, 50));
-	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(24, 24)));
+	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(120, 40));
+	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(20, 20)));
+	browseBtn->SetToolTip("Browse for an existing map file");
 	browseBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	col1->Add(browseBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
+	quickActions->Add(browseBtn, 0, wxRIGHT, 8);
 
-	// Add Column 1 to Sizer FIRST (Explicit LEFTmost placement)
-	contentSizer->Add(col1, 0, wxTOP | wxBOTTOM | wxRIGHT | wxLEFT, 8); // Add 8px left margin to whole column
+	leftSplit->Add(quickActions, 0, wxEXPAND | wxALL, 8);
 
-	// Column 2: Recent Maps
+	// Recent Maps
 	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
-	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList â€” ownership retained by m_imageList (do not replace with AssignImageList)
+	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE | wxLC_SINGLE_SEL);
 	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
 	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
 	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
@@ -413,13 +416,12 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	for (size_t i = 0; i < recentFiles.size(); ++i) {
 		long idx = m_recentList->InsertItem(i, "", 4);
-		m_recentList->SetItem(idx, 1, recentFiles[i]);
+		wxFileName fn(recentFiles[i]);
+		m_recentList->SetItem(idx, 1, fn.GetFullName());
 
 		// Get modification time
-		wxFileName fn(recentFiles[i]);
 		wxDateTime dt;
 		if (fn.GetTimes(nullptr, &dt, nullptr)) {
-			// Check if valid? GetTimes returns bool success
 			m_recentList->SetItem(idx, 2, dt.Format("%Y-%m-%d %H:%M"));
 		} else {
 			m_recentList->SetItem(idx, 2, "-");
@@ -429,46 +431,35 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 	m_recentList->Bind(wxEVT_LIST_ITEM_SELECTED, &WelcomeDialog::OnRecentFileSelected, this);
 
 	col2->GetSizer()->Add(m_recentList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col2, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 2
+	leftSplit->Add(col2, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 8);
 
-	// Column 3: Selected Map Info
+	// Selected Map Info
 	DarkCardPanel* col3 = new DarkCardPanel(contentPanel, "Selected Map Info");
-	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", ICON_LIST);
+	AddInfoField(col3->GetSizer(), col3, "Map Name", "-", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Client Version", "-", ICON_CHECK);
+	AddInfoField(col3->GetSizer(), col3, "Dimensions", "-", ICON_LIST);
 	col3->GetSizer()->Add(new wxStaticLine(col3), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", ICON_FILE_LINES);
-	contentSizer->Add(col3, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 3 (Center)
+	AddInfoField(col3->GetSizer(), col3, "House File", "-", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Spawn File", "-", ICON_FILE);
+	AddInfoField(col3->GetSizer(), col3, "Description", "-", ICON_FILE_LINES);
+	rightSplit->Add(col3, 1, wxEXPAND | wxTOP | wxRIGHT | wxBOTTOM, 8);
 
-	// Column 4: Client Info
+	// Client Info
 	DarkCardPanel* col4 = new DarkCardPanel(contentPanel, "Client Information");
-	AddInfoField(col4->GetSizer(), col4, "Client Name", "Placeholder", ICON_HARD_DRIVE);
-	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", ICON_FOLDER);
+	AddInfoField(col4->GetSizer(), col4, "Client Name", "-", ICON_HARD_DRIVE);
+	AddInfoField(col4->GetSizer(), col4, "Client Version", "-", ICON_CHECK);
+	AddInfoField(col4->GetSizer(), col4, "Data Directory", "-", ICON_FOLDER);
 	col4->GetSizer()->Add(new wxStaticLine(col4), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, wxColour(0, 200, 0));
-	contentSizer->Add(col4, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 4
+	AddInfoField(col4->GetSizer(), col4, "Status", "-", ICON_CHECK, wxColour(0, 200, 0));
+	rightSplit->Add(col4, 1, wxEXPAND | wxRIGHT | wxBOTTOM, 8);
 
-	// Column 5: Available Clients
-	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
-	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList â€” ownership retained by m_imageList (do not replace with AssignImageList)
-	m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
-	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, FromDIP(150));
+	// Create dummy Client List to avoid null pointer issues on destruction or usage
+	m_clientList = new wxListCtrl(this, wxID_ANY);
+	m_clientList->Hide();
 
-	m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));
-
-	long ph1 = m_clientList->InsertItem(0, "", 3);
-	m_clientList->SetItem(ph1, 1, "Placeholder Client 1");
-	long ph2 = m_clientList->InsertItem(1, "", 3);
-	m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
-
-	col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
+	// Add the two splits to the main sizer
+	contentSizer->Add(leftSplit, 2, wxEXPAND, 0);
+	contentSizer->Add(rightSplit, 1, wxEXPAND, 0);
 
 	contentPanel->SetSizer(contentSizer);
 	return contentPanel;

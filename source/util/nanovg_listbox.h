@@ -42,6 +42,9 @@ public:
 	void ScrollToLine(int line);
 	void EnsureVisible(int line);
 
+	// Grid Mode
+	void SetGridMode(bool grid_mode, int item_width = 32, int item_height = 32);
+
 protected:
 	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
 	wxSize DoGetBestClientSize() const override;
@@ -64,6 +67,10 @@ protected:
 
 	int m_hoverIndex;
 	int m_focusIndex;
+
+	bool m_gridMode = false;
+	int m_gridItemWidth = 32;
+	int m_gridItemHeight = 32;
 };
 
 #endif

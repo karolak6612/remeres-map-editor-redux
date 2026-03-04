@@ -311,6 +311,7 @@ FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
 	NanoVGListBox(parent, id, wxLB_SINGLE),
 	cleared(false),
 	no_matches(false) {
+	SetGridMode(true, FromDIP(80), FromDIP(80)); // Enable grid mode with 80x80 items
 	Clear();
 }
 
@@ -361,24 +362,28 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f, "No matches for your search.", nullptr);
 	} else if (cleared) {
 		nvgFontSize(vg, 12.0f);
 		nvgFontFace(vg, "sans");
 		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		nvgText(vg, rect.x + 40, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+		nvgText(vg, rect.x + rect.width / 2.0f, rect.y + rect.height / 2.0f, "Please enter your search string.", nullptr);
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+
+		int icon_size = 32;
+		int x_offset = rect.x + (rect.width - icon_size) / 2;
+		int y_offset = rect.y + 10;
+
 		if (spr) {
 			int tex = GetOrCreateSpriteTexture(vg, spr);
 			if (tex > 0) {
-				int icon_size = rect.height;
-				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+				NVGpaint imgPaint = nvgImagePattern(vg, x_offset, y_offset, icon_size, icon_size, 0, tex, 1.0f);
 				nvgBeginPath(vg);
-				nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
+				nvgRect(vg, x_offset, y_offset, icon_size, icon_size);
 				nvgFillPaint(vg, imgPaint);
 				nvgFill(vg);
 			}
@@ -392,14 +397,29 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
 		}
 
-		nvgFontSize(vg, 12.0f);
+		nvgFontSize(vg, 11.0f);
 		nvgFontFace(vg, "sans");
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+		nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_TOP);
+
+		// Truncate name if too long
 		wxString name = wxstr(brushlist[n]->getName());
-		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+		std::string u8name = name.ToUTF8().data();
+		if (u8name.length() > 15) {
+			u8name = u8name.substr(0, 12) + "...";
+		}
+
+		nvgText(vg, rect.x + rect.width / 2.0f, y_offset + icon_size + 5, u8name.c_str(), nullptr);
+
+		// Draw ID or some other small label
+		nvgFontSize(vg, 9.0f);
+		nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 180));
+		if (brushlist[n]->is<RAWBrush>()) {
+			std::string idText = "ID: " + std::to_string(brushlist[n]->as<RAWBrush>()->getItemID());
+			nvgText(vg, rect.x + rect.width / 2.0f, y_offset + icon_size + 18, idText.c_str(), nullptr);
+		}
 	}
 }
 
 int FindDialogListBox::OnMeasureItem(size_t n) const {
-	return FromDIP(32);
+	return FromDIP(80); // Base height, used as default if not in grid mode
 }

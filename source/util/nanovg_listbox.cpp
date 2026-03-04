@@ -137,16 +137,31 @@ void NanoVGListBox::ScrollToLine(int line) {
 	EnsureVisible(line);
 }
 
+void NanoVGListBox::SetGridMode(bool grid_mode, int item_width, int item_height) {
+	m_gridMode = grid_mode;
+	m_gridItemWidth = item_width;
+	m_gridItemHeight = item_height;
+	UpdateScrollbar();
+	Refresh();
+}
+
 void NanoVGListBox::EnsureVisible(int line) {
 	if (line < 0 || line >= static_cast<int>(m_count)) {
 		return;
 	}
 
 	int itemHeight = std::max(1, OnMeasureItem(0)); // Assuming uniform height for simple scrolling logic
+	int itemTop = line * itemHeight;
+
+	if (m_gridMode) {
+		int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+		itemHeight = m_gridItemHeight;
+		itemTop = (line / cols) * itemHeight;
+	}
+
 	int scrollPos = GetScrollPosition();
 	int clientHeight = GetClientSize().y;
 
-	int itemTop = line * itemHeight;
 	int itemBottom = itemTop + itemHeight;
 
 	if (itemTop < scrollPos) {
@@ -169,8 +184,15 @@ void NanoVGListBox::UpdateScrollbar() {
 	// If OnMeasureItem varies, we need a smarter system (like caching positions).
 	// Let's assume OnMeasureItem(0) is representative or we check m_itemHeightCache.
 
-	int itemHeight = std::max(1, OnMeasureItem(0));
-	int totalHeight = static_cast<int>(m_count) * itemHeight;
+	int totalHeight = 0;
+	if (m_gridMode) {
+		int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+		int rows = (static_cast<int>(m_count) + cols - 1) / cols;
+		totalHeight = rows * m_gridItemHeight;
+	} else {
+		int itemHeight = std::max(1, OnMeasureItem(0));
+		totalHeight = static_cast<int>(m_count) * itemHeight;
+	}
 
 	int clientHeight = GetClientSize().y;
 	int pageSize = clientHeight;
@@ -194,42 +216,78 @@ void NanoVGListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	}
 
 	int scrollPos = GetScrollPosition();
-	int itemHeight = std::max(1, OnMeasureItem(0)); // Simplified assumption
 
-	int startRow = scrollPos / itemHeight;
-	int endRow = (scrollPos + height + itemHeight - 1) / itemHeight;
+	if (m_gridMode) {
+		int cols = std::max(1, width / m_gridItemWidth);
+		int startRow = scrollPos / m_gridItemHeight;
+		int endRow = (scrollPos + height + m_gridItemHeight - 1) / m_gridItemHeight;
+		startRow = std::max(0, startRow);
 
-	startRow = std::max(0, startRow);
-	endRow = std::min(static_cast<int>(m_count), endRow);
+		for (int row = startRow; row < endRow; ++row) {
+			for (int col = 0; col < cols; ++col) {
+				int index = row * cols + col;
+				if (index >= static_cast<int>(m_count)) {
+					break;
+				}
 
-	// Translate by scroll position is handled by caller (NanoVGCanvas::OnPaint)?
-	// NanoVGCanvas calls OnNanoVGPaint(m_nvg, width, height) after nvgTranslate(m_nvg, 0, -m_scrollPos).
-	// So (0,0) is top of content.
+				wxRect rect(col * m_gridItemWidth, row * m_gridItemHeight, m_gridItemWidth, m_gridItemHeight);
 
-	for (int i = startRow; i < endRow; ++i) {
-		wxRect rect(0, i * itemHeight, width, itemHeight);
+				bool selected = IsSelected(index);
+				bool hover = (index == m_hoverIndex);
+				bool focused = (index == m_focusIndex);
 
-		// Draw background for selection/hover
-		bool selected = IsSelected(i);
-		bool hover = (i == m_hoverIndex);
-		bool focused = (i == m_focusIndex);
+				if (selected || hover || focused) {
+					nvgBeginPath(vg);
+					nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+					wxColour c;
+					if (selected) {
+						c = Theme::Get(Theme::Role::Accent);
+					} else if (focused) {
+						c = Theme::Get(Theme::Role::Selected);
+					} else {
+						c = Theme::Get(Theme::Role::CardBaseHover);
+					}
+					nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
+					nvgFill(vg);
+				}
 
-		if (selected || hover || focused) {
-			nvgBeginPath(vg);
-			nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
-			wxColour c;
-			if (selected) {
-				c = Theme::Get(Theme::Role::Accent);
-			} else if (focused) {
-				c = Theme::Get(Theme::Role::Selected);
-			} else {
-				c = Theme::Get(Theme::Role::CardBaseHover);
+				OnDrawItem(vg, rect, index);
 			}
-			nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
-			nvgFill(vg);
 		}
+	} else {
+		int itemHeight = std::max(1, OnMeasureItem(0)); // Simplified assumption
 
-		OnDrawItem(vg, rect, i);
+		int startRow = scrollPos / itemHeight;
+		int endRow = (scrollPos + height + itemHeight - 1) / itemHeight;
+
+		startRow = std::max(0, startRow);
+		endRow = std::min(static_cast<int>(m_count), endRow);
+
+		for (int i = startRow; i < endRow; ++i) {
+			wxRect rect(0, i * itemHeight, width, itemHeight);
+
+			// Draw background for selection/hover
+			bool selected = IsSelected(i);
+			bool hover = (i == m_hoverIndex);
+			bool focused = (i == m_focusIndex);
+
+			if (selected || hover || focused) {
+				nvgBeginPath(vg);
+				nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+				wxColour c;
+				if (selected) {
+					c = Theme::Get(Theme::Role::Accent);
+				} else if (focused) {
+					c = Theme::Get(Theme::Role::Selected);
+				} else {
+					c = Theme::Get(Theme::Role::CardBaseHover);
+				}
+				nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
+				nvgFill(vg);
+			}
+
+			OnDrawItem(vg, rect, i);
+		}
 	}
 }
 
@@ -237,17 +295,38 @@ int NanoVGListBox::HitTest(int x, int y) const {
 	if (m_count == 0) {
 		return -1;
 	}
-	int itemHeight = std::max(1, OnMeasureItem(0));
-	int index = y / itemHeight;
-	if (index >= 0 && index < static_cast<int>(m_count)) {
-		return index;
+
+	if (m_gridMode) {
+		int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+		int row = y / m_gridItemHeight;
+		int col = x / m_gridItemWidth;
+		if (col >= cols) return -1;
+
+		int index = row * cols + col;
+		if (index >= 0 && index < static_cast<int>(m_count)) {
+			return index;
+		}
+		return -1;
+	} else {
+		int itemHeight = std::max(1, OnMeasureItem(0));
+		int index = y / itemHeight;
+		if (index >= 0 && index < static_cast<int>(m_count)) {
+			return index;
+		}
+		return -1;
 	}
-	return -1;
 }
 
 wxRect NanoVGListBox::GetItemRect(int index) const {
-	int itemHeight = std::max(1, OnMeasureItem(0));
-	return wxRect(0, index * itemHeight, GetClientSize().x, itemHeight);
+	if (m_gridMode) {
+		int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+		int row = index / cols;
+		int col = index % cols;
+		return wxRect(col * m_gridItemWidth, row * m_gridItemHeight, m_gridItemWidth, m_gridItemHeight);
+	} else {
+		int itemHeight = std::max(1, OnMeasureItem(0));
+		return wxRect(0, index * itemHeight, GetClientSize().x, itemHeight);
+	}
 }
 
 void NanoVGListBox::OnMouseDown(wxMouseEvent& event) {
@@ -309,11 +388,31 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 	int next = current;
 
 	switch (event.GetKeyCode()) {
+		case WXK_LEFT:
+			if (m_gridMode) {
+				next = std::max(0, current - 1);
+			}
+			break;
+		case WXK_RIGHT:
+			if (m_gridMode) {
+				next = std::min(static_cast<int>(m_count) - 1, current + 1);
+			}
+			break;
 		case WXK_UP:
-			next = std::max(0, current - 1);
+			if (m_gridMode) {
+				int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+				next = std::max(0, current - cols);
+			} else {
+				next = std::max(0, current - 1);
+			}
 			break;
 		case WXK_DOWN:
-			next = std::min(static_cast<int>(m_count) - 1, current + 1);
+			if (m_gridMode) {
+				int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+				next = std::min(static_cast<int>(m_count) - 1, current + cols);
+			} else {
+				next = std::min(static_cast<int>(m_count) - 1, current + 1);
+			}
 			break;
 		case WXK_HOME:
 			next = 0;
@@ -322,15 +421,27 @@ void NanoVGListBox::OnKeyDown(wxKeyEvent& event) {
 			next = static_cast<int>(m_count) - 1;
 			break;
 		case WXK_PAGEUP: {
-			int itemHeight = OnMeasureItem(0);
-			int pageSize = GetClientSize().y / itemHeight;
-			next = std::max(0, current - pageSize);
+			if (m_gridMode) {
+				int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+				int pageSize = (GetClientSize().y / m_gridItemHeight) * cols;
+				next = std::max(0, current - pageSize);
+			} else {
+				int itemHeight = OnMeasureItem(0);
+				int pageSize = GetClientSize().y / itemHeight;
+				next = std::max(0, current - pageSize);
+			}
 			break;
 		}
 		case WXK_PAGEDOWN: {
-			int itemHeight = OnMeasureItem(0);
-			int pageSize = GetClientSize().y / itemHeight;
-			next = std::min(static_cast<int>(m_count) - 1, current + pageSize);
+			if (m_gridMode) {
+				int cols = std::max(1, GetClientSize().x / m_gridItemWidth);
+				int pageSize = (GetClientSize().y / m_gridItemHeight) * cols;
+				next = std::min(static_cast<int>(m_count) - 1, current + pageSize);
+			} else {
+				int itemHeight = OnMeasureItem(0);
+				int pageSize = GetClientSize().y / itemHeight;
+				next = std::min(static_cast<int>(m_count) - 1, current + pageSize);
+			}
 			break;
 		}
 		default:

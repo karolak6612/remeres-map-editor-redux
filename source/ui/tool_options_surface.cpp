@@ -63,6 +63,10 @@ wxSize ToolOptionsSurface::DoGetBestClientSize() const {
 		h += interactables.lock_check_rect.height + FromDIP(4);
 	}
 
+	for (const auto& hr : header_rects) {
+		h += hr.rect.height;
+	}
+
 	// Min width 200 DIP?
 	return wxSize(FromDIP(240), h + FromDIP(8));
 }
@@ -73,6 +77,7 @@ void ToolOptionsSurface::DoSetSizeHints(int minW, int minH, int maxW, int maxH, 
 
 void ToolOptionsSurface::RebuildLayout() {
 	tool_rects.clear();
+	header_rects.clear();
 	interactables.size_slider_rect = wxRect();
 	interactables.thickness_slider_rect = wxRect();
 	interactables.preview_check_rect = wxRect();
@@ -87,11 +92,15 @@ void ToolOptionsSurface::RebuildLayout() {
 	const int w = GetClientSize().GetWidth();
 	const int icon_sz = FromDIP(ICON_SIZE_LG); // Defaulting to large for "Pro" look
 	const int gap = FromDIP(GRID_GAP);
+	const int header_h = FromDIP(24);
 
 	// 1. Tools
 	bool has_tools = (current_type == TILESET_TERRAIN || current_type == TILESET_COLLECTION);
 
 	if (has_tools) {
+		header_rects.push_back({wxRect(x, y, w - 8, header_h), "Tools"});
+		y += header_h + FromDIP(4);
+
 		// Populate tool list based on BrushManager
 		std::vector<Brush*> brushes;
 
@@ -164,6 +173,9 @@ void ToolOptionsSurface::RebuildLayout() {
 	// 2. Size Slider
 	bool show_size = (current_type != TILESET_UNKNOWN); // Most show size
 	if (show_size) {
+		header_rects.push_back({wxRect(x, y, w - 8, header_h), "Properties"});
+		y += header_h + FromDIP(4);
+
 		interactables.size_slider_rect = wxRect(x, y, slider_w, slider_h);
 		y += slider_h + gap;
 	}
@@ -178,6 +190,9 @@ void ToolOptionsSurface::RebuildLayout() {
 	// 4. Options
 	y += FromDIP(8); // Extra spacer
 	if (has_tools) { // Assume terrain
+		header_rects.push_back({wxRect(x, y, w - 8, header_h), "Settings"});
+		y += header_h + FromDIP(4);
+
 		interactables.preview_check_rect = wxRect(x, y, slider_w, FromDIP(20));
 		y += FromDIP(24);
 		interactables.lock_check_rect = wxRect(x, y, slider_w, FromDIP(20));
@@ -194,6 +209,19 @@ void ToolOptionsSurface::OnPaint(wxPaintEvent& evt) {
 	wxColour bg = Theme::Get(Theme::Role::Surface);
 	dc.SetBackground(wxBrush(bg));
 	dc.Clear();
+
+	// Draw Headers
+	dc.SetFont(Theme::GetFont(9, true)); // bold font for headers
+	dc.SetTextForeground(Theme::Get(Theme::Role::Text));
+	for (const auto& hr : header_rects) {
+		// Draw header background
+		dc.SetPen(*wxTRANSPARENT_PEN);
+		dc.SetBrush(wxBrush(Theme::Get(Theme::Role::Header)));
+		dc.DrawRectangle(hr.rect);
+
+		// Draw text
+		dc.DrawText(hr.label, hr.rect.x + FromDIP(4), hr.rect.y + FromDIP(4));
+	}
 
 	// 1. Draw Tools
 	for (const auto& tr : tool_rects) {
