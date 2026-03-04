@@ -34,7 +34,9 @@
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/io/sprite_loader.h"
 #include "rendering/map_drawer.h"
+#include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/map_display.h"
+#include "rendering/ui/selection_controller.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "brushes/carpet/carpet_brush.h"
@@ -79,332 +81,352 @@
 #include "rendering/postprocess/post_process_manager.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 
-MapDrawer::MapDrawer(MapCanvas& canvas, Editor& editor) : canvas(canvas), editor(editor)
-{
+MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
+    : canvas(canvas), editor(editor) {
 
-    light_drawer = std::make_shared<LightDrawer>();
-    tooltip_drawer = std::make_unique<TooltipDrawer>();
+  light_drawer = std::make_shared<LightDrawer>();
+  tooltip_drawer = std::make_unique<TooltipDrawer>();
 
-    sprite_drawer = std::make_unique<SpriteDrawer>();
-    creature_drawer = std::make_unique<CreatureDrawer>();
-    floor_drawer = std::make_unique<FloorDrawer>();
-    item_drawer = std::make_unique<ItemDrawer>();
-    marker_drawer = std::make_unique<MarkerDrawer>();
+  sprite_drawer = std::make_unique<SpriteDrawer>();
+  creature_drawer = std::make_unique<CreatureDrawer>();
+  floor_drawer = std::make_unique<FloorDrawer>();
+  item_drawer = std::make_unique<ItemDrawer>();
+  marker_drawer = std::make_unique<MarkerDrawer>();
 
-    creature_name_drawer = std::make_unique<CreatureNameDrawer>();
+  creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 
-    tile_renderer = std::make_unique<TileRenderer>(
-        item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(),
-        tooltip_drawer.get(), &editor
-    );
+  tile_renderer = std::make_unique<TileRenderer>(
+      item_drawer.get(), sprite_drawer.get(), creature_drawer.get(),
+      creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(),
+      tooltip_drawer.get(), &editor);
 
-    grid_drawer = std::make_unique<GridDrawer>();
-    map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
-    live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
-    selection_drawer = std::make_unique<SelectionDrawer>();
-    brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
-    brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
-    drag_shadow_drawer = std::make_unique<DragShadowDrawer>();
-    preview_drawer = std::make_unique<PreviewDrawer>();
+  grid_drawer = std::make_unique<GridDrawer>();
+  map_layer_drawer =
+      std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(),
+                                       &editor); // Initialized map_layer_drawer
+  live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
+  selection_drawer = std::make_unique<SelectionDrawer>();
+  brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
+  brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
+  drag_shadow_drawer = std::make_unique<DragShadowDrawer>();
+  preview_drawer = std::make_unique<PreviewDrawer>();
 
-    shade_drawer = std::make_unique<ShadeDrawer>();
+  shade_drawer = std::make_unique<ShadeDrawer>();
 
-    sprite_batch = std::make_unique<SpriteBatch>();
-    primitive_renderer = std::make_unique<PrimitiveRenderer>();
-    hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
-    door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
+  sprite_batch = std::make_unique<SpriteBatch>();
+  primitive_renderer = std::make_unique<PrimitiveRenderer>();
+  hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
+  door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
 
-    item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
-    item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
+  item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
+  item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
 
-    post_process_pipeline = std::make_unique<PostProcessPipeline>();
+  post_process_pipeline = std::make_unique<PostProcessPipeline>();
 }
 
-MapDrawer::~MapDrawer() { }
+MapDrawer::~MapDrawer() {}
 
-void MapDrawer::SetupVars()
-{
-    options.current_house_id = 0;
-    Brush* brush = g_gui.GetCurrentBrush();
-    if (brush) {
-        if (brush->is<HouseBrush>()) {
-            options.current_house_id = brush->as<HouseBrush>()->getHouseID();
-        } else if (brush->is<HouseExitBrush>()) {
-            options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
-        }
+void MapDrawer::SetupVars() {
+  options.current_house_id = 0;
+  Brush *brush = g_gui.GetCurrentBrush();
+  if (brush) {
+    if (brush->is<HouseBrush>()) {
+      options.current_house_id = brush->as<HouseBrush>()->getHouseID();
+    } else if (brush->is<HouseExitBrush>()) {
+      options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
     }
+  }
 
-    // Calculate pulse for house highlighting
-    // Period is 1 second (1000ms)
-    // Range is [0.0, 1.0]
-    // Using a sine wave for smooth transition
-    // (sin(t) + 1) / 2
-    double now = wxGetLocalTimeMillis().ToDouble();
-    const double speed = 0.005;
-    options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
+  // Calculate pulse for house highlighting
+  // Period is 1 second (1000ms)
+  // Range is [0.0, 1.0]
+  // Using a sine wave for smooth transition
+  // (sin(t) + 1) / 2
+  double now = wxGetLocalTimeMillis().ToDouble();
+  const double speed = 0.005;
+  options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
 
-    // Setup ViewState from canvas
-    view.zoom = static_cast<float>(canvas.GetZoom());
-    view.floor = canvas.GetFloor();
-    canvas.GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
+  // Setup ViewState from canvas
+  view.zoom = static_cast<float>(canvas.GetZoom());
+  view.floor = canvas.GetFloor();
+  canvas.GetViewBox(&view.view_scroll_x, &view.view_scroll_y,
+                    &view.screensize_x, &view.screensize_y);
 
-    view.viewport_x = 0;
-    view.viewport_y = 0;
+  view.viewport_x = 0;
+  view.viewport_y = 0;
 
-    view.mouse_map_x = canvas.last_cursor_map_x;
-    view.mouse_map_y = canvas.last_cursor_map_y;
+  view.mouse_map_x = canvas.last_cursor_map_x;
+  view.mouse_map_y = canvas.last_cursor_map_y;
 
-    view.tile_size = std::max(1, static_cast<int>(TILE_SIZE / view.zoom));
-    view.camera_pos.z = view.floor;
+  view.tile_size = std::max(1, static_cast<int>(TILE_SIZE / view.zoom));
+  view.camera_pos.z = view.floor;
 
-    // Calculate bounds based on options and map layers
-    if (options.show_all_floors) {
-        if (view.floor <= GROUND_LAYER) {
-            view.start_z = GROUND_LAYER;
-        } else {
-            view.start_z = std::min(MAP_MAX_LAYER, view.floor + 2);
-        }
+  // Calculate bounds based on options and map layers
+  if (options.show_all_floors) {
+    if (view.floor <= GROUND_LAYER) {
+      view.start_z = GROUND_LAYER;
     } else {
-        view.start_z = view.floor;
+      view.start_z = std::min(MAP_MAX_LAYER, view.floor + 2);
     }
+  } else {
+    view.start_z = view.floor;
+  }
 
-    view.end_z = view.floor;
-    view.superend_z = (view.floor > GROUND_LAYER ? 8 : 0);
+  view.end_z = view.floor;
+  view.superend_z = (view.floor > GROUND_LAYER ? 8 : 0);
 
-    if (options.show_shade) {
-        if (view.end_z < view.start_z && view.end_z == view.superend_z && view.end_z >= 0) {
-            view.superend_z--;
-        }
-        if (view.superend_z < 0) {
-            view.superend_z = 0;
-        }
+  if (options.show_shade) {
+    if (view.end_z < view.start_z && view.end_z == view.superend_z &&
+        view.end_z >= 0) {
+      view.superend_z--;
     }
-
-    view.camera_start_x = view.view_scroll_x / TILE_SIZE;
-    view.camera_start_y = view.view_scroll_y / TILE_SIZE;
-
-    if (view.floor > GROUND_LAYER) {
-        view.camera_start_x -= 2;
-        view.camera_start_y -= 2;
+    if (view.superend_z < 0) {
+      view.superend_z = 0;
     }
+  }
 
-    view.camera_end_x = view.camera_start_x + view.screensize_x / view.tile_size + 2;
-    view.camera_end_y = view.camera_start_y + view.screensize_y / view.tile_size + 2;
+  view.camera_start_x = view.view_scroll_x / TILE_SIZE;
+  view.camera_start_y = view.view_scroll_y / TILE_SIZE;
 
-    // Calculate logical dimensions (matching RenderView behavior)
-    view.logical_width = view.screensize_x * view.zoom;
-    view.logical_height = view.screensize_y * view.zoom;
+  if (view.floor > GROUND_LAYER) {
+    view.camera_start_x -= 2;
+    view.camera_start_y -= 2;
+  }
 
-    // Metrics update for OpenGL transformations
-    view.projectionMatrix = glm::ortho(
-        0.0f, static_cast<float>(view.screensize_x) * view.zoom, static_cast<float>(view.screensize_y) * view.zoom, 0.0f, -1.0f, 1.0f
-    );
-    view.viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
+  view.camera_end_x =
+      view.camera_start_x + view.screensize_x / view.tile_size + 2;
+  view.camera_end_y =
+      view.camera_start_y + view.screensize_y / view.tile_size + 2;
+
+  // Calculate logical dimensions (matching RenderView behavior)
+  view.logical_width = view.screensize_x * view.zoom;
+  view.logical_height = view.screensize_y * view.zoom;
+
+  // Metrics update for OpenGL transformations
+  view.projectionMatrix = glm::ortho(
+      0.0f, static_cast<float>(view.screensize_x) * view.zoom,
+      static_cast<float>(view.screensize_y) * view.zoom, 0.0f, -1.0f, 1.0f);
+  view.viewMatrix =
+      glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
+
+  // Populate canvas state for DrawContext
+  canvas_state.last_click_map_x = canvas.last_click_map_x;
+  canvas_state.last_click_map_y = canvas.last_click_map_y;
+  canvas_state.last_click_map_z = canvas.last_click_map_z;
+  canvas_state.last_click_abs_x = canvas.last_click_abs_x;
+  canvas_state.last_click_abs_y = canvas.last_click_abs_y;
+  canvas_state.cursor_x = canvas.cursor_x;
+  canvas_state.cursor_y = canvas.cursor_y;
+  canvas_state.is_dragging_draw =
+      canvas.drawing_controller && canvas.drawing_controller->IsDraggingDraw();
+  canvas_state.is_pasting = canvas.isPasting();
+  canvas_state.drag_start_pos =
+      canvas.selection_controller
+          ? canvas.selection_controller->GetDragStartPosition()
+          : Position();
+
+  MapTab *mapTab = dynamic_cast<MapTab *>(canvas.GetMapWindow());
+  canvas_state.secondary_map =
+      mapTab ? mapTab->GetSession()->secondary_map : nullptr;
+  canvas_state.current_house_id = options.current_house_id;
 }
 
-void MapDrawer::SetupGL()
-{
-    GLViewport::Apply(view);
+void MapDrawer::SetupGL() {
+  GLViewport::Apply(view);
 
-    // Ensure renderers are initialized
-    if (!renderers_initialized) {
+  // Ensure renderers are initialized
+  if (!renderers_initialized) {
 
-        sprite_batch->initialize();
-        primitive_renderer->initialize();
-        renderers_initialized = true;
-    }
+    sprite_batch->initialize();
+    primitive_renderer->initialize();
+    renderers_initialized = true;
+  }
 
-    post_process_pipeline->Initialize();
+  post_process_pipeline->Initialize();
 }
 
-void MapDrawer::Draw()
-{
-    // Redundant update removed: MapCanvas::OnPaint advances timing BEFORE calling drawer->Draw()
-    // g_gui.gc.updateTime();
+void MapDrawer::Draw() {
+  // Redundant update removed: MapCanvas::OnPaint advances timing BEFORE calling
+  // drawer->Draw() g_gui.gc.updateTime();
 
-    light_buffer.Clear();
-    creature_name_drawer->clear();
-    options.transient_selection_bounds = std::nullopt;
+  light_buffer.Clear();
+  creature_name_drawer->clear();
+  options.transient_selection_bounds = std::nullopt;
 
-    if (options.boundbox_selection) {
-        options.transient_selection_bounds = MapBounds {
-            .x1 = std::min(canvas.last_click_map_x, canvas.last_cursor_map_x),
-            .y1 = std::min(canvas.last_click_map_y, canvas.last_cursor_map_y),
-            .x2 = std::max(canvas.last_click_map_x, canvas.last_cursor_map_x),
-            .y2 = std::max(canvas.last_click_map_y, canvas.last_cursor_map_y)
-        };
+  if (options.boundbox_selection) {
+    options.transient_selection_bounds = MapBounds{
+        .x1 = std::min(canvas.last_click_map_x, canvas.last_cursor_map_x),
+        .y1 = std::min(canvas.last_click_map_y, canvas.last_cursor_map_y),
+        .x2 = std::max(canvas.last_click_map_x, canvas.last_cursor_map_x),
+        .y2 = std::max(canvas.last_click_map_y, canvas.last_cursor_map_y)};
+  }
+
+  if (!g_gui.atlas.ensureAtlasManager()) {
+    return;
+  }
+  auto *atlas = g_gui.atlas.getAtlasManager();
+
+  // Begin Batches
+  sprite_batch->begin(view.projectionMatrix, *atlas);
+  primitive_renderer->setProjectionMatrix(view.projectionMatrix);
+
+  // Check Framebuffer Logic
+  bool use_fbo = post_process_pipeline->BeginCapture(view, options);
+
+  DrawBackground(); // Clear screen (or FBO)
+
+  // Save original view bounds before DrawMap modifies them per-floor
+  const ViewBounds original_bounds{view.camera_start_x, view.camera_start_y,
+                                   view.camera_end_x, view.camera_end_y};
+
+  DrawMap();
+
+  // Flush Map for Light Pass
+  sprite_batch->end(*atlas);
+  primitive_renderer->flush();
+
+  if (options.isDrawLight()) {
+    DrawLight();
+  }
+
+  // If using FBO, we must now Resolve to Screen
+  if (use_fbo) {
+    post_process_pipeline->EndCaptureAndDraw(view, options);
+  }
+
+  // Resume Batch for Overlays
+  sprite_batch->begin(view.projectionMatrix, *atlas);
+
+  DrawContext ctx = MakeDrawContext();
+
+  if (drag_shadow_drawer) {
+    drag_shadow_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(),
+                             creature_drawer.get(), editor);
+  }
+
+  live_cursor_drawer->draw(ctx, editor);
+
+  brush_overlay_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(),
+                             creature_drawer.get(), editor);
+
+  if (options.show_grid) {
+    DrawGrid(ctx, original_bounds);
+  }
+  if (options.show_ingame_box) {
+    DrawIngameBox(ctx, original_bounds);
+  }
+
+  // Draw creature names (Overlay) moved to DrawCreatureNames()
+
+  // End Batches and Flush
+  sprite_batch->end(*atlas);
+  primitive_renderer->flush();
+
+  // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
+}
+
+void MapDrawer::DrawBackground() {
+  GLViewport::ClearBackground(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), true);
+}
+
+void MapDrawer::DrawMap() {
+  bool live_client = editor.live_manager.IsClient();
+
+  bool only_colors = options.show_as_minimap || options.show_only_colors;
+
+  // Enable texture mode
+
+  int current_start_x = view.camera_start_x;
+  int current_start_y = view.camera_start_y;
+  int current_end_x = view.camera_end_x;
+  int current_end_y = view.camera_end_y;
+
+  DrawContext ctx = MakeDrawContext();
+
+  for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
+    FloorViewParams floor_params{.current_z = map_z,
+                                 .start_x = current_start_x,
+                                 .start_y = current_start_y,
+                                 .end_x = current_end_x,
+                                 .end_y = current_end_y};
+
+    if (map_z == view.end_z && view.start_z != view.end_z) {
+      shade_drawer->draw(ctx, floor_params);
     }
 
-    if (!g_gui.atlas.ensureAtlasManager()) {
-        return;
-    }
-    auto* atlas = g_gui.atlas.getAtlasManager();
-
-    // Begin Batches
-    sprite_batch->begin(view.projectionMatrix, *atlas);
-    primitive_renderer->setProjectionMatrix(view.projectionMatrix);
-
-    // Check Framebuffer Logic
-    bool use_fbo = post_process_pipeline->BeginCapture(view, options);
-
-    DrawBackground(); // Clear screen (or FBO)
-
-    // Save original view bounds before DrawMap modifies them per-floor
-    const ViewBounds original_bounds {view.camera_start_x, view.camera_start_y, view.camera_end_x, view.camera_end_y};
-
-    DrawMap();
-
-    // Flush Map for Light Pass
-    sprite_batch->end(*atlas);
-    primitive_renderer->flush();
-
-    if (options.isDrawLight()) {
-        DrawLight();
+    if (map_z >= view.end_z) {
+      DrawMapLayer(ctx, floor_params, live_client);
     }
 
-    // If using FBO, we must now Resolve to Screen
-    if (use_fbo) {
-        post_process_pipeline->EndCaptureAndDraw(view, options);
-    }
+    preview_drawer->draw(ctx, floor_params, map_z, editor, item_drawer.get(),
+                         sprite_drawer.get(), creature_drawer.get());
 
-    // Resume Batch for Overlays
-    sprite_batch->begin(view.projectionMatrix, *atlas);
+    --current_start_x;
+    --current_start_y;
+    ++current_end_x;
+    ++current_end_y;
+  }
+}
 
+void MapDrawer::DrawIngameBox(const DrawContext &ctx,
+                              const ViewBounds &bounds) {
+  grid_drawer->DrawIngameBox(ctx, bounds);
+}
+
+void MapDrawer::DrawGrid(const DrawContext &ctx, const ViewBounds &bounds) {
+  grid_drawer->DrawGrid(ctx, bounds);
+}
+
+void MapDrawer::DrawTooltips(NVGcontext *vg) {
+  if (options.show_tooltips) {
     DrawContext ctx = MakeDrawContext();
-
-    if (drag_shadow_drawer) {
-        drag_shadow_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get());
-    }
-
-    live_cursor_drawer->draw(ctx, editor);
-
-    brush_overlay_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor);
-
-    if (options.show_grid) {
-        DrawGrid(ctx, original_bounds);
-    }
-    if (options.show_ingame_box) {
-        DrawIngameBox(ctx, original_bounds);
-    }
-
-    // Draw creature names (Overlay) moved to DrawCreatureNames()
-
-    // End Batches and Flush
-    sprite_batch->end(*atlas);
-    primitive_renderer->flush();
-
-    // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
+    tooltip_drawer->draw(vg, ctx);
+  }
 }
 
-void MapDrawer::DrawBackground()
-{
-    GLViewport::ClearBackground(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), true);
+void MapDrawer::DrawHookIndicators(NVGcontext *vg) {
+  DrawContext ctx = MakeDrawContext();
+  hook_indicator_drawer->draw(vg, ctx);
 }
 
-void MapDrawer::DrawMap()
-{
-    bool live_client = editor.live_manager.IsClient();
-
-    bool only_colors = options.show_as_minimap || options.show_only_colors;
-
-    // Enable texture mode
-
-    int current_start_x = view.camera_start_x;
-    int current_start_y = view.camera_start_y;
-    int current_end_x = view.camera_end_x;
-    int current_end_y = view.camera_end_y;
-
+void MapDrawer::DrawDoorIndicators(NVGcontext *vg) {
+  if (options.highlight_locked_doors) {
     DrawContext ctx = MakeDrawContext();
-
-    for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
-        FloorViewParams floor_params {
-            .current_z = map_z, .start_x = current_start_x, .start_y = current_start_y, .end_x = current_end_x, .end_y = current_end_y
-        };
-
-        if (map_z == view.end_z && view.start_z != view.end_z) {
-            shade_drawer->draw(ctx, floor_params);
-        }
-
-        if (map_z >= view.end_z) {
-            DrawMapLayer(ctx, floor_params, live_client);
-        }
-
-        preview_drawer->draw(
-            ctx, floor_params, canvas, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(),
-            options.current_house_id
-        );
-
-        --current_start_x;
-        --current_start_y;
-        ++current_end_x;
-        ++current_end_y;
-    }
+    door_indicator_drawer->draw(vg, ctx);
+  }
 }
 
-void MapDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds)
-{
-    grid_drawer->DrawIngameBox(ctx, bounds);
+void MapDrawer::DrawCreatureNames(NVGcontext *vg) {
+  DrawContext ctx = MakeDrawContext();
+  creature_name_drawer->draw(vg, ctx);
 }
 
-void MapDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds)
-{
-    grid_drawer->DrawGrid(ctx, bounds);
+void MapDrawer::DrawMapLayer(const DrawContext &ctx,
+                             const FloorViewParams &floor_params,
+                             bool live_client) {
+  map_layer_drawer->Draw(ctx, floor_params, live_client);
 }
 
-void MapDrawer::DrawTooltips(NVGcontext* vg)
-{
-    if (options.show_tooltips) {
-        DrawContext ctx = MakeDrawContext();
-        tooltip_drawer->draw(vg, ctx);
-    }
+DrawContext MapDrawer::MakeDrawContext() {
+  return DrawContext{
+      *sprite_batch, *primitive_renderer,      view, options, light_buffer,
+      canvas_state,  brush_cursor_drawer.get()};
 }
 
-void MapDrawer::DrawHookIndicators(NVGcontext* vg)
-{
+void MapDrawer::DrawLight() {
+  if (options.isDrawLight()) {
     DrawContext ctx = MakeDrawContext();
-    hook_indicator_drawer->draw(vg, ctx);
+    light_drawer->draw(ctx);
+  }
 }
 
-void MapDrawer::DrawDoorIndicators(NVGcontext* vg)
-{
-    if (options.highlight_locked_doors) {
-        DrawContext ctx = MakeDrawContext();
-        door_indicator_drawer->draw(vg, ctx);
-    }
+void MapDrawer::TakeScreenshot(uint8_t *screenshot_buffer) {
+  ScreenCapture::Capture(view.screensize_x, view.screensize_y,
+                         screenshot_buffer);
 }
 
-void MapDrawer::DrawCreatureNames(NVGcontext* vg)
-{
-    DrawContext ctx = MakeDrawContext();
-    creature_name_drawer->draw(vg, ctx);
-}
-
-void MapDrawer::DrawMapLayer(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client)
-{
-    map_layer_drawer->Draw(ctx, floor_params, live_client);
-}
-
-DrawContext MapDrawer::MakeDrawContext()
-{
-    return DrawContext {*sprite_batch, *primitive_renderer, view, options, light_buffer};
-}
-
-void MapDrawer::DrawLight()
-{
-    if (options.isDrawLight()) {
-        DrawContext ctx = MakeDrawContext();
-        light_drawer->draw(ctx);
-    }
-}
-
-void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer)
-{
-    ScreenCapture::Capture(view.screensize_x, view.screensize_y, screenshot_buffer);
-}
-
-void MapDrawer::ClearFrameOverlays()
-{
-    tooltip_drawer->clear();
-    hook_indicator_drawer->clear();
-    door_indicator_drawer->clear();
+void MapDrawer::ClearFrameOverlays() {
+  tooltip_drawer->clear();
+  hook_indicator_drawer->clear();
+  door_indicator_drawer->clear();
 }

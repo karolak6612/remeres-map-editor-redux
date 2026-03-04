@@ -7,12 +7,17 @@ struct ViewState;
 struct DrawingOptions;
 struct LightBuffer;
 
+struct CanvasState;
+class BrushCursorDrawer;
+
 struct DrawContext {
-	SpriteBatch& sprite_batch;
-	PrimitiveRenderer& primitive_renderer;
-	const ViewState& view;
-	const DrawingOptions& options;
-	LightBuffer& light_buffer;
+  SpriteBatch &sprite_batch;
+  PrimitiveRenderer &primitive_renderer;
+  const ViewState &view;
+  const DrawingOptions &options;
+  LightBuffer &light_buffer;
+  const CanvasState &canvas_state;
+  BrushCursorDrawer *brush_cursor_drawer = nullptr;
 };
 
 #endif

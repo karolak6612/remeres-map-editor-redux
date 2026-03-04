@@ -26,6 +26,7 @@ class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
 // Storage during drawing, for option caching
+#include "rendering/core/canvas_state.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/light_buffer.h"
@@ -62,91 +63,76 @@ class Editor;
 class PostProcessPipeline;
 
 class MapDrawer {
-    MapCanvas& canvas;
-    Editor& editor;
-    DrawingOptions options;
-    ViewState view;
-    std::shared_ptr<LightDrawer> light_drawer;
-    LightBuffer light_buffer;
-    std::unique_ptr<TooltipDrawer> tooltip_drawer;
-    std::unique_ptr<GridDrawer> grid_drawer;
-    std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
-    std::unique_ptr<SelectionDrawer> selection_drawer;
-    std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
-    std::unique_ptr<BrushOverlayDrawer> brush_overlay_drawer;
-    std::unique_ptr<DragShadowDrawer> drag_shadow_drawer;
-    std::unique_ptr<FloorDrawer> floor_drawer;
-    std::unique_ptr<SpriteDrawer> sprite_drawer;
-    std::unique_ptr<MapLayerDrawer> map_layer_drawer;
-    std::unique_ptr<CreatureDrawer> creature_drawer;
-    std::unique_ptr<ItemDrawer> item_drawer;
-    std::unique_ptr<MarkerDrawer> marker_drawer;
-    std::unique_ptr<PreviewDrawer> preview_drawer;
-    std::unique_ptr<ShadeDrawer> shade_drawer;
-    std::unique_ptr<TileRenderer> tile_renderer;
-    std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
-    std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
-    std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
-    std::unique_ptr<SpriteBatch> sprite_batch;
-    std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+  MapCanvas &canvas;
+  Editor &editor;
+  DrawingOptions options;
+  ViewState view;
+  std::shared_ptr<LightDrawer> light_drawer;
+  LightBuffer light_buffer;
+  std::unique_ptr<TooltipDrawer> tooltip_drawer;
+  std::unique_ptr<GridDrawer> grid_drawer;
+  std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
+  std::unique_ptr<SelectionDrawer> selection_drawer;
+  std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
+  std::unique_ptr<BrushOverlayDrawer> brush_overlay_drawer;
+  std::unique_ptr<DragShadowDrawer> drag_shadow_drawer;
+  std::unique_ptr<FloorDrawer> floor_drawer;
+  std::unique_ptr<SpriteDrawer> sprite_drawer;
+  std::unique_ptr<MapLayerDrawer> map_layer_drawer;
+  std::unique_ptr<CreatureDrawer> creature_drawer;
+  std::unique_ptr<ItemDrawer> item_drawer;
+  std::unique_ptr<MarkerDrawer> marker_drawer;
+  std::unique_ptr<PreviewDrawer> preview_drawer;
+  std::unique_ptr<ShadeDrawer> shade_drawer;
+  std::unique_ptr<TileRenderer> tile_renderer;
+  std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
+  std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
+  std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
+  std::unique_ptr<SpriteBatch> sprite_batch;
+  std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
-    std::unique_ptr<PostProcessPipeline> post_process_pipeline;
+  std::unique_ptr<PostProcessPipeline> post_process_pipeline;
 
-protected:
-    friend class BrushOverlayDrawer;
-    friend class DragShadowDrawer;
-    friend class FloorDrawer;
+  CanvasState canvas_state;
 
 public:
-    MapDrawer(MapCanvas& canvas, Editor& editor);
-    ~MapDrawer();
+  MapDrawer(MapCanvas &canvas, Editor &editor);
+  ~MapDrawer();
 
-    void SetupVars();
-    void SetupGL();
+  void SetupVars();
+  void SetupGL();
 
-    void Draw();
-    void DrawBackground();
-    void DrawMap();
-    void DrawLiveCursors();
-    void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
+  void Draw();
+  void DrawBackground();
+  void DrawMap();
+  void DrawLiveCursors();
+  void DrawIngameBox(const DrawContext &ctx, const ViewBounds &bounds);
 
-    void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
-    void DrawTooltips(NVGcontext* vg);
-    void DrawHookIndicators(NVGcontext* vg);
-    void DrawDoorIndicators(NVGcontext* vg);
-    void ClearFrameOverlays();
-    void DrawCreatureNames(NVGcontext* vg);
+  void DrawGrid(const DrawContext &ctx, const ViewBounds &bounds);
+  void DrawTooltips(NVGcontext *vg);
+  void DrawHookIndicators(NVGcontext *vg);
+  void DrawDoorIndicators(NVGcontext *vg);
+  void ClearFrameOverlays();
+  void DrawCreatureNames(NVGcontext *vg);
 
-    void DrawLight();
+  void DrawLight();
 
-    void TakeScreenshot(uint8_t* screenshot_buffer);
+  void TakeScreenshot(uint8_t *screenshot_buffer);
 
-    DrawingOptions& getOptions()
-    {
-        return options;
-    }
+  DrawingOptions &getOptions() { return options; }
 
-    SpriteBatch* getSpriteBatch()
-    {
-        return sprite_batch.get();
-    }
-    PrimitiveRenderer* getPrimitiveRenderer()
-    {
-        return primitive_renderer.get();
-    }
-    TileRenderer* getTileRenderer()
-    {
-        return tile_renderer.get();
-    }
-    DoorIndicatorDrawer* getDoorIndicatorDrawer()
-    {
-        return door_indicator_drawer.get();
-    }
+  SpriteBatch *getSpriteBatch() { return sprite_batch.get(); }
+  PrimitiveRenderer *getPrimitiveRenderer() { return primitive_renderer.get(); }
+  TileRenderer *getTileRenderer() { return tile_renderer.get(); }
+  DoorIndicatorDrawer *getDoorIndicatorDrawer() {
+    return door_indicator_drawer.get();
+  }
 
 private:
-    void DrawMapLayer(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client);
-    DrawContext MakeDrawContext();
-    bool renderers_initialized = false;
+  void DrawMapLayer(const DrawContext &ctx, const FloorViewParams &floor_params,
+                    bool live_client);
+  DrawContext MakeDrawContext();
+  bool renderers_initialized = false;
 };
 
 #endif
