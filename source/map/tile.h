@@ -231,9 +231,9 @@ public: // Functions
 	uint16_t getStatFlags() const;
 };
 
-bool tilePositionLessThan(const Tile* a, const Tile* b);
+bool tilePositionLessThan(const Tile& a, const Tile& b);
 // This sorts them by draw order
-bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
+bool tilePositionVisualLessThan(const Tile& a, const Tile& b);
 
 using TileVector = std::vector<Tile*>;
 using TileSet = std::vector<Tile*>;

@@ -276,13 +276,13 @@ uint8_t Tile::getMiniMapColor() const {
 	return 0;
 }
 
-bool tilePositionLessThan(const Tile* a, const Tile* b) {
-	return a->getPosition() < b->getPosition();
+bool tilePositionLessThan(const Tile& a, const Tile& b) {
+	return a.getPosition() < b.getPosition();
 }
 
-bool tilePositionVisualLessThan(const Tile* a, const Tile* b) {
-	Position pa = a->getPosition();
-	Position pb = b->getPosition();
+bool tilePositionVisualLessThan(const Tile& a, const Tile& b) {
+	Position pa = a.getPosition();
+	Position pb = b.getPosition();
 
 	if (pa.z > pb.z) {
 		return true;
