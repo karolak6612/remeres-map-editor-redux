@@ -18,7 +18,6 @@
 #include "rendering/drawers/cursors/drag_shadow_drawer.h"
 #include "rendering/ui/map_display.h"
 
-
 #include "game/creature.h"
 #include "game/item.h"
 #include "game/spawn.h"
@@ -72,25 +71,16 @@ void DragShadowDrawer::draw(const DrawContext &ctx, ItemDrawer *item_drawer,
             TileOperations::getSelectedItems(tile, ctx.view.zoom > 3.0);
         Tile *desttile = editor.map.getTile(pos);
         for (const auto &item : toRender) {
-          if (desttile) {
-            BlitItemParams params(desttile, item, ctx.options);
-            params.ephemeral = true;
-            params.red = 160;
-            params.green = 160;
-            params.blue = 160;
-            params.alpha = 160;
-            item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x,
-                                  draw_y, params);
-          } else {
-            BlitItemParams params(pos, item, ctx.options);
-            params.ephemeral = true;
-            params.red = 160;
-            params.green = 160;
-            params.blue = 160;
-            params.alpha = 160;
-            item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x,
-                                  draw_y, params);
-          }
+          BlitItemParams params =
+              desttile ? BlitItemParams(desttile, item, ctx.options)
+                       : BlitItemParams(pos, item, ctx.options);
+          params.ephemeral = true;
+          params.red = 160;
+          params.green = 160;
+          params.blue = 160;
+          params.alpha = 160;
+          item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x,
+                                draw_y, params);
         }
 
         // save performance when moving large chunks unzoomed

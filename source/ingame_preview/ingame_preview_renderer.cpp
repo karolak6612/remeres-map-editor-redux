@@ -69,6 +69,12 @@ void IngamePreviewRenderer::Render(
     float zoom, bool lighting_enabled, uint8_t ambient_light,
     const Outfit &preview_outfit, Direction preview_direction,
     int animation_phase, int offset_x, int offset_y) {
+  if (!tile_renderer) {
+    spdlog::error(
+        "IngamePreviewRenderer::Render called with null tile_renderer");
+    return;
+  }
+
   g_gui.gc.updateTime();
   auto now = std::chrono::steady_clock::now();
   double dt = std::chrono::duration<double>(now - last_time).count();
@@ -107,15 +113,17 @@ void IngamePreviewRenderer::Render(
                   .light_buffer = *light_buffer,
                   .canvas_state = dummy_state};
 
+  int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
+
   RenderFloors(ctx, map, last_visible, camera_pos, lighting_enabled, atlas);
-  RenderPreviewCharacter(ctx, map, camera_pos, preview_outfit,
-                         preview_direction, animation_phase, atlas);
+  RenderPreviewCharacter(ctx, preview_outfit, preview_direction,
+                         animation_phase, atlas, elevation_offset);
 
   if (lighting_enabled && light_drawer && options.isDrawLight()) {
     light_drawer->draw(ctx);
   }
 
-  RenderNames(vg, ctx, map, camera_pos, viewport_width, viewport_height, zoom);
+  RenderNames(vg, ctx, viewport_width, viewport_height, zoom, elevation_offset);
 }
 
 int IngamePreviewRenderer::GetTileElevationOffset(const Tile *tile) const {
@@ -189,7 +197,7 @@ void IngamePreviewRenderer::RenderFloors(DrawContext &ctx, const BaseMap &map,
     sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
 
     int floor_offset = ctx.view.CalculateLayerOffset(z);
-    constexpr int margin = TILE_SIZE * 2;
+    constexpr int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
     int start_x = static_cast<int>(
         std::floor((ctx.view.view_scroll_x + floor_offset - margin) /
                    static_cast<float>(TILE_SIZE)));
@@ -232,16 +240,14 @@ void IngamePreviewRenderer::RenderFloors(DrawContext &ctx, const BaseMap &map,
 }
 
 void IngamePreviewRenderer::RenderPreviewCharacter(
-    DrawContext &ctx, const BaseMap &map, const Position &camera_pos,
-    const Outfit &preview_outfit, Direction preview_direction,
-    int animation_phase, AtlasManager *atlas) {
+    DrawContext &ctx, const Outfit &preview_outfit, Direction preview_direction,
+    int animation_phase, AtlasManager *atlas, int elevation_offset) {
   sprite_batch->begin(ctx.view.projectionMatrix, *atlas);
 
   int center_x =
       static_cast<int>((ctx.view.screensize_x * ctx.view.zoom) / 2.0f);
   int center_y =
       static_cast<int>((ctx.view.screensize_y * ctx.view.zoom) / 2.0f);
-  int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
 
   int draw_x = center_x - 16;
   int draw_y = center_y - 16 - elevation_offset;
@@ -255,10 +261,8 @@ void IngamePreviewRenderer::RenderPreviewCharacter(
 }
 
 void IngamePreviewRenderer::RenderNames(NVGcontext *vg, const DrawContext &ctx,
-                                        const BaseMap &map,
-                                        const Position &camera_pos,
                                         int viewport_width, int viewport_height,
-                                        float zoom) {
+                                        float zoom, int elevation_offset) {
   if (!creature_name_drawer || !vg) {
     return;
   }
@@ -274,7 +278,6 @@ void IngamePreviewRenderer::RenderNames(NVGcontext *vg, const DrawContext &ctx,
 
   float screenCenterX = static_cast<float>(viewport_width) / 2.0f;
   float screenCenterY = static_cast<float>(viewport_height) / 2.0f;
-  int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
 
   float labelY = screenCenterY -
                  (16.0f + static_cast<float>(elevation_offset)) / zoom - 2.0f;

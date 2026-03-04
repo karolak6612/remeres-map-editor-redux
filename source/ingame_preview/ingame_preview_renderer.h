@@ -87,15 +87,12 @@ private:
                     const Position &camera_pos, bool lighting_enabled,
                     class AtlasManager *atlas);
 
-  void RenderPreviewCharacter(DrawContext &ctx, const BaseMap &map,
-                              const Position &camera_pos,
-                              const Outfit &preview_outfit,
+  void RenderPreviewCharacter(DrawContext &ctx, const Outfit &preview_outfit,
                               Direction preview_direction, int animation_phase,
-                              class AtlasManager *atlas);
+                              class AtlasManager *atlas, int elevation_offset);
 
-  void RenderNames(NVGcontext *vg, const DrawContext &ctx, const BaseMap &map,
-                   const Position &camera_pos, int viewport_width,
-                   int viewport_height, float zoom);
+  void RenderNames(NVGcontext *vg, const DrawContext &ctx, int viewport_width,
+                   int viewport_height, float zoom, int elevation_offset);
 };
 
 } // namespace IngamePreview

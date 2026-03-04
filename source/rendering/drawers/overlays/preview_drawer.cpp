@@ -111,8 +111,9 @@ void PreviewDrawer::drawTilePreview(const DrawContext &ctx, int draw_x,
     }
     if (ctx.options.show_special_tiles &&
         tile->getMapFlags() & TILESTATE_PVPZONE) {
+      uint8_t r_orig = r;
       r = r / 3 * 2;
-      b = r / 3 * 2;
+      b = r_orig / 3 * 2;
     }
     if (ctx.options.show_special_tiles &&
         tile->getMapFlags() & TILESTATE_NOLOGOUT) {

@@ -72,7 +72,6 @@
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
-#include "rendering/drawers/overlays/selection_drawer.h"
 #include "rendering/drawers/tiles/floor_drawer.h"
 #include "rendering/drawers/tiles/shade_drawer.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -105,7 +104,6 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
       std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(),
                                        &editor); // Initialized map_layer_drawer
   live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
-  selection_drawer = std::make_unique<SelectionDrawer>();
   brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
   brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
   drag_shadow_drawer = std::make_unique<DragShadowDrawer>();

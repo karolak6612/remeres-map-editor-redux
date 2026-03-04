@@ -200,7 +200,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/door_indicator_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.h
@@ -535,7 +534,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/door_indicator_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.cpp

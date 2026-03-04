@@ -49,6 +49,18 @@
 
 #include "brushes/waypoint/waypoint_brush.h"
 
+namespace {
+int mapToScreenX(int map_x, const DrawContext &ctx) {
+  return map_x * TILE_SIZE - ctx.view.view_scroll_x -
+         ctx.view.getFloorAdjustment();
+}
+
+int mapToScreenY(int map_y, const DrawContext &ctx) {
+  return map_y * TILE_SIZE - ctx.view.view_scroll_y -
+         ctx.view.getFloorAdjustment();
+}
+} // namespace
+
 // Helper to get color from config
 glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color) {
   glm::vec4 c(1.0f);
@@ -297,11 +309,9 @@ void BrushOverlayDrawer::drawDraggingOverlay(const DrawContext &ctx,
         }
 
         for (int y = start_y; y <= end_y; y++) {
-          int cy = y * TILE_SIZE - ctx.view.view_scroll_y -
-                   ctx.view.getFloorAdjustment();
+          int cy = mapToScreenY(y, ctx);
           for (int x = start_x; x <= end_x; x++) {
-            int cx = x * TILE_SIZE - ctx.view.view_scroll_x -
-                     ctx.view.getFloorAdjustment();
+            int cx = mapToScreenX(x, ctx);
             if (brush->is<OptionalBorderBrush>()) {
               ctx.sprite_batch.drawRect(
                   static_cast<float>(cx), static_cast<float>(cy),
@@ -332,18 +342,10 @@ void BrushOverlayDrawer::drawDraggingOverlay(const DrawContext &ctx,
             std::max(ctx.canvas_state.last_click_map_y, ctx.view.mouse_map_y) +
             1;
 
-        int last_click_start_sx = last_click_start_map_x * TILE_SIZE -
-                                  ctx.view.view_scroll_x -
-                                  ctx.view.getFloorAdjustment();
-        int last_click_start_sy = last_click_start_map_y * TILE_SIZE -
-                                  ctx.view.view_scroll_y -
-                                  ctx.view.getFloorAdjustment();
-        int last_click_end_sx = last_click_end_map_x * TILE_SIZE -
-                                ctx.view.view_scroll_x -
-                                ctx.view.getFloorAdjustment();
-        int last_click_end_sy = last_click_end_map_y * TILE_SIZE -
-                                ctx.view.view_scroll_y -
-                                ctx.view.getFloorAdjustment();
+        int last_click_start_sx = mapToScreenX(last_click_start_map_x, ctx);
+        int last_click_start_sy = mapToScreenY(last_click_start_map_y, ctx);
+        int last_click_end_sx = mapToScreenX(last_click_end_map_x, ctx);
+        int last_click_end_sy = mapToScreenY(last_click_end_map_y, ctx);
 
         float w = last_click_end_sx - last_click_start_sx;
         float h = last_click_end_sy - last_click_start_sy;
@@ -411,12 +413,10 @@ void BrushOverlayDrawer::drawDraggingOverlay(const DrawContext &ctx,
       }
 
       for (int y = start_y - 1; y <= end_y + 1; y++) {
-        int cy = y * TILE_SIZE - ctx.view.view_scroll_y -
-                 ctx.view.getFloorAdjustment();
+        int cy = mapToScreenY(y, ctx);
         float dy = center_y - y;
         for (int x = start_x - 1; x <= end_x + 1; x++) {
-          int cx = x * TILE_SIZE - ctx.view.view_scroll_x -
-                   ctx.view.getFloorAdjustment();
+          int cx = mapToScreenX(x, ctx);
 
           float dx = center_x - x;
           float distance = sqrt(dx * dx + dy * dy);
