@@ -248,7 +248,7 @@ void FindBrushDialog::OnClickOKInternal()
             result_brush = brush;
         }
     }
-    EndModal(1);
+    EndModal(result_brush ? 1 : 0);
 }
 
 void FindBrushDialog::RefreshContentsInternal()

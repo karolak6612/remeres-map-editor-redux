@@ -7,15 +7,22 @@
 #include "rendering/core/texture_gc.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "ui/gui.h"
+#include <spdlog/spdlog.h>
 
 void SpriteIconRenderer::unloadDC()
 {
-    dc[SPRITE_SIZE_16x16].reset();
-    dc[SPRITE_SIZE_32x32].reset();
-    dc[SPRITE_SIZE_64x64].reset();
-    bm[SPRITE_SIZE_16x16].reset();
-    bm[SPRITE_SIZE_32x32].reset();
-    bm[SPRITE_SIZE_64x64].reset();
+    for (int i = 0; i < 3; ++i) {
+        if (dc[i]) {
+            dc[i]->SelectObject(wxNullBitmap);
+        }
+        dc[i].reset();
+        bm[i].reset();
+    }
+    for (auto& [key, cached] : colored_dc) {
+        if (cached && cached->dc) {
+            cached->dc->SelectObject(wxNullBitmap);
+        }
+    }
     colored_dc.clear();
 }
 
@@ -104,6 +111,7 @@ void SpriteIconRenderer::blitOrFallback(wxDC* target_dc, wxDC* sdc, SpriteSize s
     if (sdc) {
         target_dc->StretchBlit(start_x, start_y, width, height, sdc, 0, 0, src_width, src_height, wxCOPY, true);
     } else {
+        spdlog::warn("SpriteIconRenderer: sprite generation failed, drawing fallback rectangle.");
         const wxBrush& b = target_dc->GetBrush();
         target_dc->SetBrush(*wxRED_BRUSH);
         target_dc->DrawRectangle(start_x, start_y, width, height);

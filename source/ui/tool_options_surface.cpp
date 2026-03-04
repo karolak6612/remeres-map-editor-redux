@@ -247,13 +247,20 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr)
     // Draw Brush Sprite
     if (tr.brush) {
         Sprite* s = tr.brush->getSprite();
-        if (!s && tr.brush->getLookID() != 0) {
+        int look_id = tr.brush->getLookID();
+        if (!s && look_id != 0) {
             int x_off = r.x + (r.width - 32) / 2;
             int y_off = r.y + (r.height - 32) / 2;
 
-            const ItemType& it = g_items.getItemType(tr.brush->getLookID());
-            if (it.clientID != 0) {
-                g_gui.sprites.DrawItemSprite(it.clientID, &dc, SPRITE_SIZE_32x32, x_off, y_off);
+            if (look_id < 0) {
+                // Editor sprite (negative IDs like EDITOR_SPRITE_ERASER, EDITOR_SPRITE_PZ_TOOL)
+                g_gui.sprites.DrawItemSprite(look_id, &dc, SPRITE_SIZE_32x32, x_off, y_off);
+            } else {
+                // Server item ID — convert to clientID via items.otb
+                const ItemType& it = g_items.getItemType(look_id);
+                if (it.clientID != 0) {
+                    g_gui.sprites.DrawItemSprite(it.clientID, &dc, SPRITE_SIZE_32x32, x_off, y_off);
+                }
             }
         } else if (s) {
             // Center the sprite in the rect

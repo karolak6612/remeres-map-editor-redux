@@ -228,6 +228,7 @@ bool OtbLoader::load(
                       }
                       if (!node->getU16(it.clientID)) {
                           warnings.push_back("Invalid item type property (clientID)");
+                          return false;
                       }
                       return true;
                   };

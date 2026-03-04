@@ -4,6 +4,7 @@
 #include "rendering/core/normal_image.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/text_renderer.h"
+#include "rendering/utilities/sprite_icon_generator.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
 #include "util/image_manager.h"
@@ -287,22 +288,46 @@ int NanoVGCanvas::GetOrCreateCreatureTexture(NVGcontext* vg, uint32_t lookType, 
         return 0;
     }
 
-    // Stable cache key: high 32 bits = clientID, low 32 bits = outfit color hash
-    uint64_t key = (static_cast<uint64_t>(clientID) << 32) | outfit.getColorHash();
+    // Stable cache key: high 32 bits = clientID, low 32 bits = combined outfit + mount color hash
+    uint64_t key
+        = (static_cast<uint64_t>(clientID) << 32) | (outfit.getColorHash() ^ (static_cast<uint64_t>(outfit.getMountColorHash()) << 16));
 
     int existing = GetCachedImage(key);
     if (existing > 0) {
         return existing;
     }
 
-    int w = 0;
-    int h = 0;
-    auto composite = NvgUtils::CreateCompositeRGBA(clientID, w, h);
-    if (!composite || w <= 0 || h <= 0) {
+    // Use SpriteIconGenerator to produce a colorized bitmap (handles template coloring)
+    wxBitmap bmp = SpriteIconGenerator::Generate(clientID, SPRITE_SIZE_32x32, outfit, false);
+    if (!bmp.IsOk()) {
         return 0;
     }
 
-    return GetOrCreateImage(key, composite.get(), w, h);
+    wxImage img = bmp.ConvertToImage();
+    if (!img.IsOk()) {
+        return 0;
+    }
+
+    int w = img.GetWidth();
+    int h = img.GetHeight();
+    if (w <= 0 || h <= 0) {
+        return 0;
+    }
+
+    // Convert wxImage RGB+Alpha to RGBA for NanoVG
+    const unsigned char* rgb = img.GetData();
+    const unsigned char* alpha = img.HasAlpha() ? img.GetAlpha() : nullptr;
+    size_t pixel_count = static_cast<size_t>(w) * h;
+    auto rgba = std::make_unique<uint8_t[]>(pixel_count * 4);
+
+    for (size_t i = 0; i < pixel_count; ++i) {
+        rgba[i * 4 + 0] = rgb[i * 3 + 0];
+        rgba[i * 4 + 1] = rgb[i * 3 + 1];
+        rgba[i * 4 + 2] = rgb[i * 3 + 2];
+        rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
+    }
+
+    return GetOrCreateImage(key, rgba.get(), w, h);
 }
 
 int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uint64_t spriteId)

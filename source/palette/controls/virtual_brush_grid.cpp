@@ -2,6 +2,7 @@
 #include "app/main.h"
 #include "brushes/creature/creature_brush.h"
 #include "game/creature.h"
+#include "game/items.h"
 #include "rendering/core/atlas_lifecycle.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/texture_gc.h"

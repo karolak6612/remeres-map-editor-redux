@@ -178,7 +178,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                 }
             }
         }
-        pattern_z = std::min<int>(1, metadata.pattern_z - 1);
+        pattern_z = std::clamp(static_cast<int>(metadata.pattern_z) - 1, 0, 1);
     }
 
     for (int pattern_y = 0; pattern_y < metadata.pattern_y; pattern_y++) {
