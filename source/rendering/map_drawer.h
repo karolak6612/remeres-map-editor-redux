@@ -103,7 +103,6 @@ public:
 
     void SetupVars();
     void SetupGL();
-    void Release();
 
     void Draw();
     void DrawBackground();

@@ -120,11 +120,7 @@ MapDrawer::MapDrawer(MapCanvas& canvas, Editor& editor) : canvas(canvas), editor
     post_process_pipeline = std::make_unique<PostProcessPipeline>();
 }
 
-MapDrawer::~MapDrawer()
-{
-
-    Release();
-}
+MapDrawer::~MapDrawer() { }
 
 void MapDrawer::SetupVars()
 {
@@ -219,11 +215,6 @@ void MapDrawer::SetupGL()
     }
 
     post_process_pipeline->Initialize();
-}
-
-void MapDrawer::Release()
-{
-    // tooltip_drawer->clear(); // Moved to ClearTooltips(), called explicitly after UI draw
 }
 
 void MapDrawer::Draw()

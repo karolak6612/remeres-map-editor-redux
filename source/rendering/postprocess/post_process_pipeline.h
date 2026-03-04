@@ -23,7 +23,7 @@ public:
     void EndCaptureAndDraw(const ViewState& view, const DrawingOptions& options);
 
 private:
-    void UpdateFBO(const ViewState& view, const DrawingOptions& options);
+    bool UpdateFBO(const ViewState& view, const DrawingOptions& options);
 
     std::unique_ptr<GLFramebuffer> scale_fbo;
     std::unique_ptr<GLTextureResource> scale_texture;

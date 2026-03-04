@@ -3,6 +3,7 @@
 #include "rendering/postprocess/post_process_manager.h"
 #include "util/file_system.h"
 #include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <spdlog/spdlog.h>
 #include <sstream>
@@ -19,12 +20,13 @@ void PostProcessPipeline::Initialize()
 
     // Load Shaders
     wxString exePath = FileSystem::GetExecDirectory();
-    std::string fullPath = std::string(exePath.mb_str()) + "/shaders/screen.vert";
+    const std::filesystem::path exe_dir(exePath.ToStdString());
+    const auto fullPath = exe_dir / "shaders" / "screen.vert";
     std::ifstream vShaderFile(fullPath);
     std::string default_vert_code;
 
     if (!vShaderFile.is_open()) {
-        spdlog::error("PostProcessPipeline: Failed to load vertex shader from {}", fullPath);
+        spdlog::error("PostProcessPipeline: Failed to load vertex shader from {}", fullPath.string());
         // Fallback to inline string just in case shaders/ is missing
         default_vert_code = R"(
 #version 450 core
@@ -49,11 +51,12 @@ void main() {
     pp_vbo = std::make_unique<GLBuffer>();
     pp_ebo = std::make_unique<GLBuffer>();
 
-    float quadVertices[] = {// positions   // texCoords
-                            -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f
+    static constexpr float quadVertices[] = {
+        // positions // texCoords
+        -1.0f, 1.0f, 0.0f, 1.0f, -1.0f, -1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 1.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f,
     };
 
-    unsigned int quadIndices[] = {0, 1, 2, 0, 2, 3};
+    static constexpr unsigned int quadIndices[] = {0, 1, 2, 0, 2, 3};
 
     glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, 0);
     glNamedBufferStorage(pp_ebo->GetID(), sizeof(quadIndices), quadIndices, 0);
@@ -75,8 +78,9 @@ bool PostProcessPipeline::BeginCapture(const ViewState& view, const DrawingOptio
     bool use_fbo = (options.screen_shader_name != ShaderNames::NONE) || options.anti_aliasing;
 
     if (use_fbo) {
-        UpdateFBO(view, options);
-        return true;
+        if (UpdateFBO(view, options)) {
+            return true;
+        }
     }
 
     return false;
@@ -85,11 +89,13 @@ bool PostProcessPipeline::BeginCapture(const ViewState& view, const DrawingOptio
 void PostProcessPipeline::EndCaptureAndDraw(const ViewState& view, const DrawingOptions& options)
 {
     if (!scale_fbo || !pp_vao) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Ensure main buffer is bound
         return;
     }
 
     ShaderProgram* shader = PostProcessManager::Instance().GetEffect(options.screen_shader_name);
     if (!shader) {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0); // Ensure main buffer is bound
         return;
     }
 
@@ -110,7 +116,7 @@ void PostProcessPipeline::EndCaptureAndDraw(const ViewState& view, const Drawing
     shader->Unuse();
 }
 
-void PostProcessPipeline::UpdateFBO(const ViewState& view, const DrawingOptions& options)
+bool PostProcessPipeline::UpdateFBO(const ViewState& view, const DrawingOptions& options)
 {
     float scale_factor = view.zoom < 1.0f ? view.zoom : 1.0f;
 
@@ -134,6 +140,17 @@ void PostProcessPipeline::UpdateFBO(const ViewState& view, const DrawingOptions&
 
         if (fbo_width < 1 || fbo_height < 1) {
             spdlog::error("PostProcessPipeline: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
+            return false;
+        }
+
+        GLenum status = glCheckNamedFramebufferStatus(scale_fbo->GetID(), GL_FRAMEBUFFER);
+        if (status != GL_FRAMEBUFFER_COMPLETE) {
+            spdlog::error("PostProcessPipeline: Framebuffer incomplete (status: {:#x})", status);
+            scale_fbo.reset();
+            scale_texture.reset();
+            fbo_width = 0;
+            fbo_height = 0;
+            return false;
         }
         fbo_resized = true;
     }
@@ -147,4 +164,5 @@ void PostProcessPipeline::UpdateFBO(const ViewState& view, const DrawingOptions&
 
     glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());
     glViewport(0, 0, fbo_width, fbo_height);
+    return true;
 }
