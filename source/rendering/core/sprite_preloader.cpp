@@ -71,7 +71,7 @@ void SpritePreloader::clear()
 
 void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z, int frame)
 {
-    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
+    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() || clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
         return;
     }
     const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];

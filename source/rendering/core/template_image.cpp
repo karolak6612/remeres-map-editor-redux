@@ -84,7 +84,7 @@ namespace {
 
     bool validateTemplateParentAndIndices(const TemplateImage* img, int sprite_index, size_t& mask_index)
     {
-        if (img->clientID >= g_gui.sprites.getMetadataSpace().size()) {
+        if (img->clientID >= g_gui.sprites.getMetadataSpace().size() || img->clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
             spdlog::warn("TemplateImage (texture_id={}): Invalid clientID {}.", img->texture_id, img->clientID);
             return false;
         }

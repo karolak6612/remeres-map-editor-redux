@@ -117,13 +117,13 @@ void BrowseTileListBox::RemoveSelected()
         return;
     }
 
-    ClearSelection();
     items.clear();
 
-    // Delete the items from the tile
+    // Delete the items from the tile (must pop before clearing selection)
     auto tile_selection = TileOperations::popSelectedItems(edit_tile, true);
     // items are automatically deleted when tile_selection goes out of scope
 
+    ClearSelection();
     UpdateItems();
     Refresh();
 }

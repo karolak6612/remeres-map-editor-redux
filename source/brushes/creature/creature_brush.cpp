@@ -31,6 +31,10 @@
 
 CreatureBrush::CreatureBrush(CreatureType* type) : Brush(), creature_type(type)
 {
+    ASSERT(type);
+    if (!type) {
+        return;
+    }
     ASSERT(type->brush == nullptr);
     type->brush = this;
 }

@@ -9,6 +9,7 @@
 #include "ui/gui.h"
 #include "util/nvg_utils.h"
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <memory>
 #include <ranges>
@@ -154,8 +155,6 @@ static float CompareHistograms(std::span<const float> h1, std::span<const float>
     }
     return intersection;
 }
-
-#include <bit>
 
 static int HammingDistance(uint64_t h1, uint64_t h2)
 {

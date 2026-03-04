@@ -47,7 +47,8 @@ void OutfitPreviewPanel::OnPaint(wxPaintEvent& event)
             dir = WEST;
         }
 
-        wxBitmap bmp = SpriteIconGenerator::Generate(preview_outfit.lookType, SPRITE_SIZE_32x32, draw_outfit, false, dir);
+        uint32_t clientID = preview_outfit.lookType + g_gui.sprites.getItemSpriteMaxID();
+        wxBitmap bmp = SpriteIconGenerator::Generate(clientID, SPRITE_SIZE_32x32, draw_outfit, false, dir);
         if (bmp.IsOk()) {
             std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
             if (gc) {

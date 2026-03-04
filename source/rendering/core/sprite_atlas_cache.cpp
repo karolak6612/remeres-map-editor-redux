@@ -27,12 +27,12 @@ void SpriteAtlasCache::clean(time_t time, int longevity)
 
 bool SpriteAtlasCache::isSimpleAndLoaded(const SpriteMetadata& metadata) const
 {
-    return metadata.is_simple && !spriteList.empty() && spriteList[0]->isGLLoaded;
+    return metadata.is_simple && !spriteList.empty() && spriteList[0] != nullptr && spriteList[0]->isGLLoaded;
 }
 
 uint32_t SpriteAtlasCache::getDebugImageId(size_t index) const
 {
-    if (index < spriteList.size() && spriteList[index]->isNormalImage()) {
+    if (index < spriteList.size() && spriteList[index] != nullptr && spriteList[index]->isNormalImage()) {
         return static_cast<const NormalImage*>(spriteList[index])->id;
     }
     return 0;
@@ -41,7 +41,7 @@ uint32_t SpriteAtlasCache::getDebugImageId(size_t index) const
 uint32_t SpriteAtlasCache::getSpriteId(const SpriteMetadata& metadata, int frameIndex, int pattern_x, int pattern_y) const
 {
     auto idx = metadata.getIndex(0, 0, 0, pattern_x, pattern_y, 0, frameIndex);
-    if (idx < spriteList.size() && spriteList[idx]->isNormalImage()) {
+    if (idx < spriteList.size() && spriteList[idx] != nullptr && spriteList[idx]->isNormalImage()) {
         return static_cast<const NormalImage*>(spriteList[idx])->id;
     }
     return 0;

@@ -320,8 +320,8 @@ bool DatLoader::LoadMetadata(
     uint32_t id = minID;
     const uint32_t maxID = item_count + creature_count;
     while (id <= maxID) {
-        db.getMetadataSpace()[id].id = id;
         SpriteMetadata& metadata = db.getMetadataSpace()[id];
+        metadata.id = id;
 
         // Load flags
         if (!LoadMetadataFlags(loader.getDatFormat(), file, metadata, id, warnings)) {

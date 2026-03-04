@@ -120,7 +120,8 @@ void ItemDrawer::BlitItem(
         }
     }
 
-    bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size();
+    bool has_metadata
+        = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size() && clientID < g_gui.sprites.getAtlasCacheSpace().size();
     const SpriteMetadata* metadata = has_metadata ? &g_gui.sprites.getMetadataSpace()[clientID] : nullptr;
 
     // metaItem, sprite not found or not hidden

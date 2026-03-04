@@ -96,9 +96,10 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 
     // Check if it's a teleport
     if (is_teleport) {
-        Teleport* tp = static_cast<Teleport*>(item);
-        if (tp->hasDestination()) {
-            destination = tp->getDestination();
+        if (Teleport* tp = item->asTeleport()) {
+            if (tp->hasDestination()) {
+                destination = tp->getDestination();
+            }
         }
     }
 
@@ -244,7 +245,8 @@ void TileRenderer::DrawTile(
     } else {
         if (tile->ground && ground_it) {
             uint32_t clientID = ground_it->clientID;
-            bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size();
+            bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size()
+                && clientID < g_gui.sprites.getAtlasCacheSpace().size();
             if (has_metadata) {
                 const SpriteMetadata& metadata = g_gui.sprites.getMetadataSpace()[clientID];
                 SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
@@ -334,7 +336,8 @@ void TileRenderer::DrawTile(
                 }
 
                 uint32_t clientID = it.clientID;
-                bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size();
+                bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size()
+                    && clientID < g_gui.sprites.getAtlasCacheSpace().size();
 
                 if (has_metadata) {
                     const SpriteMetadata& metadata = g_gui.sprites.getMetadataSpace()[clientID];
@@ -407,7 +410,8 @@ void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it,
     }
 
     uint32_t clientID = it.clientID;
-    bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size();
+    bool has_metadata
+        = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size() && clientID < g_gui.sprites.getAtlasCacheSpace().size();
 
     if (has_metadata) {
         const SpriteMetadata& metadata = g_gui.sprites.getMetadataSpace()[clientID];

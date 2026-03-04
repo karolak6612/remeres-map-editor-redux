@@ -6,18 +6,23 @@
 #include "rendering/io/sprite_loader.h"
 #include "util/image_manager.h"
 #include <memory>
+#include <string_view>
 
-inline auto makeEditorSprite(std::string_view pathSmall, std::string_view pathLarge)
-{
-    return std::make_unique<EditorSprite>(
-        std::make_unique<wxBitmap>(IMAGE_MANAGER.GetBitmap(pathSmall)), std::make_unique<wxBitmap>(IMAGE_MANAGER.GetBitmap(pathLarge))
-    );
-}
+namespace {
 
-inline auto makeSingleEditorSprite(std::string_view path)
-{
-    return std::make_unique<EditorSprite>(std::make_unique<wxBitmap>(IMAGE_MANAGER.GetBitmap(path)), nullptr);
-}
+    auto makeEditorSprite(std::string_view pathSmall, std::string_view pathLarge)
+    {
+        return std::make_unique<EditorSprite>(
+            std::make_unique<wxBitmap>(IMAGE_MANAGER.GetBitmap(pathSmall)), std::make_unique<wxBitmap>(IMAGE_MANAGER.GetBitmap(pathLarge))
+        );
+    }
+
+    auto makeSingleEditorSprite(std::string_view path)
+    {
+        return std::make_unique<EditorSprite>(std::make_unique<wxBitmap>(IMAGE_MANAGER.GetBitmap(path)), nullptr);
+    }
+
+} // namespace
 
 bool EditorSpriteLoader::Load([[maybe_unused]] SpriteLoader* loader, SpriteDatabase& db)
 {

@@ -15,15 +15,15 @@ public:
     virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
 
     const AtlasRegion* getAtlasRegion();
-    const AtlasRegion* atlas_region;
+    const AtlasRegion* atlas_region = nullptr;
 
-    uint32_t texture_id; // Unique ID for AtlasManager key
-    uint32_t clientID;
-    int sprite_index;
-    uint8_t lookHead;
-    uint8_t lookBody;
-    uint8_t lookLegs;
-    uint8_t lookFeet;
+    uint32_t texture_id = 0; // Unique ID for AtlasManager key
+    uint32_t clientID = 0;
+    int sprite_index = 0;
+    uint8_t lookHead = 0;
+    uint8_t lookBody = 0;
+    uint8_t lookLegs = 0;
+    uint8_t lookFeet = 0;
 };
 
 #endif

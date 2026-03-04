@@ -75,7 +75,7 @@ void SpriteDrawer::glSetColor(wxColor color)
 
 void SpriteDrawer::BlitSprite(const DrawContext& ctx, int screenx, int screeny, uint32_t clientID, DrawColor color)
 {
-    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
+    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() || clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
         return;
     }
     const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];

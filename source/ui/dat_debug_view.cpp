@@ -73,7 +73,9 @@ void DatDebugViewListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) con
         dc.SetTextForeground(wxColor(0x00, 0x00, 0x00));
     }
 
-    dc.DrawText(wxString() << n, rect.GetX() + 40, rect.GetY() + 6);
+    if (n < sprite_ids.size()) {
+        dc.DrawText(wxString() << sprite_ids[n], rect.GetX() + 40, rect.GetY() + 6);
+    }
 }
 
 wxCoord DatDebugViewListBox::OnMeasureItem(size_t n) const

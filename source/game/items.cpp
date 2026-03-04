@@ -199,6 +199,7 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
         }
     } else {
         error = "Expected ROOT_ATTR_VERSION as first node of items.otb!";
+        return false;
     }
 
     if (g_settings.getInteger(Config::CHECK_SIGNATURES)) {
@@ -224,6 +225,8 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
             error = std::format("items.otb: Unsupported version ({})", MajorVersion);
             return false;
     }
+
+#undef safe_get
 
     bool res = loadFromOtbGeneric(itemNode, version, error, warnings);
     if (res) {

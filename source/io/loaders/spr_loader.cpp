@@ -185,6 +185,10 @@ bool SprLoader::LoadDump(const std::string& filename, bool extended, std::unique
         return true;
     }
 
+    if (sprite_id < 0) {
+        return false;
+    }
+
     if (filename.empty()) {
         return false;
     }

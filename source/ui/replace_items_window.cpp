@@ -349,7 +349,6 @@ void ReplaceItemsDialog::OnReplaceItemClicked(wxMouseEvent& WXUNUSED(event))
             UpdateWidgets();
         }
     }
-    dialog.Destroy();
 }
 
 void ReplaceItemsDialog::OnWithItemClicked(wxMouseEvent& WXUNUSED(event))
@@ -366,7 +365,6 @@ void ReplaceItemsDialog::OnWithItemClicked(wxMouseEvent& WXUNUSED(event))
             UpdateWidgets();
         }
     }
-    dialog.Destroy();
 }
 
 void ReplaceItemsDialog::OnAddButtonClicked(wxCommandEvent& WXUNUSED(event))
@@ -452,6 +450,8 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
     }
 
     tab->Refresh();
+    replace_button->Enable(true);
+    with_button->Enable(true);
     close_button->Enable(true);
     UpdateWidgets();
 }

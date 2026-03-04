@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "rendering/core/draw_context.h"
+#include "rendering/utilities/pattern_calculator.h"
 
 class TileLocation;
 class Editor;
@@ -16,7 +17,6 @@ class CreatureNameDrawer;
 class FloorDrawer;
 class MarkerDrawer;
 class TooltipDrawer;
-#include "rendering/utilities/pattern_calculator.h"
 
 class TileRenderer {
 public:

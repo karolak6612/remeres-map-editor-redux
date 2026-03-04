@@ -405,6 +405,7 @@ void CreatureDatabase::processLoadedCreature(std::unique_ptr<CreatureType> creat
     CreatureType* current = (*this)[creatureType->name];
     if (current) {
         CreatureType::preserve_assign_creature_fields(current, *creatureType);
+        ensureCreatureBrush(current);
     } else {
         CreatureType* ptr = creatureType.get();
         creature_map[as_lower_str(ptr->name)] = std::move(creatureType);

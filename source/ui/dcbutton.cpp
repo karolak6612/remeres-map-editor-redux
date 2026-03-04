@@ -88,7 +88,6 @@ void DCButton::SetValue(bool val)
         } else {
             SetOverlay(0);
         }
-        Refresh();
     }
 }
 
