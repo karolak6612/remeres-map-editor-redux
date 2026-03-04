@@ -85,9 +85,7 @@ wxMemoryDC* SpriteIconRenderer::getDC(uint32_t clientID, const SpriteMetadata& m
     return it->second->dc.get();
 }
 
-void SpriteIconRenderer::DrawTo(
-    uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, int start_x, int start_y, int width, int height
-)
+void SpriteIconRenderer::blitOrFallback(wxDC* target_dc, wxDC* sdc, SpriteSize sz, int start_x, int start_y, int width, int height)
 {
     const int sprite_dim = (sz == SPRITE_SIZE_64x64) ? 64 : (sz == SPRITE_SIZE_32x32 ? 32 : 16);
     int src_width = sprite_dim;
@@ -99,7 +97,7 @@ void SpriteIconRenderer::DrawTo(
     if (height == -1) {
         height = src_height;
     }
-    wxDC* sdc = getDC(clientID, metadata, sz);
+
     if (sdc) {
         target_dc->StretchBlit(start_x, start_y, width, height, sdc, 0, 0, src_width, src_height, wxCOPY, true);
     } else {
@@ -111,27 +109,16 @@ void SpriteIconRenderer::DrawTo(
 }
 
 void SpriteIconRenderer::DrawTo(
+    uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, int start_x, int start_y, int width, int height
+)
+{
+    blitOrFallback(target_dc, getDC(clientID, metadata, sz), sz, start_x, start_y, width, height);
+}
+
+void SpriteIconRenderer::DrawTo(
     uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y,
     int width, int height
 )
 {
-    const int sprite_dim = (sz == SPRITE_SIZE_64x64) ? 64 : (sz == SPRITE_SIZE_32x32 ? 32 : 16);
-    int src_width = sprite_dim;
-    int src_height = sprite_dim;
-
-    if (width == -1) {
-        width = src_width;
-    }
-    if (height == -1) {
-        height = src_height;
-    }
-    wxDC* sdc = getDC(clientID, metadata, sz, outfit);
-    if (sdc) {
-        target_dc->StretchBlit(start_x, start_y, width, height, sdc, 0, 0, src_width, src_height, wxCOPY, true);
-    } else {
-        const wxBrush& b = target_dc->GetBrush();
-        target_dc->SetBrush(*wxRED_BRUSH);
-        target_dc->DrawRectangle(start_x, start_y, width, height);
-        target_dc->SetBrush(b);
-    }
+    blitOrFallback(target_dc, getDC(clientID, metadata, sz, outfit), sz, start_x, start_y, width, height);
 }

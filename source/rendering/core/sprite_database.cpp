@@ -33,16 +33,29 @@ void SpriteDatabase::insertEditorSprite(int id, std::unique_ptr<Sprite> sprite)
 
 SpriteMetadata& SpriteDatabase::getMetadata(uint32_t id)
 {
+    if (id >= metadata_space.size()) {
+        static SpriteMetadata fallback;
+        fallback = SpriteMetadata {}; // Reset each call to avoid stale state
+        return fallback;
+    }
     return metadata_space[id];
 }
 
 SpriteAtlasCache& SpriteDatabase::getAtlasCache(uint32_t id)
 {
+    if (id >= atlas_space.size()) {
+        static SpriteAtlasCache fallback;
+        return fallback;
+    }
     return atlas_space[id];
 }
 
 SpriteIconRenderer& SpriteDatabase::getIconRenderer(uint32_t id)
 {
+    if (id >= icon_space.size()) {
+        static SpriteIconRenderer fallback;
+        return fallback;
+    }
     return icon_space[id];
 }
 

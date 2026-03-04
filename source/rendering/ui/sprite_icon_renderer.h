@@ -51,6 +51,9 @@ protected:
     wxMemoryDC* getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size);
     wxMemoryDC* getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size, const Outfit& outfit);
 
+private:
+    void blitOrFallback(wxDC* target_dc, wxDC* sdc, SpriteSize sz, int start_x, int start_y, int width, int height);
+
     std::unique_ptr<wxMemoryDC> dc[SPRITE_SIZE_COUNT];
     std::unique_ptr<wxBitmap> bm[SPRITE_SIZE_COUNT];
 
@@ -76,9 +79,11 @@ protected:
     struct RenderKeyHash {
         size_t operator()(const RenderKey& k) const noexcept
         {
-            size_t h = std::hash<uint64_t> {}((uint64_t(k.colorHash) << 32) | k.mountColorHash);
+            size_t h = std::hash<int> {}(static_cast<int>(k.size));
+            h ^= std::hash<uint64_t> {}((uint64_t(k.colorHash) << 32) | k.mountColorHash) + 0x9e3779b9 + (h << 6) + (h >> 2);
             h ^= std::hash<uint64_t> {}((uint64_t(k.lookMount) << 32) | k.lookAddon) + 0x9e3779b9 + (h << 6) + (h >> 2);
             h ^= std::hash<uint64_t> {}((uint64_t(k.lookMountHead) << 32) | k.lookMountBody) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            h ^= std::hash<uint64_t> {}((uint64_t(k.lookMountLegs) << 32) | k.lookMountFeet) + 0x9e3779b9 + (h << 6) + (h >> 2);
             return h;
         }
     };

@@ -84,12 +84,7 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     if (_count >= 0 && metadata.height <= 1 && metadata.width <= 1) {
         v = _count;
     } else {
-        v
-            = ((((((_frame)*metadata.pattern_y + _pattern_y) * metadata.pattern_x + _pattern_x) * metadata.layers + _layer)
-                    * metadata.height
-                + _y)
-                   * metadata.width
-               + _x);
+        v = static_cast<uint32_t>(metadata.getIndex(_x, _y, _layer, _pattern_x, _pattern_y, _pattern_z, _frame));
     }
     if (v >= metadata.numsprites) {
         if (metadata.numsprites == 1) {
