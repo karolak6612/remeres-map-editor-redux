@@ -135,8 +135,8 @@ bool SprLoader::ReadSprites(
             if (spr) {
                 if (size > 0) {
                     if (spr->size > 0) {
-                        // Duplicate GameSprite id
-                        warnings.push_back(std::format("items.spr: Duplicate GameSprite id {}", id));
+                        // Duplicate sprite id
+                        warnings.push_back(std::format("items.spr: Duplicate sprite id {}", id));
                         if (!fh.seekRelative(size)) {
                             error = wxstr(fh.getErrorMessage());
                             return false;

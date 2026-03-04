@@ -42,7 +42,6 @@ class FlagBrush;
 class RAWBrush;
 
 class ItemType;
-class GameSprite;
 class ItemDatabase;
 
 extern ItemDatabase g_items;
@@ -501,7 +500,6 @@ protected:
     uint16_t maxclientID;
     uint16_t max_item_id;
 
-    friend class GameSprite;
     friend class Item;
     friend class OtbLoader;
 };

@@ -252,7 +252,7 @@ void TileRenderer::DrawTile(
                 SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
                 SpritePatterns patterns = PatternCalculator::Calculate(&metadata, *ground_it, tile->ground.get(), tile, position);
 
-                // Inline preload check Ă˘â‚¬â€ť skip function call when sprite is simple and loaded (95%+ case)
+                // Inline preload check — skip function call when sprite is simple and loaded (95%+ case)
                 if (!atlas.isSimpleAndLoaded(metadata)) {
                     rme::collectTileSprites(clientID, patterns.x, patterns.y, patterns.z, patterns.frame);
                 }
@@ -265,6 +265,9 @@ void TileRenderer::DrawTile(
                 params.blue = b;
                 params.patterns = &patterns;
                 item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+            } else {
+                // Missing sprite — draw magenta placeholder
+                sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(255, 0, 255, 128));
             }
         } else if (ctx.options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
             ItemType* zoneItem = &g_items[SPRITE_ZONE];
@@ -272,7 +275,7 @@ void TileRenderer::DrawTile(
         }
     }
 
-    // Cache isHouseTile Ă˘â‚¬â€ť used multiple times below
+    // Cache isHouseTile — used multiple times below
     const bool is_house_tile = tile->isHouseTile();
 
     // Ground tooltip (one per item)
@@ -345,7 +348,7 @@ void TileRenderer::DrawTile(
 
                     SpritePatterns patterns = PatternCalculator::Calculate(&metadata, it, item.get(), tile, position);
 
-                    // Inline preload check Ă˘â‚¬â€ť skip function call when sprite is simple and loaded
+                    // Inline preload check — skip function call when sprite is simple and loaded
                     if (!atlas.isSimpleAndLoaded(metadata)) {
                         rme::collectTileSprites(clientID, patterns.x, patterns.y, patterns.z, patterns.frame);
                     }
@@ -382,6 +385,9 @@ void TileRenderer::DrawTile(
                         params.blue = ib;
                         item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x, draw_y, params);
                     }
+                } else if (clientID > 0) {
+                    // Missing sprite — draw magenta placeholder
+                    sprite_drawer->glBlitSquare(ctx, draw_x, draw_y, DrawColor(255, 0, 255, 128));
                 }
             }
             // monster/npc on tile

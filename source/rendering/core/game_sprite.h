@@ -51,7 +51,7 @@ public:
     ~CreatureSprite() override;
 
     void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) override;
-    virtual void unloadDC() override;
+    void unloadDC() override;
     wxSize GetSize() const override
     {
         return wxSize(32, 32);

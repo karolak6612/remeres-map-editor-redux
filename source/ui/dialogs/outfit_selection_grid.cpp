@@ -103,15 +103,15 @@ wxSize OutfitSelectionGrid::DoGetBestClientSize() const
 
 int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, const Outfit& outfit)
 {
+    if (lookType <= 0) {
+        return 0;
+    }
+
     uint32_t cache_key = (static_cast<uint32_t>(lookType) << 16) | (outfit.getColorHash() & 0xFFFF);
 
     int existing = GetCachedImage(cache_key);
     if (existing > 0) {
         return existing;
-    }
-
-    if (lookType <= 0) {
-        return 0;
     }
     uint32_t clientID = static_cast<uint32_t>(lookType) + g_gui.sprites.getItemSpriteMaxID();
     if (clientID >= g_gui.sprites.getMetadataSpace().size()) {

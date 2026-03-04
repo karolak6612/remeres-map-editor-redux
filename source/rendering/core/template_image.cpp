@@ -27,6 +27,7 @@ TemplateImage::TemplateImage(uint32_t clientID, int v, const Outfit& outfit) :
 TemplateImage::~TemplateImage()
 {
     if (isGLLoaded) {
+        g_gui.gc.removeResidentImage(this);
         if (g_gui.atlas.hasAtlasManager()) {
             g_gui.atlas.getAtlasManager()->removeSprite(texture_id);
         }

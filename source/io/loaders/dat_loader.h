@@ -9,7 +9,6 @@
 class SpriteLoader;
 class SpriteDatabase;
 class FileReadHandle;
-class GameSprite;
 
 class DatLoader {
 public:

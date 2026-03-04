@@ -83,8 +83,8 @@ bool ReplaceItemsListBox::AddItem(const ReplacingItem& item)
         return false;
     }
 
-    SetItemCount(GetItemCount() + 1);
     m_items.push_back(item);
+    SetItemCount(static_cast<int>(m_items.size()));
     Refresh();
 
     return true;
@@ -112,7 +112,7 @@ void ReplaceItemsListBox::RemoveSelected()
     }
 
     m_items.erase(m_items.begin() + index);
-    SetItemCount(GetItemCount() - 1);
+    SetItemCount(static_cast<int>(m_items.size()));
     Refresh();
 }
 
@@ -336,7 +336,7 @@ void ReplaceItemsDialog::UpdateWidgets()
 
 void ReplaceItemsDialog::OnListSelected(wxCommandEvent& WXUNUSED(event))
 {
-    remove_button->Enable(list->GetCount() != 0 && list->GetSelection() != wxNOT_FOUND);
+    UpdateWidgets();
 }
 
 void ReplaceItemsDialog::OnReplaceItemClicked(wxMouseEvent& WXUNUSED(event))

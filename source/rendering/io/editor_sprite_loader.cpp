@@ -26,7 +26,7 @@ namespace {
 
 bool EditorSpriteLoader::Load([[maybe_unused]] SpriteLoader* loader, SpriteDatabase& db)
 {
-    // Unused graphics MIGHT be loaded here, but it's a neglectable loss
+    // Unused graphics MIGHT be loaded here, but it's a negligible loss
     db.insertEditorSprite(
         EDITOR_SPRITE_SELECTION_MARKER,
         std::make_unique<EditorSprite>(
