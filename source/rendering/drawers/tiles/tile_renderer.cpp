@@ -1,4 +1,4 @@
-﻿#include "rendering/drawers/tiles/tile_renderer.h"
+#include "rendering/drawers/tiles/tile_renderer.h"
 #include "app/main.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_batch.h"

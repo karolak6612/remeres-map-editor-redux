@@ -57,8 +57,8 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     }
 
     if (_count == -1 && metadata.is_simple) {
-        if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0
-            && !spriteList.empty()) {
+        if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0 && !spriteList.empty()
+            && spriteList[0]) {
             if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id
                 && cached_sprite_id == spriteList[0]->id) {
                 return cached_default_region;

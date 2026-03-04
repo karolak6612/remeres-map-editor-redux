@@ -7,6 +7,7 @@
 #include <memory>
 #include <mutex>
 #include <unordered_set>
+#include <vector>
 
 class GameSprite;
 class Sprite;

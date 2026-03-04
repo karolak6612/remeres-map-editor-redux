@@ -96,7 +96,7 @@ void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y, i
                 int idx = meta.getIndex(cx, cy, cf, pattern_x, pattern_y, pattern_z, frame);
 
                 if (idx >= static_cast<int>(meta.numsprites)) {
-                    if (meta.numsprites == 1) {
+                    if (meta.numsprites <= 1) {
                         idx = 0;
                     } else {
                         idx %= meta.numsprites;
@@ -183,7 +183,7 @@ void SpritePreloader::update()
             return;
         }
         results = std::move(result_queue);
-        local_cancelled = std::move(cancelled_ids); // Move all cancelled IDs for batch checking
+        local_cancelled = cancelled_ids; // Copy — don't move, preserves for later batches
     }
 
     thread_local std::vector<uint32_t> ids_processed;

@@ -217,10 +217,12 @@ void BrowseFieldList::OnItemSelected(wxCommandEvent& event)
 
     // Issue #3: Sync selection with the editor
     Editor* editor = g_gui.GetCurrentEditor();
-    if (editor && current_tile && selected_item) {
+    if (editor && current_tile) {
         editor->selection.start(Selection::INTERNAL);
         editor->selection.clear();
-        editor->selection.add(current_tile, selected_item);
+        if (selected_item) {
+            editor->selection.add(current_tile, selected_item);
+        }
         editor->selection.finish(Selection::INTERNAL);
     }
 

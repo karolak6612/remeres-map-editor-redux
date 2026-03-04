@@ -253,6 +253,8 @@ void BrowseTileWindow::OnClickDelete(wxCommandEvent& WXUNUSED(event))
 {
     item_list->RemoveSelected();
     item_count_txt->SetLabelText("Item count:  " + i2ws(item_list->GetItemCount()));
+    delete_button->Enable(item_list->GetSelectedCount() != 0);
+    select_raw_button->Enable(item_list->GetSelectedCount() == 1);
 }
 
 void BrowseTileWindow::OnClickSelectRaw(wxCommandEvent& WXUNUSED(event))

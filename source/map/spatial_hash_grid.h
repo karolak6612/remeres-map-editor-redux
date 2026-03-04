@@ -1,4 +1,4 @@
-﻿#ifndef RME_MAP_SPATIAL_HASH_GRID_H
+#ifndef RME_MAP_SPATIAL_HASH_GRID_H
 #define RME_MAP_SPATIAL_HASH_GRID_H
 
 #include "app/main.h"

@@ -238,10 +238,8 @@ bool ItemDatabase::loadFromOtb(const FileName& datafile, wxString& error, std::v
 bool ItemDatabase::loadItemFromGameXml(pugi::xml_node itemNode, int id)
 {
     if (g_version.GetCurrentVersion().getProtocolID() < CLIENT_VERSION_980 && id > 20000 && id < 20100) {
-        itemNode = itemNode.next_sibling();
         return true;
     } else if (id > 30000 && id < 30100) {
-        itemNode = itemNode.next_sibling();
         return true;
     }
 
@@ -288,7 +286,7 @@ bool ItemDatabase::loadFromGameXml(const FileName& identifier, wxString& error, 
             return false;
         }
 
-        for (uint16_t id = fromId; id <= toId; ++id) {
+        for (uint32_t id = fromId; id <= toId; ++id) {
             if (!loadItemFromGameXml(itemNode, id)) {
                 return false;
             }

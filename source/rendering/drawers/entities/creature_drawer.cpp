@@ -55,7 +55,8 @@ void CreatureDrawer::BlitCreature(
     } else {
         // get outfit sprite
         uint32_t clientID = g_gui.sprites.getItemSpriteMaxID() + outfit.lookType;
-        if (clientID >= g_gui.sprites.getMetadataSpace().size() || outfit.lookType == 0) {
+        if (clientID >= g_gui.sprites.getMetadataSpace().size() || clientID >= g_gui.sprites.getAtlasCacheSpace().size()
+            || outfit.lookType == 0) {
             return;
         }
 
@@ -74,7 +75,7 @@ void CreatureDrawer::BlitCreature(
         int pattern_z = 0;
         if (outfit.lookMount != 0) {
             uint32_t mountClientID = g_gui.sprites.getItemSpriteMaxID() + outfit.lookMount;
-            if (mountClientID < g_gui.sprites.getMetadataSpace().size()) {
+            if (mountClientID < g_gui.sprites.getMetadataSpace().size() && mountClientID < g_gui.sprites.getAtlasCacheSpace().size()) {
                 const SpriteMetadata& mountMeta = g_gui.sprites.getMetadataSpace()[mountClientID];
                 SpriteAtlasCache& mountAtlas = g_gui.sprites.getAtlasCacheSpace()[mountClientID];
 

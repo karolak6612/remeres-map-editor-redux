@@ -182,7 +182,8 @@ void VirtualBrushGrid::DrawBrushItem(NVGcontext* vg, int i, const wxRect& rect)
         if (auto* creature_brush = dynamic_cast<CreatureBrush*>(brush)) {
             if (auto* ct = creature_brush->getType(); ct && ct->outfit.lookType != 0 && ct->outfit.lookItem == 0) {
                 tex = GetOrCreateCreatureTexture(vg, ct->outfit.lookType, ct->outfit);
-            } else if (brush->getLookID() != 0) {
+            }
+            if (tex == 0 && brush->getLookID() != 0) {
                 tex = GetOrCreateClientSpriteImage(brush->getLookID());
             }
         } else if (Sprite* spr = brush->getSprite()) {
@@ -257,7 +258,7 @@ int VirtualBrushGrid::HitTest(int x, int y) const
         int index = row;
         // Check horizontal bounds properly
         int width = GetClientSize().x - 2 * padding;
-        if (realX >= padding && realX <= GetClientSize().x - padding) {
+        if (realX >= padding && realX < GetClientSize().x - padding) {
             return index;
         }
         return -1;

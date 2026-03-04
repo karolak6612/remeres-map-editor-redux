@@ -16,11 +16,11 @@ public:
     const AtlasRegion* getAtlasRegion();
 
     // We use the sprite id as key
-    uint32_t id;
-    const AtlasRegion* atlas_region;
+    uint32_t id = 0;
+    const AtlasRegion* atlas_region = nullptr;
 
     // This contains the pixel data
-    uint16_t size;
+    uint16_t size = 0;
     std::unique_ptr<uint8_t[]> dump;
 
     void clean(time_t time, int longevity) override;

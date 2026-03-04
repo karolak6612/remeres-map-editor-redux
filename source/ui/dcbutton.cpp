@@ -31,8 +31,8 @@ IMPLEMENT_DYNAMIC_CLASS(DCButton, NanoVGCanvas)
 DCButton::DCButton() :
     NanoVGCanvas(nullptr, wxID_ANY, 0), type(DC_BTN_NORMAL), state(false), size(RENDER_SIZE_16x16), sprite_id(0), overlay_id(0)
 {
-    SetSize(FromDIP(wxSize(36, 36)));
-    SetMinSize(FromDIP(wxSize(36, 36)));
+    SetSize(FromDIP(wxSize(20, 20)));
+    SetMinSize(FromDIP(wxSize(20, 20)));
     Bind(wxEVT_LEFT_DOWN, &DCButton::OnClick, this);
     SetSprite(0);
 }

@@ -122,8 +122,8 @@ void TextureGC::garbageCollection(SpriteDatabase& db)
 
                 // Call clean on resident ui sprites
                 for (uint32_t gs : resident_game_sprites) {
-                    if (gs > 0 && gs < g_gui.sprites.getIconRendererSpace().size()) {
-                        g_gui.sprites.getIconRendererSpace()[gs].clean(cached_time_, longevity);
+                    if (gs > 0 && gs < db.getIconRendererSpace().size()) {
+                        db.getIconRendererSpace()[gs].clean(cached_time_, longevity);
                     }
                 }
             }
