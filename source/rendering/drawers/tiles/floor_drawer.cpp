@@ -26,45 +26,59 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 	// Draw "transparent higher floor"
 	if (view.floor != 8 && view.floor != 0 && options.transparent_floors) {
 		int map_z = view.floor - 1;
-		for (int map_x = view.start_x; map_x <= view.end_x; map_x++) {
-			for (int map_y = view.start_y; map_y <= view.end_y; map_y++) {
-				Tile* tile = editor.map.getTile(map_x, map_y, map_z);
-				if (tile) {
-					int offset;
-					if (map_z <= GROUND_LAYER) {
-						offset = (GROUND_LAYER - map_z) * TILE_SIZE;
-					} else {
-						offset = TILE_SIZE * (view.floor - map_z);
+
+		int offset;
+		if (map_z <= GROUND_LAYER) {
+			offset = (GROUND_LAYER - map_z) * TILE_SIZE;
+		} else {
+			offset = TILE_SIZE * (view.floor - map_z);
+		}
+
+		editor.map.visitLeaves(view.start_x, view.start_y, view.end_x, view.end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+			Floor* floor = nd->getFloor(map_z);
+			if (!floor) {
+				return;
+			}
+
+			TileLocation* location = floor->locs.data();
+			for (int x = 0; x < 4; ++x) {
+				int map_x = nd_map_x + x;
+				for (int y = 0; y < 4; ++y, ++location) {
+					int map_y = nd_map_y + y;
+
+					if (map_x < view.start_x || map_x > view.end_x || map_y < view.start_y || map_y > view.end_y) {
+						continue;
 					}
 
-					int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
-					int draw_y = ((map_y * TILE_SIZE) - view.view_scroll_y) - offset;
+					Tile* tile = location->get();
+					if (tile) {
+						int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
+						int draw_y = ((map_y * TILE_SIZE) - view.view_scroll_y) - offset;
 
-					// Position pos = tile->getPosition();
-
-					if (tile->ground) {
-						BlitItemParams params(tile, tile->ground.get(), options);
-						params.alpha = 96;
-						if (tile->isPZ()) {
-							params.red = 128;
-							params.green = 255;
-							params.blue = 128;
-						} else {
-							params.red = 255;
-							params.green = 255;
-							params.blue = 255;
-						}
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
-					}
-					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
-						for (const auto& item : tile->items) {
-							BlitItemParams params(tile, item.get(), options);
+						if (tile->ground) {
+							BlitItemParams params(tile, tile->ground.get(), options);
 							params.alpha = 96;
+							if (tile->isPZ()) {
+								params.red = 128;
+								params.green = 255;
+								params.blue = 128;
+							} else {
+								params.red = 255;
+								params.green = 255;
+								params.blue = 255;
+							}
 							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						}
+						if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
+							for (const auto& item : tile->items) {
+								BlitItemParams params(tile, item.get(), options);
+								params.alpha = 96;
+								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+							}
 						}
 					}
 				}
 			}
-		}
+		});
 	}
 }
