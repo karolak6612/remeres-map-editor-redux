@@ -1,8 +1,9 @@
+#include "rendering/postprocess/effects/effects.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 namespace {
 
-	const char* screen_frag = R"(
+const char *screen_frag = R"(
 #version 450 core
 in vec2 vTexCoord;
 out vec4 FragColor;
@@ -14,11 +15,8 @@ void main() {
 }
 )";
 
-	// Auto-register (Bilinear/Screen)
-	struct ScreenRegister {
-		ScreenRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::NONE, screen_frag);
-		}
-	} screen_register;
-
 } // namespace
+
+void RegisterScreenEffect(PostProcessManager &manager) {
+  manager.Register(ShaderNames::NONE, screen_frag);
+}

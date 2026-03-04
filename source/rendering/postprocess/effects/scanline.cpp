@@ -1,8 +1,9 @@
+#include "rendering/postprocess/effects/effects.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 namespace {
 
-	const char* scanline_frag_source = R"(
+const char *scanline_frag_source = R"(
 #version 450 core
 in vec2 vTexCoord;
 out vec4 FragColor;
@@ -136,11 +137,8 @@ void main(){
 }
 )";
 
-	// Auto-register
-	struct ScanlineRegister {
-		ScanlineRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::SCANLINE, scanline_frag_source);
-		}
-	} scanline_register;
-
 } // namespace
+
+void RegisterScanlineEffect(PostProcessManager &manager) {
+  manager.Register(ShaderNames::SCANLINE, scanline_frag_source);
+}

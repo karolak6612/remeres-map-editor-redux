@@ -119,7 +119,8 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
   item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
   item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
 
-  post_process_pipeline = std::make_unique<PostProcessPipeline>();
+  post_process_pipeline =
+      std::make_unique<PostProcessPipeline>(post_process_manager_);
 }
 
 MapDrawer::~MapDrawer() {}

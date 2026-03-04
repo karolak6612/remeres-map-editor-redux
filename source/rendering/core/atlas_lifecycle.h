@@ -2,24 +2,30 @@
 #define RME_RENDERING_CORE_ATLAS_LIFECYCLE_H_
 
 #include "rendering/core/atlas_manager.h"
+#include "rendering/core/sprite_preloader.h"
 #include <memory>
 
 class AtlasLifecycle {
 public:
-	AtlasLifecycle() = default;
-	~AtlasLifecycle();
+  AtlasLifecycle() = default;
+  ~AtlasLifecycle();
 
-	AtlasLifecycle(const AtlasLifecycle&) = delete;
-	AtlasLifecycle& operator=(const AtlasLifecycle&) = delete;
+  AtlasLifecycle(const AtlasLifecycle &) = delete;
+  AtlasLifecycle &operator=(const AtlasLifecycle &) = delete;
 
-	AtlasManager* getAtlasManager() { return atlas_manager_.get(); }
-	bool hasAtlasManager() const { return atlas_manager_ != nullptr && atlas_manager_->isValid(); }
-	bool ensureAtlasManager();
+  AtlasManager *getAtlasManager() { return atlas_manager_.get(); }
+  bool hasAtlasManager() const {
+    return atlas_manager_ != nullptr && atlas_manager_->isValid();
+  }
+  bool ensureAtlasManager();
 
-	void clear();
+  SpritePreloader &getSpritePreloader() { return sprite_preloader_; }
+
+  void clear();
 
 private:
-	std::unique_ptr<AtlasManager> atlas_manager_ = nullptr;
+  std::unique_ptr<AtlasManager> atlas_manager_ = nullptr;
+  SpritePreloader sprite_preloader_;
 };
 
 #endif
