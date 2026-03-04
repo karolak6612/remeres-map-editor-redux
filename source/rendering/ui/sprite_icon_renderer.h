@@ -24,6 +24,8 @@ public:
 
     void clean(time_t time, int longevity)
     {
+        // Only clean if longevity indicates forced cleanup (-1 → settings-based)
+        // or always clean for simplicity since UI sprites are cheap to recreate
         unloadDC();
     }
 

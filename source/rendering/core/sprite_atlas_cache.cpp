@@ -40,7 +40,7 @@ uint32_t SpriteAtlasCache::getDebugImageId(size_t index) const
 
 uint32_t SpriteAtlasCache::getSpriteId(const SpriteMetadata& metadata, int frameIndex, int pattern_x, int pattern_y) const
 {
-    auto idx = metadata.getIndex(metadata.width, metadata.height, 0, pattern_x, pattern_y, 0, frameIndex);
+    auto idx = metadata.getIndex(0, 0, 0, pattern_x, pattern_y, 0, frameIndex);
     if (idx < spriteList.size() && spriteList[idx]->isNormalImage()) {
         return static_cast<const NormalImage*>(spriteList[idx])->id;
     }

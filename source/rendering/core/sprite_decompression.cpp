@@ -4,6 +4,7 @@
 
 #include "rendering/core/sprite_decompression.h"
 #include <algorithm>
+#include <atomic>
 #include <spdlog/spdlog.h>
 
 namespace {
@@ -135,13 +136,13 @@ std::unique_ptr<uint8_t[]> decompress_sprite(std::span<const uint8_t> dump, bool
 
     // Debug logging for diagnostic - verify if we are decoding pure transparency or pure blackness
     if (!non_zero_alpha_found && id > 100) {
-        static int empty_log_count = 0;
-        if (empty_log_count++ < 10) {
+        static std::atomic<int> empty_log_count = 0;
+        if (empty_log_count.fetch_add(1, std::memory_order_relaxed) < 10) {
             spdlog::info("Sprite {}: Decoded fully transparent sprite. bpp used: {}, dump size: {}", id, bpp, dump.size());
         }
     } else if (!non_black_pixel_found && non_zero_alpha_found && id > 100) {
-        static int black_log_count = 0;
-        if (black_log_count++ < 10) {
+        static std::atomic<int> black_log_count = 0;
+        if (black_log_count.fetch_add(1, std::memory_order_relaxed) < 10) {
             spdlog::warn(
                 "Sprite {}: Decoded PURE BLACK sprite (Alpha > 0, RGB = 0). bpp used: {}, dump size: {}. Check hasTransparency() config!",
                 id, bpp, dump.size()

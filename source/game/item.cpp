@@ -202,7 +202,7 @@ bool Item::isLocked() const
 std::pair<int, int> Item::getDrawOffset() const
 {
     ItemType& it = g_items[id];
-    if (it.clientID != 0) {
+    if (it.clientID != 0 && it.clientID < g_gui.sprites.getMetadataSpace().size()) {
         const SpriteMetadata& meta = g_gui.sprites.getMetadata(it.clientID);
         return std::make_pair(meta.drawoffset_x, meta.drawoffset_y);
     }
@@ -212,7 +212,7 @@ std::pair<int, int> Item::getDrawOffset() const
 bool Item::hasLight() const
 {
     const ItemType& type = g_items.getItemType(id);
-    if (type.clientID != 0) {
+    if (type.clientID != 0 && type.clientID < g_gui.sprites.getMetadataSpace().size()) {
         return g_gui.sprites.getMetadata(type.clientID).has_light;
     }
     return false;
@@ -221,7 +221,7 @@ bool Item::hasLight() const
 SpriteLight Item::getLight() const
 {
     const ItemType& type = g_items.getItemType(id);
-    if (type.clientID != 0) {
+    if (type.clientID != 0 && type.clientID < g_gui.sprites.getMetadataSpace().size()) {
         return g_gui.sprites.getMetadata(type.clientID).light;
     }
     return SpriteLight {0, 0};
@@ -291,7 +291,7 @@ bool Item::canHoldDescription() const
 uint8_t Item::getMiniMapColor() const
 {
     uint32_t clientID = g_items[id].clientID;
-    if (clientID != 0) {
+    if (clientID != 0 && clientID < g_gui.sprites.getMetadataSpace().size()) {
         return g_gui.sprites.getMetadata(clientID).minimap_color;
     }
     return 0;

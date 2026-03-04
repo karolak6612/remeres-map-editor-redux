@@ -19,173 +19,176 @@
 #define RME_TOOLTIP_DRAWER_H_
 
 #include "app/definitions.h"
-#include <iostream>
 #include "map/position.h"
 #include "rendering/core/view_state.h"
-#include <vector>
+#include <iostream>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <sstream>
 #include <unordered_map>
+#include <vector>
 
 class Item;
 class Waypoint;
 struct NVGcontext;
 
 struct ContainerItem {
-	uint16_t id;
-	uint8_t count;
-	uint8_t subtype;
+    uint16_t id;
+    uint8_t count;
+    uint8_t subtype;
 };
 
 // Tooltip category determines header color and icon
 enum class TooltipCategory {
-	WAYPOINT, // Green - landmark
-	ITEM, // Dark charcoal - generic item
-	DOOR, // Brown - door with door ID
-	TELEPORT, // Purple - teleporter
-	TEXT // Gold - readable text (signs, books)
+    WAYPOINT, // Green - landmark
+    ITEM, // Dark charcoal - generic item
+    DOOR, // Brown - door with door ID
+    TELEPORT, // Purple - teleporter
+    TEXT // Gold - readable text (signs, books)
 };
 
 // Structured tooltip data for card-based rendering
 struct TooltipData {
-	Position pos;
-	TooltipCategory category = TooltipCategory::ITEM;
+    Position pos;
+    TooltipCategory category = TooltipCategory::ITEM;
 
-	// Header info
-	uint16_t itemId = 0;
-	std::string_view itemName;
+    // Header info
+    uint16_t itemId = 0;
+    std::string_view itemName;
 
-	// Optional fields (0 or empty = not shown)
-	uint16_t actionId = 0;
-	uint16_t uniqueId = 0;
-	uint8_t doorId = 0;
-	std::string_view text;
-	std::string_view description;
-	Position destination; // For teleports (check if valid via destination.x > 0)
+    // Optional fields (0 or empty = not shown)
+    uint16_t actionId = 0;
+    uint16_t uniqueId = 0;
+    uint8_t doorId = 0;
+    std::string_view text;
+    std::string_view description;
+    Position destination; // For teleports (check if valid via destination.x > 0)
 
-	// Waypoint-specific
-	std::string_view waypointName;
+    // Waypoint-specific
+    std::string_view waypointName;
 
-	// Container contents
-	std::vector<ContainerItem> containerItems;
-	uint8_t containerCapacity = 0;
+    // Container contents
+    std::vector<ContainerItem> containerItems;
+    uint8_t containerCapacity = 0;
 
-	TooltipData() = default;
+    TooltipData() = default;
 
-	// Constructor for waypoint
-	TooltipData(Position p, std::string_view wpName) :
-		pos(p), category(TooltipCategory::WAYPOINT), waypointName(wpName) { }
+    // Constructor for waypoint
+    TooltipData(Position p, std::string_view wpName) : pos(p), category(TooltipCategory::WAYPOINT), waypointName(wpName) { }
 
-	// Constructor for item
-	TooltipData(Position p, uint16_t id, std::string_view name) :
-		pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(name) { }
+    // Constructor for item
+    TooltipData(Position p, uint16_t id, std::string_view name) : pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(name) { }
 
-	// Determine category based on fields
-	void updateCategory() {
-		if (!waypointName.empty()) {
-			category = TooltipCategory::WAYPOINT;
-		} else if (destination.x > 0) {
-			category = TooltipCategory::TELEPORT;
-		} else if (doorId > 0) {
-			category = TooltipCategory::DOOR;
-		} else if (!text.empty()) {
-			category = TooltipCategory::TEXT;
-		} else {
-			category = TooltipCategory::ITEM;
-		}
-	}
+    // Determine category based on fields
+    void updateCategory()
+    {
+        if (!waypointName.empty()) {
+            category = TooltipCategory::WAYPOINT;
+        } else if (destination.x > 0) {
+            category = TooltipCategory::TELEPORT;
+        } else if (doorId > 0) {
+            category = TooltipCategory::DOOR;
+        } else if (!text.empty()) {
+            category = TooltipCategory::TEXT;
+        } else {
+            category = TooltipCategory::ITEM;
+        }
+    }
 
-	// Check if this tooltip has any visible fields
-	bool hasVisibleFields() const {
-		return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty() || destination.x > 0 || !containerItems.empty();
-	}
+    // Check if this tooltip has any visible fields
+    bool hasVisibleFields() const
+    {
+        return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty()
+            || destination.x > 0 || !containerItems.empty();
+    }
 
-	void clear() {
-		// Reset scalars
-		pos = Position();
-		category = TooltipCategory::ITEM;
-		itemId = 0;
-		// clear strings
-		itemName = {};
-		actionId = 0;
-		uniqueId = 0;
-		doorId = 0;
-		text = {};
-		description = {};
-		destination = Position();
-		waypointName = {};
-		containerItems.clear();
-		containerCapacity = 0;
-	}
+    void clear()
+    {
+        // Reset scalars
+        pos = Position();
+        category = TooltipCategory::ITEM;
+        itemId = 0;
+        // clear strings
+        itemName = {};
+        actionId = 0;
+        uniqueId = 0;
+        doorId = 0;
+        text = {};
+        description = {};
+        destination = Position();
+        waypointName = {};
+        containerItems.clear();
+        containerCapacity = 0;
+    }
 };
 
 struct DrawContext;
 
 class TooltipDrawer {
 public:
-	TooltipDrawer();
-	~TooltipDrawer();
+    TooltipDrawer();
+    ~TooltipDrawer();
 
-	// Add a structured tooltip for an item
-	void addItemTooltip(const TooltipData& data);
-	void addItemTooltip(TooltipData&& data);
+    // Add a structured tooltip for an item
+    void addItemTooltip(const TooltipData& data);
+    void addItemTooltip(TooltipData&& data);
 
-	// Request a tooltip object from the pool. Call commitTooltip() to finalize.
-	TooltipData& requestTooltipData();
-	void commitTooltip();
+    // Request a tooltip object from the pool. Call commitTooltip() to finalize.
+    TooltipData& requestTooltipData();
+    void commitTooltip();
 
-	// Add a waypoint tooltip
-	void addWaypointTooltip(Position pos, std::string_view name);
+    // Add a waypoint tooltip
+    void addWaypointTooltip(Position pos, std::string_view name);
 
-	// Draw all tooltips
-	void draw(NVGcontext* vg, const DrawContext& ctx);
+    // Draw all tooltips
+    void draw(NVGcontext* vg, const DrawContext& ctx);
 
-	// Clear all tooltips
-	void clear();
+    // Clear all tooltips
+    void clear();
 
 protected:
-	struct FieldLine {
-		std::string_view label;
-		std::string_view value;
-		uint8_t r, g, b;
-		std::vector<std::string_view> wrappedLines; // For multi-line values
-	};
-	std::vector<FieldLine> scratch_fields;
-	size_t scratch_fields_count = 0;
-	std::string storage; // Scratch buffer for text generation
+    struct FieldLine {
+        std::string label;
+        std::string value;
+        uint8_t r, g, b;
+        std::vector<std::string> wrappedLines; // For multi-line values
+    };
+    std::vector<FieldLine> scratch_fields;
+    size_t scratch_fields_count = 0;
+    std::string storage; // Scratch buffer for text generation
 
-	std::vector<TooltipData> tooltips;
-	size_t active_count = 0;
+    std::vector<TooltipData> tooltips;
+    size_t active_count = 0;
 
-	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
-	NVGcontext* lastContext = nullptr;
+    std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
+    NVGcontext* lastContext = nullptr;
 
-	// Helper to get or load sprite image
-	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
+    // Helper to get or load sprite image
+    int getSpriteImage(NVGcontext* vg, uint16_t itemId);
 
-	// Helper to get header color based on category
-	void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
+    // Helper to get header color based on category
+    void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
 
-	// Refactored drawing helpers
-	struct LayoutMetrics {
-		float width;
-		float height;
-		float valueStartX;
-		float gridSlotSize;
-		int containerCols;
-		int containerRows;
-		float containerHeight;
-		int totalContainerSlots;
-		int emptyContainerSlots;
-		int numContainerItems;
-	};
+    // Refactored drawing helpers
+    struct LayoutMetrics {
+        float width;
+        float height;
+        float valueStartX;
+        float gridSlotSize;
+        int containerCols;
+        int containerRows;
+        float containerHeight;
+        int totalContainerSlots;
+        int emptyContainerSlots;
+        int numContainerItems;
+    };
 
-	void prepareFields(const TooltipData& tooltip);
-	LayoutMetrics calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
-	void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
-	void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
-	void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
+    void prepareFields(const TooltipData& tooltip);
+    LayoutMetrics
+    calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
+    void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
+    void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
+    void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
 };
 
 #endif

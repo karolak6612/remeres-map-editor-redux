@@ -37,14 +37,18 @@ TooltipDrawer::TooltipDrawer() { }
 TooltipDrawer::~TooltipDrawer()
 {
     clear();
-    if (lastContext) {
-        for (auto& pair : spriteCache) {
-            if (pair.second > 0) {
-                nvgDeleteImage(lastContext, pair.second);
+    // Only delete NVG images if the context pointer appears valid.
+    // If the context was destroyed before us, calling nvgDeleteImage is UB.
+    // We defensively skip cleanup when lastContext may be stale.
+    if (lastContext && !spriteCache.empty()) {
+        for (auto& [id, handle] : spriteCache) {
+            if (handle > 0) {
+                nvgDeleteImage(lastContext, handle);
             }
         }
-        spriteCache.clear();
     }
+    spriteCache.clear();
+    lastContext = nullptr;
 }
 
 void TooltipDrawer::clear()
@@ -149,7 +153,8 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId)
 
     // Resolve Item ID
     ItemType& it = g_items[itemId];
-    if (it.clientID == 0 || it.clientID >= g_gui.sprites.getMetadataSpace().size()) {
+    if (it.clientID == 0 || it.clientID >= g_gui.sprites.getMetadataSpace().size()
+        || it.clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
         return 0;
     }
 
@@ -241,8 +246,8 @@ void TooltipDrawer::prepareFields(const TooltipData& tooltip)
             scratch_fields.emplace_back();
         }
         FieldLine& field = scratch_fields[scratch_fields_count++];
-        field.label = label;
-        field.value = value;
+        field.label = std::string(label);
+        field.value = std::string(value);
         wxColour c = Theme::Get(colorRole);
         field.r = c.Red();
         field.g = c.Green();
@@ -331,22 +336,28 @@ TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float
                 actualMaxWidth = lineWidth;
             }
         } else {
-            // Need to wrap - use NanoVG text breaking
-            NVGtextRow rows[16];
-            int nRows = nvgTextBreakLines(vg, start, end, maxValueWidth, rows, 16);
-
-            for (int i = 0; i < nRows; i++) {
-                std::string_view line(rows[i].start, rows[i].end - rows[i].start);
-                field.wrappedLines.push_back(line);
-                totalLines++;
-
-                float lineWidth = lm.valueStartX + rows[i].width + padding * 2;
-                if (lineWidth > actualMaxWidth) {
-                    actualMaxWidth = lineWidth;
+            // Need to wrap - use NanoVG text breaking with loop for >16 rows
+            const char* currentStart = start;
+            bool any_rows = false;
+            while (currentStart && currentStart < end) {
+                NVGtextRow rows[16];
+                int nRows = nvgTextBreakLines(vg, currentStart, end, maxValueWidth, rows, 16);
+                if (nRows == 0) {
+                    break;
                 }
+                any_rows = true;
+                for (int j = 0; j < nRows; ++j) {
+                    field.wrappedLines.emplace_back(rows[j].start, rows[j].end - rows[j].start);
+                    totalLines++;
+                    float lineWidth = lm.valueStartX + rows[j].width + padding * 2;
+                    if (lineWidth > actualMaxWidth) {
+                        actualMaxWidth = lineWidth;
+                    }
+                }
+                currentStart = rows[nRows - 1].next;
             }
 
-            if (nRows == 0) {
+            if (!any_rows) {
                 // Fallback if breaking failed
                 field.wrappedLines.push_back(field.value);
                 totalLines++;
@@ -512,6 +523,7 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
 
         // Draw slot background (always)
         nvgBeginPath(vg);
+        nvgRect(vg, itemX, itemY, 32, 32);
         wxColour baseCol = Theme::Get(Theme::Role::CardBase);
         wxColour borderCol = Theme::Get(Theme::Role::Border);
 

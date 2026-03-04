@@ -45,7 +45,7 @@ public:
 
         patterns.frame = (metadata->animator) ? metadata->animator->getFrame() : 0;
 
-        if (it.isSplash() || it.isFluidContainer()) {
+        if ((it.isSplash() || it.isFluidContainer()) && item) {
             patterns.subtype = item->getSubtype();
         } else if (it.isHangable) {
             if (tile && tile->hasHookSouth()) {
@@ -55,7 +55,7 @@ public:
             } else {
                 patterns.x = 0;
             }
-        } else if (it.stackable) {
+        } else if (it.stackable && item) {
             uint16_t itemSubtype = item->getSubtype();
             if (itemSubtype <= 1) {
                 patterns.subtype = 0;

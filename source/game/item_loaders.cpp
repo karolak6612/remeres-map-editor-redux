@@ -253,6 +253,7 @@ bool OtbLoader::load(
                     warnings.push_back(
                         std::format("items.otb: Unexpected data length of item light (2) block (Should be {} bytes)", expected_len)
                     );
+                    node->skip(len);
                     return true;
                 }
                 if (!node->skip(4)) {
@@ -265,6 +266,7 @@ bool OtbLoader::load(
                                        std::vector<std::string>& warnings) {
                 if (len != sizeof(uint8_t)) {
                     warnings.push_back("items.otb: Unexpected data length of item toporder block (Should be 1 byte)");
+                    node->skip(len);
                     return true;
                 }
                 uint8_t u8_top = 0;
@@ -279,6 +281,7 @@ bool OtbLoader::load(
                                    std::vector<std::string>& warnings) {
                 if (len >= 128) {
                     warnings.push_back("items.otb: Unexpected data length of item name block (Should be < 128 bytes)");
+                    node->skip(len);
                     return true;
                 }
                 uint8_t name[128] = {0};
@@ -293,6 +296,7 @@ bool OtbLoader::load(
                                     std::vector<std::string>& warnings) {
                 if (len >= 128) {
                     warnings.push_back("items.otb: Unexpected data length of item descr block (Should be < 128 bytes)");
+                    node->skip(len);
                     return true;
                 }
                 uint8_t description[128] = {0};

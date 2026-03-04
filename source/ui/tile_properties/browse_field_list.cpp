@@ -289,6 +289,10 @@ void BrowseFieldList::OnClickDelete(wxCommandEvent& event)
         return;
     }
 
+    if (!current_tile) {
+        return;
+    }
+
     if (current_tile->ground && selection == 0) {
         return;
     }

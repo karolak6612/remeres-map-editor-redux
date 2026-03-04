@@ -402,6 +402,16 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
         return;
     }
 
+    MapTab* tab = dynamic_cast<MapTab*>(GetParent());
+    if (!tab) {
+        return;
+    }
+
+    Editor* editor = tab->GetEditor();
+    if (!editor) {
+        return;
+    }
+
     replace_button->Enable(false);
     with_button->Enable(false);
     add_button->Enable(false);
@@ -409,13 +419,6 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
     execute_button->Enable(false);
     close_button->Enable(false);
     progress->SetValue(0);
-
-    MapTab* tab = dynamic_cast<MapTab*>(GetParent());
-    if (!tab) {
-        return;
-    }
-
-    Editor* editor = tab->GetEditor();
 
     int done = 0;
     for (const ReplacingItem& info : items) {

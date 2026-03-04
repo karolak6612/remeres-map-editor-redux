@@ -188,6 +188,7 @@ void FindBrushDialog::OnClickListInternal(wxCommandEvent& event)
 
 void FindBrushDialog::OnClickOKInternal()
 {
+    result_brush = nullptr;
     // This is kind of stupid as it would fail unless the "Please enter a search string" wasn't there
     if (item_list->GetItemCount() > 0) {
         if (item_list->GetSelection() == wxNOT_FOUND) {
