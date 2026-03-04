@@ -119,8 +119,11 @@ void* RingBuffer::waitAndMap(size_t count) {
 	// Wait for fence on current section if it exists
 	if (fences_[current_section_]) {
 		static constexpr uint64_t WAIT_TIMEOUT_NS = 5000000000ULL; // 5 second timeout (increased from 1s for large viewports)
+		// Avoid GL_SYNC_FLUSH_COMMANDS_BIT in hot paths if possible, but for large fences
+		// we might need it. Let's try passing 0 instead to avoid flushing command queue
+		// which can block the render thread, relying on implicit sync.
 		GLenum result = fences_[current_section_].clientWait(
-			GL_SYNC_FLUSH_COMMANDS_BIT, WAIT_TIMEOUT_NS
+			0, WAIT_TIMEOUT_NS
 		);
 
 		if (result == GL_TIMEOUT_EXPIRED || result == GL_WAIT_FAILED) {
