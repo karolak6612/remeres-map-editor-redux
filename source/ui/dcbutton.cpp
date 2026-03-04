@@ -22,6 +22,8 @@
 #include "ui/dcbutton.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "ui/theme.h"
+#include "util/nvg_utils.h"
 
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -125,23 +127,23 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 		return;
 	}
 
-	int size_x = 20, size_y = 20;
+	int size_x = FROM_DIP(this, 20), size_y = FROM_DIP(this, 20);
 
 	if (size == RENDER_SIZE_16x16) {
-		size_x = 20;
-		size_y = 20;
+		size_x = FROM_DIP(this, 20);
+		size_y = FROM_DIP(this, 20);
 	} else if (size == RENDER_SIZE_32x32) {
-		size_x = 36;
-		size_y = 36;
+		size_x = FROM_DIP(this, 36);
+		size_y = FROM_DIP(this, 36);
 	} else if (size == RENDER_SIZE_64x64) {
-		size_x = 68;
-		size_y = 68;
+		size_x = FROM_DIP(this, 68);
+		size_y = FROM_DIP(this, 68);
 	}
 
 	// Background
 	nvgBeginPath(vg);
 	nvgRect(vg, 0, 0, size_x, size_y);
-	nvgFillColor(vg, nvgRGBA(0, 0, 0, 255));
+	nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Surface)));
 	nvgFill(vg);
 
 	if (type == DC_BTN_TOGGLE && GetValue()) {
@@ -153,27 +155,29 @@ void DCButton::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
 	if (sprite) {
 		int tex = GetOrCreateSpriteTexture(vg, sprite);
 		if (tex > 0) {
-			int imgSize = 32;
+			int imgSize = FROM_DIP(this, 32);
 			if (size == RENDER_SIZE_16x16) {
-				imgSize = 16;
+				imgSize = FROM_DIP(this, 16);
 			} else if (size == RENDER_SIZE_32x32) {
-				imgSize = 32;
+				imgSize = FROM_DIP(this, 32);
 			} else if (size == RENDER_SIZE_64x64) {
-				imgSize = 64; // Not supported in original?
+				imgSize = FROM_DIP(this, 64); // Not supported in original?
 			}
 
-			NVGpaint imgPaint = nvgImagePattern(vg, 2, 2, imgSize, imgSize, 0, tex, 1.0f);
+			int offset = FROM_DIP(this, 2);
+
+			NVGpaint imgPaint = nvgImagePattern(vg, offset, offset, imgSize, imgSize, 0, tex, 1.0f);
 			nvgBeginPath(vg);
-			nvgRect(vg, 2, 2, imgSize, imgSize);
+			nvgRect(vg, offset, offset, imgSize, imgSize);
 			nvgFillPaint(vg, imgPaint);
 			nvgFill(vg);
 
 			if (overlay && type == DC_BTN_TOGGLE && GetValue()) {
 				int overlayTex = GetOrCreateSpriteTexture(vg, overlay);
 				if (overlayTex > 0) {
-					NVGpaint ovPaint = nvgImagePattern(vg, 2, 2, imgSize, imgSize, 0, overlayTex, 1.0f);
+					NVGpaint ovPaint = nvgImagePattern(vg, offset, offset, imgSize, imgSize, 0, overlayTex, 1.0f);
 					nvgBeginPath(vg);
-					nvgRect(vg, 2, 2, imgSize, imgSize);
+					nvgRect(vg, offset, offset, imgSize, imgSize);
 					nvgFillPaint(vg, ovPaint);
 					nvgFill(vg);
 				}
@@ -195,10 +199,10 @@ void DCButton::OnClick(wxMouseEvent& WXUNUSED(evt)) {
 }
 
 void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	NVGcolor dark_highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Surface).ChangeLightness(110));
+	NVGcolor light_shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text));
+	NVGcolor shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Background));
 
 	nvgStrokeWidth(vg, 1.0f);
 
@@ -232,10 +236,10 @@ void DCButton::DrawSunkenBorder(NVGcontext* vg, float size_x, float size_y) {
 }
 
 void DCButton::DrawRaisedBorder(NVGcontext* vg, float size_x, float size_y) {
-	NVGcolor dark_highlight = nvgRGBA(212, 208, 200, 255);
-	NVGcolor light_shadow = nvgRGBA(128, 128, 128, 255);
-	NVGcolor highlight = nvgRGBA(255, 255, 255, 255);
-	NVGcolor shadow = nvgRGBA(64, 64, 64, 255);
+	NVGcolor dark_highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Surface).ChangeLightness(110));
+	NVGcolor light_shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Border));
+	NVGcolor highlight = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text));
+	NVGcolor shadow = NvgUtils::ToNvColor(Theme::Get(Theme::Role::Background));
 
 	nvgStrokeWidth(vg, 1.0f);
 

@@ -72,6 +72,7 @@ void ToolOptionsSurface::DoSetSizeHints(int minW, int minH, int maxW, int maxH, 
 }
 
 void ToolOptionsSurface::RebuildLayout() {
+	Freeze();
 	tool_rects.clear();
 	interactables.size_slider_rect = wxRect();
 	interactables.thickness_slider_rect = wxRect();
@@ -79,6 +80,7 @@ void ToolOptionsSurface::RebuildLayout() {
 	interactables.lock_check_rect = wxRect();
 
 	if (current_type == TILESET_UNKNOWN) {
+		Thaw();
 		return;
 	}
 
@@ -184,6 +186,7 @@ void ToolOptionsSurface::RebuildLayout() {
 	}
 
 	InvalidateBestSize();
+	Thaw();
 }
 
 void ToolOptionsSurface::OnPaint(wxPaintEvent& evt) {

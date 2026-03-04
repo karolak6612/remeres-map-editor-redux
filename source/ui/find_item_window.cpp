@@ -280,6 +280,7 @@ void FindItemDialog::EnableProperties(bool enable) {
 }
 
 void FindItemDialog::RefreshContentsInternal() {
+	items_list->Freeze();
 	items_list->Clear();
 	ok_button->Enable(false);
 	ok_button->SetToolTip("Select an item to continue");
@@ -412,6 +413,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetNoMatches();
 	}
 
+	items_list->Thaw();
 	items_list->Refresh();
 }
 
