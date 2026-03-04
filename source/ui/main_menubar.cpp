@@ -31,6 +31,7 @@
 #include "ui/map/map_properties_window.h"
 
 #include "ui/about_window.h"
+#include "util/image_manager.h"
 #include "ui/dat_debug_view.h"
 #include "ui/menubar_loader.h"
 #include "ui/map_statistics_dialog.h"
@@ -237,6 +238,9 @@ void MainMenuBar::OnExportTilesets(wxCommandEvent& event) {
 
 void MainMenuBar::OnDebugViewDat(wxCommandEvent& event) {
 	wxDialog dlg(frame, wxID_ANY, "Debug .dat file", wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER);
+
+	dlg.SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_BUG));
+
 	new DatDebugView(&dlg);
 	dlg.ShowModal();
 }

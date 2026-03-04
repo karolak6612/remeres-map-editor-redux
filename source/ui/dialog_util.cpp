@@ -34,6 +34,9 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 	// Create the window
 	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 
+	dlg->SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_LIST));
+
+
 	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
 	wxListBox* item_list = newd wxListBox(dlg, wxID_ANY, wxDefaultPosition, wxDefaultSize, 0, nullptr, wxLB_SINGLE);
 	item_list->SetMinSize(dlg->FromDIP(wxSize(500, 300)));
@@ -66,9 +69,13 @@ void DialogUtil::ListDialog(wxWindow* parent, wxString title, const std::vector<
 }
 
 void DialogUtil::ShowTextBox(wxWindow* parent, wxString title, wxString content) {
+
 	wxDialog* dlg = newd wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX);
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
 	wxTextCtrl* text_field = newd wxTextCtrl(dlg, wxID_ANY, content, wxDefaultPosition, wxDefaultSize, wxTE_MULTILINE | wxTE_READONLY);
+
+	dlg->SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_FILE_LINES));
+
 	text_field->SetMinSize(dlg->FromDIP(wxSize(400, 550)));
 	topsizer->Add(text_field, wxSizerFlags(5).Expand());
 

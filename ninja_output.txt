@@ -1,0 +1,108 @@
+[1/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/map_actions_handler.cpp.o
+[2/64] Building CXX object CMakeFiles/rme.dir/source/ui/main_menubar.cpp.o
+[3/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/search_handler.cpp.o
+[4/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/view_settings_handler.cpp.o
+[5/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/navigation_menu_handler.cpp.o
+[6/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/file_menu_handler.cpp.o
+[7/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/palette_menu_handler.cpp.o
+[8/64] Building CXX object CMakeFiles/rme.dir/source/ui/main_toolbar.cpp.o
+[9/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/loading_manager.cpp.o
+[10/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/layout_manager.cpp.o
+[11/64] Building CXX object CMakeFiles/rme.dir/source/brushes/managers/doodad_preview_manager.cpp.o
+[12/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/minimap_manager.cpp.o
+[13/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/status_manager.cpp.o
+[14/64] Building CXX object CMakeFiles/rme.dir/source/brushes/managers/autoborder_preview_manager.cpp.o
+[15/64] Building CXX object CMakeFiles/rme.dir/source/brushes/managers/brush_manager.cpp.o
+In file included from /app/source/brushes/managers/brush_manager.cpp:7:
+/app/source/brushes/managers/brush_manager.h: In constructor ‘BrushManager::BrushManager()’:
+/app/source/brushes/managers/brush_manager.h:112:20: warning: ‘BrushManager::window_door_brush’ will be initialized after [-Wreorder]
+  112 |         DoorBrush* window_door_brush;
+      |                    ^~~~~~~~~~~~~~~~~
+/app/source/brushes/managers/brush_manager.h:110:20: warning:   ‘DoorBrush* BrushManager::normal_door_alt_brush’ [-Wreorder]
+  110 |         DoorBrush* normal_door_alt_brush;
+      |                    ^~~~~~~~~~~~~~~~~~~~~
+/app/source/brushes/managers/brush_manager.cpp:24:1: warning:   when initialized here [-Wreorder]
+   24 | BrushManager::BrushManager() :
+      | ^~~~~~~~~~~~
+[16/64] Building CXX object CMakeFiles/rme.dir/source/palette/managers/palette_manager.cpp.o
+[17/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/recent_files_manager.cpp.o
+[18/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/search_manager.cpp.o
+[19/64] Building CXX object CMakeFiles/rme.dir/source/editor/managers/editor_manager.cpp.o
+[20/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/gl_context_manager.cpp.o
+[21/64] Building CXX object CMakeFiles/rme.dir/source/ui/managers/welcome_manager.cpp.o
+[22/64] Building CXX object CMakeFiles/rme.dir/source/ui/map_popup_menu.cpp.o
+/app/source/ui/map_popup_menu.cpp: In member function ‘void MapPopupMenu::Update()’:
+/app/source/ui/map_popup_menu.cpp:193:70: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  193 |                                 if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+      |                                                      ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/ui/map_popup_menu.cpp:193:137: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  193 |                                 if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+      |                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/ui/map_popup_menu.cpp:221:77: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  221 |                                 if (hasCollection || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[23/64] Building CXX object CMakeFiles/rme.dir/source/ui/numbertextctrl.cpp.o
+[24/64] Building CXX object CMakeFiles/rme.dir/source/ui/map_window.cpp.o
+[25/64] Building CXX object CMakeFiles/rme.dir/source/ui/map_tab.cpp.o
+[26/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/brush_toolbar.cpp.o
+[27/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/position_toolbar.cpp.o
+[28/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/size_toolbar.cpp.o
+[29/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/standard_toolbar.cpp.o
+/app/source/ui/toolbar/standard_toolbar.cpp: In constructor ‘StandardToolBar::StandardToolBar(wxWindow*)’:
+/app/source/ui/toolbar/standard_toolbar.cpp:44:42: warning: arithmetic between different enumeration types ‘EditorActionID’ and ‘MenuBar::ActionID’ is deprecated [-Wdeprecated-enum-enum-conversion]
+   44 |         toolbar->AddTool(MAIN_FRAME_MENU + MenuBar::JUMP_TO_BRUSH, wxEmptyString, find_bitmap, wxNullBitmap, wxITEM_NORMAL, "Jump to Brush (J)", "Find brush or item", nullptr);
+      |                          ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+[30/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/light_toolbar.cpp.o
+[31/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_persistence.cpp.o
+[32/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_registry.cpp.o
+[33/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_factory.cpp.o
+[34/64] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_layout.cpp.o
+[35/64] Building CXX object CMakeFiles/rme.dir/source/ui/positionctrl.cpp.o
+[36/64] Building CXX object CMakeFiles/rme.dir/source/ui/properties/old_properties_window.cpp.o
+[37/64] Building CXX object CMakeFiles/rme.dir/source/ui/properties/properties_window.cpp.o
+In file included from /app/source/ui/properties/properties_window.cpp:20:
+/app/source/ui/properties/properties_window.h: In constructor ‘PropertiesWindow::PropertiesWindow(wxWindow*, const Map*, const Tile*, Item*, wxPoint)’:
+/app/source/ui/properties/properties_window.h:69:21: warning: ‘PropertiesWindow::tier_field’ will be initialized after [-Wreorder]
+   69 |         wxSpinCtrl* tier_field;
+      |                     ^~~~~~~~~~
+/app/source/ui/properties/properties_window.h:55:30: warning:   ‘ContainerGridCanvas* PropertiesWindow::grid_canvas’ [-Wreorder]
+   55 |         ContainerGridCanvas* grid_canvas;
+      |                              ^~~~~~~~~~~
+/app/source/ui/properties/properties_window.cpp:34:1: warning:   when initialized here [-Wreorder]
+   34 | PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
+      | ^~~~~~~~~~~~~~~~
+[38/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_items_window.cpp.o
+[39/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/item_grid_panel.cpp.o
+[40/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/library_panel.cpp.o
+[41/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_card_renderer.cpp.o
+[42/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/card_panel.cpp.o
+[43/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_builder_panel.cpp.o
+[44/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/replace_tool_window.cpp.o
+[45/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/replacement_engine.cpp.o
+[46/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_list_control.cpp.o
+[47/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_manager.cpp.o
+[48/64] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/visual_similarity_service.cpp.o
+[49/64] Building CXX object CMakeFiles/rme.dir/source/ui/theme.cpp.o
+[50/64] Building CXX object CMakeFiles/rme.dir/source/ui/result_window.cpp.o
+[51/64] Building CXX object CMakeFiles/rme.dir/source/ui/tileset_window.cpp.o
+[52/64] Building CXX object CMakeFiles/rme.dir/source/ui/welcome_dialog.cpp.o
+[53/64] Building CXX object CMakeFiles/rme.dir/source/ui/map_statistics_dialog.cpp.o
+[54/64] Building CXX object CMakeFiles/rme.dir/source/ui/live_dialogs.cpp.o
+[55/64] Building CXX object CMakeFiles/rme.dir/source/ui/menubar_loader.cpp.o
+[56/64] Building CXX object CMakeFiles/rme.dir/source/util/nanovg_listbox.cpp.o
+[57/64] Building CXX object CMakeFiles/rme.dir/source/util/nanovg_canvas.cpp.o
+[58/64] Building CXX object CMakeFiles/rme.dir/source/util/virtual_item_grid.cpp.o
+[59/64] Building CXX object CMakeFiles/rme.dir/source/util/common.cpp.o
+[60/64] Building CXX object CMakeFiles/rme.dir/source/util/file_system.cpp.o
+/app/source/util/file_system.cpp: In static member function ‘static wxString FileSystem::GetDataDirectory()’:
+/app/source/util/file_system.cpp:29:29: warning: catching polymorphic type ‘const class std::bad_cast’ by value [-Wcatch-value=]
+   29 |         } catch (const std::bad_cast) {
+      |                             ^~~~~~~~
+/app/source/util/file_system.cpp: In static member function ‘static wxString FileSystem::GetExecDirectory()’:
+/app/source/util/file_system.cpp:42:29: warning: catching polymorphic type ‘const class std::bad_cast’ by value [-Wcatch-value=]
+   42 |         } catch (const std::bad_cast) {
+      |                             ^~~~~~~~
+[61/64] Building CXX object CMakeFiles/rme.dir/source/ui/tool_options_window.cpp.o
+[62/64] Building CXX object CMakeFiles/rme.dir/source/util/image_manager.cpp.o
+[63/64] Building CXX object CMakeFiles/rme.dir/source/ui/tool_options_surface.cpp.o
+[64/64] Linking CXX executable rme

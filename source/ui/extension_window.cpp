@@ -52,9 +52,7 @@ ExtensionsDialog::ExtensionsDialog(wxWindow* parent) :
 	okBtn->Bind(wxEVT_BUTTON, &ExtensionsDialog::OnClickOK, this);
 	openBtn->Bind(wxEVT_BUTTON, &ExtensionsDialog::OnClickOpenFolder, this);
 
-	wxIcon icon;
-	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_PUZZLE_PIECE, wxSize(32, 32)));
-	SetIcon(icon);
+	SetIcons(IMAGE_MANAGER.GetIconBundle(ICON_PUZZLE_PIECE));
 }
 
 ExtensionsDialog::~ExtensionsDialog() {
