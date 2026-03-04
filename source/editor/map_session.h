@@ -9,14 +9,12 @@ class BaseMap;
 
 class MapSession {
 public:
-	MapSession(Editor* editor) :
-		editor(editor),
-		mode(SELECTION_MODE),
-		secondary_map(nullptr) { }
+  MapSession(Editor *editor)
+      : editor(editor), mode(SELECTION_MODE), secondary_map(nullptr) {}
 
-	Editor* const editor;
-	EditorMode mode;
-	BaseMap* secondary_map;
+  Editor *const editor;
+  EditorMode mode;
+  const BaseMap *secondary_map;
 };
 
 #endif

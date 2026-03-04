@@ -7,17 +7,19 @@
 
 #include "rendering/core/draw_context.h"
 
-class MapDrawer;
+class Editor;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
 
 class DragShadowDrawer {
 public:
-	DragShadowDrawer();
-	~DragShadowDrawer();
+  DragShadowDrawer();
+  ~DragShadowDrawer();
 
-	void draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer);
+  void draw(const DrawContext &ctx, ItemDrawer *item_drawer,
+            SpriteDrawer *sprite_drawer, CreatureDrawer *creature_drawer,
+            Editor &editor);
 };
 
 #endif

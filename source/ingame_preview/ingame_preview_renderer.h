@@ -2,14 +2,14 @@
 #define RME_INGAME_PREVIEW_RENDERER_H_
 
 #include "app/main.h"
-#include "map/position.h"
 #include "game/creature.h"
-#include "rendering/core/view_state.h"
+#include "map/position.h"
 #include "rendering/core/drawing_options.h"
-#include <memory>
-#include <unordered_map>
+#include "rendering/core/view_state.h"
 #include <chrono>
+#include <memory>
 #include <string>
+#include <unordered_map>
 
 class Tile;
 class BaseMap;
@@ -23,57 +23,77 @@ class CreatureNameDrawer;
 class SpriteDrawer;
 struct Outfit;
 struct NVGcontext;
+struct DrawContext;
+class AtlasManager;
 
 namespace IngamePreview {
 
-	class FloorVisibilityCalculator;
+class FloorVisibilityCalculator;
 
-	/**
-	 * High-level renderer for the in-game preview window.
-	 */
-	class IngamePreviewRenderer {
-	public:
-		IngamePreviewRenderer(TileRenderer* tile_renderer);
-		~IngamePreviewRenderer();
+/**
+ * High-level renderer for the in-game preview window.
+ */
+class IngamePreviewRenderer {
+public:
+  IngamePreviewRenderer(TileRenderer *tile_renderer);
+  ~IngamePreviewRenderer();
 
-		/**
-		 * Render the preview.
-		 */
-		void Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y);
+  /**
+   * Render the preview.
+   */
+  void Render(NVGcontext *vg, const BaseMap &map, int viewport_x,
+              int viewport_y, int viewport_width, int viewport_height,
+              const Position &camera_pos, float zoom, bool lighting_enabled,
+              uint8_t ambient_light, const Outfit &preview_outfit,
+              Direction preview_direction, int animation_phase, int offset_x,
+              int offset_y);
 
-		void SetLightIntensity(float intensity) {
-			light_intensity = intensity;
-		}
+  void SetLightIntensity(float intensity) { light_intensity = intensity; }
 
-		void SetName(const std::string& name) {
-			preview_name = name;
-		}
+  void SetName(const std::string &name) { preview_name = name; }
 
-	private:
-		TileRenderer* tile_renderer;
-		std::unique_ptr<FloorVisibilityCalculator> floor_calculator;
+private:
+  TileRenderer *tile_renderer;
+  std::unique_ptr<FloorVisibilityCalculator> floor_calculator;
 
-		float light_intensity = 1.0f;
-		std::string preview_name = "You";
+  float light_intensity = 1.0f;
+  std::string preview_name = "You";
 
-		// Smooth fading state
-		std::unordered_map<int, float> floor_opacity;
-		std::chrono::steady_clock::time_point last_time;
+  // Smooth fading state
+  std::unordered_map<int, float> floor_opacity;
+  std::chrono::steady_clock::time_point last_time;
 
-		// Internal rendering resources (could be shared or managed)
-		std::unique_ptr<SpriteBatch> sprite_batch;
-		std::unique_ptr<PrimitiveRenderer> primitive_renderer;
-		std::unique_ptr<LightBuffer> light_buffer;
-		std::shared_ptr<LightDrawer> light_drawer;
+  // Internal rendering resources (could be shared or managed)
+  std::unique_ptr<SpriteBatch> sprite_batch;
+  std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+  std::unique_ptr<LightBuffer> light_buffer;
+  std::shared_ptr<LightDrawer> light_drawer;
 
-		// Drawers
-		std::unique_ptr<CreatureDrawer> creature_drawer;
-		std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
-		std::unique_ptr<SpriteDrawer> sprite_drawer;
+  // Drawers
+  std::unique_ptr<CreatureDrawer> creature_drawer;
+  std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
+  std::unique_ptr<SpriteDrawer> sprite_drawer;
 
-		void UpdateOpacity(double dt, int first_visible, int last_visible);
-		int GetTileElevationOffset(const Tile* tile) const;
-	};
+  void UpdateOpacity(double dt, int first_visible, int last_visible);
+  int GetTileElevationOffset(const Tile *tile) const;
+
+  void SetupViewAndOptions(ViewState &view, DrawingOptions &options,
+                           int viewport_x, int viewport_y, int viewport_width,
+                           int viewport_height, const Position &camera_pos,
+                           float zoom, bool lighting_enabled,
+                           uint8_t ambient_light, int offset_x, int offset_y);
+
+  void RenderFloors(DrawContext &ctx, const BaseMap &map, int last_visible,
+                    const Position &camera_pos, bool lighting_enabled,
+                    class AtlasManager *atlas);
+
+  void RenderPreviewCharacter(DrawContext &ctx, const Outfit &preview_outfit,
+                              Direction preview_direction, int animation_phase,
+                              class AtlasManager *atlas, int elevation_offset);
+
+  void RenderNames(NVGcontext *vg, const DrawContext &ctx, int viewport_width,
+                   int viewport_height, float zoom, int elevation_offset);
+};
 
 } // namespace IngamePreview
 

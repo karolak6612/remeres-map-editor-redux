@@ -5,18 +5,26 @@
 #include "rendering/core/floor_view_params.h"
 #include <cstdint>
 
-class MapCanvas;
 class Editor;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
+class Tile;
 
 class PreviewDrawer {
 public:
-	PreviewDrawer();
-	~PreviewDrawer();
+  PreviewDrawer();
+  ~PreviewDrawer();
 
-	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, MapCanvas& canvas, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
+  void draw(const DrawContext &ctx, const FloorViewParams &floor_params,
+            int map_z, Editor &editor, ItemDrawer *item_drawer,
+            SpriteDrawer *sprite_drawer, CreatureDrawer *creature_drawer);
+
+private:
+  void drawTilePreview(const DrawContext &ctx, int draw_x, int draw_y,
+                       const Tile *tile, uint8_t base_alpha,
+                       ItemDrawer *item_drawer, SpriteDrawer *sprite_drawer,
+                       CreatureDrawer *creature_drawer) const;
 };
 
 #endif
