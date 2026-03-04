@@ -43,7 +43,6 @@ class RAWBrush;
 
 class ItemType;
 class GameSprite;
-class GameSprite;
 class ItemDatabase;
 
 extern ItemDatabase g_items;

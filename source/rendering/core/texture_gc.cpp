@@ -60,24 +60,19 @@ bool TextureGC::containsResidentImage(Image* img) const
 void TextureGC::addResidentGameSprite(uint32_t clientID)
 {
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
-    if (std::find(resident_game_sprites.begin(), resident_game_sprites.end(), clientID) == resident_game_sprites.end()) {
-        resident_game_sprites.push_back(clientID);
-    }
+    resident_game_sprites.insert(clientID);
 }
 
 void TextureGC::removeResidentGameSprite(uint32_t clientID)
 {
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
-    auto it = std::find(resident_game_sprites.begin(), resident_game_sprites.end(), clientID);
-    if (it != resident_game_sprites.end()) {
-        resident_game_sprites.erase(it);
-    }
+    resident_game_sprites.erase(clientID);
 }
 
 bool TextureGC::containsResidentGameSprite(uint32_t clientID) const
 {
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
-    return std::find(resident_game_sprites.begin(), resident_game_sprites.end(), clientID) != resident_game_sprites.end();
+    return resident_game_sprites.contains(clientID);
 }
 
 constexpr int MIN_CLEAN_THRESHOLD = 100;
@@ -126,8 +121,7 @@ void TextureGC::garbageCollection(SpriteDatabase& db)
                 }
 
                 // Call clean on resident ui sprites
-                for (size_t i = resident_game_sprites.size(); i > 0; --i) {
-                    uint32_t gs = resident_game_sprites[i - 1];
+                for (uint32_t gs : resident_game_sprites) {
                     if (gs > 0 && gs < g_gui.sprites.getIconRendererSpace().size()) {
                         g_gui.sprites.getIconRendererSpace()[gs].clean(cached_time_, longevity);
                     }

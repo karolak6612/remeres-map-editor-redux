@@ -244,6 +244,9 @@ int VirtualBrushGrid::HitTest(int x, int y) const
     int realX = x;
 
     if (display_mode == DisplayMode::List) {
+        if (realY < padding) {
+            return -1;
+        }
         int row = (realY - padding) / LIST_ROW_HEIGHT;
 
         if (row < 0 || row >= static_cast<int>(tileset->size())) {

@@ -36,6 +36,9 @@ void SpriteIconRenderer::unloadOutfitDC(const Outfit& outfit)
 
     key.size = SPRITE_SIZE_32x32;
     colored_dc.erase(key);
+
+    key.size = SPRITE_SIZE_64x64;
+    colored_dc.erase(key);
 }
 
 wxMemoryDC* SpriteIconRenderer::getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size)

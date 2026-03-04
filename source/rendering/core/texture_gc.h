@@ -6,6 +6,7 @@
 #include <deque>
 #include <memory>
 #include <mutex>
+#include <unordered_set>
 
 class GameSprite;
 class Sprite;
@@ -71,7 +72,7 @@ private:
 
     mutable std::recursive_mutex resident_images_mutex_;
     std::vector<Image*> resident_images;
-    std::vector<uint32_t> resident_game_sprites;
+    std::unordered_set<uint32_t> resident_game_sprites;
 };
 
 #endif

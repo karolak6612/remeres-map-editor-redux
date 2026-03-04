@@ -34,9 +34,9 @@ void SpriteDatabase::insertEditorSprite(int id, std::unique_ptr<Sprite> sprite)
 SpriteMetadata& SpriteDatabase::getMetadata(uint32_t id)
 {
     if (id >= metadata_space.size()) {
-        static SpriteMetadata fallback;
-        fallback = SpriteMetadata {}; // Reset each call to avoid stale state
-        return fallback;
+        static const SpriteMetadata empty_metadata;
+        // Safe: callers should not modify the fallback.
+        return const_cast<SpriteMetadata&>(empty_metadata);
     }
     return metadata_space[id];
 }

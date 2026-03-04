@@ -113,7 +113,7 @@ void ItemDrawer::BlitItem(
         }
 
         // primal light
-        if (it.clientID >= 39092 && it.clientID <= 39100 || it.clientID == 39236 || it.clientID == 39367 || it.clientID == 39368) {
+        if ((it.clientID >= 39092 && it.clientID <= 39100) || it.clientID == 39236 || it.clientID == 39367 || it.clientID == 39368) {
             clientID = g_items[SPRITE_LIGHTSOURCE].clientID;
             red = 0;
             alpha = 180;
@@ -302,7 +302,7 @@ void ItemDrawer::DrawRawBrush(
     }
 
     // primal light
-    if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
+    if ((cid >= 39092 && cid <= 39100) || cid == 39236 || cid == 39367 || cid == 39368) {
         clientID = g_items[SPRITE_LIGHTSOURCE].clientID;
         r = 0;
         alpha = (alpha * 171) >> 8;

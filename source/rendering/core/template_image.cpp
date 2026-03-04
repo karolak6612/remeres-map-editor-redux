@@ -110,6 +110,14 @@ namespace {
             return false;
         }
 
+        if (!atlas.spriteList[sprite_index] || !atlas.spriteList[mask_index]) {
+            spdlog::warn(
+                "TemplateImage (texture_id={}): Null sprite in list (sprite_index={}, mask_index={})", img->texture_id, sprite_index,
+                mask_index
+            );
+            return false;
+        }
+
         return true;
     }
 
