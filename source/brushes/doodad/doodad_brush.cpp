@@ -53,7 +53,7 @@ bool DoodadBrush::ownsItem(Item* item) const {
 
 void DoodadBrush::undraw(BaseMap* map, Tile* tile) {
 	// Remove all doodad-related
-	std::erase_if(tile->items, [this](const std::unique_ptr<Item>& item) {
+	tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [this](const std::unique_ptr<Item>& item) {
 		if (item->getDoodadBrush() != nullptr) {
 			if (item->isComplex() && g_settings.getInteger(Config::ERASER_LEAVE_UNIQUE)) {
 				return false;
@@ -64,7 +64,7 @@ void DoodadBrush::undraw(BaseMap* map, Tile* tile) {
 			return true;
 		}
 		return false;
-	});
+	}), tile->items.end());
 
 	if (tile->ground && tile->ground->getDoodadBrush() != nullptr) {
 		if (g_settings.getInteger(Config::DOODAD_BRUSH_ERASE_LIKE)) {

@@ -273,9 +273,9 @@ void GroundBorderCalculator::calculate(BaseMap* map, Tile* tile) {
 	}
 
 	// Clean current borders
-	std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
+	tile->items.erase(std::remove_if(tile->items.begin(), tile->items.end(), [](const std::unique_ptr<Item>& item) {
 		return item->isBorder();
-	});
+	}), tile->items.end());
 
 	// Sort borders based on z-order
 	std::ranges::sort(borderList, [](const GroundBrush::BorderCluster& a, const GroundBrush::BorderCluster& b) {
