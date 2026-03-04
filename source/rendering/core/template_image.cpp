@@ -123,16 +123,16 @@ namespace {
 
     void clampTemplateLookValues(TemplateImage* img)
     {
-        if (img->lookHead > TemplateOutfitLookupTableSize) {
+        if (img->lookHead >= TemplateOutfitLookupTableSize) {
             img->lookHead = 0;
         }
-        if (img->lookBody > TemplateOutfitLookupTableSize) {
+        if (img->lookBody >= TemplateOutfitLookupTableSize) {
             img->lookBody = 0;
         }
-        if (img->lookLegs > TemplateOutfitLookupTableSize) {
+        if (img->lookLegs >= TemplateOutfitLookupTableSize) {
             img->lookLegs = 0;
         }
-        if (img->lookFeet > TemplateOutfitLookupTableSize) {
+        if (img->lookFeet >= TemplateOutfitLookupTableSize) {
             img->lookFeet = 0;
         }
     }

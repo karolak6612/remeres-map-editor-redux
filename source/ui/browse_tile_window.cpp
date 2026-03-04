@@ -69,6 +69,9 @@ BrowseTileListBox::~BrowseTileListBox()
 
 void BrowseTileListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 {
+    if (n >= items.size() || !items[n]) {
+        return;
+    }
     Item* item = items[n];
 
     int tex = GetOrCreateItemImage(item->getID());

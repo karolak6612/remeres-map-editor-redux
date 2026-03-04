@@ -13,7 +13,6 @@
 #include <vector>
 
 class NormalImage;
-class TemplateImage;
 struct Outfit;
 struct AtlasRegion;
 

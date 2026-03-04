@@ -357,7 +357,7 @@ void FindDialogListBox::CommitUpdates()
 Brush* FindDialogListBox::GetSelectedBrush()
 {
     int n = GetSelection();
-    if (n == -1 || no_matches || cleared) {
+    if (n < 0 || no_matches || cleared || static_cast<size_t>(n) >= brushlist.size()) {
         return nullptr;
     }
     return brushlist[n];

@@ -11,7 +11,7 @@
 
 void SpriteIconRenderer::unloadDC()
 {
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < SPRITE_SIZE_COUNT; ++i) {
         if (dc[i]) {
             dc[i]->SelectObject(wxNullBitmap);
         }

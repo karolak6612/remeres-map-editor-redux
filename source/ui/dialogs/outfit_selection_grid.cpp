@@ -110,8 +110,11 @@ int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, co
         return existing;
     }
 
+    if (lookType <= 0) {
+        return 0;
+    }
     uint32_t clientID = static_cast<uint32_t>(lookType) + g_gui.sprites.getItemSpriteMaxID();
-    if (lookType == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
+    if (clientID >= g_gui.sprites.getMetadataSpace().size()) {
         return 0;
     }
 

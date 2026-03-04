@@ -104,7 +104,7 @@ CreatureType* CreatureType::loadFromXML(pugi::xml_node node, std::vector<std::st
     if (attribute) {
         ct->outfit.lookType = attribute.as_int();
 
-        if (ct->outfit.lookType == 0
+        if (ct->outfit.lookType <= 0
             || (ct->outfit.lookType + g_gui.sprites.getItemSpriteMaxID()) >= g_gui.sprites.getMetadataSpace().size()) {
             warnings.push_back(
                 (wxString("Invalid creature \"") + wxstr(ct->name) + "\" look type #" + std::to_string(ct->outfit.lookType)).ToStdString()
