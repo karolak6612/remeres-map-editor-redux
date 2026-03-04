@@ -6,13 +6,14 @@
 #define RME_RENDERING_UTILITIES_SPRITE_ICON_GENERATOR_H_
 
 #include "game/creature.h"
-#include "rendering/core/game_sprite.h"
+#include "rendering/ui/sprite_size.h"
 #include <wx/bitmap.h>
+#include <cstdint>
 
 class SpriteIconGenerator {
 public:
-	static wxBitmap Generate(GameSprite* sprite, SpriteSize size, bool rescale = true);
-	static wxBitmap Generate(GameSprite* sprite, SpriteSize size, const Outfit& outfit, bool rescale = true, Direction direction = SOUTH);
+    static wxBitmap Generate(uint32_t clientID, SpriteSize size, bool rescale = true);
+    static wxBitmap Generate(uint32_t clientID, SpriteSize size, const Outfit& outfit, bool rescale = true, Direction direction = SOUTH);
 };
 
 #endif

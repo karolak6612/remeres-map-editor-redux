@@ -6,6 +6,7 @@
 #include <stdint.h>
 
 #include "rendering/core/draw_context.h"
+#include "rendering/utilities/pattern_calculator.h"
 
 class TileLocation;
 class Editor;
@@ -16,26 +17,30 @@ class CreatureNameDrawer;
 class FloorDrawer;
 class MarkerDrawer;
 class TooltipDrawer;
-class ItemType;
-struct SpritePatterns;
 
 class TileRenderer {
 public:
-	TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed);
+    TileRenderer(
+        ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td,
+        Editor* ed
+    );
 
-	void DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1, bool draw_lights = false);
+    void DrawTile(
+        const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1,
+        bool draw_lights = false
+    );
 
 private:
-	void PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* patterns = nullptr);
+    void PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* patterns = nullptr);
 
-	ItemDrawer* item_drawer;
-	SpriteDrawer* sprite_drawer;
-	CreatureDrawer* creature_drawer;
-	FloorDrawer* floor_drawer;
-	MarkerDrawer* marker_drawer;
-	TooltipDrawer* tooltip_drawer;
-	CreatureNameDrawer* creature_name_drawer;
-	Editor* editor;
+    ItemDrawer* item_drawer;
+    SpriteDrawer* sprite_drawer;
+    CreatureDrawer* creature_drawer;
+    FloorDrawer* floor_drawer;
+    MarkerDrawer* marker_drawer;
+    TooltipDrawer* tooltip_drawer;
+    CreatureNameDrawer* creature_name_drawer;
+    Editor* editor;
 };
 
 #endif

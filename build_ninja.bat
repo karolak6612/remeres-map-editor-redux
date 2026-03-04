@@ -2,25 +2,60 @@
 setlocal enabledelayedexpansion
 
 REM ============================================================
-REM  RME Ninja Build Script
-REM  Builds x64 Release with Ninja and generates compile_commands.json
+REM  RME Ninja Build Script Wrapper
+REM  Handles logging and real-time progress display
 REM ============================================================
 
+if "%~1"=="--logging" goto :main
+
+set "PROJECT_ROOT=%~dp0"
+set "PROJECT_ROOT=%PROJECT_ROOT:~0,-1%"
+set "LOG_FILE=%PROJECT_ROOT%\build_ninja.log"
+
+echo RME Ninja Build Log > "%LOG_FILE%"
+echo Started: %DATE% %TIME% >> "%LOG_FILE%"
+echo -------------------------------------------------------- >> "%LOG_FILE%"
+
+echo.
+echo ========================================================
+echo   RME Ninja Build Script (x64 Release)
+echo   Logging to: %LOG_FILE%
+echo ========================================================
+
+REM Call the script again with the --logging flag and pipe everything to Tee-Object
+powershell -NoProfile -Command "& { & '%~f0' --logging 2>&1 | Tee-Object -FilePath '%LOG_FILE%' -Append; exit $LASTEXITCODE }"
+set "RET=%ERRORLEVEL%"
+
+echo -------------------------------------------------------- >> "%LOG_FILE%"
+echo Finished: %DATE% %TIME% >> "%LOG_FILE%"
+if %RET% equ 0 (
+    echo SUCCESSFUL >> "%LOG_FILE%"
+) else (
+    echo FAILED with code %RET% >> "%LOG_FILE%"
+)
+
+exit /b %RET%
+
+:main
+REM ============================================================
+REM  Core Build Logic
+REM ============================================================
 set "SCRIPT_DIR=%~dp0"
 set "PROJECT_ROOT=%SCRIPT_DIR:~0,-1%"
 set "BUILD_DIR=%PROJECT_ROOT%\build-ninja"
 
 echo.
-echo ========================================================
-echo   RME Ninja Build Script (x64 Release)
-echo ========================================================
-echo.
+echo [0/6] Cleaning up previous build processes...
+taskkill /F /IM ninja.exe /T >nul 2>&1
+taskkill /F /IM cl.exe /T >nul 2>&1
+taskkill /F /IM link.exe /T >nul 2>&1
+taskkill /F /IM rme.exe /T >nul 2>&1
+echo OK - Processes cleaned.
 
 echo [1/6] Checking for Ninja...
 ninja --version >nul 2>&1
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Ninja was not found.
-    
     exit /b 1
 )
 echo OK - Ninja found.
@@ -29,7 +64,6 @@ echo [2/6] Finding Visual C++ toolchain...
 set "VW=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 if not exist "%VW%" (
     echo ERROR: vswhere.exe not found.
-    
     exit /b 1
 )
 
@@ -40,7 +74,6 @@ for /f "usebackq tokens=*" %%i in (`"%VW%" -latest -products * -property install
 
 if "%VSP%"=="" (
     echo ERROR: Visual Studio installation not found.
-    
     exit /b 1
 )
 
@@ -50,14 +83,13 @@ echo Initializing x64 environment...
 set "VV=%VSP%\VC\Auxiliary\Build\vcvarsall.bat"
 if not exist "%VV%" (
     echo ERROR: vcvarsall.bat not found.
-    
     exit /b 1
 )
 
+REM We don't redirect to log here because the wrapper handles it
 call "%VV%" x64 >nul
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Failed to initialize x64 environment.
-    
     exit /b 1
 )
 echo OK - Environment initialized.
@@ -74,7 +106,6 @@ if not defined VKD (
 )
 if not defined VKD (
     echo ERROR: vcpkg not found. Set VCPKG_ROOT environment variable.
-    
     exit /b 1
 )
 echo OK - vcpkg found at: %VKD%
@@ -92,7 +123,6 @@ cmake -G Ninja ^
 
 if !ERRORLEVEL! neq 0 (
     echo ERROR: CMake configuration failed.
-    
     exit /b 1
 )
 echo OK - Configuration complete.
@@ -101,7 +131,6 @@ echo [5/6] Building rme...
 cmake --build "%BUILD_DIR%" --target rme --parallel
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Build failed.
-    
     exit /b 1
 )
 echo OK - Build complete.
@@ -124,4 +153,3 @@ echo   Linter:    %PROJECT_ROOT%\compile_commands.json
 echo.
 
 endlocal
-

@@ -25,46 +25,45 @@ class GameSprite;
 class EditorSprite;
 
 enum {
-	DC_BTN_NORMAL,
-	DC_BTN_TOGGLE,
+    DC_BTN_NORMAL,
+    DC_BTN_TOGGLE,
 };
 
 enum RenderSize {
-	RENDER_SIZE_16x16,
-	RENDER_SIZE_32x32,
-	RENDER_SIZE_64x64,
+    RENDER_SIZE_16x16,
+    RENDER_SIZE_32x32,
+    RENDER_SIZE_64x64,
 };
 
 class DCButton : public NanoVGCanvas {
 public:
-	DCButton();
-	DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, RenderSize sz, int sprite_id);
-	virtual ~DCButton();
+    DCButton();
+    DCButton(wxWindow* parent, wxWindowID id, wxPoint pos, int type, RenderSize sz, int sprite_id);
+    virtual ~DCButton();
 
-	void SetValue(bool val);
-	bool GetValue() const;
+    void SetValue(bool val);
+    bool GetValue() const;
 
-	void SetSprite(int id);
-	void SetSprite(Sprite* sprite);
+    void SetSprite(int id);
 
-	void OnClick(wxMouseEvent&);
+    void OnClick(wxMouseEvent&);
 
 protected:
-	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
-	wxSize DoGetBestClientSize() const override;
+    void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+    wxSize DoGetBestClientSize() const override;
 
-	void DrawSunkenBorder(NVGcontext* vg, float x, float y);
-	void DrawRaisedBorder(NVGcontext* vg, float x, float y);
+    void DrawSunkenBorder(NVGcontext* vg, float x, float y);
+    void DrawRaisedBorder(NVGcontext* vg, float x, float y);
 
-	void SetOverlay(Sprite* espr);
+    void SetOverlay(int id);
 
-	int type;
-	bool state; // pressed/unpressed
-	RenderSize size;
-	Sprite* sprite;
-	Sprite* overlay;
+    int type;
+    bool state; // pressed/unpressed
+    RenderSize size;
+    int sprite_id;
+    int overlay_id;
 
-	DECLARE_DYNAMIC_CLASS(DCButton)
+    DECLARE_DYNAMIC_CLASS(DCButton)
 };
 
 #endif

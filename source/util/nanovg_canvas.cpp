@@ -1,407 +1,497 @@
-#include "app/main.h"
 #include "util/nanovg_canvas.h"
-#include "util/image_manager.h"
-#include "rendering/core/text_renderer.h"
-#include "ui/theme.h"
-#include "game/items.h"
-#include "rendering/core/game_sprite.h"
+#include "app/main.h"
+#include "game/outfit.h"
 #include "rendering/core/normal_image.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/text_renderer.h"
+#include "rendering/utilities/sprite_icon_generator.h"
+#include "ui/gui.h"
+#include "ui/theme.h"
+#include "util/image_manager.h"
 
 #include <glad/glad.h>
 
 #define NANOVG_GL3_IMPLEMENTATION
-#include "util/nvg_utils.h"
-#include <nanovg_gl.h>
-#include "rendering/core/sprite_database.h"
 #include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/sprite_database.h"
 #include "rendering/core/texture_gc.h"
 #include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
+#include "util/nvg_utils.h"
+#include <nanovg_gl.h>
 
 #include <wx/dcclient.h>
 #include <algorithm>
-#include <span>
 #include <ranges>
+#include <span>
 
-ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) :
-	m_canvas(canvas) {
-	if (m_canvas) {
-		m_canvas->MakeContextCurrent();
-	}
+ScopedGLContext::ScopedGLContext(NanoVGCanvas* canvas) : m_canvas(canvas)
+{
+    if (m_canvas) {
+        m_canvas->MakeContextCurrent();
+    }
 }
 
-void NVGDeleter::operator()(NVGcontext* nvg) const {
-	if (nvg) {
-		nvgDeleteGL3(nvg);
-	}
+void NVGDeleter::operator()(NVGcontext* nvg) const
+{
+    if (nvg) {
+        nvgDeleteGL3(nvg);
+    }
 }
-
-
 
 NanoVGCanvas::NanoVGCanvas(wxWindow* parent, wxWindowID id, long style) :
-	wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style) {
-	SetBackgroundStyle(wxBG_STYLE_PAINT);
+    wxGLCanvas(parent, id, nullptr, wxDefaultPosition, wxDefaultSize, style)
+{
+    SetBackgroundStyle(wxBG_STYLE_PAINT);
 
-	Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);
-	Bind(wxEVT_SIZE, &NanoVGCanvas::OnSize, this);
-	Bind(wxEVT_MOUSEWHEEL, &NanoVGCanvas::OnMouseWheel, this);
-	Bind(wxEVT_ERASE_BACKGROUND, &NanoVGCanvas::OnEraseBackground, this);
+    Bind(wxEVT_PAINT, &NanoVGCanvas::OnPaint, this);
+    Bind(wxEVT_SIZE, &NanoVGCanvas::OnSize, this);
+    Bind(wxEVT_MOUSEWHEEL, &NanoVGCanvas::OnMouseWheel, this);
+    Bind(wxEVT_ERASE_BACKGROUND, &NanoVGCanvas::OnEraseBackground, this);
 
-	// Scrollbar interaction events
-	Bind(wxEVT_SCROLLWIN_TOP, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_BOTTOM, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_LINEUP, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_LINEDOWN, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_PAGEUP, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_PAGEDOWN, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_THUMBTRACK, &NanoVGCanvas::OnScroll, this);
-	Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &NanoVGCanvas::OnScroll, this);
+    // Scrollbar interaction events
+    Bind(wxEVT_SCROLLWIN_TOP, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_BOTTOM, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_LINEUP, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_LINEDOWN, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_PAGEUP, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_PAGEDOWN, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_THUMBTRACK, &NanoVGCanvas::OnScroll, this);
+    Bind(wxEVT_SCROLLWIN_THUMBRELEASE, &NanoVGCanvas::OnScroll, this);
 }
 
-NanoVGCanvas::~NanoVGCanvas() {
-	if (m_glContext) {
-		if (MakeContextCurrent()) {
-			ClearImageCache();
-		}
-	}
-	g_gl_context.UnregisterCanvas(this);
+NanoVGCanvas::~NanoVGCanvas()
+{
+    if (m_glContext) {
+        if (MakeContextCurrent()) {
+            ClearImageCache();
+        }
+    }
+    g_gl_context.UnregisterCanvas(this);
 }
 
-void NanoVGCanvas::InitGL() {
-	if (m_glInitialized) {
-		return;
-	}
+void NanoVGCanvas::InitGL()
+{
+    if (m_glInitialized) {
+        return;
+    }
 
-	m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
-	if (!m_glContext->IsOK()) {
-		m_glContext.reset();
-		return;
-	}
+    m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
+    if (!m_glContext->IsOK()) {
+        m_glContext.reset();
+        return;
+    }
 
-	SetCurrent(*m_glContext);
+    SetCurrent(*m_glContext);
 
-	if (!gladLoadGL()) {
-		return;
-	}
+    if (!gladLoadGL()) {
+        return;
+    }
 
-	m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
-	if (m_nvg) {
-		// Load default font - same as TextRenderer for consistency
-		TextRenderer::LoadFont(m_nvg.get());
-		m_glInitialized = true;
-	}
+    m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
+    if (m_nvg) {
+        // Load default font - same as TextRenderer for consistency
+        TextRenderer::LoadFont(m_nvg.get());
+        m_glInitialized = true;
+    }
 }
 
-bool NanoVGCanvas::MakeContextCurrent() {
-	if (!m_glContext) {
-		return false;
-	}
-	return g_gl_context.EnsureContextCurrent(*m_glContext, this);
+bool NanoVGCanvas::MakeContextCurrent()
+{
+    if (!m_glContext) {
+        return false;
+    }
+    return g_gl_context.EnsureContextCurrent(*m_glContext, this);
 }
 
-void NanoVGCanvas::OnPaint(wxPaintEvent&) {
-	wxPaintDC dc(this); // validates the paint event
+void NanoVGCanvas::OnPaint(wxPaintEvent&)
+{
+    wxPaintDC dc(this); // validates the paint event
 
-	InitGL();
-	if (!m_nvg || !m_glContext) {
-		return;
-	}
+    InitGL();
+    if (!m_nvg || !m_glContext) {
+        return;
+    }
 
-	SetCurrent(*m_glContext);
+    SetCurrent(*m_glContext);
 
-	int w, h;
-	GetClientSize(&w, &h);
+    int w, h;
+    GetClientSize(&w, &h);
 
-	glViewport(0, 0, w, h);
+    glViewport(0, 0, w, h);
 
-	// Use theme background
-	wxColour bg = Theme::Get(Theme::Role::Surface);
-	glClearColor(bg.Red() / 255.0f, bg.Green() / 255.0f, bg.Blue() / 255.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    // Use theme background
+    wxColour bg = Theme::Get(Theme::Role::Surface);
+    glClearColor(bg.Red() / 255.0f, bg.Green() / 255.0f, bg.Blue() / 255.0f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-	NVGcontext* vg = m_nvg.get();
-	nvgBeginFrame(vg, w, h, GetContentScaleFactor());
-	nvgSave(vg);
-	nvgTranslate(vg, 0, static_cast<float>(-m_scrollPos));
+    NVGcontext* vg = m_nvg.get();
+    nvgBeginFrame(vg, w, h, GetContentScaleFactor());
+    nvgSave(vg);
+    nvgTranslate(vg, 0, static_cast<float>(-m_scrollPos));
 
-	// Call subclass implementation
-	OnNanoVGPaint(vg, w, h);
+    // Call subclass implementation
+    OnNanoVGPaint(vg, w, h);
 
-	nvgRestore(vg);
-	nvgEndFrame(vg);
+    nvgRestore(vg);
+    nvgEndFrame(vg);
 
-	SwapBuffers();
+    SwapBuffers();
 }
 
-void NanoVGCanvas::OnSize(wxSizeEvent& evt) {
-	UpdateScrollbar(m_contentHeight);
-	Refresh();
-	evt.Skip();
+void NanoVGCanvas::OnSize(wxSizeEvent& evt)
+{
+    UpdateScrollbar(m_contentHeight);
+    Refresh();
+    evt.Skip();
 }
 
-void NanoVGCanvas::OnMouseWheel(wxMouseEvent& evt) {
-	int rotation = evt.GetWheelRotation();
-	m_scrollPos -= (rotation / 120) * m_scrollStep;
+void NanoVGCanvas::OnMouseWheel(wxMouseEvent& evt)
+{
+    int rotation = evt.GetWheelRotation();
+    m_scrollPos -= (rotation / 120) * m_scrollStep;
 
-	int maxScroll = std::max(0, m_contentHeight - GetClientSize().y);
-	m_scrollPos = std::clamp(m_scrollPos, 0, maxScroll);
+    int maxScroll = std::max(0, m_contentHeight - GetClientSize().y);
+    m_scrollPos = std::clamp(m_scrollPos, 0, maxScroll);
 
-	UpdateScrollbar(m_contentHeight);
-	Refresh();
+    UpdateScrollbar(m_contentHeight);
+    Refresh();
 }
 
-void NanoVGCanvas::OnEraseBackground(wxEraseEvent&) {
-	// No-op to prevent flicker
+void NanoVGCanvas::OnEraseBackground(wxEraseEvent&)
+{
+    // No-op to prevent flicker
 }
 
-void NanoVGCanvas::OnScroll(wxScrollWinEvent& evt) {
-	int h = GetClientSize().y;
-	int maxScroll = std::max(0, m_contentHeight - h);
+void NanoVGCanvas::OnScroll(wxScrollWinEvent& evt)
+{
+    int h = GetClientSize().y;
+    int maxScroll = std::max(0, m_contentHeight - h);
 
-	wxEventType type = evt.GetEventType();
+    wxEventType type = evt.GetEventType();
 
-	if (type == wxEVT_SCROLLWIN_TOP) {
-		m_scrollPos = 0;
-	} else if (type == wxEVT_SCROLLWIN_BOTTOM) {
-		m_scrollPos = maxScroll;
-	} else if (type == wxEVT_SCROLLWIN_LINEUP) {
-		m_scrollPos = std::max(0, m_scrollPos - m_scrollStep);
-	} else if (type == wxEVT_SCROLLWIN_LINEDOWN) {
-		m_scrollPos = std::min(maxScroll, m_scrollPos + m_scrollStep);
-	} else if (type == wxEVT_SCROLLWIN_PAGEUP) {
-		m_scrollPos = std::max(0, m_scrollPos - h);
-	} else if (type == wxEVT_SCROLLWIN_PAGEDOWN) {
-		m_scrollPos = std::min(maxScroll, m_scrollPos + h);
-	} else if (type == wxEVT_SCROLLWIN_THUMBTRACK || type == wxEVT_SCROLLWIN_THUMBRELEASE) {
-		m_scrollPos = evt.GetPosition();
-	}
+    if (type == wxEVT_SCROLLWIN_TOP) {
+        m_scrollPos = 0;
+    } else if (type == wxEVT_SCROLLWIN_BOTTOM) {
+        m_scrollPos = maxScroll;
+    } else if (type == wxEVT_SCROLLWIN_LINEUP) {
+        m_scrollPos = std::max(0, m_scrollPos - m_scrollStep);
+    } else if (type == wxEVT_SCROLLWIN_LINEDOWN) {
+        m_scrollPos = std::min(maxScroll, m_scrollPos + m_scrollStep);
+    } else if (type == wxEVT_SCROLLWIN_PAGEUP) {
+        m_scrollPos = std::max(0, m_scrollPos - h);
+    } else if (type == wxEVT_SCROLLWIN_PAGEDOWN) {
+        m_scrollPos = std::min(maxScroll, m_scrollPos + h);
+    } else if (type == wxEVT_SCROLLWIN_THUMBTRACK || type == wxEVT_SCROLLWIN_THUMBRELEASE) {
+        m_scrollPos = evt.GetPosition();
+    }
 
-	m_scrollPos = std::clamp(m_scrollPos, 0, maxScroll);
-	UpdateScrollbar(m_contentHeight);
-	Refresh();
+    m_scrollPos = std::clamp(m_scrollPos, 0, maxScroll);
+    UpdateScrollbar(m_contentHeight);
+    Refresh();
 }
 
-void NanoVGCanvas::SetScrollPosition(int pos) {
-	int maxScroll = std::max(0, m_contentHeight - GetClientSize().y);
-	m_scrollPos = std::clamp(pos, 0, maxScroll);
-	UpdateScrollbar(m_contentHeight);
-	Refresh();
+void NanoVGCanvas::SetScrollPosition(int pos)
+{
+    int maxScroll = std::max(0, m_contentHeight - GetClientSize().y);
+    m_scrollPos = std::clamp(pos, 0, maxScroll);
+    UpdateScrollbar(m_contentHeight);
+    Refresh();
 }
 
-int NanoVGCanvas::GetOrCreateItemImage(uint16_t itemId) {
-	int tex = GetCachedImage(itemId);
-	if (tex > 0) {
-		return tex;
-	}
+int NanoVGCanvas::GetOrCreateItemImage(uint16_t itemId)
+{
+    int tex = GetCachedImage(itemId);
+    if (tex > 0) {
+        return tex;
+    }
 
-	NVGcontext* vg = GetNVGContext();
-	if (!vg) {
-		return 0;
-	}
+    NVGcontext* vg = GetNVGContext();
+    if (!vg) {
+        return 0;
+    }
 
-	tex = NvgUtils::CreateItemTexture(vg, itemId);
-	if (tex > 0) {
-		AddCachedImage(static_cast<uint64_t>(itemId), tex);
-	}
-	return tex;
+    tex = NvgUtils::CreateItemTexture(vg, itemId);
+    if (tex > 0) {
+        AddCachedImage(static_cast<uint64_t>(itemId), tex);
+    }
+    return tex;
 }
 
-int NanoVGCanvas::GetOrCreateStaticImage(const std::string& assetPath) {
-	NVGcontext* vg = GetNVGContext();
-	if (!vg) {
-		return 0;
-	}
+int NanoVGCanvas::GetOrCreateClientSpriteImage(uint32_t clientID)
+{
+    // Cache using a distinct key range that won't collide with serverID cache entries
+    constexpr uint64_t kClientIDOffset = 0x1'0000'0000ULL;
+    uint64_t cache_key = kClientIDOffset + clientID;
 
-	return IMAGE_MANAGER.GetNanoVGImage(vg, assetPath);
+    int tex = GetCachedImage(cache_key);
+    if (tex > 0) {
+        return tex;
+    }
+
+    NVGcontext* vg = GetNVGContext();
+    if (!vg) {
+        return 0;
+    }
+
+    int w = 0;
+    int h = 0;
+    auto composite = NvgUtils::CreateCompositeRGBA(clientID, w, h);
+    if (!composite || w <= 0 || h <= 0) {
+        return 0;
+    }
+
+    tex = nvgCreateImageRGBA(vg, w, h, 0, composite.get());
+    if (tex > 0) {
+        AddCachedImage(cache_key, tex);
+    }
+    return tex;
 }
 
-int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
-	if (!sprite) {
-		return 0;
-	}
+int NanoVGCanvas::GetOrCreateStaticImage(const std::string& assetPath)
+{
+    NVGcontext* vg = GetNVGContext();
+    if (!vg) {
+        return 0;
+    }
 
-	// Use full pointer as unique ID for 64-bit systems
-	uint64_t spriteId = reinterpret_cast<uint64_t>(sprite);
-
-	// Check cache first
-	int existingTex = GetCachedImage(spriteId);
-	if (existingTex > 0) {
-		return existingTex;
-	}
-
-	// Try to get as GameSprite for RGBA access (Fast Path)
-	GameSprite* gs = dynamic_cast<GameSprite*>(sprite);
-	if (gs && !gs->spriteList.empty()) {
-		return CreateGameSpriteTexture(vg, gs, spriteId);
-	}
-
-	// Generic Fallback (Slow Path via wxDC)
-	return CreateGenericSpriteTexture(vg, sprite, spriteId);
+    return IMAGE_MANAGER.GetNanoVGImage(vg, assetPath);
 }
 
-int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64_t spriteId) {
-	int w, h;
-	auto composite = NvgUtils::CreateCompositeRGBA(*gs, w, h);
-	if (!composite) {
-		return 0;
-	}
-	return GetOrCreateImage(spriteId, composite.get(), w, h);
+int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite)
+{
+    if (!sprite) {
+        return 0;
+    }
+
+    // Use full pointer as unique ID for 64-bit systems
+    uint64_t spriteId = reinterpret_cast<uint64_t>(sprite);
+
+    // Check cache first
+    int existingTex = GetCachedImage(spriteId);
+    if (existingTex > 0) {
+        return existingTex;
+    }
+
+    // Generic Fallback (Slow Path via wxDC)
+    return CreateGenericSpriteTexture(vg, sprite, spriteId);
 }
 
-int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uint64_t spriteId) {
-	wxSize sz = sprite->GetSize();
-	int w = sz.x;
-	int h = sz.y;
+int NanoVGCanvas::GetOrCreateCreatureTexture(NVGcontext* vg, uint32_t lookType, const Outfit& outfit)
+{
+    if (lookType == 0) {
+        return 0;
+    }
 
-	// Determine best SpriteSize for DrawTo
-	SpriteSize drawSize = SPRITE_SIZE_32x32;
-	if (w <= 16 && h <= 16) {
-		drawSize = SPRITE_SIZE_16x16;
-	} else if (w > 32 || h > 32) {
-		drawSize = SPRITE_SIZE_64x64;
-	}
+    uint32_t clientID = lookType + g_gui.sprites.getItemSpriteMaxID();
+    if (clientID >= g_gui.sprites.getMetadataSpace().size()) {
+        return 0;
+    }
 
-	wxBitmap bmp(w, h);
-	// Need a DC to draw
-	{
-		wxMemoryDC mdc(bmp);
-		// Initialize with transparent background
-		mdc.SetBackground(wxBrush(wxColor(0, 0, 0), wxBRUSHSTYLE_TRANSPARENT));
-		mdc.Clear();
-		// Draw at 0,0 with its size
-		sprite->DrawTo(&mdc, drawSize, 0, 0, w, h);
-	}
+    // Stable cache key: high 32 bits = clientID, low 32 bits = combined outfit + mount color hash
+    uint64_t key
+        = (static_cast<uint64_t>(clientID) << 32) | (outfit.getColorHash() ^ (static_cast<uint64_t>(outfit.getMountColorHash()) << 16));
 
-	wxImage img = bmp.ConvertToImage();
-	if (!img.IsOk()) {
-		return 0;
-	}
+    int existing = GetCachedImage(key);
+    if (existing > 0) {
+        return existing;
+    }
 
-	// Convert to RGBA
-	std::vector<uint8_t> rgba(w * h * 4);
-	const uint8_t* data = img.GetData();
-	const uint8_t* alpha = img.GetAlpha();
-	bool hasAlpha = img.HasAlpha();
+    // Use SpriteIconGenerator to produce a colorized bitmap (handles template coloring)
+    wxBitmap bmp = SpriteIconGenerator::Generate(clientID, SPRITE_SIZE_32x32, outfit, false);
+    if (!bmp.IsOk()) {
+        return 0;
+    }
 
-	std::span<uint8_t> dest(rgba);
-	std::span<const uint8_t> src(data, w * h * 3);
+    wxImage img = bmp.ConvertToImage();
+    if (!img.IsOk()) {
+        return 0;
+    }
 
-	if (hasAlpha && alpha) {
-		for (int i : std::views::iota(0, w * h)) {
-			dest[i * 4 + 0] = src[i * 3 + 0];
-			dest[i * 4 + 1] = src[i * 3 + 1];
-			dest[i * 4 + 2] = src[i * 3 + 2];
-			dest[i * 4 + 3] = alpha[i];
-		}
-	} else {
-		for (int i : std::views::iota(0, w * h)) {
-			dest[i * 4 + 0] = src[i * 3 + 0];
-			dest[i * 4 + 1] = src[i * 3 + 1];
-			dest[i * 4 + 2] = src[i * 3 + 2];
-			dest[i * 4 + 3] = 255;
-		}
-	}
+    int w = img.GetWidth();
+    int h = img.GetHeight();
+    if (w <= 0 || h <= 0) {
+        return 0;
+    }
 
-	return GetOrCreateImage(spriteId, rgba.data(), w, h);
+    // Convert wxImage RGB+Alpha to RGBA for NanoVG
+    const unsigned char* rgb = img.GetData();
+    const unsigned char* alpha = img.HasAlpha() ? img.GetAlpha() : nullptr;
+    size_t pixel_count = static_cast<size_t>(w) * h;
+    auto rgba = std::make_unique<uint8_t[]>(pixel_count * 4);
+
+    for (size_t i = 0; i < pixel_count; ++i) {
+        rgba[i * 4 + 0] = rgb[i * 3 + 0];
+        rgba[i * 4 + 1] = rgb[i * 3 + 1];
+        rgba[i * 4 + 2] = rgb[i * 3 + 2];
+        rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
+    }
+
+    return GetOrCreateImage(key, rgba.get(), w, h);
 }
 
-void NanoVGCanvas::UpdateScrollbar(int contentHeight) {
-	m_contentHeight = contentHeight;
-	int h = GetClientSize().y;
-	SetScrollbar(wxVERTICAL, m_scrollPos, h, contentHeight);
+int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uint64_t spriteId)
+{
+    wxSize sz = sprite->GetSize();
+    int w = sz.x;
+    int h = sz.y;
+
+    // Determine best SpriteSize for DrawTo
+    SpriteSize drawSize = SPRITE_SIZE_32x32;
+    if (w <= 16 && h <= 16) {
+        drawSize = SPRITE_SIZE_16x16;
+    } else if (w > 32 || h > 32) {
+        drawSize = SPRITE_SIZE_64x64;
+    }
+
+    wxBitmap bmp(w, h);
+    // Need a DC to draw
+    {
+        wxMemoryDC mdc(bmp);
+        // Initialize with transparent background
+        mdc.SetBackground(wxBrush(wxColor(0, 0, 0), wxBRUSHSTYLE_TRANSPARENT));
+        mdc.Clear();
+        // Draw at 0,0 with its size
+        sprite->DrawTo(&mdc, drawSize, 0, 0, w, h);
+    }
+
+    wxImage img = bmp.ConvertToImage();
+    if (!img.IsOk()) {
+        return 0;
+    }
+
+    // Convert to RGBA
+    std::vector<uint8_t> rgba(w * h * 4);
+    const uint8_t* data = img.GetData();
+    const uint8_t* alpha = img.GetAlpha();
+    bool hasAlpha = img.HasAlpha();
+
+    std::span<uint8_t> dest(rgba);
+    std::span<const uint8_t> src(data, w * h * 3);
+
+    if (hasAlpha && alpha) {
+        for (int i : std::views::iota(0, w * h)) {
+            dest[i * 4 + 0] = src[i * 3 + 0];
+            dest[i * 4 + 1] = src[i * 3 + 1];
+            dest[i * 4 + 2] = src[i * 3 + 2];
+            dest[i * 4 + 3] = alpha[i];
+        }
+    } else {
+        for (int i : std::views::iota(0, w * h)) {
+            dest[i * 4 + 0] = src[i * 3 + 0];
+            dest[i * 4 + 1] = src[i * 3 + 1];
+            dest[i * 4 + 2] = src[i * 3 + 2];
+            dest[i * 4 + 3] = 255;
+        }
+    }
+
+    return GetOrCreateImage(spriteId, rgba.data(), w, h);
 }
 
-int NanoVGCanvas::GetOrCreateImage(uint64_t id, const uint8_t* data, int width, int height) {
-	ScopedGLContext ctx(this);
-	if (!m_nvg) {
-		return 0;
-	}
-
-	auto it = m_imageCache.find(id);
-	if (it != m_imageCache.end()) {
-		// Update LRU
-		m_lruList.remove(id);
-		m_lruList.push_front(id);
-		return it->second;
-	}
-
-	int tex = nvgCreateImageRGBA(m_nvg.get(), width, height, 0, data);
-	if (tex > 0) {
-		AddCachedImage(id, tex);
-	}
-	return tex;
+void NanoVGCanvas::UpdateScrollbar(int contentHeight)
+{
+    m_contentHeight = contentHeight;
+    int h = GetClientSize().y;
+    SetScrollbar(wxVERTICAL, m_scrollPos, h, contentHeight);
 }
 
-void NanoVGCanvas::DeleteCachedImage(uint64_t id) {
-	ScopedGLContext ctx(this);
-	if (!m_nvg) {
-		return;
-	}
+int NanoVGCanvas::GetOrCreateImage(uint64_t id, const uint8_t* data, int width, int height)
+{
+    ScopedGLContext ctx(this);
+    if (!m_nvg) {
+        return 0;
+    }
 
-	auto it = m_imageCache.find(id);
-	if (it != m_imageCache.end()) {
-		nvgDeleteImage(m_nvg.get(), it->second);
-		m_imageCache.erase(it);
-		m_lruList.remove(id);
-	}
+    auto it = m_imageCache.find(id);
+    if (it != m_imageCache.end()) {
+        // Update LRU
+        m_lruList.remove(id);
+        m_lruList.push_front(id);
+        return it->second;
+    }
+
+    int tex = nvgCreateImageRGBA(m_nvg.get(), width, height, 0, data);
+    if (tex > 0) {
+        AddCachedImage(id, tex);
+    }
+    return tex;
 }
 
-void NanoVGCanvas::AddCachedImage(uint64_t id, int imageHandle) {
-	if (imageHandle > 0) {
-		ScopedGLContext ctx(this);
-		auto it = m_imageCache.find(id);
-		if (it != m_imageCache.end()) {
-			if (m_nvg) {
-				nvgDeleteImage(m_nvg.get(), it->second);
-			}
-			m_lruList.remove(id);
-		}
+void NanoVGCanvas::DeleteCachedImage(uint64_t id)
+{
+    ScopedGLContext ctx(this);
+    if (!m_nvg) {
+        return;
+    }
 
-		// Evict if over limit
-		if (m_imageCache.size() >= m_maxCacheSize) {
-			uint64_t last = m_lruList.back();
-			auto lastIt = m_imageCache.find(last);
-			if (lastIt != m_imageCache.end()) {
-				if (m_nvg) {
-					nvgDeleteImage(m_nvg.get(), lastIt->second);
-				}
-				m_imageCache.erase(lastIt);
-			}
-			m_lruList.pop_back();
-		}
-
-		m_imageCache[id] = imageHandle;
-		m_lruList.push_front(id);
-	}
+    auto it = m_imageCache.find(id);
+    if (it != m_imageCache.end()) {
+        nvgDeleteImage(m_nvg.get(), it->second);
+        m_imageCache.erase(it);
+        m_lruList.remove(id);
+    }
 }
 
-void NanoVGCanvas::ClearImageCache() {
-	ScopedGLContext ctx(this);
-	if (!m_nvg) {
-		return;
-	}
+void NanoVGCanvas::AddCachedImage(uint64_t id, int imageHandle)
+{
+    if (imageHandle > 0) {
+        ScopedGLContext ctx(this);
+        auto it = m_imageCache.find(id);
+        if (it != m_imageCache.end()) {
+            if (m_nvg) {
+                nvgDeleteImage(m_nvg.get(), it->second);
+            }
+            m_lruList.remove(id);
+        }
 
-	for (const auto& [id, tex] : m_imageCache) {
-		nvgDeleteImage(m_nvg.get(), tex);
-	}
-	m_imageCache.clear();
-	m_lruList.clear();
+        // Evict if over limit
+        if (m_imageCache.size() >= m_maxCacheSize) {
+            uint64_t last = m_lruList.back();
+            auto lastIt = m_imageCache.find(last);
+            if (lastIt != m_imageCache.end()) {
+                if (m_nvg) {
+                    nvgDeleteImage(m_nvg.get(), lastIt->second);
+                }
+                m_imageCache.erase(lastIt);
+            }
+            m_lruList.pop_back();
+        }
+
+        m_imageCache[id] = imageHandle;
+        m_lruList.push_front(id);
+    }
 }
 
-int NanoVGCanvas::GetCachedImage(uint64_t id) const {
-	// Const-cast to call MakeContextCurrent if needed, or just assume it's for lookup
-	// Actually GetCachedImage doesn't call GL, it just looks in the map.
-	// So it's fine.
-	auto it = m_imageCache.find(id);
-	if (it != m_imageCache.end()) {
-		// Update LRU
-		m_lruList.remove(id);
-		m_lruList.push_front(id);
-		return it->second;
-	}
-	return 0;
+void NanoVGCanvas::ClearImageCache()
+{
+    ScopedGLContext ctx(this);
+    if (!m_nvg) {
+        return;
+    }
+
+    for (const auto& [id, tex] : m_imageCache) {
+        nvgDeleteImage(m_nvg.get(), tex);
+    }
+    m_imageCache.clear();
+    m_lruList.clear();
 }
 
-wxSize NanoVGCanvas::DoGetBestClientSize() const {
-	return FromDIP(wxSize(200, 200));
+int NanoVGCanvas::GetCachedImage(uint64_t id) const
+{
+    // Const-cast to call MakeContextCurrent if needed, or just assume it's for lookup
+    // Actually GetCachedImage doesn't call GL, it just looks in the map.
+    // So it's fine.
+    auto it = m_imageCache.find(id);
+    if (it != m_imageCache.end()) {
+        // Update LRU
+        m_lruList.remove(id);
+        m_lruList.push_front(id);
+        return it->second;
+    }
+    return 0;
+}
+
+wxSize NanoVGCanvas::DoGetBestClientSize() const
+{
+    return FromDIP(wxSize(200, 200));
 }
