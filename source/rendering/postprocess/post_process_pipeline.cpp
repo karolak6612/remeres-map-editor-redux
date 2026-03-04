@@ -9,7 +9,6 @@
 #include <spdlog/spdlog.h>
 #include <sstream>
 
-
 PostProcessPipeline::PostProcessPipeline(PostProcessManager &manager)
     : post_process_manager_(manager) {}
 
@@ -86,8 +85,8 @@ void main() {
 
 bool PostProcessPipeline::BeginCapture(const ViewState &view,
                                        const DrawingOptions &options) {
-  bool use_fbo = (options.screen_shader_name != ShaderNames::NONE) ||
-                 options.anti_aliasing;
+  bool use_fbo = (options.settings.screen_shader_name != ShaderNames::NONE) ||
+                 options.settings.anti_aliasing;
 
   if (use_fbo) {
     if (UpdateFBO(view, options)) {
@@ -106,7 +105,7 @@ void PostProcessPipeline::EndCaptureAndDraw(const ViewState &view,
   }
 
   ShaderProgram *shader =
-      post_process_manager_.GetEffect(options.screen_shader_name);
+      post_process_manager_.GetEffect(options.settings.screen_shader_name);
   if (!shader) {
     glBindFramebuffer(GL_FRAMEBUFFER, 0); // Ensure main buffer is bound
     return;
@@ -179,11 +178,12 @@ bool PostProcessPipeline::UpdateFBO(const ViewState &view,
     fbo_resized = true;
   }
 
-  if (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode)) {
-    GLenum filter = options.anti_aliasing ? GL_LINEAR : GL_NEAREST;
+  if (scale_texture &&
+      (fbo_resized || options.settings.anti_aliasing != m_lastAaMode)) {
+    GLenum filter = options.settings.anti_aliasing ? GL_LINEAR : GL_NEAREST;
     glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MIN_FILTER, filter);
     glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);
-    m_lastAaMode = options.anti_aliasing;
+    m_lastAaMode = options.settings.anti_aliasing;
   }
 
   glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());

@@ -20,20 +20,22 @@
 
 #include "app/main.h"
 #include "map/position.h"
+#include <cmath>
+#include <concepts>
+#include <iomanip>
 #include <stdio.h>
 #include <stdlib.h>
-#include <cmath>
-#include <iomanip>
 #include <string>
 #include <string_view>
-#include <concepts>
 #include <type_traits>
+
 
 //
 template <typename T1, typename T2>
-	requires(std::integral<T1> || std::is_enum_v<T1>) && (std::integral<T2> || std::is_enum_v<T2>)
+  requires(std::integral<T1> || std::is_enum_v<T1>) &&
+          (std::integral<T2> || std::is_enum_v<T2>)
 inline bool testFlags(T1 flags, T2 test) {
-	return (static_cast<uint64_t>(flags) & static_cast<uint64_t>(test)) != 0;
+  return (static_cast<uint64_t>(flags) & static_cast<uint64_t>(test)) != 0;
 }
 
 int32_t uniform_random(int32_t minNumber, int32_t maxNumber);
@@ -42,57 +44,65 @@ int32_t uniform_random(int32_t maxNumber);
 // Function-like convertions between float, int and doubles
 std::string i2s(int i);
 std::string f2s(double i);
-int s2i(const std::string& s);
-double s2f(const std::string& s);
+int s2i(const std::string &s);
+double s2f(const std::string &s);
 wxString i2ws(int i);
 wxString f2ws(double i);
 int ws2i(wxString s);
 double ws2f(wxString s);
 
 inline wxString wxstr(std::string_view sv) {
-	return wxString::FromUTF8(sv.data(), sv.length());
+  return wxString::FromUTF8(sv.data(), sv.length());
 }
 
-inline wxString wxstr(const std::string& str) {
-	return wxString::FromUTF8(str.c_str(), str.length());
+inline wxString wxstr(const std::string &str) {
+  return wxString::FromUTF8(str.c_str(), str.length());
 }
 
-inline wxString wxstr(const char* str) {
-	return wxString::FromUTF8(str);
-}
+inline wxString wxstr(const char *str) { return wxString::FromUTF8(str); }
 
 // replaces all instances of sought in str with replacement
-void replaceString(std::string& str, std::string_view sought, std::string_view replacement);
-// Removes all characters in t from source (from either start or beginning of the string)
-void trim_right(std::string& source, std::string_view t);
-void trim_left(std::string& source, std::string_view t);
+void replaceString(std::string &str, std::string_view sought,
+                   std::string_view replacement);
+// Removes all characters in t from source (from either start or beginning of
+// the string)
+void trim_right(std::string &source, std::string_view t);
+void trim_left(std::string &source, std::string_view t);
 // Converts the argument to lower/uppercase
-void to_lower_str(std::string& source);
-void to_upper_str(std::string& source);
-std::string as_lower_str(const std::string& other);
-std::string as_upper_str(const std::string& other);
+void to_lower_str(std::string &source);
+void to_upper_str(std::string &source);
+std::string as_lower_str(const std::string &other);
+std::string as_upper_str(const std::string &other);
 
-// isFalseString returns true if the string is either "0", "false", "no", "not" or blank
-// isTrueString returns the opposite value of isFalseString
-bool isFalseString(const std::string& str);
-bool isTrueString(const std::string& str);
+// isFalseString returns true if the string is either "0", "false", "no", "not"
+// or blank isTrueString returns the opposite value of isFalseString
+bool isFalseString(const std::string &str);
+bool isTrueString(const std::string &str);
 
-// Generates a random number between low and high using the Mersenne Twister algorithm (std::mt19937).
-// Swaps low and high if low > high for a more intuitive behavior.
+// Generates a random number between low and high using the Mersenne Twister
+// algorithm (std::mt19937). Swaps low and high if low > high for a more
+// intuitive behavior.
 int random(int high);
 int random(int low, int high);
 
 // Unicode conversions
-std::wstring string2wstring(const std::string& utf8string);
-std::string wstring2string(const std::wstring& widestring);
+std::wstring string2wstring(const std::string &utf8string);
+std::string wstring2string(const std::wstring &widestring);
 
 // Gets position values from ClipBoard
-bool posFromClipboard(Position& position, const int mapWidth = MAP_MAX_WIDTH, const int mapHeight = MAP_MAX_HEIGHT);
+bool posFromClipboard(Position &position, const int mapWidth = MAP_MAX_WIDTH,
+                      const int mapHeight = MAP_MAX_HEIGHT);
 
 // Returns 'yes' if the defined value is true or 'no' if it is false.
 wxString b2yn(bool v);
 
 wxColor colorFromEightBit(int color);
+
+// Returns normalized [0,1] float color from Tibia's 8-bit color palette.
+// Preferred over colorFromEightBit in the rendering layer (no wxWidgets
+// dependency).
+#include <glm/glm.hpp>
+[[nodiscard]] glm::vec4 colorFromEightBitNorm(int color);
 
 // Standard math functions are now used via <cmath> and <algorithm>
 // std::abs, std::min, std::max should be used instead.

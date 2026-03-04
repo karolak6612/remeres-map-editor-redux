@@ -17,208 +17,220 @@
 
 #include "app/main.h"
 
-#include "util/common.h"
 #include "math.h"
+#include "util/common.h"
 
+
+#include <algorithm>
+#include <array>
 #include <cstdio>
 #include <format>
 #include <random>
 #include <regex>
-#include <algorithm>
-#include <array>
+
 
 // random generator
-std::mt19937& getRandomGenerator() {
-	static std::random_device rd;
-	thread_local std::mt19937 generator(rd());
-	return generator;
+std::mt19937 &getRandomGenerator() {
+  static std::random_device rd;
+  thread_local std::mt19937 generator(rd());
+  return generator;
 }
 
 int32_t uniform_random(int32_t minNumber, int32_t maxNumber) {
-	thread_local std::uniform_int_distribution<int32_t> uniformRand;
-	if (minNumber == maxNumber) {
-		return minNumber;
-	} else if (minNumber > maxNumber) {
-		std::swap(minNumber, maxNumber);
-	}
-	return uniformRand(getRandomGenerator(), std::uniform_int_distribution<int32_t>::param_type(minNumber, maxNumber));
+  thread_local std::uniform_int_distribution<int32_t> uniformRand;
+  if (minNumber == maxNumber) {
+    return minNumber;
+  } else if (minNumber > maxNumber) {
+    std::swap(minNumber, maxNumber);
+  }
+  return uniformRand(
+      getRandomGenerator(),
+      std::uniform_int_distribution<int32_t>::param_type(minNumber, maxNumber));
 }
 
 int32_t uniform_random(int32_t maxNumber) {
-	return uniform_random(0, maxNumber);
+  return uniform_random(0, maxNumber);
 }
 
 //
-std::string i2s(const int _i) {
-	return std::to_string(_i);
+std::string i2s(const int _i) { return std::to_string(_i); }
+
+std::string f2s(const double _d) { return std::format("{:.6g}", _d); }
+
+int s2i(const std::string &s) {
+  try {
+    return std::stoi(s);
+  } catch (const std::exception &) {
+    return 0;
+  }
 }
 
-std::string f2s(const double _d) {
-	return std::format("{:.6g}", _d);
-}
-
-int s2i(const std::string& s) {
-	try {
-		return std::stoi(s);
-	} catch (const std::exception&) {
-		return 0;
-	}
-}
-
-double s2f(const std::string& s) {
-	try {
-		return std::stod(s);
-	} catch (const std::exception&) {
-		return 0.0;
-	}
+double s2f(const std::string &s) {
+  try {
+    return std::stod(s);
+  } catch (const std::exception &) {
+    return 0.0;
+  }
 }
 
 wxString i2ws(const int _i) {
-	wxString str;
-	str << _i;
-	return str;
+  wxString str;
+  str << _i;
+  return str;
 }
 
 wxString f2ws(const double _d) {
-	wxString str;
-	str << _d;
-	return str;
+  wxString str;
+  str << _d;
+  return str;
 }
 
 int ws2i(const wxString s) {
-	long _i;
-	if (s.ToLong(&_i)) {
-		return static_cast<int>(_i);
-	}
-	return 0;
+  long _i;
+  if (s.ToLong(&_i)) {
+    return static_cast<int>(_i);
+  }
+  return 0;
 }
 
 double ws2f(const wxString s) {
-	double _d;
-	if (s.ToDouble(&_d)) {
-		return _d;
-	}
-	return 0.0;
+  double _d;
+  if (s.ToDouble(&_d)) {
+    return _d;
+  }
+  return 0.0;
 }
 
-void replaceString(std::string& str, std::string_view sought, std::string_view replacement) {
-	if (sought.empty()) {
-		return;
-	}
-	size_t pos = 0;
-	size_t soughtLen = sought.length();
-	size_t replaceLen = replacement.length();
-	while ((pos = str.find(sought, pos)) != std::string::npos) {
-		str.replace(pos, soughtLen, replacement);
-		pos += replaceLen;
-	}
+void replaceString(std::string &str, std::string_view sought,
+                   std::string_view replacement) {
+  if (sought.empty()) {
+    return;
+  }
+  size_t pos = 0;
+  size_t soughtLen = sought.length();
+  size_t replaceLen = replacement.length();
+  while ((pos = str.find(sought, pos)) != std::string::npos) {
+    str.replace(pos, soughtLen, replacement);
+    pos += replaceLen;
+  }
 }
 
-void trim_right(std::string& source, std::string_view t) {
-	source.erase(source.find_last_not_of(t) + 1);
+void trim_right(std::string &source, std::string_view t) {
+  source.erase(source.find_last_not_of(t) + 1);
 }
 
-void trim_left(std::string& source, std::string_view t) {
-	source.erase(0, source.find_first_not_of(t));
+void trim_left(std::string &source, std::string_view t) {
+  source.erase(0, source.find_first_not_of(t));
 }
 
-void to_lower_str(std::string& source) {
-	std::ranges::transform(source, source.begin(), [](unsigned char c) { return std::tolower(c); });
+void to_lower_str(std::string &source) {
+  std::ranges::transform(source, source.begin(),
+                         [](unsigned char c) { return std::tolower(c); });
 }
 
-void to_upper_str(std::string& source) {
-	std::transform(source.begin(), source.end(), source.begin(), [](unsigned char c) { return std::toupper(c); });
+void to_upper_str(std::string &source) {
+  std::transform(source.begin(), source.end(), source.begin(),
+                 [](unsigned char c) { return std::toupper(c); });
 }
 
-std::string as_lower_str(const std::string& other) {
-	std::string ret = other;
-	to_lower_str(ret);
-	return ret;
+std::string as_lower_str(const std::string &other) {
+  std::string ret = other;
+  to_lower_str(ret);
+  return ret;
 }
 
-std::string as_upper_str(const std::string& other) {
-	std::string ret = other;
-	to_upper_str(ret);
-	return ret;
+std::string as_upper_str(const std::string &other) {
+  std::string ret = other;
+  to_upper_str(ret);
+  return ret;
 }
 
-bool isFalseString(const std::string& str) {
-	static constexpr std::array<std::string_view, 5> falseStrings = { "false", "0", "", "no", "not" };
-	return std::ranges::any_of(falseStrings, [&](const auto& s) { return s == str; });
+bool isFalseString(const std::string &str) {
+  static constexpr std::array<std::string_view, 5> falseStrings = {
+      "false", "0", "", "no", "not"};
+  return std::ranges::any_of(falseStrings,
+                             [&](const auto &s) { return s == str; });
 }
 
-bool isTrueString(const std::string& str) {
-	return !isFalseString(str);
+bool isTrueString(const std::string &str) { return !isFalseString(str); }
+
+int random(int low, int high) { return uniform_random(low, high); }
+
+int random(int high) { return random(0, high); }
+
+std::wstring string2wstring(const std::string &utf8string) {
+  wxString s(utf8string.c_str(), wxConvUTF8);
+  return s.ToStdWstring();
 }
 
-int random(int low, int high) {
-	return uniform_random(low, high);
+std::string wstring2string(const std::wstring &widestring) {
+  wxString s(widestring.c_str());
+  return std::string(s.ToUTF8());
 }
 
-int random(int high) {
-	return random(0, high);
+bool posFromClipboard(Position &position,
+                      const int mapWidth /* = MAP_MAX_WIDTH */,
+                      const int mapHeight /* = MAP_MAX_HEIGHT */) {
+  wxClipboardLocker locker(wxTheClipboard);
+  if (!locker) {
+    return false;
+  }
+
+  if (!wxTheClipboard->IsSupported(wxDF_TEXT)) {
+    return false;
+  }
+
+  wxTextDataObject data;
+  wxTheClipboard->GetData(data);
+
+  std::string input = data.GetText().ToStdString();
+  if (input.empty()) {
+    return false;
+  }
+
+  bool done = false;
+  std::smatch matches;
+  static const std::regex expression = std::regex(
+      R"(.*?(\d+).*?(\d+).*?(\d+).*?)", std::regex_constants::ECMAScript);
+  if (std::regex_match(input, matches, expression)) {
+    try {
+      const int tmpX = std::stoi(matches.str(1));
+      const int tmpY = std::stoi(matches.str(2));
+      const int tmpZ = std::stoi(matches.str(3));
+
+      const Position pastedPos = Position(tmpX, tmpY, tmpZ);
+      if (pastedPos.isValid() && tmpX <= mapWidth && tmpY <= mapHeight) {
+        position.x = tmpX;
+        position.y = tmpY;
+        position.z = tmpZ;
+        done = true;
+      }
+    } catch (const std::out_of_range &) {
+    }
+  }
+
+  return done;
 }
 
-std::wstring string2wstring(const std::string& utf8string) {
-	wxString s(utf8string.c_str(), wxConvUTF8);
-	return s.ToStdWstring();
-}
-
-std::string wstring2string(const std::wstring& widestring) {
-	wxString s(widestring.c_str());
-	return std::string(s.ToUTF8());
-}
-
-bool posFromClipboard(Position& position, const int mapWidth /* = MAP_MAX_WIDTH */, const int mapHeight /* = MAP_MAX_HEIGHT */) {
-	wxClipboardLocker locker(wxTheClipboard);
-	if (!locker) {
-		return false;
-	}
-
-	if (!wxTheClipboard->IsSupported(wxDF_TEXT)) {
-		return false;
-	}
-
-	wxTextDataObject data;
-	wxTheClipboard->GetData(data);
-
-	std::string input = data.GetText().ToStdString();
-	if (input.empty()) {
-		return false;
-	}
-
-	bool done = false;
-	std::smatch matches;
-	static const std::regex expression = std::regex(R"(.*?(\d+).*?(\d+).*?(\d+).*?)", std::regex_constants::ECMAScript);
-	if (std::regex_match(input, matches, expression)) {
-		try {
-			const int tmpX = std::stoi(matches.str(1));
-			const int tmpY = std::stoi(matches.str(2));
-			const int tmpZ = std::stoi(matches.str(3));
-
-			const Position pastedPos = Position(tmpX, tmpY, tmpZ);
-			if (pastedPos.isValid() && tmpX <= mapWidth && tmpY <= mapHeight) {
-				position.x = tmpX;
-				position.y = tmpY;
-				position.z = tmpZ;
-				done = true;
-			}
-		} catch (const std::out_of_range&) { }
-	}
-
-	return done;
-}
-
-wxString b2yn(bool value) {
-	return value ? "Yes" : "No";
-}
+wxString b2yn(bool value) { return value ? "Yes" : "No"; }
 
 wxColor colorFromEightBit(int color) {
-	if (color <= 0 || color >= 216) {
-		return wxColor(0, 0, 0);
-	}
-	const uint8_t red = static_cast<uint8_t>((color / 36) % 6 * 51);
-	const uint8_t green = static_cast<uint8_t>((color / 6) % 6 * 51);
-	const uint8_t blue = static_cast<uint8_t>(color % 6 * 51);
-	return wxColor(red, green, blue);
+  if (color <= 0 || color >= 216) {
+    return wxColor(0, 0, 0);
+  }
+  const uint8_t red = static_cast<uint8_t>((color / 36) % 6 * 51);
+  const uint8_t green = static_cast<uint8_t>((color / 6) % 6 * 51);
+  const uint8_t blue = static_cast<uint8_t>(color % 6 * 51);
+  return wxColor(red, green, blue);
+}
+
+glm::vec4 colorFromEightBitNorm(int color) {
+  if (color <= 0 || color >= 216) {
+    return glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+  }
+  constexpr float inv255 = 1.0f / 255.0f;
+  const float red = static_cast<float>((color / 36) % 6 * 51) * inv255;
+  const float green = static_cast<float>((color / 6) % 6 * 51) * inv255;
+  const float blue = static_cast<float>(color % 6 * 51) * inv255;
+  return glm::vec4(red, green, blue, 1.0f);
 }

@@ -126,7 +126,7 @@ void IngamePreviewRenderer::Render(
   RenderPreviewCharacter(ctx, preview_outfit, preview_direction,
                          animation_phase, atlas, elevation_offset);
 
-  if (lighting_enabled && light_drawer && options.isDrawLight()) {
+  if (lighting_enabled && light_drawer && options.settings.isDrawLight()) {
     light_drawer->draw(ctx);
   }
 
@@ -182,11 +182,12 @@ void IngamePreviewRenderer::SetupViewAndOptions(
   view.viewMatrix =
       glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
 
-  options.SetIngame();
-  options.show_lights = lighting_enabled;
-  options.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
-  options.light_intensity = light_intensity;
-  options.global_light_color = wxColor(255, 255, 255);
+  options.settings = RenderSettings::makeIngame();
+  options.settings.show_lights = lighting_enabled;
+  options.settings.ambient_light_level =
+      static_cast<float>(ambient_light) / 255.0f;
+  options.settings.light_intensity = light_intensity;
+  options.settings.global_light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 void IngamePreviewRenderer::RenderFloors(DrawContext &ctx, const BaseMap &map,
