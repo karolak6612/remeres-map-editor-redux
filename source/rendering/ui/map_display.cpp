@@ -25,7 +25,6 @@
 #include <time.h>
 #include <wx/wfstream.h>
 
-
 #include "app/application.h"
 #include "brushes/brush.h"
 #include "brushes/brush_utility.h"
@@ -188,6 +187,7 @@ void MapCanvas::EnsureNanoVG() {
   if (!m_nvg) {
     if (!gladLoadGL()) {
       spdlog::error("MapCanvas: Failed to initialize GLAD");
+      return;
     }
     m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
     if (m_nvg) {
@@ -249,7 +249,9 @@ void MapCanvas::PerformGarbageCollection() {
 void MapCanvas::OnPaint(wxPaintEvent &event) {
   wxPaintDC dc(this); // validates the paint event
   if (m_glContext) {
-    g_gl_context.EnsureContextCurrent(*m_glContext, this);
+    if (!g_gl_context.EnsureContextCurrent(*m_glContext, this)) {
+      return;
+    }
     g_gl_context.SetFallbackCanvas(this);
   }
 
@@ -530,7 +532,10 @@ void MapCanvas::OnMousePropertiesClick(wxMouseEvent &event) {
   selection_controller->HandlePropertiesClick(
       Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(),
       event.ControlDown(), event.AltDown());
+
+  last_click_x = int(event.GetX() * zoom);
   last_click_y = int(event.GetY() * zoom);
+  last_click_map_z = floor;
 
   int start_x, start_y;
   static_cast<MapWindow *>(GetParent())->GetViewStart(&start_x, &start_y);

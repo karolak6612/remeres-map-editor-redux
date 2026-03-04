@@ -22,7 +22,7 @@ struct CanvasState {
 
   Position drag_start_pos;
 
-  BaseMap *secondary_map = nullptr;
+  const BaseMap *secondary_map = nullptr;
   uint32_t current_house_id = 0;
 };
 

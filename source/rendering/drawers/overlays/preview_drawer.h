@@ -22,8 +22,8 @@ public:
 
 private:
   void drawTilePreview(const DrawContext &ctx, int draw_x, int draw_y,
-                       Tile *tile, uint8_t base_alpha, ItemDrawer *item_drawer,
-                       SpriteDrawer *sprite_drawer,
+                       const Tile *tile, uint8_t base_alpha,
+                       ItemDrawer *item_drawer, SpriteDrawer *sprite_drawer,
                        CreatureDrawer *creature_drawer) const;
 };
 

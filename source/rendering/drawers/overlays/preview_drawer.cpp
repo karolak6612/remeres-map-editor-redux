@@ -28,7 +28,7 @@ void PreviewDrawer::draw(const DrawContext &ctx,
                          Editor &editor, ItemDrawer *item_drawer,
                          SpriteDrawer *sprite_drawer,
                          CreatureDrawer *creature_drawer) {
-  BaseMap *secondary_map = ctx.canvas_state.secondary_map;
+  const BaseMap *secondary_map = ctx.canvas_state.secondary_map;
 
   if (secondary_map != nullptr && !ctx.options.ingame) {
     Brush *brush = g_gui.GetCurrentBrush();
@@ -55,7 +55,7 @@ void PreviewDrawer::draw(const DrawContext &ctx,
           continue;
         }
 
-        Tile *tile = secondary_map->getTile(pos);
+        const Tile *tile = secondary_map->getTile(pos);
         if (tile) {
           int draw_x, draw_y;
           ctx.view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
@@ -87,8 +87,8 @@ void PreviewDrawer::draw(const DrawContext &ctx,
 }
 
 void PreviewDrawer::drawTilePreview(const DrawContext &ctx, int draw_x,
-                                    int draw_y, Tile *tile, uint8_t base_alpha,
-                                    ItemDrawer *item_drawer,
+                                    int draw_y, const Tile *tile,
+                                    uint8_t base_alpha, ItemDrawer *item_drawer,
                                     SpriteDrawer *sprite_drawer,
                                     CreatureDrawer *creature_drawer) const {
   uint8_t r = 255, g = 255, b = 255;

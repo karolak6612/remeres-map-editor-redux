@@ -36,8 +36,15 @@ IngamePreviewRenderer::IngamePreviewRenderer(TileRenderer *tile_renderer)
   creature_name_drawer = std::make_unique<CreatureNameDrawer>();
   sprite_drawer = std::make_unique<SpriteDrawer>();
 
-  sprite_batch->initialize();
-  primitive_renderer->initialize();
+  if (!sprite_batch->initialize()) {
+    spdlog::error("IngamePreviewRenderer failed to initialize sprite_batch");
+    throw std::runtime_error("Failed to initialize SpriteBatch");
+  }
+  if (!primitive_renderer->initialize()) {
+    spdlog::error(
+        "IngamePreviewRenderer failed to initialize primitive_renderer");
+    throw std::runtime_error("Failed to initialize PrimitiveRenderer");
+  }
   last_time = std::chrono::steady_clock::now();
 
   // Initialize opacity
