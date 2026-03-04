@@ -112,7 +112,7 @@ void SpriteIconRenderer::blitOrFallback(wxDC* target_dc, wxDC* sdc, SpriteSize s
         target_dc->StretchBlit(start_x, start_y, width, height, sdc, 0, 0, src_width, src_height, wxCOPY, true);
     } else {
         spdlog::warn("SpriteIconRenderer: sprite generation failed, drawing fallback rectangle.");
-        const wxBrush& b = target_dc->GetBrush();
+        wxBrush b = target_dc->GetBrush();
         target_dc->SetBrush(*wxRED_BRUSH);
         target_dc->DrawRectangle(start_x, start_y, width, height);
         target_dc->SetBrush(b);

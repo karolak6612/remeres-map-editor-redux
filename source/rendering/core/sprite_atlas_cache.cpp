@@ -107,7 +107,8 @@ TemplateImage* SpriteAtlasCache::getTemplateImage(uint32_t clientID, const Sprit
         if (img->sprite_index != sprite_index) {
             return false;
         }
-        uint32_t lookHash = img->lookHead << 24 | img->lookBody << 16 | img->lookLegs << 8 | img->lookFeet;
+        uint32_t lookHash = static_cast<uint32_t>(img->lookHead) << 24 | static_cast<uint32_t>(img->lookBody) << 16
+            | static_cast<uint32_t>(img->lookLegs) << 8 | static_cast<uint32_t>(img->lookFeet);
         return outfit.getColorHash() == lookHash;
     });
 

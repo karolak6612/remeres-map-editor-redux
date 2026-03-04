@@ -35,7 +35,7 @@ void KeyForwardingTextCtrl::OnKeyDown(wxKeyEvent& event)
 // Find Item Dialog (Jump to item)
 
 FindDialog::FindDialog(wxWindow* parent, wxString title) :
-    wxDialog(g_gui.root, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX),
+    wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX),
     idle_input_timer(this),
     result_brush(nullptr),
     result_id(0)
