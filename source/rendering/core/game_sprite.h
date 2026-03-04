@@ -46,8 +46,8 @@ public:
 	virtual wxSize GetSize() const = 0;
 
 private:
-	Sprite(const Sprite&);
-	Sprite& operator=(const Sprite&);
+	Sprite(const Sprite&) = delete;
+	Sprite& operator=(const Sprite&) = delete;
 };
 
 class GameSprite;
