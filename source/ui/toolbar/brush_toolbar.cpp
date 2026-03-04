@@ -36,13 +36,13 @@ BrushToolBar::BrushToolBar(wxWindow* parent) {
 
 	toolbar = newd wxAuiToolBar(parent, TOOLBAR_BRUSHES, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);
-	toolbar->AddTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, wxEmptyString, border_bitmap, wxNullBitmap, wxITEM_CHECK, "Border (Add borders to ground)", "Add automatic borders to ground tiles", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_ERASER, wxEmptyString, eraser_bitmap, wxNullBitmap, wxITEM_CHECK, "Eraser (Clear tile content)", "Clear content from tiles", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, wxEmptyString, border_bitmap, wxNullBitmap, wxITEM_CHECK, "Border (A)", "Add automatic borders to ground tiles", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_ERASER, wxEmptyString, eraser_bitmap, wxNullBitmap, wxITEM_CHECK, "Eraser (E)", "Clear content from tiles", nullptr);
 	toolbar->AddSeparator();
-	toolbar->AddTool(PALETTE_TERRAIN_PZ_TOOL, wxEmptyString, pz_bitmap, wxNullBitmap, wxITEM_CHECK, "Protected Zone (Non-combat area)", "Mark area as Protected Zone (Non-combat)", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_NOPVP_TOOL, wxEmptyString, nopvp_bitmap, wxNullBitmap, wxITEM_CHECK, "No PvP Zone (Non-PvP area)", "Mark area as No PvP Zone", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, wxEmptyString, nologout_bitmap, wxNullBitmap, wxITEM_CHECK, "No Logout Zone (Prevents logout)", "Mark area as No Logout Zone", nullptr);
-	toolbar->AddTool(PALETTE_TERRAIN_PVPZONE_TOOL, wxEmptyString, pvp_bitmap, wxNullBitmap, wxITEM_CHECK, "PvP Zone (Combat area)", "Mark area as PvP Zone", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_PZ_TOOL, wxEmptyString, pz_bitmap, wxNullBitmap, wxITEM_CHECK, "Protected Zone (P)", "Mark area as Protected Zone (Non-combat)", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_NOPVP_TOOL, wxEmptyString, nopvp_bitmap, wxNullBitmap, wxITEM_CHECK, "No PvP Zone (N)", "Mark area as No PvP Zone", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, wxEmptyString, nologout_bitmap, wxNullBitmap, wxITEM_CHECK, "No Logout Zone (O)", "Mark area as No Logout Zone", nullptr);
+	toolbar->AddTool(PALETTE_TERRAIN_PVPZONE_TOOL, wxEmptyString, pvp_bitmap, wxNullBitmap, wxITEM_CHECK, "PvP Zone (V)", "Mark area as PvP Zone", nullptr);
 	toolbar->AddSeparator();
 
 	toolbar->AddTool(PALETTE_TERRAIN_NORMAL_DOOR, wxEmptyString, normal_bitmap, wxNullBitmap, wxITEM_CHECK, "Normal Door", "Place normal door", nullptr);
@@ -72,12 +72,12 @@ void BrushToolBar::Update() {
 		toolbar->SetToolShortHelp(id, has_map ? name : name + " - No map open");
 	};
 
-	updateTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, "Border (Add borders to ground)");
-	updateTool(PALETTE_TERRAIN_ERASER, "Eraser (Clear tile content)");
-	updateTool(PALETTE_TERRAIN_PZ_TOOL, "Protected Zone (Non-combat area)");
-	updateTool(PALETTE_TERRAIN_NOPVP_TOOL, "No PvP Zone (Non-PvP area)");
-	updateTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, "No Logout Zone (Prevents logout)");
-	updateTool(PALETTE_TERRAIN_PVPZONE_TOOL, "PvP Zone (Combat area)");
+	updateTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, "Border (A)");
+	updateTool(PALETTE_TERRAIN_ERASER, "Eraser (E)");
+	updateTool(PALETTE_TERRAIN_PZ_TOOL, "Protected Zone (P)");
+	updateTool(PALETTE_TERRAIN_NOPVP_TOOL, "No PvP Zone (N)");
+	updateTool(PALETTE_TERRAIN_NOLOGOUT_TOOL, "No Logout Zone (O)");
+	updateTool(PALETTE_TERRAIN_PVPZONE_TOOL, "PvP Zone (V)");
 	updateTool(PALETTE_TERRAIN_NORMAL_DOOR, "Normal Door");
 	updateTool(PALETTE_TERRAIN_LOCKED_DOOR, "Locked Door");
 	updateTool(PALETTE_TERRAIN_MAGIC_DOOR, "Magic Door");
