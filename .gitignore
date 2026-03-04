@@ -119,3 +119,4 @@ data/user/
 compile_commands.json
 /.cache
 /build_clang
+build_ninja.log

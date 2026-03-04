@@ -79,7 +79,10 @@ add_custom_command(TARGET rme POST_BUILD
 	COMMAND ${CMAKE_COMMAND} -E copy_directory
 	"${CMAKE_CURRENT_SOURCE_DIR}/source/assets"
 	"$<TARGET_FILE_DIR:rme>/assets"
-	COMMENT "Copying assets to output directory..."
+	COMMAND ${CMAKE_COMMAND} -E copy_directory
+	"${CMAKE_CURRENT_SOURCE_DIR}/source/rendering/shaders"
+	"$<TARGET_FILE_DIR:rme>/shaders"
+	COMMENT "Copying assets and shaders to output directory..."
 )
 
 
