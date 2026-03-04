@@ -1,0 +1,99 @@
+[1/5] Checking/Installing Tools (Quiet)...
+[2/5] Setting up Conan Clang profile...
+[3/5] Installing dependencies (Debug)...
+[4/5] Configuring CMake (Ninja + Mold)...
+[5/5] Building with Ninja (j2 to avoid OOM)...
+ninja: Entering directory `/app/build_clang/build/Debug'
+[1/317] Building CXX object CMakeFiles/rme.dir/source/app/client_version.cpp.o
+FAILED: CMakeFiles/rme.dir/source/app/client_version.cpp.o
+ccache /usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DNANOVG_GL3 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE=1 -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE=1 -D__WXGTK__ -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/glad3f6fabaabcc35/p/include -isystem /home/jules/.conan2/p/tomlpf6611d18152aa/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O0 -g -D__DEBUG__ -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/app/client_version.cpp.o -MF CMakeFiles/rme.dir/source/app/client_version.cpp.o.d -o CMakeFiles/rme.dir/source/app/client_version.cpp.o -c /app/source/app/client_version.cpp
+error: "Never use <enqcmdintrin.h> directly; include <immintrin.h> instead."
+error: "Never use <f16cintrin.h> directly; include <immintrin.h> instead."
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: expected unqualified-id
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace, preprocessed source, and associated run script.
+Stack dump:
+0.	Program arguments: /usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DNANOVG_GL3 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE=1 -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE=1 -D__WXGTK__ -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/glad3f6fabaabcc35/p/include -isystem /home/jules/.conan2/p/tomlpf6611d18152aa/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O0 -g -D__DEBUG__ -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/app/client_version.cpp.o -MF CMakeFiles/rme.dir/source/app/client_version.cpp.o.d -o CMakeFiles/rme.dir/source/app/client_version.cpp.o -c /app/source/app/client_version.cpp
+1.	<unknown> parser at unknown location
+Stack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):
+0  libLLVM.so.18.1      0x00007feabe4e73bf llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 63
+1  libLLVM.so.18.1      0x00007feabe4e54f9 llvm::sys::RunSignalHandlers() + 89
+2  libLLVM.so.18.1      0x00007feabe431227
+3  libc.so.6            0x00007feabd2e5330
+4  libclang-cpp.so.18.1 0x00007feac586dd3d clang::Lexer::SkipWhitespace(clang::Token&, char const*, bool&) + 45
+5  libclang-cpp.so.18.1 0x00007feac58722f7 clang::Lexer::LexTokenInternal(clang::Token&, bool) + 1847
+6  libclang-cpp.so.18.1 0x00007feac58db5ed clang::Preprocessor::Lex(clang::Token&) + 45
+7  libclang-cpp.so.18.1 0x00007feac58e929d
+8  libclang-cpp.so.18.1 0x00007feac59a9af2 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1026
+9  libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+10 libclang-cpp.so.18.1 0x00007feac59a9b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+11 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+12 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+13 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+14 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+15 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+16 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+17 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+18 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+19 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+20 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+21 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+22 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+23 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+24 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+25 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+26 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+27 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+28 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+29 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+30 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+31 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+32 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+33 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+34 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+35 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+36 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+37 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+38 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+39 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+40 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+41 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+42 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+43 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+44 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+45 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+46 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+47 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+48 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+49 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+50 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+51 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+52 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+53 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+54 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+55 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+56 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+57 libclang-cpp.so.18.1 0x00007feac59a9b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+58 libclang-cpp.so.18.1 0x00007feac59a9b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+59 libclang-cpp.so.18.1 0x00007feac59a9b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+60 libclang-cpp.so.18.1 0x00007feac59a99e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+61 libclang-cpp.so.18.1 0x00007feac58f97a9 clang::Parser::SkipMalformedDecl() + 297
+62 libclang-cpp.so.18.1 0x00007feac58f8912 clang::Parser::ParseDeclGroup(clang::ParsingDeclSpec&, clang::DeclaratorContext, clang::ParsedAttributes&, clang::SourceLocation*, clang::Parser::ForRangeInit*) + 2242
+63 libclang-cpp.so.18.1 0x00007feac59af07f clang::Parser::ParseDeclOrFunctionDefInternal(clang::ParsedAttributes&, clang::ParsedAttributes&, clang::ParsingDeclSpec&, clang::AccessSpecifier) + 1087
+64 libclang-cpp.so.18.1 0x00007feac59a
