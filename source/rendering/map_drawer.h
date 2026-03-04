@@ -99,7 +99,9 @@ public:
   MapDrawer(MapCanvas &canvas, Editor &editor);
   ~MapDrawer();
 
-  void SetupVars();
+  void SetupDrawingOptions();
+  void SetupViewState();
+  void SetupCanvasState();
   void SetupGL();
 
   void Draw();

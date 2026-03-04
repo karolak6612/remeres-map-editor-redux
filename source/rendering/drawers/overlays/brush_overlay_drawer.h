@@ -9,7 +9,6 @@
 #include <glm/glm.hpp>
 #include <wx/colour.h>
 
-
 #include "rendering/core/draw_context.h"
 class MapDrawer;
 class Brush;
@@ -45,6 +44,23 @@ private:
 
   glm::vec4 get_brush_color(BrushColor color);
   glm::vec4 get_check_color(Brush *brush, Editor &editor, const Position &pos);
+
+  void drawDraggingOverlay(const DrawContext &ctx, ItemDrawer *item_drawer,
+                           SpriteDrawer *sprite_drawer, Editor &editor,
+                           Brush *brush, const glm::vec4 &brushColor,
+                           const class AtlasManager &atlas);
+
+  void drawStaticOverlay(const DrawContext &ctx, ItemDrawer *item_drawer,
+                         SpriteDrawer *sprite_drawer,
+                         CreatureDrawer *creature_drawer, Editor &editor,
+                         Brush *brush, const glm::vec4 &brushColor,
+                         const class AtlasManager &atlas);
+
+  void drawWallBrushDrag(const DrawContext &ctx, const glm::vec4 &brushColor,
+                         const class AtlasManager &atlas);
+
+  void drawWallBrushStatic(const DrawContext &ctx, const glm::vec4 &brushColor,
+                           const class AtlasManager &atlas);
 };
 
 #endif

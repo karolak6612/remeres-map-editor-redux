@@ -126,7 +126,7 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
 
 MapDrawer::~MapDrawer() {}
 
-void MapDrawer::SetupVars() {
+void MapDrawer::SetupDrawingOptions() {
   options.current_house_id = 0;
   Brush *brush = g_gui.GetCurrentBrush();
   if (brush) {
@@ -145,7 +145,9 @@ void MapDrawer::SetupVars() {
   double now = wxGetLocalTimeMillis().ToDouble();
   const double speed = 0.005;
   options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
+}
 
+void MapDrawer::SetupViewState() {
   // Setup ViewState from canvas
   view.zoom = static_cast<float>(canvas.GetZoom());
   view.floor = canvas.GetFloor();
@@ -208,7 +210,9 @@ void MapDrawer::SetupVars() {
       static_cast<float>(view.screensize_y) * view.zoom, 0.0f, -1.0f, 1.0f);
   view.viewMatrix =
       glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
+}
 
+void MapDrawer::SetupCanvasState() {
   // Populate canvas state for DrawContext
   canvas_state.last_click_map_x = canvas.last_click_map_x;
   canvas_state.last_click_map_y = canvas.last_click_map_y;
@@ -408,9 +412,13 @@ void MapDrawer::DrawMapLayer(const DrawContext &ctx,
 }
 
 DrawContext MapDrawer::MakeDrawContext() {
-  return DrawContext{
-      *sprite_batch, *primitive_renderer,      view, options, light_buffer,
-      canvas_state,  brush_cursor_drawer.get()};
+  return DrawContext{.sprite_batch = *sprite_batch,
+                     .primitive_renderer = *primitive_renderer,
+                     .view = view,
+                     .options = options,
+                     .light_buffer = light_buffer,
+                     .canvas_state = canvas_state,
+                     .brush_cursor_drawer = brush_cursor_drawer.get()};
 }
 
 void MapDrawer::DrawLight() {

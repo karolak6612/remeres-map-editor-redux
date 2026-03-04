@@ -69,9 +69,7 @@ void IngamePreviewRenderer::Render(
     float zoom, bool lighting_enabled, uint8_t ambient_light,
     const Outfit &preview_outfit, Direction preview_direction,
     int animation_phase, int offset_x, int offset_y) {
-  // CRITICAL: Update animation time for all sprite animations to work
   g_gui.gc.updateTime();
-
   auto now = std::chrono::steady_clock::now();
   double dt = std::chrono::duration<double>(now - last_time).count();
   last_time = now;
@@ -79,53 +77,14 @@ void IngamePreviewRenderer::Render(
   int first_visible = floor_calculator->CalcFirstVisibleFloor(
       map, camera_pos.x, camera_pos.y, camera_pos.z);
   int last_visible = floor_calculator->CalcLastVisibleFloor(camera_pos.z);
-
   UpdateOpacity(dt, first_visible, last_visible);
 
-  // Setup ViewState and DrawingOptions
   ViewState view;
-  view.zoom = zoom;
-  view.tile_size = TILE_SIZE;
-  view.floor = camera_pos.z;
-  view.screensize_x = viewport_width;
-  view.screensize_y = viewport_height;
-  view.camera_pos = camera_pos;
-  view.viewport_x = viewport_x;
-  view.viewport_y = viewport_y;
-
-  // Initialize cached logical dimensions (required for visibility culling)
-  view.logical_width = viewport_width * zoom;
-  view.logical_height = viewport_height * zoom;
-
-  // Proper coordinate alignment
-  // We want camera_pos to be at the center of the viewport
-  int offset = (camera_pos.z <= GROUND_LAYER)
-                   ? (GROUND_LAYER - camera_pos.z) * TILE_SIZE
-                   : 0;
-  view.view_scroll_x = (camera_pos.x * TILE_SIZE) + (TILE_SIZE / 2) - offset +
-                       offset_x -
-                       static_cast<int>(viewport_width * zoom / 2.0f);
-  view.view_scroll_y = (camera_pos.y * TILE_SIZE) + (TILE_SIZE / 2) - offset +
-                       offset_y -
-                       static_cast<int>(viewport_height * zoom / 2.0f);
-
-  // Matching RME's projection (width * zoom x height * zoom)
-  view.projectionMatrix =
-      glm::ortho(0.0f, static_cast<float>(viewport_width) * zoom,
-                 static_cast<float>(viewport_height) * zoom, 0.0f, -1.0f, 1.0f);
-  view.viewMatrix =
-      glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
-
   DrawingOptions options;
-  options.SetIngame();
-  options.show_lights = lighting_enabled;
-  options.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
-  options.light_intensity = light_intensity;
-  // Explicitly set global light color to white (daylight) to avoid black
-  // multiplication
-  options.global_light_color = wxColor(255, 255, 255);
+  SetupViewAndOptions(view, options, viewport_x, viewport_y, viewport_width,
+                      viewport_height, camera_pos, zoom, lighting_enabled,
+                      ambient_light, offset_x, offset_y);
 
-  // Initialize GL state
   glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -133,16 +92,14 @@ void IngamePreviewRenderer::Render(
   primitive_renderer->setProjectionMatrix(view.projectionMatrix);
   light_buffer->Clear();
   if (creature_name_drawer) {
-    creature_name_drawer->clear(); // Clear old labels
+    creature_name_drawer->clear();
   }
 
-  if (!g_gui.atlas.ensureAtlasManager()) {
+  if (!g_gui.atlas.ensureAtlasManager())
     return;
-  }
   auto *atlas = g_gui.atlas.getAtlasManager();
 
   CanvasState dummy_state{};
-
   DrawContext ctx{.sprite_batch = *sprite_batch,
                   .primitive_renderer = *primitive_renderer,
                   .view = view,
@@ -150,162 +107,15 @@ void IngamePreviewRenderer::Render(
                   .light_buffer = *light_buffer,
                   .canvas_state = dummy_state};
 
-  // Render floors from bottom to top
-  for (int z = last_visible; z >= 0; z--) {
-    float alpha = floor_opacity[z];
-    if (alpha <= 0.001f) {
-      continue;
-    }
+  RenderFloors(ctx, map, last_visible, camera_pos, lighting_enabled, atlas);
+  RenderPreviewCharacter(ctx, map, camera_pos, preview_outfit,
+                         preview_direction, animation_phase, atlas);
 
-    // Sync viewport and start batch for this floor
-    sprite_batch->begin(view.projectionMatrix, *atlas);
-    sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
-
-    // Pre-calculate view offsets for this floor using CalculateLayerOffset
-    int floor_offset = view.CalculateLayerOffset(z);
-    constexpr int margin =
-        TILE_SIZE * 2; // 2 tiles margin for multi-tile objects and off-by-one
-    int start_x = static_cast<int>(
-        std::floor((view.view_scroll_x + floor_offset - margin) /
-                   static_cast<float>(TILE_SIZE)));
-    int start_y = static_cast<int>(
-        std::floor((view.view_scroll_y + floor_offset - margin) /
-                   static_cast<float>(TILE_SIZE)));
-    int end_x = static_cast<int>(std::ceil(
-        (view.view_scroll_x + floor_offset + viewport_width * zoom + margin) /
-        static_cast<float>(TILE_SIZE)));
-    int end_y = static_cast<int>(std::ceil(
-        (view.view_scroll_y + floor_offset + viewport_height * zoom + margin) /
-        static_cast<float>(TILE_SIZE)));
-
-    int base_draw_x = -view.view_scroll_x - floor_offset;
-    int base_draw_y = -view.view_scroll_y - floor_offset;
-
-    for (int x = start_x; x <= end_x; ++x) {
-      for (int y = start_y; y <= end_y; ++y) {
-        const Tile *tile = map.getTile(x, y, z);
-        if (tile) {
-          int draw_x = (x * TILE_SIZE) + base_draw_x;
-          int draw_y = (y * TILE_SIZE) + base_draw_y;
-          tile_renderer->DrawTile(ctx, tile->location, 0, draw_x, draw_y,
-                                  lighting_enabled);
-
-          // Add names of creatures on this floor
-          if (creature_name_drawer && z == camera_pos.z) {
-            if (tile->creature) {
-              creature_name_drawer->addLabel(tile->location->getPosition(),
-                                             tile->creature->getName(),
-                                             tile->creature.get());
-            }
-          }
-        }
-      }
-    }
-    sprite_batch->end(*atlas);
+  if (lighting_enabled && light_drawer && options.isDrawLight()) {
+    light_drawer->draw(ctx);
   }
 
-  // Draw Preview Character (Center Screen)
-  // Only if on the camera Z floor (or always visible as "player"?) - Request
-  // says "center of the screen". Assuming always drawn on top.
-  {
-    sprite_batch->begin(view.projectionMatrix, *atlas);
-
-    // Calculate center position in logical coordinates
-    int center_x = static_cast<int>((viewport_width * zoom) / 2.0f);
-    int center_y = static_cast<int>((viewport_height * zoom) / 2.0f);
-
-    // Adjust for sprite size (assuming 32x32 centered)
-    // BlitCreature usually draws top-left at (screenx, screeny) relative to the
-    // tile grid logic? It draws at (screenx, screeny). We want center of sprite
-    // at center of screen.
-    // 1. Fetch Elevation of current logical tile (camera_pos)
-    int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
-
-    // 2. Adjust for sprite size (assuming 32x32 centered)
-    // BlitCreature usually draws top-left at (screenx, screeny) relative to the
-    // tile grid logic? It draws at (screenx, screeny). We want center of sprite
-    // at center of screen.
-    int draw_x = center_x - 16;
-    int draw_y = center_y - 16 - elevation_offset;
-
-    // Adjust for "walking offset" from standard drawing logic?
-    // Standard Tile drawing: x * 32 - scroll_x.
-    // Center of screen X in map coords = scroll_x + width/2.
-    // Since we added offset_x/y to the camera scroll logic in
-    // IngamePreviewCanvas::Render, the character should stay exactly at the
-    // center of the screen while the map moves smoothly under it. So we DO NOT
-    // add offset_x/y to draw_x/y again.
-
-    creature_drawer->BlitCreature(
-        ctx, sprite_drawer.get(), draw_x, draw_y, preview_outfit,
-        preview_direction,
-        CreatureDrawOptions{.animationPhase = animation_phase});
-
-    sprite_batch->end(*atlas);
-  }
-
-  if (lighting_enabled && light_drawer) {
-    // Ensure light options are fully initialized to avoid black screen from
-    // garbage values
-    if (options.isDrawLight()) {
-      light_drawer->draw(ctx);
-    }
-  }
-
-  // Draw Names
-  if (creature_name_drawer && vg) {
-    TextRenderer::BeginFrame(
-        vg, viewport_width, viewport_height,
-        1.0f); // Ingame preview doesn't use scale factor yet
-
-    // 1. Draw creatures on map
-    creature_name_drawer->draw(vg, ctx);
-
-    // 2. Draw our own label at precise center
-    if (vg) {
-      nvgSave(vg);
-      float fontSize = 11.0f;
-      nvgFontSize(vg, fontSize);
-      nvgFontFace(vg, "sans");
-      nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
-
-      // Total elevation offset was calculated above.
-      // For the label to stay synced, we should probably fetch it again or
-      // store it. Since we are at the center of the screen, we can just use
-      // screen-relative coords.
-      float screenCenterX = static_cast<float>(viewport_width) / 2.0f;
-      float screenCenterY = static_cast<float>(viewport_height) / 2.0f;
-
-      // Fetch elevation again to be precise
-      int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
-
-      float labelY = screenCenterY -
-                     (16.0f + static_cast<float>(elevation_offset)) / zoom -
-                     2.0f;
-
-      std::string name = preview_name;
-      float textBounds[4];
-      nvgTextBounds(vg, 0, 0, name.c_str(), nullptr, textBounds);
-      float textWidth = textBounds[2] - textBounds[0];
-      float textHeight = textBounds[3] - textBounds[1];
-
-      float paddingX = 4.0f;
-      float paddingY = 2.0f;
-
-      nvgBeginPath(vg);
-      nvgRoundedRect(vg, screenCenterX - textWidth / 2.0f - paddingX,
-                     labelY - textHeight - paddingY * 2.0f,
-                     textWidth + paddingX * 2.0f, textHeight + paddingY * 2.0f,
-                     3.0f);
-      nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
-      nvgFill(vg);
-
-      nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
-      nvgText(vg, screenCenterX, labelY - paddingY, name.c_str(), nullptr);
-      nvgRestore(vg);
-    }
-    TextRenderer::EndFrame(vg);
-  }
+  RenderNames(vg, ctx, map, camera_pos, viewport_width, viewport_height, zoom);
 }
 
 int IngamePreviewRenderer::GetTileElevationOffset(const Tile *tile) const {
@@ -322,6 +132,173 @@ int IngamePreviewRenderer::GetTileElevationOffset(const Tile *tile) const {
     }
   }
   return elevation_offset;
+}
+
+void IngamePreviewRenderer::SetupViewAndOptions(
+    ViewState &view, DrawingOptions &options, int viewport_x, int viewport_y,
+    int viewport_width, int viewport_height, const Position &camera_pos,
+    float zoom, bool lighting_enabled, uint8_t ambient_light, int offset_x,
+    int offset_y) {
+  view.zoom = zoom;
+  view.tile_size = TILE_SIZE;
+  view.floor = camera_pos.z;
+  view.screensize_x = viewport_width;
+  view.screensize_y = viewport_height;
+  view.camera_pos = camera_pos;
+  view.viewport_x = viewport_x;
+  view.viewport_y = viewport_y;
+
+  view.logical_width = viewport_width * zoom;
+  view.logical_height = viewport_height * zoom;
+
+  int offset = (camera_pos.z <= GROUND_LAYER)
+                   ? (GROUND_LAYER - camera_pos.z) * TILE_SIZE
+                   : 0;
+  view.view_scroll_x = (camera_pos.x * TILE_SIZE) + (TILE_SIZE / 2) - offset +
+                       offset_x -
+                       static_cast<int>(viewport_width * zoom / 2.0f);
+  view.view_scroll_y = (camera_pos.y * TILE_SIZE) + (TILE_SIZE / 2) - offset +
+                       offset_y -
+                       static_cast<int>(viewport_height * zoom / 2.0f);
+
+  view.projectionMatrix =
+      glm::ortho(0.0f, static_cast<float>(viewport_width) * zoom,
+                 static_cast<float>(viewport_height) * zoom, 0.0f, -1.0f, 1.0f);
+  view.viewMatrix =
+      glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
+
+  options.SetIngame();
+  options.show_lights = lighting_enabled;
+  options.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
+  options.light_intensity = light_intensity;
+  options.global_light_color = wxColor(255, 255, 255);
+}
+
+void IngamePreviewRenderer::RenderFloors(DrawContext &ctx, const BaseMap &map,
+                                         int last_visible,
+                                         const Position &camera_pos,
+                                         bool lighting_enabled,
+                                         AtlasManager *atlas) {
+  for (int z = last_visible; z >= 0; z--) {
+    float alpha = floor_opacity[z];
+    if (alpha <= 0.001f) {
+      continue;
+    }
+
+    sprite_batch->begin(ctx.view.projectionMatrix, *atlas);
+    sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
+
+    int floor_offset = ctx.view.CalculateLayerOffset(z);
+    constexpr int margin = TILE_SIZE * 2;
+    int start_x = static_cast<int>(
+        std::floor((ctx.view.view_scroll_x + floor_offset - margin) /
+                   static_cast<float>(TILE_SIZE)));
+    int start_y = static_cast<int>(
+        std::floor((ctx.view.view_scroll_y + floor_offset - margin) /
+                   static_cast<float>(TILE_SIZE)));
+    int end_x = static_cast<int>(
+        std::ceil((ctx.view.view_scroll_x + floor_offset +
+                   ctx.view.screensize_x * ctx.view.zoom + margin) /
+                  static_cast<float>(TILE_SIZE)));
+    int end_y = static_cast<int>(
+        std::ceil((ctx.view.view_scroll_y + floor_offset +
+                   ctx.view.screensize_y * ctx.view.zoom + margin) /
+                  static_cast<float>(TILE_SIZE)));
+
+    int base_draw_x = -ctx.view.view_scroll_x - floor_offset;
+    int base_draw_y = -ctx.view.view_scroll_y - floor_offset;
+
+    for (int x = start_x; x <= end_x; ++x) {
+      for (int y = start_y; y <= end_y; ++y) {
+        const Tile *tile = map.getTile(x, y, z);
+        if (tile) {
+          int draw_x = (x * TILE_SIZE) + base_draw_x;
+          int draw_y = (y * TILE_SIZE) + base_draw_y;
+          tile_renderer->DrawTile(ctx, tile->location, 0, draw_x, draw_y,
+                                  lighting_enabled);
+
+          if (creature_name_drawer && z == camera_pos.z) {
+            if (tile->creature) {
+              creature_name_drawer->addLabel(tile->location->getPosition(),
+                                             tile->creature->getName(),
+                                             tile->creature.get());
+            }
+          }
+        }
+      }
+    }
+    sprite_batch->end(*atlas);
+  }
+}
+
+void IngamePreviewRenderer::RenderPreviewCharacter(
+    DrawContext &ctx, const BaseMap &map, const Position &camera_pos,
+    const Outfit &preview_outfit, Direction preview_direction,
+    int animation_phase, AtlasManager *atlas) {
+  sprite_batch->begin(ctx.view.projectionMatrix, *atlas);
+
+  int center_x =
+      static_cast<int>((ctx.view.screensize_x * ctx.view.zoom) / 2.0f);
+  int center_y =
+      static_cast<int>((ctx.view.screensize_y * ctx.view.zoom) / 2.0f);
+  int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
+
+  int draw_x = center_x - 16;
+  int draw_y = center_y - 16 - elevation_offset;
+
+  creature_drawer->BlitCreature(
+      ctx, sprite_drawer.get(), draw_x, draw_y, preview_outfit,
+      preview_direction,
+      CreatureDrawOptions{.animationPhase = animation_phase});
+
+  sprite_batch->end(*atlas);
+}
+
+void IngamePreviewRenderer::RenderNames(NVGcontext *vg, const DrawContext &ctx,
+                                        const BaseMap &map,
+                                        const Position &camera_pos,
+                                        int viewport_width, int viewport_height,
+                                        float zoom) {
+  if (!creature_name_drawer || !vg) {
+    return;
+  }
+
+  TextRenderer::BeginFrame(vg, viewport_width, viewport_height, 1.0f);
+  creature_name_drawer->draw(vg, ctx);
+
+  nvgSave(vg);
+  float fontSize = 11.0f;
+  nvgFontSize(vg, fontSize);
+  nvgFontFace(vg, "sans");
+  nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
+
+  float screenCenterX = static_cast<float>(viewport_width) / 2.0f;
+  float screenCenterY = static_cast<float>(viewport_height) / 2.0f;
+  int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
+
+  float labelY = screenCenterY -
+                 (16.0f + static_cast<float>(elevation_offset)) / zoom - 2.0f;
+  std::string name = preview_name;
+  float textBounds[4];
+  nvgTextBounds(vg, 0, 0, name.c_str(), nullptr, textBounds);
+  float textWidth = textBounds[2] - textBounds[0];
+  float textHeight = textBounds[3] - textBounds[1];
+  float paddingX = 4.0f;
+  float paddingY = 2.0f;
+
+  nvgBeginPath(vg);
+  nvgRoundedRect(vg, screenCenterX - textWidth / 2.0f - paddingX,
+                 labelY - textHeight - paddingY * 2.0f,
+                 textWidth + paddingX * 2.0f, textHeight + paddingY * 2.0f,
+                 3.0f);
+  nvgFillColor(vg, nvgRGBA(0, 0, 0, 160));
+  nvgFill(vg);
+
+  nvgFillColor(vg, nvgRGBA(255, 255, 255, 255));
+  nvgText(vg, screenCenterX, labelY - paddingY, name.c_str(), nullptr);
+  nvgRestore(vg);
+
+  TextRenderer::EndFrame(vg);
 }
 
 } // namespace IngamePreview

@@ -60,74 +60,9 @@ void PreviewDrawer::draw(const DrawContext &ctx,
           int draw_x, draw_y;
           ctx.view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
 
-          // Draw ground
-          uint8_t r = 255, g = 255, b = 255;
           uint8_t base_alpha = ctx.canvas_state.is_pasting ? 128 : 255;
-
-          if (tile->ground) {
-            if (tile->isBlocking() && ctx.options.show_blocking) {
-              g = g / 3 * 2;
-              b = b / 3 * 2;
-            }
-            if (tile->isHouseTile() && ctx.options.show_houses) {
-              if (tile->getHouseID() == ctx.canvas_state.current_house_id) {
-                r /= 2;
-              } else {
-                r /= 2;
-                g /= 2;
-              }
-            } else if (ctx.options.show_special_tiles && tile->isPZ()) {
-              r /= 2;
-              b /= 2;
-            }
-            if (ctx.options.show_special_tiles &&
-                tile->getMapFlags() & TILESTATE_PVPZONE) {
-              r = r / 3 * 2;
-              b = r / 3 * 2;
-            }
-            if (ctx.options.show_special_tiles &&
-                tile->getMapFlags() & TILESTATE_NOLOGOUT) {
-              b /= 2;
-            }
-            if (ctx.options.show_special_tiles &&
-                tile->getMapFlags() & TILESTATE_NOPVP) {
-              g /= 2;
-            }
-            if (tile->ground) {
-              BlitItemParams params(tile, tile->ground.get(), ctx.options);
-              params.ephemeral = true;
-              params.red = r;
-              params.green = g;
-              params.blue = b;
-              params.alpha = base_alpha;
-              item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x,
-                                    draw_y, params);
-            }
-          }
-
-          // Draw items on the tile
-          if (ctx.view.zoom <= 10.0 || !ctx.options.hide_items_when_zoomed) {
-            for (const auto &item : tile->items) {
-              BlitItemParams params(tile, item.get(), ctx.options);
-              params.ephemeral = true;
-              params.alpha = base_alpha;
-              if (item->isBorder()) {
-                params.red = 255;
-                params.green = r;
-                params.blue = g;
-                params.alpha = (base_alpha == 255) ? b : base_alpha;
-                item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer,
-                                      draw_x, draw_y, params);
-              } else {
-                item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer,
-                                      draw_x, draw_y, params);
-              }
-            }
-            if (tile->creature && ctx.options.show_creatures) {
-              creature_drawer->BlitCreature(ctx, sprite_drawer, draw_x, draw_y,
-                                            tile->creature.get());
-            }
-          }
+          drawTilePreview(ctx, draw_x, draw_y, tile, base_alpha, item_drawer,
+                          sprite_drawer, creature_drawer);
         }
       }
     }
@@ -147,6 +82,77 @@ void PreviewDrawer::draw(const DrawContext &ctx,
             (float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE,
             highlightColor, *g_gui.atlas.getAtlasManager());
       }
+    }
+  }
+}
+
+void PreviewDrawer::drawTilePreview(const DrawContext &ctx, int draw_x,
+                                    int draw_y, Tile *tile, uint8_t base_alpha,
+                                    ItemDrawer *item_drawer,
+                                    SpriteDrawer *sprite_drawer,
+                                    CreatureDrawer *creature_drawer) const {
+  uint8_t r = 255, g = 255, b = 255;
+
+  if (tile->ground) {
+    if (tile->isBlocking() && ctx.options.show_blocking) {
+      g = g / 3 * 2;
+      b = b / 3 * 2;
+    }
+    if (tile->isHouseTile() && ctx.options.show_houses) {
+      if (tile->getHouseID() == ctx.canvas_state.current_house_id) {
+        r /= 2;
+      } else {
+        r /= 2;
+        g /= 2;
+      }
+    } else if (ctx.options.show_special_tiles && tile->isPZ()) {
+      r /= 2;
+      b /= 2;
+    }
+    if (ctx.options.show_special_tiles &&
+        tile->getMapFlags() & TILESTATE_PVPZONE) {
+      r = r / 3 * 2;
+      b = r / 3 * 2;
+    }
+    if (ctx.options.show_special_tiles &&
+        tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+      b /= 2;
+    }
+    if (ctx.options.show_special_tiles &&
+        tile->getMapFlags() & TILESTATE_NOPVP) {
+      g /= 2;
+    }
+
+    BlitItemParams params(tile, tile->ground.get(), ctx.options);
+    params.ephemeral = true;
+    params.red = r;
+    params.green = g;
+    params.blue = b;
+    params.alpha = base_alpha;
+    item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x, draw_y,
+                          params);
+  }
+
+  if (ctx.view.zoom <= 10.0 || !ctx.options.hide_items_when_zoomed) {
+    for (const auto &item : tile->items) {
+      BlitItemParams params(tile, item.get(), ctx.options);
+      params.ephemeral = true;
+      params.alpha = base_alpha;
+      if (item->isBorder()) {
+        params.red = 255;
+        params.green = r;
+        params.blue = g;
+        params.alpha = (base_alpha == 255) ? b : base_alpha;
+        item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x,
+                              draw_y, params);
+      } else {
+        item_drawer->BlitItem(ctx, sprite_drawer, creature_drawer, draw_x,
+                              draw_y, params);
+      }
+    }
+    if (tile->creature && ctx.options.show_creatures) {
+      creature_drawer->BlitCreature(ctx, sprite_drawer, draw_x, draw_y,
+                                    tile->creature.get());
     }
   }
 }
