@@ -33,6 +33,7 @@ TextureGarbageCollector::~TextureGarbageCollector() {
 void TextureGarbageCollector::Clear() {
 	loaded_textures = 0;
 	lastclean = time(nullptr);
+	std::lock_guard<std::mutex> lock(cleanup_mutex);
 	cleanup_list.clear();
 }
 
@@ -48,8 +49,12 @@ void TextureGarbageCollector::NotifyTextureUnloaded() {
 const int MIN_CLEAN_THRESHOLD = 100;
 
 void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
+	std::lock_guard<std::mutex> lock(cleanup_mutex);
 	cleanup_list.push_back(spr);
-	// Clean if needed
+}
+
+void TextureGarbageCollector::ProcessCleanupQueue() {
+	std::lock_guard<std::mutex> lock(cleanup_mutex);
 	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD)));
 	if (cleanup_list.size() > clean_threshold) {
 		const auto software_clean_size = std::max(0, g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE));
@@ -63,6 +68,8 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 }
 
 void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
+	ProcessCleanupQueue();
+
 	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 

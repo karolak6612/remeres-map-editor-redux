@@ -22,6 +22,7 @@
 #include <vector>
 #include <memory>
 #include <time.h>
+#include <mutex>
 
 class GameSprite;
 class Sprite;
@@ -33,6 +34,7 @@ public:
 
 	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time);
 	void AddSpriteToCleanup(GameSprite* spr);
+	void ProcessCleanupQueue();
 	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
 	void Clear();
 
@@ -47,6 +49,7 @@ private:
 	int loaded_textures;
 	time_t lastclean;
 	std::deque<GameSprite*> cleanup_list;
+	std::mutex cleanup_mutex;
 };
 
 #endif
