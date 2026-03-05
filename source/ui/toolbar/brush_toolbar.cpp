@@ -69,7 +69,7 @@ void BrushToolBar::Update() {
 
 	auto updateTool = [&](int id, const wxString& name) {
 		toolbar->EnableTool(id, has_map);
-		toolbar->SetToolShortHelp(id, has_map ? name : name + " - No map open");
+		toolbar->SetToolShortHelp(id, has_map ? name : name + " (Disabled - Open a map first)");
 	};
 
 	updateTool(PALETTE_TERRAIN_OPTIONAL_BORDER_TOOL, "Border (Add borders to ground)");

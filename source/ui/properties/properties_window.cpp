@@ -75,11 +75,11 @@ void PropertiesWindow::createUI() {
 	wxSizer* optSizer = newd wxBoxSizer(wxHORIZONTAL);
 	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
 	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	okBtn->SetToolTip("Apply changes and close");
+	okBtn->SetToolTip("Apply changes and close (Enter)");
 	optSizer->Add(okBtn, wxSizerFlags(0).Center());
 	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
 	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	cancelBtn->SetToolTip("Discard changes and close");
+	cancelBtn->SetToolTip("Discard changes and close (Esc)");
 	optSizer->Add(cancelBtn, wxSizerFlags(0).Center());
 	topSizer->Add(optSizer, wxSizerFlags(0).Center().DoubleBorder());
 
