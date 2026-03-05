@@ -45,6 +45,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	int radio_boxNChoices = sizeof(radio_boxChoices) / sizeof(wxString);
 	options_radio_box = newd wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, radio_boxNChoices, radio_boxChoices, 1, wxRA_SPECIFY_COLS);
+	options_radio_box->SetToolTip("Select search method");
 	options_radio_box->SetSelection(SearchMode::ServerIDs);
 	options_box_sizer->Add(options_radio_box, 0, wxALL | wxEXPAND, 5);
 
@@ -54,7 +55,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	server_id_box_sizer->Add(server_id_spin, 0, wxALL | wxEXPAND, 5);
 
 	invalid_item = newd wxCheckBox(server_id_box_sizer->GetStaticBox(), wxID_ANY, "Force select", wxDefaultPosition, wxDefaultSize, 0);
-	invalid_item->SetToolTip("Force choose item ID that does not appear on the list.");
+	invalid_item->SetToolTip("Force select ID even if not found in items list");
 	server_id_box_sizer->Add(invalid_item, 1, wxALL | wxEXPAND, 5);
 
 	options_box_sizer->Add(server_id_box_sizer, 1, wxALL | wxEXPAND, 5);
@@ -79,11 +80,11 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	buttons_box_sizer = newd wxStdDialogButtonSizer();
 	ok_button = newd wxButton(this, wxID_OK);
 	ok_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_CHECK));
-	ok_button->SetToolTip("Select an item to confirm");
+	ok_button->SetToolTip("Select an item to confirm (Enter)");
 	buttons_box_sizer->AddButton(ok_button);
 	cancel_button = newd wxButton(this, wxID_CANCEL);
 	cancel_button->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_XMARK));
-	cancel_button->SetToolTip("Cancel selection");
+	cancel_button->SetToolTip("Cancel selection (Esc)");
 	buttons_box_sizer->AddButton(cancel_button);
 	buttons_box_sizer->Realize();
 	options_box_sizer->Add(buttons_box_sizer, 0, wxALIGN_CENTER | wxALL, 5);
@@ -107,6 +108,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	int types_choices_count = sizeof(types_choices) / sizeof(wxString);
 	types_radio_box = newd wxRadioBox(type_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, types_choices_count, types_choices, 1, wxRA_SPECIFY_COLS);
+	types_radio_box->SetToolTip("Select item type to search for");
 	types_radio_box->SetSelection(0);
 	types_radio_box->Enable(false);
 	type_box_sizer->Add(types_radio_box, 0, wxALL | wxEXPAND, 5);
@@ -282,7 +284,7 @@ void FindItemDialog::EnableProperties(bool enable) {
 void FindItemDialog::RefreshContentsInternal() {
 	items_list->Clear();
 	ok_button->Enable(false);
-	ok_button->SetToolTip("Select an item to continue");
+	ok_button->SetToolTip("Select an item to continue (Enter)");
 
 	SearchMode selection = (SearchMode)options_radio_box->GetSelection();
 	bool found_search_results = false;
@@ -407,7 +409,7 @@ void FindItemDialog::RefreshContentsInternal() {
 	if (found_search_results) {
 		items_list->SetSelection(0);
 		ok_button->Enable(true);
-		ok_button->SetToolTip("Confirm selection");
+		ok_button->SetToolTip("Confirm selection (Enter)");
 	} else {
 		items_list->SetNoMatches();
 	}
