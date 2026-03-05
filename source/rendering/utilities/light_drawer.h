@@ -28,6 +28,7 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/ring_buffer.h"
 
 struct DrawingOptions;
 struct RenderView;
@@ -55,8 +56,7 @@ private:
 	std::unique_ptr<ShaderProgram> shader;
 	std::unique_ptr<GLVertexArray> vao;
 	std::unique_ptr<GLBuffer> vbo;
-	std::unique_ptr<GLBuffer> light_ssbo;
-	size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
+	std::unique_ptr<RingBuffer> light_buffer_;
 
 	std::vector<GPULight> gpu_lights_;
 

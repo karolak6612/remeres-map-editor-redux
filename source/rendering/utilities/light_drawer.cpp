@@ -121,22 +121,20 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 								.color = { (c.Red() / 255.0f) * light_intensity, (c.Green() / 255.0f) * light_intensity, (c.Blue() / 255.0f) * light_intensity, 1.0f } });
 	}
 
-	if (gpu_lights_.empty()) {
-		// Just render ambient? We still need to clear the FBO/screen area or simpy fill it.
-		// If no lights, the overlay should just be ambient color.
-	} else {
-		// Upload Lights
-		size_t needed_size = gpu_lights_.size() * sizeof(GPULight);
-		if (needed_size > light_ssbo_capacity_) {
-			light_ssbo_capacity_ = std::max(needed_size, static_cast<size_t>(light_ssbo_capacity_ * 1.5));
-			if (light_ssbo_capacity_ < 1024) {
-				light_ssbo_capacity_ = 1024;
-			}
-			// Destroy and recreate buffer for Immutable Storage
-			light_ssbo = std::make_unique<GLBuffer>();
-			glNamedBufferStorage(light_ssbo->GetID(), light_ssbo_capacity_, nullptr, GL_DYNAMIC_STORAGE_BIT);
+	if (!gpu_lights_.empty()) {
+		if (!light_buffer_) {
+			light_buffer_ = std::make_unique<RingBuffer>();
+			light_buffer_->initialize(sizeof(GPULight), 65536); // Max 65536 lights (~2MB per frame section)
 		}
-		glNamedBufferSubData(light_ssbo->GetID(), 0, needed_size, gpu_lights_.data());
+
+		void* mapped_ptr = light_buffer_->waitAndMap(gpu_lights_.size());
+		if (mapped_ptr) {
+			std::memcpy(mapped_ptr, gpu_lights_.data(), gpu_lights_.size() * sizeof(GPULight));
+			light_buffer_->finishWrite();
+		} else {
+			spdlog::warn("LightDrawer: GPU lights exceed capacity ({})", light_buffer_->getMaxElements());
+			gpu_lights_.clear(); // Prevent drawing
+		}
 	}
 
 	// 3. Render to FBO
@@ -169,7 +167,9 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 			shader->SetMat4("uProjection", fbo_projection);
 			shader->SetFloat("uTileSize", static_cast<float>(TILE_SIZE) / view.zoom);
 
-			glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 0, light_ssbo->GetID());
+			size_t offset = light_buffer_->getCurrentSectionOffset();
+			size_t size = gpu_lights_.size() * sizeof(GPULight);
+			glBindBufferRange(GL_SHADER_STORAGE_BUFFER, 0, light_buffer_->getBufferId(), offset, size);
 			glBindVertexArray(vao->GetID());
 
 			// Enable MAX blending
@@ -185,6 +185,7 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 			}
 
 			glBindVertexArray(0);
+			light_buffer_->signalFinished();
 		}
 	}
 
@@ -351,7 +352,6 @@ void LightDrawer::initRenderResources() {
 
 	vao = std::make_unique<GLVertexArray>();
 	vbo = std::make_unique<GLBuffer>();
-	light_ssbo = std::make_unique<GLBuffer>();
 
 	glNamedBufferStorage(vbo->GetID(), sizeof(vertices), vertices, 0);
 
