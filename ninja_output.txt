@@ -1,0 +1,463 @@
+ninja: Entering directory `linux_build/build/Release'
+[1/215] Building CXX object CMakeFiles/rme.dir/source/map/basemap.cpp.o
+In file included from /app/source/map/basemap.cpp:21:
+/app/source/map/basemap.h: In copy constructor ‘MapIterator::MapIterator(const MapIterator&)’:
+/app/source/map/basemap.h:74:18: warning: ‘MapIterator::map’ will be initialized after [-Wreorder]
+   74 |         BaseMap* map;
+      |                  ^~~
+/app/source/map/basemap.h:73:23: warning:   ‘TileLocation* MapIterator::current_tile’ [-Wreorder]
+   73 |         TileLocation* current_tile;
+      |                       ^~~~~~~~~~~~
+/app/source/map/basemap.cpp:153:1: warning:   when initialized here [-Wreorder]
+  153 | MapIterator::MapIterator(const MapIterator& other) :
+      | ^~~~~~~~~~~
+[2/215] Building CXX object CMakeFiles/rme.dir/source/map/map_region.cpp.o
+[3/215] Building CXX object CMakeFiles/rme.dir/source/live/live_tab.cpp.o
+[4/215] Building CXX object CMakeFiles/rme.dir/source/map/operations/map_processor.cpp.o
+[5/215] Building CXX object CMakeFiles/rme.dir/source/live/live_socket.cpp.o
+/app/source/live/live_socket.cpp: In member function ‘std::unique_ptr<Tile> LiveSocket::readTile(BinaryNode*, Editor&, const Position*)’:
+/app/source/live/live_socket.cpp:292:25: warning: ‘y’ may be used uninitialized [-Wmaybe-uninitialized]
+  292 |                 pos.y = y;
+      |                         ^
+/app/source/live/live_socket.cpp:290:26: note: ‘y’ was declared here
+  290 |                 uint16_t y;
+      |                          ^
+/app/source/live/live_socket.cpp:279:35: warning: ‘tileType’ may be used uninitialized [-Wmaybe-uninitialized]
+  279 |         if (tileType != OTBM_TILE && tileType != OTBM_HOUSETILE) {
+      |             ~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/live/live_socket.cpp:276:17: note: ‘tileType’ was declared here
+  276 |         uint8_t tileType;
+      |                 ^~~~~~~~
+/app/source/live/live_socket.cpp:289:25: warning: ‘x’ may be used uninitialized [-Wmaybe-uninitialized]
+  289 |                 pos.x = x;
+      |                         ^
+/app/source/live/live_socket.cpp:287:26: note: ‘x’ was declared here
+  287 |                 uint16_t x;
+      |                          ^
+/app/source/live/live_socket.cpp:295:25: warning: ‘z’ may be used uninitialized [-Wmaybe-uninitialized]
+  295 |                 pos.z = z;
+      |                         ^
+/app/source/live/live_socket.cpp:293:25: note: ‘z’ was declared here
+  293 |                 uint8_t z;
+      |                         ^
+[6/215] Building CXX object CMakeFiles/rme.dir/source/map/map.cpp.o
+[7/215] Building CXX object CMakeFiles/rme.dir/source/map/map_spawn_manager.cpp.o
+[8/215] Building CXX object CMakeFiles/rme.dir/source/map/map_statistics.cpp.o
+[9/215] Building CXX object CMakeFiles/rme.dir/source/map/map_search.cpp.o
+[10/215] Building CXX object CMakeFiles/rme.dir/source/map/tile.cpp.o
+[11/215] Building CXX object CMakeFiles/rme.dir/source/map/map_converter.cpp.o
+[12/215] Building CXX object CMakeFiles/rme.dir/source/map/tile_operations.cpp.o
+[13/215] Building CXX object CMakeFiles/rme.dir/source/mkpch.cpp.o
+[14/215] Building CXX object CMakeFiles/rme.dir/source/net/process_com.cpp.o
+[15/215] Building CXX object CMakeFiles/rme.dir/source/map/tileset.cpp.o
+[16/215] Building CXX object CMakeFiles/rme.dir/source/net/net_connection.cpp.o
+[17/215] Building CXX object CMakeFiles/rme.dir/source/palette/palette_brushlist.cpp.o
+[18/215] Building CXX object CMakeFiles/rme.dir/source/palette/palette_common.cpp.o
+[19/215] Building CXX object CMakeFiles/rme.dir/source/palette/palette_creature.cpp.o
+[20/215] Building CXX object CMakeFiles/rme.dir/source/palette/palette_waypoints.cpp.o
+[21/215] Building CXX object CMakeFiles/rme.dir/source/palette/house/house_palette.cpp.o
+[22/215] Building CXX object CMakeFiles/rme.dir/source/palette/house/edit_house_dialog.cpp.o
+[23/215] Building CXX object CMakeFiles/rme.dir/source/palette/palette_window.cpp.o
+/app/source/palette/palette_window.cpp: In member function ‘virtual bool PaletteWindow::OnSelectBrush(const Brush*, PaletteType)’:
+/app/source/palette/palette_window.cpp:273:25: warning: this statement may fall through [-Wimplicit-fallthrough=]
+  273 |                         if (collection_palette && collection_palette->SelectBrush(whatbrush)) {
+      |                         ^~
+/app/source/palette/palette_window.cpp:278:17: note: here
+  278 |                 case TILESET_ITEM: {
+      |                 ^~~~
+[24/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/coordinate_mapper.cpp.o
+[25/215] Building CXX object CMakeFiles/rme.dir/source/palette/controls/virtual_brush_grid.cpp.o
+[26/215] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_palette_panel.cpp.o
+[27/215] Building CXX object CMakeFiles/rme.dir/source/palette/panels/brush_panel.cpp.o
+[28/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/atlas_manager.cpp.o
+[29/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/editor_sprite.cpp.o
+[30/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/animator.cpp.o
+[31/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/drawing_options.cpp.o
+[32/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/graphics.cpp.o
+[33/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/light_buffer.cpp.o
+[34/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/game_sprite.cpp.o
+/app/source/rendering/core/game_sprite.cpp: In member function ‘uint32_t GameSprite::getSpriteId(int, int, int) const’:
+/app/source/rendering/core/game_sprite.cpp:151:17: warning: comparison of unsigned expression in ‘>= 0’ is always true [-Wtype-limits]
+  151 |         if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
+      |             ~~~~^~~~
+[35/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/image.cpp.o
+[36/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/outfit_colors.cpp.o
+[37/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/normal_image.cpp.o
+[38/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/template_image.cpp.o
+In file included from /usr/include/c++/13/bits/stl_uninitialized.h:63,
+                 from /usr/include/c++/13/memory:69,
+                 from /app/source/rendering/core/image.h:5,
+                 from /app/source/rendering/core/template_image.h:4,
+                 from /app/source/rendering/core/template_image.cpp:1:
+In static member function ‘static constexpr _Up* std::__copy_move<_IsMove, true, std::random_access_iterator_tag>::__copy_m(_Tp*, _Tp*, _Up*) [with _Tp = unsigned int; _Up = unsigned int; bool _IsMove = false]’,
+    inlined from ‘constexpr _OI std::__copy_move_a2(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:506:30,
+    inlined from ‘constexpr _OI std::__copy_move_a1(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:533:42,
+    inlined from ‘constexpr _OI std::__copy_move_a(_II, _II, _OI) [with bool _IsMove = false; _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:540:31,
+    inlined from ‘constexpr _OI std::copy(_II, _II, _OI) [with _II = unsigned int*; _OI = unsigned int*]’ at /usr/include/c++/13/bits/stl_algobase.h:633:7,
+    inlined from ‘static _ForwardIterator std::__uninitialized_copy<true>::__uninit_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = unsigned int*; _ForwardIterator = unsigned int*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:147:27,
+    inlined from ‘_ForwardIterator std::uninitialized_copy(_InputIterator, _InputIterator, _ForwardIterator) [with _InputIterator = unsigned int*; _ForwardIterator = unsigned int*]’ at /usr/include/c++/13/bits/stl_uninitialized.h:185:15,
+    inlined from ‘constexpr void fmt::v9::basic_memory_buffer<T, SIZE, Allocator>::grow(size_t) [with T = unsigned int; long unsigned int SIZE = 32; Allocator = std::allocator<unsigned int>]’ at /usr/include/fmt/format.h:925:26,
+    inlined from ‘constexpr void fmt::v9::detail::buffer<T>::try_reserve(size_t) [with T = unsigned int]’ at /usr/include/fmt/core.h:928:39,
+    inlined from ‘constexpr void fmt::v9::detail::buffer<T>::try_resize(size_t) [with T = unsigned int]’ at /usr/include/fmt/core.h:919:16,
+    inlined from ‘constexpr void fmt::v9::basic_memory_buffer<T, SIZE, Allocator>::resize(size_t) [with T = unsigned int; long unsigned int SIZE = 32; Allocator = std::allocator<unsigned int>]’ at /usr/include/fmt/format.h:897:63,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::assign(UInt) [with UInt = long unsigned int; typename std::enable_if<(std::is_same<UInt, long unsigned int>::value || std::is_same<UInt, __int128 unsigned>::value), int>::type <anonymous> = 0]’ at /usr/include/fmt/format.h:2792:19,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::operator=(Int) [with Int = int]’ at /usr/include/fmt/format.h:2813:11,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::assign_pow10(int)’ at /usr/include/fmt/format.h:2893:11,
+    inlined from ‘constexpr void fmt::v9::detail::bigint::assign_pow10(int)’ at /usr/include/fmt/format.h:2884:24,
+    inlined from ‘constexpr void fmt::v9::detail::format_dragon(basic_fp<__int128 unsigned>, unsigned int, int, buffer<char>&, int&)’ at /usr/include/fmt/format.h:3011:29:
+/usr/include/c++/13/bits/stl_algobase.h:437:30: warning: ‘void* __builtin_memmove(void*, const void*, long unsigned int)’ forming offset 4 is out of the bounds [0, 4] [-Warray-bounds=]
+  437 |             __builtin_memmove(__result, __first, sizeof(_Tp) * _Num);
+      |             ~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[39/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/sprite_preloader.cpp.o
+[40/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/multi_draw_indirect_renderer.cpp.o
+[41/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/outfit_colorizer.cpp.o
+[42/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/render_timer.cpp.o
+[43/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/pixel_buffer_object.cpp.o
+In file included from /app/source/rendering/core/pixel_buffer_object.cpp:1:
+/app/source/rendering/core/pixel_buffer_object.h: In constructor ‘PixelBufferObject::PixelBufferObject(PixelBufferObject&&)’:
+/app/source/rendering/core/pixel_buffer_object.h:81:13: warning: ‘PixelBufferObject::current_index_’ will be initialized after [-Wreorder]
+   81 |         int current_index_ = 0;
+      |             ^~~~~~~~~~~~~~
+/app/source/rendering/core/pixel_buffer_object.h:80:16: warning:   ‘size_t PixelBufferObject::size_’ [-Wreorder]
+   80 |         size_t size_ = 0;
+      |                ^~~~~
+/app/source/rendering/core/pixel_buffer_object.cpp:11:1: warning:   when initialized here [-Wreorder]
+   11 | PixelBufferObject::PixelBufferObject(PixelBufferObject&& other) noexcept
+      | ^~~~~~~~~~~~~~~~~
+[44/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/render_view.cpp.o
+[45/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/primitive_renderer.cpp.o
+[46/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/shared_geometry.cpp.o
+[47/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/ring_buffer.cpp.o
+[48/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/shader_program.cpp.o
+[49/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/text_renderer.cpp.o
+[50/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/sprite_batch.cpp.o
+[51/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/texture_array.cpp.o
+[52/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/texture_atlas.cpp.o
+In file included from /app/source/rendering/core/texture_atlas.cpp:1:
+/app/source/rendering/core/texture_atlas.h: In constructor ‘TextureAtlas::TextureAtlas(TextureAtlas&&)’:
+/app/source/rendering/core/texture_atlas.h:132:31: warning: ‘TextureAtlas::free_slots_’ will be initialized after [-Wreorder]
+  132 |         std::vector<FreeSlot> free_slots_;
+      |                               ^~~~~~~~~~~
+/app/source/rendering/core/texture_atlas.h:116:44: warning:   ‘std::unique_ptr<PixelBufferObject> TextureAtlas::pbo_’ [-Wreorder]
+  116 |         std::unique_ptr<PixelBufferObject> pbo_;
+      |                                            ^~~~
+/app/source/rendering/core/texture_atlas.cpp:12:1: warning:   when initialized here [-Wreorder]
+   12 | TextureAtlas::TextureAtlas(TextureAtlas&& other) noexcept
+      | ^~~~~~~~~~~~
+[53/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/cursors/brush_cursor_drawer.cpp.o
+[54/215] Building CXX object CMakeFiles/rme.dir/source/rendering/core/texture_garbage_collector.cpp.o
+[55/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/cursors/drag_shadow_drawer.cpp.o
+/app/source/rendering/drawers/cursors/drag_shadow_drawer.cpp: In member function ‘void DragShadowDrawer::draw(SpriteBatch&, MapDrawer*, ItemDrawer*, SpriteDrawer*, CreatureDrawer*, const RenderView&, const DrawingOptions&)’:
+/app/source/rendering/drawers/cursors/drag_shadow_drawer.cpp:99:207: warning: missing initializer for member ‘CreatureDrawOptions::map_pos’ [-Wmissing-field-initializers]
+   99 |                                                 creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .color = DrawColor(160, 160, 160, 160) });
+      |                                                                                                                                                                                                               ^
+/app/source/rendering/drawers/cursors/drag_shadow_drawer.cpp:99:207: warning: missing initializer for member ‘CreatureDrawOptions::transient_selection_bounds’ [-Wmissing-field-initializers]
+[56/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/cursors/live_cursor_drawer.cpp.o
+[57/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/creature_drawer.cpp.o
+[58/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/creature_name_drawer.cpp.o
+[59/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/item_drawer.cpp.o
+/app/source/rendering/drawers/entities/item_drawer.cpp: In member function ‘void ItemDrawer::BlitItem(SpriteBatch&, SpriteDrawer*, CreatureDrawer*, int&, int&, const BlitItemParams&)’:
+/app/source/rendering/drawers/entities/item_drawer.cpp:114:42: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  114 |                 if (it.clientID >= 39092 && it.clientID <= 39100 || it.clientID == 39236 || it.clientID == 39367 || it.clientID == 39368) {
+      |                     ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+/app/source/rendering/drawers/entities/item_drawer.cpp:122:78: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  122 |         if (it.isMetaItem() || spr == nullptr || !ephemeral && it.pickupable && !options.show_items) {
+      |                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~
+/app/source/rendering/drawers/entities/item_drawer.cpp:223:214: warning: missing initializer for member ‘CreatureDrawOptions::map_pos’ [-Wmissing-field-initializers]
+  223 |                 creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
+      |                                                                                                                                                                                                                      ^
+/app/source/rendering/drawers/entities/item_drawer.cpp:223:214: warning: missing initializer for member ‘CreatureDrawOptions::transient_selection_bounds’ [-Wmissing-field-initializers]
+/app/source/rendering/drawers/entities/item_drawer.cpp: In member function ‘void ItemDrawer::DrawRawBrush(SpriteBatch&, SpriteDrawer*, int, int, ItemType*, uint8_t, uint8_t, uint8_t, uint8_t)’:
+/app/source/rendering/drawers/entities/item_drawer.cpp:286:26: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  286 |         if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
+      |             ~~~~~~~~~~~~~^~~~~~~~~~~~~~~
+[60/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/map_layer_drawer.cpp.o
+[61/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/entities/sprite_drawer.cpp.o
+[62/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/hook_indicator_drawer.cpp.o
+[63/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/minimap_drawer.cpp.o
+[64/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/door_indicator_drawer.cpp.o
+[65/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/minimap_renderer.cpp.o
+[66/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/brush_overlay_drawer.cpp.o
+/app/source/rendering/drawers/overlays/brush_overlay_drawer.cpp: In member function ‘void BrushOverlayDrawer::draw(SpriteBatch&, PrimitiveRenderer&, MapDrawer*, ItemDrawer*, SpriteDrawer*, CreatureDrawer*, const RenderView&, const DrawingOptions&, Editor&)’:
+/app/source/rendering/drawers/overlays/brush_overlay_drawer.cpp:350:203: warning: missing initializer for member ‘CreatureDrawOptions::map_pos’ [-Wmissing-field-initializers]
+  350 |                                 creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 255, 255, 160) });
+      |                                                                                                                                                                                                           ^
+/app/source/rendering/drawers/overlays/brush_overlay_drawer.cpp:350:203: warning: missing initializer for member ‘CreatureDrawOptions::transient_selection_bounds’ [-Wmissing-field-initializers]
+/app/source/rendering/drawers/overlays/brush_overlay_drawer.cpp:352:201: warning: missing initializer for member ‘CreatureDrawOptions::map_pos’ [-Wmissing-field-initializers]
+  352 |                                 creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 64, 64, 160) });
+      |                                                                                                                                                                                                         ^
+/app/source/rendering/drawers/overlays/brush_overlay_drawer.cpp:352:201: warning: missing initializer for member ‘CreatureDrawOptions::transient_selection_bounds’ [-Wmissing-field-initializers]
+[67/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/grid_drawer.cpp.o
+[68/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/marker_drawer.cpp.o
+[69/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/preview_drawer.cpp.o
+[70/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/tile_color_calculator.cpp.o
+[71/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/floor_drawer.cpp.o
+[72/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/overlays/selection_drawer.cpp.o
+[73/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/shade_drawer.cpp.o
+[74/215] Building CXX object CMakeFiles/rme.dir/source/rendering/drawers/tiles/tile_renderer.cpp.o
+/app/source/rendering/drawers/tiles/tile_renderer.cpp: In member function ‘void TileRenderer::DrawTile(SpriteBatch&, TileLocation*, const RenderView&, const DrawingOptions&, uint32_t, int, int, LightBuffer*)’:
+/app/source/rendering/drawers/tiles/tile_renderer.cpp:358:238: warning: missing initializer for member ‘CreatureDrawOptions::color’ [-Wmissing-field-initializers]
+  358 |                                 creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = options.transient_selection_bounds });
+      |                                                                                                                                                                                                                                              ^
+[75/215] Building CXX object CMakeFiles/rme.dir/source/rendering/io/screen_capture.cpp.o
+[76/215] Building CXX object CMakeFiles/rme.dir/source/rendering/io/screenshot_saver.cpp.o
+[77/215] Building CXX object CMakeFiles/rme.dir/source/rendering/io/game_sprite_loader.cpp.o
+[78/215] Building CXX object CMakeFiles/rme.dir/source/rendering/io/editor_sprite_loader.cpp.o
+[79/215] Building CXX object CMakeFiles/rme.dir/source/rendering/map_drawer.cpp.o
+[80/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/clipboard_handler.cpp.o
+[81/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/drawing_controller.cpp.o
+[82/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/brush_selector.cpp.o
+[83/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/map_display.cpp.o
+In file included from /app/source/app/application.h:27,
+                 from /app/source/ui/map_tab.h:22,
+                 from /app/source/ui/gui.h:12,
+                 from /app/source/rendering/ui/map_display.cpp:28:
+/app/source/rendering/ui/map_display.h: In constructor ‘MapCanvas::MapCanvas(MapWindow*, Editor&, int*)’:
+/app/source/rendering/ui/map_display.h:182:14: warning: ‘MapCanvas::renderer_initialized’ will be initialized after [-Wreorder]
+  182 |         bool renderer_initialized = false;
+      |              ^~~~~~~~~~~~~~~~~~~~
+/app/source/rendering/ui/map_display.h:128:13: warning:   ‘int MapCanvas::cursor_x’ [-Wreorder]
+  128 |         int cursor_x;
+      |             ^~~~~~~~
+/app/source/rendering/ui/map_display.cpp:92:1: warning:   when initialized here [-Wreorder]
+   92 | MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
+      | ^~~~~~~~~
+[84/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/keyboard_handler.cpp.o
+[85/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/map_menu_handler.cpp.o
+[86/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/navigation_controller.cpp.o
+[87/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/popup_action_handler.cpp.o
+[88/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/map_status_updater.cpp.o
+[89/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/screenshot_controller.cpp.o
+[90/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/minimap_window.cpp.o
+[91/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/icon_renderer.cpp.o
+[92/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/selection_controller.cpp.o
+[93/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/frame_pacer.cpp.o
+[94/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/fps_counter.cpp.o
+[95/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/tooltip_drawer.cpp.o
+[96/215] Building CXX object CMakeFiles/rme.dir/source/rendering/ui/zoom_controller.cpp.o
+[97/215] Building CXX object CMakeFiles/rme.dir/source/rendering/postprocess/effects/screen.cpp.o
+[98/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/light_calculator.cpp.o
+[99/215] Building CXX object CMakeFiles/rme.dir/source/rendering/postprocess/effects/scanline.cpp.o
+[100/215] Building CXX object CMakeFiles/rme.dir/source/rendering/postprocess/effects/xbrz.cpp.o
+[101/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/tile_describer.cpp.o
+[102/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/light_drawer.cpp.o
+[103/215] Building CXX object CMakeFiles/rme.dir/source/rendering/utilities/sprite_icon_generator.cpp.o
+[104/215] Building CXX object CMakeFiles/rme.dir/source/rendering/postprocess/post_process_manager.cpp.o
+[105/215] Building CXX object CMakeFiles/rme.dir/source/ui/about_window.cpp.o
+[106/215] Building CXX object CMakeFiles/rme.dir/source/ui/add_item_window.cpp.o
+In file included from /app/source/ui/add_item_window.cpp:36:
+/app/source/ui/add_item_window.h: In constructor ‘AddItemWindow::AddItemWindow(wxWindow*, TilesetCategoryType, Tileset*, wxPoint)’:
+/app/source/ui/add_item_window.h:49:18: warning: ‘AddItemWindow::tileset_item’ will be initialized after [-Wreorder]
+   49 |         Tileset* tileset_item;
+      |                  ^~~~~~~~~~~~
+/app/source/ui/add_item_window.h:48:29: warning:   ‘TilesetCategoryType AddItemWindow::category_type’ [-Wreorder]
+   48 |         TilesetCategoryType category_type;
+      |                             ^~~~~~~~~~~~~
+/app/source/ui/add_item_window.cpp:46:1: warning:   when initialized here [-Wreorder]
+   46 | AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryType, Tileset* tilesetItem, wxPoint pos) :
+      | ^~~~~~~~~~~~~
+/app/source/ui/add_item_window.h:48:29: warning: ‘AddItemWindow::category_type’ will be initialized after [-Wreorder]
+   48 |         TilesetCategoryType category_type;
+      |                             ^~~~~~~~~~~~~
+/app/source/ui/add_item_window.h:43:21: warning:   ‘wxSpinCtrl* AddItemWindow::item_id_field’ [-Wreorder]
+   43 |         wxSpinCtrl* item_id_field;
+      |                     ^~~~~~~~~~~~~
+/app/source/ui/add_item_window.cpp:46:1: warning:   when initialized here [-Wreorder]
+   46 | AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryType, Tileset* tilesetItem, wxPoint pos) :
+      | ^~~~~~~~~~~~~
+[107/215] Building CXX object CMakeFiles/rme.dir/source/ui/controls/modern_button.cpp.o
+[108/215] Building CXX object CMakeFiles/rme.dir/source/ui/controls/outfit_color_palette.cpp.o
+[109/215] Building CXX object CMakeFiles/rme.dir/source/ui/add_tileset_window.cpp.o
+In file included from /app/source/ui/add_tileset_window.cpp:36:
+/app/source/ui/add_tileset_window.h: In constructor ‘AddTilesetWindow::AddTilesetWindow(wxWindow*, TilesetCategoryType, wxPoint)’:
+/app/source/ui/add_tileset_window.h:47:29: warning: ‘AddTilesetWindow::category_type’ will be initialized after [-Wreorder]
+   47 |         TilesetCategoryType category_type;
+      |                             ^~~~~~~~~~~~~
+/app/source/ui/add_tileset_window.h:44:23: warning:   ‘wxStaticText* AddTilesetWindow::item_id_label’ [-Wreorder]
+   44 |         wxStaticText* item_id_label;
+      |                       ^~~~~~~~~~~~~
+/app/source/ui/add_tileset_window.cpp:46:1: warning:   when initialized here [-Wreorder]
+   46 | AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType categoryType, wxPoint pos) :
+      | ^~~~~~~~~~~~~~~~
+/app/source/ui/add_tileset_window.h:45:23: warning: ‘AddTilesetWindow::item_name_label’ will be initialized after [-Wreorder]
+   45 |         wxStaticText* item_name_label;
+      |                       ^~~~~~~~~~~~~~~
+/app/source/ui/add_tileset_window.h:41:21: warning:   ‘wxTextCtrl* AddTilesetWindow::tileset_name_field’ [-Wreorder]
+   41 |         wxTextCtrl* tileset_name_field;
+      |                     ^~~~~~~~~~~~~~~~~~
+/app/source/ui/add_tileset_window.cpp:46:1: warning:   when initialized here [-Wreorder]
+   46 | AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType categoryType, wxPoint pos) :
+      | ^~~~~~~~~~~~~~~~
+[110/215] Building CXX object CMakeFiles/rme.dir/source/ui/browse_tile_window.cpp.o
+[111/215] Building CXX object CMakeFiles/rme.dir/source/ui/controls/sortable_list_box.cpp.o
+[112/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/object_properties_base.cpp.o
+[113/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/property_applier.cpp.o
+[114/215] Building CXX object CMakeFiles/rme.dir/source/ui/dialogs/goto_position_dialog.cpp.o
+[115/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/teleport_service.cpp.o
+[116/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/property_validator.cpp.o
+[117/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/attribute_service.cpp.o
+[118/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/creature_properties_window.cpp.o
+[119/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/writable_properties_window.cpp.o
+[120/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/spawn_properties_window.cpp.o
+[121/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/podium_properties_window.cpp.o
+[122/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/splash_properties_window.cpp.o
+[123/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/container_properties_window.cpp.o
+[124/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/depot_properties_window.cpp.o
+[125/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/tile_properties_panel.cpp.o
+[126/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/browse_field_list.cpp.o
+/app/source/ui/tile_properties/browse_field_list.cpp: In member function ‘void BrowseFieldList::OnClickUp(wxCommandEvent&)’:
+/app/source/ui/tile_properties/browse_field_list.cpp:241:26: warning: variable ‘pos’ set but not used [-Wunused-but-set-variable]
+  241 |                 Position pos = current_tile->getPosition();
+      |                          ^~~
+/app/source/ui/tile_properties/browse_field_list.cpp: In member function ‘void BrowseFieldList::OnClickDelete(wxCommandEvent&)’:
+/app/source/ui/tile_properties/browse_field_list.cpp:295:26: warning: variable ‘pos’ set but not used [-Wunused-but-set-variable]
+  295 |                 Position pos = current_tile->getPosition();
+      |                          ^~~
+[127/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/item_property_panel.cpp.o
+[128/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/container_grid_canvas.cpp.o
+[129/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/spawn_creature_panel.cpp.o
+[130/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/map_flags_panel.cpp.o
+[131/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/container_property_panel.cpp.o
+[132/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/depot_property_panel.cpp.o
+[133/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/door_property_panel.cpp.o
+[134/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/spawn_property_panel.cpp.o
+[135/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/teleport_property_panel.cpp.o
+[136/215] Building CXX object CMakeFiles/rme.dir/source/ui/tile_properties/creature_property_panel.cpp.o
+[137/215] Building CXX object CMakeFiles/rme.dir/source/ui/dcbutton.cpp.o
+[138/215] Building CXX object CMakeFiles/rme.dir/source/ui/dialog_helper.cpp.o
+[139/215] Building CXX object CMakeFiles/rme.dir/source/ui/dat_debug_view.cpp.o
+[140/215] Building CXX object CMakeFiles/rme.dir/source/ui/extension_window.cpp.o
+[141/215] Building CXX object CMakeFiles/rme.dir/source/ui/dialog_util.cpp.o
+[142/215] Building CXX object CMakeFiles/rme.dir/source/ui/find_item_window.cpp.o
+[143/215] Building CXX object CMakeFiles/rme.dir/source/ui/map/map_properties_window.cpp.o
+/app/source/ui/map/map_properties_window.cpp: In member function ‘void MapPropertiesWindow::OnClickOK(wxCommandEvent&)’:
+/app/source/ui/map/map_properties_window.cpp:177:20: warning: variable ‘old_ver’ set but not used [-Wunused-but-set-variable]
+  177 |         MapVersion old_ver = map.getVersion();
+      |                    ^~~~~~~
+[144/215] Building CXX object CMakeFiles/rme.dir/source/ui/map/towns_window.cpp.o
+[145/215] Building CXX object CMakeFiles/rme.dir/source/ui/dialogs/find_dialog.cpp.o
+[146/215] Building CXX object CMakeFiles/rme.dir/source/ui/map/import_map_window.cpp.o
+[147/215] Building CXX object CMakeFiles/rme.dir/source/ui/map/export_tilesets_window.cpp.o
+[148/215] Building CXX object CMakeFiles/rme.dir/source/ui/gui.cpp.o
+In file included from /app/source/ui/gui.cpp:25:
+/app/source/ui/gui.h: In constructor ‘GUI::GUI()’:
+/app/source/ui/gui.h:356:13: warning: ‘GUI::disabled_counter’ will be initialized after [-Wreorder]
+  356 |         int disabled_counter;
+      |             ^~~~~~~~~~~~~~~~
+/app/source/ui/gui.h:351:14: warning:   ‘bool GUI::hotkeys_enabled’ [-Wreorder]
+  351 |         bool hotkeys_enabled;
+      |              ^~~~~~~~~~~~~~~
+/app/source/ui/gui.cpp:67:1: warning:   when initialized here [-Wreorder]
+   67 | GUI::GUI() :
+      | ^~~
+[149/215] Building CXX object CMakeFiles/rme.dir/source/ui/main_menubar.cpp.o
+[150/215] Building CXX object CMakeFiles/rme.dir/source/ui/gui_autoborder_ext.cpp.o
+[151/215] Building CXX object CMakeFiles/rme.dir/source/ui/main_frame.cpp.o
+[152/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/menubar_action_manager.cpp.o
+[153/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/search_handler.cpp.o
+[154/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/view_settings_handler.cpp.o
+[155/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/file_menu_handler.cpp.o
+[156/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/navigation_menu_handler.cpp.o
+[157/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/map_actions_handler.cpp.o
+[158/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar/palette_menu_handler.cpp.o
+[159/215] Building CXX object CMakeFiles/rme.dir/source/ui/main_toolbar.cpp.o
+[160/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/loading_manager.cpp.o
+[161/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/layout_manager.cpp.o
+[162/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/minimap_manager.cpp.o
+[163/215] Building CXX object CMakeFiles/rme.dir/source/brushes/managers/doodad_preview_manager.cpp.o
+[164/215] Building CXX object CMakeFiles/rme.dir/source/brushes/managers/brush_manager.cpp.o
+In file included from /app/source/brushes/managers/brush_manager.cpp:7:
+/app/source/brushes/managers/brush_manager.h: In constructor ‘BrushManager::BrushManager()’:
+/app/source/brushes/managers/brush_manager.h:112:20: warning: ‘BrushManager::window_door_brush’ will be initialized after [-Wreorder]
+  112 |         DoorBrush* window_door_brush;
+      |                    ^~~~~~~~~~~~~~~~~
+/app/source/brushes/managers/brush_manager.h:110:20: warning:   ‘DoorBrush* BrushManager::normal_door_alt_brush’ [-Wreorder]
+  110 |         DoorBrush* normal_door_alt_brush;
+      |                    ^~~~~~~~~~~~~~~~~~~~~
+/app/source/brushes/managers/brush_manager.cpp:24:1: warning:   when initialized here [-Wreorder]
+   24 | BrushManager::BrushManager() :
+      | ^~~~~~~~~~~~
+[165/215] Building CXX object CMakeFiles/rme.dir/source/brushes/managers/autoborder_preview_manager.cpp.o
+[166/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/status_manager.cpp.o
+[167/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/recent_files_manager.cpp.o
+[168/215] Building CXX object CMakeFiles/rme.dir/source/palette/managers/palette_manager.cpp.o
+[169/215] Building CXX object CMakeFiles/rme.dir/source/editor/managers/editor_manager.cpp.o
+[170/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/gl_context_manager.cpp.o
+[171/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/search_manager.cpp.o
+[172/215] Building CXX object CMakeFiles/rme.dir/source/ui/managers/welcome_manager.cpp.o
+[173/215] Building CXX object CMakeFiles/rme.dir/source/ui/map_popup_menu.cpp.o
+/app/source/ui/map_popup_menu.cpp: In member function ‘void MapPopupMenu::Update()’:
+/app/source/ui/map_popup_menu.cpp:193:70: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  193 |                                 if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+      |                                                      ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/ui/map_popup_menu.cpp:193:137: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  193 |                                 if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+      |                                                                                                                  ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+/app/source/ui/map_popup_menu.cpp:221:77: warning: suggest parentheses around ‘&&’ within ‘||’ [-Wparentheses]
+  221 |                                 if (hasCollection || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
+      |                                                      ~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+[174/215] Building CXX object CMakeFiles/rme.dir/source/ui/numbertextctrl.cpp.o
+[175/215] Building CXX object CMakeFiles/rme.dir/source/ui/map_tab.cpp.o
+[176/215] Building CXX object CMakeFiles/rme.dir/source/ui/map_window.cpp.o
+[177/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/position_toolbar.cpp.o
+[178/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/brush_toolbar.cpp.o
+[179/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/size_toolbar.cpp.o
+[180/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/standard_toolbar.cpp.o
+/app/source/ui/toolbar/standard_toolbar.cpp: In constructor ‘StandardToolBar::StandardToolBar(wxWindow*)’:
+/app/source/ui/toolbar/standard_toolbar.cpp:44:42: warning: arithmetic between different enumeration types ‘EditorActionID’ and ‘MenuBar::ActionID’ is deprecated [-Wdeprecated-enum-enum-conversion]
+   44 |         toolbar->AddTool(MAIN_FRAME_MENU + MenuBar::JUMP_TO_BRUSH, wxEmptyString, find_bitmap, wxNullBitmap, wxITEM_NORMAL, "Jump to Brush (J)", "Find brush or item", nullptr);
+      |                          ~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~
+[181/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_persistence.cpp.o
+[182/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_factory.cpp.o
+[183/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_registry.cpp.o
+[184/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/light_toolbar.cpp.o
+[185/215] Building CXX object CMakeFiles/rme.dir/source/ui/toolbar/toolbar_layout.cpp.o
+[186/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/old_properties_window.cpp.o
+[187/215] Building CXX object CMakeFiles/rme.dir/source/ui/positionctrl.cpp.o
+[188/215] Building CXX object CMakeFiles/rme.dir/source/ui/properties/properties_window.cpp.o
+In file included from /app/source/ui/properties/properties_window.cpp:20:
+/app/source/ui/properties/properties_window.h: In constructor ‘PropertiesWindow::PropertiesWindow(wxWindow*, const Map*, const Tile*, Item*, wxPoint)’:
+/app/source/ui/properties/properties_window.h:69:21: warning: ‘PropertiesWindow::tier_field’ will be initialized after [-Wreorder]
+   69 |         wxSpinCtrl* tier_field;
+      |                     ^~~~~~~~~~
+/app/source/ui/properties/properties_window.h:55:30: warning:   ‘ContainerGridCanvas* PropertiesWindow::grid_canvas’ [-Wreorder]
+   55 |         ContainerGridCanvas* grid_canvas;
+      |                              ^~~~~~~~~~~
+/app/source/ui/properties/properties_window.cpp:34:1: warning:   when initialized here [-Wreorder]
+   34 | PropertiesWindow::PropertiesWindow(wxWindow* parent, const Map* map, const Tile* tile_parent, Item* item, wxPoint pos) :
+      | ^~~~~~~~~~~~~~~~
+[189/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/item_grid_panel.cpp.o
+[190/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/library_panel.cpp.o
+[191/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_items_window.cpp.o
+[192/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_card_renderer.cpp.o
+[193/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/card_panel.cpp.o
+[194/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_builder_panel.cpp.o
+[195/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/replace_tool_window.cpp.o
+[196/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/replacement_engine.cpp.o
+[197/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_list_control.cpp.o
+[198/215] Building CXX object CMakeFiles/rme.dir/source/ui/theme.cpp.o
+[199/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/visual_similarity_service.cpp.o
+[200/215] Building CXX object CMakeFiles/rme.dir/source/ui/replace_tool/rule_manager.cpp.o
+[201/215] Building CXX object CMakeFiles/rme.dir/source/ui/result_window.cpp.o
+[202/215] Building CXX object CMakeFiles/rme.dir/source/ui/welcome_dialog.cpp.o
+[203/215] Building CXX object CMakeFiles/rme.dir/source/ui/tileset_window.cpp.o
+[204/215] Building CXX object CMakeFiles/rme.dir/source/ui/menubar_loader.cpp.o
+[205/215] Building CXX object CMakeFiles/rme.dir/source/ui/map_statistics_dialog.cpp.o
+[206/215] Building CXX object CMakeFiles/rme.dir/source/ui/live_dialogs.cpp.o
+[207/215] Building CXX object CMakeFiles/rme.dir/source/util/virtual_item_grid.cpp.o
+[208/215] Building CXX object CMakeFiles/rme.dir/source/util/nanovg_listbox.cpp.o
+[209/215] Building CXX object CMakeFiles/rme.dir/source/util/nanovg_canvas.cpp.o
+[210/215] Building CXX object CMakeFiles/rme.dir/source/ui/tool_options_window.cpp.o
+[211/215] Building CXX object CMakeFiles/rme.dir/source/util/common.cpp.o
+[212/215] Building CXX object CMakeFiles/rme.dir/source/ui/tool_options_surface.cpp.o
+[213/215] Building CXX object CMakeFiles/rme.dir/source/util/image_manager.cpp.o
+[214/215] Building CXX object CMakeFiles/rme.dir/source/util/file_system.cpp.o
+/app/source/util/file_system.cpp: In static member function ‘static wxString FileSystem::GetDataDirectory()’:
+/app/source/util/file_system.cpp:29:29: warning: catching polymorphic type ‘const class std::bad_cast’ by value [-Wcatch-value=]
+   29 |         } catch (const std::bad_cast) {
+      |                             ^~~~~~~~
+/app/source/util/file_system.cpp: In static member function ‘static wxString FileSystem::GetExecDirectory()’:
+/app/source/util/file_system.cpp:42:29: warning: catching polymorphic type ‘const class std::bad_cast’ by value [-Wcatch-value=]
+   42 |         } catch (const std::bad_cast) {
+      |                             ^~~~~~~~
+[215/215] Linking CXX executable rme
