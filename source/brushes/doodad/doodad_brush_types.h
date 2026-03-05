@@ -6,6 +6,7 @@
 #define RME_DOODAD_BRUSH_TYPES_H
 
 #include "map/position.h"
+#include <boost/container/small_vector.hpp>
 #include <vector>
 #include <utility>
 #include <cstdint>
@@ -14,7 +15,7 @@ class Item;
 
 #include <memory>
 
-using DoodadItemVector = std::vector<std::unique_ptr<Item>>;
+using DoodadItemVector = boost::container::small_vector<std::unique_ptr<Item>, 4>;
 using CompositeTileList = std::vector<std::pair<Position, DoodadItemVector>>;
 
 struct DoodadBrushSettings {

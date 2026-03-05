@@ -6,6 +6,7 @@
 #define RME_TILE_OPERATIONS_H
 
 #include "game/item.h"
+#include <boost/container/small_vector.hpp>
 #include <memory>
 #include <vector>
 
@@ -37,7 +38,7 @@ namespace TileOperations {
 	void selectGround(Tile* tile);
 	void deselectGround(Tile* tile);
 
-	std::vector<std::unique_ptr<Item>> popSelectedItems(Tile* tile, bool ignoreTileSelected = false);
+	boost::container::small_vector<std::unique_ptr<Item>, 4> popSelectedItems(Tile* tile, bool ignoreTileSelected = false);
 	ItemVector getSelectedItems(Tile* tile, bool unzoomed = false);
 	Item* getTopSelectedItem(Tile* tile);
 

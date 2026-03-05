@@ -19,6 +19,7 @@
 #define RME_CONTAINER_H_
 
 #include "map/position.h"
+#include <boost/container/small_vector.hpp>
 #include "game/item.h"
 #include "game/outfit.h"
 
@@ -54,10 +55,10 @@ public:
 		return g_items[id].volume;
 	}
 
-	std::vector<std::unique_ptr<Item>>& getVector() {
+	boost::container::small_vector<std::unique_ptr<Item>, 4>& getVector() {
 		return contents;
 	}
-	const std::vector<std::unique_ptr<Item>>& getVector() const {
+	const boost::container::small_vector<std::unique_ptr<Item>, 4>& getVector() const {
 		return contents;
 	}
 	double getWeight() const;
@@ -67,7 +68,7 @@ public:
 	virtual bool serializeItemNode_OTBM(const IOMap& maphandle, NodeFileWriteHandle& f) const;
 
 protected:
-	std::vector<std::unique_ptr<Item>> contents;
+	boost::container::small_vector<std::unique_ptr<Item>, 4> contents;
 };
 
 class Teleport : public Item {

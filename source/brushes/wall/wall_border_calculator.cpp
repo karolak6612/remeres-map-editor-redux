@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "brushes/wall/wall_border_calculator.h"
+#include <boost/container/small_vector.hpp>
 #include "brushes/wall/wall_brush.h"
 #include "brushes/wall/wall_brush_items.h"
 #include "map/basemap.h"
@@ -46,7 +47,7 @@ void WallBorderCalculator::doWalls(BaseMap* map, Tile* tile) {
 	for (; it != tile->items.end() && (*it)->isBorder(); ++it)
 		;
 
-	std::vector<std::unique_ptr<Item>> items_to_add;
+	boost::container::small_vector<std::unique_ptr<Item>, 4> items_to_add;
 
 	while (it != tile->items.end()) {
 		Item* wall = it->get();

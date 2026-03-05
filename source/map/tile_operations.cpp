@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include <boost/container/small_vector.hpp>
 #include "map/tile_operations.h"
 #include "map/tile.h"
 #include "map/basemap.h"
@@ -290,8 +291,8 @@ namespace TileOperations {
 		TileOperations::update(tile);
 	}
 
-	std::vector<std::unique_ptr<Item>> popSelectedItems(Tile* tile, bool ignoreTileSelected) {
-		std::vector<std::unique_ptr<Item>> pop_items;
+	boost::container::small_vector<std::unique_ptr<Item>, 4> popSelectedItems(Tile* tile, bool ignoreTileSelected) {
+		boost::container::small_vector<std::unique_ptr<Item>, 4> pop_items;
 
 		if (!ignoreTileSelected && !tile->isSelected()) {
 			return pop_items;
