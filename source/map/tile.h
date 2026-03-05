@@ -64,7 +64,7 @@ enum : uint8_t {
 
 class Tile {
 public: // Members
-	TileLocation* location;
+	TileLocation* location; // Observer pointer, managed by TileLocation/Map
 	std::unique_ptr<Item> ground;
 	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
@@ -235,9 +235,9 @@ bool tilePositionLessThan(const Tile* a, const Tile* b);
 // This sorts them by draw order
 bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
 
-using TileVector = std::vector<Tile*>;
-using TileSet = std::vector<Tile*>;
-using TileList = std::list<Tile*>;
+using TileVector = std::vector<Tile*>; // Observer pointers, owned by Map
+using TileSet = std::vector<Tile*>; // Observer pointers, owned by Map
+using TileList = std::list<Tile*>; // Observer pointers, owned by Map
 
 inline bool Tile::hasWall() const {
 	return getWall() != nullptr;

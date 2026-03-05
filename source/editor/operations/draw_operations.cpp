@@ -309,7 +309,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
-		action->addChange(std::unique_ptr<Change>(Change::Create(house, offset)));
+		action->addChange(Change::Create(house, offset));
 		batch->addAndCommitAction(std::move(action));
 		editor.addBatch(std::move(batch), 2);
 	} else if (brush->is<WaypointBrush>()) {
@@ -325,7 +325,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
-		action->addChange(std::unique_ptr<Change>(Change::Create(waypoint, offset)));
+		action->addChange(Change::Create(waypoint, offset));
 		batch->addAndCommitAction(std::move(action));
 		editor.addBatch(std::move(batch), 2);
 	} else if (brush->is<WallBrush>()) {

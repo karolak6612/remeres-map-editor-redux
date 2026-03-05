@@ -88,7 +88,7 @@ void main() {
 MapDrawer::MapDrawer(MapCanvas* canvas) :
 	canvas(canvas), editor(canvas->editor) {
 
-	light_drawer = std::make_shared<LightDrawer>();
+	light_drawer = std::make_unique<LightDrawer>();
 	tooltip_drawer = std::make_unique<TooltipDrawer>();
 
 	sprite_drawer = std::make_unique<SpriteDrawer>();
