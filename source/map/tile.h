@@ -37,25 +37,27 @@ class Map;
 
 // TileOperations functions are now in tile_operations.h
 
-enum {
-	TILESTATE_NONE = 0x0000,
-	TILESTATE_PROTECTIONZONE = 0x0001,
-	TILESTATE_DEPRECATED = 0x0002, // Reserved
-	TILESTATE_NOPVP = 0x0004,
-	TILESTATE_NOLOGOUT = 0x0008,
-	TILESTATE_PVPZONE = 0x0010,
-	TILESTATE_REFRESH = 0x0020,
-	// Internal
-	TILESTATE_SELECTED = 0x0001,
-	TILESTATE_UNIQUE = 0x0002,
-	TILESTATE_BLOCKING = 0x0004,
-	TILESTATE_OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
-	TILESTATE_HAS_TABLE = 0x0010,
-	TILESTATE_HAS_CARPET = 0x0020,
-	TILESTATE_MODIFIED = 0x0040,
-	TILESTATE_HOOK_SOUTH = 0x0080,
-	TILESTATE_HOOK_EAST = 0x0100,
-	TILESTATE_HAS_LIGHT = 0x0200,
+enum class TileState : uint16_t {
+	NONE = 0x0000,
+	PROTECTIONZONE = 0x0001,
+	DEPRECATED = 0x0002, // Reserved
+	NOPVP = 0x0004,
+	NOLOGOUT = 0x0008,
+	PVPZONE = 0x0010,
+	REFRESH = 0x0020,
+};
+
+enum class TileInternalState : uint16_t {
+	SELECTED = 0x0001,
+	UNIQUE = 0x0002,
+	BLOCKING = 0x0004,
+	OP_BORDER = 0x0008, // If this is true, gravel will be placed on the tile!
+	HAS_TABLE = 0x0010,
+	HAS_CARPET = 0x0020,
+	MODIFIED = 0x0040,
+	HOOK_SOUTH = 0x0080,
+	HOOK_EAST = 0x0100,
+	HAS_LIGHT = 0x0200,
 };
 
 enum : uint8_t {
@@ -98,137 +100,137 @@ public:
 	}
 
 	// Position of the tile
-	Position getPosition();
-	const Position getPosition() const;
-	int getX() const;
-	int getY() const;
-	int getZ() const;
+	[[nodiscard]] Position getPosition();
+	[[nodiscard]] const Position getPosition() const;
+	[[nodiscard]] int getX() const;
+	[[nodiscard]] int getY() const;
+	[[nodiscard]] int getZ() const;
 
 public: // Functions
 	// Compare the content (ground and items) of two tiles
-	bool isContentEqual(const Tile* other) const;
+	[[nodiscard]] bool isContentEqual(const Tile* other) const;
 
 	// Has tile been modified since the map was loaded/created?
-	bool isModified() const {
-		return testFlags(statflags, TILESTATE_MODIFIED);
+	[[nodiscard]] bool isModified() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::MODIFIED));
 	}
 	void modify() {
-		statflags |= TILESTATE_MODIFIED;
+		statflags |= static_cast<uint16_t>(TileInternalState::MODIFIED);
 	}
 	void unmodify() {
-		statflags &= ~TILESTATE_MODIFIED;
+		statflags &= ~static_cast<uint16_t>(TileInternalState::MODIFIED);
 	}
 
 	// Get memory footprint size
-	uint32_t memsize() const;
+	[[nodiscard]] uint32_t memsize() const;
 	// Get number of items on the tile
-	bool empty() const {
+	[[nodiscard]] bool empty() const {
 		return size() == 0;
 	}
-	int size() const;
+	[[nodiscard]] int size() const;
 
 	// Blocking?
-	bool isBlocking() const {
-		return testFlags(statflags, TILESTATE_BLOCKING);
+	[[nodiscard]] bool isBlocking() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::BLOCKING));
 	}
 
 	// PZ
-	bool isPZ() const {
-		return testFlags(mapflags, TILESTATE_PROTECTIONZONE);
+	[[nodiscard]] bool isPZ() const {
+		return testFlags(mapflags, static_cast<uint16_t>(TileState::PROTECTIONZONE));
 	}
 	void setPZ(bool pz) {
 		if (pz) {
-			mapflags |= TILESTATE_PROTECTIONZONE;
+			mapflags |= static_cast<uint16_t>(TileState::PROTECTIONZONE);
 		} else {
-			mapflags &= ~TILESTATE_PROTECTIONZONE;
+			mapflags &= ~static_cast<uint16_t>(TileState::PROTECTIONZONE);
 		}
 	}
 
-	bool hasProperty(enum ITEMPROPERTY prop) const;
+	[[nodiscard]] bool hasProperty(enum ITEMPROPERTY prop) const;
 
-	int getIndexOf(Item* item) const;
-	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
-	Item* getItemAt(int index) const;
+	[[nodiscard]] int getIndexOf(Item* item) const;
+	[[nodiscard]] Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
+	[[nodiscard]] Item* getItemAt(int index) const;
 	void addItem(std::unique_ptr<Item> item);
 
-	bool isSelected() const {
-		return testFlags(statflags, TILESTATE_SELECTED);
+	[[nodiscard]] bool isSelected() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::SELECTED));
 	}
-	bool hasUniqueItem() const {
-		return testFlags(statflags, TILESTATE_UNIQUE);
+	[[nodiscard]] bool hasUniqueItem() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::UNIQUE));
 	}
 
-	uint8_t getMiniMapColor() const;
+	[[nodiscard]] uint8_t getMiniMapColor() const;
 
 	// Does this tile have ground?
-	bool hasGround() const {
+	[[nodiscard]] bool hasGround() const {
 		return ground != nullptr;
 	}
-	bool hasBorders() const {
+	[[nodiscard]] bool hasBorders() const {
 		return items.size() && items[0]->isBorder();
 	}
 
 	// Get the border brush of this tile
-	GroundBrush* getGroundBrush() const;
+	[[nodiscard]] GroundBrush* getGroundBrush() const;
 
-	bool hasTable() const {
-		return testFlags(statflags, TILESTATE_HAS_TABLE);
+	[[nodiscard]] bool hasTable() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::HAS_TABLE));
 	}
-	Item* getTable() const;
+	[[nodiscard]] Item* getTable() const;
 
-	bool hasCarpet() const {
-		return testFlags(statflags, TILESTATE_HAS_CARPET);
+	[[nodiscard]] bool hasCarpet() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::HAS_CARPET));
 	}
-	Item* getCarpet() const;
+	[[nodiscard]] Item* getCarpet() const;
 
-	bool hasHookSouth() const {
-		return testFlags(statflags, TILESTATE_HOOK_SOUTH);
-	}
-
-	bool hasHookEast() const {
-		return testFlags(statflags, TILESTATE_HOOK_EAST);
+	[[nodiscard]] bool hasHookSouth() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::HOOK_SOUTH));
 	}
 
-	bool hasLight() const {
-		return testFlags(statflags, TILESTATE_HAS_LIGHT);
+	[[nodiscard]] bool hasHookEast() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::HOOK_EAST));
 	}
 
-	bool hasOptionalBorder() const {
-		return testFlags(statflags, TILESTATE_OP_BORDER);
+	[[nodiscard]] bool hasLight() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::HAS_LIGHT));
+	}
+
+	[[nodiscard]] bool hasOptionalBorder() const {
+		return testFlags(statflags, static_cast<uint16_t>(TileInternalState::OP_BORDER));
 	}
 	void setOptionalBorder(bool b) {
 		if (b) {
-			statflags |= TILESTATE_OP_BORDER;
+			statflags |= static_cast<uint16_t>(TileInternalState::OP_BORDER);
 		} else {
-			statflags &= ~TILESTATE_OP_BORDER;
+			statflags &= ~static_cast<uint16_t>(TileInternalState::OP_BORDER);
 		}
 	}
 
 	// Get the (first) wall of this tile
-	Item* getWall() const;
-	bool hasWall() const;
+	[[nodiscard]] Item* getWall() const;
+	[[nodiscard]] bool hasWall() const;
 
 	// Has to do with houses
-	bool isHouseTile() const;
-	uint32_t getHouseID() const;
+	[[nodiscard]] bool isHouseTile() const;
+	[[nodiscard]] uint32_t getHouseID() const;
 	void setHouseID(uint32_t newHouseId);
 
-	bool isHouseExit() const;
-	bool isTownExit(Map& map) const;
-	const HouseExitList* getHouseExits() const;
-	HouseExitList* getHouseExits();
-	bool hasHouseExit(uint32_t exit) const;
+	[[nodiscard]] bool isHouseExit() const;
+	[[nodiscard]] bool isTownExit(Map& map) const;
+	[[nodiscard]] const HouseExitList* getHouseExits() const;
+	[[nodiscard]] HouseExitList* getHouseExits();
+	[[nodiscard]] bool hasHouseExit(uint32_t exit) const;
 	void setHouse(House* house);
 
 	// Mapflags (PZ, PVPZONE etc.)
 	void setMapFlags(uint16_t _flags);
 	void unsetMapFlags(uint16_t _flags);
-	uint16_t getMapFlags() const;
+	[[nodiscard]] uint16_t getMapFlags() const;
 
 	// Statflags (You really ought not to touch this)
 	void setStatFlags(uint16_t _flags);
 	void unsetStatFlags(uint16_t _flags);
-	uint16_t getStatFlags() const;
+	[[nodiscard]] uint16_t getStatFlags() const;
 };
 
 bool tilePositionLessThan(const Tile* a, const Tile* b);

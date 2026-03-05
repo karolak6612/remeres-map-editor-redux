@@ -70,7 +70,7 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 		editor.notifyStateChange();
 	}
 
-	if (batch->getType() == ACTION_REMOTE) {
+	if (batch->getType() == ActionIdentifier::REMOTE) {
 		return;
 	}
 

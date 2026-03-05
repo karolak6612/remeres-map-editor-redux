@@ -38,16 +38,15 @@ class SpritePreloader;
 
 class Sprite {
 public:
-	Sprite() { }
+	Sprite() = default;
 	virtual ~Sprite() = default;
 
 	virtual void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) = 0;
 	virtual void unloadDC() = 0;
-	virtual wxSize GetSize() const = 0;
+	[[nodiscard]] virtual wxSize GetSize() const = 0;
 
-private:
-	Sprite(const Sprite&);
-	Sprite& operator=(const Sprite&);
+	Sprite(const Sprite&) = delete;
+	Sprite& operator=(const Sprite&) = delete;
 };
 
 class GameSprite;
@@ -57,8 +56,8 @@ public:
 	~CreatureSprite() override;
 
 	void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) override;
-	virtual void unloadDC() override;
-	wxSize GetSize() const override {
+	void unloadDC() override;
+	[[nodiscard]] wxSize GetSize() const override {
 		return wxSize(32, 32);
 	}
 
@@ -75,31 +74,31 @@ public:
 	GameSprite();
 	~GameSprite() override;
 
-	size_t getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
+	[[nodiscard]] size_t getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
 
 	// Phase 2: Get atlas region for texture array rendering
-	const AtlasRegion* getAtlasRegion(int _x, int _y, int _layer, int _subtype, int _pattern_x, int _pattern_y, int _pattern_z, int _frame);
-	const AtlasRegion* getAtlasRegion(int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit, int _frame);
+	[[nodiscard]] const AtlasRegion* getAtlasRegion(int _x, int _y, int _layer, int _subtype, int _pattern_x, int _pattern_y, int _pattern_z, int _frame);
+	[[nodiscard]] const AtlasRegion* getAtlasRegion(int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit, int _frame);
 
 	void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) override;
 	virtual void DrawTo(wxDC* dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y, int width = -1, int height = -1);
 
 	void unloadDC() override;
 
-	wxSize GetSize() const override {
+	[[nodiscard]] wxSize GetSize() const override {
 		return wxSize(width * 32, height * 32);
 	}
 
 	void clean(time_t time, int longevity = -1);
 
-	int getDrawHeight() const;
-	std::pair<int, int> getDrawOffset() const;
-	uint8_t getMiniMapColor() const;
+	[[nodiscard]] int getDrawHeight() const;
+	[[nodiscard]] std::pair<int, int> getDrawOffset() const;
+	[[nodiscard]] uint8_t getMiniMapColor() const;
 
-	bool hasLight() const noexcept {
+	[[nodiscard]] bool hasLight() const noexcept {
 		return has_light;
 	}
-	const SpriteLight& getLight() const noexcept {
+	[[nodiscard]] const SpriteLight& getLight() const noexcept {
 		return light;
 	}
 
@@ -131,10 +130,10 @@ public:
 	uint8_t pattern_z;
 	uint8_t frames;
 	uint32_t numsprites;
-	uint32_t getId() const {
+	[[nodiscard]] uint32_t getId() const {
 		return id;
 	}
-	uint32_t getDebugImageId(size_t index = 0) const;
+	[[nodiscard]] uint32_t getDebugImageId(size_t index = 0) const;
 
 	std::unique_ptr<Animator> animator;
 
@@ -188,14 +187,14 @@ public:
 	friend class SpritePreloader;
 
 	// Exposed for fast-path rendering (BlitItem)
-	const AtlasRegion* getCachedDefaultRegion() const {
+	[[nodiscard]] const AtlasRegion* getCachedDefaultRegion() const {
 		return cached_default_region;
 	}
 
 	// DEBUG: Get the actual image ID that would be rendered for these coordinates
-	uint32_t getSpriteId(int frameIndex, int pattern_x, int pattern_y) const;
+	[[nodiscard]] uint32_t getSpriteId(int frameIndex, int pattern_x, int pattern_y) const;
 
-	bool isSimpleAndLoaded() const;
+	[[nodiscard]] bool isSimpleAndLoaded() const;
 
 	bool is_simple = false;
 	void updateSimpleStatus() {

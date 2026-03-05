@@ -30,25 +30,25 @@
 #include <ctime>
 
 Change::Change() :
-	type(CHANGE_NONE), data(std::monostate {}) {
+	type(ChangeType::NONE), data(std::monostate {}) {
 	////
 }
 
 Change::Change(std::unique_ptr<Tile> t) :
-	type(CHANGE_TILE), data(std::move(t)) {
+	type(ChangeType::TILE), data(std::move(t)) {
 	ASSERT(std::get<std::unique_ptr<Tile>>(data));
 }
 
 Change* Change::Create(House* house, const Position& where) {
 	Change* c = newd Change();
-	c->type = CHANGE_MOVE_HOUSE_EXIT;
+	c->type = ChangeType::MOVE_HOUSE_EXIT;
 	c->data = HouseExitChangeData { .houseId = house->getID(), .pos = where };
 	return c;
 }
 
 Change* Change::Create(Waypoint* wp, const Position& where) {
 	Change* c = newd Change();
-	c->type = CHANGE_MOVE_WAYPOINT;
+	c->type = ChangeType::MOVE_WAYPOINT;
 	c->data = WaypointChangeData { .name = wp->name, .pos = where };
 	return c;
 }
@@ -58,7 +58,7 @@ Change::~Change() {
 }
 
 void Change::clear() {
-	type = CHANGE_NONE;
+	type = ChangeType::NONE;
 	data = std::monostate {};
 }
 
@@ -120,7 +120,7 @@ void Action::commit(DirtyList* dirty_list) {
 	while (it != changes.end()) {
 		Change* c = it->get();
 		switch (c->type) {
-			case CHANGE_TILE: {
+			case ChangeType::TILE: {
 				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
 				ASSERT(uptr);
 				Tile* newtile = uptr.get();
@@ -202,14 +202,14 @@ void Action::commit(DirtyList* dirty_list) {
 				newtile->modify();
 
 				// Update client dirty list
-				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
+				if (editor.live_manager.IsClient() && dirty_list && type != ActionIdentifier::REMOTE) {
 					// Local action, assemble changes
 					dirty_list->AddChange(c);
 				}
 				break;
 			}
 
-			case CHANGE_MOVE_HOUSE_EXIT: {
+			case ChangeType::MOVE_HOUSE_EXIT: {
 				auto& p = std::get<HouseExitChangeData>(c->data);
 				House* whathouse = editor.map.houses.getHouse(p.houseId);
 
@@ -221,7 +221,7 @@ void Action::commit(DirtyList* dirty_list) {
 				break;
 			}
 
-			case CHANGE_MOVE_WAYPOINT: {
+			case ChangeType::MOVE_WAYPOINT: {
 				auto& p = std::get<WaypointChangeData>(c->data);
 				Waypoint* wp = editor.map.waypoints.getWaypoint(p.name);
 
@@ -267,7 +267,7 @@ void Action::undo(DirtyList* dirty_list) {
 	while (it != changes.rend()) {
 		Change* c = it->get();
 		switch (c->type) {
-			case CHANGE_TILE: {
+			case ChangeType::TILE: {
 				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
 				std::unique_ptr<Tile> old_uptr = std::move(uptr);
 				ASSERT(old_uptr);
@@ -331,14 +331,14 @@ void Action::undo(DirtyList* dirty_list) {
 				uptr = std::move(newtile_uptr);
 
 				// Update client dirty list
-				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
+				if (editor.live_manager.IsClient() && dirty_list && type != ActionIdentifier::REMOTE) {
 					// Local action, assemble changes
 					dirty_list->AddChange(c);
 				}
 				break;
 			}
 
-			case CHANGE_MOVE_HOUSE_EXIT: {
+			case ChangeType::MOVE_HOUSE_EXIT: {
 				auto& p = std::get<HouseExitChangeData>(c->data);
 				House* whathouse = editor.map.houses.getHouse(p.houseId);
 				if (whathouse) {
@@ -349,7 +349,7 @@ void Action::undo(DirtyList* dirty_list) {
 				break;
 			}
 
-			case CHANGE_MOVE_WAYPOINT: {
+			case ChangeType::MOVE_WAYPOINT: {
 				auto& p = std::get<WaypointChangeData>(c->data);
 				Waypoint* wp = editor.map.waypoints.getWaypoint(p.name);
 

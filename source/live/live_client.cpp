@@ -288,7 +288,7 @@ void LiveClient::sendChanges(DirtyList& dirtyList) {
 	mapWriter.reset();
 	for (const auto& change : changeList) {
 		switch (change->getType()) {
-			case CHANGE_TILE: {
+			case ChangeType::TILE: {
 				const Position& position = change->getTile()->getPosition();
 				sendTile(mapWriter, editor->map.getTile(position), &position);
 				break;

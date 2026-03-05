@@ -351,9 +351,9 @@ void Selection::start(SessionFlags flags) {
 		if (flags & SUBTHREAD) {
 			;
 		} else {
-			session = std::move(editor.actionQueue->createBatch(ACTION_SELECT));
+			session = std::move(editor.actionQueue->createBatch(ActionIdentifier::SELECT));
 		}
-		subsession = editor.actionQueue->createAction(ACTION_SELECT);
+		subsession = editor.actionQueue->createAction(ActionIdentifier::SELECT);
 	} else {
 		deferred = true;
 		pending_adds.clear();
@@ -373,7 +373,7 @@ void Selection::commit() {
 		tmp->addAndCommitAction(std::move(subsession));
 
 		// Create a newd action for subsequent selects
-		subsession = editor.actionQueue->createAction(ACTION_SELECT);
+		subsession = editor.actionQueue->createAction(ActionIdentifier::SELECT);
 		session = std::move(tmp);
 	}
 }

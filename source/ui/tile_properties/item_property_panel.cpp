@@ -154,7 +154,7 @@ void ItemPropertyPanel::OnActionIdChange(wxSpinEvent& event) {
 			Item* new_item = new_tile->getItemAt(index);
 			new_item->setActionID(action_id_spin->GetValue());
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 		}
@@ -174,7 +174,7 @@ void ItemPropertyPanel::OnUniqueIdChange(wxSpinEvent& event) {
 			Item* new_item = new_tile->getItemAt(index);
 			new_item->setUniqueID(unique_id_spin->GetValue());
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 		}
@@ -194,7 +194,7 @@ void ItemPropertyPanel::OnCountChange(wxSpinEvent& event) {
 			Item* new_item = new_tile->getItemAt(index);
 			new_item->setSubtype(count_spin->GetValue());
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 		}
@@ -215,7 +215,7 @@ void ItemPropertyPanel::OnSplashTypeChange(wxCommandEvent& event) {
 			int new_type = (int)(intptr_t)splash_type_choice->GetClientData(splash_type_choice->GetSelection());
 			new_item->setSubtype(new_type);
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 			g_gui.RefreshView();
@@ -240,7 +240,7 @@ void ItemPropertyPanel::OnTextChange(wxEvent& event) {
 			Item* new_item = new_tile->getItemAt(index);
 			new_item->setText(nstr(text_ctrl->GetValue()));
 
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::CHANGE_PROPERTIES);
 			action->addChange(std::make_unique<Change>(std::move(new_tile)));
 			editor->addAction(std::move(action));
 		}

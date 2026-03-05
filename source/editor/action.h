@@ -38,11 +38,11 @@ class Action;
 class BatchAction;
 class ActionQueue;
 
-enum ChangeType {
-	CHANGE_NONE,
-	CHANGE_TILE,
-	CHANGE_MOVE_HOUSE_EXIT,
-	CHANGE_MOVE_WAYPOINT,
+enum class ChangeType {
+	NONE,
+	TILE,
+	MOVE_HOUSE_EXIT,
+	MOVE_WAYPOINT,
 };
 
 struct HouseExitChangeData {
@@ -65,20 +65,20 @@ private:
 
 public:
 	explicit Change(std::unique_ptr<Tile> tile);
-	static Change* Create(House* house, const Position& where);
-	static Change* Create(Waypoint* wp, const Position& where);
+	[[nodiscard]] static Change* Create(House* house, const Position& where);
+	[[nodiscard]] static Change* Create(Waypoint* wp, const Position& where);
 	~Change();
 	void clear();
 
-	ChangeType getType() const {
+	[[nodiscard]] ChangeType getType() const {
 		return type;
 	}
-	const Tile* getTile() const;
-	const HouseExitChangeData* getHouseExitData() const;
-	const WaypointChangeData* getWaypointData() const;
+	[[nodiscard]] const Tile* getTile() const;
+	[[nodiscard]] const HouseExitChangeData* getHouseExitData() const;
+	[[nodiscard]] const WaypointChangeData* getWaypointData() const;
 
 	// Get memory footprint
-	uint32_t memsize() const;
+	[[nodiscard]] uint32_t memsize() const;
 
 	friend class Action;
 };
@@ -87,20 +87,20 @@ using ChangeList = std::vector<std::unique_ptr<Change>>;
 
 class DirtyList;
 
-enum ActionIdentifier {
-	ACTION_MOVE,
-	ACTION_REMOTE,
-	ACTION_SELECT,
-	ACTION_DELETE_TILES,
-	ACTION_CUT_TILES,
-	ACTION_PASTE_TILES,
-	ACTION_RANDOMIZE,
-	ACTION_BORDERIZE,
-	ACTION_DRAW,
-	ACTION_SWITCHDOOR,
-	ACTION_ROTATE_ITEM,
-	ACTION_REPLACE_ITEMS,
-	ACTION_CHANGE_PROPERTIES,
+enum class ActionIdentifier {
+	MOVE,
+	REMOTE,
+	SELECT,
+	DELETE_TILES,
+	CUT_TILES,
+	PASTE_TILES,
+	RANDOMIZE,
+	BORDERIZE,
+	DRAW,
+	SWITCHDOOR,
+	ROTATE_ITEM,
+	REPLACE_ITEMS,
+	CHANGE_PROPERTIES,
 };
 
 class Action {
@@ -112,17 +112,17 @@ public:
 	}
 
 	// Get memory footprint
-	size_t approx_memsize() const;
-	size_t memsize() const;
-	size_t size() const {
+	[[nodiscard]] size_t approx_memsize() const;
+	[[nodiscard]] size_t memsize() const;
+	[[nodiscard]] size_t size() const {
 		return changes.size();
 	}
-	ActionIdentifier getType() const {
+	[[nodiscard]] ActionIdentifier getType() const {
 		return type;
 	}
 
 	void commit(DirtyList* dirty_list);
-	bool isCommited() const {
+	[[nodiscard]] bool isCommited() const {
 		return commited;
 	}
 	void undo(DirtyList* dirty_list);
@@ -152,11 +152,11 @@ public:
 	}
 
 	// Get memory footprint
-	size_t memsize(bool resize = false) const;
-	size_t size() const {
+	[[nodiscard]] size_t memsize(bool resize = false) const;
+	[[nodiscard]] size_t size() const {
 		return batch.size();
 	}
-	ActionIdentifier getType() const {
+	[[nodiscard]] ActionIdentifier getType() const {
 		return type;
 	}
 
