@@ -34,10 +34,10 @@ namespace TileOperations {
 
 		void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
 			if (i->isSelected()) {
-				statflags |= TILESTATE_SELECTED;
+				statflags |= static_cast<uint16_t>(TileState::SELECTED);
 			}
 			if (i->getUniqueID() != 0) {
-				statflags |= TILESTATE_UNIQUE;
+				statflags |= static_cast<uint16_t>(TileState::UNIQUE);
 			}
 			if (i->getMiniMapColor() != 0) {
 				minimapColor = i->getMiniMapColor();
@@ -45,25 +45,25 @@ namespace TileOperations {
 
 			const ItemType& it_type = g_items[i->getID()];
 			if (it_type.unpassable) {
-				statflags |= TILESTATE_BLOCKING;
+				statflags |= static_cast<uint16_t>(TileState::BLOCKING);
 			}
 			if (it_type.isOptionalBorder) {
-				statflags |= TILESTATE_OP_BORDER;
+				statflags |= static_cast<uint16_t>(TileState::OP_BORDER);
 			}
 			if (it_type.isTable) {
-				statflags |= TILESTATE_HAS_TABLE;
+				statflags |= static_cast<uint16_t>(TileState::HAS_TABLE);
 			}
 			if (it_type.isCarpet) {
-				statflags |= TILESTATE_HAS_CARPET;
+				statflags |= static_cast<uint16_t>(TileState::HAS_CARPET);
 			}
 			if (it_type.hookSouth) {
-				statflags |= TILESTATE_HOOK_SOUTH;
+				statflags |= static_cast<uint16_t>(TileState::HOOK_SOUTH);
 			}
 			if (it_type.hookEast) {
-				statflags |= TILESTATE_HOOK_EAST;
+				statflags |= static_cast<uint16_t>(TileState::HOOK_EAST);
 			}
 			if (i->hasLight()) {
-				statflags |= TILESTATE_HAS_LIGHT;
+				statflags |= static_cast<uint16_t>(TileState::HAS_LIGHT);
 			}
 		}
 
@@ -240,7 +240,7 @@ namespace TileOperations {
 			i->select();
 		});
 
-		tile->statflags |= TILESTATE_SELECTED;
+		tile->statflags |= static_cast<uint16_t>(TileState::SELECTED);
 	}
 
 	void deselect(Tile* tile) {
@@ -258,7 +258,7 @@ namespace TileOperations {
 			i->deselect();
 		});
 
-		tile->statflags &= ~TILESTATE_SELECTED;
+		tile->statflags &= ~static_cast<uint16_t>(TileState::SELECTED);
 	}
 
 	void selectGround(Tile* tile) {
@@ -274,7 +274,7 @@ namespace TileOperations {
 		}
 
 		if (selected_) {
-			tile->statflags |= TILESTATE_SELECTED;
+			tile->statflags |= static_cast<uint16_t>(TileState::SELECTED);
 		}
 	}
 
@@ -387,35 +387,35 @@ namespace TileOperations {
 	}
 
 	void update(Tile* tile) {
-		tile->statflags &= TILESTATE_MODIFIED;
+		tile->statflags &= static_cast<uint16_t>(TileState::MODIFIED);
 
 		if (tile->spawn && tile->spawn->isSelected()) {
-			tile->statflags |= TILESTATE_SELECTED;
+			tile->statflags |= static_cast<uint16_t>(TileState::SELECTED);
 		}
 		if (tile->creature && tile->creature->isSelected()) {
-			tile->statflags |= TILESTATE_SELECTED;
+			tile->statflags |= static_cast<uint16_t>(TileState::SELECTED);
 		}
 
 		tile->minimapColor = 0; // Reset to "no color" (valid)
 
 		if (tile->ground) {
 			if (tile->ground->isSelected()) {
-				tile->statflags |= TILESTATE_SELECTED;
+				tile->statflags |= static_cast<uint16_t>(TileState::SELECTED);
 			}
 			if (tile->ground->isBlocking()) {
-				tile->statflags |= TILESTATE_BLOCKING;
+				tile->statflags |= static_cast<uint16_t>(TileState::BLOCKING);
 			}
 			if (tile->ground->getUniqueID() != 0) {
-				tile->statflags |= TILESTATE_UNIQUE;
+				tile->statflags |= static_cast<uint16_t>(TileState::UNIQUE);
 			}
 			if (tile->ground->getMiniMapColor() != 0) {
 				tile->minimapColor = tile->ground->getMiniMapColor();
 			}
 			if (tile->ground->hasLight()) {
-				tile->statflags |= TILESTATE_HAS_LIGHT;
+				tile->statflags |= static_cast<uint16_t>(TileState::HAS_LIGHT);
 			}
 		} else {
-			tile->mapflags = TILESTATE_NONE;
+			tile->mapflags = static_cast<uint16_t>(TileState::NONE);
 			tile->house_id = 0;
 		}
 
@@ -423,9 +423,9 @@ namespace TileOperations {
 			UpdateItemFlags(i.get(), tile->statflags, tile->minimapColor);
 		});
 
-		if ((tile->statflags & TILESTATE_BLOCKING) == 0) {
+		if ((tile->statflags & static_cast<uint16_t>(TileState::BLOCKING)) == 0) {
 			if (tile->ground == nullptr && tile->items.empty()) {
-				tile->statflags |= TILESTATE_BLOCKING;
+				tile->statflags |= static_cast<uint16_t>(TileState::BLOCKING);
 			}
 		}
 	}
