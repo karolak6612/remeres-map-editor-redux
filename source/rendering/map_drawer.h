@@ -97,8 +97,6 @@ class MapDrawer {
 	bool m_lastAaMode = false;
 
 	std::unique_ptr<GLVertexArray> pp_vao;
-	std::unique_ptr<GLBuffer> pp_vbo;
-	std::unique_ptr<GLBuffer> pp_ebo;
 
 	void InitPostProcess();
 	void DrawPostProcess(const RenderView& view, const DrawingOptions& options);

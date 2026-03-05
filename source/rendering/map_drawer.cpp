@@ -24,6 +24,7 @@
 #include "game/sprites.h"
 
 #include "rendering/map_drawer.h"
+#include "rendering/core/shared_geometry.h"
 #include "brushes/brush.h"
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/ui/map_display.h"
@@ -80,7 +81,7 @@ layout(location = 1) in vec2 aTexCoord; // 0..1
 out vec2 vTexCoord;
 
 void main() {
-    gl_Position = vec4(aPos, 0.0, 1.0);
+    gl_Position = vec4(aPos * 2.0 - 1.0, 0.0, 1.0);
     vTexCoord = aTexCoord;
 }
 )";
@@ -169,32 +170,13 @@ void MapDrawer::InitPostProcess() {
 	}
 
 	// Load Shaders
-	// Load Shaders
 	PostProcessManager::Instance().Initialize(screen_vert);
 
 	// Setup Screen Quad
 	pp_vao = std::make_unique<GLVertexArray>();
-	pp_vbo = std::make_unique<GLBuffer>();
-	pp_ebo = std::make_unique<GLBuffer>();
 
-	float quadVertices[] = {
-		// positions   // texCoords
-		-1.0f, 1.0f, 0.0f, 1.0f,
-		-1.0f, -1.0f, 0.0f, 0.0f,
-		1.0f, -1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 1.0f
-	};
-
-	unsigned int quadIndices[] = {
-		0, 1, 2,
-		0, 2, 3
-	};
-
-	glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, 0);
-	glNamedBufferStorage(pp_ebo->GetID(), sizeof(quadIndices), quadIndices, 0);
-
-	glVertexArrayVertexBuffer(pp_vao->GetID(), 0, pp_vbo->GetID(), 0, 4 * sizeof(float));
-	glVertexArrayElementBuffer(pp_vao->GetID(), pp_ebo->GetID());
+	glVertexArrayVertexBuffer(pp_vao->GetID(), 0, SharedGeometry::Instance().getQuadVBO(), 0, 4 * sizeof(float));
+	glVertexArrayElementBuffer(pp_vao->GetID(), SharedGeometry::Instance().getQuadEBO());
 
 	glEnableVertexArrayAttrib(pp_vao->GetID(), 0);
 	glVertexArrayAttribFormat(pp_vao->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);

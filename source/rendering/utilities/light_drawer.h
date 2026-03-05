@@ -54,7 +54,6 @@ private:
 
 	std::unique_ptr<ShaderProgram> shader;
 	std::unique_ptr<GLVertexArray> vao;
-	std::unique_ptr<GLBuffer> vbo;
 	std::unique_ptr<GLBuffer> light_ssbo;
 	size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
 
