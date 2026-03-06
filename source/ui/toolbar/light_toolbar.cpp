@@ -19,11 +19,11 @@ LightToolBar::LightToolBar(wxWindow* parent) {
 
 	wxStaticText* intensity_label = newd wxStaticText(toolbar, wxID_ANY, "Intensity:");
 	light_slider = newd wxSlider(toolbar, ID_LIGHT_INTENSITY_SLIDER, 100, 0, 200, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
-	light_slider->SetToolTip("Global Light Intensity");
+	light_slider->SetToolTip("Global Light Intensity - Controls the overall brightness of the map");
 
 	wxStaticText* ambient_label = newd wxStaticText(toolbar, wxID_ANY, "Ambient:");
 	ambient_slider = newd wxSlider(toolbar, ID_AMBIENT_LIGHT_SLIDER, 50, 0, 100, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
-	ambient_slider->SetToolTip("Ambient Light Level");
+	ambient_slider->SetToolTip("Ambient Light Level - Controls the minimum light level in dark areas");
 
 	toolbar->AddControl(intensity_label);
 	toolbar->AddControl(light_slider);

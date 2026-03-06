@@ -51,16 +51,16 @@ CreaturePalettePanel::CreaturePalettePanel(wxWindow* parent, wxWindowID id) :
 	grid->Add(creature_spawntime_spin, 0, wxEXPAND);
 	creature_brush_button = newd wxToggleButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_BRUSH_BUTTON, "Place Creature");
 	creature_brush_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
-	creature_brush_button->SetToolTip("Place Creature");
+	creature_brush_button->SetToolTip("Place Creature (Click on map to place)");
 	grid->Add(creature_brush_button, 0, wxEXPAND);
 
 	grid->Add(newd wxStaticText(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), wxID_ANY, "Spawn size"));
 	spawn_size_spin = newd wxSpinCtrl(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_CREATURE_SPAWN_SIZE, i2ws(5), wxDefaultPosition, FROM_DIP(this, wxSize(64, 20)), wxSP_ARROW_KEYS, 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS), g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS));
-	spawn_size_spin->SetToolTip("Spawn radius");
+	spawn_size_spin->SetToolTip("Spawn radius (How far creatures can wander)");
 	grid->Add(spawn_size_spin, 0, wxEXPAND);
 	spawn_brush_button = newd wxToggleButton(static_cast<wxStaticBoxSizer*>(sidesizer)->GetStaticBox(), PALETTE_SPAWN_BRUSH_BUTTON, "Place Spawn");
 	spawn_brush_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
-	spawn_brush_button->SetToolTip("Place Spawn");
+	spawn_brush_button->SetToolTip("Place Spawn (Click on map to place)");
 	grid->Add(spawn_brush_button, 0, wxEXPAND);
 
 	sidesizer->Add(grid, 0, wxEXPAND);
