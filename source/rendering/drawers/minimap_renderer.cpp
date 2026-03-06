@@ -160,9 +160,11 @@ void MinimapRenderer::resize(int width, int height) {
 	texture_id_ = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
 	glTextureStorage3D(texture_id_->GetID(), 1, GL_R8UI, TILE_SIZE, TILE_SIZE, num_layers);
 
-	GLenum error = glGetError();
-	if (error != GL_NO_ERROR) {
+	GLenum error;
+	bool has_error = false;
+	while ((error = glGetError()) != GL_NO_ERROR) {
 		spdlog::error("MinimapRenderer: FAILED to create texture array {}x{}x{}! Error: {}", TILE_SIZE, TILE_SIZE, num_layers, error);
+		has_error = true;
 	}
 
 	glTextureParameteri(texture_id_->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
