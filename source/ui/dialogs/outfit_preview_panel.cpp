@@ -45,7 +45,7 @@ void OutfitPreviewPanel::OnPaint(wxPaintEvent& event) {
 			dir = WEST;
 		}
 
-		wxBitmap bmp = SpriteIconGenerator::Generate(spr, SPRITE_SIZE_32x32, draw_outfit, false, dir);
+		wxBitmap bmp = SpriteIconGenerator::Generate(spr, SpriteSize::SPRITE_SIZE_32x32, draw_outfit, false, dir);
 		if (bmp.IsOk()) {
 			std::unique_ptr<wxGraphicsContext> gc(wxGraphicsContext::Create(dc));
 			if (gc) {

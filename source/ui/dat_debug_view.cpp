@@ -56,7 +56,7 @@ DatDebugViewListBox::~DatDebugViewListBox() {
 
 void DatDebugViewListBox::OnDrawItem(wxDC& dc, const wxRect& rect, size_t n) const {
 	if (n < sprites.size()) {
-		sprites[n]->DrawTo(&dc, SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
+		sprites[n]->DrawTo(&dc, SpriteSize::SPRITE_SIZE_32x32, rect.GetX(), rect.GetY(), rect.GetWidth(), rect.GetHeight());
 	}
 
 	if (IsSelected(n)) {

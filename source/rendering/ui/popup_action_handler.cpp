@@ -33,7 +33,7 @@
 void PopupActionHandler::RotateItem(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
 
-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_ROTATE_ITEM);
+	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::ACTION_ROTATE_ITEM);
 
 	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
@@ -62,7 +62,7 @@ void PopupActionHandler::GotoDestination(Editor& editor) {
 void PopupActionHandler::SwitchDoor(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
 
-	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_SWITCHDOOR);
+	std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::ACTION_SWITCHDOOR);
 
 	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
@@ -93,7 +93,7 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) 
 
 	int ret = w->ShowModal();
 	if (ret != 0) {
-		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_DELETE_TILES);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::ACTION_DELETE_TILES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor.addAction(std::move(action));
 	}
@@ -144,7 +144,7 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 
 	int ret = w->ShowModal();
 	if (ret != 0) {
-		std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(ActionIdentifier::ACTION_CHANGE_PROPERTIES);
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor.addAction(std::move(action));
 

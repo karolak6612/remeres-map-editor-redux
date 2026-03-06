@@ -25,7 +25,7 @@
 #include <wx/bitmap.h>
 #include <wx/dcmemory.h>
 
-enum SpriteSize {
+enum class SpriteSize : uint8_t {
 	SPRITE_SIZE_16x16,
 	// SPRITE_SIZE_24x24,
 	SPRITE_SIZE_32x32,
@@ -118,8 +118,8 @@ protected:
 	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
 
 	uint32_t id;
-	std::unique_ptr<wxMemoryDC> dc[SPRITE_SIZE_COUNT];
-	std::unique_ptr<wxBitmap> bm[SPRITE_SIZE_COUNT];
+	std::unique_ptr<wxMemoryDC> dc[static_cast<int>(SpriteSize::SPRITE_SIZE_COUNT)];
+	std::unique_ptr<wxBitmap> bm[static_cast<int>(SpriteSize::SPRITE_SIZE_COUNT)];
 
 public:
 	// GameSprite info

@@ -6,8 +6,8 @@
 #include "rendering/core/editor_sprite.h"
 
 EditorSprite::EditorSprite(std::unique_ptr<wxBitmap> b16x16, std::unique_ptr<wxBitmap> b32x32) {
-	bm[SPRITE_SIZE_16x16] = std::move(b16x16);
-	bm[SPRITE_SIZE_32x32] = std::move(b32x32);
+	bm[SpriteSize::SPRITE_SIZE_16x16] = std::move(b16x16);
+	bm[SpriteSize::SPRITE_SIZE_32x32] = std::move(b32x32);
 }
 
 EditorSprite::~EditorSprite() {
@@ -23,6 +23,6 @@ void EditorSprite::DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int
 }
 
 void EditorSprite::unloadDC() {
-	bm[SPRITE_SIZE_16x16].reset();
-	bm[SPRITE_SIZE_32x32].reset();
+	bm[SpriteSize::SPRITE_SIZE_16x16].reset();
+	bm[SpriteSize::SPRITE_SIZE_32x32].reset();
 }

@@ -47,10 +47,10 @@ void CreatureSprite::unloadDC() {
 		key.lookMountLegs = outfit.lookMountLegs;
 		key.lookMountFeet = outfit.lookMountFeet;
 
-		key.size = SPRITE_SIZE_16x16;
+		key.size = SpriteSize::SPRITE_SIZE_16x16;
 		parent->colored_dc.erase(key);
 
-		key.size = SPRITE_SIZE_32x32;
+		key.size = SpriteSize::SPRITE_SIZE_32x32;
 		parent->colored_dc.erase(key);
 	}
 }
@@ -122,12 +122,12 @@ void GameSprite::clean(time_t time, int longevity) {
 }
 
 void GameSprite::unloadDC() {
-	dc[SPRITE_SIZE_16x16].reset();
-	dc[SPRITE_SIZE_32x32].reset();
-	dc[SPRITE_SIZE_64x64].reset();
-	bm[SPRITE_SIZE_16x16].reset();
-	bm[SPRITE_SIZE_32x32].reset();
-	bm[SPRITE_SIZE_64x64].reset();
+	dc[SpriteSize::SPRITE_SIZE_16x16].reset();
+	dc[SpriteSize::SPRITE_SIZE_32x32].reset();
+	dc[SpriteSize::SPRITE_SIZE_64x64].reset();
+	bm[SpriteSize::SPRITE_SIZE_16x16].reset();
+	bm[SpriteSize::SPRITE_SIZE_32x32].reset();
+	bm[SpriteSize::SPRITE_SIZE_64x64].reset();
 	colored_dc.clear();
 }
 
@@ -290,7 +290,7 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _dir, int _add
 }
 
 wxMemoryDC* GameSprite::getDC(SpriteSize size) {
-	ASSERT(size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_32x32);
+	ASSERT(size == SpriteSize::SPRITE_SIZE_16x16 || size == SpriteSize::SPRITE_SIZE_32x32);
 
 	if (!dc[size]) {
 		wxBitmap bmp = SpriteIconGenerator::Generate(this, size);
@@ -304,7 +304,7 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size) {
 }
 
 wxMemoryDC* GameSprite::getDC(SpriteSize size, const Outfit& outfit) {
-	ASSERT(size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_32x32);
+	ASSERT(size == SpriteSize::SPRITE_SIZE_16x16 || size == SpriteSize::SPRITE_SIZE_32x32);
 
 	RenderKey key;
 	key.size = size;
@@ -335,7 +335,7 @@ wxMemoryDC* GameSprite::getDC(SpriteSize size, const Outfit& outfit) {
 }
 
 void GameSprite::DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width, int height) {
-	const int sprite_dim = (sz == SPRITE_SIZE_64x64) ? 64 : (sz == SPRITE_SIZE_32x32 ? 32 : 16);
+	const int sprite_dim = (sz == SpriteSize::SPRITE_SIZE_64x64) ? 64 : (sz == SpriteSize::SPRITE_SIZE_32x32 ? 32 : 16);
 	int src_width = sprite_dim;
 	int src_height = sprite_dim;
 
@@ -357,7 +357,7 @@ void GameSprite::DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int w
 }
 
 void GameSprite::DrawTo(wxDC* dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y, int width, int height) {
-	const int sprite_dim = (sz == SPRITE_SIZE_64x64) ? 64 : (sz == SPRITE_SIZE_32x32 ? 32 : 16);
+	const int sprite_dim = (sz == SpriteSize::SPRITE_SIZE_64x64) ? 64 : (sz == SpriteSize::SPRITE_SIZE_32x32 ? 32 : 16);
 	int src_width = sprite_dim;
 	int src_height = sprite_dim;
 

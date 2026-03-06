@@ -300,11 +300,11 @@ int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uin
 	int h = sz.y;
 
 	// Determine best SpriteSize for DrawTo
-	SpriteSize drawSize = SPRITE_SIZE_32x32;
+	SpriteSize drawSize = SpriteSize::SPRITE_SIZE_32x32;
 	if (w <= 16 && h <= 16) {
-		drawSize = SPRITE_SIZE_16x16;
+		drawSize = SpriteSize::SPRITE_SIZE_16x16;
 	} else if (w > 32 || h > 32) {
-		drawSize = SPRITE_SIZE_64x64;
+		drawSize = SpriteSize::SPRITE_SIZE_64x64;
 	}
 
 	wxBitmap bmp(w, h);

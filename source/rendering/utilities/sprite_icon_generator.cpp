@@ -52,11 +52,11 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 	}
 
 	// Now comes the resizing / antialiasing
-	if (rescale && (size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_64x64 || image.GetWidth() > SPRITE_PIXELS || image.GetHeight() > SPRITE_PIXELS)) {
+	if (rescale && (size == SpriteSize::SPRITE_SIZE_16x16 || size == SpriteSize::SPRITE_SIZE_64x64 || image.GetWidth() > SPRITE_PIXELS || image.GetHeight() > SPRITE_PIXELS)) {
 		int new_size = 32;
-		if (size == SPRITE_SIZE_16x16) {
+		if (size == SpriteSize::SPRITE_SIZE_16x16) {
 			new_size = 16;
-		} else if (size == SPRITE_SIZE_64x64) {
+		} else if (size == SpriteSize::SPRITE_SIZE_64x64) {
 			new_size = 64;
 		}
 		image.Rescale(new_size, new_size, wxIMAGE_QUALITY_HIGH);
@@ -189,11 +189,11 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 	}
 
 	// Now comes the resizing / antialiasing
-	if (rescale && (size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_64x64 || image.GetWidth() > SPRITE_PIXELS || image.GetHeight() > SPRITE_PIXELS)) {
+	if (rescale && (size == SpriteSize::SPRITE_SIZE_16x16 || size == SpriteSize::SPRITE_SIZE_64x64 || image.GetWidth() > SPRITE_PIXELS || image.GetHeight() > SPRITE_PIXELS)) {
 		int new_size = 32;
-		if (size == SPRITE_SIZE_16x16) {
+		if (size == SpriteSize::SPRITE_SIZE_16x16) {
 			new_size = 16;
-		} else if (size == SPRITE_SIZE_64x64) {
+		} else if (size == SpriteSize::SPRITE_SIZE_64x64) {
 			new_size = 64;
 		}
 		image.Rescale(new_size, new_size, wxIMAGE_QUALITY_HIGH);

@@ -20,7 +20,7 @@ public:
 	}
 
 protected:
-	std::unique_ptr<wxBitmap> bm[SPRITE_SIZE_COUNT];
+	std::unique_ptr<wxBitmap> bm[static_cast<int>(SpriteSize::SPRITE_SIZE_COUNT)];
 };
 
 #endif

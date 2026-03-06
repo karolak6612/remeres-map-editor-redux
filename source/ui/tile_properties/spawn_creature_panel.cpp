@@ -63,7 +63,7 @@ void SpawnCreaturePanel::SetTile(Tile* tile) {
 		creature_text->SetLabelText(wxString(tile->creature->getName()));
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(tile->creature->getLookType().lookType);
 		if (spr) {
-			wxBitmap bmp = SpriteIconGenerator::Generate(spr, SPRITE_SIZE_32x32, tile->creature->getLookType(), false, SOUTH);
+			wxBitmap bmp = SpriteIconGenerator::Generate(spr, SpriteSize::SPRITE_SIZE_32x32, tile->creature->getLookType(), false, SOUTH);
 			creature_bitmap->SetBitmap(bmp);
 		} else {
 			creature_bitmap->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, FROM_DIP(this, wxSize(32, 32))));

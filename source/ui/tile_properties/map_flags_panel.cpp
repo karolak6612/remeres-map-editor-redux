@@ -44,9 +44,9 @@ void MapFlagsPanel::SetTile(Tile* tile, Map* map) {
 
 	if (tile) {
 		chk_pz->SetValue(tile->isPZ());
-		chk_nopvp->SetValue(tile->getMapFlags() & TILESTATE_NOPVP);
-		chk_nologout->SetValue(tile->getMapFlags() & TILESTATE_NOLOGOUT);
-		chk_pvpzone->SetValue(tile->getMapFlags() & TILESTATE_PVPZONE);
+		chk_nopvp->SetValue(tile->getMapFlags() & static_cast<uint16_t>(TileState::NOPVP));
+		chk_nologout->SetValue(tile->getMapFlags() & static_cast<uint16_t>(TileState::NOLOGOUT));
+		chk_pvpzone->SetValue(tile->getMapFlags() & static_cast<uint16_t>(TileState::PVPZONE));
 
 		chk_pz->Enable(true);
 		chk_nopvp->Enable(true);
@@ -79,25 +79,25 @@ void MapFlagsPanel::OnToggleFlag(wxCommandEvent& event) {
 	new_tile->setPZ(chk_pz->GetValue());
 
 	if (chk_nopvp->GetValue()) {
-		new_tile->setMapFlags(TILESTATE_NOPVP);
+		new_tile->setMapFlags(static_cast<uint16_t>(TileState::NOPVP));
 	} else {
-		new_tile->unsetMapFlags(TILESTATE_NOPVP);
+		new_tile->unsetMapFlags(static_cast<uint16_t>(TileState::NOPVP));
 	}
 
 	if (chk_nologout->GetValue()) {
-		new_tile->setMapFlags(TILESTATE_NOLOGOUT);
+		new_tile->setMapFlags(static_cast<uint16_t>(TileState::NOLOGOUT));
 	} else {
-		new_tile->unsetMapFlags(TILESTATE_NOLOGOUT);
+		new_tile->unsetMapFlags(static_cast<uint16_t>(TileState::NOLOGOUT));
 	}
 
 	if (chk_pvpzone->GetValue()) {
-		new_tile->setMapFlags(TILESTATE_PVPZONE);
+		new_tile->setMapFlags(static_cast<uint16_t>(TileState::PVPZONE));
 	} else {
-		new_tile->unsetMapFlags(TILESTATE_PVPZONE);
+		new_tile->unsetMapFlags(static_cast<uint16_t>(TileState::PVPZONE));
 	}
 
 	Tile* old_ptr = new_tile.get();
-	std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+	std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::ACTION_CHANGE_PROPERTIES);
 	action->addChange(std::make_unique<Change>(std::move(new_tile)));
 	editor->addAction(std::move(action));
 	current_tile = editor->map.getTile(old_ptr->getPosition());

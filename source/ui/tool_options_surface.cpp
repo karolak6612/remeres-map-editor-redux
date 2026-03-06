@@ -247,10 +247,10 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 
 		if (s) {
 			// Center the sprite in the rect
-			// Assuming 32x32 icon size for now, which matches SPRITE_SIZE_32x32 (32x32)
+			// Assuming 32x32 icon size for now, which matches SpriteSize::SPRITE_SIZE_32x32 (32x32)
 			int x_off = r.x + (r.width - 32) / 2;
 			int y_off = r.y + (r.height - 32) / 2;
-			s->DrawTo(&dc, SPRITE_SIZE_32x32, x_off, y_off);
+			s->DrawTo(&dc, SpriteSize::SPRITE_SIZE_32x32, x_off, y_off);
 		} else {
 			// Fallback text/color if no sprite
 			wxString label = tr.tooltip.Left(1);
