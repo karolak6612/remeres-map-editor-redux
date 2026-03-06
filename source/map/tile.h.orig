@@ -34,7 +34,6 @@ class Map;
 #include <unordered_set>
 #include <memory>
 #include <vector>
-#include <list>
 
 // TileOperations functions are now in tile_operations.h
 

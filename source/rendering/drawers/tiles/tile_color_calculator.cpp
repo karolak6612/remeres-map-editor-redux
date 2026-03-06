@@ -65,16 +65,16 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		b >>= 1;
 	}
 
-	if (showspecial && tile->getMapFlags() & TILESTATE_PVPZONE) {
+	if (showspecial && tile->getMapFlags() & static_cast<uint16_t>(TileMapFlag::PVPZONE)) {
 		g = r >> 2;
 		b = (b * 171) >> 8;
 	}
 
-	if (showspecial && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+	if (showspecial && tile->getMapFlags() & static_cast<uint16_t>(TileMapFlag::NOLOGOUT)) {
 		b >>= 1;
 	}
 
-	if (showspecial && tile->getMapFlags() & TILESTATE_NOPVP) {
+	if (showspecial && tile->getMapFlags() & static_cast<uint16_t>(TileMapFlag::NOPVP)) {
 		g >>= 1;
 	}
 }
