@@ -38,7 +38,7 @@ class Action;
 class BatchAction;
 class ActionQueue;
 
-enum ChangeType {
+enum class ChangeType {
 	CHANGE_NONE,
 	CHANGE_TILE,
 	CHANGE_MOVE_HOUSE_EXIT,
@@ -87,7 +87,7 @@ using ChangeList = std::vector<std::unique_ptr<Change>>;
 
 class DirtyList;
 
-enum ActionIdentifier {
+enum class ActionIdentifier {
 	ACTION_MOVE,
 	ACTION_REMOTE,
 	ACTION_SELECT,

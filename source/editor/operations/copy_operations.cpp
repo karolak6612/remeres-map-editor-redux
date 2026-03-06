@@ -82,7 +82,7 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 	int item_count = 0;
 	buffer.copyPos = Position(0xFFFF, 0xFFFF, floor);
 
-	std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_CUT_TILES);
+	std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ActionIdentifier::ACTION_CUT_TILES);
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
 	PositionList tilestoborder;
@@ -172,7 +172,7 @@ void CopyOperations::paste(Editor& editor, CopyBuffer& buffer, const Position& t
 		return;
 	}
 
-	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ACTION_PASTE_TILES);
+	std::unique_ptr<BatchAction> batchAction = editor.actionQueue->createBatch(ActionIdentifier::ACTION_PASTE_TILES);
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(batchAction.get());
 	for (TileLocation& location : *buffer.tiles) {
 		Tile* buffer_tile = location.get();

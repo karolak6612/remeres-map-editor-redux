@@ -38,16 +38,15 @@ class SpritePreloader;
 
 class Sprite {
 public:
-	Sprite() { }
+	Sprite() = default;
 	virtual ~Sprite() = default;
+
+	Sprite(const Sprite&) = delete;
+	Sprite& operator=(const Sprite&) = delete;
 
 	virtual void DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) = 0;
 	virtual void unloadDC() = 0;
 	virtual wxSize GetSize() const = 0;
-
-private:
-	Sprite(const Sprite&);
-	Sprite& operator=(const Sprite&);
 };
 
 class GameSprite;
