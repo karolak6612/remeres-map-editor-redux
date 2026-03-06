@@ -35,6 +35,8 @@ class Map;
 #include <memory>
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 // TileOperations functions are now in tile_operations.h
 
 enum {
@@ -66,7 +68,7 @@ class Tile {
 public: // Members
 	TileLocation* location;
 	std::unique_ptr<Item> ground;
-	std::vector<std::unique_ptr<Item>> items;
+	boost::container::small_vector<std::unique_ptr<Item>, 4> items;
 	std::unique_ptr<Creature> creature;
 	std::unique_ptr<Spawn> spawn;
 	uint32_t house_id; // House id for this tile (pointer not safe)

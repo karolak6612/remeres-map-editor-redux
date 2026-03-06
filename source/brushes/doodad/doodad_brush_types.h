@@ -13,8 +13,9 @@
 class Item;
 
 #include <memory>
+#include <boost/container/small_vector.hpp>
 
-using DoodadItemVector = std::vector<std::unique_ptr<Item>>;
+using DoodadItemVector = boost::container::small_vector<std::unique_ptr<Item>, 4>;
 using CompositeTileList = std::vector<std::pair<Position, DoodadItemVector>>;
 
 struct DoodadBrushSettings {

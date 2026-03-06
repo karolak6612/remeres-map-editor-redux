@@ -1,0 +1,158 @@
+ninja: Entering directory `/app/build_clang/build/Debug'
+[1/317] Building CXX object CMakeFiles/rme.dir/source/app/client_version.cpp.o
+FAILED: CMakeFiles/rme.dir/source/app/client_version.cpp.o
+ccache /usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DNANOVG_GL3 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE=1 -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE=1 -D__WXGTK__ -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/gladbcf4bd7c27d75/p/include -isystem /home/jules/.conan2/p/tomlpf6611d18152aa/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O0 -g -D__DEBUG__ -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/app/client_version.cpp.o -MF CMakeFiles/rme.dir/source/app/client_version.cpp.o.d -o CMakeFiles/rme.dir/source/app/client_version.cpp.o -c /app/source/app/client_version.cpp
+error: "Never use <enqcmdintrin.h> directly; include <immintrin.h> instead."
+error: "Never use <f16cintrin.h> directly; include <immintrin.h> instead."
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: expected a class name after '~' to name a destructor
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+error: source file is not valid UTF-8
+fatal error: too many errors emitted, stopping now [-ferror-limit=]
+PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace, preprocessed source, and associated run script.
+Stack dump:
+0.	Program arguments: /usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DNANOVG_GL3 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE=1 -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE=1 -D__WXGTK__ -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/gladbcf4bd7c27d75/p/include -isystem /home/jules/.conan2/p/tomlpf6611d18152aa/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O0 -g -D__DEBUG__ -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/app/client_version.cpp.o -MF CMakeFiles/rme.dir/source/app/client_version.cpp.o.d -o CMakeFiles/rme.dir/source/app/client_version.cpp.o -c /app/source/app/client_version.cpp
+1.	<unknown> parser at unknown location
+Stack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):
+0  libLLVM.so.18.1      0x00007efe2be003bf llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 63
+1  libLLVM.so.18.1      0x00007efe2bdfe4f9 llvm::sys::RunSignalHandlers() + 89
+2  libLLVM.so.18.1      0x00007efe2bd4a227
+3  libc.so.6            0x00007efe2abfe330
+4  libclang-cpp.so.18.1 0x00007efe33186d3d clang::Lexer::SkipWhitespace(clang::Token&, char const*, bool&) + 45
+5  libclang-cpp.so.18.1 0x00007efe3318b2f7 clang::Lexer::LexTokenInternal(clang::Token&, bool) + 1847
+6  libclang-cpp.so.18.1 0x00007efe331f45ed clang::Preprocessor::Lex(clang::Token&) + 45
+7  libclang-cpp.so.18.1 0x00007efe3320229d
+8  libclang-cpp.so.18.1 0x00007efe332c2af2 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1026
+9  libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+10 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+11 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+12 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+13 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+14 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+15 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+16 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+17 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+18 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+19 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+20 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+21 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+22 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+23 libclang-cpp.so.18.1 0x00007efe332c2b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+24 libclang-cpp.so.18.1 0x00007efe332c2b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+25 libclang-cpp.so.18.1 0x00007efe332c2b23 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 1075
+26 libclang-cpp.so.18.1 0x00007efe332c29e5 clang::Parser::SkipUntil(llvm::ArrayRef<clang::tok::TokenKind>, clang::Parser::SkipUntilFlags) + 757
+27 libclang-cpp.so.18.1 0x00007efe332127a9 clang::Parser::SkipMalformedDecl() + 297
+28 libclang-cpp.so.18.1 0x00007efe33211912 clang::Parser::ParseDeclGroup(clang::ParsingDeclSpec&, clang::DeclaratorContext, clang::ParsedAttributes&, clang::SourceLocation*, clang::Parser::ForRangeInit*) + 2242
+29 libclang-cpp.so.18.1 0x00007efe332c807f clang::Parser::ParseDeclOrFunctionDefInternal(clang::ParsedAttributes&, clang::ParsedAttributes&, clang::ParsingDeclSpec&, clang::AccessSpecifier) + 1087
+30 libclang-cpp.so.18.1 0x00007efe332c7a39 clang::Parser::ParseDeclarationOrFunctionDefinition(clang::ParsedAttributes&, clang::ParsedAttributes&, clang::ParsingDeclSpec*, clang::AccessSpecifier) + 489
+31 libclang-cpp.so.18.1 0x00007efe332c6c65 clang::Parser::ParseExternalDeclaration(clang::ParsedAttributes&, clang::ParsedAttributes&, clang::ParsingDeclSpec*) + 2197
+32 libclang-cpp.so.18.1 0x00007efe332c4f7b clang::Parser::ParseTopLevelDecl(clang::OpaquePtr<clang::DeclGroupRef>&, clang::Sema::ModuleImportState&) + 1499
+33 libclang-cpp.so.18.1 0x00007efe331fc47e clang::ParseAST(clang::Sema&, bool, bool) + 766
+34 libclang-cpp.so.18.1 0x00007efe3506b62c clang::FrontendAction::Execute() + 92
+35 libclang-cpp.so.18.1 0x00007efe34fe80b4 clang::CompilerInstance::ExecuteAction(clang::FrontendAction&) + 708
+36 libclang-cpp.so.18.1 0x00007efe350e763d clang::ExecuteCompilerInvocation(clang::CompilerInstance*) + 765
+37 clang++              0x000055fe76b9042e cc1_main(llvm::ArrayRef<char const*>, char const*, void*) + 369o.18.1 0x00007f0b7d60e0b4 clang::CompilerInstance::ExecuteAction(clang::FrontendAction&) + 708
+37 libclang-cpp.so.18.1 0x00007f0b7d70d63d clang::ExecuteCompilerInvocation(clang::CompilerInstance*) + 765
+38 clang++              0x000055bf6943942e cc1_main(llvm::ArrayRef<char const*>, char const*, void*) + 3694
+39 clang++              0x000055bf69436894
+40 libclang-cpp.so.18.1 0x00007f0b7d2be972
+41 libLLVM.so.18.1      0x00007f0b7436ff77 llvm::CrashRecoveryContext::RunSafely(llvm::function_ref<void ()>) + 151
+42 libclang-cpp.so.18.1 0x00007f0b7d2be237 clang::driver::CC1Command::Execute(llvm::ArrayRef<std::optional<llvm::StringRef>>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>*, bool*) const + 407
+43 libclang-cpp.so.18.1 0x00007f0b7d286518 clang::driver::Compilation::ExecuteCommand(clang::driver::Command const&, clang::driver::Command const*&, bool) const + 888
+44 libclang-cpp.so.18.1 0x00007f0b7d28677f clang::driver::Compilation::ExecuteJobs(clang::driver::JobList const&, llvm::SmallVectorImpl<std::pair<int, clang::driver::Command const*>>&, bool) const + 159
+45 libclang-cpp.so.18.1 0x00007f0b7d2a2c20 clang::driver::Driver::ExecuteCompilation(clang::driver::Compilation&, llvm::SmallVectorImpl<std::pair<int, clang::driver::Command const*>>&) + 352
+46 clang++              0x000055bf694361ec clang_main(int, char**, llvm::ToolContext const&) + 11180
+47 clang++              0x000055bf69443383 main + 131
+48 libc.so.6            0x00007f0b732091ca
+49 libc.so.6            0x00007f0b7320928b __libc_start_main + 139
+50 clang++              0x000055bf69433255 _start + 37
+clang++: error: clang frontend command failed with exit code 139 (use -v to see invocation)
+Ubuntu clang version 18.1.3 (1ubuntu1)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+clang++: error: unable to execute command: Segmentation fault
+clang++: note: diagnostic msg: Error generating preprocessed source(s).
+./build_clang.sh: line 105: 20056 Killed                  ninja -C "$BUILD_DIR/build/Debug" -j2 2>&1
+     20057 Done                    | grep -v "Scanning .* for CXX dependencies"
+     20058 Done                    | tee -a "$LOG_FILE"
+========================================
+ BUILD FAILED. COPY THE ERRORS ABOVE TO THE AI.
+========================================
+cf4bd7c27d75/p/include -isystem /home/jules/.conan2/p/tomlpf6611d18152aa/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O0 -g -D__DEBUG__ -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/app/preferences/general_page.cpp.o -MF CMakeFiles/rme.dir/source/app/preferences/general_page.cpp.o.d -o CMakeFiles/rme.dir/source/app/preferences/general_page.cpp.o -c /app/source/app/preferences/general_page.cpp
+error: "Never use <enqcmdintrin.h> directly; include <immintrin.h> instead."
+error: "Never use <f16cintrin.h> directly; include <immintrin.h> instead."
+fatal error: 'forward_declarations.hpp' file not found
+free(): invalid pointer
+PLEASE submit a bug report to https://github.com/llvm/llvm-project/issues/ and include the crash backtrace, preprocessed source, and associated run script.
+Stack dump:
+0.	Program arguments: /usr/bin/clang++ -DBOOST_ATOMIC_DYN_LINK -DBOOST_ATOMIC_NO_LIB -DBOOST_SYSTEM_DYN_LINK -DBOOST_SYSTEM_NO_LIB -DBOOST_THREAD_DYN_LINK -DBOOST_THREAD_NO_LIB -DFMT_SHARED -DNANOVG_GL3 -DSPDLOG_COMPILED_LIB -DSPDLOG_FMT_EXTERNAL -DSPDLOG_SHARED_LIB -DUNICODE=1 -DWXUSINGDLL -DWXWIN_COMPATIBILITY_3_3 -D_FILE_OFFSET_BITS=64 -D_UNICODE=1 -D__WXGTK__ -I/app/source -I/app/ext/nanovg/src -isystem /usr/lib/x86_64-linux-gnu/wx/include/gtk3-unicode-3.2 -isystem /usr/include/wx-3.2 -isystem /home/jules/.conan2/p/b/gladbcf4bd7c27d75/p/include -isystem /home/jules/.conan2/p/tomlpf6611d18152aa/p/include -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-deprecated-declarations -Wno-overloaded-virtual -Wno-strict-aliasing -Wno-sign-compare -Wno-unused-function -Wunused-result -pthread -O0 -g -D__DEBUG__ -std=gnu++20 -pthread -MD -MT CMakeFiles/rme.dir/source/app/preferences/general_page.cpp.o -MF CMakeFiles/rme.dir/source/app/preferences/general_page.cpp.o.d -o CMakeFiles/rme.dir/source/app/preferences/general_page.cpp.o -c /app/source/app/preferences/general_page.cpp
+1.	/usr/bin/../lib/gcc/x86_64-linux-gnu/13/../../../../include/c++/13/cmath:41:2: current parser token 'include'
+Stack dump without symbol names (ensure you have llvm-symbolizer in your PATH or set the environment var `LLVM_SYMBOLIZER_PATH` to point to it):
+0  libLLVM.so.18.1      0x00007f09c866d3bf llvm::sys::PrintStackTrace(llvm::raw_ostream&, int) + 63
+1  libLLVM.so.18.1      0x00007f09c866b4f9 llvm::sys::RunSignalHandlers() + 89
+2  libLLVM.so.18.1      0x00007f09c85b7227
+3  libc.so.6            0x00007f09c746b330
+4  libc.so.6            0x00007f09c74c4b2c pthread_kill + 284
+5  libc.so.6            0x00007f09c746b27e gsignal + 30
+6  libc.so.6            0x00007f09c744e8ff abort + 223
+7  libc.so.6            0x00007f09c744f7b6
+8  libc.so.6            0x00007f09c74ceff5
+9  libc.so.6            0x00007f09c74d138c
+10 libc.so.6            0x00007f09c74d3dae __libc_free + 126
+11 libclang-cpp.so.18.1 0x00007f09cf8fbce7
+12 libclang-cpp.so.18.1 0x00007f09cf8f6596 clang::DiagnosticsEngine::DiagState::getOrAddMapping(unsigned int) + 54
+13 libclang-cpp.so.18.1 0x00007f09cf8fd268 clang::DiagnosticIDs::getDiagnosticSeverity(unsigned int, clang::SourceLocation, clang::DiagnosticsEngine const&) const + 72
+14 libclang-cpp.so.18.1 0x00007f09cf8fe1ad clang::DiagnosticIDs::ProcessDiag(clang::DiagnosticsEngine&) const + 189
+15 libclang-cpp.so.18.1 0x00007f09cf8f7c8c clang::DiagnosticsEngine::EmitCurrentDiagnostic(bool) + 92
+16 libclang-cpp.so.18.1 0x00007f09cf9de70d clang::HeaderSearch::noteLookupUsage(unsigned int, clang::SourceLocation) + 365
+17 libclang-cpp.so.18.1 0x00007f09cf9e0245 clang::HeaderSearch::LookupFile(llvm::StringRef, clang::SourceLocation, bool, clang::detail::SearchDirIteratorImpl<true>, clang::detail::SearchDirIteratorImpl<true>*, llvm::ArrayRef<std::pair<clang::CustomizableOptional<clang::FileEntryRef>, clang::DirectoryEntryRef>>, llvm::SmallVectorImpl<char>*, llvm::SmallVectorImpl<char>*, clang::Module*, clang::ModuleMap::KnownHeader*, bool*, bool*, bool, bool, bool, bool) + 4597
+18 libclang-cpp.so.18.1 0x00007f09cfa2673e clang::Preprocessor::LookupFile(clang::SourceLocation, llvm::StringRef, bool, clang::detail::SearchDirIteratorImpl<true>, clang::FileEntry const*, clang::detail::SearchDirIteratorImpl<true>*, llvm::SmallVectorImpl<char>*, llvm::SmallVectorImpl<char>*, clang::ModuleMap::KnownHeader*, bool*, bool*, bool, bool, bool) + 1614
+19 libclang-cpp.so.18.1 0x00007f09cfa2ec95 clang::Preprocessor::LookupHeaderIncludeOrImport(clang::detail::SearchDirIteratorImpl<true>*, llvm::StringRef&, clang::SourceLocation, clang::CharSourceRange, clang::Token const&, bool&, bool, bool&, clang::detail::SearchDirIteratorImpl<true>, clang::FileEntry const*, llvm::StringRef&, llvm::SmallVectorImpl<char>&, llvm::SmallVectorImpl<char>&, clang::ModuleMap::KnownHeader&, bool) + 197
+20 libclang-cpp.so.18.1 0x00007f09cfa2d41e clang::Preprocessor::HandleHeaderIncludeOrImport(clang::SourceLocation, clang::Token&, clang::Token&, clang::SourceLocation, clang::detail::SearchDirIteratorImpl<true>, clang::FileEntry const*) + 2014
+21 libclang-cpp.so.18.1 0x00007f09cfa27835 clang::Preprocessor::HandleIncludeDirective(clang::SourceLocation, clang::Token&, clang::detail::SearchDirIteratorImpl<true>, clang::FileEntry const*) + 149
+22 libclang-cpp.so.18.1 0x00007f09cfa28314 clang::Preprocessor::HandleDirective(clang::Token&) + 2260
+23 libclang-cpp.so.18.1 0x00007f09cf9f9998 clang::Lexer::LexTokenInternal(clang::Token&, bool) + 7640
+24 libclang-cpp.so.18.1 0x00007f09cfa615ed clang::Preprocessor::Lex(clang::Token&) + 45
+25 libclang-cpp.so.18.1 0x00007f09cfb2e97c clang::Parser::ExpectAndConsumeSemi(unsigned int, llvm::StringRef) + 764
+26 libclang-cpp.so.18.1 0x00007f09cfa9dbc3 clang::Parser::ParseStaticAssertDeclaration(clang::SourceLocation&) + 2259
+27 libclang-cpp.so.18.1 0x00007f09cfa7d1f3 clang::Parser::ParseDeclaration(clang::DeclaratorContext, clang::SourceLocation&, clang::ParsedAttributes&, clang::ParsedAttributes&, clang::SourceLocation*) + 323
+28 libclang-cpp.so.18.1 0x00007f09cfb3348f clang::Parser::ParseExternalDeclaration(clang::ParsedAttributes&, clang::ParsedAttributes&, clang::ParsingDeclSpec*) + 191
+29 libclang-cpp.so.18.1 0x00007f09cfb31f7b clang::Parser::ParseTopLevelDecl(clang::OpaquePtr<clang::DeclGroupRef>&, clang::Sema::ModuleImportState&) + 1499
+30 libclang-cpp.so.18.1 0x00007f09cfa6947e clang::ParseAST(clang::Sema&, bool, bool) + 766
+31 libclang-cpp.so.18.1 0x00007f09d18d862c clang::FrontendAction::Execute() + 92
+32 libclang-cpp.so.18.1 0x00007f09d18550b4 clang::CompilerInstance::ExecuteAction(clang::FrontendAction&) + 708
+33 libclang-cpp.so.18.1 0x00007f09d195463d clang::ExecuteCompilerInvocation(clang::CompilerInstance*) + 765
+34 clang++              0x0000557a22a8f42e cc1_main(llvm::ArrayRef<char const*>, char const*, void*) + 3694
+35 clang++              0x0000557a22a8c894
+36 libclang-cpp.so.18.1 0x00007f09d1505972
+37 libLLVM.so.18.1      0x00007f09c85b6f77 llvm::CrashRecoveryContext::RunSafely(llvm::function_ref<void ()>) + 151
+38 libclang-cpp.so.18.1 0x00007f09d1505237 clang::driver::CC1Command::Execute(llvm::ArrayRef<std::optional<llvm::StringRef>>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char>>*, bool*) const + 407
+39 libclang-cpp.so.18.1 0x00007f09d14cd518 clang::driver::Compilation::ExecuteCommand(clang::driver::Command const&, clang::driver::Command const*&, bool) const + 888
+40 libclang-cpp.so.18.1 0x00007f09d14cd77f clang::driver::Compilation::ExecuteJobs(clang::driver::JobList const&, llvm::SmallVectorImpl<std::pair<int, clang::driver::Command const*>>&, bool) const + 159
+41 libclang-cpp.so.18.1 0x00007f09d14e9c20 clang::driver::Driver::ExecuteCompilation(clang::driver::Compilation&, llvm::SmallVectorImpl<std::pair<int, clang::driver::Command const*>>&) + 352
+42 clang++              0x0000557a22a8c1ec clang_main(int, char**, llvm::ToolContext const&) + 11180
+43 clang++              0x0000557a22a99383 main + 131
+44 libc.so.6            0x00007f09c74501ca
+45 libc.so.6            0x00007f09c745028b __libc_start_main + 139
+46 clang++              0x0000557a22a89255 _start + 37
+clang++: error: clang frontend command failed with exit code 134 (use -v to see invocation)
+Ubuntu clang version 18.1.3 (1ubuntu1)
+Target: x86_64-pc-linux-gnu
+Thread model: posix
+InstalledDir: /usr/bin
+clang++: error: unable to execute command: Aborted
+clang++: note: diagnostic msg: Error generating preprocessed source(s).
