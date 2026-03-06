@@ -368,6 +368,18 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 		UnsetToolTip();
 	}
 
+	if (interactables.size_slider_rect.Contains(m_hoverPos)) {
+		SetToolTip("Adjust brush size");
+	} else if (interactables.thickness_slider_rect.Contains(m_hoverPos)) {
+		SetToolTip("Adjust brush thickness");
+	} else if (interactables.preview_check_rect.Contains(m_hoverPos)) {
+		SetToolTip("Toggle autoborder preview");
+	} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
+		SetToolTip("Lock doors to prevent opening");
+	} else if (!hover_brush) {
+		UnsetToolTip();
+	}
+
 	// Sliders Interaction
 	if (evt.LeftDown()) {
 		if (interactables.size_slider_rect.Contains(m_hoverPos)) {
