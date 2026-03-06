@@ -152,7 +152,7 @@ public:
 	}
 
 private:
-	void DrawMapLayer(int map_z, bool live_client);
+	void DrawMapLayer(int map_z, bool live_client, const std::vector<std::pair<class MapNode*, std::pair<int, int>>>* visible_nodes = nullptr);
 	bool renderers_initialized = false;
 };
 

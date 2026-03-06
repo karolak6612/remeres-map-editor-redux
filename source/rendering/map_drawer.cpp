@@ -378,6 +378,36 @@ void MapDrawer::DrawMap() {
 
 	bool only_colors = options.show_as_minimap || options.show_only_colors;
 
+	// Pre-calculate visible leaf nodes based on the initial view to avoid O(N) queries per z-layer
+	// The viewport expands by 1 for each Z-level drawn downwards.
+	// We calculate the maximum possible extent for the worst case z-level.
+	int max_z_diff = view.start_z - view.end_z;
+	if (max_z_diff < 0) {
+		max_z_diff = 0;
+	}
+	int max_start_x = view.start_x - max_z_diff;
+	int max_start_y = view.start_y - max_z_diff;
+	int max_end_x = view.end_x + max_z_diff;
+	int max_end_y = view.end_y + max_z_diff;
+
+	int nd_start_x = max_start_x & ~3;
+	int nd_start_y = max_start_y & ~3;
+	int nd_end_x = (max_end_x & ~3) + 4;
+	int nd_end_y = (max_end_y & ~3) + 4;
+
+	int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+	int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+	int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+	int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+
+	std::vector<std::pair<MapNode*, std::pair<int, int>>> visible_nodes;
+	if (!live_client) {
+		// Use SpatialHashGrid::visitLeaves which handles O(1) viewport query internally
+		editor.map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+			visible_nodes.push_back({nd, {nd_map_x, nd_map_y}});
+		});
+	}
+
 	// Enable texture mode
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
@@ -386,7 +416,7 @@ void MapDrawer::DrawMap() {
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			DrawMapLayer(map_z, live_client, live_client ? nullptr : &visible_nodes);
 		}
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
@@ -424,8 +454,8 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawMapLayer(int map_z, bool live_client, const std::vector<std::pair<MapNode*, std::pair<int, int>>>* visible_nodes) {
+	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer, visible_nodes);
 }
 
 void MapDrawer::DrawLight() {
