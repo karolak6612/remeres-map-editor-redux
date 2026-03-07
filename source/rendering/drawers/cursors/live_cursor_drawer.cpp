@@ -8,17 +8,13 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/view_state.h"
-#include "ui/gui.h"
 
 void LiveCursorDrawer::draw(const DrawContext &ctx, LiveManager &live_manager) {
   if (ctx.state.options.settings.ingame || !live_manager.IsLive()) {
     return;
   }
 
-  if (!g_gui.atlas.ensureAtlasManager()) {
-    return;
-  }
-  const AtlasManager &atlas = *g_gui.atlas.getAtlasManager();
+  const AtlasManager &atlas = ctx.backend.atlas_manager;
 
   LiveSocket &live = live_manager.GetSocket();
   for (const LiveCursor &cursor : live.getCursorList()) {

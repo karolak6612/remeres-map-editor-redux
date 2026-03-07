@@ -28,7 +28,6 @@
 #include "rendering/drawers/overlays/brush_overlay_drawer.h"
 #include "rendering/io/sprite_loader.h"
 #include "rendering/map_drawer.h"
-#include "ui/gui.h"
 
 #include "brushes/brush.h"
 
@@ -113,17 +112,17 @@ BrushOverlayDrawer::~BrushOverlayDrawer() {}
 void BrushOverlayDrawer::draw(const DrawContext &ctx, ItemDrawer *item_drawer,
                               SpriteDrawer *sprite_drawer,
                               CreatureDrawer *creature_drawer, Map &map) {
-  if (!g_gui.IsDrawingMode()) {
+  if (!ctx.overlays.brush.is_drawing_mode) {
     return;
   }
-  if (!g_gui.GetCurrentBrush()) {
+  if (!ctx.overlays.brush.current_brush) {
     return;
   }
   if (ctx.state.options.settings.ingame) {
     return;
   }
 
-  Brush *brush = g_gui.GetCurrentBrush();
+  Brush *brush = ctx.overlays.brush.current_brush;
 
   BrushColor brushColorType = COLOR_BLANK;
   if (brush->is<TerrainBrush>() || brush->is<TableBrush>() ||
@@ -141,10 +140,7 @@ void BrushOverlayDrawer::draw(const DrawContext &ctx, ItemDrawer *item_drawer,
 
   glm::vec4 brushColor = get_brush_color(brushColorType);
 
-  if (!g_gui.atlas.ensureAtlasManager()) {
-    return;
-  }
-  const AtlasManager &atlas = *g_gui.atlas.getAtlasManager();
+  const AtlasManager &atlas = ctx.backend.atlas_manager;
 
   if (ctx.state.canvas_state.is_dragging_draw) {
     ASSERT(brush->canDrag());
@@ -176,10 +172,10 @@ void BrushOverlayDrawer::get_color(Brush *brush, Map &map,
 void BrushOverlayDrawer::drawWallBrushStatic(const DrawContext &ctx,
                                              const glm::vec4 &brushColor,
                                              const AtlasManager &atlas) {
-  int start_map_x = ctx.state.view.mouse_map_x - g_gui.GetBrushSize();
-  int start_map_y = ctx.state.view.mouse_map_y - g_gui.GetBrushSize();
-  int end_map_x = ctx.state.view.mouse_map_x + g_gui.GetBrushSize() + 1;
-  int end_map_y = ctx.state.view.mouse_map_y + g_gui.GetBrushSize() + 1;
+  int start_map_x = ctx.state.view.mouse_map_x - ctx.overlays.brush.size;
+  int start_map_y = ctx.state.view.mouse_map_y - ctx.overlays.brush.size;
+  int end_map_x = ctx.state.view.mouse_map_x + ctx.overlays.brush.size + 1;
+  int end_map_y = ctx.state.view.mouse_map_y + ctx.overlays.brush.size + 1;
 
   int start_sx = start_map_x * TILE_SIZE - ctx.state.view.view_scroll_x -
                  ctx.state.view.getFloorAdjustment();
@@ -291,7 +287,7 @@ void BrushOverlayDrawer::drawDraggingOverlay(const DrawContext &ctx,
   if (brush->is<WallBrush>()) {
     drawWallBrushDrag(ctx, brushColor, atlas);
   } else {
-    if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
+    if (ctx.overlays.brush.shape == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
       if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
         const int click_x = ctx.state.canvas_state.last_click_map_x;
         const int click_y = ctx.state.canvas_state.last_click_map_y;
@@ -374,7 +370,7 @@ void BrushOverlayDrawer::drawDraggingOverlay(const DrawContext &ctx,
                                     h, brushColor, atlas);
         }
       }
-    } else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
+    } else if (ctx.overlays.brush.shape == BRUSHSHAPE_CIRCLE) {
       int start_x, end_x;
       int start_y, end_y;
       int width =
@@ -482,17 +478,17 @@ void BrushOverlayDrawer::drawStaticOverlay(const DrawContext &ctx,
       raw_brush = brush->as<RAWBrush>();
     }
 
-    for (int y = -g_gui.GetBrushSize() - 1; y <= g_gui.GetBrushSize() + 1;
+    for (int y = -ctx.overlays.brush.size - 1; y <= ctx.overlays.brush.size + 1;
          y++) {
       int cy = (ctx.state.view.mouse_map_y + y) * TILE_SIZE - ctx.state.view.view_scroll_y -
                ctx.state.view.getFloorAdjustment();
-      for (int x = -g_gui.GetBrushSize() - 1; x <= g_gui.GetBrushSize() + 1;
+      for (int x = -ctx.overlays.brush.size - 1; x <= ctx.overlays.brush.size + 1;
            x++) {
         int cx = (ctx.state.view.mouse_map_x + x) * TILE_SIZE -
                  ctx.state.view.view_scroll_x - ctx.state.view.getFloorAdjustment();
-        if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
-          if (x >= -g_gui.GetBrushSize() && x <= g_gui.GetBrushSize() &&
-              y >= -g_gui.GetBrushSize() && y <= g_gui.GetBrushSize()) {
+        if (ctx.overlays.brush.shape == BRUSHSHAPE_SQUARE) {
+          if (x >= -ctx.overlays.brush.size && x <= ctx.overlays.brush.size &&
+              y >= -ctx.overlays.brush.size && y <= ctx.overlays.brush.size) {
             if (brush->is<RAWBrush>()) {
               item_drawer->DrawRawBrush(ctx, sprite_drawer, cx, cy,
                                         raw_brush->getItemType(), 160, 160, 160,
@@ -523,9 +519,9 @@ void BrushOverlayDrawer::drawStaticOverlay(const DrawContext &ctx,
               }
             }
           }
-        } else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
+        } else if (ctx.overlays.brush.shape == BRUSHSHAPE_CIRCLE) {
           double distance = sqrt(double(x * x) + double(y * y));
-          if (distance < g_gui.GetBrushSize() + 0.005) {
+          if (distance < ctx.overlays.brush.size + 0.005) {
             if (brush->is<RAWBrush>()) {
               item_drawer->DrawRawBrush(ctx, sprite_drawer, cx, cy,
                                         raw_brush->getItemType(), 160, 160, 160,

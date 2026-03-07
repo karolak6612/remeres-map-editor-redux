@@ -12,7 +12,6 @@
 #include "rendering/core/atlas_lifecycle.h"
 #include "rendering/core/texture_gc.h"
 #include "rendering/io/sprite_loader.h"
-#include "ui/gui.h"
 
 void BrushCursorDrawer::draw(const DrawContext& ctx, int x, int y, Brush* brush, uint8_t r, uint8_t g, uint8_t b) {
 	x += (TILE_SIZE / 2);
@@ -63,10 +62,8 @@ void BrushCursorDrawer::draw(const DrawContext& ctx, int x, int y, Brush* brush,
 	// Box: (-15, -20) to (15, -5). width=30, height=15.
 	// Top Left of box relative to x,y: (-15, -20).
 	// But coordinates seem to be relative offset.
-	if (g_gui.atlas.ensureAtlasManager()) {
-		const AtlasManager& atlas = *g_gui.atlas.getAtlasManager();
-		ctx.backend.sprite_batch.drawRect((float)(x - 15), (float)(y - 20), (float)30, (float)15, bgColor, atlas);
-	}
+	const AtlasManager& atlas = ctx.backend.atlas_manager;
+	ctx.backend.sprite_batch.drawRect((float)(x - 15), (float)(y - 20), (float)30, (float)15, bgColor, atlas);
 
 	// Tip Triangle: (-5, -5), (0,0), (5, -5) relative to x,y
 	// Tip Triangle: (-5, -5), (0,0), (5, -5) relative to x,y

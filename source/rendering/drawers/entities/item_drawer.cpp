@@ -22,7 +22,6 @@
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/utilities/pattern_calculator.h"
-#include "ui/gui.h"
 
 BlitItemParams::BlitItemParams(const Tile *t, Item *i, const DrawingOptions &o)
     : tile(t), item(i), options(&o) {
@@ -130,10 +129,10 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
   }
 
   bool has_metadata = clientID > 0 &&
-                      clientID < g_gui.sprites.getMetadataSpace().size() &&
-                      clientID < g_gui.sprites.getAtlasCacheSpace().size();
+                      clientID < ctx.backend.sprite_database.getMetadataSpace().size() &&
+                      clientID < ctx.backend.sprite_database.getAtlasCacheSpace().size();
   const SpriteMetadata *metadata =
-      has_metadata ? &g_gui.sprites.getMetadataSpace()[clientID] : nullptr;
+      has_metadata ? &ctx.backend.sprite_database.getMetadataSpace()[clientID] : nullptr;
 
   // metaItem, sprite not found or not hidden
   if (it.isMetaItem() || metadata == nullptr ||
@@ -183,7 +182,7 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
     }
   }
 
-  SpriteAtlasCache &atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+  SpriteAtlasCache &atlas = ctx.backend.sprite_database.getAtlasCacheSpace()[clientID];
 
   if (metadata->width == 1 && metadata->height == 1 && metadata->layers == 1) {
     const AtlasRegion *region;

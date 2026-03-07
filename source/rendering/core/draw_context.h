@@ -16,10 +16,14 @@ struct ContextState {
   const CanvasState &canvas_state;
   bool is_preload_pass = false;
 };
+class SpriteDatabase;
+class AtlasManager;
 
 struct RenderBackend {
   SpriteBatch &sprite_batch;
   PrimitiveRenderer &primitive_renderer;
+  SpriteDatabase &sprite_database;
+  AtlasManager &atlas_manager;
 };
 
 struct FrameOutput {
@@ -27,8 +31,18 @@ struct FrameOutput {
   BrushCursorDrawer *brush_cursor_drawer = nullptr;
 };
 
+struct OverlayState {
+  struct BrushSettings {
+    class Brush* current_brush = nullptr;
+    int size = 0;
+    int shape = 0;
+    bool is_drawing_mode = false;
+  } brush;
+};
+
 struct DrawContext {
   const ContextState state;
+  const OverlayState overlays;
   const RenderBackend backend;
   const FrameOutput output;
 };

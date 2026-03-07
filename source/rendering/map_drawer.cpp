@@ -419,12 +419,19 @@ void MapDrawer::DrawMapLayer(const DrawContext &ctx,
 }
 
 DrawContext MapDrawer::MakeDrawContext(bool is_preload_pass) {
+  g_gui.atlas.ensureAtlasManager();
   return DrawContext{.state = {.view = view,
                                .options = options,
                                .canvas_state = canvas_state,
                                .is_preload_pass = is_preload_pass},
+                     .overlays = {.brush = {.current_brush = g_gui.GetCurrentBrush(),
+                                            .size = g_gui.GetBrushSize(),
+                                            .shape = g_gui.GetBrushShape(),
+                                            .is_drawing_mode = g_gui.IsDrawingMode()}},
                      .backend = {.sprite_batch = *sprite_batch,
-                                 .primitive_renderer = *primitive_renderer},
+                                 .primitive_renderer = *primitive_renderer,
+                                 .sprite_database = g_gui.sprites,
+                                 .atlas_manager = *g_gui.atlas.getAtlasManager()},
                      .output = {.light_buffer = light_buffer,
                                 .brush_cursor_drawer = brush_cursor_drawer.get()}};
 }

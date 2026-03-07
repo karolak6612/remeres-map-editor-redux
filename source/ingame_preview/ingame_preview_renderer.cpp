@@ -117,7 +117,9 @@ void IngamePreviewRenderer::Render(
                             .options = options,
                             .canvas_state = dummy_state},
                   .backend = {.sprite_batch = *sprite_batch,
-                              .primitive_renderer = *primitive_renderer},
+                              .primitive_renderer = *primitive_renderer,
+                              .sprite_database = g_gui.sprites,
+                              .atlas_manager = *atlas},
                   .output = {.light_buffer = *light_buffer,
                              .brush_cursor_drawer = nullptr}};
 

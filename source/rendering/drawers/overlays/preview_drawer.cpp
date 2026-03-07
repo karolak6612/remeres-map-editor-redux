@@ -16,7 +16,6 @@
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
 #include "rendering/ui/map_display.h"
-#include "ui/gui.h"
 #include "ui/map_tab.h"
 
 PreviewDrawer::PreviewDrawer() {}
@@ -31,7 +30,7 @@ void PreviewDrawer::draw(const DrawContext &ctx,
   const BaseMap *secondary_map = ctx.state.canvas_state.secondary_map;
 
   if (secondary_map != nullptr && !ctx.state.options.settings.ingame) {
-    Brush *brush = g_gui.GetCurrentBrush();
+    Brush *brush = ctx.overlays.brush.current_brush;
 
     Position normalPos;
     Position to(ctx.state.view.mouse_map_x, ctx.state.view.mouse_map_y, ctx.state.view.floor);
@@ -75,13 +74,11 @@ void PreviewDrawer::draw(const DrawContext &ctx,
       ctx.state.view.getScreenPosition(mousePos.x, mousePos.y, mousePos.z, draw_x,
                                  draw_y);
 
-      if (g_gui.atlas.ensureAtlasManager()) {
-        // Draw a semi-transparent white box over the tile
-        glm::vec4 highlightColor(1.0f, 1.0f, 1.0f, 0.25f); // 25% white
-        ctx.backend.sprite_batch.drawRect(
-            (float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE,
-            highlightColor, *g_gui.atlas.getAtlasManager());
-      }
+      // Draw a semi-transparent white box over the tile
+      glm::vec4 highlightColor(1.0f, 1.0f, 1.0f, 0.25f); // 25% white
+      ctx.backend.sprite_batch.drawRect(
+          (float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE,
+          highlightColor, ctx.backend.atlas_manager);
     }
   }
 }

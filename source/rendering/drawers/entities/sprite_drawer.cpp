@@ -8,7 +8,7 @@
 
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/sprite_batch.h"
-#include "ui/gui.h"
+
 #include <spdlog/spdlog.h>
 
 SpriteDrawer::SpriteDrawer() { }
@@ -45,14 +45,10 @@ void SpriteDrawer::glBlitSquare(const DrawContext& ctx, int sx, int sy, DrawColo
     float normalizedB = color.b / 255.0f;
     float normalizedA = color.a / 255.0f;
 
-    // Use g_gui.atlas to get the atlas manager for white pixel access
-    // This assumes g_gui.atlas and AtlasManager are available
-    if (g_gui.atlas.hasAtlasManager()) {
-        ctx.backend.sprite_batch.drawRect(
-            static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size),
-            glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager()
-        );
-    }
+    ctx.backend.sprite_batch.drawRect(
+        static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size),
+        glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), ctx.backend.atlas_manager
+    );
 }
 
 void SpriteDrawer::glDrawBox(const DrawContext& ctx, int sx, int sy, int width, int height, DrawColor color)
@@ -64,12 +60,10 @@ void SpriteDrawer::glDrawBox(const DrawContext& ctx, int sx, int sy, int width, 
     float normalizedB = color.b / 255.0f;
     float normalizedA = color.a / 255.0f;
 
-    if (g_gui.atlas.hasAtlasManager()) {
-        ctx.backend.sprite_batch.drawRectLines(
-            static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height),
-            glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager()
-        );
-    }
+    ctx.backend.sprite_batch.drawRectLines(
+        static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height),
+        glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), ctx.backend.atlas_manager
+    );
 }
 
 void SpriteDrawer::glSetColor(wxColor color)
@@ -81,11 +75,11 @@ void SpriteDrawer::glSetColor(wxColor color)
 
 void SpriteDrawer::BlitSprite(const DrawContext& ctx, int screenx, int screeny, uint32_t clientID, DrawColor color)
 {
-    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() || clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
+    if (clientID == 0 || clientID >= ctx.backend.sprite_database.getMetadataSpace().size() || clientID >= ctx.backend.sprite_database.getAtlasCacheSpace().size()) {
         return;
     }
-    const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];
-    SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+    const SpriteMetadata& meta = ctx.backend.sprite_database.getMetadataSpace()[clientID];
+    SpriteAtlasCache& atlas = ctx.backend.sprite_database.getAtlasCacheSpace()[clientID];
 
     screenx -= meta.getDrawOffset().first;
     screeny -= meta.getDrawOffset().second;

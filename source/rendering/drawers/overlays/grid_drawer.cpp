@@ -4,7 +4,6 @@
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/texture_gc.h"
 #include "rendering/io/sprite_loader.h"
-#include "ui/gui.h"
 
 #include "app/definitions.h"
 #include "rendering/core/draw_context.h"
@@ -22,7 +21,7 @@ void GridDrawer::DrawGrid(const DrawContext &ctx, const ViewBounds &bounds) {
   // Use zoom as line thickness so lines are always ~1 screen pixel
   const float line_thickness = ctx.state.view.zoom;
 
-  const AtlasManager *atlas = ensureAtlasManager();
+  const AtlasManager *atlas = &ctx.backend.atlas_manager;
   if (atlas) {
     // Hoisted invariants for horizontal lines
     const float h_xStart = bounds.start_x * TILE_SIZE - ctx.state.view.view_scroll_x;
@@ -76,7 +75,7 @@ void GridDrawer::DrawIngameBox(const DrawContext &ctx,
   // but DrawQuad uses white texture if no texture ID is provided or if specific
   // non-textured method used. DrawQuad uses whiteTextureID by default.
 
-  const AtlasManager *atlas = ensureAtlasManager();
+  const AtlasManager *atlas = &ctx.backend.atlas_manager;
   if (!atlas) {
     return;
   }
@@ -132,7 +131,7 @@ void GridDrawer::DrawIngameBox(const DrawContext &ctx,
 
 void GridDrawer::DrawNodeLoadingPlaceholder(const DrawContext &ctx,
                                             int nd_map_x, int nd_map_y) {
-  const AtlasManager *atlas = ensureAtlasManager();
+  const AtlasManager *atlas = &ctx.backend.atlas_manager;
   if (!atlas) {
     return;
   }
@@ -146,12 +145,7 @@ void GridDrawer::DrawNodeLoadingPlaceholder(const DrawContext &ctx,
   drawFilledRect(ctx.backend.sprite_batch, nd_x, nd_y, nd_w, nd_h, nd_color, *atlas);
 }
 
-const AtlasManager *GridDrawer::ensureAtlasManager() const {
-  if (g_gui.atlas.ensureAtlasManager()) {
-    return g_gui.atlas.getAtlasManager();
-  }
-  return nullptr;
-}
+
 
 namespace {
 inline glm::vec4 toVec4(const wxColor &color) {

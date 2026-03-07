@@ -15,7 +15,6 @@
 #include "rendering/core/sprite_metadata.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
-#include "ui/gui.h"
 #include <algorithm>
 #include <spdlog/spdlog.h>
 
@@ -54,14 +53,14 @@ void CreatureDrawer::BlitCreature(
         sprite_drawer->BlitSprite(ctx, screenx, screeny, it.clientID, options.color);
     } else {
         // get outfit sprite
-        uint32_t clientID = g_gui.sprites.getItemSpriteMaxID() + outfit.lookType;
-        if (clientID >= g_gui.sprites.getMetadataSpace().size() || clientID >= g_gui.sprites.getAtlasCacheSpace().size()
+        uint32_t clientID = ctx.backend.sprite_database.getItemSpriteMaxID() + outfit.lookType;
+        if (clientID >= ctx.backend.sprite_database.getMetadataSpace().size() || clientID >= ctx.backend.sprite_database.getAtlasCacheSpace().size()
             || outfit.lookType == 0) {
             return;
         }
 
-        const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];
-        SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+        const SpriteMetadata& meta = ctx.backend.sprite_database.getMetadataSpace()[clientID];
+        SpriteAtlasCache& atlas = ctx.backend.sprite_database.getAtlasCacheSpace()[clientID];
 
         // Resolve animation frame for walk animation
         // For in-game preview: animationPhase controls walk animation
@@ -74,10 +73,10 @@ void CreatureDrawer::BlitCreature(
         // mount colors by Zbizu
         int pattern_z = 0;
         if (outfit.lookMount != 0) {
-            uint32_t mountClientID = g_gui.sprites.getItemSpriteMaxID() + outfit.lookMount;
-            if (mountClientID < g_gui.sprites.getMetadataSpace().size() && mountClientID < g_gui.sprites.getAtlasCacheSpace().size()) {
-                const SpriteMetadata& mountMeta = g_gui.sprites.getMetadataSpace()[mountClientID];
-                SpriteAtlasCache& mountAtlas = g_gui.sprites.getAtlasCacheSpace()[mountClientID];
+            uint32_t mountClientID = ctx.backend.sprite_database.getItemSpriteMaxID() + outfit.lookMount;
+            if (mountClientID < ctx.backend.sprite_database.getMetadataSpace().size() && mountClientID < ctx.backend.sprite_database.getAtlasCacheSpace().size()) {
+                const SpriteMetadata& mountMeta = ctx.backend.sprite_database.getMetadataSpace()[mountClientID];
+                SpriteAtlasCache& mountAtlas = ctx.backend.sprite_database.getAtlasCacheSpace()[mountClientID];
 
                 // generate mount colors
                 Outfit mountOutfit;
