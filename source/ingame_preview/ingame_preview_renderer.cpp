@@ -13,7 +13,7 @@
 #include "rendering/drawers/entities/creature_name_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
-#include "rendering/utilities/light_drawer.h"
+#include "rendering/utilities/light_renderer.h"
 #include "ui/gui.h"
 #include <algorithm> // For std::max
 #include <cmath>     // For std::floor, std::ceil
@@ -31,7 +31,7 @@ IngamePreviewRenderer::IngamePreviewRenderer(TileRenderer *tile_renderer)
   sprite_batch = std::make_unique<SpriteBatch>();
   primitive_renderer = std::make_unique<PrimitiveRenderer>();
   light_buffer = std::make_unique<LightBuffer>();
-  light_drawer = std::make_shared<LightDrawer>();
+  light_renderer = std::make_unique<LightRenderer>();
   creature_drawer = std::make_unique<CreatureDrawer>();
   creature_name_drawer = std::make_unique<CreatureNameDrawer>();
   sprite_drawer = std::make_unique<SpriteDrawer>();
@@ -126,8 +126,8 @@ void IngamePreviewRenderer::Render(
   RenderPreviewCharacter(ctx, preview_outfit, preview_direction,
                          animation_phase, atlas, elevation_offset);
 
-  if (lighting_enabled && light_drawer && options.settings.isDrawLight()) {
-    light_drawer->draw(ctx);
+  if (lighting_enabled && light_renderer && options.settings.isDrawLight()) {
+    light_renderer->draw(ctx);
   }
 
   RenderNames(vg, ctx, viewport_width, viewport_height, zoom, elevation_offset);

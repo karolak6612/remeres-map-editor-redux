@@ -5,7 +5,7 @@
 #include "game/complexitem.h"
 #include "game/item.h"
 #include "game/items.h"
-#include "rendering/ui/tooltip_drawer.h"
+#include "rendering/ui/tooltip_collector.h"
 
 namespace rme {
 

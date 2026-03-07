@@ -163,6 +163,8 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_fbo.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_shader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/minimap_colors.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/multi_draw_indirect_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/outfit_colorizer.h
@@ -222,12 +224,14 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_collector.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_renderer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/nvg_image_cache.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/frame_pacer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_calculator.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
@@ -504,6 +508,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_fbo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_shader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/multi_draw_indirect_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/outfit_colorizer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/outfit_colors.cpp
@@ -557,14 +563,16 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_collector.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_renderer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/nvg_image_cache.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/frame_pacer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/icon_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/icon_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_calculator.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.cpp

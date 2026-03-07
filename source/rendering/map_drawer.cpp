@@ -54,8 +54,10 @@
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/view_state.h"
-#include "rendering/ui/tooltip_drawer.h"
-#include "rendering/utilities/light_drawer.h"
+#include "rendering/ui/tooltip_collector.h"
+#include "rendering/ui/tooltip_renderer.h"
+#include "rendering/ui/nvg_image_cache.h"
+#include "rendering/utilities/light_renderer.h"
 
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
@@ -83,8 +85,10 @@
 MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
     : canvas(canvas), editor(editor) {
 
-  light_drawer = std::make_shared<LightDrawer>();
-  tooltip_drawer = std::make_unique<TooltipDrawer>();
+  light_renderer = std::make_unique<LightRenderer>();
+  tooltip_collector = std::make_unique<TooltipCollector>();
+  tooltip_renderer = std::make_unique<TooltipRenderer>();
+  nvg_image_cache = std::make_unique<NVGImageCache>();
 
   sprite_drawer = std::make_unique<SpriteDrawer>();
   creature_drawer = std::make_unique<CreatureDrawer>();
@@ -101,7 +105,7 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
       .creature_name_drawer = *creature_name_drawer,
       .floor_drawer = *floor_drawer,
       .marker_drawer = *marker_drawer,
-      .tooltip_drawer = *tooltip_drawer,
+      .tooltip_collector = *tooltip_collector,
       .editor = editor});
 
   grid_drawer = std::make_unique<GridDrawer>();
@@ -391,7 +395,7 @@ void MapDrawer::DrawGrid(const DrawContext &ctx, const ViewBounds &bounds) {
 void MapDrawer::DrawTooltips(NVGcontext *vg) {
   if (options.settings.show_tooltips) {
     DrawContext ctx = MakeDrawContext();
-    tooltip_drawer->draw(vg, ctx);
+    tooltip_renderer->draw(vg, ctx, nvg_image_cache.get(), tooltip_collector->getTooltips());
   }
 }
 
@@ -431,7 +435,7 @@ DrawContext MapDrawer::MakeDrawContext() {
 void MapDrawer::DrawLight() {
   if (options.settings.isDrawLight()) {
     DrawContext ctx = MakeDrawContext();
-    light_drawer->draw(ctx);
+    light_renderer->draw(ctx);
   }
 }
 
@@ -441,7 +445,7 @@ void MapDrawer::TakeScreenshot(uint8_t *screenshot_buffer) {
 }
 
 void MapDrawer::ClearFrameOverlays() {
-  tooltip_drawer->clear();
+  tooltip_collector->clear();
   hook_indicator_drawer->clear();
   door_indicator_drawer->clear();
 }

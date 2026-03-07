@@ -21,7 +21,9 @@
 class GameSprite;
 
 struct NVGcontext;
-class TooltipDrawer;
+class TooltipCollector;
+class TooltipRenderer;
+class NVGImageCache;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
@@ -37,7 +39,7 @@ class DoorIndicatorDrawer;
 class GridDrawer;
 
 class MapCanvas;
-class LightDrawer;
+class LightRenderer;
 class LiveCursorDrawer;
 class BrushCursorDrawer;
 class BrushOverlayDrawer;
@@ -66,9 +68,11 @@ class MapDrawer {
   Editor &editor;
   DrawingOptions options;
   ViewState view;
-  std::shared_ptr<LightDrawer> light_drawer;
+  std::unique_ptr<LightRenderer> light_renderer;
   LightBuffer light_buffer;
-  std::unique_ptr<TooltipDrawer> tooltip_drawer;
+  std::unique_ptr<TooltipCollector> tooltip_collector;
+  std::unique_ptr<TooltipRenderer> tooltip_renderer;
+  std::unique_ptr<NVGImageCache> nvg_image_cache;
   std::unique_ptr<GridDrawer> grid_drawer;
   std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
   std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
