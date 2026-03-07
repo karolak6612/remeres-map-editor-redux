@@ -18,12 +18,20 @@ class FloorDrawer;
 class MarkerDrawer;
 class TooltipDrawer;
 
+struct TileRenderContext {
+    ItemDrawer* item_drawer = nullptr;
+    SpriteDrawer* sprite_drawer = nullptr;
+    CreatureDrawer* creature_drawer = nullptr;
+    CreatureNameDrawer* creature_name_drawer = nullptr;
+    FloorDrawer* floor_drawer = nullptr;
+    MarkerDrawer* marker_drawer = nullptr;
+    TooltipDrawer* tooltip_drawer = nullptr;
+    Editor* editor = nullptr;
+};
+
 class TileRenderer {
 public:
-    TileRenderer(
-        ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td,
-        Editor* ed
-    );
+    explicit TileRenderer(const TileRenderContext& ctx);
 
     void DrawTile(
         const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1,
