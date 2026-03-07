@@ -129,11 +129,11 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 			return false;
 		}
 	} else if(cv->getConfigType().find("assets_bt") != std::string::npos) {
-		// TODO this is part of code from bt map editor, for redux to be analysed (99% that it should be discarded)
-		// const auto& signatureData = g_gui.gfx.getSignatureData();
-		// g_items.MajorVersion = signatureData.majorVersion;
-		// g_items.MinorVersion = signatureData.minorVersion;
-		// g_items.BuildNumber = 1;
+		// TODO one day to be discarded, since .otb is not loaded there was never a point in loading such things.. but
+		// for now they are necessary for stuff to work.
+		g_items.MajorVersion = cv->getOtbMajor();
+		g_items.MinorVersion = cv->getOtbId();
+		g_items.BuildNumber = 1;
 	} else {
 		warnings.push_back(std::format("Client version {} has unrecognized config type '{}', skipping OTB loading", cv->getName(), cv->getConfigType()));
 		spdlog::warn("Client version {} has unrecognized config type '{}', skipping OTB loading", cv->getName(), cv->getConfigType());
