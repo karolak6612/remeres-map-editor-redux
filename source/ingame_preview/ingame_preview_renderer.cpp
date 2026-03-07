@@ -113,30 +113,41 @@ void IngamePreviewRenderer::Render(
   auto *atlas = g_gui.atlas.getAtlasManager();
 
   CanvasState dummy_state{};
-  DrawContext ctx{.state = {.view = view,
-                            .options = options,
-                            .canvas_state = dummy_state},
-                  .backend = {.sprite_batch = *sprite_batch,
-                              .primitive_renderer = *primitive_renderer,
-                              .sprite_database = g_gui.sprites,
-                              .atlas_manager = *atlas,
-                              .texture_gc = g_gui.gc,
-                              .sprite_loader = g_gui.loader,
-                              .use_memcached = true},
-                  .output = {.light_buffer = *light_buffer,
-                             .brush_cursor_drawer = nullptr}};
+  auto make_ctx = [&](bool is_preload) {
+    return DrawContext{.state = {.view = view,
+                                 .options = options,
+                                 .canvas_state = dummy_state,
+                                 .is_preload_pass = is_preload},
+                       .backend = {.sprite_batch = *sprite_batch,
+                                   .primitive_renderer = *primitive_renderer,
+                                   .sprite_database = g_gui.sprites,
+                                   .atlas_manager = *atlas,
+                                   .texture_gc = g_gui.gc,
+                                   .sprite_loader = g_gui.loader,
+                                   .use_memcached = false},
+                       .output = {.light_buffer = *light_buffer,
+                                  .brush_cursor_drawer = nullptr}};
+  };
 
   int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
 
-  RenderFloors(ctx, map, last_visible, camera_pos, lighting_enabled, atlas);
-  RenderPreviewCharacter(ctx, preview_outfit, preview_direction,
+  // --- Preload Pass ---
+  DrawContext preload_ctx = make_ctx(true);
+  RenderFloors(preload_ctx, map, last_visible, camera_pos, lighting_enabled, atlas);
+  RenderPreviewCharacter(preload_ctx, preview_outfit, preview_direction,
+                         animation_phase, atlas, elevation_offset);
+
+  // --- Render Pass ---
+  DrawContext render_ctx = make_ctx(false);
+  RenderFloors(render_ctx, map, last_visible, camera_pos, lighting_enabled, atlas);
+  RenderPreviewCharacter(render_ctx, preview_outfit, preview_direction,
                          animation_phase, atlas, elevation_offset);
 
   if (lighting_enabled && light_renderer && options.settings.isDrawLight()) {
-    light_renderer->draw(ctx);
+    light_renderer->draw(render_ctx);
   }
 
-  RenderNames(vg, ctx, viewport_width, viewport_height, zoom, elevation_offset);
+  RenderNames(vg, render_ctx, viewport_width, viewport_height, zoom, elevation_offset);
 }
 
 int IngamePreviewRenderer::GetTileElevationOffset(const Tile *tile) const {
