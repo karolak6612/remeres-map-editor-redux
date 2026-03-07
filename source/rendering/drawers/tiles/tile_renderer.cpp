@@ -33,9 +33,14 @@
 #include "rendering/utilities/pattern_calculator.h"
 #include "rendering/ui/tooltip_data_extractor.h"
 TileRenderer::TileRenderer(const TileRenderContext& ctx)
-    : item_drawer(ctx.item_drawer), sprite_drawer(ctx.sprite_drawer), creature_drawer(ctx.creature_drawer),
-      floor_drawer(ctx.floor_drawer), marker_drawer(ctx.marker_drawer), tooltip_drawer(ctx.tooltip_drawer),
-      creature_name_drawer(ctx.creature_name_drawer), editor(ctx.editor) {}
+    : item_drawer(&ctx.item_drawer),
+      sprite_drawer(&ctx.sprite_drawer),
+      creature_drawer(&ctx.creature_drawer),
+      floor_drawer(&ctx.floor_drawer),
+      marker_drawer(&ctx.marker_drawer),
+      tooltip_drawer(&ctx.tooltip_drawer),
+      creature_name_drawer(&ctx.creature_name_drawer),
+      editor(&ctx.editor) {}
 
 void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
                             uint32_t current_house_id, int in_draw_x,

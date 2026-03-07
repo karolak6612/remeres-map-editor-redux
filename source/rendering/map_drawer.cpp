@@ -95,14 +95,14 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
   creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 
   tile_renderer = std::make_unique<TileRenderer>(TileRenderContext{
-      .item_drawer = item_drawer.get(),
-      .sprite_drawer = sprite_drawer.get(),
-      .creature_drawer = creature_drawer.get(),
-      .creature_name_drawer = creature_name_drawer.get(),
-      .floor_drawer = floor_drawer.get(),
-      .marker_drawer = marker_drawer.get(),
-      .tooltip_drawer = tooltip_drawer.get(),
-      .editor = &editor});
+      .item_drawer = *item_drawer,
+      .sprite_drawer = *sprite_drawer,
+      .creature_drawer = *creature_drawer,
+      .creature_name_drawer = *creature_name_drawer,
+      .floor_drawer = *floor_drawer,
+      .marker_drawer = *marker_drawer,
+      .tooltip_drawer = *tooltip_drawer,
+      .editor = editor});
 
   grid_drawer = std::make_unique<GridDrawer>();
   map_layer_drawer =

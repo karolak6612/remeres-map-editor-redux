@@ -5,8 +5,73 @@
 #include "game/complexitem.h"
 #include "game/item.h"
 #include "game/items.h"
+#include "rendering/ui/tooltip_drawer.h"
 
 namespace rme {
+
+constexpr uint16_t MIN_TOOLTIP_ITEM_ID = 100;
+constexpr float MAX_ZOOM_FOR_CONTAINER_TOOLTIP = 1.5f;
+constexpr size_t MAX_CONTAINER_ITEMS_IN_TOOLTIP = 32;
+
+static void ExtractComplexItemData(TooltipData& data, const Item* item) {
+  if (item->isComplex()) {
+    data.uniqueId = item->getUniqueID();
+    data.actionId = item->getActionID();
+    data.text = item->getText();
+    data.description = item->getDescription();
+  }
+}
+
+static void ExtractDoorData(TooltipData& data, const Item* item, bool isHouseTile) {
+  if (isHouseTile && item->isDoor()) {
+    if (const Door* door = item->asDoor()) {
+      if (door->isRealDoor()) {
+        data.doorId = door->getDoorID();
+      }
+    }
+  }
+}
+
+static void ExtractTeleportData(TooltipData& data, const Item* item) {
+  if (item->isTeleport()) {
+    if (const Teleport* tp = item->asTeleport()) {
+      if (tp->hasDestination()) {
+        data.destination = tp->getDestination();
+        data.has_destination = true;
+      }
+    }
+  }
+}
+
+static void ExtractContainerData(TooltipData& data, const Item* item, float zoom) {
+  if (zoom <= MAX_ZOOM_FOR_CONTAINER_TOOLTIP) {
+    if (const Container* container = item->asContainer()) {
+      data.containerCapacity = static_cast<uint8_t>(container->getVolume());
+
+      const auto& items = container->getVector();
+      data.containerItems.clear();
+      data.containerItems.reserve(std::min(items.size(), MAX_CONTAINER_ITEMS_IN_TOOLTIP));
+      
+      for (const auto& subItem : items) {
+        if (subItem) {
+          ContainerItem ci;
+          ci.id = subItem->getID();
+          ci.subtype = subItem->getSubtype();
+          ci.count = subItem->getCount();
+          if (ci.count == 0) {
+            ci.count = 1;
+          }
+
+          data.containerItems.push_back(ci);
+
+          if (data.containerItems.size() >= MAX_CONTAINER_ITEMS_IN_TOOLTIP) {
+            break;
+          }
+        }
+      }
+    }
+  }
+}
 
 bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, const Position& pos, bool isHouseTile, float zoom) {
   if (!item) {
@@ -14,70 +79,35 @@ bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, cons
   }
 
   const uint16_t id = item->getID();
-  if (id < 100) {
+  if (id < MIN_TOOLTIP_ITEM_ID) {
     return false;
   }
 
-  uint16_t unique = 0;
-  uint16_t action = 0;
-  std::string_view text;
-  std::string_view description;
-  uint8_t doorId = 0;
-  Position destination;
-  bool has_destination = false;
-  bool hasContent = false;
+  // Initialize data defaults for the checks
+  data.uniqueId = 0;
+  data.actionId = 0;
+  data.doorId = 0;
+  data.text = std::string_view();
+  data.description = std::string_view();
+  data.has_destination = false;
 
   bool is_complex = item->isComplex();
-  // Early exit for simple items
-  // isTooltipable is cached (isContainer || isDoor || isTeleport)
   if (!is_complex && !it.isTooltipable()) {
     return false;
   }
 
+  ExtractComplexItemData(data, item);
+  ExtractDoorData(data, item, isHouseTile);
+  ExtractTeleportData(data, item);
+
   bool is_container = it.isContainer();
-  bool is_door = isHouseTile && item->isDoor();
-  bool is_teleport = item->isTeleport();
 
-  if (is_complex) {
-    unique = item->getUniqueID();
-    action = item->getActionID();
-    text = item->getText();
-    description = item->getDescription();
-  }
-
-  // Check if it's a door
-  if (is_door) {
-    if (const Door* door = item->asDoor()) {
-      if (door->isRealDoor()) {
-        doorId = door->getDoorID();
-      }
-    }
-  }
-
-  // Check if it's a teleport
-  if (is_teleport) {
-    if (Teleport* tp = item->asTeleport()) {
-      if (tp->hasDestination()) {
-        destination = tp->getDestination();
-        has_destination = true;
-      }
-    }
-  }
-
-  // Check if container has content
-  if (is_container) {
-    if (const Container* container = item->asContainer()) {
-      hasContent = container->getItemCount() > 0;
-    }
-  }
-
-  // Only create tooltip if there's something to show
-  if (unique == 0 && action == 0 && doorId == 0 && text.empty() &&
-      description.empty() && !has_destination && !hasContent) {
+  // Only create tooltip if there's something to show (or if it's a container)
+  if (data.uniqueId == 0 && data.actionId == 0 && data.doorId == 0 && 
+      data.text.empty() && data.description.empty() && !data.has_destination && !is_container) {
     return false;
   }
 
-  // Get item name from database
   std::string_view itemName = it.name;
   if (itemName.empty()) {
     itemName = "Item";
@@ -85,46 +115,10 @@ bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, cons
 
   data.pos = pos;
   data.itemId = id;
-  data.itemName = itemName; // Assign string_view to string_view (no copy)
+  data.itemName = itemName;
 
-  data.actionId = action;
-  data.uniqueId = unique;
-  data.doorId = doorId;
-  data.text = text;
-  data.description = description;
-  data.destination = destination;
-  data.has_destination = has_destination;
-
-  // Populate container items
-  if (it.isContainer() && zoom <= 1.5f) {
-    if (const Container* container = item->asContainer()) {
-      // Set capacity for rendering empty slots
-      data.containerCapacity = static_cast<uint8_t>(container->getVolume());
-
-      const auto& items = container->getVector();
-      data.containerItems.clear();
-      // Reserve only what we need (capped at 32)
-      data.containerItems.reserve(std::min(items.size(), size_t(32)));
-      for (const auto& subItem : items) {
-        if (subItem) {
-          ContainerItem ci;
-          ci.id = subItem->getID();
-          ci.subtype = subItem->getSubtype();
-          ci.count = subItem->getCount();
-          // Sanity check for count
-          if (ci.count == 0) {
-            ci.count = 1;
-          }
-
-          data.containerItems.push_back(ci);
-
-          // Limit preview items to avoid massive tooltips
-          if (data.containerItems.size() >= 32) {
-            break;
-          }
-        }
-      }
-    }
+  if (is_container) {
+    ExtractContainerData(data, item, zoom);
   }
 
   data.updateCategory();
