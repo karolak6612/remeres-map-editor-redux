@@ -24,6 +24,7 @@
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+#include "ui/theme.h"
 
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
@@ -53,8 +54,8 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	server_id_spin->SetToolTip("Search by server ID");
 	server_id_box_sizer->Add(server_id_spin, 0, wxALL | wxEXPAND, 5);
 
-	invalid_item = newd wxCheckBox(server_id_box_sizer->GetStaticBox(), wxID_ANY, "Force select", wxDefaultPosition, wxDefaultSize, 0);
-	invalid_item->SetToolTip("Force choose item ID that does not appear on the list.");
+	invalid_item = newd wxCheckBox(server_id_box_sizer->GetStaticBox(), wxID_ANY, "Force select ID even if missing", wxDefaultPosition, wxDefaultSize, 0);
+	invalid_item->SetToolTip("Force choose item ID that does not appear on the list, even if it is invalid.");
 	server_id_box_sizer->Add(invalid_item, 1, wxALL | wxEXPAND, 5);
 
 	options_box_sizer->Add(server_id_box_sizer, 1, wxALL | wxEXPAND, 5);
@@ -117,67 +118,87 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	wxStaticBoxSizer* properties_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Properties"), wxVERTICAL);
 
+	// Blocking
+	wxStaticText* blocking_header = newd wxStaticText(properties_box_sizer->GetStaticBox(), wxID_ANY, "Blocking");
+	blocking_header->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	properties_box_sizer->Add(blocking_header, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+
 	unpassable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unpassable", wxDefaultPosition, wxDefaultSize, 0);
 	unpassable->SetToolTip("Item blocks movement");
-	properties_box_sizer->Add(unpassable, 0, wxALL, 5);
-
-	unmovable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unmovable", wxDefaultPosition, wxDefaultSize, 0);
-	unmovable->SetToolTip("Item cannot be moved");
-	properties_box_sizer->Add(unmovable, 0, wxALL, 5);
+	properties_box_sizer->Add(unpassable, 0, wxLEFT | wxRIGHT, 10);
 
 	block_missiles = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Block Missiles", wxDefaultPosition, wxDefaultSize, 0);
 	block_missiles->SetToolTip("Item blocks projectiles");
-	properties_box_sizer->Add(block_missiles, 0, wxALL, 5);
+	properties_box_sizer->Add(block_missiles, 0, wxLEFT | wxRIGHT, 10);
 
 	block_pathfinder = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Block Pathfinder", wxDefaultPosition, wxDefaultSize, 0);
 	block_pathfinder->SetToolTip("Item blocks pathfinding");
-	properties_box_sizer->Add(block_pathfinder, 0, wxALL, 5);
+	properties_box_sizer->Add(block_pathfinder, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+
+	// Interaction
+	wxStaticText* interaction_header = newd wxStaticText(properties_box_sizer->GetStaticBox(), wxID_ANY, "Interaction");
+	interaction_header->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	properties_box_sizer->Add(interaction_header, 0, wxLEFT | wxTOP | wxRIGHT, 5);
 
 	readable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Readable", wxDefaultPosition, wxDefaultSize, 0);
 	readable->SetToolTip("Item has text");
-	properties_box_sizer->Add(readable, 0, wxALL, 5);
+	properties_box_sizer->Add(readable, 0, wxLEFT | wxRIGHT, 10);
 
 	writeable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Writeable", wxDefaultPosition, wxDefaultSize, 0);
 	writeable->SetToolTip("Item can be written on");
-	properties_box_sizer->Add(writeable, 0, wxALL, 5);
+	properties_box_sizer->Add(writeable, 0, wxLEFT | wxRIGHT, 10);
+
+	ignore_look = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Ignore Look", wxDefaultPosition, wxDefaultSize, 0);
+	ignore_look->SetToolTip("Item is ignored when looking");
+	properties_box_sizer->Add(ignore_look, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+
+	// Movement
+	wxStaticText* movement_header = newd wxStaticText(properties_box_sizer->GetStaticBox(), wxID_ANY, "Movement");
+	movement_header->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	properties_box_sizer->Add(movement_header, 0, wxLEFT | wxTOP | wxRIGHT, 5);
+
+	unmovable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Unmovable", wxDefaultPosition, wxDefaultSize, 0);
+	unmovable->SetToolTip("Item cannot be moved");
+	properties_box_sizer->Add(unmovable, 0, wxLEFT | wxRIGHT, 10);
 
 	pickupable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Pickupable", wxDefaultPosition, wxDefaultSize, 0);
 	pickupable->SetToolTip("Item can be picked up");
 	pickupable->SetValue(only_pickupables);
 	pickupable->Enable(!only_pickupables);
-	properties_box_sizer->Add(pickupable, 0, wxALL, 5);
+	properties_box_sizer->Add(pickupable, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
+
+	// Other
+	wxStaticText* other_header = newd wxStaticText(properties_box_sizer->GetStaticBox(), wxID_ANY, "Other");
+	other_header->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	properties_box_sizer->Add(other_header, 0, wxLEFT | wxTOP | wxRIGHT, 5);
 
 	stackable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Stackable", wxDefaultPosition, wxDefaultSize, 0);
 	stackable->SetToolTip("Item is stackable");
-	properties_box_sizer->Add(stackable, 0, wxALL, 5);
+	properties_box_sizer->Add(stackable, 0, wxLEFT | wxRIGHT, 10);
 
 	rotatable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Rotatable", wxDefaultPosition, wxDefaultSize, 0);
 	rotatable->SetToolTip("Item can be rotated");
-	properties_box_sizer->Add(rotatable, 0, wxALL, 5);
+	properties_box_sizer->Add(rotatable, 0, wxLEFT | wxRIGHT, 10);
 
 	hangable = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hangable", wxDefaultPosition, wxDefaultSize, 0);
 	hangable->SetToolTip("Item can be hung on walls");
-	properties_box_sizer->Add(hangable, 0, wxALL, 5);
+	properties_box_sizer->Add(hangable, 0, wxLEFT | wxRIGHT, 10);
 
 	hook_east = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hook East", wxDefaultPosition, wxDefaultSize, 0);
 	hook_east->SetToolTip("Item hooks to the east");
-	properties_box_sizer->Add(hook_east, 0, wxALL, 5);
+	properties_box_sizer->Add(hook_east, 0, wxLEFT | wxRIGHT, 10);
 
 	hook_south = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Hook South", wxDefaultPosition, wxDefaultSize, 0);
 	hook_south->SetToolTip("Item hooks to the south");
-	properties_box_sizer->Add(hook_south, 0, wxALL, 5);
+	properties_box_sizer->Add(hook_south, 0, wxLEFT | wxRIGHT, 10);
 
 	has_elevation = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Has Elevation", wxDefaultPosition, wxDefaultSize, 0);
 	has_elevation->SetToolTip("Item has height (elevation)");
-	properties_box_sizer->Add(has_elevation, 0, wxALL, 5);
-
-	ignore_look = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Ignore Look", wxDefaultPosition, wxDefaultSize, 0);
-	ignore_look->SetToolTip("Item is ignored when looking");
-	properties_box_sizer->Add(ignore_look, 0, wxALL, 5);
+	properties_box_sizer->Add(has_elevation, 0, wxLEFT | wxRIGHT, 10);
 
 	floor_change = newd wxCheckBox(properties_box_sizer->GetStaticBox(), wxID_ANY, "Floor Change", wxDefaultPosition, wxDefaultSize, 0);
 	floor_change->SetToolTip("Item causes floor change");
-	properties_box_sizer->Add(floor_change, 0, wxALL, 5);
+	properties_box_sizer->Add(floor_change, 0, wxLEFT | wxRIGHT | wxBOTTOM, 10);
 
 	box_sizer->Add(properties_box_sizer, 1, wxALL | wxEXPAND, 5);
 
@@ -280,6 +301,7 @@ void FindItemDialog::EnableProperties(bool enable) {
 }
 
 void FindItemDialog::RefreshContentsInternal() {
+	items_list->Freeze();
 	items_list->Clear();
 	ok_button->Enable(false);
 	ok_button->SetToolTip("Select an item to continue");
@@ -412,6 +434,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetNoMatches();
 	}
 
+	items_list->Thaw();
 	items_list->Refresh();
 }
 

@@ -19,6 +19,7 @@
 #define RME_RESULT_WINDOW_H_
 
 #include "app/main.h"
+#include <wx/listctrl.h>
 
 class SearchResultWindow : public wxPanel {
 public:
@@ -28,12 +29,12 @@ public:
 	void Clear();
 	void AddPosition(wxString description, Position pos);
 
-	void OnClickResult(wxCommandEvent&);
+	void OnClickResult(wxListEvent&);
 	void OnClickExport(wxCommandEvent&);
 	void OnClickClear(wxCommandEvent&);
 
 protected:
-	wxListBox* result_list;
+	wxListCtrl* result_list;
 
 };
 
