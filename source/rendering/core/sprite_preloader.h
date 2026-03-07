@@ -14,6 +14,9 @@
 #include <unordered_set>
 #include <vector>
 
+class SpriteDatabase;
+class SpriteLoader;
+
 class SpritePreloader {
 public:
   SpritePreloader();
@@ -23,7 +26,7 @@ public:
 
   // Schedules sprites for preloading based on the given view parameters.
   // This corresponds to the loop logic previously in collectTileSprites.
-  void preload(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z,
+  void preload(SpriteDatabase &sprites, SpriteLoader &loader, uint32_t clientID, int pattern_x, int pattern_y, int pattern_z,
                int frame);
 
   // Processes finished preload tasks and uploads data to the GPU.
@@ -72,7 +75,8 @@ private:
 };
 
 namespace rme {
-void collectTileSprites(SpritePreloader &preloader, uint32_t clientID,
+void collectTileSprites(SpritePreloader &preloader, SpriteDatabase &sprites,
+                        SpriteLoader &loader, uint32_t clientID,
                         int pattern_x, int pattern_y, int pattern_z, int frame);
 } // namespace rme
 

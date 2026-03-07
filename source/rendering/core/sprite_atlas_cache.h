@@ -54,7 +54,7 @@ public:
         return spriteList.size();
     }
 
-    [[nodiscard]] bool isSimpleAndLoaded(const SpriteMetadata& metadata) const;
+    [[nodiscard]] bool isSimpleAndLoaded(const SpriteMetadata& metadata, const SpriteDatabase& sprites) const;
 
     TemplateImage* getTemplateImage(SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, int sprite_index, const Outfit& outfit);
 

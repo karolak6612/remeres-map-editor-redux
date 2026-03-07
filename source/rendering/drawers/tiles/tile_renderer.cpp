@@ -134,8 +134,8 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
 
         // Inline preload check — skip function call when sprite is simple and
         // loaded (95%+ case)
-        if (!atlas.isSimpleAndLoaded(metadata)) {
-          rme::collectTileSprites(*sprite_preloader, clientID,
+        if (!atlas.isSimpleAndLoaded(metadata, *sprite_database)) {
+          rme::collectTileSprites(*sprite_preloader, g_gui.sprites, g_gui.loader, clientID,
                                   patterns.x, patterns.y, patterns.z,
                                   patterns.frame);
         }
@@ -256,8 +256,8 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
 
           // Inline preload check — skip function call when sprite is simple and
           // loaded
-          if (!atlas.isSimpleAndLoaded(metadata)) {
-            rme::collectTileSprites(*sprite_preloader, clientID,
+          if (!atlas.isSimpleAndLoaded(metadata, *sprite_database)) {
+            rme::collectTileSprites(*sprite_preloader, g_gui.sprites, g_gui.loader, clientID,
                                     patterns.x, patterns.y, patterns.z,
                                     patterns.frame);
           }
@@ -343,7 +343,7 @@ void TileRenderer::PreloadItem(const Tile *tile, Item *item, const ItemType &it,
     const SpriteMetadata &metadata = (*sprite_database).getMetadataSpace()[clientID];
     SpriteAtlasCache &atlas = (*sprite_database).getAtlasCacheSpace()[clientID];
 
-    if (!atlas.isSimpleAndLoaded(metadata)) {
+    if (!atlas.isSimpleAndLoaded(metadata, *sprite_database)) {
       SpritePatterns patterns;
       if (cached_patterns) {
         patterns = *cached_patterns;
@@ -351,7 +351,7 @@ void TileRenderer::PreloadItem(const Tile *tile, Item *item, const ItemType &it,
         patterns = PatternCalculator::Calculate(&metadata, it, item, tile,
                                                 tile->getPosition());
       }
-      rme::collectTileSprites(*sprite_preloader, clientID,
+      rme::collectTileSprites(*sprite_preloader, g_gui.sprites, g_gui.loader, clientID,
                               patterns.x, patterns.y, patterns.z,
                               patterns.frame);
     }

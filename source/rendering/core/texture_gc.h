@@ -47,7 +47,7 @@ public:
     void garbageCollection(SpriteDatabase& db);
     void cleanSoftwareSprites(SpriteDatabase& db);
     void onSettingsChanged(SpriteDatabase& db);
-    void addSpriteToCleanup(uint32_t spr_id);
+    void addSpriteToCleanup(uint32_t spr_id, SpriteDatabase& sprites);
 
     int getLoadedTexturesCount() const
     {

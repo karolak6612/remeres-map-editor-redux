@@ -254,12 +254,12 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr)
 
             if (look_id < 0) {
                 // Editor sprite (negative IDs like EDITOR_SPRITE_ERASER, EDITOR_SPRITE_PZ_TOOL)
-                g_gui.sprites.DrawItemSprite(look_id, &dc, SPRITE_SIZE_32x32, x_off, y_off);
+                g_gui.sprites.DrawItemSprite(g_gui.gc, look_id, &dc, SPRITE_SIZE_32x32, x_off, y_off);
             } else {
                 // Server item ID — convert to clientID via items.otb
                 const ItemType& it = g_items.getItemType(look_id);
                 if (it.clientID != 0) {
-                    g_gui.sprites.DrawItemSprite(it.clientID, &dc, SPRITE_SIZE_32x32, x_off, y_off);
+                    g_gui.sprites.DrawItemSprite(g_gui.gc, it.clientID, &dc, SPRITE_SIZE_32x32, x_off, y_off);
                 }
             }
         } else if (s) {
@@ -267,7 +267,7 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr)
             // Assuming 32x32 icon size for now, which matches SPRITE_SIZE_32x32 (32x32)
             int x_off = r.x + (r.width - 32) / 2;
             int y_off = r.y + (r.height - 32) / 2;
-            s->DrawTo(&dc, SPRITE_SIZE_32x32, x_off, y_off);
+            s->DrawTo(g_gui.gc, &dc, SPRITE_SIZE_32x32, x_off, y_off);
         } else {
             // Fallback text/color if no sprite
             wxString label = tr.tooltip.Left(1);

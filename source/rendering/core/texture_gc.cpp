@@ -79,7 +79,7 @@ bool TextureGC::containsResidentGameSprite(uint32_t clientID) const
 
 constexpr int MIN_CLEAN_THRESHOLD = 100;
 
-void TextureGC::addSpriteToCleanup(uint32_t spr_id)
+void TextureGC::addSpriteToCleanup(uint32_t spr_id, SpriteDatabase& sprites)
 {
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
     cleanup_list.push_back(spr_id);
@@ -94,8 +94,8 @@ void TextureGC::addSpriteToCleanup(uint32_t spr_id)
             uint32_t id = cleanup_list.front();
             cleanup_list.pop_front();
 
-            if (id > 0 && id < g_gui.sprites.getIconRendererSpace().size()) {
-                g_gui.sprites.getIconRendererSpace()[id].unloadDC();
+            if (id > 0 && id < sprites.getIconRendererSpace().size()) {
+                sprites.getIconRendererSpace()[id].unloadDC();
             }
         }
     }

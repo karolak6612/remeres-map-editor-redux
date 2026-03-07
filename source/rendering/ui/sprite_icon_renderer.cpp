@@ -48,22 +48,22 @@ void SpriteIconRenderer::unloadOutfitDC(const Outfit& outfit)
     colored_dc.erase(key);
 }
 
-wxMemoryDC* SpriteIconRenderer::getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size)
+wxMemoryDC* SpriteIconRenderer::getDC(TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size)
 {
     if (!dc[size]) {
-        wxBitmap bmp = SpriteIconGenerator::Generate(clientID, size);
+        wxBitmap bmp = SpriteIconGenerator::Generate(sprites, g_gui.loader, clientID, size);
         if (bmp.IsOk()) {
             bm[size] = std::make_unique<wxBitmap>(bmp);
             dc[size] = std::make_unique<wxMemoryDC>(*bm[size]);
         }
         if (metadata.id != 0) {
-            g_gui.gc.addSpriteToCleanup(metadata.id);
+            gc.addSpriteToCleanup(metadata.id, sprites);
         }
     }
     return dc[size].get();
 }
 
-wxMemoryDC* SpriteIconRenderer::getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size, const Outfit& outfit)
+wxMemoryDC* SpriteIconRenderer::getDC(TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size, const Outfit& outfit)
 {
     RenderKey key;
     key.size = size;
@@ -78,7 +78,7 @@ wxMemoryDC* SpriteIconRenderer::getDC(uint32_t clientID, const SpriteMetadata& m
 
     auto it = colored_dc.find(key);
     if (it == colored_dc.end()) {
-        wxBitmap bmp = SpriteIconGenerator::Generate(clientID, size, outfit);
+        wxBitmap bmp = SpriteIconGenerator::Generate(sprites, g_gui.loader, clientID, size, outfit);
         if (bmp.IsOk()) {
             auto cache = std::make_unique<CachedDC>();
             cache->bm = std::make_unique<wxBitmap>(bmp);
@@ -86,7 +86,7 @@ wxMemoryDC* SpriteIconRenderer::getDC(uint32_t clientID, const SpriteMetadata& m
 
             auto res = colored_dc.insert(std::make_pair(key, std::move(cache)));
             if (metadata.id != 0) {
-                g_gui.gc.addSpriteToCleanup(metadata.id);
+                gc.addSpriteToCleanup(metadata.id, sprites);
             }
             return res.first->second->dc.get();
         }
@@ -120,16 +120,16 @@ void SpriteIconRenderer::blitOrFallback(wxDC* target_dc, wxDC* sdc, SpriteSize s
 }
 
 void SpriteIconRenderer::DrawTo(
-    uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, int start_x, int start_y, int width, int height
+    TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, int start_x, int start_y, int width, int height
 )
 {
-    blitOrFallback(target_dc, getDC(clientID, metadata, sz), sz, start_x, start_y, width, height);
+    blitOrFallback(target_dc, getDC(gc, sprites, clientID, metadata, sz), sz, start_x, start_y, width, height);
 }
 
 void SpriteIconRenderer::DrawTo(
-    uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y,
+    TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, wxDC* target_dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y,
     int width, int height
 )
 {
-    blitOrFallback(target_dc, getDC(clientID, metadata, sz, outfit), sz, start_x, start_y, width, height);
+    blitOrFallback(target_dc, getDC(gc, sprites, clientID, metadata, sz, outfit), sz, start_x, start_y, width, height);
 }

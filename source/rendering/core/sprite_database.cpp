@@ -64,27 +64,35 @@ void SpriteDatabase::resizeSpriteSpaces(size_t new_size) {
   }
 }
 
-void SpriteDatabase::DrawItemSprite(int clientID, wxDC *dc, SpriteSize sz,
+void SpriteDatabase::DrawItemSprite(TextureGC& gc, int clientID, wxDC *dc, SpriteSize sz,
                                     int start_x, int start_y, int width,
                                     int height) {
   if (clientID < 0) {
     if (Sprite *editor_sprite = getEditorSprite(clientID)) {
-      editor_sprite->DrawTo(dc, sz, start_x, start_y, width, height);
+      editor_sprite->DrawTo(gc, dc, sz, start_x, start_y, width, height);
     }
   } else if (static_cast<size_t>(clientID) < metadata_space.size()) {
-    icon_space[clientID].DrawTo(clientID, metadata_space[clientID], dc, sz,
+    icon_space[clientID].DrawTo(gc, *this, clientID, metadata_space[clientID], dc, sz,
                                 start_x, start_y, width, height);
   }
 }
 
-void SpriteDatabase::DrawCreatureSprite(int lookType, const Outfit &outfit,
+void SpriteDatabase::DrawCreatureSprite(TextureGC& gc, int lookType, const Outfit &outfit,
                                         wxDC *dc, SpriteSize sz, int start_x,
                                         int start_y, int width, int height) {
   size_t clientID = static_cast<size_t>(lookType) + item_count;
   if (clientID < metadata_space.size()) {
-    icon_space[clientID].DrawTo(clientID, metadata_space[clientID], dc, sz,
+    icon_space[clientID].DrawTo(gc, *this, clientID, metadata_space[clientID], dc, sz,
                                 outfit, start_x, start_y, width, height);
   }
+}
+void SpriteDatabase::DrawSprite(TextureGC& gc, int clientID, wxDC *dc, SpriteSize sz, int start_x,
+                int start_y, int width, int height) {
+    if (clientID < 0) return;
+    if (static_cast<size_t>(clientID) < metadata_space.size()) {
+        icon_space[clientID].DrawTo(gc, *this, clientID, metadata_space[clientID], dc, sz,
+                                start_x, start_y, width, height);
+    }
 }
 
 // --- CreatureSprite implementation ---
@@ -94,9 +102,9 @@ CreatureSprite::CreatureSprite(uint32_t clientID, const Outfit &outfit)
 
 CreatureSprite::~CreatureSprite() = default;
 
-void CreatureSprite::DrawTo(wxDC *dc, SpriteSize sz, int start_x, int start_y,
+void CreatureSprite::DrawTo(TextureGC& gc, wxDC *dc, SpriteSize sz, int start_x, int start_y,
                             int width, int height) {
-  g_gui.sprites.DrawCreatureSprite(clientID, outfit, dc, sz, start_x, start_y,
+  g_gui.sprites.DrawCreatureSprite(gc, clientID, outfit, dc, sz, start_x, start_y,
                                    width, height);
 }
 

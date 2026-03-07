@@ -118,7 +118,7 @@ int OutfitSelectionGrid::GetOrCreateOutfitImage(NVGcontext* vg, int lookType, co
         return 0;
     }
 
-    wxBitmap bmp = SpriteIconGenerator::Generate(clientID, SPRITE_SIZE_64x64, outfit);
+    wxBitmap bmp = SpriteIconGenerator::Generate(g_gui.sprites, g_gui.loader, clientID, SPRITE_SIZE_64x64, outfit);
     wxImage img = bmp.ConvertToImage();
 
     if (!img.IsOk()) {

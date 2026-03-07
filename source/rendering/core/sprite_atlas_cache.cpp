@@ -31,10 +31,10 @@ void SpriteAtlasCache::clean(time_t time, int longevity, SpriteDatabase& sprites
     }
 }
 
-bool SpriteAtlasCache::isSimpleAndLoaded(const SpriteMetadata& metadata) const
+bool SpriteAtlasCache::isSimpleAndLoaded(const SpriteMetadata& metadata, const SpriteDatabase& sprites) const
 {
     if (!metadata.is_simple || spriteList.empty()) return false;
-    auto& space = g_gui.sprites.getNormalImageSpace();
+    auto& space = sprites.getNormalImageSpace();
     if (spriteList[0] >= space.size()) return false;
     return space[spriteList[0]].isGLLoaded;
 }

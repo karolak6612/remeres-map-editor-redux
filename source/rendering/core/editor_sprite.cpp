@@ -15,7 +15,7 @@ EditorSprite::~EditorSprite() {
 	unloadDC();
 }
 
-void EditorSprite::DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width, int height) {
+void EditorSprite::DrawTo(TextureGC& gc, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width, int height) {
 	wxBitmap* sp = bm[sz].get();
 	if (sp) {
 		dc->DrawBitmap(*sp, start_x, start_y, true);

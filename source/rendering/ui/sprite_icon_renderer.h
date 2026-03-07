@@ -14,6 +14,9 @@
 #include <memory>
 #include <unordered_map>
 
+class TextureGC;
+class SpriteDatabase;
+
 class SpriteIconRenderer {
 public:
     SpriteIconRenderer() = default;
@@ -36,11 +39,11 @@ public:
     SpriteIconRenderer& operator=(SpriteIconRenderer&&) = default;
 
     void DrawTo(
-        uint32_t clientID, const SpriteMetadata& metadata, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1,
+        TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1,
         int height = -1
     );
     void DrawTo(
-        uint32_t clientID, const SpriteMetadata& metadata, wxDC* dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y,
+        TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, wxDC* dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y,
         int width = -1, int height = -1
     );
 
@@ -48,8 +51,8 @@ public:
     void unloadOutfitDC(const Outfit& outfit);
 
 protected:
-    wxMemoryDC* getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size);
-    wxMemoryDC* getDC(uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size, const Outfit& outfit);
+    wxMemoryDC* getDC(TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size);
+    wxMemoryDC* getDC(TextureGC& gc, SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, SpriteSize size, const Outfit& outfit);
 
 private:
     void blitOrFallback(wxDC* target_dc, wxDC* sdc, SpriteSize sz, int start_x, int start_y, int width, int height);

@@ -56,19 +56,20 @@ void SpritePreloader::clear() {
   pending_ids.clear();
 }
 
-void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y,
-                              int pattern_z, int frame) {
-  if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() ||
-      clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
+void SpritePreloader::preload(SpriteDatabase &sprites, SpriteLoader &loader,
+                               uint32_t clientID, int pattern_x, int pattern_y,
+                               int pattern_z, int frame) {
+  if (clientID == 0 || clientID >= sprites.getMetadataSpace().size() ||
+      clientID >= sprites.getAtlasCacheSpace().size()) {
     return;
   }
-  const SpriteMetadata &meta = g_gui.sprites.getMetadataSpace()[clientID];
-  SpriteAtlasCache &atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+  const SpriteMetadata &meta = sprites.getMetadataSpace()[clientID];
+  SpriteAtlasCache &atlas = sprites.getAtlasCacheSpace()[clientID];
 
   // Capture global state once per preload call (one item)
-  const std::string &sprfile = g_gui.loader.getSpriteFile();
-  const bool is_extended = g_gui.loader.isExtended();
-  const bool has_transparency = g_gui.loader.hasTransparency();
+  const std::string &sprfile = loader.getSpriteFile();
+  const bool is_extended = loader.isExtended();
+  const bool has_transparency = loader.hasTransparency();
 
   static thread_local std::vector<PendingTask> ids_to_enqueue;
   ids_to_enqueue.clear();
@@ -225,9 +226,10 @@ void SpritePreloader::update() {
 }
 
 namespace rme {
-void collectTileSprites(SpritePreloader &preloader, uint32_t clientID,
-                        int pattern_x, int pattern_y, int pattern_z,
-                        int frame) {
-  preloader.preload(clientID, pattern_x, pattern_y, pattern_z, frame);
+void collectTileSprites(SpritePreloader &preloader, SpriteDatabase &sprites,
+                        SpriteLoader &loader, uint32_t clientID, int pattern_x,
+                        int pattern_y, int pattern_z, int frame) {
+  preloader.preload(sprites, loader, clientID, pattern_x, pattern_y, pattern_z,
+                    frame);
 }
 } // namespace rme

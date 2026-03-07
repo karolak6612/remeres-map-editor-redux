@@ -68,7 +68,7 @@ void SpawnCreaturePanel::SetTile(Tile* tile)
         uint32_t clientID = tile->creature->getLookType().lookType;
         bool has_metadata = clientID > 0 && clientID < g_gui.sprites.getMetadataSpace().size();
         if (has_metadata) {
-            wxBitmap bmp = SpriteIconGenerator::Generate(clientID, SPRITE_SIZE_32x32, tile->creature->getLookType(), false, SOUTH);
+            wxBitmap bmp = SpriteIconGenerator::Generate(g_gui.sprites, g_gui.loader, clientID, SPRITE_SIZE_32x32, tile->creature->getLookType(), false, SOUTH);
             creature_bitmap->SetBitmap(bmp);
         } else {
             creature_bitmap->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, FROM_DIP(this, wxSize(32, 32))));

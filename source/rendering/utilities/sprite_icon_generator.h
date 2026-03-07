@@ -10,10 +10,13 @@
 #include <wx/bitmap.h>
 #include <cstdint>
 
+class SpriteDatabase;
+class SpriteLoader;
+
 class SpriteIconGenerator {
 public:
-    static wxBitmap Generate(uint32_t clientID, SpriteSize size, bool rescale = true);
-    static wxBitmap Generate(uint32_t clientID, SpriteSize size, const Outfit& outfit, bool rescale = true, Direction direction = SOUTH);
+    static wxBitmap Generate(SpriteDatabase& sprites, SpriteLoader& loader, uint32_t clientID, SpriteSize size, bool rescale = true);
+    static wxBitmap Generate(SpriteDatabase& sprites, SpriteLoader& loader, uint32_t clientID, SpriteSize size, const Outfit& outfit, bool rescale = true, Direction direction = SOUTH);
 };
 
 #endif
