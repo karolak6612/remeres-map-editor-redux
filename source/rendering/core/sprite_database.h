@@ -7,8 +7,9 @@
 #include "rendering/core/sprite_metadata.h"
 #include "rendering/ui/sprite_icon_renderer.h"
 #include <memory>
-#include <unordered_map>
 #include <vector>
+#include "rendering/core/normal_image.h"
+#include "rendering/core/template_image.h"
 
 class SpriteDatabase {
 public:
@@ -55,7 +56,10 @@ public:
   std::unordered_map<int, std::unique_ptr<Sprite>> &getEditorSpriteSpace() {
     return editor_sprite_space;
   }
-  std::vector<std::unique_ptr<Image>> &getImageSpace() { return image_space; }
+  std::vector<NormalImage> &getNormalImageSpace() { return normal_images_; }
+  std::vector<TemplateImage> &getTemplateImageSpace() { return template_images_; }
+
+  Image* resolveImage(ImageHandle handle);
 
   void resizeSpriteSpaces(size_t new_size);
 
@@ -63,7 +67,8 @@ private:
   std::vector<SpriteMetadata> metadata_space;
   std::vector<SpriteAtlasCache> atlas_space;
   std::vector<SpriteIconRenderer> icon_space;
-  std::vector<std::unique_ptr<Image>> image_space;
+  std::vector<NormalImage> normal_images_;
+  std::vector<TemplateImage> template_images_;
   std::unordered_map<int, std::unique_ptr<Sprite>> editor_sprite_space;
 
   uint16_t item_count = 0;

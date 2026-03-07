@@ -12,6 +12,29 @@ Image::Image() :
 	lastaccess(0) {
 }
 
+Image::Image(Image&& other) noexcept :
+	handle(other.handle),
+	isGLLoaded(other.isGLLoaded),
+	lastaccess(other.lastaccess.load(std::memory_order_relaxed)),
+	generation_id(other.generation_id)
+{
+	other.isGLLoaded = false;
+	other.handle = ImageHandle{};
+}
+
+Image& Image::operator=(Image&& other) noexcept {
+	if (this != &other) {
+		handle = other.handle;
+		isGLLoaded = other.isGLLoaded;
+		lastaccess.store(other.lastaccess.load(std::memory_order_relaxed), std::memory_order_relaxed);
+		generation_id = other.generation_id;
+		
+		other.isGLLoaded = false;
+		other.handle = ImageHandle{};
+	}
+	return *this;
+}
+
 void Image::visit() const {
 	lastaccess.store(static_cast<int64_t>(g_gui.gc.getCachedTime()), std::memory_order_relaxed);
 }
@@ -70,7 +93,7 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 		if (region) {
 			if (!isGLLoaded) {
 				isGLLoaded = true;
-				g_gui.gc.addResidentImage(this); // Add to resident set
+				g_gui.gc.addResidentImage(handle); // Add to resident set
 			}
 			return region;
 		} else {

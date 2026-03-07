@@ -1,36 +1,16 @@
 //////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
 
-#ifndef RME_TOOLTIP_DRAWER_H_
-#define RME_TOOLTIP_DRAWER_H_
+#ifndef RME_TOOLTIP_COLLECTOR_H_
+#define RME_TOOLTIP_COLLECTOR_H_
 
-#include "app/definitions.h"
 #include "map/position.h"
-#include "rendering/core/view_state.h"
-#include <iostream>
-#include <sstream>
+#include <cstdint>
 #include <string>
 #include <string_view>
-#include <unordered_map>
 #include <vector>
-
-class Item;
-class Waypoint;
-struct NVGcontext;
+#include <span>
 
 struct ContainerItem {
     uint16_t id;
@@ -124,12 +104,9 @@ struct TooltipData {
     }
 };
 
-struct DrawContext;
-
-class TooltipDrawer {
+class TooltipCollector {
 public:
-    TooltipDrawer();
-    ~TooltipDrawer();
+    TooltipCollector() = default;
 
     // Add a structured tooltip for an item
     void addItemTooltip(const TooltipData& data);
@@ -142,55 +119,15 @@ public:
     // Add a waypoint tooltip
     void addWaypointTooltip(Position pos, std::string_view name);
 
-    // Draw all tooltips
-    void draw(NVGcontext* vg, const DrawContext& ctx);
-
-    // Clear all tooltips
+    // Clear all collected tooltips
     void clear();
 
-protected:
-    struct FieldLine {
-        std::string label;
-        std::string value;
-        uint8_t r, g, b;
-        std::vector<std::string> wrappedLines; // For multi-line values
-    };
-    std::vector<FieldLine> scratch_fields;
-    size_t scratch_fields_count = 0;
-    std::string storage; // Scratch buffer for text generation
+    // Get the collected tooltips
+    std::span<const TooltipData> getTooltips() const { return std::span<const TooltipData>(tooltips.data(), active_count); }
 
+private:
     std::vector<TooltipData> tooltips;
     size_t active_count = 0;
-
-    std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
-    NVGcontext* lastContext = nullptr;
-
-    // Helper to get or load sprite image
-    int getSpriteImage(NVGcontext* vg, uint16_t itemId);
-
-    // Helper to get header color based on category
-    void getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const;
-
-    // Refactored drawing helpers
-    struct LayoutMetrics {
-        float width;
-        float height;
-        float valueStartX;
-        float gridSlotSize;
-        int containerCols;
-        int containerRows;
-        float containerHeight;
-        int totalContainerSlots;
-        int emptyContainerSlots;
-        int numContainerItems;
-    };
-
-    void prepareFields(const TooltipData& tooltip);
-    LayoutMetrics
-    calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize);
-    void drawBackground(NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip);
-    void drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize);
-    void drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout);
 };
 
 #endif

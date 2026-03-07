@@ -15,6 +15,38 @@ NormalImage::~NormalImage()
     unloadGL();
 }
 
+NormalImage::NormalImage(NormalImage&& other) noexcept
+    : Image(std::move(other)),
+      id(other.id),
+      atlas_region(other.atlas_region),
+      size(other.size),
+      dump(std::move(other.dump)),
+      clientID(other.clientID)
+{
+    other.id = 0;
+    other.atlas_region = nullptr;
+    other.size = 0;
+    other.clientID = 0;
+}
+
+NormalImage& NormalImage::operator=(NormalImage&& other) noexcept
+{
+    if (this != &other) {
+        Image::operator=(std::move(other));
+        id = other.id;
+        atlas_region = other.atlas_region;
+        size = other.size;
+        dump = std::move(other.dump);
+        clientID = other.clientID;
+        
+        other.id = 0;
+        other.atlas_region = nullptr;
+        other.size = 0;
+        other.clientID = 0;
+    }
+    return *this;
+}
+
 void NormalImage::unloadGL()
 {
     if (isGLLoaded) {
@@ -24,9 +56,11 @@ void NormalImage::unloadGL()
 
         isGLLoaded = false;
         atlas_region = nullptr;
+        ImageHandle old_handle = handle;
         generation_id++;
+        handle.generation = generation_id;
 
-        g_gui.gc.removeResidentImage(this);
+        g_gui.gc.removeResidentImage(old_handle);
     }
 }
 

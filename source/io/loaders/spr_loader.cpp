@@ -73,9 +73,9 @@ bool SprLoader::LoadData(
         return true;
     }
 
-    // Pre-allocate image_space if total_pics is known
-    // Resize image_space to match exact sprite count, removing potential stale entries
-    db.getImageSpace().resize(total_pics + 1);
+    // Pre-allocate normal_images_ if total_pics is known
+    // Resize normal_images_ to match exact sprite count, removing potential stale entries
+    db.getNormalImageSpace().resize(total_pics + 1);
 
     std::vector<uint32_t> sprite_indexes = ReadSpriteIndexes(fh, total_pics, error);
     if (sprite_indexes.empty() && total_pics > 0) {
@@ -130,31 +130,21 @@ bool SprLoader::ReadSprites(
             return false;
         }
 
-        if (id < db.getImageSpace().size() && db.getImageSpace()[id]) {
-            NormalImage* spr = dynamic_cast<NormalImage*>(db.getImageSpace()[id].get());
-            if (spr) {
-                if (size > 0) {
-                    if (spr->size > 0) {
-                        // Duplicate sprite id
-                        warnings.push_back(std::format("items.spr: Duplicate sprite id {}", id));
-                        if (!fh.seekRelative(size)) {
-                            error = wxstr(fh.getErrorMessage());
-                            return false;
-                        }
-                    } else {
-                        spr->id = id;
-                        spr->size = size;
-                        spr->dump = std::make_unique<uint8_t[]>(size);
-                        if (!fh.getRAW(spr->dump.get(), size)) {
-                            error = wxstr(fh.getErrorMessage());
-                            return false;
-                        }
-                    }
-                }
-            } else {
-                warnings.push_back(std::format("SprLoader: Failed to cast sprite id {} to NormalImage", id));
-                if (size > 0) {
+        if (id < static_cast<int>(db.getNormalImageSpace().size())) {
+            NormalImage* spr = &db.getNormalImageSpace()[id];
+            if (size > 0) {
+                if (spr->size > 0) {
+                    // Duplicate sprite id
+                    warnings.push_back(std::format("items.spr: Duplicate sprite id {}", id));
                     if (!fh.seekRelative(size)) {
+                        error = wxstr(fh.getErrorMessage());
+                        return false;
+                    }
+                } else {
+                    spr->id = id;
+                    spr->size = size;
+                    spr->dump = std::make_unique<uint8_t[]>(size);
+                    if (!fh.getRAW(spr->dump.get(), size)) {
                         error = wxstr(fh.getErrorMessage());
                         return false;
                     }

@@ -12,7 +12,6 @@
 #include <memory>
 #include <vector>
 
-class NormalImage;
 struct Outfit;
 struct AtlasRegion;
 
@@ -27,8 +26,8 @@ public:
     SpriteAtlasCache(SpriteAtlasCache&&) = default;
     SpriteAtlasCache& operator=(SpriteAtlasCache&&) = default;
 
-    std::vector<NormalImage*> spriteList;
-    std::vector<std::unique_ptr<TemplateImage>> instanced_templates;
+    std::vector<uint32_t> spriteList; // Stores indices into SpriteDatabase::normal_images_
+    std::vector<uint32_t> instanced_templates; // Stores indices into SpriteDatabase::template_images_
 
     void invalidateCache(const AtlasRegion* region);
     void clean(time_t time, int longevity = -1);

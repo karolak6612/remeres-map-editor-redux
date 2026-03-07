@@ -29,7 +29,7 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/drawers/tiles/floor_drawer.h"
-#include "rendering/ui/tooltip_drawer.h"
+#include "rendering/ui/tooltip_collector.h"
 #include "rendering/utilities/pattern_calculator.h"
 #include "rendering/ui/tooltip_data_extractor.h"
 TileRenderer::TileRenderer(const TileRenderContext& ctx)
@@ -38,7 +38,7 @@ TileRenderer::TileRenderer(const TileRenderContext& ctx)
       creature_drawer(&ctx.creature_drawer),
       floor_drawer(&ctx.floor_drawer),
       marker_drawer(&ctx.marker_drawer),
-      tooltip_drawer(&ctx.tooltip_drawer),
+      tooltip_collector(&ctx.tooltip_collector),
       creature_name_drawer(&ctx.creature_name_drawer),
       editor(&ctx.editor) {}
 
@@ -91,7 +91,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   // Waypoint tooltip (one per waypoint)
   if (ctx.options.settings.show_tooltips && waypoint &&
       map_z == ctx.view.floor) {
-    tooltip_drawer->addWaypointTooltip(position, waypoint->name);
+    tooltip_collector->addWaypointTooltip(position, waypoint->name);
   }
 
   bool as_minimap = ctx.options.settings.show_as_minimap;
@@ -166,11 +166,11 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   // Ground tooltip (one per item)
   if (ctx.options.settings.show_tooltips && map_z == ctx.view.floor &&
       tile->ground && ground_it) {
-    TooltipData &groundData = tooltip_drawer->requestTooltipData();
+    TooltipData &groundData = tooltip_collector->requestTooltipData();
     if (rme::FillItemTooltipData(groundData, tile->ground.get(), *ground_it,
                             position, is_house_tile, ctx.view.zoom)) {
       if (groundData.hasVisibleFields()) {
-        tooltip_drawer->commitTooltip();
+        tooltip_collector->commitTooltip();
       }
     }
   }
@@ -228,11 +228,11 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         const ItemType &it = item->getType();
 
         if (process_tooltips) {
-          TooltipData &itemData = tooltip_drawer->requestTooltipData();
+          TooltipData &itemData = tooltip_collector->requestTooltipData();
           if (rme::FillItemTooltipData(itemData, item.get(), it, position,
                                   is_house_tile, ctx.view.zoom)) {
             if (itemData.hasVisibleFields()) {
-              tooltip_drawer->commitTooltip();
+              tooltip_collector->commitTooltip();
             }
           }
         }

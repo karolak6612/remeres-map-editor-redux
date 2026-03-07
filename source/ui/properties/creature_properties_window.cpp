@@ -19,21 +19,21 @@ CreaturePropertiesWindow::CreaturePropertiesWindow(wxWindow* win_parent, const M
 	Bind(wxEVT_BUTTON, &CreaturePropertiesWindow::OnClickCancel, this, wxID_CANCEL);
 
 	wxSizer* topsizer = newd wxBoxSizer(wxVERTICAL);
-	wxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Creature Properties");
+	wxStaticBoxSizer* boxsizer = newd wxStaticBoxSizer(wxVERTICAL, this, "Creature Properties");
 
 	wxFlexGridSizer* subsizer = newd wxFlexGridSizer(2, 10, 10);
 	subsizer->AddGrowableCol(1);
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Creature "));
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "\"" + wxstr(edit_creature->getName()) + "\""), wxSizerFlags(1).Expand());
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Creature "));
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "\"" + wxstr(edit_creature->getName()) + "\""), wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Spawn interval"));
-	count_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_creature->getSpawnTime()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 10, 86400, edit_creature->getSpawnTime());
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Spawn interval"));
+	count_field = newd wxSpinCtrl(boxsizer->GetStaticBox(), wxID_ANY, i2ws(edit_creature->getSpawnTime()), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 10, 86400, edit_creature->getSpawnTime());
 	count_field->SetToolTip("Spawn interval in seconds");
 	subsizer->Add(count_field, wxSizerFlags(1).Expand());
 
-	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Direction"));
-	direction_field = newd wxChoice(this, wxID_ANY);
+	subsizer->Add(newd wxStaticText(boxsizer->GetStaticBox(), wxID_ANY, "Direction"));
+	direction_field = newd wxChoice(boxsizer->GetStaticBox(), wxID_ANY);
 	direction_field->SetToolTip("Initial facing direction");
 
 	for (Direction dir = DIRECTION_FIRST; dir <= DIRECTION_LAST; ++dir) {

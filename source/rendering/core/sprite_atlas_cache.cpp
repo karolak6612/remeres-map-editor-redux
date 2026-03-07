@@ -7,7 +7,10 @@
 
 #include "rendering/core/normal_image.h"
 #include "rendering/core/template_image.h"
+#include "rendering/core/sprite_database.h"
+#include "ui/gui.h"
 #include <algorithm>
+#include <ranges>
 
 void SpriteAtlasCache::invalidateCache(const AtlasRegion* region)
 {
@@ -20,20 +23,26 @@ void SpriteAtlasCache::invalidateCache(const AtlasRegion* region)
 
 void SpriteAtlasCache::clean(time_t time, int longevity)
 {
-    for (auto& iter : instanced_templates) {
-        iter->clean(time, longevity);
+    auto& template_space = g_gui.sprites.getTemplateImageSpace();
+    for (uint32_t idx : instanced_templates) {
+        if (idx < template_space.size()) {
+            template_space[idx].clean(time, longevity);
+        }
     }
 }
 
 bool SpriteAtlasCache::isSimpleAndLoaded(const SpriteMetadata& metadata) const
 {
-    return metadata.is_simple && !spriteList.empty() && spriteList[0] != nullptr && spriteList[0]->isGLLoaded;
+    if (!metadata.is_simple || spriteList.empty()) return false;
+    auto& space = g_gui.sprites.getNormalImageSpace();
+    if (spriteList[0] >= space.size()) return false;
+    return space[spriteList[0]].isGLLoaded;
 }
 
 uint32_t SpriteAtlasCache::getDebugImageId(size_t index) const
 {
-    if (index < spriteList.size() && spriteList[index] != nullptr && spriteList[index]->isNormalImage()) {
-        return static_cast<const NormalImage*>(spriteList[index])->id;
+    if (index < spriteList.size()) {
+        return spriteList[index];
     }
     return 0;
 }
@@ -41,8 +50,8 @@ uint32_t SpriteAtlasCache::getDebugImageId(size_t index) const
 uint32_t SpriteAtlasCache::getSpriteId(const SpriteMetadata& metadata, int frameIndex, int pattern_x, int pattern_y) const
 {
     auto idx = metadata.getIndex(0, 0, 0, pattern_x, pattern_y, 0, frameIndex);
-    if (idx < spriteList.size() && spriteList[idx] != nullptr && spriteList[idx]->isNormalImage()) {
-        return static_cast<const NormalImage*>(spriteList[idx])->id;
+    if (idx < spriteList.size()) {
+        return spriteList[idx];
     }
     return 0;
 }
@@ -56,26 +65,30 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
         return nullptr;
     }
 
+    auto& space = g_gui.sprites.getNormalImageSpace();
+
     if (_count == -1 && metadata.is_simple) {
         if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0 && !spriteList.empty()
-            && spriteList[0]) {
-            if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id
-                && cached_sprite_id == spriteList[0]->id) {
+            && spriteList[0] < space.size()) {
+                
+            auto& img = space[spriteList[0]];
+            if (cached_default_region && img.isGLLoaded && cached_generation_id == img.generation_id
+                && cached_sprite_id == img.id) {
                 return cached_default_region;
             }
 
-            const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
-            if (valid_region && spriteList[0]->isGLLoaded) {
+            const AtlasRegion* valid_region = img.getAtlasRegion();
+            if (valid_region && img.isGLLoaded) {
                 cached_default_region = valid_region;
-                cached_generation_id = spriteList[0]->generation_id;
-                cached_sprite_id = spriteList[0]->id;
+                cached_generation_id = img.generation_id;
+                cached_sprite_id = img.id;
             } else {
                 cached_default_region = nullptr;
                 cached_generation_id = 0;
                 cached_sprite_id = 0;
             }
 
-            spriteList[0]->clientID = clientID;
+            img.clientID = clientID;
             return valid_region;
         }
     }
@@ -94,36 +107,44 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
         }
     }
 
-    if (v < spriteList.size() && spriteList[v]) {
-        spriteList[v]->clientID = clientID;
-        return spriteList[v]->getAtlasRegion();
+    if (v < spriteList.size() && spriteList[v] < space.size()) {
+        auto& img = space[spriteList[v]];
+        img.clientID = clientID;
+        return img.getAtlasRegion();
     }
     return nullptr;
 }
 
 TemplateImage* SpriteAtlasCache::getTemplateImage(uint32_t clientID, const SpriteMetadata& metadata, int sprite_index, const Outfit& outfit)
 {
-    auto it = std::ranges::find_if(instanced_templates, [sprite_index, &outfit](const auto& img) {
-        if (img->sprite_index != sprite_index) {
+    auto& template_space = g_gui.sprites.getTemplateImageSpace();
+    
+    auto it = std::ranges::find_if(instanced_templates, [sprite_index, &outfit, &template_space](uint32_t idx) {
+        if (idx >= template_space.size()) return false;
+        auto& img = template_space[idx];
+        if (img.sprite_index != sprite_index) {
             return false;
         }
-        uint32_t lookHash = static_cast<uint32_t>(img->lookHead) << 24 | static_cast<uint32_t>(img->lookBody) << 16
-            | static_cast<uint32_t>(img->lookLegs) << 8 | static_cast<uint32_t>(img->lookFeet);
+        uint32_t lookHash = static_cast<uint32_t>(img.lookHead) << 24 | static_cast<uint32_t>(img.lookBody) << 16
+            | static_cast<uint32_t>(img.lookLegs) << 8 | static_cast<uint32_t>(img.lookFeet);
         return outfit.getColorHash() == lookHash;
     });
 
     if (it != instanced_templates.end()) {
         if (it != instanced_templates.begin()) {
             std::iter_swap(it, instanced_templates.begin());
-            return instanced_templates.front().get();
+            return &template_space[instanced_templates.front()];
         }
-        return it->get();
+        return &template_space[*it];
     }
 
-    auto img = std::make_unique<TemplateImage>(clientID, sprite_index, outfit);
-    TemplateImage* ptr = img.get();
-    instanced_templates.push_back(std::move(img));
-    return ptr;
+    uint32_t new_idx = template_space.size();
+    template_space.emplace_back(clientID, sprite_index, outfit);
+    auto& new_img = template_space.back();
+    new_img.handle = {ImageType::Template, new_idx, new_img.generation_id};
+    
+    instanced_templates.push_back(new_idx);
+    return &template_space.back();
 }
 
 const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
@@ -147,9 +168,13 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
         TemplateImage* img = getTemplateImage(clientID, metadata, v, _outfit);
         return img->getAtlasRegion();
     }
-    if (v < spriteList.size() && spriteList[v]) {
-        spriteList[v]->clientID = clientID;
-        return spriteList[v]->getAtlasRegion();
+    if (v < spriteList.size()) {
+        auto& space = g_gui.sprites.getNormalImageSpace();
+        if (spriteList[v] < space.size()) {
+            auto& img = space[spriteList[v]];
+            img.clientID = clientID;
+            return img.getAtlasRegion();
+        }
     }
     return nullptr;
 }

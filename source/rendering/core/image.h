@@ -6,11 +6,36 @@
 #include <cstdint>
 #include "rendering/core/atlas_manager.h" // For AtlasRegion
 
+enum class ImageType : uint8_t {
+    None = 0,
+    Normal,
+    Template
+};
+
+struct ImageHandle {
+    ImageType type = ImageType::None;
+    uint32_t index = 0;
+    uint32_t generation = 0;
+
+    bool isValid() const { return type != ImageType::None; }
+
+    bool operator==(const ImageHandle& other) const {
+        return type == other.type && index == other.index && generation == other.generation;
+    }
+};
+
 class Image {
 public:
 	Image();
 	virtual ~Image() = default;
 
+	Image(const Image&) = delete;
+	Image& operator=(const Image&) = delete;
+
+	Image(Image&& other) noexcept;
+	Image& operator=(Image&& other) noexcept;
+
+	ImageHandle handle;
 	bool isGLLoaded = false;
 	mutable std::atomic<int64_t> lastaccess;
 	uint32_t generation_id = 0;

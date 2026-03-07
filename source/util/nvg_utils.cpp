@@ -41,12 +41,14 @@ namespace NvgUtils {
                         continue;
                     }
 
-                    auto* normal_img = dynamic_cast<NormalImage*>(atlas_cache.spriteList[spriteIdx]);
-                    if (!normal_img) {
+                    uint32_t normal_img_idx = atlas_cache.spriteList[spriteIdx];
+
+                    auto& space = g_gui.sprites.getNormalImageSpace();
+                    if (normal_img_idx >= space.size()) {
                         continue;
                     }
 
-                    auto spriteData = normal_img->getRGBAData();
+                    auto spriteData = space[normal_img_idx].getRGBAData();
                     if (!spriteData) {
                         continue;
                     }

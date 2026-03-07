@@ -16,7 +16,7 @@ class BaseMap;
 class TileRenderer;
 class SpriteBatch;
 class PrimitiveRenderer;
-class LightDrawer;
+class LightRenderer;
 struct LightBuffer;
 class CreatureDrawer;
 class CreatureNameDrawer;
@@ -67,7 +67,7 @@ private:
   std::unique_ptr<SpriteBatch> sprite_batch;
   std::unique_ptr<PrimitiveRenderer> primitive_renderer;
   std::unique_ptr<LightBuffer> light_buffer;
-  std::shared_ptr<LightDrawer> light_drawer;
+  std::unique_ptr<LightRenderer> light_renderer;
 
   // Drawers
   std::unique_ptr<CreatureDrawer> creature_drawer;

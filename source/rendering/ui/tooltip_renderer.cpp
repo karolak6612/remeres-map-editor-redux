@@ -1,109 +1,17 @@
 //////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
 
-#include "rendering/ui/tooltip_drawer.h"
-#include "game/items.h"
-#include "game/sprites.h"
-#include "rendering/core/atlas_lifecycle.h"
-#include "rendering/core/coordinate_mapper.h"
+#include "rendering/ui/tooltip_renderer.h"
+#include "rendering/ui/nvg_image_cache.h"
 #include "rendering/core/draw_context.h"
-#include "rendering/core/normal_image.h"
-#include "rendering/core/sprite_database.h"
-#include "rendering/core/text_renderer.h"
-#include "rendering/core/texture_gc.h"
-#include "rendering/io/sprite_loader.h"
-#include "ui/gui.h"
+#include "rendering/core/view_state.h"
 #include "ui/theme.h"
 #include <wx/wx.h>
 #include <format>
 #include <nanovg.h>
 
-TooltipDrawer::TooltipDrawer() { }
-
-TooltipDrawer::~TooltipDrawer()
-{
-    clear();
-    // Only delete NVG images if the context pointer appears valid.
-    // If the context was destroyed before us, calling nvgDeleteImage is UB.
-    // We defensively skip cleanup when lastContext may be stale.
-    if (lastContext && !spriteCache.empty()) {
-        for (auto& [id, handle] : spriteCache) {
-            if (handle > 0) {
-                nvgDeleteImage(lastContext, handle);
-            }
-        }
-    }
-    spriteCache.clear();
-    lastContext = nullptr;
-}
-
-void TooltipDrawer::clear()
-{
-    active_count = 0;
-}
-
-TooltipData& TooltipDrawer::requestTooltipData()
-{
-    if (active_count >= tooltips.size()) {
-        tooltips.emplace_back();
-    }
-    TooltipData& data = tooltips[active_count];
-    data.clear();
-    return data;
-}
-
-void TooltipDrawer::commitTooltip()
-{
-    active_count++;
-}
-
-void TooltipDrawer::addItemTooltip(const TooltipData& data)
-{
-    if (!data.hasVisibleFields()) {
-        return;
-    }
-    TooltipData& dest = requestTooltipData();
-    dest = data;
-    commitTooltip();
-}
-
-void TooltipDrawer::addItemTooltip(TooltipData&& data)
-{
-    if (!data.hasVisibleFields()) {
-        return;
-    }
-    TooltipData& dest = requestTooltipData();
-    dest = std::move(data);
-    commitTooltip();
-}
-
-void TooltipDrawer::addWaypointTooltip(Position pos, std::string_view name)
-{
-    if (name.empty()) {
-        return;
-    }
-    TooltipData& data = requestTooltipData();
-    data.pos = pos;
-    data.category = TooltipCategory::WAYPOINT;
-    data.waypointName = name;
-    commitTooltip();
-}
-
-void TooltipDrawer::getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const
+void TooltipRenderer::getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, uint8_t& b) const
 {
     wxColour color;
     switch (cat) {
@@ -129,105 +37,7 @@ void TooltipDrawer::getHeaderColor(TooltipCategory cat, uint8_t& r, uint8_t& g, 
     b = color.Blue();
 }
 
-int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId)
-{
-    if (itemId == 0) {
-        return 0;
-    }
-
-    // Detect context change and clear cache
-    if (vg != lastContext) {
-        // If we had a previous context, we'd ideally delete images from it,
-        // but if the context pointer changed, the old one might be invalid.
-        // However, adhering to the request to clear cache with nvgDeleteImage:
-        if (lastContext) {
-            for (auto& pair : spriteCache) {
-                if (pair.second > 0) {
-                    nvgDeleteImage(lastContext, pair.second);
-                }
-            }
-        }
-        spriteCache.clear();
-        lastContext = vg;
-    }
-
-    // Resolve Item ID
-    ItemType& it = g_items[itemId];
-    if (it.clientID == 0 || it.clientID >= g_gui.sprites.getMetadataSpace().size()
-        || it.clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
-        return 0;
-    }
-
-    // We use the item ID as the cache key since it's unique and stable
-    auto itCache = spriteCache.find(itemId);
-    if (itCache != spriteCache.end()) {
-        return itCache->second;
-    }
-
-    uint32_t clientID = it.clientID;
-    SpriteAtlasCache& atlas_cache = g_gui.sprites.getAtlasCacheSpace()[clientID];
-
-    if (!atlas_cache.spriteList.empty()) {
-        // Use the first frame/part of the sprite
-        NormalImage* img = atlas_cache.spriteList[0];
-        if (img) {
-            std::unique_ptr<uint8_t[]> rgba;
-
-            // For legacy sprites (no transparency), use getRGBData + Magenta Masking
-            // This matches how WxWidgets/SpriteIconGenerator renders icons
-            if (!g_gui.loader.hasTransparency()) {
-                std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
-                if (rgb) {
-                    rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
-                    for (int i = 0; i < 32 * 32; ++i) {
-                        uint8_t r = rgb[i * 3 + 0];
-                        uint8_t g = rgb[i * 3 + 1];
-                        uint8_t b = rgb[i * 3 + 2];
-
-                        // Magic Pink (Magenta) is transparent for legacy sprites
-                        if (r == 0xFF && g == 0x00 && b == 0xFF) {
-                            rgba[i * 4 + 0] = 0;
-                            rgba[i * 4 + 1] = 0;
-                            rgba[i * 4 + 2] = 0;
-                            rgba[i * 4 + 3] = 0;
-                        } else {
-                            rgba[i * 4 + 0] = r;
-                            rgba[i * 4 + 1] = g;
-                            rgba[i * 4 + 2] = b;
-                            rgba[i * 4 + 3] = 255;
-                        }
-                    }
-                } else {
-                    // getRGBData failed, should ideally not happen if sprite exists logic is correct
-                }
-            }
-
-            // Fallback/Standard path for alpha sprites or if RGB failed
-            if (!rgba) {
-                rgba = img->getRGBAData();
-                if (!rgba) {
-                    // getRGBAData failed
-                }
-            }
-
-            if (rgba) {
-                int image = nvgCreateImageRGBA(vg, 32, 32, 0, rgba.get());
-                if (image == 0) {
-                    // nvgCreateImageRGBA failed
-                } else {
-                    spriteCache[itemId] = image;
-                    return image;
-                }
-            }
-        }
-    } else {
-        // GameSprite missing or empty list
-    }
-
-    return 0;
-}
-
-void TooltipDrawer::prepareFields(const TooltipData& tooltip)
+void TooltipRenderer::prepareFields(const TooltipData& tooltip)
 {
     // Build content lines with word wrapping support
     scratch_fields_count = 0;
@@ -284,8 +94,9 @@ void TooltipDrawer::prepareFields(const TooltipData& tooltip)
     }
 }
 
-TooltipDrawer::LayoutMetrics
-TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize)
+TooltipRenderer::LayoutMetrics TooltipRenderer::calculateLayout(
+    NVGcontext* vg, const TooltipData& tooltip, float maxWidth, float minWidth, float padding, float fontSize
+)
 {
     LayoutMetrics lm = {};
 
@@ -421,11 +232,10 @@ TooltipDrawer::calculateLayout(NVGcontext* vg, const TooltipData& tooltip, float
     return lm;
 }
 
-void TooltipDrawer::drawBackground(
+void TooltipRenderer::drawBackground(
     NVGcontext* vg, float x, float y, float width, float height, float cornerRadius, const TooltipData& tooltip
 )
 {
-
     // Get border color based on category
     uint8_t borderR, borderG, borderB;
     getHeaderColor(tooltip.category, borderR, borderG, borderB);
@@ -456,9 +266,8 @@ void TooltipDrawer::drawBackground(
     nvgStroke(vg);
 }
 
-void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize)
+void TooltipRenderer::drawFields(NVGcontext* vg, float x, float y, float valueStartX, float lineHeight, float padding, float fontSize)
 {
-
     float contentX = x + padding;
     float cursorY = y + padding;
 
@@ -487,17 +296,15 @@ void TooltipDrawer::drawFields(NVGcontext* vg, float x, float y, float valueStar
     }
 }
 
-void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout)
+void TooltipRenderer::drawContainerGrid(
+    NVGcontext* vg, float x, float y, const TooltipData& tooltip, const LayoutMetrics& layout, NVGImageCache* cache
+)
 {
-
     if (layout.totalContainerSlots <= 0) {
         return;
     }
 
     // Calculate cursorY after text fields
-    // We need to re-calculate text height or pass it, but simpler to deduce from logic:
-    // The grid is at the bottom. We can just use the bottom of the box minus grid height minus padding.
-    // But let's calculate exact start Y based on text content for precision
     float fontSize = 11.0f;
     float lineHeight = fontSize * 1.4f;
     float textBlockHeight = 0.0f;
@@ -552,7 +359,7 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
             const auto& item = tooltip.containerItems[idx];
 
             // Draw item sprite
-            int img = getSpriteImage(vg, item.id);
+            int img = cache->getSpriteImage(vg, item.id);
             if (img > 0) {
                 nvgBeginPath(vg);
                 nvgRect(vg, itemX, itemY, 32, 32);
@@ -579,15 +386,14 @@ void TooltipDrawer::drawContainerGrid(NVGcontext* vg, float x, float y, const To
     }
 }
 
-void TooltipDrawer::draw(NVGcontext* vg, const DrawContext& ctx)
+void TooltipRenderer::draw(NVGcontext* vg, const DrawContext& ctx, NVGImageCache* cache, std::span<const TooltipData> tooltips)
 {
     if (!vg) {
         return;
     }
     const auto& view = ctx.view;
 
-    for (size_t i = 0; i < active_count; ++i) {
-        const auto& tooltip = tooltips[i];
+    for (const auto& tooltip : tooltips) {
         int unscaled_x, unscaled_y;
         view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
 
@@ -629,6 +435,6 @@ void TooltipDrawer::draw(NVGcontext* vg, const DrawContext& ctx)
         drawFields(vg, tooltipX, tooltipY, layout.valueStartX, fontSize * 1.4f, padding, fontSize);
 
         // 5. Draw Container Grid
-        drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout);
+        drawContainerGrid(vg, tooltipX, tooltipY, tooltip, layout, cache);
     }
 }

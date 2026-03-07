@@ -130,7 +130,7 @@ RenderSettings buildRenderSettings(const Settings &s, float light_intensity,
   rs.light_intensity = light_intensity;
   rs.ambient_light_level = ambient_light_level;
   // global_light_color intentionally left at default — it is computed
-  // per-frame from the light system via colorFromEightBitNorm() in LightDrawer.
+  // per-frame from the light system via colorFromEightBitNorm() in LightRenderer.
 
   return rs;
 }
