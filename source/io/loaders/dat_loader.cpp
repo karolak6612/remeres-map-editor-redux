@@ -259,19 +259,19 @@ namespace {
 	}
 
 	// Helper loop to read all flags for a sprite
-	bool LoadMetadataFlags(DatFormat format, FileReadHandle& file, GameSprite* sType, uint32_t client_id, std::vector<std::string>& warnings) {
+	bool LoadMetadataFlags(DatFormat format, FileReadHandle& file, GameSprite* sType, uint32_t item_id, std::vector<std::string>& warnings) {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
 
 		static ItemType iTemp = ItemType();
-		ItemType& iType = (client_id < g_items.items.size())
-			? g_items.items[client_id]
+		ItemType& iType = (item_id != 0 && item_id < g_items.items.size())
+			? g_items.items[item_id]
 			: iTemp;
 
 		for (int count = 0; count < static_cast<int>(DatFlagLast); ++count) {
 			previous_flag = flag;
 			if (!file.getU8(flag)) {
-				warnings.push_back(std::format("Metadata: error reading flag for client/sprite id {}", client_id));
+				warnings.push_back(std::format("Metadata: error reading flag for client/sprite id {}", item_id));
 				return false;
 			}
 
@@ -280,12 +280,12 @@ namespace {
 			}
 			flag = RemapFlag(flag, format);
 			if (!ReadFlagData(format, file, sType, iType, flag, previous_flag, warnings)) {
-				warnings.push_back(std::format("Metadata: error reading flag data for flag {} for client/sprite id {}", static_cast<int>(flag), client_id));
+				warnings.push_back(std::format("Metadata: error reading flag data for flag {} for client/sprite id {}", static_cast<int>(flag), item_id));
 				return false;
 			}
 		}
 		// Sanity check: If we exit the loop without hitting DatFlagLast, it's potential corruption.
-		warnings.push_back(std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for client/sprite id {}", client_id));
+		warnings.push_back(std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for client/sprite id {}", item_id));
 		return true; // We continue even if there was no terminator, as it's just a warning
 	}
 
@@ -357,7 +357,11 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 		manager->sprite_space[id] = std::move(sTypeUnique);
 		sType->id = id;
 
+		// Helper variable item_id, to using and passing e.g. std:optional of iType to LoadMetadataFlags()
+		// as that would be the only other way of achieving both otb and otb-less loading..
+		uint32_t item_id = 0;
 		if((id < (manager->item_count + 1)) && is_assets_bt) {
+			item_id = id;
 			ItemType iType;
 			iType.id = id;
 			iType.clientID = id;
@@ -366,7 +370,7 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 		}
 
 		// Load flags
-		if (!LoadMetadataFlags(manager->dat_format, file, sType, id, warnings)) {
+		if (!LoadMetadataFlags(manager->dat_format, file, sType, item_id, warnings)) {
 			error = wxstr(std::format("Failed to read metadata flags for id {}", id));
 			return false;
 		}
