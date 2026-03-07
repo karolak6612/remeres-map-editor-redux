@@ -82,18 +82,25 @@ const ClientVersion& VersionManager::GetCurrentVersion() const {
 }
 
 bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& warnings) {
-	FileName data_path = getLoadedVersion()->getDataPath();
-	FileName client_path = getLoadedVersion()->getClientPath();
+	ClientVersion* cv = getLoadedVersion();
+	if(!cv) {
+		error = "No version loaded";
+		g_loading.DestroyLoadBar();
+		return false;
+	}
+
+	FileName data_path = cv->getDataPath();
+	FileName client_path = cv->getClientPath();
 	FileName extension_path = FileSystem::GetExtensionsDirectory();
 
-	g_gui.gfx.client_version = getLoadedVersion();
+	g_gui.gfx.client_version = cv;
 
 	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
 
 	g_loading.CreateLoadBar("Loading asset files");
 	g_loading.SetLoadDone(0, "Loading metadata file...");
 
-	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
+	wxFileName metadata_path = cv->getMetadataPath();
 	if (!g_gui.gfx.loadSpriteMetadata(metadata_path, error, warnings)) {
 		error = "Couldn't load metadata: " + error;
 		g_loading.DestroyLoadBar();
@@ -103,7 +110,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 	g_loading.SetLoadDone(10, "Loading sprites file...");
 
-	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
+	wxFileName sprites_path = cv->getSpritesPath();
 	if (!g_gui.gfx.loadSpriteData(sprites_path, error, warnings)) {
 		error = "Couldn't load sprites: " + error;
 		g_loading.DestroyLoadBar();
@@ -111,13 +118,25 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		return false;
 	}
 
-	g_loading.SetLoadDone(20, "Loading items.otb file...");
 	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
-	if (!g_items.loadFromOtb(base_data_path + "items.otb", error, warnings)) {
-		error = "Couldn't load items.otb: " + error;
-		g_loading.DestroyLoadBar();
-		UnloadVersion();
-		return false;
+	// Load .otb only if the config type contains "otb" word, otherwise we assume it is not to be loaded.
+	if (cv->getConfigType().find("otb") != std::string::npos) {
+		g_loading.SetLoadDone(20, "Loading items.otb file...");
+		if (!g_items.loadFromOtb(base_data_path + "items.otb", error, warnings)) {
+			error = "Couldn't load items.otb: " + error;
+			g_loading.DestroyLoadBar();
+			UnloadVersion();
+			return false;
+		}
+	} else if(cv->getConfigType().find("assets_bt") != std::string::npos) {
+		// TODO one day to be discarded, since .otb is not loaded there was never a point in loading such things.. but
+		// for now they are necessary for stuff to work.
+		g_items.MajorVersion = cv->getOtbMajor();
+		g_items.MinorVersion = cv->getOtbId();
+		g_items.BuildNumber = 1;
+	} else {
+		warnings.push_back(std::format("Client version {} has unrecognized config type '{}', skipping OTB loading", cv->getName(), cv->getConfigType()));
+		spdlog::warn("Client version {} has unrecognized config type '{}', skipping OTB loading", cv->getName(), cv->getConfigType());
 	}
 
 	g_loading.SetLoadDone(30, "Loading items.xml ...");

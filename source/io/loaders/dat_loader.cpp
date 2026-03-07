@@ -4,6 +4,8 @@
 #include "rendering/core/normal_image.h"
 #include "io/filehandle.h"
 #include "util/common.h"
+#include "game/items.h"
+#include "game/item.h"
 #include <memory>
 #include <cstdint>
 #include <climits>
@@ -74,26 +76,63 @@ namespace {
 	}
 
 	// Helper to read flag data associated with a specific flag
-	bool ReadFlagData(DatFormat format, FileReadHandle& file, GameSprite* sType, uint8_t flag, uint8_t previous_flag, std::vector<std::string>& warnings) {
+	bool ReadFlagData(DatFormat format, FileReadHandle& file, GameSprite* sType, ItemType& iType, uint8_t flag, uint8_t previous_flag, std::vector<std::string>& warnings) {
 		switch (flag) {
 			case DatFlagGroundBorder:
+				iType.alwaysOnTopOrder = 1;
+				iType.alwaysOnBottom = true;
+				break;
 			case DatFlagOnBottom:
+				iType.alwaysOnTopOrder = 2;
+				iType.alwaysOnBottom = true;
+				break;
 			case DatFlagOnTop:
+				iType.alwaysOnTopOrder = 3;
+				iType.alwaysOnBottom = true;
+				break;
 			case DatFlagContainer:
+				iType.group = ITEM_GROUP_CONTAINER;
+				iType.type = ITEM_TYPE_CONTAINER;
+				break;
 			case DatFlagStackable:
+				iType.stackable = true;
+				break;
 			case DatFlagForceUse:
 			case DatFlagMultiUse:
+				break;
 			case DatFlagFluidContainer:
+				iType.group = ITEM_GROUP_FLUID;
+				break;
 			case DatFlagSplash:
+				iType.group = ITEM_GROUP_SPLASH;
+				break;
 			case DatFlagNotWalkable:
+				iType.unpassable = true;
+				break;
 			case DatFlagNotMoveable:
+				iType.moveable = false;
+				break;
 			case DatFlagBlockProjectile:
+				iType.blockMissiles = true;
+				break;
 			case DatFlagNotPathable:
+				iType.blockPathfinder = true;
+				break;
 			case DatFlagPickupable:
+				iType.pickupable = true;
+				break;
 			case DatFlagHangable:
+				iType.isHangable = true;
+				break;
 			case DatFlagHookSouth:
+				iType.hookSouth = true;
+				break;
 			case DatFlagHookEast:
+				iType.hookEast = true;
+				break;
 			case DatFlagRotateable:
+				iType.rotable = true;
+				break;
 			case DatFlagDontHide:
 			case DatFlagTranslucent:
 			case DatFlagLyingCorpse:
@@ -103,15 +142,33 @@ namespace {
 			case DatFlagWrappable:
 			case DatFlagUnwrappable:
 			case DatFlagTopEffect:
+				break;
 			case DatFlagFloorChange:
+				iType.floorChange = true;
+				break;
 			case DatFlagNoMoveAnimation:
 			case DatFlagChargeable:
 			case DatFlagDefault:
 				break;
 
-			case DatFlagGround:
+			case DatFlagGround: {
+				iType.group = ITEM_GROUP_GROUND;
+				uint16_t speed;
+				file.getU16(speed);
+                iType.way_speed = speed;
+				break;
+			}
+
 			case DatFlagWritable:
+				file.skip(2);
+				iType.canReadText = true;
+				iType.canWriteText = true;
+				break;
 			case DatFlagWritableOnce:
+				file.skip(2);
+				iType.canReadText = true;
+				iType.canWriteText = true;
+				break;
 			case DatFlagCloth:
 			case DatFlagLensHelp:
 			case DatFlagUsable:
@@ -202,14 +259,19 @@ namespace {
 	}
 
 	// Helper loop to read all flags for a sprite
-	bool LoadMetadataFlags(DatFormat format, FileReadHandle& file, GameSprite* sType, uint32_t sprite_id, std::vector<std::string>& warnings) {
+	bool LoadMetadataFlags(DatFormat format, FileReadHandle& file, GameSprite* sType, uint32_t item_id, std::vector<std::string>& warnings) {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
+
+		static ItemType iTemp = ItemType();
+		ItemType& iType = (item_id != 0 && item_id < g_items.items.size())
+			? g_items.items[item_id]
+			: iTemp;
 
 		for (int count = 0; count < static_cast<int>(DatFlagLast); ++count) {
 			previous_flag = flag;
 			if (!file.getU8(flag)) {
-				warnings.push_back(std::format("Metadata: error reading flag for sprite id {}", sprite_id));
+				warnings.push_back(std::format("Metadata: error reading flag for client/sprite id {}", item_id));
 				return false;
 			}
 
@@ -217,13 +279,13 @@ namespace {
 				return true;
 			}
 			flag = RemapFlag(flag, format);
-			if (!ReadFlagData(format, file, sType, flag, previous_flag, warnings)) {
-				warnings.push_back(std::format("Metadata: error reading flag data for flag {} for sprite id {}", static_cast<int>(flag), sprite_id));
+			if (!ReadFlagData(format, file, sType, iType, flag, previous_flag, warnings)) {
+				warnings.push_back(std::format("Metadata: error reading flag data for flag {} for client/sprite id {}", static_cast<int>(flag), item_id));
 				return false;
 			}
 		}
 		// Sanity check: If we exit the loop without hitting DatFlagLast, it's potential corruption.
-		warnings.push_back(std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for sprite id {}", sprite_id));
+		warnings.push_back(std::format("Metadata: corruption warning - flag list exceeded limit (255) without terminator for client/sprite id {}", item_id));
 		return true; // We continue even if there was no terminator, as it's just a warning
 	}
 
@@ -282,17 +344,33 @@ bool DatLoader::LoadMetadata(GraphicManager* manager, const wxFileName& datafile
 	manager->has_frame_groups = manager->client_version->hasFrameGroups();
 	manager->has_transparency = manager->client_version->isTransparent();
 
+	bool is_assets_bt = (manager->client_version->getConfigType() == "assets_bt");
+	if(is_assets_bt) {
+		g_items.items.resize(manager->item_count + 1);
+	}
+
 	uint32_t id = minID;
 	const uint32_t maxID = manager->item_count + manager->creature_count;
 	while (id <= maxID) {
 		auto sTypeUnique = std::make_unique<GameSprite>();
 		GameSprite* sType = sTypeUnique.get();
 		manager->sprite_space[id] = std::move(sTypeUnique);
-
 		sType->id = id;
 
+		// Helper variable item_id, to using and passing e.g. std:optional of iType to LoadMetadataFlags()
+		// as that would be the only other way of achieving both otb and otb-less loading..
+		uint32_t item_id = 0;
+		if((id < (manager->item_count + 1)) && is_assets_bt) {
+			item_id = id;
+			ItemType iType;
+			iType.id = id;
+			iType.clientID = id;
+			iType.sprite = static_cast<GameSprite*>(manager->getSprite(iType.clientID));
+			g_items.items[iType.id] = std::move(iType);
+		}
+
 		// Load flags
-		if (!LoadMetadataFlags(manager->dat_format, file, sType, id, warnings)) {
+		if (!LoadMetadataFlags(manager->dat_format, file, sType, item_id, warnings)) {
 			error = wxstr(std::format("Failed to read metadata flags for id {}", id));
 			return false;
 		}
