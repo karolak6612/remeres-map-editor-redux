@@ -65,10 +65,10 @@ void GridDrawer::DrawIngameBox(const DrawContext &ctx,
   int box_end_map_x = center_x + ClientMapWidth;
   int box_end_map_y = center_y + ClientMapHeight + offset_y;
 
-  int box_start_x = box_start_map_x * TILE_SIZE - ctx.view.view_scroll_x;
-  int box_start_y = box_start_map_y * TILE_SIZE - ctx.view.view_scroll_y;
-  int box_end_x = box_end_map_x * TILE_SIZE - ctx.view.view_scroll_x;
-  int box_end_y = box_end_map_y * TILE_SIZE - ctx.view.view_scroll_y;
+  int box_start_x = std::max(0, box_start_map_x * TILE_SIZE - ctx.view.view_scroll_x);
+  int box_start_y = std::max(0, box_start_map_y * TILE_SIZE - ctx.view.view_scroll_y);
+  int box_end_x = std::max(0, box_end_map_x * TILE_SIZE - ctx.view.view_scroll_x);
+  int box_end_y = std::max(0, box_end_map_y * TILE_SIZE - ctx.view.view_scroll_y);
 
   static wxColor side_color(0, 0, 0, 200);
 
@@ -161,8 +161,7 @@ inline glm::vec4 toVec4(const wxColor &color) {
 } // namespace
 
 void GridDrawer::drawRect(SpriteBatch &sprite_batch, int x, int y, int w, int h,
-                          const wxColor &color, const AtlasManager &atlas,
-                          int width) {
+                          const wxColor &color, const AtlasManager &atlas) {
   sprite_batch.drawRectLines(static_cast<float>(x), static_cast<float>(y),
                              static_cast<float>(w), static_cast<float>(h),
                              toVec4(color), atlas);

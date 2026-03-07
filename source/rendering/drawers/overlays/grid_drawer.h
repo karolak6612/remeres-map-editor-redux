@@ -15,7 +15,7 @@ public:
 	void DrawNodeLoadingPlaceholder(const DrawContext& ctx, int nd_map_x, int nd_map_y);
 
 private:
-	void drawRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color, const AtlasManager& atlas, int width = 1);
+	void drawRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color, const AtlasManager& atlas);
 	void drawFilledRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color, const AtlasManager& atlas);
 
 	const AtlasManager* ensureAtlasManager() const;

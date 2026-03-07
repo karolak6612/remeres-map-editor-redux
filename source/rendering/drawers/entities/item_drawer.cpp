@@ -144,7 +144,7 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
   // int screenx = draw_x - spr->getDrawOffset().first;
   // int screeny = draw_y - spr->getDrawOffset().second;
   // The original code modified draw_x/draw_y AFTER calculating screenx/screeny
-  // using the original draw_x/draw_y screenx use input draw_x
+  // using the original draw_x/draw_y.
   int screenx = draw_x - metadata->drawoffset_x;
   int screeny = draw_y - metadata->drawoffset_y;
 
@@ -268,9 +268,9 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
     const SpriteLight &light = item->getLight();
     if (light.intensity > 0) {
       glm::vec4 lc = colorFromEightBitNorm(light.color);
-      uint8_t byteR = static_cast<uint8_t>(lc.r * 255.0f);
-      uint8_t byteG = static_cast<uint8_t>(lc.g * 255.0f);
-      uint8_t byteB = static_cast<uint8_t>(lc.b * 255.0f);
+      uint8_t byteR = static_cast<uint8_t>(std::round(lc.r * 255.0f));
+      uint8_t byteG = static_cast<uint8_t>(std::round(lc.g * 255.0f));
+      uint8_t byteB = static_cast<uint8_t>(std::round(lc.b * 255.0f));
       uint8_t byteA = 255;
 
       int startOffset = std::max<int>(16, 32 - light.intensity);

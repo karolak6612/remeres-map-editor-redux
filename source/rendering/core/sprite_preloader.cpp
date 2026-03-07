@@ -50,11 +50,6 @@ void SpritePreloader::shutdown() {
 
 void SpritePreloader::clear() {
   std::lock_guard<std::mutex> lock(queue_mutex);
-  // When clearing, we must ensure any in-flight tasks are ignored when they
-  // complete. We move all pending IDs to the cancelled set.
-  for (auto id : pending_ids) {
-    cancelled_ids.insert(id);
-  }
   task_queue = std::queue<Task>();
   result_queue = std::queue<Result>();
   pending_ids.clear();
@@ -112,13 +107,12 @@ void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y,
 
   if (!ids_to_enqueue.empty()) {
     std::lock_guard<std::mutex> lock(queue_mutex);
-    if (task_queue.size() > MAX_QUEUE_SIZE) {
-      spdlog::debug("SpritePreloader: Queue full ({}), dropping enqueues",
-                    task_queue.size());
-      return; // Drop requests if queue is slammed
-    }
-
     for (const auto &pending : ids_to_enqueue) {
+      if (task_queue.size() >= MAX_QUEUE_SIZE) {
+        spdlog::debug("SpritePreloader: Queue full ({}), dropping remaining enqueues",
+                      task_queue.size());
+        break; // Drop remaining requests if queue is slammed
+      }
       if (pending_ids.insert(pending.id).second) {
         task_queue.push({pending.id, pending.generation_id, sprfile,
                          is_extended, has_transparency});
@@ -174,18 +168,14 @@ void SpritePreloader::update() {
   // CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
   assert(wxIsMainThread());
 
-  // Move results to a local queue and cancelled_ids to a local set under lock
-  // to minimize holding time
+  // Move results to a local queue to minimize holding time
   std::queue<Result> results;
-  std::unordered_set<uint32_t> local_cancelled;
   {
     std::lock_guard<std::mutex> lock(queue_mutex);
     if (result_queue.empty()) {
       return;
     }
     results = std::move(result_queue);
-    local_cancelled =
-        cancelled_ids; // Copy — don't move, preserves for later batches
   }
 
   thread_local std::vector<uint32_t> ids_processed;
@@ -201,11 +191,6 @@ void SpritePreloader::update() {
 
     auto id = res.id;
     ids_processed.push_back(id);
-
-    // Check if this ID was cancelled (moved to local set under one lock)
-    if (local_cancelled.count(id)) {
-      continue;
-    }
 
     // Check if GraphicManager is loaded, for the correct sprite file, and ID is
     // valid

@@ -101,12 +101,12 @@ GraphicsPage::GraphicsPage(wxWindow *parent) : PreferencesPage(parent) {
   // Cursor colors
   subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Cursor color: "),
                 wxSizerFlags());
+  const wxColor cursor_color(g_settings.getInteger(Config::CURSOR_RED),
+                             g_settings.getInteger(Config::CURSOR_GREEN),
+                             g_settings.getInteger(Config::CURSOR_BLUE),
+                             g_settings.getInteger(Config::CURSOR_ALPHA));
   subsizer->Add(cursor_color_pick = newd wxColourPickerCtrl(
-                    this, wxID_ANY,
-                    wxColor(g_settings.getInteger(Config::CURSOR_RED),
-                            g_settings.getInteger(Config::CURSOR_GREEN),
-                            g_settings.getInteger(Config::CURSOR_BLUE),
-                            g_settings.getInteger(Config::CURSOR_ALPHA))),
+                    this, wxID_ANY, cursor_color),
                 wxSizerFlags());
   SetWindowToolTip(
       cursor_color_pick, tmp,
@@ -116,12 +116,12 @@ GraphicsPage::GraphicsPage(wxWindow *parent) : PreferencesPage(parent) {
   subsizer->Add(
       tmp = newd wxStaticText(this, wxID_ANY, "Secondary cursor color: "),
       wxSizerFlags());
+  const wxColor cursor_alt_color(g_settings.getInteger(Config::CURSOR_ALT_RED),
+                                 g_settings.getInteger(Config::CURSOR_ALT_GREEN),
+                                 g_settings.getInteger(Config::CURSOR_ALT_BLUE),
+                                 g_settings.getInteger(Config::CURSOR_ALT_ALPHA));
   subsizer->Add(cursor_alt_color_pick = newd wxColourPickerCtrl(
-                    this, wxID_ANY,
-                    wxColor(g_settings.getInteger(Config::CURSOR_ALT_RED),
-                            g_settings.getInteger(Config::CURSOR_ALT_GREEN),
-                            g_settings.getInteger(Config::CURSOR_ALT_BLUE),
-                            g_settings.getInteger(Config::CURSOR_ALT_ALPHA))),
+                    this, wxID_ANY, cursor_alt_color),
                 wxSizerFlags());
   SetWindowToolTip(
       cursor_alt_color_pick, tmp,

@@ -15,7 +15,8 @@
 
 wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, bool rescale)
 {
-    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
+    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() ||
+        clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
         return wxBitmap();
     }
     const SpriteMetadata& metadata = g_gui.sprites.getMetadataSpace()[clientID];

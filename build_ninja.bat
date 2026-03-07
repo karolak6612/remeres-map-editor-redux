@@ -18,13 +18,15 @@ echo -------------------------------------------------------- >> "%LOG_FILE%"
 
 echo.
 echo ========================================================
-echo   RME Ninja Build Script (x64 Release)
+echo   RME Ninja Build Script (x64 Release^)
 echo   Logging to: %LOG_FILE%
 echo ========================================================
+echo.
 
-REM Call the script again with the --logging flag and pipe everything to Tee-Object
-powershell -NoProfile -Command "& { & '%~f0' --logging 2>&1 | Tee-Object -FilePath '%LOG_FILE%' -Append; exit $LASTEXITCODE }"
+call "%~f0" --logging >> "%LOG_FILE%" 2>&1
 set "RET=%ERRORLEVEL%"
+
+type "%LOG_FILE%"
 
 echo -------------------------------------------------------- >> "%LOG_FILE%"
 echo Finished: %DATE% %TIME% >> "%LOG_FILE%"
@@ -86,7 +88,6 @@ if not exist "%VV%" (
     exit /b 1
 )
 
-REM We don't redirect to log here because the wrapper handles it
 call "%VV%" x64 >nul
 if !ERRORLEVEL! neq 0 (
     echo ERROR: Failed to initialize x64 environment.
@@ -110,7 +111,7 @@ if not defined VKD (
 )
 echo OK - vcpkg found at: %VKD%
 
-echo [4/6] Configuring CMake (Ninja)...
+echo [4/6] Configuring CMake (Ninja^)...
 if not exist "%BUILD_DIR%" mkdir "%BUILD_DIR%"
 
 cmake -G Ninja ^

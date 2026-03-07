@@ -23,6 +23,8 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/sprite_light.h"
+
+#include <cstddef>
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <memory>
@@ -71,7 +73,7 @@ private:
   int buffer_height = 0;
 
   void InitFBO();
-  void ResizeFBO(int width, int height);
+  void InitFBOStorage(int width, int height);
 
   void initRenderResources();
 };

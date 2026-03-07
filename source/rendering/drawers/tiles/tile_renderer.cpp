@@ -58,6 +58,7 @@ static bool FillItemTooltipData(TooltipData &data, Item *item,
   std::string_view description;
   uint8_t doorId = 0;
   Position destination;
+  bool has_destination = false;
   bool hasContent = false;
 
   bool is_complex = item->isComplex();
@@ -92,6 +93,7 @@ static bool FillItemTooltipData(TooltipData &data, Item *item,
     if (Teleport *tp = item->asTeleport()) {
       if (tp->hasDestination()) {
         destination = tp->getDestination();
+        has_destination = true;
       }
     }
   }
@@ -105,7 +107,7 @@ static bool FillItemTooltipData(TooltipData &data, Item *item,
 
   // Only create tooltip if there's something to show
   if (unique == 0 && action == 0 && doorId == 0 && text.empty() &&
-      description.empty() && destination.x == 0 && !hasContent) {
+      description.empty() && !has_destination && !hasContent) {
     return false;
   }
 
@@ -125,6 +127,7 @@ static bool FillItemTooltipData(TooltipData &data, Item *item,
   data.text = text;
   data.description = description;
   data.destination = destination;
+  data.has_destination = has_destination;
 
   // Populate container items
   if (it.isContainer() && zoom <= 1.5f) {

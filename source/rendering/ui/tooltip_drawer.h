@@ -54,18 +54,19 @@ struct TooltipData {
 
     // Header info
     uint16_t itemId = 0;
-    std::string_view itemName;
+    std::string itemName;
 
     // Optional fields (0 or empty = not shown)
     uint16_t actionId = 0;
     uint16_t uniqueId = 0;
     uint8_t doorId = 0;
-    std::string_view text;
-    std::string_view description;
-    Position destination; // For teleports (check if valid via destination.x > 0)
+    std::string text;
+    std::string description;
+    Position destination;
+    bool has_destination = false;
 
     // Waypoint-specific
-    std::string_view waypointName;
+    std::string waypointName;
 
     // Container contents
     std::vector<ContainerItem> containerItems;
@@ -84,7 +85,7 @@ struct TooltipData {
     {
         if (!waypointName.empty()) {
             category = TooltipCategory::WAYPOINT;
-        } else if (destination.x > 0) {
+        } else if (has_destination) {
             category = TooltipCategory::TELEPORT;
         } else if (doorId > 0) {
             category = TooltipCategory::DOOR;
@@ -99,7 +100,7 @@ struct TooltipData {
     bool hasVisibleFields() const
     {
         return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty()
-            || destination.x > 0 || !containerItems.empty();
+            || has_destination || !containerItems.empty();
     }
 
     void clear()
@@ -116,6 +117,7 @@ struct TooltipData {
         text = {};
         description = {};
         destination = Position();
+        has_destination = false;
         waypointName = {};
         containerItems.clear();
         containerCapacity = 0;

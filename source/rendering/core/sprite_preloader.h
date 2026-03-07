@@ -9,8 +9,10 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <string>
 #include <thread>
 #include <unordered_set>
+#include <vector>
 
 class SpritePreloader {
 public:
@@ -67,7 +69,6 @@ private:
   std::queue<Task> task_queue;
   std::queue<Result> result_queue;
   std::unordered_set<uint32_t> pending_ids;
-  std::unordered_set<uint32_t> cancelled_ids;
 };
 
 namespace rme {

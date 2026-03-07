@@ -164,7 +164,14 @@ void MinimapRenderer::resize(int width, int height) {
 
   rows_ = (height + TILE_SIZE - 1) / TILE_SIZE;
   cols_ = (width + TILE_SIZE - 1) / TILE_SIZE;
-  int num_layers = rows_ * cols_;
+  int num_layers = std::max(1, rows_ * cols_);
+
+  GLint max_array_layers = 1;
+  glGetIntegerv(GL_MAX_ARRAY_TEXTURE_LAYERS, &max_array_layers);
+  if (num_layers > max_array_layers) {
+    spdlog::warn("MinimapRenderer: requested {} layers but GL_MAX_ARRAY_TEXTURE_LAYERS is {}. Sizing down.", num_layers, max_array_layers);
+    num_layers = max_array_layers;
+  }
 
   texture_id_ = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
   glTextureStorage3D(texture_id_->GetID(), 1, GL_R8UI, TILE_SIZE, TILE_SIZE,
@@ -341,6 +348,10 @@ void MinimapRenderer::render(const glm::mat4 &projection, int x, int y, int w,
   start_row = std::max(0, start_row);
   end_col = std::min(cols_ - 1, end_col);
   end_row = std::min(rows_ - 1, end_row);
+
+  if (end_col < start_col || end_row < start_row) {
+    return;
+  }
 
   // Collect instances
   instance_data_.clear();

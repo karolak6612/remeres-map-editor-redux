@@ -42,7 +42,7 @@ void LightDrawer::InitFBO() {
   fbo_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
 
   // Initial dummy size
-  ResizeFBO(32, 32);
+  InitFBOStorage(32, 32);
 
   glNamedFramebufferTexture(fbo->GetID(), GL_COLOR_ATTACHMENT0,
                             fbo_texture->GetID(), 0);
@@ -50,10 +50,13 @@ void LightDrawer::InitFBO() {
   GLenum status = glCheckNamedFramebufferStatus(fbo->GetID(), GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE) {
     spdlog::error("LightDrawer FBO Incomplete: {}", status);
+    fbo.reset();
+    fbo_texture.reset();
+    return;
   }
 }
 
-void LightDrawer::ResizeFBO(int width, int height) {
+void LightDrawer::InitFBOStorage(int width, int height) {
   if (width == buffer_width && height == buffer_height) {
     return;
   }
@@ -75,6 +78,9 @@ void LightDrawer::ResizeFBO(int width, int height) {
 void LightDrawer::draw(const DrawContext &ctx) {
   if (!shader) {
     initRenderResources();
+    if (!shader) {
+      return;
+    }
   }
 
   if (!fbo) {
@@ -98,8 +104,8 @@ void LightDrawer::draw(const DrawContext &ctx) {
   if (buffer_width < buffer_w || buffer_height < buffer_h) {
     // Re-create texture if we need to grow
     fbo_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
-    ResizeFBO(std::max(buffer_width, buffer_w),
-              std::max(buffer_height, buffer_h));
+    InitFBOStorage(std::max(buffer_width, buffer_w),
+                   std::max(buffer_height, buffer_h));
     glNamedFramebufferTexture(fbo->GetID(), GL_COLOR_ATTACHMENT0,
                               fbo_texture->GetID(), 0);
   }

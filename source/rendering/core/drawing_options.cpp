@@ -41,6 +41,7 @@ RenderSettings RenderSettings::makeDefault() {
   s.global_light_color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
   s.anti_aliasing = false;
   s.screen_shader_name = ShaderNames::NONE;
+  s.experimental_fog = false;
 
   return s;
 }
@@ -81,16 +82,18 @@ RenderSettings RenderSettings::makeIngame() {
 
   s.light_intensity = 1.0f;
   s.ambient_light_level = 0.5f;
+  s.ambient_light_level = 0.5f;
   s.global_light_color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
   s.anti_aliasing = false;
   s.screen_shader_name = ShaderNames::NONE;
+  s.experimental_fog = false;
 
   return s;
 }
 
 RenderSettings buildRenderSettings(const Settings &s, float light_intensity,
                                    float ambient_light_level) {
-  RenderSettings rs;
+  RenderSettings rs = RenderSettings::makeDefault();
   rs.transparent_floors = s.getBoolean(Config::TRANSPARENT_FLOORS);
   rs.transparent_items = s.getBoolean(Config::TRANSPARENT_ITEMS);
   rs.show_ingame_box = s.getBoolean(Config::SHOW_INGAME_BOX);
@@ -126,7 +129,7 @@ RenderSettings buildRenderSettings(const Settings &s, float light_intensity,
 
   rs.light_intensity = light_intensity;
   rs.ambient_light_level = ambient_light_level;
-  // global_light_color intentionally left at default (zero) — it is computed
+  // global_light_color intentionally left at default — it is computed
   // per-frame from the light system via colorFromEightBitNorm() in LightDrawer.
 
   return rs;
