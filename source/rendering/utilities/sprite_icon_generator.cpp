@@ -18,8 +18,8 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, bool 
     if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
         return wxBitmap();
     }
-    const SpriteMetadata& metadata = g_gui.sprites.getMetadata(clientID);
-    SpriteAtlasCache& atlas_cache = g_gui.sprites.getAtlasCache(clientID);
+    const SpriteMetadata& metadata = g_gui.sprites.getMetadataSpace()[clientID];
+    SpriteAtlasCache& atlas_cache = g_gui.sprites.getAtlasCacheSpace()[clientID];
 
     ASSERT(metadata.width >= 1 && metadata.height >= 1);
 
@@ -84,8 +84,8 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
     if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size()) {
         return wxBitmap();
     }
-    const SpriteMetadata& metadata = g_gui.sprites.getMetadata(clientID);
-    SpriteAtlasCache& atlas_cache = g_gui.sprites.getAtlasCache(clientID);
+    const SpriteMetadata& metadata = g_gui.sprites.getMetadataSpace()[clientID];
+    SpriteAtlasCache& atlas_cache = g_gui.sprites.getAtlasCacheSpace()[clientID];
 
     ASSERT(metadata.width >= 1 && metadata.height >= 1);
 
@@ -121,8 +121,8 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
     int pattern_z = 0;
     uint32_t mountClientID = static_cast<uint32_t>(outfit.lookMount) + g_gui.sprites.getItemSpriteMaxID();
     if (outfit.lookMount != 0 && mountClientID < g_gui.sprites.getMetadataSpace().size()) {
-        const SpriteMetadata& mountMeta = g_gui.sprites.getMetadata(mountClientID);
-        SpriteAtlasCache& mountAtlas = g_gui.sprites.getAtlasCache(mountClientID);
+        const SpriteMetadata& mountMeta = g_gui.sprites.getMetadataSpace()[mountClientID];
+        SpriteAtlasCache& mountAtlas = g_gui.sprites.getAtlasCacheSpace()[mountClientID];
 
         // Mount outfit
         Outfit mountOutfit;

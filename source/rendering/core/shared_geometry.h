@@ -29,6 +29,7 @@ public:
     return *this;
   }
 
+private:
   struct ContextGeometry {
     std::unique_ptr<GLBuffer> vbo;
     std::unique_ptr<GLBuffer> ebo;

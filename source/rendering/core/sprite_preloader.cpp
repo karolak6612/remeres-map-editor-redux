@@ -113,6 +113,8 @@ void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y,
   if (!ids_to_enqueue.empty()) {
     std::lock_guard<std::mutex> lock(queue_mutex);
     if (task_queue.size() > MAX_QUEUE_SIZE) {
+      spdlog::debug("SpritePreloader: Queue full ({}), dropping enqueues",
+                    task_queue.size());
       return; // Drop requests if queue is slammed
     }
 

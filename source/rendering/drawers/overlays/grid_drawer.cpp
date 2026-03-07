@@ -6,13 +6,11 @@
 #include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
 
-
 #include "app/definitions.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/view_state.h"
 #include <wx/gdicmn.h>
-
 
 void GridDrawer::DrawGrid(const DrawContext &ctx, const ViewBounds &bounds) {
   if (!ctx.options.settings.show_grid) {
@@ -155,21 +153,25 @@ const AtlasManager *GridDrawer::ensureAtlasManager() const {
   return nullptr;
 }
 
+namespace {
+inline glm::vec4 toVec4(const wxColor &color) {
+  return {color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f,
+          color.Alpha() / 255.0f};
+}
+} // namespace
+
 void GridDrawer::drawRect(SpriteBatch &sprite_batch, int x, int y, int w, int h,
                           const wxColor &color, const AtlasManager &atlas,
                           int width) {
-  // glLineWidth(width); // Width ignored for now, BatchRenderer lines are 1px
-  glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f,
-              color.Blue() / 255.0f, color.Alpha() / 255.0f);
-
-  sprite_batch.drawRectLines((float)x, (float)y, (float)w, (float)h, c, atlas);
+  sprite_batch.drawRectLines(static_cast<float>(x), static_cast<float>(y),
+                             static_cast<float>(w), static_cast<float>(h),
+                             toVec4(color), atlas);
 }
 
 void GridDrawer::drawFilledRect(SpriteBatch &sprite_batch, int x, int y, int w,
                                 int h, const wxColor &color,
                                 const AtlasManager &atlas) {
-  glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f,
-              color.Blue() / 255.0f, color.Alpha() / 255.0f);
-
-  sprite_batch.drawRect((float)x, (float)y, (float)w, (float)h, c, atlas);
+  sprite_batch.drawRect(static_cast<float>(x), static_cast<float>(y),
+                        static_cast<float>(w), static_cast<float>(h),
+                        toVec4(color), atlas);
 }

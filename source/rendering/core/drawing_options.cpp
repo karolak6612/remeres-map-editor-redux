@@ -79,6 +79,12 @@ RenderSettings RenderSettings::makeIngame() {
   s.always_show_zones = false;
   s.extended_house_shader = false;
 
+  s.light_intensity = 1.0f;
+  s.ambient_light_level = 0.5f;
+  s.global_light_color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+  s.anti_aliasing = false;
+  s.screen_shader_name = ShaderNames::NONE;
+
   return s;
 }
 
@@ -120,6 +126,8 @@ RenderSettings buildRenderSettings(const Settings &s, float light_intensity,
 
   rs.light_intensity = light_intensity;
   rs.ambient_light_level = ambient_light_level;
+  // global_light_color intentionally left at default (zero) — it is computed
+  // per-frame from the light system via colorFromEightBitNorm() in LightDrawer.
 
   return rs;
 }

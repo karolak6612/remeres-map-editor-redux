@@ -10,7 +10,6 @@
 #include "rendering/core/view_state.h"
 #include "ui/gui.h"
 
-
 void LiveCursorDrawer::draw(const DrawContext &ctx, Editor &editor) {
   if (ctx.options.settings.ingame || !editor.live_manager.IsLive()) {
     return;
@@ -27,7 +26,7 @@ void LiveCursorDrawer::draw(const DrawContext &ctx, Editor &editor) {
       continue;
     }
 
-    if (cursor.pos.z > GROUND_LAYER && ctx.view.floor <= (GROUND_LAYER + 1)) {
+    if (cursor.pos.z > GROUND_LAYER && ctx.view.floor < (GROUND_LAYER + 1)) {
       continue;
     }
 

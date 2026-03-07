@@ -157,12 +157,6 @@ bool PostProcessPipeline::UpdateFBO(const ViewState &view,
     GLenum drawBuffers[] = {GL_COLOR_ATTACHMENT0};
     glNamedFramebufferDrawBuffers(scale_fbo->GetID(), 1, drawBuffers);
 
-    if (fbo_width < 1 || fbo_height < 1) {
-      spdlog::error("PostProcessPipeline: FBO dimension is zero ({}, {})!",
-                    fbo_width, fbo_height);
-      return false;
-    }
-
     GLenum status =
         glCheckNamedFramebufferStatus(scale_fbo->GetID(), GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {

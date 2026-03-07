@@ -29,7 +29,6 @@
 #include <string_view>
 #include <type_traits>
 
-
 //
 template <typename T1, typename T2>
   requires(std::integral<T1> || std::is_enum_v<T1>) &&
@@ -59,7 +58,9 @@ inline wxString wxstr(const std::string &str) {
   return wxString::FromUTF8(str.c_str(), str.length());
 }
 
-inline wxString wxstr(const char *str) { return wxString::FromUTF8(str); }
+inline wxString wxstr(const char *str) {
+  return str ? wxString::FromUTF8(str) : wxString();
+}
 
 // replaces all instances of sought in str with replacement
 void replaceString(std::string &str, std::string_view sought,

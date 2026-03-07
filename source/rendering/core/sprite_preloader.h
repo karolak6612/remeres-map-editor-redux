@@ -37,6 +37,13 @@ public:
 
   ~SpritePreloader();
 
+private:
+  void workerLoop(std::stop_token stop_token);
+
+  static constexpr unsigned int MIN_WORKER_THREADS = 2u;
+  static constexpr unsigned int MAX_WORKER_THREADS = 8u;
+  static constexpr size_t MAX_QUEUE_SIZE = 50000;
+
   struct Task {
     uint32_t id;
     uint32_t generation_id;
@@ -52,14 +59,6 @@ public:
     std::string spritefile;
   };
 
-  void workerLoop(std::stop_token stop_token);
-
-  static constexpr unsigned int MIN_WORKER_THREADS = 2u;
-  static constexpr unsigned int MAX_WORKER_THREADS = 8u;
-
-  static constexpr size_t MAX_QUEUE_SIZE =
-      50000; // Limit pending tasks to prevent memory blowup
-
   std::mutex queue_mutex;
   std::condition_variable cv;
   bool stopping = false;
@@ -67,9 +66,8 @@ public:
 
   std::queue<Task> task_queue;
   std::queue<Result> result_queue;
-  std::unordered_set<uint32_t> pending_ids; // To avoid duplicate tasks
-  std::unordered_set<uint32_t>
-      cancelled_ids; // IDs that were cleared and should be ignored
+  std::unordered_set<uint32_t> pending_ids;
+  std::unordered_set<uint32_t> cancelled_ids;
 };
 
 namespace rme {

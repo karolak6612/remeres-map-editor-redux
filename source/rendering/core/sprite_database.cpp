@@ -31,25 +31,25 @@ void SpriteDatabase::insertEditorSprite(int id,
   }
 }
 
-SpriteMetadata &SpriteDatabase::getMetadata(uint32_t id) {
+const SpriteMetadata &SpriteDatabase::getMetadata(uint32_t id) const {
   if (id >= metadata_space.size()) {
-    static SpriteMetadata empty_metadata;
+    static const SpriteMetadata empty_metadata;
     return empty_metadata;
   }
   return metadata_space[id];
 }
 
-SpriteAtlasCache &SpriteDatabase::getAtlasCache(uint32_t id) {
+const SpriteAtlasCache &SpriteDatabase::getAtlasCache(uint32_t id) const {
   if (id >= atlas_space.size()) {
-    static SpriteAtlasCache fallback;
+    static const SpriteAtlasCache fallback;
     return fallback;
   }
   return atlas_space[id];
 }
 
-SpriteIconRenderer &SpriteDatabase::getIconRenderer(uint32_t id) {
+const SpriteIconRenderer &SpriteDatabase::getIconRenderer(uint32_t id) const {
   if (id >= icon_space.size()) {
-    static SpriteIconRenderer fallback;
+    static const SpriteIconRenderer fallback;
     return fallback;
   }
   return icon_space[id];

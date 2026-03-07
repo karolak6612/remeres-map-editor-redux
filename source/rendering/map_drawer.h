@@ -89,8 +89,8 @@ class MapDrawer {
   std::unique_ptr<SpriteBatch> sprite_batch;
   std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
-  std::unique_ptr<PostProcessPipeline> post_process_pipeline;
   PostProcessManager post_process_manager_;
+  std::unique_ptr<PostProcessPipeline> post_process_pipeline;
 
   CanvasState canvas_state;
 

@@ -139,8 +139,8 @@ void LightDrawer::draw(const DrawContext &ctx) {
   }
 
   if (gpu_lights_.empty()) {
-    // Just render ambient? We still need to clear the FBO/screen area or simpy
-    // fill it. If no lights, the overlay should just be ambient color.
+    // No point lights — the ambient-only overlay is handled by the
+    // FBO clear color set earlier. Skip the light-upload/draw path.
   } else {
     // Upload Lights
     size_t needed_size = gpu_lights_.size() * sizeof(GPULight);
@@ -370,7 +370,11 @@ void LightDrawer::initRenderResources() {
 	)";
 
   shader = std::make_unique<ShaderProgram>();
-  shader->Load(vs, fs);
+  if (!shader->Load(vs, fs)) {
+    spdlog::error("LightDrawer: Failed to compile light shader");
+    shader.reset();
+    return;
+  }
 
   float vertices[] = {
       0.0f, 0.0f, // BL

@@ -1,10 +1,8 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/shared_geometry.h"
 #include <cstring>
-#include <iostream>
 #include <spdlog/spdlog.h>
 #include <utility>
-
 
 const char *sprite_batch_vert = R"(
 #version 450 core

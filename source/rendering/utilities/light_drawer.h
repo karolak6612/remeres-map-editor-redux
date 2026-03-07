@@ -28,7 +28,6 @@
 #include <memory>
 #include <vector>
 
-
 struct DrawingOptions;
 struct ViewState;
 class TileLocation;
@@ -39,6 +38,12 @@ struct GPULight {
   float padding;      // 4 bytes (offset 12) -> Aligns color to 16 bytes
   glm::vec4 color;    // 16 bytes (offset 16) -> Total 32 bytes
 };
+
+static_assert(sizeof(GPULight) == 32, "GPULight must be 32 bytes for std430");
+static_assert(offsetof(GPULight, position) == 0);
+static_assert(offsetof(GPULight, intensity) == 8);
+static_assert(offsetof(GPULight, padding) == 12);
+static_assert(offsetof(GPULight, color) == 16);
 
 class LightDrawer {
 public:
