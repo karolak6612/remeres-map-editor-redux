@@ -26,6 +26,7 @@
 #include <wx/wfstream.h>
 
 #include "app/application.h"
+#include "app/settings.h"
 #include "brushes/brush.h"
 #include "brushes/brush_utility.h"
 #include "editor/action_queue.h"
@@ -65,6 +66,7 @@
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <nanovg_gl.h>
+
 
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/creature/creature_brush.h"
@@ -214,16 +216,16 @@ void MapCanvas::DrawOverlays(NVGcontext *vg, const DrawingOptions &options) {
   TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y,
                            GetContentScaleFactor());
 
-  if (options.show_creatures) {
+  if (options.settings.show_creatures) {
     drawer->DrawCreatureNames(vg);
   }
-  if (options.show_tooltips) {
+  if (options.settings.show_tooltips) {
     drawer->DrawTooltips(vg);
   }
-  if (options.show_hooks) {
+  if (options.settings.show_hooks) {
     drawer->DrawHookIndicators(vg);
   }
-  if (options.highlight_locked_doors) {
+  if (options.settings.highlight_locked_doors) {
     drawer->DrawDoorIndicators(vg);
   }
 
@@ -260,19 +262,21 @@ void MapCanvas::OnPaint(wxPaintEvent &event) {
   if (g_gui.IsRenderingEnabled()) {
     // Advance graphics clock and drain the preloader queue before rendering
     g_gui.gc.updateTime();
-    SpritePreloader::get().update();
+    g_gui.atlas.getSpritePreloader().update();
 
     DrawingOptions &options = drawer->getOptions();
     if (screenshot_controller->IsCapturing()) {
-      options.SetIngame();
+      options.settings = RenderSettings::makeIngame();
     } else {
-      options.Update();
+      options.settings = buildRenderSettings(
+          g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
     }
 
-    options.dragging = selection_controller->IsDragging();
-    options.boundbox_selection = selection_controller->IsBoundboxSelection();
+    options.frame.dragging = selection_controller->IsDragging();
+    options.frame.boundbox_selection =
+        selection_controller->IsBoundboxSelection();
 
-    if (options.show_preview) {
+    if (options.settings.show_preview) {
       animation_timer->Start();
       g_gui.gc.resumeAnimation();
     } else {

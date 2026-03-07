@@ -2,18 +2,19 @@
 #define RME_RENDERING_CORE_SPRITE_BATCH_H_
 
 #include "app/main.h"
-#include "rendering/core/ring_buffer.h"
-#include "rendering/core/multi_draw_indirect_renderer.h"
-#include "rendering/core/sprite_instance.h"
-#include "rendering/core/shader_program.h"
-#include "rendering/core/texture_atlas.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/gl_scoped_state.h"
-#include <vector>
-#include <memory>
+#include "rendering/core/multi_draw_indirect_renderer.h"
+#include "rendering/core/ring_buffer.h"
+#include "rendering/core/shader_program.h"
+#include "rendering/core/shared_geometry.h"
+#include "rendering/core/sprite_instance.h"
+#include "rendering/core/texture_atlas.h"
 #include <glm/glm.hpp>
+#include <memory>
 #include <optional>
+#include <vector>
 
 /**
  * High-performance batched sprite renderer using instanced drawing.
@@ -26,105 +27,107 @@
  */
 class SpriteBatch {
 public:
-	// 100k sprites buffer = ~6.4MB
-	static constexpr size_t MAX_SPRITES_PER_BATCH = 100000;
+  // 100k sprites buffer = ~6.4MB
+  static constexpr size_t MAX_SPRITES_PER_BATCH = 100000;
 
-	SpriteBatch();
-	~SpriteBatch();
+  SpriteBatch();
+  ~SpriteBatch();
 
-	// Non-copyable, but movable
-	SpriteBatch(const SpriteBatch&) = delete;
-	SpriteBatch& operator=(const SpriteBatch&) = delete;
-	SpriteBatch(SpriteBatch&& other) noexcept;
-	SpriteBatch& operator=(SpriteBatch&& other) noexcept;
+  // Non-copyable, but movable
+  SpriteBatch(const SpriteBatch &) = delete;
+  SpriteBatch &operator=(const SpriteBatch &) = delete;
+  SpriteBatch(SpriteBatch &&other) noexcept;
+  SpriteBatch &operator=(SpriteBatch &&other) noexcept;
 
-	/**
-	 * Initialize GPU resources (shader, VAO, RingBuffer).
-	 * @return true if successful
-	 */
-	bool initialize();
+  /**
+   * Initialize GPU resources (shader, VAO, RingBuffer).
+   * @return true if successful
+   */
+  bool initialize();
 
-	/**
-	 * Begin a new batch. Clears pending sprites.
-	 * @param projection The orthographic projection matrix
-	 * @param atlas_manager Atlas manager to use for flushing
-	 */
-	void begin(const glm::mat4& projection, const AtlasManager& atlas_manager);
+  /**
+   * Begin a new batch. Clears pending sprites.
+   * @param projection The orthographic projection matrix
+   * @param atlas_manager Atlas manager to use for flushing
+   */
+  void begin(const glm::mat4 &projection, const AtlasManager &atlas_manager);
 
-	/**
-	 * Queue a sprite for rendering.
-	 * @param x Screen X
-	 * @param y Screen Y
-	 * @param w Width
-	 * @param h Height
-	 * @param region Atlas region for UVs
-	 */
-	void draw(float x, float y, float w, float h, const AtlasRegion& region);
+  /**
+   * Queue a sprite for rendering.
+   * @param x Screen X
+   * @param y Screen Y
+   * @param w Width
+   * @param h Height
+   * @param region Atlas region for UVs
+   */
+  void draw(float x, float y, float w, float h, const AtlasRegion &region);
 
-	/**
-	 * Queue a sprite with tint.
-	 */
-	void draw(float x, float y, float w, float h, const AtlasRegion& region, float r, float g, float b, float a);
+  /**
+   * Queue a sprite with tint.
+   */
+  void draw(float x, float y, float w, float h, const AtlasRegion &region,
+            float r, float g, float b, float a);
 
-	/**
-	 * Draw a solid rectangle using the white pixel from the atlas.
-	 * Requires AtlasManager::getWhitePixel() to be valid.
-	 */
-	void drawRect(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager);
+  /**
+   * Draw a solid rectangle using the white pixel from the atlas.
+   * Requires AtlasManager::getWhitePixel() to be valid.
+   */
+  void drawRect(float x, float y, float w, float h, const glm::vec4 &color,
+                const AtlasManager &atlas_manager);
 
-	/**
-	 * Draw a hollow rectangle (outline) using 4 thin rects.
-	 */
-	void drawRectLines(float x, float y, float w, float h, const glm::vec4& color, const AtlasManager& atlas_manager);
+  /**
+   * Draw a hollow rectangle (outline) using 4 thin rects.
+   */
+  void drawRectLines(float x, float y, float w, float h, const glm::vec4 &color,
+                     const AtlasManager &atlas_manager);
 
-	/**
-	 * End batch. Flushes all sprites to GPU.
-	 * @param atlas_manager Atlas manager to bind textures from
-	 */
-	void end(const AtlasManager& atlas_manager);
+  /**
+   * End batch. Flushes all sprites to GPU.
+   * @param atlas_manager Atlas manager to bind textures from
+   */
+  void end(const AtlasManager &atlas_manager);
 
-	/**
-	 * Set global tint for subsequent draws in current batch.
-	 * If pending sprites exist, they will be flushed using the provided atlas manager.
-	 */
-	void setGlobalTint(float r, float g, float b, float a, const AtlasManager& atlas_manager);
+  /**
+   * Set global tint for subsequent draws in current batch.
+   * If pending sprites exist, they will be flushed using the provided atlas
+   * manager.
+   */
+  void setGlobalTint(float r, float g, float b, float a,
+                     const AtlasManager &atlas_manager);
 
-	/**
-	 * Ensure capacity in pending vector.
-	 */
-	void ensureCapacity(size_t capacity);
+  /**
+   * Ensure capacity in pending vector.
+   */
+  void ensureCapacity(size_t capacity);
 
-	int getDrawCallCount() const {
-		return draw_call_count_;
-	}
-	int getSpriteCount() const {
-		return sprite_count_;
-	}
+  int getDrawCallCount() const { return draw_call_count_; }
+  int getSpriteCount() const { return sprite_count_; }
 
 private:
-	void flush(const AtlasManager& atlas_manager);
+  void flush(const AtlasManager &atlas_manager);
 
-	std::unique_ptr<ShaderProgram> shader_;
+  std::unique_ptr<ShaderProgram> shader_;
 
-	std::unique_ptr<GLVertexArray> vao_;
+  std::unique_ptr<GLVertexArray> vao_;
+  SharedGeometry shared_geometry_;
 
-	RingBuffer ring_buffer_;
-	MultiDrawIndirectRenderer mdi_renderer_;
+  RingBuffer ring_buffer_;
+  MultiDrawIndirectRenderer mdi_renderer_;
 
-	std::vector<SpriteInstance> pending_sprites_;
-	glm::mat4 projection_ { 1.0f };
-	glm::vec4 global_tint_ { 1.0f };
-	const AtlasManager* current_atlas_manager_ = nullptr;
+  std::vector<SpriteInstance> pending_sprites_;
+  glm::mat4 projection_{1.0f};
+  glm::vec4 global_tint_{1.0f};
+  const AtlasManager *current_atlas_manager_ = nullptr;
 
-	// Scoped state for batch duration
-	std::optional<ScopedGLCapability> blend_capability_;
-	std::optional<ScopedGLBlend> blend_func_;
+  // Scoped state for batch duration
+  std::optional<ScopedGLCapability> blend_capability_;
+  std::optional<ScopedGLBlend> blend_func_;
 
-	bool in_batch_ = false;
-	bool use_mdi_ = false;
+  bool in_batch_ = false;
+  bool use_mdi_ = false;
 
-	int draw_call_count_ = 0;
-	int sprite_count_ = 0;
+  int draw_call_count_ = 0;
+  int sprite_count_ = 0;
 };
 
 #endif

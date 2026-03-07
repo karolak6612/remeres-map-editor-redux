@@ -12,40 +12,49 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/io/sprite_loader.h"
 
-MarkerDrawer::MarkerDrawer() { }
+MarkerDrawer::MarkerDrawer() {}
 
-MarkerDrawer::~MarkerDrawer() { }
+MarkerDrawer::~MarkerDrawer() {}
 
-void MarkerDrawer::draw(
-    const DrawContext& ctx, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id,
-    Editor& editor
-)
-{
-    // waypoint (blue flame)
-    if (!ctx.options.ingame && waypoint && ctx.options.show_waypoints) {
-        drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_WAYPOINT].clientID, DrawColor(64, 64, 255));
+void MarkerDrawer::draw(const DrawContext &ctx, SpriteDrawer *drawer,
+                        int draw_x, int draw_y, const Tile *tile,
+                        Waypoint *waypoint, uint32_t current_house_id,
+                        Editor &editor) {
+  // waypoint (blue flame)
+  if (!ctx.options.settings.ingame && waypoint &&
+      ctx.options.settings.show_waypoints) {
+    drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_WAYPOINT].clientID,
+                       DrawColor(64, 64, 255));
+  }
+
+  // house exit (blue splash)
+  if (tile->isHouseExit() && ctx.options.settings.show_houses) {
+    if (tile->hasHouseExit(current_house_id)) {
+      drawer->BlitSprite(ctx, draw_x, draw_y,
+                         g_items[SPRITE_HOUSE_EXIT].clientID,
+                         DrawColor(64, 255, 255));
+    } else {
+      drawer->BlitSprite(ctx, draw_x, draw_y,
+                         g_items[SPRITE_HOUSE_EXIT].clientID,
+                         DrawColor(64, 64, 255));
     }
+  }
 
-    // house exit (blue splash)
-    if (tile->isHouseExit() && ctx.options.show_houses) {
-        if (tile->hasHouseExit(current_house_id)) {
-            drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_HOUSE_EXIT].clientID, DrawColor(64, 255, 255));
-        } else {
-            drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_HOUSE_EXIT].clientID, DrawColor(64, 64, 255));
-        }
-    }
+  // town temple (gray flag)
+  if (ctx.options.settings.show_towns && tile->isTownExit(editor.map)) {
+    drawer->BlitSprite(ctx, draw_x, draw_y,
+                       g_items[SPRITE_TOWN_TEMPLE].clientID,
+                       DrawColor(255, 255, 64, 170));
+  }
 
-    // town temple (gray flag)
-    if (ctx.options.show_towns && tile->isTownExit(editor.map)) {
-        drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_TOWN_TEMPLE].clientID, DrawColor(255, 255, 64, 170));
+  // spawn (purple flame)
+  if (tile->spawn && ctx.options.settings.show_spawns) {
+    if (tile->spawn->isSelected()) {
+      drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_SPAWN].clientID,
+                         DrawColor(128, 128, 128));
+    } else {
+      drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_SPAWN].clientID,
+                         DrawColor(255, 255, 255));
     }
-
-    // spawn (purple flame)
-    if (tile->spawn && ctx.options.show_spawns) {
-        if (tile->spawn->isSelected()) {
-            drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_SPAWN].clientID, DrawColor(128, 128, 128));
-        } else {
-            drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_SPAWN].clientID, DrawColor(255, 255, 255));
-        }
-    }
+  }
 }

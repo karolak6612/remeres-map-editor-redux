@@ -18,58 +18,64 @@
 #ifndef RME_LIGHDRAWER_H
 #define RME_LIGHDRAWER_H
 
-#include <cstdint>
-#include <vector>
-#include <memory>
-#include <wx/wx.h>
-#include <wx/glcanvas.h>
-#include <glm/glm.hpp>
-#include "rendering/core/sprite_light.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/gl_resources.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/shader_program.h"
-#include "rendering/core/gl_resources.h"
-#include "rendering/core/draw_context.h"
+#include "rendering/core/sprite_light.h"
+
+#include <cstddef>
+#include <cstdint>
+#include <glm/glm.hpp>
+#include <memory>
+#include <vector>
 
 struct DrawingOptions;
 struct ViewState;
 class TileLocation;
 
 struct GPULight {
-	glm::vec2 position; // 8 bytes (offset 0)
-	float intensity; // 4 bytes (offset 8)
-	float padding; // 4 bytes (offset 12) -> Aligns color to 16 bytes
-	glm::vec4 color; // 16 bytes (offset 16) -> Total 32 bytes
+  glm::vec2 position; // 8 bytes (offset 0)
+  float intensity;    // 4 bytes (offset 8)
+  float padding;      // 4 bytes (offset 12) -> Aligns color to 16 bytes
+  glm::vec4 color;    // 16 bytes (offset 16) -> Total 32 bytes
 };
+
+static_assert(sizeof(GPULight) == 32, "GPULight must be 32 bytes for std430");
+static_assert(offsetof(GPULight, position) == 0);
+static_assert(offsetof(GPULight, intensity) == 8);
+static_assert(offsetof(GPULight, padding) == 12);
+static_assert(offsetof(GPULight, color) == 16);
 
 class LightDrawer {
 public:
-	LightDrawer();
-	~LightDrawer();
-	void draw(const DrawContext& ctx);
+  LightDrawer();
+  ~LightDrawer();
+  void draw(const DrawContext &ctx);
 
 private:
-	// wxColor global_color; // Removed state
+  // wxColor global_color; // Removed state
 
-	// Open GL Texture used for lightmap
-	// It is owned by this class and should be released when context is destroyed
+  // Open GL Texture used for lightmap
+  // It is owned by this class and should be released when context is destroyed
 
-	std::unique_ptr<ShaderProgram> shader;
-	std::unique_ptr<GLVertexArray> vao;
-	std::unique_ptr<GLBuffer> vbo;
-	std::unique_ptr<GLBuffer> light_ssbo;
-	size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
+  std::unique_ptr<ShaderProgram> shader;
+  std::unique_ptr<GLVertexArray> vao;
+  std::unique_ptr<GLBuffer> vbo;
+  std::unique_ptr<GLBuffer> light_ssbo;
+  size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
 
-	std::vector<GPULight> gpu_lights_;
+  std::vector<GPULight> gpu_lights_;
 
-	std::unique_ptr<GLFramebuffer> fbo;
-	std::unique_ptr<GLTextureResource> fbo_texture;
-	int buffer_width = 0;
-	int buffer_height = 0;
+  std::unique_ptr<GLFramebuffer> fbo;
+  std::unique_ptr<GLTextureResource> fbo_texture;
+  int buffer_width = 0;
+  int buffer_height = 0;
 
-	void InitFBO();
-	void ResizeFBO(int width, int height);
+  void InitFBO();
+  void InitFBOStorage(int width, int height);
 
-	void initRenderResources();
+  void initRenderResources();
 };
 
 #endif

@@ -119,7 +119,7 @@ void BrushOverlayDrawer::draw(const DrawContext &ctx, ItemDrawer *item_drawer,
   if (!g_gui.GetCurrentBrush()) {
     return;
   }
-  if (ctx.options.ingame) {
+  if (ctx.options.settings.ingame) {
     return;
   }
 

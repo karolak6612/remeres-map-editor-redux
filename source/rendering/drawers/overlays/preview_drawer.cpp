@@ -30,7 +30,7 @@ void PreviewDrawer::draw(const DrawContext &ctx,
                          CreatureDrawer *creature_drawer) {
   const BaseMap *secondary_map = ctx.canvas_state.secondary_map;
 
-  if (secondary_map != nullptr && !ctx.options.ingame) {
+  if (secondary_map != nullptr && !ctx.options.settings.ingame) {
     Brush *brush = g_gui.GetCurrentBrush();
 
     Position normalPos;
@@ -94,32 +94,32 @@ void PreviewDrawer::drawTilePreview(const DrawContext &ctx, int draw_x,
   uint8_t r = 255, g = 255, b = 255;
 
   if (tile->ground) {
-    if (tile->isBlocking() && ctx.options.show_blocking) {
+    if (tile->isBlocking() && ctx.options.settings.show_blocking) {
       g = g / 3 * 2;
       b = b / 3 * 2;
     }
-    if (tile->isHouseTile() && ctx.options.show_houses) {
+    if (tile->isHouseTile() && ctx.options.settings.show_houses) {
       if (tile->getHouseID() == ctx.canvas_state.current_house_id) {
         r /= 2;
       } else {
         r /= 2;
         g /= 2;
       }
-    } else if (ctx.options.show_special_tiles && tile->isPZ()) {
+    } else if (ctx.options.settings.show_special_tiles && tile->isPZ()) {
       r /= 2;
       b /= 2;
     }
-    if (ctx.options.show_special_tiles &&
+    if (ctx.options.settings.show_special_tiles &&
         tile->getMapFlags() & TILESTATE_PVPZONE) {
       uint8_t r_orig = r;
       r = r / 3 * 2;
       b = r_orig / 3 * 2;
     }
-    if (ctx.options.show_special_tiles &&
+    if (ctx.options.settings.show_special_tiles &&
         tile->getMapFlags() & TILESTATE_NOLOGOUT) {
       b /= 2;
     }
-    if (ctx.options.show_special_tiles &&
+    if (ctx.options.settings.show_special_tiles &&
         tile->getMapFlags() & TILESTATE_NOPVP) {
       g /= 2;
     }
@@ -134,7 +134,7 @@ void PreviewDrawer::drawTilePreview(const DrawContext &ctx, int draw_x,
                           params);
   }
 
-  if (ctx.view.zoom <= 10.0 || !ctx.options.hide_items_when_zoomed) {
+  if (ctx.view.zoom <= 10.0 || !ctx.options.settings.hide_items_when_zoomed) {
     for (const auto &item : tile->items) {
       BlitItemParams params(tile, item.get(), ctx.options);
       params.ephemeral = true;
@@ -151,7 +151,7 @@ void PreviewDrawer::drawTilePreview(const DrawContext &ctx, int draw_x,
                               draw_y, params);
       }
     }
-    if (tile->creature && ctx.options.show_creatures) {
+    if (tile->creature && ctx.options.settings.show_creatures) {
       creature_drawer->BlitCreature(ctx, sprite_drawer, draw_x, draw_y,
                                     tile->creature.get());
     }

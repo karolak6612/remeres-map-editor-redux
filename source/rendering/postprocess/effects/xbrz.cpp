@@ -1,8 +1,9 @@
+#include "rendering/postprocess/effects/effects.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 namespace {
 
-	const char* xbrz_vert = R"(
+const char *xbrz_vert = R"(
 #version 450 core
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -36,7 +37,7 @@ void main() {
 }
 )";
 
-	const char* xbrz_frag_source = R"(
+const char *xbrz_frag_source = R"(
 #version 450 core
 in vec2 vTexCoord;
 in vec4 t1;
@@ -260,11 +261,8 @@ void main()
 }
 )";
 
-	// Auto-register
-	struct XBRZRegister {
-		XBRZRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
-		}
-	} xbrz_register;
-
 } // namespace
+
+void RegisterXBRZEffect(PostProcessManager &manager) {
+  manager.Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
+}

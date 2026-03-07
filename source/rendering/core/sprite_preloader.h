@@ -9,70 +9,71 @@
 #include <memory>
 #include <mutex>
 #include <queue>
+#include <string>
 #include <thread>
 #include <unordered_set>
+#include <vector>
 
 class SpritePreloader {
 public:
-    [[nodiscard]] static SpritePreloader& get();
+  SpritePreloader();
 
-    SpritePreloader(const SpritePreloader&) = delete;
-    SpritePreloader& operator=(const SpritePreloader&) = delete;
+  SpritePreloader(const SpritePreloader &) = delete;
+  SpritePreloader &operator=(const SpritePreloader &) = delete;
 
-    // Schedules sprites for preloading based on the given view parameters.
-    // This corresponds to the loop logic previously in collectTileSprites.
-    void preload(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z, int frame);
+  // Schedules sprites for preloading based on the given view parameters.
+  // This corresponds to the loop logic previously in collectTileSprites.
+  void preload(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z,
+               int frame);
 
-    // Processes finished preload tasks and uploads data to the GPU.
-    // Should be called on the main thread.
-    void update();
+  // Processes finished preload tasks and uploads data to the GPU.
+  // Should be called on the main thread.
+  void update();
 
-    // Clears all pending tasks and results.
-    // Should be called when GraphicManager is cleared.
-    void clear();
+  // Clears all pending tasks and results.
+  // Should be called when GraphicManager is cleared.
+  void clear();
 
-    // Explicit shutdown to be called before global destruction
-    void shutdown();
+  // Explicit shutdown to be called before global destruction
+  void shutdown();
+
+  ~SpritePreloader();
 
 private:
-    SpritePreloader();
-    ~SpritePreloader();
+  void workerLoop(std::stop_token stop_token);
 
-    struct Task {
-        uint32_t id;
-        uint32_t generation_id;
-        std::string spritefile;
-        bool is_extended;
-        bool has_transparency;
-    };
+  static constexpr unsigned int MIN_WORKER_THREADS = 2u;
+  static constexpr unsigned int MAX_WORKER_THREADS = 8u;
+  static constexpr size_t MAX_QUEUE_SIZE = 50000;
 
-    struct Result {
-        uint32_t id;
-        uint32_t generation_id;
-        std::unique_ptr<uint8_t[]> data;
-        std::string spritefile;
-    };
+  struct Task {
+    uint32_t id;
+    uint32_t generation_id;
+    std::string spritefile;
+    bool is_extended;
+    bool has_transparency;
+  };
 
-    void workerLoop(std::stop_token stop_token);
+  struct Result {
+    uint32_t id;
+    uint32_t generation_id;
+    std::unique_ptr<uint8_t[]> data;
+    std::string spritefile;
+  };
 
-    static constexpr unsigned int MIN_WORKER_THREADS = 2u;
-    static constexpr unsigned int MAX_WORKER_THREADS = 8u;
+  std::mutex queue_mutex;
+  std::condition_variable cv;
+  bool stopping = false;
+  std::vector<std::jthread> workers;
 
-    static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
-
-    std::mutex queue_mutex;
-    std::condition_variable cv;
-    bool stopping = false;
-    std::vector<std::jthread> workers;
-
-    std::queue<Task> task_queue;
-    std::queue<Result> result_queue;
-    std::unordered_set<uint32_t> pending_ids; // To avoid duplicate tasks
-    std::unordered_set<uint32_t> cancelled_ids; // IDs that were cleared and should be ignored
+  std::queue<Task> task_queue;
+  std::queue<Result> result_queue;
+  std::unordered_set<uint32_t> pending_ids;
 };
 
 namespace rme {
-    void collectTileSprites(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z, int frame);
+void collectTileSprites(SpritePreloader &preloader, uint32_t clientID,
+                        int pattern_x, int pattern_y, int pattern_z, int frame);
 } // namespace rme
 
 #endif

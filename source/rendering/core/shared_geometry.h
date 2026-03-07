@@ -3,39 +3,40 @@
 
 #include "rendering/core/gl_resources.h"
 #include <memory>
-#include <unordered_map>
 #include <mutex>
+#include <unordered_map>
 
 class SharedGeometry {
 public:
-	static SharedGeometry& Instance() {
-		static SharedGeometry instance;
-		return instance;
-	}
+  SharedGeometry() = default;
+  ~SharedGeometry() = default;
 
-	bool initialize();
-	GLuint getQuadVBO();
-	GLuint getQuadEBO();
+  bool initialize();
+  GLuint getQuadVBO();
+  GLuint getQuadEBO();
 
-	// Returns number of indices for the quad (6)
-	GLsizei getQuadIndexCount() const {
-		return 6;
-	}
+  // Returns number of indices for the quad (6)
+  GLsizei getQuadIndexCount() const { return 6; }
+
+  SharedGeometry(const SharedGeometry &) = delete;
+  SharedGeometry &operator=(const SharedGeometry &) = delete;
+  SharedGeometry(SharedGeometry &&other) noexcept
+      : contexts_(std::move(other.contexts_)) {}
+  SharedGeometry &operator=(SharedGeometry &&other) noexcept {
+    if (this != &other) {
+      contexts_ = std::move(other.contexts_);
+    }
+    return *this;
+  }
 
 private:
-	SharedGeometry() = default;
-	~SharedGeometry() = default;
+  struct ContextGeometry {
+    std::unique_ptr<GLBuffer> vbo;
+    std::unique_ptr<GLBuffer> ebo;
+  };
 
-	SharedGeometry(const SharedGeometry&) = delete;
-	SharedGeometry& operator=(const SharedGeometry&) = delete;
-
-	struct ContextGeometry {
-		std::unique_ptr<GLBuffer> vbo;
-		std::unique_ptr<GLBuffer> ebo;
-	};
-
-	std::unordered_map<void*, ContextGeometry> contexts_;
-	std::mutex mutex_;
+  std::unordered_map<void *, ContextGeometry> contexts_;
+  std::mutex mutex_;
 };
 
 #endif

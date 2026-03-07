@@ -15,224 +15,215 @@
 #include <span>
 
 namespace {
-    struct PendingTask {
-        uint32_t id;
-        uint32_t generation_id;
-    };
+struct PendingTask {
+  uint32_t id;
+  uint32_t generation_id;
+};
 } // namespace
 
-SpritePreloader& SpritePreloader::get()
-{
-    static SpritePreloader instance;
-    return instance;
+SpritePreloader::SpritePreloader() : stopping(false) {
+  unsigned int num_threads = std::clamp(std::thread::hardware_concurrency(),
+                                        MIN_WORKER_THREADS, MAX_WORKER_THREADS);
+  workers.reserve(num_threads);
+  for (unsigned int i = 0; i < num_threads; ++i) {
+    workers.emplace_back(
+        [this](std::stop_token stop_token) { this->workerLoop(stop_token); });
+  }
 }
 
-SpritePreloader::SpritePreloader() : stopping(false)
-{
-    unsigned int num_threads = std::clamp(std::thread::hardware_concurrency(), MIN_WORKER_THREADS, MAX_WORKER_THREADS);
-    workers.reserve(num_threads);
-    for (unsigned int i = 0; i < num_threads; ++i) {
-        workers.emplace_back([this](std::stop_token stop_token) { this->workerLoop(stop_token); });
+SpritePreloader::~SpritePreloader() { shutdown(); }
+
+void SpritePreloader::shutdown() {
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    if (stopping) {
+      return;
     }
+    stopping = true;
+  }
+  for (auto &worker : workers) {
+    worker.request_stop(); // Correctly signaled transition for jthread's
+                           // stop_token
+  }
+  cv.notify_all();
 }
 
-SpritePreloader::~SpritePreloader()
-{
-    shutdown();
+void SpritePreloader::clear() {
+  std::lock_guard<std::mutex> lock(queue_mutex);
+  task_queue = std::queue<Task>();
+  result_queue = std::queue<Result>();
+  pending_ids.clear();
 }
 
-void SpritePreloader::shutdown()
-{
-    {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        if (stopping) {
-            return;
+void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y,
+                              int pattern_z, int frame) {
+  if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() ||
+      clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
+    return;
+  }
+  const SpriteMetadata &meta = g_gui.sprites.getMetadataSpace()[clientID];
+  SpriteAtlasCache &atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+
+  // Capture global state once per preload call (one item)
+  const std::string &sprfile = g_gui.loader.getSpriteFile();
+  const bool is_extended = g_gui.loader.isExtended();
+  const bool has_transparency = g_gui.loader.hasTransparency();
+
+  static thread_local std::vector<PendingTask> ids_to_enqueue;
+  ids_to_enqueue.clear();
+
+  // Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize
+  // allocations
+  if (ids_to_enqueue.capacity() < 64) {
+    ids_to_enqueue.reserve(64);
+  }
+
+  for (int cx = 0; cx < meta.width; ++cx) {
+    for (int cy = 0; cy < meta.height; ++cy) {
+      for (int cf = 0; cf < meta.layers; ++cf) {
+        int idx =
+            meta.getIndex(cx, cy, cf, pattern_x, pattern_y, pattern_z, frame);
+
+        if (idx >= static_cast<int>(meta.numsprites)) {
+          if (meta.numsprites <= 1) {
+            idx = 0;
+          } else {
+            idx %= meta.numsprites;
+          }
         }
-        stopping = true;
+
+        if (idx < 0 || static_cast<size_t>(idx) >= atlas.spriteList.size()) {
+          continue;
+        }
+
+        NormalImage *img = atlas.spriteList[idx];
+        if (img && !img->isGLLoaded) {
+          img->clientID = clientID;
+          ids_to_enqueue.push_back({img->id, img->generation_id});
+        }
+      }
     }
-    for (auto& worker : workers) {
-        worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+  }
+
+  if (!ids_to_enqueue.empty()) {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    for (const auto &pending : ids_to_enqueue) {
+      if (task_queue.size() >= MAX_QUEUE_SIZE) {
+        spdlog::debug("SpritePreloader: Queue full ({}), dropping remaining enqueues",
+                      task_queue.size());
+        break; // Drop remaining requests if queue is slammed
+      }
+      if (pending_ids.insert(pending.id).second) {
+        task_queue.push({pending.id, pending.generation_id, sprfile,
+                         is_extended, has_transparency});
+      }
     }
     cv.notify_all();
+  }
 }
 
-void SpritePreloader::clear()
-{
-    std::lock_guard<std::mutex> lock(queue_mutex);
-    // When clearing, we must ensure any in-flight tasks are ignored when they complete.
-    // We move all pending IDs to the cancelled set.
-    for (auto id : pending_ids) {
-        cancelled_ids.insert(id);
-    }
-    task_queue = std::queue<Task>();
-    result_queue = std::queue<Result>();
-    pending_ids.clear();
-}
-
-void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z, int frame)
-{
-    if (clientID == 0 || clientID >= g_gui.sprites.getMetadataSpace().size() || clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
-        return;
-    }
-    const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];
-    SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
-
-    // Capture global state once per preload call (one item)
-    const std::string& sprfile = g_gui.loader.getSpriteFile();
-    const bool is_extended = g_gui.loader.isExtended();
-    const bool has_transparency = g_gui.loader.hasTransparency();
-
-    static thread_local std::vector<PendingTask> ids_to_enqueue;
-    ids_to_enqueue.clear();
-
-    // Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize allocations
-    if (ids_to_enqueue.capacity() < 64) {
-        ids_to_enqueue.reserve(64);
-    }
-
-    for (int cx = 0; cx < meta.width; ++cx) {
-        for (int cy = 0; cy < meta.height; ++cy) {
-            for (int cf = 0; cf < meta.layers; ++cf) {
-                int idx = meta.getIndex(cx, cy, cf, pattern_x, pattern_y, pattern_z, frame);
-
-                if (idx >= static_cast<int>(meta.numsprites)) {
-                    if (meta.numsprites <= 1) {
-                        idx = 0;
-                    } else {
-                        idx %= meta.numsprites;
-                    }
-                }
-
-                if (idx < 0 || static_cast<size_t>(idx) >= atlas.spriteList.size()) {
-                    continue;
-                }
-
-                NormalImage* img = atlas.spriteList[idx];
-                if (img && !img->isGLLoaded) {
-                    img->clientID = clientID;
-                    ids_to_enqueue.push_back({img->id, img->generation_id});
-                }
-            }
-        }
-    }
-
-    if (!ids_to_enqueue.empty()) {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        if (task_queue.size() > MAX_QUEUE_SIZE) {
-            return; // Drop requests if queue is slammed
-        }
-
-        for (const auto& pending : ids_to_enqueue) {
-            if (pending_ids.insert(pending.id).second) {
-                task_queue.push({pending.id, pending.generation_id, sprfile, is_extended, has_transparency});
-            }
-        }
-        cv.notify_all();
-    }
-}
-
-void SpritePreloader::workerLoop(std::stop_token stop_token)
-{
-    while (!stop_token.stop_requested()) {
-        Task task;
-        {
-            std::unique_lock<std::mutex> lock(queue_mutex);
-            cv.wait(lock, [this, &stop_token] { return stop_token.stop_requested() || !task_queue.empty(); });
-            if (stop_token.stop_requested()) {
-                break;
-            }
-            task = std::move(task_queue.front());
-            task_queue.pop();
-        }
-
-        std::unique_ptr<uint8_t[]> dump;
-        uint16_t size = 0;
-        bool success = false;
-
-        if (!task.spritefile.empty()) {
-            success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump, size, task.id);
-        }
-
-        std::unique_ptr<uint8_t[]> rgba;
-        if (success && dump) {
-            rgba = decompress_sprite(std::span {dump.get(), size}, task.has_transparency, task.id);
-        }
-
-        {
-            std::lock_guard<std::mutex> lock(queue_mutex);
-            if (rgba) {
-                result_queue.push({task.id, task.generation_id, std::move(rgba), std::move(task.spritefile)});
-            } else {
-                pending_ids.erase(task.id);
-            }
-        }
-    }
-}
-
-void SpritePreloader::update()
-{
-    // CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
-    assert(wxIsMainThread());
-
-    // Move results to a local queue and cancelled_ids to a local set under lock to minimize holding time
-    std::queue<Result> results;
-    std::unordered_set<uint32_t> local_cancelled;
+void SpritePreloader::workerLoop(std::stop_token stop_token) {
+  while (!stop_token.stop_requested()) {
+    Task task;
     {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        if (result_queue.empty()) {
-            return;
-        }
-        results = std::move(result_queue);
-        local_cancelled = cancelled_ids; // Copy — don't move, preserves for later batches
+      std::unique_lock<std::mutex> lock(queue_mutex);
+      cv.wait(lock, [this, &stop_token] {
+        return stop_token.stop_requested() || !task_queue.empty();
+      });
+      if (stop_token.stop_requested()) {
+        break;
+      }
+      task = std::move(task_queue.front());
+      task_queue.pop();
     }
 
-    thread_local std::vector<uint32_t> ids_processed;
-    ids_processed.clear();
-    ids_processed.reserve(results.size());
+    std::unique_ptr<uint8_t[]> dump;
+    uint16_t size = 0;
+    bool success = false;
 
-    const std::string& current_sprfile = g_gui.loader.getSpriteFile();
-    const bool graphics_unloaded = g_gui.loader.isUnloaded();
-
-    while (!results.empty()) {
-        Result res = std::move(results.front());
-        results.pop();
-
-        auto id = res.id;
-        ids_processed.push_back(id);
-
-        // Check if this ID was cancelled (moved to local set under one lock)
-        if (local_cancelled.count(id)) {
-            continue;
-        }
-
-        // Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-        auto& imageSpace = g_gui.sprites.getImageSpace();
-        if (res.spritefile == current_sprfile && !graphics_unloaded && id < imageSpace.size()) {
-            auto& img_ptr = imageSpace[id];
-            if (img_ptr && img_ptr->isNormalImage()) {
-                // Use static_cast for performance, as we know the type from loaders
-                auto* img = static_cast<NormalImage*>(img_ptr.get());
-
-                // Validate Sprite Identity & Generation
-                // Check ID match, Generation match, and GLLoaded state
-                if (img->id == id && img->generation_id == res.generation_id && !img->isGLLoaded) {
-                    img->fulfillPreload(std::move(res.data));
-                }
-            }
-        }
+    if (!task.spritefile.empty()) {
+      success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump,
+                                    size, task.id);
     }
 
-    if (!ids_processed.empty()) {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        for (uint32_t id : ids_processed) {
-            pending_ids.erase(id);
-        }
+    std::unique_ptr<uint8_t[]> rgba;
+    if (success && dump) {
+      rgba = decompress_sprite(std::span{dump.get(), size},
+                               task.has_transparency, task.id);
     }
+
+    {
+      std::lock_guard<std::mutex> lock(queue_mutex);
+      if (rgba) {
+        result_queue.push({task.id, task.generation_id, std::move(rgba),
+                           std::move(task.spritefile)});
+      } else {
+        pending_ids.erase(task.id);
+      }
+    }
+  }
+}
+
+void SpritePreloader::update() {
+  // CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
+  assert(wxIsMainThread());
+
+  // Move results to a local queue to minimize holding time
+  std::queue<Result> results;
+  {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    if (result_queue.empty()) {
+      return;
+    }
+    results = std::move(result_queue);
+  }
+
+  thread_local std::vector<uint32_t> ids_processed;
+  ids_processed.clear();
+  ids_processed.reserve(results.size());
+
+  const std::string &current_sprfile = g_gui.loader.getSpriteFile();
+  const bool graphics_unloaded = g_gui.loader.isUnloaded();
+
+  while (!results.empty()) {
+    Result res = std::move(results.front());
+    results.pop();
+
+    auto id = res.id;
+    ids_processed.push_back(id);
+
+    // Check if GraphicManager is loaded, for the correct sprite file, and ID is
+    // valid
+    auto &imageSpace = g_gui.sprites.getImageSpace();
+    if (res.spritefile == current_sprfile && !graphics_unloaded &&
+        id < imageSpace.size()) {
+      auto &img_ptr = imageSpace[id];
+      if (img_ptr && img_ptr->isNormalImage()) {
+        // Use static_cast for performance, as we know the type from loaders
+        auto *img = static_cast<NormalImage *>(img_ptr.get());
+
+        // Validate Sprite Identity & Generation
+        // Check ID match, Generation match, and GLLoaded state
+        if (img->id == id && img->generation_id == res.generation_id &&
+            !img->isGLLoaded) {
+          img->fulfillPreload(std::move(res.data));
+        }
+      }
+    }
+  }
+
+  if (!ids_processed.empty()) {
+    std::lock_guard<std::mutex> lock(queue_mutex);
+    for (uint32_t id : ids_processed) {
+      pending_ids.erase(id);
+    }
+  }
 }
 
 namespace rme {
-    void collectTileSprites(uint32_t clientID, int pattern_x, int pattern_y, int pattern_z, int frame)
-    {
-        SpritePreloader::get().preload(clientID, pattern_x, pattern_y, pattern_z, frame);
-    }
+void collectTileSprites(SpritePreloader &preloader, uint32_t clientID,
+                        int pattern_x, int pattern_y, int pattern_z,
+                        int frame) {
+  preloader.preload(clientID, pattern_x, pattern_y, pattern_z, frame);
+}
 } // namespace rme

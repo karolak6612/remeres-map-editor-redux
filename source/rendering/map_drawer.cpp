@@ -119,19 +119,21 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
   item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
   item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
 
-  post_process_pipeline = std::make_unique<PostProcessPipeline>();
+  post_process_pipeline =
+      std::make_unique<PostProcessPipeline>(post_process_manager_);
 }
 
 MapDrawer::~MapDrawer() {}
 
 void MapDrawer::SetupDrawingOptions() {
-  options.current_house_id = 0;
+  options.frame.current_house_id = 0;
   Brush *brush = g_gui.GetCurrentBrush();
   if (brush) {
     if (brush->is<HouseBrush>()) {
-      options.current_house_id = brush->as<HouseBrush>()->getHouseID();
+      options.frame.current_house_id = brush->as<HouseBrush>()->getHouseID();
     } else if (brush->is<HouseExitBrush>()) {
-      options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
+      options.frame.current_house_id =
+          brush->as<HouseExitBrush>()->getHouseID();
     }
   }
 
@@ -142,7 +144,8 @@ void MapDrawer::SetupDrawingOptions() {
   // (sin(t) + 1) / 2
   double now = wxGetLocalTimeMillis().ToDouble();
   const double speed = 0.005;
-  options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
+  options.frame.highlight_pulse =
+      static_cast<float>((sin(now * speed) + 1.0) / 2.0);
 }
 
 void MapDrawer::SetupViewState() {
@@ -162,7 +165,7 @@ void MapDrawer::SetupViewState() {
   view.camera_pos.z = view.floor;
 
   // Calculate bounds based on options and map layers
-  if (options.show_all_floors) {
+  if (options.settings.show_all_floors) {
     if (view.floor <= GROUND_LAYER) {
       view.start_z = GROUND_LAYER;
     } else {
@@ -175,7 +178,7 @@ void MapDrawer::SetupViewState() {
   view.end_z = view.floor;
   view.superend_z = (view.floor > GROUND_LAYER ? 8 : 0);
 
-  if (options.show_shade) {
+  if (options.settings.show_shade) {
     if (view.end_z < view.start_z && view.end_z == view.superend_z &&
         view.end_z >= 0) {
       view.superend_z--;
@@ -230,7 +233,7 @@ void MapDrawer::SetupCanvasState() {
   MapTab *mapTab = dynamic_cast<MapTab *>(canvas.GetMapWindow());
   canvas_state.secondary_map =
       mapTab ? mapTab->GetSession()->secondary_map : nullptr;
-  canvas_state.current_house_id = options.current_house_id;
+  canvas_state.current_house_id = options.frame.current_house_id;
 }
 
 void MapDrawer::SetupGL() {
@@ -253,10 +256,10 @@ void MapDrawer::Draw() {
 
   light_buffer.Clear();
   creature_name_drawer->clear();
-  options.transient_selection_bounds = std::nullopt;
+  options.frame.transient_selection_bounds = std::nullopt;
 
-  if (options.boundbox_selection) {
-    options.transient_selection_bounds = MapBounds{
+  if (options.frame.boundbox_selection) {
+    options.frame.transient_selection_bounds = MapBounds{
         .x1 = std::min(canvas.last_click_map_x, canvas.last_cursor_map_x),
         .y1 = std::min(canvas.last_click_map_y, canvas.last_cursor_map_y),
         .x2 = std::max(canvas.last_click_map_x, canvas.last_cursor_map_x),
@@ -287,7 +290,7 @@ void MapDrawer::Draw() {
   sprite_batch->end(*atlas);
   primitive_renderer->flush();
 
-  if (options.isDrawLight()) {
+  if (options.settings.isDrawLight()) {
     DrawLight();
   }
 
@@ -311,10 +314,10 @@ void MapDrawer::Draw() {
   brush_overlay_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(),
                              creature_drawer.get(), editor);
 
-  if (options.show_grid) {
+  if (options.settings.show_grid) {
     DrawGrid(ctx, original_bounds);
   }
-  if (options.show_ingame_box) {
+  if (options.settings.show_ingame_box) {
     DrawIngameBox(ctx, original_bounds);
   }
 
@@ -334,7 +337,8 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
   bool live_client = editor.live_manager.IsClient();
 
-  bool only_colors = options.show_as_minimap || options.show_only_colors;
+  bool only_colors =
+      options.settings.show_as_minimap || options.settings.show_only_colors;
 
   // Enable texture mode
 
@@ -380,7 +384,7 @@ void MapDrawer::DrawGrid(const DrawContext &ctx, const ViewBounds &bounds) {
 }
 
 void MapDrawer::DrawTooltips(NVGcontext *vg) {
-  if (options.show_tooltips) {
+  if (options.settings.show_tooltips) {
     DrawContext ctx = MakeDrawContext();
     tooltip_drawer->draw(vg, ctx);
   }
@@ -392,7 +396,7 @@ void MapDrawer::DrawHookIndicators(NVGcontext *vg) {
 }
 
 void MapDrawer::DrawDoorIndicators(NVGcontext *vg) {
-  if (options.highlight_locked_doors) {
+  if (options.settings.highlight_locked_doors) {
     DrawContext ctx = MakeDrawContext();
     door_indicator_drawer->draw(vg, ctx);
   }
@@ -420,7 +424,7 @@ DrawContext MapDrawer::MakeDrawContext() {
 }
 
 void MapDrawer::DrawLight() {
-  if (options.isDrawLight()) {
+  if (options.settings.isDrawLight()) {
     DrawContext ctx = MakeDrawContext();
     light_drawer->draw(ctx);
   }

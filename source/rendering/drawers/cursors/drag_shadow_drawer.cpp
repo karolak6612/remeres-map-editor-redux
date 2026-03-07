@@ -37,8 +37,8 @@ void DragShadowDrawer::draw(const DrawContext &ctx, ItemDrawer *item_drawer,
                             SpriteDrawer *sprite_drawer,
                             CreatureDrawer *creature_drawer, Editor &editor) {
   // Draw dragging shadow
-  if (!editor.selection.isBusy() && ctx.options.dragging &&
-      !ctx.options.ingame) {
+  if (!editor.selection.isBusy() && ctx.options.frame.dragging &&
+      !ctx.options.settings.ingame) {
     Position drag_start = ctx.canvas_state.drag_start_pos;
     int move_x = drag_start.x - ctx.view.mouse_map_x;
     int move_y = drag_start.y - ctx.view.mouse_map_y;
@@ -86,7 +86,7 @@ void DragShadowDrawer::draw(const DrawContext &ctx, ItemDrawer *item_drawer,
         // save performance when moving large chunks unzoomed
         if (ctx.view.zoom <= 3.0) {
           if (tile->creature && tile->creature->isSelected() &&
-              ctx.options.show_creatures) {
+              ctx.options.settings.show_creatures) {
             creature_drawer->BlitCreature(
                 ctx, sprite_drawer, draw_x, draw_y, tile->creature.get(),
                 CreatureDrawOptions{.color = DrawColor(160, 160, 160, 160)});
