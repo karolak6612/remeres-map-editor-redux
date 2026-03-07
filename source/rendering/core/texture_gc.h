@@ -12,7 +12,8 @@
 class GameSprite;
 class Sprite;
 class SpriteDatabase;
-class Image;
+class SpriteDatabase;
+#include "rendering/core/image.h" // requires ImageHandle
 
 class TextureGC {
 public:
@@ -54,9 +55,9 @@ public:
     }
 
     // Controlled API for resident sets
-    void addResidentImage(Image* img);
-    void removeResidentImage(Image* img);
-    bool containsResidentImage(Image* img) const;
+    void addResidentImage(ImageHandle handle);
+    void removeResidentImage(ImageHandle handle);
+    bool containsResidentImage(ImageHandle handle) const;
 
     void addResidentGameSprite(uint32_t clientID);
     void removeResidentGameSprite(uint32_t clientID);
@@ -72,7 +73,7 @@ private:
     std::deque<uint32_t> cleanup_list;
 
     mutable std::recursive_mutex resident_images_mutex_;
-    std::vector<Image*> resident_images;
+    std::vector<ImageHandle> resident_images;
     std::unordered_set<uint32_t> resident_game_sprites;
 };
 

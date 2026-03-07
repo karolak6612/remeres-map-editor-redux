@@ -9,6 +9,12 @@ public:
     TemplateImage(uint32_t clientID, int v, const Outfit& outfit);
     ~TemplateImage() override;
 
+    TemplateImage(const TemplateImage&) = delete;
+    TemplateImage& operator=(const TemplateImage&) = delete;
+
+    TemplateImage(TemplateImage&& other) noexcept;
+    TemplateImage& operator=(TemplateImage&& other) noexcept;
+
     void clean(time_t time, int longevity) override;
 
     virtual std::unique_ptr<uint8_t[]> getRGBData() override;

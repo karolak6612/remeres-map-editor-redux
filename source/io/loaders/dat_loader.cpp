@@ -292,10 +292,10 @@ bool DatLoader::LoadMetadata(
     db.getMetadataSpace().resize(max_id_needed);
     db.getAtlasCacheSpace().resize(max_id_needed);
     db.getIconRendererSpace().resize(max_id_needed);
-    // Resize image_space to MAX_SPRITES to ensure OOB access doesn't happen during sprite id reading.
+    // Resize normal_images_ to MAX_SPRITES to ensure OOB access doesn't happen during sprite id reading.
     // SprLoader will later resize it to the exact count, but we need it safe now.
-    if (db.getImageSpace().size() < MAX_SPRITES) {
-        db.getImageSpace().resize(MAX_SPRITES);
+    if (db.getNormalImageSpace().size() < MAX_SPRITES) {
+        db.getNormalImageSpace().resize(MAX_SPRITES);
     }
 
     const ClientVersion* cv = loader.getClientVersion();
@@ -478,17 +478,14 @@ bool DatLoader::ReadSpriteGroup(
 
         if (group_index == 0) {
             // Validate sprite_id
-            if (sprite_id == UINT32_MAX || sprite_id >= MAX_SPRITES || sprite_id >= db.getImageSpace().size()) {
+            if (sprite_id == UINT32_MAX || sprite_id >= MAX_SPRITES || sprite_id >= db.getNormalImageSpace().size()) {
                 return false;
             }
 
-            auto& imgPtr = db.getImageSpace()[sprite_id];
-            if (!imgPtr) {
-                auto img = std::make_unique<NormalImage>();
-                img->id = sprite_id;
-                imgPtr = std::move(img);
-            }
-            atlas_cache.spriteList.push_back(static_cast<NormalImage*>(imgPtr.get()));
+            auto& img = db.getNormalImageSpace()[sprite_id];
+            img.id = sprite_id;
+            img.handle = {ImageType::Normal, sprite_id, img.generation_id};
+            atlas_cache.spriteList.push_back(sprite_id);
         }
     }
 

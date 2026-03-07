@@ -27,57 +27,11 @@ TemplateImage::TemplateImage(uint32_t clientID, int v, const Outfit& outfit) :
 TemplateImage::~TemplateImage()
 {
     if (isGLLoaded) {
-        g_gui.gc.removeResidentImage(handle);
+        g_gui.gc.removeResidentImage(this);
         if (g_gui.atlas.hasAtlasManager()) {
             g_gui.atlas.getAtlasManager()->removeSprite(texture_id);
         }
     }
-}
-
-TemplateImage::TemplateImage(TemplateImage&& other) noexcept
-    : Image(std::move(other)),
-      atlas_region(other.atlas_region),
-      texture_id(other.texture_id),
-      clientID(other.clientID),
-      sprite_index(other.sprite_index),
-      lookHead(other.lookHead),
-      lookBody(other.lookBody),
-      lookLegs(other.lookLegs),
-      lookFeet(other.lookFeet)
-{
-    other.atlas_region = nullptr;
-    other.texture_id = 0;
-    other.clientID = 0;
-    other.sprite_index = 0;
-    other.lookHead = 0;
-    other.lookBody = 0;
-    other.lookLegs = 0;
-    other.lookFeet = 0;
-}
-
-TemplateImage& TemplateImage::operator=(TemplateImage&& other) noexcept
-{
-    if (this != &other) {
-        Image::operator=(std::move(other));
-        atlas_region = other.atlas_region;
-        texture_id = other.texture_id;
-        clientID = other.clientID;
-        sprite_index = other.sprite_index;
-        lookHead = other.lookHead;
-        lookBody = other.lookBody;
-        lookLegs = other.lookLegs;
-        lookFeet = other.lookFeet;
-
-        other.atlas_region = nullptr;
-        other.texture_id = 0;
-        other.clientID = 0;
-        other.sprite_index = 0;
-        other.lookHead = 0;
-        other.lookBody = 0;
-        other.lookLegs = 0;
-        other.lookFeet = 0;
-    }
-    return *this;
 }
 
 void TemplateImage::clean(time_t time, int longevity)
@@ -92,10 +46,8 @@ void TemplateImage::clean(time_t time, int longevity)
         }
         isGLLoaded = false;
         atlas_region = nullptr;
-        ImageHandle old_handle = handle;
         generation_id++;
-        handle.generation = generation_id;
-        g_gui.gc.removeResidentImage(old_handle);
+        g_gui.gc.removeResidentImage(this);
     }
 }
 
@@ -159,6 +111,14 @@ namespace {
             return false;
         }
 
+        if (!atlas.spriteList[sprite_index] || !atlas.spriteList[mask_index]) {
+            spdlog::warn(
+                "TemplateImage (texture_id={}): Null sprite in list (sprite_index={}, mask_index={})", img->texture_id, sprite_index,
+                mask_index
+            );
+            return false;
+        }
+
         return true;
     }
 
@@ -187,13 +147,8 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData()
     }
 
     SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
-    auto& space = g_gui.sprites.getNormalImageSpace();
-    if (atlas.spriteList[sprite_index] >= space.size() || atlas.spriteList[mask_index] >= space.size()) {
-        return nullptr;
-    }
-    
-    auto rgbdata = space[atlas.spriteList[sprite_index]].getRGBData();
-    auto template_rgbdata = space[atlas.spriteList[mask_index]].getRGBData();
+    auto rgbdata = atlas.spriteList[sprite_index]->getRGBData();
+    auto template_rgbdata = atlas.spriteList[mask_index]->getRGBData();
 
     if (!rgbdata) {
         return nullptr;
@@ -220,14 +175,8 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData()
 
     SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
     const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];
-    auto& space = g_gui.sprites.getNormalImageSpace();
-    
-    if (atlas.spriteList[sprite_index] >= space.size() || atlas.spriteList[mask_index] >= space.size()) {
-         return nullptr;
-    }
-
-    auto rgbadata = space[atlas.spriteList[sprite_index]].getRGBAData();
-    auto template_rgbdata = space[atlas.spriteList[mask_index]].getRGBData();
+    auto rgbadata = atlas.spriteList[sprite_index]->getRGBAData();
+    auto template_rgbdata = atlas.spriteList[mask_index]->getRGBData();
 
     if (!rgbadata) {
         spdlog::warn(
@@ -277,7 +226,7 @@ const AtlasRegion* TemplateImage::getAtlasRegion()
         if (region) {
             isGLLoaded = true;
             atlas_region = region;
-            g_gui.gc.addResidentImage(handle);
+            g_gui.gc.addResidentImage(this);
         } else {
             return nullptr;
         }

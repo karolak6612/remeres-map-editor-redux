@@ -8,6 +8,12 @@ public:
     NormalImage();
     ~NormalImage() override;
 
+    NormalImage(const NormalImage&) = delete;
+    NormalImage& operator=(const NormalImage&) = delete;
+
+    NormalImage(NormalImage&& other) noexcept;
+    NormalImage& operator=(NormalImage&& other) noexcept;
+
     bool isNormalImage() const override
     {
         return true;

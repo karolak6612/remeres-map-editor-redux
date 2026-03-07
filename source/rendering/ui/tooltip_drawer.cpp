@@ -169,8 +169,10 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId)
 
     if (!atlas_cache.spriteList.empty()) {
         // Use the first frame/part of the sprite
-        NormalImage* img = atlas_cache.spriteList[0];
-        if (img) {
+        uint32_t sprite_index = atlas_cache.spriteList[0];
+        auto& space = g_gui.sprites.getNormalImageSpace();
+        if (sprite_index != 0 && sprite_index < space.size()) {
+            NormalImage* img = &space[sprite_index];
             std::unique_ptr<uint8_t[]> rgba;
 
             // For legacy sprites (no transparency), use getRGBData + Magenta Masking

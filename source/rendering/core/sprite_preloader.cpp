@@ -96,8 +96,12 @@ void SpritePreloader::preload(uint32_t clientID, int pattern_x, int pattern_y,
           continue;
         }
 
-        NormalImage *img = atlas.spriteList[idx];
-        if (img && !img->isGLLoaded) {
+        uint32_t spr_index = atlas.spriteList[idx];
+        auto& space = g_gui.sprites.getNormalImageSpace();
+        if (spr_index >= space.size()) continue;
+
+        NormalImage *img = &space[spr_index];
+        if (!img->isGLLoaded) {
           img->clientID = clientID;
           ids_to_enqueue.push_back({img->id, img->generation_id});
         }
@@ -194,20 +198,16 @@ void SpritePreloader::update() {
 
     // Check if GraphicManager is loaded, for the correct sprite file, and ID is
     // valid
-    auto &imageSpace = g_gui.sprites.getImageSpace();
+    auto &normalSpace = g_gui.sprites.getNormalImageSpace();
     if (res.spritefile == current_sprfile && !graphics_unloaded &&
-        id < imageSpace.size()) {
-      auto &img_ptr = imageSpace[id];
-      if (img_ptr && img_ptr->isNormalImage()) {
-        // Use static_cast for performance, as we know the type from loaders
-        auto *img = static_cast<NormalImage *>(img_ptr.get());
+        id < normalSpace.size()) {
+      NormalImage *img = &normalSpace[id];
 
-        // Validate Sprite Identity & Generation
-        // Check ID match, Generation match, and GLLoaded state
-        if (img->id == id && img->generation_id == res.generation_id &&
-            !img->isGLLoaded) {
-          img->fulfillPreload(std::move(res.data));
-        }
+      // Validate Sprite Identity & Generation
+      // Check ID match, Generation match, and GLLoaded state
+      if (img->id == id && img->generation_id == res.generation_id &&
+          !img->isGLLoaded) {
+        img->fulfillPreload(std::move(res.data));
       }
     }
   }

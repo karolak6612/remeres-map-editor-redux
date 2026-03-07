@@ -7,7 +7,8 @@ void SpriteDatabase::clear() {
   metadata_space.clear();
   atlas_space.clear();
   icon_space.clear();
-  image_space.clear();
+  normal_images_.clear();
+  template_images_.clear();
   // editor_sprite_space is intentionally not cleared here, as editor sprites
   // persist across map versions.
   item_count = 0;
@@ -101,4 +102,23 @@ void CreatureSprite::DrawTo(wxDC *dc, SpriteSize sz, int start_x, int start_y,
 
 void CreatureSprite::unloadDC() {
   // No cached DC to unload — rendering is delegated to SpriteDatabase
+}
+
+Image* SpriteDatabase::resolveImage(ImageHandle handle) {
+    if (handle.type == ImageType::Normal) {
+        if (handle.index < normal_images_.size()) {
+            NormalImage& img = normal_images_[handle.index];
+            if (img.generation_id == handle.generation) {
+                return &img;
+            }
+        }
+    } else if (handle.type == ImageType::Template) {
+        if (handle.index < template_images_.size()) {
+            TemplateImage& img = template_images_[handle.index];
+            if (img.generation_id == handle.generation) {
+                return &img;
+            }
+        }
+    }
+    return nullptr;
 }

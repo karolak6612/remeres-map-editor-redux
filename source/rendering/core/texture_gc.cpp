@@ -30,17 +30,19 @@ void TextureGC::updateTime()
     cached_time_ = std::time(nullptr);
 }
 
-void TextureGC::addResidentImage(Image* img)
+void TextureGC::addResidentImage(ImageHandle handle)
 {
+    if (!handle.isValid()) return;
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
-    resident_images.push_back(img);
+    resident_images.push_back(handle);
     loaded_textures++;
 }
 
-void TextureGC::removeResidentImage(Image* img)
+void TextureGC::removeResidentImage(ImageHandle handle)
 {
+    if (!handle.isValid()) return;
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
-    auto it = std::find(resident_images.begin(), resident_images.end(), img);
+    auto it = std::find(resident_images.begin(), resident_images.end(), handle);
     if (it != resident_images.end()) {
         // O(1) removal via swap-and-pop
         if (it != resident_images.end() - 1) {
@@ -51,10 +53,10 @@ void TextureGC::removeResidentImage(Image* img)
     }
 }
 
-bool TextureGC::containsResidentImage(Image* img) const
+bool TextureGC::containsResidentImage(ImageHandle handle) const
 {
     std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
-    return std::find(resident_images.begin(), resident_images.end(), img) != resident_images.end();
+    return std::find(resident_images.begin(), resident_images.end(), handle) != resident_images.end();
 }
 
 void TextureGC::addResidentGameSprite(uint32_t clientID)
@@ -112,8 +114,16 @@ void TextureGC::garbageCollection(SpriteDatabase& db)
             {
                 std::lock_guard<std::recursive_mutex> lock(resident_images_mutex_);
                 for (size_t i = resident_images.size(); i > 0; --i) {
-                    Image* img = resident_images[i - 1];
-                    img->clean(cached_time_, longevity);
+                    ImageHandle handle = resident_images[i - 1];
+                    Image* img = db.resolveImage(handle);
+                    if (img) {
+                        img->clean(cached_time_, longevity);
+                    } else {
+                        // Invalid handle, remove it
+                        resident_images[i - 1] = resident_images.back();
+                        resident_images.pop_back();
+                        loaded_textures.fetch_sub(1, std::memory_order_relaxed);
+                    }
 
                     // If the image chose to unload, it already removed itself from resident_images
                     // via the recursive removeResidentImage call. We don't need to do anything else
