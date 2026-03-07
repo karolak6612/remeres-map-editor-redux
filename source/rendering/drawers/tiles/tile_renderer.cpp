@@ -78,7 +78,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   const auto &position = location->getPosition();
 
   // Light Processing (Ground)
-  if (draw_lights && tile->hasLight()) {
+  if (!ctx.state.is_preload_pass && draw_lights && tile->hasLight()) {
     if (tile->ground && tile->ground->hasLight()) {
       ctx.output.light_buffer.AddLight(position.x, position.y, position.z,
                                 tile->ground->getLight());
@@ -91,7 +91,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   }
 
   // Waypoint tooltip (one per waypoint)
-  if (ctx.state.options.settings.show_tooltips && waypoint &&
+  if (!ctx.state.is_preload_pass && ctx.state.options.settings.show_tooltips && waypoint &&
       map_z == ctx.state.view.floor) {
     tooltip_collector->addWaypointTooltip(position, waypoint->name);
   }
@@ -102,7 +102,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   uint8_t r = 255, g = 255, b = 255;
 
   // begin filters for ground tile
-  if (!as_minimap) {
+  if (!ctx.state.is_preload_pass && !as_minimap) {
     TileColorCalculator::Calculate(tile, ctx.state.options, current_house_id,
                                    location->getSpawnCount(), r, g, b);
   }
@@ -135,7 +135,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         // Inline preload check — skip function call when sprite is simple and
         // loaded (95%+ case)
         if (!atlas.isSimpleAndLoaded(metadata)) {
-          rme::collectTileSprites(g_gui.atlas.getSpritePreloader(), clientID,
+          rme::collectTileSprites(*sprite_preloader, clientID,
                                   patterns.x, patterns.y, patterns.z,
                                   patterns.frame);
         }
@@ -154,7 +154,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         sprite_drawer->glBlitSquare(ctx, draw_x, draw_y,
                                     DrawColor(255, 0, 255, 128));
       }
-    } else if (ctx.state.options.settings.always_show_zones &&
+    } else if (!ctx.state.is_preload_pass && ctx.state.options.settings.always_show_zones &&
                (r != 255 || g != 255 || b != 255)) {
       ItemType *zoneItem = &g_items[SPRITE_ZONE];
       item_drawer->DrawRawBrush(ctx, sprite_drawer, draw_x, draw_y, zoneItem, r,
@@ -166,7 +166,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   const bool is_house_tile = tile->isHouseTile();
 
   // Ground tooltip (one per item)
-  if (ctx.state.options.settings.show_tooltips && map_z == ctx.state.view.floor &&
+  if (!ctx.state.is_preload_pass && ctx.state.options.settings.show_tooltips && map_z == ctx.state.view.floor &&
       tile->ground && ground_it) {
     TooltipData &groundData = tooltip_collector->requestTooltipData();
     if (rme::FillItemTooltipData(groundData, tile->ground.get(), *ground_it,
@@ -181,7 +181,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
 
   // Draw helper border for selected house tiles
   // Only draw on the current floor (grid)
-  if (ctx.state.options.settings.show_houses && is_house_tile &&
+  if (!ctx.state.is_preload_pass && ctx.state.options.settings.show_houses && is_house_tile &&
       static_cast<int>(tile->getHouseID()) == current_house_id &&
       map_z == ctx.state.view.floor) {
 
@@ -222,14 +222,14 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
           ctx.state.options.settings.show_tooltips && map_z == ctx.state.view.floor;
 
       for (const auto &item : tile->items) {
-        if (draw_lights && item->hasLight()) {
+        if (!ctx.state.is_preload_pass && draw_lights && item->hasLight()) {
           ctx.output.light_buffer.AddLight(position.x, position.y, position.z,
                                     item->getLight());
         }
 
         const ItemType &it = item->getType();
 
-        if (process_tooltips) {
+        if (!ctx.state.is_preload_pass && process_tooltips) {
           TooltipData &itemData = tooltip_collector->requestTooltipData();
           if (rme::FillItemTooltipData(itemData, item.get(), it, position,
                                   is_house_tile, ctx.state.view.zoom)) {
@@ -257,7 +257,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
           // Inline preload check — skip function call when sprite is simple and
           // loaded
           if (!atlas.isSimpleAndLoaded(metadata)) {
-            rme::collectTileSprites(g_gui.atlas.getSpritePreloader(), clientID,
+            rme::collectTileSprites(*sprite_preloader, clientID,
                                     patterns.x, patterns.y, patterns.z,
                                     patterns.frame);
           }
@@ -313,14 +313,14 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
                 .map_pos = position,
                 .transient_selection_bounds =
                     ctx.state.options.frame.transient_selection_bounds});
-        if (creature_name_drawer) {
+        if (!ctx.state.is_preload_pass && creature_name_drawer) {
           creature_name_drawer->addLabel(position, tile->creature->getName(),
                                          tile->creature.get());
         }
       }
     }
 
-    if (ctx.state.view.zoom < 10.0) {
+    if (!ctx.state.is_preload_pass && ctx.state.view.zoom < 10.0) {
       // markers (waypoint, house exit, town temple, spawn)
       marker_drawer->draw(ctx, sprite_drawer, draw_x, draw_y, tile, waypoint,
                           current_house_id, *map);
@@ -351,7 +351,7 @@ void TileRenderer::PreloadItem(const Tile *tile, Item *item, const ItemType &it,
         patterns = PatternCalculator::Calculate(&metadata, it, item, tile,
                                                 tile->getPosition());
       }
-      rme::collectTileSprites(g_gui.atlas.getSpritePreloader(), clientID,
+      rme::collectTileSprites(*sprite_preloader, clientID,
                               patterns.x, patterns.y, patterns.z,
                               patterns.frame);
     }
