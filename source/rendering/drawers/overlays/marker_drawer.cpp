@@ -19,16 +19,16 @@ MarkerDrawer::~MarkerDrawer() {}
 void MarkerDrawer::draw(const DrawContext &ctx, SpriteDrawer *drawer,
                         int draw_x, int draw_y, const Tile *tile,
                         Waypoint *waypoint, uint32_t current_house_id,
-                        Editor &editor) {
+                        Map &map) {
   // waypoint (blue flame)
-  if (!ctx.options.settings.ingame && waypoint &&
-      ctx.options.settings.show_waypoints) {
+  if (!ctx.state.options.settings.ingame && waypoint &&
+      ctx.state.options.settings.show_waypoints) {
     drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_WAYPOINT].clientID,
                        DrawColor(64, 64, 255));
   }
 
   // house exit (blue splash)
-  if (tile->isHouseExit() && ctx.options.settings.show_houses) {
+  if (tile->isHouseExit() && ctx.state.options.settings.show_houses) {
     if (tile->hasHouseExit(current_house_id)) {
       drawer->BlitSprite(ctx, draw_x, draw_y,
                          g_items[SPRITE_HOUSE_EXIT].clientID,
@@ -41,14 +41,14 @@ void MarkerDrawer::draw(const DrawContext &ctx, SpriteDrawer *drawer,
   }
 
   // town temple (gray flag)
-  if (ctx.options.settings.show_towns && tile->isTownExit(editor.map)) {
+  if (ctx.state.options.settings.show_towns && tile->isTownExit(map)) {
     drawer->BlitSprite(ctx, draw_x, draw_y,
                        g_items[SPRITE_TOWN_TEMPLE].clientID,
                        DrawColor(255, 255, 64, 170));
   }
 
   // spawn (purple flame)
-  if (tile->spawn && ctx.options.settings.show_spawns) {
+  if (tile->spawn && ctx.state.options.settings.show_spawns) {
     if (tile->spawn->isSelected()) {
       drawer->BlitSprite(ctx, draw_x, draw_y, g_items[SPRITE_SPAWN].clientID,
                          DrawColor(128, 128, 128));

@@ -40,7 +40,9 @@ TileRenderer::TileRenderer(const TileRenderContext& ctx)
       marker_drawer(&ctx.marker_drawer),
       tooltip_collector(&ctx.tooltip_collector),
       creature_name_drawer(&ctx.creature_name_drawer),
-      editor(&ctx.editor) {}
+      map(&ctx.map),
+      sprite_database(&ctx.sprite_database),
+      sprite_preloader(&ctx.sprite_preloader) {}
 
 void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
                             uint32_t current_house_id, int in_draw_x,
@@ -54,7 +56,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
     return;
   }
 
-  if (ctx.options.settings.show_only_modified && !tile->isModified()) {
+  if (ctx.state.options.settings.show_only_modified && !tile->isModified()) {
     return;
   }
 
@@ -68,7 +70,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
     draw_y = in_draw_y;
   } else {
     // Early viewport culling - skip tiles that are completely off-screen
-    if (!ctx.view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
+    if (!ctx.state.view.IsTileVisible(map_x, map_y, map_z, draw_x, draw_y)) {
       return;
     }
   }
@@ -78,30 +80,30 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   // Light Processing (Ground)
   if (draw_lights && tile->hasLight()) {
     if (tile->ground && tile->ground->hasLight()) {
-      ctx.light_buffer.AddLight(position.x, position.y, position.z,
+      ctx.output.light_buffer.AddLight(position.x, position.y, position.z,
                                 tile->ground->getLight());
     }
   }
 
   Waypoint *waypoint = nullptr;
   if (location->getWaypointCount() > 0) {
-    waypoint = editor->map.waypoints.getWaypoint(location);
+    waypoint = map->waypoints.getWaypoint(location);
   }
 
   // Waypoint tooltip (one per waypoint)
-  if (ctx.options.settings.show_tooltips && waypoint &&
-      map_z == ctx.view.floor) {
+  if (ctx.state.options.settings.show_tooltips && waypoint &&
+      map_z == ctx.state.view.floor) {
     tooltip_collector->addWaypointTooltip(position, waypoint->name);
   }
 
-  bool as_minimap = ctx.options.settings.show_as_minimap;
-  bool only_colors = as_minimap || ctx.options.settings.show_only_colors;
+  bool as_minimap = ctx.state.options.settings.show_as_minimap;
+  bool only_colors = as_minimap || ctx.state.options.settings.show_only_colors;
 
   uint8_t r = 255, g = 255, b = 255;
 
   // begin filters for ground tile
   if (!as_minimap) {
-    TileColorCalculator::Calculate(tile, ctx.options, current_house_id,
+    TileColorCalculator::Calculate(tile, ctx.state.options, current_house_id,
                                    location->getSpawnCount(), r, g, b);
   }
 
@@ -121,12 +123,12 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
     if (tile->ground && ground_it) {
       uint32_t clientID = ground_it->clientID;
       bool has_metadata = clientID > 0 &&
-                          clientID < g_gui.sprites.getMetadataSpace().size() &&
-                          clientID < g_gui.sprites.getAtlasCacheSpace().size();
+                          clientID < (*sprite_database).getMetadataSpace().size() &&
+                          clientID < (*sprite_database).getAtlasCacheSpace().size();
       if (has_metadata) {
         const SpriteMetadata &metadata =
-            g_gui.sprites.getMetadataSpace()[clientID];
-        SpriteAtlasCache &atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+            (*sprite_database).getMetadataSpace()[clientID];
+        SpriteAtlasCache &atlas = (*sprite_database).getAtlasCacheSpace()[clientID];
         SpritePatterns patterns = PatternCalculator::Calculate(
             &metadata, *ground_it, tile->ground.get(), tile, position);
 
@@ -138,7 +140,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
                                   patterns.frame);
         }
 
-        BlitItemParams params(position, tile->ground.get(), ctx.options);
+        BlitItemParams params(position, tile->ground.get(), ctx.state.options);
         params.tile = tile;
         params.item_type = ground_it;
         params.red = r;
@@ -152,7 +154,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         sprite_drawer->glBlitSquare(ctx, draw_x, draw_y,
                                     DrawColor(255, 0, 255, 128));
       }
-    } else if (ctx.options.settings.always_show_zones &&
+    } else if (ctx.state.options.settings.always_show_zones &&
                (r != 255 || g != 255 || b != 255)) {
       ItemType *zoneItem = &g_items[SPRITE_ZONE];
       item_drawer->DrawRawBrush(ctx, sprite_drawer, draw_x, draw_y, zoneItem, r,
@@ -164,11 +166,11 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   const bool is_house_tile = tile->isHouseTile();
 
   // Ground tooltip (one per item)
-  if (ctx.options.settings.show_tooltips && map_z == ctx.view.floor &&
+  if (ctx.state.options.settings.show_tooltips && map_z == ctx.state.view.floor &&
       tile->ground && ground_it) {
     TooltipData &groundData = tooltip_collector->requestTooltipData();
     if (rme::FillItemTooltipData(groundData, tile->ground.get(), *ground_it,
-                            position, is_house_tile, ctx.view.zoom)) {
+                            position, is_house_tile, ctx.state.view.zoom)) {
       if (groundData.hasVisibleFields()) {
         tooltip_collector->commitTooltip();
       }
@@ -179,14 +181,14 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
 
   // Draw helper border for selected house tiles
   // Only draw on the current floor (grid)
-  if (ctx.options.settings.show_houses && is_house_tile &&
+  if (ctx.state.options.settings.show_houses && is_house_tile &&
       static_cast<int>(tile->getHouseID()) == current_house_id &&
-      map_z == ctx.view.floor) {
+      map_z == ctx.state.view.floor) {
 
     uint8_t hr, hg, hb;
     TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
-    float intensity = 0.5f + (0.5f * ctx.options.frame.highlight_pulse);
+    float intensity = 0.5f + (0.5f * ctx.state.options.frame.highlight_pulse);
     // Optimization: Use integer math for border color to avoid vec4
     // construction and casting
     int ba = static_cast<int>(intensity * 255.0f);
@@ -196,32 +198,32 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   }
 
   if (!only_colors) {
-    if (ctx.view.zoom < 10.0 || !ctx.options.settings.hide_items_when_zoomed) {
+    if (ctx.state.view.zoom < 10.0 || !ctx.state.options.settings.hide_items_when_zoomed) {
       // Hoist house color calculation out of item loop
       uint8_t house_r = 255, house_g = 255, house_b = 255;
-      bool calculate_house_color = ctx.options.settings.extended_house_shader &&
-                                   ctx.options.settings.show_houses &&
+      bool calculate_house_color = ctx.state.options.settings.extended_house_shader &&
+                                   ctx.state.options.settings.show_houses &&
                                    is_house_tile;
       bool should_pulse =
           calculate_house_color &&
           (static_cast<int>(tile->getHouseID()) == current_house_id) &&
-          (ctx.options.frame.highlight_pulse > 0.0f);
+          (ctx.state.options.frame.highlight_pulse > 0.0f);
       float boost = 0.0f;
 
       if (calculate_house_color) {
         TileColorCalculator::GetHouseColor(tile->getHouseID(), house_r, house_g,
                                            house_b);
         if (should_pulse) {
-          boost = ctx.options.frame.highlight_pulse * 0.6f;
+          boost = ctx.state.options.frame.highlight_pulse * 0.6f;
         }
       }
 
       bool process_tooltips =
-          ctx.options.settings.show_tooltips && map_z == ctx.view.floor;
+          ctx.state.options.settings.show_tooltips && map_z == ctx.state.view.floor;
 
       for (const auto &item : tile->items) {
         if (draw_lights && item->hasLight()) {
-          ctx.light_buffer.AddLight(position.x, position.y, position.z,
+          ctx.output.light_buffer.AddLight(position.x, position.y, position.z,
                                     item->getLight());
         }
 
@@ -230,7 +232,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         if (process_tooltips) {
           TooltipData &itemData = tooltip_collector->requestTooltipData();
           if (rme::FillItemTooltipData(itemData, item.get(), it, position,
-                                  is_house_tile, ctx.view.zoom)) {
+                                  is_house_tile, ctx.state.view.zoom)) {
             if (itemData.hasVisibleFields()) {
               tooltip_collector->commitTooltip();
             }
@@ -240,14 +242,14 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         uint32_t clientID = it.clientID;
         bool has_metadata =
             clientID > 0 &&
-            clientID < g_gui.sprites.getMetadataSpace().size() &&
-            clientID < g_gui.sprites.getAtlasCacheSpace().size();
+            clientID < (*sprite_database).getMetadataSpace().size() &&
+            clientID < (*sprite_database).getAtlasCacheSpace().size();
 
         if (has_metadata) {
           const SpriteMetadata &metadata =
-              g_gui.sprites.getMetadataSpace()[clientID];
+              (*sprite_database).getMetadataSpace()[clientID];
           SpriteAtlasCache &atlas =
-              g_gui.sprites.getAtlasCacheSpace()[clientID];
+              (*sprite_database).getAtlasCacheSpace()[clientID];
 
           SpritePatterns patterns = PatternCalculator::Calculate(
               &metadata, it, item.get(), tile, position);
@@ -260,7 +262,7 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
                                     patterns.frame);
           }
 
-          BlitItemParams params(position, item.get(), ctx.options);
+          BlitItemParams params(position, item.get(), ctx.state.options);
           params.tile = tile;
           params.item_type = &it;
           params.patterns = &patterns;
@@ -304,13 +306,13 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
         }
       }
       // monster/npc on tile
-      if (tile->creature && ctx.options.settings.show_creatures) {
+      if (tile->creature && ctx.state.options.settings.show_creatures) {
         creature_drawer->BlitCreature(
             ctx, sprite_drawer, draw_x, draw_y, tile->creature.get(),
             CreatureDrawOptions{
                 .map_pos = position,
                 .transient_selection_bounds =
-                    ctx.options.frame.transient_selection_bounds});
+                    ctx.state.options.frame.transient_selection_bounds});
         if (creature_name_drawer) {
           creature_name_drawer->addLabel(position, tile->creature->getName(),
                                          tile->creature.get());
@@ -318,10 +320,10 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
       }
     }
 
-    if (ctx.view.zoom < 10.0) {
+    if (ctx.state.view.zoom < 10.0) {
       // markers (waypoint, house exit, town temple, spawn)
       marker_drawer->draw(ctx, sprite_drawer, draw_x, draw_y, tile, waypoint,
-                          current_house_id, *editor);
+                          current_house_id, *map);
     }
   }
 }
@@ -334,12 +336,12 @@ void TileRenderer::PreloadItem(const Tile *tile, Item *item, const ItemType &it,
 
   uint32_t clientID = it.clientID;
   bool has_metadata = clientID > 0 &&
-                      clientID < g_gui.sprites.getMetadataSpace().size() &&
-                      clientID < g_gui.sprites.getAtlasCacheSpace().size();
+                      clientID < (*sprite_database).getMetadataSpace().size() &&
+                      clientID < (*sprite_database).getAtlasCacheSpace().size();
 
   if (has_metadata) {
-    const SpriteMetadata &metadata = g_gui.sprites.getMetadataSpace()[clientID];
-    SpriteAtlasCache &atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
+    const SpriteMetadata &metadata = (*sprite_database).getMetadataSpace()[clientID];
+    SpriteAtlasCache &atlas = (*sprite_database).getAtlasCacheSpace()[clientID];
 
     if (!atlas.isSimpleAndLoaded(metadata)) {
       SpritePatterns patterns;

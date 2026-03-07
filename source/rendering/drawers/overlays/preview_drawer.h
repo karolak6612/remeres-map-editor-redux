@@ -17,7 +17,7 @@ public:
   ~PreviewDrawer();
 
   void draw(const DrawContext &ctx, const FloorViewParams &floor_params,
-            int map_z, Editor &editor, ItemDrawer *item_drawer,
+            int map_z, Map &map, CopyBuffer &copybuffer, ItemDrawer *item_drawer,
             SpriteDrawer *sprite_drawer, CreatureDrawer *creature_drawer);
 
 private:

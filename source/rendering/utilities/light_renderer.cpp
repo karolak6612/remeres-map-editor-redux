@@ -25,11 +25,11 @@ void LightRenderer::draw(const DrawContext &ctx) {
     fbo = std::make_unique<LightFBO>();
   }
 
-  const auto &view = ctx.view;
-  const auto &light_buffer = ctx.light_buffer;
-  const auto &global_color = ctx.options.settings.global_light_color;
-  float light_intensity = ctx.options.settings.light_intensity;
-  float ambient_light_level = ctx.options.settings.ambient_light_level;
+  const auto &view = ctx.state.view;
+  const auto &light_buffer = ctx.output.light_buffer;
+  const auto &global_color = ctx.state.options.settings.global_light_color;
+  float light_intensity = ctx.state.options.settings.light_intensity;
+  float ambient_light_level = ctx.state.options.settings.ambient_light_level;
 
   int buffer_w = view.screensize_x;
   int buffer_h = view.screensize_y;

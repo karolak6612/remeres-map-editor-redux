@@ -23,7 +23,7 @@ MinimapDrawer::MinimapDrawer() :
 MinimapDrawer::~MinimapDrawer() {
 }
 
-void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanvas* canvas) {
+void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Map& map, MapCanvas* canvas) {
 	// We no longer use wxDC for drawing the map content, as we render via OpenGL.
 	// However, we might need to conform to existing architecture.
 	// The caller likely sets up GL context if we are in GLCanvas?
@@ -79,22 +79,22 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 	if (start_x < 0) {
 		start_x = 0;
 		end_x = window_width;
-	} else if (end_x > editor.map.getWidth()) {
-		start_x = editor.map.getWidth() - window_width;
-		end_x = editor.map.getWidth();
+	} else if (end_x > map.getWidth()) {
+		start_x = map.getWidth() - window_width;
+		end_x = map.getWidth();
 	}
 	if (start_y < 0) {
 		start_y = 0;
 		end_y = window_height;
-	} else if (end_y > editor.map.getHeight()) {
-		start_y = editor.map.getHeight() - window_height;
-		end_y = editor.map.getHeight();
+	} else if (end_y > map.getHeight()) {
+		start_y = map.getHeight() - window_height;
+		end_y = map.getHeight();
 	}
 
 	start_x = std::max(start_x, 0);
 	start_y = std::max(start_y, 0);
-	end_x = std::min(end_x, editor.map.getWidth());
-	end_y = std::min(end_y, editor.map.getHeight());
+	end_x = std::min(end_x, map.getWidth());
+	end_y = std::min(end_y, map.getHeight());
 
 	last_start_x = start_x;
 	last_start_y = start_y;
@@ -104,7 +104,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 
 	// Ensure renderer has texture for this map size
 	// Note: Resizing texture every frame if map resizes is bad, but map resize is rare.
-	renderer->resize(editor.map.getWidth(), editor.map.getHeight());
+	renderer->resize(map.getWidth(), map.getHeight());
 
 	int floor = g_gui.GetCurrentFloor();
 
@@ -112,7 +112,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		// Update Visible Region
 		// OPTIMIZATION: In future, only update dirty regions.
 		// For now, updating the visible window 60 times a second via PBO is WAY faster than DrawPoint.
-		renderer->updateRegion(editor.map, floor, start_x, start_y, map_draw_w, map_draw_h);
+		renderer->updateRegion(map, floor, start_x, start_y, map_draw_w, map_draw_h);
 
 		// Render
 		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);

@@ -30,19 +30,19 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	// Style
 	const NVGcolor tintColor = nvgRGBA(204, 255, 0, 255); // Fluorescent Yellow-Green (#ccff00)
 
-	const float zoom = std::max(0.01f, ctx.view.zoom);
+	const float zoom = std::max(0.01f, ctx.state.view.zoom);
 	const float zoomFactor = 1.0f / zoom;
 	const float iconSize = 24.0f * zoomFactor;
 	const float outlineOffset = 1.0f * zoomFactor;
 
 	for (const auto& request : requests) {
 		// Only render hooks on the current floor
-		if (request.pos.z != ctx.view.floor) {
+		if (request.pos.z != ctx.state.view.floor) {
 			continue;
 		}
 
 		int unscaled_x, unscaled_y;
-		if (!ctx.view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
+		if (!ctx.state.view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
 			continue;
 		}
 

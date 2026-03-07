@@ -10,8 +10,8 @@
 #include "rendering/core/view_state.h"
 #include "ui/gui.h"
 
-void LiveCursorDrawer::draw(const DrawContext &ctx, Editor &editor) {
-  if (ctx.options.settings.ingame || !editor.live_manager.IsLive()) {
+void LiveCursorDrawer::draw(const DrawContext &ctx, LiveManager &live_manager) {
+  if (ctx.state.options.settings.ingame || !live_manager.IsLive()) {
     return;
   }
 
@@ -20,34 +20,34 @@ void LiveCursorDrawer::draw(const DrawContext &ctx, Editor &editor) {
   }
   const AtlasManager &atlas = *g_gui.atlas.getAtlasManager();
 
-  LiveSocket &live = editor.live_manager.GetSocket();
+  LiveSocket &live = live_manager.GetSocket();
   for (const LiveCursor &cursor : live.getCursorList()) {
-    if (cursor.pos.z <= GROUND_LAYER && ctx.view.floor > GROUND_LAYER) {
+    if (cursor.pos.z <= GROUND_LAYER && ctx.state.view.floor > GROUND_LAYER) {
       continue;
     }
 
-    if (cursor.pos.z > GROUND_LAYER && ctx.view.floor < (GROUND_LAYER + 1)) {
+    if (cursor.pos.z > GROUND_LAYER && ctx.state.view.floor < (GROUND_LAYER + 1)) {
       continue;
     }
 
     wxColor draw_color = cursor.color;
-    if (cursor.pos.z < ctx.view.floor) {
+    if (cursor.pos.z < ctx.state.view.floor) {
       draw_color =
           wxColor(draw_color.Red(), draw_color.Green(), draw_color.Blue(),
                   std::max<uint8_t>(draw_color.Alpha() / 2, 64));
     }
 
-    int offset = ctx.view.CalculateLayerOffset(cursor.pos.z);
+    int offset = ctx.state.view.CalculateLayerOffset(cursor.pos.z);
 
     float draw_x =
-        ((cursor.pos.x * TILE_SIZE) - ctx.view.view_scroll_x) - offset;
+        ((cursor.pos.x * TILE_SIZE) - ctx.state.view.view_scroll_x) - offset;
     float draw_y =
-        ((cursor.pos.y * TILE_SIZE) - ctx.view.view_scroll_y) - offset;
+        ((cursor.pos.y * TILE_SIZE) - ctx.state.view.view_scroll_y) - offset;
 
     glm::vec4 color(draw_color.Red() / 255.0f, draw_color.Green() / 255.0f,
                     draw_color.Blue() / 255.0f, draw_color.Alpha() / 255.0f);
 
-    ctx.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE,
+    ctx.backend.sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE,
                               (float)TILE_SIZE, color, atlas);
   }
 }

@@ -391,7 +391,7 @@ void TooltipRenderer::draw(NVGcontext* vg, const DrawContext& ctx, NVGImageCache
     if (!vg) {
         return;
     }
-    const auto& view = ctx.view;
+    const auto& view = ctx.state.view;
 
     for (const auto& tooltip : tooltips) {
         int unscaled_x, unscaled_y;

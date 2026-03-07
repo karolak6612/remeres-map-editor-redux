@@ -25,7 +25,7 @@ public:
 
   void draw(const DrawContext &ctx, ItemDrawer *item_drawer,
             SpriteDrawer *sprite_drawer, CreatureDrawer *creature_drawer,
-            Editor &editor);
+            Map &map);
 
 private:
   enum BrushColor {
@@ -39,20 +39,20 @@ private:
     COLOR_BLANK,
   };
 
-  void get_color(Brush *brush, Editor &editor, const Position &position,
+  void get_color(Brush *brush, Map &map, const Position &position,
                  uint8_t &r, uint8_t &g, uint8_t &b);
 
   glm::vec4 get_brush_color(BrushColor color);
-  glm::vec4 get_check_color(Brush *brush, Editor &editor, const Position &pos);
+  glm::vec4 get_check_color(Brush *brush, Map &map, const Position &pos);
 
   void drawDraggingOverlay(const DrawContext &ctx, ItemDrawer *item_drawer,
-                           SpriteDrawer *sprite_drawer, Editor &editor,
+                           SpriteDrawer *sprite_drawer, Map &map,
                            Brush *brush, const glm::vec4 &brushColor,
                            const class AtlasManager &atlas);
 
   void drawStaticOverlay(const DrawContext &ctx, ItemDrawer *item_drawer,
                          SpriteDrawer *sprite_drawer,
-                         CreatureDrawer *creature_drawer, Editor &editor,
+                         CreatureDrawer *creature_drawer, Map &map,
                          Brush *brush, const glm::vec4 &brushColor,
                          const class AtlasManager &atlas);
 

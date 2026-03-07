@@ -29,23 +29,23 @@ void FloorDrawer::draw(const DrawContext &ctx,
                        const TileRenderContext &render_ctx) {
 
   // Draw "transparent higher floor"
-  if (ctx.view.floor != 8 && ctx.view.floor != 0 &&
-      ctx.options.settings.transparent_floors) {
-    int map_z = ctx.view.floor - 1;
+  if (ctx.state.view.floor != 8 && ctx.state.view.floor != 0 &&
+      ctx.state.options.settings.transparent_floors) {
+    int map_z = ctx.state.view.floor - 1;
     for (int map_x = floor_params.start_x; map_x <= floor_params.end_x;
          map_x++) {
       for (int map_y = floor_params.start_y; map_y <= floor_params.end_y;
            map_y++) {
-        Tile *tile = render_ctx.editor.map.getTile(map_x, map_y, map_z);
+        Tile *tile = render_ctx.map.getTile(map_x, map_y, map_z);
         if (tile) {
           int draw_x = 0;
           int draw_y = 0;
-          ctx.view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
+          ctx.state.view.getScreenPosition(map_x, map_y, map_z, draw_x, draw_y);
 
           // Position pos = tile->getPosition();
 
           if (tile->ground) {
-            BlitItemParams params(tile, tile->ground.get(), ctx.options);
+            BlitItemParams params(tile, tile->ground.get(), ctx.state.options);
             params.alpha = 96;
             if (tile->isPZ()) {
               params.red = 128;
@@ -56,10 +56,10 @@ void FloorDrawer::draw(const DrawContext &ctx,
                                             &render_ctx.creature_drawer, draw_x,
                                             draw_y, params);
           }
-          if (ctx.view.zoom <= 10.0 ||
-              !ctx.options.settings.hide_items_when_zoomed) {
+          if (ctx.state.view.zoom <= 10.0 ||
+              !ctx.state.options.settings.hide_items_when_zoomed) {
             for (const auto &item : tile->items) {
-              BlitItemParams params(tile, item.get(), ctx.options);
+              BlitItemParams params(tile, item.get(), ctx.state.options);
               params.alpha = 96;
               render_ctx.item_drawer.BlitItem(ctx, &render_ctx.sprite_drawer,
                                               &render_ctx.creature_drawer,

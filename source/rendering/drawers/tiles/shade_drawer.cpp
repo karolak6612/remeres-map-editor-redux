@@ -16,13 +16,13 @@ ShadeDrawer::~ShadeDrawer() {}
 
 void ShadeDrawer::draw(const DrawContext &ctx,
                        [[maybe_unused]] const FloorViewParams &floor_params) {
-  if (ctx.view.start_z != ctx.view.end_z && ctx.options.settings.show_shade) {
+  if (ctx.state.view.start_z != ctx.state.view.end_z && ctx.state.options.settings.show_shade) {
     glm::vec4 color(0.0f, 0.0f, 0.0f, 128.0f / 255.0f);
-    float w = ctx.view.screensize_x * ctx.view.zoom;
-    float h = ctx.view.screensize_y * ctx.view.zoom;
+    float w = ctx.state.view.screensize_x * ctx.state.view.zoom;
+    float h = ctx.state.view.screensize_y * ctx.state.view.zoom;
 
     if (g_gui.atlas.ensureAtlasManager()) {
-      ctx.sprite_batch.drawRect(0.0f, 0.0f, w, h, color,
+      ctx.backend.sprite_batch.drawRect(0.0f, 0.0f, w, h, color,
                                 *g_gui.atlas.getAtlasManager());
     }
   }

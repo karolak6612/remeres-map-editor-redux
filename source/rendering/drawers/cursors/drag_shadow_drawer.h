@@ -19,7 +19,7 @@ public:
 
   void draw(const DrawContext &ctx, ItemDrawer *item_drawer,
             SpriteDrawer *sprite_drawer, CreatureDrawer *creature_drawer,
-            Editor &editor);
+            Map &map, Selection &selection);
 };
 
 #endif

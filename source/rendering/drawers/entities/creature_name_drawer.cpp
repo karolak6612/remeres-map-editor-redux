@@ -38,7 +38,7 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 		return;
 	}
 
-	float zoom = ctx.view.zoom;
+	float zoom = ctx.state.view.zoom;
 	float tile_size_screen = 32.0f / zoom;
 	float fontSize = 11.0f; // Original size or slightly larger if preferred, reverting to 11.0f
 
@@ -47,12 +47,12 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const DrawContext& ctx) {
 	nvgTextAlign(vg, NVG_ALIGN_CENTER | NVG_ALIGN_BOTTOM);
 
 	for (const auto& label : labels) {
-		if (label.pos.z != ctx.view.floor) {
+		if (label.pos.z != ctx.state.view.floor) {
 			continue;
 		}
 
 		int unscaled_x, unscaled_y;
-		ctx.view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
+		ctx.state.view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
 
 		float screen_x = (float)unscaled_x / zoom;
 		float screen_y = (float)unscaled_y / zoom;

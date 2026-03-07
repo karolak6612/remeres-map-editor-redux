@@ -18,6 +18,9 @@ class FloorDrawer;
 class MarkerDrawer;
 class TooltipCollector;
 class GridDrawer;
+class SpriteDatabase;
+class SpritePreloader;
+class LiveManager;
 
 /**
  * @brief Context structure for initializing TileRenderer with necessary drawers and services.
@@ -31,7 +34,10 @@ struct TileRenderContext {
     MarkerDrawer& marker_drawer;
     TooltipCollector& tooltip_collector;
     GridDrawer& grid_drawer;
-    Editor& editor;
+    Map& map;
+    SpriteDatabase& sprite_database;
+    SpritePreloader& sprite_preloader;
+    LiveManager* live_manager;
 };
 
 class TileRenderer {
@@ -53,7 +59,9 @@ private:
     MarkerDrawer* marker_drawer;
     TooltipCollector* tooltip_collector;
     CreatureNameDrawer* creature_name_drawer;
-    Editor* editor;
+    Map* map;
+    SpriteDatabase* sprite_database;
+    SpritePreloader* sprite_preloader;
 };
 
 #endif

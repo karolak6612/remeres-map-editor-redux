@@ -8,7 +8,7 @@ class SpriteDrawer;
 class Tile;
 class Waypoint;
 
-class Editor;
+class Map;
 class SpriteBatch;
 
 class MarkerDrawer {
@@ -16,7 +16,7 @@ public:
 	MarkerDrawer();
 	~MarkerDrawer();
 
-	void draw(const DrawContext& ctx, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id, Editor& editor);
+	void draw(const DrawContext& ctx, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id, Map& map);
 };
 
 #endif

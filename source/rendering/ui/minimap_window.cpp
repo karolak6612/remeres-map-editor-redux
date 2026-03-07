@@ -126,7 +126,7 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
 
 	// Mock dc passed to Draw, unused by new GL implementation
-	drawer->Draw(dc, GetSize(), editor, canvas);
+	drawer->Draw(dc, GetSize(), editor.map, canvas);
 
 	SwapBuffers();
 }

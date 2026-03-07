@@ -23,7 +23,7 @@ void SpriteDrawer::glBlitAtlasQuad(const DrawContext& ctx, int sx, int sy, const
         float normalizedB = color.b / 255.0f;
         float normalizedA = color.a / 255.0f;
 
-        ctx.sprite_batch.draw(
+        ctx.backend.sprite_batch.draw(
             static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), *region,
             normalizedR, normalizedG, normalizedB, normalizedA
         );
@@ -44,7 +44,7 @@ void SpriteDrawer::glBlitSquare(const DrawContext& ctx, int sx, int sy, DrawColo
     // Use g_gui.atlas to get the atlas manager for white pixel access
     // This assumes g_gui.atlas and AtlasManager are available
     if (g_gui.atlas.hasAtlasManager()) {
-        ctx.sprite_batch.drawRect(
+        ctx.backend.sprite_batch.drawRect(
             static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size),
             glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager()
         );
@@ -59,7 +59,7 @@ void SpriteDrawer::glDrawBox(const DrawContext& ctx, int sx, int sy, int width, 
     float normalizedA = color.a / 255.0f;
 
     if (g_gui.atlas.hasAtlasManager()) {
-        ctx.sprite_batch.drawRectLines(
+        ctx.backend.sprite_batch.drawRectLines(
             static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height),
             glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.atlas.getAtlasManager()
         );

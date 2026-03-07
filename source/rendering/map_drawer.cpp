@@ -305,14 +305,12 @@ void MapDrawer::Draw() {
   DrawContext ctx = MakeDrawContext();
 
   if (drag_shadow_drawer) {
-    drag_shadow_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(),
-                             creature_drawer.get(), editor);
+    drag_shadow_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor.map, editor.selection);
   }
 
-  live_cursor_drawer->draw(ctx, editor);
+  live_cursor_drawer->draw(ctx, editor.live_manager);
 
-  brush_overlay_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(),
-                             creature_drawer.get(), editor);
+  brush_overlay_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor.map);
 
   if (options.settings.show_grid) {
     DrawGrid(ctx, original_bounds);
@@ -364,8 +362,7 @@ void MapDrawer::DrawMap() {
       DrawMapLayer(ctx, floor_params, live_client);
     }
 
-    preview_drawer->draw(ctx, floor_params, map_z, editor, item_drawer.get(),
-                         sprite_drawer.get(), creature_drawer.get());
+    preview_drawer->draw(ctx, floor_params, map_z, editor.map, editor.copybuffer, item_drawer.get(), sprite_drawer.get(), creature_drawer.get());
 
     --current_start_x;
     --current_start_y;
@@ -414,13 +411,13 @@ void MapDrawer::DrawMapLayer(const DrawContext &ctx,
 }
 
 DrawContext MapDrawer::MakeDrawContext() {
-  return DrawContext{.sprite_batch = *sprite_batch,
-                     .primitive_renderer = *primitive_renderer,
-                     .view = view,
-                     .options = options,
-                     .light_buffer = light_buffer,
-                     .canvas_state = canvas_state,
-                     .brush_cursor_drawer = brush_cursor_drawer.get()};
+  return DrawContext{.state = {.view = view,
+                               .options = options,
+                               .canvas_state = canvas_state},
+                     .backend = {.sprite_batch = *sprite_batch,
+                                 .primitive_renderer = *primitive_renderer},
+                     .output = {.light_buffer = light_buffer,
+                                .brush_cursor_drawer = brush_cursor_drawer.get()}};
 }
 
 TileRenderContext MapDrawer::MakeTileRenderContext() {
@@ -432,7 +429,10 @@ TileRenderContext MapDrawer::MakeTileRenderContext() {
                            .marker_drawer = *marker_drawer,
                            .tooltip_collector = *tooltip_collector,
                            .grid_drawer = *grid_drawer,
-                           .editor = editor};
+                           .map = editor.map,
+                           .sprite_database = g_gui.sprites,
+                           .sprite_preloader = g_gui.atlas.getSpritePreloader(),
+                           .live_manager = &editor.live_manager};
 }
 
 void MapDrawer::DrawLight() {

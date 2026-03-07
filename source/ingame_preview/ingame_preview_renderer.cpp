@@ -113,12 +113,13 @@ void IngamePreviewRenderer::Render(
   auto *atlas = g_gui.atlas.getAtlasManager();
 
   CanvasState dummy_state{};
-  DrawContext ctx{.sprite_batch = *sprite_batch,
-                  .primitive_renderer = *primitive_renderer,
-                  .view = view,
-                  .options = options,
-                  .light_buffer = *light_buffer,
-                  .canvas_state = dummy_state};
+  DrawContext ctx{.state = {.view = view,
+                            .options = options,
+                            .canvas_state = dummy_state},
+                  .backend = {.sprite_batch = *sprite_batch,
+                              .primitive_renderer = *primitive_renderer},
+                  .output = {.light_buffer = *light_buffer,
+                             .brush_cursor_drawer = nullptr}};
 
   int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
 
@@ -201,28 +202,28 @@ void IngamePreviewRenderer::RenderFloors(DrawContext &ctx, const BaseMap &map,
       continue;
     }
 
-    sprite_batch->begin(ctx.view.projectionMatrix, *atlas);
+    sprite_batch->begin(ctx.state.view.projectionMatrix, *atlas);
     sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
 
-    int floor_offset = ctx.view.CalculateLayerOffset(z);
+    int floor_offset = ctx.state.view.CalculateLayerOffset(z);
     constexpr int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
     int start_x = static_cast<int>(
-        std::floor((ctx.view.view_scroll_x + floor_offset - margin) /
+        std::floor((ctx.state.view.view_scroll_x + floor_offset - margin) /
                    static_cast<float>(TILE_SIZE)));
     int start_y = static_cast<int>(
-        std::floor((ctx.view.view_scroll_y + floor_offset - margin) /
+        std::floor((ctx.state.view.view_scroll_y + floor_offset - margin) /
                    static_cast<float>(TILE_SIZE)));
     int end_x = static_cast<int>(
-        std::ceil((ctx.view.view_scroll_x + floor_offset +
-                   ctx.view.screensize_x * ctx.view.zoom + margin) /
+        std::ceil((ctx.state.view.view_scroll_x + floor_offset +
+                   ctx.state.view.screensize_x * ctx.state.view.zoom + margin) /
                   static_cast<float>(TILE_SIZE)));
     int end_y = static_cast<int>(
-        std::ceil((ctx.view.view_scroll_y + floor_offset +
-                   ctx.view.screensize_y * ctx.view.zoom + margin) /
+        std::ceil((ctx.state.view.view_scroll_y + floor_offset +
+                   ctx.state.view.screensize_y * ctx.state.view.zoom + margin) /
                   static_cast<float>(TILE_SIZE)));
 
-    int base_draw_x = -ctx.view.view_scroll_x - floor_offset;
-    int base_draw_y = -ctx.view.view_scroll_y - floor_offset;
+    int base_draw_x = -ctx.state.view.view_scroll_x - floor_offset;
+    int base_draw_y = -ctx.state.view.view_scroll_y - floor_offset;
 
     for (int x = start_x; x <= end_x; ++x) {
       for (int y = start_y; y <= end_y; ++y) {
@@ -250,12 +251,12 @@ void IngamePreviewRenderer::RenderFloors(DrawContext &ctx, const BaseMap &map,
 void IngamePreviewRenderer::RenderPreviewCharacter(
     DrawContext &ctx, const Outfit &preview_outfit, Direction preview_direction,
     int animation_phase, AtlasManager *atlas, int elevation_offset) {
-  sprite_batch->begin(ctx.view.projectionMatrix, *atlas);
+  sprite_batch->begin(ctx.state.view.projectionMatrix, *atlas);
 
   int center_x =
-      static_cast<int>((ctx.view.screensize_x * ctx.view.zoom) / 2.0f);
+      static_cast<int>((ctx.state.view.screensize_x * ctx.state.view.zoom) / 2.0f);
   int center_y =
-      static_cast<int>((ctx.view.screensize_y * ctx.view.zoom) / 2.0f);
+      static_cast<int>((ctx.state.view.screensize_y * ctx.state.view.zoom) / 2.0f);
 
   int draw_x = center_x - 16;
   int draw_y = center_y - 16 - elevation_offset;
