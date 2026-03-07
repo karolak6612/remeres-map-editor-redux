@@ -31,14 +31,14 @@
 #include "rendering/drawers/tiles/tile_renderer.h"
 
 
-MapLayerDrawer::MapLayerDrawer(TileRenderer *tile_renderer,
-                               GridDrawer *grid_drawer, Editor *editor)
-    : tile_renderer(tile_renderer), grid_drawer(grid_drawer), editor(editor) {}
+MapLayerDrawer::MapLayerDrawer(TileRenderer *tile_renderer)
+    : tile_renderer(tile_renderer) {}
 
 MapLayerDrawer::~MapLayerDrawer() {}
 
 void MapLayerDrawer::Draw(const DrawContext &ctx,
                           const FloorViewParams &floor_params,
+                          const TileRenderContext &render_ctx,
                           bool live_client) {
   int map_z = floor_params.current_z;
   int nd_start_x = floor_params.start_x & ~3;
@@ -74,13 +74,13 @@ void MapLayerDrawer::Draw(const DrawContext &ctx,
     if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
       if (!nd->isRequested(map_z > GROUND_LAYER)) {
         // Request the node
-        if (editor->live_manager.GetClient()) {
-          editor->live_manager.GetClient()->queryNode(nd_map_x, nd_map_y,
+        if (render_ctx.editor.live_manager.GetClient()) {
+          render_ctx.editor.live_manager.GetClient()->queryNode(nd_map_x, nd_map_y,
                                                       map_z > GROUND_LAYER);
         }
         nd->setRequested(map_z > GROUND_LAYER, true);
       }
-      grid_drawer->DrawNodeLoadingPlaceholder(ctx, nd_map_x, nd_map_y);
+      render_ctx.grid_drawer.DrawNodeLoadingPlaceholder(ctx, nd_map_x, nd_map_y);
       return;
     }
 
@@ -114,9 +114,9 @@ void MapLayerDrawer::Draw(const DrawContext &ctx,
   if (live_client) {
     for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
       for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
-        MapNode *nd = editor->map.getLeaf(nd_map_x, nd_map_y);
+        MapNode *nd = render_ctx.editor.map.getLeaf(nd_map_x, nd_map_y);
         if (!nd) {
-          nd = editor->map.createLeaf(nd_map_x, nd_map_y);
+          nd = render_ctx.editor.map.createLeaf(nd_map_x, nd_map_y);
           nd->setVisible(false, false);
         }
         drawNode(nd, nd_map_x, nd_map_y, true);
@@ -135,9 +135,9 @@ void MapLayerDrawer::Draw(const DrawContext &ctx,
     int safe_end_y =
         nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 
-    editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y,
-                            [&](MapNode *nd, int nd_map_x, int nd_map_y) {
-                              drawNode(nd, nd_map_x, nd_map_y, false);
-                            });
+    render_ctx.editor.map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y,
+                             [&](MapNode *nd, int nd_map_x, int nd_map_y) {
+                               drawNode(nd, nd_map_x, nd_map_y, false);
+                             });
   }
 }

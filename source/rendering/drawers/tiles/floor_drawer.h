@@ -13,12 +13,14 @@ class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
 
+struct TileRenderContext;
+
 class FloorDrawer {
 public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Editor& editor);
+	void draw(const DrawContext& ctx, const FloorViewParams& floor_params, const TileRenderContext& render_ctx);
 };
 
 #endif

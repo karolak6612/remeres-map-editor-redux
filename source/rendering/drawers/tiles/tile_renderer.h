@@ -17,6 +17,7 @@ class CreatureNameDrawer;
 class FloorDrawer;
 class MarkerDrawer;
 class TooltipCollector;
+class GridDrawer;
 
 /**
  * @brief Context structure for initializing TileRenderer with necessary drawers and services.
@@ -29,6 +30,7 @@ struct TileRenderContext {
     FloorDrawer& floor_drawer;
     MarkerDrawer& marker_drawer;
     TooltipCollector& tooltip_collector;
+    GridDrawer& grid_drawer;
     Editor& editor;
 };
 

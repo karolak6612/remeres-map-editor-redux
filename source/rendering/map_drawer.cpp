@@ -98,20 +98,11 @@ MapDrawer::MapDrawer(MapCanvas &canvas, Editor &editor)
 
   creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 
-  tile_renderer = std::make_unique<TileRenderer>(TileRenderContext{
-      .item_drawer = *item_drawer,
-      .sprite_drawer = *sprite_drawer,
-      .creature_drawer = *creature_drawer,
-      .creature_name_drawer = *creature_name_drawer,
-      .floor_drawer = *floor_drawer,
-      .marker_drawer = *marker_drawer,
-      .tooltip_collector = *tooltip_collector,
-      .editor = editor});
-
   grid_drawer = std::make_unique<GridDrawer>();
-  map_layer_drawer =
-      std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(),
-                                       &editor); // Initialized map_layer_drawer
+
+  tile_renderer = std::make_unique<TileRenderer>(MakeTileRenderContext());
+
+  map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get());
   live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
   brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
   brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
@@ -249,11 +240,11 @@ void MapDrawer::SetupGL() {
   GLViewport::Apply(view);
 
   // Ensure renderers are initialized
-  if (!renderers_initialized) {
+  if (!is_gl_resource_owner) {
 
     sprite_batch->initialize();
     primitive_renderer->initialize();
-    renderers_initialized = true;
+    is_gl_resource_owner = true;
   }
 
   post_process_pipeline->Initialize();
@@ -419,7 +410,7 @@ void MapDrawer::DrawCreatureNames(NVGcontext *vg) {
 void MapDrawer::DrawMapLayer(const DrawContext &ctx,
                              const FloorViewParams &floor_params,
                              bool live_client) {
-  map_layer_drawer->Draw(ctx, floor_params, live_client);
+  map_layer_drawer->Draw(ctx, floor_params, MakeTileRenderContext(), live_client);
 }
 
 DrawContext MapDrawer::MakeDrawContext() {
@@ -430,6 +421,18 @@ DrawContext MapDrawer::MakeDrawContext() {
                      .light_buffer = light_buffer,
                      .canvas_state = canvas_state,
                      .brush_cursor_drawer = brush_cursor_drawer.get()};
+}
+
+TileRenderContext MapDrawer::MakeTileRenderContext() {
+  return TileRenderContext{.item_drawer = *item_drawer,
+                           .sprite_drawer = *sprite_drawer,
+                           .creature_drawer = *creature_drawer,
+                           .creature_name_drawer = *creature_name_drawer,
+                           .floor_drawer = *floor_drawer,
+                           .marker_drawer = *marker_drawer,
+                           .tooltip_collector = *tooltip_collector,
+                           .grid_drawer = *grid_drawer,
+                           .editor = editor};
 }
 
 void MapDrawer::DrawLight() {

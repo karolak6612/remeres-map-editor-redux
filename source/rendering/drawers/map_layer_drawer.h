@@ -18,11 +18,10 @@
 #ifndef RME_MAP_LAYER_DRAWER_H
 #define RME_MAP_LAYER_DRAWER_H
 
-#include <iosfwd>
 
 class Editor;
-class TileRenderer;
 class GridDrawer;
+#include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/floor_view_params.h"
 class SpriteBatch;
@@ -30,15 +29,13 @@ class PrimitiveRenderer;
 
 class MapLayerDrawer {
 public:
-	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
+	MapLayerDrawer(TileRenderer* tile_renderer);
 	~MapLayerDrawer();
 
-	void Draw(const DrawContext& ctx, const FloorViewParams& floor_params, bool live_client);
+	void Draw(const DrawContext& ctx, const FloorViewParams& floor_params, const TileRenderContext& render_ctx, bool live_client);
 
 private:
 	TileRenderer* tile_renderer;
-	GridDrawer* grid_drawer;
-	Editor* editor;
 };
 
 #endif

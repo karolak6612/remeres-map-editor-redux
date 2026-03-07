@@ -52,15 +52,13 @@ class CreatureDrawer;
 class MarkerDrawer;
 class PreviewDrawer;
 class ShadeDrawer;
-class TileRenderer;
-class CreatureNameDrawer;
 struct FloorViewParams;
 struct DrawContext;
 struct Outfit;
 class Creature;
 class Editor;
 class PostProcessPipeline;
-
+#include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 class MapDrawer {
@@ -137,7 +135,8 @@ private:
   void DrawMapLayer(const DrawContext &ctx, const FloorViewParams &floor_params,
                     bool live_client);
   DrawContext MakeDrawContext();
-  bool renderers_initialized = false;
+  TileRenderContext MakeTileRenderContext();
+  bool is_gl_resource_owner = false;
 };
 
 #endif
