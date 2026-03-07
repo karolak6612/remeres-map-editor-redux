@@ -92,7 +92,7 @@ namespace {
 				break;
 			case DatFlagContainer:
 				iType.group = ITEM_GROUP_CONTAINER;
-				iType.allowDistRead = ITEM_TYPE_CONTAINER;
+				iType.type = ITEM_TYPE_CONTAINER;
 				break;
 			case DatFlagStackable:
 				iType.stackable = true;
@@ -263,7 +263,7 @@ namespace {
 		uint8_t flag = 0xFF; // Initialize to an invalid flag or trailing flag
 		uint8_t previous_flag = 0xFF;
 
-		static ItemType iTemp;
+		static ItemType iTemp = ItemType();
 		ItemType& iType = (client_id < g_items.items.size())
 			? g_items.items[client_id]
 			: iTemp;
