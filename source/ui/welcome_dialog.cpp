@@ -303,6 +303,7 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 	// Icon Button - Align Left: 10px total
 	ConvexButton* iconBtn = new ConvexButton(headerPanel, wxID_ANY, "", wxDefaultPosition, wxSize(48, 48));
 	iconBtn->SetBitmap(rmeLogo.IsOk() ? rmeLogo : IMAGE_MANAGER.GetBitmap(ICON_QUESTION_CIRCLE, wxSize(32, 32))); // Fallback if logo invalid
+	iconBtn->SetToolTip("Remere's Map Editor");
 	headerSizer->Add(iconBtn, 0, wxALL | wxCENTER, 8);
 
 	wxBoxSizer* titleSizer = new wxBoxSizer(wxVERTICAL);
@@ -324,6 +325,7 @@ wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titl
 
 	ConvexButton* prefBtn = new ConvexButton(headerPanel, wxID_PREFERENCES, "Preferences");
 	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, FromDIP(wxSize(24, 24))));
+	prefBtn->SetToolTip("Open Preferences");
 	prefBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Right: 10px total
@@ -339,6 +341,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 
 	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
 	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_POWER_OFF, FromDIP(wxSize(24, 24))));
+	exitBtn->SetToolTip("Exit Editor");
 	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 
 	// Align Left: 10px total
@@ -346,6 +349,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 
 	ConvexButton* newBtn = new ConvexButton(footerPanel, wxID_NEW, "New Map");
 	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(24, 24))));
+	newBtn->SetToolTip("Create a new map (Ctrl+N)");
 	newBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	footerSizer->Add(newBtn, 0, wxALL, 8);
 
@@ -358,6 +362,7 @@ wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& vers
 
 	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
 	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(24, 24))));
+	loadBtn->SetToolTip("Load selected map");
 	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
 		long item = -1;
 		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
@@ -387,12 +392,14 @@ wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<w
 
 	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, wxSize(130, 50));
 	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(24, 24)));
+	newMapBtn->SetToolTip("Create a new map (Ctrl+N)");
 	newMapBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	// Align "New Map" with Icon (8px from left edge of content panel)
 	col1->Add(newMapBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
 
 	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(130, 50));
 	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(24, 24)));
+	browseBtn->SetToolTip("Browse for a map file (Ctrl+O)");
 	browseBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
 	col1->Add(browseBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
 

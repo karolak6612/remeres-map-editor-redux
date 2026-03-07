@@ -18,6 +18,7 @@
 #include "app/main.h"
 #include "ui/find_item_window.h"
 #include "ui/dialogs/find_dialog.h"
+#include <wx/wupdlock.h>
 #include "ui/controls/sortable_list_box.h"
 #include "ui/gui.h"
 #include "game/items.h"
@@ -284,6 +285,8 @@ void FindItemDialog::RefreshContentsInternal() {
 	ok_button->Enable(false);
 	ok_button->SetToolTip("Select an item to continue");
 
+	wxWindowUpdateLocker noUpdates(items_list);
+
 	SearchMode selection = (SearchMode)options_radio_box->GetSelection();
 	bool found_search_results = false;
 
@@ -412,6 +415,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetNoMatches();
 	}
 
+	items_list->CommitUpdates();
 	items_list->Refresh();
 }
 

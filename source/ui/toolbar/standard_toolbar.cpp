@@ -29,8 +29,8 @@ StandardToolBar::StandardToolBar(wxWindow* parent) {
 
 	toolbar = newd wxAuiToolBar(parent, TOOLBAR_STANDARD, wxDefaultPosition, wxDefaultSize, wxAUI_TB_DEFAULT_STYLE);
 	toolbar->SetToolBitmapSize(icon_size);
-	toolbar->AddTool(wxID_NEW, wxEmptyString, new_bitmap, wxNullBitmap, wxITEM_NORMAL, "New Map (Ctrl+N) - Create a new empty map", "Create a new empty map", nullptr);
-	toolbar->AddTool(wxID_OPEN, wxEmptyString, open_bitmap, wxNullBitmap, wxITEM_NORMAL, "Open Map (Ctrl+O) - Open an existing map", "Open an existing map", nullptr);
+	toolbar->AddTool(wxID_NEW, wxEmptyString, new_bitmap, wxNullBitmap, wxITEM_NORMAL, "New Map (Ctrl+N)", "Create a new empty map", nullptr);
+	toolbar->AddTool(wxID_OPEN, wxEmptyString, open_bitmap, wxNullBitmap, wxITEM_NORMAL, "Open Map (Ctrl+O)", "Open an existing map", nullptr);
 	toolbar->AddTool(wxID_SAVE, wxEmptyString, save_bitmap, wxNullBitmap, wxITEM_NORMAL, "Save Map (Ctrl+S)", "Save the current map", nullptr);
 	toolbar->AddTool(wxID_SAVEAS, wxEmptyString, saveas_bitmap, wxNullBitmap, wxITEM_NORMAL, "Save Map As... (Ctrl+Alt+S)", "Save the current map with a new name", nullptr);
 	toolbar->AddSeparator();
@@ -56,38 +56,38 @@ void StandardToolBar::Update() {
 	if (editor) {
 		bool canUndo = editor->actionQueue->canUndo();
 		toolbar->EnableTool(wxID_UNDO, canUndo);
-		toolbar->SetToolShortHelp(wxID_UNDO, canUndo ? "Undo (Ctrl+Z)" : "Undo (Ctrl+Z) - Nothing to undo");
+		toolbar->SetToolShortHelp(wxID_UNDO, canUndo ? "Undo (Ctrl+Z)" : "Undo (Ctrl+Z)");
 
 		bool canRedo = editor->actionQueue->canRedo();
 		toolbar->EnableTool(wxID_REDO, canRedo);
-		toolbar->SetToolShortHelp(wxID_REDO, canRedo ? "Redo (Ctrl+Shift+Z)" : "Redo (Ctrl+Shift+Z) - Nothing to redo");
+		toolbar->SetToolShortHelp(wxID_REDO, canRedo ? "Redo (Ctrl+Shift+Z)" : "Redo (Ctrl+Shift+Z)");
 
 		bool canPaste = editor->copybuffer.canPaste();
 		toolbar->EnableTool(wxID_PASTE, canPaste);
-		toolbar->SetToolShortHelp(wxID_PASTE, canPaste ? "Paste (Ctrl+V)" : "Paste (Ctrl+V) - Clipboard empty");
+		toolbar->SetToolShortHelp(wxID_PASTE, canPaste ? "Paste (Ctrl+V)" : "Paste (Ctrl+V)");
 	} else {
 		toolbar->EnableTool(wxID_UNDO, false);
-		toolbar->SetToolShortHelp(wxID_UNDO, "Undo (Ctrl+Z) - No editor open");
+		toolbar->SetToolShortHelp(wxID_UNDO, "Undo (Ctrl+Z)");
 		toolbar->EnableTool(wxID_REDO, false);
-		toolbar->SetToolShortHelp(wxID_REDO, "Redo (Ctrl+Shift+Z) - No editor open");
+		toolbar->SetToolShortHelp(wxID_REDO, "Redo (Ctrl+Shift+Z)");
 		toolbar->EnableTool(wxID_PASTE, false);
-		toolbar->SetToolShortHelp(wxID_PASTE, "Paste (Ctrl+V) - No editor open");
+		toolbar->SetToolShortHelp(wxID_PASTE, "Paste (Ctrl+V)");
 	}
 
 	bool has_map = editor != nullptr;
 	bool is_host = has_map && !editor->live_manager.IsClient();
 
 	toolbar->EnableTool(wxID_SAVE, is_host);
-	toolbar->SetToolShortHelp(wxID_SAVE, is_host ? "Save Map (Ctrl+S)" : (has_map ? "Save Map (Ctrl+S) - Client cannot save" : "Save Map (Ctrl+S) - No map open"));
+	toolbar->SetToolShortHelp(wxID_SAVE, "Save Map (Ctrl+S)");
 
 	toolbar->EnableTool(wxID_SAVEAS, is_host);
-	toolbar->SetToolShortHelp(wxID_SAVEAS, is_host ? "Save Map As... (Ctrl+Alt+S)" : (has_map ? "Save Map As... (Ctrl+Alt+S) - Client cannot save" : "Save Map As... (Ctrl+Alt+S) - No map open"));
+	toolbar->SetToolShortHelp(wxID_SAVEAS, "Save Map As... (Ctrl+Alt+S)");
 
 	toolbar->EnableTool(wxID_CUT, has_map);
-	toolbar->SetToolShortHelp(wxID_CUT, has_map ? "Cut (Ctrl+X)" : "Cut (Ctrl+X) - No map open");
+	toolbar->SetToolShortHelp(wxID_CUT, "Cut (Ctrl+X)");
 
 	toolbar->EnableTool(wxID_COPY, has_map);
-	toolbar->SetToolShortHelp(wxID_COPY, has_map ? "Copy (Ctrl+C)" : "Copy (Ctrl+C) - No map open");
+	toolbar->SetToolShortHelp(wxID_COPY, "Copy (Ctrl+C)");
 
 	toolbar->Refresh();
 }

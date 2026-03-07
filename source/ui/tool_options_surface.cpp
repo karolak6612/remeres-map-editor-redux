@@ -28,6 +28,13 @@ ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) : wxControl(parent, wxI
 	Bind(wxEVT_LEAVE_WINDOW, &ToolOptionsSurface::OnLeave, this);
 	Bind(wxEVT_SIZE, &ToolOptionsSurface::OnSize, this);
 	Bind(wxEVT_TIMER, &ToolOptionsSurface::OnTimer, this);
+	Bind(wxEVT_SET_FOCUS, &ToolOptionsSurface::OnFocus, this);
+	Bind(wxEVT_KILL_FOCUS, &ToolOptionsSurface::OnFocus, this);
+}
+
+void ToolOptionsSurface::OnFocus(wxFocusEvent& evt) {
+	Refresh();
+	evt.Skip();
 }
 
 ToolOptionsSurface::~ToolOptionsSurface() {
@@ -145,10 +152,18 @@ void ToolOptionsSurface::RebuildLayout() {
 				y += icon_sz + gap;
 			}
 
+			wxString hint = "";
+			if (b == g_brush_manager.optional_brush) hint = " (B)";
+			else if (b == g_brush_manager.eraser) hint = " (E)";
+			else if (b == g_brush_manager.pz_brush) hint = " (P)";
+			else if (b == g_brush_manager.rook_brush) hint = " (N)";
+			else if (b == g_brush_manager.nolog_brush) hint = " (L)";
+			else if (b == g_brush_manager.pvp_brush) hint = " (V)";
+
 			ToolRect tr;
 			tr.rect = wxRect(cur_x, y, icon_sz, icon_sz);
 			tr.brush = b;
-			tr.tooltip = b->getName(); // Or specific label
+			tr.tooltip = wxString(b->getName()) + hint;
 			tool_rects.push_back(tr);
 
 			cur_x += icon_sz + gap;
@@ -217,8 +232,14 @@ void ToolOptionsSurface::OnPaint(wxPaintEvent& evt) {
 		DrawCheckbox(dc, interactables.lock_check_rect, "Lock Doors (Shift)", lock_doors, interactables.hover_lock);
 	}
 
-	// Debug Focus
-	// if (HasFocus()) { wxPen p(*wxRED, 1); dc.SetPen(p); dc.SetBrush(*wxTRANSPARENT_BRUSH); dc.DrawRectangle(GetClientSize()); }
+	// Focus feedback
+	if (HasFocus()) {
+		wxRect focusRect = GetClientRect();
+		focusRect.Deflate(1, 1);
+		dc.SetPen(wxPen(Theme::Get(Theme::Role::Accent), 1, wxPENSTYLE_SOLID));
+		dc.SetBrush(*wxTRANSPARENT_BRUSH);
+		dc.DrawRectangle(focusRect);
+	}
 }
 
 void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {

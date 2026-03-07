@@ -27,6 +27,7 @@ public:
 	void OnLeave(wxMouseEvent& evt);
 	void OnSize(wxSizeEvent& evt);
 	void OnTimer(wxTimerEvent& evt);
+	void OnFocus(wxFocusEvent& evt);
 
 	// Interface
 	void SetPaletteType(PaletteType type);
