@@ -352,7 +352,7 @@ int NanoVGCanvas::CreateGenericSpriteTexture(NVGcontext* vg, Sprite* sprite, uin
         mdc.SetBackground(wxBrush(wxColor(0, 0, 0), wxBRUSHSTYLE_TRANSPARENT));
         mdc.Clear();
         // Draw at 0,0 with its size
-        sprite->DrawTo(g_gui.gc, &mdc, drawSize, 0, 0, w, h);
+        sprite->DrawTo(g_gui.sprites, g_gui.gc, &mdc, drawSize, 0, 0, w, h);
     }
 
     wxImage img = bmp.ConvertToImage();

@@ -155,7 +155,7 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
   if (cached_patterns && clientID == it.clientID) {
     patterns = *cached_patterns;
   } else {
-    patterns = PatternCalculator::Calculate(metadata, it, item, tile, pos);
+    patterns = PatternCalculator::Calculate(ctx.backend.texture_gc, metadata, it, item, tile, pos);
   }
 
   int subtype = patterns.subtype;

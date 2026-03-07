@@ -450,6 +450,7 @@ TileRenderContext MapDrawer::MakeTileRenderContext() {
                            .grid_drawer = *grid_drawer,
                            .map = editor.map,
                            .sprite_database = g_gui.sprites,
+                           .sprite_loader = g_gui.loader,
                            .sprite_preloader = g_gui.atlas.getSpritePreloader(),
                            .live_manager = &editor.live_manager};
 }

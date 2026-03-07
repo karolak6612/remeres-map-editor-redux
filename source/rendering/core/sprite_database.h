@@ -23,7 +23,7 @@ public:
   SpriteDatabase(SpriteDatabase &&) = delete;
   SpriteDatabase &operator=(SpriteDatabase &&) = delete;
 
-  void clear();
+  void clear(SpritePreloader* preloader = nullptr);
 
   Sprite *getEditorSprite(int id);
   void insertEditorSprite(int id, std::unique_ptr<Sprite> sprite);

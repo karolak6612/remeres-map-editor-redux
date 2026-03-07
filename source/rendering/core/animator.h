@@ -21,6 +21,8 @@
 #include <vector>
 #include "util/common.h"
 
+class TextureGC;
+
 enum AnimationDirection {
 	ANIMATION_FORWARD = 0,
 	ANIMATION_BACKWARD = 1
@@ -62,8 +64,8 @@ public:
 
 	FrameDuration* getFrameDuration(int frame);
 
-	int getFrame();
-	void setFrame(int frame);
+	int getFrame(TextureGC& gc);
+	void setFrame(TextureGC& gc, int frame);
 
 	void reset();
 
@@ -71,7 +73,7 @@ private:
 	int getDuration(int frame) const;
 	int getPingPongFrame();
 	int getLoopFrame();
-	void calculateSynchronous();
+	void calculateSynchronous(TextureGC& gc);
 
 	int frame_count;
 	int start_frame;

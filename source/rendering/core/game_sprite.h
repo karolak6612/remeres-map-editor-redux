@@ -29,6 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
+class SpriteDatabase;
 class SpriteLoader;
 class SpritePreloader;
 
@@ -37,7 +38,7 @@ public:
     Sprite() { }
     virtual ~Sprite() = default;
 
-    virtual void DrawTo(TextureGC& gc, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) = 0;
+    virtual void DrawTo(SpriteDatabase& sprites, TextureGC& gc, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) = 0;
     virtual void unloadDC() = 0;
     virtual wxSize GetSize() const = 0;
 
@@ -50,7 +51,7 @@ public:
     CreatureSprite(uint32_t clientID, const Outfit& outfit);
     ~CreatureSprite() override;
 
-    void DrawTo(TextureGC& gc, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) override;
+    void DrawTo(SpriteDatabase& sprites, TextureGC& gc, wxDC* dc, SpriteSize sz, int start_x, int start_y, int width = -1, int height = -1) override;
     void unloadDC() override;
     wxSize GetSize() const override
     {

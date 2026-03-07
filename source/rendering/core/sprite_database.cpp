@@ -2,8 +2,10 @@
 #include "rendering/core/sprite_preloader.h"
 #include "ui/gui.h"
 
-void SpriteDatabase::clear() {
-  g_gui.atlas.getSpritePreloader().clear();
+void SpriteDatabase::clear(SpritePreloader* preloader) {
+  if (preloader) {
+    preloader->clear();
+  }
   metadata_space.clear();
   atlas_space.clear();
   icon_space.clear();
@@ -69,7 +71,7 @@ void SpriteDatabase::DrawItemSprite(TextureGC& gc, int clientID, wxDC *dc, Sprit
                                     int height) {
   if (clientID < 0) {
     if (Sprite *editor_sprite = getEditorSprite(clientID)) {
-      editor_sprite->DrawTo(gc, dc, sz, start_x, start_y, width, height);
+      editor_sprite->DrawTo(*this, gc, dc, sz, start_x, start_y, width, height);
     }
   } else if (static_cast<size_t>(clientID) < metadata_space.size()) {
     icon_space[clientID].DrawTo(gc, *this, clientID, metadata_space[clientID], dc, sz,
@@ -102,9 +104,9 @@ CreatureSprite::CreatureSprite(uint32_t clientID, const Outfit &outfit)
 
 CreatureSprite::~CreatureSprite() = default;
 
-void CreatureSprite::DrawTo(TextureGC& gc, wxDC *dc, SpriteSize sz, int start_x, int start_y,
+void CreatureSprite::DrawTo(SpriteDatabase& sprites, TextureGC& gc, wxDC *dc, SpriteSize sz, int start_x, int start_y,
                             int width, int height) {
-  g_gui.sprites.DrawCreatureSprite(gc, clientID, outfit, dc, sz, start_x, start_y,
+  sprites.DrawCreatureSprite(gc, clientID, outfit, dc, sz, start_x, start_y,
                                    width, height);
 }
 

@@ -43,8 +43,7 @@ void SpritePreloader::shutdown() {
     stopping = true;
   }
   for (auto &worker : workers) {
-    worker.request_stop(); // Correctly signaled transition for jthread's
-                           // stop_token
+    worker.request_stop(); 
   }
   cv.notify_all();
 }
@@ -57,8 +56,8 @@ void SpritePreloader::clear() {
 }
 
 void SpritePreloader::preload(SpriteDatabase &sprites, SpriteLoader &loader,
-                               uint32_t clientID, int pattern_x, int pattern_y,
-                               int pattern_z, int frame) {
+                                uint32_t clientID, int pattern_x, int pattern_y,
+                                int pattern_z, int frame) {
   if (clientID == 0 || clientID >= sprites.getMetadataSpace().size() ||
       clientID >= sprites.getAtlasCacheSpace().size()) {
     return;
@@ -66,7 +65,6 @@ void SpritePreloader::preload(SpriteDatabase &sprites, SpriteLoader &loader,
   const SpriteMetadata &meta = sprites.getMetadataSpace()[clientID];
   SpriteAtlasCache &atlas = sprites.getAtlasCacheSpace()[clientID];
 
-  // Capture global state once per preload call (one item)
   const std::string &sprfile = loader.getSpriteFile();
   const bool is_extended = loader.isExtended();
   const bool has_transparency = loader.hasTransparency();
@@ -74,8 +72,6 @@ void SpritePreloader::preload(SpriteDatabase &sprites, SpriteLoader &loader,
   static thread_local std::vector<PendingTask> ids_to_enqueue;
   ids_to_enqueue.clear();
 
-  // Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize
-  // allocations
   if (ids_to_enqueue.capacity() < 64) {
     ids_to_enqueue.reserve(64);
   }
@@ -99,7 +95,7 @@ void SpritePreloader::preload(SpriteDatabase &sprites, SpriteLoader &loader,
         }
 
         uint32_t spr_index = atlas.spriteList[idx];
-        auto& space = g_gui.sprites.getNormalImageSpace();
+        auto& space = sprites.getNormalImageSpace();
         if (spr_index >= space.size()) continue;
 
         NormalImage *img = &space[spr_index];
@@ -115,9 +111,7 @@ void SpritePreloader::preload(SpriteDatabase &sprites, SpriteLoader &loader,
     std::lock_guard<std::mutex> lock(queue_mutex);
     for (const auto &pending : ids_to_enqueue) {
       if (task_queue.size() >= MAX_QUEUE_SIZE) {
-        spdlog::debug("SpritePreloader: Queue full ({}), dropping remaining enqueues",
-                      task_queue.size());
-        break; // Drop remaining requests if queue is slammed
+        break; 
       }
       if (pending_ids.insert(pending.id).second) {
         task_queue.push({pending.id, pending.generation_id, sprfile,
@@ -149,13 +143,13 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 
     if (!task.spritefile.empty()) {
       success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump,
-                                    size, task.id);
+                                    size, static_cast<int>(task.id));
     }
 
     std::unique_ptr<uint8_t[]> rgba;
     if (success && dump) {
-      rgba = decompress_sprite(std::span{dump.get(), size},
-                               task.has_transparency, task.id);
+      rgba = decompress_sprite(std::span<const uint8_t>{dump.get(), size},
+                                task.has_transparency, static_cast<int>(task.id));
     }
 
     {
@@ -170,48 +164,42 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
   }
 }
 
-void SpritePreloader::update() {
-  // CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
+void SpritePreloader::update(SpriteDatabase& sprites, AtlasLifecycle& atlas_lifecycle, TextureGC& gc, SpriteLoader& loader) {
   assert(wxIsMainThread());
 
-  // Move results to a local queue to minimize holding time
   std::queue<Result> results;
   {
     std::lock_guard<std::mutex> lock(queue_mutex);
     if (result_queue.empty()) {
       return;
     }
-    results = std::move(result_queue);
+    std::swap(results, result_queue);
   }
 
   thread_local std::vector<uint32_t> ids_processed;
   ids_processed.clear();
   ids_processed.reserve(results.size());
 
-  const std::string &current_sprfile = g_gui.loader.getSpriteFile();
-  const bool graphics_unloaded = g_gui.loader.isUnloaded();
+  const std::string &current_sprfile = loader.getSpriteFile();
+  const bool graphics_unloaded = loader.isUnloaded();
 
   while (!results.empty()) {
     Result res = std::move(results.front());
     results.pop();
 
-    auto id = res.id;
+    uint32_t id = res.id;
     ids_processed.push_back(id);
 
-    // Check if SpriteLoader is loaded, for the correct sprite file, and ID is
-    // valid
-    auto &normalSpace = g_gui.sprites.getNormalImageSpace();
+    auto &normalSpace = sprites.getNormalImageSpace();
     if (res.spritefile == current_sprfile && !graphics_unloaded &&
-        id < normalSpace.size()) {
+        static_cast<size_t>(id) < normalSpace.size()) {
       NormalImage *img = &normalSpace[id];
 
-      // Validate Sprite Identity & Generation
-      // Check ID match, Generation match, and GLLoaded state
       if (img->id == id && img->generation_id == res.generation_id &&
           !img->isGLLoaded) {
-        if (g_gui.atlas.hasAtlasManager()) {
-            bool use_memcached = false; // Memcached behavior moved out of settings
-            img->fulfillPreload(*(g_gui.atlas.getAtlasManager()), g_gui.gc, g_gui.loader, use_memcached, std::move(res.data));
+        if (atlas_lifecycle.hasAtlasManager()) {
+            bool use_memcached = false; 
+            img->fulfillPreload(*(atlas_lifecycle.getAtlasManager()), gc, loader, use_memcached, std::move(res.data));
         }
       }
     }

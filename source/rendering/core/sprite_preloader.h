@@ -16,6 +16,8 @@
 
 class SpriteDatabase;
 class SpriteLoader;
+class TextureGC;
+class AtlasLifecycle;
 
 class SpritePreloader {
 public:
@@ -25,16 +27,14 @@ public:
   SpritePreloader &operator=(const SpritePreloader &) = delete;
 
   // Schedules sprites for preloading based on the given view parameters.
-  // This corresponds to the loop logic previously in collectTileSprites.
   void preload(SpriteDatabase &sprites, SpriteLoader &loader, uint32_t clientID, int pattern_x, int pattern_y, int pattern_z,
                int frame);
 
   // Processes finished preload tasks and uploads data to the GPU.
   // Should be called on the main thread.
-  void update();
+  void update(SpriteDatabase& sprites, AtlasLifecycle& atlas, TextureGC& gc, SpriteLoader& loader);
 
   // Clears all pending tasks and results.
-  // Should be called when SpriteLoader is cleared.
   void clear();
 
   // Explicit shutdown to be called before global destruction
@@ -43,11 +43,9 @@ public:
   ~SpritePreloader();
 
 private:
-  void workerLoop(std::stop_token stop_token);
-
-  static constexpr unsigned int MIN_WORKER_THREADS = 2u;
-  static constexpr unsigned int MAX_WORKER_THREADS = 8u;
-  static constexpr size_t MAX_QUEUE_SIZE = 50000;
+  static constexpr unsigned int MIN_WORKER_THREADS = 1;
+  static constexpr unsigned int MAX_WORKER_THREADS = 4;
+  static constexpr size_t MAX_QUEUE_SIZE = 1024;
 
   struct Task {
     uint32_t id;
@@ -64,19 +62,21 @@ private:
     std::string spritefile;
   };
 
-  std::mutex queue_mutex;
-  std::condition_variable cv;
-  bool stopping = false;
-  std::vector<std::jthread> workers;
+  void workerLoop(std::stop_token stop_token);
 
+  std::vector<std::jthread> workers;
+  std::mutex queue_mutex;
+  std::condition_variable_any cv;
   std::queue<Task> task_queue;
   std::queue<Result> result_queue;
   std::unordered_set<uint32_t> pending_ids;
+
+  bool stopping = false;
 };
 
 namespace rme {
-void collectTileSprites(SpritePreloader &preloader, SpriteDatabase &sprites,
-                        SpriteLoader &loader, uint32_t clientID,
+// Specialized helper for tile rendering that collects all needed layers
+void collectTileSprites(SpritePreloader &preloader, SpriteDatabase &sprites, SpriteLoader &loader, uint32_t clientID,
                         int pattern_x, int pattern_y, int pattern_z, int frame);
 } // namespace rme
 

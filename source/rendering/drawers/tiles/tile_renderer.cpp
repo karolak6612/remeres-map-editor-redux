@@ -1,5 +1,7 @@
 #include "rendering/drawers/tiles/tile_renderer.h"
 #include "app/main.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_batch.h"
 #include "ui/gui.h"
@@ -42,6 +44,7 @@ TileRenderer::TileRenderer(const TileRenderContext& ctx)
       creature_name_drawer(&ctx.creature_name_drawer),
       map(&ctx.map),
       sprite_database(&ctx.sprite_database),
+      sprite_loader(&ctx.sprite_loader),
       sprite_preloader(&ctx.sprite_preloader) {}
 
 void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
@@ -130,12 +133,12 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
             (*sprite_database).getMetadataSpace()[clientID];
         SpriteAtlasCache &atlas = (*sprite_database).getAtlasCacheSpace()[clientID];
         SpritePatterns patterns = PatternCalculator::Calculate(
-            &metadata, *ground_it, tile->ground.get(), tile, position);
+            ctx.backend.texture_gc, &metadata, *ground_it, tile->ground.get(), tile, position);
 
         // Inline preload check — skip function call when sprite is simple and
         // loaded (95%+ case)
         if (!atlas.isSimpleAndLoaded(metadata, *sprite_database)) {
-          rme::collectTileSprites(*sprite_preloader, g_gui.sprites, g_gui.loader, clientID,
+          rme::collectTileSprites(*sprite_preloader, *sprite_database, *sprite_loader, clientID,
                                   patterns.x, patterns.y, patterns.z,
                                   patterns.frame);
         }
@@ -252,12 +255,12 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
               (*sprite_database).getAtlasCacheSpace()[clientID];
 
           SpritePatterns patterns = PatternCalculator::Calculate(
-              &metadata, it, item.get(), tile, position);
+              ctx.backend.texture_gc, &metadata, it, item.get(), tile, position);
 
           // Inline preload check — skip function call when sprite is simple and
           // loaded
           if (!atlas.isSimpleAndLoaded(metadata, *sprite_database)) {
-            rme::collectTileSprites(*sprite_preloader, g_gui.sprites, g_gui.loader, clientID,
+            rme::collectTileSprites(*sprite_preloader, *sprite_database, *sprite_loader, clientID,
                                     patterns.x, patterns.y, patterns.z,
                                     patterns.frame);
           }
@@ -328,7 +331,8 @@ void TileRenderer::DrawTile(const DrawContext &ctx, TileLocation *location,
   }
 }
 
-void TileRenderer::PreloadItem(const Tile *tile, Item *item, const ItemType &it,
+void TileRenderer::PreloadItem(TextureGC &gc, const Tile *tile, Item *item,
+                               const ItemType &it,
                                const SpritePatterns *cached_patterns) {
   if (!item) {
     return;
@@ -348,10 +352,10 @@ void TileRenderer::PreloadItem(const Tile *tile, Item *item, const ItemType &it,
       if (cached_patterns) {
         patterns = *cached_patterns;
       } else {
-        patterns = PatternCalculator::Calculate(&metadata, it, item, tile,
+        patterns = PatternCalculator::Calculate(gc, &metadata, it, item, tile,
                                                 tile->getPosition());
       }
-      rme::collectTileSprites(*sprite_preloader, g_gui.sprites, g_gui.loader, clientID,
+      rme::collectTileSprites(*sprite_preloader, *sprite_database, *sprite_loader, clientID,
                               patterns.x, patterns.y, patterns.z,
                               patterns.frame);
     }

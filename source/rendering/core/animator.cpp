@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 #include "rendering/core/animator.h"
+#include "rendering/core/texture_gc.h"
 #include "ui/gui.h"
 
 Animator::Animator(int frame_count, int start_frame, int loop_count, bool async) :
@@ -54,8 +55,8 @@ FrameDuration* Animator::getFrameDuration(int frame) {
 	return &durations[frame];
 }
 
-int Animator::getFrame() {
-	long time = g_gui.gc.getElapsedTime();
+int Animator::getFrame(TextureGC& gc) {
+	long time = gc.getElapsedTime();
 	if (time != last_time && !is_complete) {
 		long elapsed = time - last_time;
 		if (elapsed >= current_duration) {
@@ -69,7 +70,7 @@ int Animator::getFrame() {
 			if (current_frame != frame) {
 				int duration = getDuration(frame) - (elapsed - current_duration);
 				if (duration < 0 && !async) {
-					calculateSynchronous();
+					calculateSynchronous(gc);
 				} else {
 					current_frame = frame;
 					current_duration = std::max<int>(0, duration);
@@ -86,7 +87,7 @@ int Animator::getFrame() {
 	return current_frame;
 }
 
-void Animator::setFrame(int frame) {
+void Animator::setFrame(TextureGC& gc, int frame) {
 	ASSERT(frame == -1 || frame == 255 || frame == 254 || (frame >= 0 && frame < frame_count));
 
 	if (current_frame == frame) {
@@ -105,11 +106,11 @@ void Animator::setFrame(int frame) {
 		}
 
 		is_complete = false;
-		last_time = g_gui.gc.getElapsedTime();
+		last_time = gc.getElapsedTime();
 		current_duration = getDuration(current_frame);
 		current_loop = 0;
 	} else {
-		calculateSynchronous();
+		calculateSynchronous(gc);
 	}
 }
 
@@ -123,7 +124,12 @@ void Animator::reset() {
 	direction = ANIMATION_FORWARD;
 	current_loop = 0;
 	async = false;
-	setFrame(-1);
+	// Warning: this call is technically synchronous but needs a GC.
+	// However, reset() is usually called when we don't have a GC context yet.
+	// We'll pass a dummy GC or assume the caller will set the frame later.
+	// In the original code it was setFrame(-1) which called calculateSynchronous.
+	// We'll skip the setFrame call here and let the first getFrame handle it.
+	current_frame = getStartFrame(); 
 }
 
 int Animator::getDuration(int frame) const {
@@ -158,8 +164,8 @@ int Animator::getLoopFrame() {
 	return current_frame;
 }
 
-void Animator::calculateSynchronous() {
-	long time = g_gui.gc.getElapsedTime();
+void Animator::calculateSynchronous(TextureGC& gc) {
+	long time = gc.getElapsedTime();
 	if (time > 0 && total_duration > 0) {
 		long elapsed = time % total_duration;
 		int total_time = 0;

@@ -8,6 +8,8 @@
 #include <bit>
 #include <cstdint>
 
+class TextureGC;
+
 struct SpritePatterns {
     int x = 0;
     int y = 0;
@@ -31,7 +33,7 @@ private:
 
 public:
     static SpritePatterns
-    Calculate(const SpriteMetadata* metadata, const ItemType& it, const Item* item, const Tile* tile, const Position& pos)
+    Calculate(TextureGC& gc, const SpriteMetadata* metadata, const ItemType& it, const Item* item, const Tile* tile, const Position& pos)
     {
         SpritePatterns patterns;
 
@@ -43,7 +45,7 @@ public:
         patterns.y = calculatePatternOffset(pos.y, metadata->pattern_y);
         patterns.z = calculatePatternOffset(pos.z, metadata->pattern_z);
 
-        patterns.frame = (metadata->animator) ? metadata->animator->getFrame() : 0;
+        patterns.frame = (metadata->animator) ? metadata->animator->getFrame(gc) : 0;
 
         if ((it.isSplash() || it.isFluidContainer()) && item) {
             patterns.subtype = item->getSubtype();

@@ -21,6 +21,7 @@ class GridDrawer;
 class SpriteDatabase;
 class SpritePreloader;
 class LiveManager;
+class TextureGC;
 
 /**
  * @brief Context structure for initializing TileRenderer with necessary drawers and services.
@@ -36,6 +37,7 @@ struct TileRenderContext {
     GridDrawer& grid_drawer;
     Map& map;
     SpriteDatabase& sprite_database;
+    SpriteLoader& sprite_loader;
     SpritePreloader& sprite_preloader;
     LiveManager* live_manager;
 };
@@ -50,7 +52,7 @@ public:
     );
 
 private:
-    void PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* patterns = nullptr);
+    void PreloadItem(TextureGC& gc, const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* patterns = nullptr);
 
     ItemDrawer* item_drawer;
     SpriteDrawer* sprite_drawer;
@@ -61,6 +63,7 @@ private:
     CreatureNameDrawer* creature_name_drawer;
     Map* map;
     SpriteDatabase* sprite_database;
+    SpriteLoader* sprite_loader;
     SpritePreloader* sprite_preloader;
 };
 

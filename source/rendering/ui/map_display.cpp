@@ -40,6 +40,8 @@
 #include "map/tile.h"
 #include "palette/palette_window.h"
 #include "rendering/core/coordinate_mapper.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/texture_gc.h"
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/core/text_renderer.h"
 #include "rendering/map_drawer.h"
@@ -262,7 +264,7 @@ void MapCanvas::OnPaint(wxPaintEvent &event) {
   if (g_gui.IsRenderingEnabled()) {
     // Advance graphics clock and drain the preloader queue before rendering
     g_gui.gc.updateTime();
-    g_gui.atlas.getSpritePreloader().update();
+    g_gui.atlas.getSpritePreloader().update(g_gui.sprites, g_gui.atlas, g_gui.gc, g_gui.loader);
 
     DrawingOptions &options = drawer->getOptions();
     if (screenshot_controller->IsCapturing()) {
