@@ -190,10 +190,10 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
     if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 &&
         frame == 0) {
       region =
-          atlas.getAtlasRegion(clientID, *metadata, 0, 0, 0, -1, 0, 0, 0, 0);
+          atlas.getAtlasRegion(clientID, *metadata, 0, 0, 0, -1, 0, 0, 0, 0, ctx.state.is_preload_pass);
     } else {
       region = atlas.getAtlasRegion(clientID, *metadata, 0, 0, 0, subtype,
-                                    pattern_x, pattern_y, pattern_z, frame);
+                                    pattern_x, pattern_y, pattern_z, frame, ctx.state.is_preload_pass);
     }
 
     if (region) {
@@ -220,7 +220,7 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
         for (int cf = 0; cf != metadata->layers; cf++) {
           const AtlasRegion *region =
               atlas.getAtlasRegion(clientID, *metadata, cx, cy, cf, subtype,
-                                   pattern_x, pattern_y, pattern_z, frame);
+                                   pattern_x, pattern_y, pattern_z, frame, ctx.state.is_preload_pass);
           if (region) {
             sprite_drawer->glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE,
                                            screeny - cy * TILE_SIZE, region,

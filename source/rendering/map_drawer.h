@@ -107,7 +107,7 @@ public:
 
   void Draw();
   void DrawBackground();
-  void DrawMap();
+  void DrawMap(bool is_preload_pass = false);
   void DrawLiveCursors();
   void DrawIngameBox(const DrawContext &ctx, const ViewBounds &bounds);
 
@@ -134,7 +134,7 @@ public:
 private:
   void DrawMapLayer(const DrawContext &ctx, const FloorViewParams &floor_params,
                     bool live_client);
-  DrawContext MakeDrawContext();
+  DrawContext MakeDrawContext(bool is_preload_pass = false);
   TileRenderContext MakeTileRenderContext();
   bool is_gl_resource_owner = false;
 };

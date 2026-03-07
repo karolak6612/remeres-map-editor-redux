@@ -271,7 +271,15 @@ void MapDrawer::Draw() {
   }
   auto *atlas = g_gui.atlas.getAtlasManager();
 
-  // Begin Batches
+  // Begin Preload Pass
+  // This executes synchronously on the main thread, parsing the map and forcing 
+  // texture allocations without mid-frame OpenGL mutations.
+  bool old_show_tooltips = options.settings.show_tooltips;
+  options.settings.show_tooltips = false; // Disable tooltips during preload to save processing power
+  DrawMap(true);
+  options.settings.show_tooltips = old_show_tooltips;
+
+  // Begin Batches for Render Pass
   sprite_batch->begin(view.projectionMatrix, *atlas);
   primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 
@@ -284,7 +292,7 @@ void MapDrawer::Draw() {
   const ViewBounds original_bounds{view.camera_start_x, view.camera_start_y,
                                    view.camera_end_x, view.camera_end_y};
 
-  DrawMap();
+  DrawMap(false);
 
   // Flush Map for Light Pass
   sprite_batch->end(*atlas);
@@ -332,7 +340,7 @@ void MapDrawer::DrawBackground() {
   GLViewport::ClearBackground(glm::vec4(0.0f, 0.0f, 0.0f, 1.0f), true);
 }
 
-void MapDrawer::DrawMap() {
+void MapDrawer::DrawMap(bool is_preload_pass) {
   bool live_client = editor.live_manager.IsClient();
 
   bool only_colors =
@@ -345,7 +353,7 @@ void MapDrawer::DrawMap() {
   int current_end_x = view.camera_end_x;
   int current_end_y = view.camera_end_y;
 
-  DrawContext ctx = MakeDrawContext();
+  DrawContext ctx = MakeDrawContext(is_preload_pass);
 
   for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
     FloorViewParams floor_params{.current_z = map_z,
@@ -410,10 +418,11 @@ void MapDrawer::DrawMapLayer(const DrawContext &ctx,
   map_layer_drawer->Draw(ctx, floor_params, MakeTileRenderContext(), live_client);
 }
 
-DrawContext MapDrawer::MakeDrawContext() {
+DrawContext MapDrawer::MakeDrawContext(bool is_preload_pass) {
   return DrawContext{.state = {.view = view,
                                .options = options,
-                               .canvas_state = canvas_state},
+                               .canvas_state = canvas_state,
+                               .is_preload_pass = is_preload_pass},
                      .backend = {.sprite_batch = *sprite_batch,
                                  .primitive_renderer = *primitive_renderer},
                      .output = {.light_buffer = light_buffer,

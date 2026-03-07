@@ -34,11 +34,11 @@ public:
 
     const AtlasRegion* getAtlasRegion(
         uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y,
-        int _pattern_z, int _frame
+        int _pattern_z, int _frame, bool block = true
     );
     const AtlasRegion* getAtlasRegion(
         uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit,
-        int _frame
+        int _frame, bool block = true
     );
 
     [[nodiscard]] const AtlasRegion* getCachedDefaultRegion() const

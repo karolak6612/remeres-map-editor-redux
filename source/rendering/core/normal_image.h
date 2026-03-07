@@ -19,7 +19,7 @@ public:
         return true;
     }
 
-    const AtlasRegion* getAtlasRegion();
+    const AtlasRegion* getAtlasRegion(bool block = true);
 
     // We use the sprite id as key
     uint32_t id = 0;

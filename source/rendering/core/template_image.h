@@ -20,7 +20,7 @@ public:
     virtual std::unique_ptr<uint8_t[]> getRGBData() override;
     virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
 
-    const AtlasRegion* getAtlasRegion();
+    const AtlasRegion* getAtlasRegion(bool block = true);
     const AtlasRegion* atlas_region = nullptr;
 
     uint32_t texture_id = 0; // Unique ID for AtlasManager key

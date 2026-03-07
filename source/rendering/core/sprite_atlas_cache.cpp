@@ -58,7 +58,7 @@ uint32_t SpriteAtlasCache::getSpriteId(const SpriteMetadata& metadata, int frame
 
 const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y,
-    int _pattern_z, int _frame
+    int _pattern_z, int _frame, bool block
 )
 {
     if (metadata.numsprites == 0) {
@@ -77,7 +77,7 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
                 return cached_default_region;
             }
 
-            const AtlasRegion* valid_region = img.getAtlasRegion();
+            const AtlasRegion* valid_region = img.getAtlasRegion(block);
             if (valid_region && img.isGLLoaded) {
                 cached_default_region = valid_region;
                 cached_generation_id = img.generation_id;
@@ -110,7 +110,7 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     if (v < spriteList.size() && spriteList[v] < space.size()) {
         auto& img = space[spriteList[v]];
         img.clientID = clientID;
-        return img.getAtlasRegion();
+        return img.getAtlasRegion(block);
     }
     return nullptr;
 }
@@ -149,7 +149,7 @@ TemplateImage* SpriteAtlasCache::getTemplateImage(uint32_t clientID, const Sprit
 
 const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit,
-    int _frame
+    int _frame, bool block
 )
 {
     if (metadata.numsprites == 0) {
@@ -166,14 +166,14 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     }
     if (metadata.layers > 1) {
         TemplateImage* img = getTemplateImage(clientID, metadata, v, _outfit);
-        return img->getAtlasRegion();
+        return img->getAtlasRegion(block);
     }
     if (v < spriteList.size()) {
         auto& space = g_gui.sprites.getNormalImageSpace();
         if (spriteList[v] < space.size()) {
             auto& img = space[spriteList[v]];
             img.clientID = clientID;
-            return img.getAtlasRegion();
+            return img.getAtlasRegion(block);
         }
     }
     return nullptr;

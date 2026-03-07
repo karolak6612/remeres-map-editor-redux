@@ -254,7 +254,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData()
     return rgbadata;
 }
 
-const AtlasRegion* TemplateImage::getAtlasRegion()
+const AtlasRegion* TemplateImage::getAtlasRegion(bool block)
 {
     if (isGLLoaded && atlas_region) {
         // Self-Healing: Check for stale atlas region pointer
@@ -272,7 +272,7 @@ const AtlasRegion* TemplateImage::getAtlasRegion()
         }
     }
 
-    if (!isGLLoaded) {
+    if (!isGLLoaded && block) {
         const AtlasRegion* region = EnsureAtlasSprite(texture_id);
         if (region) {
             isGLLoaded = true;

@@ -183,7 +183,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData()
     return decompress_sprite(std::span {dump.get(), size}, g_gui.loader.hasTransparency(), id);
 }
 
-const AtlasRegion* NormalImage::getAtlasRegion()
+const AtlasRegion* NormalImage::getAtlasRegion(bool block)
 {
     if (isGLLoaded && atlas_region) {
         // Self-Healing: Check for stale atlas region pointer (e.g. from memory reuse)
@@ -201,7 +201,7 @@ const AtlasRegion* NormalImage::getAtlasRegion()
         }
     }
 
-    if (!isGLLoaded) {
+    if (!isGLLoaded && block) {
         atlas_region = EnsureAtlasSprite(id);
     }
     visit();

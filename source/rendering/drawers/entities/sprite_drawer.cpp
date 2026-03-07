@@ -17,6 +17,8 @@ SpriteDrawer::~SpriteDrawer() { }
 
 void SpriteDrawer::glBlitAtlasQuad(const DrawContext& ctx, int sx, int sy, const AtlasRegion* region, DrawColor color)
 {
+    if (ctx.state.is_preload_pass) return;
+
     if (region) {
         float normalizedR = color.r / 255.0f;
         float normalizedG = color.g / 255.0f;
@@ -32,6 +34,8 @@ void SpriteDrawer::glBlitAtlasQuad(const DrawContext& ctx, int sx, int sy, const
 
 void SpriteDrawer::glBlitSquare(const DrawContext& ctx, int sx, int sy, DrawColor color, int size)
 {
+    if (ctx.state.is_preload_pass) return;
+
     if (size == 0) {
         size = TILE_SIZE;
     }
@@ -53,6 +57,8 @@ void SpriteDrawer::glBlitSquare(const DrawContext& ctx, int sx, int sy, DrawColo
 
 void SpriteDrawer::glDrawBox(const DrawContext& ctx, int sx, int sy, int width, int height, DrawColor color)
 {
+    if (ctx.state.is_preload_pass) return;
+
     float normalizedR = color.r / 255.0f;
     float normalizedG = color.g / 255.0f;
     float normalizedB = color.b / 255.0f;
@@ -89,7 +95,7 @@ void SpriteDrawer::BlitSprite(const DrawContext& ctx, int screenx, int screeny, 
     for (int cx = 0; cx != meta.width; ++cx) {
         for (int cy = 0; cy != meta.height; ++cy) {
             for (int cf = 0; cf != meta.layers; ++cf) {
-                const AtlasRegion* region = atlas.getAtlasRegion(clientID, meta, cx, cy, cf, -1, 0, 0, 0, tme);
+                const AtlasRegion* region = atlas.getAtlasRegion(clientID, meta, cx, cy, cf, -1, 0, 0, 0, tme, ctx.state.is_preload_pass);
                 if (region) {
                     glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
                 }

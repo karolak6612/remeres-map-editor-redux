@@ -14,6 +14,7 @@ struct ContextState {
   const ViewState &view;
   const DrawingOptions &options;
   const CanvasState &canvas_state;
+  bool is_preload_pass = false;
 };
 
 struct RenderBackend {
