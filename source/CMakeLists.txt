@@ -221,6 +221,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/popup_action_handler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.h
@@ -555,6 +556,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/popup_action_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.cpp
