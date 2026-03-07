@@ -29,7 +29,7 @@
 #include <unordered_map>
 #include <vector>
 
-class GraphicManager;
+class SpriteLoader;
 class SpritePreloader;
 
 class Sprite {

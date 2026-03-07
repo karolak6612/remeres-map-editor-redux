@@ -26,12 +26,6 @@ TemplateImage::TemplateImage(uint32_t clientID, int v, const Outfit& outfit) :
 
 TemplateImage::~TemplateImage()
 {
-    if (isGLLoaded) {
-        g_gui.gc.removeResidentImage(handle);
-        if (g_gui.atlas.hasAtlasManager()) {
-            g_gui.atlas.getAtlasManager()->removeSprite(texture_id);
-        }
-    }
 }
 
 TemplateImage::TemplateImage(TemplateImage&& other) noexcept
@@ -80,22 +74,19 @@ TemplateImage& TemplateImage::operator=(TemplateImage&& other) noexcept
     return *this;
 }
 
-void TemplateImage::clean(time_t time, int longevity)
+void TemplateImage::clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc)
 {
     // Evict from atlas if expired
     if (longevity == -1) {
         longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
     }
     if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-        if (g_gui.atlas.hasAtlasManager()) {
-            g_gui.atlas.getAtlasManager()->removeSprite(texture_id);
-        }
         isGLLoaded = false;
         atlas_region = nullptr;
         ImageHandle old_handle = handle;
         generation_id++;
         handle.generation = generation_id;
-        g_gui.gc.removeResidentImage(old_handle);
+        gc.removeResidentImage(old_handle);
     }
 }
 
@@ -131,14 +122,14 @@ namespace {
         }
     }
 
-    bool validateTemplateParentAndIndices(const TemplateImage* img, int sprite_index, size_t& mask_index)
+    bool validateTemplateParentAndIndices(const TemplateImage* img, int sprite_index, size_t& mask_index, SpriteDatabase* sprites)
     {
-        if (img->clientID >= g_gui.sprites.getMetadataSpace().size() || img->clientID >= g_gui.sprites.getAtlasCacheSpace().size()) {
+        if (img->clientID >= sprites->getMetadataSpace().size() || img->clientID >= sprites->getAtlasCacheSpace().size()) {
             spdlog::warn("TemplateImage (texture_id={}): Invalid clientID {}.", img->texture_id, img->clientID);
             return false;
         }
-        const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[img->clientID];
-        const SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[img->clientID];
+        const SpriteMetadata& meta = sprites->getMetadataSpace()[img->clientID];
+        const SpriteAtlasCache& atlas = sprites->getAtlasCacheSpace()[img->clientID];
 
         if (meta.width <= 0 || meta.height <= 0) {
             spdlog::warn("TemplateImage (texture_id={}): Invalid metadata dimensions ({}x{})", img->texture_id, meta.width, meta.height);
@@ -179,21 +170,21 @@ namespace {
     }
 } // namespace
 
-std::unique_ptr<uint8_t[]> TemplateImage::getRGBData()
+std::unique_ptr<uint8_t[]> TemplateImage::getRGBData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached)
 {
     size_t mask_index = 0;
-    if (!validateTemplateParentAndIndices(this, sprite_index, mask_index)) {
+    if (!validateTemplateParentAndIndices(this, sprite_index, mask_index, sprites)) {
         return nullptr;
     }
 
-    SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
-    auto& space = g_gui.sprites.getNormalImageSpace();
+    SpriteAtlasCache& atlas = sprites->getAtlasCacheSpace()[clientID];
+    auto& space = sprites->getNormalImageSpace();
     if (atlas.spriteList[sprite_index] >= space.size() || atlas.spriteList[mask_index] >= space.size()) {
         return nullptr;
     }
     
-    auto rgbdata = space[atlas.spriteList[sprite_index]].getRGBData();
-    auto template_rgbdata = space[atlas.spriteList[mask_index]].getRGBData();
+    auto rgbdata = space[atlas.spriteList[sprite_index]].getRGBData(sprites, loader, use_memcached);
+    auto template_rgbdata = space[atlas.spriteList[mask_index]].getRGBData(sprites, loader, use_memcached);
 
     if (!rgbdata) {
         return nullptr;
@@ -211,23 +202,23 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData()
     return rgbdata;
 }
 
-std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData()
+std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached)
 {
     size_t mask_index = 0;
-    if (!validateTemplateParentAndIndices(this, sprite_index, mask_index)) {
+    if (!validateTemplateParentAndIndices(this, sprite_index, mask_index, sprites)) {
         return nullptr;
     }
 
-    SpriteAtlasCache& atlas = g_gui.sprites.getAtlasCacheSpace()[clientID];
-    const SpriteMetadata& meta = g_gui.sprites.getMetadataSpace()[clientID];
-    auto& space = g_gui.sprites.getNormalImageSpace();
+    SpriteAtlasCache& atlas = sprites->getAtlasCacheSpace()[clientID];
+    const SpriteMetadata& meta = sprites->getMetadataSpace()[clientID];
+    auto& space = sprites->getNormalImageSpace();
     
     if (atlas.spriteList[sprite_index] >= space.size() || atlas.spriteList[mask_index] >= space.size()) {
          return nullptr;
     }
 
-    auto rgbadata = space[atlas.spriteList[sprite_index]].getRGBAData();
-    auto template_rgbdata = space[atlas.spriteList[mask_index]].getRGBData();
+    auto rgbadata = space[atlas.spriteList[sprite_index]].getRGBAData(sprites, loader, use_memcached);
+    auto template_rgbdata = space[atlas.spriteList[mask_index]].getRGBData(sprites, loader, use_memcached);
 
     if (!rgbadata) {
         spdlog::warn(
@@ -254,7 +245,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData()
     return rgbadata;
 }
 
-const AtlasRegion* TemplateImage::getAtlasRegion(bool block)
+const AtlasRegion* TemplateImage::getAtlasRegion(SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, bool block)
 {
     if (isGLLoaded && atlas_region) {
         // Self-Healing: Check for stale atlas region pointer
@@ -267,21 +258,21 @@ const AtlasRegion* TemplateImage::getAtlasRegion(bool block)
             isGLLoaded = false;
             atlas_region = nullptr;
         } else {
-            visit();
+            visit(gc);
             return atlas_region;
         }
     }
 
     if (!isGLLoaded && block) {
-        const AtlasRegion* region = EnsureAtlasSprite(texture_id);
+        const AtlasRegion* region = EnsureAtlasSprite(&sprites, atlas, gc, loader, use_memcached, texture_id);
         if (region) {
             isGLLoaded = true;
             atlas_region = region;
-            g_gui.gc.addResidentImage(handle);
+            gc.addResidentImage(handle);
         } else {
             return nullptr;
         }
     }
-    visit();
+    visit(gc);
     return atlas_region;
 }

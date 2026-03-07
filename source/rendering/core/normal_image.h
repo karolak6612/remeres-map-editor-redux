@@ -19,7 +19,7 @@ public:
         return true;
     }
 
-    const AtlasRegion* getAtlasRegion(bool block = true);
+    const AtlasRegion* getAtlasRegion(SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, bool block = true);
 
     // We use the sprite id as key
     uint32_t id = 0;
@@ -29,15 +29,15 @@ public:
     uint16_t size = 0;
     std::unique_ptr<uint8_t[]> dump;
 
-    void clean(time_t time, int longevity) override;
+    void clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc) override;
 
-    std::unique_ptr<uint8_t[]> getRGBData() override;
-    std::unique_ptr<uint8_t[]> getRGBAData() override;
+    std::unique_ptr<uint8_t[]> getRGBData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached) override;
+    std::unique_ptr<uint8_t[]> getRGBAData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached) override;
 
-    void fulfillPreload(std::unique_ptr<uint8_t[]> preloaded_data);
+    void fulfillPreload(AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, std::unique_ptr<uint8_t[]> preloaded_data);
 
-    bool ensureDumpLoaded();
-    void unloadGL();
+    bool ensureDumpLoaded(SpriteLoader& loader, bool use_memcached);
+    void unloadGL(AtlasManager* atlas, TextureGC& gc);
 
     uint32_t clientID = 0;
 };

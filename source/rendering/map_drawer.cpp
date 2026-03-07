@@ -431,7 +431,10 @@ DrawContext MapDrawer::MakeDrawContext(bool is_preload_pass) {
                      .backend = {.sprite_batch = *sprite_batch,
                                  .primitive_renderer = *primitive_renderer,
                                  .sprite_database = g_gui.sprites,
-                                 .atlas_manager = *g_gui.atlas.getAtlasManager()},
+                                 .atlas_manager = *g_gui.atlas.getAtlasManager(),
+                                 .texture_gc = g_gui.gc,
+                                 .sprite_loader = g_gui.loader,
+                                 .use_memcached = static_cast<bool>(g_settings.getInteger(Config::USE_MEMCACHED_SPRITES))},
                      .output = {.light_buffer = light_buffer,
                                 .brush_cursor_drawer = brush_cursor_drawer.get()}};
 }

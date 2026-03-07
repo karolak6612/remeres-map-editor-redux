@@ -89,7 +89,7 @@ void SpriteDrawer::BlitSprite(const DrawContext& ctx, int screenx, int screeny, 
     for (int cx = 0; cx != meta.width; ++cx) {
         for (int cy = 0; cy != meta.height; ++cy) {
             for (int cf = 0; cf != meta.layers; ++cf) {
-                const AtlasRegion* region = atlas.getAtlasRegion(clientID, meta, cx, cy, cf, -1, 0, 0, 0, tme, ctx.state.is_preload_pass);
+                const AtlasRegion* region = atlas.getAtlasRegion(clientID, meta, ctx.backend.sprite_database, ctx.backend.atlas_manager, ctx.backend.texture_gc, ctx.backend.sprite_loader, ctx.backend.use_memcached, cx, cy, cf, -1, 0, 0, 0, tme, ctx.state.is_preload_pass);
                 if (region) {
                     glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
                 }

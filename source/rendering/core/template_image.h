@@ -15,12 +15,12 @@ public:
     TemplateImage(TemplateImage&& other) noexcept;
     TemplateImage& operator=(TemplateImage&& other) noexcept;
 
-    void clean(time_t time, int longevity) override;
+    void clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc) override;
 
-    virtual std::unique_ptr<uint8_t[]> getRGBData() override;
-    virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
+    virtual std::unique_ptr<uint8_t[]> getRGBData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached) override;
+    virtual std::unique_ptr<uint8_t[]> getRGBAData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached) override;
 
-    const AtlasRegion* getAtlasRegion(bool block = true);
+    const AtlasRegion* getAtlasRegion(SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, bool block = true);
     const AtlasRegion* atlas_region = nullptr;
 
     uint32_t texture_id = 0; // Unique ID for AtlasManager key

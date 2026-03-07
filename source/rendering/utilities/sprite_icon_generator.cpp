@@ -59,7 +59,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, bool 
                 auto& space = g_gui.sprites.getNormalImageSpace();
                 if (sprite_index >= space.size()) continue;
 
-                std::unique_ptr<uint8_t[]> data = space[sprite_index].getRGBData();
+                std::unique_ptr<uint8_t[]> data = space[sprite_index].getRGBData(&g_gui.sprites, g_gui.loader, false);
                 if (data) {
                     wxImage img(SPRITE_PIXELS, SPRITE_PIXELS, data.get(), true);
                     img.SetMaskColour(0xFF, 0x00, 0xFF);
@@ -160,9 +160,9 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                         }
 
                         if (mountIdx < mountAtlas.spriteList.size()) {
-                            auto tmplImg = mountAtlas.getTemplateImage(mountClientID, mountMeta, mountIdx, mountOutfit);
+                            auto tmplImg = mountAtlas.getTemplateImage(g_gui.sprites, mountClientID, mountMeta, mountIdx, mountOutfit);
                             if (tmplImg) {
-                                data = tmplImg->getRGBData();
+                                data = tmplImg->getRGBData(&g_gui.sprites, g_gui.loader, false);
                             }
                         }
                     } else {
@@ -172,7 +172,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             uint32_t sprite_index = mountAtlas.spriteList[idx];
                             auto& space = g_gui.sprites.getNormalImageSpace();
                             if (sprite_index < space.size()) {
-                                data = space[sprite_index].getRGBData();
+                                data = space[sprite_index].getRGBData(&g_gui.sprites, g_gui.loader, false);
                             }
                         }
                     }
@@ -212,9 +212,9 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             continue;
                         }
                         if (idx0 < atlas_cache.spriteList.size()) {
-                            auto tmplImg = atlas_cache.getTemplateImage(clientID, metadata, idx0, outfit);
+                            auto tmplImg = atlas_cache.getTemplateImage(g_gui.sprites, clientID, metadata, idx0, outfit);
                             if (tmplImg) {
-                                data = tmplImg->getRGBData();
+                                data = tmplImg->getRGBData(&g_gui.sprites, g_gui.loader, false);
                             }
                         }
                     } else if (metadata.layers == 4) {
@@ -223,17 +223,17 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                         }
                         if (l == 0) {
                             if (idx0 < atlas_cache.spriteList.size()) {
-                                auto tmplImg = atlas_cache.getTemplateImage(clientID, metadata, idx0, outfit);
+                                auto tmplImg = atlas_cache.getTemplateImage(g_gui.sprites, clientID, metadata, idx0, outfit);
                                 if (tmplImg) {
-                                    data = tmplImg->getRGBData();
+                                    data = tmplImg->getRGBData(&g_gui.sprites, g_gui.loader, false);
                                 }
                             }
                         }
                         if (l == 2) {
                             if (idx2 < atlas_cache.spriteList.size()) {
-                                auto tmplImg = atlas_cache.getTemplateImage(clientID, metadata, idx2, outfit);
+                                auto tmplImg = atlas_cache.getTemplateImage(g_gui.sprites, clientID, metadata, idx2, outfit);
                                 if (tmplImg) {
-                                    data = tmplImg->getRGBData();
+                                    data = tmplImg->getRGBData(&g_gui.sprites, g_gui.loader, false);
                                 }
                             }
                         }
@@ -242,7 +242,7 @@ wxBitmap SpriteIconGenerator::Generate(uint32_t clientID, SpriteSize size, const
                             uint32_t sprite_index = atlas_cache.spriteList[idxl];
                             auto& space = g_gui.sprites.getNormalImageSpace();
                             if (sprite_index < space.size()) {
-                                data = space[sprite_index].getRGBData();
+                                data = space[sprite_index].getRGBData(&g_gui.sprites, g_gui.loader, false);
                             }
                         }
                     }

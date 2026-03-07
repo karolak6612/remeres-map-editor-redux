@@ -89,7 +89,7 @@ void CreatureDrawer::BlitCreature(
                 for (int cx = 0; cx != mountMeta.width; ++cx) {
                     for (int cy = 0; cy != mountMeta.height; ++cy) {
                         const AtlasRegion* region = mountAtlas.getAtlasRegion(
-                            mountClientID, mountMeta, cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame, ctx.state.is_preload_pass
+                            mountClientID, mountMeta, ctx.backend.sprite_database, ctx.backend.atlas_manager, ctx.backend.texture_gc, ctx.backend.sprite_loader, ctx.backend.use_memcached, cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame, ctx.state.is_preload_pass
                         );
                         if (region) {
                             sprite_drawer->glBlitAtlasQuad(
@@ -116,7 +116,7 @@ void CreatureDrawer::BlitCreature(
 
             for (int cx = 0; cx != meta.width; ++cx) {
                 for (int cy = 0; cy != meta.height; ++cy) {
-                    const AtlasRegion* region = atlas.getAtlasRegion(clientID, meta, cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame, ctx.state.is_preload_pass);
+                    const AtlasRegion* region = atlas.getAtlasRegion(clientID, meta, ctx.backend.sprite_database, ctx.backend.atlas_manager, ctx.backend.texture_gc, ctx.backend.sprite_loader, ctx.backend.use_memcached, cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame, ctx.state.is_preload_pass);
                     if (region) {
                         sprite_drawer->glBlitAtlasQuad(
                             ctx, screenx - cx * TILE_SIZE - meta.getDrawOffset().first,

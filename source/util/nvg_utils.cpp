@@ -48,7 +48,7 @@ namespace NvgUtils {
                         continue;
                     }
 
-                    auto spriteData = space[normal_img_idx].getRGBAData();
+                    auto spriteData = space[normal_img_idx].getRGBAData(&g_gui.sprites, g_gui.loader, false);
                     if (!spriteData) {
                         continue;
                     }

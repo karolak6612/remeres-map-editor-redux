@@ -24,6 +24,11 @@ struct ImageHandle {
     }
 };
 
+class TextureGC;
+class AtlasManager;
+class SpriteLoader;
+class SpriteDatabase;
+
 class Image {
 public:
 	Image();
@@ -40,11 +45,11 @@ public:
 	mutable std::atomic<int64_t> lastaccess;
 	uint32_t generation_id = 0;
 
-	void visit() const;
-	virtual void clean(time_t time, int longevity);
+	void visit(TextureGC& gc) const;
+	virtual void clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc);
 
-	virtual std::unique_ptr<uint8_t[]> getRGBData() = 0;
-	virtual std::unique_ptr<uint8_t[]> getRGBAData() = 0;
+	virtual std::unique_ptr<uint8_t[]> getRGBData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached) = 0;
+	virtual std::unique_ptr<uint8_t[]> getRGBAData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached) = 0;
 
 	virtual bool isNormalImage() const {
 		return false;
@@ -52,7 +57,7 @@ public:
 
 protected:
 	// Helper to handle atlas interactions
-	const AtlasRegion* EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data = nullptr);
+	const AtlasRegion* EnsureAtlasSprite(SpriteDatabase* sprites, AtlasManager& atlas_mgr, TextureGC& gc, SpriteLoader& loader, bool use_memcached, uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data = nullptr);
 };
 
 #endif

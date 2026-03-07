@@ -2,7 +2,8 @@
 #include "app/settings.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/sprite_decompression.h"
-#include "ui/gui.h"
+#include "rendering/core/texture_gc.h"
+#include "rendering/io/sprite_loader.h"
 #include <spdlog/spdlog.h>
 
 constexpr int RGB_COMPONENTS = 3;
@@ -11,8 +12,6 @@ NormalImage::NormalImage() : id(0), atlas_region(nullptr), size(0), dump(nullptr
 
 NormalImage::~NormalImage()
 {
-    // dump auto-deleted
-    unloadGL();
 }
 
 NormalImage::NormalImage(NormalImage&& other) noexcept
@@ -47,11 +46,11 @@ NormalImage& NormalImage::operator=(NormalImage&& other) noexcept
     return *this;
 }
 
-void NormalImage::unloadGL()
+void NormalImage::unloadGL(AtlasManager* atlas, TextureGC& gc)
 {
     if (isGLLoaded) {
-        if (g_gui.atlas.hasAtlasManager()) {
-            g_gui.atlas.getAtlasManager()->removeSprite(id);
+        if (atlas) {
+            atlas->removeSprite(id);
         }
 
         isGLLoaded = false;
@@ -60,74 +59,67 @@ void NormalImage::unloadGL()
         generation_id++;
         handle.generation = generation_id;
 
-        g_gui.gc.removeResidentImage(old_handle);
+        gc.removeResidentImage(old_handle);
     }
 }
 
-void NormalImage::fulfillPreload(std::unique_ptr<uint8_t[]> data)
+void NormalImage::fulfillPreload(AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, std::unique_ptr<uint8_t[]> data)
 {
-    atlas_region = EnsureAtlasSprite(id, std::move(data));
+    atlas_region = EnsureAtlasSprite(nullptr, atlas, gc, loader, use_memcached, id, std::move(data));
 }
 
-void NormalImage::clean(time_t time, int longevity)
+void NormalImage::clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc)
 {
     // Evict from atlas if expired
     if (longevity == -1) {
         longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
     }
     if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-        if (clientID != 0 && clientID < g_gui.sprites.getAtlasCacheSpace().size()) {
-            g_gui.sprites.getAtlasCacheSpace()[clientID].invalidateCache(atlas_region);
+        if (clientID != 0 && clientID < sprites.getAtlasCacheSpace().size()) {
+            sprites.getAtlasCacheSpace()[clientID].invalidateCache(atlas_region);
         }
-        unloadGL();
-    }
-
-    if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5
-        && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
-        dump.reset();
     }
 }
 
-bool NormalImage::ensureDumpLoaded()
+bool NormalImage::ensureDumpLoaded(SpriteLoader& loader, bool use_memcached)
 {
     if (!dump) {
-        if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
+        if (use_memcached) {
             return false;
         }
 
-        if (!g_gui.loader.loadSpriteDump(dump, size, id)) {
+        if (!loader.loadSpriteDump(dump, size, id)) {
             return false;
         }
     }
     return true;
 }
 
-std::unique_ptr<uint8_t[]> NormalImage::getRGBData()
+std::unique_ptr<uint8_t[]> NormalImage::getRGBData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached)
 {
+    const size_t pixels_data_size = static_cast<size_t>(SPRITE_PIXELS) * SPRITE_PIXELS * RGB_COMPONENTS;
     if (id == 0) {
-        const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
         return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
     }
 
-    if (!ensureDumpLoaded()) {
+    if (!ensureDumpLoaded(loader, use_memcached)) {
         return nullptr;
     }
 
-    const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
     auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-    uint8_t bpp = g_gui.loader.hasTransparency() ? 4 : RGB_COMPONENTS;
+    uint8_t bpp = loader.hasTransparency() ? 4 : RGB_COMPONENTS;
     size_t write = 0;
     size_t read = 0;
 
     // decompress pixels
-    while (read < size && write < static_cast<size_t>(pixels_data_size)) {
+    while (read < size && write < pixels_data_size) {
         if (read + 1 >= size) {
             spdlog::warn("NormalImage::getRGBData: Transparency header truncated (read={}, size={})", read, size);
             break;
         }
         int transparent = dump[read] | dump[read + 1] << 8;
         read += 2;
-        for (int cnt = 0; cnt < transparent && write < static_cast<size_t>(pixels_data_size); ++cnt) {
+        for (int cnt = 0; cnt < transparent && write < pixels_data_size; ++cnt) {
             data[write + 0] = 0xFF; // red
             data[write + 1] = 0x00; // green
             data[write + 2] = 0xFF; // blue
@@ -147,7 +139,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData()
             break;
         }
 
-        for (int cnt = 0; cnt < colored && write < static_cast<size_t>(pixels_data_size); ++cnt) {
+        for (int cnt = 0; cnt < colored && write < pixels_data_size; ++cnt) {
             data[write + 0] = dump[read + 0]; // red
             data[write + 1] = dump[read + 1]; // green
             data[write + 2] = dump[read + 2]; // blue
@@ -157,7 +149,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData()
     }
 
     // fill remaining pixels
-    while (write < static_cast<size_t>(pixels_data_size)) {
+    while (write < pixels_data_size) {
         data[write + 0] = 0xFF; // red
         data[write + 1] = 0x00; // green
         data[write + 2] = 0xFF; // blue
@@ -166,24 +158,24 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData()
     return data;
 }
 
-std::unique_ptr<uint8_t[]> NormalImage::getRGBAData()
+std::unique_ptr<uint8_t[]> NormalImage::getRGBAData(SpriteDatabase* sprites, SpriteLoader& loader, bool use_memcached)
 {
     // Robust ID 0 handling
     if (id == 0) {
-        const int pixels_data_size = SPRITE_PIXELS_SIZE * 4;
+        const size_t pixels_data_size = static_cast<size_t>(SPRITE_PIXELS_SIZE) * 4;
         return std::make_unique<uint8_t[]>(pixels_data_size); // Value-initialized (zeroed)
     }
 
-    if (!ensureDumpLoaded()) {
+    if (!ensureDumpLoaded(loader, use_memcached)) {
         // This is the only case where we return nullptr for non-zero ID
         // effectively warning the caller that the sprite is missing from file
         return nullptr;
     }
 
-    return decompress_sprite(std::span {dump.get(), size}, g_gui.loader.hasTransparency(), id);
+    return decompress_sprite(std::span {dump.get(), size}, loader.hasTransparency(), id);
 }
 
-const AtlasRegion* NormalImage::getAtlasRegion(bool block)
+const AtlasRegion* NormalImage::getAtlasRegion(SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, bool block)
 {
     if (isGLLoaded && atlas_region) {
         // Self-Healing: Check for stale atlas region pointer (e.g. from memory reuse)
@@ -196,14 +188,14 @@ const AtlasRegion* NormalImage::getAtlasRegion(bool block)
             isGLLoaded = false;
             atlas_region = nullptr;
         } else {
-            visit();
+            visit(gc);
             return atlas_region;
         }
     }
 
     if (!isGLLoaded && block) {
-        atlas_region = EnsureAtlasSprite(id);
+        atlas_region = EnsureAtlasSprite(&sprites, atlas, gc, loader, use_memcached, id);
     }
-    visit();
+    visit(gc);
     return atlas_region;
 }

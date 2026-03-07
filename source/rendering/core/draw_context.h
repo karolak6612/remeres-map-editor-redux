@@ -18,12 +18,17 @@ struct ContextState {
 };
 class SpriteDatabase;
 class AtlasManager;
+class TextureGC;
+class SpriteLoader;
 
 struct RenderBackend {
   SpriteBatch &sprite_batch;
   PrimitiveRenderer &primitive_renderer;
   SpriteDatabase &sprite_database;
   AtlasManager &atlas_manager;
+  TextureGC &texture_gc;
+  SpriteLoader &sprite_loader;
+  bool use_memcached;
 };
 
 struct FrameOutput {

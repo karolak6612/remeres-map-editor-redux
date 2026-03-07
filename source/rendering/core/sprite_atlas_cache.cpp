@@ -21,12 +21,12 @@ void SpriteAtlasCache::invalidateCache(const AtlasRegion* region)
     }
 }
 
-void SpriteAtlasCache::clean(time_t time, int longevity)
+void SpriteAtlasCache::clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc)
 {
-    auto& template_space = g_gui.sprites.getTemplateImageSpace();
+    auto& template_space = sprites.getTemplateImageSpace();
     for (uint32_t idx : instanced_templates) {
         if (idx < template_space.size()) {
-            template_space[idx].clean(time, longevity);
+            template_space[idx].clean(time, longevity, sprites, gc);
         }
     }
 }
@@ -57,7 +57,7 @@ uint32_t SpriteAtlasCache::getSpriteId(const SpriteMetadata& metadata, int frame
 }
 
 const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
-    uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y,
+    uint32_t clientID, const SpriteMetadata& metadata, SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y,
     int _pattern_z, int _frame, bool block
 )
 {
@@ -65,7 +65,7 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
         return nullptr;
     }
 
-    auto& space = g_gui.sprites.getNormalImageSpace();
+    auto& space = sprites.getNormalImageSpace();
 
     if (_count == -1 && metadata.is_simple) {
         if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0 && !spriteList.empty()
@@ -77,7 +77,7 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
                 return cached_default_region;
             }
 
-            const AtlasRegion* valid_region = img.getAtlasRegion(block);
+            const AtlasRegion* valid_region = img.getAtlasRegion(sprites, atlas, gc, loader, use_memcached, block);
             if (valid_region && img.isGLLoaded) {
                 cached_default_region = valid_region;
                 cached_generation_id = img.generation_id;
@@ -110,14 +110,14 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
     if (v < spriteList.size() && spriteList[v] < space.size()) {
         auto& img = space[spriteList[v]];
         img.clientID = clientID;
-        return img.getAtlasRegion(block);
+        return img.getAtlasRegion(sprites, atlas, gc, loader, use_memcached, block);
     }
     return nullptr;
 }
 
-TemplateImage* SpriteAtlasCache::getTemplateImage(uint32_t clientID, const SpriteMetadata& metadata, int sprite_index, const Outfit& outfit)
+TemplateImage* SpriteAtlasCache::getTemplateImage(SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, int sprite_index, const Outfit& outfit)
 {
-    auto& template_space = g_gui.sprites.getTemplateImageSpace();
+    auto& template_space = sprites.getTemplateImageSpace();
     
     auto it = std::ranges::find_if(instanced_templates, [sprite_index, &outfit, &template_space](uint32_t idx) {
         if (idx >= template_space.size()) return false;
@@ -148,7 +148,7 @@ TemplateImage* SpriteAtlasCache::getTemplateImage(uint32_t clientID, const Sprit
 }
 
 const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
-    uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit,
+    uint32_t clientID, const SpriteMetadata& metadata, SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit,
     int _frame, bool block
 )
 {
@@ -165,15 +165,15 @@ const AtlasRegion* SpriteAtlasCache::getAtlasRegion(
         }
     }
     if (metadata.layers > 1) {
-        TemplateImage* img = getTemplateImage(clientID, metadata, v, _outfit);
-        return img->getAtlasRegion(block);
+        TemplateImage* img = getTemplateImage(sprites, clientID, metadata, v, _outfit);
+        return img->getAtlasRegion(sprites, atlas, gc, loader, use_memcached, block);
     }
     if (v < spriteList.size()) {
-        auto& space = g_gui.sprites.getNormalImageSpace();
+        auto& space = sprites.getNormalImageSpace();
         if (spriteList[v] < space.size()) {
             auto& img = space[spriteList[v]];
             img.clientID = clientID;
-            return img.getAtlasRegion(block);
+            return img.getAtlasRegion(sprites, atlas, gc, loader, use_memcached, block);
         }
     }
     return nullptr;

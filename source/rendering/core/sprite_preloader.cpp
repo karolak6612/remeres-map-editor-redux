@@ -3,6 +3,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "rendering/core/sprite_preloader.h"
+#include "app/settings.h"
 #include "io/loaders/spr_loader.h"
 #include "rendering/core/atlas_lifecycle.h"
 #include "rendering/core/normal_image.h"
@@ -196,7 +197,7 @@ void SpritePreloader::update() {
     auto id = res.id;
     ids_processed.push_back(id);
 
-    // Check if GraphicManager is loaded, for the correct sprite file, and ID is
+    // Check if SpriteLoader is loaded, for the correct sprite file, and ID is
     // valid
     auto &normalSpace = g_gui.sprites.getNormalImageSpace();
     if (res.spritefile == current_sprfile && !graphics_unloaded &&
@@ -207,7 +208,10 @@ void SpritePreloader::update() {
       // Check ID match, Generation match, and GLLoaded state
       if (img->id == id && img->generation_id == res.generation_id &&
           !img->isGLLoaded) {
-        img->fulfillPreload(std::move(res.data));
+        if (g_gui.atlas.hasAtlasManager()) {
+            bool use_memcached = false; // Memcached behavior moved out of settings
+            img->fulfillPreload(*(g_gui.atlas.getAtlasManager()), g_gui.gc, g_gui.loader, use_memcached, std::move(res.data));
+        }
       }
     }
   }

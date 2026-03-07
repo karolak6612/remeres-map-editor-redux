@@ -185,13 +185,12 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
   SpriteAtlasCache &atlas = ctx.backend.sprite_database.getAtlasCacheSpace()[clientID];
 
   if (metadata->width == 1 && metadata->height == 1 && metadata->layers == 1) {
-    const AtlasRegion *region;
+    const AtlasRegion *region = nullptr;
     if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 &&
         frame == 0) {
-      region =
-          atlas.getAtlasRegion(clientID, *metadata, 0, 0, 0, -1, 0, 0, 0, 0, ctx.state.is_preload_pass);
+          region = atlas.getAtlasRegion(clientID, *metadata, ctx.backend.sprite_database, ctx.backend.atlas_manager, ctx.backend.texture_gc, ctx.backend.sprite_loader, ctx.backend.use_memcached, 0, 0, 0, -1, 0, 0, 0, 0, ctx.state.is_preload_pass);
     } else {
-      region = atlas.getAtlasRegion(clientID, *metadata, 0, 0, 0, subtype,
+      region = atlas.getAtlasRegion(clientID, *metadata, ctx.backend.sprite_database, ctx.backend.atlas_manager, ctx.backend.texture_gc, ctx.backend.sprite_loader, ctx.backend.use_memcached, 0, 0, 0, subtype,
                                     pattern_x, pattern_y, pattern_z, frame, ctx.state.is_preload_pass);
     }
 
@@ -218,7 +217,7 @@ void ItemDrawer::BlitItem(const DrawContext &ctx, SpriteDrawer *sprite_drawer,
       for (int cy = 0; cy != metadata->height; cy++) {
         for (int cf = 0; cf != metadata->layers; cf++) {
           const AtlasRegion *region =
-              atlas.getAtlasRegion(clientID, *metadata, cx, cy, cf, subtype,
+              atlas.getAtlasRegion(clientID, *metadata, ctx.backend.sprite_database, ctx.backend.atlas_manager, ctx.backend.texture_gc, ctx.backend.sprite_loader, ctx.backend.use_memcached, cx, cy, cf, subtype,
                                    pattern_x, pattern_y, pattern_z, frame, ctx.state.is_preload_pass);
           if (region) {
             sprite_drawer->glBlitAtlasQuad(ctx, screenx - cx * TILE_SIZE,

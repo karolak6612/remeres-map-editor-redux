@@ -30,14 +30,14 @@ public:
     std::vector<uint32_t> instanced_templates; // Stores indices into SpriteDatabase::template_images_
 
     void invalidateCache(const AtlasRegion* region);
-    void clean(time_t time, int longevity = -1);
+    void clean(time_t time, int longevity, SpriteDatabase& sprites, TextureGC& gc);
 
     const AtlasRegion* getAtlasRegion(
-        uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y,
+        uint32_t clientID, const SpriteMetadata& metadata, SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y,
         int _pattern_z, int _frame, bool block = true
     );
     const AtlasRegion* getAtlasRegion(
-        uint32_t clientID, const SpriteMetadata& metadata, int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit,
+        uint32_t clientID, const SpriteMetadata& metadata, SpriteDatabase& sprites, AtlasManager& atlas, TextureGC& gc, SpriteLoader& loader, bool use_memcached, int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit,
         int _frame, bool block = true
     );
 
@@ -56,7 +56,7 @@ public:
 
     [[nodiscard]] bool isSimpleAndLoaded(const SpriteMetadata& metadata) const;
 
-    TemplateImage* getTemplateImage(uint32_t clientID, const SpriteMetadata& metadata, int sprite_index, const Outfit& outfit);
+    TemplateImage* getTemplateImage(SpriteDatabase& sprites, uint32_t clientID, const SpriteMetadata& metadata, int sprite_index, const Outfit& outfit);
 
 protected:
     mutable const AtlasRegion* cached_default_region = nullptr;

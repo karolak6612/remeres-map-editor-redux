@@ -117,7 +117,7 @@ void TextureGC::garbageCollection(SpriteDatabase& db)
                     ImageHandle handle = resident_images[i - 1];
                     Image* img = db.resolveImage(handle);
                     if (img) {
-                        img->clean(cached_time_, longevity);
+                        img->clean(cached_time_, longevity, db, *this);
                     } else {
                         // Invalid handle, remove it
                         resident_images[i - 1] = resident_images.back();

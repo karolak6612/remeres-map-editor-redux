@@ -31,7 +31,7 @@ public:
   void update();
 
   // Clears all pending tasks and results.
-  // Should be called when GraphicManager is cleared.
+  // Should be called when SpriteLoader is cleared.
   void clear();
 
   // Explicit shutdown to be called before global destruction

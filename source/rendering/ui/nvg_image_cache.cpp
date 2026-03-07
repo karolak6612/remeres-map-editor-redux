@@ -10,6 +10,7 @@
 #include "rendering/core/sprite_database.h"
 #include "rendering/io/sprite_loader.h"
 #include "ui/gui.h"
+#include "app/settings.h"
 #include <nanovg.h>
 
 NVGImageCache::~NVGImageCache()
@@ -66,10 +67,12 @@ int NVGImageCache::getSpriteImage(NVGcontext* vg, uint16_t itemId)
             NormalImage* img = &space[sprite_index];
             std::unique_ptr<uint8_t[]> rgba;
 
+            bool use_memcached = false;
+
             // For legacy sprites (no transparency), use getRGBData + Magenta Masking
             // This matches how WxWidgets/SpriteIconGenerator renders icons
             if (!g_gui.loader.hasTransparency()) {
-                std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
+                std::unique_ptr<uint8_t[]> rgb = img->getRGBData(&g_gui.sprites, g_gui.loader, use_memcached);
                 if (rgb) {
                     rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);
                     for (int i = 0; i < 32 * 32; ++i) {
@@ -95,7 +98,7 @@ int NVGImageCache::getSpriteImage(NVGcontext* vg, uint16_t itemId)
 
             // Fallback/Standard path for alpha sprites or if RGB failed
             if (!rgba) {
-                rgba = img->getRGBAData();
+                rgba = img->getRGBAData(&g_gui.sprites, g_gui.loader, use_memcached);
             }
 
             if (rgba) {
