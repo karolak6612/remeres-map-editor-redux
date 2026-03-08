@@ -62,60 +62,58 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	left_panel->SetBackgroundColour(GetBackgroundColour());
 	auto* left_sizer = new wxBoxSizer(wxVERTICAL);
 
-	auto* library_section = new PreferencesSectionPanel(
-		left_panel,
-		"Client Library",
-		"Browse configured clients, filter the list by name or version, and manage entries without leaving Preferences."
-	);
-	client_search_ctrl = new wxSearchCtrl(library_section, wxID_ANY);
-	client_search_ctrl->ShowSearchButton(true);
-	client_search_ctrl->ShowCancelButton(true);
-	PreferencesLayout::AddControlRow(
-		library_section,
-		"Search clients",
-		"Filter by display name, description, protocol version, or OTB id.",
-		client_search_ctrl,
-		true
-	);
-
-	client_tree_ctrl = new wxTreeCtrl(library_section, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_LINES_AT_ROOT);
-	client_tree_ctrl->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	client_tree_ctrl->SetForegroundColour(Theme::Get(Theme::Role::Text));
-	library_section->GetBodySizer()->Add(client_tree_ctrl, 1, wxEXPAND | wxBOTTOM, FromDIP(12));
-
-	auto* action_sizer = new wxBoxSizer(wxHORIZONTAL);
-	add_client_btn = new wxButton(library_section, wxID_ANY, "Add");
-	add_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
-	action_sizer->Add(add_client_btn, 1, wxRIGHT, FromDIP(6));
-	duplicate_client_btn = new wxButton(library_section, wxID_ANY, "Duplicate");
-	duplicate_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_COPY));
-	action_sizer->Add(duplicate_client_btn, 1, wxRIGHT, FromDIP(6));
-	delete_client_btn = new wxButton(library_section, wxID_ANY, "Remove");
-	delete_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
-	action_sizer->Add(delete_client_btn, 1);
-	library_section->GetBodySizer()->Add(action_sizer, 0, wxEXPAND);
-	left_sizer->Add(library_section, 1, wxEXPAND | wxALL, FromDIP(10));
-
 	auto* defaults_section = new PreferencesSectionPanel(
 		left_panel,
-		"Client Defaults",
-		"These options apply globally to client loading and validation."
+		"Global Client Settings",
+		"Defaults that apply to client loading across the editor."
 	);
 	default_version_choice = new wxChoice(defaults_section, wxID_ANY);
 	PreferencesLayout::AddControlRow(
 		defaults_section,
 		"Default client version",
-		"Client selected by default in flows that need a preferred version.",
+		"Used as the preferred version in flows that need a fallback client.",
 		default_version_choice,
 		true
 	);
-	check_sigs_chkbox = PreferencesLayout::AddCheckBoxRow(
+	check_sigs_chkbox = new wxCheckBox(defaults_section, wxID_ANY, "Enabled");
+	check_sigs_chkbox->SetValue(g_settings.getBoolean(Config::CHECK_SIGNATURES));
+	PreferencesLayout::AddControlRow(
 		defaults_section,
-		"Check file signatures",
-		"Validate DAT and SPR signatures when loading client assets to catch mismatched folders early.",
-		g_settings.getBoolean(Config::CHECK_SIGNATURES)
+		"Signature validation",
+		"Verify DAT and SPR signatures so mismatched client folders are caught early.",
+		check_sigs_chkbox
 	);
-	left_sizer->Add(defaults_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
+	left_sizer->Add(defaults_section, 0, wxEXPAND | wxALL, FromDIP(10));
+
+	auto* library_section = new PreferencesSectionPanel(
+		left_panel,
+		"Client Versions",
+		"Search, scan, and pick the client you want to edit."
+	);
+	client_search_ctrl = new wxSearchCtrl(library_section, wxID_ANY);
+	client_search_ctrl->ShowSearchButton(true);
+	client_search_ctrl->ShowCancelButton(true);
+	client_search_ctrl->SetDescriptiveText("Search by name, version, or OTB id");
+	library_section->GetBodySizer()->Add(client_search_ctrl, 0, wxEXPAND | wxBOTTOM, FromDIP(10));
+
+	client_tree_ctrl = new wxTreeCtrl(library_section, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_LINES_AT_ROOT);
+	client_tree_ctrl->SetBackgroundColour(Theme::Get(Theme::Role::Background));
+	client_tree_ctrl->SetForegroundColour(Theme::Get(Theme::Role::Text));
+	library_section->GetBodySizer()->Add(client_tree_ctrl, 1, wxEXPAND | wxBOTTOM, FromDIP(10));
+
+	auto* action_sizer = new wxBoxSizer(wxHORIZONTAL);
+	add_client_btn = new wxButton(library_section, wxID_ANY, "Add");
+	add_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_PLUS));
+	action_sizer->Add(add_client_btn, 0, wxRIGHT, FromDIP(8));
+	duplicate_client_btn = new wxButton(library_section, wxID_ANY, "Duplicate");
+	duplicate_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_COPY));
+	action_sizer->Add(duplicate_client_btn, 0, wxRIGHT, FromDIP(8));
+	delete_client_btn = new wxButton(library_section, wxID_ANY, "Remove");
+	delete_client_btn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_MINUS));
+	action_sizer->Add(delete_client_btn, 0);
+	action_sizer->AddStretchSpacer();
+	library_section->GetBodySizer()->Add(action_sizer, 0, wxEXPAND);
+	left_sizer->Add(library_section, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 	left_panel->SetSizer(left_sizer);
 
 	auto* right_panel = new wxPanel(client_splitter, wxID_ANY);
@@ -130,11 +128,11 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	auto* empty_sizer = new wxBoxSizer(wxVERTICAL);
 	auto* empty_section = new PreferencesSectionPanel(
 		empty_panel,
-		"No Client Selected",
-		"Choose a client from the library to edit its compatibility, paths, signatures, and feature flags."
+		"Choose a Client Version",
+		"Select a version from the list on the left to edit identity, files, compatibility, and feature flags."
 	);
 	empty_section->GetBodySizer()->Add(
-		PreferencesLayout::CreateBodyText(empty_section, "Use the search box on the left to narrow the list, then select a client entry to begin editing.", false),
+		PreferencesLayout::CreateBodyText(empty_section, "The selected client will appear here as one focused editing workspace.", false),
 		0,
 		wxEXPAND
 	);
@@ -148,51 +146,53 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	editor_panel->SetBackgroundColour(GetBackgroundColour());
 	auto* editor_sizer = new wxBoxSizer(wxVERTICAL);
 
-	auto* summary_section = new PreferencesSectionPanel(
+	auto* details_section = new PreferencesSectionPanel(
 		editor_panel,
-		"Selected Client",
-		"Review the active client at a glance before making detailed changes below."
+		"Client Details",
+		"Edit one client version at a time."
 	);
-	summary_name_label = PreferencesLayout::CreateBodyText(summary_section, "", true);
-	summary_name_label->SetFont(Theme::GetFont(12, true));
-	summary_section->GetBodySizer()->Add(summary_name_label, 0, wxBOTTOM, FromDIP(4));
-	summary_meta_label = PreferencesLayout::CreateBodyText(summary_section, "", false);
-	summary_meta_label->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	summary_section->GetBodySizer()->Add(summary_meta_label, 0, wxBOTTOM, FromDIP(4));
-	summary_dirty_label = PreferencesLayout::CreateBodyText(summary_section, "", true);
-	summary_section->GetBodySizer()->Add(summary_dirty_label, 0);
-	editor_sizer->Add(summary_section, 0, wxEXPAND | wxALL, FromDIP(10));
+	auto* summary_row = new wxBoxSizer(wxHORIZONTAL);
+	summary_name_label = PreferencesLayout::CreateBodyText(details_section, "", true);
+	summary_name_label->SetFont(Theme::GetFont(14, true));
+	summary_row->Add(summary_name_label, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(10));
+	summary_dirty_label = PreferencesLayout::CreateBodyText(details_section, "", true);
+	summary_row->Add(summary_dirty_label, 0, wxALIGN_CENTER_VERTICAL);
+	details_section->GetBodySizer()->Add(summary_row, 0, wxEXPAND | wxBOTTOM, FromDIP(12));
 
-	auto* editor_section = new PreferencesSectionPanel(
-		editor_panel,
-		"Client Editor",
-		"Use the property pages to edit identity, paths, compatibility, signatures, and feature flags."
-	);
-	client_prop_grid = new wxPropertyGridManager(
-		editor_section,
+	auto* top_separator = new wxPanel(details_section, wxID_ANY, wxDefaultPosition, wxSize(-1, FromDIP(1)));
+	top_separator->SetBackgroundColour(Theme::Get(Theme::Role::Border));
+	details_section->GetBodySizer()->Add(top_separator, 0, wxEXPAND | wxBOTTOM, FromDIP(12));
+
+	client_prop_grid = new wxPropertyGrid(
+		details_section,
 		wxID_ANY,
 		wxDefaultPosition,
 		wxDefaultSize,
-		wxPG_SPLITTER_AUTO_CENTER | wxPG_BOLD_MODIFIED | wxPG_DESCRIPTION | wxPG_TOOLBAR
+		wxPG_SPLITTER_AUTO_CENTER | wxPG_BOLD_MODIFIED
 	);
 	client_prop_grid->SetBackgroundColour(Theme::Get(Theme::Role::Background));
 	client_prop_grid->SetForegroundColour(Theme::Get(Theme::Role::Text));
-	identity_page = client_prop_grid->AddPage("Identity");
-	paths_page = client_prop_grid->AddPage("Paths & Files");
-	compatibility_page = client_prop_grid->AddPage("Compatibility");
-	signatures_page = client_prop_grid->AddPage("Signatures");
-	features_page = client_prop_grid->AddPage("Features");
-	editor_section->GetBodySizer()->Add(client_prop_grid, 1, wxEXPAND);
-	editor_sizer->Add(editor_section, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
+	client_prop_grid->SetCaptionBackgroundColour(Theme::Get(Theme::Role::RaisedSurface));
+	client_prop_grid->SetCaptionTextColour(Theme::Get(Theme::Role::Text));
+	client_prop_grid->SetCellBackgroundColour(Theme::Get(Theme::Role::Background));
+	client_prop_grid->SetCellTextColour(Theme::Get(Theme::Role::Text));
+	client_prop_grid->SetLineColour(Theme::Get(Theme::Role::Border));
+	client_prop_grid->SetMarginColour(Theme::Get(Theme::Role::RaisedSurface));
+	client_prop_grid->SetSelectionBackgroundColour(Theme::Get(Theme::Role::Accent));
+	client_prop_grid->SetSelectionTextColour(*wxWHITE);
+	client_prop_grid->SetMinSize(wxSize(-1, FromDIP(420)));
+	details_section->GetBodySizer()->Add(client_prop_grid, 1, wxEXPAND);
+
+	editor_sizer->Add(details_section, 1, wxEXPAND | wxALL, FromDIP(10));
 	editor_panel->SetSizer(editor_sizer);
 	detail_book->AddPage(editor_panel, "Editor");
 
 	right_sizer->Add(detail_book, 1, wxEXPAND);
 	right_panel->SetSizer(right_sizer);
 
-	client_splitter->SplitVertically(left_panel, right_panel, FromDIP(320));
-	client_splitter->SetSashGravity(0.30);
-	client_splitter->SetMinimumPaneSize(FromDIP(250));
+	client_splitter->SplitVertically(left_panel, right_panel, FromDIP(350));
+	client_splitter->SetSashGravity(0.28);
+	client_splitter->SetMinimumPaneSize(FromDIP(240));
 	main_sizer->Add(client_splitter, 1, wxEXPAND | wxALL, FromDIP(5));
 
 	SetSizer(main_sizer);
@@ -208,7 +208,7 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	client_tree_ctrl->Bind(wxEVT_TREE_SEL_CHANGED, &ClientVersionPage::OnClientSelected, this);
 	client_tree_ctrl->Bind(wxEVT_TREE_ITEM_MENU, &ClientVersionPage::OnTreeContextMenu, this);
 	client_search_ctrl->Bind(wxEVT_TEXT, &ClientVersionPage::OnSearchChanged, this);
-	client_search_ctrl->Bind(wxEVT_SEARCHCTRL_CANCEL_BTN, &ClientVersionPage::OnSearchChanged, this);
+	client_search_ctrl->Bind(wxEVT_SEARCHCTRL_CANCEL_BTN, &ClientVersionPage::OnSearchCancelled, this);
 	client_prop_grid->Bind(wxEVT_PG_CHANGED, &ClientVersionPage::OnPropertyChanged, this);
 	add_client_btn->Bind(wxEVT_BUTTON, &ClientVersionPage::OnAddClient, this);
 	duplicate_client_btn->Bind(wxEVT_BUTTON, &ClientVersionPage::OnDuplicateClient, this);
@@ -279,8 +279,15 @@ void ClientVersionPage::PopulateClientTree() {
 	wxTreeItemId first_item;
 	wxTreeItemId group_to_expand;
 
-	for (const auto& [major_version, versions] : grouped_versions) {
-		auto group = client_tree_ctrl->AppendItem(root, wxString::Format("%d.x", major_version));
+	for (auto& [major_version, versions] : grouped_versions) {
+		std::sort(versions.begin(), versions.end(), [](const ClientVersion* lhs, const ClientVersion* rhs) {
+			if (lhs->getVersion() != rhs->getVersion()) {
+				return lhs->getVersion() < rhs->getVersion();
+			}
+			return lhs->getName() < rhs->getName();
+		});
+
+		auto group = client_tree_ctrl->AppendItem(root, wxString::Format("%d.x (%zu)", major_version, versions.size()));
 		for (auto* version : versions) {
 			auto item = client_tree_ctrl->AppendItem(group, wxstr(version->getName()), -1, -1, new TreeItemData(version));
 			if (!first_item.IsOk()) {
@@ -310,7 +317,7 @@ void ClientVersionPage::PopulateClientTree() {
 	if (item_to_select.IsOk()) {
 		client_tree_ctrl->SelectItem(item_to_select);
 		client_tree_ctrl->EnsureVisible(item_to_select);
-	} else if (first_item.IsOk()) {
+	} else if (!preferred_selection && client_filter.empty() && first_item.IsOk()) {
 		client_tree_ctrl->SelectItem(first_item);
 		client_tree_ctrl->EnsureVisible(first_item);
 	} else {
@@ -361,19 +368,11 @@ ClientVersion* ClientVersionPage::GetSelectedClient() {
 void ClientVersionPage::RefreshSummary() {
 	if (!active_client) {
 		summary_name_label->SetLabel("");
-		summary_meta_label->SetLabel("");
 		summary_dirty_label->SetLabel("");
 		return;
 	}
 
 	summary_name_label->SetLabel(wxstr(active_client->getName()));
-	summary_meta_label->SetLabel(wxString::Format(
-		"Version %u | Config %s | OTB %u / %u",
-		active_client->getVersion(),
-		wxstr(active_client->getConfigType()),
-		active_client->getOtbMajor(),
-		active_client->getOtbId()
-	));
 	if (active_client->isDirty()) {
 		summary_dirty_label->SetLabel("Unsaved changes");
 		summary_dirty_label->SetForegroundColour(Theme::Get(Theme::Role::Warning));
@@ -385,11 +384,7 @@ void ClientVersionPage::RefreshSummary() {
 }
 
 void ClientVersionPage::RefreshClientEditor() {
-	identity_page->Clear();
-	paths_page->Clear();
-	compatibility_page->Clear();
-	signatures_page->Clear();
-	features_page->Clear();
+	client_prop_grid->Clear();
 
 	if (!active_client) {
 		detail_book->SetSelection(0);
@@ -400,32 +395,35 @@ void ClientVersionPage::RefreshClientEditor() {
 	detail_book->SetSelection(1);
 	RefreshSummary();
 
-	auto* version_property = identity_page->Append(new wxIntProperty("Version ID", "Version", active_client->getVersion()));
+	client_prop_grid->Append(new wxPropertyCategory("Identity"));
+	auto* version_property = client_prop_grid->Append(new wxIntProperty("Version ID", "Version", active_client->getVersion()));
 	version_property->SetHelpString("Internal numeric client version, for example 860 or 1287.");
-	auto* name_property = identity_page->Append(new wxStringProperty("Display Name", "Name", wxstr(active_client->getName())));
+	auto* name_property = client_prop_grid->Append(new wxStringProperty("Display Name", "Name", wxstr(active_client->getName())));
 	name_property->SetHelpString("Name shown in version selectors and compatibility prompts.");
-	auto* description_property = identity_page->Append(new wxStringProperty("Description", "description", wxstr(active_client->getDescription())));
+	auto* description_property = client_prop_grid->Append(new wxStringProperty("Description", "description", wxstr(active_client->getDescription())));
 	description_property->SetHelpString("Optional note describing the client, data source, or intended use.");
 	wxPGChoices config_choices;
 	config_choices.Add("dat_otb");
 	config_choices.Add("dat_only");
 	config_choices.Add("dat_srv");
 	config_choices.Add("protobuf");
-	auto* config_property = identity_page->Append(new wxEnumProperty("Configuration Type", "configType", config_choices, SelectionFromConfigType(active_client->getConfigType())));
+	auto* config_property = client_prop_grid->Append(new wxEnumProperty("Configuration Type", "configType", config_choices, SelectionFromConfigType(active_client->getConfigType())));
 	config_property->SetHelpString("How item definitions are loaded for this client.");
 
-	auto* client_path_property = paths_page->Append(new wxDirProperty("Client Path", "clientPath", active_client->getClientPath().GetFullPath()));
+	client_prop_grid->Append(new wxPropertyCategory("Files & Paths"));
+	auto* client_path_property = client_prop_grid->Append(new wxDirProperty("Client Path", "clientPath", active_client->getClientPath().GetFullPath()));
 	client_path_property->SetHelpString("Folder containing the configured client DAT and SPR files.");
-	auto* data_directory_property = paths_page->Append(new wxStringProperty("Data Directory", "dataDirectory", wxstr(active_client->getDataDirectory())));
+	auto* data_directory_property = client_prop_grid->Append(new wxStringProperty("Data Directory", "dataDirectory", wxstr(active_client->getDataDirectory())));
 	data_directory_property->SetHelpString("Editor data folder used for this client version.");
-	auto* metadata_property = paths_page->Append(new wxStringProperty("Metadata File (.dat)", "metadataFile", wxstr(active_client->getMetadataFile())));
+	auto* metadata_property = client_prop_grid->Append(new wxStringProperty("Metadata File (.dat)", "metadataFile", wxstr(active_client->getMetadataFile())));
 	metadata_property->SetHelpString("File name of the DAT metadata file inside the client path.");
-	auto* sprites_property = paths_page->Append(new wxStringProperty("Sprites File (.spr)", "spritesFile", wxstr(active_client->getSpritesFile())));
+	auto* sprites_property = client_prop_grid->Append(new wxStringProperty("Sprites File (.spr)", "spritesFile", wxstr(active_client->getSpritesFile())));
 	sprites_property->SetHelpString("File name of the SPR sprite archive inside the client path.");
 
-	auto* otb_id_property = compatibility_page->Append(new wxIntProperty("OTB ID", "otbId", active_client->getOtbId()));
+	client_prop_grid->Append(new wxPropertyCategory("Compatibility"));
+	auto* otb_id_property = client_prop_grid->Append(new wxIntProperty("OTB ID", "otbId", active_client->getOtbId()));
 	otb_id_property->SetHelpString("Minor items version used when comparing maps against this client.");
-	auto* otb_major_property = compatibility_page->Append(new wxIntProperty("OTB Major Version", "otbMajor", active_client->getOtbMajor()));
+	auto* otb_major_property = client_prop_grid->Append(new wxIntProperty("OTB Major Version", "otbMajor", active_client->getOtbMajor()));
 	otb_major_property->SetHelpString("Major OTB format version for this client.");
 	wxString otbm_versions_text;
 	for (const auto version_id : active_client->getMapVersionsSupported()) {
@@ -434,27 +432,27 @@ void ClientVersionPage::RefreshClientEditor() {
 		}
 		otbm_versions_text += wxString::Format("%d", static_cast<int>(version_id) + 1);
 	}
-	auto* otbm_property = compatibility_page->Append(new wxStringProperty("Supported OTBM Versions", "otbmVersions", otbm_versions_text));
+	auto* otbm_property = client_prop_grid->Append(new wxStringProperty("Supported OTBM Versions", "otbmVersions", otbm_versions_text));
 	otbm_property->SetHelpString("Comma-separated list of supported OTBM versions, usually 1 through 4.");
 
-	auto* dat_signature_property = signatures_page->Append(new wxStringProperty("DAT Signature", "datSignature", wxString::Format("%X", active_client->getDatSignature())));
+	client_prop_grid->Append(new wxPropertyCategory("Signatures"));
+	auto* dat_signature_property = client_prop_grid->Append(new wxStringProperty("DAT Signature", "datSignature", wxString::Format("%X", active_client->getDatSignature())));
 	dat_signature_property->SetHelpString("Expected DAT signature written in hexadecimal.");
-	auto* spr_signature_property = signatures_page->Append(new wxStringProperty("SPR Signature", "sprSignature", wxString::Format("%X", active_client->getSprSignature())));
+	auto* spr_signature_property = client_prop_grid->Append(new wxStringProperty("SPR Signature", "sprSignature", wxString::Format("%X", active_client->getSprSignature())));
 	spr_signature_property->SetHelpString("Expected SPR signature written in hexadecimal.");
 
-	features_page->Append(new wxBoolProperty("Transparency", "transparency", active_client->isTransparent()))->SetHelpString("Enable transparency handling for this client.");
-	features_page->Append(new wxBoolProperty("Extended", "extended", active_client->isExtended()))->SetHelpString("Use the extended sprite/item feature set for this client.");
-	features_page->Append(new wxBoolProperty("Frame Durations", "frameDurations", active_client->hasFrameDurations()))->SetHelpString("Treat animations as having per-frame durations.");
-	features_page->Append(new wxBoolProperty("Frame Groups", "frameGroups", active_client->hasFrameGroups()))->SetHelpString("Treat animations as having separate frame groups.");
+	client_prop_grid->Append(new wxPropertyCategory("Features"));
+	client_prop_grid->Append(new wxBoolProperty("Transparency", "transparency", active_client->isTransparent()))->SetHelpString("Enable transparency handling for this client.");
+	client_prop_grid->Append(new wxBoolProperty("Extended", "extended", active_client->isExtended()))->SetHelpString("Use the extended sprite or item feature set for this client.");
+	client_prop_grid->Append(new wxBoolProperty("Frame Durations", "frameDurations", active_client->hasFrameDurations()))->SetHelpString("Treat animations as having per-frame durations.");
+	client_prop_grid->Append(new wxBoolProperty("Frame Groups", "frameGroups", active_client->hasFrameGroups()))->SetHelpString("Treat animations as having separate frame groups.");
 
-	for (auto* page : { identity_page, paths_page, compatibility_page, signatures_page, features_page }) {
-		wxPropertyGridIterator iterator = page->GetIterator();
-		for (; !iterator.AtEnd(); ++iterator) {
-			UpdatePropertyValidation(*iterator);
-		}
+	wxPropertyGridIterator iterator = client_prop_grid->GetIterator();
+	for (; !iterator.AtEnd(); ++iterator) {
+		UpdatePropertyValidation(*iterator);
 	}
 
-	client_prop_grid->SelectPage(0);
+	client_prop_grid->ExpandAll();
 	client_prop_grid->Refresh();
 }
 
@@ -551,10 +549,25 @@ void ClientVersionPage::OnSearchChanged(wxCommandEvent& WXUNUSED(event)) {
 	client_filter = LowercaseCopy(nstr(client_search_ctrl->GetValue()));
 	PopulateClientTree();
 	active_client = GetSelectedClient();
+	if (!active_client && previous_client && MatchesFilter(*previous_client)) {
+		active_client = previous_client;
+		SelectClient(active_client);
+	}
 	if (active_client && active_client != previous_client) {
 		active_client->backup();
 	}
 	RefreshClientEditor();
+	client_search_ctrl->SetFocus();
+	client_search_ctrl->SetInsertionPointEnd();
+}
+
+void ClientVersionPage::OnSearchCancelled(wxCommandEvent& WXUNUSED(event)) {
+	client_search_ctrl->ChangeValue("");
+	client_filter.clear();
+	PopulateClientTree();
+	active_client = GetSelectedClient();
+	RefreshClientEditor();
+	client_search_ctrl->SetFocus();
 }
 
 void ClientVersionPage::OnTreeContextMenu(wxTreeEvent& event) {
@@ -773,6 +786,4 @@ void ClientVersionPage::Apply() {
 		wxMessageBox("Failed to save client versions. Check the log for details.", "Save Error", wxOK | wxICON_ERROR, this);
 	}
 }
-
-
 

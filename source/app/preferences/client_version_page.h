@@ -3,8 +3,7 @@
 
 #include <wx/button.h>
 #include <wx/checkbox.h>
-#include <wx/choice.h>
-#include <wx/propgrid/manager.h>
+#include <wx/propgrid/propgrid.h>
 #include <wx/srchctrl.h>
 #include <wx/simplebook.h>
 #include <wx/splitter.h>
@@ -39,6 +38,7 @@ private:
 
 	void OnClientSelected(wxTreeEvent& event);
 	void OnSearchChanged(wxCommandEvent& event);
+	void OnSearchCancelled(wxCommandEvent& event);
 	void OnTreeContextMenu(wxTreeEvent& event);
 	void OnDuplicateClient(wxCommandEvent& event);
 	void OnPropertyChanged(wxPropertyGridEvent& event);
@@ -48,7 +48,7 @@ private:
 	wxSplitterWindow* client_splitter = nullptr;
 	wxSearchCtrl* client_search_ctrl = nullptr;
 	wxTreeCtrl* client_tree_ctrl = nullptr;
-	wxPropertyGridManager* client_prop_grid = nullptr;
+	wxPropertyGrid* client_prop_grid = nullptr;
 	wxButton* add_client_btn = nullptr;
 	wxButton* duplicate_client_btn = nullptr;
 	wxButton* delete_client_btn = nullptr;
@@ -57,18 +57,10 @@ private:
 	wxCheckBox* check_sigs_chkbox = nullptr;
 	wxSimplebook* detail_book = nullptr;
 	wxStaticText* summary_name_label = nullptr;
-	wxStaticText* summary_meta_label = nullptr;
 	wxStaticText* summary_dirty_label = nullptr;
-	wxPropertyGridPage* identity_page = nullptr;
-	wxPropertyGridPage* paths_page = nullptr;
-	wxPropertyGridPage* compatibility_page = nullptr;
-	wxPropertyGridPage* signatures_page = nullptr;
-	wxPropertyGridPage* features_page = nullptr;
 	ClientVersion* active_client = nullptr;
 	bool ignore_tree_selection = false;
 	std::string client_filter;
 };
 
 #endif
-
-
