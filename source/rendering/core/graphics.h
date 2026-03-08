@@ -41,6 +41,7 @@ class MapCanvas;
 class GraphicManager;
 class FileReadHandle;
 class Animator;
+class SpriteArchive;
 
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/texture_garbage_collector.h"
@@ -88,17 +89,6 @@ public:
 
 	// This is part of the binary
 	bool loadEditorSprites();
-	// Metadata should be loaded first
-	// This fills the item / creature adress space
-
-	// This fills the item / creature adress space
-	bool loadSpriteMetadata(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
-	bool loadSpriteData(const FileName& datafile, wxString& error, std::vector<std::string>& warnings);
-
-	friend class GameSpriteLoader;
-	friend class DatLoader;
-	friend class DatMetadataDecoder;
-	friend class SprLoader;
 
 	// Cleans old & unused textures according to config settings
 	void garbageCollection();
@@ -120,6 +110,9 @@ public:
 	bool isExtended() const {
 		return is_extended;
 	}
+	std::shared_ptr<SpriteArchive> getSpriteArchive() const {
+		return sprite_archive_;
+	}
 
 	ClientVersion* client_version;
 
@@ -135,9 +128,8 @@ public:
 
 private:
 	std::atomic<bool> unloaded;
-	// This is used if memcaching is NOT on
 	std::string spritefile;
-	bool loadSpriteDump(std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id);
+	std::shared_ptr<SpriteArchive> sprite_archive_;
 
 	// Atlas manager for Phase 2 texture array rendering
 	std::unique_ptr<AtlasManager> atlas_manager_ = nullptr;
@@ -172,6 +164,7 @@ private:
 	friend class NormalImage;
 	friend class TemplateImage;
 	friend class SpritePreloader;
+	friend class GraphicsAssembler;
 };
 
 #include "minimap_colors.h"

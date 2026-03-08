@@ -10,10 +10,15 @@
 #include <vector>
 
 class GraphicManager;
+struct DatCatalog;
 
 struct DatItemFragment {
 	ClientItemId client_id = 0;
+	ItemGroup_t group = ITEM_GROUP_NONE;
+	ItemTypes_t type = ITEM_TYPE_NONE;
 	uint64_t flags = 0;
+	uint16_t way_speed = 100;
+	int always_on_top_order = 0;
 };
 
 struct OtbItemFragment {
@@ -111,6 +116,7 @@ struct ItemDefinitionLoadInput {
 	wxFileName xml_path;
 	ClientVersion* client_version = nullptr;
 	GraphicManager* graphics = nullptr;
+	const DatCatalog* dat_catalog = nullptr;
 };
 
 #endif

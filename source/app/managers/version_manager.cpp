@@ -15,24 +15,8 @@
 #include "brushes/managers/brush_manager.h"
 #include "ui/managers/loading_manager.h"
 #include "ui/tool_options_window.h"
-#include "item_definitions/core/item_definitions_loader.h"
+#include "item_definitions/core/asset_bundle_loader.h"
 #include "item_definitions/core/item_definition_store.h"
-
-namespace {
-	wxString getItemDefinitionLoadingLabel(ItemDefinitionMode mode) {
-		switch (mode) {
-			case ItemDefinitionMode::DatOtb:
-				return "Loading item definitions (DAT + OTB + XML)...";
-			case ItemDefinitionMode::DatOnly:
-				return "Loading item definitions (DAT + XML)...";
-			case ItemDefinitionMode::DatSrv:
-				return "Loading item definitions (DAT + SRV + XML)...";
-			case ItemDefinitionMode::Protobuf:
-				return "Loading item definitions (protobuf + XML)...";
-		}
-		return "Loading item definitions...";
-	}
-}
 
 VersionManager g_version;
 
@@ -101,7 +85,6 @@ const ClientVersion& VersionManager::GetCurrentVersion() const {
 
 bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& warnings) {
 	FileName data_path = getLoadedVersion()->getDataPath();
-	FileName client_path = getLoadedVersion()->getClientPath();
 	FileName extension_path = FileSystem::GetExtensionsDirectory();
 
 	g_gui.gfx.client_version = getLoadedVersion();
@@ -109,38 +92,32 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
 
 	g_loading.CreateLoadBar("Loading asset files");
-	g_loading.SetLoadDone(0, "Loading metadata file...");
+	g_loading.SetLoadDone(0, "Loading canonical asset bundle...");
 
 	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
-	if (!g_gui.gfx.loadSpriteMetadata(metadata_path, error, warnings)) {
-		error = "Couldn't load metadata: " + error;
-		g_loading.DestroyLoadBar();
-		UnloadVersion();
-		return false;
-	}
-
-	g_loading.SetLoadDone(10, "Loading sprites file...");
-
 	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
-	if (!g_gui.gfx.loadSpriteData(sprites_path, error, warnings)) {
-		error = "Couldn't load sprites: " + error;
+	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+
+	AssetLoadRequest asset_request;
+	asset_request.mode = getLoadedVersion()->getItemDefinitionMode();
+	asset_request.client_version = getLoadedVersion();
+	asset_request.dat_path = metadata_path;
+	asset_request.spr_path = sprites_path;
+	asset_request.otb_path = wxFileName(base_data_path + "items.otb");
+	asset_request.xml_path = wxFileName(base_data_path + "items.xml");
+
+	AssetBundle bundle;
+	AssetBundleLoader bundle_loader;
+	if (!bundle_loader.load(asset_request, bundle, error, warnings)) {
+		error = "Couldn't load canonical asset bundle: " + error;
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
 		return false;
 	}
 
-	g_loading.SetLoadDone(20, getItemDefinitionLoadingLabel(getLoadedVersion()->getItemDefinitionMode()));
-	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
-	ItemDefinitionsLoader item_loader;
-	ItemDefinitionLoadInput item_input;
-	item_input.mode = getLoadedVersion()->getItemDefinitionMode();
-	item_input.client_version = getLoadedVersion();
-	item_input.dat_path = metadata_path;
-	item_input.otb_path = wxFileName(base_data_path + "items.otb");
-	item_input.xml_path = wxFileName(base_data_path + "items.xml");
-	item_input.graphics = &g_gui.gfx;
-	if (!item_loader.load(item_input, error, warnings)) {
-		error = "Couldn't load item definitions: " + error;
+	g_loading.SetLoadDone(20, "Installing graphics...");
+	if (!bundle_loader.install(bundle, g_gui.gfx, g_item_definitions, error, warnings)) {
+		error = "Couldn't install canonical asset bundle: " + error;
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
 		return false;

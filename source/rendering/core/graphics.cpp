@@ -85,6 +85,7 @@ void GraphicManager::clear() {
 	creature_count = 0;
 	collector.Clear();
 	spritefile = "";
+	sprite_archive_.reset();
 
 	// Cleanup atlas manager (will be reinitialized lazily when needed)
 	if (atlas_manager_) {
@@ -170,23 +171,8 @@ uint16_t GraphicManager::getCreatureSpriteMaxID() const {
 	return creature_count;
 }
 
-#include "rendering/io/game_sprite_loader.h"
-
 bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
-}
-
-bool GraphicManager::loadSpriteMetadata(const FileName& datafile, wxString& error, std::vector<std::string>& warnings) {
-	return GameSpriteLoader::LoadSpriteMetadata(this, datafile, error, warnings);
-}
-
-bool GraphicManager::loadSpriteData(const FileName& datafile, wxString& error, std::vector<std::string>& warnings) {
-	return GameSpriteLoader::LoadSpriteData(this, datafile, error, warnings);
-}
-
-bool GraphicManager::loadSpriteDump(std::unique_ptr<uint8_t[]>& target, uint16_t& size, int sprite_id) {
-	// Pass via reference to unique_ptr to loader
-	return GameSpriteLoader::LoadSpriteDump(this, target, size, sprite_id);
 }
 
 void GraphicManager::addSpriteToCleanup(GameSprite* spr) {

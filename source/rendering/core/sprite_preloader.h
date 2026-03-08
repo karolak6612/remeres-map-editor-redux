@@ -13,6 +13,8 @@
 #include <queue>
 #include <unordered_set>
 
+class SpriteArchive;
+
 class SpritePreloader {
 public:
 	[[nodiscard]] static SpritePreloader& get();
@@ -42,8 +44,7 @@ private:
 	struct Task {
 		uint32_t id;
 		uint32_t generation_id;
-		std::string spritefile;
-		bool is_extended;
+		std::shared_ptr<SpriteArchive> archive;
 		bool has_transparency;
 	};
 
@@ -51,7 +52,7 @@ private:
 		uint32_t id;
 		uint32_t generation_id;
 		std::unique_ptr<uint8_t[]> data;
-		std::string spritefile;
+		std::shared_ptr<SpriteArchive> archive;
 	};
 
 	void workerLoop(std::stop_token stop_token);

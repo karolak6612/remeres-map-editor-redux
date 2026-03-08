@@ -5,8 +5,8 @@
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/normal_image.h"
+#include "rendering/core/sprite_archive.h"
 #include "ui/gui.h"
-#include "io/loaders/spr_loader.h"
 #include <mutex>
 #include <span>
 
@@ -67,10 +67,11 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		return;
 	}
 
-	// Capture global state once per preload call (one item)
-	const std::string& sprfile = g_gui.gfx.getSpriteFile();
-	const bool is_extended = g_gui.gfx.isExtended();
+	const auto archive = g_gui.gfx.getSpriteArchive();
 	const bool has_transparency = g_gui.gfx.hasTransparency();
+	if (!archive) {
+		return;
+	}
 
 	static thread_local std::vector<PendingTask> ids_to_enqueue;
 	ids_to_enqueue.clear();
@@ -116,7 +117,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 		for (const auto& pending : ids_to_enqueue) {
 			if (pending_ids.insert(pending.id).second) {
-				task_queue.push({ pending.id, pending.generation_id, sprfile, is_extended, has_transparency });
+				task_queue.push({ pending.id, pending.generation_id, archive, has_transparency });
 			}
 		}
 		cv.notify_all();
@@ -138,11 +139,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 
 		std::unique_ptr<uint8_t[]> dump;
 		uint16_t size = 0;
-		bool success = false;
-
-		if (!task.spritefile.empty()) {
-			success = SprLoader::LoadDump(task.spritefile, task.is_extended, dump, size, task.id);
-		}
+		const bool success = task.archive && task.archive->readCompressed(task.id, dump, size);
 
 		std::unique_ptr<uint8_t[]> rgba;
 		if (success && dump) {
@@ -152,7 +149,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
 			if (rgba) {
-				result_queue.push({ task.id, task.generation_id, std::move(rgba), std::move(task.spritefile) });
+				result_queue.push({ task.id, task.generation_id, std::move(rgba), std::move(task.archive) });
 			} else {
 				pending_ids.erase(task.id);
 			}
@@ -180,7 +177,7 @@ void SpritePreloader::update() {
 	ids_processed.clear();
 	ids_processed.reserve(results.size());
 
-	const std::string& current_sprfile = g_gui.gfx.getSpriteFile();
+	const auto current_archive = g_gui.gfx.getSpriteArchive();
 	const bool graphics_unloaded = g_gui.gfx.isUnloaded();
 
 	while (!results.empty()) {
@@ -196,7 +193,7 @@ void SpritePreloader::update() {
 		}
 
 		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-		if (res.spritefile == current_sprfile && !graphics_unloaded && id < g_gui.gfx.image_space.size()) {
+		if (res.archive == current_archive && !graphics_unloaded && id < g_gui.gfx.image_space.size()) {
 			auto& img_ptr = g_gui.gfx.image_space[id];
 			if (img_ptr && img_ptr->isNormalImage()) {
 				// Use static_cast for performance, as we know the type from loaders

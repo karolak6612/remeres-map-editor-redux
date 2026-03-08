@@ -89,11 +89,13 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_recipe.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_parser.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/asset_bundle.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/asset_bundle_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_resolver.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store_builder.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definitions_loader.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_catalog.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_item_parser.h
-    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_metadata_decoder.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_format.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_parser.h
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/xml/xml_item_parser.h
@@ -108,9 +110,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_selection_grid.h
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.h
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.h
-
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.h
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.h
     ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.h
@@ -162,8 +161,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_assembler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_archive.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.h
@@ -208,7 +209,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/editor_sprite_loader.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/io/game_sprite_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/screen_capture.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/screenshot_saver.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/map_drawer.h
@@ -438,13 +438,13 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/town.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/preview_preferences.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/waypoints.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/asset_bundle_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_recipe.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_resolver.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store_builder.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definitions_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_item_parser.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_metadata_decoder.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_parser.cpp
     ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/xml/xml_item_parser.cpp
 
@@ -458,9 +458,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/outfit_selection_grid.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/io/filehandle.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/dat_loader.cpp
-
-    ${CMAKE_CURRENT_LIST_DIR}/io/loaders/spr_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/iomap_otbm.cpp
     ${CMAKE_CURRENT_LIST_DIR}/io/map_xml_io.cpp
@@ -508,8 +505,10 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_assembler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_archive.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.cpp
@@ -550,7 +549,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/editor_sprite_loader.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/io/game_sprite_loader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/screen_capture.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/screenshot_saver.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/map_drawer.cpp

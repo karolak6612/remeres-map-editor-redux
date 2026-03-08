@@ -88,7 +88,11 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionFragments& fragm
 		ResolvedItemDefinitionRow row;
 		row.server_id = client_id;
 		row.client_id = client_id;
+		row.group = dat.group;
+		row.type = dat.type;
 		row.flags = dat.flags;
+		row.way_speed = dat.way_speed;
+		row.always_on_top_order = dat.always_on_top_order;
 		rows.push_back(std::move(row));
 		client_to_row[client_id] = rows.size() - 1;
 	}

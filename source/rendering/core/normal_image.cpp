@@ -1,10 +1,18 @@
 #include "rendering/core/normal_image.h"
 #include "rendering/core/game_sprite.h"
 #include "app/settings.h"
+#include "rendering/core/sprite_archive.h"
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
 
 constexpr int RGB_COMPONENTS = 3;
+
+namespace {
+	bool loadDumpFromArchive(uint32_t id, std::unique_ptr<uint8_t[]>& dump, uint16_t& size) {
+		const auto archive = g_gui.gfx.getSpriteArchive();
+		return archive && archive->readCompressed(id, dump, size);
+	}
+}
 
 NormalImage::NormalImage() :
 	id(0),
@@ -59,11 +67,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 	}
 
 	if (!dump) {
-		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
-			return nullptr;
-		}
-
-		if (!g_gui.gfx.loadSpriteDump(dump, size, id)) {
+		if (!loadDumpFromArchive(id, dump, size)) {
 			return nullptr;
 		}
 	}
@@ -129,11 +133,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 	}
 
 	if (!dump) {
-		if (g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) {
-			return nullptr;
-		}
-
-		if (!g_gui.gfx.loadSpriteDump(dump, size, id)) {
+		if (!loadDumpFromArchive(id, dump, size)) {
 			// This is the only case where we return nullptr for non-zero ID
 			// effectively warning the caller that the sprite is missing from file
 			return nullptr;

@@ -143,7 +143,6 @@ public:
 	uint16_t drawoffset_y;
 
 	uint16_t minimap_color;
-	uint64_t item_definition_flags = 0;
 
 	bool has_light = false;
 	SpriteLight light;
@@ -180,10 +179,7 @@ public:
 	bool is_resident = false; // Tracks if this GameSprite is in resident_game_sprites
 
 	friend class GraphicManager;
-	friend class GameSpriteLoader;
-	friend class DatLoader;
-	friend class DatMetadataDecoder;
-	friend class SprLoader;
+	friend class GraphicsAssembler;
 	friend class SpriteIconGenerator;
 	friend class TextureGarbageCollector;
 	friend class TooltipDrawer;
