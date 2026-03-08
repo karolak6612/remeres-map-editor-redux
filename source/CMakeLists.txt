@@ -6,6 +6,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/app/main.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/preferences_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/preferences_layout.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/general_page.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/editor_page.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.h
@@ -364,6 +365,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/app/client_version.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/extension.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/preferences_layout.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/general_page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/editor_page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.cpp
@@ -701,3 +703,4 @@ set(rme_SRC
 if(WIN32)
 	set(rme_SRC ${rme_SRC} ${CMAKE_CURRENT_LIST_DIR}/Editor.rc)
 endif()
+

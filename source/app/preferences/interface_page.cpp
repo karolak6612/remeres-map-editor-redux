@@ -1,150 +1,128 @@
 #include "app/preferences/interface_page.h"
+
+#include <cmath>
+
 #include "app/main.h"
+#include "app/preferences/preferences_layout.h"
 #include "app/settings.h"
-#include "ui/gui.h"
 #include "ui/dialog_util.h"
+#include "ui/gui.h"
 #include "ui/theme.h"
 
-InterfacePage::InterfacePage(wxWindow* parent) : PreferencesPage(parent) {
-	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-
-	auto* subsizer = newd wxFlexGridSizer(2, 10, 10);
-	subsizer->AddGrowableCol(1);
-	terrain_palette_style_choice = AddPaletteStyleChoice(
-		subsizer,
-		"Terrain Palette Style:",
-		"Configures the look of the terrain palette.",
-		g_settings.getString(Config::PALETTE_TERRAIN_STYLE)
-	);
-	collection_palette_style_choice = AddPaletteStyleChoice(
-		subsizer,
-		"Collections Palette Style:",
-		"Configures the look of the collections palette.",
-		g_settings.getString(Config::PALETTE_COLLECTION_STYLE)
-	);
-	doodad_palette_style_choice = AddPaletteStyleChoice(
-		subsizer,
-		"Doodad Palette Style:",
-		"Configures the look of the doodad palette.",
-		g_settings.getString(Config::PALETTE_DOODAD_STYLE)
-	);
-	item_palette_style_choice = AddPaletteStyleChoice(
-		subsizer,
-		"Item Palette Style:",
-		"Configures the look of the item palette.",
-		g_settings.getString(Config::PALETTE_ITEM_STYLE)
-	);
-	raw_palette_style_choice = AddPaletteStyleChoice(
-		subsizer,
-		"RAW Palette Style:",
-		"Configures the look of the raw palette.",
-		g_settings.getString(Config::PALETTE_RAW_STYLE)
-	);
-
-	sizer->Add(subsizer, wxSizerFlags().Border(wxALL, FROM_DIP(this, 6)));
-
-	sizer->AddSpacer(10);
-
-	// Theme selection
-	wxBoxSizer* themeSizer = newd wxBoxSizer(wxHORIZONTAL);
-	themeSizer->Add(newd wxStaticText(this, wxID_ANY, wxString("Theme: ")), wxSizerFlags().Align(wxALIGN_CENTER_VERTICAL).Border(wxRIGHT, FROM_DIP(this, 5)));
-
-	theme_choice = newd wxChoice(this, wxID_ANY);
-	theme_choice->Append(wxString("System Default"));
-	theme_choice->Append(wxString("Dark"));
-	theme_choice->Append(wxString("Light"));
-
-	int currentTheme = g_settings.getInteger(Config::THEME);
-	if (currentTheme >= 0 && currentTheme <= 2) {
-		theme_choice->SetSelection(currentTheme);
-	} else {
-		theme_choice->SetSelection(0);
-	}
-
-	themeSizer->Add(theme_choice, wxSizerFlags());
-	sizer->Add(themeSizer, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_terrain_tools_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large terrain palette tool && size icons");
-	large_terrain_tools_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_TERRAIN_TOOLBAR));
-	sizer->Add(large_terrain_tools_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_collection_tools_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large collections palette tool && size icons");
-	large_collection_tools_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_COLLECTION_TOOLBAR));
-	sizer->Add(large_collection_tools_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_doodad_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large doodad size palette icons");
-	large_doodad_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_DOODAD_SIZEBAR));
-	sizer->Add(large_doodad_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_item_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large item size palette icons");
-	large_item_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_ITEM_SIZEBAR));
-	sizer->Add(large_item_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_house_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large house palette size icons");
-	large_house_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_HOUSE_SIZEBAR));
-	sizer->Add(large_house_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_raw_sizebar_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large raw palette size icons");
-	large_raw_sizebar_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_RAW_SIZEBAR));
-	sizer->Add(large_raw_sizebar_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_container_icons_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large container view icons");
-	large_container_icons_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
-	sizer->Add(large_container_icons_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	large_pick_item_icons_chkbox = newd wxCheckBox(this, wxID_ANY, "Use large item picker icons");
-	large_pick_item_icons_chkbox->SetValue(g_settings.getBoolean(Config::USE_LARGE_CHOOSE_ITEM_ICONS));
-	sizer->Add(large_pick_item_icons_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	sizer->AddSpacer(10);
-
-	switch_mousebtn_chkbox = newd wxCheckBox(this, wxID_ANY, "Switch mousebuttons");
-	switch_mousebtn_chkbox->SetValue(g_settings.getBoolean(Config::SWITCH_MOUSEBUTTONS));
-	switch_mousebtn_chkbox->SetToolTip("Switches the right and center mouse button.");
-	sizer->Add(switch_mousebtn_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	doubleclick_properties_chkbox = newd wxCheckBox(this, wxID_ANY, "Double click for properties");
-	doubleclick_properties_chkbox->SetValue(g_settings.getBoolean(Config::DOUBLECLICK_PROPERTIES));
-	doubleclick_properties_chkbox->SetToolTip("Double clicking on a tile will bring up the properties menu for the top item.");
-	sizer->Add(doubleclick_properties_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	inversed_scroll_chkbox = newd wxCheckBox(this, wxID_ANY, "Use inversed scroll");
-	inversed_scroll_chkbox->SetValue(g_settings.getFloat(Config::SCROLL_SPEED) < 0);
-	inversed_scroll_chkbox->SetToolTip("When this checkbox is checked, dragging the map using the center mouse button will be inversed (default RTS behaviour).");
-	sizer->Add(inversed_scroll_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	sizer->AddSpacer(10);
-
-	sizer->Add(newd wxStaticText(this, wxID_ANY, "Scroll speed: "), wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	auto true_scrollspeed = int(std::abs(g_settings.getFloat(Config::SCROLL_SPEED)) * 10);
-	scroll_speed_slider = newd wxSlider(this, wxID_ANY, true_scrollspeed, 1, std::max(true_scrollspeed, 100));
-	scroll_speed_slider->SetToolTip("This controls how fast the map will scroll when you hold down the center mouse button and move it around.");
-	sizer->Add(scroll_speed_slider, wxSizerFlags().Expand().Border(wxALL, FROM_DIP(this, 5)));
-
-	sizer->Add(newd wxStaticText(this, wxID_ANY, "Zoom speed: "), wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-
-	auto true_zoomspeed = int(g_settings.getFloat(Config::ZOOM_SPEED) * 10);
-	zoom_speed_slider = newd wxSlider(this, wxID_ANY, true_zoomspeed, 1, std::max(true_zoomspeed, 100));
-	zoom_speed_slider->SetToolTip("This controls how fast you will zoom when you scroll the center mouse button.");
-	sizer->Add(zoom_speed_slider, wxSizerFlags().Expand().Border(wxALL, FROM_DIP(this, 5)));
-
-	SetSizerAndFit(sizer);
+namespace {
+wxString FormatSpeedLabel(int raw_value) {
+	return wxString::Format("%.1fx", raw_value / 10.0);
+}
 }
 
-wxChoice* InterfacePage::AddPaletteStyleChoice(wxSizer* sizer, const wxString& short_description, const wxString& description, const std::string& setting) {
-	wxStaticText* text;
-	sizer->Add(text = newd wxStaticText(this, wxID_ANY, short_description), 0);
+InterfacePage::InterfacePage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
+	auto* page_sizer = GetPageSizer();
 
-	wxChoice* choice = newd wxChoice(this, wxID_ANY);
-	sizer->Add(choice, 0);
+	auto* theme_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Theme",
+		"Choose the global editor theme and keep the overall interface readable across long mapping sessions."
+	);
+	theme_choice = new wxChoice(theme_section, wxID_ANY);
+	theme_choice->Append("System Default");
+	theme_choice->Append("Dark");
+	theme_choice->Append("Light");
+	const int current_theme = g_settings.getInteger(Config::THEME);
+	theme_choice->SetSelection(current_theme >= 0 && current_theme <= 2 ? current_theme : 0);
+	PreferencesLayout::AddControlRow(
+		theme_section,
+		"Theme",
+		"Apply the system theme or force the editor into a specific light or dark appearance.",
+		theme_choice
+	);
+	page_sizer->Add(theme_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(10));
 
-	choice->Append(wxString("Large Icons"));
-	choice->Append(wxString("Small Icons"));
-	choice->Append(wxString("Listbox with Icons"));
+	auto* palette_style_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Palette Style",
+		"Pick the presentation style for each major palette so browsing tools and assets feels consistent."
+	);
+	auto* palette_style_sizer = palette_style_section->GetBodySizer();
+	terrain_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Terrain palette style", "Choose how the terrain palette is presented.", g_settings.getString(Config::PALETTE_TERRAIN_STYLE));
+	collection_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Collections palette style", "Choose how the collections palette is presented.", g_settings.getString(Config::PALETTE_COLLECTION_STYLE));
+	doodad_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Doodad palette style", "Choose how the doodad palette is presented.", g_settings.getString(Config::PALETTE_DOODAD_STYLE));
+	item_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "Item palette style", "Choose how the item palette is presented.", g_settings.getString(Config::PALETTE_ITEM_STYLE));
+	raw_palette_style_choice = AddPaletteStyleChoice(palette_style_section, palette_style_sizer, "RAW palette style", "Choose how the RAW palette is presented.", g_settings.getString(Config::PALETTE_RAW_STYLE));
+	page_sizer->Add(palette_style_section, 0, wxEXPAND | wxALL, FromDIP(10));
 
-	text->SetToolTip(description);
-	choice->SetToolTip(description);
+	auto* density_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Icon Density",
+		"Scale palette and picker icons for denser browsing or for easier reading on larger displays."
+	);
+	large_terrain_tools_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large terrain tool and size icons", "Increase the size of terrain palette tool buttons and size selectors.", g_settings.getBoolean(Config::USE_LARGE_TERRAIN_TOOLBAR));
+	large_collection_tools_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large collections tool and size icons", "Increase the size of collection palette tool buttons and size selectors.", g_settings.getBoolean(Config::USE_LARGE_COLLECTION_TOOLBAR));
+	large_doodad_sizebar_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large doodad palette icons", "Use larger icon sizes inside the doodad palette controls.", g_settings.getBoolean(Config::USE_LARGE_DOODAD_SIZEBAR));
+	large_item_sizebar_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large item palette icons", "Use larger icon sizes inside the item palette controls.", g_settings.getBoolean(Config::USE_LARGE_ITEM_SIZEBAR));
+	large_house_sizebar_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large house palette icons", "Use larger icon sizes inside house palette controls.", g_settings.getBoolean(Config::USE_LARGE_HOUSE_SIZEBAR));
+	large_raw_sizebar_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large RAW palette icons", "Use larger icon sizes inside RAW palette controls.", g_settings.getBoolean(Config::USE_LARGE_RAW_SIZEBAR));
+	large_container_icons_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large container view icons", "Increase icon size in container browsing windows.", g_settings.getBoolean(Config::USE_LARGE_CONTAINER_ICONS));
+	large_pick_item_icons_chkbox = PreferencesLayout::AddCheckBoxRow(density_section, "Large item picker icons", "Increase icon size in add-item and item-picker dialogs.", g_settings.getBoolean(Config::USE_LARGE_CHOOSE_ITEM_ICONS));
+	page_sizer->Add(density_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
+
+	auto* navigation_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Mouse and Navigation",
+		"Adjust input behavior for scrolling, zooming, and opening property dialogs while mapping."
+	);
+	switch_mousebtn_chkbox = PreferencesLayout::AddCheckBoxRow(navigation_section, "Switch mouse buttons", "Swap the middle and right mouse button behavior used in the editor.", g_settings.getBoolean(Config::SWITCH_MOUSEBUTTONS));
+	doubleclick_properties_chkbox = PreferencesLayout::AddCheckBoxRow(navigation_section, "Double click opens properties", "Open the top item properties dialog by double clicking a tile.", g_settings.getBoolean(Config::DOUBLECLICK_PROPERTIES));
+	inversed_scroll_chkbox = PreferencesLayout::AddCheckBoxRow(navigation_section, "Use inverted map drag", "Invert middle-mouse dragging for RTS-style navigation.", g_settings.getFloat(Config::SCROLL_SPEED) < 0);
+
+	auto* scroll_panel = new wxPanel(navigation_section, wxID_ANY);
+	scroll_panel->SetBackgroundColour(navigation_section->GetBackgroundColour());
+	auto* scroll_panel_sizer = new wxBoxSizer(wxHORIZONTAL);
+	auto true_scrollspeed = static_cast<int>(std::abs(g_settings.getFloat(Config::SCROLL_SPEED)) * 10);
+	scroll_speed_slider = new wxSlider(scroll_panel, wxID_ANY, true_scrollspeed, 1, std::max(true_scrollspeed, 100));
+	scroll_panel_sizer->Add(scroll_speed_slider, 1, wxEXPAND | wxRIGHT, FromDIP(10));
+	scroll_speed_value_label = PreferencesLayout::CreateBodyText(scroll_panel, FormatSpeedLabel(true_scrollspeed), true);
+	scroll_panel_sizer->Add(scroll_speed_value_label, 0, wxALIGN_CENTER_VERTICAL);
+	scroll_panel->SetSizer(scroll_panel_sizer);
+	PreferencesLayout::AddControlRow(navigation_section, "Scroll speed", "How fast the map pans while dragging with the middle mouse button.", scroll_panel, true);
+
+	auto* zoom_panel = new wxPanel(navigation_section, wxID_ANY);
+	zoom_panel->SetBackgroundColour(navigation_section->GetBackgroundColour());
+	auto* zoom_panel_sizer = new wxBoxSizer(wxHORIZONTAL);
+	auto true_zoomspeed = static_cast<int>(g_settings.getFloat(Config::ZOOM_SPEED) * 10);
+	zoom_speed_slider = new wxSlider(zoom_panel, wxID_ANY, true_zoomspeed, 1, std::max(true_zoomspeed, 100));
+	zoom_panel_sizer->Add(zoom_speed_slider, 1, wxEXPAND | wxRIGHT, FromDIP(10));
+	zoom_speed_value_label = PreferencesLayout::CreateBodyText(zoom_panel, FormatSpeedLabel(true_zoomspeed), true);
+	zoom_panel_sizer->Add(zoom_speed_value_label, 0, wxALIGN_CENTER_VERTICAL);
+	zoom_panel->SetSizer(zoom_panel_sizer);
+	PreferencesLayout::AddControlRow(navigation_section, "Zoom speed", "How quickly the view zooms in and out when using the mouse wheel.", zoom_panel, true);
+	page_sizer->Add(navigation_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
+
+	scroll_speed_slider->Bind(wxEVT_SLIDER, [this](wxCommandEvent&) {
+		UpdateSpeedLabels();
+	});
+	zoom_speed_slider->Bind(wxEVT_SLIDER, [this](wxCommandEvent&) {
+		UpdateSpeedLabels();
+	});
+	UpdateSpeedLabels();
+
+	FinishLayout();
+}
+
+void InterfacePage::UpdateSpeedLabels() {
+	if (scroll_speed_value_label) {
+		scroll_speed_value_label->SetLabel(FormatSpeedLabel(scroll_speed_slider->GetValue()));
+	}
+	if (zoom_speed_value_label) {
+		zoom_speed_value_label->SetLabel(FormatSpeedLabel(zoom_speed_slider->GetValue()));
+	}
+}
+
+wxChoice* InterfacePage::AddPaletteStyleChoice(wxWindow* parent, wxSizer* sizer, const wxString& short_description, const wxString& description, const std::string& setting) {
+	wxUnusedVar(sizer);
+	auto* choice = new wxChoice(parent, wxID_ANY);
+	choice->Append("Large icons");
+	choice->Append("Small icons");
+	choice->Append("Listbox with icons");
 
 	if (setting == "large icons") {
 		choice->SetSelection(0);
@@ -156,6 +134,7 @@ wxChoice* InterfacePage::AddPaletteStyleChoice(wxSizer* sizer, const wxString& s
 		choice->SetSelection(0);
 	}
 
+	PreferencesLayout::AddControlRow(static_cast<PreferencesSectionPanel*>(parent), short_description, description, choice);
 	return choice;
 }
 
@@ -233,10 +212,7 @@ void InterfacePage::Apply() {
 	g_settings.setInteger(Config::SWITCH_MOUSEBUTTONS, switch_mousebtn_chkbox->GetValue());
 	g_settings.setInteger(Config::DOUBLECLICK_PROPERTIES, doubleclick_properties_chkbox->GetValue());
 
-	float scroll_mul = 1.0;
-	if (inversed_scroll_chkbox->GetValue()) {
-		scroll_mul = -1.0;
-	}
+	float scroll_mul = inversed_scroll_chkbox->GetValue() ? -1.0f : 1.0f;
 	g_settings.setFloat(Config::SCROLL_SPEED, scroll_mul * scroll_speed_slider->GetValue() / 10.f);
 	g_settings.setFloat(Config::ZOOM_SPEED, zoom_speed_slider->GetValue() / 10.f);
 
@@ -244,10 +220,10 @@ void InterfacePage::Apply() {
 		g_gui.RebuildPalettes();
 	}
 
-	int selectedTheme = theme_choice->GetSelection();
-	if (selectedTheme != wxNOT_FOUND && g_settings.getInteger(Config::THEME) != selectedTheme) {
-		g_settings.setInteger(Config::THEME, selectedTheme);
-		Theme::setType(static_cast<Theme::Type>(selectedTheme));
+	const int selected_theme = theme_choice->GetSelection();
+	if (selected_theme != wxNOT_FOUND && g_settings.getInteger(Config::THEME) != selected_theme) {
+		g_settings.setInteger(Config::THEME, selected_theme);
+		Theme::setType(static_cast<Theme::Type>(selected_theme));
 		DialogUtil::PopupDialog(wxString("Theme Changed"), wxString("Theme changed. Please restart the application for all changes to take effect."), wxOK);
 	}
 }

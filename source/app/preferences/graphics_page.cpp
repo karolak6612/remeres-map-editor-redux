@@ -1,61 +1,58 @@
 #include "app/preferences/graphics_page.h"
+
 #include "app/main.h"
+#include "app/preferences/preferences_layout.h"
 #include "app/settings.h"
-#include "ui/gui.h"
-#include "ui/dialog_util.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "ui/gui.h"
 
-GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
-	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	wxWindow* tmp;
+GraphicsPage::GraphicsPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
+	auto* page_sizer = GetPageSizer();
 
-	hide_items_when_zoomed_chkbox = newd wxCheckBox(this, wxID_ANY, "Hide items when zoomed out");
-	hide_items_when_zoomed_chkbox->SetValue(g_settings.getBoolean(Config::HIDE_ITEMS_WHEN_ZOOMED));
-	sizer->Add(hide_items_when_zoomed_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-	SetWindowToolTip(hide_items_when_zoomed_chkbox, "When this option is checked, \"loose\" items will be hidden when you zoom very far out.");
-
-	icon_selection_shadow_chkbox = newd wxCheckBox(this, wxID_ANY, "Use icon selection shadow");
-	icon_selection_shadow_chkbox->SetValue(g_settings.getBoolean(Config::USE_GUI_SELECTION_SHADOW));
-	sizer->Add(icon_selection_shadow_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-	SetWindowToolTip(icon_selection_shadow_chkbox, "When this option is checked, selected items in the palette menu will be shaded.");
-
-	use_memcached_chkbox = newd wxCheckBox(this, wxID_ANY, "Use memcached sprites");
-	use_memcached_chkbox->SetValue(g_settings.getBoolean(Config::USE_MEMCACHED_SPRITES));
-	sizer->Add(use_memcached_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-	SetWindowToolTip(use_memcached_chkbox, "When this is checked, sprites will be loaded into memory at startup and unpacked at runtime. This is faster but consumes more memory.\nIf it is not checked, the editor will use less memory but there will be a performance decrease due to reading sprites from the disk.");
-
-	anti_aliasing_chkbox = newd wxCheckBox(this, wxID_ANY, "Enable Anti-Aliasing");
-	anti_aliasing_chkbox->SetValue(g_settings.getBoolean(Config::ANTI_ALIASING));
-	sizer->Add(anti_aliasing_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-	SetWindowToolTip(anti_aliasing_chkbox, "Smoothens the map rendering using linear interpolation.");
-
-	sizer->AddSpacer(10);
-
-	auto* subsizer = newd wxFlexGridSizer(2, 10, 10);
-	subsizer->AddGrowableCol(1);
-
-	// Screen Shader
-	screen_shader_choice = newd wxChoice(this, wxID_ANY);
-	auto effect_names = PostProcessManager::Instance().GetEffectNames();
-	for (const auto& name : effect_names) {
+	auto* rendering_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Rendering",
+		"These controls change how the map view is drawn and filtered while you work."
+	);
+	hide_items_when_zoomed_chkbox = PreferencesLayout::AddCheckBoxRow(
+		rendering_section,
+		"Hide loose items when zoomed out",
+		"Reduce clutter in distant views by hiding loose items once the editor is heavily zoomed out.",
+		g_settings.getBoolean(Config::HIDE_ITEMS_WHEN_ZOOMED)
+	);
+	anti_aliasing_chkbox = PreferencesLayout::AddCheckBoxRow(
+		rendering_section,
+		"Enable anti-aliasing",
+		"Smooth map rendering using linear interpolation so scaled views appear less jagged.",
+		g_settings.getBoolean(Config::ANTI_ALIASING)
+	);
+	screen_shader_choice = new wxChoice(rendering_section, wxID_ANY);
+	for (const auto& name : PostProcessManager::Instance().GetEffectNames()) {
 		screen_shader_choice->Append(name);
 	}
+	const auto current_shader = wxstr(g_settings.getString(Config::SCREEN_SHADER));
+	const int shader_index = screen_shader_choice->FindString(current_shader);
+	screen_shader_choice->SetSelection(shader_index != wxNOT_FOUND ? shader_index : 0);
+	PreferencesLayout::AddControlRow(
+		rendering_section,
+		"Screen shader",
+		"Apply a post-processing effect to the map viewport. Keep this on the default effect for the cleanest editing view.",
+		screen_shader_choice
+	);
+	page_sizer->Add(rendering_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(10));
 
-	std::string current_shader = g_settings.getString(Config::SCREEN_SHADER);
-	int selection = screen_shader_choice->FindString(current_shader);
-	if (selection != wxNOT_FOUND) {
-		screen_shader_choice->SetSelection(selection);
-	} else {
-		screen_shader_choice->SetSelection(0);
-	}
-
-	tmp = newd wxStaticText(this, wxID_ANY, "Screen Shader: ");
-	subsizer->Add(tmp, wxSizerFlags());
-	subsizer->Add(screen_shader_choice, wxSizerFlags());
-	SetWindowToolTip(screen_shader_choice, tmp, "Apply a post-processing shader to the map view.");
-
-	// Icon background color
-	icon_background_choice = newd wxChoice(this, wxID_ANY);
+	auto* palette_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Palette Appearance",
+		"These options affect how icons and selections look in palette-style UI panels."
+	);
+	icon_selection_shadow_chkbox = PreferencesLayout::AddCheckBoxRow(
+		palette_section,
+		"Use icon selection shadow",
+		"Shade selected palette entries more strongly so the current selection stands out.",
+		g_settings.getBoolean(Config::USE_GUI_SELECTION_SHADOW)
+	);
+	icon_background_choice = new wxChoice(palette_section, wxID_ANY);
 	icon_background_choice->Append("Black background");
 	icon_background_choice->Append("Gray background");
 	icon_background_choice->Append("White background");
@@ -66,72 +63,121 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : PreferencesPage(parent) {
 	} else {
 		icon_background_choice->SetSelection(0);
 	}
+	PreferencesLayout::AddControlRow(
+		palette_section,
+		"Icon background color",
+		"Choose a neutral icon backdrop that makes palette assets easier to scan across dialogs and browsers.",
+		icon_background_choice
+	);
+	page_sizer->Add(palette_section, 0, wxEXPAND | wxALL, FromDIP(10));
 
-	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Icon background color: "), wxSizerFlags());
-	subsizer->Add(icon_background_choice, wxSizerFlags());
-	SetWindowToolTip(icon_background_choice, tmp, "This will change the background color on icons in all windows.");
+	auto* cursor_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Cursor",
+		"Customize the map cursor colors used for drawing, houses, flags, and similar overlays."
+	);
+	cursor_color_pick = new wxColourPickerCtrl(
+		cursor_section,
+		wxID_ANY,
+		wxColor(
+			g_settings.getInteger(Config::CURSOR_RED),
+			g_settings.getInteger(Config::CURSOR_GREEN),
+			g_settings.getInteger(Config::CURSOR_BLUE),
+			g_settings.getInteger(Config::CURSOR_ALPHA)
+		)
+	);
+	PreferencesLayout::AddControlRow(
+		cursor_section,
+		"Primary cursor color",
+		"Main drawing cursor color shown during regular placement and painting operations.",
+		cursor_color_pick
+	);
+	cursor_alt_color_pick = new wxColourPickerCtrl(
+		cursor_section,
+		wxID_ANY,
+		wxColor(
+			g_settings.getInteger(Config::CURSOR_ALT_RED),
+			g_settings.getInteger(Config::CURSOR_ALT_GREEN),
+			g_settings.getInteger(Config::CURSOR_ALT_BLUE),
+			g_settings.getInteger(Config::CURSOR_ALT_ALPHA)
+		)
+	);
+	PreferencesLayout::AddControlRow(
+		cursor_section,
+		"Secondary cursor color",
+		"Alternate cursor used for special overlays such as house and flag tools.",
+		cursor_alt_color_pick
+	);
+	page_sizer->Add(cursor_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 
-	// Cursor colors
-	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Cursor color: "), wxSizerFlags());
-	subsizer->Add(cursor_color_pick = newd wxColourPickerCtrl(this, wxID_ANY, wxColor(g_settings.getInteger(Config::CURSOR_RED), g_settings.getInteger(Config::CURSOR_GREEN), g_settings.getInteger(Config::CURSOR_BLUE), g_settings.getInteger(Config::CURSOR_ALPHA))), wxSizerFlags());
-	SetWindowToolTip(cursor_color_pick, tmp, "The color of the main cursor on the map (while in drawing mode).");
-
-	// Alternate cursor color
-	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Secondary cursor color: "), wxSizerFlags());
-	subsizer->Add(cursor_alt_color_pick = newd wxColourPickerCtrl(this, wxID_ANY, wxColor(g_settings.getInteger(Config::CURSOR_ALT_RED), g_settings.getInteger(Config::CURSOR_ALT_GREEN), g_settings.getInteger(Config::CURSOR_ALT_BLUE), g_settings.getInteger(Config::CURSOR_ALT_ALPHA))), wxSizerFlags());
-	SetWindowToolTip(cursor_alt_color_pick, tmp, "The color of the secondary cursor on the map (for houses and flags).");
-
-	// Screenshot dir
-	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Screenshot directory: "), wxSizerFlags());
-	screenshot_directory_picker = newd wxDirPickerCtrl(this, wxID_ANY);
-	subsizer->Add(screenshot_directory_picker, wxSizerFlags(1).Expand());
-	wxString ss = wxstr(g_settings.getString(Config::SCREENSHOT_DIRECTORY));
-	screenshot_directory_picker->SetPath(ss);
-	SetWindowToolTip(screenshot_directory_picker, "Screenshot taken in the editor will be saved to this directory.");
-
-	// Screenshot format
-	screenshot_format_choice = newd wxChoice(this, wxID_ANY);
+	auto* screenshot_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Screenshots",
+		"Configure where screenshots are saved and which file format is used when capturing the viewport."
+	);
+	screenshot_directory_picker = new wxDirPickerCtrl(screenshot_section, wxID_ANY, wxstr(g_settings.getString(Config::SCREENSHOT_DIRECTORY)));
+	PreferencesLayout::AddControlRow(
+		screenshot_section,
+		"Screenshot directory",
+		"Folder where screenshots taken from the editor are stored.",
+		screenshot_directory_picker,
+		true
+	);
+	screenshot_format_choice = new wxChoice(screenshot_section, wxID_ANY);
 	screenshot_format_choice->Append("PNG");
 	screenshot_format_choice->Append("JPG");
 	screenshot_format_choice->Append("TGA");
 	screenshot_format_choice->Append("BMP");
-	if (g_settings.getString(Config::SCREENSHOT_FORMAT) == "png") {
-		screenshot_format_choice->SetSelection(0);
-	} else if (g_settings.getString(Config::SCREENSHOT_FORMAT) == "jpg") {
+	const auto screenshot_format = g_settings.getString(Config::SCREENSHOT_FORMAT);
+	if (screenshot_format == "jpg") {
 		screenshot_format_choice->SetSelection(1);
-	} else if (g_settings.getString(Config::SCREENSHOT_FORMAT) == "tga") {
+	} else if (screenshot_format == "tga") {
 		screenshot_format_choice->SetSelection(2);
-	} else if (g_settings.getString(Config::SCREENSHOT_FORMAT) == "bmp") {
+	} else if (screenshot_format == "bmp") {
 		screenshot_format_choice->SetSelection(3);
 	} else {
 		screenshot_format_choice->SetSelection(0);
 	}
-	subsizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "Screenshot format: "), wxSizerFlags());
-	subsizer->Add(screenshot_format_choice, wxSizerFlags());
-	SetWindowToolTip(screenshot_format_choice, tmp, "This will affect the screenshot format used by the editor.\nTo take a screenshot, press F11.");
+	PreferencesLayout::AddControlRow(
+		screenshot_section,
+		"Screenshot format",
+		"File type used when you capture the map view with F11.",
+		screenshot_format_choice
+	);
+	page_sizer->Add(screenshot_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 
-	sizer->Add(subsizer, wxSizerFlags(1).Expand().Border(wxALL, FROM_DIP(this, 5)));
+	auto* performance_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Performance",
+		"Manage sprite caching and frame pacing to balance memory use, speed, and responsiveness."
+	);
+	use_memcached_chkbox = PreferencesLayout::AddCheckBoxRow(
+		performance_section,
+		"Cache sprites in memory",
+		"Load sprites into memory up front for faster browsing and rendering at the cost of higher RAM use.",
+		g_settings.getBoolean(Config::USE_MEMCACHED_SPRITES)
+	);
+	PreferencesLayout::AddNotice(
+		performance_section,
+		"Changing sprite caching requires an application restart before the new loading mode takes effect.",
+		Theme::Role::Warning
+	);
+	fps_limit_spin = new wxSpinCtrl(performance_section, wxID_ANY, i2ws(g_settings.getInteger(Config::FRAME_RATE_LIMIT)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 300);
+	PreferencesLayout::AddControlRow(
+		performance_section,
+		"FPS limit",
+		"Cap frame rate to reduce power usage. Set this to 0 for an uncapped viewport.",
+		fps_limit_spin
+	);
+	show_fps_chkbox = PreferencesLayout::AddCheckBoxRow(
+		performance_section,
+		"Show FPS counter",
+		"Display the current frame rate in the editor status area while you work.",
+		g_settings.getBoolean(Config::SHOW_FPS_COUNTER)
+	);
+	page_sizer->Add(performance_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 
-	// Advanced g_settings
-
-	// FPS Settings
-	sizer->AddSpacer(10);
-	auto* fps_sizer = newd wxFlexGridSizer(2, 10, 10);
-	fps_sizer->AddGrowableCol(1);
-
-	fps_sizer->Add(tmp = newd wxStaticText(this, wxID_ANY, "FPS Limit (0 = unlimited): "), wxSizerFlags());
-	fps_limit_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::FRAME_RATE_LIMIT)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 300);
-	fps_sizer->Add(fps_limit_spin, wxSizerFlags());
-	SetWindowToolTip(fps_limit_spin, tmp, "Limits the frame rate to save power. Set to 0 for unlimited.");
-
-	sizer->Add(fps_sizer, wxSizerFlags().Border(wxALL, FROM_DIP(this, 5)));
-
-	show_fps_chkbox = newd wxCheckBox(this, wxID_ANY, "Show FPS Counter");
-	show_fps_chkbox->SetValue(g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
-	sizer->Add(show_fps_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, FROM_DIP(this, 5)));
-	SetWindowToolTip(show_fps_chkbox, "Displays the current frame rate in the status bar.");
-
-	SetSizerAndFit(sizer);
+	FinishLayout();
 }
 
 void GraphicsPage::Apply() {
@@ -155,17 +201,16 @@ void GraphicsPage::Apply() {
 			g_gui.gfx.cleanSoftwareSprites();
 		}
 		g_settings.setInteger(Config::ICON_BACKGROUND, 88);
-	} else if (icon_background_choice->GetSelection() == 2) {
+	} else {
 		if (g_settings.getInteger(Config::ICON_BACKGROUND) != 255) {
 			g_gui.gfx.cleanSoftwareSprites();
 		}
 		g_settings.setInteger(Config::ICON_BACKGROUND, 255);
 	}
 
-	// Screenshots
 	g_settings.setString(Config::SCREENSHOT_DIRECTORY, nstr(screenshot_directory_picker->GetPath()));
 
-	std::string new_format = nstr(screenshot_format_choice->GetStringSelection());
+	const auto new_format = nstr(screenshot_format_choice->GetStringSelection());
 	if (new_format == "PNG") {
 		g_settings.setString(Config::SCREENSHOT_FORMAT, "png");
 	} else if (new_format == "TGA") {
@@ -176,21 +221,19 @@ void GraphicsPage::Apply() {
 		g_settings.setString(Config::SCREENSHOT_FORMAT, "bmp");
 	}
 
-	wxColor clr = cursor_color_pick->GetColour();
-	g_settings.setInteger(Config::CURSOR_RED, clr.Red());
-	g_settings.setInteger(Config::CURSOR_GREEN, clr.Green());
-	g_settings.setInteger(Config::CURSOR_BLUE, clr.Blue());
-	g_settings.setInteger(Config::CURSOR_ALPHA, clr.Alpha());
+	auto cursor_color = cursor_color_pick->GetColour();
+	g_settings.setInteger(Config::CURSOR_RED, cursor_color.Red());
+	g_settings.setInteger(Config::CURSOR_GREEN, cursor_color.Green());
+	g_settings.setInteger(Config::CURSOR_BLUE, cursor_color.Blue());
+	g_settings.setInteger(Config::CURSOR_ALPHA, cursor_color.Alpha());
 
-	clr = cursor_alt_color_pick->GetColour();
-	g_settings.setInteger(Config::CURSOR_ALT_RED, clr.Red());
-	g_settings.setInteger(Config::CURSOR_ALT_GREEN, clr.Green());
-	g_settings.setInteger(Config::CURSOR_ALT_BLUE, clr.Blue());
-	g_settings.setInteger(Config::CURSOR_ALT_ALPHA, clr.Alpha());
+	cursor_color = cursor_alt_color_pick->GetColour();
+	g_settings.setInteger(Config::CURSOR_ALT_RED, cursor_color.Red());
+	g_settings.setInteger(Config::CURSOR_ALT_GREEN, cursor_color.Green());
+	g_settings.setInteger(Config::CURSOR_ALT_BLUE, cursor_color.Blue());
+	g_settings.setInteger(Config::CURSOR_ALT_ALPHA, cursor_color.Alpha());
 
 	g_settings.setInteger(Config::HIDE_ITEMS_WHEN_ZOOMED, hide_items_when_zoomed_chkbox->GetValue());
-
-	// FPS
 	g_settings.setInteger(Config::FRAME_RATE_LIMIT, fps_limit_spin->GetValue());
 	g_settings.setInteger(Config::SHOW_FPS_COUNTER, show_fps_chkbox->GetValue());
 
