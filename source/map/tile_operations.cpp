@@ -15,6 +15,7 @@
 #include "brushes/wall/wall_brush.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/carpet/carpet_brush.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <algorithm>
 #include <functional>
 #include <ranges>
@@ -43,23 +44,23 @@ namespace TileOperations {
 				minimapColor = i->getMiniMapColor();
 			}
 
-			const ItemType& it_type = g_items[i->getID()];
-			if (it_type.unpassable) {
+			const auto it_type = i->getDefinition();
+			if (it_type.hasFlag(ItemFlag::Unpassable)) {
 				statflags |= TILESTATE_BLOCKING;
 			}
-			if (it_type.isOptionalBorder) {
+			if (it_type.hasFlag(ItemFlag::IsOptionalBorder)) {
 				statflags |= TILESTATE_OP_BORDER;
 			}
-			if (it_type.isTable) {
+			if (it_type.hasFlag(ItemFlag::IsTable)) {
 				statflags |= TILESTATE_HAS_TABLE;
 			}
-			if (it_type.isCarpet) {
+			if (it_type.hasFlag(ItemFlag::IsCarpet)) {
 				statflags |= TILESTATE_HAS_CARPET;
 			}
-			if (it_type.hookSouth) {
+			if (it_type.hasFlag(ItemFlag::HookSouth)) {
 				statflags |= TILESTATE_HOOK_SOUTH;
 			}
-			if (it_type.hookEast) {
+			if (it_type.hasFlag(ItemFlag::HookEast)) {
 				statflags |= TILESTATE_HOOK_EAST;
 			}
 			if (i->hasLight()) {

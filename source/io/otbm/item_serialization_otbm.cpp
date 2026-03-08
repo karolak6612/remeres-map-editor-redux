@@ -6,7 +6,7 @@
 #include "item_serialization_otbm.h"
 #include "game/item.h"
 #include "game/complexitem.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/tile.h"
 #include "io/filehandle.h"
 #include <spdlog/spdlog.h>
@@ -18,9 +18,9 @@ std::unique_ptr<Item> ItemSerializationOTBM::createFromStream(const IOMap& mapha
 	}
 
 	uint8_t _count = 0;
-	const ItemType& iType = g_items[_id];
+	const auto iType = g_item_definitions.get(_id);
 	if (maphandle.version.otbm == MAP_OTBM_1) {
-		if (iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
+		if (iType.hasFlag(ItemFlag::Stackable) || iType.isSplash() || iType.isFluidContainer()) {
 			if (!stream->getU8(_count)) {
 				return nullptr;
 			}
@@ -231,8 +231,8 @@ bool ItemSerializationOTBM::serializeItemNode(const IOMap& maphandle, NodeFileWr
 	f.addNode(OTBM_ITEM);
 	f.addU16(item.getID());
 	if (maphandle.version.otbm == MAP_OTBM_1) {
-		const ItemType& iType = g_items[item.getID()];
-		if (iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
+		const auto iType = item.getDefinition();
+		if (iType.hasFlag(ItemFlag::Stackable) || iType.isSplash() || iType.isFluidContainer()) {
 			f.addU8(item.getSubtype());
 		}
 	}
@@ -255,8 +255,8 @@ void ItemSerializationOTBM::serializeItemCompact(const IOMap& /*maphandle*/, Nod
 
 void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, NodeFileWriteHandle& f, const Item& item) {
 	if (maphandle.version.otbm >= MAP_OTBM_2) {
-		const ItemType& iType = g_items[item.getID()];
-		if (iType.stackable || iType.isSplash() || iType.isFluidContainer()) {
+		const auto iType = item.getDefinition();
+		if (iType.hasFlag(ItemFlag::Stackable) || iType.isSplash() || iType.isFluidContainer()) {
 			f.addU8(OTBM_ATTR_COUNT);
 			f.addU8(item.getSubtype());
 		}
@@ -268,7 +268,7 @@ void ItemSerializationOTBM::serializeItemAttributes(const IOMap& maphandle, Node
 			item.serializeAttributeMap(maphandle, f);
 		}
 	} else {
-		if (g_items.MinorVersion >= CLIENT_VERSION_820 && item.isCharged()) {
+		if (g_item_definitions.MinorVersion >= CLIENT_VERSION_820 && item.isCharged()) {
 			f.addU8(OTBM_ATTR_CHARGES);
 			f.addU16(item.getSubtype());
 		}

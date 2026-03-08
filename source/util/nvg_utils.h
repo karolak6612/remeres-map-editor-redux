@@ -1,7 +1,7 @@
 #ifndef RME_UTIL_NVG_UTILS_H_
 #define RME_UTIL_NVG_UTILS_H_
 
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/gui.h"
 #include <nanovg.h>
 #include <vector>
@@ -95,8 +95,8 @@ namespace NvgUtils {
 	// Returns a texture ID created in the given NanoVG context.
 	// Returns 0 if generation fails.
 	inline int CreateItemTexture(NVGcontext* vg, uint16_t id) {
-		const ItemType& it = g_items.getItemType(id);
-		GameSprite* gs = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientID));
+		const auto it = g_item_definitions.get(id);
+		GameSprite* gs = it ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(it.clientId())) : nullptr;
 		if (!gs) {
 			return 0;
 		}

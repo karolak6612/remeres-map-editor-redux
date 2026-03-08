@@ -30,7 +30,6 @@
 
 // Thanks to a million forward declarations, we don't have to include any files!
 // TODO move to a declarations file.
-class ItemType;
 class Sprite;
 class CreatureType;
 class BaseMap;

@@ -1,5 +1,7 @@
 #include "util/virtual_item_grid.h"
 #include "util/nvg_utils.h"
+#include "util/common.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/theme.h"
 #include <algorithm>
 #include <format>
@@ -165,7 +167,7 @@ int VirtualItemGrid::GetOrCreateItemTexture(NVGcontext* vg, uint16_t id) {
 wxString VirtualItemGrid::GetItemName(size_t index) const {
 	if (index < GetItemCount()) {
 		uint16_t id = GetItem(index);
-		return g_items.getItemType(id).name;
+		return wxstr(g_item_definitions.get(id).name());
 	}
 	return "";
 }

@@ -24,7 +24,6 @@
 #include "game/creature.h"
 #include "map/basemap.h"
 #include "game/spawn.h"
-#include "game/items.h"
 
 //=============================================================================
 // Creature brush
@@ -48,8 +47,10 @@ Sprite* CreatureBrush::getSprite() const {
 	if (creature_type) {
 		const Outfit& outfit = creature_type->outfit;
 		if (outfit.lookItem != 0) {
-			ItemType& it = g_items[outfit.lookItem];
-			return it.sprite;
+			if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
+				return g_gui.gfx.getSprite(definition.clientId());
+			}
+			return nullptr;
 		}
 
 		if (outfit.lookType != 0) {

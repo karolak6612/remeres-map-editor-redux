@@ -10,6 +10,16 @@
 
 namespace {
 	constexpr char kDefaultDataDirectory[] = "1287";
+
+	std::string configTypeFromSelection(long selection) {
+		switch (selection) {
+			case 0: return "dat_otb";
+			case 1: return "dat_only";
+			case 2: return "dat_srv";
+			case 3: return "protobuf";
+			default: return "dat_otb";
+		}
+	}
 }
 
 ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent) {
@@ -151,7 +161,7 @@ void ClientVersionPage::PopulateClientTree() {
 		wxTreeItemId group = client_tree_ctrl->AppendItem(root, wxString::Format("%d.x", major_version));
 		for (auto* version : versions_in_group) {
 			default_version_choice->Append(wxstr(version->getName()));
-			if (version->getProtocolID() == g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION)) {
+			if (version == ClientVersion::getLatestVersion()) {
 				default_version_choice->SetSelection(default_version_choice->GetCount() - 1);
 			}
 
@@ -280,7 +290,20 @@ void ClientVersionPage::OnClientSelected(wxTreeEvent& WXUNUSED(event)) {
 
 	// Group: Config / Flags
 	client_prop_grid->Append(new wxPropertyCategory("Configuration & Flags", "Config"));
-	client_prop_grid->Append(new wxStringProperty("Configuration Type", "configType", cv->getConfigType()));
+	{
+		wxPGChoices config_choices;
+		config_choices.Add("dat_otb");
+		config_choices.Add("dat_only");
+		config_choices.Add("dat_srv");
+		config_choices.Add("protobuf");
+		const wxString current_config = wxstr(cv->getConfigType());
+		int current_index = config_choices.Index(current_config);
+		if (current_index == wxNOT_FOUND) {
+			current_index = 0;
+		}
+		client_prop_grid->Append(new wxEnumProperty("Configuration Type", "configType", config_choices, current_index))
+			->SetHelpString("Select how item definitions are loaded for this client.");
+	}
 
 	client_prop_grid->Append(new wxBoolProperty("Transparency", "transparency", cv->isTransparent()));
 	client_prop_grid->Append(new wxBoolProperty("Extended", "extended", cv->isExtended()));
@@ -421,7 +444,7 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 	} else if (propName == "description") {
 		cv->setDescription(nstr(value.As<wxString>()));
 	} else if (propName == "configType") {
-		cv->setConfigType(nstr(prop->GetValueAsString()));
+		cv->setConfigType(configTypeFromSelection(prop->GetValue().GetLong()));
 	} else if (propName == "metadataFile") {
 		cv->setMetadataFile(nstr(value.As<wxString>()));
 	} else if (propName == "spritesFile") {
@@ -509,6 +532,7 @@ void ClientVersionPage::Apply() {
 		std::string defName = nstr(default_version_choice->GetStringSelection());
 		ClientVersion* defCv = ClientVersion::get(defName);
 		if (defCv) {
+			ClientVersion::setLatestVersion(defCv);
 			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, defCv->getProtocolID());
 		}
 	}

@@ -97,6 +97,7 @@ public:
 
 	friend class GameSpriteLoader;
 	friend class DatLoader;
+	friend class DatMetadataDecoder;
 	friend class SprLoader;
 
 	// Cleans old & unused textures according to config settings

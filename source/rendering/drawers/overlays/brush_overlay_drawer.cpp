@@ -203,7 +203,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 									sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(x, y, view.floor)), atlas);
 								}
 							} else {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
+								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
 							}
 						}
 					}
@@ -284,7 +284,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 						float distance = sqrt(dx * dx + dy * dy);
 						if (distance < radii) {
 							if (brush->is<RAWBrush>()) {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
+								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
 							} else {
 								if (g_gui.gfx.ensureAtlasManager()) {
 									sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), brushColor, *g_gui.gfx.getAtlasManager());
@@ -366,7 +366,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 					if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
 						if (x >= -g_gui.GetBrushSize() && x <= g_gui.GetBrushSize() && y >= -g_gui.GetBrushSize() && y <= g_gui.GetBrushSize()) {
 							if (brush->is<RAWBrush>()) {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
+								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
 							} else {
 								if (brush->is<WaypointBrush>()) {
 									uint8_t r, g, b;
@@ -387,7 +387,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 						double distance = sqrt(double(x * x) + double(y * y));
 						if (distance < g_gui.GetBrushSize() + 0.005) {
 							if (brush->is<RAWBrush>()) {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemType(), 160, 160, 160, 160);
+								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
 							} else {
 								if (brush->is<WaypointBrush>()) {
 									uint8_t r, g, b;

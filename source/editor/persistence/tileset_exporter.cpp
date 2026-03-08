@@ -1,7 +1,7 @@
 #include "editor/persistence/tileset_exporter.h"
 
 #include "game/materials.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "ui/gui.h"
@@ -63,10 +63,10 @@ void TilesetExporter::exportTilesets(const FileName& directory, const std::strin
 							pugi::xml_node brush = palette.append_child("brush");
 							brush.append_attribute("name") = brush_ptr->getName().c_str();
 						} else {
-							ItemType& it = g_items[brush_ptr->as<RAWBrush>()->getItemID()];
-							if (it.id != 0) {
+							const auto it = g_item_definitions.get(brush_ptr->as<RAWBrush>()->getItemID());
+							if (it) {
 								pugi::xml_node item = palette.append_child("item");
-								item.append_attribute("id") = it.id;
+								item.append_attribute("id") = it.serverId();
 							}
 						}
 					}

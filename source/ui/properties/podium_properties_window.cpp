@@ -7,6 +7,7 @@
 
 #include "game/complexitem.h"
 #include "game/creature.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
 #include "util/image_manager.h"
@@ -41,7 +42,7 @@ PodiumPropertiesWindow::PodiumPropertiesWindow(wxWindow* win_parent, const Map* 
 	unique_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(edit_item->getUniqueID()), wxDefaultPosition, FromDIP(wxSize(-1, 20)), wxSP_ARROW_KEYS, 0, 0xFFFF, edit_item->getUniqueID());
 	subsizer->Add(unique_id_field, wxSizerFlags(1).Expand());
 
-	if (g_items.MajorVersion >= 3 && g_items.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
+	if (g_item_definitions.MajorVersion >= 3 && g_item_definitions.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
 		subsizer->Add(newd wxStaticText(this, wxID_ANY, "Classification"));
 		subsizer->Add(newd wxStaticText(this, wxID_ANY, i2ws(item->getClassification())));
 

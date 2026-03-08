@@ -9,7 +9,7 @@
 #include "brushes/wall/wall_border_calculator.h"
 
 #include "ui/gui.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/basemap.h"
 #include "map/tile_operations.h"
 
@@ -203,14 +203,14 @@ void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 				bool open = item->isOpen();
 
 				const auto& doorItems = items.getDoorItems(wall_alignment);
-				for (const auto& dt : doorItems) {
-					if (dt.type == doortype) {
-						ASSERT(dt.id);
-						ItemType& it = g_items[dt.id];
-						ASSERT(it.id != 0);
+					for (const auto& dt : doorItems) {
+						if (dt.type == doortype) {
+							ASSERT(dt.id);
+							const auto it = g_item_definitions.get(dt.id);
+							ASSERT(it);
 
-						if (it.isOpen == open) {
-							if (open || dt.locked == prefLocked) {
+							if (it.hasFlag(ItemFlag::IsOpen) == open) {
+								if (open || dt.locked == prefLocked) {
 								id = dt.id;
 								break;
 							} else {

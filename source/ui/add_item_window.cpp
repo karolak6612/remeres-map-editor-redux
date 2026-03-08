@@ -28,6 +28,7 @@
 #include "editor/editor.h"
 #include "game/creature.h"
 #include "game/materials.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/tileset.h"
 
 #include "ui/gui.h"
@@ -104,11 +105,11 @@ AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryT
 }
 
 void AddItemWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
-	const ItemType& it = g_items.getItemType(item_id_field->GetValue());
-	if (it.id != 0) {
-		g_materials.addToTileset(tileset_item->name, it.id, category_type);
+	const auto it = g_item_definitions.get(item_id_field->GetValue());
+	if (it) {
+		g_materials.addToTileset(tileset_item->name, it.serverId(), category_type);
 		g_materials.modify();
-		DialogUtil::PopupDialog("Item added to Tileset", "'" + it.name + "' has been added to tileset '" + tileset_item->name + "'", wxOK);
+		DialogUtil::PopupDialog("Item added to Tileset", "'" + std::string(it.name()) + "' has been added to tileset '" + tileset_item->name + "'", wxOK);
 
 		EndModal(1);
 	} else {
@@ -123,12 +124,12 @@ void AddItemWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 
 void AddItemWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
-		item_id_label->SetLabelText("ID " + i2ws(it.id));
-		item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
+	const auto it = g_item_definitions.get(itemId);
+	if (it) {
+		item_id_label->SetLabelText("ID " + i2ws(it.serverId()));
+		item_name_label->SetLabelText("\"" + wxstr(std::string(it.name())) + "\"");
 
-		item_button->SetSprite(it.clientID);
+		item_button->SetSprite(it.clientId());
 	} else {
 		item_id_field->SetValue(100);
 	}
@@ -149,13 +150,13 @@ void AddItemWindow::SetItemIdToItemButton(uint16_t id) {
 	}
 
 	if (id != 0) {
-		const ItemType& it = g_items.getItemType(id);
-		if (it.id != 0) {
-			item_id_field->SetValue(it.id);
-			item_id_label->SetLabelText("ID " + i2ws(it.id));
-			item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
+		const auto it = g_item_definitions.get(id);
+		if (it) {
+			item_id_field->SetValue(it.serverId());
+			item_id_label->SetLabelText("ID " + i2ws(it.serverId()));
+			item_name_label->SetLabelText("\"" + wxstr(std::string(it.name())) + "\"");
 
-			item_button->SetSprite(it.clientID);
+			item_button->SetSprite(it.clientId());
 			return;
 		}
 	}

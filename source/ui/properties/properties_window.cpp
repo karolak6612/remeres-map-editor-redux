@@ -27,6 +27,7 @@
 #include "ui/properties/property_validator.h"
 #include "ui/properties/property_applier.h"
 #include "ui/properties/teleport_service.h"
+#include "item_definitions/core/item_definition_store.h"
 
 #include <wx/grid.h>
 #include <wx/wrapsizer.h>
@@ -147,7 +148,7 @@ void PropertiesWindow::createGeneralFields(wxFlexGridSizer* gridsizer, wxWindow*
 }
 
 void PropertiesWindow::createClassificationFields(wxFlexGridSizer* gridsizer, wxWindow* panel) {
-	if (g_items.MajorVersion >= 3 && g_items.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
+	if (g_item_definitions.MajorVersion >= 3 && g_item_definitions.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
 		gridsizer->Add(newd wxStaticText(panel, wxID_ANY, "Classification"));
 		gridsizer->Add(newd wxStaticText(panel, wxID_ANY, i2ws(edit_item->getClassification())));
 

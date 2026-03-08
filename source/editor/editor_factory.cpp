@@ -46,18 +46,18 @@ void SetupCallbacks(Editor* editor) {
 
 std::unique_ptr<Editor> EditorFactory::CreateEmpty(CopyBuffer& copybuffer) {
 	ClientVersionID defaultVersion = CLIENT_VERSION_NONE;
-	OtbVersionID protocolId = g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION);
-	if (protocolId != 0) {
-		ClientVersion* match = ClientVersion::getBestMatch(protocolId);
-		if (match) {
-			defaultVersion = match->getID();
-		}
+	ClientVersion* latest = ClientVersion::getLatestVersion();
+	if (latest) {
+		defaultVersion = latest->getID();
 	}
 
 	if (defaultVersion == CLIENT_VERSION_NONE) {
-		ClientVersion* latest = ClientVersion::getLatestVersion();
-		if (latest) {
-			defaultVersion = latest->getID();
+		OtbVersionID protocolId = g_settings.getInteger(Config::DEFAULT_CLIENT_VERSION);
+		if (protocolId != 0) {
+			ClientVersion* match = ClientVersion::getBestMatch(protocolId);
+			if (match) {
+				defaultVersion = match->getID();
+			}
 		}
 	}
 

@@ -2,7 +2,7 @@
 #define RME_RENDERING_UTILITIES_PATTERN_CALCULATOR_H_
 
 #include "rendering/core/game_sprite.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "game/item.h"
 #include "map/tile.h"
 #include <bit>
@@ -29,7 +29,7 @@ private:
 	}
 
 public:
-	static SpritePatterns Calculate(const GameSprite* spr, const ItemType& it, const Item* item, const Tile* tile, const Position& pos) {
+	static SpritePatterns Calculate(const GameSprite* spr, const ItemDefinitionView& it, const Item* item, const Tile* tile, const Position& pos) {
 		SpritePatterns patterns;
 
 		if (!spr) {
@@ -44,7 +44,7 @@ public:
 
 		if (it.isSplash() || it.isFluidContainer()) {
 			patterns.subtype = item->getSubtype();
-		} else if (it.isHangable) {
+		} else if (it.hasFlag(ItemFlag::IsHangable)) {
 			if (tile && tile->hasHookSouth()) {
 				patterns.x = 1;
 			} else if (tile && tile->hasHookEast()) {
@@ -52,7 +52,7 @@ public:
 			} else {
 				patterns.x = 0;
 			}
-		} else if (it.stackable) {
+		} else if (it.hasFlag(ItemFlag::Stackable)) {
 			uint16_t itemSubtype = item->getSubtype();
 			if (itemSubtype <= 1) {
 				patterns.subtype = 0;

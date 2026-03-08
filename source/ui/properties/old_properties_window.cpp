@@ -20,6 +20,7 @@
 #include "ui/properties/property_validator.h"
 #include "ui/properties/property_applier.h"
 #include "ui/properties/teleport_service.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "util/image_manager.h"
 
 // ============================================================================
@@ -112,7 +113,7 @@ void OldPropertiesWindow::createGenericFields(wxFlexGridSizer* subsizer, wxWindo
 
 void OldPropertiesWindow::createClassificationFields(wxFlexGridSizer* subsizer, wxWindow* parent) {
 	// item classification (12.81+)
-	if (g_items.MajorVersion >= 3 && g_items.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
+	if (g_item_definitions.MajorVersion >= 3 && g_item_definitions.MinorVersion >= 60 && (edit_item->getClassification() > 0 || edit_item->isWeapon() || edit_item->isWearableEquipment())) {
 		subsizer->Add(newd wxStaticText(parent, wxID_ANY, "Classification"));
 		subsizer->Add(newd wxStaticText(parent, wxID_ANY, i2ws(edit_item->getClassification())));
 

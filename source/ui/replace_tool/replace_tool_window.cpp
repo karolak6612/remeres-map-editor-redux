@@ -3,7 +3,6 @@
 #include "visual_similarity_service.h"
 #include "ui/theme.h"
 #include "editor/editor.h"
-#include "game/items.h"
 #include "ui/gui.h"
 #include "ui/gui.h"
 #include "app/settings.h"

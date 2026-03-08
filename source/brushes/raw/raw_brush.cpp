@@ -19,7 +19,7 @@
 
 #include "brushes/raw/raw_brush.h"
 #include "app/settings.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/basemap.h"
 #include <format>
 
@@ -27,13 +27,8 @@
 // RAW brush
 
 RAWBrush::RAWBrush(uint16_t itemid) :
-	Brush() {
-	ItemType& it = g_items[itemid];
-	if (it.id == 0) {
-		itemtype = nullptr;
-	} else {
-		itemtype = &it;
-	}
+	Brush(),
+	item_id(itemid) {
 }
 
 RAWBrush::~RAWBrush() {
@@ -41,49 +36,51 @@ RAWBrush::~RAWBrush() {
 }
 
 int RAWBrush::getLookID() const {
-	if (itemtype) {
-		return itemtype->clientID;
+	if (const auto definition = g_item_definitions.get(item_id)) {
+		return definition.clientId();
 	}
 	return 0;
 }
 
 uint16_t RAWBrush::getItemID() const {
-	return itemtype->id;
+	return item_id;
 }
 
 std::string RAWBrush::getName() const {
-	if (!itemtype) {
+	const auto definition = g_item_definitions.get(item_id);
+	if (!definition) {
 		return "RAWBrush";
 	}
 
-	if (itemtype->hookSouth) {
-		return std::format("{} - {} (Hook South)", itemtype->id, itemtype->name);
-	} else if (itemtype->hookEast) {
-		return std::format("{} - {} (Hook East)", itemtype->id, itemtype->name);
+	if (definition.hasFlag(ItemFlag::HookSouth)) {
+		return std::format("{} - {} (Hook South)", item_id, definition.name());
+	} else if (definition.hasFlag(ItemFlag::HookEast)) {
+		return std::format("{} - {} (Hook East)", item_id, definition.name());
 	}
 
-	return std::format("{} - {}{}", itemtype->id, itemtype->name, itemtype->editorsuffix);
+	return std::format("{} - {}{}", item_id, definition.name(), definition.editorSuffix());
 }
 
 void RAWBrush::undraw(BaseMap* map, Tile* tile) {
-	if (tile->ground && tile->ground->getID() == itemtype->id) {
+	if (tile->ground && tile->ground->getID() == item_id) {
 		tile->ground = nullptr;
 	}
-	std::erase_if(tile->items, [item_id = itemtype->id](const auto& item) {
-		return item->getID() == item_id;
+	std::erase_if(tile->items, [brush_item_id = item_id](const auto& item) {
+		return item->getID() == brush_item_id;
 	});
 }
 
 void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
-	if (!itemtype) {
+	const auto definition = g_item_definitions.get(item_id);
+	if (!definition) {
 		return;
 	}
 
 	bool b = parameter ? *reinterpret_cast<bool*>(parameter) : false;
-	if ((g_settings.getInteger(Config::RAW_LIKE_SIMONE) && !b) && itemtype->alwaysOnBottom && itemtype->alwaysOnTopOrder == 2) {
-		std::erase_if(tile->items, [topOrder = itemtype->alwaysOnTopOrder](const auto& item) {
+	if ((g_settings.getInteger(Config::RAW_LIKE_SIMONE) && !b) && definition.hasFlag(ItemFlag::AlwaysOnBottom) && definition.attribute(ItemAttributeKey::AlwaysOnTopOrder) == 2) {
+		std::erase_if(tile->items, [topOrder = definition.attribute(ItemAttributeKey::AlwaysOnTopOrder)](const auto& item) {
 			return item->getTopOrder() == topOrder;
 		});
 	}
-	tile->addItem(Item::Create(itemtype->id));
+	tile->addItem(Item::Create(item_id));
 }

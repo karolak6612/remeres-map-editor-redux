@@ -23,7 +23,7 @@
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 #include "util/image_manager.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <glad/glad.h>
 #include <format>
 #include <nanovg.h>
@@ -39,9 +39,9 @@ ReplaceItemsButton::ReplaceItemsButton(wxWindow* parent) :
 
 ItemGroup_t ReplaceItemsButton::GetGroup() const {
 	if (m_id != 0) {
-		const ItemType& it = g_items.getItemType(m_id);
-		if (it.id != 0) {
-			return it.group;
+		const auto it = g_item_definitions.get(m_id);
+		if (it) {
+			return it.group();
 		}
 	}
 	return ITEM_GROUP_NONE;
@@ -55,9 +55,9 @@ void ReplaceItemsButton::SetItemId(uint16_t id) {
 	m_id = id;
 
 	if (m_id != 0) {
-		const ItemType& it = g_items.getItemType(m_id);
-		if (it.id != 0) {
-			SetSprite(it.clientID);
+		const auto it = g_item_definitions.get(m_id);
+		if (it) {
+			SetSprite(it.clientId());
 			return;
 		}
 	}
@@ -140,10 +140,10 @@ void ReplaceItemsListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t 
 	}
 
 	const ReplacingItem& item = m_items.at(index);
-	const ItemType& type1 = g_items.getItemType(item.replaceId);
-	Sprite* sprite1 = g_gui.gfx.getSprite(type1.clientID);
-	const ItemType& type2 = g_items.getItemType(item.withId);
-	Sprite* sprite2 = g_gui.gfx.getSprite(type2.clientID);
+	const auto type1 = g_item_definitions.get(item.replaceId);
+	Sprite* sprite1 = type1 ? g_gui.gfx.getSprite(type1.clientId()) : nullptr;
+	const auto type2 = g_item_definitions.get(item.withId);
+	Sprite* sprite2 = type2 ? g_gui.gfx.getSprite(type2.clientId()) : nullptr;
 
 	if (sprite1 && sprite2) {
 		int x = rect.GetX();

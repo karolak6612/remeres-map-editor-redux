@@ -2,7 +2,7 @@
 #include "ui/replace_tool/rule_card_renderer.h"
 #include "util/nanovg_canvas.h"
 #include "ui/replace_tool/rule_manager.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "util/nvg_utils.h"
 #include <string>
 #include <algorithm>
@@ -293,8 +293,8 @@ void RuleCardRenderer::DrawRuleItemCard(NanoVGCanvas* canvas, NVGcontext* vg, fl
 			nvgFill(vg);
 		}
 
-		ItemType& it = g_items[id];
-		std::string label = std::format("{} - {}", id, it.name);
+		const auto it = g_item_definitions.get(id);
+		std::string label = std::format("{} - {}", id, it.name());
 
 		nvgFillColor(vg, NvgUtils::ToNvColor(Theme::Get(Theme::Role::Text)));
 		nvgFontSize(vg, 11.0f);

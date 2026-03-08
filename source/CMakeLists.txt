@@ -76,8 +76,6 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/game/house.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item.h
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.h
-    ${CMAKE_CURRENT_LIST_DIR}/game/item_loaders.h
-    ${CMAKE_CURRENT_LIST_DIR}/game/items.h
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.h
     ${CMAKE_CURRENT_LIST_DIR}/game/outfit.h
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.h
@@ -85,6 +83,19 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/game/town.h
     ${CMAKE_CURRENT_LIST_DIR}/game/preview_preferences.h
     ${CMAKE_CURRENT_LIST_DIR}/game/waypoints.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_types.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_fragments.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_recipe.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_parser.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_resolver.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store_builder.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definitions_loader.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_item_parser.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_metadata_decoder.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_format.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_parser.h
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/xml/xml_item_parser.h
 
     ${CMAKE_CURRENT_LIST_DIR}/ingame_preview/floor_visibility_calculator.h
     ${CMAKE_CURRENT_LIST_DIR}/ingame_preview/ingame_preview_renderer.h
@@ -415,13 +426,20 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/game/house.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/item_attributes.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/game/item_loaders.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/game/items.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/materials.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/spawn.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/town.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/preview_preferences.cpp
     ${CMAKE_CURRENT_LIST_DIR}/game/waypoints.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_recipe.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_resolver.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definition_store_builder.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/core/item_definitions_loader.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_item_parser.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/dat/dat_metadata_decoder.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/otb/otb_item_parser.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/item_definitions/formats/xml/xml_item_parser.cpp
 
     ${CMAKE_CURRENT_LIST_DIR}/ingame_preview/floor_visibility_calculator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ingame_preview/ingame_preview_renderer.cpp

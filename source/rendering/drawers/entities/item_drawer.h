@@ -6,6 +6,7 @@
 #define RME_RENDERING_ITEM_DRAWER_H_
 
 #include "app/definitions.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/position.h"
 
 // Forward declarations
@@ -13,7 +14,6 @@ class SpriteDrawer;
 class CreatureDrawer;
 class Tile;
 class Item;
-class ItemType;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
@@ -25,7 +25,7 @@ struct BlitItemParams {
 	const Tile* tile = nullptr;
 	Position pos;
 	Item* item = nullptr;
-	const ItemType* item_type = nullptr;
+	ItemDefinitionView item_definition;
 	const DrawingOptions* options = nullptr;
 	const SpritePatterns* patterns = nullptr;
 	bool ephemeral = false;
@@ -45,8 +45,8 @@ public:
 
 	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
 
-	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
-	void DrawHookIndicator(const ItemType& type, const Position& pos);
+	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ServerItemId item_id, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
+	void DrawHookIndicator(const ItemDefinitionView& definition, const Position& pos);
 	void DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east);
 
 	void SetHookIndicatorDrawer(HookIndicatorDrawer* drawer) {

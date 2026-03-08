@@ -1,7 +1,7 @@
 #include "ui/dialogs/find_dialog.h"
 
 #include "brushes/brush.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
 #include "brushes/raw/raw_brush.h"
@@ -212,13 +212,8 @@ void FindBrushDialog::OnClickOKInternal() {
 				// Did we not find a matching brush?
 				if (!result_brush) {
 					// Then let's search the RAWs
-					for (int id = 0; id <= g_items.getMaxID(); ++id) {
-						ItemType& it = g_items[id];
-						if (it.id == 0) {
-							continue;
-						}
-
-						RAWBrush* raw_brush = it.raw_brush;
+					for (ServerItemId id : g_item_definitions.allIds()) {
+						RAWBrush* raw_brush = g_item_definitions.editorData(id).raw_brush;
 						if (!raw_brush) {
 							continue;
 						}
@@ -271,13 +266,8 @@ void FindBrushDialog::RefreshContentsInternal() {
 			item_list->AddBrush(const_cast<Brush*>(brush));
 		}
 
-		for (int id = 0; id <= g_items.getMaxID(); ++id) {
-			ItemType& it = g_items[id];
-			if (it.id == 0) {
-				continue;
-			}
-
-			RAWBrush* raw_brush = it.raw_brush;
+		for (ServerItemId id : g_item_definitions.allIds()) {
+			RAWBrush* raw_brush = g_item_definitions.editorData(id).raw_brush;
 			if (!raw_brush) {
 				continue;
 			}

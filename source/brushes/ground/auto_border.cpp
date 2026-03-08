@@ -5,7 +5,7 @@
 #include "brushes/ground/auto_border.h"
 #include "brushes/brush_enums.h"
 #include "brushes/ground/ground_brush.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ext/pugixml.hpp"
 #include <wx/string.h>
 #include <utility>
@@ -67,33 +67,34 @@ bool AutoBorder::load(pugi::xml_node node, std::vector<std::string>& warnings, G
 
 		const std::string_view orientation = attribute.as_string();
 
-		ItemType& it = g_items[itemid];
-		if (it.id == 0) {
+		if (!g_item_definitions.exists(itemid)) {
 			warnings.push_back("Invalid item ID " + std::to_string(itemid) + " for border " + std::to_string(id));
 			continue;
 		}
 
 		if (ground) { // We are a ground border
-			it.group = ITEM_GROUP_NONE;
-			it.ground_equivalent = ground_equivalent;
-			it.brush = owner;
-
-			ItemType& it2 = g_items[ground_equivalent];
-			it2.has_equivalent = it2.id != 0;
+			g_item_definitions.setGroup(itemid, ITEM_GROUP_NONE);
+			g_item_definitions.setAttribute(itemid, ItemAttributeKey::GroundEquivalent, ground_equivalent);
+			g_item_definitions.mutableEditorData(itemid).brush = owner;
+			if (g_item_definitions.exists(ground_equivalent)) {
+				g_item_definitions.setFlag(ground_equivalent, ItemFlag::HasEquivalent, true);
+			}
 		}
 
-		it.alwaysOnBottom = true; // Never-ever place other items under this, will confuse the user something awful.
-		it.isBorder = true;
-		it.isOptionalBorder = it.isOptionalBorder ? true : optionalBorder;
-		if (group && !it.border_group) {
-			it.border_group = group;
+		g_item_definitions.setFlag(itemid, ItemFlag::AlwaysOnBottom, true);
+		g_item_definitions.setFlag(itemid, ItemFlag::IsBorder, true);
+		if (optionalBorder) {
+			g_item_definitions.setFlag(itemid, ItemFlag::IsOptionalBorder, true);
+		}
+		if (group && g_item_definitions.get(itemid).attribute(ItemAttributeKey::BorderGroup) == 0) {
+			g_item_definitions.setAttribute(itemid, ItemAttributeKey::BorderGroup, group);
 		}
 
 		int32_t edge_id = edgeNameToID(orientation);
 		if (edge_id != BORDER_NONE) {
 			tiles[edge_id] = itemid;
-			if (it.border_alignment == BORDER_NONE) {
-				it.border_alignment = ::BorderType(edge_id);
+			if (g_item_definitions.get(itemid).attribute(ItemAttributeKey::BorderAlignment) == BORDER_NONE) {
+				g_item_definitions.setAttribute(itemid, ItemAttributeKey::BorderAlignment, edge_id);
 			}
 		}
 	}

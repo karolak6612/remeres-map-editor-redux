@@ -2,7 +2,7 @@
 #include "ui/replace_tool/visual_similarity_service.h"
 #include "util/nvg_utils.h"
 #include "ui/gui.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "rendering/core/graphics.h"
 #include <algorithm>
 #include <cmath>
@@ -180,12 +180,12 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 		return data;
 	}
 
-	const ItemType& it = g_items.getItemType(itemId);
-	if (it.id == 0 || it.clientID == 0) {
+	const auto it = g_item_definitions.get(itemId);
+	if (!it || it.clientId() == 0) {
 		return data;
 	}
 
-	Sprite* sprite = g_gui.gfx.getSprite(it.clientID);
+	Sprite* sprite = g_gui.gfx.getSprite(it.clientId());
 	if (!sprite) {
 		return data;
 	}
@@ -215,13 +215,13 @@ VisualSimilarityService::VisualItemData VisualSimilarityService::CalculateData(u
 
 void VisualSimilarityService::OnTimer(wxTimerEvent&) {
 	int processed = 0;
-	int maxId = g_items.getMaxID();
+	int maxId = g_item_definitions.getMaxID();
 
 	// Process fewer items per tick to prevent UI lag and handle spikes
 	while (processed < 100 && m_nextIdToIndex <= maxId) {
 		uint16_t id = m_nextIdToIndex++;
-		const ItemType& it = g_items.getItemType(id);
-		if (it.id != 0 && it.clientID != 0) {
+		const auto it = g_item_definitions.get(id);
+		if (it && it.clientId() != 0) {
 			VisualItemData data = CalculateData(id);
 			if (data.width > 0) {
 				std::lock_guard<std::mutex> lock(dataMutex);

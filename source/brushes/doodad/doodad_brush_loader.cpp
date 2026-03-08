@@ -7,8 +7,8 @@
 #include "brushes/doodad/doodad_brush_items.h"
 #include "brushes/doodad/doodad_brush.h" // For DoodadBrush definition if needed for pointer check?
 // actually we just pass DoodadBrush*
-#include "game/item.h" // For g_items
-#include "game/items.h"
+#include "game/item.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/tile.h"
 
 #include "ext/pugixml.hpp"
@@ -33,9 +33,12 @@ bool DoodadBrushLoader::load(pugi::xml_node node, DoodadBrushItems& items, Dooda
 	}
 
 	if ((attribute = node.attribute("server_lookid"))) {
-		uint16_t id = g_items[attribute.as_ushort()].clientID;
-		if (id != 0) {
-			settings.look_id = id;
+		if (const auto definition = g_item_definitions.get(attribute.as_ushort())) {
+			if (definition.clientId() != 0) {
+				settings.look_id = definition.clientId();
+			} else {
+				warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()));
+			}
 		} else {
 			warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()));
 		}
@@ -120,9 +123,8 @@ bool DoodadBrushLoader::loadAlternative(pugi::xml_node node, DoodadBrushItems& i
 				continue;
 			}
 
-			ItemType& it = g_items[item->getID()];
-			if (it.id != 0 && brushPtr) {
-				it.doodad_brush = brushPtr;
+			if (g_item_definitions.exists(item->getID()) && brushPtr) {
+				g_item_definitions.mutableEditorData(item->getID()).doodad_brush = brushPtr;
 			}
 
 			int chance = attribute.as_int();
@@ -182,9 +184,8 @@ bool DoodadBrushLoader::loadAlternative(pugi::xml_node node, DoodadBrushItems& i
 
 					std::unique_ptr<Item> item = Item::Create(itemNode);
 					if (item) {
-						ItemType& it = g_items[item->getID()];
-						if (it.id != 0 && brushPtr) {
-							it.doodad_brush = brushPtr;
+						if (g_item_definitions.exists(item->getID()) && brushPtr) {
+							g_item_definitions.mutableEditorData(item->getID()).doodad_brush = brushPtr;
 						}
 						tiles_items.push_back(std::move(item));
 					} else {

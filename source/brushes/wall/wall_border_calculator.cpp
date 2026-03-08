@@ -7,7 +7,7 @@
 #include "brushes/wall/wall_brush_items.h"
 #include "map/basemap.h"
 #include "map/tile_operations.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "app/main.h" // ASSERT, etc
 
 #include <vector>
@@ -23,9 +23,9 @@ bool WallBorderCalculator::hasMatchingWallBrushAtTile(BaseMap* map, WallBrush* w
 		if (item->isWall()) {
 			WallBrush* wb = item->getWallBrush();
 			if (wb == wall_brush) {
-				return !g_items[item->getID()].wall_hate_me;
+				return !g_item_definitions.get(item->getID()).hasFlag(ItemFlag::WallHateMe);
 			} else if (wb && (wall_brush->friendOf(wb) || wb->friendOf(wall_brush))) {
-				return !g_items[item->getID()].wall_hate_me;
+				return !g_item_definitions.get(item->getID()).hasFlag(ItemFlag::WallHateMe);
 			}
 		}
 	}

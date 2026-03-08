@@ -1,8 +1,9 @@
 #include "ui/replace_tool/item_grid_panel.h"
 #include "ui/theme.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/gui.h"
 #include "app/managers/version_manager.h"
+#include "util/common.h"
 #include <wx/dcclient.h>
 #include <wx/graphics.h>
 #include <wx/dnd.h>
@@ -36,12 +37,12 @@ void ItemGridPanel::SetFilter(const wxString& filter) {
 		if (id < 100) {
 			continue;
 		}
-		const ItemType& it = g_items.getItemType(id);
+		const auto it = g_item_definitions.get(id);
 		if (lowerFilter.IsEmpty()) {
 			filteredItems.push_back(id);
 		} else {
-			wxString name = wxString(it.name);
-			if (name.Lower().Contains(lowerFilter) || wxString(std::format("{}", id)).Contains(lowerFilter) || wxString(std::format("{}", it.clientID)).Contains(lowerFilter)) {
+			wxString name = wxstr(it.name());
+			if (name.Lower().Contains(lowerFilter) || wxstr(std::format("{}", id)).Contains(lowerFilter) || wxstr(std::format("{}", it.clientId())).Contains(lowerFilter)) {
 				filteredItems.push_back(id);
 			}
 		}
@@ -67,7 +68,7 @@ wxString ItemGridPanel::GetItemName(size_t index) const {
 	if (it != m_nameOverrides.end()) {
 		return it->second;
 	}
-	return wxString(std::format("{} - {}", id, g_items.getItemType(id).name));
+	return wxstr(std::format("{} - {}", id, g_item_definitions.get(id).name()));
 }
 
 void ItemGridPanel::OnItemSelected(int index) {
@@ -87,7 +88,7 @@ void ItemGridPanel::OnMotion(wxMouseEvent& event) {
 	if (event.Dragging() && m_draggable) {
 		uint16_t id = GetSelectedItemId();
 		if (id != 0) {
-			wxTextDataObject data(wxString(std::format("RME_ITEM:{}", id)));
+			wxTextDataObject data(wxstr(std::format("RME_ITEM:{}", id)));
 			wxDropSource dragSource(this);
 			dragSource.SetData(data);
 			dragSource.DoDragDrop(wxDrag_AllowMove);

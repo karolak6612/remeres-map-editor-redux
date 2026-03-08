@@ -51,7 +51,7 @@ public:
 		return contents.size();
 	}
 	size_t getVolume() const {
-		return g_items[id].volume;
+		return static_cast<size_t>(getDefinition().attribute(ItemAttributeKey::Volume));
 	}
 
 	std::vector<std::unique_ptr<Item>>& getVector() {

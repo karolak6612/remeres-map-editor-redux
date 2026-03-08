@@ -15,6 +15,24 @@
 #include "brushes/managers/brush_manager.h"
 #include "ui/managers/loading_manager.h"
 #include "ui/tool_options_window.h"
+#include "item_definitions/core/item_definitions_loader.h"
+#include "item_definitions/core/item_definition_store.h"
+
+namespace {
+	wxString getItemDefinitionLoadingLabel(ItemDefinitionMode mode) {
+		switch (mode) {
+			case ItemDefinitionMode::DatOtb:
+				return "Loading item definitions (DAT + OTB + XML)...";
+			case ItemDefinitionMode::DatOnly:
+				return "Loading item definitions (DAT + XML)...";
+			case ItemDefinitionMode::DatSrv:
+				return "Loading item definitions (DAT + SRV + XML)...";
+			case ItemDefinitionMode::Protobuf:
+				return "Loading item definitions (protobuf + XML)...";
+		}
+		return "Loading item definitions...";
+	}
+}
 
 VersionManager g_version;
 
@@ -111,21 +129,24 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		return false;
 	}
 
-	g_loading.SetLoadDone(20, "Loading items.otb file...");
+	g_loading.SetLoadDone(20, getItemDefinitionLoadingLabel(getLoadedVersion()->getItemDefinitionMode()));
 	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
-	if (!g_items.loadFromOtb(base_data_path + "items.otb", error, warnings)) {
-		error = "Couldn't load items.otb: " + error;
+	ItemDefinitionsLoader item_loader;
+	ItemDefinitionLoadInput item_input;
+	item_input.mode = getLoadedVersion()->getItemDefinitionMode();
+	item_input.client_version = getLoadedVersion();
+	item_input.dat_path = metadata_path;
+	item_input.otb_path = wxFileName(base_data_path + "items.otb");
+	item_input.xml_path = wxFileName(base_data_path + "items.xml");
+	item_input.graphics = &g_gui.gfx;
+	if (!item_loader.load(item_input, error, warnings)) {
+		error = "Couldn't load item definitions: " + error;
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
 		return false;
 	}
 
-	g_loading.SetLoadDone(30, "Loading items.xml ...");
-	if (!g_items.loadFromGameXml(base_data_path + "items.xml", error, warnings)) {
-		warnings.push_back(std::format("Couldn't load items.xml: {}", error.ToStdString()));
-	}
-
-	g_loading.SetLoadDone(45, "Loading creatures.xml ...");
+	g_loading.SetLoadDone(35, "Loading creatures.xml ...");
 	if (!g_creatures.loadFromXML(base_data_path + "creatures.xml", true, error, warnings)) {
 		warnings.push_back(std::format("Couldn't load creatures.xml: {}", error.ToStdString()));
 	}
@@ -176,7 +197,7 @@ void VersionManager::UnloadVersion() {
 	if (!loaded_version.empty()) {
 		g_materials.clear();
 		g_brushes.clear();
-		g_items.clear();
+		g_item_definitions.clear();
 		g_gui.gfx.clear();
 
 		// FileName cdb = getLoadedVersion()->getLocalDataPath();

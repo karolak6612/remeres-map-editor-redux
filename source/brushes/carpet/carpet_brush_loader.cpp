@@ -6,7 +6,7 @@
 #include "brushes/carpet/carpet_brush_loader.h"
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/ground/auto_border.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <string_view>
 #include <charconv>
 #include <algorithm>
@@ -24,7 +24,7 @@ bool CarpetBrushLoader::load(CarpetBrush& brush, pugi::xml_node node, std::vecto
 	}
 
 	if ((attribute = node.attribute("server_lookid"))) {
-		uint16_t clientID = g_items[attribute.as_ushort()].clientID;
+		uint16_t clientID = g_item_definitions.get(attribute.as_ushort()).clientId();
 		brush.look_id = clientID;
 	}
 
@@ -74,17 +74,17 @@ bool CarpetBrushLoader::load(CarpetBrush& brush, pugi::xml_node node, std::vecto
 
 			int32_t chance = attribute.as_int();
 
-			ItemType& it = g_items[id];
-			if (it.id == 0) {
+			const auto definition = g_item_definitions.get(id);
+			if (!definition) {
 				warnings.push_back("There is no itemtype with id " + std::to_string(id));
 				continue;
-			} else if (it.brush && it.brush != &brush) {
+			} else if (definition.editorData().brush && definition.editorData().brush != &brush) {
 				warnings.push_back("Itemtype id " + std::to_string(id) + " already has a brush");
 				continue;
 			}
 
-			it.isCarpet = true;
-			it.brush = &brush;
+			g_item_definitions.setFlag(id, ItemFlag::IsCarpet, true);
+			g_item_definitions.mutableEditorData(id).brush = &brush;
 
 			brush.m_items.addItem(static_cast<BorderType>(alignment), id, chance);
 		}
@@ -97,17 +97,17 @@ bool CarpetBrushLoader::load(CarpetBrush& brush, pugi::xml_node node, std::vecto
 
 			uint16_t id = attribute.as_ushort();
 
-			ItemType& it = g_items[id];
-			if (it.id == 0) {
+			const auto definition = g_item_definitions.get(id);
+			if (!definition) {
 				warnings.push_back("There is no itemtype with id " + std::to_string(id));
 				return false;
-			} else if (it.brush && it.brush != &brush) {
+			} else if (definition.editorData().brush && definition.editorData().brush != &brush) {
 				warnings.push_back("Itemtype id " + std::to_string(id) + " already has a brush");
 				return false;
 			}
 
-			it.isCarpet = true;
-			it.brush = &brush;
+			g_item_definitions.setFlag(id, ItemFlag::IsCarpet, true);
+			g_item_definitions.mutableEditorData(id).brush = &brush;
 
 			brush.m_items.addItem(static_cast<BorderType>(alignment), id, 1);
 		}

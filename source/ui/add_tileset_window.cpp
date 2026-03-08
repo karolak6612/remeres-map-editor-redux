@@ -28,6 +28,7 @@
 #include "editor/editor.h"
 #include "game/creature.h"
 #include "game/materials.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/tileset.h"
 
 #include "ui/gui.h"
@@ -107,12 +108,12 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 
 void AddTilesetWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
-		item_id_label->SetLabelText("ID " + i2ws(it.id));
-		item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
+	const auto it = g_item_definitions.get(itemId);
+	if (it) {
+		item_id_label->SetLabelText("ID " + i2ws(it.serverId()));
+		item_name_label->SetLabelText("\"" + wxstr(std::string(it.name())) + "\"");
 
-		item_button->SetSprite(it.clientID);
+		item_button->SetSprite(it.clientId());
 	} else {
 		item_id_field->SetValue(100);
 	}
@@ -133,13 +134,13 @@ void AddTilesetWindow::SetItemIdToItemButton(uint16_t id) {
 	}
 
 	if (id != 0) {
-		const ItemType& it = g_items.getItemType(id);
-		if (it.id != 0) {
-			item_id_field->SetValue(it.id);
-			item_id_label->SetLabelText("ID " + i2ws(it.id));
-			item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
+		const auto it = g_item_definitions.get(id);
+		if (it) {
+			item_id_field->SetValue(it.serverId());
+			item_id_label->SetLabelText("ID " + i2ws(it.serverId()));
+			item_name_label->SetLabelText("\"" + wxstr(std::string(it.name())) + "\"");
 
-			item_button->SetSprite(it.clientID);
+			item_button->SetSprite(it.clientId());
 			return;
 		}
 	}
@@ -149,12 +150,12 @@ void AddTilesetWindow::SetItemIdToItemButton(uint16_t id) {
 
 void AddTilesetWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
+	const auto it = g_item_definitions.get(itemId);
+	if (it) {
 		std::string tilesetName = std::string(tileset_name_field->GetValue().mb_str());
-		g_materials.addToTileset(tilesetName, it.id, category_type);
+		g_materials.addToTileset(tilesetName, it.serverId(), category_type);
 		g_materials.modify();
-		DialogUtil::PopupDialog("Added Tileset", "'" + it.name + "' has been added to new tileset '" + tilesetName + "'", wxOK);
+		DialogUtil::PopupDialog("Added Tileset", "'" + std::string(it.name()) + "' has been added to new tileset '" + tilesetName + "'", wxOK);
 
 		EndModal(1);
 	} else {

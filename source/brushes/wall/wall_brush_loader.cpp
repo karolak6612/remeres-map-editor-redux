@@ -7,7 +7,7 @@
 #include "app/main.h" // Global brushes
 #include "brushes/wall/wall_brush.h"
 #include "brushes/wall/wall_brush_items.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "util/common.h"
 
 #include "wx/arrstr.h"
@@ -78,7 +78,12 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 	}
 
 	if ((attribute = node.attribute("server_lookid"))) {
-		brush->look_id = g_items[attribute.as_ushort()].clientID;
+		const auto definition = g_item_definitions.get(attribute.as_ushort());
+		if (!definition) {
+			warnings.push_back("There is no itemtype with id " + std::to_string(attribute.as_ushort()) + " for wall brush server_lookid");
+		} else {
+			brush->look_id = definition.clientId();
+		}
 	}
 
 	for (pugi::xml_node childNode : node.children()) {
@@ -111,18 +116,18 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 						continue;
 					}
 
-					ItemType& it = g_items[id];
-					if (it.id == 0) {
+					const auto definition = g_item_definitions.get(id);
+					if (!definition) {
 						warnings.push_back("There is no itemtype with id " + std::to_string(id));
 						return false;
-					} else if (it.brush && it.brush != brush) {
+					} else if (definition.editorData().brush && definition.editorData().brush != brush) {
 						warnings.push_back("Itemtype id " + std::to_string(id) + " already has a brush");
 						return false;
 					}
 
-					it.isWall = true;
-					it.brush = brush;
-					it.border_alignment = alignment;
+					g_item_definitions.setFlag(id, ItemFlag::IsWall, true);
+					g_item_definitions.mutableEditorData(id).brush = brush;
+					g_item_definitions.setAttribute(id, ItemAttributeKey::BorderAlignment, alignment);
 
 					int chance = 1;
 					if (auto attribute = subChildNode.attribute("chance")) {
@@ -160,22 +165,22 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 
 					bool isLocked = subChildNode.attribute("locked").as_bool();
 
-					ItemType& it = g_items[id];
-					if (it.id == 0) {
+					const auto definition = g_item_definitions.get(id);
+					if (!definition) {
 						warnings.push_back("There is no itemtype with id " + std::to_string(id));
 						return false;
-					} else if (it.brush && it.brush != brush) {
+					} else if (definition.editorData().brush && definition.editorData().brush != brush) {
 						warnings.push_back("Itemtype id " + std::to_string(id) + " already has a brush");
 						return false;
 					}
 
-					it.isWall = true;
-					it.brush = brush;
-					it.isBrushDoor = true;
-					it.wall_hate_me = subChildNode.attribute("hate").as_bool();
-					it.isOpen = isOpen;
-					it.isLocked = isLocked;
-					it.border_alignment = alignment;
+					g_item_definitions.setFlag(id, ItemFlag::IsWall, true);
+					g_item_definitions.mutableEditorData(id).brush = brush;
+					g_item_definitions.setFlag(id, ItemFlag::IsBrushDoor, true);
+					g_item_definitions.setFlag(id, ItemFlag::WallHateMe, subChildNode.attribute("hate").as_bool());
+					g_item_definitions.setFlag(id, ItemFlag::IsOpen, isOpen);
+					g_item_definitions.setFlag(id, ItemFlag::IsLocked, isLocked);
+					g_item_definitions.setAttribute(id, ItemAttributeKey::BorderAlignment, alignment);
 
 					bool all_windows = false;
 					bool all_doors = false;

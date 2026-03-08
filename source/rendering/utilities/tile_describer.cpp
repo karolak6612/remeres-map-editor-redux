@@ -1,7 +1,6 @@
 #include "rendering/utilities/tile_describer.h"
 #include "app/main.h"
 #include "app/definitions.h"
-#include "game/items.h"
 #include "map/tile.h"
 #include "game/spawn.h"
 #include "game/creature.h"
