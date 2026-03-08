@@ -46,6 +46,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	int radio_boxNChoices = sizeof(radio_boxChoices) / sizeof(wxString);
 	options_radio_box = newd wxRadioBox(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, radio_boxNChoices, radio_boxChoices, 1, wxRA_SPECIFY_COLS);
 	options_radio_box->SetSelection(SearchMode::ServerIDs);
+	options_radio_box->SetToolTip("Choose search criteria");
 	options_box_sizer->Add(options_radio_box, 0, wxALL | wxEXPAND, 5);
 
 	wxStaticBoxSizer* server_id_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Server ID"), wxVERTICAL);
@@ -54,7 +55,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	server_id_box_sizer->Add(server_id_spin, 0, wxALL | wxEXPAND, 5);
 
 	invalid_item = newd wxCheckBox(server_id_box_sizer->GetStaticBox(), wxID_ANY, "Force select", wxDefaultPosition, wxDefaultSize, 0);
-	invalid_item->SetToolTip("Force choose item ID that does not appear on the list.");
+	invalid_item->SetToolTip("Force choose item ID that does not appear on the list. Useful for missing client data.");
 	server_id_box_sizer->Add(invalid_item, 1, wxALL | wxEXPAND, 5);
 
 	options_box_sizer->Add(server_id_box_sizer, 1, wxALL | wxEXPAND, 5);
@@ -186,6 +187,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
 	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
 	items_list->SetMinSize(wxSize(230, 512));
+	items_list->SetToolTip("Double click to select an item.");
 	result_box_sizer->Add(items_list, 0, wxALL, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
 

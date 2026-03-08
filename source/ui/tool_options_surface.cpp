@@ -364,10 +364,6 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 			break;
 		}
 	}
-	if (!hover_brush && prev_hover) {
-		UnsetToolTip();
-	}
-
 	// Sliders Interaction
 	if (evt.LeftDown()) {
 		if (interactables.size_slider_rect.Contains(m_hoverPos)) {
@@ -449,11 +445,21 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	// Hover states for checkboxes
 	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_preview = true;
+		if (!prev_preview) {
+			SetToolTip("Preview automatic borders before placing them");
+		}
 		hand_cursor = true;
 	}
 	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_lock = true;
+		if (!prev_lock) {
+			SetToolTip("Place doors in locked state (Hold Shift)");
+		}
 		hand_cursor = true;
+	}
+
+	if (!hover_brush && !interactables.hover_preview && !interactables.hover_lock && (prev_hover || prev_preview || prev_lock)) {
+		UnsetToolTip();
 	}
 
 	if (interactables.size_slider_rect.Contains(m_hoverPos) || interactables.thickness_slider_rect.Contains(m_hoverPos)) {
