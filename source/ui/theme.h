@@ -18,9 +18,20 @@ public:
 		Border, // Outline/Separator colors
 		Selected, // Selection fill
 		Error, // Warning/Error states
+		Warning,
+		Success,
 		CardBase, // Rule card background
 		CardBaseHover, // Rule card hover background
 		CardBorder, // Rule card default border
+		PanelBackground,
+		RaisedSurface,
+		FooterSurface,
+		SelectionFill,
+		PrimaryButton,
+		PrimaryButtonHover,
+		SecondaryButton,
+		SecondaryButtonHover,
+		ButtonDisabled,
 
 		// Tooltip field value colors
 		TooltipBg, // Tooltip background

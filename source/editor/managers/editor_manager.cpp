@@ -273,7 +273,7 @@ void EditorManager::SaveMapAs() {
 	}
 }
 
-bool EditorManager::LoadMap(const FileName& fileName) {
+bool EditorManager::LoadMap(const FileName& fileName, const MapLoadOptions& load_options) {
 	spdlog::info("EditorManager::LoadMap - Loading map: {}", nstr(fileName.GetFullPath()));
 	g_status.SetStatusText("Loading map...");
 	if (g_gui.root) {
@@ -287,21 +287,29 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 
 	std::unique_ptr<Editor> editor;
 	try {
-		// Identify version first
 		MapVersion ver;
 		if (!IOMapOTBM::getVersionInfo(fileName, ver)) {
 			throw std::runtime_error(std::format("Could not open file \"{}\".\nThis is not a valid OTBM file or it does not exist.", nstr(fileName.GetFullPath())));
 		}
 
+		ClientVersion* target = nullptr;
+		if (load_options.hasSelectedClient()) {
+			target = ClientVersion::get(load_options.selected_client_id);
+			if (!target) {
+				throw std::runtime_error(std::format("Unsupported client selection: {}", load_options.selected_client_id));
+			}
+		} else {
+			target = ClientVersion::getBestMatch(ver.client);
+			if (!target) {
+				throw std::runtime_error(std::format("Unsupported client version (OtbId: {})", static_cast<int>(ver.client)));
+			}
+		}
+
 		ClientVersion* current = g_version.getLoadedVersion();
-		if (!current || current->getProtocolID() != ver.client) {
+		if (!current || current->getID() != target->getID()) {
 			wxString error;
 			std::vector<std::string> warnings;
 			if (CloseAllEditors()) {
-				ClientVersion* target = ClientVersion::getBestMatch(ver.client);
-				if (!target) {
-					throw std::runtime_error(std::format("Unsupported client version (OtbId: {})", static_cast<int>(ver.client)));
-				}
 				if (!g_version.LoadVersion(target->getID(), error, warnings)) {
 					g_status.SetStatusText("Failed to load map.");
 					DialogUtil::PopupDialog("Error", error, wxOK);
@@ -315,7 +323,7 @@ bool EditorManager::LoadMap(const FileName& fileName) {
 			}
 		}
 
-		editor = EditorFactory::LoadFromFile(g_gui.copybuffer, fileName);
+		editor = EditorFactory::LoadFromFile(g_gui.copybuffer, fileName, load_options);
 	} catch (std::runtime_error& e) {
 		g_status.SetStatusText("Failed to load map.");
 		DialogUtil::PopupDialog(g_gui.root, "Error!", wxString(e.what(), wxConvUTF8), wxOK);

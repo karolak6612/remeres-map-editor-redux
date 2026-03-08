@@ -419,8 +419,8 @@ void GUI::SaveMap() {
 void GUI::SaveMapAs() {
 	g_editors.SaveMapAs();
 }
-bool GUI::LoadMap(const FileName& fileName) {
-	return g_editors.LoadMap(fileName);
+bool GUI::LoadMap(const FileName& fileName, const MapLoadOptions& load_options) {
+	return g_editors.LoadMap(fileName, load_options);
 }
 
 Map& GUI::GetCurrentMap() {

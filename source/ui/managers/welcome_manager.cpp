@@ -16,7 +16,7 @@ WelcomeManager::~WelcomeManager() {
 
 void WelcomeManager::ShowWelcomeDialog(const wxBitmap& icon) {
 	std::vector<wxString> recent_files = g_gui.root->GetRecentFiles();
-	welcomeDialog = newd WelcomeDialog(__W_RME_APPLICATION_NAME__, "Version " + __W_RME_VERSION__, FROM_DIP(g_gui.root, wxSize(800, 480)), icon, recent_files);
+	welcomeDialog = newd WelcomeDialog(__W_RME_APPLICATION_NAME__, "Version " + __W_RME_VERSION__, FROM_DIP(g_gui.root, wxSize(1320, 820)), icon, recent_files);
 	welcomeDialog->Bind(wxEVT_CLOSE_WINDOW, &WelcomeManager::OnWelcomeDialogClosed, this);
 	welcomeDialog->Bind(WELCOME_DIALOG_ACTION, &WelcomeManager::OnWelcomeDialogAction, this);
 	welcomeDialog->Show();
@@ -45,6 +45,12 @@ void WelcomeManager::OnWelcomeDialogAction(wxCommandEvent& event) {
 	if (event.GetId() == wxID_NEW) {
 		g_gui.NewMap();
 	} else if (event.GetId() == wxID_OPEN) {
+		if (welcomeDialog != nullptr) {
+			if (auto load_request = welcomeDialog->ConsumePendingLoadRequest()) {
+				g_gui.LoadMap(FileName(load_request->map_path), load_request->load_options);
+				return;
+			}
+		}
 		g_gui.LoadMap(FileName(event.GetString()));
 	}
 }

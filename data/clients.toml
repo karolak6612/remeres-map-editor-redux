@@ -1,5 +1,5 @@
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '41BF619C'
 dataDirectory = '740'
 description = 'sample description'
@@ -17,7 +17,7 @@ transparency = false
 version = 740
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '42F81973'
 dataDirectory = '750'
 description = 'sample description'
@@ -35,7 +35,7 @@ transparency = false
 version = 750
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '437B2B8F'
 dataDirectory = '755'
 description = 'sample description'
@@ -53,7 +53,7 @@ transparency = false
 version = 755
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '439D5A33'
 dataDirectory = '760'
 description = 'sample description'
@@ -71,7 +71,7 @@ transparency = false
 version = 760
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '439D5A33'
 dataDirectory = '770'
 description = 'sample description'
@@ -89,7 +89,7 @@ transparency = false
 version = 770
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '44CE4743'
 dataDirectory = '780'
 description = 'sample description'
@@ -107,7 +107,7 @@ transparency = false
 version = 780
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '457D854E'
 dataDirectory = '790'
 description = 'sample description'
@@ -125,7 +125,7 @@ transparency = false
 version = 790
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '459E7B73'
 dataDirectory = '792'
 description = 'sample description'
@@ -143,7 +143,7 @@ transparency = false
 version = 792
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '467FD7E6'
 dataDirectory = '800'
 description = 'sample description'
@@ -161,7 +161,7 @@ transparency = false
 version = 800
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '475D3747'
 dataDirectory = '810'
 description = 'sample description'
@@ -179,7 +179,7 @@ transparency = false
 version = 810
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '47F60E37'
 dataDirectory = '811'
 description = 'sample description'
@@ -197,7 +197,7 @@ transparency = false
 version = 811
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '486905AA'
 dataDirectory = '820'
 description = 'sample description'
@@ -215,7 +215,7 @@ transparency = false
 version = 820
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '48DA1FB6'
 dataDirectory = '830'
 description = 'sample description'
@@ -233,7 +233,7 @@ transparency = false
 version = 830
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '493D607A'
 dataDirectory = '840'
 description = 'sample description'
@@ -251,7 +251,7 @@ transparency = false
 version = 840
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '49B7CC19'
 dataDirectory = '841'
 description = 'sample description'
@@ -269,7 +269,7 @@ transparency = false
 version = 841
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '49C233C9'
 dataDirectory = '842'
 description = 'sample description'
@@ -287,7 +287,7 @@ transparency = false
 version = 842
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A49C5EB'
 dataDirectory = '850'
 description = 'sample description'
@@ -305,7 +305,7 @@ transparency = false
 version = 850
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4B28B89E'
 dataDirectory = '854'
 description = 'sample description'
@@ -323,7 +323,7 @@ transparency = false
 version = 854
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4B98FF53'
 dataDirectory = '855'
 description = 'sample description'
@@ -341,7 +341,7 @@ transparency = false
 version = 855
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4C2C7993'
 dataDirectory = '860'
 description = 'sample description'
@@ -359,7 +359,7 @@ transparency = false
 version = 860
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4C6A4CBC'
 dataDirectory = '861'
 description = 'sample description'
@@ -377,7 +377,7 @@ transparency = false
 version = 861
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4C973450'
 dataDirectory = '862'
 description = 'sample description'
@@ -395,7 +395,7 @@ transparency = false
 version = 862
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4CFE22C5'
 dataDirectory = '870'
 description = 'sample description'
@@ -413,7 +413,7 @@ transparency = false
 version = 870
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4D41979E'
 dataDirectory = '871'
 description = 'sample description'
@@ -431,7 +431,7 @@ transparency = false
 version = 871
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4DAD1A1A'
 dataDirectory = '872'
 description = 'sample description'
@@ -449,7 +449,7 @@ transparency = false
 version = 872
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4DBAA20B'
 dataDirectory = '873'
 description = 'sample description'
@@ -467,7 +467,7 @@ transparency = false
 version = 873
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4DBAA20B'
 dataDirectory = '900'
 description = 'sample description'
@@ -485,7 +485,7 @@ transparency = false
 version = 900
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4E12DAFF'
 dataDirectory = '910'
 description = 'sample description'
@@ -503,7 +503,7 @@ transparency = false
 version = 910
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4E807C08'
 dataDirectory = '920'
 description = 'sample description'
@@ -521,7 +521,7 @@ transparency = false
 version = 920
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4EE71DE5'
 dataDirectory = '940'
 description = 'sample description'
@@ -539,7 +539,7 @@ transparency = false
 version = 940
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4F3131CF'
 dataDirectory = '944'
 description = 'sample description'
@@ -557,7 +557,7 @@ transparency = false
 version = 944
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4F6B341F'
 dataDirectory = '946'
 description = 'sample description'
@@ -575,7 +575,7 @@ transparency = false
 version = 946
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4F75B7AB'
 dataDirectory = '950'
 description = 'sample description'
@@ -593,7 +593,7 @@ transparency = false
 version = 950
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4F857F6C'
 dataDirectory = '952'
 description = 'sample description'
@@ -611,7 +611,7 @@ transparency = false
 version = 952
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4FA11252'
 dataDirectory = '953'
 description = 'sample description'
@@ -629,7 +629,7 @@ transparency = false
 version = 953
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4FD5956B'
 dataDirectory = '954'
 description = 'sample description'
@@ -647,7 +647,7 @@ transparency = false
 version = 954
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4FFA74CC'
 dataDirectory = '960'
 description = 'sample description'
@@ -665,7 +665,7 @@ transparency = false
 version = 960
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '50226F9D'
 dataDirectory = '961'
 description = 'sample description'
@@ -683,7 +683,7 @@ transparency = false
 version = 961
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '503CB933'
 dataDirectory = '963'
 description = 'sample description'
@@ -701,7 +701,7 @@ transparency = false
 version = 963
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '5072A490'
 dataDirectory = '970'
 description = 'sample description'
@@ -719,7 +719,7 @@ transparency = false
 version = 970
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '50C70674'
 dataDirectory = '980'
 description = 'sample description'
@@ -737,7 +737,7 @@ transparency = false
 version = 980
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '50D1C5B6'
 dataDirectory = '981'
 description = 'sample description'
@@ -755,7 +755,7 @@ transparency = false
 version = 981
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '512CAD09'
 dataDirectory = '982'
 description = 'sample description'
@@ -773,7 +773,7 @@ transparency = false
 version = 982
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '51407B67'
 dataDirectory = '983'
 description = 'sample description'
@@ -791,7 +791,7 @@ transparency = false
 version = 983
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '51641A1B'
 dataDirectory = '985'
 description = 'sample description'
@@ -809,7 +809,7 @@ transparency = false
 version = 985
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '5170E904'
 dataDirectory = '986'
 description = 'sample description'
@@ -827,7 +827,7 @@ transparency = false
 version = 986
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '51E3F8C3'
 dataDirectory = '1010'
 description = 'sample description'
@@ -845,7 +845,7 @@ transparency = true
 version = 1010
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '5236F129'
 dataDirectory = '1020'
 description = 'sample description'
@@ -863,7 +863,7 @@ transparency = true
 version = 1020
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '526A5068'
 dataDirectory = '1021'
 description = 'sample description'
@@ -881,7 +881,7 @@ transparency = true
 version = 1021
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '52A59036'
 dataDirectory = '1030'
 description = 'sample description'
@@ -899,7 +899,7 @@ transparency = true
 version = 1030
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '52AED581'
 dataDirectory = '1031'
 description = 'sample description'
@@ -917,7 +917,7 @@ transparency = true
 version = 1031
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '5383504E'
 dataDirectory = '1041'
 description = 'sample description'
@@ -935,7 +935,7 @@ transparency = true
 version = 1041
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '38DE'
 dataDirectory = '1077'
 description = 'sample description'
@@ -953,7 +953,7 @@ transparency = true
 version = 1077
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '42A3'
 dataDirectory = '1098'
 description = 'sample description'
@@ -967,11 +967,11 @@ otbMajor = 3
 otbmVersions = [ 3 ]
 sprSignature = '57BBD603'
 spritesFile = 'Tibia.spr'
-transparency = true
+transparency = false
 version = 1098
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '44BA'
 dataDirectory = '10100'
 description = 'sample description'
@@ -989,7 +989,7 @@ transparency = true
 version = 10100
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1271'
 description = 'sample description'
@@ -1007,7 +1007,7 @@ transparency = true
 version = 1271
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1281'
 description = 'sample description'
@@ -1025,7 +1025,7 @@ transparency = true
 version = 1281
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1285'
 description = 'sample description'
@@ -1043,7 +1043,7 @@ transparency = true
 version = 1285
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '42A3'
 dataDirectory = '1286'
 description = 'sample description'
@@ -1061,7 +1061,7 @@ transparency = true
 version = 1286
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1287'
 description = 'sample description'
@@ -1079,7 +1079,7 @@ transparency = true
 version = 1287
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1290'
 description = 'sample description'
@@ -1097,7 +1097,7 @@ transparency = true
 version = 1290
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1310'
 description = 'sample description'
@@ -1115,7 +1115,7 @@ transparency = true
 version = 1310
 
 [[clients]]
-configType = 'otb'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1320'
 description = 'sample description'
@@ -1133,7 +1133,7 @@ transparency = true
 version = 1320
 
 [[clients]]
-configType = 'dat'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1286'
 description = 'sample dat config'
@@ -1151,7 +1151,7 @@ transparency = true
 version = 1286
 
 [[clients]]
-configType = 'assets'
+configType = 'dat_otb'
 datSignature = '4A10'
 dataDirectory = '1286'
 description = 'sample assets config'
@@ -1169,7 +1169,7 @@ transparency = true
 version = 1286
 
 [[clients]]
-configType = 'srv'
+configType = 'dat_otb'
 datSignature = '439D5A33'
 dataDirectory = '770'
 description = 'sample description'
@@ -1185,3 +1185,21 @@ sprSignature = '439852BE'
 spritesFile = 'Tibia.spr'
 transparency = false
 version = 77
+
+[[clients]]
+configType = 'dat_only'
+datSignature = '42A3'
+dataDirectory = 'canary'
+description = 'sample description'
+extended = true
+frameDurations = true
+frameGroups = true
+metadataFile = 'Tibia.dat'
+name = '10.98dat'
+otbId = 57
+otbMajor = 3
+otbmVersions = [ 3 ]
+sprSignature = '57BBD603'
+spritesFile = 'Tibia.spr'
+transparency = false
+version = 1098

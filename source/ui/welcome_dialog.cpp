@@ -1,524 +1,536 @@
-#include <wx/listctrl.h>
-#include <wx/imaglist.h>
-#include <wx/statline.h>
-#include <wx/filename.h>
-#include <wx/dcbuffer.h>
-
-#include "app/main.h"
-#include "app/definitions.h"
 #include "ui/welcome_dialog.h"
-#include "app/settings.h"
+
+#include <algorithm>
+#include <format>
+#include <ranges>
+
+#include <wx/filedlg.h>
+#include <wx/filename.h>
+#include <wx/statline.h>
+
+#include "app/client_version.h"
+#include "app/definitions.h"
+#include "app/main.h"
 #include "app/preferences.h"
-#include "util/image_manager.h"
 #include "ui/theme.h"
+#include "ui/welcome/startup_button.h"
+#include "ui/welcome/startup_card.h"
+#include "ui/welcome/startup_formatters.h"
+#include "ui/welcome/startup_info_panel.h"
+#include "ui/welcome/startup_list_box.h"
+#include "util/image_manager.h"
 
 wxDEFINE_EVENT(WELCOME_DIALOG_ACTION, wxCommandEvent);
 
-// --- Convex Button Helper Class ---
-class ConvexButton : public wxControl {
-public:
-	ConvexButton(wxWindow* parent, wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0) :
-		wxControl(parent, id, pos, size, style | wxBORDER_NONE) {
-		SetLabel(label);
-		SetBackgroundStyle(wxBG_STYLE_PAINT);
-		Bind(wxEVT_PAINT, &ConvexButton::OnPaint, this);
-		Bind(wxEVT_ENTER_WINDOW, &ConvexButton::OnMouse, this);
-		Bind(wxEVT_LEAVE_WINDOW, &ConvexButton::OnMouse, this);
-		Bind(wxEVT_LEFT_DOWN, &ConvexButton::OnMouse, this);
-		Bind(wxEVT_LEFT_UP, &ConvexButton::OnMouse, this);
-		Bind(wxEVT_MOUSE_CAPTURE_LOST, &ConvexButton::OnMouseCaptureLost, this);
-	}
+namespace {
+constexpr int ID_RECENT_LIST = wxID_HIGHEST + 101;
+constexpr int ID_CLIENT_LIST = wxID_HIGHEST + 102;
+constexpr int ID_FORCE_LOAD = wxID_HIGHEST + 103;
+constexpr int ID_LOAD_BUTTON = wxID_HIGHEST + 104;
+}
 
-	void SetBitmap(const wxBitmap& bitmap) {
-		m_icon = bitmap;
-		InvalidateBestSize();
-		Refresh();
-	}
-
-	wxSize DoGetBestClientSize() const override {
-		wxClientDC dc(const_cast<ConvexButton*>(this));
-		dc.SetFont(GetFont());
-		wxSize text = dc.GetTextExtent(GetLabel());
-		int width = text.x + FromDIP(30);
-		if (m_icon.IsOk()) {
-			width += m_icon.GetWidth() + FromDIP(8);
-		}
-		int height = std::max(text.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(16);
-		return wxSize(std::max(width, FromDIP(100)), std::max(height, FromDIP(30)));
-	}
-
-private:
-	wxBitmap m_icon;
-	bool m_hover = false;
-	bool m_pressed = false;
-
-	void OnPaint(wxPaintEvent& evt) {
-		wxAutoBufferedPaintDC dc(this);
-		wxSize sz = GetClientSize();
-		wxColour bg = Theme::Get(Theme::Role::Surface);
-
-		// Determine gradient colors for convex look
-		wxColour top = bg.ChangeLightness(120);
-		wxColour bottom = bg.ChangeLightness(90);
-		if (m_pressed) {
-			std::swap(top, bottom); // Invert gradient for pressed state
-		} else if (m_hover) {
-			top = top.ChangeLightness(110);
-			bottom = bottom.ChangeLightness(110);
-		}
-
-		// Draw Gradient Background
-		dc.GradientFillLinear(wxRect(sz), top, bottom, wxSOUTH);
-
-		// Draw Border
-		dc.SetPen(wxPen(Theme::Get(Theme::Role::Border)));
-		dc.SetBrush(*wxTRANSPARENT_BRUSH);
-		dc.DrawRectangle(0, 0, sz.x, sz.y);
-
-		// Draw Inner Highlight/Shadow for 3D effect
-		if (!m_pressed) {
-			dc.SetPen(wxPen(wxColour(255, 255, 255))); // Highlight top/left
-			dc.DrawLine(1, 1, sz.x - 1, 1);
-			dc.DrawLine(1, 1, 1, sz.y - 1);
-
-			dc.SetPen(wxPen(wxColour(0, 0, 0))); // Shadow bottom/right
-			dc.DrawLine(1, sz.y - 2, sz.x - 1, sz.y - 2);
-			dc.DrawLine(sz.x - 2, 1, sz.x - 2, sz.y - 2);
-		}
-
-		// Draw Icon and Text
-		dc.SetFont(GetFont());
-		dc.SetTextForeground(Theme::Get(Theme::Role::Text));
-		wxSize textSize = dc.GetTextExtent(GetLabel());
-
-		int x = (sz.x - textSize.x) / 2;
-		if (m_icon.IsOk()) {
-			x -= (m_icon.GetWidth() + FromDIP(8)) / 2;
-		}
-
-		int y = (sz.y - textSize.y) / 2;
-		if (m_pressed) {
-			x += 1;
-			y += 1;
-		} // Shift content when pressed
-
-		if (m_icon.IsOk()) {
-			int iy = (sz.y - m_icon.GetHeight()) / 2;
-			if (m_pressed) {
-				iy += 1;
-			}
-			dc.DrawBitmap(m_icon, x, iy, true);
-			x += m_icon.GetWidth() + FromDIP(8);
-		}
-
-		dc.DrawText(GetLabel(), x, y);
-	}
-
-	void OnMouse(wxMouseEvent& evt) {
-		if (evt.Entering()) {
-			m_hover = true;
-		} else if (evt.Leaving()) {
-			m_hover = false;
-			if (!HasCapture()) {
-				m_pressed = false;
-			}
-		} else if (evt.LeftDown()) {
-			m_pressed = true;
-			CaptureMouse();
-		} else if (evt.LeftUp()) {
-			if (HasCapture()) {
-				ReleaseMouse();
-			}
-			if (m_pressed && GetClientRect().Contains(evt.GetPosition())) {
-				wxCommandEvent event(wxEVT_BUTTON, GetId());
-				event.SetEventObject(this);
-				ProcessWindowEvent(event);
-			}
-			m_pressed = false;
-		}
-		Refresh();
-	}
-
-	void OnMouseCaptureLost(wxMouseCaptureLostEvent& evt) {
-		if (HasCapture()) {
-			ReleaseMouse();
-		}
-		m_pressed = false;
-		Refresh();
-	}
-};
-
-// --- Dark Card Panel Helper Class ---
-class DarkCardPanel : public wxPanel {
-public:
-	DarkCardPanel(wxWindow* parent, const wxString& title) : wxPanel(parent, wxID_ANY) {
-		SetBackgroundStyle(wxBG_STYLE_PAINT);
-		Bind(wxEVT_PAINT, &DarkCardPanel::OnPaint, this);
-
-		m_title = title;
-		m_mainSizer = new wxBoxSizer(wxVERTICAL);
-		m_mainSizer->AddSpacer(FromDIP(30)); // Header space
-
-		SetSizer(m_mainSizer);
-	}
-
-	wxBoxSizer* GetSizer() {
-		return m_mainSizer;
-	}
-
-	// Override to ensure refresh on color change
-	bool SetBackgroundColour(const wxColour& colour) override {
-		bool ret = wxPanel::SetBackgroundColour(colour);
-		Refresh();
-		return ret;
-	}
-
-private:
-	wxString m_title;
-	wxBoxSizer* m_mainSizer;
-
-	void OnPaint(wxPaintEvent& evt) {
-		wxAutoBufferedPaintDC dc(this);
-		wxSize sz = GetClientSize();
-		wxColour bg = Theme::Get(Theme::Role::Surface);
-		wxColour border = Theme::Get(Theme::Role::Border);
-		wxColour headerBg = Theme::Get(Theme::Role::Header);
-		wxColour textCol = Theme::Get(Theme::Role::Text);
-
-		// Fill Background
-		dc.SetBrush(wxBrush(bg));
-		dc.SetPen(*wxTRANSPARENT_PEN);
-		dc.DrawRectangle(sz);
-
-		// Draw Border
-		dc.SetPen(wxPen(border));
-		dc.SetBrush(*wxTRANSPARENT_BRUSH);
-		dc.DrawRectangle(0, 0, sz.x, sz.y);
-
-		// Draw Header
-		int headerH = FromDIP(28);
-		dc.SetBrush(wxBrush(headerBg));
-		dc.DrawRectangle(1, 1, sz.x - 2, headerH);
-		dc.DrawLine(0, headerH + 1, sz.x, headerH + 1);
-
-		// Draw Title
-		dc.SetFont(Theme::GetFont(9, true));
-		dc.SetTextForeground(textCol);
-		dc.DrawText(m_title, FromDIP(8), FromDIP(6));
-	}
-};
-
-// --- Bordered Dark Panel (for Header/Footer) ---
-class BorderedDarkPanel : public wxPanel {
-public:
-	BorderedDarkPanel(wxWindow* parent) : wxPanel(parent, wxID_ANY) {
-		// Set actual background colour so children inherit it
-		wxPanel::SetBackgroundColour(Theme::Get(Theme::Role::Background));
-		SetBackgroundStyle(wxBG_STYLE_PAINT);
-		Bind(wxEVT_PAINT, &BorderedDarkPanel::OnPaint, this);
-	}
-
-private:
-	void OnPaint(wxPaintEvent& evt) {
-		wxAutoBufferedPaintDC dc(this);
-		wxSize sz = GetClientSize();
-		wxColour bg = Theme::Get(Theme::Role::Background); // Default header/footer bg
-		wxColour border = Theme::Get(Theme::Role::Border);
-
-		dc.SetBrush(wxBrush(bg));
-		dc.SetPen(wxPen(border));
-		dc.DrawRectangle(0, 0, sz.x, sz.y);
-	}
-};
-
-WelcomeDialog::WelcomeDialog(const wxString& titleText, const wxString& versionText, const wxSize& size, const wxBitmap& rmeLogo, const std::vector<wxString>& recentFiles) :
-	wxDialog(nullptr, wxID_ANY, titleText, wxDefaultPosition, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
-
-	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
+WelcomeDialog::WelcomeDialog(const wxString& title_text, const wxString& version_text, const wxSize& size, const wxBitmap& rme_logo, const std::vector<wxString>& recent_files) :
+	wxDialog(nullptr, wxID_ANY, title_text, wxDefaultPosition, size, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER) {
+	SetBackgroundColour(Theme::Get(Theme::Role::PanelBackground));
 	SetForegroundColour(Theme::Get(Theme::Role::Text));
+	SetMinSize(FROM_DIP(this, wxSize(1180, 720)));
 
-	// Image List for Icons
-	m_imageList = std::make_unique<wxImageList>(FromDIP(16), FromDIP(16));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(16, 16))));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(16, 16))));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, FromDIP(wxSize(16, 16))));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_HARD_DRIVE, FromDIP(wxSize(16, 16))));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FILE, FromDIP(wxSize(16, 16))));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_CHECK, FromDIP(wxSize(16, 16))));
-	m_imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_FOLDER, FromDIP(wxSize(16, 16))));
+	for (const auto& recent_file : recent_files) {
+		m_recent_maps.push_back({ recent_file, FormatModifiedLabel(recent_file), false });
+	}
 
-	wxBoxSizer* mainSizer = new wxBoxSizer(wxVERTICAL);
+	for (ClientVersion* client : ClientVersion::getConfiguredVisible()) {
+		m_configured_clients.push_back({
+			client,
+			wxstr(client->getName()),
+			client->getClientPath().GetFullPath(),
+		});
+	}
 
-	mainSizer->Add(CreateHeaderPanel(this, titleText, rmeLogo), 0, wxEXPAND | wxALL, 2);
-	mainSizer->Add(CreateContentPanel(this, recentFiles), 1, wxEXPAND | wxALL, 2);
-	mainSizer->Add(CreateFooterPanel(this, versionText), 0, wxEXPAND | wxALL, 2);
+	BuildInterface(title_text, version_text, rme_logo);
 
-	SetSizer(mainSizer);
-	Layout();
+	if (!m_configured_clients.empty()) {
+		const ClientVersion* latest = ClientVersion::getLatestVersion();
+		const auto latest_it = std::ranges::find_if(m_configured_clients, [latest](const auto& entry) {
+			return entry.client == latest;
+		});
+		const int default_client_index = latest_it != m_configured_clients.end() ? static_cast<int>(std::distance(m_configured_clients.begin(), latest_it)) : 0;
+		SetSelectedClientIndex(default_client_index, false);
+	}
+
+	if (!m_recent_maps.empty()) {
+		SetSelectedMapIndex(0);
+	} else {
+		RefreshMapInfoPanel();
+		RefreshClientInfoPanel();
+		RefreshFooterState();
+	}
+
 	Centre();
 }
 
-WelcomeDialog::~WelcomeDialog() {
-	if (m_recentList) {
-		m_recentList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
-	}
-	if (m_clientList) {
-		m_clientList->SetImageList(nullptr, wxIMAGE_LIST_SMALL);
+std::optional<StartupLoadRequest> WelcomeDialog::ConsumePendingLoadRequest() {
+	auto request = m_pending_load_request;
+	m_pending_load_request.reset();
+	return request;
+}
+
+void WelcomeDialog::BuildInterface(const wxString& title_text, const wxString& version_text, const wxBitmap& rme_logo) {
+	auto* root_sizer = new wxBoxSizer(wxVERTICAL);
+
+	auto* header_panel = new wxPanel(this, wxID_ANY);
+	header_panel->SetBackgroundColour(Theme::Get(Theme::Role::RaisedSurface));
+	auto* header_sizer = new wxBoxSizer(wxHORIZONTAL);
+
+	auto* logo = new wxStaticBitmap(header_panel, wxID_ANY, rme_logo);
+	header_sizer->Add(logo, 0, wxALL | wxALIGN_CENTER_VERTICAL, FromDIP(14));
+
+	auto* title_sizer = new wxBoxSizer(wxVERTICAL);
+	auto* title_label = new wxStaticText(header_panel, wxID_ANY, title_text);
+	title_label->SetFont(Theme::GetFont(15, true));
+	title_label->SetForegroundColour(Theme::Get(Theme::Role::Text));
+	title_label->SetBackgroundColour(header_panel->GetBackgroundColour());
+	title_sizer->Add(title_label, 0, wxBOTTOM, FromDIP(2));
+
+	auto* subtitle_label = new wxStaticText(header_panel, wxID_ANY, "Welcome back. Pick a map, confirm the client, and load when you are ready.");
+	subtitle_label->SetFont(Theme::GetFont(9, false));
+	subtitle_label->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	subtitle_label->SetBackgroundColour(header_panel->GetBackgroundColour());
+	title_sizer->Add(subtitle_label, 0);
+
+	header_sizer->Add(title_sizer, 1, wxALIGN_CENTER_VERTICAL | wxTOP | wxBOTTOM, FromDIP(16));
+
+	auto* preferences_button = new StartupButton(header_panel, wxID_PREFERENCES, "Preferences", StartupButtonVariant::Secondary);
+	preferences_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, FromDIP(wxSize(18, 18))));
+	preferences_button->Bind(wxEVT_BUTTON, &WelcomeDialog::OnPreferences, this);
+	header_sizer->Add(preferences_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, FromDIP(14));
+
+	header_panel->SetSizer(header_sizer);
+	root_sizer->Add(header_panel, 0, wxEXPAND | wxLEFT | wxTOP | wxRIGHT, FromDIP(10));
+
+	auto* content_panel = new wxPanel(this, wxID_ANY);
+	content_panel->SetBackgroundColour(Theme::Get(Theme::Role::PanelBackground));
+	auto* content_sizer = new wxBoxSizer(wxHORIZONTAL);
+
+	auto* actions_card = new StartupCardPanel(content_panel, "Quick Actions");
+	actions_card->SetMinSize(wxSize(FromDIP(170), -1));
+	auto* new_map_button = new StartupButton(actions_card, wxID_NEW, "New Map", StartupButtonVariant::Primary);
+	new_map_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(18, 18))));
+	new_map_button->Bind(wxEVT_BUTTON, &WelcomeDialog::OnNewMap, this);
+	actions_card->GetBodySizer()->Add(new_map_button, 0, wxEXPAND | wxBOTTOM, FromDIP(10));
+
+	auto* browse_map_button = new StartupButton(actions_card, wxID_OPEN, "Browse Map", StartupButtonVariant::Secondary);
+	browse_map_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(18, 18))));
+	browse_map_button->Bind(wxEVT_BUTTON, &WelcomeDialog::OnBrowseMap, this);
+	actions_card->GetBodySizer()->Add(browse_map_button, 0, wxEXPAND);
+	content_sizer->Add(actions_card, 0, wxEXPAND | wxALL, FromDIP(10));
+
+	auto* recent_card = new StartupCardPanel(content_panel, "Recent Maps");
+	m_recent_list = new StartupListBox(recent_card, ID_RECENT_LIST);
+	m_recent_list->Bind(wxEVT_LISTBOX, &WelcomeDialog::OnRecentMapSelected, this);
+	m_recent_list->Bind(wxEVT_LISTBOX_DCLICK, &WelcomeDialog::OnRecentMapActivated, this);
+	recent_card->GetBodySizer()->Add(m_recent_list, 1, wxEXPAND);
+	content_sizer->Add(recent_card, 22, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, FromDIP(10));
+
+	auto* map_card = new StartupCardPanel(content_panel, "Selected Map Info");
+	m_map_info_panel = new StartupInfoPanel(map_card);
+	map_card->GetBodySizer()->Add(m_map_info_panel, 1, wxEXPAND);
+	content_sizer->Add(map_card, 20, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, FromDIP(10));
+
+	auto* client_card = new StartupCardPanel(content_panel, "Client Information");
+	m_client_info_panel = new StartupInfoPanel(client_card);
+	client_card->GetBodySizer()->Add(m_client_info_panel, 1, wxEXPAND);
+	content_sizer->Add(client_card, 20, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, FromDIP(10));
+
+	auto* available_clients_card = new StartupCardPanel(content_panel, "Available Clients");
+	m_client_list = new StartupListBox(available_clients_card, ID_CLIENT_LIST);
+	m_client_list->Bind(wxEVT_LISTBOX, &WelcomeDialog::OnClientSelected, this);
+	available_clients_card->GetBodySizer()->Add(m_client_list, 1, wxEXPAND);
+	content_sizer->Add(available_clients_card, 18, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, FromDIP(10));
+
+	content_panel->SetSizer(content_sizer);
+	root_sizer->Add(content_panel, 1, wxEXPAND | wxLEFT | wxRIGHT, FromDIP(10));
+
+	auto* footer_panel = new wxPanel(this, wxID_ANY);
+	footer_panel->SetBackgroundColour(Theme::Get(Theme::Role::FooterSurface));
+	auto* footer_root_sizer = new wxBoxSizer(wxVERTICAL);
+
+	m_status_text = new wxStaticText(footer_panel, wxID_ANY, "");
+	m_status_text->SetFont(Theme::GetFont(9, false));
+	m_status_text->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	m_status_text->SetBackgroundColour(footer_panel->GetBackgroundColour());
+	footer_root_sizer->Add(m_status_text, 0, wxEXPAND | wxTOP | wxLEFT | wxRIGHT, FromDIP(12));
+
+	auto* footer_actions = new wxBoxSizer(wxHORIZONTAL);
+	auto* exit_button = new StartupButton(footer_panel, wxID_EXIT, "Exit", StartupButtonVariant::Secondary);
+	exit_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_POWER_OFF, FromDIP(wxSize(18, 18))));
+	exit_button->Bind(wxEVT_BUTTON, &WelcomeDialog::OnExit, this);
+	footer_actions->Add(exit_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, FromDIP(10));
+
+	footer_actions->AddStretchSpacer();
+
+	m_version_text = new wxStaticText(footer_panel, wxID_ANY, version_text);
+	m_version_text->SetFont(Theme::GetFont(8, false));
+	m_version_text->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
+	m_version_text->SetBackgroundColour(footer_panel->GetBackgroundColour());
+	footer_actions->Add(m_version_text, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(16));
+
+	m_force_load_checkbox = new wxCheckBox(footer_panel, ID_FORCE_LOAD, "Force Load");
+	m_force_load_checkbox->SetForegroundColour(Theme::Get(Theme::Role::Text));
+	m_force_load_checkbox->SetBackgroundColour(footer_panel->GetBackgroundColour());
+	m_force_load_checkbox->Bind(wxEVT_CHECKBOX, &WelcomeDialog::OnForceLoadChanged, this);
+	footer_actions->Add(m_force_load_checkbox, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, FromDIP(12));
+
+	m_load_button = new StartupButton(footer_panel, ID_LOAD_BUTTON, "Load Map", StartupButtonVariant::Primary);
+	m_load_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(18, 18))));
+	m_load_button->Bind(wxEVT_BUTTON, &WelcomeDialog::OnLoadRequested, this);
+	footer_actions->Add(m_load_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, FromDIP(10));
+
+	footer_root_sizer->Add(footer_actions, 0, wxEXPAND | wxBOTTOM, FromDIP(4));
+	footer_panel->SetSizer(footer_root_sizer);
+	root_sizer->Add(footer_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
+
+	SetSizer(root_sizer);
+
+	RefreshRecentMapList();
+	RefreshClientList();
+}
+
+void WelcomeDialog::OnPreferences(wxCommandEvent& WXUNUSED(event)) {
+	PreferencesWindow preferences_window(this, true);
+	preferences_window.ShowModal();
+}
+
+void WelcomeDialog::OnNewMap(wxCommandEvent& WXUNUSED(event)) {
+	auto* new_event = new wxCommandEvent(WELCOME_DIALOG_ACTION, wxID_NEW);
+	QueueEvent(new_event);
+}
+
+void WelcomeDialog::OnBrowseMap(wxCommandEvent& WXUNUSED(event)) {
+	wxFileDialog file_dialog(this, "Open map file", "", "", MAP_LOAD_FILE_WILDCARD, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
+	if (file_dialog.ShowModal() == wxID_OK) {
+		AddBrowsedMap(file_dialog.GetPath());
 	}
 }
 
-void WelcomeDialog::AddInfoField(wxSizer* sizer, wxWindow* parent, const wxString& label, const wxString& value, std::string_view artId, const wxColour& valCol) {
-	wxBoxSizer* row = new wxBoxSizer(wxHORIZONTAL);
+void WelcomeDialog::OnExit(wxCommandEvent& WXUNUSED(event)) {
+	Close(true);
+}
 
-	wxStaticBitmap* icon = new wxStaticBitmap(parent, wxID_ANY, IMAGE_MANAGER.GetBitmap(artId, wxSize(14, 14)));
-	row->Add(icon, 0, wxCENTER | wxRIGHT, 4);
+void WelcomeDialog::OnLoadRequested(wxCommandEvent& WXUNUSED(event)) {
+	AttemptLoad(true);
+}
 
-	wxStaticText* lbl = new wxStaticText(parent, wxID_ANY, label);
-	wxFont f = lbl->GetFont();
-	f.SetPointSize(8);
-	lbl->SetFont(f);
-	lbl->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	row->Add(lbl, 0, wxCENTER, 0);
+void WelcomeDialog::OnRecentMapSelected(wxCommandEvent& WXUNUSED(event)) {
+	SetSelectedMapIndex(m_recent_list->GetSelection());
+}
 
-	sizer->Add(row, 0, wxTOP | wxLEFT | wxRIGHT, 2);
+void WelcomeDialog::OnRecentMapActivated(wxCommandEvent& WXUNUSED(event)) {
+	AttemptLoad(true);
+}
 
-	wxStaticText* val = new wxStaticText(parent, wxID_ANY, value);
-	wxFont vf = val->GetFont();
-	vf.SetWeight(wxFONTWEIGHT_BOLD);
-	val->SetFont(vf);
+void WelcomeDialog::OnClientSelected(wxCommandEvent& WXUNUSED(event)) {
+	SetSelectedClientIndex(m_client_list->GetSelection(), true);
+}
 
-	if (!valCol.IsOk()) {
-		val->SetForegroundColour(Theme::Get(Theme::Role::Text));
+void WelcomeDialog::OnForceLoadChanged(wxCommandEvent& WXUNUSED(event)) {
+	RefreshFooterState();
+}
+
+void WelcomeDialog::RefreshRecentMapList() {
+	std::vector<StartupListItem> items;
+	items.reserve(m_recent_maps.size());
+	for (const auto& map_entry : m_recent_maps) {
+		items.push_back({
+			map_entry.path,
+			map_entry.modified_label,
+			std::string(ICON_FILE),
+		});
+	}
+
+	m_recent_list->SetItems(std::move(items));
+	if (m_selected_map_index != wxNOT_FOUND && m_selected_map_index < static_cast<int>(m_recent_maps.size())) {
+		m_recent_list->SetSelection(m_selected_map_index);
+	}
+}
+
+void WelcomeDialog::RefreshClientList() {
+	std::vector<StartupListItem> items;
+	items.reserve(m_configured_clients.size());
+	for (const auto& client_entry : m_configured_clients) {
+		items.push_back({
+			client_entry.name,
+			client_entry.client_path,
+			std::string(ICON_HARD_DRIVE),
+		});
+	}
+
+	m_client_list->SetItems(std::move(items));
+	if (m_selected_client_index != wxNOT_FOUND && m_selected_client_index < static_cast<int>(m_configured_clients.size())) {
+		m_client_list->SetSelection(m_selected_client_index);
+	}
+}
+
+void WelcomeDialog::RefreshMapInfoPanel() {
+	m_map_info_panel->SetFields(BuildStartupMapFields(GetSelectedMapInfo()));
+}
+
+void WelcomeDialog::RefreshClientInfoPanel() {
+	m_client_info_panel->SetFields(BuildStartupClientFields(GetSelectedClient()));
+}
+
+void WelcomeDialog::RefreshFooterState() {
+	const StartupCompatibilityStatus status = GetCompatibilityStatus();
+	m_status_text->SetLabel(BuildCompatibilityMessage());
+	m_status_text->SetForegroundColour(StartupStatusColour(status));
+	m_status_text->Wrap(std::max(GetClientSize().GetWidth() - FromDIP(320), FromDIP(240)));
+
+	const bool mismatch = status == StartupCompatibilityStatus::ForceRequired || status == StartupCompatibilityStatus::Forced;
+	if (!mismatch && m_force_load_checkbox->GetValue()) {
+		m_force_load_checkbox->SetValue(false);
+	}
+	m_force_load_checkbox->Enable(mismatch);
+
+	const bool can_load = status == StartupCompatibilityStatus::Compatible || status == StartupCompatibilityStatus::Forced;
+	m_load_button->Enable(can_load);
+
+	Layout();
+}
+
+void WelcomeDialog::SetSelectedMapIndex(int index) {
+	if (index < 0 || index >= static_cast<int>(m_recent_maps.size())) {
+		m_selected_map_index = wxNOT_FOUND;
+		m_recent_list->SetSelection(wxNOT_FOUND);
 	} else {
-		val->SetForegroundColour(valCol);
+		m_selected_map_index = index;
+		m_recent_list->SetSelection(index);
+		EnsurePeeked(m_recent_maps[index].path);
 	}
 
-	sizer->Add(val, 0, wxBOTTOM | wxLEFT | wxRIGHT, 4);
+	AutoSelectMatchingClient();
+	RefreshMapInfoPanel();
+	RefreshClientInfoPanel();
+	RefreshFooterState();
 }
 
-wxPanel* WelcomeDialog::CreateHeaderPanel(wxWindow* parent, const wxString& titleText, const wxBitmap& rmeLogo) {
-	wxPanel* headerPanel = new BorderedDarkPanel(parent);
-	wxBoxSizer* headerSizer = new wxBoxSizer(wxHORIZONTAL);
+void WelcomeDialog::SetSelectedClientIndex(int index, bool manual_selection) {
+	if (index < 0 || index >= static_cast<int>(m_configured_clients.size())) {
+		m_selected_client_index = wxNOT_FOUND;
+		m_client_list->SetSelection(wxNOT_FOUND);
+	} else {
+		m_selected_client_index = index;
+		m_client_list->SetSelection(index);
+	}
 
-	// Icon Button - Align Left: 10px total
-	ConvexButton* iconBtn = new ConvexButton(headerPanel, wxID_ANY, "", wxDefaultPosition, wxSize(48, 48));
-	iconBtn->SetBitmap(rmeLogo.IsOk() ? rmeLogo : IMAGE_MANAGER.GetBitmap(ICON_QUESTION_CIRCLE, wxSize(32, 32))); // Fallback if logo invalid
-	headerSizer->Add(iconBtn, 0, wxALL | wxCENTER, 8);
-
-	wxBoxSizer* titleSizer = new wxBoxSizer(wxVERTICAL);
-	wxStaticText* title = new wxStaticText(headerPanel, wxID_ANY, titleText);
-	wxFont titleFont = title->GetFont();
-	titleFont.SetPointSize(14);
-	titleFont.SetWeight(wxFONTWEIGHT_BOLD);
-	title->SetFont(titleFont);
-	title->SetForegroundColour(Theme::Get(Theme::Role::Text));
-	title->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	titleSizer->Add(title, 0, wxALL, 2);
-
-	wxStaticText* subtitle = new wxStaticText(headerPanel, wxID_ANY, "Welcome! Start a new project or continue where you left off.");
-	subtitle->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	subtitle->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	titleSizer->Add(subtitle, 0, wxALL, 2);
-
-	headerSizer->Add(titleSizer, 1, wxALL | wxEXPAND, 10);
-
-	ConvexButton* prefBtn = new ConvexButton(headerPanel, wxID_PREFERENCES, "Preferences");
-	prefBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, FromDIP(wxSize(24, 24))));
-	prefBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-
-	// Align Right: 10px total
-	headerSizer->Add(prefBtn, 0, wxCENTER | wxALL, 8);
-
-	headerPanel->SetSizer(headerSizer);
-	return headerPanel;
+	m_has_manual_client_selection = manual_selection;
+	RefreshClientInfoPanel();
+	RefreshFooterState();
 }
 
-wxPanel* WelcomeDialog::CreateFooterPanel(wxWindow* parent, const wxString& versionText) {
-	wxPanel* footerPanel = new BorderedDarkPanel(parent);
-	wxBoxSizer* footerSizer = new wxBoxSizer(wxHORIZONTAL);
+void WelcomeDialog::AutoSelectMatchingClient() {
+	if (m_has_manual_client_selection || m_selected_map_index == wxNOT_FOUND) {
+		return;
+	}
 
-	ConvexButton* exitBtn = new ConvexButton(footerPanel, wxID_EXIT, "Exit");
-	exitBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_POWER_OFF, FromDIP(wxSize(24, 24))));
-	exitBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
+	const OTBMStartupPeekResult* info = GetSelectedMapInfo();
+	if (!info || info->has_error) {
+		return;
+	}
 
-	// Align Left: 10px total
-	footerSizer->Add(exitBtn, 0, wxALL, 8);
+	auto exact_match = std::ranges::find_if(m_configured_clients, [info](const auto& client_entry) {
+		return client_entry.client->getOtbMajor() == info->items_major_version && client_entry.client->getOtbId() == info->items_minor_version;
+	});
+	if (exact_match == m_configured_clients.end()) {
+		exact_match = std::ranges::find_if(m_configured_clients, [info](const auto& client_entry) {
+			return client_entry.client->getOtbId() == info->items_minor_version;
+		});
+	}
 
-	ConvexButton* newBtn = new ConvexButton(footerPanel, wxID_NEW, "New Map");
-	newBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, FromDIP(wxSize(24, 24))));
-	newBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	footerSizer->Add(newBtn, 0, wxALL, 8);
-
-	footerSizer->AddStretchSpacer();
-	wxStaticText* version = new wxStaticText(footerPanel, wxID_ANY, versionText);
-	version->SetForegroundColour(Theme::Get(Theme::Role::TextSubtle));
-	version->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	footerSizer->Add(version, 0, wxCENTER | wxALL, 5);
-	footerSizer->AddStretchSpacer();
-
-	ConvexButton* loadBtn = new ConvexButton(footerPanel, wxID_ANY, "Load Map");
-	loadBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, FromDIP(wxSize(24, 24))));
-	loadBtn->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) {
-		long item = -1;
-		item = m_recentList->GetNextItem(item, wxLIST_NEXT_ALL, wxLIST_STATE_SELECTED);
-		if (item != -1) {
-			wxString path = m_recentList->GetItemText(item, 1);
-			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-			newEvent->SetId(wxID_OPEN);
-			newEvent->SetString(path);
-			QueueEvent(newEvent);
+	if (exact_match != m_configured_clients.end()) {
+		const int new_index = static_cast<int>(std::distance(m_configured_clients.begin(), exact_match));
+		if (new_index != m_selected_client_index) {
+			m_selected_client_index = new_index;
+			m_client_list->SetSelection(new_index);
 		}
+	} else if (m_selected_client_index == wxNOT_FOUND && !m_configured_clients.empty()) {
+		m_selected_client_index = 0;
+		m_client_list->SetSelection(0);
+	}
+}
+
+bool WelcomeDialog::AttemptLoad(bool show_message) {
+	if (m_selected_map_index == wxNOT_FOUND) {
+		if (show_message) {
+			wxMessageBox("Select a map before loading.", "Load Map", wxOK | wxICON_INFORMATION, this);
+		}
+		return false;
+	}
+
+	ClientVersion* selected_client = GetSelectedClient();
+	if (!selected_client) {
+		if (show_message) {
+			wxMessageBox("Select a configured client before loading.", "Load Map", wxOK | wxICON_INFORMATION, this);
+		}
+		return false;
+	}
+
+	const OTBMStartupPeekResult* map_info = GetSelectedMapInfo();
+	if (!map_info || map_info->has_error) {
+		if (show_message) {
+			const wxString error_message = (map_info != nullptr && !map_info->error_message.empty()) ? map_info->error_message : wxString("The selected map could not be read.");
+			wxMessageBox(error_message, "Load Map", wxOK | wxICON_WARNING, this);
+		}
+		return false;
+	}
+
+	const StartupCompatibilityStatus status = GetCompatibilityStatus();
+	if (status == StartupCompatibilityStatus::ForceRequired) {
+		if (show_message) {
+			wxMessageBox("The selected client does not match the map items version. Enable Force Load to continue.", "Client Mismatch", wxOK | wxICON_WARNING, this);
+		}
+		return false;
+	}
+
+	m_pending_load_request = StartupLoadRequest {
+		m_recent_maps[m_selected_map_index].path,
+		MapLoadOptions {
+			.selected_client_id = selected_client->getID(),
+			.force_client_mismatch = status == StartupCompatibilityStatus::Forced,
+		},
+	};
+
+	auto* open_event = new wxCommandEvent(WELCOME_DIALOG_ACTION, wxID_OPEN);
+	open_event->SetString(m_pending_load_request->map_path);
+	QueueEvent(open_event);
+	return true;
+}
+
+bool WelcomeDialog::AddBrowsedMap(const wxString& path) {
+	const int existing_index = FindRecentMapIndex(path);
+	if (existing_index != wxNOT_FOUND) {
+		SetSelectedMapIndex(existing_index);
+		return true;
+	}
+
+	std::erase_if(m_recent_maps, [](const auto& map_entry) {
+		return map_entry.ephemeral;
 	});
 
-	// Align Right: 10px total
-	footerSizer->Add(loadBtn, 0, wxALL, 8);
-
-	footerPanel->SetSizer(footerSizer);
-	return footerPanel;
+	m_recent_maps.insert(m_recent_maps.begin(), StartupRecentMapEntry {
+		path,
+		FormatModifiedLabel(path),
+		true,
+	});
+	RefreshRecentMapList();
+	SetSelectedMapIndex(0);
+	return true;
 }
 
-wxPanel* WelcomeDialog::CreateContentPanel(wxWindow* parent, const std::vector<wxString>& recentFiles) {
-	wxPanel* contentPanel = new wxPanel(parent, wxID_ANY);
-	contentPanel->SetBackgroundColour(Theme::Get(Theme::Role::Surface));
-	wxBoxSizer* contentSizer = new wxBoxSizer(wxHORIZONTAL);
-
-	// Column 1: Actions (Buttons directly on panel)
-	wxBoxSizer* col1 = new wxBoxSizer(wxVERTICAL);
-
-	ConvexButton* newMapBtn = new ConvexButton(contentPanel, wxID_NEW, "New map", wxDefaultPosition, wxSize(130, 50));
-	newMapBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_NEW, wxSize(24, 24)));
-	newMapBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	// Align "New Map" with Icon (8px from left edge of content panel)
-	col1->Add(newMapBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
-
-	ConvexButton* browseBtn = new ConvexButton(contentPanel, wxID_OPEN, "Browse Map", wxDefaultPosition, wxSize(130, 50));
-	browseBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_OPEN, wxSize(24, 24)));
-	browseBtn->Bind(wxEVT_BUTTON, &WelcomeDialog::OnButtonClicked, this);
-	col1->Add(browseBtn, 0, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 4);
-
-	// Add Column 1 to Sizer FIRST (Explicit LEFTmost placement)
-	contentSizer->Add(col1, 0, wxTOP | wxBOTTOM | wxRIGHT | wxLEFT, 8); // Add 8px left margin to whole column
-
-	// Column 2: Recent Maps
-	DarkCardPanel* col2 = new DarkCardPanel(contentPanel, "Recent Maps");
-	m_recentList = new wxListCtrl(col2, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList â€” ownership retained by m_imageList (do not replace with AssignImageList)
-	m_recentList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
-	m_recentList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_recentList->InsertColumn(1, "Map Info", wxLIST_FORMAT_LEFT, FromDIP(250)); // Wider
-	m_recentList->InsertColumn(2, "Date Modified", wxLIST_FORMAT_LEFT, FromDIP(150));
-
-	m_recentList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	m_recentList->SetTextColour(Theme::Get(Theme::Role::Text));
-
-	for (size_t i = 0; i < recentFiles.size(); ++i) {
-		long idx = m_recentList->InsertItem(i, "", 4);
-		m_recentList->SetItem(idx, 1, recentFiles[i]);
-
-		// Get modification time
-		wxFileName fn(recentFiles[i]);
-		wxDateTime dt;
-		if (fn.GetTimes(nullptr, &dt, nullptr)) {
-			// Check if valid? GetTimes returns bool success
-			m_recentList->SetItem(idx, 2, dt.Format("%Y-%m-%d %H:%M"));
-		} else {
-			m_recentList->SetItem(idx, 2, "-");
-		}
+void WelcomeDialog::EnsurePeeked(const wxString& path) {
+	const std::string key = NormalizePathKey(path);
+	if (m_peek_cache.contains(key)) {
+		return;
 	}
-	m_recentList->Bind(wxEVT_LIST_ITEM_ACTIVATED, &WelcomeDialog::OnRecentFileActivated, this);
-	m_recentList->Bind(wxEVT_LIST_ITEM_SELECTED, &WelcomeDialog::OnRecentFileSelected, this);
 
-	col2->GetSizer()->Add(m_recentList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col2, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 2
-
-	// Column 3: Selected Map Info
-	DarkCardPanel* col3 = new DarkCardPanel(contentPanel, "Selected Map Info");
-	AddInfoField(col3->GetSizer(), col3, "Map Name", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col3->GetSizer(), col3, "Dimensions", "Placeholder", ICON_LIST);
-	col3->GetSizer()->Add(new wxStaticLine(col3), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col3->GetSizer(), col3, "House File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Spawn File", "Placeholder", ICON_FILE);
-	AddInfoField(col3->GetSizer(), col3, "Description", "Placeholder", ICON_FILE_LINES);
-	contentSizer->Add(col3, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 3 (Center)
-
-	// Column 4: Client Info
-	DarkCardPanel* col4 = new DarkCardPanel(contentPanel, "Client Information");
-	AddInfoField(col4->GetSizer(), col4, "Client Name", "Placeholder", ICON_HARD_DRIVE);
-	AddInfoField(col4->GetSizer(), col4, "Client Version", "Placeholder", ICON_CHECK);
-	AddInfoField(col4->GetSizer(), col4, "Data Directory", "Placeholder", ICON_FOLDER);
-	col4->GetSizer()->Add(new wxStaticLine(col4), 0, wxEXPAND | wxALL, 4);
-	AddInfoField(col4->GetSizer(), col4, "Status", "Placeholder", ICON_CHECK, wxColour(0, 200, 0));
-	contentSizer->Add(col4, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 4
-
-	// Column 5: Available Clients
-	DarkCardPanel* col5 = new DarkCardPanel(contentPanel, "Available Clients");
-	m_clientList = new wxListCtrl(col5, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLC_REPORT | wxLC_NO_HEADER | wxBORDER_NONE);
-	// SetImageList â€” ownership retained by m_imageList (do not replace with AssignImageList)
-	m_clientList->SetImageList(m_imageList.get(), wxIMAGE_LIST_SMALL);
-	m_clientList->InsertColumn(0, "Icon", wxLIST_FORMAT_LEFT, FromDIP(24));
-	m_clientList->InsertColumn(1, "Name", wxLIST_FORMAT_LEFT, FromDIP(150));
-
-	m_clientList->SetBackgroundColour(Theme::Get(Theme::Role::Background));
-	m_clientList->SetTextColour(Theme::Get(Theme::Role::Text));
-
-	long ph1 = m_clientList->InsertItem(0, "", 3);
-	m_clientList->SetItem(ph1, 1, "Placeholder Client 1");
-	long ph2 = m_clientList->InsertItem(1, "", 3);
-	m_clientList->SetItem(ph2, 1, "Placeholder Client 2");
-
-	col5->GetSizer()->Add(m_clientList, 1, wxEXPAND | wxALL, 1);
-	contentSizer->Add(col5, 1, wxEXPAND | wxTOP | wxBOTTOM | wxRIGHT, 5); // Add Column 5 (Right)
-
-	contentPanel->SetSizer(contentSizer);
-	return contentPanel;
+	OTBMStartupPeekResult peek_result;
+	if (!IOMapOTBM::peekStartupInfo(FileName(path), peek_result) && !peek_result.has_error) {
+		peek_result.has_error = true;
+		peek_result.error_message = "Could not read the selected map.";
+	}
+	m_peek_cache.emplace(key, std::move(peek_result));
 }
 
-void WelcomeDialog::OnButtonClicked(wxCommandEvent& event) {
-	int id = event.GetId();
-	if (id == wxID_PREFERENCES) {
-		PreferencesWindow preferences_window(this, true);
-		preferences_window.ShowModal();
-	} else if (id == wxID_NEW) {
-		wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-		newEvent->SetId(wxID_NEW);
-		QueueEvent(newEvent);
-	} else if (id == wxID_OPEN) {
-		wxString wildcard = MAP_LOAD_FILE_WILDCARD;
-		wxString filePath;
-		{
-			wxFileDialog file_dialog(this, "Open map file", "", "", wildcard, wxFD_OPEN | wxFD_FILE_MUST_EXIST);
-			if (file_dialog.ShowModal() == wxID_OK) {
-				filePath = file_dialog.GetPath();
-			}
-		}
+const OTBMStartupPeekResult* WelcomeDialog::GetSelectedMapInfo() const {
+	if (m_selected_map_index == wxNOT_FOUND || m_selected_map_index >= static_cast<int>(m_recent_maps.size())) {
+		return nullptr;
+	}
 
-		if (!filePath.IsEmpty()) {
-			wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-			newEvent->SetId(wxID_OPEN);
-			newEvent->SetString(filePath);
-			QueueEvent(newEvent);
-		}
-	} else if (id == wxID_EXIT) {
-		Close(true); // Close the dialog
+	const auto key = NormalizePathKey(m_recent_maps[m_selected_map_index].path);
+	const auto it = m_peek_cache.find(key);
+	return it != m_peek_cache.end() ? &it->second : nullptr;
+}
+
+ClientVersion* WelcomeDialog::GetSelectedClient() const {
+	if (m_selected_client_index == wxNOT_FOUND || m_selected_client_index >= static_cast<int>(m_configured_clients.size())) {
+		return nullptr;
+	}
+	return m_configured_clients[m_selected_client_index].client;
+}
+
+StartupCompatibilityStatus WelcomeDialog::GetCompatibilityStatus() const {
+	const OTBMStartupPeekResult* map_info = GetSelectedMapInfo();
+	ClientVersion* client = GetSelectedClient();
+
+	if (!map_info || !client) {
+		return StartupCompatibilityStatus::MissingSelection;
+	}
+	if (map_info->has_error) {
+		return StartupCompatibilityStatus::MapError;
+	}
+
+	const bool matches = client->getOtbMajor() == map_info->items_major_version && client->getOtbId() == map_info->items_minor_version;
+	if (matches) {
+		return StartupCompatibilityStatus::Compatible;
+	}
+	return m_force_load_checkbox->GetValue() ? StartupCompatibilityStatus::Forced : StartupCompatibilityStatus::ForceRequired;
+}
+
+wxString WelcomeDialog::BuildCompatibilityMessage() const {
+	const OTBMStartupPeekResult* map_info = GetSelectedMapInfo();
+	ClientVersion* client = GetSelectedClient();
+
+	if (m_recent_maps.empty()) {
+		return "No recent maps yet. Browse for a map or start a new one.";
+	}
+	if (!map_info) {
+		return "Select a map to preview its header information.";
+	}
+	if (map_info->has_error) {
+		return "The selected map could not be previewed. Loading is disabled until a valid OTBM is selected.";
+	}
+	if (!client) {
+		return "Select a configured client to compare against the map header.";
+	}
+
+	switch (GetCompatibilityStatus()) {
+		case StartupCompatibilityStatus::Compatible:
+			return "Selected client matches the map items version. Load is ready.";
+		case StartupCompatibilityStatus::Forced:
+			return "Client mismatch is being ignored. The map will load with the selected client assets.";
+		case StartupCompatibilityStatus::ForceRequired:
+			return wxstr(std::format(
+				"Map header expects items {}.{} while the selected client provides {}.{}. Enable Force Load to continue anyway.",
+				map_info->items_major_version,
+				map_info->items_minor_version,
+				client->getOtbMajor(),
+				client->getOtbId()
+			));
+		case StartupCompatibilityStatus::MapError:
+			return "The selected map could not be previewed. Loading is disabled until a valid OTBM is selected.";
+		case StartupCompatibilityStatus::MissingSelection:
+		default:
+			return "Select both a map and a configured client to continue.";
 	}
 }
 
-void WelcomeDialog::OnRecentFileActivated(wxListEvent& event) {
-	wxListItem item;
-	item.SetId(event.GetIndex());
-	item.SetColumn(1);
-	item.SetMask(wxLIST_MASK_TEXT);
-
-	if (m_recentList->GetItem(item)) {
-		wxString realPath = item.GetText();
-		wxCommandEvent* newEvent = new wxCommandEvent(WELCOME_DIALOG_ACTION);
-		newEvent->SetId(wxID_OPEN);
-		newEvent->SetString(realPath);
-		QueueEvent(newEvent);
+int WelcomeDialog::FindRecentMapIndex(const wxString& path) const {
+	const std::string normalized_path = NormalizePathKey(path);
+	for (size_t index = 0; index < m_recent_maps.size(); ++index) {
+		if (NormalizePathKey(m_recent_maps[index].path) == normalized_path) {
+			return static_cast<int>(index);
+		}
 	}
+	return wxNOT_FOUND;
 }
 
-void WelcomeDialog::OnRecentFileSelected(wxListEvent& event) {
-	// Placeholder
+wxString WelcomeDialog::FormatModifiedLabel(const wxString& path) {
+	wxFileName filename(path);
+	wxDateTime modified_time;
+	return filename.GetTimes(nullptr, &modified_time, nullptr) ? modified_time.Format("%Y-%m-%d %H:%M") : wxString("Modified time unavailable");
+}
+
+std::string WelcomeDialog::NormalizePathKey(const wxString& path) {
+	wxFileName filename(path);
+	filename.Normalize(wxPATH_NORM_ABSOLUTE | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE);
+	return nstr(filename.GetFullPath());
 }

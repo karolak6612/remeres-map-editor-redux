@@ -55,16 +55,14 @@ Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version) :
 	map.initializeEmpty();
 }
 
-Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn) :
+Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, const FileName& fn, const MapLoadOptions& load_options) :
 	live_manager(*this),
 	actionQueue(newd ActionQueue(*this)),
 	selection(*this),
 	copybuffer(copybuffer),
 	replace_brush(nullptr) {
 	spdlog::info("Editor created (From File) [Editor={}]", (void*)this);
-	// EditorPersistence handles version checking internally or assumes compatibility
-	// Usage of "version" parameter here might be redundant for loading but good for consistency/future use
-	EditorPersistence::loadMap(*this, fn);
+	EditorPersistence::loadMap(*this, fn, load_options);
 }
 
 Editor::Editor(CopyBuffer& copybuffer, const MapVersion& version, std::unique_ptr<LiveClient> client) :

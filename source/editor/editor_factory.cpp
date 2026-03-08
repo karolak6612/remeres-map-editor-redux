@@ -74,16 +74,12 @@ std::unique_ptr<Editor> EditorFactory::CreateEmpty(CopyBuffer& copybuffer) {
 	return editor;
 }
 
-std::unique_ptr<Editor> EditorFactory::LoadFromFile(CopyBuffer& copybuffer, const FileName& fn) {
-	// For loading, we might want to query version from headers first, OR assume current GUI version is what we want?
-	// The original Editor constructor for file loading called EditorPersistence::loadMap.
-	// We'll pass current GUI version as a default context, though EditorPersistence might override map.
-
+std::unique_ptr<Editor> EditorFactory::LoadFromFile(CopyBuffer& copybuffer, const FileName& fn, const MapLoadOptions& load_options) {
 	MapVersion mapVersion;
 	mapVersion.otbm = g_version.GetCurrentVersion().getPrefferedMapVersionID();
 	mapVersion.client = g_version.GetCurrentVersion().getProtocolID();
 
-	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, fn);
+	std::unique_ptr<Editor> editor = std::make_unique<Editor>(copybuffer, mapVersion, fn, load_options);
 	SetupCallbacks(editor.get());
 	return editor;
 }

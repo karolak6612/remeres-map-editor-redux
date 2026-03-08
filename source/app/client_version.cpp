@@ -409,6 +409,16 @@ ClientVersionList ClientVersion::getAllVisible() {
 	return l;
 }
 
+ClientVersionList ClientVersion::getConfiguredVisible() {
+	ClientVersionList configured_versions;
+	for (const auto& client_version : client_versions) {
+		if (client_version->isVisible() && client_version->hasConfiguredClientPath()) {
+			configured_versions.push_back(client_version.get());
+		}
+	}
+	return configured_versions;
+}
+
 ClientVersionList ClientVersion::getAllForOTBMVersion(MapVersionID id) {
 	ClientVersionList list;
 	for (const auto& cv : client_versions) {
@@ -559,6 +569,10 @@ bool ClientVersion::isVisible() const {
 
 void ClientVersion::setClientPath(const FileName& dir) {
 	client_path.Assign(dir);
+}
+
+bool ClientVersion::hasConfiguredClientPath() const {
+	return client_path.IsOk() && !client_path.GetFullPath().IsEmpty();
 }
 
 MapVersionID ClientVersion::getPrefferedMapVersionID() const {

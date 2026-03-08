@@ -7,6 +7,12 @@
 #include "ui/dialog_util.h"
 #include <spdlog/spdlog.h>
 
+namespace {
+int toDisplayOTBMVersion(uint32_t raw_version) {
+	return raw_version <= static_cast<uint32_t>(MAP_OTBM_4) ? static_cast<int>(raw_version) + 1 : static_cast<int>(raw_version);
+}
+}
+
 bool HeaderSerializationOTBM::getVersionInfo(NodeFileReadHandle& f, MapVersion& out_ver) {
 	BinaryNode* root = f.getRootNode();
 	if (!root) {
@@ -34,6 +40,80 @@ bool HeaderSerializationOTBM::getVersionInfo(NodeFileReadHandle& f, MapVersion& 
 	}
 
 	out_ver.client = static_cast<OtbVersionID>(u32);
+	return true;
+}
+
+bool HeaderSerializationOTBM::peekStartupInfo(NodeFileReadHandle& f, OTBMStartupPeekResult& out_info) {
+	BinaryNode* root = f.getRootNode();
+	if (!root) {
+		return false;
+	}
+
+	uint8_t root_type = 0;
+	if (!root->getByte(root_type)) {
+		return false;
+	}
+
+	uint32_t raw_otbm_version = 0;
+	if (!root->getU32(raw_otbm_version)) {
+		return false;
+	}
+	out_info.otbm_version = toDisplayOTBMVersion(raw_otbm_version);
+
+	uint16_t ignored_dimension = 0;
+	if (!root->getU16(ignored_dimension) || !root->getU16(ignored_dimension) || !root->getU32(out_info.items_major_version) || !root->getU32(out_info.items_minor_version)) {
+		return false;
+	}
+
+	BinaryNode* map_header_node = root->getChild();
+	if (!map_header_node) {
+		return true;
+	}
+
+	uint8_t node_type = 0;
+	if (!map_header_node->getByte(node_type) || node_type != OTBM_MAP_DATA) {
+		return false;
+	}
+
+	uint8_t attribute = 0;
+	while (map_header_node->getU8(attribute)) {
+		switch (attribute) {
+			case OTBM_ATTR_DESCRIPTION: {
+				std::string description;
+				if (!map_header_node->getString(description)) {
+					return false;
+				}
+				out_info.description = wxstr(description);
+				break;
+			}
+			case OTBM_ATTR_EXT_SPAWN_FILE: {
+				std::string spawn_file;
+				if (!map_header_node->getString(spawn_file)) {
+					return false;
+				}
+				out_info.spawn_xml_file = wxstr(spawn_file);
+				break;
+			}
+			case OTBM_ATTR_EXT_HOUSE_FILE: {
+				std::string house_file;
+				if (!map_header_node->getString(house_file)) {
+					return false;
+				}
+				out_info.house_xml_file = wxstr(house_file);
+				break;
+			}
+			case OTBM_ATTR_EXT_SPAWN_NPC_FILE: {
+				std::string ignored_string;
+				if (!map_header_node->getString(ignored_string)) {
+					return false;
+				}
+				break;
+			}
+			default:
+				return true;
+		}
+	}
+
 	return true;
 }
 

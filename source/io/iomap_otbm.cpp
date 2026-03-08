@@ -141,6 +141,31 @@ bool IOMapOTBM::getVersionInfo(NodeFileReadHandle* f, MapVersion& out_ver) {
 	return HeaderSerializationOTBM::getVersionInfo(*f, out_ver);
 }
 
+bool IOMapOTBM::peekStartupInfo(const FileName& identifier, OTBMStartupPeekResult& out_info) {
+	out_info = {};
+	out_info.map_name = identifier.GetName();
+
+	wxDateTime modified_time;
+	if (identifier.GetTimes(nullptr, &modified_time, nullptr)) {
+		out_info.modified_time = modified_time;
+	}
+
+	DiskNodeFileReadHandle handle(nstr(identifier.GetFullPath()), StringVector(1, "OTBM"));
+	if (!handle.isOk()) {
+		out_info.has_error = true;
+		out_info.error_message = wxstr(handle.getErrorMessage());
+		return false;
+	}
+
+	if (!HeaderSerializationOTBM::peekStartupInfo(handle, out_info)) {
+		out_info.has_error = true;
+		out_info.error_message = "Could not read the OTBM header.";
+		return false;
+	}
+
+	return true;
+}
+
 bool IOMapOTBM::loadMapFromDisk(Map& map, const FileName& filename) {
 	spdlog::debug("Loading OTBM map from disk: {}", filename.GetFullPath().ToStdString());
 	std::filesystem::path path(nstr(filename.GetFullPath()));

@@ -3,6 +3,7 @@
 #include <memory>
 #include "app/main.h"
 #include "app/client_version.h"
+#include "editor/persistence/map_load_options.h"
 
 class Editor;
 class CopyBuffer;
@@ -14,7 +15,7 @@ public:
 	static std::unique_ptr<Editor> CreateEmpty(CopyBuffer& copybuffer);
 
 	// Loads a map from file, handles version checking/switching
-	static std::unique_ptr<Editor> LoadFromFile(CopyBuffer& copybuffer, const FileName& fn);
+	static std::unique_ptr<Editor> LoadFromFile(CopyBuffer& copybuffer, const FileName& fn, const MapLoadOptions& load_options = {});
 
 	// Joins a live session
 	static std::unique_ptr<Editor> JoinLive(CopyBuffer& copybuffer, std::unique_ptr<LiveClient> client);

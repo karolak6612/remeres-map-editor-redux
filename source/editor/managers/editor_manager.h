@@ -6,6 +6,7 @@
 #define RME_EDITOR_MANAGER_H_
 
 #include "app/main.h"
+#include "editor/persistence/map_load_options.h"
 
 class Map;
 class Editor;
@@ -40,7 +41,7 @@ public:
 	void OpenMap();
 	void SaveMap();
 	void SaveMapAs();
-	bool LoadMap(const FileName& fileName);
+	bool LoadMap(const FileName& fileName, const MapLoadOptions& load_options = {});
 
 	// Edit operations
 	void DoCut();

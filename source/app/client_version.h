@@ -232,6 +232,7 @@ public:
 	static ClientVersionList getVisible(std::string from, std::string to);
 	static ClientVersionList getAll();
 	static ClientVersionList getAllVisible();
+	static ClientVersionList getConfiguredVisible();
 	static ClientVersionList getAllForOTBMVersion(MapVersionID map_version);
 	static ClientVersionList getAllVersionsSupportedForClientVersion(ClientVersion* v);
 	static ClientVersion* getLatestVersion();
@@ -248,6 +249,7 @@ public:
 	bool loadValidPaths();
 	bool isDefaultPath() const;
 	void setClientPath(const FileName& dir);
+	bool hasConfiguredClientPath() const;
 
 	bool isVisible() const;
 	std::string getName() const;

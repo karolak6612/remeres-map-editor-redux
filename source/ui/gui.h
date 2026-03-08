@@ -9,6 +9,7 @@
 #include "brushes/brush_enums.h"
 #include "ui/gui_ids.h"
 #include "editor/editor_tabs.h"
+#include "editor/persistence/map_load_options.h"
 #include "ui/map_tab.h"
 #include "palette/palette_window.h"
 #include "app/client_version.h"
@@ -293,7 +294,7 @@ public:
 	void OpenMap();
 	void SaveMap();
 	void SaveMapAs();
-	bool LoadMap(const FileName& fileName);
+	bool LoadMap(const FileName& fileName, const MapLoadOptions& load_options = {});
 
 protected:
 	ClientVersion* getLoadedVersion() const {

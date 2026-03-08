@@ -62,6 +62,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/editor/operations/selection_operations.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/operations/map_version_changer.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/editor_persistence.h
+    ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/map_load_options.h
     ${CMAKE_CURRENT_LIST_DIR}/editor/persistence/tileset_exporter.h
 
     ${CMAKE_CURRENT_LIST_DIR}/editor/editor_tabs.h
@@ -335,6 +336,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/result_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_button.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_card.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_formatters.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_info_panel.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_list_box.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_types.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.h
@@ -675,6 +682,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/theme.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/welcome_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_button.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_card.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_formatters.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_info_panel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/welcome/startup_list_box.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map_statistics_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/live_dialogs.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar_loader.cpp

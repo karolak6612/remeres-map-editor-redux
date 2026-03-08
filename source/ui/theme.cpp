@@ -51,12 +51,34 @@ wxColour Theme::GetDark(Role role) {
 			return wxColour(0, 120, 215, 60); // Alpha translucency
 		case Role::Error:
 			return wxColour(200, 50, 50);
+		case Role::Warning:
+			return wxColour(240, 185, 64);
+		case Role::Success:
+			return wxColour(96, 196, 142);
 		case Role::CardBase:
 			return wxColour(50, 50, 55);
 		case Role::CardBaseHover:
 			return wxColour(60, 60, 65);
 		case Role::CardBorder:
 			return wxColour(80, 80, 80);
+		case Role::PanelBackground:
+			return wxColour(26, 28, 33);
+		case Role::RaisedSurface:
+			return wxColour(36, 39, 46);
+		case Role::FooterSurface:
+			return wxColour(28, 30, 36);
+		case Role::SelectionFill:
+			return wxColour(58, 95, 146);
+		case Role::PrimaryButton:
+			return wxColour(53, 108, 178);
+		case Role::PrimaryButtonHover:
+			return wxColour(68, 124, 196);
+		case Role::SecondaryButton:
+			return wxColour(52, 56, 65);
+		case Role::SecondaryButtonHover:
+			return wxColour(62, 67, 78);
+		case Role::ButtonDisabled:
+			return wxColour(44, 47, 54);
 		// Tooltip colors (vibrant on dark background)
 		case Role::TooltipBg:
 			return wxColour(30, 30, 35);
@@ -117,12 +139,34 @@ wxColour Theme::GetLight(Role role) {
 			return wxColour(0, 120, 215, 60);
 		case Role::Error:
 			return wxColour(200, 0, 0);
+		case Role::Warning:
+			return wxColour(180, 120, 0);
+		case Role::Success:
+			return wxColour(32, 132, 76);
 		case Role::CardBase:
 			return *wxWHITE;
 		case Role::CardBaseHover:
 			return wxColour(245, 245, 245);
 		case Role::CardBorder:
 			return wxColour(200, 200, 200);
+		case Role::PanelBackground:
+			return wxColour(248, 249, 251);
+		case Role::RaisedSurface:
+			return *wxWHITE;
+		case Role::FooterSurface:
+			return wxColour(238, 240, 244);
+		case Role::SelectionFill:
+			return wxColour(209, 225, 245);
+		case Role::PrimaryButton:
+			return wxColour(45, 102, 173);
+		case Role::PrimaryButtonHover:
+			return wxColour(32, 90, 164);
+		case Role::SecondaryButton:
+			return wxColour(236, 239, 244);
+		case Role::SecondaryButtonHover:
+			return wxColour(225, 229, 235);
+		case Role::ButtonDisabled:
+			return wxColour(229, 232, 236);
 		// Tooltip colors (readable on light background)
 		case Role::TooltipBg:
 			return wxColour(240, 240, 240);

@@ -24,13 +24,13 @@
 #include <unordered_map>
 #include <spdlog/spdlog.h>
 
-void EditorPersistence::loadMap(Editor& editor, const FileName& fn) {
+void EditorPersistence::loadMap(Editor& editor, const FileName& fn, const MapLoadOptions& load_options) {
 	MapVersion ver;
 	if (!IOMapOTBM::getVersionInfo(fn, ver)) {
 		throw std::runtime_error("Could not open file \"" + nstr(fn.GetFullPath()) + "\".\nThis is not a valid OTBM file or it does not exist.");
 	}
 
-	if (g_version.GetCurrentVersion().getProtocolID() != ver.client) {
+	if (g_version.GetCurrentVersion().getProtocolID() != ver.client && !load_options.force_client_mismatch) {
 		throw std::runtime_error(std::format("Client version mismatch. Expected protocol {} but got protocol {}", ver.client, g_version.GetCurrentVersion().getProtocolID()));
 	}
 
