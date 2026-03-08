@@ -10,6 +10,17 @@
 
 #include <memory>
 
+namespace {
+	void seedVersionInfoFromClient(const ItemDefinitionLoadInput& input, ItemDefinitionFragments& fragments) {
+		if (input.client_version == nullptr) {
+			return;
+		}
+
+		fragments.version.major_version = input.client_version->getOtbMajor();
+		fragments.version.minor_version = input.client_version->getOtbId();
+	}
+}
+
 bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings) const {
 	const ItemDefinitionRecipe& recipe = ItemDefinitionRecipeRegistry::get(input.mode);
 	if (!recipe.runnable) {
@@ -24,6 +35,7 @@ bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemD
 
 	fragments = {};
 	rows.clear();
+	seedVersionInfoFromClient(input, fragments);
 
 	DatItemParser dat_parser;
 	OtbItemParser otb_parser;
