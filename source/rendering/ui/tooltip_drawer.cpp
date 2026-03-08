@@ -24,7 +24,7 @@
 #include <format>
 #include "rendering/core/coordinate_mapper.h"
 #include <wx/wx.h>
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
 
@@ -136,8 +136,9 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	}
 
 	// Resolve Item ID
-	ItemType& it = g_items[itemId];
-	if (!it.sprite) {
+	const auto definition = g_item_definitions.get(itemId);
+	GameSprite* gameSprite = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
+	if (!gameSprite) {
 		return 0;
 	}
 
@@ -146,9 +147,6 @@ int TooltipDrawer::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	if (itCache != spriteCache.end()) {
 		return itCache->second;
 	}
-
-	// Use the sprite directly from ItemType
-	GameSprite* gameSprite = it.sprite;
 
 	if (gameSprite && !gameSprite->spriteList.empty()) {
 		// Use the first frame/part of the sprite

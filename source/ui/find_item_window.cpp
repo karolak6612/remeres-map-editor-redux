@@ -20,10 +20,12 @@
 #include "ui/dialogs/find_dialog.h"
 #include "ui/controls/sortable_list_box.h"
 #include "ui/gui.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
+
+#include <limits>
 
 FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables /* = false*/) :
 	wxDialog(parent, wxID_ANY, title, wxDefaultPosition, wxSize(800, 600), wxDEFAULT_DIALOG_STYLE),
@@ -49,7 +51,7 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 	options_box_sizer->Add(options_radio_box, 0, wxALL | wxEXPAND, 5);
 
 	wxStaticBoxSizer* server_id_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Server ID"), wxVERTICAL);
-	server_id_spin = newd wxSpinCtrl(server_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, g_items.getMaxID(), 100);
+	server_id_spin = newd wxSpinCtrl(server_id_box_sizer->GetStaticBox(), wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, std::numeric_limits<uint16_t>::max(), 100);
 	server_id_spin->SetToolTip("Search by server ID");
 	server_id_box_sizer->Add(server_id_spin, 0, wxALL | wxEXPAND, 5);
 
@@ -290,12 +292,12 @@ void FindItemDialog::RefreshContentsInternal() {
 	if (selection == SearchMode::ServerIDs) {
 		result_id = std::min(server_id_spin->GetValue(), 0xFFFF);
 		uint16_t serverID = static_cast<uint16_t>(result_id);
-		if (serverID <= g_items.getMaxID()) {
-			ItemType& item = g_items.getItemType(serverID);
-			RAWBrush* raw_brush = item.raw_brush;
+		if (serverID <= g_item_definitions.getMaxID()) {
+			const auto item = g_item_definitions.get(serverID);
+			RAWBrush* raw_brush = item ? item.editorData().raw_brush : nullptr;
 			if (raw_brush) {
 				if (only_pickupables) {
-					if (item.pickupable) {
+					if (item.hasFlag(ItemFlag::Pickupable)) {
 						found_search_results = true;
 						items_list->AddBrush(raw_brush);
 					}
@@ -311,18 +313,14 @@ void FindItemDialog::RefreshContentsInternal() {
 		}
 	} else if (selection == SearchMode::ClientIDs) {
 		uint16_t clientID = (uint16_t)client_id_spin->GetValue();
-		for (int id = 100; id <= g_items.getMaxID(); ++id) {
-			ItemType& item = g_items.getItemType(id);
-			if (item.id == 0 || item.clientID != clientID) {
-				continue;
-			}
-
-			RAWBrush* raw_brush = item.raw_brush;
+		for (ServerItemId id : g_item_definitions.findAllByClientId(clientID)) {
+			const auto item = g_item_definitions.get(id);
+			RAWBrush* raw_brush = item.editorData().raw_brush;
 			if (!raw_brush) {
 				continue;
 			}
 
-			if (only_pickupables && !item.pickupable) {
+			if (only_pickupables && !item.hasFlag(ItemFlag::Pickupable)) {
 				continue;
 			}
 
@@ -332,22 +330,18 @@ void FindItemDialog::RefreshContentsInternal() {
 	} else if (selection == SearchMode::Names) {
 		std::string search_string = as_lower_str(nstr(name_text_input->GetValue()));
 		if (search_string.size() >= 2) {
-			for (int id = 100; id <= g_items.getMaxID(); ++id) {
-				ItemType& item = g_items.getItemType(id);
-				if (item.id == 0) {
-					continue;
-				}
-
-				RAWBrush* raw_brush = item.raw_brush;
+			for (ServerItemId id : g_item_definitions.allIds()) {
+				const auto item = g_item_definitions.get(id);
+				RAWBrush* raw_brush = item.editorData().raw_brush;
 				if (!raw_brush) {
 					continue;
 				}
 
-				if (only_pickupables && !item.pickupable) {
+				if (only_pickupables && !item.hasFlag(ItemFlag::Pickupable)) {
 					continue;
 				}
 
-				if (as_lower_str(raw_brush->getName()).find(search_string) == std::string::npos) {
+				if (as_lower_str(std::string(item.name())).find(search_string) == std::string::npos) {
 					continue;
 				}
 
@@ -356,18 +350,14 @@ void FindItemDialog::RefreshContentsInternal() {
 			}
 		}
 	} else if (selection == SearchMode::Types) {
-		for (int id = 100; id <= g_items.getMaxID(); ++id) {
-			ItemType& item = g_items.getItemType(id);
-			if (item.id == 0) {
-				continue;
-			}
-
-			RAWBrush* raw_brush = item.raw_brush;
+		for (ServerItemId id : g_item_definitions.allIds()) {
+			const auto item = g_item_definitions.get(id);
+			RAWBrush* raw_brush = item.editorData().raw_brush;
 			if (!raw_brush) {
 				continue;
 			}
 
-			if (only_pickupables && !item.pickupable) {
+			if (only_pickupables && !item.hasFlag(ItemFlag::Pickupable)) {
 				continue;
 			}
 
@@ -383,18 +373,14 @@ void FindItemDialog::RefreshContentsInternal() {
 		bool has_selected = (unpassable->GetValue() || unmovable->GetValue() || block_missiles->GetValue() || block_pathfinder->GetValue() || readable->GetValue() || writeable->GetValue() || pickupable->GetValue() || stackable->GetValue() || rotatable->GetValue() || hangable->GetValue() || hook_east->GetValue() || hook_south->GetValue() || has_elevation->GetValue() || ignore_look->GetValue() || floor_change->GetValue());
 
 		if (has_selected) {
-			for (int id = 100; id <= g_items.getMaxID(); ++id) {
-				ItemType& item = g_items.getItemType(id);
-				if (item.id == 0) {
-					continue;
-				}
-
-				RAWBrush* raw_brush = item.raw_brush;
+			for (ServerItemId id : g_item_definitions.allIds()) {
+				const auto item = g_item_definitions.get(id);
+				RAWBrush* raw_brush = item.editorData().raw_brush;
 				if (!raw_brush) {
 					continue;
 				}
 
-				if ((unpassable->GetValue() && !item.unpassable) || (unmovable->GetValue() && item.moveable) || (block_missiles->GetValue() && !item.blockMissiles) || (block_pathfinder->GetValue() && !item.blockPathfinder) || (readable->GetValue() && !item.canReadText) || (writeable->GetValue() && !item.canWriteText) || (pickupable->GetValue() && !item.pickupable) || (stackable->GetValue() && !item.stackable) || (rotatable->GetValue() && !item.rotable) || (hangable->GetValue() && !item.isHangable) || (hook_east->GetValue() && !item.hookEast) || (hook_south->GetValue() && !item.hookSouth) || (has_elevation->GetValue() && !item.hasElevation) || (ignore_look->GetValue() && !item.ignoreLook) || (floor_change->GetValue() && !item.isFloorChange())) {
+				if ((unpassable->GetValue() && !item.hasFlag(ItemFlag::Unpassable)) || (unmovable->GetValue() && item.hasFlag(ItemFlag::Moveable)) || (block_missiles->GetValue() && !item.hasFlag(ItemFlag::BlockMissiles)) || (block_pathfinder->GetValue() && !item.hasFlag(ItemFlag::BlockPathfinder)) || (readable->GetValue() && !item.hasFlag(ItemFlag::CanReadText)) || (writeable->GetValue() && !item.hasFlag(ItemFlag::CanWriteText)) || (pickupable->GetValue() && !item.hasFlag(ItemFlag::Pickupable)) || (stackable->GetValue() && !item.hasFlag(ItemFlag::Stackable)) || (rotatable->GetValue() && !item.hasFlag(ItemFlag::Rotatable)) || (hangable->GetValue() && !item.hasFlag(ItemFlag::IsHangable)) || (hook_east->GetValue() && !item.hasFlag(ItemFlag::HookEast)) || (hook_south->GetValue() && !item.hasFlag(ItemFlag::HookSouth)) || (has_elevation->GetValue() && !item.hasFlag(ItemFlag::HasElevation)) || (ignore_look->GetValue() && !item.hasFlag(ItemFlag::IgnoreLook)) || (floor_change->GetValue() && !item.isFloorChange())) {
 					continue;
 				}
 

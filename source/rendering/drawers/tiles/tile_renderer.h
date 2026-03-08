@@ -6,6 +6,8 @@
 #include <stdint.h>
 
 class TileLocation;
+class Tile;
+class Item;
 struct RenderView;
 struct DrawingOptions;
 class Editor;
@@ -19,8 +21,8 @@ class TooltipDrawer;
 struct LightBuffer;
 class SpriteBatch;
 class PrimitiveRenderer;
-class ItemType;
 struct SpritePatterns;
+class ItemDefinitionView;
 
 class TileRenderer {
 public:
@@ -29,7 +31,7 @@ public:
 	void DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1, LightBuffer* light_buffer = nullptr);
 
 private:
-	void PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* patterns = nullptr);
+	void PreloadItem(const Tile* tile, Item* item, const ItemDefinitionView& definition, const SpritePatterns* patterns = nullptr);
 
 	ItemDrawer* item_drawer;
 	SpriteDrawer* sprite_drawer;

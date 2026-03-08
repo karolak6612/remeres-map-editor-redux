@@ -7,7 +7,6 @@
 #include "app/managers/version_manager.h"
 #include "app/application.h"
 #include "game/creature.h"
-#include "game/items.h"
 #include "map/tile.h"
 
 #include <unordered_map>

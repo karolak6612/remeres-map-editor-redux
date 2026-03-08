@@ -28,6 +28,7 @@
 #include "editor/editor.h"
 #include "game/creature.h"
 #include "game/materials.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/tileset.h"
 
 #include "ui/gui.h"
@@ -38,10 +39,26 @@
 #include "ui/find_item_window.h"
 #include "util/image_manager.h"
 
+#include <limits>
+
 // ============================================================================
 // Add Item Window
 
-static constexpr int OUTFIT_COLOR_MAX = 133;
+namespace {
+	void clearItemSelection(wxSpinCtrl* item_id_field, wxStaticText* item_id_label, wxStaticText* item_name_label, DCButton* item_button) {
+		item_id_field->SetValue(0);
+		item_id_label->SetLabelText("ID 0");
+		item_name_label->SetLabelText("\"None\"");
+		item_button->SetSprite(0);
+	}
+
+	void applyItemSelection(wxSpinCtrl* item_id_field, wxStaticText* item_id_label, wxStaticText* item_name_label, DCButton* item_button, const ItemDefinitionView& item) {
+		item_id_field->SetValue(item.serverId());
+		item_id_label->SetLabelText("ID " + i2ws(item.serverId()));
+		item_name_label->SetLabelText("\"" + wxstr(std::string(item.name())) + "\"");
+		item_button->SetSprite(item.clientId());
+	}
+}
 
 AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryType, Tileset* tilesetItem, wxPoint pos) :
 	ObjectPropertiesWindowBase(win_parent, "Add a Item", pos),
@@ -73,7 +90,7 @@ AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryT
 	subsizer->Add(item_button);
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item Id"));
-	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, 100000);
+	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, std::numeric_limits<uint16_t>::max());
 	item_id_field->SetToolTip("Enter item ID directly");
 	item_id_field->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &AddItemWindow::OnChangeItemId, this);
 	subsizer->Add(item_id_field, wxSizerFlags(1).Expand());
@@ -104,11 +121,11 @@ AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryT
 }
 
 void AddItemWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
-	const ItemType& it = g_items.getItemType(item_id_field->GetValue());
-	if (it.id != 0) {
-		g_materials.addToTileset(tileset_item->name, it.id, category_type);
+	const auto it = g_item_definitions.get(item_id_field->GetValue());
+	if (it) {
+		g_materials.addToTileset(tileset_item->name, it.serverId(), category_type);
 		g_materials.modify();
-		DialogUtil::PopupDialog("Item added to Tileset", "'" + it.name + "' has been added to tileset '" + tileset_item->name + "'", wxOK);
+		DialogUtil::PopupDialog("Item added to Tileset", "'" + std::string(it.name()) + "' has been added to tileset '" + tileset_item->name + "'", wxOK);
 
 		EndModal(1);
 	} else {
@@ -123,14 +140,11 @@ void AddItemWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 
 void AddItemWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
-		item_id_label->SetLabelText("ID " + i2ws(it.id));
-		item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
-
-		item_button->SetSprite(it.clientID);
+	const auto it = g_item_definitions.get(itemId);
+	if (it) {
+		applyItemSelection(item_id_field, item_id_label, item_name_label, item_button, it);
 	} else {
-		item_id_field->SetValue(100);
+		clearItemSelection(item_id_field, item_id_label, item_name_label, item_button);
 	}
 }
 
@@ -149,16 +163,12 @@ void AddItemWindow::SetItemIdToItemButton(uint16_t id) {
 	}
 
 	if (id != 0) {
-		const ItemType& it = g_items.getItemType(id);
-		if (it.id != 0) {
-			item_id_field->SetValue(it.id);
-			item_id_label->SetLabelText("ID " + i2ws(it.id));
-			item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
-
-			item_button->SetSprite(it.clientID);
+		const auto it = g_item_definitions.get(id);
+		if (it) {
+			applyItemSelection(item_id_field, item_id_label, item_name_label, item_button, it);
 			return;
 		}
 	}
 
-	item_button->SetSprite(0);
+	clearItemSelection(item_id_field, item_id_label, item_name_label, item_button);
 }

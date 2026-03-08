@@ -1,7 +1,6 @@
 #include "ingame_preview/floor_visibility_calculator.h"
 #include "map/basemap.h"
 #include "map/tile.h"
-#include "game/items.h"
 #include <algorithm>
 
 namespace IngamePreview {
@@ -14,21 +13,21 @@ namespace IngamePreview {
 		}
 
 		// In RME, Tile has ground and items.
-		// ItemType properties are used to determine blocking.
+		// Item definitions are used to determine blocking.
 
 		if (tile->ground) {
-			const ItemType& it = g_items[tile->ground->getID()];
+			const auto it = tile->ground->getDefinition();
 			if (it.isGroundTile()) {
 				return true;
 			}
-			if (it.alwaysOnBottom && it.blockMissiles) {
+			if (it.hasFlag(ItemFlag::AlwaysOnBottom) && it.hasFlag(ItemFlag::BlockMissiles)) {
 				return true; // Most walls
 			}
 		}
 
 		return std::ranges::any_of(tile->items, [](const auto& item) {
-			const ItemType& it = g_items[item->getID()];
-			return it.isGroundTile() || (it.alwaysOnBottom && it.blockMissiles);
+			const auto it = item->getDefinition();
+			return it.isGroundTile() || (it.hasFlag(ItemFlag::AlwaysOnBottom) && it.hasFlag(ItemFlag::BlockMissiles));
 		});
 	}
 
@@ -38,14 +37,14 @@ namespace IngamePreview {
 		}
 
 		if (tile->ground) {
-			const ItemType& it = g_items[tile->ground->getID()];
-			if (it.blockMissiles) {
+			const auto it = tile->ground->getDefinition();
+			if (it.hasFlag(ItemFlag::BlockMissiles)) {
 				return false;
 			}
 		}
 
 		return std::ranges::none_of(tile->items, [](const auto& item) {
-			return g_items[item->getID()].blockMissiles;
+			return item->getDefinition().hasFlag(ItemFlag::BlockMissiles);
 		});
 	}
 

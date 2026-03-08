@@ -1,7 +1,7 @@
 #include "ui/dialogs/find_dialog.h"
 
 #include "brushes/brush.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/gui.h"
 #include "ui/theme.h"
 #include "brushes/raw/raw_brush.h"
@@ -212,13 +212,8 @@ void FindBrushDialog::OnClickOKInternal() {
 				// Did we not find a matching brush?
 				if (!result_brush) {
 					// Then let's search the RAWs
-					for (int id = 0; id <= g_items.getMaxID(); ++id) {
-						ItemType& it = g_items[id];
-						if (it.id == 0) {
-							continue;
-						}
-
-						RAWBrush* raw_brush = it.raw_brush;
+					for (ServerItemId id : g_item_definitions.allIds()) {
+						RAWBrush* raw_brush = g_item_definitions.editorData(id).raw_brush;
 						if (!raw_brush) {
 							continue;
 						}
@@ -253,9 +248,6 @@ void FindBrushDialog::RefreshContentsInternal() {
 
 		const BrushMap& brushes_map = g_brushes.getMap();
 
-		// We store the raws so they display last of all results
-		std::deque<const RAWBrush*> raws;
-
 		for (const auto& [name, brush_ptr] : brushes_map) {
 			const Brush* brush = brush_ptr.get();
 
@@ -271,13 +263,8 @@ void FindBrushDialog::RefreshContentsInternal() {
 			item_list->AddBrush(const_cast<Brush*>(brush));
 		}
 
-		for (int id = 0; id <= g_items.getMaxID(); ++id) {
-			ItemType& it = g_items[id];
-			if (it.id == 0) {
-				continue;
-			}
-
-			RAWBrush* raw_brush = it.raw_brush;
+		for (ServerItemId id : g_item_definitions.allIds()) {
+			RAWBrush* raw_brush = g_item_definitions.editorData(id).raw_brush;
 			if (!raw_brush) {
 				continue;
 			}
@@ -288,11 +275,6 @@ void FindBrushDialog::RefreshContentsInternal() {
 
 			found_search_results = true;
 			item_list->AddBrush(raw_brush);
-		}
-
-		while (!raws.empty()) {
-			item_list->AddBrush(const_cast<RAWBrush*>(raws.front()));
-			raws.pop_front();
 		}
 
 		if (found_search_results) {

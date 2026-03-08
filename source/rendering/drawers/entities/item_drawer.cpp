@@ -19,10 +19,22 @@
 #include "rendering/utilities/pattern_calculator.h"
 #include "map/tile.h"
 #include "game/item.h"
-#include "game/items.h"
 #include "game/complexitem.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+
+namespace {
+	GameSprite* resolveSprite(const ItemDefinitionView& definition) {
+		if (!definition) {
+			return nullptr;
+		}
+		return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+	}
+
+	GameSprite* resolveSprite(ServerItemId item_id) {
+		return resolveSprite(g_item_definitions.get(item_id));
+	}
+}
 
 BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
 	if (t) {
@@ -51,16 +63,16 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int alpha = params.alpha;
 	const SpritePatterns* cached_patterns = params.patterns;
 
-	const ItemType& it = params.item_type ? *params.item_type : item->getType();
+	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
 
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
 		bool locked = item->isLocked();
 
 		// Door orientation: horizontal wall -> West border (south=true), vertical wall -> North border (east=true)
-		if (it.border_alignment == WALL_HORIZONTAL) {
+		if (static_cast<BorderType>(it.attribute(ItemAttributeKey::BorderAlignment)) == WALL_HORIZONTAL) {
 			DrawDoorIndicator(locked, pos, true, false);
-		} else if (it.border_alignment == WALL_VERTICAL) {
+		} else if (static_cast<BorderType>(it.attribute(ItemAttributeKey::BorderAlignment)) == WALL_VERTICAL) {
 			DrawDoorIndicator(locked, pos, false, true);
 		} else {
 			// Center case for non-aligned doors
@@ -76,18 +88,18 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// item sprite
-	GameSprite* spr = it.sprite;
+	GameSprite* spr = resolveSprite(it);
 
 	// Display invisible and invalid items
 	// Ugly hacks. :)
 	if (!options.ingame && options.show_tech_items) {
 		// Red invalid client id
-		if (it.id == 0) {
+		if (!it) {
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
 			return;
 		}
 
-		switch (it.clientID) {
+		switch (it.clientId()) {
 			// Yellow invisible stairs tile (459)
 			case 469:
 				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
@@ -111,15 +123,15 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		}
 
 		// primal light
-		if (it.clientID >= 39092 && it.clientID <= 39100 || it.clientID == 39236 || it.clientID == 39367 || it.clientID == 39368) {
-			spr = g_items[SPRITE_LIGHTSOURCE].sprite;
+		if (it.clientId() >= 39092 && it.clientId() <= 39100 || it.clientId() == 39236 || it.clientId() == 39367 || it.clientId() == 39368) {
+			spr = resolveSprite(SPRITE_LIGHTSOURCE);
 			red = 0;
 			alpha = 180;
 		}
 	}
 
 	// metaItem, sprite not found or not hidden
-	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.pickupable && !options.show_items) {
+	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.hasFlag(ItemFlag::Pickupable) && !options.show_items) {
 		return;
 	}
 
@@ -135,7 +147,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_y -= spr->draw_height;
 
 	SpritePatterns patterns;
-	if (cached_patterns && spr == it.sprite) {
+	if (cached_patterns && spr == resolveSprite(it)) {
 		patterns = *cached_patterns;
 	} else {
 		patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
@@ -147,7 +159,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
 
-	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.isBorder || spr->width > 1 || spr->height > 1)) {
+	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
 	}
 
@@ -224,7 +236,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// draw wall hook
-	if (!options.ingame && options.show_hooks && (it.hookSouth || it.hookEast)) {
+	if (!options.ingame && options.show_hooks && (it.hasFlag(ItemFlag::HookSouth) || it.hasFlag(ItemFlag::HookEast))) {
 		DrawHookIndicator(it, pos);
 	}
 
@@ -251,16 +263,17 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 }
 
-void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ItemType* itemType, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
-	GameSprite* spr = itemType->sprite;
-	uint16_t cid = itemType->clientID;
+void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ServerItemId item_id, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
+	const auto definition = g_item_definitions.get(item_id);
+	GameSprite* spr = resolveSprite(definition);
+	uint16_t cid = definition ? definition.clientId() : 0;
 
 	switch (cid) {
 		// Yellow invisible stairs tile
 		case 469:
 			b = 0;
 			alpha = (alpha * 171) >> 8;
-			spr = g_items[SPRITE_ZONE].sprite;
+			spr = resolveSprite(SPRITE_ZONE);
 			break;
 
 		// Red invisible walkable tile
@@ -268,14 +281,14 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 			g = 0;
 			b = 0;
 			alpha = (alpha * 171) >> 8;
-			spr = g_items[SPRITE_ZONE].sprite;
+			spr = resolveSprite(SPRITE_ZONE);
 			break;
 
 		// Cyan invisible wall
 		case 2187:
 			r = 0;
 			alpha = alpha / 3;
-			spr = g_items[SPRITE_ZONE].sprite;
+			spr = resolveSprite(SPRITE_ZONE);
 			break;
 
 		default:
@@ -284,17 +297,19 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 
 	// primal light
 	if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
-		spr = g_items[SPRITE_LIGHTSOURCE].sprite;
+		spr = resolveSprite(SPRITE_LIGHTSOURCE);
 		r = 0;
 		alpha = (alpha * 171) >> 8;
 	}
 
-	sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, DrawColor(r, g, b, alpha));
+	if (spr) {
+		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, DrawColor(r, g, b, alpha));
+	}
 }
 
-void ItemDrawer::DrawHookIndicator(const ItemType& type, const Position& pos) {
+void ItemDrawer::DrawHookIndicator(const ItemDefinitionView& definition, const Position& pos) {
 	if (hook_indicator_drawer) {
-		hook_indicator_drawer->addHook(pos, type.hookSouth, type.hookEast);
+		hook_indicator_drawer->addHook(pos, definition.hasFlag(ItemFlag::HookSouth), definition.hasFlag(ItemFlag::HookEast));
 	}
 }
 

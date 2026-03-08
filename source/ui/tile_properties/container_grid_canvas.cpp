@@ -9,7 +9,6 @@
 #include "ui/tile_properties/container_grid_canvas.h"
 #include "ui/tile_properties/container_property_panel.h"
 #include "game/complexitem.h"
-#include "game/items.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
 #include "ui/theme.h"

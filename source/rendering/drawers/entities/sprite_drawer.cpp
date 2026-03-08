@@ -1,7 +1,7 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/core/graphics.h"
 #include "game/sprites.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
@@ -64,8 +64,9 @@ void SpriteDrawer::glSetColor(wxColor color) {
 	// For now, ignoring as glBlitTexture/Square takes explicit color.
 }
 
-void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, uint32_t spriteid, DrawColor color) {
-	GameSprite* spr = g_items[spriteid].sprite;
+void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color) {
+	const auto definition = g_item_definitions.get(server_item_id);
+	GameSprite* spr = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
 	if (spr == nullptr) {
 		return;
 	}

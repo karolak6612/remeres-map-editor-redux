@@ -22,7 +22,6 @@
 #include "brushes/ground/auto_border.h"
 #include "brushes/ground/ground_brush_loader.h"
 #include "brushes/ground/ground_border_calculator.h"
-#include "game/items.h"
 #include "map/basemap.h"
 
 uint32_t GroundBrush::border_types[256];

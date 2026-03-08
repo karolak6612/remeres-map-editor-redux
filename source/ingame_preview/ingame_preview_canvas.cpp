@@ -229,7 +229,7 @@ namespace IngamePreview {
 			if (auto* editor = tab->GetEditor()) {
 				const Tile* tile = editor->map.getTile(target_pos);
 				if (tile && tile->ground) {
-					ground_speed = g_items[tile->ground->getID()].way_speed;
+					ground_speed = static_cast<uint16_t>(tile->ground->getDefinition().attribute(ItemAttributeKey::WaySpeed));
 				}
 			}
 		}

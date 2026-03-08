@@ -53,7 +53,13 @@ Item* Container::getItem(size_t index) const {
 }
 
 double Container::getWeight() const {
-	return g_items[id].weight;
+	double total_weight = Item::getWeight();
+	for (const auto& item : contents) {
+		if (item) {
+			total_weight += item->getWeight();
+		}
+	}
+	return total_weight;
 }
 
 uint32_t Container::memsize() const {

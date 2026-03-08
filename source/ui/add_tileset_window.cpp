@@ -28,6 +28,7 @@
 #include "editor/editor.h"
 #include "game/creature.h"
 #include "game/materials.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "map/tileset.h"
 
 #include "ui/gui.h"
@@ -38,10 +39,26 @@
 #include "ui/find_item_window.h"
 #include "util/image_manager.h"
 
+#include <limits>
+
 // ============================================================================
 // Add Tileset Window
 
-static constexpr int OUTFIT_COLOR_MAX = 133;
+namespace {
+	void clearItemSelection(wxSpinCtrl* item_id_field, wxStaticText* item_id_label, wxStaticText* item_name_label, DCButton* item_button) {
+		item_id_field->SetValue(0);
+		item_id_label->SetLabelText("ID 0");
+		item_name_label->SetLabelText("\"None\"");
+		item_button->SetSprite(0);
+	}
+
+	void applyItemSelection(wxSpinCtrl* item_id_field, wxStaticText* item_id_label, wxStaticText* item_name_label, DCButton* item_button, const ItemDefinitionView& item) {
+		item_id_field->SetValue(item.serverId());
+		item_id_label->SetLabelText("ID " + i2ws(item.serverId()));
+		item_name_label->SetLabelText("\"" + wxstr(std::string(item.name())) + "\"");
+		item_button->SetSprite(item.clientId());
+	}
+}
 
 AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType categoryType, wxPoint pos) :
 	ObjectPropertiesWindowBase(win_parent, "Add a Tileset", pos),
@@ -74,7 +91,7 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 	subsizer->Add(item_button);
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item Id of First Item"));
-	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, 100000);
+	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, std::numeric_limits<uint16_t>::max());
 	subsizer->Add(item_id_field, wxSizerFlags(1).Expand());
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Tileset Name"));
@@ -107,14 +124,11 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 
 void AddTilesetWindow::OnChangeItemId(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
-		item_id_label->SetLabelText("ID " + i2ws(it.id));
-		item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
-
-		item_button->SetSprite(it.clientID);
+	const auto it = g_item_definitions.get(itemId);
+	if (it) {
+		applyItemSelection(item_id_field, item_id_label, item_name_label, item_button, it);
 	} else {
-		item_id_field->SetValue(100);
+		clearItemSelection(item_id_field, item_id_label, item_name_label, item_button);
 	}
 }
 
@@ -133,28 +147,24 @@ void AddTilesetWindow::SetItemIdToItemButton(uint16_t id) {
 	}
 
 	if (id != 0) {
-		const ItemType& it = g_items.getItemType(id);
-		if (it.id != 0) {
-			item_id_field->SetValue(it.id);
-			item_id_label->SetLabelText("ID " + i2ws(it.id));
-			item_name_label->SetLabelText("\"" + wxstr(it.name) + "\"");
-
-			item_button->SetSprite(it.clientID);
+		const auto it = g_item_definitions.get(id);
+		if (it) {
+			applyItemSelection(item_id_field, item_id_label, item_name_label, item_button, it);
 			return;
 		}
 	}
 
-	item_button->SetSprite(0);
+	clearItemSelection(item_id_field, item_id_label, item_name_label, item_button);
 }
 
 void AddTilesetWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	uint16_t itemId = item_id_field->GetValue();
-	ItemType& it = g_items[itemId];
-	if (it.id != 0) {
+	const auto it = g_item_definitions.get(itemId);
+	if (it) {
 		std::string tilesetName = std::string(tileset_name_field->GetValue().mb_str());
-		g_materials.addToTileset(tilesetName, it.id, category_type);
+		g_materials.addToTileset(tilesetName, it.serverId(), category_type);
 		g_materials.modify();
-		DialogUtil::PopupDialog("Added Tileset", "'" + it.name + "' has been added to new tileset '" + tilesetName + "'", wxOK);
+		DialogUtil::PopupDialog("Added Tileset", "'" + std::string(it.name()) + "' has been added to new tileset '" + tilesetName + "'", wxOK);
 
 		EndModal(1);
 	} else {

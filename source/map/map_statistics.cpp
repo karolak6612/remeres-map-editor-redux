@@ -2,7 +2,6 @@
 #include "map/map_statistics.h"
 #include "map/map.h"
 #include "map/tile.h"
-#include "game/items.h"
 #include "ui/gui.h"
 #include <sstream>
 #include <unordered_map>
@@ -30,8 +29,8 @@ MapStatistics MapStatisticsCollector::Collect(Map* map) {
 			stats.item_count += 1;
 			if (!item->isGroundTile() && !item->isBorder()) {
 				is_detailed = true;
-				ItemType& it = g_items[item->getID()];
-				if (it.moveable) {
+				const auto it = item->getDefinition();
+				if (it.hasFlag(ItemFlag::Moveable)) {
 					stats.loose_item_count += 1;
 				}
 				if (it.isDepot()) {

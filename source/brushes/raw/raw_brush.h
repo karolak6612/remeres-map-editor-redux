@@ -19,6 +19,7 @@
 #define RME_RAW_BRUSH_H
 
 #include "brushes/brush.h"
+#include "item_definitions/core/item_definition_types.h"
 
 //=============================================================================
 // RAWBrush, draw items like SimOne's editor
@@ -40,13 +41,10 @@ public:
 	}
 	int getLookID() const override;
 	std::string getName() const override;
-	ItemType* getItemType() const {
-		return itemtype;
-	}
 	uint16_t getItemID() const;
 
 protected:
-	ItemType* itemtype;
+	ServerItemId item_id = 0;
 };
 
 #endif

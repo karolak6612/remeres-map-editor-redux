@@ -25,6 +25,7 @@
 #include "io/iomap.h"
 #include "game/item.h"
 #include "brushes/managers/brush_manager.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <unordered_map>
 
 #include "brushes/ground/ground_brush.h"
@@ -40,26 +41,26 @@ std::unique_ptr<Item> Item::Create(uint16_t _type, uint16_t _subtype /*= 0xFFFF*
 	}
 	std::unique_ptr<Item> newItem;
 
-	const ItemType& it = g_items[_type];
+	const auto definition = g_item_definitions.get(_type);
 
-	if (it.id != 0) {
-		if (it.isDepot()) {
+	if (definition) {
+		if (definition.isDepot()) {
 			newItem = std::make_unique<Depot>(_type);
-		} else if (it.isContainer()) {
+		} else if (definition.isContainer()) {
 			newItem = std::make_unique<Container>(_type);
-		} else if (it.isTeleport()) {
+		} else if (definition.isTeleport()) {
 			newItem = std::make_unique<Teleport>(_type);
-		} else if (it.isDoor()) {
+		} else if (definition.isDoor()) {
 			newItem = std::make_unique<Door>(_type);
-		} else if (it.isPodium()) {
+		} else if (definition.isPodium()) {
 			newItem = std::make_unique<Podium>(_type);
 		} else if (_subtype == 0xFFFF) {
-			if (it.isFluidContainer()) {
+			if (definition.isFluidContainer()) {
 				newItem = std::make_unique<Item>(_type, LIQUID_NONE);
-			} else if (it.isSplash()) {
+			} else if (definition.isSplash()) {
 				newItem = std::make_unique<Item>(_type, LIQUID_WATER);
-			} else if (it.charges > 0) {
-				newItem = std::make_unique<Item>(_type, it.charges);
+			} else if (definition.attribute(ItemAttributeKey::Charges) > 0) {
+				newItem = std::make_unique<Item>(_type, static_cast<uint16_t>(definition.attribute(ItemAttributeKey::Charges)));
 			} else {
 				newItem = std::make_unique<Item>(_type, 1);
 			}
@@ -106,13 +107,17 @@ void Item::setID(uint16_t newid) {
 	id = newid;
 }
 
+GameSprite* Item::getSprite() const {
+	return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(getClientID()));
+}
+
 void Item::setSubtype(uint16_t n) {
 	subtype = n;
 }
 
 bool Item::hasSubtype() const {
-	const ItemType& it = g_items[id];
-	return (it.isFluidContainer() || it.isSplash() || isCharged() || it.stackable || it.charges != 0);
+	const auto definition = getDefinition();
+	return definition && (definition.isFluidContainer() || definition.isSplash() || isCharged() || definition.hasFlag(ItemFlag::Stackable) || definition.attribute(ItemAttributeKey::Charges) != 0);
 }
 
 uint16_t Item::getSubtype() const {
@@ -123,16 +128,19 @@ uint16_t Item::getSubtype() const {
 }
 
 bool Item::hasProperty(enum ITEMPROPERTY prop) const {
-	const ItemType& it = g_items[id];
+	const auto definition = getDefinition();
+	if (!definition) {
+		return false;
+	}
 	switch (prop) {
 		case BLOCKSOLID:
-			if (it.unpassable) {
+			if (definition.hasFlag(ItemFlag::Unpassable)) {
 				return true;
 			}
 			break;
 
 		case MOVEABLE:
-			if (it.moveable && getUniqueID() == 0) {
+			if (definition.hasFlag(ItemFlag::Moveable) && getUniqueID() == 0) {
 				return true;
 			}
 			break;
@@ -143,31 +151,31 @@ bool Item::hasProperty(enum ITEMPROPERTY prop) const {
 						break;
 			*/
 		case BLOCKPROJECTILE:
-			if (it.blockMissiles) {
+			if (definition.hasFlag(ItemFlag::BlockMissiles)) {
 				return true;
 			}
 			break;
 
 		case BLOCKPATHFIND:
-			if (it.blockPathfinder) {
+			if (definition.hasFlag(ItemFlag::BlockPathfinder)) {
 				return true;
 			}
 			break;
 
 		case HOOK_SOUTH:
-			if (it.hookSouth) {
+			if (definition.hasFlag(ItemFlag::HookSouth)) {
 				return true;
 			}
 			break;
 
 		case HOOK_EAST:
-			if (it.hookEast) {
+			if (definition.hasFlag(ItemFlag::HookEast)) {
 				return true;
 			}
 			break;
 
 		case BLOCKINGANDNOTMOVEABLE:
-			if (it.unpassable && (!it.moveable || getUniqueID() != 0)) {
+			if (definition.hasFlag(ItemFlag::Unpassable) && (!definition.hasFlag(ItemFlag::Moveable) || getUniqueID() != 0)) {
 				return true;
 			}
 			break;
@@ -189,46 +197,53 @@ bool Item::isLocked() const {
 }
 
 std::pair<int, int> Item::getDrawOffset() const {
-	ItemType& it = g_items[id];
-	if (it.sprite != nullptr) {
-		return it.sprite->getDrawOffset();
+	if (GameSprite* sprite = getSprite()) {
+		return sprite->getDrawOffset();
 	}
 	return std::make_pair(0, 0);
 }
 
 bool Item::hasLight() const {
-	const ItemType& type = g_items.getItemType(id);
-	if (type.sprite) {
-		return type.sprite->hasLight();
+	if (auto* sprite = getSprite()) {
+		return sprite->hasLight();
 	}
 	return false;
 }
 
 SpriteLight Item::getLight() const {
-	const ItemType& type = g_items.getItemType(id);
-	if (type.sprite) {
-		return type.sprite->getLight();
+	if (auto* sprite = getSprite()) {
+		return sprite->getLight();
 	}
 	return SpriteLight { 0, 0 };
 }
 
 double Item::getWeight() const {
-	ItemType& it = g_items[id];
-	if (it.stackable) {
-		return it.weight * std::max(1, (int)subtype);
+	const auto definition = getDefinition();
+	if (!definition) {
+		return 0.0;
+	}
+	const double base_weight = static_cast<double>(definition.attribute(ItemAttributeKey::Weight)) / 1000.0;
+	if (definition.hasFlag(ItemFlag::Stackable)) {
+		return base_weight * std::max(1, static_cast<int>(subtype));
 	}
 
-	return it.weight;
+	return base_weight;
 }
 
 int Item::getHeight() const {
-	// Simple implementation based on hasElevation flag
-	const ItemType& it = g_items[id];
-	// In Tibia, elevation is typically equal to a full tile step (sometimes variable).
-	// RME's ItemType has 'hasElevation' bool.
-	// If hasElevation is true, we assume standard elevation (8px usually in client draw logic terms, but logical step is 1).
-	// For drawing: we want pixels. 8px is standard elevation step.
-	return it.hasElevation ? 8 : 0;
+	if (!getDefinition().hasFlag(ItemFlag::HasElevation)) {
+		return 0;
+	}
+
+	if (const GameSprite* sprite = getSprite()) {
+		const int draw_height = sprite->getDrawHeight();
+		if (draw_height > 0) {
+			return draw_height;
+		}
+	}
+
+	// Older DAT formats may mark elevation without storing an explicit draw height.
+	return 8;
 }
 
 void Item::setUniqueID(unsigned short n) {
@@ -260,11 +275,11 @@ bool Item::canHoldText() const {
 }
 
 bool Item::canHoldDescription() const {
-	return g_items[id].allowDistRead;
+	return getDefinition().hasFlag(ItemFlag::AllowDistRead);
 }
 
 uint8_t Item::getMiniMapColor() const {
-	GameSprite* spr = g_items[id].sprite;
+	GameSprite* spr = getSprite();
 	if (spr) {
 		return spr->getMiniMapColor();
 	}
@@ -272,36 +287,36 @@ uint8_t Item::getMiniMapColor() const {
 }
 
 GroundBrush* Item::getGroundBrush() const {
-	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isGroundTile() && item_type.brush && item_type.brush->is<GroundBrush>()) {
-		return item_type.brush->as<GroundBrush>();
+	const auto definition = getDefinition();
+	if (definition.isGroundTile() && definition.editorData().brush && definition.editorData().brush->is<GroundBrush>()) {
+		return definition.editorData().brush->as<GroundBrush>();
 	}
 	return nullptr;
 }
 
 TableBrush* Item::getTableBrush() const {
-	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isTable && item_type.brush && item_type.brush->is<TableBrush>()) {
-		return item_type.brush->as<TableBrush>();
+	const auto definition = getDefinition();
+	if (definition.hasFlag(ItemFlag::IsTable) && definition.editorData().brush && definition.editorData().brush->is<TableBrush>()) {
+		return definition.editorData().brush->as<TableBrush>();
 	}
 	return nullptr;
 }
 
 CarpetBrush* Item::getCarpetBrush() const {
-	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isCarpet && item_type.brush && item_type.brush->is<CarpetBrush>()) {
-		return item_type.brush->as<CarpetBrush>();
+	const auto definition = getDefinition();
+	if (definition.hasFlag(ItemFlag::IsCarpet) && definition.editorData().brush && definition.editorData().brush->is<CarpetBrush>()) {
+		return definition.editorData().brush->as<CarpetBrush>();
 	}
 	return nullptr;
 }
 
 DoorBrush* Item::getDoorBrush() const {
-	ItemType& item_type = g_items.getItemType(id);
-	if (!item_type.isWall || !item_type.isBrushDoor || !item_type.brush || !item_type.brush->is<WallBrush>()) {
+	const auto definition = getDefinition();
+	if (!definition.hasFlag(ItemFlag::IsWall) || !definition.hasFlag(ItemFlag::IsBrushDoor) || !definition.editorData().brush || !definition.editorData().brush->is<WallBrush>()) {
 		return nullptr;
 	}
 
-	DoorType door_type = item_type.brush->as<WallBrush>()->getDoorTypeFromID(id);
+	DoorType door_type = definition.editorData().brush->as<WallBrush>()->getDoorTypeFromID(id);
 	DoorBrush* door_brush = nullptr;
 	// Quite a horrible dependency on a global here, meh.
 	switch (door_type) {
@@ -345,24 +360,23 @@ DoorBrush* Item::getDoorBrush() const {
 }
 
 WallBrush* Item::getWallBrush() const {
-	ItemType& item_type = g_items.getItemType(id);
-	if (item_type.isWall && item_type.brush && item_type.brush->is<WallBrush>()) {
-		return item_type.brush->as<WallBrush>();
+	const auto definition = getDefinition();
+	if (definition.hasFlag(ItemFlag::IsWall) && definition.editorData().brush && definition.editorData().brush->is<WallBrush>()) {
+		return definition.editorData().brush->as<WallBrush>();
 	}
 	return nullptr;
 }
 
 BorderType Item::getWallAlignment() const {
-	ItemType& it = g_items[id];
-	if (!it.isWall) {
+	const auto definition = getDefinition();
+	if (!definition.hasFlag(ItemFlag::IsWall)) {
 		return BORDER_NONE;
 	}
-	return it.border_alignment;
+	return static_cast<BorderType>(definition.attribute(ItemAttributeKey::BorderAlignment));
 }
 
 BorderType Item::getBorderAlignment() const {
-	ItemType& it = g_items[id];
-	return it.border_alignment;
+	return static_cast<BorderType>(getDefinition().attribute(ItemAttributeKey::BorderAlignment));
 }
 
 // ============================================================================

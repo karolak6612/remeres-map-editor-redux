@@ -157,7 +157,7 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 			ClientVersion* cv_ptr = cv.get();
 			cv_ptr->version = version;
 			cv_ptr->description = client["description"].value_or("");
-			cv_ptr->config_type = client["configType"].value_or("");
+			cv_ptr->item_definition_mode = parseItemDefinitionMode(client["configType"].value_or("dat_otb")).value_or(ItemDefinitionMode::DatOtb);
 
 			// OTBM Versions
 			cv_ptr->preferred_map_version = MAP_OTBM_UNKNOWN;
@@ -283,7 +283,7 @@ bool ClientVersion::saveVersions() {
 		db_obj.insert_or_assign("otbId", (int)version->otb.id);
 		db_obj.insert_or_assign("otbMajor", (int)version->otb.format_version);
 		db_obj.insert_or_assign("description", version->description);
-		db_obj.insert_or_assign("configType", version->config_type);
+		db_obj.insert_or_assign("configType", toString(version->item_definition_mode));
 		db_obj.insert_or_assign("metadataFile", version->metadata_file);
 		db_obj.insert_or_assign("spritesFile", version->sprites_file);
 		db_obj.insert_or_assign("transparency", version->is_transparent);
@@ -423,6 +423,10 @@ ClientVersionList ClientVersion::getAllForOTBMVersion(MapVersionID id) {
 
 ClientVersion* ClientVersion::getLatestVersion() {
 	return latest_version;
+}
+
+void ClientVersion::setLatestVersion(ClientVersion* version) {
+	latest_version = version;
 }
 
 FileName ClientVersion::getDataPath() const {
@@ -586,7 +590,7 @@ void ClientVersion::backup() {
 	backup_data.version = version;
 	backup_data.name = name;
 	backup_data.description = description;
-	backup_data.config_type = config_type;
+	backup_data.item_definition_mode = item_definition_mode;
 	backup_data.metadata_file = metadata_file;
 	backup_data.sprites_file = sprites_file;
 	backup_data.is_transparent = is_transparent;
@@ -606,7 +610,7 @@ void ClientVersion::restore() {
 	version = backup_data.version;
 	name = backup_data.name;
 	description = backup_data.description;
-	config_type = backup_data.config_type;
+	item_definition_mode = backup_data.item_definition_mode;
 	metadata_file = backup_data.metadata_file;
 	sprites_file = backup_data.sprites_file;
 	is_transparent = backup_data.is_transparent;
@@ -637,7 +641,7 @@ std::unique_ptr<ClientVersion> ClientVersion::clone() const {
 	new_cv->data_versions = data_versions;
 	new_cv->client_path = client_path;
 	new_cv->description = description;
-	new_cv->config_type = config_type;
+	new_cv->item_definition_mode = item_definition_mode;
 	return new_cv;
 }
 

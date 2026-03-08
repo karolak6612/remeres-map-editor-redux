@@ -23,7 +23,7 @@
 #include "map/tileset.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "brushes/raw/raw_brush.h"
 
 Tileset::Tileset(Brushes& brushes, const std::string& name) :
@@ -180,9 +180,9 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 
 	std::string brushName = node.attribute("after").as_string();
 	if ((attribute = node.attribute("afteritem"))) {
-		ItemType& it = g_items[attribute.as_ushort()];
-		if (it.id != 0) {
-			brushName = it.raw_brush ? it.raw_brush->getName() : std::string();
+		const auto it = g_item_definitions.get(attribute.as_ushort());
+		if (it) {
+			brushName = it.editorData().raw_brush ? it.editorData().raw_brush->getName() : std::string();
 		}
 	}
 
@@ -224,35 +224,36 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 
 		std::vector<Brush*> tempBrushVector;
 		for (uint16_t id = fromId; id <= toId; ++id) {
-			ItemType& it = g_items[id];
-			if (it.id == 0) {
+			const auto it = g_item_definitions.get(id);
+			if (!it) {
 				warnings.push_back(std::format("Tileset: {}, Brush: {}, Previous {}, From: {}, To: {}", tileset.name, brushName, tileset.previousId, fromId, toId));
 				warnings.push_back("Unknown item id #" + std::to_string(id) + ".");
 				continue;
 			}
 
 			RAWBrush* brush;
-			if (it.raw_brush) {
-				brush = it.raw_brush;
+			if (it.editorData().raw_brush) {
+				brush = it.editorData().raw_brush;
 				if (type == TILESET_COLLECTION) {
-					it.raw_brush->setCollection();
+					it.editorData().raw_brush->setCollection();
 				}
 			} else {
-				auto raw_brush = std::make_unique<RAWBrush>(it.id);
-				brush = it.raw_brush = raw_brush.get();
-				it.has_raw = true;
+				auto raw_brush = std::make_unique<RAWBrush>(it.serverId());
+				brush = raw_brush.get();
+				g_item_definitions.mutableEditorData(id).raw_brush = brush;
+				g_item_definitions.setFlag(id, ItemFlag::HasRaw, true);
 				if (type == TILESET_COLLECTION) {
-					it.raw_brush->setCollection();
+					brush->setCollection();
 				}
 				tileset.brushes.addBrush(std::move(raw_brush)); // This will take care of cleaning up afterwards
 			}
 
 			if (type == TILESET_COLLECTION) {
-				it.collection_brush = brush;
+				g_item_definitions.mutableEditorData(id).collection_brush = brush;
 			}
 
-			if (it.doodad_brush == nullptr && !isTrivial()) {
-				it.doodad_brush = brush;
+			if (!isTrivial() && g_item_definitions.mutableEditorData(id).doodad_brush == nullptr) {
+				g_item_definitions.mutableEditorData(id).doodad_brush = brush;
 			}
 
 			brush->flagAsVisible();

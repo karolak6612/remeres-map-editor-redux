@@ -20,7 +20,7 @@
 #include <wx/dir.h>
 
 #include "editor/editor.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "game/creatures.h"
 
 #include "ui/gui.h"
@@ -211,7 +211,9 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 				warnings.push_back((wxString("Error while loading file \"") + includeName.GetFullName() + "\": " + subError).ToStdString());
 			}
 		} else if (childName == "metaitem") {
-			g_items.loadMetaItem(childNode);
+			if (const auto attribute = childNode.attribute("id")) {
+				g_item_definitions.ensureMetaItem(attribute.as_ushort());
+			}
 		} else if (childName == "border") {
 			g_brushes.unserializeBorder(childNode, warnings);
 			if (warning.size()) {
@@ -229,14 +231,15 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 	return true;
 }
 
-static RAWBrush* ensureRawBrush(ItemType& it) {
-	if (it.raw_brush == nullptr) {
-		auto raw_brush = std::make_unique<RAWBrush>(it.id);
-		it.raw_brush = raw_brush.get();
-		it.has_raw = true;
+static RAWBrush* ensureRawBrush(ServerItemId item_id) {
+	ItemEditorData& editor_data = g_item_definitions.mutableEditorData(item_id);
+	if (editor_data.raw_brush == nullptr) {
+		auto raw_brush = std::make_unique<RAWBrush>(item_id);
+		editor_data.raw_brush = raw_brush.get();
+		g_item_definitions.setFlag(item_id, ItemFlag::HasRaw, true);
 		g_brushes.addBrush(std::move(raw_brush));
 	}
-	return it.raw_brush;
+	return editor_data.raw_brush;
 }
 
 void Materials::createOtherTileset() {
@@ -260,28 +263,29 @@ void Materials::createOtherTileset() {
 	}
 
 	// There should really be an iterator to do this
-	for (int32_t id = 0; id <= g_items.getMaxID(); ++id) {
-		ItemType& it = g_items[id];
-		if (it.id == 0) {
+	for (ServerItemId id : g_item_definitions.allIds()) {
+		const auto definition = g_item_definitions.get(id);
+		if (!definition) {
 			continue;
 		}
 
-		if (!it.isMetaItem()) {
+		if (!definition.isMetaItem()) {
 			Brush* brush;
-			if (it.in_other_tileset) {
-				others->getCategory(TILESET_RAW)->brushlist.push_back(it.raw_brush);
+			const ItemEditorData& editor_data = definition.editorData();
+			if (definition.hasFlag(ItemFlag::InOtherTileset)) {
+				others->getCategory(TILESET_RAW)->brushlist.push_back(editor_data.raw_brush);
 				continue;
-			} else if (it.raw_brush == nullptr) {
-				brush = ensureRawBrush(it);
-			} else if (!it.has_raw) {
-				brush = it.raw_brush;
+			} else if (editor_data.raw_brush == nullptr) {
+				brush = ensureRawBrush(id);
+			} else if (!definition.hasFlag(ItemFlag::HasRaw)) {
+				brush = editor_data.raw_brush;
 			} else {
 				continue;
 			}
 
 			brush->flagAsVisible();
-			others->getCategory(TILESET_RAW)->brushlist.push_back(it.raw_brush);
-			it.in_other_tileset = true;
+			others->getCategory(TILESET_RAW)->brushlist.push_back(g_item_definitions.editorData(id).raw_brush);
+			g_item_definitions.setFlag(id, ItemFlag::InOtherTileset, true);
 		}
 	}
 
@@ -336,9 +340,8 @@ bool Materials::unserializeTileset(pugi::xml_node node, std::vector<std::string>
 }
 
 void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategoryType categoryType) {
-	ItemType& it = g_items[itemId];
-
-	if (it.id == 0) {
+	const auto definition = g_item_definitions.get(itemId);
+	if (!definition) {
 		return;
 	}
 
@@ -353,27 +356,32 @@ void Materials::addToTileset(std::string tilesetName, int itemId, TilesetCategor
 
 	TilesetCategory* category = tileset->getCategory(categoryType);
 
-	if (!it.isMetaItem()) {
+	if (!definition.isMetaItem()) {
 		Brush* brush;
-		if (it.in_other_tileset) {
-			category->brushlist.push_back(it.raw_brush);
+		const ItemEditorData& editor_data = definition.editorData();
+		if (definition.hasFlag(ItemFlag::InOtherTileset)) {
+			category->brushlist.push_back(editor_data.raw_brush);
 			return;
-		} else if (it.raw_brush == nullptr) {
-			brush = ensureRawBrush(it);
+		} else if (editor_data.raw_brush == nullptr) {
+			brush = ensureRawBrush(itemId);
 		} else {
-			brush = it.raw_brush;
+			brush = editor_data.raw_brush;
 		}
 
 		brush->flagAsVisible();
-		category->brushlist.push_back(it.raw_brush);
-		it.in_other_tileset = true;
+		category->brushlist.push_back(g_item_definitions.editorData(itemId).raw_brush);
+		g_item_definitions.setFlag(itemId, ItemFlag::InOtherTileset, true);
 	}
 }
 
 bool Materials::isInTileset(Item* item, std::string tilesetName) const {
-	const ItemType& it = g_items[item->getID()];
+	const auto definition = g_item_definitions.get(item->getID());
+	if (!definition) {
+		return false;
+	}
 
-	return it.id != 0 && (isInTileset(it.brush, tilesetName) || isInTileset(it.doodad_brush, tilesetName) || isInTileset(it.raw_brush, tilesetName)) || isInTileset(it.collection_brush, tilesetName);
+	const ItemEditorData& editor_data = definition.editorData();
+	return (isInTileset(editor_data.brush, tilesetName) || isInTileset(editor_data.doodad_brush, tilesetName) || isInTileset(editor_data.raw_brush, tilesetName) || isInTileset(editor_data.collection_brush, tilesetName));
 }
 
 bool Materials::isInTileset(Brush* brush, std::string tilesetName) const {

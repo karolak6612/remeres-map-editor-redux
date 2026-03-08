@@ -9,7 +9,6 @@
 #include "map/tile.h"
 #include "map/tile_operations.h"
 #include "game/item.h"
-#include "game/items.h"
 #include <array>
 #include <algorithm>
 

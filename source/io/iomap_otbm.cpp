@@ -42,6 +42,7 @@
 #include "game/complexitem.h"
 #include "game/town.h"
 #include "brushes/wall/wall_brush.h"
+#include "item_definitions/core/item_definition_store.h"
 
 #include "io/iomap_otbm.h"
 #include "io/map_xml_io.h"
@@ -443,8 +444,8 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 		f.addU32(mapVersion.otbm);
 		f.addU16(map.width);
 		f.addU16(map.height);
-		f.addU32(g_items.MajorVersion);
-		f.addU32(g_items.MinorVersion);
+		f.addU32(g_item_definitions.MajorVersion);
+		f.addU32(g_item_definitions.MinorVersion);
 
 		f.addNode(OTBM_MAP_DATA);
 		{

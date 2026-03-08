@@ -81,16 +81,20 @@ void DoorBrush::switchDoor(Item* item) {
 
 	const auto& doorItems = wb->items.getDoorItems(wall_alignment);
 	for (const auto& dt : doorItems) {
-		if (dt.type == type) {
-			ASSERT(dt.id);
-			ItemType& it = g_items[dt.id];
-			ASSERT(it.id != 0);
+		if (dt.type != type) {
+			continue;
+		}
 
-			if (it.isOpen == new_open) {
-				if (!new_open || dt.locked == prefLocked) {
-					item->setID(dt.id);
-					return;
-				}
+		ASSERT(dt.id);
+		const auto it = g_item_definitions.get(dt.id);
+		ASSERT(it);
+
+		if (it.hasFlag(ItemFlag::IsOpen) == new_open) {
+			if (!new_open || dt.locked == prefLocked) {
+				item->setID(dt.id);
+				return;
+			}
+			if (oppositeVariant == 0) {
 				oppositeVariant = dt.id;
 			}
 		}
@@ -129,10 +133,10 @@ bool DoorBrush::canDraw(BaseMap* map, const Position& position) const {
 		for (const auto& dt : doorItems) {
 			if (dt.type == doortype) {
 				ASSERT(dt.id);
-				ItemType& it = g_items[dt.id];
-				ASSERT(it.id != 0);
+				const auto it = g_item_definitions.get(dt.id);
+				ASSERT(it);
 
-				if (it.isOpen == open) {
+				if (it.hasFlag(ItemFlag::IsOpen) == open) {
 					if (open || dt.locked == prefLocked) {
 						return true;
 					}
@@ -190,10 +194,10 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 			for (const auto& dt : doorItems) {
 				if (dt.type == doortype) {
 					ASSERT(dt.id);
-					ItemType& i_type = g_items[dt.id];
-					ASSERT(i_type.id != 0);
+					const auto i_type = g_item_definitions.get(dt.id);
+					ASSERT(i_type);
 
-					if (i_type.isOpen == open) {
+					if (i_type.hasFlag(ItemFlag::IsOpen) == open) {
 						if (open || dt.locked == prefLocked) {
 							item = TileOperations::transformItem(item, dt.id, tile);
 							perfect_match = true;
@@ -250,10 +254,10 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 					for (const auto& dt : decDoorItems) {
 						if (dt.type == doortype) {
 							ASSERT(dt.id);
-							ItemType& i_type = g_items[dt.id];
-							ASSERT(i_type.id != 0);
+							const auto i_type = g_item_definitions.get(dt.id);
+							ASSERT(i_type);
 
-							if (i_type.isOpen == open) {
+							if (i_type.hasFlag(ItemFlag::IsOpen) == open) {
 								if (open || dt.locked == prefLocked) {
 									item = TileOperations::transformItem(item, dt.id, tile);
 									perfect_match = true;
@@ -264,9 +268,6 @@ void DoorBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 							} else if (!close_match) {
 								discarded_id = dt.id;
 								close_match = true;
-							}
-							if (!close_match && discarded_id == 0) {
-								discarded_id = dt.id;
 							}
 						}
 					}

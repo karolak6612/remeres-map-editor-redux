@@ -3,6 +3,7 @@
 #include "io/iomap_otbm.h"
 
 #include "map/map.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ui/dialog_util.h"
 #include <spdlog/spdlog.h>
 
@@ -81,7 +82,7 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 		return false;
 	}
 
-	if (u32 > static_cast<uint32_t>(g_items.MajorVersion)) {
+	if (u32 > static_cast<uint32_t>(g_item_definitions.MajorVersion)) {
 		if (DialogUtil::PopupDialog("Map error", "The loaded map appears to be a items.otb format that deviates from the "
 												 "items.otb loaded by the editor. Do you still want to attempt to load the map?",
 									wxYES | wxNO)
@@ -97,7 +98,7 @@ bool HeaderSerializationOTBM::loadMapRoot(Map& map, NodeFileReadHandle& f, MapVe
 		return false;
 	}
 
-	if (u32 > static_cast<uint32_t>(g_items.MinorVersion)) {
+	if (u32 > static_cast<uint32_t>(g_item_definitions.MinorVersion)) {
 		spdlog::warn("This editor needs an updated items.otb version (found minor {})", u32);
 	}
 	if (u32 == 0) {
@@ -121,21 +122,21 @@ bool HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderN
 			case OTBM_ATTR_DESCRIPTION: {
 				if (!mapHeaderNode->getString(map.description)) {
 					spdlog::warn("Invalid map description tag");
-					return false;
+					return true;
 				}
 				break;
 			}
 			case OTBM_ATTR_EXT_SPAWN_FILE: {
 				if (!mapHeaderNode->getString(map.spawnfile)) {
 					spdlog::warn("Invalid map spawnfile tag");
-					return false;
+					return true;
 				}
 				break;
 			}
 			case OTBM_ATTR_EXT_HOUSE_FILE: {
 				if (!mapHeaderNode->getString(map.housefile)) {
 					spdlog::warn("Invalid map housefile tag");
-					return false;
+					return true;
 				}
 				break;
 			}
@@ -144,13 +145,13 @@ bool HeaderSerializationOTBM::readMapAttributes(Map& map, BinaryNode* mapHeaderN
 				std::string stringToSkip;
 				if (!mapHeaderNode->getString(stringToSkip)) {
 					spdlog::warn("Invalid map NPC spawnfile tag");
-					return false;
+					return true;
 				}
 				break;
 			}
 			default: {
-				spdlog::warn("Unknown header attribute: {}", static_cast<int>(attribute));
-				return false;
+				spdlog::warn("Unknown header attribute: {}. Continuing map load without parsing the remaining header attributes.", static_cast<int>(attribute));
+				return true;
 			}
 		}
 	}

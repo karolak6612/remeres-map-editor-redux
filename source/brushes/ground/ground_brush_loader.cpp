@@ -6,7 +6,7 @@
 #include "brushes/ground/ground_brush.h"
 #include "brushes/ground/auto_border.h"
 #include "brushes/brush.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "ext/pugixml.hpp"
 #include <wx/string.h>
 
@@ -24,7 +24,12 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 	}
 
 	if ((attribute = node.attribute("server_lookid"))) {
-		brush.look_id = g_items[attribute.as_ushort()].clientID;
+		const auto definition = g_item_definitions.get(attribute.as_ushort());
+		if (!definition) {
+			warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()) + " for ground brush");
+		} else {
+			brush.look_id = definition.clientId();
+		}
 	}
 
 	if ((attribute = node.attribute("z-order"))) {
@@ -53,23 +58,23 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				chance = 0;
 			}
 
-			ItemType& it = g_items[itemId];
-			if (it.id == 0) {
+			const auto definition = g_item_definitions.get(itemId);
+			if (!definition) {
 				warnings.push_back("\nInvalid item id " + std::to_string(itemId));
 				return false;
 			}
 
-			if (!it.isGroundTile()) {
+			if (!definition.isGroundTile()) {
 				warnings.push_back("\nItem " + std::to_string(itemId) + " is not ground item.");
 				return false;
 			}
 
-			if (it.brush && it.brush != &brush) {
+			if (definition.editorData().brush && definition.editorData().brush != &brush) {
 				warnings.push_back("\nItem " + std::to_string(itemId) + " can not be member of two brushes");
 				return false;
 			}
 
-			it.brush = &brush;
+			g_item_definitions.mutableEditorData(itemId).brush = &brush;
 			brush.total_chance += chance;
 
 			GroundBrush::ItemChanceBlock ci;
@@ -87,14 +92,14 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				uint16_t ground_equivalent = attribute.as_ushort();
 
 				// Load from inline definition
-				ItemType& it = g_items[ground_equivalent];
-				if (it.id == 0) {
+				const auto definition = g_item_definitions.get(ground_equivalent);
+				if (!definition) {
 					warnings.push_back("Invalid id of ground dependency equivalent item.\n");
 					continue;
-				} else if (!it.isGroundTile()) {
+				} else if (!definition.isGroundTile()) {
 					warnings.push_back("Ground dependency equivalent is not a ground item.\n");
 					continue;
-				} else if (it.brush && it.brush != &brush) {
+				} else if (definition.editorData().brush && definition.editorData().brush != &brush) {
 					warnings.push_back("Ground dependency equivalent does not use the same brush as ground border.\n");
 					continue;
 				}
@@ -130,15 +135,15 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				}
 
 				uint16_t ground_equivalent = attribute.as_ushort();
-				ItemType& it = g_items[ground_equivalent];
+				const auto definition = g_item_definitions.get(ground_equivalent);
 				bool valid = true;
-				if (it.id == 0) {
+				if (!definition) {
 					warnings.push_back("Invalid id of ground dependency equivalent item.\n");
 					valid = false;
-				} else if (!it.isGroundTile()) { // Changed to else if to avoid duplicate warnings
+				} else if (!definition.isGroundTile()) {
 					warnings.push_back("Ground dependency equivalent is not a ground item.\n");
 					valid = false;
-				} else if (it.brush && it.brush != &brush) {
+				} else if (definition.editorData().brush && definition.editorData().brush != &brush) {
 					warnings.push_back("Ground dependency equivalent does not use the same brush as ground border.\n");
 					valid = false;
 				}
@@ -317,12 +322,12 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 								AutoBorder* autoBorder = itt->second.get();
 								ASSERT(autoBorder != nullptr);
 
-								ItemType& it = g_items[with_id];
-								if (it.id == 0) {
+								if (!g_item_definitions.exists(with_id)) {
+									warnings.push_back("Unknown border replacement item id " + std::to_string(with_id));
 									return false;
 								}
 
-								it.isBorder = true;
+								g_item_definitions.setFlag(with_id, ItemFlag::IsBorder, true);
 								if (!specificCaseBlock) {
 									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}
@@ -340,12 +345,12 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 								}
 
 								int32_t with_id = attribute.as_int();
-								ItemType& it = g_items[with_id];
-								if (it.id == 0) {
+								if (!g_item_definitions.exists(with_id)) {
+									warnings.push_back("Unknown item replacement id " + std::to_string(with_id));
 									return false;
 								}
 
-								it.isBorder = true;
+								g_item_definitions.setFlag(with_id, ItemFlag::IsBorder, true);
 								if (!specificCaseBlock) {
 									specificCaseBlock = std::make_unique<GroundBrush::SpecificCaseBlock>();
 								}

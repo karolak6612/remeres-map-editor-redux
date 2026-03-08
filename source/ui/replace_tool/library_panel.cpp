@@ -3,7 +3,7 @@
 #include "ui/replace_tool/library_panel.h"
 #include "ui/replace_tool/visual_similarity_service.h"
 #include "ui/theme.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "game/item.h"
 #include "brushes/brush.h"
 #include "brushes/raw/raw_brush.h"
@@ -23,11 +23,10 @@ LibraryPanel::LibraryPanel(wxWindow* parent, Listener* listener) :
 
 	// Pre-fill item list
 	std::vector<uint16_t> ids;
-	ids.reserve(g_items.getMaxID());
-	for (uint32_t i = 1; i <= static_cast<uint32_t>(g_items.getMaxID()); ++i) {
-		const ItemType& it = g_items.getItemType(i);
-		if (it.id != 0) {
-			ids.push_back(i);
+	ids.reserve(g_item_definitions.getMaxID());
+	for (const ServerItemId id : g_item_definitions.allIds()) {
+		if (id != 0) {
+			ids.push_back(id);
 		}
 	}
 	m_allItemsGrid->SetItems(ids);
@@ -125,12 +124,12 @@ void LibraryPanel::OnBrushSearchChange(wxCommandEvent&) {
 
 uint16_t LibraryPanel::GetSidFromCid(uint16_t cid) {
 	if (m_cidToSidCache.empty()) {
-		uint32_t maxId = static_cast<uint32_t>(g_items.getMaxID());
-		m_cidToSidCache.reserve(maxId - 100);
-		for (uint32_t id = 100; id <= maxId; ++id) {
-			const ItemType& it = g_items.getItemType(id);
-			if (it.id != 0 && it.clientID != 0) {
-				m_cidToSidCache.emplace(it.clientID, it.id);
+		const auto all_ids = g_item_definitions.allIds();
+		m_cidToSidCache.reserve(all_ids.size());
+		for (const ServerItemId id : all_ids) {
+			const auto it = g_item_definitions.get(id);
+			if (it && it.clientId() != 0) {
+				m_cidToSidCache.emplace(it.clientId(), it.serverId());
 			}
 		}
 	}

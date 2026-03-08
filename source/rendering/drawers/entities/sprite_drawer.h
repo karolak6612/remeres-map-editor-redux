@@ -9,6 +9,7 @@
 
 #include <wx/colour.h>
 #include "app/definitions.h"
+#include "item_definitions/core/item_definition_types.h"
 
 // Forward declarations
 class GameSprite;
@@ -26,7 +27,7 @@ public:
 	void glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color);
 	void glSetColor(wxColor color);
 
-	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, uint32_t spriteid, DrawColor color = {});
+	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color = {});
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, DrawColor color = {});
 };
 

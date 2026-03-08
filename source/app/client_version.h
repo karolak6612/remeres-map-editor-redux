@@ -26,6 +26,7 @@
 
 #include "app/main.h"
 #include "app/settings.h"
+#include "item_definitions/core/item_definition_types.h"
 
 using ClientVersionID = std::string;
 using OtbVersionID = int;
@@ -234,6 +235,7 @@ public:
 	static ClientVersionList getAllForOTBMVersion(MapVersionID map_version);
 	static ClientVersionList getAllVersionsSupportedForClientVersion(ClientVersion* v);
 	static ClientVersion* getLatestVersion();
+	static void setLatestVersion(ClientVersion* version);
 
 	std::unique_ptr<ClientVersion> clone() const;
 	bool isValid() const;
@@ -376,10 +378,13 @@ public:
 	}
 
 	std::string getConfigType() const {
-		return config_type;
+		return toString(item_definition_mode);
 	}
 	void setConfigType(const std::string& v) {
-		config_type = v;
+		item_definition_mode = parseItemDefinitionMode(v).value_or(ItemDefinitionMode::DatOtb);
+	}
+	ItemDefinitionMode getItemDefinitionMode() const {
+		return item_definition_mode;
 	}
 
 	FileName getDataPath() const;
@@ -401,7 +406,7 @@ private:
 		uint32_t version;
 		std::string name;
 		std::string description;
-		std::string config_type;
+		ItemDefinitionMode item_definition_mode;
 		std::string metadata_file;
 		std::string sprites_file;
 		bool is_transparent;
@@ -440,7 +445,7 @@ private:
 	wxFileName metadata_path;
 	wxFileName sprites_path;
 	std::string description;
-	std::string config_type;
+	ItemDefinitionMode item_definition_mode = ItemDefinitionMode::DatOtb;
 
 private:
 	static void loadVersionsFromTOML(const std::string& configPath);

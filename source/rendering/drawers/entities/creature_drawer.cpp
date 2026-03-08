@@ -10,7 +10,6 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/creature.h"
 #include "ui/gui.h"
-#include "game/items.h"
 #include "game/sprites.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/game_sprite.h"
@@ -35,8 +34,10 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 
 void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options) {
 	if (outfit.lookItem != 0) {
-		ItemType& it = g_items[outfit.lookItem];
-		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, it.sprite, options.color);
+		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
+			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+			sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
+		}
 	} else {
 		// get outfit sprite
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);

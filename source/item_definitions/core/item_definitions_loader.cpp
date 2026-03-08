@@ -1,0 +1,62 @@
+#include "item_definitions/core/item_definitions_loader.h"
+
+#include "item_definitions/core/item_definition_parser.h"
+#include "item_definitions/core/item_definition_recipe.h"
+#include "item_definitions/core/item_definition_resolver.h"
+#include "item_definitions/core/item_definition_store_builder.h"
+#include "item_definitions/formats/dat/dat_item_parser.h"
+#include "item_definitions/formats/otb/otb_item_parser.h"
+#include "item_definitions/formats/xml/xml_item_parser.h"
+
+#include <memory>
+
+bool ItemDefinitionsLoader::load(const ItemDefinitionLoadInput& input, wxString& error, std::vector<std::string>& warnings) const {
+	const ItemDefinitionRecipe& recipe = ItemDefinitionRecipeRegistry::get(input.mode);
+	if (!recipe.runnable) {
+		error = "Selected item definition mode is not implemented yet.";
+		return false;
+	}
+
+	if (input.xml_path.GetFullPath().IsEmpty()) {
+		error = "items.xml path is missing.";
+		return false;
+	}
+
+	ItemDefinitionFragments fragments;
+
+	DatItemParser dat_parser;
+	OtbItemParser otb_parser;
+	XmlItemParser xml_parser;
+
+	for (size_t i = 0; i < recipe.source_count; ++i) {
+		switch (recipe.sources[i]) {
+			case ItemDefinitionSourceKind::Dat:
+				if (!dat_parser.parse(input, fragments, error, warnings)) {
+					return false;
+				}
+				break;
+			case ItemDefinitionSourceKind::Otb:
+				if (!otb_parser.parse(input, fragments, error, warnings)) {
+					return false;
+				}
+				break;
+			case ItemDefinitionSourceKind::Xml:
+				if (!xml_parser.parse(input, fragments, error, warnings)) {
+					return false;
+				}
+				break;
+			case ItemDefinitionSourceKind::Srv:
+			case ItemDefinitionSourceKind::Protobuf:
+				error = "Selected item definition mode is not implemented yet.";
+				return false;
+		}
+	}
+
+	std::vector<ResolvedItemDefinitionRow> rows;
+	if (!ItemDefinitionResolver::resolve(input, fragments, rows, error, warnings)) {
+		return false;
+	}
+
+	ItemDefinitionStoreBuilder::build(g_item_definitions, fragments.version, rows);
+	return true;
+}

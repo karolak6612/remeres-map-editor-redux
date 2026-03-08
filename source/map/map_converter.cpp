@@ -1,7 +1,7 @@
 #include "map/map_converter.h"
 #include "map/map.h"
 #include "ui/gui.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include "game/item.h"
 #include <unordered_map>
 #include <unordered_set>
@@ -177,7 +177,7 @@ void MapConverter::cleanInvalidTiles(Map& map, bool showdialog) {
 
 		// Use std::erase_if from C++20 for cleanup
 		std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
-			return !g_items.typeExists(item->getID());
+			return !g_item_definitions.typeExists(item->getID());
 		});
 
 		++tiles_done;

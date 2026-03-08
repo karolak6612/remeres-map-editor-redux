@@ -5,7 +5,7 @@
 #include "brushes/table/table_brush_loader.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/table/table_brush_items.h"
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <utility>
 #include <string_view>
 #include <algorithm>
@@ -19,7 +19,12 @@ static const auto iequal = [](char a, char b) {
 bool TableBrushLoader::load(pugi::xml_node node, TableBrush& brush, TableBrushItems& items, std::vector<std::string>& warnings) {
 	uint16_t look_id = 0;
 	if (const pugi::xml_attribute attribute = node.attribute("server_lookid")) {
-		look_id = g_items[attribute.as_ushort()].clientID;
+		const auto definition = g_item_definitions.get(attribute.as_ushort());
+		if (!definition) {
+			warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()) + " for table brush");
+		} else {
+			look_id = definition.clientId();
+		}
 	}
 
 	if (look_id == 0) {
@@ -55,11 +60,11 @@ bool TableBrushLoader::load(pugi::xml_node node, TableBrush& brush, TableBrushIt
 				continue;
 			}
 
-			ItemType& it = g_items[id];
-			if (it.id == 0) {
+			const auto definition = g_item_definitions.get(id);
+			if (!definition) {
 				warnings.push_back("There is no itemtype with id " + std::to_string(id));
 				return false;
-			} else if (it.brush && it.brush != &brush) {
+			} else if (definition.editorData().brush && definition.editorData().brush != &brush) {
 				warnings.push_back("Itemtype id " + std::to_string(id) + " already has a brush");
 				return false;
 			}
@@ -74,8 +79,8 @@ bool TableBrushLoader::load(pugi::xml_node node, TableBrush& brush, TableBrushIt
 				chance = 0;
 			}
 
-			it.isTable = true;
-			it.brush = &brush;
+			g_item_definitions.setFlag(id, ItemFlag::IsTable, true);
+			g_item_definitions.mutableEditorData(id).brush = &brush;
 			items.addItem(alignment, id, chance);
 		}
 	}

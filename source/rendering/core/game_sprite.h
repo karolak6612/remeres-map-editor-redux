@@ -143,6 +143,7 @@ public:
 	uint16_t drawoffset_y;
 
 	uint16_t minimap_color;
+	uint64_t item_definition_flags = 0;
 
 	bool has_light = false;
 	SpriteLight light;
@@ -181,6 +182,7 @@ public:
 	friend class GraphicManager;
 	friend class GameSpriteLoader;
 	friend class DatLoader;
+	friend class DatMetadataDecoder;
 	friend class SprLoader;
 	friend class SpriteIconGenerator;
 	friend class TextureGarbageCollector;

@@ -7,7 +7,6 @@
 #include "editor/editor.h"
 #include "map/tile.h"
 #include "game/item.h"
-#include "game/items.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "game/complexitem.h"
 
@@ -33,7 +32,7 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 }
 
 // Helper function to populate tooltip data from an item (in-place)
-static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& it, const Position& pos, bool isHouseTile, float zoom) {
+static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinitionView& it, const Position& pos, bool isHouseTile, float zoom) {
 	if (!item) {
 		return false;
 	}
@@ -99,7 +98,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemType& i
 	}
 
 	// Get item name from database
-	std::string_view itemName = it.name;
+	std::string_view itemName = it.name();
 	if (itemName.empty()) {
 		itemName = "Item";
 	}
@@ -210,9 +209,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
-	const ItemType* ground_it = nullptr;
+	ItemDefinitionView ground_it;
 	if (tile->ground) {
-		ground_it = &tile->ground->getType();
+		ground_it = tile->ground->getDefinition();
 	}
 
 	if (only_colors) {
@@ -224,17 +223,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	} else {
 		if (tile->ground && ground_it) {
-			if (ground_it->sprite) {
-				SpritePatterns patterns = PatternCalculator::Calculate(ground_it->sprite, *ground_it, tile->ground.get(), tile, position);
+			if (GameSprite* ground_sprite = tile->ground->getSprite()) {
+				SpritePatterns patterns = PatternCalculator::Calculate(ground_sprite, ground_it, tile->ground.get(), tile, position);
 
 				// Inline preload check â€” skip function call when sprite is simple and loaded (95%+ case)
-				if (!ground_it->sprite->isSimpleAndLoaded()) {
-					rme::collectTileSprites(ground_it->sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+				if (!ground_sprite->isSimpleAndLoaded()) {
+					rme::collectTileSprites(ground_sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
 				}
 
 				BlitItemParams params(position, tile->ground.get(), options);
 				params.tile = tile;
-				params.item_type = ground_it;
+				params.item_definition = ground_it;
 				params.red = r;
 				params.green = g;
 				params.blue = b;
@@ -242,8 +241,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
-			ItemType* zoneItem = &g_items[SPRITE_ZONE];
-			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zoneItem, r, g, b, 60);
+			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, SPRITE_ZONE, r, g, b, 60);
 		}
 	}
 
@@ -253,7 +251,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
 		TooltipData& groundData = tooltip_drawer->requestTooltipData();
-		if (FillItemTooltipData(groundData, tile->ground.get(), *ground_it, position, is_house_tile, view.zoom)) {
+		if (FillItemTooltipData(groundData, tile->ground.get(), ground_it, position, is_house_tile, view.zoom)) {
 			if (groundData.hasVisibleFields()) {
 				tooltip_drawer->commitTooltip();
 			}
@@ -299,7 +297,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
 				}
 
-				const ItemType& it = item->getType();
+				const ItemDefinitionView it = item->getDefinition();
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
@@ -311,17 +309,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					}
 				}
 
-				if (it.sprite) {
-					SpritePatterns patterns = PatternCalculator::Calculate(it.sprite, it, item.get(), tile, position);
+				if (GameSprite* sprite = item->getSprite()) {
+					SpritePatterns patterns = PatternCalculator::Calculate(sprite, it, item.get(), tile, position);
 
 					// Inline preload check â€” skip function call when sprite is simple and loaded
-					if (!it.sprite->isSimpleAndLoaded()) {
-						rme::collectTileSprites(it.sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+					if (!sprite->isSimpleAndLoaded()) {
+						rme::collectTileSprites(sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
 					}
 
 					BlitItemParams params(position, item.get(), options);
 					params.tile = tile;
-					params.item_type = &it;
+					params.item_definition = it;
 					params.patterns = &patterns;
 
 					// item sprite
@@ -369,12 +367,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 }
 
-void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemType& it, const SpritePatterns* cached_patterns) {
+void TileRenderer::PreloadItem(const Tile* tile, Item* item, const ItemDefinitionView& it, const SpritePatterns* cached_patterns) {
 	if (!item) {
 		return;
 	}
 
-	GameSprite* spr = it.sprite;
+	GameSprite* spr = item->getSprite();
 	if (spr && !spr->isSimpleAndLoaded()) {
 		SpritePatterns patterns;
 		if (cached_patterns) {

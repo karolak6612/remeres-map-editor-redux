@@ -18,7 +18,7 @@
 #ifndef RME_ITEM_H_
 #define RME_ITEM_H_
 
-#include "game/items.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <string_view>
 #include "io/iomap_otbm.h"
 #include "game/item_attributes.h"
@@ -32,6 +32,7 @@ class Depot;
 class Podium;
 
 struct SpriteLight;
+class GameSprite;
 
 enum ITEMPROPERTY {
 	BLOCKSOLID,
@@ -172,58 +173,59 @@ public:
 		return id;
 	}
 	// Type access via stable index â€” no cached pointer, safe across vector resizes
-	[[nodiscard]] const ItemType& getType() const {
-		return g_items[id];
-	}
-	[[nodiscard]] ItemType& getType() {
-		return g_items[id];
+	[[nodiscard]] ItemDefinitionView getDefinition() const {
+		return g_item_definitions.get(id);
 	}
 	[[nodiscard]] uint16_t getClientID() const {
-		return g_items[id].clientID;
+		if (const auto definition = getDefinition()) {
+			return definition.clientId();
+		}
+		return 0;
 	}
+	[[nodiscard]] GameSprite* getSprite() const;
 	// NOTE: This is very volatile, do NOT use this unless you know exactly what you're doing
 	// which you probably don't so avoid it like the plague!
 	void setID(uint16_t id);
 
 	bool typeExists() const {
-		return g_items.typeExists(id);
+		return g_item_definitions.typeExists(id);
 	}
 
 	// Usual attributes
 	[[nodiscard]] virtual double getWeight() const;
 	int getAttack() const {
-		return g_items[id].attack;
+		return static_cast<int>(getDefinition().attribute(ItemAttributeKey::Attack));
 	}
 	int getArmor() const {
-		return g_items[id].armor;
+		return static_cast<int>(getDefinition().attribute(ItemAttributeKey::Armor));
 	}
 	int getDefense() const {
-		return g_items[id].defense;
+		return static_cast<int>(getDefinition().attribute(ItemAttributeKey::Defense));
 	}
 	uint16_t getSlotPosition() const {
-		return g_items[id].slot_position;
+		return static_cast<uint16_t>(getDefinition().attribute(ItemAttributeKey::SlotPosition));
 	}
 	uint8_t getWeaponType() const {
-		return g_items[id].weapon_type;
+		return static_cast<uint8_t>(getDefinition().attribute(ItemAttributeKey::WeaponType));
 	}
 	uint8_t getClassification() const {
-		return g_items[id].classification;
+		return static_cast<uint8_t>(getDefinition().attribute(ItemAttributeKey::Classification));
 	} // 12.81
 
 	// Item g_settings
 	bool canHoldText() const;
 	bool canHoldDescription() const;
 	bool isReadable() const {
-		return g_items[id].canReadText;
+		return getDefinition().hasFlag(ItemFlag::CanReadText);
 	}
 	bool canWriteText() const {
-		return g_items[id].canWriteText;
+		return getDefinition().hasFlag(ItemFlag::CanWriteText);
 	}
 	uint32_t getMaxWriteLength() const {
-		return g_items[id].maxTextLen;
+		return static_cast<uint32_t>(getDefinition().attribute(ItemAttributeKey::MaxTextLen));
 	}
 	Brush* getBrush() const {
-		return g_items[id].brush;
+		return getDefinition().editorData().brush;
 	}
 	GroundBrush* getGroundBrush() const;
 	WallBrush* getWallBrush() const;
@@ -231,22 +233,22 @@ public:
 	TableBrush* getTableBrush() const;
 	CarpetBrush* getCarpetBrush() const;
 	Brush* getDoodadBrush() const {
-		return g_items[id].doodad_brush;
+		return getDefinition().editorData().doodad_brush;
 	} // This is not necessarily a doodad brush
 	RAWBrush* getRAWBrush() const {
-		return g_items[id].raw_brush;
+		return getDefinition().editorData().raw_brush;
 	}
 	bool hasCollectionBrush() const {
-		return g_items[id].collection_brush;
+		return getDefinition().editorData().collection_brush != nullptr;
 	}
 	uint16_t getGroundEquivalent() const {
-		return g_items[id].ground_equivalent;
+		return static_cast<uint16_t>(getDefinition().attribute(ItemAttributeKey::GroundEquivalent));
 	}
 	uint16_t hasBorderEquivalent() const {
-		return g_items[id].has_equivalent;
+		return getDefinition().hasFlag(ItemFlag::HasEquivalent);
 	}
 	uint32_t getBorderGroup() const {
-		return g_items[id].border_group;
+		return static_cast<uint32_t>(getDefinition().attribute(ItemAttributeKey::BorderGroup));
 	}
 
 	// Drawing related
@@ -260,93 +262,93 @@ public:
 	// Item types
 	bool hasProperty(enum ITEMPROPERTY prop) const;
 	bool isBlocking() const {
-		return g_items[id].unpassable;
+		return getDefinition().hasFlag(ItemFlag::Unpassable);
 	}
 	bool isStackable() const {
-		return g_items[id].stackable;
+		return getDefinition().hasFlag(ItemFlag::Stackable);
 	}
 	bool isClientCharged() const {
-		return g_items[id].isClientCharged();
+		return getDefinition().isClientCharged();
 	}
 	bool isExtraCharged() const {
-		return g_items[id].isExtraCharged();
+		return getDefinition().isExtraCharged();
 	}
 	bool isCharged() const {
 		return isClientCharged() || isExtraCharged();
 	}
 	bool isFluidContainer() const {
-		return (g_items[id].isFluidContainer());
+		return getDefinition().isFluidContainer();
 	}
 	bool isAlwaysOnBottom() const {
-		return g_items[id].alwaysOnBottom;
+		return getDefinition().hasFlag(ItemFlag::AlwaysOnBottom);
 	}
 	int getTopOrder() const {
-		return g_items[id].alwaysOnTopOrder;
+		return static_cast<int>(getDefinition().attribute(ItemAttributeKey::AlwaysOnTopOrder));
 	}
 	bool isGroundTile() const {
-		return g_items[id].isGroundTile();
+		return getDefinition().isGroundTile();
 	}
 	bool isSplash() const {
-		return g_items[id].isSplash();
+		return getDefinition().isSplash();
 	}
 	bool isMagicField() const {
-		return g_items[id].isMagicField();
+		return getDefinition().isMagicField();
 	}
 	bool isTeleport() const {
-		return g_items[id].isTeleport();
+		return getDefinition().isTeleport();
 	}
 	bool isNotMoveable() const {
-		return !g_items[id].moveable;
+		return !getDefinition().hasFlag(ItemFlag::Moveable);
 	}
 	bool isMoveable() const {
-		return g_items[id].moveable;
+		return getDefinition().hasFlag(ItemFlag::Moveable);
 	}
 	bool isPickupable() const {
-		return g_items[id].pickupable;
+		return getDefinition().hasFlag(ItemFlag::Pickupable);
 	}
 	// bool isWeapon() const {return (g_items[id].weaponType != WEAPON_NONE && g_items[id].weaponType != WEAPON_AMMO);}
 	// bool isUseable() const {return g_items[id].useable;}
 	bool isHangable() const {
-		return g_items[id].isHangable;
+		return getDefinition().hasFlag(ItemFlag::IsHangable);
 	}
 	bool isRoteable() const {
-		const ItemType& it = g_items[id];
-		return it.rotable && it.rotateTo;
+		const auto definition = getDefinition();
+		return definition.hasFlag(ItemFlag::Rotatable) && definition.attribute(ItemAttributeKey::RotateTo) != 0;
 	}
 	void doRotate() {
 		if (isRoteable()) {
-			id = g_items[id].rotateTo;
+			id = static_cast<uint16_t>(getDefinition().attribute(ItemAttributeKey::RotateTo));
 		}
 	}
 	bool hasCharges() const {
-		return g_items[id].charges != 0;
+		return getDefinition().attribute(ItemAttributeKey::Charges) != 0;
 	}
 	bool isBorder() const {
-		return g_items[id].isBorder;
+		return getDefinition().hasFlag(ItemFlag::IsBorder);
 	}
 	bool isOptionalBorder() const {
-		return g_items[id].isOptionalBorder;
+		return getDefinition().hasFlag(ItemFlag::IsOptionalBorder);
 	}
 	bool isWall() const {
-		return g_items[id].isWall;
+		return getDefinition().hasFlag(ItemFlag::IsWall);
 	}
 	bool isDoor() const {
-		return g_items[id].isDoor();
+		return getDefinition().isDoor();
 	}
 	bool isOpen() const {
-		return g_items[id].isOpen;
+		return getDefinition().hasFlag(ItemFlag::IsOpen);
 	}
 	bool isBrushDoor() const {
-		return g_items[id].isBrushDoor;
+		return getDefinition().hasFlag(ItemFlag::IsBrushDoor);
 	}
 	bool isTable() const {
-		return g_items[id].isTable;
+		return getDefinition().hasFlag(ItemFlag::IsTable);
 	}
 	bool isCarpet() const {
-		return g_items[id].isCarpet;
+		return getDefinition().hasFlag(ItemFlag::IsCarpet);
 	}
 	bool isMetaItem() const {
-		return g_items[id].isMetaItem();
+		return getDefinition().isMetaItem();
 	}
 
 	// Logic for UI overlays
@@ -354,14 +356,14 @@ public:
 
 	// Slot-based Item Types
 	bool isWeapon() const {
-		uint8_t weaponType = g_items[id].weapon_type;
+		uint8_t weaponType = getWeaponType();
 		return weaponType != WEAPON_NONE && weaponType != WEAPON_AMMO;
 	}
 	bool isAmmunition() const {
-		return g_items[id].weapon_type == WEAPON_AMMO;
+		return getWeaponType() == WEAPON_AMMO;
 	}
 	bool isWearableEquipment() const { // Determine if the item is wearable piece of armor
-		uint16_t slotPosition = g_items[id].slot_position;
+		uint16_t slotPosition = getSlotPosition();
 		return slotPosition & SLOTP_HEAD || slotPosition & SLOTP_NECKLACE ||
 			// slotPosition & SLOTP_BACKPACK || // handled as container in properties window
 			slotPosition & SLOTP_ARMOR || slotPosition & SLOTP_LEGS || slotPosition & SLOTP_FEET || slotPosition & SLOTP_RING || (slotPosition & SLOTP_AMMO && !isAmmunition()); // light sources that give stats
@@ -374,10 +376,11 @@ public:
 
 	// Get the name!
 	std::string_view getName() const {
-		return g_items[id].name;
+		return getDefinition().name();
 	}
 	const std::string getFullName() const {
-		return g_items[id].name + g_items[id].editorsuffix;
+		const auto definition = getDefinition();
+		return std::string(definition.name()) + std::string(definition.editorSuffix());
 	}
 
 	// Selection
@@ -432,7 +435,7 @@ public:
 	std::string_view getDescription() const;
 
 protected:
-	uint16_t id; // the same id as in ItemType
+	uint16_t id; // the same id as in ItemDefinitionStore
 	// Subtype is either fluid type, count, subtype or charges
 	uint16_t subtype;
 	bool selected;
