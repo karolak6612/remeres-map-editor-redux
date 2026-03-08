@@ -7,15 +7,10 @@
 #include "rendering/core/normal_image.h"
 #include "rendering/core/sprite_archive.h"
 #include "ui/gui.h"
-#include <mutex>
-#include <span>
 
-namespace {
-	struct PendingTask {
-		uint32_t id;
-		uint32_t generation_id;
-	};
-}
+#include <algorithm>
+#include <cassert>
+#include <span>
 
 SpritePreloader& SpritePreloader::get() {
 	static SpritePreloader instance;
@@ -53,9 +48,9 @@ void SpritePreloader::shutdown() {
 void SpritePreloader::clear() {
 	std::lock_guard<std::mutex> lock(queue_mutex);
 	// When clearing, we must ensure any in-flight tasks are ignored when they complete.
-	// We move all pending IDs to the cancelled set.
-	for (auto id : pending_ids) {
-		cancelled_ids.insert(id);
+	// We move all pending archive/id keys to the cancelled set.
+	for (const auto& key : pending_ids) {
+		cancelled_ids.insert(key);
 	}
 	task_queue = std::queue<Task>();
 	result_queue = std::queue<Result>();
@@ -72,6 +67,11 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	if (!archive) {
 		return;
 	}
+
+	struct PendingTask {
+		ArchiveSpriteKey key;
+		uint32_t generation_id = 0;
+	};
 
 	static thread_local std::vector<PendingTask> ids_to_enqueue;
 	ids_to_enqueue.clear();
@@ -103,7 +103,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 					// Ensure parent is set so GC can invalidate cached_default_region
 					// when evicting this sprite later (prevents stale cache -> wrong sprite)
 					img->parent = spr;
-					ids_to_enqueue.push_back({ img->id, img->generation_id });
+					ids_to_enqueue.push_back({ { archive.get(), img->id }, img->generation_id });
 				}
 			}
 		}
@@ -116,8 +116,8 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		}
 
 		for (const auto& pending : ids_to_enqueue) {
-			if (pending_ids.insert(pending.id).second) {
-				task_queue.push({ pending.id, pending.generation_id, archive, has_transparency });
+			if (pending_ids.insert(pending.key).second) {
+				task_queue.push({ pending.key, pending.generation_id, archive, has_transparency });
 			}
 		}
 		cv.notify_all();
@@ -139,19 +139,19 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 
 		std::unique_ptr<uint8_t[]> dump;
 		uint16_t size = 0;
-		const bool success = task.archive && task.archive->readCompressed(task.id, dump, size);
+		const bool success = task.archive && task.archive->readCompressed(task.key.id, dump, size);
 
 		std::unique_ptr<uint8_t[]> rgba;
 		if (success && dump) {
-			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.id);
+			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.key.id);
 		}
 
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
 			if (rgba) {
-				result_queue.push({ task.id, task.generation_id, std::move(rgba), std::move(task.archive) });
+				result_queue.push({ task.key, task.generation_id, std::move(rgba), std::move(task.archive) });
 			} else {
-				pending_ids.erase(task.id);
+				pending_ids.erase(task.key);
 			}
 		}
 	}
@@ -163,7 +163,7 @@ void SpritePreloader::update() {
 
 	// Move results to a local queue and cancelled_ids to a local set under lock to minimize holding time
 	std::queue<Result> results;
-	std::unordered_set<uint32_t> local_cancelled;
+	std::unordered_set<ArchiveSpriteKey, ArchiveSpriteKeyHash> local_cancelled;
 	{
 		std::lock_guard<std::mutex> lock(queue_mutex);
 		if (result_queue.empty()) {
@@ -173,9 +173,9 @@ void SpritePreloader::update() {
 		local_cancelled = std::move(cancelled_ids); // Move all cancelled IDs for batch checking
 	}
 
-	thread_local std::vector<uint32_t> ids_processed;
-	ids_processed.clear();
-	ids_processed.reserve(results.size());
+	thread_local std::vector<ArchiveSpriteKey> keys_processed;
+	keys_processed.clear();
+	keys_processed.reserve(results.size());
 
 	const auto current_archive = g_gui.gfx.getSpriteArchive();
 	const bool graphics_unloaded = g_gui.gfx.isUnloaded();
@@ -184,11 +184,12 @@ void SpritePreloader::update() {
 		Result res = std::move(results.front());
 		results.pop();
 
-		auto id = res.id;
-		ids_processed.push_back(id);
+		const auto key = res.key;
+		const auto id = key.id;
+		keys_processed.push_back(key);
 
-		// Check if this ID was cancelled (moved to local set under one lock)
-		if (local_cancelled.count(id)) {
+		// Check if this archive/id pair was cancelled (moved to local set under one lock)
+		if (local_cancelled.contains(key)) {
 			continue;
 		}
 
@@ -208,10 +209,10 @@ void SpritePreloader::update() {
 		}
 	}
 
-	if (!ids_processed.empty()) {
+	if (!keys_processed.empty()) {
 		std::lock_guard<std::mutex> lock(queue_mutex);
-		for (uint32_t id : ids_processed) {
-			pending_ids.erase(id);
+		for (const auto& key : keys_processed) {
+			pending_ids.erase(key);
 		}
 	}
 }

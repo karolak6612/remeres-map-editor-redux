@@ -3,6 +3,9 @@
 
 #include "item_definitions/core/asset_bundle.h"
 
+#include <string>
+#include <vector>
+
 class GraphicManager;
 class ItemDefinitionStore;
 class wxString;

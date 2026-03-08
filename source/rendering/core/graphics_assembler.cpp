@@ -115,6 +115,14 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 	manager.spritefile = manager.sprite_archive_->fileName();
 	manager.unloaded = false;
 
+	if (catalog.max_sprite_id >= MAX_SPRITES) {
+		error = wxString::FromUTF8(std::format(
+			"DAT catalog references sprite id {} which exceeds MAX_SPRITES={}.",
+			catalog.max_sprite_id,
+			MAX_SPRITES));
+		return false;
+	}
+
 	manager.sprite_space.resize(static_cast<size_t>(catalog.lastEntryId()) + 1);
 	manager.image_space.resize(imageSpaceSize(catalog));
 

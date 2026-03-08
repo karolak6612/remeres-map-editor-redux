@@ -6,6 +6,7 @@
 #define RME_RENDERING_CORE_SPRITE_PRELOADER_H_
 
 #include "rendering/core/game_sprite.h"
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -41,15 +42,30 @@ private:
 	SpritePreloader();
 	~SpritePreloader();
 
+	struct ArchiveSpriteKey {
+		const SpriteArchive* archive = nullptr;
+		uint32_t id = 0;
+
+		bool operator==(const ArchiveSpriteKey& other) const = default;
+	};
+
+	struct ArchiveSpriteKeyHash {
+		size_t operator()(const ArchiveSpriteKey& key) const noexcept {
+			size_t seed = std::hash<const SpriteArchive*> {}(key.archive);
+			seed ^= std::hash<uint32_t> {}(key.id) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+			return seed;
+		}
+	};
+
 	struct Task {
-		uint32_t id;
+		ArchiveSpriteKey key;
 		uint32_t generation_id;
 		std::shared_ptr<SpriteArchive> archive;
 		bool has_transparency;
 	};
 
 	struct Result {
-		uint32_t id;
+		ArchiveSpriteKey key;
 		uint32_t generation_id;
 		std::unique_ptr<uint8_t[]> data;
 		std::shared_ptr<SpriteArchive> archive;
@@ -69,8 +85,8 @@ private:
 
 	std::queue<Task> task_queue;
 	std::queue<Result> result_queue;
-	std::unordered_set<uint32_t> pending_ids; // To avoid duplicate tasks
-	std::unordered_set<uint32_t> cancelled_ids; // IDs that were cleared and should be ignored
+	std::unordered_set<ArchiveSpriteKey, ArchiveSpriteKeyHash> pending_ids; // To avoid duplicate tasks per archive
+	std::unordered_set<ArchiveSpriteKey, ArchiveSpriteKeyHash> cancelled_ids; // Keys that were cleared and should be ignored
 };
 
 namespace rme {

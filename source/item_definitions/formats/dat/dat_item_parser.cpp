@@ -241,7 +241,7 @@ namespace {
 		return true;
 	}
 
-	bool readSpriteIds(DatCatalog& catalog, FileReadHandle& file, DatCatalogEntry& entry, uint32_t sprite_count, uint32_t group_index) {
+	bool readSpriteIds(DatCatalog& catalog, FileReadHandle& file, DatCatalogEntry& entry, uint32_t sprite_count, uint32_t group_index, std::vector<std::string>& warnings) {
 		if (group_index == 0) {
 			entry.sprite_ids.clear();
 			entry.sprite_ids.reserve(sprite_count);
@@ -260,6 +260,14 @@ namespace {
 				}
 				sprite_id = compact_id;
 			}
+			if (sprite_id >= MAX_SPRITES) {
+				warnings.push_back(std::format(
+					"DAT catalog: sprite id {} exceeds MAX_SPRITES={} for client id {}.",
+					sprite_id,
+					MAX_SPRITES,
+					entry.client_id));
+				return false;
+			}
 
 			if (group_index != 0) {
 				continue;
@@ -271,7 +279,7 @@ namespace {
 		return true;
 	}
 
-	bool readSpriteGroup(DatCatalog& catalog, FileReadHandle& file, DatCatalogEntry& entry, uint32_t group_index) {
+	bool readSpriteGroup(DatCatalog& catalog, FileReadHandle& file, DatCatalogEntry& entry, uint32_t group_index, std::vector<std::string>& warnings) {
 		if (catalog.has_frame_groups && entry.client_id > catalog.item_count && !file.skip(1)) {
 			return false;
 		}
@@ -312,7 +320,12 @@ namespace {
 
 		const uint64_t sprite_count_64 = static_cast<uint64_t>(width) * static_cast<uint64_t>(height) * static_cast<uint64_t>(layers) *
 			static_cast<uint64_t>(pattern_x) * static_cast<uint64_t>(pattern_y) * static_cast<uint64_t>(pattern_z) * static_cast<uint64_t>(frames);
-		if (sprite_count_64 > UINT32_MAX) {
+		if (sprite_count_64 > static_cast<uint64_t>(MAX_SPRITES)) {
+			warnings.push_back(std::format(
+				"DAT catalog: sprite group for client id {} expands to {} sprites which exceeds MAX_SPRITES={}.",
+				entry.client_id,
+				sprite_count_64,
+				MAX_SPRITES));
 			return false;
 		}
 		const auto sprite_count = static_cast<uint32_t>(sprite_count_64);
@@ -328,7 +341,7 @@ namespace {
 			entry.numsprites = sprite_count;
 		}
 
-		return readSpriteIds(catalog, file, entry, sprite_count, group_index);
+		return readSpriteIds(catalog, file, entry, sprite_count, group_index, warnings);
 	}
 }
 
@@ -431,7 +444,7 @@ bool DatItemParser::parseCatalog(const ItemDefinitionLoadInput& input, DatCatalo
 		}
 
 		for (uint32_t group_index = 0; group_index < group_count; ++group_index) {
-			if (!readSpriteGroup(catalog, file, entry, group_index)) {
+			if (!readSpriteGroup(catalog, file, entry, group_index, warnings)) {
 				error = wxstr(std::format("Failed to read DAT sprite group {} for client id {}", group_index, client_id));
 				return false;
 			}
