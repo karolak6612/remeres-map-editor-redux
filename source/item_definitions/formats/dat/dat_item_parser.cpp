@@ -36,10 +36,9 @@ namespace {
 				return DatFlagFloorChange;
 			}
 		} else if (format >= DAT_FORMAT_74) {
-			if (flag > 0 && flag <= 15) {
-				return flag + 1;
-			}
 			switch (flag) {
+				case DatFlagMultiUse: return DatFlagForceUse;
+				case DatFlagForceUse: return DatFlagMultiUse;
 				case 16: return DatFlagLight;
 				case 17: return DatFlagFloorChange;
 				case 18: return DatFlagFullGround;
@@ -52,8 +51,9 @@ namespace {
 				case 26: return DatFlagHookSouth;
 				case 27: return DatFlagHookEast;
 				case 28: return DatFlagAnimateAlways;
-				case DatFlagMultiUse: return DatFlagForceUse;
-				case DatFlagForceUse: return DatFlagMultiUse;
+			}
+			if (flag > 0 && flag <= 15) {
+				return flag + 1;
 			}
 		}
 		return flag;
