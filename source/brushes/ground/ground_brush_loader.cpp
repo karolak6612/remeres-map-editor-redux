@@ -24,7 +24,12 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 	}
 
 	if ((attribute = node.attribute("server_lookid"))) {
-		brush.look_id = g_item_definitions.get(attribute.as_ushort()).clientId();
+		const auto definition = g_item_definitions.get(attribute.as_ushort());
+		if (!definition) {
+			warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()) + " for ground brush");
+		} else {
+			brush.look_id = definition.clientId();
+		}
 	}
 
 	if ((attribute = node.attribute("z-order"))) {
@@ -318,6 +323,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 								ASSERT(autoBorder != nullptr);
 
 								if (!g_item_definitions.exists(with_id)) {
+									warnings.push_back("Unknown border replacement item id " + std::to_string(with_id));
 									return false;
 								}
 
@@ -340,6 +346,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 								int32_t with_id = attribute.as_int();
 								if (!g_item_definitions.exists(with_id)) {
+									warnings.push_back("Unknown item replacement id " + std::to_string(with_id));
 									return false;
 								}
 

@@ -38,6 +38,9 @@ void ItemGridPanel::SetFilter(const wxString& filter) {
 			continue;
 		}
 		const auto it = g_item_definitions.get(id);
+		if (!it) {
+			continue;
+		}
 		if (lowerFilter.IsEmpty()) {
 			filteredItems.push_back(id);
 		} else {
@@ -68,7 +71,9 @@ wxString ItemGridPanel::GetItemName(size_t index) const {
 	if (it != m_nameOverrides.end()) {
 		return it->second;
 	}
-	return wxstr(std::format("{} - {}", id, g_item_definitions.get(id).name()));
+	const auto definition = g_item_definitions.get(id);
+	const std::string_view name = definition ? definition.name() : std::string_view("<unknown item>");
+	return wxstr(std::format("{} - {}", id, name));
 }
 
 void ItemGridPanel::OnItemSelected(int index) {

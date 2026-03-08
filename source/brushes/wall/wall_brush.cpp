@@ -203,27 +203,27 @@ void WallDecorationBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 				bool open = item->isOpen();
 
 				const auto& doorItems = items.getDoorItems(wall_alignment);
-					for (const auto& dt : doorItems) {
-						if (dt.type == doortype) {
-							ASSERT(dt.id);
-							const auto it = g_item_definitions.get(dt.id);
-							ASSERT(it);
+				for (const auto& dt : doorItems) {
+					if (dt.type != doortype) {
+						continue;
+					}
 
-							if (it.hasFlag(ItemFlag::IsOpen) == open) {
-								if (open || dt.locked == prefLocked) {
-								id = dt.id;
-								break;
-							} else {
-								discarded_id = dt.id;
-								close_match = true;
-							}
-						} else {
+					ASSERT(dt.id);
+					const auto it = g_item_definitions.get(dt.id);
+					ASSERT(it);
+
+					if (it.hasFlag(ItemFlag::IsOpen) == open) {
+						if (open || dt.locked == prefLocked) {
+							id = dt.id;
+							break;
+						}
+						if (!close_match) {
 							discarded_id = dt.id;
 							close_match = true;
 						}
-						if (!close_match && discarded_id == 0) {
-							discarded_id = dt.id;
-						}
+					} else if (!close_match) {
+						discarded_id = dt.id;
+						close_match = true;
 					}
 				}
 				if (id == 0) {

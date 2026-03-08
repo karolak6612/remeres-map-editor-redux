@@ -248,9 +248,6 @@ void FindBrushDialog::RefreshContentsInternal() {
 
 		const BrushMap& brushes_map = g_brushes.getMap();
 
-		// We store the raws so they display last of all results
-		std::deque<const RAWBrush*> raws;
-
 		for (const auto& [name, brush_ptr] : brushes_map) {
 			const Brush* brush = brush_ptr.get();
 
@@ -278,11 +275,6 @@ void FindBrushDialog::RefreshContentsInternal() {
 
 			found_search_results = true;
 			item_list->AddBrush(raw_brush);
-		}
-
-		while (!raws.empty()) {
-			item_list->AddBrush(const_cast<RAWBrush*>(raws.front()));
-			raws.pop_front();
 		}
 
 		if (found_search_results) {

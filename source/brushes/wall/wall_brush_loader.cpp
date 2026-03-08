@@ -174,14 +174,6 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 						return false;
 					}
 
-					g_item_definitions.setFlag(id, ItemFlag::IsWall, true);
-					g_item_definitions.mutableEditorData(id).brush = brush;
-					g_item_definitions.setFlag(id, ItemFlag::IsBrushDoor, true);
-					g_item_definitions.setFlag(id, ItemFlag::WallHateMe, subChildNode.attribute("hate").as_bool());
-					g_item_definitions.setFlag(id, ItemFlag::IsOpen, isOpen);
-					g_item_definitions.setFlag(id, ItemFlag::IsLocked, isLocked);
-					g_item_definitions.setAttribute(id, ItemAttributeKey::BorderAlignment, alignment);
-
 					bool all_windows = false;
 					bool all_doors = false;
 					::DoorType specificType = WALL_UNDEFINED;
@@ -202,6 +194,14 @@ bool WallBrushLoader::load(WallBrush* brush, WallBrushItems& items, pugi::xml_no
 							break;
 						}
 					}
+
+					g_item_definitions.setFlag(id, ItemFlag::IsWall, true);
+					g_item_definitions.mutableEditorData(id).brush = brush;
+					g_item_definitions.setFlag(id, ItemFlag::IsBrushDoor, true);
+					g_item_definitions.setFlag(id, ItemFlag::WallHateMe, subChildNode.attribute("hate").as_bool());
+					g_item_definitions.setFlag(id, ItemFlag::IsOpen, isOpen);
+					g_item_definitions.setFlag(id, ItemFlag::IsLocked, isLocked);
+					g_item_definitions.setAttribute(id, ItemAttributeKey::BorderAlignment, alignment);
 
 					if (all_doors) {
 						addAllDoors(items, alignment, id, isLocked);

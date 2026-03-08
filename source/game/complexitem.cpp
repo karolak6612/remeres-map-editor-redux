@@ -22,6 +22,7 @@
 #include "io/iomap.h"
 #include "brushes/brush_enums.h"
 #include "brushes/wall/wall_brush.h"
+#include "game/item.h"
 
 // Container
 Container::Container(const uint16_t type) :
@@ -53,7 +54,13 @@ Item* Container::getItem(size_t index) const {
 }
 
 double Container::getWeight() const {
-	return Item::getWeight();
+	double total_weight = Item::getWeight();
+	for (const auto& item : contents) {
+		if (item) {
+			total_weight += item->getWeight();
+		}
+	}
+	return total_weight;
 }
 
 uint32_t Container::memsize() const {

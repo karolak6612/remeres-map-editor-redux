@@ -339,7 +339,7 @@ void FindItemDialog::RefreshContentsInternal() {
 					continue;
 				}
 
-				if (as_lower_str(raw_brush->getName()).find(search_string) == std::string::npos) {
+				if (as_lower_str(std::string(item.name())).find(search_string) == std::string::npos) {
 					continue;
 				}
 

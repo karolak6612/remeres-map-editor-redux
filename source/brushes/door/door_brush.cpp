@@ -81,16 +81,20 @@ void DoorBrush::switchDoor(Item* item) {
 
 	const auto& doorItems = wb->items.getDoorItems(wall_alignment);
 	for (const auto& dt : doorItems) {
-			if (dt.type == type) {
-				ASSERT(dt.id);
-				const auto it = g_item_definitions.get(dt.id);
-				ASSERT(it);
+		if (dt.type != type) {
+			continue;
+		}
 
-				if (it.hasFlag(ItemFlag::IsOpen) == new_open) {
-					if (!new_open || dt.locked == prefLocked) {
-						item->setID(dt.id);
-						return;
-				}
+		ASSERT(dt.id);
+		const auto it = g_item_definitions.get(dt.id);
+		ASSERT(it);
+
+		if (it.hasFlag(ItemFlag::IsOpen) == new_open) {
+			if (!new_open || dt.locked == prefLocked) {
+				item->setID(dt.id);
+				return;
+			}
+			if (oppositeVariant == 0) {
 				oppositeVariant = dt.id;
 			}
 		}

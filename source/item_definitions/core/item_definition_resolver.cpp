@@ -6,13 +6,6 @@ namespace {
 	constexpr uint64_t flagMask(ItemFlag flag) {
 		return uint64_t { 1 } << static_cast<uint8_t>(flag);
 	}
-
-	void applyOptionalFlag(uint64_t& target, uint64_t xml_flags, ItemFlag flag) {
-		const uint64_t mask = flagMask(flag);
-		if ((xml_flags & mask) != 0) {
-			target |= mask;
-		}
-	}
 }
 
 bool ItemDefinitionResolver::resolve(const ItemDefinitionLoadInput& input, const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings) {
@@ -65,7 +58,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 			error = wxString::FromUTF8(std::format("Missing DAT definition for client id {}", otb.client_id));
 			return false;
 		}
-		row.flags |= dat_it->second.flags;
+		row.flags |= dat_it->second.flags & ~flagMask(ItemFlag::Moveable);
 
 		const auto xml_it = fragments.xml.find(server_id);
 		if (xml_it != fragments.xml.end()) {
@@ -166,5 +159,8 @@ void ItemDefinitionResolver::applyXmlOverrides(const XmlItemFragment& xml, Resol
 	}
 	if (xml.rotate_to.has_value()) {
 		row.rotate_to = *xml.rotate_to;
+	}
+	if (xml.way_speed.has_value()) {
+		row.way_speed = *xml.way_speed;
 	}
 }

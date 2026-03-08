@@ -11,14 +11,14 @@ bool DatItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 		return false;
 	}
 
-	const uint16_t item_count = input.graphics->getItemSpriteMaxID();
+	const uint32_t item_count = input.graphics->getItemSpriteMaxID();
 	if (item_count < 100) {
 		error = "Graphics metadata does not contain any item sprites.";
 		return false;
 	}
 
-	for (uint16_t id = 100; id <= item_count; ++id) {
-		Sprite* sprite = input.graphics->getSprite(id);
+	for (uint32_t id = 100; id <= item_count; ++id) {
+		Sprite* sprite = input.graphics->getSprite(static_cast<int>(id));
 		if (sprite == nullptr) {
 			warnings.push_back(std::format("Missing loaded DAT metadata for client item id {}.", id));
 			continue;

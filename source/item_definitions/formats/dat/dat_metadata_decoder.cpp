@@ -310,8 +310,16 @@ bool DatMetadataDecoder::readSpriteGroup(GraphicManager* manager, FileReadHandle
 			}
 		}
 
-		const uint32_t numsprites = static_cast<uint32_t>(width) * static_cast<uint32_t>(height) * static_cast<uint32_t>(layers) *
-			static_cast<uint32_t>(pattern_x) * static_cast<uint32_t>(pattern_y) * static_cast<uint32_t>(pattern_z) * static_cast<uint32_t>(frames);
+		if (width == 0 || height == 0 || layers == 0 || pattern_x == 0 || pattern_y == 0 || pattern_z == 0 || frames == 0) {
+			return false;
+		}
+
+		const uint64_t numsprites64 = static_cast<uint64_t>(width) * static_cast<uint64_t>(height) * static_cast<uint64_t>(layers) *
+			static_cast<uint64_t>(pattern_x) * static_cast<uint64_t>(pattern_y) * static_cast<uint64_t>(pattern_z) * static_cast<uint64_t>(frames);
+		if (numsprites64 > UINT32_MAX) {
+			return false;
+		}
+		const uint32_t numsprites = static_cast<uint32_t>(numsprites64);
 		if (group_index == 0) {
 			sprite->numsprites = numsprites;
 			sprite->spriteList.reserve(numsprites);

@@ -27,7 +27,7 @@ namespace {
 
 	void parseSlot(XmlItemFragment& fragment, std::string value) {
 		to_lower_str(value);
-		uint16_t slot = fragment.slot_position.value_or(SLOTP_HAND);
+		uint16_t slot = fragment.slot_position.value_or(0);
 		if (value == "head") slot |= SLOTP_HEAD;
 		else if (value == "body") slot |= SLOTP_ARMOR;
 		else if (value == "legs") slot |= SLOTP_LEGS;
@@ -71,8 +71,9 @@ namespace {
 		if (key == "type") parseType(fragment, value);
 		else if (key == "name") fragment.name = value;
 		else if (key == "description") fragment.description = value;
-		else if (key == "speed") {}
+		else if (key == "speed") fragment.way_speed = attribute_node.attribute("value").as_ushort();
 		else if (key == "weight") fragment.weight = attribute_node.attribute("value").as_int() / 100.f;
+		else if (key == "attack") fragment.attack = attribute_node.attribute("value").as_int();
 		else if (key == "armor") fragment.armor = attribute_node.attribute("value").as_int();
 		else if (key == "defense") fragment.defense = attribute_node.attribute("value").as_int();
 		else if (key == "slottype") parseSlot(fragment, value);
@@ -130,13 +131,13 @@ bool XmlItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 			return false;
 		}
 
-		for (uint16_t server_id = from_id; server_id <= to_id; ++server_id) {
+		for (uint32_t server_id = from_id; server_id <= to_id; ++server_id) {
 			XmlItemFragment fragment;
-			fragment.server_id = server_id;
+			fragment.server_id = static_cast<ServerItemId>(server_id);
 			fragment.name = item_node.attribute("name").as_string();
 			fragment.editor_suffix = item_node.attribute("editorsuffix").as_string();
 			if (from_client_id != 0) {
-				const uint16_t offset = static_cast<uint16_t>(server_id - from_id);
+				const uint32_t offset = server_id - from_id;
 				fragment.client_id = static_cast<ClientItemId>(from_client_id + offset);
 			}
 
@@ -147,7 +148,7 @@ bool XmlItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 				applyAttribute(fragment, attribute_node);
 			}
 
-			fragments.xml[server_id] = std::move(fragment);
+			fragments.xml[fragment.server_id] = std::move(fragment);
 		}
 	}
 

@@ -252,7 +252,7 @@ void TilesetCategory::loadBrush(pugi::xml_node node, std::vector<std::string>& w
 				g_item_definitions.mutableEditorData(id).collection_brush = brush;
 			}
 
-			if (g_item_definitions.mutableEditorData(id).doodad_brush == nullptr && !isTrivial()) {
+			if (!isTrivial() && g_item_definitions.mutableEditorData(id).doodad_brush == nullptr) {
 				g_item_definitions.mutableEditorData(id).doodad_brush = brush;
 			}
 

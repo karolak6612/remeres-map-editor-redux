@@ -78,7 +78,7 @@ void RAWBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 
 	bool b = parameter ? *reinterpret_cast<bool*>(parameter) : false;
 	if ((g_settings.getInteger(Config::RAW_LIKE_SIMONE) && !b) && definition.hasFlag(ItemFlag::AlwaysOnBottom) && definition.attribute(ItemAttributeKey::AlwaysOnTopOrder) == 2) {
-		std::erase_if(tile->items, [topOrder = definition.attribute(ItemAttributeKey::AlwaysOnTopOrder)](const auto& item) {
+		std::erase_if(tile->items, [topOrder = static_cast<int>(definition.attribute(ItemAttributeKey::AlwaysOnTopOrder))](const auto& item) {
 			return item->getTopOrder() == topOrder;
 		});
 	}

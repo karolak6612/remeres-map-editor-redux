@@ -24,8 +24,12 @@ bool CarpetBrushLoader::load(CarpetBrush& brush, pugi::xml_node node, std::vecto
 	}
 
 	if ((attribute = node.attribute("server_lookid"))) {
-		uint16_t clientID = g_item_definitions.get(attribute.as_ushort()).clientId();
-		brush.look_id = clientID;
+		const auto definition = g_item_definitions.get(attribute.as_ushort());
+		if (!definition) {
+			warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()) + " for carpet brush");
+		} else {
+			brush.look_id = definition.clientId();
+		}
 	}
 
 	for (pugi::xml_node childNode : node.children()) {

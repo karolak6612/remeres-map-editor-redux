@@ -9,11 +9,11 @@ enum class OtbFileFormatVersion {
 	V3 = 3
 };
 
-enum rootattrib_t {
+enum rootattrib_t : std::uint8_t {
 	ROOT_ATTR_VERSION = 0x01
 };
 
-enum itemattrib_t {
+enum itemattrib_t : std::uint8_t {
 	ITEM_ATTR_FIRST = 0x10,
 	ITEM_ATTR_SERVERID = ITEM_ATTR_FIRST,
 	ITEM_ATTR_CLIENTID,
@@ -49,31 +49,31 @@ enum itemattrib_t {
 	ITEM_ATTR_LAST
 };
 
-enum itemflags_t {
-	FLAG_UNPASSABLE = 1 << 0,
-	FLAG_BLOCK_MISSILES = 1 << 1,
-	FLAG_BLOCK_PATHFINDER = 1 << 2,
-	FLAG_HAS_ELEVATION = 1 << 3,
-	FLAG_USEABLE = 1 << 4,
-	FLAG_PICKUPABLE = 1 << 5,
-	FLAG_MOVEABLE = 1 << 6,
-	FLAG_STACKABLE = 1 << 7,
-	FLAG_FLOORCHANGEDOWN = 1 << 8,
-	FLAG_FLOORCHANGENORTH = 1 << 9,
-	FLAG_FLOORCHANGEEAST = 1 << 10,
-	FLAG_FLOORCHANGESOUTH = 1 << 11,
-	FLAG_FLOORCHANGEWEST = 1 << 12,
-	FLAG_ALWAYSONTOP = 1 << 13,
-	FLAG_READABLE = 1 << 14,
-	FLAG_ROTABLE = 1 << 15,
-	FLAG_HANGABLE = 1 << 16,
-	FLAG_HOOK_EAST = 1 << 17,
-	FLAG_HOOK_SOUTH = 1 << 18,
-	FLAG_CANNOTDECAY = 1 << 19,
-	FLAG_ALLOWDISTREAD = 1 << 20,
-	FLAG_UNUSED = 1 << 21,
-	FLAG_CLIENTCHARGES = 1 << 22,
-	FLAG_IGNORE_LOOK = 1 << 23
+enum itemflags_t : std::uint32_t {
+	FLAG_UNPASSABLE = std::uint32_t { 1 } << 0,
+	FLAG_BLOCK_MISSILES = std::uint32_t { 1 } << 1,
+	FLAG_BLOCK_PATHFINDER = std::uint32_t { 1 } << 2,
+	FLAG_HAS_ELEVATION = std::uint32_t { 1 } << 3,
+	FLAG_USEABLE = std::uint32_t { 1 } << 4,
+	FLAG_PICKUPABLE = std::uint32_t { 1 } << 5,
+	FLAG_MOVEABLE = std::uint32_t { 1 } << 6,
+	FLAG_STACKABLE = std::uint32_t { 1 } << 7,
+	FLAG_FLOORCHANGEDOWN = std::uint32_t { 1 } << 8,
+	FLAG_FLOORCHANGENORTH = std::uint32_t { 1 } << 9,
+	FLAG_FLOORCHANGEEAST = std::uint32_t { 1 } << 10,
+	FLAG_FLOORCHANGESOUTH = std::uint32_t { 1 } << 11,
+	FLAG_FLOORCHANGEWEST = std::uint32_t { 1 } << 12,
+	FLAG_ALWAYSONTOP = std::uint32_t { 1 } << 13,
+	FLAG_READABLE = std::uint32_t { 1 } << 14,
+	FLAG_ROTABLE = std::uint32_t { 1 } << 15,
+	FLAG_HANGABLE = std::uint32_t { 1 } << 16,
+	FLAG_HOOK_EAST = std::uint32_t { 1 } << 17,
+	FLAG_HOOK_SOUTH = std::uint32_t { 1 } << 18,
+	FLAG_CANNOTDECAY = std::uint32_t { 1 } << 19,
+	FLAG_ALLOWDISTREAD = std::uint32_t { 1 } << 20,
+	FLAG_UNUSED = std::uint32_t { 1 } << 21,
+	FLAG_CLIENTCHARGES = std::uint32_t { 1 } << 22,
+	FLAG_IGNORE_LOOK = std::uint32_t { 1 } << 23
 };
 
 #endif

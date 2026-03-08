@@ -39,6 +39,8 @@
 #include "ui/find_item_window.h"
 #include "util/image_manager.h"
 
+#include <limits>
+
 // ============================================================================
 // Add Item Window
 
@@ -74,7 +76,7 @@ AddItemWindow::AddItemWindow(wxWindow* win_parent, TilesetCategoryType categoryT
 	subsizer->Add(item_button);
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item Id"));
-	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, 100000);
+	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, std::numeric_limits<uint16_t>::max());
 	item_id_field->SetToolTip("Enter item ID directly");
 	item_id_field->Bind(wxEVT_COMMAND_SPINCTRL_UPDATED, &AddItemWindow::OnChangeItemId, this);
 	subsizer->Add(item_id_field, wxSizerFlags(1).Expand());

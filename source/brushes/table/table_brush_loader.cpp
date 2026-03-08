@@ -19,7 +19,12 @@ static const auto iequal = [](char a, char b) {
 bool TableBrushLoader::load(pugi::xml_node node, TableBrush& brush, TableBrushItems& items, std::vector<std::string>& warnings) {
 	uint16_t look_id = 0;
 	if (const pugi::xml_attribute attribute = node.attribute("server_lookid")) {
-		look_id = g_item_definitions.get(attribute.as_ushort()).clientId();
+		const auto definition = g_item_definitions.get(attribute.as_ushort());
+		if (!definition) {
+			warnings.push_back("Invalid server_lookid " + std::to_string(attribute.as_ushort()) + " for table brush");
+		} else {
+			look_id = definition.clientId();
+		}
 	}
 
 	if (look_id == 0) {

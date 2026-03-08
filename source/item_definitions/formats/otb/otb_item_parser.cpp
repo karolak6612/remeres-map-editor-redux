@@ -17,6 +17,18 @@ namespace {
 			target |= flagMask(flag);
 		}
 	}
+
+	template <typename T>
+	bool readFixedPayload(BinaryNode* node, uint16_t length, T& value) {
+		if (length != sizeof(T)) {
+			return false;
+		}
+		return node->getRAW(reinterpret_cast<uint8_t*>(&value), sizeof(T));
+	}
+
+	bool skipPayload(BinaryNode* node, uint16_t length) {
+		return length == 0 || node->skip(length);
+	}
 }
 
 bool OtbItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFragments& fragments, wxString& error, std::vector<std::string>& warnings) const {
@@ -125,13 +137,15 @@ bool OtbItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 
 			switch (attr) {
 				case ITEM_ATTR_SERVERID:
-					if (!item_node->getU16(fragment.server_id)) {
+					if (!readFixedPayload(item_node, length, fragment.server_id)) {
 						warnings.push_back("Invalid server id in items.otb.");
+						skipPayload(item_node, length);
 					}
 					break;
 				case ITEM_ATTR_CLIENTID:
-					if (!item_node->getU16(fragment.client_id)) {
+					if (!readFixedPayload(item_node, length, fragment.client_id)) {
 						warnings.push_back("Invalid client id in items.otb.");
+						skipPayload(item_node, length);
 					}
 					break;
 				case ITEM_ATTR_NAME: {
@@ -151,47 +165,56 @@ bool OtbItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 					break;
 				}
 				case ITEM_ATTR_SPEED:
-					if (!item_node->getU16(fragment.way_speed)) {
+					if (!readFixedPayload(item_node, length, fragment.way_speed)) {
 						warnings.push_back("Invalid speed in items.otb.");
+						skipPayload(item_node, length);
 					}
 					break;
 				case ITEM_ATTR_MAXITEMS:
-					if (!item_node->getU16(fragment.volume)) {
+					if (!readFixedPayload(item_node, length, fragment.volume)) {
 						warnings.push_back("Invalid volume in items.otb.");
+						skipPayload(item_node, length);
 					}
 					break;
 				case ITEM_ATTR_WEIGHT: {
 					double weight = 0.0;
-					if (!item_node->getRAW(reinterpret_cast<uint8_t*>(&weight), sizeof(double))) {
+					if (!readFixedPayload(item_node, length, weight)) {
 						warnings.push_back("Invalid weight in items.otb.");
+						skipPayload(item_node, length);
 					}
 					fragment.weight = static_cast<float>(weight);
 					break;
 				}
 				case ITEM_ATTR_ROTATETO:
-					if (!item_node->getU16(fragment.rotate_to)) {
+					if (!readFixedPayload(item_node, length, fragment.rotate_to)) {
 						warnings.push_back("Invalid rotateTo in items.otb.");
+						skipPayload(item_node, length);
 					}
 					break;
 				case ITEM_ATTR_TOPORDER: {
 					uint8_t value = 0;
-					if (!item_node->getU8(value)) {
+					if (!readFixedPayload(item_node, length, value)) {
 						warnings.push_back("Invalid top order in items.otb.");
+						skipPayload(item_node, length);
 					}
 					fragment.always_on_top_order = value;
 					break;
 				}
 				case ITEM_ATTR_WRITEABLE3: {
-					uint16_t readonly_id = 0;
-					if (!item_node->getU16(readonly_id) || !item_node->getU16(fragment.max_text_len)) {
+					std::array<uint16_t, 2> payload {};
+					if (!readFixedPayload(item_node, length, payload)) {
 						warnings.push_back("Invalid writeable3 in items.otb.");
+						skipPayload(item_node, length);
+					} else {
+						fragment.max_text_len = payload[1];
 					}
 					break;
 				}
 				case ITEM_ATTR_CLASSIFICATION: {
 					uint8_t value = 0;
-					if (!item_node->getU8(value)) {
+					if (!readFixedPayload(item_node, length, value)) {
 						warnings.push_back("Invalid classification in items.otb.");
+						skipPayload(item_node, length);
 					}
 					fragment.classification = value;
 					break;

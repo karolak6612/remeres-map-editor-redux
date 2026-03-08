@@ -231,7 +231,15 @@ double Item::getWeight() const {
 }
 
 int Item::getHeight() const {
-	return getDefinition().hasFlag(ItemFlag::HasElevation) ? 8 : 0;
+	if (!getDefinition().hasFlag(ItemFlag::HasElevation)) {
+		return 0;
+	}
+
+	if (const GameSprite* sprite = getSprite()) {
+		return sprite->getDrawHeight();
+	}
+
+	return 0;
 }
 
 void Item::setUniqueID(unsigned short n) {

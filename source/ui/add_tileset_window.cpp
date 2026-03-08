@@ -39,6 +39,8 @@
 #include "ui/find_item_window.h"
 #include "util/image_manager.h"
 
+#include <limits>
+
 // ============================================================================
 // Add Tileset Window
 
@@ -75,7 +77,7 @@ AddTilesetWindow::AddTilesetWindow(wxWindow* win_parent, TilesetCategoryType cat
 	subsizer->Add(item_button);
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Item Id of First Item"));
-	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, 100000);
+	item_id_field = newd wxSpinCtrl(this, wxID_ANY, i2ws(itemId), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 100, std::numeric_limits<uint16_t>::max());
 	subsizer->Add(item_id_field, wxSizerFlags(1).Expand());
 
 	subsizer->Add(newd wxStaticText(this, wxID_ANY, "Tileset Name"));

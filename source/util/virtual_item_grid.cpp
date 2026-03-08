@@ -167,7 +167,8 @@ int VirtualItemGrid::GetOrCreateItemTexture(NVGcontext* vg, uint16_t id) {
 wxString VirtualItemGrid::GetItemName(size_t index) const {
 	if (index < GetItemCount()) {
 		uint16_t id = GetItem(index);
-		return wxstr(g_item_definitions.get(id).name());
+		const auto definition = g_item_definitions.get(id);
+		return definition ? wxstr(definition.name()) : wxString();
 	}
 	return "";
 }

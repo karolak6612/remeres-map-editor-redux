@@ -61,6 +61,7 @@ struct XmlItemFragment {
 	std::optional<int> armor;
 	std::optional<uint32_t> charges;
 	std::optional<uint16_t> rotate_to;
+	std::optional<uint16_t> way_speed;
 };
 
 struct ResolvedItemDefinitionRow {

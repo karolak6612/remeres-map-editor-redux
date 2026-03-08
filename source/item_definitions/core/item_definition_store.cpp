@@ -154,7 +154,9 @@ void ItemDefinitionStore::append(ResolvedItemDefinitionRow row) {
 	editor_.data.emplace_back();
 
 	server_to_index_[row.server_id] = index;
-	client_to_servers_[row.client_id].push_back(row.server_id);
+	if (row.client_id != 0) {
+		client_to_servers_[row.client_id].push_back(row.server_id);
+	}
 	max_server_id_ = std::max(max_server_id_, row.server_id);
 }
 
