@@ -70,6 +70,8 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/ui/drawing_controller.h"
+#include "rendering/ui/selection_controller.h"
 
 // Inline fallback for screen vertex shader (used when shaders/ dir is missing)
 static constexpr const char* kScreenVertFallback = R"(
@@ -215,12 +217,17 @@ void MapDrawer::Draw() {
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 
 	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
+		Position drag_start;
+		if (canvas->selection_controller) {
+			drag_start = canvas->selection_controller->GetDragStartPosition();
+		}
+		drag_shadow_drawer->draw(*sprite_batch, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor, drag_start);
 	}
 
 	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
 
-	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
+	bool is_dragging_draw = canvas->drawing_controller && canvas->drawing_controller->IsDraggingDraw();
+	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), brush_cursor_drawer.get(), view, options, editor, is_dragging_draw, canvas->last_click_map_x, canvas->last_click_map_y);
 
 	if (options.show_grid) {
 		DrawGrid(original_bounds);

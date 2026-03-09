@@ -10,7 +10,6 @@
 #include <wx/colour.h>
 #include <glm/glm.hpp>
 
-class MapDrawer;
 struct RenderView;
 struct DrawingOptions;
 class Brush;
@@ -19,6 +18,7 @@ class Editor;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
+class BrushCursorDrawer;
 class SpriteBatch;
 class PrimitiveRenderer;
 
@@ -27,7 +27,7 @@ public:
 	BrushOverlayDrawer();
 	~BrushOverlayDrawer();
 
-	void draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor, bool is_dragging_draw, int last_click_map_x, int last_click_map_y);
 
 private:
 	enum BrushColor {

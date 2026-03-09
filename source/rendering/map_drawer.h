@@ -90,11 +90,6 @@ class MapDrawer {
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 	std::unique_ptr<PostProcessPipeline> post_process_pipeline;
 
-protected:
-	friend class BrushOverlayDrawer;
-	friend class DragShadowDrawer;
-	friend class FloorDrawer;
-
 public:
 	MapDrawer(MapCanvas* canvas);
 	~MapDrawer();
