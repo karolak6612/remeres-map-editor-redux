@@ -265,7 +265,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		if (screenshot_controller->IsCapturing()) {
 			options.SetIngame();
 		} else {
-			options.Update();
+			options.Update(g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
 		}
 
 		options.dragging = selection_controller->IsDragging();

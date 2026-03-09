@@ -12,7 +12,7 @@ struct DrawingOptions {
 
 	void SetIngame();
 	void SetDefault();
-	void Update();
+	void Update(const class Settings& settings, float gui_light_intensity, float gui_ambient_light_level);
 	bool isDrawLight() const noexcept;
 
 	bool transparent_floors;
