@@ -321,7 +321,7 @@ void MapDrawer::Draw() {
 
 	DrawBackground(); // Clear screen (or FBO)
 
-	// Save original view bounds before DrawMap modifies them per-floor
+	// View bounds are now immutable — DrawMap uses local copies for per-floor offsets
 	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
 
 	DrawMap();
@@ -376,9 +376,11 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
-	bool only_colors = options.show_as_minimap || options.show_only_colors;
-
-	// Enable texture mode
+	// Per-floor offsets computed as local variables — RenderView stays immutable
+	int current_start_x = view.start_x;
+	int current_start_y = view.start_y;
+	int current_end_x = view.end_x;
+	int current_end_y = view.end_y;
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
 		if (map_z == view.end_z && view.start_z != view.end_z) {
@@ -391,10 +393,10 @@ void MapDrawer::DrawMap() {
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 
-		--view.start_x;
-		--view.start_y;
-		++view.end_x;
-		++view.end_y;
+		--current_start_x;
+		--current_start_y;
+		++current_end_x;
+		++current_end_y;
 	}
 }
 
