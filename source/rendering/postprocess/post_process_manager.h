@@ -13,7 +13,7 @@ struct PostProcessEffect {
 	std::string name;
 	std::string fragment_source;
 	std::string vertex_source;
-	std::shared_ptr<ShaderProgram> shader;
+	std::unique_ptr<ShaderProgram> shader;
 
 	// Constructor for easy registration
 	PostProcessEffect(std::string n, std::string frag, std::string vert = "") : name(n), fragment_source(frag), vertex_source(vert) { }
@@ -39,7 +39,7 @@ private:
 	// We maintain insertion order for UI consistency usually,
 	// but a map by name is good for lookup.
 	// Let's keep a vector for order and a map for lookup, or just search the vector (small N).
-	std::vector<std::shared_ptr<PostProcessEffect>> effects;
+	std::vector<std::unique_ptr<PostProcessEffect>> effects;
 
 	bool initialized = false;
 };

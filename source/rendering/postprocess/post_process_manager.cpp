@@ -16,7 +16,7 @@ void PostProcessManager::Register(const std::string& name, const std::string& fr
 		}
 	}
 
-	effects.push_back(std::make_shared<PostProcessEffect>(name, fragment_source, vertex_source));
+	effects.push_back(std::make_unique<PostProcessEffect>(name, fragment_source, vertex_source));
 }
 
 void PostProcessManager::Initialize(const std::string& default_vertex_source) {
@@ -25,7 +25,7 @@ void PostProcessManager::Initialize(const std::string& default_vertex_source) {
 	}
 
 	for (auto& effect : effects) {
-		effect->shader = std::make_shared<ShaderProgram>();
+		effect->shader = std::make_unique<ShaderProgram>();
 
 		std::string v_source = effect->vertex_source;
 		if (v_source.empty()) {
@@ -39,7 +39,7 @@ void PostProcessManager::Initialize(const std::string& default_vertex_source) {
 	}
 
 	// Remove invalid effects (where load failed)
-	effects.erase(std::remove_if(effects.begin(), effects.end(), [](const std::shared_ptr<PostProcessEffect>& effect) {
+	effects.erase(std::remove_if(effects.begin(), effects.end(), [](const std::unique_ptr<PostProcessEffect>& effect) {
 					  return !effect->shader || !effect->shader->IsValid();
 				  }),
 				  effects.end());
