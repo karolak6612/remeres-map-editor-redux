@@ -18,38 +18,38 @@
 #ifndef RME_PREFERENCES_WINDOW_H_
 #define RME_PREFERENCES_WINDOW_H_
 
-#include "app/main.h"
 #include <wx/dialog.h>
-#include <wx/notebook.h>
-#include <wx/collpane.h>
+#include <wx/listbook.h>
+#include <wx/listctrl.h>
 
-#include "app/preferences/general_page.h"
+#include "app/main.h"
+#include "app/preferences/client_version_page.h"
 #include "app/preferences/editor_page.h"
+#include "app/preferences/general_page.h"
 #include "app/preferences/graphics_page.h"
 #include "app/preferences/interface_page.h"
-#include "app/preferences/client_version_page.h"
 
 class PreferencesWindow : public wxDialog {
 public:
 	PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false);
-	virtual ~PreferencesWindow();
+	~PreferencesWindow() override;
 
-	void OnClickApply(wxCommandEvent&);
-	void OnClickOK(wxCommandEvent&);
-	void OnClickCancel(wxCommandEvent&);
-
-	void OnCollapsiblePane(wxCollapsiblePaneEvent&);
+	void OnClickApply(wxCommandEvent& event);
+	void OnClickOK(wxCommandEvent& event);
+	void OnClickCancel(wxCommandEvent& event);
+	void OnClose(wxCloseEvent& event);
 
 protected:
 	void Apply();
 
-	wxNotebook* book;
+	wxListbook* book = nullptr;
 
-	GeneralPage* general_page;
-	EditorPage* editor_page;
-	GraphicsPage* graphics_page;
-	InterfacePage* interface_page;
-	ClientVersionPage* client_version_page;
+	GeneralPage* general_page = nullptr;
+	EditorPage* editor_page = nullptr;
+	GraphicsPage* graphics_page = nullptr;
+	InterfacePage* interface_page = nullptr;
+	ClientVersionPage* client_version_page = nullptr;
 };
 
 #endif
+

@@ -1,76 +1,160 @@
 #include "app/preferences/general_page.h"
+
+#include <array>
+
 #include "app/main.h"
+#include "app/preferences/preferences_layout.h"
 #include "app/settings.h"
 #include "ui/gui.h"
-#include "ui/dialog_util.h"
 
-GeneralPage::GeneralPage(wxWindow* parent) : PreferencesPage(parent) {
-	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
-	wxStaticText* tmptext;
+namespace {
+constexpr std::array<const char*, 5> kPositionChoiceLabels = {
+	"Lua table",
+	"Compact JSON",
+	"CSV",
+	"Tuple",
+	"Constructor call",
+};
 
-	show_welcome_dialog_chkbox = newd wxCheckBox(this, wxID_ANY, "Show welcome dialog on startup");
-	show_welcome_dialog_chkbox->SetValue(g_settings.getInteger(Config::WELCOME_DIALOG) == 1);
-	show_welcome_dialog_chkbox->SetToolTip("Show welcome dialog when starting the editor.");
-	sizer->Add(show_welcome_dialog_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+int ClampPositionFormatSelection(int selection) {
+	return std::clamp(selection, 0, static_cast<int>(kPositionChoiceLabels.size()) - 1);
+}
 
-	always_make_backup_chkbox = newd wxCheckBox(this, wxID_ANY, "Always make map backup");
-	always_make_backup_chkbox->SetValue(g_settings.getInteger(Config::ALWAYS_MAKE_BACKUP) == 1);
-	sizer->Add(always_make_backup_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+wxString BuildPositionPreview(int selection) {
+	switch (ClampPositionFormatSelection(selection)) {
+		case 0:
+			return "{x = 512, y = 1024, z = 7}";
+		case 1:
+			return R"({"x":512,"y":1024,"z":7})";
+		case 2:
+			return "512, 1024, 7";
+		case 3:
+			return "(512, 1024, 7)";
+		case 4:
+		default:
+			return "Position(512, 1024, 7)";
+	}
+}
+}
 
-	update_check_on_startup_chkbox = newd wxCheckBox(this, wxID_ANY, "Check for updates on startup");
-	update_check_on_startup_chkbox->SetValue(g_settings.getInteger(Config::USE_UPDATER) == 1);
-	sizer->Add(update_check_on_startup_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+GeneralPage::GeneralPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
+	auto* page_sizer = GetPageSizer();
 
-	only_one_instance_chkbox = newd wxCheckBox(this, wxID_ANY, "Open all maps in the same instance");
-	only_one_instance_chkbox->SetValue(g_settings.getInteger(Config::ONLY_ONE_INSTANCE) == 1);
-	only_one_instance_chkbox->SetToolTip("When checked, maps opened using the shell will all be opened in the same instance.");
-	sizer->Add(only_one_instance_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	auto* startup_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Startup",
+		"Control which general startup behaviors are enabled when the editor launches."
+	);
+	show_welcome_dialog_chkbox = PreferencesLayout::AddCheckBoxRow(
+		startup_section,
+		"Show welcome dialog on startup",
+		"Open the recent maps and client selection screen every time the editor starts.",
+		g_settings.getBoolean(Config::WELCOME_DIALOG)
+	);
+	update_check_on_startup_chkbox = PreferencesLayout::AddCheckBoxRow(
+		startup_section,
+		"Check for updates on startup",
+		"Look for new editor releases automatically during startup.",
+		g_settings.getBoolean(Config::USE_UPDATER)
+	);
+	only_one_instance_chkbox = PreferencesLayout::AddCheckBoxRow(
+		startup_section,
+		"Open maps in the same instance",
+		"Maps opened from Explorer or shell integrations are routed into the already running editor window.",
+		g_settings.getBoolean(Config::ONLY_ONE_INSTANCE)
+	);
+	page_sizer->Add(startup_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(10));
 
-	enable_tileset_editing_chkbox = newd wxCheckBox(this, wxID_ANY, "Enable tileset editing");
-	enable_tileset_editing_chkbox->SetValue(g_settings.getInteger(Config::SHOW_TILESET_EDITOR) == 1);
-	enable_tileset_editing_chkbox->SetToolTip("Show tileset editing options.");
-	sizer->Add(enable_tileset_editing_chkbox, wxSizerFlags().Border(wxLEFT | wxTOP, 5));
+	auto* safety_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Safety",
+		"These options protect project data and expose optional editor tools."
+	);
+	always_make_backup_chkbox = PreferencesLayout::AddCheckBoxRow(
+		safety_section,
+		"Always make map backups",
+		"Create a backup when saving maps so you have a recovery point if something goes wrong.",
+		g_settings.getBoolean(Config::ALWAYS_MAKE_BACKUP)
+	);
+	enable_tileset_editing_chkbox = PreferencesLayout::AddCheckBoxRow(
+		safety_section,
+		"Enable tileset editing",
+		"Show palette editing tools for customizing tileset organization.",
+		g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)
+	);
+	page_sizer->Add(safety_section, 0, wxEXPAND | wxALL, FromDIP(10));
 
-	sizer->AddSpacer(10);
+	auto* performance_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Performance",
+		"Tune undo capacity and background work limits to match your hardware and map size."
+	);
+	undo_size_spin = new wxSpinCtrl(performance_section, wxID_ANY, i2ws(g_settings.getInteger(Config::UNDO_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0x10000000);
+	PreferencesLayout::AddControlRow(
+		performance_section,
+		"Undo queue size",
+		"Maximum number of editor actions kept in history. Larger values improve safety but use more memory.",
+		undo_size_spin
+	);
+	undo_mem_size_spin = new wxSpinCtrl(performance_section, wxID_ANY, i2ws(g_settings.getInteger(Config::UNDO_MEM_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 4096);
+	PreferencesLayout::AddControlRow(
+		performance_section,
+		"Undo memory limit (MB)",
+		"Approximate memory budget for the undo queue before old entries begin to drop off.",
+		undo_mem_size_spin
+	);
+	worker_threads_spin = new wxSpinCtrl(performance_section, wxID_ANY, i2ws(g_settings.getInteger(Config::WORKER_THREADS)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 64);
+	PreferencesLayout::AddControlRow(
+		performance_section,
+		"Worker threads",
+		"Number of background threads used for heavier editor tasks. Match this to your logical CPU core count when possible.",
+		worker_threads_spin
+	);
+	replace_size_spin = new wxSpinCtrl(performance_section, wxID_ANY, i2ws(g_settings.getInteger(Config::REPLACE_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 100000);
+	PreferencesLayout::AddControlRow(
+		performance_section,
+		"Replace count limit",
+		"Maximum number of items the Replace Item tool can affect in one operation.",
+		replace_size_spin
+	);
+	page_sizer->Add(performance_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 
-	auto* grid_sizer = newd wxFlexGridSizer(2, 10, 10);
-	grid_sizer->AddGrowableCol(1);
+	auto* clipboard_section = new PreferencesSectionPanel(
+		GetScrollWindow(),
+		"Clipboard",
+		"Choose how copied map positions should be written when you paste them into scripts, notes, or chat."
+	);
+	position_format_choice = new wxChoice(clipboard_section, wxID_ANY);
+	for (const auto* label : kPositionChoiceLabels) {
+		position_format_choice->Append(wxString::FromUTF8(label));
+	}
+	position_format_choice->SetSelection(ClampPositionFormatSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT)));
+	PreferencesLayout::AddControlRow(
+		clipboard_section,
+		"Copy position format",
+		"Switch between scripting-friendly and plain text formats without giving this option a full screen of space.",
+		position_format_choice
+	);
+	position_preview_label = PreferencesLayout::AddValuePreviewRow(
+		clipboard_section,
+		"Preview",
+		"Example output shown with representative map coordinates.",
+		BuildPositionPreview(position_format_choice->GetSelection())
+	);
+	page_sizer->Add(clipboard_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 
-	grid_sizer->Add(tmptext = newd wxStaticText(this, wxID_ANY, "Undo queue size: "), 0);
-	undo_size_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::UNDO_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 0x10000000);
-	grid_sizer->Add(undo_size_spin, 0);
-	SetWindowToolTip(tmptext, undo_size_spin, "How many action you can undo, be aware that a high value will increase memory usage.");
+	position_format_choice->Bind(wxEVT_CHOICE, [this](wxCommandEvent&) {
+		UpdatePositionPreview();
+	});
 
-	grid_sizer->Add(tmptext = newd wxStaticText(this, wxID_ANY, "Undo maximum memory size (MB): "), 0);
-	undo_mem_size_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::UNDO_MEM_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 4096);
-	grid_sizer->Add(undo_mem_size_spin, 0);
-	SetWindowToolTip(tmptext, undo_mem_size_spin, "The approximate limit for the memory usage of the undo queue.");
+	FinishLayout();
+}
 
-	grid_sizer->Add(tmptext = newd wxStaticText(this, wxID_ANY, "Worker Threads: "), 0);
-	worker_threads_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::WORKER_THREADS)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 1, 64);
-	grid_sizer->Add(worker_threads_spin, 0);
-	SetWindowToolTip(tmptext, worker_threads_spin, "How many threads the editor will use for intensive operations. This should be equivalent to the amount of logical processors in your system.");
-
-	grid_sizer->Add(tmptext = newd wxStaticText(this, wxID_ANY, "Replace count: "), 0);
-	replace_size_spin = newd wxSpinCtrl(this, wxID_ANY, i2ws(g_settings.getInteger(Config::REPLACE_SIZE)), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS, 0, 100000);
-	grid_sizer->Add(replace_size_spin, 0);
-	SetWindowToolTip(tmptext, replace_size_spin, "How many items you can replace on the map using the Replace Item tool.");
-
-	sizer->Add(grid_sizer, wxSizerFlags().Border(wxALL, 5));
-	sizer->AddSpacer(10);
-
-	wxString position_choices[] = { "  {x = 0, y = 0, z = 0}",
-									R"(  {"x":0,"y":0,"z":0})",
-									"  x, y, z",
-									"  (x, y, z)",
-									"  Position(x, y, z)" };
-	int radio_choices = sizeof(position_choices) / sizeof(wxString);
-	position_format = newd wxRadioBox(this, wxID_ANY, "Copy Position Format", wxDefaultPosition, wxDefaultSize, radio_choices, position_choices, 1, wxRA_SPECIFY_COLS);
-	position_format->SetSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT));
-	sizer->Add(position_format, wxSizerFlags().Expand().Border(wxALL, 5));
-	SetWindowToolTip(position_format, "The position format when copying from the map.");
-
-	SetSizerAndFit(sizer);
+void GeneralPage::UpdatePositionPreview() {
+	if (position_preview_label && position_format_choice) {
+		position_preview_label->SetLabel(BuildPositionPreview(position_format_choice->GetSelection()));
+		position_preview_label->GetParent()->Layout();
+	}
 }
 
 void GeneralPage::Apply() {
@@ -82,7 +166,8 @@ void GeneralPage::Apply() {
 	g_settings.setInteger(Config::UNDO_MEM_SIZE, undo_mem_size_spin->GetValue());
 	g_settings.setInteger(Config::WORKER_THREADS, worker_threads_spin->GetValue());
 	g_settings.setInteger(Config::REPLACE_SIZE, replace_size_spin->GetValue());
-	g_settings.setInteger(Config::COPY_POSITION_FORMAT, position_format->GetSelection());
+	const int selected_format = position_format_choice->GetSelection() == wxNOT_FOUND ? 0 : ClampPositionFormatSelection(position_format_choice->GetSelection());
+	g_settings.setInteger(Config::COPY_POSITION_FORMAT, selected_format);
 
 	if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR) != enable_tileset_editing_chkbox->GetValue()) {
 		g_gui.RebuildPalettes();

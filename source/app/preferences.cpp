@@ -15,38 +15,32 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#include "app/main.h"
-
-#include <wx/collpane.h>
-
-#include "app/settings.h"
+#include "app/preferences.h"
 
 #include "app/client_version.h"
-#include "editor/editor.h"
+#include "app/main.h"
+#include "app/settings.h"
 #include "rendering/postprocess/post_process_manager.h"
-
 #include "ui/gui.h"
-
-#include "ui/dialog_util.h"
-#include "app/managers/version_manager.h"
-#include "app/preferences.h"
 #include "util/image_manager.h"
 
 PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected) :
-	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(600, 500), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
+	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(980, 720), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
 	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
-	wxSizer* sizer = newd wxBoxSizer(wxVERTICAL);
+	SetMinSize(wxSize(FromDIP(860), FromDIP(640)));
 
-	book = newd wxNotebook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBK_TOP);
-	// book->SetPadding(4);
+	auto* sizer = new wxBoxSizer(wxVERTICAL);
 
-	wxImageList* imageList = new wxImageList(16, 16);
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_IMAGE, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_WINDOW_MAXIMIZE, wxSize(16, 16)));
-	imageList->Add(IMAGE_MANAGER.GetBitmap(ICON_GAMEPAD, wxSize(16, 16)));
-	book->AssignImageList(imageList);
+	book = new wxListbook(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBK_LEFT);
+	book->SetBackgroundColour(Theme::Get(Theme::Role::PanelBackground));
+
+	auto* image_list = new wxImageList(18, 18);
+	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(18, 18)));
+	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(18, 18)));
+	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_IMAGE, wxSize(18, 18)));
+	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_WINDOW_MAXIMIZE, wxSize(18, 18)));
+	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_GAMEPAD, wxSize(18, 18)));
+	book->AssignImageList(image_list);
 
 	general_page = new GeneralPage(book);
 	editor_page = new EditorPage(book);
@@ -54,37 +48,44 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	interface_page = new InterfacePage(book);
 	client_version_page = new ClientVersionPage(book);
 
-	book->AddPage(general_page, "General", true, 0);
+	book->AddPage(general_page, "General", false, 0);
 	book->AddPage(editor_page, "Editor", false, 1);
 	book->AddPage(graphics_page, "Graphics", false, 2);
 	book->AddPage(interface_page, "Interface", false, 3);
-	book->AddPage(client_version_page, "Client Version", clientVersionSelected, 4);
+	book->AddPage(client_version_page, "Client Version", false, 4);
+	book->SetSelection(clientVersionSelected ? 4 : 0);
 
-	sizer->Add(book, 1, wxEXPAND | wxALL, 10);
+	if (auto* list_view = book->GetListView()) {
+		list_view->SetMinSize(wxSize(FromDIP(170), -1));
+		list_view->SetBackgroundColour(Theme::Get(Theme::Role::RaisedSurface));
+		list_view->SetTextColour(Theme::Get(Theme::Role::Text));
+		list_view->SetColumnWidth(0, FromDIP(150));
+	}
 
-	wxSizer* subsizer = newd wxBoxSizer(wxHORIZONTAL);
-	wxButton* okBtn = newd wxButton(this, wxID_OK, "OK");
-	okBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
-	subsizer->Add(okBtn, wxSizerFlags(1).Center());
+	sizer->Add(book, 1, wxEXPAND | wxALL, FromDIP(10));
 
-	wxButton* cancelBtn = newd wxButton(this, wxID_CANCEL, "Cancel");
-	cancelBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
-	subsizer->Add(cancelBtn, wxSizerFlags(1).Border(wxALL, 5).Left().Center());
+	auto* footer_sizer = new wxBoxSizer(wxHORIZONTAL);
+	footer_sizer->AddStretchSpacer();
 
-	wxButton* applyBtn = newd wxButton(this, wxID_APPLY, "Apply");
-	applyBtn->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(16, 16)));
-	subsizer->Add(applyBtn, wxSizerFlags(1).Center());
+	auto* ok_button = new wxButton(this, wxID_OK, "OK");
+	ok_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CHECK, wxSize(16, 16)));
+	footer_sizer->Add(ok_button, 0, wxRIGHT, FromDIP(8));
 
-	sizer->Add(subsizer, 0, wxCENTER | wxLEFT | wxBOTTOM | wxRIGHT, 10);
+	auto* cancel_button = new wxButton(this, wxID_CANCEL, "Cancel");
+	cancel_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_XMARK, wxSize(16, 16)));
+	footer_sizer->Add(cancel_button, 0, wxRIGHT, FromDIP(8));
 
-	SetSizerAndFit(sizer);
+	auto* apply_button = new wxButton(this, wxID_APPLY, "Apply");
+	apply_button->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SYNC, wxSize(16, 16)));
+	footer_sizer->Add(apply_button, 0);
 
-	int w = g_settings.getInteger(Config::PREFERENCES_WINDOW_WIDTH);
-	int h = g_settings.getInteger(Config::PREFERENCES_WINDOW_HEIGHT);
-	if (w > 0 && h > 0) {
-		SetSize(w, h);
-	} else {
-		SetSize(600, 500);
+	sizer->Add(footer_sizer, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
+	SetSizer(sizer);
+
+	const int width = g_settings.getInteger(Config::PREFERENCES_WINDOW_WIDTH);
+	const int height = g_settings.getInteger(Config::PREFERENCES_WINDOW_HEIGHT);
+	if (width > 0 && height > 0) {
+		SetSize(width, height);
 	}
 
 	Centre(wxBOTH);
@@ -92,7 +93,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickCancel, this, wxID_CANCEL);
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickApply, this, wxID_APPLY);
-	Bind(wxEVT_COLLAPSIBLEPANE_CHANGED, &PreferencesWindow::OnCollapsiblePane, this);
+	Bind(wxEVT_CLOSE_WINDOW, &PreferencesWindow::OnClose, this);
 
 	wxIcon icon;
 	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
@@ -100,13 +101,12 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 }
 
 PreferencesWindow::~PreferencesWindow() {
-	int w, h;
-	GetSize(&w, &h);
-	g_settings.setInteger(Config::PREFERENCES_WINDOW_WIDTH, w);
-	g_settings.setInteger(Config::PREFERENCES_WINDOW_HEIGHT, h);
+	int width = 0;
+	int height = 0;
+	GetSize(&width, &height);
+	g_settings.setInteger(Config::PREFERENCES_WINDOW_WIDTH, width);
+	g_settings.setInteger(Config::PREFERENCES_WINDOW_HEIGHT, height);
 }
-
-// Event handlers!
 
 void PreferencesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 	if (!client_version_page->ValidateData()) {
@@ -117,6 +117,7 @@ void PreferencesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void PreferencesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
+	client_version_page->DiscardPendingChanges();
 	EndModal(wxID_CANCEL);
 }
 
@@ -127,11 +128,6 @@ void PreferencesWindow::OnClickApply(wxCommandEvent& WXUNUSED(event)) {
 	Apply();
 }
 
-void PreferencesWindow::OnCollapsiblePane(wxCollapsiblePaneEvent& event) {
-	auto* win = (wxWindow*)event.GetEventObject();
-	win->GetParent()->Fit();
-}
-
 void PreferencesWindow::Apply() {
 	general_page->Apply();
 	editor_page->Apply();
@@ -140,4 +136,14 @@ void PreferencesWindow::Apply() {
 	client_version_page->Apply();
 
 	g_settings.save();
+}
+
+void PreferencesWindow::OnClose(wxCloseEvent& event) {
+	if (!IsModal()) {
+		event.Skip();
+		return;
+	}
+
+	client_version_page->DiscardPendingChanges();
+	EndModal(wxID_CANCEL);
 }
