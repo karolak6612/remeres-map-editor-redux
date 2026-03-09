@@ -23,6 +23,7 @@ public:
 	~WelcomeDialog() override = default;
 
 	std::optional<StartupLoadRequest> ConsumePendingLoadRequest();
+	void RefreshConfiguredClients();
 
 private:
 	void BuildInterface(const wxString& title_text, const wxString& version_text, const wxBitmap& rme_logo);

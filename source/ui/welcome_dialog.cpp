@@ -89,6 +89,42 @@ std::optional<StartupLoadRequest> WelcomeDialog::ConsumePendingLoadRequest() {
 	return request;
 }
 
+void WelcomeDialog::RefreshConfiguredClients() {
+	const auto selected_client_id = GetSelectedClient() != nullptr ? GetSelectedClient()->getID() : ClientVersionID {};
+
+	m_configured_clients.clear();
+	for (ClientVersion* client : ClientVersion::getConfiguredVisible()) {
+		m_configured_clients.push_back({
+			client,
+			wxstr(client->getName()),
+			client->getClientPath().GetFullPath(),
+		});
+	}
+
+	RefreshClientList();
+
+	if (!selected_client_id.empty()) {
+		const auto selected_it = std::ranges::find_if(m_configured_clients, [&](const auto& entry) {
+			return entry.client != nullptr && entry.client->getID() == selected_client_id;
+		});
+		if (selected_it != m_configured_clients.end()) {
+			SetSelectedClientIndex(static_cast<int>(std::distance(m_configured_clients.begin(), selected_it)), m_has_manual_client_selection);
+			return;
+		}
+	}
+
+	if (!m_configured_clients.empty()) {
+		const ClientVersion* latest = ClientVersion::getLatestVersion();
+		const auto latest_it = std::ranges::find_if(m_configured_clients, [latest](const auto& entry) {
+			return entry.client == latest;
+		});
+		const int fallback_index = latest_it != m_configured_clients.end() ? static_cast<int>(std::distance(m_configured_clients.begin(), latest_it)) : 0;
+		SetSelectedClientIndex(fallback_index, false);
+	} else {
+		SetSelectedClientIndex(wxNOT_FOUND, false);
+	}
+}
+
 void WelcomeDialog::BuildInterface(const wxString& title_text, const wxString& version_text, const wxBitmap& rme_logo) {
 	auto* root_sizer = new wxBoxSizer(wxVERTICAL);
 
@@ -214,6 +250,7 @@ void WelcomeDialog::BuildInterface(const wxString& title_text, const wxString& v
 void WelcomeDialog::OnPreferences(wxCommandEvent& WXUNUSED(event)) {
 	PreferencesWindow preferences_window(this, true);
 	preferences_window.ShowModal();
+	RefreshConfiguredClients();
 }
 
 void WelcomeDialog::OnNewMap(wxCommandEvent& WXUNUSED(event)) {

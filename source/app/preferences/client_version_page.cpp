@@ -7,6 +7,7 @@
 #include <cmath>
 #include <map>
 #include <ranges>
+#include <thread>
 
 #include <wx/menu.h>
 #include <wx/tokenzr.h>
@@ -616,6 +617,8 @@ void ClientVersionPage::ApplyDetectionResult(ClientVersion& client, const Client
 
 	if (result.dat_format.has_value() && result.dat_signature.has_value() && result.spr_signature.has_value()) {
 		client.setClientData(*result.dat_signature, *result.spr_signature, *result.dat_format);
+	} else if (result.dat_format.has_value()) {
+		client.setDatFormat(*result.dat_format);
 	}
 
 	if (result.transparency.has_value()) {
@@ -649,6 +652,39 @@ void ClientVersionPage::ApplyDetectionResult(ClientVersion& client, const Client
 	for (const auto& warning : result.warnings) {
 		wxLogWarning("%s", wxString::FromUTF8(warning));
 	}
+}
+
+void ClientVersionPage::RequestClientAssetDetection(ClientVersion& client) {
+	const auto client_id = client.getID();
+	const auto requested_path = client.getClientPath().GetFullPath().ToStdString();
+	const auto request_id = ++next_detection_request_id;
+	auto snapshot = client.clone();
+	pending_detection_requests_[client_id] = request_id;
+
+	std::thread([this, client_id, requested_path, request_id, snapshot = std::move(snapshot)]() mutable {
+		auto detection = ClientAssetDetector::detect(*snapshot);
+		CallAfter([this, client_id, requested_path, request_id, detection = std::move(detection)]() mutable {
+			const auto pending_it = pending_detection_requests_.find(client_id);
+			if (pending_it == pending_detection_requests_.end() || pending_it->second != request_id) {
+				return;
+			}
+			pending_detection_requests_.erase(pending_it);
+
+			auto* client = ClientVersion::get(client_id);
+			if (!client) {
+				return;
+			}
+			if (client->getClientPath().GetFullPath().ToStdString() != requested_path) {
+				return;
+			}
+
+			ApplyDetectionResult(*client, detection);
+			if (active_client == client) {
+				SyncClientPropertiesToGrid(*client);
+				RefreshSummary();
+			}
+		});
+	}).detach();
 }
 
 void ClientVersionPage::SyncClientPropertiesToGrid(const ClientVersion& client) {
@@ -871,9 +907,7 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 		client->setConfigType(ConfigTypeFromSelection(prop->GetValue().GetLong()));
 	} else if (prop_name == "clientPath") {
 		client->setClientPath(FileName(value.As<wxString>()));
-		const auto detection = ClientAssetDetector::detect(*client);
-		ApplyDetectionResult(*client, detection);
-		SyncClientPropertiesToGrid(*client);
+		RequestClientAssetDetection(*client);
 	} else if (prop_name == "dataDirectory") {
 		client->setDataDirectory(nstr(value.As<wxString>()));
 	} else if (prop_name == "metadataFile") {

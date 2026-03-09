@@ -52,6 +52,7 @@ private:
 	int GetMajorGroup(const ClientVersion& version) const;
 	void UpdatePropertyValidation(wxPGProperty* prop);
 	void ApplyDetectionResult(ClientVersion& client, const ClientAssetDetectionResult& result);
+	void RequestClientAssetDetection(ClientVersion& client);
 	void SyncClientPropertiesToGrid(const ClientVersion& client);
 	void SetPropertyState(ClientVersion* client, std::string_view property_name, PropertyVisualState state);
 	void MarkSavedProperties();
@@ -86,6 +87,8 @@ private:
 	wxString last_search_text;
 	std::string client_filter;
 	std::unordered_set<std::string> pending_deleted_client_ids;
+	uint64_t next_detection_request_id = 0;
+	std::unordered_map<ClientVersionID, uint64_t> pending_detection_requests_;
 	std::unordered_map<const ClientVersion*, std::unordered_map<std::string, PropertyVisualState>> property_states_;
 };
 

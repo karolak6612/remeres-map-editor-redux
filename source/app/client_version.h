@@ -372,18 +372,30 @@ public:
 		data_versions[0].datFormat = format;
 	}
 	void setDatSignature(uint32_t v) {
-		if (!data_versions.empty()) {
-			data_versions[0].datSignature = v;
+		if (data_versions.empty()) {
+			data_versions.push_back(ClientData {
+				.datFormat = DAT_FORMAT_UNKNOWN,
+				.datSignature = v,
+				.sprSignature = 0,
+			});
+			return;
 		}
+		data_versions[0].datSignature = v;
 	}
 
 	uint32_t getSprSignature() const {
 		return data_versions.empty() ? 0 : data_versions[0].sprSignature;
 	}
 	void setSprSignature(uint32_t v) {
-		if (!data_versions.empty()) {
-			data_versions[0].sprSignature = v;
+		if (data_versions.empty()) {
+			data_versions.push_back(ClientData {
+				.datFormat = DAT_FORMAT_UNKNOWN,
+				.datSignature = 0,
+				.sprSignature = v,
+			});
+			return;
 		}
+		data_versions[0].sprSignature = v;
 	}
 	void setClientData(uint32_t dat_signature, uint32_t spr_signature, DatFormat format) {
 		if (data_versions.empty()) {

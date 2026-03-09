@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <format>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -15,6 +16,8 @@
 #include "item_definitions/formats/dat/dat_item_parser.h"
 
 namespace {
+	constexpr size_t kMaxSampleOffsets = 24;
+
 	struct ResolvedClientFile {
 		wxFileName path;
 		std::string filename;
@@ -37,16 +40,20 @@ namespace {
 	};
 
 	ResolvedClientFile resolveClientFile(const wxFileName& client_path, const std::string& configured_name, const std::string& fallback_name) {
+		const auto sanitizeFileName = [](const std::string& raw_name) {
+			return wxFileName(wxString::FromUTF8(raw_name)).GetFullName().ToStdString();
+		};
+
 		ResolvedClientFile resolved;
-		resolved.filename = configured_name;
-		resolved.path = wxFileName(client_path.GetFullPath(), wxString::FromUTF8(configured_name));
+		resolved.filename = sanitizeFileName(configured_name);
+		resolved.path = wxFileName(client_path.GetFullPath(), wxString::FromUTF8(resolved.filename));
 		if (resolved.path.FileExists()) {
 			resolved.exists = true;
 			return resolved;
 		}
 
-		resolved.filename = fallback_name;
-		resolved.path = wxFileName(client_path.GetFullPath(), wxString::FromUTF8(fallback_name));
+		resolved.filename = sanitizeFileName(fallback_name);
+		resolved.path = wxFileName(client_path.GetFullPath(), wxString::FromUTF8(resolved.filename));
 		resolved.exists = resolved.path.FileExists();
 		return resolved;
 	}
@@ -54,7 +61,7 @@ namespace {
 	std::optional<uint32_t> readSignature(const wxFileName& path, std::string_view label, std::vector<std::string>& warnings) {
 		FileReadHandle file(path.GetFullPath().ToStdString());
 		if (!file.isOk()) {
-			const auto message = std::string { label } + " signature detection failed: could not open " + path.GetFullPath().ToStdString();
+			const auto message = std::format("{} signature detection failed: could not open {}", label, path.GetFullPath().ToStdString());
 			spdlog::warn(message);
 			warnings.push_back(message);
 			return std::nullopt;
@@ -62,7 +69,7 @@ namespace {
 
 		uint32_t signature = 0;
 		if (!file.getU32(signature)) {
-			const auto message = std::string { label } + " signature detection failed: could not read header from " + path.GetFullPath().ToStdString();
+			const auto message = std::format("{} signature detection failed: could not read header from {}", label, path.GetFullPath().ToStdString());
 			spdlog::warn(message);
 			warnings.push_back(message);
 			return std::nullopt;
@@ -191,7 +198,7 @@ namespace {
 		}
 
 		std::vector<uint32_t> sample_offsets;
-		sample_offsets.reserve(24);
+		sample_offsets.reserve(kMaxSampleOffsets);
 
 		uint32_t previous_non_zero_offset = 0;
 		for (uint32_t sprite_id = 1; sprite_id <= sprite_count; ++sprite_id) {
@@ -202,14 +209,14 @@ namespace {
 			if (offset == 0) {
 				continue;
 			}
-			if (offset < header_size || offset >= file.size()) {
+			if (offset < header_size || offset > file.size() - 5) {
 				return std::nullopt;
 			}
 			if (previous_non_zero_offset != 0 && offset < previous_non_zero_offset) {
 				return std::nullopt;
 			}
 			previous_non_zero_offset = offset;
-			if (sample_offsets.size() < 24) {
+			if (sample_offsets.size() < kMaxSampleOffsets) {
 				sample_offsets.push_back(offset);
 			}
 		}
@@ -359,10 +366,14 @@ ClientAssetDetectionResult ClientAssetDetector::detect(const ClientVersion& clie
 			spdlog::warn("{}", message);
 			result.warnings.emplace_back(message);
 		} else {
-			if (sprite_candidates.size() == 1) {
+			const auto best_candidate = std::ranges::max_element(sprite_candidates, {}, [](const SpriteProbeCandidate& candidate) {
+				return candidate.opaque_matches + candidate.alpha_matches;
+			});
+
+			if (best_candidate != sprite_candidates.end() && (best_candidate->opaque_matches > 0 || best_candidate->alpha_matches > 0)) {
 				if (!result.extended.has_value()) {
-					result.extended = sprite_candidates.front().extended;
-				} else if (result.extended != sprite_candidates.front().extended) {
+					result.extended = best_candidate->extended;
+				} else if (result.extended != best_candidate->extended) {
 					const auto message = "DAT and SPR probing disagree on the extended flag.";
 					spdlog::warn("{}", message);
 					result.warnings.emplace_back(message);
@@ -370,24 +381,18 @@ ClientAssetDetectionResult ClientAssetDetector::detect(const ClientVersion& clie
 				}
 			}
 
-			int total_opaque_matches = 0;
-			int total_alpha_matches = 0;
-			for (const auto& candidate : sprite_candidates) {
-				total_opaque_matches += candidate.opaque_matches;
-				total_alpha_matches += candidate.alpha_matches;
-			}
-			if (total_alpha_matches > 0 || total_opaque_matches > 0) {
-				if (total_alpha_matches > total_opaque_matches) {
+			if (best_candidate != sprite_candidates.end()) {
+				if (best_candidate->alpha_matches > best_candidate->opaque_matches) {
 					result.transparency = true;
-				} else if (total_opaque_matches > total_alpha_matches) {
+				} else if (best_candidate->opaque_matches > best_candidate->alpha_matches) {
 					result.transparency = false;
 				}
 			}
 		}
 	}
 
-	if (result.frame_groups.has_value()) {
-		result.frame_durations = result.frame_groups.value() ? std::optional<bool>(true) : result.frame_durations;
+	if (result.frame_groups.value_or(false)) {
+		result.frame_durations = true;
 	}
 
 	return result;
