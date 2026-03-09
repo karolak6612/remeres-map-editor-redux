@@ -195,8 +195,8 @@ void SpritePreloader::update() {
 		}
 
 		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-		if (res.archive == current_archive && !graphics_unloaded && id < g_gui.gfx.image_space.size()) {
-			auto& img_ptr = g_gui.gfx.image_space[id];
+		if (res.archive == current_archive && !graphics_unloaded && id < g_gui.gfx.getSpriteDatabase().imageSpace().size()) {
+			auto& img_ptr = g_gui.gfx.getSpriteDatabase().imageSpace()[id];
 			if (img_ptr && img_ptr->isNormalImage()) {
 				// Use static_cast for performance, as we know the type from loaders
 				auto* img = static_cast<NormalImage*>(img_ptr.get());

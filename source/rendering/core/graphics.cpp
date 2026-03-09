@@ -50,6 +50,9 @@ GraphicManager::GraphicManager() :
 	animation_timer->Start();
 }
 
+// Note: getSprite, insertSprite, getCreatureSprite, getItemSpriteMaxID,
+// getCreatureSpriteMaxID are now inline in graphics.h, delegating to SpriteDatabase.
+
 GraphicManager::~GraphicManager() {
 	// Unique pointers handle deletion automatically
 	// atlas_manager_ clean up still good to be explicit if it has custom clear logic
@@ -75,14 +78,10 @@ void GraphicManager::clear() {
 	// CRITICAL: Ensure preloader is cleared before modifying image_space to avoid
 	// use-after-free or OOB access in SpritePreloader::update() on main thread.
 	SpritePreloader::get().clear();
-	sprite_space.clear();
-	image_space.clear();
-	// editor_sprite_space.clear(); // Editor sprites are global/internal and should persist across version changes
+	sprites.clear();
 	resident_images.clear();
 	resident_game_sprites.clear();
 
-	item_count = 0;
-	creature_count = 0;
 	collector.Clear();
 	spritefile = "";
 	sprite_archive_.reset();
@@ -103,7 +102,7 @@ void GraphicManager::clear() {
 }
 
 void GraphicManager::cleanSoftwareSprites() {
-	collector.CleanSoftwareSprites(sprite_space);
+	collector.CleanSoftwareSprites(sprites.spriteSpace());
 }
 
 bool GraphicManager::ensureAtlasManager() {
@@ -127,49 +126,8 @@ bool GraphicManager::ensureAtlasManager() {
 	return true;
 }
 
-Sprite* GraphicManager::getSprite(int id) {
-	if (id < 0) {
-		if (auto it = editor_sprite_space.find(id); it != editor_sprite_space.end()) {
-			return it->second.get();
-		}
-		return nullptr;
-	}
-	if (static_cast<size_t>(id) >= sprite_space.size()) {
-		return nullptr;
-	}
-	return sprite_space[id].get();
-}
-
-void GraphicManager::insertSprite(int id, std::unique_ptr<Sprite> sprite) {
-	if (id < 0) {
-		editor_sprite_space[id] = std::move(sprite);
-	} else {
-		if (static_cast<size_t>(id) >= sprite_space.size()) {
-			sprite_space.resize(id + 1);
-		}
-		sprite_space[id] = std::move(sprite);
-	}
-}
-
-GameSprite* GraphicManager::getCreatureSprite(int id) {
-	if (id < 0) {
-		return nullptr;
-	}
-
-	size_t target_id = static_cast<size_t>(id) + item_count;
-	if (target_id >= sprite_space.size()) {
-		return nullptr;
-	}
-	return static_cast<GameSprite*>(sprite_space[target_id].get());
-}
-
-uint16_t GraphicManager::getItemSpriteMaxID() const {
-	return item_count;
-}
-
-uint16_t GraphicManager::getCreatureSpriteMaxID() const {
-	return creature_count;
-}
+// getSprite, insertSprite, getCreatureSprite, getItemSpriteMaxID,
+// getCreatureSpriteMaxID moved to SpriteDatabase (see sprite_database.cpp)
 
 bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
