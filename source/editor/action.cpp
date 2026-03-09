@@ -178,6 +178,19 @@ void Action::commit(DirtyList* dirty_list) {
 						editor.map.addSpawn(newtile);
 					}
 
+					if (oldtile->npc_spawn) {
+						if (newtile->npc_spawn) {
+							if (*oldtile->npc_spawn != *newtile->npc_spawn) {
+								editor.map.removeNpcSpawn(oldtile);
+								editor.map.addNpcSpawn(newtile);
+							}
+						} else {
+							editor.map.removeNpcSpawn(oldtile);
+						}
+					} else if (newtile->npc_spawn) {
+						editor.map.addNpcSpawn(newtile);
+					}
+
 					// oldtile->update();
 					if (oldtile->isSelected()) {
 						editor.selection.removeInternal(oldtile);
@@ -196,6 +209,9 @@ void Action::commit(DirtyList* dirty_list) {
 
 					if (newtile->spawn) {
 						editor.map.addSpawn(newtile);
+					}
+					if (newtile->npc_spawn) {
+						editor.map.addNpcSpawn(newtile);
 					}
 				}
 				// Mark the tile as modified
@@ -327,6 +343,19 @@ void Action::undo(DirtyList* dirty_list) {
 					}
 				} else if (newtile->spawn) {
 					editor.map.removeSpawn(newtile);
+				}
+
+				if (oldtile->npc_spawn) {
+					if (newtile->npc_spawn) {
+						if (*oldtile->npc_spawn != *newtile->npc_spawn) {
+							editor.map.removeNpcSpawn(newtile);
+							editor.map.addNpcSpawn(oldtile);
+						}
+					} else {
+						editor.map.addNpcSpawn(oldtile);
+					}
+				} else if (newtile->npc_spawn) {
+					editor.map.removeNpcSpawn(newtile);
 				}
 				uptr = std::move(newtile_uptr);
 

@@ -115,6 +115,8 @@ enum MapVersionID {
 	MAP_OTBM_2 = 1,
 	MAP_OTBM_3 = 2,
 	MAP_OTBM_4 = 3,
+	MAP_OTBM_5 = 4,
+	MAP_OTBM_6 = 5,
 };
 
 // The composed version of a otbm file (otbm version, client version)
@@ -441,6 +443,9 @@ public:
 	wxFileName getSpritesPath() const {
 		return sprites_path;
 	}
+	wxFileName getPackagePath() const {
+		return package_path;
+	}
 
 private:
 	bool is_dirty = false;
@@ -487,6 +492,7 @@ private:
 	FileName client_path;
 	wxFileName metadata_path;
 	wxFileName sprites_path;
+	wxFileName package_path;
 	std::string description;
 	ItemDefinitionMode item_definition_mode = ItemDefinitionMode::DatOtb;
 

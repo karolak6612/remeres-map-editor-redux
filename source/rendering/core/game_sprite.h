@@ -86,9 +86,7 @@ public:
 
 	void unloadDC() override;
 
-	wxSize GetSize() const override {
-		return wxSize(width * 32, height * 32);
-	}
+	wxSize GetSize() const override;
 
 	void clean(time_t time, int longevity = -1);
 
@@ -135,6 +133,7 @@ public:
 		return id;
 	}
 	uint32_t getDebugImageId(size_t index = 0) const;
+	wxSize getCompositePixelSize() const;
 
 	std::unique_ptr<Animator> animator;
 

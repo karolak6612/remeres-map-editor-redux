@@ -37,10 +37,11 @@ void SpawnPropertyPanel::SetItem(Item* /*item*/, Tile* tile, Map* map) {
 	SetSpawn(nullptr, tile, map);
 }
 
-void SpawnPropertyPanel::SetSpawn(Spawn* spawn, Tile* tile, Map* map) {
+void SpawnPropertyPanel::SetSpawn(Spawn* spawn, Tile* tile, Map* map, const wxString& title) {
 	current_spawn = spawn;
 	current_tile = tile;
 	current_map = map;
+	radius_sizer->GetStaticBox()->SetLabel(title);
 
 	if (spawn) {
 		GetSizer()->Show(radius_sizer, true);

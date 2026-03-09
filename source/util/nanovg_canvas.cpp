@@ -226,8 +226,8 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
 
 int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64_t spriteId) {
 	// Calculate composite size
-	int w = gs->width * 32;
-	int h = gs->height * 32;
+	int w = gs->GetSize().x;
+	int h = gs->GetSize().y;
 	if (w <= 0 || h <= 0) {
 		return 0;
 	}
@@ -255,16 +255,17 @@ int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64
 				if (!data) {
 					continue;
 				}
+				const auto dimensions = image->getDimensions();
 
 				int part_x = (gs->width - sw - 1) * 32;
 				int part_y = (gs->height - sh - 1) * 32;
 
-				for (int sy = 0; sy < 32; ++sy) {
-					for (int sx = 0; sx < 32; ++sx) {
+				for (int sy = 0; sy < dimensions.height; ++sy) {
+					for (int sx = 0; sx < dimensions.width; ++sx) {
 						int dy = part_y + sy;
 						int dx = part_x + sx;
 						int di = (dy * w + dx) * 4;
-						int si = (sy * 32 + sx) * 4;
+						int si = (sy * dimensions.width + sx) * 4;
 
 						uint8_t sa = data[si + 3];
 						if (sa == 0) {

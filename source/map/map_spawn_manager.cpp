@@ -27,6 +27,31 @@ bool MapSpawnManager::addSpawn(Map& map, Tile* tile) {
 	return false;
 }
 
+bool MapSpawnManager::addNpcSpawn(Map& map, Tile* tile) {
+	if (!tile) {
+		return false;
+	}
+
+	Spawn* spawn = tile->npc_spawn.get();
+	if (spawn) {
+		int z = tile->getZ();
+		int start_x = tile->getX() - spawn->getSize();
+		int start_y = tile->getY() - spawn->getSize();
+		int end_x = tile->getX() + spawn->getSize();
+		int end_y = tile->getY() + spawn->getSize();
+
+		for (int y = start_y; y <= end_y; ++y) {
+			for (int x = start_x; x <= end_x; ++x) {
+				TileLocation* ctile_loc = map.createTileL(x, y, z);
+				ctile_loc->increaseNpcSpawnCount();
+			}
+		}
+		map.npc_spawns.addSpawn(tile);
+		return true;
+	}
+	return false;
+}
+
 void MapSpawnManager::removeSpawnInternal(Map& map, Tile* tile) {
 	if (!tile || !tile->spawn) {
 		return;
@@ -51,6 +76,30 @@ void MapSpawnManager::removeSpawnInternal(Map& map, Tile* tile) {
 	}
 }
 
+void MapSpawnManager::removeNpcSpawnInternal(Map& map, Tile* tile) {
+	if (!tile || !tile->npc_spawn) {
+		return;
+	}
+
+	Spawn* spawn = tile->npc_spawn.get();
+	ASSERT(spawn);
+
+	int z = tile->getZ();
+	int start_x = tile->getX() - spawn->getSize();
+	int start_y = tile->getY() - spawn->getSize();
+	int end_x = tile->getX() + spawn->getSize();
+	int end_y = tile->getY() + spawn->getSize();
+
+	for (int y = start_y; y <= end_y; ++y) {
+		for (int x = start_x; x <= end_x; ++x) {
+			TileLocation* ctile_loc = map.getTileL(x, y, z);
+			if (ctile_loc != nullptr && ctile_loc->getNpcSpawnCount() > 0) {
+				ctile_loc->decreaseNpcSpawnCount();
+			}
+		}
+	}
+}
+
 void MapSpawnManager::removeSpawn(Map& map, Tile* tile) {
 	if (!tile) {
 		return;
@@ -59,6 +108,17 @@ void MapSpawnManager::removeSpawn(Map& map, Tile* tile) {
 	if (tile->spawn) {
 		removeSpawnInternal(map, tile);
 		map.spawns.removeSpawn(tile);
+	}
+}
+
+void MapSpawnManager::removeNpcSpawn(Map& map, Tile* tile) {
+	if (!tile) {
+		return;
+	}
+
+	if (tile->npc_spawn) {
+		removeNpcSpawnInternal(map, tile);
+		map.npc_spawns.removeSpawn(tile);
 	}
 }
 
@@ -121,5 +181,66 @@ SpawnList MapSpawnManager::getSpawnList(Map& map, Tile* where) {
 			}
 		}
 	}
+	return list;
+}
+
+SpawnList MapSpawnManager::getNpcSpawnList(Map& map, Tile* where) {
+	SpawnList list;
+	if (!where) {
+		return list;
+	}
+
+	TileLocation* tile_loc = where->getLocation();
+	if (!tile_loc || tile_loc->getNpcSpawnCount() == 0) {
+		return list;
+	}
+
+	uint32_t found = 0;
+	if (where->npc_spawn) {
+		++found;
+		list.push_back(where->npc_spawn.get());
+	}
+
+	int z = where->getZ();
+	int start_x = where->getX() - 1;
+	int end_x = where->getX() + 1;
+	int start_y = where->getY() - 1;
+	int end_y = where->getY() + 1;
+
+	auto checkTile = [&](int x, int y) {
+		if (Tile* tile = map.getTile(x, y, z)) {
+			if (tile->npc_spawn) {
+				int dx = std::abs(where->getX() - tile->getX());
+				int dy = std::abs(where->getY() - tile->getY());
+				if (dx <= tile->npc_spawn->getSize() && dy <= tile->npc_spawn->getSize()) {
+					list.push_back(tile->npc_spawn.get());
+					++found;
+				}
+			}
+		}
+	};
+
+	const int max_radius = std::max(map.getWidth(), map.getHeight());
+	while (found < tile_loc->getNpcSpawnCount()) {
+		for (int x = start_x; x <= end_x; ++x) {
+			checkTile(x, start_y);
+			checkTile(x, end_y);
+		}
+
+		for (int y = start_y + 1; y < end_y; ++y) {
+			checkTile(start_x, y);
+			checkTile(end_x, y);
+		}
+
+		--start_x;
+		--start_y;
+		++end_x;
+		++end_y;
+
+		if ((end_x - start_x) / 2 > max_radius) {
+			break;
+		}
+	}
+
 	return list;
 }

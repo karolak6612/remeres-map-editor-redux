@@ -22,6 +22,14 @@ public:
 	static bool loadSpawns(Map& map, pugi::xml_document& doc);
 	static bool saveSpawns(const Map& map, const wxFileName& dir);
 	static bool saveSpawns(const Map& map, pugi::xml_document& doc);
+	static bool loadNpcSpawns(Map& map, const wxFileName& dir);
+	static bool loadNpcSpawns(Map& map, pugi::xml_document& doc);
+	static bool saveNpcSpawns(const Map& map, const wxFileName& dir);
+	static bool saveNpcSpawns(const Map& map, pugi::xml_document& doc);
+	static bool loadZones(Map& map, const wxFileName& dir);
+	static bool loadZones(Map& map, pugi::xml_document& doc);
+	static bool saveZones(const Map& map, const wxFileName& dir);
+	static bool saveZones(const Map& map, pugi::xml_document& doc);
 
 	// Houses
 	static bool loadHouses(Map& map, const wxFileName& dir);

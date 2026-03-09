@@ -212,6 +212,9 @@ bool MapXMLIO::saveSpawns(const Map& map, pugi::xml_document& doc) {
 				const Tile* creatureTile = map.getTile(spawnPosition + Position(x, y, 0));
 				if (creatureTile && creatureTile->creature && !creatureTile->creature->isSaved()) {
 					Creature* creature = creatureTile->creature.get();
+					if (map.getVersion().otbm >= MAP_OTBM_5 && creature->isNpc()) {
+						continue;
+					}
 					pugi::xml_node creatureNode = spawnNode.append_child(creature->isNpc() ? "npc" : "monster");
 
 					creatureNode.append_attribute("name") = creature->getName().c_str();
@@ -228,6 +231,238 @@ bool MapXMLIO::saveSpawns(const Map& map, pugi::xml_document& doc) {
 				}
 			}
 		}
+	}
+
+	return true;
+}
+
+bool MapXMLIO::loadNpcSpawns(Map& map, const wxFileName& dir) {
+	auto paths = normalizeMapFilePaths(dir, map.spawnnpcfile);
+	if (!FileName(wxstr(paths.first)).FileExists()) {
+		return false;
+	}
+
+	pugi::xml_document doc;
+	if (!doc.load_file(paths.second.c_str())) {
+		return false;
+	}
+	return loadNpcSpawns(map, doc);
+}
+
+bool MapXMLIO::loadNpcSpawns(Map& map, pugi::xml_document& doc) {
+	pugi::xml_node node = doc.child("npcs");
+	if (!node) {
+		return false;
+	}
+
+	for (auto spawnNode : node.children("npc")) {
+		Position spawnPosition {
+			spawnNode.attribute("centerx").as_int(),
+			spawnNode.attribute("centery").as_int(),
+			spawnNode.attribute("centerz").as_int()
+		};
+
+		if (spawnPosition.x == 0 || spawnPosition.y == 0) {
+			spdlog::warn("MapXMLIO: Bad NPC spawn position data, discarding...");
+			continue;
+		}
+
+		int32_t radius = spawnNode.attribute("radius").as_int();
+		if (radius < 1) {
+			spdlog::warn("MapXMLIO: Invalid NPC spawn radius, discarding...");
+			continue;
+		}
+
+		Tile* tile = map.getTile(spawnPosition);
+		if (tile && tile->npc_spawn) {
+			spdlog::warn("MapXMLIO: Duplicate NPC spawn at {}:{}:{}", spawnPosition.x, spawnPosition.y, spawnPosition.z);
+			continue;
+		}
+
+		if (!tile) {
+			tile = map.createTile(spawnPosition.x, spawnPosition.y, spawnPosition.z);
+		}
+
+		tile->npc_spawn = std::make_unique<Spawn>(radius);
+		map.addNpcSpawn(tile);
+
+		for (auto npcNode : spawnNode.children("npc")) {
+			const std::string name = npcNode.attribute("name").as_string();
+			if (name.empty()) {
+				continue;
+			}
+
+			int32_t spawntime = npcNode.attribute("spawntime").as_int();
+			if (spawntime == 0) {
+				spawntime = g_settings.getInteger(Config::DEFAULT_SPAWNTIME);
+			}
+
+			Direction direction = NORTH;
+			const int dir = npcNode.attribute("direction").as_int(static_cast<int>(NORTH));
+			if (dir >= DIRECTION_FIRST && dir <= DIRECTION_LAST) {
+				direction = static_cast<Direction>(dir);
+			}
+
+			Position npcPosition = spawnPosition;
+			const auto xAttr = npcNode.attribute("x");
+			const auto yAttr = npcNode.attribute("y");
+			if (!xAttr || !yAttr) {
+				continue;
+			}
+
+			npcPosition.x += xAttr.as_int();
+			npcPosition.y += yAttr.as_int();
+
+			radius = std::clamp<int32_t>(
+				std::max({ radius, std::abs(npcPosition.x - spawnPosition.x), std::abs(npcPosition.y - spawnPosition.y) }),
+				1,
+				g_settings.getInteger(Config::MAX_SPAWN_RADIUS)
+			);
+			tile->npc_spawn->setSize(radius);
+
+			Tile* npcTile = (npcPosition == spawnPosition) ? tile : map.getTile(npcPosition);
+			if (!npcTile) {
+				continue;
+			}
+
+			if (npcTile->creature) {
+				spdlog::warn("MapXMLIO: Duplicate NPC '{}' at {}:{}:{}", name, npcPosition.x, npcPosition.y, npcPosition.z);
+				continue;
+			}
+
+			CreatureType* type = g_creatures[name];
+			if (!type) {
+				type = g_creatures.addMissingCreatureType(name, true);
+			}
+
+			npcTile->creature = std::make_unique<Creature>(type);
+			npcTile->creature->setDirection(direction);
+			npcTile->creature->setSpawnTime(spawntime);
+		}
+	}
+
+	return true;
+}
+
+bool MapXMLIO::saveNpcSpawns(const Map& map, const wxFileName& dir) {
+	auto paths = normalizeMapFilePaths(dir, map.spawnnpcfile);
+
+	pugi::xml_document doc;
+	if (saveNpcSpawns(map, doc)) {
+		return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	}
+	return false;
+}
+
+bool MapXMLIO::saveNpcSpawns(const Map& map, pugi::xml_document& doc) {
+	pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
+	if (!decl) {
+		return false;
+	}
+	decl.append_attribute("version") = "1.0";
+
+	pugi::xml_node rootNode = doc.append_child("npcs");
+	std::vector<Creature*> saved_creatures;
+	for (const auto& spawnPos : map.npc_spawns) {
+		const Tile* tile = map.getTile(spawnPos);
+		if (!tile || !tile->npc_spawn) {
+			continue;
+		}
+
+		const Position spawnPosition = spawnPos;
+		pugi::xml_node spawnNode = rootNode.append_child("npc");
+		spawnNode.append_attribute("centerx") = spawnPosition.x;
+		spawnNode.append_attribute("centery") = spawnPosition.y;
+		spawnNode.append_attribute("centerz") = spawnPosition.z;
+		spawnNode.append_attribute("radius") = tile->npc_spawn->getSize();
+
+		const int32_t radius = tile->npc_spawn->getSize();
+		for (int32_t y = -radius; y <= radius; ++y) {
+			for (int32_t x = -radius; x <= radius; ++x) {
+				const Tile* npcTile = map.getTile(spawnPosition + Position(x, y, 0));
+				if (!npcTile || !npcTile->creature || !npcTile->creature->isNpc() || npcTile->creature->isSaved()) {
+					continue;
+				}
+
+				Creature* creature = npcTile->creature.get();
+				pugi::xml_node npcNode = spawnNode.append_child("npc");
+				npcNode.append_attribute("name") = creature->getName().c_str();
+				npcNode.append_attribute("x") = x;
+				npcNode.append_attribute("y") = y;
+				npcNode.append_attribute("z") = spawnPosition.z;
+				npcNode.append_attribute("spawntime") = creature->getSpawnTime();
+
+				if (creature->getDirection() != NORTH) {
+					npcNode.append_attribute("direction") = static_cast<int>(creature->getDirection());
+				}
+
+				creature->save();
+				saved_creatures.push_back(creature);
+			}
+		}
+	}
+
+	for (Creature* creature : saved_creatures) {
+		creature->reset();
+	}
+
+	return true;
+}
+
+bool MapXMLIO::loadZones(Map& map, const wxFileName& dir) {
+	auto paths = normalizeMapFilePaths(dir, map.zonefile);
+	if (!FileName(wxstr(paths.first)).FileExists()) {
+		return false;
+	}
+
+	pugi::xml_document doc;
+	if (!doc.load_file(paths.second.c_str())) {
+		return false;
+	}
+	return loadZones(map, doc);
+}
+
+bool MapXMLIO::loadZones(Map& map, pugi::xml_document& doc) {
+	pugi::xml_node node = doc.child("zones");
+	if (!node) {
+		return false;
+	}
+
+	for (auto zoneNode : node.children("zone")) {
+		const std::string name = zoneNode.attribute("name").as_string();
+		const auto id = static_cast<uint16_t>(zoneNode.attribute("zoneid").as_uint());
+		map.zones.addZone(name, id);
+	}
+
+	return true;
+}
+
+bool MapXMLIO::saveZones(const Map& map, const wxFileName& dir) {
+	auto paths = normalizeMapFilePaths(dir, map.zonefile);
+
+	pugi::xml_document doc;
+	if (saveZones(map, doc)) {
+		return doc.save_file(paths.second.c_str(), "\t", pugi::format_default, pugi::encoding_utf8);
+	}
+	return false;
+}
+
+bool MapXMLIO::saveZones(const Map& map, pugi::xml_document& doc) {
+	pugi::xml_node decl = doc.prepend_child(pugi::node_declaration);
+	if (!decl) {
+		return false;
+	}
+	decl.append_attribute("version") = "1.0";
+
+	pugi::xml_node rootNode = doc.append_child("zones");
+	for (const auto& [name, id] : map.zones) {
+		if (id == 0) {
+			continue;
+		}
+
+		pugi::xml_node zoneNode = rootNode.append_child("zone");
+		zoneNode.append_attribute("name") = name.c_str();
+		zoneNode.append_attribute("zoneid") = id;
 	}
 
 	return true;

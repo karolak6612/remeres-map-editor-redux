@@ -15,6 +15,7 @@ public:
 
 	virtual std::unique_ptr<uint8_t[]> getRGBData() override;
 	virtual std::unique_ptr<uint8_t[]> getRGBAData() override;
+	ImageDimensions getDimensions() const override;
 
 	const AtlasRegion* getAtlasRegion();
 	const AtlasRegion* atlas_region;

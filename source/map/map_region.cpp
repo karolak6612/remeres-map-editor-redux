@@ -32,6 +32,7 @@
 TileLocation::TileLocation() :
 	position(0, 0, 0),
 	spawn_count(0),
+	npc_spawn_count(0),
 	waypoint_count(0),
 	town_count(0) {
 	////
@@ -45,7 +46,7 @@ int TileLocation::size() const {
 	if (tile) {
 		return tile->size();
 	}
-	return spawn_count + waypoint_count + (house_exits ? 1 : 0);
+	return spawn_count + npc_spawn_count + waypoint_count + (house_exits ? 1 : 0);
 }
 
 bool TileLocation::empty() const {

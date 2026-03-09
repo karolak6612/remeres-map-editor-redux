@@ -83,7 +83,10 @@ namespace {
 				fragment.flags |= flagMask(ItemFlag::Stackable);
 				return true;
 			case DatFlagForceUse:
+				fragment.flags |= flagMask(ItemFlag::ForceUse);
+				return true;
 			case DatFlagMultiUse:
+				fragment.flags |= flagMask(ItemFlag::MultiUse);
 				return true;
 			case DatFlagFluidContainer:
 				fragment.group = ITEM_GROUP_FLUID;
@@ -119,16 +122,32 @@ namespace {
 				fragment.flags |= flagMask(ItemFlag::Rotatable);
 				return true;
 			case DatFlagDontHide:
+				fragment.flags |= flagMask(ItemFlag::DontHide);
+				return true;
 			case DatFlagTranslucent:
+				fragment.flags |= flagMask(ItemFlag::Translucent);
+				return true;
 			case DatFlagLyingCorpse:
+				fragment.flags |= flagMask(ItemFlag::Corpse);
+				return true;
 			case DatFlagAnimateAlways:
+				fragment.flags |= flagMask(ItemFlag::AnimateAlways);
+				return true;
 			case DatFlagFullGround:
 			case DatFlagLook:
-			case DatFlagWrappable:
-			case DatFlagUnwrappable:
-			case DatFlagTopEffect:
-			case DatFlagNoMoveAnimation:
 			case DatFlagDefault:
+				return true;
+			case DatFlagWrappable:
+				fragment.flags |= flagMask(ItemFlag::Wrappable);
+				return true;
+			case DatFlagUnwrappable:
+				fragment.flags |= flagMask(ItemFlag::Unwrappable);
+				return true;
+			case DatFlagTopEffect:
+				fragment.flags |= flagMask(ItemFlag::TopEffect);
+				return true;
+			case DatFlagNoMoveAnimation:
+				fragment.flags |= flagMask(ItemFlag::NoMoveAnimation);
 				return true;
 			case DatFlagFloorChange:
 				fragment.flags |= flagMask(ItemFlag::FloorChange);
@@ -145,7 +164,9 @@ namespace {
 				return file.skip(2);
 			case DatFlagCloth:
 			case DatFlagLensHelp:
+				return file.skip(2);
 			case DatFlagUsable:
+				fragment.flags |= flagMask(ItemFlag::Usable);
 				return file.skip(2);
 			case DatFlagLight: {
 				uint16_t intensity = 0;
@@ -490,6 +511,8 @@ bool DatItemParser::parseCatalog(const ItemDefinitionLoadInput& input, DatCatalo
 		error = "No DAT entries were parsed.";
 		return false;
 	}
+
+	catalog.sprite_dimensions.assign(static_cast<size_t>(catalog.max_sprite_id) + 1, DatSpriteDimensions {});
 
 	return true;
 }

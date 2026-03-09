@@ -8,6 +8,9 @@
 #include "app/main.h"
 #include "brushes/brush_enums.h"
 
+#include <string>
+#include <string_view>
+
 class Brush;
 class HouseBrush;
 class HouseExitBrush;
@@ -15,6 +18,8 @@ class WaypointBrush;
 class OptionalBorderBrush;
 class EraserBrush;
 class SpawnBrush;
+class NpcSpawnBrush;
+class ZoneBrush;
 class DoorBrush;
 class FlagBrush;
 
@@ -50,10 +55,22 @@ public:
 	[[nodiscard]] int GetSpawnTime() const {
 		return creature_spawntime;
 	}
+	[[nodiscard]] int GetNpcSpawnTime() const {
+		return npc_spawntime;
+	}
+	[[nodiscard]] std::string_view GetSelectedZone() const {
+		return selected_zone_name;
+	}
 
 	// Additional brush parameters
 	void SetSpawnTime(int time) {
 		creature_spawntime = time;
+	}
+	void SetNpcSpawnTime(int time) {
+		npc_spawntime = time;
+	}
+	void SetSelectedZone(std::string zone_name) {
+		selected_zone_name = std::move(zone_name);
 	}
 
 	void SetLightIntensity(float v) {
@@ -102,6 +119,8 @@ public:
 	OptionalBorderBrush* optional_brush;
 	EraserBrush* eraser;
 	SpawnBrush* spawn_brush;
+	NpcSpawnBrush* npc_spawn_brush;
+	ZoneBrush* zone_brush;
 	DoorBrush* normal_door_brush;
 	DoorBrush* locked_door_brush;
 	DoorBrush* magic_door_brush;
@@ -122,6 +141,8 @@ private:
 	int brush_size;
 	int brush_variation;
 	int creature_spawntime;
+	int npc_spawntime;
+	std::string selected_zone_name;
 
 	void UpdateDoodadPreview();
 

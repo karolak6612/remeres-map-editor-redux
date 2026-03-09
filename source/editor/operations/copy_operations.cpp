@@ -54,6 +54,10 @@ void CopyOperations::copy(Editor& editor, CopyBuffer& buffer, int floor) {
 		if (tile->spawn && tile->spawn->isSelected()) {
 			copied_tile->spawn = tile->spawn->deepCopy();
 		}
+		if (tile->npc_spawn && tile->npc_spawn->isSelected()) {
+			copied_tile->npc_spawn = tile->npc_spawn->deepCopy();
+		}
+		copied_tile->zone_ids = tile->zone_ids;
 
 		if (copied_tile->getX() < buffer.copyPos.x) {
 			buffer.copyPos.x = copied_tile->getX();
@@ -115,6 +119,10 @@ void CopyOperations::cut(Editor& editor, CopyBuffer& buffer, int floor) {
 		if (newtile->spawn && newtile->spawn->isSelected()) {
 			copied_tile->spawn = std::move(newtile->spawn);
 		}
+		if (newtile->npc_spawn && newtile->npc_spawn->isSelected()) {
+			copied_tile->npc_spawn = std::move(newtile->npc_spawn);
+		}
+		copied_tile->zone_ids = newtile->zone_ids;
 
 		if (copied_tile->getX() < buffer.copyPos.x) {
 			buffer.copyPos.x = copied_tile->getX();

@@ -31,6 +31,71 @@
 #include <format>
 #include <spdlog/spdlog.h>
 
+bool ZoneRegistry::addZone(const std::string& name, uint16_t id) {
+	if (name.empty() || id == 0) {
+		return false;
+	}
+
+	if (const auto existing = findId(name); existing && *existing != id) {
+		return false;
+	}
+
+	if (const auto existing_name = findName(id); !existing_name.empty() && existing_name != name) {
+		return false;
+	}
+
+	name_to_id[name] = id;
+	id_to_name[id] = name;
+	return true;
+}
+
+bool ZoneRegistry::removeZone(uint16_t id) {
+	const auto it = id_to_name.find(id);
+	if (it == id_to_name.end()) {
+		return false;
+	}
+	name_to_id.erase(it->second);
+	id_to_name.erase(it);
+	return true;
+}
+
+void ZoneRegistry::clear() {
+	name_to_id.clear();
+	id_to_name.clear();
+}
+
+std::optional<uint16_t> ZoneRegistry::findId(const std::string& name) const {
+	if (const auto it = name_to_id.find(name); it != name_to_id.end()) {
+		return it->second;
+	}
+	return std::nullopt;
+}
+
+std::string ZoneRegistry::findName(uint16_t id) const {
+	if (const auto it = id_to_name.find(id); it != id_to_name.end()) {
+		return it->second;
+	}
+	return {};
+}
+
+uint16_t ZoneRegistry::ensureZone(const std::string& name) {
+	if (const auto existing = findId(name)) {
+		return *existing;
+	}
+
+	const uint16_t id = nextFreeId();
+	addZone(name, id);
+	return id;
+}
+
+uint16_t ZoneRegistry::nextFreeId() const {
+	uint16_t candidate = 1;
+	while (id_to_name.contains(candidate)) {
+		++candidate;
+	}
+	return candidate;
+}
+
 Map::Map() :
 	BaseMap(),
 	width(512),
@@ -56,7 +121,9 @@ void Map::initializeEmpty() {
 	std::string sname = std::format("Untitled-{}", ++unnamed_counter);
 	name = sname + ".otbm";
 	spawnfile = sname + "-spawn.xml";
+	spawnnpcfile = sname + "-npc.xml";
 	housefile = sname + "-house.xml";
+	zonefile = sname + "-zones.xml";
 	waypointfile = sname + "-waypoint.xml";
 	description = "No map description available.";
 	unnamed = true;
@@ -160,6 +227,16 @@ void Map::setSpawnFilename(const std::string& new_spawnfile) {
 	unnamed = false;
 }
 
+void Map::setSpawnNpcFilename(const std::string& new_spawnnpcfile) {
+	spawnnpcfile = new_spawnnpcfile;
+	unnamed = false;
+}
+
+void Map::setZoneFilename(const std::string& new_zonefile) {
+	zonefile = new_zonefile;
+	unnamed = false;
+}
+
 void Map::setWaypointFilename(const std::string& new_waypointfile) {
 	waypointfile = new_waypointfile;
 	unnamed = false;
@@ -169,10 +246,22 @@ bool Map::addSpawn(Tile* tile) {
 	return MapSpawnManager::addSpawn(*this, tile);
 }
 
+bool Map::addNpcSpawn(Tile* tile) {
+	return MapSpawnManager::addNpcSpawn(*this, tile);
+}
+
 void Map::removeSpawn(Tile* tile) {
 	MapSpawnManager::removeSpawn(*this, tile);
 }
 
+void Map::removeNpcSpawn(Tile* tile) {
+	MapSpawnManager::removeNpcSpawn(*this, tile);
+}
+
 SpawnList Map::getSpawnList(Tile* where) {
 	return MapSpawnManager::getSpawnList(*this, where);
+}
+
+SpawnList Map::getNpcSpawnList(Tile* where) {
+	return MapSpawnManager::getNpcSpawnList(*this, where);
 }

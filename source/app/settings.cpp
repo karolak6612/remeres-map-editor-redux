@@ -320,6 +320,8 @@ void Settings::IO(IOMode mode) {
 	String(RECENT_EDITED_MAP_POSITION, "");
 	Int(FIND_ITEM_MODE, 0);
 	Int(JUMP_TO_ITEM_MODE, 0);
+	Int(DEFAULT_NPC_SPAWNTIME, 60);
+	Int(CURRENT_NPC_SPAWN_RADIUS, 5);
 
 	section("Graphics");
 	Bool(TEXTURE_MANAGEMENT, true);

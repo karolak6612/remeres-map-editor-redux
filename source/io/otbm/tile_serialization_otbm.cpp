@@ -110,6 +110,20 @@ void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode*
 						tile->addItem(std::move(item));
 					}
 				}
+			} else if (item_type == OTBM_TILE_ZONE) {
+				uint16_t zone_count = 0;
+				if (!itemNode->getU16(zone_count)) {
+					spdlog::warn("Failed to read tile zone count at {},{},{}", pos.x, pos.y, pos.z);
+					continue;
+				}
+				for (uint16_t i = 0; i < zone_count; ++i) {
+					uint16_t zone_id = 0;
+					if (!itemNode->getU16(zone_id)) {
+						spdlog::warn("Failed to read tile zone id at {},{},{}", pos.x, pos.y, pos.z);
+						break;
+					}
+					tile->addZone(zone_id);
+				}
 			} else {
 				spdlog::warn("Unknown tile child node type {} at {},{},{}", static_cast<int>(item_type), pos.x, pos.y, pos.z);
 			}
@@ -225,6 +239,15 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 		if (!item->isMetaItem()) {
 			ItemSerializationOTBM::serializeItemNode(iomap, f, *item);
 		}
+	}
+
+	if (iomap.version.otbm >= MAP_OTBM_5 && !save_tile->zone_ids.empty()) {
+		f.addNode(OTBM_TILE_ZONE);
+		f.addU16(static_cast<uint16_t>(save_tile->zone_ids.size()));
+		for (uint16_t zone_id : save_tile->zone_ids) {
+			f.addU16(zone_id);
+		}
+		f.endNode();
 	}
 
 	f.endNode();

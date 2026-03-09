@@ -87,6 +87,8 @@ void MapPopupMenu::Update() {
 			Item* topSelectedItem = (selected_items.size() == 1 ? selected_items.back() : nullptr);
 			Creature* topCreature = tile->creature.get();
 			Spawn* topSpawn = tile->spawn.get();
+			Spawn* topNpcSpawn = tile->npc_spawn.get();
+			const bool hasZones = !tile->getZones().empty();
 
 			for (const auto& item : tile->items) {
 				if (item->isWall()) {
@@ -159,6 +161,12 @@ void MapPopupMenu::Update() {
 				if (topSpawn) {
 					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
 				}
+				if (topNpcSpawn) {
+					Append(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER, wxSize(16, 16)));
+				}
+				if (hasZones) {
+					Append(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MARKER, wxSize(16, 16)));
+				}
 
 				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
 
@@ -209,6 +217,12 @@ void MapPopupMenu::Update() {
 				if (topSpawn) {
 					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
 				}
+				if (topNpcSpawn) {
+					Append(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER, wxSize(16, 16)));
+				}
+				if (hasZones) {
+					Append(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MARKER, wxSize(16, 16)));
+				}
 
 				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
 				if (hasWall) {
@@ -226,7 +240,7 @@ void MapPopupMenu::Update() {
 					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
 				}
 
-				if (tile->hasGround() || topCreature || topSpawn) {
+				if (tile->hasGround() || topCreature || topSpawn || topNpcSpawn || hasZones) {
 					AppendSeparator();
 					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
 				}

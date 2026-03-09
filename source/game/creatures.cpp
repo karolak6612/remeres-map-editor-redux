@@ -22,6 +22,7 @@
 #include "brushes/brush.h"
 #include "game/creatures.h"
 #include "brushes/creature/creature_brush.h"
+#include "io/xml_file_loader.h"
 #include <algorithm>
 
 CreatureDatabase g_creatures;
@@ -372,8 +373,7 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 				continue;
 			}
 
-			FileName monsterFile(filename);
-			monsterFile.SetFullName(wxString(attribute.as_string(), wxConvUTF8));
+			FileName monsterFile = XmlFileLoader::resolveRelative(filename, wxString::FromUTF8(attribute.as_string()));
 
 			pugi::xml_document monsterDoc;
 			pugi::xml_parse_result monsterResult = monsterDoc.load_file(monsterFile.GetFullPath().mb_str());
@@ -390,6 +390,37 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 				} else {
 					creature_map[as_lower_str(creatureType->name)] = creatureType;
 
+					ensureCreatureBrush(creatureType);
+				}
+			}
+		}
+	} else if ((node = doc.child("npcs"))) {
+		for (pugi::xml_node npcNode = node.first_child(); npcNode; npcNode = npcNode.next_sibling()) {
+			if (as_lower_str(npcNode.name()) != "npc") {
+				continue;
+			}
+
+			pugi::xml_attribute attribute;
+			if (!(attribute = npcNode.attribute("file"))) {
+				continue;
+			}
+
+			FileName npcFile = XmlFileLoader::resolveRelative(filename, wxString::FromUTF8(attribute.as_string()));
+
+			pugi::xml_document npcDoc;
+			pugi::xml_parse_result npcResult = npcDoc.load_file(npcFile.GetFullPath().mb_str());
+			if (!npcResult) {
+				continue;
+			}
+
+			CreatureType* creatureType = CreatureType::loadFromOTXML(npcFile, npcDoc, warnings);
+			if (creatureType) {
+				CreatureType* current = (*this)[creatureType->name];
+				if (current) {
+					CreatureType::preserve_assign_creature_fields(current, *creatureType);
+					delete creatureType;
+				} else {
+					creature_map[as_lower_str(creatureType->name)] = creatureType;
 					ensureCreatureBrush(creatureType);
 				}
 			}

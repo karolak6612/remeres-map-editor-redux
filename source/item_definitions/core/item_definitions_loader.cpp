@@ -6,6 +6,7 @@
 #include "item_definitions/core/item_definition_store_builder.h"
 #include "item_definitions/formats/dat/dat_item_parser.h"
 #include "item_definitions/formats/otb/otb_item_parser.h"
+#include "item_definitions/formats/protobuf/protobuf_item_parser.h"
 #include "item_definitions/formats/xml/xml_item_parser.h"
 
 #include <memory>
@@ -39,6 +40,7 @@ bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemD
 
 	DatItemParser dat_parser;
 	OtbItemParser otb_parser;
+	ProtobufItemParser protobuf_parser;
 	XmlItemParser xml_parser;
 
 	for (size_t i = 0; i < recipe.source_count; ++i) {
@@ -58,8 +60,12 @@ bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemD
 					return false;
 				}
 				break;
-			case ItemDefinitionSourceKind::Srv:
 			case ItemDefinitionSourceKind::Protobuf:
+				if (!protobuf_parser.parse(input, fragments, error, warnings)) {
+					return false;
+				}
+				break;
+			case ItemDefinitionSourceKind::Srv:
 				error = "Selected item definition mode is not implemented yet.";
 				return false;
 		}

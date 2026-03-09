@@ -23,6 +23,8 @@
 #include "palette/panels/brush_panel.h"
 #include "ui/controls/sortable_list_box.h"
 
+class wxComboBox;
+
 class CreaturePalettePanel : public PalettePanel {
 public:
 	CreaturePalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
@@ -59,21 +61,34 @@ public:
 	// Event handling
 	void OnChangeSpawnTime(wxSpinEvent& event);
 	void OnChangeSpawnSize(wxSpinEvent& event);
+	void OnChangeNpcSpawnTime(wxSpinEvent& event);
+	void OnChangeNpcSpawnSize(wxSpinEvent& event);
+	void OnZoneNameChanged(wxCommandEvent& event);
 
 	void OnSwitchingPage(wxChoicebookEvent& event);
 	void OnPageChanged(wxChoicebookEvent& event);
 	void OnClickCreatureBrushButton(wxCommandEvent& event);
 	void OnClickSpawnBrushButton(wxCommandEvent& event);
+	void OnClickNpcSpawnBrushButton(wxCommandEvent& event);
+	void OnClickZoneBrushButton(wxCommandEvent& event);
 
 protected:
 	void SelectCreatureBrush();
 	void SelectSpawnBrush();
+	void SelectNpcSpawnBrush();
+	void SelectZoneBrush();
+	void RefreshZoneChoices();
 
 	wxChoicebook* choicebook;
 	wxToggleButton* creature_brush_button;
 	wxToggleButton* spawn_brush_button;
+	wxToggleButton* npc_spawn_brush_button;
+	wxToggleButton* zone_brush_button;
 	wxSpinCtrl* creature_spawntime_spin;
 	wxSpinCtrl* spawn_size_spin;
+	wxSpinCtrl* npc_spawntime_spin;
+	wxSpinCtrl* npc_spawn_size_spin;
+	wxComboBox* zone_name_combo;
 
 	bool handling_event;
 };

@@ -30,6 +30,8 @@ else()
 endif()
 
 find_package(OpenGL REQUIRED)
+find_package(Protobuf REQUIRED)
+find_package(LibLZMA REQUIRED)
 
 
 if(WIN32)
@@ -67,8 +69,12 @@ if(NOT nanovg_FOUND)
 endif()
 
 include(source/CMakeLists.txt)
+
+set(RME_APPEARANCES_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/protobuf/appearances.proto")
+protobuf_generate_cpp(RME_PROTO_SRCS RME_PROTO_HDRS "${RME_APPEARANCES_PROTO}")
+
 # Removed WIN32 to enable Console subsystem for persistent debugging logs
-add_executable(rme ${rme_H} ${rme_SRC})
+add_executable(rme ${rme_H} ${rme_SRC} ${RME_PROTO_SRCS} ${RME_PROTO_HDRS})
 
 set_target_properties(rme PROPERTIES CXX_STANDARD 20)
 set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
@@ -98,6 +104,9 @@ target_include_directories(rme PRIVATE
 	${OPENGL_INCLUDE_DIR}
 
 	${ZLIB_INCLUDE_DIR}
+	${Protobuf_INCLUDE_DIRS}
+	${LIBLZMA_INCLUDE_DIRS}
+	${CMAKE_CURRENT_BINARY_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
@@ -113,6 +122,18 @@ if(TARGET ZLIB::ZLIB)
 	target_link_libraries(rme PRIVATE ZLIB::ZLIB)
 else()
 	target_link_libraries(rme PRIVATE ${ZLIB_LIBRARIES})
+endif()
+
+if(TARGET protobuf::libprotobuf)
+	target_link_libraries(rme PRIVATE protobuf::libprotobuf)
+else()
+	target_link_libraries(rme PRIVATE ${Protobuf_LIBRARIES})
+endif()
+
+if(TARGET LibLZMA::LibLZMA)
+	target_link_libraries(rme PRIVATE LibLZMA::LibLZMA)
+else()
+	target_link_libraries(rme PRIVATE ${LIBLZMA_LIBRARIES})
 endif()
 
 target_link_libraries(rme PRIVATE ${OPENGL_LIBRARIES})

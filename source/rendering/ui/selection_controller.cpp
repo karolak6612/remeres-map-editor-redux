@@ -83,6 +83,15 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 						}
 						editor.selection.finish(); // Finish selection session
 						editor.selection.updateSelectionCount();
+					} else if (tile->npc_spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+						editor.selection.start(); // Start selection session
+						if (tile->npc_spawn->isSelected()) {
+							editor.selection.remove(tile, tile->npc_spawn.get());
+						} else {
+							editor.selection.add(tile, tile->npc_spawn.get());
+						}
+						editor.selection.finish(); // Finish selection session
+						editor.selection.updateSelectionCount();
 					} else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 						editor.selection.start(); // Start selection session
 						if (tile->creature->isSelected()) {
@@ -122,6 +131,10 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 					editor.selection.commit();
 					if (tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
 						editor.selection.add(tile, tile->spawn.get());
+						dragging = true;
+						drag_start_pos = mouse_map_pos;
+					} else if (tile->npc_spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+						editor.selection.add(tile, tile->npc_spawn.get());
 						dragging = true;
 						drag_start_pos = mouse_map_pos;
 					} else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
@@ -210,6 +223,13 @@ void SelectionController::HandleRelease(const Position& mouse_map_pos, bool shif
 							editor.selection.finish(); // Finish the selection session
 							editor.selection.updateSelectionCount();
 						}
+					} else if (tile->npc_spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+						if (!tile->npc_spawn->isSelected()) {
+							editor.selection.start(); // Start a selection session
+							editor.selection.add(tile, tile->npc_spawn.get());
+							editor.selection.finish(); // Finish the selection session
+							editor.selection.updateSelectionCount();
+						}
 					} else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 						if (!tile->creature->isSelected()) {
 							editor.selection.start(); // Start a selection session
@@ -267,6 +287,8 @@ void SelectionController::HandlePropertiesClick(const Position& mouse_map_pos, b
 		editor.selection.commit();
 		if (tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
 			editor.selection.add(tile, tile->spawn.get());
+		} else if (tile->npc_spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+			editor.selection.add(tile, tile->npc_spawn.get());
 		} else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
 			editor.selection.add(tile, tile->creature.get());
 		} else {

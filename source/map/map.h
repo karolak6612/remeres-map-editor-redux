@@ -27,8 +27,38 @@
 #include "game/waypoints.h"
 #include "io/templates.h"
 
+#include <map>
+#include <optional>
+
 class MapConverter;
 class MapSpawnManager;
+
+class ZoneRegistry {
+public:
+	bool addZone(const std::string& name, uint16_t id);
+	bool removeZone(uint16_t id);
+	void clear();
+
+	[[nodiscard]] std::optional<uint16_t> findId(const std::string& name) const;
+	[[nodiscard]] std::string findName(uint16_t id) const;
+	[[nodiscard]] uint16_t ensureZone(const std::string& name);
+	[[nodiscard]] bool empty() const {
+		return name_to_id.empty();
+	}
+
+	auto begin() const {
+		return name_to_id.begin();
+	}
+	auto end() const {
+		return name_to_id.end();
+	}
+
+private:
+	[[nodiscard]] uint16_t nextFreeId() const;
+
+	std::map<std::string, uint16_t, std::less<>> name_to_id;
+	std::map<uint16_t, std::string> id_to_name;
+};
 
 class Map : public BaseMap {
 public:
@@ -76,6 +106,11 @@ public:
 	void removeSpawn(const Position& position) {
 		removeSpawn(getTile(position));
 	}
+	bool addNpcSpawn(Tile* spawn);
+	void removeNpcSpawn(Tile* tile);
+	void removeNpcSpawn(const Position& position) {
+		removeNpcSpawn(getTile(position));
+	}
 
 	// Returns all possible spawns on the target tile
 	SpawnList getSpawnList(Tile* t);
@@ -84,6 +119,13 @@ public:
 	}
 	SpawnList getSpawnList(int32_t x, int32_t y, int32_t z) {
 		return getSpawnList(getTile(x, y, z));
+	}
+	SpawnList getNpcSpawnList(Tile* t);
+	SpawnList getNpcSpawnList(const Position& position) {
+		return getNpcSpawnList(getTile(position));
+	}
+	SpawnList getNpcSpawnList(int32_t x, int32_t y, int32_t z) {
+		return getNpcSpawnList(getTile(x, y, z));
 	}
 
 	// Returns true if the map has been saved
@@ -115,6 +157,12 @@ public:
 	std::string getSpawnFilename() const {
 		return spawnfile;
 	}
+	std::string getSpawnNpcFilename() const {
+		return spawnnpcfile;
+	}
+	std::string getZoneFilename() const {
+		return zonefile;
+	}
 
 	// Set some map data
 	void setWidth(int new_width);
@@ -122,6 +170,8 @@ public:
 	void setMapDescription(const std::string& new_description);
 	void setHouseFilename(const std::string& new_housefile);
 	void setSpawnFilename(const std::string& new_spawnfile);
+	void setSpawnNpcFilename(const std::string& new_spawnnpcfile);
+	void setZoneFilename(const std::string& new_zonefile);
 	void setWaypointFilename(const std::string& new_waypointfile);
 
 	std::string getWaypointFilename() const {
@@ -152,13 +202,17 @@ protected:
 	uint16_t width, height;
 
 	std::string spawnfile; // The maps spawnfile
+	std::string spawnnpcfile; // The maps npc spawn file
 	std::string housefile; // The housefile
+	std::string zonefile; // The zones file
 	std::string waypointfile; // The waypoints file (stores extended waypoint information such as id, preferred icon and matching town)
 
 public:
 	Towns towns;
 	Houses houses;
 	Spawns spawns;
+	Spawns npc_spawns;
+	ZoneRegistry zones;
 
 protected:
 	bool has_changed; // If the map has changed

@@ -18,12 +18,25 @@
 #include "app/main.h"
 
 #include "brushes/creature/creature_brush.h"
+#include "brushes/managers/brush_manager.h"
 #include "ui/gui.h"
 #include "app/settings.h"
+#include "map/map.h"
 #include "map/tile.h"
 #include "game/creature.h"
 #include "map/basemap.h"
 #include "game/spawn.h"
+
+namespace {
+bool usesNpcSpawnSystem(const BaseMap* map, const CreatureType* creature_type) {
+	if (!creature_type || !creature_type->isNpc) {
+		return false;
+	}
+
+	const auto* concrete_map = dynamic_cast<const Map*>(map);
+	return concrete_map && concrete_map->getVersion().otbm >= MAP_OTBM_5;
+}
+}
 
 //=============================================================================
 // Creature brush
@@ -76,7 +89,11 @@ std::string CreatureBrush::getName() const {
 bool CreatureBrush::canDraw(BaseMap* map, const Position& position) const {
 	Tile* tile = map->getTile(position);
 	if (creature_type && tile && !tile->isBlocking()) {
-		if (tile->getLocation()->getSpawnCount() != 0 || g_settings.getInteger(Config::AUTO_CREATE_SPAWN)) {
+		const bool use_npc_spawn = usesNpcSpawnSystem(map, creature_type);
+		const bool has_spawn_area = use_npc_spawn
+			? (tile->npc_spawn != nullptr || tile->getLocation()->getNpcSpawnCount() != 0)
+			: (tile->spawn != nullptr || tile->getLocation()->getSpawnCount() != 0);
+		if (has_spawn_area || g_settings.getInteger(Config::AUTO_CREATE_SPAWN)) {
 			if (tile->isPZ()) {
 				if (creature_type->isNpc) {
 					return true;
@@ -103,12 +120,15 @@ void CreatureBrush::draw_creature(BaseMap* map, Tile* tile) {
 	if (canDraw(map, tile->getPosition())) {
 		undraw(map, tile);
 		if (creature_type) {
-			if (tile->spawn == nullptr && tile->getLocation()->getSpawnCount() == 0) {
-				// manually place spawn on location
+			if (const bool use_npc_spawn = usesNpcSpawnSystem(map, creature_type); use_npc_spawn) {
+				if (tile->npc_spawn == nullptr && tile->getLocation()->getNpcSpawnCount() == 0) {
+					tile->npc_spawn = std::make_unique<Spawn>(1);
+				}
+			} else if (tile->spawn == nullptr && tile->getLocation()->getSpawnCount() == 0) {
 				tile->spawn = std::make_unique<Spawn>(1);
 			}
 			tile->creature = std::make_unique<Creature>(creature_type);
-			tile->creature->setSpawnTime(g_gui.GetSpawnTime());
+			tile->creature->setSpawnTime(usesNpcSpawnSystem(map, creature_type) ? g_brush_manager.GetNpcSpawnTime() : g_gui.GetSpawnTime());
 		}
 	}
 }

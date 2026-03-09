@@ -18,8 +18,10 @@
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/table/table_brush.h"
 #include "brushes/creature/creature_brush.h"
+#include "brushes/spawn/npc_spawn_brush.h"
 #include "brushes/spawn/spawn_brush.h"
 #include "brushes/door/door_brush.h"
+#include "brushes/zone/zone_brush.h"
 #include "map/map.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
@@ -349,7 +351,7 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		batch->addAndCommitAction(std::move(action));
 		editor.addBatch(std::move(batch), 2);
-	} else if (brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
+	} else if (brush->is<SpawnBrush>() || brush->is<NpcSpawnBrush>() || brush->is<CreatureBrush>()) {
 		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
 		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
 
@@ -360,12 +362,32 @@ void DrawOperations::draw(Editor& editor, Position offset, bool alt, bool dodraw
 		} else {
 			new_tile = editor.map.allocator(editor.map.createTileL(offset));
 		}
-		int param;
+		int param = 0;
 		if (!brush->is<CreatureBrush>()) {
 			param = g_gui.GetBrushSize();
 		}
 		if (dodraw) {
 			brush->draw(&editor.map, new_tile.get(), &param);
+		} else {
+			brush->undraw(&editor.map, new_tile.get());
+		}
+		action->addChange(std::make_unique<Change>(std::move(new_tile)));
+		batch->addAndCommitAction(std::move(action));
+		editor.addBatch(std::move(batch), 2);
+	} else if (brush->is<ZoneBrush>()) {
+		std::unique_ptr<BatchAction> batch = editor.actionQueue->createBatch(ACTION_DRAW);
+		std::unique_ptr<Action> action = editor.actionQueue->createAction(batch.get());
+
+		Tile* tile = editor.map.getTile(offset);
+		std::unique_ptr<Tile> new_tile;
+		if (tile) {
+			new_tile = TileOperations::deepCopy(tile, editor.map);
+		} else {
+			new_tile = editor.map.allocator(editor.map.createTileL(offset));
+		}
+
+		if (dodraw) {
+			brush->draw(&editor.map, new_tile.get(), nullptr);
 		} else {
 			brush->undraw(&editor.map, new_tile.get());
 		}

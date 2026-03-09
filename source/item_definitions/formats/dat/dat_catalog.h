@@ -21,6 +21,11 @@ struct DatAnimationInfo {
 	std::vector<DatAnimationFrameDuration> frame_durations;
 };
 
+struct DatSpriteDimensions {
+	uint16_t width = 32;
+	uint16_t height = 32;
+};
+
 struct DatCatalogEntry {
 	uint32_t client_id = 0;
 	DatItemFragment item_fragment;
@@ -59,6 +64,7 @@ struct DatCatalog {
 	uint16_t distance_count = 0;
 	uint32_t max_sprite_id = 0;
 	std::vector<DatCatalogEntry> entries;
+	std::vector<DatSpriteDimensions> sprite_dimensions;
 
 	[[nodiscard]] uint32_t lastEntryId() const {
 		return static_cast<uint32_t>(item_count) + static_cast<uint32_t>(creature_count);
@@ -78,6 +84,13 @@ struct DatCatalog {
 		}
 		auto& candidate = entries[id];
 		return candidate.client_id == id ? &candidate : nullptr;
+	}
+
+	[[nodiscard]] DatSpriteDimensions spriteDimension(uint32_t id) const {
+		if (id >= sprite_dimensions.size()) {
+			return {};
+		}
+		return sprite_dimensions[id];
 	}
 };
 

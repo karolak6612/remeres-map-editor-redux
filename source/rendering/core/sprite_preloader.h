@@ -6,6 +6,7 @@
 #define RME_RENDERING_CORE_SPRITE_PRELOADER_H_
 
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/image.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -84,6 +85,7 @@ private:
 	struct Result {
 		PendingSpriteKey pending;
 		std::unique_ptr<uint8_t[]> data;
+		ImageDimensions dimensions;
 		std::shared_ptr<SpriteArchive> archive;
 	};
 

@@ -22,6 +22,7 @@
 #include "editor/editor.h"
 #include "item_definitions/core/item_definition_store.h"
 #include "game/creatures.h"
+#include "io/xml_file_loader.h"
 
 #include "ui/gui.h"
 #include "game/materials.h"
@@ -67,21 +68,30 @@ MaterialsExtensionList Materials::getExtensionsByVersion(const ClientVersionID& 
 }
 
 bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::vector<std::string>& warnings) {
-	pugi::xml_document doc;
-	pugi::xml_parse_result result = doc.load_file(identifier.GetFullPath().mb_str());
-	if (!result) {
-		warnings.push_back((wxString("Could not open ") + identifier.GetFullName() + " (file not found or syntax error)").ToStdString());
-		return false;
-	}
-
-	pugi::xml_node node = doc.child("materials");
-	if (!node) {
-		warnings.push_back((identifier.GetFullName() + ": Invalid rootheader.").ToStdString());
-		return false;
-	}
-
-	unserializeMaterials(identifier, node, error, warnings);
-	return true;
+	const auto visitor = [&](const FileName& source_file, pugi::xml_node child_node, wxString& visit_error, std::vector<std::string>& visit_warnings) {
+		const auto child_name = as_lower_str(child_node.name());
+		if (child_name == "metaitem") {
+			if (const auto attribute = child_node.attribute("id")) {
+				g_item_definitions.ensureMetaItem(attribute.as_ushort());
+			}
+			return true;
+		}
+		if (child_name == "border") {
+			g_brushes.unserializeBorder(child_node, visit_warnings);
+			return true;
+		}
+		if (child_name == "brush") {
+			g_brushes.unserializeBrush(child_node, visit_warnings);
+			return true;
+		}
+		if (child_name == "tileset") {
+			return unserializeTileset(child_node, visit_warnings);
+		}
+		(void)source_file;
+		(void)visit_error;
+		return true;
+	};
+	return XmlFileLoader::visitElements(identifier, "materials", visitor, error, warnings);
 }
 
 bool Materials::loadExtensions(FileName directoryName, wxString& error, std::vector<std::string>& warnings) {
@@ -197,20 +207,7 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 	pugi::xml_attribute attribute;
 	for (pugi::xml_node childNode = node.first_child(); childNode; childNode = childNode.next_sibling()) {
 		const std::string& childName = as_lower_str(childNode.name());
-		if (childName == "include") {
-			if (!(attribute = childNode.attribute("file"))) {
-				continue;
-			}
-
-			FileName includeName;
-			includeName.SetPath(filename.GetPath());
-			includeName.SetFullName(wxString(attribute.as_string(), wxConvUTF8));
-
-			wxString subError;
-			if (!loadMaterials(includeName, subError, warnings)) {
-				warnings.push_back((wxString("Error while loading file \"") + includeName.GetFullName() + "\": " + subError).ToStdString());
-			}
-		} else if (childName == "metaitem") {
+		if (childName == "metaitem") {
 			if (const auto attribute = childNode.attribute("id")) {
 				g_item_definitions.ensureMetaItem(attribute.as_ushort());
 			}
@@ -228,6 +225,9 @@ bool Materials::unserializeMaterials(const FileName& filename, pugi::xml_node no
 			unserializeTileset(childNode, warnings);
 		}
 	}
+	(void)filename;
+	(void)error;
+	(void)attribute;
 	return true;
 }
 

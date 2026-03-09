@@ -79,6 +79,10 @@ GameSprite::~GameSprite() {
 	// instanced_templates and animator cleaned up automatically by unique_ptr
 }
 
+wxSize GameSprite::GetSize() const {
+	return getCompositePixelSize();
+}
+
 void GameSprite::invalidateCache(const AtlasRegion* region) {
 	if (cached_default_region == region) {
 		cached_default_region = nullptr;
@@ -146,6 +150,30 @@ uint32_t GameSprite::getDebugImageId(size_t index) const {
 	return 0;
 }
 
+wxSize GameSprite::getCompositePixelSize() const {
+	int max_width = std::max<int>(width * SPRITE_PIXELS, SPRITE_PIXELS);
+	int max_height = std::max<int>(height * SPRITE_PIXELS, SPRITE_PIXELS);
+
+	for (int layer = 0; layer < layers; ++layer) {
+		for (int part_x = 0; part_x < width; ++part_x) {
+			for (int part_y = 0; part_y < height; ++part_y) {
+				const size_t index = getIndex(part_x, part_y, layer, 0, 0, 0, 0);
+				if (index >= spriteList.size() || !spriteList[index]) {
+					continue;
+				}
+
+				const auto dimensions = spriteList[index]->getDimensions();
+				const int draw_x = (width - part_x - 1) * SPRITE_PIXELS;
+				const int draw_y = (height - part_y - 1) * SPRITE_PIXELS;
+				max_width = std::max(max_width, draw_x + static_cast<int>(dimensions.width));
+				max_height = std::max(max_height, draw_y + static_cast<int>(dimensions.height));
+			}
+		}
+	}
+
+	return wxSize(max_width, max_height);
+}
+
 uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
 	auto idx = getIndex(width, height, 0, pattern_x, pattern_y, 0, frameIndex); // Assuming layer, pattern_z are 0 for this context
 	if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
@@ -155,7 +183,16 @@ uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) c
 }
 
 std::pair<int, int> GameSprite::getDrawOffset() const {
-	return std::make_pair(drawoffset_x, drawoffset_y);
+	int implicit_offset_x = 0;
+	int implicit_offset_y = 0;
+
+	if (!spriteList.empty() && spriteList.front()) {
+		const auto dimensions = spriteList.front()->getDimensions();
+		implicit_offset_x = std::max(0, static_cast<int>(dimensions.width) - SPRITE_PIXELS);
+		implicit_offset_y = std::max(0, static_cast<int>(dimensions.height) - SPRITE_PIXELS);
+	}
+
+	return std::make_pair(static_cast<int>(drawoffset_x) + implicit_offset_x, static_cast<int>(drawoffset_y) + implicit_offset_y);
 }
 
 uint8_t GameSprite::getMiniMapColor() const {

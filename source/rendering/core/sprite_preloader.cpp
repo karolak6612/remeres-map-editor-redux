@@ -139,19 +139,14 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 			task_queue.pop();
 		}
 
-		std::unique_ptr<uint8_t[]> dump;
-		uint16_t size = 0;
-		const bool success = task.archive && task.archive->readCompressed(task.pending.key.id, dump, size);
-
 		std::unique_ptr<uint8_t[]> rgba;
-		if (success && dump) {
-			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.pending.key.id);
-		}
+		ImageDimensions dimensions;
+		const bool success = task.archive && task.archive->readRGBA(task.pending.key.id, task.has_transparency, rgba, dimensions);
 
 		{
 			std::lock_guard<std::mutex> lock(queue_mutex);
 			if (rgba) {
-				result_queue.push({ task.pending, std::move(rgba), std::move(task.archive) });
+				result_queue.push({ task.pending, std::move(rgba), dimensions, std::move(task.archive) });
 			} else {
 				pending_ids.erase(task.pending);
 			}
@@ -204,6 +199,8 @@ void SpritePreloader::update() {
 				// Validate Sprite Identity & Generation
 				// Check ID match, Generation match, and GLLoaded state
 				if (img->id == id && img->generation_id == pending.generation_id && !img->isGLLoaded) {
+					img->pixel_width = res.dimensions.width;
+					img->pixel_height = res.dimensions.height;
 					img->fulfillPreload(std::move(res.data));
 				}
 			}

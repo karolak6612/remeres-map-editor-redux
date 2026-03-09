@@ -113,6 +113,9 @@ void SelectionOperations::moveSelection(Editor& editor, Position offset) {
 		if (new_src_tile->spawn && new_src_tile->spawn->isSelected()) {
 			tmp_storage_tile->spawn = std::move(new_src_tile->spawn);
 		}
+		if (new_src_tile->npc_spawn && new_src_tile->npc_spawn->isSelected()) {
+			tmp_storage_tile->npc_spawn = std::move(new_src_tile->npc_spawn);
+		}
 		// Move creatures
 		if (new_src_tile->creature && new_src_tile->creature->isSelected()) {
 			tmp_storage_tile->creature = std::move(new_src_tile->creature);
@@ -361,6 +364,9 @@ void SelectionOperations::destroySelection(Editor& editor) {
 
 			if (newtile->spawn && newtile->spawn->isSelected()) {
 				newtile->spawn.reset();
+			}
+			if (newtile->npc_spawn && newtile->npc_spawn->isSelected()) {
+				newtile->npc_spawn.reset();
 			}
 
 			if (g_settings.getInteger(Config::USE_AUTOMAGIC)) {

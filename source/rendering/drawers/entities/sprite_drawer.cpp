@@ -23,7 +23,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 
 		sprite_batch.draw(
 			static_cast<float>(sx), static_cast<float>(sy),
-			static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
+			static_cast<float>(region->pixel_width), static_cast<float>(region->pixel_height),
 			*region,
 			normalizedR, normalizedG, normalizedB, normalizedA
 		);

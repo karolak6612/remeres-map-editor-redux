@@ -17,6 +17,7 @@
 
 #include <toml++/toml.h>
 #include <charconv>
+#include <fstream>
 #include <string>
 #include "app/main.h"
 
@@ -26,6 +27,7 @@
 #include "ui/gui.h"
 
 #include "util/file_system.h"
+#include "util/json.h"
 #include "ui/dialog_util.h"
 #include "app/client_version.h"
 
@@ -165,7 +167,7 @@ void ClientVersion::loadVersionsFromTOML(const std::string& configName) {
 				auto& otbmVers = *client["otbmVersions"].as_array();
 				for (auto&& v : otbmVers) {
 					int ver = v.value_or(-1);
-					if (ver >= 1 && ver <= 4) {
+					if (ver >= 1 && ver <= 6) {
 						int enumVer = ver - 1;
 						cv_ptr->map_versions_supported.push_back(static_cast<MapVersionID>(enumVer));
 						if (cv_ptr->preferred_map_version == MAP_OTBM_UNKNOWN) {
@@ -479,6 +481,45 @@ bool ClientVersion::hasValidPaths() {
 		return false;
 	}
 
+	if (item_definition_mode == ItemDefinitionMode::Protobuf) {
+		package_path = wxFileName(client_path.GetFullPath(), "package.json");
+		if (!package_path.FileExists()) {
+			return false;
+		}
+
+		sprites_path = wxFileName(client_path.GetFullPath() + FileName::GetPathSeparator() + "assets", "catalog-content.json");
+		if (!sprites_path.FileExists()) {
+			return false;
+		}
+
+		std::ifstream catalog_stream(sprites_path.GetFullPath().ToStdString(), std::ios::in | std::ios::binary);
+		if (!catalog_stream.is_open()) {
+			return false;
+		}
+
+		json::json catalog = json::json::parse(catalog_stream, nullptr, false);
+		if (catalog.is_discarded() || !catalog.is_array()) {
+			return false;
+		}
+
+		std::string appearances_file;
+		for (const auto& entry : catalog) {
+			if (!entry.is_object() || entry.value("type", std::string {}) != "appearances") {
+				continue;
+			}
+			appearances_file = entry.value("file", std::string {});
+			if (!appearances_file.empty()) {
+				break;
+			}
+		}
+		if (appearances_file.empty()) {
+			return false;
+		}
+
+		metadata_path = wxFileName(sprites_path.GetPath(), wxString::FromUTF8(appearances_file));
+		return metadata_path.FileExists();
+	}
+
 	wxDir dir(client_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR));
 
 	// OTFI loading removed (deprecated)
@@ -538,13 +579,21 @@ bool ClientVersion::hasValidPaths() {
 
 bool ClientVersion::loadValidPaths() {
 	while (!hasValidPaths()) {
-		wxString message = "Could not locate metadata and/or sprite files, please navigate to your client assets %s installation folder.\n";
-		message << "Attempted metadata file: %s\n";
-		message << "Attempted sprites file: %s\n";
+		wxString message;
+		if (item_definition_mode == ItemDefinitionMode::Protobuf) {
+			message = "Could not locate the protobuf client package, catalog-content.json, or appearances file. Please navigate to the protobuf client root for %s.\n";
+			message << "Attempted package file: %s\n";
+			message << "Attempted catalog file: %s\n";
+			message << "Attempted appearances file: %s\n";
+			DialogUtil::PopupDialog("Error", wxString::Format(message, name, package_path.GetFullPath(), sprites_path.GetFullPath(), metadata_path.GetFullPath()), wxOK);
+		} else {
+			message = "Could not locate metadata and/or sprite files, please navigate to your client assets %s installation folder.\n";
+			message << "Attempted metadata file: %s\n";
+			message << "Attempted sprites file: %s\n";
+			DialogUtil::PopupDialog("Error", wxString::Format(message, name, metadata_path.GetFullPath(), sprites_path.GetFullPath()), wxOK);
+		}
 
-		DialogUtil::PopupDialog("Error", wxString::Format(message, name, metadata_path.GetFullPath(), sprites_path.GetFullPath()), wxOK);
-
-		wxString dirHelpText("Select assets directory.");
+		wxString dirHelpText(item_definition_mode == ItemDefinitionMode::Protobuf ? "Select protobuf client root." : "Select assets directory.");
 		wxDirDialog file_dlg(nullptr, dirHelpText, "", wxDD_DIR_MUST_EXIST);
 		int ok = file_dlg.ShowModal();
 		if (ok == wxID_CANCEL) {

@@ -20,6 +20,22 @@
 
 VersionManager g_version;
 
+namespace {
+	wxFileName resolveVersionDataFile(const wxString& base_data_path, const std::initializer_list<const char*>& candidates) {
+		for (const auto* candidate : candidates) {
+			wxFileName path(base_data_path + wxString::FromUTF8(candidate));
+			if (path.FileExists()) {
+				return path;
+			}
+		}
+		return {};
+	}
+
+	std::string displayName(const wxFileName& filename, const char* fallback_name) {
+		return filename.IsOk() && !filename.GetFullPath().empty() ? filename.GetFullPath().ToStdString() : std::string(fallback_name);
+	}
+}
+
 VersionManager::VersionManager() :
 	loaded_version(CLIENT_VERSION_NONE) {
 }
@@ -97,14 +113,27 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	wxFileName metadata_path = getLoadedVersion()->getMetadataPath();
 	wxFileName sprites_path = getLoadedVersion()->getSpritesPath();
 	wxString base_data_path = data_path.GetPath(wxPATH_GET_VOLUME | wxPATH_GET_SEPARATOR);
+	const wxFileName items_xml_path = resolveVersionDataFile(base_data_path, { "items/items.xml", "items.xml" });
+	const wxFileName items_otb_path = resolveVersionDataFile(base_data_path, { "items.otb" });
+	const wxFileName monsters_xml_path = resolveVersionDataFile(base_data_path, { "creatures/monsters.xml" });
+	const wxFileName npcs_xml_path = resolveVersionDataFile(base_data_path, { "creatures/npcs.xml" });
+	const wxFileName creatures_xml_path = resolveVersionDataFile(base_data_path, { "creatures.xml" });
+	const wxFileName materials_xml_path = resolveVersionDataFile(base_data_path, { "materials/materials.xml", "materials.xml" });
 
 	AssetLoadRequest asset_request;
 	asset_request.mode = getLoadedVersion()->getItemDefinitionMode();
 	asset_request.client_version = getLoadedVersion();
 	asset_request.dat_path = metadata_path;
 	asset_request.spr_path = sprites_path;
-	asset_request.otb_path = wxFileName(base_data_path + "items.otb");
-	asset_request.xml_path = wxFileName(base_data_path + "items.xml");
+	asset_request.otb_path = items_otb_path;
+	asset_request.xml_path = items_xml_path;
+
+	if (asset_request.xml_path.GetFullPath().empty()) {
+		error = "Couldn't locate items.xml for the selected client version.";
+		g_loading.DestroyLoadBar();
+		UnloadVersion();
+		return false;
+	}
 
 	AssetBundle bundle;
 	AssetBundleLoader bundle_loader;
@@ -123,9 +152,21 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		return false;
 	}
 
-	g_loading.SetLoadDone(35, "Loading creatures.xml ...");
-	if (!g_creatures.loadFromXML(base_data_path + "creatures.xml", true, error, warnings)) {
-		warnings.push_back(std::format("Couldn't load creatures.xml: {}", error.ToStdString()));
+	g_loading.SetLoadDone(35, "Loading creatures...");
+	wxString creatures_error;
+	if (monsters_xml_path.FileExists() || npcs_xml_path.FileExists()) {
+		if (monsters_xml_path.FileExists() && !g_creatures.importXMLFromOT(monsters_xml_path, creatures_error, warnings)) {
+			warnings.push_back(std::format("Couldn't load {}: {}", monsters_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+		}
+		if (npcs_xml_path.FileExists() && !g_creatures.importXMLFromOT(npcs_xml_path, creatures_error, warnings)) {
+			warnings.push_back(std::format("Couldn't load {}: {}", npcs_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+		}
+	} else if (creatures_xml_path.FileExists()) {
+		if (!g_creatures.loadFromXML(creatures_xml_path, true, creatures_error, warnings)) {
+			warnings.push_back(std::format("Couldn't load {}: {}", creatures_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+		}
+	} else {
+		warnings.push_back("Couldn't locate creatures XML for the selected client version.");
 	}
 
 	// g_loading.SetLoadDone(45, "Loading user creatures.xml ...");
@@ -144,9 +185,13 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	// 	}
 	// }
 
-	g_loading.SetLoadDone(50, "Loading materials.xml ...");
-	if (!g_materials.loadMaterials(base_data_path + "materials.xml", error, warnings)) {
-		warnings.push_back("Couldn't load materials.xml: " + std::string(error.mb_str()));
+	g_loading.SetLoadDone(50, "Loading materials...");
+	if (materials_xml_path.FileExists()) {
+		if (!g_materials.loadMaterials(materials_xml_path, error, warnings)) {
+			warnings.push_back("Couldn't load materials XML: " + std::string(error.mb_str()));
+		}
+	} else {
+		warnings.push_back("Couldn't locate materials XML for the selected client version.");
 	}
 
 	g_loading.SetLoadDone(70, "Loading extensions...");

@@ -45,6 +45,16 @@ void TemplateImage::clean(time_t time, int longevity) {
 }
 
 namespace {
+	ImageDimensions resolveTemplateDimensions(const TemplateImage* img) {
+		if (!img || !img->parent || img->sprite_index < 0 || static_cast<size_t>(img->sprite_index) >= img->parent->spriteList.size()) {
+			return {};
+		}
+		if (const auto* image = img->parent->spriteList[img->sprite_index]) {
+			return image->getDimensions();
+		}
+		return {};
+	}
+
 	bool validateTemplateParentAndIndices(const TemplateImage* img, int sprite_index, size_t& mask_index) {
 		if (!img->parent) {
 			spdlog::warn("TemplateImage (texture_id={}): Invalid parent reference.", img->texture_id);
@@ -86,6 +96,10 @@ namespace {
 	}
 } // namespace
 
+ImageDimensions TemplateImage::getDimensions() const {
+	return resolveTemplateDimensions(this);
+}
+
 std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 	size_t mask_index = 0;
 	if (!validateTemplateParentAndIndices(this, sprite_index, mask_index)) {
@@ -104,7 +118,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 
 	clampTemplateLookValues(this);
 
-	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
+	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), getDimensions().pixelCount(), lookHead, lookBody, lookLegs, lookFeet, false);
 
 	return rgbdata;
 }
@@ -130,7 +144,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 	clampTemplateLookValues(this);
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
+	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), getDimensions().pixelCount(), lookHead, lookBody, lookLegs, lookFeet, true);
 
 	return rgbadata;
 }
