@@ -3,11 +3,6 @@
 #include <spdlog/spdlog.h>
 #include <algorithm>
 
-PostProcessManager& PostProcessManager::Instance() {
-	static PostProcessManager instance;
-	return instance;
-}
-
 void PostProcessManager::Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source) {
 	// Check if already registered
 	for (const auto& effect : effects) {

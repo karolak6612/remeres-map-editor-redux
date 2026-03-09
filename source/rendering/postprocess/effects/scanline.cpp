@@ -136,11 +136,8 @@ void main(){
 }
 )";
 
-	// Auto-register
-	struct ScanlineRegister {
-		ScanlineRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::SCANLINE, scanline_frag_source);
-		}
-	} scanline_register;
-
 } // namespace
+
+void RegisterScanlineEffect(PostProcessManager& mgr) {
+	mgr.Register(ShaderNames::SCANLINE, scanline_frag_source);
+}

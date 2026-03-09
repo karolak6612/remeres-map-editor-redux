@@ -25,6 +25,7 @@ class TooltipDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 class PostProcessPipeline;
+class PostProcessManager;
 
 // Storage during drawing, for option caching
 #include "rendering/core/drawing_options.h"
@@ -88,6 +89,7 @@ class MapDrawer {
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+	std::unique_ptr<PostProcessManager> post_process_manager;
 	std::unique_ptr<PostProcessPipeline> post_process_pipeline;
 
 public:
@@ -130,6 +132,9 @@ public:
 	}
 	DoorIndicatorDrawer* getDoorIndicatorDrawer() {
 		return door_indicator_drawer.get();
+	}
+	PostProcessManager* getPostProcessManager() {
+		return post_process_manager.get();
 	}
 
 private:

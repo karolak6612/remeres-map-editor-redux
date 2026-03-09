@@ -70,6 +70,7 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/post_process_effects.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/selection_controller.h"
@@ -115,7 +116,9 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 
 	sprite_batch = std::make_unique<SpriteBatch>();
 	primitive_renderer = std::make_unique<PrimitiveRenderer>();
-	post_process_pipeline = std::make_unique<PostProcessPipeline>(PostProcessManager::Instance());
+	post_process_manager = std::make_unique<PostProcessManager>();
+	RegisterAllPostProcessEffects(*post_process_manager);
+	post_process_pipeline = std::make_unique<PostProcessPipeline>(*post_process_manager);
 	hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
 	door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
 

@@ -21,7 +21,11 @@ struct PostProcessEffect {
 
 class PostProcessManager {
 public:
-	static PostProcessManager& Instance();
+	PostProcessManager() = default;
+	~PostProcessManager() = default;
+
+	PostProcessManager(const PostProcessManager&) = delete;
+	PostProcessManager& operator=(const PostProcessManager&) = delete;
 
 	void Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source = "");
 	void Initialize(const std::string& default_vertex_source); // Compiles all registered shaders
@@ -34,11 +38,6 @@ public:
 	std::vector<std::string> GetEffectNames() const;
 
 private:
-	PostProcessManager() = default;
-
-	// We maintain insertion order for UI consistency usually,
-	// but a map by name is good for lookup.
-	// Let's keep a vector for order and a map for lookup, or just search the vector (small N).
 	std::vector<std::unique_ptr<PostProcessEffect>> effects;
 
 	bool initialized = false;

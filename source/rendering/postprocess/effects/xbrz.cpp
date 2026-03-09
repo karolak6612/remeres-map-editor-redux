@@ -260,11 +260,8 @@ void main()
 }
 )";
 
-	// Auto-register
-	struct XBRZRegister {
-		XBRZRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
-		}
-	} xbrz_register;
-
 } // namespace
+
+void RegisterXBRZEffect(PostProcessManager& mgr) {
+	mgr.Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
+}

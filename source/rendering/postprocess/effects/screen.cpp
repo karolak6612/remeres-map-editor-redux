@@ -14,11 +14,8 @@ void main() {
 }
 )";
 
-	// Auto-register (Bilinear/Screen)
-	struct ScreenRegister {
-		ScreenRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::NONE, screen_frag);
-		}
-	} screen_register;
-
 } // namespace
+
+void RegisterScreenEffect(PostProcessManager& mgr) {
+	mgr.Register(ShaderNames::NONE, screen_frag);
+}
