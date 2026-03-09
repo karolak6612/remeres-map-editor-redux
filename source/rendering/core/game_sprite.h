@@ -25,6 +25,8 @@
 #include <wx/bitmap.h>
 #include <wx/dcmemory.h>
 
+#include "rendering/core/sprite_utils.h"
+
 enum SpriteSize {
 	SPRITE_SIZE_16x16,
 	// SPRITE_SIZE_24x24,
@@ -103,10 +105,14 @@ public:
 		return light;
 	}
 
-	// Helper for SpritePreloader to decompress data off-thread
-	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0);
+	// Delegates to SpriteUtils — kept for backward compatibility
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0) {
+		return SpriteUtils::Decompress(dump, use_alpha, id);
+	}
 
-	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
+		SpriteUtils::ColorizeTemplatePixels(dest, mask, pixelCount, lookHead, lookBody, lookLegs, lookFeet, destHasAlpha);
+	}
 
 	// Exposed for NormalImage::clean to invalidate cache
 	void invalidateCache(const AtlasRegion* region);
@@ -178,12 +184,10 @@ public:
 
 	bool is_resident = false; // Tracks if this GameSprite is in resident_game_sprites
 
-	friend class GraphicManager;
+	// GraphicsAssembler needs write access to 'id' during sprite installation
 	friend class GraphicsAssembler;
+	// SpriteIconGenerator needs access to getTemplateImage() for icon generation
 	friend class SpriteIconGenerator;
-	friend class TextureGarbageCollector;
-	friend class TooltipDrawer;
-	friend class SpritePreloader;
 
 	// Exposed for fast-path rendering (BlitItem)
 	const AtlasRegion* getCachedDefaultRegion() const {
