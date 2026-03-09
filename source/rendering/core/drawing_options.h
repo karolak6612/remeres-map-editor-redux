@@ -2,9 +2,9 @@
 #define RME_RENDERING_DRAWING_OPTIONS_H_
 
 #include <cstdint>
-#include <wx/wx.h>
 #include <string>
 #include <optional>
+#include <glm/glm.hpp>
 #include "map/position.h"
 
 struct DrawingOptions {
@@ -55,7 +55,7 @@ struct DrawingOptions {
 	bool experimental_fog;
 
 	uint32_t current_house_id;
-	wxColor global_light_color;
+	glm::vec4 global_light_color;
 	float light_intensity;
 	float ambient_light_level;
 	float highlight_pulse;

@@ -41,7 +41,7 @@ void DrawingOptions::SetDefault() {
 	current_house_id = 0;
 	light_intensity = 1.0f;
 	ambient_light_level = 0.5f;
-	global_light_color = wxColor(128, 128, 128);
+	global_light_color = glm::vec4(128.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f, 1.0f);
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = ShaderNames::NONE;

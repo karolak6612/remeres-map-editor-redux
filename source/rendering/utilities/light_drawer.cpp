@@ -68,7 +68,7 @@ void LightDrawer::ResizeFBO(int width, int height) {
 	glTextureParameteri(fbo_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
-void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& light_buffer, const wxColor& global_color, float light_intensity, float ambient_light_level) {
+void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& light_buffer, const glm::vec4& global_color, float light_intensity, float ambient_light_level) {
 	if (!shader) {
 		initRenderResources();
 	}
@@ -145,12 +145,12 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 		ScopedGLViewport viewportScope(0, 0, buffer_w, buffer_h);
 
 		// Clear to Ambient Color
-		float ambient_r = (global_color.Red() / 255.0f) * ambient_light_level;
-		float ambient_g = (global_color.Green() / 255.0f) * ambient_light_level;
-		float ambient_b = (global_color.Blue() / 255.0f) * ambient_light_level;
+		float ambient_r = global_color.r * ambient_light_level;
+		float ambient_g = global_color.g * ambient_light_level;
+		float ambient_b = global_color.b * ambient_light_level;
 
 		// If global_color is (0,0,0) (not set), use a default dark ambient
-		if (global_color.Red() == 0 && global_color.Green() == 0 && global_color.Blue() == 0) {
+		if (global_color.r == 0.0f && global_color.g == 0.0f && global_color.b == 0.0f) {
 			ambient_r = 0.5f * ambient_light_level;
 			ambient_g = 0.5f * ambient_light_level;
 			ambient_b = 0.5f * ambient_light_level;

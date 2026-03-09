@@ -21,8 +21,6 @@
 #include <cstdint>
 #include <vector>
 #include <memory>
-#include <wx/wx.h>
-#include <wx/glcanvas.h>
 #include <glm/glm.hpp>
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/light_buffer.h"
@@ -44,7 +42,7 @@ class LightDrawer {
 public:
 	LightDrawer();
 	~LightDrawer();
-	void draw(const RenderView& view, bool fog, const LightBuffer& light_buffer, const wxColor& global_color, float light_intensity = 1.0f, float ambient_light_level = 0.5f);
+	void draw(const RenderView& view, bool fog, const LightBuffer& light_buffer, const glm::vec4& global_color, float light_intensity = 1.0f, float ambient_light_level = 0.5f);
 
 private:
 	// wxColor global_color; // Removed state
