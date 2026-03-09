@@ -40,7 +40,7 @@ void TemplateImage::clean(time_t time, int longevity) {
 		isGLLoaded = false;
 		atlas_region = nullptr;
 		generation_id++;
-		g_gui.gfx.collector.NotifyTextureUnloaded();
+		g_gui.gfx.notifyTextureUnloaded();
 	}
 }
 

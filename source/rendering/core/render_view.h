@@ -34,9 +34,7 @@ struct RenderView {
 	glm::mat4 viewMatrix;
 
 	void Setup(MapCanvas* canvas, const DrawingOptions& options);
-	void SetupGL();
-	void ReleaseGL();
-	void Clear();
+	void ComputeProjection();
 
 	int getFloorAdjustment() const;
 	bool IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;

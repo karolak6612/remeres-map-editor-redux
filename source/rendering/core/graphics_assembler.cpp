@@ -40,11 +40,12 @@ namespace {
 }
 
 NormalImage* GraphicsAssembler::ensureImage(GraphicManager& manager, uint32_t sprite_id) {
-	if (sprite_id >= manager.image_space.size()) {
+	auto& image_space = manager.sprites.imageSpace();
+	if (sprite_id >= image_space.size()) {
 		return nullptr;
 	}
 
-	auto& slot = manager.image_space[sprite_id];
+	auto& slot = image_space[sprite_id];
 	if (!slot) {
 		auto image = std::make_unique<NormalImage>();
 		image->id = sprite_id;
@@ -101,7 +102,7 @@ bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCat
 	}
 	sprite_ptr->updateSimpleStatus();
 
-	manager.sprite_space[entry.client_id] = std::move(sprite);
+	manager.sprites.spriteSpace()[entry.client_id] = std::move(sprite);
 	return true;
 }
 
@@ -110,8 +111,7 @@ void GraphicsAssembler::resetRuntimeState(GraphicManager& manager) {
 	manager.unloaded = true;
 	manager.sprite_archive_.reset();
 	manager.spritefile.clear();
-	manager.sprite_space.clear();
-	manager.image_space.clear();
+	manager.sprites.clear();
 	manager.resident_images.clear();
 	manager.resident_game_sprites.clear();
 	manager.collector.Clear();
@@ -135,8 +135,8 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 	const auto image_space_size = imageSpaceSize(catalog);
 
 	resetRuntimeState(manager);
-	manager.sprite_space.resize(sprite_space_size);
-	manager.image_space.resize(image_space_size);
+	manager.sprites.spriteSpace().resize(sprite_space_size);
+	manager.sprites.imageSpace().resize(image_space_size);
 
 	for (uint32_t client_id = 100; client_id <= catalog.lastEntryId(); ++client_id) {
 		const auto* entry = catalog.entry(client_id);
@@ -151,8 +151,8 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 	}
 
 	manager.dat_format = catalog.format;
-	manager.item_count = catalog.item_count;
-	manager.creature_count = catalog.creature_count;
+	manager.sprites.setItemCount(catalog.item_count);
+	manager.sprites.setCreatureCount(catalog.creature_count);
 	manager.is_extended = catalog.is_extended;
 	manager.has_transparency = catalog.has_transparency;
 	manager.has_frame_durations = catalog.has_frame_durations;

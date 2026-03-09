@@ -104,7 +104,7 @@ namespace IngamePreview {
 		options.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
 		options.light_intensity = light_intensity;
 		// Explicitly set global light color to white (daylight) to avoid black multiplication
-		options.global_light_color = wxColor(255, 255, 255);
+		options.global_light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f);
 
 		// Initialize GL state
 		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
@@ -226,7 +226,7 @@ namespace IngamePreview {
 		if (lighting_enabled && light_drawer) {
 			// Ensure light options are fully initialized to avoid black screen from garbage values
 			options.experimental_fog = false;
-			options.global_light_color = wxColor(255, 255, 255); // Full light color
+			options.global_light_color = glm::vec4(1.0f, 1.0f, 1.0f, 1.0f); // Full light color
 			light_drawer->draw(view, options.experimental_fog, *light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
 		}
 

@@ -6,20 +6,17 @@
 #define RME_RENDERING_BRUSH_OVERLAY_DRAWER_H_
 
 #include "map/position.h"
-#include "map/position.h"
 #include <wx/colour.h>
 #include <glm/glm.hpp>
 
-class MapDrawer;
-struct RenderView;
-struct DrawingOptions;
+struct DrawContext;
 class Brush;
 class Editor;
 
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
-class SpriteBatch;
+class BrushCursorDrawer;
 class PrimitiveRenderer;
 
 class BrushOverlayDrawer {
@@ -27,7 +24,7 @@ public:
 	BrushOverlayDrawer();
 	~BrushOverlayDrawer();
 
-	void draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(const DrawContext& ctx, PrimitiveRenderer& primitive_renderer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, bool is_dragging_draw, int last_click_map_x, int last_click_map_y);
 
 private:
 	enum BrushColor {
