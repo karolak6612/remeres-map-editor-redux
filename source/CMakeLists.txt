@@ -237,6 +237,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_pipeline.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/floor_view_params.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h

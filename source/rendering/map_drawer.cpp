@@ -70,6 +70,7 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/ui/drawing_controller.h"
 #include "rendering/ui/selection_controller.h"
 
@@ -218,18 +219,20 @@ void MapDrawer::Draw() {
 	// Resume Batch for Overlays
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 
+	DrawContext ctx { *sprite_batch, view, options, editor };
+
 	if (drag_shadow_drawer) {
 		Position drag_start;
 		if (canvas->selection_controller) {
 			drag_start = canvas->selection_controller->GetDragStartPosition();
 		}
-		drag_shadow_drawer->draw(*sprite_batch, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor, drag_start);
+		drag_shadow_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), drag_start);
 	}
 
 	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
 
 	bool is_dragging_draw = canvas->drawing_controller && canvas->drawing_controller->IsDraggingDraw();
-	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), brush_cursor_drawer.get(), view, options, editor, is_dragging_draw, canvas->last_click_map_x, canvas->last_click_map_y);
+	brush_overlay_drawer->draw(ctx, *primitive_renderer, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), brush_cursor_drawer.get(), is_dragging_draw, canvas->last_click_map_x, canvas->last_click_map_y);
 
 	if (options.show_grid) {
 		DrawGrid(original_bounds);

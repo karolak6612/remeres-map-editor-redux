@@ -7,6 +7,7 @@
 // glut include removed
 
 #include "rendering/drawers/overlays/brush_overlay_drawer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
@@ -96,7 +97,11 @@ BrushOverlayDrawer::BrushOverlayDrawer() {
 BrushOverlayDrawer::~BrushOverlayDrawer() {
 }
 
-void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor, bool is_dragging_draw, int last_click_map_x, int last_click_map_y) {
+void BrushOverlayDrawer::draw(const DrawContext& ctx, PrimitiveRenderer& primitive_renderer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, bool is_dragging_draw, int last_click_map_x, int last_click_map_y) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
+	auto& editor = ctx.editor;
 	if (!g_gui.IsDrawingMode()) {
 		return;
 	}

@@ -8,6 +8,7 @@
 // glut include removed
 
 #include "rendering/drawers/cursors/drag_shadow_drawer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
@@ -30,7 +31,12 @@ DragShadowDrawer::~DragShadowDrawer() {
 
 #include "rendering/core/primitive_renderer.h"
 
-void DragShadowDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor, const Position& drag_start) {
+void DragShadowDrawer::draw(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const Position& drag_start) {
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
+	auto& editor = ctx.editor;
+	auto& sprite_batch = ctx.sprite_batch;
+
 	// Draw dragging shadow
 	if (!editor.selection.isBusy() && options.dragging && !options.ingame) {
 		for (auto tit = editor.selection.begin(); tit != editor.selection.end(); tit++) {
