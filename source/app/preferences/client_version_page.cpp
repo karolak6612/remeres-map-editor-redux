@@ -11,6 +11,7 @@
 
 #include <wx/menu.h>
 #include <wx/tokenzr.h>
+#include <wx/weakref.h>
 
 #include "app/main.h"
 #include "app/settings.h"
@@ -659,16 +660,26 @@ void ClientVersionPage::RequestClientAssetDetection(ClientVersion& client) {
 	const auto requested_path = client.getClientPath().GetFullPath().ToStdString();
 	const auto request_id = ++next_detection_request_id;
 	auto snapshot = client.clone();
+	wxWeakRef<ClientVersionPage> weak_this(this);
 	pending_detection_requests_[client_id] = request_id;
 
-	std::thread([this, client_id, requested_path, request_id, snapshot = std::move(snapshot)]() mutable {
+	std::thread([weak_this, client_id, requested_path, request_id, snapshot = std::move(snapshot)]() mutable {
 		auto detection = ClientAssetDetector::detect(*snapshot);
-		CallAfter([this, client_id, requested_path, request_id, detection = std::move(detection)]() mutable {
-			const auto pending_it = pending_detection_requests_.find(client_id);
-			if (pending_it == pending_detection_requests_.end() || pending_it->second != request_id) {
+		if (!weak_this) {
+			return;
+		}
+
+		weak_this->CallAfter([weak_this, client_id, requested_path, request_id, detection = std::move(detection)]() mutable {
+			if (!weak_this) {
 				return;
 			}
-			pending_detection_requests_.erase(pending_it);
+			auto& self = *weak_this;
+
+			const auto pending_it = self.pending_detection_requests_.find(client_id);
+			if (pending_it == self.pending_detection_requests_.end() || pending_it->second != request_id) {
+				return;
+			}
+			self.pending_detection_requests_.erase(pending_it);
 
 			auto* client = ClientVersion::get(client_id);
 			if (!client) {
@@ -678,10 +689,10 @@ void ClientVersionPage::RequestClientAssetDetection(ClientVersion& client) {
 				return;
 			}
 
-			ApplyDetectionResult(*client, detection);
-			if (active_client == client) {
-				SyncClientPropertiesToGrid(*client);
-				RefreshSummary();
+			self.ApplyDetectionResult(*client, detection);
+			if (self.active_client == client) {
+				self.SyncClientPropertiesToGrid(*client);
+				self.RefreshSummary();
 			}
 		});
 	}).detach();
