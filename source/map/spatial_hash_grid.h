@@ -189,7 +189,9 @@ protected:
 
 	static uint64_t makeKeyFromCell(int cx, int cy) {
 		static_assert(sizeof(int) == 4, "Key packing assumes exactly 32-bit integers");
-		return (static_cast<uint64_t>(static_cast<uint32_t>(cy) ^ 0x80000000u) << 32) | (static_cast<uint32_t>(cx) ^ 0x80000000u);
+		uint32_t cx_u = static_cast<uint32_t>(cx);
+		uint32_t cy_u = static_cast<uint32_t>(cy);
+		return (static_cast<uint64_t>(cy_u ^ 0x80000000u) << 32) | (cx_u ^ 0x80000000u);
 	}
 
 	static uint64_t makeKey(int x, int y) {

@@ -23,6 +23,7 @@
 #include <vector>
 #include <algorithm>
 #include <atomic>
+#include <mutex>
 
 class Action;
 class Editor;
@@ -36,6 +37,9 @@ public:
 
 	Selection(Editor& editor);
 	~Selection();
+
+	Selection(const Selection&) = delete;
+	Selection& operator=(const Selection&) = delete;
 
 	// Selects the items on the tile/tiles
 	// Won't work outside a selection session
@@ -106,10 +110,12 @@ public:
 		return tiles;
 	}
 	Tile* getSelectedTile() {
+		if (tiles.empty()) return nullptr;
 		ASSERT(size() == 1);
 		return *tiles.begin();
 	}
 	Tile* getSelectedTile() const {
+		if (tiles.empty()) return nullptr;
 		ASSERT(size() == 1);
 		return *tiles.begin();
 	}
@@ -131,6 +137,7 @@ private:
 	std::vector<Tile*> pending_adds;
 	std::vector<Tile*> pending_removes;
 
+	mutable std::mutex bounds_mutex;
 	mutable std::atomic<bool> bounds_dirty;
 	mutable Position cached_min;
 	mutable Position cached_max;

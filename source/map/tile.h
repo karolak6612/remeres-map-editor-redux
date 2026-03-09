@@ -37,7 +37,7 @@ class Map;
 
 // TileOperations functions are now in tile_operations.h
 
-enum {
+enum TileMapFlags : uint16_t {
 	TILESTATE_NONE = 0x0000,
 	TILESTATE_PROTECTIONZONE = 0x0001,
 	TILESTATE_DEPRECATED = 0x0002, // Reserved
@@ -45,6 +45,9 @@ enum {
 	TILESTATE_NOLOGOUT = 0x0008,
 	TILESTATE_PVPZONE = 0x0010,
 	TILESTATE_REFRESH = 0x0020,
+};
+
+enum TileStatFlags : uint16_t {
 	// Internal
 	TILESTATE_SELECTED = 0x0001,
 	TILESTATE_UNIQUE = 0x0002,

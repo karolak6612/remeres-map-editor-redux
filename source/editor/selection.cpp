@@ -46,6 +46,7 @@ Selection::~Selection() {
 }
 
 void Selection::recalculateBounds() const {
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	if (!bounds_dirty) {
 		return;
 	}
@@ -76,11 +77,13 @@ void Selection::recalculateBounds() const {
 
 Position Selection::minPosition() const {
 	recalculateBounds();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	return cached_min;
 }
 
 Position Selection::maxPosition() const {
 	recalculateBounds();
+	std::lock_guard<std::mutex> lock(bounds_mutex);
 	return cached_max;
 }
 
