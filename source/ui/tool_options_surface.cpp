@@ -393,11 +393,13 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 		} else if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 			show_preview = !show_preview;
 			g_settings.setInteger(Config::SHOW_AUTOBORDER_PREVIEW, show_preview);
+			g_gui.SetStatusText(std::format("Preview Border: {}", show_preview ? "On" : "Off"));
 			Refresh();
 		} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 			lock_doors = !lock_doors;
 			g_settings.setInteger(Config::DRAW_LOCKED_DOOR, lock_doors);
 			g_brush_manager.SetDoorLocked(lock_doors);
+			g_gui.SetStatusText(std::format("Lock Doors: {}", lock_doors ? "On" : "Off"));
 			Refresh();
 		} else if (hover_brush) {
 			SelectBrush(hover_brush);
@@ -449,10 +451,12 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 	// Hover states for checkboxes
 	if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_preview = true;
+		SetToolTip("Toggle automatic border preview");
 		hand_cursor = true;
 	}
 	if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 		interactables.hover_lock = true;
+		SetToolTip("Toggle placing doors in a locked state (Shift)");
 		hand_cursor = true;
 	}
 

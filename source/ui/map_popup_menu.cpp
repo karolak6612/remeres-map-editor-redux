@@ -153,49 +153,49 @@ void MapPopupMenu::Update() {
 				}
 
 				if (topCreature) {
-					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select &Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
 				}
 
 				if (topSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select S&pawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
 				}
 
-				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select &RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
 
 				if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR)) {
-					Append(MAP_POPUP_MENU_MOVE_TO_TILESET, "Move To Tileset", "Move this item to any tileset")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHARE_FROM_SQUARE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_MOVE_TO_TILESET, "Move To &Tileset", "Move this item to any tileset")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SHARE_FROM_SQUARE, wxSize(16, 16)));
 				}
 
 				if (hasWall) {
-					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select &Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
 				}
 
 				if (hasCarpet) {
-					Append(MAP_POPUP_MENU_SELECT_CARPET_BRUSH, "Select Carpetbrush", "Uses the current item as a carpetbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_RUG, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_CARPET_BRUSH, "Select &Carpetbrush", "Uses the current item as a carpetbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_RUG, wxSize(16, 16)));
 				}
 
 				if (hasTable) {
-					Append(MAP_POPUP_MENU_SELECT_TABLE_BRUSH, "Select Tablebrush", "Uses the current item as a tablebrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TABLE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_TABLE_BRUSH, "Select &Tablebrush", "Uses the current item as a tablebrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TABLE, wxSize(16, 16)));
 				}
 
 				if (topSelectedItem && topSelectedItem->getDoodadBrush() && topSelectedItem->getDoodadBrush()->visibleInPalette()) {
-					Append(MAP_POPUP_MENU_SELECT_DOODAD_BRUSH, "Select Doodadbrush", "Use this doodad brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TREE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_DOODAD_BRUSH, "Select &Doodadbrush", "Use this doodad brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_TREE, wxSize(16, 16)));
 				}
 
 				if (topSelectedItem && topSelectedItem->isBrushDoor() && topSelectedItem->getDoorBrush()) {
-					Append(MAP_POPUP_MENU_SELECT_DOOR_BRUSH, "Select Doorbrush", "Use this door brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_DOOR_BRUSH, "Select D&oorbrush", "Use this door brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DOOR_CLOSED, wxSize(16, 16)));
 				}
 
 				if (tile->hasGround() && tile->getGroundBrush() && tile->getGroundBrush()->visibleInPalette()) {
-					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current item as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select &Groundbrush", "Uses the current item as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
 				if (hasCollection || topSelectedItem && topSelectedItem->hasCollectionBrush() || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
-					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select C&ollection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
 				if (tile->isHouseTile()) {
-					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select &House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
 				}
 
 				AppendSeparator();
@@ -203,27 +203,27 @@ void MapPopupMenu::Update() {
 			} else {
 
 				if (topCreature) {
-					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select &Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
 				}
 
 				if (topSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select S&pawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
 				}
 
-				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select &RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
 				if (hasWall) {
-					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_WALL_BRUSH, "Select &Wallbrush", "Uses the current item as a wallbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DUNGEON, wxSize(16, 16)));
 				}
 				if (tile->hasGround() && tile->getGroundBrush() && tile->getGroundBrush()->visibleInPalette()) {
-					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select Groundbrush", "Uses the current tile as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_GROUND_BRUSH, "Select &Groundbrush", "Uses the current tile as a groundbrush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
 				if (hasCollection || tile->getGroundBrush() && tile->getGroundBrush()->hasCollection()) {
-					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select Collection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_COLLECTION_BRUSH, "Select C&ollection", "Use this collection")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LAYER_GROUP, wxSize(16, 16)));
 				}
 
 				if (tile->isHouseTile()) {
-					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_SELECT_HOUSE_BRUSH, "Select &House", "Draw with the house on this tile.")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_HOUSE, wxSize(16, 16)));
 				}
 
 				if (tile->hasGround() || topCreature || topSpawn) {
@@ -234,11 +234,11 @@ void MapPopupMenu::Update() {
 
 			AppendSeparator();
 
-			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items");
+			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "&Browse Field", "Navigate from tile items");
 			browseTile->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
 			browseTile->Enable(anything_selected);
 
-			wxMenuItem* tileProps = Append(MAP_POPUP_MENU_TILE_PROPERTIES, "Tile Properties", "Show tile properties panel");
+			wxMenuItem* tileProps = Append(MAP_POPUP_MENU_TILE_PROPERTIES, "Tile &Properties", "Show tile properties panel");
 			tileProps->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
 			tileProps->Enable(anything_selected);
 		}
