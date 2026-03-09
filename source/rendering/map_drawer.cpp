@@ -151,7 +151,9 @@ void MapDrawer::SetupVars() {
 }
 
 void MapDrawer::SetupGL() {
-	view.SetupGL();
+	// GL viewport setup — separated from RenderView (pure data)
+	glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
+	view.ComputeProjection();
 
 	// Ensure renderers are initialized
 	if (!renderers_initialized) {
@@ -246,7 +248,8 @@ void MapDrawer::Draw() {
 }
 
 void MapDrawer::DrawBackground() {
-	view.Clear();
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 void MapDrawer::DrawMap() {
