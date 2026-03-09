@@ -50,6 +50,21 @@ std::string LowercaseCopy(std::string value) {
 	});
 	return value;
 }
+
+bool MatchesClientFilter(const ClientVersion& version, const std::string& filter) {
+	if (filter.empty()) {
+		return true;
+	}
+
+	std::string haystack = LowercaseCopy(version.getName());
+	haystack += " ";
+	haystack += LowercaseCopy(version.getDescription());
+	haystack += " ";
+	haystack += std::to_string(version.getVersion());
+	haystack += " ";
+	haystack += std::to_string(version.getOtbId());
+	return haystack.find(filter) != std::string::npos;
+}
 }
 
 ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent) {
@@ -95,6 +110,7 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 	client_search_ctrl->ShowCancelButton(true);
 	client_search_ctrl->SetDescriptiveText("Search by name, version, or OTB id");
 	library_section->GetBodySizer()->Add(client_search_ctrl, 0, wxEXPAND | wxBOTTOM, FromDIP(10));
+	last_search_text = client_search_ctrl->GetValue();
 
 	client_tree_ctrl = new wxTreeCtrl(library_section, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTR_HIDE_ROOT | wxTR_HAS_BUTTONS | wxTR_SINGLE | wxTR_LINES_AT_ROOT);
 	client_tree_ctrl->SetBackgroundColour(Theme::Get(Theme::Role::Background));
@@ -216,18 +232,26 @@ ClientVersionPage::ClientVersionPage(wxWindow* parent) : PreferencesPage(parent)
 }
 
 void ClientVersionPage::PopulateDefaultVersionChoice() {
+	const wxString previous_selection = default_version_choice->GetStringSelection();
 	default_version_choice->Clear();
 	ClientVersion* latest_version = ClientVersion::getLatestVersion();
 	int latest_index = wxNOT_FOUND;
 	int index = 0;
 	for (auto* version : ClientVersion::getAll()) {
+		if (IsPendingDeletion(*version)) {
+			continue;
+		}
 		default_version_choice->Append(wxstr(version->getName()));
 		if (version == latest_version) {
 			latest_index = index;
 		}
 		++index;
 	}
-	if (latest_index != wxNOT_FOUND) {
+
+	const int previous_index = previous_selection.empty() ? wxNOT_FOUND : default_version_choice->FindString(previous_selection);
+	if (previous_index != wxNOT_FOUND) {
+		default_version_choice->SetSelection(previous_index);
+	} else if (latest_index != wxNOT_FOUND) {
 		default_version_choice->SetSelection(latest_index);
 	} else if (default_version_choice->GetCount() > 0) {
 		default_version_choice->SetSelection(0);
@@ -235,27 +259,13 @@ void ClientVersionPage::PopulateDefaultVersionChoice() {
 }
 
 bool ClientVersionPage::MatchesFilter(const ClientVersion& version) const {
-	if (client_filter.empty()) {
-		return true;
-	}
-
-	std::string haystack = LowercaseCopy(version.getName());
-	haystack += " ";
-	haystack += LowercaseCopy(version.getDescription());
-	haystack += " ";
-	haystack += std::to_string(version.getVersion());
-	haystack += " ";
-	haystack += std::to_string(version.getOtbId());
-	return haystack.find(client_filter) != std::string::npos;
+	return !IsPendingDeletion(version) && MatchesClientFilter(version, client_filter);
 }
 
 int ClientVersionPage::GetMajorGroup(const ClientVersion& version) const {
 	const int protocol = static_cast<int>(version.getVersion());
 	if (protocol >= 10000) {
 		return protocol / 1000;
-	}
-	if (protocol >= 1000) {
-		return protocol / 100;
 	}
 	if (protocol >= 100) {
 		return protocol / 100;
@@ -468,14 +478,6 @@ bool ClientVersionPage::ResolvePendingChanges(ClientVersion* client) {
 		this
 	);
 	if (result == wxYES) {
-		if (!ClientVersion::saveVersions()) {
-			wxMessageBox("Failed to save client versions. Changes were not saved.", "Save Error", wxOK | wxICON_ERROR, this);
-			return false;
-		}
-		for (auto* version : ClientVersion::getAll()) {
-			version->clearDirty();
-			version->backup();
-		}
 		return true;
 	}
 	if (result == wxNO) {
@@ -484,6 +486,10 @@ bool ClientVersionPage::ResolvePendingChanges(ClientVersion* client) {
 		return true;
 	}
 	return false;
+}
+
+bool ClientVersionPage::IsPendingDeletion(const ClientVersion& version) const {
+	return pending_deleted_client_ids.contains(version.getName());
 }
 
 void ClientVersionPage::UpdatePropertyValidation(wxPGProperty* prop) {
@@ -545,8 +551,20 @@ void ClientVersionPage::OnClientSelected(wxTreeEvent& WXUNUSED(event)) {
 }
 
 void ClientVersionPage::OnSearchChanged(wxCommandEvent& WXUNUSED(event)) {
+	const wxString new_search_text = client_search_ctrl->GetValue();
+	const std::string new_filter = LowercaseCopy(nstr(new_search_text));
 	ClientVersion* previous_client = active_client;
-	client_filter = LowercaseCopy(nstr(client_search_ctrl->GetValue()));
+	if (previous_client && previous_client->isDirty() && !MatchesClientFilter(*previous_client, new_filter)) {
+		if (!ResolvePendingChanges(previous_client)) {
+			client_search_ctrl->ChangeValue(last_search_text);
+			client_search_ctrl->SetFocus();
+			client_search_ctrl->SetInsertionPointEnd();
+			return;
+		}
+	}
+
+	client_filter = new_filter;
+	last_search_text = new_search_text;
 	PopulateClientTree();
 	active_client = GetSelectedClient();
 	if (!active_client && previous_client && MatchesFilter(*previous_client)) {
@@ -563,6 +581,7 @@ void ClientVersionPage::OnSearchChanged(wxCommandEvent& WXUNUSED(event)) {
 
 void ClientVersionPage::OnSearchCancelled(wxCommandEvent& WXUNUSED(event)) {
 	client_search_ctrl->ChangeValue("");
+	last_search_text.clear();
 	client_filter.clear();
 	PopulateClientTree();
 	active_client = GetSelectedClient();
@@ -574,6 +593,13 @@ void ClientVersionPage::OnTreeContextMenu(wxTreeEvent& event) {
 	auto* data = dynamic_cast<TreeItemData*>(client_tree_ctrl->GetItemData(event.GetItem()));
 	if (!data || !data->cv) {
 		return;
+	}
+
+	if (client_tree_ctrl->GetSelection() != event.GetItem()) {
+		client_tree_ctrl->SelectItem(event.GetItem());
+		if (client_tree_ctrl->GetSelection() != event.GetItem()) {
+			return;
+		}
 	}
 
 	wxMenu menu;
@@ -645,7 +671,9 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 	} else if (prop_name == "datSignature") {
 		uint32_t signature = 0;
 		auto text = nstr(value.As<wxString>());
-		if (std::from_chars(text.data(), text.data() + text.size(), signature, 16).ec == std::errc()) {
+		const auto end = text.data() + text.size();
+		const auto result = std::from_chars(text.data(), end, signature, 16);
+		if (result.ec == std::errc() && result.ptr == end) {
 			client->setDatSignature(signature);
 		} else {
 			prop->SetValue(wxString::Format("%X", client->getDatSignature()));
@@ -653,7 +681,9 @@ void ClientVersionPage::OnPropertyChanged(wxPropertyGridEvent& event) {
 	} else if (prop_name == "sprSignature") {
 		uint32_t signature = 0;
 		auto text = nstr(value.As<wxString>());
-		if (std::from_chars(text.data(), text.data() + text.size(), signature, 16).ec == std::errc()) {
+		const auto end = text.data() + text.size();
+		const auto result = std::from_chars(text.data(), end, signature, 16);
+		if (result.ec == std::errc() && result.ptr == end) {
 			client->setSprSignature(signature);
 		} else {
 			prop->SetValue(wxString::Format("%X", client->getSprSignature()));
@@ -716,11 +746,7 @@ void ClientVersionPage::OnDeleteClient(wxCommandEvent& WXUNUSED(event)) {
 		return;
 	}
 
-	ClientVersion::removeVersion(client->getName());
-	if (!ClientVersion::saveVersions()) {
-		wxMessageBox("Could not save client versions to disk. The changes will be reverted.", "Error", wxOK | wxICON_ERROR, this);
-		ClientVersion::loadVersions();
-	}
+	pending_deleted_client_ids.insert(client->getName());
 
 	PopulateDefaultVersionChoice();
 	active_client = nullptr;
@@ -733,7 +759,11 @@ void ClientVersionPage::OnDeleteClient(wxCommandEvent& WXUNUSED(event)) {
 }
 
 bool ClientVersionPage::ValidateData() {
+	std::unordered_set<std::string> names;
 	for (auto* client : ClientVersion::getAll()) {
+		if (IsPendingDeletion(*client)) {
+			continue;
+		}
 		if (!client->isValid()) {
 			wxMessageBox("Client '" + wxstr(client->getName()) + "' has invalid data. The name cannot be empty.", "Invalid Client Data", wxOK | wxICON_ERROR, this);
 			SelectClient(client);
@@ -741,14 +771,13 @@ bool ClientVersionPage::ValidateData() {
 			RefreshClientEditor();
 			return false;
 		}
-		for (auto* other : ClientVersion::getAll()) {
-			if (client != other && client->getName() == other->getName()) {
-				wxMessageBox("Client '" + wxstr(client->getName()) + "' has a duplicate name. Rename one of them before saving.", "Duplicate Client Name", wxOK | wxICON_ERROR, this);
-				SelectClient(client);
-				active_client = client;
-				RefreshClientEditor();
-				return false;
-			}
+
+		if (const auto [_, inserted] = names.insert(client->getName()); !inserted) {
+			wxMessageBox("Client '" + wxstr(client->getName()) + "' has a duplicate name. Rename one of them before saving.", "Duplicate Client Name", wxOK | wxICON_ERROR, this);
+			SelectClient(client);
+			active_client = client;
+			RefreshClientEditor();
+			return false;
 		}
 	}
 	return true;
@@ -763,10 +792,16 @@ void ClientVersionPage::Apply() {
 			ClientVersion::setLatestVersion(default_client);
 			g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, default_client->getProtocolID());
 		}
+	} else {
+		ClientVersion::setLatestVersion(nullptr);
+		g_settings.setInteger(Config::DEFAULT_CLIENT_VERSION, 0);
 	}
 
-	bool any_dirty = false;
+	bool any_dirty = !pending_deleted_client_ids.empty();
 	for (auto* client : ClientVersion::getAll()) {
+		if (IsPendingDeletion(*client)) {
+			continue;
+		}
 		if (client->isDirty()) {
 			any_dirty = true;
 			break;
@@ -776,14 +811,66 @@ void ClientVersionPage::Apply() {
 		return;
 	}
 
+	std::vector<std::unique_ptr<ClientVersion>> deleted_backups;
+	deleted_backups.reserve(pending_deleted_client_ids.size());
+	for (const auto& id : pending_deleted_client_ids) {
+		if (auto* client = ClientVersion::get(id)) {
+			deleted_backups.push_back(client->clone());
+		}
+	}
+
+	const std::string previous_latest_name = ClientVersion::getLatestVersion() ? ClientVersion::getLatestVersion()->getName() : std::string {};
+	for (const auto& id : pending_deleted_client_ids) {
+		ClientVersion::removeVersion(id);
+	}
+
 	if (ClientVersion::saveVersions()) {
 		for (auto* client : ClientVersion::getAll()) {
 			client->clearDirty();
 			client->backup();
 		}
+		pending_deleted_client_ids.clear();
+		PopulateDefaultVersionChoice();
+		PopulateClientTree();
+		active_client = GetSelectedClient();
+		if (active_client) {
+			active_client->backup();
+		}
+		RefreshClientEditor();
 		RefreshSummary();
 	} else {
+		for (auto& client : deleted_backups) {
+			ClientVersion::addVersion(std::move(client));
+		}
+		if (!previous_latest_name.empty()) {
+			ClientVersion::setLatestVersion(ClientVersion::get(previous_latest_name));
+		}
+		PopulateDefaultVersionChoice();
+		PopulateClientTree();
+		active_client = GetSelectedClient();
+		RefreshClientEditor();
 		wxMessageBox("Failed to save client versions. Check the log for details.", "Save Error", wxOK | wxICON_ERROR, this);
 	}
+}
+
+void ClientVersionPage::DiscardPendingChanges() {
+	for (auto* client : ClientVersion::getAll()) {
+		if (client->isDirty()) {
+			client->restore();
+			client->clearDirty();
+		}
+	}
+
+	pending_deleted_client_ids.clear();
+	client_filter.clear();
+	last_search_text.clear();
+	if (client_search_ctrl) {
+		client_search_ctrl->ChangeValue("");
+	}
+
+	PopulateDefaultVersionChoice();
+	PopulateClientTree();
+	active_client = GetSelectedClient();
+	RefreshClientEditor();
 }
 

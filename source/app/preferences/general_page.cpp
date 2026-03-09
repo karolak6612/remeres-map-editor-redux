@@ -16,8 +16,12 @@ constexpr std::array<const char*, 5> kPositionChoiceLabels = {
 	"Constructor call",
 };
 
+int ClampPositionFormatSelection(int selection) {
+	return std::clamp(selection, 0, static_cast<int>(kPositionChoiceLabels.size()) - 1);
+}
+
 wxString BuildPositionPreview(int selection) {
-	switch (selection) {
+	switch (ClampPositionFormatSelection(selection)) {
 		case 0:
 			return "{x = 512, y = 1024, z = 7}";
 		case 1:
@@ -124,7 +128,7 @@ GeneralPage::GeneralPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 	for (const auto* label : kPositionChoiceLabels) {
 		position_format_choice->Append(wxString::FromUTF8(label));
 	}
-	position_format_choice->SetSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT));
+	position_format_choice->SetSelection(ClampPositionFormatSelection(g_settings.getInteger(Config::COPY_POSITION_FORMAT)));
 	PreferencesLayout::AddControlRow(
 		clipboard_section,
 		"Copy position format",
@@ -162,7 +166,8 @@ void GeneralPage::Apply() {
 	g_settings.setInteger(Config::UNDO_MEM_SIZE, undo_mem_size_spin->GetValue());
 	g_settings.setInteger(Config::WORKER_THREADS, worker_threads_spin->GetValue());
 	g_settings.setInteger(Config::REPLACE_SIZE, replace_size_spin->GetValue());
-	g_settings.setInteger(Config::COPY_POSITION_FORMAT, position_format_choice->GetSelection());
+	const int selected_format = position_format_choice->GetSelection() == wxNOT_FOUND ? 0 : ClampPositionFormatSelection(position_format_choice->GetSelection());
+	g_settings.setInteger(Config::COPY_POSITION_FORMAT, selected_format);
 
 	if (g_settings.getBoolean(Config::SHOW_TILESET_EDITOR) != enable_tileset_editing_chkbox->GetValue()) {
 		g_gui.RebuildPalettes();

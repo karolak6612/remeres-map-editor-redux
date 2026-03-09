@@ -15,6 +15,8 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
+#include <algorithm>
+
 #include "map/tile_operations.h"
 #include "app/main.h"
 #include "rendering/ui/clipboard_handler.h"
@@ -24,6 +26,15 @@
 #include "game/item.h"
 #include "editor/selection.h"
 #include "app/settings.h"
+
+namespace {
+constexpr int kMinCopyPositionFormat = 0;
+constexpr int kMaxCopyPositionFormat = 4;
+
+int ClampCopyPositionFormat(int format) {
+	return std::clamp(format, kMinCopyPositionFormat, kMaxCopyPositionFormat);
+}
+}
 
 void ClipboardHandler::copy(Editor& editor, int floor) {
 	if (g_gui.IsSelectionMode()) {
@@ -71,7 +82,7 @@ void ClipboardHandler::copyPosition(const Selection& selection) {
 		}
 		clip << "}";
 	} else {
-		switch (g_settings.getInteger(Config::COPY_POSITION_FORMAT)) {
+		switch (ClampCopyPositionFormat(g_settings.getInteger(Config::COPY_POSITION_FORMAT))) {
 			case 0:
 				clip << "{x = " << minPos.x << ", y = " << minPos.y << ", z = " << minPos.z << "}";
 				break;
@@ -85,6 +96,7 @@ void ClipboardHandler::copyPosition(const Selection& selection) {
 				clip << "(" << minPos.x << ", " << minPos.y << ", " << minPos.z << ")";
 				break;
 			case 4:
+			default:
 				clip << "Position(" << minPos.x << ", " << minPos.y << ", " << minPos.z << ")";
 				break;
 		}

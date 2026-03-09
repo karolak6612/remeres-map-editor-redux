@@ -24,10 +24,13 @@ private:
 	void OnPaint(wxPaintEvent& event);
 	void OnSize(wxSizeEvent& event);
 	void UpdateWrapping();
+	void RefreshScrolledParent();
 
 	wxStaticText* m_description_label = nullptr;
 	wxBoxSizer* m_body_sizer = nullptr;
 	std::vector<wxStaticText*> m_wrapped_labels;
+	int m_last_wrap_width = -1;
+	bool m_scroll_refresh_pending = false;
 };
 
 namespace PreferencesLayout {

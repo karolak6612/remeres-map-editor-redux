@@ -93,6 +93,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickCancel, this, wxID_CANCEL);
 	Bind(wxEVT_BUTTON, &PreferencesWindow::OnClickApply, this, wxID_APPLY);
+	Bind(wxEVT_CLOSE_WINDOW, &PreferencesWindow::OnClose, this);
 
 	wxIcon icon;
 	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
@@ -116,6 +117,7 @@ void PreferencesWindow::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void PreferencesWindow::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
+	client_version_page->DiscardPendingChanges();
 	EndModal(wxID_CANCEL);
 }
 
@@ -134,4 +136,14 @@ void PreferencesWindow::Apply() {
 	client_version_page->Apply();
 
 	g_settings.save();
+}
+
+void PreferencesWindow::OnClose(wxCloseEvent& event) {
+	if (!IsModal()) {
+		event.Skip();
+		return;
+	}
+
+	client_version_page->DiscardPendingChanges();
+	EndModal(wxID_CANCEL);
 }

@@ -3,8 +3,12 @@
 #include <algorithm>
 
 #include <wx/dcbuffer.h>
+#include <wx/scrolwin.h>
 
 namespace {
+constexpr int kWrapHorizontalPaddingDip = 120;
+constexpr int kMinWrapWidthDip = 220;
+
 wxStaticText* CreateTitleLabel(wxWindow* parent, const wxString& text) {
 	auto* label = new wxStaticText(parent, wxID_ANY, text);
 	label->SetFont(Theme::GetFont(9, true));
@@ -71,7 +75,11 @@ void PreferencesSectionPanel::RegisterWrappedLabel(wxStaticText* label) {
 
 void PreferencesSectionPanel::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	wxAutoBufferedPaintDC dc(this);
-	dc.SetBackground(wxBrush(GetParent()->GetBackgroundColour()));
+	if (auto* parent = GetParent()) {
+		dc.SetBackground(wxBrush(parent->GetBackgroundColour()));
+	} else {
+		dc.SetBackground(wxBrush(Theme::Get(Theme::Role::Background)));
+	}
 	dc.Clear();
 
 	const wxRect rect = GetClientRect().Deflate(1);
@@ -86,13 +94,39 @@ void PreferencesSectionPanel::OnSize(wxSizeEvent& event) {
 }
 
 void PreferencesSectionPanel::UpdateWrapping() {
-	const int wrap_width = std::max(GetClientSize().GetWidth() - wxWindow::FromDIP(120, this), wxWindow::FromDIP(220, this));
+	const int wrap_width = std::max(
+		GetClientSize().GetWidth() - wxWindow::FromDIP(kWrapHorizontalPaddingDip, this),
+		wxWindow::FromDIP(kMinWrapWidthDip, this)
+	);
+	if (wrap_width == m_last_wrap_width) {
+		return;
+	}
+
+	m_last_wrap_width = wrap_width;
 	for (auto* label : m_wrapped_labels) {
 		if (label) {
 			label->Wrap(wrap_width);
 		}
 	}
 	Layout();
+	if (auto* containing_sizer = GetContainingSizer()) {
+		containing_sizer->Layout();
+	}
+
+	if (!m_scroll_refresh_pending) {
+		m_scroll_refresh_pending = true;
+		CallAfter(&PreferencesSectionPanel::RefreshScrolledParent);
+	}
+}
+
+void PreferencesSectionPanel::RefreshScrolledParent() {
+	m_scroll_refresh_pending = false;
+	for (auto* window = GetParent(); window; window = window->GetParent()) {
+		if (auto* scrolled_window = dynamic_cast<wxScrolledWindow*>(window)) {
+			scrolled_window->FitInside();
+			break;
+		}
+	}
 }
 
 wxStaticText* PreferencesLayout::CreateBodyText(wxWindow* parent, const wxString& text, bool bold) {

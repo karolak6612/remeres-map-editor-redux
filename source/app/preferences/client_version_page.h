@@ -1,8 +1,11 @@
 #ifndef RME_PREFERENCES_CLIENT_VERSION_PAGE_H
 #define RME_PREFERENCES_CLIENT_VERSION_PAGE_H
 
+#include <unordered_set>
+
 #include <wx/button.h>
 #include <wx/checkbox.h>
+#include <wx/choice.h>
 #include <wx/propgrid/propgrid.h>
 #include <wx/srchctrl.h>
 #include <wx/simplebook.h>
@@ -18,6 +21,7 @@ public:
 	explicit ClientVersionPage(wxWindow* parent);
 	void Apply() override;
 	bool ValidateData();
+	void DiscardPendingChanges();
 
 private:
 	struct TreeItemData : public wxTreeItemData {
@@ -32,6 +36,7 @@ private:
 	void RefreshClientEditor();
 	void RefreshSummary();
 	bool ResolvePendingChanges(ClientVersion* client);
+	bool IsPendingDeletion(const ClientVersion& version) const;
 	bool MatchesFilter(const ClientVersion& version) const;
 	int GetMajorGroup(const ClientVersion& version) const;
 	void UpdatePropertyValidation(wxPGProperty* prop);
@@ -60,7 +65,9 @@ private:
 	wxStaticText* summary_dirty_label = nullptr;
 	ClientVersion* active_client = nullptr;
 	bool ignore_tree_selection = false;
+	wxString last_search_text;
 	std::string client_filter;
+	std::unordered_set<std::string> pending_deleted_client_ids;
 };
 
 #endif

@@ -37,6 +37,7 @@ public:
 	void OnClickApply(wxCommandEvent& event);
 	void OnClickOK(wxCommandEvent& event);
 	void OnClickCancel(wxCommandEvent& event);
+	void OnClose(wxCloseEvent& event);
 
 protected:
 	void Apply();
