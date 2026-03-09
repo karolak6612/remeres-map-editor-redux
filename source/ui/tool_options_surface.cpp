@@ -14,6 +14,7 @@
 #include "brushes/border/optional_border_brush.h"
 #include "brushes/door/door_brush.h"
 #include "brushes/flag/flag_brush.h"
+#include <wx/wupdlock.h>
 
 ToolOptionsSurface::ToolOptionsSurface(wxWindow* parent) : wxControl(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxBORDER_NONE | wxWANTS_CHARS) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
@@ -72,6 +73,8 @@ void ToolOptionsSurface::DoSetSizeHints(int minW, int minH, int maxW, int maxH, 
 }
 
 void ToolOptionsSurface::RebuildLayout() {
+	wxWindowUpdateLocker locker(this);
+
 	tool_rects.clear();
 	interactables.size_slider_rect = wxRect();
 	interactables.thickness_slider_rect = wxRect();

@@ -398,7 +398,7 @@ void FindItemDialog::RefreshContentsInternal() {
 		items_list->SetNoMatches();
 	}
 
-	items_list->Refresh();
+	items_list->CommitUpdates();
 }
 
 void FindItemDialog::OnOptionChange(wxCommandEvent& WXUNUSED(event)) {
