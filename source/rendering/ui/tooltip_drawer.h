@@ -18,131 +18,40 @@
 #ifndef RME_TOOLTIP_DRAWER_H_
 #define RME_TOOLTIP_DRAWER_H_
 
-#include "app/definitions.h"
-#include <iostream>
-#include "map/position.h"
+#include "rendering/ui/tooltip_data.h"
+#include "rendering/ui/tooltip_collector.h"
 #include "rendering/core/render_view.h"
-#include <vector>
-#include <string>
-#include <string_view>
-#include <sstream>
 #include <unordered_map>
+#include <sstream>
 
 class Item;
 class Waypoint;
 struct NVGcontext;
 
-struct ContainerItem {
-	uint16_t id;
-	uint8_t count;
-	uint8_t subtype;
-};
-
-// Tooltip category determines header color and icon
-enum class TooltipCategory {
-	WAYPOINT, // Green - landmark
-	ITEM, // Dark charcoal - generic item
-	DOOR, // Brown - door with door ID
-	TELEPORT, // Purple - teleporter
-	TEXT // Gold - readable text (signs, books)
-};
-
-// Structured tooltip data for card-based rendering
-struct TooltipData {
-	Position pos;
-	TooltipCategory category = TooltipCategory::ITEM;
-
-	// Header info
-	uint16_t itemId = 0;
-	std::string_view itemName;
-
-	// Optional fields (0 or empty = not shown)
-	uint16_t actionId = 0;
-	uint16_t uniqueId = 0;
-	uint8_t doorId = 0;
-	std::string_view text;
-	std::string_view description;
-	Position destination; // For teleports (check if valid via destination.x > 0)
-
-	// Waypoint-specific
-	std::string_view waypointName;
-
-	// Container contents
-	std::vector<ContainerItem> containerItems;
-	uint8_t containerCapacity = 0;
-
-	TooltipData() = default;
-
-	// Constructor for waypoint
-	TooltipData(Position p, std::string_view wpName) :
-		pos(p), category(TooltipCategory::WAYPOINT), waypointName(wpName) { }
-
-	// Constructor for item
-	TooltipData(Position p, uint16_t id, std::string_view name) :
-		pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(name) { }
-
-	// Determine category based on fields
-	void updateCategory() {
-		if (!waypointName.empty()) {
-			category = TooltipCategory::WAYPOINT;
-		} else if (destination.x > 0) {
-			category = TooltipCategory::TELEPORT;
-		} else if (doorId > 0) {
-			category = TooltipCategory::DOOR;
-		} else if (!text.empty()) {
-			category = TooltipCategory::TEXT;
-		} else {
-			category = TooltipCategory::ITEM;
-		}
-	}
-
-	// Check if this tooltip has any visible fields
-	bool hasVisibleFields() const {
-		return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty() || destination.x > 0 || !containerItems.empty();
-	}
-
-	void clear() {
-		// Reset scalars
-		pos = Position();
-		category = TooltipCategory::ITEM;
-		itemId = 0;
-		// clear strings
-		itemName = {};
-		actionId = 0;
-		uniqueId = 0;
-		doorId = 0;
-		text = {};
-		description = {};
-		destination = Position();
-		waypointName = {};
-		containerItems.clear();
-		containerCapacity = 0;
-	}
-};
-
+/// Renders tooltip cards collected by TooltipCollector.
+/// Also exposes collector methods for backward compatibility.
 class TooltipDrawer {
 public:
 	TooltipDrawer();
 	~TooltipDrawer();
 
-	// Add a structured tooltip for an item
-	void addItemTooltip(const TooltipData& data);
-	void addItemTooltip(TooltipData&& data);
+	// --- Collector pass (delegates to owned collector) ---
+	void addItemTooltip(const TooltipData& data) { collector.addItemTooltip(data); }
+	void addItemTooltip(TooltipData&& data) { collector.addItemTooltip(std::move(data)); }
+	TooltipData& requestTooltipData() { return collector.requestTooltipData(); }
+	void commitTooltip() { collector.commitTooltip(); }
+	void addWaypointTooltip(Position pos, std::string_view name) { collector.addWaypointTooltip(pos, name); }
+	void clear() { collector.clear(); }
 
-	// Request a tooltip object from the pool. Call commitTooltip() to finalize.
-	TooltipData& requestTooltipData();
-	void commitTooltip();
+	// Direct access to the collector (for callers that want the separated interface)
+	TooltipCollector& getCollector() { return collector; }
 
-	// Add a waypoint tooltip
-	void addWaypointTooltip(Position pos, std::string_view name);
-
-	// Draw all tooltips
+	// --- Renderer pass ---
 	void draw(NVGcontext* vg, const RenderView& view);
 
-	// Clear all tooltips
-	void clear();
-
 protected:
+	TooltipCollector collector;
+
 	struct FieldLine {
 		std::string_view label;
 		std::string_view value;
@@ -152,9 +61,6 @@ protected:
 	std::vector<FieldLine> scratch_fields;
 	size_t scratch_fields_count = 0;
 	std::string storage; // Scratch buffer for text generation
-
-	std::vector<TooltipData> tooltips;
-	size_t active_count = 0;
 
 	std::unordered_map<uint32_t, int> spriteCache; // sprite_id -> nvg image handle
 	NVGcontext* lastContext = nullptr;
