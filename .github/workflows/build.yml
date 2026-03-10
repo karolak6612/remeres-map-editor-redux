@@ -25,6 +25,7 @@ jobs:
           sudo apt-get install -y \
             build-essential \
             cmake \
+            ninja-build \
             ccache \
             pkg-config \
             libglu1-mesa-dev \
@@ -53,6 +54,14 @@ jobs:
         with:
           vcpkgGitCommitId: '1940ee77e81573713c0d364c42f5990172198be1'
 
+      - name: Cache vcpkg installed packages
+        uses: actions/cache@v4
+        with:
+          path: build/vcpkg_installed
+          key: vcpkg-installed-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json') }}
+          restore-keys: |
+            vcpkg-installed-${{ runner.os }}-
+
       - name: Setup ccache
         run: |
           echo "/usr/lib/ccache" >> $GITHUB_PATH
@@ -70,13 +79,11 @@ jobs:
 
       - name: Build RME
         run: |
-          mkdir -p build
-          cd build
-          cmake .. \
+          cmake -B build -G Ninja \
             -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             -DCMAKE_BUILD_TYPE=Release
-          make -j$(nproc)
+          cmake --build build --parallel
 
       - name: Show ccache stats
         run: ccache --show-stats
