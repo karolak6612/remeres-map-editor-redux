@@ -1,5 +1,5 @@
-#include "rendering/drawers/tiles/tile_renderer.h"
 #include "app/main.h"
+#include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/drawers/tiles/tile_draw_plan.h"

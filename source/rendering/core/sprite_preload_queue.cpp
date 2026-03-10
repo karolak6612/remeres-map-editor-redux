@@ -1,3 +1,4 @@
+#include "app/main.h"
 #include "rendering/core/sprite_preload_queue.h"
 #include "rendering/core/sprite_preloader.h"
 

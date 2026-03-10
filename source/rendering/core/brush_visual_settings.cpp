@@ -1,3 +1,4 @@
+#include "app/main.h"
 #include "rendering/core/brush_visual_settings.h"
 #include "app/settings.h"
 
