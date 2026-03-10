@@ -25,12 +25,11 @@
 #include "app/definitions.h"
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/light_buffer.h"
-#include "rendering/core/shader_program.h"
-#include "rendering/core/gl_resources.h"
 
 struct DrawingOptions;
 struct ViewState;
-class TileLocation;
+class LightFBO;
+class LightShader;
 
 struct GPULight {
 	glm::vec2 position; // 8 bytes (offset 0)
@@ -39,6 +38,9 @@ struct GPULight {
 	glm::vec4 color; // 16 bytes (offset 16) -> Total 32 bytes
 };
 
+// Orchestrates the light rendering pass.
+// Owns a LightFBO (framebuffer resources) and a LightShader (shader/SSBO resources),
+// coordinating their usage to produce the per-frame light overlay.
 class LightDrawer {
 public:
 	LightDrawer();
@@ -46,28 +48,9 @@ public:
 	void draw(const ViewState& view, bool fog, const LightBuffer& light_buffer, const DrawColor& global_color, float light_intensity = 1.0f, float ambient_light_level = 0.5f);
 
 private:
-	// wxColor global_color; // Removed state
-
-	// Open GL Texture used for lightmap
-	// It is owned by this class and should be released when context is destroyed
-
-	std::unique_ptr<ShaderProgram> shader;
-	std::unique_ptr<GLVertexArray> vao;
-	std::unique_ptr<GLBuffer> vbo;
-	std::unique_ptr<GLBuffer> light_ssbo;
-	size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
-
+	std::unique_ptr<LightFBO> fbo_;
+	std::unique_ptr<LightShader> shader_;
 	std::vector<GPULight> gpu_lights_;
-
-	std::unique_ptr<GLFramebuffer> fbo;
-	std::unique_ptr<GLTextureResource> fbo_texture;
-	int buffer_width = 0;
-	int buffer_height = 0;
-
-	void InitFBO();
-	void ResizeFBO(int width, int height);
-
-	void initRenderResources();
 };
 
 #endif

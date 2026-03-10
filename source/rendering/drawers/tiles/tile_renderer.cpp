@@ -22,7 +22,7 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/creature_name_drawer.h"
 #include "rendering/drawers/overlays/marker_drawer.h"
-#include "rendering/ui/tooltip_drawer.h"
+#include "rendering/ui/tooltip_collector.h"
 #include "rendering/ui/tooltip_data_extractor.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preloader.h"
@@ -34,7 +34,7 @@ TileRenderer::TileRenderer(const TileRenderDeps& deps) :
 	creature_drawer(deps.creature_drawer),
 	creature_name_drawer(deps.creature_name_drawer),
 	marker_drawer(deps.marker_drawer),
-	tooltip_drawer(deps.tooltip_drawer),
+	tooltip_collector(deps.tooltip_collector),
 	editor(deps.editor) {
 }
 
@@ -87,7 +87,7 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 
 	// Waypoint tooltip (one per waypoint)
 	if (options.show_tooltips && waypoint && map_z == view.floor) {
-		tooltip_drawer->addWaypointTooltip(position, waypoint->name);
+		tooltip_collector->addWaypointTooltip(position, waypoint->name);
 	}
 
 	bool as_minimap = options.show_as_minimap;
@@ -141,10 +141,10 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 
 	// Ground tooltip (one per item)
 	if (options.show_tooltips && map_z == view.floor && tile->ground && ground_it) {
-		TooltipData& groundData = tooltip_drawer->requestTooltipData();
+		TooltipData& groundData = tooltip_collector->requestTooltipData();
 		if (TooltipDataExtractor::Fill(groundData, tile->ground.get(), ground_it, position, is_house_tile, view.zoom)) {
 			if (groundData.hasVisibleFields()) {
-				tooltip_drawer->commitTooltip();
+				tooltip_collector->commitTooltip();
 			}
 		}
 	}
@@ -192,10 +192,10 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
-					TooltipData& itemData = tooltip_drawer->requestTooltipData();
+					TooltipData& itemData = tooltip_collector->requestTooltipData();
 					if (TooltipDataExtractor::Fill(itemData, item.get(), it, position, is_house_tile, view.zoom)) {
 						if (itemData.hasVisibleFields()) {
-							tooltip_drawer->commitTooltip();
+							tooltip_collector->commitTooltip();
 						}
 					}
 				}

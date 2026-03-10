@@ -15,39 +15,35 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_TEXTURE_GARBAGE_COLLECTOR_H
-#define RME_TEXTURE_GARBAGE_COLLECTOR_H
+#ifndef RME_NVG_IMAGE_CACHE_H_
+#define RME_NVG_IMAGE_CACHE_H_
 
-#include <deque>
-#include <vector>
-#include <memory>
-#include <time.h>
+#include <cstdint>
+#include <unordered_map>
 
-class GameSprite;
-class Image;
-class Sprite;
+struct NVGcontext;
 
-class TextureGarbageCollector {
+// Cache for NanoVG image handles, keyed by item ID.
+// Detects NVGcontext changes and invalidates the cache automatically.
+// Can be shared by multiple NanoVG-based renderers.
+class NVGImageCache {
 public:
-	TextureGarbageCollector();
-	~TextureGarbageCollector();
+	NVGImageCache() = default;
+	~NVGImageCache();
 
-	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time);
-	void AddSpriteToCleanup(GameSprite* spr);
-	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
-	void Clear();
+	// Non-copyable, non-movable (owns NVG handles)
+	NVGImageCache(const NVGImageCache&) = delete;
+	NVGImageCache& operator=(const NVGImageCache&) = delete;
 
-	void NotifyTextureLoaded();
-	void NotifyTextureUnloaded();
-
-	int GetLoadedTexturesCount() const {
-		return loaded_textures;
-	}
+	// Get or create a NanoVG image handle for the given item ID.
+	// Returns 0 on failure.
+	int getSpriteImage(NVGcontext* vg, uint16_t itemId);
 
 private:
-	int loaded_textures;
-	time_t lastclean;
-	std::deque<GameSprite*> cleanup_list;
+	std::unordered_map<uint32_t, int> cache_;
+	NVGcontext* last_context_ = nullptr;
+
+	void invalidateAll();
 };
 
 #endif

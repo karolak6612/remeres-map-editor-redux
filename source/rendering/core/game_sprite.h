@@ -163,7 +163,6 @@ public:
 	friend class GraphicsAssembler;
 	friend class SpriteIconGenerator;
 	friend class TextureGarbageCollector;
-	friend class TooltipDrawer;
 	friend class SpritePreloader;
 
 	// Exposed for fast-path rendering (BlitItem)

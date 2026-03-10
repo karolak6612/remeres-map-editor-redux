@@ -44,7 +44,9 @@
 #include "brushes/table/table_brush.h"
 #include "brushes/waypoint/waypoint_brush.h"
 #include "rendering/utilities/light_drawer.h"
-#include "rendering/ui/tooltip_drawer.h"
+#include "rendering/ui/tooltip_collector.h"
+#include "rendering/ui/tooltip_renderer.h"
+#include "rendering/ui/nvg_image_cache.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/render_view.h"
@@ -79,7 +81,6 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	canvas(canvas), editor(canvas->editor) {
 
 	light_drawer = std::make_shared<LightDrawer>();
-	tooltip_drawer = std::make_unique<TooltipDrawer>();
 
 	sprite_drawer = std::make_unique<SpriteDrawer>();
 	creature_drawer = std::make_unique<CreatureDrawer>();
@@ -95,7 +96,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 		.creature_drawer = creature_drawer.get(),
 		.creature_name_drawer = creature_name_drawer.get(),
 		.marker_drawer = marker_drawer.get(),
-		.tooltip_drawer = tooltip_drawer.get(),
+		.tooltip_collector = &tooltip_collector,
 		.editor = &editor
 	});
 
@@ -200,7 +201,6 @@ void MapDrawer::SetupGL() {
 }
 
 void MapDrawer::Release() {
-	// tooltip_drawer->clear(); // Moved to ClearTooltips(), called explicitly after UI draw
 }
 
 void MapDrawer::Draw() {
@@ -327,7 +327,7 @@ void MapDrawer::DrawGrid(const ViewBounds& bounds) {
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
-	tooltip_drawer->draw(vg, view);
+	tooltip_renderer.draw(vg, view, tooltip_collector.getTooltips(), nvg_image_cache);
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
@@ -358,7 +358,7 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 }
 
 void MapDrawer::ClearFrameOverlays() {
-	tooltip_drawer->clear();
+	tooltip_collector.clear();
 	hook_indicator_drawer->clear();
 	door_indicator_drawer->clear();
 }

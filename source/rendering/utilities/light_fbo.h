@@ -15,39 +15,34 @@
 // along with this program. If not, see <http://www.gnu.org/licenses/>.
 //////////////////////////////////////////////////////////////////////
 
-#ifndef RME_TEXTURE_GARBAGE_COLLECTOR_H
-#define RME_TEXTURE_GARBAGE_COLLECTOR_H
+#ifndef RME_LIGHT_FBO_H
+#define RME_LIGHT_FBO_H
 
-#include <deque>
-#include <vector>
 #include <memory>
-#include <time.h>
+#include "rendering/core/gl_resources.h"
 
-class GameSprite;
-class Image;
-class Sprite;
-
-class TextureGarbageCollector {
+// Owns the light framebuffer and its attached texture.
+// Handles creation, resize, and provides access to GL IDs.
+class LightFBO {
 public:
-	TextureGarbageCollector();
-	~TextureGarbageCollector();
+	LightFBO();
 
-	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time);
-	void AddSpriteToCleanup(GameSprite* spr);
-	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
-	void Clear();
+	// Ensures the FBO texture is at least (width x height).
+	// Recreates the texture if the current size is insufficient.
+	void EnsureSize(int width, int height);
 
-	void NotifyTextureLoaded();
-	void NotifyTextureUnloaded();
-
-	int GetLoadedTexturesCount() const {
-		return loaded_textures;
-	}
+	GLuint GetFBOID() const { return fbo_->GetID(); }
+	GLuint GetTextureID() const { return texture_->GetID(); }
+	int GetWidth() const { return width_; }
+	int GetHeight() const { return height_; }
 
 private:
-	int loaded_textures;
-	time_t lastclean;
-	std::deque<GameSprite*> cleanup_list;
+	std::unique_ptr<GLFramebuffer> fbo_;
+	std::unique_ptr<GLTextureResource> texture_;
+	int width_ = 0;
+	int height_ = 0;
+
+	void createTexture(int width, int height);
 };
 
 #endif

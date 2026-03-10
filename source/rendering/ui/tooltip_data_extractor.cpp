@@ -1,6 +1,6 @@
 #include "app/main.h"
 #include "rendering/ui/tooltip_data_extractor.h"
-#include "rendering/ui/tooltip_drawer.h"
+#include "rendering/ui/tooltip_data.h"
 #include "game/item.h"
 #include "game/complexitem.h"
 #include "map/position.h"

@@ -53,7 +53,7 @@ public:
 
 	std::unordered_map<int, std::unique_ptr<Sprite>>& editorSprites() { return editor_sprite_space_; }
 
-	std::vector<void*>& residentImages() { return resident_images_; }
+	std::vector<Image*>& residentImages() { return resident_images_; }
 	std::vector<GameSprite*>& residentGameSprites() { return resident_game_sprites_; }
 
 private:
@@ -61,7 +61,7 @@ private:
 	ImageVector image_space_;
 	std::unordered_map<int, std::unique_ptr<Sprite>> editor_sprite_space_;
 
-	std::vector<void*> resident_images_;
+	std::vector<Image*> resident_images_;
 	std::vector<GameSprite*> resident_game_sprites_;
 };
 

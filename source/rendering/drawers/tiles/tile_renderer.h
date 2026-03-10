@@ -15,7 +15,7 @@ class SpriteDrawer;
 class CreatureDrawer;
 class CreatureNameDrawer;
 class MarkerDrawer;
-class TooltipDrawer;
+class TooltipCollector;
 class SpriteBatch;
 struct SpritePatterns;
 class ItemDefinitionView;
@@ -26,7 +26,7 @@ struct TileRenderDeps {
 	CreatureDrawer* creature_drawer = nullptr;
 	CreatureNameDrawer* creature_name_drawer = nullptr;
 	MarkerDrawer* marker_drawer = nullptr;
-	TooltipDrawer* tooltip_drawer = nullptr;
+	TooltipCollector* tooltip_collector = nullptr;
 	Editor* editor = nullptr;
 };
 
@@ -43,7 +43,7 @@ private:
 	SpriteDrawer* sprite_drawer;
 	CreatureDrawer* creature_drawer;
 	MarkerDrawer* marker_drawer;
-	TooltipDrawer* tooltip_drawer;
+	TooltipCollector* tooltip_collector;
 	CreatureNameDrawer* creature_name_drawer;
 	Editor* editor;
 };

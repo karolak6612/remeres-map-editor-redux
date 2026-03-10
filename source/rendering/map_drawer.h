@@ -21,7 +21,6 @@
 class GameSprite;
 
 struct NVGcontext;
-class TooltipDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
@@ -37,6 +36,9 @@ class DoorIndicatorDrawer;
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
+#include "rendering/ui/tooltip_collector.h"
+#include "rendering/ui/tooltip_renderer.h"
+#include "rendering/ui/nvg_image_cache.h"
 
 class PostProcessPipeline;
 class GridDrawer;
@@ -68,7 +70,9 @@ class MapDrawer {
 	ViewState view;
 	std::shared_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
-	std::unique_ptr<TooltipDrawer> tooltip_drawer;
+	TooltipCollector tooltip_collector;
+	TooltipRenderer tooltip_renderer;
+	NVGImageCache nvg_image_cache;
 	std::unique_ptr<GridDrawer> grid_drawer;
 	std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
 	std::unique_ptr<SelectionDrawer> selection_drawer;
