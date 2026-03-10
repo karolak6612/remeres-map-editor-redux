@@ -43,7 +43,7 @@ void DrawingOptions::SetDefault() {
 	global_light_color = DrawColor(128, 128, 128, 255);
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
-	screen_shader_name = ShaderNames::NONE;
+	screen_shader_name = "None";
 }
 
 void DrawingOptions::SetIngame() {
