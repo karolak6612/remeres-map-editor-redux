@@ -56,6 +56,15 @@ class SpriteArchive;
 #include "rendering/core/template_image.h"
 
 class GraphicManager {
+	// Private data members declared first to ensure correct initialization order.
+	// C++ initializes members in declaration order, and client_version (below)
+	// binds a reference to loader_.client_version, so loader_ must be constructed first.
+	SpriteDatabase db_;
+	AtlasLifecycle atlas_;
+	SpriteLoaderState loader_;
+	TextureGC gc_;
+	SharedGeometry shared_geometry_;
+
 public:
 	GraphicManager();
 	~GraphicManager();
@@ -112,13 +121,6 @@ public:
 	AtlasLifecycle& atlas() { return atlas_; }
 	SpriteLoaderState& loader() { return loader_; }
 	TextureGC& gc() { return gc_; }
-
-private:
-	SpriteDatabase db_;
-	AtlasLifecycle atlas_;
-	SpriteLoaderState loader_;
-	TextureGC gc_;
-	SharedGeometry shared_geometry_;
 };
 
 #include "minimap_colors.h"

@@ -55,6 +55,8 @@ public:
 			size_t h = std::hash<uint64_t> {}((uint64_t(k.colorHash) << 32) | k.mountColorHash);
 			h ^= std::hash<uint64_t> {}((uint64_t(k.lookMount) << 32) | k.lookAddon) + 0x9e3779b9 + (h << 6) + (h >> 2);
 			h ^= std::hash<uint64_t> {}((uint64_t(k.lookMountHead) << 32) | k.lookMountBody) + 0x9e3779b9 + (h << 6) + (h >> 2);
+			h ^= std::hash<uint64_t> {}((uint64_t(k.lookMountLegs) << 32) | k.lookMountFeet) + 0x9e3779b9 + (h << 6) + (h >> 2);
+			h ^= std::hash<int> {}(static_cast<int>(k.size)) + 0x9e3779b9 + (h << 6) + (h >> 2);
 			return h;
 		}
 	};

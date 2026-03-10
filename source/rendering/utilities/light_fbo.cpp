@@ -51,4 +51,9 @@ void LightFBO::EnsureSize(int width, int height) {
 	// Grow to at least the requested size (never shrinks)
 	createTexture(std::max(width_, width), std::max(height_, height));
 	glNamedFramebufferTexture(fbo_->GetID(), GL_COLOR_ATTACHMENT0, texture_->GetID(), 0);
+
+	GLenum status = glCheckNamedFramebufferStatus(fbo_->GetID(), GL_FRAMEBUFFER);
+	if (status != GL_FRAMEBUFFER_COMPLETE) {
+		spdlog::error("LightFBO Incomplete after resize ({}x{}): {}", width_, height_, status);
+	}
 }

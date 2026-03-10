@@ -55,7 +55,6 @@
 
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "rendering/drawers/cursors/live_cursor_drawer.h"
-#include "rendering/drawers/overlays/selection_drawer.h"
 #include "rendering/drawers/cursors/brush_cursor_drawer.h"
 #include "rendering/drawers/overlays/brush_overlay_drawer.h"
 #include "rendering/drawers/cursors/drag_shadow_drawer.h"
@@ -103,7 +102,6 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	grid_drawer = std::make_unique<GridDrawer>();
 	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
 	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
-	selection_drawer = std::make_unique<SelectionDrawer>();
 	brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
 	brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
 	drag_shadow_drawer = std::make_unique<DragShadowDrawer>();

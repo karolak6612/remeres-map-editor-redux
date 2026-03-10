@@ -69,6 +69,12 @@ void SpriteDatabase::clear() {
 }
 
 void SpriteDatabase::resize(size_t sprite_size, size_t image_size) {
+	// If shrinking, clear resident tracking to avoid dangling pointers
+	// to sprites/images that will be destroyed by resize.
+	if (sprite_size < sprite_space_.size() || image_size < image_space_.size()) {
+		resident_images_.clear();
+		resident_game_sprites_.clear();
+	}
 	sprite_space_.resize(sprite_size);
 	image_space_.resize(image_size);
 }

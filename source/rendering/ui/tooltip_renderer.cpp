@@ -104,51 +104,92 @@ void TooltipRenderer::prepareFields(const TooltipData& tooltip) {
 		storage_.reserve(4096);
 	}
 
-	auto addField = [&](std::string_view label, std::string_view value, Theme::Role colorRole) {
+	// Two-phase approach to avoid string_view invalidation from storage_ reallocation.
+	// Phase 1: Format all values into storage_, recording offsets.
+	// Phase 2: Create FieldLines with string_views into the now-stable storage_ buffer.
+
+	struct PendingField {
+		std::string_view label;
+		size_t value_offset; // SIZE_MAX = external string_view
+		size_t value_length;
+		std::string_view external_value;
+		Theme::Role colorRole;
+	};
+	PendingField pending[8];
+	size_t pending_count = 0;
+
+	if (tooltip.category == TooltipCategory::WAYPOINT) {
+		auto& pf = pending[pending_count++];
+		pf.label = "Waypoint";
+		pf.value_offset = SIZE_MAX;
+		pf.external_value = tooltip.waypointName;
+		pf.colorRole = Theme::Role::TooltipWaypoint;
+	} else {
+		if (tooltip.actionId > 0) {
+			auto& pf = pending[pending_count++];
+			pf.label = "Action ID";
+			pf.value_offset = storage_.size();
+			std::format_to(std::back_inserter(storage_), "{}", tooltip.actionId);
+			pf.value_length = storage_.size() - pf.value_offset;
+			pf.colorRole = Theme::Role::TooltipActionId;
+		}
+		if (tooltip.uniqueId > 0) {
+			auto& pf = pending[pending_count++];
+			pf.label = "Unique ID";
+			pf.value_offset = storage_.size();
+			std::format_to(std::back_inserter(storage_), "{}", tooltip.uniqueId);
+			pf.value_length = storage_.size() - pf.value_offset;
+			pf.colorRole = Theme::Role::TooltipUniqueId;
+		}
+		if (tooltip.doorId > 0) {
+			auto& pf = pending[pending_count++];
+			pf.label = "Door ID";
+			pf.value_offset = storage_.size();
+			std::format_to(std::back_inserter(storage_), "{}", tooltip.doorId);
+			pf.value_length = storage_.size() - pf.value_offset;
+			pf.colorRole = Theme::Role::TooltipDoorId;
+		}
+		if (tooltip.has_destination) {
+			auto& pf = pending[pending_count++];
+			pf.label = "Destination";
+			pf.value_offset = storage_.size();
+			std::format_to(std::back_inserter(storage_), "{}, {}, {}", tooltip.destination.x, tooltip.destination.y, tooltip.destination.z);
+			pf.value_length = storage_.size() - pf.value_offset;
+			pf.colorRole = Theme::Role::TooltipTeleport;
+		}
+		if (!tooltip.description.empty()) {
+			auto& pf = pending[pending_count++];
+			pf.label = "Description";
+			pf.value_offset = SIZE_MAX;
+			pf.external_value = tooltip.description;
+			pf.colorRole = Theme::Role::TooltipBodyText;
+		}
+		if (!tooltip.text.empty()) {
+			auto& pf = pending[pending_count++];
+			pf.label = "Text";
+			pf.value_offset = storage_.size();
+			std::format_to(std::back_inserter(storage_), "\"{}\"", tooltip.text);
+			pf.value_length = storage_.size() - pf.value_offset;
+			pf.colorRole = Theme::Role::TooltipTextValue;
+		}
+	}
+
+	// Phase 2: storage_ is now stable — create FieldLines with safe string_views
+	for (size_t i = 0; i < pending_count; ++i) {
+		const auto& pf = pending[i];
 		if (scratch_fields_count_ >= scratch_fields_.size()) {
 			scratch_fields_.emplace_back();
 		}
 		FieldLine& field = scratch_fields_[scratch_fields_count_++];
-		field.label = label;
-		field.value = value;
-		wxColour c = Theme::Get(colorRole);
+		field.label = pf.label;
+		field.value = (pf.value_offset == SIZE_MAX)
+			? pf.external_value
+			: std::string_view(storage_.data() + pf.value_offset, pf.value_length);
+		wxColour c = Theme::Get(pf.colorRole);
 		field.r = c.Red();
 		field.g = c.Green();
 		field.b = c.Blue();
 		field.wrappedLines.clear();
-	};
-
-	if (tooltip.category == TooltipCategory::WAYPOINT) {
-		addField("Waypoint", tooltip.waypointName, Theme::Role::TooltipWaypoint);
-	} else {
-		if (tooltip.actionId > 0) {
-			size_t start = storage_.size();
-			std::format_to(std::back_inserter(storage_), "{}", tooltip.actionId);
-			addField("Action ID", std::string_view(storage_.data() + start, storage_.size() - start), Theme::Role::TooltipActionId);
-		}
-		if (tooltip.uniqueId > 0) {
-			size_t start = storage_.size();
-			std::format_to(std::back_inserter(storage_), "{}", tooltip.uniqueId);
-			addField("Unique ID", std::string_view(storage_.data() + start, storage_.size() - start), Theme::Role::TooltipUniqueId);
-		}
-		if (tooltip.doorId > 0) {
-			size_t start = storage_.size();
-			std::format_to(std::back_inserter(storage_), "{}", tooltip.doorId);
-			addField("Door ID", std::string_view(storage_.data() + start, storage_.size() - start), Theme::Role::TooltipDoorId);
-		}
-		if (tooltip.destination.x > 0) {
-			size_t start = storage_.size();
-			std::format_to(std::back_inserter(storage_), "{}, {}, {}", tooltip.destination.x, tooltip.destination.y, tooltip.destination.z);
-			addField("Destination", std::string_view(storage_.data() + start, storage_.size() - start), Theme::Role::TooltipTeleport);
-		}
-		if (!tooltip.description.empty()) {
-			addField("Description", tooltip.description, Theme::Role::TooltipBodyText);
-		}
-		if (!tooltip.text.empty()) {
-			size_t start = storage_.size();
-			std::format_to(std::back_inserter(storage_), "\"{}\"", tooltip.text);
-			addField("Text", std::string_view(storage_.data() + start, storage_.size() - start), Theme::Role::TooltipTextValue);
-		}
 	}
 }
 
@@ -354,6 +395,7 @@ void TooltipRenderer::drawContainerGrid(NVGcontext* vg, float x, float y, const 
 
 		// Draw slot background
 		nvgBeginPath(vg);
+		nvgRect(vg, itemX, itemY, layout.gridSlotSize, layout.gridSlotSize);
 		wxColour baseCol = Theme::Get(Theme::Role::CardBase);
 		wxColour borderCol = Theme::Get(Theme::Role::Border);
 

@@ -32,6 +32,10 @@ public:
 	void clear();
 
 	// All public — GraphicsAssembler writes directly to these.
+	// Synchronization contract: `unloaded` acts as a release/acquire guard.
+	// Writers must set all non-atomic fields BEFORE storing unloaded = false (release).
+	// Readers must load unloaded (acquire) and only access other fields if it returns false.
+	// Default seq_cst ordering on std::atomic provides the required guarantees.
 	std::atomic<bool> unloaded { true };
 	std::string spritefile;
 	std::shared_ptr<SpriteArchive> sprite_archive_;

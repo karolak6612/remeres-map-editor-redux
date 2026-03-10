@@ -80,7 +80,7 @@ void SpriteIconRenderer::eraseColoredDC(const RenderKey& key) {
 }
 
 wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite) {
-	ASSERT(size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_32x32);
+	ASSERT(size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_32x32 || size == SPRITE_SIZE_64x64);
 
 	if (!dc_[size]) {
 		wxBitmap bmp = SpriteIconGenerator::Generate(sprite, size);
@@ -94,7 +94,7 @@ wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite) {
 }
 
 wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite, const Outfit& outfit) {
-	ASSERT(size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_32x32);
+	ASSERT(size == SPRITE_SIZE_16x16 || size == SPRITE_SIZE_32x32 || size == SPRITE_SIZE_64x64);
 
 	RenderKey key;
 	key.size = size;

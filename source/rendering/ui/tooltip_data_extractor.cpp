@@ -22,6 +22,7 @@ bool Fill(TooltipData& data, Item* item, const ItemDefinitionView& it, const Pos
 	std::string_view text;
 	std::string_view description;
 	uint8_t doorId = 0;
+	bool hasDestination = false;
 	Position destination;
 	bool hasContent = false;
 
@@ -57,6 +58,7 @@ bool Fill(TooltipData& data, Item* item, const ItemDefinitionView& it, const Pos
 		Teleport* tp = static_cast<Teleport*>(item);
 		if (tp->hasDestination()) {
 			destination = tp->getDestination();
+			hasDestination = true;
 		}
 	}
 
@@ -68,7 +70,7 @@ bool Fill(TooltipData& data, Item* item, const ItemDefinitionView& it, const Pos
 	}
 
 	// Only create tooltip if there's something to show
-	if (unique == 0 && action == 0 && doorId == 0 && text.empty() && description.empty() && destination.x == 0 && !hasContent) {
+	if (unique == 0 && action == 0 && doorId == 0 && text.empty() && description.empty() && !hasDestination && !hasContent) {
 		return false;
 	}
 
@@ -87,6 +89,7 @@ bool Fill(TooltipData& data, Item* item, const ItemDefinitionView& it, const Pos
 	data.doorId = doorId;
 	data.text = text;
 	data.description = description;
+	data.has_destination = hasDestination;
 	data.destination = destination;
 
 	// Populate container items

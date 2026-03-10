@@ -53,7 +53,8 @@ struct TooltipData {
 	uint8_t doorId = 0;
 	std::string_view text;
 	std::string_view description;
-	Position destination; // For teleports (check if valid via destination.x > 0)
+	bool has_destination = false; // Explicit flag instead of sentinel (x=0 is a valid map position)
+	Position destination;
 
 	// Waypoint-specific
 	std::string_view waypointName;
@@ -76,7 +77,7 @@ struct TooltipData {
 	void updateCategory() {
 		if (!waypointName.empty()) {
 			category = TooltipCategory::WAYPOINT;
-		} else if (destination.x > 0) {
+		} else if (has_destination) {
 			category = TooltipCategory::TELEPORT;
 		} else if (doorId > 0) {
 			category = TooltipCategory::DOOR;
@@ -89,7 +90,7 @@ struct TooltipData {
 
 	// Check if this tooltip has any visible fields
 	bool hasVisibleFields() const {
-		return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty() || destination.x > 0 || !containerItems.empty();
+		return !waypointName.empty() || actionId > 0 || uniqueId > 0 || doorId > 0 || !text.empty() || !description.empty() || has_destination || !containerItems.empty();
 	}
 
 	void clear() {
@@ -102,6 +103,7 @@ struct TooltipData {
 		doorId = 0;
 		text = {};
 		description = {};
+		has_destination = false;
 		destination = Position();
 		waypointName = {};
 		containerItems.clear();

@@ -108,8 +108,7 @@ void LightDrawer::draw(const ViewState& view, bool fog, const LightBuffer& light
 	float draw_dest_w = static_cast<float>(buffer_w) * view.zoom;
 	float draw_dest_h = static_cast<float>(buffer_h) * view.zoom;
 
-	glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, 0.0f));
-	model = glm::scale(model, glm::vec3(draw_dest_w, draw_dest_h, 1.0f));
+	glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(draw_dest_w, draw_dest_h, 1.0f));
 	glm::mat4 mvp = view.projectionMatrix * view.viewMatrix * model;
 
 	float uv_w = static_cast<float>(buffer_w) / static_cast<float>(fbo_->GetWidth());
