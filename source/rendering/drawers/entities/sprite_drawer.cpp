@@ -1,5 +1,6 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/sprites.h"
+#include "rendering/core/game_sprite.h"
 #include "rendering/core/sprite_resolver.h"
 #include "item_definitions/core/item_definition_store.h"
 
