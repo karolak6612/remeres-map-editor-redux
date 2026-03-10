@@ -25,6 +25,7 @@
 
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/ui/view_state_manager.h"
 #include "ui/map_popup_menu.h"
 #include <memory>
 
@@ -98,13 +99,14 @@ public:
     void ChangeFloor(int new_floor);
     int GetFloor() const
     {
-        return floor;
+        return view_state_->getFloor();
     }
     double GetZoom() const
     {
-        return zoom;
+        return view_state_->getZoom();
     }
     void SetZoom(double value);
+    ViewStateManager& GetViewState() { return *view_state_; }
     void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
 
     Position GetCursorPosition() const;
@@ -185,18 +187,18 @@ public:
     }
     void SetFloorDirect(int f)
     {
-        floor = f;
+        view_state_->setFloor(f);
     }
     void SetZoomDirect(double z)
     {
-        zoom = z;
+        view_state_->setZoom(z);
     }
 
 private:
+    std::unique_ptr<ViewStateManager> view_state_;
+
     // View state
     int keyCode;
-    int floor;
-    double zoom;
     int cursor_x;
     int cursor_y;
     bool dragging;

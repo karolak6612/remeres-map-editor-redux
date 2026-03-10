@@ -593,6 +593,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/drawing_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/keyboard_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_display.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/view_state_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_menu_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_status_updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/minimap_window.cpp
