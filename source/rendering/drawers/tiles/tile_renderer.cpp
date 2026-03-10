@@ -34,6 +34,8 @@ TileRenderer::TileRenderer(const TileRenderDeps& deps) :
 	creature_drawer(deps.creature_drawer),
 	marker_drawer(deps.marker_drawer),
 	editor(deps.editor) {
+	// Pre-reserve for typical tile item counts to avoid per-tile allocations
+	reusable_plan_.reserve(16);
 }
 
 namespace {
@@ -60,10 +62,10 @@ namespace {
 }
 
 void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights) {
-	TileDrawPlan plan;
-	PlanTile(ctx, location, current_house_id, in_draw_x, in_draw_y, draw_lights, plan);
-	if (plan.valid) {
-		ExecutePlan(ctx, plan);
+	reusable_plan_.clear();
+	PlanTile(ctx, location, current_house_id, in_draw_x, in_draw_y, draw_lights, reusable_plan_);
+	if (reusable_plan_.valid) {
+		ExecutePlan(ctx, reusable_plan_);
 	}
 }
 

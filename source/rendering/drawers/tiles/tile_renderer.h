@@ -2,8 +2,9 @@
 #define RME_RENDERING_TILE_RENDERER_H_
 
 #include <memory>
-#include <sstream>
 #include <stdint.h>
+
+#include "rendering/drawers/tiles/tile_draw_plan.h"
 
 class TileLocation;
 class Tile;
@@ -14,7 +15,6 @@ class SpriteDrawer;
 class CreatureDrawer;
 class MarkerDrawer;
 class SpriteBatch;
-struct TileDrawPlan;
 
 struct TileRenderDeps {
 	ItemDrawer* item_drawer = nullptr;
@@ -48,6 +48,10 @@ private:
 	CreatureDrawer* creature_drawer;
 	MarkerDrawer* marker_drawer;
 	Editor* editor;
+
+	// Reusable plan to avoid per-tile heap allocations.
+	// Pre-reserved in constructor for typical tile item counts.
+	TileDrawPlan reusable_plan_;
 };
 
 #endif
