@@ -107,7 +107,7 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {
 		}
 		case 'd':
 		case 'D': {
-			canvas->keyCode = WXK_CONTROL_D;
+			canvas->SetKeyCode(WXK_CONTROL_D);
 			break;
 		}
 		default: {
@@ -118,14 +118,14 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event) {
 }
 
 void KeyboardHandler::OnKeyUp(MapCanvas* canvas, wxKeyEvent& event) {
-	canvas->keyCode = WXK_NONE;
+	canvas->SetKeyCode(WXK_NONE);
 }
 
 void KeyboardHandler::HandleFloorChange(MapCanvas* canvas, int keycode) {
 	if (keycode == WXK_NUMPAD_ADD || keycode == WXK_PAGEUP) {
-		g_gui.ChangeFloor(canvas->floor - 1);
+		g_gui.ChangeFloor(canvas->GetFloor() - 1);
 	} else {
-		g_gui.ChangeFloor(canvas->floor + 1);
+		g_gui.ChangeFloor(canvas->GetFloor() + 1);
 	}
 }
 
@@ -176,10 +176,10 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			int view_screensize_x, view_screensize_y;
 			static_cast<MapWindow*>(canvas->GetParent())->GetViewSize(&view_screensize_x, &view_screensize_y);
 
-			int map_x = int(view_start_map_x + (view_screensize_x * canvas->zoom) / TILE_SIZE / 2);
-			int map_y = int(view_start_map_y + (view_screensize_y * canvas->zoom) / TILE_SIZE / 2);
+			int map_x = int(view_start_map_x + (view_screensize_x * canvas->GetZoom()) / TILE_SIZE / 2);
+			int map_y = int(view_start_map_y + (view_screensize_y * canvas->GetZoom()) / TILE_SIZE / 2);
 
-			hk = Hotkey(Position(map_x, map_y, canvas->floor));
+			hk = Hotkey(Position(map_x, map_y, canvas->GetFloor()));
 		} else if (g_gui.GetCurrentBrush()) {
 			hk = Hotkey(g_gui.GetCurrentBrush());
 		} else {
@@ -196,7 +196,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 			int map_z = hk.GetPosition().z;
 
 			static_cast<MapWindow*>(canvas->GetParent())->Scroll(TILE_SIZE * map_x, TILE_SIZE * map_y, true);
-			canvas->floor = map_z;
+			canvas->SetFloorDirect(map_z);
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
 			g_gui.RefreshView();

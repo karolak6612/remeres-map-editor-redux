@@ -94,7 +94,7 @@ void MapMenuHandler::OnCopyName(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MapMenuHandler::OnBrowseTile(wxCommandEvent& WXUNUSED(event)) {
-	PopupActionHandler::BrowseTile(editor, canvas->cursor_x, canvas->cursor_y);
+	PopupActionHandler::BrowseTile(editor, canvas->GetCursorX(), canvas->GetCursorY());
 }
 
 void MapMenuHandler::OnTileProperties(wxCommandEvent& WXUNUSED(event)) {

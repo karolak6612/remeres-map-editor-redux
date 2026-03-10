@@ -160,8 +160,8 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
 			canvas->Refresh();
 		} else if (boundbox_selection) {
 			// Calculate selection size
-			int move_x = std::abs(canvas->last_click_map_x - mouse_map_pos.x);
-			int move_y = std::abs(canvas->last_click_map_y - mouse_map_pos.y);
+			int move_x = std::abs(canvas->GetLastClickMapX() - mouse_map_pos.x);
+			int move_y = std::abs(canvas->GetLastClickMapY() - mouse_map_pos.y);
 			wxString ss;
 			ss << "Selection " << move_x + 1 << ":" << move_y + 1;
 			g_gui.SetStatusText(ss);
@@ -172,16 +172,16 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
 }
 
 void SelectionController::HandleRelease(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down) {
-	int move_x = canvas->last_click_map_x - mouse_map_pos.x;
-	int move_y = canvas->last_click_map_y - mouse_map_pos.y;
-	int move_z = canvas->last_click_map_z - mouse_map_pos.z;
+	int move_x = canvas->GetLastClickMapX() - mouse_map_pos.x;
+	int move_y = canvas->GetLastClickMapY() - mouse_map_pos.y;
+	int move_z = canvas->GetLastClickMapZ() - mouse_map_pos.z;
 
 	if (g_gui.IsSelectionMode()) {
 		if (dragging && (move_x != 0 || move_y != 0 || move_z != 0)) {
 			editor.moveSelection(Position(move_x, move_y, move_z));
 		} else {
 			if (boundbox_selection) {
-				if (mouse_map_pos.x == canvas->last_click_map_x && mouse_map_pos.y == canvas->last_click_map_y && ctrl_down) {
+				if (mouse_map_pos.x == canvas->GetLastClickMapX() && mouse_map_pos.y == canvas->GetLastClickMapY() && ctrl_down) {
 					// Mouse hasn't moved, do control+shift thingy!
 					Tile* tile = editor.map.getTile(mouse_map_pos);
 					if (tile) {
@@ -195,7 +195,7 @@ void SelectionController::HandleRelease(const Position& mouse_map_pos, bool shif
 						editor.selection.updateSelectionCount();
 					}
 				} else {
-					ExecuteBoundboxSelection(Position(canvas->last_click_map_x, canvas->last_click_map_y, canvas->last_click_map_z), mouse_map_pos, mouse_map_pos.z);
+					ExecuteBoundboxSelection(Position(canvas->GetLastClickMapX(), canvas->GetLastClickMapY(), canvas->GetLastClickMapZ()), mouse_map_pos, mouse_map_pos.z);
 				}
 			} else if (ctrl_down) {
 				////
@@ -286,7 +286,7 @@ void SelectionController::HandlePropertiesRelease(const Position& mouse_map_pos,
 	}
 
 	if (boundbox_selection) {
-		if (mouse_map_pos.x == canvas->last_click_map_x && mouse_map_pos.y == canvas->last_click_map_y && ctrl_down) {
+		if (mouse_map_pos.x == canvas->GetLastClickMapX() && mouse_map_pos.y == canvas->GetLastClickMapY() && ctrl_down) {
 			// Mouse hasn't move, do control+shift thingy!
 			Tile* tile = editor.map.getTile(mouse_map_pos);
 			if (tile) {
@@ -300,7 +300,7 @@ void SelectionController::HandlePropertiesRelease(const Position& mouse_map_pos,
 				editor.selection.updateSelectionCount();
 			}
 		} else {
-			ExecuteBoundboxSelection(Position(canvas->last_click_map_x, canvas->last_click_map_y, canvas->last_click_map_z), mouse_map_pos, mouse_map_pos.z);
+			ExecuteBoundboxSelection(Position(canvas->GetLastClickMapX(), canvas->GetLastClickMapY(), canvas->GetLastClickMapZ()), mouse_map_pos, mouse_map_pos.z);
 		}
 	} else if (ctrl_down) {
 		// Nothing

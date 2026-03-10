@@ -148,7 +148,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					PositionVector tilestodraw;
 					PositionVector tilestoborder;
 
-					bool fill = canvas->keyCode == WXK_CONTROL_D && ctrl_down && brush->is<GroundBrush>();
+					bool fill = canvas->GetKeyCode() == WXK_CONTROL_D && ctrl_down && brush->is<GroundBrush>();
 					BrushUtility::GetTilesToDraw(mouse_map_pos.x, mouse_map_pos.y, mouse_map_pos.z, &tilestodraw, &tilestoborder, fill);
 
 					if (!fill && ctrl_down) {
@@ -282,10 +282,10 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 		Brush* brush = g_gui.GetCurrentBrush();
 		if (brush) {
 			if (brush->is<SpawnBrush>()) {
-				int start_map_x = std::min(canvas->last_click_map_x, mouse_map_pos.x);
-				int start_map_y = std::min(canvas->last_click_map_y, mouse_map_pos.y);
-				int end_map_x = std::max(canvas->last_click_map_x, mouse_map_pos.x);
-				int end_map_y = std::max(canvas->last_click_map_y, mouse_map_pos.y);
+				int start_map_x = std::min(canvas->GetLastClickMapX(), mouse_map_pos.x);
+				int start_map_y = std::min(canvas->GetLastClickMapY(), mouse_map_pos.y);
+				int end_map_x = std::max(canvas->GetLastClickMapX(), mouse_map_pos.x);
+				int end_map_y = std::max(canvas->GetLastClickMapY(), mouse_map_pos.y);
 
 				int map_x = start_map_x + (end_map_x - start_map_x) / 2;
 				int map_y = start_map_y + (end_map_y - start_map_y) / 2;
@@ -299,10 +299,10 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 				PositionVector tilestodraw;
 				PositionVector tilestoborder;
 				if (brush->is<WallBrush>()) {
-					int start_map_x = std::min(canvas->last_click_map_x, mouse_map_pos.x);
-					int start_map_y = std::min(canvas->last_click_map_y, mouse_map_pos.y);
-					int end_map_x = std::max(canvas->last_click_map_x, mouse_map_pos.x);
-					int end_map_y = std::max(canvas->last_click_map_y, mouse_map_pos.y);
+					int start_map_x = std::min(canvas->GetLastClickMapX(), mouse_map_pos.x);
+					int start_map_y = std::min(canvas->GetLastClickMapY(), mouse_map_pos.y);
+					int end_map_x = std::max(canvas->GetLastClickMapX(), mouse_map_pos.x);
+					int end_map_y = std::max(canvas->GetLastClickMapY(), mouse_map_pos.y);
 
 					for (int y = start_map_y - 1; y <= end_map_y + 1; y++) {
 						for (int x = start_map_x - 1; x <= end_map_x + 1; x++) {
@@ -316,8 +316,8 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 					}
 				} else {
 					if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
-						int last_x = canvas->last_click_map_x;
-						int last_y = canvas->last_click_map_y;
+						int last_x = canvas->GetLastClickMapX();
+						int last_y = canvas->GetLastClickMapY();
 						int curr_x = mouse_map_pos.x;
 						int curr_y = mouse_map_pos.y;
 
@@ -343,25 +343,25 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 						int start_y, end_y;
 						int width = std::max(
 							std::abs(
-								std::max(mouse_map_pos.y, canvas->last_click_map_y) - std::min(mouse_map_pos.y, canvas->last_click_map_y)
+								std::max(mouse_map_pos.y, canvas->GetLastClickMapY()) - std::min(mouse_map_pos.y, canvas->GetLastClickMapY())
 							),
 							std::abs(
-								std::max(mouse_map_pos.x, canvas->last_click_map_x) - std::min(mouse_map_pos.x, canvas->last_click_map_x)
+								std::max(mouse_map_pos.x, canvas->GetLastClickMapX()) - std::min(mouse_map_pos.x, canvas->GetLastClickMapX())
 							)
 						);
-						if (mouse_map_pos.x < canvas->last_click_map_x) {
-							start_x = canvas->last_click_map_x - width;
-							end_x = canvas->last_click_map_x;
+						if (mouse_map_pos.x < canvas->GetLastClickMapX()) {
+							start_x = canvas->GetLastClickMapX() - width;
+							end_x = canvas->GetLastClickMapX();
 						} else {
-							start_x = canvas->last_click_map_x;
-							end_x = canvas->last_click_map_x + width;
+							start_x = canvas->GetLastClickMapX();
+							end_x = canvas->GetLastClickMapX() + width;
 						}
-						if (mouse_map_pos.y < canvas->last_click_map_y) {
-							start_y = canvas->last_click_map_y - width;
-							end_y = canvas->last_click_map_y;
+						if (mouse_map_pos.y < canvas->GetLastClickMapY()) {
+							start_y = canvas->GetLastClickMapY() - width;
+							end_y = canvas->GetLastClickMapY();
 						} else {
-							start_y = canvas->last_click_map_y;
-							end_y = canvas->last_click_map_y + width;
+							start_y = canvas->GetLastClickMapY();
+							end_y = canvas->GetLastClickMapY() + width;
 						}
 
 						int center_x = start_x + (end_x - start_x) / 2;

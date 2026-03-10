@@ -36,7 +36,6 @@ class Item;
 class Creature;
 class MapWindow;
 class AnimationTimer;
-class AnimationTimer;
 class MapDrawer;
 class SelectionController;
 class DrawingController;
@@ -109,51 +108,12 @@ public:
 
 	void TakeScreenshot(wxFileName path, wxString format);
 
-	enum {
-		BLOCK_SIZE = 100
-	};
-
-	inline int getFillIndex(int x, int y) const {
-		return x + BLOCK_SIZE * y;
-	}
-
-	static bool processed[BLOCK_SIZE * BLOCK_SIZE];
-	Editor& editor;
-	std::unique_ptr<MapDrawer> drawer;
-	int keyCode;
-
-	// View related
-	int floor;
-	double zoom;
-	int cursor_x;
-	int cursor_y;
-
-	bool dragging;
-	bool boundbox_selection;
-	bool screendragging;
 	bool isPasting() const;
 
+	// Public members — widely referenced by framework and event handlers
+	Editor& editor;
+	std::unique_ptr<MapDrawer> drawer;
 	std::unique_ptr<ScreenshotController> screenshot_controller;
-
-	int last_cursor_map_x;
-	int last_cursor_map_y;
-	int last_cursor_map_z;
-
-	int last_click_map_x;
-	int last_click_map_y;
-	int last_click_map_z;
-	int last_click_abs_x;
-	int last_click_abs_y;
-	int last_click_x;
-	int last_click_y;
-
-	int last_mmb_click_x;
-	int last_mmb_click_y;
-
-	int view_scroll_x;
-	int view_scroll_y;
-
-	uint32_t current_house_id;
 
 	wxStopWatch refresh_watch;
 	std::unique_ptr<MapPopupMenu> popup_menu;
@@ -167,7 +127,48 @@ public:
 
 	MapWindow* GetMapWindow() const;
 
+	// --- Accessors for privatized fields ---
+	int GetKeyCode() const { return keyCode; }
+	void SetKeyCode(int code) { keyCode = code; }
+	int GetCursorX() const { return cursor_x; }
+	int GetCursorY() const { return cursor_y; }
+	bool IsScreenDragging() const { return screendragging; }
+	void SetScreenDragging(bool v) { screendragging = v; }
+	int GetLastClickMapX() const { return last_click_map_x; }
+	int GetLastClickMapY() const { return last_click_map_y; }
+	int GetLastClickMapZ() const { return last_click_map_z; }
+	int GetLastMmbClickX() const { return last_mmb_click_x; }
+	int GetLastMmbClickY() const { return last_mmb_click_y; }
+	void SetLastMmbClickX(int v) { last_mmb_click_x = v; }
+	void SetLastMmbClickY(int v) { last_mmb_click_y = v; }
+	void SetFloorDirect(int f) { floor = f; }
+	void SetZoomDirect(double z) { zoom = z; }
+
 private:
+	// View state
+	int keyCode;
+	int floor;
+	double zoom;
+	int cursor_x;
+	int cursor_y;
+	bool dragging;
+	bool boundbox_selection;
+	bool screendragging;
+
+	// Cursor/click tracking
+	int last_cursor_map_x;
+	int last_cursor_map_y;
+	int last_cursor_map_z;
+	int last_click_map_x;
+	int last_click_map_y;
+	int last_click_map_z;
+	int last_click_abs_x;
+	int last_click_abs_y;
+	int last_click_x;
+	int last_click_y;
+	int last_mmb_click_x;
+	int last_mmb_click_y;
+
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame);
 	void PerformGarbageCollection();
