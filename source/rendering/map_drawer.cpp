@@ -401,7 +401,7 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer)
     ScreenCapture::Capture(view.screensize_x, view.screensize_y, screenshot_buffer);
 }
 
-void MapDrawer::ClearFrameOverlays()
+void MapDrawer::BeginFrame()
 {
     // Swap: current write buffer becomes the read buffer for overlay drawing,
     // then clear the new write buffer for the next frame.

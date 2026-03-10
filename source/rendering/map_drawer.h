@@ -107,7 +107,7 @@ class MapDrawer {
 
     // Double-buffered accumulators: write buffer accumulates during Draw(),
     // read buffer is consumed by overlay drawers (tooltips, hooks, doors, names).
-    // Swapped at frame boundary in ClearFrameOverlays().
+    // Swapped at frame boundary in BeginFrame().
     FrameAccumulators accumulators_[2];
     int write_index_ = 0;
     FrameAccumulators& writeAccumulators()
@@ -159,7 +159,9 @@ public:
     void DrawTooltips(NVGcontext* vg);
     void DrawHookIndicators(NVGcontext* vg);
     void DrawDoorIndicators(NVGcontext* vg);
-    void ClearFrameOverlays();
+    // Swap accumulator buffers and clear the new write buffer.
+    // Call once at the start of each frame, before Draw().
+    void BeginFrame();
     void DrawCreatureNames(NVGcontext* vg);
 
     void DrawLight();

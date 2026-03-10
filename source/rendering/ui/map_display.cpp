@@ -344,7 +344,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event)
         // Draw UI (Tooltips, Overlays & HUD) using NanoVG
         DrawOverlays(m_nvg.get(), settings, frame);
 
-        drawer->ClearFrameOverlays();
+        drawer->BeginFrame();
     }
 
     PerformGarbageCollection();
