@@ -393,11 +393,13 @@ void ToolOptionsSurface::OnMouse(wxMouseEvent& evt) {
 		} else if (interactables.preview_check_rect.Contains(m_hoverPos)) {
 			show_preview = !show_preview;
 			g_settings.setInteger(Config::SHOW_AUTOBORDER_PREVIEW, show_preview);
+			g_gui.SetStatusText(std::format("Auto-border preview: {}", show_preview ? "ON" : "OFF"));
 			Refresh();
 		} else if (interactables.lock_check_rect.Contains(m_hoverPos)) {
 			lock_doors = !lock_doors;
 			g_settings.setInteger(Config::DRAW_LOCKED_DOOR, lock_doors);
 			g_brush_manager.SetDoorLocked(lock_doors);
+			g_gui.SetStatusText(std::format("Door lock: {}", lock_doors ? "ON" : "OFF"));
 			Refresh();
 		} else if (hover_brush) {
 			SelectBrush(hover_brush);

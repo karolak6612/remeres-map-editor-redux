@@ -135,11 +135,11 @@ void MapPopupMenu::Update() {
 				if (topSelectedItem && (topSelectedItem->isBrushDoor() || topSelectedItem->isRoteable() || teleport)) {
 
 					if (topSelectedItem->isRoteable()) {
-						Append(MAP_POPUP_MENU_ROTATE, "&Rotate item", "Rotate this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE, wxSize(16, 16)));
+						Append(MAP_POPUP_MENU_ROTATE, "&Rotate item\tR", "Rotate this item")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ROTATE, wxSize(16, 16)));
 					}
 
 					if (teleport && teleport->hasDestination()) {
-						Append(MAP_POPUP_MENU_GOTO, "&Go To Destination", "Go to the destination of this teleport")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ARROW_RIGHT_TO_BRACKET, wxSize(16, 16)));
+						Append(MAP_POPUP_MENU_GOTO, "&Go To Destination\tG", "Go to the destination of this teleport")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_ARROW_RIGHT_TO_BRACKET, wxSize(16, 16)));
 					}
 
 					if (topSelectedItem->isDoor()) {
@@ -199,7 +199,7 @@ void MapPopupMenu::Update() {
 				}
 
 				AppendSeparator();
-				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+				Append(MAP_POPUP_MENU_PROPERTIES, "&Properties\tALT+ENTER", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
 			} else {
 
 				if (topCreature) {
@@ -228,17 +228,17 @@ void MapPopupMenu::Update() {
 
 				if (tile->hasGround() || topCreature || topSpawn) {
 					AppendSeparator();
-					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
+					Append(MAP_POPUP_MENU_PROPERTIES, "&Properties\tALT+ENTER", "Properties for the current object")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(16, 16)));
 				}
 			}
 
 			AppendSeparator();
 
-			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field", "Navigate from tile items");
+			wxMenuItem* browseTile = Append(MAP_POPUP_MENU_BROWSE_TILE, "Browse Field\tB", "Navigate from tile items");
 			browseTile->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_SEARCH, wxSize(16, 16)));
 			browseTile->Enable(anything_selected);
 
-			wxMenuItem* tileProps = Append(MAP_POPUP_MENU_TILE_PROPERTIES, "Tile Properties", "Show tile properties panel");
+			wxMenuItem* tileProps = Append(MAP_POPUP_MENU_TILE_PROPERTIES, "Tile Properties\tT", "Show tile properties panel");
 			tileProps->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
 			tileProps->Enable(anything_selected);
 		}
