@@ -1,5 +1,6 @@
 #include "app/main.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
+#include "rendering/drawers/tiles/tile_draw_plan.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 
@@ -37,7 +38,6 @@ TileRenderer::TileRenderer(const TileRenderDeps& deps) :
 
 namespace {
 	// Accumulate a door indicator request into the frame accumulators.
-	// Replicates the logic previously in ItemDrawer::BlitItem.
 	void AccumulateDoorIndicator(FrameAccumulators& accumulators, Item* item, const ItemDefinitionView& it, const Position& pos) {
 		bool locked = item->isLocked();
 		auto border = static_cast<BorderType>(it.attribute(ItemAttributeKey::BorderAlignment));
@@ -54,19 +54,28 @@ namespace {
 	}
 
 	// Accumulate a hook indicator request into the frame accumulators.
-	// Replicates the logic previously in ItemDrawer::BlitItem.
 	void AccumulateHookIndicator(FrameAccumulators& accumulators, const ItemDefinitionView& it, const Position& pos) {
 		accumulators.hooks.push_back({ pos, it.hasFlag(ItemFlag::HookSouth), it.hasFlag(ItemFlag::HookEast) });
 	}
 }
 
 void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights) {
-	auto& sprite_batch = ctx.sprite_batch;
+	TileDrawPlan plan;
+	PlanTile(ctx, location, current_house_id, in_draw_x, in_draw_y, draw_lights, plan);
+	if (plan.valid) {
+		ExecutePlan(ctx, plan);
+	}
+}
+
+void TileRenderer::PlanTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights, TileDrawPlan& plan) {
 	const auto& view = ctx.view;
 	const auto& settings = ctx.settings;
 	const auto& frame = ctx.frame;
 	auto& accumulators = ctx.accumulators;
 	auto* light_buffer = draw_lights ? &ctx.light_buffer : nullptr;
+
+	plan.valid = false;
+
 	if (!location) {
 		return;
 	}
@@ -97,6 +106,10 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 		draw_x = vis->x;
 		draw_y = vis->y;
 	}
+
+	plan.valid = true;
+	plan.draw_x = draw_x;
+	plan.draw_y = draw_y;
 
 	const auto& position = location->getPosition();
 
@@ -135,9 +148,9 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 	if (only_colors) {
 		if (as_minimap) {
 			TileColorCalculator::GetMinimapColor(tile, r, g, b);
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 255));
+			plan.color_square = TileDrawPlan::ColorSquare { DrawColor(r, g, b, 255) };
 		} else if (r != 255 || g != 255 || b != 255) {
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
+			plan.color_square = TileDrawPlan::ColorSquare { DrawColor(r, g, b, 128) };
 		}
 	} else {
 		if (tile->ground && ground_it) {
@@ -155,8 +168,8 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 				params.red = r;
 				params.green = g;
 				params.blue = b;
-				params.patterns = &patterns;
-				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+				// patterns pointer will be set in ExecutePlan
+				plan.items.push_back({ std::move(params), patterns });
 
 				// Accumulate door indicator for ground items (doors can be ground items)
 				if (!settings.ingame && settings.highlight_locked_doors && ground_it.isDoor()) {
@@ -164,7 +177,7 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 				}
 			}
 		} else if (settings.always_show_zones && (r != 255 || g != 255 || b != 255)) {
-			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, SPRITE_ZONE, r, g, b, 60);
+			plan.zone_brush = TileDrawPlan::ZoneBrush { SPRITE_ZONE, r, g, b, 60 };
 		}
 	}
 
@@ -183,18 +196,14 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 
 	// end filters for ground tile
 
-	// Draw helper border for selected house tiles
-	// Only draw on the current floor (grid)
+	// House border highlight for selected house tiles on current floor
 	if (settings.show_houses && is_house_tile && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
-
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
 
 		float intensity = 0.5f + (0.5f * frame.highlight_pulse);
-		// Optimization: Use integer math for border color to avoid vec4 construction and casting
 		int ba = static_cast<int>(intensity * 255.0f);
-		// hr, hg, hb are already uint8_t
-		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
+		plan.house_border = TileDrawPlan::HouseBorder { DrawColor(hr, hg, hb, static_cast<uint8_t>(ba)) };
 	}
 
 	if (!only_colors) {
@@ -243,14 +252,12 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 					BlitItemParams params(position, item.get(), settings, frame);
 					params.tile = tile;
 					params.item_definition = it;
-					params.patterns = &patterns;
 
 					// item sprite
 					if (item->isBorder()) {
 						params.red = r;
 						params.green = g;
 						params.blue = b;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
 						uint8_t ir = 255, ig = 255, ib = 255;
 
@@ -270,8 +277,9 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 						params.red = ir;
 						params.green = ig;
 						params.blue = ib;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
+					// patterns pointer will be set in ExecutePlan
+					plan.items.push_back({ std::move(params), patterns });
 				}
 
 				// Accumulate door indicator for this item
@@ -284,9 +292,13 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 					AccumulateHookIndicator(accumulators, it, position);
 				}
 			}
+
 			// monster/npc on tile
 			if (tile->creature && settings.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = frame.transient_selection_bounds });
+				plan.creature = TileDrawPlan::CreatureCmd {
+					tile->creature.get(),
+					CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = frame.transient_selection_bounds }
+				};
 				if (!tile->creature->getName().empty()) {
 					accumulators.creature_names.push_back({ position, tile->creature->getName(), tile->creature.get() });
 				}
@@ -295,7 +307,47 @@ void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint
 
 		if (view.zoom < 10.0) {
 			// markers (waypoint, house exit, town temple, spawn)
-			marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, tile, waypoint, current_house_id, *editor, settings);
+			plan.marker = TileDrawPlan::MarkerCmd { tile, waypoint, current_house_id };
 		}
+	}
+}
+
+void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan) {
+	auto& sprite_batch = ctx.sprite_batch;
+
+	int draw_x = plan.draw_x;
+	int draw_y = plan.draw_y;
+
+	// Only-colors mode: colored square
+	if (plan.color_square) {
+		sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, plan.color_square->color);
+	}
+
+	// Zone brush fallback
+	if (plan.zone_brush) {
+		const auto& zb = *plan.zone_brush;
+		item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, zb.sprite_id, zb.r, zb.g, zb.b, zb.a);
+	}
+
+	// House border highlight
+	if (plan.house_border) {
+		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, plan.house_border->color);
+	}
+
+	// Item draw commands (ground + stacked items in order)
+	for (auto& cmd : plan.items) {
+		// Fix up patterns pointer to point to the command's owned copy
+		cmd.params.patterns = &cmd.patterns;
+		item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, cmd.params);
+	}
+
+	// Creature draw
+	if (plan.creature) {
+		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, plan.creature->creature, plan.creature->options);
+	}
+
+	// Marker draw
+	if (plan.marker) {
+		marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, plan.marker->tile, plan.marker->waypoint, plan.marker->current_house_id, *editor, ctx.settings);
 	}
 }

@@ -14,6 +14,7 @@ class SpriteDrawer;
 class CreatureDrawer;
 class MarkerDrawer;
 class SpriteBatch;
+struct TileDrawPlan;
 
 struct TileRenderDeps {
 	ItemDrawer* item_drawer = nullptr;
@@ -27,7 +28,18 @@ class TileRenderer {
 public:
 	explicit TileRenderer(const TileRenderDeps& deps);
 
+	// Convenience wrapper: gathers data then submits GPU commands in one call.
 	void DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1, bool draw_lights = false);
+
+	// Phase 1: Data gathering. Reads tile data, computes colors, accumulates
+	// tooltips/hooks/doors/lights/creature-names into DrawContext accumulators,
+	// and builds a list of draw commands in |plan|.
+	void PlanTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights, TileDrawPlan& plan);
+
+	// Phase 2: GPU submission. Reads the draw commands from |plan| and issues
+	// BlitItem, BlitCreature, marker draw, and primitive draw calls.
+	// Non-const plan: patterns pointers are fixed up during execution.
+	void ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan);
 
 private:
 

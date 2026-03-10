@@ -222,6 +222,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_draw_plan.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/editor_sprite_loader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/io/screen_capture.h
