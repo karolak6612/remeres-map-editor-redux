@@ -18,8 +18,8 @@
 #ifndef RME_RENDERING_CORE_SPRITE_PRELOAD_QUEUE_H_
 #define RME_RENDERING_CORE_SPRITE_PRELOAD_QUEUE_H_
 
+#include "rendering/core/sprite_preloader.h"
 #include <vector>
-#include "game/sprites.h"
 
 class GameSprite;
 
@@ -27,33 +27,37 @@ class GameSprite;
 // batch-processed after frame submission, avoiding per-sprite mutex
 // contention in the hot render loop.
 struct SpritePreloadQueue {
-	struct Request {
-		GameSprite* sprite;
-		int pattern_x;
-		int pattern_y;
-		int pattern_z;
-		int frame;
-	};
+    struct Request {
+        GameSprite* sprite;
+        int pattern_x;
+        int pattern_y;
+        int pattern_z;
+        int frame;
+    };
 
-	std::vector<Request> requests;
+    std::vector<Request> requests;
 
-	void enqueue(GameSprite* s, int px, int py, int pz, int f) {
-		requests.push_back({ s, px, py, pz, f });
-	}
+    void enqueue(GameSprite* s, int px, int py, int pz, int f)
+    {
+        requests.push_back({s, px, py, pz, f});
+    }
 
-	void processAll() {
-		for (const auto& req : requests) {
-			rme::collectTileSprites(req.sprite, req.pattern_x, req.pattern_y, req.pattern_z, req.frame);
-		}
-	}
+    void processAll()
+    {
+        for (const auto& req : requests) {
+            rme::collectTileSprites(req.sprite, req.pattern_x, req.pattern_y, req.pattern_z, req.frame);
+        }
+    }
 
-	void clear() {
-		requests.clear();
-	}
+    void clear()
+    {
+        requests.clear();
+    }
 
-	void reserve(size_t capacity) {
-		requests.reserve(capacity);
-	}
+    void reserve(size_t capacity)
+    {
+        requests.reserve(capacity);
+    }
 };
 
 #endif

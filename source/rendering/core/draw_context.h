@@ -16,14 +16,14 @@ struct FrameAccumulators;
 // (sprite_batch, primitive_renderer, light_buffer, accumulators)
 // remain mutable since drawers need to write to them.
 struct DrawContext {
-	SpriteBatch& sprite_batch;
-	PrimitiveRenderer& primitive_renderer;
-	const ViewState& view;
-	const RenderSettings& settings;
-	const FrameOptions& frame;
-	LightBuffer& light_buffer;
-	FrameAccumulators& accumulators;
-	const AtlasManager& atlas;
+    SpriteBatch& sprite_batch;
+    PrimitiveRenderer& primitive_renderer;
+    const ViewState& view;
+    const RenderSettings& settings;
+    const FrameOptions& frame;
+    LightBuffer& light_buffer;
+    FrameAccumulators& accumulators;
+    const AtlasManager& atlas;
 };
 
 #endif

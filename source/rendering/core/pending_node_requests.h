@@ -18,8 +18,8 @@
 #ifndef RME_RENDERING_CORE_PENDING_NODE_REQUESTS_H_
 #define RME_RENDERING_CORE_PENDING_NODE_REQUESTS_H_
 
-#include <vector>
 #include <mutex>
+#include <vector>
 
 // Thread-safe buffer for live-client node requests generated during
 // the render pass. Requests are enqueued by MapLayerDrawer and drained
@@ -27,33 +27,36 @@
 // GPU submission path.
 class PendingNodeRequests {
 public:
-	struct NodeRequest {
-		int x;
-		int y;
-		bool underground;
-	};
+    struct NodeRequest {
+        int x;
+        int y;
+        bool underground;
+    };
 
-	void enqueue(int x, int y, bool underground) {
-		std::lock_guard<std::mutex> lock(mutex_);
-		pending_.push_back({ x, y, underground });
-	}
+    void enqueue(int x, int y, bool underground)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        pending_.push_back({x, y, underground});
+    }
 
-	// Returns all pending requests and clears the internal buffer.
-	std::vector<NodeRequest> drain() {
-		std::lock_guard<std::mutex> lock(mutex_);
-		std::vector<NodeRequest> result;
-		result.swap(pending_);
-		return result;
-	}
+    // Returns all pending requests and clears the internal buffer.
+    std::vector<NodeRequest> drain()
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<NodeRequest> result;
+        result.swap(pending_);
+        return result;
+    }
 
-	void reserve(size_t capacity) {
-		std::lock_guard<std::mutex> lock(mutex_);
-		pending_.reserve(capacity);
-	}
+    void reserve(size_t capacity)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+        pending_.reserve(capacity);
+    }
 
 private:
-	std::vector<NodeRequest> pending_;
-	std::mutex mutex_;
+    std::vector<NodeRequest> pending_;
+    std::mutex mutex_;
 };
 
 #endif

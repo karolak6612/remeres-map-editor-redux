@@ -22,9 +22,9 @@
 
 class LightCalculator {
 public:
-	static const int MaxLightIntensity = 210;
+    static const int MaxLightIntensity = 210;
 
-	static float calculateIntensity(int map_x, int map_y, int light_map_x, int light_map_y, uint8_t light_intensity);
+    static float calculateIntensity(int map_x, int map_y, int light_map_x, int light_map_y, uint8_t light_intensity);
 };
 
 #endif

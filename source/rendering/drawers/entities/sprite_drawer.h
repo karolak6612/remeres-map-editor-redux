@@ -7,8 +7,8 @@
 
 #include "app/main.h"
 
-#include <wx/colour.h>
 #include "app/definitions.h"
+#include <wx/colour.h>
 #include "item_definitions/core/item_definition_types.h"
 
 // Forward declarations
@@ -21,28 +21,30 @@ class ISpriteResolver;
 
 class SpriteDrawer {
 public:
-	SpriteDrawer();
-	~SpriteDrawer();
+    SpriteDrawer();
+    ~SpriteDrawer();
 
-	void glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color = {});
-	void glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size = 0);
-	void glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color);
-	void glSetColor(wxColor color);
+    void glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color = {});
+    void glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size = 0);
+    void glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color);
+    void glSetColor(wxColor color);
 
-	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color = {});
-	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, DrawColor color = {});
+    void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color = {});
+    void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, DrawColor color = {});
 
-	void SetSpriteResolver(ISpriteResolver* resolver) {
-		sprite_resolver = resolver;
-	}
+    void SetSpriteResolver(ISpriteResolver* resolver)
+    {
+        sprite_resolver = resolver;
+    }
 
-	void SetAtlas(const AtlasManager* atlas) {
-		atlas_ = atlas;
-	}
+    void SetAtlas(const AtlasManager* atlas)
+    {
+        atlas_ = atlas;
+    }
 
 private:
-	ISpriteResolver* sprite_resolver = nullptr;
-	const AtlasManager* atlas_ = nullptr;
+    ISpriteResolver* sprite_resolver = nullptr;
+    const AtlasManager* atlas_ = nullptr;
 };
 
 #endif

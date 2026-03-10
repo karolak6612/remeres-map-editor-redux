@@ -30,16 +30,16 @@ class SpriteBatch;
 
 class MapLayerDrawer {
 public:
-	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests = nullptr);
-	~MapLayerDrawer();
+    MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests = nullptr);
+    ~MapLayerDrawer();
 
-	void Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
+    void Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
 
 private:
-	TileRenderer* tile_renderer;
-	GridDrawer* grid_drawer;
-	Editor* editor;
-	PendingNodeRequests* pending_requests_;
+    TileRenderer* tile_renderer;
+    GridDrawer* grid_drawer;
+    Editor* editor;
+    PendingNodeRequests* pending_requests_;
 };
 
 #endif

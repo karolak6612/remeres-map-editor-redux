@@ -14,10 +14,13 @@ class Brush;
 
 class PreviewDrawer {
 public:
-	PreviewDrawer();
-	~PreviewDrawer();
+    PreviewDrawer();
+    ~PreviewDrawer();
 
-	void draw(const DrawContext& ctx, const ViewSnapshot& snapshot, const FloorViewParams& floor_params, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* current_brush);
+    void draw(
+        const DrawContext& ctx, const ViewSnapshot& snapshot, const FloorViewParams& floor_params, int map_z, Editor& editor,
+        ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* current_brush
+    );
 };
 
 #endif
