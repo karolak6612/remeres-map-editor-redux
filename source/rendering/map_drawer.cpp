@@ -27,6 +27,8 @@
 #include "brushes/brush.h"
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/ui/map_display.h"
+#include "rendering/ui/selection_controller.h"
+#include "rendering/ui/drawing_controller.h"
 #include "editor/copybuffer.h"
 #include "live/live_socket.h"
 #include "rendering/core/graphics.h"
