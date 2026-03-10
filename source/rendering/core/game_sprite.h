@@ -120,11 +120,6 @@ public:
 
 	SpriteIconRenderer& iconRenderer() { return icon_renderer_; }
 
-	// Re-export types for backward compatibility (used by CreatureSprite)
-	using RenderKey = SpriteIconRenderer::RenderKey;
-	using RenderKeyHash = SpriteIconRenderer::RenderKeyHash;
-	using CachedDC = SpriteIconRenderer::CachedDC;
-
 protected:
 	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
 
