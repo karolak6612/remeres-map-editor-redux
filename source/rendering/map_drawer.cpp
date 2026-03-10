@@ -26,6 +26,7 @@
 #include "brushes/brush.h"
 #include "brushes/brush_enums.h"
 #include "editor/copybuffer.h"
+#include "live/live_client.h"
 #include "live/live_socket.h"
 #include "rendering/core/graphics.h"
 #include "rendering/drawers/map_layer_drawer.h"
