@@ -144,20 +144,20 @@ MapDrawer::~MapDrawer()
     Release();
 }
 
-void MapDrawer::SetupVars(const ViewSnapshot& snapshot)
+void MapDrawer::SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush)
 {
     {
         std::lock_guard<std::mutex> lock(snapshot_mutex_);
         snapshot_ = snapshot;
     }
+    brush_snapshot_ = brush;
 
     frame_options.current_house_id = 0;
-    Brush* brush = g_gui.GetCurrentBrush();
-    if (brush) {
-        if (brush->is<HouseBrush>()) {
-            frame_options.current_house_id = brush->as<HouseBrush>()->getHouseID();
-        } else if (brush->is<HouseExitBrush>()) {
-            frame_options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
+    if (brush_snapshot_.current_brush) {
+        if (brush_snapshot_.current_brush->is<HouseBrush>()) {
+            frame_options.current_house_id = brush_snapshot_.current_brush->as<HouseBrush>()->getHouseID();
+        } else if (brush_snapshot_.current_brush->is<HouseExitBrush>()) {
+            frame_options.current_house_id = brush_snapshot_.current_brush->as<HouseExitBrush>()->getHouseID();
         }
     }
 
@@ -291,10 +291,10 @@ void MapDrawer::Draw()
             .brush_cursor_drawer = cursors_.brush.get(),
             .editor = &editor,
             .visual = &bvs,
-            .current_brush = g_gui.GetCurrentBrush(),
-            .brush_shape = g_gui.GetBrushShape(),
-            .brush_size = g_gui.GetBrushSize(),
-            .is_drawing_mode = g_gui.IsDrawingMode(),
+            .current_brush = brush_snapshot_.current_brush,
+            .brush_shape = brush_snapshot_.brush_shape,
+            .brush_size = brush_snapshot_.brush_size,
+            .is_drawing_mode = brush_snapshot_.is_drawing_mode,
             .is_dragging_draw = snapshot_.is_dragging_draw,
             .last_click_map_x = snapshot_.last_click_map_x,
             .last_click_map_y = snapshot_.last_click_map_y
@@ -354,7 +354,7 @@ void MapDrawer::DrawMap(const DrawContext& ctx)
 
         overlays_.preview->draw(
             ctx, snapshot_, floor_params, map_z, editor, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(),
-            g_gui.GetCurrentBrush()
+            brush_snapshot_.current_brush
         );
 
         ++floor_offset;

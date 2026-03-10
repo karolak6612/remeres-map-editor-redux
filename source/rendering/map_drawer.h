@@ -36,6 +36,7 @@ struct NVGcontext;
 #include "rendering/core/render_view.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/sprite_batch.h"
+#include "rendering/core/brush_snapshot.h"
 #include "rendering/core/view_snapshot.h"
 #include "rendering/ui/nvg_image_cache.h"
 #include "rendering/ui/tooltip_renderer.h"
@@ -101,6 +102,7 @@ class MapDrawer {
     FrameOptions frame_options;
     ViewState view;
     ViewSnapshot snapshot_;
+    BrushSnapshot brush_snapshot_;
     mutable std::mutex snapshot_mutex_; // Protects snapshot_ for future multi-threaded access
     std::unique_ptr<LightDrawer> light_drawer;
     LightBuffer light_buffer;
@@ -150,7 +152,7 @@ public:
     MapDrawer(Editor& editor);
     ~MapDrawer();
 
-    void SetupVars(const ViewSnapshot& snapshot);
+    void SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush);
     void SetupGL();
     void Release();
 

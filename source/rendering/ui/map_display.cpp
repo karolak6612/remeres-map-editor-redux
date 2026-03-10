@@ -43,6 +43,7 @@
 #include "rendering/core/frame_options.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/text_renderer.h"
+#include "rendering/core/brush_snapshot.h"
 #include "rendering/core/view_snapshot.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/brush_selector.h"
@@ -339,8 +340,14 @@ void MapCanvas::OnPaint(wxPaintEvent& event)
         }
 
         ViewSnapshot snapshot = BuildViewSnapshot();
+        const BrushSnapshot brush_snap {
+            .current_brush = g_gui.GetCurrentBrush(),
+            .brush_shape = g_gui.GetBrushShape(),
+            .brush_size = g_gui.GetBrushSize(),
+            .is_drawing_mode = g_gui.IsDrawingMode()
+        };
 
-        drawer->SetupVars(snapshot);
+        drawer->SetupVars(snapshot, brush_snap);
         drawer->SetupGL();
         drawer->Draw();
 
