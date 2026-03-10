@@ -223,7 +223,6 @@ private:
     void DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame);
     void PerformGarbageCollection();
     bool renderer_initialized = false;
-    long m_last_gc_time = 0;
 };
 
 #endif

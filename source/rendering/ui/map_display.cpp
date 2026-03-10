@@ -114,8 +114,7 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
     last_click_abs_y(-1),
     last_click_x(-1),
     last_click_y(-1),
-    last_mmb_click_y(-1),
-    m_last_gc_time(0)
+    last_mmb_click_y(-1)
 {
     view_state_ = std::make_unique<ViewStateManager>(this);
 
@@ -252,12 +251,10 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const RenderSettings& settings, con
 
 void MapCanvas::PerformGarbageCollection()
 {
-    // Clean unused textures once every second
     // Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
-    long current_time = wxGetLocalTime();
-    if (current_time - m_last_gc_time >= 1 && g_gui.GetCurrentMapTab() == GetParent()) {
+    if (g_gui.gfx.gc().shouldCollect() && g_gui.GetCurrentMapTab() == GetParent()) {
         g_gui.gfx.garbageCollection();
-        m_last_gc_time = current_time;
+        g_gui.gfx.gc().markCollected();
     }
 }
 

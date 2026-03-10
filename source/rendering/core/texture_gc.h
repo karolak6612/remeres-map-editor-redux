@@ -49,11 +49,16 @@ public:
 	// Sprite preloader (background decompression threads)
 	SpritePreloader& preloader() { return *preloader_; }
 
+	// GC scheduling: returns true if enough time has elapsed since last collection.
+	bool shouldCollect() const noexcept { return (cached_time_ - last_gc_time_) >= 1; }
+	void markCollected() noexcept { last_gc_time_ = cached_time_; }
+
 private:
 	TextureGarbageCollector collector_;
 	std::unique_ptr<RenderTimer> animation_timer_;
 	std::unique_ptr<SpritePreloader> preloader_;
 	time_t cached_time_ = 0;
+	time_t last_gc_time_ = 0;
 };
 
 #endif
