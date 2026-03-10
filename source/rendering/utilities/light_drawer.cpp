@@ -49,27 +49,27 @@ void LightDrawer::draw(const ViewState& view, bool fog, const LightBuffer& light
 
 	// 2. Filter and convert lights to GPU format
 	gpu_lights_.clear();
-	gpu_lights_.reserve(light_buffer.lights.size());
+	gpu_lights_.reserve(light_buffer.size());
 
-	for (const auto& light : light_buffer.lights) {
-		int lx_px = light.map_x * TILE_SIZE + TILE_SIZE / 2;
-		int ly_px = light.map_y * TILE_SIZE + TILE_SIZE / 2;
+	for (size_t i = 0; i < light_buffer.size(); ++i) {
+		int lx_px = light_buffer.map_x[i] * TILE_SIZE + TILE_SIZE / 2;
+		int ly_px = light_buffer.map_y[i] * TILE_SIZE + TILE_SIZE / 2;
 
 		float map_pos_x = static_cast<float>(lx_px - view.view_scroll_x);
 		float map_pos_y = static_cast<float>(ly_px - view.view_scroll_y);
 
 		float screen_x = map_pos_x / view.zoom;
 		float screen_y = map_pos_y / view.zoom;
-		float screen_radius = (light.intensity * TILE_SIZE) / view.zoom;
+		float screen_radius = (light_buffer.intensity[i] * TILE_SIZE) / view.zoom;
 
 		// Frustum culling
 		if (screen_x + screen_radius < 0 || screen_x - screen_radius > buffer_w || screen_y + screen_radius < 0 || screen_y - screen_radius > buffer_h) {
 			continue;
 		}
 
-		wxColor c = colorFromEightBit(light.color);
+		wxColor c = colorFromEightBit(light_buffer.color[i]);
 
-		gpu_lights_.push_back({ .position = { screen_x, screen_y }, .intensity = static_cast<float>(light.intensity), .padding = 0.0f,
+		gpu_lights_.push_back({ .position = { screen_x, screen_y }, .intensity = static_cast<float>(light_buffer.intensity[i]), .padding = 0.0f,
 								.color = { (c.Red() / 255.0f) * light_intensity, (c.Green() / 255.0f) * light_intensity, (c.Blue() / 255.0f) * light_intensity, 1.0f } });
 	}
 

@@ -121,6 +121,10 @@ MapDrawer::MapDrawer(Editor& editor) :
 	item_drawer->SetSpriteResolver(sprite_resolver.get());
 	creature_drawer->SetSpriteResolver(sprite_resolver.get());
 	sprite_drawer->SetSpriteResolver(sprite_resolver.get());
+
+	// Pre-reserve accumulators and light buffer for typical frame sizes
+	accumulators_.reserve(256, 128, 64);
+	light_buffer.reserve(512);
 }
 
 MapDrawer::~MapDrawer() {

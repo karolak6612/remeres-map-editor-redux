@@ -24,6 +24,12 @@ struct FrameAccumulators {
 		doors.clear();
 		creature_names.clear();
 	}
+
+	void reserve(size_t hook_cap, size_t door_cap, size_t creature_cap) {
+		hooks.reserve(hook_cap);
+		doors.reserve(door_cap);
+		creature_names.reserve(creature_cap);
+	}
 };
 
 #endif

@@ -20,16 +20,16 @@
 #include <cmath>
 #include <algorithm>
 
-float LightCalculator::calculateIntensity(int map_x, int map_y, const LightBuffer::Light& light) {
-	int dx = map_x - light.map_x;
-	int dy = map_y - light.map_y;
+float LightCalculator::calculateIntensity(int map_x, int map_y, int light_map_x, int light_map_y, uint8_t light_intensity) {
+	int dx = map_x - light_map_x;
+	int dy = map_y - light_map_y;
 	float distance = std::sqrt(dx * dx + dy * dy);
 	if (distance > MaxLightIntensity) {
 		return 0.f;
 	}
-	float intensity = (-distance + light.intensity) * 0.2f;
-	if (intensity < 0.01f) {
+	float calc_intensity = (-distance + light_intensity) * 0.2f;
+	if (calc_intensity < 0.01f) {
 		return 0.f;
 	}
-	return std::min(intensity, 1.f);
+	return std::min(calc_intensity, 1.f);
 }
