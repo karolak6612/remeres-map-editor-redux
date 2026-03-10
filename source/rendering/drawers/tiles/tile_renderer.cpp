@@ -25,7 +25,6 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/ui/tooltip_data_extractor.h"
 #include "rendering/core/light_buffer.h"
-#include "rendering/core/sprite_preloader.h"
 #include "rendering/utilities/pattern_calculator.h"
 
 TileRenderer::TileRenderer(const TileRenderDeps& deps) :
@@ -36,6 +35,7 @@ TileRenderer::TileRenderer(const TileRenderDeps& deps) :
 	editor(deps.editor) {
 	// Pre-reserve for typical tile item counts to avoid per-tile allocations
 	reusable_plan_.reserve(16);
+	preload_queue_.reserve(256);
 }
 
 namespace {
@@ -161,7 +161,7 @@ void TileRenderer::PlanTile(const DrawContext& ctx, TileLocation* location, uint
 
 				// Inline preload check - skip function call when sprite is simple and loaded (95%+ case)
 				if (!ground_sprite->isSimpleAndLoaded()) {
-					rme::collectTileSprites(ground_sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+					preload_queue_.enqueue(ground_sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
 				}
 
 				BlitItemParams params(position, tile->ground.get(), settings, frame);
@@ -248,7 +248,7 @@ void TileRenderer::PlanTile(const DrawContext& ctx, TileLocation* location, uint
 
 					// Inline preload check - skip function call when sprite is simple and loaded
 					if (!sprite->isSimpleAndLoaded()) {
-						rme::collectTileSprites(sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+						preload_queue_.enqueue(sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
 					}
 
 					BlitItemParams params(position, item.get(), settings, frame);

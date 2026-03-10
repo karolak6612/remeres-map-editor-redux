@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "rendering/drawers/tiles/tile_draw_plan.h"
+#include "rendering/core/sprite_preload_queue.h"
 
 class TileLocation;
 class Tile;
@@ -52,6 +53,16 @@ private:
 	// Reusable plan to avoid per-tile heap allocations.
 	// Pre-reserved in constructor for typical tile item counts.
 	TileDrawPlan reusable_plan_;
+
+	// Buffered sprite preload requests, flushed after frame submission.
+	SpritePreloadQueue preload_queue_;
+
+public:
+	// Flush buffered preload requests. Call after Draw() completes.
+	void FlushPreloadQueue() {
+		preload_queue_.processAll();
+		preload_queue_.clear();
+	}
 };
 
 #endif

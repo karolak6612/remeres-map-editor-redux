@@ -295,6 +295,9 @@ void MapDrawer::Draw() {
 	sprite_batch->end(*current_atlas_);
 	primitive_renderer->flush();
 
+	// Flush buffered sprite preload requests after GPU submission
+	tile_renderer->FlushPreloadQueue();
+
 	// Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
 }
 
