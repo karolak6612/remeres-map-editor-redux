@@ -97,7 +97,15 @@ class MapDrawer {
 	ViewSnapshot snapshot_;
 	std::unique_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
-	FrameAccumulators accumulators_;
+
+	// Double-buffered accumulators: write buffer accumulates during Draw(),
+	// read buffer is consumed by overlay drawers (tooltips, hooks, doors, names).
+	// Swapped at frame boundary in ClearFrameOverlays().
+	FrameAccumulators accumulators_[2];
+	int write_index_ = 0;
+	FrameAccumulators& writeAccumulators() { return accumulators_[write_index_]; }
+	const FrameAccumulators& readAccumulators() const { return accumulators_[1 - write_index_]; }
+
 	TooltipRenderer tooltip_renderer;
 	NVGImageCache nvg_image_cache;
 

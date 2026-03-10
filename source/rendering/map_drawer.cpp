@@ -128,8 +128,9 @@ MapDrawer::MapDrawer(Editor& editor) :
 	entities_.creature->SetSpriteResolver(sprite_resolver.get());
 	entities_.sprite->SetSpriteResolver(sprite_resolver.get());
 
-	// Pre-reserve accumulators and light buffer for typical frame sizes
-	accumulators_.reserve(256, 128, 64);
+	// Pre-reserve both accumulator buffers and light buffer for typical frame sizes
+	accumulators_[0].reserve(256, 128, 64);
+	accumulators_[1].reserve(256, 128, 64);
 	light_buffer.reserve(512);
 }
 
@@ -262,7 +263,7 @@ void MapDrawer::Draw() {
 	// Resume Batch for Overlays
 	sprite_batch->begin(view.projectionMatrix, *current_atlas_);
 
-	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, writeAccumulators(), *current_atlas_ };
 
 	if (cursors_.drag_shadow) {
 		cursors_.drag_shadow->draw(ctx, editor, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(),
@@ -308,7 +309,7 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
-	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, writeAccumulators(), *current_atlas_ };
 
 	int floor_offset = 0;
 
@@ -335,35 +336,35 @@ void MapDrawer::DrawMap() {
 }
 
 void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
-	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, writeAccumulators(), *current_atlas_ };
 	overlays_.grid->DrawIngameBox(ctx, bounds);
 }
 
 void MapDrawer::DrawGrid(const ViewBounds& bounds) {
-	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, writeAccumulators(), *current_atlas_ };
 	overlays_.grid->DrawGrid(ctx, bounds);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
-	tooltip_renderer.draw(vg, view, accumulators_.tooltips.getTooltips(), nvg_image_cache);
+	tooltip_renderer.draw(vg, view, readAccumulators().tooltips.getTooltips(), nvg_image_cache);
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
-	overlays_.hook_indicator->draw(vg, view, accumulators_.hooks);
+	overlays_.hook_indicator->draw(vg, view, readAccumulators().hooks);
 }
 
 void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
 	if (render_settings.highlight_locked_doors) {
-		overlays_.door_indicator->draw(vg, view, accumulators_.doors);
+		overlays_.door_indicator->draw(vg, view, readAccumulators().doors);
 	}
 }
 
 void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
-	overlays_.creature_name->draw(vg, view, accumulators_.creature_names);
+	overlays_.creature_name->draw(vg, view, readAccumulators().creature_names);
 }
 
 void MapDrawer::DrawMapLayer(int map_z, bool live_client, const FloorViewParams& floor_params) {
-	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, writeAccumulators(), *current_atlas_ };
 	map_layer_drawer->Draw(ctx, map_z, live_client, floor_params);
 }
 
@@ -376,5 +377,8 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
 }
 
 void MapDrawer::ClearFrameOverlays() {
-	accumulators_.clear();
+	// Swap: current write buffer becomes the read buffer for overlay drawing,
+	// then clear the new write buffer for the next frame.
+	write_index_ = 1 - write_index_;
+	writeAccumulators().clear();
 }
