@@ -39,148 +39,25 @@
 #include <functional>
 
 GraphicManager::GraphicManager() :
-	client_version(nullptr),
-	unloaded(true),
-	dat_format(DAT_FORMAT_UNKNOWN),
-	is_extended(false),
-	has_transparency(false),
-	has_frame_durations(false),
-	has_frame_groups(false) {
-	animation_timer = std::make_unique<RenderTimer>();
-	animation_timer->Start();
+	client_version(loader_.client_version) {
 }
 
 GraphicManager::~GraphicManager() {
-	// Unique pointers handle deletion automatically
-	// atlas_manager_ clean up still good to be explicit if it has custom clear logic
-	if (atlas_manager_) {
-		atlas_manager_->clear();
-	}
-}
-
-bool GraphicManager::hasTransparency() const {
-	return has_transparency;
-}
-
-bool GraphicManager::isUnloaded() const {
-	return unloaded.load();
-}
-
-void GraphicManager::updateTime() {
-	cached_time_ = time(nullptr);
-	SpritePreloader::get().update();
+	atlas_.clear();
 }
 
 void GraphicManager::clear() {
 	// CRITICAL: Ensure preloader is cleared before modifying image_space to avoid
 	// use-after-free or OOB access in SpritePreloader::update() on main thread.
-	SpritePreloader::get().clear();
-	sprite_space.clear();
-	image_space.clear();
-	// editor_sprite_space.clear(); // Editor sprites are global/internal and should persist across version changes
-	resident_images.clear();
-	resident_game_sprites.clear();
-
-	item_count = 0;
-	creature_count = 0;
-	collector.Clear();
-	spritefile = "";
-	sprite_archive_.reset();
-
-	// Cleanup atlas manager (will be reinitialized lazily when needed)
-	if (atlas_manager_) {
-		atlas_manager_->clear();
-		atlas_manager_.reset();
-	}
-
-	client_version = nullptr;
-	unloaded = true;
-	dat_format = DAT_FORMAT_UNKNOWN;
-	is_extended = false;
-	has_transparency = false;
-	has_frame_durations = false;
-	has_frame_groups = false;
-}
-
-void GraphicManager::cleanSoftwareSprites() {
-	collector.CleanSoftwareSprites(sprite_space);
-}
-
-bool GraphicManager::ensureAtlasManager() {
-	// Already initialized
-	if (atlas_manager_ && atlas_manager_->isValid()) {
-		return true;
-	}
-
-	// Create and initialize on first use
-	if (!atlas_manager_) {
-		atlas_manager_ = std::make_unique<AtlasManager>();
-	}
-
-	// Lazy initialization happens inside AtlasManager::ensureInitialized()
-	if (!atlas_manager_->ensureInitialized()) {
-		spdlog::error("GraphicManager: Failed to initialize atlas manager");
-		atlas_manager_.reset();
-		return false;
-	}
-
-	return true;
-}
-
-Sprite* GraphicManager::getSprite(int id) {
-	if (id < 0) {
-		if (auto it = editor_sprite_space.find(id); it != editor_sprite_space.end()) {
-			return it->second.get();
-		}
-		return nullptr;
-	}
-	if (static_cast<size_t>(id) >= sprite_space.size()) {
-		return nullptr;
-	}
-	return sprite_space[id].get();
-}
-
-void GraphicManager::insertSprite(int id, std::unique_ptr<Sprite> sprite) {
-	if (id < 0) {
-		editor_sprite_space[id] = std::move(sprite);
-	} else {
-		if (static_cast<size_t>(id) >= sprite_space.size()) {
-			sprite_space.resize(id + 1);
-		}
-		sprite_space[id] = std::move(sprite);
-	}
-}
-
-GameSprite* GraphicManager::getCreatureSprite(int id) {
-	if (id < 0) {
-		return nullptr;
-	}
-
-	size_t target_id = static_cast<size_t>(id) + item_count;
-	if (target_id >= sprite_space.size()) {
-		return nullptr;
-	}
-	return static_cast<GameSprite*>(sprite_space[target_id].get());
-}
-
-uint16_t GraphicManager::getItemSpriteMaxID() const {
-	return item_count;
-}
-
-uint16_t GraphicManager::getCreatureSpriteMaxID() const {
-	return creature_count;
+	gc_.preloader().clear();
+	db_.clear();
+	loader_.clear();
+	gc_.clear();
+	atlas_.clear();
 }
 
 bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
-}
-
-void GraphicManager::addSpriteToCleanup(GameSprite* spr) {
-	collector.AddSpriteToCleanup(spr);
-}
-
-void GraphicManager::garbageCollection() {
-	collector.GarbageCollect(resident_game_sprites, resident_images, cached_time_);
 }
 
 void NVGDeleter::operator()(NVGcontext* nvg) const {

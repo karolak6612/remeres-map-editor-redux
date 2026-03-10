@@ -19,7 +19,8 @@ class SpriteArchive;
 
 class SpritePreloader {
 public:
-	[[nodiscard]] static SpritePreloader& get();
+	SpritePreloader();
+	~SpritePreloader();
 
 	SpritePreloader(const SpritePreloader&) = delete;
 	SpritePreloader& operator=(const SpritePreloader&) = delete;
@@ -40,8 +41,6 @@ public:
 	void shutdown();
 
 private:
-	SpritePreloader();
-	~SpritePreloader();
 
 	struct ArchiveSpriteKey {
 		const SpriteArchive* archive = nullptr;

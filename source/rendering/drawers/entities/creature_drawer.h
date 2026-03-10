@@ -25,6 +25,8 @@ struct CreatureDrawOptions {
 	std::optional<MapBounds> transient_selection_bounds;
 };
 
+class ISpriteResolver;
+
 class CreatureDrawer {
 public:
 	CreatureDrawer();
@@ -32,6 +34,13 @@ public:
 
 	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
 	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
+
+	void SetSpriteResolver(ISpriteResolver* resolver) {
+		sprite_resolver = resolver;
+	}
+
+private:
+	ISpriteResolver* sprite_resolver = nullptr;
 };
 
 #endif

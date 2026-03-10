@@ -2,21 +2,21 @@
 #include "rendering/drawers/tiles/tile_color_calculator.h"
 #include "map/tile.h"
 #include "game/item.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
 #include "app/definitions.h"
 #include <array>
 
-void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
-	bool showspecial = options.show_only_colors || options.show_special_tiles;
+void TileColorCalculator::Calculate(const Tile* tile, const RenderSettings& settings, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b, float highlight_pulse) {
+	bool showspecial = settings.show_only_colors || settings.show_special_tiles;
 
-	if (options.show_blocking && tile->isBlocking() && tile->size() > 0) {
+	if (settings.show_blocking && tile->isBlocking() && tile->size() > 0) {
 		// g * 2/3 approx g * 171 / 256
 		g = (g * 171) >> 8;
 		b = (b * 171) >> 8;
 	}
 
 	int item_count = tile->items.size();
-	if (options.highlight_items && item_count > 0 && !tile->items.back()->isBorder()) {
+	if (settings.highlight_items && item_count > 0 && !tile->items.back()->isBorder()) {
 		// Fixed point factors (x/256)
 		// 0.75 -> 192, 0.6 -> 154, 0.48 -> 123, 0.40 -> 102, 0.33 -> 84
 		static constexpr std::array<int, 5> factor = { 192, 154, 123, 102, 84 };
@@ -25,7 +25,7 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		r = (r * factor[idx]) >> 8;
 	}
 
-	if (options.show_spawns && spawn_count > 0) {
+	if (settings.show_spawns && spawn_count > 0) {
 		// Precomputed 0.7^n * 256 for n=1..9
 		static constexpr std::array<int, 9> spawn_factor = { 179, 125, 88, 61, 43, 30, 21, 15, 10 };
 		int f = spawn_factor[std::clamp(spawn_count, 1, 9) - 1];
@@ -33,7 +33,7 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 		b = (b * f) >> 8;
 	}
 
-	if (options.show_houses && tile->isHouseTile()) {
+	if (settings.show_houses && tile->isHouseTile()) {
 		uint32_t house_id = tile->getHouseID();
 
 		// Get unique house color
@@ -52,8 +52,8 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 
 			// Simple intensity boost
 			// When pulse is high, we brighten the color towards white
-			if (options.highlight_pulse > 0.0f) {
-				float boost = options.highlight_pulse * 0.6f; // Max 60% boost towards white
+			if (highlight_pulse > 0.0f) {
+				float boost = highlight_pulse * 0.6f; // Max 60% boost towards white
 
 				r = static_cast<uint8_t>(std::min(255, static_cast<int>(r + (255 - r) * boost)));
 				g = static_cast<uint8_t>(std::min(255, static_cast<int>(g + (255 - g) * boost)));

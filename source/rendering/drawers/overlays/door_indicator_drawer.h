@@ -1,11 +1,11 @@
 #ifndef RME_DOOR_INDICATOR_DRAWER_H_
 #define RME_DOOR_INDICATOR_DRAWER_H_
 
-#include <vector>
+#include <span>
 #include "map/position.h"
 
 struct NVGcontext;
-struct RenderView;
+struct ViewState;
 
 class DoorIndicatorDrawer {
 public:
@@ -19,12 +19,7 @@ public:
 		bool east;
 	};
 
-	void addDoor(const Position& pos, bool locked, bool south, bool east);
-	void clear();
-	void draw(NVGcontext* vg, const RenderView& view);
-
-private:
-	std::vector<DoorRequest> requests;
+	void draw(NVGcontext* vg, const ViewState& view, std::span<const DoorRequest> doors);
 };
 
 #endif

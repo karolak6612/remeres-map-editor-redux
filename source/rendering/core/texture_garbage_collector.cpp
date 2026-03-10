@@ -62,13 +62,13 @@ void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
 	}
 }
 
-void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time) {
+void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time) {
 	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
 		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
 
 			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
 			for (size_t i = resident_images.size(); i > 0; --i) {
-				Image* img = static_cast<Image*>(resident_images[i - 1]);
+				Image* img = resident_images[i - 1];
 				img->clean(current_time, longevity);
 
 				if (!img->isGLLoaded) {

@@ -11,7 +11,8 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "editor/editor.h"
 #include "map/tile.h"
 
@@ -21,10 +22,10 @@ FloorDrawer::FloorDrawer() {
 FloorDrawer::~FloorDrawer() {
 }
 
-void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor) {
+void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor) {
 
 	// Draw "transparent higher floor"
-	if (view.floor != 8 && view.floor != 0 && options.transparent_floors) {
+	if (view.floor != 8 && view.floor != 0 && settings.transparent_floors) {
 		int map_z = view.floor - 1;
 		for (int map_x = view.start_x; map_x <= view.end_x; map_x++) {
 			for (int map_y = view.start_y; map_y <= view.end_y; map_y++) {
@@ -43,7 +44,7 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 					// Position pos = tile->getPosition();
 
 					if (tile->ground) {
-						BlitItemParams params(tile, tile->ground.get(), options);
+						BlitItemParams params(tile, tile->ground.get(), settings, frame);
 						params.alpha = 96;
 						if (tile->isPZ()) {
 							params.red = 128;
@@ -56,9 +57,9 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 						}
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
-					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
+					if (view.zoom <= 10.0 || !settings.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
-							BlitItemParams params(tile, item.get(), options);
+							BlitItemParams params(tile, item.get(), settings, frame);
 							params.alpha = 96;
 							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 						}

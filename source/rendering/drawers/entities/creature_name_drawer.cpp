@@ -14,21 +14,9 @@ CreatureNameDrawer::CreatureNameDrawer() {
 }
 
 CreatureNameDrawer::~CreatureNameDrawer() {
-	clear();
 }
 
-void CreatureNameDrawer::clear() {
-	labels.clear();
-}
-
-void CreatureNameDrawer::addLabel(const Position& pos, const std::string& name, const Creature* c) {
-	if (name.empty()) {
-		return;
-	}
-	labels.push_back({ pos, name, c });
-}
-
-void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void CreatureNameDrawer::draw(NVGcontext* vg, const ViewState& view, std::span<const CreatureLabel> labels) {
 	if (!vg) {
 		return;
 	}

@@ -12,11 +12,6 @@
 #include <cassert>
 #include <span>
 
-SpritePreloader& SpritePreloader::get() {
-	static SpritePreloader instance;
-	return instance;
-}
-
 SpritePreloader::SpritePreloader() : stopping(false) {
 	unsigned int num_threads = std::clamp(std::thread::hardware_concurrency(), MIN_WORKER_THREADS, MAX_WORKER_THREADS);
 	workers.reserve(num_threads);
@@ -195,8 +190,8 @@ void SpritePreloader::update() {
 		}
 
 		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-		if (res.archive == current_archive && !graphics_unloaded && id < g_gui.gfx.image_space.size()) {
-			auto& img_ptr = g_gui.gfx.image_space[id];
+		if (res.archive == current_archive && !graphics_unloaded && id < g_gui.gfx.db().images().size()) {
+			auto& img_ptr = g_gui.gfx.db().images()[id];
 			if (img_ptr && img_ptr->isNormalImage()) {
 				// Use static_cast for performance, as we know the type from loaders
 				auto* img = static_cast<NormalImage*>(img_ptr.get());
@@ -220,6 +215,6 @@ void SpritePreloader::update() {
 
 namespace rme {
 	void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
-		SpritePreloader::get().preload(spr, pattern_x, pattern_y, pattern_z, frame);
+		g_gui.gfx.gc().preloader().preload(spr, pattern_x, pattern_y, pattern_z, frame);
 	}
 }

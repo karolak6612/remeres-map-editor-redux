@@ -9,21 +9,20 @@
 
 #include "rendering/drawers/cursors/drag_shadow_drawer.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/map_drawer.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "editor/editor.h"
-#include "rendering/ui/map_display.h"
 #include "map/tile.h"
 #include "game/sprites.h"
 
 #include "game/item.h"
 #include "game/creature.h"
 #include "game/spawn.h"
-#include "rendering/ui/selection_controller.h"
 
 DragShadowDrawer::DragShadowDrawer() {
 }
@@ -33,19 +32,19 @@ DragShadowDrawer::~DragShadowDrawer() {
 
 #include "rendering/core/primitive_renderer.h"
 
-void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options) {
-	if (!drawer || !drawer->canvas) {
-		return;
-	}
+void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const Position& drag_start) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+	const auto& settings = ctx.settings;
+	const auto& frame = ctx.frame;
 
 	// Draw dragging shadow
-	if (!drawer->editor.selection.isBusy() && options.dragging && !options.ingame) {
-		for (auto tit = drawer->editor.selection.begin(); tit != drawer->editor.selection.end(); tit++) {
+	if (!editor.selection.isBusy() && frame.dragging && !settings.ingame) {
+		for (auto tit = editor.selection.begin(); tit != editor.selection.end(); tit++) {
 			Tile* tile = *tit;
 			Position pos = tile->getPosition();
 
 			int move_x, move_y, move_z;
-			Position drag_start = drawer->canvas->selection_controller->GetDragStartPosition();
 			move_x = drag_start.x - view.mouse_map_x;
 			move_y = drag_start.y - view.mouse_map_y;
 			move_z = drag_start.z - view.floor;
@@ -72,10 +71,10 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 
 				// save performance when moving large chunks unzoomed
 				ItemVector toRender = TileOperations::getSelectedItems(tile, view.zoom > 3.0);
-				Tile* desttile = drawer->editor.map.getTile(pos);
+				Tile* desttile = editor.map.getTile(pos);
 				for (const auto& item : toRender) {
 					if (desttile) {
-						BlitItemParams params(desttile, item, options);
+						BlitItemParams params(desttile, item, settings, frame);
 						params.ephemeral = true;
 						params.red = 160;
 						params.green = 160;
@@ -83,7 +82,7 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 						params.alpha = 160;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
-						BlitItemParams params(pos, item, options);
+						BlitItemParams params(pos, item, settings, frame);
 						params.ephemeral = true;
 						params.red = 160;
 						params.green = 160;
@@ -95,7 +94,7 @@ void DragShadowDrawer::draw(SpriteBatch& sprite_batch, MapDrawer* drawer, ItemDr
 
 				// save performance when moving large chunks unzoomed
 				if (view.zoom <= 3.0) {
-					if (tile->creature && tile->creature->isSelected() && options.show_creatures) {
+					if (tile->creature && tile->creature->isSelected() && settings.show_creatures) {
 						creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .color = DrawColor(160, 160, 160, 160) });
 					}
 					if (tile->spawn && tile->spawn->isSelected()) {

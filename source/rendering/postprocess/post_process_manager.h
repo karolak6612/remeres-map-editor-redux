@@ -4,8 +4,6 @@
 #include <string>
 #include <vector>
 #include <memory>
-#include <functional>
-#include <map>
 
 class ShaderProgram;
 
@@ -15,16 +13,19 @@ struct PostProcessEffect {
 	std::string vertex_source;
 	std::shared_ptr<ShaderProgram> shader;
 
-	// Constructor for easy registration
+	// Constructor for easy creation
 	PostProcessEffect(std::string n, std::string frag, std::string vert = "") : name(n), fragment_source(frag), vertex_source(vert) { }
 };
 
 class PostProcessManager {
 public:
-	static PostProcessManager& Instance();
+	PostProcessManager() = default;
 
 	void Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source = "");
 	void Initialize(const std::string& default_vertex_source); // Compiles all registered shaders
+
+	// Loads all pending registrations from EffectRegistry
+	void LoadFromRegistry();
 
 	// Returns the shader program for the given name.
 	// If not found, returns the first available shader (usually "None") or nullptr.
@@ -34,13 +35,7 @@ public:
 	std::vector<std::string> GetEffectNames() const;
 
 private:
-	PostProcessManager() = default;
-
-	// We maintain insertion order for UI consistency usually,
-	// but a map by name is good for lookup.
-	// Let's keep a vector for order and a map for lookup, or just search the vector (small N).
 	std::vector<std::shared_ptr<PostProcessEffect>> effects;
-
 	bool initialized = false;
 };
 
