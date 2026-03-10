@@ -42,6 +42,9 @@ struct NVGcontext;
 
 #include <mutex>
 
+struct DrawContext;
+struct ViewBounds;
+struct FloorViewParams;
 class PostProcessPipeline;
 class AtlasManager;
 class GridDrawer;
@@ -152,11 +155,7 @@ public:
     void Release();
 
     void Draw();
-    void DrawMap();
     void DrawLiveCursors();
-    void DrawIngameBox(const ViewBounds& bounds);
-
-    void DrawGrid(const ViewBounds& bounds);
     void DrawTooltips(NVGcontext* vg);
     void DrawHookIndicators(NVGcontext* vg);
     void DrawDoorIndicators(NVGcontext* vg);
@@ -195,7 +194,10 @@ public:
     }
 
 private:
-    void DrawMapLayer(int map_z, bool live_client, const FloorViewParams& floor_params);
+    void DrawMap(const DrawContext& ctx);
+    void DrawMapLayer(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
+    void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
+    void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
     bool renderers_initialized = false;
 };
 

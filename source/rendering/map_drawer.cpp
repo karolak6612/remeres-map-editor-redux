@@ -252,7 +252,11 @@ void MapDrawer::Draw()
 
     GLViewport::Clear(); // Clear screen (or FBO)
 
-    DrawMap();
+    // Construct the frame DrawContext once — all private methods receive it by const ref.
+    const DrawContext ctx {*sprite_batch, *primitive_renderer, view,           render_settings, frame_options,
+                           light_buffer,  writeAccumulators(), *current_atlas_};
+
+    DrawMap(ctx);
 
     // Flush Map for Light Pass
     sprite_batch->end(*current_atlas_);
@@ -269,9 +273,6 @@ void MapDrawer::Draw()
 
     // Resume Batch for Overlays
     sprite_batch->begin(view.projectionMatrix, *current_atlas_);
-
-    const DrawContext ctx {*sprite_batch, *primitive_renderer, view,           render_settings, frame_options,
-                           light_buffer,  writeAccumulators(), *current_atlas_};
 
     if (cursors_.drag_shadow) {
         cursors_.drag_shadow->draw(
@@ -294,10 +295,10 @@ void MapDrawer::Draw()
     const ViewBounds base_bounds {view.start_x, view.start_y, view.end_x, view.end_y};
 
     if (render_settings.show_grid) {
-        DrawGrid(base_bounds);
+        DrawGrid(ctx, base_bounds);
     }
     if (render_settings.show_ingame_box) {
-        DrawIngameBox(base_bounds);
+        DrawIngameBox(ctx, base_bounds);
     }
 
     // Draw creature names (Overlay) moved to DrawCreatureNames()
@@ -322,12 +323,9 @@ void MapDrawer::Draw()
     // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
 }
 
-void MapDrawer::DrawMap()
+void MapDrawer::DrawMap(const DrawContext& ctx)
 {
     bool live_client = editor.live_manager.IsClient();
-
-    const DrawContext ctx {*sprite_batch, *primitive_renderer, view,           render_settings, frame_options,
-                           light_buffer,  writeAccumulators(), *current_atlas_};
 
     int floor_offset = 0;
 
@@ -341,7 +339,7 @@ void MapDrawer::DrawMap()
         }
 
         if (map_z >= view.end_z) {
-            DrawMapLayer(map_z, live_client, floor_params);
+            DrawMapLayer(ctx, map_z, live_client, floor_params);
         }
 
         overlays_.preview->draw(
@@ -353,17 +351,13 @@ void MapDrawer::DrawMap()
     }
 }
 
-void MapDrawer::DrawIngameBox(const ViewBounds& bounds)
+void MapDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds)
 {
-    const DrawContext ctx {*sprite_batch, *primitive_renderer, view,           render_settings, frame_options,
-                           light_buffer,  writeAccumulators(), *current_atlas_};
     overlays_.grid->DrawIngameBox(ctx, bounds);
 }
 
-void MapDrawer::DrawGrid(const ViewBounds& bounds)
+void MapDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds)
 {
-    const DrawContext ctx {*sprite_batch, *primitive_renderer, view,           render_settings, frame_options,
-                           light_buffer,  writeAccumulators(), *current_atlas_};
     overlays_.grid->DrawGrid(ctx, bounds);
 }
 
@@ -389,10 +383,8 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg)
     overlays_.creature_name->draw(vg, view, readAccumulators().creature_names);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client, const FloorViewParams& floor_params)
+void MapDrawer::DrawMapLayer(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params)
 {
-    const DrawContext ctx {*sprite_batch, *primitive_renderer, view,           render_settings, frame_options,
-                           light_buffer,  writeAccumulators(), *current_atlas_};
     map_layer_drawer->Draw(ctx, map_z, live_client, floor_params);
 }
 
