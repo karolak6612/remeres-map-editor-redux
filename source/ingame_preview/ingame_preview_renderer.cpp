@@ -1,6 +1,7 @@
 #include "ingame_preview/ingame_preview_renderer.h"
 #include "ingame_preview/floor_visibility_calculator.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/light_buffer.h"
@@ -172,7 +173,8 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y, lighting_enabled ? light_buffer.get() : nullptr);
+						const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, *light_buffer };
+					tile_renderer->DrawTile(ctx, tile->location, 0, draw_x, draw_y, lighting_enabled);
 
 						// Add names of creatures on this floor
 						if (creature_name_drawer && z == camera_pos.z) {
