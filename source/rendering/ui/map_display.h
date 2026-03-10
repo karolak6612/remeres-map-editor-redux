@@ -32,6 +32,7 @@
 struct NVGcontext;
 struct RenderSettings;
 struct FrameOptions;
+struct ViewSnapshot;
 
 class Item;
 class Creature;
@@ -222,6 +223,9 @@ private:
     void EnsureNanoVG();
     void DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame);
     void PerformGarbageCollection();
+    ViewSnapshot BuildViewSnapshot() const;
+    void ConfigureRenderSettings(RenderSettings& settings) const;
+    void ConfigureFrameOptions(FrameOptions& frame) const;
     bool renderer_initialized = false;
 };
 

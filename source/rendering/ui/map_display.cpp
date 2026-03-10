@@ -249,6 +249,60 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const RenderSettings& settings, con
     glBindVertexArray(0);
 }
 
+ViewSnapshot MapCanvas::BuildViewSnapshot() const
+{
+    ViewSnapshot snapshot;
+    snapshot.zoom = static_cast<float>(view_state_->getZoom());
+    snapshot.floor = view_state_->getFloor();
+
+    int mouse_map_x, mouse_map_y;
+    view_state_->screenToMap(cursor_x, cursor_y, &mouse_map_x, &mouse_map_y);
+    snapshot.mouse_map_x = mouse_map_x;
+    snapshot.mouse_map_y = mouse_map_y;
+
+    int vsx, vsy, ssx, ssy;
+    GetViewBox(&vsx, &vsy, &ssx, &ssy);
+    snapshot.view_scroll_x = vsx;
+    snapshot.view_scroll_y = vsy;
+    snapshot.screensize_x = ssx;
+    snapshot.screensize_y = ssy;
+
+    snapshot.last_click_map_x = last_click_map_x;
+    snapshot.last_click_map_y = last_click_map_y;
+    snapshot.last_cursor_map_x = last_cursor_map_x;
+    snapshot.last_cursor_map_y = last_cursor_map_y;
+
+    snapshot.last_click_abs_x = last_click_abs_x;
+    snapshot.last_click_abs_y = last_click_abs_y;
+    snapshot.cursor_x = cursor_x;
+    snapshot.cursor_y = cursor_y;
+
+    snapshot.is_dragging_draw = drawing_controller->IsDrawing();
+    snapshot.drag_start = selection_controller->GetDragStartPosition();
+
+    if (auto* mapTab = g_gui.GetCurrentMapTab()) {
+        snapshot.secondary_map = mapTab->GetSession()->secondary_map;
+    }
+    snapshot.is_pasting = isPasting();
+
+    return snapshot;
+}
+
+void MapCanvas::ConfigureRenderSettings(RenderSettings& settings) const
+{
+    if (screenshot_controller->IsCapturing()) {
+        settings.SetIngame();
+    } else {
+        settings = RenderSettings::FromSettings(g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
+    }
+}
+
+void MapCanvas::ConfigureFrameOptions(FrameOptions& frame) const
+{
+    frame.dragging = selection_controller->IsDragging();
+    frame.boundbox_selection = selection_controller->IsBoundboxSelection();
+}
+
 void MapCanvas::PerformGarbageCollection()
 {
     // Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
@@ -269,19 +323,12 @@ void MapCanvas::OnPaint(wxPaintEvent& event)
     EnsureNanoVG();
 
     if (g_gui.IsRenderingEnabled()) {
-        // Advance graphics clock and drain the preloader queue before rendering
         g_gui.gfx.updateTime();
 
         RenderSettings& settings = drawer->getRenderSettings();
         FrameOptions& frame = drawer->getFrameOptions();
-        if (screenshot_controller->IsCapturing()) {
-            settings.SetIngame();
-        } else {
-            settings = RenderSettings::FromSettings(g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
-        }
-
-        frame.dragging = selection_controller->IsDragging();
-        frame.boundbox_selection = selection_controller->IsBoundboxSelection();
+        ConfigureRenderSettings(settings);
+        ConfigureFrameOptions(frame);
 
         if (settings.show_preview) {
             animation_timer->Start();
@@ -291,42 +338,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event)
             g_gui.gfx.pauseAnimation();
         }
 
-        // BatchRenderer calls removed - MapDrawer handles its own renderers
-
-        // Construct ViewSnapshot from canvas state for this frame
-        ViewSnapshot snapshot;
-        snapshot.zoom = static_cast<float>(view_state_->getZoom());
-        snapshot.floor = view_state_->getFloor();
-
-        int mouse_map_x, mouse_map_y;
-        ScreenToMap(cursor_x, cursor_y, &mouse_map_x, &mouse_map_y);
-        snapshot.mouse_map_x = mouse_map_x;
-        snapshot.mouse_map_y = mouse_map_y;
-
-        int vsx, vsy, ssx, ssy;
-        GetViewBox(&vsx, &vsy, &ssx, &ssy);
-        snapshot.view_scroll_x = vsx;
-        snapshot.view_scroll_y = vsy;
-        snapshot.screensize_x = ssx;
-        snapshot.screensize_y = ssy;
-
-        snapshot.last_click_map_x = last_click_map_x;
-        snapshot.last_click_map_y = last_click_map_y;
-        snapshot.last_cursor_map_x = last_cursor_map_x;
-        snapshot.last_cursor_map_y = last_cursor_map_y;
-
-        snapshot.last_click_abs_x = last_click_abs_x;
-        snapshot.last_click_abs_y = last_click_abs_y;
-        snapshot.cursor_x = cursor_x;
-        snapshot.cursor_y = cursor_y;
-
-        snapshot.is_dragging_draw = drawing_controller->IsDrawing();
-        snapshot.drag_start = selection_controller->GetDragStartPosition();
-
-        if (auto* mapTab = g_gui.GetCurrentMapTab()) {
-            snapshot.secondary_map = mapTab->GetSession()->secondary_map;
-        }
-        snapshot.is_pasting = isPasting();
+        ViewSnapshot snapshot = BuildViewSnapshot();
 
         drawer->SetupVars(snapshot);
         drawer->SetupGL();
@@ -338,9 +350,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event)
 
         drawer->Release();
 
-        // Draw UI (Tooltips, Overlays & HUD) using NanoVG
         DrawOverlays(m_nvg.get(), settings, frame);
-
         drawer->BeginFrame();
     }
 
