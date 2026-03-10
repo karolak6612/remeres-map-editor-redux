@@ -16,6 +16,7 @@
 #include <unordered_set>
 
 class SpriteArchive;
+class GraphicManager;
 
 class SpritePreloader {
 public:
@@ -24,6 +25,10 @@ public:
 
 	SpritePreloader(const SpritePreloader&) = delete;
 	SpritePreloader& operator=(const SpritePreloader&) = delete;
+
+	// Inject the GraphicManager after construction (avoids circular dependency
+	// since GraphicManager owns TextureGC which owns SpritePreloader).
+	void setGraphicManager(GraphicManager* gfx) { gfx_ = gfx; }
 
 	// Schedules sprites for preloading based on the given view parameters.
 	// This corresponds to the loop logic previously in collectTileSprites.
@@ -102,6 +107,8 @@ private:
 	std::queue<Result> result_queue;
 	std::unordered_set<PendingSpriteKey, PendingSpriteKeyHash> pending_ids; // To avoid duplicate tasks for the same archive/id/generation/epoch
 	uint64_t active_epoch = 0;
+
+	GraphicManager* gfx_ = nullptr;
 };
 
 #endif

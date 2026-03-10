@@ -40,6 +40,7 @@
 
 GraphicManager::GraphicManager() :
 	client_version(loader_.client_version) {
+	gc_.preloader().setGraphicManager(this);
 }
 
 GraphicManager::~GraphicManager() {
