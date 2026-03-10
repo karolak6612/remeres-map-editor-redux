@@ -84,7 +84,7 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
 				}
 				nd->setRequested(map_z > GROUND_LAYER, true);
 			}
-			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
+			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, ctx.atlas, nd_map_x, nd_map_y, view);
 			return;
 		}
 

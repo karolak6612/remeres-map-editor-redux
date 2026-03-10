@@ -36,8 +36,13 @@ public:
 		sprite_resolver = resolver;
 	}
 
+	void SetAtlas(const AtlasManager* atlas) {
+		atlas_ = atlas;
+	}
+
 private:
 	ISpriteResolver* sprite_resolver = nullptr;
+	const AtlasManager* atlas_ = nullptr;
 };
 
 #endif

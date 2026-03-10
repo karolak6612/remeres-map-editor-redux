@@ -3,6 +3,7 @@
 
 class SpriteBatch;
 class PrimitiveRenderer;
+class AtlasManager;
 struct ViewState;
 struct RenderSettings;
 struct FrameOptions;
@@ -22,6 +23,7 @@ struct DrawContext {
 	const FrameOptions& frame;
 	LightBuffer& light_buffer;
 	FrameAccumulators& accumulators;
+	const AtlasManager& atlas;
 };
 
 #endif

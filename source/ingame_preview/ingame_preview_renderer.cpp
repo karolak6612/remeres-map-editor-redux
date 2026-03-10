@@ -179,7 +179,7 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, *light_buffer, accumulators_ };
+						const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, *light_buffer, accumulators_, *atlas };
 					tile_renderer->DrawTile(ctx, tile->location, 0, draw_x, draw_y, lighting_enabled);
 					}
 				}

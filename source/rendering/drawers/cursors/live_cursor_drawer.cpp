@@ -8,8 +8,7 @@
 #include "editor/editor.h"
 #include "live/live_socket.h"
 #include "rendering/core/render_settings.h"
-#include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "rendering/core/atlas_manager.h"
 
 void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 	auto& sprite_batch = ctx.sprite_batch;
@@ -56,9 +55,7 @@ void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 			cursor.color.Alpha() / 255.0f
 		);
 
-		if (g_gui.gfx.ensureAtlasManager()) {
-			sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, *g_gui.gfx.getAtlasManager());
-		}
+		sprite_batch.drawRect(draw_x, draw_y, (float)TILE_SIZE, (float)TILE_SIZE, color, ctx.atlas);
 	}
 }
 

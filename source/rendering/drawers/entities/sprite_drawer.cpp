@@ -1,10 +1,8 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
-#include "rendering/core/graphics.h"
 #include "rendering/core/sprite_resolver.h"
 #include "game/sprites.h"
 #include "item_definitions/core/item_definition_store.h"
 
-#include "ui/gui.h"
 #include <spdlog/spdlog.h>
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"
@@ -41,10 +39,8 @@ void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawC
 	float normalizedB = color.b / 255.0f;
 	float normalizedA = color.a / 255.0f;
 
-	// Use Graphics::getAtlasManager() to get the atlas manager for white pixel access
-	// This assumes Graphics and AtlasManager are available
-	if (g_gui.gfx.hasAtlasManager()) {
-		sprite_batch.drawRect(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+	if (atlas_) {
+		sprite_batch.drawRect(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *atlas_);
 	}
 }
 
@@ -54,8 +50,8 @@ void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int widt
 	float normalizedB = color.b / 255.0f;
 	float normalizedA = color.a / 255.0f;
 
-	if (g_gui.gfx.hasAtlasManager()) {
-		sprite_batch.drawRectLines(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *g_gui.gfx.getAtlasManager());
+	if (atlas_) {
+		sprite_batch.drawRectLines(static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height), glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *atlas_);
 	}
 }
 
@@ -83,10 +79,6 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	screeny -= spr->getDrawOffset().second;
 
 	int tme = 0; // GetTime() % itype->FPA;
-
-	// Atlas-only rendering - ensure atlas is available
-	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
-	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
 
 	for (int cx = 0; cx != spr->width; ++cx) {
 		for (int cy = 0; cy != spr->height; ++cy) {

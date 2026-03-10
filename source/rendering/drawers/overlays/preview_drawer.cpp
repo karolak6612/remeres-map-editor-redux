@@ -3,6 +3,8 @@
 // glut include removed
 
 #include "rendering/drawers/overlays/preview_drawer.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/atlas_manager.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/sprite_batch.h"
@@ -10,7 +12,6 @@
 #include "rendering/core/view_snapshot.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
-#include "ui/gui.h"
 #include "brushes/brush.h"
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
@@ -21,14 +22,16 @@ PreviewDrawer::PreviewDrawer() {
 PreviewDrawer::~PreviewDrawer() {
 }
 
-void PreviewDrawer::draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot, const ViewState& view, const FloorViewParams& floor_params, int map_z, const RenderSettings& settings, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
+void PreviewDrawer::draw(const DrawContext& ctx, const ViewSnapshot& snapshot, const FloorViewParams& floor_params, int map_z, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* current_brush) {
+	const auto& view = ctx.view;
+	const auto& settings = ctx.settings;
+	const auto& frame = ctx.frame;
+	auto& sprite_batch = ctx.sprite_batch;
+
 	BaseMap* secondary_map = snapshot.secondary_map;
 
-	// Create a default FrameOptions for preview (no transient frame state needed)
-	static const FrameOptions preview_frame;
-
 	if (secondary_map != nullptr && !settings.ingame) {
-		Brush* brush = g_gui.GetCurrentBrush();
+		Brush* brush = current_brush;
 
 		Position normalPos;
 		Position to(view.mouse_map_x, view.mouse_map_y, view.floor);
@@ -73,7 +76,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot
 							b = b / 3 * 2;
 						}
 						if (tile->isHouseTile() && settings.show_houses) {
-							if ((int)tile->getHouseID() == current_house_id) {
+							if ((int)tile->getHouseID() == frame.current_house_id) {
 								r /= 2;
 							} else {
 								r /= 2;
@@ -94,7 +97,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot
 							g /= 2;
 						}
 						if (tile->ground) {
-							BlitItemParams params(tile, tile->ground.get(), settings, preview_frame);
+							BlitItemParams params(tile, tile->ground.get(), settings, frame);
 							params.ephemeral = true;
 							params.red = r;
 							params.green = g;
@@ -107,7 +110,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot
 					// Draw items on the tile
 					if (view.zoom <= 10.0 || !settings.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
-							BlitItemParams params(tile, item.get(), settings, preview_frame);
+							BlitItemParams params(tile, item.get(), settings, frame);
 							params.ephemeral = true;
 							params.alpha = base_alpha;
 							if (item->isBorder()) {
@@ -141,10 +144,10 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot
 			int draw_x = ((mousePos.x * TILE_SIZE) - view.view_scroll_x) - offset;
 			int draw_y = ((mousePos.y * TILE_SIZE) - view.view_scroll_y) - offset;
 
-			if (g_gui.gfx.ensureAtlasManager()) {
+			{
 				// Draw a semi-transparent white box over the tile
 				glm::vec4 highlightColor(1.0f, 1.0f, 1.0f, 0.25f); // 25% white
-				sprite_batch.drawRect((float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE, highlightColor, *g_gui.gfx.getAtlasManager());
+				sprite_batch.drawRect((float)draw_x, (float)draw_y, (float)TILE_SIZE, (float)TILE_SIZE, highlightColor, ctx.atlas);
 			}
 		}
 	}

@@ -22,7 +22,6 @@
 #include "game/item.h"
 #include "game/complexitem.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
 
 GameSprite* ItemDrawer::resolveSprite(const ItemDefinitionView& definition) const {
 	if (!definition || !sprite_resolver) {
@@ -156,8 +155,6 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// Atlas-only rendering
-	// g_gui.gfx.ensureAtlasManager();
-	// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
 
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
 		const AtlasRegion* region;

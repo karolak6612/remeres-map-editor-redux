@@ -43,6 +43,7 @@ class DoorIndicatorDrawer;
 #include "rendering/ui/nvg_image_cache.h"
 
 class PostProcessPipeline;
+class AtlasManager;
 class GridDrawer;
 
 class LightDrawer;
@@ -98,6 +99,9 @@ class MapDrawer {
 
 	// Post-processing
 	std::unique_ptr<PostProcessPipeline> post_process_;
+
+	// Cached per-frame atlas pointer (set in Draw(), valid until frame ends)
+	AtlasManager* current_atlas_ = nullptr;
 
 public:
 	MapDrawer(Editor& editor);
