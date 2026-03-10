@@ -32,6 +32,12 @@ public:
 	using SpriteVector = std::vector<std::unique_ptr<Sprite>>;
 	using ImageVector = std::vector<std::unique_ptr<Image>>;
 
+	SpriteDatabase();
+	~SpriteDatabase();
+
+	SpriteDatabase(SpriteDatabase&&) noexcept;
+	SpriteDatabase& operator=(SpriteDatabase&&) noexcept;
+
 	Sprite* getSprite(int id) const;
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
 	GameSprite* getCreatureSprite(int id, uint16_t item_count) const;

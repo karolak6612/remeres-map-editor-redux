@@ -18,6 +18,12 @@
 #include "app/main.h"
 #include "rendering/core/sprite_database.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/image.h"
+
+SpriteDatabase::SpriteDatabase() = default;
+SpriteDatabase::~SpriteDatabase() = default;
+SpriteDatabase::SpriteDatabase(SpriteDatabase&&) noexcept = default;
+SpriteDatabase& SpriteDatabase::operator=(SpriteDatabase&&) noexcept = default;
 
 Sprite* SpriteDatabase::getSprite(int id) const {
 	if (id < 0) {
