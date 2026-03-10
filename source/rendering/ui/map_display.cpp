@@ -44,7 +44,11 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/ui/map_status_updater.h"
 #include "rendering/map_drawer.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "rendering/core/text_renderer.h"
+#include "rendering/core/view_snapshot.h"
+#include "ui/map_tab.h"
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <nanovg_gl.h>
@@ -124,7 +128,7 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 	popup_menu = std::make_unique<MapPopupMenu>(editor);
 	animation_timer = std::make_unique<AnimationTimer>(this);
-	drawer = std::make_unique<MapDrawer>(this);
+	drawer = std::make_unique<MapDrawer>(editor);
 	selection_controller = std::make_unique<SelectionController>(this, editor);
 	drawing_controller = std::make_unique<DrawingController>(this, editor);
 	screenshot_controller = std::make_unique<ScreenshotController>(this);
@@ -204,7 +208,7 @@ void MapCanvas::EnsureNanoVG() {
 	}
 }
 
-void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
+void MapCanvas::DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame) {
 	if (!vg) {
 		return;
 	}
@@ -219,16 +223,16 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	glClear(GL_STENCIL_BUFFER_BIT);
 	TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
 
-	if (options.show_creatures) {
+	if (settings.show_creatures) {
 		drawer->DrawCreatureNames(vg);
 	}
-	if (options.show_tooltips) {
+	if (settings.show_tooltips) {
 		drawer->DrawTooltips(vg);
 	}
-	if (options.show_hooks) {
+	if (settings.show_hooks) {
 		drawer->DrawHookIndicators(vg);
 	}
-	if (options.highlight_locked_doors) {
+	if (settings.highlight_locked_doors) {
 		drawer->DrawDoorIndicators(vg);
 	}
 
@@ -262,17 +266,18 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		// Advance graphics clock and drain the preloader queue before rendering
 		g_gui.gfx.updateTime();
 
-		DrawingOptions& options = drawer->getOptions();
+		RenderSettings& settings = drawer->getRenderSettings();
+		FrameOptions& frame = drawer->getFrameOptions();
 		if (screenshot_controller->IsCapturing()) {
-			options.SetIngame();
+			settings.SetIngame();
 		} else {
-			options = DrawingOptions::FromSettings(g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
+			settings = RenderSettings::FromSettings(g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
 		}
 
-		options.dragging = selection_controller->IsDragging();
-		options.boundbox_selection = selection_controller->IsBoundboxSelection();
+		frame.dragging = selection_controller->IsDragging();
+		frame.boundbox_selection = selection_controller->IsBoundboxSelection();
 
-		if (options.show_preview) {
+		if (settings.show_preview) {
 			animation_timer->Start();
 			g_gui.gfx.resumeAnimation();
 		} else {
@@ -282,7 +287,42 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 
 		// BatchRenderer calls removed - MapDrawer handles its own renderers
 
-		drawer->SetupVars();
+		// Construct ViewSnapshot from canvas state for this frame
+		ViewSnapshot snapshot;
+		snapshot.zoom = static_cast<float>(zoom);
+		snapshot.floor = floor;
+
+		int mouse_map_x, mouse_map_y;
+		ScreenToMap(cursor_x, cursor_y, &mouse_map_x, &mouse_map_y);
+		snapshot.mouse_map_x = mouse_map_x;
+		snapshot.mouse_map_y = mouse_map_y;
+
+		int vsx, vsy, ssx, ssy;
+		GetViewBox(&vsx, &vsy, &ssx, &ssy);
+		snapshot.view_scroll_x = vsx;
+		snapshot.view_scroll_y = vsy;
+		snapshot.screensize_x = ssx;
+		snapshot.screensize_y = ssy;
+
+		snapshot.last_click_map_x = last_click_map_x;
+		snapshot.last_click_map_y = last_click_map_y;
+		snapshot.last_cursor_map_x = last_cursor_map_x;
+		snapshot.last_cursor_map_y = last_cursor_map_y;
+
+		snapshot.last_click_abs_x = last_click_abs_x;
+		snapshot.last_click_abs_y = last_click_abs_y;
+		snapshot.cursor_x = cursor_x;
+		snapshot.cursor_y = cursor_y;
+
+		snapshot.is_dragging_draw = drawing_controller->IsDrawing();
+		snapshot.drag_start = selection_controller->GetDragStartPosition();
+
+		if (auto* mapTab = g_gui.GetCurrentMapTab()) {
+			snapshot.secondary_map = mapTab->GetSession()->secondary_map;
+		}
+		snapshot.is_pasting = isPasting();
+
+		drawer->SetupVars(snapshot);
 		drawer->SetupGL();
 		drawer->Draw();
 
@@ -293,7 +333,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		drawer->Release();
 
 		// Draw UI (Tooltips, Overlays & HUD) using NanoVG
-		DrawOverlays(m_nvg.get(), options);
+		DrawOverlays(m_nvg.get(), settings, frame);
 
 		drawer->ClearFrameOverlays();
 	}

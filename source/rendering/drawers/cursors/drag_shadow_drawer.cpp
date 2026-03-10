@@ -14,7 +14,8 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "editor/editor.h"
 #include "map/tile.h"
 #include "game/sprites.h"
@@ -34,10 +35,11 @@ DragShadowDrawer::~DragShadowDrawer() {
 void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const Position& drag_start) {
 	auto& sprite_batch = ctx.sprite_batch;
 	const auto& view = ctx.view;
-	const auto& options = ctx.options;
+	const auto& settings = ctx.settings;
+	const auto& frame = ctx.frame;
 
 	// Draw dragging shadow
-	if (!editor.selection.isBusy() && options.dragging && !options.ingame) {
+	if (!editor.selection.isBusy() && frame.dragging && !settings.ingame) {
 		for (auto tit = editor.selection.begin(); tit != editor.selection.end(); tit++) {
 			Tile* tile = *tit;
 			Position pos = tile->getPosition();
@@ -72,7 +74,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* 
 				Tile* desttile = editor.map.getTile(pos);
 				for (const auto& item : toRender) {
 					if (desttile) {
-						BlitItemParams params(desttile, item, options);
+						BlitItemParams params(desttile, item, settings, frame);
 						params.ephemeral = true;
 						params.red = 160;
 						params.green = 160;
@@ -80,7 +82,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* 
 						params.alpha = 160;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
-						BlitItemParams params(pos, item, options);
+						BlitItemParams params(pos, item, settings, frame);
 						params.ephemeral = true;
 						params.red = 160;
 						params.green = 160;
@@ -92,7 +94,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* 
 
 				// save performance when moving large chunks unzoomed
 				if (view.zoom <= 3.0) {
-					if (tile->creature && tile->creature->isSelected() && options.show_creatures) {
+					if (tile->creature && tile->creature->isSelected() && settings.show_creatures) {
 						creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .color = DrawColor(160, 160, 160, 160) });
 					}
 					if (tile->spawn && tile->spawn->isSelected()) {

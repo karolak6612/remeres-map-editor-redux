@@ -1,26 +1,24 @@
-#ifndef RME_RENDERING_DRAWING_OPTIONS_H_
-#define RME_RENDERING_DRAWING_OPTIONS_H_
+#ifndef RME_RENDERING_CORE_RENDER_SETTINGS_H_
+#define RME_RENDERING_CORE_RENDER_SETTINGS_H_
 
 #include <cstdint>
 #include <string>
-#include <optional>
-#include "map/position.h"
 #include "app/definitions.h"
 
 class Settings;
 
-struct DrawingOptions {
-	DrawingOptions();
+// Persistent rendering settings populated from g_settings once per frame.
+// Lifetime: frame-scoped, but values only change when user modifies preferences.
+struct RenderSettings {
+	RenderSettings();
 
 	void SetIngame();
 	void SetDefault();
-	bool isDrawLight() const noexcept;
+	[[nodiscard]] bool isDrawLight() const noexcept;
 
-	// Factory: populates persistent user preferences from Settings + GUI values.
-	// The global read stays at the UI call site; this struct has no global dependencies.
-	static DrawingOptions FromSettings(const Settings& settings, float light_intensity, float ambient_light_level);
+	// Factory: populates from Settings + GUI values.
+	static RenderSettings FromSettings(const Settings& settings, float light_intensity, float ambient_light_level);
 
-	// === Persistent user preferences (set from Settings) ===
 	bool transparent_floors;
 	bool transparent_items;
 	bool show_ingame_box;
@@ -59,14 +57,12 @@ struct DrawingOptions {
 	float light_intensity;
 	float ambient_light_level;
 
-	// === Per-frame transient state (set each frame by MapDrawer/MapCanvas) ===
+	// Cursor colors (used by BrushOverlayDrawer)
+	uint8_t cursor_red, cursor_green, cursor_blue, cursor_alpha;
+	uint8_t cursor_alt_red, cursor_alt_green, cursor_alt_blue, cursor_alt_alpha;
+	bool use_automagic;
+
 	bool ingame;
-	bool dragging;
-	bool boundbox_selection;
-	uint32_t current_house_id;
-	float highlight_pulse;
-	DrawColor global_light_color { 128, 128, 128, 255 };
-	std::optional<MapBounds> transient_selection_bounds;
 };
 
 #endif

@@ -1,5 +1,6 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_resolver.h"
 #include "game/sprites.h"
 #include "item_definitions/core/item_definition_store.h"
 
@@ -66,7 +67,7 @@ void SpriteDrawer::glSetColor(wxColor color) {
 
 void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color) {
 	const auto definition = g_item_definitions.get(server_item_id);
-	GameSprite* spr = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
+	GameSprite* spr = (definition && sprite_resolver) ? sprite_resolver->getSprite(definition.clientId()) : nullptr;
 	if (spr == nullptr) {
 		return;
 	}

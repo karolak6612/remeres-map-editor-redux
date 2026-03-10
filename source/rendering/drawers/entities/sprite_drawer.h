@@ -17,6 +17,8 @@ struct AtlasRegion;
 class SpriteBatch;
 class AtlasManager;
 
+class ISpriteResolver;
+
 class SpriteDrawer {
 public:
 	SpriteDrawer();
@@ -29,6 +31,13 @@ public:
 
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color = {});
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, DrawColor color = {});
+
+	void SetSpriteResolver(ISpriteResolver* resolver) {
+		sprite_resolver = resolver;
+	}
+
+private:
+	ISpriteResolver* sprite_resolver = nullptr;
 };
 
 #endif

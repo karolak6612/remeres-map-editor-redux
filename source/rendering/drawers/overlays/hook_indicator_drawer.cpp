@@ -5,22 +5,12 @@
 #include "util/image_manager.h"
 #include "rendering/utilities/icon_renderer.h"
 
-HookIndicatorDrawer::HookIndicatorDrawer() {
-	requests.reserve(100);
-}
+HookIndicatorDrawer::HookIndicatorDrawer() = default;
 
 HookIndicatorDrawer::~HookIndicatorDrawer() = default;
 
-void HookIndicatorDrawer::addHook(const Position& pos, bool south, bool east) {
-	requests.push_back({ pos, south, east });
-}
-
-void HookIndicatorDrawer::clear() {
-	requests.clear();
-}
-
-void HookIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
-	if (requests.empty() || !vg) {
+void HookIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view, std::span<const HookRequest> hooks) {
+	if (hooks.empty() || !vg) {
 		return;
 	}
 
@@ -33,20 +23,20 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
 	const float iconSize = 24.0f * zoomFactor;
 	const float outlineOffset = 1.0f * zoomFactor;
 
-	for (const auto& request : requests) {
+	for (const auto& request : hooks) {
 		// Only render hooks on the current floor
 		if (request.pos.z != view.floor) {
 			continue;
 		}
 
-		int unscaled_x, unscaled_y;
-		if (!view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
+		auto vis = view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z);
+		if (!vis) {
 			continue;
 		}
 
 		const float zoom = view.zoom;
-		const float x = unscaled_x / zoom;
-		const float y = unscaled_y / zoom;
+		const float x = vis->x / zoom;
+		const float y = vis->y / zoom;
 		const float TILE_SIZE = 32.0f / zoom;
 
 		if (request.south) {
@@ -62,4 +52,3 @@ void HookIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
 
 	nvgRestore(vg);
 }
-

@@ -28,7 +28,7 @@ class GLVertexArray;
 class GLBuffer;
 class PostProcessManager;
 struct ViewState;
-struct DrawingOptions;
+struct RenderSettings;
 
 class PostProcessPipeline {
 public:
@@ -38,20 +38,19 @@ public:
 	PostProcessPipeline(const PostProcessPipeline&) = delete;
 	PostProcessPipeline& operator=(const PostProcessPipeline&) = delete;
 
-	void Initialize();
-
 	// Returns true if FBO is active and End() should be called after rendering.
-	bool Begin(const ViewState& view, const DrawingOptions& options);
+	[[nodiscard]] bool Begin(const ViewState& view, const RenderSettings& options);
 
 	// Resolves FBO to screen: draws post-process quad, unbinds FBO, restores viewport.
-	void End(const ViewState& view, const DrawingOptions& options);
+	void End(const ViewState& view, const RenderSettings& options);
 
 	// Expose effect names for UI (preferences page)
-	std::vector<std::string> GetEffectNames() const;
+	[[nodiscard]] std::vector<std::string> GetEffectNames() const;
 
 private:
-	void UpdateFBO(const ViewState& view, const DrawingOptions& options);
-	void DrawPostProcess(const ViewState& view, const DrawingOptions& options);
+	void EnsureInitialized();
+	void UpdateFBO(const ViewState& view, const RenderSettings& options);
+	void DrawPostProcess(const ViewState& view, const RenderSettings& options);
 
 	std::unique_ptr<PostProcessManager> post_process_mgr_;
 

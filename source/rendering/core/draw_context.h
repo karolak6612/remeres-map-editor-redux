@@ -4,20 +4,24 @@
 class SpriteBatch;
 class PrimitiveRenderer;
 struct ViewState;
-struct DrawingOptions;
+struct RenderSettings;
+struct FrameOptions;
 struct LightBuffer;
+struct FrameAccumulators;
 
 // Bundles all per-frame drawing dependencies into a single struct,
 // reducing parameter bloat across drawer call sites.
 // Passed as const DrawContext& — internal non-const references
-// (sprite_batch, primitive_renderer, light_buffer) remain mutable
-// since drawers need to write to them.
+// (sprite_batch, primitive_renderer, light_buffer, accumulators)
+// remain mutable since drawers need to write to them.
 struct DrawContext {
 	SpriteBatch& sprite_batch;
 	PrimitiveRenderer& primitive_renderer;
 	const ViewState& view;
-	const DrawingOptions& options;
+	const RenderSettings& settings;
+	const FrameOptions& frame;
 	LightBuffer& light_buffer;
+	FrameAccumulators& accumulators;
 };
 
 #endif

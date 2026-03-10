@@ -9,13 +9,14 @@
 #undef max
 
 #include "rendering/drawers/entities/item_drawer.h"
-#include "rendering/drawers/overlays/hook_indicator_drawer.h"
-#include "rendering/drawers/overlays/door_indicator_drawer.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
+#include "rendering/core/special_client_ids.h"
+#include "rendering/core/sprite_resolver.h"
 #include "rendering/utilities/pattern_calculator.h"
 #include "map/tile.h"
 #include "game/item.h"
@@ -23,26 +24,24 @@
 #include "game/sprites.h"
 #include "ui/gui.h"
 
-namespace {
-	GameSprite* resolveSprite(const ItemDefinitionView& definition) {
-		if (!definition) {
-			return nullptr;
-		}
-		return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+GameSprite* ItemDrawer::resolveSprite(const ItemDefinitionView& definition) const {
+	if (!definition || !sprite_resolver) {
+		return nullptr;
 	}
-
-	GameSprite* resolveSprite(ServerItemId item_id) {
-		return resolveSprite(g_item_definitions.get(item_id));
-	}
+	return sprite_resolver->getSprite(definition.clientId());
 }
 
-BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
+GameSprite* ItemDrawer::resolveSprite(ServerItemId item_id) const {
+	return resolveSprite(g_item_definitions.get(item_id));
+}
+
+BlitItemParams::BlitItemParams(const Tile* t, Item* i, const RenderSettings& s, const FrameOptions& f) : tile(t), item(i), settings(&s), frame(&f) {
 	if (t) {
 		pos = t->getPosition();
 	}
 }
 
-BlitItemParams::BlitItemParams(const Position& p, Item* i, const DrawingOptions& o) : pos(p), item(i), options(&o) {
+BlitItemParams::BlitItemParams(const Position& p, Item* i, const RenderSettings& s, const FrameOptions& f) : pos(p), item(i), settings(&s), frame(&f) {
 }
 
 ItemDrawer::ItemDrawer() {
@@ -55,7 +54,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	const Position& pos = params.pos;
 	Item* item = params.item;
 	const Tile* tile = params.tile;
-	const DrawingOptions& options = *params.options;
+	const RenderSettings& settings = *params.settings;
+	const FrameOptions& frame = *params.frame;
 	bool ephemeral = params.ephemeral;
 	int red = params.red;
 	int green = params.green;
@@ -65,23 +65,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
 
-	// Locked door indicator
-	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
-		bool locked = item->isLocked();
-
-		// Door orientation: horizontal wall -> West border (south=true), vertical wall -> North border (east=true)
-		if (static_cast<BorderType>(it.attribute(ItemAttributeKey::BorderAlignment)) == WALL_HORIZONTAL) {
-			DrawDoorIndicator(locked, pos, true, false);
-		} else if (static_cast<BorderType>(it.attribute(ItemAttributeKey::BorderAlignment)) == WALL_VERTICAL) {
-			DrawDoorIndicator(locked, pos, false, true);
-		} else {
-			// Center case for non-aligned doors
-			DrawDoorIndicator(locked, pos, false, false);
-		}
-	}
-
-	bool is_transient_selected = !ephemeral && options.transient_selection_bounds && options.transient_selection_bounds->contains(pos.x, pos.y);
-	if (!options.ingame && (item->isSelected() || is_transient_selected)) {
+	bool is_transient_selected = !ephemeral && frame.transient_selection_bounds && frame.transient_selection_bounds->contains(pos.x, pos.y);
+	if (!settings.ingame && (item->isSelected() || is_transient_selected)) {
 		red /= 2;
 		blue /= 2;
 		green /= 2;
@@ -92,7 +77,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	// Display invisible and invalid items
 	// Ugly hacks. :)
-	if (!options.ingame && options.show_tech_items) {
+	if (!settings.ingame && settings.show_tech_items) {
 		// Red invalid client id
 		if (!it) {
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
@@ -100,21 +85,18 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		}
 
 		switch (it.clientId()) {
-			// Yellow invisible stairs tile (459)
-			case 469:
+			case SpecialClientId::INVISIBLE_STAIRS:
 				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
 				return;
 
-			// Red invisible walkable tile (460)
-			case 470:
-			case 17970:
-			case 20028:
-			case 34168:
+			case SpecialClientId::INVISIBLE_WALKABLE_470:
+			case SpecialClientId::INVISIBLE_WALKABLE_17970:
+			case SpecialClientId::INVISIBLE_WALKABLE_20028:
+			case SpecialClientId::INVISIBLE_WALKABLE_34168:
 				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
 				return;
 
-			// Cyan invisible wall (1548)
-			case 2187:
+			case SpecialClientId::INVISIBLE_WALL:
 				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(0, green, blue, 80));
 				return;
 
@@ -122,8 +104,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				break;
 		}
 
-		// primal light
-		if (it.clientId() >= 39092 && it.clientId() <= 39100 || it.clientId() == 39236 || it.clientId() == 39367 || it.clientId() == 39368) {
+		if (SpecialClientId::isPrimalLight(it.clientId())) {
 			spr = resolveSprite(SPRITE_LIGHTSOURCE);
 			red = 0;
 			alpha = 180;
@@ -131,7 +112,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// metaItem, sprite not found or not hidden
-	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.hasFlag(ItemFlag::Pickupable) && !options.show_items) {
+	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.hasFlag(ItemFlag::Pickupable) && !settings.show_items) {
 		return;
 	}
 
@@ -159,14 +140,14 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
 
-	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
+	if (!ephemeral && settings.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
 	}
 
 	if (it.isPodium()) {
 		Podium* podium = static_cast<Podium*>(item);
-		if (!podium->hasShowPlatform() && !options.ingame) {
-			if (options.show_tech_items) {
+		if (!podium->hasShowPlatform() && !settings.ingame) {
+			if (settings.show_tech_items) {
 				alpha /= 2;
 			} else {
 				alpha = 0;
@@ -235,13 +216,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
 	}
 
-	// draw wall hook
-	if (!options.ingame && options.show_hooks && (it.hasFlag(ItemFlag::HookSouth) || it.hasFlag(ItemFlag::HookEast))) {
-		DrawHookIndicator(it, pos);
-	}
-
 	// draw light color indicator
-	if (!options.ingame && options.show_light_str) {
+	if (!settings.ingame && settings.show_light_str) {
 		const SpriteLight& light = item->getLight();
 		if (light.intensity > 0) {
 			wxColor lightColor = colorFromEightBit(light.color);
@@ -269,23 +245,20 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 	uint16_t cid = definition ? definition.clientId() : 0;
 
 	switch (cid) {
-		// Yellow invisible stairs tile
-		case 469:
+		case SpecialClientId::INVISIBLE_STAIRS:
 			b = 0;
 			alpha = (alpha * 171) >> 8;
 			spr = resolveSprite(SPRITE_ZONE);
 			break;
 
-		// Red invisible walkable tile
-		case 470:
+		case SpecialClientId::INVISIBLE_WALKABLE_470:
 			g = 0;
 			b = 0;
 			alpha = (alpha * 171) >> 8;
 			spr = resolveSprite(SPRITE_ZONE);
 			break;
 
-		// Cyan invisible wall
-		case 2187:
+		case SpecialClientId::INVISIBLE_WALL:
 			r = 0;
 			alpha = alpha / 3;
 			spr = resolveSprite(SPRITE_ZONE);
@@ -295,8 +268,7 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 			break;
 	}
 
-	// primal light
-	if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
+	if (SpecialClientId::isPrimalLight(cid)) {
 		spr = resolveSprite(SPRITE_LIGHTSOURCE);
 		r = 0;
 		alpha = (alpha * 171) >> 8;
@@ -304,17 +276,5 @@ void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_dr
 
 	if (spr) {
 		sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, DrawColor(r, g, b, alpha));
-	}
-}
-
-void ItemDrawer::DrawHookIndicator(const ItemDefinitionView& definition, const Position& pos) {
-	if (hook_indicator_drawer) {
-		hook_indicator_drawer->addHook(pos, definition.hasFlag(ItemFlag::HookSouth), definition.hasFlag(ItemFlag::HookEast));
-	}
-}
-
-void ItemDrawer::DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east) {
-	if (door_indicator_drawer) {
-		door_indicator_drawer->addDoor(pos, locked, south, east);
 	}
 }

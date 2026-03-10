@@ -25,26 +25,28 @@ class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
 // Storage during drawing, for option caching
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "rendering/core/light_buffer.h"
 #include "app/definitions.h"
 #include "game/outfit.h"
 #include "game/creature.h"
 
 #include "rendering/core/render_view.h"
+#include "rendering/core/view_snapshot.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
-#include "rendering/ui/tooltip_collector.h"
+#include "rendering/core/frame_accumulators.h"
 #include "rendering/ui/tooltip_renderer.h"
 #include "rendering/ui/nvg_image_cache.h"
 
 class PostProcessPipeline;
 class GridDrawer;
 
-class MapCanvas;
 class LightDrawer;
+class GraphicsSpriteResolver;
 class LiveCursorDrawer;
 class BrushCursorDrawer;
 class BrushOverlayDrawer;
@@ -63,13 +65,14 @@ class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
 class MapDrawer {
-	MapCanvas* canvas;
 	Editor& editor;
-	DrawingOptions options;
+	RenderSettings render_settings;
+	FrameOptions frame_options;
 	ViewState view;
-	std::shared_ptr<LightDrawer> light_drawer;
+	ViewSnapshot snapshot_;
+	std::unique_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
-	TooltipCollector tooltip_collector;
+	FrameAccumulators accumulators_;
 	TooltipRenderer tooltip_renderer;
 	NVGImageCache nvg_image_cache;
 	std::unique_ptr<GridDrawer> grid_drawer;
@@ -89,6 +92,7 @@ class MapDrawer {
 	std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
 	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
+	std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
@@ -96,10 +100,10 @@ class MapDrawer {
 	std::unique_ptr<PostProcessPipeline> post_process_;
 
 public:
-	MapDrawer(MapCanvas* canvas);
+	MapDrawer(Editor& editor);
 	~MapDrawer();
 
-	void SetupVars();
+	void SetupVars(const ViewSnapshot& snapshot);
 	void SetupGL();
 	void Release();
 
@@ -120,8 +124,14 @@ public:
 
 	void TakeScreenshot(uint8_t* screenshot_buffer);
 
-	DrawingOptions& getOptions() {
-		return options;
+	RenderSettings& getRenderSettings() {
+		return render_settings;
+	}
+	FrameOptions& getFrameOptions() {
+		return frame_options;
+	}
+	const ViewSnapshot& getSnapshot() const {
+		return snapshot_;
 	}
 
 	SpriteBatch* getSpriteBatch() {
@@ -132,9 +142,6 @@ public:
 	}
 	TileRenderer* getTileRenderer() {
 		return tile_renderer.get();
-	}
-	DoorIndicatorDrawer* getDoorIndicatorDrawer() {
-		return door_indicator_drawer.get();
 	}
 
 private:

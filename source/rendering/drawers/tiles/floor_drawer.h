@@ -7,7 +7,8 @@
 
 class MapDrawer;
 struct ViewState;
-struct DrawingOptions;
+struct RenderSettings;
+struct FrameOptions;
 class Editor;
 
 class ItemDrawer;
@@ -22,7 +23,7 @@ public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const DrawingOptions& options, Editor& editor);
+	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor);
 };
 
 #endif

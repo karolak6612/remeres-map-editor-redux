@@ -5,7 +5,9 @@
 #include "map/position.h"
 #include "game/creature.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
+#include "rendering/core/frame_accumulators.h"
 #include <memory>
 #include <unordered_map>
 #include <chrono>
@@ -21,6 +23,7 @@ struct LightBuffer;
 class CreatureDrawer;
 class CreatureNameDrawer;
 class SpriteDrawer;
+class GraphicsSpriteResolver;
 struct Outfit;
 struct NVGcontext;
 
@@ -64,12 +67,16 @@ namespace IngamePreview {
 		std::unique_ptr<SpriteBatch> sprite_batch;
 		std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 		std::unique_ptr<LightBuffer> light_buffer;
-		std::shared_ptr<LightDrawer> light_drawer;
+		std::unique_ptr<LightDrawer> light_drawer;
 
 		// Drawers
 		std::unique_ptr<CreatureDrawer> creature_drawer;
 		std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
 		std::unique_ptr<SpriteDrawer> sprite_drawer;
+		std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
+
+		// Per-frame accumulation buffers
+		FrameAccumulators accumulators_;
 
 		void UpdateOpacity(double dt, int first_visible, int last_visible);
 		int GetTileElevationOffset(const Tile* tile) const;

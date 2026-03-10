@@ -4,11 +4,12 @@
 #include <cstdint>
 
 class Tile;
-struct DrawingOptions;
+struct RenderSettings;
+struct FrameOptions;
 
 class TileColorCalculator {
 public:
-	static void Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b);
+	static void Calculate(const Tile* tile, const RenderSettings& settings, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b, float highlight_pulse = 0.0f);
 	static void GetHouseColor(uint32_t house_id, uint8_t& r, uint8_t& g, uint8_t& b);
 	static void GetMinimapColor(const Tile* tile, uint8_t& r, uint8_t& g, uint8_t& b);
 };

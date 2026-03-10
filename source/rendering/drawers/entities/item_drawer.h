@@ -14,10 +14,11 @@ class SpriteDrawer;
 class CreatureDrawer;
 class Tile;
 class Item;
-class HookIndicatorDrawer;
-class DoorIndicatorDrawer;
+class ISpriteResolver;
+class GameSprite;
 
-struct DrawingOptions;
+struct RenderSettings;
+struct FrameOptions;
 class SpriteBatch;
 struct SpritePatterns;
 
@@ -26,7 +27,8 @@ struct BlitItemParams {
 	Position pos;
 	Item* item = nullptr;
 	ItemDefinitionView item_definition;
-	const DrawingOptions* options = nullptr;
+	const RenderSettings* settings = nullptr;
+	const FrameOptions* frame = nullptr;
 	const SpritePatterns* patterns = nullptr;
 	bool ephemeral = false;
 	int red = 255;
@@ -34,8 +36,8 @@ struct BlitItemParams {
 	int blue = 255;
 	int alpha = 255;
 
-	BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o);
-	BlitItemParams(const Position& p, Item* i, const DrawingOptions& o);
+	BlitItemParams(const Tile* t, Item* i, const RenderSettings& s, const FrameOptions& f);
+	BlitItemParams(const Position& p, Item* i, const RenderSettings& s, const FrameOptions& f);
 };
 
 class ItemDrawer {
@@ -46,19 +48,16 @@ public:
 	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
 
 	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ServerItemId item_id, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
-	void DrawHookIndicator(const ItemDefinitionView& definition, const Position& pos);
-	void DrawDoorIndicator(bool locked, const Position& pos, bool south, bool east);
 
-	void SetHookIndicatorDrawer(HookIndicatorDrawer* drawer) {
-		hook_indicator_drawer = drawer;
-	}
-	void SetDoorIndicatorDrawer(DoorIndicatorDrawer* drawer) {
-		door_indicator_drawer = drawer;
+	void SetSpriteResolver(ISpriteResolver* resolver) {
+		sprite_resolver = resolver;
 	}
 
 private:
-	HookIndicatorDrawer* hook_indicator_drawer = nullptr;
-	DoorIndicatorDrawer* door_indicator_drawer = nullptr;
+	GameSprite* resolveSprite(const ItemDefinitionView& definition) const;
+	GameSprite* resolveSprite(ServerItemId item_id) const;
+
+	ISpriteResolver* sprite_resolver = nullptr;
 };
 
 #endif

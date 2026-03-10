@@ -5,15 +5,15 @@
 #include "rendering/core/graphics.h"
 
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
 #include "app/definitions.h"
 #include <wx/gdicmn.h>
 
 void GridDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds) {
 	auto& sprite_batch = ctx.sprite_batch;
 	const auto& view = ctx.view;
-	const auto& options = ctx.options;
-	if (!options.show_grid) {
+	const auto& settings = ctx.settings;
+	if (!settings.show_grid) {
 		return;
 	}
 
@@ -50,8 +50,8 @@ void GridDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds) {
 void GridDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds) {
 	auto& sprite_batch = ctx.sprite_batch;
 	const auto& view = ctx.view;
-	const auto& options = ctx.options;
-	if (!options.show_ingame_box) {
+	const auto& settings = ctx.settings;
+	if (!settings.show_ingame_box) {
 		return;
 	}
 

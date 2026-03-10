@@ -7,16 +7,16 @@
 #include "rendering/core/render_view.h"
 #include "editor/editor.h"
 #include "live/live_socket.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 
 void LiveCursorDrawer::draw(const DrawContext& ctx, Editor& editor) {
 	auto& sprite_batch = ctx.sprite_batch;
 	const auto& view = ctx.view;
-	const auto& options = ctx.options;
+	const auto& settings = ctx.settings;
 
-	if (options.ingame || !editor.live_manager.IsLive()) {
+	if (settings.ingame || !editor.live_manager.IsLive()) {
 		return;
 	}
 

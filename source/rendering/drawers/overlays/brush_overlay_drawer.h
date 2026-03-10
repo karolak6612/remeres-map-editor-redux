@@ -9,6 +9,7 @@
 #include <glm/glm.hpp>
 
 struct DrawContext;
+struct RenderSettings;
 class Brush;
 class Editor;
 
@@ -36,10 +37,18 @@ private:
 		COLOR_BLANK,
 	};
 
+	// Sub-methods for draw()
+	void drawDragging(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor, int last_click_map_x, int last_click_map_y);
+	void drawStationary(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor);
+	void drawStationaryWall(const DrawContext& ctx, Brush* brush, const glm::vec4& brushColor);
+	void drawStationaryDoor(const DrawContext& ctx, Brush* brush, Editor& editor);
+	void drawStationaryCreature(const DrawContext& ctx, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* brush, Editor& editor);
+	void drawStationaryGeneric(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor);
+
 	void get_color(Brush* brush, Editor& editor, const Position& position, uint8_t& r, uint8_t& g, uint8_t& b);
 
-	glm::vec4 get_brush_color(BrushColor color);
-	glm::vec4 get_check_color(Brush* brush, Editor& editor, const Position& pos);
+	glm::vec4 get_brush_color(BrushColor color, const RenderSettings& settings);
+	glm::vec4 get_check_color(Brush* brush, Editor& editor, const Position& pos, const RenderSettings& settings);
 };
 
 #endif

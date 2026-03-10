@@ -4,22 +4,12 @@
 #include "rendering/utilities/icon_renderer.h"
 #include "util/image_manager.h"
 
-DoorIndicatorDrawer::DoorIndicatorDrawer() {
-	requests.reserve(100);
-}
+DoorIndicatorDrawer::DoorIndicatorDrawer() = default;
 
 DoorIndicatorDrawer::~DoorIndicatorDrawer() = default;
 
-void DoorIndicatorDrawer::addDoor(const Position& pos, bool locked, bool south, bool east) {
-	requests.push_back({ pos, locked, south, east });
-}
-
-void DoorIndicatorDrawer::clear() {
-	requests.clear();
-}
-
-void DoorIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
-	if (requests.empty() || !vg) {
+void DoorIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view, std::span<const DoorRequest> doors) {
+	if (doors.empty() || !vg) {
 		return;
 	}
 
@@ -32,20 +22,20 @@ void DoorIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
 	const float iconSize = 12.0f * zoomFactor;
 	const float outlineOffset = 1.0f * zoomFactor;
 
-	for (const auto& request : requests) {
+	for (const auto& request : doors) {
 		// Only render doors on the current floor
 		if (request.pos.z != view.floor) {
 			continue;
 		}
 
-		int unscaled_x, unscaled_y;
-		if (!view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z, unscaled_x, unscaled_y)) {
+		auto vis = view.IsTileVisible(request.pos.x, request.pos.y, request.pos.z);
+		if (!vis) {
 			continue;
 		}
 
 		const float zoom = view.zoom;
-		const float x = unscaled_x / zoom;
-		const float y = unscaled_y / zoom;
+		const float x = vis->x / zoom;
+		const float y = vis->y / zoom;
 		const float TILE_SIZE = 32.0f / zoom;
 
 		const std::string_view icon = request.locked ? ICON_LOCK : ICON_LOCK_OPEN;

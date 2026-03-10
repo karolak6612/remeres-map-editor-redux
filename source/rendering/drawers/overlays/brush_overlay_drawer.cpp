@@ -12,7 +12,8 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "rendering/drawers/cursors/brush_cursor_drawer.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
@@ -20,7 +21,6 @@
 #include "editor/editor.h"
 #include "ui/gui.h"
 #include "game/sprites.h"
-#include "app/settings.h"
 #include "game/outfit.h"
 #include "app/definitions.h"
 #include "game/creatures.h"
@@ -43,26 +43,26 @@
 
 #include "brushes/waypoint/waypoint_brush.h"
 
-// Helper to get color from config
-glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color) {
+// Helper to get color from render settings
+glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color, const RenderSettings& settings) {
 	glm::vec4 c(1.0f);
 	switch (color) {
 		case COLOR_BRUSH:
 			c = glm::vec4(
-				g_settings.getInteger(Config::CURSOR_RED) / 255.0f,
-				g_settings.getInteger(Config::CURSOR_GREEN) / 255.0f,
-				g_settings.getInteger(Config::CURSOR_BLUE) / 255.0f,
-				g_settings.getInteger(Config::CURSOR_ALPHA) / 255.0f
+				settings.cursor_red / 255.0f,
+				settings.cursor_green / 255.0f,
+				settings.cursor_blue / 255.0f,
+				settings.cursor_alpha / 255.0f
 			);
 			break;
 
 		case COLOR_FLAG_BRUSH:
 		case COLOR_HOUSE_BRUSH:
 			c = glm::vec4(
-				g_settings.getInteger(Config::CURSOR_ALT_RED) / 255.0f,
-				g_settings.getInteger(Config::CURSOR_ALT_GREEN) / 255.0f,
-				g_settings.getInteger(Config::CURSOR_ALT_BLUE) / 255.0f,
-				g_settings.getInteger(Config::CURSOR_ALT_ALPHA) / 255.0f
+				settings.cursor_alt_red / 255.0f,
+				settings.cursor_alt_green / 255.0f,
+				settings.cursor_alt_blue / 255.0f,
+				settings.cursor_alt_alpha / 255.0f
 			);
 			break;
 
@@ -83,11 +83,11 @@ glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color) {
 	return c;
 }
 
-glm::vec4 BrushOverlayDrawer::get_check_color(Brush* brush, Editor& editor, const Position& pos) {
+glm::vec4 BrushOverlayDrawer::get_check_color(Brush* brush, Editor& editor, const Position& pos, const RenderSettings& settings) {
 	if (brush->canDraw(&editor.map, pos)) {
-		return get_brush_color(COLOR_VALID);
+		return get_brush_color(COLOR_VALID, settings);
 	} else {
-		return get_brush_color(COLOR_INVALID);
+		return get_brush_color(COLOR_INVALID, settings);
 	}
 }
 
@@ -98,17 +98,13 @@ BrushOverlayDrawer::~BrushOverlayDrawer() {
 }
 
 void BrushOverlayDrawer::draw(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_dragging_draw, int last_click_map_x, int last_click_map_y) {
-	auto& sprite_batch = ctx.sprite_batch;
-	auto& primitive_renderer = ctx.primitive_renderer;
-	const auto& view = ctx.view;
-	const auto& options = ctx.options;
 	if (!g_gui.IsDrawingMode()) {
 		return;
 	}
 	if (!g_gui.GetCurrentBrush()) {
 		return;
 	}
-	if (options.ingame) {
+	if (ctx.settings.ingame) {
 		return;
 	}
 
@@ -127,12 +123,100 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, ItemDrawer* item_drawer, S
 		brushColorType = COLOR_ERASER;
 	}
 
-	glm::vec4 brushColor = get_brush_color(brushColorType);
+	glm::vec4 brushColor = get_brush_color(brushColorType, ctx.settings);
 
 	if (is_dragging_draw) {
-		ASSERT(brush->canDrag());
+		drawDragging(ctx, item_drawer, sprite_drawer, editor, brush, brushColor, last_click_map_x, last_click_map_y);
+	} else {
+		drawStationary(ctx, item_drawer, sprite_drawer, creature_drawer, brush_cursor_drawer, editor, brush, brushColor);
+	}
+}
 
-		if (brush->is<WallBrush>()) {
+void BrushOverlayDrawer::drawDragging(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor, int last_click_map_x, int last_click_map_y) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+
+	ASSERT(brush->canDrag());
+
+	if (brush->is<WallBrush>()) {
+		int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
+		int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
+		int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
+		int last_click_end_map_y = std::max(last_click_map_y, view.mouse_map_y) + 1;
+
+		int last_click_start_sx = last_click_start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+		int last_click_start_sy = last_click_start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+		int last_click_end_sx = last_click_end_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+		int last_click_end_sy = last_click_end_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+
+		int delta_x = last_click_end_sx - last_click_start_sx;
+		int delta_y = last_click_end_sy - last_click_start_sy;
+
+		if (g_gui.gfx.ensureAtlasManager()) {
+			const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
+			// Top
+			sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), static_cast<float>(last_click_end_sx - last_click_start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
+
+			// Bottom
+			if (delta_y > TILE_SIZE) {
+				sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_end_sy - TILE_SIZE), static_cast<float>(last_click_end_sx - last_click_start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
+			}
+
+			// Right
+			if (delta_x > TILE_SIZE && delta_y > TILE_SIZE) {
+				float h = (last_click_end_sy - TILE_SIZE) - (last_click_start_sy + TILE_SIZE);
+				sprite_batch.drawRect(static_cast<float>(last_click_end_sx - TILE_SIZE), static_cast<float>(last_click_start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
+			}
+
+			// Left
+			if (delta_y > TILE_SIZE) {
+				float h = (last_click_end_sy - TILE_SIZE) - (last_click_start_sy + TILE_SIZE);
+				sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
+			}
+		}
+		return;
+	}
+
+	if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
+		if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
+			int start_x, end_x;
+			int start_y, end_y;
+
+			if (view.mouse_map_x < last_click_map_x) {
+				start_x = view.mouse_map_x;
+				end_x = last_click_map_x;
+			} else {
+				start_x = last_click_map_x;
+				end_x = view.mouse_map_x;
+			}
+			if (view.mouse_map_y < last_click_map_y) {
+				start_y = view.mouse_map_y;
+				end_y = last_click_map_y;
+			} else {
+				start_y = last_click_map_y;
+				end_y = view.mouse_map_y;
+			}
+
+			RAWBrush* raw_brush = nullptr;
+			if (brush->is<RAWBrush>()) {
+				raw_brush = brush->as<RAWBrush>();
+			}
+
+			for (int y = start_y; y <= end_y; y++) {
+				int cy = y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+				for (int x = start_x; x <= end_x; x++) {
+					int cx = x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+					if (brush->is<OptionalBorderBrush>()) {
+						if (g_gui.gfx.ensureAtlasManager()) {
+							const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
+							sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(x, y, view.floor), ctx.settings), atlas);
+						}
+					} else {
+						item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
+					}
+				}
+			}
+		} else {
 			int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
 			int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
 			int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
@@ -143,277 +227,220 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, ItemDrawer* item_drawer, S
 			int last_click_end_sx = last_click_end_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 			int last_click_end_sy = last_click_end_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 
-			int delta_x = last_click_end_sx - last_click_start_sx;
-			int delta_y = last_click_end_sy - last_click_start_sy;
-
+			float w = last_click_end_sx - last_click_start_sx;
+			float h = last_click_end_sy - last_click_start_sy;
 			if (g_gui.gfx.ensureAtlasManager()) {
-				const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-				// Top
-				sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), static_cast<float>(last_click_end_sx - last_click_start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
+				bool autoborder_active = ctx.settings.use_automagic && brush->needBorders();
+				if (autoborder_active) {
+					// Draw outline only
+					const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
+					float thickness = 1.0f; // Thin border
 
-				// Bottom
-				if (delta_y > TILE_SIZE) {
-					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_end_sy - TILE_SIZE), static_cast<float>(last_click_end_sx - last_click_start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
-				}
-
-				// Right
-				if (delta_x > TILE_SIZE && delta_y > TILE_SIZE) {
-					float h = (last_click_end_sy - TILE_SIZE) - (last_click_start_sy + TILE_SIZE);
-					sprite_batch.drawRect(static_cast<float>(last_click_end_sx - TILE_SIZE), static_cast<float>(last_click_start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
-				}
-
-				// Left
-				if (delta_y > TILE_SIZE) {
-					float h = (last_click_end_sy - TILE_SIZE) - (last_click_start_sy + TILE_SIZE);
-					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
+					// Top
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), w, thickness, brushColor, atlas);
+					// Bottom
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + h - thickness), w, thickness, brushColor, atlas);
+					// Left
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
+					// Right
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx + w - thickness), static_cast<float>(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
+				} else {
+					sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), w, h, brushColor, *g_gui.gfx.getAtlasManager());
 				}
 			}
+		}
+	} else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
+		// Calculate drawing offsets
+		int start_x, end_x;
+		int start_y, end_y;
+		int width = std::max(
+			std::abs(std::max(view.mouse_map_y, last_click_map_y) - std::min(view.mouse_map_y, last_click_map_y)),
+			std::abs(std::max(view.mouse_map_x, last_click_map_x) - std::min(view.mouse_map_x, last_click_map_x))
+		);
+
+		if (view.mouse_map_x < last_click_map_x) {
+			start_x = last_click_map_x - width;
+			end_x = last_click_map_x;
 		} else {
-			// if (brush->is<RAWBrush>()) { glEnable(GL_TEXTURE_2D); } -> handled by DrawRawBrush or BatchRenderer
+			start_x = last_click_map_x;
+			end_x = last_click_map_x + width;
+		}
 
-			if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
-				if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
-					int start_x, end_x;
-					int start_y, end_y;
+		if (view.mouse_map_y < last_click_map_y) {
+			start_y = last_click_map_y - width;
+			end_y = last_click_map_y;
+		} else {
+			start_y = last_click_map_y;
+			end_y = last_click_map_y + width;
+		}
 
-					if (view.mouse_map_x < last_click_map_x) {
-						start_x = view.mouse_map_x;
-						end_x = last_click_map_x;
-					} else {
-						start_x = last_click_map_x;
-						end_x = view.mouse_map_x;
-					}
-					if (view.mouse_map_y < last_click_map_y) {
-						start_y = view.mouse_map_y;
-						end_y = last_click_map_y;
-					} else {
-						start_y = last_click_map_y;
-						end_y = view.mouse_map_y;
-					}
+		int center_x = start_x + (end_x - start_x) / 2;
+		int center_y = start_y + (end_y - start_y) / 2;
+		float radii = width / 2.0f + 0.005f;
 
-					RAWBrush* raw_brush = nullptr;
+		RAWBrush* raw_brush = nullptr;
+		if (brush->is<RAWBrush>()) {
+			raw_brush = brush->as<RAWBrush>();
+		}
+
+		for (int y = start_y - 1; y <= end_y + 1; y++) {
+			int cy = y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+			float dy = center_y - y;
+			for (int x = start_x - 1; x <= end_x + 1; x++) {
+				int cx = x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+
+				float dx = center_x - x;
+				float distance = sqrt(dx * dx + dy * dy);
+				if (distance < radii) {
 					if (brush->is<RAWBrush>()) {
-						raw_brush = brush->as<RAWBrush>();
-					}
-
-					for (int y = start_y; y <= end_y; y++) {
-						int cy = y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-						for (int x = start_x; x <= end_x; x++) {
-							int cx = x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-							if (brush->is<OptionalBorderBrush>()) {
-								if (g_gui.gfx.ensureAtlasManager()) {
-									const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-									sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(x, y, view.floor)), atlas);
-								}
-							} else {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
-							}
+						item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
+					} else {
+						if (g_gui.gfx.ensureAtlasManager()) {
+							sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), brushColor, *g_gui.gfx.getAtlasManager());
 						}
 					}
-				} else {
-					int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
-					int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
-					int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
-					int last_click_end_map_y = std::max(last_click_map_y, view.mouse_map_y) + 1;
+				}
+			}
+		}
+	}
+}
 
-					int last_click_start_sx = last_click_start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-					int last_click_start_sy = last_click_start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-					int last_click_end_sx = last_click_end_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-					int last_click_end_sy = last_click_end_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+void BrushOverlayDrawer::drawStationary(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor) {
+	if (brush->is<WallBrush>()) {
+		drawStationaryWall(ctx, brush, brushColor);
+	} else if (brush->is<DoorBrush>()) {
+		drawStationaryDoor(ctx, brush, editor);
+	} else if (brush->is<CreatureBrush>()) {
+		drawStationaryCreature(ctx, sprite_drawer, creature_drawer, brush, editor);
+	} else if (!brush->is<DoodadBrush>()) {
+		drawStationaryGeneric(ctx, item_drawer, sprite_drawer, brush_cursor_drawer, editor, brush, brushColor);
+	}
+}
 
-					float w = last_click_end_sx - last_click_start_sx;
-					float h = last_click_end_sy - last_click_start_sy;
-					if (g_gui.gfx.ensureAtlasManager()) {
-						bool autoborder_active = g_settings.getInteger(Config::USE_AUTOMAGIC) && brush->needBorders();
-						if (autoborder_active) {
-							// Draw outline only
-							const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-							float thickness = 1.0f; // Thin border
+void BrushOverlayDrawer::drawStationaryWall(const DrawContext& ctx, Brush* brush, const glm::vec4& brushColor) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
 
-							// Top
-							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), w, thickness, brushColor, atlas);
-							// Bottom
-							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + h - thickness), w, thickness, brushColor, atlas);
-							// Left
-							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
-							// Right
-							sprite_batch.drawRect(static_cast<float>(last_click_start_sx + w - thickness), static_cast<float>(last_click_start_sy + thickness), thickness, h - 2 * thickness, brushColor, atlas);
+	int start_map_x = view.mouse_map_x - g_gui.GetBrushSize();
+	int start_map_y = view.mouse_map_y - g_gui.GetBrushSize();
+	int end_map_x = view.mouse_map_x + g_gui.GetBrushSize() + 1;
+	int end_map_y = view.mouse_map_y + g_gui.GetBrushSize() + 1;
+
+	int start_sx = start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+	int start_sy = start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+	int end_sx = end_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+	int end_sy = end_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+
+	int delta_x = end_sx - start_sx;
+	int delta_y = end_sy - start_sy;
+
+	if (g_gui.gfx.ensureAtlasManager()) {
+		const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
+		// Top
+		sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(start_sy), static_cast<float>(end_sx - start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
+
+		// Bottom
+		if (delta_y > TILE_SIZE) {
+			sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(end_sy - TILE_SIZE), static_cast<float>(end_sx - start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
+		}
+
+		// Right
+		if (delta_x > TILE_SIZE && delta_y > TILE_SIZE) {
+			float h = static_cast<float>(end_sy - start_sy - 2 * TILE_SIZE);
+			sprite_batch.drawRect(static_cast<float>(end_sx - TILE_SIZE), static_cast<float>(start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
+		}
+
+		// Left
+		if (delta_y > TILE_SIZE) {
+			float h = static_cast<float>(end_sy - start_sy - 2 * TILE_SIZE);
+			sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
+		}
+	}
+}
+
+void BrushOverlayDrawer::drawStationaryDoor(const DrawContext& ctx, Brush* brush, Editor& editor) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+
+	int cx = view.mouse_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+	int cy = view.mouse_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+
+	if (g_gui.gfx.ensureAtlasManager()) {
+		sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor), ctx.settings), *g_gui.gfx.getAtlasManager());
+	}
+}
+
+void BrushOverlayDrawer::drawStationaryCreature(const DrawContext& ctx, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* brush, Editor& editor) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+
+	int cx = view.mouse_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+	int cy = view.mouse_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+
+	CreatureBrush* creature_brush = brush->as<CreatureBrush>();
+	if (creature_brush->canDraw(&editor.map, Position(view.mouse_map_x, view.mouse_map_y, view.floor))) {
+		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 255, 255, 160) });
+	} else {
+		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 64, 64, 160) });
+	}
+}
+
+void BrushOverlayDrawer::drawStationaryGeneric(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor) {
+	auto& sprite_batch = ctx.sprite_batch;
+	auto& primitive_renderer = ctx.primitive_renderer;
+	const auto& view = ctx.view;
+
+	RAWBrush* raw_brush = nullptr;
+	if (brush->is<RAWBrush>()) {
+		raw_brush = brush->as<RAWBrush>();
+	}
+
+	for (int y = -g_gui.GetBrushSize() - 1; y <= g_gui.GetBrushSize() + 1; y++) {
+		int cy = (view.mouse_map_y + y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
+		for (int x = -g_gui.GetBrushSize() - 1; x <= g_gui.GetBrushSize() + 1; x++) {
+			int cx = (view.mouse_map_x + x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
+			if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
+				if (x >= -g_gui.GetBrushSize() && x <= g_gui.GetBrushSize() && y >= -g_gui.GetBrushSize() && y <= g_gui.GetBrushSize()) {
+					if (brush->is<RAWBrush>()) {
+						item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
+					} else {
+						if (brush->is<WaypointBrush>()) {
+							uint8_t r, g, b;
+							get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
+							brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
 						} else {
-							sprite_batch.drawRect(static_cast<float>(last_click_start_sx), static_cast<float>(last_click_start_sy), w, h, brushColor, *g_gui.gfx.getAtlasManager());
+							glm::vec4 c = brushColor;
+							if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
+								c = get_check_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), ctx.settings);
+							}
+							if (g_gui.gfx.ensureAtlasManager()) {
+								sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), c, *g_gui.gfx.getAtlasManager());
+							}
 						}
 					}
 				}
 			} else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
-				// Calculate drawing offsets
-				int start_x, end_x;
-				int start_y, end_y;
-				int width = std::max(
-					std::abs(std::max(view.mouse_map_y, last_click_map_y) - std::min(view.mouse_map_y, last_click_map_y)),
-					std::abs(std::max(view.mouse_map_x, last_click_map_x) - std::min(view.mouse_map_x, last_click_map_x))
-				);
-
-				if (view.mouse_map_x < last_click_map_x) {
-					start_x = last_click_map_x - width;
-					end_x = last_click_map_x;
-				} else {
-					start_x = last_click_map_x;
-					end_x = last_click_map_x + width;
-				}
-
-				if (view.mouse_map_y < last_click_map_y) {
-					start_y = last_click_map_y - width;
-					end_y = last_click_map_y;
-				} else {
-					start_y = last_click_map_y;
-					end_y = last_click_map_y + width;
-				}
-
-				int center_x = start_x + (end_x - start_x) / 2;
-				int center_y = start_y + (end_y - start_y) / 2;
-				float radii = width / 2.0f + 0.005f;
-
-				RAWBrush* raw_brush = nullptr;
-				if (brush->is<RAWBrush>()) {
-					raw_brush = brush->as<RAWBrush>();
-				}
-
-				for (int y = start_y - 1; y <= end_y + 1; y++) {
-					int cy = y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-					float dy = center_y - y;
-					for (int x = start_x - 1; x <= end_x + 1; x++) {
-						int cx = x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-
-						float dx = center_x - x;
-						float distance = sqrt(dx * dx + dy * dy);
-						if (distance < radii) {
-							if (brush->is<RAWBrush>()) {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
-							} else {
-								if (g_gui.gfx.ensureAtlasManager()) {
-									sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), brushColor, *g_gui.gfx.getAtlasManager());
-								}
+				double distance = sqrt(double(x * x) + double(y * y));
+				if (distance < g_gui.GetBrushSize() + 0.005) {
+					if (brush->is<RAWBrush>()) {
+						item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
+					} else {
+						if (brush->is<WaypointBrush>()) {
+							uint8_t r, g, b;
+							get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
+							brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
+						} else {
+							glm::vec4 c = brushColor;
+							if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
+								c = get_check_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), ctx.settings);
+							}
+							if (g_gui.gfx.ensureAtlasManager()) {
+								sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), c, *g_gui.gfx.getAtlasManager());
 							}
 						}
 					}
 				}
 			}
-
-			// if (brush->is<RAWBrush>()) { glDisable(GL_TEXTURE_2D); }
-		}
-	} else {
-		if (brush->is<WallBrush>()) {
-			int start_map_x = view.mouse_map_x - g_gui.GetBrushSize();
-			int start_map_y = view.mouse_map_y - g_gui.GetBrushSize();
-			int end_map_x = view.mouse_map_x + g_gui.GetBrushSize() + 1;
-			int end_map_y = view.mouse_map_y + g_gui.GetBrushSize() + 1;
-
-			int start_sx = start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-			int start_sy = start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-			int end_sx = end_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-			int end_sy = end_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-
-			int delta_x = end_sx - start_sx;
-			int delta_y = end_sy - start_sy;
-
-			if (g_gui.gfx.ensureAtlasManager()) {
-				const AtlasManager& atlas = *g_gui.gfx.getAtlasManager();
-				// Top
-				sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(start_sy), static_cast<float>(end_sx - start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
-
-				// Bottom
-				if (delta_y > TILE_SIZE) {
-					sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(end_sy - TILE_SIZE), static_cast<float>(end_sx - start_sx), static_cast<float>(TILE_SIZE), brushColor, atlas);
-				}
-
-				// Right
-				if (delta_x > TILE_SIZE && delta_y > TILE_SIZE) {
-					float h = static_cast<float>(end_sy - start_sy - 2 * TILE_SIZE);
-					sprite_batch.drawRect(static_cast<float>(end_sx - TILE_SIZE), static_cast<float>(start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
-				}
-
-				// Left
-				if (delta_y > TILE_SIZE) {
-					float h = static_cast<float>(end_sy - start_sy - 2 * TILE_SIZE);
-					sprite_batch.drawRect(static_cast<float>(start_sx), static_cast<float>(start_sy + TILE_SIZE), static_cast<float>(TILE_SIZE), h, brushColor, atlas);
-				}
-			}
-		} else if (brush->is<DoorBrush>()) {
-			int cx = (view.mouse_map_x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-			int cy = (view.mouse_map_y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-
-			if (g_gui.gfx.ensureAtlasManager()) {
-				sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor)), *g_gui.gfx.getAtlasManager());
-			}
-		} else if (brush->is<CreatureBrush>()) {
-			// glEnable(GL_TEXTURE_2D);
-			int cy = (view.mouse_map_y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-			int cx = (view.mouse_map_x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-			CreatureBrush* creature_brush = brush->as<CreatureBrush>();
-			if (creature_brush->canDraw(&editor.map, Position(view.mouse_map_x, view.mouse_map_y, view.floor))) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 255, 255, 160) });
-			} else {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 64, 64, 160) });
-			}
-			// glDisable(GL_TEXTURE_2D);
-		} else if (!brush->is<DoodadBrush>()) {
-			RAWBrush* raw_brush = nullptr;
-			if (brush->is<RAWBrush>()) { // Textured brush
-				// glEnable(GL_TEXTURE_2D);
-				raw_brush = brush->as<RAWBrush>();
-			}
-
-			for (int y = -g_gui.GetBrushSize() - 1; y <= g_gui.GetBrushSize() + 1; y++) {
-				int cy = (view.mouse_map_y + y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-				for (int x = -g_gui.GetBrushSize() - 1; x <= g_gui.GetBrushSize() + 1; x++) {
-					int cx = (view.mouse_map_x + x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-					if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
-						if (x >= -g_gui.GetBrushSize() && x <= g_gui.GetBrushSize() && y >= -g_gui.GetBrushSize() && y <= g_gui.GetBrushSize()) {
-							if (brush->is<RAWBrush>()) {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
-							} else {
-								if (brush->is<WaypointBrush>()) {
-									uint8_t r, g, b;
-									get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
-									brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
-								} else {
-									glm::vec4 c = brushColor;
-									if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
-										c = get_check_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor));
-									}
-									if (g_gui.gfx.ensureAtlasManager()) {
-										sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), c, *g_gui.gfx.getAtlasManager());
-									}
-								}
-							}
-						}
-					} else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
-						double distance = sqrt(double(x * x) + double(y * y));
-						if (distance < g_gui.GetBrushSize() + 0.005) {
-							if (brush->is<RAWBrush>()) {
-								item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
-							} else {
-								if (brush->is<WaypointBrush>()) {
-									uint8_t r, g, b;
-									get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
-									brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
-								} else {
-									glm::vec4 c = brushColor;
-									if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
-										c = get_check_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor));
-									}
-									if (g_gui.gfx.ensureAtlasManager()) {
-										sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), c, *g_gui.gfx.getAtlasManager());
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-
-			// if (brush->is<RAWBrush>()) { // Textured brush
-			// 	glDisable(GL_TEXTURE_2D);
-			// }
 		}
 	}
 }

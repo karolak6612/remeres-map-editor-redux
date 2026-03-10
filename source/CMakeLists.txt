@@ -160,7 +160,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/frame_accumulators.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_settings.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/frame_options.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/view_snapshot.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_resolver.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_sprite_resolver.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_metadata.h
@@ -521,7 +526,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.cpp

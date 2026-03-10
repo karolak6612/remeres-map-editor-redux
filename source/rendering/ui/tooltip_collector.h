@@ -83,7 +83,7 @@ public:
 		return std::span<const TooltipData>(tooltips_.data(), active_count_);
 	}
 
-	size_t count() const { return active_count_; }
+	[[nodiscard]] size_t count() const { return active_count_; }
 
 private:
 	std::vector<TooltipData> tooltips_;

@@ -2,6 +2,7 @@
 #include "ingame_preview/floor_visibility_calculator.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/core/draw_context.h"
+#include "rendering/core/frame_accumulators.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/light_buffer.h"
@@ -9,6 +10,7 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/creature_name_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
+#include "rendering/core/graphics_sprite_resolver.h"
 #include "game/outfit.h"
 #include "map/basemap.h"
 #include "map/tile.h"
@@ -30,10 +32,14 @@ namespace IngamePreview {
 		sprite_batch = std::make_unique<SpriteBatch>();
 		primitive_renderer = std::make_unique<PrimitiveRenderer>();
 		light_buffer = std::make_unique<LightBuffer>();
-		light_drawer = std::make_shared<LightDrawer>();
+		light_drawer = std::make_unique<LightDrawer>();
 		creature_drawer = std::make_unique<CreatureDrawer>();
 		creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 		sprite_drawer = std::make_unique<SpriteDrawer>();
+
+		sprite_resolver = std::make_unique<GraphicsSpriteResolver>(g_gui.gfx);
+		creature_drawer->SetSpriteResolver(sprite_resolver.get());
+		sprite_drawer->SetSpriteResolver(sprite_resolver.get());
 
 		sprite_batch->initialize();
 		primitive_renderer->initialize();
@@ -74,7 +80,7 @@ namespace IngamePreview {
 
 		UpdateOpacity(dt, first_visible, last_visible);
 
-		// Setup ViewState and DrawingOptions
+		// Setup ViewState, RenderSettings, and FrameOptions
 		ViewState view;
 		view.zoom = zoom;
 		view.tile_size = TILE_SIZE;
@@ -99,13 +105,15 @@ namespace IngamePreview {
 		view.projectionMatrix = glm::ortho(0.0f, static_cast<float>(viewport_width) * zoom, static_cast<float>(viewport_height) * zoom, 0.0f, -1.0f, 1.0f);
 		view.viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
 
-		DrawingOptions options;
-		options.SetIngame();
-		options.show_lights = lighting_enabled;
-		options.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
-		options.light_intensity = light_intensity;
+		RenderSettings render_settings;
+		render_settings.SetIngame();
+		render_settings.show_lights = lighting_enabled;
+		render_settings.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
+		render_settings.light_intensity = light_intensity;
+
+		FrameOptions frame_options;
 		// Explicitly set global light color to white (daylight) to avoid black multiplication
-		options.global_light_color = DrawColor(255, 255, 255, 255);
+		frame_options.global_light_color = DrawColor(255, 255, 255, 255);
 
 		// Initialize GL state
 		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
@@ -114,9 +122,7 @@ namespace IngamePreview {
 
 		primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 		light_buffer->Clear();
-		if (creature_name_drawer) {
-			creature_name_drawer->clear(); // Clear old labels
-		}
+		accumulators_.clear();
 
 		if (!g_gui.gfx.ensureAtlasManager()) {
 			return;
@@ -173,15 +179,8 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, *light_buffer };
+						const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, *light_buffer, accumulators_ };
 					tile_renderer->DrawTile(ctx, tile->location, 0, draw_x, draw_y, lighting_enabled);
-
-						// Add names of creatures on this floor
-						if (creature_name_drawer && z == camera_pos.z) {
-							if (tile->creature) {
-								creature_name_drawer->addLabel(tile->location->getPosition(), tile->creature->getName(), tile->creature.get());
-							}
-						}
 					}
 				}
 			}
@@ -227,9 +226,9 @@ namespace IngamePreview {
 
 		if (lighting_enabled && light_drawer) {
 			// Ensure light options are fully initialized to avoid black screen from garbage values
-			options.experimental_fog = false;
-			options.global_light_color = DrawColor(255, 255, 255, 255); // Full light color
-			light_drawer->draw(view, options.experimental_fog, *light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+			render_settings.experimental_fog = false;
+			frame_options.global_light_color = DrawColor(255, 255, 255, 255); // Full light color
+			light_drawer->draw(view, render_settings.experimental_fog, *light_buffer, frame_options.global_light_color, render_settings.light_intensity, render_settings.ambient_light_level);
 		}
 
 		// Draw Names
@@ -237,7 +236,7 @@ namespace IngamePreview {
 			TextRenderer::BeginFrame(vg, viewport_width, viewport_height, 1.0f); // Ingame preview doesn't use scale factor yet
 
 			// 1. Draw creatures on map
-			creature_name_drawer->draw(vg, view);
+			creature_name_drawer->draw(vg, view, accumulators_.creature_names);
 
 			// 2. Draw our own label at precise center
 			if (vg) {

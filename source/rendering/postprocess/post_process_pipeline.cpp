@@ -22,7 +22,7 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
 
 #include <algorithm>
 #include <spdlog/spdlog.h>
@@ -51,7 +51,7 @@ std::vector<std::string> PostProcessPipeline::GetEffectNames() const {
 	return post_process_mgr_->GetEffectNames();
 }
 
-void PostProcessPipeline::Initialize() {
+void PostProcessPipeline::EnsureInitialized() {
 	if (pp_vao_) {
 		return;
 	}
@@ -90,7 +90,8 @@ void PostProcessPipeline::Initialize() {
 	glVertexArrayAttribBinding(pp_vao_->GetID(), 1, 0);
 }
 
-bool PostProcessPipeline::Begin(const ViewState& view, const DrawingOptions& options) {
+bool PostProcessPipeline::Begin(const ViewState& view, const RenderSettings& options) {
+	EnsureInitialized();
 	bool use_fbo = (options.screen_shader_name != ShaderNames::NONE) || options.anti_aliasing;
 	if (use_fbo) {
 		UpdateFBO(view, options);
@@ -98,13 +99,13 @@ bool PostProcessPipeline::Begin(const ViewState& view, const DrawingOptions& opt
 	return use_fbo;
 }
 
-void PostProcessPipeline::End(const ViewState& view, const DrawingOptions& options) {
+void PostProcessPipeline::End(const ViewState& view, const RenderSettings& options) {
 	DrawPostProcess(view, options);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
 }
 
-void PostProcessPipeline::DrawPostProcess(const ViewState& view, const DrawingOptions& options) {
+void PostProcessPipeline::DrawPostProcess(const ViewState& view, const RenderSettings& options) {
 	if (!scale_fbo_ || !pp_vao_) {
 		return;
 	}
@@ -129,7 +130,7 @@ void PostProcessPipeline::DrawPostProcess(const ViewState& view, const DrawingOp
 	shader->Unuse();
 }
 
-void PostProcessPipeline::UpdateFBO(const ViewState& view, const DrawingOptions& options) {
+void PostProcessPipeline::UpdateFBO(const ViewState& view, const RenderSettings& options) {
 	float scale_factor = view.zoom < 1.0f ? view.zoom : 1.0f;
 
 	int target_w = std::max(1, static_cast<int>(view.screensize_x * scale_factor));

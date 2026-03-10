@@ -26,7 +26,8 @@
 #include "map/map_region.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/draw_context.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
@@ -44,7 +45,8 @@ MapLayerDrawer::~MapLayerDrawer() {
 void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params) {
 	auto& sprite_batch = ctx.sprite_batch;
 	const auto& view = ctx.view;
-	const auto& options = ctx.options;
+	const auto& settings = ctx.settings;
+	const auto& frame = ctx.frame;
 	auto& light_buffer = ctx.light_buffer;
 	int nd_start_x = floor_params.start_x & ~3;
 	int nd_start_y = floor_params.start_y & ~3;
@@ -62,7 +64,7 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
 	int base_screen_x = -view.view_scroll_x - offset;
 	int base_screen_y = -view.view_scroll_y - offset;
 
-	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
+	bool draw_lights = settings.isDrawLight() && view.zoom <= 10.0;
 
 	// Common lambda to draw a node
 	auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
@@ -103,7 +105,7 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
 					continue;
 				}
 
-				tile_renderer->DrawTile(ctx, location, options.current_house_id, draw_x_base, draw_y, draw_lights);
+				tile_renderer->DrawTile(ctx, location, frame.current_house_id, draw_x_base, draw_y, draw_lights);
 			}
 		}
 	};

@@ -2,10 +2,10 @@
 #define RME_PREVIEW_DRAWER_H_
 
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
 #include <cstdint>
 
-class MapCanvas;
+struct RenderSettings;
+struct ViewSnapshot;
 class Editor;
 class ItemDrawer;
 class SpriteDrawer;
@@ -19,7 +19,7 @@ public:
 	PreviewDrawer();
 	~PreviewDrawer();
 
-	void draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const ViewState& view, const FloorViewParams& floor_params, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
+	void draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot, const ViewState& view, const FloorViewParams& floor_params, int map_z, const RenderSettings& settings, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id);
 };
 
 #endif

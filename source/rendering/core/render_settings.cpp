@@ -1,12 +1,12 @@
 #include "app/main.h"
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
 #include "app/settings.h"
 
-DrawingOptions::DrawingOptions() {
+RenderSettings::RenderSettings() {
 	SetDefault();
 }
 
-void DrawingOptions::SetDefault() {
+void RenderSettings::SetDefault() {
 	transparent_floors = false;
 	transparent_items = false;
 	show_ingame_box = false;
@@ -15,8 +15,6 @@ void DrawingOptions::SetDefault() {
 	show_tech_items = true;
 	show_waypoints = true;
 	ingame = false;
-	dragging = false;
-	boundbox_selection = false;
 
 	show_grid = 0;
 	show_all_floors = true;
@@ -37,16 +35,17 @@ void DrawingOptions::SetDefault() {
 	show_preview = false;
 	show_hooks = false;
 	hide_items_when_zoomed = true;
-	current_house_id = 0;
 	light_intensity = 1.0f;
 	ambient_light_level = 0.5f;
-	global_light_color = DrawColor(128, 128, 128, 255);
-	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = "None";
+
+	cursor_red = 0; cursor_green = 0; cursor_blue = 255; cursor_alpha = 128;
+	cursor_alt_red = 0; cursor_alt_green = 255; cursor_alt_blue = 0; cursor_alt_alpha = 128;
+	use_automagic = true;
 }
 
-void DrawingOptions::SetIngame() {
+void RenderSettings::SetIngame() {
 	transparent_floors = false;
 	transparent_items = false;
 	show_ingame_box = false;
@@ -55,8 +54,6 @@ void DrawingOptions::SetIngame() {
 	show_tech_items = false;
 	show_waypoints = false;
 	ingame = true;
-	dragging = false;
-	boundbox_selection = false;
 
 	show_grid = 0;
 	show_all_floors = true;
@@ -77,11 +74,10 @@ void DrawingOptions::SetIngame() {
 	show_preview = false;
 	show_hooks = false;
 	hide_items_when_zoomed = false;
-	current_house_id = 0;
 }
 
-DrawingOptions DrawingOptions::FromSettings(const Settings& settings, float gui_light_intensity, float gui_ambient_light_level) {
-	DrawingOptions opts;
+RenderSettings RenderSettings::FromSettings(const Settings& settings, float gui_light_intensity, float gui_ambient_light_level) {
+	RenderSettings opts;
 	opts.transparent_floors = settings.getBoolean(Config::TRANSPARENT_FLOORS);
 	opts.transparent_items = settings.getBoolean(Config::TRANSPARENT_ITEMS);
 	opts.show_ingame_box = settings.getBoolean(Config::SHOW_INGAME_BOX);
@@ -117,9 +113,20 @@ DrawingOptions DrawingOptions::FromSettings(const Settings& settings, float gui_
 	opts.experimental_fog = settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	opts.anti_aliasing = settings.getBoolean(Config::ANTI_ALIASING);
 	opts.screen_shader_name = settings.getString(Config::SCREEN_SHADER);
+
+	opts.cursor_red = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_RED));
+	opts.cursor_green = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_GREEN));
+	opts.cursor_blue = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_BLUE));
+	opts.cursor_alpha = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALPHA));
+	opts.cursor_alt_red = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_RED));
+	opts.cursor_alt_green = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_GREEN));
+	opts.cursor_alt_blue = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_BLUE));
+	opts.cursor_alt_alpha = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_ALPHA));
+	opts.use_automagic = settings.getInteger(Config::USE_AUTOMAGIC) != 0;
+
 	return opts;
 }
 
-bool DrawingOptions::isDrawLight() const noexcept {
+bool RenderSettings::isDrawLight() const noexcept {
 	return show_lights;
 }

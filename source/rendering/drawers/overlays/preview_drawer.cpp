@@ -3,16 +3,17 @@
 // glut include removed
 
 #include "rendering/drawers/overlays/preview_drawer.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/frame_options.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
-#include "rendering/ui/map_display.h"
+#include "rendering/core/view_snapshot.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "ui/gui.h"
 #include "brushes/brush.h"
 #include "editor/copybuffer.h"
 #include "editor/editor.h"
-#include "ui/map_tab.h"
 
 PreviewDrawer::PreviewDrawer() {
 }
@@ -20,17 +21,19 @@ PreviewDrawer::PreviewDrawer() {
 PreviewDrawer::~PreviewDrawer() {
 }
 
-void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const ViewState& view, const FloorViewParams& floor_params, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
-	MapTab* mapTab = dynamic_cast<MapTab*>(canvas->GetMapWindow());
-	BaseMap* secondary_map = mapTab ? mapTab->GetSession()->secondary_map : nullptr;
+void PreviewDrawer::draw(SpriteBatch& sprite_batch, const ViewSnapshot& snapshot, const ViewState& view, const FloorViewParams& floor_params, int map_z, const RenderSettings& settings, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
+	BaseMap* secondary_map = snapshot.secondary_map;
 
-	if (secondary_map != nullptr && !options.ingame) {
+	// Create a default FrameOptions for preview (no transient frame state needed)
+	static const FrameOptions preview_frame;
+
+	if (secondary_map != nullptr && !settings.ingame) {
 		Brush* brush = g_gui.GetCurrentBrush();
 
 		Position normalPos;
 		Position to(view.mouse_map_x, view.mouse_map_y, view.floor);
 
-		if (canvas->isPasting()) {
+		if (snapshot.is_pasting) {
 			normalPos = editor.copybuffer.getPosition();
 		} else if (brush && brush->is<DoodadBrush>()) {
 			normalPos = Position(0x8000, 0x8000, 0x8);
@@ -62,36 +65,36 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Vie
 
 					// Draw ground
 					uint8_t r = 255, g = 255, b = 255;
-					uint8_t base_alpha = canvas->isPasting() ? 128 : 255;
+					uint8_t base_alpha = snapshot.is_pasting ? 128 : 255;
 
 					if (tile->ground) {
-						if (tile->isBlocking() && options.show_blocking) {
+						if (tile->isBlocking() && settings.show_blocking) {
 							g = g / 3 * 2;
 							b = b / 3 * 2;
 						}
-						if (tile->isHouseTile() && options.show_houses) {
+						if (tile->isHouseTile() && settings.show_houses) {
 							if ((int)tile->getHouseID() == current_house_id) {
 								r /= 2;
 							} else {
 								r /= 2;
 								g /= 2;
 							}
-						} else if (options.show_special_tiles && tile->isPZ()) {
+						} else if (settings.show_special_tiles && tile->isPZ()) {
 							r /= 2;
 							b /= 2;
 						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
+						if (settings.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
 							r = r / 3 * 2;
 							b = r / 3 * 2;
 						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+						if (settings.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
 							b /= 2;
 						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
+						if (settings.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
 							g /= 2;
 						}
 						if (tile->ground) {
-							BlitItemParams params(tile, tile->ground.get(), options);
+							BlitItemParams params(tile, tile->ground.get(), settings, preview_frame);
 							params.ephemeral = true;
 							params.red = r;
 							params.green = g;
@@ -102,9 +105,9 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Vie
 					}
 
 					// Draw items on the tile
-					if (view.zoom <= 10.0 || !options.hide_items_when_zoomed) {
+					if (view.zoom <= 10.0 || !settings.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
-							BlitItemParams params(tile, item.get(), options);
+							BlitItemParams params(tile, item.get(), settings, preview_frame);
 							params.ephemeral = true;
 							params.alpha = base_alpha;
 							if (item->isBorder()) {
@@ -117,7 +120,7 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Vie
 								item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 							}
 						}
-						if (tile->creature && options.show_creatures) {
+						if (tile->creature && settings.show_creatures) {
 							creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
 						}
 					}

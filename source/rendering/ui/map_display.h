@@ -24,13 +24,13 @@
 #include "rendering/utilities/frame_pacer.h"
 
 #include "ui/map_popup_menu.h"
-#include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
 #include <memory>
 
 struct NVGcontext;
-struct DrawingOptions;
+struct RenderSettings;
+struct FrameOptions;
 
 class Item;
 class Creature;
@@ -169,7 +169,7 @@ public:
 
 private:
 	void EnsureNanoVG();
-	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
+	void DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame);
 	void PerformGarbageCollection();
 	bool renderer_initialized = false;
 	long m_last_gc_time = 0;

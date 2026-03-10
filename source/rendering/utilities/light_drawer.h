@@ -26,7 +26,7 @@
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/light_buffer.h"
 
-struct DrawingOptions;
+struct RenderSettings;
 struct ViewState;
 class LightFBO;
 class LightShader;

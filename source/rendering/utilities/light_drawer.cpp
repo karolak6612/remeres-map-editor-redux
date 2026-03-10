@@ -21,7 +21,7 @@
 #include "rendering/utilities/light_shader.h"
 #include "rendering/utilities/light_calculator.h"
 #include <glm/gtc/matrix_transform.hpp>
-#include "rendering/core/drawing_options.h"
+#include "rendering/core/render_settings.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/gl_scoped_state.h"
 

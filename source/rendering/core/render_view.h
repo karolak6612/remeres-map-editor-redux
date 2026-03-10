@@ -2,8 +2,15 @@
 #define RME_RENDERING_RENDER_VIEW_H_
 
 #include <glm/glm.hpp>
+#include <optional>
 #include "map/position.h"
 #include "app/definitions.h"
+
+// Return type for IsTileVisible — replaces out-parameter pattern.
+struct TileScreenPos {
+	int x;
+	int y;
+};
 
 struct ViewBounds {
 	int start_x = 0;
@@ -44,15 +51,11 @@ struct ViewState {
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
 
-	// Compute projection and view matrices from current dimensions.
-	// Pure math (GLM) — no GL calls.
-	void ComputeProjection();
-
-	int getFloorAdjustment() const;
-	bool IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
-	bool IsPixelVisible(int draw_x, int draw_y, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
-	bool IsRectVisible(int draw_x, int draw_y, int width, int height, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
-	bool IsRectFullyInside(int draw_x, int draw_y, int width, int height) const;
+	[[nodiscard]] int getFloorAdjustment() const;
+	[[nodiscard]] std::optional<TileScreenPos> IsTileVisible(int map_x, int map_y, int map_z) const;
+	[[nodiscard]] bool IsPixelVisible(int draw_x, int draw_y, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
+	[[nodiscard]] bool IsRectVisible(int draw_x, int draw_y, int width, int height, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
+	[[nodiscard]] bool IsRectFullyInside(int draw_x, int draw_y, int width, int height) const;
 	void getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
 
 	// Cached logical viewport dimensions for optimization
@@ -68,6 +71,11 @@ namespace GLViewport {
 
 	// Clears the framebuffer (color + depth).
 	void Clear();
+}
+
+// Pure math — compute projection and view matrices from ViewState dimensions.
+namespace ViewProjection {
+	void Compute(ViewState& vs);
 }
 
 #endif

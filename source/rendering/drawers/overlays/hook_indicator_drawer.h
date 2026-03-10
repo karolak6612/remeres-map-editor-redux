@@ -1,7 +1,7 @@
 #ifndef RME_HOOK_INDICATOR_DRAWER_H_
 #define RME_HOOK_INDICATOR_DRAWER_H_
 
-#include <vector>
+#include <span>
 #include "map/position.h"
 
 struct NVGcontext;
@@ -18,12 +18,7 @@ public:
 		bool east;
 	};
 
-	void addHook(const Position& pos, bool south, bool east);
-	void clear();
-	void draw(NVGcontext* vg, const ViewState& view);
-
-private:
-	std::vector<HookRequest> requests;
+	void draw(NVGcontext* vg, const ViewState& view, std::span<const HookRequest> hooks);
 };
 
 #endif
