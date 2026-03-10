@@ -138,7 +138,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_x = patterns.x;
 	int pattern_y = patterns.y;
 	int pattern_z = patterns.z;
-	int frame = patterns.frame;
+	int anim_frame = patterns.frame;
 
 	if (!ephemeral && settings.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
@@ -161,10 +161,10 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
 		const AtlasRegion* region;
-		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
+		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && anim_frame == 0) {
 			region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
 		} else {
-			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
+			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
 		}
 
 		if (region) {
@@ -172,7 +172,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			// DEBUG: Check for mismatch on Item 369 using PRECISE sub-sprite ID
 			if (item->getID() == 369) {
 				// Use 0,0 as pattern coordinates for 1x1 items
-				uint32_t precise_expected_id = spr->getSpriteId(frame, 0, 0);
+				uint32_t precise_expected_id = spr->getSpriteId(anim_frame, 0, 0);
 				if (region->debug_sprite_id != 0 && precise_expected_id != 0 && region->debug_sprite_id != precise_expected_id) {
 					spdlog::error("SPRITE MISMATCH DETECTED: Item 369 (Expected Sprite ID {}, Actual Region Owner {})", precise_expected_id, region->debug_sprite_id);
 				}
@@ -184,7 +184,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		for (int cx = 0; cx != spr->width; cx++) {
 			for (int cy = 0; cy != spr->height; cy++) {
 				for (int cf = 0; cf != spr->layers; cf++) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
+					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
 					if (region) {
 						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
 					}
