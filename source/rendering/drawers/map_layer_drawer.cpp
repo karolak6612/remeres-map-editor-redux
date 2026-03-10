@@ -21,7 +21,6 @@
 #include "rendering/drawers/tiles/tile_renderer.h"
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "editor/editor.h"
-#include "live/live_client.h"
 #include "map/map.h"
 #include "map/map_region.h"
 #include "rendering/core/render_view.h"
@@ -33,10 +32,11 @@
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
 
-MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
+MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, NodeRequestFn node_request_fn) :
 	tile_renderer(tile_renderer),
 	grid_drawer(grid_drawer),
-	editor(editor) {
+	editor(editor),
+	node_request_fn_(std::move(node_request_fn)) {
 }
 
 MapLayerDrawer::~MapLayerDrawer() {
@@ -78,9 +78,9 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
 
 		if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
 			if (!nd->isRequested(map_z > GROUND_LAYER)) {
-				// Request the node
-				if (editor->live_manager.GetClient()) {
-					editor->live_manager.GetClient()->queryNode(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
+				// Request the node via callback (decoupled from live_client I/O)
+				if (node_request_fn_) {
+					node_request_fn_(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
 				}
 				nd->setRequested(map_z > GROUND_LAYER, true);
 			}

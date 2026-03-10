@@ -97,7 +97,12 @@ MapDrawer::MapDrawer(Editor& editor) :
 	});
 
 	grid_drawer = std::make_unique<GridDrawer>();
-	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
+	auto node_request_fn = [this](int x, int y, bool underground) {
+		if (editor.live_manager.GetClient()) {
+			editor.live_manager.GetClient()->queryNode(x, y, underground);
+		}
+	};
+	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor, std::move(node_request_fn));
 	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
 	brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
 	brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
