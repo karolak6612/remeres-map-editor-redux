@@ -283,13 +283,23 @@ void MapDrawer::Draw()
     cursors_.live->draw(ctx, editor);
 
     {
-        Brush* current_brush = g_gui.GetCurrentBrush();
         const BrushVisualSettings bvs = BrushVisualSettings::FromSettings(g_settings);
-        overlays_.brush_overlay->draw(
-            ctx, bvs, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(), cursors_.brush.get(), editor,
-            g_gui.IsDrawingMode(), current_brush, g_gui.GetBrushShape(), g_gui.GetBrushSize(), snapshot_.is_dragging_draw,
-            snapshot_.last_click_map_x, snapshot_.last_click_map_y
-        );
+        const BrushOverlayContext overlay {
+            .item_drawer = entities_.item.get(),
+            .sprite_drawer = entities_.sprite.get(),
+            .creature_drawer = entities_.creature.get(),
+            .brush_cursor_drawer = cursors_.brush.get(),
+            .editor = &editor,
+            .visual = &bvs,
+            .current_brush = g_gui.GetCurrentBrush(),
+            .brush_shape = g_gui.GetBrushShape(),
+            .brush_size = g_gui.GetBrushSize(),
+            .is_drawing_mode = g_gui.IsDrawingMode(),
+            .is_dragging_draw = snapshot_.is_dragging_draw,
+            .last_click_map_x = snapshot_.last_click_map_x,
+            .last_click_map_y = snapshot_.last_click_map_y
+        };
+        overlays_.brush_overlay->draw(ctx, overlay);
     }
 
     const ViewBounds base_bounds {view.start_x, view.start_y, view.end_x, view.end_y};

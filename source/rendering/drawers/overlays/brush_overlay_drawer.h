@@ -20,16 +20,30 @@ class SpriteDrawer;
 class CreatureDrawer;
 class BrushCursorDrawer;
 
+// Bundles all parameters for BrushOverlayDrawer::draw(), reducing the
+// 13-parameter call to a single struct passed from MapDrawer.
+struct BrushOverlayContext {
+    ItemDrawer* item_drawer = nullptr;
+    SpriteDrawer* sprite_drawer = nullptr;
+    CreatureDrawer* creature_drawer = nullptr;
+    BrushCursorDrawer* brush_cursor_drawer = nullptr;
+    Editor* editor = nullptr;
+    const BrushVisualSettings* visual = nullptr;
+    Brush* current_brush = nullptr;
+    BrushShape brush_shape = BRUSHSHAPE_SQUARE;
+    int brush_size = 0;
+    bool is_drawing_mode = false;
+    bool is_dragging_draw = false;
+    int last_click_map_x = 0;
+    int last_click_map_y = 0;
+};
+
 class BrushOverlayDrawer {
 public:
     BrushOverlayDrawer();
     ~BrushOverlayDrawer();
 
-    void draw(
-        const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
-        CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_drawing_mode,
-        Brush* current_brush, BrushShape brush_shape, int brush_size, bool is_dragging_draw, int last_click_map_x, int last_click_map_y
-    );
+    void draw(const DrawContext& ctx, const BrushOverlayContext& overlay);
 
 private:
     enum BrushColor {

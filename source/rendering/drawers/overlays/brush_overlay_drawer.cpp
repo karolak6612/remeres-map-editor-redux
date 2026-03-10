@@ -91,23 +91,21 @@ BrushOverlayDrawer::BrushOverlayDrawer() { }
 
 BrushOverlayDrawer::~BrushOverlayDrawer() { }
 
-void BrushOverlayDrawer::draw(
-    const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
-    CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_drawing_mode,
-    Brush* current_brush, BrushShape brush_shape, int brush_size, bool is_dragging_draw, int last_click_map_x, int last_click_map_y
-)
+void BrushOverlayDrawer::draw(const DrawContext& ctx, const BrushOverlayContext& overlay)
 {
-    if (!is_drawing_mode) {
+    if (!overlay.is_drawing_mode) {
         return;
     }
-    if (!current_brush) {
+    if (!overlay.current_brush) {
         return;
     }
     if (ctx.settings.ingame) {
         return;
     }
 
-    Brush* brush = current_brush;
+    const auto& visual = *overlay.visual;
+    auto* editor = overlay.editor;
+    Brush* brush = overlay.current_brush;
 
     BrushColor brushColorType = COLOR_BLANK;
     if (brush->is<TerrainBrush>() || brush->is<TableBrush>() || brush->is<CarpetBrush>()) {
@@ -124,11 +122,15 @@ void BrushOverlayDrawer::draw(
 
     glm::vec4 brushColor = get_brush_color(brushColorType, visual);
 
-    if (is_dragging_draw) {
-        drawDragging(ctx, visual, item_drawer, sprite_drawer, editor, brush, brushColor, brush_shape, last_click_map_x, last_click_map_y);
+    if (overlay.is_dragging_draw) {
+        drawDragging(
+            ctx, visual, overlay.item_drawer, overlay.sprite_drawer, *editor, brush, brushColor, overlay.brush_shape,
+            overlay.last_click_map_x, overlay.last_click_map_y
+        );
     } else {
         drawStationary(
-            ctx, visual, item_drawer, sprite_drawer, creature_drawer, brush_cursor_drawer, editor, brush, brushColor, brush_shape, brush_size
+            ctx, visual, overlay.item_drawer, overlay.sprite_drawer, overlay.creature_drawer, overlay.brush_cursor_drawer, *editor,
+            brush, brushColor, overlay.brush_shape, overlay.brush_size
         );
     }
 }
