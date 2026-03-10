@@ -529,6 +529,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/brush_visual_settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp

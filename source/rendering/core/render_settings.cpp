@@ -40,9 +40,6 @@ void RenderSettings::SetDefault() {
 	anti_aliasing = false;
 	screen_shader_name = "None";
 
-	cursor_red = 0; cursor_green = 0; cursor_blue = 255; cursor_alpha = 128;
-	cursor_alt_red = 0; cursor_alt_green = 255; cursor_alt_blue = 0; cursor_alt_alpha = 128;
-	use_automagic = true;
 }
 
 void RenderSettings::SetIngame() {
@@ -113,16 +110,6 @@ RenderSettings RenderSettings::FromSettings(const Settings& settings, float gui_
 	opts.experimental_fog = settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	opts.anti_aliasing = settings.getBoolean(Config::ANTI_ALIASING);
 	opts.screen_shader_name = settings.getString(Config::SCREEN_SHADER);
-
-	opts.cursor_red = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_RED));
-	opts.cursor_green = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_GREEN));
-	opts.cursor_blue = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_BLUE));
-	opts.cursor_alpha = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALPHA));
-	opts.cursor_alt_red = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_RED));
-	opts.cursor_alt_green = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_GREEN));
-	opts.cursor_alt_blue = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_BLUE));
-	opts.cursor_alt_alpha = static_cast<uint8_t>(settings.getInteger(Config::CURSOR_ALT_ALPHA));
-	opts.use_automagic = settings.getInteger(Config::USE_AUTOMAGIC) != 0;
 
 	return opts;
 }

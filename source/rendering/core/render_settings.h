@@ -57,11 +57,6 @@ struct RenderSettings {
 	float light_intensity;
 	float ambient_light_level;
 
-	// Cursor colors (used by BrushOverlayDrawer)
-	uint8_t cursor_red, cursor_green, cursor_blue, cursor_alpha;
-	uint8_t cursor_alt_red, cursor_alt_green, cursor_alt_blue, cursor_alt_alpha;
-	bool use_automagic;
-
 	bool ingame;
 };
 

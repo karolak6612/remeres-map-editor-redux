@@ -152,7 +152,6 @@ public:
     void Release();
 
     void Draw();
-    void DrawBackground();
     void DrawMap();
     void DrawLiveCursors();
     void DrawIngameBox(const ViewBounds& bounds);

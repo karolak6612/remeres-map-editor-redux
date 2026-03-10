@@ -42,22 +42,22 @@
 
 #include "brushes/waypoint/waypoint_brush.h"
 
-// Helper to get color from render settings
-glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color, const RenderSettings& settings)
+// Helper to get color from brush visual settings
+glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color, const BrushVisualSettings& visual)
 {
     glm::vec4 c(1.0f);
     switch (color) {
         case COLOR_BRUSH:
             c = glm::vec4(
-                settings.cursor_red / 255.0f, settings.cursor_green / 255.0f, settings.cursor_blue / 255.0f, settings.cursor_alpha / 255.0f
+                visual.cursor_red / 255.0f, visual.cursor_green / 255.0f, visual.cursor_blue / 255.0f, visual.cursor_alpha / 255.0f
             );
             break;
 
         case COLOR_FLAG_BRUSH:
         case COLOR_HOUSE_BRUSH:
             c = glm::vec4(
-                settings.cursor_alt_red / 255.0f, settings.cursor_alt_green / 255.0f, settings.cursor_alt_blue / 255.0f,
-                settings.cursor_alt_alpha / 255.0f
+                visual.cursor_alt_red / 255.0f, visual.cursor_alt_green / 255.0f, visual.cursor_alt_blue / 255.0f,
+                visual.cursor_alt_alpha / 255.0f
             );
             break;
 
@@ -78,12 +78,12 @@ glm::vec4 BrushOverlayDrawer::get_brush_color(BrushColor color, const RenderSett
     return c;
 }
 
-glm::vec4 BrushOverlayDrawer::get_check_color(Brush* brush, Editor& editor, const Position& pos, const RenderSettings& settings)
+glm::vec4 BrushOverlayDrawer::get_check_color(Brush* brush, Editor& editor, const Position& pos, const BrushVisualSettings& visual)
 {
     if (brush->canDraw(&editor.map, pos)) {
-        return get_brush_color(COLOR_VALID, settings);
+        return get_brush_color(COLOR_VALID, visual);
     } else {
-        return get_brush_color(COLOR_INVALID, settings);
+        return get_brush_color(COLOR_INVALID, visual);
     }
 }
 
@@ -92,9 +92,9 @@ BrushOverlayDrawer::BrushOverlayDrawer() { }
 BrushOverlayDrawer::~BrushOverlayDrawer() { }
 
 void BrushOverlayDrawer::draw(
-    const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer,
-    BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_drawing_mode, Brush* current_brush, BrushShape brush_shape,
-    int brush_size, bool is_dragging_draw, int last_click_map_x, int last_click_map_y
+    const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
+    CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_drawing_mode,
+    Brush* current_brush, BrushShape brush_shape, int brush_size, bool is_dragging_draw, int last_click_map_x, int last_click_map_y
 )
 {
     if (!is_drawing_mode) {
@@ -122,20 +122,20 @@ void BrushOverlayDrawer::draw(
         brushColorType = COLOR_ERASER;
     }
 
-    glm::vec4 brushColor = get_brush_color(brushColorType, ctx.settings);
+    glm::vec4 brushColor = get_brush_color(brushColorType, visual);
 
     if (is_dragging_draw) {
-        drawDragging(ctx, item_drawer, sprite_drawer, editor, brush, brushColor, brush_shape, last_click_map_x, last_click_map_y);
+        drawDragging(ctx, visual, item_drawer, sprite_drawer, editor, brush, brushColor, brush_shape, last_click_map_x, last_click_map_y);
     } else {
         drawStationary(
-            ctx, item_drawer, sprite_drawer, creature_drawer, brush_cursor_drawer, editor, brush, brushColor, brush_shape, brush_size
+            ctx, visual, item_drawer, sprite_drawer, creature_drawer, brush_cursor_drawer, editor, brush, brushColor, brush_shape, brush_size
         );
     }
 }
 
 void BrushOverlayDrawer::drawDragging(
-    const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor,
-    BrushShape brush_shape, int last_click_map_x, int last_click_map_y
+    const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, Editor& editor,
+    Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int last_click_map_x, int last_click_map_y
 )
 {
     auto& sprite_batch = ctx.sprite_batch;
@@ -224,7 +224,7 @@ void BrushOverlayDrawer::drawDragging(
                     if (brush->is<OptionalBorderBrush>()) {
                         sprite_batch.drawRect(
                             static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
-                            get_check_color(brush, editor, Position(x, y, view.floor), ctx.settings), atlas
+                            get_check_color(brush, editor, Position(x, y, view.floor), visual), atlas
                         );
                     } else {
                         item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
@@ -244,7 +244,7 @@ void BrushOverlayDrawer::drawDragging(
 
             float w = last_click_end_sx - last_click_start_sx;
             float h = last_click_end_sy - last_click_start_sy;
-            bool autoborder_active = ctx.settings.use_automagic && brush->needBorders();
+            bool autoborder_active = visual.use_automagic && brush->needBorders();
             if (autoborder_active) {
                 // Draw outline only
                 float thickness = 1.0f; // Thin border
@@ -332,19 +332,19 @@ void BrushOverlayDrawer::drawDragging(
 }
 
 void BrushOverlayDrawer::drawStationary(
-    const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer,
-    BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape,
-    int brush_size
+    const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
+    CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush,
+    const glm::vec4& brushColor, BrushShape brush_shape, int brush_size
 )
 {
     if (brush->is<WallBrush>()) {
         drawStationaryWall(ctx, brush, brushColor, brush_size);
     } else if (brush->is<DoorBrush>()) {
-        drawStationaryDoor(ctx, brush, editor);
+        drawStationaryDoor(ctx, brush, editor, visual);
     } else if (brush->is<CreatureBrush>()) {
         drawStationaryCreature(ctx, sprite_drawer, creature_drawer, brush, editor);
     } else if (!brush->is<DoodadBrush>()) {
-        drawStationaryGeneric(ctx, item_drawer, sprite_drawer, brush_cursor_drawer, editor, brush, brushColor, brush_shape, brush_size);
+        drawStationaryGeneric(ctx, item_drawer, sprite_drawer, brush_cursor_drawer, editor, brush, brushColor, brush_shape, brush_size, visual);
     }
 }
 
@@ -399,7 +399,7 @@ void BrushOverlayDrawer::drawStationaryWall(const DrawContext& ctx, Brush* brush
     }
 }
 
-void BrushOverlayDrawer::drawStationaryDoor(const DrawContext& ctx, Brush* brush, Editor& editor)
+void BrushOverlayDrawer::drawStationaryDoor(const DrawContext& ctx, Brush* brush, Editor& editor, const BrushVisualSettings& visual)
 {
     auto& sprite_batch = ctx.sprite_batch;
     const auto& view = ctx.view;
@@ -409,7 +409,7 @@ void BrushOverlayDrawer::drawStationaryDoor(const DrawContext& ctx, Brush* brush
 
     sprite_batch.drawRect(
         static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
-        get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor), ctx.settings), ctx.atlas
+        get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor), visual), ctx.atlas
     );
 }
 
@@ -439,7 +439,7 @@ void BrushOverlayDrawer::drawStationaryCreature(
 
 void BrushOverlayDrawer::drawStationaryGeneric(
     const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor,
-    Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int brush_size
+    Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int brush_size, const BrushVisualSettings& visual
 )
 {
     auto& sprite_batch = ctx.sprite_batch;
@@ -469,7 +469,7 @@ void BrushOverlayDrawer::drawStationaryGeneric(
                             glm::vec4 c = brushColor;
                             if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
                                 c = get_check_color(
-                                    brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), ctx.settings
+                                    brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), visual
                                 );
                             }
                             sprite_batch.drawRect(
@@ -493,7 +493,7 @@ void BrushOverlayDrawer::drawStationaryGeneric(
                             glm::vec4 c = brushColor;
                             if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
                                 c = get_check_color(
-                                    brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), ctx.settings
+                                    brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), visual
                                 );
                             }
                             sprite_batch.drawRect(

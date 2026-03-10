@@ -19,6 +19,7 @@
 
 #include <algorithm>
 
+#include "app/settings.h"
 #include "editor/editor.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
@@ -44,6 +45,7 @@
 #include "brushes/waypoint/waypoint_brush.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/frame_options.h"
+#include "rendering/core/brush_visual_settings.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/render_view.h"
@@ -248,7 +250,7 @@ void MapDrawer::Draw()
     // Post-processing: bind FBO if shader or AA is active
     bool use_fbo = post_process_->Begin(view, render_settings);
 
-    DrawBackground(); // Clear screen (or FBO)
+    GLViewport::Clear(); // Clear screen (or FBO)
 
     DrawMap();
 
@@ -281,8 +283,9 @@ void MapDrawer::Draw()
 
     {
         Brush* current_brush = g_gui.GetCurrentBrush();
+        const BrushVisualSettings bvs = BrushVisualSettings::FromSettings(g_settings);
         overlays_.brush_overlay->draw(
-            ctx, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(), cursors_.brush.get(), editor,
+            ctx, bvs, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(), cursors_.brush.get(), editor,
             g_gui.IsDrawingMode(), current_brush, g_gui.GetBrushShape(), g_gui.GetBrushSize(), snapshot_.is_dragging_draw,
             snapshot_.last_click_map_x, snapshot_.last_click_map_y
         );
@@ -317,11 +320,6 @@ void MapDrawer::Draw()
     }
 
     // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
-}
-
-void MapDrawer::DrawBackground()
-{
-    GLViewport::Clear();
 }
 
 void MapDrawer::DrawMap()
