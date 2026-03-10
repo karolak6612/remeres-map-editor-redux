@@ -45,6 +45,7 @@ struct NVGcontext;
 class PostProcessPipeline;
 class AtlasManager;
 class GridDrawer;
+class PendingNodeRequests;
 
 class LightDrawer;
 class GraphicsSpriteResolver;
@@ -126,6 +127,9 @@ class MapDrawer {
 	std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+
+	// Deferred network node requests — filled during Draw(), drained after
+	std::unique_ptr<PendingNodeRequests> pending_requests_;
 
 	// Post-processing
 	std::unique_ptr<PostProcessPipeline> post_process_;

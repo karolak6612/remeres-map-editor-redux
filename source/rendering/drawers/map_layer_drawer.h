@@ -19,21 +19,18 @@
 #define RME_MAP_LAYER_DRAWER_H
 
 #include <iosfwd>
-#include <functional>
 
 class Editor;
 class TileRenderer;
 class GridDrawer;
+class PendingNodeRequests;
 struct DrawContext;
 struct FloorViewParams;
 class SpriteBatch;
 
-// Callback for network node requests — decouples render loop from live_client I/O
-using NodeRequestFn = std::function<void(int x, int y, bool underground)>;
-
 class MapLayerDrawer {
 public:
-	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, NodeRequestFn node_request_fn = nullptr);
+	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests = nullptr);
 	~MapLayerDrawer();
 
 	void Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
@@ -42,7 +39,7 @@ private:
 	TileRenderer* tile_renderer;
 	GridDrawer* grid_drawer;
 	Editor* editor;
-	NodeRequestFn node_request_fn_;
+	PendingNodeRequests* pending_requests_;
 };
 
 #endif

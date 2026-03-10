@@ -74,6 +74,7 @@
 #include "rendering/postprocess/post_process_manager.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 #include "rendering/core/graphics_sprite_resolver.h"
+#include "rendering/core/pending_node_requests.h"
 
 MapDrawer::MapDrawer(Editor& editor) :
 	editor(editor) {
@@ -98,12 +99,9 @@ MapDrawer::MapDrawer(Editor& editor) :
 	});
 
 	overlays_.grid = std::make_unique<GridDrawer>();
-	auto node_request_fn = [this](int x, int y, bool underground) {
-		if (editor.live_manager.GetClient()) {
-			editor.live_manager.GetClient()->queryNode(x, y, underground);
-		}
-	};
-	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), overlays_.grid.get(), &editor, std::move(node_request_fn));
+	pending_requests_ = std::make_unique<PendingNodeRequests>();
+	pending_requests_->reserve(64);
+	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), overlays_.grid.get(), &editor, pending_requests_.get());
 
 	// Cursor drawers
 	cursors_.live = std::make_unique<LiveCursorDrawer>();
@@ -301,6 +299,16 @@ void MapDrawer::Draw() {
 
 	// Flush buffered sprite preload requests after GPU submission
 	tile_renderer->FlushPreloadQueue();
+
+	// Drain deferred node requests — dispatch network I/O outside render loop
+	{
+		auto requests = pending_requests_->drain();
+		for (const auto& req : requests) {
+			if (editor.live_manager.GetClient()) {
+				editor.live_manager.GetClient()->queryNode(req.x, req.y, req.underground);
+			}
+		}
+	}
 
 	// Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
 }

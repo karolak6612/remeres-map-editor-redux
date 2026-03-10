@@ -31,12 +31,13 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
+#include "rendering/core/pending_node_requests.h"
 
-MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, NodeRequestFn node_request_fn) :
+MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests) :
 	tile_renderer(tile_renderer),
 	grid_drawer(grid_drawer),
 	editor(editor),
-	node_request_fn_(std::move(node_request_fn)) {
+	pending_requests_(pending_requests) {
 }
 
 MapLayerDrawer::~MapLayerDrawer() {
@@ -78,9 +79,9 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
 
 		if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
 			if (!nd->isRequested(map_z > GROUND_LAYER)) {
-				// Request the node via callback (decoupled from live_client I/O)
-				if (node_request_fn_) {
-					node_request_fn_(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
+				// Enqueue node request for deferred dispatch (after frame submission)
+				if (pending_requests_) {
+					pending_requests_->enqueue(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
 				}
 				nd->setRequested(map_z > GROUND_LAYER, true);
 			}
