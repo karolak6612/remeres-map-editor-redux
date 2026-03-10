@@ -25,6 +25,7 @@
 #include "map/map.h"
 #include "map/map_region.h"
 #include "rendering/core/render_view.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_batch.h"
@@ -40,11 +41,15 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	int nd_start_x = view.start_x & ~3;
-	int nd_start_y = view.start_y & ~3;
-	int nd_end_x = (view.end_x & ~3) + 4;
-	int nd_end_y = (view.end_y & ~3) + 4;
+void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
+	auto& light_buffer = ctx.light_buffer;
+	int nd_start_x = floor_params.start_x & ~3;
+	int nd_start_y = floor_params.start_y & ~3;
+	int nd_end_x = (floor_params.end_x & ~3) + 4;
+	int nd_end_y = (floor_params.end_y & ~3) + 4;
 
 	// Optimization: Pre-calculate offset and base coordinates
 	// IsTileVisible does this for every tile, but it's constant per layer/frame.
@@ -98,7 +103,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 					continue;
 				}
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y, draw_lights ? &light_buffer : nullptr);
+				tile_renderer->DrawTile(ctx, location, options.current_house_id, draw_x_base, draw_y, draw_lights);
 			}
 		}
 	};

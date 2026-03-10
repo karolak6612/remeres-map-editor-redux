@@ -11,6 +11,7 @@
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/drawers/cursors/brush_cursor_drawer.h"
@@ -98,7 +99,11 @@ BrushOverlayDrawer::BrushOverlayDrawer() {
 BrushOverlayDrawer::~BrushOverlayDrawer() {
 }
 
-void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& primitive_renderer, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor) {
+void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Editor& editor) {
+	auto& sprite_batch = ctx.sprite_batch;
+	auto& primitive_renderer = ctx.primitive_renderer;
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
 	if (!g_gui.IsDrawingMode()) {
 		return;
 	}

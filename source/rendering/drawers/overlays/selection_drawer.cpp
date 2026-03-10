@@ -13,7 +13,7 @@
 #include <algorithm>
 #include <cmath>
 
-void SelectionDrawer::draw(PrimitiveRenderer& primitive_renderer, const RenderView& view, const MapCanvas* canvas, const DrawingOptions& options) {
+void SelectionDrawer::draw(PrimitiveRenderer& primitive_renderer, const ViewState& view, const MapCanvas* canvas, const DrawingOptions& options) {
 	if (options.ingame) {
 		return;
 	}

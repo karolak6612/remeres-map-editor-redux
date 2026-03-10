@@ -19,7 +19,7 @@ void HookIndicatorDrawer::clear() {
 	requests.clear();
 }
 
-void HookIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void HookIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
 	if (requests.empty() || !vg) {
 		return;
 	}

@@ -5,7 +5,7 @@
 #include "map/position.h"
 
 struct NVGcontext;
-struct RenderView;
+struct ViewState;
 
 class HookIndicatorDrawer {
 public:
@@ -20,7 +20,7 @@ public:
 
 	void addHook(const Position& pos, bool south, bool east);
 	void clear();
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(NVGcontext* vg, const ViewState& view);
 
 private:
 	std::vector<HookRequest> requests;

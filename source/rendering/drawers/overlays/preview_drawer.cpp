@@ -20,7 +20,7 @@ PreviewDrawer::PreviewDrawer() {
 PreviewDrawer::~PreviewDrawer() {
 }
 
-void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const RenderView& view, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
+void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const ViewState& view, const FloorViewParams& floor_params, int map_z, const DrawingOptions& options, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, uint32_t current_house_id) {
 	MapTab* mapTab = dynamic_cast<MapTab*>(canvas->GetMapWindow());
 	BaseMap* secondary_map = mapTab ? mapTab->GetSession()->secondary_map : nullptr;
 
@@ -38,8 +38,8 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 			normalPos = to;
 		}
 
-		for (int map_x = view.start_x; map_x <= view.end_x; map_x++) {
-			for (int map_y = view.start_y; map_y <= view.end_y; map_y++) {
+		for (int map_x = floor_params.start_x; map_x <= floor_params.end_x; map_x++) {
+			for (int map_y = floor_params.start_y; map_y <= floor_params.end_y; map_y++) {
 				Position final(map_x, map_y, map_z);
 				Position pos = normalPos + final - to;
 

@@ -73,8 +73,8 @@ namespace IngamePreview {
 
 		UpdateOpacity(dt, first_visible, last_visible);
 
-		// Setup RenderView and DrawingOptions
-		RenderView view;
+		// Setup ViewState and DrawingOptions
+		ViewState view;
 		view.zoom = zoom;
 		view.tile_size = TILE_SIZE;
 		view.floor = camera_pos.z;

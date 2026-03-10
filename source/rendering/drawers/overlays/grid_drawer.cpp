@@ -1,5 +1,6 @@
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "ui/gui.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/graphics.h"
 
@@ -8,7 +9,10 @@
 #include "app/definitions.h"
 #include <wx/gdicmn.h>
 
-void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options, const ViewBounds& bounds) {
+void GridDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
 	if (!options.show_grid) {
 		return;
 	}
@@ -43,7 +47,10 @@ void GridDrawer::DrawGrid(SpriteBatch& sprite_batch, const RenderView& view, con
 	}
 }
 
-void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view, const DrawingOptions& options, const ViewBounds& bounds) {
+void GridDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
 	if (!options.show_ingame_box) {
 		return;
 	}
@@ -106,7 +113,7 @@ void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view
 	drawRect(sprite_batch, box_start_x, box_start_y, box_end_x - box_start_x, box_end_y - box_start_y, *wxGREEN);
 }
 
-void GridDrawer::DrawNodeLoadingPlaceholder(SpriteBatch& sprite_batch, int nd_map_x, int nd_map_y, const RenderView& view) {
+void GridDrawer::DrawNodeLoadingPlaceholder(SpriteBatch& sprite_batch, int nd_map_x, int nd_map_y, const ViewState& view) {
 	int cy = (nd_map_y)*TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 	int cx = (nd_map_x)*TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 

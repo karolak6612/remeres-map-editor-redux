@@ -43,6 +43,7 @@
 #include "brushes/waypoint/waypoint_brush.h"
 #include "rendering/utilities/light_drawer.h"
 #include "rendering/ui/tooltip_drawer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/sprite_batch.h"
@@ -146,11 +147,48 @@ void MapDrawer::SetupVars() {
 	const double speed = 0.005;
 	options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
 
-	view.Setup(canvas, options);
+	// Construct ViewState from explicit canvas parameters — no pointer stored.
+	canvas->MouseToMap(&view.mouse_map_x, &view.mouse_map_y);
+	canvas->GetViewBox(&view.view_scroll_x, &view.view_scroll_y, &view.screensize_x, &view.screensize_y);
+	view.viewport_x = 0;
+	view.viewport_y = 0;
+
+	view.zoom = static_cast<float>(canvas->GetZoom());
+	view.tile_size = std::max(1, static_cast<int>(TILE_SIZE / view.zoom));
+	view.floor = canvas->GetFloor();
+	view.camera_pos.z = view.floor;
+
+	if (options.show_all_floors) {
+		if (view.floor <= GROUND_LAYER) {
+			view.start_z = GROUND_LAYER;
+		} else {
+			view.start_z = std::min(MAP_MAX_LAYER, view.floor + 2);
+		}
+	} else {
+		view.start_z = view.floor;
+	}
+
+	view.end_z = view.floor;
+	view.superend_z = (view.floor > GROUND_LAYER ? 8 : 0);
+
+	view.start_x = view.view_scroll_x / TILE_SIZE;
+	view.start_y = view.view_scroll_y / TILE_SIZE;
+
+	if (view.floor > GROUND_LAYER) {
+		view.start_x -= 2;
+		view.start_y -= 2;
+	}
+
+	view.end_x = view.start_x + view.screensize_x / view.tile_size + 2;
+	view.end_y = view.start_y + view.screensize_y / view.tile_size + 2;
+
+	view.logical_width = view.screensize_x * view.zoom;
+	view.logical_height = view.screensize_y * view.zoom;
 }
 
 void MapDrawer::SetupGL() {
-	view.SetupGL();
+	GLViewport::Apply(view);
+	view.ComputeProjection();
 
 	// Ensure renderers are initialized
 	if (!renderers_initialized) {
@@ -205,7 +243,7 @@ void MapDrawer::InitPostProcess() {
 	glVertexArrayAttribBinding(pp_vao->GetID(), 1, 0);
 }
 
-void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& options) {
+void MapDrawer::DrawPostProcess(const ViewState& view, const DrawingOptions& options) {
 	if (!scale_fbo || !pp_vao) {
 		return;
 	}
@@ -233,7 +271,7 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 	shader->Unuse();
 }
 
-void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options) {
+void MapDrawer::UpdateFBO(const ViewState& view, const DrawingOptions& options) {
 	// Determine FBO size.
 	// If upscaling (Zoom < 1.0, e.g. 0.25), we want 1 pixel = 1 map unit.
 	// width_pixels = screen_width * zoom.
@@ -321,9 +359,6 @@ void MapDrawer::Draw() {
 
 	DrawBackground(); // Clear screen (or FBO)
 
-	// Save original view bounds before DrawMap modifies them per-floor
-	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
-
 	DrawMap();
 
 	// Flush Map for Light Pass
@@ -345,19 +380,23 @@ void MapDrawer::Draw() {
 	// Resume Batch for Overlays
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+
 	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
+		drag_shadow_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get());
 	}
 
-	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
+	live_cursor_drawer->draw(ctx, editor);
 
-	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
+	brush_overlay_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor);
+
+	const ViewBounds base_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
 
 	if (options.show_grid) {
-		DrawGrid(original_bounds);
+		DrawGrid(base_bounds);
 	}
 	if (options.show_ingame_box) {
-		DrawIngameBox(original_bounds);
+		DrawIngameBox(base_bounds);
 	}
 
 	// Draw creature names (Overlay) moved to DrawCreatureNames()
@@ -370,40 +409,46 @@ void MapDrawer::Draw() {
 }
 
 void MapDrawer::DrawBackground() {
-	view.Clear();
+	GLViewport::Clear();
 }
 
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
-	bool only_colors = options.show_as_minimap || options.show_only_colors;
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
 
-	// Enable texture mode
+	int floor_offset = 0;
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
+		FloorViewParams floor_params {
+			view.start_x - floor_offset,
+			view.start_y - floor_offset,
+			view.end_x + floor_offset,
+			view.end_y + floor_offset
+		};
+
 		if (map_z == view.end_z && view.start_z != view.end_z) {
-			shade_drawer->draw(*sprite_batch, view, options);
+			shade_drawer->draw(ctx);
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			DrawMapLayer(map_z, live_client, floor_params);
 		}
 
-		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
+		preview_drawer->draw(*sprite_batch, canvas, view, floor_params, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
 
-		--view.start_x;
-		--view.start_y;
-		++view.end_x;
-		++view.end_y;
+		++floor_offset;
 	}
 }
 
 void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
-	grid_drawer->DrawIngameBox(*sprite_batch, view, options, bounds);
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	grid_drawer->DrawIngameBox(ctx, bounds);
 }
 
 void MapDrawer::DrawGrid(const ViewBounds& bounds) {
-	grid_drawer->DrawGrid(*sprite_batch, view, options, bounds);
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	grid_drawer->DrawGrid(ctx, bounds);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
@@ -424,8 +469,9 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawMapLayer(int map_z, bool live_client, const FloorViewParams& floor_params) {
+	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
+	map_layer_drawer->Draw(ctx, map_z, live_client, floor_params);
 }
 
 void MapDrawer::DrawLight() {

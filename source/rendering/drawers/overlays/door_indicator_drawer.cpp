@@ -18,7 +18,7 @@ void DoorIndicatorDrawer::clear() {
 	requests.clear();
 }
 
-void DoorIndicatorDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void DoorIndicatorDrawer::draw(NVGcontext* vg, const ViewState& view) {
 	if (requests.empty() || !vg) {
 		return;
 	}

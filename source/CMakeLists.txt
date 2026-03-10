@@ -159,6 +159,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h

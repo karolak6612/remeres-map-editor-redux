@@ -64,7 +64,7 @@ class MapDrawer {
 	MapCanvas* canvas;
 	Editor& editor;
 	DrawingOptions options;
-	RenderView view;
+	ViewState view;
 	std::shared_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
 	std::unique_ptr<TooltipDrawer> tooltip_drawer;
@@ -101,8 +101,8 @@ class MapDrawer {
 	std::unique_ptr<GLBuffer> pp_ebo;
 
 	void InitPostProcess();
-	void DrawPostProcess(const RenderView& view, const DrawingOptions& options);
-	void UpdateFBO(const RenderView& view, const DrawingOptions& options);
+	void DrawPostProcess(const ViewState& view, const DrawingOptions& options);
+	void UpdateFBO(const ViewState& view, const DrawingOptions& options);
 
 protected:
 	friend class BrushOverlayDrawer;
@@ -152,7 +152,7 @@ public:
 	}
 
 private:
-	void DrawMapLayer(int map_z, bool live_client);
+	void DrawMapLayer(int map_z, bool live_client, const FloorViewParams& floor_params);
 	bool renderers_initialized = false;
 };
 

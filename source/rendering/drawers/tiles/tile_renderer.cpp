@@ -10,6 +10,7 @@
 #include "brushes/waypoint/waypoint_brush.h"
 #include "game/complexitem.h"
 
+#include "rendering/core/draw_context.h"
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/render_view.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -151,7 +152,11 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
+void TileRenderer::DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& view = ctx.view;
+	const auto& options = ctx.options;
+	auto* light_buffer = draw_lights ? &ctx.light_buffer : nullptr;
 	if (!location) {
 		return;
 	}

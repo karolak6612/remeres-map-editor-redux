@@ -5,7 +5,7 @@
 #include "map/position.h"
 
 struct NVGcontext;
-struct RenderView;
+struct ViewState;
 
 class DoorIndicatorDrawer {
 public:
@@ -21,7 +21,7 @@ public:
 
 	void addDoor(const Position& pos, bool locked, bool south, bool east);
 	void clear();
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(NVGcontext* vg, const ViewState& view);
 
 private:
 	std::vector<DoorRequest> requests;

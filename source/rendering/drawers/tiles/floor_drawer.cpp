@@ -21,7 +21,7 @@ FloorDrawer::FloorDrawer() {
 FloorDrawer::~FloorDrawer() {
 }
 
-void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor) {
+void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const DrawingOptions& options, Editor& editor) {
 
 	// Draw "transparent higher floor"
 	if (view.floor != 8 && view.floor != 0 && options.transparent_floors) {

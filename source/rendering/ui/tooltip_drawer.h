@@ -137,7 +137,7 @@ public:
 	void addWaypointTooltip(Position pos, std::string_view name);
 
 	// Draw all tooltips
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(NVGcontext* vg, const ViewState& view);
 
 	// Clear all tooltips
 	void clear();

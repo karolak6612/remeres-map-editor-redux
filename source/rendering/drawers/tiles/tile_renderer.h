@@ -8,8 +8,7 @@
 class TileLocation;
 class Tile;
 class Item;
-struct RenderView;
-struct DrawingOptions;
+struct DrawContext;
 class Editor;
 class ItemDrawer;
 class SpriteDrawer;
@@ -18,9 +17,7 @@ class CreatureNameDrawer;
 class FloorDrawer;
 class MarkerDrawer;
 class TooltipDrawer;
-struct LightBuffer;
 class SpriteBatch;
-class PrimitiveRenderer;
 struct SpritePatterns;
 class ItemDefinitionView;
 
@@ -28,7 +25,7 @@ class TileRenderer {
 public:
 	TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed);
 
-	void DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1, LightBuffer* light_buffer = nullptr);
+	void DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1, bool draw_lights = false);
 
 private:
 	void PreloadItem(const Tile* tile, Item* item, const ItemDefinitionView& definition, const SpritePatterns* patterns = nullptr);
