@@ -40,11 +40,11 @@ namespace {
 }
 
 NormalImage* GraphicsAssembler::ensureImage(GraphicManager& manager, uint32_t sprite_id) {
-	if (sprite_id >= manager.image_space.size()) {
+	if (sprite_id >= manager.db().images().size()) {
 		return nullptr;
 	}
 
-	auto& slot = manager.image_space[sprite_id];
+	auto& slot = manager.db().images()[sprite_id];
 	if (!slot) {
 		auto image = std::make_unique<NormalImage>();
 		image->id = sprite_id;
@@ -101,24 +101,18 @@ bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCat
 	}
 	sprite_ptr->updateSimpleStatus();
 
-	manager.sprite_space[entry.client_id] = std::move(sprite);
+	manager.db().sprites()[entry.client_id] = std::move(sprite);
 	return true;
 }
 
 void GraphicsAssembler::resetRuntimeState(GraphicManager& manager) {
 	SpritePreloader::get().clear();
-	manager.unloaded = true;
-	manager.sprite_archive_.reset();
-	manager.spritefile.clear();
-	manager.sprite_space.clear();
-	manager.image_space.clear();
-	manager.resident_images.clear();
-	manager.resident_game_sprites.clear();
-	manager.collector.Clear();
-	if (manager.atlas_manager_) {
-		manager.atlas_manager_->clear();
-		manager.atlas_manager_.reset();
-	}
+	manager.loader().unloaded = true;
+	manager.loader().sprite_archive_.reset();
+	manager.loader().spritefile.clear();
+	manager.db().clear();
+	manager.gc().clear();
+	manager.atlas().clear();
 }
 
 bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catalog, std::shared_ptr<SpriteArchive> sprite_archive, wxString& error, std::vector<std::string>& warnings) {
@@ -135,8 +129,7 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 	const auto image_space_size = imageSpaceSize(catalog);
 
 	resetRuntimeState(manager);
-	manager.sprite_space.resize(sprite_space_size);
-	manager.image_space.resize(image_space_size);
+	manager.db().resize(sprite_space_size, image_space_size);
 
 	for (uint32_t client_id = 100; client_id <= catalog.lastEntryId(); ++client_id) {
 		const auto* entry = catalog.entry(client_id);
@@ -150,16 +143,16 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 		}
 	}
 
-	manager.dat_format = catalog.format;
-	manager.item_count = catalog.item_count;
-	manager.creature_count = catalog.creature_count;
-	manager.is_extended = catalog.is_extended;
-	manager.has_transparency = catalog.has_transparency;
-	manager.has_frame_durations = catalog.has_frame_durations;
-	manager.has_frame_groups = catalog.has_frame_groups;
-	manager.sprite_archive_ = std::move(sprite_archive);
-	manager.spritefile = manager.sprite_archive_->fileName();
-	manager.unloaded = false;
+	manager.loader().dat_format = catalog.format;
+	manager.loader().item_count = catalog.item_count;
+	manager.loader().creature_count = catalog.creature_count;
+	manager.loader().is_extended = catalog.is_extended;
+	manager.loader().has_transparency = catalog.has_transparency;
+	manager.loader().has_frame_durations = catalog.has_frame_durations;
+	manager.loader().has_frame_groups = catalog.has_frame_groups;
+	manager.loader().sprite_archive_ = std::move(sprite_archive);
+	manager.loader().spritefile = manager.loader().sprite_archive_->fileName();
+	manager.loader().unloaded = false;
 
 	return true;
 }

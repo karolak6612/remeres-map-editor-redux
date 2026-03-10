@@ -12,6 +12,9 @@
 #include "rendering/core/texture_garbage_collector.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/render_timer.h"
+#include "rendering/core/sprite_metadata.h"
+#include "rendering/core/sprite_decompression.h"
+#include "rendering/core/sprite_icon_renderer.h"
 #include <atomic>
 #include <cstdint>
 #include <span>
@@ -25,7 +28,7 @@
 #include <wx/bitmap.h>
 #include <wx/dcmemory.h>
 
-enum SpriteSize {
+enum SpriteSize : int {
 	SPRITE_SIZE_16x16,
 	// SPRITE_SIZE_24x24,
 	SPRITE_SIZE_32x32,
@@ -103,80 +106,58 @@ public:
 		return light;
 	}
 
-	// Helper for SpritePreloader to decompress data off-thread
-	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0);
+	// Thin wrappers delegating to SpriteDecompression namespace
+	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0) {
+		return SpriteDecompression::Decompress(dump, use_alpha, id);
+	}
 
-	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha);
+	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
+		SpriteDecompression::ColorizeTemplatePixels(dest, mask, pixelCount, lookHead, lookBody, lookLegs, lookFeet, destHasAlpha);
+	}
 
 	// Exposed for NormalImage::clean to invalidate cache
 	void invalidateCache(const AtlasRegion* region);
 
-private:
+	SpriteIconRenderer& iconRenderer() { return icon_renderer_; }
+
+	// Re-export types for backward compatibility (used by CreatureSprite)
+	using RenderKey = SpriteIconRenderer::RenderKey;
+	using RenderKeyHash = SpriteIconRenderer::RenderKeyHash;
+	using CachedDC = SpriteIconRenderer::CachedDC;
+
 protected:
-	wxMemoryDC* getDC(SpriteSize size);
-	wxMemoryDC* getDC(SpriteSize size, const Outfit& outfit);
 	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
 
-	uint32_t id;
-	std::unique_ptr<wxMemoryDC> dc[SPRITE_SIZE_COUNT];
-	std::unique_ptr<wxBitmap> bm[SPRITE_SIZE_COUNT];
-
 public:
-	// GameSprite info
-	uint8_t height;
-	uint8_t width;
-	uint8_t layers;
-	uint8_t pattern_x;
-	uint8_t pattern_y;
-	uint8_t pattern_z;
-	uint8_t frames;
-	uint32_t numsprites;
-	uint32_t getId() const {
-		return id;
-	}
+	// Sprite metadata (public for GraphicsAssembler direct writes)
+	uint32_t id = 0;
+	uint8_t height = 0;
+	uint8_t width = 0;
+	uint8_t layers = 0;
+	uint8_t pattern_x = 0;
+	uint8_t pattern_y = 0;
+	uint8_t pattern_z = 0;
+	uint8_t frames = 0;
+	uint32_t numsprites = 0;
+
+	uint32_t getId() const { return id; }
 	uint32_t getDebugImageId(size_t index = 0) const;
 
 	std::unique_ptr<Animator> animator;
 
-	uint16_t draw_height;
-	uint16_t drawoffset_x;
-	uint16_t drawoffset_y;
+	uint16_t draw_height = 0;
+	uint16_t drawoffset_x = 0;
+	uint16_t drawoffset_y = 0;
 
-	uint16_t minimap_color;
+	uint16_t minimap_color = 0;
 
 	bool has_light = false;
 	SpriteLight light;
 
 	std::vector<NormalImage*> spriteList;
-	std::vector<std::unique_ptr<TemplateImage>> instanced_templates; // Templates that use this sprite
-	struct CachedDC {
-		std::unique_ptr<wxMemoryDC> dc;
-		std::unique_ptr<wxBitmap> bm;
-	};
+	std::vector<std::unique_ptr<TemplateImage>> instanced_templates;
 
-	struct RenderKey {
-		SpriteSize size;
-		uint32_t colorHash;
-		uint32_t mountColorHash;
-		int lookMount, lookAddon, lookMountHead, lookMountBody, lookMountLegs, lookMountFeet;
-
-		bool operator==(const RenderKey& rk) const {
-			return size == rk.size && colorHash == rk.colorHash && mountColorHash == rk.mountColorHash && lookMount == rk.lookMount && lookAddon == rk.lookAddon && lookMountHead == rk.lookMountHead && lookMountBody == rk.lookMountBody && lookMountLegs == rk.lookMountLegs && lookMountFeet == rk.lookMountFeet;
-		}
-	};
-
-	struct RenderKeyHash {
-		size_t operator()(const RenderKey& k) const noexcept {
-			// Combine hashes of the most significant fields
-			size_t h = std::hash<uint64_t> {}((uint64_t(k.colorHash) << 32) | k.mountColorHash);
-			h ^= std::hash<uint64_t> {}((uint64_t(k.lookMount) << 32) | k.lookAddon) + 0x9e3779b9 + (h << 6) + (h >> 2);
-			h ^= std::hash<uint64_t> {}((uint64_t(k.lookMountHead) << 32) | k.lookMountBody) + 0x9e3779b9 + (h << 6) + (h >> 2);
-			return h;
-		}
-	};
-	std::unordered_map<RenderKey, std::unique_ptr<CachedDC>, RenderKeyHash> colored_dc;
-
-	bool is_resident = false; // Tracks if this GameSprite is in resident_game_sprites
+	bool is_resident = false;
 
 	friend class GraphicManager;
 	friend class GraphicsAssembler;
@@ -190,7 +171,6 @@ public:
 		return cached_default_region;
 	}
 
-	// DEBUG: Get the actual image ID that would be rendered for these coordinates
 	uint32_t getSpriteId(int frameIndex, int pattern_x, int pattern_y) const;
 
 	bool isSimpleAndLoaded() const;
@@ -201,10 +181,12 @@ public:
 	}
 
 protected:
-	// Cache for default state (0,0,0,0) to avoid lookups/virtual calls for simple sprites
 	mutable const AtlasRegion* cached_default_region = nullptr;
 	uint32_t cached_generation_id = 0;
 	uint32_t cached_sprite_id = 0;
+
+private:
+	SpriteIconRenderer icon_renderer_;
 };
 
 #endif

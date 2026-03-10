@@ -163,8 +163,15 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_metadata.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_assembler.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_loader_state.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_archive.h
@@ -236,6 +243,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_pipeline.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
@@ -509,8 +517,14 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_assembler.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_database.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_lifecycle.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_loader_state.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/texture_gc.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_archive.cpp
@@ -580,6 +594,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_pipeline.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/screen.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/scanline.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/xbrz.cpp

@@ -38,6 +38,7 @@ class DoorIndicatorDrawer;
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
 
+class PostProcessPipeline;
 class GridDrawer;
 
 class MapCanvas;
@@ -90,19 +91,7 @@ class MapDrawer {
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
 	// Post-processing
-	std::unique_ptr<GLFramebuffer> scale_fbo;
-	std::unique_ptr<GLTextureResource> scale_texture;
-	int fbo_width = 0;
-	int fbo_height = 0;
-	bool m_lastAaMode = false;
-
-	std::unique_ptr<GLVertexArray> pp_vao;
-	std::unique_ptr<GLBuffer> pp_vbo;
-	std::unique_ptr<GLBuffer> pp_ebo;
-
-	void InitPostProcess();
-	void DrawPostProcess(const ViewState& view, const DrawingOptions& options);
-	void UpdateFBO(const ViewState& view, const DrawingOptions& options);
+	std::unique_ptr<PostProcessPipeline> post_process_;
 
 protected:
 	friend class BrushOverlayDrawer;
