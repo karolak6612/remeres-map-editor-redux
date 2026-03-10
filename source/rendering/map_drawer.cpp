@@ -162,9 +162,7 @@ void MapDrawer::SetupVars(const ViewSnapshot& snapshot)
     }
 
     // Calculate pulse for house highlighting
-    double now = wxGetLocalTimeMillis().ToDouble();
-    const double speed = 0.005;
-    frame_options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
+    frame_options.highlight_pulse = FrameOptions::ComputeHighlightPulse(wxGetLocalTimeMillis().ToDouble());
 
     // Construct ViewState from ViewSnapshot
     view.mouse_map_x = snapshot_.mouse_map_x;
