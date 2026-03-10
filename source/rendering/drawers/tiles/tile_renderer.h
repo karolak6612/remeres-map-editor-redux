@@ -10,6 +10,7 @@
 class TileLocation;
 class Tile;
 struct DrawContext;
+struct LightBuffer;
 class Editor;
 class ItemDrawer;
 class SpriteDrawer;
@@ -49,6 +50,15 @@ public:
     void ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan);
 
 private:
+    // PlanTile sub-functions — each handles one logical section.
+    void PlanGroundItem(
+        const DrawContext& ctx, Tile* tile, const Position& position, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
+    );
+    void PlanStackedItems(
+        const DrawContext& ctx, Tile* tile, const Position& position, LightBuffer* light_buffer, uint32_t current_house_id,
+        bool is_house_tile, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
+    );
+
     ItemDrawer* item_drawer;
     SpriteDrawer* sprite_drawer;
     CreatureDrawer* creature_drawer;
