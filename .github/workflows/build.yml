@@ -41,6 +41,7 @@ jobs:
             automake \
             autoconf-archive \
             libtool \
+            libltdl-dev \
             nasm \
             curl \
             zip \
