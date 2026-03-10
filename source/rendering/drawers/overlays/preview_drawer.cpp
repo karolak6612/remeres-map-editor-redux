@@ -105,7 +105,7 @@ void PreviewDrawer::draw(
                             params.green = g;
                             params.blue = b;
                             params.alpha = base_alpha;
-                            item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+                            item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
                         }
                     }
 
@@ -120,9 +120,9 @@ void PreviewDrawer::draw(
                                 params.green = r;
                                 params.blue = g;
                                 params.alpha = (base_alpha == 255) ? b : base_alpha;
-                                item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+                                item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
                             } else {
-                                item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+                                item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
                             }
                         }
                         if (tile->creature && settings.show_creatures) {

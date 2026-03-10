@@ -244,7 +244,6 @@ void MapDrawer::Draw()
         return;
     }
     current_atlas_ = g_gui.gfx.getAtlasManager();
-    entities_.sprite->SetAtlas(current_atlas_);
 
     // Begin Batches
     sprite_batch->begin(view.projectionMatrix, *current_atlas_);

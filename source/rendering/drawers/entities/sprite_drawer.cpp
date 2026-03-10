@@ -27,7 +27,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
     }
 }
 
-void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size)
+void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, const AtlasManager& atlas, int sx, int sy, DrawColor color, int size)
 {
     if (size == 0) {
         size = TILE_SIZE;
@@ -38,27 +38,23 @@ void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawC
     float normalizedB = color.b / 255.0f;
     float normalizedA = color.a / 255.0f;
 
-    if (atlas_) {
-        sprite_batch.drawRect(
-            static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size),
-            glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *atlas_
-        );
-    }
+    sprite_batch.drawRect(
+        static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(size), static_cast<float>(size),
+        glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), atlas
+    );
 }
 
-void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color)
+void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, const AtlasManager& atlas, int sx, int sy, int width, int height, DrawColor color)
 {
     float normalizedR = color.r / 255.0f;
     float normalizedG = color.g / 255.0f;
     float normalizedB = color.b / 255.0f;
     float normalizedA = color.a / 255.0f;
 
-    if (atlas_) {
-        sprite_batch.drawRectLines(
-            static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height),
-            glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), *atlas_
-        );
-    }
+    sprite_batch.drawRectLines(
+        static_cast<float>(sx), static_cast<float>(sy), static_cast<float>(width), static_cast<float>(height),
+        glm::vec4(normalizedR, normalizedG, normalizedB, normalizedA), atlas
+    );
 }
 
 void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color)

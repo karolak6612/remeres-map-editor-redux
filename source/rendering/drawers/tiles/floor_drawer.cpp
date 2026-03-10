@@ -22,7 +22,7 @@ FloorDrawer::FloorDrawer() {
 FloorDrawer::~FloorDrawer() {
 }
 
-void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor) {
+void FloorDrawer::draw(SpriteBatch& sprite_batch, const AtlasManager& atlas, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor) {
 
 	// Draw "transparent higher floor"
 	if (view.floor != 8 && view.floor != 0 && settings.transparent_floors) {
@@ -55,13 +55,13 @@ void FloorDrawer::draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, Sprit
 							params.green = 255;
 							params.blue = 255;
 						}
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(sprite_batch, atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
 					if (view.zoom <= 10.0 || !settings.hide_items_when_zoomed) {
 						for (const auto& item : tile->items) {
 							BlitItemParams params(tile, item.get(), settings, frame);
 							params.alpha = 96;
-							item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+							item_drawer->BlitItem(sprite_batch, atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 						}
 					}
 				}

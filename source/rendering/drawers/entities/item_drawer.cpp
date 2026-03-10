@@ -54,7 +54,7 @@ ItemDrawer::ItemDrawer() { }
 ItemDrawer::~ItemDrawer() { }
 
 void ItemDrawer::BlitItem(
-    SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y,
+    SpriteBatch& sprite_batch, const AtlasManager& atlas, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y,
     const BlitItemParams& params
 )
 {
@@ -89,24 +89,24 @@ void ItemDrawer::BlitItem(
     if (!settings.ingame && settings.show_tech_items) {
         // Red invalid client id
         if (!it) {
-            sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
+            sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
             return;
         }
 
         switch (it.clientId()) {
             case SpecialClientId::INVISIBLE_STAIRS:
-                sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
+                sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
                 return;
 
             case SpecialClientId::INVISIBLE_WALKABLE_470:
             case SpecialClientId::INVISIBLE_WALKABLE_17970:
             case SpecialClientId::INVISIBLE_WALKABLE_20028:
             case SpecialClientId::INVISIBLE_WALKABLE_34168:
-                sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
+                sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
                 return;
 
             case SpecialClientId::INVISIBLE_WALL:
-                sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(0, green, blue, 80));
+                sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(0, green, blue, 80));
                 return;
 
             default:
@@ -250,10 +250,10 @@ void ItemDrawer::BlitItem(
             // So we don't need manual enable/disable here anymore.
 
             sprite_drawer->glBlitSquare(
-                sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2
+                sprite_batch, atlas, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2
             );
             sprite_drawer->glBlitSquare(
-                sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize
+                sprite_batch, atlas, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize
             );
         }
     }

@@ -80,7 +80,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* 
 						params.green = 160;
 						params.blue = 160;
 						params.alpha = 160;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
 						BlitItemParams params(pos, item, settings, frame);
 						params.ephemeral = true;
@@ -88,7 +88,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* 
 						params.green = 160;
 						params.blue = 160;
 						params.alpha = 160;
-						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+						item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
 				}
 

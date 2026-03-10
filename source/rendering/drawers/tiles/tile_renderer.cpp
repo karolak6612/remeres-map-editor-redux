@@ -334,7 +334,7 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
 
     // Only-colors mode: colored square
     if (plan.color_square) {
-        sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, plan.color_square->color);
+        sprite_drawer->glBlitSquare(sprite_batch, ctx.atlas, draw_x, draw_y, plan.color_square->color);
     }
 
     // Zone brush fallback
@@ -345,14 +345,14 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
 
     // House border highlight
     if (plan.house_border) {
-        sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, plan.house_border->color);
+        sprite_drawer->glDrawBox(sprite_batch, ctx.atlas, draw_x, draw_y, 32, 32, plan.house_border->color);
     }
 
     // Item draw commands (ground + stacked items in order)
     for (auto& cmd : plan.items) {
         // Fix up patterns pointer to point to the command's owned copy
         cmd.params.patterns = &cmd.patterns;
-        item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, cmd.params);
+        item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, cmd.params);
     }
 
     // Creature draw

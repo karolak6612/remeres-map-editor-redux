@@ -20,6 +20,7 @@ class GameSprite;
 struct RenderSettings;
 struct FrameOptions;
 class SpriteBatch;
+class AtlasManager;
 struct SpritePatterns;
 
 struct BlitItemParams {
@@ -45,7 +46,7 @@ public:
 	ItemDrawer();
 	~ItemDrawer();
 
-	void BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
+	void BlitItem(SpriteBatch& sprite_batch, const AtlasManager& atlas, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y, const BlitItemParams& params);
 
 	void DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ServerItemId item_id, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha);
 

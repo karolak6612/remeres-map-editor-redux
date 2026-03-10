@@ -17,13 +17,14 @@ class SpriteDrawer;
 class CreatureDrawer;
 class SpriteBatch;
 class PrimitiveRenderer;
+class AtlasManager;
 
 class FloorDrawer {
 public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor);
+	void draw(SpriteBatch& sprite_batch, const AtlasManager& atlas, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor);
 };
 
 #endif
