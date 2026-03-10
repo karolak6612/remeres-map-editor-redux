@@ -19,18 +19,21 @@
 #define RME_RENDERING_POSTPROCESS_PIPELINE_H_
 
 #include <memory>
+#include <string>
+#include <vector>
 
 class GLFramebuffer;
 class GLTextureResource;
 class GLVertexArray;
 class GLBuffer;
+class PostProcessManager;
 struct ViewState;
 struct DrawingOptions;
 
 class PostProcessPipeline {
 public:
-	PostProcessPipeline() = default;
-	~PostProcessPipeline() = default;
+	PostProcessPipeline();
+	~PostProcessPipeline();
 
 	PostProcessPipeline(const PostProcessPipeline&) = delete;
 	PostProcessPipeline& operator=(const PostProcessPipeline&) = delete;
@@ -43,9 +46,14 @@ public:
 	// Resolves FBO to screen: draws post-process quad, unbinds FBO, restores viewport.
 	void End(const ViewState& view, const DrawingOptions& options);
 
+	// Expose effect names for UI (preferences page)
+	std::vector<std::string> GetEffectNames() const;
+
 private:
 	void UpdateFBO(const ViewState& view, const DrawingOptions& options);
 	void DrawPostProcess(const ViewState& view, const DrawingOptions& options);
+
+	std::unique_ptr<PostProcessManager> post_process_mgr_;
 
 	std::unique_ptr<GLFramebuffer> scale_fbo_;
 	std::unique_ptr<GLTextureResource> scale_texture_;

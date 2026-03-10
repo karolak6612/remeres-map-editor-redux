@@ -7,7 +7,6 @@
 // glut include removed
 
 #include "rendering/drawers/overlays/brush_overlay_drawer.h"
-#include "rendering/map_drawer.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
@@ -28,7 +27,6 @@
 
 #include "brushes/brush.h"
 
-#include "rendering/ui/drawing_controller.h"
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/creature/creature_brush.h"
 #include "brushes/house/house_exit_brush.h"
@@ -99,7 +97,7 @@ BrushOverlayDrawer::BrushOverlayDrawer() {
 BrushOverlayDrawer::~BrushOverlayDrawer() {
 }
 
-void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Editor& editor) {
+void BrushOverlayDrawer::draw(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_dragging_draw, int last_click_map_x, int last_click_map_y) {
 	auto& sprite_batch = ctx.sprite_batch;
 	auto& primitive_renderer = ctx.primitive_renderer;
 	const auto& view = ctx.view;
@@ -131,14 +129,14 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 
 	glm::vec4 brushColor = get_brush_color(brushColorType);
 
-	if (drawer->canvas->drawing_controller->IsDraggingDraw()) {
+	if (is_dragging_draw) {
 		ASSERT(brush->canDrag());
 
 		if (brush->is<WallBrush>()) {
-			int last_click_start_map_x = std::min(drawer->canvas->last_click_map_x, view.mouse_map_x);
-			int last_click_start_map_y = std::min(drawer->canvas->last_click_map_y, view.mouse_map_y);
-			int last_click_end_map_x = std::max(drawer->canvas->last_click_map_x, view.mouse_map_x) + 1;
-			int last_click_end_map_y = std::max(drawer->canvas->last_click_map_y, view.mouse_map_y) + 1;
+			int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
+			int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
+			int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
+			int last_click_end_map_y = std::max(last_click_map_y, view.mouse_map_y) + 1;
 
 			int last_click_start_sx = last_click_start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 			int last_click_start_sy = last_click_start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
@@ -178,18 +176,18 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 					int start_x, end_x;
 					int start_y, end_y;
 
-					if (view.mouse_map_x < drawer->canvas->last_click_map_x) {
+					if (view.mouse_map_x < last_click_map_x) {
 						start_x = view.mouse_map_x;
-						end_x = drawer->canvas->last_click_map_x;
+						end_x = last_click_map_x;
 					} else {
-						start_x = drawer->canvas->last_click_map_x;
+						start_x = last_click_map_x;
 						end_x = view.mouse_map_x;
 					}
-					if (view.mouse_map_y < drawer->canvas->last_click_map_y) {
+					if (view.mouse_map_y < last_click_map_y) {
 						start_y = view.mouse_map_y;
-						end_y = drawer->canvas->last_click_map_y;
+						end_y = last_click_map_y;
 					} else {
-						start_y = drawer->canvas->last_click_map_y;
+						start_y = last_click_map_y;
 						end_y = view.mouse_map_y;
 					}
 
@@ -213,10 +211,10 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 						}
 					}
 				} else {
-					int last_click_start_map_x = std::min(drawer->canvas->last_click_map_x, view.mouse_map_x);
-					int last_click_start_map_y = std::min(drawer->canvas->last_click_map_y, view.mouse_map_y);
-					int last_click_end_map_x = std::max(drawer->canvas->last_click_map_x, view.mouse_map_x) + 1;
-					int last_click_end_map_y = std::max(drawer->canvas->last_click_map_y, view.mouse_map_y) + 1;
+					int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
+					int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
+					int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
+					int last_click_end_map_y = std::max(last_click_map_y, view.mouse_map_y) + 1;
 
 					int last_click_start_sx = last_click_start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 					int last_click_start_sy = last_click_start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
@@ -250,24 +248,24 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 				int start_x, end_x;
 				int start_y, end_y;
 				int width = std::max(
-					std::abs(std::max(view.mouse_map_y, drawer->canvas->last_click_map_y) - std::min(view.mouse_map_y, drawer->canvas->last_click_map_y)),
-					std::abs(std::max(view.mouse_map_x, drawer->canvas->last_click_map_x) - std::min(view.mouse_map_x, drawer->canvas->last_click_map_x))
+					std::abs(std::max(view.mouse_map_y, last_click_map_y) - std::min(view.mouse_map_y, last_click_map_y)),
+					std::abs(std::max(view.mouse_map_x, last_click_map_x) - std::min(view.mouse_map_x, last_click_map_x))
 				);
 
-				if (view.mouse_map_x < drawer->canvas->last_click_map_x) {
-					start_x = drawer->canvas->last_click_map_x - width;
-					end_x = drawer->canvas->last_click_map_x;
+				if (view.mouse_map_x < last_click_map_x) {
+					start_x = last_click_map_x - width;
+					end_x = last_click_map_x;
 				} else {
-					start_x = drawer->canvas->last_click_map_x;
-					end_x = drawer->canvas->last_click_map_x + width;
+					start_x = last_click_map_x;
+					end_x = last_click_map_x + width;
 				}
 
-				if (view.mouse_map_y < drawer->canvas->last_click_map_y) {
-					start_y = drawer->canvas->last_click_map_y - width;
-					end_y = drawer->canvas->last_click_map_y;
+				if (view.mouse_map_y < last_click_map_y) {
+					start_y = last_click_map_y - width;
+					end_y = last_click_map_y;
 				} else {
-					start_y = drawer->canvas->last_click_map_y;
-					end_y = drawer->canvas->last_click_map_y + width;
+					start_y = last_click_map_y;
+					end_y = last_click_map_y + width;
 				}
 
 				int center_x = start_x + (end_x - start_x) / 2;
@@ -376,7 +374,7 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 								if (brush->is<WaypointBrush>()) {
 									uint8_t r, g, b;
 									get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
-									drawer->brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
+									brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
 								} else {
 									glm::vec4 c = brushColor;
 									if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {
@@ -397,7 +395,7 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, MapDrawer* drawer, ItemDra
 								if (brush->is<WaypointBrush>()) {
 									uint8_t r, g, b;
 									get_color(brush, editor, Position(view.mouse_map_x + x, view.mouse_map_y + y, view.floor), r, g, b);
-									drawer->brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
+									brush_cursor_drawer->draw(sprite_batch, primitive_renderer, cx, cy, brush, r, g, b);
 								} else {
 									glm::vec4 c = brushColor;
 									if (brush->is<HouseExitBrush>() || brush->is<OptionalBorderBrush>()) {

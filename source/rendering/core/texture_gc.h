@@ -25,10 +25,12 @@
 
 class GameSprite;
 class SpriteDatabase;
+class SpritePreloader;
 
 class TextureGC {
 public:
 	TextureGC();
+	~TextureGC();
 
 	void updateTime();
 	time_t getCachedTime() const { return cached_time_; }
@@ -44,9 +46,13 @@ public:
 
 	TextureGarbageCollector& collector() { return collector_; }
 
+	// Sprite preloader (background decompression threads)
+	SpritePreloader& preloader() { return *preloader_; }
+
 private:
 	TextureGarbageCollector collector_;
 	std::unique_ptr<RenderTimer> animation_timer_;
+	std::unique_ptr<SpritePreloader> preloader_;
 	time_t cached_time_ = 0;
 };
 

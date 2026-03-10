@@ -235,6 +235,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/frame_pacer.h
@@ -242,6 +243,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/light_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/sprite_icon_generator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effect_registry.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_pipeline.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
@@ -584,6 +586,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/fps_counter.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/frame_pacer.cpp

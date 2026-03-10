@@ -49,7 +49,7 @@ GraphicManager::~GraphicManager() {
 void GraphicManager::clear() {
 	// CRITICAL: Ensure preloader is cleared before modifying image_space to avoid
 	// use-after-free or OOB access in SpritePreloader::update() on main thread.
-	SpritePreloader::get().clear();
+	gc_.preloader().clear();
 	db_.clear();
 	loader_.clear();
 	gc_.clear();

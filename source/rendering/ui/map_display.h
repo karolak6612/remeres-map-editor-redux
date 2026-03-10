@@ -161,24 +161,16 @@ public:
 
 	FramePacer frame_pacer;
 
-	friend class MapDrawer;
-	friend class SelectionDrawer;
-	friend class BrushOverlayDrawer;
-	friend class DragShadowDrawer;
-	friend class PreviewDrawer;
-	friend class SelectionController;
-	friend class DrawingController;
-
 	std::unique_ptr<SelectionController> selection_controller;
 	std::unique_ptr<DrawingController> drawing_controller;
 	std::unique_ptr<MapMenuHandler> menu_handler;
+
+	MapWindow* GetMapWindow() const;
 
 private:
 	void EnsureNanoVG();
 	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
 	void PerformGarbageCollection();
-
-	MapWindow* GetMapWindow() const;
 	bool renderer_initialized = false;
 	long m_last_gc_time = 0;
 };

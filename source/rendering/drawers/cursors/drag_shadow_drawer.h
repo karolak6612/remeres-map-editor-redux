@@ -5,8 +5,10 @@
 #ifndef RME_RENDERING_DRAG_SHADOW_DRAWER_H_
 #define RME_RENDERING_DRAG_SHADOW_DRAWER_H_
 
+#include "map/position.h"
+
 struct DrawContext;
-class MapDrawer;
+class Editor;
 
 class ItemDrawer;
 class SpriteDrawer;
@@ -17,7 +19,7 @@ public:
 	DragShadowDrawer();
 	~DragShadowDrawer();
 
-	void draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer);
+	void draw(const DrawContext& ctx, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const Position& drag_start);
 };
 
 #endif

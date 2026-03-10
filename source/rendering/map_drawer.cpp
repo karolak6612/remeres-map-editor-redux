@@ -87,7 +87,15 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 
 	creature_name_drawer = std::make_unique<CreatureNameDrawer>();
 
-	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
+	tile_renderer = std::make_unique<TileRenderer>(TileRenderDeps {
+		.item_drawer = item_drawer.get(),
+		.sprite_drawer = sprite_drawer.get(),
+		.creature_drawer = creature_drawer.get(),
+		.creature_name_drawer = creature_name_drawer.get(),
+		.marker_drawer = marker_drawer.get(),
+		.tooltip_drawer = tooltip_drawer.get(),
+		.editor = &editor
+	});
 
 	grid_drawer = std::make_unique<GridDrawer>();
 	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
@@ -244,12 +252,16 @@ void MapDrawer::Draw() {
 	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, options, light_buffer };
 
 	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get());
+		drag_shadow_drawer->draw(ctx, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(),
+			canvas->selection_controller->GetDragStartPosition());
 	}
 
 	live_cursor_drawer->draw(ctx, editor);
 
-	brush_overlay_drawer->draw(ctx, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), editor);
+	brush_overlay_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(),
+		brush_cursor_drawer.get(), editor,
+		canvas->drawing_controller->IsDraggingDraw(),
+		canvas->last_click_map_x, canvas->last_click_map_y);
 
 	const ViewBounds base_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
 

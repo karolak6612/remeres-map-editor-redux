@@ -41,12 +41,22 @@ void main() {
 }
 )";
 
+PostProcessPipeline::PostProcessPipeline() : post_process_mgr_(std::make_unique<PostProcessManager>()) {
+	post_process_mgr_->LoadFromRegistry();
+}
+
+PostProcessPipeline::~PostProcessPipeline() = default;
+
+std::vector<std::string> PostProcessPipeline::GetEffectNames() const {
+	return post_process_mgr_->GetEffectNames();
+}
+
 void PostProcessPipeline::Initialize() {
 	if (pp_vao_) {
 		return;
 	}
 
-	PostProcessManager::Instance().Initialize(screen_vert);
+	post_process_mgr_->Initialize(screen_vert);
 
 	pp_vao_ = std::make_unique<GLVertexArray>();
 	pp_vbo_ = std::make_unique<GLBuffer>();
@@ -99,7 +109,7 @@ void PostProcessPipeline::DrawPostProcess(const ViewState& view, const DrawingOp
 		return;
 	}
 
-	ShaderProgram* shader = PostProcessManager::Instance().GetEffect(options.screen_shader_name);
+	ShaderProgram* shader = post_process_mgr_->GetEffect(options.screen_shader_name);
 	if (!shader) {
 		return;
 	}

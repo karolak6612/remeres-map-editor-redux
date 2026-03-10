@@ -23,11 +23,14 @@
 TextureGC::TextureGC() {
 	animation_timer_ = std::make_unique<RenderTimer>();
 	animation_timer_->Start();
+	preloader_ = std::make_unique<SpritePreloader>();
 }
+
+TextureGC::~TextureGC() = default;
 
 void TextureGC::updateTime() {
 	cached_time_ = time(nullptr);
-	SpritePreloader::get().update();
+	preloader_->update();
 }
 
 void TextureGC::addSpriteToCleanup(GameSprite* spr) {

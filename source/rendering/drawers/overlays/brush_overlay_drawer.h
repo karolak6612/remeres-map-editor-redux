@@ -10,20 +10,20 @@
 #include <glm/glm.hpp>
 
 struct DrawContext;
-class MapDrawer;
 class Brush;
 class Editor;
 
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
+class BrushCursorDrawer;
 
 class BrushOverlayDrawer {
 public:
 	BrushOverlayDrawer();
 	~BrushOverlayDrawer();
 
-	void draw(const DrawContext& ctx, MapDrawer* drawer, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Editor& editor);
+	void draw(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, bool is_dragging_draw, int last_click_map_x, int last_click_map_y);
 
 private:
 	enum BrushColor {

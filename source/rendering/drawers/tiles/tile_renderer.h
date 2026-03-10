@@ -14,16 +14,25 @@ class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
 class CreatureNameDrawer;
-class FloorDrawer;
 class MarkerDrawer;
 class TooltipDrawer;
 class SpriteBatch;
 struct SpritePatterns;
 class ItemDefinitionView;
 
+struct TileRenderDeps {
+	ItemDrawer* item_drawer = nullptr;
+	SpriteDrawer* sprite_drawer = nullptr;
+	CreatureDrawer* creature_drawer = nullptr;
+	CreatureNameDrawer* creature_name_drawer = nullptr;
+	MarkerDrawer* marker_drawer = nullptr;
+	TooltipDrawer* tooltip_drawer = nullptr;
+	Editor* editor = nullptr;
+};
+
 class TileRenderer {
 public:
-	TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed);
+	explicit TileRenderer(const TileRenderDeps& deps);
 
 	void DrawTile(const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x = -1, int in_draw_y = -1, bool draw_lights = false);
 
@@ -33,7 +42,6 @@ private:
 	ItemDrawer* item_drawer;
 	SpriteDrawer* sprite_drawer;
 	CreatureDrawer* creature_drawer;
-	FloorDrawer* floor_drawer;
 	MarkerDrawer* marker_drawer;
 	TooltipDrawer* tooltip_drawer;
 	CreatureNameDrawer* creature_name_drawer;

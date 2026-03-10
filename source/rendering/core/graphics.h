@@ -49,6 +49,7 @@ class SpriteArchive;
 #include "rendering/core/sprite_loader_state.h"
 #include "rendering/core/texture_gc.h"
 #include "rendering/core/atlas_manager.h"
+#include "rendering/core/shared_geometry.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/image.h"
 #include "rendering/core/normal_image.h"
@@ -103,6 +104,9 @@ public:
 	bool hasAtlasManager() const { return atlas_.has(); }
 	bool ensureAtlasManager() { return atlas_.ensure(); }
 
+	// Shared GPU geometry (quad VBO/EBO)
+	SharedGeometry& sharedGeometry() { return shared_geometry_; }
+
 	// Sub-object accessors for internal/friend use
 	SpriteDatabase& db() { return db_; }
 	AtlasLifecycle& atlas() { return atlas_; }
@@ -114,6 +118,7 @@ private:
 	AtlasLifecycle atlas_;
 	SpriteLoaderState loader_;
 	TextureGC gc_;
+	SharedGeometry shared_geometry_;
 };
 
 #include "minimap_colors.h"

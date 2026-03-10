@@ -1,11 +1,13 @@
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
 #include "rendering/core/shader_program.h"
 #include <spdlog/spdlog.h>
 #include <algorithm>
 
-PostProcessManager& PostProcessManager::Instance() {
-	static PostProcessManager instance;
-	return instance;
+void PostProcessManager::LoadFromRegistry() {
+	for (auto& reg : EffectRegistry::Pending()) {
+		Register(reg.name, reg.fragment_source, reg.vertex_source);
+	}
 }
 
 void PostProcessManager::Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source) {

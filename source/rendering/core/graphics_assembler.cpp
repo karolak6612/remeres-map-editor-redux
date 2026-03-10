@@ -106,7 +106,7 @@ bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCat
 }
 
 void GraphicsAssembler::resetRuntimeState(GraphicManager& manager) {
-	SpritePreloader::get().clear();
+	manager.gc().preloader().clear();
 	manager.loader().unloaded = true;
 	manager.loader().sprite_archive_.reset();
 	manager.loader().spritefile.clear();

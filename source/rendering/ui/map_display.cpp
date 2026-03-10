@@ -26,6 +26,7 @@
 #include <spdlog/spdlog.h>
 
 #include "ui/gui.h"
+#include "app/settings.h"
 #include "editor/editor.h"
 #include "editor/action_queue.h"
 #include "brushes/brush.h"
@@ -265,7 +266,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event) {
 		if (screenshot_controller->IsCapturing()) {
 			options.SetIngame();
 		} else {
-			options.Update();
+			options = DrawingOptions::FromSettings(g_settings, g_gui.GetLightIntensity(), g_gui.GetAmbientLightLevel());
 		}
 
 		options.dragging = selection_controller->IsDragging();
