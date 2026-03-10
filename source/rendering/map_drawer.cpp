@@ -80,47 +80,53 @@ MapDrawer::MapDrawer(Editor& editor) :
 
 	light_drawer = std::make_unique<LightDrawer>();
 
-	sprite_drawer = std::make_unique<SpriteDrawer>();
-	creature_drawer = std::make_unique<CreatureDrawer>();
-	floor_drawer = std::make_unique<FloorDrawer>();
-	item_drawer = std::make_unique<ItemDrawer>();
-	marker_drawer = std::make_unique<MarkerDrawer>();
+	// Entity drawers
+	entities_.sprite = std::make_unique<SpriteDrawer>();
+	entities_.creature = std::make_unique<CreatureDrawer>();
+	entities_.item = std::make_unique<ItemDrawer>();
+	entities_.marker = std::make_unique<MarkerDrawer>();
 
-	creature_name_drawer = std::make_unique<CreatureNameDrawer>();
+	// Orchestrators
+	floor_drawer = std::make_unique<FloorDrawer>();
 
 	tile_renderer = std::make_unique<TileRenderer>(TileRenderDeps {
-		.item_drawer = item_drawer.get(),
-		.sprite_drawer = sprite_drawer.get(),
-		.creature_drawer = creature_drawer.get(),
-		.marker_drawer = marker_drawer.get(),
+		.item_drawer = entities_.item.get(),
+		.sprite_drawer = entities_.sprite.get(),
+		.creature_drawer = entities_.creature.get(),
+		.marker_drawer = entities_.marker.get(),
 		.editor = &editor
 	});
 
-	grid_drawer = std::make_unique<GridDrawer>();
+	overlays_.grid = std::make_unique<GridDrawer>();
 	auto node_request_fn = [this](int x, int y, bool underground) {
 		if (editor.live_manager.GetClient()) {
 			editor.live_manager.GetClient()->queryNode(x, y, underground);
 		}
 	};
-	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor, std::move(node_request_fn));
-	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
-	brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
-	brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
-	drag_shadow_drawer = std::make_unique<DragShadowDrawer>();
-	preview_drawer = std::make_unique<PreviewDrawer>();
+	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), overlays_.grid.get(), &editor, std::move(node_request_fn));
 
-	shade_drawer = std::make_unique<ShadeDrawer>();
+	// Cursor drawers
+	cursors_.live = std::make_unique<LiveCursorDrawer>();
+	cursors_.brush = std::make_unique<BrushCursorDrawer>();
+	cursors_.drag_shadow = std::make_unique<DragShadowDrawer>();
 
+	// Overlay drawers
+	overlays_.brush_overlay = std::make_unique<BrushOverlayDrawer>();
+	overlays_.preview = std::make_unique<PreviewDrawer>();
+	overlays_.shade = std::make_unique<ShadeDrawer>();
+	overlays_.creature_name = std::make_unique<CreatureNameDrawer>();
+	overlays_.hook_indicator = std::make_unique<HookIndicatorDrawer>();
+	overlays_.door_indicator = std::make_unique<DoorIndicatorDrawer>();
+
+	// Infrastructure
 	sprite_batch = std::make_unique<SpriteBatch>();
 	primitive_renderer = std::make_unique<PrimitiveRenderer>();
-	hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
-	door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
 	post_process_ = std::make_unique<PostProcessPipeline>();
 
 	sprite_resolver = std::make_unique<GraphicsSpriteResolver>(g_gui.gfx);
-	item_drawer->SetSpriteResolver(sprite_resolver.get());
-	creature_drawer->SetSpriteResolver(sprite_resolver.get());
-	sprite_drawer->SetSpriteResolver(sprite_resolver.get());
+	entities_.item->SetSpriteResolver(sprite_resolver.get());
+	entities_.creature->SetSpriteResolver(sprite_resolver.get());
+	entities_.sprite->SetSpriteResolver(sprite_resolver.get());
 
 	// Pre-reserve accumulators and light buffer for typical frame sizes
 	accumulators_.reserve(256, 128, 64);
@@ -227,7 +233,7 @@ void MapDrawer::Draw() {
 		return;
 	}
 	current_atlas_ = g_gui.gfx.getAtlasManager();
-	sprite_drawer->SetAtlas(current_atlas_);
+	entities_.sprite->SetAtlas(current_atlas_);
 
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *current_atlas_);
@@ -258,17 +264,17 @@ void MapDrawer::Draw() {
 
 	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
 
-	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(ctx, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(),
+	if (cursors_.drag_shadow) {
+		cursors_.drag_shadow->draw(ctx, editor, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(),
 			snapshot_.drag_start);
 	}
 
-	live_cursor_drawer->draw(ctx, editor);
+	cursors_.live->draw(ctx, editor);
 
 	{
 		Brush* current_brush = g_gui.GetCurrentBrush();
-		brush_overlay_drawer->draw(ctx, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(),
-			brush_cursor_drawer.get(), editor,
+		overlays_.brush_overlay->draw(ctx, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(),
+			cursors_.brush.get(), editor,
 			g_gui.IsDrawingMode(), current_brush, g_gui.GetBrushShape(), g_gui.GetBrushSize(),
 			snapshot_.is_dragging_draw,
 			snapshot_.last_click_map_x, snapshot_.last_click_map_y);
@@ -312,14 +318,14 @@ void MapDrawer::DrawMap() {
 		};
 
 		if (map_z == view.end_z && view.start_z != view.end_z) {
-			shade_drawer->draw(ctx);
+			overlays_.shade->draw(ctx);
 		}
 
 		if (map_z >= view.end_z) {
 			DrawMapLayer(map_z, live_client, floor_params);
 		}
 
-		preview_drawer->draw(ctx, snapshot_, floor_params, map_z, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), g_gui.GetCurrentBrush());
+		overlays_.preview->draw(ctx, snapshot_, floor_params, map_z, editor, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(), g_gui.GetCurrentBrush());
 
 		++floor_offset;
 	}
@@ -327,12 +333,12 @@ void MapDrawer::DrawMap() {
 
 void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
 	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
-	grid_drawer->DrawIngameBox(ctx, bounds);
+	overlays_.grid->DrawIngameBox(ctx, bounds);
 }
 
 void MapDrawer::DrawGrid(const ViewBounds& bounds) {
 	const DrawContext ctx { *sprite_batch, *primitive_renderer, view, render_settings, frame_options, light_buffer, accumulators_, *current_atlas_ };
-	grid_drawer->DrawGrid(ctx, bounds);
+	overlays_.grid->DrawGrid(ctx, bounds);
 }
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
@@ -340,17 +346,17 @@ void MapDrawer::DrawTooltips(NVGcontext* vg) {
 }
 
 void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
-	hook_indicator_drawer->draw(vg, view, accumulators_.hooks);
+	overlays_.hook_indicator->draw(vg, view, accumulators_.hooks);
 }
 
 void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
 	if (render_settings.highlight_locked_doors) {
-		door_indicator_drawer->draw(vg, view, accumulators_.doors);
+		overlays_.door_indicator->draw(vg, view, accumulators_.doors);
 	}
 }
 
 void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
-	creature_name_drawer->draw(vg, view, accumulators_.creature_names);
+	overlays_.creature_name->draw(vg, view, accumulators_.creature_names);
 }
 
 void MapDrawer::DrawMapLayer(int map_z, bool live_client, const FloorViewParams& floor_params) {

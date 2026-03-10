@@ -21,8 +21,6 @@
 class GameSprite;
 
 struct NVGcontext;
-class HookIndicatorDrawer;
-class DoorIndicatorDrawer;
 
 // Storage during drawing, for option caching
 #include "rendering/core/render_settings.h"
@@ -65,6 +63,32 @@ class CreatureNameDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
+// Logical groupings for MapDrawer's many sub-drawers.
+// Each group owns related drawers via unique_ptr.
+
+struct EntityDrawers {
+	std::unique_ptr<SpriteDrawer> sprite;
+	std::unique_ptr<ItemDrawer> item;
+	std::unique_ptr<CreatureDrawer> creature;
+	std::unique_ptr<MarkerDrawer> marker;
+};
+
+struct OverlayDrawers {
+	std::unique_ptr<GridDrawer> grid;
+	std::unique_ptr<HookIndicatorDrawer> hook_indicator;
+	std::unique_ptr<DoorIndicatorDrawer> door_indicator;
+	std::unique_ptr<PreviewDrawer> preview;
+	std::unique_ptr<ShadeDrawer> shade;
+	std::unique_ptr<BrushOverlayDrawer> brush_overlay;
+	std::unique_ptr<CreatureNameDrawer> creature_name;
+};
+
+struct CursorDrawers {
+	std::unique_ptr<LiveCursorDrawer> live;
+	std::unique_ptr<BrushCursorDrawer> brush;
+	std::unique_ptr<DragShadowDrawer> drag_shadow;
+};
+
 class MapDrawer {
 	Editor& editor;
 	RenderSettings render_settings;
@@ -76,23 +100,18 @@ class MapDrawer {
 	FrameAccumulators accumulators_;
 	TooltipRenderer tooltip_renderer;
 	NVGImageCache nvg_image_cache;
-	std::unique_ptr<GridDrawer> grid_drawer;
-	std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
-	std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
-	std::unique_ptr<BrushOverlayDrawer> brush_overlay_drawer;
-	std::unique_ptr<DragShadowDrawer> drag_shadow_drawer;
+
+	// Grouped sub-drawers
+	EntityDrawers entities_;
+	OverlayDrawers overlays_;
+	CursorDrawers cursors_;
+
+	// Orchestrators (not categorized — they coordinate multiple drawers)
 	std::unique_ptr<FloorDrawer> floor_drawer;
-	std::unique_ptr<SpriteDrawer> sprite_drawer;
 	std::unique_ptr<MapLayerDrawer> map_layer_drawer;
-	std::unique_ptr<CreatureDrawer> creature_drawer;
-	std::unique_ptr<ItemDrawer> item_drawer;
-	std::unique_ptr<MarkerDrawer> marker_drawer;
-	std::unique_ptr<PreviewDrawer> preview_drawer;
-	std::unique_ptr<ShadeDrawer> shade_drawer;
 	std::unique_ptr<TileRenderer> tile_renderer;
-	std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
-	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
-	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
+
+	// Infrastructure
 	std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
