@@ -20,6 +20,7 @@
 
 #include "rendering/core/sprite_resolver.h"
 #include "rendering/core/graphics.h"
+#include <cassert>
 
 // Concrete ISpriteResolver implementation that delegates to GraphicManager.
 // Wraps the global GraphicManager to provide sprite lookup through the
@@ -29,7 +30,9 @@ public:
 	explicit GraphicsSpriteResolver(GraphicManager& gfx) : gfx_(gfx) {}
 
 	GameSprite* getSprite(int client_id) override {
-		return dynamic_cast<GameSprite*>(gfx_.getSprite(client_id));
+		Sprite* s = gfx_.getSprite(client_id);
+		assert(s == nullptr || dynamic_cast<GameSprite*>(s) != nullptr);
+		return static_cast<GameSprite*>(s);
 	}
 
 	GameSprite* getCreatureSprite(int look_type) override {

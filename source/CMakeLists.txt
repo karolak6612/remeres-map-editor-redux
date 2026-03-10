@@ -545,6 +545,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/normal_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_archive.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preload_queue.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/multi_draw_indirect_renderer.cpp

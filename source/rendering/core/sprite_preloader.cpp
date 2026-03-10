@@ -212,9 +212,3 @@ void SpritePreloader::update() {
 		}
 	}
 }
-
-namespace rme {
-	void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
-		g_gui.gfx.gc().preloader().preload(spr, pattern_x, pattern_y, pattern_z, frame);
-	}
-}

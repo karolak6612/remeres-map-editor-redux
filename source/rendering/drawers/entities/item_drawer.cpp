@@ -58,6 +58,8 @@ void ItemDrawer::BlitItem(
     const BlitItemParams& params
 )
 {
+    ASSERT(params.settings != nullptr);
+    ASSERT(params.frame != nullptr);
     const Position& pos = params.pos;
     Item* item = params.item;
     const Tile* tile = params.tile;

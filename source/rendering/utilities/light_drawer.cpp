@@ -25,7 +25,10 @@
 #include "rendering/utilities/light_shader.h"
 #include <glm/gtc/matrix_transform.hpp>
 
-LightDrawer::LightDrawer() = default;
+LightDrawer::LightDrawer()
+{
+    gpu_lights_.reserve(512);
+}
 LightDrawer::~LightDrawer() = default;
 
 void LightDrawer::draw(

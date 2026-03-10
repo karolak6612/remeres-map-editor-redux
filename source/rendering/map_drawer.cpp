@@ -100,6 +100,9 @@ MapDrawer::MapDrawer(Editor& editor) : editor(editor)
         .marker_drawer = entities_.marker.get(),
         .editor = &editor
     });
+    // Wire up the preloader so SpritePreloadQueue can call it directly
+    // instead of going through the rme::collectTileSprites() indirection.
+    tile_renderer->setPreloader(&g_gui.gfx.gc().preloader());
 
     overlays_.grid = std::make_unique<GridDrawer>();
     pending_requests_ = std::make_unique<PendingNodeRequests>();

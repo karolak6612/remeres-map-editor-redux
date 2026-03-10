@@ -63,10 +63,15 @@ private:
     SpritePreloadQueue preload_queue_;
 
 public:
+    // Set the preloader used by the internal SpritePreloadQueue.
+    void setPreloader(SpritePreloader* p) { preload_queue_.setPreloader(p); }
+
     // Flush buffered preload requests. Call after Draw() completes.
     void FlushPreloadQueue()
     {
-        preload_queue_.processAll();
+        if (!preload_queue_.empty()) {
+            preload_queue_.processAll();
+        }
         preload_queue_.clear();
     }
 };

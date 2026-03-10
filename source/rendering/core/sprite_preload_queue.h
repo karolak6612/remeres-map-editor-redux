@@ -18,10 +18,10 @@
 #ifndef RME_RENDERING_CORE_SPRITE_PRELOAD_QUEUE_H_
 #define RME_RENDERING_CORE_SPRITE_PRELOAD_QUEUE_H_
 
-#include "rendering/core/sprite_preloader.h"
 #include <vector>
 
 class GameSprite;
+class SpritePreloader;
 
 // Buffers sprite preload requests during the render pass so they can be
 // batch-processed after frame submission, avoiding per-sprite mutex
@@ -36,18 +36,18 @@ struct SpritePreloadQueue {
     };
 
     std::vector<Request> requests;
+    SpritePreloader* preloader_ = nullptr;
+
+    void setPreloader(SpritePreloader* p) { preloader_ = p; }
 
     void enqueue(GameSprite* s, int px, int py, int pz, int f)
     {
         requests.push_back({s, px, py, pz, f});
     }
 
-    void processAll()
-    {
-        for (const auto& req : requests) {
-            rme::collectTileSprites(req.sprite, req.pattern_x, req.pattern_y, req.pattern_z, req.frame);
-        }
-    }
+    void processAll();
+
+    [[nodiscard]] bool empty() const { return requests.empty(); }
 
     void clear()
     {

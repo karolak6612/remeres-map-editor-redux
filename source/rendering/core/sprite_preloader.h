@@ -104,8 +104,4 @@ private:
 	uint64_t active_epoch = 0;
 };
 
-namespace rme {
-	void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame);
-}
-
 #endif
