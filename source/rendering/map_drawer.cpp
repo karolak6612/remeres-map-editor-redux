@@ -140,7 +140,10 @@ MapDrawer::~MapDrawer() {
 }
 
 void MapDrawer::SetupVars(const ViewSnapshot& snapshot) {
-	snapshot_ = snapshot;
+	{
+		std::lock_guard<std::mutex> lock(snapshot_mutex_);
+		snapshot_ = snapshot;
+	}
 
 	frame_options.current_house_id = 0;
 	Brush* brush = g_gui.GetCurrentBrush();

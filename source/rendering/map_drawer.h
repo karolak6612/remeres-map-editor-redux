@@ -40,6 +40,8 @@ struct NVGcontext;
 #include "rendering/ui/tooltip_renderer.h"
 #include "rendering/ui/nvg_image_cache.h"
 
+#include <mutex>
+
 class PostProcessPipeline;
 class AtlasManager;
 class GridDrawer;
@@ -95,6 +97,7 @@ class MapDrawer {
 	FrameOptions frame_options;
 	ViewState view;
 	ViewSnapshot snapshot_;
+	mutable std::mutex snapshot_mutex_;  // Protects snapshot_ for future multi-threaded access
 	std::unique_ptr<LightDrawer> light_drawer;
 	LightBuffer light_buffer;
 
@@ -161,7 +164,8 @@ public:
 	FrameOptions& getFrameOptions() {
 		return frame_options;
 	}
-	const ViewSnapshot& getSnapshot() const {
+	ViewSnapshot getSnapshot() const {
+		std::lock_guard<std::mutex> lock(snapshot_mutex_);
 		return snapshot_;
 	}
 
