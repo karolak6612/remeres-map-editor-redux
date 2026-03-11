@@ -91,9 +91,6 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 				NormalImage* img = spr->spriteList[idx];
 				if (img && !img->isGLLoaded) {
-					// Ensure parent is set so GC can invalidate cached_default_region
-					// when evicting this sprite later (prevents stale cache -> wrong sprite)
-					img->parent = spr;
 					ids_to_enqueue.push_back({ { archive.get(), img->id }, img->generation_id });
 				}
 			}

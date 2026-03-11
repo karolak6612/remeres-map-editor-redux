@@ -115,9 +115,6 @@ public:
 		SpriteDecompression::ColorizeTemplatePixels(dest, mask, pixelCount, lookHead, lookBody, lookLegs, lookFeet, destHasAlpha);
 	}
 
-	// Exposed for NormalImage::clean to invalidate cache
-	void invalidateCache(const AtlasRegion* region);
-
 	SpriteIconRenderer& iconRenderer() { return icon_renderer_; }
 
 protected:

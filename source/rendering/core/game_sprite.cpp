@@ -57,14 +57,6 @@ GameSprite::~GameSprite() {
 	unloadDC();
 }
 
-void GameSprite::invalidateCache(const AtlasRegion* region) {
-	if (cached_default_region == region) {
-		cached_default_region = nullptr;
-		cached_generation_id = 0;
-		cached_sprite_id = 0;
-	}
-}
-
 void GameSprite::clean(time_t time, int longevity) {
 	for (auto& iter : instanced_templates) {
 		iter->clean(time, longevity);
@@ -145,7 +137,6 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 				cached_sprite_id = 0;
 			}
 
-			spriteList[0]->parent = this;
 			return valid_region;
 		}
 	}
@@ -165,7 +156,6 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 	}
 
 	if (spriteList[v]) {
-		spriteList[v]->parent = this;
 		return spriteList[v]->getAtlasRegion();
 	}
 	return nullptr;
@@ -212,7 +202,6 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _dir, int _add
 		return img->getAtlasRegion();
 	}
 	if (spriteList[v]) {
-		spriteList[v]->parent = this;
 		return spriteList[v]->getAtlasRegion();
 	}
 	return nullptr;

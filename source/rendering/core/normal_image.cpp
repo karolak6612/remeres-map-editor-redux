@@ -43,9 +43,6 @@ void NormalImage::clean(time_t time, int longevity) {
 		if (g_gui.gfx.hasAtlasManager()) {
 			g_gui.gfx.getAtlasManager()->removeSprite(id);
 		}
-		if (parent) {
-			parent->invalidateCache(atlas_region);
-		}
 
 		isGLLoaded = false;
 		atlas_region = nullptr;
