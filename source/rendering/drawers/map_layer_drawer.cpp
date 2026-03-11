@@ -95,10 +95,16 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
         }
 
         TileLocation* location = floor->locs.data();
+
         int draw_x_base = node_draw_x;
         for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
             int draw_y = node_draw_y;
             for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
+                // Early-out: skip empty tile locations before function call overhead
+                if (!location->get()) [[likely]] {
+                    continue;
+                }
+
                 // Culling: Skip tiles that are far outside the viewport.
                 if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
                     continue;
