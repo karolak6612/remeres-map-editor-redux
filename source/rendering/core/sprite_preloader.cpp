@@ -27,7 +27,7 @@ SpritePreloader::~SpritePreloader() {
 
 void SpritePreloader::shutdown() {
 	{
-		std::lock_guard<std::mutex> lock(queue_mutex);
+		std::lock_guard<std::mutex> lock(task_mutex_);
 		if (stopping) {
 			return;
 		}
@@ -40,12 +40,17 @@ void SpritePreloader::shutdown() {
 }
 
 void SpritePreloader::clear() {
-	std::lock_guard<std::mutex> lock(queue_mutex);
-	// Bump the epoch so any in-flight worker result becomes stale.
-	++active_epoch;
-	task_queue = std::queue<Task>();
-	result_queue = std::queue<Result>();
-	pending_ids.clear();
+	{
+		std::lock_guard<std::mutex> lock(task_mutex_);
+		// Bump the epoch so any in-flight worker result becomes stale.
+		++active_epoch;
+		task_queue = std::queue<Task>();
+		pending_ids.clear();
+	}
+	{
+		std::lock_guard<std::mutex> lock(result_mutex_);
+		result_buffer_.clear();
+	}
 }
 
 void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame) {
@@ -98,7 +103,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	}
 
 	if (!ids_to_enqueue.empty()) {
-		std::lock_guard<std::mutex> lock(queue_mutex);
+		std::lock_guard<std::mutex> lock(task_mutex_);
 		if (task_queue.size() > MAX_QUEUE_SIZE) {
 			return; // Drop requests if queue is slammed
 		}
@@ -121,7 +126,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 	while (!stop_token.stop_requested()) {
 		Task task;
 		{
-			std::unique_lock<std::mutex> lock(queue_mutex);
+			std::unique_lock<std::mutex> lock(task_mutex_);
 			cv.wait(lock, [this, &stop_token] { return stop_token.stop_requested() || !task_queue.empty(); });
 			if (stop_token.stop_requested()) {
 				break;
@@ -139,13 +144,13 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.pending.key.id);
 		}
 
-		{
-			std::lock_guard<std::mutex> lock(queue_mutex);
-			if (rgba) {
-				result_queue.push({ task.pending, std::move(rgba), std::move(task.archive) });
-			} else {
-				pending_ids.erase(task.pending);
-			}
+		if (rgba) {
+			// Result push uses separate mutex — no contention with task popping
+			std::lock_guard<std::mutex> lock(result_mutex_);
+			result_buffer_.push_back({ task.pending, std::move(rgba), std::move(task.archive) });
+		} else {
+			std::lock_guard<std::mutex> lock(task_mutex_);
+			pending_ids.erase(task.pending);
 		}
 	}
 }
@@ -154,15 +159,20 @@ void SpritePreloader::update() {
 	// CRITICAL: This method MUST only be called from the main GUI/OpenGL thread.
 	assert(wxIsMainThread());
 
-	// Move results to a local queue under lock to minimize holding time.
-	std::queue<Result> results;
-	uint64_t current_epoch = 0;
+	// Swap result buffer under result_mutex_ — brief lock, no contention with task popping.
+	std::vector<Result> results;
 	{
-		std::lock_guard<std::mutex> lock(queue_mutex);
-		if (result_queue.empty()) {
+		std::lock_guard<std::mutex> lock(result_mutex_);
+		if (result_buffer_.empty()) {
 			return;
 		}
-		results = std::move(result_queue);
+		std::swap(results, result_buffer_);
+	}
+
+	// Read epoch under task_mutex_ (separate from result drain).
+	uint64_t current_epoch;
+	{
+		std::lock_guard<std::mutex> lock(task_mutex_);
 		current_epoch = active_epoch;
 	}
 
@@ -173,10 +183,7 @@ void SpritePreloader::update() {
 	const auto current_archive = gfx_->getSpriteArchive();
 	const bool graphics_unloaded = gfx_->isUnloaded();
 
-	while (!results.empty()) {
-		Result res = std::move(results.front());
-		results.pop();
-
+	for (auto& res : results) {
 		const auto pending = res.pending;
 		const auto id = pending.key.id;
 		keys_processed.push_back(pending);
@@ -202,7 +209,7 @@ void SpritePreloader::update() {
 	}
 
 	if (!keys_processed.empty()) {
-		std::lock_guard<std::mutex> lock(queue_mutex);
+		std::lock_guard<std::mutex> lock(task_mutex_);
 		for (const auto& pending : keys_processed) {
 			pending_ids.erase(pending);
 		}

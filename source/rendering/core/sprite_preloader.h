@@ -98,13 +98,14 @@ private:
 
 	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
 
-	std::mutex queue_mutex;
+	std::mutex task_mutex_;    // Protects task_queue, pending_ids, stopping, active_epoch
+	std::mutex result_mutex_;  // Protects result_buffer_ (separate to avoid contention with task popping)
 	std::condition_variable cv;
 	bool stopping = false;
 	std::vector<std::jthread> workers;
 
 	std::queue<Task> task_queue;
-	std::queue<Result> result_queue;
+	std::vector<Result> result_buffer_;
 	std::unordered_set<PendingSpriteKey, PendingSpriteKeyHash> pending_ids; // To avoid duplicate tasks for the same archive/id/generation/epoch
 	uint64_t active_epoch = 0;
 
