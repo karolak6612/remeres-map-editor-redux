@@ -22,7 +22,6 @@
 #include "app/settings.h"
 #include "editor/editor.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
 
 #include "brushes/brush.h"
 #include "brushes/brush_enums.h"
@@ -79,7 +78,7 @@
 #include "rendering/postprocess/post_process_manager.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 
-MapDrawer::MapDrawer(Editor& editor) : editor(editor)
+MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) : editor(editor), render_ctx_(ctx)
 {
 
     light_drawer = std::make_unique<LightDrawer>();
@@ -102,7 +101,7 @@ MapDrawer::MapDrawer(Editor& editor) : editor(editor)
     });
     // Wire up the preloader so SpritePreloadQueue can call it directly
     // instead of going through the rme::collectTileSprites() indirection.
-    tile_renderer->setPreloader(&g_gui.gfx.gc().preloader());
+    tile_renderer->setPreloader(&render_ctx_.gfx.gc().preloader());
 
     overlays_.grid = std::make_unique<GridDrawer>();
     pending_requests_ = std::make_unique<PendingNodeRequests>();
@@ -127,7 +126,7 @@ MapDrawer::MapDrawer(Editor& editor) : editor(editor)
     primitive_renderer = std::make_unique<PrimitiveRenderer>();
     post_process_ = std::make_unique<PostProcessPipeline>();
 
-    sprite_resolver = std::make_unique<GraphicsSpriteResolver>(g_gui.gfx);
+    sprite_resolver = std::make_unique<GraphicsSpriteResolver>(render_ctx_.gfx);
     entities_.item->SetSpriteResolver(sprite_resolver.get());
     entities_.creature->SetSpriteResolver(sprite_resolver.get());
     entities_.sprite->SetSpriteResolver(sprite_resolver.get());
@@ -224,7 +223,7 @@ void MapDrawer::Release() { }
 
 void MapDrawer::Draw()
 {
-    g_gui.gfx.updateTime();
+    render_ctx_.gfx.updateTime();
 
     light_buffer.Clear();
     frame_options.transient_selection_bounds = std::nullopt;
@@ -238,10 +237,10 @@ void MapDrawer::Draw()
         };
     }
 
-    if (!g_gui.gfx.ensureAtlasManager()) {
+    if (!render_ctx_.gfx.ensureAtlasManager()) {
         return;
     }
-    current_atlas_ = g_gui.gfx.getAtlasManager();
+    current_atlas_ = render_ctx_.gfx.getAtlasManager();
 
     // Begin Batches
     sprite_batch->begin(view.projectionMatrix, *current_atlas_);

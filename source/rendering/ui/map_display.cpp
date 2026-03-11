@@ -44,6 +44,7 @@
 #include "rendering/core/render_settings.h"
 #include "rendering/core/text_renderer.h"
 #include "rendering/core/brush_snapshot.h"
+#include "rendering/core/render_context.h"
 #include "rendering/core/view_snapshot.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/brush_selector.h"
@@ -128,7 +129,7 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
     popup_menu = std::make_unique<MapPopupMenu>(editor);
     animation_timer = std::make_unique<AnimationTimer>(this);
-    drawer = std::make_unique<MapDrawer>(editor);
+    drawer = std::make_unique<MapDrawer>(editor, RenderContext { g_gui.gfx });
     selection_controller = std::make_unique<SelectionController>(this, editor);
     drawing_controller = std::make_unique<DrawingController>(this, editor);
     screenshot_controller = std::make_unique<ScreenshotController>(this);

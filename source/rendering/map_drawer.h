@@ -23,6 +23,7 @@ class GameSprite;
 struct NVGcontext;
 
 // Storage during drawing, for option caching
+#include "rendering/core/render_context.h"
 #include "app/definitions.h"
 #include "game/creature.h"
 #include "game/outfit.h"
@@ -98,6 +99,7 @@ struct CursorDrawers {
 
 class MapDrawer {
     Editor& editor;
+    RenderContext render_ctx_;
     RenderSettings render_settings;
     FrameOptions frame_options;
     ViewState view;
@@ -149,7 +151,7 @@ class MapDrawer {
     AtlasManager* current_atlas_ = nullptr;
 
 public:
-    MapDrawer(Editor& editor);
+    MapDrawer(Editor& editor, RenderContext ctx);
     ~MapDrawer();
 
     void SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush);
