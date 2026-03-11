@@ -168,19 +168,19 @@ ItemAttribute::ItemAttribute() :
 }
 
 ItemAttribute::ItemAttribute(const std::string& str) :
-	type(ItemAttribute::STRING), m_value(str) {
+	type(ItemAttribute::Type::STRING), m_value(str) {
 }
 
 ItemAttribute::ItemAttribute(int32_t i) :
-	type(ItemAttribute::INTEGER), m_value(i) {
+	type(ItemAttribute::Type::INTEGER), m_value(i) {
 }
 
 ItemAttribute::ItemAttribute(double f) :
-	type(ItemAttribute::DOUBLE), m_value(f) {
+	type(ItemAttribute::Type::DOUBLE), m_value(f) {
 }
 
 ItemAttribute::ItemAttribute(bool b) :
-	type(ItemAttribute::BOOLEAN), m_value(b) {
+	type(ItemAttribute::Type::BOOLEAN), m_value(b) {
 }
 
 ItemAttribute::ItemAttribute(const ItemAttribute& o) :
@@ -205,22 +205,22 @@ void ItemAttribute::clear() {
 }
 
 void ItemAttribute::set(const std::string& str) {
-	type = STRING;
+	type = Type::STRING;
 	m_value = str;
 }
 
 void ItemAttribute::set(int32_t i) {
-	type = INTEGER;
+	type = Type::INTEGER;
 	m_value = i;
 }
 
 void ItemAttribute::set(double y) {
-	type = DOUBLE;
+	type = Type::DOUBLE;
 	m_value = y;
 }
 
 void ItemAttribute::set(bool b) {
-	type = BOOLEAN;
+	type = Type::BOOLEAN;
 	m_value = b;
 }
 
@@ -290,7 +290,7 @@ bool ItemAttribute::unserialize(const IOMap& maphandle, BinaryNode* stream) {
 
 	// Read contents
 	switch (rtype) {
-		case STRING: {
+		case Type::STRING: {
 			std::string str;
 			if (!stream->getLongString(str)) {
 				return false;
@@ -298,7 +298,7 @@ bool ItemAttribute::unserialize(const IOMap& maphandle, BinaryNode* stream) {
 			set(str);
 			break;
 		}
-		case INTEGER: {
+		case Type::INTEGER: {
 			uint32_t u32;
 			if (!stream->getU32(u32)) {
 				return false;
@@ -307,7 +307,7 @@ bool ItemAttribute::unserialize(const IOMap& maphandle, BinaryNode* stream) {
 			set(static_cast<int32_t>(u32));
 			break;
 		}
-		case FLOAT: {
+		case Type::FLOAT: {
 			uint32_t u32;
 			if (!stream->getU32(u32)) {
 				return false;
@@ -318,7 +318,7 @@ bool ItemAttribute::unserialize(const IOMap& maphandle, BinaryNode* stream) {
 			set(static_cast<double>(f));
 			break;
 		}
-		case DOUBLE: {
+		case Type::DOUBLE: {
 			uint64_t u64;
 			if (!stream->getU64(u64)) {
 				return false;
@@ -329,7 +329,7 @@ bool ItemAttribute::unserialize(const IOMap& maphandle, BinaryNode* stream) {
 			set(d);
 			break;
 		}
-		case BOOLEAN: {
+		case Type::BOOLEAN: {
 			uint8_t b;
 			if (!stream->getU8(b)) {
 				return false;
@@ -349,20 +349,20 @@ void ItemAttribute::serialize(const IOMap& maphandle, NodeFileWriteHandle& f) co
 
 	// Write contents
 	switch (type) {
-		case STRING:
+		case Type::STRING:
 			f.addLongString(*getString());
 			break;
-		case INTEGER:
+		case Type::INTEGER:
 			f.addU32(static_cast<uint32_t>(*getInteger()));
 			break;
-		case DOUBLE: {
+		case Type::DOUBLE: {
 			double d = *getFloat();
 			uint64_t u64;
 			std::memcpy(&u64, &d, sizeof(double));
 			f.addU64(u64);
 			break;
 		}
-		case BOOLEAN:
+		case Type::BOOLEAN:
 			f.addU8(static_cast<uint8_t>(*getBoolean()));
 			break;
 		default:

@@ -43,7 +43,7 @@ public:
 	ItemAttribute& operator=(const ItemAttribute& o);
 	~ItemAttribute();
 
-	enum Type {
+	enum class Type : uint8_t {
 		STRING = 1,
 		INTEGER = 2,
 		FLOAT = 3,

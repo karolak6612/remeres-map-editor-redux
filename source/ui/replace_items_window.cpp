@@ -411,7 +411,7 @@ void ReplaceItemsDialog::OnExecuteButtonClicked(wxCommandEvent& WXUNUSED(event))
 		std::vector<std::pair<Tile*, Item*>>& result = finder.result;
 
 		if (!result.empty()) {
-			std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_REPLACE_ITEMS);
+			std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::ACTION_REPLACE_ITEMS);
 			for (const auto& [tile, itemToReplace] : result) {
 				std::unique_ptr<Tile> new_tile = TileOperations::deepCopy(tile, editor->map);
 				int index = tile->getIndexOf(itemToReplace);

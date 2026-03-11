@@ -78,7 +78,7 @@ void TeleportPropertyPanel::OnDestChange(wxSpinEvent& event) {
 				Position dest(x_spin->GetValue(), y_spin->GetValue(), z_spin->GetValue());
 				teleport->setDestination(dest);
 
-				std::unique_ptr<Action> action = editor->actionQueue->createAction(ACTION_CHANGE_PROPERTIES);
+				std::unique_ptr<Action> action = editor->actionQueue->createAction(ActionIdentifier::ACTION_CHANGE_PROPERTIES);
 				action->addChange(std::make_unique<Change>(std::move(new_tile)));
 				editor->addAction(std::move(action));
 			}

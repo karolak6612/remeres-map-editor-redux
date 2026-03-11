@@ -15,19 +15,19 @@ void AttributeService::setGridValue(wxGrid* grid, int rowIndex, const std::strin
 
 	grid->SetCellValue(rowIndex, 0, label);
 	switch (attr.type) {
-		case ItemAttribute::STRING: {
+		case ItemAttribute::Type::STRING: {
 			grid->SetCellValue(rowIndex, 1, "String");
 			grid->SetCellValue(rowIndex, 2, wxstr(*attr.getString()));
 			break;
 		}
-		case ItemAttribute::INTEGER: {
+		case ItemAttribute::Type::INTEGER: {
 			grid->SetCellValue(rowIndex, 1, "Number");
 			grid->SetCellValue(rowIndex, 2, i2ws(*attr.getInteger()));
 			grid->SetCellEditor(rowIndex, 2, new wxGridCellNumberEditor);
 			break;
 		}
-		case ItemAttribute::DOUBLE:
-		case ItemAttribute::FLOAT: {
+		case ItemAttribute::Type::DOUBLE:
+		case ItemAttribute::Type::FLOAT: {
 			grid->SetCellValue(rowIndex, 1, "Float");
 			wxString f;
 			f << *attr.getFloat();
@@ -35,7 +35,7 @@ void AttributeService::setGridValue(wxGrid* grid, int rowIndex, const std::strin
 			grid->SetCellEditor(rowIndex, 2, new wxGridCellFloatEditor);
 			break;
 		}
-		case ItemAttribute::BOOLEAN: {
+		case ItemAttribute::Type::BOOLEAN: {
 			grid->SetCellValue(rowIndex, 1, "Boolean");
 			grid->SetCellValue(rowIndex, 2, *attr.getBoolean() ? "1" : "");
 			grid->SetCellRenderer(rowIndex, 2, new wxGridCellBoolRenderer);

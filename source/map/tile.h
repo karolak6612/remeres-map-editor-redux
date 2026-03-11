@@ -58,9 +58,7 @@ enum {
 	TILESTATE_HAS_LIGHT = 0x0200,
 };
 
-enum : uint8_t {
-	INVALID_MINIMAP_COLOR = 0xFF
-};
+constexpr uint8_t INVALID_MINIMAP_COLOR = 0xFF;
 
 class Tile {
 public: // Members
