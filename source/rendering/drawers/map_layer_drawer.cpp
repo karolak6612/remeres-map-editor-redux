@@ -18,9 +18,10 @@
 #include "rendering/drawers/map_layer_drawer.h"
 #include "app/definitions.h"
 #include "app/main.h"
-#include "editor/editor.h"
 #include "map/map.h"
 #include "map/map_region.h"
+#include "rendering/core/map_access.h"
+#include "rendering/core/draw_command_queue.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/light_buffer.h"
@@ -32,17 +33,60 @@
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
+#include "rendering/drawers/tiles/tile_draw_plan.h"
+
+#include <algorithm>
+#include <thread>
+#include <vector>
 
 MapLayerDrawer::MapLayerDrawer(
-    TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests
+    TileRenderer* tile_renderer, GridDrawer* grid_drawer, IMapAccess* map_access, PendingNodeRequests* pending_requests
 ) :
-    tile_renderer(tile_renderer), grid_drawer(grid_drawer), editor(editor), pending_requests_(pending_requests)
+    tile_renderer(tile_renderer), grid_drawer(grid_drawer), map_access(map_access), pending_requests_(pending_requests)
 {
 }
 
 MapLayerDrawer::~MapLayerDrawer() { }
 
-void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params)
+void MapLayerDrawer::MergePlans(std::span<const TileDrawPlan> plans, DrawContext& ctx)
+{
+    for (const auto& plan : plans) {
+        if (!plan.valid) {
+            continue;
+        }
+        tile_renderer->MergePlanSideEffects(plan, ctx);
+    }
+}
+
+void MapLayerDrawer::PlanTilesParallel(
+    const DrawContext& ctx, uint32_t current_house_id, bool draw_lights, std::span<const TilePlanInput> inputs, std::span<TileDrawPlan> plans
+)
+{
+    if (inputs.empty()) {
+        return;
+    }
+
+    const size_t worker_count = std::clamp<size_t>(std::thread::hardware_concurrency(), 1, inputs.size());
+    const size_t chunk_size = (inputs.size() + worker_count - 1) / worker_count;
+    std::vector<std::jthread> workers;
+    workers.reserve(worker_count);
+
+    for (size_t worker_index = 0; worker_index < worker_count; ++worker_index) {
+        const size_t begin = worker_index * chunk_size;
+        if (begin >= inputs.size()) {
+            break;
+        }
+        const size_t end = std::min(inputs.size(), begin + chunk_size);
+        workers.emplace_back([&, begin, end](std::stop_token) {
+            for (size_t i = begin; i < end; ++i) {
+                plans[i].clear();
+                tile_renderer->PlanTile(ctx, inputs[i].location, current_house_id, inputs[i].draw_x, inputs[i].draw_y, draw_lights, plans[i]);
+            }
+        });
+    }
+}
+
+void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params, DrawCommandQueue& command_queue)
 {
     auto& sprite_batch = ctx.sprite_batch;
     const auto& view = ctx.view;
@@ -64,6 +108,8 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
     int base_screen_y = -view.view_scroll_y - offset;
 
     bool draw_lights = settings.isDrawLight() && view.zoom <= 10.0;
+    std::vector<TilePlanInput> tile_inputs;
+    tile_inputs.reserve(2048);
 
     // Common lambda to draw a node
     auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
@@ -110,7 +156,7 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
                     continue;
                 }
 
-                tile_renderer->DrawTile(ctx, location, frame.current_house_id, draw_x_base, draw_y, draw_lights);
+                tile_inputs.push_back({location, draw_x_base, draw_y});
             }
         }
     };
@@ -118,9 +164,9 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
     if (live_client) {
         for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
             for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
-                MapNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
+                MapNode* nd = map_access->getMap().getLeaf(nd_map_x, nd_map_y);
                 if (!nd) {
-                    nd = editor->map.createLeaf(nd_map_x, nd_map_y);
+                    nd = map_access->getMap().createLeaf(nd_map_x, nd_map_y);
                     nd->setVisible(false, false);
                 }
                 drawNode(nd, nd_map_x, nd_map_y, true);
@@ -134,8 +180,26 @@ void MapLayerDrawer::Draw(const DrawContext& ctx, int map_z, bool live_client, c
         int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
         int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
 
-        editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
+        map_access->getMap().visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
             drawNode(nd, nd_map_x, nd_map_y, false);
         });
+    }
+
+    std::vector<TileDrawPlan> plans(tile_inputs.size());
+    for (auto& plan : plans) {
+        plan.reserve();
+    }
+
+    auto& mutable_ctx = const_cast<DrawContext&>(ctx);
+    PlanTilesParallel(ctx, frame.current_house_id, draw_lights, tile_inputs, plans);
+    MergePlans(plans, mutable_ctx);
+    command_queue.clear();
+    command_queue.reserve(tile_inputs.size() * 4);
+
+    for (auto& plan : plans) {
+        if (!plan.valid) {
+            continue;
+        }
+        tile_renderer->QueuePlanCommands(plan, command_queue);
     }
 }

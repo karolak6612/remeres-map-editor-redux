@@ -1,6 +1,7 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/sprites.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/sprite_metadata.h"
 #include "rendering/core/sprite_resolver.h"
 #include "item_definitions/core/item_definition_store.h"
 
@@ -73,15 +74,20 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
     if (spr == nullptr) {
         return;
     }
-    screenx -= spr->getDrawOffset().first;
-    screeny -= spr->getDrawOffset().second;
+    const SpriteMetadata* meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(spr->getId())) : nullptr;
+    if (!meta) {
+        meta = &spr->meta;
+    }
+    screenx -= meta->drawoffset_x;
+    screeny -= meta->drawoffset_y;
 
     int tme = 0; // GetTime() % itype->FPA;
 
-    for (int cx = 0; cx != spr->meta.width; ++cx) {
-        for (int cy = 0; cy != spr->meta.height; ++cy) {
-            for (int cf = 0; cf != spr->meta.layers; ++cf) {
-                const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
+    for (int cx = 0; cx != meta->width; ++cx) {
+        for (int cy = 0; cy != meta->height; ++cy) {
+            for (int cf = 0; cf != meta->layers; ++cf) {
+                const AtlasRegion* region = sprite_resolver ? sprite_resolver->getItemAtlasRegion(static_cast<int>(spr->getId()), cx, cy, cf, -1, 0, 0, 0, tme)
+                                                            : spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
                 if (region) {
                     glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
                 }

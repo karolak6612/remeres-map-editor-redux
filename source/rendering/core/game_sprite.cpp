@@ -5,6 +5,7 @@
 #include "app/main.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_icon_renderer.h"
 #include "ui/gui.h"
 #include "app/settings.h"
 #include "rendering/core/normal_image.h"
@@ -42,15 +43,16 @@ void CreatureSprite::unloadDC() {
 		key.lookMountFeet = outfit.lookMountFeet;
 
 		key.size = SPRITE_SIZE_16x16;
-		parent->iconRenderer().eraseColoredDC(key);
+		parent->icon_data.icon_renderer->eraseColoredDC(key);
 
 		key.size = SPRITE_SIZE_32x32;
-		parent->iconRenderer().eraseColoredDC(key);
+		parent->icon_data.icon_renderer->eraseColoredDC(key);
 	}
 }
 
 GameSprite::GameSprite() :
-	animator(nullptr) {
+	icon_data() {
+	icon_data.icon_renderer = std::make_unique<SpriteIconRenderer>();
 }
 
 GameSprite::~GameSprite() {
@@ -58,13 +60,13 @@ GameSprite::~GameSprite() {
 }
 
 void GameSprite::clean(time_t time, int longevity) {
-	for (auto& iter : instanced_templates) {
+	for (auto& iter : icon_data.instanced_templates) {
 		iter->clean(time, longevity);
 	}
 }
 
 void GameSprite::unloadDC() {
-	icon_renderer_.unloadDC();
+	icon_data.cleanSoftwareData();
 }
 
 int GameSprite::getDrawHeight() const {
@@ -72,20 +74,20 @@ int GameSprite::getDrawHeight() const {
 }
 
 bool GameSprite::isSimpleAndLoaded() const {
-	return meta.is_simple && spriteList[0]->isGLLoaded;
+	return meta.is_simple && !icon_data.sprite_list.empty() && icon_data.sprite_list[0]->isGLLoaded;
 }
 
 uint32_t GameSprite::getDebugImageId(size_t index) const {
-	if (index < spriteList.size() && spriteList[index]->isNormalImage()) {
-		return static_cast<const NormalImage*>(spriteList[index])->id;
+	if (index < icon_data.sprite_list.size() && icon_data.sprite_list[index]->isNormalImage()) {
+		return static_cast<const NormalImage*>(icon_data.sprite_list[index])->id;
 	}
 	return 0;
 }
 
 uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
 	auto idx = getIndex(meta.width, meta.height, 0, pattern_x, pattern_y, 0, frameIndex);
-	if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
-		return static_cast<const NormalImage*>(spriteList[idx])->id;
+	if (idx >= 0 && static_cast<size_t>(idx) < icon_data.sprite_list.size() && icon_data.sprite_list[idx]->isNormalImage()) {
+		return static_cast<const NormalImage*>(icon_data.sprite_list[idx])->id;
 	}
 	return 0;
 }
@@ -122,15 +124,15 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 
 	if (_count == -1 && meta.numsprites == 1 && meta.frames == 1 && meta.layers == 1 && meta.width == 1 && meta.height == 1) {
 		if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0) {
-			if (atlas_cache.cached_default_region && spriteList[0]->isGLLoaded && atlas_cache.cached_generation_id == spriteList[0]->generation_id && atlas_cache.cached_sprite_id == spriteList[0]->id) {
+			if (atlas_cache.cached_default_region && icon_data.sprite_list[0]->isGLLoaded && atlas_cache.cached_generation_id == icon_data.sprite_list[0]->generation_id && atlas_cache.cached_sprite_id == icon_data.sprite_list[0]->id) {
 				return atlas_cache.cached_default_region;
 			}
 
-			const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
-			if (valid_region && spriteList[0]->isGLLoaded) {
+			const AtlasRegion* valid_region = icon_data.sprite_list[0]->getAtlasRegion();
+			if (valid_region && icon_data.sprite_list[0]->isGLLoaded) {
 				atlas_cache.cached_default_region = valid_region;
-				atlas_cache.cached_generation_id = spriteList[0]->generation_id;
-				atlas_cache.cached_sprite_id = spriteList[0]->id;
+				atlas_cache.cached_generation_id = icon_data.sprite_list[0]->generation_id;
+				atlas_cache.cached_sprite_id = icon_data.sprite_list[0]->id;
 			} else {
 				atlas_cache.invalidate();
 			}
@@ -153,14 +155,14 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 		}
 	}
 
-	if (spriteList[v]) {
-		return spriteList[v]->getAtlasRegion();
+	if (icon_data.sprite_list[v]) {
+		return icon_data.sprite_list[v]->getAtlasRegion();
 	}
 	return nullptr;
 }
 
 TemplateImage* GameSprite::getTemplateImage(int sprite_index, const Outfit& outfit) {
-	auto it = std::ranges::find_if(instanced_templates, [sprite_index, &outfit](const auto& img) {
+	auto it = std::ranges::find_if(icon_data.instanced_templates, [sprite_index, &outfit](const auto& img) {
 		if (img->sprite_index != sprite_index) {
 			return false;
 		}
@@ -168,17 +170,17 @@ TemplateImage* GameSprite::getTemplateImage(int sprite_index, const Outfit& outf
 		return outfit.getColorHash() == lookHash;
 	});
 
-	if (it != instanced_templates.end()) {
-		if (it != instanced_templates.begin()) {
-			std::iter_swap(it, instanced_templates.begin());
-			return instanced_templates.front().get();
+	if (it != icon_data.instanced_templates.end()) {
+		if (it != icon_data.instanced_templates.begin()) {
+			std::iter_swap(it, icon_data.instanced_templates.begin());
+			return icon_data.instanced_templates.front().get();
 		}
 		return it->get();
 	}
 
 	auto img = std::make_unique<TemplateImage>(this, sprite_index, outfit);
 	TemplateImage* ptr = img.get();
-	instanced_templates.push_back(std::move(img));
+	icon_data.instanced_templates.push_back(std::move(img));
 	return ptr;
 }
 
@@ -199,16 +201,16 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _dir, int _add
 		TemplateImage* img = getTemplateImage(v, _outfit);
 		return img->getAtlasRegion();
 	}
-	if (spriteList[v]) {
-		return spriteList[v]->getAtlasRegion();
+	if (icon_data.sprite_list[v]) {
+		return icon_data.sprite_list[v]->getAtlasRegion();
 	}
 	return nullptr;
 }
 
 void GameSprite::DrawTo(wxDC* dc, SpriteSize sz, int start_x, int start_y, int width, int height) {
-	icon_renderer_.DrawTo(dc, sz, this, start_x, start_y, width, height);
+	icon_data.icon_renderer->DrawTo(dc, sz, this, start_x, start_y, width, height);
 }
 
 void GameSprite::DrawTo(wxDC* dc, SpriteSize sz, const Outfit& outfit, int start_x, int start_y, int width, int height) {
-	icon_renderer_.DrawTo(dc, sz, this, outfit, start_x, start_y, width, height);
+	icon_data.icon_renderer->DrawTo(dc, sz, this, outfit, start_x, start_y, width, height);
 }

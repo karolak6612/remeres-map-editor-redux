@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdint.h>
 
+#include "rendering/core/draw_command_queue.h"
 #include "rendering/core/sprite_preload_queue.h"
 #include "rendering/drawers/tiles/tile_draw_plan.h"
 
@@ -11,7 +12,7 @@ class TileLocation;
 class Tile;
 struct DrawContext;
 struct LightBuffer;
-class Editor;
+class IMapAccess;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
@@ -23,7 +24,7 @@ struct TileRenderDeps {
     SpriteDrawer* sprite_drawer = nullptr;
     CreatureDrawer* creature_drawer = nullptr;
     MarkerDrawer* marker_drawer = nullptr;
-    Editor* editor = nullptr;
+    IMapAccess* map_access = nullptr;
 };
 
 class TileRenderer {
@@ -48,6 +49,8 @@ public:
     // BlitItem, BlitCreature, marker draw, and primitive draw calls.
     // Non-const plan: patterns pointers are fixed up during execution.
     void ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan);
+    void QueuePlanCommands(const TileDrawPlan& plan, DrawCommandQueue& queue) const;
+    void MergePlanSideEffects(const TileDrawPlan& plan, DrawContext& ctx);
 
 private:
     // PlanTile sub-functions — each handles one logical section.
@@ -63,7 +66,7 @@ private:
     SpriteDrawer* sprite_drawer;
     CreatureDrawer* creature_drawer;
     MarkerDrawer* marker_drawer;
-    Editor* editor;
+    IMapAccess* map_access;
 
     // Reusable plan to avoid per-tile heap allocations.
     // Pre-reserved in constructor for typical tile item counts.

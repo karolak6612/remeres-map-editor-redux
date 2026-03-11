@@ -8,7 +8,7 @@
 #include "map/position.h"
 
 struct DrawContext;
-class Editor;
+class IMapAccess;
 
 class ItemDrawer;
 class SpriteDrawer;
@@ -19,7 +19,10 @@ public:
 	DragShadowDrawer();
 	~DragShadowDrawer();
 
-	void draw(const DrawContext& ctx, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const Position& drag_start);
+	void draw(
+		const DrawContext& ctx, IMapAccess& map_access, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer,
+		const Position& drag_start
+	);
 };
 
 #endif

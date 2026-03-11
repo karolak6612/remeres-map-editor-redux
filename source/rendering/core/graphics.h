@@ -79,6 +79,19 @@ public:
 	void resumeAnimation() { animation_timer_->Resume(); }
 
 	GameSprite* getCreatureSprite(int id) { return db_.getCreatureSprite(id, loader_.item_count); }
+	const SpriteMetadata* getSpriteMetadata(int id) const { return db_.getMeta(id); }
+	SpriteAnimationState* getSpriteAnimation(int id) { return db_.getAnimation(id); }
+	bool isSpriteSimpleAndLoaded(int id) const { return db_.isSimpleAndLoaded(id); }
+	const AtlasRegion* getItemAtlasRegion(
+		int id, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame
+	) {
+		return db_.getItemAtlasRegion(id, x, y, layer, subtype, pattern_x, pattern_y, pattern_z, frame);
+	}
+	const AtlasRegion* getCreatureAtlasRegion(
+		int id, int x, int y, int dir, int addon, int pattern_z, const Outfit& outfit, int frame
+	) {
+		return db_.getCreatureAtlasRegion(id, x, y, dir, addon, pattern_z, outfit, frame);
+	}
 
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite) { db_.insertSprite(id, std::move(sprite)); }
 	void insertSprite(int id, Sprite* sprite) { db_.insertSprite(id, std::unique_ptr<Sprite>(sprite)); }

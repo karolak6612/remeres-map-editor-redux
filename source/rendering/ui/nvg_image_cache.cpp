@@ -58,11 +58,11 @@ int NVGImageCache::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	// Resolve item definition to GameSprite
 	const auto definition = g_item_definitions.get(itemId);
 	GameSprite* gameSprite = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
-	if (!gameSprite || gameSprite->getSpriteList().empty()) {
+	if (!gameSprite || gameSprite->icon_data.sprite_list.empty()) {
 		return 0;
 	}
 
-	NormalImage* img = gameSprite->getSpriteList()[0];
+	NormalImage* img = gameSprite->icon_data.sprite_list[0];
 	if (!img) {
 		return 0;
 	}

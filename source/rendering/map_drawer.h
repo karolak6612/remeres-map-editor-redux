@@ -28,6 +28,7 @@ struct NVGcontext;
 #include "game/creature.h"
 #include "game/outfit.h"
 #include "rendering/core/draw_frame.h"
+#include "rendering/core/draw_command_queue.h"
 #include "rendering/core/frame_accumulators.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/primitive_renderer.h"
@@ -36,6 +37,7 @@ struct NVGcontext;
 #include "rendering/ui/nvg_image_cache.h"
 #include "rendering/ui/tooltip_renderer.h"
 
+#include <atomic>
 #include <mutex>
 
 struct DrawContext;
@@ -45,6 +47,7 @@ class PostProcessPipeline;
 class AtlasManager;
 class GridDrawer;
 class PendingNodeRequests;
+class EditorMapAccess;
 
 class LightDrawer;
 class GraphicsSpriteResolver;
@@ -93,9 +96,13 @@ struct CursorDrawers {
 
 class MapDrawer {
     Editor& editor;
+    std::unique_ptr<EditorMapAccess> map_access_;
     RenderContext render_ctx_;
-    DrawFrame frame_;
-    mutable std::mutex snapshot_mutex_; // Protects frame_.snapshot for future multi-threaded access
+    DrawFrame frames_[2];
+    std::atomic<int> write_frame_index_ {0};
+    int render_frame_index_ = 0;
+    std::atomic<bool> frame_ready_ {false};
+    mutable std::mutex snapshot_mutex_; // Protects frame snapshots for future multi-threaded access
     std::unique_ptr<LightDrawer> light_drawer;
 
     // Double-buffered accumulators: write buffer accumulates during Draw(),
@@ -129,6 +136,7 @@ class MapDrawer {
     std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
     std::unique_ptr<SpriteBatch> sprite_batch;
     std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+    DrawCommandQueue draw_command_queue_;
 
     // Deferred network node requests — filled during Draw(), drained after
     std::unique_ptr<PendingNodeRequests> pending_requests_;
@@ -140,7 +148,8 @@ public:
     MapDrawer(Editor& editor, RenderContext ctx);
     ~MapDrawer();
 
-    void SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush);
+    void SetupVars(DrawFrame frame);
+    void SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush, const RenderSettings& settings, const FrameOptions& base_options);
     void SetupGL();
     void Release();
 
@@ -161,16 +170,16 @@ public:
 
     RenderSettings& getRenderSettings()
     {
-        return frame_.settings;
+        return renderFrame().settings;
     }
     FrameOptions& getFrameOptions()
     {
-        return frame_.options;
+        return renderFrame().options;
     }
     ViewSnapshot getSnapshot() const
     {
         std::lock_guard<std::mutex> lock(snapshot_mutex_);
-        return frame_.snapshot;
+        return renderFrame().snapshot;
     }
 
     SpriteBatch* getSpriteBatch()
@@ -189,8 +198,21 @@ public:
 private:
     void DrawMap(const DrawContext& ctx);
     void DrawMapLayer(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
+    void SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue);
     void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
     void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
+    DrawFrame& writeFrame()
+    {
+        return frames_[write_frame_index_.load(std::memory_order_relaxed)];
+    }
+    DrawFrame& renderFrame()
+    {
+        return frames_[render_frame_index_];
+    }
+    const DrawFrame& renderFrame() const
+    {
+        return frames_[render_frame_index_];
+    }
     bool renderers_initialized_ = false;
 };
 

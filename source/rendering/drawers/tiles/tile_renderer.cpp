@@ -5,9 +5,11 @@
 #include "rendering/drawers/tiles/tile_draw_plan.h"
 
 #include "brushes/waypoint/waypoint_brush.h"
-#include "editor/editor.h"
 #include "game/complexitem.h"
 #include "game/item.h"
+#include "game/waypoints.h"
+#include "map/map.h"
+#include "map/map_region.h"
 #include "map/tile.h"
 
 #include "app/definitions.h"
@@ -15,6 +17,7 @@
 #include "rendering/core/draw_context.h"
 #include "rendering/core/frame_accumulators.h"
 #include "rendering/core/frame_options.h"
+#include "rendering/core/map_access.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/render_view.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -32,7 +35,7 @@ TileRenderer::TileRenderer(const TileRenderDeps& deps) :
     sprite_drawer(deps.sprite_drawer),
     creature_drawer(deps.creature_drawer),
     marker_drawer(deps.marker_drawer),
-    editor(deps.editor)
+    map_access(deps.map_access)
 {
     // Pre-reserve for typical tile item counts to avoid per-tile allocations
     reusable_plan_.reserve(16);
@@ -71,6 +74,8 @@ void TileRenderer::DrawTile(
     reusable_plan_.clear();
     PlanTile(ctx, location, current_house_id, in_draw_x, in_draw_y, draw_lights, reusable_plan_);
     if (reusable_plan_.valid) {
+        auto& mutable_ctx = const_cast<DrawContext&>(ctx);
+        MergePlanSideEffects(reusable_plan_, mutable_ctx);
         ExecutePlan(ctx, reusable_plan_);
     }
 }
@@ -83,8 +88,8 @@ void TileRenderer::PlanTile(
     const auto& view = ctx.view;
     const auto& settings = ctx.settings;
     const auto& frame = ctx.frame;
-    auto& accumulators = ctx.accumulators;
-    auto* light_buffer = draw_lights ? &ctx.light_buffer : nullptr;
+    auto& accumulators = plan.accumulators;
+    auto* light_buffer = draw_lights ? &plan.lights : nullptr;
 
     plan.valid = false;
 
@@ -134,7 +139,7 @@ void TileRenderer::PlanTile(
 
     Waypoint* waypoint = nullptr;
     if (location->getWaypointCount() > 0) {
-        waypoint = editor->map.waypoints.getWaypoint(location);
+        waypoint = map_access->getMap().waypoints.getWaypoint(location);
     }
 
     // Waypoint tooltip (one per waypoint)
@@ -228,7 +233,7 @@ void TileRenderer::PlanGroundItem(
 
     // Inline preload check - skip function call when sprite is simple and loaded (95%+ case)
     if (!ground_sprite->isSimpleAndLoaded()) {
-        preload_queue_.enqueue(ground_sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+                plan.preload_requests.push_back({ground_sprite, patterns.x, patterns.y, patterns.z, patterns.frame});
     }
 
     BlitItemParams params(position, tile->ground.get(), settings, frame);
@@ -296,7 +301,7 @@ void TileRenderer::PlanStackedItems(
 
             // Inline preload check - skip function call when sprite is simple and loaded
             if (!sprite->isSimpleAndLoaded()) {
-                preload_queue_.enqueue(sprite, patterns.x, patterns.y, patterns.z, patterns.frame);
+                plan.preload_requests.push_back({sprite, patterns.x, patterns.y, patterns.z, patterns.frame});
             }
 
             BlitItemParams params(position, item.get(), settings, frame);
@@ -393,8 +398,78 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
     // Marker draw
     if (plan.marker) {
         marker_drawer->draw(
-            sprite_batch, sprite_drawer, draw_x, draw_y, plan.marker->tile, plan.marker->waypoint, plan.marker->current_house_id, *editor,
+            sprite_batch, sprite_drawer, draw_x, draw_y, plan.marker->tile, plan.marker->waypoint, plan.marker->current_house_id, *map_access,
             ctx.settings
         );
+    }
+}
+
+void TileRenderer::QueuePlanCommands(const TileDrawPlan& plan, DrawCommandQueue& queue) const
+{
+    const int draw_x = plan.draw_x;
+    const int draw_y = plan.draw_y;
+
+    if (plan.color_square) {
+        queue.push(DrawColorSquareCmd {.draw_x = draw_x, .draw_y = draw_y, .color = plan.color_square->color});
+    }
+
+    if (plan.zone_brush) {
+        queue.push(DrawZoneBrushCmd {
+            .draw_x = draw_x,
+            .draw_y = draw_y,
+            .sprite_id = plan.zone_brush->sprite_id,
+            .r = plan.zone_brush->r,
+            .g = plan.zone_brush->g,
+            .b = plan.zone_brush->b,
+            .a = plan.zone_brush->a,
+        });
+    }
+
+    if (plan.house_border) {
+        queue.push(DrawHouseBorderCmd {.draw_x = draw_x, .draw_y = draw_y, .color = plan.house_border->color});
+    }
+
+    for (const auto& item : plan.items) {
+        queue.push(DrawItemCmd {draw_x, draw_y, item.params, item.patterns});
+    }
+
+    if (plan.creature) {
+        queue.push(DrawCreatureCmd {
+            .draw_x = draw_x,
+            .draw_y = draw_y,
+            .creature = plan.creature->creature,
+            .options = plan.creature->options,
+        });
+    }
+
+    if (plan.marker) {
+        queue.push(DrawMarkerCmd {
+            .draw_x = draw_x,
+            .draw_y = draw_y,
+            .tile = plan.marker->tile,
+            .waypoint = plan.marker->waypoint,
+            .current_house_id = plan.marker->current_house_id,
+        });
+    }
+}
+
+void TileRenderer::MergePlanSideEffects(const TileDrawPlan& plan, DrawContext& ctx)
+{
+    for (const auto& tooltip : plan.accumulators.tooltips.getTooltips()) {
+        ctx.accumulators.tooltips.addItemTooltip(tooltip);
+    }
+
+    ctx.accumulators.hooks.insert(ctx.accumulators.hooks.end(), plan.accumulators.hooks.begin(), plan.accumulators.hooks.end());
+    ctx.accumulators.doors.insert(ctx.accumulators.doors.end(), plan.accumulators.doors.begin(), plan.accumulators.doors.end());
+    ctx.accumulators.creature_names.insert(
+        ctx.accumulators.creature_names.end(), plan.accumulators.creature_names.begin(), plan.accumulators.creature_names.end()
+    );
+
+    for (size_t i = 0; i < plan.lights.size(); ++i) {
+        ctx.light_buffer.AddLight(plan.lights.map_x[i], plan.lights.map_y[i], GROUND_LAYER, SpriteLight {plan.lights.intensity[i], plan.lights.color[i]});
+    }
+
+    for (const auto& request : plan.preload_requests) {
+        preload_queue_.enqueue(request.sprite, request.pattern_x, request.pattern_y, request.pattern_z, request.frame);
     }
 }

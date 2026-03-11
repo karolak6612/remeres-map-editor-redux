@@ -16,9 +16,11 @@ SpritePreloader::SpritePreloader() : stopping(false) {
 	unsigned int num_threads = std::clamp(std::thread::hardware_concurrency(), MIN_WORKER_THREADS, MAX_WORKER_THREADS);
 	workers.reserve(num_threads);
 	for (unsigned int i = 0; i < num_threads; ++i) {
-		workers.emplace_back([this](std::stop_token stop_token) {
-			this->workerLoop(stop_token);
+		auto worker = std::make_unique<WorkerState>();
+		worker->thread = std::jthread([this, state = worker.get()](std::stop_token stop_token) {
+			this->workerLoop(stop_token, *state);
 		});
+		workers.push_back(std::move(worker));
 	}
 }
 
@@ -35,7 +37,7 @@ void SpritePreloader::shutdown() {
 		stopping = true;
 	}
 	for (auto& worker : workers) {
-		worker.request_stop(); // Correctly signaled transition for jthread's stop_token
+		worker->thread.request_stop(); // Correctly signaled transition for jthread's stop_token
 	}
 	cv.notify_all();
 }
@@ -48,9 +50,8 @@ void SpritePreloader::clear() {
 		task_queue = std::queue<Task>();
 		pending_ids.clear();
 	}
-	{
-		std::lock_guard<std::mutex> lock(result_mutex_);
-		result_buffer_.clear();
+	for (const auto& worker : workers) {
+		worker->results.clear();
 	}
 }
 
@@ -72,7 +73,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 	static thread_local std::vector<PendingTask> ids_to_enqueue;
 	ids_to_enqueue.clear();
-	const auto& sprite_list = spr->getSpriteList();
+	const auto& sprite_list = spr->icon_data.sprite_list;
 
 	// Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize allocations
 	if (ids_to_enqueue.capacity() < 64) {
@@ -124,7 +125,7 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 	}
 }
 
-void SpritePreloader::workerLoop(std::stop_token stop_token) {
+void SpritePreloader::workerLoop(std::stop_token stop_token, WorkerState& worker) {
 	while (!stop_token.stop_requested()) {
 		Task task;
 		{
@@ -147,9 +148,10 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 		}
 
 		if (rgba) {
-			// Result push uses separate mutex — no contention with task popping
-			std::lock_guard<std::mutex> lock(result_mutex_);
-			result_buffer_.push_back({ task.pending, std::move(rgba), std::move(task.archive) });
+			Result result { task.pending, std::move(rgba), std::move(task.archive) };
+			while (!stop_token.stop_requested() && !worker.results.try_push(std::move(result))) {
+				std::this_thread::yield();
+			}
 		} else {
 			std::lock_guard<std::mutex> lock(task_mutex_);
 			pending_ids.erase(task.pending);
@@ -163,12 +165,13 @@ void SpritePreloader::update() {
 
 	// Swap result buffer under result_mutex_ — brief lock, no contention with task popping.
 	std::vector<Result> results;
-	{
-		std::lock_guard<std::mutex> lock(result_mutex_);
-		if (result_buffer_.empty()) {
-			return;
+	for (const auto& worker : workers) {
+		while (auto result = worker->results.try_pop()) {
+			results.push_back(std::move(*result));
 		}
-		std::swap(results, result_buffer_);
+	}
+	if (results.empty()) {
+		return;
 	}
 
 	// Read epoch under task_mutex_ (separate from result drain).

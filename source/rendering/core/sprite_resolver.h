@@ -19,6 +19,10 @@
 #define RME_RENDERING_CORE_SPRITE_RESOLVER_H_
 
 class GameSprite;
+struct AtlasRegion;
+struct Outfit;
+struct SpriteAnimationState;
+struct SpriteMetadata;
 
 // Abstract interface for resolving sprites by ID.
 // Decouples rendering from the global GraphicManager singleton.
@@ -27,6 +31,15 @@ public:
 	virtual ~ISpriteResolver() = default;
 	virtual GameSprite* getSprite(int client_id) = 0;
 	virtual GameSprite* getCreatureSprite(int look_type) = 0;
+	virtual const SpriteMetadata* getSpriteMetadata(int client_id) const = 0;
+	virtual SpriteAnimationState* getSpriteAnimation(int client_id) = 0;
+	virtual bool isSpriteSimpleAndLoaded(int client_id) const = 0;
+	virtual const AtlasRegion* getItemAtlasRegion(
+		int client_id, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame
+	) = 0;
+	virtual const AtlasRegion* getCreatureAtlasRegion(
+		int client_id, int x, int y, int dir, int addon, int pattern_z, const Outfit& outfit, int frame
+	) = 0;
 };
 
 #endif

@@ -4,10 +4,10 @@
 
 #include "brushes/brush.h"
 #include "editor/copybuffer.h"
-#include "editor/editor.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/frame_options.h"
+#include "rendering/core/map_access.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/sprite_batch.h"
@@ -36,7 +36,7 @@ void PreviewDrawer::draw(const DrawContext& ctx, const PreviewDrawerContext& pre
         Position to(view.mouse_map_x, view.mouse_map_y, view.floor);
 
         if (preview.snapshot.is_pasting) {
-            normalPos = preview.editor.copybuffer.getPosition();
+            normalPos = preview.map_access.getCopyBuffer().getPosition();
         } else if (brush && brush->is<DoodadBrush>()) {
             normalPos = Position(0x8000, 0x8000, 0x8);
         } else {

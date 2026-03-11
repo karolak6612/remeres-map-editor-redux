@@ -6,7 +6,7 @@
 struct DrawContext;
 struct ViewSnapshot;
 struct FloorViewParams;
-class Editor;
+class IMapAccess;
 class ItemDrawer;
 class SpriteDrawer;
 class CreatureDrawer;
@@ -16,7 +16,7 @@ struct PreviewDrawerContext {
     const ViewSnapshot& snapshot;
     const FloorViewParams& floor_params;
     int map_z;
-    Editor& editor;
+    IMapAccess& map_access;
     ItemDrawer* item_drawer;
     SpriteDrawer* sprite_drawer;
     CreatureDrawer* creature_drawer;

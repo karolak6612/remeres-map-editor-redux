@@ -25,6 +25,7 @@
 
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/ui/render_loop.h"
 #include "rendering/ui/input_state.h"
 #include "rendering/ui/view_state_manager.h"
 #include "ui/map_popup_menu.h"
@@ -45,9 +46,11 @@ class DrawingController;
 class ScreenshotController;
 class MapMenuHandler;
 
-class MapCanvas : public wxGLCanvas {
-    std::unique_ptr<wxGLContext> m_glContext;
-    std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
+namespace rme::rendering {
+class GLContextManager;
+}
+
+class MapCanvas : public wxGLCanvas, public rme::rendering::RenderLoopHost {
 
 public:
     MapCanvas(MapWindow* parent, Editor& editor, int* attriblist);
@@ -120,6 +123,8 @@ public:
     // Public members — widely referenced by framework and event handlers
     Editor& editor;
     std::unique_ptr<MapDrawer> drawer;
+    std::unique_ptr<rme::rendering::GLContextManager> gl_context_;
+    std::unique_ptr<rme::rendering::RenderLoop> render_loop_;
     std::unique_ptr<ScreenshotController> screenshot_controller;
 
     wxStopWatch refresh_watch;
@@ -133,6 +138,22 @@ public:
     std::unique_ptr<MapMenuHandler> menu_handler;
 
     MapWindow* GetMapWindow() const;
+    wxGLCanvas& canvas() override
+    {
+        return *this;
+    }
+    bool isRenderingEnabled() const override;
+    RenderSettings buildRenderSettings() const override;
+    FrameOptions buildFrameOptions() const override;
+    ViewSnapshot buildViewSnapshot() const override;
+    BrushSnapshot buildBrushSnapshot() const override;
+    void updateAnimationState(bool show_preview) override;
+    bool isCapturingScreenshot() const override;
+    uint8_t* screenshotBuffer() const override;
+    bool shouldCollectGarbage() const override;
+    void collectGarbage() override;
+    void updateFramePacing() override;
+    void sendNodeRequests() override;
 
     // --- Accessors for privatized fields ---
     int GetKeyCode() const
@@ -200,13 +221,9 @@ private:
     std::unique_ptr<ViewStateManager> view_state_;
     InputState input_;
 
-    void EnsureNanoVG();
-    void DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame);
-    void PerformGarbageCollection();
     ViewSnapshot BuildViewSnapshot() const;
     void ConfigureRenderSettings(RenderSettings& settings) const;
     void ConfigureFrameOptions(FrameOptions& frame) const;
-    bool renderer_initialized = false;
 };
 
 #endif

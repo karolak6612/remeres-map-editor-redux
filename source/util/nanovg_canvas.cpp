@@ -216,7 +216,7 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
 
 	// Try to get as GameSprite for RGBA access (Fast Path)
 	GameSprite* gs = dynamic_cast<GameSprite*>(sprite);
-	if (gs && !gs->getSpriteList().empty()) {
+	if (gs && !gs->icon_data.sprite_list.empty()) {
 		return CreateGameSpriteTexture(vg, gs, spriteId);
 	}
 
@@ -238,7 +238,7 @@ int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64
 
 	// Composite all layers
 	int px = (gs->meta.pattern_x >= 3) ? 2 : 0;
-	const auto& sprite_list = gs->getSpriteList();
+	const auto& sprite_list = gs->icon_data.sprite_list;
 	for (int l = 0; l < gs->meta.layers; ++l) {
 		for (int sw = 0; sw < gs->meta.width; ++sw) {
 			for (int sh = 0; sh < gs->meta.height; ++sh) {

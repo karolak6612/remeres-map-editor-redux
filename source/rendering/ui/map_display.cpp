@@ -42,7 +42,6 @@
 #include "rendering/core/coordinate_mapper.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/render_settings.h"
-#include "rendering/core/text_renderer.h"
 #include "rendering/core/brush_snapshot.h"
 #include "rendering/core/render_context.h"
 #include "rendering/core/view_snapshot.h"
@@ -50,12 +49,14 @@
 #include "rendering/ui/brush_selector.h"
 #include "rendering/ui/clipboard_handler.h"
 #include "rendering/ui/drawing_controller.h"
+#include "rendering/ui/gl_context_manager.h"
 #include "rendering/ui/keyboard_handler.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/ui/map_menu_handler.h"
 #include "rendering/ui/map_status_updater.h"
 #include "rendering/ui/navigation_controller.h"
 #include "rendering/ui/popup_action_handler.h"
+#include "rendering/ui/render_loop.h"
 #include "rendering/ui/screenshot_controller.h"
 #include "rendering/ui/selection_controller.h"
 #include "rendering/ui/zoom_controller.h"
@@ -68,9 +69,6 @@
 #include "ui/properties/old_properties_window.h"
 #include "ui/properties/properties_window.h"
 #include "ui/tileset_window.h"
-#include <glad/glad.h>
-#include <nanovg.h>
-#include <nanovg_gl.h>
 
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/creature/creature_brush.h"
@@ -98,7 +96,6 @@ static wxGLAttributes& GetCoreProfileAttributes()
 MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
     wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
     editor(editor),
-    renderer_initialized(false),
     input_ {
         .keyCode = WXK_NONE,
         .cursor_x = -1,
@@ -122,16 +119,11 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 {
     view_state_ = std::make_unique<ViewStateManager>(this);
 
-    // Context creation must happen on the main/UI thread
-    m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
-    if (!m_glContext->IsOK()) {
-        spdlog::error("MapCanvas: Failed to create wxGLContext");
-        m_glContext.reset();
-    }
-
     popup_menu = std::make_unique<MapPopupMenu>(editor);
     animation_timer = std::make_unique<AnimationTimer>(this);
     drawer = std::make_unique<MapDrawer>(editor, RenderContext { g_gui.gfx });
+    gl_context_ = std::make_unique<rme::rendering::GLContextManager>(this);
+    render_loop_ = std::make_unique<rme::rendering::RenderLoop>(*drawer, *gl_context_, editor, *this);
     selection_controller = std::make_unique<SelectionController>(this, editor);
     drawing_controller = std::make_unique<DrawingController>(this, editor);
     screenshot_controller = std::make_unique<ScreenshotController>(this);
@@ -158,21 +150,9 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
 
 MapCanvas::~MapCanvas()
 {
-    bool context_ok = false;
-    if (m_glContext) {
-        context_ok = g_gl_context.EnsureContextCurrent(*m_glContext, this);
-    } else if (auto context = g_gui.GetGLContext(this)) {
-        context_ok = g_gl_context.EnsureContextCurrent(*context, this);
-    }
-
-    if (!context_ok) {
-        spdlog::warn("MapCanvas: Destroying canvas without a current OpenGL context. Cleanup might fail or assert.");
-    }
-
+    render_loop_.reset();
     drawer.reset();
-    m_nvg.reset();
-
-    g_gl_context.UnregisterCanvas(this);
+    gl_context_.reset();
 }
 
 void MapCanvas::Refresh()
@@ -198,57 +178,6 @@ void MapCanvas::GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensi
 MapWindow* MapCanvas::GetMapWindow() const
 {
     return static_cast<MapWindow*>(GetParent());
-}
-
-void MapCanvas::EnsureNanoVG()
-{
-    if (!m_nvg) {
-        if (!gladLoadGL()) {
-            spdlog::error("MapCanvas: Failed to initialize GLAD");
-        }
-        m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
-        if (m_nvg) {
-            TextRenderer::LoadFont(m_nvg.get());
-        } else {
-            spdlog::error("MapCanvas: Failed to initialize NanoVG");
-        }
-    }
-}
-
-void MapCanvas::DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame)
-{
-    if (!vg) {
-        return;
-    }
-
-    // Sanitize state before handover to NanoVG
-    glUseProgram(0);
-    glBindVertexArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-    glClear(GL_STENCIL_BUFFER_BIT);
-    TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
-
-    if (settings.show_creatures) {
-        drawer->DrawCreatureNames(vg);
-    }
-    if (settings.show_tooltips) {
-        drawer->DrawTooltips(vg);
-    }
-    if (settings.show_hooks) {
-        drawer->DrawHookIndicators(vg);
-    }
-    if (settings.highlight_locked_doors) {
-        drawer->DrawDoorIndicators(vg);
-    }
-
-    TextRenderer::EndFrame(vg);
-
-    // Sanitize state after NanoVG to avoid polluting the next frame or other tabs
-    glUseProgram(0);
-    glBindVertexArray(0);
 }
 
 ViewSnapshot MapCanvas::BuildViewSnapshot() const
@@ -306,80 +235,93 @@ void MapCanvas::ConfigureFrameOptions(FrameOptions& frame) const
     frame.boundbox_selection = selection_controller->IsBoundboxSelection();
 }
 
-void MapCanvas::PerformGarbageCollection()
-{
-    // Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
-    if (g_gui.gfx.shouldCollectGarbage() && g_gui.GetCurrentMapTab() == GetParent()) {
-        g_gui.gfx.garbageCollection();
-        g_gui.gfx.markGarbageCollected();
-    }
-}
-
 void MapCanvas::OnPaint(wxPaintEvent& event)
 {
     wxPaintDC dc(this); // validates the paint event
-    if (m_glContext) {
-        g_gl_context.EnsureContextCurrent(*m_glContext, this);
-        g_gl_context.SetFallbackCanvas(this);
-    }
-
-    EnsureNanoVG();
-
-    if (g_gui.IsRenderingEnabled()) {
-        g_gui.gfx.updateTime();
-
-        RenderSettings& settings = drawer->getRenderSettings();
-        FrameOptions& frame = drawer->getFrameOptions();
-        ConfigureRenderSettings(settings);
-        ConfigureFrameOptions(frame);
-
-        if (settings.show_preview) {
-            animation_timer->Start();
-            g_gui.gfx.resumeAnimation();
-        } else {
-            animation_timer->Stop();
-            g_gui.gfx.pauseAnimation();
-        }
-
-        ViewSnapshot snapshot = BuildViewSnapshot();
-        const BrushSnapshot brush_snap {
-            .current_brush = g_gui.GetCurrentBrush(),
-            .brush_shape = g_gui.GetBrushShape(),
-            .brush_size = g_gui.GetBrushSize(),
-            .is_drawing_mode = g_gui.IsDrawingMode()
-        };
-
-        drawer->SetupVars(snapshot, brush_snap);
-        drawer->SetupGL();
-        drawer->Draw();
-        drawer->DrainPendingNodeRequests();
-
-        if (screenshot_controller->IsCapturing()) {
-            drawer->TakeScreenshot(screenshot_controller->GetBuffer());
-        }
-
-        drawer->Release();
-
-        DrawOverlays(m_nvg.get(), settings, frame);
-        drawer->BeginFrame();
-    }
-
-    PerformGarbageCollection();
-
-    SwapBuffers();
-
-    // FPS tracking and limiting
-    frame_pacer.UpdateAndLimit(g_settings.getInteger(Config::FRAME_RATE_LIMIT), g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
-
-    // Send newd node requests
-    if (editor.live_manager.GetClient()) {
-        editor.live_manager.GetClient()->sendNodeRequests();
-    }
+    render_loop_->ExecuteFrame();
 }
 
 void MapCanvas::TakeScreenshot(wxFileName path, wxString format)
 {
     screenshot_controller->TakeScreenshot(path, format);
+}
+
+bool MapCanvas::isRenderingEnabled() const
+{
+    return g_gui.IsRenderingEnabled();
+}
+
+RenderSettings MapCanvas::buildRenderSettings() const
+{
+    RenderSettings settings;
+    ConfigureRenderSettings(settings);
+    return settings;
+}
+
+FrameOptions MapCanvas::buildFrameOptions() const
+{
+    FrameOptions frame;
+    ConfigureFrameOptions(frame);
+    return frame;
+}
+
+ViewSnapshot MapCanvas::buildViewSnapshot() const
+{
+    return BuildViewSnapshot();
+}
+
+BrushSnapshot MapCanvas::buildBrushSnapshot() const
+{
+    return BrushSnapshot {
+        .current_brush = g_gui.GetCurrentBrush(),
+        .brush_shape = g_gui.GetBrushShape(),
+        .brush_size = g_gui.GetBrushSize(),
+        .is_drawing_mode = g_gui.IsDrawingMode()
+    };
+}
+
+void MapCanvas::updateAnimationState(bool show_preview)
+{
+    if (show_preview) {
+        animation_timer->Start();
+        g_gui.gfx.resumeAnimation();
+    } else {
+        animation_timer->Stop();
+        g_gui.gfx.pauseAnimation();
+    }
+}
+
+bool MapCanvas::isCapturingScreenshot() const
+{
+    return screenshot_controller->IsCapturing();
+}
+
+uint8_t* MapCanvas::screenshotBuffer() const
+{
+    return screenshot_controller->GetBuffer();
+}
+
+bool MapCanvas::shouldCollectGarbage() const
+{
+    return g_gui.gfx.shouldCollectGarbage() && g_gui.GetCurrentMapTab() == GetParent();
+}
+
+void MapCanvas::collectGarbage()
+{
+    g_gui.gfx.garbageCollection();
+    g_gui.gfx.markGarbageCollected();
+}
+
+void MapCanvas::updateFramePacing()
+{
+    frame_pacer.UpdateAndLimit(g_settings.getInteger(Config::FRAME_RATE_LIMIT), g_settings.getBoolean(Config::SHOW_FPS_COUNTER));
+}
+
+void MapCanvas::sendNodeRequests()
+{
+    if (editor.live_manager.GetClient()) {
+        editor.live_manager.GetClient()->sendNodeRequests();
+    }
 }
 
 void MapCanvas::ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y)

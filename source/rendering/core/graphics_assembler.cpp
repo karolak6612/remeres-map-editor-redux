@@ -40,18 +40,19 @@ namespace {
 }
 
 void GraphicsAssembler::installAnimation(GameSprite& sprite, const DatCatalogEntry& entry) {
+	sprite.animation.sprite_id = sprite.meta.id;
 	if (!entry.animation.has_value()) {
-		sprite.animator.reset();
+		sprite.animation.animator.reset();
 		return;
 	}
 
 	const auto& animation = *entry.animation;
-	sprite.animator = std::make_unique<Animator>(entry.frames, animation.start_frame, animation.loop_count, animation.asynchronous);
+	sprite.animation.animator = std::make_unique<Animator>(entry.frames, animation.start_frame, animation.loop_count, animation.asynchronous);
 	for (size_t frame_index = 0; frame_index < animation.frame_durations.size(); ++frame_index) {
-		FrameDuration* duration = sprite.animator->getFrameDuration(static_cast<int>(frame_index));
+		FrameDuration* duration = sprite.animation.animator->getFrameDuration(static_cast<int>(frame_index));
 		duration->setValues(static_cast<int>(animation.frame_durations[frame_index].minimum), static_cast<int>(animation.frame_durations[frame_index].maximum));
 	}
-	sprite.animator->reset();
+	sprite.animation.animator->reset();
 }
 
 bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCatalogEntry& entry, std::vector<std::string>& warnings) {
@@ -75,7 +76,7 @@ bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCat
 	sprite_ptr->meta.light = entry.light;
 	installAnimation(*sprite_ptr, entry);
 
-	auto& sprite_list = sprite_ptr->getSpriteList();
+	auto& sprite_list = sprite_ptr->icon_data.sprite_list;
 	sprite_list.clear();
 	sprite_list.reserve(entry.sprite_ids.size());
 	for (uint32_t sprite_id : entry.sprite_ids) {

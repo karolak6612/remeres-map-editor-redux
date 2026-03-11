@@ -41,7 +41,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 		for (uint8_t w = 0; w < sprite->meta.width; w++) {
 			for (uint8_t h = 0; h < sprite->meta.height; h++) {
 				const int i = sprite->getIndex(w, h, l, 0, 0, 0, 0);
-				std::unique_ptr<uint8_t[]> data = sprite->getSpriteList()[i]->getRGBData();
+				std::unique_ptr<uint8_t[]> data = sprite->icon_data.sprite_list[i]->getRGBData();
 				if (data) {
 					wxImage img(SPRITE_PIXELS, SPRITE_PIXELS, data.get(), true);
 					img.SetMaskColour(0xFF, 0x00, 0xFF);
@@ -129,7 +129,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 							data = mountSpr->getTemplateImage(mountSpr->getIndex(w, h, 0, mount_frame_index, 0, 0, 0), mountOutfit)->getRGBData();
 						} else {
 							// Standard mount
-							data = mountSpr->getSpriteList()[mountSpr->getIndex(w, h, l, mount_frame_index, 0, 0, 0)]->getRGBData();
+							data = mountSpr->icon_data.sprite_list[mountSpr->getIndex(w, h, l, mount_frame_index, 0, 0, 0)]->getRGBData();
 						}
 
 						if (data) {
@@ -175,7 +175,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 							data = sprite->getTemplateImage(sprite->getIndex(w, h, 2, frame_index, pattern_y, pattern_z, 0), outfit)->getRGBData();
 						}
 					} else {
-						data = sprite->getSpriteList()[sprite->getIndex(w, h, l, frame_index, pattern_y, pattern_z, 0)]->getRGBData();
+						data = sprite->icon_data.sprite_list[sprite->getIndex(w, h, l, frame_index, pattern_y, pattern_z, 0)]->getRGBData();
 					}
 
 					if (data) {

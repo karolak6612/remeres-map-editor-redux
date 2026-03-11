@@ -7,26 +7,18 @@
 
 #include "game/outfit.h"
 #include "util/common.h"
-#include "rendering/core/animator.h"
 #include "rendering/core/atlas_region_cache.h"
+#include "rendering/core/sprite_animation_state.h"
+#include "rendering/core/sprite_icon_data.h"
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/texture_garbage_collector.h"
 #include "rendering/core/atlas_manager.h"
-#include "rendering/core/render_timer.h"
 #include "rendering/core/sprite_metadata.h"
-#include "rendering/core/sprite_icon_renderer.h"
 #include <atomic>
 #include <cstdint>
 #include <span>
 
-#include <deque>
-#include <memory>
-#include <map>
-#include <unordered_map>
-#include <vector>
 #include <wx/dc.h>
-#include <wx/bitmap.h>
-#include <wx/dcmemory.h>
 
 enum SpriteSize : int {
 	SPRITE_SIZE_16x16,
@@ -106,11 +98,11 @@ public:
 		return meta.light;
 	}
 
-	SpriteIconRenderer& iconRenderer() { return icon_renderer_; }
-
 	// Sprite metadata (public for GraphicsAssembler direct writes)
 	SpriteMetadata meta;
 	AtlasRegionCache atlas_cache;
+	SpriteAnimationState animation;
+	SpriteIconData icon_data;
 
 	[[nodiscard]] uint32_t getId() const noexcept { return meta.id; }
 	[[nodiscard]] uint8_t getHeight() const noexcept { return meta.height; }
@@ -124,12 +116,6 @@ public:
 	[[nodiscard]] bool isSimple() const noexcept { return meta.is_simple; }
 	uint32_t getDebugImageId(size_t index = 0) const;
 	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
-	auto& getSpriteList() { return spriteList; }
-	const auto& getSpriteList() const { return spriteList; }
-	auto& getInstancedTemplates() { return instanced_templates; }
-	const auto& getInstancedTemplates() const { return instanced_templates; }
-
-	std::unique_ptr<Animator> animator;
 
 	bool is_resident = false;
 
@@ -143,13 +129,8 @@ public:
 	bool isSimpleAndLoaded() const;
 
 	void updateSimpleStatus() {
-		meta.is_simple = (meta.numsprites == 1 && meta.frames == 1 && meta.layers == 1 && meta.width == 1 && meta.height == 1 && !spriteList.empty());
+		meta.is_simple = (meta.numsprites == 1 && meta.frames == 1 && meta.layers == 1 && meta.width == 1 && meta.height == 1 && !icon_data.sprite_list.empty());
 	}
-
-private:
-	std::vector<NormalImage*> spriteList;
-	std::vector<std::unique_ptr<TemplateImage>> instanced_templates;
-	SpriteIconRenderer icon_renderer_;
 };
 
 #endif

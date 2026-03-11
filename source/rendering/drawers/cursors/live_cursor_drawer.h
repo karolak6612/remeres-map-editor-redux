@@ -2,11 +2,11 @@
 #define RME_RENDERING_LIVE_CURSOR_DRAWER_H_
 
 struct DrawContext;
-class Editor;
+class IMapAccess;
 
 class LiveCursorDrawer {
 public:
-	void draw(const DrawContext& ctx, Editor& editor);
+	void draw(const DrawContext& ctx, IMapAccess& map_access);
 };
 
 #endif

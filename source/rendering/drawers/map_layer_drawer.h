@@ -19,26 +19,40 @@
 #define RME_MAP_LAYER_DRAWER_H
 
 #include <iosfwd>
+#include <span>
+#include <vector>
 
-class Editor;
+class DrawCommandQueue;
+class IMapAccess;
 class TileRenderer;
 class GridDrawer;
 class PendingNodeRequests;
+class TileLocation;
 struct DrawContext;
 struct FloorViewParams;
 class SpriteBatch;
+struct TileDrawPlan;
 
 class MapLayerDrawer {
 public:
-    MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests = nullptr);
+    MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, IMapAccess* map_access, PendingNodeRequests* pending_requests = nullptr);
     ~MapLayerDrawer();
 
-    void Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
+    void Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params, DrawCommandQueue& command_queue);
 
 private:
+    struct TilePlanInput {
+        TileLocation* location = nullptr;
+        int draw_x = 0;
+        int draw_y = 0;
+    };
+
+    void MergePlans(std::span<const TileDrawPlan> plans, DrawContext& ctx);
+    void PlanTilesParallel(const DrawContext& ctx, uint32_t current_house_id, bool draw_lights, std::span<const TilePlanInput> inputs, std::span<TileDrawPlan> plans);
+
     TileRenderer* tile_renderer;
     GridDrawer* grid_drawer;
-    Editor* editor;
+    IMapAccess* map_access;
     PendingNodeRequests* pending_requests_;
 };
 

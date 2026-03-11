@@ -40,11 +40,11 @@ namespace NvgUtils {
 			for (int w = 0; w < gs.meta.width; ++w) {
 				for (int h = 0; h < gs.meta.height; ++h) {
 					int spriteIdx = gs.getIndex(w, h, l, pattern_x, pattern_y, pattern_z, frame);
-					if (spriteIdx < 0 || static_cast<size_t>(spriteIdx) >= gs.getSpriteList().size()) {
+					if (spriteIdx < 0 || static_cast<size_t>(spriteIdx) >= gs.icon_data.sprite_list.size()) {
 						continue;
 					}
 
-					auto spriteData = gs.getSpriteList()[spriteIdx]->getRGBAData();
+					auto spriteData = gs.icon_data.sprite_list[spriteIdx]->getRGBAData();
 					if (!spriteData) {
 						continue;
 					}

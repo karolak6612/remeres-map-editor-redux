@@ -14,6 +14,8 @@
 #include "map/tile.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_metadata.h"
+#include "rendering/core/sprite_animation_state.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/special_client_ids.h"
 #include "rendering/core/sprite_batch.h"
@@ -129,12 +131,17 @@ void ItemDrawer::BlitItem(
     // int screeny = draw_y - spr->getDrawOffset().second;
     // The original code modified draw_x/draw_y AFTER calculating screenx/screeny using the original draw_x/draw_y
     // screenx use input draw_x
-    int screenx = draw_x - spr->meta.drawoffset_x;
-    int screeny = draw_y - spr->meta.drawoffset_y;
+    const SpriteMetadata* meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(spr->getId())) : nullptr;
+    if (!meta) {
+        meta = &spr->meta;
+    }
+
+    int screenx = draw_x - meta->drawoffset_x;
+    int screeny = draw_y - meta->drawoffset_y;
 
     // Set the newd drawing height accordingly
-    draw_x -= spr->meta.draw_height;
-    draw_y -= spr->meta.draw_height;
+    draw_x -= meta->draw_height;
+    draw_y -= meta->draw_height;
 
     SpritePatterns patterns;
     if (cached_patterns && spr == resolveSprite(it)) {
@@ -149,8 +156,8 @@ void ItemDrawer::BlitItem(
     int pattern_z = patterns.z;
     int anim_frame = patterns.frame;
 
-    if (!ephemeral && settings.transparent_items && (!it.isGroundTile() || spr->meta.width > 1 || spr->meta.height > 1) && !it.isSplash()
-        && (!it.hasFlag(ItemFlag::IsBorder) || spr->meta.width > 1 || spr->meta.height > 1)) {
+    if (!ephemeral && settings.transparent_items && (!it.isGroundTile() || meta->width > 1 || meta->height > 1) && !it.isSplash()
+        && (!it.hasFlag(ItemFlag::IsBorder) || meta->width > 1 || meta->height > 1)) {
         alpha /= 2;
     }
 
@@ -167,12 +174,15 @@ void ItemDrawer::BlitItem(
 
     // Atlas-only rendering
 
-    if (spr->meta.width == 1 && spr->meta.height == 1 && spr->meta.layers == 1) {
+    if (meta->width == 1 && meta->height == 1 && meta->layers == 1) {
         const AtlasRegion* region;
         if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && anim_frame == 0) {
-            region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+            region = sprite_resolver ? sprite_resolver->getItemAtlasRegion(static_cast<int>(spr->getId()), 0, 0, 0, -1, 0, 0, 0, 0)
+                                     : spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
         } else {
-            region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
+            region = sprite_resolver ? sprite_resolver->getItemAtlasRegion(
+                                          static_cast<int>(spr->getId()), 0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, anim_frame)
+                                     : spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
         }
 
         if (region) {
@@ -192,10 +202,12 @@ void ItemDrawer::BlitItem(
             sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
         }
     } else {
-        for (int cx = 0; cx != spr->meta.width; cx++) {
-            for (int cy = 0; cy != spr->meta.height; cy++) {
-                for (int cf = 0; cf != spr->meta.layers; cf++) {
-                    const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
+        for (int cx = 0; cx != meta->width; cx++) {
+            for (int cy = 0; cy != meta->height; cy++) {
+                for (int cf = 0; cf != meta->layers; cf++) {
+                    const AtlasRegion* region = sprite_resolver ? sprite_resolver->getItemAtlasRegion(
+                                                                      static_cast<int>(spr->getId()), cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame)
+                                                                 : spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
                     if (region) {
                         sprite_drawer->glBlitAtlasQuad(
                             sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha)

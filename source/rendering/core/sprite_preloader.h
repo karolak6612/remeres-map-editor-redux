@@ -6,6 +6,7 @@
 #define RME_RENDERING_CORE_SPRITE_PRELOADER_H_
 
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/spsc_queue.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -91,7 +92,12 @@ private:
 		std::shared_ptr<SpriteArchive> archive;
 	};
 
-	void workerLoop(std::stop_token stop_token);
+	struct WorkerState {
+		SPSCQueue<Result, 1024> results;
+		std::jthread thread;
+	};
+
+	void workerLoop(std::stop_token stop_token, WorkerState& worker);
 
 	static constexpr unsigned int MIN_WORKER_THREADS = 2u;
 	static constexpr unsigned int MAX_WORKER_THREADS = 8u;
@@ -99,13 +105,11 @@ private:
 	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
 
 	std::mutex task_mutex_;    // Protects task_queue, pending_ids, stopping, active_epoch
-	std::mutex result_mutex_;  // Protects result_buffer_ (separate to avoid contention with task popping)
 	std::condition_variable cv;
 	bool stopping = false;
-	std::vector<std::jthread> workers;
+	std::vector<std::unique_ptr<WorkerState>> workers;
 
 	std::queue<Task> task_queue;
-	std::vector<Result> result_buffer_;
 	std::unordered_set<PendingSpriteKey, PendingSpriteKeyHash> pending_ids; // To avoid duplicate tasks for the same archive/id/generation/epoch
 	uint64_t active_epoch = 0;
 

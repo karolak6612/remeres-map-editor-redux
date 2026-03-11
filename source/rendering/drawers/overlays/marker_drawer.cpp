@@ -3,10 +3,11 @@
 #include "rendering/core/render_settings.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/map_access.h"
 #include "rendering/core/sprite_batch.h"
+#include "game/spawn.h"
 #include "map/tile.h"
 #include "game/sprites.h"
-#include "editor/editor.h"
 
 MarkerDrawer::MarkerDrawer() {
 }
@@ -14,7 +15,10 @@ MarkerDrawer::MarkerDrawer() {
 MarkerDrawer::~MarkerDrawer() {
 }
 
-void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id, Editor& editor, const RenderSettings& settings) {
+void MarkerDrawer::draw(
+	SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id,
+	IMapAccess& map_access, const RenderSettings& settings
+) {
 	// waypoint (blue flame)
 	if (!settings.ingame && waypoint && settings.show_waypoints) {
 		drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_WAYPOINT, DrawColor(64, 64, 255));
@@ -30,7 +34,7 @@ void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int dra
 	}
 
 	// town temple (gray flag)
-	if (settings.show_towns && tile->isTownExit(editor.map)) {
+	if (settings.show_towns && tile->isTownExit(map_access.getMap())) {
 		drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_TOWN_TEMPLE, DrawColor(255, 255, 64, 170));
 	}
 

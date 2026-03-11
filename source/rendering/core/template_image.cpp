@@ -63,7 +63,7 @@ namespace {
 		}
 
 		mask_index = static_cast<size_t>(sprite_index) + static_cast<size_t>(img->parent->meta.height * img->parent->meta.width);
-		const auto& sprite_list = img->parent->getSpriteList();
+		const auto& sprite_list = img->parent->icon_data.sprite_list;
 		if (static_cast<size_t>(sprite_index) >= sprite_list.size() || mask_index >= sprite_list.size()) {
 			spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", img->texture_id, sprite_index, mask_index, sprite_list.size());
 			return false;
@@ -94,7 +94,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 		return nullptr;
 	}
 
-	const auto& sprite_list = parent->getSpriteList();
+	const auto& sprite_list = parent->icon_data.sprite_list;
 	auto rgbdata = sprite_list[sprite_index]->getRGBData();
 	auto template_rgbdata = sprite_list[mask_index]->getRGBData();
 
@@ -118,7 +118,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 		return nullptr;
 	}
 
-	const auto& sprite_list = parent->getSpriteList();
+	const auto& sprite_list = parent->icon_data.sprite_list;
 	auto rgbadata = sprite_list[sprite_index]->getRGBAData();
 	auto template_rgbdata = sprite_list[mask_index]->getRGBData();
 

@@ -13,10 +13,12 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/draw_context.h"
+#include "rendering/core/map_access.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/frame_options.h"
-#include "editor/editor.h"
+#include "editor/selection.h"
+#include "map/map.h"
 #include "map/tile.h"
 #include "game/sprites.h"
 
@@ -32,15 +34,18 @@ DragShadowDrawer::~DragShadowDrawer() {
 
 #include "rendering/core/primitive_renderer.h"
 
-void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const Position& drag_start) {
+void DragShadowDrawer::draw(
+	const DrawContext& ctx, IMapAccess& map_access, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer,
+	const Position& drag_start
+) {
 	auto& sprite_batch = ctx.sprite_batch;
 	const auto& view = ctx.view;
 	const auto& settings = ctx.settings;
 	const auto& frame = ctx.frame;
 
 	// Draw dragging shadow
-	if (!editor.selection.isBusy() && frame.dragging && !settings.ingame) {
-		for (auto tit = editor.selection.begin(); tit != editor.selection.end(); tit++) {
+	if (!map_access.getSelection().isBusy() && frame.dragging && !settings.ingame) {
+		for (auto tit = map_access.getSelection().begin(); tit != map_access.getSelection().end(); tit++) {
 			Tile* tile = *tit;
 			Position pos = tile->getPosition();
 
@@ -71,7 +76,7 @@ void DragShadowDrawer::draw(const DrawContext& ctx, Editor& editor, ItemDrawer* 
 
 				// save performance when moving large chunks unzoomed
 				ItemVector toRender = TileOperations::getSelectedItems(tile, view.zoom > 3.0);
-				Tile* desttile = editor.map.getTile(pos);
+				Tile* desttile = map_access.getMap().getTile(pos);
 				for (const auto& item : toRender) {
 					if (desttile) {
 						BlitItemParams params(desttile, item, settings, frame);

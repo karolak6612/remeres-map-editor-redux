@@ -22,6 +22,9 @@
 #include <vector>
 
 #include "app/definitions.h"
+#include "rendering/core/light_buffer.h"
+#include "rendering/core/sprite_preload_queue.h"
+#include "rendering/core/frame_accumulators.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/utilities/pattern_calculator.h"
@@ -84,6 +87,11 @@ struct TileDrawPlan {
     };
     std::optional<MarkerCmd> marker;
 
+    // Per-tile side effects collected during planning and merged later.
+    FrameAccumulators accumulators;
+    LightBuffer lights;
+    std::vector<SpritePreloadQueue::Request> preload_requests;
+
     void clear()
     {
         valid = false;
@@ -93,11 +101,15 @@ struct TileDrawPlan {
         items.clear();
         creature.reset();
         marker.reset();
+        accumulators.clear();
+        lights.Clear();
+        preload_requests.clear();
     }
 
     void reserve(size_t item_count = 16)
     {
         items.reserve(item_count);
+        preload_requests.reserve(item_count);
     }
 };
 

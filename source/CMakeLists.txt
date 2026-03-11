@@ -161,6 +161,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_command_queue.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/map_access.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_map_access.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/frame_builder.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/frame_accumulators.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_settings.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/frame_options.h
@@ -169,6 +173,8 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_sprite_resolver.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_animation_state.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_data.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_metadata.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_renderer.h
@@ -184,6 +190,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preload_queue.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/spsc_queue.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/pending_node_requests.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/minimap_colors.h
@@ -216,6 +223,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush_overlay_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/brush_overlay_common.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/creature_overlay_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/door_overlay_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/dragging_overlay_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/generic_overlay_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/wall_overlay_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/grid_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/hook_indicator_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/door_indicator_drawer.h
@@ -234,6 +247,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/brush_selector.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/clipboard_handler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/drawing_controller.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/gl_context_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/input_state.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/keyboard_handler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_display.h
@@ -247,6 +261,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_collector.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_renderer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/render_loop.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/nvg_image_cache.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.h
@@ -531,10 +546,14 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_map_access.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/frame_builder.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/brush_visual_settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_animation_state.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_data.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_decompression.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics.cpp
@@ -576,6 +595,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush_overlay_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/creature_overlay_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/door_overlay_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/dragging_overlay_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/generic_overlay_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush/wall_overlay_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/grid_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/hook_indicator_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/door_indicator_drawer.cpp
@@ -593,6 +617,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/brush_selector.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/clipboard_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/drawing_controller.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/gl_context_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/keyboard_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_display.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/view_state_manager.cpp
@@ -604,6 +629,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/screenshot_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/selection_controller.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_renderer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/render_loop.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/nvg_image_cache.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/tooltip_data_extractor.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/zoom_controller.cpp

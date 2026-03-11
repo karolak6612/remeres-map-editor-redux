@@ -18,6 +18,11 @@
 #ifndef RME_RENDERING_CORE_SPRITE_DATABASE_H_
 #define RME_RENDERING_CORE_SPRITE_DATABASE_H_
 
+#include "rendering/core/atlas_region_cache.h"
+#include "rendering/core/sprite_animation_state.h"
+#include "rendering/core/sprite_icon_data.h"
+#include "rendering/core/sprite_metadata.h"
+
 #include <vector>
 #include <unordered_map>
 #include <memory>
@@ -26,6 +31,8 @@
 class Sprite;
 class GameSprite;
 class Image;
+struct AtlasRegion;
+struct Outfit;
 
 class SpriteDatabase {
 public:
@@ -56,10 +63,34 @@ public:
 	std::vector<Image*>& residentImages() { return resident_images_; }
 	std::vector<GameSprite*>& residentGameSprites() { return resident_game_sprites_; }
 
+	const SpriteMetadata* getMeta(int id) const;
+	AtlasRegionCache* getAtlasCache(int id);
+	const AtlasRegionCache* getAtlasCache(int id) const;
+	SpriteAnimationState* getAnimation(int id);
+	const SpriteAnimationState* getAnimation(int id) const;
+	SpriteIconData* getIconData(int id);
+	const SpriteIconData* getIconData(int id) const;
+
+	bool isSimpleAndLoaded(int id) const;
+	const AtlasRegion* getItemAtlasRegion(
+		int id, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame
+	);
+	const AtlasRegion* getCreatureAtlasRegion(
+		int id, int x, int y, int dir, int addon, int pattern_z, const Outfit& outfit, int frame
+	);
+
 private:
+	void syncComponents(int id, const GameSprite& sprite);
+	GameSprite* getGameSprite(int id);
+	const GameSprite* getGameSprite(int id) const;
+
 	SpriteVector sprite_space_;
 	ImageVector image_space_;
 	std::unordered_map<int, std::unique_ptr<Sprite>> editor_sprite_space_;
+	std::vector<SpriteMetadata> metadata_;
+	std::vector<AtlasRegionCache> atlas_caches_;
+	std::vector<SpriteAnimationState> animations_;
+	std::vector<SpriteIconData> icon_data_;
 
 	std::vector<Image*> resident_images_;
 	std::vector<GameSprite*> resident_game_sprites_;

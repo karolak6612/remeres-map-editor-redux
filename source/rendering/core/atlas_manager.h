@@ -4,6 +4,7 @@
 #include "rendering/core/texture_atlas.h"
 #include <cstdint>
 #include <deque>
+#include <shared_mutex>
 #include <unordered_map>
 #include <vector>
 
@@ -53,13 +54,7 @@ public:
 	 * @param sprite_id Sprite ID
 	 * @return Pointer to region, or nullptr if not found
 	 */
-	inline const AtlasRegion* getRegion(uint32_t sprite_id) const {
-		if (sprite_id < DIRECT_LOOKUP_SIZE) {
-			return direct_lookup_[sprite_id];
-		}
-		auto it = sprite_regions_.find(sprite_id);
-		return it != sprite_regions_.end() ? it->second : nullptr;
-	}
+	const AtlasRegion* getRegion(uint32_t sprite_id) const;
 
 	/**
 	 * Check if a sprite has been added.
@@ -99,6 +94,11 @@ public:
 	bool ensureInitialized();
 
 private:
+	const AtlasRegion* addSpriteUnlocked(uint32_t sprite_id, const uint8_t* rgba_data);
+	bool ensureInitializedUnlocked();
+	const AtlasRegion* getRegionUnlocked(uint32_t sprite_id) const;
+
+	mutable std::shared_mutex atlas_mutex_;
 	TextureAtlas atlas_;
 
 	// Stable storage for AtlasRegions (deque doesn't invalidate pointers)

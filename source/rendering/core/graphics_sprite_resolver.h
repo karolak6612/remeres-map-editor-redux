@@ -39,6 +39,30 @@ public:
 		return gfx_.getCreatureSprite(look_type);
 	}
 
+	const SpriteMetadata* getSpriteMetadata(int client_id) const override {
+		return gfx_.getSpriteMetadata(client_id);
+	}
+
+	SpriteAnimationState* getSpriteAnimation(int client_id) override {
+		return gfx_.getSpriteAnimation(client_id);
+	}
+
+	bool isSpriteSimpleAndLoaded(int client_id) const override {
+		return gfx_.isSpriteSimpleAndLoaded(client_id);
+	}
+
+	const AtlasRegion* getItemAtlasRegion(
+		int client_id, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame
+	) override {
+		return gfx_.getItemAtlasRegion(client_id, x, y, layer, subtype, pattern_x, pattern_y, pattern_z, frame);
+	}
+
+	const AtlasRegion* getCreatureAtlasRegion(
+		int client_id, int x, int y, int dir, int addon, int pattern_z, const Outfit& outfit, int frame
+	) override {
+		return gfx_.getCreatureAtlasRegion(client_id, x, y, dir, addon, pattern_z, outfit, frame);
+	}
+
 private:
 	GraphicManager& gfx_;
 };

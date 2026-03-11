@@ -40,7 +40,7 @@ public:
 		patterns.y = calculatePatternOffset(pos.y, spr->meta.pattern_y);
 		patterns.z = calculatePatternOffset(pos.z, spr->meta.pattern_z);
 
-		patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
+		patterns.frame = spr->animation.getFrame();
 
 		if (it.isSplash() || it.isFluidContainer()) {
 			patterns.subtype = item->getSubtype();

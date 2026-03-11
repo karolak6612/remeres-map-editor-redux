@@ -14,6 +14,7 @@
 #include "rendering/core/sprite_resolver.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/animator.h"
+#include "rendering/core/sprite_metadata.h"
 #include "item_definitions/core/item_definition_store.h"
 #include <spdlog/spdlog.h>
 
@@ -45,6 +46,10 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		if (!spr || outfit.lookType == 0) {
 			return;
 		}
+		const SpriteMetadata* meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(spr->getId())) : nullptr;
+		if (!meta) {
+			meta = &spr->meta;
+		}
 
 		// Resolve animation frame for walk animation
 		// For in-game preview: animationPhase controls walk animation
@@ -58,6 +63,10 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		int pattern_z = 0;
 		if (outfit.lookMount != 0) {
 			if (GameSprite* mountSpr = sprite_resolver ? sprite_resolver->getCreatureSprite(outfit.lookMount) : nullptr) {
+				const SpriteMetadata* mount_meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(mountSpr->getId())) : nullptr;
+				if (!mount_meta) {
+					mount_meta = &mountSpr->meta;
+				}
 				// generate mount colors
 				Outfit mountOutfit;
 				mountOutfit.lookType = outfit.lookMount;
@@ -66,21 +75,26 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				mountOutfit.lookLegs = outfit.lookMountLegs;
 				mountOutfit.lookFeet = outfit.lookMountFeet;
 
-				for (int cx = 0; cx != mountSpr->meta.width; ++cx) {
-					for (int cy = 0; cy != mountSpr->meta.height; ++cy) {
-						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
+				for (int cx = 0; cx != mount_meta->width; ++cx) {
+					for (int cy = 0; cy != mount_meta->height; ++cy) {
+						const AtlasRegion* region = sprite_resolver ? sprite_resolver->getCreatureAtlasRegion(
+							static_cast<int>(mountSpr->getId()), cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame)
+							: mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
+							sprite_drawer->glBlitAtlasQuad(
+								sprite_batch, screenx - cx * TILE_SIZE - mount_meta->drawoffset_x, screeny - cy * TILE_SIZE - mount_meta->drawoffset_y, region,
+								options.color
+							);
 						}
 					}
 				}
 
-				pattern_z = std::clamp(spr->meta.pattern_z - 1, 0, 1);
+				pattern_z = std::clamp(meta->pattern_z - 1, 0, 1);
 			}
 		}
 
 		// pattern_y => creature addon
-		for (int pattern_y = 0; pattern_y < spr->meta.pattern_y; pattern_y++) {
+		for (int pattern_y = 0; pattern_y < meta->pattern_y; pattern_y++) {
 
 			// continue if we dont have this addon
 			if (pattern_y > 0) {
@@ -89,11 +103,15 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				}
 			}
 
-			for (int cx = 0; cx != spr->meta.width; ++cx) {
-				for (int cy = 0; cy != spr->meta.height; ++cy) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
+			for (int cx = 0; cx != meta->width; ++cx) {
+				for (int cy = 0; cy != meta->height; ++cy) {
+					const AtlasRegion* region = sprite_resolver ? sprite_resolver->getCreatureAtlasRegion(
+						static_cast<int>(spr->getId()), cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame)
+						: spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
+						sprite_drawer->glBlitAtlasQuad(
+							sprite_batch, screenx - cx * TILE_SIZE - meta->drawoffset_x, screeny - cy * TILE_SIZE - meta->drawoffset_y, region, options.color
+						);
 					}
 				}
 			}
