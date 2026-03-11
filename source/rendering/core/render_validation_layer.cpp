@@ -93,6 +93,7 @@ namespace {
 		SettingsSummary settings;
 		OptionsSummary options;
 		size_t floor_count = 0;
+		size_t total_chunks = 0;
 		size_t total_commands = 0;
 		size_t light_count = 0;
 		size_t hook_count = 0;
@@ -185,20 +186,28 @@ namespace {
 		summary.view = SummarizeView(prepared.frame.view);
 		summary.settings = SummarizeSettings(prepared.frame.settings);
 		summary.options = SummarizeOptions(prepared.frame.options);
-		summary.floor_count = prepared.floor_ranges.size();
-		summary.total_commands = prepared.commands.size();
+		summary.floor_count = prepared.floors.size();
 		summary.light_count = prepared.lights.size();
 		summary.hook_count = prepared.accumulators.hooks.size();
 		summary.door_count = prepared.accumulators.doors.size();
 		summary.creature_name_count = prepared.accumulators.creature_names.size();
 		summary.tooltip_count = prepared.accumulators.tooltips.count();
 		summary.preload_request_count = prepared.preload_requests.size();
-		summary.floors.reserve(prepared.floor_ranges.size());
-		for (const auto& floor : prepared.floor_ranges) {
-			summary.floors.push_back(FloorSummary {.map_z = floor.map_z, .command_count = floor.command_count});
-		}
-		for (const auto& command : prepared.commands.commands()) {
-			summary.command_type_counts[command.index()] += 1;
+		summary.floors.reserve(prepared.floors.size());
+		for (const auto& floor : prepared.floors) {
+			size_t floor_command_count = 0;
+			summary.total_chunks += floor.chunks.size();
+			for (const auto& chunk : floor.chunks) {
+				if (!chunk) {
+					continue;
+				}
+				floor_command_count += chunk->commands.size();
+				for (const auto& command : chunk->commands.commands()) {
+					summary.command_type_counts[command.index()] += 1;
+				}
+			}
+			summary.total_commands += floor_command_count;
+			summary.floors.push_back(FloorSummary {.map_z = floor.map_z, .command_count = floor_command_count});
 		}
 		return summary;
 	}
@@ -229,6 +238,9 @@ namespace {
 		}
 		if (lhs.total_commands != rhs.total_commands) {
 			return "total command count differs";
+		}
+		if (lhs.total_chunks != rhs.total_chunks) {
+			return "visible chunk count differs";
 		}
 		if (lhs.light_count != rhs.light_count) {
 			return "light count differs";

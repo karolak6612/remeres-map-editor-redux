@@ -2,8 +2,10 @@
 
 #include "rendering/core/tile_planning_pool.h"
 
+#include "rendering/core/chunk_source_snapshot.h"
 #include "rendering/core/draw_context.h"
-#include "rendering/core/tile_render_snapshot.h"
+#include "rendering/core/prepared_render_chunk.h"
+#include "rendering/core/prepared_render_chunk_builder.h"
 #include "rendering/drawers/tiles/tile_draw_plan.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
 
@@ -27,33 +29,32 @@ TilePlanningPool::~TilePlanningPool()
 	job_cv_.notify_all();
 }
 
-void TilePlanningPool::Plan(
-	TileRenderer& tile_renderer, const FramePlanContext& ctx, bool draw_lights, std::span<const TileRenderSnapshot> tiles,
-	std::span<TileDrawPlan> plans
+void TilePlanningPool::BuildChunks(
+	TileRenderer& tile_renderer, const FramePlanContext& ctx, std::span<const ChunkSourceSnapshot> chunks,
+	std::span<std::shared_ptr<const PreparedRenderChunk>> outputs, uint64_t generation
 )
 {
-	if (tiles.empty()) {
+	if (chunks.empty()) {
 		return;
 	}
 
 	if (workers_.empty()) {
-		ExecuteChunks(tile_renderer, ctx, draw_lights, tiles, plans, tiles.size());
+		ExecuteChunks(tile_renderer, ctx, chunks, outputs, chunks.size(), generation);
 		return;
 	}
 
 	std::lock_guard dispatch_lock(dispatch_mutex_);
-	const size_t chunk_size = std::max<size_t>(1, (tiles.size() + workers_.size()) / (workers_.size() + 1));
+	const size_t chunk_size = std::max<size_t>(1, (chunks.size() + workers_.size()) / (workers_.size() + 1));
 
 	{
 		std::lock_guard lock(job_mutex_);
 		job_.ctx = &ctx;
 		job_.tile_renderer = &tile_renderer;
-		job_.tiles = tiles;
-		job_.plans = plans;
-		job_.draw_lights = draw_lights;
+		job_.chunks = chunks;
+		job_.outputs = outputs;
 		job_.chunk_size = chunk_size;
 		job_.pending_workers = workers_.size();
-		job_.generation += 1;
+		job_.generation = generation;
 		job_.active = true;
 		next_index_.store(0, std::memory_order_release);
 	}
@@ -62,7 +63,7 @@ void TilePlanningPool::Plan(
 
 	// The caller participates in planning to reduce idle time while the
 	// persistent workers consume the remaining chunks.
-	ExecuteChunks(tile_renderer, ctx, draw_lights, tiles, plans, chunk_size);
+	ExecuteChunks(tile_renderer, ctx, chunks, outputs, chunk_size, generation);
 
 	std::unique_lock lock(job_mutex_);
 	job_cv_.wait(lock, [&] { return !job_.active; });
@@ -85,9 +86,7 @@ void TilePlanningPool::WorkerMain(std::stop_token stop_token)
 			observed_generation = job_.generation;
 		}
 
-		ExecuteChunks(
-			*local_job.tile_renderer, *local_job.ctx, local_job.draw_lights, local_job.tiles, local_job.plans, local_job.chunk_size
-		);
+		ExecuteChunks(*local_job.tile_renderer, *local_job.ctx, local_job.chunks, local_job.outputs, local_job.chunk_size, observed_generation);
 
 		std::lock_guard lock(job_mutex_);
 		if (job_.active && job_.generation == observed_generation) {
@@ -100,20 +99,19 @@ void TilePlanningPool::WorkerMain(std::stop_token stop_token)
 }
 
 void TilePlanningPool::ExecuteChunks(
-	TileRenderer& tile_renderer, const FramePlanContext& ctx, bool draw_lights, std::span<const TileRenderSnapshot> tiles,
-	std::span<TileDrawPlan> plans, size_t chunk_size
+	TileRenderer& tile_renderer, const FramePlanContext& ctx, std::span<const ChunkSourceSnapshot> chunks,
+	std::span<std::shared_ptr<const PreparedRenderChunk>> outputs, size_t chunk_size, uint64_t generation
 )
 {
 	for (;;) {
 		const size_t begin = next_index_.fetch_add(chunk_size, std::memory_order_relaxed);
-		if (begin >= tiles.size()) {
+		if (begin >= chunks.size()) {
 			return;
 		}
 
-		const size_t end = std::min(tiles.size(), begin + chunk_size);
+		const size_t end = std::min(chunks.size(), begin + chunk_size);
 		for (size_t i = begin; i < end; ++i) {
-			plans[i].clear();
-			tile_renderer.PlanTile(ctx, tiles[i], draw_lights, plans[i]);
+			outputs[i] = PreparedRenderChunkBuilder::Build(tile_renderer, ctx, chunks[i], generation);
 		}
 	}
 }

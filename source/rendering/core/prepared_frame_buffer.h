@@ -2,18 +2,18 @@
 #define RME_RENDERING_CORE_PREPARED_FRAME_BUFFER_H_
 
 #include <cstdint>
+#include <memory>
 
-#include "rendering/core/draw_command_queue.h"
 #include "rendering/core/draw_frame.h"
 #include "rendering/core/frame_accumulators.h"
 #include "rendering/core/light_buffer.h"
+#include "rendering/core/prepared_render_chunk.h"
 #include "rendering/core/sprite_preload_queue.h"
 #include <vector>
 
-struct PreparedFloorRange {
+struct PreparedVisibleFloor {
     int map_z = 0;
-    size_t command_start = 0;
-    size_t command_count = 0;
+    std::vector<std::shared_ptr<const PreparedRenderChunk>> chunks;
 };
 
 // Cross-thread handoff buffer for prepared rendering work.
@@ -26,26 +26,23 @@ struct PreparedFrameBuffer {
     DrawFrame frame;
     FrameAccumulators accumulators;
     LightBuffer lights;
-    DrawCommandQueue commands;
     std::vector<SpritePreloadQueue::Request> preload_requests;
-    std::vector<PreparedFloorRange> floor_ranges;
+    std::vector<PreparedVisibleFloor> floors;
 
     void clearTransientData()
     {
         accumulators.clear();
         lights.Clear();
-        commands.clear();
         preload_requests.clear();
-        floor_ranges.clear();
+        floors.clear();
     }
 
     void reserve(size_t light_capacity, size_t hook_capacity, size_t door_capacity, size_t creature_capacity, size_t command_capacity)
     {
         lights.reserve(light_capacity);
         accumulators.reserve(hook_capacity, door_capacity, creature_capacity);
-        commands.reserve(command_capacity);
         preload_requests.reserve(command_capacity);
-        floor_ranges.reserve(16);
+        floors.reserve(16);
     }
 };
 

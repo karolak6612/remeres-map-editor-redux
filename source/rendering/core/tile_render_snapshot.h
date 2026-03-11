@@ -6,10 +6,6 @@
 #include "app/definitions.h"
 #include "map/position.h"
 #include "rendering/core/sprite_light.h"
-#include "rendering/drawers/entities/creature_name_drawer.h"
-#include "rendering/drawers/overlays/door_indicator_drawer.h"
-#include "rendering/drawers/overlays/hook_indicator_drawer.h"
-#include "rendering/ui/tooltip_data.h"
 #include "map/tile.h"
 
 #include <cstdint>
@@ -67,8 +63,7 @@ struct MarkerRenderSnapshot {
 };
 
 struct LoadingPlaceholderSnapshot {
-    int draw_x = 0;
-    int draw_y = 0;
+    Position pos;
     int width = 0;
     int height = 0;
     DrawColor color;
@@ -92,10 +87,6 @@ struct TileRenderSnapshot {
     std::vector<ItemRenderSnapshot> items;
     std::optional<CreatureRenderSnapshot> creature;
     std::optional<MarkerRenderSnapshot> marker;
-    std::vector<TooltipData> tooltips;
-    std::vector<HookIndicatorDrawer::HookRequest> hooks;
-    std::vector<DoorIndicatorDrawer::DoorRequest> doors;
-    std::optional<CreatureLabel> creature_label;
 
     [[nodiscard]] bool hasHookSouth() const
     {
@@ -120,25 +111,6 @@ struct TileRenderSnapshot {
     [[nodiscard]] bool isBlocking() const
     {
         return (statflags & TILESTATE_BLOCKING) != 0;
-    }
-};
-
-struct VisibleFloorSnapshot {
-    int map_z = 0;
-    std::vector<TileRenderSnapshot> tiles;
-    std::vector<LoadingPlaceholderSnapshot> loading_placeholders;
-
-    [[nodiscard]] size_t estimatedCommandCount() const
-    {
-        size_t commands = loading_placeholders.size();
-        for (const auto& tile : tiles) {
-            commands += tile.items.size();
-            commands += tile.ground ? 1U : 0U;
-            commands += tile.creature ? 1U : 0U;
-            commands += tile.marker ? 1U : 0U;
-            commands += 3U;
-        }
-        return commands;
     }
 };
 

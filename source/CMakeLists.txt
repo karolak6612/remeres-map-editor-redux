@@ -159,6 +159,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_region_cache.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/chunk_source_snapshot.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_command_queue.h
@@ -194,7 +195,12 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/spsc_queue.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/pending_node_requests.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/prepared_frame_buffer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/prepared_render_chunk.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/prepared_render_chunk_builder.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_chunk_cache.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_chunk_key.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_prep_snapshot.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_variant_key.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_validation_layer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/minimap_colors.h
@@ -575,6 +581,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/template_image.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preload_queue.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preloader.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_chunk_cache.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/prepared_render_chunk_builder.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/tile_render_snapshot_builder.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/tile_planning_pool.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/render_validation_layer.cpp

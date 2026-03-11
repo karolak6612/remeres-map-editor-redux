@@ -1,45 +1,54 @@
 //////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
 
 #include "rendering/drawers/map_layer_drawer.h"
+
+#include <algorithm>
+
 #include "app/definitions.h"
-#include "app/main.h"
 #include "map/map.h"
 #include "map/map_region.h"
-#include "rendering/core/tile_render_snapshot.h"
-#include "rendering/core/tile_render_snapshot_builder.h"
-#include "rendering/core/map_access.h"
-#include "rendering/core/draw_command_queue.h"
+#include "rendering/core/chunk_source_snapshot.h"
 #include "rendering/core/draw_context.h"
-#include "rendering/core/prepared_frame_buffer.h"
-#include "rendering/core/frame_options.h"
-#include "rendering/core/light_buffer.h"
+#include "rendering/core/map_access.h"
 #include "rendering/core/pending_node_requests.h"
-#include "rendering/core/primitive_renderer.h"
-#include "rendering/core/render_settings.h"
+#include "rendering/core/render_chunk_key.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/sprite_batch.h"
 #include "rendering/core/tile_planning_pool.h"
-#include "rendering/core/sprite_preloader.h"
+#include "rendering/core/tile_render_snapshot_builder.h"
 #include "rendering/drawers/overlays/grid_drawer.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
-#include "rendering/drawers/tiles/tile_draw_plan.h"
 
-#include <vector>
+namespace {
+
+[[nodiscard]] int floorDiv(int value, int divisor)
+{
+    const int quotient = value / divisor;
+    const int remainder = value % divisor;
+    return remainder < 0 ? quotient - 1 : quotient;
+}
+
+[[nodiscard]] size_t estimateChunkTileCapacity()
+{
+    return static_cast<size_t>(RENDER_CHUNK_SIZE) * static_cast<size_t>(RENDER_CHUNK_SIZE);
+}
+
+[[nodiscard]] size_t estimateChunkNodeCapacity()
+{
+    constexpr int nodes_per_side = RENDER_CHUNK_SIZE / 4;
+    return static_cast<size_t>(nodes_per_side) * static_cast<size_t>(nodes_per_side);
+}
+
+[[nodiscard]] size_t estimateSideEffectCapacity(size_t tile_capacity, bool enabled, size_t divisor, size_t minimum_capacity)
+{
+    if (!enabled) {
+        return 0;
+    }
+    return std::max(minimum_capacity, tile_capacity / divisor);
+}
+
+} // namespace
 
 MapLayerDrawer::MapLayerDrawer(
     TileRenderer* tile_renderer, GridDrawer* grid_drawer, IMapAccess* map_access, PendingNodeRequests* pending_requests
@@ -50,72 +59,65 @@ MapLayerDrawer::MapLayerDrawer(
 
 MapLayerDrawer::~MapLayerDrawer() { }
 
-void MapLayerDrawer::MergePlans(std::span<const TileDrawPlan> plans, PreparedFrameBuffer& prepared)
+VisibleChunkList MapLayerDrawer::BuildVisibleChunkList(int map_z, const FloorViewParams& floor_params) const
 {
-    for (const auto& plan : plans) {
-        if (!plan.valid) {
-            continue;
+    constexpr int safety_margin_tiles = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+    const int start_chunk_x = floorDiv(floor_params.start_x - safety_margin_tiles, RENDER_CHUNK_SIZE);
+    const int start_chunk_y = floorDiv(floor_params.start_y - safety_margin_tiles, RENDER_CHUNK_SIZE);
+    const int end_chunk_x = floorDiv(floor_params.end_x + safety_margin_tiles, RENDER_CHUNK_SIZE);
+    const int end_chunk_y = floorDiv(floor_params.end_y + safety_margin_tiles, RENDER_CHUNK_SIZE);
+
+    VisibleChunkList visible_chunks {.map_z = map_z};
+    visible_chunks.chunks.reserve(
+        static_cast<size_t>(std::max(0, end_chunk_x - start_chunk_x + 1)) * static_cast<size_t>(std::max(0, end_chunk_y - start_chunk_y + 1))
+    );
+
+    for (int chunk_x = start_chunk_x; chunk_x <= end_chunk_x; ++chunk_x) {
+        for (int chunk_y = start_chunk_y; chunk_y <= end_chunk_y; ++chunk_y) {
+            visible_chunks.chunks.push_back(RenderChunkKey {.map_z = map_z, .chunk_x = chunk_x, .chunk_y = chunk_y});
         }
-        tile_renderer->MergePlanSideEffects(plan, prepared.accumulators, prepared.lights);
-        prepared.preload_requests.insert(prepared.preload_requests.end(), plan.preload_requests.begin(), plan.preload_requests.end());
     }
+
+    return visible_chunks;
 }
 
-void MapLayerDrawer::PlanTilesParallel(
-    const FramePlanContext& ctx, bool draw_lights, std::span<const TileRenderSnapshot> tiles, std::span<TileDrawPlan> plans
-)
-{
-    if (tiles.empty()) {
-        return;
-    }
-
-    if (planning_pool_) {
-        planning_pool_->Plan(*tile_renderer, ctx, draw_lights, tiles, plans);
-        return;
-    }
-
-    for (size_t i = 0; i < tiles.size(); ++i) {
-        plans[i].clear();
-        tile_renderer->PlanTile(ctx, tiles[i], draw_lights, plans[i]);
-    }
-}
-
-VisibleFloorSnapshot MapLayerDrawer::BuildVisibleFloorSnapshot(
-    const FramePlanContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params, uint32_t current_house_id
+ChunkSourceSnapshot MapLayerDrawer::BuildChunkSourceSnapshot(
+    const FramePlanContext& ctx, const RenderChunkKey& key, bool live_client, uint32_t current_house_id
 )
 {
     const auto& view = ctx.view;
     const auto& settings = ctx.settings;
-    int nd_start_x = floor_params.start_x & ~3;
-    int nd_start_y = floor_params.start_y & ~3;
-    int nd_end_x = (floor_params.end_x & ~3) + 4;
-    int nd_end_y = (floor_params.end_y & ~3) + 4;
+    const int chunk_start_x = key.startX();
+    const int chunk_start_y = key.startY();
+    const int node_start_x = chunk_start_x;
+    const int node_start_y = chunk_start_y;
+    const int node_end_x = chunk_start_x + RENDER_CHUNK_SIZE - 4;
+    const int node_end_y = chunk_start_y + RENDER_CHUNK_SIZE - 4;
 
-    const int offset = (map_z <= GROUND_LAYER) ? (GROUND_LAYER - map_z) * TILE_SIZE : TILE_SIZE * (view.floor - map_z);
-    const int base_screen_x = -view.view_scroll_x - offset;
-    const int base_screen_y = -view.view_scroll_y - offset;
+    ChunkSourceSnapshot chunk_snapshot {.key = key};
+    chunk_snapshot.reserve(
+        estimateChunkTileCapacity(),
+        estimateChunkNodeCapacity(),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.show_tooltips, 8, 16),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.show_hooks, 16, 8),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.highlight_locked_doors, 16, 8),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.show_creatures, 32, 4)
+    );
 
-    VisibleFloorSnapshot floor_snapshot {.map_z = map_z};
-    floor_snapshot.tiles.reserve(2048);
-
-    auto collectNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
-        const int node_draw_x = nd_map_x * TILE_SIZE + base_screen_x;
-        const int node_draw_y = nd_map_y * TILE_SIZE + base_screen_y;
-
-        if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+    auto collectNode = [&](MapNode* node, int nd_map_x, int nd_map_y, bool live) {
+        if (!node) {
             return;
         }
 
-        if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
-            if (!nd->isRequested(map_z > GROUND_LAYER)) {
+        if (live && !node->isVisible(key.map_z > GROUND_LAYER)) {
+            if (!node->isRequested(key.map_z > GROUND_LAYER)) {
                 if (pending_requests_) {
-                    pending_requests_->enqueue(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
+                    pending_requests_->enqueue(nd_map_x, nd_map_y, key.map_z > GROUND_LAYER);
                 }
-                nd->setRequested(map_z > GROUND_LAYER, true);
+                node->setRequested(key.map_z > GROUND_LAYER, true);
             }
-            floor_snapshot.loading_placeholders.push_back(LoadingPlaceholderSnapshot {
-                .draw_x = nd_map_x * TILE_SIZE + base_screen_x,
-                .draw_y = nd_map_y * TILE_SIZE + base_screen_y,
+            chunk_snapshot.loading_placeholders.push_back(LoadingPlaceholderSnapshot {
+                .pos = Position(nd_map_x, nd_map_y, key.map_z),
                 .width = TILE_SIZE * 4,
                 .height = TILE_SIZE * 4,
                 .color = DrawColor(255, 0, 255, 128),
@@ -123,98 +125,48 @@ VisibleFloorSnapshot MapLayerDrawer::BuildVisibleFloorSnapshot(
             return;
         }
 
-        const bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
-        Floor* floor = nd->getFloor(map_z);
+        Floor* floor = node->getFloor(key.map_z);
         if (!floor) {
             return;
         }
 
         TileLocation* location = floor->locs.data();
-        int draw_x_base = node_draw_x;
-        for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
-            int draw_y = node_draw_y;
-            for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
+        for (int local_x = 0; local_x < 4; ++local_x) {
+            for (int local_y = 0; local_y < 4; ++local_y, ++location) {
                 if (!location->get()) [[likely]] {
                     continue;
                 }
-                if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-                    continue;
-                }
 
+                const int tile_map_x = nd_map_x + local_x;
+                const int tile_map_y = nd_map_y + local_y;
+                const int local_draw_x = (tile_map_x - chunk_start_x) * TILE_SIZE;
+                const int local_draw_y = (tile_map_y - chunk_start_y) * TILE_SIZE;
                 const Map* map = map_access ? &map_access->getMap() : nullptr;
-                if (auto snapshot = TileRenderSnapshotBuilder::Build(*location, ctx.view, settings, ctx.frame, map, current_house_id, draw_x_base, draw_y)) {
-                    floor_snapshot.tiles.push_back(std::move(*snapshot));
-                }
+                static_cast<void>(TileRenderSnapshotBuilder::BuildInto(
+                    chunk_snapshot, *location, view, settings, ctx.frame, map, current_house_id, local_draw_x, local_draw_y
+                ));
             }
         }
     };
 
     if (live_client) {
-        for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
-            for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
-                MapNode* nd = map_access->getMap().getLeaf(nd_map_x, nd_map_y);
-                if (!nd) {
-                    nd = map_access->getMap().createLeaf(nd_map_x, nd_map_y);
-                    nd->setVisible(false, false);
+        for (int nd_map_x = node_start_x; nd_map_x <= node_end_x; nd_map_x += 4) {
+            for (int nd_map_y = node_start_y; nd_map_y <= node_end_y; nd_map_y += 4) {
+                MapNode* node = map_access->getMap().getLeaf(nd_map_x, nd_map_y);
+                if (!node) {
+                    node = map_access->getMap().createLeaf(nd_map_x, nd_map_y);
+                    node->setVisible(false, false);
                 }
-                collectNode(nd, nd_map_x, nd_map_y, true);
+                collectNode(node, nd_map_x, nd_map_y, true);
             }
         }
     } else {
-        const int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-        const int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-        const int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-        const int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-
-        map_access->getMap().visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
-            collectNode(nd, nd_map_x, nd_map_y, false);
-        });
-    }
-
-    return floor_snapshot;
-}
-
-PreparedFloorRange MapLayerDrawer::PrepareFloor(const FramePlanContext& ctx, const VisibleFloorSnapshot& floor_snapshot, PreparedFrameBuffer& prepared)
-{
-    const bool draw_lights = ctx.settings.isDrawLight() && ctx.view.zoom <= 10.0;
-    if (reusable_plans_.size() < floor_snapshot.tiles.size()) {
-        const size_t previous_size = reusable_plans_.size();
-        reusable_plans_.resize(floor_snapshot.tiles.size());
-        for (size_t i = previous_size; i < reusable_plans_.size(); ++i) {
-            reusable_plans_[i].reserve();
+        for (int nd_map_x = node_start_x; nd_map_x <= node_end_x; nd_map_x += 4) {
+            for (int nd_map_y = node_start_y; nd_map_y <= node_end_y; nd_map_y += 4) {
+                collectNode(map_access->getMap().getLeaf(nd_map_x, nd_map_y), nd_map_x, nd_map_y, false);
+            }
         }
     }
 
-    auto plans = std::span<TileDrawPlan>(reusable_plans_.data(), floor_snapshot.tiles.size());
-    for (auto& plan : plans) {
-        plan.clear();
-    }
-
-    PlanTilesParallel(ctx, draw_lights, floor_snapshot.tiles, plans);
-    MergePlans(plans, prepared);
-
-    prepared.commands.reserve(prepared.commands.size() + floor_snapshot.estimatedCommandCount());
-    const size_t command_start = prepared.commands.size();
-    for (const auto& placeholder : floor_snapshot.loading_placeholders) {
-        prepared.commands.push(DrawFilledRectCmd {
-            .draw_x = placeholder.draw_x,
-            .draw_y = placeholder.draw_y,
-            .width = placeholder.width,
-            .height = placeholder.height,
-            .color = placeholder.color,
-        });
-    }
-
-    for (auto& plan : plans) {
-        if (!plan.valid) {
-            continue;
-        }
-        tile_renderer->QueuePlanCommands(plan, prepared.commands);
-    }
-
-    return PreparedFloorRange {
-        .map_z = floor_snapshot.map_z,
-        .command_start = command_start,
-        .command_count = prepared.commands.size() - command_start,
-    };
+    return chunk_snapshot;
 }

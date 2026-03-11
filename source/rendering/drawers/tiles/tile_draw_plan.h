@@ -22,6 +22,7 @@
 #include <vector>
 
 #include "app/definitions.h"
+#include "map/position.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preload_queue.h"
 #include "rendering/core/tile_render_snapshot.h"
@@ -38,12 +39,14 @@
 
 struct TileDrawPlan {
     bool valid = false;
+    Position pos;
     int draw_x = 0;
     int draw_y = 0;
 
     // Only-colors mode: single colored square instead of individual items
     struct ColorSquare {
         DrawColor color;
+        bool apply_highlight_pulse = false;
     };
     std::optional<ColorSquare> color_square;
 
@@ -51,12 +54,13 @@ struct TileDrawPlan {
     struct ZoneBrush {
         ServerItemId sprite_id;
         uint8_t r, g, b, a;
+        bool apply_highlight_pulse = false;
     };
     std::optional<ZoneBrush> zone_brush;
 
     // House border highlight overlay
     struct HouseBorder {
-        DrawColor color;
+        uint32_t house_id = 0;
     };
     std::optional<HouseBorder> house_border;
 
@@ -73,6 +77,7 @@ struct TileDrawPlan {
     void clear()
     {
         valid = false;
+        pos = Position();
         color_square.reset();
         zone_brush.reset();
         house_border.reset();
@@ -88,7 +93,7 @@ struct TileDrawPlan {
     {
         items.reserve(item_count);
         preload_requests.reserve(item_count);
-        accumulators.reserve(item_count, item_count, 2);
+        accumulators.reserve(item_count, item_count, 2, item_count);
         lights.reserve(item_count);
     }
 };

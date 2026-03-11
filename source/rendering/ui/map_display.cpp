@@ -130,6 +130,15 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, GUI& gui, Settings& sett
     drawer = std::make_unique<MapDrawer>(editor, RenderContext { gui_.gfx });
     gl_context_ = std::make_unique<rme::rendering::GLContextManager>(this);
     render_loop_ = std::make_unique<rme::rendering::RenderLoop>(*drawer, *gl_context_, editor, *this);
+    previous_editor_state_change_ = editor.onStateChange;
+    editor.onStateChange = [this]() {
+        if (previous_editor_state_change_) {
+            previous_editor_state_change_();
+        }
+        if (drawer) {
+            drawer->InvalidatePreparedChunks();
+        }
+    };
     selection_controller = std::make_unique<SelectionController>(this, editor);
     drawing_controller = std::make_unique<DrawingController>(this, editor);
     screenshot_controller = std::make_unique<ScreenshotController>(this);
@@ -156,6 +165,7 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, GUI& gui, Settings& sett
 
 MapCanvas::~MapCanvas()
 {
+    editor.onStateChange = std::move(previous_editor_state_change_);
     render_loop_.reset();
     drawer.reset();
     gl_context_.reset();

@@ -38,9 +38,8 @@ void appendHookIndicator(std::vector<HookIndicatorDrawer::HookRequest>& hooks, c
     hooks.push_back({pos, definition.hasFlag(ItemFlag::HookSouth), definition.hasFlag(ItemFlag::HookEast)});
 }
 
-ItemRenderSnapshot snapshotItem(const Item& item, const ItemDefinitionView& definition, const Position& pos)
+void fillItemSnapshot(ItemRenderSnapshot& snapshot, const Item& item, const ItemDefinitionView& definition, const Position& pos)
 {
-    ItemRenderSnapshot snapshot;
     snapshot.pos = pos;
     snapshot.server_id = item.getID();
     snapshot.client_id = definition ? definition.clientId() : 0;
@@ -72,28 +71,28 @@ ItemRenderSnapshot snapshotItem(const Item& item, const ItemDefinitionView& defi
             .show_mount = podium->getShowMount(),
             .show_platform = podium->getShowPlatform(),
         };
+    } else {
+        snapshot.podium.reset();
     }
-
-    return snapshot;
 }
 
 } // namespace
 
-std::optional<TileRenderSnapshot> TileRenderSnapshotBuilder::Build(
-    TileLocation& location, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, const Map* map, uint32_t current_house_id,
-    int draw_x, int draw_y
+TileRenderSnapshot* TileRenderSnapshotBuilder::BuildInto(
+    ChunkSourceSnapshot& chunk_snapshot, TileLocation& location, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame,
+    const Map* map, uint32_t current_house_id, int draw_x, int draw_y
 )
 {
     Tile* tile = location.get();
     if (!tile) {
-        return std::nullopt;
+        return nullptr;
     }
 
     if (settings.show_only_modified && !tile->isModified()) {
-        return std::nullopt;
+        return nullptr;
     }
 
-    TileRenderSnapshot snapshot;
+    auto& snapshot = chunk_snapshot.tiles.emplace_back();
     snapshot.pos = location.getPosition();
     snapshot.draw_x = draw_x;
     snapshot.draw_y = draw_y;
@@ -127,48 +126,47 @@ std::optional<TileRenderSnapshot> TileRenderSnapshotBuilder::Build(
 
     if (settings.show_tooltips && snapshot.pos.z == view.floor) {
         if (waypoint && !waypoint->name.empty()) {
-            snapshot.tooltips.reserve(4);
-            snapshot.tooltips.emplace_back(snapshot.pos, std::string(waypoint->name));
+            chunk_snapshot.tooltips.emplace_back(snapshot.pos, std::string(waypoint->name));
         }
     }
 
     if (tile->ground) {
         const auto ground_definition = tile->ground->getDefinition();
-        snapshot.ground = snapshotItem(*tile->ground, ground_definition, snapshot.pos);
+        snapshot.ground.emplace();
+        fillItemSnapshot(*snapshot.ground, *tile->ground, ground_definition, snapshot.pos);
 
         if (!settings.ingame && settings.highlight_locked_doors) {
-            appendDoorIndicator(snapshot.doors, *tile->ground, ground_definition, snapshot.pos);
+            appendDoorIndicator(chunk_snapshot.doors, *tile->ground, ground_definition, snapshot.pos);
         }
 
         if (settings.show_tooltips && snapshot.pos.z == view.floor) {
             TooltipData tooltip;
             if (TooltipDataExtractor::Fill(tooltip, tile->ground.get(), ground_definition, snapshot.pos, tile->isHouseTile(), view.zoom)) {
-                snapshot.tooltips.push_back(std::move(tooltip));
+                chunk_snapshot.tooltips.push_back(std::move(tooltip));
             }
         }
     }
 
     snapshot.items.reserve(tile->items.size());
-    snapshot.hooks.reserve(tile->items.size());
-    snapshot.doors.reserve(tile->items.size());
     for (const auto& item : tile->items) {
         if (!item) {
             continue;
         }
 
         const auto definition = item->getDefinition();
-        snapshot.items.push_back(snapshotItem(*item, definition, snapshot.pos));
+        auto& item_snapshot = snapshot.items.emplace_back();
+        fillItemSnapshot(item_snapshot, *item, definition, snapshot.pos);
 
         if (!settings.ingame && settings.highlight_locked_doors) {
-            appendDoorIndicator(snapshot.doors, *item, definition, snapshot.pos);
+            appendDoorIndicator(chunk_snapshot.doors, *item, definition, snapshot.pos);
         }
         if (!settings.ingame && settings.show_hooks && (definition.hasFlag(ItemFlag::HookSouth) || definition.hasFlag(ItemFlag::HookEast))) {
-            appendHookIndicator(snapshot.hooks, definition, snapshot.pos);
+            appendHookIndicator(chunk_snapshot.hooks, definition, snapshot.pos);
         }
         if (settings.show_tooltips && snapshot.pos.z == view.floor) {
             TooltipData tooltip;
             if (TooltipDataExtractor::Fill(tooltip, item.get(), definition, snapshot.pos, tile->isHouseTile(), view.zoom)) {
-                snapshot.tooltips.push_back(std::move(tooltip));
+                chunk_snapshot.tooltips.push_back(std::move(tooltip));
             }
         }
     }
@@ -183,13 +181,13 @@ std::optional<TileRenderSnapshot> TileRenderSnapshotBuilder::Build(
         };
 
         if (settings.show_creatures && !snapshot.creature->name.empty()) {
-            snapshot.creature_label = CreatureLabel {
+            chunk_snapshot.creature_names.push_back(CreatureLabel {
                 .pos = snapshot.pos,
                 .name = snapshot.creature->name,
-            };
+            });
         }
     }
 
     static_cast<void>(frame);
-    return snapshot;
+    return &snapshot;
 }

@@ -30,6 +30,7 @@ struct NVGcontext;
 #include "rendering/core/draw_frame.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/prepared_frame_buffer.h"
+#include "rendering/core/render_chunk_cache.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/render_prep_snapshot.h"
 #include "rendering/core/shader_program.h"
@@ -100,6 +101,7 @@ class MapDrawer {
     std::unique_ptr<EditorMapAccess> map_access_;
     RenderContext render_ctx_;
     PreparedFrameBuffer prepared_frames_[2];
+    RenderChunkCache chunk_cache_;
     std::atomic<int> write_prepared_index_ {0};
     int render_prepared_index_ = 0;
     std::atomic<bool> has_prepared_frame_ {false};
@@ -126,6 +128,7 @@ class MapDrawer {
 
     // Deferred network node requests — filled during Draw(), drained after
     std::unique_ptr<PendingNodeRequests> pending_requests_;
+    TilePlanningPool* planning_pool_ = nullptr;
 
     // Post-processing
     std::unique_ptr<PostProcessPipeline> post_process_;
@@ -141,6 +144,7 @@ public:
     [[nodiscard]] PreparedFrameBuffer PrepareFrame(RenderPrepSnapshot snapshot);
     void SetupPreparedFrame(PreparedFrameBuffer prepared);
     void SetPlanningPool(TilePlanningPool* planning_pool);
+    void InvalidatePreparedChunks();
     [[nodiscard]] bool HasPreparedFrame() const
     {
         return has_prepared_frame_.load(std::memory_order_acquire);
@@ -197,7 +201,7 @@ public:
 private:
     void DrawMap(const DrawContext& ctx);
     void DrawMapLayer(const DrawContext& ctx, int map_z);
-    void SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue, size_t command_start, size_t command_count);
+    void SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue);
     void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
     void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
     PreparedFrameBuffer& writePreparedFrame()

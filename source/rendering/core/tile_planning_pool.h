@@ -5,15 +5,16 @@
 #include <condition_variable>
 #include <cstddef>
 #include <cstdint>
+#include <memory>
 #include <mutex>
 #include <span>
 #include <thread>
 #include <vector>
 
+struct ChunkSourceSnapshot;
+struct PreparedRenderChunk;
 class TileRenderer;
 struct FramePlanContext;
-struct TileDrawPlan;
-struct TileRenderSnapshot;
 
 // Persistent worker pool for snapshot-driven tile planning.
 // The caller submits one batch at a time and waits for completion, while the
@@ -26,10 +27,10 @@ public:
 	TilePlanningPool(const TilePlanningPool&) = delete;
 	TilePlanningPool& operator=(const TilePlanningPool&) = delete;
 
-	void Plan(
-		TileRenderer& tile_renderer, const FramePlanContext& ctx, bool draw_lights, std::span<const TileRenderSnapshot> tiles,
-		std::span<TileDrawPlan> plans
-	);
+    void BuildChunks(
+        TileRenderer& tile_renderer, const FramePlanContext& ctx, std::span<const ChunkSourceSnapshot> chunks,
+        std::span<std::shared_ptr<const PreparedRenderChunk>> outputs, uint64_t generation
+    );
 
 	[[nodiscard]] size_t workerCount() const
 	{
@@ -40,9 +41,8 @@ private:
 	struct JobState {
 		const FramePlanContext* ctx = nullptr;
 		TileRenderer* tile_renderer = nullptr;
-		std::span<const TileRenderSnapshot> tiles;
-		std::span<TileDrawPlan> plans;
-		bool draw_lights = false;
+		std::span<const ChunkSourceSnapshot> chunks;
+		std::span<std::shared_ptr<const PreparedRenderChunk>> outputs;
 		size_t chunk_size = 1;
 		size_t pending_workers = 0;
 		uint64_t generation = 0;
@@ -51,8 +51,8 @@ private:
 
 	void WorkerMain(std::stop_token stop_token);
 	void ExecuteChunks(
-		TileRenderer& tile_renderer, const FramePlanContext& ctx, bool draw_lights, std::span<const TileRenderSnapshot> tiles,
-		std::span<TileDrawPlan> plans, size_t chunk_size
+		TileRenderer& tile_renderer, const FramePlanContext& ctx, std::span<const ChunkSourceSnapshot> chunks,
+		std::span<std::shared_ptr<const PreparedRenderChunk>> outputs, size_t chunk_size, uint64_t generation
 	);
 
 	std::vector<std::jthread> workers_;

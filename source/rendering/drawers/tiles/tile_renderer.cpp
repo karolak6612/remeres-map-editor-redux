@@ -29,7 +29,6 @@
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/overlays/marker_drawer.h"
-#include "rendering/ui/tooltip_data_extractor.h"
 #include "rendering/utilities/pattern_calculator.h"
 
 TileRenderer::TileRenderer(const TileRenderDeps& deps) :
@@ -46,27 +45,23 @@ TileRenderer::TileRenderer(const TileRenderDeps& deps) :
 }
 
 namespace {
-    // Accumulate a door indicator request into the frame accumulators.
-    void AccumulateDoorIndicator(FrameAccumulators& accumulators, Item* item, const ItemDefinitionView& it, const Position& pos)
-    {
-        bool locked = item->isLocked();
-        auto border = static_cast<BorderType>(it.attribute(ItemAttributeKey::BorderAlignment));
 
-        // Door orientation: horizontal wall -> West border (south=true), vertical wall -> North border (east=true)
-        if (border == WALL_HORIZONTAL) {
-            accumulators.doors.push_back({pos, locked, true, false});
-        } else if (border == WALL_VERTICAL) {
-            accumulators.doors.push_back({pos, locked, false, true});
-        } else {
-            // Center case for non-aligned doors
-            accumulators.doors.push_back({pos, locked, false, false});
+    void AccumulateChunkSnapshotSideEffects(const ChunkSourceSnapshot& chunk_snapshot, FrameAccumulators& accumulators)
+    {
+        accumulators.reserve(
+            accumulators.hooks.size() + chunk_snapshot.hooks.size(),
+            accumulators.doors.size() + chunk_snapshot.doors.size(),
+            accumulators.creature_names.size() + chunk_snapshot.creature_names.size(),
+            accumulators.tooltips.count() + chunk_snapshot.tooltips.size()
+        );
+        for (const auto& tooltip : chunk_snapshot.tooltips) {
+            accumulators.tooltips.addItemTooltip(tooltip);
         }
-    }
-
-    // Accumulate a hook indicator request into the frame accumulators.
-    void AccumulateHookIndicator(FrameAccumulators& accumulators, const ItemDefinitionView& it, const Position& pos)
-    {
-        accumulators.hooks.push_back({pos, it.hasFlag(ItemFlag::HookSouth), it.hasFlag(ItemFlag::HookEast)});
+        accumulators.hooks.insert(accumulators.hooks.end(), chunk_snapshot.hooks.begin(), chunk_snapshot.hooks.end());
+        accumulators.doors.insert(accumulators.doors.end(), chunk_snapshot.doors.begin(), chunk_snapshot.doors.end());
+        accumulators.creature_names.insert(
+            accumulators.creature_names.end(), chunk_snapshot.creature_names.begin(), chunk_snapshot.creature_names.end()
+        );
     }
 } // namespace
 
@@ -112,11 +107,22 @@ void TileRenderer::PlanTile(
     }
 
     const Map* map = map_access ? &map_access->getMap() : nullptr;
-    auto snapshot = TileRenderSnapshotBuilder::Build(*location, ctx.view, ctx.settings, ctx.frame, map, current_house_id, draw_x, draw_y);
+    ChunkSourceSnapshot scratch_chunk;
+    scratch_chunk.reserve(
+        1, 0,
+        ctx.settings.show_tooltips ? 4 : 0,
+        ctx.settings.show_hooks ? 2 : 0,
+        ctx.settings.highlight_locked_doors ? 2 : 0,
+        ctx.settings.show_creatures ? 1 : 0
+    );
+    auto* snapshot = TileRenderSnapshotBuilder::BuildInto(
+        scratch_chunk, *location, ctx.view, ctx.settings, ctx.frame, map, current_house_id, draw_x, draw_y
+    );
     if (!snapshot) {
         return;
     }
 
+    AccumulateChunkSnapshotSideEffects(scratch_chunk, plan.accumulators);
     PlanTile(ctx, *snapshot, draw_lights, plan);
 }
 
@@ -131,21 +137,12 @@ void TileRenderer::PlanTile(const FramePlanContext& ctx, const TileRenderSnapsho
     const auto& view = ctx.view;
     const auto& settings = ctx.settings;
     const auto& frame = ctx.frame;
-    auto& accumulators = plan.accumulators;
     auto* light_buffer = draw_lights ? &plan.lights : nullptr;
 
     plan.valid = true;
+    plan.pos = tile.pos;
     plan.draw_x = tile.draw_x;
     plan.draw_y = tile.draw_y;
-
-    for (const auto& tooltip : tile.tooltips) {
-        accumulators.tooltips.addItemTooltip(tooltip);
-    }
-    accumulators.hooks.insert(accumulators.hooks.end(), tile.hooks.begin(), tile.hooks.end());
-    accumulators.doors.insert(accumulators.doors.end(), tile.doors.begin(), tile.doors.end());
-    if (tile.creature_label) {
-        accumulators.creature_names.push_back(*tile.creature_label);
-    }
 
     bool as_minimap = settings.show_as_minimap;
     bool only_colors = as_minimap || settings.show_only_colors;
@@ -154,33 +151,28 @@ void TileRenderer::PlanTile(const FramePlanContext& ctx, const TileRenderSnapsho
     uint8_t g = 255;
     uint8_t b = 255;
     if (!as_minimap) {
-        TileColorCalculator::Calculate(tile, settings, r, g, b, frame.highlight_pulse);
+        TileColorCalculator::Calculate(tile, settings, r, g, b, 0.0f);
     }
+    const bool apply_highlight_pulse = tile.is_current_house_tile && settings.show_houses;
 
     if (only_colors) {
         if (as_minimap) {
             TileColorCalculator::GetMinimapColor(tile, r, g, b);
-            plan.color_square = TileDrawPlan::ColorSquare {DrawColor(r, g, b, 255)};
+            plan.color_square = TileDrawPlan::ColorSquare {DrawColor(r, g, b, 255), apply_highlight_pulse};
         } else if (r != 255 || g != 255 || b != 255) {
-            plan.color_square = TileDrawPlan::ColorSquare {DrawColor(r, g, b, 128)};
+            plan.color_square = TileDrawPlan::ColorSquare {DrawColor(r, g, b, 128), apply_highlight_pulse};
         }
     } else {
         if (tile.ground) {
             PlanGroundItem(ctx, tile, *tile.ground, r, g, b, plan);
         }
         if (plan.items.empty() && settings.always_show_zones && (r != 255 || g != 255 || b != 255)) {
-            plan.zone_brush = TileDrawPlan::ZoneBrush {SPRITE_ZONE, r, g, b, 60};
+            plan.zone_brush = TileDrawPlan::ZoneBrush {SPRITE_ZONE, r, g, b, 60, apply_highlight_pulse};
         }
     }
 
     if (settings.show_houses && tile.isHouseTile() && tile.is_current_house_tile && tile.pos.z == view.floor) {
-        uint8_t hr = 255;
-        uint8_t hg = 255;
-        uint8_t hb = 255;
-        TileColorCalculator::GetHouseColor(tile.house_id, hr, hg, hb);
-        const float intensity = 0.5f + (0.5f * frame.highlight_pulse);
-        const int alpha = static_cast<int>(intensity * 255.0f);
-        plan.house_border = TileDrawPlan::HouseBorder {DrawColor(hr, hg, hb, static_cast<uint8_t>(alpha))};
+        plan.house_border = TileDrawPlan::HouseBorder {.house_id = tile.house_id};
     }
 
     if (!only_colors) {
@@ -189,17 +181,15 @@ void TileRenderer::PlanTile(const FramePlanContext& ctx, const TileRenderSnapsho
         }
 
         if (view.zoom < 10.0 && tile.marker) {
-            plan.marker = DrawMarkerCmd {.draw_x = tile.draw_x, .draw_y = tile.draw_y, .marker = *tile.marker};
+            plan.marker.emplace(tile.pos, *tile.marker);
         }
     }
 
     if (tile.creature && settings.show_creatures) {
-        plan.creature = DrawCreatureCmd {
-            .draw_x = tile.draw_x,
-            .draw_y = tile.draw_y,
-            .creature = *tile.creature,
-            .options = CreatureDrawOptions {.map_pos = tile.pos, .transient_selection_bounds = frame.transient_selection_bounds}
-        };
+        plan.creature.emplace(
+            tile.pos, *tile.creature,
+            CreatureDrawOptions {.map_pos = tile.pos, .transient_selection_bounds = frame.transient_selection_bounds}
+        );
     }
 }
 
@@ -223,16 +213,7 @@ void TileRenderer::PlanGroundItem(
         plan.preload_requests.push_back({client_id, patterns.x, patterns.y, patterns.z, patterns.frame});
     }
 
-    plan.items.push_back(DrawItemCmd {
-        .draw_x = tile.draw_x,
-        .draw_y = tile.draw_y,
-        .item = ground,
-        .patterns = patterns,
-        .red = r,
-        .green = g,
-        .blue = b,
-        .alpha = 255,
-    });
+    plan.items.emplace_back(tile.pos, ground, patterns, r, g, b, 255, tile.is_current_house_tile && ctx.settings.show_houses);
 
     if (plan.lights.size() == 0 && ground.has_light && ctx.settings.isDrawLight()) {
         plan.lights.AddLight(tile.pos.x, tile.pos.y, tile.pos.z, ground.light);
@@ -250,14 +231,10 @@ void TileRenderer::PlanStackedItems(
     // Hoist house color calculation out of item loop
     uint8_t house_r = 255, house_g = 255, house_b = 255;
     bool calculate_house_color = settings.extended_house_shader && settings.show_houses && tile.isHouseTile();
-    bool should_pulse = calculate_house_color && tile.is_current_house_tile && (frame.highlight_pulse > 0.0f);
-    float boost = 0.0f;
+    bool apply_item_pulse = tile.is_current_house_tile && settings.show_houses;
 
     if (calculate_house_color) {
         TileColorCalculator::GetHouseColor(tile.house_id, house_r, house_g, house_b);
-        if (should_pulse) {
-            boost = frame.highlight_pulse * 0.6f;
-        }
     }
 
     // items on tile
@@ -293,28 +270,22 @@ void TileRenderer::PlanStackedItems(
             item_green = static_cast<uint8_t>(item_green * house_g / 255);
             item_blue = static_cast<uint8_t>(item_blue * house_b / 255);
 
-            if (should_pulse) {
-                item_red = static_cast<uint8_t>(std::min(255, static_cast<int>(item_red + (255 - item_red) * boost)));
-                item_green = static_cast<uint8_t>(std::min(255, static_cast<int>(item_green + (255 - item_green) * boost)));
-                item_blue = static_cast<uint8_t>(std::min(255, static_cast<int>(item_blue + (255 - item_blue) * boost)));
-            }
         }
 
-        plan.items.push_back(DrawItemCmd {
-            .draw_x = tile.draw_x,
-            .draw_y = tile.draw_y,
-            .item = item,
-            .patterns = patterns,
-            .red = item_red,
-            .green = item_green,
-            .blue = item_blue,
-            .alpha = 255,
-        });
+        const bool item_pulse = apply_item_pulse && (item.is_border || calculate_house_color);
+        plan.items.emplace_back(tile.pos, item, patterns, item_red, item_green, item_blue, 255, item_pulse);
     }
 }
 
 void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
 {
+    auto applyHighlightPulse = [](uint8_t& red, uint8_t& green, uint8_t& blue, float highlight_pulse) {
+        constexpr uint8_t pulse_boost = 48;
+        red = static_cast<uint8_t>(std::min(255.0f, red + pulse_boost * highlight_pulse));
+        green = static_cast<uint8_t>(std::min(255.0f, green + pulse_boost * highlight_pulse));
+        blue = static_cast<uint8_t>(std::min(255.0f, blue + pulse_boost * highlight_pulse));
+    };
+
     auto& sprite_batch = ctx.sprite_batch;
 
     int draw_x = plan.draw_x;
@@ -333,7 +304,12 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
 
     // House border highlight
     if (plan.house_border) {
-        sprite_drawer->glDrawBox(sprite_batch, ctx.atlas, draw_x, draw_y, 32, 32, plan.house_border->color);
+        uint8_t red = 255;
+        uint8_t green = 255;
+        uint8_t blue = 255;
+        TileColorCalculator::GetHouseColor(plan.house_border->house_id, red, green, blue);
+        applyHighlightPulse(red, green, blue, ctx.frame.highlight_pulse);
+        sprite_drawer->glDrawBox(sprite_batch, ctx.atlas, draw_x, draw_y, 32, 32, DrawColor(red, green, blue, 255));
     }
 
     // Item draw commands (ground + stacked items in order)
@@ -346,16 +322,12 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
 
     // Creature draw
     if (plan.creature) {
-        creature_drawer->BlitCreature(
-            sprite_batch, sprite_drawer, plan.creature->draw_x, plan.creature->draw_y, plan.creature->creature, plan.creature->options
-        );
+        creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, plan.creature->creature, plan.creature->options);
     }
 
     // Marker draw
     if (plan.marker) {
-        marker_drawer->draw(
-            sprite_batch, sprite_drawer, plan.marker->draw_x, plan.marker->draw_y, plan.marker->marker, ctx.settings
-        );
+        marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, plan.marker->marker, ctx.settings);
     }
 }
 
@@ -365,35 +337,30 @@ void TileRenderer::QueuePlanCommands(TileDrawPlan& plan, DrawCommandQueue& queue
     const int draw_y = plan.draw_y;
 
     if (plan.color_square) {
-        queue.push(DrawColorSquareCmd {.draw_x = draw_x, .draw_y = draw_y, .color = plan.color_square->color});
+        queue.emplaceColorSquare(plan.pos, plan.color_square->color, plan.color_square->apply_highlight_pulse);
     }
 
     if (plan.zone_brush) {
-        queue.push(DrawZoneBrushCmd {
-            .draw_x = draw_x,
-            .draw_y = draw_y,
-            .sprite_id = plan.zone_brush->sprite_id,
-            .r = plan.zone_brush->r,
-            .g = plan.zone_brush->g,
-            .b = plan.zone_brush->b,
-            .a = plan.zone_brush->a,
-        });
+        queue.emplaceZoneBrush(
+            plan.pos, plan.zone_brush->sprite_id, plan.zone_brush->r, plan.zone_brush->g, plan.zone_brush->b, plan.zone_brush->a,
+            plan.zone_brush->apply_highlight_pulse
+        );
     }
 
     if (plan.house_border) {
-        queue.push(DrawHouseBorderCmd {.draw_x = draw_x, .draw_y = draw_y, .color = plan.house_border->color});
+        queue.emplaceHouseBorder(plan.pos, plan.house_border->house_id);
     }
 
     for (auto& item : plan.items) {
-        queue.push(std::move(item));
+        queue.emplaceItem(item.pos, std::move(item.item), item.patterns, item.red, item.green, item.blue, item.alpha, item.apply_highlight_pulse);
     }
 
     if (plan.creature) {
-        queue.push(std::move(*plan.creature));
+        queue.emplaceCreature(plan.creature->pos, std::move(plan.creature->creature), std::move(plan.creature->options));
     }
 
     if (plan.marker) {
-        queue.push(std::move(*plan.marker));
+        queue.emplaceMarker(plan.marker->pos, std::move(plan.marker->marker));
     }
 }
 

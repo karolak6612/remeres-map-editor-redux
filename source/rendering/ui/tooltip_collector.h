@@ -28,6 +28,10 @@ class TooltipCollector {
 public:
 	TooltipCollector() = default;
 
+	void reserve(size_t capacity) {
+		tooltips_.reserve(capacity);
+	}
+
 	// Add a structured tooltip for an item
 	void addItemTooltip(const TooltipData& data) {
 		if (!data.hasVisibleFields()) {

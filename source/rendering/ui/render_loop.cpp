@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <numeric>
 #include <sstream>
 
 #include "rendering/core/frame_builder.h"
@@ -20,6 +21,23 @@
 #include <wx/glcanvas.h>
 
 namespace rme::rendering {
+
+namespace {
+
+[[nodiscard]] size_t CountPreparedCommands(const PreparedFrameBuffer& prepared)
+{
+	size_t total = 0;
+	for (const auto& floor : prepared.floors) {
+		for (const auto& chunk : floor.chunks) {
+			if (chunk) {
+				total += chunk->commands.size();
+			}
+		}
+	}
+	return total;
+}
+
+} // namespace
 
 RenderLoop::RenderLoop(MapDrawer& drawer, GLContextManager& gl, Editor& editor, RenderLoopHost& host) :
 	drawer_(drawer),
@@ -206,10 +224,14 @@ void RenderLoop::PrepThreadMain(std::stop_token stop_token) {
 		}
 		if (!prepared_frame_ || prepared.generation >= prepared_frame_->generation) {
 			spdlog::debug(
-				"RenderLoop: prepared frame published (generation={}, floors={}, commands={}, lights={})",
+				"RenderLoop: prepared frame published (generation={}, floors={}, chunks={}, commands={}, lights={})",
 				prepared.generation,
-				prepared.floor_ranges.size(),
-				prepared.commands.size(),
+				prepared.floors.size(),
+				std::accumulate(
+					prepared.floors.begin(), prepared.floors.end(), static_cast<size_t>(0),
+					[](size_t total, const PreparedVisibleFloor& floor) { return total + floor.chunks.size(); }
+				),
+				CountPreparedCommands(prepared),
 				prepared.lights.size()
 			);
 			prepared_frame_ = std::move(prepared);
@@ -248,9 +270,9 @@ bool RenderLoop::TryApplyPreparedFrame() {
 
 	const bool is_initial_prepared_frame = applied_prepared_frames_ == 0;
 	const auto prepared_generation = prepared->generation;
-	const auto prepared_command_count = prepared->commands.size();
+	const auto prepared_command_count = CountPreparedCommands(*prepared);
 	const auto prepared_light_count = prepared->lights.size();
-	const auto prepared_floor_count = prepared->floor_ranges.size();
+	const auto prepared_floor_count = prepared->floors.size();
 	drawer_.SetupPreparedFrame(std::move(*prepared));
 	last_applied_generation_ = prepared->generation;
 	applied_prepared_frames_++;

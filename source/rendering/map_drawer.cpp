@@ -18,6 +18,8 @@
 #include "app/main.h"
 
 #include <algorithm>
+#include <chrono>
+#include <memory>
 #include <type_traits>
 
 #include "app/settings.h"
@@ -30,18 +32,24 @@
 #include "live/live_client.h"
 #include "live/live_socket.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/tile_planning_pool.h"
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/map_drawer.h"
 
 #include "brushes/house/house_brush.h"
 #include "brushes/house/house_exit_brush.h"
 #include "rendering/core/draw_context.h"
+#include "rendering/core/chunk_source_snapshot.h"
 #include "rendering/core/editor_map_access.h"
 #include "rendering/core/frame_builder.h"
 #include "rendering/core/frame_options.h"
+#include "rendering/core/prepared_render_chunk_builder.h"
+#include "rendering/core/prepared_render_chunk.h"
 #include "rendering/core/brush_visual_settings.h"
 #include "rendering/core/prepared_frame_buffer.h"
 #include "rendering/core/primitive_renderer.h"
+#include "rendering/core/render_chunk_key.h"
+#include "rendering/core/render_variant_key.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/render_prep_snapshot.h"
 #include "rendering/core/render_view.h"
@@ -74,6 +82,48 @@
 #include "rendering/io/screen_capture.h"
 #include "rendering/postprocess/post_process_manager.h"
 #include "rendering/postprocess/post_process_pipeline.h"
+
+namespace {
+
+void ApplyHighlightPulse(uint8_t& red, uint8_t& green, uint8_t& blue, float highlight_pulse)
+{
+    if (highlight_pulse <= 0.0f) {
+        return;
+    }
+
+    const float boost = highlight_pulse * 0.6f;
+    red = static_cast<uint8_t>(std::min(255, static_cast<int>(red + (255 - red) * boost)));
+    green = static_cast<uint8_t>(std::min(255, static_cast<int>(green + (255 - green) * boost)));
+    blue = static_cast<uint8_t>(std::min(255, static_cast<int>(blue + (255 - blue) * boost)));
+}
+
+void MergePreparedChunkIntoFrame(const PreparedRenderChunk& chunk, PreparedFrameBuffer& prepared)
+{
+    prepared.accumulators.reserve(
+        prepared.accumulators.hooks.size() + chunk.accumulators.hooks.size(),
+        prepared.accumulators.doors.size() + chunk.accumulators.doors.size(),
+        prepared.accumulators.creature_names.size() + chunk.accumulators.creature_names.size(),
+        prepared.accumulators.tooltips.count() + chunk.accumulators.tooltips.count()
+    );
+
+    for (const auto& tooltip : chunk.accumulators.tooltips.getTooltips()) {
+        prepared.accumulators.tooltips.addItemTooltip(tooltip);
+    }
+    prepared.accumulators.hooks.insert(prepared.accumulators.hooks.end(), chunk.accumulators.hooks.begin(), chunk.accumulators.hooks.end());
+    prepared.accumulators.doors.insert(prepared.accumulators.doors.end(), chunk.accumulators.doors.begin(), chunk.accumulators.doors.end());
+    prepared.accumulators.creature_names.insert(
+        prepared.accumulators.creature_names.end(), chunk.accumulators.creature_names.begin(), chunk.accumulators.creature_names.end()
+    );
+
+    prepared.lights.map_x.insert(prepared.lights.map_x.end(), chunk.lights.map_x.begin(), chunk.lights.map_x.end());
+    prepared.lights.map_y.insert(prepared.lights.map_y.end(), chunk.lights.map_y.begin(), chunk.lights.map_y.end());
+    prepared.lights.color.insert(prepared.lights.color.end(), chunk.lights.color.begin(), chunk.lights.color.end());
+    prepared.lights.intensity.insert(prepared.lights.intensity.end(), chunk.lights.intensity.begin(), chunk.lights.intensity.end());
+
+    prepared.preload_requests.insert(prepared.preload_requests.end(), chunk.preload_requests.begin(), chunk.preload_requests.end());
+}
+
+} // namespace
 
 MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) :
 	editor(editor), map_access_(std::make_unique<EditorMapAccess>(editor)), render_ctx_(ctx), nvg_image_cache(render_ctx_.gfx)
@@ -147,9 +197,11 @@ RenderPrepSnapshot MapDrawer::BuildRenderPrepSnapshot(
     RenderPrepSnapshot prep;
     prep.frame = FrameBuilder::Build(snapshot, brush, brush_visual, settings, base_options, editor, render_ctx_.gfx.getAtlasManager());
     prep.atlas_version = render_ctx_.gfx.hasAtlasManager() ? render_ctx_.gfx.getAtlasManager()->getTextureId() : 0;
+    prep.variant = RenderVariantKey::From(prep.frame.view, prep.frame.settings, prep.frame.options);
     const FramePlanContext plan_ctx {prep.frame.view, prep.frame.settings, prep.frame.options};
     const bool live_client = editor.live_manager.IsClient();
     prep.floors.reserve(static_cast<size_t>(prep.frame.view.start_z - prep.frame.view.superend_z + 1));
+    size_t visible_chunk_count = 0;
 
     int floor_offset = 0;
     for (int map_z = prep.frame.view.start_z; map_z >= prep.frame.view.superend_z; --map_z) {
@@ -161,13 +213,23 @@ RenderPrepSnapshot MapDrawer::BuildRenderPrepSnapshot(
         };
 
         if (map_z >= prep.frame.view.end_z) {
-            prep.floors.push_back(map_layer_drawer->BuildVisibleFloorSnapshot(
-                plan_ctx, map_z, live_client, floor_params, prep.frame.options.current_house_id
-            ));
+            auto visible_chunks = map_layer_drawer->BuildVisibleChunkList(map_z, floor_params);
+            visible_chunk_count += visible_chunks.chunks.size();
+            for (const auto& chunk_key : visible_chunks.chunks) {
+                if (chunk_cache_.find(chunk_key, prep.variant)) {
+                    continue;
+                }
+                prep.dirty_chunks.push_back(
+                    map_layer_drawer->BuildChunkSourceSnapshot(plan_ctx, chunk_key, live_client, prep.frame.options.current_house_id)
+                );
+            }
+            prep.floors.push_back(std::move(visible_chunks));
         }
 
         ++floor_offset;
     }
+
+    chunk_cache_.setCapacity(std::max<size_t>(visible_chunk_count * 3, 512));
 
     return prep;
 }
@@ -182,8 +244,37 @@ PreparedFrameBuffer MapDrawer::PrepareFrame(RenderPrepSnapshot snapshot)
     prepared.reserve(512, 256, 128, 64, 4096);
 
     const FramePlanContext plan_ctx {prepared.frame.view, prepared.frame.settings, prepared.frame.options};
-    for (const auto& floor_snapshot : snapshot.floors) {
-        prepared.floor_ranges.push_back(map_layer_drawer->PrepareFloor(plan_ctx, floor_snapshot, prepared));
+    if (!snapshot.dirty_chunks.empty()) {
+        std::vector<std::shared_ptr<const PreparedRenderChunk>> built_chunks(snapshot.dirty_chunks.size());
+        if (planning_pool_) {
+            planning_pool_->BuildChunks(*tile_renderer, plan_ctx, snapshot.dirty_chunks, built_chunks, snapshot.generation);
+        } else {
+            for (size_t i = 0; i < snapshot.dirty_chunks.size(); ++i) {
+                built_chunks[i] = PreparedRenderChunkBuilder::Build(*tile_renderer, plan_ctx, snapshot.dirty_chunks[i], snapshot.generation);
+            }
+        }
+        for (auto& chunk : built_chunks) {
+            if (!chunk) {
+                spdlog::warn("MapDrawer::PrepareFrame - worker returned null prepared chunk for generation {}", snapshot.generation);
+                continue;
+            }
+            chunk_cache_.store(std::move(chunk));
+        }
+    }
+
+    prepared.floors.reserve(snapshot.floors.size());
+    for (const auto& floor_chunks : snapshot.floors) {
+        PreparedVisibleFloor floor {.map_z = floor_chunks.map_z};
+        floor.chunks.reserve(floor_chunks.chunks.size());
+        for (const auto& chunk_key : floor_chunks.chunks) {
+            auto chunk = chunk_cache_.find(chunk_key, snapshot.variant);
+            if (!chunk) {
+                continue;
+            }
+            MergePreparedChunkIntoFrame(*chunk, prepared);
+            floor.chunks.push_back(std::move(chunk));
+        }
+        prepared.floors.push_back(std::move(floor));
     }
 
     return prepared;
@@ -192,6 +283,12 @@ PreparedFrameBuffer MapDrawer::PrepareFrame(RenderPrepSnapshot snapshot)
 void MapDrawer::SetPlanningPool(TilePlanningPool* planning_pool)
 {
     map_layer_drawer->setPlanningPool(planning_pool);
+    planning_pool_ = planning_pool;
+}
+
+void MapDrawer::InvalidatePreparedChunks()
+{
+    chunk_cache_.invalidateAll();
 }
 
 void MapDrawer::SetupPreparedFrame(PreparedFrameBuffer prepared)
@@ -416,32 +513,51 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg)
 void MapDrawer::DrawMapLayer(const DrawContext& ctx, int map_z)
 {
     const auto& prepared = renderPreparedFrame();
-    auto range_it = std::find_if(prepared.floor_ranges.begin(), prepared.floor_ranges.end(), [map_z](const PreparedFloorRange& range) {
-        return range.map_z == map_z;
+    auto floor_it = std::find_if(prepared.floors.begin(), prepared.floors.end(), [map_z](const PreparedVisibleFloor& floor) {
+        return floor.map_z == map_z;
     });
-    if (range_it == prepared.floor_ranges.end()) {
+    if (floor_it == prepared.floors.end()) {
         return;
     }
 
-    SubmitDrawCommands(ctx, prepared.commands, range_it->command_start, range_it->command_count);
+    for (const auto& chunk : floor_it->chunks) {
+        if (!chunk) {
+            continue;
+        }
+        SubmitDrawCommands(ctx, chunk->commands);
+    }
 }
 
-void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue, size_t command_start, size_t command_count)
+void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue)
 {
-    const auto commands = queue.commands().subspan(command_start, command_count);
-    for (const auto& command : commands) {
+    for (const auto& command : queue.commands()) {
         std::visit(
             [&](const auto& cmd) {
                 using Command = std::decay_t<decltype(cmd)>;
+                const auto [screen_x, screen_y] = ctx.view.getScreenPosition(cmd.pos.x, cmd.pos.y, cmd.pos.z);
 
                 if constexpr (std::is_same_v<Command, DrawColorSquareCmd>) {
-                    entities_.sprite->glBlitSquare(ctx.sprite_batch, ctx.atlas, cmd.draw_x, cmd.draw_y, cmd.color);
+                    auto color = cmd.color;
+                    if (cmd.apply_highlight_pulse) {
+                        ApplyHighlightPulse(color.r, color.g, color.b, ctx.frame.highlight_pulse);
+                    }
+                    entities_.sprite->glBlitSquare(ctx.sprite_batch, ctx.atlas, screen_x, screen_y, color);
                 } else if constexpr (std::is_same_v<Command, DrawZoneBrushCmd>) {
-                    entities_.item->DrawRawBrush(
-                        ctx.sprite_batch, entities_.sprite.get(), cmd.draw_x, cmd.draw_y, cmd.sprite_id, cmd.r, cmd.g, cmd.b, cmd.a
-                    );
+                    uint8_t red = cmd.r;
+                    uint8_t green = cmd.g;
+                    uint8_t blue = cmd.b;
+                    if (cmd.apply_highlight_pulse) {
+                        ApplyHighlightPulse(red, green, blue, ctx.frame.highlight_pulse);
+                    }
+                    entities_.item->DrawRawBrush(ctx.sprite_batch, entities_.sprite.get(), screen_x, screen_y, cmd.sprite_id, red, green, blue, cmd.a);
                 } else if constexpr (std::is_same_v<Command, DrawHouseBorderCmd>) {
-                    entities_.sprite->glDrawBox(ctx.sprite_batch, ctx.atlas, cmd.draw_x, cmd.draw_y, 32, 32, cmd.color);
+                    uint8_t red = 255;
+                    uint8_t green = 255;
+                    uint8_t blue = 255;
+                    TileColorCalculator::GetHouseColor(cmd.house_id, red, green, blue);
+                    const float intensity = 0.5f + (0.5f * ctx.frame.highlight_pulse);
+                    const auto alpha = static_cast<uint8_t>(std::clamp(static_cast<int>(intensity * 255.0f), 0, 255));
+                    entities_.sprite->glDrawBox(ctx.sprite_batch, ctx.atlas, screen_x, screen_y, 32, 32, DrawColor(red, green, blue, alpha));
                 } else if constexpr (std::is_same_v<Command, DrawFilledRectCmd>) {
                     const glm::vec4 color {
                         cmd.color.r / 255.0f,
@@ -449,20 +565,30 @@ void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueu
                         cmd.color.b / 255.0f,
                         cmd.color.a / 255.0f,
                     };
-                    ctx.sprite_batch.drawRect((float)cmd.draw_x, (float)cmd.draw_y, (float)cmd.width, (float)cmd.height, color, ctx.atlas);
+                    ctx.sprite_batch.drawRect((float)screen_x, (float)screen_y, (float)cmd.width, (float)cmd.height, color, ctx.atlas);
                 } else if constexpr (std::is_same_v<Command, DrawItemCmd>) {
-                    int draw_x = cmd.draw_x;
-                    int draw_y = cmd.draw_y;
+                    int draw_x = screen_x;
+                    int draw_y = screen_y;
+                    int red = cmd.red;
+                    int green = cmd.green;
+                    int blue = cmd.blue;
+                    if (cmd.apply_highlight_pulse) {
+                        auto byte_red = static_cast<uint8_t>(std::clamp(red, 0, 255));
+                        auto byte_green = static_cast<uint8_t>(std::clamp(green, 0, 255));
+                        auto byte_blue = static_cast<uint8_t>(std::clamp(blue, 0, 255));
+                        ApplyHighlightPulse(byte_red, byte_green, byte_blue, ctx.frame.highlight_pulse);
+                        red = byte_red;
+                        green = byte_green;
+                        blue = byte_blue;
+                    }
                     entities_.item->BlitItemSnapshot(
                         ctx.sprite_batch, ctx.atlas, entities_.sprite.get(), entities_.creature.get(), draw_x, draw_y, cmd.item, ctx.settings,
-                        ctx.frame, cmd.patterns, cmd.red, cmd.green, cmd.blue, cmd.alpha
+                        ctx.frame, cmd.patterns, red, green, blue, cmd.alpha
                     );
                 } else if constexpr (std::is_same_v<Command, DrawCreatureCmd>) {
-                    entities_.creature->BlitCreature(
-                        ctx.sprite_batch, entities_.sprite.get(), cmd.draw_x, cmd.draw_y, cmd.creature, cmd.options
-                    );
+                    entities_.creature->BlitCreature(ctx.sprite_batch, entities_.sprite.get(), screen_x, screen_y, cmd.creature, cmd.options);
                 } else if constexpr (std::is_same_v<Command, DrawMarkerCmd>) {
-                    entities_.marker->draw(ctx.sprite_batch, entities_.sprite.get(), cmd.draw_x, cmd.draw_y, cmd.marker, ctx.settings);
+                    entities_.marker->draw(ctx.sprite_batch, entities_.sprite.get(), screen_x, screen_y, cmd.marker, ctx.settings);
                 }
             },
             command

@@ -31,6 +31,7 @@
 #include "ui/map_popup_menu.h"
 #include <chrono>
 #include <cstddef>
+#include <functional>
 #include <memory>
 
 struct NVGcontext;
@@ -271,6 +272,7 @@ private:
     std::unique_ptr<ViewStateManager> view_state_;
     InputState input_;
     std::chrono::steady_clock::time_point next_hover_ui_update_ {};
+    std::function<void()> previous_editor_state_change_;
 
     ViewSnapshot BuildViewSnapshot() const;
     void ConfigureRenderSettings(RenderSettings& settings) const;
