@@ -34,8 +34,8 @@ public:
 	void updateTime();
 	time_t getCachedTime() const { return cached_time_; }
 
-	void addSpriteToCleanup(SpriteDatabase& db, uint32_t sprite_id);
-	void garbageCollect(SpriteDatabase& db);
+	void addSpriteToCleanup(SpriteDatabase& db, uint32_t sprite_id, const GraphicsRuntimeConfig& config);
+	void garbageCollect(SpriteDatabase& db, const GraphicsRuntimeConfig& config);
 	void cleanSoftwareSprites(SpriteDatabase& db);
 	void clear();
 

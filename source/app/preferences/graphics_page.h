@@ -19,6 +19,7 @@ private:
 	wxCheckBox* icon_selection_shadow_chkbox = nullptr;
 	wxCheckBox* use_memcached_chkbox = nullptr;
 	wxCheckBox* anti_aliasing_chkbox = nullptr;
+	wxCheckBox* threaded_rendering_chkbox = nullptr;
 
 	wxChoice* screen_shader_choice = nullptr;
 	wxChoice* icon_background_choice = nullptr;

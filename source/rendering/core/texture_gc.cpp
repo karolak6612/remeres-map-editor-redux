@@ -31,12 +31,12 @@ void TextureGC::updateTime() {
 	preloader_->update();
 }
 
-void TextureGC::addSpriteToCleanup(SpriteDatabase& db, uint32_t sprite_id) {
-	collector_.AddSpriteToCleanup(db.residentGameSprites(), sprite_id);
+void TextureGC::addSpriteToCleanup(SpriteDatabase& db, uint32_t sprite_id, const GraphicsRuntimeConfig& config) {
+	collector_.AddSpriteToCleanup(db.residentGameSprites(), sprite_id, config);
 }
 
-void TextureGC::garbageCollect(SpriteDatabase& db) {
-	collector_.GarbageCollect(db.residentGameSprites(), db.residentImages(), cached_time_);
+void TextureGC::garbageCollect(SpriteDatabase& db, const GraphicsRuntimeConfig& config) {
+	collector_.GarbageCollect(db.residentGameSprites(), db.residentImages(), cached_time_, config);
 }
 
 void TextureGC::cleanSoftwareSprites(SpriteDatabase& db) {

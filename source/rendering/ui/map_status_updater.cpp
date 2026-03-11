@@ -17,33 +17,33 @@
 
 #include "app/main.h"
 #include "rendering/ui/map_status_updater.h"
-#include "ui/gui.h"
 #include "editor/editor.h"
 #include "map/map.h"
 #include "map/tile.h"
 #include "live/live_server.h"
 #include "rendering/utilities/tile_describer.h"
 #include "app/settings.h"
+#include "ui/gui.h"
 
-void MapStatusUpdater::Update(Editor& editor, int map_x, int map_y, int map_z) {
+void MapStatusUpdater::Update(GUI& gui, const Settings& settings, Editor& editor, int map_x, int map_y, int map_z) {
 	wxString ss;
 	ss << "x: " << map_x << " y:" << map_y << " z:" << map_z;
-	g_gui.root->SetStatusText(ss, 2);
+	gui.root->SetStatusText(ss, 2);
 
 	ss = "";
 	Tile* tile = editor.map.getTile(map_x, map_y, map_z);
 	if (tile) {
-		ss = TileDescriber::GetDescription(tile, g_settings.getInteger(Config::SHOW_SPAWNS), g_settings.getInteger(Config::SHOW_CREATURES));
+		ss = TileDescriber::GetDescription(tile, settings.getInteger(Config::SHOW_SPAWNS), settings.getInteger(Config::SHOW_CREATURES));
 
 		if (editor.live_manager.IsLive()) {
 			editor.live_manager.GetSocket().updateCursor(Position(map_x, map_y, map_z));
 		}
-		g_gui.root->SetStatusText(ss, 1);
+		gui.root->SetStatusText(ss, 1);
 	} else {
-		g_gui.root->SetStatusText("Nothing", 1);
+		gui.root->SetStatusText("Nothing", 1);
 	}
 }
 
-void MapStatusUpdater::UpdateFPS(const wxString& fps_status) {
-	g_gui.root->SetStatusText(fps_status, 0);
+void MapStatusUpdater::UpdateFPS(GUI& gui, const wxString& fps_status) {
+	gui.root->SetStatusText(fps_status, 0);
 }

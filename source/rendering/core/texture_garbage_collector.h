@@ -24,6 +24,8 @@
 #include <time.h>
 #include <vector>
 
+#include "rendering/core/graphics_runtime_config.h"
+
 class GameSprite;
 class Image;
 class Sprite;
@@ -33,8 +35,10 @@ public:
 	TextureGarbageCollector();
 	~TextureGarbageCollector();
 
-	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time);
-	void AddSpriteToCleanup(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id);
+	void GarbageCollect(
+		std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time, const GraphicsRuntimeConfig& config
+	);
+	void AddSpriteToCleanup(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id, const GraphicsRuntimeConfig& config);
 	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
 	void Clear();
 

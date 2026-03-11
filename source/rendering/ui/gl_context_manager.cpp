@@ -3,7 +3,7 @@
 #include "rendering/ui/gl_context_manager.h"
 
 #include "rendering/core/text_renderer.h"
-#include "ui/gui.h"
+#include "rendering/ui/map_display.h"
 #include "ui/managers/gl_context_manager.h"
 
 #include <glad/glad.h>
@@ -25,7 +25,8 @@ GLContextManager::GLContextManager(wxGLCanvas* canvas) :
 		return;
 	}
 
-	gl_context_ = std::make_unique<wxGLContext>(canvas_, g_gui.GetGLContext(canvas_));
+	auto* map_canvas = dynamic_cast<MapCanvas*>(canvas_);
+	gl_context_ = std::make_unique<wxGLContext>(canvas_, map_canvas ? map_canvas->GetSharedGLContext() : nullptr);
 	if (!gl_context_ || !gl_context_->IsOK()) {
 		spdlog::error("MapCanvas: Failed to create wxGLContext");
 		gl_context_.reset();

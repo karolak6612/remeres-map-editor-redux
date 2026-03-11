@@ -41,7 +41,8 @@ namespace IngamePreview {
         creature_drawer->SetSpriteResolver(sprite_resolver.get());
         sprite_drawer->SetSpriteResolver(sprite_resolver.get());
 
-        sprite_batch->initialize();
+        [[maybe_unused]] const bool sprite_batch_initialized = sprite_batch->initialize(g_gui.gfx.sharedGeometry());
+        ASSERT(sprite_batch_initialized);
         primitive_renderer->initialize();
         last_time = std::chrono::steady_clock::now();
 

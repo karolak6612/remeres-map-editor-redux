@@ -73,7 +73,8 @@
 #include "rendering/postprocess/post_process_manager.h"
 #include "rendering/postprocess/post_process_pipeline.h"
 
-MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) : editor(editor), map_access_(std::make_unique<EditorMapAccess>(editor)), render_ctx_(ctx)
+MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) :
+	editor(editor), map_access_(std::make_unique<EditorMapAccess>(editor)), render_ctx_(ctx), nvg_image_cache(render_ctx_.gfx)
 {
 
     light_drawer = std::make_unique<LightDrawer>();
@@ -147,9 +148,12 @@ void MapDrawer::SetupVars(DrawFrame frame)
     frame_ready_.store(true, std::memory_order_release);
 }
 
-void MapDrawer::SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush, const RenderSettings& settings, const FrameOptions& base_options)
+void MapDrawer::SetupVars(
+    const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+    const FrameOptions& base_options
+)
 {
-    SetupVars(FrameBuilder::Build(snapshot, brush, settings, base_options, editor, render_ctx_.gfx.getAtlasManager()));
+    SetupVars(FrameBuilder::Build(snapshot, brush, brush_visual, settings, base_options, editor, render_ctx_.gfx.getAtlasManager()));
 }
 
 void MapDrawer::SetupGL()
@@ -160,7 +164,10 @@ void MapDrawer::SetupGL()
 
     // Ensure renderers are initialized
     if (!renderers_initialized_) {
-        sprite_batch->initialize();
+        const bool sprite_batch_initialized = sprite_batch->initialize(render_ctx_.gfx.sharedGeometry());
+        if (!sprite_batch_initialized) {
+            return;
+        }
         primitive_renderer->initialize();
         renderers_initialized_ = true;
     }
@@ -233,14 +240,13 @@ void MapDrawer::Draw()
     cursors_.live->draw(ctx, *map_access_);
 
     {
-        const BrushVisualSettings bvs = BrushVisualSettings::FromSettings(g_settings);
         const BrushOverlayContext overlay {
             .item_drawer = entities_.item.get(),
             .sprite_drawer = entities_.sprite.get(),
             .creature_drawer = entities_.creature.get(),
             .brush_cursor_drawer = cursors_.brush.get(),
             .map_access = map_access_.get(),
-            .visual = &bvs,
+            .visual = &frame.brush_visual,
             .current_brush = frame.brush.current_brush,
             .brush_shape = frame.brush.brush_shape,
             .brush_size = frame.brush.brush_size,

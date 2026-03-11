@@ -1,6 +1,5 @@
 #include "rendering/drawers/minimap_renderer.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
 #include "map/map.h"
 #include "map/tile.h"
 #include "rendering/core/minimap_colors.h"
@@ -58,7 +57,7 @@ MinimapRenderer::~MinimapRenderer() {
 	// RAII manages resources
 }
 
-bool MinimapRenderer::initialize() {
+bool MinimapRenderer::initialize(SharedGeometry& shared_geom) {
 	shader_ = std::make_unique<ShaderProgram>();
 	if (!shader_->Load(minimap_vert, minimap_frag)) {
 		spdlog::error("MinimapRenderer: Failed to load shader");
@@ -76,8 +75,6 @@ bool MinimapRenderer::initialize() {
 
 	createPaletteTexture();
 
-	// Initialize Shared Geometry
-	auto& shared_geom = g_gui.gfx.sharedGeometry();
 	if (!shared_geom.initialize()) {
 		spdlog::error("MinimapRenderer: Failed to initialize SharedGeometry");
 		return false;

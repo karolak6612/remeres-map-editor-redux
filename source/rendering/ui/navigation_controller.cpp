@@ -10,8 +10,6 @@
 #include <algorithm>
 #include <cmath>
 
-extern GUI g_gui;
-
 void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event)
 {
     int start_x, start_y;
@@ -44,8 +42,8 @@ void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& even
     if (canvas->IsScreenDragging()) {
         static_cast<MapWindow*>(canvas->GetParent())
             ->ScrollRelative(
-                int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->GetZoom() * (event.GetX() - canvas->GetCursorX())),
-                int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->GetZoom() * (event.GetY() - canvas->GetCursorY()))
+                int(canvas->GetSettings().getFloat(Config::SCROLL_SPEED) * canvas->GetZoom() * (event.GetX() - canvas->GetCursorX())),
+                int(canvas->GetSettings().getFloat(Config::SCROLL_SPEED) * canvas->GetZoom() * (event.GetY() - canvas->GetCursorY()))
             );
         canvas->Refresh();
     }
@@ -107,8 +105,8 @@ void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor)
     canvas->SetFloorDirect(new_floor);
     if (old_floor != new_floor) {
         canvas->UpdatePositionStatus();
-        g_gui.root->UpdateFloorMenu();
-        g_gui.UpdateMinimap(true);
+        canvas->GetGui().root->UpdateFloorMenu();
+        canvas->UpdateMinimap(true);
     }
     canvas->Refresh();
 }

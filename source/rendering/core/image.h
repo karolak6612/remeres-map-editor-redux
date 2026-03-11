@@ -6,6 +6,8 @@
 #include <cstdint>
 #include "rendering/core/atlas_manager.h" // For AtlasRegion
 
+class GraphicManager;
+
 class Image {
 public:
 	Image();
@@ -25,9 +27,17 @@ public:
 		return false;
 	}
 
+	void setGraphicManager(GraphicManager* graphics) {
+		graphics_ = graphics;
+	}
+
 protected:
+	[[nodiscard]] GraphicManager& graphics() const;
 	// Helper to handle atlas interactions
 	const AtlasRegion* EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<uint8_t[]> preloaded_data = nullptr);
+
+private:
+	GraphicManager* graphics_ = nullptr;
 };
 
 #endif

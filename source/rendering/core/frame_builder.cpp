@@ -10,6 +10,7 @@
 DrawFrame FrameBuilder::Build(
 	const ViewSnapshot& snapshot,
 	const BrushSnapshot& brush,
+	const BrushVisualSettings& brush_visual,
 	const RenderSettings& settings,
 	const FrameOptions& base_options,
 	const Editor& editor,
@@ -19,6 +20,7 @@ DrawFrame FrameBuilder::Build(
 	frame.settings = settings;
 	frame.snapshot = snapshot;
 	frame.brush = brush;
+	frame.brush_visual = brush_visual;
 	frame.options = ComputeFrameOptions(base_options, brush, editor);
 	frame.view = ComputeViewState(snapshot, settings);
 	frame.atlas = atlas;

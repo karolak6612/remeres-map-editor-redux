@@ -8,6 +8,7 @@
 #include "brushes/creature/creature_brush.h"
 #include "brushes/raw/raw_brush.h"
 #include "editor/action_queue.h"
+#include "editor/copybuffer.h"
 #include "editor/editor.h"
 #include "editor/selection_thread.h"
 #include "game/creature.h"
@@ -18,7 +19,7 @@
 #include "rendering/ui/brush_selector.h"
 #include "rendering/ui/map_display.h"
 #include "ui/dialog_helper.h"
-#include "ui/gui.h"
+#include "ui/gui_ids.h"
 
 SelectionController::SelectionController(MapCanvas* canvas, Editor& editor) :
     canvas(canvas), editor(editor), dragging(false), boundbox_selection(false), drag_start_pos(Position())
@@ -33,20 +34,20 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
         Tile* tile = editor.map.getTile(mouse_map_pos);
         if (tile && tile->size() > 0) {
             // Select visible creature
-            if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
+            if (tile->creature && canvas->GetSettings().getInteger(Config::SHOW_CREATURES)) {
                 CreatureBrush* brush = tile->creature->getBrush();
                 if (brush) {
-                    g_gui.SelectBrush(brush, TILESET_CREATURE);
+                    canvas->SelectBrush(brush, TILESET_CREATURE);
                     return;
                 }
             }
             // Fall back to item selection
             Item* item = tile->getTopItem();
             if (item && item->getRAWBrush()) {
-                g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
+                canvas->SelectBrush(item->getRAWBrush(), TILESET_RAW);
             }
         }
-    } else if (g_gui.IsSelectionMode()) {
+    } else if (canvas->IsSelectionMode()) {
         if (canvas->isPasting()) {
             // Set paste to false (no rendering etc.)
             canvas->EndPasting();
@@ -71,7 +72,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
             } else if (ctrl_down) {
                 Tile* tile = editor.map.getTile(mouse_map_pos);
                 if (tile) {
-                    if (tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+                    if (tile->spawn && canvas->GetSettings().getInteger(Config::SHOW_SPAWNS)) {
                         editor.selection.start(); // Start selection session
                         if (tile->spawn->isSelected()) {
                             editor.selection.remove(tile, tile->spawn.get());
@@ -80,7 +81,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
                         }
                         editor.selection.finish(); // Finish selection session
                         editor.selection.updateSelectionCount();
-                    } else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
+                    } else if (tile->creature && canvas->GetSettings().getInteger(Config::SHOW_CREATURES)) {
                         editor.selection.start(); // Start selection session
                         if (tile->creature->isSelected()) {
                             editor.selection.remove(tile, tile->creature.get());
@@ -117,11 +118,11 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
                     editor.selection.start(); // Start a selection session
                     editor.selection.clear();
                     editor.selection.commit();
-                    if (tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+                    if (tile->spawn && canvas->GetSettings().getInteger(Config::SHOW_SPAWNS)) {
                         editor.selection.add(tile, tile->spawn.get());
                         dragging = true;
                         drag_start_pos = mouse_map_pos;
-                    } else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
+                    } else if (tile->creature && canvas->GetSettings().getInteger(Config::SHOW_CREATURES)) {
                         editor.selection.add(tile, tile->creature.get());
                         dragging = true;
                         drag_start_pos = mouse_map_pos;
@@ -143,7 +144,7 @@ void SelectionController::HandleClick(const Position& mouse_map_pos, bool shift_
 
 void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down)
 {
-    if (g_gui.IsSelectionMode()) {
+    if (canvas->IsSelectionMode()) {
         if (canvas->isPasting()) {
             canvas->Refresh();
         } else if (dragging) {
@@ -153,7 +154,7 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
             int move_y = drag_start_pos.y - mouse_map_pos.y;
             int move_z = drag_start_pos.z - mouse_map_pos.z;
             ss << "Dragging " << -move_x << "," << -move_y << "," << -move_z;
-            g_gui.SetStatusText(ss);
+            canvas->SetStatusText(ss);
 
             canvas->Refresh();
         } else if (boundbox_selection) {
@@ -162,7 +163,7 @@ void SelectionController::HandleDrag(const Position& mouse_map_pos, bool shift_d
             int move_y = std::abs(canvas->GetLastClickMapY() - mouse_map_pos.y);
             wxString ss;
             ss << "Selection " << move_x + 1 << ":" << move_y + 1;
-            g_gui.SetStatusText(ss);
+            canvas->SetStatusText(ss);
 
             canvas->Refresh();
         }
@@ -175,7 +176,7 @@ void SelectionController::HandleRelease(const Position& mouse_map_pos, bool shif
     int move_y = canvas->GetLastClickMapY() - mouse_map_pos.y;
     int move_z = canvas->GetLastClickMapZ() - mouse_map_pos.z;
 
-    if (g_gui.IsSelectionMode()) {
+    if (canvas->IsSelectionMode()) {
         if (dragging && (move_x != 0 || move_y != 0 || move_z != 0)) {
             editor.moveSelection(Position(move_x, move_y, move_z));
         } else {
@@ -205,14 +206,14 @@ void SelectionController::HandleRelease(const Position& mouse_map_pos, bool shif
                 // User hasn't moved anything, meaning selection/deselection
                 Tile* tile = editor.map.getTile(mouse_map_pos);
                 if (tile) {
-                    if (tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+                    if (tile->spawn && canvas->GetSettings().getInteger(Config::SHOW_SPAWNS)) {
                         if (!tile->spawn->isSelected()) {
                             editor.selection.start(); // Start a selection session
                             editor.selection.add(tile, tile->spawn.get());
                             editor.selection.finish(); // Finish the selection session
                             editor.selection.updateSelectionCount();
                         }
-                    } else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
+                    } else if (tile->creature && canvas->GetSettings().getInteger(Config::SHOW_CREATURES)) {
                         if (!tile->creature->isSelected()) {
                             editor.selection.start(); // Start a selection session
                             editor.selection.add(tile, tile->creature.get());
@@ -241,8 +242,8 @@ void SelectionController::HandlePropertiesClick(const Position& mouse_map_pos, b
 {
     Tile* tile = editor.map.getTile(mouse_map_pos);
 
-    if (g_gui.IsDrawingMode()) {
-        g_gui.SetSelectionMode();
+    if (canvas->IsDrawingMode()) {
+        canvas->SetSelectionMode();
     }
 
     canvas->EndPasting();
@@ -268,9 +269,9 @@ void SelectionController::HandlePropertiesClick(const Position& mouse_map_pos, b
         editor.selection.start(); // Start a selection session
         editor.selection.clear();
         editor.selection.commit();
-        if (tile->spawn && g_settings.getInteger(Config::SHOW_SPAWNS)) {
+        if (tile->spawn && canvas->GetSettings().getInteger(Config::SHOW_SPAWNS)) {
             editor.selection.add(tile, tile->spawn.get());
-        } else if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
+        } else if (tile->creature && canvas->GetSettings().getInteger(Config::SHOW_CREATURES)) {
             editor.selection.add(tile, tile->creature.get());
         } else {
             Item* item = tile->getTopItem();
@@ -285,8 +286,8 @@ void SelectionController::HandlePropertiesClick(const Position& mouse_map_pos, b
 
 void SelectionController::HandlePropertiesRelease(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down)
 {
-    if (g_gui.IsDrawingMode()) {
-        g_gui.SetSelectionMode();
+    if (canvas->IsDrawingMode()) {
+        canvas->SetSelectionMode();
     }
 
     if (boundbox_selection) {
@@ -319,7 +320,7 @@ void SelectionController::HandlePropertiesRelease(const Position& mouse_map_pos,
 
 void SelectionController::HandleDoubleClick(const Position& mouse_map_pos)
 {
-    if (g_settings.getInteger(Config::DOUBLECLICK_PROPERTIES)) {
+    if (canvas->GetSettings().getInteger(Config::DOUBLECLICK_PROPERTIES)) {
         Tile* tile = editor.map.getTile(mouse_map_pos);
         if (tile) {
             DialogHelper::OpenProperties(editor, tile);
@@ -342,12 +343,12 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
     }
 
     int numtiles = 0;
-    int threadcount = std::max(g_settings.getInteger(Config::WORKER_THREADS), 1);
+    int threadcount = std::max(canvas->GetSettings().getInteger(Config::WORKER_THREADS), 1);
 
     int s_x = 0, s_y = 0, s_z = 0;
     int e_x = 0, e_y = 0, e_z = 0;
 
-    switch (g_settings.getInteger(Config::SELECTION_TYPE)) {
+    switch (canvas->GetSettings().getInteger(Config::SELECTION_TYPE)) {
         case SELECT_CURRENT_FLOOR: {
             s_z = e_z = floor;
             s_x = start_x;
@@ -364,7 +365,7 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
             e_y = end_y;
             e_z = floor;
 
-            if (g_settings.getInteger(Config::COMPENSATED_SELECT)) {
+            if (canvas->GetSettings().getInteger(Config::COMPENSATED_SELECT)) {
                 s_x -= (floor < GROUND_LAYER ? GROUND_LAYER - floor : 0);
                 s_y -= (floor < GROUND_LAYER ? GROUND_LAYER - floor : 0);
 
@@ -387,7 +388,7 @@ void SelectionController::ExecuteBoundboxSelection(const Position& start_pos, co
             e_y = end_y;
             e_z = floor;
 
-            if (g_settings.getInteger(Config::COMPENSATED_SELECT)) {
+            if (canvas->GetSettings().getInteger(Config::COMPENSATED_SELECT)) {
                 s_x -= (floor < GROUND_LAYER ? GROUND_LAYER - floor : 0);
                 s_y -= (floor < GROUND_LAYER ? GROUND_LAYER - floor : 0);
 

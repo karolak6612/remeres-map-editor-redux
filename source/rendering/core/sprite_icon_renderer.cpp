@@ -18,8 +18,8 @@
 #include "app/main.h"
 #include "rendering/core/sprite_icon_renderer.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/graphics.h"
 #include "rendering/utilities/sprite_icon_generator.h"
-#include "ui/gui.h"
 
 void SpriteIconRenderer::DrawTo(wxDC* dc, SpriteSize sz, GameSprite* sprite, int start_x, int start_y, int width, int height) {
 	const int sprite_dim = (sz == SPRITE_SIZE_64x64) ? 64 : (sz == SPRITE_SIZE_32x32 ? 32 : 16);
@@ -88,7 +88,9 @@ wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite) {
 			bm_[size] = std::make_unique<wxBitmap>(bmp);
 			dc_[size] = std::make_unique<wxMemoryDC>(*bm_[size]);
 		}
-		g_gui.gfx.addSpriteToCleanup(sprite->getId());
+		if (auto* graphics = sprite->graphics()) {
+			graphics->addSpriteToCleanup(sprite->getId());
+		}
 	}
 	return dc_[size].get();
 }
@@ -116,7 +118,9 @@ wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite, const
 			cache->dc = std::make_unique<wxMemoryDC>(*cache->bm);
 
 			auto res = colored_dc_.insert(std::make_pair(key, std::move(cache)));
-			g_gui.gfx.addSpriteToCleanup(sprite->getId());
+			if (auto* graphics = sprite->graphics()) {
+				graphics->addSpriteToCleanup(sprite->getId());
+			}
 			return res.first->second->dc.get();
 		}
 		return nullptr;

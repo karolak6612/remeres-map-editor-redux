@@ -35,6 +35,12 @@ struct NVGcontext;
 struct RenderSettings;
 struct FrameOptions;
 struct ViewSnapshot;
+class GUI;
+class Settings;
+class Brush;
+class MapTab;
+class EditorTab;
+class wxGLContext;
 
 class Item;
 class Creature;
@@ -53,7 +59,7 @@ class GLContextManager;
 class MapCanvas : public wxGLCanvas, public rme::rendering::RenderLoopHost {
 
 public:
-    MapCanvas(MapWindow* parent, Editor& editor, int* attriblist);
+    MapCanvas(MapWindow* parent, Editor& editor, GUI& gui, Settings& settings, int* attriblist);
     ~MapCanvas() override;
     void Reset();
 
@@ -138,15 +144,53 @@ public:
     std::unique_ptr<MapMenuHandler> menu_handler;
 
     MapWindow* GetMapWindow() const;
+    GUI& GetGui() const { return gui_; }
+    Settings& GetSettings() const { return settings_; }
+    GraphicManager& GetGraphics() const;
+    wxGLContext* GetSharedGLContext() const;
+    MapTab* GetCurrentMapTab() const;
+    EditorTab* GetCurrentTab() const;
+    Editor* GetCurrentEditor() const;
+    bool IsEditorOpen() const;
+    Brush* GetCurrentBrush() const;
+    BrushShape GetBrushShape() const;
+    int GetBrushSize() const;
+    int GetBrushVariation() const;
+    void SetBrushSize(int size);
+    void SetBrushVariation(int variation);
+    void IncreaseBrushSize(bool wrap = false);
+    void DecreaseBrushSize(bool wrap = false);
+    bool SelectBrush(const Brush* brush, PaletteType palette = TILESET_UNKNOWN);
+    void SelectPreviousBrush();
+    void FillDoodadPreviewBuffer();
+    void UpdateAutoborderPreview(Position pos);
+    void RefreshView();
+    void UpdateMinimap(bool immediate = false);
+    void UpdateMenubar();
+    void SetStatusText(const wxString& text);
+    void SetSelectionMode();
+    void SetDrawingMode();
+    void SwitchMode();
+    bool IsSelectionMode() const;
+    bool IsDrawingMode() const;
+    bool IsRenderingEnabledViaGui() const;
+    void CycleTab(bool forward = true);
+    void SetScreenCenterPosition(Position pos);
+    void RebuildPalettes();
+    float GetLightIntensity() const;
+    float GetAmbientLightLevel() const;
     wxGLCanvas& canvas() override
     {
         return *this;
     }
     bool isRenderingEnabled() const override;
+    bool isThreadedRenderingEnabled() const override;
+    GraphicManager& graphics() const override;
     RenderSettings buildRenderSettings() const override;
     FrameOptions buildFrameOptions() const override;
     ViewSnapshot buildViewSnapshot() const override;
     BrushSnapshot buildBrushSnapshot() const override;
+    BrushVisualSettings buildBrushVisualSettings() const override;
     void updateAnimationState(bool show_preview) override;
     bool isCapturingScreenshot() const override;
     uint8_t* screenshotBuffer() const override;
@@ -218,6 +262,8 @@ public:
     }
 
 private:
+    GUI& gui_;
+    Settings& settings_;
     std::unique_ptr<ViewStateManager> view_state_;
     InputState input_;
 

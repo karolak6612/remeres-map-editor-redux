@@ -4,10 +4,12 @@
 #include "app/preferences/preferences_layout.h"
 #include "app/settings.h"
 #include "rendering/postprocess/post_process_manager.h" // For ShaderNames
+#include "rendering/ui/render_loop.h"
 #include "ui/gui.h"
 
 GraphicsPage::GraphicsPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 	auto* page_sizer = GetPageSizer();
+	const bool threaded_rendering_available = rme::rendering::RenderLoop::IsThreadedPipelineReady();
 
 	auto* rendering_section = new PreferencesSectionPanel(
 		GetScrollWindow(),
@@ -176,6 +178,23 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : ScrollablePreferencesPage(parent)
 		"Display the current frame rate in the editor status area while you work.",
 		g_settings.getBoolean(Config::SHOW_FPS_COUNTER)
 	);
+	threaded_rendering_chkbox = PreferencesLayout::AddCheckBoxRow(
+		performance_section,
+		"Enable threaded rendering prep (Experimental)",
+		threaded_rendering_available
+			? "Experimental snapshot-driven frame preparation. Leave this off if you see unstable rendering."
+			: "This option will become available once the full snapshot-driven threaded pipeline is finished.",
+		threaded_rendering_available && g_settings.getBoolean(Config::THREADED_RENDERING)
+	);
+	if (!threaded_rendering_available) {
+		threaded_rendering_chkbox->SetValue(false);
+		threaded_rendering_chkbox->Enable(false);
+		PreferencesLayout::AddNotice(
+			performance_section,
+			"Threaded rendering is temporarily unavailable. The current release keeps it off until prepared-frame snapshots and command buffers are fully thread-safe.",
+			Theme::Role::Warning
+		);
+	}
 	page_sizer->Add(performance_section, 0, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, FromDIP(10));
 
 	FinishLayout();
@@ -237,6 +256,7 @@ void GraphicsPage::Apply() {
 	g_settings.setInteger(Config::HIDE_ITEMS_WHEN_ZOOMED, hide_items_when_zoomed_chkbox->GetValue());
 	g_settings.setInteger(Config::FRAME_RATE_LIMIT, fps_limit_spin->GetValue());
 	g_settings.setInteger(Config::SHOW_FPS_COUNTER, show_fps_chkbox->GetValue());
+	g_settings.setInteger(Config::THREADED_RENDERING, threaded_rendering_chkbox->IsEnabled() && threaded_rendering_chkbox->GetValue());
 
 	if (must_restart) {
 		wxMessageBox("Some changes require a restart of the application to take effect.", "Restart Required", wxOK | wxICON_INFORMATION);

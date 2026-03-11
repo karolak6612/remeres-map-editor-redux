@@ -39,11 +39,13 @@ static wxGLAttributes& GetCoreProfileAttributes() {
 	return vAttrs;
 }
 
-MinimapWindow::MinimapWindow(wxWindow* parent) :
+MinimapWindow::MinimapWindow(wxWindow* parent, GUI& gui, Settings& settings) :
 	wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxSize(205, 130)),
-	update_timer(this) {
+	update_timer(this),
+	gui_(gui),
+	settings_(settings) {
 	spdlog::info("MinimapWindow::MinimapWindow - Creating own context shared with global");
-	m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
+	m_glContext = std::make_unique<wxGLContext>(this, gui_.GetGLContext(this));
 	if (!m_glContext || !m_glContext->IsOK()) {
 		spdlog::error("MinimapWindow::MinimapWindow - Context creation failed");
 	}
@@ -83,13 +85,13 @@ void MinimapWindow::OnSize(wxSizeEvent& event) {
 void MinimapWindow::OnClose(wxCloseEvent&) {
 	spdlog::info("MinimapWindow::OnClose called");
 	spdlog::default_logger()->flush();
-	g_gui.DestroyMinimap();
+	gui_.DestroyMinimap();
 }
 
 void MinimapWindow::DelayedUpdate() {
 	// We only updated the window AFTER actions have taken place, that
 	// way we don't waste too much performance on updating this window
-	update_timer.Start(g_settings.getInteger(Config::MINIMAP_UPDATE_DELAY), true);
+	update_timer.Start(settings_.getInteger(Config::MINIMAP_UPDATE_DELAY), true);
 }
 
 void MinimapWindow::OnDelayedUpdate(wxTimerEvent& event) {
@@ -117,14 +119,14 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 		gladInitialized = true;
 	}
 
-	if (!g_gui.IsEditorOpen()) {
+	if (!gui_.IsEditorOpen()) {
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		SwapBuffers();
 		return;
 	}
-	Editor& editor = *g_gui.GetCurrentEditor();
-	MapCanvas* canvas = g_gui.GetCurrentMapTab()->GetCanvas();
+	Editor& editor = *gui_.GetCurrentEditor();
+	MapCanvas* canvas = gui_.GetCurrentMapTab()->GetCanvas();
 
 	// Mock dc passed to Draw, unused by new GL implementation
 	drawer->Draw(dc, GetSize(), editor, canvas);
@@ -133,19 +135,19 @@ void MinimapWindow::OnPaint(wxPaintEvent& event) {
 }
 
 void MinimapWindow::OnMouseClick(wxMouseEvent& event) {
-	if (!g_gui.IsEditorOpen()) {
+	if (!gui_.IsEditorOpen()) {
 		return;
 	}
 	int new_map_x, new_map_y;
 	drawer->ScreenToMap(event.GetX(), event.GetY(), new_map_x, new_map_y);
 
-	g_gui.SetScreenCenterPosition(Position(new_map_x, new_map_y, g_gui.GetCurrentFloor()));
+	gui_.SetScreenCenterPosition(Position(new_map_x, new_map_y, gui_.GetCurrentFloor()));
 	Refresh();
-	g_gui.RefreshView();
+	gui_.RefreshView();
 }
 
 void MinimapWindow::OnKey(wxKeyEvent& event) {
-	if (g_gui.GetCurrentTab() != nullptr) {
-		g_gui.GetCurrentMapTab()->GetEventHandler()->AddPendingEvent(event);
+	if (gui_.GetCurrentTab() != nullptr) {
+		gui_.GetCurrentMapTab()->GetEventHandler()->AddPendingEvent(event);
 	}
 }

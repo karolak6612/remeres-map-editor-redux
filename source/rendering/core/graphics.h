@@ -42,6 +42,7 @@ class GraphicManager;
 class FileReadHandle;
 class Animator;
 class SpriteArchive;
+class Settings;
 
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/sprite_database.h"
@@ -52,6 +53,7 @@ class SpriteArchive;
 #include "rendering/core/render_timer.h"
 #include "rendering/core/shared_geometry.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/graphics_runtime_config.h"
 #include "rendering/core/image.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/template_image.h"
@@ -63,12 +65,16 @@ class GraphicManager {
 	TextureGC gc_;
 	std::unique_ptr<RenderTimer> animation_timer_;
 	SharedGeometry shared_geometry_;
+	GraphicsRuntimeConfig runtime_config_;
 
 public:
 	GraphicManager();
 	~GraphicManager();
 
 	void clear();
+	void refreshRuntimeConfig(const Settings& settings) { runtime_config_ = GraphicsRuntimeConfig::FromSettings(settings); }
+	void applyRuntimeConfig(GraphicsRuntimeConfig config) { runtime_config_ = std::move(config); }
+	[[nodiscard]] const GraphicsRuntimeConfig& runtimeConfig() const { return runtime_config_; }
 
 	void cleanSoftwareSprites() { gc_.cleanSoftwareSprites(db_); }
 
@@ -93,8 +99,8 @@ public:
 		return db_.getCreatureAtlasRegion(id, x, y, dir, addon, pattern_z, outfit, frame);
 	}
 
-	void insertSprite(int id, std::unique_ptr<Sprite> sprite) { db_.insertSprite(id, std::move(sprite)); }
-	void insertSprite(int id, Sprite* sprite) { db_.insertSprite(id, std::unique_ptr<Sprite>(sprite)); }
+	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
+	void insertSprite(int id, Sprite* sprite) { insertSprite(id, std::unique_ptr<Sprite>(sprite)); }
 
 	long getElapsedTime() const { return animation_timer_->getElapsedTime(); }
 	time_t getCachedTime() const { return gc_.getCachedTime(); }
@@ -104,8 +110,8 @@ public:
 
 	bool loadEditorSprites();
 
-	void garbageCollection() { gc_.garbageCollect(db_); }
-	void addSpriteToCleanup(uint32_t sprite_id) { gc_.addSpriteToCleanup(db_, sprite_id); }
+	void garbageCollection() { gc_.garbageCollect(db_, runtime_config_); }
+	void addSpriteToCleanup(uint32_t sprite_id) { gc_.addSpriteToCleanup(db_, sprite_id, runtime_config_); }
 	bool shouldCollectGarbage() const noexcept { return gc_.shouldCollect(); }
 	void markGarbageCollected() noexcept { gc_.markCollected(); }
 

@@ -6,8 +6,6 @@
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/sprite_icon_renderer.h"
-#include "ui/gui.h"
-#include "app/settings.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/template_image.h"
 #include <spdlog/spdlog.h>
@@ -57,6 +55,23 @@ GameSprite::GameSprite() :
 
 GameSprite::~GameSprite() {
 	unloadDC();
+}
+
+void GameSprite::setGraphicManager(GraphicManager* graphics) {
+	graphics_ = graphics;
+	if (animation.animator) {
+		animation.animator->setGraphicManager(graphics);
+	}
+	for (auto* image : icon_data.sprite_list) {
+		if (image) {
+			image->setGraphicManager(graphics);
+		}
+	}
+	for (auto& image : icon_data.instanced_templates) {
+		if (image) {
+			image->setGraphicManager(graphics);
+		}
+	}
 }
 
 void GameSprite::clean(time_t time, int longevity) {
@@ -178,7 +193,7 @@ TemplateImage* GameSprite::getTemplateImage(int sprite_index, const Outfit& outf
 		return it->get();
 	}
 
-	auto img = std::make_unique<TemplateImage>(this, sprite_index, outfit);
+	auto img = std::make_unique<TemplateImage>(this, graphics_, sprite_index, outfit);
 	TemplateImage* ptr = img.get();
 	icon_data.instanced_templates.push_back(std::move(img));
 	return ptr;

@@ -149,7 +149,10 @@ public:
     ~MapDrawer();
 
     void SetupVars(DrawFrame frame);
-    void SetupVars(const ViewSnapshot& snapshot, const BrushSnapshot& brush, const RenderSettings& settings, const FrameOptions& base_options);
+    void SetupVars(
+        const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+        const FrameOptions& base_options
+    );
     void SetupGL();
     void Release();
 

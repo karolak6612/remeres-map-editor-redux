@@ -25,9 +25,6 @@
 #include <spdlog/spdlog.h>
 #include <nanovg_gl.h>
 #include "io/filehandle.h"
-#include "app/settings.h"
-#include "ui/gui.h"
-
 #include "rendering/io/editor_sprite_loader.h"
 
 #include <wx/mstream.h>
@@ -69,6 +66,7 @@ NormalImage* GraphicManager::getOrCreateNormalImage(uint32_t sprite_id) {
 	if (!slot) {
 		auto image = std::make_unique<NormalImage>();
 		image->id = sprite_id;
+		image->setGraphicManager(this);
 		slot = std::move(image);
 	}
 	return static_cast<NormalImage*>(slot.get());
@@ -118,6 +116,13 @@ void GraphicManager::finalizeLoadedCatalog(
 
 bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
+}
+
+void GraphicManager::insertSprite(int id, std::unique_ptr<Sprite> sprite) {
+	if (auto* game_sprite = dynamic_cast<GameSprite*>(sprite.get())) {
+		game_sprite->setGraphicManager(this);
+	}
+	db_.insertSprite(id, std::move(sprite));
 }
 
 void NVGDeleter::operator()(NVGcontext* nvg) const {

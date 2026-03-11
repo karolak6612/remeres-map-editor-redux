@@ -3,7 +3,7 @@
 
 class GraphicManager;
 
-// Explicit dependency injection replacing g_gui.gfx global access.
+// Explicit dependency injection for graphics services.
 // Constructed once in MapCanvas, passed to MapDrawer.
 struct RenderContext {
 	GraphicManager& gfx;

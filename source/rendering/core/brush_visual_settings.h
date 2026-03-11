@@ -20,7 +20,7 @@ struct BrushVisualSettings {
 
     bool use_automagic = true;
 
-    // Factory: populate from g_settings.
+    // Factory: populate from a settings object.
     static BrushVisualSettings FromSettings(const Settings& settings);
 };
 

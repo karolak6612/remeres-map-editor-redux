@@ -2,15 +2,15 @@
 
 #include "rendering/ui/render_loop.h"
 
-#include "app/settings.h"
 #include "rendering/core/frame_builder.h"
+#include "rendering/core/graphics.h"
 #include "rendering/core/text_renderer.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/gl_context_manager.h"
-#include "ui/gui.h"
 
 #include <glad/glad.h>
 #include <nanovg.h>
+#include <spdlog/spdlog.h>
 #include <wx/gdicmn.h>
 #include <wx/glcanvas.h>
 
@@ -20,8 +20,17 @@ RenderLoop::RenderLoop(MapDrawer& drawer, GLContextManager& gl, Editor& editor, 
 	drawer_(drawer),
 	gl_(gl),
 	editor_(editor),
-	host_(host),
-	prep_thread_([this](std::stop_token stop_token) { PrepThreadMain(stop_token); }) {
+	host_(host) {
+	if (IsThreadedPipelineReady()) {
+		prep_thread_.emplace([this](std::stop_token stop_token) { PrepThreadMain(stop_token); });
+	}
+}
+
+bool RenderLoop::IsThreadedPipelineReady() {
+	// The user-facing setting stays visible, but the old DrawFrame-only prep
+	// path is intentionally disabled until the full snapshot-driven pipeline
+	// can prepare map traversal, command buffers, and accumulators safely.
+	return false;
 }
 
 void RenderLoop::ExecuteFrame() {
@@ -31,15 +40,22 @@ void RenderLoop::ExecuteFrame() {
 	NVGcontext* vg = has_context ? gl_.GetNVG() : nullptr;
 
 	if (has_context && host_.isRenderingEnabled()) {
-		g_gui.gfx.updateTime();
+		host_.graphics().updateTime();
 
 		const auto settings = host_.buildRenderSettings();
 		const auto frame_options = host_.buildFrameOptions();
+		const auto brush_visual = host_.buildBrushVisualSettings();
 		host_.updateAnimationState(settings.show_preview);
 
 		const auto snapshot = host_.buildViewSnapshot();
 		const auto brush = host_.buildBrushSnapshot();
-		const bool threaded_rendering = g_settings.getBoolean(Config::THREADED_RENDERING);
+		const bool threaded_rendering_requested = host_.isThreadedRenderingEnabled();
+		const bool threaded_rendering = threaded_rendering_requested && IsThreadedPipelineReady();
+		if (threaded_rendering_requested && !threaded_rendering) {
+			std::call_once(threaded_rendering_warning_once_, [] {
+				spdlog::warn("Threaded rendering is disabled because the snapshot-driven pipeline is not ready yet.");
+			});
+		}
 		bool used_prepared_frame = false;
 		if (threaded_rendering) {
 			used_prepared_frame = TryApplyPreparedFrame();
@@ -47,13 +63,14 @@ void RenderLoop::ExecuteFrame() {
 				.generation = ++next_generation_,
 				.view = snapshot,
 				.brush = brush,
+				.brush_visual = brush_visual,
 				.settings = settings,
 				.frame_options = frame_options,
-				.atlas = g_gui.gfx.getAtlasManager(),
+				.atlas = host_.graphics().getAtlasManager(),
 			});
 		}
 		if (!used_prepared_frame) {
-			drawer_.SetupVars(snapshot, brush, settings, frame_options);
+			drawer_.SetupVars(snapshot, brush, brush_visual, settings, frame_options);
 		}
 		drawer_.SetupGL();
 		drawer_.Draw();
@@ -136,12 +153,13 @@ void RenderLoop::PrepThreadMain(std::stop_token stop_token) {
 			continue;
 		}
 
-		PreparedFrame prepared {
+		PreparedFrameBuffer prepared {
 			.generation = snapshot->generation,
 			.frame = FrameBuilder::Build(
-				snapshot->view, snapshot->brush, snapshot->settings, snapshot->frame_options, editor_, snapshot->atlas
+				snapshot->view, snapshot->brush, snapshot->brush_visual, snapshot->settings, snapshot->frame_options, editor_, snapshot->atlas
 			),
 		};
+		prepared.reserve(512, 256, 128, 64, 4096);
 
 		std::lock_guard lock(prep_mutex_);
 		if (!prepared_frame_ || prepared.generation >= prepared_frame_->generation) {
@@ -157,7 +175,7 @@ void RenderLoop::EnqueuePreparedFrame(RenderPrepSnapshot snapshot) {
 }
 
 bool RenderLoop::TryApplyPreparedFrame() {
-	std::optional<PreparedFrame> prepared;
+	std::optional<PreparedFrameBuffer> prepared;
 	{
 		std::lock_guard lock(prep_mutex_);
 		if (!prepared_frame_ || prepared_frame_->generation <= last_applied_generation_) {

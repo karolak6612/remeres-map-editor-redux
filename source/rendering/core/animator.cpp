@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 #include "rendering/core/animator.h"
-#include "ui/gui.h"
+#include "rendering/core/graphics.h"
 
 Animator::Animator(int frame_count, int start_frame, int loop_count, bool async) :
 	frame_count(frame_count),
@@ -55,7 +55,7 @@ FrameDuration* Animator::getFrameDuration(int frame) {
 }
 
 int Animator::getFrame() {
-	long time = g_gui.gfx.getElapsedTime();
+	long time = graphics_ ? graphics_->getElapsedTime() : 0;
 	if (time != last_time && !is_complete) {
 		long elapsed = time - last_time;
 		if (elapsed >= current_duration) {
@@ -105,7 +105,7 @@ void Animator::setFrame(int frame) {
 		}
 
 		is_complete = false;
-		last_time = g_gui.gfx.getElapsedTime();
+		last_time = graphics_ ? graphics_->getElapsedTime() : 0;
 		current_duration = getDuration(current_frame);
 		current_loop = 0;
 	} else {
@@ -159,7 +159,7 @@ int Animator::getLoopFrame() {
 }
 
 void Animator::calculateSynchronous() {
-	long time = g_gui.gfx.getElapsedTime();
+	long time = graphics_ ? graphics_->getElapsedTime() : 0;
 	if (time > 0 && total_duration > 0) {
 		long elapsed = time % total_duration;
 		int total_time = 0;

@@ -7,7 +7,7 @@
 
 class Settings;
 
-// Persistent rendering settings populated from g_settings once per frame.
+// Persistent rendering settings populated once per frame.
 // Lifetime: frame-scoped, but values only change when user modifies preferences.
 struct RenderSettings {
 	RenderSettings();

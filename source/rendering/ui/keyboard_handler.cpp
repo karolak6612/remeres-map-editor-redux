@@ -61,24 +61,24 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event)
         }
         case WXK_SPACE: {
             if (event.ControlDown()) {
-                g_gui.FillDoodadPreviewBuffer();
-                g_gui.RefreshView();
+                canvas->FillDoodadPreviewBuffer();
+                canvas->RefreshView();
             } else {
-                g_gui.SwitchMode();
+                canvas->SwitchMode();
             }
             break;
         }
         case WXK_TAB: {
             if (event.ShiftDown()) {
-                g_gui.CycleTab(false);
+                canvas->CycleTab(false);
             } else {
-                g_gui.CycleTab(true);
+                canvas->CycleTab(true);
             }
             break;
         }
         case WXK_DELETE: {
             canvas->editor.destroySelection();
-            g_gui.RefreshView();
+            canvas->RefreshView();
             break;
         }
         case 'z':
@@ -90,7 +90,7 @@ void KeyboardHandler::OnKeyDown(MapCanvas* canvas, wxKeyEvent& event)
         }
         case 'q':
         case 'Q': {
-            g_gui.SelectPreviousBrush();
+            canvas->SelectPreviousBrush();
             break;
         }
         case '0':
@@ -126,9 +126,9 @@ void KeyboardHandler::OnKeyUp(MapCanvas* canvas, wxKeyEvent& event)
 void KeyboardHandler::HandleFloorChange(MapCanvas* canvas, int keycode)
 {
     if (keycode == WXK_NUMPAD_ADD || keycode == WXK_PAGEUP) {
-        g_gui.ChangeFloor(canvas->GetFloor() - 1);
+        canvas->GetGui().ChangeFloor(canvas->GetFloor() - 1);
     } else {
-        g_gui.ChangeFloor(canvas->GetFloor() + 1);
+        canvas->GetGui().ChangeFloor(canvas->GetFloor() + 1);
     }
 }
 
@@ -146,29 +146,29 @@ void KeyboardHandler::HandleArrowNavigation(MapCanvas* canvas, wxKeyEvent& event
 void KeyboardHandler::HandleBrushSizeChange(MapCanvas* canvas, int keycode)
 {
     if (keycode == '[' || keycode == '+') {
-        g_gui.IncreaseBrushSize();
+        canvas->IncreaseBrushSize();
     } else {
-        g_gui.DecreaseBrushSize();
+        canvas->DecreaseBrushSize();
     }
     canvas->Refresh();
 }
 
 void KeyboardHandler::HandleBrushVariation(MapCanvas* canvas, int keycode)
 {
-    int nv = g_gui.GetBrushVariation();
+    int nv = canvas->GetBrushVariation();
     if (keycode == 'z' || keycode == 'Z') {
         --nv;
         if (nv < 0) {
-            nv = std::max(0, (g_gui.GetCurrentBrush() ? g_gui.GetCurrentBrush()->getMaxVariation() - 1 : 0));
+            nv = std::max(0, (canvas->GetCurrentBrush() ? canvas->GetCurrentBrush()->getMaxVariation() - 1 : 0));
         }
     } else {
         ++nv;
-        if (nv >= (g_gui.GetCurrentBrush() ? g_gui.GetCurrentBrush()->getMaxVariation() : 0)) {
+        if (nv >= (canvas->GetCurrentBrush() ? canvas->GetCurrentBrush()->getMaxVariation() : 0)) {
             nv = 0;
         }
     }
-    g_gui.SetBrushVariation(nv);
-    g_gui.RefreshView();
+    canvas->SetBrushVariation(nv);
+    canvas->RefreshView();
 }
 
 void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event)
@@ -176,7 +176,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event)
     int index = event.GetKeyCode() - '0';
     if (event.ControlDown()) {
         Hotkey hk;
-        if (g_gui.IsSelectionMode()) {
+        if (canvas->IsSelectionMode()) {
             int view_start_x, view_start_y;
             static_cast<MapWindow*>(canvas->GetParent())->GetViewStart(&view_start_x, &view_start_y);
             int view_start_map_x = view_start_x / TILE_SIZE, view_start_map_y = view_start_y / TILE_SIZE;
@@ -188,8 +188,8 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event)
             int map_y = int(view_start_map_y + (view_screensize_y * canvas->GetZoom()) / TILE_SIZE / 2);
 
             hk = Hotkey(Position(map_x, map_y, canvas->GetFloor()));
-        } else if (g_gui.GetCurrentBrush()) {
-            hk = Hotkey(g_gui.GetCurrentBrush());
+        } else if (canvas->GetCurrentBrush()) {
+            hk = Hotkey(canvas->GetCurrentBrush());
         } else {
             return;
         }
@@ -197,7 +197,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event)
     } else {
         Hotkey hk = g_hotkeys.GetHotkey(index);
         if (hk.IsPosition()) {
-            g_gui.SetSelectionMode();
+            canvas->SetSelectionMode();
 
             int map_x = hk.GetPosition().x;
             int map_y = hk.GetPosition().y;
@@ -206,27 +206,27 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event)
             static_cast<MapWindow*>(canvas->GetParent())->Scroll(TILE_SIZE * map_x, TILE_SIZE * map_y, true);
             canvas->SetFloorDirect(map_z);
 
-            g_gui.SetStatusText("Used hotkey " + i2ws(index));
-            g_gui.RefreshView();
+            canvas->SetStatusText("Used hotkey " + i2ws(index));
+            canvas->RefreshView();
         } else if (hk.IsBrush()) {
-            g_gui.SetDrawingMode();
+            canvas->SetDrawingMode();
 
             std::string name = hk.GetBrushname();
             Brush* brush = g_brushes.getBrush(name);
             if (brush == nullptr) {
-                g_gui.SetStatusText("Brush \"" + wxstr(name) + "\" not found");
+                canvas->SetStatusText("Brush \"" + wxstr(name) + "\" not found");
                 return;
             }
 
-            if (!g_gui.SelectBrush(brush)) {
-                g_gui.SetStatusText("Brush \"" + wxstr(name) + "\" is not in any palette");
+            if (!canvas->SelectBrush(brush)) {
+                canvas->SetStatusText("Brush \"" + wxstr(name) + "\" is not in any palette");
                 return;
             }
 
-            g_gui.SetStatusText("Used hotkey " + i2ws(index));
-            g_gui.RefreshView();
+            canvas->SetStatusText("Used hotkey " + i2ws(index));
+            canvas->RefreshView();
         } else {
-            g_gui.SetStatusText("Unassigned hotkey " + i2ws(index));
+            canvas->SetStatusText("Unassigned hotkey " + i2ws(index));
         }
     }
 }

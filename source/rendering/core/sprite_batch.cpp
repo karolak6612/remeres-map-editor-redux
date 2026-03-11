@@ -1,6 +1,5 @@
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/graphics.h"
-#include "ui/gui.h"
 #include <iostream>
 #include <cstring>
 #include <utility>
@@ -53,7 +52,7 @@ SpriteBatch::~SpriteBatch() {
 SpriteBatch::SpriteBatch(SpriteBatch&& other) noexcept = default;
 SpriteBatch& SpriteBatch::operator=(SpriteBatch&& other) noexcept = default;
 
-bool SpriteBatch::initialize() {
+bool SpriteBatch::initialize(SharedGeometry& shared_geom) {
 	// Load shader
 	shader_ = std::make_unique<ShaderProgram>();
 	if (!shader_->Load(sprite_batch_vert, sprite_batch_frag)) {
@@ -70,7 +69,6 @@ bool SpriteBatch::initialize() {
 	// Create VAO and static buffers
 	vao_ = std::make_unique<GLVertexArray>();
 	// Initialize Shared Geometry
-	auto& shared_geom = g_gui.gfx.sharedGeometry();
 	if (!shared_geom.initialize()) {
 		spdlog::error("SpriteBatch: Failed to initialize SharedGeometry");
 		return false;

@@ -69,6 +69,8 @@ class GameSprite : public Sprite {
 public:
 	GameSprite();
 	~GameSprite() override;
+	void setGraphicManager(GraphicManager* graphics);
+	[[nodiscard]] GraphicManager* graphics() const { return graphics_; }
 
 	size_t getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const;
 
@@ -131,6 +133,9 @@ public:
 	void updateSimpleStatus() {
 		meta.is_simple = (meta.numsprites == 1 && meta.frames == 1 && meta.layers == 1 && meta.width == 1 && meta.height == 1 && !icon_data.sprite_list.empty());
 	}
+
+private:
+	GraphicManager* graphics_ = nullptr;
 };
 
 #endif

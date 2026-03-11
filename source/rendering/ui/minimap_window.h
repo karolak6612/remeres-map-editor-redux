@@ -24,9 +24,11 @@
 #include "rendering/core/graphics.h"
 
 class MinimapDrawer;
+class GUI;
+class Settings;
 class MinimapWindow : public wxGLCanvas {
 public:
-	MinimapWindow(wxWindow* parent);
+	MinimapWindow(wxWindow* parent, GUI& gui, Settings& settings);
 	~MinimapWindow() override;
 
 	void OnPaint(wxPaintEvent&);
@@ -43,6 +45,8 @@ protected:
 	std::unique_ptr<MinimapDrawer> drawer;
 	wxTimer update_timer;
 	std::unique_ptr<wxGLContext> m_glContext;
+	GUI& gui_;
+	Settings& settings_;
 };
 
 #endif

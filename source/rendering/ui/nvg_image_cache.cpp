@@ -20,7 +20,6 @@
 #include "rendering/core/normal_image.h"
 #include "item_definitions/core/item_definition_store.h"
 #include "game/sprites.h"
-#include "ui/gui.h"
 #include <nanovg.h>
 
 NVGImageCache::~NVGImageCache() {
@@ -57,7 +56,7 @@ int NVGImageCache::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 
 	// Resolve item definition to GameSprite
 	const auto definition = g_item_definitions.get(itemId);
-	GameSprite* gameSprite = definition ? dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId())) : nullptr;
+	GameSprite* gameSprite = definition ? dynamic_cast<GameSprite*>(graphics_.getSprite(definition.clientId())) : nullptr;
 	if (!gameSprite || gameSprite->icon_data.sprite_list.empty()) {
 		return 0;
 	}
@@ -70,7 +69,7 @@ int NVGImageCache::getSpriteImage(NVGcontext* vg, uint16_t itemId) {
 	std::unique_ptr<uint8_t[]> rgba;
 
 	// For legacy sprites (no transparency), use RGB + Magenta masking
-	if (!g_gui.gfx.hasTransparency()) {
+	if (!graphics_.hasTransparency()) {
 		std::unique_ptr<uint8_t[]> rgb = img->getRGBData();
 		if (rgb) {
 			rgba = std::make_unique<uint8_t[]>(32 * 32 * 4);

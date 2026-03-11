@@ -61,27 +61,27 @@ void MapMenuHandler::BindEvents()
 
 void MapMenuHandler::OnCopy(wxCommandEvent& WXUNUSED(event))
 {
-    ClipboardHandler::copy(editor, canvas->GetFloor());
+    ClipboardHandler::copy(canvas->GetGui(), editor, canvas->GetFloor());
 }
 
 void MapMenuHandler::OnCut(wxCommandEvent& WXUNUSED(event))
 {
-    ClipboardHandler::cut(editor, canvas->GetFloor());
+    ClipboardHandler::cut(canvas->GetGui(), editor, canvas->GetFloor());
 }
 
 void MapMenuHandler::OnPaste(wxCommandEvent& WXUNUSED(event))
 {
-    ClipboardHandler::paste();
+    ClipboardHandler::paste(canvas->GetGui());
 }
 
 void MapMenuHandler::OnDelete(wxCommandEvent& WXUNUSED(event))
 {
-    ClipboardHandler::doDelete(editor);
+    ClipboardHandler::doDelete(canvas->GetGui(), editor);
 }
 
 void MapMenuHandler::OnCopyPosition(wxCommandEvent& WXUNUSED(event))
 {
-    ClipboardHandler::copyPosition(editor.selection);
+    ClipboardHandler::copyPosition(canvas->GetSettings(), editor.selection);
 }
 
 void MapMenuHandler::OnCopyServerId(wxCommandEvent& WXUNUSED(event))
@@ -101,92 +101,92 @@ void MapMenuHandler::OnCopyName(wxCommandEvent& WXUNUSED(event))
 
 void MapMenuHandler::OnBrowseTile(wxCommandEvent& WXUNUSED(event))
 {
-    PopupActionHandler::BrowseTile(editor, canvas->GetCursorX(), canvas->GetCursorY());
+    PopupActionHandler::BrowseTile(canvas->GetGui(), editor, canvas->GetCursorX(), canvas->GetCursorY());
 }
 
 void MapMenuHandler::OnTileProperties(wxCommandEvent& WXUNUSED(event))
 {
-    if (g_gui.tile_properties_panel) {
-        wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_gui.tile_properties_panel);
+    if (canvas->GetGui().tile_properties_panel) {
+        wxAuiPaneInfo& info = canvas->GetGui().aui_manager->GetPane(canvas->GetGui().tile_properties_panel);
         info.Show();
-        g_gui.tile_properties_panel->UpdateFromEditor(&editor);
-        g_gui.aui_manager->Update();
+        canvas->GetGui().tile_properties_panel->UpdateFromEditor(&editor);
+        canvas->GetGui().aui_manager->Update();
     }
 }
 
 void MapMenuHandler::OnRotateItem(wxCommandEvent& WXUNUSED(event))
 {
-    PopupActionHandler::RotateItem(editor);
+    PopupActionHandler::RotateItem(canvas->GetGui(), editor);
 }
 
 void MapMenuHandler::OnGotoDestination(wxCommandEvent& WXUNUSED(event))
 {
-    PopupActionHandler::GotoDestination(editor);
+    PopupActionHandler::GotoDestination(canvas->GetGui(), editor);
 }
 
 void MapMenuHandler::OnSwitchDoor(wxCommandEvent& WXUNUSED(event))
 {
-    PopupActionHandler::SwitchDoor(editor);
+    PopupActionHandler::SwitchDoor(canvas->GetGui(), editor);
 }
 
 void MapMenuHandler::OnSelectRAWBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectRAWBrush(editor.selection);
+    BrushSelector::SelectRAWBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectGroundBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectGroundBrush(editor.selection);
+    BrushSelector::SelectGroundBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectDoodadBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectDoodadBrush(editor.selection);
+    BrushSelector::SelectDoodadBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectDoorBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectDoorBrush(editor.selection);
+    BrushSelector::SelectDoorBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectWallBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectWallBrush(editor.selection);
+    BrushSelector::SelectWallBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectCarpetBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectCarpetBrush(editor.selection);
+    BrushSelector::SelectCarpetBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectTableBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectTableBrush(editor.selection);
+    BrushSelector::SelectTableBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectHouseBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectHouseBrush(editor, editor.selection);
+    BrushSelector::SelectHouseBrush(canvas->GetGui(), editor, editor.selection);
 }
 
 void MapMenuHandler::OnSelectCollectionBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectCollectionBrush(editor.selection);
+    BrushSelector::SelectCollectionBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectCreatureBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectCreatureBrush(editor.selection);
+    BrushSelector::SelectCreatureBrush(canvas->GetGui(), editor.selection);
 }
 
 void MapMenuHandler::OnSelectSpawnBrush(wxCommandEvent& WXUNUSED(event))
 {
-    BrushSelector::SelectSpawnBrush();
+    BrushSelector::SelectSpawnBrush(canvas->GetGui());
 }
 
 void MapMenuHandler::OnSelectMoveTo(wxCommandEvent& WXUNUSED(event))
 {
-    PopupActionHandler::SelectMoveTo(editor);
+    PopupActionHandler::SelectMoveTo(canvas->GetGui(), editor);
 }
 
 void MapMenuHandler::OnProperties(wxCommandEvent& WXUNUSED(event))
@@ -217,7 +217,7 @@ void MapMenuHandler::OnAdvancedReplace(wxCommandEvent& WXUNUSED(event))
     }
 
     std::vector<uint16_t> sortedIds(uniqueIds.begin(), uniqueIds.end());
-    MapTab* tab = g_gui.GetCurrentMapTab();
+    MapTab* tab = canvas->GetCurrentMapTab();
     if (tab) {
         tab->ShowAdvancedReplaceForSelection(sortedIds);
     }

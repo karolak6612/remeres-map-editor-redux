@@ -173,6 +173,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_sprite_resolver.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/graphics_runtime_config.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_animation_state.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_icon_data.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_metadata.h
@@ -192,6 +193,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/sprite_preload_queue.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/spsc_queue.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/pending_node_requests.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/prepared_frame_buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/light_buffer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/minimap_colors.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/multi_draw_indirect_renderer.h

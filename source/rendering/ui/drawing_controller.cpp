@@ -12,7 +12,6 @@
 #include "map/map.h"
 #include "map/tile.h"
 #include "rendering/ui/map_display.h"
-#include "ui/gui.h"
 
 // Brushes
 #include "brushes/doodad/doodad_brush.h"
@@ -38,18 +37,18 @@ DrawingController::~DrawingController() { }
 
 void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down)
 {
-    Brush* brush = g_gui.GetCurrentBrush();
+    Brush* brush = canvas->GetCurrentBrush();
     if (brush) {
         if (shift_down && brush->canDrag()) {
             dragging_draw = true;
         } else {
-            if (g_gui.GetBrushSize() == 0 && !brush->oneSizeFitsAll()) {
+            if (canvas->GetBrushSize() == 0 && !brush->oneSizeFitsAll()) {
                 drawing = true;
             } else {
-                drawing = g_gui.GetCurrentBrush()->canSmear();
+                drawing = canvas->GetCurrentBrush()->canSmear();
             }
             if (brush->is<WallBrush>()) {
-                if (alt_down && g_gui.GetBrushSize() == 0) {
+                if (alt_down && canvas->GetBrushSize() == 0) {
                     // z0mg, just clicked a tile, shift variaton.
                     if (ctrl_down) {
                         editor.undraw(mouse_map_pos, alt_down);
@@ -61,10 +60,10 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
                     PositionVector tilestodraw;
                     PositionVector tilestoborder;
 
-                    int start_map_x = mouse_map_pos.x - g_gui.GetBrushSize();
-                    int start_map_y = mouse_map_pos.y - g_gui.GetBrushSize();
-                    int end_map_x = mouse_map_pos.x + g_gui.GetBrushSize();
-                    int end_map_y = mouse_map_pos.y + g_gui.GetBrushSize();
+                    int start_map_x = mouse_map_pos.x - canvas->GetBrushSize();
+                    int start_map_y = mouse_map_pos.y - canvas->GetBrushSize();
+                    int end_map_x = mouse_map_pos.x + canvas->GetBrushSize();
+                    int end_map_y = mouse_map_pos.y + canvas->GetBrushSize();
 
                     for (int y = start_map_y - 1; y <= end_map_y + 1; ++y) {
                         for (int x = start_map_x - 1; x <= end_map_x + 1; ++x) {
@@ -111,7 +110,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
                 } else {
                     bool will_show_spawn = false;
                     if (brush->is<SpawnBrush>() || brush->is<CreatureBrush>()) {
-                        if (!g_settings.getBoolean(Config::SHOW_SPAWNS)) {
+                        if (!canvas->GetSettings().getBoolean(Config::SHOW_SPAWNS)) {
                             Tile* tile = editor.map.getTile(mouse_map_pos);
                             if (!tile || !tile->spawn) {
                                 will_show_spawn = true;
@@ -124,8 +123,8 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
                     if (will_show_spawn) {
                         Tile* tile = editor.map.getTile(mouse_map_pos);
                         if (tile && tile->spawn) {
-                            g_settings.setInteger(Config::SHOW_SPAWNS, true);
-                            g_gui.UpdateMenubar();
+                            canvas->GetSettings().setInteger(Config::SHOW_SPAWNS, true);
+                            canvas->UpdateMenubar();
                         }
                     }
                 }
@@ -178,7 +177,7 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
                 }
             }
             // Change the doodad layout brush
-            g_gui.FillDoodadPreviewBuffer();
+            canvas->FillDoodadPreviewBuffer();
         }
     }
 }
@@ -190,7 +189,7 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
     }
     last_draw_pos = mouse_map_pos;
 
-    Brush* brush = g_gui.GetCurrentBrush();
+    Brush* brush = canvas->GetCurrentBrush();
     if (drawing && brush) {
         if (brush->is<DoodadBrush>()) {
             if (ctrl_down) {
@@ -243,13 +242,13 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
         } else { // No borders
             PositionVector tilestodraw;
 
-            for (int y = -g_gui.GetBrushSize(); y <= g_gui.GetBrushSize(); y++) {
-                for (int x = -g_gui.GetBrushSize(); x <= g_gui.GetBrushSize(); x++) {
-                    if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
+            for (int y = -canvas->GetBrushSize(); y <= canvas->GetBrushSize(); y++) {
+                for (int x = -canvas->GetBrushSize(); x <= canvas->GetBrushSize(); x++) {
+                    if (canvas->GetBrushShape() == BRUSHSHAPE_SQUARE) {
                         tilestodraw.push_back(Position(mouse_map_pos.x + x, mouse_map_pos.y + y, mouse_map_pos.z));
-                    } else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
+                    } else if (canvas->GetBrushShape() == BRUSHSHAPE_CIRCLE) {
                         double distance = sqrt(double(x * x) + double(y * y));
-                        if (distance < g_gui.GetBrushSize() + 0.005) {
+                        if (distance < canvas->GetBrushSize() + 0.005) {
                             tilestodraw.push_back(Position(mouse_map_pos.x + x, mouse_map_pos.y + y, mouse_map_pos.z));
                         }
                     }
@@ -263,11 +262,11 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
         }
 
         // Create newd doodad layout (does nothing if a non-doodad brush is selected)
-        g_gui.FillDoodadPreviewBuffer();
+        canvas->FillDoodadPreviewBuffer();
 
-        g_gui.RefreshView();
+        canvas->RefreshView();
     } else if (dragging_draw) {
-        g_gui.RefreshView();
+        canvas->RefreshView();
     }
     // Removed map_update check as this function is usually called when coords changed
     if (!drawing && !dragging_draw && brush) {
@@ -278,7 +277,7 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
 void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down)
 {
     if (dragging_draw) {
-        Brush* brush = g_gui.GetCurrentBrush();
+        Brush* brush = canvas->GetCurrentBrush();
         if (brush) {
             if (brush->is<SpawnBrush>()) {
                 int start_map_x = std::min(canvas->GetLastClickMapX(), mouse_map_pos.x);
@@ -290,12 +289,12 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
                 int map_y = start_map_y + (end_map_y - start_map_y) / 2;
 
                 int width = std::min(
-                    g_settings.getInteger(Config::MAX_SPAWN_RADIUS), ((end_map_x - start_map_x) / 2 + (end_map_y - start_map_y) / 2) / 2
+                    canvas->GetSettings().getInteger(Config::MAX_SPAWN_RADIUS), ((end_map_x - start_map_x) / 2 + (end_map_y - start_map_y) / 2) / 2
                 );
-                int old = g_gui.GetBrushSize();
-                g_gui.SetBrushSize(width);
+                int old = canvas->GetBrushSize();
+                canvas->SetBrushSize(width);
                 editor.draw(Position(map_x, map_y, mouse_map_pos.z), alt_down);
-                g_gui.SetBrushSize(old);
+                canvas->SetBrushSize(old);
             } else {
                 PositionVector tilestodraw;
                 PositionVector tilestoborder;
@@ -317,7 +316,7 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
                         }
                     }
                 } else {
-                    if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
+                    if (canvas->GetBrushShape() == BRUSHSHAPE_SQUARE) {
                         int last_x = canvas->GetLastClickMapX();
                         int last_y = canvas->GetLastClickMapY();
                         int curr_x = mouse_map_pos.x;
@@ -411,9 +410,9 @@ void DrawingController::HandleWheel(int rotation, bool alt_down, bool ctrl_down)
         diff += rotation;
         if (diff <= 1.0 || diff >= 1.0) {
             if (diff < 0.0) {
-                g_gui.IncreaseBrushSize();
+                canvas->IncreaseBrushSize();
             } else {
-                g_gui.DecreaseBrushSize();
+                canvas->DecreaseBrushSize();
             }
             diff = 0.0;
         }

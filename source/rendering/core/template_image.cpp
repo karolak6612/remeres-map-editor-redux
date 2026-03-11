@@ -1,16 +1,15 @@
 #include "rendering/core/template_image.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/graphics.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/outfit_colors.h"
 #include "rendering/core/sprite_decompression.h"
-#include "app/settings.h"
-#include "ui/gui.h"
 #include <atomic>
 #include <spdlog/spdlog.h>
 
 static std::atomic<uint32_t> template_id_generator(0x1000000);
 
-TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
+TemplateImage::TemplateImage(GameSprite* parent, GraphicManager* graphics, int v, const Outfit& outfit) :
 	atlas_region(nullptr),
 	texture_id(template_id_generator.fetch_add(1)), // Generate unique ID for Atlas
 	parent(parent),
@@ -19,12 +18,13 @@ TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
 	lookBody(outfit.lookBody),
 	lookLegs(outfit.lookLegs),
 	lookFeet(outfit.lookFeet) {
+	setGraphicManager(graphics);
 }
 
 TemplateImage::~TemplateImage() {
 	if (isGLLoaded) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
+		if (graphics().hasAtlasManager()) {
+			graphics().getAtlasManager()->removeSprite(texture_id);
 		}
 	}
 }
@@ -32,16 +32,16 @@ TemplateImage::~TemplateImage() {
 void TemplateImage::clean(time_t time, int longevity) {
 	// Evict from atlas if expired
 	if (longevity == -1) {
-		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+		longevity = graphics().runtimeConfig().texture_longevity;
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
+		if (graphics().hasAtlasManager()) {
+			graphics().getAtlasManager()->removeSprite(texture_id);
 		}
 		isGLLoaded = false;
 		atlas_region = nullptr;
 		generation_id++;
-		g_gui.gfx.notifyTextureUnloaded();
+		graphics().notifyTextureUnloaded();
 	}
 }
 

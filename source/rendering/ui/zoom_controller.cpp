@@ -12,7 +12,7 @@
 
 void ZoomController::OnWheel(MapCanvas* canvas, wxMouseEvent& event)
 {
-    double diff = -event.GetWheelRotation() * g_settings.getFloat(Config::ZOOM_SPEED) / 640.0;
+    double diff = -event.GetWheelRotation() * canvas->GetSettings().getFloat(Config::ZOOM_SPEED) / 640.0;
     ApplyRelativeZoom(canvas, diff);
 }
 
@@ -74,5 +74,5 @@ void ZoomController::UpdateStatus(MapCanvas* canvas)
     int percentage = static_cast<int>((1.0 / canvas->GetZoom()) * 100);
     wxString ss;
     ss << "zoom: " << percentage << "%";
-    g_gui.root->SetStatusText(ss, 3);
+    canvas->GetGui().root->SetStatusText(ss, 3);
 }

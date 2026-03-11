@@ -4,16 +4,16 @@
 
 #include "app/main.h"
 #include "rendering/utilities/sprite_icon_generator.h"
-#include "app/settings.h"
-#include "ui/gui.h"
+#include "rendering/core/graphics.h"
 #include <algorithm>
 #include <ranges>
 #include <span>
 
 wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool rescale) {
 	ASSERT(sprite->meta.width >= 1 && sprite->meta.height >= 1);
+	ASSERT(sprite->graphics() != nullptr);
 
-	const int bgshade = g_settings.getInteger(Config::ICON_BACKGROUND);
+	const int bgshade = sprite->graphics()->runtimeConfig().icon_background;
 
 	int image_size = std::max<uint8_t>(sprite->meta.width, sprite->meta.height) * SPRITE_PIXELS;
 	wxImage image(image_size, image_size);
@@ -67,8 +67,9 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, bool
 
 wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, const Outfit& outfit, bool rescale, Direction direction) {
 	ASSERT(sprite->meta.width >= 1 && sprite->meta.height >= 1);
+	ASSERT(sprite->graphics() != nullptr);
 
-	const int bgshade = g_settings.getInteger(Config::ICON_BACKGROUND);
+	const int bgshade = sprite->graphics()->runtimeConfig().icon_background;
 
 	int image_size = std::max<uint8_t>(sprite->meta.width, sprite->meta.height) * SPRITE_PIXELS;
 	wxImage image(image_size, image_size);
@@ -100,7 +101,7 @@ wxBitmap SpriteIconGenerator::Generate(GameSprite* sprite, SpriteSize size, cons
 	// Mounts
 	int pattern_z = 0;
 	if (outfit.lookMount != 0) {
-		if (GameSprite* mountSpr = g_gui.gfx.getCreatureSprite(outfit.lookMount)) {
+		if (GameSprite* mountSpr = sprite->graphics()->getCreatureSprite(outfit.lookMount)) {
 			// Mount outfit
 			Outfit mountOutfit;
 			mountOutfit.lookType = outfit.lookMount;

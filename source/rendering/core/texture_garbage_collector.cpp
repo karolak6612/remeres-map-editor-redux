@@ -19,7 +19,6 @@
 #include "rendering/core/texture_garbage_collector.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/image.h"
-#include "app/settings.h"
 #include <algorithm>
 
 namespace {
@@ -56,12 +55,14 @@ void TextureGarbageCollector::NotifyTextureUnloaded() {
 // Minimal threshold before we even consider reliable cleanup
 const int MIN_CLEAN_THRESHOLD = 100;
 
-void TextureGarbageCollector::AddSpriteToCleanup(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id) {
+void TextureGarbageCollector::AddSpriteToCleanup(
+	const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id, const GraphicsRuntimeConfig& config
+) {
 	cleanup_list_.push_back(sprite_id);
 	// Clean if needed
-	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD)));
+	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, config.software_clean_threshold));
 	if (cleanup_list_.size() > clean_threshold) {
-		const auto software_clean_size = std::max(0, g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE));
+		const auto software_clean_size = std::max(0, config.software_clean_size);
 		const auto cleanup_count = std::min(cleanup_list_.size(), static_cast<size_t>(software_clean_size));
 
 		for (size_t i = 0; i < cleanup_count; ++i) {
@@ -73,11 +74,13 @@ void TextureGarbageCollector::AddSpriteToCleanup(const std::vector<GameSprite*>&
 	}
 }
 
-void TextureGarbageCollector::GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time) {
-	if (g_settings.getInteger(Config::TEXTURE_MANAGEMENT)) {
-		if (loaded_textures > g_settings.getInteger(Config::TEXTURE_CLEAN_THRESHOLD) && current_time - lastclean > g_settings.getInteger(Config::TEXTURE_CLEAN_PULSE)) {
+void TextureGarbageCollector::GarbageCollect(
+	std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time, const GraphicsRuntimeConfig& config
+) {
+	if (config.texture_management) {
+		if (loaded_textures > config.texture_clean_threshold && current_time - lastclean > config.texture_clean_pulse) {
 
-			int longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+			int longevity = config.texture_longevity;
 			for (size_t i = resident_images.size(); i > 0; --i) {
 				Image* img = resident_images[i - 1];
 				img->clean(current_time, longevity);

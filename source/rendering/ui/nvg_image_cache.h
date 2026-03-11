@@ -22,13 +22,14 @@
 #include <unordered_map>
 
 struct NVGcontext;
+class GraphicManager;
 
 // Cache for NanoVG image handles, keyed by item ID.
 // Detects NVGcontext changes and invalidates the cache automatically.
 // Can be shared by multiple NanoVG-based renderers.
 class NVGImageCache {
 public:
-	NVGImageCache() = default;
+	explicit NVGImageCache(GraphicManager& graphics) : graphics_(graphics) {}
 	~NVGImageCache();
 
 	// Non-copyable, non-movable (owns NVG handles)
@@ -42,6 +43,7 @@ public:
 private:
 	std::unordered_map<uint32_t, int> cache_;
 	NVGcontext* last_context_ = nullptr;
+	GraphicManager& graphics_;
 
 	void invalidateAll();
 };

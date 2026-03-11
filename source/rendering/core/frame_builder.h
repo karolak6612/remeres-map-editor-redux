@@ -1,6 +1,7 @@
 #ifndef RME_RENDERING_CORE_FRAME_BUILDER_H_
 #define RME_RENDERING_CORE_FRAME_BUILDER_H_
 
+#include "rendering/core/brush_visual_settings.h"
 #include "rendering/core/brush_snapshot.h"
 #include "rendering/core/draw_frame.h"
 
@@ -12,6 +13,7 @@ public:
 	[[nodiscard]] static DrawFrame Build(
 		const ViewSnapshot& snapshot,
 		const BrushSnapshot& brush,
+		const BrushVisualSettings& brush_visual,
 		const RenderSettings& settings,
 		const FrameOptions& base_options,
 		const Editor& editor,
