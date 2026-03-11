@@ -20,6 +20,7 @@
 #include "rendering/core/map_access.h"
 #include "rendering/core/render_settings.h"
 #include "rendering/core/render_view.h"
+#include "rendering/core/special_client_ids.h"
 #include "rendering/core/sprite_resolver.h"
 #include "rendering/core/tile_render_snapshot_builder.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -62,6 +63,45 @@ namespace {
         accumulators.creature_names.insert(
             accumulators.creature_names.end(), chunk_snapshot.creature_names.begin(), chunk_snapshot.creature_names.end()
         );
+    }
+
+    [[nodiscard]] int computeQueuedItemDrawHeight(
+        const ISpriteResolver* sprite_resolver, const FramePlanContext& ctx, const ItemRenderSnapshot& item
+    )
+    {
+        if (!sprite_resolver) {
+            return 0;
+        }
+
+        int client_id = item.client_id;
+        if (ctx.settings.show_tech_items) {
+            if (client_id == 0) {
+                return 0;
+            }
+
+            switch (client_id) {
+                case SpecialClientId::INVISIBLE_STAIRS:
+                case SpecialClientId::INVISIBLE_WALKABLE_470:
+                case SpecialClientId::INVISIBLE_WALKABLE_17970:
+                case SpecialClientId::INVISIBLE_WALKABLE_20028:
+                case SpecialClientId::INVISIBLE_WALKABLE_34168:
+                case SpecialClientId::INVISIBLE_WALL:
+                    return 0;
+                default:
+                    break;
+            }
+
+            if (SpecialClientId::isPrimalLight(client_id)) {
+                client_id = SPRITE_LIGHTSOURCE;
+            }
+        }
+
+        if (item.is_meta_item || (!ctx.settings.ingame && item.is_pickupable && !ctx.settings.show_items)) {
+            return 0;
+        }
+
+        const SpriteMetadata* meta = sprite_resolver->getSpriteMetadata(client_id);
+        return meta ? meta->draw_height : 0;
     }
 } // namespace
 
@@ -331,10 +371,10 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
     }
 }
 
-void TileRenderer::QueuePlanCommands(TileDrawPlan& plan, DrawCommandQueue& queue) const
+void TileRenderer::QueuePlanCommands(const FramePlanContext& ctx, TileDrawPlan& plan, DrawCommandQueue& queue) const
 {
-    const int draw_x = plan.draw_x;
-    const int draw_y = plan.draw_y;
+    int draw_x = plan.draw_x;
+    int draw_y = plan.draw_y;
 
     if (plan.color_square) {
         queue.emplaceColorSquare(plan.pos, plan.color_square->color, plan.color_square->apply_highlight_pulse);
@@ -352,15 +392,31 @@ void TileRenderer::QueuePlanCommands(TileDrawPlan& plan, DrawCommandQueue& queue
     }
 
     for (auto& item : plan.items) {
-        queue.emplaceItem(item.pos, std::move(item.item), item.patterns, item.red, item.green, item.blue, item.alpha, item.apply_highlight_pulse);
+        const int draw_height = computeQueuedItemDrawHeight(sprite_resolver, ctx, item.item);
+        queue.emplaceItem(
+            item.pos,
+            draw_x - plan.draw_x,
+            draw_y - plan.draw_y,
+            std::move(item.item),
+            item.patterns,
+            item.red,
+            item.green,
+            item.blue,
+            item.alpha,
+            item.apply_highlight_pulse
+        );
+        draw_x -= draw_height;
+        draw_y -= draw_height;
     }
 
     if (plan.creature) {
-        queue.emplaceCreature(plan.creature->pos, std::move(plan.creature->creature), std::move(plan.creature->options));
+        queue.emplaceCreature(
+            plan.creature->pos, draw_x - plan.draw_x, draw_y - plan.draw_y, std::move(plan.creature->creature), std::move(plan.creature->options)
+        );
     }
 
     if (plan.marker) {
-        queue.emplaceMarker(plan.marker->pos, std::move(plan.marker->marker));
+        queue.emplaceMarker(plan.marker->pos, draw_x - plan.draw_x, draw_y - plan.draw_y, std::move(plan.marker->marker));
     }
 }
 

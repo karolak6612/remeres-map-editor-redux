@@ -269,6 +269,13 @@ PreparedFrameBuffer MapDrawer::PrepareFrame(RenderPrepSnapshot snapshot)
         for (const auto& chunk_key : floor_chunks.chunks) {
             auto chunk = chunk_cache_.find(chunk_key, snapshot.variant);
             if (!chunk) {
+                spdlog::debug(
+                    "MapDrawer::PrepareFrame - missing prepared chunk for floor {} chunk ({}, {}) generation {}",
+                    floor_chunks.map_z,
+                    chunk_key.chunk_x,
+                    chunk_key.chunk_y,
+                    snapshot.generation
+                );
                 continue;
             }
             MergePreparedChunkIntoFrame(*chunk, prepared);
@@ -567,8 +574,8 @@ void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueu
                     };
                     ctx.sprite_batch.drawRect((float)screen_x, (float)screen_y, (float)cmd.width, (float)cmd.height, color, ctx.atlas);
                 } else if constexpr (std::is_same_v<Command, DrawItemCmd>) {
-                    int draw_x = screen_x;
-                    int draw_y = screen_y;
+                    int draw_x = screen_x + cmd.local_draw_x;
+                    int draw_y = screen_y + cmd.local_draw_y;
                     int red = cmd.red;
                     int green = cmd.green;
                     int blue = cmd.blue;
@@ -586,9 +593,13 @@ void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueu
                         ctx.frame, cmd.patterns, red, green, blue, cmd.alpha
                     );
                 } else if constexpr (std::is_same_v<Command, DrawCreatureCmd>) {
-                    entities_.creature->BlitCreature(ctx.sprite_batch, entities_.sprite.get(), screen_x, screen_y, cmd.creature, cmd.options);
+                    entities_.creature->BlitCreature(
+                        ctx.sprite_batch, entities_.sprite.get(), screen_x + cmd.local_draw_x, screen_y + cmd.local_draw_y, cmd.creature, cmd.options
+                    );
                 } else if constexpr (std::is_same_v<Command, DrawMarkerCmd>) {
-                    entities_.marker->draw(ctx.sprite_batch, entities_.sprite.get(), screen_x, screen_y, cmd.marker, ctx.settings);
+                    entities_.marker->draw(
+                        ctx.sprite_batch, entities_.sprite.get(), screen_x + cmd.local_draw_x, screen_y + cmd.local_draw_y, cmd.marker, ctx.settings
+                    );
                 }
             },
             command

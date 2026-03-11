@@ -95,6 +95,7 @@ ChunkSourceSnapshot MapLayerDrawer::BuildChunkSourceSnapshot(
     const int node_end_y = chunk_start_y + RENDER_CHUNK_SIZE - 4;
 
     ChunkSourceSnapshot chunk_snapshot {.key = key};
+    chunk_snapshot.variant = RenderVariantKey::From(ctx.view, ctx.settings, ctx.frame);
     chunk_snapshot.reserve(
         estimateChunkTileCapacity(),
         estimateChunkNodeCapacity(),

@@ -83,7 +83,7 @@ std::shared_ptr<const PreparedRenderChunk> PreparedRenderChunkBuilder::Build(
             continue;
         }
         MergePlanOutputs(plan, *prepared_chunk);
-        tile_renderer.QueuePlanCommands(plan, prepared_chunk->commands);
+        tile_renderer.QueuePlanCommands(ctx, plan, prepared_chunk->commands);
     }
 
     return prepared_chunk;

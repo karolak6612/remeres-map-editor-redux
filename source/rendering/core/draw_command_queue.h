@@ -63,6 +63,8 @@ struct DrawFilledRectCmd {
 
 struct DrawItemCmd {
     Position pos;
+    int local_draw_x = 0;
+    int local_draw_y = 0;
     ItemRenderSnapshot item;
     SpritePatterns patterns;
     int red = 255;
@@ -76,7 +78,7 @@ struct DrawItemCmd {
         Position pos, const ItemRenderSnapshot& item, const SpritePatterns& patterns, int red, int green, int blue, int alpha,
         bool apply_highlight_pulse
     ) :
-        pos(pos), item(item), patterns(patterns), red(red), green(green), blue(blue), alpha(alpha), apply_highlight_pulse(apply_highlight_pulse)
+        DrawItemCmd(pos, 0, 0, item, patterns, red, green, blue, alpha, apply_highlight_pulse)
     {
     }
 
@@ -84,7 +86,25 @@ struct DrawItemCmd {
         Position pos, ItemRenderSnapshot&& item, const SpritePatterns& patterns, int red, int green, int blue, int alpha,
         bool apply_highlight_pulse
     ) :
-        pos(pos), item(std::move(item)), patterns(patterns), red(red), green(green), blue(blue), alpha(alpha),
+        DrawItemCmd(pos, 0, 0, std::move(item), patterns, red, green, blue, alpha, apply_highlight_pulse)
+    {
+    }
+
+    DrawItemCmd(
+        Position pos, int local_draw_x, int local_draw_y, const ItemRenderSnapshot& item, const SpritePatterns& patterns, int red, int green, int blue, int alpha,
+        bool apply_highlight_pulse
+    ) :
+        pos(pos), local_draw_x(local_draw_x), local_draw_y(local_draw_y), item(item), patterns(patterns), red(red), green(green), blue(blue), alpha(alpha),
+        apply_highlight_pulse(apply_highlight_pulse)
+    {
+    }
+
+    DrawItemCmd(
+        Position pos, int local_draw_x, int local_draw_y, ItemRenderSnapshot&& item, const SpritePatterns& patterns, int red, int green, int blue, int alpha,
+        bool apply_highlight_pulse
+    ) :
+        pos(pos), local_draw_x(local_draw_x), local_draw_y(local_draw_y), item(std::move(item)), patterns(patterns), red(red), green(green), blue(blue),
+        alpha(alpha),
         apply_highlight_pulse(apply_highlight_pulse)
     {
     }
@@ -92,28 +112,51 @@ struct DrawItemCmd {
 
 struct DrawCreatureCmd {
     Position pos;
+    int local_draw_x = 0;
+    int local_draw_y = 0;
     CreatureRenderSnapshot creature;
     CreatureDrawOptions options;
 
     DrawCreatureCmd() = default;
     DrawCreatureCmd(Position pos, const CreatureRenderSnapshot& creature, const CreatureDrawOptions& options) :
-        pos(pos), creature(creature), options(options)
+        DrawCreatureCmd(pos, 0, 0, creature, options)
     {
     }
 
     DrawCreatureCmd(Position pos, CreatureRenderSnapshot&& creature, CreatureDrawOptions&& options) :
-        pos(pos), creature(std::move(creature)), options(std::move(options))
+        DrawCreatureCmd(pos, 0, 0, std::move(creature), std::move(options))
+    {
+    }
+
+    DrawCreatureCmd(Position pos, int local_draw_x, int local_draw_y, const CreatureRenderSnapshot& creature, const CreatureDrawOptions& options) :
+        pos(pos), local_draw_x(local_draw_x), local_draw_y(local_draw_y), creature(creature), options(options)
+    {
+    }
+
+    DrawCreatureCmd(Position pos, int local_draw_x, int local_draw_y, CreatureRenderSnapshot&& creature, CreatureDrawOptions&& options) :
+        pos(pos), local_draw_x(local_draw_x), local_draw_y(local_draw_y), creature(std::move(creature)), options(std::move(options))
     {
     }
 };
 
 struct DrawMarkerCmd {
     Position pos;
+    int local_draw_x = 0;
+    int local_draw_y = 0;
     MarkerRenderSnapshot marker;
 
     DrawMarkerCmd() = default;
-    DrawMarkerCmd(Position pos, const MarkerRenderSnapshot& marker) : pos(pos), marker(marker) { }
-    DrawMarkerCmd(Position pos, MarkerRenderSnapshot&& marker) : pos(pos), marker(std::move(marker)) { }
+    DrawMarkerCmd(Position pos, const MarkerRenderSnapshot& marker) : DrawMarkerCmd(pos, 0, 0, marker) { }
+    DrawMarkerCmd(Position pos, MarkerRenderSnapshot&& marker) : DrawMarkerCmd(pos, 0, 0, std::move(marker)) { }
+
+    DrawMarkerCmd(Position pos, int local_draw_x, int local_draw_y, const MarkerRenderSnapshot& marker) :
+        pos(pos), local_draw_x(local_draw_x), local_draw_y(local_draw_y), marker(marker)
+    {
+    }
+    DrawMarkerCmd(Position pos, int local_draw_x, int local_draw_y, MarkerRenderSnapshot&& marker) :
+        pos(pos), local_draw_x(local_draw_x), local_draw_y(local_draw_y), marker(std::move(marker))
+    {
+    }
 };
 
 using DrawCommand = std::variant<DrawColorSquareCmd, DrawZoneBrushCmd, DrawHouseBorderCmd, DrawFilledRectCmd, DrawItemCmd, DrawCreatureCmd, DrawMarkerCmd>;
@@ -157,41 +200,45 @@ public:
     }
 
     void emplaceItem(
-        Position pos, const ItemRenderSnapshot& item, const SpritePatterns& patterns, int red, int green, int blue, int alpha,
-        bool apply_highlight_pulse
-    )
-    {
-        commands_.emplace_back(std::in_place_type<DrawItemCmd>, pos, item, patterns, red, green, blue, alpha, apply_highlight_pulse);
-    }
-
-    void emplaceItem(
-        Position pos, ItemRenderSnapshot&& item, const SpritePatterns& patterns, int red, int green, int blue, int alpha,
+        Position pos, int local_draw_x, int local_draw_y, const ItemRenderSnapshot& item, const SpritePatterns& patterns, int red, int green, int blue,
+        int alpha,
         bool apply_highlight_pulse
     )
     {
         commands_.emplace_back(
-            std::in_place_type<DrawItemCmd>, pos, std::move(item), patterns, red, green, blue, alpha, apply_highlight_pulse
+            std::in_place_type<DrawItemCmd>, pos, local_draw_x, local_draw_y, item, patterns, red, green, blue, alpha, apply_highlight_pulse
         );
     }
 
-    void emplaceCreature(Position pos, const CreatureRenderSnapshot& creature, const CreatureDrawOptions& options)
+    void emplaceItem(
+        Position pos, int local_draw_x, int local_draw_y, ItemRenderSnapshot&& item, const SpritePatterns& patterns, int red, int green, int blue,
+        int alpha,
+        bool apply_highlight_pulse
+    )
     {
-        commands_.emplace_back(std::in_place_type<DrawCreatureCmd>, pos, creature, options);
+        commands_.emplace_back(
+            std::in_place_type<DrawItemCmd>, pos, local_draw_x, local_draw_y, std::move(item), patterns, red, green, blue, alpha, apply_highlight_pulse
+        );
     }
 
-    void emplaceCreature(Position pos, CreatureRenderSnapshot&& creature, CreatureDrawOptions&& options)
+    void emplaceCreature(Position pos, int local_draw_x, int local_draw_y, const CreatureRenderSnapshot& creature, const CreatureDrawOptions& options)
     {
-        commands_.emplace_back(std::in_place_type<DrawCreatureCmd>, pos, std::move(creature), std::move(options));
+        commands_.emplace_back(std::in_place_type<DrawCreatureCmd>, pos, local_draw_x, local_draw_y, creature, options);
     }
 
-    void emplaceMarker(Position pos, const MarkerRenderSnapshot& marker)
+    void emplaceCreature(Position pos, int local_draw_x, int local_draw_y, CreatureRenderSnapshot&& creature, CreatureDrawOptions&& options)
     {
-        commands_.emplace_back(std::in_place_type<DrawMarkerCmd>, pos, marker);
+        commands_.emplace_back(std::in_place_type<DrawCreatureCmd>, pos, local_draw_x, local_draw_y, std::move(creature), std::move(options));
     }
 
-    void emplaceMarker(Position pos, MarkerRenderSnapshot&& marker)
+    void emplaceMarker(Position pos, int local_draw_x, int local_draw_y, const MarkerRenderSnapshot& marker)
     {
-        commands_.emplace_back(std::in_place_type<DrawMarkerCmd>, pos, std::move(marker));
+        commands_.emplace_back(std::in_place_type<DrawMarkerCmd>, pos, local_draw_x, local_draw_y, marker);
+    }
+
+    void emplaceMarker(Position pos, int local_draw_x, int local_draw_y, MarkerRenderSnapshot&& marker)
+    {
+        commands_.emplace_back(std::in_place_type<DrawMarkerCmd>, pos, local_draw_x, local_draw_y, std::move(marker));
     }
 
     [[nodiscard]] std::span<const DrawCommand> commands() const
