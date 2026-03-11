@@ -25,6 +25,7 @@
 
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/ui/input_state.h"
 #include "rendering/ui/view_state_manager.h"
 #include "ui/map_popup_menu.h"
 #include <memory>
@@ -85,7 +86,7 @@ public:
     void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
     void MouseToMap(int* map_x, int* map_y)
     {
-        ScreenToMap(cursor_x, cursor_y, map_x, map_y);
+        ScreenToMap(input_.cursor_x, input_.cursor_y, map_x, map_y);
     }
     void GetScreenCenter(int* map_x, int* map_y);
 
@@ -136,55 +137,55 @@ public:
     // --- Accessors for privatized fields ---
     int GetKeyCode() const
     {
-        return keyCode;
+        return input_.keyCode;
     }
     void SetKeyCode(int code)
     {
-        keyCode = code;
+        input_.keyCode = code;
     }
     int GetCursorX() const
     {
-        return cursor_x;
+        return input_.cursor_x;
     }
     int GetCursorY() const
     {
-        return cursor_y;
+        return input_.cursor_y;
     }
     bool IsScreenDragging() const
     {
-        return screendragging;
+        return input_.screendragging;
     }
     void SetScreenDragging(bool v)
     {
-        screendragging = v;
+        input_.screendragging = v;
     }
     int GetLastClickMapX() const
     {
-        return last_click_map_x;
+        return input_.last_click_map_x;
     }
     int GetLastClickMapY() const
     {
-        return last_click_map_y;
+        return input_.last_click_map_y;
     }
     int GetLastClickMapZ() const
     {
-        return last_click_map_z;
+        return input_.last_click_map_z;
     }
     int GetLastMmbClickX() const
     {
-        return last_mmb_click_x;
+        return input_.last_mmb_click_x;
     }
     int GetLastMmbClickY() const
     {
-        return last_mmb_click_y;
+        return input_.last_mmb_click_y;
     }
     void SetLastMmbClickX(int v)
     {
-        last_mmb_click_x = v;
+        input_.last_mmb_click_x = v;
     }
     void SetLastMmbClickY(int v)
     {
-        last_mmb_click_y = v;
+        input_.last_mmb_click_y = v;
     }
     void SetFloorDirect(int f)
     {
@@ -197,28 +198,7 @@ public:
 
 private:
     std::unique_ptr<ViewStateManager> view_state_;
-
-    // View state
-    int keyCode;
-    int cursor_x;
-    int cursor_y;
-    bool dragging;
-    bool boundbox_selection;
-    bool screendragging;
-
-    // Cursor/click tracking
-    int last_cursor_map_x;
-    int last_cursor_map_y;
-    int last_cursor_map_z;
-    int last_click_map_x;
-    int last_click_map_y;
-    int last_click_map_z;
-    int last_click_abs_x;
-    int last_click_abs_y;
-    int last_click_x;
-    int last_click_y;
-    int last_mmb_click_x;
-    int last_mmb_click_y;
+    InputState input_;
 
     void EnsureNanoVG();
     void DrawOverlays(NVGcontext* vg, const RenderSettings& settings, const FrameOptions& frame);

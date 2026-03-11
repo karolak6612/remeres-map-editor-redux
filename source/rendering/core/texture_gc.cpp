@@ -21,8 +21,6 @@
 #include "rendering/core/sprite_preloader.h"
 
 TextureGC::TextureGC() {
-	animation_timer_ = std::make_unique<RenderTimer>();
-	animation_timer_->Start();
 	preloader_ = std::make_unique<SpritePreloader>();
 }
 
@@ -33,8 +31,8 @@ void TextureGC::updateTime() {
 	preloader_->update();
 }
 
-void TextureGC::addSpriteToCleanup(GameSprite* spr) {
-	collector_.AddSpriteToCleanup(spr);
+void TextureGC::addSpriteToCleanup(SpriteDatabase& db, uint32_t sprite_id) {
+	collector_.AddSpriteToCleanup(db.residentGameSprites(), sprite_id);
 }
 
 void TextureGC::garbageCollect(SpriteDatabase& db) {

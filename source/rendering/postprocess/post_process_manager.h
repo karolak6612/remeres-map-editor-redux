@@ -19,13 +19,10 @@ struct PostProcessEffect {
 
 class PostProcessManager {
 public:
-	PostProcessManager() = default;
+	PostProcessManager();
 
 	void Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source = "");
 	void Initialize(const std::string& default_vertex_source); // Compiles all registered shaders
-
-	// Loads all pending registrations from EffectRegistry
-	void LoadFromRegistry();
 
 	// Returns the shader program for the given name.
 	// If not found, returns the first available shader (usually "None") or nullptr.
@@ -35,6 +32,8 @@ public:
 	std::vector<std::string> GetEffectNames() const;
 
 private:
+	void RegisterBuiltinEffects();
+
 	std::vector<std::shared_ptr<PostProcessEffect>> effects;
 	bool initialized = false;
 };

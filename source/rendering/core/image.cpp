@@ -65,9 +65,9 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 		if (region) {
 			if (!isGLLoaded) {
 				isGLLoaded = true;
-				g_gui.gfx.db().residentImages().push_back(this); // Add to resident set
+				g_gui.gfx.trackResidentImage(this);
 			}
-			g_gui.gfx.gc().collector().NotifyTextureLoaded();
+			g_gui.gfx.notifyTextureLoaded();
 			return region;
 		} else {
 			spdlog::warn("Atlas addSprite failed for sprite_id={}", sprite_id);

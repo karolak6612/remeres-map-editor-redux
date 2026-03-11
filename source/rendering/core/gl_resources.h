@@ -10,12 +10,12 @@ class GLShader {
 public:
 	explicit GLShader(GLenum type) {
 		id = glCreateShader(type);
-		spdlog::info("GLShader created [ID={}]", id);
+		spdlog::trace("GLShader created [ID={}]", id);
 	}
 
 	~GLShader() {
 		if (id) {
-			spdlog::info("GLShader deleted [ID={}]", id);
+			spdlog::trace("GLShader deleted [ID={}]", id);
 			glDeleteShader(id);
 		}
 	}
@@ -55,12 +55,12 @@ class GLProgram {
 public:
 	GLProgram() {
 		id = glCreateProgram();
-		spdlog::info("GLProgram created [ID={}]", id);
+		spdlog::trace("GLProgram created [ID={}]", id);
 	}
 
 	~GLProgram() {
 		if (id) {
-			spdlog::info("GLProgram deleted [ID={}]", id);
+			spdlog::trace("GLProgram deleted [ID={}]", id);
 			glDeleteProgram(id);
 		}
 	}
@@ -100,12 +100,12 @@ class GLBuffer {
 public:
 	GLBuffer() {
 		glCreateBuffers(1, &id);
-		spdlog::info("GLBuffer created [ID={}]", id);
+		spdlog::trace("GLBuffer created [ID={}]", id);
 	}
 
 	~GLBuffer() {
 		if (id) {
-			spdlog::info("GLBuffer deleted [ID={}]", id);
+			spdlog::trace("GLBuffer deleted [ID={}]", id);
 			glDeleteBuffers(1, &id);
 		}
 	}
@@ -145,12 +145,12 @@ class GLVertexArray {
 public:
 	GLVertexArray() {
 		glCreateVertexArrays(1, &id);
-		spdlog::info("GLVertexArray created [ID={}]", id);
+		spdlog::trace("GLVertexArray created [ID={}]", id);
 	}
 
 	~GLVertexArray() {
 		if (id) {
-			spdlog::info("GLVertexArray deleted [ID={}]", id);
+			spdlog::trace("GLVertexArray deleted [ID={}]", id);
 			glDeleteVertexArrays(1, &id);
 		}
 	}
@@ -190,12 +190,12 @@ class GLTextureResource {
 public:
 	explicit GLTextureResource(GLenum target) {
 		glCreateTextures(target, 1, &id);
-		spdlog::info("GLTextureResource created [ID={}]", id);
+		spdlog::trace("GLTextureResource created [ID={}]", id);
 	}
 
 	~GLTextureResource() {
 		if (id) {
-			spdlog::info("GLTextureResource deleted [ID={}]", id);
+			spdlog::trace("GLTextureResource deleted [ID={}]", id);
 			glDeleteTextures(1, &id);
 		}
 	}
@@ -235,12 +235,12 @@ class GLFramebuffer {
 public:
 	GLFramebuffer() {
 		glCreateFramebuffers(1, &id);
-		spdlog::info("GLFramebuffer created [ID={}]", id);
+		spdlog::trace("GLFramebuffer created [ID={}]", id);
 	}
 
 	~GLFramebuffer() {
 		if (id) {
-			spdlog::info("GLFramebuffer deleted [ID={}]", id);
+			spdlog::trace("GLFramebuffer deleted [ID={}]", id);
 			glDeleteFramebuffers(1, &id);
 		}
 	}

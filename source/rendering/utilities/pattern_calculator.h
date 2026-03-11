@@ -36,9 +36,9 @@ public:
 			return patterns;
 		}
 
-		patterns.x = calculatePatternOffset(pos.x, spr->pattern_x);
-		patterns.y = calculatePatternOffset(pos.y, spr->pattern_y);
-		patterns.z = calculatePatternOffset(pos.z, spr->pattern_z);
+		patterns.x = calculatePatternOffset(pos.x, spr->meta.pattern_x);
+		patterns.y = calculatePatternOffset(pos.y, spr->meta.pattern_y);
+		patterns.z = calculatePatternOffset(pos.z, spr->meta.pattern_z);
 
 		patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
 

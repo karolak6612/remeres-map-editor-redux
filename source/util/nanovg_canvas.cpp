@@ -216,7 +216,7 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
 
 	// Try to get as GameSprite for RGBA access (Fast Path)
 	GameSprite* gs = dynamic_cast<GameSprite*>(sprite);
-	if (gs && !gs->spriteList.empty()) {
+	if (gs && !gs->getSpriteList().empty()) {
 		return CreateGameSpriteTexture(vg, gs, spriteId);
 	}
 
@@ -226,8 +226,8 @@ int NanoVGCanvas::GetOrCreateSpriteTexture(NVGcontext* vg, Sprite* sprite) {
 
 int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64_t spriteId) {
 	// Calculate composite size
-	int w = gs->width * 32;
-	int h = gs->height * 32;
+	int w = gs->meta.width * 32;
+	int h = gs->meta.height * 32;
 	if (w <= 0 || h <= 0) {
 		return 0;
 	}
@@ -237,16 +237,17 @@ int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64
 	std::vector<uint8_t> composite(bufferSize, 0);
 
 	// Composite all layers
-	int px = (gs->pattern_x >= 3) ? 2 : 0;
-	for (int l = 0; l < gs->layers; ++l) {
-		for (int sw = 0; sw < gs->width; ++sw) {
-			for (int sh = 0; sh < gs->height; ++sh) {
+	int px = (gs->meta.pattern_x >= 3) ? 2 : 0;
+	const auto& sprite_list = gs->getSpriteList();
+	for (int l = 0; l < gs->meta.layers; ++l) {
+		for (int sw = 0; sw < gs->meta.width; ++sw) {
+			for (int sh = 0; sh < gs->meta.height; ++sh) {
 				int idx = gs->getIndex(sw, sh, l, px, 0, 0, 0);
-				if (idx < 0 || static_cast<size_t>(idx) >= gs->spriteList.size()) {
+				if (idx < 0 || static_cast<size_t>(idx) >= sprite_list.size()) {
 					continue;
 				}
 
-				auto image = gs->spriteList[idx];
+				auto image = sprite_list[idx];
 				if (!image) {
 					continue;
 				}
@@ -256,8 +257,8 @@ int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64
 					continue;
 				}
 
-				int part_x = (gs->width - sw - 1) * 32;
-				int part_y = (gs->height - sh - 1) * 32;
+				int part_x = (gs->meta.width - sw - 1) * 32;
+				int part_y = (gs->meta.height - sh - 1) * 32;
 
 				for (int sy = 0; sy < 32; ++sy) {
 					for (int sx = 0; sx < 32; ++sx) {

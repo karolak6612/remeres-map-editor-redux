@@ -32,16 +32,8 @@
 #include "rendering/drawers/map_layer_drawer.h"
 #include "rendering/map_drawer.h"
 
-#include "brushes/carpet/carpet_brush.h"
-#include "brushes/creature/creature_brush.h"
-#include "brushes/doodad/doodad_brush.h"
 #include "brushes/house/house_brush.h"
 #include "brushes/house/house_exit_brush.h"
-#include "brushes/raw/raw_brush.h"
-#include "brushes/spawn/spawn_brush.h"
-#include "brushes/table/table_brush.h"
-#include "brushes/wall/wall_brush.h"
-#include "brushes/waypoint/waypoint_brush.h"
 #include "rendering/core/draw_context.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/brush_visual_settings.h"
@@ -101,7 +93,7 @@ MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) : editor(editor), render
     });
     // Wire up the preloader so SpritePreloadQueue can call it directly
     // instead of going through the rme::collectTileSprites() indirection.
-    tile_renderer->setPreloader(&render_ctx_.gfx.gc().preloader());
+    tile_renderer->setPreloader(&render_ctx_.gfx.spritePreloader());
 
     overlays_.grid = std::make_unique<GridDrawer>();
     pending_requests_ = std::make_unique<PendingNodeRequests>();
@@ -212,10 +204,10 @@ void MapDrawer::SetupGL()
     ViewProjection::Compute(frame_.view);
 
     // Ensure renderers are initialized
-    if (!renderers_initialized) {
+    if (!renderers_initialized_) {
         sprite_batch->initialize();
         primitive_renderer->initialize();
-        renderers_initialized = true;
+        renderers_initialized_ = true;
     }
 }
 
@@ -319,17 +311,17 @@ void MapDrawer::Draw()
     // Flush buffered sprite preload requests after GPU submission
     tile_renderer->FlushPreloadQueue();
 
-    // Drain deferred node requests — dispatch network I/O outside render loop
-    {
-        auto requests = pending_requests_->drain();
-        for (const auto& req : requests) {
-            if (editor.live_manager.GetClient()) {
-                editor.live_manager.GetClient()->queryNode(req.x, req.y, req.underground);
-            }
+    // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
+}
+
+void MapDrawer::DrainPendingNodeRequests()
+{
+    auto requests = pending_requests_->drain();
+    for (const auto& req : requests) {
+        if (editor.live_manager.GetClient()) {
+            editor.live_manager.GetClient()->queryNode(req.x, req.y, req.underground);
         }
     }
-
-    // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
 }
 
 void MapDrawer::DrawMap(const DrawContext& ctx)
@@ -351,10 +343,16 @@ void MapDrawer::DrawMap(const DrawContext& ctx)
             DrawMapLayer(ctx, map_z, live_client, floor_params);
         }
 
-        overlays_.preview->draw(
-            ctx, frame_.snapshot, floor_params, map_z, editor, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(),
-            frame_.brush.current_brush
-        );
+        overlays_.preview->draw(ctx, PreviewDrawerContext {
+            .snapshot = frame_.snapshot,
+            .floor_params = floor_params,
+            .map_z = map_z,
+            .editor = editor,
+            .item_drawer = entities_.item.get(),
+            .sprite_drawer = entities_.sprite.get(),
+            .creature_drawer = entities_.creature.get(),
+            .current_brush = frame_.brush.current_brush,
+        });
 
         ++floor_offset;
     }

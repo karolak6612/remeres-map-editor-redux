@@ -27,8 +27,7 @@ void TooltipRenderer::draw(NVGcontext* vg, const ViewState& view, std::span<cons
 	}
 
 	for (const auto& tooltip : tooltips) {
-		int unscaled_x, unscaled_y;
-		view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z, unscaled_x, unscaled_y);
+		const auto [unscaled_x, unscaled_y] = view.getScreenPosition(tooltip.pos.x, tooltip.pos.y, tooltip.pos.z);
 
 		float zoom = view.zoom < 0.01f ? 1.0f : view.zoom;
 

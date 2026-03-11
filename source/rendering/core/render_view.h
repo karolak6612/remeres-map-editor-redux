@@ -56,7 +56,7 @@ struct ViewState {
 	[[nodiscard]] bool IsPixelVisible(int draw_x, int draw_y, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
 	[[nodiscard]] bool IsRectVisible(int draw_x, int draw_y, int width, int height, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
 	[[nodiscard]] bool IsRectFullyInside(int draw_x, int draw_y, int width, int height) const;
-	void getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
+	[[nodiscard]] TileScreenPos getScreenPosition(int map_x, int map_y, int map_z) const;
 
 	// Cached logical viewport dimensions for optimization
 	float logical_width = 0.0f;

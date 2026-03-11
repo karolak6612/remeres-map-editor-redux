@@ -3,7 +3,6 @@
 #include "app/main.h"
 #include "app/preferences/preferences_layout.h"
 #include "app/settings.h"
-#include "rendering/postprocess/effect_registry.h"
 #include "rendering/postprocess/post_process_manager.h" // For ShaderNames
 #include "ui/gui.h"
 
@@ -28,7 +27,8 @@ GraphicsPage::GraphicsPage(wxWindow* parent) : ScrollablePreferencesPage(parent)
 		g_settings.getBoolean(Config::ANTI_ALIASING)
 	);
 	screen_shader_choice = new wxChoice(rendering_section, wxID_ANY);
-	for (const auto& name : EffectRegistry::GetRegisteredNames()) {
+	PostProcessManager post_process_manager;
+	for (const auto& name : post_process_manager.GetEffectNames()) {
 		screen_shader_choice->Append(name);
 	}
 	const auto current_shader = wxstr(g_settings.getString(Config::SCREEN_SHADER));

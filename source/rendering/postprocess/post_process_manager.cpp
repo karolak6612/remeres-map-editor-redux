@@ -4,10 +4,14 @@
 #include <spdlog/spdlog.h>
 #include <algorithm>
 
-void PostProcessManager::LoadFromRegistry() {
-	for (auto& reg : EffectRegistry::Pending()) {
-		Register(reg.name, reg.fragment_source, reg.vertex_source);
-	}
+PostProcessManager::PostProcessManager() {
+	RegisterBuiltinEffects();
+}
+
+void PostProcessManager::RegisterBuiltinEffects() {
+	Register(ShaderNames::NONE, EffectRegistry::ScreenFragmentSource());
+	Register(ShaderNames::SCANLINE, EffectRegistry::ScanlineFragmentSource());
+	Register(ShaderNames::XBRZ, EffectRegistry::XbrzFragmentSource(), EffectRegistry::XbrzVertexSource());
 }
 
 void PostProcessManager::Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source) {

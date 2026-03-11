@@ -6,6 +6,7 @@
 #include "rendering/core/graphics.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/sprite_archive.h"
+#include "rendering/core/sprite_decompression.h"
 
 #include <algorithm>
 #include <cassert>
@@ -71,30 +72,31 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 
 	static thread_local std::vector<PendingTask> ids_to_enqueue;
 	ids_to_enqueue.clear();
+	const auto& sprite_list = spr->getSpriteList();
 
 	// Reserve for typical sprite sizes (1x1, 2x2, max layers etc) to minimize allocations
 	if (ids_to_enqueue.capacity() < 64) {
 		ids_to_enqueue.reserve(64);
 	}
 
-	for (int cx = 0; cx < spr->width; ++cx) {
-		for (int cy = 0; cy < spr->height; ++cy) {
-			for (int cf = 0; cf < spr->layers; ++cf) {
+	for (int cx = 0; cx < spr->meta.width; ++cx) {
+		for (int cy = 0; cy < spr->meta.height; ++cy) {
+			for (int cf = 0; cf < spr->meta.layers; ++cf) {
 				int idx = spr->getIndex(cx, cy, cf, pattern_x, pattern_y, pattern_z, frame);
 
-				if (idx >= static_cast<int>(spr->numsprites)) {
-					if (spr->numsprites == 1) {
+				if (idx >= static_cast<int>(spr->meta.numsprites)) {
+					if (spr->meta.numsprites == 1) {
 						idx = 0;
 					} else {
-						idx %= spr->numsprites;
+						idx %= spr->meta.numsprites;
 					}
 				}
 
-				if (idx < 0 || static_cast<size_t>(idx) >= spr->spriteList.size()) {
+				if (idx < 0 || static_cast<size_t>(idx) >= sprite_list.size()) {
 					continue;
 				}
 
-				NormalImage* img = spr->spriteList[idx];
+				NormalImage* img = sprite_list[idx];
 				if (img && !img->isGLLoaded) {
 					ids_to_enqueue.push_back({ { archive.get(), img->id }, img->generation_id });
 				}
@@ -141,7 +143,7 @@ void SpritePreloader::workerLoop(std::stop_token stop_token) {
 
 		std::unique_ptr<uint8_t[]> rgba;
 		if (success && dump) {
-			rgba = GameSprite::Decompress(std::span { dump.get(), size }, task.has_transparency, task.pending.key.id);
+			rgba = SpriteDecompression::Decompress(std::span { dump.get(), size }, task.has_transparency, task.pending.key.id);
 		}
 
 		if (rgba) {
@@ -193,12 +195,8 @@ void SpritePreloader::update() {
 		}
 
 		// Check if GraphicManager is loaded, for the correct sprite file, and ID is valid
-		if (res.archive == current_archive && !graphics_unloaded && id < gfx_->db().images().size()) {
-			auto& img_ptr = gfx_->db().images()[id];
-			if (img_ptr && img_ptr->isNormalImage()) {
-				// Use static_cast for performance, as we know the type from loaders
-				auto* img = static_cast<NormalImage*>(img_ptr.get());
-
+		if (res.archive == current_archive && !graphics_unloaded) {
+			if (auto* img = gfx_->getNormalImage(id)) {
 				// Validate Sprite Identity & Generation
 				// Check ID match, Generation match, and GLLoaded state
 				if (img->id == id && img->generation_id == pending.generation_id && !img->isGLLoaded) {

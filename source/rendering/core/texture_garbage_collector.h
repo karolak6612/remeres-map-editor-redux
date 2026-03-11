@@ -18,10 +18,11 @@
 #ifndef RME_TEXTURE_GARBAGE_COLLECTOR_H
 #define RME_TEXTURE_GARBAGE_COLLECTOR_H
 
+#include <cstdint>
 #include <deque>
-#include <vector>
 #include <memory>
 #include <time.h>
+#include <vector>
 
 class GameSprite;
 class Image;
@@ -33,7 +34,7 @@ public:
 	~TextureGarbageCollector();
 
 	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time);
-	void AddSpriteToCleanup(GameSprite* spr);
+	void AddSpriteToCleanup(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id);
 	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
 	void Clear();
 
@@ -47,7 +48,7 @@ public:
 private:
 	int loaded_textures;
 	time_t lastclean;
-	std::deque<GameSprite*> cleanup_list;
+	std::deque<uint32_t> cleanup_list_;
 };
 
 #endif

@@ -20,35 +20,32 @@ PreviewDrawer::PreviewDrawer() { }
 
 PreviewDrawer::~PreviewDrawer() { }
 
-void PreviewDrawer::draw(
-    const DrawContext& ctx, const ViewSnapshot& snapshot, const FloorViewParams& floor_params, int map_z, Editor& editor,
-    ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* current_brush
-)
+void PreviewDrawer::draw(const DrawContext& ctx, const PreviewDrawerContext& preview)
 {
     const auto& view = ctx.view;
     const auto& settings = ctx.settings;
     const auto& frame = ctx.frame;
     auto& sprite_batch = ctx.sprite_batch;
 
-    BaseMap* secondary_map = snapshot.secondary_map;
+    BaseMap* secondary_map = preview.snapshot.secondary_map;
 
     if (secondary_map != nullptr && !settings.ingame) {
-        Brush* brush = current_brush;
+        Brush* brush = preview.current_brush;
 
         Position normalPos;
         Position to(view.mouse_map_x, view.mouse_map_y, view.floor);
 
-        if (snapshot.is_pasting) {
-            normalPos = editor.copybuffer.getPosition();
+        if (preview.snapshot.is_pasting) {
+            normalPos = preview.editor.copybuffer.getPosition();
         } else if (brush && brush->is<DoodadBrush>()) {
             normalPos = Position(0x8000, 0x8000, 0x8);
         } else {
             normalPos = to;
         }
 
-        for (int map_x = floor_params.start_x; map_x <= floor_params.end_x; map_x++) {
-            for (int map_y = floor_params.start_y; map_y <= floor_params.end_y; map_y++) {
-                Position final(map_x, map_y, map_z);
+        for (int map_x = preview.floor_params.start_x; map_x <= preview.floor_params.end_x; map_x++) {
+            for (int map_y = preview.floor_params.start_y; map_y <= preview.floor_params.end_y; map_y++) {
+                Position final(map_x, map_y, preview.map_z);
                 Position pos = normalPos + final - to;
 
                 if (pos.z >= MAP_LAYERS || pos.z < 0) {
@@ -59,10 +56,10 @@ void PreviewDrawer::draw(
                 if (tile) {
                     // Compensate for underground/overground
                     int offset;
-                    if (map_z <= GROUND_LAYER) {
-                        offset = (GROUND_LAYER - map_z) * TILE_SIZE;
+                    if (preview.map_z <= GROUND_LAYER) {
+                        offset = (GROUND_LAYER - preview.map_z) * TILE_SIZE;
                     } else {
-                        offset = TILE_SIZE * (view.floor - map_z);
+                        offset = TILE_SIZE * (view.floor - preview.map_z);
                     }
 
                     int draw_x = ((map_x * TILE_SIZE) - view.view_scroll_x) - offset;
@@ -70,7 +67,7 @@ void PreviewDrawer::draw(
 
                     // Draw ground
                     uint8_t r = 255, g = 255, b = 255;
-                    uint8_t base_alpha = snapshot.is_pasting ? 128 : 255;
+                    uint8_t base_alpha = preview.snapshot.is_pasting ? 128 : 255;
 
                     if (tile->ground) {
                         if (tile->isBlocking() && settings.show_blocking) {
@@ -105,7 +102,7 @@ void PreviewDrawer::draw(
                             params.green = g;
                             params.blue = b;
                             params.alpha = base_alpha;
-                            item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+                            preview.item_drawer->BlitItem(sprite_batch, ctx.atlas, preview.sprite_drawer, preview.creature_drawer, draw_x, draw_y, params);
                         }
                     }
 
@@ -120,13 +117,13 @@ void PreviewDrawer::draw(
                                 params.green = r;
                                 params.blue = g;
                                 params.alpha = (base_alpha == 255) ? b : base_alpha;
-                                item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+                                preview.item_drawer->BlitItem(sprite_batch, ctx.atlas, preview.sprite_drawer, preview.creature_drawer, draw_x, draw_y, params);
                             } else {
-                                item_drawer->BlitItem(sprite_batch, ctx.atlas, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+                                preview.item_drawer->BlitItem(sprite_batch, ctx.atlas, preview.sprite_drawer, preview.creature_drawer, draw_x, draw_y, params);
                             }
                         }
                         if (tile->creature && settings.show_creatures) {
-                            creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get());
+                            preview.creature_drawer->BlitCreature(sprite_batch, preview.sprite_drawer, draw_x, draw_y, tile->creature.get());
                         }
                     }
                 }
@@ -135,13 +132,13 @@ void PreviewDrawer::draw(
         // Draw highlight on the specific tile under mouse
         // This helps user see where they are pointing in the "chaos"
         Position mousePos(view.mouse_map_x, view.mouse_map_y, view.floor);
-        if (mousePos.z == map_z) {
+        if (mousePos.z == preview.map_z) {
             // Use correct offset logic
             int offset;
-            if (map_z <= GROUND_LAYER) {
-                offset = (GROUND_LAYER - map_z) * TILE_SIZE;
+            if (preview.map_z <= GROUND_LAYER) {
+                offset = (GROUND_LAYER - preview.map_z) * TILE_SIZE;
             } else {
-                offset = TILE_SIZE * (view.floor - map_z);
+                offset = TILE_SIZE * (view.floor - preview.map_z);
             }
             int draw_x = ((mousePos.x * TILE_SIZE) - view.view_scroll_x) - offset;
             int draw_y = ((mousePos.y * TILE_SIZE) - view.view_scroll_y) - offset;

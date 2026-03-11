@@ -129,12 +129,12 @@ void ItemDrawer::BlitItem(
     // int screeny = draw_y - spr->getDrawOffset().second;
     // The original code modified draw_x/draw_y AFTER calculating screenx/screeny using the original draw_x/draw_y
     // screenx use input draw_x
-    int screenx = draw_x - spr->drawoffset_x;
-    int screeny = draw_y - spr->drawoffset_y;
+    int screenx = draw_x - spr->meta.drawoffset_x;
+    int screeny = draw_y - spr->meta.drawoffset_y;
 
     // Set the newd drawing height accordingly
-    draw_x -= spr->draw_height;
-    draw_y -= spr->draw_height;
+    draw_x -= spr->meta.draw_height;
+    draw_y -= spr->meta.draw_height;
 
     SpritePatterns patterns;
     if (cached_patterns && spr == resolveSprite(it)) {
@@ -149,8 +149,8 @@ void ItemDrawer::BlitItem(
     int pattern_z = patterns.z;
     int anim_frame = patterns.frame;
 
-    if (!ephemeral && settings.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash()
-        && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
+    if (!ephemeral && settings.transparent_items && (!it.isGroundTile() || spr->meta.width > 1 || spr->meta.height > 1) && !it.isSplash()
+        && (!it.hasFlag(ItemFlag::IsBorder) || spr->meta.width > 1 || spr->meta.height > 1)) {
         alpha /= 2;
     }
 
@@ -167,7 +167,7 @@ void ItemDrawer::BlitItem(
 
     // Atlas-only rendering
 
-    if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
+    if (spr->meta.width == 1 && spr->meta.height == 1 && spr->meta.layers == 1) {
         const AtlasRegion* region;
         if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && anim_frame == 0) {
             region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
@@ -192,9 +192,9 @@ void ItemDrawer::BlitItem(
             sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
         }
     } else {
-        for (int cx = 0; cx != spr->width; cx++) {
-            for (int cy = 0; cy != spr->height; cy++) {
-                for (int cf = 0; cf != spr->layers; cf++) {
+        for (int cx = 0; cx != spr->meta.width; cx++) {
+            for (int cy = 0; cy != spr->meta.height; cy++) {
+                for (int cf = 0; cf != spr->meta.layers; cf++) {
                     const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
                     if (region) {
                         sprite_drawer->glBlitAtlasQuad(

@@ -152,6 +152,7 @@ public:
     // Swap accumulator buffers and clear the new write buffer.
     // Call once at the start of each frame, before Draw().
     void BeginFrame();
+    void DrainPendingNodeRequests();
     void DrawCreatureNames(NVGcontext* vg);
 
     void DrawLight();
@@ -190,7 +191,7 @@ private:
     void DrawMapLayer(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
     void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
     void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
-    bool renderers_initialized = false;
+    bool renderers_initialized_ = false;
 };
 
 #endif

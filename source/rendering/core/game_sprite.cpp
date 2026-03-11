@@ -68,11 +68,11 @@ void GameSprite::unloadDC() {
 }
 
 int GameSprite::getDrawHeight() const {
-	return draw_height;
+	return meta.draw_height;
 }
 
 bool GameSprite::isSimpleAndLoaded() const {
-	return is_simple && spriteList[0]->isGLLoaded;
+	return meta.is_simple && spriteList[0]->isGLLoaded;
 }
 
 uint32_t GameSprite::getDebugImageId(size_t index) const {
@@ -83,7 +83,7 @@ uint32_t GameSprite::getDebugImageId(size_t index) const {
 }
 
 uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) const {
-	auto idx = getIndex(width, height, 0, pattern_x, pattern_y, 0, frameIndex);
+	auto idx = getIndex(meta.width, meta.height, 0, pattern_x, pattern_y, 0, frameIndex);
 	if (idx >= 0 && static_cast<size_t>(idx) < spriteList.size() && spriteList[idx]->isNormalImage()) {
 		return static_cast<const NormalImage*>(spriteList[idx])->id;
 	}
@@ -91,50 +91,48 @@ uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) c
 }
 
 std::pair<int, int> GameSprite::getDrawOffset() const {
-	return std::make_pair(drawoffset_x, drawoffset_y);
+	return std::make_pair(meta.drawoffset_x, meta.drawoffset_y);
 }
 
 uint8_t GameSprite::getMiniMapColor() const {
-	return minimap_color;
+	return static_cast<uint8_t>(meta.minimap_color);
 }
 
 size_t GameSprite::getIndex(int width, int height, int layer, int pattern_x, int pattern_y, int pattern_z, int frame) const {
-	if (is_simple) {
+	if (meta.is_simple) {
 		return 0;
 	}
-	if (this->frames == 0) {
+	if (meta.frames == 0) {
 		return 0;
 	}
-	size_t idx = (this->frames > 1) ? frame % this->frames : 0;
-	idx = idx * static_cast<size_t>(this->pattern_z) + static_cast<size_t>(pattern_z);
-	idx = idx * static_cast<size_t>(this->pattern_y) + static_cast<size_t>(pattern_y);
-	idx = idx * static_cast<size_t>(this->pattern_x) + static_cast<size_t>(pattern_x);
-	idx = idx * static_cast<size_t>(this->layers) + static_cast<size_t>(layer);
-	idx = idx * static_cast<size_t>(this->height) + static_cast<size_t>(height);
-	idx = idx * static_cast<size_t>(this->width) + static_cast<size_t>(width);
+	size_t idx = (meta.frames > 1) ? frame % meta.frames : 0;
+	idx = idx * static_cast<size_t>(meta.pattern_z) + static_cast<size_t>(pattern_z);
+	idx = idx * static_cast<size_t>(meta.pattern_y) + static_cast<size_t>(pattern_y);
+	idx = idx * static_cast<size_t>(meta.pattern_x) + static_cast<size_t>(pattern_x);
+	idx = idx * static_cast<size_t>(meta.layers) + static_cast<size_t>(layer);
+	idx = idx * static_cast<size_t>(meta.height) + static_cast<size_t>(height);
+	idx = idx * static_cast<size_t>(meta.width) + static_cast<size_t>(width);
 	return idx;
 }
 
 const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _count, int _pattern_x, int _pattern_y, int _pattern_z, int _frame) {
-	if (numsprites == 0) {
+	if (meta.numsprites == 0) {
 		return nullptr;
 	}
 
-	if (_count == -1 && numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1) {
+	if (_count == -1 && meta.numsprites == 1 && meta.frames == 1 && meta.layers == 1 && meta.width == 1 && meta.height == 1) {
 		if (_x == 0 && _y == 0 && _layer == 0 && _frame == 0 && _pattern_x == 0 && _pattern_y == 0 && _pattern_z == 0) {
-			if (cached_default_region && spriteList[0]->isGLLoaded && cached_generation_id == spriteList[0]->generation_id && cached_sprite_id == spriteList[0]->id) {
-				return cached_default_region;
+			if (atlas_cache.cached_default_region && spriteList[0]->isGLLoaded && atlas_cache.cached_generation_id == spriteList[0]->generation_id && atlas_cache.cached_sprite_id == spriteList[0]->id) {
+				return atlas_cache.cached_default_region;
 			}
 
 			const AtlasRegion* valid_region = spriteList[0]->getAtlasRegion();
 			if (valid_region && spriteList[0]->isGLLoaded) {
-				cached_default_region = valid_region;
-				cached_generation_id = spriteList[0]->generation_id;
-				cached_sprite_id = spriteList[0]->id;
+				atlas_cache.cached_default_region = valid_region;
+				atlas_cache.cached_generation_id = spriteList[0]->generation_id;
+				atlas_cache.cached_sprite_id = spriteList[0]->id;
 			} else {
-				cached_default_region = nullptr;
-				cached_generation_id = 0;
-				cached_sprite_id = 0;
+				atlas_cache.invalidate();
 			}
 
 			return valid_region;
@@ -142,16 +140,16 @@ const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _layer, int _c
 	}
 
 	uint32_t v;
-	if (_count >= 0 && height <= 1 && width <= 1) {
+	if (_count >= 0 && meta.height <= 1 && meta.width <= 1) {
 		v = _count;
 	} else {
-		v = ((((((_frame)*pattern_y + _pattern_y) * pattern_x + _pattern_x) * layers + _layer) * height + _y) * width + _x);
+		v = ((((((_frame)*meta.pattern_y + _pattern_y) * meta.pattern_x + _pattern_x) * meta.layers + _layer) * meta.height + _y) * meta.width + _x);
 	}
-	if (v >= numsprites) {
-		if (numsprites == 1) {
+	if (v >= meta.numsprites) {
+		if (meta.numsprites == 1) {
 			v = 0;
 		} else {
-			v %= numsprites;
+			v %= meta.numsprites;
 		}
 	}
 
@@ -185,19 +183,19 @@ TemplateImage* GameSprite::getTemplateImage(int sprite_index, const Outfit& outf
 }
 
 const AtlasRegion* GameSprite::getAtlasRegion(int _x, int _y, int _dir, int _addon, int _pattern_z, const Outfit& _outfit, int _frame) {
-	if (numsprites == 0) {
+	if (meta.numsprites == 0) {
 		return nullptr;
 	}
 
 	uint32_t v = getIndex(_x, _y, 0, _dir, _addon, _pattern_z, _frame);
-	if (v >= numsprites) {
-		if (numsprites == 1) {
+	if (v >= meta.numsprites) {
+		if (meta.numsprites == 1) {
 			v = 0;
 		} else {
-			v %= numsprites;
+			v %= meta.numsprites;
 		}
 	}
-	if (layers > 1) {
+	if (meta.layers > 1) {
 		TemplateImage* img = getTemplateImage(v, _outfit);
 		return img->getAtlasRegion();
 	}

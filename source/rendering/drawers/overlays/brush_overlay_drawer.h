@@ -58,25 +58,12 @@ private:
     };
 
     // Sub-methods for draw()
-    void drawDragging(
-        const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
-        Editor& editor, Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int last_click_map_x, int last_click_map_y
-    );
-    void drawStationary(
-        const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
-        CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush,
-        const glm::vec4& brushColor, BrushShape brush_shape, int brush_size
-    );
-    void drawStationaryWall(const DrawContext& ctx, Brush* brush, const glm::vec4& brushColor, int brush_size);
-    void drawStationaryDoor(const DrawContext& ctx, Brush* brush, Editor& editor, const BrushVisualSettings& visual);
-    void drawStationaryCreature(
-        const DrawContext& ctx, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* brush, Editor& editor
-    );
-    void drawStationaryGeneric(
-        const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, BrushCursorDrawer* brush_cursor_drawer,
-        Editor& editor, Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int brush_size,
-        const BrushVisualSettings& visual
-    );
+    void drawDragging(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor);
+    void drawStationary(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor);
+    void drawStationaryWall(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor);
+    void drawStationaryDoor(const DrawContext& ctx, const BrushOverlayContext& overlay);
+    void drawStationaryCreature(const DrawContext& ctx, const BrushOverlayContext& overlay);
+    void drawStationaryGeneric(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor);
 
     void get_color(Brush* brush, Editor& editor, const Position& position, uint8_t& r, uint8_t& g, uint8_t& b);
 

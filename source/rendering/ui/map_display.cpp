@@ -99,24 +99,26 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
     wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
     editor(editor),
     renderer_initialized(false),
-    cursor_x(-1),
-    cursor_y(-1),
-    dragging(false),
-    boundbox_selection(false),
-    screendragging(false),
-
-    last_cursor_map_x(-1),
-    last_cursor_map_y(-1),
-    last_cursor_map_z(-1),
-
-    last_click_map_x(-1),
-    last_click_map_y(-1),
-    last_click_map_z(-1),
-    last_click_abs_x(-1),
-    last_click_abs_y(-1),
-    last_click_x(-1),
-    last_click_y(-1),
-    last_mmb_click_y(-1)
+    input_ {
+        .keyCode = WXK_NONE,
+        .cursor_x = -1,
+        .cursor_y = -1,
+        .dragging = false,
+        .boundbox_selection = false,
+        .screendragging = false,
+        .last_cursor_map_x = -1,
+        .last_cursor_map_y = -1,
+        .last_cursor_map_z = -1,
+        .last_click_map_x = -1,
+        .last_click_map_y = -1,
+        .last_click_map_z = -1,
+        .last_click_abs_x = -1,
+        .last_click_abs_y = -1,
+        .last_click_x = -1,
+        .last_click_y = -1,
+        .last_mmb_click_x = -1,
+        .last_mmb_click_y = -1
+    }
 {
     view_state_ = std::make_unique<ViewStateManager>(this);
 
@@ -135,8 +137,6 @@ MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, int* attriblist) :
     screenshot_controller = std::make_unique<ScreenshotController>(this);
     menu_handler = std::make_unique<MapMenuHandler>(this, editor);
     menu_handler->BindEvents();
-    keyCode = WXK_NONE;
-
     Bind(wxEVT_KEY_DOWN, &MapCanvas::OnKeyDown, this);
     Bind(wxEVT_KEY_UP, &MapCanvas::OnKeyUp, this);
 
@@ -258,7 +258,7 @@ ViewSnapshot MapCanvas::BuildViewSnapshot() const
     snapshot.floor = view_state_->getFloor();
 
     int mouse_map_x, mouse_map_y;
-    view_state_->screenToMap(cursor_x, cursor_y, &mouse_map_x, &mouse_map_y);
+    view_state_->screenToMap(input_.cursor_x, input_.cursor_y, &mouse_map_x, &mouse_map_y);
     snapshot.mouse_map_x = mouse_map_x;
     snapshot.mouse_map_y = mouse_map_y;
 
@@ -269,17 +269,18 @@ ViewSnapshot MapCanvas::BuildViewSnapshot() const
     snapshot.screensize_x = ssx;
     snapshot.screensize_y = ssy;
 
-    snapshot.last_click_map_x = last_click_map_x;
-    snapshot.last_click_map_y = last_click_map_y;
-    snapshot.last_cursor_map_x = last_cursor_map_x;
-    snapshot.last_cursor_map_y = last_cursor_map_y;
+    snapshot.last_click_map_x = input_.last_click_map_x;
+    snapshot.last_click_map_y = input_.last_click_map_y;
+    snapshot.last_cursor_map_x = input_.last_cursor_map_x;
+    snapshot.last_cursor_map_y = input_.last_cursor_map_y;
 
-    snapshot.last_click_abs_x = last_click_abs_x;
-    snapshot.last_click_abs_y = last_click_abs_y;
-    snapshot.cursor_x = cursor_x;
-    snapshot.cursor_y = cursor_y;
+    snapshot.last_click_abs_x = input_.last_click_abs_x;
+    snapshot.last_click_abs_y = input_.last_click_abs_y;
+    snapshot.cursor_x = input_.cursor_x;
+    snapshot.cursor_y = input_.cursor_y;
 
-    snapshot.is_dragging_draw = drawing_controller->IsDrawing();
+    // Only use the drag-preview overlay for explicit drag-draw gestures.
+    snapshot.is_dragging_draw = drawing_controller->IsDraggingDraw();
     snapshot.drag_start = selection_controller->GetDragStartPosition();
 
     if (auto* mapTab = g_gui.GetCurrentMapTab()) {
@@ -308,9 +309,9 @@ void MapCanvas::ConfigureFrameOptions(FrameOptions& frame) const
 void MapCanvas::PerformGarbageCollection()
 {
     // Only run GC if this is the active tab to prevent multiple tabs from fighting over resources
-    if (g_gui.gfx.gc().shouldCollect() && g_gui.GetCurrentMapTab() == GetParent()) {
+    if (g_gui.gfx.shouldCollectGarbage() && g_gui.GetCurrentMapTab() == GetParent()) {
         g_gui.gfx.garbageCollection();
-        g_gui.gfx.gc().markCollected();
+        g_gui.gfx.markGarbageCollected();
     }
 }
 
@@ -351,6 +352,7 @@ void MapCanvas::OnPaint(wxPaintEvent& event)
         drawer->SetupVars(snapshot, brush_snap);
         drawer->SetupGL();
         drawer->Draw();
+        drawer->DrainPendingNodeRequests();
 
         if (screenshot_controller->IsCapturing()) {
             drawer->TakeScreenshot(screenshot_controller->GetBuffer());
@@ -408,16 +410,16 @@ void MapCanvas::GetScreenCenter(int* map_x, int* map_y)
 
 Position MapCanvas::GetCursorPosition() const
 {
-    return Position(last_cursor_map_x, last_cursor_map_y, view_state_->getFloor());
+    return Position(input_.last_cursor_map_x, input_.last_cursor_map_y, view_state_->getFloor());
 }
 
 void MapCanvas::UpdatePositionStatus(int x, int y)
 {
     if (x == -1) {
-        x = cursor_x;
+        x = input_.cursor_x;
     }
     if (y == -1) {
-        y = cursor_y;
+        y = input_.cursor_y;
     }
 
     int map_x, map_y;
@@ -435,23 +437,23 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event)
 {
     NavigationController::HandleMouseDrag(this, event);
 
-    cursor_x = event.GetX();
-    cursor_y = event.GetY();
+    input_.cursor_x = event.GetX();
+    input_.cursor_y = event.GetY();
 
     int mouse_map_x, mouse_map_y;
     MouseToMap(&mouse_map_x, &mouse_map_y);
 
     bool map_update = false;
-    if (last_cursor_map_x != mouse_map_x || last_cursor_map_y != mouse_map_y || last_cursor_map_z != view_state_->getFloor()) {
+    if (input_.last_cursor_map_x != mouse_map_x || input_.last_cursor_map_y != mouse_map_y || input_.last_cursor_map_z != view_state_->getFloor()) {
         map_update = true;
     }
-    last_cursor_map_x = mouse_map_x;
-    last_cursor_map_y = mouse_map_y;
-    last_cursor_map_z = view_state_->getFloor();
+    input_.last_cursor_map_x = mouse_map_x;
+    input_.last_cursor_map_y = mouse_map_y;
+    input_.last_cursor_map_z = view_state_->getFloor();
 
     if (map_update) {
         g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, view_state_->getFloor()));
-        UpdatePositionStatus(cursor_x, cursor_y);
+        UpdatePositionStatus(input_.cursor_x, input_.cursor_y);
         UpdateZoomStatus();
         Refresh();
     }
@@ -535,17 +537,17 @@ void MapCanvas::OnMouseActionClick(wxMouseEvent& event)
     } else if (g_gui.GetCurrentBrush()) { // Drawing mode
         drawing_controller->HandleClick(Position(mouse_map_x, mouse_map_y, view_state_->getFloor()), event.ShiftDown(), event.ControlDown(), event.AltDown());
     }
-    last_click_x = int(event.GetX() * view_state_->getZoom());
-    last_click_y = int(event.GetY() * view_state_->getZoom());
+    input_.last_click_x = int(event.GetX() * view_state_->getZoom());
+    input_.last_click_y = int(event.GetY() * view_state_->getZoom());
 
     int start_x, start_y;
     static_cast<MapWindow*>(GetParent())->GetViewStart(&start_x, &start_y);
-    last_click_abs_x = last_click_x + start_x;
-    last_click_abs_y = last_click_y + start_y;
+    input_.last_click_abs_x = input_.last_click_x + start_x;
+    input_.last_click_abs_y = input_.last_click_y + start_y;
 
-    last_click_map_x = mouse_map_x;
-    last_click_map_y = mouse_map_y;
-    last_click_map_z = view_state_->getFloor();
+    input_.last_click_map_x = mouse_map_x;
+    input_.last_click_map_y = mouse_map_y;
+    input_.last_click_map_z = view_state_->getFloor();
     g_gui.RefreshView();
     g_gui.UpdateMinimap();
 }
@@ -555,9 +557,9 @@ void MapCanvas::OnMouseActionRelease(wxMouseEvent& event)
     int mouse_map_x, mouse_map_y;
     ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
 
-    int move_x = last_click_map_x - mouse_map_x;
-    int move_y = last_click_map_y - mouse_map_y;
-    int move_z = last_click_map_z - view_state_->getFloor();
+    int move_x = input_.last_click_map_x - mouse_map_x;
+    int move_y = input_.last_click_map_y - mouse_map_y;
+    int move_z = input_.last_click_map_z - view_state_->getFloor();
 
     if (g_gui.IsSelectionMode()) {
         selection_controller->HandleRelease(
@@ -576,8 +578,8 @@ void MapCanvas::OnMouseCameraClick(wxMouseEvent& event)
 {
     SetFocus();
 
-    last_mmb_click_x = event.GetX();
-    last_mmb_click_y = event.GetY();
+    input_.last_mmb_click_x = event.GetX();
+    input_.last_mmb_click_y = event.GetY();
     if (event.ControlDown()) {
         ZoomController::ApplyRelativeZoom(this, 1.0 - view_state_->getZoom());
     } else {
@@ -605,15 +607,15 @@ void MapCanvas::OnMousePropertiesClick(wxMouseEvent& event)
     selection_controller->HandlePropertiesClick(
         Position(mouse_map_x, mouse_map_y, view_state_->getFloor()), event.ShiftDown(), event.ControlDown(), event.AltDown()
     );
-    last_click_y = int(event.GetY() * view_state_->getZoom());
+    input_.last_click_y = int(event.GetY() * view_state_->getZoom());
 
     int start_x, start_y;
     static_cast<MapWindow*>(GetParent())->GetViewStart(&start_x, &start_y);
-    last_click_abs_x = last_click_x + start_x;
-    last_click_abs_y = last_click_y + start_y;
+    input_.last_click_abs_x = input_.last_click_x + start_x;
+    input_.last_click_abs_y = input_.last_click_y + start_y;
 
-    last_click_map_x = mouse_map_x;
-    last_click_map_y = mouse_map_y;
+    input_.last_click_map_x = mouse_map_x;
+    input_.last_click_map_y = mouse_map_y;
     g_gui.RefreshView();
 }
 
@@ -634,12 +636,12 @@ void MapCanvas::OnMousePropertiesRelease(wxMouseEvent& event)
     PopupMenu(popup_menu.get());
 
     editor.actionQueue->resetTimer();
-    dragging = false;
-    boundbox_selection = false;
+    input_.dragging = false;
+    input_.boundbox_selection = false;
 
-    last_cursor_map_x = mouse_map_x;
-    last_cursor_map_y = mouse_map_y;
-    last_cursor_map_z = view_state_->getFloor();
+    input_.last_cursor_map_x = mouse_map_x;
+    input_.last_cursor_map_y = mouse_map_y;
+    input_.last_cursor_map_z = view_state_->getFloor();
 
     g_gui.RefreshView();
 }
@@ -665,12 +667,12 @@ void MapCanvas::OnLoseMouse(wxMouseEvent& event)
 void MapCanvas::OnGainMouse(wxMouseEvent& event)
 {
     if (!event.LeftIsDown()) {
-        dragging = false;
-        boundbox_selection = false;
+        input_.dragging = false;
+        input_.boundbox_selection = false;
         drawing_controller->Reset();
     }
     if (!event.MiddleIsDown()) {
-        screendragging = false;
+        input_.screendragging = false;
     }
 
     Refresh();
@@ -693,8 +695,8 @@ void MapCanvas::ChangeFloor(int new_floor)
 
 void MapCanvas::EnterDrawingMode()
 {
-    dragging = false;
-    boundbox_selection = false;
+    input_.dragging = false;
+    input_.boundbox_selection = false;
     EndPasting();
     Refresh();
 }
@@ -723,25 +725,25 @@ void MapCanvas::EndPasting()
 
 void MapCanvas::Reset()
 {
-    cursor_x = 0;
-    cursor_y = 0;
+    input_.cursor_x = 0;
+    input_.cursor_y = 0;
 
     view_state_->setZoom(1.0);
     view_state_->setFloor(GROUND_LAYER);
 
-    dragging = false;
-    boundbox_selection = false;
-    screendragging = false;
+    input_.dragging = false;
+    input_.boundbox_selection = false;
+    input_.screendragging = false;
     drawing_controller->Reset();
 
     editor.replace_brush = nullptr;
 
-    last_click_map_x = -1;
-    last_click_map_y = -1;
-    last_click_map_z = -1;
+    input_.last_click_map_x = -1;
+    input_.last_click_map_y = -1;
+    input_.last_click_map_z = -1;
 
-    last_mmb_click_x = -1;
-    last_mmb_click_y = -1;
+    input_.last_mmb_click_x = -1;
+    input_.last_mmb_click_y = -1;
 
     editor.selection.clear();
     editor.actionQueue->clear();

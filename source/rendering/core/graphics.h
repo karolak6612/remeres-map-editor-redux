@@ -49,6 +49,7 @@ class SpriteArchive;
 #include "rendering/core/sprite_loader_state.h"
 #include "rendering/core/texture_gc.h"
 #include "rendering/core/atlas_manager.h"
+#include "rendering/core/render_timer.h"
 #include "rendering/core/shared_geometry.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/image.h"
@@ -56,13 +57,11 @@ class SpriteArchive;
 #include "rendering/core/template_image.h"
 
 class GraphicManager {
-	// Private data members declared first to ensure correct initialization order.
-	// C++ initializes members in declaration order, and client_version (below)
-	// binds a reference to loader_.client_version, so loader_ must be constructed first.
 	SpriteDatabase db_;
 	AtlasLifecycle atlas_;
 	SpriteLoaderState loader_;
 	TextureGC gc_;
+	std::unique_ptr<RenderTimer> animation_timer_;
 	SharedGeometry shared_geometry_;
 
 public:
@@ -76,15 +75,15 @@ public:
 	Sprite* getSprite(int id) { return db_.getSprite(id); }
 	void updateTime() { gc_.updateTime(); }
 
-	void pauseAnimation() { gc_.pauseAnimation(); }
-	void resumeAnimation() { gc_.resumeAnimation(); }
+	void pauseAnimation() { animation_timer_->Pause(); }
+	void resumeAnimation() { animation_timer_->Resume(); }
 
 	GameSprite* getCreatureSprite(int id) { return db_.getCreatureSprite(id, loader_.item_count); }
 
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite) { db_.insertSprite(id, std::move(sprite)); }
 	void insertSprite(int id, Sprite* sprite) { db_.insertSprite(id, std::unique_ptr<Sprite>(sprite)); }
 
-	long getElapsedTime() const { return gc_.getElapsedTime(); }
+	long getElapsedTime() const { return animation_timer_->getElapsedTime(); }
 	time_t getCachedTime() const { return gc_.getCachedTime(); }
 
 	uint16_t getItemSpriteMaxID() const { return loader_.item_count; }
@@ -93,7 +92,9 @@ public:
 	bool loadEditorSprites();
 
 	void garbageCollection() { gc_.garbageCollect(db_); }
-	void addSpriteToCleanup(GameSprite* spr) { gc_.addSpriteToCleanup(spr); }
+	void addSpriteToCleanup(uint32_t sprite_id) { gc_.addSpriteToCleanup(db_, sprite_id); }
+	bool shouldCollectGarbage() const noexcept { return gc_.shouldCollect(); }
+	void markGarbageCollected() noexcept { gc_.markCollected(); }
 
 	wxFileName getMetadataFileName() const { return loader_.getMetadataFileName(); }
 	wxFileName getSpritesFileName() const { return loader_.getSpritesFileName(); }
@@ -104,25 +105,36 @@ public:
 	const std::string& getSpriteFile() const { return loader_.spritefile; }
 	bool isExtended() const { return loader_.is_extended; }
 	std::shared_ptr<SpriteArchive> getSpriteArchive() const { return loader_.sprite_archive_; }
-
-	// client_version exposed via loader for backward compatibility
-	ClientVersion*& client_version;
+	ClientVersion* getClientVersion() const { return loader_.client_version; }
+	void setClientVersion(ClientVersion* client_version) { loader_.client_version = client_version; }
 
 	// Atlas facade
 	AtlasManager* getAtlasManager() { return atlas_.get(); }
 	bool hasAtlasManager() const { return atlas_.has(); }
 	bool ensureAtlasManager() { return atlas_.ensure(); }
+	void clearAtlas() { atlas_.clear(); }
+
+	NormalImage* getNormalImage(uint32_t sprite_id) const;
+	NormalImage* getOrCreateNormalImage(uint32_t sprite_id);
+	void trackResidentImage(Image* image) { db_.residentImages().push_back(image); }
+	void notifyTextureLoaded() { gc_.collector().NotifyTextureLoaded(); }
+	void notifyTextureUnloaded() { gc_.collector().NotifyTextureUnloaded(); }
+	void resizeStorage(size_t sprite_size, size_t image_size) { db_.resize(sprite_size, image_size); }
+	void resetLoadedGraphicsState();
+	void finalizeLoadedCatalog(
+		DatFormat dat_format,
+		uint16_t item_count,
+		uint16_t creature_count,
+		bool is_extended,
+		bool has_transparency,
+		bool has_frame_durations,
+		bool has_frame_groups,
+		std::shared_ptr<SpriteArchive> sprite_archive
+	);
+	SpritePreloader& spritePreloader() { return gc_.preloader(); }
 
 	// Shared GPU geometry (quad VBO/EBO)
 	SharedGeometry& sharedGeometry() { return shared_geometry_; }
-
-	// Sub-object accessors for internal/friend use
-	SpriteDatabase& db() { return db_; }
-	AtlasLifecycle& atlas() { return atlas_; }
-	SpriteLoaderState& loader() { return loader_; }
-	TextureGC& gc() { return gc_; }
 };
-
-#include "minimap_colors.h"
 
 #endif

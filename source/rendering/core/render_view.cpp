@@ -48,12 +48,14 @@ bool ViewState::IsRectFullyInside(int draw_x, int draw_y, int width, int height)
 	return (draw_x >= 0 && draw_x + width <= logical_width && draw_y >= 0 && draw_y + height <= logical_height);
 }
 
-void ViewState::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const {
+TileScreenPos ViewState::getScreenPosition(int map_x, int map_y, int map_z) const {
 	int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TILE_SIZE
 		: TILE_SIZE * (floor - map_z);
-	out_x = (map_x * TILE_SIZE) - view_scroll_x - offset;
-	out_y = (map_y * TILE_SIZE) - view_scroll_y - offset;
+	return TileScreenPos {
+		.x = (map_x * TILE_SIZE) - view_scroll_x - offset,
+		.y = (map_y * TILE_SIZE) - view_scroll_y - offset,
+	};
 }
 
 void ViewProjection::Compute(ViewState& vs) {

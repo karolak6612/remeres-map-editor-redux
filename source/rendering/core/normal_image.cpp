@@ -1,5 +1,6 @@
 #include "rendering/core/normal_image.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/sprite_decompression.h"
 #include "app/settings.h"
 #include "rendering/core/sprite_archive.h"
 #include "ui/gui.h"
@@ -50,7 +51,7 @@ void NormalImage::clean(time_t time, int longevity) {
 		// Invalidate any pending preloads for this sprite ID
 		generation_id++;
 
-		g_gui.gfx.gc().collector().NotifyTextureUnloaded();
+		g_gui.gfx.notifyTextureUnloaded();
 	}
 
 	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
@@ -137,7 +138,7 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 		}
 	}
 
-	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id);
+	return SpriteDecompression::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id);
 }
 
 const AtlasRegion* NormalImage::getAtlasRegion() {

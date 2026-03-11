@@ -2,7 +2,6 @@
 #define RME_RENDERING_CORE_DRAW_FRAME_H_
 
 #include "rendering/core/brush_snapshot.h"
-#include "rendering/core/frame_accumulators.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/render_settings.h"
@@ -21,7 +20,6 @@ struct DrawFrame {
 	ViewSnapshot snapshot;
 	BrushSnapshot brush;
 	LightBuffer lights;
-	FrameAccumulators accumulators;
 	AtlasManager* atlas = nullptr;
 };
 

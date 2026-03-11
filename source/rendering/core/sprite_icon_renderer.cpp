@@ -88,7 +88,7 @@ wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite) {
 			bm_[size] = std::make_unique<wxBitmap>(bmp);
 			dc_[size] = std::make_unique<wxMemoryDC>(*bm_[size]);
 		}
-		g_gui.gfx.addSpriteToCleanup(sprite);
+		g_gui.gfx.addSpriteToCleanup(sprite->getId());
 	}
 	return dc_[size].get();
 }
@@ -116,7 +116,7 @@ wxMemoryDC* SpriteIconRenderer::getDC(SpriteSize size, GameSprite* sprite, const
 			cache->dc = std::make_unique<wxMemoryDC>(*cache->bm);
 
 			auto res = colored_dc_.insert(std::make_pair(key, std::move(cache)));
-			g_gui.gfx.addSpriteToCleanup(sprite);
+			g_gui.gfx.addSpriteToCleanup(sprite->getId());
 			return res.first->second->dc.get();
 		}
 		return nullptr;

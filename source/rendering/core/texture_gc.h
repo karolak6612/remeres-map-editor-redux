@@ -21,7 +21,6 @@
 #include <memory>
 #include <ctime>
 #include "rendering/core/texture_garbage_collector.h"
-#include "rendering/core/render_timer.h"
 
 class GameSprite;
 class SpriteDatabase;
@@ -34,12 +33,8 @@ public:
 
 	void updateTime();
 	time_t getCachedTime() const { return cached_time_; }
-	long getElapsedTime() const { return animation_timer_->getElapsedTime(); }
 
-	void pauseAnimation() { animation_timer_->Pause(); }
-	void resumeAnimation() { animation_timer_->Resume(); }
-
-	void addSpriteToCleanup(GameSprite* spr);
+	void addSpriteToCleanup(SpriteDatabase& db, uint32_t sprite_id);
 	void garbageCollect(SpriteDatabase& db);
 	void cleanSoftwareSprites(SpriteDatabase& db);
 	void clear();
@@ -55,7 +50,6 @@ public:
 
 private:
 	TextureGarbageCollector collector_;
-	std::unique_ptr<RenderTimer> animation_timer_;
 	std::unique_ptr<SpritePreloader> preloader_;
 	time_t cached_time_ = 0;
 	time_t last_gc_time_ = 0;

@@ -157,6 +157,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_palette_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/palette/panels/brush_panel.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_region_cache.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/draw_context.h
@@ -233,6 +234,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/brush_selector.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/clipboard_handler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/drawing_controller.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/input_state.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/keyboard_handler.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_display.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/ui/map_menu_handler.h

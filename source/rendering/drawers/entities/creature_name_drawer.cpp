@@ -38,8 +38,7 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const ViewState& view, std::span<c
 			continue;
 		}
 
-		int unscaled_x, unscaled_y;
-		view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
+		const auto [unscaled_x, unscaled_y] = view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z);
 
 		float screen_x = (float)unscaled_x / zoom;
 		float screen_y = (float)unscaled_y / zoom;

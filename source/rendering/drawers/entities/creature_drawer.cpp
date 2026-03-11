@@ -66,8 +66,8 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				mountOutfit.lookLegs = outfit.lookMountLegs;
 				mountOutfit.lookFeet = outfit.lookMountFeet;
 
-				for (int cx = 0; cx != mountSpr->width; ++cx) {
-					for (int cy = 0; cy != mountSpr->height; ++cy) {
+				for (int cx = 0; cx != mountSpr->meta.width; ++cx) {
+					for (int cy = 0; cy != mountSpr->meta.height; ++cy) {
 						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
 						if (region) {
 							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
@@ -75,12 +75,12 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					}
 				}
 
-				pattern_z = std::clamp(spr->pattern_z - 1, 0, 1);
+				pattern_z = std::clamp(spr->meta.pattern_z - 1, 0, 1);
 			}
 		}
 
 		// pattern_y => creature addon
-		for (int pattern_y = 0; pattern_y < spr->pattern_y; pattern_y++) {
+		for (int pattern_y = 0; pattern_y < spr->meta.pattern_y; pattern_y++) {
 
 			// continue if we dont have this addon
 			if (pattern_y > 0) {
@@ -89,8 +89,8 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				}
 			}
 
-			for (int cx = 0; cx != spr->width; ++cx) {
-				for (int cy = 0; cy != spr->height; ++cy) {
+			for (int cx = 0; cx != spr->meta.width; ++cx) {
+				for (int cy = 0; cy != spr->meta.height; ++cy) {
 					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
 						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);

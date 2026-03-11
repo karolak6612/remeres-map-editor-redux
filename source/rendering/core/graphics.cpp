@@ -19,6 +19,7 @@
 
 #include "game/sprites.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_archive.h"
 #include "rendering/core/sprite_preloader.h"
 #include <nanovg.h>
 #include <spdlog/spdlog.h>
@@ -38,13 +39,39 @@
 #include <atomic>
 #include <functional>
 
-GraphicManager::GraphicManager() :
-	client_version(loader_.client_version) {
+GraphicManager::GraphicManager() {
+	animation_timer_ = std::make_unique<RenderTimer>();
+	animation_timer_->Start();
 	gc_.preloader().setGraphicManager(this);
 }
 
 GraphicManager::~GraphicManager() {
 	atlas_.clear();
+}
+
+NormalImage* GraphicManager::getNormalImage(uint32_t sprite_id) const {
+	if (sprite_id >= db_.images().size()) {
+		return nullptr;
+	}
+	auto* image = db_.images()[sprite_id].get();
+	if (!image || !image->isNormalImage()) {
+		return nullptr;
+	}
+	return static_cast<NormalImage*>(image);
+}
+
+NormalImage* GraphicManager::getOrCreateNormalImage(uint32_t sprite_id) {
+	if (sprite_id >= db_.images().size()) {
+		return nullptr;
+	}
+
+	auto& slot = db_.images()[sprite_id];
+	if (!slot) {
+		auto image = std::make_unique<NormalImage>();
+		image->id = sprite_id;
+		slot = std::move(image);
+	}
+	return static_cast<NormalImage*>(slot.get());
 }
 
 void GraphicManager::clear() {
@@ -55,6 +82,38 @@ void GraphicManager::clear() {
 	loader_.clear();
 	gc_.clear();
 	atlas_.clear();
+}
+
+void GraphicManager::resetLoadedGraphicsState() {
+	gc_.preloader().clear();
+	loader_.unloaded = true;
+	loader_.sprite_archive_.reset();
+	loader_.spritefile.clear();
+	db_.clear();
+	gc_.clear();
+	atlas_.clear();
+}
+
+void GraphicManager::finalizeLoadedCatalog(
+	DatFormat dat_format,
+	uint16_t item_count,
+	uint16_t creature_count,
+	bool is_extended,
+	bool has_transparency,
+	bool has_frame_durations,
+	bool has_frame_groups,
+	std::shared_ptr<SpriteArchive> sprite_archive
+) {
+	loader_.dat_format = dat_format;
+	loader_.item_count = item_count;
+	loader_.creature_count = creature_count;
+	loader_.is_extended = is_extended;
+	loader_.has_transparency = has_transparency;
+	loader_.has_frame_durations = has_frame_durations;
+	loader_.has_frame_groups = has_frame_groups;
+	loader_.sprite_archive_ = std::move(sprite_archive);
+	loader_.spritefile = loader_.sprite_archive_ ? loader_.sprite_archive_->fileName() : std::string {};
+	loader_.unloaded = false;
 }
 
 bool GraphicManager::loadEditorSprites() {

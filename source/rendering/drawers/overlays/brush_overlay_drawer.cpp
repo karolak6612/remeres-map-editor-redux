@@ -123,34 +123,30 @@ void BrushOverlayDrawer::draw(const DrawContext& ctx, const BrushOverlayContext&
     glm::vec4 brushColor = get_brush_color(brushColorType, visual);
 
     if (overlay.is_dragging_draw) {
-        drawDragging(
-            ctx, visual, overlay.item_drawer, overlay.sprite_drawer, *editor, brush, brushColor, overlay.brush_shape,
-            overlay.last_click_map_x, overlay.last_click_map_y
-        );
+        drawDragging(ctx, overlay, brushColor);
     } else {
-        drawStationary(
-            ctx, visual, overlay.item_drawer, overlay.sprite_drawer, overlay.creature_drawer, overlay.brush_cursor_drawer, *editor,
-            brush, brushColor, overlay.brush_shape, overlay.brush_size
-        );
+        drawStationary(ctx, overlay, brushColor);
     }
 }
 
-void BrushOverlayDrawer::drawDragging(
-    const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, Editor& editor,
-    Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int last_click_map_x, int last_click_map_y
-)
+void BrushOverlayDrawer::drawDragging(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor)
 {
     auto& sprite_batch = ctx.sprite_batch;
     const auto& view = ctx.view;
     const auto& atlas = ctx.atlas;
+    const auto& visual = *overlay.visual;
+    auto* item_drawer = overlay.item_drawer;
+    auto* sprite_drawer = overlay.sprite_drawer;
+    Editor& editor = *overlay.editor;
+    Brush* brush = overlay.current_brush;
 
     ASSERT(brush->canDrag());
 
     if (brush->is<WallBrush>()) {
-        int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
-        int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
-        int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
-        int last_click_end_map_y = std::max(last_click_map_y, view.mouse_map_y) + 1;
+        int last_click_start_map_x = std::min(overlay.last_click_map_x, view.mouse_map_x);
+        int last_click_start_map_y = std::min(overlay.last_click_map_y, view.mouse_map_y);
+        int last_click_end_map_x = std::max(overlay.last_click_map_x, view.mouse_map_x) + 1;
+        int last_click_end_map_y = std::max(overlay.last_click_map_y, view.mouse_map_y) + 1;
 
         int last_click_start_sx = last_click_start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
         int last_click_start_sy = last_click_start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
@@ -194,23 +190,23 @@ void BrushOverlayDrawer::drawDragging(
         return;
     }
 
-    if (brush_shape == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
+    if (overlay.brush_shape == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
         if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
             int start_x, end_x;
             int start_y, end_y;
 
-            if (view.mouse_map_x < last_click_map_x) {
+            if (view.mouse_map_x < overlay.last_click_map_x) {
                 start_x = view.mouse_map_x;
-                end_x = last_click_map_x;
+                end_x = overlay.last_click_map_x;
             } else {
-                start_x = last_click_map_x;
+                start_x = overlay.last_click_map_x;
                 end_x = view.mouse_map_x;
             }
-            if (view.mouse_map_y < last_click_map_y) {
+            if (view.mouse_map_y < overlay.last_click_map_y) {
                 start_y = view.mouse_map_y;
-                end_y = last_click_map_y;
+                end_y = overlay.last_click_map_y;
             } else {
-                start_y = last_click_map_y;
+                start_y = overlay.last_click_map_y;
                 end_y = view.mouse_map_y;
             }
 
@@ -234,10 +230,10 @@ void BrushOverlayDrawer::drawDragging(
                 }
             }
         } else {
-            int last_click_start_map_x = std::min(last_click_map_x, view.mouse_map_x);
-            int last_click_start_map_y = std::min(last_click_map_y, view.mouse_map_y);
-            int last_click_end_map_x = std::max(last_click_map_x, view.mouse_map_x) + 1;
-            int last_click_end_map_y = std::max(last_click_map_y, view.mouse_map_y) + 1;
+            int last_click_start_map_x = std::min(overlay.last_click_map_x, view.mouse_map_x);
+            int last_click_start_map_y = std::min(overlay.last_click_map_y, view.mouse_map_y);
+            int last_click_end_map_x = std::max(overlay.last_click_map_x, view.mouse_map_x) + 1;
+            int last_click_end_map_y = std::max(overlay.last_click_map_y, view.mouse_map_y) + 1;
 
             int last_click_start_sx = last_click_start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
             int last_click_start_sy = last_click_start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
@@ -276,29 +272,29 @@ void BrushOverlayDrawer::drawDragging(
                 );
             }
         }
-    } else if (brush_shape == BRUSHSHAPE_CIRCLE) {
+    } else if (overlay.brush_shape == BRUSHSHAPE_CIRCLE) {
         // Calculate drawing offsets
         int start_x, end_x;
         int start_y, end_y;
         int width = std::max(
-            std::abs(std::max(view.mouse_map_y, last_click_map_y) - std::min(view.mouse_map_y, last_click_map_y)),
-            std::abs(std::max(view.mouse_map_x, last_click_map_x) - std::min(view.mouse_map_x, last_click_map_x))
+            std::abs(std::max(view.mouse_map_y, overlay.last_click_map_y) - std::min(view.mouse_map_y, overlay.last_click_map_y)),
+            std::abs(std::max(view.mouse_map_x, overlay.last_click_map_x) - std::min(view.mouse_map_x, overlay.last_click_map_x))
         );
 
-        if (view.mouse_map_x < last_click_map_x) {
-            start_x = last_click_map_x - width;
-            end_x = last_click_map_x;
+        if (view.mouse_map_x < overlay.last_click_map_x) {
+            start_x = overlay.last_click_map_x - width;
+            end_x = overlay.last_click_map_x;
         } else {
-            start_x = last_click_map_x;
-            end_x = last_click_map_x + width;
+            start_x = overlay.last_click_map_x;
+            end_x = overlay.last_click_map_x + width;
         }
 
-        if (view.mouse_map_y < last_click_map_y) {
-            start_y = last_click_map_y - width;
-            end_y = last_click_map_y;
+        if (view.mouse_map_y < overlay.last_click_map_y) {
+            start_y = overlay.last_click_map_y - width;
+            end_y = overlay.last_click_map_y;
         } else {
-            start_y = last_click_map_y;
-            end_y = last_click_map_y + width;
+            start_y = overlay.last_click_map_y;
+            end_y = overlay.last_click_map_y + width;
         }
 
         int center_x = start_x + (end_x - start_x) / 2;
@@ -333,33 +329,30 @@ void BrushOverlayDrawer::drawDragging(
     }
 }
 
-void BrushOverlayDrawer::drawStationary(
-    const DrawContext& ctx, const BrushVisualSettings& visual, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer,
-    CreatureDrawer* creature_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor, Brush* brush,
-    const glm::vec4& brushColor, BrushShape brush_shape, int brush_size
-)
+void BrushOverlayDrawer::drawStationary(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor)
 {
+    Brush* brush = overlay.current_brush;
     if (brush->is<WallBrush>()) {
-        drawStationaryWall(ctx, brush, brushColor, brush_size);
+        drawStationaryWall(ctx, overlay, brushColor);
     } else if (brush->is<DoorBrush>()) {
-        drawStationaryDoor(ctx, brush, editor, visual);
+        drawStationaryDoor(ctx, overlay);
     } else if (brush->is<CreatureBrush>()) {
-        drawStationaryCreature(ctx, sprite_drawer, creature_drawer, brush, editor);
+        drawStationaryCreature(ctx, overlay);
     } else if (!brush->is<DoodadBrush>()) {
-        drawStationaryGeneric(ctx, item_drawer, sprite_drawer, brush_cursor_drawer, editor, brush, brushColor, brush_shape, brush_size, visual);
+        drawStationaryGeneric(ctx, overlay, brushColor);
     }
 }
 
-void BrushOverlayDrawer::drawStationaryWall(const DrawContext& ctx, Brush* brush, const glm::vec4& brushColor, int brush_size)
+void BrushOverlayDrawer::drawStationaryWall(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor)
 {
     auto& sprite_batch = ctx.sprite_batch;
     const auto& view = ctx.view;
     const auto& atlas = ctx.atlas;
 
-    int start_map_x = view.mouse_map_x - brush_size;
-    int start_map_y = view.mouse_map_y - brush_size;
-    int end_map_x = view.mouse_map_x + brush_size + 1;
-    int end_map_y = view.mouse_map_y + brush_size + 1;
+    int start_map_x = view.mouse_map_x - overlay.brush_size;
+    int start_map_y = view.mouse_map_y - overlay.brush_size;
+    int end_map_x = view.mouse_map_x + overlay.brush_size + 1;
+    int end_map_y = view.mouse_map_y + overlay.brush_size + 1;
 
     int start_sx = start_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
     int start_sy = start_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
@@ -401,32 +394,34 @@ void BrushOverlayDrawer::drawStationaryWall(const DrawContext& ctx, Brush* brush
     }
 }
 
-void BrushOverlayDrawer::drawStationaryDoor(const DrawContext& ctx, Brush* brush, Editor& editor, const BrushVisualSettings& visual)
+void BrushOverlayDrawer::drawStationaryDoor(const DrawContext& ctx, const BrushOverlayContext& overlay)
 {
     auto& sprite_batch = ctx.sprite_batch;
     const auto& view = ctx.view;
+    const auto& visual = *overlay.visual;
 
     int cx = view.mouse_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
     int cy = view.mouse_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 
     sprite_batch.drawRect(
         static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE),
-        get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor), visual), ctx.atlas
+        get_check_color(overlay.current_brush, *overlay.editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor), visual), ctx.atlas
     );
 }
 
-void BrushOverlayDrawer::drawStationaryCreature(
-    const DrawContext& ctx, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Brush* brush, Editor& editor
-)
+void BrushOverlayDrawer::drawStationaryCreature(const DrawContext& ctx, const BrushOverlayContext& overlay)
 {
     auto& sprite_batch = ctx.sprite_batch;
     const auto& view = ctx.view;
+    auto* sprite_drawer = overlay.sprite_drawer;
+    auto* creature_drawer = overlay.creature_drawer;
+    auto* brush = overlay.current_brush;
 
     int cx = view.mouse_map_x * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
     int cy = view.mouse_map_y * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 
     CreatureBrush* creature_brush = brush->as<CreatureBrush>();
-    if (creature_brush->canDraw(&editor.map, Position(view.mouse_map_x, view.mouse_map_y, view.floor))) {
+    if (creature_brush->canDraw(&overlay.editor->map, Position(view.mouse_map_x, view.mouse_map_y, view.floor))) {
         creature_drawer->BlitCreature(
             sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH,
             CreatureDrawOptions {.color = DrawColor(255, 255, 255, 160)}
@@ -439,27 +434,30 @@ void BrushOverlayDrawer::drawStationaryCreature(
     }
 }
 
-void BrushOverlayDrawer::drawStationaryGeneric(
-    const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, BrushCursorDrawer* brush_cursor_drawer, Editor& editor,
-    Brush* brush, const glm::vec4& brushColor, BrushShape brush_shape, int brush_size, const BrushVisualSettings& visual
-)
+void BrushOverlayDrawer::drawStationaryGeneric(const DrawContext& ctx, const BrushOverlayContext& overlay, const glm::vec4& brushColor)
 {
     auto& sprite_batch = ctx.sprite_batch;
     auto& primitive_renderer = ctx.primitive_renderer;
     const auto& view = ctx.view;
     const auto& atlas = ctx.atlas;
+    auto* item_drawer = overlay.item_drawer;
+    auto* sprite_drawer = overlay.sprite_drawer;
+    auto* brush_cursor_drawer = overlay.brush_cursor_drawer;
+    Editor& editor = *overlay.editor;
+    Brush* brush = overlay.current_brush;
+    const auto& visual = *overlay.visual;
 
     RAWBrush* raw_brush = nullptr;
     if (brush->is<RAWBrush>()) {
         raw_brush = brush->as<RAWBrush>();
     }
 
-    for (int y = -brush_size - 1; y <= brush_size + 1; y++) {
+    for (int y = -overlay.brush_size - 1; y <= overlay.brush_size + 1; y++) {
         int cy = (view.mouse_map_y + y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
-        for (int x = -brush_size - 1; x <= brush_size + 1; x++) {
+        for (int x = -overlay.brush_size - 1; x <= overlay.brush_size + 1; x++) {
             int cx = (view.mouse_map_x + x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
-            if (brush_shape == BRUSHSHAPE_SQUARE) {
-                if (x >= -brush_size && x <= brush_size && y >= -brush_size && y <= brush_size) {
+            if (overlay.brush_shape == BRUSHSHAPE_SQUARE) {
+                if (x >= -overlay.brush_size && x <= overlay.brush_size && y >= -overlay.brush_size && y <= overlay.brush_size) {
                     if (brush->is<RAWBrush>()) {
                         item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
                     } else {
@@ -481,9 +479,9 @@ void BrushOverlayDrawer::drawStationaryGeneric(
                         }
                     }
                 }
-            } else if (brush_shape == BRUSHSHAPE_CIRCLE) {
+            } else if (overlay.brush_shape == BRUSHSHAPE_CIRCLE) {
                 double distance = sqrt(double(x * x) + double(y * y));
-                if (distance < brush_size + 0.005) {
+                if (distance < overlay.brush_size + 0.005) {
                     if (brush->is<RAWBrush>()) {
                         item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, cx, cy, raw_brush->getItemID(), 160, 160, 160, 160);
                     } else {

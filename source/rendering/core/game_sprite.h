@@ -8,12 +8,12 @@
 #include "game/outfit.h"
 #include "util/common.h"
 #include "rendering/core/animator.h"
+#include "rendering/core/atlas_region_cache.h"
 #include "rendering/core/sprite_light.h"
 #include "rendering/core/texture_garbage_collector.h"
 #include "rendering/core/atlas_manager.h"
 #include "rendering/core/render_timer.h"
 #include "rendering/core/sprite_metadata.h"
-#include "rendering/core/sprite_decompression.h"
 #include "rendering/core/sprite_icon_renderer.h"
 #include <atomic>
 #include <cstdint>
@@ -90,7 +90,7 @@ public:
 	void unloadDC() override;
 
 	wxSize GetSize() const override {
-		return wxSize(width * 32, height * 32);
+		return wxSize(meta.width * 32, meta.height * 32);
 	}
 
 	void clean(time_t time, int longevity = -1);
@@ -100,83 +100,55 @@ public:
 	uint8_t getMiniMapColor() const;
 
 	bool hasLight() const noexcept {
-		return has_light;
+		return meta.has_light;
 	}
 	const SpriteLight& getLight() const noexcept {
-		return light;
-	}
-
-	// Thin wrappers delegating to SpriteDecompression namespace
-	[[nodiscard]] static std::unique_ptr<uint8_t[]> Decompress(std::span<const uint8_t> dump, bool use_alpha, int id = 0) {
-		return SpriteDecompression::Decompress(dump, use_alpha, id);
-	}
-
-	static void ColorizeTemplatePixels(uint8_t* dest, const uint8_t* mask, size_t pixelCount, int lookHead, int lookBody, int lookLegs, int lookFeet, bool destHasAlpha) {
-		SpriteDecompression::ColorizeTemplatePixels(dest, mask, pixelCount, lookHead, lookBody, lookLegs, lookFeet, destHasAlpha);
+		return meta.light;
 	}
 
 	SpriteIconRenderer& iconRenderer() { return icon_renderer_; }
 
-protected:
-	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
-
-public:
 	// Sprite metadata (public for GraphicsAssembler direct writes)
-	uint32_t id = 0;
-	uint8_t height = 0;
-	uint8_t width = 0;
-	uint8_t layers = 0;
-	uint8_t pattern_x = 0;
-	uint8_t pattern_y = 0;
-	uint8_t pattern_z = 0;
-	uint8_t frames = 0;
-	uint32_t numsprites = 0;
+	SpriteMetadata meta;
+	AtlasRegionCache atlas_cache;
 
-	uint32_t getId() const { return id; }
+	[[nodiscard]] uint32_t getId() const noexcept { return meta.id; }
+	[[nodiscard]] uint8_t getHeight() const noexcept { return meta.height; }
+	[[nodiscard]] uint8_t getWidth() const noexcept { return meta.width; }
+	[[nodiscard]] uint8_t getLayers() const noexcept { return meta.layers; }
+	[[nodiscard]] uint8_t getPatternX() const noexcept { return meta.pattern_x; }
+	[[nodiscard]] uint8_t getPatternY() const noexcept { return meta.pattern_y; }
+	[[nodiscard]] uint8_t getPatternZ() const noexcept { return meta.pattern_z; }
+	[[nodiscard]] uint8_t getFrames() const noexcept { return meta.frames; }
+	[[nodiscard]] uint32_t getNumSprites() const noexcept { return meta.numsprites; }
+	[[nodiscard]] bool isSimple() const noexcept { return meta.is_simple; }
 	uint32_t getDebugImageId(size_t index = 0) const;
+	TemplateImage* getTemplateImage(int sprite_index, const Outfit& outfit);
+	auto& getSpriteList() { return spriteList; }
+	const auto& getSpriteList() const { return spriteList; }
+	auto& getInstancedTemplates() { return instanced_templates; }
+	const auto& getInstancedTemplates() const { return instanced_templates; }
 
 	std::unique_ptr<Animator> animator;
 
-	uint16_t draw_height = 0;
-	uint16_t drawoffset_x = 0;
-	uint16_t drawoffset_y = 0;
-
-	uint16_t minimap_color = 0;
-
-	bool has_light = false;
-	SpriteLight light;
-
-	std::vector<NormalImage*> spriteList;
-	std::vector<std::unique_ptr<TemplateImage>> instanced_templates;
-
 	bool is_resident = false;
-
-	friend class GraphicManager;
-	friend class GraphicsAssembler;
-	friend class SpriteIconGenerator;
-	friend class TextureGarbageCollector;
-	friend class SpritePreloader;
 
 	// Exposed for fast-path rendering (BlitItem)
 	const AtlasRegion* getCachedDefaultRegion() const {
-		return cached_default_region;
+		return atlas_cache.cached_default_region;
 	}
 
 	uint32_t getSpriteId(int frameIndex, int pattern_x, int pattern_y) const;
 
 	bool isSimpleAndLoaded() const;
 
-	bool is_simple = false;
 	void updateSimpleStatus() {
-		is_simple = (numsprites == 1 && frames == 1 && layers == 1 && width == 1 && height == 1 && !spriteList.empty());
+		meta.is_simple = (meta.numsprites == 1 && meta.frames == 1 && meta.layers == 1 && meta.width == 1 && meta.height == 1 && !spriteList.empty());
 	}
 
-protected:
-	mutable const AtlasRegion* cached_default_region = nullptr;
-	uint32_t cached_generation_id = 0;
-	uint32_t cached_sprite_id = 0;
-
 private:
+	std::vector<NormalImage*> spriteList;
+	std::vector<std::unique_ptr<TemplateImage>> instanced_templates;
 	SpriteIconRenderer icon_renderer_;
 };
 

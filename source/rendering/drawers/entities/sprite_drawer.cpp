@@ -78,9 +78,9 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 
     int tme = 0; // GetTime() % itype->FPA;
 
-    for (int cx = 0; cx != spr->width; ++cx) {
-        for (int cy = 0; cy != spr->height; ++cy) {
-            for (int cf = 0; cf != spr->layers; ++cf) {
+    for (int cx = 0; cx != spr->meta.width; ++cx) {
+        for (int cy = 0; cy != spr->meta.height; ++cy) {
+            for (int cf = 0; cf != spr->meta.layers; ++cf) {
                 const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
                 if (region) {
                     glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);

@@ -82,7 +82,7 @@ OutfitChooserDialog::OutfitChooserDialog(wxWindow* parent, const Outfit& current
 		}
 
 		GameSprite* spr = g_gui.gfx.getCreatureSprite(i);
-		item.layers = spr ? spr->layers : 1;
+		item.layers = spr ? spr->meta.layers : 1;
 
 		selection_panel->all_outfits.push_back(item);
 	}

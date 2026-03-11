@@ -17,10 +17,19 @@
 
 #include "app/main.h"
 #include "rendering/core/texture_garbage_collector.h"
-#include "rendering/core/graphics.h"
+#include "rendering/core/game_sprite.h"
 #include "rendering/core/image.h"
 #include "app/settings.h"
 #include <algorithm>
+
+namespace {
+GameSprite* findResidentSpriteById(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id) {
+	const auto it = std::ranges::find_if(resident_game_sprites, [sprite_id](const GameSprite* sprite) {
+		return sprite && sprite->getId() == sprite_id;
+	});
+	return it != resident_game_sprites.end() ? *it : nullptr;
+}
+}
 
 TextureGarbageCollector::TextureGarbageCollector() :
 	loaded_textures(0),
@@ -33,7 +42,7 @@ TextureGarbageCollector::~TextureGarbageCollector() {
 void TextureGarbageCollector::Clear() {
 	loaded_textures = 0;
 	lastclean = time(nullptr);
-	cleanup_list.clear();
+	cleanup_list_.clear();
 }
 
 void TextureGarbageCollector::NotifyTextureLoaded() {
@@ -47,17 +56,19 @@ void TextureGarbageCollector::NotifyTextureUnloaded() {
 // Minimal threshold before we even consider reliable cleanup
 const int MIN_CLEAN_THRESHOLD = 100;
 
-void TextureGarbageCollector::AddSpriteToCleanup(GameSprite* spr) {
-	cleanup_list.push_back(spr);
+void TextureGarbageCollector::AddSpriteToCleanup(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id) {
+	cleanup_list_.push_back(sprite_id);
 	// Clean if needed
 	const size_t clean_threshold = static_cast<size_t>(std::max(MIN_CLEAN_THRESHOLD, g_settings.getInteger(Config::SOFTWARE_CLEAN_THRESHOLD)));
-	if (cleanup_list.size() > clean_threshold) {
+	if (cleanup_list_.size() > clean_threshold) {
 		const auto software_clean_size = std::max(0, g_settings.getInteger(Config::SOFTWARE_CLEAN_SIZE));
-		const auto cleanup_count = std::min(cleanup_list.size(), static_cast<size_t>(software_clean_size));
+		const auto cleanup_count = std::min(cleanup_list_.size(), static_cast<size_t>(software_clean_size));
 
 		for (size_t i = 0; i < cleanup_count; ++i) {
-			cleanup_list.front()->unloadDC();
-			cleanup_list.pop_front();
+			if (auto* sprite = findResidentSpriteById(resident_game_sprites, cleanup_list_.front())) {
+				sprite->unloadDC();
+			}
+			cleanup_list_.pop_front();
 		}
 	}
 }

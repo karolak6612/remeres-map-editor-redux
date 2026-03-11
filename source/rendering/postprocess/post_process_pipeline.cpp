@@ -42,7 +42,6 @@ void main() {
 )";
 
 PostProcessPipeline::PostProcessPipeline() : post_process_mgr_(std::make_unique<PostProcessManager>()) {
-	post_process_mgr_->LoadFromRegistry();
 }
 
 PostProcessPipeline::~PostProcessPipeline() = default;

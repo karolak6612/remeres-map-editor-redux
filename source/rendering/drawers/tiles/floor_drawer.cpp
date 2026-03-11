@@ -7,6 +7,7 @@
 // glut include removed
 
 #include "rendering/drawers/tiles/floor_drawer.h"
+#include "rendering/core/draw_context.h"
 #include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
@@ -22,7 +23,12 @@ FloorDrawer::FloorDrawer() {
 FloorDrawer::~FloorDrawer() {
 }
 
-void FloorDrawer::draw(SpriteBatch& sprite_batch, const AtlasManager& atlas, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor) {
+void FloorDrawer::draw(const DrawContext& ctx, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, Editor& editor) {
+	auto& sprite_batch = ctx.sprite_batch;
+	const auto& atlas = ctx.atlas;
+	const auto& view = ctx.view;
+	const auto& settings = ctx.settings;
+	const auto& frame = ctx.frame;
 
 	// Draw "transparent higher floor"
 	if (view.floor != 8 && view.floor != 0 && settings.transparent_floors) {
