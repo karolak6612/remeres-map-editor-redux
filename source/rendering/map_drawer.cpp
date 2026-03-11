@@ -149,6 +149,7 @@ RenderPrepSnapshot MapDrawer::BuildRenderPrepSnapshot(
     prep.atlas_version = render_ctx_.gfx.hasAtlasManager() ? render_ctx_.gfx.getAtlasManager()->getTextureId() : 0;
     const FramePlanContext plan_ctx {prep.frame.view, prep.frame.settings, prep.frame.options};
     const bool live_client = editor.live_manager.IsClient();
+    prep.floors.reserve(static_cast<size_t>(prep.frame.view.start_z - prep.frame.view.superend_z + 1));
 
     int floor_offset = 0;
     for (int map_z = prep.frame.view.start_z; map_z >= prep.frame.view.superend_z; --map_z) {

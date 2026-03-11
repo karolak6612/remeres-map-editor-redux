@@ -25,9 +25,8 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preload_queue.h"
 #include "rendering/core/tile_render_snapshot.h"
+#include "rendering/core/draw_command_queue.h"
 #include "rendering/core/frame_accumulators.h"
-#include "rendering/drawers/entities/creature_drawer.h"
-#include "rendering/utilities/pattern_calculator.h"
 
 // Intermediate representation produced by PlanTile() and consumed by ExecutePlan().
 // Separates data-gathering (tile traversal, color calculation, accumulator writes)
@@ -62,28 +61,9 @@ struct TileDrawPlan {
     std::optional<HouseBorder> house_border;
 
     // Item draw commands (ground item + stacked items, in render order)
-    struct ItemCmd {
-        ItemRenderSnapshot item;
-        SpritePatterns patterns;
-        int red = 255;
-        int green = 255;
-        int blue = 255;
-        int alpha = 255;
-    };
-    std::vector<ItemCmd> items;
-
-    // Creature draw command
-    struct CreatureCmd {
-        CreatureRenderSnapshot creature;
-        CreatureDrawOptions options;
-    };
-    std::optional<CreatureCmd> creature;
-
-    // Marker draw command (waypoints, house exits, spawns, etc.)
-    struct MarkerCmd {
-        MarkerRenderSnapshot marker;
-    };
-    std::optional<MarkerCmd> marker;
+    std::vector<DrawItemCmd> items;
+    std::optional<DrawCreatureCmd> creature;
+    std::optional<DrawMarkerCmd> marker;
 
     // Per-tile side effects collected during planning and merged later.
     FrameAccumulators accumulators;
@@ -108,6 +88,8 @@ struct TileDrawPlan {
     {
         items.reserve(item_count);
         preload_requests.reserve(item_count);
+        accumulators.reserve(item_count, item_count, 2);
+        lights.reserve(item_count);
     }
 };
 

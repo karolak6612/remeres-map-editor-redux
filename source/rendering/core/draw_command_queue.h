@@ -51,11 +51,6 @@ struct DrawItemCmd {
     int green = 255;
     int blue = 255;
     int alpha = 255;
-
-    DrawItemCmd(int draw_x, int draw_y, ItemRenderSnapshot item, SpritePatterns patterns, int red, int green, int blue, int alpha) :
-        draw_x(draw_x), draw_y(draw_y), item(std::move(item)), patterns(std::move(patterns)), red(red), green(green), blue(blue), alpha(alpha)
-    {
-    }
 };
 
 struct DrawCreatureCmd {

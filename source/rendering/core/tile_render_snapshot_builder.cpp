@@ -38,16 +38,28 @@ void appendHookIndicator(std::vector<HookIndicatorDrawer::HookRequest>& hooks, c
     hooks.push_back({pos, definition.hasFlag(ItemFlag::HookSouth), definition.hasFlag(ItemFlag::HookEast)});
 }
 
-ItemRenderSnapshot snapshotItem(const Item& item, const Position& pos)
+ItemRenderSnapshot snapshotItem(const Item& item, const ItemDefinitionView& definition, const Position& pos)
 {
     ItemRenderSnapshot snapshot;
     snapshot.pos = pos;
-    snapshot.id = item.getID();
+    snapshot.server_id = item.getID();
+    snapshot.client_id = definition ? definition.clientId() : 0;
     snapshot.subtype = item.getSubtype();
-    snapshot.definition = item.getDefinition();
     snapshot.selected = item.isSelected();
     snapshot.locked = item.isLocked();
     snapshot.has_light = item.hasLight();
+    snapshot.is_ground_tile = definition.isGroundTile();
+    snapshot.is_splash = definition.isSplash();
+    snapshot.is_fluid_container = definition.isFluidContainer();
+    snapshot.is_hangable = definition.hasFlag(ItemFlag::IsHangable);
+    snapshot.is_stackable = definition.hasFlag(ItemFlag::Stackable);
+    snapshot.is_pickupable = definition.hasFlag(ItemFlag::Pickupable);
+    snapshot.is_meta_item = definition.isMetaItem();
+    snapshot.is_border = definition.hasFlag(ItemFlag::IsBorder);
+    snapshot.is_door = definition.isDoor();
+    snapshot.has_hook_south = definition.hasFlag(ItemFlag::HookSouth);
+    snapshot.has_hook_east = definition.hasFlag(ItemFlag::HookEast);
+    snapshot.border_alignment = static_cast<BorderType>(definition.attribute(ItemAttributeKey::BorderAlignment));
     if (snapshot.has_light) {
         snapshot.light = item.getLight();
     }
@@ -115,13 +127,14 @@ std::optional<TileRenderSnapshot> TileRenderSnapshotBuilder::Build(
 
     if (settings.show_tooltips && snapshot.pos.z == view.floor) {
         if (waypoint && !waypoint->name.empty()) {
+            snapshot.tooltips.reserve(4);
             snapshot.tooltips.emplace_back(snapshot.pos, std::string(waypoint->name));
         }
     }
 
     if (tile->ground) {
         const auto ground_definition = tile->ground->getDefinition();
-        snapshot.ground = snapshotItem(*tile->ground, snapshot.pos);
+        snapshot.ground = snapshotItem(*tile->ground, ground_definition, snapshot.pos);
 
         if (!settings.ingame && settings.highlight_locked_doors) {
             appendDoorIndicator(snapshot.doors, *tile->ground, ground_definition, snapshot.pos);
@@ -136,13 +149,15 @@ std::optional<TileRenderSnapshot> TileRenderSnapshotBuilder::Build(
     }
 
     snapshot.items.reserve(tile->items.size());
+    snapshot.hooks.reserve(tile->items.size());
+    snapshot.doors.reserve(tile->items.size());
     for (const auto& item : tile->items) {
         if (!item) {
             continue;
         }
 
         const auto definition = item->getDefinition();
-        snapshot.items.push_back(snapshotItem(*item, snapshot.pos));
+        snapshot.items.push_back(snapshotItem(*item, definition, snapshot.pos));
 
         if (!settings.ingame && settings.highlight_locked_doors) {
             appendDoorIndicator(snapshot.doors, *item, definition, snapshot.pos);

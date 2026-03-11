@@ -37,7 +37,7 @@ void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event)
     canvas->Refresh();
 }
 
-void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event)
+bool NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event)
 {
     if (canvas->IsScreenDragging()) {
         static_cast<MapWindow*>(canvas->GetParent())
@@ -45,8 +45,9 @@ void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& even
                 int(canvas->GetSettings().getFloat(Config::SCROLL_SPEED) * canvas->GetZoom() * (event.GetX() - canvas->GetCursorX())),
                 int(canvas->GetSettings().getFloat(Config::SCROLL_SPEED) * canvas->GetZoom() * (event.GetY() - canvas->GetCursorY()))
             );
-        canvas->Refresh();
+        return true;
     }
+    return false;
 }
 
 void NavigationController::HandleCameraClick(MapCanvas* canvas, wxMouseEvent& event)

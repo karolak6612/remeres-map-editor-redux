@@ -61,6 +61,7 @@ public:
 	}
 
 private:
+	GameSprite* resolveSprite(int client_id) const;
 	GameSprite* resolveSprite(const ItemDefinitionView& definition) const;
 	GameSprite* resolveSprite(ServerItemId item_id) const;
 

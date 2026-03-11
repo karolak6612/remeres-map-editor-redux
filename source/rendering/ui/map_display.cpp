@@ -93,6 +93,10 @@ static wxGLAttributes& GetCoreProfileAttributes()
     return vAttrs;
 }
 
+namespace {
+constexpr auto HOVER_UI_UPDATE_INTERVAL = std::chrono::milliseconds(50);
+}
+
 MapCanvas::MapCanvas(MapWindow* parent, Editor& editor, GUI& gui, Settings& settings, int* attriblist) :
     wxGLCanvas(parent, GetCoreProfileAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
     editor(editor),
@@ -554,7 +558,23 @@ void MapCanvas::UpdatePositionStatus(int x, int y)
     int map_x, map_y;
     ScreenToMap(x, y, &map_x, &map_y);
 
-    MapStatusUpdater::Update(gui_, settings_, editor, map_x, map_y, view_state_->getFloor());
+    UpdatePositionStatus(map_x, map_y, view_state_->getFloor());
+}
+
+void MapCanvas::UpdatePositionStatus(int map_x, int map_y, int map_z)
+{
+    MapStatusUpdater::Update(gui_, settings_, editor, map_x, map_y, map_z);
+}
+
+bool MapCanvas::shouldRefreshHoverUi() const
+{
+    const auto now = std::chrono::steady_clock::now();
+    if (now < next_hover_ui_update_) {
+        return false;
+    }
+
+    const_cast<MapCanvas*>(this)->next_hover_ui_update_ = now + HOVER_UI_UPDATE_INTERVAL;
+    return true;
 }
 
 void MapCanvas::UpdateZoomStatus()
@@ -564,10 +584,15 @@ void MapCanvas::UpdateZoomStatus()
 
 void MapCanvas::OnMouseMove(wxMouseEvent& event)
 {
-    NavigationController::HandleMouseDrag(this, event);
+    const bool scrolled = NavigationController::HandleMouseDrag(this, event);
 
     input_.cursor_x = event.GetX();
     input_.cursor_y = event.GetY();
+
+    if (scrolled) {
+        Refresh();
+        return;
+    }
 
     int mouse_map_x, mouse_map_y;
     MouseToMap(&mouse_map_x, &mouse_map_y);
@@ -581,9 +606,11 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event)
     input_.last_cursor_map_z = view_state_->getFloor();
 
     if (map_update) {
-        UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, view_state_->getFloor()));
-        UpdatePositionStatus(input_.cursor_x, input_.cursor_y);
-        UpdateZoomStatus();
+        if (shouldRefreshHoverUi()) {
+            UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, view_state_->getFloor()));
+            UpdatePositionStatus(mouse_map_x, mouse_map_y, view_state_->getFloor());
+            UpdateZoomStatus();
+        }
         Refresh();
     }
 

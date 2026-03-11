@@ -4,7 +4,6 @@
 #include "game/creature.h"
 #include "game/outfit.h"
 #include "app/definitions.h"
-#include "item_definitions/core/item_definition_store.h"
 #include "map/position.h"
 #include "rendering/core/sprite_light.h"
 #include "rendering/drawers/entities/creature_name_drawer.h"
@@ -28,12 +27,24 @@ struct PodiumRenderSnapshot {
 
 struct ItemRenderSnapshot {
     Position pos;
-    uint16_t id = 0;
+    uint16_t server_id = 0;
+    uint16_t client_id = 0;
     uint16_t subtype = 0;
-    ItemDefinitionView definition;
     bool selected = false;
     bool locked = false;
     bool has_light = false;
+    bool is_ground_tile = false;
+    bool is_splash = false;
+    bool is_fluid_container = false;
+    bool is_hangable = false;
+    bool is_stackable = false;
+    bool is_pickupable = false;
+    bool is_meta_item = false;
+    bool is_border = false;
+    bool is_door = false;
+    bool has_hook_south = false;
+    bool has_hook_east = false;
+    BorderType border_alignment = BORDER_NONE;
     SpriteLight light;
     std::optional<PodiumRenderSnapshot> podium;
 };
@@ -116,6 +127,19 @@ struct VisibleFloorSnapshot {
     int map_z = 0;
     std::vector<TileRenderSnapshot> tiles;
     std::vector<LoadingPlaceholderSnapshot> loading_placeholders;
+
+    [[nodiscard]] size_t estimatedCommandCount() const
+    {
+        size_t commands = loading_placeholders.size();
+        for (const auto& tile : tiles) {
+            commands += tile.items.size();
+            commands += tile.ground ? 1U : 0U;
+            commands += tile.creature ? 1U : 0U;
+            commands += tile.marker ? 1U : 0U;
+            commands += 3U;
+        }
+        return commands;
+    }
 };
 
 #endif

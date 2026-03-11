@@ -33,6 +33,14 @@ GameSprite* ItemDrawer::resolveSprite(const ItemDefinitionView& definition) cons
     return sprite_resolver->getSprite(definition.clientId());
 }
 
+GameSprite* ItemDrawer::resolveSprite(int client_id) const
+{
+    if (client_id <= 0 || !sprite_resolver) {
+        return nullptr;
+    }
+    return sprite_resolver->getSprite(client_id);
+}
+
 GameSprite* ItemDrawer::resolveSprite(ServerItemId item_id) const
 {
     return resolveSprite(g_item_definitions.get(item_id));
@@ -63,7 +71,6 @@ void ItemDrawer::BlitItemSnapshot(
 {
     bool ephemeral = false;
     const auto& pos = item.pos;
-    const auto& definition = item.definition;
 
     const bool is_transient_selected = !ephemeral && frame.transient_selection_bounds && frame.transient_selection_bounds->contains(pos.x, pos.y);
     if (!settings.ingame && (item.selected || is_transient_selected)) {
@@ -72,15 +79,15 @@ void ItemDrawer::BlitItemSnapshot(
         green /= 2;
     }
 
-    GameSprite* spr = resolveSprite(definition);
+    GameSprite* spr = resolveSprite(static_cast<int>(item.client_id));
 
     if (!settings.ingame && settings.show_tech_items) {
-        if (!definition) {
+        if (item.client_id == 0) {
             sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
             return;
         }
 
-        switch (definition.clientId()) {
+        switch (item.client_id) {
             case SpecialClientId::INVISIBLE_STAIRS:
                 sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
                 return;
@@ -100,14 +107,14 @@ void ItemDrawer::BlitItemSnapshot(
                 break;
         }
 
-        if (SpecialClientId::isPrimalLight(definition.clientId())) {
+        if (SpecialClientId::isPrimalLight(item.client_id)) {
             spr = resolveSprite(SPRITE_LIGHTSOURCE);
             red = 0;
             alpha = 180;
         }
     }
 
-    if (definition.isMetaItem() || spr == nullptr || (!ephemeral && definition.hasFlag(ItemFlag::Pickupable) && !settings.show_items)) {
+    if (item.is_meta_item || spr == nullptr || (!ephemeral && item.is_pickupable && !settings.show_items)) {
         return;
     }
 
@@ -127,8 +134,8 @@ void ItemDrawer::BlitItemSnapshot(
     const int pattern_z = patterns.z;
     const int anim_frame = patterns.frame;
 
-    if (!ephemeral && settings.transparent_items && (!definition.isGroundTile() || meta->width > 1 || meta->height > 1) && !definition.isSplash()
-        && (!definition.hasFlag(ItemFlag::IsBorder) || meta->width > 1 || meta->height > 1)) {
+    if (!ephemeral && settings.transparent_items && (!item.is_ground_tile || meta->width > 1 || meta->height > 1) && !item.is_splash
+        && (!item.is_border || meta->width > 1 || meta->height > 1)) {
         alpha /= 2;
     }
 

@@ -28,7 +28,13 @@ struct RenderValidationResult {
 // the prep-thread result before the prepared frame is applied.
 class RenderValidationLayer {
 public:
-	explicit RenderValidationLayer(size_t sample_interval = 120);
+#ifdef NDEBUG
+	static constexpr size_t DEFAULT_SAMPLE_INTERVAL = 600;
+#else
+	static constexpr size_t DEFAULT_SAMPLE_INTERVAL = 120;
+#endif
+
+	explicit RenderValidationLayer(size_t sample_interval = DEFAULT_SAMPLE_INTERVAL);
 
 	[[nodiscard]] bool shouldSample(uint64_t generation) const;
 	void trackSnapshot(const RenderPrepSnapshot& snapshot);

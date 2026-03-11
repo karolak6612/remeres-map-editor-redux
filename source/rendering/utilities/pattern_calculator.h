@@ -5,7 +5,6 @@
 #include "rendering/core/sprite_animation_state.h"
 #include "rendering/core/sprite_metadata.h"
 #include "rendering/core/tile_render_snapshot.h"
-#include "item_definitions/core/item_definition_store.h"
 #include "game/item.h"
 #include "map/tile.h"
 #include <bit>
@@ -42,10 +41,9 @@ public:
 		patterns.z = calculatePatternOffset(tile.pos.z, meta.pattern_z);
 		patterns.frame = animation ? animation->getFrame() : 0;
 
-		const auto& definition = item.definition;
-		if (definition.isSplash() || definition.isFluidContainer()) {
+		if (item.is_splash || item.is_fluid_container) {
 			patterns.subtype = item.subtype;
-		} else if (definition.hasFlag(ItemFlag::IsHangable)) {
+		} else if (item.is_hangable) {
 			if (tile.hasHookSouth()) {
 				patterns.x = 1;
 			} else if (tile.hasHookEast()) {
@@ -53,7 +51,7 @@ public:
 			} else {
 				patterns.x = 0;
 			}
-		} else if (definition.hasFlag(ItemFlag::Stackable)) {
+		} else if (item.is_stackable) {
 			const uint16_t itemSubtype = item.subtype;
 			if (itemSubtype <= 1) {
 				patterns.subtype = 0;

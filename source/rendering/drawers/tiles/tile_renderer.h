@@ -59,7 +59,7 @@ public:
     // BlitItem, BlitCreature, marker draw, and primitive draw calls.
     // Non-const plan: patterns pointers are fixed up during execution.
     void ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan);
-    void QueuePlanCommands(const TileDrawPlan& plan, DrawCommandQueue& queue) const;
+    void QueuePlanCommands(TileDrawPlan& plan, DrawCommandQueue& queue) const;
     void MergePlanSideEffects(const TileDrawPlan& plan, DrawContext& ctx);
     void MergePlanSideEffects(const TileDrawPlan& plan, FrameAccumulators& accumulators, LightBuffer& light_buffer);
     void QueuePreloadRequests(std::span<const SpritePreloadQueue::Request> requests);

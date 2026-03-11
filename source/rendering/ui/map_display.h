@@ -29,6 +29,7 @@
 #include "rendering/ui/input_state.h"
 #include "rendering/ui/view_state_manager.h"
 #include "ui/map_popup_menu.h"
+#include <chrono>
 #include <cstddef>
 #include <memory>
 
@@ -106,6 +107,7 @@ public:
     void EnterDrawingMode();
 
     void UpdatePositionStatus(int x = -1, int y = -1);
+    void UpdatePositionStatus(int map_x, int map_y, int map_z);
     void UpdateZoomStatus();
 
     void ChangeFloor(int new_floor);
@@ -268,10 +270,12 @@ private:
     Settings& settings_;
     std::unique_ptr<ViewStateManager> view_state_;
     InputState input_;
+    std::chrono::steady_clock::time_point next_hover_ui_update_ {};
 
     ViewSnapshot BuildViewSnapshot() const;
     void ConfigureRenderSettings(RenderSettings& settings) const;
     void ConfigureFrameOptions(FrameOptions& frame) const;
+    [[nodiscard]] bool shouldRefreshHoverUi() const;
 };
 
 #endif

@@ -64,6 +64,7 @@ private:
     IMapAccess* map_access;
     PendingNodeRequests* pending_requests_;
     TilePlanningPool* planning_pool_ = nullptr;
+    std::vector<TileDrawPlan> reusable_plans_;
 };
 
 #endif

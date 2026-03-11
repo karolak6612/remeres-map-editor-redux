@@ -177,14 +177,23 @@ VisibleFloorSnapshot MapLayerDrawer::BuildVisibleFloorSnapshot(
 PreparedFloorRange MapLayerDrawer::PrepareFloor(const FramePlanContext& ctx, const VisibleFloorSnapshot& floor_snapshot, PreparedFrameBuffer& prepared)
 {
     const bool draw_lights = ctx.settings.isDrawLight() && ctx.view.zoom <= 10.0;
-    std::vector<TileDrawPlan> plans(floor_snapshot.tiles.size());
+    if (reusable_plans_.size() < floor_snapshot.tiles.size()) {
+        const size_t previous_size = reusable_plans_.size();
+        reusable_plans_.resize(floor_snapshot.tiles.size());
+        for (size_t i = previous_size; i < reusable_plans_.size(); ++i) {
+            reusable_plans_[i].reserve();
+        }
+    }
+
+    auto plans = std::span<TileDrawPlan>(reusable_plans_.data(), floor_snapshot.tiles.size());
     for (auto& plan : plans) {
-        plan.reserve();
+        plan.clear();
     }
 
     PlanTilesParallel(ctx, draw_lights, floor_snapshot.tiles, plans);
     MergePlans(plans, prepared);
 
+    prepared.commands.reserve(prepared.commands.size() + floor_snapshot.estimatedCommandCount());
     const size_t command_start = prepared.commands.size();
     for (const auto& placeholder : floor_snapshot.loading_placeholders) {
         prepared.commands.push(DrawFilledRectCmd {

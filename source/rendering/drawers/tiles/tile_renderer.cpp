@@ -189,12 +189,14 @@ void TileRenderer::PlanTile(const FramePlanContext& ctx, const TileRenderSnapsho
         }
 
         if (view.zoom < 10.0 && tile.marker) {
-            plan.marker = TileDrawPlan::MarkerCmd {.marker = *tile.marker};
+            plan.marker = DrawMarkerCmd {.draw_x = tile.draw_x, .draw_y = tile.draw_y, .marker = *tile.marker};
         }
     }
 
     if (tile.creature && settings.show_creatures) {
-        plan.creature = TileDrawPlan::CreatureCmd {
+        plan.creature = DrawCreatureCmd {
+            .draw_x = tile.draw_x,
+            .draw_y = tile.draw_y,
             .creature = *tile.creature,
             .options = CreatureDrawOptions {.map_pos = tile.pos, .transient_selection_bounds = frame.transient_selection_bounds}
         };
@@ -205,11 +207,11 @@ void TileRenderer::PlanGroundItem(
     const FramePlanContext& ctx, const TileRenderSnapshot& tile, const ItemRenderSnapshot& ground, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
 )
 {
-    if (!ground.definition || !sprite_resolver) {
+    if (ground.client_id == 0 || !sprite_resolver) {
         return;
     }
 
-    const int client_id = ground.definition.clientId();
+    const int client_id = ground.client_id;
     const SpriteMetadata* meta = sprite_resolver->getSpriteMetadata(client_id);
     if (!meta) {
         return;
@@ -221,7 +223,9 @@ void TileRenderer::PlanGroundItem(
         plan.preload_requests.push_back({client_id, patterns.x, patterns.y, patterns.z, patterns.frame});
     }
 
-    plan.items.push_back(TileDrawPlan::ItemCmd {
+    plan.items.push_back(DrawItemCmd {
+        .draw_x = tile.draw_x,
+        .draw_y = tile.draw_y,
         .item = ground,
         .patterns = patterns,
         .red = r,
@@ -262,9 +266,8 @@ void TileRenderer::PlanStackedItems(
             light_buffer->AddLight(tile.pos.x, tile.pos.y, tile.pos.z, item.light);
         }
 
-        const auto& definition = item.definition;
-        const int client_id = definition ? definition.clientId() : 0;
-        if (!definition || !sprite_resolver || client_id <= 0) {
+        const int client_id = item.client_id;
+        if (!sprite_resolver || client_id <= 0) {
             continue;
         }
 
@@ -281,7 +284,7 @@ void TileRenderer::PlanStackedItems(
         uint8_t item_red = 255;
         uint8_t item_green = 255;
         uint8_t item_blue = 255;
-        if (definition.hasFlag(ItemFlag::IsBorder)) {
+        if (item.is_border) {
             item_red = r;
             item_green = g;
             item_blue = b;
@@ -297,7 +300,9 @@ void TileRenderer::PlanStackedItems(
             }
         }
 
-        plan.items.push_back(TileDrawPlan::ItemCmd {
+        plan.items.push_back(DrawItemCmd {
+            .draw_x = tile.draw_x,
+            .draw_y = tile.draw_y,
             .item = item,
             .patterns = patterns,
             .red = item_red,
@@ -341,16 +346,20 @@ void TileRenderer::ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan)
 
     // Creature draw
     if (plan.creature) {
-        creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, plan.creature->creature, plan.creature->options);
+        creature_drawer->BlitCreature(
+            sprite_batch, sprite_drawer, plan.creature->draw_x, plan.creature->draw_y, plan.creature->creature, plan.creature->options
+        );
     }
 
     // Marker draw
     if (plan.marker) {
-        marker_drawer->draw(sprite_batch, sprite_drawer, draw_x, draw_y, plan.marker->marker, ctx.settings);
+        marker_drawer->draw(
+            sprite_batch, sprite_drawer, plan.marker->draw_x, plan.marker->draw_y, plan.marker->marker, ctx.settings
+        );
     }
 }
 
-void TileRenderer::QueuePlanCommands(const TileDrawPlan& plan, DrawCommandQueue& queue) const
+void TileRenderer::QueuePlanCommands(TileDrawPlan& plan, DrawCommandQueue& queue) const
 {
     const int draw_x = plan.draw_x;
     const int draw_y = plan.draw_y;
@@ -375,25 +384,16 @@ void TileRenderer::QueuePlanCommands(const TileDrawPlan& plan, DrawCommandQueue&
         queue.push(DrawHouseBorderCmd {.draw_x = draw_x, .draw_y = draw_y, .color = plan.house_border->color});
     }
 
-    for (const auto& item : plan.items) {
-        queue.push(DrawItemCmd {draw_x, draw_y, item.item, item.patterns, item.red, item.green, item.blue, item.alpha});
+    for (auto& item : plan.items) {
+        queue.push(std::move(item));
     }
 
     if (plan.creature) {
-        queue.push(DrawCreatureCmd {
-            .draw_x = draw_x,
-            .draw_y = draw_y,
-            .creature = plan.creature->creature,
-            .options = plan.creature->options,
-        });
+        queue.push(std::move(*plan.creature));
     }
 
     if (plan.marker) {
-        queue.push(DrawMarkerCmd {
-            .draw_x = draw_x,
-            .draw_y = draw_y,
-            .marker = plan.marker->marker,
-        });
+        queue.push(std::move(*plan.marker));
     }
 }
 
