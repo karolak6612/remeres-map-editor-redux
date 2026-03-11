@@ -29,6 +29,7 @@
 #include "rendering/ui/input_state.h"
 #include "rendering/ui/view_state_manager.h"
 #include "ui/map_popup_menu.h"
+#include <cstddef>
 #include <memory>
 
 struct NVGcontext;
@@ -185,6 +186,7 @@ public:
     }
     bool isRenderingEnabled() const override;
     bool isThreadedRenderingEnabled() const override;
+    size_t planningWorkerCount() const override;
     GraphicManager& graphics() const override;
     RenderSettings buildRenderSettings() const override;
     FrameOptions buildFrameOptions() const override;

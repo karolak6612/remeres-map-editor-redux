@@ -24,14 +24,10 @@
 #include "app/definitions.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preload_queue.h"
+#include "rendering/core/tile_render_snapshot.h"
 #include "rendering/core/frame_accumulators.h"
 #include "rendering/drawers/entities/creature_drawer.h"
-#include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/utilities/pattern_calculator.h"
-
-class Tile;
-class Waypoint;
-class Creature;
 
 // Intermediate representation produced by PlanTile() and consumed by ExecutePlan().
 // Separates data-gathering (tile traversal, color calculation, accumulator writes)
@@ -67,23 +63,25 @@ struct TileDrawPlan {
 
     // Item draw commands (ground item + stacked items, in render order)
     struct ItemCmd {
-        BlitItemParams params;
+        ItemRenderSnapshot item;
         SpritePatterns patterns;
+        int red = 255;
+        int green = 255;
+        int blue = 255;
+        int alpha = 255;
     };
     std::vector<ItemCmd> items;
 
     // Creature draw command
     struct CreatureCmd {
-        Creature* creature;
+        CreatureRenderSnapshot creature;
         CreatureDrawOptions options;
     };
     std::optional<CreatureCmd> creature;
 
     // Marker draw command (waypoints, house exits, spawns, etc.)
     struct MarkerCmd {
-        Tile* tile;
-        Waypoint* waypoint;
-        uint32_t current_house_id;
+        MarkerRenderSnapshot marker;
     };
     std::optional<MarkerCmd> marker;
 

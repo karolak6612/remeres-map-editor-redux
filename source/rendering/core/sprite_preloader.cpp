@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <spdlog/spdlog.h>
 #include <span>
 
 SpritePreloader::SpritePreloader() : stopping(false) {
@@ -22,6 +23,7 @@ SpritePreloader::SpritePreloader() : stopping(false) {
 		});
 		workers.push_back(std::move(worker));
 	}
+	spdlog::info("SpritePreloader: started {} sprite decompression worker threads", workers.size());
 }
 
 SpritePreloader::~SpritePreloader() {
@@ -123,6 +125,20 @@ void SpritePreloader::preload(GameSprite* spr, int pattern_x, int pattern_y, int
 		}
 		cv.notify_all();
 	}
+}
+
+void SpritePreloader::preload(int client_id, int pattern_x, int pattern_y, int pattern_z, int frame) {
+	if (!gfx_ || client_id <= 0) {
+		return;
+	}
+
+	Sprite* sprite = gfx_->getSprite(client_id);
+	auto* game_sprite = dynamic_cast<GameSprite*>(sprite);
+	if (!game_sprite) {
+		return;
+	}
+
+	preload(game_sprite, pattern_x, pattern_y, pattern_z, frame);
 }
 
 void SpritePreloader::workerLoop(std::stop_token stop_token, WorkerState& worker) {

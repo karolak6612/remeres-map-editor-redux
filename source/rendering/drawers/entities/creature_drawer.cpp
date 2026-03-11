@@ -34,6 +34,22 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 	BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), local_opts);
 }
 
+void CreatureDrawer::BlitCreature(
+    SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const CreatureRenderSnapshot& creature,
+    const CreatureDrawOptions& options
+)
+{
+    CreatureDrawOptions local_opts = options;
+    if (!local_opts.ingame
+        && (creature.selected || (local_opts.transient_selection_bounds.has_value() && local_opts.transient_selection_bounds->contains(creature.map_pos.x, creature.map_pos.y)))) {
+        local_opts.color.r /= 2;
+        local_opts.color.g /= 2;
+        local_opts.color.b /= 2;
+    }
+
+    BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, creature.outfit, creature.direction, local_opts);
+}
+
 void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options) {
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {

@@ -28,10 +28,10 @@ struct NVGcontext;
 #include "game/creature.h"
 #include "game/outfit.h"
 #include "rendering/core/draw_frame.h"
-#include "rendering/core/draw_command_queue.h"
-#include "rendering/core/frame_accumulators.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/prepared_frame_buffer.h"
 #include "rendering/core/primitive_renderer.h"
+#include "rendering/core/render_prep_snapshot.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/ui/nvg_image_cache.h"
@@ -48,6 +48,7 @@ class AtlasManager;
 class GridDrawer;
 class PendingNodeRequests;
 class EditorMapAccess;
+class TilePlanningPool;
 
 class LightDrawer;
 class GraphicsSpriteResolver;
@@ -98,26 +99,12 @@ class MapDrawer {
     Editor& editor;
     std::unique_ptr<EditorMapAccess> map_access_;
     RenderContext render_ctx_;
-    DrawFrame frames_[2];
-    std::atomic<int> write_frame_index_ {0};
-    int render_frame_index_ = 0;
-    std::atomic<bool> frame_ready_ {false};
+    PreparedFrameBuffer prepared_frames_[2];
+    std::atomic<int> write_prepared_index_ {0};
+    int render_prepared_index_ = 0;
+    std::atomic<bool> has_prepared_frame_ {false};
     mutable std::mutex snapshot_mutex_; // Protects frame snapshots for future multi-threaded access
     std::unique_ptr<LightDrawer> light_drawer;
-
-    // Double-buffered accumulators: write buffer accumulates during Draw(),
-    // read buffer is consumed by overlay drawers (tooltips, hooks, doors, names).
-    // Swapped at frame boundary in BeginFrame().
-    FrameAccumulators accumulators_[2];
-    int write_index_ = 0;
-    FrameAccumulators& writeAccumulators()
-    {
-        return accumulators_[write_index_];
-    }
-    const FrameAccumulators& readAccumulators() const
-    {
-        return accumulators_[1 - write_index_];
-    }
 
     TooltipRenderer tooltip_renderer;
     NVGImageCache nvg_image_cache;
@@ -136,7 +123,6 @@ class MapDrawer {
     std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
     std::unique_ptr<SpriteBatch> sprite_batch;
     std::unique_ptr<PrimitiveRenderer> primitive_renderer;
-    DrawCommandQueue draw_command_queue_;
 
     // Deferred network node requests — filled during Draw(), drained after
     std::unique_ptr<PendingNodeRequests> pending_requests_;
@@ -148,7 +134,17 @@ public:
     MapDrawer(Editor& editor, RenderContext ctx);
     ~MapDrawer();
 
-    void SetupVars(DrawFrame frame);
+    [[nodiscard]] RenderPrepSnapshot BuildRenderPrepSnapshot(
+        const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+        const FrameOptions& base_options
+    );
+    [[nodiscard]] PreparedFrameBuffer PrepareFrame(RenderPrepSnapshot snapshot);
+    void SetupPreparedFrame(PreparedFrameBuffer prepared);
+    void SetPlanningPool(TilePlanningPool* planning_pool);
+    [[nodiscard]] bool HasPreparedFrame() const
+    {
+        return has_prepared_frame_.load(std::memory_order_acquire);
+    }
     void SetupVars(
         const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
         const FrameOptions& base_options
@@ -200,21 +196,33 @@ public:
 
 private:
     void DrawMap(const DrawContext& ctx);
-    void DrawMapLayer(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
-    void SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue);
+    void DrawMapLayer(const DrawContext& ctx, int map_z);
+    void SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue, size_t command_start, size_t command_count);
     void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
     void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
-    DrawFrame& writeFrame()
+    PreparedFrameBuffer& writePreparedFrame()
     {
-        return frames_[write_frame_index_.load(std::memory_order_relaxed)];
+        return prepared_frames_[write_prepared_index_.load(std::memory_order_relaxed)];
+    }
+    PreparedFrameBuffer& renderPreparedFrame()
+    {
+        return prepared_frames_[render_prepared_index_];
+    }
+    const PreparedFrameBuffer& renderPreparedFrame() const
+    {
+        return prepared_frames_[render_prepared_index_];
     }
     DrawFrame& renderFrame()
     {
-        return frames_[render_frame_index_];
+        return renderPreparedFrame().frame;
     }
     const DrawFrame& renderFrame() const
     {
-        return frames_[render_frame_index_];
+        return renderPreparedFrame().frame;
+    }
+    const FrameAccumulators& readAccumulators() const
+    {
+        return renderPreparedFrame().accumulators;
     }
     bool renderers_initialized_ = false;
 };

@@ -423,6 +423,11 @@ bool MapCanvas::isThreadedRenderingEnabled() const
     return settings_.getBoolean(Config::THREADED_RENDERING);
 }
 
+size_t MapCanvas::planningWorkerCount() const
+{
+    return static_cast<size_t>(std::max(1, settings_.getInteger(Config::WORKER_THREADS)));
+}
+
 GraphicManager& MapCanvas::graphics() const
 {
     return gui_.gfx;

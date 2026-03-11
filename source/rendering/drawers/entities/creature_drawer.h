@@ -8,6 +8,7 @@
 #include "app/definitions.h"
 #include "game/outfit.h"
 #include "game/creature.h"
+#include "rendering/core/tile_render_snapshot.h"
 
 // Forward declarations
 
@@ -33,6 +34,10 @@ public:
 	~CreatureDrawer();
 
 	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Creature* c, const CreatureDrawOptions& options = {});
+	void BlitCreature(
+		SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const CreatureRenderSnapshot& creature,
+		const CreatureDrawOptions& options = {}
+	);
 	void BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options = {});
 
 	void SetSpriteResolver(ISpriteResolver* resolver) {

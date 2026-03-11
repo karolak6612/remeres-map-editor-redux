@@ -6,11 +6,13 @@
 
 #include "rendering/core/draw_command_queue.h"
 #include "rendering/core/sprite_preload_queue.h"
+#include "rendering/core/tile_render_snapshot.h"
 #include "rendering/drawers/tiles/tile_draw_plan.h"
 
 class TileLocation;
 class Tile;
 struct DrawContext;
+struct FramePlanContext;
 struct LightBuffer;
 class IMapAccess;
 class ItemDrawer;
@@ -18,6 +20,7 @@ class SpriteDrawer;
 class CreatureDrawer;
 class MarkerDrawer;
 class SpriteBatch;
+class ISpriteResolver;
 
 struct TileRenderDeps {
     ItemDrawer* item_drawer = nullptr;
@@ -25,6 +28,7 @@ struct TileRenderDeps {
     CreatureDrawer* creature_drawer = nullptr;
     MarkerDrawer* marker_drawer = nullptr;
     IMapAccess* map_access = nullptr;
+    ISpriteResolver* sprite_resolver = nullptr;
 };
 
 class TileRenderer {
@@ -44,6 +48,12 @@ public:
         const DrawContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights,
         TileDrawPlan& plan
     );
+    void PlanTile(
+        const FramePlanContext& ctx, TileLocation* location, uint32_t current_house_id, int in_draw_x, int in_draw_y, bool draw_lights,
+        TileDrawPlan& plan
+    );
+    void PlanTile(const DrawContext& ctx, const TileRenderSnapshot& tile, bool draw_lights, TileDrawPlan& plan);
+    void PlanTile(const FramePlanContext& ctx, const TileRenderSnapshot& tile, bool draw_lights, TileDrawPlan& plan);
 
     // Phase 2: GPU submission. Reads the draw commands from |plan| and issues
     // BlitItem, BlitCreature, marker draw, and primitive draw calls.
@@ -51,15 +61,16 @@ public:
     void ExecutePlan(const DrawContext& ctx, TileDrawPlan& plan);
     void QueuePlanCommands(const TileDrawPlan& plan, DrawCommandQueue& queue) const;
     void MergePlanSideEffects(const TileDrawPlan& plan, DrawContext& ctx);
+    void MergePlanSideEffects(const TileDrawPlan& plan, FrameAccumulators& accumulators, LightBuffer& light_buffer);
+    void QueuePreloadRequests(std::span<const SpritePreloadQueue::Request> requests);
 
 private:
     // PlanTile sub-functions — each handles one logical section.
     void PlanGroundItem(
-        const DrawContext& ctx, Tile* tile, const Position& position, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
+        const FramePlanContext& ctx, const TileRenderSnapshot& tile, const ItemRenderSnapshot& ground, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
     );
     void PlanStackedItems(
-        const DrawContext& ctx, Tile* tile, const Position& position, LightBuffer* light_buffer, uint32_t current_house_id,
-        bool is_house_tile, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
+        const FramePlanContext& ctx, const TileRenderSnapshot& tile, LightBuffer* light_buffer, uint8_t r, uint8_t g, uint8_t b, TileDrawPlan& plan
     );
 
     ItemDrawer* item_drawer;
@@ -67,6 +78,7 @@ private:
     CreatureDrawer* creature_drawer;
     MarkerDrawer* marker_drawer;
     IMapAccess* map_access;
+    ISpriteResolver* sprite_resolver;
 
     // Reusable plan to avoid per-tile heap allocations.
     // Pre-reserved in constructor for typical tile item counts.

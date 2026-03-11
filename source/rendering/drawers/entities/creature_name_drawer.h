@@ -7,14 +7,11 @@
 
 struct ViewState;
 struct NVGcontext;
-class Creature;
-
 #include "map/position.h"
 
 struct CreatureLabel {
 	Position pos;
 	std::string name;
-	const Creature* creature;
 };
 
 class CreatureNameDrawer {

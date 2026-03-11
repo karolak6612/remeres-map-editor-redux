@@ -55,6 +55,164 @@ ItemDrawer::ItemDrawer() { }
 
 ItemDrawer::~ItemDrawer() { }
 
+void ItemDrawer::BlitItemSnapshot(
+    SpriteBatch& sprite_batch, const AtlasManager& atlas, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y,
+    const ItemRenderSnapshot& item, const RenderSettings& settings, const FrameOptions& frame, const SpritePatterns& patterns, int red, int green,
+    int blue, int alpha
+)
+{
+    bool ephemeral = false;
+    const auto& pos = item.pos;
+    const auto& definition = item.definition;
+
+    const bool is_transient_selected = !ephemeral && frame.transient_selection_bounds && frame.transient_selection_bounds->contains(pos.x, pos.y);
+    if (!settings.ingame && (item.selected || is_transient_selected)) {
+        red /= 2;
+        blue /= 2;
+        green /= 2;
+    }
+
+    GameSprite* spr = resolveSprite(definition);
+
+    if (!settings.ingame && settings.show_tech_items) {
+        if (!definition) {
+            sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
+            return;
+        }
+
+        switch (definition.clientId()) {
+            case SpecialClientId::INVISIBLE_STAIRS:
+                sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
+                return;
+
+            case SpecialClientId::INVISIBLE_WALKABLE_470:
+            case SpecialClientId::INVISIBLE_WALKABLE_17970:
+            case SpecialClientId::INVISIBLE_WALKABLE_20028:
+            case SpecialClientId::INVISIBLE_WALKABLE_34168:
+                sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
+                return;
+
+            case SpecialClientId::INVISIBLE_WALL:
+                sprite_drawer->glBlitSquare(sprite_batch, atlas, draw_x, draw_y, DrawColor(0, green, blue, 80));
+                return;
+
+            default:
+                break;
+        }
+
+        if (SpecialClientId::isPrimalLight(definition.clientId())) {
+            spr = resolveSprite(SPRITE_LIGHTSOURCE);
+            red = 0;
+            alpha = 180;
+        }
+    }
+
+    if (definition.isMetaItem() || spr == nullptr || (!ephemeral && definition.hasFlag(ItemFlag::Pickupable) && !settings.show_items)) {
+        return;
+    }
+
+    const SpriteMetadata* meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(spr->getId())) : nullptr;
+    if (!meta) {
+        meta = &spr->meta;
+    }
+
+    const int screenx = draw_x - meta->drawoffset_x;
+    const int screeny = draw_y - meta->drawoffset_y;
+    draw_x -= meta->draw_height;
+    draw_y -= meta->draw_height;
+
+    const int subtype = patterns.subtype;
+    const int pattern_x = patterns.x;
+    const int pattern_y = patterns.y;
+    const int pattern_z = patterns.z;
+    const int anim_frame = patterns.frame;
+
+    if (!ephemeral && settings.transparent_items && (!definition.isGroundTile() || meta->width > 1 || meta->height > 1) && !definition.isSplash()
+        && (!definition.hasFlag(ItemFlag::IsBorder) || meta->width > 1 || meta->height > 1)) {
+        alpha /= 2;
+    }
+
+    if (item.podium && !item.podium->show_platform && !settings.ingame) {
+        if (settings.show_tech_items) {
+            alpha /= 2;
+        } else {
+            alpha = 0;
+        }
+    }
+
+    if (meta->width == 1 && meta->height == 1 && meta->layers == 1) {
+        const AtlasRegion* region = (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && anim_frame == 0)
+            ? (sprite_resolver ? sprite_resolver->getItemAtlasRegion(static_cast<int>(spr->getId()), 0, 0, 0, -1, 0, 0, 0, 0)
+                               : spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0))
+            : (sprite_resolver ? sprite_resolver->getItemAtlasRegion(
+                                    static_cast<int>(spr->getId()), 0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, anim_frame)
+                               : spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, anim_frame));
+
+        if (region) {
+            sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
+        }
+    } else {
+        for (int cx = 0; cx != meta->width; ++cx) {
+            for (int cy = 0; cy != meta->height; ++cy) {
+                for (int cf = 0; cf != meta->layers; ++cf) {
+                    const AtlasRegion* region = sprite_resolver
+                        ? sprite_resolver->getItemAtlasRegion(
+                              static_cast<int>(spr->getId()), cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame)
+                        : spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, anim_frame);
+                    if (region) {
+                        sprite_drawer->glBlitAtlasQuad(
+                            sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha)
+                        );
+                    }
+                }
+            }
+        }
+    }
+
+    if (item.podium) {
+        Outfit outfit = item.podium->outfit;
+        if (!item.podium->show_outfit) {
+            if (item.podium->show_mount) {
+                outfit.lookType = outfit.lookMount;
+                outfit.lookHead = outfit.lookMountHead;
+                outfit.lookBody = outfit.lookMountBody;
+                outfit.lookLegs = outfit.lookMountLegs;
+                outfit.lookFeet = outfit.lookMountFeet;
+                outfit.lookAddon = 0;
+                outfit.lookMount = 0;
+            } else {
+                outfit.lookType = 0;
+            }
+        }
+        if (!item.podium->show_mount) {
+            outfit.lookMount = 0;
+        }
+
+        creature_drawer->BlitCreature(
+            sprite_batch, sprite_drawer, draw_x, draw_y, outfit, item.podium->direction,
+            CreatureDrawOptions {.color = DrawColor(red, green, blue, alpha)}
+        );
+    }
+
+    if (!settings.ingame && settings.show_light_str && item.has_light && item.light.intensity > 0) {
+        const wxColor lightColor = colorFromEightBit(item.light.color);
+        const uint8_t byteR = lightColor.Red();
+        const uint8_t byteG = lightColor.Green();
+        const uint8_t byteB = lightColor.Blue();
+        const uint8_t byteA = 255;
+
+        const int startOffset = std::max<int>(16, 32 - item.light.intensity);
+        const int sqSize = TILE_SIZE - startOffset;
+
+        sprite_drawer->glBlitSquare(
+            sprite_batch, atlas, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2
+        );
+        sprite_drawer->glBlitSquare(
+            sprite_batch, atlas, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize
+        );
+    }
+}
+
 void ItemDrawer::BlitItem(
     SpriteBatch& sprite_batch, const AtlasManager& atlas, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, int& draw_x, int& draw_y,
     const BlitItemParams& params

@@ -10,6 +10,12 @@ struct FrameOptions;
 struct LightBuffer;
 struct FrameAccumulators;
 
+struct FramePlanContext {
+    const ViewState& view;
+    const RenderSettings& settings;
+    const FrameOptions& frame;
+};
+
 // Bundles all per-frame drawing dependencies into a single struct,
 // reducing parameter bloat across drawer call sites.
 // Passed as const DrawContext& — internal non-const references

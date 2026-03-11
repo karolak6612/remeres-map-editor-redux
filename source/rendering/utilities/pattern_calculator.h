@@ -2,6 +2,9 @@
 #define RME_RENDERING_UTILITIES_PATTERN_CALCULATOR_H_
 
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/sprite_animation_state.h"
+#include "rendering/core/sprite_metadata.h"
+#include "rendering/core/tile_render_snapshot.h"
 #include "item_definitions/core/item_definition_store.h"
 #include "game/item.h"
 #include "map/tile.h"
@@ -29,6 +32,51 @@ private:
 	}
 
 public:
+	static SpritePatterns Calculate(
+		const SpriteMetadata& meta, const SpriteAnimationState* animation, const ItemRenderSnapshot& item, const TileRenderSnapshot& tile
+	) {
+		SpritePatterns patterns;
+
+		patterns.x = calculatePatternOffset(tile.pos.x, meta.pattern_x);
+		patterns.y = calculatePatternOffset(tile.pos.y, meta.pattern_y);
+		patterns.z = calculatePatternOffset(tile.pos.z, meta.pattern_z);
+		patterns.frame = animation ? animation->getFrame() : 0;
+
+		const auto& definition = item.definition;
+		if (definition.isSplash() || definition.isFluidContainer()) {
+			patterns.subtype = item.subtype;
+		} else if (definition.hasFlag(ItemFlag::IsHangable)) {
+			if (tile.hasHookSouth()) {
+				patterns.x = 1;
+			} else if (tile.hasHookEast()) {
+				patterns.x = 2;
+			} else {
+				patterns.x = 0;
+			}
+		} else if (definition.hasFlag(ItemFlag::Stackable)) {
+			const uint16_t itemSubtype = item.subtype;
+			if (itemSubtype <= 1) {
+				patterns.subtype = 0;
+			} else if (itemSubtype <= 2) {
+				patterns.subtype = 1;
+			} else if (itemSubtype <= 3) {
+				patterns.subtype = 2;
+			} else if (itemSubtype <= 4) {
+				patterns.subtype = 3;
+			} else if (itemSubtype < 10) {
+				patterns.subtype = 4;
+			} else if (itemSubtype < 25) {
+				patterns.subtype = 5;
+			} else if (itemSubtype < 50) {
+				patterns.subtype = 6;
+			} else {
+				patterns.subtype = 7;
+			}
+		}
+
+		return patterns;
+	}
+
 	static SpritePatterns Calculate(const GameSprite* spr, const ItemDefinitionView& it, const Item* item, const Tile* tile, const Position& pos) {
 		SpritePatterns patterns;
 

@@ -40,8 +40,10 @@
 #include "rendering/core/frame_builder.h"
 #include "rendering/core/frame_options.h"
 #include "rendering/core/brush_visual_settings.h"
+#include "rendering/core/prepared_frame_buffer.h"
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/render_settings.h"
+#include "rendering/core/render_prep_snapshot.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/ui/nvg_image_cache.h"
@@ -87,13 +89,15 @@ MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) :
 
     // Orchestrators
     floor_drawer = std::make_unique<FloorDrawer>();
+    sprite_resolver = std::make_unique<GraphicsSpriteResolver>(render_ctx_.gfx);
 
     tile_renderer = std::make_unique<TileRenderer>(TileRenderDeps {
         .item_drawer = entities_.item.get(),
         .sprite_drawer = entities_.sprite.get(),
         .creature_drawer = entities_.creature.get(),
         .marker_drawer = entities_.marker.get(),
-        .map_access = map_access_.get()
+        .map_access = map_access_.get(),
+        .sprite_resolver = sprite_resolver.get()
     });
     // Wire up the preloader so SpritePreloadQueue can call it directly
     // instead of going through the rme::collectTileSprites() indirection.
@@ -121,17 +125,12 @@ MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) :
     sprite_batch = std::make_unique<SpriteBatch>();
     primitive_renderer = std::make_unique<PrimitiveRenderer>();
     post_process_ = std::make_unique<PostProcessPipeline>();
-
-    sprite_resolver = std::make_unique<GraphicsSpriteResolver>(render_ctx_.gfx);
     entities_.item->SetSpriteResolver(sprite_resolver.get());
     entities_.creature->SetSpriteResolver(sprite_resolver.get());
     entities_.sprite->SetSpriteResolver(sprite_resolver.get());
 
-    // Pre-reserve both accumulator buffers and light buffer for typical frame sizes
-    accumulators_[0].reserve(256, 128, 64);
-    accumulators_[1].reserve(256, 128, 64);
-    frames_[0].lights.reserve(512);
-    frames_[1].lights.reserve(512);
+    prepared_frames_[0].reserve(512, 256, 128, 64, 4096);
+    prepared_frames_[1].reserve(512, 256, 128, 64, 4096);
 }
 
 MapDrawer::~MapDrawer()
@@ -140,12 +139,68 @@ MapDrawer::~MapDrawer()
     Release();
 }
 
-void MapDrawer::SetupVars(DrawFrame frame)
+RenderPrepSnapshot MapDrawer::BuildRenderPrepSnapshot(
+    const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+    const FrameOptions& base_options
+)
+{
+    RenderPrepSnapshot prep;
+    prep.frame = FrameBuilder::Build(snapshot, brush, brush_visual, settings, base_options, editor, render_ctx_.gfx.getAtlasManager());
+    prep.atlas_version = render_ctx_.gfx.hasAtlasManager() ? render_ctx_.gfx.getAtlasManager()->getTextureId() : 0;
+    const FramePlanContext plan_ctx {prep.frame.view, prep.frame.settings, prep.frame.options};
+    const bool live_client = editor.live_manager.IsClient();
+
+    int floor_offset = 0;
+    for (int map_z = prep.frame.view.start_z; map_z >= prep.frame.view.superend_z; --map_z) {
+        FloorViewParams floor_params {
+            prep.frame.view.start_x - floor_offset,
+            prep.frame.view.start_y - floor_offset,
+            prep.frame.view.end_x + floor_offset,
+            prep.frame.view.end_y + floor_offset,
+        };
+
+        if (map_z >= prep.frame.view.end_z) {
+            prep.floors.push_back(map_layer_drawer->BuildVisibleFloorSnapshot(
+                plan_ctx, map_z, live_client, floor_params, prep.frame.options.current_house_id
+            ));
+        }
+
+        ++floor_offset;
+    }
+
+    return prep;
+}
+
+PreparedFrameBuffer MapDrawer::PrepareFrame(RenderPrepSnapshot snapshot)
+{
+    PreparedFrameBuffer prepared;
+    prepared.generation = snapshot.generation;
+    prepared.atlas_version = snapshot.atlas_version;
+    prepared.frame = std::move(snapshot.frame);
+    prepared.clearTransientData();
+    prepared.reserve(512, 256, 128, 64, 4096);
+
+    const FramePlanContext plan_ctx {prepared.frame.view, prepared.frame.settings, prepared.frame.options};
+    for (const auto& floor_snapshot : snapshot.floors) {
+        prepared.floor_ranges.push_back(map_layer_drawer->PrepareFloor(plan_ctx, floor_snapshot, prepared));
+    }
+
+    return prepared;
+}
+
+void MapDrawer::SetPlanningPool(TilePlanningPool* planning_pool)
+{
+    map_layer_drawer->setPlanningPool(planning_pool);
+}
+
+void MapDrawer::SetupPreparedFrame(PreparedFrameBuffer prepared)
 {
     std::lock_guard<std::mutex> lock(snapshot_mutex_);
-    writeFrame() = std::move(frame);
-    render_frame_index_ = write_frame_index_.load(std::memory_order_relaxed);
-    frame_ready_.store(true, std::memory_order_release);
+    auto& write_frame = writePreparedFrame();
+    write_frame = std::move(prepared);
+    render_prepared_index_ = write_prepared_index_.load(std::memory_order_relaxed);
+    write_prepared_index_.store(1 - render_prepared_index_, std::memory_order_release);
+    has_prepared_frame_.store(true, std::memory_order_release);
 }
 
 void MapDrawer::SetupVars(
@@ -153,7 +208,9 @@ void MapDrawer::SetupVars(
     const FrameOptions& base_options
 )
 {
-    SetupVars(FrameBuilder::Build(snapshot, brush, brush_visual, settings, base_options, editor, render_ctx_.gfx.getAtlasManager()));
+    SetupPreparedFrame(
+        PrepareFrame(BuildRenderPrepSnapshot(snapshot, brush, brush_visual, settings, base_options))
+    );
 }
 
 void MapDrawer::SetupGL()
@@ -177,14 +234,13 @@ void MapDrawer::Release() { }
 
 void MapDrawer::Draw()
 {
-    if (!frame_ready_.load(std::memory_order_acquire)) {
+    if (!has_prepared_frame_.load(std::memory_order_acquire)) {
         return;
     }
 
+    auto& prepared = renderPreparedFrame();
     auto& frame = renderFrame();
     render_ctx_.gfx.updateTime();
-
-    frame.lights.Clear();
     frame.options.transient_selection_bounds = std::nullopt;
 
     if (frame.options.boundbox_selection) {
@@ -211,7 +267,8 @@ void MapDrawer::Draw()
     GLViewport::Clear(); // Clear screen (or FBO)
 
     // Construct the frame DrawContext once — all private methods receive it by const ref.
-    const DrawContext ctx {*sprite_batch, *primitive_renderer, frame.view, frame.settings, frame.options, frame.lights, writeAccumulators(), *frame.atlas};
+    const DrawContext ctx {
+        *sprite_batch, *primitive_renderer, frame.view, frame.settings, frame.options, prepared.lights, prepared.accumulators, *frame.atlas};
 
     DrawMap(ctx);
 
@@ -274,6 +331,7 @@ void MapDrawer::Draw()
     primitive_renderer->flush();
 
     // Flush buffered sprite preload requests after GPU submission
+    tile_renderer->QueuePreloadRequests(prepared.preload_requests);
     tile_renderer->FlushPreloadQueue();
 
     // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
@@ -292,8 +350,6 @@ void MapDrawer::DrainPendingNodeRequests()
 void MapDrawer::DrawMap(const DrawContext& ctx)
 {
     const auto& frame = renderFrame();
-    bool live_client = editor.live_manager.IsClient();
-
     int floor_offset = 0;
 
     for (int map_z = frame.view.start_z; map_z >= frame.view.superend_z; map_z--) {
@@ -306,7 +362,7 @@ void MapDrawer::DrawMap(const DrawContext& ctx)
         }
 
         if (map_z >= frame.view.end_z) {
-            DrawMapLayer(ctx, map_z, live_client, floor_params);
+            DrawMapLayer(ctx, map_z);
         }
 
         overlays_.preview->draw(ctx, PreviewDrawerContext {
@@ -356,15 +412,23 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg)
     overlays_.creature_name->draw(vg, renderFrame().view, readAccumulators().creature_names);
 }
 
-void MapDrawer::DrawMapLayer(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params)
+void MapDrawer::DrawMapLayer(const DrawContext& ctx, int map_z)
 {
-    map_layer_drawer->Draw(ctx, map_z, live_client, floor_params, draw_command_queue_);
-    SubmitDrawCommands(ctx, draw_command_queue_);
+    const auto& prepared = renderPreparedFrame();
+    auto range_it = std::find_if(prepared.floor_ranges.begin(), prepared.floor_ranges.end(), [map_z](const PreparedFloorRange& range) {
+        return range.map_z == map_z;
+    });
+    if (range_it == prepared.floor_ranges.end()) {
+        return;
+    }
+
+    SubmitDrawCommands(ctx, prepared.commands, range_it->command_start, range_it->command_count);
 }
 
-void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue)
+void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue, size_t command_start, size_t command_count)
 {
-    for (const auto& command : queue.commands()) {
+    const auto commands = queue.commands().subspan(command_start, command_count);
+    for (const auto& command : commands) {
         std::visit(
             [&](const auto& cmd) {
                 using Command = std::decay_t<decltype(cmd)>;
@@ -377,24 +441,27 @@ void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueu
                     );
                 } else if constexpr (std::is_same_v<Command, DrawHouseBorderCmd>) {
                     entities_.sprite->glDrawBox(ctx.sprite_batch, ctx.atlas, cmd.draw_x, cmd.draw_y, 32, 32, cmd.color);
+                } else if constexpr (std::is_same_v<Command, DrawFilledRectCmd>) {
+                    const glm::vec4 color {
+                        cmd.color.r / 255.0f,
+                        cmd.color.g / 255.0f,
+                        cmd.color.b / 255.0f,
+                        cmd.color.a / 255.0f,
+                    };
+                    ctx.sprite_batch.drawRect((float)cmd.draw_x, (float)cmd.draw_y, (float)cmd.width, (float)cmd.height, color, ctx.atlas);
                 } else if constexpr (std::is_same_v<Command, DrawItemCmd>) {
-                    auto params = cmd.params;
-                    auto patterns = cmd.patterns;
-                    params.patterns = &patterns;
                     int draw_x = cmd.draw_x;
                     int draw_y = cmd.draw_y;
-                    entities_.item->BlitItem(
-                        ctx.sprite_batch, ctx.atlas, entities_.sprite.get(), entities_.creature.get(), draw_x, draw_y, params
+                    entities_.item->BlitItemSnapshot(
+                        ctx.sprite_batch, ctx.atlas, entities_.sprite.get(), entities_.creature.get(), draw_x, draw_y, cmd.item, ctx.settings,
+                        ctx.frame, cmd.patterns, cmd.red, cmd.green, cmd.blue, cmd.alpha
                     );
                 } else if constexpr (std::is_same_v<Command, DrawCreatureCmd>) {
                     entities_.creature->BlitCreature(
                         ctx.sprite_batch, entities_.sprite.get(), cmd.draw_x, cmd.draw_y, cmd.creature, cmd.options
                     );
                 } else if constexpr (std::is_same_v<Command, DrawMarkerCmd>) {
-                    entities_.marker->draw(
-                        ctx.sprite_batch, entities_.sprite.get(), cmd.draw_x, cmd.draw_y, cmd.tile, cmd.waypoint, cmd.current_house_id,
-                        *map_access_, ctx.settings
-                    );
+                    entities_.marker->draw(ctx.sprite_batch, entities_.sprite.get(), cmd.draw_x, cmd.draw_y, cmd.marker, ctx.settings);
                 }
             },
             command
@@ -405,7 +472,7 @@ void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueu
 void MapDrawer::DrawLight()
 {
     light_drawer->draw(
-        renderFrame().view, renderFrame().settings.experimental_fog, renderFrame().lights, renderFrame().options.global_light_color,
+        renderFrame().view, renderFrame().settings.experimental_fog, renderPreparedFrame().lights, renderFrame().options.global_light_color,
         renderFrame().settings.light_intensity, renderFrame().settings.ambient_light_level
     );
 }
@@ -417,10 +484,6 @@ void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer)
 
 void MapDrawer::BeginFrame()
 {
-    // Swap: current write buffer becomes the read buffer for overlay drawing,
-    // then clear the new write buffer for the next frame.
-    write_index_ = 1 - write_index_;
-    writeAccumulators().clear();
-    write_frame_index_.store(1 - render_frame_index_, std::memory_order_release);
-    frame_ready_.store(false, std::memory_order_release);
+    // Prepared frames persist until replaced so the last completed frame can
+    // be re-used safely when threaded preparation lags behind rendering.
 }

@@ -8,6 +8,6 @@ void SpritePreloadQueue::processAll()
         return;
     }
     for (const auto& req : requests) {
-        preloader_->preload(req.sprite, req.pattern_x, req.pattern_y, req.pattern_z, req.frame);
+        preloader_->preload(req.client_id, req.pattern_x, req.pattern_y, req.pattern_z, req.frame);
     }
 }

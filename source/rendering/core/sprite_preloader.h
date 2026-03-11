@@ -34,6 +34,7 @@ public:
 	// Schedules sprites for preloading based on the given view parameters.
 	// This corresponds to the loop logic previously in collectTileSprites.
 	void preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame);
+	void preload(int client_id, int pattern_x, int pattern_y, int pattern_z, int frame);
 
 	// Processes finished preload tasks and uploads data to the GPU.
 	// Should be called on the main thread.

@@ -8,13 +8,9 @@
 #include <vector>
 
 #include "app/definitions.h"
+#include "rendering/core/tile_render_snapshot.h"
 #include "rendering/drawers/entities/creature_drawer.h"
-#include "rendering/drawers/entities/item_drawer.h"
 #include "rendering/utilities/pattern_calculator.h"
-
-class Creature;
-class Tile;
-class Waypoint;
 
 struct DrawColorSquareCmd {
     int draw_x = 0;
@@ -38,14 +34,26 @@ struct DrawHouseBorderCmd {
     DrawColor color;
 };
 
+struct DrawFilledRectCmd {
+    int draw_x = 0;
+    int draw_y = 0;
+    int width = 0;
+    int height = 0;
+    DrawColor color;
+};
+
 struct DrawItemCmd {
     int draw_x = 0;
     int draw_y = 0;
-    BlitItemParams params;
+    ItemRenderSnapshot item;
     SpritePatterns patterns;
+    int red = 255;
+    int green = 255;
+    int blue = 255;
+    int alpha = 255;
 
-    DrawItemCmd(int draw_x, int draw_y, BlitItemParams params, SpritePatterns patterns) :
-        draw_x(draw_x), draw_y(draw_y), params(std::move(params)), patterns(std::move(patterns))
+    DrawItemCmd(int draw_x, int draw_y, ItemRenderSnapshot item, SpritePatterns patterns, int red, int green, int blue, int alpha) :
+        draw_x(draw_x), draw_y(draw_y), item(std::move(item)), patterns(std::move(patterns)), red(red), green(green), blue(blue), alpha(alpha)
     {
     }
 };
@@ -53,19 +61,17 @@ struct DrawItemCmd {
 struct DrawCreatureCmd {
     int draw_x = 0;
     int draw_y = 0;
-    const Creature* creature = nullptr;
+    CreatureRenderSnapshot creature;
     CreatureDrawOptions options;
 };
 
 struct DrawMarkerCmd {
     int draw_x = 0;
     int draw_y = 0;
-    Tile* tile = nullptr;
-    Waypoint* waypoint = nullptr;
-    uint32_t current_house_id = 0;
+    MarkerRenderSnapshot marker;
 };
 
-using DrawCommand = std::variant<DrawColorSquareCmd, DrawZoneBrushCmd, DrawHouseBorderCmd, DrawItemCmd, DrawCreatureCmd, DrawMarkerCmd>;
+using DrawCommand = std::variant<DrawColorSquareCmd, DrawZoneBrushCmd, DrawHouseBorderCmd, DrawFilledRectCmd, DrawItemCmd, DrawCreatureCmd, DrawMarkerCmd>;
 
 class DrawCommandQueue {
 public:

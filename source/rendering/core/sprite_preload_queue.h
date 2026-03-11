@@ -18,9 +18,9 @@
 #ifndef RME_RENDERING_CORE_SPRITE_PRELOAD_QUEUE_H_
 #define RME_RENDERING_CORE_SPRITE_PRELOAD_QUEUE_H_
 
+#include <cstdint>
 #include <vector>
 
-class GameSprite;
 class SpritePreloader;
 
 // Buffers sprite preload requests during the render pass so they can be
@@ -28,7 +28,7 @@ class SpritePreloader;
 // contention in the hot render loop.
 struct SpritePreloadQueue {
     struct Request {
-        GameSprite* sprite;
+        int client_id = 0;
         int pattern_x;
         int pattern_y;
         int pattern_z;
@@ -40,9 +40,9 @@ struct SpritePreloadQueue {
 
     void setPreloader(SpritePreloader* p) { preloader_ = p; }
 
-    void enqueue(GameSprite* s, int px, int py, int pz, int f)
+    void enqueue(int client_id, int px, int py, int pz, int f)
     {
-        requests.push_back({s, px, py, pz, f});
+        requests.push_back({client_id, px, py, pz, f});
     }
 
     void processAll();

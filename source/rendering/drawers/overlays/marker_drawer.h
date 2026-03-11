@@ -3,12 +3,9 @@
 
 #include <cstdint>
 
+struct MarkerRenderSnapshot;
 struct RenderSettings;
 class SpriteDrawer;
-class Tile;
-class Waypoint;
-
-class IMapAccess;
 class SpriteBatch;
 
 class MarkerDrawer {
@@ -17,8 +14,7 @@ public:
 	~MarkerDrawer();
 
 	void draw(
-		SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id,
-		IMapAccess& map_access, const RenderSettings& settings
+		SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const MarkerRenderSnapshot& marker, const RenderSettings& settings
 	);
 };
 

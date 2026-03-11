@@ -19,7 +19,7 @@
 #define RME_TOOLTIP_DATA_H_
 
 #include <cstdint>
-#include <string_view>
+#include <string>
 #include <vector>
 #include "map/position.h"
 
@@ -45,19 +45,19 @@ struct TooltipData {
 
 	// Header info
 	uint16_t itemId = 0;
-	std::string_view itemName;
+	std::string itemName;
 
 	// Optional fields (0 or empty = not shown)
 	uint16_t actionId = 0;
 	uint16_t uniqueId = 0;
 	uint8_t doorId = 0;
-	std::string_view text;
-	std::string_view description;
+	std::string text;
+	std::string description;
 	bool has_destination = false; // Explicit flag instead of sentinel (x=0 is a valid map position)
 	Position destination;
 
 	// Waypoint-specific
-	std::string_view waypointName;
+	std::string waypointName;
 
 	// Container contents
 	std::vector<ContainerItem> containerItems;
@@ -66,11 +66,11 @@ struct TooltipData {
 	TooltipData() = default;
 
 	// Constructor for waypoint
-	TooltipData(Position p, std::string_view wpName) :
+	TooltipData(Position p, std::string wpName) :
 		pos(p), category(TooltipCategory::WAYPOINT), waypointName(wpName) { }
 
 	// Constructor for item
-	TooltipData(Position p, uint16_t id, std::string_view name) :
+	TooltipData(Position p, uint16_t id, std::string name) :
 		pos(p), category(TooltipCategory::ITEM), itemId(id), itemName(name) { }
 
 	// Determine category based on fields
