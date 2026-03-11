@@ -1,15 +1,15 @@
 #include "rendering/core/template_image.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/graphics.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/outfit_colors.h"
-#include "app/settings.h"
-#include "ui/gui.h"
+#include "rendering/core/sprite_decompression.h"
 #include <atomic>
 #include <spdlog/spdlog.h>
 
 static std::atomic<uint32_t> template_id_generator(0x1000000);
 
-TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
+TemplateImage::TemplateImage(GameSprite* parent, GraphicManager* graphics, int v, const Outfit& outfit) :
 	atlas_region(nullptr),
 	texture_id(template_id_generator.fetch_add(1)), // Generate unique ID for Atlas
 	parent(parent),
@@ -18,12 +18,13 @@ TemplateImage::TemplateImage(GameSprite* parent, int v, const Outfit& outfit) :
 	lookBody(outfit.lookBody),
 	lookLegs(outfit.lookLegs),
 	lookFeet(outfit.lookFeet) {
+	setGraphicManager(graphics);
 }
 
 TemplateImage::~TemplateImage() {
 	if (isGLLoaded) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
+		if (graphics().hasAtlasManager()) {
+			graphics().getAtlasManager()->removeSprite(texture_id);
 		}
 	}
 }
@@ -31,16 +32,16 @@ TemplateImage::~TemplateImage() {
 void TemplateImage::clean(time_t time, int longevity) {
 	// Evict from atlas if expired
 	if (longevity == -1) {
-		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+		longevity = graphics().runtimeConfig().texture_longevity;
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(texture_id);
+		if (graphics().hasAtlasManager()) {
+			graphics().getAtlasManager()->removeSprite(texture_id);
 		}
 		isGLLoaded = false;
 		atlas_region = nullptr;
 		generation_id++;
-		g_gui.gfx.collector.NotifyTextureUnloaded();
+		graphics().notifyTextureUnloaded();
 	}
 }
 
@@ -51,8 +52,8 @@ namespace {
 			return false;
 		}
 
-		if (img->parent->width <= 0 || img->parent->height <= 0) {
-			spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", img->texture_id, img->parent->width, img->parent->height);
+		if (img->parent->meta.width <= 0 || img->parent->meta.height <= 0) {
+			spdlog::warn("TemplateImage (texture_id={}): Invalid parent dimensions ({}x{})", img->texture_id, img->parent->meta.width, img->parent->meta.height);
 			return false;
 		}
 
@@ -61,9 +62,10 @@ namespace {
 			return false;
 		}
 
-		mask_index = static_cast<size_t>(sprite_index) + static_cast<size_t>(img->parent->height * img->parent->width);
-		if (static_cast<size_t>(sprite_index) >= img->parent->spriteList.size() || mask_index >= img->parent->spriteList.size()) {
-			spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", img->texture_id, sprite_index, mask_index, img->parent->spriteList.size());
+		mask_index = static_cast<size_t>(sprite_index) + static_cast<size_t>(img->parent->meta.height * img->parent->meta.width);
+		const auto& sprite_list = img->parent->icon_data.sprite_list;
+		if (static_cast<size_t>(sprite_index) >= sprite_list.size() || mask_index >= sprite_list.size()) {
+			spdlog::warn("TemplateImage (texture_id={}): Access index out of bounds (base_index={}, mask_index={}, list_size={})", img->texture_id, sprite_index, mask_index, sprite_list.size());
 			return false;
 		}
 
@@ -92,8 +94,9 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 		return nullptr;
 	}
 
-	auto rgbdata = parent->spriteList[sprite_index]->getRGBData();
-	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
+	const auto& sprite_list = parent->icon_data.sprite_list;
+	auto rgbdata = sprite_list[sprite_index]->getRGBData();
+	auto template_rgbdata = sprite_list[mask_index]->getRGBData();
 
 	if (!rgbdata) {
 		return nullptr;
@@ -104,7 +107,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 
 	clampTemplateLookValues(this);
 
-	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
+	SpriteDecompression::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, false);
 
 	return rgbdata;
 }
@@ -115,11 +118,12 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 		return nullptr;
 	}
 
-	auto rgbadata = parent->spriteList[sprite_index]->getRGBAData();
-	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
+	const auto& sprite_list = parent->icon_data.sprite_list;
+	auto rgbadata = sprite_list[sprite_index]->getRGBAData();
+	auto template_rgbdata = sprite_list[mask_index]->getRGBData();
 
 	if (!rgbadata) {
-		spdlog::warn("TemplateImage: Failed to load BASE sprite data for sprite_index={} (template_id={}). Parent width={}, height={}", sprite_index, texture_id, parent->width, parent->height);
+		spdlog::warn("TemplateImage: Failed to load BASE sprite data for sprite_index={} (template_id={}). Parent width={}, height={}", sprite_index, texture_id, parent->meta.width, parent->meta.height);
 		return nullptr;
 	}
 	if (!template_rgbdata) {
@@ -130,7 +134,7 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 	clampTemplateLookValues(this);
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
+	SpriteDecompression::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), SPRITE_PIXELS * SPRITE_PIXELS, lookHead, lookBody, lookLegs, lookFeet, true);
 
 	return rgbadata;
 }

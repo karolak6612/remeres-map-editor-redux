@@ -5,10 +5,11 @@
 #include "game/outfit.h"
 
 class GameSprite;
+class GraphicManager;
 
 class TemplateImage : public Image {
 public:
-	TemplateImage(GameSprite* parent, int v, const Outfit& outfit);
+	TemplateImage(GameSprite* parent, GraphicManager* graphics, int v, const Outfit& outfit);
 	~TemplateImage() override;
 
 	void clean(time_t time, int longevity) override;

@@ -19,7 +19,6 @@
 #include "rendering/ui/screenshot_controller.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/io/screenshot_saver.h"
-#include "ui/gui.h"
 #include "ui/dialog_util.h"
 
 ScreenshotController::ScreenshotController(MapCanvas* canvas) :
@@ -61,7 +60,7 @@ void ScreenshotController::TakeScreenshot(const wxFileName& path, const wxString
 	if (result.StartsWith("Error:")) {
 		DialogUtil::PopupDialog("Screenshot Error", result, wxOK);
 	} else {
-		g_gui.SetStatusText(result);
+		canvas->SetStatusText(result);
 	}
 
 	canvas->Refresh();

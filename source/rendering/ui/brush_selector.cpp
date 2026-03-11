@@ -34,7 +34,7 @@
 #include "brushes/creature/creature_brush.h"
 #include "brushes/door/door_brush.h"
 
-void BrushSelector::SelectRAWBrush(Selection& selection) {
+void BrushSelector::SelectRAWBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -45,11 +45,11 @@ void BrushSelector::SelectRAWBrush(Selection& selection) {
 	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item && item->getRAWBrush()) {
-		g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
+		gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
 	}
 }
 
-void BrushSelector::SelectGroundBrush(Selection& selection) {
+void BrushSelector::SelectGroundBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -60,11 +60,11 @@ void BrushSelector::SelectGroundBrush(Selection& selection) {
 	GroundBrush* bb = tile->getGroundBrush();
 
 	if (bb) {
-		g_gui.SelectBrush(bb, TILESET_TERRAIN);
+		gui.SelectBrush(bb, TILESET_TERRAIN);
 	}
 }
 
-void BrushSelector::SelectDoodadBrush(Selection& selection) {
+void BrushSelector::SelectDoodadBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -75,11 +75,11 @@ void BrushSelector::SelectDoodadBrush(Selection& selection) {
 	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item) {
-		g_gui.SelectBrush(item->getDoodadBrush(), TILESET_DOODAD);
+		gui.SelectBrush(item->getDoodadBrush(), TILESET_DOODAD);
 	}
 }
 
-void BrushSelector::SelectDoorBrush(Selection& selection) {
+void BrushSelector::SelectDoorBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -90,11 +90,11 @@ void BrushSelector::SelectDoorBrush(Selection& selection) {
 	Item* item = TileOperations::getTopSelectedItem(tile);
 
 	if (item) {
-		g_gui.SelectBrush(item->getDoorBrush(), TILESET_TERRAIN);
+		gui.SelectBrush(item->getDoorBrush(), TILESET_TERRAIN);
 	}
 }
 
-void BrushSelector::SelectWallBrush(Selection& selection) {
+void BrushSelector::SelectWallBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -106,11 +106,11 @@ void BrushSelector::SelectWallBrush(Selection& selection) {
 	WallBrush* wb = wall->getWallBrush();
 
 	if (wb) {
-		g_gui.SelectBrush(wb, TILESET_TERRAIN);
+		gui.SelectBrush(wb, TILESET_TERRAIN);
 	}
 }
 
-void BrushSelector::SelectCarpetBrush(Selection& selection) {
+void BrushSelector::SelectCarpetBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -122,11 +122,11 @@ void BrushSelector::SelectCarpetBrush(Selection& selection) {
 	CarpetBrush* cb = wall->getCarpetBrush();
 
 	if (cb) {
-		g_gui.SelectBrush(cb);
+		gui.SelectBrush(cb);
 	}
 }
 
-void BrushSelector::SelectTableBrush(Selection& selection) {
+void BrushSelector::SelectTableBrush(GUI& gui, Selection& selection) {
 	if (selection.size() != 1) {
 		return;
 	}
@@ -138,11 +138,11 @@ void BrushSelector::SelectTableBrush(Selection& selection) {
 	TableBrush* tb = wall->getTableBrush();
 
 	if (tb) {
-		g_gui.SelectBrush(tb);
+		gui.SelectBrush(tb);
 	}
 }
 
-void BrushSelector::SelectHouseBrush(Editor& editor, Selection& selection) {
+void BrushSelector::SelectHouseBrush(GUI& gui, Editor& editor, Selection& selection) {
 	Tile* tile = selection.getSelectedTile();
 	if (!tile) {
 		return;
@@ -152,12 +152,12 @@ void BrushSelector::SelectHouseBrush(Editor& editor, Selection& selection) {
 		House* house = editor.map.houses.getHouse(tile->getHouseID());
 		if (house) {
 			g_brush_manager.house_brush->setHouse(house);
-			g_gui.SelectBrush(g_brush_manager.house_brush, TILESET_HOUSE);
+			gui.SelectBrush(g_brush_manager.house_brush, TILESET_HOUSE);
 		}
 	}
 }
 
-void BrushSelector::SelectCollectionBrush(Selection& selection) {
+void BrushSelector::SelectCollectionBrush(GUI& gui, Selection& selection) {
 	Tile* tile = selection.getSelectedTile();
 	if (!tile) {
 		return;
@@ -167,74 +167,74 @@ void BrushSelector::SelectCollectionBrush(Selection& selection) {
 		if (item->isWall()) {
 			WallBrush* wb = item->getWallBrush();
 			if (wb && wb->visibleInPalette() && wb->hasCollection()) {
-				g_gui.SelectBrush(wb, TILESET_COLLECTION);
+				gui.SelectBrush(wb, TILESET_COLLECTION);
 				return;
 			}
 		}
 		if (item->isTable()) {
 			TableBrush* tb = item->getTableBrush();
 			if (tb && tb->visibleInPalette() && tb->hasCollection()) {
-				g_gui.SelectBrush(tb, TILESET_COLLECTION);
+				gui.SelectBrush(tb, TILESET_COLLECTION);
 				return;
 			}
 		}
 		if (item->isCarpet()) {
 			CarpetBrush* cb = item->getCarpetBrush();
 			if (cb && cb->visibleInPalette() && cb->hasCollection()) {
-				g_gui.SelectBrush(cb, TILESET_COLLECTION);
+				gui.SelectBrush(cb, TILESET_COLLECTION);
 				return;
 			}
 		}
 		if (Brush* db = item->getDoodadBrush()) {
 			if (db && db->visibleInPalette() && db->hasCollection()) {
-				g_gui.SelectBrush(db, TILESET_COLLECTION);
+				gui.SelectBrush(db, TILESET_COLLECTION);
 				return;
 			}
 		}
 		if (item->isSelected()) {
 			RAWBrush* rb = item->getRAWBrush();
 			if (rb && rb->hasCollection()) {
-				g_gui.SelectBrush(rb, TILESET_COLLECTION);
+				gui.SelectBrush(rb, TILESET_COLLECTION);
 				return;
 			}
 		}
 	}
 	GroundBrush* gb = tile->getGroundBrush();
 	if (gb && gb->visibleInPalette() && gb->hasCollection()) {
-		g_gui.SelectBrush(gb, TILESET_COLLECTION);
+		gui.SelectBrush(gb, TILESET_COLLECTION);
 		return;
 	}
 }
 
-void BrushSelector::SelectCreatureBrush(Selection& selection) {
+void BrushSelector::SelectCreatureBrush(GUI& gui, Selection& selection) {
 	Tile* tile = selection.getSelectedTile();
 	if (!tile) {
 		return;
 	}
 
 	if (tile->creature) {
-		g_gui.SelectBrush(tile->creature->getBrush(), TILESET_CREATURE);
+		gui.SelectBrush(tile->creature->getBrush(), TILESET_CREATURE);
 	}
 }
 
-void BrushSelector::SelectSpawnBrush() {
-	g_gui.SelectBrush(g_brush_manager.spawn_brush, TILESET_CREATURE);
+void BrushSelector::SelectSpawnBrush(GUI& gui) {
+	gui.SelectBrush(g_brush_manager.spawn_brush, TILESET_CREATURE);
 }
 
-void BrushSelector::SelectSmartBrush(Editor& editor, Tile* tile) {
+void BrushSelector::SelectSmartBrush(GUI& gui, const Settings& settings, Editor& editor, Tile* tile) {
 	if (tile && tile->size() > 0) {
 		// Select visible creature
-		if (tile->creature && g_settings.getInteger(Config::SHOW_CREATURES)) {
+		if (tile->creature && settings.getInteger(Config::SHOW_CREATURES)) {
 			CreatureBrush* brush = tile->creature->getBrush();
 			if (brush) {
-				g_gui.SelectBrush(brush, TILESET_CREATURE);
+				gui.SelectBrush(brush, TILESET_CREATURE);
 				return;
 			}
 		}
 		// Fall back to item selection
 		Item* item = tile->getTopItem();
 		if (item && item->getRAWBrush()) {
-			g_gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
+			gui.SelectBrush(item->getRAWBrush(), TILESET_RAW);
 		}
 	}
 }

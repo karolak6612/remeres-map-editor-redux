@@ -21,11 +21,13 @@
 #include <wx/string.h>
 
 class Editor;
+class GUI;
+class Settings;
 
 class MapStatusUpdater {
 public:
-	static void Update(Editor& editor, int map_x, int map_y, int map_z);
-	static void UpdateFPS(const wxString& fps_status);
+	static void Update(GUI& gui, const Settings& settings, Editor& editor, int map_x, int map_y, int map_z);
+	static void UpdateFPS(GUI& gui, const wxString& fps_status);
 };
 
 #endif

@@ -1,19 +1,23 @@
-#ifndef RME_RENDERING_DRAWING_OPTIONS_H_
-#define RME_RENDERING_DRAWING_OPTIONS_H_
+#ifndef RME_RENDERING_CORE_RENDER_SETTINGS_H_
+#define RME_RENDERING_CORE_RENDER_SETTINGS_H_
 
 #include <cstdint>
-#include <wx/wx.h>
 #include <string>
-#include <optional>
-#include "map/position.h"
+#include "app/definitions.h"
 
-struct DrawingOptions {
-	DrawingOptions();
+class Settings;
+
+// Persistent rendering settings populated once per frame.
+// Lifetime: frame-scoped, but values only change when user modifies preferences.
+struct RenderSettings {
+	RenderSettings();
 
 	void SetIngame();
 	void SetDefault();
-	void Update();
-	bool isDrawLight() const noexcept;
+	[[nodiscard]] bool isDrawLight() const noexcept;
+
+	// Factory: populates from Settings + GUI values.
+	static RenderSettings FromSettings(const Settings& settings, float light_intensity, float ambient_light_level);
 
 	bool transparent_floors;
 	bool transparent_items;
@@ -22,12 +26,6 @@ struct DrawingOptions {
 	bool show_light_str;
 	bool show_tech_items;
 	bool show_waypoints;
-	bool ingame;
-	bool dragging;
-	bool boundbox_selection;
-
-	std::optional<MapBounds> transient_selection_bounds;
-
 	int show_grid;
 	bool show_all_floors;
 	bool show_creatures;
@@ -53,16 +51,13 @@ struct DrawingOptions {
 	bool extended_house_shader;
 
 	bool experimental_fog;
+	bool anti_aliasing;
+	std::string screen_shader_name;
 
-	uint32_t current_house_id;
-	wxColor global_light_color;
 	float light_intensity;
 	float ambient_light_level;
-	float highlight_pulse;
 
-	bool anti_aliasing;
-
-	std::string screen_shader_name;
+	bool ingame;
 };
 
 #endif

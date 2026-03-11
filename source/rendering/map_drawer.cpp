@@ -18,426 +18,610 @@
 #include "app/main.h"
 
 #include <algorithm>
+#include <chrono>
+#include <memory>
+#include <type_traits>
 
+#include "app/settings.h"
 #include "editor/editor.h"
-#include "ui/gui.h"
 #include "game/sprites.h"
 
-#include "rendering/map_drawer.h"
 #include "brushes/brush.h"
-#include "rendering/drawers/map_layer_drawer.h"
-#include "rendering/ui/map_display.h"
+#include "brushes/brush_enums.h"
 #include "editor/copybuffer.h"
+#include "live/live_client.h"
 #include "live/live_socket.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/tile_planning_pool.h"
+#include "rendering/drawers/map_layer_drawer.h"
+#include "rendering/map_drawer.h"
 
-#include "brushes/doodad/doodad_brush.h"
-#include "brushes/creature/creature_brush.h"
-#include "brushes/house/house_exit_brush.h"
 #include "brushes/house/house_brush.h"
-#include "brushes/spawn/spawn_brush.h"
-#include "brushes/wall/wall_brush.h"
-#include "brushes/carpet/carpet_brush.h"
-#include "brushes/raw/raw_brush.h"
-#include "brushes/table/table_brush.h"
-#include "brushes/waypoint/waypoint_brush.h"
-#include "rendering/utilities/light_drawer.h"
-#include "rendering/ui/tooltip_drawer.h"
-#include "rendering/core/drawing_options.h"
+#include "brushes/house/house_exit_brush.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/chunk_source_snapshot.h"
+#include "rendering/core/editor_map_access.h"
+#include "rendering/core/frame_builder.h"
+#include "rendering/core/frame_options.h"
+#include "rendering/core/prepared_render_chunk_builder.h"
+#include "rendering/core/prepared_render_chunk.h"
+#include "rendering/core/brush_visual_settings.h"
+#include "rendering/core/prepared_frame_buffer.h"
+#include "rendering/core/primitive_renderer.h"
+#include "rendering/core/render_chunk_key.h"
+#include "rendering/core/render_variant_key.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/render_prep_snapshot.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/primitive_renderer.h"
+#include "rendering/ui/nvg_image_cache.h"
+#include "rendering/ui/tooltip_renderer.h"
+#include "rendering/utilities/light_drawer.h"
 
-#include "rendering/drawers/overlays/grid_drawer.h"
-#include "rendering/drawers/cursors/live_cursor_drawer.h"
-#include "rendering/drawers/overlays/selection_drawer.h"
+#include "rendering/core/gl_resources.h"
+#include "rendering/core/graphics_sprite_resolver.h"
+#include "rendering/core/pending_node_requests.h"
+#include "rendering/core/shader_program.h"
 #include "rendering/drawers/cursors/brush_cursor_drawer.h"
-#include "rendering/drawers/overlays/brush_overlay_drawer.h"
 #include "rendering/drawers/cursors/drag_shadow_drawer.h"
-#include "rendering/drawers/tiles/floor_drawer.h"
-#include "rendering/drawers/entities/sprite_drawer.h"
-#include "rendering/drawers/entities/item_drawer.h"
+#include "rendering/drawers/cursors/live_cursor_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
-#include "rendering/drawers/overlays/marker_drawer.h"
-#include "rendering/drawers/overlays/hook_indicator_drawer.h"
+#include "rendering/drawers/entities/creature_name_drawer.h"
+#include "rendering/drawers/entities/item_drawer.h"
+#include "rendering/drawers/entities/sprite_drawer.h"
+#include "rendering/drawers/overlays/brush_overlay_drawer.h"
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
+#include "rendering/drawers/overlays/grid_drawer.h"
+#include "rendering/drawers/overlays/hook_indicator_drawer.h"
+#include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
+#include "rendering/drawers/tiles/floor_drawer.h"
 #include "rendering/drawers/tiles/shade_drawer.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
-#include "rendering/io/screen_capture.h"
 #include "rendering/drawers/tiles/tile_renderer.h"
-#include "rendering/drawers/entities/creature_name_drawer.h"
-#include "rendering/core/gl_resources.h"
-#include "rendering/core/shader_program.h"
+#include "rendering/io/screen_capture.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/post_process_pipeline.h"
 
-// Shader Sources
-const char* screen_vert = R"(
-#version 450 core
-layout(location = 0) in vec2 aPos; // -1..1
-layout(location = 1) in vec2 aTexCoord; // 0..1
+namespace {
 
-out vec2 vTexCoord;
+void ApplyHighlightPulse(uint8_t& red, uint8_t& green, uint8_t& blue, float highlight_pulse)
+{
+    if (highlight_pulse <= 0.0f) {
+        return;
+    }
 
-void main() {
-    gl_Position = vec4(aPos, 0.0, 1.0);
-    vTexCoord = aTexCoord;
-}
-)";
-
-MapDrawer::MapDrawer(MapCanvas* canvas) :
-	canvas(canvas), editor(canvas->editor) {
-
-	light_drawer = std::make_shared<LightDrawer>();
-	tooltip_drawer = std::make_unique<TooltipDrawer>();
-
-	sprite_drawer = std::make_unique<SpriteDrawer>();
-	creature_drawer = std::make_unique<CreatureDrawer>();
-	floor_drawer = std::make_unique<FloorDrawer>();
-	item_drawer = std::make_unique<ItemDrawer>();
-	marker_drawer = std::make_unique<MarkerDrawer>();
-
-	creature_name_drawer = std::make_unique<CreatureNameDrawer>();
-
-	tile_renderer = std::make_unique<TileRenderer>(item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), creature_name_drawer.get(), floor_drawer.get(), marker_drawer.get(), tooltip_drawer.get(), &editor);
-
-	grid_drawer = std::make_unique<GridDrawer>();
-	map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), grid_drawer.get(), &editor); // Initialized map_layer_drawer
-	live_cursor_drawer = std::make_unique<LiveCursorDrawer>();
-	selection_drawer = std::make_unique<SelectionDrawer>();
-	brush_cursor_drawer = std::make_unique<BrushCursorDrawer>();
-	brush_overlay_drawer = std::make_unique<BrushOverlayDrawer>();
-	drag_shadow_drawer = std::make_unique<DragShadowDrawer>();
-	preview_drawer = std::make_unique<PreviewDrawer>();
-
-	shade_drawer = std::make_unique<ShadeDrawer>();
-
-	sprite_batch = std::make_unique<SpriteBatch>();
-	primitive_renderer = std::make_unique<PrimitiveRenderer>();
-	hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
-	door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
-
-	item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
-	item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
+    const float boost = highlight_pulse * 0.6f;
+    red = static_cast<uint8_t>(std::min(255, static_cast<int>(red + (255 - red) * boost)));
+    green = static_cast<uint8_t>(std::min(255, static_cast<int>(green + (255 - green) * boost)));
+    blue = static_cast<uint8_t>(std::min(255, static_cast<int>(blue + (255 - blue) * boost)));
 }
 
-MapDrawer::~MapDrawer() {
+void MergePreparedChunkIntoFrame(const PreparedRenderChunk& chunk, PreparedFrameBuffer& prepared)
+{
+    prepared.accumulators.reserve(
+        prepared.accumulators.hooks.size() + chunk.accumulators.hooks.size(),
+        prepared.accumulators.doors.size() + chunk.accumulators.doors.size(),
+        prepared.accumulators.creature_names.size() + chunk.accumulators.creature_names.size(),
+        prepared.accumulators.tooltips.count() + chunk.accumulators.tooltips.count()
+    );
 
-	Release();
+    for (const auto& tooltip : chunk.accumulators.tooltips.getTooltips()) {
+        prepared.accumulators.tooltips.addItemTooltip(tooltip);
+    }
+    prepared.accumulators.hooks.insert(prepared.accumulators.hooks.end(), chunk.accumulators.hooks.begin(), chunk.accumulators.hooks.end());
+    prepared.accumulators.doors.insert(prepared.accumulators.doors.end(), chunk.accumulators.doors.begin(), chunk.accumulators.doors.end());
+    prepared.accumulators.creature_names.insert(
+        prepared.accumulators.creature_names.end(), chunk.accumulators.creature_names.begin(), chunk.accumulators.creature_names.end()
+    );
+
+    prepared.lights.map_x.insert(prepared.lights.map_x.end(), chunk.lights.map_x.begin(), chunk.lights.map_x.end());
+    prepared.lights.map_y.insert(prepared.lights.map_y.end(), chunk.lights.map_y.begin(), chunk.lights.map_y.end());
+    prepared.lights.color.insert(prepared.lights.color.end(), chunk.lights.color.begin(), chunk.lights.color.end());
+    prepared.lights.intensity.insert(prepared.lights.intensity.end(), chunk.lights.intensity.begin(), chunk.lights.intensity.end());
+
+    prepared.preload_requests.insert(prepared.preload_requests.end(), chunk.preload_requests.begin(), chunk.preload_requests.end());
 }
 
-void MapDrawer::SetupVars() {
-	options.current_house_id = 0;
-	Brush* brush = g_gui.GetCurrentBrush();
-	if (brush) {
-		if (brush->is<HouseBrush>()) {
-			options.current_house_id = brush->as<HouseBrush>()->getHouseID();
-		} else if (brush->is<HouseExitBrush>()) {
-			options.current_house_id = brush->as<HouseExitBrush>()->getHouseID();
-		}
-	}
+} // namespace
 
-	// Calculate pulse for house highlighting
-	// Period is 1 second (1000ms)
-	// Range is [0.0, 1.0]
-	// Using a sine wave for smooth transition
-	// (sin(t) + 1) / 2
-	double now = wxGetLocalTimeMillis().ToDouble();
-	const double speed = 0.005;
-	options.highlight_pulse = (float)((sin(now * speed) + 1.0) / 2.0);
+MapDrawer::MapDrawer(Editor& editor, RenderContext ctx) :
+	editor(editor), map_access_(std::make_unique<EditorMapAccess>(editor)), render_ctx_(ctx), nvg_image_cache(render_ctx_.gfx)
+{
 
-	view.Setup(canvas, options);
+    light_drawer = std::make_unique<LightDrawer>();
+
+    // Entity drawers
+    entities_.sprite = std::make_unique<SpriteDrawer>();
+    entities_.creature = std::make_unique<CreatureDrawer>();
+    entities_.item = std::make_unique<ItemDrawer>();
+    entities_.marker = std::make_unique<MarkerDrawer>();
+
+    // Orchestrators
+    floor_drawer = std::make_unique<FloorDrawer>();
+    sprite_resolver = std::make_unique<GraphicsSpriteResolver>(render_ctx_.gfx);
+
+    tile_renderer = std::make_unique<TileRenderer>(TileRenderDeps {
+        .item_drawer = entities_.item.get(),
+        .sprite_drawer = entities_.sprite.get(),
+        .creature_drawer = entities_.creature.get(),
+        .marker_drawer = entities_.marker.get(),
+        .map_access = map_access_.get(),
+        .sprite_resolver = sprite_resolver.get()
+    });
+    // Wire up the preloader so SpritePreloadQueue can call it directly
+    // instead of going through the rme::collectTileSprites() indirection.
+    tile_renderer->setPreloader(&render_ctx_.gfx.spritePreloader());
+
+    overlays_.grid = std::make_unique<GridDrawer>();
+    pending_requests_ = std::make_unique<PendingNodeRequests>();
+    pending_requests_->reserve(64);
+    map_layer_drawer = std::make_unique<MapLayerDrawer>(tile_renderer.get(), overlays_.grid.get(), map_access_.get(), pending_requests_.get());
+
+    // Cursor drawers
+    cursors_.live = std::make_unique<LiveCursorDrawer>();
+    cursors_.brush = std::make_unique<BrushCursorDrawer>();
+    cursors_.drag_shadow = std::make_unique<DragShadowDrawer>();
+
+    // Overlay drawers
+    overlays_.brush_overlay = std::make_unique<BrushOverlayDrawer>();
+    overlays_.preview = std::make_unique<PreviewDrawer>();
+    overlays_.shade = std::make_unique<ShadeDrawer>();
+    overlays_.creature_name = std::make_unique<CreatureNameDrawer>();
+    overlays_.hook_indicator = std::make_unique<HookIndicatorDrawer>();
+    overlays_.door_indicator = std::make_unique<DoorIndicatorDrawer>();
+
+    // Infrastructure
+    sprite_batch = std::make_unique<SpriteBatch>();
+    primitive_renderer = std::make_unique<PrimitiveRenderer>();
+    post_process_ = std::make_unique<PostProcessPipeline>();
+    entities_.item->SetSpriteResolver(sprite_resolver.get());
+    entities_.creature->SetSpriteResolver(sprite_resolver.get());
+    entities_.sprite->SetSpriteResolver(sprite_resolver.get());
+
+    prepared_frames_[0].reserve(512, 256, 128, 64, 4096);
+    prepared_frames_[1].reserve(512, 256, 128, 64, 4096);
 }
 
-void MapDrawer::SetupGL() {
-	view.SetupGL();
+MapDrawer::~MapDrawer()
+{
 
-	// Ensure renderers are initialized
-	if (!renderers_initialized) {
-
-		sprite_batch->initialize();
-		primitive_renderer->initialize();
-		renderers_initialized = true;
-	}
-
-	InitPostProcess();
+    Release();
 }
 
-void MapDrawer::InitPostProcess() {
-	if (pp_vao) {
-		return;
-	}
+RenderPrepSnapshot MapDrawer::BuildRenderPrepSnapshot(
+    const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+    const FrameOptions& base_options
+)
+{
+    RenderPrepSnapshot prep;
+    prep.frame = FrameBuilder::Build(snapshot, brush, brush_visual, settings, base_options, editor, render_ctx_.gfx.getAtlasManager());
+    prep.atlas_version = render_ctx_.gfx.hasAtlasManager() ? render_ctx_.gfx.getAtlasManager()->getTextureId() : 0;
+    prep.variant = RenderVariantKey::From(prep.frame.view, prep.frame.settings, prep.frame.options);
+    const FramePlanContext plan_ctx {prep.frame.view, prep.frame.settings, prep.frame.options};
+    const bool live_client = editor.live_manager.IsClient();
+    prep.floors.reserve(static_cast<size_t>(prep.frame.view.start_z - prep.frame.view.superend_z + 1));
+    size_t visible_chunk_count = 0;
 
-	// Load Shaders
-	// Load Shaders
-	PostProcessManager::Instance().Initialize(screen_vert);
+    int floor_offset = 0;
+    for (int map_z = prep.frame.view.start_z; map_z >= prep.frame.view.superend_z; --map_z) {
+        FloorViewParams floor_params {
+            prep.frame.view.start_x - floor_offset,
+            prep.frame.view.start_y - floor_offset,
+            prep.frame.view.end_x + floor_offset,
+            prep.frame.view.end_y + floor_offset,
+        };
 
-	// Setup Screen Quad
-	pp_vao = std::make_unique<GLVertexArray>();
-	pp_vbo = std::make_unique<GLBuffer>();
-	pp_ebo = std::make_unique<GLBuffer>();
+        if (map_z >= prep.frame.view.end_z) {
+            auto visible_chunks = map_layer_drawer->BuildVisibleChunkList(map_z, floor_params);
+            visible_chunk_count += visible_chunks.chunks.size();
+            for (const auto& chunk_key : visible_chunks.chunks) {
+                if (chunk_cache_.find(chunk_key, prep.variant)) {
+                    continue;
+                }
+                prep.dirty_chunks.push_back(
+                    map_layer_drawer->BuildChunkSourceSnapshot(plan_ctx, chunk_key, live_client, prep.frame.options.current_house_id)
+                );
+            }
+            prep.floors.push_back(std::move(visible_chunks));
+        }
 
-	float quadVertices[] = {
-		// positions   // texCoords
-		-1.0f, 1.0f, 0.0f, 1.0f,
-		-1.0f, -1.0f, 0.0f, 0.0f,
-		1.0f, -1.0f, 1.0f, 0.0f,
-		1.0f, 1.0f, 1.0f, 1.0f
-	};
+        ++floor_offset;
+    }
 
-	unsigned int quadIndices[] = {
-		0, 1, 2,
-		0, 2, 3
-	};
+    chunk_cache_.setCapacity(std::max<size_t>(visible_chunk_count * 3, 512));
 
-	glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, 0);
-	glNamedBufferStorage(pp_ebo->GetID(), sizeof(quadIndices), quadIndices, 0);
-
-	glVertexArrayVertexBuffer(pp_vao->GetID(), 0, pp_vbo->GetID(), 0, 4 * sizeof(float));
-	glVertexArrayElementBuffer(pp_vao->GetID(), pp_ebo->GetID());
-
-	glEnableVertexArrayAttrib(pp_vao->GetID(), 0);
-	glVertexArrayAttribFormat(pp_vao->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);
-	glVertexArrayAttribBinding(pp_vao->GetID(), 0, 0);
-
-	glEnableVertexArrayAttrib(pp_vao->GetID(), 1);
-	glVertexArrayAttribFormat(pp_vao->GetID(), 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
-	glVertexArrayAttribBinding(pp_vao->GetID(), 1, 0);
+    return prep;
 }
 
-void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& options) {
-	if (!scale_fbo || !pp_vao) {
-		return;
-	}
+PreparedFrameBuffer MapDrawer::PrepareFrame(RenderPrepSnapshot snapshot)
+{
+    PreparedFrameBuffer prepared;
+    prepared.generation = snapshot.generation;
+    prepared.atlas_version = snapshot.atlas_version;
+    prepared.frame = std::move(snapshot.frame);
+    prepared.clearTransientData();
+    prepared.reserve(512, 256, 128, 64, 4096);
 
-	ShaderProgram* shader = PostProcessManager::Instance().GetEffect(options.screen_shader_name);
-	if (!shader) {
-		// Manager already tries fallback to NONE, but if even that is missing:
-		return;
-	}
+    const FramePlanContext plan_ctx {prepared.frame.view, prepared.frame.settings, prepared.frame.options};
+    if (!snapshot.dirty_chunks.empty()) {
+        std::vector<std::shared_ptr<const PreparedRenderChunk>> built_chunks(snapshot.dirty_chunks.size());
+        if (planning_pool_) {
+            planning_pool_->BuildChunks(*tile_renderer, plan_ctx, snapshot.dirty_chunks, built_chunks, snapshot.generation);
+        } else {
+            for (size_t i = 0; i < snapshot.dirty_chunks.size(); ++i) {
+                built_chunks[i] = PreparedRenderChunkBuilder::Build(*tile_renderer, plan_ctx, snapshot.dirty_chunks[i], snapshot.generation);
+            }
+        }
+        for (auto& chunk : built_chunks) {
+            if (!chunk) {
+                spdlog::warn("MapDrawer::PrepareFrame - worker returned null prepared chunk for generation {}", snapshot.generation);
+                continue;
+            }
+            chunk_cache_.store(std::move(chunk));
+        }
+    }
 
-	// Only clear and bind main screen once we know we can draw the result
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear main screen
+    prepared.floors.reserve(snapshot.floors.size());
+    for (const auto& floor_chunks : snapshot.floors) {
+        PreparedVisibleFloor floor {.map_z = floor_chunks.map_z};
+        floor.chunks.reserve(floor_chunks.chunks.size());
+        for (const auto& chunk_key : floor_chunks.chunks) {
+            auto chunk = chunk_cache_.find(chunk_key, snapshot.variant);
+            if (!chunk) {
+                spdlog::debug(
+                    "MapDrawer::PrepareFrame - missing prepared chunk for floor {} chunk ({}, {}) generation {}",
+                    floor_chunks.map_z,
+                    chunk_key.chunk_x,
+                    chunk_key.chunk_y,
+                    snapshot.generation
+                );
+                continue;
+            }
+            MergePreparedChunkIntoFrame(*chunk, prepared);
+            floor.chunks.push_back(std::move(chunk));
+        }
+        prepared.floors.push_back(std::move(floor));
+    }
 
-	shader->Use();
-	shader->SetInt("u_Texture", 0);
-	// Set TextureSize uniform if shader needs it
-	shader->SetVec2("u_TextureSize", glm::vec2(fbo_width, fbo_height));
-
-	glBindTextureUnit(0, scale_texture->GetID());
-	glBindVertexArray(pp_vao->GetID());
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
-	shader->Unuse();
+    return prepared;
 }
 
-void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options) {
-	// Determine FBO size.
-	// If upscaling (Zoom < 1.0, e.g. 0.25), we want 1 pixel = 1 map unit.
-	// width_pixels = screen_width * zoom.
-	float scale_factor = view.zoom < 1.0f ? view.zoom : 1.0f;
-	// If zoom > 1.0 (minified), we render at screen res (or native map size?)
-	// Rendering at screen res with Zoom > 1.0 means primitives are small.
-
-	int target_w = std::max(1, static_cast<int>(view.screensize_x * scale_factor));
-	int target_h = std::max(1, static_cast<int>(view.screensize_y * scale_factor));
-
-	bool fbo_resized = false;
-	if (fbo_width != target_w || fbo_height != target_h || !scale_fbo) {
-		fbo_width = target_w;
-		fbo_height = target_h;
-		scale_fbo = std::make_unique<GLFramebuffer>();
-		scale_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
-
-		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_width, fbo_height);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glNamedFramebufferTexture(scale_fbo->GetID(), GL_COLOR_ATTACHMENT0, scale_texture->GetID(), 0);
-		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-		glNamedFramebufferDrawBuffers(scale_fbo->GetID(), 1, drawBuffers);
-
-		// Sanity check for division by zero risk in shaders
-		if (fbo_width < 1 || fbo_height < 1) {
-			// This should be impossible due to std::max, but good for invariant documentation
-			spdlog::error("MapDrawer: FBO dimension is zero ({}, {})!", fbo_width, fbo_height);
-		}
-		fbo_resized = true;
-	}
-
-	// Update filtering parameters when scaling is enabled and either the FBO was resized or the AA mode changed (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode))
-	if (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode)) {
-		GLenum filter = options.anti_aliasing ? GL_LINEAR : GL_NEAREST;
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MIN_FILTER, filter);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);
-		m_lastAaMode = options.anti_aliasing;
-	}
-
-	glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());
-	glViewport(0, 0, fbo_width, fbo_height);
+void MapDrawer::SetPlanningPool(TilePlanningPool* planning_pool)
+{
+    map_layer_drawer->setPlanningPool(planning_pool);
+    planning_pool_ = planning_pool;
 }
 
-void MapDrawer::Release() {
-	// tooltip_drawer->clear(); // Moved to ClearTooltips(), called explicitly after UI draw
+void MapDrawer::InvalidatePreparedChunks()
+{
+    chunk_cache_.invalidateAll();
 }
 
-void MapDrawer::Draw() {
-	g_gui.gfx.updateTime();
-
-	light_buffer.Clear();
-	creature_name_drawer->clear();
-	options.transient_selection_bounds = std::nullopt;
-
-	if (options.boundbox_selection) {
-		options.transient_selection_bounds = MapBounds {
-			.x1 = std::min(canvas->last_click_map_x, canvas->last_cursor_map_x),
-			.y1 = std::min(canvas->last_click_map_y, canvas->last_cursor_map_y),
-			.x2 = std::max(canvas->last_click_map_x, canvas->last_cursor_map_x),
-			.y2 = std::max(canvas->last_click_map_y, canvas->last_cursor_map_y)
-		};
-	}
-
-	if (!g_gui.gfx.ensureAtlasManager()) {
-		return;
-	}
-	auto* atlas = g_gui.gfx.getAtlasManager();
-
-	// Begin Batches
-	sprite_batch->begin(view.projectionMatrix, *atlas);
-	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
-
-	// Check Framebuffer Logic
-	// Check Framebuffer Logic
-	bool use_fbo = (options.screen_shader_name != ShaderNames::NONE) || options.anti_aliasing;
-	// Use FBO if zooming IN (zoom < 1.0) for upscaling, OR if AA is requested.
-	// If zooming OUT (zoom > 1.0), FBO resolution logic needs care.
-	// Current logic: Always use FBO if shading enabled.
-
-	if (use_fbo) {
-		UpdateFBO(view, options);
-	}
-
-	DrawBackground(); // Clear screen (or FBO)
-
-	// Save original view bounds before DrawMap modifies them per-floor
-	const ViewBounds original_bounds { view.start_x, view.start_y, view.end_x, view.end_y };
-
-	DrawMap();
-
-	// Flush Map for Light Pass
-	sprite_batch->end(*atlas);
-	primitive_renderer->flush();
-
-	if (options.isDrawLight()) {
-		DrawLight();
-	}
-
-	// If using FBO, we must now Resolve to Screen
-	if (use_fbo) {
-		DrawPostProcess(view, options);
-		// Reset to default FBO for overlays
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
-	}
-
-	// Resume Batch for Overlays
-	sprite_batch->begin(view.projectionMatrix, *atlas);
-
-	if (drag_shadow_drawer) {
-		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
-	}
-
-	live_cursor_drawer->draw(*sprite_batch, view, editor, options);
-
-	brush_overlay_drawer->draw(*sprite_batch, *primitive_renderer, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options, editor);
-
-	if (options.show_grid) {
-		DrawGrid(original_bounds);
-	}
-	if (options.show_ingame_box) {
-		DrawIngameBox(original_bounds);
-	}
-
-	// Draw creature names (Overlay) moved to DrawCreatureNames()
-
-	// End Batches and Flush
-	sprite_batch->end(*atlas);
-	primitive_renderer->flush();
-
-	// Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
+void MapDrawer::SetupPreparedFrame(PreparedFrameBuffer prepared)
+{
+    std::lock_guard<std::mutex> lock(snapshot_mutex_);
+    auto& write_frame = writePreparedFrame();
+    write_frame = std::move(prepared);
+    render_prepared_index_ = write_prepared_index_.load(std::memory_order_relaxed);
+    write_prepared_index_.store(1 - render_prepared_index_, std::memory_order_release);
+    has_prepared_frame_.store(true, std::memory_order_release);
 }
 
-void MapDrawer::DrawBackground() {
-	view.Clear();
+void MapDrawer::SetupVars(
+    const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+    const FrameOptions& base_options
+)
+{
+    SetupPreparedFrame(
+        PrepareFrame(BuildRenderPrepSnapshot(snapshot, brush, brush_visual, settings, base_options))
+    );
 }
 
-void MapDrawer::DrawMap() {
-	bool live_client = editor.live_manager.IsClient();
+void MapDrawer::SetupGL()
+{
+    auto& frame = renderFrame();
+    GLViewport::Apply(frame.view);
+    ViewProjection::Compute(frame.view);
 
-	bool only_colors = options.show_as_minimap || options.show_only_colors;
-
-	// Enable texture mode
-
-	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
-		if (map_z == view.end_z && view.start_z != view.end_z) {
-			shade_drawer->draw(*sprite_batch, view, options);
-		}
-
-		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
-		}
-
-		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
-
-		--view.start_x;
-		--view.start_y;
-		++view.end_x;
-		++view.end_y;
-	}
+    // Ensure renderers are initialized
+    if (!renderers_initialized_) {
+        const bool sprite_batch_initialized = sprite_batch->initialize(render_ctx_.gfx.sharedGeometry());
+        if (!sprite_batch_initialized) {
+            return;
+        }
+        primitive_renderer->initialize();
+        renderers_initialized_ = true;
+    }
 }
 
-void MapDrawer::DrawIngameBox(const ViewBounds& bounds) {
-	grid_drawer->DrawIngameBox(*sprite_batch, view, options, bounds);
+void MapDrawer::Release() { }
+
+void MapDrawer::Draw()
+{
+    if (!has_prepared_frame_.load(std::memory_order_acquire)) {
+        return;
+    }
+
+    auto& prepared = renderPreparedFrame();
+    auto& frame = renderFrame();
+    render_ctx_.gfx.updateTime();
+    frame.options.transient_selection_bounds = std::nullopt;
+
+    if (frame.options.boundbox_selection) {
+        frame.options.transient_selection_bounds = MapBounds {
+            .x1 = std::min(frame.snapshot.last_click_map_x, frame.snapshot.last_cursor_map_x),
+            .y1 = std::min(frame.snapshot.last_click_map_y, frame.snapshot.last_cursor_map_y),
+            .x2 = std::max(frame.snapshot.last_click_map_x, frame.snapshot.last_cursor_map_x),
+            .y2 = std::max(frame.snapshot.last_click_map_y, frame.snapshot.last_cursor_map_y)
+        };
+    }
+
+    if (!render_ctx_.gfx.ensureAtlasManager()) {
+        return;
+    }
+    frame.atlas = render_ctx_.gfx.getAtlasManager();
+
+    // Begin Batches
+    sprite_batch->begin(frame.view.projectionMatrix, *frame.atlas);
+    primitive_renderer->setProjectionMatrix(frame.view.projectionMatrix);
+
+    // Post-processing: bind FBO if shader or AA is active
+    bool use_fbo = post_process_->Begin(frame.view, frame.settings);
+
+    GLViewport::Clear(); // Clear screen (or FBO)
+
+    // Construct the frame DrawContext once — all private methods receive it by const ref.
+    const DrawContext ctx {
+        *sprite_batch, *primitive_renderer, frame.view, frame.settings, frame.options, prepared.lights, prepared.accumulators, *frame.atlas};
+
+    DrawMap(ctx);
+
+    // Flush Map for Light Pass
+    sprite_batch->end(*frame.atlas);
+    primitive_renderer->flush();
+
+    if (frame.settings.isDrawLight()) {
+        DrawLight();
+    }
+
+    // If using FBO, resolve to screen
+    if (use_fbo) {
+        post_process_->End(frame.view, frame.settings);
+    }
+
+    // Resume Batch for Overlays
+    sprite_batch->begin(frame.view.projectionMatrix, *frame.atlas);
+
+    if (cursors_.drag_shadow) {
+        cursors_.drag_shadow->draw(
+            ctx, *map_access_, entities_.item.get(), entities_.sprite.get(), entities_.creature.get(), frame.snapshot.drag_start
+        );
+    }
+
+    cursors_.live->draw(ctx, *map_access_);
+
+    {
+        const BrushOverlayContext overlay {
+            .item_drawer = entities_.item.get(),
+            .sprite_drawer = entities_.sprite.get(),
+            .creature_drawer = entities_.creature.get(),
+            .brush_cursor_drawer = cursors_.brush.get(),
+            .map_access = map_access_.get(),
+            .visual = &frame.brush_visual,
+            .current_brush = frame.brush.current_brush,
+            .brush_shape = frame.brush.brush_shape,
+            .brush_size = frame.brush.brush_size,
+            .is_drawing_mode = frame.brush.is_drawing_mode,
+            .is_dragging_draw = frame.snapshot.is_dragging_draw,
+            .last_click_map_x = frame.snapshot.last_click_map_x,
+            .last_click_map_y = frame.snapshot.last_click_map_y
+        };
+        overlays_.brush_overlay->draw(ctx, overlay);
+    }
+
+    const ViewBounds base_bounds {frame.view.start_x, frame.view.start_y, frame.view.end_x, frame.view.end_y};
+
+    if (frame.settings.show_grid) {
+        DrawGrid(ctx, base_bounds);
+    }
+    if (frame.settings.show_ingame_box) {
+        DrawIngameBox(ctx, base_bounds);
+    }
+
+    // Draw creature names (Overlay) moved to DrawCreatureNames()
+
+    // End Batches and Flush
+    sprite_batch->end(*frame.atlas);
+    primitive_renderer->flush();
+
+    // Flush buffered sprite preload requests after GPU submission
+    tile_renderer->QueuePreloadRequests(prepared.preload_requests);
+    tile_renderer->FlushPreloadQueue();
+
+    // Tooltips are now drawn in MapCanvas::OnPaint (UI Pass)
 }
 
-void MapDrawer::DrawGrid(const ViewBounds& bounds) {
-	grid_drawer->DrawGrid(*sprite_batch, view, options, bounds);
+void MapDrawer::DrainPendingNodeRequests()
+{
+    auto requests = pending_requests_->drain();
+    for (const auto& req : requests) {
+        if (editor.live_manager.GetClient()) {
+            editor.live_manager.GetClient()->queryNode(req.x, req.y, req.underground);
+        }
+    }
 }
 
-void MapDrawer::DrawTooltips(NVGcontext* vg) {
-	tooltip_drawer->draw(vg, view);
+void MapDrawer::DrawMap(const DrawContext& ctx)
+{
+    const auto& frame = renderFrame();
+    int floor_offset = 0;
+
+    for (int map_z = frame.view.start_z; map_z >= frame.view.superend_z; map_z--) {
+        FloorViewParams floor_params {
+            frame.view.start_x - floor_offset, frame.view.start_y - floor_offset, frame.view.end_x + floor_offset, frame.view.end_y + floor_offset
+        };
+
+        if (map_z == frame.view.end_z && frame.view.start_z != frame.view.end_z) {
+            overlays_.shade->draw(ctx);
+        }
+
+        if (map_z >= frame.view.end_z) {
+            DrawMapLayer(ctx, map_z);
+        }
+
+        overlays_.preview->draw(ctx, PreviewDrawerContext {
+            .snapshot = frame.snapshot,
+            .floor_params = floor_params,
+            .map_z = map_z,
+            .map_access = *map_access_,
+            .item_drawer = entities_.item.get(),
+            .sprite_drawer = entities_.sprite.get(),
+            .creature_drawer = entities_.creature.get(),
+            .current_brush = frame.brush.current_brush,
+        });
+
+        ++floor_offset;
+    }
 }
 
-void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
-	hook_indicator_drawer->draw(vg, view);
+void MapDrawer::DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds)
+{
+    overlays_.grid->DrawIngameBox(ctx, bounds);
 }
 
-void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
-	if (options.highlight_locked_doors) {
-		door_indicator_drawer->draw(vg, view);
-	}
+void MapDrawer::DrawGrid(const DrawContext& ctx, const ViewBounds& bounds)
+{
+    overlays_.grid->DrawGrid(ctx, bounds);
 }
 
-void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
-	creature_name_drawer->draw(vg, view);
+void MapDrawer::DrawTooltips(NVGcontext* vg)
+{
+    tooltip_renderer.draw(vg, renderFrame().view, readAccumulators().tooltips.getTooltips(), nvg_image_cache);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawHookIndicators(NVGcontext* vg)
+{
+    overlays_.hook_indicator->draw(vg, renderFrame().view, readAccumulators().hooks);
 }
 
-void MapDrawer::DrawLight() {
-	light_drawer->draw(view, options.experimental_fog, light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+void MapDrawer::DrawDoorIndicators(NVGcontext* vg)
+{
+    if (renderFrame().settings.highlight_locked_doors) {
+        overlays_.door_indicator->draw(vg, renderFrame().view, readAccumulators().doors);
+    }
 }
 
-void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
-	ScreenCapture::Capture(view.screensize_x, view.screensize_y, screenshot_buffer);
+void MapDrawer::DrawCreatureNames(NVGcontext* vg)
+{
+    overlays_.creature_name->draw(vg, renderFrame().view, readAccumulators().creature_names);
 }
 
-void MapDrawer::ClearFrameOverlays() {
-	tooltip_drawer->clear();
-	hook_indicator_drawer->clear();
-	door_indicator_drawer->clear();
+void MapDrawer::DrawMapLayer(const DrawContext& ctx, int map_z)
+{
+    const auto& prepared = renderPreparedFrame();
+    auto floor_it = std::find_if(prepared.floors.begin(), prepared.floors.end(), [map_z](const PreparedVisibleFloor& floor) {
+        return floor.map_z == map_z;
+    });
+    if (floor_it == prepared.floors.end()) {
+        return;
+    }
+
+    for (const auto& chunk : floor_it->chunks) {
+        if (!chunk) {
+            continue;
+        }
+        SubmitDrawCommands(ctx, chunk->commands);
+    }
+}
+
+void MapDrawer::SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue)
+{
+    for (const auto& command : queue.commands()) {
+        std::visit(
+            [&](const auto& cmd) {
+                using Command = std::decay_t<decltype(cmd)>;
+                const auto [screen_x, screen_y] = ctx.view.getScreenPosition(cmd.pos.x, cmd.pos.y, cmd.pos.z);
+
+                if constexpr (std::is_same_v<Command, DrawColorSquareCmd>) {
+                    auto color = cmd.color;
+                    if (cmd.apply_highlight_pulse) {
+                        ApplyHighlightPulse(color.r, color.g, color.b, ctx.frame.highlight_pulse);
+                    }
+                    entities_.sprite->glBlitSquare(ctx.sprite_batch, ctx.atlas, screen_x, screen_y, color);
+                } else if constexpr (std::is_same_v<Command, DrawZoneBrushCmd>) {
+                    uint8_t red = cmd.r;
+                    uint8_t green = cmd.g;
+                    uint8_t blue = cmd.b;
+                    if (cmd.apply_highlight_pulse) {
+                        ApplyHighlightPulse(red, green, blue, ctx.frame.highlight_pulse);
+                    }
+                    entities_.item->DrawRawBrush(ctx.sprite_batch, entities_.sprite.get(), screen_x, screen_y, cmd.sprite_id, red, green, blue, cmd.a);
+                } else if constexpr (std::is_same_v<Command, DrawHouseBorderCmd>) {
+                    uint8_t red = 255;
+                    uint8_t green = 255;
+                    uint8_t blue = 255;
+                    TileColorCalculator::GetHouseColor(cmd.house_id, red, green, blue);
+                    const float intensity = 0.5f + (0.5f * ctx.frame.highlight_pulse);
+                    const auto alpha = static_cast<uint8_t>(std::clamp(static_cast<int>(intensity * 255.0f), 0, 255));
+                    entities_.sprite->glDrawBox(ctx.sprite_batch, ctx.atlas, screen_x, screen_y, 32, 32, DrawColor(red, green, blue, alpha));
+                } else if constexpr (std::is_same_v<Command, DrawFilledRectCmd>) {
+                    const glm::vec4 color {
+                        cmd.color.r / 255.0f,
+                        cmd.color.g / 255.0f,
+                        cmd.color.b / 255.0f,
+                        cmd.color.a / 255.0f,
+                    };
+                    ctx.sprite_batch.drawRect((float)screen_x, (float)screen_y, (float)cmd.width, (float)cmd.height, color, ctx.atlas);
+                } else if constexpr (std::is_same_v<Command, DrawItemCmd>) {
+                    int draw_x = screen_x + cmd.local_draw_x;
+                    int draw_y = screen_y + cmd.local_draw_y;
+                    int red = cmd.red;
+                    int green = cmd.green;
+                    int blue = cmd.blue;
+                    if (cmd.apply_highlight_pulse) {
+                        auto byte_red = static_cast<uint8_t>(std::clamp(red, 0, 255));
+                        auto byte_green = static_cast<uint8_t>(std::clamp(green, 0, 255));
+                        auto byte_blue = static_cast<uint8_t>(std::clamp(blue, 0, 255));
+                        ApplyHighlightPulse(byte_red, byte_green, byte_blue, ctx.frame.highlight_pulse);
+                        red = byte_red;
+                        green = byte_green;
+                        blue = byte_blue;
+                    }
+                    entities_.item->BlitItemSnapshot(
+                        ctx.sprite_batch, ctx.atlas, entities_.sprite.get(), entities_.creature.get(), draw_x, draw_y, cmd.item, ctx.settings,
+                        ctx.frame, cmd.patterns, red, green, blue, cmd.alpha
+                    );
+                } else if constexpr (std::is_same_v<Command, DrawCreatureCmd>) {
+                    entities_.creature->BlitCreature(
+                        ctx.sprite_batch, entities_.sprite.get(), screen_x + cmd.local_draw_x, screen_y + cmd.local_draw_y, cmd.creature, cmd.options
+                    );
+                } else if constexpr (std::is_same_v<Command, DrawMarkerCmd>) {
+                    entities_.marker->draw(
+                        ctx.sprite_batch, entities_.sprite.get(), screen_x + cmd.local_draw_x, screen_y + cmd.local_draw_y, cmd.marker, ctx.settings
+                    );
+                }
+            },
+            command
+        );
+    }
+}
+
+void MapDrawer::DrawLight()
+{
+    light_drawer->draw(
+        renderFrame().view, renderFrame().settings.experimental_fog, renderPreparedFrame().lights, renderFrame().options.global_light_color,
+        renderFrame().settings.light_intensity, renderFrame().settings.ambient_light_level
+    );
+}
+
+void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer)
+{
+    ScreenCapture::Capture(renderFrame().view.screensize_x, renderFrame().view.screensize_y, screenshot_buffer);
+}
+
+void MapDrawer::BeginFrame()
+{
+    // Prepared frames persist until replaced so the last completed frame can
+    // be re-used safely when threaded preparation lags behind rendering.
 }

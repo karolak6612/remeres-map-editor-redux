@@ -39,86 +39,62 @@ namespace {
 	}
 }
 
-NormalImage* GraphicsAssembler::ensureImage(GraphicManager& manager, uint32_t sprite_id) {
-	if (sprite_id >= manager.image_space.size()) {
-		return nullptr;
-	}
-
-	auto& slot = manager.image_space[sprite_id];
-	if (!slot) {
-		auto image = std::make_unique<NormalImage>();
-		image->id = sprite_id;
-		slot = std::move(image);
-	}
-	return static_cast<NormalImage*>(slot.get());
-}
-
 void GraphicsAssembler::installAnimation(GameSprite& sprite, const DatCatalogEntry& entry) {
+	sprite.animation.sprite_id = sprite.meta.id;
 	if (!entry.animation.has_value()) {
-		sprite.animator.reset();
+		sprite.animation.animator.reset();
 		return;
 	}
 
 	const auto& animation = *entry.animation;
-	sprite.animator = std::make_unique<Animator>(entry.frames, animation.start_frame, animation.loop_count, animation.asynchronous);
+	sprite.animation.animator = std::make_unique<Animator>(entry.frames, animation.start_frame, animation.loop_count, animation.asynchronous);
 	for (size_t frame_index = 0; frame_index < animation.frame_durations.size(); ++frame_index) {
-		FrameDuration* duration = sprite.animator->getFrameDuration(static_cast<int>(frame_index));
+		FrameDuration* duration = sprite.animation.animator->getFrameDuration(static_cast<int>(frame_index));
 		duration->setValues(static_cast<int>(animation.frame_durations[frame_index].minimum), static_cast<int>(animation.frame_durations[frame_index].maximum));
 	}
-	sprite.animator->reset();
+	sprite.animation.animator->reset();
 }
 
 bool GraphicsAssembler::installSpriteEntry(GraphicManager& manager, const DatCatalogEntry& entry, std::vector<std::string>& warnings) {
 	auto sprite = std::make_unique<GameSprite>();
 	auto* sprite_ptr = sprite.get();
 
-	sprite_ptr->id = entry.client_id;
-	sprite_ptr->height = entry.height;
-	sprite_ptr->width = entry.width;
-	sprite_ptr->layers = entry.layers;
-	sprite_ptr->pattern_x = entry.pattern_x;
-	sprite_ptr->pattern_y = entry.pattern_y;
-	sprite_ptr->pattern_z = entry.pattern_z;
-	sprite_ptr->frames = entry.frames;
-	sprite_ptr->numsprites = entry.numsprites;
-	sprite_ptr->draw_height = entry.draw_height;
-	sprite_ptr->drawoffset_x = entry.drawoffset_x;
-	sprite_ptr->drawoffset_y = entry.drawoffset_y;
-	sprite_ptr->minimap_color = entry.minimap_color;
-	sprite_ptr->has_light = entry.has_light;
-	sprite_ptr->light = entry.light;
+	sprite_ptr->meta.id = entry.client_id;
+	sprite_ptr->meta.height = entry.height;
+	sprite_ptr->meta.width = entry.width;
+	sprite_ptr->meta.layers = entry.layers;
+	sprite_ptr->meta.pattern_x = entry.pattern_x;
+	sprite_ptr->meta.pattern_y = entry.pattern_y;
+	sprite_ptr->meta.pattern_z = entry.pattern_z;
+	sprite_ptr->meta.frames = entry.frames;
+	sprite_ptr->meta.numsprites = entry.numsprites;
+	sprite_ptr->meta.draw_height = entry.draw_height;
+	sprite_ptr->meta.drawoffset_x = entry.drawoffset_x;
+	sprite_ptr->meta.drawoffset_y = entry.drawoffset_y;
+	sprite_ptr->meta.minimap_color = entry.minimap_color;
+	sprite_ptr->meta.has_light = entry.has_light;
+	sprite_ptr->meta.light = entry.light;
 	installAnimation(*sprite_ptr, entry);
 
-	sprite_ptr->spriteList.clear();
-	sprite_ptr->spriteList.reserve(entry.sprite_ids.size());
+	auto& sprite_list = sprite_ptr->icon_data.sprite_list;
+	sprite_list.clear();
+	sprite_list.reserve(entry.sprite_ids.size());
 	for (uint32_t sprite_id : entry.sprite_ids) {
-		NormalImage* image = ensureImage(manager, sprite_id);
+		NormalImage* image = manager.getOrCreateNormalImage(sprite_id);
 		if (!image) {
 			warnings.push_back(std::format("GraphicsAssembler: sprite {} references out-of-range image {}.", entry.client_id, sprite_id));
 			return false;
 		}
-		sprite_ptr->spriteList.push_back(image);
+		sprite_list.push_back(image);
 	}
 	sprite_ptr->updateSimpleStatus();
 
-	manager.sprite_space[entry.client_id] = std::move(sprite);
+	manager.insertSprite(entry.client_id, std::move(sprite));
 	return true;
 }
 
 void GraphicsAssembler::resetRuntimeState(GraphicManager& manager) {
-	SpritePreloader::get().clear();
-	manager.unloaded = true;
-	manager.sprite_archive_.reset();
-	manager.spritefile.clear();
-	manager.sprite_space.clear();
-	manager.image_space.clear();
-	manager.resident_images.clear();
-	manager.resident_game_sprites.clear();
-	manager.collector.Clear();
-	if (manager.atlas_manager_) {
-		manager.atlas_manager_->clear();
-		manager.atlas_manager_.reset();
-	}
+	manager.resetLoadedGraphicsState();
 }
 
 bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catalog, std::shared_ptr<SpriteArchive> sprite_archive, wxString& error, std::vector<std::string>& warnings) {
@@ -135,8 +111,7 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 	const auto image_space_size = imageSpaceSize(catalog);
 
 	resetRuntimeState(manager);
-	manager.sprite_space.resize(sprite_space_size);
-	manager.image_space.resize(image_space_size);
+	manager.resizeStorage(sprite_space_size, image_space_size);
 
 	for (uint32_t client_id = 100; client_id <= catalog.lastEntryId(); ++client_id) {
 		const auto* entry = catalog.entry(client_id);
@@ -150,16 +125,16 @@ bool GraphicsAssembler::install(GraphicManager& manager, const DatCatalog& catal
 		}
 	}
 
-	manager.dat_format = catalog.format;
-	manager.item_count = catalog.item_count;
-	manager.creature_count = catalog.creature_count;
-	manager.is_extended = catalog.is_extended;
-	manager.has_transparency = catalog.has_transparency;
-	manager.has_frame_durations = catalog.has_frame_durations;
-	manager.has_frame_groups = catalog.has_frame_groups;
-	manager.sprite_archive_ = std::move(sprite_archive);
-	manager.spritefile = manager.sprite_archive_->fileName();
-	manager.unloaded = false;
+	manager.finalizeLoadedCatalog(
+		catalog.format,
+		catalog.item_count,
+		catalog.creature_count,
+		catalog.is_extended,
+		catalog.has_transparency,
+		catalog.has_frame_durations,
+		catalog.has_frame_groups,
+		std::move(sprite_archive)
+	);
 
 	return true;
 }

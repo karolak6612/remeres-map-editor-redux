@@ -340,6 +340,7 @@ void Settings::IO(IOMode mode) {
 	String(TILESET_EXPORT_DIR, "");
 	Int(FRAME_RATE_LIMIT, 144);
 	Bool(SHOW_FPS_COUNTER, false);
+	Bool(THREADED_RENDERING, false);
 	Int(ANTI_ALIASING, 0);
 	String(SCREEN_SHADER, "None");
 

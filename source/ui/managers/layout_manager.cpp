@@ -87,7 +87,7 @@ void LayoutManager::LoadPerspective() {
 				const wxString& data = wxstr(g_settings.getString(Config::MINIMAP_LAYOUT));
 				g_gui.aui_manager->LoadPaneInfo(data, info);
 
-				g_minimap.SetWindow(newd MinimapWindow(g_gui.root));
+				g_minimap.SetWindow(newd MinimapWindow(g_gui.root, g_gui, g_settings));
 				g_gui.aui_manager->AddPane(g_minimap.GetWindow(), info);
 			} else {
 				wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(g_minimap.GetWindow());

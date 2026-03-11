@@ -19,9 +19,6 @@ public:
 	PrimitiveRenderer();
 	~PrimitiveRenderer();
 
-	// Singleton access or instance? MapDrawer will own it.
-	// But static access was convenient. We will pass it around.
-
 	void initialize();
 	void shutdown();
 

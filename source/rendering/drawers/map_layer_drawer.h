@@ -18,28 +18,39 @@
 #ifndef RME_MAP_LAYER_DRAWER_H
 #define RME_MAP_LAYER_DRAWER_H
 
-#include <iosfwd>
+#include <vector>
 
-class Editor;
+struct ChunkSourceSnapshot;
+class IMapAccess;
+struct RenderChunkKey;
 class TileRenderer;
 class GridDrawer;
-struct RenderView;
-struct DrawingOptions;
-struct LightBuffer;
-class SpriteBatch;
-class PrimitiveRenderer;
+class PendingNodeRequests;
+class TileLocation;
+class TilePlanningPool;
+struct FramePlanContext;
+struct FloorViewParams;
+struct VisibleChunkList;
 
 class MapLayerDrawer {
 public:
-	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
-	~MapLayerDrawer();
+    MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, IMapAccess* map_access, PendingNodeRequests* pending_requests = nullptr);
+    ~MapLayerDrawer();
 
-	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
+    [[nodiscard]] VisibleChunkList BuildVisibleChunkList(int map_z, const FloorViewParams& floor_params) const;
+    [[nodiscard]] ChunkSourceSnapshot BuildChunkSourceSnapshot(
+        const FramePlanContext& ctx, const RenderChunkKey& key, bool live_client, uint32_t current_house_id
+    );
+    void setPlanningPool(TilePlanningPool* planning_pool)
+    {
+        planning_pool_ = planning_pool;
+    }
 
-private:
-	TileRenderer* tile_renderer;
-	GridDrawer* grid_drawer;
-	Editor* editor;
+    TileRenderer* tile_renderer;
+    GridDrawer* grid_drawer;
+    IMapAccess* map_access;
+    PendingNodeRequests* pending_requests_;
+    TilePlanningPool* planning_pool_ = nullptr;
 };
 
 #endif

@@ -18,6 +18,7 @@
 #include "app/main.h"
 
 #include "ui/map_window.h"
+#include "app/settings.h"
 #include "ui/gui.h"
 #include "game/sprites.h"
 #include "editor/editor.h"
@@ -37,7 +38,7 @@ MapWindow::MapWindow(wxWindow* parent, Editor& editor) :
 	GL_settings[0] = WX_GL_RGBA;
 	GL_settings[1] = WX_GL_DOUBLEBUFFER;
 	GL_settings[2] = 0;
-	canvas = newd MapCanvas(this, editor, GL_settings);
+	canvas = newd MapCanvas(this, editor, g_gui, g_settings, GL_settings);
 
 	vScroll = newd MapScrollBar(this, MAP_WINDOW_VSCROLL, wxVERTICAL, canvas);
 	hScroll = newd MapScrollBar(this, MAP_WINDOW_HSCROLL, wxHORIZONTAL, canvas);

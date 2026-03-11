@@ -21,29 +21,39 @@
 class GameSprite;
 
 struct NVGcontext;
-class TooltipDrawer;
-class HookIndicatorDrawer;
-class DoorIndicatorDrawer;
 
 // Storage during drawing, for option caching
-#include "rendering/core/drawing_options.h"
-#include "rendering/core/light_buffer.h"
+#include "rendering/core/render_context.h"
 #include "app/definitions.h"
-#include "game/outfit.h"
 #include "game/creature.h"
-
-#include "rendering/core/render_view.h"
-#include "rendering/core/sprite_batch.h"
-#include "rendering/core/primitive_renderer.h"
+#include "game/outfit.h"
+#include "rendering/core/draw_frame.h"
 #include "rendering/core/gl_resources.h"
+#include "rendering/core/prepared_frame_buffer.h"
+#include "rendering/core/render_chunk_cache.h"
+#include "rendering/core/primitive_renderer.h"
+#include "rendering/core/render_prep_snapshot.h"
 #include "rendering/core/shader_program.h"
+#include "rendering/core/sprite_batch.h"
+#include "rendering/ui/nvg_image_cache.h"
+#include "rendering/ui/tooltip_renderer.h"
 
+#include <atomic>
+#include <mutex>
+
+struct DrawContext;
+struct ViewBounds;
+struct FloorViewParams;
+class PostProcessPipeline;
+class AtlasManager;
 class GridDrawer;
+class PendingNodeRequests;
+class EditorMapAccess;
+class TilePlanningPool;
 
-class MapCanvas;
 class LightDrawer;
+class GraphicsSpriteResolver;
 class LiveCursorDrawer;
-class SelectionDrawer;
 class BrushCursorDrawer;
 class BrushOverlayDrawer;
 class DragShadowDrawer;
@@ -60,100 +70,165 @@ class CreatureNameDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 
+// Logical groupings for MapDrawer's many sub-drawers.
+// Each group owns related drawers via unique_ptr.
+
+struct EntityDrawers {
+    std::unique_ptr<SpriteDrawer> sprite;
+    std::unique_ptr<ItemDrawer> item;
+    std::unique_ptr<CreatureDrawer> creature;
+    std::unique_ptr<MarkerDrawer> marker;
+};
+
+struct OverlayDrawers {
+    std::unique_ptr<GridDrawer> grid;
+    std::unique_ptr<HookIndicatorDrawer> hook_indicator;
+    std::unique_ptr<DoorIndicatorDrawer> door_indicator;
+    std::unique_ptr<PreviewDrawer> preview;
+    std::unique_ptr<ShadeDrawer> shade;
+    std::unique_ptr<BrushOverlayDrawer> brush_overlay;
+    std::unique_ptr<CreatureNameDrawer> creature_name;
+};
+
+struct CursorDrawers {
+    std::unique_ptr<LiveCursorDrawer> live;
+    std::unique_ptr<BrushCursorDrawer> brush;
+    std::unique_ptr<DragShadowDrawer> drag_shadow;
+};
+
 class MapDrawer {
-	MapCanvas* canvas;
-	Editor& editor;
-	DrawingOptions options;
-	RenderView view;
-	std::shared_ptr<LightDrawer> light_drawer;
-	LightBuffer light_buffer;
-	std::unique_ptr<TooltipDrawer> tooltip_drawer;
-	std::unique_ptr<GridDrawer> grid_drawer;
-	std::unique_ptr<LiveCursorDrawer> live_cursor_drawer;
-	std::unique_ptr<SelectionDrawer> selection_drawer;
-	std::unique_ptr<BrushCursorDrawer> brush_cursor_drawer;
-	std::unique_ptr<BrushOverlayDrawer> brush_overlay_drawer;
-	std::unique_ptr<DragShadowDrawer> drag_shadow_drawer;
-	std::unique_ptr<FloorDrawer> floor_drawer;
-	std::unique_ptr<SpriteDrawer> sprite_drawer;
-	std::unique_ptr<MapLayerDrawer> map_layer_drawer;
-	std::unique_ptr<CreatureDrawer> creature_drawer;
-	std::unique_ptr<ItemDrawer> item_drawer;
-	std::unique_ptr<MarkerDrawer> marker_drawer;
-	std::unique_ptr<PreviewDrawer> preview_drawer;
-	std::unique_ptr<ShadeDrawer> shade_drawer;
-	std::unique_ptr<TileRenderer> tile_renderer;
-	std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
-	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
-	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
-	std::unique_ptr<SpriteBatch> sprite_batch;
-	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+    Editor& editor;
+    std::unique_ptr<EditorMapAccess> map_access_;
+    RenderContext render_ctx_;
+    PreparedFrameBuffer prepared_frames_[2];
+    RenderChunkCache chunk_cache_;
+    std::atomic<int> write_prepared_index_ {0};
+    int render_prepared_index_ = 0;
+    std::atomic<bool> has_prepared_frame_ {false};
+    mutable std::mutex snapshot_mutex_; // Protects frame snapshots for future multi-threaded access
+    std::unique_ptr<LightDrawer> light_drawer;
 
-	// Post-processing
-	std::unique_ptr<GLFramebuffer> scale_fbo;
-	std::unique_ptr<GLTextureResource> scale_texture;
-	int fbo_width = 0;
-	int fbo_height = 0;
-	bool m_lastAaMode = false;
+    TooltipRenderer tooltip_renderer;
+    NVGImageCache nvg_image_cache;
 
-	std::unique_ptr<GLVertexArray> pp_vao;
-	std::unique_ptr<GLBuffer> pp_vbo;
-	std::unique_ptr<GLBuffer> pp_ebo;
+    // Grouped sub-drawers
+    EntityDrawers entities_;
+    OverlayDrawers overlays_;
+    CursorDrawers cursors_;
 
-	void InitPostProcess();
-	void DrawPostProcess(const RenderView& view, const DrawingOptions& options);
-	void UpdateFBO(const RenderView& view, const DrawingOptions& options);
+    // Orchestrators (not categorized — they coordinate multiple drawers)
+    std::unique_ptr<FloorDrawer> floor_drawer;
+    std::unique_ptr<MapLayerDrawer> map_layer_drawer;
+    std::unique_ptr<TileRenderer> tile_renderer;
 
-protected:
-	friend class BrushOverlayDrawer;
-	friend class DragShadowDrawer;
-	friend class FloorDrawer;
+    // Infrastructure
+    std::unique_ptr<GraphicsSpriteResolver> sprite_resolver;
+    std::unique_ptr<SpriteBatch> sprite_batch;
+    std::unique_ptr<PrimitiveRenderer> primitive_renderer;
+
+    // Deferred network node requests — filled during Draw(), drained after
+    std::unique_ptr<PendingNodeRequests> pending_requests_;
+    TilePlanningPool* planning_pool_ = nullptr;
+
+    // Post-processing
+    std::unique_ptr<PostProcessPipeline> post_process_;
 
 public:
-	MapDrawer(MapCanvas* canvas);
-	~MapDrawer();
+    MapDrawer(Editor& editor, RenderContext ctx);
+    ~MapDrawer();
 
-	void SetupVars();
-	void SetupGL();
-	void Release();
+    [[nodiscard]] RenderPrepSnapshot BuildRenderPrepSnapshot(
+        const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+        const FrameOptions& base_options
+    );
+    [[nodiscard]] PreparedFrameBuffer PrepareFrame(RenderPrepSnapshot snapshot);
+    void SetupPreparedFrame(PreparedFrameBuffer prepared);
+    void SetPlanningPool(TilePlanningPool* planning_pool);
+    void InvalidatePreparedChunks();
+    [[nodiscard]] bool HasPreparedFrame() const
+    {
+        return has_prepared_frame_.load(std::memory_order_acquire);
+    }
+    void SetupVars(
+        const ViewSnapshot& snapshot, const BrushSnapshot& brush, const BrushVisualSettings& brush_visual, const RenderSettings& settings,
+        const FrameOptions& base_options
+    );
+    void SetupGL();
+    void Release();
 
-	void Draw();
-	void DrawBackground();
-	void DrawMap();
-	void DrawLiveCursors();
-	void DrawIngameBox(const ViewBounds& bounds);
+    void Draw();
+    void DrawLiveCursors();
+    void DrawTooltips(NVGcontext* vg);
+    void DrawHookIndicators(NVGcontext* vg);
+    void DrawDoorIndicators(NVGcontext* vg);
+    // Swap accumulator buffers and clear the new write buffer.
+    // Call once at the start of each frame, before Draw().
+    void BeginFrame();
+    void DrainPendingNodeRequests();
+    void DrawCreatureNames(NVGcontext* vg);
 
-	void DrawGrid(const ViewBounds& bounds);
-	void DrawTooltips(NVGcontext* vg);
-	void DrawHookIndicators(NVGcontext* vg);
-	void DrawDoorIndicators(NVGcontext* vg);
-	void ClearFrameOverlays();
-	void DrawCreatureNames(NVGcontext* vg);
+    void DrawLight();
 
-	void DrawLight();
+    void TakeScreenshot(uint8_t* screenshot_buffer);
 
-	void TakeScreenshot(uint8_t* screenshot_buffer);
+    RenderSettings& getRenderSettings()
+    {
+        return renderFrame().settings;
+    }
+    FrameOptions& getFrameOptions()
+    {
+        return renderFrame().options;
+    }
+    ViewSnapshot getSnapshot() const
+    {
+        std::lock_guard<std::mutex> lock(snapshot_mutex_);
+        return renderFrame().snapshot;
+    }
 
-	DrawingOptions& getOptions() {
-		return options;
-	}
-
-	SpriteBatch* getSpriteBatch() {
-		return sprite_batch.get();
-	}
-	PrimitiveRenderer* getPrimitiveRenderer() {
-		return primitive_renderer.get();
-	}
-	TileRenderer* getTileRenderer() {
-		return tile_renderer.get();
-	}
-	DoorIndicatorDrawer* getDoorIndicatorDrawer() {
-		return door_indicator_drawer.get();
-	}
+    SpriteBatch* getSpriteBatch()
+    {
+        return sprite_batch.get();
+    }
+    PrimitiveRenderer* getPrimitiveRenderer()
+    {
+        return primitive_renderer.get();
+    }
+    TileRenderer* getTileRenderer()
+    {
+        return tile_renderer.get();
+    }
 
 private:
-	void DrawMapLayer(int map_z, bool live_client);
-	bool renderers_initialized = false;
+    void DrawMap(const DrawContext& ctx);
+    void DrawMapLayer(const DrawContext& ctx, int map_z);
+    void SubmitDrawCommands(const DrawContext& ctx, const DrawCommandQueue& queue);
+    void DrawIngameBox(const DrawContext& ctx, const ViewBounds& bounds);
+    void DrawGrid(const DrawContext& ctx, const ViewBounds& bounds);
+    PreparedFrameBuffer& writePreparedFrame()
+    {
+        return prepared_frames_[write_prepared_index_.load(std::memory_order_relaxed)];
+    }
+    PreparedFrameBuffer& renderPreparedFrame()
+    {
+        return prepared_frames_[render_prepared_index_];
+    }
+    const PreparedFrameBuffer& renderPreparedFrame() const
+    {
+        return prepared_frames_[render_prepared_index_];
+    }
+    DrawFrame& renderFrame()
+    {
+        return renderPreparedFrame().frame;
+    }
+    const DrawFrame& renderFrame() const
+    {
+        return renderPreparedFrame().frame;
+    }
+    const FrameAccumulators& readAccumulators() const
+    {
+        return renderPreparedFrame().accumulators;
+    }
+    bool renderers_initialized_ = false;
 };
 
 #endif

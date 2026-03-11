@@ -5,6 +5,7 @@
 #include "app/main.h"
 #include "rendering/utilities/frame_pacer.h"
 #include "rendering/ui/map_status_updater.h"
+#include "ui/gui.h"
 
 FramePacer::FramePacer() {
 }
@@ -12,11 +13,11 @@ FramePacer::FramePacer() {
 FramePacer::~FramePacer() {
 }
 
-void FramePacer::UpdateAndLimit(int limit, bool show_counter) {
+void FramePacer::UpdateAndLimit(GUI& gui, int limit, bool show_counter) {
 	fps_counter.LimitFPS(limit);
 	fps_counter.Update();
 
 	if (show_counter && fps_counter.HasChanged()) {
-		MapStatusUpdater::UpdateFPS(fps_counter.GetStatusString());
+		MapStatusUpdater::UpdateFPS(gui, fps_counter.GetStatusString());
 	}
 }

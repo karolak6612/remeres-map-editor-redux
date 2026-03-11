@@ -1,8 +1,10 @@
-#include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
+#include "rendering/postprocess/post_process_manager.h" // For ShaderNames
 
-namespace {
+namespace EffectRegistry {
 
-	const char* screen_frag = R"(
+	const char* ScreenFragmentSource() {
+		return R"(
 #version 450 core
 in vec2 vTexCoord;
 out vec4 FragColor;
@@ -13,12 +15,6 @@ void main() {
     FragColor = texture(u_Texture, vTexCoord);
 }
 )";
+	}
 
-	// Auto-register (Bilinear/Screen)
-	struct ScreenRegister {
-		ScreenRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::NONE, screen_frag);
-		}
-	} screen_register;
-
-} // namespace
+} // namespace EffectRegistry

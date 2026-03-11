@@ -9,11 +9,13 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/creature.h"
-#include "ui/gui.h"
 #include "game/sprites.h"
 #include "rendering/core/sprite_batch.h"
+#include "rendering/core/sprite_resolver.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/animator.h"
+#include "rendering/core/sprite_metadata.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <spdlog/spdlog.h>
 
 CreatureDrawer::CreatureDrawer() {
@@ -32,17 +34,37 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 	BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, c->getLookType(), c->getDirection(), local_opts);
 }
 
+void CreatureDrawer::BlitCreature(
+    SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const CreatureRenderSnapshot& creature,
+    const CreatureDrawOptions& options
+)
+{
+    CreatureDrawOptions local_opts = options;
+    if (!local_opts.ingame
+        && (creature.selected || (local_opts.transient_selection_bounds.has_value() && local_opts.transient_selection_bounds->contains(creature.map_pos.x, creature.map_pos.y)))) {
+        local_opts.color.r /= 2;
+        local_opts.color.g /= 2;
+        local_opts.color.b /= 2;
+    }
+
+    BlitCreature(sprite_batch, sprite_drawer, screenx, screeny, creature.outfit, creature.direction, local_opts);
+}
+
 void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options) {
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
-			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+			GameSprite* spr = sprite_resolver ? sprite_resolver->getSprite(definition.clientId()) : nullptr;
 			sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
 		}
 	} else {
 		// get outfit sprite
-		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);
+		GameSprite* spr = sprite_resolver ? sprite_resolver->getCreatureSprite(outfit.lookType) : nullptr;
 		if (!spr || outfit.lookType == 0) {
 			return;
+		}
+		const SpriteMetadata* meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(spr->getId())) : nullptr;
+		if (!meta) {
+			meta = &spr->meta;
 		}
 
 		// Resolve animation frame for walk animation
@@ -56,7 +78,11 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		// mount colors by Zbizu
 		int pattern_z = 0;
 		if (outfit.lookMount != 0) {
-			if (GameSprite* mountSpr = g_gui.gfx.getCreatureSprite(outfit.lookMount)) {
+			if (GameSprite* mountSpr = sprite_resolver ? sprite_resolver->getCreatureSprite(outfit.lookMount) : nullptr) {
+				const SpriteMetadata* mount_meta = sprite_resolver ? sprite_resolver->getSpriteMetadata(static_cast<int>(mountSpr->getId())) : nullptr;
+				if (!mount_meta) {
+					mount_meta = &mountSpr->meta;
+				}
 				// generate mount colors
 				Outfit mountOutfit;
 				mountOutfit.lookType = outfit.lookMount;
@@ -65,21 +91,26 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				mountOutfit.lookLegs = outfit.lookMountLegs;
 				mountOutfit.lookFeet = outfit.lookMountFeet;
 
-				for (int cx = 0; cx != mountSpr->width; ++cx) {
-					for (int cy = 0; cy != mountSpr->height; ++cy) {
-						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
+				for (int cx = 0; cx != mount_meta->width; ++cx) {
+					for (int cy = 0; cy != mount_meta->height; ++cy) {
+						const AtlasRegion* region = sprite_resolver ? sprite_resolver->getCreatureAtlasRegion(
+							static_cast<int>(mountSpr->getId()), cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame)
+							: mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
+							sprite_drawer->glBlitAtlasQuad(
+								sprite_batch, screenx - cx * TILE_SIZE - mount_meta->drawoffset_x, screeny - cy * TILE_SIZE - mount_meta->drawoffset_y, region,
+								options.color
+							);
 						}
 					}
 				}
 
-				pattern_z = std::clamp(spr->pattern_z - 1, 0, 1);
+				pattern_z = std::clamp(meta->pattern_z - 1, 0, 1);
 			}
 		}
 
 		// pattern_y => creature addon
-		for (int pattern_y = 0; pattern_y < spr->pattern_y; pattern_y++) {
+		for (int pattern_y = 0; pattern_y < meta->pattern_y; pattern_y++) {
 
 			// continue if we dont have this addon
 			if (pattern_y > 0) {
@@ -88,11 +119,15 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 				}
 			}
 
-			for (int cx = 0; cx != spr->width; ++cx) {
-				for (int cy = 0; cy != spr->height; ++cy) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
+			for (int cx = 0; cx != meta->width; ++cx) {
+				for (int cy = 0; cy != meta->height; ++cy) {
+					const AtlasRegion* region = sprite_resolver ? sprite_resolver->getCreatureAtlasRegion(
+						static_cast<int>(spr->getId()), cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame)
+						: spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
+						sprite_drawer->glBlitAtlasQuad(
+							sprite_batch, screenx - cx * TILE_SIZE - meta->drawoffset_x, screeny - cy * TILE_SIZE - meta->drawoffset_y, region, options.color
+						);
 					}
 				}
 			}

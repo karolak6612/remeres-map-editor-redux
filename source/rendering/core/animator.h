@@ -53,10 +53,13 @@ struct FrameDuration {
 	}
 };
 
+class GraphicManager;
+
 class Animator {
 public:
 	Animator(int frames, int start_frame, int loop_count, bool async);
 	~Animator();
+	void setGraphicManager(GraphicManager* graphics) { graphics_ = graphics; }
 
 	int getStartFrame() const;
 
@@ -85,6 +88,7 @@ private:
 	AnimationDirection direction;
 	long last_time;
 	bool is_complete;
+	GraphicManager* graphics_ = nullptr;
 };
 
 #endif

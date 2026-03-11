@@ -1,29 +1,25 @@
 #include "app/main.h"
 
-// glut include removed
-
 #include "rendering/drawers/overlays/selection_drawer.h"
 #include "rendering/core/primitive_renderer.h"
 #include <glm/glm.hpp>
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
-#include "rendering/ui/map_display.h"
-#include "rendering/core/graphics.h"
-#include "ui/gui.h"
+#include "rendering/core/render_settings.h"
+#include "rendering/core/view_snapshot.h"
 #include <algorithm>
 #include <cmath>
 
-void SelectionDrawer::draw(PrimitiveRenderer& primitive_renderer, const RenderView& view, const MapCanvas* canvas, const DrawingOptions& options) {
-	if (options.ingame) {
+void SelectionDrawer::draw(PrimitiveRenderer& primitive_renderer, const ViewState& view, const ViewSnapshot& snapshot, const RenderSettings& settings) {
+	if (settings.ingame) {
 		return;
 	}
 
 	// Draw bounding box
 	// View coordinates (after zoom, relative to viewport)
-	const float last_click_rx = static_cast<float>(canvas->last_click_abs_x - view.view_scroll_x);
-	const float last_click_ry = static_cast<float>(canvas->last_click_abs_y - view.view_scroll_y);
-	const float cursor_rx = static_cast<float>(canvas->cursor_x * view.zoom);
-	const float cursor_ry = static_cast<float>(canvas->cursor_y * view.zoom);
+	const float last_click_rx = static_cast<float>(snapshot.last_click_abs_x - view.view_scroll_x);
+	const float last_click_ry = static_cast<float>(snapshot.last_click_abs_y - view.view_scroll_y);
+	const float cursor_rx = static_cast<float>(snapshot.cursor_x * view.zoom);
+	const float cursor_ry = static_cast<float>(snapshot.cursor_y * view.zoom);
 
 	const float x = std::min(last_click_rx, cursor_rx);
 	const float y = std::min(last_click_ry, cursor_ry);

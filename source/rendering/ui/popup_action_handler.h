@@ -20,6 +20,7 @@
 
 class Editor;
 class Tile;
+class GUI;
 
 /**
  * @brief Handles popup menu actions for the MapCanvas.
@@ -29,12 +30,12 @@ class Tile;
  */
 class PopupActionHandler {
 public:
-	static void RotateItem(Editor& editor);
-	static void GotoDestination(Editor& editor);
-	static void SwitchDoor(Editor& editor);
-	static void BrowseTile(Editor& editor, int cursor_x, int cursor_y);
+	static void RotateItem(GUI& gui, Editor& editor);
+	static void GotoDestination(GUI& gui, Editor& editor);
+	static void SwitchDoor(GUI& gui, Editor& editor);
+	static void BrowseTile(GUI& gui, Editor& editor, int cursor_x, int cursor_y);
 	static void OpenProperties(Editor& editor);
-	static void SelectMoveTo(Editor& editor);
+	static void SelectMoveTo(GUI& gui, Editor& editor);
 
 private:
 	PopupActionHandler() = delete;

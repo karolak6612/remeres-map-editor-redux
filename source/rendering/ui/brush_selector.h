@@ -21,6 +21,8 @@
 class Editor;
 class Selection;
 class Tile;
+class GUI;
+class Settings;
 
 /**
  * @brief Handles brush selection from popup menu context.
@@ -30,18 +32,18 @@ class Tile;
  */
 class BrushSelector {
 public:
-	static void SelectRAWBrush(Selection& selection);
-	static void SelectGroundBrush(Selection& selection);
-	static void SelectDoodadBrush(Selection& selection);
-	static void SelectDoorBrush(Selection& selection);
-	static void SelectWallBrush(Selection& selection);
-	static void SelectCarpetBrush(Selection& selection);
-	static void SelectTableBrush(Selection& selection);
-	static void SelectHouseBrush(Editor& editor, Selection& selection);
-	static void SelectCollectionBrush(Selection& selection);
-	static void SelectCreatureBrush(Selection& selection);
-	static void SelectSpawnBrush();
-	static void SelectSmartBrush(Editor& editor, Tile* tile);
+	static void SelectRAWBrush(GUI& gui, Selection& selection);
+	static void SelectGroundBrush(GUI& gui, Selection& selection);
+	static void SelectDoodadBrush(GUI& gui, Selection& selection);
+	static void SelectDoorBrush(GUI& gui, Selection& selection);
+	static void SelectWallBrush(GUI& gui, Selection& selection);
+	static void SelectCarpetBrush(GUI& gui, Selection& selection);
+	static void SelectTableBrush(GUI& gui, Selection& selection);
+	static void SelectHouseBrush(GUI& gui, Editor& editor, Selection& selection);
+	static void SelectCollectionBrush(GUI& gui, Selection& selection);
+	static void SelectCreatureBrush(GUI& gui, Selection& selection);
+	static void SelectSpawnBrush(GUI& gui);
+	static void SelectSmartBrush(GUI& gui, const Settings& settings, Editor& editor, Tile* tile);
 
 private:
 	BrushSelector() = delete;

@@ -19,23 +19,35 @@
 #define RME_DISPLAY_WINDOW_H_
 
 #include "editor/action.h"
-#include "map/tile.h"
 #include "game/creature.h"
+#include "map/tile.h"
 #include "rendering/utilities/frame_pacer.h"
 
-#include "ui/map_popup_menu.h"
-#include "ui/map_popup_menu.h"
 #include "game/animation_timer.h"
 #include "rendering/core/graphics.h"
+#include "rendering/ui/render_loop.h"
+#include "rendering/ui/input_state.h"
+#include "rendering/ui/view_state_manager.h"
+#include "ui/map_popup_menu.h"
+#include <chrono>
+#include <cstddef>
+#include <functional>
 #include <memory>
 
 struct NVGcontext;
-struct DrawingOptions;
+struct RenderSettings;
+struct FrameOptions;
+struct ViewSnapshot;
+class GUI;
+class Settings;
+class Brush;
+class MapTab;
+class EditorTab;
+class wxGLContext;
 
 class Item;
 class Creature;
 class MapWindow;
-class AnimationTimer;
 class AnimationTimer;
 class MapDrawer;
 class SelectionController;
@@ -43,144 +55,229 @@ class DrawingController;
 class ScreenshotController;
 class MapMenuHandler;
 
-class MapCanvas : public wxGLCanvas {
-	std::unique_ptr<wxGLContext> m_glContext;
-	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
+namespace rme::rendering {
+class GLContextManager;
+}
+
+class MapCanvas : public wxGLCanvas, public rme::rendering::RenderLoopHost {
 
 public:
-	MapCanvas(MapWindow* parent, Editor& editor, int* attriblist);
-	~MapCanvas() override;
-	void Reset();
+    MapCanvas(MapWindow* parent, Editor& editor, GUI& gui, Settings& settings, int* attriblist);
+    ~MapCanvas() override;
+    void Reset();
 
-	// All events
-	void OnPaint(wxPaintEvent& event);
-	void OnEraseBackground(wxEraseEvent& event) { }
+    // All events
+    void OnPaint(wxPaintEvent& event);
+    void OnEraseBackground(wxEraseEvent& event) { }
 
-	void OnMouseMove(wxMouseEvent& event);
-	void OnMouseLeftRelease(wxMouseEvent& event);
-	void OnMouseLeftClick(wxMouseEvent& event);
-	void OnMouseLeftDoubleClick(wxMouseEvent& event);
-	void OnMouseCenterClick(wxMouseEvent& event);
-	void OnMouseCenterRelease(wxMouseEvent& event);
-	void OnMouseRightClick(wxMouseEvent& event);
-	void OnMouseRightRelease(wxMouseEvent& event);
+    void OnMouseMove(wxMouseEvent& event);
+    void OnMouseLeftRelease(wxMouseEvent& event);
+    void OnMouseLeftClick(wxMouseEvent& event);
+    void OnMouseLeftDoubleClick(wxMouseEvent& event);
+    void OnMouseCenterClick(wxMouseEvent& event);
+    void OnMouseCenterRelease(wxMouseEvent& event);
+    void OnMouseRightClick(wxMouseEvent& event);
+    void OnMouseRightRelease(wxMouseEvent& event);
 
-	void OnKeyDown(wxKeyEvent& event);
-	void OnKeyUp(wxKeyEvent& event);
-	void OnWheel(wxMouseEvent& event);
-	void OnGainMouse(wxMouseEvent& event);
-	void OnLoseMouse(wxMouseEvent& event);
+    void OnKeyDown(wxKeyEvent& event);
+    void OnKeyUp(wxKeyEvent& event);
+    void OnWheel(wxMouseEvent& event);
+    void OnGainMouse(wxMouseEvent& event);
+    void OnLoseMouse(wxMouseEvent& event);
 
-	// Mouse events handlers (called by the above)
-	void OnMouseActionRelease(wxMouseEvent& event);
-	void OnMouseActionClick(wxMouseEvent& event);
-	void OnMouseCameraClick(wxMouseEvent& event);
-	void OnMouseCameraRelease(wxMouseEvent& event);
-	void OnMousePropertiesClick(wxMouseEvent& event);
-	void OnMousePropertiesRelease(wxMouseEvent& event);
+    // Mouse events handlers (called by the above)
+    void OnMouseActionRelease(wxMouseEvent& event);
+    void OnMouseActionClick(wxMouseEvent& event);
+    void OnMouseCameraClick(wxMouseEvent& event);
+    void OnMouseCameraRelease(wxMouseEvent& event);
+    void OnMousePropertiesClick(wxMouseEvent& event);
+    void OnMousePropertiesRelease(wxMouseEvent& event);
 
-	void Refresh();
+    void Refresh();
 
-	void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
-	void MouseToMap(int* map_x, int* map_y) {
-		ScreenToMap(cursor_x, cursor_y, map_x, map_y);
-	}
-	void GetScreenCenter(int* map_x, int* map_y);
+    void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
+    void MouseToMap(int* map_x, int* map_y)
+    {
+        ScreenToMap(input_.cursor_x, input_.cursor_y, map_x, map_y);
+    }
+    void GetScreenCenter(int* map_x, int* map_y);
 
-	void StartPasting();
-	void EndPasting();
-	void EnterSelectionMode();
-	void EnterDrawingMode();
+    void StartPasting();
+    void EndPasting();
+    void EnterSelectionMode();
+    void EnterDrawingMode();
 
-	void UpdatePositionStatus(int x = -1, int y = -1);
-	void UpdateZoomStatus();
+    void UpdatePositionStatus(int x = -1, int y = -1);
+    void UpdatePositionStatus(int map_x, int map_y, int map_z);
+    void UpdateZoomStatus();
 
-	void ChangeFloor(int new_floor);
-	int GetFloor() const {
-		return floor;
-	}
-	double GetZoom() const {
-		return zoom;
-	}
-	void SetZoom(double value);
-	void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
+    void ChangeFloor(int new_floor);
+    int GetFloor() const
+    {
+        return view_state_->getFloor();
+    }
+    double GetZoom() const
+    {
+        return view_state_->getZoom();
+    }
+    void SetZoom(double value);
+    ViewStateManager& GetViewState() { return *view_state_; }
+    void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
 
-	Position GetCursorPosition() const;
+    Position GetCursorPosition() const;
 
-	void TakeScreenshot(wxFileName path, wxString format);
+    void TakeScreenshot(wxFileName path, wxString format);
 
-	enum {
-		BLOCK_SIZE = 100
-	};
+    bool isPasting() const;
 
-	inline int getFillIndex(int x, int y) const {
-		return x + BLOCK_SIZE * y;
-	}
+    // Public members — widely referenced by framework and event handlers
+    Editor& editor;
+    std::unique_ptr<MapDrawer> drawer;
+    std::unique_ptr<rme::rendering::GLContextManager> gl_context_;
+    std::unique_ptr<rme::rendering::RenderLoop> render_loop_;
+    std::unique_ptr<ScreenshotController> screenshot_controller;
 
-	static bool processed[BLOCK_SIZE * BLOCK_SIZE];
-	Editor& editor;
-	std::unique_ptr<MapDrawer> drawer;
-	int keyCode;
+    wxStopWatch refresh_watch;
+    std::unique_ptr<MapPopupMenu> popup_menu;
+    std::unique_ptr<AnimationTimer> animation_timer;
 
-	// View related
-	int floor;
-	double zoom;
-	int cursor_x;
-	int cursor_y;
+    FramePacer frame_pacer;
 
-	bool dragging;
-	bool boundbox_selection;
-	bool screendragging;
-	bool isPasting() const;
+    std::unique_ptr<SelectionController> selection_controller;
+    std::unique_ptr<DrawingController> drawing_controller;
+    std::unique_ptr<MapMenuHandler> menu_handler;
 
-	std::unique_ptr<ScreenshotController> screenshot_controller;
+    MapWindow* GetMapWindow() const;
+    GUI& GetGui() const { return gui_; }
+    Settings& GetSettings() const { return settings_; }
+    GraphicManager& GetGraphics() const;
+    wxGLContext* GetSharedGLContext() const;
+    MapTab* GetCurrentMapTab() const;
+    EditorTab* GetCurrentTab() const;
+    Editor* GetCurrentEditor() const;
+    bool IsEditorOpen() const;
+    Brush* GetCurrentBrush() const;
+    BrushShape GetBrushShape() const;
+    int GetBrushSize() const;
+    int GetBrushVariation() const;
+    void SetBrushSize(int size);
+    void SetBrushVariation(int variation);
+    void IncreaseBrushSize(bool wrap = false);
+    void DecreaseBrushSize(bool wrap = false);
+    bool SelectBrush(const Brush* brush, PaletteType palette = TILESET_UNKNOWN);
+    void SelectPreviousBrush();
+    void FillDoodadPreviewBuffer();
+    void UpdateAutoborderPreview(Position pos);
+    void RefreshView();
+    void UpdateMinimap(bool immediate = false);
+    void UpdateMenubar();
+    void SetStatusText(const wxString& text);
+    void SetSelectionMode();
+    void SetDrawingMode();
+    void SwitchMode();
+    bool IsSelectionMode() const;
+    bool IsDrawingMode() const;
+    bool IsRenderingEnabledViaGui() const;
+    void CycleTab(bool forward = true);
+    void SetScreenCenterPosition(Position pos);
+    void RebuildPalettes();
+    float GetLightIntensity() const;
+    float GetAmbientLightLevel() const;
+    wxGLCanvas& canvas() override
+    {
+        return *this;
+    }
+    bool isRenderingEnabled() const override;
+    bool isThreadedRenderingEnabled() const override;
+    size_t planningWorkerCount() const override;
+    GraphicManager& graphics() const override;
+    RenderSettings buildRenderSettings() const override;
+    FrameOptions buildFrameOptions() const override;
+    ViewSnapshot buildViewSnapshot() const override;
+    BrushSnapshot buildBrushSnapshot() const override;
+    BrushVisualSettings buildBrushVisualSettings() const override;
+    void updateAnimationState(bool show_preview) override;
+    bool isCapturingScreenshot() const override;
+    uint8_t* screenshotBuffer() const override;
+    bool shouldCollectGarbage() const override;
+    void collectGarbage() override;
+    void updateFramePacing() override;
+    void sendNodeRequests() override;
 
-	int last_cursor_map_x;
-	int last_cursor_map_y;
-	int last_cursor_map_z;
-
-	int last_click_map_x;
-	int last_click_map_y;
-	int last_click_map_z;
-	int last_click_abs_x;
-	int last_click_abs_y;
-	int last_click_x;
-	int last_click_y;
-
-	int last_mmb_click_x;
-	int last_mmb_click_y;
-
-	int view_scroll_x;
-	int view_scroll_y;
-
-	uint32_t current_house_id;
-
-	wxStopWatch refresh_watch;
-	std::unique_ptr<MapPopupMenu> popup_menu;
-	std::unique_ptr<AnimationTimer> animation_timer;
-
-	FramePacer frame_pacer;
-
-	friend class MapDrawer;
-	friend class SelectionDrawer;
-	friend class BrushOverlayDrawer;
-	friend class DragShadowDrawer;
-	friend class PreviewDrawer;
-	friend class SelectionController;
-	friend class DrawingController;
-
-	std::unique_ptr<SelectionController> selection_controller;
-	std::unique_ptr<DrawingController> drawing_controller;
-	std::unique_ptr<MapMenuHandler> menu_handler;
+    // --- Accessors for privatized fields ---
+    int GetKeyCode() const
+    {
+        return input_.keyCode;
+    }
+    void SetKeyCode(int code)
+    {
+        input_.keyCode = code;
+    }
+    int GetCursorX() const
+    {
+        return input_.cursor_x;
+    }
+    int GetCursorY() const
+    {
+        return input_.cursor_y;
+    }
+    bool IsScreenDragging() const
+    {
+        return input_.screendragging;
+    }
+    void SetScreenDragging(bool v)
+    {
+        input_.screendragging = v;
+    }
+    int GetLastClickMapX() const
+    {
+        return input_.last_click_map_x;
+    }
+    int GetLastClickMapY() const
+    {
+        return input_.last_click_map_y;
+    }
+    int GetLastClickMapZ() const
+    {
+        return input_.last_click_map_z;
+    }
+    int GetLastMmbClickX() const
+    {
+        return input_.last_mmb_click_x;
+    }
+    int GetLastMmbClickY() const
+    {
+        return input_.last_mmb_click_y;
+    }
+    void SetLastMmbClickX(int v)
+    {
+        input_.last_mmb_click_x = v;
+    }
+    void SetLastMmbClickY(int v)
+    {
+        input_.last_mmb_click_y = v;
+    }
+    void SetFloorDirect(int f)
+    {
+        view_state_->setFloor(f);
+    }
+    void SetZoomDirect(double z)
+    {
+        view_state_->setZoom(z);
+    }
 
 private:
-	void EnsureNanoVG();
-	void DrawOverlays(NVGcontext* vg, const DrawingOptions& options);
-	void PerformGarbageCollection();
+    GUI& gui_;
+    Settings& settings_;
+    std::unique_ptr<ViewStateManager> view_state_;
+    InputState input_;
+    std::chrono::steady_clock::time_point next_hover_ui_update_ {};
+    std::function<void()> previous_editor_state_change_;
 
-	MapWindow* GetMapWindow() const;
-	bool renderer_initialized = false;
-	long m_last_gc_time = 0;
+    ViewSnapshot BuildViewSnapshot() const;
+    void ConfigureRenderSettings(RenderSettings& settings) const;
+    void ConfigureFrameOptions(FrameOptions& frame) const;
+    [[nodiscard]] bool shouldRefreshHoverUi() const;
 };
 
 #endif

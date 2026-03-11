@@ -10,6 +10,7 @@
 #include <glm/glm.hpp>
 
 class Map;
+class SharedGeometry;
 
 class MinimapRenderer {
 public:
@@ -28,7 +29,7 @@ public:
 	/**
 	 * Initialize rendering resources (textures, shaders, PBOs).
 	 */
-	bool initialize();
+	bool initialize(SharedGeometry& shared_geometry);
 
 	/**
 	 * Resize the internal texture to match map dimensions.

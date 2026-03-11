@@ -36,30 +36,30 @@ int ClampCopyPositionFormat(int format) {
 }
 }
 
-void ClipboardHandler::copy(Editor& editor, int floor) {
-	if (g_gui.IsSelectionMode()) {
+void ClipboardHandler::copy(GUI& gui, Editor& editor, int floor) {
+	if (gui.IsSelectionMode()) {
 		editor.copybuffer.copy(editor, floor);
 	}
 }
 
-void ClipboardHandler::cut(Editor& editor, int floor) {
-	if (g_gui.IsSelectionMode()) {
+void ClipboardHandler::cut(GUI& gui, Editor& editor, int floor) {
+	if (gui.IsSelectionMode()) {
 		editor.copybuffer.cut(editor, floor);
 	}
-	g_gui.RefreshView();
+	gui.RefreshView();
 }
 
-void ClipboardHandler::paste() {
-	g_gui.DoPaste();
-	g_gui.RefreshView();
+void ClipboardHandler::paste(GUI& gui) {
+	gui.DoPaste();
+	gui.RefreshView();
 }
 
-void ClipboardHandler::doDelete(Editor& editor) {
+void ClipboardHandler::doDelete(GUI& gui, Editor& editor) {
 	editor.destroySelection();
-	g_gui.RefreshView();
+	gui.RefreshView();
 }
 
-void ClipboardHandler::copyPosition(const Selection& selection) {
+void ClipboardHandler::copyPosition(const Settings& settings, const Selection& selection) {
 	if (selection.empty()) {
 		return;
 	}
@@ -82,7 +82,7 @@ void ClipboardHandler::copyPosition(const Selection& selection) {
 		}
 		clip << "}";
 	} else {
-		switch (ClampCopyPositionFormat(g_settings.getInteger(Config::COPY_POSITION_FORMAT))) {
+		switch (ClampCopyPositionFormat(settings.getInteger(Config::COPY_POSITION_FORMAT))) {
 			case 0:
 				clip << "{x = " << minPos.x << ", y = " << minPos.y << ", z = " << minPos.z << "}";
 				break;

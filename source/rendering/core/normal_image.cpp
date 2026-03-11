@@ -1,15 +1,15 @@
 #include "rendering/core/normal_image.h"
 #include "rendering/core/game_sprite.h"
-#include "app/settings.h"
+#include "rendering/core/graphics.h"
+#include "rendering/core/sprite_decompression.h"
 #include "rendering/core/sprite_archive.h"
-#include "ui/gui.h"
 #include <spdlog/spdlog.h>
 
 constexpr int RGB_COMPONENTS = 3;
 
 namespace {
-	bool loadDumpFromArchive(uint32_t id, std::unique_ptr<uint8_t[]>& dump, uint16_t& size) {
-		const auto archive = g_gui.gfx.getSpriteArchive();
+	bool loadDumpFromArchive(GraphicManager& graphics, uint32_t id, std::unique_ptr<uint8_t[]>& dump, uint16_t& size) {
+		const auto archive = graphics.getSpriteArchive();
 		return archive && archive->readCompressed(id, dump, size);
 	}
 }
@@ -24,8 +24,8 @@ NormalImage::NormalImage() :
 NormalImage::~NormalImage() {
 	// dump auto-deleted
 	if (isGLLoaded) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(id);
+		if (graphics().hasAtlasManager()) {
+			graphics().getAtlasManager()->removeSprite(id);
 		}
 	}
 }
@@ -37,14 +37,11 @@ void NormalImage::fulfillPreload(std::unique_ptr<uint8_t[]> data) {
 void NormalImage::clean(time_t time, int longevity) {
 	// Evict from atlas if expired
 	if (longevity == -1) {
-		longevity = g_settings.getInteger(Config::TEXTURE_LONGEVITY);
+		longevity = graphics().runtimeConfig().texture_longevity;
 	}
 	if (isGLLoaded && time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > longevity) {
-		if (g_gui.gfx.hasAtlasManager()) {
-			g_gui.gfx.getAtlasManager()->removeSprite(id);
-		}
-		if (parent) {
-			parent->invalidateCache(atlas_region);
+		if (graphics().hasAtlasManager()) {
+			graphics().getAtlasManager()->removeSprite(id);
 		}
 
 		isGLLoaded = false;
@@ -53,10 +50,10 @@ void NormalImage::clean(time_t time, int longevity) {
 		// Invalidate any pending preloads for this sprite ID
 		generation_id++;
 
-		g_gui.gfx.collector.NotifyTextureUnloaded();
+		graphics().notifyTextureUnloaded();
 	}
 
-	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !g_settings.getInteger(Config::USE_MEMCACHED_SPRITES)) { // We keep dumps around for 5 seconds.
+	if (time - static_cast<time_t>(lastaccess.load(std::memory_order_relaxed)) > 5 && !graphics().runtimeConfig().use_memcached_sprites) {
 		dump.reset();
 	}
 }
@@ -67,14 +64,14 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBData() {
 	}
 
 	if (!dump) {
-		if (!loadDumpFromArchive(id, dump, size)) {
+		if (!loadDumpFromArchive(graphics(), id, dump, size)) {
 			return nullptr;
 		}
 	}
 
 	const int pixels_data_size = SPRITE_PIXELS * SPRITE_PIXELS * RGB_COMPONENTS;
 	auto data = std::make_unique<uint8_t[]>(pixels_data_size);
-	uint8_t bpp = g_gui.gfx.hasTransparency() ? 4 : RGB_COMPONENTS;
+	uint8_t bpp = graphics().hasTransparency() ? 4 : RGB_COMPONENTS;
 	size_t write = 0;
 	size_t read = 0;
 
@@ -133,14 +130,14 @@ std::unique_ptr<uint8_t[]> NormalImage::getRGBAData() {
 	}
 
 	if (!dump) {
-		if (!loadDumpFromArchive(id, dump, size)) {
+		if (!loadDumpFromArchive(graphics(), id, dump, size)) {
 			// This is the only case where we return nullptr for non-zero ID
 			// effectively warning the caller that the sprite is missing from file
 			return nullptr;
 		}
 	}
 
-	return GameSprite::Decompress(std::span { dump.get(), size }, g_gui.gfx.hasTransparency(), id);
+	return SpriteDecompression::Decompress(std::span { dump.get(), size }, graphics().hasTransparency(), id);
 }
 
 const AtlasRegion* NormalImage::getAtlasRegion() {
