@@ -27,18 +27,12 @@ struct NVGcontext;
 #include "app/definitions.h"
 #include "game/creature.h"
 #include "game/outfit.h"
-#include "rendering/core/frame_options.h"
-#include "rendering/core/light_buffer.h"
-#include "rendering/core/render_settings.h"
-
+#include "rendering/core/draw_frame.h"
 #include "rendering/core/frame_accumulators.h"
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/primitive_renderer.h"
-#include "rendering/core/render_view.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/core/sprite_batch.h"
-#include "rendering/core/brush_snapshot.h"
-#include "rendering/core/view_snapshot.h"
 #include "rendering/ui/nvg_image_cache.h"
 #include "rendering/ui/tooltip_renderer.h"
 
@@ -100,14 +94,9 @@ struct CursorDrawers {
 class MapDrawer {
     Editor& editor;
     RenderContext render_ctx_;
-    RenderSettings render_settings;
-    FrameOptions frame_options;
-    ViewState view;
-    ViewSnapshot snapshot_;
-    BrushSnapshot brush_snapshot_;
-    mutable std::mutex snapshot_mutex_; // Protects snapshot_ for future multi-threaded access
+    DrawFrame frame_;
+    mutable std::mutex snapshot_mutex_; // Protects frame_.snapshot for future multi-threaded access
     std::unique_ptr<LightDrawer> light_drawer;
-    LightBuffer light_buffer;
 
     // Double-buffered accumulators: write buffer accumulates during Draw(),
     // read buffer is consumed by overlay drawers (tooltips, hooks, doors, names).
@@ -147,9 +136,6 @@ class MapDrawer {
     // Post-processing
     std::unique_ptr<PostProcessPipeline> post_process_;
 
-    // Cached per-frame atlas pointer (set in Draw(), valid until frame ends)
-    AtlasManager* current_atlas_ = nullptr;
-
 public:
     MapDrawer(Editor& editor, RenderContext ctx);
     ~MapDrawer();
@@ -174,16 +160,16 @@ public:
 
     RenderSettings& getRenderSettings()
     {
-        return render_settings;
+        return frame_.settings;
     }
     FrameOptions& getFrameOptions()
     {
-        return frame_options;
+        return frame_.options;
     }
     ViewSnapshot getSnapshot() const
     {
         std::lock_guard<std::mutex> lock(snapshot_mutex_);
-        return snapshot_;
+        return frame_.snapshot;
     }
 
     SpriteBatch* getSpriteBatch()
