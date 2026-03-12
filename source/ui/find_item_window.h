@@ -26,6 +26,7 @@
 #include <wx/checkbox.h>
 #include <wx/button.h>
 #include <wx/dialog.h>
+#include <wx/tglbtn.h>
 
 class FindDialogListBox;
 
@@ -78,6 +79,7 @@ private:
 	void OnInputTimer(wxTimerEvent& event);
 	void OnClickOK(wxCommandEvent& event);
 	void OnClickCancel(wxCommandEvent& event);
+	void OnToggleListMode(wxCommandEvent& event);
 
 	wxRadioBox* options_radio_box;
 
@@ -104,6 +106,7 @@ private:
 	wxCheckBox* floor_change;
 	wxCheckBox* invalid_item;
 
+	wxToggleButton* list_mode_btn;
 	FindDialogListBox* items_list;
 	wxStdDialogButtonSizer* buttons_box_sizer;
 	wxButton* ok_button;

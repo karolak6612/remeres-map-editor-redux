@@ -38,29 +38,38 @@ wxSize ToolOptionsSurface::DoGetBestClientSize() const {
 	// Base padding
 	int h = FromDIP(8);
 
+	// Headers
+	if (!headers.empty()) {
+		int max_y = 0;
+		for (const auto& header : headers) {
+			max_y = std::max(max_y, header.rect.GetBottom());
+		}
+		h = std::max(h, max_y);
+	}
+
 	// Tools Section
 	if (!tool_rects.empty()) {
 		int max_y = 0;
 		for (const auto& tr : tool_rects) {
 			max_y = std::max(max_y, tr.rect.GetBottom());
 		}
-		h = max_y + FromDIP(SECTION_GAP);
+		h = std::max(h, max_y + FromDIP(SECTION_GAP));
 	}
 
 	// Sliders Section
 	if (interactables.size_slider_rect.height > 0) {
-		h += interactables.size_slider_rect.height + FromDIP(GRID_GAP);
+		h = std::max(h, interactables.size_slider_rect.GetBottom() + FromDIP(GRID_GAP));
 	}
 	if (interactables.thickness_slider_rect.height > 0) {
-		h += interactables.thickness_slider_rect.height + FromDIP(SECTION_GAP);
+		h = std::max(h, interactables.thickness_slider_rect.GetBottom() + FromDIP(SECTION_GAP));
 	}
 
 	// Checkboxes
 	if (interactables.preview_check_rect.height > 0) {
-		h += interactables.preview_check_rect.height + FromDIP(4);
+		h = std::max(h, interactables.preview_check_rect.GetBottom() + FromDIP(4));
 	}
 	if (interactables.lock_check_rect.height > 0) {
-		h += interactables.lock_check_rect.height + FromDIP(4);
+		h = std::max(h, interactables.lock_check_rect.GetBottom() + FromDIP(4));
 	}
 
 	// Min width 200 DIP?
@@ -73,6 +82,7 @@ void ToolOptionsSurface::DoSetSizeHints(int minW, int minH, int maxW, int maxH, 
 
 void ToolOptionsSurface::RebuildLayout() {
 	tool_rects.clear();
+	headers.clear();
 	interactables.size_slider_rect = wxRect();
 	interactables.thickness_slider_rect = wxRect();
 	interactables.preview_check_rect = wxRect();
@@ -82,11 +92,13 @@ void ToolOptionsSurface::RebuildLayout() {
 		return;
 	}
 
-	int x = FromDIP(4);
-	int y = FromDIP(4);
+	int x = FromDIP(8);
+	int y = FromDIP(8);
 	const int w = GetClientSize().GetWidth();
+	const int content_w = w - FromDIP(16);
 	const int icon_sz = FromDIP(ICON_SIZE_LG); // Defaulting to large for "Pro" look
 	const int gap = FromDIP(GRID_GAP);
+	const int header_h = FromDIP(24);
 
 	// 1. Tools
 	bool has_tools = (current_type == TILESET_TERRAIN || current_type == TILESET_COLLECTION);
@@ -137,50 +149,63 @@ void ToolOptionsSurface::RebuildLayout() {
 			brushes.push_back(g_brush_manager.archway_door_brush);
 		}
 
-		// Layout grid
-		int cur_x = x;
-		for (Brush* b : brushes) {
-			if (cur_x + icon_sz > w) {
-				cur_x = x;
-				y += icon_sz + gap;
-			}
-
-			ToolRect tr;
-			tr.rect = wxRect(cur_x, y, icon_sz, icon_sz);
-			tr.brush = b;
-			tr.tooltip = b->getName(); // Or specific label
-			tool_rects.push_back(tr);
-
-			cur_x += icon_sz + gap;
-		}
 		if (!brushes.empty()) {
+			headers.push_back({ wxRect(x, y, content_w, header_h), "TOOLS" });
+			y += header_h + FromDIP(4);
+
+			// Layout grid
+			int cur_x = x;
+			for (Brush* b : brushes) {
+				if (cur_x + icon_sz > w) {
+					cur_x = x;
+					y += icon_sz + gap;
+				}
+
+				ToolRect tr;
+				tr.rect = wxRect(cur_x, y, icon_sz, icon_sz);
+				tr.brush = b;
+				tr.tooltip = b->getName(); // Or specific label
+				tool_rects.push_back(tr);
+
+				cur_x += icon_sz + gap;
+			}
 			y += icon_sz + FromDIP(SECTION_GAP);
 		}
 	}
 
 	int slider_h = FromDIP(24);
-	int slider_w = w - FromDIP(8);
 
 	// 2. Size Slider
 	bool show_size = (current_type != TILESET_UNKNOWN); // Most show size
 	if (show_size) {
-		interactables.size_slider_rect = wxRect(x, y, slider_w, slider_h);
+		headers.push_back({ wxRect(x, y, content_w, header_h), "BRUSH SETTINGS" });
+		y += header_h + FromDIP(4);
+
+		interactables.size_slider_rect = wxRect(x, y, content_w, slider_h);
 		y += slider_h + gap;
 	}
 
 	// 3. Thickness Slider
 	bool show_thickness = (current_type == TILESET_COLLECTION || current_type == TILESET_DOODAD);
 	if (show_thickness) {
-		interactables.thickness_slider_rect = wxRect(x, y, slider_w, slider_h);
+		// Only add header if we haven't already
+		if (!show_size) {
+			headers.push_back({ wxRect(x, y, content_w, header_h), "BRUSH SETTINGS" });
+			y += header_h + FromDIP(4);
+		}
+		interactables.thickness_slider_rect = wxRect(x, y, content_w, slider_h);
 		y += slider_h + gap;
 	}
 
 	// 4. Options
-	y += FromDIP(8); // Extra spacer
 	if (has_tools) { // Assume terrain
-		interactables.preview_check_rect = wxRect(x, y, slider_w, FromDIP(20));
+		y += FromDIP(SECTION_GAP) - gap; // extra gap to separate settings from options
+		headers.push_back({ wxRect(x, y, content_w, header_h), "OPTIONS" });
+		y += header_h + FromDIP(4);
+
+		interactables.preview_check_rect = wxRect(x, y, content_w, FromDIP(20));
 		y += FromDIP(24);
-		interactables.lock_check_rect = wxRect(x, y, slider_w, FromDIP(20));
+		interactables.lock_check_rect = wxRect(x, y, content_w, FromDIP(20));
 	}
 
 	InvalidateBestSize();
@@ -194,6 +219,11 @@ void ToolOptionsSurface::OnPaint(wxPaintEvent& evt) {
 	wxColour bg = Theme::Get(Theme::Role::Surface);
 	dc.SetBackground(wxBrush(bg));
 	dc.Clear();
+
+	// 0. Draw Headers
+	for (const auto& header : headers) {
+		DrawSectionHeader(dc, header);
+	}
 
 	// 1. Draw Tools
 	for (const auto& tr : tool_rects) {
@@ -267,6 +297,25 @@ void ToolOptionsSurface::DrawToolIcon(wxDC& dc, const ToolRect& tr) {
 		dc.SetPen(wxPen(Theme::Get(Theme::Role::Border)));
 	}
 	dc.DrawRectangle(r);
+}
+
+void ToolOptionsSurface::DrawSectionHeader(wxDC& dc, const SectionHeader& header) {
+	wxFont font = Theme::GetFont(10, true);
+	dc.SetFont(font);
+	dc.SetTextForeground(Theme::Get(Theme::Role::TextSubtle));
+
+	wxSize extent = dc.GetTextExtent(header.title);
+	dc.DrawText(header.title, header.rect.GetLeft(), header.rect.GetTop() + (header.rect.height - extent.y) / 2);
+
+	// Draw line separator
+	int line_x = header.rect.GetLeft() + extent.x + FromDIP(8);
+	int line_y = header.rect.GetTop() + header.rect.height / 2;
+	int line_w = header.rect.GetRight() - line_x;
+
+	if (line_w > 0) {
+		dc.SetPen(wxPen(Theme::Get(Theme::Role::Border)));
+		dc.DrawLine(line_x, line_y, line_x + line_w, line_y);
+	}
 }
 
 void ToolOptionsSurface::DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active) {

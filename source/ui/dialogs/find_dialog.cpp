@@ -48,6 +48,13 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	search_field->SetFocus();
 	sizer->Add(search_field, 0, wxEXPAND);
 
+	wxBoxSizer* list_header_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	list_header_sizer->AddStretchSpacer();
+	list_mode_btn = newd wxToggleButton(this, wxID_ANY, "List Mode");
+	list_mode_btn->SetToolTip("Toggle between grid and list views");
+	list_header_sizer->Add(list_mode_btn, 0, wxBOTTOM, 5);
+	sizer->Add(list_header_sizer, 0, wxEXPAND | wxRIGHT | wxLEFT, 5);
+
 	item_list = newd FindDialogListBox(this, JUMP_DIALOG_LIST);
 	item_list->SetMinSize(FROM_DIP(item_list, wxSize(470, 400)));
 	item_list->SetToolTip("Double click to select.");
@@ -74,6 +81,7 @@ FindDialog::FindDialog(wxWindow* parent, wxString title) :
 	Bind(wxEVT_LISTBOX_DCLICK, &FindDialog::OnClickList, this, JUMP_DIALOG_LIST);
 	Bind(wxEVT_BUTTON, &FindDialog::OnClickOK, this, wxID_OK);
 	Bind(wxEVT_BUTTON, &FindDialog::OnClickCancel, this, wxID_CANCEL);
+	Bind(wxEVT_TOGGLEBUTTON, &FindDialog::OnToggleListMode, this);
 
 	// We can't call it here since it calls an abstract function, call in child constructors instead.
 	// RefreshContents();
@@ -153,6 +161,10 @@ void FindDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 void FindDialog::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 	EndModal(0);
+}
+
+void FindDialog::OnToggleListMode(wxCommandEvent& WXUNUSED(event)) {
+	item_list->SetListMode(list_mode_btn->GetValue());
 }
 
 void FindDialog::RefreshContents() {
@@ -292,7 +304,16 @@ void FindBrushDialog::RefreshContentsInternal() {
 FindDialogListBox::FindDialogListBox(wxWindow* parent, wxWindowID id) :
 	NanoVGListBox(parent, id, wxLB_SINGLE),
 	cleared(false),
-	no_matches(false) {
+	no_matches(false),
+	is_list_mode(false),
+	columns(1),
+	item_size(32),
+	padding(4) {
+
+	Bind(wxEVT_SIZE, &FindDialogListBox::OnSize, this);
+	Bind(wxEVT_LEFT_DOWN, &FindDialogListBox::OnMouseDown, this);
+	Bind(wxEVT_MOTION, &FindDialogListBox::OnMotion, this);
+
 	Clear();
 }
 
@@ -300,11 +321,231 @@ FindDialogListBox::~FindDialogListBox() {
 	////
 }
 
+void FindDialogListBox::SetListMode(bool is_list) {
+	if (is_list_mode != is_list) {
+		is_list_mode = is_list;
+		UpdateLayout();
+		Refresh();
+	}
+}
+
+void FindDialogListBox::UpdateLayout() {
+	int width = GetClientSize().x;
+	if (width <= 0) {
+		width = 200;
+	}
+
+	if (is_list_mode || cleared || no_matches) {
+		columns = 1;
+		int rows = static_cast<int>(brushlist.empty() ? 1 : brushlist.size());
+		int contentHeight = rows * OnMeasureItem(0) + padding;
+		NanoVGCanvas::UpdateScrollbar(contentHeight);
+	} else {
+		columns = std::max(1, (width - padding) / (item_size + padding));
+		int rows = (static_cast<int>(brushlist.size()) + columns - 1) / columns;
+		int contentHeight = rows * (item_size + padding) + padding;
+		NanoVGCanvas::UpdateScrollbar(contentHeight);
+	}
+}
+
+wxSize FindDialogListBox::DoGetBestClientSize() const {
+	return FromDIP(wxSize(200, 300));
+}
+
+void FindDialogListBox::OnSize(wxSizeEvent& event) {
+	UpdateLayout();
+	Refresh();
+	event.Skip();
+}
+
+wxRect FindDialogListBox::GetItemRect(int index) const {
+	if (is_list_mode || cleared || no_matches) {
+		int width = GetClientSize().x - 2 * padding;
+		int itemHeight = OnMeasureItem(0);
+		return wxRect(padding, padding + index * itemHeight, width, itemHeight);
+	} else {
+		int row = index / columns;
+		int col = index % columns;
+
+		return wxRect(
+			padding + col * (item_size + padding),
+			padding + row * (item_size + padding),
+			item_size,
+			item_size
+		);
+	}
+}
+
+int FindDialogListBox::HitTest(int x, int y) const {
+	int scrollPos = GetScrollPosition();
+	int realY = y + scrollPos;
+	int realX = x;
+
+	if (is_list_mode || cleared || no_matches) {
+		int itemHeight = OnMeasureItem(0);
+		int row = (realY - padding) / itemHeight;
+
+		int max_items = brushlist.empty() ? 1 : static_cast<int>(brushlist.size());
+		if (row < 0 || row >= max_items) {
+			return -1;
+		}
+
+		if (realX >= padding && realX <= GetClientSize().x - padding) {
+			return row;
+		}
+		return -1;
+	} else {
+		int col = (realX - padding) / (item_size + padding);
+		int row = (realY - padding) / (item_size + padding);
+
+		if (col < 0 || col >= columns || row < 0) {
+			return -1;
+		}
+
+		int index = row * columns + col;
+		if (index >= 0 && index < static_cast<int>(brushlist.size())) {
+			wxRect rect = GetItemRect(index);
+			rect.y -= scrollPos;
+			if (rect.Contains(x, y)) {
+				return index;
+			}
+		}
+		return -1;
+	}
+}
+
+void FindDialogListBox::OnMouseDown(wxMouseEvent& event) {
+	if (cleared || no_matches) return;
+
+	int index = HitTest(event.GetX(), event.GetY());
+	if (index != -1) {
+		Select(index, true);
+		SendSelectionEvent();
+		Refresh();
+
+		if (event.LeftDClick()) {
+			wxCommandEvent doubleClickEvent(wxEVT_LISTBOX_DCLICK, GetId());
+			doubleClickEvent.SetEventObject(this);
+			doubleClickEvent.SetInt(index);
+			ProcessWindowEvent(doubleClickEvent);
+		}
+	}
+	SetFocus();
+}
+
+void FindDialogListBox::OnMotion(wxMouseEvent& event) {
+	if (cleared || no_matches) return;
+
+	int index = HitTest(event.GetX(), event.GetY());
+	if (index != m_hoverIndex) {
+		m_hoverIndex = index;
+		Refresh();
+	}
+
+	if (index != -1 && !is_list_mode && index < static_cast<int>(brushlist.size())) {
+		Brush* brush = brushlist[index];
+		if (brush) {
+			wxString tip = wxstr(brush->getName());
+			if (GetToolTipText() != tip) {
+				SetToolTip(tip);
+			}
+		}
+	} else {
+		UnsetToolTip();
+	}
+
+	event.Skip();
+}
+
+void FindDialogListBox::OnNanoVGPaint(NVGcontext* vg, int width, int height) {
+	if (m_count == 0) {
+		return;
+	}
+
+	int scrollPos = GetScrollPosition();
+
+	if (is_list_mode || cleared || no_matches) {
+		int itemHeight = OnMeasureItem(0);
+		int startRow = scrollPos / itemHeight;
+		int endRow = (scrollPos + height + itemHeight - 1) / itemHeight;
+
+		startRow = std::max(0, startRow);
+		endRow = std::min(static_cast<int>(m_count), endRow);
+
+		for (int i = startRow; i < endRow; ++i) {
+			wxRect rect = GetItemRect(i);
+
+			bool selected = IsSelected(i);
+			bool hover = (i == m_hoverIndex);
+			bool focused = (i == m_focusIndex);
+
+			if (selected || hover || focused) {
+				nvgBeginPath(vg);
+				nvgRect(vg, rect.x, rect.y, rect.width, rect.height);
+				wxColour c;
+				if (selected) {
+					c = Theme::Get(Theme::Role::Accent);
+				} else if (focused) {
+					c = Theme::Get(Theme::Role::Selected);
+				} else {
+					c = Theme::Get(Theme::Role::CardBaseHover);
+				}
+				nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), c.Alpha()));
+				nvgFill(vg);
+			}
+
+			OnDrawItem(vg, rect, i);
+		}
+	} else {
+		int rowHeight = item_size + padding;
+		int startRow = scrollPos / rowHeight;
+		int endRow = (scrollPos + height + rowHeight - 1) / rowHeight + 1;
+
+		int startIdx = startRow * columns;
+		int endIdx = std::min(static_cast<int>(brushlist.size()), endRow * columns);
+
+		for (int i = startIdx; i < endIdx; ++i) {
+			wxRect rect = GetItemRect(i);
+
+			bool selected = IsSelected(i);
+			bool hover = (i == m_hoverIndex);
+
+			// Background
+			nvgBeginPath(vg);
+			nvgRoundedRect(vg, rect.x, rect.y, rect.width, rect.height, 4.0f);
+			if (selected) {
+				wxColour c = Theme::Get(Theme::Role::Accent);
+				nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), 255));
+			} else if (hover) {
+				wxColour c = Theme::Get(Theme::Role::CardBaseHover);
+				nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), 255));
+			} else {
+				wxColour c = Theme::Get(Theme::Role::CardBase);
+				nvgFillColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), 255));
+			}
+			nvgFill(vg);
+
+			// Selection border
+			if (selected) {
+				nvgBeginPath(vg);
+				nvgRoundedRect(vg, rect.x + 0.5f, rect.y + 0.5f, rect.width - 1.0f, rect.height - 1.0f, 4.0f);
+				wxColour c = Theme::Get(Theme::Role::Accent);
+				nvgStrokeColor(vg, nvgRGBA(c.Red(), c.Green(), c.Blue(), 255));
+				nvgStrokeWidth(vg, 2.0f);
+				nvgStroke(vg);
+			}
+
+			OnDrawItem(vg, rect, i);
+		}
+	}
+}
+
 void FindDialogListBox::Clear() {
 	cleared = true;
 	no_matches = false;
 	brushlist.clear();
 	SetItemCount(1);
+	UpdateLayout();
 }
 
 void FindDialogListBox::SetNoMatches() {
@@ -312,6 +553,7 @@ void FindDialogListBox::SetNoMatches() {
 	no_matches = true;
 	brushlist.clear();
 	SetItemCount(1);
+	UpdateLayout();
 }
 
 void FindDialogListBox::AddBrush(Brush* brush) {
@@ -326,6 +568,7 @@ void FindDialogListBox::CommitUpdates() {
 	} else {
 		SetItemCount(brushlist.size());
 	}
+	UpdateLayout();
 	Refresh();
 }
 
@@ -354,31 +597,37 @@ void FindDialogListBox::OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t n)
 	} else {
 		ASSERT(n < brushlist.size());
 		Sprite* spr = g_gui.gfx.getSprite(brushlist[n]->getLookID());
+
+		int icon_size = is_list_mode ? rect.height : (item_size - 4);
+		int iconX = is_list_mode ? rect.x : (rect.x + 2);
+		int iconY = is_list_mode ? rect.y : (rect.y + 2);
+
 		if (spr) {
 			int tex = GetOrCreateSpriteTexture(vg, spr);
 			if (tex > 0) {
-				int icon_size = rect.height;
-				NVGpaint imgPaint = nvgImagePattern(vg, rect.x, rect.y, icon_size, icon_size, 0, tex, 1.0f);
+				NVGpaint imgPaint = nvgImagePattern(vg, iconX, iconY, icon_size, icon_size, 0, tex, 1.0f);
 				nvgBeginPath(vg);
-				nvgRect(vg, rect.x, rect.y, icon_size, icon_size);
+				nvgRoundedRect(vg, iconX, iconY, icon_size, icon_size, 3.0f);
 				nvgFillPaint(vg, imgPaint);
 				nvgFill(vg);
 			}
 		}
 
-		if (IsSelected(n)) {
-			textColour = Theme::Get(Theme::Role::TextOnAccent);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		} else {
-			textColour = Theme::Get(Theme::Role::Text);
-			nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
-		}
+		if (is_list_mode) {
+			if (IsSelected(n)) {
+				textColour = Theme::Get(Theme::Role::TextOnAccent);
+				nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+			} else {
+				textColour = Theme::Get(Theme::Role::Text);
+				nvgFillColor(vg, nvgRGBA(textColour.Red(), textColour.Green(), textColour.Blue(), 255));
+			}
 
-		nvgFontSize(vg, 12.0f);
-		nvgFontFace(vg, "sans");
-		nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
-		wxString name = wxstr(brushlist[n]->getName());
-		nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+			nvgFontSize(vg, 12.0f);
+			nvgFontFace(vg, "sans");
+			nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_MIDDLE);
+			wxString name = wxstr(brushlist[n]->getName());
+			nvgText(vg, rect.x + rect.height + 8, rect.y + rect.height / 2.0f, name.ToUTF8().data(), nullptr);
+		}
 	}
 }
 

@@ -72,6 +72,12 @@ private:
 	};
 	std::vector<ToolRect> tool_rects;
 
+	struct SectionHeader {
+		wxRect rect;
+		wxString title;
+	};
+	std::vector<SectionHeader> headers;
+
 	// UI Elements State
 	struct {
 		wxRect size_slider_rect;
@@ -94,6 +100,7 @@ private:
 	// Internal Helpers
 	void RebuildLayout();
 	void DrawToolIcon(wxDC& dc, const ToolRect& tr);
+	void DrawSectionHeader(wxDC& dc, const SectionHeader& header);
 	void DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
 	void DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover);
 

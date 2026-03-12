@@ -4,6 +4,7 @@
 #include "app/main.h"
 #include "util/nanovg_listbox.h"
 #include <wx/wx.h>
+#include <wx/tglbtn.h>
 #include <vector>
 
 class Brush;
@@ -30,13 +31,32 @@ public:
 	void CommitUpdates();
 	Brush* GetSelectedBrush();
 
+	void SetListMode(bool is_list);
+
 	void OnDrawItem(NVGcontext* vg, const wxRect& rect, size_t index) override;
 	int OnMeasureItem(size_t index) const override;
+
+	// Override some NanoVGCanvas things for grid layout
+	void OnNanoVGPaint(NVGcontext* vg, int width, int height) override;
+	wxSize DoGetBestClientSize() const override;
 
 protected:
 	bool cleared;
 	bool no_matches;
+	bool is_list_mode;
 	std::vector<Brush*> brushlist;
+
+	int columns;
+	int item_size;
+	int padding;
+
+	int HitTest(int x, int y) const;
+	wxRect GetItemRect(int index) const;
+	void UpdateLayout();
+
+	void OnSize(wxSizeEvent& event);
+	void OnMouseDown(wxMouseEvent& event);
+	void OnMotion(wxMouseEvent& event);
 };
 
 class FindDialog : public wxDialog {
@@ -50,6 +70,7 @@ public:
 	void OnClickList(wxCommandEvent&);
 	void OnClickOK(wxCommandEvent&);
 	void OnClickCancel(wxCommandEvent&);
+	void OnToggleListMode(wxCommandEvent&);
 
 	void RefreshContents();
 	virtual const Brush* getResult() const {
@@ -66,6 +87,7 @@ protected:
 
 	FindDialogListBox* item_list;
 	KeyForwardingTextCtrl* search_field;
+	wxToggleButton* list_mode_btn;
 	wxTimer idle_input_timer;
 	const Brush* result_brush;
 	int result_id;

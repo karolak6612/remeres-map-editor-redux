@@ -187,8 +187,18 @@ FindItemDialog::FindItemDialog(wxWindow* parent, const wxString& title, bool onl
 
 	wxStaticBoxSizer* result_box_sizer = newd wxStaticBoxSizer(newd wxStaticBox(this, wxID_ANY, "Result"), wxVERTICAL);
 	items_list = newd FindDialogListBox(result_box_sizer->GetStaticBox(), wxID_ANY);
-	items_list->SetMinSize(wxSize(230, 512));
-	result_box_sizer->Add(items_list, 0, wxALL, 5);
+	items_list->SetMinSize(FromDIP(wxSize(400, 512)));
+
+	// Add a display mode toggle right above the items list
+	wxBoxSizer* mode_sizer = newd wxBoxSizer(wxHORIZONTAL);
+	mode_sizer->AddStretchSpacer();
+	list_mode_btn = newd wxToggleButton(result_box_sizer->GetStaticBox(), wxID_ANY, "List Mode");
+	list_mode_btn->SetToolTip("Toggle between grid and list views");
+	list_mode_btn->Bind(wxEVT_TOGGLEBUTTON, &FindItemDialog::OnToggleListMode, this);
+	mode_sizer->Add(list_mode_btn, 0, wxBOTTOM, 5);
+	result_box_sizer->Add(mode_sizer, 0, wxEXPAND);
+
+	result_box_sizer->Add(items_list, 1, wxALL | wxEXPAND, 5);
 	box_sizer->Add(result_box_sizer, 1, wxALL | wxEXPAND, 5);
 
 	this->SetSizer(box_sizer);
@@ -447,4 +457,8 @@ void FindItemDialog::OnClickOK(wxCommandEvent& WXUNUSED(event)) {
 
 void FindItemDialog::OnClickCancel(wxCommandEvent& WXUNUSED(event)) {
 	EndModal(wxID_CANCEL);
+}
+
+void FindItemDialog::OnToggleListMode(wxCommandEvent& event) {
+	items_list->SetListMode(list_mode_btn->GetValue());
 }
