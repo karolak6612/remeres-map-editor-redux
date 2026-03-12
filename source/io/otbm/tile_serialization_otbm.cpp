@@ -196,9 +196,9 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 		f.addU32(save_tile->getHouseID());
 	}
 
-	if (save_tile->getMapFlags()) {
+	if (save_tile->getMapFlags() != TileMapFlag::None) {
 		f.addU8(OTBM_ATTR_TILE_FLAGS);
-		f.addU32(save_tile->getMapFlags());
+		f.addU32(static_cast<uint32_t>(save_tile->getMapFlags()));
 	}
 
 	if (save_tile->ground) {

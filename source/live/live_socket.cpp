@@ -246,9 +246,9 @@ void LiveSocket::sendTile(MemoryNodeFileWriteHandle& writer, Tile* tile, const P
 		writer.addU32(tile->getHouseID());
 	}
 
-	if (tile->getMapFlags()) {
+	if (tile->getMapFlags() != TileMapFlag::None) {
 		writer.addByte(OTBM_ATTR_TILE_FLAGS);
-		writer.addU32(tile->getMapFlags());
+		writer.addU32(static_cast<uint32_t>(tile->getMapFlags()));
 	}
 
 	Item* ground = tile->ground.get();

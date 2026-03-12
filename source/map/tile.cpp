@@ -43,8 +43,8 @@ Tile::Tile(int x, int y, int z) :
 	location(nullptr),
 	ground(nullptr),
 	house_id(0),
-	mapflags(0),
-	statflags(0),
+	mapflags(TileMapFlag::None),
+	statflags(TileStatFlag::None),
 	minimapColor(INVALID_MINIMAP_COLOR) {
 	////
 }
@@ -53,8 +53,8 @@ Tile::Tile(TileLocation& loc) :
 	location(&loc),
 	ground(nullptr),
 	house_id(0),
-	mapflags(0),
-	statflags(0),
+	mapflags(TileMapFlag::None),
+	statflags(TileStatFlag::None),
 	minimapColor(INVALID_MINIMAP_COLOR) {
 	////
 }
@@ -134,7 +134,7 @@ int Tile::size() const {
 	if (house_id != 0) {
 		++sz;
 	}
-	if (mapflags) {
+	if (mapflags != TileMapFlag::None) {
 		++sz;
 	}
 	if (location) {
