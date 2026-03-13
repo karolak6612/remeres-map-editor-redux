@@ -93,50 +93,47 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 	}
 
 	// 2. Prepare Lights
-	// Filter and convert lights to GPU format
-	gpu_lights_.clear();
-	gpu_lights_.reserve(light_buffer.lights.size());
+	size_t potential_lights_size = light_buffer.lights.size() * sizeof(GPULight);
+	size_t valid_lights_count = 0;
 
-	for (const auto& light : light_buffer.lights) {
-		int lx_px = light.map_x * TILE_SIZE + TILE_SIZE / 2;
-		int ly_px = light.map_y * TILE_SIZE + TILE_SIZE / 2;
-
-		float map_pos_x = static_cast<float>(lx_px - view.view_scroll_x);
-		float map_pos_y = static_cast<float>(ly_px - view.view_scroll_y);
-
-		// Convert to Screen Pixels
-		float screen_x = map_pos_x / view.zoom;
-		float screen_y = map_pos_y / view.zoom;
-		float screen_radius = (light.intensity * TILE_SIZE) / view.zoom;
-
-		// Check overlap with Screen Rect
-		if (screen_x + screen_radius < 0 || screen_x - screen_radius > buffer_w || screen_y + screen_radius < 0 || screen_y - screen_radius > buffer_h) {
-			continue;
-		}
-
-		wxColor c = colorFromEightBit(light.color);
-
-		gpu_lights_.push_back({ .position = { screen_x, screen_y }, .intensity = static_cast<float>(light.intensity), .padding = 0.0f,
-								// Pre-multiply intensity here if needed, or in shader
-								.color = { (c.Red() / 255.0f) * light_intensity, (c.Green() / 255.0f) * light_intensity, (c.Blue() / 255.0f) * light_intensity, 1.0f } });
-	}
-
-	if (gpu_lights_.empty()) {
-		// Just render ambient? We still need to clear the FBO/screen area or simpy fill it.
-		// If no lights, the overlay should just be ambient color.
-	} else {
-		// Upload Lights
-		size_t needed_size = gpu_lights_.size() * sizeof(GPULight);
-		if (needed_size > light_ssbo_capacity_) {
-			light_ssbo_capacity_ = std::max(needed_size, static_cast<size_t>(light_ssbo_capacity_ * 1.5));
+	if (potential_lights_size > 0) {
+		if (potential_lights_size > light_ssbo_capacity_) {
+			light_ssbo_capacity_ = std::max(potential_lights_size, static_cast<size_t>(light_ssbo_capacity_ * 1.5));
 			if (light_ssbo_capacity_ < 1024) {
 				light_ssbo_capacity_ = 1024;
 			}
 			// Destroy and recreate buffer for Immutable Storage
 			light_ssbo = std::make_unique<GLBuffer>();
-			glNamedBufferStorage(light_ssbo->GetID(), light_ssbo_capacity_, nullptr, GL_DYNAMIC_STORAGE_BIT);
+			glNamedBufferStorage(light_ssbo->GetID(), light_ssbo_capacity_, nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_STORAGE_BIT);
 		}
-		glNamedBufferSubData(light_ssbo->GetID(), 0, needed_size, gpu_lights_.data());
+
+		GPULight* mapped_lights = static_cast<GPULight*>(glMapNamedBufferRange(light_ssbo->GetID(), 0, potential_lights_size, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+
+		if (mapped_lights) {
+			for (const auto& light : light_buffer.lights) {
+				int lx_px = light.map_x * TILE_SIZE + TILE_SIZE / 2;
+				int ly_px = light.map_y * TILE_SIZE + TILE_SIZE / 2;
+
+				float map_pos_x = static_cast<float>(lx_px - view.view_scroll_x);
+				float map_pos_y = static_cast<float>(ly_px - view.view_scroll_y);
+
+				// Convert to Screen Pixels
+				float screen_x = map_pos_x / view.zoom;
+				float screen_y = map_pos_y / view.zoom;
+				float screen_radius = (light.intensity * TILE_SIZE) / view.zoom;
+
+				// Check overlap with Screen Rect
+				if (screen_x + screen_radius < 0 || screen_x - screen_radius > buffer_w || screen_y + screen_radius < 0 || screen_y - screen_radius > buffer_h) {
+					continue;
+				}
+
+				wxColor c = colorFromEightBit(light.color);
+
+				mapped_lights[valid_lights_count++] = { .position = { screen_x, screen_y }, .intensity = static_cast<float>(light.intensity), .padding = 0.0f,
+														.color = { (c.Red() / 255.0f) * light_intensity, (c.Green() / 255.0f) * light_intensity, (c.Blue() / 255.0f) * light_intensity, 1.0f } };
+			}
+			glUnmapNamedBuffer(light_ssbo->GetID());
+		}
 	}
 
 	// 3. Render to FBO
@@ -160,7 +157,7 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 		// Actually, for "Max" blending, we want to start with Ambient.
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (!gpu_lights_.empty()) {
+		if (valid_lights_count > 0) {
 			shader->Use();
 
 			// Setup Projection for FBO: Ortho 0..buffer_w, buffer_h..0 (Y-down)
@@ -177,11 +174,11 @@ void LightDrawer::draw(const RenderView& view, bool fog, const LightBuffer& ligh
 				ScopedGLCapability blendCap(GL_BLEND);
 				ScopedGLBlend blendState(GL_ONE, GL_ONE, GL_MAX); // Factors don't matter much for MAX, but usually 1,1 is safe
 
-				if (gpu_lights_.size() > static_cast<size_t>(std::numeric_limits<GLsizei>::max())) {
+				if (valid_lights_count > static_cast<size_t>(std::numeric_limits<GLsizei>::max())) {
 					spdlog::error("Too many lights for glDrawArraysInstanced");
 					return;
 				}
-				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, static_cast<GLsizei>(gpu_lights_.size()));
+				glDrawArraysInstanced(GL_TRIANGLE_FAN, 0, 4, static_cast<GLsizei>(valid_lights_count));
 			}
 
 			glBindVertexArray(0);
