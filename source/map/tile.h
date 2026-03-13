@@ -64,7 +64,7 @@ enum : uint8_t {
 
 class Tile {
 public: // Members
-	TileLocation* location;
+	TileLocation* location; // Non-owning observer
 	std::unique_ptr<Item> ground;
 	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
@@ -235,9 +235,9 @@ bool tilePositionLessThan(const Tile* a, const Tile* b);
 // This sorts them by draw order
 bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
 
-using TileVector = std::vector<Tile*>;
-using TileSet = std::vector<Tile*>;
-using TileList = std::list<Tile*>;
+using TileVector = std::vector<Tile*>; // Non-owning observers
+using TileSet = std::vector<Tile*>; // Non-owning observers
+using TileList = std::list<Tile*>; // Non-owning observers
 
 inline bool Tile::hasWall() const {
 	return getWall() != nullptr;

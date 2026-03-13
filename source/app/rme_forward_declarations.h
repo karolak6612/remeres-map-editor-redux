@@ -50,9 +50,9 @@ class ReplaceToolWindow;
 #include <vector>
 
 using HouseExitList = std::vector<uint32_t>;
-using TileVector = std::vector<Tile*>;
-using TileSet = std::vector<Tile*>;
-using ItemVector = std::vector<Item*>;
-using BrushVector = std::vector<Brush*>;
+using TileVector = std::vector<Tile*>; // Non-owning observers
+using TileSet = std::vector<Tile*>; // Non-owning observers
+using ItemVector = std::vector<Item*>; // Non-owning observers
+using BrushVector = std::vector<Brush*>; // Non-owning observers
 
 #endif

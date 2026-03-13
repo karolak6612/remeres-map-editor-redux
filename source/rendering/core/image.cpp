@@ -8,7 +8,7 @@ Image::Image() :
 }
 
 void Image::visit() const {
-	lastaccess.store(static_cast<int64_t>(g_gui.gfx.getCachedTime()), std::memory_order_relaxed);
+	lastaccess.store(static_cast<int64_t>(g_gui.gfx.getCachedTime()), std::memory_order_release);
 }
 
 void Image::clean(time_t time, int longevity) {
