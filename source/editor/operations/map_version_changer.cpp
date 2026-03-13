@@ -57,7 +57,7 @@ bool MapVersionChanger::changeMapVersion(wxWindow* parent, Editor& editor, MapVe
 			if (ret != wxID_YES) {
 				return false;
 			}
-			UnnamedRenderingLock();
+			UnnamedRenderingLock(g_gui);
 
 			// Remember all creatures types on the map
 			MapConversionContext conversion_context;
@@ -95,7 +95,7 @@ bool MapVersionChanger::changeMapVersion(wxWindow* parent, Editor& editor, MapVe
 
 			map.cleanInvalidTiles(true);
 		} else {
-			UnnamedRenderingLock();
+			UnnamedRenderingLock(g_gui);
 			ClientVersion* target = ClientVersion::getBestMatch(new_ver.client);
 			if (!target || !g_version.LoadVersion(target->getID(), error, warnings)) {
 				DialogUtil::ListDialog(parent, "Warnings", warnings);

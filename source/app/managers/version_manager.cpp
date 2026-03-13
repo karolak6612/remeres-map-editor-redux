@@ -43,7 +43,7 @@ bool VersionManager::LoadVersion(ClientVersionID version, wxString& error, std::
 		}
 
 		// Disable all rendering so the data is not accessed while reloading
-		UnnamedRenderingLock();
+		UnnamedRenderingLock(g_gui);
 		g_gui.DestroyPalettes();
 		g_gui.DestroyMinimap();
 
@@ -164,7 +164,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 }
 
 void VersionManager::UnloadVersion() {
-	UnnamedRenderingLock();
+	UnnamedRenderingLock(g_gui);
 	g_gui.gfx.clear();
 	if (g_gui.tool_options) {
 		g_gui.tool_options->Clear();

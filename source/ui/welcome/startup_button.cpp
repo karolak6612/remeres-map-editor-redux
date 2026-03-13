@@ -80,7 +80,7 @@ StartupButton::StartupButton(wxWindow* parent, wxWindowID id, const wxString& la
 	Bind(wxEVT_MOUSE_CAPTURE_LOST, &StartupButton::OnMouseCaptureLost, this);
 }
 
-void StartupButton::SetBitmap(const wxBitmap& bitmap) {
+void StartupButton::SetBitmapBundle(const wxBitmapBundle& bitmap) {
 	m_icon = bitmap;
 	InvalidateBestSize();
 	Refresh();
@@ -95,10 +95,12 @@ wxSize StartupButton::DoGetBestClientSize() const {
 	wxClientDC dc(const_cast<StartupButton*>(this));
 	dc.SetFont(GetFont());
 
+	wxBitmap icon_bmp = m_icon.IsOk() ? m_icon.GetBitmapFor(this) : wxNullBitmap;
+
 	const wxSize text_size = dc.GetTextExtent(GetLabel());
-	const int icon_width = m_icon.IsOk() ? m_icon.GetWidth() + FromDIP(8) : 0;
+	const int icon_width = icon_bmp.IsOk() ? icon_bmp.GetWidth() + FromDIP(8) : 0;
 	const int width = text_size.x + icon_width + FromDIP(30);
-	const int height = std::max(text_size.y, m_icon.IsOk() ? m_icon.GetHeight() : 0) + FromDIP(16);
+	const int height = std::max(text_size.y, icon_bmp.IsOk() ? icon_bmp.GetHeight() : 0) + FromDIP(16);
 	return { std::max(width, FromDIP(120)), std::max(height, FromDIP(42)) };
 }
 
@@ -117,15 +119,17 @@ void StartupButton::OnPaint(wxPaintEvent& WXUNUSED(event)) {
 	dc.SetFont(GetFont());
 	dc.SetTextForeground(palette.text);
 
+	wxBitmap icon_bmp = m_icon.IsOk() ? m_icon.GetBitmapFor(this) : wxNullBitmap;
+
 	const wxSize text_size = dc.GetTextExtent(GetLabel());
-	const int content_width = text_size.x + (m_icon.IsOk() ? m_icon.GetWidth() + FromDIP(8) : 0);
+	const int content_width = text_size.x + (icon_bmp.IsOk() ? icon_bmp.GetWidth() + FromDIP(8) : 0);
 	int x = rect.x + (rect.width - content_width) / 2;
 	const int y = rect.y + (rect.height - text_size.y) / 2;
 
-	if (m_icon.IsOk()) {
-		const int icon_y = rect.y + (rect.height - m_icon.GetHeight()) / 2;
-		dc.DrawBitmap(m_icon, x, icon_y, true);
-		x += m_icon.GetWidth() + FromDIP(8);
+	if (icon_bmp.IsOk()) {
+		const int icon_y = rect.y + (rect.height - icon_bmp.GetHeight()) / 2;
+		dc.DrawBitmap(icon_bmp, x, icon_y, true);
+		x += icon_bmp.GetWidth() + FromDIP(8);
 	}
 
 	dc.DrawText(GetLabel(), x, y);

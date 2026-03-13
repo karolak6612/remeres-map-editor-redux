@@ -13,7 +13,7 @@ class StartupButton : public wxControl {
 public:
 	StartupButton(wxWindow* parent, wxWindowID id, const wxString& label, StartupButtonVariant variant, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize);
 
-	void SetBitmap(const wxBitmap& bitmap);
+	void SetBitmapBundle(const wxBitmapBundle& bitmap);
 	void SetVariant(StartupButtonVariant variant);
 
 	wxSize DoGetBestClientSize() const override;
@@ -23,7 +23,7 @@ private:
 	void OnMouse(wxMouseEvent& event);
 	void OnMouseCaptureLost(wxMouseCaptureLostEvent& event);
 
-	wxBitmap m_icon;
+	wxBitmapBundle m_icon;
 	StartupButtonVariant m_variant;
 	bool m_hovered = false;
 	bool m_pressed = false;

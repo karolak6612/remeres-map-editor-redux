@@ -60,13 +60,6 @@ class TilePropertiesPanel;
 
 wxDECLARE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 
-#define EVT_ON_UPDATE_MENUS(id, fn)                                                             \
-	DECLARE_EVENT_TABLE_ENTRY(                                                                  \
-		EVT_UPDATE_MENUS, id, wxID_ANY,                                                         \
-		(wxObjectEventFunction)(wxEventFunction)wxStaticCastEvent(wxCommandEventFunction, &fn), \
-		(wxObject*)nullptr                                                                      \
-	),
-
 #include <mutex>
 #include "brushes/managers/brush_manager.h"
 #include "palette/managers/palette_manager.h"
@@ -367,18 +360,21 @@ extern GUI g_gui;
 
 class RenderingLock {
 	bool acquired;
+	GUI& gui;
 
 public:
-	RenderingLock() :
-		acquired(true) {
-		g_gui.DisableRendering();
+	RenderingLock(GUI& gui) :
+		acquired(true), gui(gui) {
+		gui.DisableRendering();
 	}
 	~RenderingLock() {
 		release();
 	}
 	void release() {
-		g_gui.EnableRendering();
-		acquired = false;
+		if (acquired) {
+			gui.EnableRendering();
+			acquired = false;
+		}
 	}
 };
 
@@ -405,7 +401,7 @@ public:
 	}
 };
 
-#define UnnamedRenderingLock() RenderingLock __unnamed_rendering_lock_##__LINE__
+#define UnnamedRenderingLock(gui) RenderingLock __unnamed_rendering_lock_##__LINE__(gui)
 
 void SetWindowToolTip(wxWindow* a, const wxString& tip);
 void SetWindowToolTip(wxWindow* a, wxWindow* b, const wxString& tip);

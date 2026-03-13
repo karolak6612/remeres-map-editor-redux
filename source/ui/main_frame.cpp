@@ -273,7 +273,7 @@ bool MainFrame::DoQuerySave(bool doclose) {
 	}
 
 	if (doclose) {
-		UnnamedRenderingLock();
+		UnnamedRenderingLock(g_gui);
 		g_gui.CloseCurrentEditor();
 	}
 

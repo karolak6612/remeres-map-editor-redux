@@ -81,7 +81,7 @@ Editor::~Editor() {
 		live_manager.CloseServer();
 	}
 
-	UnnamedRenderingLock();
+	UnnamedRenderingLock(g_gui);
 	selection.clear();
 	spdlog::info("Editor destroyed [Editor={}]", (void*)this);
 }

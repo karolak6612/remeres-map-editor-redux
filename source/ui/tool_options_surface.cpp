@@ -71,7 +71,11 @@ void ToolOptionsSurface::DoSetSizeHints(int minW, int minH, int maxW, int maxH, 
 	wxControl::DoSetSizeHints(minW, minH, maxW, maxH, incW, incH);
 }
 
+#include <wx/wupdlock.h>
+
 void ToolOptionsSurface::RebuildLayout() {
+	wxWindowUpdateLocker noUpdates(this);
+
 	tool_rects.clear();
 	interactables.size_slider_rect = wxRect();
 	interactables.thickness_slider_rect = wxRect();
