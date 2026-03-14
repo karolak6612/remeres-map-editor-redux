@@ -64,7 +64,7 @@ enum : uint8_t {
 
 class Tile {
 public: // Members
-	TileLocation* location;
+	TileLocation* location; // Observer pointer to the location owned by Floor
 	std::unique_ptr<Item> ground;
 	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
@@ -235,6 +235,7 @@ bool tilePositionLessThan(const Tile* a, const Tile* b);
 // This sorts them by draw order
 bool tilePositionVisualLessThan(const Tile* a, const Tile* b);
 
+// Observer pointer collections. The actual Tile objects are owned by MapNode/TileLocation.
 using TileVector = std::vector<Tile*>;
 using TileSet = std::vector<Tile*>;
 using TileList = std::list<Tile*>;
