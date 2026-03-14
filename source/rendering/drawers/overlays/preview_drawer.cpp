@@ -80,14 +80,14 @@ void PreviewDrawer::draw(SpriteBatch& sprite_batch, MapCanvas* canvas, const Ren
 							r /= 2;
 							b /= 2;
 						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_PVPZONE) {
+						if (options.show_special_tiles && static_cast<uint16_t>(tile->getMapFlags() & TileMapFlags::PVPZONE)) {
 							r = r / 3 * 2;
 							b = r / 3 * 2;
 						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+						if (options.show_special_tiles && static_cast<uint16_t>(tile->getMapFlags() & TileMapFlags::NOLOGOUT)) {
 							b /= 2;
 						}
-						if (options.show_special_tiles && tile->getMapFlags() & TILESTATE_NOPVP) {
+						if (options.show_special_tiles && static_cast<uint16_t>(tile->getMapFlags() & TileMapFlags::NOPVP)) {
 							g /= 2;
 						}
 						if (tile->ground) {
