@@ -79,7 +79,7 @@ public:
 	 * Get number of pending commands.
 	 */
 	size_t getCommandCount() const {
-		return commands_.size();
+		return num_commands_;
 	}
 
 	/**
@@ -90,7 +90,8 @@ public:
 	}
 
 private:
-	std::vector<DrawElementsIndirectCommand> commands_;
+	DrawElementsIndirectCommand commands_[MAX_COMMANDS];
+	size_t num_commands_ = 0;
 	std::unique_ptr<GLBuffer> command_buffer_;
 	bool available_ = false;
 	bool initialized_ = false;

@@ -87,7 +87,7 @@ bool MinimapRenderer::initialize() {
 
 	// Pre-allocate instance buffer
 	instance_vbo_capacity_ = 1024;
-	glNamedBufferStorage(instance_vbo_->GetID(), instance_vbo_capacity_ * sizeof(InstanceData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	glNamedBufferStorage(instance_vbo_->GetID(), instance_vbo_capacity_ * sizeof(InstanceData), nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_STORAGE_BIT);
 
 	// Setup VAO (DSA)
 	GLuint vao = vao_->GetID();
@@ -309,43 +309,45 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 	end_row = std::min(rows_ - 1, end_row);
 
 	// Collect instances
-	instance_data_.clear();
-	instance_data_.reserve((end_row - start_row + 1) * (end_col - start_col + 1));
+	size_t needed_instances = static_cast<size_t>((end_row - start_row + 1) * (end_col - start_col + 1));
 
-	for (int r = start_row; r <= end_row; ++r) {
-		for (int c = start_col; c <= end_col; ++c) {
-			int tile_x = c * TILE_SIZE;
-			int tile_y = r * TILE_SIZE;
-
-			// Calculate screen position (dest rect)
-			float screen_tile_x = x + (tile_x - map_x) * scale_x;
-			float screen_tile_y = y + (tile_y - map_y) * scale_y;
-			float screen_tile_w = TILE_SIZE * scale_x;
-			float screen_tile_h = TILE_SIZE * scale_y;
-
-			int layer = r * cols_ + c;
-
-			instance_data_.push_back({ .x = screen_tile_x, .y = screen_tile_y, .w = screen_tile_w, .h = screen_tile_h, .layer = static_cast<float>(layer) });
-		}
-	}
-
-	if (instance_data_.empty()) {
+	if (needed_instances == 0) {
 		return;
 	}
 
 	// Resize buffer if needed
-	// Resize buffer if needed
-	if (instance_data_.size() > instance_vbo_capacity_) {
-		instance_vbo_capacity_ = instance_data_.size() * 2; // Grow strategy
+	if (needed_instances > instance_vbo_capacity_) {
+		instance_vbo_capacity_ = needed_instances * 2; // Grow strategy
 		instance_vbo_ = std::make_unique<GLBuffer>();
-		glNamedBufferStorage(instance_vbo_->GetID(), instance_vbo_capacity_ * sizeof(InstanceData), nullptr, GL_DYNAMIC_STORAGE_BIT);
+		glNamedBufferStorage(instance_vbo_->GetID(), instance_vbo_capacity_ * sizeof(InstanceData), nullptr, GL_MAP_WRITE_BIT | GL_DYNAMIC_STORAGE_BIT);
 
 		// Update VAO binding
 		glVertexArrayVertexBuffer(vao_->GetID(), 1, instance_vbo_->GetID(), 0, sizeof(InstanceData));
 	}
 
-	// Upload data
-	glNamedBufferSubData(instance_vbo_->GetID(), 0, instance_data_.size() * sizeof(InstanceData), instance_data_.data());
+	num_instances_ = 0;
+
+	InstanceData* mapped_instances = static_cast<InstanceData*>(glMapNamedBufferRange(instance_vbo_->GetID(), 0, instance_vbo_capacity_ * sizeof(InstanceData), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT));
+
+	if (mapped_instances) {
+		for (int r = start_row; r <= end_row; ++r) {
+			for (int c = start_col; c <= end_col; ++c) {
+				int tile_x = c * TILE_SIZE;
+				int tile_y = r * TILE_SIZE;
+
+				// Calculate screen position (dest rect)
+				float screen_tile_x = x + (tile_x - map_x) * scale_x;
+				float screen_tile_y = y + (tile_y - map_y) * scale_y;
+				float screen_tile_w = TILE_SIZE * scale_x;
+				float screen_tile_h = TILE_SIZE * scale_y;
+
+				int layer = r * cols_ + c;
+
+				mapped_instances[num_instances_++] = { .x = screen_tile_x, .y = screen_tile_y, .w = screen_tile_w, .h = screen_tile_h, .layer = static_cast<float>(layer) };
+			}
+		}
+		glUnmapNamedBuffer(instance_vbo_->GetID());
+	}
 
 	// Render
 	{
@@ -363,7 +365,7 @@ void MinimapRenderer::render(const glm::mat4& projection, int x, int y, int w, i
 		shader_->SetInt("uPaletteTexture", 1);
 
 		glBindVertexArray(vao_->GetID());
-		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(instance_data_.size()));
+		glDrawElementsInstanced(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0, static_cast<GLsizei>(num_instances_));
 		glBindVertexArray(0);
 	}
 }

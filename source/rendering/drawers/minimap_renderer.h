@@ -76,8 +76,8 @@ private:
 	std::unique_ptr<GLVertexArray> vao_;
 
 	std::unique_ptr<GLBuffer> instance_vbo_;
-	std::vector<InstanceData> instance_data_;
 	size_t instance_vbo_capacity_ = 0;
+	size_t num_instances_ = 0;
 
 	int width_ = 0;
 	int height_ = 0;

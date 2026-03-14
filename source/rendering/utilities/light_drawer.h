@@ -58,7 +58,7 @@ private:
 	std::unique_ptr<GLBuffer> light_ssbo;
 	size_t light_ssbo_capacity_ = 0; // Track capacity in bytes
 
-	std::vector<GPULight> gpu_lights_;
+	int num_lights_ = 0;
 
 	std::unique_ptr<GLFramebuffer> fbo;
 	std::unique_ptr<GLTextureResource> fbo_texture;
