@@ -33,12 +33,12 @@ namespace TileOperations {
 			items.erase(first_to_remove, items.end());
 		}
 
-		void UpdateItemFlags(const Item* i, uint16_t& statflags, uint8_t& minimapColor) {
+		void UpdateItemFlags(const Item* i, TileStatFlags& statflags, uint8_t& minimapColor) {
 			if (i->isSelected()) {
-				statflags |= TILESTATE_SELECTED;
+				statflags |= TileStatFlags::SELECTED;
 			}
 			if (i->getUniqueID() != 0) {
-				statflags |= TILESTATE_UNIQUE;
+				statflags |= TileStatFlags::UNIQUE;
 			}
 			if (i->getMiniMapColor() != 0) {
 				minimapColor = i->getMiniMapColor();
@@ -46,25 +46,25 @@ namespace TileOperations {
 
 			const auto it_type = i->getDefinition();
 			if (it_type.hasFlag(ItemFlag::Unpassable)) {
-				statflags |= TILESTATE_BLOCKING;
+				statflags |= TileStatFlags::BLOCKING;
 			}
 			if (it_type.hasFlag(ItemFlag::IsOptionalBorder)) {
-				statflags |= TILESTATE_OP_BORDER;
+				statflags |= TileStatFlags::OP_BORDER;
 			}
 			if (it_type.hasFlag(ItemFlag::IsTable)) {
-				statflags |= TILESTATE_HAS_TABLE;
+				statflags |= TileStatFlags::HAS_TABLE;
 			}
 			if (it_type.hasFlag(ItemFlag::IsCarpet)) {
-				statflags |= TILESTATE_HAS_CARPET;
+				statflags |= TileStatFlags::HAS_CARPET;
 			}
 			if (it_type.hasFlag(ItemFlag::HookSouth)) {
-				statflags |= TILESTATE_HOOK_SOUTH;
+				statflags |= TileStatFlags::HOOK_SOUTH;
 			}
 			if (it_type.hasFlag(ItemFlag::HookEast)) {
-				statflags |= TILESTATE_HOOK_EAST;
+				statflags |= TileStatFlags::HOOK_EAST;
 			}
 			if (i->hasLight()) {
-				statflags |= TILESTATE_HAS_LIGHT;
+				statflags |= TileStatFlags::HAS_LIGHT;
 			}
 		}
 
@@ -241,7 +241,7 @@ namespace TileOperations {
 			i->select();
 		});
 
-		tile->statflags |= TILESTATE_SELECTED;
+		tile->statflags |= TileStatFlags::SELECTED;
 	}
 
 	void deselect(Tile* tile) {
@@ -259,7 +259,7 @@ namespace TileOperations {
 			i->deselect();
 		});
 
-		tile->statflags &= ~TILESTATE_SELECTED;
+		tile->statflags &= ~TileStatFlags::SELECTED;
 	}
 
 	void selectGround(Tile* tile) {
@@ -275,7 +275,7 @@ namespace TileOperations {
 		}
 
 		if (selected_) {
-			tile->statflags |= TILESTATE_SELECTED;
+			tile->statflags |= TileStatFlags::SELECTED;
 		}
 	}
 
@@ -388,35 +388,35 @@ namespace TileOperations {
 	}
 
 	void update(Tile* tile) {
-		tile->statflags &= TILESTATE_MODIFIED;
+		tile->statflags &= TileStatFlags::MODIFIED;
 
 		if (tile->spawn && tile->spawn->isSelected()) {
-			tile->statflags |= TILESTATE_SELECTED;
+			tile->statflags |= TileStatFlags::SELECTED;
 		}
 		if (tile->creature && tile->creature->isSelected()) {
-			tile->statflags |= TILESTATE_SELECTED;
+			tile->statflags |= TileStatFlags::SELECTED;
 		}
 
 		tile->minimapColor = 0; // Reset to "no color" (valid)
 
 		if (tile->ground) {
 			if (tile->ground->isSelected()) {
-				tile->statflags |= TILESTATE_SELECTED;
+				tile->statflags |= TileStatFlags::SELECTED;
 			}
 			if (tile->ground->isBlocking()) {
-				tile->statflags |= TILESTATE_BLOCKING;
+				tile->statflags |= TileStatFlags::BLOCKING;
 			}
 			if (tile->ground->getUniqueID() != 0) {
-				tile->statflags |= TILESTATE_UNIQUE;
+				tile->statflags |= TileStatFlags::UNIQUE;
 			}
 			if (tile->ground->getMiniMapColor() != 0) {
 				tile->minimapColor = tile->ground->getMiniMapColor();
 			}
 			if (tile->ground->hasLight()) {
-				tile->statflags |= TILESTATE_HAS_LIGHT;
+				tile->statflags |= TileStatFlags::HAS_LIGHT;
 			}
 		} else {
-			tile->mapflags = TILESTATE_NONE;
+			tile->mapflags = TileMapFlags::NONE;
 			tile->house_id = 0;
 		}
 
@@ -424,9 +424,9 @@ namespace TileOperations {
 			UpdateItemFlags(i.get(), tile->statflags, tile->minimapColor);
 		});
 
-		if ((tile->statflags & TILESTATE_BLOCKING) == 0) {
+		if (testFlags(tile->statflags, TileStatFlags::BLOCKING) == false) {
 			if (tile->ground == nullptr && tile->items.empty()) {
-				tile->statflags |= TILESTATE_BLOCKING;
+				tile->statflags |= TileStatFlags::BLOCKING;
 			}
 		}
 	}

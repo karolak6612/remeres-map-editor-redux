@@ -68,7 +68,7 @@ bool DoodadBrushLoader::load(pugi::xml_node node, DoodadBrushItems& items, Dooda
 		if (!settings.do_new_borders) {
 			warnings.push_back("remove_optional_border will not work without redo_borders\n");
 		}
-		settings.clear_statflags |= TILESTATE_OP_BORDER;
+		settings.clear_statflags |= static_cast<uint16_t>(TileStatFlags::OP_BORDER);
 	}
 
 	const std::string& thicknessString = node.attribute("thickness").as_string();
