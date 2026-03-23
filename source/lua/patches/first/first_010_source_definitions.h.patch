@@ -1,0 +1,29 @@
+diff --git a/source/definitions.h b/source/definitions.h
+index 31b1b76aa..c1c40eb62 100644
+--- a/source/definitions.h
++++ b/source/definitions.h
+@@ -24,8 +24,8 @@
+ // Version info
+ // xxyyzzt (major, minor, subversion)
+ #define __RME_VERSION_MAJOR__ 4
+-#define __RME_VERSION_MINOR__ 1
+-#define __RME_SUBVERSION__ 2
++#define __RME_VERSION_MINOR__ 2
++#define __RME_SUBVERSION__ 0
+ 
+ #define __LIVE_NET_VERSION__ 5
+ 
+
+From 92dc1c5a59d49a52019d7a6d97ceef92f3ff9e0e Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 19:02:23 +0100
+Subject: [PATCH 04/41] feat: add script manager and menu section
+
+---
+ data/menubar.xml        |   8 ++
+ source/application.cpp  |  30 +++++
+ source/gui_ids.h        |  12 +-
+ source/main_menubar.cpp | 269 +++++++++++++++++++++++++++++++++++++++-
+ source/main_menubar.h   |  32 +++++
+ 5 files changed, 344 insertions(+), 7 deletions(-)
+

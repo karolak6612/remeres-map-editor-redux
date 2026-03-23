@@ -1,0 +1,26 @@
+diff --git a/vcpkg.json b/vcpkg.json
+index 958180751..ce14052e9 100644
+--- a/vcpkg.json
++++ b/vcpkg.json
+@@ -15,7 +15,10 @@
+ 		"boost-asio",
+ 		"lua",
+ 		"sol2",
+-		"cpr"
++		"cpr",
++		"boost-system",
++		"boost-thread",
++		"zlib"
+ 	],
+ 	"builtin-baseline": "734f8130ffe2f02cf855a3a42a2958f01b3fb005"
+ }
+
+From 6832ecd9829f7433d311c32e35195b188e9ed289 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Sat, 24 Jan 2026 14:43:38 +0100
+Subject: [PATCH 32/41] typo: remove on~ in mouse events
+
+---
+ source/map_display.cpp | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
+

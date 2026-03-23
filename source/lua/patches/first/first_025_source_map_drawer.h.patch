@@ -1,0 +1,24 @@
+diff --git a/source/map_drawer.h b/source/map_drawer.h
+index b1e8e43ce..8a42a483c 100644
+--- a/source/map_drawer.h
++++ b/source/map_drawer.h
+@@ -18,6 +18,8 @@
+ #ifndef RME_MAP_DRAWER_H_
+ #define RME_MAP_DRAWER_H_
+ 
++#include "map_overlay.h"
++
+ class GameSprite;
+ 
+ struct MapTooltip {
+@@ -142,6 +144,10 @@ class MapDrawer {
+ 		return options;
+ 	}
+ 
++	MapViewInfo getViewInfo() const;
++	bool drawOverlayCommands(const std::vector<MapOverlayCommand>& commands);
++	bool addOverlayTooltips(const std::vector<MapOverlayTooltip>& tooltips);
++
+ protected:
+ 	void BlitItem(int& screenx, int& screeny, const Tile* tile, Item* item, bool ephemeral = false, int red = 255, int green = 255, int blue = 255, int alpha = 255);
+ 	void BlitItem(int& screenx, int& screeny, const Position& pos, Item* item, bool ephemeral = false, int red = 255, int green = 255, int blue = 255, int alpha = 255, const Tile* tile = nullptr);

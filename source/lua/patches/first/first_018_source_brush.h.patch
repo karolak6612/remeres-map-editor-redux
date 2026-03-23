@@ -1,0 +1,16 @@
+diff --git a/source/brush.h b/source/brush.h
+index 1d104a31f..c2df4d2e2 100644
+--- a/source/brush.h
++++ b/source/brush.h
+@@ -76,6 +76,11 @@ class Brushes {
+ 		return brushes;
+ 	}
+ 
++	typedef std::map<uint32_t, AutoBorder*> BorderMap;
++	const BorderMap& getBorders() const {
++		return borders;
++	}
++
+ protected:
+ 	typedef std::map<uint32_t, AutoBorder*> BorderMap;
+ 	BrushMap brushes;

@@ -1,0 +1,40 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 401b1cacb..de2dd7041 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,7 +1,15 @@
+-cmake_minimum_required(VERSION 3.1)
++cmake_minimum_required(VERSION 3.12)
+ 
+ project(rme)
+ 
++if(POLICY CMP0072)
++    cmake_policy(SET CMP0072 NEW) # Prefer GLVND
++endif()
++
++if(POLICY CMP0167)
++    cmake_policy(SET CMP0167 NEW) # Use BoostConfig
++endif()
++
+ if(NOT CMAKE_BUILD_TYPE)
+ 	set(CMAKE_BUILD_TYPE RelWithDebInfo)
+ endif()
+@@ -41,4 +49,4 @@ set_target_properties(rme PROPERTIES CXX_STANDARD 17)
+ set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
+ 
+ include_directories(${Boost_INCLUDE_DIRS} ${LibArchive_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${SOL2_INCLUDE_DIRS})
+-target_link_libraries(rme ${wxWidgets_LIBRARIES} ${Boost_LIBRARIES} ${LibArchive_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${ZLIB_LIBRARIES} ${LUA_LIBRARIES})
+\ No newline at end of file
++target_link_libraries(rme ${wxWidgets_LIBRARIES} ${Boost_LIBRARIES} ${LibArchive_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${ZLIB_LIBRARIES} ${LUA_LIBRARIES})
+
+From 06a5533a8f60d88346fb0eb8d56bfa7a36eaefab Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 21:49:44 +0100
+Subject: [PATCH 13/41] ci: typo in the FastNoiseLite -> fast_noise_lite,
+ unhandled libsol
+
+---
+ .github/workflows/build.yml | 3 ++-
+ source/CMakeLists.txt       | 2 +-
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+

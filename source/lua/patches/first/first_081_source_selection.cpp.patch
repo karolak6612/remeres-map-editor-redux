@@ -1,0 +1,55 @@
+diff --git a/source/selection.cpp b/source/selection.cpp
+index 89833ac68..13c1a4bd7 100644
+--- a/source/selection.cpp
++++ b/source/selection.cpp
+@@ -223,7 +223,9 @@ void Selection::clear() {
+ }
+ 
+ void Selection::start(SessionFlags flags) {
+-	if (!(flags & INTERNAL)) {
++	if (flags & INTERNAL) {
++		subsession = editor.actionQueue->createAction(ACTION_SELECT);
++	} else if (!(flags & INTERNAL)) {
+ 		if (flags & SUBTHREAD) {
+ 			;
+ 		} else {
+@@ -251,7 +253,13 @@ void Selection::commit() {
+ }
+ 
+ void Selection::finish(SessionFlags flags) {
+-	if (!(flags & INTERNAL)) {
++	if (flags & INTERNAL) {
++		if (subsession) {
++			subsession->commit(nullptr);
++			delete subsession;
++			subsession = nullptr;
++		}
++	} else if (!(flags & INTERNAL)) {
+ 		if (flags & SUBTHREAD) {
+ 			ASSERT(subsession);
+ 			subsession = nullptr;
+@@ -271,8 +279,11 @@ void Selection::finish(SessionFlags flags) {
+ 	}
+ 	busy = false;
+ 
+-	// Notify Lua scripts only if we're on the main thread and it's a "real" selection change
+-	if (!(flags & (INTERNAL | SUBTHREAD))) {
++	// Update status bar
++	updateSelectionCount();
++
++	// Notify Lua scripts
++	if (!(flags & SUBTHREAD)) {
+ 		if (g_luaScripts.isInitialized()) {
+ 			g_luaScripts.emit("selectionChange");
+ 		}
+
+From 6aeed4a0e724790fd7eeb9c7e7c6a528c6d836c2 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Sat, 24 Jan 2026 03:44:51 +0100
+Subject: [PATCH 29/41] docs: improve documentation
+
+---
+ scripts/README.md  | 13 +++++++++++++
+ scripts/linter.lua | 19 +++++++++++++++++++
+ 2 files changed, 32 insertions(+)
+

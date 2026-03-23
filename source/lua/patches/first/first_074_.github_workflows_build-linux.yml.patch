@@ -1,0 +1,13 @@
+diff --git a/.github/workflows/build.yml b/.github/workflows/build-linux.yml
+similarity index 98%
+rename from .github/workflows/build.yml
+rename to .github/workflows/build-linux.yml
+index 742b43a66..b98bd033d 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build-linux.yml
+@@ -1,4 +1,4 @@
+-name: Build RME
++name: Build - Linux
+ 
+ on:
+   push:

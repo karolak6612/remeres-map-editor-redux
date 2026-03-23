@@ -1,0 +1,17 @@
+diff --git a/source/net_connection.h b/source/net_connection.h
+index 34004c8bd..d4a5a4fae 100644
+--- a/source/net_connection.h
++++ b/source/net_connection.h
+@@ -75,10 +75,10 @@ class NetworkConnection {
+ 	bool start();
+ 	void stop();
+ 
+-	boost::asio::io_service& get_service();
++	boost::asio::io_context& get_service();
+ 
+ private:
+-	boost::asio::io_service* service;
++	boost::asio::io_context* service;
+ 	std::thread thread;
+ 	bool stopped;
+ };

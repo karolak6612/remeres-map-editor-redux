@@ -1,0 +1,24 @@
+diff --git a/source/CMakeLists.txt b/source/CMakeLists.txt
+index c32dd553c..262fc9a96 100644
+--- a/source/CMakeLists.txt
++++ b/source/CMakeLists.txt
+@@ -126,7 +126,7 @@ ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_http.h
+ ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_noise.h
+ ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_algo.h
+ ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_geo.h
+-${CMAKE_CURRENT_LIST_DIR}/FastNoiseLite.h
++${CMAKE_CURRENT_LIST_DIR}/fast_noise_lite.h
+ )
+ 
+ set(rme_SRC
+
+From 6ccc864637a2b77c64d8a572ea0c66d96c4ceac7 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 21:52:38 +0100
+Subject: [PATCH 14/41] ci: solve libsol reaching in linux
+
+---
+ .github/workflows/build.yml | 3 +--
+ CMakeLists.txt              | 9 ++++++++-
+ 2 files changed, 9 insertions(+), 3 deletions(-)
+

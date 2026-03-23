@@ -1,0 +1,40 @@
+diff --git a/source/selection.cpp b/source/selection.cpp
+index 2fec035ce..89833ac68 100644
+--- a/source/selection.cpp
++++ b/source/selection.cpp
+@@ -23,6 +23,7 @@
+ #include "item.h"
+ #include "editor.h"
+ #include "gui.h"
++#include "lua/lua_script_manager.h"
+ 
+ Selection::Selection(Editor& editor) :
+ 	busy(false),
+@@ -269,6 +270,13 @@ void Selection::finish(SessionFlags flags) {
+ 		}
+ 	}
+ 	busy = false;
++
++	// Notify Lua scripts only if we're on the main thread and it's a "real" selection change
++	if (!(flags & (INTERNAL | SUBTHREAD))) {
++		if (g_luaScripts.isInitialized()) {
++			g_luaScripts.emit("selectionChange");
++		}
++	}
+ }
+ 
+ void Selection::updateSelectionCount() {
+
+From 501ab0c57653355e5bf5f97d8f8d55097e4e6bbe Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 19:04:43 +0100
+Subject: [PATCH 06/41] feat: add map overlay, a way to show custom data in the
+ mapView
+
+---
+ source/map_drawer.cpp | 194 +++++++++++++++++++++++++++++++++++++++++-
+ source/map_drawer.h   |   6 ++
+ source/map_overlay.h  |  81 ++++++++++++++++++
+ 3 files changed, 280 insertions(+), 1 deletion(-)
+ create mode 100644 source/map_overlay.h
+

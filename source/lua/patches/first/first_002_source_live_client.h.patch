@@ -1,0 +1,13 @@
+diff --git a/source/live_client.h b/source/live_client.h
+index c580266f0..fc8328ba2 100644
+--- a/source/live_client.h
++++ b/source/live_client.h
+@@ -33,7 +33,7 @@ class LiveClient : public LiveSocket {
+ 
+ 	//
+ 	bool connect(const std::string& address, uint16_t port);
+-	void tryConnect(boost::asio::ip::tcp::resolver::iterator endpoint);
++	void tryConnect(const boost::asio::ip::tcp::resolver::results_type& results);
+ 
+ 	void close();
+ 	bool handleError(const boost::system::error_code& error);

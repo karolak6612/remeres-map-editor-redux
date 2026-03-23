@@ -1,0 +1,12 @@
+diff --git a/source/editor.h b/source/editor.h
+index 5210f8d37..5669e64d5 100644
+--- a/source/editor.h
++++ b/source/editor.h
+@@ -57,6 +57,7 @@ class Editor {
+ 	LiveClient* GetLiveClient() const;
+ 	LiveServer* GetLiveServer() const;
+ 	LiveSocket& GetLive() const;
++	Map* getMap() { return &map; }
+ 	bool CanEdit() const {
+ 		return true;
+ 	}

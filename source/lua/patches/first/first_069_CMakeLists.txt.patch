@@ -1,0 +1,25 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 17f1b9514..0df8b45d2 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -55,5 +55,5 @@ add_executable(rme ${rme_H} ${rme_SRC})
+ set_target_properties(rme PROPERTIES CXX_STANDARD 17)
+ set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
+ 
+-include_directories(${Boost_INCLUDE_DIRS} ${LibArchive_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${SOL2_INCLUDE_DIRS})
++include_directories(${CMAKE_SOURCE_DIR}/source ${Boost_INCLUDE_DIRS} ${LibArchive_INCLUDE_DIRS} ${OPENGL_INCLUDE_DIR} ${GLUT_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIR} ${LUA_INCLUDE_DIR} ${SOL2_INCLUDE_DIRS})
+ target_link_libraries(rme ${wxWidgets_LIBRARIES} ${Boost_LIBRARIES} ${LibArchive_LIBRARIES} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES} ${ZLIB_LIBRARIES} ${LUA_LIBRARIES})
+
+From 6edcc8d23c320f6028d8dbad6ee51bfbb09fbab5 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 22:50:53 +0100
+Subject: [PATCH 18/41] feat: add sandbox security, prevent use of malicious
+ paths or unknown calls
+
+---
+ source/lua/lua_api_app.cpp   |  7 +++++
+ source/lua/lua_api_http.cpp  | 38 ++++++++++++++++++++--
+ source/lua/lua_api_image.cpp | 39 +++++++++++++++++++++++
+ source/lua/lua_engine.cpp    | 61 +++++++++++++++++++++++++++++-------
+ 4 files changed, 131 insertions(+), 14 deletions(-)
+

@@ -1,0 +1,23 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 0682f1f37..415828eb7 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -68,6 +68,8 @@ if(MSVC)
+         include_directories(${VCPKG_LUA_INCLUDES})
+     endif()
+ 
++    add_compile_definitions(SOL_USING_CXX_LUA_HPP=1)
++
+     set(LIBS_TO_LINK ${LUA_LIB_TARGET} cpr::cpr nlohmann_json::nlohmann_json sol2::sol2)
+ 
+ else()
+
+From 5a0e2a64e596579ea60120487aab82312402398c Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Sat, 24 Jan 2026 17:33:17 +0100
+Subject: [PATCH 40/41] ci: improve vcpkg cache
+
+---
+ .github/workflows/build-windows.yml | 38 ++++++++++++++++++-----------
+ 1 file changed, 24 insertions(+), 14 deletions(-)
+

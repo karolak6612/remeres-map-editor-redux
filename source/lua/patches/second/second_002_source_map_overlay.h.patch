@@ -1,0 +1,31 @@
+diff --git a/source/map_overlay.h b/source/map_overlay.h
+index 36510731e..71b542ded 100644
+--- a/source/map_overlay.h
++++ b/source/map_overlay.h
+@@ -41,6 +41,7 @@ struct MapOverlayCommand {
+ 		Rect,
+ 		Line,
+ 		Text,
++		Sprite,
+ 	};
+ 
+ 	Type type = Type::Rect;
+@@ -58,6 +59,8 @@ struct MapOverlayCommand {
+ 	int y2 = 0;
+ 	int z2 = 0;
+ 
++	uint32_t sprite_id = 0;
++
+ 	std::string text;
+ 	wxColor color = wxColor(255, 255, 255, 255);
+ };
+
+From 8b8eead5a227b7c4d8ebaa8cfc9d57e6128ff224 Mon Sep 17 00:00:00 2001
+From: GitHub Actions <github-actions[bot]@users.noreply.github.com>
+Date: Sat, 24 Jan 2026 21:52:23 +0000
+Subject: [PATCH 02/10] Code format - (Clang-format)
+
+---
+ source/lua/lua_script_manager.cpp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+

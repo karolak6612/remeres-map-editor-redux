@@ -1,0 +1,74 @@
+diff --git a/source/main_menubar.h b/source/main_menubar.h
+index 04606eeba..7c2d03ece 100644
+--- a/source/main_menubar.h
++++ b/source/main_menubar.h
+@@ -156,6 +156,17 @@ namespace MenuBar {
+ 		ABOUT,
+ 
+ 		EXPERIMENTAL_FOG,
++
++		// Scripts menu
++		SCRIPTS_OPEN_FOLDER,
++		SCRIPTS_RELOAD,
++		SCRIPTS_MANAGER,  // Show/hide Script Manager window
++		SCRIPTS_FIRST,  // Dynamic script IDs start here
++		SCRIPTS_LAST = SCRIPTS_FIRST + 100,  // Allow up to 100 scripts
++
++		// Show menu (custom overlays)
++		SHOW_CUSTOM_FIRST,
++		SHOW_CUSTOM_LAST = SHOW_CUSTOM_FIRST + 200,  // Allow up to 200 custom show entries
+ 	};
+ }
+ 
+@@ -288,6 +299,21 @@ class MainMenuBar : public wxEvtHandler {
+ 	void OnGotoWebsite(wxCommandEvent& event);
+ 	void OnAbout(wxCommandEvent& event);
+ 
++	// Scripts Menu
++	void OnScriptsOpenFolder(wxCommandEvent& event);
++	void OnScriptsReload(wxCommandEvent& event);
++	void OnScriptsManager(wxCommandEvent& event);
++	void OnScriptExecute(wxCommandEvent& event);
++
++	// Show Menu (custom overlays)
++	void OnShowOverlayToggle(wxCommandEvent& event);
++
++	// Scripts menu management
++	void LoadScriptsMenu();
++	void RefreshScriptsMenu();
++	void LoadShowMenu();
++	void RefreshShowMenu();
++
+ protected:
+ 	// Load and returns a menu item, also sets accelerator
+ 	wxObject* LoadItem(pugi::xml_node node, wxMenu* parent, wxArrayString& warnings, wxString& error);
+@@ -309,6 +335,12 @@ class MainMenuBar : public wxEvtHandler {
+ 
+ 	std::map<std::string, MenuBar::Action*> actions;
+ 
++	// Scripts menu
++	wxMenu* scriptsMenu = nullptr;
++	wxMenu* showMenu = nullptr;
++	size_t showMenuCount = 0;
++	bool showMenuHasSeparator = false;
++
+ 	DECLARE_EVENT_TABLE();
+ };
+ 
+
+From b55ce29c4af983709c95359b2fb1b03977a75c89 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 19:03:55 +0100
+Subject: [PATCH 05/41] feat: add event emitters
+
+---
+ source/action.cpp    |  6 ++++++
+ source/action.h      | 31 +++++++++++++++++++++++++++++++
+ source/brush.h       |  5 +++++
+ source/editor.cpp    |  3 +++
+ source/editor.h      |  1 +
+ source/gui.cpp       |  6 ++++++
+ source/map.cpp       |  6 ++++++
+ source/selection.cpp |  8 ++++++++
+ 8 files changed, 66 insertions(+)
+

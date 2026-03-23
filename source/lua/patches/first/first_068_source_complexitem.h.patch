@@ -1,0 +1,23 @@
+diff --git a/source/complexitem.h b/source/complexitem.h
+index 7f1a8f6eb..0addfb25f 100644
+--- a/source/complexitem.h
++++ b/source/complexitem.h
+@@ -156,7 +156,7 @@ class Podium : public Item {
+ 		outfit = newOutfit;
+ 	}
+ 
+-	const uint8_t getDirection() {
++	uint8_t getDirection() {
+ 		return direction;
+ 	}
+ 	void setDirection(uint8_t newDirection) {
+
+From cd54816afe6724c42702243a94f8d70d247d8835 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 22:34:58 +0100
+Subject: [PATCH 17/41] fix: solve issue related to source header discover
+
+---
+ CMakeLists.txt | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+

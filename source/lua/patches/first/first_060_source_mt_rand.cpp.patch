@@ -1,0 +1,24 @@
+diff --git a/source/mt_rand.cpp b/source/mt_rand.cpp
+index ccd6480c9..3b9f79ca6 100644
+--- a/source/mt_rand.cpp
++++ b/source/mt_rand.cpp
+@@ -43,7 +43,7 @@ mt_get(void* vstate) {
+ 	unsigned long k;
+ 	unsigned long int* const mt = state->mt;
+ 
+-#define MAGIC(y) (((y) & 0x1) ? 0x9908b0dfUL : 0)
++#define MAGIC(y) (((y)&0x1) ? 0x9908b0dfUL : 0)
+ 
+ 	if (state->mti >= N) { /* generate N words at one time */
+ 		int kk;
+
+From 52096e537d6195f0a64d70876e223981de723adf Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 21:46:26 +0100
+Subject: [PATCH 12/41] ci: fix required files in cmakelist and build flow
+
+---
+ .github/workflows/build.yml |  5 ++++-
+ CMakeLists.txt              | 12 ++++++++++--
+ 2 files changed, 14 insertions(+), 3 deletions(-)
+

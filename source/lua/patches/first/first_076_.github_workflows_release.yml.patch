@@ -1,0 +1,36 @@
+diff --git a/.github/workflows/release.yml b/.github/workflows/release.yml
+index 6db37b91b..f4dc852f7 100644
+--- a/.github/workflows/release.yml
++++ b/.github/workflows/release.yml
+@@ -3,7 +3,11 @@ name: Release
+ on:
+   push:
+     tags:
+-      - v*
++      - 'v*'
++      - 'Hotfix*'
++      - 'Release*'
++      - 'Hotfix *'
++      - 'Release *'
+ 
+ permissions:
+   contents: write
+
+From a541a185b6908bdbb03f00eecab15457c940b198 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Sat, 24 Jan 2026 03:44:42 +0100
+Subject: [PATCH 28/41] feat: expose keyboard methods, mouse methods and
+ internal selection methods
+
+---
+ source/action.cpp                 |  4 ---
+ source/lua/lua_api_app.cpp        | 18 +++++++++++++
+ source/lua/lua_api_selection.cpp  | 42 +++++++++++++++++++++----------
+ source/lua/lua_script_manager.cpp |  4 +++
+ source/lua/lua_script_manager.h   | 23 +++++++++++++++++
+ source/map_display.cpp            | 24 ++++++++++++++++++
+ source/map_drawer.cpp             |  9 +++++++
+ source/map_overlay.h              |  1 +
+ source/selection.cpp              | 19 +++++++++++---
+ 9 files changed, 123 insertions(+), 21 deletions(-)
+

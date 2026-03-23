@@ -1,0 +1,15 @@
+diff --git a/scripts/hello_world/manifest.lua b/scripts/hello_world/manifest.lua
+new file mode 100644
+index 000000000..6d4546c5d
+--- /dev/null
++++ b/scripts/hello_world/manifest.lua
+@@ -0,0 +1,9 @@
++return {
++    name = "Hello World",
++    description = "A comprehensive tour of the RME Lua API v1 capabilities properly linted and structured",
++    version = "1.0.0",
++    author = "Michy",
++    main = "hello_world",
++    shortcut = "Ctrl+Shift+H",
++	autorun = false
++}

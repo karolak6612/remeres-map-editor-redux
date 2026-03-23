@@ -1,0 +1,21 @@
+diff --git a/source/editor.cpp b/source/editor.cpp
+index 46bcc28e2..338368894 100644
+--- a/source/editor.cpp
++++ b/source/editor.cpp
+@@ -34,6 +34,7 @@
+ #include "doodad_brush.h"
+ #include "creature_brush.h"
+ #include "spawn_brush.h"
++#include "lua/lua_script_manager.h"
+ 
+ #include "live_server.h"
+ #include "live_client.h"
+@@ -276,6 +277,8 @@ void Editor::saveMap(FileName filename, bool showdialog) {
+ 			g_gui.DestroyLoadBar();
+ 		}
+ 
++		g_luaScripts.emit("mapSave", savefile);
++
+ 		// Check for errors...
+ 		if (!success) {
+ 			// Rename the temporary backup files back to their previous names

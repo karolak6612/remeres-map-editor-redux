@@ -1,0 +1,76 @@
+diff --git a/vcproj/Project/Editor.vcxproj b/vcproj/Project/Editor.vcxproj
+index bdcc85043..a7cb59f55 100644
+--- a/vcproj/Project/Editor.vcxproj
++++ b/vcproj/Project/Editor.vcxproj
+@@ -344,6 +344,7 @@
+     <ClInclude Include="..\..\source\map_display.h" />
+     <ClCompile Include="..\..\source\map_display.cpp" />
+     <ClInclude Include="..\..\source\map_drawer.h" />
++    <ClInclude Include="..\..\source\map_overlay.h" />
+     <ClCompile Include="..\..\source\map_drawer.cpp" />
+     <ClInclude Include="..\..\source\map_window.h" />
+     <ClCompile Include="..\..\source\map_window.cpp" />
+@@ -422,6 +423,46 @@
+     <ClCompile Include="..\..\source\waypoint_brush.cpp" />
+     <ClInclude Include="..\..\source\find_item_window.h" />
+     <ClInclude Include="..\..\source\welcome_dialog.h" />
++    <ClCompile Include="..\..\source\lua\lua_api.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_app.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_position.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_item.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_tile.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_map.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_selection.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_dialog.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_color.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_creature.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_brush.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_image.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_json.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_http.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_noise.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_algo.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_api_geo.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_scripts_window.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_engine.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_script.cpp" />
++    <ClCompile Include="..\..\source\lua\lua_script_manager.cpp" />
++    <ClInclude Include="..\..\source\lua\lua_api.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_app.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_position.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_item.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_tile.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_map.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_selection.h" />
++    <ClInclude Include="..\..\source\lua\lua_dialog.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_color.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_creature.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_brush.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_image.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_json.h" />
++    <ClInclude Include="..\..\source\lua\lua_api_http.h" />
++    <ClInclude Include="..\..\source\lua\lua_engine.h" />
++    <ClInclude Include="..\..\source\lua\lua_script.h" />
++    <ClInclude Include="..\..\source\lua\lua_scripts_window.h" />
++    <ClInclude Include="..\..\source\lua\lua_script_manager.h" />
++
+   </ItemGroup>
+   <ItemGroup>
+     <ClCompile Include="..\..\source\mkpch.cpp">
+@@ -456,4 +497,4 @@
+   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+   <ImportGroup Label="ExtensionTargets">
+   </ImportGroup>
+-</Project>
+\ No newline at end of file
++</Project>
+
+From c310f8092870ba69c948473557be80db2ef14ca2 Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 19:00:32 +0100
+Subject: [PATCH 03/41] chore: bump version
+
+---
+ source/definitions.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+

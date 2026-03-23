@@ -1,0 +1,12 @@
+diff --git a/source/map_overlay.h b/source/map_overlay.h
+index 40be36228..36510731e 100644
+--- a/source/map_overlay.h
++++ b/source/map_overlay.h
+@@ -46,6 +46,7 @@ struct MapOverlayCommand {
+ 	Type type = Type::Rect;
+ 	bool screen_space = false;
+ 	bool filled = true;
++	bool dashed = false;
+ 	int width = 1;
+ 
+ 	int x = 0;

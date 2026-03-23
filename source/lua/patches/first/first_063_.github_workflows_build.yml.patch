@@ -1,0 +1,14 @@
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+index 742b43a66..f80fb08c8 100644
+--- a/.github/workflows/build.yml
++++ b/.github/workflows/build.yml
+@@ -37,7 +37,8 @@ jobs:
+             zlib1g-dev \
+             libxmu-dev \
+             libxi-dev \
+-            liblua5.3-dev
++            liblua5.3-dev \
++            libsol2-dev
+ 
+       - name: Setup ccache
+         run: |

@@ -1,0 +1,77 @@
+diff --git a/source/map_display.h b/source/map_display.h
+index 865d05df0..18dd6f075 100644
+--- a/source/map_display.h
++++ b/source/map_display.h
+@@ -31,7 +31,7 @@ class MapDrawer;
+ 
+ class MapCanvas : public wxGLCanvas {
+ public:
+-	MapCanvas(MapWindow* parent, Editor& editor, int* attriblist);
++	MapCanvas(wxWindow* parent, Editor& editor, int* attriblist);
+ 	virtual ~MapCanvas();
+ 	void Reset();
+ 
+@@ -91,14 +91,18 @@ class MapCanvas : public wxGLCanvas {
+ 	void OnSelectMoveTo(wxCommandEvent& event);
+ 	// ---
+ 	void OnProperties(wxCommandEvent& event);
++	void OnScriptMenu(wxCommandEvent& event);
+ 
+ 	void Refresh();
+ 
+-	void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
++	virtual void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
+ 	void MouseToMap(int* map_x, int* map_y) {
+ 		ScreenToMap(cursor_x, cursor_y, map_x, map_y);
+ 	}
+-	void GetScreenCenter(int* map_x, int* map_y);
++	virtual void GetScreenCenter(int* map_x, int* map_y);
++
++	virtual int GetClientWidth() const { return ClientMapWidth; }
++	virtual int GetClientHeight() const { return ClientMapHeight; }
+ 
+ 	void StartPasting();
+ 	void EndPasting();
+@@ -109,16 +113,17 @@ class MapCanvas : public wxGLCanvas {
+ 	void UpdateZoomStatus();
+ 
+ 	void ChangeFloor(int new_floor);
++	void SetFloor(int new_floor) { floor = new_floor; }
+ 	int GetFloor() const {
+ 		return floor;
+ 	}
+ 	double GetZoom() const {
+ 		return zoom;
+ 	}
+-	void SetZoom(double value);
+-	void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
++	virtual void SetZoom(double value);
++	virtual void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
+ 
+-	Position GetCursorPosition() const;
++	virtual Position GetCursorPosition() const;
+ 
+ 	void TakeScreenshot(wxFileName path, wxString format);
+ 
+@@ -126,7 +131,7 @@ class MapCanvas : public wxGLCanvas {
+ 	void getTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, PositionVector* tilestodraw, PositionVector* tilestoborder, bool fill = false);
+ 	bool floodFill(Map* map, const Position& center, int x, int y, GroundBrush* brush, PositionVector* positions);
+ 
+-private:
++protected:
+ 	enum {
+ 		BLOCK_SIZE = 100
+ 	};
+
+From 7b841000ef93e65dc23960c7dc915f37e4ebbfdf Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 19:05:25 +0100
+Subject: [PATCH 08/41] doc: add documentation related to the lua engine
+
+---
+ scripts/README.md  | 1011 ++++++++++++++++++++++++++++++++++++++++++++
+ scripts/linter.lua |  572 +++++++++++++++++++++++++
+ 2 files changed, 1583 insertions(+)
+ create mode 100644 scripts/README.md
+ create mode 100644 scripts/linter.lua
+

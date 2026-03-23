@@ -1,0 +1,24 @@
+diff --git a/source/definitions.h b/source/definitions.h
+index e59cc8dac..86458e1fc 100644
+--- a/source/definitions.h
++++ b/source/definitions.h
+@@ -24,7 +24,7 @@
+ // Version info
+ // xxyyzzt (major, minor, subversion)
+ #define __RME_VERSION_MAJOR__ 4
+-#define __RME_VERSION_MINOR__ 2
++#define __RME_VERSION_MINOR__ 3
+ #define __RME_SUBVERSION__ 0
+ 
+ #define __LIVE_NET_VERSION__ 5
+
+From b7744baa2aea92db8163e4292aa7cd7b875ff0d3 Mon Sep 17 00:00:00 2001
+From: GitHub Actions <github-actions[bot]@users.noreply.github.com>
+Date: Wed, 28 Jan 2026 19:09:24 +0000
+Subject: [PATCH 10/10] Code format - (Clang-format)
+
+---
+ source/lua/lua_api_color.cpp |  2 +-
+ source/lua/lua_dialog.cpp    | 98 +++++++++++++++++++++++++-----------
+ 2 files changed, 69 insertions(+), 31 deletions(-)
+

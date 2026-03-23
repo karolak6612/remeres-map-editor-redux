@@ -1,0 +1,142 @@
+diff --git a/vcpkg.json b/vcpkg.json
+index af6510a18..958180751 100644
+--- a/vcpkg.json
++++ b/vcpkg.json
+@@ -1,18 +1,21 @@
+ {
+-  "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
+-  "dependencies": [
+-    "wxwidgets",
+-    "freeglut",
+-    "asio",
+-    "nlohmann-json",
+-    "fmt",
+-    {
+-      "name": "libiconv",
+-      "platform": "osx"
+-    },
+-    "libarchive",
+-    "boost-spirit",
+-    "boost-asio"
+-  ],
+-  "builtin-baseline": "215a2535590f1f63788ac9bd2ed58ad15e6afdff"
+-}
+\ No newline at end of file
++	"$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
++	"dependencies": [
++		"wxwidgets",
++		"freeglut",
++		"asio",
++		"nlohmann-json",
++		"fmt",
++		{
++			"name": "libiconv",
++			"platform": "osx"
++		},
++		"libarchive",
++		"boost-spirit",
++		"boost-asio",
++		"lua",
++		"sol2",
++		"cpr"
++	],
++	"builtin-baseline": "734f8130ffe2f02cf855a3a42a2958f01b3fb005"
++}
+
+From b935c8bb2f03a2c4df0306b55e87053d84adc09a Mon Sep 17 00:00:00 2001
+From: michyaraque <michyaraque@gmail.com>
+Date: Fri, 23 Jan 2026 19:00:12 +0100
+Subject: [PATCH 02/41] feat: introduce lua_api engine
+
+---
+ CMakeLists.txt                    |    8 +-
+ source/CMakeLists.txt             |   44 +
+ source/fast_noise_lite.h          | 2586 +++++++++++++++++++++++++++
+ source/lua/lua_api.cpp            |   70 +
+ source/lua/lua_api.h              |   58 +
+ source/lua/lua_api_algo.cpp       |  849 +++++++++
+ source/lua/lua_api_algo.h         |   28 +
+ source/lua/lua_api_app.cpp        |  784 +++++++++
+ source/lua/lua_api_app.h          |   28 +
+ source/lua/lua_api_brush.cpp      |  157 ++
+ source/lua/lua_api_brush.h        |   30 +
+ source/lua/lua_api_color.cpp      |   91 +
+ source/lua/lua_api_color.h        |   59 +
+ source/lua/lua_api_creature.cpp   |  138 ++
+ source/lua/lua_api_creature.h     |   30 +
+ source/lua/lua_api_geo.cpp        |  932 ++++++++++
+ source/lua/lua_api_geo.h          |   28 +
+ source/lua/lua_api_http.cpp       |  455 +++++
+ source/lua/lua_api_http.h         |   30 +
+ source/lua/lua_api_image.cpp      |  277 +++
+ source/lua/lua_api_image.h        |   86 +
+ source/lua/lua_api_item.cpp       |  253 +++
+ source/lua/lua_api_item.h         |   29 +
+ source/lua/lua_api_json.cpp       |  172 ++
+ source/lua/lua_api_json.h         |   16 +
+ source/lua/lua_api_map.cpp        |  192 ++
+ source/lua/lua_api_map.h          |   29 +
+ source/lua/lua_api_noise.cpp      |  469 +++++
+ source/lua/lua_api_noise.h        |   28 +
+ source/lua/lua_api_position.cpp   |   71 +
+ source/lua/lua_api_position.h     |   29 +
+ source/lua/lua_api_selection.cpp  |  151 ++
+ source/lua/lua_api_selection.h    |   29 +
+ source/lua/lua_api_tile.cpp       |  549 ++++++
+ source/lua/lua_api_tile.h         |   29 +
+ source/lua/lua_dialog.cpp         | 2709 +++++++++++++++++++++++++++++
+ source/lua/lua_dialog.h           |  197 +++
+ source/lua/lua_engine.cpp         |  234 +++
+ source/lua/lua_engine.h           |  102 ++
+ source/lua/lua_script.cpp         |  287 +++
+ source/lua/lua_script.h           |   72 +
+ source/lua/lua_script_manager.cpp |  649 +++++++
+ source/lua/lua_script_manager.h   |  167 ++
+ source/lua/lua_scripts_window.cpp |  300 ++++
+ source/lua/lua_scripts_window.h   |   71 +
+ vcproj/Project/Editor.vcxproj     |   43 +-
+ 46 files changed, 13642 insertions(+), 3 deletions(-)
+ create mode 100644 source/fast_noise_lite.h
+ create mode 100644 source/lua/lua_api.cpp
+ create mode 100644 source/lua/lua_api.h
+ create mode 100644 source/lua/lua_api_algo.cpp
+ create mode 100644 source/lua/lua_api_algo.h
+ create mode 100644 source/lua/lua_api_app.cpp
+ create mode 100644 source/lua/lua_api_app.h
+ create mode 100644 source/lua/lua_api_brush.cpp
+ create mode 100644 source/lua/lua_api_brush.h
+ create mode 100644 source/lua/lua_api_color.cpp
+ create mode 100644 source/lua/lua_api_color.h
+ create mode 100644 source/lua/lua_api_creature.cpp
+ create mode 100644 source/lua/lua_api_creature.h
+ create mode 100644 source/lua/lua_api_geo.cpp
+ create mode 100644 source/lua/lua_api_geo.h
+ create mode 100644 source/lua/lua_api_http.cpp
+ create mode 100644 source/lua/lua_api_http.h
+ create mode 100644 source/lua/lua_api_image.cpp
+ create mode 100644 source/lua/lua_api_image.h
+ create mode 100644 source/lua/lua_api_item.cpp
+ create mode 100644 source/lua/lua_api_item.h
+ create mode 100644 source/lua/lua_api_json.cpp
+ create mode 100644 source/lua/lua_api_json.h
+ create mode 100644 source/lua/lua_api_map.cpp
+ create mode 100644 source/lua/lua_api_map.h
+ create mode 100644 source/lua/lua_api_noise.cpp
+ create mode 100644 source/lua/lua_api_noise.h
+ create mode 100644 source/lua/lua_api_position.cpp
+ create mode 100644 source/lua/lua_api_position.h
+ create mode 100644 source/lua/lua_api_selection.cpp
+ create mode 100644 source/lua/lua_api_selection.h
+ create mode 100644 source/lua/lua_api_tile.cpp
+ create mode 100644 source/lua/lua_api_tile.h
+ create mode 100644 source/lua/lua_dialog.cpp
+ create mode 100644 source/lua/lua_dialog.h
+ create mode 100644 source/lua/lua_engine.cpp
+ create mode 100644 source/lua/lua_engine.h
+ create mode 100644 source/lua/lua_script.cpp
+ create mode 100644 source/lua/lua_script.h
+ create mode 100644 source/lua/lua_script_manager.cpp
+ create mode 100644 source/lua/lua_script_manager.h
+ create mode 100644 source/lua/lua_scripts_window.cpp
+ create mode 100644 source/lua/lua_scripts_window.h
+
