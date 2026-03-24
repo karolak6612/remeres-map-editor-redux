@@ -58,10 +58,7 @@
 wxIMPLEMENT_APP_NO_MAIN(Application);
 
 int main(int argc, char** argv) {
-	spdlog::info("Entering main");
-	int ret = wxEntry(argc, argv);
-	spdlog::info("Exiting main with code {}", ret);
-	return ret;
+	return wxEntry(argc, argv);
 }
 
 // OnRun is implemented below
@@ -80,15 +77,6 @@ bool Application::OnInit() {
 	// 	freopen_s(&fp, "CONOUT$", "w", stdout);
 	// 	freopen_s(&fp, "CONOUT$", "w", stderr);
 	// #endif
-
-	// Configure spdlog for info output
-	spdlog::set_level(spdlog::level::info);
-	spdlog::flush_on(spdlog::level::info);
-	spdlog::info("RME starting up - logging enabled");
-
-	spdlog::info("This is free software: you are free to change and redistribute it.");
-	spdlog::info("There is NO WARRANTY, to the extent permitted by law.");
-	spdlog::info("Review COPYING in RME distribution for details.");
 
 	// Load settings early for theme support
 	g_settings.load();
@@ -183,6 +171,11 @@ bool Application::OnInit() {
 	wxInitAllImageHandlers();
 
 	g_gui.gfx.loadEditorSprites();
+
+	// Initialize Lua scripting system EARLY (before MainFrame)
+	if (!g_luaScripts.initialize()) {
+		spdlog::warn("Failed to initialize Lua scripting: {}", g_luaScripts.getLastError());
+	}
 
 	// wxHandleFatalExceptions(true);
 	wxHandleFatalExceptions(true);
@@ -362,8 +355,6 @@ void Application::FixVersionDiscrapencies() {
 }
 
 void Application::Unload() {
-	spdlog::info("Application::Unload started");
-
 #ifdef _USE_UPDATER_
 	m_updater.reset();
 #endif
@@ -376,14 +367,11 @@ void Application::Unload() {
 	ClientVersion::unloadVersions();
 	g_settings.save(true);
 
-	spdlog::info("Application::Unload - Stopping NetworkConnection");
-	spdlog::default_logger()->flush();
 	NetworkConnection::getInstance().stop();
 
 	g_preview.Destroy();
 
 	g_gui.root = nullptr;
-	spdlog::info("Application::Unload finished");
 }
 
 int Application::OnExit() {
@@ -398,7 +386,6 @@ int Application::OnExit() {
 }
 
 int Application::OnRun() {
-	spdlog::info("Application::OnRun started");
 	int ret = -1;
 	try {
 		ret = wxApp::OnRun();
@@ -409,14 +396,10 @@ int Application::OnRun() {
 		spdlog::error("Application::OnRun - Caught unknown exception");
 		spdlog::default_logger()->flush();
 	}
-	spdlog::info("Application::OnRun finished with code {}", ret);
-	spdlog::default_logger()->flush();
 	return ret;
 }
 
 void Application::OnFatalException() {
-	spdlog::critical("Application::OnFatalException called - Application crashed!");
-	spdlog::default_logger()->flush();
 }
 
 bool Application::OnExceptionInMainLoop() {

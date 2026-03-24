@@ -1,0 +1,35 @@
+-- @Title: Test UI API
+-- @Description: Verification tests for this API category.
+local framework = require("framework")
+
+framework.test("Dialog construction", function()
+    local dlg = Dialog("Test Dialog")
+    framework.assert(type(dlg) ~= "nil", "Dialog should be created")
+end)
+
+framework.test("Widget methods", function()
+    local dlg = Dialog("Widgets")
+    framework.assert(dlg:label({text="test"}) == dlg, "label should return dlg")
+    framework.assert(dlg:input({id="i1"}) == dlg, "input should return dlg")
+    framework.assert(dlg:number({id="n1"}) == dlg, "number should return dlg")
+    framework.assert(dlg:check({id="c1"}) == dlg, "check should return dlg")
+    framework.assert(dlg:button({text="b1"}) == dlg, "button should return dlg")
+    framework.assert(dlg:combobox({id="cb1", options={"a"}}) == dlg, "combobox should return dlg")
+    framework.assert(dlg:color({id="co1"}) == dlg, "color should return dlg")
+    framework.assert(dlg:item({id="it1"}) == dlg, "item should return dlg")
+    framework.assert(dlg:image({id="im1", itemid=2160}) == dlg, "image should return dlg")
+    framework.assert(dlg:file({id="f1"}) == dlg, "file should return dlg")
+    framework.assert(dlg:mapCanvas({id="m1"}) == dlg, "mapCanvas should return dlg")
+end)
+
+framework.test("Layout methods", function()
+    local dlg = Dialog("Layout")
+    framework.assert(dlg:box({}) == dlg, "box should return dlg")
+    framework.assert(dlg:endbox({}) == dlg, "endbox should return dlg")
+    framework.assert(dlg:wrap({}) == dlg, "wrap should return dlg")
+    framework.assert(dlg:endwrap({}) == dlg, "endwrap should return dlg")
+    framework.assert(dlg:newrow() == dlg, "newrow should return dlg")
+    framework.assert(dlg:separator({}) == dlg, "separator should return dlg")
+end)
+
+framework.summary()

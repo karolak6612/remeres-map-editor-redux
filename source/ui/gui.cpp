@@ -38,6 +38,7 @@
 #include "game/sprites.h"
 #include "game/materials.h"
 #include "brushes/doodad/doodad_brush.h"
+#include "lua/lua_script_manager.h"
 #include "brushes/spawn/spawn_brush.h"
 
 #include "ui/controls/item_buttons.h"
@@ -288,6 +289,10 @@ void GUI::SelectPreviousBrush() {
 }
 void GUI::SelectBrushInternal(Brush* brush) {
 	g_brush_manager.SelectBrushInternal(brush);
+
+	if (g_luaScripts.isInitialized() && GetCurrentBrush()) {
+		g_luaScripts.emit("brushChange", GetCurrentBrush()->getName());
+	}
 }
 Brush* GUI::GetCurrentBrush() const {
 	return g_brush_manager.GetCurrentBrush();

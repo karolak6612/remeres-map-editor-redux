@@ -1,0 +1,77 @@
+-- @Title: Test App API
+-- @Description: Verification tests for this API category.
+local framework = require("framework")
+
+framework.test("app basic properties", function()
+    framework.assert(type(app.version) == "string", "app.version should be string")
+    framework.assert(type(app.apiVersion) == "number", "app.apiVersion should be number")
+    framework.assert(type(app.brushSize) == "number", "app.brushSize should be number")
+    framework.assert(type(app.brushShape) == "string", "app.brushShape should be string")
+    framework.assert(type(app.spawnTime) == "number", "app.spawnTime should be number")
+end)
+
+framework.test("app helper functions", function()
+    framework.assert(type(app.getDataDirectory()) == "string", "app.getDataDirectory should return string")
+    framework.assert(type(app.hasMap()) == "boolean", "app.hasMap should return boolean")
+end)
+
+framework.test("app keyboard", function()
+    framework.assert(type(app.keyboard) ~= "nil", "app.keyboard should exist")
+    framework.assert(type(app.keyboard.isCtrlDown) == "function", "isCtrlDown should be function")
+    framework.assert(type(app.keyboard.isShiftDown) == "function", "isShiftDown should be function")
+    framework.assert(type(app.keyboard.isAltDown) == "function", "isAltDown should be function")
+end)
+
+framework.test("app selection", function()
+    local sel = app.selection
+    framework.assert(type(sel) ~= "nil", "app.selection should exist")
+    framework.assert(type(sel.tiles) == "table", "selection.tiles should be table")
+    framework.assert(type(sel.size) == "number", "selection.size should be number")
+    framework.assert(type(sel.clear) == "function", "selection.clear should be function")
+    framework.assert(type(sel.add) == "function", "selection.add should be function")
+    framework.assert(type(sel.remove) == "function", "selection.remove should be function")
+end)
+
+framework.test("app brushes", function()
+    framework.assert(type(app.setBrush) == "function", "app.setBrush should be function")
+    framework.assert(type(Brushes) ~= "nil", "Brushes global should exist")
+    framework.assert(type(Brushes.getNames) == "function", "Brushes.getNames should be function")
+    framework.assert(type(Brushes.get) == "function", "Brushes.get should be function")
+end)
+
+framework.test("app mapView", function()
+    framework.assert(type(app.mapView) ~= "nil", "app.mapView should exist")
+    framework.assert(type(app.mapView.addOverlay) == "function", "addOverlay should be function")
+    framework.assert(type(app.mapView.registerShow) == "function", "registerShow should be function")
+end)
+
+framework.test("app storage", function()
+    local store = app.storage("test_storage")
+    framework.assert(type(store) ~= "nil", "app.storage should return store")
+    framework.assert(type(store.load) == "function", "store:load should be function")
+    framework.assert(type(store.save) == "function", "store:save should be function")
+    framework.assert(type(store.clear) == "function", "store:clear should be function")
+end)
+
+framework.test("app events", function()
+    framework.assert(type(app.events) ~= "nil", "app.events should exist")
+    framework.assert(type(app.events.on) == "function", "app.events:on should be function")
+    framework.assert(type(app.events.off) == "function", "app.events:off should be function")
+end)
+
+framework.test("app other functions exist", function()
+    framework.assert(type(app.refresh) == "function", "app.refresh should be function")
+    framework.assert(type(app.copy) == "function", "app.copy should be function")
+    framework.assert(type(app.cut) == "function", "app.cut should be function")
+    framework.assert(type(app.paste) == "function", "app.paste should be function")
+    framework.assert(type(app.setClipboard) == "function", "app.setClipboard should be function")
+    framework.assert(type(app.setCameraPosition) == "function", "app.setCameraPosition should be function")
+    framework.assert(type(app.yield) == "function", "app.yield should be function")
+    framework.assert(type(app.sleep) == "function", "app.sleep should be function")
+end)
+
+framework.test("app transactions", function()
+    framework.assert(type(app.transaction) == "function", "app.transaction should be function")
+end)
+
+framework.summary()

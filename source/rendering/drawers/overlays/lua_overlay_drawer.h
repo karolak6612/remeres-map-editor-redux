@@ -7,12 +7,15 @@
 class MapDrawer;
 class CoordinateMapper;
 
+struct NVGcontext;
+
 class LuaOverlayDrawer {
 public:
 	LuaOverlayDrawer(MapDrawer* mapDrawer);
 	~LuaOverlayDrawer();
 
 	void Draw(const RenderView& view, const DrawingOptions& options);
+	void DrawUI(NVGcontext* vg, const RenderView& view, const DrawingOptions& options);
 
 private:
 	MapDrawer* mapDrawer;

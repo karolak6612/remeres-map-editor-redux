@@ -17,11 +17,11 @@
 
 #include "app/main.h"
 #include "lua_api_selection.h"
-#include "../selection.h"
-#include "../tile.h"
-#include "../position.h"
-#include "../gui.h"
-#include "../editor.h"
+#include "editor/selection.h"
+#include "map/tile.h"
+#include "map/position.h"
+#include "ui/gui.h"
+#include "editor/editor.h"
 
 namespace LuaAPI {
 
@@ -92,14 +92,24 @@ namespace LuaAPI {
 			}),
 
 			// Bounds
-			"bounds", sol::property([](Selection* sel, sol::this_state ts) {
+			"bounds", sol::property([](Selection* sel, sol::this_state ts) -> sol::table {
+				sol::state_view lua(ts);
+				if (!sel) {
+					return lua.create_table();
+				}
 				return getSelectionBounds(ts);
 			}),
-			"minPosition", sol::property([](Selection* sel) -> Position {
-				return sel ? sel->minPosition() : Position();
+			"minPosition", sol::property([](Selection* sel) -> sol::optional<Position> {
+				if (!sel || sel->size() == 0) {
+					return sol::nullopt;
+				}
+				return sel->minPosition();
 			}),
-			"maxPosition", sol::property([](Selection* sel) -> Position {
-				return sel ? sel->maxPosition() : Position();
+			"maxPosition", sol::property([](Selection* sel) -> sol::optional<Position> {
+				if (!sel || sel->size() == 0) {
+					return sol::nullopt;
+				}
+				return sel->maxPosition();
 			}),
 
 			// Methods

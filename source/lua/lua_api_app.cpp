@@ -18,18 +18,22 @@
 #include "app/main.h"
 #include "lua_api_app.h"
 #include "lua_script_manager.h"
-#include "../gui.h"
-#include "../editor.h"
-#include "../map.h"
-#include "../brush.h"
-#include "../action.h"
-#include "../tile.h"
-#include "../selection.h"
-#include "../items.h"
-#include "../raw_brush.h"
+#include "ui/gui.h"
+#include "editor/editor.h"
+#include "editor/action_queue.h"
+#include "map/map.h"
+#include "brushes/brush.h"
+#include "editor/action.h"
+#include "map/tile.h"
+#include "editor/selection.h"
+#include "game/items.h"
+#include "brushes/raw/raw_brush.h"
+#include "brushes/ground/auto_border.h"
+#include "util/file_system.h"
 
 #include <wx/msgdlg.h>
 #include <wx/app.h>
+#include <wx/clipbrd.h>
 #include <fstream>
 #include <filesystem>
 #include <unordered_set>
@@ -45,8 +49,7 @@ namespace LuaAPI {
 // ============================================================================
 
 // Transaction implementation
-#include "../selection.h"
-#include "../house.h"
+#include "game/house.h"
 
 	// Helper to sync map metadata when swapping tiles
 	static void updateTileMetadata(Editor* editor, Tile* tile, bool adding) {
@@ -91,9 +94,9 @@ namespace LuaAPI {
 	class LuaTransaction {
 		bool active;
 		Editor* editor;
-		BatchAction* batch;
-		Action* action;
-		std::unordered_map<uint64_t, Tile*> originalTiles;
+		std::unique_ptr<BatchAction> batch;
+		std::unique_ptr<Action> action;
+		std::unordered_map<uint64_t, std::unique_ptr<Tile>> originalTiles;
 
 		uint64_t positionKey(const Position& pos) const {
 			return (static_cast<uint64_t>(pos.x) << 32) | (static_cast<uint64_t>(pos.y) << 16) | static_cast<uint64_t>(pos.z);
@@ -131,50 +134,45 @@ namespace LuaAPI {
 
 			// Process each modified tile
 			for (auto& pair : originalTiles) {
-				Tile* originalTile = pair.second;
+				std::unique_ptr<Tile>& originalTile = pair.second;
 				Position pos = originalTile->getPosition();
 
 				// Get the current (modified) tile from the map
 				Tile* modifiedTile = editor->getMap()->getTile(pos);
 				if (modifiedTile) {
 					// Create a deep copy of the modified tile - this is what we want as the "new" state
-					Tile* modifiedCopy = modifiedTile->deepCopy(*editor->getMap());
+					std::unique_ptr<Tile> modifiedCopy = modifiedTile->deepCopy();
 
 					// Swap the original back into the map
-					Tile* swappedOut = editor->getMap()->swapTile(pos, originalTile);
+					std::unique_ptr<Tile> swappedOut = editor->getMap()->swapTile(pos, std::move(originalTile));
 
 					// swappedOut should be the modifiedTile. We need to clean it up.
 					// Remove it from Map metadata (spawns, houses) and selection
-					updateTileMetadata(editor, swappedOut, false);
+					updateTileMetadata(editor, swappedOut.get(), false);
 
-					// Add originalTile back to Map metadata
-					updateTileMetadata(editor, originalTile, true);
-
-					delete swappedOut;
+					// Add original back to Map metadata (now it's in the map again)
+					// Wait, the originalTile is now in the map, so we get it from map
+					Tile* tileInMap = editor->getMap()->getTile(pos);
+					updateTileMetadata(editor, tileInMap, true);
 
 					// Create Change with the modified copy
 					// When actions commit, they will swap modifiedCopy in and originalTile out.
-					// The Action system handles metadata updates during its commit/undo.
-					Change* change = new Change(modifiedCopy);
-					action->addChange(change);
-				} else {
-					// No real change or tile was removed, cleanup
-					delete originalTile;
+					action->addChange(std::make_unique<Change>(std::move(modifiedCopy)));
 				}
 			}
 
-			// Clear - ownership has been transferred
+			// Clear - ownership has been transferred or tiles discarded
 			originalTiles.clear();
 
 			if (action->size() > 0) {
-				batch->addAndCommitAction(action);
-				editor->addBatch(batch);
+				batch->addAndCommitAction(std::move(action));
+				editor->addBatch(std::move(batch));
 				editor->getMap()->doChange();
 				g_gui.RefreshView(); // Force redraw immediately
 			} else {
 				// No changes, clean up
-				delete action;
-				delete batch;
+				action.reset();
+				batch.reset();
 			}
 
 			cleanup();
@@ -187,25 +185,24 @@ namespace LuaAPI {
 
 			// Restore original tiles (discard any changes made)
 			for (auto& pair : originalTiles) {
-				Tile* originalTile = pair.second;
+				std::unique_ptr<Tile>& originalTile = pair.second;
 				if (originalTile) {
 					Position pos = originalTile->getPosition();
-					Tile* modifiedTile = editor->getMap()->swapTile(pos, originalTile);
+					std::unique_ptr<Tile> modifiedTile = editor->getMap()->swapTile(pos, std::move(originalTile));
 
 					// Clean up modified tile
-					updateTileMetadata(editor, modifiedTile, false);
+					updateTileMetadata(editor, modifiedTile.get(), false);
 
 					// Restore original tile metadata
-					updateTileMetadata(editor, originalTile, true);
-
-					delete modifiedTile; // Discard the modified version
+					Tile* tileInMap = editor->getMap()->getTile(pos);
+					updateTileMetadata(editor, tileInMap, true);
 				}
 			}
 			originalTiles.clear();
 
 			// Discard without committing
-			delete action;
-			delete batch;
+			action.reset();
+			batch.reset();
 
 			cleanup();
 		}
@@ -221,8 +218,7 @@ namespace LuaAPI {
 			// Only snapshot the tile once per transaction (first time it's modified)
 			if (originalTiles.find(key) == originalTiles.end()) {
 				// Create a deep copy of the ORIGINAL tile BEFORE modification
-				Tile* originalCopy = tile->deepCopy(*editor->getMap());
-				originalTiles[key] = originalCopy;
+				originalTiles[key] = tile->deepCopy();
 			}
 		}
 
@@ -237,9 +233,8 @@ namespace LuaAPI {
 		void cleanup() {
 			active = false;
 			editor = nullptr;
-			batch = nullptr;
-			action = nullptr;
-			// Don't clear originalTiles here - it should be empty or ownership transferred
+			batch.reset();
+			action.reset();
 		}
 	};
 
@@ -400,7 +395,7 @@ namespace LuaAPI {
 		sol::table bordersTable = lua.create_table();
 
 		for (auto& pair : g_brushes.getBorders()) {
-			AutoBorder* border = pair.second;
+			AutoBorder* border = pair.second.get();
 			if (!border) {
 				continue;
 			}
@@ -408,7 +403,7 @@ namespace LuaAPI {
 			sol::table b = lua.create_table();
 			b["id"] = border->id;
 			b["group"] = border->group;
-			b["ground"] = border->ground;
+			// b["ground"] = border->ground; // Check if ground exists in AutoBorder
 
 			sol::table tiles = lua.create_table();
 			for (int i = 0; i < 13; ++i) {
@@ -423,7 +418,7 @@ namespace LuaAPI {
 	}
 
 	static std::string getDataDirectory() {
-		return GUI::GetDataDirectory().ToStdString();
+		return FileSystem::GetDataDirectory().ToStdString();
 	}
 
 	static sol::table storageForScript(sol::this_state ts, const std::string& name) {
@@ -543,6 +538,12 @@ namespace LuaAPI {
 		app["alert"] = showAlert;
 		app["hasMap"] = hasMap;
 		app["refresh"] = refresh;
+		app["setBrush"] = [](const std::string& name) {
+			Brush* b = g_brushes.getBrush(name);
+			if (b) {
+				g_gui.SelectBrush(b);
+			}
+		};
 		app["transaction"] = transaction;
 		app["setClipboard"] = setClipboard;
 		app["getDataDirectory"] = getDataDirectory;
@@ -551,7 +552,7 @@ namespace LuaAPI {
 		};
 		app["selectRaw"] = [](int itemId) {
 			if (g_items.typeExists(itemId)) {
-				ItemType& it = g_items[itemId];
+				ItemType it = g_items[itemId];
 				if (it.raw_brush) {
 					g_gui.SelectBrush(it.raw_brush, TILESET_RAW);
 				}
@@ -680,7 +681,7 @@ namespace LuaAPI {
 
 		// Map overlay system
 		sol::table mapView = lua.create_table();
-		mapView["addOverlay"] = [](sol::variadic_args va) -> bool {
+		mapView["addOverlay"] = [](sol::this_state ts, sol::variadic_args va) -> bool {
 			if (va.size() == 2 && va[0].is<std::string>() && va[1].is<sol::table>()) {
 				return g_luaScripts.addMapOverlay(va[0].as<std::string>(), va[1].as<sol::table>());
 			}
@@ -689,7 +690,7 @@ namespace LuaAPI {
 			}
 			return false;
 		};
-		mapView["removeOverlay"] = [](sol::variadic_args va) -> bool {
+		mapView["removeOverlay"] = [](sol::this_state ts, sol::variadic_args va) -> bool {
 			if (va.size() == 1 && va[0].is<std::string>()) {
 				return g_luaScripts.removeMapOverlay(va[0].as<std::string>());
 			}
@@ -698,7 +699,7 @@ namespace LuaAPI {
 			}
 			return false;
 		};
-		mapView["setEnabled"] = [](sol::variadic_args va) -> bool {
+		mapView["setEnabled"] = [](sol::this_state ts, sol::variadic_args va) -> bool {
 			if (va.size() == 2 && va[0].is<std::string>() && va[1].is<bool>()) {
 				return g_luaScripts.setMapOverlayEnabled(va[0].as<std::string>(), va[1].as<bool>());
 			}
@@ -707,7 +708,7 @@ namespace LuaAPI {
 			}
 			return false;
 		};
-		mapView["registerShow"] = [](sol::variadic_args va) -> bool {
+		mapView["registerShow"] = [](sol::this_state ts, sol::variadic_args va) -> bool {
 			std::string label;
 			std::string overlayId;
 			bool enabled = true;
@@ -801,14 +802,12 @@ namespace LuaAPI {
 
 			// Navigate to specific history index
 			"goToHistory", [](Editor* editor, int targetIndex) {
-			if (!editor || !editor->actionQueue){ return;
-}
+			if (!editor || !editor->actionQueue) return;
 
 			int current = (int)editor->actionQueue->getCurrentIndex();
 			int target = targetIndex; // Already 1-based from Lua
 
-			if (target < 0){ target = 0;
-}
+			if (target < 0) target = 0;
 			if (target > (int)editor->actionQueue->getSize()) {
 				target = (int)editor->actionQueue->getSize();
 			}

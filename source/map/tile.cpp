@@ -104,6 +104,32 @@ Tile::~Tile() {
 	// Smart pointers handle deletion
 }
 
+std::unique_ptr<Tile> Tile::deepCopy() const {
+	std::unique_ptr<Tile> copy;
+	if (location) {
+		copy = std::make_unique<Tile>(*location);
+	} else {
+		copy = std::make_unique<Tile>(getX(), getY(), getZ());
+	}
+	if (ground) {
+		copy->ground = ground->deepCopy();
+	}
+	for (const auto& item : items) {
+		copy->items.push_back(item->deepCopy());
+	}
+	if (creature) {
+		copy->creature = creature->deepCopy();
+	}
+	if (spawn) {
+		copy->spawn = spawn->deepCopy();
+	}
+	copy->house_id = house_id;
+	copy->mapflags = mapflags;
+	copy->statflags = statflags;
+	copy->minimapColor = minimapColor;
+	return copy;
+}
+
 uint32_t Tile::memsize() const {
 	uint32_t mem = sizeof(*this);
 	if (ground) {

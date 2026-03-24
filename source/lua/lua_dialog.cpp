@@ -18,15 +18,15 @@
 #include "app/main.h"
 #include "lua_dialog.h"
 #include "lua_api_image.h"
-#include "../gui.h"
-#include "../items.h"
-#include "../map_display.h"
-#include "../map_drawer.h"
-#include "../editor.h"
+#include "ui/gui.h"
+#include "game/items.h"
+#include "rendering/ui/map_display.h"
+#include "rendering/map_drawer.h"
+#include "editor/editor.h"
 #include <wx/msgdlg.h>
-#include "../common_windows.h"
-#include "../find_item_window.h"
-#include "../dcbutton.h"
+#include "ui/common_windows.h"
+#include "ui/find_item_window.h"
+#include "ui/dcbutton.h"
 #include <wx/statline.h>
 #include <wx/valgen.h>
 #include <wx/aui/aui.h>
@@ -40,6 +40,7 @@
 #endif
 #include <wx/graphics.h>
 #include <wx/dcbuffer.h>
+#include "editor/hotkey_manager.h"
 
 using namespace std::string_literals;
 
@@ -189,6 +190,19 @@ public:
 		// Force Ingame mode for "Client Box" behavior
 		drawer->getOptions().SetIngame();
 		drawer->getOptions().show_ingame_box = true;
+
+		// Re-bind events to override base class Bindings that would crash
+		Bind(wxEVT_MOTION, &MapPreviewCanvas::OnMouseMove, this);
+		Bind(wxEVT_MOUSEWHEEL, &MapPreviewCanvas::OnWheel, this);
+		Bind(wxEVT_ENTER_WINDOW, &MapPreviewCanvas::OnGainMouse, this);
+		Bind(wxEVT_LEAVE_WINDOW, &MapPreviewCanvas::OnLoseMouse, this);
+		Bind(wxEVT_LEFT_DOWN, &MapPreviewCanvas::OnMouseLeftClick, this);
+		Bind(wxEVT_LEFT_UP, &MapPreviewCanvas::OnMouseLeftRelease, this);
+		Bind(wxEVT_LEFT_DCLICK, &MapPreviewCanvas::OnMouseLeftDoubleClick, this);
+		Bind(wxEVT_RIGHT_DOWN, &MapPreviewCanvas::OnMouseRightClick, this);
+		Bind(wxEVT_RIGHT_UP, &MapPreviewCanvas::OnMouseRightRelease, this);
+		Bind(wxEVT_MIDDLE_DOWN, &MapPreviewCanvas::OnMouseCenterClick, this);
+		Bind(wxEVT_MIDDLE_UP, &MapPreviewCanvas::OnMouseCenterRelease, this);
 	}
 
 	virtual ~MapPreviewCanvas() {
@@ -241,6 +255,11 @@ public:
 		ScreenToMap(size.GetWidth() / 2, size.GetHeight() / 2, map_x, map_y);
 	}
 
+	void SetFloor(int f) {
+		floor = f;
+		Refresh();
+	}
+
 	void SetPosition(int x, int y, int z) {
 		wxSize size = GetClientSize();
 		int width = size.GetWidth();
@@ -283,6 +302,9 @@ public:
 		Refresh();
 	}
 	void OnMouseLeftClick(wxMouseEvent& event) {
+		SetFocus();
+	}
+	void OnMouseLeftDoubleClick(wxMouseEvent& event) {
 		SetFocus();
 	}
 	void OnMouseLeftRelease(wxMouseEvent& event) { }
@@ -345,10 +367,10 @@ public:
 		return (view_y + (height * (double)zoom) / 2.0) / 32;
 	}
 
-	int GetClientWidth() const override {
+	int GetClientWidth() const {
 		return client_w;
 	}
-	int GetClientHeight() const override {
+	int GetClientHeight() const {
 		return client_h;
 	}
 
@@ -534,6 +556,9 @@ LuaDialog* LuaDialog::box(sol::table options) {
 		wxStaticBoxSizer* staticBox = new wxStaticBoxSizer(orient == "horizontal" ? wxHORIZONTAL : wxVERTICAL, getParentForWidget(), wxString(label));
 		sizer = staticBox;
 
+		// In modern wxWidgets, children of wxStaticBoxSizer should be children of the static box itself
+		panelStack.push(staticBox->GetStaticBox());
+
 		if (options["bgcolor"].valid() || options["fgcolor"].valid()) {
 			applyCommonOptions(staticBox->GetStaticBox(), options);
 		}
@@ -541,7 +566,7 @@ LuaDialog* LuaDialog::box(sol::table options) {
 		sizer = new wxBoxSizer(orient == "horizontal" ? wxHORIZONTAL : wxVERTICAL);
 	}
 
-	getSizerForWidget()->Add(sizer, expand ? 1 : 0, getSizerFlags(options, wxEXPAND | wxALL), getSizerBorder(options));
+	getSizerForWidget()->Add(sizer, expand ? 1 : 0, getSizerFlags(options, wxEXPAND | wxALL, getSizerForWidget()), getSizerBorder(options));
 
 	int width = options.get_or("width", -1);
 	int height = options.get_or("height", -1);
@@ -565,6 +590,12 @@ LuaDialog* LuaDialog::box(sol::table options) {
 LuaDialog* LuaDialog::endbox() {
 	finishCurrentRow();
 	if (!sizerStack.empty()) {
+		wxSizer* s = sizerStack.top();
+		if (wxDynamicCast(s, wxStaticBoxSizer)) {
+			if (!panelStack.empty()) {
+				panelStack.pop();
+			}
+		}
 		sizerStack.pop();
 	}
 	if (!rowSizerStack.empty()) {
@@ -586,7 +617,7 @@ LuaDialog* LuaDialog::panel(sol::table options) {
 	wxBoxSizer* panelSizer = new wxBoxSizer(options.get_or<std::string>("orient", "vertical") == "horizontal" ? wxHORIZONTAL : wxVERTICAL);
 	panel->SetSizer(panelSizer);
 
-	getSizerForWidget()->Add(panel, expand ? 1 : 0, getSizerFlags(options, wxEXPAND | wxALL), getSizerBorder(options));
+	getSizerForWidget()->Add(panel, expand ? 1 : 0, getSizerFlags(options, wxEXPAND | wxALL, getSizerForWidget()), getSizerBorder(options));
 
 	rowSizerStack.push(currentRowSizer);
 	currentRowSizer = nullptr;
@@ -624,7 +655,7 @@ LuaDialog* LuaDialog::label(sol::table options) {
 	std::string id = options.get_or(std::string("id"), ""s);
 
 	wxStaticText* label = new wxStaticText(getParentForWidget(), wxID_ANY, wxString(text));
-	currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	if (!id.empty()) {
 		LuaDialogWidget widget;
@@ -665,7 +696,7 @@ LuaDialog* LuaDialog::mapCanvas(sol::table options) {
 	// Default to center of map start
 	canvas->SetPosition(1000, 1000, 7);
 
-	currentRowSizer->Add(canvas, 1, getSizerFlags(options, wxEXPAND | wxALL), getSizerBorder(options));
+	currentRowSizer->Add(canvas, 1, getSizerFlags(options, wxEXPAND | wxALL, currentRowSizer), getSizerBorder(options));
 
 	if (!id.empty()) {
 		LuaDialogWidget widget;
@@ -693,7 +724,7 @@ LuaDialog* LuaDialog::input(sol::table options) {
 	}
 
 	wxTextCtrl* input = new wxTextCtrl(getParentForWidget(), wxID_ANY, wxString(text), wxDefaultPosition, wxSize(150, -1));
-	currentRowSizer->Add(input, 1, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(input, 1, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	input->Bind(wxEVT_SET_FOCUS, [this](wxFocusEvent& event) {
 		suspendHotkeys();
@@ -746,7 +777,7 @@ LuaDialog* LuaDialog::number(sol::table options) {
 
 	wxSpinCtrlDouble* spin = new wxSpinCtrlDouble(getParentForWidget(), wxID_ANY, "", wxDefaultPosition, wxSize(100, -1), wxSP_ARROW_KEYS, minVal, maxVal, value, decimals == 0 ? 1 : std::pow(0.1, decimals));
 	spin->SetDigits(decimals);
-	currentRowSizer->Add(spin, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(spin, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -782,7 +813,7 @@ LuaDialog* LuaDialog::slider(sol::table options) {
 	}
 
 	wxSlider* slider = new wxSlider(getParentForWidget(), wxID_ANY, value, minVal, maxVal, wxDefaultPosition, wxSize(150, -1));
-	currentRowSizer->Add(slider, 1, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(slider, 1, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -812,7 +843,7 @@ LuaDialog* LuaDialog::check(sol::table options) {
 
 	wxCheckBox* checkbox = new wxCheckBox(getParentForWidget(), wxID_ANY, wxString(text));
 	checkbox->SetValue(selected);
-	currentRowSizer->Add(checkbox, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(checkbox, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -845,7 +876,7 @@ LuaDialog* LuaDialog::radio(sol::table options) {
 
 	wxRadioButton* radio = new wxRadioButton(getParentForWidget(), wxID_ANY, wxString(text));
 	radio->SetValue(selected);
-	currentRowSizer->Add(radio, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(radio, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -900,7 +931,7 @@ LuaDialog* LuaDialog::combobox(sol::table options) {
 		selected = choices[0].ToStdString();
 	}
 
-	currentRowSizer->Add(choice, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(choice, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -980,7 +1011,7 @@ LuaDialog* LuaDialog::button(sol::table options) {
 		finalWidget = btn;
 	}
 
-	currentRowSizer->Add(finalWidget, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(finalWidget, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -1022,7 +1053,7 @@ LuaDialog* LuaDialog::color(sol::table options) {
 	}
 
 	wxColourPickerCtrl* picker = new wxColourPickerCtrl(getParentForWidget(), wxID_ANY, defaultColor);
-	currentRowSizer->Add(picker, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(picker, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -1108,6 +1139,16 @@ public:
 		smooth = value;
 	}
 
+	void SetSelection(int selection) {
+		if (selection == wxNOT_FOUND) {
+			wxVListBox::SetSelection(wxNOT_FOUND);
+			return;
+		}
+		if (selection >= 0 && static_cast<size_t>(selection) < items.size()) {
+			wxVListBox::SetSelection(selection);
+		}
+	}
+
 	const LuaListBoxItem* GetItem(int index) const {
 		if (index < 0 || index >= static_cast<int>(items.size())) {
 			return nullptr;
@@ -1118,13 +1159,16 @@ public:
 	void OnLeftDown(wxMouseEvent& event) {
 		int n = HitTest(event.GetPosition());
 		if (n != wxNOT_FOUND) {
-			SetSelection(n);
-			CallAfter([this, n]() {
-				wxCommandEvent ce(wxEVT_LISTBOX, GetId());
-				ce.SetInt(n);
-				ce.SetEventObject(this);
-				ProcessWindowEvent(ce);
-			});
+			const LuaListBoxItem* item = GetItem(n);
+			if (item) {
+				SetSelection(n);
+				CallAfter([this, n]() {
+					wxCommandEvent ce(wxEVT_LISTBOX, GetId());
+					ce.SetInt(n);
+					ce.SetEventObject(this);
+					ProcessWindowEvent(ce);
+				});
+			}
 		}
 		event.Skip();
 	}
@@ -1132,14 +1176,17 @@ public:
 	void OnLeftDouble(wxMouseEvent& event) {
 		int n = HitTest(event.GetPosition());
 		if (n != wxNOT_FOUND) {
-			SetSelection(n);
-			SetFocus();
-			CallAfter([this, n]() {
-				wxCommandEvent ce(wxEVT_LISTBOX_DCLICK, GetId());
-				ce.SetInt(n);
-				ce.SetEventObject(this);
-				ProcessWindowEvent(ce);
-			});
+			const LuaListBoxItem* item = GetItem(n);
+			if (item) {
+				SetSelection(n);
+				SetFocus();
+				CallAfter([this, n]() {
+					wxCommandEvent ce(wxEVT_LISTBOX_DCLICK, GetId());
+					ce.SetInt(n);
+					ce.SetEventObject(this);
+					ProcessWindowEvent(ce);
+				});
+			}
 		}
 		event.Skip();
 	}
@@ -1307,7 +1354,7 @@ LuaDialog* LuaDialog::list(sol::table options) {
 	}
 	listbox->SetShowText(showText);
 	listbox->SetSmooth(smooth);
-	getSizerForWidget()->Add(listbox, 1, getSizerFlags(options, wxEXPAND | wxALL), getSizerBorder(options));
+	getSizerForWidget()->Add(listbox, 1, getSizerFlags(options, wxEXPAND | wxALL, getSizerForWidget()), getSizerBorder(options));
 
 	// Populate items
 	if (options["items"].valid()) {
@@ -1486,7 +1533,7 @@ LuaDialog* LuaDialog::file(sol::table options) {
 
 	if (!labelText.empty()) {
 		wxStaticText* label = new wxStaticText(getParentForWidget(), wxID_ANY, wxString(labelText));
-		currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+		currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 	}
 
 	wxFilePickerCtrl* picker;
@@ -1495,7 +1542,7 @@ LuaDialog* LuaDialog::file(sol::table options) {
 	} else {
 		picker = new wxFilePickerCtrl(getParentForWidget(), wxID_ANY, wxString(filename), "Select a file", wxString(filetypes), wxDefaultPosition, wxSize(200, -1), wxFLP_OPEN | wxFLP_FILE_MUST_EXIST | wxFLP_USE_TEXTCTRL);
 	}
-	currentRowSizer->Add(picker, 1, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(picker, 1, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -1527,7 +1574,7 @@ LuaDialog* LuaDialog::image(sol::table options) {
 
 	if (!labelText.empty()) {
 		wxStaticText* label = new wxStaticText(getParentForWidget(), wxID_ANY, wxString(labelText));
-		currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+		currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 	}
 
 	wxBitmap bmp;
@@ -1583,7 +1630,7 @@ LuaDialog* LuaDialog::image(sol::table options) {
 	}
 
 	wxStaticBitmap* staticBmp = new wxStaticBitmap(getParentForWidget(), wxID_ANY, bmp);
-	currentRowSizer->Add(staticBmp, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(staticBmp, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -1607,12 +1654,12 @@ LuaDialog* LuaDialog::item(sol::table options) {
 
 	if (!labelText.empty()) {
 		wxStaticText* label = new wxStaticText(getParentForWidget(), wxID_ANY, wxString(labelText));
-		currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+		currentRowSizer->Add(label, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 	}
 
 	int clientId = (itemId > 100 && itemId <= g_items.getMaxID()) ? g_items[itemId].clientID : 0;
 	ItemButton* btn = new ItemButton(getParentForWidget(), RENDER_SIZE_32x32, clientId);
-	currentRowSizer->Add(btn, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT), getSizerBorder(options));
+	currentRowSizer->Add(btn, 0, getSizerFlags(options, wxALIGN_CENTER_VERTICAL | wxRIGHT, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -1664,7 +1711,7 @@ LuaDialog* LuaDialog::separator(sol::optional<sol::table> options) {
 
 	wxStaticLine* line = new wxStaticLine(getParentForWidget(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxLI_HORIZONTAL);
 	sol::table opts = options.value_or(lua.create_table());
-	getSizerForWidget()->Add(line, 0, getSizerFlags(opts, wxEXPAND | wxALL), getSizerBorder(opts));
+	getSizerForWidget()->Add(line, 0, getSizerFlags(opts, wxEXPAND | wxALL, getSizerForWidget()), getSizerBorder(opts));
 
 	applyCommonOptions(line, opts);
 
@@ -2090,10 +2137,8 @@ void LuaDialog::OnClose(wxCloseEvent& event) {
 		}
 	}
 
-	if (!IsModal() && event.CanVeto()) {
-		// Prevent destruction of modeless dialog so it can be reused
-		// event.Veto() is not needed if we don't Skip(), but it's safer
-		event.Veto();
+	if (!IsModal()) {
+		Destroy();
 		return;
 	}
 	event.Skip();
@@ -2538,7 +2583,7 @@ LuaDialog* LuaDialog::grid(sol::table options) {
 		}
 	}
 
-	currentRowSizer->Add(grid, 1, getSizerFlags(options, wxEXPAND | wxALL), getSizerBorder(options));
+	currentRowSizer->Add(grid, 1, getSizerFlags(options, wxEXPAND | wxALL, currentRowSizer), getSizerBorder(options));
 
 	LuaDialogWidget widget;
 	widget.id = id;
@@ -2822,7 +2867,7 @@ void LuaDialog::collectAllValues() {
 	}
 }
 
-int LuaDialog::getSizerFlags(sol::table options, int defaultFlags) {
+int LuaDialog::getSizerFlags(sol::table options, int defaultFlags, wxSizer* targetSizer) {
 	int flags = defaultFlags;
 	if (options["align"].valid()) {
 		std::string align = options.get<std::string>("align");
@@ -2844,9 +2889,29 @@ int LuaDialog::getSizerFlags(sol::table options, int defaultFlags) {
 			flags = (flags & ~wxALIGN_TOP & ~wxALIGN_CENTER_VERTICAL) | wxALIGN_BOTTOM;
 		}
 	}
+
 	if (options.get_or("expand", false)) {
 		flags |= wxEXPAND;
 	}
+
+	// wxEXPAND overrides alignment flags in box sizers
+	if (flags & wxEXPAND) {
+		flags &= ~(wxALIGN_RIGHT | wxALIGN_CENTRE_HORIZONTAL | wxALIGN_BOTTOM | wxALIGN_CENTRE_VERTICAL);
+	}
+
+	if (targetSizer) {
+		wxBoxSizer* box = wxDynamicCast(targetSizer, wxBoxSizer);
+		if (box) {
+			if (box->GetOrientation() == wxHORIZONTAL) {
+				// Only vertical alignment flags can be used in horizontal sizers
+				flags &= ~(wxALIGN_RIGHT | wxALIGN_CENTRE_HORIZONTAL | wxALIGN_LEFT);
+			} else {
+				// Only horizontal alignment flags can be used in vertical sizers
+				flags &= ~(wxALIGN_BOTTOM | wxALIGN_CENTRE_VERTICAL | wxALIGN_TOP);
+			}
+		}
+	}
+
 	return flags;
 }
 
@@ -2946,8 +3011,8 @@ void LuaDialog::applyCommonOptions(wxWindow* widget, sol::table options) {
 
 void LuaDialog::suspendHotkeys() {
 	if (hotkeySuspendCount == 0) {
-		if (g_gui.AreHotkeysEnabled()) {
-			g_gui.DisableHotkeys();
+		if (g_hotkeys.AreHotkeysEnabled()) {
+			g_hotkeys.DisableHotkeys();
 			hotkeysDisabledByDialog = true;
 		}
 	}
@@ -2961,7 +3026,7 @@ void LuaDialog::resumeHotkeys() {
 	}
 	--hotkeySuspendCount;
 	if (hotkeySuspendCount == 0 && hotkeysDisabledByDialog) {
-		g_gui.EnableHotkeys();
+		g_hotkeys.EnableHotkeys();
 		hotkeysDisabledByDialog = false;
 	}
 }
@@ -3052,7 +3117,9 @@ namespace LuaAPI {
 									"show", &LuaDialog::show, "close", &LuaDialog::close, "modify", &LuaDialog::modify, "repaint", &LuaDialog::repaint, "clear", &LuaDialog::clear, "layout", &LuaDialog::layout,
 
 									// Properties
-									"data", sol::property(&LuaDialog::getData, &LuaDialog::setData), "bounds", sol::property(&LuaDialog::getBounds, &LuaDialog::setBounds), "dockable", sol::property(&LuaDialog::isDockable), "activeTab", sol::property(&LuaDialog::getActiveTab));
+									"data", sol::property(&LuaDialog::getData, &LuaDialog::setData), "bounds", sol::property(&LuaDialog::getBounds, &LuaDialog::setBounds), "dockable", sol::property(&LuaDialog::isDockable), "activeTab", sol::property(&LuaDialog::getActiveTab),
+									
+									sol::meta_function::garbage_collect, sol::destructor([](LuaDialog& d) { d.Destroy(); }));
 	}
 
 } // namespace LuaAPI

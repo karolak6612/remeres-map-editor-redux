@@ -143,7 +143,9 @@ protected:
 
 	template <class T>
 	bool getType(T& ref) {
-		fread(&ref, sizeof(ref), 1, file.get());
+		if (fread(&ref, sizeof(ref), 1, file.get()) != 1) {
+			return false;
+		}
 		return ferror(file.get()) == 0;
 	}
 };

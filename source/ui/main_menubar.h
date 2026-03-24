@@ -162,6 +162,10 @@ namespace MenuBar {
 		GOTO_WEBSITE,
 		ABOUT,
 
+		SCRIPTS_MANAGER,
+		SCRIPTS_OPEN_FOLDER,
+		SCRIPTS_RELOAD,
+
 		EXPERIMENTAL_FOG,
 	};
 }
@@ -298,6 +302,10 @@ public:
 	void OnSelectCreaturePalette(wxCommandEvent& event);
 	void OnSelectWaypointPalette(wxCommandEvent& event);
 	void OnSelectRawPalette(wxCommandEvent& event);
+
+	void OnScriptsOpenFolder(wxCommandEvent& event);
+	void OnScriptsReload(wxCommandEvent& event);
+	void OnScriptsManager(wxCommandEvent& event);
 
 	void OnDebugViewDat(wxCommandEvent& event);
 

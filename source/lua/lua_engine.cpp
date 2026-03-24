@@ -20,6 +20,7 @@
 
 #include <fstream>
 #include <sstream>
+#include <spdlog/spdlog.h>
 
 LuaEngine::LuaEngine() :
 	initialized(false) {
@@ -58,9 +59,11 @@ bool LuaEngine::initialize() {
 		return true;
 	} catch (const sol::error& e) {
 		lastError = std::string("Failed to initialize Lua engine: ") + e.what();
+		spdlog::error("LuaEngine::initialize - sol::error: {}", lastError);
 		return false;
 	} catch (const std::exception& e) {
 		lastError = std::string("Failed to initialize Lua engine: ") + e.what();
+		spdlog::error("LuaEngine::initialize - std::exception: {}", lastError);
 		return false;
 	}
 }
@@ -122,7 +125,7 @@ void LuaEngine::setupSandbox() {
 		if (filename.find(":") != std::string::npos || (filename.size() > 0 && (filename[0] == '/' || filename[0] == '\\'))) {
 			throw sol::error("dofile: Absolute paths are not allowed. Use paths relative to the script.");
 		}
-		// Reject directory traversal
+		// Reject directory traversal in the input filename
 		if (filename.find("..") != std::string::npos) {
 			throw sol::error("dofile: Directory traversal ('..') is not allowed.");
 		}
@@ -237,6 +240,11 @@ bool LuaEngine::executeFile(const std::string& filepath) {
 			scriptDir = ".";
 		}
 		lua["SCRIPT_DIR"] = scriptDir;
+
+		// Add SCRIPT_DIR to package.path so 'require' can find local modules
+		std::string path = lua["package"]["path"];
+		std::string newPath = scriptDir + "/?.lua;" + path;
+		lua["package"]["path"] = newPath;
 
 		sol::load_result loaded = lua.load_file(filepath);
 		if (!loaded.valid()) {

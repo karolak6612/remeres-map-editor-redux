@@ -18,6 +18,8 @@
 #ifndef RME_COMMON_H_
 #define RME_COMMON_H_
 
+#include <wx/defs.h>
+
 // Enums
 
 enum {
@@ -205,10 +207,7 @@ enum ToolBarID {
 
 // Script Menu actions
 enum ScriptMenuID {
-	SCRIPTS_OPEN_FOLDER = TOOLBAR_LIGHT + 100,
-	SCRIPTS_RELOAD,
-	SCRIPTS_MANAGER,
-	SCRIPTS_FIRST,
+	SCRIPTS_FIRST = TOOLBAR_LIGHT + 100,
 	SCRIPTS_LAST = SCRIPTS_FIRST + 100,
 
 	SHOW_CUSTOM_FIRST,

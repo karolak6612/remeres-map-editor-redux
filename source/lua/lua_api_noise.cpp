@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 #include "lua_api_noise.h"
-#include "../fast_noise_lite.h"
+#include "ext/fast_noise_lite.h"
 
 #include <unordered_map>
 #include <mutex>

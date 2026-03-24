@@ -17,7 +17,7 @@
 
 #include "app/main.h"
 #include "lua_api_position.h"
-#include "../position.h"
+#include "map/position.h"
 
 namespace LuaAPI {
 

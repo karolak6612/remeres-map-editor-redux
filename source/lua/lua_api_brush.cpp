@@ -17,66 +17,67 @@
 
 #include "app/main.h"
 #include "lua_api_brush.h"
-#include "../brush.h"
-#include "../gui.h"
+#include "brushes/brush.h"
+#include "brushes/raw/raw_brush.h"
+#include "brushes/doodad/doodad_brush.h"
+#include "brushes/ground/ground_brush.h"
+#include "brushes/wall/wall_brush.h"
+#include "brushes/table/table_brush.h"
+#include "brushes/carpet/carpet_brush.h"
+#include "brushes/door/door_brush.h"
+#include "brushes/spawn/spawn_brush.h"
+#include "brushes/creature/creature_brush.h"
+#include "brushes/house/house_brush.h"
+#include "brushes/house/house_exit_brush.h"
+#include "brushes/waypoint/waypoint_brush.h"
 
 namespace LuaAPI {
 
-	// Helper to get brush type as string
-	static std::string getBrushTypeName(Brush* brush) {
+	static std::string getBrushType(Brush* brush) {
 		if (!brush) {
-			return "unknown";
+			return "none";
 		}
 
-		if (brush->isRaw()) {
+		if (brush->is<RAWBrush>()) {
 			return "raw";
 		}
-		if (brush->isDoodad()) {
+		if (brush->is<DoodadBrush>()) {
 			return "doodad";
 		}
-		if (brush->isGround()) {
+		if (brush->is<GroundBrush>()) {
 			return "ground";
 		}
-		if (brush->isWall()) {
+		if (brush->is<WallBrush>()) {
 			return "wall";
 		}
-		if (brush->isWallDecoration()) {
-			return "wall_decoration";
-		}
-		if (brush->isTable()) {
+		if (brush->is<TableBrush>()) {
 			return "table";
 		}
-		if (brush->isCarpet()) {
+		if (brush->is<CarpetBrush>()) {
 			return "carpet";
 		}
-		if (brush->isDoor()) {
+		if (brush->is<DoorBrush>()) {
 			return "door";
 		}
-		if (brush->isOptionalBorder()) {
-			return "optional_border";
-		}
-		if (brush->isCreature()) {
+		if (brush->is<CreatureBrush>()) {
 			return "creature";
 		}
-		if (brush->isSpawn()) {
+		if (brush->is<SpawnBrush>()) {
 			return "spawn";
 		}
-		if (brush->isHouse()) {
+		if (brush->is<HouseBrush>()) {
 			return "house";
 		}
-		if (brush->isHouseExit()) {
+		if (brush->is<HouseExitBrush>()) {
 			return "house_exit";
 		}
-		if (brush->isWaypoint()) {
+		if (brush->is<WaypointBrush>()) {
 			return "waypoint";
 		}
-		if (brush->isFlag()) {
-			return "flag";
-		}
-		if (brush->isEraser()) {
+		if (brush->is<EraserBrush>()) {
 			return "eraser";
 		}
-		if (brush->isTerrain()) {
+		if (brush->is<TerrainBrush>()) {
 			return "terrain";
 		}
 
@@ -98,80 +99,53 @@ namespace LuaAPI {
 									return b ? b->getLookID() : 0;
 								}),
 								"type", sol::property([](Brush* b) -> std::string {
-									return getBrushTypeName(b);
+									return getBrushType(b);
 								}),
 
-								// Capabilities (read-only)
-								"canDrag", sol::property([](Brush* b) -> bool {
-									return b && b->canDrag();
-								}),
-								"canSmear", sol::property([](Brush* b) -> bool {
-									return b && b->canSmear();
-								}),
-								"needsBorders", sol::property([](Brush* b) -> bool {
+								// Methods
+								"canDraw", [](Brush* b, Map* map, int x, int y, int z) -> bool {
+									return b && map && b->canDraw(reinterpret_cast<BaseMap*>(map), Position(x, y, z));
+								},
+								"needBorders", [](Brush* b) -> bool {
 									return b && b->needBorders();
-								}),
-								"oneSizeFitsAll", sol::property([](Brush* b) -> bool {
-									return b && b->oneSizeFitsAll();
-								}),
-								"maxVariation", sol::property([](Brush* b) -> int {
-									return b ? b->getMaxVariation() : 0;
-								}),
-								"visibleInPalette", sol::property([](Brush* b) -> bool {
-									return b && b->visibleInPalette();
-								}),
+								},
+								"canDrag", [](Brush* b) -> bool {
+									return b && b->canDrag();
+								},
+								"canSmear", [](Brush* b) -> bool {
+									return b && b->canSmear();
+								}
+		);
 
-								// Type checks
-								"isRaw", sol::property([](Brush* b) { return b && b->isRaw(); }), "isDoodad", sol::property([](Brush* b) { return b && b->isDoodad(); }), "isTerrain", sol::property([](Brush* b) { return b && b->isTerrain(); }), "isGround", sol::property([](Brush* b) { return b && b->isGround(); }), "isWall", sol::property([](Brush* b) { return b && b->isWall(); }), "isTable", sol::property([](Brush* b) { return b && b->isTable(); }), "isCarpet", sol::property([](Brush* b) { return b && b->isCarpet(); }), "isDoor", sol::property([](Brush* b) { return b && b->isDoor(); }), "isCreature", sol::property([](Brush* b) { return b && b->isCreature(); }), "isSpawn", sol::property([](Brush* b) { return b && b->isSpawn(); }), "isHouse", sol::property([](Brush* b) { return b && b->isHouse(); }), "isEraser", sol::property([](Brush* b) { return b && b->isEraser(); }),
+		// Global brush table
+		sol::table brushes = lua.create_table();
 
-								// String representation
-								sol::meta_function::to_string, [](Brush* b) -> std::string {
-									if (!b) {
-										return "Brush(invalid)";
-									}
-									return "Brush(\"" + b->getName() + "\", type=" + getBrushTypeName(b) + ")";
-								});
-
-		// Register Brushes namespace for brush lookup
-		sol::table brushes = lua.create_named_table("Brushes");
-
-		// Get brush by name
-		brushes["get"] = [](const std::string& name) -> Brush* {
+		brushes["get"] = [](sol::object nameObj) -> Brush* {
+			if (!nameObj.valid() || nameObj.is<sol::nil_t>() || !nameObj.is<std::string>()) {
+				return nullptr;
+			}
+			std::string name = nameObj.as<std::string>();
+			if (name.empty()) {
+				return nullptr;
+			}
 			return g_brushes.getBrush(name);
 		};
 
-		// Get all brush names (for iteration)
 		brushes["getNames"] = [](sol::this_state ts) -> sol::table {
 			sol::state_view lua(ts);
-			sol::table names = lua.create_table();
-
-			int idx = 1;
+			sol::table list = lua.create_table();
+			int index = 1;
 			for (const auto& pair : g_brushes.getMap()) {
-				names[idx++] = pair.first;
+				list[index++] = pair.first;
 			}
-			return names;
+			return list;
 		};
 
-		// Extend the existing 'app' table with brush-related functions
-		sol::table app = lua["app"];
+		brushes["count"] = []() -> size_t {
+			return g_brushes.getMap().size();
+		};
 
-		// Current brush
-		app.set_function("getBrush", []() -> Brush* {
-			return g_gui.GetCurrentBrush();
-		});
-
-		// Set brush by name
-		app.set_function("setBrush", [](const std::string& name) -> bool {
-			Brush* brush = g_brushes.getBrush(name);
-			if (brush) {
-				g_gui.SelectBrush(brush);
-				return true;
-			}
-			return false;
-		});
-
-		// Register BrushShape enum
-		lua.new_enum("BrushShape", "SQUARE", BRUSHSHAPE_SQUARE, "CIRCLE", BRUSHSHAPE_CIRCLE);
+		lua["Brushes"] = brushes;
 	}
 
 } // namespace LuaAPI

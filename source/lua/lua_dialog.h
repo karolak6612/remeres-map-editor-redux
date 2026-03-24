@@ -171,7 +171,7 @@ private:
 	void updateValue(const std::string& id);
 	void collectAllValues();
 	void applyCommonOptions(wxWindow* widget, sol::table options);
-	int getSizerFlags(sol::table options, int defaultFlags = 0);
+	int getSizerFlags(sol::table options, int defaultFlags = 0, wxSizer* targetSizer = nullptr);
 	int getSizerBorder(sol::table options);
 	void suspendHotkeys();
 	void resumeHotkeys();

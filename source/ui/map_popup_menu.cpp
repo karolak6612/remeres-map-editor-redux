@@ -30,6 +30,7 @@
 #include "brushes/raw/raw_brush.h"
 #include "brushes/carpet/carpet_brush.h"
 #include "brushes/table/table_brush.h"
+#include "lua/lua_script_manager.h"
 
 MapPopupMenu::MapPopupMenu(Editor& editor) :
 	wxMenu(""), editor(editor) {
@@ -241,6 +242,21 @@ void MapPopupMenu::Update() {
 			wxMenuItem* tileProps = Append(MAP_POPUP_MENU_TILE_PROPERTIES, "Tile Properties", "Show tile properties panel");
 			tileProps->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_LIST, wxSize(16, 16)));
 			tileProps->Enable(anything_selected);
+
+			// Add Lua Context Menu Items
+			if (g_luaScripts.isInitialized()) {
+				const auto& menuItems = g_luaScripts.getContextMenuItems();
+				if (!menuItems.empty()) {
+					AppendSeparator();
+
+					for (size_t i = 0; i < menuItems.size(); ++i) {
+						int id = MAP_POPUP_MENU_SCRIPT_FIRST + i;
+						if (id > MAP_POPUP_MENU_SCRIPT_LAST) break;
+
+						Append(id, wxString::FromUTF8(menuItems[i].label));
+					}
+				}
+			}
 		}
 	}
 }

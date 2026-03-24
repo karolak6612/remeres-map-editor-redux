@@ -19,13 +19,14 @@
 #include "lua_script_manager.h"
 #include "lua_api.h"
 #include "lua_api_image.h"
-#include "../gui.h"
-#include "../tile.h"
+#include "ui/gui.h"
+#include "map/tile.h"
 
 #include <wx/dir.h>
 #include <wx/filename.h>
 #include <wx/stdpaths.h>
 #include <algorithm>
+#include <spdlog/spdlog.h>
 
 #ifdef _WIN32
 	#include <windows.h>
@@ -46,6 +47,7 @@ bool LuaScriptManager::initialize() {
 		// Initialize the Lua engine
 		if (!engine.initialize()) {
 			lastError = "Failed to initialize Lua engine: " + engine.getLastError();
+			spdlog::error("LuaScriptManager::initialize - {}", lastError);
 			return false;
 		}
 
@@ -59,9 +61,11 @@ bool LuaScriptManager::initialize() {
 		return true;
 	} catch (const std::exception& e) {
 		lastError = "Exception during Lua initialization: " + std::string(e.what());
+		spdlog::error("LuaScriptManager::initialize - Caught std::exception: {}", lastError);
 		return false;
 	} catch (...) {
 		lastError = "Unknown exception during Lua initialization";
+		spdlog::error("LuaScriptManager::initialize - Caught unknown exception");
 		return false;
 	}
 }
@@ -512,9 +516,26 @@ void LuaScriptManager::updateMapOverlayHover(int map_x, int map_y, int map_z, in
 }
 
 std::string LuaScriptManager::getScriptsDirectory() const {
-	// Get the executable directory
+	// 1. Check relative to executable (distributed layout)
 	wxFileName execPath(wxStandardPaths::Get().GetExecutablePath());
 	wxString scriptsDir = execPath.GetPath() + wxFileName::GetPathSeparator() + "scripts";
+
+	if (wxFileName::DirExists(scriptsDir)) {
+		return scriptsDir.ToStdString();
+	}
+
+	// 2. Check relative to current working directory (development layout)
+	if (wxFileName::DirExists("scripts")) {
+		return wxFileName("scripts").GetFullPath().ToStdString();
+	}
+
+	// 3. Check one level up (build directory layout)
+	wxFileName upDir;
+	upDir.AssignDir("..");
+	upDir.AppendDir("scripts");
+	if (wxFileName::DirExists(upDir.GetFullPath())) {
+		return upDir.GetFullPath().ToStdString();
+	}
 
 	return scriptsDir.ToStdString();
 }
@@ -537,6 +558,7 @@ void LuaScriptManager::discoverScripts() {
 void LuaScriptManager::scanDirectory(const std::string& directory) {
 	wxDir dir(directory);
 	if (!dir.IsOpened()) {
+		spdlog::warn("Could not open scripts directory: {}", directory);
 		return;
 	}
 
@@ -548,30 +570,34 @@ void LuaScriptManager::scanDirectory(const std::string& directory) {
 
 	wxString name;
 
-	// First, scan for directories with manifest.lua (package scripts)
+	// First, check for manifest.lua in the CURRENT directory
+	// If it exists, this directory IS a package, don't scan deeper
+	std::string manifestPath = directory + sep + "manifest.lua";
+	if (wxFileExists(manifestPath)) {
+		auto script = std::make_unique<LuaScript>(directory, true);
+		scripts.push_back(std::move(script));
+		return;
+	}
+
+	// Scan for subdirectories
 	bool cont = dir.GetFirst(&name, wxEmptyString, wxDIR_DIRS);
 	while (cont) {
-		std::string subdir = directory + sep + name.ToStdString();
-		std::string manifestPath = subdir + sep + "manifest.lua";
-
-		// Check if manifest.lua exists
-		if (wxFileExists(manifestPath)) {
-			auto script = std::make_unique<LuaScript>(subdir, true);
-			scripts.push_back(std::move(script));
-		}
-
+		std::string subdirName = name.ToStdString();
+		std::string subdir = directory + sep + subdirName;
+		scanDirectory(subdir); // Recurse
 		cont = dir.GetNext(&name);
 	}
 
-	// Then, scan for standalone .lua files
+	// Scan for standalone .lua files in this directory
 	cont = dir.GetFirst(&name, "*.lua", wxDIR_FILES);
 	while (cont) {
-		if (name == "linter.lua") {
+		std::string filename = name.ToStdString();
+		if (filename == "linter.lua" || filename == "manifest.lua" || filename == "test_framework.lua") {
 			cont = dir.GetNext(&name);
 			continue;
 		}
 
-		std::string filepath = directory + sep + name.ToStdString();
+		std::string filepath = directory + sep + filename;
 
 		auto script = std::make_unique<LuaScript>(filepath);
 		scripts.push_back(std::move(script));

@@ -18,13 +18,13 @@
 #include "app/main.h"
 #include "lua_api_creature.h"
 #include "lua_api.h"
-#include "../creature.h"
-#include "../creatures.h"
-#include "../spawn.h"
-#include "../tile.h"
-#include "../map.h"
-#include "../editor.h"
-#include "../gui.h"
+#include "game/creature.h"
+#include "game/creatures.h"
+#include "game/spawn.h"
+#include "map/tile.h"
+#include "map/map.h"
+#include "editor/editor.h"
+#include "ui/gui.h"
 
 namespace LuaAPI {
 

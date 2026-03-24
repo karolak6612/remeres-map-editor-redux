@@ -17,12 +17,12 @@
 
 #include "app/main.h"
 #include "lua_api_map.h"
-#include "../map.h"
-#include "../basemap.h"
-#include "../tile.h"
-#include "../position.h"
-#include "../gui.h"
-#include "../editor.h"
+#include "map/map.h"
+#include "map/basemap.h"
+#include "map/tile.h"
+#include "map/position.h"
+#include "ui/gui.h"
+#include "editor/editor.h"
 
 namespace LuaAPI {
 
@@ -46,7 +46,7 @@ namespace LuaAPI {
 
 			// Find next valid tile
 			while (iter != endIter) {
-				TileLocation* loc = *iter;
+				TileLocation* loc = &(*iter);
 				++iter;
 
 				if (loc && loc->get()) {

@@ -18,6 +18,7 @@
 #ifndef RME_LUA_SCRIPTS_WINDOW_H
 #define RME_LUA_SCRIPTS_WINDOW_H
 
+#include <wx/panel.h>
 #include <wx/listctrl.h>
 #include <wx/textctrl.h>
 

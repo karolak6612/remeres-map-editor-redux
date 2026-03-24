@@ -18,7 +18,7 @@
 #include "app/main.h"
 #include "lua_scripts_window.h"
 #include "lua_script_manager.h"
-#include "../gui_ids.h"
+#include "ui/gui_ids.h"
 
 #include <wx/filename.h>
 #include <wx/stdpaths.h>

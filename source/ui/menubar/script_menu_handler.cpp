@@ -76,26 +76,20 @@ void ScriptMenuHandler::LoadScriptsMenu(wxMenu* menu) {
 	m_scriptsMenu = menu;
 	if (!m_scriptsMenu) return;
 
-	int separatorCount = 0;
-	size_t clearFrom = 0;
-	bool found = false;
-
+	// Find the last separator. Any items after it are dynamic script entries.
+	int lastSeparatorIdx = -1;
 	for (size_t i = 0; i < m_scriptsMenu->GetMenuItemCount(); ++i) {
 		wxMenuItem* item = m_scriptsMenu->FindItemByPosition(i);
 		if (item && item->IsSeparator()) {
-			separatorCount++;
-			if (separatorCount == 2) {
-				clearFrom = i + 1;
-				found = true;
-				break;
-			}
+			lastSeparatorIdx = static_cast<int>(i);
 		}
 	}
 
-	if (!found) {
-		clearFrom = 5;
-	}
+	// If no separator found, we'll start appending from the end or a reasonable default.
+	// But according to menubar.xml, there should be at least two.
+	size_t clearFrom = (lastSeparatorIdx != -1) ? (lastSeparatorIdx + 1) : m_scriptsMenu->GetMenuItemCount();
 
+	// Remove existing dynamic script items
 	while (m_scriptsMenu->GetMenuItemCount() > clearFrom) {
 		m_scriptsMenu->Destroy(m_scriptsMenu->FindItemByPosition(clearFrom));
 	}
@@ -105,7 +99,12 @@ void ScriptMenuHandler::LoadScriptsMenu(wxMenu* menu) {
 		int scriptIndex = 0;
 		for (const auto& script : scripts) {
 			if (scriptIndex >= (SCRIPTS_LAST - SCRIPTS_FIRST)) break;
-			if (!script->isEnabled()) continue;
+			// We only show enabled scripts in the main menu
+			// (Disabled scripts can still be managed in the Script Manager)
+			if (!script->isEnabled()) {
+				scriptIndex++; // Keep index aligned with Event ID mapping
+				continue;
+			}
 
 			wxString label = wxString::FromUTF8(script->getDisplayName());
 			wxString shortcut = wxString::FromUTF8(script->getShortcut());

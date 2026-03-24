@@ -17,11 +17,14 @@
 
 #include "app/main.h"
 #include "lua_api_image.h"
-#include "../gui.h"
-#include "../graphics.h"
-#include "../items.h"
+#include "ui/gui.h"
+#include "rendering/core/graphics.h"
+#include "rendering/core/game_sprite.h"
+#include "rendering/core/normal_image.h"
+#include "game/items.h"
 #include <filesystem>
 #include "lua_script_manager.h"
+#include "util/file_system.h"
 
 namespace LuaAPI {
 
@@ -49,7 +52,7 @@ namespace LuaAPI {
 			if (p.is_absolute()) {
 				// Normalize directories for comparison
 				fs::path scriptsPath = fs::absolute(LuaScriptManager::getInstance().getScriptsDirectory());
-				fs::path dataPath = fs::absolute(GUI::GetDataDirectory().ToStdString());
+				fs::path dataPath = fs::absolute(FileSystem::GetDataDirectory().ToStdString());
 				fs::path absPath = fs::absolute(p);
 
 				std::string absStr = absPath.string();
@@ -83,7 +86,7 @@ namespace LuaAPI {
 		if (isItemSprite) {
 			// Get sprite ID from item type
 			if (g_items.typeExists(id)) {
-				ItemType& itemType = g_items.getItemType(id);
+				ItemType itemType = g_items.getItemType(id);
 				if (itemType.id != 0) {
 					loadFromSpriteId(itemType.clientID);
 				}
@@ -131,7 +134,7 @@ namespace LuaAPI {
 		if (!g_items.typeExists(itemId)) {
 			return 0;
 		}
-		ItemType& itemType = g_items.getItemType(itemId);
+		ItemType itemType = g_items.getItemType(itemId);
 		return itemType.clientID;
 	}
 
@@ -160,11 +163,11 @@ namespace LuaAPI {
 			// Get sprite data for each part
 			for (int y = 0; y < gameSprite->height; ++y) {
 				for (int x = 0; x < gameSprite->width; ++x) {
-					int spriteIndex = gameSprite->getIndex(x, y, 0, 0, 0, 0, 0);
-					if (spriteIndex >= 0 && spriteIndex < (int)gameSprite->spriteList.size()) {
+					size_t spriteIndex = gameSprite->getIndex(x, y, 0, 0, 0, 0, 0);
+					if (spriteIndex < gameSprite->spriteList.size()) {
 						auto* normalImage = gameSprite->spriteList[spriteIndex];
 						if (normalImage) {
-							uint8_t* rgbaData = normalImage->getRGBAData();
+							std::unique_ptr<uint8_t[]> rgbaData = normalImage->getRGBAData();
 							if (rgbaData) {
 								// Copy pixel data to the correct position
 								int destX = (gameSprite->width - 1 - x) * 32;

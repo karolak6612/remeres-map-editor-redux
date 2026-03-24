@@ -152,6 +152,12 @@ public:
 	DoorIndicatorDrawer* getDoorIndicatorDrawer() {
 		return door_indicator_drawer.get();
 	}
+	LuaOverlayDrawer* getLuaOverlayDrawer() {
+		return lua_overlay_drawer.get();
+	}
+	const RenderView& getView() const {
+		return view;
+	}
 
 private:
 	void DrawMapLayer(int map_z, bool live_client);

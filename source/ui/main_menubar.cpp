@@ -173,7 +173,7 @@ void MainMenuBar::UpdateFloorMenu() {
 }
 
 bool MainMenuBar::Load(const FileName& path, std::vector<std::string>& warnings, wxString& error) {
-	if (MenuBarLoader::Load(path, menubar, items, actions, recentFilesManager, warnings, error)) {
+	if (MenuBarLoader::Load(path, menubar, this, items, actions, recentFilesManager, warnings, error)) {
 		Update();
 		LoadValues();
 		return true;
@@ -570,6 +570,19 @@ void MainMenuBar::OnSelectWaypointPalette(wxCommandEvent& event) {
 void MainMenuBar::OnSelectRawPalette(wxCommandEvent& event) {
 	paletteMenuHandler->OnSelectRawPalette(event);
 }
+
+void MainMenuBar::OnScriptsOpenFolder(wxCommandEvent& event) {
+	if (scriptMenuHandler) scriptMenuHandler->OnScriptsOpenFolder(event);
+}
+
+void MainMenuBar::OnScriptsReload(wxCommandEvent& event) {
+	if (scriptMenuHandler) scriptMenuHandler->OnScriptsReload(event);
+}
+
+void MainMenuBar::OnScriptsManager(wxCommandEvent& event) {
+	if (scriptMenuHandler) scriptMenuHandler->OnScriptsManager(event);
+}
+
 
 void MainMenuBar::OnStartLive(wxCommandEvent& event) {
 	LiveDialogs::ShowHostDialog(frame, g_gui.GetCurrentEditor());

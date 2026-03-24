@@ -87,6 +87,15 @@ namespace LuaAPI {
 		return result;
 	}
 
+	// BSP Node for dungeon generation
+	struct BSPNode {
+		int x, y, w, h;
+		BSPNode* left = nullptr;
+		BSPNode* right = nullptr;
+		int roomX = 0, roomY = 0, roomW = 0, roomH = 0;
+		bool hasRoom = false;
+	};
+
 	void registerAlgo(sol::state& lua) {
 		sol::table algoTable = lua.create_table();
 
@@ -723,15 +732,6 @@ namespace LuaAPI {
 
 			// Store rooms
 			std::vector<std::tuple<int, int, int, int>> rooms; // x, y, w, h
-
-			// BSP Node
-			struct BSPNode {
-				int x, y, w, h;
-				BSPNode* left = nullptr;
-				BSPNode* right = nullptr;
-				int roomX, roomY, roomW, roomH;
-				bool hasRoom = false;
-			};
 
 			std::function<BSPNode*(int, int, int, int, int)> split;
 			split = [&](int x, int y, int w, int h, int depth) -> BSPNode* {

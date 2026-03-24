@@ -85,6 +85,8 @@ public:
 	Tile(const Tile&) = delete;
 	Tile& operator=(const Tile&) = delete;
 
+	std::unique_ptr<Tile> deepCopy() const;
+
 	// The location of the tile
 	// Stores state that remains between the tile being moved (like house exits)
 	void setLocation(TileLocation* where) {
@@ -153,6 +155,12 @@ public: // Functions
 
 	bool isSelected() const {
 		return testFlags(statflags, TILESTATE_SELECTED);
+	}
+	void select() {
+		statflags |= TILESTATE_SELECTED;
+	}
+	void deselect() {
+		statflags &= ~TILESTATE_SELECTED;
 	}
 	bool hasUniqueItem() const {
 		return testFlags(statflags, TILESTATE_UNIQUE);
