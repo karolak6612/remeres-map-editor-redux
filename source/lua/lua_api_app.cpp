@@ -462,17 +462,21 @@ namespace LuaAPI {
 			if (p.is_absolute()) {
 				fullPath = fs::weakly_canonical(p);
 				// Check if absolute path is within allowed roots
-				if (fullPath.string().find(scriptsPath.string()) == 0 ||
-					fullPath.string().find(dataPath.string()) == 0 ||
-					fullPath.string().find(execPath.string()) == 0) {
-					allowed = true;
+				std::vector<fs::path> allowedRoots = { scriptsPath, dataPath, execPath };
+				for (const auto& root : allowedRoots) {
+					auto relative = fullPath.lexically_relative(root);
+					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
+						allowed = true;
+						break;
+					}
 				}
 			} else {
 				// For relative paths, try anchoring to each root
 				std::vector<fs::path> roots = { scriptsPath, dataPath, execPath, fs::path(scriptDir) };
 				for (const auto& root : roots) {
 					fs::path candidate = fs::weakly_canonical(root / p);
-					if (candidate.string().find(root.string()) == 0) {
+					auto relative = candidate.lexically_relative(root);
+					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
 						fullPath = candidate;
 						allowed = true;
 						break;
@@ -595,8 +599,8 @@ namespace LuaAPI {
 		app["transaction"] = transaction;
 		app["setClipboard"] = setClipboard;
 		app["getDataDirectory"] = getDataDirectory;
-		app["addContextMenu"] = [](const std::string& label, sol::function callback) {
-			g_luaScripts.registerContextMenuItem(label, callback);
+		app["addContextMenu"] = [](sol::this_state ts, const std::string& label, sol::function callback) {
+			g_luaScripts.registerContextMenuItem(label, callback, ts);
 		};
 		app["selectRaw"] = [](int itemId) {
 			if (g_items.typeExists(itemId)) {
@@ -634,7 +638,7 @@ namespace LuaAPI {
 		// Event system: app.events:on("eventName", callback) / app.events:off(id)
 		sol::table events = lua.create_table();
 		events["on"] = [](sol::this_state ts, sol::table self, const std::string& eventName, sol::function callback) -> int {
-			return g_luaScripts.addEventListener(eventName, callback);
+			return g_luaScripts.addEventListener(eventName, callback, ts);
 		};
 		events["off"] = [](sol::this_state ts, sol::table self, int listenerId) -> bool {
 			return g_luaScripts.removeEventListener(listenerId);

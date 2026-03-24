@@ -375,6 +375,9 @@ namespace LuaAPI {
 		// noise.map(value, inMin, inMax, outMin, outMax) -> number
 		// Map value from one range to another
 		noiseTable.set_function("map", [](float value, float inMin, float inMax, float outMin, float outMax) -> float {
+			if (std::abs(inMax - inMin) < 1e-6f) {
+				throw sol::error("noise.map: inMax and inMin must not be equal.");
+			}
 			float t = (value - inMin) / (inMax - inMin);
 			return outMin + t * (outMax - outMin);
 		});
@@ -399,6 +402,9 @@ namespace LuaAPI {
 		// noise.smoothstep(edge0, edge1, x) -> number
 		// Smooth interpolation
 		noiseTable.set_function("smoothstep", [](float edge0, float edge1, float x) -> float {
+			if (std::abs(edge1 - edge0) < 1e-6f) {
+				throw sol::error("noise.smoothstep: edge0 and edge1 must not be equal.");
+			}
 			float t = (x - edge0) / (edge1 - edge0);
 			if (t < 0.0f) {
 				t = 0.0f;

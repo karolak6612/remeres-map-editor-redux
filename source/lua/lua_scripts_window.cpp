@@ -100,6 +100,7 @@ void LuaScriptsWindow::BuildUI() {
 
 	// Script list
 	script_list = newd wxListCtrl(this, SCRIPT_MANAGER_LIST, wxDefaultPosition, wxSize(-1, 150), wxLC_REPORT | wxLC_SINGLE_SEL);
+	script_list->EnableCheckBoxes(true);
 
 	script_list->InsertColumn(0, "Status", wxLIST_FORMAT_CENTER, 40);
 	script_list->InsertColumn(1, "Title", wxLIST_FORMAT_LEFT, 70);
@@ -154,6 +155,8 @@ void LuaScriptsWindow::RefreshScriptList() {
 		if (!script->isEnabled()) {
 			script_list->SetItemTextColour(index, wxColour(128, 128, 128));
 		}
+		
+		script_list->CheckItem(index, script->isEnabled());
 	}
 
 	// Auto-resize columns if needed

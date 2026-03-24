@@ -70,6 +70,7 @@ public:
 				lastError = err.what();
 				return false;
 			}
+			lastError.clear();
 			return true;
 		} catch (const sol::error& e) {
 			lastError = e.what();
@@ -85,6 +86,7 @@ public:
 	bool safeCallVoid(Func&& func) {
 		try {
 			func();
+			lastError.clear();
 			return true;
 		} catch (const sol::error& e) {
 			lastError = e.what();

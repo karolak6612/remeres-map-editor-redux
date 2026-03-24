@@ -89,8 +89,9 @@ public:
 	struct ContextMenuItem {
 		std::string label;
 		sol::function callback;
+		std::string ownerScriptDir;
 	};
-	void registerContextMenuItem(const std::string& label, sol::function callback);
+	void registerContextMenuItem(const std::string& label, sol::function callback, sol::this_state ts);
 	const std::vector<ContextMenuItem>& getContextMenuItems() const {
 		return contextMenuItems;
 	}
@@ -100,8 +101,9 @@ public:
 		int id;
 		std::string eventName;
 		sol::function callback;
+		std::string ownerScriptDir;
 	};
-	int addEventListener(const std::string& eventName, sol::function callback);
+	int addEventListener(const std::string& eventName, sol::function callback, sol::this_state ts);
 	bool removeEventListener(int listenerId);
 
 	template <typename... Args>
@@ -116,11 +118,18 @@ public:
 		std::vector<EventListener> listenersCopy = eventListeners;
 		for (const auto& listener : listenersCopy) {
 			if (listener.eventName == eventName && listener.callback.valid()) {
+				// Re-establish script context
+				std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
+				engine.getState()["SCRIPT_DIR"] = listener.ownerScriptDir;
+
 				try {
 					std::apply(listener.callback, captured_args);
 				} catch (const sol::error& e) {
-					logOutput("Event '" + eventName + "' error: " + std::string(e.what()), true);
+					logOutput("Error in event listener '" + eventName + "': " + e.what(), true);
 				}
+
+				// Restore script context
+				engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 			}
 		}
 	}

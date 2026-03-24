@@ -642,6 +642,13 @@ namespace LuaAPI {
 		algoTable.set_function("generateRandomPoints", [](int width, int height, int count, sol::optional<int> seed, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				throw sol::error("generateRandomPoints: width and height must be positive.");
+			}
+			if (count < 0) {
+				throw sol::error("generateRandomPoints: count must be non-negative.");
+			}
+
 			int sd = seed.value_or(static_cast<int>(time(nullptr)));
 			std::mt19937 rng(sd);
 			std::uniform_int_distribution<int> distX(0, width - 1);
@@ -668,6 +675,10 @@ namespace LuaAPI {
 		algoTable.set_function("generateMaze", [](int width, int height, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				throw sol::error("generateMaze: width and height must be positive.");
+			}
+
 			int seed = static_cast<int>(time(nullptr));
 
 			if (options) {
@@ -683,6 +694,10 @@ namespace LuaAPI {
 			}
 			if (height % 2 == 0) {
 				height++;
+			}
+
+			if (width < 3 || height < 3) {
+				return gridToTable(std::vector<std::vector<int>>(height, std::vector<int>(width, 1)), lua);
 			}
 
 			// Initialize grid with walls

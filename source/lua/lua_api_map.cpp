@@ -133,21 +133,27 @@ namespace LuaAPI {
 
 			// Get or create tile (for adding content to empty positions)
 			"getOrCreateTile", [](Map* map, sol::variadic_args va) -> Tile* {
-			if (!map){ return nullptr;
-}
+				if (!map) {
+					return nullptr;
+				}
 
-			Position pos;
-			if (va.size() == 1 && va[0].is<Position>()) {
-				pos = va[0].as<Position>();
-			} else if (va.size() == 3) {
-				pos.x = va[0].as<int>();
-				pos.y = va[1].as<int>();
-				pos.z = va[2].as<int>();
-			} else {
-				throw sol::error("getOrCreateTile expects (x, y, z) or (Position)");
-			}
+				Position pos;
+				if (va.size() == 1 && va[0].is<Position>()) {
+					pos = va[0].as<Position>();
+				} else if (va.size() == 3) {
+					pos.x = va[0].as<int>();
+					pos.y = va[1].as<int>();
+					pos.z = va[2].as<int>();
+				} else {
+					throw sol::error("getOrCreateTile expects (x, y, z) or (Position)");
+				}
 
-			return map->getOrCreateTile(pos); },
+				if (!pos.isValid()) {
+					throw sol::error("getOrCreateTile: Invalid coordinates (" + std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z) + ")");
+				}
+
+				return map->getOrCreateTile(pos);
+			},
 
 			// Tiles iterator - allows: for tile in map.tiles do ... end
 			"tiles", sol::property([](Map* map, sol::this_state ts) {

@@ -117,6 +117,10 @@ public:
 	void clear();
 	void layout();
 
+	// Registry to keep instances alive (pinning)
+	static void pin(LuaDialog* dialog);
+	static void unpin(LuaDialog* dialog);
+
 	// Data access
 	sol::table getData();
 	void setData(sol::table data);

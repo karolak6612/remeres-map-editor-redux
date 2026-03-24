@@ -52,17 +52,22 @@ namespace LuaAPI {
 			fs::path p(path);
 			if (p.is_absolute()) {
 				fullPath = fs::weakly_canonical(p);
-				if (fullPath.string().find(scriptsPath.string()) == 0 ||
-					fullPath.string().find(dataPath.string()) == 0 ||
-					fullPath.string().find(execPath.string()) == 0) {
-					allowed = true;
+				// Check if absolute path is within allowed roots
+				std::vector<fs::path> allowedRoots = { scriptsPath, dataPath, execPath };
+				for (const auto& root : allowedRoots) {
+					auto relative = fullPath.lexically_relative(root);
+					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
+						allowed = true;
+						break;
+					}
 				}
 			} else {
 				// For relative paths, try anchoring to each root
 				std::vector<fs::path> roots = { scriptsPath, dataPath, execPath };
 				for (const auto& root : roots) {
 					fs::path candidate = fs::weakly_canonical(root / p);
-					if (candidate.string().find(root.string()) == 0) {
+					auto relative = candidate.lexically_relative(root);
+					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
 						fullPath = candidate;
 						allowed = true;
 						break;

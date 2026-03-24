@@ -21,6 +21,7 @@
 #include <fstream>
 #include <sstream>
 #include <algorithm>
+#include <regex>
 
 // Constructor for single .lua file
 LuaScript::LuaScript(const std::string& filepath) :
@@ -209,11 +210,21 @@ void LuaScript::parseMetadataFromManifest() {
 	if (!val.empty()) {
 		if (val == "true") {
 			autorun = true;
+		} else if (val == "false") {
+			autorun = false;
 		}
 	} else {
-		// Also check boolean literal using the same logic if possible, or keep simple check
-		if (content.find("autorun = true") != std::string::npos || content.find("autorun=true") != std::string::npos) {
-			autorun = true;
+		// Use regex for word-boundary matches like "autorun = true"
+		// This prevents comments or substrings from triggering it.
+		// Pattern matches 'autorun' optional spaces '=' optional spaces 'true'
+		std::regex arRegex(R"(^[^--]*\bautorun\s*=\s*true\b)", std::regex_constants::icase);
+		std::istringstream iss(content);
+		std::string line;
+		while (std::getline(iss, line)) {
+			if (std::regex_search(line, arRegex)) {
+				autorun = true;
+				break;
+			}
 		}
 	}
 

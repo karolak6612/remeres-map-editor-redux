@@ -44,10 +44,21 @@ bool LuaEngine::initialize() {
 			sol::lib::string,
 			sol::lib::table,
 			sol::lib::math,
-			sol::lib::utf8,
-			sol::lib::io,
-			sol::lib::os
+			sol::lib::utf8
 		);
+
+		// Remove restricted libraries from package.loaded/preload
+		if (lua["package"]["loaded"].valid()) {
+			lua["package"]["loaded"]["io"] = sol::nil;
+			lua["package"]["loaded"]["os"] = sol::nil;
+		}
+		if (lua["package"]["preload"].valid()) {
+			lua["package"]["preload"]["io"] = sol::nil;
+			lua["package"]["preload"]["os"] = sol::nil;
+		}
+
+		// Curated package.path
+		lua["package"]["path"] = "./?.lua;./?/init.lua";
 
 		// Setup sandbox (restrict dangerous functions)
 		setupSandbox();
@@ -110,37 +121,46 @@ void LuaEngine::setupSandbox() {
 		}
 	}
 
-	// Custom safe dofile implementation
-	lua["dofile"] = [this](const std::string& filename, sol::this_state s) -> bool {
-		sol::state_view lua(s);
+		// Custom safe dofile implementation
+		lua["dofile"] = [this](const std::string& filename, sol::this_state s) {
+			sol::state_view lua(s);
 
-		// Get SCRIPT_DIR
-		sol::object scriptDirObj = lua["SCRIPT_DIR"];
-		if (!scriptDirObj.is<std::string>()) {
-			throw sol::error("dofile: SCRIPT_DIR not set. Cannot resolve relative path.");
-		}
-		std::string scriptDir = scriptDirObj.as<std::string>();
+			// Get SCRIPT_DIR
+			sol::object scriptDirObj = lua["SCRIPT_DIR"];
+			if (!scriptDirObj.is<std::string>()) {
+				throw sol::error("dofile: SCRIPT_DIR not set. Cannot resolve relative path.");
+			}
+			std::string scriptDir = scriptDirObj.as<std::string>();
 
-		// Reject absolute paths
-		if (filename.find(":") != std::string::npos || (filename.size() > 0 && (filename[0] == '/' || filename[0] == '\\'))) {
-			throw sol::error("dofile: Absolute paths are not allowed. Use paths relative to the script.");
-		}
-		// Reject directory traversal in the input filename
-		if (filename.find("..") != std::string::npos) {
-			throw sol::error("dofile: Directory traversal ('..') is not allowed.");
-		}
+			// Reject absolute paths
+			if (filename.find(":") != std::string::npos || (filename.size() > 0 && (filename[0] == '/' || filename[0] == '\\'))) {
+				throw sol::error("dofile: Absolute paths are not allowed. Use paths relative to the script.");
+			}
+			// Reject directory traversal in the input filename
+			if (filename.find("..") != std::string::npos) {
+				throw sol::error("dofile: Directory traversal ('..') is not allowed.");
+			}
 
-		// Remove ./ prefix if present
-		std::string cleanFilename = filename;
-		if (cleanFilename.substr(0, 2) == "./" || cleanFilename.substr(0, 2) == ".\\") {
-			cleanFilename = cleanFilename.substr(2);
-		}
+			// Remove ./ prefix if present
+			std::string cleanFilename = filename;
+			if (cleanFilename.substr(0, 2) == "./" || cleanFilename.substr(0, 2) == ".\\") {
+				cleanFilename = cleanFilename.substr(2);
+			}
 
-		std::string fullPath = scriptDir + "/" + cleanFilename;
+			std::string fullPath = scriptDir + "/" + cleanFilename;
 
-		// We use executeFile which handles loading and error reporting
-		return this->executeFile(fullPath);
-	};
+			// Simply load and execute returning the result object directly
+			// This avoids memory leaks and stack corruption compared to manually unpacking
+			sol::load_result loaded = lua.load_file(fullPath);
+			if (!loaded.valid()) {
+				sol::error err = loaded;
+				throw sol::error("dofile: Failed to load script '" + fullPath + "': " + err.what());
+			}
+
+			sol::protected_function script = loaded;
+			// Return the result directly to Lua, letting sol2 handle the variadic push
+			return script();
+		};
 
 	// Secure 'load' to prevent bytecode execution (only allow mode "t")
 	// If the chunk starts with the bytecode signature (ESC Lua), load() normally detects it.

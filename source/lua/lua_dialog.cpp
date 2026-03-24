@@ -41,8 +41,20 @@
 #include <wx/graphics.h>
 #include <wx/dcbuffer.h>
 #include "editor/hotkey_manager.h"
+#include <set>
 
 using namespace std::string_literals;
+
+// Registry for pinned dialogs to prevent GC
+static std::set<LuaDialog*> g_pinnedDialogs;
+
+void LuaDialog::pin(LuaDialog* dialog) {
+	g_pinnedDialogs.insert(dialog);
+}
+
+void LuaDialog::unpin(LuaDialog* dialog) {
+	g_pinnedDialogs.erase(dialog);
+}
 
 class CustomButton : public wxControl {
 public:
@@ -2075,6 +2087,14 @@ LuaDialog* LuaDialog::show(sol::optional<sol::table> options) {
 
 	isShowing = true;
 
+	if (dockPanel || !waitMode) {
+		LuaDialog::pin(this);
+	}
+
+	if (waitMode) {
+		LuaDialog::pin(this);
+	}
+
 	if (waitMode) {
 		ShowModal();
 		isShowing = false;
@@ -2122,6 +2142,9 @@ void LuaDialog::close() {
 }
 
 void LuaDialog::OnClose(wxCloseEvent& event) {
+	// Unpin from registry
+	LuaDialog::unpin(this);
+
 	if (IsModal()) {
 		EndModal(wxID_CANCEL);
 	} else {

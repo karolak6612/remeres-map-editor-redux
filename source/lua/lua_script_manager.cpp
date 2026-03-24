@@ -83,18 +83,22 @@ void LuaScriptManager::shutdown() {
 	initialized = false;
 }
 
-void LuaScriptManager::registerContextMenuItem(const std::string& label, sol::function callback) {
+void LuaScriptManager::registerContextMenuItem(const std::string& label, sol::function callback, sol::this_state ts) {
+	sol::state_view lua(ts);
 	ContextMenuItem item;
 	item.label = label;
 	item.callback = callback;
+	item.ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
 	contextMenuItems.push_back(item);
 }
 
-int LuaScriptManager::addEventListener(const std::string& eventName, sol::function callback) {
+int LuaScriptManager::addEventListener(const std::string& eventName, sol::function callback, sol::this_state ts) {
+	sol::state_view lua(ts);
 	EventListener listener;
 	listener.id = nextListenerId++;
 	listener.eventName = eventName;
 	listener.callback = callback;
+	listener.ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
 	eventListeners.push_back(listener);
 	return listener.id;
 }
@@ -639,8 +643,9 @@ bool LuaScriptManager::executeScript(const std::string& filepath) {
 	bool result = engine.executeFile(filepath);
 	if (!result) {
 		lastError = engine.getLastError();
+		return false;
 	}
-	return result;
+	return true;
 }
 
 bool LuaScriptManager::executeScript(LuaScript* script) {

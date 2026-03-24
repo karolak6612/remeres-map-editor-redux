@@ -28,6 +28,8 @@
 #include <condition_variable>
 #include <string_view>
 #include <functional>
+#include <unordered_map>
+#include <boost/asio.hpp>
 
 namespace LuaAPI {
 
@@ -105,6 +107,16 @@ namespace LuaAPI {
 			return responseHeaders_;
 		}
 
+		std::string drainAllChunks() {
+			std::lock_guard<std::mutex> lock(mutex_);
+			std::string result;
+			while (!chunks_.empty()) {
+				result += chunks_.front();
+				chunks_.pop();
+			}
+			return result;
+		}
+
 	private:
 		std::queue<std::string> chunks_;
 		std::mutex mutex_;
@@ -117,9 +129,9 @@ namespace LuaAPI {
 	};
 
 	// Global map to store active stream sessions
-	static std::map<int, std::shared_ptr<StreamSession>> g_streamSessions;
+	static std::unordered_map<uint64_t, std::shared_ptr<StreamSession>> g_streamSessions;
 	static std::mutex g_sessionsMutex;
-	static int g_nextSessionId = 1;
+	static uint64_t g_nextSessionId = 1;
 
 	// Security helper: Block localhost and loopback
 	static bool isUrlSafe(const std::string& url_str) {
@@ -197,6 +209,7 @@ namespace LuaAPI {
 		if (!isUrlSafe(url)) {
 			result["error"] = "Security: URL blocked (Localhost access denied)";
 			result["ok"] = false;
+			result["headers"] = lua.create_table();
 			return result;
 		}
 
@@ -235,6 +248,7 @@ namespace LuaAPI {
 		if (!isUrlSafe(url)) {
 			result["error"] = "Security: URL blocked (Localhost access denied)";
 			result["ok"] = false;
+			result["headers"] = lua.create_table();
 			return result;
 		}
 
@@ -357,15 +371,19 @@ namespace LuaAPI {
 		if (!isUrlSafe(url)) {
 			result["error"] = "Security: URL blocked (Localhost access denied)";
 			result["ok"] = false;
+			result["headers"] = lua.create_table();
 			return result;
 		}
 
 		auto session = std::make_shared<StreamSession>();
-		int sessionId;
+		uint64_t sessionId;
 
 		{
 			std::lock_guard<std::mutex> lock(g_sessionsMutex);
 			sessionId = g_nextSessionId++;
+			while (g_streamSessions.find(sessionId) != g_streamSessions.end()) {
+				sessionId = g_nextSessionId++;
+			}
 			g_streamSessions[sessionId] = session;
 		}
 
@@ -379,7 +397,12 @@ namespace LuaAPI {
 			}
 		}
 
-		// Start the streaming request in a separate thread
+		// IMPORTANT: Using .detach() here means the background thread lifecycle
+		// is independent of the Session object. The lambda captures the session
+		// shared_ptr, ensuring it stays alive during the request.
+		// Note that cpr::Post cannot be cancelled once started; closing a Session
+		// does not stop the in-flight HTTP request. On application shutdown,
+		// detached threads may be abruptly terminated.
 		std::thread([session, url, body, headers]() {
 			std::function<bool(std::string_view, intptr_t)> writeCallback = [session](std::string_view data, intptr_t /*userdata*/) -> bool {
 				session->appendChunk(std::string(data));
@@ -433,7 +456,7 @@ namespace LuaAPI {
 	}
 
 	// Read available chunks from a stream session
-	static sol::table httpStreamRead(sol::this_state ts, int sessionId) {
+	static sol::table httpStreamRead(sol::this_state ts, uint64_t sessionId) {
 		sol::state_view lua(ts);
 		sol::table result = lua.create_table();
 
@@ -450,11 +473,8 @@ namespace LuaAPI {
 			session = it->second;
 		}
 
-		// Collect all available chunks
-		std::string data;
-		while (session->hasChunks()) {
-			data += session->getNextChunk();
-		}
+		// Atomic chunk draining
+		std::string data = session->drainAllChunks();
 
 		result["data"] = data;
 		result["finished"] = session->isFinished();
@@ -478,11 +498,17 @@ namespace LuaAPI {
 			result["headers"] = respHeaders;
 		}
 
+		// Automatic cleanup of finished sessions
+		if (session->isFinished() && !session->hasChunks()) {
+			std::lock_guard<std::mutex> lock(g_sessionsMutex);
+			g_streamSessions.erase(sessionId);
+		}
+
 		return result;
 	}
 
 	// Close and cleanup a stream session
-	static bool httpStreamClose(int sessionId) {
+	static bool httpStreamClose(uint64_t sessionId) {
 		std::lock_guard<std::mutex> lock(g_sessionsMutex);
 		auto it = g_streamSessions.find(sessionId);
 		if (it != g_streamSessions.end()) {
@@ -493,7 +519,7 @@ namespace LuaAPI {
 	}
 
 	// Check if a stream session is finished
-	static sol::table httpStreamStatus(sol::this_state ts, int sessionId) {
+	static sol::table httpStreamStatus(sol::this_state ts, uint64_t sessionId) {
 		sol::state_view lua(ts);
 		sol::table result = lua.create_table();
 

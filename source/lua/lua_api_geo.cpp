@@ -298,6 +298,7 @@ namespace LuaAPI {
 			// BFS flood fill
 			std::queue<std::pair<int, int>> queue;
 			queue.push({ sx, sy });
+			grid[sy][sx] = newValue; // Mark as visited
 
 			// Direction arrays
 			const int dx4[] = { 0, 1, 0, -1 };
@@ -313,19 +314,11 @@ namespace LuaAPI {
 				auto [cx, cy] = queue.front();
 				queue.pop();
 
-				if (cx < 0 || cx >= width || cy < 0 || cy >= height) {
-					continue;
-				}
-				if (grid[cy][cx] != oldValue) {
-					continue;
-				}
-
-				grid[cy][cx] = newValue;
-
 				for (int i = 0; i < numDirs; ++i) {
 					int nx = cx + dx[i];
 					int ny = cy + dy[i];
 					if (nx >= 0 && nx < width && ny >= 0 && ny < height && grid[ny][nx] == oldValue) {
+						grid[ny][nx] = newValue; // Mark as visited on enqueue
 						queue.push({ nx, ny });
 					}
 				}

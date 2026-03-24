@@ -54,12 +54,35 @@ namespace LuaAPI {
 
 			// Read/write properties
 			"count", sol::property(&Item::getCount, [](Item& item, int count) {
+				if (count < 0 || count > 65535) {
+					throw sol::error("item.count: value must be between 0 and 65535.");
+				}
 				item.setSubtype(static_cast<uint16_t>(count));
 			}),
-			"subtype", sol::property([](const Item& item) -> int { return item.getSubtype(); }, [](Item& item, int subtype) { item.setSubtype(static_cast<uint16_t>(subtype)); }),
-			"actionId", sol::property([](const Item& item) -> int { return item.getActionID(); }, [](Item& item, int aid) { item.setActionID(static_cast<uint16_t>(aid)); }),
-			"uniqueId", sol::property([](const Item& item) -> int { return item.getUniqueID(); }, [](Item& item, int uid) { item.setUniqueID(static_cast<uint16_t>(uid)); }),
-			"tier", sol::property([](const Item& item) -> int { return item.getTier(); }, [](Item& item, int tier) { item.setTier(static_cast<uint16_t>(tier)); }),
+			"subtype", sol::property([](const Item& item) -> int { return item.getSubtype(); }, [](Item& item, int subtype) {
+				if (subtype < 0 || subtype > 65535) {
+					throw sol::error("item.subtype: value must be between 0 and 65535.");
+				}
+				item.setSubtype(static_cast<uint16_t>(subtype));
+			}),
+			"actionId", sol::property([](const Item& item) -> int { return item.getActionID(); }, [](Item& item, int aid) {
+				if (aid < 0 || aid > 65535) {
+					throw sol::error("item.actionId: value must be between 0 and 65535.");
+				}
+				item.setActionID(static_cast<uint16_t>(aid));
+			}),
+			"uniqueId", sol::property([](const Item& item) -> int { return item.getUniqueID(); }, [](Item& item, int uid) {
+				if (uid < 0 || uid > 65535) {
+					throw sol::error("item.uniqueId: value must be between 0 and 65535.");
+				}
+				item.setUniqueID(static_cast<uint16_t>(uid));
+			}),
+			"tier", sol::property([](const Item& item) -> int { return item.getTier(); }, [](Item& item, int tier) {
+				if (tier < 0 || tier > 65535) {
+					throw sol::error("item.tier: value must be between 0 and 65535.");
+				}
+				item.setTier(static_cast<uint16_t>(tier));
+			}),
 			"text", sol::property(&Item::getText, &Item::setText),
 			"description", sol::property(&Item::getDescription, &Item::setDescription),
 
