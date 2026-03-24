@@ -24,6 +24,7 @@
 #include <time.h>
 
 class GameSprite;
+class Image;
 class Sprite;
 
 class TextureGarbageCollector {
@@ -31,7 +32,7 @@ public:
 	TextureGarbageCollector();
 	~TextureGarbageCollector();
 
-	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time);
+	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time);
 	void AddSpriteToCleanup(GameSprite* spr);
 	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
 	void Clear();

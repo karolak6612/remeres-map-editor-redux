@@ -1,4 +1,5 @@
-#include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
+#include "rendering/postprocess/post_process_manager.h" // For ShaderNames
 
 namespace {
 
@@ -17,7 +18,7 @@ void main() {
 	// Auto-register (Bilinear/Screen)
 	struct ScreenRegister {
 		ScreenRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::NONE, screen_frag);
+			EffectRegistry::Register(ShaderNames::NONE, screen_frag);
 		}
 	} screen_register;
 

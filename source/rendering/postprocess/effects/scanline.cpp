@@ -1,4 +1,5 @@
-#include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
+#include "rendering/postprocess/post_process_manager.h" // For ShaderNames
 
 namespace {
 
@@ -139,7 +140,7 @@ void main(){
 	// Auto-register
 	struct ScanlineRegister {
 		ScanlineRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::SCANLINE, scanline_frag_source);
+			EffectRegistry::Register(ShaderNames::SCANLINE, scanline_frag_source);
 		}
 	} scanline_register;
 

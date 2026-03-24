@@ -23,23 +23,23 @@
 class Editor;
 class TileRenderer;
 class GridDrawer;
-struct RenderView;
-struct DrawingOptions;
-struct LightBuffer;
+class PendingNodeRequests;
+struct DrawContext;
+struct FloorViewParams;
 class SpriteBatch;
-class PrimitiveRenderer;
 
 class MapLayerDrawer {
 public:
-	MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor);
-	~MapLayerDrawer();
+    MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor, PendingNodeRequests* pending_requests = nullptr);
+    ~MapLayerDrawer();
 
-	void Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer);
+    void Draw(const DrawContext& ctx, int map_z, bool live_client, const FloorViewParams& floor_params);
 
 private:
-	TileRenderer* tile_renderer;
-	GridDrawer* grid_drawer;
-	Editor* editor;
+    TileRenderer* tile_renderer;
+    GridDrawer* grid_drawer;
+    Editor* editor;
+    PendingNodeRequests* pending_requests_;
 };
 
 #endif

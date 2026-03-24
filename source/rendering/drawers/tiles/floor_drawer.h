@@ -6,8 +6,9 @@
 #define RME_RENDERING_FLOOR_DRAWER_H_
 
 class MapDrawer;
-struct RenderView;
-struct DrawingOptions;
+struct ViewState;
+struct RenderSettings;
+struct FrameOptions;
 class Editor;
 
 class ItemDrawer;
@@ -22,7 +23,7 @@ public:
 	FloorDrawer();
 	~FloorDrawer();
 
-	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const RenderView& view, const DrawingOptions& options, Editor& editor);
+	void draw(SpriteBatch& sprite_batch, ItemDrawer* item_drawer, SpriteDrawer* sprite_drawer, CreatureDrawer* creature_drawer, const ViewState& view, const RenderSettings& settings, const FrameOptions& frame, Editor& editor);
 };
 
 #endif

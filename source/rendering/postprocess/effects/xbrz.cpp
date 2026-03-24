@@ -1,4 +1,5 @@
-#include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
+#include "rendering/postprocess/post_process_manager.h" // For ShaderNames
 
 namespace {
 
@@ -263,7 +264,7 @@ void main()
 	// Auto-register
 	struct XBRZRegister {
 		XBRZRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
+			EffectRegistry::Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
 		}
 	} xbrz_register;
 

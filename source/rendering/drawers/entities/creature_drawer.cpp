@@ -9,11 +9,12 @@
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/creature.h"
-#include "ui/gui.h"
 #include "game/sprites.h"
 #include "rendering/core/sprite_batch.h"
+#include "rendering/core/sprite_resolver.h"
 #include "rendering/core/game_sprite.h"
 #include "rendering/core/animator.h"
+#include "item_definitions/core/item_definition_store.h"
 #include <spdlog/spdlog.h>
 
 CreatureDrawer::CreatureDrawer() {
@@ -35,12 +36,12 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options) {
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
-			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+			GameSprite* spr = sprite_resolver ? sprite_resolver->getSprite(definition.clientId()) : nullptr;
 			sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
 		}
 	} else {
 		// get outfit sprite
-		GameSprite* spr = g_gui.gfx.getCreatureSprite(outfit.lookType);
+		GameSprite* spr = sprite_resolver ? sprite_resolver->getCreatureSprite(outfit.lookType) : nullptr;
 		if (!spr || outfit.lookType == 0) {
 			return;
 		}
@@ -56,7 +57,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		// mount colors by Zbizu
 		int pattern_z = 0;
 		if (outfit.lookMount != 0) {
-			if (GameSprite* mountSpr = g_gui.gfx.getCreatureSprite(outfit.lookMount)) {
+			if (GameSprite* mountSpr = sprite_resolver ? sprite_resolver->getCreatureSprite(outfit.lookMount) : nullptr) {
 				// generate mount colors
 				Outfit mountOutfit;
 				mountOutfit.lookType = outfit.lookMount;
