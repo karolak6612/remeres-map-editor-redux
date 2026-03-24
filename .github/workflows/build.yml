@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - master
+      - jules-17856107723341453474-6306382e
   pull_request:
     branches:
       - master
+      - jules-17856107723341453474-6306382e
   workflow_dispatch:
 
 jobs:
