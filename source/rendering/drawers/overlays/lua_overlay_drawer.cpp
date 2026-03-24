@@ -25,9 +25,6 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 	for (const auto& show : shows) {
 		if (!g_luaScripts.isMapOverlayEnabled(show.overlayId)) continue;
 
-		auto overlay = g_luaScripts.getMapOverlay(show.overlayId);
-		if (!overlay) continue;
-
 		MapViewInfo viewInfo;
 		viewInfo.start_x = view.start_x;
 		viewInfo.start_y = view.start_y;
@@ -41,7 +38,9 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 		viewInfo.screen_width = view.screensize_x;
 		viewInfo.screen_height = view.screensize_y;
 
-		auto commands = overlay->onDraw(viewInfo);
+		std::vector<MapOverlayCommand> commands;
+		g_luaScripts.collectMapOverlayCommands(viewInfo, commands);
+
 		for (const auto& cmd : commands) {
 			DrawColor color(cmd.color.Red(), cmd.color.Green(), cmd.color.Blue(), cmd.color.Alpha());
 
