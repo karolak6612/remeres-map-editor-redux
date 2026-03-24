@@ -18,6 +18,7 @@
 #include "app/main.h"
 
 #include "editor/action_queue.h"
+#include "lua/lua_script_manager.h"
 #include "editor/action.h"
 #include "editor/editor.h"
 #include "app/settings.h"
@@ -126,6 +127,7 @@ void ActionQueue::undo() {
 		BatchAction* batch = actions[current].get();
 		batch->undo();
 		editor.notifyStateChange();
+		g_luaScripts.emit("actionChange");
 	}
 }
 
@@ -135,6 +137,7 @@ void ActionQueue::redo() {
 		batch->redo();
 		current++;
 		editor.notifyStateChange();
+		g_luaScripts.emit("actionChange");
 	}
 }
 

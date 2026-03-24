@@ -18,7 +18,6 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 	const auto& shows = g_luaScripts.getMapOverlayShows();
 	if (shows.empty()) return;
 
-	CoordinateMapper mapper(view, options);
 	auto* primitives = mapDrawer->getPrimitiveRenderer();
 	auto* textRenderer = Graphics::getInstance().getTextRenderer();
 	auto* spriteBatch = mapDrawer->getSpriteBatch();
