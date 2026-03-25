@@ -156,15 +156,17 @@ static wxColor parseColor(const sol::object& obj, const wxColor& fallback) {
 	return fallback;
 }
 
-bool LuaScriptManager::addMapOverlay(const std::string& id, sol::table options) {
+bool LuaScriptManager::addMapOverlay(const std::string& id, sol::table options, sol::this_state ts) {
 	if (id.empty()) {
 		return false;
 	}
 
+	sol::state_view lua(ts);
 	MapOverlay overlay;
 	overlay.id = id;
 	overlay.enabled = options.get_or(std::string("enabled"), true);
 	overlay.order = options.get_or(std::string("order"), 0);
+	overlay.ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
 	if (options["ondraw"].valid()) {
 		overlay.ondraw = options["ondraw"];
 	}
@@ -221,10 +223,13 @@ bool LuaScriptManager::setMapOverlayEnabled(const std::string& id, bool enabled)
 	return false;
 }
 
-bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const std::string& overlayId, bool enabled, sol::function ontoggle) {
+bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const std::string& overlayId, bool enabled, sol::function ontoggle, sol::this_state ts) {
 	if (label.empty() || overlayId.empty()) {
 		return false;
 	}
+
+	sol::state_view lua(ts);
+	std::string ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
 
 	auto refreshMenus = []() {
 		if (g_gui.root) {
@@ -237,6 +242,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 			item.label = label;
 			item.overlayId = overlayId;
 			item.enabled = enabled;
+			item.ownerScriptDir = ownerScriptDir;
 			if (ontoggle.valid()) {
 				item.ontoggle = ontoggle;
 			}
@@ -251,6 +257,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 	item.overlayId = overlayId;
 	item.enabled = enabled;
 	item.ontoggle = ontoggle;
+	item.ownerScriptDir = ownerScriptDir;
 	mapOverlayShows.push_back(item);
 	setMapOverlayEnabled(overlayId, enabled);
 	refreshMenus();
@@ -451,11 +458,16 @@ void LuaScriptManager::updateMapOverlayHover(int map_x, int map_y, int map_z, in
 		info["topItem"] = topItem;
 	}
 
+	// Snapshot active overlays that have onhover to prevent iterator invalidation
+	// if an overlay callback modifies mapOverlays (e.g., app.mapView.addOverlay)
+	std::vector<MapOverlay> activeOverlays;
 	for (const auto& overlay : mapOverlays) {
-		if (!overlay.enabled || !overlay.onhover.valid()) {
-			continue;
+		if (overlay.enabled && overlay.onhover.valid()) {
+			activeOverlays.push_back(overlay);
 		}
+	}
 
+	for (const auto& overlay : activeOverlays) {
 		try {
 			sol::object result = overlay.onhover(info);
 			if (!result.valid() || result.is<sol::nil_t>()) {

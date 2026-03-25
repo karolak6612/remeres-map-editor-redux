@@ -187,6 +187,10 @@ namespace LuaAPI {
 		algoTable.set_function("generateCave", [](int width, int height, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				throw sol::error("algo.generateCave: width and height must be positive integers");
+			}
+
 			float fillProbability = 0.45f;
 			int iterations = 4;
 			int birthLimit = 4;
@@ -291,8 +295,8 @@ namespace LuaAPI {
 
 			if (options) {
 				sol::table opts = *options;
-				iterations = opts.get_or(std::string("iterations"), 50000);
-				erosionRadius = opts.get_or(std::string("erosionRadius"), 3);
+				iterations = std::max(0, opts.get_or(std::string("iterations"), 50000));
+				erosionRadius = std::max(0, std::min(opts.get_or(std::string("erosionRadius"), 3), std::min(width, height) / 2));
 				inertia = opts.get_or(std::string("inertia"), 0.05f);
 				sedimentCapacity = opts.get_or(std::string("sedimentCapacity"), 4.0f);
 				minSlope = opts.get_or(std::string("minSlope"), 0.01f);
@@ -301,7 +305,7 @@ namespace LuaAPI {
 				evaporateSpeed = opts.get_or(std::string("evaporateSpeed"), 0.01f);
 				gravity = opts.get_or(std::string("gravity"), 4.0f);
 				seed = opts.get_or(std::string("seed"), seed);
-				maxDropletLifetime = opts.get_or(std::string("maxDropletLifetime"), 30);
+				maxDropletLifetime = std::max(1, opts.get_or(std::string("maxDropletLifetime"), 30));
 			}
 
 			auto heightmap = tableToFloatGrid(inputHeightmap, width, height);
@@ -597,6 +601,10 @@ namespace LuaAPI {
 		algoTable.set_function("voronoi", [](int width, int height, sol::table points, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				throw sol::error("algo.voronoi: width and height must be positive integers");
+			}
+
 			// Parse points
 			std::vector<std::pair<int, int>> seedPoints;
 			for (auto& kv : points) {
@@ -741,6 +749,10 @@ namespace LuaAPI {
 		algoTable.set_function("generateDungeon", [](int width, int height, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 
+			if (width <= 0 || height <= 0) {
+				throw sol::error("algo.generateDungeon: width and height must be positive integers");
+			}
+
 			int minRoomSize = 5;
 			int maxRoomSize = 15;
 			int seed = static_cast<int>(time(nullptr));
@@ -748,10 +760,10 @@ namespace LuaAPI {
 
 			if (options) {
 				sol::table opts = *options;
-				minRoomSize = opts.get_or(std::string("minRoomSize"), 5);
-				maxRoomSize = opts.get_or(std::string("maxRoomSize"), 15);
+				minRoomSize = std::max(1, opts.get_or(std::string("minRoomSize"), 5));
+				maxRoomSize = std::max(minRoomSize, opts.get_or(std::string("maxRoomSize"), 15));
 				seed = opts.get_or(std::string("seed"), seed);
-				maxDepth = opts.get_or(std::string("maxDepth"), 4);
+				maxDepth = std::max(1, opts.get_or(std::string("maxDepth"), 4));
 			}
 
 			std::mt19937 rng(seed);

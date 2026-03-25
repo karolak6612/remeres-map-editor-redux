@@ -234,8 +234,20 @@ void LuaScript::parseMetadataFromManifest() {
 		if (val.size() < 4 || val.substr(val.size() - 4) != ".lua") {
 			val += ".lua";
 		}
-		filepath = directory + "/" + val;
-		filename = val;
+		
+		if (val.find(":") != std::string::npos || (val.size() > 0 && (val[0] == '/' || val[0] == '\\')) || val.find("..") != std::string::npos) {
+			// Validation failed, default to main.lua
+			filepath = directory + "/main.lua";
+			filename = "main.lua";
+		} else {
+			// Remove ./ prefix if present
+			std::string cleanFilename = val;
+			if (cleanFilename.substr(0, 2) == "./" || cleanFilename.substr(0, 2) == ".\\") {
+				cleanFilename = cleanFilename.substr(2);
+			}
+			filepath = directory + "/" + cleanFilename;
+			filename = cleanFilename;
+		}
 	} else {
 		// Default to main.lua
 		filepath = directory + "/main.lua";
@@ -337,8 +349,18 @@ void LuaScript::parseMetadataFromComments() {
 			continue;
 		} else if (comment.size() > 9 && (comment.substr(0, 9) == "@AutoRun:" || comment.substr(0, 9) == "@Autorun:")) {
 			std::string ar = comment.substr(9);
-			if (ar.find("true") != std::string::npos) {
+			size_t s = ar.find_first_not_of(" \t");
+			if (s != std::string::npos) {
+				ar = ar.substr(s);
+			}
+			size_t e = ar.find_last_not_of(" \t\r\n");
+			if (e != std::string::npos) {
+				ar = ar.substr(0, e + 1);
+			}
+			if (ar == "true") {
 				autorun = true;
+			} else if (ar == "false") {
+				autorun = false;
 			}
 			continue;
 		}

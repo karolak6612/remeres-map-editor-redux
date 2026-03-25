@@ -57,8 +57,10 @@ namespace LuaAPI {
 				for (const auto& root : allowedRoots) {
 					auto relative = fullPath.lexically_relative(root);
 					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
-						allowed = true;
-						break;
+						if (fs::is_regular_file(fullPath)) {
+							allowed = true;
+							break;
+						}
 					}
 				}
 			} else {
@@ -68,9 +70,11 @@ namespace LuaAPI {
 					fs::path candidate = fs::weakly_canonical(root / p);
 					auto relative = candidate.lexically_relative(root);
 					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
-						fullPath = candidate;
-						allowed = true;
-						break;
+						if (fs::is_regular_file(candidate)) {
+							fullPath = candidate;
+							allowed = true;
+							break;
+						}
 					}
 				}
 			}
@@ -92,18 +96,25 @@ namespace LuaAPI {
 	}
 
 	LuaImage::LuaImage(int id, bool isItemSprite) :
-		spriteId(id), spriteSource(true) {
+		spriteId(0), spriteSource(false) {
 		if (isItemSprite) {
 			// Get sprite ID from item type
 			if (g_items.typeExists(id)) {
 				ItemType itemType = g_items.getItemType(id);
 				if (itemType.id != 0) {
-					spriteId = itemType.clientID;
 					loadFromSpriteId(itemType.clientID);
+					if (image.IsOk()) {
+						spriteId = itemType.clientID;
+						spriteSource = true;
+					}
 				}
 			}
 		} else {
 			loadFromSpriteId(id);
+			if (image.IsOk()) {
+				spriteId = id;
+				spriteSource = true;
+			}
 		}
 	}
 
@@ -234,9 +245,10 @@ namespace LuaAPI {
 		if (image.IsOk() && width > 0 && height > 0) {
 			wxImageResizeQuality quality = smooth ? wxIMAGE_QUALITY_HIGH : wxIMAGE_QUALITY_NEAREST;
 			result.image = image.Scale(width, height, quality);
-			result.filePath = filePath;
-			result.spriteId = spriteId;
-			result.spriteSource = spriteSource;
+			// Do not inherit identity fields for resized images
+			result.filePath = "";
+			result.spriteId = 0;
+			result.spriteSource = false;
 		}
 		return result;
 	}
@@ -245,9 +257,12 @@ namespace LuaAPI {
 		if (factor <= 0 || !image.IsOk()) {
 			return LuaImage();
 		}
-		int newWidth = static_cast<int>(image.GetWidth() * factor);
-		int newHeight = static_cast<int>(image.GetHeight() * factor);
-		return resize(newWidth, newHeight, smooth);
+		int w = static_cast<int>(image.GetWidth() * factor);
+		int h = static_cast<int>(image.GetHeight() * factor);
+
+		LuaImage result = resize(w, h, smooth);
+		// resize already cleared identity fields
+		return result;
 	}
 
 	wxBitmap LuaImage::getBitmap() const {

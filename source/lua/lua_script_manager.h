@@ -171,17 +171,20 @@ public:
 		int order = 0;
 		sol::function ondraw;
 		sol::function onhover;
+		std::string ownerScriptDir;
 	};
 	struct MapOverlayShowItem {
 		std::string label;
 		std::string overlayId;
 		bool enabled = true;
 		sol::function ontoggle;
+		std::string ownerScriptDir;
 	};
-	bool addMapOverlay(const std::string& id, sol::table options);
+
+	bool addMapOverlay(const std::string& id, sol::table options, sol::this_state ts);
 	bool removeMapOverlay(const std::string& id);
 	bool setMapOverlayEnabled(const std::string& id, bool enabled);
-	bool registerMapOverlayShow(const std::string& label, const std::string& overlayId, bool enabled, sol::function ontoggle);
+	bool registerMapOverlayShow(const std::string& label, const std::string& overlayId, bool enabled, sol::function ontoggle, sol::this_state ts);
 	bool setMapOverlayShowEnabled(const std::string& overlayId, bool enabled);
 	bool isMapOverlayEnabled(const std::string& id) const;
 	const std::vector<MapOverlayShowItem>& getMapOverlayShows() const {

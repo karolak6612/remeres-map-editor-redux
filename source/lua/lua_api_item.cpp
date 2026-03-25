@@ -39,6 +39,12 @@ namespace LuaAPI {
 		return lowerHaystack.find(lowerNeedle) != std::string::npos;
 	}
 
+	// Optimized helper when needle is already lowercased
+	static bool containsIgnoreCaseOptimized(const std::string& haystack, const std::string& lowerNeedle) {
+		std::string lowerHaystack = toLower(haystack);
+		return lowerHaystack.find(lowerNeedle) != std::string::npos;
+	}
+
 	void registerItem(sol::state& lua) {
 		// Register Item usertype
 		lua.new_usertype<Item>(
@@ -108,7 +114,10 @@ namespace LuaAPI {
 			"isSplash", sol::property(&Item::isSplash),
 			"hasCharges", sol::property(&Item::hasCharges),
 			"hasElevation", sol::property([](const Item& item) {
-				return g_items[item.getID()].hasElevation;
+				if (g_items.typeExists(item.getID())) {
+					return g_items[item.getID()].hasElevation;
+				}
+				return false;
 			}),
 			"zOrder", sol::property(&Item::getTopOrder),
 
@@ -168,6 +177,7 @@ namespace LuaAPI {
 			int limit = maxResults.value_or(50);
 			int count = 0;
 			int maxId = g_items.getMaxID();
+			std::string searchLower = toLower(searchName);
 
 			for (int id = 1; id <= maxId && count < limit; ++id) {
 				if (!g_items.typeExists(id)) {
@@ -179,7 +189,7 @@ namespace LuaAPI {
 					continue;
 				}
 
-				if (containsIgnoreCase(it.name, searchName)) {
+				if (containsIgnoreCaseOptimized(it.name, searchLower)) {
 					sol::table item = lua.create_table();
 					item["id"] = it.id;
 					item["name"] = it.name;
@@ -212,7 +222,7 @@ namespace LuaAPI {
 				}
 
 				ItemType it = g_items.getItemType(id);
-				if (containsIgnoreCase(it.name, searchName)) {
+				if (containsIgnoreCaseOptimized(it.name, searchLower)) {
 					return id;
 				}
 			}

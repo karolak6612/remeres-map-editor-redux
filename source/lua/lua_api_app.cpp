@@ -139,26 +139,34 @@ namespace LuaAPI {
 
 				// Get the current (modified) tile from the map
 				Tile* modifiedTile = editor->getMap()->getTile(pos);
+				
+				std::unique_ptr<Tile> modifiedCopy;
 				if (modifiedTile) {
 					// Create a deep copy of the modified tile - this is what we want as the "new" state
-					std::unique_ptr<Tile> modifiedCopy = modifiedTile->deepCopy();
-
-					// Swap the original back into the map
-					std::unique_ptr<Tile> swappedOut = editor->getMap()->swapTile(pos, std::move(originalTile));
-
-					// swappedOut should be the modifiedTile. We need to clean it up.
-					// Remove it from Map metadata (spawns, houses) and selection
-					updateTileMetadata(editor, swappedOut.get(), false);
-
-					// Add original back to Map metadata (now it's in the map again)
-					// Wait, the originalTile is now in the map, so we get it from map
-					Tile* tileInMap = editor->getMap()->getTile(pos);
-					updateTileMetadata(editor, tileInMap, true);
-
-					// Create Change with the modified copy
-					// When actions commit, they will swap modifiedCopy in and originalTile out.
-					action->addChange(std::make_unique<Change>(std::move(modifiedCopy)));
+					modifiedCopy = modifiedTile->deepCopy();
+				} else {
+					// Tile was deleted, construct an empty tile to represent the deletion in the Change
+					modifiedCopy = std::make_unique<Tile>(pos.x, pos.y, pos.z);
 				}
+
+				// Swap the original back into the map
+				std::unique_ptr<Tile> swappedOut = editor->getMap()->swapTile(pos, std::move(originalTile));
+
+				// swappedOut should be the modifiedTile. We need to clean it up.
+				// Remove it from Map metadata (spawns, houses) and selection
+				if (swappedOut) {
+					updateTileMetadata(editor, swappedOut.get(), false);
+				}
+
+				// Add original back to Map metadata (now it's in the map again)
+				Tile* tileInMap = editor->getMap()->getTile(pos);
+				if (tileInMap) {
+					updateTileMetadata(editor, tileInMap, true);
+				}
+
+				// Create Change with the modified copy
+				// When actions commit, they will swap modifiedCopy in and originalTile out.
+				action->addChange(std::make_unique<Change>(std::move(modifiedCopy)));
 			}
 
 			// Clear - ownership has been transferred or tiles discarded
@@ -471,8 +479,8 @@ namespace LuaAPI {
 					}
 				}
 			} else {
-				// For relative paths, try anchoring to each root
-				std::vector<fs::path> roots = { scriptsPath, dataPath, execPath, fs::path(scriptDir) };
+				// For relative paths, try anchoring to each root (scriptDir first)
+				std::vector<fs::path> roots = { fs::path(scriptDir), scriptsPath, dataPath, execPath };
 				for (const auto& root : roots) {
 					fs::path candidate = fs::weakly_canonical(root / p);
 					auto relative = candidate.lexically_relative(root);
@@ -618,7 +626,7 @@ namespace LuaAPI {
 
 		// Yield to process pending UI events (prevents UI freeze during long operations)
 		app["yield"] = []() {
-			if (wxTheApp) {
+			if (wxTheApp && !LuaTransaction::getInstance().isActive()) {
 				wxTheApp->Yield(true);
 			}
 		};
@@ -735,10 +743,10 @@ namespace LuaAPI {
 		sol::table mapView = lua.create_table();
 		mapView["addOverlay"] = [](sol::this_state ts, sol::variadic_args va) -> bool {
 			if (va.size() == 2 && va[0].is<std::string>() && va[1].is<sol::table>()) {
-				return g_luaScripts.addMapOverlay(va[0].as<std::string>(), va[1].as<sol::table>());
+				return g_luaScripts.addMapOverlay(va[0].as<std::string>(), va[1].as<sol::table>(), ts);
 			}
 			if (va.size() == 3 && va[1].is<std::string>() && va[2].is<sol::table>()) {
-				return g_luaScripts.addMapOverlay(va[1].as<std::string>(), va[2].as<sol::table>());
+				return g_luaScripts.addMapOverlay(va[1].as<std::string>(), va[2].as<sol::table>(), ts);
 			}
 			return false;
 		};
@@ -797,7 +805,7 @@ namespace LuaAPI {
 				return false;
 			}
 
-			return g_luaScripts.registerMapOverlayShow(label, overlayId, enabled, ontoggle);
+			return g_luaScripts.registerMapOverlayShow(label, overlayId, enabled, ontoggle, ts);
 		};
 		app["mapView"] = mapView;
 

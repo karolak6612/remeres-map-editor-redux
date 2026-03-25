@@ -27,13 +27,18 @@
 namespace LuaAPI {
 
 	// Custom iterator for Map tiles to use in Lua for-loops
+	// Iterator for Map Tiles
 	class LuaMapTileIterator {
 	public:
 		LuaMapTileIterator(Map* map) :
-			map(map), started(false) {
+			map(map), currentIndex(0) {
 			if (map) {
-				iter = map->begin();
-				endIter = map->end();
+				for (auto it = map->begin(); it != map->end(); ++it) {
+					TileLocation* loc = &(*it);
+					if (loc && loc->get()) {
+						positions.push_back(loc->get()->getPosition());
+					}
+				}
 			}
 		}
 
@@ -45,12 +50,10 @@ namespace LuaAPI {
 			}
 
 			// Find next valid tile
-			while (iter != endIter) {
-				TileLocation* loc = &(*iter);
-				++iter;
-
-				if (loc && loc->get()) {
-					Tile* tile = loc->get();
+			while (currentIndex < positions.size()) {
+				Position pos = positions[currentIndex++];
+				Tile* tile = map->getTile(pos);
+				if (tile) {
 					return std::make_tuple(
 						sol::make_object(lua, tile),
 						sol::make_object(lua, tile)
@@ -63,19 +66,19 @@ namespace LuaAPI {
 
 	private:
 		Map* map;
-		MapIterator iter;
-		MapIterator endIter;
-		bool started;
+		std::vector<Position> positions;
+		size_t currentIndex;
 	};
 
 	// Iterator for Spawns
 	class LuaMapSpawnIterator {
 	public:
 		LuaMapSpawnIterator(Map* map) :
-			map(map) {
+			map(map), currentIndex(0) {
 			if (map) {
-				iter = map->spawns.begin();
-				endIter = map->spawns.end();
+				for (const auto& pos : map->spawns) {
+					positions.push_back(pos);
+				}
 			}
 		}
 
@@ -84,9 +87,8 @@ namespace LuaAPI {
 				return nullptr;
 			}
 
-			while (iter != endIter) {
-				Position pos = *iter;
-				++iter;
+			while (currentIndex < positions.size()) {
+				Position pos = positions[currentIndex++];
 				Tile* tile = map->getTile(pos);
 				if (tile) {
 					return tile;
@@ -97,10 +99,9 @@ namespace LuaAPI {
 
 	private:
 		Map* map;
-		SpawnPositionList::const_iterator iter;
-		SpawnPositionList::const_iterator endIter;
+		std::vector<Position> positions;
+		size_t currentIndex;
 	};
-
 	void registerMap(sol::state& lua) {
 		// Register the iterator type
 		lua.new_usertype<LuaMapTileIterator>("MapTileIterator", sol::no_constructor, "next", &LuaMapTileIterator::next);
@@ -141,9 +142,18 @@ namespace LuaAPI {
 				if (va.size() == 1 && va[0].is<Position>()) {
 					pos = va[0].as<Position>();
 				} else if (va.size() == 3) {
-					pos.x = va[0].as<int>();
-					pos.y = va[1].as<int>();
-					pos.z = va[2].as<int>();
+					int x = va[0].as<int>();
+					int y = va[1].as<int>();
+					int z = va[2].as<int>();
+					
+					// Pre-validate before assigning to potentially 16-bit unsigned fields in Position
+					if (x < 0 || x > 65535 || y < 0 || y > 65535 || z < 0 || z > 15) {
+						throw sol::error("getOrCreateTile: Invalid coordinates (" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")");
+					}
+					
+					pos.x = x;
+					pos.y = y;
+					pos.z = z;
 				} else {
 					throw sol::error("getOrCreateTile expects (x, y, z) or (Position)");
 				}

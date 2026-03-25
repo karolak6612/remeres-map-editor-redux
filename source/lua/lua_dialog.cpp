@@ -601,7 +601,7 @@ LuaDialog* LuaDialog::box(sol::table options) {
 
 LuaDialog* LuaDialog::endbox() {
 	finishCurrentRow();
-	if (!sizerStack.empty()) {
+	if (!sizerStack.empty() && sizerStack.top() != mainSizer && (!currentTabSizer || sizerStack.top() != currentTabSizer)) {
 		wxSizer* s = sizerStack.top();
 		if (wxDynamicCast(s, wxStaticBoxSizer)) {
 			if (!panelStack.empty()) {
@@ -650,7 +650,7 @@ LuaDialog* LuaDialog::endpanel() {
 	if (!panelStack.empty()) {
 		panelStack.pop();
 	}
-	if (!sizerStack.empty()) {
+	if (!sizerStack.empty() && sizerStack.top() != mainSizer && (!currentTabSizer || sizerStack.top() != currentTabSizer)) {
 		sizerStack.pop();
 	}
 	if (!rowSizerStack.empty()) {
@@ -2001,6 +2001,9 @@ void LuaDialog::popupContextMenu(const sol::function& callback, sol::table info,
 	}
 
 	menu.Bind(wxEVT_MENU, [this, callbacks, info](wxCommandEvent& event) mutable {
+		if (g_pinnedDialogs.find(this) == g_pinnedDialogs.end()) {
+			return; // Dialog is no longer pinned/showing or has been destroyed
+		}
 		if (!lua.lua_state()) {
 			return;
 		}

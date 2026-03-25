@@ -457,38 +457,32 @@ namespace LuaAPI {
 				int err = 0;
 
 				auto addPoints = [&](int cx, int cy, int px, int py) {
-					sol::table p1 = lua.create_table();
-					p1["x"] = cx + px;
-					p1["y"] = cy + py;
-					result[index++] = p1;
-					sol::table p2 = lua.create_table();
-					p2["x"] = cx + py;
-					p2["y"] = cy + px;
-					result[index++] = p2;
-					sol::table p3 = lua.create_table();
-					p3["x"] = cx - py;
-					p3["y"] = cy + px;
-					result[index++] = p3;
-					sol::table p4 = lua.create_table();
-					p4["x"] = cx - px;
-					p4["y"] = cy + py;
-					result[index++] = p4;
-					sol::table p5 = lua.create_table();
-					p5["x"] = cx - px;
-					p5["y"] = cy - py;
-					result[index++] = p5;
-					sol::table p6 = lua.create_table();
-					p6["x"] = cx - py;
-					p6["y"] = cy - px;
-					result[index++] = p6;
-					sol::table p7 = lua.create_table();
-					p7["x"] = cx + py;
-					p7["y"] = cy - px;
-					result[index++] = p7;
-					sol::table p8 = lua.create_table();
-					p8["x"] = cx + px;
-					p8["y"] = cy - py;
-					result[index++] = p8;
+					std::pair<int, int> pts[8] = {
+						{cx + px, cy + py},
+						{cx + py, cy + px},
+						{cx - py, cy + px},
+						{cx - px, cy + py},
+						{cx - px, cy - py},
+						{cx - py, cy - px},
+						{cx + py, cy - px},
+						{cx + px, cy - py}
+					};
+					
+					for (int i = 0; i < 8; ++i) {
+						bool unique = true;
+						for (int j = 0; j < i; ++j) {
+							if (pts[i] == pts[j]) {
+								unique = false;
+								break;
+							}
+						}
+						if (unique) {
+							sol::table p = lua.create_table();
+							p["x"] = pts[i].first;
+							p["y"] = pts[i].second;
+							result[index++] = p;
+						}
+					}
 				};
 
 				while (x >= y) {
@@ -523,8 +517,8 @@ namespace LuaAPI {
 			if (filled) {
 				for (int y = -radiusY; y <= radiusY; ++y) {
 					for (int x = -radiusX; x <= radiusX; ++x) {
-						float dx = (float)x / radiusX;
-						float dy = (float)y / radiusY;
+						float dx = radiusX > 0 ? (float)x / radiusX : 0.0f;
+						float dy = radiusY > 0 ? (float)y / radiusY : 0.0f;
 						if (dx * dx + dy * dy <= 1.0f) {
 							sol::table point = lua.create_table();
 							point["x"] = centerX + x;
@@ -811,16 +805,22 @@ namespace LuaAPI {
 			sol::state_view lua(s);
 			sol::table result = lua.create_table();
 
-			int seed = static_cast<int>(time(nullptr));
+			bool hasSeed = false;
+			int seed = 0;
 			int minDistance = 0;
 
 			if (options) {
 				sol::table opts = *options;
-				seed = opts.get_or("seed", seed);
+				if (opts["seed"].valid()) {
+					seed = opts["seed"];
+					hasSeed = true;
+				}
 				minDistance = opts.get_or("minDistance", 0);
 			}
 
-			std::mt19937 rng(seed);
+			static std::mt19937 shared_rng(std::random_device{}());
+			std::mt19937 local_rng(seed);
+			std::mt19937& rng = hasSeed ? local_rng : shared_rng;
 			std::uniform_int_distribution<int> distX(std::min(x1, x2), std::max(x1, x2));
 			std::uniform_int_distribution<int> distY(std::min(y1, y2), std::max(y1, y2));
 
@@ -868,16 +868,22 @@ namespace LuaAPI {
 			sol::state_view lua(s);
 			sol::table result = lua.create_table();
 
-			int seed = static_cast<int>(time(nullptr));
+			bool hasSeed = false;
+			int seed = 0;
 			int maxAttempts = 30;
 
 			if (options) {
 				sol::table opts = *options;
-				seed = opts.get_or("seed", seed);
+				if (opts["seed"].valid()) {
+					seed = opts["seed"];
+					hasSeed = true;
+				}
 				maxAttempts = opts.get_or("maxAttempts", 30);
 			}
 
-			std::mt19937 rng(seed);
+			static std::mt19937 shared_rng(std::random_device{}());
+			std::mt19937 local_rng(seed);
+			std::mt19937& rng = hasSeed ? local_rng : shared_rng;
 
 			if (minDistance <= 0) {
 				return result;
@@ -888,8 +894,8 @@ namespace LuaAPI {
 			int minY = std::min(y1, y2);
 			int maxY = std::max(y1, y2);
 
-			float width = static_cast<float>(maxX - minX);
-			float height = static_cast<float>(maxY - minY);
+			float width = static_cast<float>(maxX - minX) + 0.001f;
+			float height = static_cast<float>(maxY - minY) + 0.001f;
 
 			float cellSize = minDistance / std::sqrt(2.0f);
 			int gridWidth = static_cast<int>(std::ceil(width / cellSize));
@@ -930,7 +936,7 @@ namespace LuaAPI {
 					float newX = point.first + r * std::cos(angle);
 					float newY = point.second + r * std::sin(angle);
 
-					if (newX < 0 || newX >= width || newY < 0 || newY >= height) {
+					if (newX < 0 || newX > width || newY < 0 || newY > height) {
 						continue;
 					}
 
@@ -977,8 +983,8 @@ namespace LuaAPI {
 
 			for (size_t i = 0; i < points.size(); ++i) {
 				sol::table point = lua.create_table();
-				point["x"] = static_cast<int>(points[i].first) + minX;
-				point["y"] = static_cast<int>(points[i].second) + minY;
+				point["x"] = std::min(static_cast<int>(points[i].first) + minX, maxX);
+				point["y"] = std::min(static_cast<int>(points[i].second) + minY, maxY);
 				result[i + 1] = point;
 			}
 

@@ -301,21 +301,26 @@ namespace LuaAPI {
 			} else if (obj.is<sol::table>()) {
 				sol::table tbl = obj.as<sol::table>();
 
-				// Check if it's an array (sequential integer keys starting at 1)
+				// Check if it's an array (contiguous integer keys starting at 1)
 				bool isArray = true;
-				size_t expectedKey = 1;
+				size_t maxKey = 0;
+				size_t count = 0;
+
 				for (auto& pair : tbl) {
-					if (!pair.first.is<size_t>() || pair.first.as<size_t>() != expectedKey) {
+					if (pair.first.is<size_t>()) {
+						size_t k = pair.first.as<size_t>();
+						if (k > maxKey) maxKey = k;
+						count++;
+					} else {
 						isArray = false;
 						break;
 					}
-					expectedKey++;
 				}
 
-				if (isArray && expectedKey > 1) {
+				if (isArray && maxKey == count && maxKey > 0) {
 					nlohmann::json arr = nlohmann::json::array();
-					for (auto& pair : tbl) {
-						arr.push_back(luaToJson(pair.second));
+					for (size_t i = 1; i <= maxKey; ++i) {
+						arr.push_back(luaToJson(tbl[i]));
 					}
 					return arr;
 				} else {

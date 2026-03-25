@@ -19,37 +19,7 @@
 #include "lua_api_noise.h"
 #include "ext/fast_noise_lite.h"
 
-#include <unordered_map>
-#include <mutex>
-
 namespace LuaAPI {
-
-	// Thread-local noise generator cache for better performance
-	// Each seed gets its own generator instance
-	class NoiseGeneratorCache {
-	public:
-		FastNoiseLite& getGenerator(int seed) {
-			std::lock_guard<std::mutex> lock(mutex_);
-			auto it = generators_.find(seed);
-			if (it == generators_.end()) {
-				auto& gen = generators_[seed];
-				gen.SetSeed(seed);
-				return gen;
-			}
-			return it->second;
-		}
-
-		void clear() {
-			std::lock_guard<std::mutex> lock(mutex_);
-			generators_.clear();
-		}
-
-	private:
-		std::unordered_map<int, FastNoiseLite> generators_;
-		std::mutex mutex_;
-	};
-
-	static NoiseGeneratorCache g_noiseCache;
 
 	// Helper to create configured noise generator
 	static FastNoiseLite createNoiseGenerator(int seed, FastNoiseLite::NoiseType type, float frequency = 0.01f) {
@@ -415,11 +385,6 @@ namespace LuaAPI {
 			return t * t * (3.0f - 2.0f * t);
 		});
 
-		// noise.clearCache() - clear noise generator cache
-		noiseTable.set_function("clearCache", []() {
-			g_noiseCache.clear();
-		});
-
 		// ========================================
 		// BATCH GENERATION (for performance)
 		// ========================================
@@ -429,6 +394,19 @@ namespace LuaAPI {
 		noiseTable.set_function("generateGrid", [](int x1, int y1, int x2, int y2, sol::optional<sol::table> options, sol::this_state s) -> sol::table {
 			sol::state_view lua(s);
 			sol::table result = lua.create_table();
+
+			if (x1 > x2 || y1 > y2) {
+				throw sol::error("noise.generateGrid: x1 must be <= x2 and y1 must be <= y2");
+			}
+
+			long long width = static_cast<long long>(x2) - x1 + 1;
+			long long height = static_cast<long long>(y2) - y1 + 1;
+			long long totalCells = width * height;
+
+			const long long MAX_GRID_CELLS = 1000000;
+			if (totalCells > MAX_GRID_CELLS) {
+				throw sol::error("noise.generateGrid: Requested grid is too large (exceeds " + std::to_string(MAX_GRID_CELLS) + " cells)");
+			}
 
 			FastNoiseLite noise;
 

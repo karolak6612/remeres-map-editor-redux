@@ -204,7 +204,7 @@ void LuaScriptsWindow::ClearConsole() {
 }
 
 void LuaScriptsWindow::UpdateScriptState(long index) {
-	if (!script_list || index < 0) {
+	if (!script_list || index < 0 || index >= script_list->GetItemCount()) {
 		return;
 	}
 
@@ -226,7 +226,7 @@ void LuaScriptsWindow::UpdateScriptState(long index) {
 void LuaScriptsWindow::OnScriptActivated(wxListEvent& event) {
 	// Double-click to run the script
 	long index = event.GetIndex();
-	if (index < 0) {
+	if (index < 0 || index >= script_list->GetItemCount()) {
 		return;
 	}
 
@@ -296,7 +296,7 @@ void LuaScriptsWindow::OnRunScript(wxCommandEvent& event) {
 void LuaScriptsWindow::OnScriptCheckToggle(wxListEvent& event) {
 	// Toggle script enabled state (would need checkbox implementation)
 	long index = event.GetIndex();
-	if (index < 0) {
+	if (index < 0 || index >= script_list->GetItemCount()) {
 		return;
 	}
 

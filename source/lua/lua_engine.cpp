@@ -149,8 +149,7 @@ void LuaEngine::setupSandbox() {
 
 			std::string fullPath = scriptDir + "/" + cleanFilename;
 
-			// Simply load and execute returning the result object directly
-			// This avoids memory leaks and stack corruption compared to manually unpacking
+			// Simply load and execute
 			sol::load_result loaded = lua.load_file(fullPath);
 			if (!loaded.valid()) {
 				sol::error err = loaded;
@@ -158,8 +157,37 @@ void LuaEngine::setupSandbox() {
 			}
 
 			sol::protected_function script = loaded;
-			// Return the result directly to Lua, letting sol2 handle the variadic push
-			return script();
+
+			// Save old state
+			std::string oldScriptDir = scriptDir;
+			std::string oldPackagePath = lua["package"]["path"].get_or<std::string>("");
+
+			// Set new state
+			std::string childDir = fullPath.substr(0, fullPath.find_last_of("/\\"));
+			lua["SCRIPT_DIR"] = childDir;
+			lua["package"]["path"] = childDir + "/?.lua;" + oldPackagePath;
+
+			sol::variadic_results results;
+			try {
+				sol::protected_function_result call_result = script();
+				if (!call_result.valid()) {
+					sol::error err = call_result;
+					throw sol::error("dofile: Error executing '" + fullPath + "': " + err.what());
+				}
+				for (auto&& res : call_result) {
+					results.push_back(res.get<sol::object>());
+				}
+			} catch (...) {
+				lua["SCRIPT_DIR"] = oldScriptDir;
+				lua["package"]["path"] = oldPackagePath;
+				throw;
+			}
+
+			// Restore old state
+			lua["SCRIPT_DIR"] = oldScriptDir;
+			lua["package"]["path"] = oldPackagePath;
+
+			return results;
 		};
 
 	// Secure 'load' to prevent bytecode execution (only allow mode "t")
@@ -169,12 +197,19 @@ void LuaEngine::setupSandbox() {
 		lua.script(R"(
 			local old_load = load
 			_G.load = function(chunk, chunkname, mode, env)
-				-- If mode is provided, ensure it is 't'
-				if mode and mode ~= "t" then
-					error("Secure Mode: Binary chunks are disabled.")
+				-- If mode is provided, ensure it does not contain 'b'
+				if mode then
+					if string.find(mode, "b") then
+						error("Secure Mode: Binary chunks are disabled.")
+					end
+					if not string.find(mode, "t") then
+						mode = mode .. "t"
+					end
+				else
+					mode = "t"
 				end
-				-- Force 't' mode
-				return old_load(chunk, chunkname, "t", env)
+				-- Force valid mode
+				return old_load(chunk, chunkname, mode, env)
 			end
 		)");
 	} catch (...) {
