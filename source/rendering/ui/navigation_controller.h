@@ -12,7 +12,7 @@ class wxKeyEvent;
 class NavigationController {
 public:
 	static void HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event);
-	static void HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event);
+	[[nodiscard]] static bool HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event);
 	static void HandleCameraClick(MapCanvas* canvas, wxMouseEvent& event);
 	static void HandleCameraRelease(MapCanvas* canvas, wxMouseEvent& event);
 	static void HandleWheel(MapCanvas* canvas, wxMouseEvent& event);

@@ -14,21 +14,9 @@ CreatureNameDrawer::CreatureNameDrawer() {
 }
 
 CreatureNameDrawer::~CreatureNameDrawer() {
-	clear();
 }
 
-void CreatureNameDrawer::clear() {
-	labels.clear();
-}
-
-void CreatureNameDrawer::addLabel(const Position& pos, const std::string& name, const Creature* c) {
-	if (name.empty()) {
-		return;
-	}
-	labels.push_back({ pos, name, c });
-}
-
-void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
+void CreatureNameDrawer::draw(NVGcontext* vg, const ViewState& view, std::span<const CreatureLabel> labels) {
 	if (!vg) {
 		return;
 	}
@@ -50,8 +38,7 @@ void CreatureNameDrawer::draw(NVGcontext* vg, const RenderView& view) {
 			continue;
 		}
 
-		int unscaled_x, unscaled_y;
-		view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z, unscaled_x, unscaled_y);
+		const auto [unscaled_x, unscaled_y] = view.getScreenPosition(label.pos.x, label.pos.y, label.pos.z);
 
 		float screen_x = (float)unscaled_x / zoom;
 		float screen_y = (float)unscaled_y / zoom;

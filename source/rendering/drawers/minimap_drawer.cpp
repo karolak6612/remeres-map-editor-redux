@@ -5,7 +5,6 @@
 #include "editor/editor.h"
 #include "map/map.h"
 #include "map/tile.h"
-#include "ui/gui.h"
 
 // Included for minimap_color
 #include "rendering/core/graphics.h"
@@ -43,7 +42,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 	int window_height = size.GetHeight();
 
 	if (!initialized_) {
-		if (renderer->initialize()) {
+		if (renderer->initialize(canvas->GetGraphics().sharedGeometry())) {
 			primitive_renderer->initialize();
 			initialized_ = true;
 		}
@@ -103,9 +102,9 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 	// Note: Resizing texture every frame if map resizes is bad, but map resize is rare.
 	renderer->resize(editor.map.getWidth(), editor.map.getHeight());
 
-	int floor = g_gui.GetCurrentFloor();
+	int floor = canvas->GetFloor();
 
-	if (g_gui.IsRenderingEnabled()) {
+	if (canvas->isRenderingEnabled()) {
 		// Update Visible Region
 		// OPTIMIZATION: In future, only update dirty regions.
 		// For now, updating the visible window 60 times a second via PBO is WAY faster than DrawPoint.
@@ -115,7 +114,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
 
 		// Draw View Box (Overlay)
-		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
+		if (canvas->GetSettings().getInteger(Config::MINIMAP_VIEW_BOX)) {
 			// Compute box coordinates
 			int screensize_x, screensize_y;
 			int view_scroll_x, view_scroll_y;

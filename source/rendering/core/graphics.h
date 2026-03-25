@@ -42,131 +42,118 @@ class GraphicManager;
 class FileReadHandle;
 class Animator;
 class SpriteArchive;
+class Settings;
 
 #include "rendering/core/sprite_light.h"
-#include "rendering/core/texture_garbage_collector.h"
-#include "rendering/core/render_timer.h"
+#include "rendering/core/sprite_database.h"
+#include "rendering/core/atlas_lifecycle.h"
+#include "rendering/core/sprite_loader_state.h"
+#include "rendering/core/texture_gc.h"
 #include "rendering/core/atlas_manager.h"
+#include "rendering/core/render_timer.h"
+#include "rendering/core/shared_geometry.h"
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/graphics_runtime_config.h"
 #include "rendering/core/image.h"
 #include "rendering/core/normal_image.h"
 #include "rendering/core/template_image.h"
 
 class GraphicManager {
+	SpriteDatabase db_;
+	AtlasLifecycle atlas_;
+	SpriteLoaderState loader_;
+	TextureGC gc_;
+	std::unique_ptr<RenderTimer> animation_timer_;
+	SharedGeometry shared_geometry_;
+	GraphicsRuntimeConfig runtime_config_;
+
 public:
 	GraphicManager();
 	~GraphicManager();
 
 	void clear();
-	void cleanSoftwareSprites();
+	void refreshRuntimeConfig(const Settings& settings) { runtime_config_ = GraphicsRuntimeConfig::FromSettings(settings); }
+	void applyRuntimeConfig(GraphicsRuntimeConfig config) { runtime_config_ = std::move(config); }
+	[[nodiscard]] const GraphicsRuntimeConfig& runtimeConfig() const { return runtime_config_; }
 
-	Sprite* getSprite(int id);
-	void updateTime();
+	void cleanSoftwareSprites() { gc_.cleanSoftwareSprites(db_); }
 
-	void pauseAnimation() {
-		animation_timer->Pause();
+	Sprite* getSprite(int id) { return db_.getSprite(id); }
+	void updateTime() { gc_.updateTime(); }
+
+	void pauseAnimation() { animation_timer_->Pause(); }
+	void resumeAnimation() { animation_timer_->Resume(); }
+
+	GameSprite* getCreatureSprite(int id) { return db_.getCreatureSprite(id, loader_.item_count); }
+	const SpriteMetadata* getSpriteMetadata(int id) const { return db_.getMeta(id); }
+	SpriteAnimationState* getSpriteAnimation(int id) { return db_.getAnimation(id); }
+	bool isSpriteSimpleAndLoaded(int id) const { return db_.isSimpleAndLoaded(id); }
+	const AtlasRegion* getItemAtlasRegion(
+		int id, int x, int y, int layer, int subtype, int pattern_x, int pattern_y, int pattern_z, int frame
+	) {
+		return db_.getItemAtlasRegion(id, x, y, layer, subtype, pattern_x, pattern_y, pattern_z, frame);
 	}
-	void resumeAnimation() {
-		animation_timer->Resume();
+	const AtlasRegion* getCreatureAtlasRegion(
+		int id, int x, int y, int dir, int addon, int pattern_z, const Outfit& outfit, int frame
+	) {
+		return db_.getCreatureAtlasRegion(id, x, y, dir, addon, pattern_z, outfit, frame);
 	}
-	GameSprite* getCreatureSprite(int id);
+
 	void insertSprite(int id, std::unique_ptr<Sprite> sprite);
-	// Overload for compatibility with existing raw pointer calls (takes ownership)
-	void insertSprite(int id, Sprite* sprite) {
-		insertSprite(id, std::unique_ptr<Sprite>(sprite));
-	}
+	void insertSprite(int id, Sprite* sprite) { insertSprite(id, std::unique_ptr<Sprite>(sprite)); }
 
-	long getElapsedTime() const {
-		return animation_timer->getElapsedTime();
-	}
+	long getElapsedTime() const { return animation_timer_->getElapsedTime(); }
+	time_t getCachedTime() const { return gc_.getCachedTime(); }
 
-	time_t getCachedTime() const {
-		return cached_time_;
-	}
+	uint16_t getItemSpriteMaxID() const { return loader_.item_count; }
+	uint16_t getCreatureSpriteMaxID() const { return loader_.creature_count; }
 
-	uint16_t getItemSpriteMaxID() const;
-	uint16_t getCreatureSpriteMaxID() const;
-
-	// This is part of the binary
 	bool loadEditorSprites();
 
-	// Cleans old & unused textures according to config settings
-	void garbageCollection();
-	void addSpriteToCleanup(GameSprite* spr);
+	void garbageCollection() { gc_.garbageCollect(db_, runtime_config_); }
+	void addSpriteToCleanup(uint32_t sprite_id) { gc_.addSpriteToCleanup(db_, sprite_id, runtime_config_); }
+	bool shouldCollectGarbage() const noexcept { return gc_.shouldCollect(); }
+	void markGarbageCollected() noexcept { gc_.markCollected(); }
 
-	wxFileName getMetadataFileName() const {
-		return client_version ? client_version->getMetadataPath() : wxFileName();
-	}
-	wxFileName getSpritesFileName() const {
-		return client_version ? client_version->getSpritesPath() : wxFileName();
-	}
+	wxFileName getMetadataFileName() const { return loader_.getMetadataFileName(); }
+	wxFileName getSpritesFileName() const { return loader_.getSpritesFileName(); }
 
-	bool hasTransparency() const;
-	bool isUnloaded() const;
+	bool hasTransparency() const { return loader_.has_transparency; }
+	bool isUnloaded() const { return loader_.unloaded.load(); }
 
-	const std::string& getSpriteFile() const {
-		return spritefile;
-	}
-	bool isExtended() const {
-		return is_extended;
-	}
-	std::shared_ptr<SpriteArchive> getSpriteArchive() const {
-		return sprite_archive_;
-	}
+	const std::string& getSpriteFile() const { return loader_.spritefile; }
+	bool isExtended() const { return loader_.is_extended; }
+	std::shared_ptr<SpriteArchive> getSpriteArchive() const { return loader_.sprite_archive_; }
+	ClientVersion* getClientVersion() const { return loader_.client_version; }
+	void setClientVersion(ClientVersion* client_version) { loader_.client_version = client_version; }
 
-	ClientVersion* client_version;
+	// Atlas facade
+	AtlasManager* getAtlasManager() { return atlas_.get(); }
+	bool hasAtlasManager() const { return atlas_.has(); }
+	bool ensureAtlasManager() { return atlas_.ensure(); }
+	void clearAtlas() { atlas_.clear(); }
 
-	// Sprite Atlas (Phase 2) - manages all game sprites in a texture array
-	AtlasManager* getAtlasManager() {
-		return atlas_manager_.get();
-	}
-	bool hasAtlasManager() const {
-		return atlas_manager_ != nullptr && atlas_manager_->isValid();
-	}
-	// Lazy initialization of atlas
-	bool ensureAtlasManager();
+	NormalImage* getNormalImage(uint32_t sprite_id) const;
+	NormalImage* getOrCreateNormalImage(uint32_t sprite_id);
+	void trackResidentImage(Image* image) { db_.residentImages().push_back(image); }
+	void notifyTextureLoaded() { gc_.collector().NotifyTextureLoaded(); }
+	void notifyTextureUnloaded() { gc_.collector().NotifyTextureUnloaded(); }
+	void resizeStorage(size_t sprite_size, size_t image_size) { db_.resize(sprite_size, image_size); }
+	void resetLoadedGraphicsState();
+	void finalizeLoadedCatalog(
+		DatFormat dat_format,
+		uint16_t item_count,
+		uint16_t creature_count,
+		bool is_extended,
+		bool has_transparency,
+		bool has_frame_durations,
+		bool has_frame_groups,
+		std::shared_ptr<SpriteArchive> sprite_archive
+	);
+	SpritePreloader& spritePreloader() { return gc_.preloader(); }
 
-private:
-	std::atomic<bool> unloaded;
-	std::string spritefile;
-	std::shared_ptr<SpriteArchive> sprite_archive_;
-
-	// Atlas manager for Phase 2 texture array rendering
-	std::unique_ptr<AtlasManager> atlas_manager_ = nullptr;
-
-	// These are indexed by ID for O(1) access
-	using SpriteVector = std::vector<std::unique_ptr<Sprite>>;
-	SpriteVector sprite_space;
-	using ImageVector = std::vector<std::unique_ptr<Image>>;
-	ImageVector image_space;
-
-	// Editor sprites use negative IDs, so they need a separate map
-	std::unordered_map<int, std::unique_ptr<Sprite>> editor_sprite_space;
-
-	// Active Resident Sets: Track only what's currently occupying memory/VRAM
-	// This avoids O(N) scans of the entire database.
-	std::vector<void*> resident_images;
-	std::vector<GameSprite*> resident_game_sprites;
-
-	DatFormat dat_format;
-	uint16_t item_count;
-	uint16_t creature_count;
-	bool is_extended;
-	bool has_transparency;
-	bool has_frame_durations;
-	bool has_frame_groups;
-	TextureGarbageCollector collector;
-
-	std::unique_ptr<RenderTimer> animation_timer;
-	time_t cached_time_ = 0;
-
-	friend class Image;
-	friend class NormalImage;
-	friend class TemplateImage;
-	friend class SpritePreloader;
-	friend class GraphicsAssembler;
+	// Shared GPU geometry (quad VBO/EBO)
+	SharedGeometry& sharedGeometry() { return shared_geometry_; }
 };
-
-#include "minimap_colors.h"
 
 #endif

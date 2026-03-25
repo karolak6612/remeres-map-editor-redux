@@ -30,7 +30,7 @@
 #include <ranges>
 #include "brushes/door/door_brush.h"
 
-void PopupActionHandler::RotateItem(Editor& editor) {
+void PopupActionHandler::RotateItem(GUI& gui, Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
 
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_ROTATE_ITEM);
@@ -45,21 +45,21 @@ void PopupActionHandler::RotateItem(Editor& editor) {
 	action->addChange(std::make_unique<Change>(std::move(new_tile)));
 
 	editor.actionQueue->addAction(std::move(action));
-	g_gui.RefreshView();
+	gui.RefreshView();
 }
 
-void PopupActionHandler::GotoDestination(Editor& editor) {
+void PopupActionHandler::GotoDestination(GUI& gui, Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
 	ItemVector selected_items = TileOperations::getSelectedItems(tile);
 	ASSERT(!selected_items.empty());
 	Teleport* teleport = dynamic_cast<Teleport*>(selected_items.front());
 	if (teleport) {
 		Position pos = teleport->getDestination();
-		g_gui.SetScreenCenterPosition(pos);
+		gui.SetScreenCenterPosition(pos);
 	}
 }
 
-void PopupActionHandler::SwitchDoor(Editor& editor) {
+void PopupActionHandler::SwitchDoor(GUI& gui, Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
 
 	std::unique_ptr<Action> action = editor.actionQueue->createAction(ACTION_SWITCHDOOR);
@@ -74,10 +74,10 @@ void PopupActionHandler::SwitchDoor(Editor& editor) {
 	action->addChange(std::make_unique<Change>(std::move(new_tile)));
 
 	editor.actionQueue->addAction(std::move(action));
-	g_gui.RefreshView();
+	gui.RefreshView();
 }
 
-void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) {
+void PopupActionHandler::BrowseTile(GUI& gui, Editor& editor, int cursor_x, int cursor_y) {
 	if (editor.selection.size() != 1) {
 		return;
 	}
@@ -89,7 +89,7 @@ void PopupActionHandler::BrowseTile(Editor& editor, int cursor_x, int cursor_y) 
 	ASSERT(tile->isSelected());
 	std::unique_ptr<Tile> new_tile(TileOperations::deepCopy(tile, editor.map));
 
-	wxDialog* w = new BrowseTileWindow(g_gui.root, new_tile.get(), wxPoint(cursor_x, cursor_y));
+	wxDialog* w = new BrowseTileWindow(gui.root, new_tile.get(), wxPoint(cursor_x, cursor_y));
 
 	int ret = w->ShowModal();
 	if (ret != 0) {
@@ -112,7 +112,7 @@ void PopupActionHandler::OpenProperties(Editor& editor) {
 	}
 }
 
-void PopupActionHandler::SelectMoveTo(Editor& editor) {
+void PopupActionHandler::SelectMoveTo(GUI& gui, Editor& editor) {
 	if (editor.selection.size() != 1) {
 		return;
 	}
@@ -137,7 +137,7 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 	}
 
 	if (item) {
-		w = newd TilesetWindow(g_gui.root, &editor.map, new_tile.get(), item);
+		w = newd TilesetWindow(gui.root, &editor.map, new_tile.get(), item);
 	} else {
 		return;
 	}
@@ -148,7 +148,7 @@ void PopupActionHandler::SelectMoveTo(Editor& editor) {
 		action->addChange(std::make_unique<Change>(std::move(new_tile)));
 		editor.addAction(std::move(action));
 
-		g_gui.RebuildPalettes();
+		gui.RebuildPalettes();
 	}
 	w->Destroy();
 }

@@ -38,7 +38,7 @@ void MinimapManager::Create() {
 	if (minimap) {
 		g_gui.aui_manager->GetPane(minimap).Show(true);
 	} else {
-		minimap = newd MinimapWindow(g_gui.root);
+		minimap = newd MinimapWindow(g_gui.root, g_gui, g_settings);
 		minimap->Show(true);
 		g_gui.aui_manager->AddPane(minimap, wxAuiPaneInfo().Caption("Minimap"));
 	}

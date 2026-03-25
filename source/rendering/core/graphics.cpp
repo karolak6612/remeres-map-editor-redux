@@ -19,14 +19,12 @@
 
 #include "game/sprites.h"
 #include "rendering/core/graphics.h"
+#include "rendering/core/sprite_archive.h"
 #include "rendering/core/sprite_preloader.h"
 #include <nanovg.h>
 #include <spdlog/spdlog.h>
 #include <nanovg_gl.h>
 #include "io/filehandle.h"
-#include "app/settings.h"
-#include "ui/gui.h"
-
 #include "rendering/io/editor_sprite_loader.h"
 
 #include <wx/mstream.h>
@@ -38,149 +36,93 @@
 #include <atomic>
 #include <functional>
 
-GraphicManager::GraphicManager() :
-	client_version(nullptr),
-	unloaded(true),
-	dat_format(DAT_FORMAT_UNKNOWN),
-	is_extended(false),
-	has_transparency(false),
-	has_frame_durations(false),
-	has_frame_groups(false) {
-	animation_timer = std::make_unique<RenderTimer>();
-	animation_timer->Start();
+GraphicManager::GraphicManager() {
+	animation_timer_ = std::make_unique<RenderTimer>();
+	animation_timer_->Start();
+	gc_.preloader().setGraphicManager(this);
 }
 
 GraphicManager::~GraphicManager() {
-	// Unique pointers handle deletion automatically
-	// atlas_manager_ clean up still good to be explicit if it has custom clear logic
-	if (atlas_manager_) {
-		atlas_manager_->clear();
+	atlas_.clear();
+}
+
+NormalImage* GraphicManager::getNormalImage(uint32_t sprite_id) const {
+	if (sprite_id >= db_.images().size()) {
+		return nullptr;
 	}
+	auto* image = db_.images()[sprite_id].get();
+	if (!image || !image->isNormalImage()) {
+		return nullptr;
+	}
+	return static_cast<NormalImage*>(image);
 }
 
-bool GraphicManager::hasTransparency() const {
-	return has_transparency;
-}
+NormalImage* GraphicManager::getOrCreateNormalImage(uint32_t sprite_id) {
+	if (sprite_id >= db_.images().size()) {
+		return nullptr;
+	}
 
-bool GraphicManager::isUnloaded() const {
-	return unloaded.load();
-}
-
-void GraphicManager::updateTime() {
-	cached_time_ = time(nullptr);
-	SpritePreloader::get().update();
+	auto& slot = db_.images()[sprite_id];
+	if (!slot) {
+		auto image = std::make_unique<NormalImage>();
+		image->id = sprite_id;
+		image->setGraphicManager(this);
+		slot = std::move(image);
+	}
+	return static_cast<NormalImage*>(slot.get());
 }
 
 void GraphicManager::clear() {
 	// CRITICAL: Ensure preloader is cleared before modifying image_space to avoid
 	// use-after-free or OOB access in SpritePreloader::update() on main thread.
-	SpritePreloader::get().clear();
-	sprite_space.clear();
-	image_space.clear();
-	// editor_sprite_space.clear(); // Editor sprites are global/internal and should persist across version changes
-	resident_images.clear();
-	resident_game_sprites.clear();
-
-	item_count = 0;
-	creature_count = 0;
-	collector.Clear();
-	spritefile = "";
-	sprite_archive_.reset();
-
-	// Cleanup atlas manager (will be reinitialized lazily when needed)
-	if (atlas_manager_) {
-		atlas_manager_->clear();
-		atlas_manager_.reset();
-	}
-
-	client_version = nullptr;
-	unloaded = true;
-	dat_format = DAT_FORMAT_UNKNOWN;
-	is_extended = false;
-	has_transparency = false;
-	has_frame_durations = false;
-	has_frame_groups = false;
+	gc_.preloader().clear();
+	db_.clear();
+	loader_.clear();
+	gc_.clear();
+	atlas_.clear();
 }
 
-void GraphicManager::cleanSoftwareSprites() {
-	collector.CleanSoftwareSprites(sprite_space);
+void GraphicManager::resetLoadedGraphicsState() {
+	gc_.preloader().clear();
+	loader_.unloaded = true;
+	loader_.sprite_archive_.reset();
+	loader_.spritefile.clear();
+	db_.clear();
+	gc_.clear();
+	atlas_.clear();
 }
 
-bool GraphicManager::ensureAtlasManager() {
-	// Already initialized
-	if (atlas_manager_ && atlas_manager_->isValid()) {
-		return true;
-	}
-
-	// Create and initialize on first use
-	if (!atlas_manager_) {
-		atlas_manager_ = std::make_unique<AtlasManager>();
-	}
-
-	// Lazy initialization happens inside AtlasManager::ensureInitialized()
-	if (!atlas_manager_->ensureInitialized()) {
-		spdlog::error("GraphicManager: Failed to initialize atlas manager");
-		atlas_manager_.reset();
-		return false;
-	}
-
-	return true;
-}
-
-Sprite* GraphicManager::getSprite(int id) {
-	if (id < 0) {
-		if (auto it = editor_sprite_space.find(id); it != editor_sprite_space.end()) {
-			return it->second.get();
-		}
-		return nullptr;
-	}
-	if (static_cast<size_t>(id) >= sprite_space.size()) {
-		return nullptr;
-	}
-	return sprite_space[id].get();
-}
-
-void GraphicManager::insertSprite(int id, std::unique_ptr<Sprite> sprite) {
-	if (id < 0) {
-		editor_sprite_space[id] = std::move(sprite);
-	} else {
-		if (static_cast<size_t>(id) >= sprite_space.size()) {
-			sprite_space.resize(id + 1);
-		}
-		sprite_space[id] = std::move(sprite);
-	}
-}
-
-GameSprite* GraphicManager::getCreatureSprite(int id) {
-	if (id < 0) {
-		return nullptr;
-	}
-
-	size_t target_id = static_cast<size_t>(id) + item_count;
-	if (target_id >= sprite_space.size()) {
-		return nullptr;
-	}
-	return static_cast<GameSprite*>(sprite_space[target_id].get());
-}
-
-uint16_t GraphicManager::getItemSpriteMaxID() const {
-	return item_count;
-}
-
-uint16_t GraphicManager::getCreatureSpriteMaxID() const {
-	return creature_count;
+void GraphicManager::finalizeLoadedCatalog(
+	DatFormat dat_format,
+	uint16_t item_count,
+	uint16_t creature_count,
+	bool is_extended,
+	bool has_transparency,
+	bool has_frame_durations,
+	bool has_frame_groups,
+	std::shared_ptr<SpriteArchive> sprite_archive
+) {
+	loader_.dat_format = dat_format;
+	loader_.item_count = item_count;
+	loader_.creature_count = creature_count;
+	loader_.is_extended = is_extended;
+	loader_.has_transparency = has_transparency;
+	loader_.has_frame_durations = has_frame_durations;
+	loader_.has_frame_groups = has_frame_groups;
+	loader_.sprite_archive_ = std::move(sprite_archive);
+	loader_.spritefile = loader_.sprite_archive_ ? loader_.sprite_archive_->fileName() : std::string {};
+	loader_.unloaded = false;
 }
 
 bool GraphicManager::loadEditorSprites() {
 	return EditorSpriteLoader::Load(this);
 }
 
-void GraphicManager::addSpriteToCleanup(GameSprite* spr) {
-	collector.AddSpriteToCleanup(spr);
-}
-
-void GraphicManager::garbageCollection() {
-	collector.GarbageCollect(resident_game_sprites, resident_images, cached_time_);
+void GraphicManager::insertSprite(int id, std::unique_ptr<Sprite> sprite) {
+	if (auto* game_sprite = dynamic_cast<GameSprite*>(sprite.get())) {
+		game_sprite->setGraphicManager(this);
+	}
+	db_.insertSprite(id, std::move(sprite));
 }
 
 void NVGDeleter::operator()(NVGcontext* nvg) const {

@@ -1,11 +1,17 @@
 #include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
 #include "rendering/core/shader_program.h"
 #include <spdlog/spdlog.h>
 #include <algorithm>
 
-PostProcessManager& PostProcessManager::Instance() {
-	static PostProcessManager instance;
-	return instance;
+PostProcessManager::PostProcessManager() {
+	RegisterBuiltinEffects();
+}
+
+void PostProcessManager::RegisterBuiltinEffects() {
+	Register(ShaderNames::NONE, EffectRegistry::ScreenFragmentSource());
+	Register(ShaderNames::SCANLINE, EffectRegistry::ScanlineFragmentSource());
+	Register(ShaderNames::XBRZ, EffectRegistry::XbrzFragmentSource(), EffectRegistry::XbrzVertexSource());
 }
 
 void PostProcessManager::Register(const std::string& name, const std::string& fragment_source, const std::string& vertex_source) {

@@ -1,129 +1,173 @@
 //////////////////////////////////////////////////////////////////////
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
 
-#include "app/main.h"
-#include "app/definitions.h"
 #include "rendering/drawers/map_layer_drawer.h"
-#include "rendering/drawers/tiles/tile_renderer.h"
-#include "rendering/drawers/overlays/grid_drawer.h"
-#include "editor/editor.h"
-#include "live/live_client.h"
+
+#include <algorithm>
+
+#include "app/definitions.h"
 #include "map/map.h"
 #include "map/map_region.h"
+#include "rendering/core/chunk_source_snapshot.h"
+#include "rendering/core/draw_context.h"
+#include "rendering/core/map_access.h"
+#include "rendering/core/pending_node_requests.h"
+#include "rendering/core/render_chunk_key.h"
 #include "rendering/core/render_view.h"
-#include "rendering/core/drawing_options.h"
-#include "rendering/core/light_buffer.h"
-#include "rendering/core/sprite_batch.h"
-#include "rendering/core/primitive_renderer.h"
-#include "rendering/core/sprite_preloader.h"
+#include "rendering/core/tile_planning_pool.h"
+#include "rendering/core/tile_render_snapshot_builder.h"
+#include "rendering/drawers/overlays/grid_drawer.h"
+#include "rendering/drawers/tiles/tile_renderer.h"
 
-MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
-	tile_renderer(tile_renderer),
-	grid_drawer(grid_drawer),
-	editor(editor) {
+namespace {
+
+[[nodiscard]] int floorDiv(int value, int divisor)
+{
+    const int quotient = value / divisor;
+    const int remainder = value % divisor;
+    return remainder < 0 ? quotient - 1 : quotient;
 }
 
-MapLayerDrawer::~MapLayerDrawer() {
+[[nodiscard]] size_t estimateChunkTileCapacity()
+{
+    return static_cast<size_t>(RENDER_CHUNK_SIZE) * static_cast<size_t>(RENDER_CHUNK_SIZE);
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	int nd_start_x = view.start_x & ~3;
-	int nd_start_y = view.start_y & ~3;
-	int nd_end_x = (view.end_x & ~3) + 4;
-	int nd_end_y = (view.end_y & ~3) + 4;
+[[nodiscard]] size_t estimateChunkNodeCapacity()
+{
+    constexpr int nodes_per_side = RENDER_CHUNK_SIZE / 4;
+    return static_cast<size_t>(nodes_per_side) * static_cast<size_t>(nodes_per_side);
+}
 
-	// Optimization: Pre-calculate offset and base coordinates
-	// IsTileVisible does this for every tile, but it's constant per layer/frame.
-	// We also skip IsTileVisible because visitLeaves already bounds us to the visible area (with 4-tile alignment),
-	// which is well within IsTileVisible's 6-tile margin.
-	int offset = (map_z <= GROUND_LAYER)
-		? (GROUND_LAYER - map_z) * TILE_SIZE
-		: TILE_SIZE * (view.floor - map_z);
+[[nodiscard]] size_t estimateSideEffectCapacity(size_t tile_capacity, bool enabled, size_t divisor, size_t minimum_capacity)
+{
+    if (!enabled) {
+        return 0;
+    }
+    return std::max(minimum_capacity, tile_capacity / divisor);
+}
 
-	int base_screen_x = -view.view_scroll_x - offset;
-	int base_screen_y = -view.view_scroll_y - offset;
+} // namespace
 
-	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
+MapLayerDrawer::MapLayerDrawer(
+    TileRenderer* tile_renderer, GridDrawer* grid_drawer, IMapAccess* map_access, PendingNodeRequests* pending_requests
+) :
+    tile_renderer(tile_renderer), grid_drawer(grid_drawer), map_access(map_access), pending_requests_(pending_requests)
+{
+}
 
-	// Common lambda to draw a node
-	auto drawNode = [&](MapNode* nd, int nd_map_x, int nd_map_y, bool live) {
-		int node_draw_x = nd_map_x * TILE_SIZE + base_screen_x;
-		int node_draw_y = nd_map_y * TILE_SIZE + base_screen_y;
+MapLayerDrawer::~MapLayerDrawer() { }
 
-		// Node level culling
-		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-			return;
-		}
+VisibleChunkList MapLayerDrawer::BuildVisibleChunkList(int map_z, const FloorViewParams& floor_params) const
+{
+    constexpr int safety_margin_tiles = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+    const int start_chunk_x = floorDiv(floor_params.start_x - safety_margin_tiles, RENDER_CHUNK_SIZE);
+    const int start_chunk_y = floorDiv(floor_params.start_y - safety_margin_tiles, RENDER_CHUNK_SIZE);
+    const int end_chunk_x = floorDiv(floor_params.end_x + safety_margin_tiles, RENDER_CHUNK_SIZE);
+    const int end_chunk_y = floorDiv(floor_params.end_y + safety_margin_tiles, RENDER_CHUNK_SIZE);
 
-		if (live && !nd->isVisible(map_z > GROUND_LAYER)) {
-			if (!nd->isRequested(map_z > GROUND_LAYER)) {
-				// Request the node
-				if (editor->live_manager.GetClient()) {
-					editor->live_manager.GetClient()->queryNode(nd_map_x, nd_map_y, map_z > GROUND_LAYER);
-				}
-				nd->setRequested(map_z > GROUND_LAYER, true);
-			}
-			grid_drawer->DrawNodeLoadingPlaceholder(sprite_batch, nd_map_x, nd_map_y, view);
-			return;
-		}
+    VisibleChunkList visible_chunks {.map_z = map_z};
+    visible_chunks.chunks.reserve(
+        static_cast<size_t>(std::max(0, end_chunk_x - start_chunk_x + 1)) * static_cast<size_t>(std::max(0, end_chunk_y - start_chunk_y + 1))
+    );
 
-		bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
+    for (int chunk_x = start_chunk_x; chunk_x <= end_chunk_x; ++chunk_x) {
+        for (int chunk_y = start_chunk_y; chunk_y <= end_chunk_y; ++chunk_y) {
+            visible_chunks.chunks.push_back(RenderChunkKey {.map_z = map_z, .chunk_x = chunk_x, .chunk_y = chunk_y});
+        }
+    }
 
-		Floor* floor = nd->getFloor(map_z);
-		if (!floor) {
-			return;
-		}
+    return visible_chunks;
+}
 
-		TileLocation* location = floor->locs.data();
-		int draw_x_base = node_draw_x;
-		for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
-			int draw_y = node_draw_y;
-			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
-				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
-					continue;
-				}
+ChunkSourceSnapshot MapLayerDrawer::BuildChunkSourceSnapshot(
+    const FramePlanContext& ctx, const RenderChunkKey& key, bool live_client, uint32_t current_house_id
+)
+{
+    const auto& view = ctx.view;
+    const auto& settings = ctx.settings;
+    const int chunk_start_x = key.startX();
+    const int chunk_start_y = key.startY();
+    const int node_start_x = chunk_start_x;
+    const int node_start_y = chunk_start_y;
+    const int node_end_x = chunk_start_x + RENDER_CHUNK_SIZE - 4;
+    const int node_end_y = chunk_start_y + RENDER_CHUNK_SIZE - 4;
 
-				tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x_base, draw_y, draw_lights ? &light_buffer : nullptr);
-			}
-		}
-	};
+    ChunkSourceSnapshot chunk_snapshot {.key = key};
+    chunk_snapshot.variant = RenderVariantKey::From(ctx.view, ctx.settings, ctx.frame);
+    chunk_snapshot.reserve(
+        estimateChunkTileCapacity(),
+        estimateChunkNodeCapacity(),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.show_tooltips, 8, 16),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.show_hooks, 16, 8),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.highlight_locked_doors, 16, 8),
+        estimateSideEffectCapacity(estimateChunkTileCapacity(), settings.show_creatures, 32, 4)
+    );
 
-	if (live_client) {
-		for (int nd_map_x = nd_start_x; nd_map_x <= nd_end_x; nd_map_x += 4) {
-			for (int nd_map_y = nd_start_y; nd_map_y <= nd_end_y; nd_map_y += 4) {
-				MapNode* nd = editor->map.getLeaf(nd_map_x, nd_map_y);
-				if (!nd) {
-					nd = editor->map.createLeaf(nd_map_x, nd_map_y);
-					nd->setVisible(false, false);
-				}
-				drawNode(nd, nd_map_x, nd_map_y, true);
-			}
-		}
-	} else {
-		// Use SpatialHashGrid::visitLeaves which handles O(1) viewport query internally
-		// Expand the query range slightly to handle the 4-tile alignment and safety margin
-		int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-		int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-		int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-		int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+    auto collectNode = [&](MapNode* node, int nd_map_x, int nd_map_y, bool live) {
+        if (!node) {
+            return;
+        }
 
-		editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
-			drawNode(nd, nd_map_x, nd_map_y, false);
-		});
-	}
+        if (live && !node->isVisible(key.map_z > GROUND_LAYER)) {
+            if (!node->isRequested(key.map_z > GROUND_LAYER)) {
+                if (pending_requests_) {
+                    pending_requests_->enqueue(nd_map_x, nd_map_y, key.map_z > GROUND_LAYER);
+                }
+                node->setRequested(key.map_z > GROUND_LAYER, true);
+            }
+            chunk_snapshot.loading_placeholders.push_back(LoadingPlaceholderSnapshot {
+                .pos = Position(nd_map_x, nd_map_y, key.map_z),
+                .width = TILE_SIZE * 4,
+                .height = TILE_SIZE * 4,
+                .color = DrawColor(255, 0, 255, 128),
+            });
+            return;
+        }
+
+        Floor* floor = node->getFloor(key.map_z);
+        if (!floor) {
+            return;
+        }
+
+        TileLocation* location = floor->locs.data();
+        for (int local_x = 0; local_x < 4; ++local_x) {
+            for (int local_y = 0; local_y < 4; ++local_y, ++location) {
+                if (!location->get()) [[likely]] {
+                    continue;
+                }
+
+                const int tile_map_x = nd_map_x + local_x;
+                const int tile_map_y = nd_map_y + local_y;
+                const int local_draw_x = (tile_map_x - chunk_start_x) * TILE_SIZE;
+                const int local_draw_y = (tile_map_y - chunk_start_y) * TILE_SIZE;
+                const Map* map = map_access ? &map_access->getMap() : nullptr;
+                static_cast<void>(TileRenderSnapshotBuilder::BuildInto(
+                    chunk_snapshot, *location, view, settings, ctx.frame, map, current_house_id, local_draw_x, local_draw_y
+                ));
+            }
+        }
+    };
+
+    if (live_client) {
+        for (int nd_map_x = node_start_x; nd_map_x <= node_end_x; nd_map_x += 4) {
+            for (int nd_map_y = node_start_y; nd_map_y <= node_end_y; nd_map_y += 4) {
+                MapNode* node = map_access->getMap().getLeaf(nd_map_x, nd_map_y);
+                if (!node) {
+                    node = map_access->getMap().createLeaf(nd_map_x, nd_map_y);
+                    node->setVisible(false, false);
+                }
+                collectNode(node, nd_map_x, nd_map_y, true);
+            }
+        }
+    } else {
+        for (int nd_map_x = node_start_x; nd_map_x <= node_end_x; nd_map_x += 4) {
+            for (int nd_map_y = node_start_y; nd_map_y <= node_end_y; nd_map_y += 4) {
+                collectNode(map_access->getMap().getLeaf(nd_map_x, nd_map_y), nd_map_x, nd_map_y, false);
+            }
+        }
+    }
+
+    return chunk_snapshot;
 }

@@ -1,9 +1,20 @@
 #include "rendering/core/atlas_manager.h"
 #include <iostream>
 #include <algorithm>
+#include <shared_mutex>
 #include <spdlog/spdlog.h>
 
-bool AtlasManager::ensureInitialized() {
+const AtlasRegion* AtlasManager::getRegionUnlocked(uint32_t sprite_id) const {
+	if (sprite_id < DIRECT_LOOKUP_SIZE) {
+		return direct_lookup_[sprite_id];
+	}
+	if (auto it = sprite_regions_.find(sprite_id); it != sprite_regions_.end()) {
+		return it->second;
+	}
+	return nullptr;
+}
+
+bool AtlasManager::ensureInitializedUnlocked() {
 	if (atlas_.isValid()) {
 		return true;
 	}
@@ -22,7 +33,7 @@ bool AtlasManager::ensureInitialized() {
 
 	// Ensure white pixel exists (ID AtlasRegion::INVALID_SENTINEL)
 	std::vector<uint8_t> white_data(32 * 32 * 4, 255);
-	white_pixel_cache_ = addSprite(WHITE_PIXEL_ID, white_data.data());
+	white_pixel_cache_ = addSpriteUnlocked(WHITE_PIXEL_ID, white_data.data());
 
 	if (!white_pixel_cache_) {
 		spdlog::error("AtlasManager: Failed to register white pixel sprite");
@@ -32,16 +43,15 @@ bool AtlasManager::ensureInitialized() {
 	return true;
 }
 
-const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rgba_data) {
-	// Fast check via direct lookup for common sprites
-	if (sprite_id < DIRECT_LOOKUP_SIZE && direct_lookup_[sprite_id] != nullptr) {
-		return direct_lookup_[sprite_id];
-	}
+bool AtlasManager::ensureInitialized() {
+	std::unique_lock lock(atlas_mutex_);
+	return ensureInitializedUnlocked();
+}
 
-	// Check hash map for already-added sprites
-	auto it = sprite_regions_.find(sprite_id);
-	if (it != sprite_regions_.end()) {
-		return it->second;
+const AtlasRegion* AtlasManager::addSpriteUnlocked(uint32_t sprite_id, const uint8_t* rgba_data) {
+	// Fast check via direct lookup for common sprites
+	if (const auto* region = getRegionUnlocked(sprite_id)) {
+		return region;
 	}
 
 	if (!rgba_data) {
@@ -49,7 +59,7 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 		return nullptr;
 	}
 
-	if (!ensureInitialized()) {
+	if (!ensureInitializedUnlocked()) {
 		return nullptr;
 	}
 
@@ -76,7 +86,13 @@ const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rg
 	return ptr;
 }
 
+const AtlasRegion* AtlasManager::addSprite(uint32_t sprite_id, const uint8_t* rgba_data) {
+	std::unique_lock lock(atlas_mutex_);
+	return addSpriteUnlocked(sprite_id, rgba_data);
+}
+
 void AtlasManager::removeSprite(uint32_t sprite_id) {
+	std::unique_lock lock(atlas_mutex_);
 	if (sprite_id == WHITE_PIXEL_ID) {
 		white_pixel_cache_ = nullptr;
 	}
@@ -110,6 +126,7 @@ void AtlasManager::removeSprite(uint32_t sprite_id) {
 }
 
 void AtlasManager::clearMapping(uint32_t sprite_id) {
+	std::unique_lock lock(atlas_mutex_);
 	if (sprite_id == WHITE_PIXEL_ID) {
 		white_pixel_cache_ = nullptr;
 	}
@@ -120,33 +137,40 @@ void AtlasManager::clearMapping(uint32_t sprite_id) {
 	sprite_regions_.erase(sprite_id);
 }
 
+const AtlasRegion* AtlasManager::getRegion(uint32_t sprite_id) const {
+	std::shared_lock lock(atlas_mutex_);
+	return getRegionUnlocked(sprite_id);
+}
+
 const AtlasRegion* AtlasManager::getWhitePixel() const {
+	std::shared_lock lock(atlas_mutex_);
 	if (white_pixel_cache_) {
 		return white_pixel_cache_;
 	}
-	if (sprite_regions_.count(WHITE_PIXEL_ID)) {
-		return sprite_regions_.at(WHITE_PIXEL_ID);
+	if (auto it = sprite_regions_.find(WHITE_PIXEL_ID); it != sprite_regions_.end()) {
+		return it->second;
 	}
 	// Should have been initialized in ensureInitialized()
 	return nullptr;
 }
 
 bool AtlasManager::hasSprite(uint32_t sprite_id) const {
-	if (sprite_id < DIRECT_LOOKUP_SIZE) {
-		return direct_lookup_[sprite_id] != nullptr;
-	}
-	return sprite_regions_.contains(sprite_id);
+	std::shared_lock lock(atlas_mutex_);
+	return getRegionUnlocked(sprite_id) != nullptr;
 }
 
 void AtlasManager::bind(uint32_t slot) const {
+	std::shared_lock lock(atlas_mutex_);
 	atlas_.bind(slot);
 }
 
 GLuint AtlasManager::getTextureId() const {
+	std::shared_lock lock(atlas_mutex_);
 	return atlas_.id();
 }
 
 void AtlasManager::clear() {
+	std::unique_lock lock(atlas_mutex_);
 	atlas_.release();
 	region_storage_.clear();
 	sprite_regions_.clear();

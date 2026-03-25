@@ -3,8 +3,6 @@
 
 #include "rendering/core/image.h"
 
-class GameSprite;
-
 class NormalImage : public Image {
 public:
 	NormalImage();
@@ -30,8 +28,6 @@ public:
 	std::unique_ptr<uint8_t[]> getRGBAData() override;
 
 	void fulfillPreload(std::unique_ptr<uint8_t[]> preloaded_data);
-
-	GameSprite* parent = nullptr;
 };
 
 #endif

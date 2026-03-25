@@ -20,8 +20,8 @@ namespace NvgUtils {
 	// Creates a composite RGBA buffer from a GameSprite.
 	// Returns a unique_ptr to the buffer, or nullptr on failure.
 	inline std::unique_ptr<uint8_t[]> CreateCompositeRGBA(GameSprite& gs, int& outW, int& outH) {
-		outW = gs.width * 32;
-		outH = gs.height * 32;
+		outW = gs.meta.width * 32;
+		outH = gs.meta.height * 32;
 
 		if (outW <= 0 || outH <= 0) {
 			return nullptr;
@@ -31,27 +31,27 @@ namespace NvgUtils {
 		auto composite = std::make_unique<uint8_t[]>(bufferSize);
 		std::fill(composite.get(), composite.get() + bufferSize, 0);
 
-		int pattern_x = (gs.pattern_x >= 3) ? 2 : 0;
+		int pattern_x = (gs.meta.pattern_x >= 3) ? 2 : 0;
 		int pattern_y = 0;
 		int pattern_z = 0;
 		int frame = 0;
 
-		for (int l = 0; l < gs.layers; ++l) {
-			for (int w = 0; w < gs.width; ++w) {
-				for (int h = 0; h < gs.height; ++h) {
+		for (int l = 0; l < gs.meta.layers; ++l) {
+			for (int w = 0; w < gs.meta.width; ++w) {
+				for (int h = 0; h < gs.meta.height; ++h) {
 					int spriteIdx = gs.getIndex(w, h, l, pattern_x, pattern_y, pattern_z, frame);
-					if (spriteIdx < 0 || (size_t)spriteIdx >= gs.spriteList.size()) {
+					if (spriteIdx < 0 || static_cast<size_t>(spriteIdx) >= gs.icon_data.sprite_list.size()) {
 						continue;
 					}
 
-					auto spriteData = gs.spriteList[spriteIdx]->getRGBAData();
+					auto spriteData = gs.icon_data.sprite_list[spriteIdx]->getRGBAData();
 					if (!spriteData) {
 						continue;
 					}
 
 					// Right-to-left, bottom-to-top arrangement (standard RME rendering order)
-					int part_x = (gs.width - w - 1) * 32;
-					int part_y = (gs.height - h - 1) * 32;
+					int part_x = (gs.meta.width - w - 1) * 32;
+					int part_y = (gs.meta.height - h - 1) * 32;
 
 					for (int sy = 0; sy < 32; ++sy) {
 						for (int sx = 0; sx < 32; ++sx) {

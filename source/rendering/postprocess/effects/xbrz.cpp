@@ -1,8 +1,10 @@
-#include "rendering/postprocess/post_process_manager.h"
+#include "rendering/postprocess/effect_registry.h"
+#include "rendering/postprocess/post_process_manager.h" // For ShaderNames
 
-namespace {
+namespace EffectRegistry {
 
-	const char* xbrz_vert = R"(
+	const char* XbrzVertexSource() {
+		return R"(
 #version 450 core
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;
@@ -35,8 +37,10 @@ void main() {
     t7 = vTexCoord.xyyy + vec4( 2.0*dx,-dy, 0.0, dy);
 }
 )";
+	}
 
-	const char* xbrz_frag_source = R"(
+	const char* XbrzFragmentSource() {
+		return R"(
 #version 450 core
 in vec2 vTexCoord;
 in vec4 t1;
@@ -259,12 +263,6 @@ void main()
     FragColor = vec4(res, 1.0);
 }
 )";
+	}
 
-	// Auto-register
-	struct XBRZRegister {
-		XBRZRegister() {
-			PostProcessManager::Instance().Register(ShaderNames::XBRZ, xbrz_frag_source, xbrz_vert);
-		}
-	} xbrz_register;
-
-} // namespace
+} // namespace EffectRegistry

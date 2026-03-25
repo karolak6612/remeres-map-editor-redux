@@ -20,18 +20,20 @@
 
 class Editor;
 class Selection;
+class GUI;
+class Settings;
 
 // Static helper class for clipboard operations
 class ClipboardHandler {
 public:
 	// Map tile/item clipboard operations
-	static void copy(Editor& editor, int floor);
-	static void cut(Editor& editor, int floor);
-	static void paste();
-	static void doDelete(Editor& editor);
+	static void copy(GUI& gui, Editor& editor, int floor);
+	static void cut(GUI& gui, Editor& editor, int floor);
+	static void paste(GUI& gui);
+	static void doDelete(GUI& gui, Editor& editor);
 
 	// Text clipboard operations
-	static void copyPosition(const Selection& selection);
+	static void copyPosition(const Settings& settings, const Selection& selection);
 	static void copyServerId(const Selection& selection);
 	static void copyClientId(const Selection& selection);
 	static void copyName(const Selection& selection);

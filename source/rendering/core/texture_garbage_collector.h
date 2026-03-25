@@ -18,12 +18,16 @@
 #ifndef RME_TEXTURE_GARBAGE_COLLECTOR_H
 #define RME_TEXTURE_GARBAGE_COLLECTOR_H
 
+#include <cstdint>
 #include <deque>
-#include <vector>
 #include <memory>
 #include <time.h>
+#include <vector>
+
+#include "rendering/core/graphics_runtime_config.h"
 
 class GameSprite;
+class Image;
 class Sprite;
 
 class TextureGarbageCollector {
@@ -31,8 +35,10 @@ public:
 	TextureGarbageCollector();
 	~TextureGarbageCollector();
 
-	void GarbageCollect(std::vector<GameSprite*>& resident_game_sprites, std::vector<void*>& resident_images, time_t current_time);
-	void AddSpriteToCleanup(GameSprite* spr);
+	void GarbageCollect(
+		std::vector<GameSprite*>& resident_game_sprites, std::vector<Image*>& resident_images, time_t current_time, const GraphicsRuntimeConfig& config
+	);
+	void AddSpriteToCleanup(const std::vector<GameSprite*>& resident_game_sprites, uint32_t sprite_id, const GraphicsRuntimeConfig& config);
 	void CleanSoftwareSprites(std::vector<std::unique_ptr<Sprite>>& sprite_space);
 	void Clear();
 
@@ -46,7 +52,7 @@ public:
 private:
 	int loaded_textures;
 	time_t lastclean;
-	std::deque<GameSprite*> cleanup_list;
+	std::deque<uint32_t> cleanup_list_;
 };
 
 #endif

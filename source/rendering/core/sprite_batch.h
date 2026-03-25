@@ -15,6 +15,8 @@
 #include <glm/glm.hpp>
 #include <optional>
 
+class SharedGeometry;
+
 /**
  * High-performance batched sprite renderer using instanced drawing.
  *
@@ -42,7 +44,7 @@ public:
 	 * Initialize GPU resources (shader, VAO, RingBuffer).
 	 * @return true if successful
 	 */
-	bool initialize();
+	[[nodiscard]] bool initialize(SharedGeometry& shared_geometry);
 
 	/**
 	 * Begin a new batch. Clears pending sprites.
@@ -94,10 +96,10 @@ public:
 	 */
 	void ensureCapacity(size_t capacity);
 
-	int getDrawCallCount() const {
+	[[nodiscard]] int getDrawCallCount() const {
 		return draw_call_count_;
 	}
-	int getSpriteCount() const {
+	[[nodiscard]] int getSpriteCount() const {
 		return sprite_count_;
 	}
 

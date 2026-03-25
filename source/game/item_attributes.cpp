@@ -285,7 +285,7 @@ void ItemAttributes::serializeAttributeMap(const IOMap& maphandle, NodeFileWrite
 
 bool ItemAttribute::unserialize(const IOMap& maphandle, BinaryNode* stream) {
 	// Read type
-	uint8_t rtype;
+	uint8_t rtype = 0;
 	stream->getU8(rtype);
 
 	// Read contents

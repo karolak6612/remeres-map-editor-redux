@@ -6,6 +6,7 @@
 #define RME_RENDERING_CORE_SPRITE_PRELOADER_H_
 
 #include "rendering/core/game_sprite.h"
+#include "rendering/core/spsc_queue.h"
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -16,17 +17,24 @@
 #include <unordered_set>
 
 class SpriteArchive;
+class GraphicManager;
 
 class SpritePreloader {
 public:
-	[[nodiscard]] static SpritePreloader& get();
+	SpritePreloader();
+	~SpritePreloader();
 
 	SpritePreloader(const SpritePreloader&) = delete;
 	SpritePreloader& operator=(const SpritePreloader&) = delete;
 
+	// Inject the GraphicManager after construction (avoids circular dependency
+	// since GraphicManager owns TextureGC which owns SpritePreloader).
+	void setGraphicManager(GraphicManager* gfx) { gfx_ = gfx; }
+
 	// Schedules sprites for preloading based on the given view parameters.
 	// This corresponds to the loop logic previously in collectTileSprites.
 	void preload(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame);
+	void preload(int client_id, int pattern_x, int pattern_y, int pattern_z, int frame);
 
 	// Processes finished preload tasks and uploads data to the GPU.
 	// Should be called on the main thread.
@@ -40,8 +48,6 @@ public:
 	void shutdown();
 
 private:
-	SpritePreloader();
-	~SpritePreloader();
 
 	struct ArchiveSpriteKey {
 		const SpriteArchive* archive = nullptr;
@@ -87,26 +93,28 @@ private:
 		std::shared_ptr<SpriteArchive> archive;
 	};
 
-	void workerLoop(std::stop_token stop_token);
+	struct WorkerState {
+		SPSCQueue<Result, 1024> results;
+		std::jthread thread;
+	};
+
+	void workerLoop(std::stop_token stop_token, WorkerState& worker);
 
 	static constexpr unsigned int MIN_WORKER_THREADS = 2u;
 	static constexpr unsigned int MAX_WORKER_THREADS = 8u;
 
 	static constexpr size_t MAX_QUEUE_SIZE = 50000; // Limit pending tasks to prevent memory blowup
 
-	std::mutex queue_mutex;
+	std::mutex task_mutex_;    // Protects task_queue, pending_ids, stopping, active_epoch
 	std::condition_variable cv;
 	bool stopping = false;
-	std::vector<std::jthread> workers;
+	std::vector<std::unique_ptr<WorkerState>> workers;
 
 	std::queue<Task> task_queue;
-	std::queue<Result> result_queue;
 	std::unordered_set<PendingSpriteKey, PendingSpriteKeyHash> pending_ids; // To avoid duplicate tasks for the same archive/id/generation/epoch
 	uint64_t active_epoch = 0;
-};
 
-namespace rme {
-	void collectTileSprites(GameSprite* spr, int pattern_x, int pattern_y, int pattern_z, int frame);
-}
+	GraphicManager* gfx_ = nullptr;
+};
 
 #endif

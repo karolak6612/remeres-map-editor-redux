@@ -7,12 +7,14 @@
 
 #include "rendering/utilities/fps_counter.h"
 
+class GUI;
+
 class FramePacer {
 public:
 	FramePacer();
 	~FramePacer();
 
-	void UpdateAndLimit(int limit, bool show_counter);
+	void UpdateAndLimit(GUI& gui, int limit, bool show_counter);
 
 private:
 	FPSCounter fps_counter;

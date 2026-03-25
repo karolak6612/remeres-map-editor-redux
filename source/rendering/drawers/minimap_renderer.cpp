@@ -1,5 +1,5 @@
 #include "rendering/drawers/minimap_renderer.h"
-#include "rendering/core/shared_geometry.h"
+#include "rendering/core/graphics.h"
 #include "map/map.h"
 #include "map/tile.h"
 #include "rendering/core/minimap_colors.h"
@@ -57,7 +57,7 @@ MinimapRenderer::~MinimapRenderer() {
 	// RAII manages resources
 }
 
-bool MinimapRenderer::initialize() {
+bool MinimapRenderer::initialize(SharedGeometry& shared_geom) {
 	shader_ = std::make_unique<ShaderProgram>();
 	if (!shader_->Load(minimap_vert, minimap_frag)) {
 		spdlog::error("MinimapRenderer: Failed to load shader");
@@ -75,8 +75,7 @@ bool MinimapRenderer::initialize() {
 
 	createPaletteTexture();
 
-	// Initialize Shared Geometry
-	if (!SharedGeometry::Instance().initialize()) {
+	if (!shared_geom.initialize()) {
 		spdlog::error("MinimapRenderer: Failed to initialize SharedGeometry");
 		return false;
 	}
@@ -94,8 +93,8 @@ bool MinimapRenderer::initialize() {
 	GLuint inst_vbo = instance_vbo_->GetID();
 
 	// Binding 0: Quad Data from SharedGeometry
-	glVertexArrayVertexBuffer(vao, 0, SharedGeometry::Instance().getQuadVBO(), 0, 4 * sizeof(float));
-	glVertexArrayElementBuffer(vao, SharedGeometry::Instance().getQuadEBO());
+	glVertexArrayVertexBuffer(vao, 0, shared_geom.getQuadVBO(), 0, 4 * sizeof(float));
+	glVertexArrayElementBuffer(vao, shared_geom.getQuadEBO());
 
 	// Attribute 0: Pos
 	glEnableVertexArrayAttrib(vao, 0);

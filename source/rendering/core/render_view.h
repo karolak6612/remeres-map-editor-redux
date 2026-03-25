@@ -1,12 +1,16 @@
 #ifndef RME_RENDERING_RENDER_VIEW_H_
 #define RME_RENDERING_RENDER_VIEW_H_
 
-class MapCanvas;
-struct DrawingOptions;
-
 #include <glm/glm.hpp>
+#include <optional>
 #include "map/position.h"
 #include "app/definitions.h"
+
+// Return type for IsTileVisible — replaces out-parameter pattern.
+struct TileScreenPos {
+	int x;
+	int y;
+};
 
 struct ViewBounds {
 	int start_x = 0;
@@ -15,7 +19,21 @@ struct ViewBounds {
 	int end_y = 0;
 };
 
-struct RenderView {
+// Per-floor coordinate bounds computed from the base ViewState.
+// Each floor in the draw loop expands the visible area by one tile in each direction
+// to account for the diagonal offset of stacked floors. This struct captures those
+// per-floor bounds explicitly, replacing the old pattern of mutating the view mid-frame.
+struct FloorViewParams {
+	int start_x;
+	int start_y;
+	int end_x;
+	int end_y;
+};
+
+// Pure data struct describing the viewport state for a single frame.
+// Contains only computed values — no pointers to UI objects, no GL calls.
+// Constructed from explicit parameters in MapDrawer::SetupVars().
+struct ViewState {
 	float zoom;
 	int tile_size;
 	int floor;
@@ -33,23 +51,31 @@ struct RenderView {
 	glm::mat4 projectionMatrix;
 	glm::mat4 viewMatrix;
 
-	void Setup(MapCanvas* canvas, const DrawingOptions& options);
-	void SetupGL();
-	void ReleaseGL();
-	void Clear();
-
-	int getFloorAdjustment() const;
-	bool IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
-	bool IsPixelVisible(int draw_x, int draw_y, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
-	// Checks if a rectangle (e.g. a node) is visible
-	bool IsRectVisible(int draw_x, int draw_y, int width, int height, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
-	// Checks if a rectangle is fully inside the viewport (no clipping needed)
-	bool IsRectFullyInside(int draw_x, int draw_y, int width, int height) const;
-	void getScreenPosition(int map_x, int map_y, int map_z, int& out_x, int& out_y) const;
+	[[nodiscard]] int getFloorAdjustment() const;
+	[[nodiscard]] std::optional<TileScreenPos> IsTileVisible(int map_x, int map_y, int map_z) const;
+	[[nodiscard]] bool IsPixelVisible(int draw_x, int draw_y, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
+	[[nodiscard]] bool IsRectVisible(int draw_x, int draw_y, int width, int height, int margin = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS) const;
+	[[nodiscard]] bool IsRectFullyInside(int draw_x, int draw_y, int width, int height) const;
+	[[nodiscard]] TileScreenPos getScreenPosition(int map_x, int map_y, int map_z) const;
 
 	// Cached logical viewport dimensions for optimization
 	float logical_width = 0.0f;
 	float logical_height = 0.0f;
 };
+
+
+// Isolated GL side effects — explicit, named, and separate from data.
+namespace GLViewport {
+	// Issues glViewport for the given view state.
+	void Apply(const ViewState& view);
+
+	// Clears the framebuffer (color + depth).
+	void Clear();
+}
+
+// Pure math — compute projection and view matrices from ViewState dimensions.
+namespace ViewProjection {
+	void Compute(ViewState& vs);
+}
 
 #endif

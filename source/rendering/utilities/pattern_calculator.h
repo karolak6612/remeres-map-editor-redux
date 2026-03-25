@@ -2,7 +2,9 @@
 #define RME_RENDERING_UTILITIES_PATTERN_CALCULATOR_H_
 
 #include "rendering/core/game_sprite.h"
-#include "item_definitions/core/item_definition_store.h"
+#include "rendering/core/sprite_animation_state.h"
+#include "rendering/core/sprite_metadata.h"
+#include "rendering/core/tile_render_snapshot.h"
 #include "game/item.h"
 #include "map/tile.h"
 #include <bit>
@@ -29,6 +31,50 @@ private:
 	}
 
 public:
+	static SpritePatterns Calculate(
+		const SpriteMetadata& meta, const SpriteAnimationState* animation, const ItemRenderSnapshot& item, const TileRenderSnapshot& tile
+	) {
+		SpritePatterns patterns;
+
+		patterns.x = calculatePatternOffset(tile.pos.x, meta.pattern_x);
+		patterns.y = calculatePatternOffset(tile.pos.y, meta.pattern_y);
+		patterns.z = calculatePatternOffset(tile.pos.z, meta.pattern_z);
+		patterns.frame = animation ? animation->getFrame() : 0;
+
+		if (item.is_splash || item.is_fluid_container) {
+			patterns.subtype = item.subtype;
+		} else if (item.is_hangable) {
+			if (tile.hasHookSouth()) {
+				patterns.x = 1;
+			} else if (tile.hasHookEast()) {
+				patterns.x = 2;
+			} else {
+				patterns.x = 0;
+			}
+		} else if (item.is_stackable) {
+			const uint16_t itemSubtype = item.subtype;
+			if (itemSubtype <= 1) {
+				patterns.subtype = 0;
+			} else if (itemSubtype <= 2) {
+				patterns.subtype = 1;
+			} else if (itemSubtype <= 3) {
+				patterns.subtype = 2;
+			} else if (itemSubtype <= 4) {
+				patterns.subtype = 3;
+			} else if (itemSubtype < 10) {
+				patterns.subtype = 4;
+			} else if (itemSubtype < 25) {
+				patterns.subtype = 5;
+			} else if (itemSubtype < 50) {
+				patterns.subtype = 6;
+			} else {
+				patterns.subtype = 7;
+			}
+		}
+
+		return patterns;
+	}
+
 	static SpritePatterns Calculate(const GameSprite* spr, const ItemDefinitionView& it, const Item* item, const Tile* tile, const Position& pos) {
 		SpritePatterns patterns;
 
@@ -36,11 +82,11 @@ public:
 			return patterns;
 		}
 
-		patterns.x = calculatePatternOffset(pos.x, spr->pattern_x);
-		patterns.y = calculatePatternOffset(pos.y, spr->pattern_y);
-		patterns.z = calculatePatternOffset(pos.z, spr->pattern_z);
+		patterns.x = calculatePatternOffset(pos.x, spr->meta.pattern_x);
+		patterns.y = calculatePatternOffset(pos.y, spr->meta.pattern_y);
+		patterns.z = calculatePatternOffset(pos.z, spr->meta.pattern_z);
 
-		patterns.frame = (spr->animator) ? spr->animator->getFrame() : 0;
+		patterns.frame = spr->animation.getFrame();
 
 		if (it.isSplash() || it.isFluidContainer()) {
 			patterns.subtype = item->getSubtype();

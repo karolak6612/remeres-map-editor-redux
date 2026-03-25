@@ -87,7 +87,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	FileName data_path = getLoadedVersion()->getDataPath();
 	FileName extension_path = FileSystem::GetExtensionsDirectory();
 
-	g_gui.gfx.client_version = getLoadedVersion();
+	g_gui.gfx.setClientVersion(getLoadedVersion());
 
 	// OTFI loading removed. Metadata and sprite files are configured via clients.toml or defaults in ClientVersion.
 
