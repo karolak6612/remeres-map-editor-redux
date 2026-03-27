@@ -87,7 +87,6 @@ Position Selection::maxPosition() const {
 }
 
 void Selection::add(Tile* tile, Item* item) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(item);
 
@@ -360,6 +359,11 @@ void Selection::clear() {
 	selectionChanged = true;
 }
 
+void Selection::markChanged() {
+	bounds_dirty = true;
+	selectionChanged = true;
+}
+
 void Selection::start(SessionFlags flags) {
 	selectionChanged = false;
 	if (!(flags & INTERNAL)) {
@@ -396,7 +400,6 @@ void Selection::commit() {
 void Selection::finish(SessionFlags flags) {
 	if (!(flags & INTERNAL)) {
 		if (flags & SUBTHREAD) {
-			ASSERT(subsession);
 			subsession = nullptr;
 		} else {
 			ASSERT(session);

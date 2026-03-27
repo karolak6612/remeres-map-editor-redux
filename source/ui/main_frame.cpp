@@ -16,6 +16,7 @@
 #include "palette/palette_window.h"
 #include "app/preferences.h"
 #include "ui/result_window.h"
+#include "lua/lua_dialog.h"
 #include "lua/lua_script_manager.h"
 #include "lua/lua_scripts_window.h"
 #include "rendering/ui/minimap_window.h"
@@ -354,6 +355,7 @@ void MainFrame::OnExit(wxCloseEvent& event) {
 	g_palettes.DestroyPalettes();
 	g_minimap.Destroy();
 	g_search.HideSearchWindow();
+	LuaDialog::DestroyDockPanelsForShutdown();
 
 	if (g_gui.aui_manager) {
 		g_gui.aui_manager->UnInit();

@@ -118,10 +118,11 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 	const TileLocation* loc = location ? location : ownedLocation;
 	if (loc) {
 		copy = std::make_unique<Tile>(loc->getPosition().x, loc->getPosition().y, loc->getPosition().z);
+		std::unique_ptr<TileLocation> clonedLocation = loc->clone();
 		if (copy->ownedLocation) {
 			delete copy->ownedLocation;
 		}
-		copy->ownedLocation = loc->clone().release();
+		copy->ownedLocation = clonedLocation.release();
 		copy->location = copy->ownedLocation;
 	} else {
 		// Detached tile: keep a safe owned location even if we do not have one yet.

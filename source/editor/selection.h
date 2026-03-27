@@ -55,6 +55,9 @@ public:
 	// Clears the selection completely
 	void clear();
 
+	// Marks the current selection as dirty without changing membership.
+	void markChanged();
+
 	// Returns true when inside a session
 	bool isBusy() {
 		return busy;

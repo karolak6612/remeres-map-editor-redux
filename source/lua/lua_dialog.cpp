@@ -69,6 +69,38 @@ void LuaDialog::unpin(LuaDialog* dialog) {
 	}
 }
 
+void LuaDialog::DestroyDockPanelsForShutdown() {
+	if (!g_gui.aui_manager || g_pinnedDialogs.empty()) {
+		return;
+	}
+
+	const std::vector<LuaDialog*> dialogs(g_pinnedDialogs.begin(), g_pinnedDialogs.end());
+	bool needsUpdate = false;
+
+	for (LuaDialog* dialog : dialogs) {
+		if (!dialog || !dialog->dockPanel) {
+			continue;
+		}
+
+		wxPanel* dockPanel = dialog->dockPanel;
+		dialog->dockPanel = nullptr;
+
+		wxAuiPaneInfo& paneInfo = g_gui.aui_manager->GetPane(dockPanel);
+		if (paneInfo.IsOk()) {
+			g_gui.aui_manager->DetachPane(dockPanel);
+			needsUpdate = true;
+		}
+
+		if (!dockPanel->IsBeingDeleted()) {
+			dockPanel->Destroy();
+		}
+	}
+
+	if (needsUpdate) {
+		g_gui.aui_manager->Update();
+	}
+}
+
 class CustomButton : public wxControl {
 public:
 	CustomButton(wxWindow* parent, wxWindowID id, const wxString& label, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = 0) :
@@ -495,12 +527,17 @@ LuaDialog::~LuaDialog() {
 	while (hotkeySuspendCount > 0) {
 		resumeHotkeys();
 	}
-	if (dockPanel) {
-		g_gui.aui_manager->DetachPane(dockPanel);
-		g_gui.aui_manager->Update();
-		dockPanel->Destroy();
-		dockPanel = nullptr;
+	if (dockPanel && g_gui.aui_manager) {
+		wxAuiPaneInfo& paneInfo = g_gui.aui_manager->GetPane(dockPanel);
+		if (paneInfo.IsOk()) {
+			g_gui.aui_manager->DetachPane(dockPanel);
+			g_gui.aui_manager->Update();
+		}
+		if (!dockPanel->IsBeingDeleted()) {
+			dockPanel->Destroy();
+		}
 	}
+	dockPanel = nullptr;
 }
 
 void LuaDialog::createLayout() {
@@ -2056,6 +2093,10 @@ void LuaDialog::popupContextMenu(const sol::function& callback, sol::table info,
 
 LuaDialog* LuaDialog::show(sol::optional<sol::table> options) {
 	if (dockPanel) {
+		if (!g_gui.aui_manager) {
+			isShowing = true;
+			return this;
+		}
 		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(dockPanel);
 		if (info.IsOk()) {
 			info.Show();
@@ -2139,10 +2180,12 @@ void LuaDialog::close() {
 		resumeHotkeys();
 	}
 	if (dockPanel) {
-		wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(dockPanel);
-		if (info.IsOk()) {
-			info.Hide();
-			g_gui.aui_manager->Update();
+		if (g_gui.aui_manager) {
+			wxAuiPaneInfo& info = g_gui.aui_manager->GetPane(dockPanel);
+			if (info.IsOk()) {
+				info.Hide();
+				g_gui.aui_manager->Update();
+			}
 		}
 		isShowing = false;
 		if (oncloseCallback.valid()) {

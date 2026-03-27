@@ -5,6 +5,8 @@
 #include "rendering/core/coordinate_mapper.h"
 #include "app/definitions.h" // For MAP_MAX_LAYER, GROUND_LAYER, TILE_SIZE if defined there, or map.h
 
+#include <cmath>
+
 void CoordinateMapper::ScreenToMap(int screen_x, int screen_y, int view_start_x, int view_start_y, double zoom, int floor, double scale_factor, int* map_x, int* map_y) {
 	screen_x = static_cast<int>(screen_x * scale_factor);
 	screen_y = static_cast<int>(screen_y * scale_factor);
@@ -37,14 +39,14 @@ void CoordinateMapper::MapToScreen(int map_x, int map_y, int view_start_x, int v
 	const double raw_y = static_cast<double>(map_y * TILE_SIZE - view_start_y);
 
 	if (raw_x < 0.0) {
-		*screen_x = static_cast<int>(raw_x / scale_factor);
+		*screen_x = static_cast<int>(std::ceil(raw_x / scale_factor));
 	} else {
-		*screen_x = static_cast<int>(raw_x / zoom / scale_factor);
+		*screen_x = static_cast<int>(std::ceil(raw_x / (zoom * scale_factor)));
 	}
 
 	if (raw_y < 0.0) {
-		*screen_y = static_cast<int>(raw_y / scale_factor);
+		*screen_y = static_cast<int>(std::ceil(raw_y / scale_factor));
 	} else {
-		*screen_y = static_cast<int>(raw_y / zoom / scale_factor);
+		*screen_y = static_cast<int>(std::ceil(raw_y / (zoom * scale_factor)));
 	}
 }

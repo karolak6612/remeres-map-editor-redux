@@ -28,8 +28,13 @@
 #include <ranges>
 #include <unordered_set>
 #include <unordered_map>
+#include <atomic>
 #include <format>
 #include <spdlog/spdlog.h>
+
+namespace {
+	static std::atomic_uint64_t g_nextMapGeneration { 1 };
+}
 
 Map::Map() :
 	BaseMap(),
@@ -38,7 +43,8 @@ Map::Map() :
 	houses(*this),
 	has_changed(false),
 	unnamed(false),
-	waypoints(*this) {
+	waypoints(*this),
+	generation(g_nextMapGeneration.fetch_add(1, std::memory_order_relaxed)) {
 	spdlog::info("Map created [Map={}]", static_cast<void*>(this));
 	// Earliest version possible
 	// Caller is responsible for converting us to proper version
@@ -48,6 +54,7 @@ Map::Map() :
 
 void Map::initializeEmpty() {
 	spdlog::info("Map::initializeEmpty [Map={}]", static_cast<void*>(this));
+	generation = g_nextMapGeneration.fetch_add(1, std::memory_order_relaxed);
 	height = 2048;
 	width = 2048;
 
@@ -73,6 +80,7 @@ bool Map::open(const std::string& file) {
 		return true; // Do not reopen ourselves!
 	}
 
+	generation = g_nextMapGeneration.fetch_add(1, std::memory_order_relaxed);
 	tilecount = 0;
 
 	IOMapOTBM maploader(getVersion());

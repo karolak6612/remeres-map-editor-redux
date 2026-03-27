@@ -4,8 +4,33 @@
 #include "rendering/core/text_renderer.h"
 #include "rendering/core/graphics.h"
 #include "rendering/core/coordinate_mapper.h"
+#include "editor/action_queue.h"
+#include "editor/editor.h"
+#include "editor/selection.h"
+#include "map/tile.h"
 #include "lua/lua_script_manager.h"
 #include "ui/gui.h"
+
+#include <functional>
+
+namespace {
+	static std::size_t hashSelection(const Selection& selection) {
+		std::size_t hash = 1469598103934665603ull;
+		for (const Tile* tile : selection.getTiles()) {
+			if (!tile) {
+				continue;
+			}
+			const Position pos = tile->getPosition();
+			hash ^= std::hash<int>{}(pos.x);
+			hash *= 1099511628211ull;
+			hash ^= std::hash<int>{}(pos.y);
+			hash *= 1099511628211ull;
+			hash ^= std::hash<int>{}(pos.z);
+			hash *= 1099511628211ull;
+		}
+		return hash;
+	}
+}
 
 LuaOverlayDrawer::LuaOverlayDrawer(MapDrawer* mapDrawer) : mapDrawer(mapDrawer) {
 }
@@ -14,6 +39,10 @@ LuaOverlayDrawer::~LuaOverlayDrawer() {
 }
 
 LuaOverlayDrawer::CacheKey LuaOverlayDrawer::makeCacheKey(const RenderView& view) const {
+	Editor* editor = g_gui.GetCurrentEditor();
+	const Selection* selection = editor ? &editor->selection : nullptr;
+	const ActionQueue* actionQueue = editor && editor->actionQueue ? editor->actionQueue.get() : nullptr;
+
 	return CacheKey {
 		.start_x = view.start_x,
 		.start_y = view.start_y,
@@ -25,15 +54,18 @@ LuaOverlayDrawer::CacheKey LuaOverlayDrawer::makeCacheKey(const RenderView& view
 		.view_scroll_y = view.view_scroll_y,
 		.tile_size = view.tile_size,
 		.screen_width = view.screensize_x,
-		.screen_height = view.screensize_y
+		.screen_height = view.screensize_y,
+		.overlay_revision = g_luaScripts.getOverlayRevision(),
+		.selection_count = selection ? selection->size() : 0,
+		.selection_hash = selection ? hashSelection(*selection) : 0,
+		.history_index = actionQueue ? actionQueue->getCurrentIndex() : 0,
+		.history_size = actionQueue ? actionQueue->getSize() : 0
 	};
 }
 
 void LuaOverlayDrawer::refreshCache(const RenderView& view) {
 	const CacheKey nextKey = makeCacheKey(view);
-	if (cacheValid && nextKey.start_x == cachedKey.start_x && nextKey.start_y == cachedKey.start_y && nextKey.end_x == cachedKey.end_x && nextKey.end_y == cachedKey.end_y &&
-		nextKey.floor == cachedKey.floor && nextKey.zoom == cachedKey.zoom && nextKey.view_scroll_x == cachedKey.view_scroll_x && nextKey.view_scroll_y == cachedKey.view_scroll_y &&
-		nextKey.tile_size == cachedKey.tile_size && nextKey.screen_width == cachedKey.screen_width && nextKey.screen_height == cachedKey.screen_height) {
+	if (cacheValid && nextKey == cachedKey) {
 		return;
 	}
 

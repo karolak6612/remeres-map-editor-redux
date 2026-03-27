@@ -22,6 +22,42 @@
 #include <sstream>
 #include <spdlog/spdlog.h>
 
+namespace {
+	static constexpr std::streamsize MAX_LUA_SCRIPT_SIZE = 4 * 1024 * 1024;
+
+	static bool readTextFileLimited(const std::string& path, std::string& content, std::string& error) {
+		std::ifstream file(path, std::ios::binary | std::ios::ate);
+		if (!file.is_open()) {
+			error = "failed to open file";
+			return false;
+		}
+
+		const std::streamsize fileSize = file.tellg();
+		if (fileSize < 0) {
+			error = "unable to determine file size";
+			return false;
+		}
+		if (fileSize > MAX_LUA_SCRIPT_SIZE) {
+			error = "file exceeds size limit";
+			return false;
+		}
+
+		if (fileSize == 0) {
+			content.clear();
+			return true;
+		}
+
+		content.resize(static_cast<size_t>(fileSize));
+		file.seekg(0, std::ios::beg);
+		if (!file.read(content.data(), fileSize)) {
+			error = "failed to read file";
+			return false;
+		}
+
+		return true;
+	}
+} // namespace
+
 LuaEngine::LuaEngine() :
 	initialized(false) {
 }
@@ -153,8 +189,13 @@ void LuaEngine::setupSandbox() {
 
 			std::string fullPath = scriptDir + "/" + cleanFilename;
 
-			// Simply load and execute
-			sol::load_result loaded = lua.load_file(fullPath);
+			std::string source;
+			std::string loadError;
+			if (!readTextFileLimited(fullPath, source, loadError)) {
+				throw sol::error("dofile: Failed to load script '" + fullPath + "': " + loadError);
+			}
+
+			sol::load_result loaded = lua.load(source, fullPath, sol::load_mode::text);
 			if (!loaded.valid()) {
 				sol::error err = loaded;
 				throw sol::error("dofile: Failed to load script '" + fullPath + "': " + err.what());
@@ -169,7 +210,7 @@ void LuaEngine::setupSandbox() {
 			// Set new state
 			std::string childDir = fullPath.substr(0, fullPath.find_last_of("/\\"));
 			lua["SCRIPT_DIR"] = childDir;
-			lua["package"]["path"] = childDir + "/?.lua;" + oldPackagePath;
+			lua["package"]["path"] = childDir + "/?.lua;" + childDir + "/?/init.lua;" + oldPackagePath;
 
 			sol::variadic_results results;
 			try {
@@ -296,26 +337,35 @@ bool LuaEngine::executeFile(const std::string& filepath) {
 		// Extract the directory from the filepath and set SCRIPT_DIR global
 		std::string scriptDir;
 		size_t lastSlash = filepath.find_last_of("/\\");
-		if (lastSlash != std::string::npos) {
-			scriptDir = filepath.substr(0, lastSlash);
-		} else {
-			scriptDir = ".";
-		}
-		lua["SCRIPT_DIR"] = scriptDir;
+			if (lastSlash != std::string::npos) {
+				scriptDir = filepath.substr(0, lastSlash);
+			} else {
+				scriptDir = ".";
+			}
+			lua["SCRIPT_DIR"] = scriptDir;
 
-		// Add SCRIPT_DIR to package.path so 'require' can find local modules
-		std::string originalPath = lua["package"]["path"];
-		std::string scriptPattern = scriptDir + "/?.lua;";
-		if (originalPath.find(scriptPattern) == std::string::npos) {
-			lua["package"]["path"] = scriptPattern + originalPath;
-		}
+			// Add SCRIPT_DIR to package.path so 'require' can find local modules
+			std::string originalPath = lua["package"]["path"];
+			std::string scriptPattern = scriptDir + "/?.lua;" + scriptDir + "/?/init.lua;";
+			if (originalPath.find(scriptPattern) == std::string::npos) {
+				lua["package"]["path"] = scriptPattern + originalPath;
+			}
 
-		sol::load_result loaded = lua.load_file(filepath);
-		if (!loaded.valid()) {
-			sol::error err = loaded;
-			lastError = std::string("Failed to load script '") + filepath + "': " + err.what();
-			lua["package"]["path"] = originalPath;
-			lua["SCRIPT_DIR"] = prevScriptDir;
+			std::string source;
+			std::string loadError;
+			if (!readTextFileLimited(filepath, source, loadError)) {
+				lastError = std::string("Failed to load script '") + filepath + "': " + loadError;
+				lua["package"]["path"] = originalPath;
+				lua["SCRIPT_DIR"] = prevScriptDir;
+				return false;
+			}
+
+			sol::load_result loaded = lua.load(source, filepath, sol::load_mode::text);
+			if (!loaded.valid()) {
+				sol::error err = loaded;
+				lastError = std::string("Failed to load script '") + filepath + "': " + err.what();
+				lua["package"]["path"] = originalPath;
+				lua["SCRIPT_DIR"] = prevScriptDir;
 			return false;
 		}
 

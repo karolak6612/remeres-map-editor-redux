@@ -23,6 +23,7 @@
 
 namespace TileOperations {
 	void update(class Tile* tile);
+	void markSelectionChanged(class Tile* tile);
 }
 
 class TileLocation;
@@ -114,6 +115,9 @@ public: // Functions
 	}
 	void modify() {
 		statflags |= TILESTATE_MODIFIED;
+		if (isSelected()) {
+			TileOperations::markSelectionChanged(this);
+		}
 	}
 	void unmodify() {
 		statflags &= ~TILESTATE_MODIFIED;

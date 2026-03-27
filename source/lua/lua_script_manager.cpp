@@ -120,6 +120,7 @@ void LuaScriptManager::clearAllCallbacks() {
 	mapOverlays.clear();
 	mapOverlayShows.clear();
 	mapOverlayHover = MapOverlayHoverState {};
+	++overlayRevision;
 }
 
 void LuaScriptManager::registerAPIs() {
@@ -184,11 +185,13 @@ bool LuaScriptManager::addMapOverlay(const std::string& id, sol::table options, 
 	for (auto& existing : mapOverlays) {
 		if (existing.id == id) {
 			existing = overlay;
+			++overlayRevision;
 			return true;
 		}
 	}
 
 	mapOverlays.push_back(overlay);
+	++overlayRevision;
 	return true;
 }
 
@@ -203,6 +206,7 @@ bool LuaScriptManager::removeMapOverlay(const std::string& id) {
 					[&id](const MapOverlayShowItem& item) { return item.overlayId == id; }),
 				mapOverlayShows.end());
 
+			++overlayRevision;
 			return true;
 		}
 	}
@@ -218,6 +222,7 @@ bool LuaScriptManager::setMapOverlayEnabled(const std::string& id, bool enabled)
 					showItem.enabled = enabled;
 				}
 			}
+			++overlayRevision;
 			return true;
 		}
 	}
@@ -250,6 +255,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 				item.ontoggle = ontoggle;
 			}
 			setMapOverlayEnabled(overlayId, enabled);
+			++overlayRevision;
 			refreshMenus();
 			return true;
 		}
@@ -264,6 +270,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 	item.ownerScriptId = ownerScriptId;
 	mapOverlayShows.push_back(item);
 	setMapOverlayEnabled(overlayId, enabled);
+	++overlayRevision;
 	refreshMenus();
 	return true;
 }
@@ -286,6 +293,7 @@ bool LuaScriptManager::setMapOverlayShowEnabled(const std::string& overlayId, bo
 			if (g_gui.root) {
 				g_gui.UpdateMenubar();
 			}
+			++overlayRevision;
 			return updated;
 		}
 	}
@@ -598,6 +606,7 @@ void LuaScriptManager::discoverScripts() {
 	engine.shutdown();
 	scripts.clear();
 	clearAllCallbacks();
+	++overlayRevision;
 
 	if (!engine.initialize()) {
 		lastError = "Failed to initialize Lua engine: " + engine.getLastError();
@@ -906,6 +915,7 @@ void LuaScriptManager::removeScriptRegistrations(const std::string& scriptId) {
 		mapOverlayShows.end());
 
 	mapOverlayHover = MapOverlayHoverState {};
+	++overlayRevision;
 
 	if (g_gui.root) {
 		g_gui.UpdateMenubar();

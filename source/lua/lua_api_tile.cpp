@@ -20,6 +20,7 @@
 #include "lua_api.h"
 #include <algorithm>
 #include <iterator>
+#include <limits>
 #include "map/tile.h"
 #include "map/tile_operations.h"
 #include "game/item.h"
@@ -35,6 +36,15 @@
 #include "map/map.h"
 
 namespace LuaAPI {
+
+	static sol::table makePositionTable(sol::this_state ts, const Position& pos) {
+		sol::state_view lua(ts);
+		sol::table tbl = lua.create_table();
+		tbl["x"] = pos.x;
+		tbl["y"] = pos.y;
+		tbl["z"] = pos.z;
+		return tbl;
+	}
 
 	// Helper to get items as a Lua table
 	static sol::table getTileItems(Tile* tile, sol::this_state ts) {
@@ -229,29 +239,39 @@ namespace LuaAPI {
 			throw sol::error("Invalid tile");
 		}
 
-		// Mark tile for undo before modification
-		markTileForUndo(tile);
-
-		// Set new ground if provided
 		if (groundObj.is<int>()) {
 			int groundId = groundObj.as<int>();
-			if (groundId > 0) {
-				tile->ground = Item::Create(static_cast<uint16_t>(groundId));
-			} else {
-				tile->ground.reset();
+			if (groundId < 1 || groundId > std::numeric_limits<uint16_t>::max()) {
+				throw sol::error("setTileGround: ground item id must be between 1 and 65535");
 			}
+			std::unique_ptr<Item> ground = Item::Create(static_cast<uint16_t>(groundId));
+			if (!ground) {
+				throw sol::error("setTileGround: failed to create ground item " + std::to_string(groundId));
+			}
+			markTileForUndo(tile);
+			tile->ground = std::move(ground);
+			tile->modify();
+			return;
 		} else if (groundObj.is<Item*>()) {
 			Item* item = groundObj.as<Item*>();
-			if (item) {
-				tile->ground = item->deepCopy();
-			} else {
-				tile->ground.reset();
+			if (!item) {
+				throw sol::error("setTileGround: invalid ground item");
 			}
+			if (!item->getGroundBrush()) {
+				throw sol::error("setTileGround: item is not a ground item");
+			}
+			markTileForUndo(tile);
+			tile->ground = item->deepCopy();
+			tile->modify();
+			return;
 		} else if (groundObj.is<sol::nil_t>()) {
+			markTileForUndo(tile);
 			tile->ground.reset();
+			tile->modify();
+			return;
 		}
 
-		tile->modify();
+		throw sol::error("setTileGround: expected item id, ground item, or nil");
 	}
 
 	// Set house ID
@@ -334,16 +354,8 @@ namespace LuaAPI {
 			sol::no_constructor,
 
 			// Position properties (read-only)
-			"position", sol::property([](Tile* tile, sol::this_state ts) {
-				sol::state_view lua(ts);
-				sol::table t = lua.create_table();
-				if (tile) {
-					Position p = tile->getPosition();
-					t["x"] = p.x;
-					t["y"] = p.y;
-					t["z"] = p.z;
-				}
-				return t;
+			"position", sol::property([](Tile* tile, sol::this_state ts) -> sol::table {
+				return makePositionTable(ts, tile ? tile->getPosition() : Position());
 			}),
 			"x", sol::property([](Tile* tile) { return tile ? tile->getX() : 0; }),
 			"y", sol::property([](Tile* tile) { return tile ? tile->getY() : 0; }),
@@ -498,16 +510,9 @@ namespace LuaAPI {
 							}
 						),
 
-			"getPosition", [](Tile* tile, sol::this_state ts) {
-				sol::state_view lua(ts);
-				sol::table t = lua.create_table();
-				if (tile) {
-					Position p = tile->getPosition();
-					t["x"] = p.x;
-					t["y"] = p.y;
-					t["z"] = p.z;
-				}
-				return t; },
+			"getPosition", [](Tile* tile, sol::this_state ts) -> sol::table {
+				return makePositionTable(ts, tile ? tile->getPosition() : Position());
+			},
 
 			"getItemAt", [](Tile* tile, int index) -> Item* {
 				if (!tile) return nullptr;

@@ -149,17 +149,15 @@ namespace LuaAPI {
 				std::unique_ptr<Tile>& originalTile = pair.second;
 				Position pos = positionFromKey(key);
 
-				// Get the current (modified) tile from the map
-				Tile* modifiedTile = editor->getMap()->getTile(pos);
-				
-				std::unique_ptr<Tile> modifiedCopy = modifiedTile ? modifiedTile->deepCopy() : std::unique_ptr<Tile>();
-
 				// Swap the original back into the map, or remove the tile entirely if it did not exist before
-				std::unique_ptr<Tile> swappedOut = originalTile ? editor->getMap()->swapTile(pos, std::move(originalTile)) : editor->getMap()->swapTile(pos, std::unique_ptr<Tile>());
+				std::unique_ptr<Tile> modifiedTile = editor->getMap()->swapTile(
+					pos,
+					originalTile ? std::move(originalTile) : std::unique_ptr<Tile>()
+				);
 
 				// Swapped-out state should be cleaned up from metadata and selection
-				if (swappedOut) {
-					updateTileMetadata(editor, swappedOut.get(), false);
+				if (modifiedTile) {
+					updateTileMetadata(editor, modifiedTile.get(), false);
 				}
 
 				// Add the current map tile back to metadata if one now exists
@@ -168,8 +166,8 @@ namespace LuaAPI {
 					updateTileMetadata(editor, tileInMap, true);
 				}
 
-				// Create Change with the modified copy (or a null sentinel for deletions)
-				action->addChange(std::make_unique<Change>(std::move(modifiedCopy), pos));
+				// Create Change with the actual modified tile object so pointer identity is preserved
+				action->addChange(std::make_unique<Change>(std::move(modifiedTile), pos));
 			}
 
 			// Clear - ownership has been transferred or tiles discarded
@@ -450,7 +448,6 @@ namespace LuaAPI {
 		// Determine potential base directories
 		fs::path scriptsPath = fs::weakly_canonical(LuaScriptManager::getInstance().getScriptsDirectory());
 		fs::path dataPath = fs::weakly_canonical(FileSystem::GetDataDirectory().ToStdString());
-		fs::path execPath = fs::weakly_canonical(FileSystem::GetExecDirectory().ToStdString());
 
 		std::string scriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
 
@@ -471,7 +468,7 @@ namespace LuaAPI {
 			if (p.is_absolute()) {
 				fullPath = fs::weakly_canonical(p);
 				// Check if absolute path is within allowed roots
-				std::vector<fs::path> allowedRoots = { scriptsPath, dataPath, execPath };
+				std::vector<fs::path> allowedRoots = { scriptsPath, dataPath };
 				for (const auto& root : allowedRoots) {
 					auto relative = fullPath.lexically_relative(root);
 					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
@@ -481,7 +478,7 @@ namespace LuaAPI {
 				}
 			} else {
 				// For relative paths, try anchoring to each root (scriptDir first)
-				std::vector<fs::path> roots = { fs::path(scriptDir), scriptsPath, dataPath, execPath };
+				std::vector<fs::path> roots = { fs::path(scriptDir), scriptsPath, dataPath };
 				for (const auto& root : roots) {
 					fs::path candidate = fs::weakly_canonical(root / p);
 					auto relative = candidate.lexically_relative(root);
@@ -507,17 +504,19 @@ namespace LuaAPI {
 
 		storage["load"] = [path](sol::this_state ts2, sol::object) -> sol::object {
 			sol::state_view lua(ts2);
-			std::ifstream file(path);
+			std::ifstream file(path, std::ios::binary | std::ios::ate);
 			if (!file.is_open()) {
 				return sol::make_object(lua, sol::nil);
 			}
 
-			std::stringstream buffer;
-			buffer << file.rdbuf();
-			file.close();
+			const std::streamsize fileSize = file.tellg();
+			if (fileSize <= 0 || fileSize > static_cast<std::streamsize>(4 * 1024 * 1024)) {
+				return sol::make_object(lua, sol::nil);
+			}
 
-			std::string content = buffer.str();
-			if (content.empty()) {
+			std::string content(static_cast<size_t>(fileSize), '\0');
+			file.seekg(0, std::ios::beg);
+			if (!file.read(content.data(), fileSize)) {
 				return sol::make_object(lua, sol::nil);
 			}
 
@@ -635,7 +634,7 @@ namespace LuaAPI {
 		// Sleep for a given number of milliseconds (use sparingly, blocks the UI)
 		app["sleep"] = [](int milliseconds) {
 			if (milliseconds > 0 && milliseconds <= 10000) { // Max 10 seconds
-				std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+				wxMilliSleep(static_cast<unsigned long>(milliseconds));
 			}
 		};
 

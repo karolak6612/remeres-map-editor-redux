@@ -120,6 +120,7 @@ public:
 	// Registry to keep instances alive (pinning)
 	static void pin(LuaDialog* dialog);
 	static void unpin(LuaDialog* dialog);
+	static void DestroyDockPanelsForShutdown();
 
 	// Data access
 	sol::table getData();

@@ -6,6 +6,7 @@
 #include "rendering/core/render_view.h"
 
 #include <vector>
+#include <cstdint>
 
 class MapDrawer;
 class CoordinateMapper;
@@ -33,6 +34,13 @@ private:
 		int tile_size = 0;
 		int screen_width = 0;
 		int screen_height = 0;
+		uint64_t overlay_revision = 0;
+		size_t selection_count = 0;
+		size_t selection_hash = 0;
+		size_t history_index = 0;
+		size_t history_size = 0;
+
+		bool operator==(const CacheKey&) const = default;
 	};
 
 	MapDrawer* mapDrawer;

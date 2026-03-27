@@ -300,16 +300,12 @@ namespace LuaAPI {
 			}
 		}
 
-		size_t hostStart = url.find("://");
-		if (hostStart == std::string::npos) hostStart = 0; else hostStart += 3;
-		size_t pathStart = url.find("/", hostStart);
-		std::string host = (pathStart == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathStart - hostStart);
-		std::string path = (pathStart == std::string::npos) ? "" : url.substr(pathStart);
+		const UrlParts parts = parseUrlParts(url);
 
 		cpr::Response response = cpr::Get(
-			cpr::Url { "http://" + safeIp + path },
+			buildPinnedUrl(safeIp, parts),
 			headers,
-			cpr::Header { { "Host", host } },
+			cpr::Header { { "Host", parts.authority } },
 			cpr::Timeout { 10000 }
 		);
 
@@ -349,17 +345,13 @@ namespace LuaAPI {
 			}
 		}
 
-		size_t hostStart = url.find("://");
-		if (hostStart == std::string::npos) hostStart = 0; else hostStart += 3;
-		size_t pathStart = url.find("/", hostStart);
-		std::string host = (pathStart == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathStart - hostStart);
-		std::string path = (pathStart == std::string::npos) ? "" : url.substr(pathStart);
+		const UrlParts parts = parseUrlParts(url);
 
 		cpr::Response response = cpr::Post(
-			cpr::Url { "http://" + safeIp + path },
+			buildPinnedUrl(safeIp, parts),
 			cpr::Body { body },
 			headers,
-			cpr::Header { { "Host", host } },
+			cpr::Header { { "Host", parts.authority } },
 			cpr::Timeout { 10000 }
 		);
 

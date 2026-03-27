@@ -33,9 +33,10 @@ namespace LuaAPI {
 	public:
 		LuaMapTileIterator(Map* mapPtr) :
 			map(mapPtr),
+			mapGeneration(mapPtr ? mapPtr->getGeneration() : 0),
 			currentIndex(0) {
 			Editor* currentEditor = g_gui.GetCurrentEditor();
-			if (currentEditor && currentEditor->getMap() == map && map) {
+			if (currentEditor && currentEditor->getMap() == map && map && map->getGeneration() == mapGeneration) {
 				for (auto it = map->begin(); it != map->end(); ++it) {
 					TileLocation* loc = &(*it);
 					if (loc && loc->get()) {
@@ -49,7 +50,7 @@ namespace LuaAPI {
 			sol::state_view lua(ts);
 
 			Editor* currentEditor = g_gui.GetCurrentEditor();
-			if (!currentEditor || currentEditor->getMap() != map || !map) {
+			if (!currentEditor || currentEditor->getMap() != map || !map || map->getGeneration() != mapGeneration) {
 				return std::make_tuple(sol::nil, sol::nil);
 			}
 
@@ -70,6 +71,7 @@ namespace LuaAPI {
 
 	private:
 		Map* map;
+		uint64_t mapGeneration;
 		std::vector<Position> positions;
 		size_t currentIndex;
 	};
@@ -78,9 +80,11 @@ namespace LuaAPI {
 	class LuaMapSpawnIterator {
 	public:
 		LuaMapSpawnIterator(Map* mapPtr) :
-			map(mapPtr), currentIndex(0) {
+			map(mapPtr),
+			mapGeneration(mapPtr ? mapPtr->getGeneration() : 0),
+			currentIndex(0) {
 			Editor* currentEditor = g_gui.GetCurrentEditor();
-			if (currentEditor && currentEditor->getMap() == map && map) {
+			if (currentEditor && currentEditor->getMap() == map && map && map->getGeneration() == mapGeneration) {
 				for (const auto& pos : map->spawns) {
 					positions.push_back(pos);
 				}
@@ -89,7 +93,7 @@ namespace LuaAPI {
 
 		Tile* next() {
 			Editor* currentEditor = g_gui.GetCurrentEditor();
-			if (!currentEditor || currentEditor->getMap() != map || !map) {
+			if (!currentEditor || currentEditor->getMap() != map || !map || map->getGeneration() != mapGeneration) {
 				return nullptr;
 			}
 
@@ -105,6 +109,7 @@ namespace LuaAPI {
 
 	private:
 		Map* map;
+		uint64_t mapGeneration = 0;
 		std::vector<Position> positions;
 		size_t currentIndex;
 	};

@@ -543,8 +543,9 @@ void MapCanvas::OnMousePropertiesClick(wxMouseEvent& event) {
 		g_gui.SetSelectionMode();
 	}
 
-	selection_controller->HandlePropertiesClick(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
+	last_click_x = int(event.GetX() * zoom);
 	last_click_y = int(event.GetY() * zoom);
+	selection_controller->HandlePropertiesClick(Position(mouse_map_x, mouse_map_y, floor), event.ShiftDown(), event.ControlDown(), event.AltDown());
 
 	int start_x = 0, start_y = 0;
 	if (auto mw = GetMapWindow()) {

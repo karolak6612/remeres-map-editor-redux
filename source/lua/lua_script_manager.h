@@ -23,6 +23,7 @@
 
 #include "lua_sol_config.h"
 
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <mutex>
@@ -220,6 +221,9 @@ public:
 	const MapOverlayHoverState& getMapOverlayHover() const {
 		return mapOverlayHover;
 	}
+	uint64_t getOverlayRevision() const {
+		return overlayRevision;
+	}
 
 private:
 	LuaScriptManager() = default;
@@ -239,6 +243,7 @@ private:
 	std::vector<MapOverlay> mapOverlays;
 	std::vector<MapOverlayShowItem> mapOverlayShows;
 	MapOverlayHoverState mapOverlayHover;
+	uint64_t overlayRevision = 0;
 
 	void registerAPIs();
 	void scanDirectory(const std::string& directory);

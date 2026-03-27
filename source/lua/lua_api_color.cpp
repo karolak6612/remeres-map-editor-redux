@@ -23,76 +23,110 @@
 
 namespace LuaAPI {
 
+	namespace {
+		static wxColour parseColorObject(sol::state_view lua, const sol::object& obj, const wxColour& fallback) {
+			if (!obj.valid()) {
+				return fallback;
+			}
+
+			auto parseHex = [&fallback](const std::string& hexValue) -> wxColour {
+				std::string h = (!hexValue.empty() && hexValue.front() == '#') ? hexValue.substr(1) : hexValue;
+				if (h.length() == 3) {
+					h = { h[0], h[0], h[1], h[1], h[2], h[2] };
+				}
+
+				if (h.length() != 6 || !std::all_of(h.begin(), h.end(), [](unsigned char c) { return std::isxdigit(c) != 0; })) {
+					return fallback;
+				}
+
+				try {
+					size_t parsed = 0;
+					const unsigned long value = std::stoul(h, &parsed, 16);
+					if (parsed != h.length()) {
+						return fallback;
+					}
+					return wxColour(
+						static_cast<unsigned char>((value >> 16) & 0xFF),
+						static_cast<unsigned char>((value >> 8) & 0xFF),
+						static_cast<unsigned char>(value & 0xFF),
+						255
+					);
+				} catch (...) {
+					return fallback;
+				}
+			};
+
+			if (obj.is<std::string>()) {
+				const std::string hexValue = obj.as<std::string>();
+				wxColour parsed = parseHex(hexValue);
+				if (parsed != fallback) {
+					return parsed;
+				}
+
+				sol::table colorTable = lua["Color"];
+				if (colorTable.valid()) {
+					sol::object named = colorTable[hexValue];
+					if (named.valid()) {
+						return parseColorObject(lua, named, fallback);
+					}
+				}
+
+				return fallback;
+			}
+
+			if (!obj.is<sol::table>()) {
+				return fallback;
+			}
+
+			sol::table tbl = obj.as<sol::table>();
+			const int r = std::clamp<int>(tbl.get_or(std::string("r"), tbl.get_or(std::string("red"), fallback.Red())), 0, 255);
+			const int g = std::clamp<int>(tbl.get_or(std::string("g"), tbl.get_or(std::string("green"), fallback.Green())), 0, 255);
+			const int b = std::clamp<int>(tbl.get_or(std::string("b"), tbl.get_or(std::string("blue"), fallback.Blue())), 0, 255);
+			const int a = std::clamp<int>(tbl.get_or(std::string("a"), tbl.get_or(std::string("alpha"), fallback.Alpha())), 0, 255);
+			return wxColour(r, g, b, a);
+		}
+
+		static sol::table makeColorTable(sol::state& lua, const wxColour& color) {
+			sol::table c = lua.create_table();
+			c["r"] = static_cast<int>(color.Red());
+			c["g"] = static_cast<int>(color.Green());
+			c["b"] = static_cast<int>(color.Blue());
+			c["a"] = static_cast<int>(color.Alpha());
+			return c;
+		}
+	} // namespace
+
 	void registerColor(sol::state& lua) {
 		sol::table Color = lua.create_table();
 
 		// Constructor rgb
 		Color["rgb"] = [&lua](int r, int g, int b) {
-			sol::table c = lua.create_table();
-			c["r"] = r;
-			c["g"] = g;
-			c["b"] = b;
-			return c;
+			return makeColorTable(lua, wxColour(r, g, b, 255));
 		};
 
 		// Constructor hex
 		Color["hex"] = [&lua](const std::string& hex) {
-			unsigned long value = 0;
-			std::string h = (!hex.empty() && hex.front() == '#') ? hex.substr(1) : hex;
-			if (h.length() == 3) {
-				h = { h[0], h[0], h[1], h[1], h[2], h[2] };
-			}
-			try {
-				if (h.length() == 6 && std::all_of(h.begin(), h.end(), [](unsigned char c) { return std::isxdigit(c) != 0; })) {
-					size_t parsed = 0;
-					value = std::stoul(h, &parsed, 16);
-					if (parsed != h.length()) {
-						value = 0;
-					}
-				} else {
-					value = 0;
-				}
-			} catch (...) {
-				value = 0;
-			}
-
-			sol::table c = lua.create_table();
-			c["r"] = (int)((value >> 16) & 0xFF);
-			c["g"] = (int)((value >> 8) & 0xFF);
-			c["b"] = (int)(value & 0xFF);
-			return c;
+			return makeColorTable(lua, parseColorObject(lua, sol::make_object(lua, hex), wxColour(0, 0, 0, 255)));
 		};
 
 		// Lighten/Darken helper using wxColour
-		Color["lighten"] = [&lua](sol::table c, int percent) {
-			wxColour wx(c.get_or("r", 0), c.get_or("g", 0), c.get_or("b", 0));
+		Color["lighten"] = [&lua](sol::object colorObj, int percent) {
+			wxColour wx = parseColorObject(lua, colorObj, wxColour(0, 0, 0, 255));
 			wxColour result = wx.ChangeLightness(100 + percent);
 
-			sol::table res = lua.create_table();
-			res["r"] = (int)result.Red();
-			res["g"] = (int)result.Green();
-			res["b"] = (int)result.Blue();
-			return res;
+			return makeColorTable(lua, result);
 		};
 
-		Color["darken"] = [&lua](sol::table c, int percent) {
-			wxColour wx(c.get_or("r", 0), c.get_or("g", 0), c.get_or("b", 0));
+		Color["darken"] = [&lua](sol::object colorObj, int percent) {
+			wxColour wx = parseColorObject(lua, colorObj, wxColour(0, 0, 0, 255));
 			wxColour result = wx.ChangeLightness(100 - percent);
 
-			sol::table res = lua.create_table();
-			res["r"] = (int)result.Red();
-			res["g"] = (int)result.Green();
-			res["b"] = (int)result.Blue();
-			return res;
+			return makeColorTable(lua, result);
 		};
 
 		// Helper to create a color table
 		auto mkColor = [&lua](int r, int g, int b) {
-			sol::table c = lua.create_table();
-			c["r"] = r;
-			c["g"] = g;
-			c["b"] = b;
-			return c;
+			return makeColorTable(lua, wxColour(r, g, b, 255));
 		};
 
 		// Predefined colors

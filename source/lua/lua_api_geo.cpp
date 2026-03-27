@@ -527,6 +527,34 @@ namespace LuaAPI {
 					}
 				}
 			} else {
+				if (radiusX <= 0 && radiusY <= 0) {
+					sol::table point = lua.create_table();
+					point["x"] = centerX;
+					point["y"] = centerY;
+					result[index++] = point;
+					return result;
+				}
+
+				if (radiusY <= 0) {
+					for (int x = -radiusX; x <= radiusX; ++x) {
+						sol::table point = lua.create_table();
+						point["x"] = centerX + x;
+						point["y"] = centerY;
+						result[index++] = point;
+					}
+					return result;
+				}
+
+				if (radiusX <= 0) {
+					for (int y = -radiusY; y <= radiusY; ++y) {
+						sol::table point = lua.create_table();
+						point["x"] = centerX;
+						point["y"] = centerY + y;
+						result[index++] = point;
+					}
+					return result;
+				}
+
 				// Midpoint ellipse algorithm
 				int rx2 = radiusX * radiusX;
 				int ry2 = radiusY * radiusY;

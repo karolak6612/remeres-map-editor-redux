@@ -298,9 +298,12 @@ void GUI::FillDoodadPreviewBuffer() {
 
 void GUI::SelectBrush() {
 	g_brush_manager.SelectBrush();
+	emitBrushChangeIfNeeded(*this);
 }
 bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
-	return g_brush_manager.SelectBrush(brush, pt);
+	const bool changed = g_brush_manager.SelectBrush(brush, pt);
+	emitBrushChangeIfNeeded(*this);
+	return changed;
 }
 void GUI::SelectPreviousBrush() {
 	g_brush_manager.SelectPreviousBrush();

@@ -150,6 +150,7 @@ function MapClass:getTile(x, y, z) return nil end
 ---@field events Events
 ---@field mapView MapView
 ---@field keyboard Keyboard
+---@field getTime fun(): number
 ---@field alert fun(message: string)
 ---@field refresh fun()
 ---@field copy fun() Copies current selection to clipboard
@@ -311,10 +312,10 @@ function DialogClass:layout() end
 ---@field clear fun(self: ScriptStorage): boolean
 
 ---@class MapView
----@field addOverlay fun(self: MapView, id: string, options: MapOverlayOptions): boolean
----@field removeOverlay fun(self: MapView, id: string): boolean
----@field setEnabled fun(self: MapView, id: string, enabled: boolean): boolean
----@field registerShow fun(self: MapView, label: string, id: string, options?: MapOverlayShowOptions): boolean
+---@field addOverlay fun(id: string, options: MapOverlayOptions): boolean
+---@field removeOverlay fun(id: string): boolean
+---@field setEnabled fun(id: string, enabled: boolean): boolean
+---@field registerShow fun(label: string, id: string, options?: MapOverlayShowOptions): boolean
 
 ---@class MapOverlayOptions
 ---@field enabled? boolean
@@ -323,10 +324,10 @@ function DialogClass:layout() end
 ---@field onhover? fun(info: MapOverlayHoverInfo): string|table|nil
 
 ---@class MapOverlayContext
----@field view {x1: number, y1: number, x2: number, y2: number, z: number, zoom: number}
----@field rect fun(self: MapOverlayContext, opts: MapOverlayRectOptions)
----@field line fun(self: MapOverlayContext, opts: MapOverlayLineOptions)
----@field text fun(self: MapOverlayContext, opts: MapOverlayTextOptions)
+---@field view {x1: number, y1: number, x2: number, y2: number, z: number, zoom: number, screenWidth: number, screenHeight: number}
+---@field rect fun(ctx: MapOverlayContext, opts: MapOverlayRectOptions)
+---@field line fun(ctx: MapOverlayContext, opts: MapOverlayLineOptions)
+---@field text fun(ctx: MapOverlayContext, opts: MapOverlayTextOptions)
 
 ---@class MapOverlayRectOptions
 ---@field x number
@@ -423,27 +424,26 @@ function ImageClass:scale(factor, smooth) return {} --[[@as Image]] end
 Image = {} --[[@as ImageStatics]]
 
 ---@class Color
----@field red number
----@field green number
----@field blue number
----@field alpha number
+---@field r number
+---@field g number
+---@field b number
+---@field a? number
 
 ---@class ColorHelper
----@field red string|table
----@field green string|table
----@field blue string|table
----@field white string|table
----@field black string|table
----@field gray string|table
----@field darkGray string|table
----@field lightGray string|table
----@field orange string|table
----@field yellow string|table
----@field cyan string|table
----@field magenta string|table
----@field transparent string|table
+---@field rgb fun(r: number, g: number, b: number): Color
+---@field hex fun(value: string): Color
 ---@field lighten fun(color: string|table|Color, amount: number): Color
 ---@field darken fun(color: string|table|Color, amount: number): Color
+---@field white Color
+---@field black Color
+---@field blue Color
+---@field red Color
+---@field green Color
+---@field yellow Color
+---@field orange Color
+---@field gray Color
+---@field lightGray Color
+---@field darkGray Color
 
 ---@type ColorHelper
 ---@diagnostic disable-next-line: missing-fields

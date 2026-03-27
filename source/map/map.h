@@ -18,6 +18,7 @@
 #ifndef RME_MAP_H_
 #define RME_MAP_H_
 
+#include <cstdint>
 #include "map/basemap.h"
 #include "map/tile.h"
 #include "game/town.h"
@@ -128,6 +129,10 @@ public:
 		return waypointfile;
 	}
 
+	uint64_t getGeneration() const {
+		return generation;
+	}
+
 	void flagAsNamed() {
 		unnamed = false;
 	}
@@ -176,6 +181,9 @@ protected:
 
 public:
 	Waypoints waypoints;
+
+private:
+	uint64_t generation;
 };
 
 template <typename ForeachType>

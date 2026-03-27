@@ -89,7 +89,9 @@ const WaypointChangeData* Change::getWaypointData() const {
 uint32_t Change::memsize() const {
 	uint32_t mem = sizeof(*this);
 	if (auto* t = std::get_if<std::unique_ptr<Tile>>(&data)) {
-		mem += (*t)->memsize();
+		if (*t) {
+			mem += (*t)->memsize();
+		}
 	} else if (auto* wp = std::get_if<WaypointChangeData>(&data)) {
 		mem += wp->name.capacity();
 	} else if (auto* house = std::get_if<HouseExitChangeData>(&data)) {
@@ -296,7 +298,6 @@ void Action::undo(DirtyList* dirty_list) {
 					if (!nd || !nd->isVisible(pos.z > GROUND_LAYER)) {
 						// Delete all changes that affect tiles outside our view
 						c->clear();
-						uptr.reset();
 						++it;
 						continue;
 					}
