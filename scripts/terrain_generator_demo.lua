@@ -103,8 +103,7 @@ end
 local function setGroundTile(x, y, z, tileId)
 	local tile = app and app.map and app.map:getOrCreateTile(x, y, z)
 	if tile then
-		tile:clearGround()
-		tile:addItem(tileId)
+		tile.ground = tileId
 	end
 end
 

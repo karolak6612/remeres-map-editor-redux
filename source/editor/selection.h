@@ -120,6 +120,7 @@ private:
 
 	bool busy;
 	bool deferred;
+	bool selectionChanged;
 	Editor& editor;
 	std::unique_ptr<BatchAction> session;
 	std::unique_ptr<Action> subsession;

@@ -19,6 +19,7 @@
 #define RME_EDITOR_ACTION_QUEUE_H
 
 #include <deque>
+#include <string>
 #include <vector>
 #include <memory>
 #include "editor/action.h"

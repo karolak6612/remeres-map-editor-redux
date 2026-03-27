@@ -13,17 +13,43 @@ LuaOverlayDrawer::LuaOverlayDrawer(MapDrawer* mapDrawer) : mapDrawer(mapDrawer) 
 LuaOverlayDrawer::~LuaOverlayDrawer() {
 }
 
-void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& options) {
-	if (!g_luaScripts.isInitialized()) return;
+LuaOverlayDrawer::CacheKey LuaOverlayDrawer::makeCacheKey(const RenderView& view) const {
+	return CacheKey {
+		.start_x = view.start_x,
+		.start_y = view.start_y,
+		.end_x = view.end_x,
+		.end_y = view.end_y,
+		.floor = view.floor,
+		.zoom = view.zoom,
+		.view_scroll_x = view.view_scroll_x,
+		.view_scroll_y = view.view_scroll_y,
+		.tile_size = view.tile_size,
+		.screen_width = view.screensize_x,
+		.screen_height = view.screensize_y
+	};
+}
+
+void LuaOverlayDrawer::refreshCache(const RenderView& view) {
+	const CacheKey nextKey = makeCacheKey(view);
+	if (cacheValid && nextKey.start_x == cachedKey.start_x && nextKey.start_y == cachedKey.start_y && nextKey.end_x == cachedKey.end_x && nextKey.end_y == cachedKey.end_y &&
+		nextKey.floor == cachedKey.floor && nextKey.zoom == cachedKey.zoom && nextKey.view_scroll_x == cachedKey.view_scroll_x && nextKey.view_scroll_y == cachedKey.view_scroll_y &&
+		nextKey.tile_size == cachedKey.tile_size && nextKey.screen_width == cachedKey.screen_width && nextKey.screen_height == cachedKey.screen_height) {
+		return;
+	}
+
+	cachedKey = nextKey;
+	cacheValid = false;
+	cachedCommands.clear();
+
+	if (!g_luaScripts.isInitialized()) {
+		return;
+	}
 
 	const auto& shows = g_luaScripts.getMapOverlayShows();
-	if (shows.empty()) return;
-
-	auto* primitives = mapDrawer->getPrimitiveRenderer();
-	auto* spriteBatch = mapDrawer->getSpriteBatch();
-	auto* atlas = g_gui.gfx.getAtlasManager();
-
-	if (!primitives || !spriteBatch || !atlas) return;
+	if (shows.empty()) {
+		cacheValid = true;
+		return;
+	}
 
 	MapViewInfo viewInfo;
 	viewInfo.start_x = view.start_x;
@@ -38,10 +64,20 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 	viewInfo.screen_width = view.screensize_x;
 	viewInfo.screen_height = view.screensize_y;
 
-	std::vector<MapOverlayCommand> commands;
-	g_luaScripts.collectMapOverlayCommands(viewInfo, commands);
+	g_luaScripts.collectMapOverlayCommands(viewInfo, cachedCommands);
+	cacheValid = true;
+}
 
-	for (const auto& cmd : commands) {
+void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& options) {
+	auto* primitives = mapDrawer->getPrimitiveRenderer();
+	auto* spriteBatch = mapDrawer->getSpriteBatch();
+	auto* atlas = g_gui.gfx.getAtlasManager();
+
+	if (!primitives || !spriteBatch || !atlas) return;
+
+	refreshCache(view);
+
+	for (const auto& cmd : cachedCommands) {
 		glm::vec4 color(cmd.color.Red() / 255.0f, cmd.color.Green() / 255.0f, cmd.color.Blue() / 255.0f, cmd.color.Alpha() / 255.0f);
 
 		float screenX = 0, screenY = 0;
@@ -50,7 +86,7 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 			screenX = cmd.x;
 			screenY = cmd.y;
 		} else {
-			if (cmd.z != viewInfo.floor) continue; // Only draw on current floor if world space
+			if (cmd.z != view.floor) continue; // Only draw on current floor if world space
 			int mapped_x, mapped_y;
 			CoordinateMapper::MapToScreen(cmd.x, cmd.y, view.start_x, view.start_y, view.zoom, cmd.z, 1.0, &mapped_x, &mapped_y);
 			screenX = mapped_x - view.view_scroll_x;
@@ -59,8 +95,8 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 
 		switch (cmd.type) {
 			case MapOverlayCommand::Type::Rect: {
-				float w = cmd.screen_space ? cmd.w : cmd.w * viewInfo.tile_size * view.zoom;
-				float h = cmd.screen_space ? cmd.h : cmd.h * viewInfo.tile_size * view.zoom;
+				float w = cmd.screen_space ? cmd.w : cmd.w * view.tile_size * view.zoom;
+				float h = cmd.screen_space ? cmd.h : cmd.h * view.tile_size * view.zoom;
 				if (cmd.filled) {
 					primitives->drawRect(glm::vec4(screenX, screenY, w, h), color);
 				} else {
@@ -74,7 +110,7 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 					screenX2 = cmd.x2;
 					screenY2 = cmd.y2;
 				} else {
-					if (cmd.z2 != viewInfo.floor) continue;
+					if (cmd.z2 != view.floor) continue;
 					int mapped_x2, mapped_y2;
 					CoordinateMapper::MapToScreen(cmd.x2, cmd.y2, view.start_x, view.start_y, view.zoom, cmd.z2, 1.0, &mapped_x2, &mapped_y2);
 					screenX2 = mapped_x2 - view.view_scroll_x;
@@ -86,8 +122,8 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 			case MapOverlayCommand::Type::Sprite: {
 				const AtlasRegion* region = atlas->getRegion(cmd.sprite_id);
 				if (region) {
-					float sizeX = cmd.screen_space ? cmd.w : viewInfo.tile_size * view.zoom;
-					float sizeY = cmd.screen_space ? cmd.h : viewInfo.tile_size * view.zoom;
+					float sizeX = cmd.screen_space ? cmd.w : view.tile_size * view.zoom;
+					float sizeY = cmd.screen_space ? cmd.h : view.tile_size * view.zoom;
 					if (sizeX == 0) sizeX = 32.0f;
 					if (sizeY == 0) sizeY = 32.0f;
 					spriteBatch->draw(screenX, screenY, sizeX, sizeY, *region, color.r, color.g, color.b, color.a);
@@ -101,28 +137,11 @@ void LuaOverlayDrawer::Draw(const RenderView& view, const DrawingOptions& option
 }
 
 void LuaOverlayDrawer::DrawUI(NVGcontext* vg, const RenderView& view, const DrawingOptions& options) {
-	if (!g_luaScripts.isInitialized() || !vg) return;
+	if (!vg) return;
 
-	const auto& shows = g_luaScripts.getMapOverlayShows();
-	if (shows.empty()) return;
+	refreshCache(view);
 
-	MapViewInfo viewInfo;
-	viewInfo.start_x = view.start_x;
-	viewInfo.start_y = view.start_y;
-	viewInfo.end_x = view.end_x;
-	viewInfo.end_y = view.end_y;
-	viewInfo.floor = view.floor;
-	viewInfo.zoom = view.zoom;
-	viewInfo.view_scroll_x = view.view_scroll_x;
-	viewInfo.view_scroll_y = view.view_scroll_y;
-	viewInfo.tile_size = view.tile_size;
-	viewInfo.screen_width = view.screensize_x;
-	viewInfo.screen_height = view.screensize_y;
-
-	std::vector<MapOverlayCommand> commands;
-	g_luaScripts.collectMapOverlayCommands(viewInfo, commands);
-
-	for (const auto& cmd : commands) {
+	for (const auto& cmd : cachedCommands) {
 		if (cmd.type != MapOverlayCommand::Type::Text) continue;
 
 		glm::vec4 color(cmd.color.Red() / 255.0f, cmd.color.Green() / 255.0f, cmd.color.Blue() / 255.0f, cmd.color.Alpha() / 255.0f);
@@ -133,7 +152,7 @@ void LuaOverlayDrawer::DrawUI(NVGcontext* vg, const RenderView& view, const Draw
 			screenX = cmd.x;
 			screenY = cmd.y;
 		} else {
-			if (cmd.z != viewInfo.floor) continue;
+			if (cmd.z != view.floor) continue;
 			int mapped_x, mapped_y;
 			CoordinateMapper::MapToScreen(cmd.x, cmd.y, view.start_x, view.start_y, view.zoom, cmd.z, 1.0, &mapped_x, &mapped_y);
 			screenX = mapped_x - view.view_scroll_x;

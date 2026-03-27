@@ -171,4 +171,5 @@ void ActionQueue::redo() {
 void ActionQueue::clear() {
 	actions.clear();
 	current = 0;
+	g_luaScripts.emit("actionChange");
 }

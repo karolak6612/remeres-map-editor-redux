@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 #include "lua_api_map.h"
+#include "lua_api.h"
 #include "map/map.h"
 #include "map/basemap.h"
 #include "map/tile.h"
@@ -30,9 +31,11 @@ namespace LuaAPI {
 	// Iterator for Map Tiles
 	class LuaMapTileIterator {
 	public:
-		LuaMapTileIterator(Map* map) :
-			map(map), currentIndex(0) {
-			if (map) {
+		LuaMapTileIterator(Map* mapPtr) :
+			map(mapPtr),
+			currentIndex(0) {
+			Editor* currentEditor = g_gui.GetCurrentEditor();
+			if (currentEditor && currentEditor->getMap() == map && map) {
 				for (auto it = map->begin(); it != map->end(); ++it) {
 					TileLocation* loc = &(*it);
 					if (loc && loc->get()) {
@@ -45,7 +48,8 @@ namespace LuaAPI {
 		std::tuple<sol::object, sol::object> next(sol::this_state ts) {
 			sol::state_view lua(ts);
 
-			if (!map) {
+			Editor* currentEditor = g_gui.GetCurrentEditor();
+			if (!currentEditor || currentEditor->getMap() != map || !map) {
 				return std::make_tuple(sol::nil, sol::nil);
 			}
 
@@ -73,9 +77,10 @@ namespace LuaAPI {
 	// Iterator for Spawns
 	class LuaMapSpawnIterator {
 	public:
-		LuaMapSpawnIterator(Map* map) :
-			map(map), currentIndex(0) {
-			if (map) {
+		LuaMapSpawnIterator(Map* mapPtr) :
+			map(mapPtr), currentIndex(0) {
+			Editor* currentEditor = g_gui.GetCurrentEditor();
+			if (currentEditor && currentEditor->getMap() == map && map) {
 				for (const auto& pos : map->spawns) {
 					positions.push_back(pos);
 				}
@@ -83,7 +88,8 @@ namespace LuaAPI {
 		}
 
 		Tile* next() {
-			if (!map) {
+			Editor* currentEditor = g_gui.GetCurrentEditor();
+			if (!currentEditor || currentEditor->getMap() != map || !map) {
 				return nullptr;
 			}
 
@@ -162,7 +168,12 @@ namespace LuaAPI {
 					throw sol::error("getOrCreateTile: Invalid coordinates (" + std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z) + ")");
 				}
 
-				return map->getOrCreateTile(pos);
+				Tile* existing = map->getTile(pos);
+				Tile* tile = map->getOrCreateTile(pos);
+				if (!existing) {
+					markTileForUndo(tile, false);
+				}
+				return tile;
 			},
 
 			// Tiles iterator - allows: for tile in map.tiles do ... end

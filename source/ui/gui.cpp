@@ -64,6 +64,24 @@ wxDEFINE_EVENT(EVT_UPDATE_MENUS, wxCommandEvent);
 // Global GUI instance
 GUI g_gui;
 
+namespace {
+void emitBrushChangeIfNeeded(GUI& gui) {
+	static const Brush* lastBrush = nullptr;
+	static std::string lastBrushName;
+
+	Brush* currentBrush = gui.GetCurrentBrush();
+	const bool hasBrush = currentBrush != nullptr;
+	const std::string currentName = hasBrush ? currentBrush->getName() : std::string();
+	if (currentBrush != lastBrush || currentName != lastBrushName) {
+		lastBrush = currentBrush;
+		lastBrushName = currentName;
+		if (g_luaScripts.isInitialized()) {
+			g_luaScripts.emit("brushChange", currentName);
+		}
+	}
+}
+}
+
 // GUI class implementation
 GUI::GUI() :
 	aui_manager(nullptr),
@@ -286,13 +304,11 @@ bool GUI::SelectBrush(const Brush* brush, PaletteType pt) {
 }
 void GUI::SelectPreviousBrush() {
 	g_brush_manager.SelectPreviousBrush();
+	emitBrushChangeIfNeeded(*this);
 }
 void GUI::SelectBrushInternal(Brush* brush) {
 	g_brush_manager.SelectBrushInternal(brush);
-
-	if (g_luaScripts.isInitialized() && GetCurrentBrush()) {
-		g_luaScripts.emit("brushChange", GetCurrentBrush()->getName());
-	}
+	emitBrushChangeIfNeeded(*this);
 }
 Brush* GUI::GetCurrentBrush() const {
 	return g_brush_manager.GetCurrentBrush();

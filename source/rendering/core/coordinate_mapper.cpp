@@ -33,6 +33,18 @@ void CoordinateMapper::MapToScreen(int map_x, int map_y, int view_start_x, int v
 		map_y -= (GROUND_LAYER - floor);
 	}
 
-	*screen_x = static_cast<int>((map_x * TILE_SIZE - view_start_x) / zoom / scale_factor);
-	*screen_y = static_cast<int>((map_y * TILE_SIZE - view_start_y) / zoom / scale_factor);
+	const double raw_x = static_cast<double>(map_x * TILE_SIZE - view_start_x);
+	const double raw_y = static_cast<double>(map_y * TILE_SIZE - view_start_y);
+
+	if (raw_x < 0.0) {
+		*screen_x = static_cast<int>(raw_x / scale_factor);
+	} else {
+		*screen_x = static_cast<int>(raw_x / zoom / scale_factor);
+	}
+
+	if (raw_y < 0.0) {
+		*screen_y = static_cast<int>(raw_y / scale_factor);
+	} else {
+		*screen_y = static_cast<int>(raw_y / zoom / scale_factor);
+	}
 }

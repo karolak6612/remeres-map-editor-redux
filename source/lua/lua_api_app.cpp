@@ -102,6 +102,14 @@ namespace LuaAPI {
 			return (static_cast<uint64_t>(pos.x) << 32) | (static_cast<uint64_t>(pos.y) << 16) | static_cast<uint64_t>(pos.z);
 		}
 
+		Position positionFromKey(uint64_t key) const {
+			Position pos;
+			pos.x = static_cast<int>(static_cast<int32_t>(key >> 32));
+			pos.y = static_cast<int>(static_cast<uint16_t>((key >> 16) & 0xFFFFu));
+			pos.z = static_cast<int>(static_cast<uint16_t>(key & 0xFFFFu));
+			return pos;
+		}
+
 	public:
 		static LuaTransaction& getInstance() {
 			static LuaTransaction instance;
@@ -137,39 +145,31 @@ namespace LuaAPI {
 
 			// Process each modified tile
 			for (auto& pair : originalTiles) {
+				const uint64_t key = pair.first;
 				std::unique_ptr<Tile>& originalTile = pair.second;
-				Position pos = originalTile->getPosition();
+				Position pos = positionFromKey(key);
 
 				// Get the current (modified) tile from the map
 				Tile* modifiedTile = editor->getMap()->getTile(pos);
 				
-				std::unique_ptr<Tile> modifiedCopy;
-				if (modifiedTile) {
-					// Create a deep copy of the modified tile - this is what we want as the "new" state
-					modifiedCopy = modifiedTile->deepCopy();
-				} else {
-					// Tile was deleted, construct an empty tile to represent the deletion in the Change
-					modifiedCopy = std::make_unique<Tile>(pos.x, pos.y, pos.z);
-				}
+				std::unique_ptr<Tile> modifiedCopy = modifiedTile ? modifiedTile->deepCopy() : std::unique_ptr<Tile>();
 
-				// Swap the original back into the map
-				std::unique_ptr<Tile> swappedOut = editor->getMap()->swapTile(pos, std::move(originalTile));
+				// Swap the original back into the map, or remove the tile entirely if it did not exist before
+				std::unique_ptr<Tile> swappedOut = originalTile ? editor->getMap()->swapTile(pos, std::move(originalTile)) : editor->getMap()->swapTile(pos, std::unique_ptr<Tile>());
 
-				// swappedOut should be the modifiedTile. We need to clean it up.
-				// Remove it from Map metadata (spawns, houses) and selection
+				// Swapped-out state should be cleaned up from metadata and selection
 				if (swappedOut) {
 					updateTileMetadata(editor, swappedOut.get(), false);
 				}
 
-				// Add original back to Map metadata (now it's in the map again)
+				// Add the current map tile back to metadata if one now exists
 				Tile* tileInMap = editor->getMap()->getTile(pos);
 				if (tileInMap) {
 					updateTileMetadata(editor, tileInMap, true);
 				}
 
-				// Create Change with the modified copy
-				// When actions commit, they will swap modifiedCopy in and originalTile out.
-				action->addChange(std::make_unique<Change>(std::move(modifiedCopy)));
+				// Create Change with the modified copy (or a null sentinel for deletions)
+				action->addChange(std::make_unique<Change>(std::move(modifiedCopy), pos));
 			}
 
 			// Clear - ownership has been transferred or tiles discarded
@@ -196,16 +196,20 @@ namespace LuaAPI {
 
 			// Restore original tiles (discard any changes made)
 			for (auto& pair : originalTiles) {
+				const uint64_t key = pair.first;
 				std::unique_ptr<Tile>& originalTile = pair.second;
-				if (originalTile) {
-					Position pos = originalTile->getPosition();
-					std::unique_ptr<Tile> modifiedTile = editor->getMap()->swapTile(pos, std::move(originalTile));
+				Position pos = positionFromKey(key);
 
-					// Clean up modified tile
+				std::unique_ptr<Tile> modifiedTile = originalTile ? editor->getMap()->swapTile(pos, std::move(originalTile)) : editor->getMap()->swapTile(pos, std::unique_ptr<Tile>());
+
+				// Clean up modified tile
+				if (modifiedTile) {
 					updateTileMetadata(editor, modifiedTile.get(), false);
+				}
 
-					// Restore original tile metadata
-					Tile* tileInMap = editor->getMap()->getTile(pos);
+				// Restore original tile metadata if one exists
+				Tile* tileInMap = editor->getMap()->getTile(pos);
+				if (tileInMap) {
 					updateTileMetadata(editor, tileInMap, true);
 				}
 			}
@@ -218,7 +222,7 @@ namespace LuaAPI {
 			cleanup();
 		}
 
-		void markTileModified(Tile* tile) {
+		void markTileModified(Tile* tile, bool originallyExisted) {
 			if (!active || !tile) {
 				return;
 			}
@@ -228,8 +232,8 @@ namespace LuaAPI {
 
 			// Only snapshot the tile once per transaction (first time it's modified)
 			if (originalTiles.find(key) == originalTiles.end()) {
-				// Create a deep copy of the ORIGINAL tile BEFORE modification
-				originalTiles[key] = tile->deepCopy();
+				// Preserve whether the tile originally existed so delete/create can undo cleanly
+				originalTiles[key] = originallyExisted ? tile->deepCopy() : std::unique_ptr<Tile>();
 			}
 		}
 
@@ -250,9 +254,9 @@ namespace LuaAPI {
 	};
 
 	// Global accessor for tile modification tracking (used by lua_api_tile.cpp)
-	void markTileForUndo(Tile* tile) {
+	void markTileForUndo(Tile* tile, bool originallyExisted) {
 		if (LuaTransaction::getInstance().isActive()) {
-			LuaTransaction::getInstance().markTileModified(tile);
+			LuaTransaction::getInstance().markTileModified(tile, originallyExisted);
 		}
 	}
 

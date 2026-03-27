@@ -303,7 +303,7 @@ void LuaScript::parseMetadataFromComments() {
 		// Trim whitespace
 		size_t start = line.find_first_not_of(" \t");
 		if (start == std::string::npos) {
-			continue;
+			break;
 		}
 		line = line.substr(start);
 

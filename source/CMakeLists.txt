@@ -360,6 +360,27 @@ set(rme_H
 
 set(rme_H
     ${rme_H}
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_algo.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_app.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_brush.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_color.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_creature.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_geo.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_http.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_image.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_item.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_json.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_map.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_noise.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_position.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_selection.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_tile.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_engine.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script_manager.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_scripts_window.h
 )
 
 set(rme_SRC
@@ -703,27 +724,6 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/file_system.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/image_manager.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_algo.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_app.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_brush.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_color.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_creature.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_geo.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_http.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_image.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_item.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_json.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_map.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_noise.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_position.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_selection.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_tile.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_dialog.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_engine.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script_manager.h
-    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_scripts_window.h
     ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_algo.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_app.cpp

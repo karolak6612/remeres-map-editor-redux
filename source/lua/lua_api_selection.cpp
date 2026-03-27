@@ -107,14 +107,28 @@ namespace LuaAPI {
 			}),
 
 			// Methods
-			"start", [](Selection* sel) {
-				if (sel && !sel->isBusy()) {
+			"transaction", [](Selection* sel, sol::function callback) {
+				if (!sel || !callback.valid()) {
+					return;
+				}
+
+				const bool managed = !sel->isBusy();
+				if (managed) {
 					sel->start(Selection::INTERNAL);
-				} },
-			"finish", [](Selection* sel) {
-				if (sel && sel->isBusy()) {
-					sel->finish(Selection::INTERNAL);
-				} },
+				}
+
+				struct SelectionFinishGuard {
+					Selection* sel;
+					bool active;
+					~SelectionFinishGuard() {
+						if (active && sel) {
+							sel->finish(Selection::INTERNAL);
+						}
+					}
+				} guard { sel, managed };
+
+				callback();
+			},
 			"clear", [](Selection* sel) {
 				if (sel) {
 					bool managed = !sel->isBusy();

@@ -25,7 +25,6 @@
 
 #include "map/map_statistics.h"
 #include "map/map_search.h"
-#include "map/map_search.h"
 #include "ui/managers/recent_files_manager.h"
 #include "ui/map/towns_window.h"
 #include "ui/map/map_properties_window.h"

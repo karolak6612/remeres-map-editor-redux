@@ -45,21 +45,8 @@ bool LuaScriptManager::initialize() {
 	}
 
 	try {
-		// Initialize the Lua engine
-		if (!engine.initialize()) {
-			lastError = "Failed to initialize Lua engine: " + engine.getLastError();
-			spdlog::error("LuaScriptManager::initialize - {}", lastError);
-			return false;
-		}
-
-		// Register all APIs
-		registerAPIs();
-
-		// Discover scripts
 		discoverScripts();
-
-		initialized = true;
-		return true;
+		return initialized;
 	} catch (const std::exception& e) {
 		initialized = false;
 		lastError = "Exception during Lua initialization: " + std::string(e.what());
@@ -70,6 +57,16 @@ bool LuaScriptManager::initialize() {
 		lastError = "Unknown exception during Lua initialization";
 		spdlog::error("LuaScriptManager::initialize - Caught unknown exception");
 		return false;
+	}
+}
+
+namespace {
+	static std::string getScriptContextIdentifier(sol::state_view lua) {
+		std::string scriptId = lua["SCRIPT_ID"].get_or(std::string(""));
+		if (!scriptId.empty()) {
+			return scriptId;
+		}
+		return lua["SCRIPT_DIR"].get_or(std::string(""));
 	}
 }
 
@@ -90,6 +87,7 @@ void LuaScriptManager::registerContextMenuItem(const std::string& label, sol::fu
 	item.label = label;
 	item.callback = callback;
 	item.ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
+	item.ownerScriptId = getScriptContextIdentifier(lua);
 	contextMenuItems.push_back(item);
 }
 
@@ -100,6 +98,7 @@ int LuaScriptManager::addEventListener(const std::string& eventName, sol::functi
 	listener.eventName = eventName;
 	listener.callback = callback;
 	listener.ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
+	listener.ownerScriptId = getScriptContextIdentifier(lua);
 	eventListeners.push_back(listener);
 	return listener.id;
 }
@@ -168,6 +167,7 @@ bool LuaScriptManager::addMapOverlay(const std::string& id, sol::table options, 
 	overlay.enabled = options.get_or(std::string("enabled"), true);
 	overlay.order = options.get_or(std::string("order"), 0);
 	overlay.ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
+	overlay.ownerScriptId = getScriptContextIdentifier(lua);
 	if (options["ondraw"].valid()) {
 		overlay.ondraw = options["ondraw"];
 	}
@@ -231,6 +231,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 
 	sol::state_view lua(ts);
 	std::string ownerScriptDir = lua["SCRIPT_DIR"].get_or(std::string(""));
+	std::string ownerScriptId = getScriptContextIdentifier(lua);
 
 	auto refreshMenus = []() {
 		if (g_gui.root) {
@@ -244,6 +245,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 			item.overlayId = overlayId;
 			item.enabled = enabled;
 			item.ownerScriptDir = ownerScriptDir;
+			item.ownerScriptId = ownerScriptId;
 			if (ontoggle.valid()) {
 				item.ontoggle = ontoggle;
 			}
@@ -259,6 +261,7 @@ bool LuaScriptManager::registerMapOverlayShow(const std::string& label, const st
 	item.enabled = enabled;
 	item.ontoggle = ontoggle;
 	item.ownerScriptDir = ownerScriptDir;
+	item.ownerScriptId = ownerScriptId;
 	mapOverlayShows.push_back(item);
 	setMapOverlayEnabled(overlayId, enabled);
 	refreshMenus();
@@ -271,18 +274,14 @@ bool LuaScriptManager::setMapOverlayShowEnabled(const std::string& overlayId, bo
 		if (item.overlayId == overlayId) {
 			item.enabled = enabled;
 			if (item.ontoggle.valid()) {
-				// Re-establish script context
-				std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
-				engine.getState()["SCRIPT_DIR"] = item.ownerScriptDir;
+				const std::string& itemScriptId = item.ownerScriptId.empty() ? item.ownerScriptDir : item.ownerScriptId;
+				ScriptContextGuard guard(engine.getState(), item.ownerScriptDir, itemScriptId);
 
 				try {
 					item.ontoggle(enabled);
 				} catch (const sol::error& e) {
 					logOutput("Overlay show '" + item.label + "' error: " + std::string(e.what()), true);
 				}
-
-				// Restore script context
-				engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 			}
 			if (g_gui.root) {
 				g_gui.UpdateMenubar();
@@ -342,8 +341,9 @@ void LuaScriptManager::collectMapOverlayCommands(const MapViewInfo& view, std::v
 
 	std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
 	for (const auto& overlay : sorted) {
-		if (overlay.enabled && isScriptEnabled(overlay.ownerScriptDir) && overlay.ondraw.valid()) {
-			engine.getState()["SCRIPT_DIR"] = overlay.ownerScriptDir;
+		const std::string& overlayScriptId = overlay.ownerScriptId.empty() ? overlay.ownerScriptDir : overlay.ownerScriptId;
+		if (overlay.enabled && isScriptEnabled(overlayScriptId) && overlay.ondraw.valid()) {
+			ScriptContextGuard guard(engine.getState(), overlay.ownerScriptDir, overlayScriptId);
 			engine.safeCall([&]() { return overlay.ondraw(ctx); });
 		}
 	}
@@ -485,21 +485,18 @@ void LuaScriptManager::updateMapOverlayHover(int map_x, int map_y, int map_z, in
 	// if an overlay callback modifies mapOverlays (e.g., app.mapView.addOverlay)
 	std::vector<MapOverlay> activeOverlays;
 	for (const auto& overlay : mapOverlays) {
-		if (overlay.enabled && isScriptEnabled(overlay.ownerScriptDir) && overlay.onhover.valid()) {
+		const std::string& overlayScriptId = overlay.ownerScriptId.empty() ? overlay.ownerScriptDir : overlay.ownerScriptId;
+		if (overlay.enabled && isScriptEnabled(overlayScriptId) && overlay.onhover.valid()) {
 			activeOverlays.push_back(overlay);
 		}
 	}
 
 	for (const auto& overlay : activeOverlays) {
-		// Re-establish script context
-		std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
-		engine.getState()["SCRIPT_DIR"] = overlay.ownerScriptDir;
+		const std::string& overlayScriptId = overlay.ownerScriptId.empty() ? overlay.ownerScriptDir : overlay.ownerScriptId;
+		ScriptContextGuard guard(engine.getState(), overlay.ownerScriptDir, overlayScriptId);
 
 		try {
 			sol::object result = overlay.onhover(info);
-			
-			// Restore script context
-			engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 
 			if (!result.valid() || result.is<sol::nil_t>()) {
 				continue;
@@ -597,13 +594,19 @@ std::string LuaScriptManager::getScriptsDirectory() const {
 }
 
 void LuaScriptManager::discoverScripts() {
+	initialized = false;
 	engine.shutdown();
-	if (engine.initialize()) {
-		initialized = true;
-		registerAPIs();
-	}
 	scripts.clear();
 	clearAllCallbacks();
+
+	if (!engine.initialize()) {
+		lastError = "Failed to initialize Lua engine: " + engine.getLastError();
+		spdlog::error("LuaScriptManager::discoverScripts - {}", lastError);
+		return;
+	}
+
+	registerAPIs();
+	initialized = true;
 
 	std::string scriptsDir = getScriptsDirectory();
 	scanDirectory(scriptsDir);
@@ -719,6 +722,15 @@ bool LuaScriptManager::executeScript(const std::string& filepath) {
 		return false;
 	}
 
+	if (LuaScript* script = getScript(filepath)) {
+		ScriptContextGuard guard(engine.getState(), script->getDirectory(), script->getUniqueId());
+		bool result = engine.executeFile(script->getFilePath());
+		if (!result) {
+			lastError = engine.getLastError();
+		}
+		return result;
+	}
+
 	bool result = engine.executeFile(filepath);
 	if (!result) {
 		lastError = engine.getLastError();
@@ -738,7 +750,12 @@ bool LuaScriptManager::executeScript(LuaScript* script) {
 		return false;
 	}
 
-	return executeScript(script->getFilePath());
+	ScriptContextGuard guard(engine.getState(), script->getDirectory(), script->getUniqueId());
+	bool result = engine.executeFile(script->getFilePath());
+	if (!result) {
+		lastError = engine.getLastError();
+	}
+	return result;
 }
 
 bool LuaScriptManager::executeScript(size_t index, std::string& errorOut) {
@@ -753,7 +770,7 @@ bool LuaScriptManager::executeScript(size_t index, std::string& errorOut) {
 		return false;
 	}
 
-	bool result = executeScript(script->getFilePath());
+	bool result = executeScript(script);
 	if (!result) {
 		errorOut = lastError;
 	}
@@ -763,17 +780,21 @@ bool LuaScriptManager::executeScript(size_t index, std::string& errorOut) {
 void LuaScriptManager::setScriptEnabled(size_t index, bool enabled) {
 	if (index < scripts.size()) {
 		scripts[index]->setEnabled(enabled);
-		
-		// Synchronize state to registered items
-		wxFileName scriptDir(scripts[index]->getDirectory());
-		for (auto& overlay : mapOverlays) {
-			if (wxFileName(overlay.ownerScriptDir).SameAs(scriptDir)) {
-				overlay.enabled = enabled;
+
+		const std::string& scriptId = scripts[index]->getUniqueId();
+		const std::string& scriptDir = scripts[index]->getDirectory();
+		if (!enabled) {
+			removeScriptRegistrations(scriptId);
+		} else {
+			for (auto& overlay : mapOverlays) {
+				if (overlay.ownerScriptId == scriptId || overlay.ownerScriptDir == scriptDir) {
+					overlay.enabled = true;
+				}
 			}
-		}
-		for (auto& item : mapOverlayShows) {
-			if (wxFileName(item.ownerScriptDir).SameAs(scriptDir)) {
-				item.enabled = enabled;
+			for (auto& item : mapOverlayShows) {
+				if (item.ownerScriptId == scriptId || item.ownerScriptDir == scriptDir) {
+					item.enabled = true;
+				}
 			}
 		}
 
@@ -799,9 +820,8 @@ void LuaScriptManager::setScriptEnabled(size_t index, bool enabled) {
 }
 
 bool LuaScriptManager::isScriptEnabled(const std::string& directory) const {
-	wxFileName dir(directory);
 	for (const auto& script : scripts) {
-		if (wxFileName(script->getDirectory()).SameAs(dir)) {
+		if (script->getUniqueId() == directory || script->getDirectory() == directory || wxFileName(script->getDirectory()).SameAs(wxFileName(directory))) {
 			return script->isEnabled();
 		}
 	}
@@ -854,4 +874,40 @@ void LuaScriptManager::openScriptsFolder() {
 	wxFileName::Mkdir(scriptsDir, wxS_DIR_DEFAULT, wxPATH_MKDIR_FULL);
 
 	wxLaunchDefaultApplication(scriptsDir);
+}
+
+void LuaScriptManager::removeScriptRegistrations(const std::string& scriptId) {
+	contextMenuItems.erase(
+		std::remove_if(contextMenuItems.begin(), contextMenuItems.end(),
+			[&scriptId](const ContextMenuItem& item) {
+				return item.ownerScriptId == scriptId;
+			}),
+		contextMenuItems.end());
+
+	eventListeners.erase(
+		std::remove_if(eventListeners.begin(), eventListeners.end(),
+			[&scriptId](const EventListener& listener) {
+				return listener.ownerScriptId == scriptId;
+			}),
+		eventListeners.end());
+
+	mapOverlays.erase(
+		std::remove_if(mapOverlays.begin(), mapOverlays.end(),
+			[&scriptId](const MapOverlay& overlay) {
+				return overlay.ownerScriptId == scriptId;
+			}),
+		mapOverlays.end());
+
+	mapOverlayShows.erase(
+		std::remove_if(mapOverlayShows.begin(), mapOverlayShows.end(),
+			[&scriptId](const MapOverlayShowItem& item) {
+				return item.ownerScriptId == scriptId;
+			}),
+		mapOverlayShows.end());
+
+	mapOverlayHover = MapOverlayHoverState {};
+
+	if (g_gui.root) {
+		g_gui.UpdateMenubar();
+	}
 }

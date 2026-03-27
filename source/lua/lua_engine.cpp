@@ -45,8 +45,7 @@ bool LuaEngine::initialize() {
 			sol::lib::table,
 			sol::lib::math,
 			sol::lib::utf8,
-			sol::lib::os,
-			sol::lib::io
+			sol::lib::os
 		);
 
 		// Curated package.path
@@ -98,6 +97,19 @@ void LuaEngine::setupSandbox() {
 
 	// Disable IO library completely - scripts must use app.storage
 	lua["io"] = sol::nil;
+	if (lua["_G"].valid()) {
+		lua["_G"]["io"] = sol::nil;
+		lua["_G"]["loadfile"] = sol::nil;
+	}
+	lua["loadfile"] = sol::nil;
+	if (lua["package"].valid()) {
+		if (lua["package"]["loaded"].valid()) {
+			lua["package"]["loaded"]["io"] = sol::nil;
+		}
+		if (lua["package"]["preload"].valid()) {
+			lua["package"]["preload"]["io"] = sol::nil;
+		}
+	}
 
 	// Disable dynamic loading of C libraries
 	if (lua["package"].valid()) {

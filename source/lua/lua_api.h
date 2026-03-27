@@ -39,7 +39,7 @@ namespace LuaAPI {
 	void registerSelection(sol::state& lua);
 
 	// Called by tile modification functions to track changes
-	void markTileForUndo(Tile* tile);
+	void markTileForUndo(Tile* tile, bool originallyExisted = true);
 
 	void registerColor(sol::state& lua);
 	void registerCreature(sol::state& lua);

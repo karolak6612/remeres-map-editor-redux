@@ -35,13 +35,21 @@ Change::Change() :
 }
 
 Change::Change(std::unique_ptr<Tile> t) :
-	type(CHANGE_TILE), data(std::move(t)) {
-	ASSERT(std::get<std::unique_ptr<Tile>>(data));
+	type(CHANGE_TILE),
+	position(t ? t->getPosition() : Position()),
+	data(std::move(t)) {
+}
+
+Change::Change(std::unique_ptr<Tile> t, const Position& pos) :
+	type(CHANGE_TILE),
+	position(pos),
+	data(std::move(t)) {
 }
 
 Change* Change::Create(House* house, const Position& where) {
 	Change* c = newd Change();
 	c->type = CHANGE_MOVE_HOUSE_EXIT;
+	c->position = where;
 	c->data = HouseExitChangeData { .houseId = house->getID(), .pos = where };
 	return c;
 }
@@ -49,6 +57,7 @@ Change* Change::Create(House* house, const Position& where) {
 Change* Change::Create(Waypoint* wp, const Position& where) {
 	Change* c = newd Change();
 	c->type = CHANGE_MOVE_WAYPOINT;
+	c->position = where;
 	c->data = WaypointChangeData { .name = wp->name, .pos = where };
 	return c;
 }
@@ -122,9 +131,7 @@ void Action::commit(DirtyList* dirty_list) {
 		switch (c->type) {
 			case CHANGE_TILE: {
 				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
-				ASSERT(uptr);
-				Tile* newtile = uptr.get();
-				Position pos = newtile->getPosition();
+				Position pos = uptr ? uptr->getPosition() : c->position;
 
 				if (editor.live_manager.IsClient()) {
 					MapNode* nd = editor.map.getLeaf(pos.x, pos.y);
@@ -136,70 +143,83 @@ void Action::commit(DirtyList* dirty_list) {
 					}
 				}
 
-				std::unique_ptr<Tile> oldtile_uptr = editor.map.swapTile(pos, std::move(uptr));
-				Tile* oldtile = oldtile_uptr.get();
-				TileLocation* location = newtile->getLocation();
+				std::unique_ptr<Tile> displacedTile = editor.map.swapTile(pos, std::move(uptr));
+				Tile* insertedTile = editor.map.getTile(pos);
+				Tile* displaced = displacedTile.get();
 
 				// Update other nodes in the network
 				if (editor.live_manager.IsServer() && dirty_list) {
 					dirty_list->AddPosition(pos.x, pos.y, pos.z);
 				}
 
-				TileOperations::update(newtile);
-
-				if (newtile->isSelected()) {
-					editor.selection.addInternal(newtile);
-				}
-
-				if (oldtile) {
-					if (newtile->getHouseID() != oldtile->getHouseID()) {
+				if (insertedTile && displaced) {
+					if (insertedTile->getHouseID() != displaced->getHouseID()) {
 						// oooooomggzzz we need to add it to the appropriate house!
-						House* house = editor.map.houses.getHouse(oldtile->getHouseID());
+						House* house = editor.map.houses.getHouse(displaced->getHouseID());
 						if (house) {
-							house->removeTile(oldtile);
+							house->removeTile(displaced);
 						}
 
-						house = editor.map.houses.getHouse(newtile->getHouseID());
+						house = editor.map.houses.getHouse(insertedTile->getHouseID());
 						if (house) {
-							house->addTile(newtile);
+							house->addTile(insertedTile);
 						}
 					}
-					if (oldtile->spawn) {
-						if (newtile->spawn) {
-							if (*oldtile->spawn != *newtile->spawn) {
-								editor.map.removeSpawn(oldtile);
-								editor.map.addSpawn(newtile);
+					if (displaced->spawn) {
+						if (insertedTile->spawn) {
+							if (*displaced->spawn != *insertedTile->spawn) {
+								editor.map.removeSpawn(displaced);
+								editor.map.addSpawn(insertedTile);
 							}
 						} else {
 							// Spawn has been removed
-							editor.map.removeSpawn(oldtile);
+							editor.map.removeSpawn(displaced);
 						}
-					} else if (newtile->spawn) {
-						editor.map.addSpawn(newtile);
+					} else if (insertedTile->spawn) {
+						editor.map.addSpawn(insertedTile);
 					}
 
-					// oldtile->update();
-					if (oldtile->isSelected()) {
-						editor.selection.removeInternal(oldtile);
+					if (displaced->isSelected()) {
+						editor.selection.removeInternal(displaced);
 					}
-
-					uptr = std::move(oldtile_uptr);
-				} else {
-					uptr = editor.map.allocator(location);
-					if (newtile->getHouseID() != 0) {
+					if (insertedTile->isSelected()) {
+						editor.selection.addInternal(insertedTile);
+					}
+					TileOperations::update(insertedTile);
+					insertedTile->modify();
+				} else if (insertedTile) {
+					TileOperations::update(insertedTile);
+					if (insertedTile->isSelected()) {
+						editor.selection.addInternal(insertedTile);
+					}
+					if (insertedTile->getHouseID() != 0) {
 						// oooooomggzzz we need to add it to the appropriate house!
-						House* house = editor.map.houses.getHouse(newtile->getHouseID());
+						House* house = editor.map.houses.getHouse(insertedTile->getHouseID());
 						if (house) {
-							house->addTile(newtile);
+							house->addTile(insertedTile);
 						}
 					}
 
-					if (newtile->spawn) {
-						editor.map.addSpawn(newtile);
+					if (insertedTile->spawn) {
+						editor.map.addSpawn(insertedTile);
+					}
+					insertedTile->modify();
+				} else if (displaced) {
+					if (displaced->isSelected()) {
+						editor.selection.removeInternal(displaced);
+					}
+					if (displaced->getHouseID() != 0) {
+						House* house = editor.map.houses.getHouse(displaced->getHouseID());
+						if (house) {
+							house->removeTile(displaced);
+						}
+					}
+					if (displaced->spawn) {
+						editor.map.removeSpawn(displaced);
 					}
 				}
-				// Mark the tile as modified
-				newtile->modify();
+
+				uptr = std::move(displacedTile);
 
 				// Update client dirty list
 				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
@@ -269,66 +289,111 @@ void Action::undo(DirtyList* dirty_list) {
 		switch (c->type) {
 			case CHANGE_TILE: {
 				auto& uptr = std::get<std::unique_ptr<Tile>>(c->data);
-				std::unique_ptr<Tile> old_uptr = std::move(uptr);
-				ASSERT(old_uptr);
-				Tile* oldtile = old_uptr.get();
-				Position pos = oldtile->getPosition();
+				Position pos = uptr ? uptr->getPosition() : c->position;
 
 				if (editor.live_manager.IsClient()) {
 					MapNode* nd = editor.map.getLeaf(pos.x, pos.y);
 					if (!nd || !nd->isVisible(pos.z > GROUND_LAYER)) {
 						// Delete all changes that affect tiles outside our view
 						c->clear();
-						old_uptr.reset();
+						uptr.reset();
 						++it;
 						continue;
 					}
 				}
 
-				std::unique_ptr<Tile> newtile_uptr = editor.map.swapTile(pos, std::move(old_uptr));
-				Tile* newtile = newtile_uptr.get();
+				if (uptr) {
+					std::unique_ptr<Tile> old_uptr = std::move(uptr);
+					Tile* oldtile = old_uptr.get();
+					std::unique_ptr<Tile> newtile_uptr = editor.map.swapTile(pos, std::move(old_uptr));
+					Tile* newtile = newtile_uptr.get();
 
-				// Update server side change list (for broadcast)
-				if (editor.live_manager.IsServer() && dirty_list) {
-					dirty_list->AddPosition(pos.x, pos.y, pos.z);
-				}
-
-				if (oldtile->isSelected()) {
-					editor.selection.addInternal(oldtile);
-				}
-				if (newtile->isSelected()) {
-					editor.selection.removeInternal(newtile);
-				}
-
-				if (newtile->getHouseID() != oldtile->getHouseID()) {
-					// oooooomggzzz we need to remove it from the appropriate house!
-					House* house = editor.map.houses.getHouse(newtile->getHouseID());
-					if (house) {
-						house->removeTile(newtile);
-					} else {
-						// Set tile house to 0, house has been removed
-						newtile->setHouse(nullptr);
+					// Update server side change list (for broadcast)
+					if (editor.live_manager.IsServer() && dirty_list) {
+						dirty_list->AddPosition(pos.x, pos.y, pos.z);
 					}
 
-					house = editor.map.houses.getHouse(oldtile->getHouseID());
-					if (house) {
-						house->addTile(oldtile);
+					if (oldtile) {
+						if (oldtile->isSelected()) {
+							editor.selection.addInternal(oldtile);
+						}
 					}
-				}
+					if (newtile) {
+						if (newtile->isSelected()) {
+							editor.selection.removeInternal(newtile);
+						}
+					}
 
-				if (oldtile->spawn) {
-					if (newtile->spawn) {
-						if (*oldtile->spawn != *newtile->spawn) {
+					if (oldtile && newtile) {
+						if (newtile->getHouseID() != oldtile->getHouseID()) {
+							// oooooomggzzz we need to remove it from the appropriate house!
+							House* house = editor.map.houses.getHouse(newtile->getHouseID());
+							if (house) {
+								house->removeTile(newtile);
+							} else {
+								// Set tile house to 0, house has been removed
+								newtile->setHouse(nullptr);
+							}
+
+							house = editor.map.houses.getHouse(oldtile->getHouseID());
+							if (house) {
+								house->addTile(oldtile);
+							}
+						}
+
+						if (oldtile->spawn) {
+							if (newtile->spawn) {
+								if (*oldtile->spawn != *newtile->spawn) {
+									editor.map.removeSpawn(newtile);
+									editor.map.addSpawn(oldtile);
+								}
+							} else {
+								editor.map.addSpawn(oldtile);
+							}
+						} else if (newtile->spawn) {
 							editor.map.removeSpawn(newtile);
+						}
+
+						uptr = std::move(newtile_uptr);
+					} else if (oldtile) {
+						if (oldtile->getHouseID() != 0) {
+							House* house = editor.map.houses.getHouse(oldtile->getHouseID());
+							if (house) {
+								house->addTile(oldtile);
+							}
+						}
+						if (oldtile->spawn) {
 							editor.map.addSpawn(oldtile);
 						}
+						uptr = std::move(newtile_uptr);
 					} else {
-						editor.map.addSpawn(oldtile);
+						uptr = std::move(newtile_uptr);
 					}
-				} else if (newtile->spawn) {
-					editor.map.removeSpawn(newtile);
+				} else {
+					std::unique_ptr<Tile> removedTile = editor.map.swapTile(pos, std::unique_ptr<Tile>());
+					Tile* removed = removedTile.get();
+
+					// Update server side change list (for broadcast)
+					if (editor.live_manager.IsServer() && dirty_list) {
+						dirty_list->AddPosition(pos.x, pos.y, pos.z);
+					}
+
+					if (removed) {
+						if (removed->isSelected()) {
+							editor.selection.removeInternal(removed);
+						}
+						if (removed->getHouseID() != 0) {
+							House* house = editor.map.houses.getHouse(removed->getHouseID());
+							if (house) {
+								house->removeTile(removed);
+							}
+						}
+						if (removed->spawn) {
+							editor.map.removeSpawn(removed);
+						}
+					}
+					uptr = std::move(removedTile);
 				}
-				uptr = std::move(newtile_uptr);
 
 				// Update client dirty list
 				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {

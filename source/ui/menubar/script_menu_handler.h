@@ -4,6 +4,7 @@
 #include "ui/gui_ids.h"
 #include <wx/menu.h>
 #include <wx/event.h>
+#include <string>
 #include <unordered_map>
 
 class MainFrame;
@@ -25,10 +26,13 @@ public:
 
 private:
 	void RebuildScriptsMenu();
+	void RebuildShowMenu();
 
 	MainFrame* m_frame;
 	wxMenu* m_scriptsMenu = nullptr;
-	size_t m_staticMenuItemCount = 0;
+	wxMenu* m_showMenu = nullptr;
+	size_t m_scriptsStaticMenuItemCount = 0;
+	size_t m_showStaticMenuItemCount = 0;
 	std::unordered_map<int, size_t> m_scriptMenuIds;
 	std::unordered_map<int, std::string> m_overlayMenuIds;
 };

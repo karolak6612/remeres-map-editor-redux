@@ -33,16 +33,19 @@
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
+	ownedLocation(new TileLocation()),
 	ground(nullptr),
 	house_id(0),
 	mapflags(0),
 	statflags(0),
 	minimapColor(INVALID_MINIMAP_COLOR) {
-	////
+	ownedLocation->setPosition(Position(x, y, z));
+	location = ownedLocation;
 }
 
 Tile::Tile(TileLocation& loc) :
 	location(&loc),
+	ownedLocation(nullptr),
 	ground(nullptr),
 	house_id(0),
 	mapflags(0),
@@ -51,28 +54,42 @@ Tile::Tile(TileLocation& loc) :
 	////
 }
 
+void Tile::setLocation(TileLocation* where) {
+	if (ownedLocation) {
+		delete ownedLocation;
+		ownedLocation = nullptr;
+	}
+	location = where;
+}
+
 Position Tile::getPosition() const {
-	return location->getPosition();
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition() : Position();
 }
 
 int Tile::getX() const {
-	return location->getPosition().x;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition().x : 0;
 }
 
 int Tile::getY() const {
-	return location->getPosition().y;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition().y : 0;
 }
 
 int Tile::getZ() const {
-	return location->getPosition().z;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition().z : 0;
 }
 
 HouseExitList* Tile::getHouseExits() {
-	return location ? location->getHouseExits() : nullptr;
+	TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getHouseExits() : nullptr;
 }
 
 const HouseExitList* Tile::getHouseExits() const {
-	return location ? location->getHouseExits() : nullptr;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getHouseExits() : nullptr;
 }
 
 bool Tile::isHouseExit() const {
@@ -89,15 +106,25 @@ bool Tile::hasHouseExit(uint32_t exit) const {
 }
 
 Tile::~Tile() {
+	if (ownedLocation) {
+		delete ownedLocation;
+		ownedLocation = nullptr;
+	}
 	// Smart pointers handle deletion
 }
 
 std::unique_ptr<Tile> Tile::deepCopy() const {
 	std::unique_ptr<Tile> copy;
-	if (location) {
-		copy = std::make_unique<Tile>(*location);
+	const TileLocation* loc = location ? location : ownedLocation;
+	if (loc) {
+		copy = std::make_unique<Tile>(loc->getPosition().x, loc->getPosition().y, loc->getPosition().z);
+		if (copy->ownedLocation) {
+			delete copy->ownedLocation;
+		}
+		copy->ownedLocation = loc->clone().release();
+		copy->location = copy->ownedLocation;
 	} else {
-		// Detached tile: avoid dereferencing location
+		// Detached tile: keep a safe owned location even if we do not have one yet.
 		copy = std::make_unique<Tile>(0, 0, 0);
 	}
 	if (ground) {
@@ -121,6 +148,9 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 
 uint32_t Tile::memsize() const {
 	uint32_t mem = sizeof(*this);
+	if (ownedLocation) {
+		mem += sizeof(TileLocation);
+	}
 	if (ground) {
 		mem += ground->memsize();
 	}
@@ -152,14 +182,15 @@ int Tile::size() const {
 	if (mapflags) {
 		++sz;
 	}
-	if (location) {
-		if (location->getHouseExits()) {
+	const TileLocation* loc = location ? location : ownedLocation;
+	if (loc) {
+		if (loc && loc->getHouseExits()) {
 			++sz;
 		}
-		if (location->getSpawnCount()) {
+		if (loc && loc->getSpawnCount()) {
 			++sz;
 		}
-		if (location->getWaypointCount()) {
+		if (loc && loc->getWaypointCount()) {
 			++sz;
 		}
 	}
@@ -361,7 +392,8 @@ void Tile::setHouseID(uint32_t newHouseId) {
 }
 
 bool Tile::isTownExit(Map& map) const {
-	return location->getTownCount() > 0;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc && loc->getTownCount() > 0;
 }
 
 bool Tile::isContentEqual(const Tile* other) const {

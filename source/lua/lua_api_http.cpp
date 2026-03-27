@@ -36,6 +36,53 @@ namespace LuaAPI {
 	// Constants for resource safety
 	static constexpr size_t MAX_STREAM_SESSIONS = 16;
 	static constexpr size_t MAX_STREAM_BUFFER_SIZE = 1024 * 1024; // 1MB
+	static std::atomic<size_t> g_activeStreamCount { 0 };
+
+	struct UrlParts {
+		std::string scheme = "http";
+		std::string authority;
+		std::string path;
+		std::string portSuffix;
+	};
+
+	static UrlParts parseUrlParts(const std::string& url) {
+		UrlParts parts;
+
+		const size_t schemePos = url.find("://");
+		const size_t hostStart = (schemePos == std::string::npos) ? 0 : schemePos + 3;
+		if (schemePos != std::string::npos) {
+			parts.scheme = url.substr(0, schemePos);
+		}
+
+		const size_t pathStart = url.find_first_of("/?#", hostStart);
+		parts.authority = (pathStart == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathStart - hostStart);
+		parts.path = (pathStart == std::string::npos) ? std::string() : url.substr(pathStart);
+
+		if (!parts.authority.empty() && parts.authority.front() == '[') {
+			const size_t bracketEnd = parts.authority.find(']');
+			if (bracketEnd != std::string::npos && bracketEnd + 1 < parts.authority.size() && parts.authority[bracketEnd + 1] == ':') {
+				parts.portSuffix = parts.authority.substr(bracketEnd + 1);
+			}
+		} else {
+			const size_t colonPos = parts.authority.rfind(':');
+			if (colonPos != std::string::npos && parts.authority.find(':') == colonPos) {
+				parts.portSuffix = parts.authority.substr(colonPos);
+			}
+		}
+
+		return parts;
+	}
+
+	static std::string formatPinnedIp(const std::string& safeIp) {
+		if (safeIp.find(':') != std::string::npos && (safeIp.empty() || safeIp.front() != '[')) {
+			return "[" + safeIp + "]";
+		}
+		return safeIp;
+	}
+
+	static cpr::Url buildPinnedUrl(const std::string& safeIp, const UrlParts& parts) {
+		return cpr::Url { parts.scheme + "://" + formatPinnedIp(safeIp) + parts.portSuffix + parts.path };
+	}
 
 	// StreamSession class for managing streaming HTTP requests
 	class StreamSession {
@@ -419,7 +466,7 @@ namespace LuaAPI {
 
 		{
 			std::lock_guard<std::mutex> lock(g_sessionsMutex);
-			if (g_streamSessions.size() >= MAX_STREAM_SESSIONS) {
+			if (g_streamSessions.size() >= MAX_STREAM_SESSIONS || g_activeStreamCount.load(std::memory_order_relaxed) >= MAX_STREAM_SESSIONS) {
 				result["error"] = "Resource limit: Too many active stream sessions";
 				result["ok"] = false;
 				return result;
@@ -430,6 +477,7 @@ namespace LuaAPI {
 			}
 			g_streamSessions[sessionId] = session;
 		}
+		g_activeStreamCount.fetch_add(1, std::memory_order_relaxed);
 
 		cpr::Header headers;
 		if (optHeaders) {
@@ -441,28 +489,61 @@ namespace LuaAPI {
 			}
 		}
 
-		std::thread([session, url, body, headers]() {
-			std::function<bool(std::string_view, intptr_t)> writeCallback = [session](std::string_view data, intptr_t /*userdata*/) -> bool {
-				return session->appendChunk(std::string(data));
-			};
+		UrlParts parts = parseUrlParts(url);
 
-			cpr::Response response = cpr::Post(
-				cpr::Url { url },
-				cpr::Body { body },
-				headers,
-				cpr::WriteCallback { writeCallback, 0 },
-				cpr::Timeout { 30000 }
-			);
+		try {
+			std::thread([session, sessionId, parts, body, headers, safeIp]() {
+			struct StreamCleanup {
+				uint64_t sessionId;
+				std::shared_ptr<StreamSession> session;
+				~StreamCleanup() {
+					g_activeStreamCount.fetch_sub(1, std::memory_order_relaxed);
+					std::lock_guard<std::mutex> lock(g_sessionsMutex);
+					auto it = g_streamSessions.find(sessionId);
+					if (it != g_streamSessions.end() && it->second == session) {
+						if (session->isFinished() && !session->hasChunks()) {
+							g_streamSessions.erase(it);
+						}
+					}
+				}
+			} cleanup { sessionId, session };
 
-			session->setStatusCode(static_cast<int>(response.status_code));
-			session->setHeaders(response.header);
+			try {
+				std::function<bool(std::string_view, intptr_t)> writeCallback = [session](std::string_view data, intptr_t /*userdata*/) -> bool {
+					return session->appendChunk(std::string(data));
+				};
 
-			if (response.error) {
-				session->setError(response.error.message);
-			} else {
-				session->setFinished();
+				cpr::Response response = cpr::Post(
+					buildPinnedUrl(safeIp, parts),
+					cpr::Body { body },
+					headers,
+					cpr::Header { { "Host", parts.authority } },
+					cpr::WriteCallback { writeCallback, 0 },
+					cpr::Timeout { 30000 }
+				);
+
+				session->setStatusCode(static_cast<int>(response.status_code));
+				session->setHeaders(response.header);
+
+				if (response.error) {
+					session->setError(response.error.message);
+				} else {
+					session->setFinished();
+				}
+			} catch (const std::exception& e) {
+				session->setError(e.what());
+			} catch (...) {
+				session->setError("Unknown streaming HTTP error");
 			}
-		}).detach();
+			}).detach();
+		} catch (const std::exception& e) {
+			g_activeStreamCount.fetch_sub(1, std::memory_order_relaxed);
+			std::lock_guard<std::mutex> lock(g_sessionsMutex);
+			g_streamSessions.erase(sessionId);
+			result["error"] = std::string("Failed to start streaming thread: ") + e.what();
+			result["ok"] = false;
+			return result;
+		}
 
 		result["sessionId"] = sessionId;
 		result["ok"] = true;
@@ -548,7 +629,6 @@ namespace LuaAPI {
 		auto it = g_streamSessions.find(sessionId);
 		if (it != g_streamSessions.end()) {
 			it->second->close();
-			g_streamSessions.erase(it);
 			return true;
 		}
 		return false;

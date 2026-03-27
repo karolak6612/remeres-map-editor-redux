@@ -34,6 +34,7 @@
 Selection::Selection(Editor& editor) :
 	busy(false),
 	deferred(false),
+	selectionChanged(false),
 	editor(editor),
 	session(nullptr),
 	subsession(nullptr),
@@ -273,6 +274,7 @@ void Selection::addInternal(Tile* tile) {
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
 			bounds_dirty = true;
+			selectionChanged = true;
 		}
 	}
 }
@@ -286,6 +288,7 @@ void Selection::removeInternal(Tile* tile) {
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
 			bounds_dirty = true;
+			selectionChanged = true;
 		}
 	}
 }
@@ -295,6 +298,7 @@ void Selection::flush() {
 		return;
 	}
 
+	const std::vector<Tile*> previousTiles = tiles;
 	bounds_dirty = true;
 
 	if (!pending_removes.empty()) {
@@ -325,6 +329,7 @@ void Selection::flush() {
 
 	pending_adds.clear();
 	pending_removes.clear();
+	selectionChanged = selectionChanged || (tiles != previousTiles);
 }
 
 void Selection::clear() {
@@ -345,9 +350,11 @@ void Selection::clear() {
 	}
 	tiles.clear();
 	bounds_dirty = true;
+	selectionChanged = true;
 }
 
 void Selection::start(SessionFlags flags) {
+	selectionChanged = false;
 	if (!(flags & INTERNAL)) {
 		if (flags & SUBTHREAD) {
 			;
@@ -403,12 +410,13 @@ void Selection::finish(SessionFlags flags) {
 	}
 	busy = false;
 
-	// Notify Lua scripts only if we're on the main thread and it's a "real" selection change
-	if (!(flags & (INTERNAL | SUBTHREAD))) {
+	// Notify Lua scripts only if we're on the main thread and the selection actually changed
+	if (selectionChanged && !(flags & (INTERNAL | SUBTHREAD))) {
 		if (g_luaScripts.isInitialized()) {
 			g_luaScripts.emit("selectionChange");
 		}
 	}
+	selectionChanged = false;
 }
 
 void Selection::updateSelectionCount() {

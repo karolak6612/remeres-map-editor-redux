@@ -24,6 +24,7 @@
 #include <cmath>
 #include <queue>
 #include <set>
+#include <memory>
 
 namespace LuaAPI {
 
@@ -90,8 +91,8 @@ namespace LuaAPI {
 	// BSP Node for dungeon generation
 	struct BSPNode {
 		int x, y, w, h;
-		BSPNode* left = nullptr;
-		BSPNode* right = nullptr;
+		std::unique_ptr<BSPNode> left;
+		std::unique_ptr<BSPNode> right;
 		int roomX = 0, roomY = 0, roomW = 0, roomH = 0;
 		bool hasRoom = false;
 	};
@@ -790,9 +791,13 @@ namespace LuaAPI {
 			// Store rooms
 			std::vector<std::tuple<int, int, int, int>> rooms; // x, y, w, h
 
-			std::function<BSPNode*(int, int, int, int, int)> split;
-			split = [&](int x, int y, int w, int h, int depth) -> BSPNode* {
-				BSPNode* node = new BSPNode { x, y, w, h };
+			std::function<std::unique_ptr<BSPNode>(int, int, int, int, int)> split;
+			split = [&](int x, int y, int w, int h, int depth) -> std::unique_ptr<BSPNode> {
+				auto node = std::make_unique<BSPNode>();
+				node->x = x;
+				node->y = y;
+				node->w = w;
+				node->h = h;
 
 				if (depth >= maxDepth || w < minRoomSize * 2 || h < minRoomSize * 2) {
 					// Check if space is sufficient for a room
@@ -840,7 +845,7 @@ namespace LuaAPI {
 				return node;
 			};
 
-			BSPNode* root = split(0, 0, width, height, 0);
+			std::unique_ptr<BSPNode> root = split(0, 0, width, height, 0);
 
 			// Carve rooms
 			for (const auto& room : rooms) {
@@ -890,16 +895,6 @@ namespace LuaAPI {
 					}
 				}
 			}
-
-			// Cleanup BSP
-			std::function<void(BSPNode*)> deleteBSP = [&](BSPNode* node) {
-				if (node) {
-					deleteBSP(node->left);
-					deleteBSP(node->right);
-					delete node;
-				}
-			};
-			deleteBSP(root);
 
 			// Return result
 			sol::table result = lua.create_table();

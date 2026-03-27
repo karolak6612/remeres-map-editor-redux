@@ -23,10 +23,39 @@
 #include "rendering/core/normal_image.h"
 #include "game/items.h"
 #include <filesystem>
+#include <cstring>
+#include <vector>
 #include "lua_script_manager.h"
 #include "util/file_system.h"
 
 namespace LuaAPI {
+
+	static bool imagesHaveSamePixels(const wxImage& lhs, const wxImage& rhs) {
+		if (lhs.IsOk() != rhs.IsOk()) {
+			return false;
+		}
+		if (!lhs.IsOk()) {
+			return true;
+		}
+		if (lhs.GetWidth() != rhs.GetWidth() || lhs.GetHeight() != rhs.GetHeight()) {
+			return false;
+		}
+		if (lhs.HasAlpha() != rhs.HasAlpha()) {
+			return false;
+		}
+
+		const size_t rgbBytes = static_cast<size_t>(lhs.GetWidth()) * static_cast<size_t>(lhs.GetHeight()) * 3;
+		if (std::memcmp(lhs.GetData(), rhs.GetData(), rgbBytes) != 0) {
+			return false;
+		}
+		if (lhs.HasAlpha()) {
+			const size_t alphaBytes = static_cast<size_t>(lhs.GetWidth()) * static_cast<size_t>(lhs.GetHeight());
+			if (std::memcmp(lhs.GetAlpha(), rhs.GetAlpha(), alphaBytes) != 0) {
+				return false;
+			}
+		}
+		return true;
+	}
 
 	LuaImage::LuaImage() :
 		spriteId(0), spriteSource(false) {
@@ -44,6 +73,25 @@ namespace LuaAPI {
 		fs::path scriptsPath = fs::weakly_canonical(LuaScriptManager::getInstance().getScriptsDirectory());
 		fs::path dataPath = fs::weakly_canonical(FileSystem::GetDataDirectory().ToStdString());
 		fs::path execPath = fs::weakly_canonical(FileSystem::GetExecDirectory().ToStdString());
+		std::vector<fs::path> lookupRoots;
+
+		try {
+			std::string activeScriptDir = LuaScriptManager::getInstance().getEngine().getState()["SCRIPT_DIR"].get_or(std::string(""));
+			if (!activeScriptDir.empty()) {
+				fs::path packagePath = fs::path(activeScriptDir);
+				if (fs::exists(packagePath)) {
+					if (fs::is_regular_file(packagePath)) {
+						packagePath = packagePath.parent_path();
+					}
+					lookupRoots.push_back(fs::weakly_canonical(packagePath));
+				}
+			}
+		} catch (...) {
+			// Ignore failures and continue with the default search roots.
+		}
+		lookupRoots.push_back(scriptsPath);
+		lookupRoots.push_back(dataPath);
+		lookupRoots.push_back(execPath);
 
 		fs::path fullPath;
 		bool allowed = false;
@@ -53,8 +101,7 @@ namespace LuaAPI {
 			if (p.is_absolute()) {
 				fullPath = fs::weakly_canonical(p);
 				// Check if absolute path is within allowed roots
-				std::vector<fs::path> allowedRoots = { scriptsPath, dataPath, execPath };
-				for (const auto& root : allowedRoots) {
+				for (const auto& root : lookupRoots) {
 					auto relative = fullPath.lexically_relative(root);
 					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
 						if (fs::is_regular_file(fullPath)) {
@@ -65,8 +112,7 @@ namespace LuaAPI {
 				}
 			} else {
 				// For relative paths, try anchoring to each root
-				std::vector<fs::path> roots = { scriptsPath, dataPath, execPath };
-				for (const auto& root : roots) {
+				for (const auto& root : lookupRoots) {
 					fs::path candidate = fs::weakly_canonical(root / p);
 					auto relative = candidate.lexically_relative(root);
 					if (!relative.empty() && relative.string().find("..") == std::string::npos) {
@@ -282,12 +328,11 @@ namespace LuaAPI {
 	}
 
 	bool LuaImage::operator==(const LuaImage& other) const {
-		// Compare by path if file-based, or sprite ID if sprite-based
 		if (spriteSource && other.spriteSource) {
 			return spriteId == other.spriteId;
 		}
 		if (!spriteSource && !other.spriteSource) {
-			return filePath == other.filePath;
+			return imagesHaveSamePixels(image, other.image);
 		}
 		return false;
 	}

@@ -60,6 +60,13 @@ namespace LuaAPI {
 			throw sol::error("Invalid tile");
 		}
 
+		if (itemId < 0 || itemId > 65535) {
+			throw sol::error("addItemToTile: itemId must be between 0 and 65535");
+		}
+		if (countOpt && (*countOpt < 0 || *countOpt > 65535)) {
+			throw sol::error("addItemToTile: count must be between 0 and 65535");
+		}
+
 		// Mark tile for undo before modification
 		markTileForUndo(tile);
 

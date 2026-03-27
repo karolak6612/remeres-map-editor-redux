@@ -62,6 +62,10 @@ public:
 	Position getPosition() const {
 		return position;
 	}
+	std::unique_ptr<TileLocation> clone() const;
+	void setPosition(const Position& pos) {
+		position = pos;
+	}
 
 	int getX() const {
 		return position.x;
@@ -108,6 +112,9 @@ public:
 		return house_exits.get();
 	}
 	HouseExitList* getHouseExits() {
+		return house_exits.get();
+	}
+	const HouseExitList* getHouseExits() const {
 		return house_exits.get();
 	}
 

@@ -65,6 +65,7 @@ enum : uint8_t {
 class Tile {
 public: // Members
 	TileLocation* location;
+	TileLocation* ownedLocation;
 	std::unique_ptr<Item> ground;
 	std::vector<std::unique_ptr<Item>> items;
 	std::unique_ptr<Creature> creature;
@@ -89,9 +90,7 @@ public:
 
 	// The location of the tile
 	// Stores state that remains between the tile being moved (like house exits)
-	void setLocation(TileLocation* where) {
-		location = where;
-	}
+	void setLocation(TileLocation* where);
 	TileLocation* getLocation() {
 		return location;
 	}

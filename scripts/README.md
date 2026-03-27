@@ -68,7 +68,7 @@ Subsequent lines starting with `--` are treated as the description.
 Metadata parsing stops at the first empty line or code line.
 
 You can also use special tags for specific fields:
-*   `@Tile: Script Name` - Sets the display name.
+*   `@Title: Script Name` - Sets the display name.
 *   `@Description: Text` - Sets the description.
 *   `@Author: Name` - Sets the script author.
 *   `@Version: 1.0` - Sets the script version.

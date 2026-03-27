@@ -92,6 +92,7 @@ public:
 		std::string label;
 		sol::function callback;
 		std::string ownerScriptDir;
+		std::string ownerScriptId;
 	};
 	void registerContextMenuItem(const std::string& label, sol::function callback, sol::this_state ts);
 	const std::vector<ContextMenuItem>& getContextMenuItems() const {
@@ -104,9 +105,31 @@ public:
 		std::string eventName;
 		sol::function callback;
 		std::string ownerScriptDir;
+		std::string ownerScriptId;
 	};
 	int addEventListener(const std::string& eventName, sol::function callback, sol::this_state ts);
 	bool removeEventListener(int listenerId);
+
+	class ScriptContextGuard {
+	public:
+		ScriptContextGuard(sol::state& state, const std::string& scriptDir, const std::string& scriptId) :
+			state(state),
+			oldScriptDir(state["SCRIPT_DIR"].get_or(std::string(""))),
+			oldScriptId(state["SCRIPT_ID"].get_or(std::string(""))) {
+			state["SCRIPT_DIR"] = scriptDir;
+			state["SCRIPT_ID"] = scriptId;
+		}
+
+		~ScriptContextGuard() {
+			state["SCRIPT_DIR"] = oldScriptDir;
+			state["SCRIPT_ID"] = oldScriptId;
+		}
+
+	private:
+		sol::state& state;
+		std::string oldScriptDir;
+		std::string oldScriptId;
+	};
 
 	template <typename... Args>
 	void emit(const std::string& eventName, Args&&... args) {
@@ -120,18 +143,13 @@ public:
 		std::vector<EventListener> listenersCopy = eventListeners;
 		for (const auto& listener : listenersCopy) {
 			if (listener.eventName == eventName && listener.callback.valid()) {
-				// Re-establish script context
-				std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
-				engine.getState()["SCRIPT_DIR"] = listener.ownerScriptDir;
+				ScriptContextGuard guard(engine.getState(), listener.ownerScriptDir, listener.ownerScriptId);
 
 				try {
 					std::apply(listener.callback, captured_args);
 				} catch (const sol::error& e) {
 					logOutput("Error in event listener '" + eventName + "': " + e.what(), true);
 				}
-
-				// Restore script context
-				engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 			}
 		}
 	}
@@ -149,15 +167,10 @@ public:
 		bool consumed = false;
 		for (const auto& listener : listenersCopy) {
 			if (listener.eventName == eventName && listener.callback.valid()) {
-				// Re-establish script context
-				std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
-				engine.getState()["SCRIPT_DIR"] = listener.ownerScriptDir;
+				ScriptContextGuard guard(engine.getState(), listener.ownerScriptDir, listener.ownerScriptId);
 
 				try {
 					sol::object result = std::apply(listener.callback, captured_args);
-
-					// Restore script context
-					engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 
 					if (result.valid() && result.is<bool>() && result.as<bool>()) {
 						consumed = true;
@@ -165,9 +178,6 @@ public:
 					}
 				} catch (const sol::error& e) {
 					logOutput("Event '" + eventName + "' error: " + std::string(e.what()), true);
-					
-					// Restore script context on error
-					engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 				}
 			}
 		}
@@ -185,6 +195,7 @@ public:
 		sol::function ondraw;
 		sol::function onhover;
 		std::string ownerScriptDir;
+		std::string ownerScriptId;
 	};
 	struct MapOverlayShowItem {
 		std::string label;
@@ -192,6 +203,7 @@ public:
 		bool enabled = true;
 		sol::function ontoggle;
 		std::string ownerScriptDir;
+		std::string ownerScriptId;
 	};
 
 	bool addMapOverlay(const std::string& id, sol::table options, sol::this_state ts);
@@ -232,6 +244,7 @@ private:
 	void scanDirectory(const std::string& directory);
 	void runAutoScripts();
 	void registerOverlayFunctions(sol::table& ctx, std::shared_ptr<std::vector<MapOverlayCommand>>& out, const MapViewInfo& view);
+	void removeScriptRegistrations(const std::string& scriptId);
 };
 
 // Global accessor macro

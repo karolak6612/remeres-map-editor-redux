@@ -5,12 +5,29 @@
 #include "app/main.h"
 #include "lua_api_json.h"
 #include <nlohmann/json.hpp>
+#include <cmath>
+#include <stdexcept>
+#include <unordered_set>
 
 namespace LuaAPI {
 
 	// Forward declarations
 	sol::object jsonToLua(const nlohmann::json& val, sol::state_view& lua);
-	nlohmann::json luaToJson(const sol::object& obj);
+
+	namespace {
+		using VisitedTables = std::unordered_set<const void*>;
+
+		struct TableVisitGuard {
+			VisitedTables& visited;
+			const void* ptr;
+
+			~TableVisitGuard() {
+				visited.erase(ptr);
+			}
+		};
+
+		nlohmann::json luaToJsonImpl(const sol::object& obj, VisitedTables& visited);
+	}
 
 	// Convert nlohmann::json to Lua Object
 	sol::object jsonToLua(const nlohmann::json& val, sol::state_view& lua) {
@@ -46,8 +63,8 @@ namespace LuaAPI {
 		return sol::nil;
 	}
 
-	// Convert Lua Object to nlohmann::json
-	nlohmann::json luaToJson(const sol::object& obj) {
+	namespace {
+		nlohmann::json luaToJsonImpl(const sol::object& obj, VisitedTables& visited) {
 		switch (obj.get_type()) {
 			case sol::type::nil:
 				return nullptr;
@@ -64,6 +81,14 @@ namespace LuaAPI {
 				return obj.as<std::string>();
 			case sol::type::table: {
 				sol::table t = obj.as<sol::table>();
+				const void* ptr = t.pointer();
+				if (!ptr) {
+					throw std::runtime_error("json.encode: encountered an invalid Lua table");
+				}
+				if (!visited.insert(ptr).second) {
+					throw std::runtime_error("json.encode: cyclic Lua table detected");
+				}
+				TableVisitGuard guard { visited, ptr };
 
 				// Determine if it's an array or object
 				bool isArray = true;
@@ -74,7 +99,7 @@ namespace LuaAPI {
 					count++;
 					if (pair.first.get_type() == sol::type::number) {
 						double k = pair.first.as<double>();
-						if (k >= 1 && k == static_cast<size_t>(k)) {
+						if (std::isfinite(k) && k >= 1.0 && k == std::floor(k)) {
 							size_t idx = static_cast<size_t>(k);
 							if (idx > maxKey) {
 								maxKey = idx;
@@ -93,7 +118,7 @@ namespace LuaAPI {
 					nlohmann::json arr = nlohmann::json::array();
 					for (size_t i = 1; i <= count; ++i) {
 						if (t[i].valid()) {
-							arr.push_back(luaToJson(t[i]));
+							arr.push_back(luaToJsonImpl(t[i], visited));
 						} else {
 							arr.push_back(nullptr);
 						}
@@ -106,18 +131,29 @@ namespace LuaAPI {
 						if (pair.first.get_type() == sol::type::string) {
 							key = pair.first.as<std::string>();
 						} else if (pair.first.get_type() == sol::type::number) {
-							key = std::to_string(pair.first.as<int64_t>());
+							double numericKey = pair.first.as<double>();
+							if (std::isfinite(numericKey) && numericKey == std::floor(numericKey)) {
+								key = std::to_string(static_cast<int64_t>(numericKey));
+							} else {
+								key = std::to_string(numericKey);
+							}
 						} else {
-							continue;
+							throw std::runtime_error("json.encode: unsupported Lua table key type");
 						}
-						objVal[key] = luaToJson(pair.second);
+						objVal[key] = luaToJsonImpl(pair.second, visited);
 					}
 					return objVal;
 				}
 			}
 			default:
-				return nullptr;
+				throw std::runtime_error("json.encode: unsupported Lua value type");
 		}
+	}
+	} // namespace
+
+	nlohmann::json luaToJson(const sol::object& obj) {
+		VisitedTables visited;
+		return luaToJsonImpl(obj, visited);
 	}
 
 	void registerJson(sol::state& lua) {

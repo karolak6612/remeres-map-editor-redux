@@ -204,10 +204,7 @@ bool Application::OnInit() {
 		g_gui.root->Show();
 	}
 
-	// Initialize Lua scripting system
-	if (!g_luaScripts.initialize()) {
-		spdlog::warn("Failed to initialize Lua scripting: {}", g_luaScripts.getLastError());
-	} else if (g_gui.root && g_gui.root->menu_bar) {
+	if (g_luaScripts.isInitialized() && g_gui.root && g_gui.root->menu_bar) {
 		g_gui.root->menu_bar->LoadScriptsMenu();
 	}
 

@@ -2,8 +2,8 @@
 // This file is part of Remere's Map Editor
 //////////////////////////////////////////////////////////////////////
 
-#ifndef LUA_API_JSON_H
-#define LUA_API_JSON_H
+#ifndef RME_LUA_API_JSON_H
+#define RME_LUA_API_JSON_H
 
 #include "lua_sol_config.h"
 
@@ -13,4 +13,4 @@ namespace LuaAPI {
 
 }
 
-#endif
+#endif // RME_LUA_API_JSON_H

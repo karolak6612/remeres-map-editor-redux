@@ -680,6 +680,9 @@ namespace LuaAPI {
 			}
 
 			int index = 1;
+			int firstX = 0;
+			int firstY = 0;
+			bool hasFirstPoint = false;
 
 			// Draw lines between consecutive vertices
 			for (size_t i = 0; i < verts.size(); ++i) {
@@ -701,11 +704,16 @@ namespace LuaAPI {
 				bool firstPoint = true;
 
 				while (true) {
-					if (!firstPoint || isFirstEdge) {
+					if ((!firstPoint || isFirstEdge) && !(hasFirstPoint && !firstPoint && x == firstX && y == firstY)) {
 						sol::table point = lua.create_table();
 						point["x"] = x;
 						point["y"] = y;
 						result[index++] = point;
+						if (!hasFirstPoint) {
+							firstX = x;
+							firstY = y;
+							hasFirstPoint = true;
+						}
 					}
 					firstPoint = false;
 
@@ -905,12 +913,17 @@ namespace LuaAPI {
 			int minY = std::min(y1, y2);
 			int maxY = std::max(y1, y2);
 
-			float width = static_cast<float>(maxX - minX);
-			float height = static_cast<float>(maxY - minY);
+			const float width = static_cast<float>(static_cast<long long>(maxX) - static_cast<long long>(minX) + 1LL);
+			const float height = static_cast<float>(static_cast<long long>(maxY) - static_cast<long long>(minY) + 1LL);
 
 			float cellSize = minDistance / std::sqrt(2.0f);
 			int gridWidth = static_cast<int>(std::ceil(width / cellSize));
 			int gridHeight = static_cast<int>(std::ceil(height / cellSize));
+
+			constexpr long long MAX_GRID_CELLS = 1000000;
+			if (gridWidth <= 0 || gridHeight <= 0 || static_cast<long long>(gridWidth) > MAX_GRID_CELLS / static_cast<long long>(gridHeight)) {
+				throw sol::error("geo.poissonDiskSampling: Requested grid is too large");
+			}
 
 			std::vector<std::vector<int>> grid(gridHeight, std::vector<int>(gridWidth, -1));
 			std::vector<std::pair<float, float>> points;
@@ -925,8 +938,8 @@ namespace LuaAPI {
 			points.push_back({ firstX, firstY });
 			activeList.push_back(0);
 
-			int gx = static_cast<int>(firstX / cellSize);
-			int gy = static_cast<int>(firstY / cellSize);
+			int gx = std::clamp(static_cast<int>(std::floor(firstX / cellSize)), 0, gridWidth - 1);
+			int gy = std::clamp(static_cast<int>(std::floor(firstY / cellSize)), 0, gridHeight - 1);
 			if (gx >= 0 && gx < gridWidth && gy >= 0 && gy < gridHeight) {
 				grid[gy][gx] = 0;
 			}
@@ -951,8 +964,8 @@ namespace LuaAPI {
 						continue;
 					}
 
-					int ngx = static_cast<int>(newX / cellSize);
-					int ngy = static_cast<int>(newY / cellSize);
+					int ngx = std::clamp(static_cast<int>(std::floor(newX / cellSize)), 0, gridWidth - 1);
+					int ngy = std::clamp(static_cast<int>(std::floor(newY / cellSize)), 0, gridHeight - 1);
 
 					bool valid = true;
 
@@ -994,8 +1007,8 @@ namespace LuaAPI {
 
 			for (size_t i = 0; i < points.size(); ++i) {
 				sol::table point = lua.create_table();
-				point["x"] = std::min(static_cast<int>(points[i].first) + minX, maxX);
-				point["y"] = std::min(static_cast<int>(points[i].second) + minY, maxY);
+				point["x"] = std::clamp(static_cast<int>(std::lround(points[i].first)) + minX, minX, maxX);
+				point["y"] = std::clamp(static_cast<int>(std::lround(points[i].second)) + minY, minY, maxY);
 				result[i + 1] = point;
 			}
 

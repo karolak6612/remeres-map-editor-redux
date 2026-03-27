@@ -59,12 +59,14 @@ class Change {
 private:
 	using Data = std::variant<std::monostate, std::unique_ptr<Tile>, HouseExitChangeData, WaypointChangeData>;
 	ChangeType type;
+	Position position;
 	Data data;
 
 	Change();
 
 public:
 	explicit Change(std::unique_ptr<Tile> tile);
+	Change(std::unique_ptr<Tile> tile, const Position& pos);
 	static Change* Create(House* house, const Position& where);
 	static Change* Create(Waypoint* wp, const Position& where);
 	~Change();

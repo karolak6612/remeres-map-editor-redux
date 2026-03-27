@@ -399,12 +399,11 @@ namespace LuaAPI {
 				throw sol::error("noise.generateGrid: x1 must be <= x2 and y1 must be <= y2");
 			}
 
-			long long width = static_cast<long long>(x2) - x1 + 1;
-			long long height = static_cast<long long>(y2) - y1 + 1;
-			long long totalCells = width * height;
+			const int64_t width = static_cast<int64_t>(x2) - static_cast<int64_t>(x1) + 1;
+			const int64_t height = static_cast<int64_t>(y2) - static_cast<int64_t>(y1) + 1;
 
-			const long long MAX_GRID_CELLS = 1000000;
-			if (totalCells > MAX_GRID_CELLS) {
+			constexpr int64_t MAX_GRID_CELLS = 1000000;
+			if (width <= 0 || height <= 0 || width > MAX_GRID_CELLS / height) {
 				throw sol::error("noise.generateGrid: Requested grid is too large (exceeds " + std::to_string(MAX_GRID_CELLS) + " cells)");
 			}
 
@@ -444,12 +443,12 @@ namespace LuaAPI {
 			}
 
 			// Generate values
-			for (int y = y1; y <= y2; ++y) {
+			for (int64_t y = y1; y <= y2; ++y) {
 				sol::table row = lua.create_table();
-				for (int x = x1; x <= x2; ++x) {
-					row[x - x1 + 1] = noise.GetNoise((float)x, (float)y);
+				for (int64_t x = x1; x <= x2; ++x) {
+					row[x - static_cast<int64_t>(x1) + 1] = noise.GetNoise(static_cast<float>(x), static_cast<float>(y));
 				}
-				result[y - y1 + 1] = row;
+				result[y - static_cast<int64_t>(y1) + 1] = row;
 			}
 
 			return result;

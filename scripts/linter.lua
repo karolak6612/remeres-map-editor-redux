@@ -451,7 +451,6 @@ Color = {} --[[@as ColorHelper]]
 
 -- Global variables set by the engine
 ---@type string The directory containing the currently executing script. Use this to load resources relative to your script.
----@type string The directory containing the currently executing script. Use this to load resources relative to your script.
 SCRIPT_DIR = ""
 
 ---@class Items
