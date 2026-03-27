@@ -23,7 +23,45 @@
 #include "ui/gui.h"
 #include "editor/editor.h"
 
+#include <string>
+
 namespace LuaAPI {
+
+	namespace {
+	class ScopedInternalSelectionSession {
+	public:
+		explicit ScopedInternalSelectionSession(Selection* selection) :
+			selection(selection),
+			ownsSession(selection && !selection->isBusy()) {
+			if (ownsSession) {
+				selection->start(Selection::INTERNAL);
+			}
+		}
+
+		ScopedInternalSelectionSession(const ScopedInternalSelectionSession&) = delete;
+		ScopedInternalSelectionSession& operator=(const ScopedInternalSelectionSession&) = delete;
+
+		~ScopedInternalSelectionSession() {
+			if (ownsSession && selection) {
+				selection->finish(Selection::INTERNAL);
+			}
+		}
+
+	private:
+		Selection* selection;
+		bool ownsSession;
+	};
+
+	template <typename Fn>
+	void withInternalSelectionSession(Selection* selection, Fn fn) {
+		if (!selection) {
+			return;
+		}
+
+		const ScopedInternalSelectionSession guard(selection);
+		fn();
+	}
+	} // namespace
 
 	// Helper to get the current selection
 	static Selection* getCurrentSelection() {
@@ -107,79 +145,83 @@ namespace LuaAPI {
 			}),
 
 			// Methods
+			"start", sol::overload(
+				[](Selection* sel) {
+					if (sel && !sel->isBusy()) {
+						sel->start(Selection::INTERNAL);
+					}
+				},
+				[](Selection* sel, int flags) {
+					if (sel && !sel->isBusy()) {
+						sel->start(static_cast<Selection::SessionFlags>(flags));
+					}
+				}),
+			"finish", sol::overload(
+				[](Selection* sel) {
+					if (sel && sel->isBusy() && sel->isDeferred()) {
+						sel->finish(Selection::INTERNAL);
+					}
+				},
+				[](Selection* sel, int flags) {
+					if (!sel || !sel->isBusy()) {
+						return;
+					}
+
+					if (sel->isDeferred()) {
+						sel->finish(Selection::INTERNAL);
+					} else {
+						sel->finish(static_cast<Selection::SessionFlags>(flags));
+					}
+				}),
 			"transaction", [](Selection* sel, sol::function callback) {
 				if (!sel || !callback.valid()) {
 					return;
 				}
 
-				const bool managed = !sel->isBusy();
-				if (managed) {
-					sel->start(Selection::INTERNAL);
-				}
-
-				struct SelectionFinishGuard {
-					Selection* sel;
-					bool active;
-					~SelectionFinishGuard() {
-						if (active && sel) {
-							sel->finish(Selection::INTERNAL);
-						}
-					}
-				} guard { sel, managed };
-
+				const ScopedInternalSelectionSession guard(sel);
 				callback();
 			},
 			"clear", [](Selection* sel) {
-				if (sel) {
-					bool managed = !sel->isBusy();
-					if (managed){ sel->start(Selection::INTERNAL);
-}
+				withInternalSelectionSession(sel, [sel] {
 					sel->clear();
-					if (managed){ sel->finish(Selection::INTERNAL);
-}
-				} },
+				});
+			},
 
 			"add", sol::overload([](Selection* sel, Tile* tile) {
 				if (sel && tile) {
-					bool managed = !sel->isBusy();
-					if (managed){ sel->start(Selection::INTERNAL);
-}
-					sel->add(tile);
-					if (managed){ sel->finish(Selection::INTERNAL);
-}
-				} }, [](Selection* sel, Tile* tile, Item* item) {
+					withInternalSelectionSession(sel, [sel, tile] {
+						sel->add(tile);
+					});
+				}
+			}, [](Selection* sel, Tile* tile, Item* item) {
 				if (sel && tile && item) {
-					bool managed = !sel->isBusy();
-					if (managed){ sel->start(Selection::INTERNAL);
-}
-					sel->add(tile, item);
-					if (managed){ sel->finish(Selection::INTERNAL);
-}
-				} }),
+					withInternalSelectionSession(sel, [sel, tile, item] {
+						sel->add(tile, item);
+					});
+				}
+			}),
 
 			"remove", sol::overload([](Selection* sel, Tile* tile) {
 				if (sel && tile) {
-					bool managed = !sel->isBusy();
-					if (managed){ sel->start(Selection::INTERNAL);
-}
-					sel->remove(tile);
-					if (managed){ sel->finish(Selection::INTERNAL);
-}
-				} }, [](Selection* sel, Tile* tile, Item* item) {
+					withInternalSelectionSession(sel, [sel, tile] {
+						sel->remove(tile);
+					});
+				}
+			}, [](Selection* sel, Tile* tile, Item* item) {
 				if (sel && tile && item) {
-					bool managed = !sel->isBusy();
-					if (managed){ sel->start(Selection::INTERNAL);
-}
-					sel->remove(tile, item);
-					if (managed){ sel->finish(Selection::INTERNAL);
-}
-				} }),
+					withInternalSelectionSession(sel, [sel, tile, item] {
+						sel->remove(tile, item);
+					});
+				}
+			}),
 
 			// String representation
 			sol::meta_function::to_string, [](Selection* sel) {
-			if (!sel){ return std::string("Selection(invalid)");
-}
-			return "Selection(size=" + std::to_string(sel->size()) + ")"; }
+				if (!sel) {
+					return std::string("Selection(invalid)");
+				}
+				return "Selection(size=" + std::to_string(sel->size()) + ")";
+			}
 		);
 	}
 

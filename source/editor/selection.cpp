@@ -333,7 +333,7 @@ void Selection::flush() {
 }
 
 void Selection::clear() {
-	if (tiles.empty()) {
+	if (tiles.empty() && pending_adds.empty() && pending_removes.empty()) {
 		return;
 	}
 
@@ -347,6 +347,13 @@ void Selection::clear() {
 		std::ranges::for_each(tiles, [](Tile* tile) {
 			TileOperations::deselect(tile);
 		});
+		if (deferred) {
+			std::ranges::for_each(pending_adds, [](Tile* tile) {
+				TileOperations::deselect(tile);
+			});
+			pending_adds.clear();
+			pending_removes.clear();
+		}
 	}
 	tiles.clear();
 	bounds_dirty = true;

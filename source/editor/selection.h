@@ -60,6 +60,10 @@ public:
 		return busy;
 	}
 
+	bool isDeferred() const {
+		return deferred;
+	}
+
 	//
 	// Returns the bounds of the selection.
 	// NOTE: Bounds queries should only be called from the main thread if
