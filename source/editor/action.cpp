@@ -387,10 +387,7 @@ void Action::undo(DirtyList* dirty_list) {
 }
 
 BatchAction::BatchAction(Editor& editor, ActionIdentifier ident) :
-	editor(editor),
-	timestamp(0),
-	memory_size(0),
-	type(ident) {
+	editor(editor), timestamp(0), memory_size(0), type(ident), label("") {
 	////
 }
 

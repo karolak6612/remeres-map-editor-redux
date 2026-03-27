@@ -1,6 +1,6 @@
 return {
-    name = "Hello World",
-    description = "A comprehensive tour of the RME Lua API v1 capabilities properly linted and structured",
+    name = "Lua UI Showcase",
+    description = "A curated five-tab showcase for layout, controls, previews, environment tools, and system actions.",
     version = "1.0.0",
     author = "Michy",
     main = "hello_world",

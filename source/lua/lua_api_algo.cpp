@@ -195,7 +195,8 @@ namespace LuaAPI {
 			int iterations = 4;
 			int birthLimit = 4;
 			int deathLimit = 3;
-			int seed = static_cast<int>(time(nullptr));
+			static std::random_device rd;
+			int seed = rd();
 
 			if (options) {
 				sol::table opts = *options;
@@ -290,7 +291,8 @@ namespace LuaAPI {
 			float depositSpeed = 0.3f;
 			float evaporateSpeed = 0.01f;
 			float gravity = 4.0f;
-			int seed = static_cast<int>(time(nullptr));
+			static std::random_device rd;
+			int seed = rd();
 			int maxDropletLifetime = 30;
 
 			if (options) {
@@ -657,7 +659,8 @@ namespace LuaAPI {
 				throw sol::error("generateRandomPoints: count must be non-negative.");
 			}
 
-			int sd = seed.value_or(static_cast<int>(time(nullptr)));
+			static std::random_device rd;
+			int sd = seed.value_or(rd());
 			std::mt19937 rng(sd);
 			std::uniform_int_distribution<int> distX(0, width - 1);
 			std::uniform_int_distribution<int> distY(0, height - 1);
@@ -687,7 +690,8 @@ namespace LuaAPI {
 				throw sol::error("generateMaze: width and height must be positive.");
 			}
 
-			int seed = static_cast<int>(time(nullptr));
+			static std::random_device rd;
+			int seed = rd();
 
 			if (options) {
 				sol::table opts = *options;
@@ -766,7 +770,8 @@ namespace LuaAPI {
 
 			int minRoomSize = 5;
 			int maxRoomSize = 15;
-			int seed = static_cast<int>(time(nullptr));
+			static std::random_device rd;
+			int seed = rd();
 			int maxDepth = 4;
 
 			if (options) {

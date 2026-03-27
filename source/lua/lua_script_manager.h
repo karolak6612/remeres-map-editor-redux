@@ -25,6 +25,7 @@
 
 #include <string>
 #include <vector>
+#include <mutex>
 #include <memory>
 #include <map>
 #include <functional>
@@ -66,6 +67,7 @@ public:
 	// Enable/disable scripts
 	void setScriptEnabled(size_t index, bool enabled);
 	bool isScriptEnabled(size_t index) const;
+	bool isScriptEnabled(const std::string& directory) const;
 
 	// Engine access
 	LuaEngine& getEngine() {
@@ -147,14 +149,25 @@ public:
 		bool consumed = false;
 		for (const auto& listener : listenersCopy) {
 			if (listener.eventName == eventName && listener.callback.valid()) {
+				// Re-establish script context
+				std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
+				engine.getState()["SCRIPT_DIR"] = listener.ownerScriptDir;
+
 				try {
 					sol::object result = std::apply(listener.callback, captured_args);
+
+					// Restore script context
+					engine.getState()["SCRIPT_DIR"] = oldScriptDir;
+
 					if (result.valid() && result.is<bool>() && result.as<bool>()) {
 						consumed = true;
 						break; // Stop propagation
 					}
 				} catch (const sol::error& e) {
 					logOutput("Event '" + eventName + "' error: " + std::string(e.what()), true);
+					
+					// Restore script context on error
+					engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 				}
 			}
 		}
@@ -207,6 +220,7 @@ private:
 	std::string lastError;
 	bool initialized = false;
 	LuaOutputCallback outputCallback;
+	mutable std::mutex outputMutex;
 	std::vector<ContextMenuItem> contextMenuItems;
 	std::vector<EventListener> eventListeners;
 	int nextListenerId = 1;

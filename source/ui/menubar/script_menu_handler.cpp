@@ -4,6 +4,7 @@
 #include "ui/main_frame.h"
 #include "ui/gui.h"
 #include "app/application.h"
+#include <algorithm>
 #include <wx/msgdlg.h>
 #include <wx/aui/framemanager.h>
 
@@ -27,9 +28,7 @@ void ScriptMenuHandler::OnScriptsOpenFolder(wxCommandEvent& WXUNUSED(event)) {
 
 void ScriptMenuHandler::OnScriptsReload(wxCommandEvent& WXUNUSED(event)) {
 	g_luaScripts.reloadScripts();
-	if (m_scriptsMenu) {
-		LoadScriptsMenu(m_scriptsMenu);
-	}
+	RebuildScriptsMenu();
 	g_gui.SetStatusText("Scripts reloaded");
 
 	LuaScriptsWindow* scriptsWindow = LuaScriptsWindow::Get();
@@ -47,157 +46,102 @@ void ScriptMenuHandler::OnScriptsManager(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void ScriptMenuHandler::OnScriptExecute(wxCommandEvent& event) {
-	int scriptIndex = event.GetId() - MAIN_FRAME_MENU - SCRIPTS_FIRST;
-	const auto& scripts = g_luaScripts.getScripts();
+	const auto it = m_scriptMenuIds.find(event.GetId());
+	if (it == m_scriptMenuIds.end()) {
+		return;
+	}
 
-	if (scriptIndex >= 0 && scriptIndex < (int)scripts.size()) {
-		LuaScript* script = scripts[scriptIndex].get();
-		if (!g_luaScripts.executeScript(script)) {
-			wxMessageBox(
-				wxString("Script error:\n") + g_luaScripts.getLastError(),
-				"Lua Script Error",
-				wxOK | wxICON_ERROR
-			);
-		}
+	g_luaScripts.setScriptEnabled(it->second, event.IsChecked());
+	RebuildScriptsMenu();
+
+	if (LuaScriptsWindow* scriptsWindow = LuaScriptsWindow::Get()) {
+		scriptsWindow->RefreshScriptList();
 	}
 }
 
 void ScriptMenuHandler::OnShowOverlayToggle(wxCommandEvent& event) {
-	int showIndex = event.GetId() - MAIN_FRAME_MENU - SHOW_CUSTOM_FIRST;
-	const auto& shows = g_luaScripts.getMapOverlayShows();
-	if (showIndex >= 0 && showIndex < static_cast<int>(shows.size())) {
-		const auto& showItem = shows[showIndex];
-		g_luaScripts.setMapOverlayShowEnabled(showItem.overlayId, event.IsChecked());
-		g_gui.RefreshView();
-	}
+	const auto it = m_overlayMenuIds.find(event.GetId());
+	if (it == m_overlayMenuIds.end()) return;
+
+	g_luaScripts.setMapOverlayShowEnabled(it->second, event.IsChecked());
+	RebuildScriptsMenu();
+	g_gui.RefreshView();
 }
 
 void ScriptMenuHandler::LoadScriptsMenu(wxMenu* menu) {
 	m_scriptsMenu = menu;
-	if (!m_scriptsMenu) return;
-
-	// Find the last separator. Any items after it are dynamic script entries.
-	int lastSeparatorIdx = -1;
-	for (size_t i = 0; i < m_scriptsMenu->GetMenuItemCount(); ++i) {
-		wxMenuItem* item = m_scriptsMenu->FindItemByPosition(i);
-		if (item && item->IsSeparator()) {
-			lastSeparatorIdx = static_cast<int>(i);
-		}
+	if (!m_scriptsMenu) {
+		return;
 	}
 
-	// If no separator found, we'll start appending from the end or a reasonable default.
-	// But according to menubar.xml, there should be at least two.
-	size_t clearFrom = (lastSeparatorIdx != -1) ? (lastSeparatorIdx + 1) : m_scriptsMenu->GetMenuItemCount();
-
-	// Remove existing dynamic script items
-	while (m_scriptsMenu->GetMenuItemCount() > clearFrom) {
-		m_scriptsMenu->Destroy(m_scriptsMenu->FindItemByPosition(clearFrom));
+	if (m_staticMenuItemCount == 0) {
+		m_staticMenuItemCount = m_scriptsMenu->GetMenuItemCount();
 	}
+
+	RebuildScriptsMenu();
+}
+
+void ScriptMenuHandler::RebuildScriptsMenu() {
+	if (!m_scriptsMenu) {
+		return;
+	}
+
+	while (m_scriptsMenu->GetMenuItemCount() > m_staticMenuItemCount) {
+		m_scriptsMenu->Destroy(m_scriptsMenu->FindItemByPosition(m_staticMenuItemCount));
+	}
+
+	m_scriptMenuIds.clear();
+	m_overlayMenuIds.clear();
 
 	const auto& scripts = g_luaScripts.getScripts();
-	if (!scripts.empty()) {
-		int scriptIndex = 0;
-		for (const auto& script : scripts) {
-			if (scriptIndex >= (SCRIPTS_LAST - SCRIPTS_FIRST)) break;
-			// We only show enabled scripts in the main menu
-			// (Disabled scripts can still be managed in the Script Manager)
-			if (!script->isEnabled()) {
-				scriptIndex++; // Keep index aligned with Event ID mapping
-				continue;
-			}
+	const auto& shows = g_luaScripts.getMapOverlayShows();
+	const size_t maxScriptCount = static_cast<size_t>(SCRIPTS_LAST - SCRIPTS_FIRST);
+	const size_t maxShowCount = static_cast<size_t>(SHOW_CUSTOM_LAST - SHOW_CUSTOM_FIRST);
 
+	if (!scripts.empty()) {
+		m_scriptsMenu->AppendSeparator();
+		for (size_t scriptIndex = 0; scriptIndex < scripts.size() && scriptIndex < maxScriptCount; ++scriptIndex) {
+			const auto& script = scripts[scriptIndex];
 			wxString label = wxString::FromUTF8(script->getDisplayName());
 			wxString shortcut = wxString::FromUTF8(script->getShortcut());
 			if (!shortcut.IsEmpty()) {
 				label += "\t" + shortcut;
 			}
 
-			m_scriptsMenu->Append(
-				MAIN_FRAME_MENU + SCRIPTS_FIRST + scriptIndex,
+			const int menuId = MAIN_FRAME_MENU + SCRIPTS_FIRST + static_cast<int>(scriptIndex);
+			wxMenuItem* item = m_scriptsMenu->AppendCheckItem(
+				menuId,
 				label,
 				wxString::FromUTF8(script->getDescription())
 			);
-			scriptIndex++;
+			if (item) {
+				item->Check(script->isEnabled());
+			}
+			m_scriptMenuIds.emplace(menuId, scriptIndex);
 		}
 	}
-}
 
-void ScriptMenuHandler::LoadShowMenu(wxMenu* menu) {
-	m_showMenu = menu;
-	if (!m_showMenu) return;
-
-	size_t total = m_showMenu->GetMenuItemCount();
-	if (m_showMenuCount > 0) {
-		for (size_t i = 0; i < m_showMenuCount && total > 0; ++i) {
-			m_showMenu->Destroy(m_showMenu->FindItemByPosition(total - 1));
-			--total;
+	if (!shows.empty()) {
+		m_scriptsMenu->AppendSeparator();
+		for (size_t showIndex = 0; showIndex < shows.size() && showIndex < maxShowCount; ++showIndex) {
+			const auto& show = shows[showIndex];
+			const int menuId = MAIN_FRAME_MENU + SHOW_CUSTOM_FIRST + static_cast<int>(showIndex);
+			wxMenuItem* item = m_scriptsMenu->AppendCheckItem(
+				menuId,
+				wxString::Format("Overlay: %s", wxString::FromUTF8(show.label)),
+				wxString()
+			);
+			if (item) {
+				item->Check(g_luaScripts.isMapOverlayEnabled(show.overlayId));
+			}
+			m_overlayMenuIds.emplace(menuId, show.overlayId);
 		}
 	}
-	if (m_showMenuHasSeparator && total > 0) {
-		m_showMenu->Destroy(m_showMenu->FindItemByPosition(total - 1));
-		--total;
-	}
-
-	m_showMenuCount = 0;
-	m_showMenuHasSeparator = false;
-
-	const auto& shows = g_luaScripts.getMapOverlayShows();
-	if (shows.empty()) return;
-
-	m_showMenu->AppendSeparator();
-	m_showMenuHasSeparator = true;
-
-	const size_t maxCount = static_cast<size_t>(SHOW_CUSTOM_LAST - SHOW_CUSTOM_FIRST);
-	size_t count = 0;
-	for (const auto& show : shows) {
-		if (count >= maxCount) break;
-
-		wxMenuItem* item = m_showMenu->Append(
-			MAIN_FRAME_MENU + SHOW_CUSTOM_FIRST + static_cast<int>(count),
-			wxString::FromUTF8(show.label),
-			wxString(),
-			wxITEM_CHECK
-		);
-		if (item) {
-			item->Check(show.enabled);
-		}
-		++count;
-	}
-
-	m_showMenuCount = count;
 }
 
 void ScriptMenuHandler::UpdateShowMenu(wxMenu* menu) {
-	if (!menu || !m_showMenu) return;
-
-	const auto& shows = g_luaScripts.getMapOverlayShows();
-	const size_t maxCount = static_cast<size_t>(SHOW_CUSTOM_LAST - SHOW_CUSTOM_FIRST);
-	const size_t desiredCount = std::min(shows.size(), maxCount);
-	bool needsReload = m_showMenuCount != desiredCount;
-
-	if (!needsReload) {
-		for (size_t i = 0; i < desiredCount; ++i) {
-			wxMenuItem* item = m_showMenu->FindItem(MAIN_FRAME_MENU + SHOW_CUSTOM_FIRST + static_cast<int>(i));
-			if (!item) {
-				needsReload = true;
-				break;
-			}
-			wxString label = wxString::FromUTF8(shows[i].label);
-			if (item->GetItemLabelText() != label) {
-				needsReload = true;
-				break;
-			}
-		}
+	if (menu) {
+		m_scriptsMenu = menu;
 	}
-
-	if (needsReload) {
-		LoadShowMenu(m_showMenu);
-	} else {
-		for (size_t i = 0; i < desiredCount; ++i) {
-			wxMenuItem* item = m_showMenu->FindItem(MAIN_FRAME_MENU + SHOW_CUSTOM_FIRST + static_cast<int>(i));
-			if (item) {
-				item->Check(g_luaScripts.isMapOverlayEnabled(shows[i].overlayId));
-			}
-		}
-	}
+	RebuildScriptsMenu();
 }

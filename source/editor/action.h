@@ -164,6 +164,13 @@ public:
 	virtual void addAction(std::unique_ptr<Action> action);
 	virtual void addAndCommitAction(std::unique_ptr<Action> action);
 
+	void setLabel(const std::string& name) {
+		label = name;
+	}
+	const std::string& getLabel() const {
+		return label;
+	}
+
 protected:
 	BatchAction(Editor& editor, ActionIdentifier ident);
 
@@ -177,6 +184,7 @@ protected:
 	int timestamp;
 	uint32_t memory_size;
 	ActionIdentifier type;
+	std::string label;
 	ActionVector batch;
 
 	friend class ActionQueue;

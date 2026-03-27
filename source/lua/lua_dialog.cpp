@@ -27,6 +27,7 @@
 #include "ui/common_windows.h"
 #include "ui/find_item_window.h"
 #include "ui/dcbutton.h"
+#include "ui/theme.h"
 #include <wx/statline.h>
 #include <wx/valgen.h>
 #include <wx/aui/aui.h>
@@ -429,6 +430,8 @@ END_EVENT_TABLE()
 LuaDialog::LuaDialog(const std::string& title, sol::this_state ts) :
 	wxDialog(g_gui.root, wxID_ANY, wxString(title), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
 	lua(ts) {
+	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
+	SetForegroundColour(Theme::Get(Theme::Role::Text));
 	createLayout();
 }
 
@@ -436,6 +439,9 @@ LuaDialog::LuaDialog(const std::string& title, sol::this_state ts) :
 LuaDialog::LuaDialog(sol::table options, sol::this_state ts) :
 	wxDialog(g_gui.root, wxID_ANY, wxString(options.get_or(std::string("title"), "Script Dialog"s)), wxDefaultPosition, wxDefaultSize, wxDEFAULT_DIALOG_STYLE | (options.get_or(std::string("resizable"), true) ? wxRESIZE_BORDER : 0) | (options.get_or(std::string("topmost"), false) ? wxSTAY_ON_TOP : 0)),
 	lua(ts) {
+
+	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
+	SetForegroundColour(Theme::Get(Theme::Role::Text));
 
 	reqWidth = options.get_or(std::string("width"), -1);
 	reqHeight = options.get_or(std::string("height"), -1);
@@ -451,6 +457,8 @@ LuaDialog::LuaDialog(sol::table options, sol::this_state ts) :
 
 	if (options.get_or(std::string("dockable"), false)) {
 		dockPanel = new wxPanel(g_gui.root, wxID_ANY);
+		dockPanel->SetBackgroundColour(Theme::Get(Theme::Role::Surface));
+		dockPanel->SetForegroundColour(Theme::Get(Theme::Role::Text));
 
 		wxAuiPaneInfo info;
 		std::string title = options.get_or(std::string("title"), "Script Dialog"s);
@@ -498,6 +506,8 @@ LuaDialog::~LuaDialog() {
 void LuaDialog::createLayout() {
 	mainSizer = new wxBoxSizer(wxVERTICAL);
 	if (dockPanel) {
+		dockPanel->SetBackgroundColour(Theme::Get(Theme::Role::Surface));
+		dockPanel->SetForegroundColour(Theme::Get(Theme::Role::Text));
 		dockPanel->SetSizer(mainSizer);
 	} else {
 		SetSizer(mainSizer);
@@ -636,6 +646,8 @@ LuaDialog* LuaDialog::panel(sol::table options) {
 	bool expand = options.get_or("expand", false);
 
 	wxPanel* panel = new wxPanel(getParentForWidget(), wxID_ANY);
+	panel->SetBackgroundColour(Theme::Get(Theme::Role::Surface));
+	panel->SetForegroundColour(Theme::Get(Theme::Role::Text));
 	applyCommonOptions(panel, options);
 
 	wxBoxSizer* panelSizer = new wxBoxSizer(options.get_or<std::string>("orient", "vertical") == "horizontal" ? wxHORIZONTAL : wxVERTICAL);
@@ -985,12 +997,14 @@ LuaDialog* LuaDialog::button(sol::table options) {
 	bool hasHover = options["hover"].valid();
 	bool hasCustomColor = options["bgcolor"].valid() || options["fgcolor"].valid();
 
-	bool useCustom = rounded || hasHover || hasCustomColor;
+	bool useCustom = rounded || hasHover;
 
 	wxWindow* finalWidget = nullptr;
 
 	if (useCustom) {
 		CustomButton* btn = new CustomButton(getParentForWidget(), wxID_ANY, wxString(text));
+		btn->SetBackgroundColour(hasCustomColor ? btn->GetBackgroundColour() : Theme::Get(Theme::Role::PrimaryButton));
+		btn->SetForegroundColour(options["fgcolor"].valid() ? btn->GetForegroundColour() : Theme::Get(Theme::Role::TextOnAccent));
 		if (rounded) {
 			btn->SetRounded(true);
 		}

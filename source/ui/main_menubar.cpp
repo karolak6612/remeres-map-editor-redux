@@ -232,10 +232,7 @@ void MainMenuBar::OnImportMonsterData(wxCommandEvent& event) {
 
 void MainMenuBar::LoadScriptsMenu() const {
 	if (scriptMenuHandler) {
-		// Just a trigger if needed, but Loader handles menu instances.
-		// However we need to build it since late initialization won't go through the loader.
 		wxMenu* parentMenu = nullptr;
-		// Find "Scripts" menu in the menubar to attach to
 		int menuIndex = menubar->FindMenu("Scripts");
 		if (menuIndex != wxNOT_FOUND) {
 			parentMenu = menubar->GetMenu(menuIndex);
@@ -243,15 +240,13 @@ void MainMenuBar::LoadScriptsMenu() const {
 		
 		if (parentMenu) {
 			scriptMenuHandler->LoadScriptsMenu(parentMenu);
-			scriptMenuHandler->UpdateShowMenu(parentMenu); 
 		}
 	}
 }
 
 void MainMenuBar::RefreshScriptsMenu() const {
 	if (scriptMenuHandler) {
-		wxCommandEvent dummy;
-		scriptMenuHandler->OnScriptsReload(dummy);
+		LoadScriptsMenu();
 	}
 }
 

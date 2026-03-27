@@ -177,6 +177,7 @@ bool MainFrame::MSWTranslateMessage(WXMSG* msg) {
 #endif
 
 void MainFrame::UpdateMenubar() {
+	menu_bar->RefreshScriptsMenu();
 	menu_bar->Update();
 	tool_bar->UpdateButtons();
 }

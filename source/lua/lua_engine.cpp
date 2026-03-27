@@ -44,18 +44,10 @@ bool LuaEngine::initialize() {
 			sol::lib::string,
 			sol::lib::table,
 			sol::lib::math,
-			sol::lib::utf8
+			sol::lib::utf8,
+			sol::lib::os,
+			sol::lib::io
 		);
-
-		// Remove restricted libraries from package.loaded/preload
-		if (lua["package"]["loaded"].valid()) {
-			lua["package"]["loaded"]["io"] = sol::nil;
-			lua["package"]["loaded"]["os"] = sol::nil;
-		}
-		if (lua["package"]["preload"].valid()) {
-			lua["package"]["preload"]["io"] = sol::nil;
-			lua["package"]["preload"]["os"] = sol::nil;
-		}
 
 		// Curated package.path
 		lua["package"]["path"] = "./?.lua;./?/init.lua";

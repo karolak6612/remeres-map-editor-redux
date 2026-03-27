@@ -154,7 +154,7 @@ local function generateIsland(bounds, cfg)
 					local dx = localX - centerX
 					local dy = localY - centerY
 					local distFromCenter = math.sqrt(dx * dx + dy * dy) / maxRadius
-					local falloff = 1 - distFromCenter * distFromCenter
+					local falloff = math.max(0, 1 - distFromCenter * distFromCenter)
 					n = n * falloff
 
 					-- Determine terrain type

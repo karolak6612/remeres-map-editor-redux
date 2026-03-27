@@ -135,10 +135,10 @@ static wxColor parseColor(const sol::object& obj, const wxColor& fallback) {
 
 	if (obj.is<sol::table>()) {
 		sol::table tbl = obj.as<sol::table>();
-		int r = tbl.get_or(std::string("r"), tbl.get_or(std::string("red"), 255));
-		int g = tbl.get_or(std::string("g"), tbl.get_or(std::string("green"), 255));
-		int b = tbl.get_or(std::string("b"), tbl.get_or(std::string("blue"), 255));
-		int a = tbl.get_or(std::string("a"), tbl.get_or(std::string("alpha"), 255));
+		int r = std::clamp<int>(tbl.get_or(std::string("r"), tbl.get_or(std::string("red"), 255)), 0, 255);
+		int g = std::clamp<int>(tbl.get_or(std::string("g"), tbl.get_or(std::string("green"), 255)), 0, 255);
+		int b = std::clamp<int>(tbl.get_or(std::string("b"), tbl.get_or(std::string("blue"), 255)), 0, 255);
+		int a = std::clamp<int>(tbl.get_or(std::string("a"), tbl.get_or(std::string("alpha"), 255)), 0, 255);
 		if (tbl[1].valid()) {
 			r = tbl.get_or(1, r);
 		}
@@ -271,11 +271,18 @@ bool LuaScriptManager::setMapOverlayShowEnabled(const std::string& overlayId, bo
 		if (item.overlayId == overlayId) {
 			item.enabled = enabled;
 			if (item.ontoggle.valid()) {
+				// Re-establish script context
+				std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
+				engine.getState()["SCRIPT_DIR"] = item.ownerScriptDir;
+
 				try {
 					item.ontoggle(enabled);
 				} catch (const sol::error& e) {
 					logOutput("Overlay show '" + item.label + "' error: " + std::string(e.what()), true);
 				}
+
+				// Restore script context
+				engine.getState()["SCRIPT_DIR"] = oldScriptDir;
 			}
 			if (g_gui.root) {
 				g_gui.UpdateMenubar();
@@ -335,7 +342,7 @@ void LuaScriptManager::collectMapOverlayCommands(const MapViewInfo& view, std::v
 
 	std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
 	for (const auto& overlay : sorted) {
-		if (overlay.enabled && overlay.ondraw.valid()) {
+		if (overlay.enabled && isScriptEnabled(overlay.ownerScriptDir) && overlay.ondraw.valid()) {
 			engine.getState()["SCRIPT_DIR"] = overlay.ownerScriptDir;
 			engine.safeCall([&]() { return overlay.ondraw(ctx); });
 		}
@@ -478,14 +485,22 @@ void LuaScriptManager::updateMapOverlayHover(int map_x, int map_y, int map_z, in
 	// if an overlay callback modifies mapOverlays (e.g., app.mapView.addOverlay)
 	std::vector<MapOverlay> activeOverlays;
 	for (const auto& overlay : mapOverlays) {
-		if (overlay.enabled && overlay.onhover.valid()) {
+		if (overlay.enabled && isScriptEnabled(overlay.ownerScriptDir) && overlay.onhover.valid()) {
 			activeOverlays.push_back(overlay);
 		}
 	}
 
 	for (const auto& overlay : activeOverlays) {
+		// Re-establish script context
+		std::string oldScriptDir = engine.getState()["SCRIPT_DIR"].get_or(std::string(""));
+		engine.getState()["SCRIPT_DIR"] = overlay.ownerScriptDir;
+
 		try {
 			sol::object result = overlay.onhover(info);
+			
+			// Restore script context
+			engine.getState()["SCRIPT_DIR"] = oldScriptDir;
+
 			if (!result.valid() || result.is<sol::nil_t>()) {
 				continue;
 			}
@@ -583,7 +598,10 @@ std::string LuaScriptManager::getScriptsDirectory() const {
 
 void LuaScriptManager::discoverScripts() {
 	engine.shutdown();
-	engine.initialize();
+	if (engine.initialize()) {
+		initialized = true;
+		registerAPIs();
+	}
 	scripts.clear();
 	clearAllCallbacks();
 
@@ -746,6 +764,25 @@ void LuaScriptManager::setScriptEnabled(size_t index, bool enabled) {
 	if (index < scripts.size()) {
 		scripts[index]->setEnabled(enabled);
 		
+		// Synchronize state to registered items
+		wxFileName scriptDir(scripts[index]->getDirectory());
+		for (auto& overlay : mapOverlays) {
+			if (wxFileName(overlay.ownerScriptDir).SameAs(scriptDir)) {
+				overlay.enabled = enabled;
+			}
+		}
+		for (auto& item : mapOverlayShows) {
+			if (wxFileName(item.ownerScriptDir).SameAs(scriptDir)) {
+				item.enabled = enabled;
+			}
+		}
+
+		if (enabled) {
+			// If enabling, run the script to ensure its components are registered
+			std::string error;
+			executeScript(index, error);
+		}
+
 		auto& table = g_settings.getTable();
 		if (!table.contains("scripts")) {
 			table.insert("scripts", toml::table{});
@@ -761,6 +798,16 @@ void LuaScriptManager::setScriptEnabled(size_t index, bool enabled) {
 	}
 }
 
+bool LuaScriptManager::isScriptEnabled(const std::string& directory) const {
+	wxFileName dir(directory);
+	for (const auto& script : scripts) {
+		if (wxFileName(script->getDirectory()).SameAs(dir)) {
+			return script->isEnabled();
+		}
+	}
+	return true;
+}
+
 bool LuaScriptManager::isScriptEnabled(size_t index) const {
 	if (index < scripts.size()) {
 		return scripts[index]->isEnabled();
@@ -769,6 +816,7 @@ bool LuaScriptManager::isScriptEnabled(size_t index) const {
 }
 
 void LuaScriptManager::setOutputCallback(LuaOutputCallback callback) {
+	std::lock_guard<std::mutex> lock(outputMutex);
 	outputCallback = callback;
 
 	// Also set up the engine's print callback
@@ -778,8 +826,15 @@ void LuaScriptManager::setOutputCallback(LuaOutputCallback callback) {
 }
 
 void LuaScriptManager::logOutput(const std::string& message, bool isError) {
+	std::lock_guard<std::mutex> lock(outputMutex);
 	if (outputCallback) {
 		outputCallback(message, isError);
+	} else {
+		if (isError) {
+			spdlog::error("[Lua] {}", message);
+		} else {
+			spdlog::info("[Lua] {}", message);
+		}
 	}
 }
 

@@ -50,11 +50,11 @@ namespace LuaAPI {
 		};
 
 		StreamSession() :
-			finished_(false), hasError_(false), statusCode_(0), totalSize_(0) { }
+			finished_(false), hasError_(false), closed_(false), statusCode_(0), totalSize_(0) { }
 
 		bool appendChunk(const std::string& chunk) {
 			std::lock_guard<std::mutex> lock(mutex_);
-			if (totalSize_ + chunk.size() > MAX_STREAM_BUFFER_SIZE) {
+			if (closed_ || totalSize_ + chunk.size() > MAX_STREAM_BUFFER_SIZE) {
 				return false;
 			}
 			chunks_.push(chunk);
@@ -142,12 +142,20 @@ namespace LuaAPI {
 			return responseHeaders_;
 		}
 
+		void close() {
+			std::lock_guard<std::mutex> lock(mutex_);
+			closed_ = true;
+			finished_ = true;
+			cv_.notify_all();
+		}
+
 	private:
 		std::queue<std::string> chunks_;
 		std::mutex mutex_;
 		std::condition_variable cv_;
 		std::atomic<bool> finished_;
 		std::atomic<bool> hasError_;
+		std::atomic<bool> closed_;
 		std::string errorMessage_;
 		std::atomic<int> statusCode_;
 		cpr::Header responseHeaders_;
@@ -245,7 +253,18 @@ namespace LuaAPI {
 			}
 		}
 
-		cpr::Response response = cpr::Get(cpr::Url { url }, headers, cpr::Timeout { 10000 });
+		size_t hostStart = url.find("://");
+		if (hostStart == std::string::npos) hostStart = 0; else hostStart += 3;
+		size_t pathStart = url.find("/", hostStart);
+		std::string host = (pathStart == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathStart - hostStart);
+		std::string path = (pathStart == std::string::npos) ? "" : url.substr(pathStart);
+
+		cpr::Response response = cpr::Get(
+			cpr::Url { "http://" + safeIp + path },
+			headers,
+			cpr::Header { { "Host", host } },
+			cpr::Timeout { 10000 }
+		);
 
 		result["status"] = static_cast<int>(response.status_code);
 		result["body"] = response.text;
@@ -283,10 +302,17 @@ namespace LuaAPI {
 			}
 		}
 
+		size_t hostStart = url.find("://");
+		if (hostStart == std::string::npos) hostStart = 0; else hostStart += 3;
+		size_t pathStart = url.find("/", hostStart);
+		std::string host = (pathStart == std::string::npos) ? url.substr(hostStart) : url.substr(hostStart, pathStart - hostStart);
+		std::string path = (pathStart == std::string::npos) ? "" : url.substr(pathStart);
+
 		cpr::Response response = cpr::Post(
-			cpr::Url { url },
+			cpr::Url { "http://" + safeIp + path },
 			cpr::Body { body },
 			headers,
+			cpr::Header { { "Host", host } },
 			cpr::Timeout { 10000 }
 		);
 
@@ -521,6 +547,7 @@ namespace LuaAPI {
 		std::lock_guard<std::mutex> lock(g_sessionsMutex);
 		auto it = g_streamSessions.find(sessionId);
 		if (it != g_streamSessions.end()) {
+			it->second->close();
 			g_streamSessions.erase(it);
 			return true;
 		}

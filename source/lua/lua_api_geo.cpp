@@ -543,18 +543,24 @@ namespace LuaAPI {
 					p1["x"] = cx + ex;
 					p1["y"] = cy + ey;
 					result[index++] = p1;
-					sol::table p2 = lua.create_table();
-					p2["x"] = cx - ex;
-					p2["y"] = cy + ey;
-					result[index++] = p2;
-					sol::table p3 = lua.create_table();
-					p3["x"] = cx + ex;
-					p3["y"] = cy - ey;
-					result[index++] = p3;
-					sol::table p4 = lua.create_table();
-					p4["x"] = cx - ex;
-					p4["y"] = cy - ey;
-					result[index++] = p4;
+					if (ex != 0) {
+						sol::table p2 = lua.create_table();
+						p2["x"] = cx - ex;
+						p2["y"] = cy + ey;
+						result[index++] = p2;
+					}
+					if (ey != 0) {
+						sol::table p3 = lua.create_table();
+						p3["x"] = cx + ex;
+						p3["y"] = cy - ey;
+						result[index++] = p3;
+					}
+					if (ex != 0 && ey != 0) {
+						sol::table p4 = lua.create_table();
+						p4["x"] = cx - ex;
+						p4["y"] = cy - ey;
+						result[index++] = p4;
+					}
 				};
 
 				// Region 1
@@ -691,11 +697,17 @@ namespace LuaAPI {
 
 				int x = x1, y = y1;
 
+				bool isFirstEdge = (i == 0);
+				bool firstPoint = true;
+
 				while (true) {
-					sol::table point = lua.create_table();
-					point["x"] = x;
-					point["y"] = y;
-					result[index++] = point;
+					if (!firstPoint || isFirstEdge) {
+						sol::table point = lua.create_table();
+						point["x"] = x;
+						point["y"] = y;
+						result[index++] = point;
+					}
+					firstPoint = false;
 
 					if (x == x2 && y == y2) {
 						break;
@@ -893,8 +905,8 @@ namespace LuaAPI {
 			int minY = std::min(y1, y2);
 			int maxY = std::max(y1, y2);
 
-			float width = static_cast<float>(maxX - minX) + 0.001f;
-			float height = static_cast<float>(maxY - minY) + 0.001f;
+			float width = static_cast<float>(maxX - minX);
+			float height = static_cast<float>(maxY - minY);
 
 			float cellSize = minDistance / std::sqrt(2.0f);
 			int gridWidth = static_cast<int>(std::ceil(width / cellSize));

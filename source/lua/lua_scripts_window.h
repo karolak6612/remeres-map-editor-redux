@@ -18,26 +18,26 @@
 #ifndef RME_LUA_SCRIPTS_WINDOW_H
 #define RME_LUA_SCRIPTS_WINDOW_H
 
+#include <wx/aui/auibar.h>
+#include <wx/dataview.h>
+#include <wx/icon.h>
 #include <wx/panel.h>
-#include <wx/listctrl.h>
+#include <wx/splitter.h>
+#include <wx/stattext.h>
 #include <wx/textctrl.h>
-#include <wx/button.h>
+
+#include <optional>
+#include <string>
 
 class LuaScriptsWindow : public wxPanel {
 public:
 	LuaScriptsWindow(wxWindow* parent);
-	virtual ~LuaScriptsWindow();
+	~LuaScriptsWindow() override;
 
-	// Refresh the script list from LuaScriptManager
 	void RefreshScriptList();
-
-	// Log a message to the console
 	void LogMessage(const wxString& message, bool isError = false);
-
-	// Clear the console
 	void ClearConsole();
 
-	// Get singleton instance (created by application)
 	static LuaScriptsWindow* Get() {
 		return instance;
 	}
@@ -45,34 +45,45 @@ public:
 		instance = win;
 	}
 
-protected:
-	// Event handlers
-	void OnScriptActivated(wxListEvent& event);
-	void OnScriptSelected(wxListEvent& event);
-	void OnScriptChecked(wxListEvent& event);
+private:
+	void BuildUI();
+	void ApplyTheme();
+	void RefreshSelectionSummary();
+	void UpdateActionState();
+	void SelectScriptById(const std::string& uniqueId);
+	std::optional<size_t> GetSelectedScriptIndex() const;
+	void RunSelectedScript();
+	void DisableSelectedScript();
+	void RemoveSelectedScript();
+	void OpenSelectedScript();
+	void RevealSelectedScript();
+
+	void OnSelectionChanged(wxDataViewEvent& event);
+	void OnItemActivated(wxDataViewEvent& event);
+	void OnItemValueChanged(wxDataViewEvent& event);
+	void OnItemContextMenu(wxDataViewEvent& event);
 	void OnReloadScripts(wxCommandEvent& event);
 	void OnOpenFolder(wxCommandEvent& event);
 	void OnClearConsole(wxCommandEvent& event);
+	void OnCopyConsole(wxCommandEvent& event);
 	void OnRunScript(wxCommandEvent& event);
-	void OnScriptCheckToggle(wxListEvent& event);
+	void OnDisableScript(wxCommandEvent& event);
+	void OnEditOpen(wxCommandEvent& event);
+	void OnReveal(wxCommandEvent& event);
+	void OnRemoveScript(wxCommandEvent& event);
 
-	// Build the UI
-	void BuildUI();
-
-	// Update script enable state in list
-	void UpdateScriptState(long index);
-
-private:
-	wxListCtrl* script_list;
-	wxTextCtrl* console_output;
-	wxButton* reload_button;
-	wxButton* open_folder_button;
-	wxButton* clear_console_button;
-	wxButton* run_script_button;
+	wxSplitterWindow* main_splitter = nullptr;
+	wxAuiToolBar* action_toolbar = nullptr;
+	wxAuiToolBar* output_toolbar = nullptr;
+	wxDataViewListCtrl* script_list = nullptr;
+	wxStaticText* selection_summary = nullptr;
+	wxTextCtrl* console_output = nullptr;
+	wxIcon file_script_icon;
+	wxIcon package_script_icon;
+	std::string selected_script_id;
+	bool refreshing_list = false;
 
 	static LuaScriptsWindow* instance;
-
-	DECLARE_EVENT_TABLE()
 };
 
 #endif // RME_LUA_SCRIPTS_WINDOW_H

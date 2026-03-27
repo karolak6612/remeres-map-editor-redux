@@ -170,6 +170,20 @@ void LuaScript::parseMetadataFromManifest() {
 									}
 									return unescaped;
 								}
+							} else {
+								// No quotes, try to read until comma, newline or closing brace
+								size_t valStart = content.find_first_not_of(" \t", eqPos + 1);
+								if (valStart != std::string::npos && (nextLine == std::string::npos || valStart < nextLine)) {
+									size_t valEnd = content.find_first_of(",\n\r}", valStart);
+									if (valEnd != std::string::npos) {
+										std::string rawVal = content.substr(valStart, valEnd - valStart);
+										// Trim trailing whitespace
+										size_t last = rawVal.find_last_not_of(" \t");
+										if (last != std::string::npos) {
+											return rawVal.substr(0, last + 1);
+										}
+									}
+								}
 							}
 						}
 					}

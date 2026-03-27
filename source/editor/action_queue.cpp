@@ -53,7 +53,11 @@ std::string ActionQueue::getActionName(size_t index) const {
 	if (index >= actions.size()) {
 		return "Unknown";
 	}
-	switch (actions[index]->getType()) {
+	const BatchAction* batch = actions[index].get();
+	if (batch && !batch->getLabel().empty()) {
+		return batch->getLabel();
+	}
+	switch (batch->getType()) {
 		case ACTION_MOVE: return "Move";
 		case ACTION_REMOTE: return "Remote";
 		case ACTION_SELECT: return "Select";

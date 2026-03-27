@@ -111,18 +111,21 @@ namespace LuaAPI {
 		LuaTransaction() :
 			active(false), editor(nullptr), batch(nullptr), action(nullptr) { }
 
-		void begin(Editor* ed) {
+		void begin(Editor* ed, const std::string& name = "") {
 			if (active) {
 				throw sol::error("Transaction already in progress");
 			}
-
+ 
 			editor = ed;
 			if (!editor || !editor->actionQueue) {
 				throw sol::error("No editor or action queue available");
 			}
-
+ 
 			active = true;
 			batch = editor->actionQueue->createBatch(ACTION_LUA_SCRIPT);
+			if (!name.empty()) {
+				batch->setLabel(name);
+			}
 			action = editor->actionQueue->createAction(ACTION_LUA_SCRIPT);
 			originalTiles.clear();
 		}
@@ -381,7 +384,7 @@ namespace LuaAPI {
 		LuaTransaction& trans = LuaTransaction::getInstance();
 
 		try {
-			trans.begin(editor);
+			trans.begin(editor, name);
 			func();
 			if (g_gui.GetCurrentEditor() == editor) {
 				trans.commit();
