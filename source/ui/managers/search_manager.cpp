@@ -10,15 +10,23 @@ SearchManager::SearchManager() :
 }
 
 SearchManager::~SearchManager() {
-	// search_result_window is managed by AUI, it'll be deleted when root is deleted?
-	// Actually GUI doesn't delete it in dtor.
+	// Explicit teardown happens from MainFrame::OnExit() while g_gui is still valid.
 }
 
-void SearchManager::HideSearchWindow() {
-	if (search_result_window) {
-		g_gui.aui_manager->GetPane(search_result_window).Show(false);
+void SearchManager::DestroySearchWindow() {
+	if (search_result_window == nullptr) {
+		return;
+	}
+
+	SearchResultWindow* window = search_result_window;
+	search_result_window = nullptr;
+
+	if (g_gui.aui_manager != nullptr) {
+		g_gui.aui_manager->DetachPane(window);
 		g_gui.aui_manager->Update();
 	}
+
+	window->Destroy();
 }
 
 SearchResultWindow* SearchManager::ShowSearchWindow() {

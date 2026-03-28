@@ -109,6 +109,7 @@ bool OtbItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 			setMappedFlag(fragment.flags, (flags & FLAG_BLOCK_MISSILES) != 0, ItemFlag::BlockMissiles);
 			setMappedFlag(fragment.flags, (flags & FLAG_BLOCK_PATHFINDER) != 0, ItemFlag::BlockPathfinder);
 			setMappedFlag(fragment.flags, (flags & FLAG_HAS_ELEVATION) != 0, ItemFlag::HasElevation);
+			setMappedFlag(fragment.flags, (flags & FLAG_USEABLE) != 0, ItemFlag::ForceUse);
 			setMappedFlag(fragment.flags, (flags & FLAG_PICKUPABLE) != 0, ItemFlag::Pickupable);
 			setMappedFlag(fragment.flags, (flags & FLAG_MOVEABLE) != 0, ItemFlag::Moveable);
 			setMappedFlag(fragment.flags, (flags & FLAG_STACKABLE) != 0, ItemFlag::Stackable);
@@ -196,6 +197,13 @@ bool OtbItemParser::parse(const ItemDefinitionLoadInput& input, ItemDefinitionFr
 					if (!readFixedPayload(item_node, length, fragment.rotate_to)) {
 						warnings.push_back("Invalid rotateTo in items.otb.");
 						skipPayload(item_node, length);
+					}
+					break;
+				case ITEM_ATTR_DECAY:
+				case ITEM_ATTR_DECAY2:
+					fragment.flags |= flagMask(ItemFlag::Decays);
+					if (!skipPayload(item_node, length)) {
+						warnings.push_back("Invalid decay attribute in items.otb.");
 					}
 					break;
 				case ITEM_ATTR_TOPORDER: {
