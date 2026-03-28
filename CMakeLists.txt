@@ -73,7 +73,7 @@ include(source/CMakeLists.txt)
 # Removed WIN32 to enable Console subsystem for persistent debugging logs
 add_executable(rme ${rme_H} ${rme_SRC})
 
-set_target_properties(rme PROPERTIES CXX_STANDARD 20)
+set_target_properties(rme PROPERTIES CXX_STANDARD 23)
 set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
 target_compile_definitions(rme PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
  

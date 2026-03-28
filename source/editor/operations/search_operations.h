@@ -3,6 +3,9 @@
 
 #include "map/map.h"
 #include "map/tile.h"
+#include "brushes/brush.h"
+#include "brushes/creature/creature_brush.h"
+#include "game/creature.h"
 #include "game/item.h"
 #include "game/complexitem.h"
 #include "ui/gui.h"
@@ -133,6 +136,33 @@ namespace EditorOperations {
 			}
 
 			return false;
+		}
+	};
+
+	struct CreatureSearcher {
+		CreatureSearcher(const Brush* creatureBrush, uint32_t maxCount) :
+			creatureBrush(creatureBrush), maxCount(maxCount) { }
+
+		const Brush* creatureBrush;
+		uint32_t maxCount;
+		std::vector<std::pair<Tile*, Creature*>> result;
+
+		bool limitReached() const {
+			return result.size() >= static_cast<size_t>(maxCount);
+		}
+
+		void operator()(Map& map, Tile* tile, long long done) {
+			if (result.size() >= static_cast<size_t>(maxCount)) {
+				return;
+			}
+
+			if (done % SEARCH_UPDATE_INTERVAL == 0) {
+				g_gui.SetLoadDone(static_cast<uint32_t>(100 * done / map.getTileCount()));
+			}
+
+			if (tile->creature != nullptr && static_cast<const Brush*>(tile->creature->getBrush()) == creatureBrush) {
+				result.emplace_back(tile, tile->creature.get());
+			}
 		}
 	};
 }

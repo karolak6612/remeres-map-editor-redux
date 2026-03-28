@@ -1,33 +1,23 @@
-//////////////////////////////////////////////////////////////////////
-// This file is part of Remere's Map Editor
-//////////////////////////////////////////////////////////////////////
-// Remere's Map Editor is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// Remere's Map Editor is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program. If not, see <http://www.gnu.org/licenses/>.
-//////////////////////////////////////////////////////////////////////
-
 #ifndef RME_FIND_ITEM_WINDOW_H_
 #define RME_FIND_ITEM_WINDOW_H_
 
-#include <wx/radiobox.h>
-#include <wx/spinctrl.h>
-#include <wx/sizer.h>
-#include <wx/statbox.h>
-#include <wx/textctrl.h>
-#include <wx/checkbox.h>
-#include <wx/button.h>
-#include <wx/dialog.h>
+#include "ui/find_item_window_model.h"
 
-class FindDialogListBox;
+#include <wx/dialog.h>
+#include <wx/timer.h>
+
+#include <array>
+#include <string>
+
+class Brush;
+class CreatureBrush;
+class KeyForwardingTextCtrl;
+class wxButton;
+class wxCheckBox;
+class wxRadioButton;
+class wxStaticBox;
+
+class AdvancedFinderResultListBox;
 
 class FindItemDialog : public wxDialog {
 public:
@@ -39,78 +29,119 @@ public:
 		Properties,
 	};
 
-	enum SearchItemType {
-		Depot,
-		Mailbox,
-		TrashHolder,
-		Container,
-		Door,
-		MagicField,
-		Teleport,
-		Bed,
-		Key,
-		Podium
+	enum class ActionSet : uint8_t {
+		ConfirmOnly = 0,
+		SearchAndSelect,
 	};
 
-	FindItemDialog(wxWindow* parent, const wxString& title, bool onlyPickupables = false);
-	~FindItemDialog();
+	enum class ResultAction : uint8_t {
+		None = 0,
+		ConfirmSelection,
+		SearchMap,
+		SelectItem,
+	};
 
-	Brush* getResult() const {
-		return result_brush;
-	}
-	uint16_t getResultID() const {
-		return result_id;
+	FindItemDialog(
+		wxWindow* parent,
+		const wxString& title,
+		bool onlyPickupables = false,
+		ActionSet action_set = ActionSet::ConfirmOnly,
+		AdvancedFinderDefaultAction default_action = AdvancedFinderDefaultAction::SelectItem,
+		bool include_creatures = false
+	);
+	~FindItemDialog() override;
+
+	[[nodiscard]] const Brush* getResult() const {
+		return result_brush_;
 	}
 
-	SearchMode getSearchMode() const;
+	[[nodiscard]] uint16_t getResultID() const {
+		return result_id_;
+	}
+
+	[[nodiscard]] AdvancedFinderCatalogKind getResultKind() const {
+		return result_kind_;
+	}
+
+	[[nodiscard]] CreatureBrush* getResultCreatureBrush() const {
+		return result_creature_brush_;
+	}
+
+	[[nodiscard]] const std::string& getResultCreatureName() const {
+		return result_creature_name_;
+	}
+
+	[[nodiscard]] ResultAction getResultAction() const {
+		return result_action_;
+	}
+
+	[[nodiscard]] SearchMode getSearchMode() const;
 	void setSearchMode(SearchMode mode);
 
 private:
-	void EnableProperties(bool enable);
-	void RefreshContentsInternal();
+	static constexpr size_t kFindByModeCount = 3;
+	static constexpr size_t kTypeCheckboxCount = static_cast<size_t>(AdvancedFinderTypeFilter::Count);
+	static constexpr size_t kPropertyCheckboxCount = static_cast<size_t>(AdvancedFinderPropertyFilter::Count);
+	static constexpr size_t kInteractionCheckboxCount = static_cast<size_t>(AdvancedFinderInteractionFilter::Count);
+	static constexpr size_t kVisualCheckboxCount = static_cast<size_t>(AdvancedFinderVisualFilter::Count);
 
-	void OnOptionChange(wxCommandEvent& event);
-	void OnServerIdChange(wxCommandEvent& event);
-	void OnClientIdChange(wxCommandEvent& event);
-	void OnText(wxCommandEvent& event);
-	void OnTypeChange(wxCommandEvent& event);
-	void OnPropertyChange(wxCommandEvent& event);
+	void buildLayout();
+	void bindEvents();
+	void loadInitialState();
+	void savePersistedState();
+	void applyQueryToControls() const;
+	void readQueryFromControls();
+	void refreshResults();
+	void updateButtons();
+	void updateResultTitle(size_t count) const;
+	void updateCurrentSelection();
+	void triggerDefaultAction();
+	void handlePositiveAction(ResultAction action);
+	bool shouldApplyLegacyFallback() const;
+
+	void OnFindByChanged(wxCommandEvent& event);
+	void OnFilterChanged(wxCommandEvent& event);
+	void OnTextChanged(wxCommandEvent& event);
 	void OnInputTimer(wxTimerEvent& event);
-	void OnClickOK(wxCommandEvent& event);
-	void OnClickCancel(wxCommandEvent& event);
+	void OnResultSelection(wxCommandEvent& event);
+	void OnResultActivate(wxCommandEvent& event);
+	void OnSearchMap(wxCommandEvent& event);
+	void OnSelectItem(wxCommandEvent& event);
+	void OnCancel(wxCommandEvent& event);
+	void OnTextEnter(wxCommandEvent& event);
 
-	wxRadioBox* options_radio_box;
+	wxTimer input_timer_;
+	KeyForwardingTextCtrl* search_field_ = nullptr;
+	std::array<wxRadioButton*, kFindByModeCount> find_by_buttons_ {};
+	std::array<wxCheckBox*, kTypeCheckboxCount> type_checkboxes_ {};
+	std::array<wxCheckBox*, kPropertyCheckboxCount> property_checkboxes_ {};
+	std::array<wxCheckBox*, kInteractionCheckboxCount> interaction_checkboxes_ {};
+	std::array<wxCheckBox*, kVisualCheckboxCount> visual_checkboxes_ {};
+	AdvancedFinderResultListBox* result_list_ = nullptr;
+	wxStaticBox* result_box_ = nullptr;
+	wxButton* search_map_button_ = nullptr;
+	wxButton* select_item_button_ = nullptr;
+	wxButton* ok_button_ = nullptr;
+	wxButton* cancel_button_ = nullptr;
 
-	wxRadioBox* types_radio_box;
+	AdvancedFinderQuery query_;
+	AdvancedFinderPersistedState persisted_state_;
+	AdvancedFinderSelectionKey current_selection_;
+	std::vector<AdvancedFinderCatalogRow> catalog_;
+	std::vector<size_t> filtered_indices_;
 
-	wxSpinCtrl* server_id_spin;
-	wxSpinCtrl* client_id_spin;
-	wxTextCtrl* name_text_input;
-	wxTimer input_timer;
-	wxCheckBox* unpassable;
-	wxCheckBox* unmovable;
-	wxCheckBox* block_missiles;
-	wxCheckBox* block_pathfinder;
-	wxCheckBox* readable;
-	wxCheckBox* writeable;
-	wxCheckBox* pickupable;
-	wxCheckBox* stackable;
-	wxCheckBox* rotatable;
-	wxCheckBox* hangable;
-	wxCheckBox* hook_east;
-	wxCheckBox* hook_south;
-	wxCheckBox* has_elevation;
-	wxCheckBox* ignore_look;
-	wxCheckBox* floor_change;
-	wxCheckBox* invalid_item;
+	ResultAction result_action_ = ResultAction::None;
+	AdvancedFinderCatalogKind result_kind_ = AdvancedFinderCatalogKind::Item;
+	Brush* result_brush_ = nullptr;
+	CreatureBrush* result_creature_brush_ = nullptr;
+	uint16_t result_id_ = 0;
+	std::string result_creature_name_;
 
-	FindDialogListBox* items_list;
-	wxStdDialogButtonSizer* buttons_box_sizer;
-	wxButton* ok_button;
-	wxButton* cancel_button;
-	Brush* result_brush;
-	uint16_t result_id;
-	bool only_pickupables;
+	bool only_pickupables_ = false;
+	bool include_creatures_ = false;
+	bool persist_shared_state_ = false;
+	ActionSet action_set_ = ActionSet::ConfirmOnly;
+	AdvancedFinderDefaultAction default_action_ = AdvancedFinderDefaultAction::SelectItem;
 };
 
-#endif // RME_FIND_ITEM_WINDOW_H_
+#endif

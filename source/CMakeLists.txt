@@ -276,6 +276,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_util.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_model.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.h
@@ -644,6 +645,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_util.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_model.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.cpp

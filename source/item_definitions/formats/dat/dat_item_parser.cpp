@@ -83,7 +83,10 @@ namespace {
 				fragment.flags |= flagMask(ItemFlag::Stackable);
 				return true;
 			case DatFlagForceUse:
+				fragment.flags |= flagMask(ItemFlag::ForceUse);
+				return true;
 			case DatFlagMultiUse:
+				fragment.flags |= flagMask(ItemFlag::MultiUse);
 				return true;
 			case DatFlagFluidContainer:
 				fragment.group = ITEM_GROUP_FLUID;
@@ -122,13 +125,15 @@ namespace {
 			case DatFlagTranslucent:
 			case DatFlagLyingCorpse:
 			case DatFlagAnimateAlways:
-			case DatFlagFullGround:
 			case DatFlagLook:
 			case DatFlagWrappable:
 			case DatFlagUnwrappable:
 			case DatFlagTopEffect:
 			case DatFlagNoMoveAnimation:
 			case DatFlagDefault:
+				return true;
+			case DatFlagFullGround:
+				fragment.flags |= flagMask(ItemFlag::FullTile);
 				return true;
 			case DatFlagFloorChange:
 				fragment.flags |= flagMask(ItemFlag::FloorChange);
@@ -145,7 +150,9 @@ namespace {
 				return file.skip(2);
 			case DatFlagCloth:
 			case DatFlagLensHelp:
+				return file.skip(2);
 			case DatFlagUsable:
+				fragment.flags |= flagMask(ItemFlag::ForceUse);
 				return file.skip(2);
 			case DatFlagLight: {
 				uint16_t intensity = 0;

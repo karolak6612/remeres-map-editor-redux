@@ -9,6 +9,55 @@
 #include "ui/find_item_window.h"
 #include "ui/main_menubar.h"
 #include "app/preferences.h"
+#include "ui/result_window.h"
+#include "editor/operations/search_operations.h"
+
+namespace {
+	void selectFoundBrush(const FindItemDialog& dialog) {
+		if (const Brush* brush = dialog.getResult()) {
+			const PaletteType palette = dialog.getResultKind() == AdvancedFinderCatalogKind::Creature ? TILESET_CREATURE : TILESET_RAW;
+			g_gui.SelectBrush(brush, palette);
+		}
+	}
+
+	void showItemSearchResults(uint16_t item_id, const wxString& load_bar_label) {
+		EditorOperations::ItemSearcher finder(item_id, static_cast<uint32_t>(g_settings.getInteger(Config::REPLACE_SIZE)));
+		g_gui.CreateLoadBar(load_bar_label);
+		foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, false);
+		g_gui.DestroyLoadBar();
+
+		if (finder.limitReached()) {
+			wxString msg;
+			msg << "The configured limit has been reached. Only " << finder.maxCount << " results will be displayed.";
+			DialogUtil::PopupDialog("Notice", msg, wxOK);
+		}
+
+		SearchResultWindow* window = g_gui.ShowSearchWindow();
+		window->Clear();
+		for (const auto& [tile, item] : finder.result) {
+			window->AddPosition(wxstr(item->getName()), tile->getPosition());
+		}
+	}
+
+	void showCreatureSearchResults(const FindItemDialog& dialog, const wxString& load_bar_label) {
+		EditorOperations::CreatureSearcher finder(dialog.getResult(), static_cast<uint32_t>(g_settings.getInteger(Config::REPLACE_SIZE)));
+		g_gui.CreateLoadBar(load_bar_label);
+		foreach_TileOnMap(g_gui.GetCurrentMap(), finder);
+		g_gui.DestroyLoadBar();
+
+		if (finder.limitReached()) {
+			wxString msg;
+			msg << "The configured limit has been reached. Only " << finder.maxCount << " results will be displayed.";
+			DialogUtil::PopupDialog("Notice", msg, wxOK);
+		}
+
+		SearchResultWindow* window = g_gui.ShowSearchWindow();
+		window->Clear();
+		for (const auto& [tile, creature] : finder.result) {
+			window->AddPosition(wxstr(creature->getName()), tile->getPosition());
+		}
+	}
+}
 
 NavigationMenuHandler::NavigationMenuHandler(MainFrame* frame, MainMenuBar* menubar) :
 	frame(frame), menubar(menubar) {
@@ -73,13 +122,18 @@ void NavigationMenuHandler::OnJumpToItemBrush(wxCommandEvent& WXUNUSED(event)) {
 	}
 
 	// Create the jump to dialog
-	FindItemDialog dialog(frame, "Jump to Item");
+	FindItemDialog dialog(frame, "Jump to Item", false, FindItemDialog::ActionSet::SearchAndSelect, AdvancedFinderDefaultAction::SelectItem, true);
 	dialog.setSearchMode((FindItemDialog::SearchMode)g_settings.getInteger(Config::JUMP_TO_ITEM_MODE));
-	if (dialog.ShowModal() == wxID_OK) {
-		// Retrieve result, if null user canceled
-		const Brush* brush = dialog.getResult();
-		if (brush) {
-			g_gui.SelectBrush(brush, TILESET_RAW);
+	const int modal_result = dialog.ShowModal();
+	if (modal_result != wxID_CANCEL) {
+		if (dialog.getResultAction() == FindItemDialog::ResultAction::SearchMap) {
+			if (dialog.getResultKind() == AdvancedFinderCatalogKind::Creature) {
+				showCreatureSearchResults(dialog, "Searching map...");
+			} else {
+				showItemSearchResults(dialog.getResultID(), "Searching map...");
+			}
+		} else if (dialog.getResultAction() == FindItemDialog::ResultAction::SelectItem) {
+			selectFoundBrush(dialog);
 		}
 		g_settings.setInteger(Config::JUMP_TO_ITEM_MODE, (int)dialog.getSearchMode());
 	}
