@@ -359,7 +359,7 @@ void MainFrame::OnExit(wxCloseEvent& event) {
 	g_layout.SavePerspective();
 	g_palettes.DestroyPalettes();
 	g_minimap.Destroy();
-	g_search.HideSearchWindow();
+	g_search.DestroySearchWindow();
 	LuaDialog::DestroyDockPanelsForShutdown();
 
 	if (g_gui.aui_manager) {

@@ -84,7 +84,12 @@ namespace {
 		else if (key == "writeable" && attribute_node.attribute("value").as_bool()) fragment.flags |= flagMask(ItemFlag::CanReadText) | flagMask(ItemFlag::CanWriteText);
 		else if (key == "maxtextlen" || key == "maxtextlength") fragment.max_text_len = attribute_node.attribute("value").as_ushort();
 		else if (key == "allowdistread" && attribute_node.attribute("value").as_bool()) fragment.flags |= flagMask(ItemFlag::AllowDistRead);
+		else if (key == "forceuse" && attribute_node.attribute("value").as_bool()) fragment.flags |= flagMask(ItemFlag::ForceUse);
+		else if (key == "multiuse" && attribute_node.attribute("value").as_bool()) fragment.flags |= flagMask(ItemFlag::MultiUse);
+		else if (key == "usable" && attribute_node.attribute("value").as_bool()) fragment.flags |= flagMask(ItemFlag::ForceUse);
+		else if ((key == "fulltile" || key == "fullground") && attribute_node.attribute("value").as_bool()) fragment.flags |= flagMask(ItemFlag::FullTile);
 		else if (key == "charges") { fragment.charges = attribute_node.attribute("value").as_uint(); fragment.flags |= flagMask(ItemFlag::ExtraChargeable); }
+		else if ((key == "decayto" || key == "decaytime" || key == "decay") && !value.empty()) fragment.flags |= flagMask(ItemFlag::Decays);
 		else if (key == "floorchange") parseFloorChange(fragment, value);
 	}
 }
