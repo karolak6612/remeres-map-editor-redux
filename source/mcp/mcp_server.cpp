@@ -8,6 +8,7 @@
 #include <boost/beast.hpp>
 #include <memory>
 #include <iostream>
+#include <wx/app.h> // For wxWakeUpIdle()
 
 namespace beast = boost::beast;
 namespace http = beast::http;
@@ -16,10 +17,7 @@ using tcp = net::ip::tcp;
 
 struct PendingRequest {
 	std::string payload;
-	std::string response;
-	bool completed = false;
-	std::mutex mutex;
-	std::condition_variable cv;
+	std::function<void(const std::string&)> on_complete;
 };
 
 class McpServerImpl {
@@ -93,7 +91,7 @@ public:
 		handler = h;
 	}
 
-	void processPendingRequests() {
+	bool processPendingRequests() {
 		McpServer::RequestHandler currentHandler;
 		{
 			std::lock_guard<std::mutex> lock(handler_mutex);
@@ -101,7 +99,7 @@ public:
 		}
 
 		if (!currentHandler) {
-			return; // No handler, ignore
+			return false; // No handler, ignore
 		}
 
 		std::vector<std::shared_ptr<PendingRequest>> requests_to_process;
@@ -115,19 +113,20 @@ public:
 		}
 
 		for (auto& req : requests_to_process) {
+			std::string response;
 			try {
-				req->response = currentHandler(req->payload);
+				response = currentHandler(req->payload);
 			} catch (const std::exception& e) {
-				req->response = std::string("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal error\"},\"id\":null}");
+				response = std::string("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal error\"},\"id\":null}");
 				spdlog::error("MCP Handler exception: {}", e.what());
 			}
 
-			{
-				std::lock_guard<std::mutex> lock(req->mutex);
-				req->completed = true;
+			if (req->on_complete) {
+				req->on_complete(response);
 			}
-			req->cv.notify_one();
 		}
+
+		return !requests_to_process.empty();
 	}
 
 private:
@@ -170,17 +169,20 @@ private:
 				auto pending = std::make_shared<PendingRequest>();
 				pending->payload = payload;
 
+				auto self = shared_from_this();
+				pending->on_complete = [self, server = this->server](const std::string& response) {
+					net::post(server->ioc, [self, response]() {
+						self->send_response(http::status::ok, response);
+					});
+				};
+
 				{
 					std::lock_guard<std::mutex> lock(server->queue_mutex);
 					server->request_queue.push(pending);
 				}
 
-				// Wait for main thread to process. Note: this blocks the ASIO session,
-				// which is perfectly fine for our MCP JSON-RPC usecase.
-				std::unique_lock<std::mutex> lock(pending->mutex);
-				pending->cv.wait(lock, [pending] { return pending->completed; });
-
-				send_response(http::status::ok, pending->response);
+				// Wake up the main thread to process the pending request
+				wxWakeUpIdle();
 			} else {
 				send_response(http::status::bad_request, "Only POST requests are supported for MCP JSON-RPC.");
 			}
@@ -249,6 +251,6 @@ void McpServer::setHandler(RequestHandler handler) {
 	impl->setHandler(handler);
 }
 
-void McpServer::processPendingRequests() {
-	impl->processPendingRequests();
+bool McpServer::processPendingRequests() {
+	return impl->processPendingRequests();
 }

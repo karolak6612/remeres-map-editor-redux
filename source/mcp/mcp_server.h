@@ -28,7 +28,8 @@ public:
 
 	// To be called from the main thread (e.g., in a wxTimer or OnIdle)
 	// This will process pending requests and call the handler
-	void processPendingRequests();
+	// Returns true if at least one request was processed
+	bool processPendingRequests();
 
 private:
 	McpServer();

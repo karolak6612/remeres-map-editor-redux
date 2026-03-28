@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rme-editor": {
+      "command": "curl",
+      "args": ["-s", "-X", "POST", "http://127.0.0.1:8080/", "-d", "@-"],
+      "description": "Remere's Map Editor MCP Server running on localhost:8080"
+    }
+  }
+}
