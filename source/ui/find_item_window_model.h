@@ -82,7 +82,7 @@ using AdvancedFinderFilterMask = uint32_t;
 
 template <typename Enum>
 constexpr AdvancedFinderFilterMask advancedFinderBit(Enum value) {
-	return AdvancedFinderFilterMask { 1 } << static_cast<AdvancedFinderFilterMask>(static_cast<std::underlying_type_t<Enum>>(value));
+	return AdvancedFinderFilterMask { 1 } << static_cast<std::underlying_type_t<Enum>>(value);
 }
 
 struct AdvancedFinderQuery {

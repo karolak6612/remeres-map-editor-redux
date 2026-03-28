@@ -10,7 +10,7 @@ SearchManager::SearchManager() :
 }
 
 SearchManager::~SearchManager() {
-	DestroySearchWindow();
+	// Explicit teardown happens from MainFrame::OnExit() while g_gui is still valid.
 }
 
 void SearchManager::DestroySearchWindow() {

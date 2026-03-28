@@ -10,6 +10,7 @@
 #include <nanovg.h>
 
 #include <algorithm>
+#include <limits>
 
 #include <wx/file.h>
 #include <wx/filedlg.h>
@@ -320,7 +321,7 @@ SearchResultWindow::SearchResultWindow(wxWindow* parent) :
 
 	export_button_ = newd wxButton(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
 	export_button_->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_FILE_EXPORT));
-	export_button_->SetToolTip("Export results");
+	export_button_->SetToolTip("Export current page");
 	action_sizer->Add(export_button_, wxSizerFlags(0).CenterVertical().Border(wxRIGHT, FromDIP(6)));
 
 	clear_button_ = newd wxButton(this, wxID_ANY, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxBU_EXACTFIT);
@@ -397,7 +398,9 @@ void SearchResultWindow::OnClickExport(wxCommandEvent& WXUNUSED(event)) {
 	for (size_t i = 0; i < count; ++i) {
 		const SearchResultRow& row = rows_[i];
 		file.Write(wxString::Format("%u\t%s\t%d\t%d\t%d\n", row.index, row.name, row.position.x, row.position.y, row.position.z));
-		g_gui.SetLoadScale(static_cast<int32_t>(i), static_cast<int32_t>(count));
+		const auto from = static_cast<int32_t>(std::min<size_t>(i, static_cast<size_t>(std::numeric_limits<int32_t>::max())));
+		const auto to = static_cast<int32_t>(std::min<size_t>(count, static_cast<size_t>(std::numeric_limits<int32_t>::max())));
+		g_gui.SetLoadScale(from, to);
 	}
 
 	file.Close();

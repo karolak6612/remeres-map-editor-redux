@@ -35,6 +35,9 @@ public:
 	~SearchResultWindow() override;
 
 	void Clear();
+	// page_loader is optional. When provided, it is invoked with the next page offset
+	// requested by the pagination controls and is expected to call SetResults() with
+	// the newly loaded page.
 	void SetResults(std::vector<SearchResultRow> rows, uint32_t total_count = 0, uint32_t page_offset = 0, uint32_t page_limit = 0, std::function<void(uint32_t)> page_loader = {});
 
 	void OnClickExport(wxCommandEvent& event);

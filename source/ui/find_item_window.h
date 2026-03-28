@@ -82,7 +82,7 @@ private:
 	void readQueryFromControls();
 	void refreshResults();
 	void updateButtons();
-	void updateResultTitle(size_t count) const;
+	void updateResultTitle(size_t count);
 	void updateCurrentSelection();
 	void triggerDefaultAction();
 	void handlePositiveAction(ResultAction action);

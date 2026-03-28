@@ -232,10 +232,12 @@ public:
 
 	bool getBoolean(uint32_t key) const;
 	int getInteger(uint32_t key) const;
+	uint32_t getUnsignedInteger(uint32_t key) const;
 	float getFloat(uint32_t key) const;
 	std::string getString(uint32_t key) const;
 
 	void setInteger(uint32_t key, int newval);
+	void setUnsignedInteger(uint32_t key, uint32_t newval);
 	void setFloat(uint32_t key, float newval);
 	void setString(uint32_t key, std::string newval);
 
@@ -254,7 +256,7 @@ public:
 		std::string str();
 
 	private:
-		std::variant<std::monostate, int, float, std::string> val;
+		std::variant<std::monostate, int, uint32_t, float, std::string> val;
 
 		friend class Settings;
 	};

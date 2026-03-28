@@ -155,6 +155,10 @@ namespace {
 			return 0;
 		}
 
+		if (query_token.prefix_wildcard && query_token.suffix_wildcard && name_token.contains(query_token.value)) {
+			return 30 + static_cast<int>(name_token.size() - query_token.value.size());
+		}
+
 		if (query_token.suffix_wildcard && name_token.starts_with(query_token.value)) {
 			return 10 + static_cast<int>(name_token.size() - query_token.value.size());
 		}
@@ -172,6 +176,10 @@ namespace {
 	[[nodiscard]] int scoreNumericTokenMatch(const QueryToken& query_token, std::string_view name_token) {
 		if (query_token.value == name_token) {
 			return 0;
+		}
+
+		if (query_token.prefix_wildcard && query_token.suffix_wildcard && name_token.contains(query_token.value)) {
+			return 30 + static_cast<int>(name_token.size() - query_token.value.size());
 		}
 
 		if (query_token.suffix_wildcard && name_token.starts_with(query_token.value)) {
@@ -386,10 +394,10 @@ namespace {
 AdvancedFinderPersistedState LoadAdvancedFinderPersistedState() {
 	AdvancedFinderPersistedState state;
 
-	state.query.type_mask = static_cast<AdvancedFinderFilterMask>(std::max(0, g_settings.getInteger(Config::ADVANCED_ITEM_FINDER_TYPE_FILTERS)));
-	state.query.property_mask = static_cast<AdvancedFinderFilterMask>(std::max(0, g_settings.getInteger(Config::ADVANCED_ITEM_FINDER_PROPERTY_FILTERS)));
-	state.query.interaction_mask = static_cast<AdvancedFinderFilterMask>(std::max(0, g_settings.getInteger(Config::ADVANCED_ITEM_FINDER_INTERACTION_FILTERS)));
-	state.query.visual_mask = static_cast<AdvancedFinderFilterMask>(std::max(0, g_settings.getInteger(Config::ADVANCED_ITEM_FINDER_VISUAL_FILTERS)));
+	state.query.type_mask = g_settings.getUnsignedInteger(Config::ADVANCED_ITEM_FINDER_TYPE_FILTERS);
+	state.query.property_mask = g_settings.getUnsignedInteger(Config::ADVANCED_ITEM_FINDER_PROPERTY_FILTERS);
+	state.query.interaction_mask = g_settings.getUnsignedInteger(Config::ADVANCED_ITEM_FINDER_INTERACTION_FILTERS);
+	state.query.visual_mask = g_settings.getUnsignedInteger(Config::ADVANCED_ITEM_FINDER_VISUAL_FILTERS);
 	state.query.text = g_settings.getString(Config::ADVANCED_ITEM_FINDER_QUERY_TEXT);
 
 	state.selection.kind = static_cast<AdvancedFinderCatalogKind>(std::clamp(g_settings.getInteger(Config::ADVANCED_ITEM_FINDER_SELECTED_KIND), 0, 1));
@@ -410,10 +418,10 @@ AdvancedFinderPersistedState LoadAdvancedFinderPersistedState() {
 }
 
 void SaveAdvancedFinderPersistedState(const AdvancedFinderPersistedState& state) {
-	g_settings.setInteger(Config::ADVANCED_ITEM_FINDER_TYPE_FILTERS, static_cast<int>(state.query.type_mask));
-	g_settings.setInteger(Config::ADVANCED_ITEM_FINDER_PROPERTY_FILTERS, static_cast<int>(state.query.property_mask));
-	g_settings.setInteger(Config::ADVANCED_ITEM_FINDER_INTERACTION_FILTERS, static_cast<int>(state.query.interaction_mask));
-	g_settings.setInteger(Config::ADVANCED_ITEM_FINDER_VISUAL_FILTERS, static_cast<int>(state.query.visual_mask));
+	g_settings.setUnsignedInteger(Config::ADVANCED_ITEM_FINDER_TYPE_FILTERS, state.query.type_mask);
+	g_settings.setUnsignedInteger(Config::ADVANCED_ITEM_FINDER_PROPERTY_FILTERS, state.query.property_mask);
+	g_settings.setUnsignedInteger(Config::ADVANCED_ITEM_FINDER_INTERACTION_FILTERS, state.query.interaction_mask);
+	g_settings.setUnsignedInteger(Config::ADVANCED_ITEM_FINDER_VISUAL_FILTERS, state.query.visual_mask);
 	g_settings.setString(Config::ADVANCED_ITEM_FINDER_QUERY_TEXT, state.query.text);
 	g_settings.setInteger(Config::ADVANCED_ITEM_FINDER_SELECTED_KIND, static_cast<int>(state.selection.kind));
 	g_settings.setInteger(Config::ADVANCED_ITEM_FINDER_SELECTED_SERVER_ID, state.selection.server_id);
