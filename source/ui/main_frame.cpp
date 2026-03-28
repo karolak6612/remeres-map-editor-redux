@@ -23,6 +23,7 @@
 #include "ui/about_window.h"
 #include "ui/main_menubar.h"
 #include "app/updater.h"
+#include "mcp/mcp_server.h"
 #include "ui/map/export_tilesets_window.h"
 #include "ui/tile_properties/tile_properties_panel.h"
 #include <wx/stattext.h>
@@ -117,6 +118,8 @@ void MainFrame::OnIdle(wxIdleEvent& event) {
 	if (tool_bar) {
 		tool_bar->UpdateButtons();
 	}
+
+	g_mcpServer.processPendingRequests();
 	event.RequestMore();
 	event.Skip();
 }

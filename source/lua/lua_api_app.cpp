@@ -25,6 +25,7 @@
 #include "brushes/brush.h"
 #include "editor/action.h"
 #include "map/tile.h"
+#include "mcp/mcp_server.h"
 #include "editor/selection.h"
 #include "game/items.h"
 #include "brushes/raw/raw_brush.h"
@@ -738,6 +739,34 @@ namespace LuaAPI {
 		app["copy"] = []() { g_gui.DoCopy(); };
 		app["cut"] = []() { g_gui.DoCut(); };
 		app["paste"] = []() { g_gui.DoPaste(); };
+
+		app["startMcpServer"] = [](uint16_t port) -> bool {
+			return g_mcpServer.start(port);
+		};
+
+		app["stopMcpServer"] = []() {
+			g_mcpServer.stop();
+		};
+
+		app["isMcpServerRunning"] = []() -> bool {
+			return g_mcpServer.isRunning();
+		};
+
+		app["setMcpHandler"] = [](sol::function callback) {
+			g_mcpServer.setHandler([callback](const std::string& request) -> std::string {
+				try {
+					auto result = callback(request);
+					if (result.valid() && result.get_type() == sol::type::string) {
+						return result.get<std::string>();
+					} else {
+						// Fallback if the callback doesn't return a valid string
+						return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Lua handler did not return a valid JSON string\"},\"id\":null}";
+					}
+				} catch (const std::exception& e) {
+					return std::string("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"") + e.what() + "\"},\"id\":null}";
+				}
+			});
+		};
 
 		// Map overlay system
 		sol::table mapView = lua.create_table();
