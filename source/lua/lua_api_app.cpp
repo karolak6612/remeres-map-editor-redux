@@ -754,18 +754,31 @@ namespace LuaAPI {
 
 		app["setMcpHandler"] = [](sol::function callback) {
 			g_mcpServer.setHandler([callback](const std::string& request) -> std::string {
+				nlohmann::json req_id = nullptr;
+				try {
+					auto parsed = nlohmann::json::parse(request);
+					if (parsed.contains("id")) req_id = parsed["id"];
+				} catch (...) {}
+
 				try {
 					auto result = callback(request);
 					if (result.valid() && result.get_type() == sol::type::string) {
 						return result.get<std::string>();
 					} else {
-						// Fallback if the callback doesn't return a valid string
-						return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Lua handler did not return a valid JSON string\"},\"id\":null}";
+						nlohmann::json error_resp = {
+							{"jsonrpc", "2.0"},
+							{"id", req_id},
+							{"error", {
+								{"code", -32603},
+								{"message", "Lua handler did not return a valid JSON string"}
+							}}
+						};
+						return error_resp.dump();
 					}
 				} catch (const std::exception& e) {
 					nlohmann::json error_resp = {
 						{"jsonrpc", "2.0"},
-						{"id", nullptr},
+						{"id", req_id},
 						{"error", {
 							{"code", -32603},
 							{"message", e.what()}

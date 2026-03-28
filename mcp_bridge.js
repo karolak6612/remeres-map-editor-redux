@@ -25,7 +25,7 @@ rl.on('line', (line) => {
     let reqId = null;
     try {
         const parsed = JSON.parse(line);
-        reqId = parsed.id || null;
+        reqId = parsed.id !== undefined ? parsed.id : null;
     } catch (e) {
         console.log(JSON.stringify({
             jsonrpc: "2.0",
@@ -35,6 +35,7 @@ rl.on('line', (line) => {
         return;
     }
 
+    let responded = false;
     const options = {
         hostname: HOST,
         port: PORT,
@@ -55,27 +56,36 @@ rl.on('line', (line) => {
         });
 
         res.on('end', () => {
-            if (responseData.trim()) {
-                console.log(responseData.trim());
+            if (!responded) {
+                responded = true;
+                if (responseData.trim()) {
+                    console.log(responseData.trim());
+                }
             }
         });
     });
 
     req.on('timeout', () => {
-        req.destroy();
-        console.log(JSON.stringify({
-            jsonrpc: "2.0",
-            error: { code: -32001, message: "Request timeout" },
-            id: reqId
-        }));
+        if (!responded) {
+            responded = true;
+            console.log(JSON.stringify({
+                jsonrpc: "2.0",
+                error: { code: -32001, message: "Request timeout" },
+                id: reqId
+            }));
+            req.destroy();
+        }
     });
 
     req.on('error', (e) => {
-        console.log(JSON.stringify({
-            jsonrpc: "2.0",
-            error: { code: -32002, message: "Connection error: " + e.message },
-            id: reqId
-        }));
+        if (!responded) {
+            responded = true;
+            console.log(JSON.stringify({
+                jsonrpc: "2.0",
+                error: { code: -32002, message: "Connection error: " + e.message },
+                id: reqId
+            }));
+        }
     });
 
     req.write(line);

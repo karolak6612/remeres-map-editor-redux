@@ -7,7 +7,7 @@
 #include <boost/asio.hpp>
 #include <boost/beast.hpp>
 #include <memory>
-#include <iostream>
+#include <nlohmann/json.hpp>
 #include <wx/app.h> // For wxWakeUpIdle()
 
 namespace beast = boost::beast;
@@ -17,6 +17,7 @@ using tcp = net::ip::tcp;
 
 struct PendingRequest {
 	std::string payload;
+	nlohmann::json id = nullptr;
 	std::function<void(const std::string&)> on_complete;
 };
 
@@ -54,7 +55,7 @@ public:
 			running = true;
 			do_accept();
 
-			server_thread = std::thread([this]() {
+			server_thread = std::jthread([this]() {
 				try {
 					ioc.run();
 				} catch (const std::exception& e) {
@@ -85,18 +86,23 @@ public:
 				auto req = request_queue.front();
 				request_queue.pop();
 				if (req->on_complete) {
-					std::string err = "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32000,\"message\":\"Server shutting down\"},\"id\":null}";
-					net::post(ioc, [req, err]() {
-						req->on_complete(err);
+					nlohmann::json err = {
+						{"jsonrpc", "2.0"},
+						{"id", req->id},
+						{"error", {
+							{"code", -32000},
+							{"message", "Server shutting down"}
+						}}
+					};
+					std::string err_str = err.dump();
+					net::post(ioc, [req, err_str]() {
+						req->on_complete(err_str);
 					});
 				}
 			}
 		}
 
 		ioc.stop();
-		if (server_thread.joinable()) {
-			server_thread.join();
-		}
 		ioc.restart();
 		spdlog::info("MCP Server stopped.");
 	}
@@ -130,7 +136,15 @@ public:
 		if (!currentHandler) {
 			for (auto& req : requests_to_process) {
 				if (req->on_complete) {
-					req->on_complete("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32601,\"message\":\"Method not found (No Lua handler registered)\"},\"id\":null}");
+					nlohmann::json err = {
+						{"jsonrpc", "2.0"},
+						{"id", req->id},
+						{"error", {
+							{"code", -32601},
+							{"message", "Method not found (No Lua handler registered)"}
+						}}
+					};
+					req->on_complete(err.dump());
 				}
 			}
 			return !requests_to_process.empty();
@@ -141,7 +155,15 @@ public:
 			try {
 				response = currentHandler(req->payload);
 			} catch (const std::exception& e) {
-				response = std::string("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Internal error\"},\"id\":null}");
+				nlohmann::json err = {
+					{"jsonrpc", "2.0"},
+					{"id", req->id},
+					{"error", {
+						{"code", -32603},
+						{"message", "Internal error"}
+					}}
+				};
+				response = err.dump();
 				spdlog::error("MCP Handler exception: {}", e.what());
 			}
 
@@ -193,6 +215,15 @@ private:
 				auto pending = std::make_shared<PendingRequest>();
 				pending->payload = payload;
 
+				try {
+					auto parsed = nlohmann::json::parse(payload);
+					if (parsed.contains("id")) {
+						pending->id = parsed["id"];
+					}
+				} catch (...) {
+					// Invalid JSON, ID remains nullptr
+				}
+
 				auto self = shared_from_this();
 				pending->on_complete = [self, server = this->server](const std::string& response) {
 					net::post(server->ioc, [self, response]() {
@@ -237,7 +268,7 @@ private:
 
 	net::io_context ioc;
 	tcp::acceptor acceptor;
-	std::thread server_thread;
+	std::jthread server_thread;
 	std::atomic<bool> running;
 
 	std::mutex queue_mutex;

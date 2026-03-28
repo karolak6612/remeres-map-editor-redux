@@ -239,8 +239,9 @@ mcp.registerTool("create_castle_template", "Creates a simple castle wall boundar
         for x = minP.x, maxP.x do
             for y = minP.y, maxP.y do
                 for z = minP.z, maxP.z do
-                    if app.selection.minPosition and x >= app.selection.minPosition.x and x <= app.selection.maxPosition.x and y >= app.selection.minPosition.y and y <= app.selection.maxPosition.y and z >= app.selection.minPosition.z and z <= app.selection.maxPosition.z then
-                        local t = Tile(Position(x,y,z))
+                    local pos = Position(x,y,z)
+                if app.selection.minPosition and x >= app.selection.minPosition.x and x <= app.selection.maxPosition.x and y >= app.selection.minPosition.y and y <= app.selection.maxPosition.y and z >= app.selection.minPosition.z and z <= app.selection.maxPosition.z then
+                    local t = Tile(pos)
                         if t then
                             t:setGround(Item(args.floorId))
                             if x == minP.x or x == maxP.x or y == minP.y or y == maxP.y then
@@ -310,7 +311,9 @@ mcp.registerTool("replace_in_selection", "Replaces one item ID with another with
                                 count = count + 1
                             end
                             -- Check top items
-                            for _, it in ipairs(t:getItems()) do
+                            local items = t:getItems()
+                            for i = #items, 1, -1 do
+                                local it = items[i]
                                 if it:getID() == args.oldId then
                                     t:removeItem(it)
                                     t:addItem(Item(args.newId))
@@ -336,8 +339,9 @@ mcp.registerTool("count_items_in_selection", "Counts the occurrences of a specif
     for x = app.selection.minPosition.x, app.selection.maxPosition.x do
         for y = app.selection.minPosition.y, app.selection.maxPosition.y do
             for z = app.selection.minPosition.z, app.selection.maxPosition.z do
+                local pos = Position(x,y,z)
                 if app.selection.minPosition and x >= app.selection.minPosition.x and x <= app.selection.maxPosition.x and y >= app.selection.minPosition.y and y <= app.selection.maxPosition.y and z >= app.selection.minPosition.z and z <= app.selection.maxPosition.z then
-                    local t = Tile(Position(x,y,z))
+                    local t = Tile(pos)
                     if t then
                         if t:getGround() and t:getGround():getID() == args.itemId then count = count + 1 end
                         for _, it in ipairs(t:getItems()) do
