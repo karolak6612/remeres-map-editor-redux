@@ -35,7 +35,7 @@ find_package(OpenGL REQUIRED)
 if(WIN32)
     set(Boost_THREADAPI win32)
 endif()
-find_package(Boost 1.34.0 COMPONENTS thread system REQUIRED)
+find_package(Boost 1.34.0 COMPONENTS thread system beast REQUIRED)
 
 find_package(wxWidgets 3.2 COMPONENTS html aui gl adv core net base propgrid REQUIRED)
 

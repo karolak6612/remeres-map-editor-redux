@@ -763,7 +763,15 @@ namespace LuaAPI {
 						return "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"Lua handler did not return a valid JSON string\"},\"id\":null}";
 					}
 				} catch (const std::exception& e) {
-					return std::string("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32603,\"message\":\"") + e.what() + "\"},\"id\":null}";
+					nlohmann::json error_resp = {
+						{"jsonrpc", "2.0"},
+						{"id", nullptr},
+						{"error", {
+							{"code", -32603},
+							{"message", e.what()}
+						}}
+					};
+					return error_resp.dump();
 				}
 			});
 		};

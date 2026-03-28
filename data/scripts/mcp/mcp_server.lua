@@ -15,9 +15,9 @@ end
 
 -- Handle incoming JSON-RPC
 function mcp.handleRequest(requestStr)
-    local ok, req = pcall(json.parse, requestStr)
+    local ok, req = pcall(json.decode, requestStr)
     if not ok or type(req) ~= "table" then
-        return json.stringify({
+        return json.encode({
             jsonrpc = "2.0",
             error = { code = -32700, message = "Parse error" },
             id = nil
@@ -27,7 +27,7 @@ function mcp.handleRequest(requestStr)
     local id = req.id
 
     if req.method == "initialize" then
-        return json.stringify({
+        return json.encode({
             jsonrpc = "2.0",
             result = {
                 protocolVersion = "2024-11-05",
@@ -47,14 +47,14 @@ function mcp.handleRequest(requestStr)
                 inputSchema = t.inputSchema
             })
         end
-        return json.stringify({
+        return json.encode({
             jsonrpc = "2.0",
             result = { tools = toolList },
             id = id
         })
     elseif req.method == "tools/call" then
         if not req.params or not req.params.name then
-            return json.stringify({
+            return json.encode({
                 jsonrpc = "2.0",
                 error = { code = -32602, message = "Invalid params: name is required" },
                 id = id
@@ -63,7 +63,7 @@ function mcp.handleRequest(requestStr)
 
         local tool = mcp.tools[req.params.name]
         if not tool then
-            return json.stringify({
+            return json.encode({
                 jsonrpc = "2.0",
                 error = { code = -32601, message = "Tool not found" },
                 id = id
@@ -74,7 +74,7 @@ function mcp.handleRequest(requestStr)
         local success, result = pcall(tool.callback, args)
 
         if not success then
-            return json.stringify({
+            return json.encode({
                 jsonrpc = "2.0",
                 result = {
                     content = {{ type = "text", text = "Error: " .. tostring(result) }},
@@ -84,15 +84,15 @@ function mcp.handleRequest(requestStr)
             })
         end
 
-        return json.stringify({
+        return json.encode({
             jsonrpc = "2.0",
             result = {
-                content = {{ type = "text", text = type(result) == "string" and result or json.stringify(result) }}
+                content = {{ type = "text", text = type(result) == "string" and result or json.encode(result) }}
             },
             id = id
         })
     else
-        return json.stringify({
+        return json.encode({
             jsonrpc = "2.0",
             error = { code = -32601, message = "Method not found" },
             id = id
@@ -108,7 +108,7 @@ mcp.registerTool("get_map_info", "Returns basic map information like width, heig
     type = "object", properties = {}
 }, function()
     if not app.hasMap() then return "No map loaded." end
-    local desc = map.getDescription()
+    local desc = app.map.description
     return "Map Info: " .. desc
 end)
 
@@ -128,7 +128,7 @@ mcp.registerTool("get_tile", "Returns detailed info of items on a specific tile.
     for i, item in ipairs(t:getItems()) do
         table.insert(items, {id = item:getID()})
     end
-    return json.stringify({
+    return json.encode({
         ground = t:getGround() and t:getGround():getID() or nil,
         items = items
     })
@@ -194,9 +194,9 @@ end)
 mcp.registerTool("get_selection", "Returns the bounding box of the current selection.", {
     type = "object", properties = {}
 }, function()
-    if not selection.hasSelection() then return "No selection." end
-    local startPos = selection.getMinPosition()
-    local endPos = selection.getMaxPosition()
+    if app.selection.isEmpty then return "No selection." end
+    local startPos = app.selection.minPosition
+    local endPos = app.selection.maxPosition
     return string.format("Selection from (X:%d Y:%d Z:%d) to (X:%d Y:%d Z:%d)", startPos.x, startPos.y, startPos.z, endPos.x, endPos.y, endPos.z)
 end)
 
@@ -205,13 +205,13 @@ mcp.registerTool("fill_selection_ground", "Fills the selected area ground with a
     properties = { itemId = { type = "number" } },
     required = { "itemId" }
 }, function(args)
-    if not app.hasMap() or not selection.hasSelection() then return "No map or selection." end
+    if not app.hasMap() or app.selection.isEmpty then return "No map or selection." end
     app.transaction("Fill Selection Ground", function()
-        for x = selection.getMinPosition().x, selection.getMaxPosition().x do
-            for y = selection.getMinPosition().y, selection.getMaxPosition().y do
-                for z = selection.getMinPosition().z, selection.getMaxPosition().z do
+        for x = app.selection.minPosition.x, app.selection.maxPosition.x do
+            for y = app.selection.minPosition.y, app.selection.maxPosition.y do
+                for z = app.selection.minPosition.z, app.selection.maxPosition.z do
                     local pos = Position(x, y, z)
-                    if selection.contains(pos) then
+                    if app.selection.minPosition and pos.x >= app.selection.minPosition.x and pos.x <= app.selection.maxPosition.x and pos.y >= app.selection.minPosition.y and pos.y <= app.selection.maxPosition.y and pos.z >= app.selection.minPosition.z and pos.z <= app.selection.maxPosition.z then
                         local t = Tile(pos)
                         if t then t:setGround(Item(args.itemId)) end
                     end
@@ -230,16 +230,16 @@ mcp.registerTool("create_castle_template", "Creates a simple castle wall boundar
     },
     required = { "wallId", "floorId" }
 }, function(args)
-    if not app.hasMap() or not selection.hasSelection() then return "No map or selection." end
+    if not app.hasMap() or app.selection.isEmpty then return "No map or selection." end
 
     app.transaction("Create Castle", function()
-        local minP = selection.getMinPosition()
-        local maxP = selection.getMaxPosition()
+        local minP = app.selection.minPosition
+        local maxP = app.selection.maxPosition
 
         for x = minP.x, maxP.x do
             for y = minP.y, maxP.y do
                 for z = minP.z, maxP.z do
-                    if selection.contains(Position(x,y,z)) then
+                    if app.selection.minPosition and x >= app.selection.minPosition.x and x <= app.selection.maxPosition.x and y >= app.selection.minPosition.y and y <= app.selection.maxPosition.y and z >= app.selection.minPosition.z and z <= app.selection.maxPosition.z then
                         local t = Tile(Position(x,y,z))
                         if t then
                             t:setGround(Item(args.floorId))
@@ -258,14 +258,14 @@ end)
 mcp.registerTool("undo", "Undoes the last map action.", {
     type = "object", properties = {}
 }, function()
-    app.undo()
+    app.editor:undo()
     return "Action undone."
 end)
 
 mcp.registerTool("redo", "Redoes the last undone action.", {
     type = "object", properties = {}
 }, function()
-    app.redo()
+    app.editor:redo()
     return "Action redone."
 end)
 
@@ -294,14 +294,14 @@ mcp.registerTool("replace_in_selection", "Replaces one item ID with another with
     },
     required = { "oldId", "newId" }
 }, function(args)
-    if not app.hasMap() or not selection.hasSelection() then return "No map or selection." end
+    if not app.hasMap() or app.selection.isEmpty then return "No map or selection." end
     local count = 0
     app.transaction("Replace Selection", function()
-        for x = selection.getMinPosition().x, selection.getMaxPosition().x do
-            for y = selection.getMinPosition().y, selection.getMaxPosition().y do
-                for z = selection.getMinPosition().z, selection.getMaxPosition().z do
+        for x = app.selection.minPosition.x, app.selection.maxPosition.x do
+            for y = app.selection.minPosition.y, app.selection.maxPosition.y do
+                for z = app.selection.minPosition.z, app.selection.maxPosition.z do
                     local pos = Position(x,y,z)
-                    if selection.contains(pos) then
+                    if app.selection.minPosition and pos.x >= app.selection.minPosition.x and pos.x <= app.selection.maxPosition.x and pos.y >= app.selection.minPosition.y and pos.y <= app.selection.maxPosition.y and pos.z >= app.selection.minPosition.z and pos.z <= app.selection.maxPosition.z then
                         local t = Tile(pos)
                         if t then
                             -- Check ground
@@ -331,12 +331,12 @@ mcp.registerTool("count_items_in_selection", "Counts the occurrences of a specif
     properties = { itemId = { type = "number" } },
     required = { "itemId" }
 }, function(args)
-    if not app.hasMap() or not selection.hasSelection() then return "No map or selection." end
+    if not app.hasMap() or app.selection.isEmpty then return "No map or selection." end
     local count = 0
-    for x = selection.getMinPosition().x, selection.getMaxPosition().x do
-        for y = selection.getMinPosition().y, selection.getMaxPosition().y do
-            for z = selection.getMinPosition().z, selection.getMaxPosition().z do
-                if selection.contains(Position(x,y,z)) then
+    for x = app.selection.minPosition.x, app.selection.maxPosition.x do
+        for y = app.selection.minPosition.y, app.selection.maxPosition.y do
+            for z = app.selection.minPosition.z, app.selection.maxPosition.z do
+                if app.selection.minPosition and x >= app.selection.minPosition.x and x <= app.selection.maxPosition.x and y >= app.selection.minPosition.y and y <= app.selection.maxPosition.y and z >= app.selection.minPosition.z and z <= app.selection.maxPosition.z then
                     local t = Tile(Position(x,y,z))
                     if t then
                         if t:getGround() and t:getGround():getID() == args.itemId then count = count + 1 end
@@ -359,7 +359,7 @@ mcp.registerTool("set_selection", "Sets the map selection box.", {
     },
     required = { "x1", "y1", "z1", "x2", "y2", "z2" }
 }, function(args)
-    selection.clear()
+    app.selection:clear()
     local minX = math.min(args.x1, args.x2)
     local maxX = math.max(args.x1, args.x2)
     local minY = math.min(args.y1, args.y2)
@@ -370,36 +370,14 @@ mcp.registerTool("set_selection", "Sets the map selection box.", {
     for x = minX, maxX do
         for y = minY, maxY do
             for z = minZ, maxZ do
-                selection.add(Position(x,y,z))
+                app.selection:add(Position(x,y,z))
             end
         end
     end
     return "Selection set."
 end)
 
-mcp.registerTool("get_towns", "Lists all towns in the map.", {
-    type = "object", properties = {}
-}, function()
-    if not app.hasMap() then return "No map loaded." end
-    local towns = map.getTowns()
-    local result = {}
-    for i, t in ipairs(towns) do
-        table.insert(result, { id = t:getID(), name = t:getName(), pos = t:getTemplePosition() })
-    end
-    return result
-end)
 
-mcp.registerTool("get_waypoints", "Lists all waypoints.", {
-    type = "object", properties = {}
-}, function()
-    if not app.hasMap() then return "No map loaded." end
-    local waypoints = map.getWaypoints()
-    local result = {}
-    for i, w in ipairs(waypoints) do
-        table.insert(result, { name = w:getName(), pos = w:getPosition() })
-    end
-    return result
-end)
 
 mcp.registerTool("remove_item", "Removes a specific item from a tile by ID.", {
     type = "object",
@@ -480,8 +458,7 @@ end)
 mcp.registerTool("get_camera_position", "Gets the current map view camera center position.", {
     type = "object", properties = {}
 }, function()
-    local view = app.mapView.get()
-    return "Camera Center: X:" .. tostring(view.center_x) .. " Y:" .. tostring(view.center_y) .. " Z:" .. tostring(view.center_z)
+    return "Camera positioning query not directly supported via bounds yet."
 end)
 
 mcp.registerTool("set_camera_position", "Sets the map view camera to center on a position.", {
@@ -500,13 +477,13 @@ mcp.registerTool("create_house", "Assigns a selection of tiles to a new house ID
     properties = { houseId = { type = "number" } },
     required = { "houseId" }
 }, function(args)
-    if not app.hasMap() or not selection.hasSelection() then return "No map or selection." end
+    if not app.hasMap() or app.selection.isEmpty then return "No map or selection." end
     app.transaction("Create House", function()
-        for x = selection.getMinPosition().x, selection.getMaxPosition().x do
-            for y = selection.getMinPosition().y, selection.getMaxPosition().y do
-                for z = selection.getMinPosition().z, selection.getMaxPosition().z do
+        for x = app.selection.minPosition.x, app.selection.maxPosition.x do
+            for y = app.selection.minPosition.y, app.selection.maxPosition.y do
+                for z = app.selection.minPosition.z, app.selection.maxPosition.z do
                     local pos = Position(x,y,z)
-                    if selection.contains(pos) then
+                    if app.selection.minPosition and pos.x >= app.selection.minPosition.x and pos.x <= app.selection.maxPosition.x and pos.y >= app.selection.minPosition.y and pos.y <= app.selection.maxPosition.y and pos.z >= app.selection.minPosition.z and pos.z <= app.selection.maxPosition.z then
                         local t = Tile(pos)
                         if t then t:setHouse(args.houseId) end
                     end
@@ -534,22 +511,11 @@ end)
 mcp.registerTool("clear_selection", "Clears the current map selection.", {
     type = "object", properties = {}
 }, function()
-    selection.clear()
+    app.selection:clear()
     return "Selection cleared."
 end)
 
 
-mcp.registerTool("execute_lua", "Executes a raw Lua script string safely within the RME environment.", {
-    type = "object",
-    properties = { code = { type = "string" } },
-    required = { "code" }
-}, function(args)
-    local func, err = load(args.code)
-    if not func then return "Syntax Error: " .. tostring(err) end
-    local success, result = pcall(func)
-    if not success then return "Runtime Error: " .. tostring(result) end
-    return "Execution successful. Result: " .. tostring(result)
-end)
 
 mcp.registerTool("save_map", "Saves the current map.", {
     type = "object", properties = {}
@@ -557,8 +523,7 @@ mcp.registerTool("save_map", "Saves the current map.", {
     if not app.hasMap() then return "No map loaded." end
     -- app.saveMap() API exists? Assuming it does or user triggers it manually,
     -- but usually we can trigger an event or just alert
-    app.alert("AI requested to save the map. Please press CTRL+S.")
-    return "Save request triggered."
+    return "Error: Programmatic save not directly exposed. Please ask the user to press CTRL+S."
 end)
 
 mcp.registerTool("get_spawn", "Gets spawn details at a given coordinate.", {
@@ -619,7 +584,7 @@ mcp.registerTool("get_item_info", "Returns basic properties of an item by its ID
 }, function(args)
     local it = Item(args.itemId)
     if not it then return "Item not found." end
-    return json.stringify({
+    return json.encode({
         id = it:getID(),
         name = it:getName(),
         isGround = it:isGround(),
@@ -632,8 +597,8 @@ end)
 
 mcp.registerTool("set_light", "Sets the global ambient light.", {
     type = "object",
-    properties = { level = { type = "number" }, color = { type = "number" } },
-    required = { "level", "color" }
+    properties = { level = { type = "number" }, },
+    required = { "level" }
 }, function(args)
     app.setAmbientLightLevel(args.level)
     return "Ambient light set."

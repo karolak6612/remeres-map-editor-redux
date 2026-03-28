@@ -22,11 +22,25 @@ const rl = readline.createInterface({
 rl.on('line', (line) => {
     if (!line.trim()) return;
 
+    let reqId = null;
+    try {
+        const parsed = JSON.parse(line);
+        reqId = parsed.id || null;
+    } catch (e) {
+        console.log(JSON.stringify({
+            jsonrpc: "2.0",
+            error: { code: -32700, message: "Parse error" },
+            id: null
+        }));
+        return;
+    }
+
     const options = {
         hostname: HOST,
         port: PORT,
         path: '/',
         method: 'POST',
+        timeout: 10000,
         headers: {
             'Content-Type': 'application/json',
             'Content-Length': Buffer.byteLength(line)
@@ -47,9 +61,21 @@ rl.on('line', (line) => {
         });
     });
 
+    req.on('timeout', () => {
+        req.destroy();
+        console.log(JSON.stringify({
+            jsonrpc: "2.0",
+            error: { code: -32001, message: "Request timeout" },
+            id: reqId
+        }));
+    });
+
     req.on('error', (e) => {
-        // Log to stderr so it doesn't break JSON-RPC over stdout
-        console.error(`[MCP Bridge Error] Could not connect to RME on ${HOST}:${PORT}: ${e.message}`);
+        console.log(JSON.stringify({
+            jsonrpc: "2.0",
+            error: { code: -32002, message: "Connection error: " + e.message },
+            id: reqId
+        }));
     });
 
     req.write(line);

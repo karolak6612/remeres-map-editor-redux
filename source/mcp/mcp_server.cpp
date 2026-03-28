@@ -33,7 +33,7 @@ public:
 	}
 
 	bool start(uint16_t port) {
-		if (running) return false;
+		if (running.load()) return false;
 
 		try {
 			net::ip::tcp::endpoint endpoint{net::ip::make_address("127.0.0.1"), port};
@@ -72,8 +72,27 @@ public:
 	}
 
 	void stop() {
-		if (!running) return;
-		running = false;
+		if (!running.exchange(false)) return;
+
+		beast::error_code ec;
+		acceptor.cancel(ec);
+		acceptor.close(ec);
+
+		// Clean up queued requests
+		{
+			std::lock_guard<std::mutex> lock(queue_mutex);
+			while (!request_queue.empty()) {
+				auto req = request_queue.front();
+				request_queue.pop();
+				if (req->on_complete) {
+					std::string err = "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32000,\"message\":\"Server shutting down\"},\"id\":null}";
+					net::post(ioc, [req, err]() {
+						req->on_complete(err);
+					});
+				}
+			}
+		}
+
 		ioc.stop();
 		if (server_thread.joinable()) {
 			server_thread.join();
@@ -83,7 +102,7 @@ public:
 	}
 
 	bool isRunning() const {
-		return running;
+		return running.load();
 	}
 
 	void setHandler(McpServer::RequestHandler h) {
@@ -98,10 +117,6 @@ public:
 			currentHandler = handler;
 		}
 
-		if (!currentHandler) {
-			return false; // No handler, ignore
-		}
-
 		std::vector<std::shared_ptr<PendingRequest>> requests_to_process;
 
 		{
@@ -110,6 +125,15 @@ public:
 				requests_to_process.push_back(request_queue.front());
 				request_queue.pop();
 			}
+		}
+
+		if (!currentHandler) {
+			for (auto& req : requests_to_process) {
+				if (req->on_complete) {
+					req->on_complete("{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32601,\"message\":\"Method not found (No Lua handler registered)\"},\"id\":null}");
+				}
+			}
+			return !requests_to_process.empty();
 		}
 
 		for (auto& req : requests_to_process) {
@@ -184,7 +208,7 @@ private:
 				// Wake up the main thread to process the pending request
 				wxWakeUpIdle();
 			} else {
-				send_response(http::status::bad_request, "Only POST requests are supported for MCP JSON-RPC.");
+				send_response(http::status::bad_request, "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32600,\"message\":\"Invalid Request: Only POST requests are supported for MCP JSON-RPC.\"},\"id\":null}");
 			}
 		}
 
@@ -214,7 +238,7 @@ private:
 	net::io_context ioc;
 	tcp::acceptor acceptor;
 	std::thread server_thread;
-	bool running;
+	std::atomic<bool> running;
 
 	std::mutex queue_mutex;
 	std::queue<std::shared_ptr<PendingRequest>> request_queue;
