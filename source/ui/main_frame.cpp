@@ -119,10 +119,8 @@ void MainFrame::OnIdle(wxIdleEvent& event) {
 		tool_bar->UpdateButtons();
 	}
 
-	if (g_mcpServer.processPendingRequests()) {
-		event.RequestMore();
-	}
-
+	g_mcpServer.processPendingRequests();
+	event.RequestMore();
 	event.Skip();
 }
 

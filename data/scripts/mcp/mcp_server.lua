@@ -1,5 +1,3 @@
-local JSON = require("json")
-
 local MCP_PORT = 8080
 
 local mcp = {}
