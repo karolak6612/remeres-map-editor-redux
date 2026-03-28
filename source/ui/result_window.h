@@ -20,21 +20,46 @@
 
 #include "app/main.h"
 
+#include <functional>
+#include <vector>
+
+struct SearchResultRow {
+	uint32_t index = 0;
+	wxString name;
+	Position position;
+};
+
 class SearchResultWindow : public wxPanel {
 public:
 	SearchResultWindow(wxWindow* parent);
-	virtual ~SearchResultWindow();
+	~SearchResultWindow() override;
 
 	void Clear();
-	void AddPosition(wxString description, Position pos);
+	void SetResults(std::vector<SearchResultRow> rows, uint32_t total_count = 0, uint32_t page_offset = 0, uint32_t page_limit = 0, std::function<void(uint32_t)> page_loader = {});
 
-	void OnClickResult(wxCommandEvent&);
-	void OnClickExport(wxCommandEvent&);
-	void OnClickClear(wxCommandEvent&);
+	void OnClickExport(wxCommandEvent& event);
+	void OnClickClear(wxCommandEvent& event);
+	void OnClickPreviousPage(wxCommandEvent& event);
+	void OnClickNextPage(wxCommandEvent& event);
 
 protected:
-	wxListBox* result_list;
+	class ResultCanvas;
 
+	void updateSummary();
+	void focusFirstResult();
+	void activateRow(int index);
+
+	ResultCanvas* result_list = nullptr;
+	wxStaticText* summary_label = nullptr;
+	wxButton* previous_page_button_ = nullptr;
+	wxButton* next_page_button_ = nullptr;
+	wxButton* export_button_ = nullptr;
+	wxButton* clear_button_ = nullptr;
+	std::vector<SearchResultRow> rows_;
+	uint32_t total_count_ = 0;
+	uint32_t page_offset_ = 0;
+	uint32_t page_limit_ = 0;
+	std::function<void(uint32_t)> page_loader_;
 };
 
 #endif

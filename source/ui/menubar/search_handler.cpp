@@ -13,7 +13,21 @@
 #include "map/map.h"
 #include "editor/action_queue.h"
 
+#include <algorithm>
+
 namespace {
+	[[nodiscard]] uint32_t searchResultsLimit() {
+		return static_cast<uint32_t>(std::max(100000, g_settings.getInteger(Config::SEARCH_RESULTS_LIMIT)));
+	}
+
+	[[nodiscard]] SearchResultRow makeSearchResultRow(uint32_t index, const wxString& name, const Position& position) {
+		return SearchResultRow {
+			.index = index,
+			.name = name,
+			.position = position,
+		};
+	}
+
 	void selectFoundBrush(const FindItemDialog& dialog) {
 		if (const Brush* brush = dialog.getResult()) {
 			const PaletteType palette = dialog.getResultKind() == AdvancedFinderCatalogKind::Creature ? TILESET_CREATURE : TILESET_RAW;
@@ -21,42 +35,79 @@ namespace {
 		}
 	}
 
-	void showItemSearchResults(uint16_t item_id, const wxString& load_bar_label) {
-		EditorOperations::ItemSearcher finder(item_id, static_cast<uint32_t>(g_settings.getInteger(Config::REPLACE_SIZE)));
+	void showItemSearchResults(uint16_t item_id, const wxString& load_bar_label, uint32_t page_offset = 0) {
+		const uint32_t page_limit = searchResultsLimit();
+		EditorOperations::ItemSearcher finder(item_id, page_limit, page_offset);
 		g_gui.CreateLoadBar(load_bar_label);
 		foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, false);
 		g_gui.DestroyLoadBar();
 
-		if (finder.limitReached()) {
-			wxString msg;
-			msg << "The configured limit has been reached. Only " << finder.maxCount << " results will be displayed.";
-			DialogUtil::PopupDialog("Notice", msg, wxOK);
-		}
-
 		SearchResultWindow* window = g_gui.ShowSearchWindow();
-		window->Clear();
-		for (const auto& [tile, item] : finder.result) {
-			window->AddPosition(wxstr(item->getName()), tile->getPosition());
+		std::vector<SearchResultRow> rows;
+		rows.reserve(finder.result.size());
+		for (size_t index = 0; index < finder.result.size(); ++index) {
+			const auto& [tile, item] = finder.result[index];
+			rows.push_back(makeSearchResultRow(page_offset + static_cast<uint32_t>(index) + 1, wxstr(item->getName()), tile->getPosition()));
 		}
+		window->SetResults(
+			std::move(rows),
+			finder.totalMatches,
+			page_offset,
+			page_limit,
+			[item_id, load_bar_label](uint32_t next_offset) {
+				showItemSearchResults(item_id, load_bar_label, next_offset);
+			}
+		);
 	}
 
-	void showCreatureSearchResults(const FindItemDialog& dialog, const wxString& load_bar_label) {
-		EditorOperations::CreatureSearcher finder(dialog.getResult(), static_cast<uint32_t>(g_settings.getInteger(Config::REPLACE_SIZE)));
+	void showCreatureSearchResults(const Brush* creature_brush, const wxString& load_bar_label, uint32_t page_offset = 0) {
+		const uint32_t page_limit = searchResultsLimit();
+		EditorOperations::CreatureSearcher finder(creature_brush, page_limit, page_offset);
 		g_gui.CreateLoadBar(load_bar_label);
 		foreach_TileOnMap(g_gui.GetCurrentMap(), finder);
 		g_gui.DestroyLoadBar();
 
-		if (finder.limitReached()) {
-			wxString msg;
-			msg << "The configured limit has been reached. Only " << finder.maxCount << " results will be displayed.";
-			DialogUtil::PopupDialog("Notice", msg, wxOK);
+		SearchResultWindow* window = g_gui.ShowSearchWindow();
+		std::vector<SearchResultRow> rows;
+		rows.reserve(finder.result.size());
+		for (size_t index = 0; index < finder.result.size(); ++index) {
+			const auto& [tile, creature] = finder.result[index];
+			rows.push_back(makeSearchResultRow(page_offset + static_cast<uint32_t>(index) + 1, wxstr(creature->getName()), tile->getPosition()));
 		}
+		window->SetResults(
+			std::move(rows),
+			finder.totalMatches,
+			page_offset,
+			page_limit,
+			[creature_brush, load_bar_label](uint32_t next_offset) {
+				showCreatureSearchResults(creature_brush, load_bar_label, next_offset);
+			}
+		);
+	}
+
+	void showItemSearchResultsOnSelection(uint16_t item_id, const wxString& load_bar_label, uint32_t page_offset = 0) {
+		const uint32_t page_limit = searchResultsLimit();
+		EditorOperations::ItemSearcher finder(item_id, page_limit, page_offset);
+		g_gui.CreateLoadBar(load_bar_label);
+		foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, true);
+		g_gui.DestroyLoadBar();
 
 		SearchResultWindow* window = g_gui.ShowSearchWindow();
-		window->Clear();
-		for (const auto& [tile, creature] : finder.result) {
-			window->AddPosition(wxstr(creature->getName()), tile->getPosition());
+		std::vector<SearchResultRow> rows;
+		rows.reserve(finder.result.size());
+		for (size_t index = 0; index < finder.result.size(); ++index) {
+			const auto& [tile, item] = finder.result[index];
+			rows.push_back(makeSearchResultRow(page_offset + static_cast<uint32_t>(index) + 1, wxstr(item->getName()), tile->getPosition()));
 		}
+		window->SetResults(
+			std::move(rows),
+			finder.totalMatches,
+			page_offset,
+			page_limit,
+			[item_id, load_bar_label](uint32_t next_offset) {
+				showItemSearchResultsOnSelection(item_id, load_bar_label, next_offset);
+			}
+		);
 	}
 }
 
@@ -74,7 +125,7 @@ void SearchHandler::OnSearchForItem(wxCommandEvent& WXUNUSED(event)) {
 	if (modal_result != wxID_CANCEL) {
 		if (dialog.getResultAction() == FindItemDialog::ResultAction::SearchMap) {
 			if (dialog.getResultKind() == AdvancedFinderCatalogKind::Creature) {
-				showCreatureSearchResults(dialog, "Searching map...");
+				showCreatureSearchResults(dialog.getResult(), "Searching map...");
 			} else {
 				showItemSearchResults(dialog.getResultID(), "Searching map...");
 			}
@@ -143,25 +194,7 @@ void SearchHandler::OnSearchForItemOnSelection(wxCommandEvent& WXUNUSED(event)) 
 
 	FindItemDialog dialog(frame, "Search on Selection");
 	if (dialog.ShowModal() == wxID_OK) {
-		EditorOperations::ItemSearcher finder(dialog.getResultID(), (uint32_t)g_settings.getInteger(Config::REPLACE_SIZE));
-		g_gui.CreateLoadBar("Searching on selected area...");
-
-		foreach_ItemOnMap(g_gui.GetCurrentMap(), finder, true);
-		std::vector<std::pair<Tile*, Item*>>& result = finder.result;
-
-		g_gui.DestroyLoadBar();
-
-		if (finder.limitReached()) {
-			wxString msg;
-			msg << "The configured limit has been reached. Only " << finder.maxCount << " results will be displayed.";
-			DialogUtil::PopupDialog("Notice", msg, wxOK);
-		}
-
-		SearchResultWindow* window = g_gui.ShowSearchWindow();
-		window->Clear();
-		for (const auto& [tile, item] : result) {
-			window->AddPosition(wxstr(item->getName()), tile->getPosition());
-		}
+		showItemSearchResultsOnSelection(dialog.getResultID(), "Searching on selected area...");
 	}
 }
 
@@ -241,8 +274,11 @@ void SearchHandler::SearchItems(bool unique, bool action, bool container, bool w
 	g_gui.DestroyLoadBar();
 
 	SearchResultWindow* result = g_gui.ShowSearchWindow();
-	result->Clear();
-	for (const auto& res : found) {
-		result->AddPosition(wxstr(res.description), res.tile->getPosition());
+	std::vector<SearchResultRow> rows;
+	rows.reserve(found.size());
+	for (size_t index = 0; index < found.size(); ++index) {
+		const auto& res = found[index];
+		rows.push_back(makeSearchResultRow(static_cast<uint32_t>(index + 1), wxstr(res.description), res.tile->getPosition()));
 	}
+	result->SetResults(std::move(rows), static_cast<uint32_t>(rows.size()));
 }

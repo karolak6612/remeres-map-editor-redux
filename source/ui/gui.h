@@ -172,6 +172,9 @@ public:
 	void HideSearchWindow() {
 		g_search.HideSearchWindow();
 	}
+	void DestroySearchWindow() {
+		g_search.DestroySearchWindow();
+	}
 
 	// Minimap
 	void CreateMinimap() {

@@ -13,6 +13,7 @@ public:
 
 	SearchResultWindow* ShowSearchWindow();
 	void HideSearchWindow();
+	void DestroySearchWindow();
 
 	SearchResultWindow* GetWindow() const {
 		return search_result_window;
