@@ -181,13 +181,13 @@ void Action::commit(DirtyList* dirty_list) {
 						editor.map.addSpawn(insertedTile);
 					}
 
+					TileOperations::update(insertedTile);
 					if (displaced->isSelected()) {
 						editor.selection.removeInternal(displaced);
 					}
 					if (insertedTile->isSelected()) {
 						editor.selection.addInternal(insertedTile);
 					}
-					TileOperations::update(insertedTile);
 					insertedTile->modify();
 				} else if (insertedTile) {
 					TileOperations::update(insertedTile);
@@ -315,11 +315,13 @@ void Action::undo(DirtyList* dirty_list) {
 					}
 
 					if (oldtile) {
+						TileOperations::update(oldtile);
 						if (oldtile->isSelected()) {
 							editor.selection.addInternal(oldtile);
 						}
 					}
 					if (newtile) {
+						TileOperations::update(newtile);
 						if (newtile->isSelected()) {
 							editor.selection.removeInternal(newtile);
 						}

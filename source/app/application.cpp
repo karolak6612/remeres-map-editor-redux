@@ -28,6 +28,7 @@
 #include "ui/dialogs/goto_position_dialog.h"
 #include "palette/palette_window.h"
 #include "app/preferences.h"
+#include "app/visuals.h"
 #include "net/net_connection.h"
 #include "lua/lua_script_manager.h"
 #include "lua/lua_scripts_window.h"
@@ -127,6 +128,7 @@ bool Application::OnInit() {
 
 	// Discover data directory
 	FileSystem::DiscoverDataDirectory("menubar.xml");
+	g_visuals.Load();
 
 	// Tell that we are the real thing
 	wxAppConsole::SetInstance(this);

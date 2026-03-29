@@ -217,6 +217,10 @@ void MainMenuBar::OnPreferences(wxCommandEvent& event) {
 	fileMenuHandler->OnPreferences(event);
 }
 
+void MainMenuBar::OnVisuals(wxCommandEvent& event) {
+	fileMenuHandler->OnVisuals(event);
+}
+
 void MainMenuBar::OnQuit(wxCommandEvent& event) {
 	fileMenuHandler->OnQuit(event);
 }

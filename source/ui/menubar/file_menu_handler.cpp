@@ -99,6 +99,12 @@ void FileMenuHandler::OnPreferences(wxCommandEvent& WXUNUSED(event)) {
 	dialog.Destroy();
 }
 
+void FileMenuHandler::OnVisuals(wxCommandEvent& WXUNUSED(event)) {
+	PreferencesWindow dialog(frame, PreferencesPageSelection::Visuals);
+	dialog.ShowModal();
+	dialog.Destroy();
+}
+
 void FileMenuHandler::OnListExtensions(wxCommandEvent& WXUNUSED(event)) {
 	ExtensionsDialog exts(frame);
 	exts.ShowModal();

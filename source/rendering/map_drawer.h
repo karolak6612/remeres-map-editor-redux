@@ -60,6 +60,7 @@ class CreatureNameDrawer;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
 class LuaOverlayDrawer;
+class VisualOverlayDrawer;
 
 class MapDrawer {
 	MapCanvas* canvas;
@@ -88,6 +89,7 @@ class MapDrawer {
 	std::unique_ptr<HookIndicatorDrawer> hook_indicator_drawer;
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
 	std::unique_ptr<LuaOverlayDrawer> lua_overlay_drawer;
+	std::unique_ptr<VisualOverlayDrawer> visual_overlay_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
@@ -129,6 +131,7 @@ public:
 	void DrawTooltips(NVGcontext* vg);
 	void DrawHookIndicators(NVGcontext* vg);
 	void DrawDoorIndicators(NVGcontext* vg);
+	void DrawVisualOverlays(NVGcontext* vg);
 	void ClearFrameOverlays();
 	void DrawCreatureNames(NVGcontext* vg);
 
@@ -151,6 +154,9 @@ public:
 	}
 	DoorIndicatorDrawer* getDoorIndicatorDrawer() {
 		return door_indicator_drawer.get();
+	}
+	VisualOverlayDrawer* getVisualOverlayDrawer() {
+		return visual_overlay_drawer.get();
 	}
 	LuaOverlayDrawer* getLuaOverlayDrawer() {
 		return lua_overlay_drawer.get();

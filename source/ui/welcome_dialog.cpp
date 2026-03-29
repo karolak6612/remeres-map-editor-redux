@@ -248,7 +248,7 @@ void WelcomeDialog::BuildInterface(const wxString& title_text, const wxString& v
 }
 
 void WelcomeDialog::OnPreferences(wxCommandEvent& WXUNUSED(event)) {
-	PreferencesWindow preferences_window(this, true);
+	PreferencesWindow preferences_window(this, PreferencesPageSelection::ClientVersion);
 	preferences_window.ShowModal();
 	RefreshConfiguredClients();
 }

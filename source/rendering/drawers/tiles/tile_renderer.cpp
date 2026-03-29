@@ -13,7 +13,9 @@
 #include "rendering/core/drawing_options.h"
 #include "rendering/core/render_view.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
+#include "rendering/drawers/overlays/visual_overlay_drawer.h"
 #include "app/definitions.h"
+#include "app/visuals.h"
 #include "game/sprites.h"
 
 #include "rendering/drawers/entities/item_drawer.h"
@@ -151,6 +153,17 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 	return true;
 }
 
+namespace {
+	uint16_t resolveVisualClientId(const VisualAppearance& appearance) {
+		if (appearance.item_id != 0) {
+			if (const auto definition = g_item_definitions.get(appearance.item_id)) {
+				return definition.clientId();
+			}
+		}
+		return 0;
+	}
+}
+
 void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
@@ -263,15 +276,40 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Draw helper border for selected house tiles
 	// Only draw on the current floor (grid)
 	if (options.show_houses && is_house_tile && static_cast<int>(tile->getHouseID()) == current_house_id && map_z == view.floor) {
-
 		uint8_t hr, hg, hb;
 		TileColorCalculator::GetHouseColor(tile->getHouseID(), hr, hg, hb);
-
 		float intensity = 0.5f + (0.5f * options.highlight_pulse);
-		// Optimization: Use integer math for border color to avoid vec4 construction and casting
 		int ba = static_cast<int>(intensity * 255.0f);
-		// hr, hg, hb are already uint8_t
 		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
+	}
+
+	if (options.show_houses && is_house_tile && map_z == view.floor) {
+		if (const VisualRule* house_overlay = g_visuals.ResolveTile(TileVisualKind::HouseOverlay); house_overlay) {
+			switch (house_overlay->appearance.type) {
+				case VisualAppearanceType::Rgba:
+					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(house_overlay->appearance.color.Red(), house_overlay->appearance.color.Green(), house_overlay->appearance.color.Blue(), house_overlay->appearance.color.Alpha()));
+					break;
+				case VisualAppearanceType::SpriteId:
+					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, house_overlay->appearance.sprite_id, DrawColor(house_overlay->appearance.color.Red(), house_overlay->appearance.color.Green(), house_overlay->appearance.color.Blue(), house_overlay->appearance.color.Alpha()));
+					break;
+				case VisualAppearanceType::OtherItemVisual:
+					if (const uint16_t client_id = resolveVisualClientId(house_overlay->appearance); client_id != 0) {
+						sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, client_id, DrawColor(house_overlay->appearance.color.Red(), house_overlay->appearance.color.Green(), house_overlay->appearance.color.Blue(), house_overlay->appearance.color.Alpha()));
+					}
+					break;
+				case VisualAppearanceType::Png:
+				case VisualAppearanceType::Svg:
+					if (auto* overlay_drawer = item_drawer->GetVisualOverlayDrawer()) {
+						overlay_drawer->add(VisualOverlayRequest {
+							.pos = position,
+							.asset_path = house_overlay->appearance.asset_path,
+							.color = house_overlay->appearance.color,
+							.placement = VisualOverlayPlacement::TileInset
+						});
+					}
+					break;
+			}
+		}
 	}
 
 	if (!only_colors) {

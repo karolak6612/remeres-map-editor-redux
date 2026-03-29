@@ -239,6 +239,7 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	if (options.highlight_locked_doors) {
 		drawer->DrawDoorIndicators(vg);
 	}
+	drawer->DrawVisualOverlays(vg);
 	if (drawer->getLuaOverlayDrawer()) {
 		drawer->getLuaOverlayDrawer()->DrawUI(vg, drawer->getView(), options);
 	}

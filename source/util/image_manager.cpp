@@ -37,6 +37,11 @@ void ImageManager::ClearCache() {
 }
 
 std::string ImageManager::ResolvePath(std::string_view assetPath) {
+	wxFileName explicit_path(wxString::FromUTF8(assetPath.data(), assetPath.size()));
+	if (explicit_path.IsAbsolute() && explicit_path.FileExists()) {
+		return explicit_path.GetFullPath().ToStdString();
+	}
+
 	// The path should be relative to the executable's "assets" directory
 	static wxString executablePath = wxStandardPaths::Get().GetExecutablePath();
 	static wxString assetsRoot = wxFileName(executablePath).GetPath() + wxFileName::GetPathSeparator() + "assets";

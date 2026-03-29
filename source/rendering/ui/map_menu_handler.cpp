@@ -23,6 +23,9 @@
 #include "ui/gui.h"
 #include "ui/tile_properties/tile_properties_panel.h"
 #include "lua/lua_script_manager.h"
+#include "app/preferences.h"
+#include "brushes/waypoint/waypoint_brush.h"
+#include "map/tile_operations.h"
 
 MapMenuHandler::MapMenuHandler(MapCanvas* canvas, Editor& editor) :
 	canvas(canvas),
@@ -57,6 +60,7 @@ void MapMenuHandler::BindEvents() {
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnSelectMoveTo, this, MAP_POPUP_MENU_MOVE_TO_TILESET);
 
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnProperties, this, MAP_POPUP_MENU_PROPERTIES);
+	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnChangeVisual, this, MAP_POPUP_MENU_CHANGE_VISUAL);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnAdvancedReplace, this, MAP_POPUP_MENU_ADVANCED_REPLACE);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnBrowseTile, this, MAP_POPUP_MENU_BROWSE_TILE);
 	canvas->Bind(wxEVT_MENU, &MapMenuHandler::OnTileProperties, this, MAP_POPUP_MENU_TILE_PROPERTIES);
@@ -193,6 +197,11 @@ void MapMenuHandler::OnSelectMoveTo(wxCommandEvent& WXUNUSED(event)) {
 
 void MapMenuHandler::OnProperties(wxCommandEvent& WXUNUSED(event)) {
 	PopupActionHandler::OpenProperties(editor);
+}
+
+void MapMenuHandler::OnChangeVisual(wxCommandEvent& WXUNUSED(event)) {
+	Tile* tile = editor.map.getTile(canvas->last_click_map_x, canvas->last_click_map_y, canvas->GetFloor());
+	PopupActionHandler::OpenVisualEditor(editor, tile);
 }
 
 void MapMenuHandler::OnAdvancedReplace(wxCommandEvent& WXUNUSED(event)) {

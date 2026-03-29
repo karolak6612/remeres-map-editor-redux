@@ -48,6 +48,7 @@ public:
 	void OnSelectMoveTo(wxCommandEvent& event);
 
 	void OnProperties(wxCommandEvent& event);
+	void OnChangeVisual(wxCommandEvent& event);
 	void OnAdvancedReplace(wxCommandEvent& event);
 
 private:

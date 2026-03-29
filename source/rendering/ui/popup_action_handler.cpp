@@ -23,10 +23,14 @@
 #include "map/tile.h"
 #include "game/item.h"
 #include "ui/gui.h"
+#include "app/preferences.h"
+#include "app/visuals.h"
 #include "ui/browse_tile_window.h"
 #include "ui/tileset_window.h"
 #include "ui/dialog_helper.h"
 #include "brushes/brush.h"
+#include "brushes/house/house_brush.h"
+#include "brushes/house/house_exit_brush.h"
 #include <ranges>
 #include "brushes/door/door_brush.h"
 
@@ -110,6 +114,54 @@ void PopupActionHandler::OpenProperties(Editor& editor) {
 	if (tile) {
 		DialogHelper::OpenProperties(editor, tile);
 	}
+}
+
+void PopupActionHandler::OpenVisualEditor(Editor& editor, Tile* tile) {
+	if (!tile) {
+		return;
+	}
+
+	std::optional<VisualEditContext> context;
+	const ItemVector selected_items = TileOperations::getSelectedItems(tile);
+	if (!selected_items.empty()) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeItemRule(selected_items.back()->getID()) };
+	} else if (tile->spawn) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(tile->spawn->isSelected() ? MarkerVisualKind::SpawnSelected : MarkerVisualKind::Spawn) };
+	} else if (editor.map.waypoints.getWaypoint(tile->getLocation())) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(MarkerVisualKind::Waypoint) };
+	} else if (tile->isTownExit(editor.map)) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(MarkerVisualKind::TownTemple) };
+	} else if (tile->isHouseExit()) {
+		uint32_t current_house_id = 0;
+		if (Brush* brush = g_gui.GetCurrentBrush()) {
+			if (brush->is<HouseBrush>()) {
+				current_house_id = brush->as<HouseBrush>()->getHouseID();
+			} else if (brush->is<HouseExitBrush>()) {
+				current_house_id = brush->as<HouseExitBrush>()->getHouseID();
+			}
+		}
+		const MarkerVisualKind kind = tile->hasHouseExit(current_house_id) ? MarkerVisualKind::HouseExitCurrent : MarkerVisualKind::HouseExitOther;
+		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(kind) };
+	} else if (tile->isHouseTile()) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::HouseOverlay) };
+	} else if (tile->isPZ()) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Pz) };
+	} else if (tile->getMapFlags() & TILESTATE_PVPZONE) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Pvp) };
+	} else if (tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::NoLogout) };
+	} else if (tile->getMapFlags() & TILESTATE_NOPVP) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::NoPvp) };
+	} else if (tile->isBlocking()) {
+		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Blocking) };
+	}
+
+	if (!context.has_value()) {
+		return;
+	}
+
+	PreferencesWindow dialog(g_gui.root, PreferencesPageSelection::Visuals, context);
+	dialog.ShowModal();
 }
 
 void PopupActionHandler::SelectMoveTo(Editor& editor) {

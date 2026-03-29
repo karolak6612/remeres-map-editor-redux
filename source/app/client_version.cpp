@@ -28,6 +28,7 @@
 #include "util/file_system.h"
 #include "ui/dialog_util.h"
 #include "app/client_version.h"
+#include "app/visuals.h"
 
 #include <wx/dir.h>
 #include <wx/filename.h>
@@ -490,8 +491,9 @@ bool ClientVersion::hasValidPaths() {
 	if (!metadata_path.FileExists() || !sprites_path.FileExists()) {
 		// Fallback to "Tibia.dat" / "Tibia.spr" if the configured files don't exist
 		// This maintains some backward compatibility if the toml config is slightly off but files are standard
-		metadata_path = wxFileName(client_path.GetFullPath(), wxString(ASSETS_NAME) + ".dat");
-		sprites_path = wxFileName(client_path.GetFullPath(), wxString(ASSETS_NAME) + ".spr");
+		const wxString assets_name = wxstr(g_visuals.GetAssetsName());
+		metadata_path = wxFileName(client_path.GetFullPath(), assets_name + ".dat");
+		sprites_path = wxFileName(client_path.GetFullPath(), assets_name + ".spr");
 	}
 
 	if (!metadata_path.FileExists() || !sprites_path.FileExists()) {

@@ -22,6 +22,8 @@
 #include "game/complexitem.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "app/visuals.h"
+#include "rendering/drawers/overlays/visual_overlay_drawer.h"
 
 namespace {
 	GameSprite* resolveSprite(const ItemDefinitionView& definition) {
@@ -33,6 +35,20 @@ namespace {
 
 	GameSprite* resolveSprite(ServerItemId item_id) {
 		return resolveSprite(g_item_definitions.get(item_id));
+	}
+
+	bool enqueueVisualImage(VisualOverlayDrawer* drawer, const Position& pos, const wxColour& base_color, const VisualAppearance& appearance) {
+		if (!drawer || appearance.asset_path.empty()) {
+			return false;
+		}
+
+		drawer->add(VisualOverlayRequest {
+			.pos = pos,
+			.asset_path = appearance.asset_path,
+			.color = Visuals::CombineColor(base_color, appearance.color),
+			.placement = VisualOverlayPlacement::TileInset
+		});
+		return true;
 	}
 }
 
@@ -64,6 +80,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	const SpritePatterns* cached_patterns = params.patterns;
 
 	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
+	ItemDefinitionView draw_definition = it;
 
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
@@ -88,11 +105,51 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// item sprite
-	GameSprite* spr = resolveSprite(it);
+	GameSprite* spr = resolveSprite(draw_definition);
+
+	if (!options.ingame) {
+		const wxColour base_color(
+			static_cast<unsigned char>(red),
+			static_cast<unsigned char>(green),
+			static_cast<unsigned char>(blue),
+			static_cast<unsigned char>(alpha)
+		);
+		if (const VisualRule* visual_rule = g_visuals.ResolveItem(item->getID()); visual_rule) {
+			const wxColour final_color = Visuals::CombineColor(base_color, visual_rule->appearance.color);
+			switch (visual_rule->appearance.type) {
+				case VisualAppearanceType::Rgba:
+					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()));
+					return;
+				case VisualAppearanceType::SpriteId: {
+					if (GameSprite* override_sprite = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(visual_rule->appearance.sprite_id))) {
+						spr = override_sprite;
+					}
+					red = final_color.Red();
+					green = final_color.Green();
+					blue = final_color.Blue();
+					alpha = final_color.Alpha();
+					break;
+				}
+				case VisualAppearanceType::OtherItemVisual:
+					draw_definition = g_item_definitions.get(visual_rule->appearance.item_id);
+					red = final_color.Red();
+					green = final_color.Green();
+					blue = final_color.Blue();
+					alpha = final_color.Alpha();
+					break;
+				case VisualAppearanceType::Png:
+				case VisualAppearanceType::Svg:
+					if (enqueueVisualImage(visual_overlay_drawer, pos, base_color, visual_rule->appearance)) {
+						return;
+					}
+					break;
+			}
+		}
+	}
 
 	// Display invisible and invalid items
 	// Ugly hacks. :)
-	if (!options.ingame && options.show_tech_items) {
+	if (!options.ingame && options.show_tech_items && !g_visuals.ResolveItem(item->getID())) {
 		// Red invalid client id
 		if (!it) {
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
@@ -131,7 +188,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// metaItem, sprite not found or not hidden
-	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.hasFlag(ItemFlag::Pickupable) && !options.show_items) {
+	if (draw_definition.isMetaItem() || spr == nullptr || !ephemeral && draw_definition.hasFlag(ItemFlag::Pickupable) && !options.show_items) {
 		return;
 	}
 
@@ -147,10 +204,10 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_y -= spr->draw_height;
 
 	SpritePatterns patterns;
-	if (cached_patterns && spr == resolveSprite(it)) {
+	if (cached_patterns && spr == resolveSprite(draw_definition)) {
 		patterns = *cached_patterns;
 	} else {
-		patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+		patterns = PatternCalculator::Calculate(spr, draw_definition, item, tile, pos);
 	}
 
 	int subtype = patterns.subtype;
@@ -159,11 +216,11 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
 
-	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
+	if (!ephemeral && options.transparent_items && (!draw_definition.isGroundTile() || spr->width > 1 || spr->height > 1) && !draw_definition.isSplash() && (!draw_definition.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
 	}
 
-	if (it.isPodium()) {
+	if (draw_definition.isPodium()) {
 		Podium* podium = static_cast<Podium*>(item);
 		if (!podium->hasShowPlatform() && !options.ingame) {
 			if (options.show_tech_items) {
@@ -212,7 +269,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		}
 	}
 
-	if (it.isPodium()) {
+	if (draw_definition.isPodium()) {
 		Podium* podium = static_cast<Podium*>(item);
 		Outfit outfit = podium->getOutfit();
 		if (!podium->hasShowOutfit()) {
@@ -236,8 +293,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// draw wall hook
-	if (!options.ingame && options.show_hooks && (it.hasFlag(ItemFlag::HookSouth) || it.hasFlag(ItemFlag::HookEast))) {
-		DrawHookIndicator(it, pos);
+	if (!options.ingame && options.show_hooks && (draw_definition.hasFlag(ItemFlag::HookSouth) || draw_definition.hasFlag(ItemFlag::HookEast))) {
+		DrawHookIndicator(draw_definition, pos);
 	}
 
 	// draw light color indicator
