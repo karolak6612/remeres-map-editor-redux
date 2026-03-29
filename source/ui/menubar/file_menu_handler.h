@@ -27,6 +27,7 @@ public:
 
 	void OnReloadDataFiles(wxCommandEvent& event);
 	void OnPreferences(wxCommandEvent& event);
+	void OnVisuals(wxCommandEvent& event);
 	void OnListExtensions(wxCommandEvent& event);
 	void OnGotoWebsite(wxCommandEvent& event);
 	void OnAbout(wxCommandEvent& event);

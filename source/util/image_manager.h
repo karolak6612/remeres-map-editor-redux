@@ -59,6 +59,7 @@ public:
 
 	// NanoVG support
 	int GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint = wxNullColour);
+	int GetNanoVGImage(NVGcontext* vg, const wxBitmap& bitmap, std::string_view cacheKey);
 
 	// OpenGL support
 	uint32_t GetGLTexture(std::string_view assetPath);

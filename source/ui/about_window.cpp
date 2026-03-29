@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "app/visuals.h"
 
 #include "ui/gui.h"
 #include "ui/dialog_util.h"
@@ -34,11 +35,13 @@
 AboutWindow::AboutWindow(wxWindow* parent) :
 	wxDialog(parent, wxID_ANY, "About", wxDefaultPosition, wxDefaultSize, wxRESIZE_BORDER | wxCAPTION | wxCLOSE_BOX) {
 	wxString about;
+	const wxString application_name = wxstr(g_visuals.GetApplicationName());
+	const wxString site_url = wxstr(g_visuals.GetSiteUrl());
 
-	about << "OTAcademy Map Editor\n";
+	about << application_name << "\n";
 	about << "(based on Remere's Map Editor)\n\n";
 	about << "This program is a map editor for game servers\nthat derivied from OpenTibia project.\n\n";
-	about << "Brought to you by OTAcademy\n\n";
+	about << "Project website: " << site_url << "\n\n";
 
 	about << "Version " << __W_RME_VERSION__ << " for ";
 	about <<
@@ -89,7 +92,7 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	wxButton* websiteBtn = newd wxButton(this, wxID_ANY, "Visit Website");
 	websiteBtn->SetBitmap(IMAGE_MANAGER.GetBitmapBundle(ICON_GLOBE));
 	websiteBtn->Bind(wxEVT_BUTTON, [](wxCommandEvent&) {
-		::wxLaunchDefaultBrowser(__SITE_URL__, wxBROWSER_NEW_WINDOW);
+		::wxLaunchDefaultBrowser(wxstr(g_visuals.GetSiteUrl()), wxBROWSER_NEW_WINDOW);
 	});
 	websiteBtn->SetToolTip("Open the official website in your browser");
 	choicesizer->Add(websiteBtn, wxSizerFlags(1).Center().Border(wxLEFT, 10));

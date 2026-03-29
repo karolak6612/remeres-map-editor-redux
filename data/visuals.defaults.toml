@@ -1,0 +1,333 @@
+[[rules]]
+key = "legacy.client.469"
+label = "Invisible Stairs Tile"
+group = "Items"
+subject = "client_id"
+value = 469
+appearance = "rgba"
+color = [255, 255, 0, 171]
+
+[[rules]]
+key = "legacy.client.470"
+label = "Invisible Walkable Tile"
+group = "Items"
+subject = "client_id"
+value = 470
+appearance = "rgba"
+color = [255, 0, 0, 171]
+
+[[rules]]
+key = "legacy.client.17970"
+label = "Invisible Walkable Tile"
+group = "Items"
+subject = "client_id"
+value = 17970
+appearance = "rgba"
+color = [255, 0, 0, 171]
+
+[[rules]]
+key = "legacy.client.20028"
+label = "Invisible Walkable Tile"
+group = "Items"
+subject = "client_id"
+value = 20028
+appearance = "rgba"
+color = [255, 0, 0, 171]
+
+[[rules]]
+key = "legacy.client.34168"
+label = "Invisible Walkable Tile"
+group = "Items"
+subject = "client_id"
+value = 34168
+appearance = "rgba"
+color = [255, 0, 0, 171]
+
+[[rules]]
+key = "legacy.client.2187"
+label = "Invisible Wall"
+group = "Items"
+subject = "client_id"
+value = 2187
+appearance = "rgba"
+color = [0, 255, 255, 80]
+
+[[rules]]
+key = "legacy.client.39092"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39092
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39093"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39093
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39094"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39094
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39095"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39095
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39096"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39096
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39097"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39097
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39098"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39098
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39099"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39099
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39100"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39100
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39236"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39236
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39367"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39367
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "legacy.client.39368"
+label = "Primal Light"
+group = "Items"
+subject = "client_id"
+value = 39368
+appearance = "sprite_id"
+sprite_id = 1501
+color = [0, 255, 255, 180]
+
+[[rules]]
+key = "marker.waypoint"
+label = "Waypoint"
+group = "Markers"
+subject = "marker"
+value = "waypoint"
+appearance = "sprite_id"
+sprite_id = 1397
+color = [64, 64, 255, 255]
+
+[[rules]]
+key = "marker.house_exit_current"
+label = "House Exit (Current House)"
+group = "Markers"
+subject = "marker"
+value = "house_exit_current"
+appearance = "sprite_id"
+sprite_id = 2019
+color = [64, 255, 255, 255]
+
+[[rules]]
+key = "marker.house_exit_other"
+label = "House Exit (Other House)"
+group = "Markers"
+subject = "marker"
+value = "house_exit_other"
+appearance = "sprite_id"
+sprite_id = 2019
+color = [64, 64, 255, 255]
+
+[[rules]]
+key = "marker.town_temple"
+label = "Town Temple"
+group = "Markers"
+subject = "marker"
+value = "town_temple"
+appearance = "sprite_id"
+sprite_id = 1436
+color = [255, 255, 64, 170]
+
+[[rules]]
+key = "marker.spawn"
+label = "Spawn"
+group = "Markers"
+subject = "marker"
+value = "spawn"
+appearance = "sprite_id"
+sprite_id = 1507
+color = [255, 255, 255, 255]
+
+[[rules]]
+key = "marker.spawn_selected"
+label = "Spawn (Selected)"
+group = "Markers"
+subject = "marker"
+value = "spawn_selected"
+appearance = "sprite_id"
+sprite_id = 1507
+color = [128, 128, 128, 255]
+
+[[rules]]
+key = "overlay.door_locked"
+label = "Door Indicator (Locked)"
+group = "Overlays"
+subject = "overlay"
+value = "door_locked"
+appearance = "rgba"
+color = [255, 0, 0, 255]
+
+[[rules]]
+key = "overlay.door_unlocked"
+label = "Door Indicator (Unlocked)"
+group = "Overlays"
+subject = "overlay"
+value = "door_unlocked"
+appearance = "rgba"
+color = [102, 255, 0, 255]
+
+[[rules]]
+key = "overlay.hook_south"
+label = "Hook Indicator (South)"
+group = "Overlays"
+subject = "overlay"
+value = "hook_south"
+appearance = "rgba"
+color = [204, 255, 0, 255]
+
+[[rules]]
+key = "overlay.hook_east"
+label = "Hook Indicator (East)"
+group = "Overlays"
+subject = "overlay"
+value = "hook_east"
+appearance = "rgba"
+color = [204, 255, 0, 255]
+
+[[rules]]
+key = "overlay.light_indicator"
+label = "Light Indicator"
+group = "Overlays"
+subject = "overlay"
+value = "light_indicator"
+appearance = "rgba"
+color = [255, 255, 255, 255]
+
+[[rules]]
+key = "tile.blocking"
+label = "Blocking Tint"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "blocking"
+appearance = "rgba"
+color = [255, 171, 171, 255]
+
+[[rules]]
+key = "tile.pz"
+label = "Protection Zone Tint"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "pz"
+appearance = "rgba"
+color = [128, 255, 128, 255]
+
+[[rules]]
+key = "tile.no_logout"
+label = "No Logout Tint"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "no_logout"
+appearance = "rgba"
+color = [255, 255, 128, 255]
+
+[[rules]]
+key = "tile.pvp"
+label = "PvP Zone Tint"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "pvp"
+appearance = "rgba"
+color = [255, 64, 171, 255]
+
+[[rules]]
+key = "tile.no_pvp"
+label = "No PvP Tint"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "no_pvp"
+appearance = "rgba"
+color = [255, 128, 255, 255]
+
+[[rules]]
+key = "tile.house_overlay"
+label = "House Overlay"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "house_overlay"
+enabled = false
+appearance = "rgba"
+color = [255, 255, 255, 0]

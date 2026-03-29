@@ -13,6 +13,10 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/interface_page.h
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/client_version_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_color_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_helpers.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_preview.h
     ${CMAKE_CURRENT_LIST_DIR}/app/rme_forward_declarations.h
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.h
     ${CMAKE_CURRENT_LIST_DIR}/app/threads.h
@@ -207,6 +211,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/visual_overlay_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.h
@@ -237,6 +242,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/utilities/tile_describer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/post_process_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/app/visuals.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/controls/item_buttons.h
@@ -398,6 +404,11 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/graphics_page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/interface_page.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/client_version_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_color_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_events.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_helpers.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_preview.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/managers/version_manager.cpp
@@ -574,6 +585,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/visual_overlay_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/floor_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/shade_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/tiles/tile_color_calculator.cpp
@@ -609,6 +621,9 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/scanline.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/xbrz.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/visuals.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/visuals_io.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/visuals_rules.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp

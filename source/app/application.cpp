@@ -28,6 +28,7 @@
 #include "ui/dialogs/goto_position_dialog.h"
 #include "palette/palette_window.h"
 #include "app/preferences.h"
+#include "app/visuals.h"
 #include "net/net_connection.h"
 #include "lua/lua_script_manager.h"
 #include "lua/lua_scripts_window.h"
@@ -127,6 +128,7 @@ bool Application::OnInit() {
 
 	// Discover data directory
 	FileSystem::DiscoverDataDirectory("menubar.xml");
+	g_visuals.Load();
 
 	// Tell that we are the real thing
 	wxAppConsole::SetInstance(this);
@@ -186,7 +188,7 @@ bool Application::OnInit() {
 	m_file_to_open = wxEmptyString;
 	ParseCommandLineMap(m_file_to_open);
 
-	g_gui.root = newd MainFrame(__W_RME_APPLICATION_NAME__, wxDefaultPosition, wxSize(700, 500));
+	g_gui.root = newd MainFrame(wxstr(g_visuals.GetApplicationName()), wxDefaultPosition, wxSize(700, 500));
 	SetTopWindow(g_gui.root);
 	g_gui.SetTitle("");
 
@@ -213,7 +215,7 @@ bool Application::OnInit() {
 
 	// Goto RME website?
 	if (g_settings.getInteger(Config::GOTO_WEBSITE_ON_BOOT) == 1) {
-		::wxLaunchDefaultBrowser(__SITE_URL__, wxBROWSER_NEW_WINDOW);
+		::wxLaunchDefaultBrowser(wxstr(g_visuals.GetSiteUrl()), wxBROWSER_NEW_WINDOW);
 		g_settings.setInteger(Config::GOTO_WEBSITE_ON_BOOT, 0);
 	}
 

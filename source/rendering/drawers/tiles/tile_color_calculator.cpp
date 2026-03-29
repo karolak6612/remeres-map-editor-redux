@@ -4,15 +4,28 @@
 #include "game/item.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h"
+#include "app/visuals.h"
 #include <array>
 
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
+	auto apply_color_rule = [&](TileVisualKind kind) {
+		if (const VisualRule* rule = g_visuals.ResolveTile(kind); rule) {
+			if (rule->appearance.type == VisualAppearanceType::Rgba) {
+				r = static_cast<uint8_t>(r * rule->appearance.color.Red() / 255);
+				g = static_cast<uint8_t>(g * rule->appearance.color.Green() / 255);
+				b = static_cast<uint8_t>(b * rule->appearance.color.Blue() / 255);
+			}
+			return true;
+		}
+		return false;
+	};
 
 	if (options.show_blocking && tile->isBlocking() && tile->size() > 0) {
-		// g * 2/3 approx g * 171 / 256
-		g = (g * 171) >> 8;
-		b = (b * 171) >> 8;
+		if (!apply_color_rule(TileVisualKind::Blocking)) {
+			g = (g * 171) >> 8;
+			b = (b * 171) >> 8;
+		}
 	}
 
 	int item_count = tile->items.size();
@@ -61,21 +74,29 @@ void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& opti
 			}
 		}
 	} else if (showspecial && tile->isPZ()) {
-		r >>= 1;
-		b >>= 1;
+		if (!apply_color_rule(TileVisualKind::Pz)) {
+			r >>= 1;
+			b >>= 1;
+		}
 	}
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_PVPZONE) {
-		g = r >> 2;
-		b = (b * 171) >> 8;
+		if (!apply_color_rule(TileVisualKind::Pvp)) {
+			g = r >> 2;
+			b = (b * 171) >> 8;
+		}
 	}
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_NOLOGOUT) {
-		b >>= 1;
+		if (!apply_color_rule(TileVisualKind::NoLogout)) {
+			b >>= 1;
+		}
 	}
 
 	if (showspecial && tile->getMapFlags() & TILESTATE_NOPVP) {
-		g >>= 1;
+		if (!apply_color_rule(TileVisualKind::NoPvp)) {
+			g >>= 1;
+		}
 	}
 }
 

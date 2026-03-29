@@ -1,6 +1,7 @@
 #include "ui/menubar/file_menu_handler.h"
 #include "app/application.h"
 #include "app/main.h"
+#include "app/visuals.h"
 #include "ui/gui.h"
 #include "ui/map/export_tilesets_window.h"
 
@@ -99,13 +100,19 @@ void FileMenuHandler::OnPreferences(wxCommandEvent& WXUNUSED(event)) {
 	dialog.Destroy();
 }
 
+void FileMenuHandler::OnVisuals(wxCommandEvent& WXUNUSED(event)) {
+	PreferencesWindow dialog(frame, PreferencesPageSelection::Visuals);
+	dialog.ShowModal();
+	dialog.Destroy();
+}
+
 void FileMenuHandler::OnListExtensions(wxCommandEvent& WXUNUSED(event)) {
 	ExtensionsDialog exts(frame);
 	exts.ShowModal();
 }
 
 void FileMenuHandler::OnGotoWebsite(wxCommandEvent& WXUNUSED(event)) {
-	::wxLaunchDefaultBrowser(__SITE_URL__, wxBROWSER_NEW_WINDOW);
+	::wxLaunchDefaultBrowser(wxstr(g_visuals.GetSiteUrl()), wxBROWSER_NEW_WINDOW);
 }
 
 void FileMenuHandler::OnAbout(wxCommandEvent& WXUNUSED(event)) {

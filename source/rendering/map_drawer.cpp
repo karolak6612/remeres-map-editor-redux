@@ -62,6 +62,7 @@
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
 #include "rendering/drawers/overlays/lua_overlay_drawer.h"
+#include "rendering/drawers/overlays/visual_overlay_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
 #include "rendering/drawers/tiles/shade_drawer.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -118,9 +119,12 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
 	door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
 	lua_overlay_drawer = std::make_unique<LuaOverlayDrawer>(this);
+	visual_overlay_drawer = std::make_unique<VisualOverlayDrawer>();
 
 	item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
 	item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
+	item_drawer->SetVisualOverlayDrawer(visual_overlay_drawer.get());
+	marker_drawer->SetVisualOverlayDrawer(visual_overlay_drawer.get());
 }
 
 MapDrawer::~MapDrawer() {
@@ -425,6 +429,10 @@ void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
 	}
 }
 
+void MapDrawer::DrawVisualOverlays(NVGcontext* vg) {
+	visual_overlay_drawer->draw(vg, view);
+}
+
 void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
@@ -445,4 +453,5 @@ void MapDrawer::ClearFrameOverlays() {
 	tooltip_drawer->clear();
 	hook_indicator_drawer->clear();
 	door_indicator_drawer->clear();
+	visual_overlay_drawer->clear();
 }

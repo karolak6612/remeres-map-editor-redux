@@ -22,6 +22,8 @@
 #include "game/complexitem.h"
 #include "game/sprites.h"
 #include "ui/gui.h"
+#include "app/visuals.h"
+#include "rendering/drawers/overlays/visual_overlay_drawer.h"
 
 namespace {
 	GameSprite* resolveSprite(const ItemDefinitionView& definition) {
@@ -33,6 +35,48 @@ namespace {
 
 	GameSprite* resolveSprite(ServerItemId item_id) {
 		return resolveSprite(g_item_definitions.get(item_id));
+	}
+
+	GameSprite* resolveAppearanceSprite(const VisualAppearance& appearance) {
+		switch (appearance.type) {
+			case VisualAppearanceType::SpriteId:
+				return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(appearance.sprite_id));
+			case VisualAppearanceType::OtherItemVisual:
+				return resolveSprite(appearance.item_id);
+			case VisualAppearanceType::Rgba:
+			case VisualAppearanceType::Png:
+			case VisualAppearanceType::Svg:
+				return nullptr;
+		}
+		return nullptr;
+	}
+
+	bool enqueueVisualImage(VisualOverlayDrawer* drawer, const Position& pos, const wxColour& base_color, const VisualAppearance& appearance) {
+		if (!drawer || appearance.asset_path.empty()) {
+			return false;
+		}
+
+		drawer->add(VisualOverlayRequest {
+			.pos = pos,
+			.asset_path = appearance.asset_path,
+			.color = Visuals::CombineColor(base_color, appearance.color),
+			.placement = VisualOverlayPlacement::TileInset
+		});
+		return true;
+	}
+
+	bool enqueueVisualImage(VisualOverlayDrawer* drawer, const Position& pos, const wxColour& color, const VisualAppearance& appearance, VisualOverlayPlacement placement) {
+		if (!drawer || appearance.asset_path.empty()) {
+			return false;
+		}
+
+		drawer->add(VisualOverlayRequest {
+			.pos = pos,
+			.asset_path = appearance.asset_path,
+			.color = color,
+			.placement = placement
+		});
+		return true;
 	}
 }
 
@@ -64,6 +108,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	const SpritePatterns* cached_patterns = params.patterns;
 
 	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
+	ItemDefinitionView draw_definition = it;
 
 	// Locked door indicator
 	if (!options.ingame && options.highlight_locked_doors && it.isDoor()) {
@@ -88,50 +133,59 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// item sprite
-	GameSprite* spr = resolveSprite(it);
+	GameSprite* spr = resolveSprite(draw_definition);
 
-	// Display invisible and invalid items
-	// Ugly hacks. :)
-	if (!options.ingame && options.show_tech_items) {
-		// Red invalid client id
+	if (!options.ingame) {
+		const wxColour base_color(
+			static_cast<unsigned char>(red),
+			static_cast<unsigned char>(green),
+			static_cast<unsigned char>(blue),
+			static_cast<unsigned char>(alpha)
+		);
+		if (const VisualRule* visual_rule = g_visuals.ResolveItem(item->getID()); visual_rule) {
+			const wxColour final_color = Visuals::CombineColor(base_color, visual_rule->appearance.color);
+			switch (visual_rule->appearance.type) {
+				case VisualAppearanceType::Rgba:
+					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()));
+					return;
+				case VisualAppearanceType::SpriteId: {
+					if (GameSprite* override_sprite = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(visual_rule->appearance.sprite_id))) {
+						spr = override_sprite;
+					}
+					red = final_color.Red();
+					green = final_color.Green();
+					blue = final_color.Blue();
+					alpha = final_color.Alpha();
+					break;
+				}
+				case VisualAppearanceType::OtherItemVisual:
+					draw_definition = g_item_definitions.get(visual_rule->appearance.item_id);
+					spr = resolveSprite(draw_definition);
+					red = final_color.Red();
+					green = final_color.Green();
+					blue = final_color.Blue();
+					alpha = final_color.Alpha();
+					break;
+				case VisualAppearanceType::Png:
+				case VisualAppearanceType::Svg:
+					if (enqueueVisualImage(visual_overlay_drawer, pos, base_color, visual_rule->appearance)) {
+						return;
+					}
+					break;
+			}
+		}
+	}
+
+	// Invalid items still need a visible fallback even if no visual rule exists.
+	if (!options.ingame && options.show_tech_items && !g_visuals.ResolveItem(item->getID())) {
 		if (!it) {
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, alpha));
 			return;
 		}
-
-		switch (it.clientId()) {
-			// Yellow invisible stairs tile (459)
-			case 469:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, green, 0, (alpha * 171) >> 8));
-				return;
-
-			// Red invisible walkable tile (460)
-			case 470:
-			case 17970:
-			case 20028:
-			case 34168:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(red, 0, 0, (alpha * 171) >> 8));
-				return;
-
-			// Cyan invisible wall (1548)
-			case 2187:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(0, green, blue, 80));
-				return;
-
-			default:
-				break;
-		}
-
-		// primal light
-		if (it.clientId() >= 39092 && it.clientId() <= 39100 || it.clientId() == 39236 || it.clientId() == 39367 || it.clientId() == 39368) {
-			spr = resolveSprite(SPRITE_LIGHTSOURCE);
-			red = 0;
-			alpha = 180;
-		}
 	}
 
 	// metaItem, sprite not found or not hidden
-	if (it.isMetaItem() || spr == nullptr || !ephemeral && it.hasFlag(ItemFlag::Pickupable) && !options.show_items) {
+	if (draw_definition.isMetaItem() || spr == nullptr || !ephemeral && draw_definition.hasFlag(ItemFlag::Pickupable) && !options.show_items) {
 		return;
 	}
 
@@ -147,10 +201,10 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	draw_y -= spr->draw_height;
 
 	SpritePatterns patterns;
-	if (cached_patterns && spr == resolveSprite(it)) {
+	if (cached_patterns && spr == resolveSprite(draw_definition)) {
 		patterns = *cached_patterns;
 	} else {
-		patterns = PatternCalculator::Calculate(spr, it, item, tile, pos);
+		patterns = PatternCalculator::Calculate(spr, draw_definition, item, tile, pos);
 	}
 
 	int subtype = patterns.subtype;
@@ -159,11 +213,11 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int pattern_z = patterns.z;
 	int frame = patterns.frame;
 
-	if (!ephemeral && options.transparent_items && (!it.isGroundTile() || spr->width > 1 || spr->height > 1) && !it.isSplash() && (!it.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
+	if (!ephemeral && options.transparent_items && (!draw_definition.isGroundTile() || spr->width > 1 || spr->height > 1) && !draw_definition.isSplash() && (!draw_definition.hasFlag(ItemFlag::IsBorder) || spr->width > 1 || spr->height > 1)) {
 		alpha /= 2;
 	}
 
-	if (it.isPodium()) {
+	if (draw_definition.isPodium()) {
 		Podium* podium = static_cast<Podium*>(item);
 		if (!podium->hasShowPlatform() && !options.ingame) {
 			if (options.show_tech_items) {
@@ -212,7 +266,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		}
 	}
 
-	if (it.isPodium()) {
+	if (draw_definition.isPodium()) {
 		Podium* podium = static_cast<Podium*>(item);
 		Outfit outfit = podium->getOutfit();
 		if (!podium->hasShowOutfit()) {
@@ -236,8 +290,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	}
 
 	// draw wall hook
-	if (!options.ingame && options.show_hooks && (it.hasFlag(ItemFlag::HookSouth) || it.hasFlag(ItemFlag::HookEast))) {
-		DrawHookIndicator(it, pos);
+	if (!options.ingame && options.show_hooks && (draw_definition.hasFlag(ItemFlag::HookSouth) || draw_definition.hasFlag(ItemFlag::HookEast))) {
+		DrawHookIndicator(draw_definition, pos);
 	}
 
 	// draw light color indicator
@@ -252,13 +306,32 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 			int startOffset = std::max<int>(16, 32 - light.intensity);
 			int sqSize = TILE_SIZE - startOffset;
-
-			// We need to disable texture 2d for BlitSquare. SpriteDrawer::glBlitSquare does NOT disable texture 2d automatically?
-			// SpriteDrawer::glBlitSquare internally uses BatchRenderer::DrawQuad which sets blank texture if needed.
-			// So we don't need manual enable/disable here anymore.
-
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize);
+			const VisualRule* light_rule = g_visuals.ResolveOverlay(OverlayVisualKind::LightIndicator);
+			if (!light_rule) {
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize);
+			} else {
+				const wxColour final_color = Visuals::CombineColor(wxColour(byteR, byteG, byteB, byteA), light_rule->appearance.color);
+				switch (light_rule->appearance.type) {
+					case VisualAppearanceType::Rgba:
+						sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
+						sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()), sqSize);
+						break;
+					case VisualAppearanceType::SpriteId:
+					case VisualAppearanceType::OtherItemVisual:
+						if (GameSprite* sprite = resolveAppearanceSprite(light_rule->appearance)) {
+							sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, sprite, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()));
+						}
+						break;
+					case VisualAppearanceType::Png:
+					case VisualAppearanceType::Svg:
+						if (!enqueueVisualImage(visual_overlay_drawer, pos, final_color, light_rule->appearance, VisualOverlayPlacement::TileCenter)) {
+							sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
+							sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()), sqSize);
+						}
+						break;
+				}
+			}
 		}
 	}
 }
@@ -266,40 +339,23 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 void ItemDrawer::DrawRawBrush(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, ServerItemId item_id, uint8_t r, uint8_t g, uint8_t b, uint8_t alpha) {
 	const auto definition = g_item_definitions.get(item_id);
 	GameSprite* spr = resolveSprite(definition);
-	uint16_t cid = definition ? definition.clientId() : 0;
 
-	switch (cid) {
-		// Yellow invisible stairs tile
-		case 469:
-			b = 0;
-			alpha = (alpha * 171) >> 8;
-			spr = resolveSprite(SPRITE_ZONE);
-			break;
-
-		// Red invisible walkable tile
-		case 470:
-			g = 0;
-			b = 0;
-			alpha = (alpha * 171) >> 8;
-			spr = resolveSprite(SPRITE_ZONE);
-			break;
-
-		// Cyan invisible wall
-		case 2187:
-			r = 0;
-			alpha = alpha / 3;
-			spr = resolveSprite(SPRITE_ZONE);
-			break;
-
-		default:
-			break;
-	}
-
-	// primal light
-	if (cid >= 39092 && cid <= 39100 || cid == 39236 || cid == 39367 || cid == 39368) {
-		spr = resolveSprite(SPRITE_LIGHTSOURCE);
-		r = 0;
-		alpha = (alpha * 171) >> 8;
+	if (const VisualRule* visual_rule = g_visuals.ResolveItem(item_id); visual_rule) {
+		switch (visual_rule->appearance.type) {
+			case VisualAppearanceType::Rgba:
+				sprite_drawer->glBlitSquare(sprite_batch, screenx, screeny, DrawColor(visual_rule->appearance.color.Red(), visual_rule->appearance.color.Green(), visual_rule->appearance.color.Blue(), visual_rule->appearance.color.Alpha()));
+				return;
+			case VisualAppearanceType::SpriteId:
+			case VisualAppearanceType::OtherItemVisual:
+				if (GameSprite* override_sprite = resolveAppearanceSprite(visual_rule->appearance)) {
+					sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, override_sprite, DrawColor(visual_rule->appearance.color.Red(), visual_rule->appearance.color.Green(), visual_rule->appearance.color.Blue(), visual_rule->appearance.color.Alpha()));
+					return;
+				}
+				break;
+			case VisualAppearanceType::Png:
+			case VisualAppearanceType::Svg:
+				break;
+		}
 	}
 
 	if (spr) {

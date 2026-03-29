@@ -23,12 +23,71 @@
 #include "map/tile.h"
 #include "game/item.h"
 #include "ui/gui.h"
+#include "app/preferences.h"
+#include "app/visuals.h"
 #include "ui/browse_tile_window.h"
 #include "ui/tileset_window.h"
 #include "ui/dialog_helper.h"
 #include "brushes/brush.h"
+#include "brushes/house/house_brush.h"
+#include "brushes/house/house_exit_brush.h"
 #include <ranges>
+#include <wx/choicdlg.h>
 #include "brushes/door/door_brush.h"
+
+namespace {
+struct VisualContextOption {
+	wxString label;
+	VisualEditContext context;
+};
+
+std::string itemLabel(uint16_t item_id) {
+	if (const auto definition = g_item_definitions.get(item_id)) {
+		if (!definition.name().empty()) {
+			return std::string(definition.name());
+		}
+	}
+	return "Item";
+}
+
+void appendItemContext(std::vector<VisualContextOption>& options, Item* item) {
+	if (!item) {
+		return;
+	}
+
+	const uint16_t item_id = item->getID();
+	options.push_back(VisualContextOption {
+		.label = wxString::FromUTF8("Item: " + itemLabel(item_id) + " [ID " + std::to_string(item_id) + "]"),
+		.context = VisualEditContext { .seed_rule = Visuals::MakeItemRule(item_id) }
+	});
+
+	const ItemDefinitionView definition = item->getDefinition();
+	if (definition.isDoor()) {
+		options.push_back(VisualContextOption {
+			.label = item->isLocked() ? "Overlay: Door Indicator (Locked)" : "Overlay: Door Indicator (Unlocked)",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(item->isLocked() ? OverlayVisualKind::DoorLocked : OverlayVisualKind::DoorUnlocked) }
+		});
+	}
+	if (definition.hasFlag(ItemFlag::HookSouth)) {
+		options.push_back(VisualContextOption {
+			.label = "Overlay: Hook Indicator (South)",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::HookSouth) }
+		});
+	}
+	if (definition.hasFlag(ItemFlag::HookEast)) {
+		options.push_back(VisualContextOption {
+			.label = "Overlay: Hook Indicator (East)",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::HookEast) }
+		});
+	}
+	if (item->getLight().intensity > 0) {
+		options.push_back(VisualContextOption {
+			.label = "Overlay: Light Indicator",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::LightIndicator) }
+		});
+	}
+}
+}
 
 void PopupActionHandler::RotateItem(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
@@ -110,6 +169,46 @@ void PopupActionHandler::OpenProperties(Editor& editor) {
 	if (tile) {
 		DialogHelper::OpenProperties(editor, tile);
 	}
+}
+
+void PopupActionHandler::OpenVisualEditor(Editor& editor, Tile* tile) {
+	if (!tile) {
+		return;
+	}
+
+	std::vector<VisualContextOption> options;
+
+	const ItemVector selected_items = TileOperations::getSelectedItems(tile);
+	if (!selected_items.empty()) {
+		for (Item* item : std::ranges::reverse_view(selected_items)) {
+			appendItemContext(options, item);
+		}
+	} else if (!tile->items.empty()) {
+		appendItemContext(options, tile->items.back().get());
+	} else if (tile->ground) {
+		appendItemContext(options, tile->ground.get());
+	}
+
+	if (options.empty()) {
+		return;
+	}
+
+	VisualEditContext context = options.front().context;
+	if (options.size() > 1) {
+		wxArrayString labels;
+		for (const auto& option : options) {
+			labels.Add(option.label);
+		}
+
+		wxSingleChoiceDialog picker(g_gui.root, "Choose what visual you want to edit for this tile.", "Change Visual", labels);
+		if (picker.ShowModal() != wxID_OK) {
+			return;
+		}
+		context = options[static_cast<size_t>(picker.GetSelection())].context;
+	}
+
+	PreferencesWindow dialog(g_gui.root, PreferencesPageSelection::Visuals, context);
+	dialog.ShowModal();
 }
 
 void PopupActionHandler::SelectMoveTo(Editor& editor) {

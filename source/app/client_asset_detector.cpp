@@ -1,4 +1,5 @@
 #include "app/client_asset_detector.h"
+#include "app/visuals.h"
 
 #include <algorithm>
 #include <array>
@@ -320,8 +321,9 @@ ClientAssetDetectionResult ClientAssetDetector::detect(const ClientVersion& clie
 		return result;
 	}
 
-	const auto dat_file = resolveClientFile(client_path, client.getMetadataFile(), std::string { ASSETS_NAME } + ".dat");
-	const auto spr_file = resolveClientFile(client_path, client.getSpritesFile(), std::string { ASSETS_NAME } + ".spr");
+	const std::string assets_name = g_visuals.GetAssetsName();
+	const auto dat_file = resolveClientFile(client_path, client.getMetadataFile(), assets_name + ".dat");
+	const auto spr_file = resolveClientFile(client_path, client.getSpritesFile(), assets_name + ".spr");
 
 	if (!dat_file.exists) {
 		const auto message = "Client asset detection failed: DAT file was not found in the selected client path.";

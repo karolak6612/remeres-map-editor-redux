@@ -7,6 +7,7 @@
 
 #include "ui/dialog_util.h"
 #include "app/application.h"
+#include "app/visuals.h"
 #include "util/file_system.h"
 #include "editor/hotkey_manager.h"
 
@@ -63,7 +64,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 
 	wxStatusBar* statusbar = CreateStatusBar();
 	statusbar->SetFieldsCount(4);
-	SetStatusText(wxString("Welcome to ") << __W_RME_APPLICATION_NAME__ << " " << __W_RME_VERSION__);
+	SetStatusText(wxString("Welcome to ") << wxstr(g_visuals.GetApplicationName()) << " " << __W_RME_VERSION__);
 
 	// Le sizer
 	g_gui.aui_manager = new wxAuiManager(this);

@@ -24,7 +24,7 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 
-PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelected) :
+PreferencesWindow::PreferencesWindow(wxWindow* parent, PreferencesPageSelection initial_page, const std::optional<VisualEditContext>& context) :
 	wxDialog(parent, wxID_ANY, "Preferences", wxDefaultPosition, wxSize(980, 720), wxCAPTION | wxCLOSE_BOX | wxRESIZE_BORDER) {
 	SetBackgroundColour(Theme::Get(Theme::Role::Surface));
 	SetMinSize(wxSize(FromDIP(860), FromDIP(640)));
@@ -39,6 +39,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_PEN_TO_SQUARE, wxSize(18, 18)));
 	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_IMAGE, wxSize(18, 18)));
 	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_WINDOW_MAXIMIZE, wxSize(18, 18)));
+	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_PALETTE, wxSize(18, 18)));
 	image_list->Add(IMAGE_MANAGER.GetBitmap(ICON_GAMEPAD, wxSize(18, 18)));
 	book->AssignImageList(image_list);
 
@@ -47,13 +48,15 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	graphics_page = new GraphicsPage(book);
 	interface_page = new InterfacePage(book);
 	client_version_page = new ClientVersionPage(book);
+	visuals_page = new VisualsPage(book);
 
 	book->AddPage(general_page, "General", false, 0);
 	book->AddPage(editor_page, "Editor", false, 1);
 	book->AddPage(graphics_page, "Graphics", false, 2);
 	book->AddPage(interface_page, "Interface", false, 3);
-	book->AddPage(client_version_page, "Client Version", false, 4);
-	book->SetSelection(clientVersionSelected ? 4 : 0);
+	book->AddPage(visuals_page, "Visuals", false, 4);
+	book->AddPage(client_version_page, "Client Version", false, 5);
+	book->SetSelection(static_cast<int>(initial_page));
 
 	if (auto* list_view = book->GetListView()) {
 		list_view->SetMinSize(wxSize(FromDIP(170), -1));
@@ -98,6 +101,10 @@ PreferencesWindow::PreferencesWindow(wxWindow* parent, bool clientVersionSelecte
 	wxIcon icon;
 	icon.CopyFromBitmap(IMAGE_MANAGER.GetBitmap(ICON_GEAR, wxSize(32, 32)));
 	SetIcon(icon);
+
+	if (context.has_value()) {
+		FocusVisualContext(*context);
+	}
 }
 
 PreferencesWindow::~PreferencesWindow() {
@@ -134,6 +141,7 @@ void PreferencesWindow::Apply() {
 	graphics_page->Apply();
 	interface_page->Apply();
 	client_version_page->Apply();
+	visuals_page->Apply();
 
 	g_settings.save();
 }
@@ -146,4 +154,13 @@ void PreferencesWindow::OnClose(wxCloseEvent& event) {
 
 	client_version_page->DiscardPendingChanges();
 	EndModal(wxID_CANCEL);
+}
+
+void PreferencesWindow::FocusVisualContext(const VisualEditContext& context) {
+	if (book) {
+		book->SetSelection(static_cast<int>(PreferencesPageSelection::Visuals));
+	}
+	if (visuals_page) {
+		visuals_page->FocusContext(context);
+	}
 }

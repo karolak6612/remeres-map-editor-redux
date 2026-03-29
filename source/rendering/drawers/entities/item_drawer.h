@@ -16,6 +16,7 @@ class Tile;
 class Item;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
+class VisualOverlayDrawer;
 
 struct DrawingOptions;
 class SpriteBatch;
@@ -55,10 +56,17 @@ public:
 	void SetDoorIndicatorDrawer(DoorIndicatorDrawer* drawer) {
 		door_indicator_drawer = drawer;
 	}
+	void SetVisualOverlayDrawer(VisualOverlayDrawer* drawer) {
+		visual_overlay_drawer = drawer;
+	}
+	VisualOverlayDrawer* GetVisualOverlayDrawer() const {
+		return visual_overlay_drawer;
+	}
 
 private:
 	HookIndicatorDrawer* hook_indicator_drawer = nullptr;
 	DoorIndicatorDrawer* door_indicator_drawer = nullptr;
+	VisualOverlayDrawer* visual_overlay_drawer = nullptr;
 };
 
 #endif

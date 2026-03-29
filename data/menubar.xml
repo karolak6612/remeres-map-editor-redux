@@ -54,6 +54,7 @@
 		<separator/>
 		<menu name="Recent Files" special="RECENT_FILES"/>
 		<item name="Preferences" action="PREFERENCES" help="Configure the map editor."/>
+		<item name="Visuals..." action="VISUALS" help="Open the visual overrides editor."/>
 		<item name="Exit" action="EXIT" help="Close the editor."/>
 	</menu>
 	<menu name="Edit">

@@ -22,17 +22,31 @@
 #include <wx/listbook.h>
 #include <wx/listctrl.h>
 
+#include <optional>
+
 #include "app/main.h"
 #include "app/preferences/client_version_page.h"
 #include "app/preferences/editor_page.h"
 #include "app/preferences/general_page.h"
 #include "app/preferences/graphics_page.h"
 #include "app/preferences/interface_page.h"
+#include "app/preferences/visuals_page.h"
+
+enum class PreferencesPageSelection {
+	General,
+	Editor,
+	Graphics,
+	Interface,
+	Visuals,
+	ClientVersion,
+};
 
 class PreferencesWindow : public wxDialog {
 public:
-	PreferencesWindow(wxWindow* parent, bool clientVersionSelected = false);
+	PreferencesWindow(wxWindow* parent, PreferencesPageSelection initial_page = PreferencesPageSelection::General, const std::optional<VisualEditContext>& context = std::nullopt);
 	~PreferencesWindow() override;
+
+	void FocusVisualContext(const VisualEditContext& context);
 
 	void OnClickApply(wxCommandEvent& event);
 	void OnClickOK(wxCommandEvent& event);
@@ -49,6 +63,7 @@ protected:
 	GraphicsPage* graphics_page = nullptr;
 	InterfacePage* interface_page = nullptr;
 	ClientVersionPage* client_version_page = nullptr;
+	VisualsPage* visuals_page = nullptr;
 };
 
 #endif
