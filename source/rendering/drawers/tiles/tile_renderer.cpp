@@ -162,6 +162,41 @@ namespace {
 		}
 		return 0;
 	}
+
+	void drawTileVisual(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, const Position& position, const VisualAppearance& appearance) {
+		switch (appearance.type) {
+			case VisualAppearanceType::Rgba:
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(appearance.color.Red(), appearance.color.Green(), appearance.color.Blue(), appearance.color.Alpha()));
+				break;
+			case VisualAppearanceType::SpriteId:
+				if (appearance.sprite_id != 0) {
+					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, appearance.sprite_id, DrawColor(appearance.color.Red(), appearance.color.Green(), appearance.color.Blue(), appearance.color.Alpha()));
+				}
+				break;
+			case VisualAppearanceType::OtherItemVisual:
+				if (const uint16_t client_id = resolveVisualClientId(appearance); client_id != 0) {
+					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, client_id, DrawColor(appearance.color.Red(), appearance.color.Green(), appearance.color.Blue(), appearance.color.Alpha()));
+				}
+				break;
+			case VisualAppearanceType::Png:
+			case VisualAppearanceType::Svg:
+				if (overlay_drawer && !appearance.asset_path.empty()) {
+					overlay_drawer->add(VisualOverlayRequest {
+						.pos = position,
+						.asset_path = appearance.asset_path,
+						.color = appearance.color,
+						.placement = VisualOverlayPlacement::TileInset
+					});
+				}
+				break;
+		}
+	}
+
+	void drawResolvedTileVisual(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, const Position& position, TileVisualKind kind) {
+		if (const VisualRule* rule = g_visuals.ResolveTile(kind); rule && rule->appearance.type != VisualAppearanceType::Rgba) {
+			drawTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, rule->appearance);
+		}
+	}
 }
 
 void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
@@ -283,32 +318,28 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
 	}
 
+	if (map_z == view.floor) {
+		auto* overlay_drawer = item_drawer->GetVisualOverlayDrawer();
+		if (options.show_blocking && tile->isBlocking() && tile->size() > 0) {
+			drawResolvedTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, TileVisualKind::Blocking);
+		}
+		if ((as_minimap || options.show_only_colors || options.show_special_tiles) && tile->isPZ()) {
+			drawResolvedTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, TileVisualKind::Pz);
+		}
+		if ((as_minimap || options.show_only_colors || options.show_special_tiles) && (tile->getMapFlags() & TILESTATE_PVPZONE)) {
+			drawResolvedTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, TileVisualKind::Pvp);
+		}
+		if ((as_minimap || options.show_only_colors || options.show_special_tiles) && (tile->getMapFlags() & TILESTATE_NOLOGOUT)) {
+			drawResolvedTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, TileVisualKind::NoLogout);
+		}
+		if ((as_minimap || options.show_only_colors || options.show_special_tiles) && (tile->getMapFlags() & TILESTATE_NOPVP)) {
+			drawResolvedTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, TileVisualKind::NoPvp);
+		}
+	}
+
 	if (options.show_houses && is_house_tile && map_z == view.floor) {
 		if (const VisualRule* house_overlay = g_visuals.ResolveTile(TileVisualKind::HouseOverlay); house_overlay) {
-			switch (house_overlay->appearance.type) {
-				case VisualAppearanceType::Rgba:
-					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(house_overlay->appearance.color.Red(), house_overlay->appearance.color.Green(), house_overlay->appearance.color.Blue(), house_overlay->appearance.color.Alpha()));
-					break;
-				case VisualAppearanceType::SpriteId:
-					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, house_overlay->appearance.sprite_id, DrawColor(house_overlay->appearance.color.Red(), house_overlay->appearance.color.Green(), house_overlay->appearance.color.Blue(), house_overlay->appearance.color.Alpha()));
-					break;
-				case VisualAppearanceType::OtherItemVisual:
-					if (const uint16_t client_id = resolveVisualClientId(house_overlay->appearance); client_id != 0) {
-						sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, client_id, DrawColor(house_overlay->appearance.color.Red(), house_overlay->appearance.color.Green(), house_overlay->appearance.color.Blue(), house_overlay->appearance.color.Alpha()));
-					}
-					break;
-				case VisualAppearanceType::Png:
-				case VisualAppearanceType::Svg:
-					if (auto* overlay_drawer = item_drawer->GetVisualOverlayDrawer()) {
-						overlay_drawer->add(VisualOverlayRequest {
-							.pos = position,
-							.asset_path = house_overlay->appearance.asset_path,
-							.color = house_overlay->appearance.color,
-							.placement = VisualOverlayPlacement::TileInset
-						});
-					}
-					break;
-			}
+			drawTileVisual(sprite_batch, sprite_drawer, item_drawer->GetVisualOverlayDrawer(), draw_x, draw_y, position, house_overlay->appearance);
 		}
 	}
 

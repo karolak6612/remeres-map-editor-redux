@@ -1,3 +1,5 @@
+application_name = "OTAcademy Map Editor"
+site_url = "https://github.com/OTAcademy/RME"
 assets_name = "Tibia"
 
 [[rules]]
@@ -271,6 +273,15 @@ appearance = "rgba"
 color = [204, 255, 0, 255]
 
 [[rules]]
+key = "overlay.light_indicator"
+label = "Light Indicator"
+group = "Overlays"
+subject = "overlay"
+value = "light_indicator"
+appearance = "rgba"
+color = [255, 255, 255, 255]
+
+[[rules]]
 key = "tile.blocking"
 label = "Blocking Tint"
 group = "Tile/House/Zone"
@@ -296,6 +307,15 @@ subject = "tile"
 value = "no_logout"
 appearance = "rgba"
 color = [255, 255, 128, 255]
+
+[[rules]]
+key = "tile.pvp"
+label = "PvP Zone Tint"
+group = "Tile/House/Zone"
+subject = "tile"
+value = "pvp"
+appearance = "rgba"
+color = [255, 64, 171, 255]
 
 [[rules]]
 key = "tile.no_pvp"

@@ -83,6 +83,10 @@ bool Visuals::Load() {
 	base_user_rules.clear();
 	legacy_default_client_rules.clear();
 	legacy_user_client_rules.clear();
+	default_application_name = __RME_APPLICATION_NAME__;
+	user_application_name.reset();
+	default_site_url = __SITE_URL__;
+	user_site_url.reset();
 	default_assets_name = ASSETS_NAME;
 	user_assets_name.reset();
 	resolved_signature = 0;
@@ -100,18 +104,14 @@ bool Visuals::LoadDefaults() {
 	if (default_config_path.empty()) {
 		return false;
 	}
-	std::optional<std::string> unused_override;
-	return LoadRulesFromFile(default_config_path, false, base_default_rules, legacy_default_client_rules, unused_override);
+	return LoadRulesFromFile(default_config_path, false, base_default_rules, legacy_default_client_rules);
 }
 
 bool Visuals::LoadUserOverrides() {
-	std::optional<std::string> assets_override;
-	const bool loaded = LoadRulesFromFile(user_config_path, true, base_user_rules, legacy_user_client_rules, assets_override);
-	user_assets_name = std::move(assets_override);
-	return loaded;
+	return LoadRulesFromFile(user_config_path, true, base_user_rules, legacy_user_client_rules);
 }
 
-bool Visuals::LoadRulesFromFile(const wxString& path, bool user_file, RuleMap& destination, std::vector<VisualRule>& client_rules, std::optional<std::string>& assets_name_override) {
+bool Visuals::LoadRulesFromFile(const wxString& path, bool user_file, RuleMap& destination, std::vector<VisualRule>& client_rules) {
 	if (path.empty() || !wxFileName::FileExists(path)) {
 		return !user_file;
 	}
@@ -125,11 +125,19 @@ bool Visuals::LoadRulesFromFile(const wxString& path, bool user_file, RuleMap& d
 	}
 
 	if (user_file) {
-		if (const auto value = config["assets_name"].value<std::string>(); value.has_value()) {
-			assets_name_override = value;
+		user_application_name = config["application_name"].value<std::string>();
+		user_site_url = config["site_url"].value<std::string>();
+		user_assets_name = config["assets_name"].value<std::string>();
+	} else {
+		if (const auto value = config["application_name"].value<std::string>(); value.has_value()) {
+			default_application_name = *value;
 		}
-	} else if (const auto value = config["assets_name"].value<std::string>(); value.has_value()) {
-		default_assets_name = *value;
+		if (const auto value = config["site_url"].value<std::string>(); value.has_value()) {
+			default_site_url = *value;
+		}
+		if (const auto value = config["assets_name"].value<std::string>(); value.has_value()) {
+			default_assets_name = *value;
+		}
 	}
 
 	if (const auto* rules = config["rules"].as_array()) {
@@ -188,25 +196,23 @@ bool Visuals::LoadRulesFromFile(const wxString& path, bool user_file, RuleMap& d
 
 bool Visuals::SaveUserOverrides() const {
 	EnsureServerItemRulesMaterialized();
-	return SaveRulesToFile(user_config_path, user_rules, user_assets_name);
+	return SaveRulesToFile(user_config_path, user_rules);
 }
 
 bool Visuals::ExportUserOverrides(const wxString& path) const {
 	EnsureServerItemRulesMaterialized();
-	return SaveRulesToFile(path, user_rules, user_assets_name);
+	return SaveRulesToFile(path, user_rules);
 }
 
 bool Visuals::ImportUserOverrides(const wxString& path) {
 	RuleMap imported_rules;
 	std::vector<VisualRule> imported_client_rules;
-	std::optional<std::string> imported_assets_name;
-	if (!LoadRulesFromFile(path, true, imported_rules, imported_client_rules, imported_assets_name)) {
+	if (!LoadRulesFromFile(path, true, imported_rules, imported_client_rules)) {
 		return false;
 	}
 
 	base_user_rules = std::move(imported_rules);
 	legacy_user_client_rules = std::move(imported_client_rules);
-	user_assets_name = std::move(imported_assets_name);
 	InvalidateResolvedRules();
 	return true;
 }
@@ -275,10 +281,16 @@ void Visuals::ExpandClientRules(const std::vector<VisualRule>& source, RuleMap& 
 	}
 }
 
-bool Visuals::SaveRulesToFile(const wxString& path, const RuleMap& rules, const std::optional<std::string>& assets_name_override) const {
+bool Visuals::SaveRulesToFile(const wxString& path, const RuleMap& rules) const {
 	toml::table root;
-	if (assets_name_override.has_value()) {
-		root.insert_or_assign("assets_name", *assets_name_override);
+	if (user_application_name.has_value()) {
+		root.insert_or_assign("application_name", *user_application_name);
+	}
+	if (user_site_url.has_value()) {
+		root.insert_or_assign("site_url", *user_site_url);
+	}
+	if (user_assets_name.has_value()) {
+		root.insert_or_assign("assets_name", *user_assets_name);
 	}
 
 	toml::array serialized_rules;
@@ -398,6 +410,8 @@ void Visuals::RemoveUserRule(const std::string& key) {
 void Visuals::ClearUserOverrides() {
 	base_user_rules.clear();
 	legacy_user_client_rules.clear();
+	user_application_name.reset();
+	user_site_url.reset();
 	user_assets_name.reset();
 	InvalidateResolvedRules();
 }
@@ -432,6 +446,36 @@ const VisualRule* Visuals::ResolveTile(TileVisualKind kind) const {
 		return rule;
 	}
 	return nullptr;
+}
+
+std::string Visuals::GetApplicationName() const {
+	if (user_application_name.has_value() && !user_application_name->empty()) {
+		return *user_application_name;
+	}
+	return default_application_name.empty() ? __RME_APPLICATION_NAME__ : default_application_name;
+}
+
+void Visuals::SetApplicationNameOverride(std::string application_name) {
+	if (application_name.empty() || application_name == default_application_name) {
+		user_application_name.reset();
+		return;
+	}
+	user_application_name = std::move(application_name);
+}
+
+std::string Visuals::GetSiteUrl() const {
+	if (user_site_url.has_value() && !user_site_url->empty()) {
+		return *user_site_url;
+	}
+	return default_site_url.empty() ? __SITE_URL__ : default_site_url;
+}
+
+void Visuals::SetSiteUrlOverride(std::string site_url) {
+	if (site_url.empty() || site_url == default_site_url) {
+		user_site_url.reset();
+		return;
+	}
+	user_site_url = std::move(site_url);
 }
 
 std::string Visuals::GetAssetsName() const {
@@ -515,11 +559,19 @@ wxColour Visuals::CombineColor(const wxColour& base_color, const wxColour& tint)
 }
 
 bool Visuals::SupportsSpriteModes(const VisualRule& rule) {
-	return rule.match_type == VisualMatchType::ItemId || rule.match_type == VisualMatchType::ClientId || rule.match_type == VisualMatchType::Marker || rule.match_type == VisualMatchType::Tile;
+	return rule.match_type == VisualMatchType::ItemId
+		|| rule.match_type == VisualMatchType::ClientId
+		|| rule.match_type == VisualMatchType::Marker
+		|| rule.match_type == VisualMatchType::Overlay
+		|| rule.match_type == VisualMatchType::Tile;
 }
 
-bool Visuals::SupportsImageModes(const VisualRule& WXUNUSED(rule)) {
-	return true;
+bool Visuals::SupportsImageModes(const VisualRule& rule) {
+	return rule.match_type == VisualMatchType::ItemId
+		|| rule.match_type == VisualMatchType::ClientId
+		|| rule.match_type == VisualMatchType::Marker
+		|| rule.match_type == VisualMatchType::Overlay
+		|| rule.match_type == VisualMatchType::Tile;
 }
 
 std::string Visuals::BuildKey(const VisualRule& rule) {
@@ -696,6 +748,8 @@ std::string Visuals::ToString(OverlayVisualKind kind) {
 			return "hook_south";
 		case OverlayVisualKind::HookEast:
 			return "hook_east";
+		case OverlayVisualKind::LightIndicator:
+			return "light_indicator";
 	}
 	return "door_locked";
 }
@@ -761,6 +815,7 @@ std::optional<OverlayVisualKind> Visuals::ParseOverlayKind(const std::string& va
 	if (normalized == "door_unlocked") return OverlayVisualKind::DoorUnlocked;
 	if (normalized == "hook_south") return OverlayVisualKind::HookSouth;
 	if (normalized == "hook_east") return OverlayVisualKind::HookEast;
+	if (normalized == "light_indicator") return OverlayVisualKind::LightIndicator;
 	return std::nullopt;
 }
 

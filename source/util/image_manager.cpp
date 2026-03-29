@@ -207,6 +207,28 @@ int ImageManager::GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, con
 	return img;
 }
 
+int ImageManager::GetNanoVGImage(NVGcontext* vg, const wxBitmap& bitmap, std::string_view cacheKey) {
+	if (!bitmap.IsOk()) {
+		return 0;
+	}
+
+	NvgCacheKey key = { vg, std::string(cacheKey), 0xFFFFFFFF };
+	if (const auto it = m_nvgImageCache.find(key); it != m_nvgImageCache.end()) {
+		return it->second;
+	}
+
+	const wxImage image = bitmap.ConvertToImage();
+	if (!image.IsOk()) {
+		return 0;
+	}
+
+	const int image_id = CreateNanoVGImageFromWxImage(vg, image);
+	if (image_id != 0) {
+		m_nvgImageCache[key] = image_id;
+	}
+	return image_id;
+}
+
 int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& image) {
 	int w = image.GetWidth();
 	int h = image.GetHeight();

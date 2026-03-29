@@ -32,7 +32,62 @@
 #include "brushes/house/house_brush.h"
 #include "brushes/house/house_exit_brush.h"
 #include <ranges>
+#include <wx/choicdlg.h>
 #include "brushes/door/door_brush.h"
+
+namespace {
+struct VisualContextOption {
+	wxString label;
+	VisualEditContext context;
+};
+
+std::string itemLabel(uint16_t item_id) {
+	if (const auto definition = g_item_definitions.get(item_id)) {
+		if (!definition.name().empty()) {
+			return std::string(definition.name());
+		}
+	}
+	return "Item";
+}
+
+void appendItemContext(std::vector<VisualContextOption>& options, Item* item) {
+	if (!item) {
+		return;
+	}
+
+	const uint16_t item_id = item->getID();
+	options.push_back(VisualContextOption {
+		.label = wxString::FromUTF8("Item: " + itemLabel(item_id) + " [ID " + std::to_string(item_id) + "]"),
+		.context = VisualEditContext { .seed_rule = Visuals::MakeItemRule(item_id) }
+	});
+
+	const ItemDefinitionView definition = item->getDefinition();
+	if (definition.isDoor()) {
+		options.push_back(VisualContextOption {
+			.label = item->isLocked() ? "Overlay: Door Indicator (Locked)" : "Overlay: Door Indicator (Unlocked)",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(item->isLocked() ? OverlayVisualKind::DoorLocked : OverlayVisualKind::DoorUnlocked) }
+		});
+	}
+	if (definition.hasFlag(ItemFlag::HookSouth)) {
+		options.push_back(VisualContextOption {
+			.label = "Overlay: Hook Indicator (South)",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::HookSouth) }
+		});
+	}
+	if (definition.hasFlag(ItemFlag::HookEast)) {
+		options.push_back(VisualContextOption {
+			.label = "Overlay: Hook Indicator (East)",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::HookEast) }
+		});
+	}
+	if (item->getLight().intensity > 0) {
+		options.push_back(VisualContextOption {
+			.label = "Overlay: Light Indicator",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::LightIndicator) }
+		});
+	}
+}
+}
 
 void PopupActionHandler::RotateItem(Editor& editor) {
 	Tile* tile = editor.selection.getSelectedTile();
@@ -121,17 +176,41 @@ void PopupActionHandler::OpenVisualEditor(Editor& editor, Tile* tile) {
 		return;
 	}
 
-	std::optional<VisualEditContext> context;
+	std::vector<VisualContextOption> options;
+
 	const ItemVector selected_items = TileOperations::getSelectedItems(tile);
 	if (!selected_items.empty()) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeItemRule(selected_items.back()->getID()) };
-	} else if (tile->spawn) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(tile->spawn->isSelected() ? MarkerVisualKind::SpawnSelected : MarkerVisualKind::Spawn) };
-	} else if (editor.map.waypoints.getWaypoint(tile->getLocation())) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(MarkerVisualKind::Waypoint) };
-	} else if (tile->isTownExit(editor.map)) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(MarkerVisualKind::TownTemple) };
-	} else if (tile->isHouseExit()) {
+		for (Item* item : std::ranges::reverse_view(selected_items)) {
+			appendItemContext(options, item);
+		}
+	} else if (!tile->items.empty()) {
+		appendItemContext(options, tile->items.back().get());
+	} else if (tile->ground) {
+		appendItemContext(options, tile->ground.get());
+	}
+
+	if (tile->spawn) {
+		options.push_back(VisualContextOption {
+			.label = tile->spawn->isSelected() ? "Marker: Spawn (Selected)" : "Marker: Spawn",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(tile->spawn->isSelected() ? MarkerVisualKind::SpawnSelected : MarkerVisualKind::Spawn) }
+		});
+	}
+
+	if (editor.map.waypoints.getWaypoint(tile->getLocation())) {
+		options.push_back(VisualContextOption {
+			.label = "Marker: Waypoint",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(MarkerVisualKind::Waypoint) }
+		});
+	}
+
+	if (tile->isTownExit(editor.map)) {
+		options.push_back(VisualContextOption {
+			.label = "Marker: Town Temple",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(MarkerVisualKind::TownTemple) }
+		});
+	}
+
+	if (tile->isHouseExit()) {
 		uint32_t current_house_id = 0;
 		if (Brush* brush = g_gui.GetCurrentBrush()) {
 			if (brush->is<HouseBrush>()) {
@@ -141,23 +220,65 @@ void PopupActionHandler::OpenVisualEditor(Editor& editor, Tile* tile) {
 			}
 		}
 		const MarkerVisualKind kind = tile->hasHouseExit(current_house_id) ? MarkerVisualKind::HouseExitCurrent : MarkerVisualKind::HouseExitOther;
-		context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(kind) };
-	} else if (tile->isHouseTile()) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::HouseOverlay) };
-	} else if (tile->isPZ()) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Pz) };
-	} else if (tile->getMapFlags() & TILESTATE_PVPZONE) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Pvp) };
-	} else if (tile->getMapFlags() & TILESTATE_NOLOGOUT) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::NoLogout) };
-	} else if (tile->getMapFlags() & TILESTATE_NOPVP) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::NoPvp) };
-	} else if (tile->isBlocking()) {
-		context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Blocking) };
+		options.push_back(VisualContextOption {
+			.label = wxString::FromUTF8("Marker: " + std::string(kind == MarkerVisualKind::HouseExitCurrent ? "House Exit (Current House)" : "House Exit (Other House)")),
+			.context = VisualEditContext { .seed_rule = Visuals::MakeMarkerRule(kind) }
+		});
 	}
 
-	if (!context.has_value()) {
+	if (tile->isHouseTile()) {
+		options.push_back(VisualContextOption {
+			.label = "Tile: House Overlay",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::HouseOverlay) }
+		});
+	}
+	if (tile->isPZ()) {
+		options.push_back(VisualContextOption {
+			.label = "Tile: Protection Zone",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Pz) }
+		});
+	}
+	if (tile->getMapFlags() & TILESTATE_PVPZONE) {
+		options.push_back(VisualContextOption {
+			.label = "Tile: PvP Zone",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Pvp) }
+		});
+	}
+	if (tile->getMapFlags() & TILESTATE_NOLOGOUT) {
+		options.push_back(VisualContextOption {
+			.label = "Tile: No Logout",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::NoLogout) }
+		});
+	}
+	if (tile->getMapFlags() & TILESTATE_NOPVP) {
+		options.push_back(VisualContextOption {
+			.label = "Tile: No PvP",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::NoPvp) }
+		});
+	}
+	if (tile->isBlocking()) {
+		options.push_back(VisualContextOption {
+			.label = "Tile: Blocking",
+			.context = VisualEditContext { .seed_rule = Visuals::MakeTileRule(TileVisualKind::Blocking) }
+		});
+	}
+
+	if (options.empty()) {
 		return;
+	}
+
+	VisualEditContext context = options.front().context;
+	if (options.size() > 1) {
+		wxArrayString labels;
+		for (const auto& option : options) {
+			labels.Add(option.label);
+		}
+
+		wxSingleChoiceDialog picker(g_gui.root, "Choose what visual you want to edit for this tile.", "Change Visual", labels);
+		if (picker.ShowModal() != wxID_OK) {
+			return;
+		}
+		context = options[static_cast<size_t>(picker.GetSelection())].context;
 	}
 
 	PreferencesWindow dialog(g_gui.root, PreferencesPageSelection::Visuals, context);

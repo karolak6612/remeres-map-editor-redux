@@ -10,10 +10,12 @@
 void TileColorCalculator::Calculate(const Tile* tile, const DrawingOptions& options, uint32_t current_house_id, int spawn_count, uint8_t& r, uint8_t& g, uint8_t& b) {
 	bool showspecial = options.show_only_colors || options.show_special_tiles;
 	auto apply_color_rule = [&](TileVisualKind kind) {
-		if (const VisualRule* rule = g_visuals.ResolveTile(kind); rule && rule->appearance.type == VisualAppearanceType::Rgba) {
-			r = static_cast<uint8_t>(r * rule->appearance.color.Red() / 255);
-			g = static_cast<uint8_t>(g * rule->appearance.color.Green() / 255);
-			b = static_cast<uint8_t>(b * rule->appearance.color.Blue() / 255);
+		if (const VisualRule* rule = g_visuals.ResolveTile(kind); rule) {
+			if (rule->appearance.type == VisualAppearanceType::Rgba) {
+				r = static_cast<uint8_t>(r * rule->appearance.color.Red() / 255);
+				g = static_cast<uint8_t>(g * rule->appearance.color.Green() / 255);
+				b = static_cast<uint8_t>(b * rule->appearance.color.Blue() / 255);
+			}
 			return true;
 		}
 		return false;

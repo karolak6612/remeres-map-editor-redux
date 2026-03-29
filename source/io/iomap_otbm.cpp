@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////
 
 #include "app/main.h"
+#include "app/visuals.h"
 
 #include <wx/wfstream.h>
 #include <wx/mstream.h>
@@ -475,7 +476,7 @@ bool IOMapOTBM::saveMap(Map& map, NodeFileWriteHandle& f) {
 		f.addNode(OTBM_MAP_DATA);
 		{
 			f.addU8(OTBM_ATTR_DESCRIPTION);
-			f.addString(std::format("Saved with {} {}", __RME_APPLICATION_NAME__, __RME_VERSION__));
+			f.addString(std::format("Saved with {} {}", g_visuals.GetApplicationName(), __RME_VERSION__));
 
 			f.addU8(OTBM_ATTR_DESCRIPTION);
 			f.addString(map.description);

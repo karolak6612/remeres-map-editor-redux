@@ -32,6 +32,7 @@ enum class OverlayVisualKind {
 	DoorUnlocked,
 	HookSouth,
 	HookEast,
+	LightIndicator,
 };
 
 enum class TileVisualKind {
@@ -113,6 +114,18 @@ public:
 	const VisualRule* ResolveOverlay(OverlayVisualKind kind) const;
 	const VisualRule* ResolveTile(TileVisualKind kind) const;
 
+	std::string GetApplicationName() const;
+	void SetApplicationNameOverride(std::string application_name);
+	bool HasApplicationNameOverride() const {
+		return user_application_name.has_value();
+	}
+
+	std::string GetSiteUrl() const;
+	void SetSiteUrlOverride(std::string site_url);
+	bool HasSiteUrlOverride() const {
+		return user_site_url.has_value();
+	}
+
 	std::string GetAssetsName() const;
 	void SetAssetsNameOverride(std::string assets_name);
 	bool HasAssetsNameOverride() const {
@@ -144,8 +157,8 @@ public:
 private:
 	bool LoadDefaults();
 	bool LoadUserOverrides();
-	bool LoadRulesFromFile(const wxString& path, bool user_file, std::map<std::string, VisualRule>& destination, std::vector<VisualRule>& client_rules, std::optional<std::string>& assets_name_override);
-	bool SaveRulesToFile(const wxString& path, const std::map<std::string, VisualRule>& rules, const std::optional<std::string>& assets_name_override) const;
+	bool LoadRulesFromFile(const wxString& path, bool user_file, std::map<std::string, VisualRule>& destination, std::vector<VisualRule>& client_rules);
+	bool SaveRulesToFile(const wxString& path, const std::map<std::string, VisualRule>& rules) const;
 	void EnsureServerItemRulesMaterialized() const;
 	void InvalidateResolvedRules();
 	static uint64_t CurrentItemDefinitionSignature();
@@ -170,6 +183,10 @@ private:
 
 	wxString default_config_path;
 	wxString user_config_path;
+	std::string default_application_name;
+	std::optional<std::string> user_application_name;
+	std::string default_site_url;
+	std::optional<std::string> user_site_url;
 	std::string default_assets_name;
 	std::optional<std::string> user_assets_name;
 	mutable std::map<std::string, VisualRule> default_rules;

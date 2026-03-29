@@ -54,6 +54,7 @@ private:
 	void OnControlChanged(wxCommandEvent& event);
 	void OnColorChanged(wxColourPickerEvent& event);
 	void OnAddItemOverride(wxCommandEvent& event);
+	void OnPickOtherItem(wxCommandEvent& event);
 	void OnResetSelected(wxCommandEvent& event);
 	void OnResetAll(wxCommandEvent& event);
 	void OnImport(wxCommandEvent& event);
@@ -87,7 +88,10 @@ private:
 	wxColourPickerCtrl* color_picker_ = nullptr;
 	wxSpinCtrl* sprite_id_spin_ = nullptr;
 	wxSpinCtrl* item_id_spin_ = nullptr;
+	wxButton* item_picker_button_ = nullptr;
 	wxFilePickerCtrl* asset_picker_ = nullptr;
+	wxTextCtrl* application_name_text_ = nullptr;
+	wxTextCtrl* site_url_text_ = nullptr;
 	wxTextCtrl* assets_name_text_ = nullptr;
 
 	wxButton* reset_selected_button_ = nullptr;

@@ -5,9 +5,11 @@
 #include "rendering/core/game_sprite.h"
 #include "rendering/utilities/sprite_icon_generator.h"
 #include "ui/gui.h"
+#include "ui/find_item_window.h"
 #include "util/image_manager.h"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <functional>
 #include <map>
@@ -30,6 +32,19 @@
 #include <wx/treectrl.h>
 
 namespace {
+struct AppearanceChoice {
+	VisualAppearanceType type;
+	const char* label;
+};
+
+constexpr std::array kAppearanceChoices = {
+	AppearanceChoice { VisualAppearanceType::Rgba, "RGBA" },
+	AppearanceChoice { VisualAppearanceType::SpriteId, "Built-in Sprite ID" },
+	AppearanceChoice { VisualAppearanceType::OtherItemVisual, "Other Item Visual" },
+	AppearanceChoice { VisualAppearanceType::Png, "PNG" },
+	AppearanceChoice { VisualAppearanceType::Svg, "SVG" },
+};
+
 std::string LowercaseCopy(std::string value) {
 	std::ranges::transform(value, value.begin(), [](unsigned char character) {
 		return static_cast<char>(std::tolower(character));
@@ -61,6 +76,42 @@ uint16_t ResolveClientIdFromItem(uint16_t item_id) {
 		return definition.clientId();
 	}
 	return 0;
+}
+
+wxString LabelForAppearanceType(VisualAppearanceType type) {
+	for (const auto& choice : kAppearanceChoices) {
+		if (choice.type == type) {
+			return wxString::FromUTF8(choice.label);
+		}
+	}
+	return "RGBA";
+}
+
+VisualAppearanceType AppearanceTypeFromLabel(const wxString& label) {
+	for (const auto& choice : kAppearanceChoices) {
+		if (label == wxString::FromUTF8(choice.label)) {
+			return choice.type;
+		}
+	}
+	return VisualAppearanceType::Rgba;
+}
+
+std::vector<VisualAppearanceType> SupportedAppearanceTypes(const VisualRule& rule) {
+	std::vector<VisualAppearanceType> types { VisualAppearanceType::Rgba };
+	if (Visuals::SupportsSpriteModes(rule)) {
+		types.push_back(VisualAppearanceType::SpriteId);
+		types.push_back(VisualAppearanceType::OtherItemVisual);
+	}
+	if (Visuals::SupportsImageModes(rule)) {
+		types.push_back(VisualAppearanceType::Png);
+		types.push_back(VisualAppearanceType::Svg);
+	}
+	return types;
+}
+
+bool SupportsAppearanceType(const VisualRule& rule, VisualAppearanceType type) {
+	const auto supported_types = SupportedAppearanceTypes(rule);
+	return std::ranges::find(supported_types, type) != supported_types.end();
 }
 
 wxBitmap BuildAppearanceBitmap(const VisualAppearance& appearance) {
@@ -249,8 +300,14 @@ VisualsPage::VisualsPage(wxWindow* parent) : PreferencesPage(parent), working_co
 		color_picker_ = new wxColourPickerCtrl(section, wxID_ANY, *wxWHITE);
 		sprite_id_spin_ = new wxSpinCtrl(section, wxID_ANY);
 		sprite_id_spin_->SetRange(0, 65535);
-		item_id_spin_ = new wxSpinCtrl(section, wxID_ANY);
+		auto* item_picker_panel = new wxPanel(section);
+		auto* item_picker_sizer = new wxBoxSizer(wxHORIZONTAL);
+		item_id_spin_ = new wxSpinCtrl(item_picker_panel, wxID_ANY);
 		item_id_spin_->SetRange(0, 65535);
+		item_picker_button_ = new wxButton(item_picker_panel, wxID_ANY, "Browse...");
+		item_picker_sizer->Add(item_id_spin_, 1, wxRIGHT, FromDIP(6));
+		item_picker_sizer->Add(item_picker_button_, 0);
+		item_picker_panel->SetSizer(item_picker_sizer);
 		asset_picker_ = new wxFilePickerCtrl(section, wxID_ANY, wxEmptyString, "Choose a visual file", "PNG and SVG files (*.png;*.svg)|*.png;*.svg|All files (*.*)|*.*", wxDefaultPosition, wxDefaultSize, wxFLP_OPEN | wxFLP_USE_TEXTCTRL);
 
 		PreferencesLayout::AddControlRow(section, "Origin", "Whether the current effective value comes from bundled defaults or a local override.", origin_label_, true);
@@ -260,7 +317,7 @@ VisualsPage::VisualsPage(wxWindow* parent) : PreferencesPage(parent), working_co
 		PreferencesLayout::AddControlRow(section, "Appearance", "Choose how this visual is rendered.", appearance_choice_, true);
 		PreferencesLayout::AddControlRow(section, "RGBA", "Used directly for color visuals and also as the tint passed to image-based visuals.", color_picker_, true);
 		PreferencesLayout::AddControlRow(section, "Sprite ID", "Built-in editor sprite id used by bundled defaults for some markers.", sprite_id_spin_, true);
-		PreferencesLayout::AddControlRow(section, "Other Item ID", "Reuse the rendered look of another item id.", item_id_spin_, true);
+		PreferencesLayout::AddControlRow(section, "Other Item ID", "Reuse the rendered look of another item id.", item_picker_panel, true);
 		PreferencesLayout::AddControlRow(section, "Asset Path", "Absolute or asset-relative PNG/SVG path.", asset_picker_, true);
 		sizer->Add(section, 0, wxEXPAND | wxALL, FromDIP(10));
 		rule_panel_->SetSizer(sizer);
@@ -270,7 +327,11 @@ VisualsPage::VisualsPage(wxWindow* parent) : PreferencesPage(parent), working_co
 	{
 		auto* sizer = new wxBoxSizer(wxVERTICAL);
 		auto* section = new PreferencesSectionPanel(branding_panel_, "Branding", "Runtime identity values are loaded from the visuals TOML layer so users can override them without recompiling.");
+		application_name_text_ = new wxTextCtrl(section, wxID_ANY);
+		site_url_text_ = new wxTextCtrl(section, wxID_ANY);
 		assets_name_text_ = new wxTextCtrl(section, wxID_ANY);
+		PreferencesLayout::AddControlRow(section, "Application Name", "Main window title and other runtime labels.", application_name_text_, true);
+		PreferencesLayout::AddControlRow(section, "Website URL", "Opened by website actions and shown by runtime branding-aware dialogs.", site_url_text_, true);
 		PreferencesLayout::AddControlRow(section, "Assets Name", "Fallback DAT/SPR basename used when a client entry does not provide explicit file names.", assets_name_text_, true);
 		sizer->Add(section, 0, wxEXPAND | wxALL, FromDIP(10));
 		branding_panel_->SetSizer(sizer);
@@ -300,7 +361,10 @@ VisualsPage::VisualsPage(wxWindow* parent) : PreferencesPage(parent), working_co
 	appearance_choice_->Bind(wxEVT_CHOICE, &VisualsPage::OnControlChanged, this);
 	sprite_id_spin_->Bind(wxEVT_SPINCTRL, &VisualsPage::OnControlChanged, this);
 	item_id_spin_->Bind(wxEVT_SPINCTRL, &VisualsPage::OnControlChanged, this);
+	item_picker_button_->Bind(wxEVT_BUTTON, &VisualsPage::OnPickOtherItem, this);
 	asset_picker_->Bind(wxEVT_FILEPICKER_CHANGED, &VisualsPage::OnControlChanged, this);
+	application_name_text_->Bind(wxEVT_TEXT, &VisualsPage::OnControlChanged, this);
+	site_url_text_->Bind(wxEVT_TEXT, &VisualsPage::OnControlChanged, this);
 	assets_name_text_->Bind(wxEVT_TEXT, &VisualsPage::OnControlChanged, this);
 	color_picker_->Bind(wxEVT_COLOURPICKER_CHANGED, &VisualsPage::OnColorChanged, this);
 	Bind(wxEVT_DESTROY, &VisualsPage::OnWindowDestroy, this);
@@ -340,8 +404,17 @@ void VisualsPage::BeginShutdown() {
 	if (item_id_spin_) {
 		item_id_spin_->Unbind(wxEVT_SPINCTRL, &VisualsPage::OnControlChanged, this);
 	}
+	if (item_picker_button_) {
+		item_picker_button_->Unbind(wxEVT_BUTTON, &VisualsPage::OnPickOtherItem, this);
+	}
 	if (asset_picker_) {
 		asset_picker_->Unbind(wxEVT_FILEPICKER_CHANGED, &VisualsPage::OnControlChanged, this);
+	}
+	if (application_name_text_) {
+		application_name_text_->Unbind(wxEVT_TEXT, &VisualsPage::OnControlChanged, this);
+	}
+	if (site_url_text_) {
+		site_url_text_->Unbind(wxEVT_TEXT, &VisualsPage::OnControlChanged, this);
 	}
 	if (assets_name_text_) {
 		assets_name_text_->Unbind(wxEVT_TEXT, &VisualsPage::OnControlChanged, this);
@@ -421,6 +494,8 @@ void VisualsPage::PopulateTree() {
 	}
 
 	const wxTreeItemId branding_root = tree_ctrl_->AppendItem(root, "Branding", -1, -1, new TreeItemData(TreeItemData::Kind::Group, {}, "Branding"));
+	tree_ctrl_->AppendItem(branding_root, "Application Name", -1, -1, new TreeItemData(TreeItemData::Kind::Branding));
+	tree_ctrl_->AppendItem(branding_root, "Website URL", -1, -1, new TreeItemData(TreeItemData::Kind::Branding));
 	tree_ctrl_->AppendItem(branding_root, "Assets Name", -1, -1, new TreeItemData(TreeItemData::Kind::Branding));
 	tree_ctrl_->ExpandAll();
 
@@ -459,9 +534,11 @@ void VisualsPage::RefreshEditor() {
 	switch (selection_mode_) {
 		case SelectionMode::Branding:
 			editor_book_->ChangeSelection(3);
+			application_name_text_->SetValue(wxString::FromUTF8(working_copy_.GetApplicationName()));
+			site_url_text_->SetValue(wxString::FromUTF8(working_copy_.GetSiteUrl()));
 			assets_name_text_->SetValue(wxString::FromUTF8(working_copy_.GetAssetsName()));
 			reset_selected_button_->SetLabel("Reset Selected");
-			reset_selected_button_->Enable(working_copy_.HasAssetsNameOverride());
+			reset_selected_button_->Enable(working_copy_.HasApplicationNameOverride() || working_copy_.HasSiteUrlOverride() || working_copy_.HasAssetsNameOverride());
 			break;
 
 		case SelectionMode::Group:
@@ -487,7 +564,15 @@ void VisualsPage::RefreshEditor() {
 			match_label_->SetLabel(wxString::FromUTF8(MatchLabel(*rule)));
 			validation_label_->SetLabel(rule->valid ? wxString("Valid") : wxString::FromUTF8(rule->validation_error));
 			label_text_->SetValue(wxString::FromUTF8(rule->label));
-			appearance_choice_->SetSelection(static_cast<int>(rule->appearance.type));
+			appearance_choice_->Clear();
+			for (const auto type : SupportedAppearanceTypes(*rule)) {
+				appearance_choice_->Append(LabelForAppearanceType(type));
+			}
+			if (const int selected_index = appearance_choice_->FindString(LabelForAppearanceType(rule->appearance.type)); selected_index != wxNOT_FOUND) {
+				appearance_choice_->SetSelection(selected_index);
+			} else {
+				appearance_choice_->SetSelection(0);
+			}
 			color_picker_->SetColour(rule->appearance.color);
 			sprite_id_spin_->SetValue(static_cast<int>(rule->appearance.sprite_id));
 			item_id_spin_->SetValue(static_cast<int>(rule->appearance.item_id));
@@ -532,6 +617,8 @@ void VisualsPage::ApplyCurrentEdits() {
 	}
 
 	if (selection_mode_ == SelectionMode::Branding) {
+		working_copy_.SetApplicationNameOverride(application_name_text_->GetValue().ToStdString());
+		working_copy_.SetSiteUrlOverride(site_url_text_->GetValue().ToStdString());
 		working_copy_.SetAssetsNameOverride(assets_name_text_->GetValue().ToStdString());
 		return;
 	}
@@ -541,6 +628,9 @@ void VisualsPage::ApplyCurrentEdits() {
 	}
 
 	VisualRule rule = BuildEditableRule();
+	if (!SupportsAppearanceType(rule, rule.appearance.type)) {
+		rule.appearance.type = SupportedAppearanceTypes(rule).front();
+	}
 	working_copy_.SetUserRule(std::move(rule));
 }
 
@@ -612,7 +702,7 @@ VisualRule VisualsPage::BuildEditableRule() const {
 
 	rule.key = selected_key_;
 	rule.label = label_text_->GetValue().ToStdString();
-	rule.appearance.type = static_cast<VisualAppearanceType>(appearance_choice_->GetSelection());
+	rule.appearance.type = AppearanceTypeFromLabel(appearance_choice_->GetStringSelection());
 	rule.appearance.color = color_picker_->GetColour();
 	rule.appearance.sprite_id = static_cast<uint32_t>(sprite_id_spin_->GetValue());
 	rule.appearance.item_id = static_cast<uint16_t>(item_id_spin_->GetValue());
@@ -630,6 +720,9 @@ void VisualsPage::UpdateControlState(const VisualRule& rule) {
 
 	sprite_id_spin_->Enable(uses_sprite_id);
 	item_id_spin_->Enable(uses_item_id);
+	if (item_picker_button_) {
+		item_picker_button_->Enable(uses_item_id);
+	}
 	asset_picker_->Enable(uses_asset);
 	color_picker_->Enable(true);
 }
@@ -706,21 +799,42 @@ void VisualsPage::OnAddItemOverride(wxCommandEvent&) {
 	if (shutting_down_) {
 		return;
 	}
-	wxTextEntryDialog dialog(this, "Enter an item ID to create a new override.", "Add Item Override");
+	FindItemDialog dialog(this, "Add Item Override");
 	if (dialog.ShowModal() != wxID_OK) {
 		return;
 	}
 
-	long item_id = 0;
-	if (!dialog.GetValue().ToLong(&item_id) || item_id <= 0 || item_id > 65535) {
-		wxMessageBox("Enter a valid item ID.", "Visual Overrides", wxOK | wxICON_WARNING, this);
+	const uint16_t item_id = dialog.getResultID();
+	if (item_id == 0) {
+		wxMessageBox("Select a valid item.", "Visual Overrides", wxOK | wxICON_WARNING, this);
 		return;
 	}
 
-	VisualRule rule = Visuals::MakeItemRule(static_cast<uint16_t>(item_id));
+	VisualRule rule = Visuals::MakeItemRule(item_id);
 	working_copy_.SetUserRule(rule);
 	PopulateTree();
 	SelectRuleByKey(rule.key);
+}
+
+void VisualsPage::OnPickOtherItem(wxCommandEvent&) {
+	if (shutting_down_ || selection_mode_ != SelectionMode::Rule) {
+		return;
+	}
+
+	FindItemDialog dialog(this, "Choose Other Item Visual");
+	if (dialog.ShowModal() != wxID_OK) {
+		return;
+	}
+
+	const uint16_t item_id = dialog.getResultID();
+	if (item_id == 0) {
+		return;
+	}
+
+	item_id_spin_->SetValue(static_cast<int>(item_id));
+	ApplyCurrentEdits();
+	RefreshEditor();
+	RefreshPreview();
 }
 
 void VisualsPage::OnResetSelected(wxCommandEvent&) {
@@ -744,6 +858,8 @@ void VisualsPage::OnResetSelected(wxCommandEvent&) {
 			break;
 
 		case SelectionMode::Branding:
+			working_copy_.SetApplicationNameOverride({});
+			working_copy_.SetSiteUrlOverride({});
 			working_copy_.SetAssetsNameOverride({});
 			RefreshEditor();
 			RefreshPreview();
