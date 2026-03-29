@@ -752,6 +752,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/lua/lua_scripts_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mcp/mcp_server.cpp
 )
 
 if(WIN32)
