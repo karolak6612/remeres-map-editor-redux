@@ -95,15 +95,11 @@ namespace {
 
 		for (const auto format : formats) {
 			for (const bool extended : { false, true }) {
-				const std::vector<bool> frame_duration_options = (format >= DAT_FORMAT_1050) ? std::vector<bool> { false, true } : std::vector<bool> { false };
-				const std::vector<bool> frame_group_options = (format >= DAT_FORMAT_1057) ? std::vector<bool> { false, true } : std::vector<bool> { false };
+				const std::array frame_duration_options = { false, true };
+				const std::array frame_group_options = { false, true };
 
 				for (const bool frame_durations : frame_duration_options) {
 					for (const bool frame_groups : frame_group_options) {
-						if (frame_groups && !frame_durations) {
-							continue;
-						}
-
 						OtbVersion otb {};
 						ClientVersion probe_client(otb, "detector-probe", "");
 						probe_client.setExtended(extended);
@@ -389,10 +385,6 @@ ClientAssetDetectionResult ClientAssetDetector::detect(const ClientVersion& clie
 				}
 			}
 		}
-	}
-
-	if (result.frame_groups.value_or(false)) {
-		result.frame_durations = true;
 	}
 
 	return result;

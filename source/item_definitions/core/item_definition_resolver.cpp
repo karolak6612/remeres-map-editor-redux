@@ -31,7 +31,6 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 	for (const auto& [server_id, otb] : fragments.otb) {
 		ResolvedItemDefinitionRow row;
 		row.server_id = server_id;
-		row.client_id = otb.client_id;
 		row.group = otb.group;
 		row.type = otb.type;
 		row.flags = otb.flags;
@@ -54,14 +53,22 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 		row.name = otb.name;
 		row.description = otb.description;
 
-		const auto dat_it = fragments.dat.find(otb.client_id);
+		const auto xml_it = fragments.xml.find(server_id);
+		const ClientItemId effective_client_id = (xml_it != fragments.xml.end() && xml_it->second.client_id.has_value()) ? *xml_it->second.client_id : otb.client_id;
+		if (effective_client_id == 0) {
+			warnings.push_back(std::format("Skipping items.otb entry {} because it does not define a DAT client id.", server_id));
+			continue;
+		}
+
+		row.client_id = effective_client_id;
+
+		const auto dat_it = fragments.dat.find(effective_client_id);
 		if (dat_it == fragments.dat.end()) {
-			error = wxString::FromUTF8(std::format("Missing DAT definition for client id {}", otb.client_id));
+			error = wxString::FromUTF8(std::format("Missing DAT definition for client id {} (server id {}).", effective_client_id, server_id));
 			return false;
 		}
 		row.flags |= dat_it->second.flags & ~flagMask(ItemFlag::Moveable);
 
-		const auto xml_it = fragments.xml.find(server_id);
 		if (xml_it != fragments.xml.end()) {
 			applyXmlOverrides(xml_it->second, row);
 		}
