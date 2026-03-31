@@ -233,13 +233,6 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	if (options.show_tooltips) {
 		drawer->DrawTooltips(vg);
 	}
-	if (options.show_hooks) {
-		drawer->DrawHookIndicators(vg);
-	}
-	if (options.highlight_locked_doors) {
-		drawer->DrawDoorIndicators(vg);
-	}
-	drawer->DrawVisualOverlays(vg);
 	if (drawer->getLuaOverlayDrawer()) {
 		drawer->getLuaOverlayDrawer()->DrawUI(vg, drawer->getView(), options);
 	}

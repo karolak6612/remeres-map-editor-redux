@@ -200,35 +200,68 @@ void DrawAppearanceOnTile(wxDC& dc, const wxRect& tile, const VisualRule& rule) 
 
 }
 
-VisualsPreviewPanel::VisualsPreviewPanel(wxWindow* parent) :
-	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(56, 56)) {
+VisualsPreviewPanel::VisualsPreviewPanel(wxWindow* parent, int edge) :
+	wxPanel(parent, wxID_ANY, wxDefaultPosition, wxSize(edge, edge)) {
 	SetBackgroundStyle(wxBG_STYLE_PAINT);
-	SetMinSize(wxSize(56, 56));
+	SetMinSize(wxSize(edge, edge));
 	Bind(wxEVT_PAINT, &VisualsPreviewPanel::OnPaint, this);
+	Bind(wxEVT_SIZE, &VisualsPreviewPanel::OnSize, this);
 }
 
 void VisualsPreviewPanel::SetRule(std::optional<VisualRule> rule) {
 	rule_ = std::move(rule);
+	cache_dirty_ = true;
 	Refresh();
 }
 
-void VisualsPreviewPanel::OnPaint(wxPaintEvent&) {
-	wxAutoBufferedPaintDC dc(this);
+void VisualsPreviewPanel::RebuildCache() {
+	const wxSize size = GetClientSize();
+	if (size.x <= 0 || size.y <= 0) {
+		cached_bitmap_ = wxNullBitmap;
+		cache_dirty_ = false;
+		return;
+	}
+
+	cached_bitmap_ = wxBitmap(size.x, size.y, 32);
+	wxMemoryDC dc(cached_bitmap_);
 	dc.SetBackground(wxBrush(GetBackgroundColour()));
 	dc.Clear();
 
-	wxRect bounds = GetClientRect();
+	wxRect bounds(wxPoint(0, 0), size);
 	bounds.Deflate(4);
 	dc.SetPen(wxPen(wxColour(88, 88, 88)));
 	dc.SetBrush(wxBrush(wxColour(20, 20, 20)));
 	dc.DrawRoundedRectangle(bounds, FromDIP(6));
 
-	if (!rule_.has_value()) {
+	if (rule_.has_value()) {
+		wxRect scene_rect = bounds;
+		scene_rect.Deflate(6);
+		DrawTileBase(dc, scene_rect);
+		DrawAppearanceOnTile(dc, PreviewTileRect(scene_rect), *rule_);
+	}
+
+	dc.SelectObject(wxNullBitmap);
+	cache_dirty_ = false;
+}
+
+void VisualsPreviewPanel::OnPaint(wxPaintEvent&) {
+	if (cache_dirty_ || !cached_bitmap_.IsOk()) {
+		RebuildCache();
+	}
+
+	wxAutoBufferedPaintDC dc(this);
+	dc.SetBackground(wxBrush(GetBackgroundColour()));
+	dc.Clear();
+
+	if (!cached_bitmap_.IsOk()) {
 		return;
 	}
 
-	wxRect scene_rect = bounds;
-	scene_rect.Deflate(6);
-	DrawTileBase(dc, scene_rect);
-	DrawAppearanceOnTile(dc, PreviewTileRect(scene_rect), *rule_);
+	dc.DrawBitmap(cached_bitmap_, 0, 0, false);
+}
+
+void VisualsPreviewPanel::OnSize(wxSizeEvent& event) {
+	cache_dirty_ = true;
+	Refresh();
+	event.Skip();
 }

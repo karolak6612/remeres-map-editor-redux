@@ -33,6 +33,12 @@ void Visuals::EnsureServerItemRulesMaterialized() const {
 void Visuals::InvalidateResolvedRules() {
 	resolved_rules_dirty = true;
 	resolved_signature = 0;
+	InvalidateRuntimeResources();
+}
+
+void Visuals::InvalidateRuntimeResources() {
+	runtime_resources_dirty = true;
+	resource_registry.Clear();
 }
 
 uint64_t Visuals::CurrentItemDefinitionSignature() {
@@ -183,6 +189,36 @@ const VisualRule* Visuals::ResolveTile(TileVisualKind kind) const {
 		return rule;
 	}
 	return nullptr;
+}
+
+const ResolvedVisualResource* Visuals::ResolveItemResource(uint16_t item_id) const {
+	EnsureRuntimeResourcesPrepared();
+	return resource_registry.GetRuleResource(MakeKeyForItemId(item_id));
+}
+
+const ResolvedVisualResource* Visuals::ResolveMarkerResource(MarkerVisualKind kind) const {
+	EnsureRuntimeResourcesPrepared();
+	return resource_registry.GetRuleResource(MakeKeyForMarker(kind));
+}
+
+const ResolvedVisualResource* Visuals::ResolveOverlayResource(OverlayVisualKind kind) const {
+	EnsureRuntimeResourcesPrepared();
+	return resource_registry.GetRuleResource(MakeKeyForOverlay(kind));
+}
+
+const ResolvedVisualResource* Visuals::ResolveTileResource(TileVisualKind kind) const {
+	EnsureRuntimeResourcesPrepared();
+	return resource_registry.GetRuleResource(MakeKeyForTile(kind));
+}
+
+const ResolvedVisualResource* Visuals::GetFallbackOverlayResource(OverlayVisualKind kind) const {
+	EnsureRuntimeResourcesPrepared();
+	return resource_registry.GetFallbackOverlayResource(kind);
+}
+
+void Visuals::EnsureAtlasResourcesUploaded(AtlasManager& atlas) const {
+	EnsureRuntimeResourcesPrepared();
+	resource_registry.EnsureAtlasResourcesUploaded(atlas);
 }
 
 std::string Visuals::GetApplicationName() {

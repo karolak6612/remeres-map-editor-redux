@@ -13,36 +13,37 @@
 
 namespace {
 void drawMarkerVisual(SpriteBatch& sprite_batch, SpriteDrawer* drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, MarkerVisualKind kind, uint32_t fallback_sprite_id, const wxColour& fallback_color, const Position& pos) {
-	const VisualRule* rule = g_visuals.ResolveMarker(kind);
-	if (!rule) {
+	const ResolvedVisualResource* resource = g_visuals.ResolveMarkerResource(kind);
+	if (!resource) {
 		drawer->BlitSprite(sprite_batch, draw_x, draw_y, fallback_sprite_id, DrawColor(fallback_color.Red(), fallback_color.Green(), fallback_color.Blue(), fallback_color.Alpha()));
 		return;
 	}
 
-	switch (rule->appearance.type) {
-		case VisualAppearanceType::Rgba:
-			drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(rule->appearance.color.Red(), rule->appearance.color.Green(), rule->appearance.color.Blue(), rule->appearance.color.Alpha()));
+	switch (resource->kind) {
+		case VisualResourceKind::FlatColor:
+			drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(resource->color.Red(), resource->color.Green(), resource->color.Blue(), resource->color.Alpha()));
 			return;
-		case VisualAppearanceType::SpriteId:
-			drawer->BlitSprite(sprite_batch, draw_x, draw_y, rule->appearance.sprite_id, DrawColor(rule->appearance.color.Red(), rule->appearance.color.Green(), rule->appearance.color.Blue(), rule->appearance.color.Alpha()));
+		case VisualResourceKind::NativeSpriteId:
+			drawer->BlitSprite(sprite_batch, draw_x, draw_y, resource->sprite_id, DrawColor(resource->color.Red(), resource->color.Green(), resource->color.Blue(), resource->color.Alpha()));
 			return;
-		case VisualAppearanceType::OtherItemVisual:
-			if (const auto definition = g_item_definitions.get(rule->appearance.item_id); definition) {
-				drawer->BlitSprite(sprite_batch, draw_x, draw_y, definition.clientId(), DrawColor(rule->appearance.color.Red(), rule->appearance.color.Green(), rule->appearance.color.Blue(), rule->appearance.color.Alpha()));
+		case VisualResourceKind::NativeItemVisual:
+			if (const auto definition = g_item_definitions.get(resource->item_id); definition) {
+				drawer->BlitSprite(sprite_batch, draw_x, draw_y, definition.clientId(), DrawColor(resource->color.Red(), resource->color.Green(), resource->color.Blue(), resource->color.Alpha()));
 				return;
 			}
 			break;
-		case VisualAppearanceType::Png:
-		case VisualAppearanceType::Svg:
-			if (overlay_drawer && !rule->appearance.asset_path.empty()) {
+		case VisualResourceKind::AtlasSprite:
+			if (overlay_drawer && resource->atlas_sprite_id != 0) {
 				overlay_drawer->add(VisualOverlayRequest {
 					.pos = pos,
-					.asset_path = rule->appearance.asset_path,
-					.color = rule->appearance.color,
+					.atlas_sprite_id = resource->atlas_sprite_id,
+					.color = resource->color,
 					.placement = VisualOverlayPlacement::TileInset
 				});
 				return;
 			}
+			break;
+		case VisualResourceKind::None:
 			break;
 	}
 

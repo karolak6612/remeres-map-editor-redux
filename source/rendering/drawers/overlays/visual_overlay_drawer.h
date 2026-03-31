@@ -1,14 +1,14 @@
 #ifndef RME_VISUAL_OVERLAY_DRAWER_H_
 #define RME_VISUAL_OVERLAY_DRAWER_H_
 
-#include <string>
 #include <vector>
 
 #include <wx/colour.h>
 
 #include "map/position.h"
 
-struct NVGcontext;
+class AtlasManager;
+class SpriteBatch;
 struct RenderView;
 
 enum class VisualOverlayPlacement {
@@ -19,7 +19,7 @@ enum class VisualOverlayPlacement {
 
 struct VisualOverlayRequest {
 	Position pos;
-	std::string asset_path;
+	uint32_t atlas_sprite_id = 0;
 	wxColour color = wxColour(255, 255, 255, 255);
 	VisualOverlayPlacement placement = VisualOverlayPlacement::TileInset;
 };
@@ -28,7 +28,7 @@ class VisualOverlayDrawer {
 public:
 	void add(VisualOverlayRequest request);
 	void clear();
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(SpriteBatch& sprite_batch, const AtlasManager& atlas_manager, const RenderView& view) const;
 
 private:
 	std::vector<VisualOverlayRequest> requests;

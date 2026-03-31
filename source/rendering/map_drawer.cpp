@@ -72,6 +72,7 @@
 #include "rendering/core/gl_resources.h"
 #include "rendering/core/shader_program.h"
 #include "rendering/postprocess/post_process_manager.h"
+#include "app/visuals.h"
 
 // Shader Sources
 const char* screen_vert = R"(
@@ -309,6 +310,7 @@ void MapDrawer::Draw() {
 		return;
 	}
 	auto* atlas = g_gui.gfx.getAtlasManager();
+	g_visuals.EnsureAtlasResourcesUploaded(*atlas);
 
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *atlas);
@@ -350,6 +352,14 @@ void MapDrawer::Draw() {
 
 	// Resume Batch for Overlays
 	sprite_batch->begin(view.projectionMatrix, *atlas);
+
+	if (options.show_hooks) {
+		hook_indicator_drawer->draw(*sprite_batch, *atlas, view);
+	}
+	if (options.highlight_locked_doors) {
+		door_indicator_drawer->draw(*sprite_batch, *atlas, view);
+	}
+	visual_overlay_drawer->draw(*sprite_batch, *atlas, view);
 
 	if (drag_shadow_drawer) {
 		drag_shadow_drawer->draw(*sprite_batch, this, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), view, options);
@@ -417,20 +427,6 @@ void MapDrawer::DrawGrid(const ViewBounds& bounds) {
 
 void MapDrawer::DrawTooltips(NVGcontext* vg) {
 	tooltip_drawer->draw(vg, view);
-}
-
-void MapDrawer::DrawHookIndicators(NVGcontext* vg) {
-	hook_indicator_drawer->draw(vg, view);
-}
-
-void MapDrawer::DrawDoorIndicators(NVGcontext* vg) {
-	if (options.highlight_locked_doors) {
-		door_indicator_drawer->draw(vg, view);
-	}
-}
-
-void MapDrawer::DrawVisualOverlays(NVGcontext* vg) {
-	visual_overlay_drawer->draw(vg, view);
 }
 
 void MapDrawer::DrawCreatureNames(NVGcontext* vg) {

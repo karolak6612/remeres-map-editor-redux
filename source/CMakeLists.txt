@@ -622,8 +622,10 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/postprocess/effects/xbrz.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/about_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/visuals.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/visuals_assets.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/visuals_io.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/visuals_rules.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/visuals_runtime.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_item_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/add_tileset_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/browse_tile_window.cpp

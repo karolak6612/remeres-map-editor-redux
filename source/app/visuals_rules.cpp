@@ -219,13 +219,8 @@ void Visuals::ValidateRule(VisualRule& rule) {
 				rule.valid = false;
 				rule.validation_error = "Image appearance requires a file path.";
 			} else {
-				wxFileName image_path(wxString::FromUTF8(rule.appearance.asset_path));
-				if (!image_path.IsAbsolute()) {
-					rule.valid = false;
-					rule.validation_error = "Image path must be absolute.";
-					break;
-				}
-				if (!image_path.FileExists()) {
+				const wxString resolved_path = ResolveAssetPath(rule.appearance.asset_path);
+				if (resolved_path.empty()) {
 					rule.valid = false;
 					rule.validation_error = "Image file does not exist.";
 					break;

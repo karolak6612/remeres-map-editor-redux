@@ -5,32 +5,17 @@
 
 #include <string>
 
-#include <wx/string.h>
-#include <wx/treectrl.h>
-
-class wxButton;
+class wxBitmapButton;
+class wxColour;
+class wxStaticText;
 
 namespace VisualsPageHelpers {
 
 std::string LowercaseCopy(std::string value);
-std::string MatchLabel(const VisualRule& rule);
-wxString CatalogLabel(const VisualCatalogEntry& entry);
-wxString CurrentValueLabel(const VisualRule& rule);
 bool IsNeutralColor(const wxColour& color);
-void StyleModeButton(wxButton* button, bool active);
-
-struct TreeItemData final : public wxTreeItemData {
-	enum class Kind {
-		Group,
-		Rule,
-	};
-
-	TreeItemData(Kind item_kind, std::string item_key = {}, std::string item_group = {});
-
-	Kind kind;
-	std::string key;
-	std::string group;
-};
+wxString BuildBadgeLabel(bool has_override, bool invalid);
+void StyleActionButton(wxBitmapButton* button, bool enabled, bool active);
+void StyleBadge(wxStaticText* label, bool invalid);
 
 }
 

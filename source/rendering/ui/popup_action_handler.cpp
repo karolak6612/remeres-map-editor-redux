@@ -60,32 +60,6 @@ void appendItemContext(std::vector<VisualContextOption>& options, Item* item) {
 		.label = wxString::FromUTF8("Item: " + itemLabel(item_id) + " [ID " + std::to_string(item_id) + "]"),
 		.context = VisualEditContext { .seed_rule = Visuals::MakeItemRule(item_id) }
 	});
-
-	const ItemDefinitionView definition = item->getDefinition();
-	if (definition.isDoor()) {
-		options.push_back(VisualContextOption {
-			.label = item->isLocked() ? "Overlay: Door Indicator (Locked)" : "Overlay: Door Indicator (Unlocked)",
-			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(item->isLocked() ? OverlayVisualKind::DoorLocked : OverlayVisualKind::DoorUnlocked) }
-		});
-	}
-	if (definition.hasFlag(ItemFlag::HookSouth)) {
-		options.push_back(VisualContextOption {
-			.label = "Overlay: Hook Indicator (South)",
-			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::HookSouth) }
-		});
-	}
-	if (definition.hasFlag(ItemFlag::HookEast)) {
-		options.push_back(VisualContextOption {
-			.label = "Overlay: Hook Indicator (East)",
-			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::HookEast) }
-		});
-	}
-	if (item->getLight().intensity > 0) {
-		options.push_back(VisualContextOption {
-			.label = "Overlay: Light Indicator",
-			.context = VisualEditContext { .seed_rule = Visuals::MakeOverlayRule(OverlayVisualKind::LightIndicator) }
-		});
-	}
 }
 }
 

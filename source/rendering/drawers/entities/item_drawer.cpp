@@ -51,28 +51,28 @@ namespace {
 		return nullptr;
 	}
 
-	bool enqueueVisualImage(VisualOverlayDrawer* drawer, const Position& pos, const wxColour& base_color, const VisualAppearance& appearance) {
-		if (!drawer || appearance.asset_path.empty()) {
-			return false;
+	GameSprite* resolveResourceSprite(const ResolvedVisualResource& resource) {
+		switch (resource.kind) {
+			case VisualResourceKind::NativeSpriteId:
+				return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(resource.sprite_id));
+			case VisualResourceKind::NativeItemVisual:
+				return resolveSprite(resource.item_id);
+			case VisualResourceKind::None:
+			case VisualResourceKind::FlatColor:
+			case VisualResourceKind::AtlasSprite:
+				return nullptr;
 		}
-
-		drawer->add(VisualOverlayRequest {
-			.pos = pos,
-			.asset_path = appearance.asset_path,
-			.color = Visuals::CombineColor(base_color, appearance.color),
-			.placement = VisualOverlayPlacement::TileInset
-		});
-		return true;
+		return nullptr;
 	}
 
-	bool enqueueVisualImage(VisualOverlayDrawer* drawer, const Position& pos, const wxColour& color, const VisualAppearance& appearance, VisualOverlayPlacement placement) {
-		if (!drawer || appearance.asset_path.empty()) {
+	bool enqueueVisualAtlas(VisualOverlayDrawer* drawer, const Position& pos, const wxColour& color, const ResolvedVisualResource& resource, VisualOverlayPlacement placement = VisualOverlayPlacement::TileInset) {
+		if (!drawer || resource.kind != VisualResourceKind::AtlasSprite || resource.atlas_sprite_id == 0) {
 			return false;
 		}
 
 		drawer->add(VisualOverlayRequest {
 			.pos = pos,
-			.asset_path = appearance.asset_path,
+			.atlas_sprite_id = resource.atlas_sprite_id,
 			.color = color,
 			.placement = placement
 		});
@@ -142,14 +142,14 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			static_cast<unsigned char>(blue),
 			static_cast<unsigned char>(alpha)
 		);
-		if (const VisualRule* visual_rule = g_visuals.ResolveItem(item->getID()); visual_rule) {
-			const wxColour final_color = Visuals::CombineColor(base_color, visual_rule->appearance.color);
-			switch (visual_rule->appearance.type) {
-				case VisualAppearanceType::Rgba:
+		if (const ResolvedVisualResource* visual_resource = g_visuals.ResolveItemResource(item->getID()); visual_resource) {
+			const wxColour final_color = Visuals::CombineColor(base_color, visual_resource->color);
+			switch (visual_resource->kind) {
+				case VisualResourceKind::FlatColor:
 					sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()));
 					return;
-				case VisualAppearanceType::SpriteId: {
-					if (GameSprite* override_sprite = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(visual_rule->appearance.sprite_id))) {
+				case VisualResourceKind::NativeSpriteId: {
+					if (GameSprite* override_sprite = resolveResourceSprite(*visual_resource)) {
 						spr = override_sprite;
 					}
 					red = final_color.Red();
@@ -158,19 +158,20 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 					alpha = final_color.Alpha();
 					break;
 				}
-				case VisualAppearanceType::OtherItemVisual:
-					draw_definition = g_item_definitions.get(visual_rule->appearance.item_id);
+				case VisualResourceKind::NativeItemVisual:
+					draw_definition = g_item_definitions.get(visual_resource->item_id);
 					spr = resolveSprite(draw_definition);
 					red = final_color.Red();
 					green = final_color.Green();
 					blue = final_color.Blue();
 					alpha = final_color.Alpha();
 					break;
-				case VisualAppearanceType::Png:
-				case VisualAppearanceType::Svg:
-					if (enqueueVisualImage(visual_overlay_drawer, pos, base_color, visual_rule->appearance)) {
+				case VisualResourceKind::AtlasSprite:
+					if (enqueueVisualAtlas(visual_overlay_drawer, pos, final_color, *visual_resource)) {
 						return;
 					}
+					break;
+				case VisualResourceKind::None:
 					break;
 			}
 		}
@@ -306,29 +307,30 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 
 			int startOffset = std::max<int>(16, 32 - light.intensity);
 			int sqSize = TILE_SIZE - startOffset;
-			const VisualRule* light_rule = g_visuals.ResolveOverlay(OverlayVisualKind::LightIndicator);
-			if (!light_rule) {
+			const ResolvedVisualResource* light_resource = g_visuals.ResolveOverlayResource(OverlayVisualKind::LightIndicator);
+			if (!light_resource) {
 				sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
 				sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(byteR, byteG, byteB, byteA), sqSize);
 			} else {
-				const wxColour final_color = Visuals::CombineColor(wxColour(byteR, byteG, byteB, byteA), light_rule->appearance.color);
-				switch (light_rule->appearance.type) {
-					case VisualAppearanceType::Rgba:
+				const wxColour final_color = Visuals::CombineColor(wxColour(byteR, byteG, byteB, byteA), light_resource->color);
+				switch (light_resource->kind) {
+					case VisualResourceKind::FlatColor:
 						sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
 						sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()), sqSize);
 						break;
-					case VisualAppearanceType::SpriteId:
-					case VisualAppearanceType::OtherItemVisual:
-						if (GameSprite* sprite = resolveAppearanceSprite(light_rule->appearance)) {
+					case VisualResourceKind::NativeSpriteId:
+					case VisualResourceKind::NativeItemVisual:
+						if (GameSprite* sprite = resolveResourceSprite(*light_resource)) {
 							sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, sprite, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()));
 						}
 						break;
-					case VisualAppearanceType::Png:
-					case VisualAppearanceType::Svg:
-						if (!enqueueVisualImage(visual_overlay_drawer, pos, final_color, light_rule->appearance, VisualOverlayPlacement::TileCenter)) {
+					case VisualResourceKind::AtlasSprite:
+						if (!enqueueVisualAtlas(visual_overlay_drawer, pos, final_color, *light_resource, VisualOverlayPlacement::TileCenter)) {
 							sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 2, draw_y + startOffset - 2, DrawColor(0, 0, 0, byteA), sqSize + 2);
 							sprite_drawer->glBlitSquare(sprite_batch, draw_x + startOffset - 1, draw_y + startOffset - 1, DrawColor(final_color.Red(), final_color.Green(), final_color.Blue(), final_color.Alpha()), sqSize);
 						}
+						break;
+					case VisualResourceKind::None:
 						break;
 				}
 			}

@@ -27,6 +27,7 @@
 #include "rendering/ui/tooltip_drawer.h"
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/sprite_preloader.h"
+#include "rendering/core/game_sprite.h"
 #include "rendering/utilities/pattern_calculator.h"
 
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
@@ -154,47 +155,52 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 }
 
 namespace {
-	uint16_t resolveVisualClientId(const VisualAppearance& appearance) {
-		if (appearance.item_id != 0) {
-			if (const auto definition = g_item_definitions.get(appearance.item_id)) {
-				return definition.clientId();
-			}
+	GameSprite* resolveVisualSprite(const ResolvedVisualResource& resource) {
+		switch (resource.kind) {
+			case VisualResourceKind::NativeSpriteId:
+				return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(resource.sprite_id));
+			case VisualResourceKind::NativeItemVisual:
+				if (const auto definition = g_item_definitions.get(resource.item_id)) {
+					return dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
+				}
+				break;
+			case VisualResourceKind::None:
+			case VisualResourceKind::FlatColor:
+			case VisualResourceKind::AtlasSprite:
+				break;
 		}
-		return 0;
+		return nullptr;
 	}
 
-	void drawTileVisual(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, const Position& position, const VisualAppearance& appearance) {
-		switch (appearance.type) {
-			case VisualAppearanceType::Rgba:
-				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(appearance.color.Red(), appearance.color.Green(), appearance.color.Blue(), appearance.color.Alpha()));
+	void drawTileVisual(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, const Position& position, const ResolvedVisualResource& resource) {
+		switch (resource.kind) {
+			case VisualResourceKind::FlatColor:
+				sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(resource.color.Red(), resource.color.Green(), resource.color.Blue(), resource.color.Alpha()));
 				break;
-			case VisualAppearanceType::SpriteId:
-				if (appearance.sprite_id != 0) {
-					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, appearance.sprite_id, DrawColor(appearance.color.Red(), appearance.color.Green(), appearance.color.Blue(), appearance.color.Alpha()));
+			case VisualResourceKind::NativeSpriteId:
+			case VisualResourceKind::NativeItemVisual:
+				if (GameSprite* sprite = resolveVisualSprite(resource)) {
+					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, sprite, DrawColor(resource.color.Red(), resource.color.Green(), resource.color.Blue(), resource.color.Alpha()));
 				}
 				break;
-			case VisualAppearanceType::OtherItemVisual:
-				if (const uint16_t client_id = resolveVisualClientId(appearance); client_id != 0) {
-					sprite_drawer->BlitSprite(sprite_batch, draw_x, draw_y, client_id, DrawColor(appearance.color.Red(), appearance.color.Green(), appearance.color.Blue(), appearance.color.Alpha()));
-				}
-				break;
-			case VisualAppearanceType::Png:
-			case VisualAppearanceType::Svg:
-				if (overlay_drawer && !appearance.asset_path.empty()) {
+			case VisualResourceKind::AtlasSprite:
+				if (overlay_drawer && resource.atlas_sprite_id != 0) {
 					overlay_drawer->add(VisualOverlayRequest {
 						.pos = position,
-						.asset_path = appearance.asset_path,
-						.color = appearance.color,
+						.atlas_sprite_id = resource.atlas_sprite_id,
+						.color = resource.color,
 						.placement = VisualOverlayPlacement::TileInset
 					});
 				}
+				break;
+			case VisualResourceKind::None:
 				break;
 		}
 	}
 
 	void drawResolvedTileVisual(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, const Position& position, TileVisualKind kind) {
-		if (const VisualRule* rule = g_visuals.ResolveTile(kind); rule && rule->appearance.type != VisualAppearanceType::Rgba) {
-			drawTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, rule->appearance);
+		if (const ResolvedVisualResource* resource = g_visuals.ResolveTileResource(kind); resource) {
+			drawTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, *resource);
 		}
 	}
 }
@@ -338,8 +344,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	}
 
 	if (options.show_houses && is_house_tile && map_z == view.floor) {
-		if (const VisualRule* house_overlay = g_visuals.ResolveTile(TileVisualKind::HouseOverlay); house_overlay) {
-			drawTileVisual(sprite_batch, sprite_drawer, item_drawer->GetVisualOverlayDrawer(), draw_x, draw_y, position, house_overlay->appearance);
+		if (const ResolvedVisualResource* house_overlay = g_visuals.ResolveTileResource(TileVisualKind::HouseOverlay); house_overlay) {
+			drawTileVisual(sprite_batch, sprite_drawer, item_drawer->GetVisualOverlayDrawer(), draw_x, draw_y, position, *house_overlay);
 		}
 	}
 

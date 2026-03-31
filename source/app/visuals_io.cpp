@@ -78,12 +78,15 @@ bool Visuals::Load() {
 	legacy_user_client_rules.clear();
 	resolved_signature = 0;
 	resolved_rules_dirty = true;
+	runtime_resources_dirty = true;
+	resource_registry.Clear();
 
 	default_config_path = resolveDefaultsPath();
 	user_config_path = FileSystem::GetLocalDirectory() + "visuals.toml";
 
 	const bool defaults_loaded = LoadDefaults();
 	const bool user_loaded = LoadUserOverrides();
+	PrepareRuntimeResources();
 	return defaults_loaded && user_loaded;
 }
 
@@ -167,11 +170,17 @@ bool Visuals::LoadRulesFromFile(const wxString& path, bool user_file, RuleMap& d
 
 bool Visuals::SaveUserOverrides() const {
 	EnsureServerItemRulesMaterialized();
+	if (!PrepareUserRulesForSerialization()) {
+		return false;
+	}
 	return SaveRulesToFile(user_config_path, user_rules);
 }
 
 bool Visuals::ExportUserOverrides(const wxString& path) const {
 	EnsureServerItemRulesMaterialized();
+	if (!PrepareUserRulesForSerialization()) {
+		return false;
+	}
 	return SaveRulesToFile(path, user_rules);
 }
 
@@ -185,6 +194,7 @@ bool Visuals::ImportUserOverrides(const wxString& path) {
 	base_user_rules = std::move(imported_rules);
 	legacy_user_client_rules = std::move(imported_client_rules);
 	InvalidateResolvedRules();
+	PrepareRuntimeResources();
 	return true;
 }
 

@@ -4,7 +4,8 @@
 #include <vector>
 #include "map/position.h"
 
-struct NVGcontext;
+class AtlasManager;
+class SpriteBatch;
 struct RenderView;
 
 class DoorIndicatorDrawer {
@@ -21,7 +22,7 @@ public:
 
 	void addDoor(const Position& pos, bool locked, bool south, bool east);
 	void clear();
-	void draw(NVGcontext* vg, const RenderView& view);
+	void draw(SpriteBatch& sprite_batch, const AtlasManager& atlas_manager, const RenderView& view) const;
 
 private:
 	std::vector<DoorRequest> requests;

@@ -129,9 +129,6 @@ public:
 
 	void DrawGrid(const ViewBounds& bounds);
 	void DrawTooltips(NVGcontext* vg);
-	void DrawHookIndicators(NVGcontext* vg);
-	void DrawDoorIndicators(NVGcontext* vg);
-	void DrawVisualOverlays(NVGcontext* vg);
 	void ClearFrameOverlays();
 	void DrawCreatureNames(NVGcontext* vg);
 

@@ -56,6 +56,7 @@ public:
 	wxBitmapBundle GetBitmapBundle(std::string_view assetPath, const wxColour& tint = wxNullColour);
 	wxBitmap GetBitmap(std::string_view assetPath, const wxSize& size = wxDefaultSize, const wxColour& tint = wxNullColour);
 	wxIconBundle GetIconBundle(std::string_view assetPath, const wxColour& tint = wxNullColour);
+	std::string ResolvePath(std::string_view assetPath);
 
 	// NanoVG support
 	int GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint = wxNullColour);
@@ -70,8 +71,6 @@ public:
 private:
 	ImageManager();
 	~ImageManager();
-
-	std::string ResolvePath(std::string_view assetPath);
 
 	// Caches
 	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;

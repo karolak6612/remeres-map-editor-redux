@@ -52,6 +52,14 @@ enum class VisualAppearanceType {
 	Svg,
 };
 
+enum class VisualResourceKind {
+	None,
+	FlatColor,
+	NativeSpriteId,
+	NativeItemVisual,
+	AtlasSprite,
+};
+
 struct VisualAppearance {
 	VisualAppearanceType type = VisualAppearanceType::Rgba;
 	wxColour color = wxColour(255, 255, 255, 255);
@@ -71,6 +79,41 @@ struct VisualRule {
 	bool enabled = true;
 	bool valid = true;
 	std::string validation_error;
+};
+
+struct ResolvedVisualResource {
+	VisualResourceKind kind = VisualResourceKind::None;
+	wxColour color = wxColour(255, 255, 255, 255);
+	uint32_t sprite_id = 0;
+	uint16_t item_id = 0;
+	uint32_t atlas_sprite_id = 0;
+	bool valid = false;
+};
+
+struct AtlasSpriteResource {
+	uint32_t sprite_id = 0;
+	std::vector<std::uint8_t> rgba_pixels;
+};
+
+class AtlasManager;
+
+class VisualResourceRegistry {
+public:
+	void Clear();
+	void SetRuleResource(std::string key, ResolvedVisualResource resource);
+	const ResolvedVisualResource* GetRuleResource(const std::string& key) const;
+	void SetFallbackOverlayResource(OverlayVisualKind kind, ResolvedVisualResource resource);
+	const ResolvedVisualResource* GetFallbackOverlayResource(OverlayVisualKind kind) const;
+	uint32_t AddAtlasSprite(std::vector<std::uint8_t> rgba_pixels);
+	void EnsureAtlasResourcesUploaded(AtlasManager& atlas) const;
+
+private:
+	std::map<std::string, ResolvedVisualResource> rule_resources_;
+	std::map<OverlayVisualKind, ResolvedVisualResource> fallback_overlay_resources_;
+	std::vector<AtlasSpriteResource> atlas_sprites_;
+	uint32_t next_custom_sprite_id_ = 2'800'000;
+	mutable uint32_t uploaded_texture_id_ = 0;
+	mutable size_t uploaded_sprite_count_ = 0;
 };
 
 struct VisualCatalogEntry {
@@ -98,6 +141,7 @@ public:
 	bool SaveUserOverrides() const;
 	bool ExportUserOverrides(const wxString& path) const;
 	bool ImportUserOverrides(const wxString& path);
+	bool PrepareRuntimeResources();
 
 	std::vector<VisualCatalogEntry> BuildCatalog() const;
 
@@ -113,6 +157,12 @@ public:
 	const VisualRule* ResolveMarker(MarkerVisualKind kind) const;
 	const VisualRule* ResolveOverlay(OverlayVisualKind kind) const;
 	const VisualRule* ResolveTile(TileVisualKind kind) const;
+	const ResolvedVisualResource* ResolveItemResource(uint16_t item_id) const;
+	const ResolvedVisualResource* ResolveMarkerResource(MarkerVisualKind kind) const;
+	const ResolvedVisualResource* ResolveOverlayResource(OverlayVisualKind kind) const;
+	const ResolvedVisualResource* ResolveTileResource(TileVisualKind kind) const;
+	const ResolvedVisualResource* GetFallbackOverlayResource(OverlayVisualKind kind) const;
+	void EnsureAtlasResourcesUploaded(AtlasManager& atlas) const;
 
 	static std::string GetApplicationName();
 	static std::string GetSiteUrl();
@@ -148,8 +198,14 @@ private:
 	bool SaveRulesToFile(const wxString& path, const std::map<std::string, VisualRule>& rules) const;
 	void EnsureServerItemRulesMaterialized() const;
 	void InvalidateResolvedRules();
+	void InvalidateRuntimeResources();
 	static uint64_t CurrentItemDefinitionSignature();
 	static void ExpandClientRules(const std::vector<VisualRule>& source, std::map<std::string, VisualRule>& destination);
+	void EnsureRuntimeResourcesPrepared() const;
+	bool PrepareUserRulesForSerialization() const;
+	bool EnsureManagedAssetPath(VisualRule& rule) const;
+	static wxString ResolveAssetPath(const std::string& asset_path);
+	static wxString GetManagedAssetsDirectory();
 
 	static std::string BuildKey(const VisualRule& rule);
 	static std::string DeriveLabel(const VisualRule& rule);
@@ -178,6 +234,8 @@ private:
 	mutable std::vector<VisualRule> legacy_user_client_rules;
 	mutable uint64_t resolved_signature = 0;
 	mutable bool resolved_rules_dirty = true;
+	mutable VisualResourceRegistry resource_registry;
+	mutable bool runtime_resources_dirty = true;
 };
 
 extern Visuals g_visuals;
