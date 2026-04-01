@@ -48,6 +48,33 @@ struct NvgCacheKeyHash {
 	}
 };
 
+struct BitmapCacheKey {
+	std::string assetPath;
+	int width = 0;
+	int height = 0;
+	uint32_t tint = 0;
+	uint64_t version = 0;
+
+	bool operator==(const BitmapCacheKey& other) const {
+		return assetPath == other.assetPath
+			&& width == other.width
+			&& height == other.height
+			&& tint == other.tint
+			&& version == other.version;
+	}
+};
+
+struct BitmapCacheKeyHash {
+	std::size_t operator()(const BitmapCacheKey& key) const {
+		auto hash = std::hash<std::string> {}(key.assetPath);
+		hash ^= std::hash<int> {}(key.width) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= std::hash<int> {}(key.height) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= std::hash<uint32_t> {}(key.tint) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		hash ^= std::hash<uint64_t> {}(key.version) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
+		return hash;
+	}
+};
+
 class ImageManager {
 public:
 	static ImageManager& GetInstance();
@@ -74,7 +101,7 @@ private:
 
 	// Caches
 	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;
-	std::unordered_map<std::pair<std::string, uint32_t>, wxBitmap, PairHash> m_tintedBitmapCache;
+	std::unordered_map<BitmapCacheKey, wxBitmap, BitmapCacheKeyHash> m_tintedBitmapCache;
 	std::unordered_map<NvgCacheKey, int, NvgCacheKeyHash> m_nvgImageCache;
 	std::unordered_map<std::string, uint32_t> m_glTextureCache;
 

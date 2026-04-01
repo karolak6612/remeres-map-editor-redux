@@ -57,6 +57,8 @@ private:
 		wxStaticBox* configuration_box = nullptr;
 		wxStaticText* selected_label = nullptr;
 		wxTextCtrl* name_ctrl = nullptr;
+		wxStaticText* sid_label = nullptr;
+		wxStaticText* cid_label = nullptr;
 		wxStaticText* item_id_label = nullptr;
 		wxStaticText* visual_id_label = nullptr;
 		wxStaticText* source_label = nullptr;
@@ -67,6 +69,7 @@ private:
 		wxButton* sprite_button = nullptr;
 		wxButton* image_button = nullptr;
 		wxButton* tint_button = nullptr;
+		wxButton* restore_button = nullptr;
 		wxButton* remove_button = nullptr;
 		wxSlider* alpha_slider = nullptr;
 		wxStaticText* alpha_value_label = nullptr;
@@ -88,6 +91,8 @@ private:
 
 	static wxString BuildTypeLabel(const std::optional<VisualRule>& rule);
 	static wxString BuildItemIdLabel(const DisplayEntry& entry);
+	static wxString BuildSidLabel(const DisplayEntry& entry);
+	static wxString BuildCidLabel(const DisplayEntry& entry);
 	static wxString BuildVisualIdLabel(const std::optional<VisualRule>& rule);
 	static wxString BuildVisualName(const DisplayEntry& entry);
 	static wxString BuildSourceLabel(const std::optional<VisualRule>& rule);
@@ -107,10 +112,12 @@ private:
 	void PickImageFor(const std::string& key);
 	void PickColorFor(const std::string& key);
 	void ResetRow(const std::string& key);
+	void RemoveRow(const std::string& key);
 	void PickSpriteForSelected();
 	void PickImageForSelected();
 	void PickColorForSelected();
 	void ResetSelected();
+	void RemoveSelected();
 	void CommitNameChange();
 	void ApplyAlphaForSelected(int alpha);
 

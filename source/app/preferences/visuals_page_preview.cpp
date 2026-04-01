@@ -62,6 +62,7 @@ wxBitmap ApplyPreviewTint(wxBitmap bitmap, const wxColour& tint) {
 }
 
 wxBitmap BuildAppearanceBitmap(const VisualAppearance& appearance, const wxSize& size = wxSize(48, 48)) {
+	const auto sprite_size = (size.GetWidth() >= 64 || size.GetHeight() >= 64) ? SPRITE_SIZE_64x64 : SPRITE_SIZE_32x32;
 	switch (appearance.type) {
 		case VisualAppearanceType::Rgba: {
 			wxBitmap bitmap(size.GetWidth(), size.GetHeight());
@@ -79,14 +80,14 @@ wxBitmap BuildAppearanceBitmap(const VisualAppearance& appearance, const wxSize&
 		case VisualAppearanceType::SpriteId:
 			if (appearance.sprite_id != 0) {
 				if (auto* sprite = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(static_cast<uint32_t>(appearance.sprite_id)))) {
-					return ApplyPreviewTint(SpriteIconGenerator::Generate(sprite, SPRITE_SIZE_32x32, false), appearance.color);
+					return ApplyPreviewTint(SpriteIconGenerator::Generate(sprite, sprite_size, false), appearance.color);
 				}
 			}
 			break;
 		case VisualAppearanceType::OtherItemVisual:
 			if (const uint16_t client_id = ResolveClientIdFromItem(appearance.item_id); client_id != 0) {
 				if (auto* sprite = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(client_id))) {
-					return ApplyPreviewTint(SpriteIconGenerator::Generate(sprite, SPRITE_SIZE_32x32, false), appearance.color);
+					return ApplyPreviewTint(SpriteIconGenerator::Generate(sprite, sprite_size, false), appearance.color);
 				}
 			}
 			break;

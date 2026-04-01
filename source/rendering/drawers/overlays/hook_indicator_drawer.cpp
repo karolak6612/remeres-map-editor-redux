@@ -64,10 +64,9 @@ void HookIndicatorDrawer::draw(SpriteBatch& sprite_batch, const AtlasManager& at
 			continue;
 		}
 
-		const float zoom = view.zoom;
-		const float x = unscaled_x / zoom;
-		const float y = unscaled_y / zoom;
-		const float tile_size = 32.0f / zoom;
+		const float x = static_cast<float>(unscaled_x);
+		const float y = static_cast<float>(unscaled_y);
+		const float tile_size = static_cast<float>(TILE_SIZE);
 
 		if (request.south) {
 			drawHookIcon(sprite_batch, atlas_manager, view, request, OverlayVisualKind::HookSouth, x, y + tile_size * 0.5f);

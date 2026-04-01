@@ -17,6 +17,37 @@
 #include <span>
 #include <ranges>
 
+namespace {
+
+uint32_t rgbaCacheKey(const wxColour& tint) {
+	if (!tint.IsOk()) {
+		return 0;
+	}
+
+	return (static_cast<uint32_t>(tint.Red()) << 24)
+		| (static_cast<uint32_t>(tint.Green()) << 16)
+		| (static_cast<uint32_t>(tint.Blue()) << 8)
+		| static_cast<uint32_t>(tint.Alpha());
+}
+
+uint64_t fileVersion(const std::string& full_path) {
+	if (full_path.empty() || !wxFileName::FileExists(full_path)) {
+		return 0;
+	}
+
+	wxFileName file_name(wxString::FromUTF8(full_path));
+	const auto modification_time = file_name.GetModificationTime();
+	const uint64_t ticks = modification_time.IsValid() ? static_cast<uint64_t>(modification_time.GetTicks()) : 0ull;
+	const uint64_t size = static_cast<uint64_t>(file_name.GetSize().GetValue());
+	return ticks ^ (size << 1);
+}
+
+std::string bitmapBundleCacheKey(const std::string& full_path) {
+	return full_path + "#" + std::to_string(fileVersion(full_path));
+}
+
+}
+
 ImageManager& ImageManager::GetInstance() {
 	static ImageManager instance;
 	return instance;
@@ -65,10 +96,7 @@ std::string ImageManager::ResolvePath(std::string_view assetPath) {
 
 wxBitmapBundle ImageManager::GetBitmapBundle(std::string_view assetPath, const wxColour& tint) {
 	std::string fullPath = ResolvePath(assetPath);
-	std::string cacheKey(assetPath);
-	if (tint.IsOk()) {
-		cacheKey += "_" + std::to_string(tint.GetRGB());
-	}
+	std::string cacheKey = bitmapBundleCacheKey(fullPath.empty() ? std::string(assetPath) : fullPath);
 
 	auto it = m_bitmapBundleCache.find(cacheKey);
 	if (it != m_bitmapBundleCache.end()) {
@@ -106,6 +134,7 @@ wxBitmapBundle ImageManager::GetBitmapBundle(std::string_view assetPath, const w
 }
 
 wxBitmap ImageManager::GetBitmap(std::string_view assetPath, const wxSize& size, const wxColour& tint) {
+	const std::string fullPath = ResolvePath(assetPath);
 	wxBitmapBundle bundle = GetBitmapBundle(assetPath);
 	if (!bundle.IsOk()) {
 		return wxNullBitmap;
@@ -118,7 +147,13 @@ wxBitmap ImageManager::GetBitmap(std::string_view assetPath, const wxSize& size,
 	}
 
 	// For tinted bitmaps, use separate cache
-	std::pair<std::string, uint32_t> cacheKey = { std::string(assetPath), static_cast<uint32_t>(tint.GetRGB()) };
+	const BitmapCacheKey cacheKey {
+		.assetPath = fullPath.empty() ? std::string(assetPath) : fullPath,
+		.width = actualSize.GetWidth(),
+		.height = actualSize.GetHeight(),
+		.tint = rgbaCacheKey(tint),
+		.version = fileVersion(fullPath.empty() ? std::string(assetPath) : fullPath)
+	};
 	auto it = m_tintedBitmapCache.find(cacheKey);
 	if (it != m_tintedBitmapCache.end()) {
 		return it->second;

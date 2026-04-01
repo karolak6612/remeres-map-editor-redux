@@ -1,8 +1,9 @@
 #include "app/preferences/visuals_page.h"
 
-#include "app/preferences/visuals_color_dialog.h"
 #include "ui/find_item_window.h"
+#include "util/image_manager.h"
 
+#include <wx/colordlg.h>
 #include <wx/filedlg.h>
 #include <wx/filename.h>
 #include <wx/msgdlg.h>
@@ -27,7 +28,9 @@ void VisualsPage::PickSpriteFor(const std::string& key) {
 	rule.appearance.item_id = dialog.getResultID();
 	rule.appearance.sprite_id = 0;
 	rule.appearance.asset_path.clear();
-	rule.appearance.color = wxColour(255, 255, 255, 255);
+	if (!rule.appearance.color.IsOk()) {
+		rule.appearance.color = wxColour(255, 255, 255, 255);
+	}
 	draft_rules_[key] = NormalizeRule(std::move(rule));
 	FocusRow(key);
 }
@@ -49,6 +52,7 @@ void VisualsPage::PickImageFor(const std::string& key) {
 		return;
 	}
 
+	IMAGE_MANAGER.ClearCache();
 	const auto preview_rule = draft_rules_.contains(key) ? std::optional<VisualRule>(draft_rules_.at(key)) : RuleForKey(working_copy_, key);
 	VisualRule rule = preview_rule.value_or(ParseItemId(key).has_value() ? Visuals::MakeItemRule(*ParseItemId(key)) : VisualRule {});
 	rule.key = key;
@@ -69,19 +73,28 @@ void VisualsPage::PickColorFor(const std::string& key) {
 	}
 
 	const auto preview_rule = draft_rules_.contains(key) ? std::optional<VisualRule>(draft_rules_.at(key)) : RuleForKey(working_copy_, key);
-	const wxColour initial_color = preview_rule.has_value() ? preview_rule->appearance.color : wxColour(255, 255, 255, 255);
-	ColorAlphaDialog dialog(this, initial_color);
+	const wxColour initial_color = preview_rule.has_value() && preview_rule->appearance.color.IsOk() ? preview_rule->appearance.color : wxColour(255, 255, 255, 255);
+	wxColourData color_data;
+	color_data.SetChooseFull(true);
+	color_data.SetColour(wxColour(initial_color.Red(), initial_color.Green(), initial_color.Blue(), 255));
+	wxColourDialog dialog(this, &color_data);
 	if (dialog.ShowModal() != wxID_OK) {
 		return;
 	}
 
 	VisualRule rule = preview_rule.value_or(ParseItemId(key).has_value() ? Visuals::MakeItemRule(*ParseItemId(key)) : VisualRule {});
 	rule.key = key;
-	if (rule.appearance.type == VisualAppearanceType::Svg) {
-		rule.appearance.color = dialog.GetColour();
+	const wxColour picked = dialog.GetColourData().GetColour();
+	if (
+		rule.appearance.type == VisualAppearanceType::OtherItemVisual ||
+		rule.appearance.type == VisualAppearanceType::SpriteId ||
+		rule.appearance.type == VisualAppearanceType::Png ||
+		rule.appearance.type == VisualAppearanceType::Svg
+	) {
+		rule.appearance.color = wxColour(picked.Red(), picked.Green(), picked.Blue(), initial_color.Alpha());
 	} else {
 		rule.appearance.type = VisualAppearanceType::Rgba;
-		rule.appearance.color = dialog.GetColour();
+		rule.appearance.color = wxColour(picked.Red(), picked.Green(), picked.Blue(), initial_color.Alpha());
 		rule.appearance.item_id = 0;
 		rule.appearance.sprite_id = 0;
 		rule.appearance.asset_path.clear();
@@ -98,6 +111,18 @@ void VisualsPage::ResetRow(const std::string& key) {
 	draft_rules_.erase(key);
 	working_copy_.RemoveUserRule(key);
 	focus_key_ = key;
+	RebuildTree();
+}
+
+void VisualsPage::RemoveRow(const std::string& key) {
+	if (shutting_down_) {
+		return;
+	}
+
+	draft_rules_.erase(key);
+	working_copy_.RemoveUserRule(key);
+	focus_key_.clear();
+	selected_key_.clear();
 	RebuildTree();
 }
 
@@ -134,6 +159,21 @@ void VisualsPage::ResetSelected() {
 	}
 }
 
+void VisualsPage::RemoveSelected() {
+	if (selected_key_.empty()) {
+		return;
+	}
+
+	if (working_copy_.GetDefaultRule(selected_key_) != nullptr) {
+		return;
+	}
+
+	const auto answer = wxMessageBox("Remove this custom visual entry?", "Remove Visual Entry", wxYES_NO | wxNO_DEFAULT | wxICON_WARNING, this);
+	if (answer == wxYES) {
+		RemoveRow(selected_key_);
+	}
+}
+
 void VisualsPage::CommitNameChange() {
 	if (shutting_down_ || selected_key_.empty() || !detail_.name_ctrl) {
 		return;
@@ -163,8 +203,17 @@ void VisualsPage::ApplyAlphaForSelected(int alpha) {
 	}
 
 	VisualRule rule = *preview_rule;
-	if (rule.appearance.type != VisualAppearanceType::Rgba && rule.appearance.type != VisualAppearanceType::Svg) {
-		return;
+	if (
+		rule.appearance.type != VisualAppearanceType::Rgba &&
+		rule.appearance.type != VisualAppearanceType::Svg &&
+		rule.appearance.type != VisualAppearanceType::Png &&
+		rule.appearance.type != VisualAppearanceType::OtherItemVisual &&
+		rule.appearance.type != VisualAppearanceType::SpriteId
+	) {
+		rule.appearance.type = VisualAppearanceType::Rgba;
+		rule.appearance.item_id = 0;
+		rule.appearance.sprite_id = 0;
+		rule.appearance.asset_path.clear();
 	}
 
 	const wxColour current = rule.appearance.color.IsOk() ? rule.appearance.color : wxColour(255, 255, 255, 255);

@@ -40,11 +40,10 @@ void drawDoorRequest(SpriteBatch& sprite_batch, const AtlasManager& atlas_manage
 
 	const wxColour tint = resource && resource->kind == VisualResourceKind::FlatColor ? resource->color : resource ? resource->color : fallback_color;
 	const uint32_t sprite_id = resource && resource->kind == VisualResourceKind::AtlasSprite ? resource->atlas_sprite_id : fallback_resource->atlas_sprite_id;
-	const float zoom = view.zoom;
-	const float x = unscaled_x / zoom;
-	const float y = unscaled_y / zoom;
-	const float tile_size = 32.0f / zoom;
-	const float icon_size = 12.0f / zoom;
+	const float x = static_cast<float>(unscaled_x);
+	const float y = static_cast<float>(unscaled_y);
+	const float tile_size = static_cast<float>(TILE_SIZE);
+	const float icon_size = 12.0f;
 
 	const auto draw_at = [&](float px, float py) {
 		drawIcon(sprite_batch, atlas_manager, sprite_id, px, py, icon_size * 1.4f, tint);

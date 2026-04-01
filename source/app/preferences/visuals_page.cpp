@@ -55,6 +55,25 @@ void ConfigureActionButton(wxButton* button, std::string_view icon, const wxSize
 	button->SetMinSize(min_size);
 }
 
+void SetActionButtonState(wxButton* button, bool active) {
+	if (!button) {
+		return;
+	}
+
+	wxFont font = button->GetFont();
+	font.SetWeight(active ? wxFONTWEIGHT_BOLD : wxFONTWEIGHT_NORMAL);
+	button->SetFont(font);
+
+	if (active) {
+		button->SetBackgroundColour(wxColour(222, 235, 252));
+		button->SetForegroundColour(wxColour(26, 74, 136));
+	} else {
+		button->SetBackgroundColour(wxNullColour);
+		button->SetForegroundColour(wxNullColour);
+	}
+	button->Refresh();
+}
+
 wxStaticBoxSizer* MakeStaticBoxSizer(wxWindow* parent, const wxString& label, int orientation = wxVERTICAL) {
 	auto* box = new wxStaticBox(parent, wxID_ANY, label);
 	return new wxStaticBoxSizer(box, orientation);
@@ -120,14 +139,14 @@ void VisualsPage::BuildLayout() {
 	splitter_ = new wxSplitterWindow(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSP_LIVE_UPDATE | wxSP_NOBORDER);
 	auto* left_panel = new wxPanel(splitter_, wxID_ANY);
 	detail_panel_ = new wxPanel(splitter_, wxID_ANY);
-	detail_panel_->SetMinSize(wxSize(dip(300), -1));
+	detail_panel_->SetMinSize(wxSize(dip(500), -1));
 
 	BuildLeftPane(left_panel);
 	BuildRightPane(detail_panel_);
 
 	splitter_->SplitVertically(left_panel, detail_panel_, dip(SplitterInitialLeftWidth));
 	splitter_->SetSashGravity(0.42);
-	splitter_->SetMinimumPaneSize(dip(300));
+	splitter_->SetMinimumPaneSize(dip(220));
 	root->Add(splitter_, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, dip(10));
 	SetSizer(root);
 
@@ -139,7 +158,8 @@ void VisualsPage::BuildLayout() {
 	detail_.sprite_button->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { PickSpriteForSelected(); });
 	detail_.image_button->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { PickImageForSelected(); });
 	detail_.tint_button->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { PickColorForSelected(); });
-	detail_.remove_button->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { ResetSelected(); });
+	detail_.restore_button->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { ResetSelected(); });
+	detail_.remove_button->Bind(wxEVT_BUTTON, [this](wxCommandEvent&) { RemoveSelected(); });
 	detail_.name_ctrl->Bind(wxEVT_TEXT_ENTER, &VisualsPage::OnNameCommit, this);
 	detail_.name_ctrl->Bind(wxEVT_KILL_FOCUS, &VisualsPage::OnNameFocusLost, this);
 	detail_.alpha_slider->Bind(wxEVT_SLIDER, &VisualsPage::OnAlphaChanged, this);
@@ -157,6 +177,8 @@ void VisualsPage::BuildLeftPane(wxWindow* parent) {
 	);
 	tree_->AppendColumn("Visual", FromDIP(300), wxALIGN_LEFT, wxCOL_RESIZABLE);
 	tree_->AppendColumn("Type", FromDIP(110), wxALIGN_CENTER, wxCOL_RESIZABLE);
+	tree_->AppendColumn("SID", FromDIP(68), wxALIGN_CENTER, wxCOL_RESIZABLE);
+	tree_->AppendColumn("CID", FromDIP(68), wxALIGN_CENTER, wxCOL_RESIZABLE);
 	root->Add(tree_, 1, wxEXPAND);
 	parent->SetSizer(root);
 }
@@ -174,10 +196,13 @@ void VisualsPage::BuildRightPane(wxWindow* parent) {
 	auto* selected_item_box = MakeStaticBoxSizer(configuration_box->GetStaticBox(), "Selected item");
 	auto* selected_item_row = new wxBoxSizer(wxHORIZONTAL);
 	detail_.selected_label = MakeSectionLabel(selected_item_box->GetStaticBox(), "No visual selected", true);
+	detail_.restore_button = new wxButton(selected_item_box->GetStaticBox(), wxID_ANY, "Restore defaults");
 	detail_.remove_button = new wxButton(selected_item_box->GetStaticBox(), wxID_ANY, "Remove");
+	ConfigureActionButton(detail_.restore_button, ICON_UNDO, wxSize(dip(156), dip(34)));
 	ConfigureActionButton(detail_.remove_button, ICON_TRASH_CAN_SOLID, wxSize(dip(118), dip(34)));
 	detail_.remove_button->SetForegroundColour(wxColour(160, 45, 45));
 	selected_item_row->Add(detail_.selected_label, 1, wxALIGN_CENTER_VERTICAL | wxRIGHT, dip(10));
+	selected_item_row->Add(detail_.restore_button, 0, wxALIGN_CENTER_VERTICAL | wxRIGHT, dip(8));
 	selected_item_row->Add(detail_.remove_button, 0, wxALIGN_CENTER_VERTICAL);
 	selected_item_box->Add(selected_item_row, 0, wxEXPAND | wxALL, dip(8));
 	configuration_box->Add(selected_item_box, 0, wxEXPAND | wxALL, dip(8));
@@ -189,8 +214,10 @@ void VisualsPage::BuildRightPane(wxWindow* parent) {
 	detail_.preview = new VisualsPreviewPanel(preview_box->GetStaticBox(), PreviewEdge);
 	current_box->Add(detail_.current_preview, 0, wxALL, dip(8));
 	preview_box->Add(detail_.preview, 0, wxALL, dip(8));
-	preview_row->Add(current_box, 0, wxRIGHT, dip(10));
-	preview_row->Add(preview_box, 0);
+	current_box->AddStretchSpacer();
+	preview_box->AddStretchSpacer();
+	preview_row->Add(current_box, 1, wxRIGHT | wxEXPAND, dip(10));
+	preview_row->Add(preview_box, 1, wxEXPAND);
 	configuration_box->Add(preview_row, 0, wxLEFT | wxRIGHT | wxBOTTOM, dip(8));
 
 	auto* source_box = MakeStaticBoxSizer(configuration_box->GetStaticBox(), "Source");
@@ -224,6 +251,12 @@ void VisualsPage::BuildRightPane(wxWindow* parent) {
 	detail_.name_ctrl = new wxTextCtrl(properties_box->GetStaticBox(), wxID_ANY, {}, wxDefaultPosition, wxDefaultSize, wxTE_PROCESS_ENTER);
 	detail_.name_ctrl->SetMinSize(wxSize(action_button_size.x, -1));
 	metadata_grid->Add(detail_.name_ctrl, 1, wxEXPAND);
+	metadata_grid->Add(MakeSectionLabel(properties_box->GetStaticBox(), "SID", true), 0, wxALIGN_CENTER_VERTICAL);
+	detail_.sid_label = new wxStaticText(properties_box->GetStaticBox(), wxID_ANY, "N/A");
+	metadata_grid->Add(detail_.sid_label, 0, wxALIGN_CENTER_VERTICAL);
+	metadata_grid->Add(MakeSectionLabel(properties_box->GetStaticBox(), "CID", true), 0, wxALIGN_CENTER_VERTICAL);
+	detail_.cid_label = new wxStaticText(properties_box->GetStaticBox(), wxID_ANY, "N/A");
+	metadata_grid->Add(detail_.cid_label, 0, wxALIGN_CENTER_VERTICAL);
 	metadata_grid->Add(MakeSectionLabel(properties_box->GetStaticBox(), "Item ID", true), 0, wxALIGN_CENTER_VERTICAL);
 	detail_.item_id_label = new wxStaticText(properties_box->GetStaticBox(), wxID_ANY, "N/A");
 	metadata_grid->Add(detail_.item_id_label, 0, wxALIGN_CENTER_VERTICAL);
@@ -259,7 +292,10 @@ void VisualsPage::Apply() {
 	g_visuals = working_copy_;
 	g_visuals.SaveUserOverrides();
 	g_visuals.PrepareRuntimeResources();
+	working_copy_ = g_visuals;
+	draft_rules_.clear();
 	g_gui.RefreshView();
+	focus_key_ = selected_key_;
 	RebuildTree();
 }
 
@@ -284,6 +320,8 @@ void VisualsPage::RefreshDetail() {
 	if (selected_key_.empty()) {
 		detail_.selected_label->SetLabel("No visual selected");
 		detail_.name_ctrl->ChangeValue("N/A");
+		detail_.sid_label->SetLabel("N/A");
+		detail_.cid_label->SetLabel("N/A");
 		detail_.item_id_label->SetLabel("N/A");
 		detail_.visual_id_label->SetLabel("N/A");
 		detail_.source_label->SetLabel("N/A");
@@ -311,6 +349,8 @@ void VisualsPage::RefreshDetail() {
 
 void VisualsPage::RefreshDetailMetadata(const DisplayEntry& entry) {
 	detail_.item_id_label->SetLabel(BuildItemIdLabel(entry));
+	detail_.sid_label->SetLabel(BuildSidLabel(entry));
+	detail_.cid_label->SetLabel(BuildCidLabel(entry));
 	detail_.visual_id_label->SetLabel(BuildVisualIdLabel(entry.preview_rule));
 	detail_.source_label->SetLabel(BuildSourceLabel(entry.preview_rule));
 	detail_.tint_label->SetLabel(BuildTintLabel(entry.preview_rule));
@@ -325,27 +365,43 @@ void VisualsPage::RefreshDetailButtons(const std::optional<VisualRule>& preview_
 	const bool has_selection = !selected_key_.empty();
 	const bool supports_sprite = has_selection && Visuals::SupportsSpriteModes(seed_rule);
 	const bool supports_image = has_selection && Visuals::SupportsImageModes(seed_rule);
-	const bool remove_enabled = has_selection && (
+	const bool restore_enabled = has_selection && (
 		working_copy_.GetUserRule(selected_key_) != nullptr ||
 		draft_rules_.contains(selected_key_) ||
 		g_visuals.GetUserRule(selected_key_) != nullptr
+	);
+	const bool has_default = has_selection && working_copy_.GetDefaultRule(selected_key_) != nullptr;
+	const bool remove_enabled = restore_enabled && !has_default;
+	const bool sprite_active = preview_rule.has_value() && (
+		preview_rule->appearance.type == VisualAppearanceType::OtherItemVisual ||
+		preview_rule->appearance.type == VisualAppearanceType::SpriteId
+	);
+	const bool image_active = preview_rule.has_value() && (
+		preview_rule->appearance.type == VisualAppearanceType::Png ||
+		preview_rule->appearance.type == VisualAppearanceType::Svg
+	);
+	const bool tint_active = preview_rule.has_value() && (
+		preview_rule->appearance.type == VisualAppearanceType::Rgba ||
+		preview_rule->appearance.color != wxColour(255, 255, 255, 255)
 	);
 
 	detail_.sprite_button->Enable(supports_sprite);
 	detail_.image_button->Enable(supports_image);
 	detail_.tint_button->Enable(has_selection);
+	detail_.restore_button->Enable(restore_enabled);
 	detail_.remove_button->Enable(remove_enabled);
 
 	if (preview_rule.has_value() && preview_rule->appearance.type == VisualAppearanceType::Svg) {
 		detail_.tint_button->Enable(true);
 	}
+
+	SetActionButtonState(detail_.sprite_button, sprite_active);
+	SetActionButtonState(detail_.image_button, image_active);
+	SetActionButtonState(detail_.tint_button, tint_active);
 }
 
 void VisualsPage::RefreshAlphaControls(const std::optional<VisualRule>& preview_rule) {
-	const bool enabled = preview_rule.has_value() && (
-		preview_rule->appearance.type == VisualAppearanceType::Rgba ||
-		preview_rule->appearance.type == VisualAppearanceType::Svg
-	);
+	const bool enabled = preview_rule.has_value();
 	detail_.alpha_slider->Enable(enabled);
 	const int alpha = enabled && preview_rule->appearance.color.IsOk() ? preview_rule->appearance.color.Alpha() : 255;
 	detail_.alpha_slider->SetValue(alpha);
@@ -378,6 +434,39 @@ wxString VisualsPage::BuildItemIdLabel(const DisplayEntry& entry) {
 		return wxString::Format("%d", entry.preview_rule->match_id);
 	}
 
+	return "N/A";
+}
+
+wxString VisualsPage::BuildSidLabel(const DisplayEntry& entry) {
+	if (entry.seed_rule.match_type == VisualMatchType::ItemId && entry.seed_rule.match_id > 0) {
+		return wxString::Format("%d", entry.seed_rule.match_id);
+	}
+
+	if (entry.preview_rule.has_value() && entry.preview_rule->match_type == VisualMatchType::ItemId && entry.preview_rule->match_id > 0) {
+		return wxString::Format("%d", entry.preview_rule->match_id);
+	}
+
+	return "N/A";
+}
+
+wxString VisualsPage::BuildCidLabel(const DisplayEntry& entry) {
+	const auto resolve_client_id = [](const std::optional<VisualRule>& rule) -> uint16_t {
+		if (!rule.has_value() || rule->match_type != VisualMatchType::ItemId || rule->match_id <= 0) {
+			return 0;
+		}
+
+		if (const auto definition = g_item_definitions.get(static_cast<uint16_t>(rule->match_id))) {
+			return definition.clientId();
+		}
+		return 0;
+	};
+
+	if (const uint16_t client_id = resolve_client_id(entry.preview_rule); client_id != 0) {
+		return wxString::Format("%u", client_id);
+	}
+	if (const uint16_t client_id = resolve_client_id(entry.current_rule); client_id != 0) {
+		return wxString::Format("%u", client_id);
+	}
 	return "N/A";
 }
 
@@ -428,12 +517,12 @@ wxString VisualsPage::BuildTintLabel(const std::optional<VisualRule>& rule) {
 		return "N/A";
 	}
 
-	if (rule->appearance.type != VisualAppearanceType::Rgba && rule->appearance.type != VisualAppearanceType::Svg) {
+	if (!rule->appearance.color.IsOk()) {
 		return "N/A";
 	}
 
 	const wxColour color = rule->appearance.color;
-	return color.IsOk() ? wxString::Format("rgba(%d, %d, %d, %d)", color.Red(), color.Green(), color.Blue(), color.Alpha()) : wxString("N/A");
+	return wxString::Format("rgba(%d, %d, %d, %d)", color.Red(), color.Green(), color.Blue(), color.Alpha());
 }
 
 wxString VisualsPage::BuildImagePathLabel(const std::optional<VisualRule>& rule) {

@@ -33,10 +33,9 @@ void VisualOverlayDrawer::draw(SpriteBatch& sprite_batch, const AtlasManager& at
 			continue;
 		}
 
-		const float zoom = view.zoom;
-		const float tile_size = 32.0f / zoom;
-		float x = unscaled_x / zoom;
-		float y = unscaled_y / zoom;
+		const float tile_size = static_cast<float>(TILE_SIZE);
+		float x = static_cast<float>(unscaled_x);
+		float y = static_cast<float>(unscaled_y);
 		float width = tile_size;
 		float height = tile_size;
 

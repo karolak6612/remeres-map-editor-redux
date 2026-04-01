@@ -11,8 +11,15 @@
 
 namespace {
 
-wxBitmap loadAssetBitmap(std::string_view asset_path) {
-	return IMAGE_MANAGER.GetBitmap(asset_path, wxSize(TILE_SIZE, TILE_SIZE), wxNullColour);
+wxColour alphaOnlyTint(const wxColour& color) {
+	if (!color.IsOk()) {
+		return wxColour(255, 255, 255, 255);
+	}
+	return wxColour(255, 255, 255, color.Alpha());
+}
+
+wxBitmap loadAssetBitmap(std::string_view asset_path, const wxColour& tint = wxNullColour) {
+	return IMAGE_MANAGER.GetBitmap(asset_path, wxSize(TILE_SIZE, TILE_SIZE), tint);
 }
 
 GameSprite* getSpriteById(uint32_t sprite_id) {
@@ -40,7 +47,7 @@ wxBitmap buildOverlayBitmap(const VisualAppearance& appearance) {
 			break;
 		case VisualAppearanceType::Png:
 		case VisualAppearanceType::Svg:
-			return loadAssetBitmap(appearance.asset_path);
+			return loadAssetBitmap(appearance.asset_path, Visuals::EffectiveImageTint(appearance.color));
 		case VisualAppearanceType::Rgba:
 			break;
 	}
@@ -108,7 +115,12 @@ ResolvedVisualResource buildRuleResource(VisualResourceRegistry& registry, const
 			return ResolvedVisualResource { .kind = VisualResourceKind::NativeItemVisual, .color = rule.appearance.color, .item_id = rule.appearance.item_id, .valid = rule.appearance.item_id != 0 };
 		case VisualAppearanceType::Png:
 		case VisualAppearanceType::Svg:
-			return makeAtlasResource(registry, rule, loadAssetBitmap(rule.appearance.asset_path));
+			if (const wxBitmap bitmap = loadAssetBitmap(rule.appearance.asset_path, Visuals::EffectiveImageTint(rule.appearance.color)); bitmap.IsOk()) {
+				VisualRule atlas_rule = rule;
+				atlas_rule.appearance.color = alphaOnlyTint(rule.appearance.color);
+				return makeAtlasResource(registry, atlas_rule, bitmap);
+			}
+			return {};
 	}
 
 	return {};
@@ -155,7 +167,6 @@ void VisualResourceRegistry::Clear() {
 	rule_resources_.clear();
 	fallback_overlay_resources_.clear();
 	atlas_sprites_.clear();
-	next_custom_sprite_id_ = 2'800'000;
 	uploaded_texture_id_ = 0;
 	uploaded_sprite_count_ = 0;
 }
@@ -206,6 +217,7 @@ void VisualResourceRegistry::EnsureAtlasResourcesUploaded(AtlasManager& atlas) c
 
 bool Visuals::PrepareRuntimeResources() {
 	EnsureServerItemRulesMaterialized();
+	IMAGE_MANAGER.ClearCache();
 	resource_registry.Clear();
 
 	for (const auto kind : std::array {

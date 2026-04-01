@@ -224,6 +224,8 @@ void VisualsPage::RebuildTree() {
 
 			auto leaf = tree_->AppendItem(section_item, BuildVisualName(entry), -1, -1, new VisualTreeItemData(entry.key));
 			tree_->SetItemText(leaf, 1, BuildTypeLabel(entry.preview_rule));
+			tree_->SetItemText(leaf, 2, BuildSidLabel(entry));
+			tree_->SetItemText(leaf, 3, BuildCidLabel(entry));
 		}
 	}
 
