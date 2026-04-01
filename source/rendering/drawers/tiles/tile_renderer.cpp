@@ -200,6 +200,9 @@ namespace {
 
 	void drawResolvedTileVisual(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, VisualOverlayDrawer* overlay_drawer, int draw_x, int draw_y, const Position& position, TileVisualKind kind) {
 		if (const ResolvedVisualResource* resource = g_visuals.ResolveTileResource(kind); resource) {
+			if (resource->kind == VisualResourceKind::FlatColor) {
+				return;
+			}
 			drawTileVisual(sprite_batch, sprite_drawer, overlay_drawer, draw_x, draw_y, position, *resource);
 		}
 	}

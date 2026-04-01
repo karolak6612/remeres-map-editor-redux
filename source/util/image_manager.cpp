@@ -37,12 +37,16 @@ void ImageManager::ClearCache() {
 }
 
 std::string ImageManager::ResolvePath(std::string_view assetPath) {
-	wxFileName explicit_path(wxString::FromUTF8(assetPath.data(), assetPath.size()));
+	const wxString path = wxString::FromUTF8(assetPath.data(), assetPath.size());
+	wxFileName explicit_path(path);
 	if (explicit_path.IsAbsolute() && explicit_path.FileExists()) {
 		return explicit_path.GetFullPath().ToStdString();
 	}
 
-	wxFileName local_path(FileSystem::GetLocalDirectory(), wxString::FromUTF8(assetPath.data(), assetPath.size()));
+	wxFileName local_path(path);
+	if (!local_path.IsAbsolute()) {
+		local_path.MakeAbsolute(FileSystem::GetLocalDirectory());
+	}
 	if (local_path.FileExists()) {
 		return local_path.GetFullPath().ToStdString();
 	}
@@ -52,7 +56,7 @@ std::string ImageManager::ResolvePath(std::string_view assetPath) {
 	static wxString assetsRoot = wxFileName(executablePath).GetPath() + wxFileName::GetPathSeparator() + "assets";
 
 	// Use full path joining to avoid stripping subdirectories
-	wxString fullPathLine = assetsRoot + wxFileName::GetPathSeparator() + wxString::FromUTF8(assetPath.data(), assetPath.size());
+	wxString fullPathLine = assetsRoot + wxFileName::GetPathSeparator() + path;
 	wxFileName fn(fullPathLine);
 
 	std::string fullPath = fn.GetFullPath().ToStdString();

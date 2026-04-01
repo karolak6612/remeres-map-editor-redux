@@ -3,8 +3,12 @@
 
 #include <wx/dialog.h>
 
-class wxColourPickerCtrl;
-class wxSpinCtrl;
+class wxBitmapButton;
+class wxCommandEvent;
+class wxPanel;
+class wxSlider;
+class wxStaticText;
+class wxMouseEvent;
 
 class ColorAlphaDialog final : public wxDialog {
 public:
@@ -13,8 +17,18 @@ public:
 	wxColour GetColour() const;
 
 private:
-	wxColourPickerCtrl* color_picker_ = nullptr;
-	wxSpinCtrl* alpha_spin_ = nullptr;
+	void OpenColorPicker();
+	void UpdateSwatch();
+	void UpdateAlphaLabel();
+	void OnAlphaChanged(wxCommandEvent& event);
+	void OnResetAlpha(wxCommandEvent& event);
+	void OnSwatchClicked(wxMouseEvent& event);
+
+	wxPanel* swatch_panel_ = nullptr;
+	wxSlider* alpha_slider_ = nullptr;
+	wxStaticText* alpha_value_label_ = nullptr;
+	wxBitmapButton* reset_alpha_button_ = nullptr;
+	wxColour color_;
 };
 
 #endif

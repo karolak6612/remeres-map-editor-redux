@@ -409,6 +409,8 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_events.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_helpers.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_preview.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_tree.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/app/preferences/visuals_page_tree.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/settings.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/updater.cpp
     ${CMAKE_CURRENT_LIST_DIR}/app/managers/version_manager.cpp

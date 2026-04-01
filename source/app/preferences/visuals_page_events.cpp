@@ -7,6 +7,8 @@
 #include <wx/filename.h>
 #include <wx/msgdlg.h>
 #include <wx/srchctrl.h>
+#include <wx/slider.h>
+#include <wx/treelist.h>
 
 void VisualsPage::PickSpriteFor(const std::string& key) {
 	if (shutting_down_) {
@@ -18,7 +20,8 @@ void VisualsPage::PickSpriteFor(const std::string& key) {
 		return;
 	}
 
-	VisualRule rule = RuleForKey(working_copy_, key).value_or(ParseItemId(key).has_value() ? Visuals::MakeItemRule(*ParseItemId(key)) : VisualRule {});
+	const auto preview_rule = draft_rules_.contains(key) ? std::optional<VisualRule>(draft_rules_.at(key)) : RuleForKey(working_copy_, key);
+	VisualRule rule = preview_rule.value_or(ParseItemId(key).has_value() ? Visuals::MakeItemRule(*ParseItemId(key)) : VisualRule {});
 	rule.key = key;
 	rule.appearance.type = VisualAppearanceType::OtherItemVisual;
 	rule.appearance.item_id = dialog.getResultID();
@@ -26,7 +29,6 @@ void VisualsPage::PickSpriteFor(const std::string& key) {
 	rule.appearance.asset_path.clear();
 	rule.appearance.color = wxColour(255, 255, 255, 255);
 	draft_rules_[key] = NormalizeRule(std::move(rule));
-	RefreshRow(MakeDisplayEntry(key));
 	FocusRow(key);
 }
 
@@ -47,7 +49,8 @@ void VisualsPage::PickImageFor(const std::string& key) {
 		return;
 	}
 
-	VisualRule rule = RuleForKey(working_copy_, key).value_or(ParseItemId(key).has_value() ? Visuals::MakeItemRule(*ParseItemId(key)) : VisualRule {});
+	const auto preview_rule = draft_rules_.contains(key) ? std::optional<VisualRule>(draft_rules_.at(key)) : RuleForKey(working_copy_, key);
+	VisualRule rule = preview_rule.value_or(ParseItemId(key).has_value() ? Visuals::MakeItemRule(*ParseItemId(key)) : VisualRule {});
 	rule.key = key;
 	rule.appearance.type = wxFileName(dialog.GetPath()).GetExt().Lower() == "png" ? VisualAppearanceType::Png : VisualAppearanceType::Svg;
 	rule.appearance.asset_path = dialog.GetPath().ToStdString();
@@ -57,7 +60,6 @@ void VisualsPage::PickImageFor(const std::string& key) {
 		rule.appearance.color = wxColour(255, 255, 255, 255);
 	}
 	draft_rules_[key] = NormalizeRule(std::move(rule));
-	RefreshRow(MakeDisplayEntry(key));
 	FocusRow(key);
 }
 
@@ -85,7 +87,6 @@ void VisualsPage::PickColorFor(const std::string& key) {
 		rule.appearance.asset_path.clear();
 	}
 	draft_rules_[key] = NormalizeRule(std::move(rule));
-	RefreshRow(MakeDisplayEntry(key));
 	FocusRow(key);
 }
 
@@ -97,11 +98,94 @@ void VisualsPage::ResetRow(const std::string& key) {
 	draft_rules_.erase(key);
 	working_copy_.RemoveUserRule(key);
 	focus_key_ = key;
-	RebuildTabs();
+	RebuildTree();
 }
 
 void VisualsPage::OnSearchChanged(wxCommandEvent&) {
-	RebuildTabs();
+	RebuildTree();
+}
+
+void VisualsPage::PickSpriteForSelected() {
+	if (!selected_key_.empty()) {
+		PickSpriteFor(selected_key_);
+	}
+}
+
+void VisualsPage::PickImageForSelected() {
+	if (!selected_key_.empty()) {
+		PickImageFor(selected_key_);
+	}
+}
+
+void VisualsPage::PickColorForSelected() {
+	if (!selected_key_.empty()) {
+		PickColorFor(selected_key_);
+	}
+}
+
+void VisualsPage::ResetSelected() {
+	if (selected_key_.empty()) {
+		return;
+	}
+
+	const auto answer = wxMessageBox("Remove this visual override and restore the default?", "Remove Visual Override", wxYES_NO | wxNO_DEFAULT | wxICON_WARNING, this);
+	if (answer == wxYES) {
+		ResetRow(selected_key_);
+	}
+}
+
+void VisualsPage::CommitNameChange() {
+	if (shutting_down_ || selected_key_.empty() || !detail_.name_ctrl) {
+		return;
+	}
+
+	const auto preview_rule = draft_rules_.contains(selected_key_) ? std::optional<VisualRule>(draft_rules_.at(selected_key_)) : RuleForKey(working_copy_, selected_key_);
+	if (!preview_rule.has_value()) {
+		return;
+	}
+
+	VisualRule rule = *preview_rule;
+	const wxString entered = detail_.name_ctrl->GetValue().Trim(true).Trim(false);
+	rule.label = entered.empty() ? MakeDisplayEntry(selected_key_).seed_rule.label : entered.ToStdString();
+	draft_rules_[selected_key_] = NormalizeRule(std::move(rule));
+	focus_key_ = selected_key_;
+	RebuildTree();
+}
+
+void VisualsPage::ApplyAlphaForSelected(int alpha) {
+	if (shutting_down_ || selected_key_.empty()) {
+		return;
+	}
+
+	const auto preview_rule = draft_rules_.contains(selected_key_) ? std::optional<VisualRule>(draft_rules_.at(selected_key_)) : RuleForKey(working_copy_, selected_key_);
+	if (!preview_rule.has_value()) {
+		return;
+	}
+
+	VisualRule rule = *preview_rule;
+	if (rule.appearance.type != VisualAppearanceType::Rgba && rule.appearance.type != VisualAppearanceType::Svg) {
+		return;
+	}
+
+	const wxColour current = rule.appearance.color.IsOk() ? rule.appearance.color : wxColour(255, 255, 255, 255);
+	rule.appearance.color = wxColour(current.Red(), current.Green(), current.Blue(), static_cast<unsigned char>(alpha));
+	draft_rules_[selected_key_] = NormalizeRule(std::move(rule));
+	RefreshDetail();
+}
+
+void VisualsPage::OnNameCommit(wxCommandEvent& event) {
+	CommitNameChange();
+	event.Skip();
+}
+
+void VisualsPage::OnNameFocusLost(wxFocusEvent& event) {
+	CommitNameChange();
+	event.Skip();
+}
+
+void VisualsPage::OnAlphaChanged(wxCommandEvent& event) {
+	ApplyAlphaForSelected(detail_.alpha_slider ? detail_.alpha_slider->GetValue() : 255);
+	event.Skip();
 }
 
 void VisualsPage::OnAddItemOverride(wxCommandEvent&) {
@@ -113,7 +197,7 @@ void VisualsPage::OnAddItemOverride(wxCommandEvent&) {
 	VisualRule rule = Visuals::MakeItemRule(dialog.getResultID());
 	working_copy_.SetUserRule(rule);
 	focus_key_ = rule.key;
-	RebuildTabs();
+	RebuildTree();
 }
 
 void VisualsPage::OnImport(wxCommandEvent&) {
@@ -128,7 +212,7 @@ void VisualsPage::OnImport(wxCommandEvent&) {
 	}
 
 	draft_rules_.clear();
-	RebuildTabs();
+	RebuildTree();
 }
 
 void VisualsPage::OnExport(wxCommandEvent&) {
@@ -141,13 +225,23 @@ void VisualsPage::OnExport(wxCommandEvent&) {
 	if (!working_copy_.ExportUserOverrides(dialog.GetPath())) {
 		wxMessageBox("Failed to export the selected TOML file.", "Visual Overrides", wxOK | wxICON_ERROR, this);
 	}
-	RebuildTabs();
+	RebuildTree();
 }
 
 void VisualsPage::OnResetAll(wxCommandEvent&) {
+	const auto answer = wxMessageBox(
+		"Reset all visuals to defaults? This removes every custom visual override.",
+		"Reset All Visual Overrides",
+		wxYES_NO | wxNO_DEFAULT | wxICON_WARNING,
+		this
+	);
+	if (answer != wxYES) {
+		return;
+	}
+
 	draft_rules_.clear();
 	working_copy_.ClearUserOverrides();
-	RebuildTabs();
+	RebuildTree();
 }
 
 void VisualsPage::OnWindowDestroy(wxWindowDestroyEvent& event) {
@@ -166,6 +260,9 @@ void VisualsPage::BeginShutdown() {
 	if (search_ctrl_) {
 		search_ctrl_->Unbind(wxEVT_TEXT, &VisualsPage::OnSearchChanged, this);
 	}
+	if (tree_) {
+		tree_->Unbind(wxEVT_TREELIST_SELECTION_CHANGED, &VisualsPage::OnTreeSelectionChanged, this);
+	}
 	if (add_button_) {
 		add_button_->Unbind(wxEVT_BUTTON, &VisualsPage::OnAddItemOverride, this);
 	}
@@ -177,6 +274,13 @@ void VisualsPage::BeginShutdown() {
 	}
 	if (reset_all_button_) {
 		reset_all_button_->Unbind(wxEVT_BUTTON, &VisualsPage::OnResetAll, this);
+	}
+	if (detail_.name_ctrl) {
+		detail_.name_ctrl->Unbind(wxEVT_TEXT_ENTER, &VisualsPage::OnNameCommit, this);
+		detail_.name_ctrl->Unbind(wxEVT_KILL_FOCUS, &VisualsPage::OnNameFocusLost, this);
+	}
+	if (detail_.alpha_slider) {
+		detail_.alpha_slider->Unbind(wxEVT_SLIDER, &VisualsPage::OnAlphaChanged, this);
 	}
 	Unbind(wxEVT_DESTROY, &VisualsPage::OnWindowDestroy, this);
 }

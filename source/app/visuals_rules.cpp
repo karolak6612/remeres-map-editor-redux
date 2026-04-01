@@ -15,7 +15,7 @@ std::string normalize(std::string value) {
 }
 
 std::string pathExtension(const std::string& path) {
-	return normalize(wxFileName::FileName(path).GetExt().ToStdString());
+	return normalize(wxFileName(wxString::FromUTF8(path)).GetExt().ToStdString());
 }
 
 }
