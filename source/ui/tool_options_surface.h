@@ -69,6 +69,7 @@ private:
 	void OnPreviewBorderToggled(wxCommandEvent& event);
 	void OnLockDoorsToggled(wxCommandEvent& event);
 	void OnThicknessChanged(wxCommandEvent& event);
+	void OnPlaceSpawnWithCreatureToggled(wxCommandEvent& event);
 	void OnSpawnTimeChanged(wxSpinEvent& event);
 	void OnSpawnSizeChanged(wxSpinEvent& event);
 
@@ -82,6 +83,7 @@ private:
 	wxStaticBoxSizer* other_sizer = nullptr;
 	wxPanel* thickness_panel = nullptr;
 	wxPanel* spawn_time_panel = nullptr;
+	wxCheckBox* place_spawn_with_creature_checkbox = nullptr;
 	wxPanel* spawn_size_panel = nullptr;
 
 	wxSlider* size_x_slider = nullptr;

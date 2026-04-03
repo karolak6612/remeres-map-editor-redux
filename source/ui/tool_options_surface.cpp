@@ -142,6 +142,9 @@ void ToolOptionsSurface::BuildUi() {
 	spawn_time_panel->SetSizer(spawn_time_row);
 	other_sizer->Add(spawn_time_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 
+	place_spawn_with_creature_checkbox = newd wxCheckBox(other_sizer->GetStaticBox(), wxID_ANY, "Place spawn with creature");
+	other_sizer->Add(place_spawn_with_creature_checkbox, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
+
 	spawn_size_panel = newd wxPanel(other_sizer->GetStaticBox(), wxID_ANY);
 	auto* spawn_size_row = newd wxBoxSizer(wxHORIZONTAL);
 	spawn_size_label = newd wxStaticText(spawn_size_panel, wxID_ANY, "Spawn Size");
@@ -176,6 +179,7 @@ void ToolOptionsSurface::BuildUi() {
 	preview_border_checkbox->Bind(wxEVT_CHECKBOX, &ToolOptionsSurface::OnPreviewBorderToggled, this);
 	lock_doors_checkbox->Bind(wxEVT_CHECKBOX, &ToolOptionsSurface::OnLockDoorsToggled, this);
 	thickness_slider->Bind(wxEVT_SLIDER, &ToolOptionsSurface::OnThicknessChanged, this);
+	place_spawn_with_creature_checkbox->Bind(wxEVT_CHECKBOX, &ToolOptionsSurface::OnPlaceSpawnWithCreatureToggled, this);
 	spawn_time_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnTimeChanged, this);
 	spawn_size_spin->Bind(wxEVT_SPINCTRL, &ToolOptionsSurface::OnSpawnSizeChanged, this);
 }
@@ -313,6 +317,7 @@ void ToolOptionsSurface::RefreshFromState() {
 	lock_doors_checkbox->SetValue(g_settings.getInteger(Config::DRAW_LOCKED_DOOR));
 	const int thickness_percent = g_brush_manager.UseCustomThickness() ? std::clamp(static_cast<int>(g_brush_manager.GetCustomThicknessMod() * 100.0f), MIN_THICKNESS, MAX_THICKNESS) : MAX_THICKNESS;
 	thickness_slider->SetValue(thickness_percent);
+	place_spawn_with_creature_checkbox->SetValue(g_settings.getInteger(Config::AUTO_CREATE_SPAWN));
 	spawn_time_spin->SetValue(std::max(MIN_SPAWN_TIME, g_settings.getInteger(Config::DEFAULT_SPAWNTIME)));
 	spawn_size_spin->SetRange(1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS));
 	spawn_size_spin->SetValue(std::clamp(g_settings.getInteger(Config::CURRENT_SPAWN_RADIUS), 1, g_settings.getInteger(Config::MAX_SPAWN_RADIUS)));
@@ -341,6 +346,7 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 	other_sizer->Clear(false);
 	DetachWindowIfPresent(other_sizer, thickness_panel);
 	DetachWindowIfPresent(other_sizer, spawn_time_panel);
+	DetachWindowIfPresent(other_sizer, place_spawn_with_creature_checkbox);
 	DetachWindowIfPresent(other_sizer, spawn_size_panel);
 	DetachWindowIfPresent(other_sizer, preview_border_checkbox);
 	DetachWindowIfPresent(other_sizer, lock_doors_checkbox);
@@ -351,6 +357,7 @@ void ToolOptionsSurface::UpdateSectionVisibility() {
 	if (show_spawn_controls) {
 		AddWindowToSizer(other_sizer, spawn_time_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 		AddWindowToSizer(other_sizer, spawn_size_panel, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
+		AddWindowToSizer(other_sizer, place_spawn_with_creature_checkbox, 0, wxEXPAND | wxLEFT | wxRIGHT | wxTOP, FromDIP(6));
 	}
 	if (show_preview_border) {
 		AddWindowToSizer(other_sizer, preview_border_checkbox, 0, wxEXPAND | wxALL, FromDIP(6));
@@ -647,6 +654,14 @@ void ToolOptionsSurface::OnThicknessChanged(wxCommandEvent& event) {
 
 	thickness_value->SetLabel(std::format("{}%", event.GetInt()));
 	g_brush_manager.SetBrushThickness(true, event.GetInt(), 100);
+}
+
+void ToolOptionsSurface::OnPlaceSpawnWithCreatureToggled(wxCommandEvent& event) {
+	if (IsMutatingUi()) {
+		return;
+	}
+
+	g_settings.setInteger(Config::AUTO_CREATE_SPAWN, event.IsChecked());
 }
 
 void ToolOptionsSurface::OnSpawnTimeChanged(wxSpinEvent& event) {

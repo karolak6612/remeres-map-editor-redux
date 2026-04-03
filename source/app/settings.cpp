@@ -348,7 +348,7 @@ void Settings::IO(IOMode mode) {
 	Bool(ERASER_LEAVE_UNIQUE, true);
 	Bool(DOODAD_BRUSH_ERASE_LIKE, false);
 	Bool(WARN_FOR_DUPLICATE_ID, true);
-	Bool(AUTO_CREATE_SPAWN, true);
+	Bool(AUTO_CREATE_SPAWN, false);
 	Int(DEFAULT_SPAWNTIME, 60);
 	Int(MAX_SPAWN_RADIUS, 30);
 	Int(CURRENT_SPAWN_RADIUS, 5);
