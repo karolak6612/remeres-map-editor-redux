@@ -350,11 +350,8 @@ if (floor <= GROUND_LAYER) {
 
 #endif
 void MapCanvas::GetScreenCenter(int* map_x, int* map_y) {
-	int width = GetSize().x, height = GetSize().y;
-	if (auto mw = GetMapWindow()) {
-		mw->GetViewSize(&width, &height);
-	}
-	ScreenToMap(width / 2, height / 2, map_x, map_y);
+	const wxSize logical_size = GetSize();
+	ScreenToMap(logical_size.x / 2, logical_size.y / 2, map_x, map_y);
 }
 
 Position MapCanvas::GetCursorPosition() const {

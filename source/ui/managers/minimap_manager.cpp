@@ -5,6 +5,9 @@
 #include "app/main.h"
 #include "ui/managers/minimap_manager.h"
 #include "app/managers/version_manager.h"
+#include "map/map.h"
+#include "map/position.h"
+#include "rendering/drawers/minimap_cache.h"
 #include "ui/gui.h"
 #include "rendering/ui/minimap_window.h"
 #include <wx/aui/aui.h>
@@ -28,6 +31,13 @@ MinimapManager::~MinimapManager() {
 	}
 	spdlog::debug("MinimapManager destructor finished");
 	spdlog::default_logger()->flush();
+}
+
+MinimapManager::InvalidationKey MinimapManager::makeKey(const Map& map) {
+	return {
+		.map = &map,
+		.generation = map.getGeneration(),
+	};
 }
 
 void MinimapManager::Create() {
@@ -79,13 +89,51 @@ void MinimapManager::Destroy() {
 }
 
 void MinimapManager::Update(bool immediate) {
-	if (IsVisible()) {
-		if (immediate) {
-			minimap->Refresh();
-		} else {
-			minimap->DelayedUpdate();
-		}
+	if (g_gui.IsLoading()) {
+		return;
 	}
+
+	if (IsVisible()) {
+		minimap->RefreshMinimap(immediate);
+	}
+}
+
+void MinimapManager::InvalidateAll(const Map& map) {
+	auto& pending = pending_invalidations_[makeKey(map)];
+	pending.invalidate_all = true;
+	for (auto& floor_rects : pending.floor_rects) {
+		floor_rects.clear();
+	}
+}
+
+void MinimapManager::MarkTileDirty(const Map& map, const Position& position) {
+	if (position.z < 0 || position.z >= MAP_LAYERS) {
+		return;
+	}
+
+	auto& pending = pending_invalidations_[makeKey(map)];
+	if (pending.invalidate_all) {
+		return;
+	}
+
+	pending.floor_rects[position.z].push_back({
+		.x = position.x,
+		.y = position.y,
+		.width = 1,
+		.height = 1,
+	});
+}
+
+PendingMinimapInvalidation MinimapManager::TakePendingInvalidation(const Map& map) {
+	const InvalidationKey key = makeKey(map);
+	auto it = pending_invalidations_.find(key);
+	if (it == pending_invalidations_.end()) {
+		return {};
+	}
+
+	PendingMinimapInvalidation pending = std::move(it->second);
+	pending_invalidations_.erase(it);
+	return pending;
 }
 
 bool MinimapManager::IsVisible() const {

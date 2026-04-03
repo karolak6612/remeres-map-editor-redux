@@ -113,12 +113,7 @@ public: // Functions
 	bool isModified() const {
 		return testFlags(statflags, TILESTATE_MODIFIED);
 	}
-	void modify() {
-		statflags |= TILESTATE_MODIFIED;
-		if (isSelected()) {
-			TileOperations::markSelectionChanged(this);
-		}
-	}
+	void modify();
 	void unmodify() {
 		statflags &= ~TILESTATE_MODIFIED;
 	}

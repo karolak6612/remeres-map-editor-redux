@@ -160,6 +160,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/map_view_math.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
@@ -199,6 +200,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/sprite_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/map_layer_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_cache.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush_overlay_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/grid_drawer.h
@@ -532,6 +534,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/map_view_math.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
@@ -567,6 +570,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/sprite_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/map_layer_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_cache.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush_overlay_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/grid_drawer.cpp

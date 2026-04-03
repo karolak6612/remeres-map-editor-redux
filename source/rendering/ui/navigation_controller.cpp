@@ -90,6 +90,9 @@ void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {
 	int old_floor = canvas->floor;
 	canvas->floor = new_floor;
 	if (old_floor != new_floor) {
+		if (auto* map_window = static_cast<MapWindow*>(canvas->GetParent())) {
+			map_window->SyncTrackedMinimapViewportToCurrentView();
+		}
 		canvas->UpdatePositionStatus();
 		g_gui.root->UpdateFloorMenu();
 		g_gui.UpdateMinimap(true);

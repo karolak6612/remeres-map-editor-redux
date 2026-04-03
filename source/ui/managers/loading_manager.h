@@ -38,6 +38,9 @@ public:
 	 * Destroys (hides) the current loading bar.
 	 */
 	void DestroyLoadBar();
+	bool IsLoading() const {
+		return progressBar != nullptr;
+	}
 
 private:
 	wxString progressText;

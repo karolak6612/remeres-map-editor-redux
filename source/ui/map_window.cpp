@@ -21,6 +21,7 @@
 #include "ui/gui.h"
 #include "game/sprites.h"
 #include "editor/editor.h"
+#include "rendering/core/map_view_math.h"
 #include "ui/replace_tool/replace_tool_window.h"
 
 void ReplaceToolWindowDeleter::operator()(ReplaceToolWindow* w) {
@@ -165,23 +166,45 @@ void MapWindow::FitToMap() {
 }
 
 Position MapWindow::GetScreenCenterPosition() {
-	int x, y;
-	canvas->GetScreenCenter(&x, &y);
+	int logical_width = 0;
+	int logical_height = 0;
+	canvas->GetSize(&logical_width, &logical_height);
+
+	int x = 0;
+	int y = 0;
+	canvas->ScreenToMap(logical_width / 2, logical_height / 2, &x, &y);
 	return Position(x, y, canvas->GetFloor());
 }
 
-void MapWindow::SetScreenCenterPosition(const Position& position) {
-	if (position == Position()) {
+void MapWindow::EnsureMinimapViewportInitialized() {
+	if (!minimap_viewport_state.initialized) {
+		SyncTrackedMinimapViewportToCurrentView(true);
+	}
+}
+
+void MapWindow::ResetMinimapViewportToCurrentView() {
+	SyncTrackedMinimapViewportToCurrentView(true);
+}
+
+void MapWindow::SyncTrackedMinimapViewportToCurrentView(bool reset_zoom) {
+	if (minimap_viewport_state.initialized && !minimap_viewport_state.tracking_main_camera && !reset_zoom) {
 		return;
 	}
 
-	int x = position.x * TILE_SIZE;
-	int y = position.y * TILE_SIZE;
-	if (position.z <= GROUND_LAYER) {
-		// Compensate for floor offset above ground
-		x -= (GROUND_LAYER - position.z) * TILE_SIZE;
-		y -= (GROUND_LAYER - position.z) * TILE_SIZE;
+	const Position center = GetScreenCenterPosition();
+	minimap_viewport_state.center_x = center.x;
+	minimap_viewport_state.center_y = center.y;
+	if (!minimap_viewport_state.initialized || reset_zoom) {
+		minimap_viewport_state.zoom_step = MinimapViewport::DefaultZoomStep;
 	}
+	minimap_viewport_state.floor = MinimapViewport::ClampFloor(center.z);
+	minimap_viewport_state.tracking_main_camera = true;
+	minimap_viewport_state.initialized = true;
+}
+
+void MapWindow::SetScreenCenterPosition(const Position& position) {
+	int x = MainMapViewMath::WorldTileToScrollPixel(position.x, position.z);
+	int y = MainMapViewMath::WorldTileToScrollPixel(position.y, position.z);
 
 	const Position& center = GetScreenCenterPosition();
 	if (previous_position != center) {
@@ -200,21 +223,23 @@ void MapWindow::GoToPreviousCenterPosition() {
 
 void MapWindow::Scroll(int x, int y, bool center) {
 	if (center) {
-		int windowSizeX, windowSizeY;
-
-		canvas->GetSize(&windowSizeX, &windowSizeY);
-		x -= int((windowSizeX * g_gui.GetCurrentZoom()) / 2.0);
-		y -= int((windowSizeY * g_gui.GetCurrentZoom()) / 2.0);
+		int window_size_x = 0;
+		int window_size_y = 0;
+		GetViewSize(&window_size_x, &window_size_y);
+		x -= int((window_size_x * g_gui.GetCurrentZoom()) / 2.0);
+		y -= int((window_size_y * g_gui.GetCurrentZoom()) / 2.0);
 	}
 
 	hScroll->SetThumbPosition(x);
 	vScroll->SetThumbPosition(y);
+	SyncTrackedMinimapViewportToCurrentView();
 	g_gui.UpdateMinimap();
 }
 
 void MapWindow::ScrollRelative(int x, int y) {
 	hScroll->SetThumbPosition(hScroll->GetThumbPosition() + x);
 	vScroll->SetThumbPosition(vScroll->GetThumbPosition() + y);
+	SyncTrackedMinimapViewportToCurrentView();
 	g_gui.UpdateMinimap();
 }
 
@@ -228,6 +253,8 @@ void MapWindow::OnSize(wxSizeEvent& event) {
 }
 
 void MapWindow::OnScroll(wxScrollEvent& event) {
+	SyncTrackedMinimapViewportToCurrentView();
+	g_gui.UpdateMinimap();
 	canvas->Refresh();
 }
 

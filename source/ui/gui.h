@@ -127,6 +127,9 @@ public:
 	void DestroyLoadBar() {
 		g_loading.DestroyLoadBar();
 	}
+	bool IsLoading() const {
+		return g_loading.IsLoading();
+	}
 
 	void UpdateMenubar();
 

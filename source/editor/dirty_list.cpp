@@ -54,3 +54,21 @@ DirtyList::SetType& DirtyList::GetPosList() {
 DirtyList::ChangeList& DirtyList::GetChanges() {
 	return ichanges;
 }
+
+int DirtyList::DecodeNodeX(const ValueType& value) {
+	return static_cast<int>((value.pos >> 18) << 2);
+}
+
+int DirtyList::DecodeNodeY(const ValueType& value) {
+	return static_cast<int>(((value.pos >> 4) & 0x3FFF) << 2);
+}
+
+uint32_t DirtyList::DecodeFloorsMask(const ValueType& value) {
+	return value.floors;
+}
+
+void DirtyList::ForEachNodeRect(const Visitor& visitor) const {
+	for (const auto& value : iset) {
+		visitor(DecodeNodeX(value), DecodeNodeY(value), DecodeFloorsMask(value));
+	}
+}

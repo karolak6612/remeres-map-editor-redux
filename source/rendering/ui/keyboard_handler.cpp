@@ -190,13 +190,7 @@ void KeyboardHandler::HandleHotkeys(MapCanvas* canvas, wxKeyEvent& event) {
 		Hotkey hk = g_hotkeys.GetHotkey(index);
 		if (hk.IsPosition()) {
 			g_gui.SetSelectionMode();
-
-			int map_x = hk.GetPosition().x;
-			int map_y = hk.GetPosition().y;
-			int map_z = hk.GetPosition().z;
-
-			static_cast<MapWindow*>(canvas->GetParent())->Scroll(TILE_SIZE * map_x, TILE_SIZE * map_y, true);
-			canvas->floor = map_z;
+			static_cast<MapWindow*>(canvas->GetParent())->SetScreenCenterPosition(hk.GetPosition());
 
 			g_gui.SetStatusText("Used hotkey " + i2ws(index));
 			g_gui.RefreshView();

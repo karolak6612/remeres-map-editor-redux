@@ -18,8 +18,9 @@
 #ifndef RME_MAP_WINDOW_H_
 #define RME_MAP_WINDOW_H_
 
-#include "map/position.h"
 #include "app/rme_forward_declarations.h"
+#include "map/position.h"
+#include "rendering/ui/minimap_viewport.h"
 class ReplaceToolWindow;
 #include <memory>
 
@@ -74,6 +75,15 @@ public:
 	Position GetScreenCenterPosition();
 	void SetScreenCenterPosition(const Position& position);
 	void GoToPreviousCenterPosition();
+	void EnsureMinimapViewportInitialized();
+	void ResetMinimapViewportToCurrentView();
+	void SyncTrackedMinimapViewportToCurrentView(bool reset_zoom = false);
+	MinimapViewportState& GetMinimapViewportState() {
+		return minimap_viewport_state;
+	}
+	const MinimapViewportState& GetMinimapViewportState() const {
+		return minimap_viewport_state;
+	}
 
 	// Return the containing canvas
 	MapCanvas* GetCanvas() const {
@@ -100,6 +110,7 @@ protected:
 
 private:
 	std::unique_ptr<ReplaceToolWindow, ReplaceToolWindowDeleter> replaceItemsDialog;
+	MinimapViewportState minimap_viewport_state;
 	Position previous_position;
 
 	friend class MainFrame;
