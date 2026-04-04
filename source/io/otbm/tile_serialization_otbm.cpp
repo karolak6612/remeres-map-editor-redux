@@ -8,7 +8,6 @@
 #include "io/otbm/item_serialization_otbm.h"
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
-#include <ranges>
 #include <functional>
 
 void TileSerializationOTBM::readTileArea(IOMapOTBM& iomap, Map& map, BinaryNode* mapNode) {
@@ -204,15 +203,7 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 	if (save_tile->ground) {
 		Item* ground = save_tile->ground.get();
 		if (!ground->isMetaItem()) {
-			if (ground->hasBorderEquivalent()) {
-				bool found = std::ranges::any_of(save_tile->items, [&](const auto& item) {
-					return item->getGroundEquivalent() == ground->getID();
-				});
-
-				if (!found) {
-					ItemSerializationOTBM::serializeItemNode(iomap, f, *ground);
-				}
-			} else if (ground->isComplex()) {
+			if (ground->isComplex()) {
 				ItemSerializationOTBM::serializeItemNode(iomap, f, *ground);
 			} else {
 				f.addU8(OTBM_ATTR_ITEM);

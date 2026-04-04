@@ -266,24 +266,28 @@ Item* Tile::getItemAt(int index) const {
 	return nullptr;
 }
 
-void Tile::addItem(std::unique_ptr<Item> item, ItemInsertMode mode) {
+void Tile::setGround(std::unique_ptr<Item> item) {
+	if (!item) {
+		ground.reset();
+		TileOperations::update(this);
+		return;
+	}
+
+	ASSERT(item->isGroundTile());
+	ground = std::move(item);
+	TileOperations::update(this);
+}
+
+void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
 	if (item->isGroundTile()) {
-		ground = std::move(item);
-		TileOperations::update(this);
+		// Generic insertion preserves literal tile identity. Terrain policy lives in brushes/ground.
+		setGround(std::move(item));
 		return;
 	}
-
-	const uint16_t gid = item->getGroundEquivalent();
 	auto it = items.begin();
-
-	if (mode == ItemInsertMode::ApplyGroundEquivalent && gid != 0) {
-		ground = Item::Create(gid);
-		TileOperations::update(this);
-		return;
-	} 
 	
 	// At the very bottom!
 	if (item->isAlwaysOnBottom()) {

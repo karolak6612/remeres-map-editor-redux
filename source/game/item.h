@@ -241,11 +241,8 @@ public:
 	bool hasCollectionBrush() const {
 		return getDefinition().editorData().collection_brush != nullptr;
 	}
-	uint16_t getGroundEquivalent() const {
-		return static_cast<uint16_t>(getDefinition().attribute(ItemAttributeKey::GroundEquivalent));
-	}
-	uint16_t hasBorderEquivalent() const {
-		return getDefinition().hasFlag(ItemFlag::HasEquivalent);
+	uint16_t borderBaseGroundId() const {
+		return static_cast<uint16_t>(getDefinition().attribute(ItemAttributeKey::BorderBaseGroundId));
 	}
 	uint32_t getBorderGroup() const {
 		return static_cast<uint32_t>(getDefinition().attribute(ItemAttributeKey::BorderGroup));

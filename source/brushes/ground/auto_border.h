@@ -52,10 +52,10 @@ public:
 	 * @param node The XML node containing the border configuration.
 	 * @param warnings A list to append any warnings encountered during loading.
 	 * @param owner The GroundBrush that owns this border (optional).
-	 * @param ground_equivalent The ID of the ground item this border is equivalent to (optional).
+	 * @param border_base_ground_id The base ground item used by terrain tools for this border (optional).
 	 * @return true if loading was successful, false otherwise.
 	 */
-	bool load(pugi::xml_node node, std::vector<std::string>& warnings, GroundBrush* owner = nullptr, uint16_t ground_equivalent = 0);
+	bool load(pugi::xml_node node, std::vector<std::string>& warnings, GroundBrush* owner = nullptr, uint16_t border_base_ground_id = 0);
 
 	/**
 	 * @brief Array of tile IDs for each border direction.

@@ -39,7 +39,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 		row.slot_position = otb.slot_position;
 		row.weapon_type = otb.weapon_type;
 		row.classification = otb.classification;
-		row.ground_equivalent = otb.ground_equivalent;
+		row.border_base_ground_id = otb.border_base_ground_id;
 		row.border_group = otb.border_group;
 		row.weight = otb.weight;
 		row.attack = otb.attack;
