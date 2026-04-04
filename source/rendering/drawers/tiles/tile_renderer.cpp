@@ -180,6 +180,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	const int tile_draw_x = draw_x;
+	const int tile_draw_y = draw_y;
+
 	const auto& position = location->getPosition();
 
 	// Light Processing (Ground)
@@ -222,7 +225,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
-		if (tile->ground && ground_it) {
+		if (tile->ground && (ground_it || tile->ground->isInvalidOTBMItem())) {
 			if (GameSprite* ground_sprite = tile->ground->getSprite()) {
 				SpritePatterns patterns = PatternCalculator::Calculate(ground_sprite, ground_it, tile->ground.get(), tile, position);
 
@@ -238,6 +241,14 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				params.green = g;
 				params.blue = b;
 				params.patterns = &patterns;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+			} else {
+				BlitItemParams params(position, tile->ground.get(), options);
+				params.tile = tile;
+				params.item_definition = ground_it;
+				params.red = r;
+				params.green = g;
+				params.blue = b;
 				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 			}
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
@@ -349,6 +360,11 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.blue = ib;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
+				} else if (item->isInvalidOTBMItem()) {
+					BlitItemParams params(position, item.get(), options);
+					params.tile = tile;
+					params.item_definition = it;
+					item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 				}
 			}
 			// monster/npc on tile
@@ -358,6 +374,10 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					creature_name_drawer->addLabel(position, tile->creature->getName(), tile->creature.get());
 				}
 			}
+		}
+
+		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {
+			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, DrawColor(255, 0, 255, 171));
 		}
 
 		if (view.zoom < 10.0) {

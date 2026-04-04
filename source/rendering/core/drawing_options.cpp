@@ -14,6 +14,8 @@ void DrawingOptions::SetDefault() {
 	show_lights = false;
 	show_light_str = true;
 	show_tech_items = true;
+	show_invalid_tiles = true;
+	show_invalid_zones = true;
 	show_waypoints = true;
 	ingame = false;
 	dragging = false;
@@ -54,6 +56,8 @@ void DrawingOptions::SetIngame() {
 	show_lights = false;
 	show_light_str = false;
 	show_tech_items = false;
+	show_invalid_tiles = false;
+	show_invalid_zones = false;
 	show_waypoints = false;
 	ingame = true;
 	dragging = false;
@@ -90,6 +94,8 @@ void DrawingOptions::Update() {
 	show_lights = g_settings.getBoolean(Config::SHOW_LIGHTS);
 	show_light_str = g_settings.getBoolean(Config::SHOW_LIGHT_STR);
 	show_tech_items = g_settings.getBoolean(Config::SHOW_TECHNICAL_ITEMS);
+	show_invalid_tiles = g_settings.getBoolean(Config::SHOW_INVALID_TILES);
+	show_invalid_zones = g_settings.getBoolean(Config::SHOW_INVALID_ZONES);
 	show_waypoints = g_settings.getBoolean(Config::SHOW_WAYPOINTS);
 	show_grid = g_settings.getInteger(Config::SHOW_GRID);
 	ingame = !g_settings.getBoolean(Config::SHOW_EXTRA);

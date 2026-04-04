@@ -34,6 +34,24 @@ namespace {
 	GameSprite* resolveSprite(ServerItemId item_id) {
 		return resolveSprite(g_item_definitions.get(item_id));
 	}
+
+	DrawColor invalidItemColor(InvalidOTBMItemMarkerColor markerColor, bool selected) {
+		uint8_t red = 255;
+		uint8_t green = 0;
+		uint8_t blue = 0;
+
+		if (markerColor == InvalidOTBMItemMarkerColor::Orange) {
+			green = 165;
+		}
+
+		if (selected) {
+			red = static_cast<uint8_t>(red / 2);
+			green = static_cast<uint8_t>(green / 2);
+			blue = static_cast<uint8_t>(blue / 2);
+		}
+
+		return DrawColor(red, green, blue, 171);
+	}
 }
 
 BlitItemParams::BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o) : tile(t), item(i), options(&o) {
@@ -62,6 +80,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int blue = params.blue;
 	int alpha = params.alpha;
 	const SpritePatterns* cached_patterns = params.patterns;
+	const int marker_draw_x = draw_x;
+	const int marker_draw_y = draw_y;
 
 	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
 
@@ -87,8 +107,28 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		green /= 2;
 	}
 
+	const bool is_invalid_otbm_item = !options.ingame && options.show_invalid_tiles && item->isInvalidOTBMItem();
+	const InvalidOTBMItemMarkerColor invalid_marker_color = is_invalid_otbm_item ? item->invalidOTBMMarkerColor() : InvalidOTBMItemMarkerColor::None;
+	const bool is_selected = item->isSelected() || is_transient_selected;
+	const DrawColor invalid_marker_overlay = invalidItemColor(invalid_marker_color, is_selected);
+	const bool draw_invalid_overlay = invalid_marker_color != InvalidOTBMItemMarkerColor::None;
+
 	// item sprite
 	GameSprite* spr = resolveSprite(it);
+
+	if (draw_invalid_overlay) {
+		// Missing definitions cannot be drawn as sprites, so render a colored placeholder directly.
+		if (!it || spr == nullptr) {
+			sprite_drawer->glBlitSquare(sprite_batch, marker_draw_x, marker_draw_y, invalid_marker_overlay);
+			sprite_drawer->glDrawBox(sprite_batch, marker_draw_x, marker_draw_y, TILE_SIZE, TILE_SIZE, invalid_marker_overlay);
+			return;
+		}
+	}
+
+	if (item->isInvalidOTBMItem() && !options.show_invalid_tiles) {
+		// Invalid OTBM placeholders are controlled exclusively by SHOW_INVALID_TILES.
+		return;
+	}
 
 	// Display invisible and invalid items
 	// Ugly hacks. :)
@@ -210,6 +250,12 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				}
 			}
 		}
+	}
+
+	if (draw_invalid_overlay) {
+		// Preserve the actual sprite colors and mark the owning tile instead of tint-multiplying the sprite into darkness.
+		sprite_drawer->glBlitSquare(sprite_batch, marker_draw_x, marker_draw_y, invalid_marker_overlay);
+		sprite_drawer->glDrawBox(sprite_batch, marker_draw_x, marker_draw_y, TILE_SIZE, TILE_SIZE, invalid_marker_overlay);
 	}
 
 	if (it.isPodium()) {

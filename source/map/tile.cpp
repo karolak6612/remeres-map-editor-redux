@@ -31,6 +31,18 @@
 #include <iterator>
 #include <memory>
 
+namespace {
+	uint32_t preservedNodeMemsize(const PreservedOTBMNode& node) {
+		uint32_t bytes = static_cast<uint32_t>(node.rawPayload.capacity());
+		bytes += sizeof(PreservedOTBMNode);
+		for (const auto& child : node.children) {
+			bytes += preservedNodeMemsize(child);
+		}
+		bytes += static_cast<uint32_t>(node.children.capacity() * sizeof(PreservedOTBMNode));
+		return bytes;
+	}
+}
+
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
 	ownedLocation(new TileLocation()),
@@ -144,6 +156,7 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 	copy->mapflags = mapflags;
 	copy->statflags = statflags;
 	copy->minimapColor = minimapColor;
+	copy->invalidZones = invalidZones;
 	return copy;
 }
 
@@ -161,6 +174,17 @@ uint32_t Tile::memsize() const {
 	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
+	if (invalidZones) {
+		mem += sizeof(InvalidZoneState);
+		mem += static_cast<uint32_t>(invalidZones->opaqueTileAttributes.capacity() * sizeof(OpaqueTileAttributeRecord));
+		for (const auto& attribute : invalidZones->opaqueTileAttributes) {
+			mem += static_cast<uint32_t>(attribute.rawBytes.capacity());
+		}
+		mem += static_cast<uint32_t>(invalidZones->opaqueChildNodes.capacity() * sizeof(PreservedOTBMNode));
+		for (const auto& node : invalidZones->opaqueChildNodes) {
+			mem += preservedNodeMemsize(node);
+		}
+	}
 
 	return mem;
 }
@@ -181,6 +205,9 @@ int Tile::size() const {
 		++sz;
 	}
 	if (mapflags) {
+		++sz;
+	}
+	if (hasInvalidZones()) {
 		++sz;
 	}
 	const TileLocation* loc = location ? location : ownedLocation;
@@ -403,6 +430,10 @@ bool Tile::isTownExit(Map& map) const {
 
 bool Tile::isContentEqual(const Tile* other) const {
 	if (!other) {
+		return false;
+	}
+
+	if (invalidZones != other->invalidZones) {
 		return false;
 	}
 

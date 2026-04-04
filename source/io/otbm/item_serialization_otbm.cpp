@@ -21,7 +21,6 @@ std::unique_ptr<Item> ItemSerializationOTBM::createFromStream(const IOMap& mapha
 	const auto iType = g_item_definitions.get(_id);
 	if (maphandle.version.otbm == MAP_OTBM_1) {
 		if (!iType) {
-			spdlog::error("ItemSerializationOTBM: Unknown item id {} while reading OTBM v1 item.", _id);
 			return nullptr;
 		}
 		if (iType.hasFlag(ItemFlag::Stackable) || iType.isSplash() || iType.isFluidContainer()) {

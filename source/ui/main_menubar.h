@@ -82,6 +82,7 @@ namespace MenuBar {
 		EDIT_ITEMS,
 		EDIT_MONSTERS,
 		MAP_CLEANUP,
+		MAP_CLEAN_INVALID_ZONES,
 		MAP_REMOVE_ITEMS,
 		MAP_REMOVE_CORPSES,
 		MAP_REMOVE_UNREACHABLE_TILES,
@@ -107,6 +108,8 @@ namespace MenuBar {
 		SHOW_LIGHTS,
 		SHOW_LIGHT_STR,
 		SHOW_TECHNICAL_ITEMS,
+		SHOW_INVALID_TILES,
+		SHOW_INVALID_ZONES,
 		SHOW_WAYPOINTS,
 		SHOW_GRID,
 		SHOW_EXTRA,
@@ -269,6 +272,7 @@ public:
 
 	void OnMapStatistics(wxCommandEvent& event);
 	void OnMapCleanup(wxCommandEvent& event);
+	void OnMapCleanInvalidZones(wxCommandEvent& event);
 	void OnMapProperties(wxCommandEvent& event);
 
 	void OnToolbars(wxCommandEvent& event);

@@ -20,6 +20,7 @@
 
 #include "map/position.h"
 #include "game/item.h"
+#include "io/otbm/invalid_otbm_content.h"
 
 namespace TileOperations {
 	void update(class Tile* tile);
@@ -33,7 +34,9 @@ class House;
 class Map;
 #include "app/rme_forward_declarations.h"
 #include <unordered_set>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <vector>
 
 // TileOperations functions are now in tile_operations.h
@@ -72,9 +75,10 @@ public: // Members
 	std::unique_ptr<Creature> creature;
 	std::unique_ptr<Spawn> spawn;
 	uint32_t house_id; // House id for this tile (pointer not safe)
-	uint16_t mapflags;
+	uint32_t mapflags;
 	uint16_t statflags;
 	uint8_t minimapColor;
+	std::optional<InvalidZoneState> invalidZones;
 
 public:
 	// ALWAYS use this constructor if the Tile is EVER going to be placed on a map
@@ -155,6 +159,13 @@ public: // Functions
 	Item* getItemAt(int index) const;
 	void setGround(std::unique_ptr<Item> item);
 	void addItem(std::unique_ptr<Item> item);
+	InvalidZoneState& getOrCreateInvalidZones();
+	void clearInvalidZones();
+	void addOpaqueTileAttribute(OpaqueTileAttributeRecord record);
+	void addOpaqueChildNode(PreservedOTBMNode node);
+	void recordUnknownMapFlags(uint32_t rawFlags, uint32_t unknownBits);
+	[[nodiscard]] const InvalidZoneState* getInvalidZones() const;
+	[[nodiscard]] bool hasInvalidZones() const;
 
 	bool isSelected() const {
 		return testFlags(statflags, TILESTATE_SELECTED);
@@ -232,9 +243,9 @@ public: // Functions
 	void setHouse(House* house);
 
 	// Mapflags (PZ, PVPZONE etc.)
-	void setMapFlags(uint16_t _flags);
-	void unsetMapFlags(uint16_t _flags);
-	uint16_t getMapFlags() const;
+	void setMapFlags(uint32_t _flags);
+	void unsetMapFlags(uint32_t _flags);
+	uint32_t getMapFlags() const;
 
 	// Statflags (You really ought not to touch this)
 	void setStatFlags(uint16_t _flags);
@@ -262,15 +273,53 @@ inline uint32_t Tile::getHouseID() const {
 	return house_id;
 }
 
-inline void Tile::setMapFlags(uint16_t _flags) {
+inline InvalidZoneState& Tile::getOrCreateInvalidZones() {
+	if (!invalidZones) {
+		invalidZones.emplace();
+	}
+	return *invalidZones;
+}
+
+inline void Tile::clearInvalidZones() {
+	invalidZones.reset();
+}
+
+inline void Tile::addOpaqueTileAttribute(OpaqueTileAttributeRecord record) {
+	auto& state = getOrCreateInvalidZones();
+	state.hasStructuralMismatch = true;
+	state.opaqueTileAttributes.push_back(std::move(record));
+}
+
+inline void Tile::addOpaqueChildNode(PreservedOTBMNode node) {
+	auto& state = getOrCreateInvalidZones();
+	state.hasStructuralMismatch = true;
+	state.opaqueChildNodes.push_back(std::move(node));
+}
+
+inline void Tile::recordUnknownMapFlags(uint32_t rawFlags, uint32_t unknownBits) {
+	auto& state = getOrCreateInvalidZones();
+	state.rawMapFlags = rawFlags;
+	state.unknownMapFlagBits |= unknownBits;
+	state.hasStructuralMismatch = state.hasStructuralMismatch || unknownBits != 0;
+}
+
+inline const InvalidZoneState* Tile::getInvalidZones() const {
+	return invalidZones ? &*invalidZones : nullptr;
+}
+
+inline bool Tile::hasInvalidZones() const {
+	return invalidZones && invalidZones->hasContent();
+}
+
+inline void Tile::setMapFlags(uint32_t _flags) {
 	mapflags = _flags | mapflags;
 }
 
-inline void Tile::unsetMapFlags(uint16_t _flags) {
+inline void Tile::unsetMapFlags(uint32_t _flags) {
 	mapflags &= ~_flags;
 }
 
-inline uint16_t Tile::getMapFlags() const {
+inline uint32_t Tile::getMapFlags() const {
 	return mapflags;
 }
 

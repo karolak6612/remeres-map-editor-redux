@@ -1,5 +1,6 @@
 #include "map/map_converter.h"
 #include "map/map.h"
+#include "map/tile_operations.h"
 #include "ui/gui.h"
 #include "item_definitions/core/item_definition_store.h"
 #include "game/item.h"
@@ -175,10 +176,48 @@ void MapConverter::cleanInvalidTiles(Map& map, bool showdialog) {
 			continue;
 		}
 
+		if (tile->ground && tile->ground->isInvalidOTBMItem()) {
+			tile->ground.reset();
+		}
+
 		// Use std::erase_if from C++20 for cleanup
 		std::erase_if(tile->items, [](const std::unique_ptr<Item>& item) {
-			return !g_item_definitions.typeExists(item->getID());
+			return item->isInvalidOTBMItem() || !g_item_definitions.typeExists(item->getID());
 		});
+
+		TileOperations::update(tile);
+
+		++tiles_done;
+		if (showdialog && tiles_done % 0x10000 == 0) {
+			g_gui.SetLoadDone(static_cast<int>(tiles_done * 100.0 / static_cast<double>(map.getTileCount())));
+		}
+	}
+
+	if (showdialog) {
+		g_gui.DestroyLoadBar();
+	}
+}
+
+void MapConverter::cleanInvalidZones(Map& map, bool showdialog) {
+	if (showdialog) {
+		g_gui.CreateLoadBar("Removing invalid zones...");
+	}
+
+	uint64_t tiles_done = 0;
+
+	for (auto& tile_loc : map.tiles()) {
+		Tile* tile = tile_loc.get();
+		ASSERT(tile);
+
+		if (!tile->hasInvalidZones()) {
+			continue;
+		}
+
+		if (const InvalidZoneState* invalidZones = tile->getInvalidZones(); invalidZones && invalidZones->unknownMapFlagBits != 0) {
+			tile->unsetMapFlags(invalidZones->unknownMapFlagBits);
+		}
+		tile->clearInvalidZones();
+		TileOperations::update(tile);
 
 		++tiles_done;
 		if (showdialog && tiles_done % 0x10000 == 0) {

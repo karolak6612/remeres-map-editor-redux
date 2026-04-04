@@ -131,6 +131,7 @@ namespace TileOperations {
 		copy->statflags = tile->statflags;
 		copy->minimapColor = tile->minimapColor;
 		copy->house_id = tile->house_id;
+		copy->invalidZones = tile->invalidZones;
 		if (tile->spawn) {
 			copy->spawn = tile->spawn->deepCopy();
 		}
@@ -168,6 +169,9 @@ namespace TileOperations {
 
 		if (src->spawn) {
 			dest->spawn = std::move(src->spawn);
+		}
+		if (src->invalidZones) {
+			dest->invalidZones = std::move(src->invalidZones);
 		}
 
 		dest->items.reserve(dest->items.size() + src->items.size());

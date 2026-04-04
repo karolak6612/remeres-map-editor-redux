@@ -21,6 +21,7 @@
 #include "item_definitions/core/item_definition_store.h"
 #include <string_view>
 #include "io/iomap_otbm.h"
+#include "io/otbm/invalid_otbm_content.h"
 #include "game/item_attributes.h"
 #include "brushes/doodad/doodad_brush.h"
 #include "brushes/raw/raw_brush.h"
@@ -190,6 +191,21 @@ public:
 	bool typeExists() const {
 		return g_item_definitions.typeExists(id);
 	}
+	[[nodiscard]] bool isInvalidOTBMItem() const {
+		return invalidOtbmData.has_value();
+	}
+	[[nodiscard]] const InvalidOTBMItemData* getInvalidOTBMData() const {
+		return invalidOtbmData ? &*invalidOtbmData : nullptr;
+	}
+	void setInvalidOTBMData(InvalidOTBMItemData data) {
+		invalidOtbmData = std::move(data);
+	}
+	void clearInvalidOTBMData() {
+		invalidOtbmData.reset();
+	}
+	[[nodiscard]] InvalidOTBMItemMarkerColor invalidOTBMMarkerColor() const {
+		return invalidOtbmData ? invalidOtbmData->markerColor() : InvalidOTBMItemMarkerColor::None;
+	}
 
 	// Usual attributes
 	[[nodiscard]] virtual double getWeight() const;
@@ -283,7 +299,7 @@ public:
 		return static_cast<int>(getDefinition().attribute(ItemAttributeKey::AlwaysOnTopOrder));
 	}
 	bool isGroundTile() const {
-		return getDefinition().isGroundTile();
+		return getDefinition().isGroundTile() || (invalidOtbmData && invalidOtbmData->isGroundLike());
 	}
 	bool isSplash() const {
 		return getDefinition().isSplash();
@@ -373,10 +389,19 @@ public:
 
 	// Get the name!
 	std::string_view getName() const {
-		return getDefinition().name();
+		if (const auto definition = getDefinition()) {
+			return definition.name();
+		}
+		if (invalidOtbmData) {
+			return "Invalid Item";
+		}
+		return {};
 	}
 	const std::string getFullName() const {
 		const auto definition = getDefinition();
+		if (!definition) {
+			return invalidOtbmData ? std::string("Invalid Item") : std::string();
+		}
 		return std::string(definition.name()) + std::string(definition.editorSuffix());
 	}
 
@@ -436,6 +461,7 @@ protected:
 	// Subtype is either fluid type, count, subtype or charges
 	uint16_t subtype;
 	bool selected;
+	std::optional<InvalidOTBMItemData> invalidOtbmData;
 
 private:
 	Item& operator=(const Item& i); // Can't copy

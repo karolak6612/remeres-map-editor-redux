@@ -198,9 +198,17 @@ void MapActionsHandler::OnRandomizeMap(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MapActionsHandler::OnMapCleanup(wxCommandEvent& WXUNUSED(event)) {
-	int ok = DialogUtil::PopupDialog("Clean map", "Do you want to remove all invalid items from the map?", wxYES | wxNO);
+	int ok = DialogUtil::PopupDialog("Cleanup invalid tiles", "Do you want to remove all invalid or unresolved items from the map?", wxYES | wxNO);
 
 	if (ok == wxID_YES) {
 		g_gui.GetCurrentMap().cleanInvalidTiles(true);
+	}
+}
+
+void MapActionsHandler::OnMapCleanInvalidZones(wxCommandEvent& WXUNUSED(event)) {
+	int ok = DialogUtil::PopupDialog("Cleanup invalid zones", "Do you want to remove all invalid tile flags and opaque OTBM tile fragments from the map?", wxYES | wxNO);
+
+	if (ok == wxID_YES) {
+		g_gui.GetCurrentMap().cleanInvalidZones(true);
 	}
 }

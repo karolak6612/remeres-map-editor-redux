@@ -31,6 +31,7 @@
 #include <format>
 #include <iterator>
 #include <cstring>
+#include <string_view>
 
 class wxFileName;
 using FileName = wxFileName;
@@ -193,6 +194,9 @@ public:
 	}
 	size_t getReadOffset() const {
 		return read_offset;
+	}
+	std::string_view rawData() const {
+		return data;
 	}
 	std::string hexDump(size_t maxBytes = 32) const {
 		size_t count = std::min(maxBytes, data.size());
