@@ -21,6 +21,11 @@
 #include "map/position.h"
 #include "game/item.h"
 
+enum class ItemInsertMode : uint8_t {
+	PreserveIdentity,
+	ApplyGroundEquivalent,
+};
+
 namespace TileOperations {
 	void update(class Tile* tile);
 	void markSelectionChanged(class Tile* tile);
@@ -153,7 +158,7 @@ public: // Functions
 	int getIndexOf(Item* item) const;
 	Item* getTopItem() const; // Returns the topmost item, or nullptr if the tile is empty
 	Item* getItemAt(int index) const;
-	void addItem(std::unique_ptr<Item> item);
+	void addItem(std::unique_ptr<Item> item, ItemInsertMode mode = ItemInsertMode::PreserveIdentity);
 
 	bool isSelected() const {
 		return testFlags(statflags, TILESTATE_SELECTED);

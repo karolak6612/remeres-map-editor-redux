@@ -266,7 +266,7 @@ Item* Tile::getItemAt(int index) const {
 	return nullptr;
 }
 
-void Tile::addItem(std::unique_ptr<Item> item) {
+void Tile::addItem(std::unique_ptr<Item> item, ItemInsertMode mode) {
 	if (!item) {
 		return;
 	}
@@ -276,10 +276,10 @@ void Tile::addItem(std::unique_ptr<Item> item) {
 		return;
 	}
 
-	uint16_t gid = item->getGroundEquivalent();
+	const uint16_t gid = item->getGroundEquivalent();
 	auto it = items.begin();
 
-	if (gid != 0) {
+	if (mode == ItemInsertMode::ApplyGroundEquivalent && gid != 0) {
 		ground = Item::Create(gid);
 		TileOperations::update(this);
 		return;
