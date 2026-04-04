@@ -367,7 +367,7 @@ namespace LuaAPI {
 
 			// Items collection (read-only - use addItem/removeItem to modify)
 			"items", sol::property(getTileItems),
-			"itemCount", sol::property([](Tile* tile) { return tile ? tile->size() : 0; }),
+			"itemCount", sol::property([](Tile* tile) { return tile ? static_cast<int>(tile->items.size()) : 0; }),
 
 			// House
 			"houseId", sol::property([](Tile* tile) -> uint32_t { return tile ? tile->getHouseID() : 0; }, setTileHouseId),

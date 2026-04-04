@@ -213,9 +213,6 @@ void MapConverter::cleanInvalidZones(Map& map, bool showdialog) {
 			continue;
 		}
 
-		if (const InvalidZoneState* invalidZones = tile->getInvalidZones(); invalidZones && invalidZones->unknownMapFlagBits != 0) {
-			tile->unsetMapFlags(invalidZones->unknownMapFlagBits);
-		}
 		tile->clearInvalidZones();
 		TileOperations::update(tile);
 

@@ -131,7 +131,9 @@ namespace TileOperations {
 		copy->statflags = tile->statflags;
 		copy->minimapColor = tile->minimapColor;
 		copy->house_id = tile->house_id;
-		copy->invalidZones = tile->invalidZones;
+		if (tile->invalidZones) {
+			copy->invalidZones = std::make_unique<InvalidZoneState>(*tile->invalidZones);
+		}
 		if (tile->spawn) {
 			copy->spawn = tile->spawn->deepCopy();
 		}

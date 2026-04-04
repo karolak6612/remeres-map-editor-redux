@@ -36,7 +36,6 @@ class Map;
 #include <unordered_set>
 #include <cstdint>
 #include <memory>
-#include <optional>
 #include <vector>
 
 // TileOperations functions are now in tile_operations.h
@@ -78,7 +77,7 @@ public: // Members
 	uint32_t mapflags;
 	uint16_t statflags;
 	uint8_t minimapColor;
-	std::optional<InvalidZoneState> invalidZones;
+	std::unique_ptr<InvalidZoneState> invalidZones;
 
 public:
 	// ALWAYS use this constructor if the Tile is EVER going to be placed on a map
@@ -275,12 +274,15 @@ inline uint32_t Tile::getHouseID() const {
 
 inline InvalidZoneState& Tile::getOrCreateInvalidZones() {
 	if (!invalidZones) {
-		invalidZones.emplace();
+		invalidZones = std::make_unique<InvalidZoneState>();
 	}
 	return *invalidZones;
 }
 
 inline void Tile::clearInvalidZones() {
+	if (invalidZones && invalidZones->unknownMapFlagBits != 0) {
+		unsetMapFlags(invalidZones->unknownMapFlagBits);
+	}
 	invalidZones.reset();
 }
 
@@ -304,7 +306,7 @@ inline void Tile::recordUnknownMapFlags(uint32_t rawFlags, uint32_t unknownBits)
 }
 
 inline const InvalidZoneState* Tile::getInvalidZones() const {
-	return invalidZones ? &*invalidZones : nullptr;
+	return invalidZones.get();
 }
 
 inline bool Tile::hasInvalidZones() const {

@@ -32,13 +32,12 @@
 #include <memory>
 
 namespace {
-	uint32_t preservedNodeMemsize(const PreservedOTBMNode& node) {
+	uint32_t preservedNodeHeapSize(const PreservedOTBMNode& node) {
 		uint32_t bytes = static_cast<uint32_t>(node.rawPayload.capacity());
-		bytes += sizeof(PreservedOTBMNode);
-		for (const auto& child : node.children) {
-			bytes += preservedNodeMemsize(child);
-		}
 		bytes += static_cast<uint32_t>(node.children.capacity() * sizeof(PreservedOTBMNode));
+		for (const auto& child : node.children) {
+			bytes += preservedNodeHeapSize(child);
+		}
 		return bytes;
 	}
 }
@@ -156,7 +155,9 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 	copy->mapflags = mapflags;
 	copy->statflags = statflags;
 	copy->minimapColor = minimapColor;
-	copy->invalidZones = invalidZones;
+	if (invalidZones) {
+		copy->invalidZones = std::make_unique<InvalidZoneState>(*invalidZones);
+	}
 	return copy;
 }
 
@@ -182,7 +183,7 @@ uint32_t Tile::memsize() const {
 		}
 		mem += static_cast<uint32_t>(invalidZones->opaqueChildNodes.capacity() * sizeof(PreservedOTBMNode));
 		for (const auto& node : invalidZones->opaqueChildNodes) {
-			mem += preservedNodeMemsize(node);
+			mem += preservedNodeHeapSize(node);
 		}
 	}
 
@@ -433,7 +434,10 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
-	if (invalidZones != other->invalidZones) {
+	if (static_cast<bool>(invalidZones) != static_cast<bool>(other->invalidZones)) {
+		return false;
+	}
+	if (invalidZones && other->invalidZones && *invalidZones != *other->invalidZones) {
 		return false;
 	}
 

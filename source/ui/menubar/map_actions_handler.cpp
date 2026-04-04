@@ -206,6 +206,10 @@ void MapActionsHandler::OnMapCleanup(wxCommandEvent& WXUNUSED(event)) {
 }
 
 void MapActionsHandler::OnMapCleanInvalidZones(wxCommandEvent& WXUNUSED(event)) {
+	if (!g_gui.IsEditorOpen()) {
+		return;
+	}
+
 	int ok = DialogUtil::PopupDialog("Cleanup invalid zones", "Do you want to remove all invalid tile flags and opaque OTBM tile fragments from the map?", wxYES | wxNO);
 
 	if (ok == wxID_YES) {

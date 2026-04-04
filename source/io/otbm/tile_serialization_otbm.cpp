@@ -330,9 +330,10 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 	if (save_tile->ground) {
 		Item* ground = save_tile->ground.get();
 		if (!ground->isMetaItem()) {
-			if (const InvalidOTBMItemData* invalidData = ground->getInvalidOTBMData(); invalidData && invalidData->hasRawInlineBytes()) {
+			const InvalidOTBMItemData* invalidData = ground->getInvalidOTBMData();
+			if (invalidData && invalidData->hasRawInlineBytes()) {
 				writeRawInlineBytes(f, invalidData->rawInlineBytes);
-			} else if (const InvalidOTBMItemData* invalidData = ground->getInvalidOTBMData(); invalidData && invalidData->hasRawNode()) {
+			} else if (invalidData && invalidData->hasRawNode()) {
 				writePreservedNode(f, *invalidData->rawNode);
 			} else if (ground->isComplex()) {
 				ItemSerializationOTBM::serializeItemNode(iomap, f, *ground);
@@ -345,9 +346,10 @@ void TileSerializationOTBM::serializeTile(const IOMapOTBM& iomap, const Tile* sa
 
 	for (const auto& item : save_tile->items) {
 		if (!item->isMetaItem()) {
-			if (const InvalidOTBMItemData* invalidData = item->getInvalidOTBMData(); invalidData && invalidData->hasRawInlineBytes()) {
+			const InvalidOTBMItemData* invalidData = item->getInvalidOTBMData();
+			if (invalidData && invalidData->hasRawInlineBytes()) {
 				writeRawInlineBytes(f, invalidData->rawInlineBytes);
-			} else if (const InvalidOTBMItemData* invalidData = item->getInvalidOTBMData(); invalidData && invalidData->hasRawNode()) {
+			} else if (invalidData && invalidData->hasRawNode()) {
 				writePreservedNode(f, *invalidData->rawNode);
 			} else {
 				ItemSerializationOTBM::serializeItemNode(iomap, f, *item);

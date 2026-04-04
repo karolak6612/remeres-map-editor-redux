@@ -12,7 +12,7 @@ struct PreservedOTBMNode {
 	bool operator==(const PreservedOTBMNode&) const = default;
 
 	[[nodiscard]] bool empty() const {
-		return rawPayload.empty();
+		return rawPayload.empty() && children.empty();
 	}
 };
 
