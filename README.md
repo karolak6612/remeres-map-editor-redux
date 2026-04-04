@@ -88,7 +88,7 @@ The terms are simple:
 **Links:**
 
 - [PL] Suppi by Patronite → https://suppi.pl/karolak6612
-- [World] https://ko-fi.com/karolak6612
+- [World] https://revolut.me/karolak6612
 
 ## Some media
 
