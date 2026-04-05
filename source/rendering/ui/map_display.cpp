@@ -479,6 +479,9 @@ void MapCanvas::OnMouseRightRelease(wxMouseEvent& event) {
 
 void MapCanvas::OnMouseActionClick(wxMouseEvent& event) {
 	SetFocus();
+	if (auto* map_window = GetMapWindow()) {
+		map_window->ResumeMinimapTrackingToCurrentView();
+	}
 
 	int mouse_map_x, mouse_map_y;
 	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);
@@ -537,6 +540,9 @@ void MapCanvas::OnMouseActionRelease(wxMouseEvent& event) {
 
 void MapCanvas::OnMouseCameraClick(wxMouseEvent& event) {
 	SetFocus();
+	if (auto* map_window = GetMapWindow()) {
+		map_window->ResumeMinimapTrackingToCurrentView();
+	}
 
 	last_mmb_click_x = event.GetX();
 	last_mmb_click_y = event.GetY();
@@ -553,6 +559,9 @@ void MapCanvas::OnMouseCameraRelease(wxMouseEvent& event) {
 
 void MapCanvas::OnMousePropertiesClick(wxMouseEvent& event) {
 	SetFocus();
+	if (auto* map_window = GetMapWindow()) {
+		map_window->ResumeMinimapTrackingToCurrentView();
+	}
 
 	int mouse_map_x, mouse_map_y;
 	ScreenToMap(event.GetX(), event.GetY(), &mouse_map_x, &mouse_map_y);

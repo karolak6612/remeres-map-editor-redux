@@ -186,6 +186,11 @@ void MapWindow::ResetMinimapViewportToCurrentView() {
 	SyncTrackedMinimapViewportToCurrentView(true);
 }
 
+void MapWindow::ResumeMinimapTrackingToCurrentView(bool reset_zoom) {
+	minimap_viewport_state.tracking_main_camera = true;
+	SyncTrackedMinimapViewportToCurrentView(reset_zoom);
+}
+
 void MapWindow::SyncTrackedMinimapViewportToCurrentView(bool reset_zoom) {
 	if (minimap_viewport_state.initialized && !minimap_viewport_state.tracking_main_camera && !reset_zoom) {
 		return;

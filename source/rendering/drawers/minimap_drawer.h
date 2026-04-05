@@ -45,6 +45,7 @@ private:
 	};
 
 	VisibleWorldRect BuildVisibleWorldRect(const wxSize& size, Editor& editor, const MinimapViewportState& viewport_state);
+	void DrawFloorShade(const glm::mat4& projection, const wxSize& size);
 	void DrawMainCameraBox(const glm::mat4& projection, const wxSize& size, MapCanvas& canvas, const VisibleWorldRect& visible_rect);
 
 	std::unique_ptr<MinimapRenderer> renderer;

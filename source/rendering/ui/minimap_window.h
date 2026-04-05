@@ -14,6 +14,7 @@ class MinimapCanvas;
 class wxButton;
 class wxPanel;
 class wxStaticText;
+class wxToggleButton;
 
 struct MinimapViewportState;
 
@@ -28,6 +29,7 @@ public:
 
 	void StepZoom(int delta);
 	void StepFloor(int delta);
+	void SetShowAllFloors(bool show_all_floors);
 	void JumpCameraTo(int map_x, int map_y);
 
 	Editor* GetActiveEditor() const;
@@ -43,6 +45,7 @@ private:
 	void OnZoomIn(wxCommandEvent& event);
 	void OnFloorUp(wxCommandEvent& event);
 	void OnFloorDown(wxCommandEvent& event);
+	void OnShowAllFloorsToggle(wxCommandEvent& event);
 	void OnHelpEnter(wxMouseEvent& event);
 	void OnHelpLeave(wxMouseEvent& event);
 	void OnHelpClick(wxCommandEvent& event);
@@ -55,6 +58,7 @@ private:
 	wxButton* floor_up_button_ = nullptr;
 	wxButton* floor_down_button_ = nullptr;
 	wxButton* help_button_ = nullptr;
+	wxToggleButton* show_all_floors_button_ = nullptr;
 	wxStaticText* zoom_label_ = nullptr;
 	wxStaticText* floor_label_ = nullptr;
 	wxPanel* help_panel_ = nullptr;

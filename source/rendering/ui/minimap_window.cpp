@@ -5,6 +5,7 @@
 #include <wx/button.h>
 #include <wx/sizer.h>
 #include <wx/stattext.h>
+#include <wx/tglbtn.h>
 
 #include "editor/editor.h"
 #include "rendering/drawers/minimap_drawer.h"
@@ -45,6 +46,13 @@ wxButton* createHeaderButton(wxWindow* parent, const wxBitmap& bitmap, const wxS
 	return button;
 }
 
+wxToggleButton* createHeaderToggleButton(wxWindow* parent, const wxString& label) {
+	const wxSize button_size = dipSize(parent, wxSize(32, 22));
+	auto* button = new wxToggleButton(parent, wxID_ANY, label, wxDefaultPosition, button_size, wxBU_EXACTFIT);
+	button->SetMinSize(button_size);
+	return button;
+}
+
 wxPanel* createSeparator(wxWindow* parent) {
 	const wxSize separator_size = dipSize(parent, wxSize(1, 18));
 	auto* separator = new wxPanel(parent, wxID_ANY, wxDefaultPosition, separator_size);
@@ -68,8 +76,9 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	zoom_in_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_PLUS, icon_size));
 	floor_up_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_ARROW_UP, icon_size));
 	floor_down_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_ARROW_DOWN, icon_size));
+	show_all_floors_button_ = createHeaderToggleButton(this, "All");
 	help_button_ = createHeaderButton(this, IMAGE_MANAGER.GetBitmap(ICON_QUESTION_CIRCLE, icon_size));
-	zoom_label_ = new wxStaticText(this, wxID_ANY, "1:1");
+	zoom_label_ = new wxStaticText(this, wxID_ANY, "9");
 	floor_label_ = new wxStaticText(this, wxID_ANY, "F: 7");
 
 	header_sizer->Add(zoom_out_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
@@ -79,6 +88,8 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	header_sizer->Add(floor_label_, 0, wxLEFT | wxRIGHT | wxALIGN_CENTER_VERTICAL, pad_4);
 	header_sizer->Add(floor_up_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
 	header_sizer->Add(floor_down_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
+	header_sizer->Add(createSeparator(this), 0, wxLEFT | wxRIGHT | wxALIGN_CENTER_VERTICAL, pad_6);
+	header_sizer->Add(show_all_floors_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
 	header_sizer->Add(createSeparator(this), 0, wxLEFT | wxRIGHT | wxALIGN_CENTER_VERTICAL, pad_6);
 	header_sizer->Add(help_button_, 0, wxALL | wxALIGN_CENTER_VERTICAL, pad_2);
 	header_sizer->AddStretchSpacer(1);
@@ -107,6 +118,7 @@ MinimapWindow::MinimapWindow(wxWindow* parent) :
 	zoom_in_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnZoomIn, this);
 	floor_up_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnFloorUp, this);
 	floor_down_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnFloorDown, this);
+	show_all_floors_button_->Bind(wxEVT_TOGGLEBUTTON, &MinimapWindow::OnShowAllFloorsToggle, this);
 	help_button_->Bind(wxEVT_BUTTON, &MinimapWindow::OnHelpClick, this);
 	help_button_->Bind(wxEVT_ENTER_WINDOW, &MinimapWindow::OnHelpEnter, this);
 	help_button_->Bind(wxEVT_LEAVE_WINDOW, &MinimapWindow::OnHelpLeave, this);
@@ -138,12 +150,14 @@ void MinimapWindow::RefreshMinimap(bool immediate) {
 
 void MinimapWindow::SyncHeaderState() {
 	if (g_gui.IsLoading()) {
-		zoom_label_->SetLabel("1:1");
+		zoom_label_->SetLabel("9");
 		floor_label_->SetLabel("F: -");
 		zoom_out_button_->Enable(false);
 		zoom_in_button_->Enable(false);
 		floor_up_button_->Enable(false);
 		floor_down_button_->Enable(false);
+		show_all_floors_button_->SetValue(true);
+		show_all_floors_button_->Enable(false);
 	} else if (auto* state = GetActiveViewportState()) {
 		zoom_label_->SetLabel(wxString::FromUTF8(MinimapViewport::GetZoomLabel(state->zoom_step).data()));
 		const std::string floor_label = std::format("F: {}", state->floor);
@@ -152,13 +166,17 @@ void MinimapWindow::SyncHeaderState() {
 		zoom_in_button_->Enable(state->zoom_step < static_cast<int>(MinimapViewport::ZoomFactors.size()) - 1);
 		floor_up_button_->Enable(state->floor > 0);
 		floor_down_button_->Enable(state->floor < MAP_MAX_LAYER);
+		show_all_floors_button_->SetValue(state->show_all_floors);
+		show_all_floors_button_->Enable(true);
 	} else {
-		zoom_label_->SetLabel("1:1");
+		zoom_label_->SetLabel("9");
 		floor_label_->SetLabel("F: -");
 		zoom_out_button_->Enable(false);
 		zoom_in_button_->Enable(false);
 		floor_up_button_->Enable(false);
 		floor_down_button_->Enable(false);
+		show_all_floors_button_->SetValue(true);
+		show_all_floors_button_->Enable(false);
 	}
 }
 
@@ -181,6 +199,18 @@ void MinimapWindow::StepFloor(int delta) {
 		const int next_floor = MinimapViewport::ClampFloor(state->floor + delta);
 		if (next_floor != state->floor) {
 			state->floor = next_floor;
+			if (canvas_) {
+				canvas_->Refresh();
+			}
+		}
+	}
+	SyncHeaderState();
+}
+
+void MinimapWindow::SetShowAllFloors(bool show_all_floors) {
+	if (auto* state = GetActiveViewportState()) {
+		if (state->show_all_floors != show_all_floors) {
+			state->show_all_floors = show_all_floors;
 			if (canvas_) {
 				canvas_->Refresh();
 			}
@@ -274,6 +304,10 @@ void MinimapWindow::OnFloorUp(wxCommandEvent& event) {
 void MinimapWindow::OnFloorDown(wxCommandEvent& event) {
 	wxUnusedVar(event);
 	StepFloor(1);
+}
+
+void MinimapWindow::OnShowAllFloorsToggle(wxCommandEvent& event) {
+	SetShowAllFloors(event.IsChecked());
 }
 
 void MinimapWindow::OnHelpEnter(wxMouseEvent& event) {
@@ -502,7 +536,7 @@ void MinimapCanvas::OnMouseWheel(wxMouseEvent& event) {
 	}
 
 	if (event.ControlDown()) {
-		owner_->StepFloor(event.GetWheelRotation() > 0 ? -1 : 1);
+		owner_->StepFloor(event.GetWheelRotation() > 0 ? 1 : -1);
 	} else {
 		auto* state = owner_->GetActiveViewportState();
 		Editor* editor = owner_->GetActiveEditor();

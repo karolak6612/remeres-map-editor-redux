@@ -22,6 +22,33 @@ namespace {
 	return std::clamp(value, 0.0, static_cast<double>(limit - 1));
 }
 
+struct MinimapFloorRenderRange {
+	int start_floor = GROUND_LAYER;
+	int current_floor = GROUND_LAYER;
+};
+
+[[nodiscard]] MinimapFloorRenderRange getFloorRenderRange(const MinimapViewportState& viewport_state) {
+	const int current_floor = MinimapViewport::ClampFloor(viewport_state.floor);
+	if (!viewport_state.show_all_floors) {
+		return {
+			.start_floor = current_floor,
+			.current_floor = current_floor,
+		};
+	}
+
+	if (current_floor <= GROUND_LAYER) {
+		return {
+			.start_floor = GROUND_LAYER,
+			.current_floor = current_floor,
+		};
+	}
+
+	return {
+		.start_floor = std::min(MAP_MAX_LAYER, current_floor + 2),
+		.current_floor = current_floor,
+	};
+}
+
 } // namespace
 
 MinimapDrawer::MinimapDrawer() :
@@ -91,6 +118,14 @@ void MinimapDrawer::DrawMainCameraBox(const glm::mat4& projection, const wxSize&
 	primitive_renderer->flush();
 }
 
+void MinimapDrawer::DrawFloorShade(const glm::mat4& projection, const wxSize& size) {
+	primitive_renderer->setProjectionMatrix(projection);
+	primitive_renderer->drawRect(
+		glm::vec4(0.0f, 0.0f, static_cast<float>(size.GetWidth()), static_cast<float>(size.GetHeight())),
+		glm::vec4(0.0f, 0.0f, 0.0f, 0.45f));
+	primitive_renderer->flush();
+}
+
 void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanvas& canvas, const MinimapViewportState& viewport_state) {
 	wxUnusedVar(pdc);
 
@@ -151,7 +186,7 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		return;
 	}
 
-	const int floor = MinimapViewport::ClampFloor(viewport_state.floor);
+	const auto floor_range = getFloorRenderRange(viewport_state);
 	const MinimapDirtyRect visible_rect_pixels = {
 		.x = static_cast<int>(std::floor(visible_rect.start_x)),
 		.y = static_cast<int>(std::floor(visible_rect.start_y)),
@@ -159,8 +194,17 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 		.height = std::max(1, static_cast<int>(std::ceil(visible_rect.start_y + visible_rect.height)) - static_cast<int>(std::floor(visible_rect.start_y))),
 	};
 
-	renderer->flushVisible(editor.map, floor, visible_rect_pixels);
-	renderer->renderVisible(projection, 0, 0, window_width, window_height, floor, visible_rect_pixels);
+	for (int floor = floor_range.start_floor; floor > floor_range.current_floor; --floor) {
+		renderer->flushVisible(editor.map, floor, visible_rect_pixels);
+		renderer->renderVisible(projection, 0, 0, window_width, window_height, floor, visible_rect_pixels);
+	}
+
+	if (floor_range.start_floor > floor_range.current_floor) {
+		DrawFloorShade(projection, size);
+	}
+
+	renderer->flushVisible(editor.map, floor_range.current_floor, visible_rect_pixels);
+	renderer->renderVisible(projection, 0, 0, window_width, window_height, floor_range.current_floor, visible_rect_pixels);
 	DrawMainCameraBox(projection, size, canvas, visible_rect);
 }
 

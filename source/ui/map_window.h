@@ -77,6 +77,7 @@ public:
 	void GoToPreviousCenterPosition();
 	void EnsureMinimapViewportInitialized();
 	void ResetMinimapViewportToCurrentView();
+	void ResumeMinimapTrackingToCurrentView(bool reset_zoom = false);
 	void SyncTrackedMinimapViewportToCurrentView(bool reset_zoom = false);
 	MinimapViewportState& GetMinimapViewportState() {
 		return minimap_viewport_state;

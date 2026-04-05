@@ -29,7 +29,7 @@ void ZoomController::SetZoom(MapCanvas* canvas, double value) {
 
 		canvas->zoom = value;
 		static_cast<MapWindow*>(canvas->GetParent())->SetScreenCenterPosition(Position(center_x, center_y, canvas->floor));
-		static_cast<MapWindow*>(canvas->GetParent())->SyncTrackedMinimapViewportToCurrentView();
+		static_cast<MapWindow*>(canvas->GetParent())->ResumeMinimapTrackingToCurrentView();
 
 		canvas->UpdatePositionStatus();
 		UpdateStatus(canvas);
@@ -61,8 +61,8 @@ void ZoomController::ApplyRelativeZoom(MapCanvas* canvas, double diff) {
 	int scroll_x = static_cast<int>(screensize_x * diff * (std::max(canvas->cursor_x, 1) / double(screensize_x))) * canvas->GetContentScaleFactor();
 	int scroll_y = static_cast<int>(screensize_y * diff * (std::max(canvas->cursor_y, 1) / double(screensize_y))) * canvas->GetContentScaleFactor();
 
+	static_cast<MapWindow*>(canvas->GetParent())->ResumeMinimapTrackingToCurrentView();
 	static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(-scroll_x, -scroll_y);
-	static_cast<MapWindow*>(canvas->GetParent())->SyncTrackedMinimapViewportToCurrentView();
 
 	g_gui.UpdateMinimap(true);
 	canvas->Refresh();
