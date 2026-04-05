@@ -379,6 +379,24 @@ void MapCanvas::UpdateZoomStatus() {
 	ZoomController::UpdateStatus(this);
 }
 
+void MapCanvas::SyncCursorHoverState() {
+	int mouse_map_x, mouse_map_y;
+	MouseToMap(&mouse_map_x, &mouse_map_y);
+
+	const bool map_update = last_cursor_map_x != mouse_map_x || last_cursor_map_y != mouse_map_y || last_cursor_map_z != floor;
+	last_cursor_map_x = mouse_map_x;
+	last_cursor_map_y = mouse_map_y;
+	last_cursor_map_z = floor;
+
+	g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
+	UpdatePositionStatus(cursor_x, cursor_y);
+	UpdateZoomStatus();
+
+	if (map_update) {
+		Refresh();
+	}
+}
+
 void MapCanvas::OnMouseMove(wxMouseEvent& event) {
 	NavigationController::HandleMouseDrag(this, event);
 

@@ -173,7 +173,26 @@ namespace TileOperations {
 			dest->spawn = std::move(src->spawn);
 		}
 		if (src->invalidZones) {
-			dest->invalidZones = std::move(src->invalidZones);
+			auto& dest_invalid_zones = dest->getOrCreateInvalidZones();
+			auto& src_invalid_zones = *src->invalidZones;
+
+			dest_invalid_zones.hasStructuralMismatch = dest_invalid_zones.hasStructuralMismatch || src_invalid_zones.hasStructuralMismatch;
+			dest_invalid_zones.rawMapFlags |= src_invalid_zones.rawMapFlags;
+			dest_invalid_zones.unknownMapFlagBits |= src_invalid_zones.unknownMapFlagBits;
+
+			dest->setMapFlags(dest->getMapFlags() | src_invalid_zones.unknownMapFlagBits);
+
+			dest_invalid_zones.opaqueTileAttributes.reserve(dest_invalid_zones.opaqueTileAttributes.size() + src_invalid_zones.opaqueTileAttributes.size());
+			for (auto& attribute : src_invalid_zones.opaqueTileAttributes) {
+				dest_invalid_zones.opaqueTileAttributes.push_back(std::move(attribute));
+			}
+
+			dest_invalid_zones.opaqueChildNodes.reserve(dest_invalid_zones.opaqueChildNodes.size() + src_invalid_zones.opaqueChildNodes.size());
+			for (auto& node : src_invalid_zones.opaqueChildNodes) {
+				dest_invalid_zones.opaqueChildNodes.push_back(std::move(node));
+			}
+
+			src->invalidZones.reset();
 		}
 
 		dest->items.reserve(dest->items.size() + src->items.size());

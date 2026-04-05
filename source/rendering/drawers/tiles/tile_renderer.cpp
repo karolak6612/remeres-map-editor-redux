@@ -203,9 +203,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	const auto& position = location->getPosition();
 
+	ItemDefinitionView ground_it;
+	if (tile->ground) {
+		ground_it = tile->ground->getDefinition();
+	}
+
+	const bool hidden_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !options.show_invalid_tiles;
+	const bool unresolved_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !ground_it;
+
 	// Light Processing (Ground)
 	if (light_buffer && tile->hasLight()) {
-		if (tile->ground && tile->ground->hasLight()) {
+		if (tile->ground && tile->ground->hasLight() && !hidden_invalid_ground && !unresolved_invalid_ground) {
 			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
 		}
 	}
@@ -230,10 +238,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
-	ItemDefinitionView ground_it;
-	if (tile->ground) {
-		ground_it = tile->ground->getDefinition();
-	}
 	InvalidOTBMItemMarkerColor invalid_tile_marker_color = InvalidOTBMItemMarkerColor::None;
 	bool has_selected_invalid_item = false;
 
@@ -250,8 +254,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
-		const bool hidden_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !options.show_invalid_tiles;
-		const bool unresolved_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !ground_it;
 		if (tile->ground && ground_it && !hidden_invalid_ground) {
 			if (GameSprite* ground_sprite = tile->ground->getSprite()) {
 				SpritePatterns patterns = PatternCalculator::Calculate(ground_sprite, ground_it, tile->ground.get(), tile, position);
@@ -413,13 +415,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			}
 		}
 
+		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {
+			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, DrawColor(255, 0, 255, 171));
+		}
+
 		if (options.show_invalid_tiles && !as_minimap && invalid_tile_marker_color != InvalidOTBMItemMarkerColor::None) {
 			const DrawColor overlay = invalidTileOverlayColor(invalid_tile_marker_color, has_selected_invalid_item);
 			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, overlay);
-		}
-
-		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {
-			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, DrawColor(255, 0, 255, 171));
 		}
 
 		if (view.zoom < 10.0) {

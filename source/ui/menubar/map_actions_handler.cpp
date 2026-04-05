@@ -206,6 +206,7 @@ void MapActionsHandler::OnMapCleanup(wxCommandEvent& WXUNUSED(event)) {
 
 	if (ok == wxID_YES) {
 		g_gui.GetCurrentMap().cleanInvalidTiles(true);
+		g_gui.RefreshView();
 	}
 }
 
@@ -218,5 +219,6 @@ void MapActionsHandler::OnMapCleanInvalidZones(wxCommandEvent& WXUNUSED(event)) 
 
 	if (ok == wxID_YES) {
 		g_gui.GetCurrentMap().cleanInvalidZones(true);
+		g_gui.RefreshView();
 	}
 }
