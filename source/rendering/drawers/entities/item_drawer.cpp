@@ -90,6 +90,11 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	// item sprite
 	GameSprite* spr = resolveSprite(it);
 
+	if (item->isInvalidOTBMItem() && !options.show_invalid_tiles) {
+		// Invalid OTBM placeholders are controlled exclusively by SHOW_INVALID_TILES.
+		return;
+	}
+
 	// Display invisible and invalid items
 	// Ugly hacks. :)
 	if (!options.ingame && options.show_tech_items) {

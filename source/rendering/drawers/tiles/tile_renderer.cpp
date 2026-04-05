@@ -31,6 +31,24 @@ TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd,
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
 }
 
+static DrawColor invalidTileOverlayColor(InvalidOTBMItemMarkerColor markerColor, bool selected) {
+	uint8_t red = 255;
+	uint8_t green = 0;
+	uint8_t blue = 0;
+
+	if (markerColor == InvalidOTBMItemMarkerColor::Orange) {
+		green = 165;
+	}
+
+	if (selected) {
+		red = static_cast<uint8_t>(red / 2);
+		green = static_cast<uint8_t>(green / 2);
+		blue = static_cast<uint8_t>(blue / 2);
+	}
+
+	return DrawColor(red, green, blue, 171);
+}
+
 // Helper function to populate tooltip data from an item (in-place)
 static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinitionView& it, const Position& pos, bool isHouseTile, float zoom) {
 	if (!item) {
@@ -180,11 +198,22 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	const int tile_draw_x = draw_x;
+	const int tile_draw_y = draw_y;
+
 	const auto& position = location->getPosition();
+
+	ItemDefinitionView ground_it;
+	if (tile->ground) {
+		ground_it = tile->ground->getDefinition();
+	}
+
+	const bool hidden_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !options.show_invalid_tiles;
+	const bool unresolved_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !ground_it;
 
 	// Light Processing (Ground)
 	if (light_buffer && tile->hasLight()) {
-		if (tile->ground && tile->ground->hasLight()) {
+		if (tile->ground && tile->ground->hasLight() && !hidden_invalid_ground && !unresolved_invalid_ground) {
 			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
 		}
 	}
@@ -209,9 +238,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
-	ItemDefinitionView ground_it;
-	if (tile->ground) {
-		ground_it = tile->ground->getDefinition();
+	InvalidOTBMItemMarkerColor invalid_tile_marker_color = InvalidOTBMItemMarkerColor::None;
+	bool has_selected_invalid_item = false;
+
+	if (options.show_invalid_tiles && tile->ground && tile->ground->isInvalidOTBMItem()) {
+		invalid_tile_marker_color = tile->ground->invalidOTBMMarkerColor();
+		has_selected_invalid_item = tile->ground->isSelected();
 	}
 
 	if (only_colors) {
@@ -222,7 +254,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
-		if (tile->ground && ground_it) {
+		if (tile->ground && ground_it && !hidden_invalid_ground) {
 			if (GameSprite* ground_sprite = tile->ground->getSprite()) {
 				SpritePatterns patterns = PatternCalculator::Calculate(ground_sprite, ground_it, tile->ground.get(), tile, position);
 
@@ -239,7 +271,17 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				params.blue = b;
 				params.patterns = &patterns;
 				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+			} else if (!unresolved_invalid_ground) {
+				BlitItemParams params(position, tile->ground.get(), options);
+				params.tile = tile;
+				params.item_definition = ground_it;
+				params.red = r;
+				params.green = g;
+				params.blue = b;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 			}
+		} else if (unresolved_invalid_ground) {
+			// Missing-definition ground placeholders are represented by the tile-level invalid overlay.
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, SPRITE_ZONE, r, g, b, 60);
 		}
@@ -293,11 +335,22 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
-				if (light_buffer && item->hasLight()) {
-					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				if (item->isInvalidOTBMItem() && options.show_invalid_tiles) {
+					if (invalid_tile_marker_color != InvalidOTBMItemMarkerColor::Red) {
+						invalid_tile_marker_color = item->invalidOTBMMarkerColor();
+					}
+					has_selected_invalid_item = has_selected_invalid_item || item->isSelected();
 				}
 
 				const ItemDefinitionView it = item->getDefinition();
+				if (item->isInvalidOTBMItem() && (!options.show_invalid_tiles || !it)) {
+					// Missing-definition placeholders are represented by the tile-level invalid overlay.
+					continue;
+				}
+
+				if (light_buffer && item->hasLight()) {
+					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				}
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
@@ -349,6 +402,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.blue = ib;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
+				} else if (item->isInvalidOTBMItem()) {
+					// Missing-definition placeholders are represented by the tile-level invalid overlay.
 				}
 			}
 			// monster/npc on tile
@@ -358,6 +413,15 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 					creature_name_drawer->addLabel(position, tile->creature->getName(), tile->creature.get());
 				}
 			}
+		}
+
+		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {
+			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, DrawColor(255, 0, 255, 171));
+		}
+
+		if (options.show_invalid_tiles && !as_minimap && invalid_tile_marker_color != InvalidOTBMItemMarkerColor::None) {
+			const DrawColor overlay = invalidTileOverlayColor(invalid_tile_marker_color, has_selected_invalid_item);
+			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, overlay);
 		}
 
 		if (view.zoom < 10.0) {

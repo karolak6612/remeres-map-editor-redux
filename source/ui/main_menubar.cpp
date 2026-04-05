@@ -447,6 +447,10 @@ void MainMenuBar::OnMapCleanup(wxCommandEvent& event) {
 	mapActionsHandler->OnMapCleanup(event);
 }
 
+void MainMenuBar::OnMapCleanInvalidZones(wxCommandEvent& event) {
+	mapActionsHandler->OnMapCleanInvalidZones(event);
+}
+
 void MainMenuBar::OnMapProperties(wxCommandEvent& WXUNUSED(event)) {
 	wxDialog* properties = newd MapPropertiesWindow(
 		frame,

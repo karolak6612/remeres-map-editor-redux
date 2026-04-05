@@ -91,6 +91,9 @@ std::unique_ptr<Item> Item::deepCopy() const {
 	std::unique_ptr<Item> copy = Create(id, subtype);
 	if (copy) {
 		copy->selected = selected;
+		if (invalidOtbmData) {
+			copy->invalidOtbmData = std::make_unique<InvalidOTBMItemData>(*invalidOtbmData);
+		}
 		if (attributes) {
 			copy->attributes = newd ItemAttributeMap(*attributes);
 		}
@@ -100,6 +103,21 @@ std::unique_ptr<Item> Item::deepCopy() const {
 
 uint32_t Item::memsize() const {
 	uint32_t mem = sizeof(*this);
+	if (invalidOtbmData) {
+		mem += static_cast<uint32_t>(invalidOtbmData->rawInlineBytes.capacity());
+		if (invalidOtbmData->rawNode) {
+			std::vector<const PreservedOTBMNode*> stack { &*invalidOtbmData->rawNode };
+			while (!stack.empty()) {
+				const PreservedOTBMNode* node = stack.back();
+				stack.pop_back();
+				mem += static_cast<uint32_t>(node->rawPayload.capacity());
+				mem += static_cast<uint32_t>(node->children.capacity() * sizeof(PreservedOTBMNode));
+				for (const auto& child : node->children) {
+					stack.push_back(&child);
+				}
+			}
+		}
+	}
 	return mem;
 }
 
