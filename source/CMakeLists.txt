@@ -39,6 +39,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_border_calculator.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush_loader.h
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/terrain_placement.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_exit_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/raw/raw_brush.h
@@ -427,6 +428,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush_arrays.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush_loader.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/terrain_placement.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_exit_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/raw/raw_brush.cpp

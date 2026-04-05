@@ -284,7 +284,9 @@ void Settings::IO(IOMode mode) {
 	Bool(SHOW_LIGHTS, false);
 	Bool(SHOW_LIGHT_STR, true);
 	Bool(SHOW_TECHNICAL_ITEMS, true);
+	Bool(SHOW_INVALID_TILES, true);
 	Bool(SHOW_WAYPOINTS, true);
+	Bool(SHOW_INVALID_ZONES, true);
 	Bool(SHOW_GRID, false);
 	Bool(SHOW_EXTRA, true);
 	Bool(SHOW_SHADE, true);

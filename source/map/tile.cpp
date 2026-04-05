@@ -34,6 +34,39 @@
 #include <iterator>
 #include <memory>
 
+namespace {
+	bool itemsMatch(const Item* lhs, const Item* rhs) {
+		if (lhs == rhs) {
+			return true;
+		}
+		if (!lhs || !rhs) {
+			return false;
+		}
+		if (lhs->getID() != rhs->getID() || lhs->getSubtype() != rhs->getSubtype()) {
+			return false;
+		}
+
+		const InvalidOTBMItemData* lhsInvalid = lhs->getInvalidOTBMData();
+		const InvalidOTBMItemData* rhsInvalid = rhs->getInvalidOTBMData();
+		if (static_cast<bool>(lhsInvalid) != static_cast<bool>(rhsInvalid)) {
+			return false;
+		}
+		if (lhsInvalid && rhsInvalid && *lhsInvalid != *rhsInvalid) {
+			return false;
+		}
+		return true;
+	}
+
+	uint32_t preservedNodeHeapSize(const PreservedOTBMNode& node) {
+		uint32_t bytes = static_cast<uint32_t>(node.rawPayload.capacity());
+		bytes += static_cast<uint32_t>(node.children.capacity() * sizeof(PreservedOTBMNode));
+		for (const auto& child : node.children) {
+			bytes += preservedNodeHeapSize(child);
+		}
+		return bytes;
+	}
+}
+
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
 	ownedLocation(new TileLocation()),
@@ -147,6 +180,9 @@ std::unique_ptr<Tile> Tile::deepCopy() const {
 	copy->mapflags = mapflags;
 	copy->statflags = statflags;
 	copy->minimapColor = minimapColor;
+	if (invalidZones) {
+		copy->invalidZones = std::make_unique<InvalidZoneState>(*invalidZones);
+	}
 	return copy;
 }
 
@@ -164,6 +200,17 @@ uint32_t Tile::memsize() const {
 	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
+	if (invalidZones) {
+		mem += sizeof(InvalidZoneState);
+		mem += static_cast<uint32_t>(invalidZones->opaqueTileAttributes.capacity() * sizeof(OpaqueTileAttributeRecord));
+		for (const auto& attribute : invalidZones->opaqueTileAttributes) {
+			mem += static_cast<uint32_t>(attribute.rawBytes.capacity());
+		}
+		mem += static_cast<uint32_t>(invalidZones->opaqueChildNodes.capacity() * sizeof(PreservedOTBMNode));
+		for (const auto& node : invalidZones->opaqueChildNodes) {
+			mem += preservedNodeHeapSize(node);
+		}
+	}
 
 	return mem;
 }
@@ -184,6 +231,9 @@ int Tile::size() const {
 		++sz;
 	}
 	if (mapflags) {
+		++sz;
+	}
+	if (hasInvalidZones()) {
 		++sz;
 	}
 	const TileLocation* loc = location ? location : ownedLocation;
@@ -269,24 +319,28 @@ Item* Tile::getItemAt(int index) const {
 	return nullptr;
 }
 
+void Tile::setGround(std::unique_ptr<Item> item) {
+	if (!item) {
+		ground.reset();
+		TileOperations::update(this);
+		return;
+	}
+
+	ASSERT(item->isGroundTile());
+	ground = std::move(item);
+	TileOperations::update(this);
+}
+
 void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
 	if (item->isGroundTile()) {
-		ground = std::move(item);
-		TileOperations::update(this);
+		// Generic insertion preserves literal tile identity. Terrain policy lives in brushes/ground.
+		setGround(std::move(item));
 		return;
 	}
-
-	uint16_t gid = item->getGroundEquivalent();
 	auto it = items.begin();
-
-	if (gid != 0) {
-		ground = Item::Create(gid);
-		TileOperations::update(this);
-		return;
-	} 
 	
 	// At the very bottom!
 	if (item->isAlwaysOnBottom()) {
@@ -423,17 +477,20 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
+	if (static_cast<bool>(invalidZones) != static_cast<bool>(other->invalidZones)) {
+		return false;
+	}
+	if (invalidZones && other->invalidZones && *invalidZones != *other->invalidZones) {
+		return false;
+	}
+
 	// Compare ground
-	if (ground != nullptr && other->ground != nullptr) {
-		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
-			return false;
-		}
-	} else if (ground != other->ground) {
+	if (!itemsMatch(ground.get(), other->ground.get())) {
 		return false;
 	}
 
 	// Compare items
 	return std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
-		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
+		return itemsMatch(it1.get(), it2.get());
 	});
 }

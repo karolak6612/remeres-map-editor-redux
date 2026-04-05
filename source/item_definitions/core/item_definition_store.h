@@ -26,7 +26,7 @@ struct ItemAttributeTable {
 	std::vector<uint16_t> slot_positions;
 	std::vector<uint8_t> weapon_types;
 	std::vector<uint8_t> classifications;
-	std::vector<uint16_t> ground_equivalents;
+	std::vector<uint16_t> border_base_ground_ids;
 	std::vector<uint32_t> border_groups;
 	std::vector<float> weights;
 	std::vector<int> attacks;

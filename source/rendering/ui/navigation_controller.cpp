@@ -81,8 +81,8 @@ void NavigationController::HandleCameraRelease(MapCanvas* canvas, wxMouseEvent& 
 		int screensize_x, screensize_y;
 		static_cast<MapWindow*>(canvas->GetParent())->GetViewSize(&screensize_x, &screensize_y);
 		static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(int(canvas->zoom * (2 * canvas->cursor_x - screensize_x)), int(canvas->zoom * (2 * canvas->cursor_y - screensize_y)));
-		canvas->Refresh();
 	}
+	canvas->SyncCursorHoverState();
 }
 
 void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {

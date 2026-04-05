@@ -119,6 +119,10 @@ void Map::cleanInvalidTiles(bool showdialog) {
 	MapConverter::cleanInvalidTiles(*this, showdialog);
 }
 
+void Map::cleanInvalidZones(bool showdialog) {
+	MapConverter::cleanInvalidZones(*this, showdialog);
+}
+
 void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {
 	MapConverter::convertHouseTiles(*this, fromId, toId);
 }

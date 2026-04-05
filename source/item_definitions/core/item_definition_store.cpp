@@ -109,7 +109,7 @@ void ItemDefinitionStore::reserve(size_t count) {
 	attributes_.slot_positions.reserve(count);
 	attributes_.weapon_types.reserve(count);
 	attributes_.classifications.reserve(count);
-	attributes_.ground_equivalents.reserve(count);
+	attributes_.border_base_ground_ids.reserve(count);
 	attributes_.border_groups.reserve(count);
 	attributes_.weights.reserve(count);
 	attributes_.attacks.reserve(count);
@@ -138,7 +138,7 @@ void ItemDefinitionStore::append(ResolvedItemDefinitionRow row) {
 	attributes_.slot_positions.push_back(row.slot_position);
 	attributes_.weapon_types.push_back(row.weapon_type);
 	attributes_.classifications.push_back(row.classification);
-	attributes_.ground_equivalents.push_back(row.ground_equivalent);
+	attributes_.border_base_ground_ids.push_back(row.border_base_ground_id);
 	attributes_.border_groups.push_back(row.border_group);
 	attributes_.weights.push_back(row.weight);
 	attributes_.attacks.push_back(row.attack);
@@ -273,7 +273,7 @@ int64_t ItemDefinitionStore::attributeValue(DefinitionId index, ItemAttributeKey
 		case ItemAttributeKey::SlotPosition: return attributes_.slot_positions[index];
 		case ItemAttributeKey::WeaponType: return attributes_.weapon_types[index];
 		case ItemAttributeKey::Classification: return attributes_.classifications[index];
-		case ItemAttributeKey::GroundEquivalent: return attributes_.ground_equivalents[index];
+		case ItemAttributeKey::BorderBaseGroundId: return attributes_.border_base_ground_ids[index];
 		case ItemAttributeKey::BorderGroup: return attributes_.border_groups[index];
 		case ItemAttributeKey::Weight: return static_cast<int64_t>(std::llround(attributes_.weights[index] * 1000.0f));
 		case ItemAttributeKey::Attack: return attributes_.attacks[index];
@@ -295,7 +295,7 @@ void ItemDefinitionStore::setAttributeAtIndex(DefinitionId index, ItemAttributeK
 		case ItemAttributeKey::SlotPosition: attributes_.slot_positions[index] = static_cast<uint16_t>(value); break;
 		case ItemAttributeKey::WeaponType: attributes_.weapon_types[index] = static_cast<uint8_t>(value); break;
 		case ItemAttributeKey::Classification: attributes_.classifications[index] = static_cast<uint8_t>(value); break;
-		case ItemAttributeKey::GroundEquivalent: attributes_.ground_equivalents[index] = static_cast<uint16_t>(value); break;
+		case ItemAttributeKey::BorderBaseGroundId: attributes_.border_base_ground_ids[index] = static_cast<uint16_t>(value); break;
 		case ItemAttributeKey::BorderGroup: attributes_.border_groups[index] = static_cast<uint32_t>(value); break;
 		case ItemAttributeKey::Weight: attributes_.weights[index] = static_cast<float>(value) / 1000.0f; break;
 		case ItemAttributeKey::Attack: attributes_.attacks[index] = static_cast<int>(value); break;

@@ -39,8 +39,8 @@ int AutoBorder::edgeNameToID(std::string_view edgename) {
 	return BORDER_NONE;
 }
 
-bool AutoBorder::load(pugi::xml_node node, std::vector<std::string>& warnings, GroundBrush* owner, uint16_t ground_equivalent) {
-	ASSERT(ground ? ground_equivalent != 0 : true);
+bool AutoBorder::load(pugi::xml_node node, std::vector<std::string>& warnings, GroundBrush* owner, uint16_t border_base_ground_id) {
+	ASSERT(ground ? border_base_ground_id != 0 : true);
 
 	pugi::xml_attribute attribute;
 
@@ -74,11 +74,8 @@ bool AutoBorder::load(pugi::xml_node node, std::vector<std::string>& warnings, G
 
 		if (ground) { // We are a ground border
 			g_item_definitions.setGroup(itemid, ITEM_GROUP_NONE);
-			g_item_definitions.setAttribute(itemid, ItemAttributeKey::GroundEquivalent, ground_equivalent);
+			g_item_definitions.setAttribute(itemid, ItemAttributeKey::BorderBaseGroundId, border_base_ground_id);
 			g_item_definitions.mutableEditorData(itemid).brush = owner;
-			if (g_item_definitions.exists(ground_equivalent)) {
-				g_item_definitions.setFlag(ground_equivalent, ItemFlag::HasEquivalent, true);
-			}
 		}
 
 		g_item_definitions.setFlag(itemid, ItemFlag::AlwaysOnBottom, true);

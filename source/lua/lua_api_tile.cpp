@@ -367,7 +367,7 @@ namespace LuaAPI {
 
 			// Items collection (read-only - use addItem/removeItem to modify)
 			"items", sol::property(getTileItems),
-			"itemCount", sol::property([](Tile* tile) { return tile ? tile->size() : 0; }),
+			"itemCount", sol::property([](Tile* tile) { return tile ? static_cast<int>(tile->items.size()) : 0; }),
 
 			// House
 			"houseId", sol::property([](Tile* tile) -> uint32_t { return tile ? tile->getHouseID() : 0; }, setTileHouseId),
@@ -393,7 +393,7 @@ namespace LuaAPI {
 			"isPvpZone", sol::property([](Tile* tile) { return tile && (tile->getMapFlags() & TILESTATE_PVPZONE); }),
 
 			// Map flags
-			"mapFlags", sol::property([](Tile* tile) -> uint16_t { return tile ? tile->getMapFlags() : 0; }, [](Tile* tile, uint16_t flags) {
+			"mapFlags", sol::property([](Tile* tile) -> uint32_t { return tile ? tile->getMapFlags() : 0; }, [](Tile* tile, uint32_t flags) {
 					if (tile) {
 						markTileForUndo(tile);
 						tile->setMapFlags(flags);

@@ -48,6 +48,8 @@ void ViewSettingsHandler::LoadValues() {
 	menuBar->CheckItem(SHOW_LIGHTS, g_settings.getBoolean(Config::SHOW_LIGHTS));
 	menuBar->CheckItem(SHOW_LIGHT_STR, g_settings.getBoolean(Config::SHOW_LIGHT_STR));
 	menuBar->CheckItem(SHOW_TECHNICAL_ITEMS, g_settings.getBoolean(Config::SHOW_TECHNICAL_ITEMS));
+	menuBar->CheckItem(SHOW_INVALID_TILES, g_settings.getBoolean(Config::SHOW_INVALID_TILES));
+	menuBar->CheckItem(SHOW_INVALID_ZONES, g_settings.getBoolean(Config::SHOW_INVALID_ZONES));
 	menuBar->CheckItem(SHOW_WAYPOINTS, g_settings.getBoolean(Config::SHOW_WAYPOINTS));
 	menuBar->CheckItem(SHOW_ALL_FLOORS, g_settings.getBoolean(Config::SHOW_ALL_FLOORS));
 	menuBar->CheckItem(GHOST_ITEMS, g_settings.getBoolean(Config::TRANSPARENT_ITEMS));
@@ -96,6 +98,8 @@ void ViewSettingsHandler::OnChangeViewSettings(wxCommandEvent& event) {
 	g_settings.setInteger(Config::SHOW_LIGHTS, menuBar->IsItemChecked(SHOW_LIGHTS));
 	g_settings.setInteger(Config::SHOW_LIGHT_STR, menuBar->IsItemChecked(SHOW_LIGHT_STR));
 	g_settings.setInteger(Config::SHOW_TECHNICAL_ITEMS, menuBar->IsItemChecked(SHOW_TECHNICAL_ITEMS));
+	g_settings.setInteger(Config::SHOW_INVALID_TILES, menuBar->IsItemChecked(SHOW_INVALID_TILES));
+	g_settings.setInteger(Config::SHOW_INVALID_ZONES, menuBar->IsItemChecked(SHOW_INVALID_ZONES));
 	g_settings.setInteger(Config::SHOW_WAYPOINTS, menuBar->IsItemChecked(SHOW_WAYPOINTS));
 	g_settings.setInteger(Config::SHOW_GRID, menuBar->IsItemChecked(SHOW_GRID));
 	g_settings.setInteger(Config::SHOW_EXTRA, !menuBar->IsItemChecked(SHOW_EXTRA));

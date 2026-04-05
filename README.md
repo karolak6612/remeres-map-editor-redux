@@ -1,6 +1,8 @@
 <p align="left">
-  <a href="https://suppi.pl/karolak6612" style="text-decoration: none; border: none;"><img src="https://github.com/user-attachments/assets/39c46c55-bcdb-42d0-9f2a-b23bb05b4019" alt="Suppi" width="160" height="90" style="display: inline-block; vertical-align: middle;"></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://ko-fi.com/karolak6612" style="text-decoration: none; border: none;"><img src="https://img.shields.io/badge/Ko--fi-F16061?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-fi" width="160" height="90" style="display: inline-block; vertical-align: middle;"></a>
+  <a href="https://suppi.pl/karolak6612" style="text-decoration: none; border: none;"><img src="https://github.com/user-attachments/assets/39c46c55-bcdb-42d0-9f2a-b23bb05b4019" alt="Suppi" width="160" height="90" style="display: inline-block; vertical-align: middle;"></a>&nbsp;&nbsp;&nbsp;&nbsp;<a href="https://revolut.me/karolak6612" style="text-decoration: none; border: none;"><img width="160" height="90" alt="obraz" src="https://github.com/user-attachments/assets/6f2c7220-9108-4274-817d-fbabeb5cdcc3" /></a>
 </p>
+
+
 
 
 # Remere's Map Editor: Redux
@@ -86,7 +88,7 @@ The terms are simple:
 **Links:**
 
 - [PL] Suppi by Patronite → https://suppi.pl/karolak6612
-- [World] https://ko-fi.com/karolak6612
+- [World] https://revolut.me/karolak6612
 
 ## Some media
 
