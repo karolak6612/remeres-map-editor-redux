@@ -56,6 +56,7 @@ class RMERecipe(ConanFile):
             # Boost components needed
             self.options["boost/*"].without_python = True
             self.options["boost/*"].without_test = True
+            self.options["boost/*"].without_beast = False
             
             # wxWidgets components needed
             self.options["wxwidgets/*"].opengl = True
