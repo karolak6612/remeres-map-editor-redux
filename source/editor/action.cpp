@@ -228,6 +228,9 @@ void Action::commit(DirtyList* dirty_list) {
 					// Local action, assemble changes
 					dirty_list->AddChange(c);
 				}
+				if (type != ACTION_SELECT) {
+					g_minimap.MarkTileDirty(editor.map, pos);
+				}
 				break;
 			}
 
@@ -404,6 +407,9 @@ void Action::undo(DirtyList* dirty_list) {
 				if (editor.live_manager.IsClient() && dirty_list && type != ACTION_REMOTE) {
 					// Local action, assemble changes
 					dirty_list->AddChange(c);
+				}
+				if (type != ACTION_SELECT) {
+					g_minimap.MarkTileDirty(editor.map, pos);
 				}
 				break;
 			}

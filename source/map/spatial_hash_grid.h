@@ -81,6 +81,24 @@ public:
 
 		visitLeavesImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
 	}
+	template <typename Func>
+	void visitLeaves(int min_x, int min_y, int max_x, int max_y, Func&& func) const {
+		if (max_x <= min_x || max_y <= min_y) {
+			return;
+		}
+
+		int start_nx = min_x >> NODE_SHIFT;
+		int start_ny = min_y >> NODE_SHIFT;
+		int end_nx = (max_x - 1) >> NODE_SHIFT;
+		int end_ny = (max_y - 1) >> NODE_SHIFT;
+
+		int start_cx = start_nx >> NODES_PER_CELL_SHIFT;
+		int start_cy = start_ny >> NODES_PER_CELL_SHIFT;
+		int end_cx = end_nx >> NODES_PER_CELL_SHIFT;
+		int end_cy = end_ny >> NODES_PER_CELL_SHIFT;
+
+		visitLeavesConstImpl(start_nx, start_ny, end_nx, end_ny, start_cx, start_cy, end_cx, end_cy, std::forward<Func>(func));
+	}
 
 	// Iterator support for MapIterator â€” const-only to protect sorted invariant
 	auto begin() const {
@@ -100,6 +118,13 @@ protected:
 
 	struct RowCellInfo {
 		GridCell* cell;
+		int cell_start_nx;
+		int local_start_nx;
+		int local_end_nx;
+	};
+
+	struct ConstRowCellInfo {
+		const GridCell* cell;
 		int cell_start_nx;
 		int local_start_nx;
 		int local_end_nx;
@@ -179,6 +204,65 @@ protected:
 				for (const auto& row_cell : row_cells) {
 					for (int lnx = row_cell.local_start_nx; lnx <= row_cell.local_end_nx; ++lnx) {
 						if (MapNode* node = row_cell.cell->nodes[idx_base + lnx].get()) {
+							func(node, (row_cell.cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
+						}
+					}
+				}
+			}
+		}
+	}
+
+	template <typename Func>
+	void visitLeavesConstImpl(int start_nx, int start_ny, int end_nx, int end_ny, int start_cx, int start_cy, int end_cx, int end_cy, Func&& func) const {
+		if (cells_.empty()) {
+			return;
+		}
+
+		struct ConstRowCellInfo {
+			const GridCell* cell;
+			int cell_start_nx;
+			int local_start_nx;
+			int local_end_nx;
+		};
+
+		static thread_local std::vector<ConstRowCellInfo> row_cells;
+		row_cells.clear();
+		row_cells.reserve(end_cx - start_cx + 1);
+
+		for (int cy = start_cy; cy <= end_cy; ++cy) {
+			row_cells.clear();
+
+			const uint64_t row_start_key = makeKeyFromCell(start_cx, cy);
+			const uint64_t row_end_key = makeKeyFromCell(end_cx, cy);
+
+			auto it = std::lower_bound(cells_.cbegin(), cells_.cend(), row_start_key, cell_key_less);
+			while (it != cells_.cend() && it->key <= row_end_key) {
+				int cx, cell_cy;
+				getCellCoordsFromKey(it->key, cx, cell_cy);
+				if (cell_cy != cy) {
+					break;
+				}
+				if (cx >= start_cx && cx <= end_cx) {
+					const int cell_start_nx = cx << NODES_PER_CELL_SHIFT;
+					row_cells.push_back({ .cell = it->cell.get(), .cell_start_nx = cell_start_nx, .local_start_nx = std::max(start_nx, cell_start_nx) - cell_start_nx, .local_end_nx = std::min(end_nx, cell_start_nx + NODES_PER_CELL - 1) - cell_start_nx });
+				}
+				++it;
+			}
+
+			if (row_cells.empty()) {
+				continue;
+			}
+
+			const int row_start_ny = std::max(start_ny, cy << NODES_PER_CELL_SHIFT);
+			const int row_end_ny = std::min(end_ny, ((cy + 1) << NODES_PER_CELL_SHIFT) - 1);
+
+			for (int ny = row_start_ny; ny <= row_end_ny; ++ny) {
+				const int local_ny = ny & (NODES_PER_CELL - 1);
+				const int idx_base = local_ny * NODES_PER_CELL;
+
+				for (const auto& row_cell : row_cells) {
+					for (int lnx = row_cell.local_start_nx; lnx <= row_cell.local_end_nx; ++lnx) {
+						if (const MapNode* node = row_cell.cell->nodes[idx_base + lnx].get()) {
 							func(node, (row_cell.cell_start_nx + lnx) << NODE_SHIFT, ny << NODE_SHIFT);
 						}
 					}

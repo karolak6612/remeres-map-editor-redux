@@ -1,46 +1,138 @@
 #include "app/main.h"
 #include "rendering/drawers/minimap_drawer.h"
-#include "rendering/core/primitive_renderer.h"
-#include "rendering/ui/map_display.h"
+
 #include "editor/editor.h"
 #include "map/map.h"
-#include "map/tile.h"
+#include "rendering/core/map_view_math.h"
+#include "rendering/core/primitive_renderer.h"
+#include "rendering/ui/map_display.h"
 #include "ui/gui.h"
+#include "ui/managers/minimap_manager.h"
 
-// Included for minimap_color
-#include "rendering/core/graphics.h"
+#include <algorithm>
+#include <cmath>
 #include <glm/gtc/matrix_transform.hpp>
+
+namespace {
+
+[[nodiscard]] double clampMapCoordinate(double value, int limit) {
+	if (limit <= 0) {
+		return 0.0;
+	}
+	return std::clamp(value, 0.0, static_cast<double>(limit - 1));
+}
+
+struct MinimapFloorRenderRange {
+	int start_floor = GROUND_LAYER;
+	int current_floor = GROUND_LAYER;
+};
+
+[[nodiscard]] MinimapFloorRenderRange getFloorRenderRange(const MinimapViewportState& viewport_state) {
+	const int current_floor = MinimapViewport::ClampFloor(viewport_state.floor);
+	if (!viewport_state.show_all_floors) {
+		return {
+			.start_floor = current_floor,
+			.current_floor = current_floor,
+		};
+	}
+
+	if (current_floor <= GROUND_LAYER) {
+		return {
+			.start_floor = GROUND_LAYER,
+			.current_floor = current_floor,
+		};
+	}
+
+	return {
+		.start_floor = std::min(MAP_MAX_LAYER, current_floor + 2),
+		.current_floor = current_floor,
+	};
+}
+
+} // namespace
 
 MinimapDrawer::MinimapDrawer() :
 	renderer(std::make_unique<MinimapRenderer>()),
-	primitive_renderer(std::make_unique<PrimitiveRenderer>()),
-	last_start_x(0), last_start_y(0) {
+	primitive_renderer(std::make_unique<PrimitiveRenderer>()) {
 }
 
 MinimapDrawer::~MinimapDrawer() {
 }
 
-void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanvas* canvas) {
-	// We no longer use wxDC for drawing the map content, as we render via OpenGL.
-	// However, we might need to conform to existing architecture.
-	// The caller likely sets up GL context if we are in GLCanvas?
-	// RME seems to mix wxDC and GL?
-	// Wait, MapDrawer::Draw calls everything in GL.
-	// MinimapWindow seems to be a separate window.
-	// If MinimapWindow is a wxWindow (not GLCanvas), we cannot just issue GL commands!
+void MinimapDrawer::ReleaseGL() {
+	if (renderer) {
+		renderer->releaseGL();
+	}
+	primitive_renderer.reset();
+	renderer.reset();
+	initialized_ = false;
+}
 
-	// CHECK: MinimapWindow is likely a wxWindow or wxPanel.
-	// If so, we can't easily use OpenGL unless it IS a wxGLCanvas.
-	// But let's assume we can upgrade it or it is one.
-	// Looking at project structure: rendering/ui/minimap_window.h
+MinimapDrawer::VisibleWorldRect MinimapDrawer::BuildVisibleWorldRect(const wxSize& size, Editor& editor, const MinimapViewportState& viewport_state) {
+	const double zoom_factor = MinimapViewport::GetZoomFactor(viewport_state.zoom_step);
+	const double visible_map_width = std::max(1.0, size.GetWidth() * zoom_factor);
+	const double visible_map_height = std::max(1.0, size.GetHeight() * zoom_factor);
 
-	// PROCEEDING UNDER ASSUMPTION: We can render GL to it.
-	// If not, we will panic. But RME v2 implies modern rendering.
+	return {
+		.start_x = viewport_state.center_x - visible_map_width / 2.0,
+		.start_y = viewport_state.center_y - visible_map_height / 2.0,
+		.width = visible_map_width,
+		.height = visible_map_height,
+	};
+}
 
-	// Assuming the context is active.
+void MinimapDrawer::DrawMainCameraBox(const glm::mat4& projection, const wxSize& size, MapCanvas& canvas, const VisibleWorldRect& visible_rect) {
+	if (!g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
+		return;
+	}
 
-	int window_width = size.GetWidth();
-	int window_height = size.GetHeight();
+	int view_scroll_x = 0;
+	int view_scroll_y = 0;
+	int screensize_x = 0;
+	int screensize_y = 0;
+	canvas.GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
+
+	const MainMapVisibleRect camera_rect = MainMapViewMath::GetVisibleRect({
+		.view_scroll_x = view_scroll_x,
+		.view_scroll_y = view_scroll_y,
+		.pixel_width = screensize_x,
+		.pixel_height = screensize_y,
+		.zoom = canvas.GetZoom(),
+		.floor = canvas.GetFloor(),
+		.scale_factor = canvas.GetContentScaleFactor(),
+	});
+
+	const float scale_x = static_cast<float>(size.GetWidth() / visible_rect.width);
+	const float scale_y = static_cast<float>(size.GetHeight() / visible_rect.height);
+	const float x = static_cast<float>((camera_rect.start_x - visible_rect.start_x) * scale_x);
+	const float y = static_cast<float>((camera_rect.start_y - visible_rect.start_y) * scale_y);
+	const float w = static_cast<float>(camera_rect.width * scale_x);
+	const float h = static_cast<float>(camera_rect.height * scale_y);
+
+	primitive_renderer->setProjectionMatrix(projection);
+	const glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
+	primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x + w, y), color);
+	primitive_renderer->drawLine(glm::vec2(x, y + h), glm::vec2(x + w, y + h), color);
+	primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x, y + h), color);
+	primitive_renderer->drawLine(glm::vec2(x + w, y), glm::vec2(x + w, y + h), color);
+	primitive_renderer->flush();
+}
+
+void MinimapDrawer::DrawFloorShade(const glm::mat4& projection, const wxSize& size) {
+	primitive_renderer->setProjectionMatrix(projection);
+	primitive_renderer->drawRect(
+		glm::vec4(0.0f, 0.0f, static_cast<float>(size.GetWidth()), static_cast<float>(size.GetHeight())),
+		glm::vec4(0.0f, 0.0f, 0.0f, 0.45f));
+	primitive_renderer->flush();
+}
+
+void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, const MinimapViewportState& viewport_state) {
+	const int window_width = size.GetWidth();
+	const int window_height = size.GetHeight();
+	if (window_width <= 0 || window_height <= 0) {
+		last_viewport_.valid = false;
+		return;
+	}
 
 	if (!initialized_) {
 		if (renderer->initialize()) {
@@ -50,112 +142,83 @@ void MinimapDrawer::Draw(wxDC& pdc, const wxSize& size, Editor& editor, MapCanva
 	}
 
 	if (!initialized_) {
+		last_viewport_.valid = false;
 		return;
 	}
 
-	// Prepare view
 	glViewport(0, 0, window_width, window_height);
-	glm::mat4 projection = glm::ortho(0.0f, (float)window_width, (float)window_height, 0.0f, -1.0f, 1.0f);
+	const glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(window_width), static_cast<float>(window_height), 0.0f, -1.0f, 1.0f);
 
-	// Clear background
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	int center_x, center_y;
-	canvas->GetScreenCenter(&center_x, &center_y);
+	const VisibleWorldRect visible_rect = BuildVisibleWorldRect(size, editor, viewport_state);
+	const double start_x = visible_rect.start_x;
+	const double start_y = visible_rect.start_y;
 
-	int start_x, start_y;
-	int end_x, end_y;
-	start_x = center_x - window_width / 2;
-	start_y = center_y - window_height / 2;
+	last_viewport_ = {
+		.start_x = start_x,
+		.start_y = start_y,
+		.map_width = visible_rect.width,
+		.map_height = visible_rect.height,
+		.screen_width = window_width,
+		.screen_height = window_height,
+		.map_limit_x = editor.map.getWidth(),
+		.map_limit_y = editor.map.getHeight(),
+		.valid = true
+	};
 
-	end_x = center_x + window_width / 2;
-	end_y = center_y + window_height / 2;
+	renderer->bindMap(editor.map.getGeneration(), editor.map.getWidth(), editor.map.getHeight());
 
-	// Clamp to map bounds
-	if (start_x < 0) {
-		start_x = 0;
-		end_x = window_width;
-	} else if (end_x > editor.map.getWidth()) {
-		start_x = editor.map.getWidth() - window_width;
-		end_x = editor.map.getWidth();
+	const PendingMinimapInvalidation pending = g_minimap.TakePendingInvalidation(editor.map);
+	if (pending.invalidate_all) {
+		renderer->invalidateAll();
 	}
-	if (start_y < 0) {
-		start_y = 0;
-		end_y = window_height;
-	} else if (end_y > editor.map.getHeight()) {
-		start_y = editor.map.getHeight() - window_height;
-		end_y = editor.map.getHeight();
-	}
-
-	start_x = std::max(start_x, 0);
-	start_y = std::max(start_y, 0);
-	end_x = std::min(end_x, editor.map.getWidth());
-	end_y = std::min(end_y, editor.map.getHeight());
-
-	last_start_x = start_x;
-	last_start_y = start_y;
-
-	int map_draw_w = end_x - start_x;
-	int map_draw_h = end_y - start_y;
-
-	// Ensure renderer has texture for this map size
-	// Note: Resizing texture every frame if map resizes is bad, but map resize is rare.
-	renderer->resize(editor.map.getWidth(), editor.map.getHeight());
-
-	int floor = g_gui.GetCurrentFloor();
-
-	if (g_gui.IsRenderingEnabled()) {
-		// Update Visible Region
-		// OPTIMIZATION: In future, only update dirty regions.
-		// For now, updating the visible window 60 times a second via PBO is WAY faster than DrawPoint.
-		renderer->updateRegion(editor.map, floor, start_x, start_y, map_draw_w, map_draw_h);
-
-		// Render
-		renderer->render(projection, 0, 0, window_width, window_height, (float)start_x, (float)start_y, (float)map_draw_w, (float)map_draw_h);
-
-		// Draw View Box (Overlay)
-		if (g_settings.getInteger(Config::MINIMAP_VIEW_BOX)) {
-			// Compute box coordinates
-			int screensize_x, screensize_y;
-			int view_scroll_x, view_scroll_y;
-			canvas->GetViewBox(&view_scroll_x, &view_scroll_y, &screensize_x, &screensize_y);
-
-			int floor_offset = (floor > GROUND_LAYER ? 0 : (GROUND_LAYER - floor));
-			int view_start_x = view_scroll_x / TILE_SIZE + floor_offset;
-			int view_start_y = view_scroll_y / TILE_SIZE + floor_offset;
-
-			int tile_size = int(TILE_SIZE / canvas->GetZoom());
-			int view_w = screensize_x / tile_size + 1;
-			int view_h = screensize_y / tile_size + 1;
-
-			// Convert to local minimap coords
-			float x = (float)(view_start_x - start_x);
-			float y = (float)(view_start_y - start_y);
-			float w = (float)view_w;
-			float h = (float)view_h;
-
-			// Draw white rectangle using PrimitiveRenderer
-			primitive_renderer->setProjectionMatrix(projection);
-
-			glm::vec4 color(1.0f, 1.0f, 1.0f, 1.0f);
-
-			// Top
-			primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x + w, y), color);
-			// Bottom
-			primitive_renderer->drawLine(glm::vec2(x, y + h), glm::vec2(x + w, y + h), color);
-			// Left
-			primitive_renderer->drawLine(glm::vec2(x, y), glm::vec2(x, y + h), color);
-			// Right
-			primitive_renderer->drawLine(glm::vec2(x + w, y), glm::vec2(x + w, y + h), color);
-
-			primitive_renderer->flush();
+	for (int floor = 0; floor < MAP_LAYERS; ++floor) {
+		if (pending.floor_rects[floor].has_value()) {
+			renderer->markDirty(floor, *pending.floor_rects[floor]);
 		}
 	}
+
+	if (!g_gui.IsRenderingEnabled()) {
+		return;
+	}
+
+	const auto floor_range = getFloorRenderRange(viewport_state);
+	const MinimapDirtyRect visible_rect_pixels = {
+		.x = static_cast<int>(std::floor(visible_rect.start_x)),
+		.y = static_cast<int>(std::floor(visible_rect.start_y)),
+		.width = std::max(1, static_cast<int>(std::ceil(visible_rect.start_x + visible_rect.width)) - static_cast<int>(std::floor(visible_rect.start_x))),
+		.height = std::max(1, static_cast<int>(std::ceil(visible_rect.start_y + visible_rect.height)) - static_cast<int>(std::floor(visible_rect.start_y))),
+	};
+
+	for (int floor = floor_range.start_floor; floor > floor_range.current_floor; --floor) {
+		renderer->flushVisible(editor.map, floor, visible_rect_pixels);
+		renderer->renderVisible(projection, 0, 0, window_width, window_height, floor, visible_rect_pixels);
+	}
+
+	if (floor_range.start_floor > floor_range.current_floor) {
+		DrawFloorShade(projection, size);
+	}
+
+	renderer->flushVisible(editor.map, floor_range.current_floor, visible_rect_pixels);
+	renderer->renderVisible(projection, 0, 0, window_width, window_height, floor_range.current_floor, visible_rect_pixels);
+	DrawMainCameraBox(projection, size, canvas, visible_rect);
 }
 
 void MinimapDrawer::ScreenToMap(int screen_x, int screen_y, int& map_x, int& map_y) {
-	map_x = last_start_x + screen_x;
-	map_y = last_start_y + screen_y;
-}
+	if (!last_viewport_.valid) {
+		map_x = 0;
+		map_y = 0;
+		return;
+	}
 
+	const double normalized_x = std::clamp(screen_x / static_cast<double>(std::max(1, last_viewport_.screen_width)), 0.0, 1.0);
+	const double normalized_y = std::clamp(screen_y / static_cast<double>(std::max(1, last_viewport_.screen_height)), 0.0, 1.0);
+
+	const double raw_map_x = last_viewport_.start_x + normalized_x * last_viewport_.map_width;
+	const double raw_map_y = last_viewport_.start_y + normalized_y * last_viewport_.map_height;
+
+	map_x = static_cast<int>(std::floor(clampMapCoordinate(raw_map_x, last_viewport_.map_limit_x)));
+	map_y = static_cast<int>(std::floor(clampMapCoordinate(raw_map_y, last_viewport_.map_limit_y)));
+}

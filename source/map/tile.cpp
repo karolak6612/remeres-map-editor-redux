@@ -19,8 +19,11 @@
 
 #include "brushes/brush.h"
 
+#include "editor/editor.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
+#include "ui/gui.h"
+#include "ui/managers/minimap_manager.h"
 #include "game/creature.h"
 #include "game/house.h"
 #include "map/basemap.h"
@@ -377,6 +380,24 @@ uint8_t Tile::getMiniMapColor() const {
 	}
 
 	return 0;
+}
+
+void Tile::modify() {
+	statflags |= TILESTATE_MODIFIED;
+	minimapColor = INVALID_MINIMAP_COLOR;
+
+	if (!ownedLocation) {
+		if (Editor* editor = g_gui.GetCurrentEditor()) {
+			const Position position = getPosition();
+			if (editor->map.getTile(position) == this) {
+				g_minimap.MarkTileDirty(editor->map, position);
+			}
+		}
+	}
+
+	if (isSelected()) {
+		TileOperations::markSelectionChanged(this);
+	}
 }
 
 bool tilePositionLessThan(const Tile* a, const Tile* b) {

@@ -221,12 +221,15 @@ bool EditorManager::NewMap() {
 	auto* mapTab = newd MapTab(g_gui.tabbook, editor.release());
 	mapTab->OnSwitchEditorMode(SELECTION_MODE);
 	mapTab->GetMap()->clearChanges();
+	mapTab->GetView()->ResetMinimapViewportToCurrentView();
+	g_minimap.InvalidateAll(*mapTab->GetMap());
 
 	g_status.SetStatusText("Created new map");
 	g_status.UpdateTitle();
 	g_palettes.RefreshPalettes();
 	g_gui.root->UpdateMenubar();
 	g_gui.root->Refresh();
+	g_gui.UpdateMinimap(true);
 
 	return true;
 }
@@ -353,6 +356,10 @@ bool EditorManager::LoadMap(const FileName& fileName, const MapLoadOptions& load
 			mapTab->SetScreenCenterPosition(position);
 		}
 	}
+
+	mapTab->GetView()->ResetMinimapViewportToCurrentView();
+	g_minimap.InvalidateAll(*mapTab->GetMap());
+	g_gui.UpdateMinimap(true);
 
 	g_status.SetStatusText("Map loaded successfully.");
 	return true;

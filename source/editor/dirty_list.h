@@ -21,6 +21,7 @@
 #include <vector>
 #include <set>
 #include <cstdint>
+#include <functional>
 
 class Change;
 
@@ -47,6 +48,7 @@ protected:
 public:
 	using SetType = std::set<ValueType, Comparator>;
 	using ChangeList = std::vector<Change*>;
+	using Visitor = std::function<void(int node_x, int node_y, uint32_t floors_mask)>;
 
 	void AddPosition(int x, int y, int z);
 	void AddChange(Change* c);
@@ -55,6 +57,10 @@ public:
 	}
 	SetType& GetPosList();
 	ChangeList& GetChanges();
+	static int DecodeNodeX(const ValueType& value);
+	static int DecodeNodeY(const ValueType& value);
+	static uint32_t DecodeFloorsMask(const ValueType& value);
+	void ForEachNodeRect(const Visitor& visitor) const;
 
 protected:
 	SetType iset;
