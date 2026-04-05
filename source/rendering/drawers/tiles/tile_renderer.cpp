@@ -237,7 +237,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	InvalidOTBMItemMarkerColor invalid_tile_marker_color = InvalidOTBMItemMarkerColor::None;
 	bool has_selected_invalid_item = false;
 
-	if (tile->ground && tile->ground->isInvalidOTBMItem()) {
+	if (options.show_invalid_tiles && tile->ground && tile->ground->isInvalidOTBMItem()) {
 		invalid_tile_marker_color = tile->ground->invalidOTBMMarkerColor();
 		has_selected_invalid_item = tile->ground->isSelected();
 	}
@@ -250,7 +250,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
-		if (tile->ground && (ground_it || tile->ground->isInvalidOTBMItem())) {
+		const bool hidden_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !options.show_invalid_tiles;
+		const bool unresolved_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !ground_it;
+		if (tile->ground && ground_it && !hidden_invalid_ground) {
 			if (GameSprite* ground_sprite = tile->ground->getSprite()) {
 				SpritePatterns patterns = PatternCalculator::Calculate(ground_sprite, ground_it, tile->ground.get(), tile, position);
 
@@ -267,7 +269,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				params.blue = b;
 				params.patterns = &patterns;
 				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
-			} else {
+			} else if (!unresolved_invalid_ground) {
 				BlitItemParams params(position, tile->ground.get(), options);
 				params.tile = tile;
 				params.item_definition = ground_it;
@@ -276,6 +278,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				params.blue = b;
 				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 			}
+		} else if (unresolved_invalid_ground) {
+			// Missing-definition ground placeholders are represented by the tile-level invalid overlay.
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, SPRITE_ZONE, r, g, b, 60);
 		}
@@ -329,11 +333,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
-				if (light_buffer && item->hasLight()) {
-					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
-				}
-
-				if (item->isInvalidOTBMItem()) {
+				if (item->isInvalidOTBMItem() && options.show_invalid_tiles) {
 					if (invalid_tile_marker_color != InvalidOTBMItemMarkerColor::Red) {
 						invalid_tile_marker_color = item->invalidOTBMMarkerColor();
 					}
@@ -341,6 +341,14 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 
 				const ItemDefinitionView it = item->getDefinition();
+				if (item->isInvalidOTBMItem() && (!options.show_invalid_tiles || !it)) {
+					// Missing-definition placeholders are represented by the tile-level invalid overlay.
+					continue;
+				}
+
+				if (light_buffer && item->hasLight()) {
+					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				}
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
@@ -408,7 +416,6 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		if (options.show_invalid_tiles && !as_minimap && invalid_tile_marker_color != InvalidOTBMItemMarkerColor::None) {
 			const DrawColor overlay = invalidTileOverlayColor(invalid_tile_marker_color, has_selected_invalid_item);
 			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, overlay);
-			sprite_drawer->glDrawBox(sprite_batch, tile_draw_x, tile_draw_y, TILE_SIZE, TILE_SIZE, overlay);
 		}
 
 		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {

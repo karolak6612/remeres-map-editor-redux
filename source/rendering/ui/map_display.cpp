@@ -396,6 +396,10 @@ void MapCanvas::OnMouseMove(wxMouseEvent& event) {
 	last_cursor_map_y = mouse_map_y;
 	last_cursor_map_z = floor;
 
+	if (screendragging) {
+		return;
+	}
+
 	if (map_update) {
 		g_gui.UpdateAutoborderPreview(Position(mouse_map_x, mouse_map_y, floor));
 		UpdatePositionStatus(cursor_x, cursor_y);

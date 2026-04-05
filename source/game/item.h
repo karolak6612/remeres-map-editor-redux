@@ -19,6 +19,7 @@
 #define RME_ITEM_H_
 
 #include "item_definitions/core/item_definition_store.h"
+#include <memory>
 #include <string_view>
 #include "io/iomap_otbm.h"
 #include "io/otbm/invalid_otbm_content.h"
@@ -192,13 +193,13 @@ public:
 		return g_item_definitions.typeExists(id);
 	}
 	[[nodiscard]] bool isInvalidOTBMItem() const {
-		return invalidOtbmData.has_value();
+		return invalidOtbmData != nullptr;
 	}
 	[[nodiscard]] const InvalidOTBMItemData* getInvalidOTBMData() const {
-		return invalidOtbmData ? &*invalidOtbmData : nullptr;
+		return invalidOtbmData.get();
 	}
 	void setInvalidOTBMData(InvalidOTBMItemData data) {
-		invalidOtbmData = std::move(data);
+		invalidOtbmData = std::make_unique<InvalidOTBMItemData>(std::move(data));
 	}
 	void clearInvalidOTBMData() {
 		invalidOtbmData.reset();
@@ -461,7 +462,7 @@ protected:
 	// Subtype is either fluid type, count, subtype or charges
 	uint16_t subtype;
 	bool selected;
-	std::optional<InvalidOTBMItemData> invalidOtbmData;
+	std::unique_ptr<InvalidOTBMItemData> invalidOtbmData;
 
 private:
 	Item& operator=(const Item& i); // Can't copy
