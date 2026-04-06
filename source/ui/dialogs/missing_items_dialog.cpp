@@ -5,6 +5,12 @@
 #include "ui/dialogs/missing_items_dialog.h"
 
 #include <format>
+#include <wx/clipbrd.h>
+#include <wx/filedlg.h>
+#include <wx/fdrepdlg.h>
+#include <wx/stream.h>
+#include <wx/txtstrm.h>
+#include <wx/wfstream.h>
 
 MissingItemsDialog::MissingItemsDialog(wxWindow* parent, const MissingItemReport& report, bool hasOtb) :
 	wxDialog(parent, wxID_ANY, "Missing Item Definitions Report", wxDefaultPosition, wxSize(700, 600), wxDEFAULT_DIALOG_STYLE | wxRESIZE_BORDER),
@@ -67,7 +73,7 @@ void MissingItemsDialog::BuildUI() {
 	page1->SetSizer(sizer1);
 	notebook->AddPage(page1, wxString::FromUTF8(std::format("Missing in DAT ({})", report.missing_in_dat.size())));
 
-	// Section 2: Missing in OTB
+	// Section 2: Missing in OTB (DAT not in primary source)
 	auto* page2 = newd wxPanel(notebook, wxID_ANY);
 	auto* sizer2 = newd wxBoxSizer(wxVERTICAL);
 	countMissingInOtb = newd wxStaticText(page2, wxID_ANY, "");
@@ -89,30 +95,30 @@ void MissingItemsDialog::BuildUI() {
 	page2->SetSizer(sizer2);
 	notebook->AddPage(page2, wxString::FromUTF8(std::format("DAT not in {} ({})", hasOtb ? "OTB" : "XML", report.missing_in_otb.size())));
 
-	// Section 3: XML no OTB
-	auto* page3 = newd wxPanel(notebook, wxID_ANY);
-	auto* sizer3 = newd wxBoxSizer(wxVERTICAL);
-	countXmlNoOtb = newd wxStaticText(page3, wxID_ANY, "");
-	sizer3->Add(countXmlNoOtb, 0, wxALL, FromDIP(5));
-
-	listXmlNoOtb = newd wxDataViewListCtrl(page3, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
-	listXmlNoOtb->AppendTextColumn("Server ID", wxDATAVIEW_CELL_INERT, FromDIP(100));
-	listXmlNoOtb->AppendTextColumn("Client ID", wxDATAVIEW_CELL_INERT, FromDIP(100));
-	listXmlNoOtb->AppendTextColumn("Name", wxDATAVIEW_CELL_INERT, FromDIP(200));
-	listXmlNoOtb->AppendTextColumn("Description", wxDATAVIEW_CELL_INERT, FromDIP(250));
-	sizer3->Add(listXmlNoOtb, 1, wxALL | wxEXPAND, FromDIP(5));
-
-	for (const auto& entry : report.xml_no_otb) {
-		listXmlNoOtb->AppendItem({
-			wxString::FromUTF8(std::format("{}", entry.server_id)),
-			wxString::FromUTF8(std::format("{}", entry.client_id)),
-			wxString::FromUTF8(entry.name.empty() ? "unknown" : entry.name),
-			wxString::FromUTF8(entry.description)
-		});
-	}
-	countXmlNoOtb->SetLabel(wxString::FromUTF8(std::format("Items in items.xml missing from items.otb: {}", report.xml_no_otb.size())));
-	page3->SetSizer(sizer3);
+	// Section 3: XML no OTB (only shown if hasOtb is true)
 	if (hasOtb) {
+		auto* page3 = newd wxPanel(notebook, wxID_ANY);
+		auto* sizer3 = newd wxBoxSizer(wxVERTICAL);
+		countXmlNoOtb = newd wxStaticText(page3, wxID_ANY, "");
+		sizer3->Add(countXmlNoOtb, 0, wxALL, FromDIP(5));
+
+		listXmlNoOtb = newd wxDataViewListCtrl(page3, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
+		listXmlNoOtb->AppendTextColumn("Server ID", wxDATAVIEW_CELL_INERT, FromDIP(100));
+		listXmlNoOtb->AppendTextColumn("Client ID", wxDATAVIEW_CELL_INERT, FromDIP(100));
+		listXmlNoOtb->AppendTextColumn("Name", wxDATAVIEW_CELL_INERT, FromDIP(200));
+		listXmlNoOtb->AppendTextColumn("Description", wxDATAVIEW_CELL_INERT, FromDIP(250));
+		sizer3->Add(listXmlNoOtb, 1, wxALL | wxEXPAND, FromDIP(5));
+
+		for (const auto& entry : report.xml_no_otb) {
+			listXmlNoOtb->AppendItem({
+				wxString::FromUTF8(std::format("{}", entry.server_id)),
+				wxString::FromUTF8(std::format("{}", entry.client_id)),
+				wxString::FromUTF8(entry.name.empty() ? "unknown" : entry.name),
+				wxString::FromUTF8(entry.description)
+			});
+		}
+		countXmlNoOtb->SetLabel(wxString::FromUTF8(std::format("Items in items.xml missing from items.otb: {}", report.xml_no_otb.size())));
+		page3->SetSizer(sizer3);
 		notebook->AddPage(page3, wxString::FromUTF8(std::format("XML no OTB ({})", report.xml_no_otb.size())));
 	}
 
@@ -215,11 +221,15 @@ wxString MissingItemsDialog::GenerateReportText() const {
 }
 
 void MissingItemsDialog::OnCopyToClipboard(wxCommandEvent& WXUNUSED(evt)) {
-	if (wxTheClipboard->Open()) {
-		wxTheClipboard->SetData(newd wxTextDataObject(GenerateReportText()));
-		wxTheClipboard->Close();
-		wxMessageBox("Report copied to clipboard.", "Clipboard", wxOK | wxICON_INFORMATION, this);
+	if (!wxTheClipboard->Open()) {
+		wxMessageBox("Failed to open clipboard. Another application may be using it.",
+		             "Clipboard Error", wxOK | wxICON_ERROR, this);
+		return;
 	}
+
+	wxTheClipboard->SetData(newd wxTextDataObject(GenerateReportText()));
+	wxTheClipboard->Close();
+	wxMessageBox("Report copied to clipboard.", "Clipboard", wxOK | wxICON_INFORMATION, this);
 }
 
 void MissingItemsDialog::OnSaveReport(wxCommandEvent& WXUNUSED(evt)) {

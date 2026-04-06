@@ -9,14 +9,6 @@
 
 #include <wx/wx.h>
 #include <wx/dataview.h>
-#include <wx/sizer.h>
-#include <wx/button.h>
-#include <wx/clipbrd.h>
-#include <wx/filedlg.h>
-#include <wx/textfile.h>
-#include <wx/stream.h>
-#include <wx/txtstrm.h>
-#include <wx/wfstream.h>
 
 #include "item_definitions/core/missing_item_report.h"
 

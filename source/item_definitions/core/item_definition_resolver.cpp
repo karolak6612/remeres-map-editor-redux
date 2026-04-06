@@ -126,7 +126,8 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 			continue;
 		}
 
-		// DAT item exists (even if empty) - this is a valid OTB mapping
+		// OTB has a mapping to DAT. This is a valid item regardless of whether it's empty or not.
+		// We add it to the rows so the editor recognizes the ID.
 		dat_ids_referenced_by_otb.insert(effective_client_id);
 		row.flags |= dat_it->second.flags & ~flagMask(ItemFlag::Moveable);
 
@@ -155,13 +156,22 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 
 		// Collect XML entries that reference non-existent OTB server IDs
 		for (const auto& [server_id, xml] : fragments.xml) {
-			// Skip XML entries with invalid IDs
-			if (server_id <= 0) {
-				continue;
-			}
 			// Skip server-side fluid types and special items (IDs < 100)
 			if (server_id < 100) {
 				continue;
+			}
+			// If XML entry has a client_id override that maps to an existing OTB entry, it's valid
+			if (xml.client_id.has_value()) {
+				bool foundInOtb = false;
+				for (const auto& [otbServerId, otb] : fragments.otb) {
+					if (otb.client_id == xml.client_id.value()) {
+						foundInOtb = true;
+						break;
+					}
+				}
+				if (foundInOtb) {
+					continue;
+				}
 			}
 			if (!fragments.otb.contains(server_id)) {
 				MissingItemEntry entry;
@@ -215,11 +225,7 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 	std::unordered_set<ClientItemId> dat_ids_used_by_xml;
 
 	for (const auto& [client_id, dat] : fragments.dat) {
-		// Skip empty/invalid DAT items
-		if (isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
-			continue;
-		}
-
+		// DAT_ONLY mode: tibia.dat is the source of truth. Load all items unconditionally.
 		ResolvedItemDefinitionRow row;
 		row.server_id = client_id;
 		row.client_id = client_id;
@@ -283,6 +289,9 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 	}
 
 	// Collect DAT items not referenced by XML (informational)
+	// NOTE: In DatOnly mode, missing_in_otb is intentionally reused as a generic
+	// "not referenced by primary source" bucket. Since there's no OTB in this mode,
+	// XML becomes the primary source, and this tracks DAT items unused by XML.
 	if (missingReport && !fragments.xml.empty()) {
 		for (const auto& [client_id, dat] : fragments.dat) {
 			// Skip empty/invalid DAT items
