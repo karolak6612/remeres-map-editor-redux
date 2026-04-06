@@ -12,30 +12,34 @@ namespace {
 
 	// Check if a DAT item is empty/invalid and should be skipped
 	bool isDatItemEmptyOrInvalid(const DatItemFragment& dat, const DatCatalog* catalog, ClientItemId client_id) {
-		// First check catalog for actual sprite/content info
+		// Check catalog for actual sprite/content info
 		if (catalog) {
 			const auto* entry = catalog->entry(client_id);
 			if (entry) {
-				// Has valid sprites? Check if any sprite ID is non-zero
-				if (entry->numsprites > 0) {
-					bool hasValidSprite = false;
-					for (uint32_t sprite_id : entry->sprite_ids) {
-						if (sprite_id != 0) {
-							hasValidSprite = true;
-							break;
-						}
-					}
-					if (hasValidSprite) {
-						return false; // Has real content, not empty
+				// If no sprites at all, treat as empty
+				if (entry->numsprites == 0) {
+					return true;
+				}
+				// Check if ALL sprites are ID 0 (empty placeholders)
+				bool allSpritesEmpty = true;
+				for (uint32_t sprite_id : entry->sprite_ids) {
+					if (sprite_id != 0) {
+						allSpritesEmpty = false;
+						break;
 					}
 				}
+				if (allSpritesEmpty) {
+					return true; // All sprites are placeholder 0
+				}
+				// Has at least one valid sprite
+				return false;
 			} else {
 				// No catalog entry at all
 				return true;
 			}
 		}
 
-		// Only treat as empty if all metadata is default AND catalog didn't save it
+		// Fallback: treat as empty if all metadata is default
 		if (dat.group == ITEM_GROUP_NONE &&
 			dat.type == ITEM_TYPE_NONE &&
 			dat.flags == 0 &&
