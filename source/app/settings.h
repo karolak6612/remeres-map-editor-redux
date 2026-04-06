@@ -223,6 +223,9 @@ namespace Config {
 		SHOW_INVALID_TILES,
 		SHOW_INVALID_ZONES,
 
+		// Add new settings at the end to preserve enum ordering for persisted settings
+		SHOW_MISSING_ITEMS_WARNING,
+
 		LAST,
 	};
 }

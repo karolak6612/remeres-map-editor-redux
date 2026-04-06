@@ -161,6 +161,7 @@ namespace MenuBar {
 		FLOOR_14,
 		FLOOR_15,
 		DEBUG_VIEW_DAT,
+		MISSING_ITEMS_REPORT,
 		EXTENSIONS,
 		GOTO_WEBSITE,
 		ABOUT,
@@ -216,6 +217,7 @@ public:
 
 	void OnExportTilesets(wxCommandEvent& event);
 	void OnReloadDataFiles(wxCommandEvent& event); // RELOAD_DATA
+	void OnMissingItemsReport(wxCommandEvent& event);
 	void OnPreferences(wxCommandEvent& event);
 	void OnListExtensions(wxCommandEvent& event);
 	void OnGotoWebsite(wxCommandEvent& event);

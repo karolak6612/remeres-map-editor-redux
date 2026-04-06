@@ -284,6 +284,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_model.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_views.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/missing_items_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.h
@@ -660,6 +661,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_views.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_views_paint.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/missing_items_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.cpp

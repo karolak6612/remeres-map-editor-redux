@@ -472,6 +472,10 @@ void Settings::IO(IOMode mode) {
 	section("experimental");
 	Int(EXPERIMENTAL_FOG, 0);
 
+	// Missing items report (added at end to preserve enum stability)
+	section("Editor");
+	Bool(SHOW_MISSING_ITEMS_WARNING, false);
+
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");
 		if (file.is_open()) {
