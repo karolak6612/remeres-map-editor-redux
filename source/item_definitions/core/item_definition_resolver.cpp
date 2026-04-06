@@ -224,8 +224,8 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 	// Track which DAT client IDs are used by XML
 	std::unordered_set<ClientItemId> dat_ids_used_by_xml;
 
+	// 1. Load all items from tibia.dat (Source of Truth)
 	for (const auto& [client_id, dat] : fragments.dat) {
-		// DAT_ONLY mode: tibia.dat is the source of truth. Load all items unconditionally.
 		ResolvedItemDefinitionRow row;
 		row.server_id = client_id;
 		row.client_id = client_id;
@@ -238,11 +238,8 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 		client_to_row[client_id] = rows.size() - 1;
 	}
 
+	// 2. Apply items.xml overrides
 	for (const auto& [server_id, xml] : fragments.xml) {
-		// Skip XML entries with invalid IDs
-		if (server_id <= 0) {
-			continue;
-		}
 		// Skip server-side fluid types and special items (IDs < 100)
 		if (server_id < 100) {
 			continue;
@@ -250,15 +247,10 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 
 		const ClientItemId client_id = xml.client_id.value_or(server_id);
 		const auto row_it = client_to_row.find(client_id);
+		
 		if (row_it == client_to_row.end()) {
-			// Check if DAT item exists but is empty/invalid
-			const auto dat_it = fragments.dat.find(client_id);
-			if (dat_it != fragments.dat.end() && isDatItemEmptyOrInvalid(dat_it->second, input.dat_catalog, client_id)) {
-				// DAT item exists but is empty - skip XML entry silently
-				continue;
-			}
-
-			// DAT item truly missing - collect missing instead of just warning
+			// XML item is missing from tibia.dat.
+			// Rule: Report only when id >= 100.
 			if (missingReport) {
 				MissingItemEntry entry;
 				entry.server_id = server_id;
@@ -272,8 +264,7 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 			continue;
 		}
 
-		dat_ids_used_by_xml.insert(client_id);
-
+		// DAT item exists. Handle duplicate XML mappings.
 		const auto owner_it = xml_server_by_client.find(client_id);
 		if (owner_it != xml_server_by_client.end() && owner_it->second != server_id) {
 			warnings.push_back(std::format("Duplicate items.xml client id {} in dat_only mode for server ids {} and {}. Keeping the first mapping.", client_id, owner_it->second, server_id));
@@ -281,6 +272,7 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 		}
 		if (owner_it == xml_server_by_client.end()) {
 			xml_server_by_client.emplace(client_id, server_id);
+			dat_ids_used_by_xml.insert(client_id);
 		}
 
 		ResolvedItemDefinitionRow& row = rows[row_it->second];
@@ -288,22 +280,18 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 		applyXmlOverrides(xml, row);
 	}
 
-	// Collect DAT items not referenced by XML (informational)
-	// NOTE: In DatOnly mode, missing_in_otb is intentionally reused as a generic
-	// "not referenced by primary source" bucket. Since there's no OTB in this mode,
-	// XML becomes the primary source, and this tracks DAT items unused by XML.
-	if (missingReport && !fragments.xml.empty()) {
+	// 3. Report items in tibia.dat that are missing from items.xml
+	// Rule: Report if item is NOT empty. Skip if item is empty.
+	if (missingReport) {
 		for (const auto& [client_id, dat] : fragments.dat) {
-			// Skip empty/invalid DAT items
-			if (isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
-				continue;
-			}
 			if (!dat_ids_used_by_xml.contains(client_id)) {
-				MissingItemEntry entry;
-				entry.client_id = client_id;
-				entry.server_id = 0;
-				entry.name = "";
-				missingReport->missing_in_otb.push_back(std::move(entry));
+				if (!isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
+					MissingItemEntry entry;
+					entry.client_id = client_id;
+					entry.server_id = 0; 
+					entry.name = "";
+					missingReport->missing_in_otb.push_back(std::move(entry));
+				}
 			}
 		}
 	}
