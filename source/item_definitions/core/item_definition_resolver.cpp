@@ -12,34 +12,36 @@ namespace {
 
 	// Check if a DAT item is empty/invalid and should be skipped
 	bool isDatItemEmptyOrInvalid(const DatItemFragment& dat, const DatCatalog* catalog, ClientItemId client_id) {
-		// Skip items with no attributes (all defaults)
+		// First check catalog for actual sprite/content info
+		if (catalog) {
+			const auto* entry = catalog->entry(client_id);
+			if (entry) {
+				// Has valid sprites? Check if any sprite ID is non-zero
+				if (entry->numsprites > 0) {
+					bool hasValidSprite = false;
+					for (uint32_t sprite_id : entry->sprite_ids) {
+						if (sprite_id != 0) {
+							hasValidSprite = true;
+							break;
+						}
+					}
+					if (hasValidSprite) {
+						return false; // Has real content, not empty
+					}
+				}
+			} else {
+				// No catalog entry at all
+				return true;
+			}
+		}
+
+		// Only treat as empty if all metadata is default AND catalog didn't save it
 		if (dat.group == ITEM_GROUP_NONE &&
 			dat.type == ITEM_TYPE_NONE &&
 			dat.flags == 0 &&
 			dat.way_speed == 100 &&
 			dat.always_on_top_order == 0) {
 			return true;
-		}
-
-		// Skip items with no sprites, or only sprite ID 0 (empty placeholder)
-		if (catalog) {
-			const auto* entry = catalog->entry(client_id);
-			if (entry) {
-				if (entry->numsprites == 0) {
-					return true;
-				}
-				// Check if all sprite IDs are 0 (empty placeholder sprites)
-				bool allSpritesEmpty = true;
-				for (uint32_t sprite_id : entry->sprite_ids) {
-					if (sprite_id != 0) {
-						allSpritesEmpty = false;
-						break;
-					}
-				}
-				if (allSpritesEmpty) {
-					return true;
-				}
-			}
 		}
 
 		return false;
@@ -138,7 +140,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 			if (isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
 				continue;
 			}
-			if (dat_ids_referenced_by_otb.find(client_id) == dat_ids_referenced_by_otb.end()) {
+			if (!dat_ids_referenced_by_otb.contains(client_id)) {
 				MissingItemEntry entry;
 				entry.client_id = client_id;
 				entry.server_id = 0; // Not mapped in OTB
@@ -157,7 +159,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 			if (server_id < 100) {
 				continue;
 			}
-			if (fragments.otb.find(server_id) == fragments.otb.end()) {
+			if (!fragments.otb.contains(server_id)) {
 				MissingItemEntry entry;
 				entry.server_id = server_id;
 				entry.client_id = xml.client_id.value_or(0);
@@ -174,7 +176,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 				continue;
 			}
 			// Skip entries where DAT definition doesn't exist (already reported)
-			if (fragments.dat.find(otb.client_id) == fragments.dat.end()) {
+			if (!fragments.dat.contains(otb.client_id)) {
 				continue;
 			}
 			// Skip entries that have XML overrides
@@ -190,7 +192,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 		}
 	}
 
-	if (rows.empty() && missingReport && missingReport->missing_in_dat.empty()) {
+	if (rows.empty()) {
 		error = "No item definitions were resolved from DAT/OTB/XML.";
 		return false;
 	}
@@ -283,7 +285,7 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 			if (isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
 				continue;
 			}
-			if (dat_ids_used_by_xml.find(client_id) == dat_ids_used_by_xml.end()) {
+			if (!dat_ids_used_by_xml.contains(client_id)) {
 				MissingItemEntry entry;
 				entry.client_id = client_id;
 				entry.server_id = 0;

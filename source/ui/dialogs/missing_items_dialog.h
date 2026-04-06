@@ -32,7 +32,7 @@ private:
 	void OnSaveReport(wxCommandEvent& evt);
 	void OnIgnore(wxCommandEvent& evt);
 
-	wxString GenerateReportText(bool hasOtb) const;
+	wxString GenerateReportText() const;
 
 	const MissingItemReport& report;
 	const bool hasOtb;

@@ -296,6 +296,7 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(LIVE_CLOSE, is_live);
 
 	mb->EnableItem(DEBUG_VIEW_DAT, loaded);
+	mb->EnableItem(MISSING_ITEMS_REPORT, loaded);
 
 	mb->EnableItem(SCRIPTS_MANAGER, loaded);
 	mb->EnableItem(SCRIPTS_OPEN_FOLDER, loaded);

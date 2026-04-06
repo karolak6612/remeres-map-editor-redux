@@ -115,6 +115,9 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	if (!bundle_loader.load(asset_request, bundle, error, warnings)) {
 		error = "Couldn't load canonical asset bundle: " + error;
 		g_loading.DestroyLoadBar();
+		// Clear stale data on failure
+		last_missing_items = {};
+		last_load_has_otb = true;
 		UnloadVersion();
 		return false;
 	}
@@ -123,6 +126,9 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	if (!bundle_loader.install(bundle, g_gui.gfx, g_item_definitions, error, warnings)) {
 		error = "Couldn't install canonical asset bundle: " + error;
 		g_loading.DestroyLoadBar();
+		// Clear stale data on failure
+		last_missing_items = {};
+		last_load_has_otb = true;
 		UnloadVersion();
 		return false;
 	}
