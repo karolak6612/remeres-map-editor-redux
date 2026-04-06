@@ -85,7 +85,6 @@ namespace Config {
 		ERASER_LEAVE_UNIQUE,
 		DOODAD_BRUSH_ERASE_LIKE,
 		WARN_FOR_DUPLICATE_ID,
-		SHOW_MISSING_ITEMS_WARNING,
 		USE_UPDATER,
 		USE_OTBM_4_FOR_ALL_MAPS,
 		SAVE_WITH_OTB_MAGIC_NUMBER,
@@ -223,6 +222,9 @@ namespace Config {
 		SEARCH_RESULTS_LIMIT,
 		SHOW_INVALID_TILES,
 		SHOW_INVALID_ZONES,
+
+		// Add new settings at the end to preserve enum ordering for persisted settings
+		SHOW_MISSING_ITEMS_WARNING,
 
 		LAST,
 	};

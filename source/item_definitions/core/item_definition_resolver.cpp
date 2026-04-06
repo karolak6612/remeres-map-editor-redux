@@ -1,8 +1,9 @@
 #include "item_definitions/core/item_definition_resolver.h"
 #include "item_definitions/formats/dat/dat_catalog.h"
 
-#include <spdlog/spdlog.h>
+#include <algorithm>
 #include <format>
+#include <ranges>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -22,7 +23,7 @@ namespace {
 		if (catalog) {
 			const auto* entry = catalog->entry(client_id);
 			if (entry) {
-				bool hasValidSprite = (entry->numsprites > 0 && entry->sprite_ids.size() > 0 && entry->sprite_ids[0] != 0);
+				bool hasValidSprite = (entry->numsprites > 0 && !entry->sprite_ids.empty() && entry->sprite_ids[0] != 0);
 				bool hasMinimapColor = (entry->minimap_color != 0);
 				bool hasLight = entry->has_light;
 				
@@ -100,12 +101,12 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 		if (dat_it == fragments.dat.end()) {
 			// DAT item truly doesn't exist - collect as missing
 			if (missingReport) {
-				MissingItemEntry entry;
-				entry.server_id = server_id;
-				entry.client_id = effective_client_id;
-				entry.name = otb.name;
-				entry.description = otb.description;
-				missingReport->missing_in_dat.push_back(std::move(entry));
+				missingReport->missing_in_dat.push_back({
+					.server_id = server_id,
+					.client_id = effective_client_id,
+					.name = otb.name,
+					.description = otb.description
+				});
 			} else {
 				error = wxString::FromUTF8(std::format("Missing DAT definition for client id {} (server id {}).", effective_client_id, server_id));
 				return false;
@@ -134,11 +135,12 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 				continue;
 			}
 			if (!dat_ids_referenced_by_otb.contains(client_id)) {
-				MissingItemEntry entry;
-				entry.client_id = client_id;
-				entry.server_id = 0; // Not mapped in OTB
-				entry.name = "";
-				missingReport->missing_in_otb.push_back(std::move(entry));
+				missingReport->missing_in_otb.push_back({
+					.server_id = 0,
+					.client_id = client_id,
+					.name = "",
+					.description = ""
+				});
 			}
 		}
 
@@ -148,27 +150,25 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 			if (server_id < 100) {
 				continue;
 			}
+			// If XML server_id already exists in OTB, it's valid
+			if (fragments.otb.contains(server_id)) {
+				continue;
+			}
 			// If XML entry has a client_id override that maps to an existing OTB entry, it's valid
 			if (xml.client_id.has_value()) {
-				bool foundInOtb = false;
-				for (const auto& [otbServerId, otb] : fragments.otb) {
-					if (otb.client_id == xml.client_id.value()) {
-						foundInOtb = true;
-						break;
-					}
-				}
+				bool foundInOtb = std::ranges::any_of(fragments.otb, [&](const auto& p) {
+					return p.second.client_id == xml.client_id.value();
+				});
 				if (foundInOtb) {
 					continue;
 				}
 			}
-			if (!fragments.otb.contains(server_id)) {
-				MissingItemEntry entry;
-				entry.server_id = server_id;
-				entry.client_id = xml.client_id.value_or(0);
-				entry.name = xml.name;
-				entry.description = xml.description;
-				missingReport->xml_no_otb.push_back(std::move(entry));
-			}
+			missingReport->xml_no_otb.push_back({
+				.server_id = server_id,
+				.client_id = xml.client_id.value_or(0),
+				.name = xml.name,
+				.description = xml.description
+			});
 		}
 
 		// Collect OTB entries that don't have XML entries (informational)
@@ -185,12 +185,12 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 			if (fragments.xml.find(server_id) != fragments.xml.end()) {
 				continue;
 			}
-			MissingItemEntry entry;
-			entry.server_id = server_id;
-			entry.client_id = otb.client_id;
-			entry.name = otb.name;
-			entry.description = otb.description;
-			missingReport->otb_no_xml.push_back(std::move(entry));
+			missingReport->otb_no_xml.push_back({
+				.server_id = server_id,
+				.client_id = otb.client_id,
+				.name = otb.name,
+				.description = otb.description
+			});
 		}
 	}
 
@@ -240,12 +240,12 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 			// XML item is missing from tibia.dat.
 			// Rule: Report only when id >= 100.
 			if (missingReport) {
-				MissingItemEntry entry;
-				entry.server_id = server_id;
-				entry.client_id = client_id;
-				entry.name = xml.name;
-				entry.description = xml.description;
-				missingReport->missing_in_dat.push_back(std::move(entry));
+				missingReport->missing_in_dat.push_back({
+					.server_id = server_id,
+					.client_id = client_id,
+					.name = xml.name,
+					.description = xml.description
+				});
 			} else {
 				warnings.push_back(std::format("Skipping items.xml entry {} in dat_only mode because DAT client id {} is missing.", server_id, client_id));
 			}
@@ -274,11 +274,12 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 		for (const auto& [client_id, dat] : fragments.dat) {
 			if (!dat_ids_used_by_xml.contains(client_id)) {
 				if (!isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
-					MissingItemEntry entry;
-					entry.client_id = client_id;
-					entry.server_id = 0; 
-					entry.name = "";
-					missingReport->missing_in_otb.push_back(std::move(entry));
+					missingReport->missing_in_otb.push_back({
+						.server_id = 0,
+						.client_id = client_id,
+						.name = "",
+						.description = ""
+					});
 				}
 			}
 		}

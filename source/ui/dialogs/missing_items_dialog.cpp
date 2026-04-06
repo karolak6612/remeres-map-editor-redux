@@ -5,9 +5,9 @@
 #include "ui/dialogs/missing_items_dialog.h"
 
 #include <format>
+#include <algorithm>
 #include <wx/clipbrd.h>
 #include <wx/filedlg.h>
-#include <wx/fdrepdlg.h>
 #include <wx/stream.h>
 #include <wx/txtstrm.h>
 #include <wx/wfstream.h>
@@ -30,6 +30,21 @@ MissingItemsDialog::MissingItemsDialog(wxWindow* parent, const MissingItemReport
 
 void MissingItemsDialog::BuildUI() {
 	auto* mainSizer = newd wxBoxSizer(wxVERTICAL);
+
+	// Sort entries ascending by Server ID, then Client ID
+	auto sort_entries = [](const std::vector<MissingItemEntry>& vec) {
+		auto sorted = vec;
+		std::sort(sorted.begin(), sorted.end(), [](const MissingItemEntry& a, const MissingItemEntry& b) {
+			if (a.server_id != b.server_id) return a.server_id < b.server_id;
+			return a.client_id < b.client_id;
+		});
+		return sorted;
+	};
+
+	auto sorted_dat = sort_entries(report.missing_in_dat);
+	auto sorted_otb = sort_entries(report.missing_in_otb);
+	auto sorted_xml_no_otb = sort_entries(report.xml_no_otb);
+	auto sorted_otb_no_xml = sort_entries(report.otb_no_xml);
 
 	// Header text
 	wxString headerTextContent;
@@ -60,7 +75,7 @@ void MissingItemsDialog::BuildUI() {
 	listMissingInDat->AppendTextColumn("Description", wxDATAVIEW_CELL_INERT, FromDIP(250));
 	sizer1->Add(listMissingInDat, 1, wxALL | wxEXPAND, FromDIP(5));
 
-	for (const auto& entry : report.missing_in_dat) {
+	for (const auto& entry : sorted_dat) {
 		listMissingInDat->AppendItem({
 			wxString::FromUTF8(std::format("{}", entry.server_id)),
 			wxString::FromUTF8(std::format("{}", entry.client_id)),
@@ -84,7 +99,7 @@ void MissingItemsDialog::BuildUI() {
 	listMissingInOtb->AppendTextColumn("Name", wxDATAVIEW_CELL_INERT, FromDIP(200));
 	sizer2->Add(listMissingInOtb, 1, wxALL | wxEXPAND, FromDIP(5));
 
-	for (const auto& entry : report.missing_in_otb) {
+	for (const auto& entry : sorted_otb) {
 		listMissingInOtb->AppendItem({
 			wxString::FromUTF8(std::format("{}", entry.client_id)),
 			wxString::FromUTF8(entry.name.empty() ? "(no name)" : entry.name)
@@ -109,7 +124,7 @@ void MissingItemsDialog::BuildUI() {
 		listXmlNoOtb->AppendTextColumn("Description", wxDATAVIEW_CELL_INERT, FromDIP(250));
 		sizer3->Add(listXmlNoOtb, 1, wxALL | wxEXPAND, FromDIP(5));
 
-		for (const auto& entry : report.xml_no_otb) {
+		for (const auto& entry : sorted_xml_no_otb) {
 			listXmlNoOtb->AppendItem({
 				wxString::FromUTF8(std::format("{}", entry.server_id)),
 				wxString::FromUTF8(std::format("{}", entry.client_id)),
@@ -136,7 +151,7 @@ void MissingItemsDialog::BuildUI() {
 		listOtbNoXml->AppendTextColumn("Description", wxDATAVIEW_CELL_INERT, FromDIP(250));
 		sizer4->Add(listOtbNoXml, 1, wxALL | wxEXPAND, FromDIP(5));
 
-		for (const auto& entry : report.otb_no_xml) {
+		for (const auto& entry : sorted_otb_no_xml) {
 			listOtbNoXml->AppendItem({
 				wxString::FromUTF8(std::format("{}", entry.server_id)),
 				wxString::FromUTF8(std::format("{}", entry.client_id)),
@@ -164,7 +179,7 @@ void MissingItemsDialog::BuildUI() {
 
 	buttonSizer->AddStretchSpacer();
 
-	auto* ignoreButton = newd wxButton(this, wxID_ANY, "Ignore");
+	auto* ignoreButton = newd wxButton(this, wxID_ANY, "Close");
 	ignoreButton->SetDefault();
 	ignoreButton->Bind(wxEVT_BUTTON, &MissingItemsDialog::OnIgnore, this);
 	buttonSizer->Add(ignoreButton, 0, wxALL, FromDIP(5));

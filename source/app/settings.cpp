@@ -350,7 +350,6 @@ void Settings::IO(IOMode mode) {
 	Bool(ERASER_LEAVE_UNIQUE, true);
 	Bool(DOODAD_BRUSH_ERASE_LIKE, false);
 	Bool(WARN_FOR_DUPLICATE_ID, true);
-	Bool(SHOW_MISSING_ITEMS_WARNING, false);
 	Bool(AUTO_CREATE_SPAWN, false);
 	Int(DEFAULT_SPAWNTIME, 60);
 	Int(MAX_SPAWN_RADIUS, 30);
@@ -472,6 +471,10 @@ void Settings::IO(IOMode mode) {
 	// experimental
 	section("experimental");
 	Int(EXPERIMENTAL_FOG, 0);
+
+	// Missing items report (added at end to preserve enum stability)
+	section("Editor");
+	Bool(SHOW_MISSING_ITEMS_WARNING, false);
 
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");

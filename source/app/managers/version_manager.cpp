@@ -19,6 +19,9 @@
 #include "item_definitions/core/item_definition_store.h"
 #include "app/settings.h"
 
+#include <format>
+#include <ranges>
+
 VersionManager g_version;
 
 VersionManager::VersionManager() :
@@ -145,14 +148,17 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		                       last_missing_items.otb_no_xml.size();
 		if (total_missing > 0) {
 			warnings.push_back(std::format("Missing item definitions detected ({} entries total).", total_missing));
-			warnings.push_back("Go to File -> Missing Items Report... for detailed view.");
+			warnings.push_back("Go to File -> Missing Items Report... to view details.");
 			warnings.push_back(""); // Empty line for readability
+
+			// Determine correct label for missing_in_otb based on mode
+			const std::string missing_in_otb_label = last_load_has_otb
+				? "tibia.dat items not in items.otb"
+				: "tibia.dat items not referenced by items.xml";
 
 			if (!last_missing_items.missing_in_dat.empty()) {
 				warnings.push_back(std::format("--- Items missing from tibia.dat ({}) ---", last_missing_items.missing_in_dat.size()));
-				size_t show_count = std::min(last_missing_items.missing_in_dat.size(), MAX_SHOW);
-				for (size_t i = 0; i < show_count; ++i) {
-					const auto& entry = last_missing_items.missing_in_dat[i];
+				for (const auto& entry : last_missing_items.missing_in_dat | std::views::take(MAX_SHOW)) {
 					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
 						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
 				}
@@ -163,10 +169,8 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 			}
 
 			if (!last_missing_items.missing_in_otb.empty()) {
-				warnings.push_back(std::format("--- tibia.dat items not in items.otb ({}) ---", last_missing_items.missing_in_otb.size()));
-				size_t show_count = std::min(last_missing_items.missing_in_otb.size(), MAX_SHOW);
-				for (size_t i = 0; i < show_count; ++i) {
-					const auto& entry = last_missing_items.missing_in_otb[i];
+				warnings.push_back(std::format("--- {} ({}) ---", missing_in_otb_label, last_missing_items.missing_in_otb.size()));
+				for (const auto& entry : last_missing_items.missing_in_otb | std::views::take(MAX_SHOW)) {
 					warnings.push_back(std::format("  Client ID: {}", entry.client_id));
 				}
 				if (last_missing_items.missing_in_otb.size() > MAX_SHOW) {
@@ -177,9 +181,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 			if (!last_missing_items.xml_no_otb.empty()) {
 				warnings.push_back(std::format("--- items.xml entries missing from items.otb ({}) ---", last_missing_items.xml_no_otb.size()));
-				size_t show_count = std::min(last_missing_items.xml_no_otb.size(), MAX_SHOW);
-				for (size_t i = 0; i < show_count; ++i) {
-					const auto& entry = last_missing_items.xml_no_otb[i];
+				for (const auto& entry : last_missing_items.xml_no_otb | std::views::take(MAX_SHOW)) {
 					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
 						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
 				}
@@ -191,9 +193,7 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 
 			if (!last_missing_items.otb_no_xml.empty()) {
 				warnings.push_back(std::format("--- items.otb entries missing from items.xml ({}) ---", last_missing_items.otb_no_xml.size()));
-				size_t show_count = std::min(last_missing_items.otb_no_xml.size(), MAX_SHOW);
-				for (size_t i = 0; i < show_count; ++i) {
-					const auto& entry = last_missing_items.otb_no_xml[i];
+				for (const auto& entry : last_missing_items.otb_no_xml | std::views::take(MAX_SHOW)) {
 					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
 						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
 				}
