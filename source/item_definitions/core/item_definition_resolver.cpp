@@ -1,6 +1,7 @@
 #include "item_definitions/core/item_definition_resolver.h"
 #include "item_definitions/formats/dat/dat_catalog.h"
 
+#include <spdlog/spdlog.h>
 #include <format>
 #include <unordered_map>
 #include <unordered_set>
@@ -12,40 +13,27 @@ namespace {
 
 	// Check if a DAT item is empty/invalid and should be skipped
 	bool isDatItemEmptyOrInvalid(const DatItemFragment& dat, const DatCatalog* catalog, ClientItemId client_id) {
-		// Check catalog for actual sprite/content info
+		// An item is considered "Empty" (placeholder) if ALL of these conditions are true:
+		// 1. Has exactly 1 sprite AND that sprite ID is 0
+		// 2. No minimap color
+		// 3. No light
+		// 4. No group assigned (ITEM_GROUP_NONE)
+		// 5. No type assigned (ITEM_TYPE_NONE)
 		if (catalog) {
 			const auto* entry = catalog->entry(client_id);
 			if (entry) {
-				// If no sprites at all, treat as empty
-				if (entry->numsprites == 0) {
-					return true;
+				bool hasValidSprite = (entry->numsprites > 0 && entry->sprite_ids.size() > 0 && entry->sprite_ids[0] != 0);
+				bool hasMinimapColor = (entry->minimap_color != 0);
+				bool hasLight = entry->has_light;
+				
+				if (!hasValidSprite && !hasMinimapColor && !hasLight &&
+					dat.group == ITEM_GROUP_NONE && dat.type == ITEM_TYPE_NONE) {
+					return true; // This is a placeholder item
 				}
-				// Check if ALL sprites are ID 0 (empty placeholders)
-				bool allSpritesEmpty = true;
-				for (uint32_t sprite_id : entry->sprite_ids) {
-					if (sprite_id != 0) {
-						allSpritesEmpty = false;
-						break;
-					}
-				}
-				if (allSpritesEmpty) {
-					return true; // All sprites are placeholder 0
-				}
-				// Has at least one valid sprite
-				return false;
 			} else {
-				// No catalog entry at all
+				// No catalog entry means no definition
 				return true;
 			}
-		}
-
-		// Fallback: treat as empty if all metadata is default
-		if (dat.group == ITEM_GROUP_NONE &&
-			dat.type == ITEM_TYPE_NONE &&
-			dat.flags == 0 &&
-			dat.way_speed == 100 &&
-			dat.always_on_top_order == 0) {
-			return true;
 		}
 
 		return false;
