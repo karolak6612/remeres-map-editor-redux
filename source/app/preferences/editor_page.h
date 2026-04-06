@@ -13,6 +13,7 @@ public:
 private:
 	wxCheckBox* group_actions_chkbox = nullptr;
 	wxCheckBox* duplicate_id_warn_chkbox = nullptr;
+	wxCheckBox* missing_items_warn_chkbox = nullptr;
 	wxCheckBox* house_remove_chkbox = nullptr;
 	wxCheckBox* auto_assign_doors_chkbox = nullptr;
 	wxCheckBox* doodad_erase_same_chkbox = nullptr;

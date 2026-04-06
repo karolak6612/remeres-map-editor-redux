@@ -49,8 +49,9 @@
 			<item name="Export Tilesets..." action="EXPORT_TILESETS" help="Export tilesets to an xml file."/>
 		</menu>
 		<menu name="Reload">
-			<item name="Reload" hotkey="F5" action="RELOAD_DATA" help="Reloads all data files."/>
+			<item name="Reload Data Files" hotkey="F5" action="RELOAD_DATA" help="Reloads all data files."/>
 		</menu>
+		<item name="Missing Items Report..." action="MISSING_ITEMS_REPORT" help="View missing item definitions between data files."/>
 		<separator/>
 		<menu name="Recent Files" special="RECENT_FILES"/>
 		<item name="Preferences" action="PREFERENCES" help="Configure the map editor."/>

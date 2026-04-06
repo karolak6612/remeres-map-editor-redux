@@ -3,6 +3,7 @@
 #include "app/main.h"
 #include "ui/gui.h"
 #include "ui/map/export_tilesets_window.h"
+#include "ui/dialogs/missing_items_dialog.h"
 
 #include "ui/map/import_map_window.h"
 #include "ui/dialog_util.h"
@@ -91,6 +92,16 @@ void FileMenuHandler::OnReloadDataFiles(wxCommandEvent& WXUNUSED(event)) {
 	g_version.LoadVersion(g_version.GetCurrentVersionID(), error, warnings, true);
 	DialogUtil::PopupDialog("Error", error, wxOK);
 	DialogUtil::ListDialog("Warnings", warnings);
+}
+
+void FileMenuHandler::OnMissingItemsReport(wxCommandEvent& WXUNUSED(event)) {
+	const auto& missing = g_version.getLastMissingItems();
+	if (missing.missing_in_dat.empty() && missing.missing_in_otb.empty() && missing.xml_no_otb.empty()) {
+		wxMessageBox("No missing item definitions were detected for the current client version.",
+		             "Missing Items Report", wxOK | wxICON_INFORMATION, g_gui.root);
+		return;
+	}
+	MissingItemsDialog::Show(g_gui.root, missing, g_version.lastLoadHasOtb());
 }
 
 void FileMenuHandler::OnPreferences(wxCommandEvent& WXUNUSED(event)) {

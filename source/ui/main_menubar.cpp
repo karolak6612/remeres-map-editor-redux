@@ -267,6 +267,10 @@ void MainMenuBar::OnReloadDataFiles(wxCommandEvent& event) {
 	fileMenuHandler->OnReloadDataFiles(event);
 }
 
+void MainMenuBar::OnMissingItemsReport(wxCommandEvent& event) {
+	fileMenuHandler->OnMissingItemsReport(event);
+}
+
 void MainMenuBar::OnListExtensions(wxCommandEvent& event) {
 	fileMenuHandler->OnListExtensions(event);
 }

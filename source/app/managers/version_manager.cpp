@@ -17,6 +17,7 @@
 #include "ui/tool_options_window.h"
 #include "item_definitions/core/asset_bundle_loader.h"
 #include "item_definitions/core/item_definition_store.h"
+#include "app/settings.h"
 
 VersionManager g_version;
 
@@ -106,6 +107,9 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	asset_request.otb_path = wxFileName(base_data_path + "items.otb");
 	asset_request.xml_path = wxFileName(base_data_path + "items.xml");
 
+	// Track whether this mode uses OTB
+	last_load_has_otb = (asset_request.mode != ItemDefinitionMode::DatOnly);
+
 	AssetBundle bundle;
 	AssetBundleLoader bundle_loader;
 	if (!bundle_loader.load(asset_request, bundle, error, warnings)) {
@@ -121,6 +125,47 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		g_loading.DestroyLoadBar();
 		UnloadVersion();
 		return false;
+	}
+
+	// Store the missing items report for later dialog display (always collected regardless of warning setting)
+	last_missing_items = std::move(bundle.missing_items);
+
+	// Only add detailed missing items to warnings list if the user has enabled this option
+	if (g_settings.getBoolean(Config::SHOW_MISSING_ITEMS_WARNING)) {
+		size_t total_missing = last_missing_items.missing_in_dat.size() +
+		                       last_missing_items.missing_in_otb.size() +
+		                       last_missing_items.xml_no_otb.size();
+		if (total_missing > 0) {
+			warnings.push_back(std::format("Missing item definitions detected ({} entries total).", total_missing));
+			warnings.push_back("Go to File -> Missing Items Report... for detailed view.");
+			warnings.push_back(""); // Empty line for readability
+
+			if (!last_missing_items.missing_in_dat.empty()) {
+				warnings.push_back(std::format("--- Items missing from tibia.dat ({}) ---", last_missing_items.missing_in_dat.size()));
+				for (const auto& entry : last_missing_items.missing_in_dat) {
+					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+				}
+				warnings.push_back("");
+			}
+
+			if (!last_missing_items.missing_in_otb.empty()) {
+				warnings.push_back(std::format("--- tibia.dat items not in items.otb ({}) ---", last_missing_items.missing_in_otb.size()));
+				for (const auto& entry : last_missing_items.missing_in_otb) {
+					warnings.push_back(std::format("  Client ID: {}", entry.client_id));
+				}
+				warnings.push_back("");
+			}
+
+			if (!last_missing_items.xml_no_otb.empty()) {
+				warnings.push_back(std::format("--- items.xml entries missing from items.otb ({}) ---", last_missing_items.xml_no_otb.size()));
+				for (const auto& entry : last_missing_items.xml_no_otb) {
+					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+				}
+				warnings.push_back("");
+			}
+		}
 	}
 
 	g_loading.SetLoadDone(35, "Loading creatures.xml ...");

@@ -2,6 +2,7 @@
 #define RME_ITEM_DEFINITIONS_CORE_ASSET_BUNDLE_H_
 
 #include "item_definitions/core/item_definition_store.h"
+#include "item_definitions/core/missing_item_report.h"
 #include "item_definitions/formats/dat/dat_catalog.h"
 
 #include <memory>
@@ -25,6 +26,7 @@ struct AssetBundle {
 	std::shared_ptr<SpriteArchive> sprite_archive;
 	ItemDefinitionFragments fragments;
 	std::vector<ResolvedItemDefinitionRow> rows;
+	MissingItemReport missing_items;
 };
 
 #endif
