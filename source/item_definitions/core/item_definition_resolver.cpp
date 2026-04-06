@@ -166,6 +166,28 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input,
 				missingReport->xml_no_otb.push_back(std::move(entry));
 			}
 		}
+
+		// Collect OTB entries that don't have XML entries (informational)
+		for (const auto& [server_id, otb] : fragments.otb) {
+			// Skip OTB entries with no client ID
+			if (otb.client_id == 0) {
+				continue;
+			}
+			// Skip entries where DAT definition doesn't exist (already reported)
+			if (fragments.dat.find(otb.client_id) == fragments.dat.end()) {
+				continue;
+			}
+			// Skip entries that have XML overrides
+			if (fragments.xml.find(server_id) != fragments.xml.end()) {
+				continue;
+			}
+			MissingItemEntry entry;
+			entry.server_id = server_id;
+			entry.client_id = otb.client_id;
+			entry.name = otb.name;
+			entry.description = otb.description;
+			missingReport->otb_no_xml.push_back(std::move(entry));
+		}
 	}
 
 	if (rows.empty() && missingReport && missingReport->missing_in_dat.empty()) {

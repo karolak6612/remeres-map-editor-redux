@@ -40,10 +40,12 @@ private:
 	wxDataViewListCtrl* listMissingInDat;
 	wxDataViewListCtrl* listMissingInOtb;
 	wxDataViewListCtrl* listXmlNoOtb;
+	wxDataViewListCtrl* listOtbNoXml;
 
 	wxStaticText* countMissingInDat;
 	wxStaticText* countMissingInOtb;
 	wxStaticText* countXmlNoOtb;
+	wxStaticText* countOtbNoXml;
 };
 
 #endif

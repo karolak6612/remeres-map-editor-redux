@@ -20,6 +20,7 @@ struct MissingItemReport {
 	std::vector<MissingItemEntry> missing_in_dat;   // In OTB/XML but not in DAT
 	std::vector<MissingItemEntry> missing_in_otb;   // In DAT but not in OTB
 	std::vector<MissingItemEntry> xml_no_otb;       // In XML but not in OTB
+	std::vector<MissingItemEntry> otb_no_xml;       // In OTB but not in XML
 };
 
 #endif

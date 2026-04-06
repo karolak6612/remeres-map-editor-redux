@@ -96,7 +96,7 @@ void FileMenuHandler::OnReloadDataFiles(wxCommandEvent& WXUNUSED(event)) {
 
 void FileMenuHandler::OnMissingItemsReport(wxCommandEvent& WXUNUSED(event)) {
 	const auto& missing = g_version.getLastMissingItems();
-	if (missing.missing_in_dat.empty() && missing.missing_in_otb.empty() && missing.xml_no_otb.empty()) {
+	if (missing.missing_in_dat.empty() && missing.missing_in_otb.empty() && missing.xml_no_otb.empty() && missing.otb_no_xml.empty()) {
 		wxMessageBox("No missing item definitions were detected for the current client version.",
 		             "Missing Items Report", wxOK | wxICON_INFORMATION, g_gui.root);
 		return;

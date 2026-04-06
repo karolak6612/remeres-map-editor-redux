@@ -13,9 +13,11 @@ MissingItemsDialog::MissingItemsDialog(wxWindow* parent, const MissingItemReport
 	listMissingInDat(nullptr),
 	listMissingInOtb(nullptr),
 	listXmlNoOtb(nullptr),
+	listOtbNoXml(nullptr),
 	countMissingInDat(nullptr),
 	countMissingInOtb(nullptr),
-	countXmlNoOtb(nullptr) {
+	countXmlNoOtb(nullptr),
+	countOtbNoXml(nullptr) {
 	BuildUI();
 	CenterOnParent();
 }
@@ -114,6 +116,33 @@ void MissingItemsDialog::BuildUI() {
 		notebook->AddPage(page3, wxString::Format("XML no OTB (%zu)", report.xml_no_otb.size()));
 	}
 
+	// Section 4: OTB no XML (only shown if hasOtb is true)
+	if (hasOtb) {
+		auto* page4 = newd wxPanel(notebook, wxID_ANY);
+		auto* sizer4 = newd wxBoxSizer(wxVERTICAL);
+		countOtbNoXml = newd wxStaticText(page4, wxID_ANY, "");
+		sizer4->Add(countOtbNoXml, 0, wxALL, 5);
+
+		listOtbNoXml = newd wxDataViewListCtrl(page4, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxDV_HORIZ_RULES);
+		listOtbNoXml->AppendTextColumn("Server ID", wxDATAVIEW_CELL_INERT, 100);
+		listOtbNoXml->AppendTextColumn("Client ID", wxDATAVIEW_CELL_INERT, 100);
+		listOtbNoXml->AppendTextColumn("Name", wxDATAVIEW_CELL_INERT, 200);
+		listOtbNoXml->AppendTextColumn("Description", wxDATAVIEW_CELL_INERT, 250);
+		sizer4->Add(listOtbNoXml, 1, wxALL | wxEXPAND, 5);
+
+		for (const auto& entry : report.otb_no_xml) {
+			listOtbNoXml->AppendItem({
+				wxString::Format("%u", entry.server_id),
+				wxString::Format("%u", entry.client_id),
+				wxString::FromUTF8(entry.name.empty() ? "unknown" : entry.name),
+				wxString::FromUTF8(entry.description)
+			});
+		}
+		countOtbNoXml->SetLabel(wxString::Format("Items in items.otb missing from items.xml: %zu", report.otb_no_xml.size()));
+		page4->SetSizer(sizer4);
+		notebook->AddPage(page4, wxString::Format("OTB no XML (%zu)", report.otb_no_xml.size()));
+	}
+
 	mainSizer->Add(notebook, 1, wxALL | wxEXPAND, 5);
 
 	// Buttons
@@ -208,7 +237,7 @@ void MissingItemsDialog::OnIgnore(wxCommandEvent& WXUNUSED(evt)) {
 }
 
 void MissingItemsDialog::Show(wxWindow* parent, const MissingItemReport& report, bool hasOtb) {
-	if (report.missing_in_dat.empty() && report.missing_in_otb.empty() && report.xml_no_otb.empty()) {
+	if (report.missing_in_dat.empty() && report.missing_in_otb.empty() && report.xml_no_otb.empty() && report.otb_no_xml.empty()) {
 		return;
 	}
 

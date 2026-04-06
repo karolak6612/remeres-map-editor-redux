@@ -134,7 +134,8 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	if (g_settings.getBoolean(Config::SHOW_MISSING_ITEMS_WARNING)) {
 		size_t total_missing = last_missing_items.missing_in_dat.size() +
 		                       last_missing_items.missing_in_otb.size() +
-		                       last_missing_items.xml_no_otb.size();
+		                       last_missing_items.xml_no_otb.size() +
+		                       last_missing_items.otb_no_xml.size();
 		if (total_missing > 0) {
 			warnings.push_back(std::format("Missing item definitions detected ({} entries total).", total_missing));
 			warnings.push_back("Go to File -> Missing Items Report... for detailed view.");
@@ -160,6 +161,15 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 			if (!last_missing_items.xml_no_otb.empty()) {
 				warnings.push_back(std::format("--- items.xml entries missing from items.otb ({}) ---", last_missing_items.xml_no_otb.size()));
 				for (const auto& entry : last_missing_items.xml_no_otb) {
+					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+				}
+				warnings.push_back("");
+			}
+
+			if (!last_missing_items.otb_no_xml.empty()) {
+				warnings.push_back(std::format("--- items.otb entries missing from items.xml ({}) ---", last_missing_items.otb_no_xml.size()));
+				for (const auto& entry : last_missing_items.otb_no_xml) {
 					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
 						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
 				}
