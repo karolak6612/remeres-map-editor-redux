@@ -9,7 +9,7 @@
 
 struct SpriteLight {
 	uint8_t intensity = 0;
-	uint8_t color = 0;
+	uint8_t color = 215;
 };
 
 #endif

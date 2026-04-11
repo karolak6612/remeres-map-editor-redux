@@ -101,10 +101,11 @@ namespace IngamePreview {
 		DrawingOptions options;
 		options.SetIngame();
 		options.show_lights = lighting_enabled;
-		options.ambient_light_level = static_cast<float>(ambient_light) / 255.0f;
-		options.light_intensity = light_intensity;
-		// Explicitly set global light color to white (daylight) to avoid black multiplication
-		options.global_light_color = wxColor(255, 255, 255);
+		options.server_light = SpriteLight {
+			.intensity = ambient_light,
+			.color = server_light_color
+		};
+		options.minimum_ambient_light = 0.0f;
 
 		// Initialize GL state
 		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
@@ -113,6 +114,10 @@ namespace IngamePreview {
 
 		primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 		light_buffer->Clear();
+		if (lighting_enabled) {
+			light_buffer->Prepare(view);
+		}
+		const bool draw_lights = lighting_enabled && view.zoom <= 10.0f;
 		if (creature_name_drawer) {
 			creature_name_drawer->clear(); // Clear old labels
 		}
@@ -163,6 +168,16 @@ namespace IngamePreview {
 			view.end_x = static_cast<int>(std::ceil((view.view_scroll_x + viewport_width * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
 			view.end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
 
+			if (draw_lights) {
+				for (int x = view.start_x; x <= view.end_x; ++x) {
+					for (int y = view.start_y; y <= view.end_y; ++y) {
+						if (const Tile* tile = map.getTile(x, y, z)) {
+							tile_renderer->RegisterGroundLightOcclusion(tile->location, view, *light_buffer);
+						}
+					}
+				}
+			}
+
 			int base_draw_x = -view.view_scroll_x - floor_offset;
 			int base_draw_y = -view.view_scroll_y - floor_offset;
 
@@ -172,7 +187,7 @@ namespace IngamePreview {
 					if (tile) {
 						int draw_x = (x * TILE_SIZE) + base_draw_x;
 						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y, lighting_enabled ? light_buffer.get() : nullptr);
+						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y, draw_lights ? light_buffer.get() : nullptr);
 
 						// Add names of creatures on this floor
 						if (creature_name_drawer && z == camera_pos.z) {
@@ -224,10 +239,14 @@ namespace IngamePreview {
 		}
 
 		if (lighting_enabled && light_drawer) {
-			// Ensure light options are fully initialized to avoid black screen from garbage values
-			options.experimental_fog = false;
-			options.global_light_color = wxColor(255, 255, 255); // Full light color
-			light_drawer->draw(view, options.experimental_fog, *light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+			if (options.draw_floor_shadow && view.floor > GROUND_LAYER) {
+				primitive_renderer->drawRect(
+					glm::vec4(0.0f, 0.0f, view.logical_width, view.logical_height),
+					glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)
+				);
+				primitive_renderer->flush();
+			}
+			light_drawer->draw(view, *light_buffer, options);
 		}
 
 		// Draw Names

@@ -21,8 +21,8 @@
 #include <algorithm>
 
 float LightCalculator::calculateIntensity(int map_x, int map_y, const LightBuffer::Light& light) {
-	int dx = map_x - light.map_x;
-	int dy = map_y - light.map_y;
+	int dx = map_x - light.tile_x;
+	int dy = map_y - light.tile_y;
 	float distance = std::sqrt(dx * dx + dy * dy);
 	if (distance > MaxLightIntensity) {
 		return 0.f;

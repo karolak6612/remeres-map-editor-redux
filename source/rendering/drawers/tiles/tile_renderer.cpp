@@ -27,8 +27,36 @@
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/utilities/pattern_calculator.h"
 
+#include <ranges>
+
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
+}
+
+namespace {
+	[[nodiscard]] int projectedFloorOffsetTiles(const RenderView& view, int map_z) {
+		if (map_z <= GROUND_LAYER) {
+			return GROUND_LAYER - map_z;
+		}
+		return view.floor - map_z;
+	}
+
+	[[nodiscard]] std::pair<int, int> projectedTilePosition(const RenderView& view, const Position& position) {
+		const int offset_tiles = projectedFloorOffsetTiles(view, position.z);
+		return { position.x - offset_tiles, position.y - offset_tiles };
+	}
+
+	[[nodiscard]] bool tileCarriesTranslucentLight(const Tile* tile) {
+		if (!tile) {
+			return false;
+		}
+		if (tile->ground && (tile->ground->isTranslucent() || tile->ground->hasLensHelp())) {
+			return true;
+		}
+		return std::ranges::any_of(tile->items, [](const std::unique_ptr<Item>& item) {
+			return item && (item->isTranslucent() || item->hasLensHelp());
+		});
+	}
 }
 
 static DrawColor invalidTileOverlayColor(InvalidOTBMItemMarkerColor markerColor, bool selected) {
@@ -169,6 +197,20 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 	return true;
 }
 
+void TileRenderer::RegisterGroundLightOcclusion(TileLocation* location, const RenderView& view, LightBuffer& light_buffer) const {
+	if (!location) {
+		return;
+	}
+
+	Tile* tile = location->get();
+	if (!tile || !tile->ground || !tile->ground->blocksLightFromBelow()) {
+		return;
+	}
+
+	const auto [tile_x, tile_y] = projectedTilePosition(view, location->getPosition());
+	light_buffer.SetFieldBrightness(tile_x, tile_y, light_buffer.lights.size());
+}
+
 void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
 	if (!location) {
 		return;
@@ -202,6 +244,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	const int tile_draw_y = draw_y;
 
 	const auto& position = location->getPosition();
+	const auto [projected_tile_x, projected_tile_y] = projectedTilePosition(view, position);
 
 	ItemDefinitionView ground_it;
 	if (tile->ground) {
@@ -214,7 +257,18 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	// Light Processing (Ground)
 	if (light_buffer && tile->hasLight()) {
 		if (tile->ground && tile->ground->hasLight() && !hidden_invalid_ground && !unresolved_invalid_ground) {
-			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+			light_buffer->AddLight(projected_tile_x, projected_tile_y, tile->ground->getLight());
+		}
+	}
+
+	if (light_buffer && position.z == GROUND_LAYER + 1) {
+		Position above_position = position;
+		--above_position.z;
+		if (const Tile* tile_above = editor ? editor->map.getTile(above_position) : nullptr; tileCarriesTranslucentLight(tile_above)) {
+			light_buffer->AddLight(projected_tile_x, projected_tile_y, SpriteLight {
+				.intensity = 1,
+				.color = 215
+			});
 		}
 	}
 
@@ -349,7 +403,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				}
 
 				if (light_buffer && item->hasLight()) {
-					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+					light_buffer->AddLight(projected_tile_x, projected_tile_y, item->getLight());
 				}
 
 				// item tooltip (one per item)

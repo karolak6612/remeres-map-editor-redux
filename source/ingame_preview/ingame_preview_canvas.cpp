@@ -32,7 +32,8 @@ namespace IngamePreview {
 		zoom(1.0f),
 		lighting_enabled(true),
 		ambient_light(255),
-		light_intensity(1.0f),
+		light_intensity(255),
+		server_light_color(215),
 		viewport_width_tiles(15),
 		viewport_height_tiles(11),
 		preview_direction(SOUTH),
@@ -377,9 +378,16 @@ namespace IngamePreview {
 		}
 	}
 
-	void IngamePreviewCanvas::SetLightIntensity(float intensity) {
+	void IngamePreviewCanvas::SetLightIntensity(uint8_t intensity) {
 		if (light_intensity != intensity) {
 			light_intensity = intensity;
+			Refresh();
+		}
+	}
+
+	void IngamePreviewCanvas::SetServerLightColor(uint8_t color) {
+		if (server_light_color != color) {
+			server_light_color = color;
 			Refresh();
 		}
 	}
@@ -466,6 +474,7 @@ namespace IngamePreview {
 
 		NVGcontext* vg = m_nvg.get();
 		renderer->SetLightIntensity(light_intensity);
+		renderer->SetServerLightColor(server_light_color);
 		renderer->SetName(preview_name_str);
 		renderer->Render(vg, current_editor->map, view_x, view_y, view_w, view_h, camera_pos, calculated_zoom, lighting_enabled, ambient_light, preview_outfit, preview_direction, animation_phase, walk_offset_x, walk_offset_y);
 

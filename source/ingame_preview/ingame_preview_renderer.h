@@ -41,8 +41,11 @@ namespace IngamePreview {
 		 */
 		void Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y);
 
-		void SetLightIntensity(float intensity) {
+		void SetLightIntensity(uint8_t intensity) {
 			light_intensity = intensity;
+		}
+		void SetServerLightColor(uint8_t color) {
+			server_light_color = color;
 		}
 
 		void SetName(const std::string& name) {
@@ -53,7 +56,8 @@ namespace IngamePreview {
 		TileRenderer* tile_renderer;
 		std::unique_ptr<FloorVisibilityCalculator> floor_calculator;
 
-		float light_intensity = 1.0f;
+		uint8_t light_intensity = 255;
+		uint8_t server_light_color = 215;
 		std::string preview_name = "You";
 
 		// Smooth fading state

@@ -20,6 +20,7 @@ public:
 
 	void OnLightSlider(wxCommandEvent& event);
 	void OnAmbientLightSlider(wxCommandEvent& event);
+	void OnServerLightColorSlider(wxCommandEvent& event);
 	void OnToggleLight(wxCommandEvent& event);
 
 	static const wxString PANE_NAME;
@@ -28,6 +29,7 @@ private:
 	wxAuiToolBar* toolbar;
 	wxSlider* light_slider;
 	wxSlider* ambient_slider;
+	wxSlider* server_light_color_slider;
 };
 
 #endif // RME_UI_TOOLBAR_LIGHT_TOOLBAR_H_

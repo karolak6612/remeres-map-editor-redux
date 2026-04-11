@@ -5,20 +5,36 @@
 #include <cstdint>
 #include <algorithm>
 #include "rendering/core/sprite_light.h"
-#include "app/definitions.h"
+
+struct RenderView;
 
 struct LightBuffer {
 	struct Light {
-		uint16_t map_x = 0;
-		uint16_t map_y = 0;
+		int32_t tile_x = 0;
+		int32_t tile_y = 0;
 		uint8_t color = 0;
 		uint8_t intensity = 0;
 	};
 
-	std::vector<Light> lights;
+	struct TileLight {
+		uint32_t start = 0;
+		uint8_t color = 0;
+	};
 
-	void AddLight(int map_x, int map_y, int map_z, const SpriteLight& light);
+	std::vector<Light> lights;
+	std::vector<TileLight> tiles;
+	int origin_x = 0;
+	int origin_y = 0;
+	int width = 0;
+	int height = 0;
+
+	void Prepare(const RenderView& view);
+	void AddLight(int tile_x, int tile_y, const SpriteLight& light);
+	void SetFieldBrightness(int tile_x, int tile_y, size_t start, uint8_t color = 0);
 	void Clear();
+
+	[[nodiscard]] bool ContainsTile(int tile_x, int tile_y) const noexcept;
+	[[nodiscard]] int IndexOf(int tile_x, int tile_y) const noexcept;
 };
 
 #endif

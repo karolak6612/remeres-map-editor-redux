@@ -378,10 +378,10 @@ void GUI::SetSpawnTime(int time) {
 		tool_options->ReloadSettings();
 	}
 }
-void GUI::SetLightIntensity(float v) {
+void GUI::SetLightIntensity(int v) {
 	g_brush_manager.SetLightIntensity(v);
 }
-float GUI::GetLightIntensity() const {
+int GUI::GetLightIntensity() const {
 	return g_brush_manager.GetLightIntensity();
 }
 void GUI::SetAmbientLightLevel(float v) {
@@ -389,6 +389,12 @@ void GUI::SetAmbientLightLevel(float v) {
 }
 float GUI::GetAmbientLightLevel() const {
 	return g_brush_manager.GetAmbientLightLevel();
+}
+void GUI::SetServerLightColor(int v) {
+	g_brush_manager.SetServerLightColor(v);
+}
+int GUI::GetServerLightColor() const {
+	return g_brush_manager.GetServerLightColor();
 }
 void GUI::SetBrushSize(int nz) {
 	g_brush_manager.SetBrushSize(nz);

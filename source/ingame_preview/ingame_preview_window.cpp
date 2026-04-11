@@ -18,6 +18,7 @@ namespace IngamePreview {
 		ID_CHOOSE_OUTFIT,
 		ID_AMBIENT_SLIDER,
 		ID_INTENSITY_SLIDER,
+		ID_SERVER_COLOR_SLIDER,
 		ID_VIEWPORT_W_UP,
 		ID_VIEWPORT_W_DOWN,
 		ID_VIEWPORT_H_UP,
@@ -42,6 +43,7 @@ namespace IngamePreview {
 		Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleLighting, this, ID_ENABLE_LIGHTING);
 		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnAmbientSlider, this, ID_AMBIENT_SLIDER);
 		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnIntensitySlider, this, ID_INTENSITY_SLIDER);
+		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnServerColorSlider, this, ID_SERVER_COLOR_SLIDER);
 		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthUp, this, ID_VIEWPORT_W_UP);
 		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthDown, this, ID_VIEWPORT_W_DOWN);
 		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportHeightUp, this, ID_VIEWPORT_H_UP);
@@ -76,9 +78,13 @@ namespace IngamePreview {
 		ambient_slider->SetToolTip("Ambient Light");
 		toolbar_sizer->Add(ambient_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
-		intensity_slider = new wxSlider(this, ID_INTENSITY_SLIDER, 100, 0, 200, wxDefaultPosition, wxSize(60, -1));
-		intensity_slider->SetToolTip("Light Intensity");
+		intensity_slider = new wxSlider(this, ID_INTENSITY_SLIDER, 255, 0, 255, wxDefaultPosition, wxSize(60, -1));
+		intensity_slider->SetToolTip("Server Ambient Intensity");
 		toolbar_sizer->Add(intensity_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+
+		server_color_slider = new wxSlider(this, ID_SERVER_COLOR_SLIDER, 215, 0, 255, wxDefaultPosition, wxSize(60, -1));
+		server_color_slider->SetToolTip("Server Ambient Color");
+		toolbar_sizer->Add(server_color_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
 		// Spacer
 		toolbar_sizer->AddSpacer(4);
@@ -121,7 +127,8 @@ namespace IngamePreview {
 		// Sync UI State to Canvas
 		canvas->SetLightingEnabled(lighting_btn->GetValue());
 		canvas->SetAmbientLight((uint8_t)ambient_slider->GetValue());
-		canvas->SetLightIntensity(intensity_slider->GetValue() / 100.0f);
+		canvas->SetLightIntensity(static_cast<uint8_t>(intensity_slider->GetValue()));
+		canvas->SetServerLightColor(static_cast<uint8_t>(server_color_slider->GetValue()));
 		canvas->SetPreviewOutfit(preview_outfit);
 		canvas->SetName(current_name.ToStdString());
 		canvas->SetSpeed(current_speed);
@@ -200,7 +207,11 @@ namespace IngamePreview {
 	}
 
 	void IngamePreviewWindow::OnIntensitySlider(wxCommandEvent& event) {
-		canvas->SetLightIntensity(intensity_slider->GetValue() / 100.0f);
+		canvas->SetLightIntensity(static_cast<uint8_t>(intensity_slider->GetValue()));
+	}
+
+	void IngamePreviewWindow::OnServerColorSlider(wxCommandEvent& event) {
+		canvas->SetServerLightColor(static_cast<uint8_t>(server_color_slider->GetValue()));
 	}
 
 	void IngamePreviewWindow::OnViewportWidthUp(wxCommandEvent& event) {

@@ -22,6 +22,7 @@ namespace IngamePreview {
 		void OnToggleLighting(wxCommandEvent& event);
 		void OnAmbientSlider(wxCommandEvent& event);
 		void OnIntensitySlider(wxCommandEvent& event);
+		void OnServerColorSlider(wxCommandEvent& event);
 		void OnViewportWidthUp(wxCommandEvent& event);
 		void OnViewportWidthDown(wxCommandEvent& event);
 		void OnViewportHeightUp(wxCommandEvent& event);
@@ -41,6 +42,7 @@ namespace IngamePreview {
 		wxButton* outfit_btn;
 		wxSlider* ambient_slider;
 		wxSlider* intensity_slider;
+		wxSlider* server_color_slider;
 
 		wxTextCtrl* viewport_x_text;
 		wxTextCtrl* viewport_y_text;

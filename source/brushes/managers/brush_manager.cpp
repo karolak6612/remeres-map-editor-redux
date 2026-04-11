@@ -52,8 +52,9 @@ BrushManager::BrushManager() :
 	draw_locked_doors(false),
 	use_custom_thickness(false),
 	custom_thickness_mod(0.0),
-	light_intensity(1.0f),
-	ambient_light_level(0.5f) {
+	light_intensity(255),
+	ambient_light_level(0.0f),
+	server_light_color(215) {
 }
 
 BrushManager::~BrushManager() {

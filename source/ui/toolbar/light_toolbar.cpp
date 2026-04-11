@@ -18,18 +18,25 @@ LightToolBar::LightToolBar(wxWindow* parent) {
 	toolbar->SetToolBitmapSize(icon_size);
 
 	wxStaticText* intensity_label = newd wxStaticText(toolbar, wxID_ANY, "Intensity:");
-	light_slider = newd wxSlider(toolbar, ID_LIGHT_INTENSITY_SLIDER, 100, 0, 200, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
-	light_slider->SetToolTip("Global Light Intensity");
+	light_slider = newd wxSlider(toolbar, ID_LIGHT_INTENSITY_SLIDER, g_gui.GetLightIntensity(), 0, 255, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
+	light_slider->SetToolTip("Server Ambient Light Intensity");
 
 	wxStaticText* ambient_label = newd wxStaticText(toolbar, wxID_ANY, "Ambient:");
-	ambient_slider = newd wxSlider(toolbar, ID_AMBIENT_LIGHT_SLIDER, 50, 0, 100, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
-	ambient_slider->SetToolTip("Ambient Light Level");
+	ambient_slider = newd wxSlider(toolbar, ID_AMBIENT_LIGHT_SLIDER, static_cast<int>(g_gui.GetAmbientLightLevel() * 100.0f), 0, 100, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
+	ambient_slider->SetToolTip("Minimum Ambient Light");
+
+	wxStaticText* color_label = newd wxStaticText(toolbar, wxID_ANY, "Color:");
+	server_light_color_slider = newd wxSlider(toolbar, ID_SERVER_LIGHT_COLOR_SLIDER, g_gui.GetServerLightColor(), 0, 255, wxDefaultPosition, parent->FromDIP(wxSize(100, 20)));
+	server_light_color_slider->SetToolTip("Server Ambient Light Color (8-bit palette index)");
 
 	toolbar->AddControl(intensity_label);
 	toolbar->AddControl(light_slider);
 	toolbar->AddSeparator();
 	toolbar->AddControl(ambient_label);
 	toolbar->AddControl(ambient_slider);
+	toolbar->AddSeparator();
+	toolbar->AddControl(color_label);
+	toolbar->AddControl(server_light_color_slider);
 	toolbar->AddSeparator();
 
 	wxBitmap light_bitmap = IMAGE_MANAGER.GetBitmap(ICON_SUNNY, icon_size, wxColour(255, 235, 59));
@@ -40,24 +47,31 @@ LightToolBar::LightToolBar(wxWindow* parent) {
 
 	light_slider->Bind(wxEVT_SLIDER, &LightToolBar::OnLightSlider, this);
 	ambient_slider->Bind(wxEVT_SLIDER, &LightToolBar::OnAmbientLightSlider, this);
+	server_light_color_slider->Bind(wxEVT_SLIDER, &LightToolBar::OnServerLightColorSlider, this);
 	toolbar->Bind(wxEVT_TOOL, &LightToolBar::OnToggleLight, this, ID_LIGHT_TOGGLE);
 }
 
 LightToolBar::~LightToolBar() {
 	light_slider->Unbind(wxEVT_SLIDER, &LightToolBar::OnLightSlider, this);
 	ambient_slider->Unbind(wxEVT_SLIDER, &LightToolBar::OnAmbientLightSlider, this);
+	server_light_color_slider->Unbind(wxEVT_SLIDER, &LightToolBar::OnServerLightColorSlider, this);
 	if (toolbar) {
 		toolbar->Unbind(wxEVT_TOOL, &LightToolBar::OnToggleLight, this, ID_LIGHT_TOGGLE);
 	}
 }
 
 void LightToolBar::OnLightSlider(wxCommandEvent& event) {
-	g_gui.SetLightIntensity(event.GetInt() / 100.0f);
+	g_gui.SetLightIntensity(event.GetInt());
 	g_gui.RefreshView();
 }
 
 void LightToolBar::OnAmbientLightSlider(wxCommandEvent& event) {
 	g_gui.SetAmbientLightLevel(event.GetInt() / 100.0f);
+	g_gui.RefreshView();
+}
+
+void LightToolBar::OnServerLightColorSlider(wxCommandEvent& event) {
+	g_gui.SetServerLightColor(event.GetInt());
 	g_gui.RefreshView();
 }
 

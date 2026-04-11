@@ -309,6 +309,9 @@ void MapDrawer::Draw() {
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
+	if (options.isDrawLight()) {
+		light_buffer.Prepare(view);
+	}
 
 	// Check Framebuffer Logic
 	// Check Framebuffer Logic
@@ -333,6 +336,13 @@ void MapDrawer::Draw() {
 	primitive_renderer->flush();
 
 	if (options.isDrawLight()) {
+		if (options.draw_floor_shadow && view.floor > GROUND_LAYER) {
+			primitive_renderer->drawRect(
+				glm::vec4(0.0f, 0.0f, view.logical_width, view.logical_height),
+				glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)
+			);
+			primitive_renderer->flush();
+		}
 		DrawLight();
 	}
 
@@ -434,7 +444,7 @@ void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
 }
 
 void MapDrawer::DrawLight() {
-	light_drawer->draw(view, options.experimental_fog, light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+	light_drawer->draw(view, light_buffer, options);
 }
 
 void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {
