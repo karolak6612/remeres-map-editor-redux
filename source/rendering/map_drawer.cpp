@@ -335,8 +335,19 @@ void MapDrawer::Draw() {
 	sprite_batch->end(*atlas);
 	primitive_renderer->flush();
 
+	// If using FBO, resolve to screen BEFORE compositing lightmap
+	// (lightmap must composite onto the resolved scene, not an empty framebuffer)
+	if (use_fbo) {
+		DrawPostProcess(view, options);
+		// Reset to default FBO for overlays
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
+	}
+
 	if (options.isDrawLight()) {
-		if (options.draw_floor_shadow && view.floor > GROUND_LAYER) {
+		// OTClient floor shadow: 50% black overlay when underground (floor 8+) and viewing that floor
+		// view.start_z is the topmost floor being rendered; if it's underground, we're fully underground
+		if (options.draw_floor_shadow && view.start_z >= GROUND_LAYER + 1) {
 			primitive_renderer->drawRect(
 				glm::vec4(0.0f, 0.0f, view.logical_width, view.logical_height),
 				glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)
@@ -344,14 +355,6 @@ void MapDrawer::Draw() {
 			primitive_renderer->flush();
 		}
 		DrawLight();
-	}
-
-	// If using FBO, we must now Resolve to Screen
-	if (use_fbo) {
-		DrawPostProcess(view, options);
-		// Reset to default FBO for overlays
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
 	}
 
 	// Resume Batch for Overlays

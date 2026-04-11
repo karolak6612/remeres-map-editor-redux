@@ -197,7 +197,7 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 	return true;
 }
 
-void TileRenderer::RegisterGroundLightOcclusion(TileLocation* location, const RenderView& view, LightBuffer& light_buffer) const {
+void TileRenderer::RegisterGroundLightOcclusion(TileLocation* location, const RenderView& view, LightBuffer& light_buffer, size_t floor_light_start) const {
 	if (!location) {
 		return;
 	}
@@ -208,7 +208,7 @@ void TileRenderer::RegisterGroundLightOcclusion(TileLocation* location, const Re
 	}
 
 	const auto [tile_x, tile_y] = projectedTilePosition(view, location->getPosition());
-	light_buffer.SetFieldBrightness(tile_x, tile_y, light_buffer.lights.size());
+	light_buffer.SetFieldBrightness(tile_x, tile_y, floor_light_start);
 }
 
 void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
@@ -261,10 +261,13 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
+	// Translucent light: when on floor 8 (GROUND_LAYER + 1), check if floor 7 above has translucent items
+	// OTClient: light seeps through translucent ground (grates, windows) from floor 7 to floor 8
 	if (light_buffer && position.z == GROUND_LAYER + 1) {
 		Position above_position = position;
 		--above_position.z;
 		if (const Tile* tile_above = editor ? editor->map.getTile(above_position) : nullptr; tileCarriesTranslucentLight(tile_above)) {
+			// Emit faint warm white light (intensity=1, color=215) matching OTClient
 			light_buffer->AddLight(projected_tile_x, projected_tile_y, SpriteLight {
 				.intensity = 1,
 				.color = 215

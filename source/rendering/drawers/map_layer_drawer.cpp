@@ -127,9 +127,12 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		});
 	};
 
+	// OTClient floor-aware light occlusion: capture light count at START of each floor,
+	// then mark opaque ground tiles with that index so they block light from floors below
 	if (draw_lights) {
+		size_t floor_light_start = light_buffer.lights.size();
 		visitAllVisibleNodes([&](TileLocation* location, int, int) {
-			tile_renderer->RegisterGroundLightOcclusion(location, view, light_buffer);
+			tile_renderer->RegisterGroundLightOcclusion(location, view, light_buffer, floor_light_start);
 		});
 	}
 

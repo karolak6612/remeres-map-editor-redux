@@ -14,6 +14,7 @@
 #include "game/creature.h"
 #include "ui/gui.h"
 #include "rendering/core/text_renderer.h"
+#include <cstddef>
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -169,10 +170,11 @@ namespace IngamePreview {
 			view.end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
 
 			if (draw_lights) {
+				size_t floor_light_start = light_buffer->lights.size();
 				for (int x = view.start_x; x <= view.end_x; ++x) {
 					for (int y = view.start_y; y <= view.end_y; ++y) {
 						if (const Tile* tile = map.getTile(x, y, z)) {
-							tile_renderer->RegisterGroundLightOcclusion(tile->location, view, *light_buffer);
+							tile_renderer->RegisterGroundLightOcclusion(tile->location, view, *light_buffer, floor_light_start);
 						}
 					}
 				}

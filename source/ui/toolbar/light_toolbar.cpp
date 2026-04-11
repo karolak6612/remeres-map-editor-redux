@@ -62,16 +62,19 @@ LightToolBar::~LightToolBar() {
 
 void LightToolBar::OnLightSlider(wxCommandEvent& event) {
 	g_gui.SetLightIntensity(event.GetInt());
+	spdlog::info("[LightToolBar] Intensity slider -> {}", event.GetInt());
 	g_gui.RefreshView();
 }
 
 void LightToolBar::OnAmbientLightSlider(wxCommandEvent& event) {
 	g_gui.SetAmbientLightLevel(event.GetInt() / 100.0f);
+	spdlog::info("[LightToolBar] Ambient slider -> {} ({})", event.GetInt() / 100.0f, event.GetInt());
 	g_gui.RefreshView();
 }
 
 void LightToolBar::OnServerLightColorSlider(wxCommandEvent& event) {
 	g_gui.SetServerLightColor(event.GetInt());
+	spdlog::info("[LightToolBar] Color slider -> {} (palette index)", event.GetInt());
 	g_gui.RefreshView();
 }
 

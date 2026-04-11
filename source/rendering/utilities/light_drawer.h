@@ -14,18 +14,6 @@
 struct DrawingOptions;
 struct RenderView;
 
-struct GPULight {
-	glm::vec2 tile_position;
-	float intensity;
-	float padding;
-	glm::vec4 color;
-};
-
-struct GPUTileLight {
-	uint32_t start = 0;
-	uint32_t color = 0;
-};
-
 class LightDrawer {
 public:
 	LightDrawer();
@@ -33,27 +21,32 @@ public:
 
 	void draw(const RenderView& view, const LightBuffer& light_buffer, const DrawingOptions& options);
 
+	// Call when the map changes (tiles added/removed, light sources change)
+	void markDirty();
+
 private:
-	void initFBO();
-	void resizeFBO(int width, int height);
+	void computeBrightness(const LightBuffer& light_buffer, const DrawingOptions& options);
 	void initRenderResources();
-	void uploadBuffer(std::unique_ptr<GLBuffer>& buffer, size_t& capacity, const void* data, size_t count, size_t stride);
 
 	std::unique_ptr<ShaderProgram> shader_;
 	std::unique_ptr<GLVertexArray> vao_;
 	std::unique_ptr<GLBuffer> vbo_;
-	std::unique_ptr<GLBuffer> light_ssbo_;
-	std::unique_ptr<GLBuffer> tile_ssbo_;
-	size_t light_ssbo_capacity_ = 0;
-	size_t tile_ssbo_capacity_ = 0;
+	std::unique_ptr<GLTextureResource> light_texture_;
+	std::vector<uint8_t> tile_brightness_;
+	std::vector<uint8_t> screen_pixels_;
+	int tex_width_ = 0;
+	int tex_height_ = 0;
+	int cached_tw_ = 0;
+	int cached_th_ = 0;
+	bool dirty_ = true;
 
-	std::vector<GPULight> gpu_lights_;
-	std::vector<GPUTileLight> gpu_tiles_;
-
-	std::unique_ptr<GLFramebuffer> fbo_;
-	std::unique_ptr<GLTextureResource> fbo_texture_;
-	int buffer_width_ = 0;
-	int buffer_height_ = 0;
+	// Track lighting params to detect changes
+	float cached_ambient_ = -1.0f;
+	uint8_t cached_server_intensity_ = 0;
+	uint8_t cached_server_color_ = 0;
+	bool cached_show_lights_ = false;
+	size_t cached_light_count_ = 0;
+	size_t cached_light_hash_ = 0;
 };
 
 #endif
