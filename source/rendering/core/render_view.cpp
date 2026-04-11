@@ -1,9 +1,11 @@
 #include "app/main.h"
 #include "rendering/core/render_view.h"
 
+#include "editor/editor.h"
 #include "rendering/ui/map_display.h"
 #include "rendering/core/drawing_options.h"
 #include "app/definitions.h" // For TILE_SIZE, GROUND_LAYER, MAP_MAX_LAYER
+#include "ingame_preview/floor_visibility_calculator.h"
 #include <algorithm> // For std::min
 
 void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
@@ -15,20 +17,27 @@ void RenderView::Setup(MapCanvas* canvas, const DrawingOptions& options) {
 	zoom = static_cast<float>(canvas->GetZoom());
 	tile_size = std::max(1, static_cast<int>(TILE_SIZE / zoom)); // after zoom
 	floor = canvas->GetFloor();
+	canvas->GetScreenCenter(&camera_pos.x, &camera_pos.y);
 	camera_pos.z = floor;
 
-	if (options.show_all_floors) {
+	if (options.show_lights) {
+		IngamePreview::FloorVisibilityCalculator floor_visibility;
+		start_z = floor_visibility.CalcLastVisibleFloor(floor);
+		superend_z = floor_visibility.CalcFirstVisibleFloor(canvas->editor.map, camera_pos.x, camera_pos.y, floor);
+	} else if (options.show_all_floors) {
 		if (floor <= GROUND_LAYER) {
 			start_z = GROUND_LAYER;
+			superend_z = 0;
 		} else {
 			start_z = std::min(MAP_MAX_LAYER, floor + 2);
+			superend_z = 8;
 		}
 	} else {
 		start_z = floor;
+		superend_z = floor;
 	}
 
 	end_z = floor;
-	superend_z = (floor > GROUND_LAYER ? 8 : 0);
 
 	start_x = view_scroll_x / TILE_SIZE;
 	start_y = view_scroll_y / TILE_SIZE;

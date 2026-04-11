@@ -143,5 +143,5 @@ void DrawingOptions::Update() {
 }
 
 bool DrawingOptions::isDrawLight() const noexcept {
-	return show_lights;
+	return show_lights && minimum_ambient_light < 1.0f;
 }

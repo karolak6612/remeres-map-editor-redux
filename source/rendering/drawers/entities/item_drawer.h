@@ -16,6 +16,8 @@ class Tile;
 class Item;
 class HookIndicatorDrawer;
 class DoorIndicatorDrawer;
+struct LightBuffer;
+struct RenderView;
 
 struct DrawingOptions;
 class SpriteBatch;
@@ -33,6 +35,8 @@ struct BlitItemParams {
 	int green = 255;
 	int blue = 255;
 	int alpha = 255;
+	LightBuffer* light_buffer = nullptr;
+	const RenderView* view = nullptr;
 
 	BlitItemParams(const Tile* t, Item* i, const DrawingOptions& o);
 	BlitItemParams(const Position& p, Item* i, const DrawingOptions& o);

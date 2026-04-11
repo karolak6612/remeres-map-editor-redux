@@ -7,8 +7,6 @@
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
 #include <memory>
-#include <unordered_map>
-#include <chrono>
 #include <string>
 
 class Tile;
@@ -60,10 +58,6 @@ namespace IngamePreview {
 		uint8_t server_light_color = 215;
 		std::string preview_name = "You";
 
-		// Smooth fading state
-		std::unordered_map<int, float> floor_opacity;
-		std::chrono::steady_clock::time_point last_time;
-
 		// Internal rendering resources (could be shared or managed)
 		std::unique_ptr<SpriteBatch> sprite_batch;
 		std::unique_ptr<PrimitiveRenderer> primitive_renderer;
@@ -75,7 +69,6 @@ namespace IngamePreview {
 		std::unique_ptr<CreatureNameDrawer> creature_name_drawer;
 		std::unique_ptr<SpriteDrawer> sprite_drawer;
 
-		void UpdateOpacity(double dt, int first_visible, int last_visible);
 		int GetTileElevationOffset(const Tile* tile) const;
 	};
 

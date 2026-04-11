@@ -10,8 +10,8 @@ struct RenderView;
 
 struct LightBuffer {
 	struct Light {
-		int32_t tile_x = 0;
-		int32_t tile_y = 0;
+		int32_t pixel_x = 0;
+		int32_t pixel_y = 0;
 		uint8_t color = 0;
 		uint8_t intensity = 0;
 	};
@@ -29,7 +29,9 @@ struct LightBuffer {
 	int height = 0;
 
 	void Prepare(const RenderView& view);
-	void AddLight(int tile_x, int tile_y, const SpriteLight& light);
+	void AddLight(int pixel_x, int pixel_y, const SpriteLight& light);
+	void AddTileLight(int tile_x, int tile_y, const SpriteLight& light);
+	void AddScreenLight(int screen_x, int screen_y, const RenderView& view, const SpriteLight& light);
 	void SetFieldBrightness(int tile_x, int tile_y, size_t start, uint8_t color = 0);
 	void Clear();
 

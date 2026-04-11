@@ -345,15 +345,6 @@ void MapDrawer::Draw() {
 	}
 
 	if (options.isDrawLight()) {
-		// OTClient floor shadow: 50% black overlay when underground (floor 8+) and viewing that floor
-		// view.start_z is the topmost floor being rendered; if it's underground, we're fully underground
-		if (options.draw_floor_shadow && view.start_z >= GROUND_LAYER + 1) {
-			primitive_renderer->drawRect(
-				glm::vec4(0.0f, 0.0f, view.logical_width, view.logical_height),
-				glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)
-			);
-			primitive_renderer->flush();
-		}
 		DrawLight();
 	}
 
@@ -399,7 +390,13 @@ void MapDrawer::DrawMap() {
 	// Enable texture mode
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
-		if (map_z == view.end_z && view.start_z != view.end_z) {
+		if (options.isDrawLight() && options.draw_floor_shadow && view.end_z >= GROUND_LAYER + 1 && map_z == view.end_z) {
+			if (g_gui.gfx.ensureAtlasManager()) {
+				sprite_batch->drawRect(0.0f, 0.0f, view.screensize_x * view.zoom, view.screensize_y * view.zoom, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), *g_gui.gfx.getAtlasManager());
+			}
+		}
+
+		if (!options.show_lights && map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(*sprite_batch, view, options);
 		}
 

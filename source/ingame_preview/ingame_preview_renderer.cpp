@@ -10,17 +10,16 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "game/outfit.h"
 #include "map/basemap.h"
+#include "map/map_region.h"
 #include "map/tile.h"
 #include "game/creature.h"
 #include "ui/gui.h"
 #include "rendering/core/text_renderer.h"
-#include <cstddef>
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <glm/gtc/matrix_transform.hpp>
-#include <spdlog/spdlog.h>
-#include <algorithm> // For std::max
-#include <cstdlib> // For std::abs
+#include <algorithm>
+#include <cstdlib>
 
 namespace IngamePreview {
 
@@ -37,48 +36,25 @@ namespace IngamePreview {
 
 		sprite_batch->initialize();
 		primitive_renderer->initialize();
-		last_time = std::chrono::steady_clock::now();
-
-		// Initialize opacity
-		for (int z = 0; z <= MAP_MAX_LAYER; ++z) {
-			floor_opacity[z] = 0.0f;
-		}
 	}
 
 	IngamePreviewRenderer::~IngamePreviewRenderer() = default;
-
-	void IngamePreviewRenderer::UpdateOpacity(double dt, int first_visible, int last_visible) {
-		const float fade_speed = 4.0f; // Roughly 250ms for full fade
-		for (int z = 0; z <= MAP_MAX_LAYER; ++z) {
-			float target = (z >= first_visible && z <= last_visible) ? 1.0f : 0.0f;
-			float current = floor_opacity[z];
-			if (current < target) {
-				current = std::min(target, current + static_cast<float>(dt * fade_speed));
-			} else if (current > target) {
-				current = std::max(target, current - static_cast<float>(dt * fade_speed));
-			}
-			floor_opacity[z] = current;
-		}
-	}
 
 	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y) {
 		// CRITICAL: Update animation time for all sprite animations to work
 		g_gui.gfx.updateTime();
 
-		auto now = std::chrono::steady_clock::now();
-		double dt = std::chrono::duration<double>(now - last_time).count();
-		last_time = now;
-
 		int first_visible = floor_calculator->CalcFirstVisibleFloor(map, camera_pos.x, camera_pos.y, camera_pos.z);
 		int last_visible = floor_calculator->CalcLastVisibleFloor(camera_pos.z);
-
-		UpdateOpacity(dt, first_visible, last_visible);
 
 		// Setup RenderView and DrawingOptions
 		RenderView view;
 		view.zoom = zoom;
 		view.tile_size = TILE_SIZE;
 		view.floor = camera_pos.z;
+		view.start_z = last_visible;
+		view.end_z = camera_pos.z;
+		view.superend_z = first_visible;
 		view.screensize_x = viewport_width;
 		view.screensize_y = viewport_height;
 		view.camera_pos = camera_pos;
@@ -103,10 +79,10 @@ namespace IngamePreview {
 		options.SetIngame();
 		options.show_lights = lighting_enabled;
 		options.server_light = SpriteLight {
-			.intensity = ambient_light,
+			.intensity = light_intensity,
 			.color = server_light_color
 		};
-		options.minimum_ambient_light = 0.0f;
+		options.minimum_ambient_light = static_cast<float>(ambient_light) / 255.0f;
 
 		// Initialize GL state
 		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
@@ -118,7 +94,7 @@ namespace IngamePreview {
 		if (lighting_enabled) {
 			light_buffer->Prepare(view);
 		}
-		const bool draw_lights = lighting_enabled && view.zoom <= 10.0f;
+		const bool draw_lights = options.isDrawLight() && view.zoom <= 10.0f;
 		if (creature_name_drawer) {
 			creature_name_drawer->clear(); // Clear old labels
 		}
@@ -128,16 +104,12 @@ namespace IngamePreview {
 		}
 		auto* atlas = g_gui.gfx.getAtlasManager();
 
-		// Render floors from bottom to top
-		for (int z = last_visible; z >= 0; z--) {
-			float alpha = floor_opacity[z];
-			if (alpha <= 0.001f) {
-				continue;
-			}
+		sprite_batch->begin(view.projectionMatrix, *atlas);
 
-			// Sync viewport and start batch for this floor
-			sprite_batch->begin(view.projectionMatrix, *atlas);
-			sprite_batch->setGlobalTint(1.0f, 1.0f, 1.0f, alpha, *atlas);
+		for (int z = last_visible; z >= first_visible; --z) {
+			if (options.isDrawLight() && options.draw_floor_shadow && camera_pos.z >= GROUND_LAYER + 1 && z == camera_pos.z) {
+				sprite_batch->drawRect(0.0f, 0.0f, view.screensize_x * view.zoom, view.screensize_y * view.zoom, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), *atlas);
+			}
 
 			// Pre-calculate view offsets for this floor
 			int floor_offset = (z <= GROUND_LAYER)
@@ -146,22 +118,12 @@ namespace IngamePreview {
 			int camera_offset = (camera_pos.z <= GROUND_LAYER)
 				? (GROUND_LAYER - camera_pos.z) * TILE_SIZE
 				: 0;
-			// offset_diff accounts for the diagonal shift between the camera floor and this floor
-			int offset_diff = floor_offset - camera_offset;
 
 			// Dynamic viewport culling â€” adjusted per floor
-			// Use EXTREMELY large margins to guarantee no tiles are ever culled
-			// The camera floor (z == camera_pos.z) uses view_scroll directly
-			// Other floors are shifted by floor_offset, so we need to expand bounds
-			constexpr int margin = TILE_SIZE * 16; // 16 tiles margin = 512 pixels
-
-			// For viewport bounds, we need to consider the camera floor's coordinate system
-			// The camera floor uses view_scroll directly (floor_offset = camera_offset)
-			// For other floors, tiles are drawn at different positions due to floor_offset
-			// To ensure ALL visible tiles on ANY floor are rendered, we expand bounds by max possible offset
+			constexpr int margin = TILE_SIZE * 16;
 			int max_floor_offset = std::max(
 				std::abs(floor_offset - camera_offset),
-				TILE_SIZE * MAP_MAX_LAYER // Maximum possible floor offset
+				TILE_SIZE * MAP_MAX_LAYER
 			);
 
 			view.start_x = static_cast<int>(std::floor((view.view_scroll_x - margin - max_floor_offset) / static_cast<float>(TILE_SIZE)));
@@ -169,85 +131,80 @@ namespace IngamePreview {
 			view.end_x = static_cast<int>(std::ceil((view.view_scroll_x + viewport_width * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
 			view.end_y = static_cast<int>(std::ceil((view.view_scroll_y + viewport_height * zoom + margin + max_floor_offset) / static_cast<float>(TILE_SIZE)));
 
-			if (draw_lights) {
-				size_t floor_light_start = light_buffer->lights.size();
-				for (int x = view.start_x; x <= view.end_x; ++x) {
-					for (int y = view.start_y; y <= view.end_y; ++y) {
-						if (const Tile* tile = map.getTile(x, y, z)) {
-							tile_renderer->RegisterGroundLightOcclusion(tile->location, view, *light_buffer, floor_light_start);
-						}
+			const int nd_start_x = view.start_x & ~3;
+			const int nd_start_y = view.start_y & ~3;
+			const int nd_end_x = (view.end_x & ~3) + 4;
+			const int nd_end_y = (view.end_y & ~3) + 4;
+			const int base_draw_x = -view.view_scroll_x - floor_offset;
+			const int base_draw_y = -view.view_scroll_y - floor_offset;
+			const int safe_margin_tiles = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+
+			auto visitVisibleNodes = [&](auto&& visitor) {
+				map.visitLeaves(nd_start_x - safe_margin_tiles, nd_start_y - safe_margin_tiles, nd_end_x + safe_margin_tiles, nd_end_y + safe_margin_tiles, [&](const MapNode* node, int nd_map_x, int nd_map_y) {
+					const int node_draw_x = nd_map_x * TILE_SIZE + base_draw_x;
+					const int node_draw_y = nd_map_y * TILE_SIZE + base_draw_y;
+
+					if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+						return;
 					}
-				}
-			}
 
-			int base_draw_x = -view.view_scroll_x - floor_offset;
-			int base_draw_y = -view.view_scroll_y - floor_offset;
+					const bool fully_inside = view.IsRectFullyInside(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE);
+					const Floor* floor = node->getFloor(z);
+					if (!floor) {
+						return;
+					}
 
-			for (int x = view.start_x; x <= view.end_x; ++x) {
-				for (int y = view.start_y; y <= view.end_y; ++y) {
-					const Tile* tile = map.getTile(x, y, z);
-					if (tile) {
-						int draw_x = (x * TILE_SIZE) + base_draw_x;
-						int draw_y = (y * TILE_SIZE) + base_draw_y;
-						tile_renderer->DrawTile(*sprite_batch, tile->location, view, options, 0, draw_x, draw_y, draw_lights ? light_buffer.get() : nullptr);
-
-						// Add names of creatures on this floor
-						if (creature_name_drawer && z == camera_pos.z) {
-							if (tile->creature) {
-								creature_name_drawer->addLabel(tile->location->getPosition(), tile->creature->getName(), tile->creature.get());
+					const TileLocation* location = floor->locs.data();
+					int draw_x_base = node_draw_x;
+					for (int map_x = 0; map_x < 4; ++map_x, draw_x_base += TILE_SIZE) {
+						int draw_y = node_draw_y;
+						for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
+							if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+								continue;
 							}
+							visitor(location, draw_x_base, draw_y);
 						}
 					}
+				});
+			};
+
+			if (draw_lights) {
+				const size_t floor_light_start = light_buffer->lights.size();
+				visitVisibleNodes([&](const TileLocation* location, int, int) {
+					tile_renderer->RegisterGroundLightOcclusion(const_cast<TileLocation*>(location), view, *light_buffer, floor_light_start);
+				});
+			}
+
+			visitVisibleNodes([&](const TileLocation* location, int draw_x, int draw_y) {
+				tile_renderer->DrawTile(*sprite_batch, const_cast<TileLocation*>(location), view, options, 0, draw_x, draw_y, draw_lights ? light_buffer.get() : nullptr);
+
+				if (creature_name_drawer && z == camera_pos.z) {
+					if (const Tile* tile = location->get(); tile && tile->creature) {
+						creature_name_drawer->addLabel(location->getPosition(), tile->creature->getName(), tile->creature.get());
+					}
 				}
+			});
+
+			if (z == camera_pos.z) {
+				const int center_x = static_cast<int>((viewport_width * zoom) / 2.0f);
+				const int center_y = static_cast<int>((viewport_height * zoom) / 2.0f);
+				const int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
+				const int draw_x = center_x - 16;
+				const int draw_y = center_y - 16 - elevation_offset;
+
+				creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions {
+					.ingame = true,
+					.animationPhase = animation_phase,
+					.light_buffer = draw_lights ? light_buffer.get() : nullptr,
+					.view = &view,
+					.preview_local_player = true
+				});
 			}
-			sprite_batch->end(*atlas);
 		}
 
-		// Draw Preview Character (Center Screen)
-		// Only if on the camera Z floor (or always visible as "player"?) - Request says "center of the screen".
-		// Assuming always drawn on top.
-		{
-			sprite_batch->begin(view.projectionMatrix, *atlas);
+		sprite_batch->end(*atlas);
 
-			// Calculate center position in logical coordinates
-			int center_x = static_cast<int>((viewport_width * zoom) / 2.0f);
-			int center_y = static_cast<int>((viewport_height * zoom) / 2.0f);
-
-			// Adjust for sprite size (assuming 32x32 centered)
-			// BlitCreature usually draws top-left at (screenx, screeny) relative to the tile grid logic?
-			// It draws at (screenx, screeny).
-			// We want center of sprite at center of screen.
-			// 1. Fetch Elevation of current logical tile (camera_pos)
-			int elevation_offset = GetTileElevationOffset(map.getTile(camera_pos));
-
-			// 2. Adjust for sprite size (assuming 32x32 centered)
-			// BlitCreature usually draws top-left at (screenx, screeny) relative to the tile grid logic?
-			// It draws at (screenx, screeny).
-			// We want center of sprite at center of screen.
-			int draw_x = center_x - 16;
-			int draw_y = center_y - 16 - elevation_offset;
-
-			// Adjust for "walking offset" from standard drawing logic?
-			// Standard Tile drawing: x * 32 - scroll_x.
-			// Center of screen X in map coords = scroll_x + width/2.
-			// Since we added offset_x/y to the camera scroll logic in IngamePreviewCanvas::Render,
-			// the character should stay exactly at the center of the screen
-			// while the map moves smoothly under it.
-			// So we DO NOT add offset_x/y to draw_x/y again.
-
-			creature_drawer->BlitCreature(*sprite_batch, sprite_drawer.get(), draw_x, draw_y, preview_outfit, preview_direction, CreatureDrawOptions { .animationPhase = animation_phase });
-
-			sprite_batch->end(*atlas);
-		}
-
-		if (lighting_enabled && light_drawer) {
-			if (options.draw_floor_shadow && view.floor > GROUND_LAYER) {
-				primitive_renderer->drawRect(
-					glm::vec4(0.0f, 0.0f, view.logical_width, view.logical_height),
-					glm::vec4(0.0f, 0.0f, 0.0f, 0.5f)
-				);
-				primitive_renderer->flush();
-			}
+		if (options.isDrawLight() && light_drawer) {
 			light_drawer->draw(view, *light_buffer, options);
 		}
 

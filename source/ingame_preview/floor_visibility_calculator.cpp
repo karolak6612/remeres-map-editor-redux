@@ -7,86 +7,88 @@ namespace IngamePreview {
 
 	FloorVisibilityCalculator::FloorVisibilityCalculator() = default;
 
-	bool FloorVisibilityCalculator::TileLimitsFloorsView(const Tile* tile) const {
+	bool FloorVisibilityCalculator::TileLimitsFloorsView(const Tile* tile, bool is_free_view) const {
 		if (!tile) {
 			return false;
 		}
 
-		// In RME, Tile has ground and items.
-		// Item definitions are used to determine blocking.
-
-		if (tile->ground) {
-			const auto it = tile->ground->getDefinition();
-			if (it.isGroundTile()) {
-				return true;
-			}
-			if (it.hasFlag(ItemFlag::AlwaysOnBottom) && it.hasFlag(ItemFlag::BlockMissiles)) {
-				return true; // Most walls
-			}
+		const Item* first_thing = tile->ground.get();
+		if (!first_thing && !tile->items.empty()) {
+			first_thing = tile->items.front().get();
 		}
 
-		return std::ranges::any_of(tile->items, [](const auto& item) {
-			const auto it = item->getDefinition();
-			return it.isGroundTile() || (it.hasFlag(ItemFlag::AlwaysOnBottom) && it.hasFlag(ItemFlag::BlockMissiles));
-		});
+		if (!first_thing) {
+			return false;
+		}
+
+		const auto definition = first_thing->getDefinition();
+		if (definition.hasFlag(ItemFlag::IgnoreLook)) {
+			return false;
+		}
+
+		if (is_free_view) {
+			return first_thing->isGroundTile() || first_thing->isAlwaysOnBottom();
+		}
+
+		return first_thing->isGroundTile() || (first_thing->isAlwaysOnBottom() && first_thing->hasProperty(BLOCKPROJECTILE));
 	}
 
 	bool FloorVisibilityCalculator::IsLookPossible(const Tile* tile) const {
 		if (!tile) {
-			return true;
+			return false;
 		}
 
-		if (tile->ground) {
-			const auto it = tile->ground->getDefinition();
-			if (it.hasFlag(ItemFlag::BlockMissiles)) {
-				return false;
-			}
+		if (tile->ground && tile->ground->hasProperty(BLOCKPROJECTILE)) {
+			return false;
 		}
 
 		return std::ranges::none_of(tile->items, [](const auto& item) {
-			return item->getDefinition().hasFlag(ItemFlag::BlockMissiles);
+			return item->hasProperty(BLOCKPROJECTILE);
 		});
 	}
 
 	int FloorVisibilityCalculator::CalcFirstVisibleFloor(const BaseMap& map, int camera_x, int camera_y, int camera_z) const {
 		int first_floor = 0;
-
 		if (camera_z > GROUND_LAYER) {
 			first_floor = std::max(camera_z - AWARE_UNDERGROUND_FLOOR_RANGE, static_cast<int>(GROUND_LAYER) + 1);
 		}
 
-		// Check 3x3 area around camera for blocking tiles
 		for (int ix = -1; ix <= 1 && first_floor < camera_z; ++ix) {
 			for (int iy = -1; iy <= 1 && first_floor < camera_z; ++iy) {
-				int pos_x = camera_x + ix;
-				int pos_y = camera_y + iy;
+				const int pos_x = camera_x + ix;
+				const int pos_y = camera_y + iy;
+				const bool is_center = ix == 0 && iy == 0;
+				const bool is_straight_neighbor = std::abs(ix) != std::abs(iy);
+				const Tile* position_tile = map.getTile(pos_x, pos_y, camera_z);
+				const bool look_possible = IsLookPossible(position_tile);
 
-				bool is_center = (ix == 0 && iy == 0);
-				bool is_diagonal = (std::abs(ix) == std::abs(iy)) && !is_center;
-
-				if (!is_center && is_diagonal) {
-					const Tile* current_tile = map.getTile(pos_x, pos_y, camera_z);
-					if (!IsLookPossible(current_tile)) {
-						continue;
-					}
+				if (!is_center && (!is_straight_neighbor || !look_possible)) {
+					continue;
 				}
 
-				for (int check_z = camera_z - 1; check_z >= first_floor; --check_z) {
-					int z_diff = camera_z - check_z;
-					int covered_x = pos_x + z_diff;
-					int covered_y = pos_y + z_diff;
+				int upper_x = pos_x;
+				int upper_y = pos_y;
+				int upper_z = camera_z;
+				int covered_x = pos_x;
+				int covered_y = pos_y;
+				int covered_z = camera_z;
 
-					// Check tile directly above
-					const Tile* upper_tile = map.getTile(pos_x, pos_y, check_z);
-					if (upper_tile && TileLimitsFloorsView(upper_tile)) {
-						first_floor = check_z + 1;
+				while (upper_z > 0 && covered_z > 0) {
+					--upper_z;
+					--covered_z;
+					++covered_x;
+					++covered_y;
+					if (upper_z < first_floor) {
 						break;
 					}
 
-					// Check tile geometrically above (perspective shift)
-					const Tile* covered_tile = map.getTile(covered_x, covered_y, check_z);
-					if (covered_tile && TileLimitsFloorsView(covered_tile)) {
-						first_floor = check_z + 1;
+					if (const Tile* upper_tile = map.getTile(upper_x, upper_y, upper_z); TileLimitsFloorsView(upper_tile, !look_possible)) {
+						first_floor = upper_z + 1;
+						break;
+					}
+
+					if (const Tile* covered_tile = map.getTile(covered_x, covered_y, covered_z); TileLimitsFloorsView(covered_tile, look_possible)) {
+						first_floor = covered_z + 1;
 						break;
 					}
 				}

@@ -16,6 +16,8 @@
 #include "rendering/drawers/entities/sprite_drawer.h"
 #include "rendering/drawers/entities/creature_drawer.h"
 #include "rendering/core/drawing_options.h"
+#include "rendering/core/light_buffer.h"
+#include "rendering/core/render_view.h"
 #include "rendering/utilities/pattern_calculator.h"
 #include "map/tile.h"
 #include "game/item.h"
@@ -33,6 +35,14 @@ namespace {
 
 	GameSprite* resolveSprite(ServerItemId item_id) {
 		return resolveSprite(g_item_definitions.get(item_id));
+	}
+
+	void registerSpriteLight(LightBuffer& light_buffer, const RenderView& view, const GameSprite& sprite, int screen_x, int screen_y, const SpriteLight& light) {
+		const int left = screen_x - (static_cast<int>(sprite.width) - 1) * TILE_SIZE;
+		const int top = screen_y - (static_cast<int>(sprite.height) - 1) * TILE_SIZE;
+		const int width = std::max(1, static_cast<int>(sprite.width) * TILE_SIZE);
+		const int height = std::max(1, static_cast<int>(sprite.height) * TILE_SIZE);
+		light_buffer.AddScreenLight(left + width / 2, top + height / 2, view, light);
 	}
 }
 
@@ -62,6 +72,8 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	int blue = params.blue;
 	int alpha = params.alpha;
 	const SpritePatterns* cached_patterns = params.patterns;
+	LightBuffer* light_buffer = params.light_buffer;
+	const RenderView* view = params.view;
 
 	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
 
@@ -146,6 +158,10 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	// screenx use input draw_x
 	int screenx = draw_x - spr->drawoffset_x;
 	int screeny = draw_y - spr->drawoffset_y;
+
+	if (light_buffer && view && item->hasLight()) {
+		registerSpriteLight(*light_buffer, *view, *spr, screenx, screeny, item->getLight());
+	}
 
 	// Set the newd drawing height accordingly
 	draw_x -= spr->draw_height;
