@@ -42,7 +42,7 @@ namespace IngamePreview {
 
 	IngamePreviewRenderer::~IngamePreviewRenderer() = default;
 
-	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t ambient_light, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y) {
+	void IngamePreviewRenderer::Render(NVGcontext* vg, const BaseMap& map, int viewport_x, int viewport_y, int viewport_width, int viewport_height, const Position& camera_pos, float zoom, bool lighting_enabled, uint8_t client_brightness_percent, const Outfit& preview_outfit, Direction preview_direction, int animation_phase, int offset_x, int offset_y) {
 		// CRITICAL: Update animation time for all sprite animations to work
 		g_gui.gfx.updateTime();
 
@@ -85,7 +85,7 @@ namespace IngamePreview {
 			.intensity = light_intensity,
 			.color = server_light_color
 		};
-		options.minimum_ambient_light = static_cast<float>(ambient_light) / 255.0f;
+		options.minimum_ambient_light = static_cast<float>(std::min<int>(client_brightness_percent, 100)) / 100.0f;
 		options.draw_floor_shadow = options.show_shade;
 
 		// Initialize GL state

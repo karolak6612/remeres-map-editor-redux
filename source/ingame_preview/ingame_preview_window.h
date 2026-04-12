@@ -3,6 +3,7 @@
 
 #include "app/main.h"
 #include "game/outfit.h"
+#include "rendering/core/light_defaults.h"
 #include <memory>
 
 class Editor;
@@ -20,9 +21,9 @@ namespace IngamePreview {
 		void OnToggleFollow(wxCommandEvent& event);
 		void SetFollowSelection(bool follow);
 		void OnToggleLighting(wxCommandEvent& event);
-		void OnAmbientSlider(wxCommandEvent& event);
+		void OnClientBrightnessSlider(wxCommandEvent& event);
 		void OnIntensitySlider(wxCommandEvent& event);
-		void OnServerColorSlider(wxCommandEvent& event);
+		void OnChooseServerColor(wxCommandEvent& event);
 		void OnViewportWidthUp(wxCommandEvent& event);
 		void OnViewportWidthDown(wxCommandEvent& event);
 		void OnViewportHeightUp(wxCommandEvent& event);
@@ -33,6 +34,8 @@ namespace IngamePreview {
 		void UpdateState();
 
 	private:
+		void UpdateServerColorButton();
+
 		IngamePreviewCanvas* canvas = nullptr;
 		wxTimer update_timer;
 
@@ -42,7 +45,7 @@ namespace IngamePreview {
 		wxButton* outfit_btn;
 		wxSlider* ambient_slider;
 		wxSlider* intensity_slider;
-		wxSlider* server_color_slider;
+		wxButton* server_color_button;
 
 		wxTextCtrl* viewport_x_text;
 		wxTextCtrl* viewport_y_text;
@@ -55,6 +58,7 @@ namespace IngamePreview {
 		wxString current_name;
 		uint16_t current_speed;
 		bool follow_selection;
+		uint8_t server_light_color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR;
 	};
 
 } // namespace IngamePreview

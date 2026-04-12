@@ -22,11 +22,7 @@ namespace {
 
 	[[nodiscard]] glm::vec3 ambientColorForView(const RenderView& view, const DrawingOptions& options) {
 		const bool above_ground = view.floor <= GROUND_LAYER;
-		uint8_t ambient_color_index = above_ground ? options.server_light.color : static_cast<uint8_t>(215);
-		if (ambient_color_index == 0 || ambient_color_index >= 216) {
-			ambient_color_index = 215;
-		}
-
+		const uint8_t ambient_color_index = above_ground ? options.server_light.color : static_cast<uint8_t>(215);
 		const float server_intensity = above_ground ? options.server_light.intensity / 255.0f : 0.0f;
 		const float ambient_intensity = std::max(options.minimum_ambient_light, server_intensity);
 		return normalizedPaletteColor(ambient_color_index) * ambient_intensity;

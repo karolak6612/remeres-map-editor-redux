@@ -34,7 +34,7 @@ namespace IngamePreview {
 		void SetCameraPosition(const Position& pos);
 		void SetZoom(float z);
 		void SetLightingEnabled(bool enabled);
-		void SetAmbientLight(uint8_t ambient);
+		void SetClientBrightness(uint8_t brightness_percent);
 		void SetLightIntensity(uint8_t intensity);
 		void SetServerLightColor(uint8_t color);
 		void SetPreviewOutfit(const Outfit& outfit) {
@@ -67,7 +67,7 @@ namespace IngamePreview {
 		Position camera_pos;
 		float zoom;
 		bool lighting_enabled;
-		uint8_t ambient_light;
+		uint8_t client_brightness_percent;
 		uint8_t light_intensity;
 		uint8_t server_light_color;
 

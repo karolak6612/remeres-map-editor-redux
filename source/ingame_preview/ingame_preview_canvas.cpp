@@ -7,6 +7,8 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/core/light_defaults.h"
 #include "rendering/core/text_renderer.h"
+#include <algorithm>
+#include <cmath>
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
 #include <nanovg.h>
@@ -32,7 +34,7 @@ namespace IngamePreview {
 		camera_pos(0, 0, GROUND_LAYER),
 		zoom(1.0f),
 		lighting_enabled(true),
-		ambient_light(255),
+		client_brightness_percent(static_cast<uint8_t>(std::lround(g_gui.GetAmbientLightLevel() * 100.0f))),
 		light_intensity(rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY),
 		server_light_color(rme::lighting::DEFAULT_SERVER_LIGHT_COLOR),
 		viewport_width_tiles(15),
@@ -372,9 +374,10 @@ namespace IngamePreview {
 		}
 	}
 
-	void IngamePreviewCanvas::SetAmbientLight(uint8_t ambient) {
-		if (ambient_light != ambient) {
-			ambient_light = ambient;
+	void IngamePreviewCanvas::SetClientBrightness(uint8_t brightness_percent) {
+		const uint8_t clamped = static_cast<uint8_t>(std::min<int>(brightness_percent, 100));
+		if (client_brightness_percent != clamped) {
+			client_brightness_percent = clamped;
 			Refresh();
 		}
 	}
@@ -477,7 +480,7 @@ namespace IngamePreview {
 		renderer->SetLightIntensity(light_intensity);
 		renderer->SetServerLightColor(server_light_color);
 		renderer->SetName(preview_name_str);
-		renderer->Render(vg, current_editor->map, view_x, view_y, view_w, view_h, camera_pos, calculated_zoom, lighting_enabled, ambient_light, preview_outfit, preview_direction, animation_phase, walk_offset_x, walk_offset_y);
+		renderer->Render(vg, current_editor->map, view_x, view_y, view_w, view_h, camera_pos, calculated_zoom, lighting_enabled, client_brightness_percent, preview_outfit, preview_direction, animation_phase, walk_offset_x, walk_offset_y);
 
 		SwapBuffers();
 	}
