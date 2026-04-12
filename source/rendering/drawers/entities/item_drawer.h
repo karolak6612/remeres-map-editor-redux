@@ -35,6 +35,7 @@ struct BlitItemParams {
 	int green = 255;
 	int blue = 255;
 	int alpha = 255;
+	bool light_collection_only = false;
 	LightBuffer* light_buffer = nullptr;
 	const RenderView* view = nullptr;
 

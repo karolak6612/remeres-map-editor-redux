@@ -89,6 +89,7 @@ class MapDrawer {
 	std::unique_ptr<DoorIndicatorDrawer> door_indicator_drawer;
 	std::unique_ptr<LuaOverlayDrawer> lua_overlay_drawer;
 	std::unique_ptr<SpriteBatch> sprite_batch;
+	SpriteBatch hidden_floor_light_batch;
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
 	// Post-processing
@@ -160,7 +161,7 @@ public:
 	}
 
 private:
-	void DrawMapLayer(int map_z, bool live_client);
+	void DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only = false);
 	bool renderers_initialized = false;
 };
 

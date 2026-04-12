@@ -211,7 +211,7 @@ void TileRenderer::RegisterGroundLightOcclusion(const TileLocation* location, co
 	light_buffer.SetFieldBrightness(tile_x, tile_y, floor_light_start);
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) const {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer, bool light_collection_only) const {
 	if (!location) {
 		return;
 	}
@@ -266,6 +266,51 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* locat
 				.color = 215
 			});
 		}
+	}
+
+	if (light_collection_only) {
+		if (light_buffer && tile->ground && ground_it && !hidden_invalid_ground && !unresolved_invalid_ground) {
+			int ground_draw_x = draw_x;
+			int ground_draw_y = draw_y;
+			BlitItemParams params(position, tile->ground.get(), options);
+			params.tile = tile;
+			params.item_definition = ground_it;
+			params.light_collection_only = true;
+			params.light_buffer = light_buffer;
+			params.view = &view;
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, ground_draw_x, ground_draw_y, params);
+		}
+
+		if (light_buffer) {
+			for (const auto& item : tile->items) {
+				const ItemDefinitionView it = item->getDefinition();
+				if (item->isInvalidOTBMItem() && (!options.show_invalid_tiles || !it)) {
+					continue;
+				}
+
+				int item_draw_x = draw_x;
+				int item_draw_y = draw_y;
+				BlitItemParams params(position, item.get(), options);
+				params.tile = tile;
+				params.item_definition = it;
+				params.light_collection_only = true;
+				params.light_buffer = light_buffer;
+				params.view = &view;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, item_draw_x, item_draw_y, params);
+			}
+
+			if (tile->creature && options.show_creatures) {
+				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions {
+					.map_pos = position,
+					.transient_selection_bounds = options.transient_selection_bounds,
+					.light_buffer = light_buffer,
+					.view = &view,
+					.light_collection_only = true
+				});
+			}
+		}
+
+		return;
 	}
 
 	Waypoint* waypoint = nullptr;

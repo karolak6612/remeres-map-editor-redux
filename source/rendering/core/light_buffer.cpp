@@ -11,15 +11,34 @@ namespace {
 		const int remainder = value % divisor;
 		return (remainder != 0 && ((remainder < 0) != (divisor < 0))) ? quotient - 1 : quotient;
 	}
+
+	[[nodiscard]] int projectedPaddingTiles(const RenderView& view) noexcept {
+		const int traversed_floor_span = std::max(0, view.start_z - view.superend_z);
+		int max_projected_offset = 0;
+		for (int map_z = view.start_z; map_z >= view.superend_z; --map_z) {
+			int offset_tiles = 0;
+			if (map_z <= GROUND_LAYER) {
+				offset_tiles = GROUND_LAYER - map_z;
+			} else if (map_z < view.floor) {
+				offset_tiles = view.floor - map_z;
+			}
+
+			max_projected_offset = std::max(max_projected_offset, offset_tiles);
+		}
+
+		return 1 + traversed_floor_span + max_projected_offset;
+	}
 }
 
 void LightBuffer::Prepare(const RenderView& view) {
-	constexpr int buffer_margin_tiles = 1;
+	const int buffer_padding_tiles = projectedPaddingTiles(view);
+	const int right_edge = static_cast<int>(std::ceil((view.view_scroll_x + view.logical_width) / static_cast<float>(TILE_SIZE))) + buffer_padding_tiles;
+	const int bottom_edge = static_cast<int>(std::ceil((view.view_scroll_y + view.logical_height) / static_cast<float>(TILE_SIZE))) + buffer_padding_tiles;
 
-	origin_x = floorDiv(view.view_scroll_x, TILE_SIZE) - buffer_margin_tiles;
-	origin_y = floorDiv(view.view_scroll_y, TILE_SIZE) - buffer_margin_tiles;
-	width = std::max(1, static_cast<int>(std::ceil((view.view_scroll_x + view.logical_width) / static_cast<float>(TILE_SIZE))) - origin_x + buffer_margin_tiles);
-	height = std::max(1, static_cast<int>(std::ceil((view.view_scroll_y + view.logical_height) / static_cast<float>(TILE_SIZE))) - origin_y + buffer_margin_tiles);
+	origin_x = floorDiv(view.view_scroll_x, TILE_SIZE) - buffer_padding_tiles;
+	origin_y = floorDiv(view.view_scroll_y, TILE_SIZE) - buffer_padding_tiles;
+	width = std::max(1, right_edge - origin_x);
+	height = std::max(1, bottom_edge - origin_y);
 	tiles.assign(static_cast<size_t>(width * height), TileLight {});
 }
 

@@ -385,8 +385,6 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
-	bool only_colors = options.show_as_minimap || options.show_only_colors;
-
 	// Enable texture mode
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
@@ -401,7 +399,9 @@ void MapDrawer::DrawMap() {
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			DrawMapLayer(*sprite_batch, map_z, live_client);
+		} else if (options.isDrawLight()) {
+			DrawMapLayer(hidden_floor_light_batch, map_z, live_client, true);
 		}
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
@@ -439,8 +439,8 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only) {
+	map_layer_drawer->Draw(batch, map_z, live_client, view, options, light_buffer, light_collection_only);
 }
 
 void MapDrawer::DrawLight() {

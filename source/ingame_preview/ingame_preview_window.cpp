@@ -80,15 +80,15 @@ namespace IngamePreview {
 		// Sliders
 		const int initial_brightness = static_cast<int>(std::lround(g_gui.GetAmbientLightLevel() * 100.0f));
 		ambient_slider = new wxSlider(this, ID_AMBIENT_SLIDER, initial_brightness, 0, 100, wxDefaultPosition, wxSize(60, -1));
-		ambient_slider->SetToolTip("Client brightness as minimum ambient light percentage");
+		ambient_slider->SetToolTip("Client Light: minimum ambient light percentage");
 		toolbar_sizer->Add(ambient_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
 		intensity_slider = new wxSlider(this, ID_INTENSITY_SLIDER, g_gui.GetLightIntensity(), 0, 255, wxDefaultPosition, wxSize(60, -1));
-		intensity_slider->SetToolTip("World light intensity received from the server");
+		intensity_slider->SetToolTip("Server Light: world light intensity received from the server");
 		toolbar_sizer->Add(intensity_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
 		server_color_button = new wxButton(this, ID_SERVER_COLOR_BUTTON, "", wxDefaultPosition, wxSize(40, 24));
-		server_color_button->SetToolTip("Server world light color from the Tibia 8-bit palette");
+		server_color_button->SetToolTip("Server Color: world light color from the Tibia 8-bit palette");
 		UpdateServerColorButton();
 		toolbar_sizer->Add(server_color_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 

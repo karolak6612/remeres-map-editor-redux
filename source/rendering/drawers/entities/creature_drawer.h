@@ -29,6 +29,7 @@ struct CreatureDrawOptions {
 	LightBuffer* light_buffer = nullptr;
 	const RenderView* view = nullptr;
 	bool preview_local_player = false;
+	bool light_collection_only = false;
 };
 
 class CreatureDrawer {

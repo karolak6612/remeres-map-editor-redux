@@ -73,13 +73,17 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 }
 
 void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer, int screenx, int screeny, const Outfit& outfit, Direction dir, const CreatureDrawOptions& options) {
+	const bool draw_visuals = !options.light_collection_only;
+
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
 			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
 			if (spr && options.light_buffer && options.view && spr->hasLight()) {
 				registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->getLight(), false);
 			}
-			sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
+			if (draw_visuals) {
+				sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
+			}
 			if (spr && options.light_buffer && options.view && (spr->hasLight() || options.preview_local_player)) {
 				registerCreatureCenterLight(*options.light_buffer, *options.view, screenx, screeny, spr, spr->hasLight() ? spr->getLight() : SpriteLight {}, options.preview_local_player);
 			}
@@ -112,19 +116,21 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					registerCreatureSpriteLight(*options.light_buffer, *options.view, *mountSpr, screenx, screeny, mountSpr->getLight(), false);
 				}
 
-				// generate mount colors
-				Outfit mountOutfit;
-				mountOutfit.lookType = outfit.lookMount;
-				mountOutfit.lookHead = outfit.lookMountHead;
-				mountOutfit.lookBody = outfit.lookMountBody;
-				mountOutfit.lookLegs = outfit.lookMountLegs;
-				mountOutfit.lookFeet = outfit.lookMountFeet;
+				if (draw_visuals) {
+					// generate mount colors
+					Outfit mountOutfit;
+					mountOutfit.lookType = outfit.lookMount;
+					mountOutfit.lookHead = outfit.lookMountHead;
+					mountOutfit.lookBody = outfit.lookMountBody;
+					mountOutfit.lookLegs = outfit.lookMountLegs;
+					mountOutfit.lookFeet = outfit.lookMountFeet;
 
-				for (int cx = 0; cx != mountSpr->width; ++cx) {
-					for (int cy = 0; cy != mountSpr->height; ++cy) {
-						const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
-						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
+					for (int cx = 0; cx != mountSpr->width; ++cx) {
+						for (int cy = 0; cy != mountSpr->height; ++cy) {
+							const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
+							if (region) {
+								sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
+							}
 						}
 					}
 				}
@@ -134,20 +140,22 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 		}
 
 		// pattern_y => creature addon
-		for (int pattern_y = 0; pattern_y < spr->pattern_y; pattern_y++) {
+		if (draw_visuals) {
+			for (int pattern_y = 0; pattern_y < spr->pattern_y; pattern_y++) {
 
-			// continue if we dont have this addon
-			if (pattern_y > 0) {
-				if ((pattern_y - 1 >= 31) || !(outfit.lookAddon & (1 << (pattern_y - 1)))) {
-					continue;
+				// continue if we dont have this addon
+				if (pattern_y > 0) {
+					if ((pattern_y - 1 >= 31) || !(outfit.lookAddon & (1 << (pattern_y - 1)))) {
+						continue;
+					}
 				}
-			}
 
-			for (int cx = 0; cx != spr->width; ++cx) {
-				for (int cy = 0; cy != spr->height; ++cy) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
-					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
+				for (int cx = 0; cx != spr->width; ++cx) {
+					for (int cy = 0; cy != spr->height; ++cy) {
+						const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
+						if (region) {
+							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
+						}
 					}
 				}
 			}

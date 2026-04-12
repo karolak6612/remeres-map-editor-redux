@@ -74,6 +74,7 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 	const SpritePatterns* cached_patterns = params.patterns;
 	LightBuffer* light_buffer = params.light_buffer;
 	const RenderView* view = params.view;
+	const bool draw_visuals = !params.light_collection_only;
 
 	const ItemDefinitionView it = params.item_definition ? params.item_definition : item->getDefinition();
 
@@ -195,38 +196,40 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 		}
 	}
 
-	// Atlas-only rendering
-	// g_gui.gfx.ensureAtlasManager();
-	// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
+	if (draw_visuals) {
+		// Atlas-only rendering
+		// g_gui.gfx.ensureAtlasManager();
+		// BatchRenderer::SetAtlasManager(g_gui.gfx.getAtlasManager());
 
-	if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
-		const AtlasRegion* region;
-		if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
-			region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
-		} else {
-			region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
-		}
-
-		if (region) {
-#ifdef DEBUG
-			// DEBUG: Check for mismatch on Item 369 using PRECISE sub-sprite ID
-			if (item->getID() == 369) {
-				// Use 0,0 as pattern coordinates for 1x1 items
-				uint32_t precise_expected_id = spr->getSpriteId(frame, 0, 0);
-				if (region->debug_sprite_id != 0 && precise_expected_id != 0 && region->debug_sprite_id != precise_expected_id) {
-					spdlog::error("SPRITE MISMATCH DETECTED: Item 369 (Expected Sprite ID {}, Actual Region Owner {})", precise_expected_id, region->debug_sprite_id);
-				}
+		if (spr->width == 1 && spr->height == 1 && spr->layers == 1) {
+			const AtlasRegion* region;
+			if (subtype == -1 && pattern_x == 0 && pattern_y == 0 && pattern_z == 0 && frame == 0) {
+				region = spr->getAtlasRegion(0, 0, 0, -1, 0, 0, 0, 0);
+			} else {
+				region = spr->getAtlasRegion(0, 0, 0, subtype, pattern_x, pattern_y, pattern_z, frame);
 			}
+
+			if (region) {
+#ifdef DEBUG
+				// DEBUG: Check for mismatch on Item 369 using PRECISE sub-sprite ID
+				if (item->getID() == 369) {
+					// Use 0,0 as pattern coordinates for 1x1 items
+					uint32_t precise_expected_id = spr->getSpriteId(frame, 0, 0);
+					if (region->debug_sprite_id != 0 && precise_expected_id != 0 && region->debug_sprite_id != precise_expected_id) {
+						spdlog::error("SPRITE MISMATCH DETECTED: Item 369 (Expected Sprite ID {}, Actual Region Owner {})", precise_expected_id, region->debug_sprite_id);
+					}
+				}
 #endif
-			sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
-		}
-	} else {
-		for (int cx = 0; cx != spr->width; cx++) {
-			for (int cy = 0; cy != spr->height; cy++) {
-				for (int cf = 0; cf != spr->layers; cf++) {
-					const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
-					if (region) {
-						sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
+				sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
+			}
+		} else {
+			for (int cx = 0; cx != spr->width; cx++) {
+				for (int cy = 0; cy != spr->height; cy++) {
+					for (int cf = 0; cf != spr->layers; cf++) {
+						const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
+						if (region) {
+							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
+						}
 					}
 				}
 			}
@@ -253,16 +256,21 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 			outfit.lookMount = 0;
 		}
 
-		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions { .color = DrawColor(red, green, blue, alpha) });
+		creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, outfit, static_cast<Direction>(podium->getDirection()), CreatureDrawOptions {
+			.color = DrawColor(red, green, blue, alpha),
+			.light_buffer = light_buffer,
+			.view = view,
+			.light_collection_only = params.light_collection_only
+		});
 	}
 
 	// draw wall hook
-	if (!options.ingame && options.show_hooks && (it.hasFlag(ItemFlag::HookSouth) || it.hasFlag(ItemFlag::HookEast))) {
+	if (draw_visuals && !options.ingame && options.show_hooks && (it.hasFlag(ItemFlag::HookSouth) || it.hasFlag(ItemFlag::HookEast))) {
 		DrawHookIndicator(it, pos);
 	}
 
 	// draw light color indicator
-	if (!options.ingame && options.show_light_str) {
+	if (draw_visuals && !options.ingame && options.show_light_str) {
 		const SpriteLight& light = item->getLight();
 		if (light.intensity > 0) {
 			wxColor lightColor = colorFromEightBit(light.color);

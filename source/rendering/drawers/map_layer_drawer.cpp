@@ -31,6 +31,7 @@
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
 
+#include <cmath>
 #include <limits>
 
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
@@ -42,22 +43,46 @@ MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_dra
 MapLayerDrawer::~MapLayerDrawer() {
 }
 
-void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer) {
-	int nd_start_x = view.start_x & ~3;
-	int nd_start_y = view.start_y & ~3;
-	int nd_end_x = (view.end_x & ~3) + 4;
-	int nd_end_y = (view.end_y & ~3) + 4;
-
+void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client, const RenderView& view, const DrawingOptions& options, LightBuffer& light_buffer, bool light_collection_only) {
 	// Optimization: Pre-calculate offset and base coordinates
 	// IsTileVisible does this for every tile, but it's constant per layer/frame.
 	// We also skip IsTileVisible because visitLeaves already bounds us to the visible area (with 4-tile alignment),
 	// which is well within IsTileVisible's 6-tile margin.
-	int offset = (map_z <= GROUND_LAYER)
+	const int offset = (map_z <= GROUND_LAYER)
 		? (GROUND_LAYER - map_z) * TILE_SIZE
 		: TILE_SIZE * (view.floor - map_z);
 
-	int base_screen_x = -view.view_scroll_x - offset;
-	int base_screen_y = -view.view_scroll_y - offset;
+	int nd_start_x = 0;
+	int nd_start_y = 0;
+	int nd_end_x = 0;
+	int nd_end_y = 0;
+	int visibility_margin_pixels = PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS;
+	int visibility_margin_tiles = std::max(1, (visibility_margin_pixels + TILE_SIZE - 1) / TILE_SIZE);
+
+	if (light_collection_only) {
+		constexpr int light_collection_margin_pixels = TILE_SIZE * 16;
+		const int camera_offset = (view.floor <= GROUND_LAYER)
+			? (GROUND_LAYER - view.floor) * TILE_SIZE
+			: 0;
+		const int max_floor_offset = std::max(std::abs(offset - camera_offset), TILE_SIZE * MAP_MAX_LAYER);
+		const int start_x = static_cast<int>(std::floor((view.view_scroll_x - light_collection_margin_pixels - max_floor_offset) / static_cast<float>(TILE_SIZE)));
+		const int start_y = static_cast<int>(std::floor((view.view_scroll_y - light_collection_margin_pixels - max_floor_offset) / static_cast<float>(TILE_SIZE)));
+		const int end_x = static_cast<int>(std::ceil((view.view_scroll_x + view.logical_width + light_collection_margin_pixels + max_floor_offset) / static_cast<float>(TILE_SIZE)));
+		const int end_y = static_cast<int>(std::ceil((view.view_scroll_y + view.logical_height + light_collection_margin_pixels + max_floor_offset) / static_cast<float>(TILE_SIZE)));
+
+		nd_start_x = start_x & ~3;
+		nd_start_y = start_y & ~3;
+		nd_end_x = (end_x & ~3) + 4;
+		nd_end_y = (end_y & ~3) + 4;
+	} else {
+		nd_start_x = view.start_x & ~3;
+		nd_start_y = view.start_y & ~3;
+		nd_end_x = (view.end_x & ~3) + 4;
+		nd_end_y = (view.end_y & ~3) + 4;
+	}
+
+	const int base_screen_x = -view.view_scroll_x - offset;
+	const int base_screen_y = -view.view_scroll_y - offset;
 
 	bool draw_lights = options.isDrawLight() && view.zoom <= 10.0;
 
@@ -66,7 +91,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 		int node_draw_y = nd_map_y * TILE_SIZE + base_screen_y;
 
 		// Node level culling
-		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+		if (!view.IsRectVisible(node_draw_x, node_draw_y, 4 * TILE_SIZE, 4 * TILE_SIZE, visibility_margin_pixels)) {
 			return;
 		}
 
@@ -95,7 +120,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			int draw_y = node_draw_y;
 			for (int map_y = 0; map_y < 4; ++map_y, ++location, draw_y += TILE_SIZE) {
 				// Culling: Skip tiles that are far outside the viewport.
-				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS)) {
+				if (!fully_inside && !view.IsPixelVisible(draw_x_base, draw_y, visibility_margin_pixels)) {
 					continue;
 				}
 
@@ -119,10 +144,10 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 			return;
 		}
 
-		int safe_start_x = nd_start_x - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-		int safe_start_y = nd_start_y - PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-		int safe_end_x = nd_end_x + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
-		int safe_end_y = nd_end_y + PAINTERS_ALGORITHM_SAFETY_MARGIN_PIXELS / TILE_SIZE;
+		int safe_start_x = nd_start_x - visibility_margin_tiles;
+		int safe_start_y = nd_start_y - visibility_margin_tiles;
+		int safe_end_x = nd_end_x + visibility_margin_tiles;
+		int safe_end_y = nd_end_y + visibility_margin_tiles;
 
 		editor->map.visitLeaves(safe_start_x, safe_start_y, safe_end_x, safe_end_y, [&](MapNode* nd, int nd_map_x, int nd_map_y) {
 			visitNodeTiles(nd, nd_map_x, nd_map_y, false, visitor);
@@ -131,7 +156,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 
 	// OTClient floor-aware light occlusion: capture light count at START of each floor,
 	// then mark opaque ground tiles with that index so they block light from floors below
-	if (draw_lights) {
+	if (draw_lights && !light_collection_only) {
 		ASSERT(light_buffer.lights.size() <= std::numeric_limits<uint32_t>::max());
 		const uint32_t floor_light_start = static_cast<uint32_t>(light_buffer.lights.size());
 		visitAllVisibleNodes([&](const TileLocation* location, int, int) {
@@ -140,7 +165,7 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	}
 
 	auto drawVisibleTiles = [&](const TileLocation* location, int draw_x, int draw_y) {
-		tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y, draw_lights ? &light_buffer : nullptr);
+		tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y, draw_lights ? &light_buffer : nullptr, light_collection_only);
 	};
 
 	visitAllVisibleNodes(drawVisibleTiles);
