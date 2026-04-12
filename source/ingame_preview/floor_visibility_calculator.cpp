@@ -62,7 +62,7 @@ namespace IngamePreview {
 				const Tile* position_tile = map.getTile(pos_x, pos_y, camera_z);
 				const bool look_possible = IsLookPossible(position_tile);
 
-				if (!is_center && (!is_straight_neighbor && !look_possible)) {
+				if (!is_center && (!is_straight_neighbor || !look_possible)) {
 					continue;
 				}
 
