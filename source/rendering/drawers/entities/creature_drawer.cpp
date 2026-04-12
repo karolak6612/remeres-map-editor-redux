@@ -84,7 +84,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 			if (draw_visuals) {
 				sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
 			}
-			if (spr && options.light_buffer && options.view && (spr->hasLight() || options.preview_local_player)) {
+			if (spr && options.light_buffer && options.view && options.preview_local_player) {
 				registerCreatureCenterLight(*options.light_buffer, *options.view, screenx, screeny, spr, spr->hasLight() ? spr->getLight() : SpriteLight {}, options.preview_local_player);
 			}
 		}
@@ -161,7 +161,7 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 			}
 		}
 
-		if (options.light_buffer && options.view && (spr->hasLight() || options.preview_local_player)) {
+		if (options.light_buffer && options.view && options.preview_local_player) {
 			registerCreatureCenterLight(*options.light_buffer, *options.view, screenx, screeny, mountSpr ? mountSpr : spr, spr->hasLight() ? spr->getLight() : SpriteLight {}, options.preview_local_player);
 		}
 	}

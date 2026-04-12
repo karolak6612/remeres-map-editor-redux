@@ -313,9 +313,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* locat
 		return;
 	}
 
-	Waypoint* waypoint = nullptr;
+	const Waypoint* waypoint = nullptr;
 	if (location->getWaypointCount() > 0) {
-		waypoint = editor->map.waypoints.getWaypoint(const_cast<TileLocation*>(location));
+		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
 
 	// Waypoint tooltip (one per waypoint)

@@ -42,6 +42,7 @@ public:
 	void addWaypoint(std::unique_ptr<Waypoint> wp, bool replace = true);
 	Waypoint* getWaypoint(std::string name);
 	Waypoint* getWaypoint(TileLocation* location);
+	const Waypoint* getWaypoint(const TileLocation* location) const;
 	void removeWaypoint(std::string name);
 
 	WaypointMap waypoints;
