@@ -159,6 +159,8 @@ enum class ItemFlag : uint8_t {
 	BlockPathfinder,
 	HasElevation,
 	FullTile,
+	Translucent,
+	LensHelp,
 	Tooltipable,
 	WallHateMe,
 	HasRaw,

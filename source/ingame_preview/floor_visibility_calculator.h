@@ -35,7 +35,7 @@ namespace IngamePreview {
 		/**
 		 * Check if a tile limits the view of floors above it (roofs/solid ground).
 		 */
-		[[nodiscard]] bool TileLimitsFloorsView(const Tile* tile) const;
+		[[nodiscard]] bool TileLimitsFloorsView(const Tile* tile, bool is_free_view = false) const;
 
 		/**
 		 * Check if a tile allows looking through (windows, certain doors).

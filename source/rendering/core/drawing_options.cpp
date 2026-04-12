@@ -1,7 +1,10 @@
 #include "app/main.h"
 #include "ui/gui.h"
 #include "rendering/core/drawing_options.h"
+#include "rendering/core/light_defaults.h"
 #include "rendering/postprocess/post_process_manager.h"
+
+#include <algorithm>
 
 DrawingOptions::DrawingOptions() {
 	SetDefault();
@@ -41,9 +44,12 @@ void DrawingOptions::SetDefault() {
 	show_hooks = false;
 	hide_items_when_zoomed = true;
 	current_house_id = 0;
-	light_intensity = 1.0f;
-	ambient_light_level = 0.5f;
-	global_light_color = wxColor(128, 128, 128);
+	draw_floor_shadow = show_shade;
+	server_light = SpriteLight {
+		.intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY,
+		.color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR
+	};
+	minimum_ambient_light = rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT;
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = ShaderNames::NONE;
@@ -83,6 +89,12 @@ void DrawingOptions::SetIngame() {
 	show_hooks = false;
 	hide_items_when_zoomed = false;
 	current_house_id = 0;
+	draw_floor_shadow = show_shade;
+	server_light = SpriteLight {
+		.intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY,
+		.color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR
+	};
+	minimum_ambient_light = rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT;
 }
 
 #include "app/settings.h"
@@ -119,8 +131,12 @@ void DrawingOptions::Update() {
 	show_towns = g_settings.getBoolean(Config::SHOW_TOWNS);
 	always_show_zones = g_settings.getBoolean(Config::ALWAYS_SHOW_ZONES);
 	extended_house_shader = g_settings.getBoolean(Config::EXT_HOUSE_SHADER);
-	light_intensity = g_gui.GetLightIntensity();
-	ambient_light_level = g_gui.GetAmbientLightLevel();
+	server_light = SpriteLight {
+		.intensity = static_cast<uint8_t>(std::clamp(g_gui.GetLightIntensity(), 0, 255)),
+		.color = static_cast<uint8_t>(std::clamp(g_gui.GetServerLightColor(), 0, 255))
+	};
+	minimum_ambient_light = std::clamp(g_gui.GetAmbientLightLevel(), 0.0f, 1.0f);
+	draw_floor_shadow = show_shade;
 
 	experimental_fog = g_settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	anti_aliasing = g_settings.getBoolean(Config::ANTI_ALIASING);
@@ -128,5 +144,5 @@ void DrawingOptions::Update() {
 }
 
 bool DrawingOptions::isDrawLight() const noexcept {
-	return show_lights;
+	return show_lights && minimum_ambient_light < 1.0f;
 }

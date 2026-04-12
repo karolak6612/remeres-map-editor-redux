@@ -48,14 +48,21 @@ Waypoint* Waypoints::getWaypoint(TileLocation* location) {
 	if (!location) {
 		return nullptr;
 	}
-	// TODO find waypoint by position hash.
-	for (WaypointMap::iterator it = waypoints.begin(); it != waypoints.end(); it++) {
-		Waypoint* waypoint = it->second.get();
-		if (waypoint && waypoint->pos == location->position) {
-			return waypoint;
-		}
+	return const_cast<Waypoint*>(std::as_const(*this).getWaypoint(location));
+}
+
+const Waypoint* Waypoints::getWaypoint(const TileLocation* location) const {
+	if (!location) {
+		return nullptr;
 	}
-	return nullptr;
+
+	const auto matches_location = [location](const auto& entry) {
+		const Waypoint* waypoint = entry.second.get();
+		return waypoint && waypoint->pos == location->position;
+	};
+
+	const auto it = std::ranges::find_if(waypoints, matches_location);
+	return it != waypoints.end() ? it->second.get() : nullptr;
 }
 
 void Waypoints::removeWaypoint(std::string name) {

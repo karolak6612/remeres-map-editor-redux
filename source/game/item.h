@@ -302,6 +302,15 @@ public:
 	bool isGroundTile() const {
 		return getDefinition().isGroundTile() || (invalidOtbmData && invalidOtbmData->isGroundLike());
 	}
+	bool isTranslucent() const {
+		return getDefinition().hasFlag(ItemFlag::Translucent);
+	}
+	bool hasLensHelp() const {
+		return getDefinition().hasFlag(ItemFlag::LensHelp);
+	}
+	bool blocksLightFromBelow() const {
+		return isGroundTile() && !isTranslucent();
+	}
 	bool isSplash() const {
 		return getDefinition().isSplash();
 	}

@@ -2,12 +2,15 @@
 #include "ingame_preview/ingame_preview_window.h"
 #include "ingame_preview/ingame_preview_canvas.h"
 #include "ui/dialogs/outfit_chooser_dialog.h"
+#include "ui/controls/outfit_color_palette.h"
 #include "game/preview_preferences.h"
 #include "util/image_manager.h"
 
 #include "editor/editor.h"
 #include "ui/gui.h"
 #include "rendering/ui/map_display.h"
+#include "rendering/core/light_defaults.h"
+#include <cmath>
 #include <wx/tglbtn.h>
 
 namespace IngamePreview {
@@ -18,6 +21,7 @@ namespace IngamePreview {
 		ID_CHOOSE_OUTFIT,
 		ID_AMBIENT_SLIDER,
 		ID_INTENSITY_SLIDER,
+		ID_SERVER_COLOR_BUTTON,
 		ID_VIEWPORT_W_UP,
 		ID_VIEWPORT_W_DOWN,
 		ID_VIEWPORT_H_UP,
@@ -28,7 +32,8 @@ namespace IngamePreview {
 	IngamePreviewWindow::IngamePreviewWindow(wxWindow* parent) :
 		wxPanel(parent, wxID_ANY),
 		update_timer(this, ID_UPDATE_TIMER),
-		follow_selection(true) {
+		follow_selection(true),
+		server_light_color(static_cast<uint8_t>(g_gui.GetServerLightColor())) {
 
 		// Load initial preferences
 		g_preview_preferences.load();
@@ -40,8 +45,9 @@ namespace IngamePreview {
 		Bind(wxEVT_TIMER, &IngamePreviewWindow::OnUpdateTimer, this, ID_UPDATE_TIMER);
 		Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleFollow, this, ID_FOLLOW_SELECTION);
 		Bind(wxEVT_TOGGLEBUTTON, &IngamePreviewWindow::OnToggleLighting, this, ID_ENABLE_LIGHTING);
-		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnAmbientSlider, this, ID_AMBIENT_SLIDER);
+		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnClientBrightnessSlider, this, ID_AMBIENT_SLIDER);
 		Bind(wxEVT_SLIDER, &IngamePreviewWindow::OnIntensitySlider, this, ID_INTENSITY_SLIDER);
+		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnChooseServerColor, this, ID_SERVER_COLOR_BUTTON);
 		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthUp, this, ID_VIEWPORT_W_UP);
 		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportWidthDown, this, ID_VIEWPORT_W_DOWN);
 		Bind(wxEVT_BUTTON, &IngamePreviewWindow::OnViewportHeightUp, this, ID_VIEWPORT_H_UP);
@@ -72,13 +78,19 @@ namespace IngamePreview {
 		toolbar_sizer->Add(outfit_btn, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
 		// Sliders
-		ambient_slider = new wxSlider(this, ID_AMBIENT_SLIDER, 128, 0, 255, wxDefaultPosition, wxSize(60, -1));
-		ambient_slider->SetToolTip("Ambient Light");
+		const int initial_brightness = static_cast<int>(std::lround(g_gui.GetAmbientLightLevel() * 100.0f));
+		ambient_slider = new wxSlider(this, ID_AMBIENT_SLIDER, initial_brightness, 0, 100, wxDefaultPosition, wxSize(60, -1));
+		ambient_slider->SetToolTip("Client Light: minimum ambient light percentage");
 		toolbar_sizer->Add(ambient_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
-		intensity_slider = new wxSlider(this, ID_INTENSITY_SLIDER, 100, 0, 200, wxDefaultPosition, wxSize(60, -1));
-		intensity_slider->SetToolTip("Light Intensity");
+		intensity_slider = new wxSlider(this, ID_INTENSITY_SLIDER, g_gui.GetLightIntensity(), 0, 255, wxDefaultPosition, wxSize(60, -1));
+		intensity_slider->SetToolTip("Server Light: world light intensity received from the server");
 		toolbar_sizer->Add(intensity_slider, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
+
+		server_color_button = new wxButton(this, ID_SERVER_COLOR_BUTTON, "", wxDefaultPosition, wxSize(40, 24));
+		server_color_button->SetToolTip("Server Color: world light color from the Tibia 8-bit palette");
+		UpdateServerColorButton();
+		toolbar_sizer->Add(server_color_button, 0, wxALL | wxALIGN_CENTER_VERTICAL, 1);
 
 		// Spacer
 		toolbar_sizer->AddSpacer(4);
@@ -120,8 +132,9 @@ namespace IngamePreview {
 
 		// Sync UI State to Canvas
 		canvas->SetLightingEnabled(lighting_btn->GetValue());
-		canvas->SetAmbientLight((uint8_t)ambient_slider->GetValue());
-		canvas->SetLightIntensity(intensity_slider->GetValue() / 100.0f);
+		canvas->SetClientBrightness(static_cast<uint8_t>(ambient_slider->GetValue()));
+		canvas->SetLightIntensity(static_cast<uint8_t>(intensity_slider->GetValue()));
+		canvas->SetServerLightColor(server_light_color);
 		canvas->SetPreviewOutfit(preview_outfit);
 		canvas->SetName(current_name.ToStdString());
 		canvas->SetSpeed(current_speed);
@@ -195,12 +208,28 @@ namespace IngamePreview {
 		canvas->SetLightingEnabled(lighting_btn->GetValue());
 	}
 
-	void IngamePreviewWindow::OnAmbientSlider(wxCommandEvent& event) {
-		canvas->SetAmbientLight((uint8_t)ambient_slider->GetValue());
+	void IngamePreviewWindow::UpdateServerColorButton() {
+		server_color_button->SetBitmap(CreateLightColorSwatchBitmap(this, server_light_color, wxSize(20, 16)));
+		server_color_button->SetLabel(wxEmptyString);
+	}
+
+	void IngamePreviewWindow::OnClientBrightnessSlider(wxCommandEvent& event) {
+		canvas->SetClientBrightness(static_cast<uint8_t>(ambient_slider->GetValue()));
 	}
 
 	void IngamePreviewWindow::OnIntensitySlider(wxCommandEvent& event) {
-		canvas->SetLightIntensity(intensity_slider->GetValue() / 100.0f);
+		canvas->SetLightIntensity(static_cast<uint8_t>(intensity_slider->GetValue()));
+	}
+
+	void IngamePreviewWindow::OnChooseServerColor(wxCommandEvent& event) {
+		LightColorPickerDialog dialog(this, server_light_color);
+		if (dialog.ShowModal() != wxID_OK) {
+			return;
+		}
+
+		server_light_color = static_cast<uint8_t>(dialog.GetSelectedColor());
+		UpdateServerColorButton();
+		canvas->SetServerLightColor(server_light_color);
 	}
 
 	void IngamePreviewWindow::OnViewportWidthUp(wxCommandEvent& event) {

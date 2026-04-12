@@ -234,11 +234,13 @@ public:
 	// Additional brush parameters
 	void SetSpawnTime(int time);
 
-	void SetLightIntensity(float v);
-	float GetLightIntensity() const;
+	void SetLightIntensity(int v);
+	int GetLightIntensity() const;
 
 	void SetAmbientLightLevel(float v);
 	float GetAmbientLightLevel() const;
+	void SetServerLightColor(int v);
+	int GetServerLightColor() const;
 	void SetBrushSize(int nz);
 	void SetBrushSizeInternal(int nz);
 	void SetBrushSizeX(int nz);

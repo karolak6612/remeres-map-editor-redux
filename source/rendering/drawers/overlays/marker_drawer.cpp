@@ -13,7 +13,7 @@ MarkerDrawer::MarkerDrawer() {
 MarkerDrawer::~MarkerDrawer() {
 }
 
-void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id, Editor& editor, const DrawingOptions& options) {
+void MarkerDrawer::draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, const Waypoint* waypoint, uint32_t current_house_id, Editor& editor, const DrawingOptions& options) {
 	// waypoint (blue flame)
 	if (!options.ingame && waypoint && options.show_waypoints) {
 		drawer->BlitSprite(sprite_batch, draw_x, draw_y, SPRITE_WAYPOINT, DrawColor(64, 64, 255));

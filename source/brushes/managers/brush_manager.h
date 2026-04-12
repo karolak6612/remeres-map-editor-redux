@@ -72,10 +72,10 @@ public:
 		creature_spawntime = time;
 	}
 
-	void SetLightIntensity(float v) {
+	void SetLightIntensity(int v) {
 		light_intensity = v;
 	}
-	[[nodiscard]] float GetLightIntensity() const {
+	[[nodiscard]] int GetLightIntensity() const {
 		return light_intensity;
 	}
 
@@ -84,6 +84,12 @@ public:
 	}
 	[[nodiscard]] float GetAmbientLightLevel() const {
 		return ambient_light_level;
+	}
+	void SetServerLightColor(int v) {
+		server_light_color = v;
+	}
+	[[nodiscard]] int GetServerLightColor() const {
+		return server_light_color;
 	}
 
 	void SetBrushSize(int nz);
@@ -155,8 +161,9 @@ private:
 	bool draw_locked_doors;
 	bool use_custom_thickness;
 	float custom_thickness_mod;
-	float light_intensity;
+	int light_intensity;
 	float ambient_light_level;
+	int server_light_color;
 };
 
 extern BrushManager g_brush_manager;
