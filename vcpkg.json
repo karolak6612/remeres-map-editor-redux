@@ -2,7 +2,8 @@
   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg-tool/main/docs/vcpkg.schema.json",
   "dependencies": [
     "wxwidgets",
-    "glad",
+    "vulkan-headers",
+    "vulkan-memory-allocator",
     "glm",
     "asio",
     "nlohmann-json",

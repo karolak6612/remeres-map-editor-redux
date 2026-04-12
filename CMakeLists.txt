@@ -29,16 +29,13 @@ else()
 	set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -DNDEBUG")
 endif()
 
-find_package(OpenGL REQUIRED)
-
 
 if(WIN32)
     set(Boost_THREADAPI win32)
 endif()
 find_package(Boost 1.34.0 COMPONENTS thread system REQUIRED)
 
-find_package(wxWidgets 3.2 COMPONENTS html aui gl adv core net base propgrid REQUIRED)
-
+find_package(wxWidgets 3.2 COMPONENTS html aui adv core net base propgrid REQUIRED)
 
 find_package(ZLIB REQUIRED)
 
@@ -48,7 +45,9 @@ if(wxWidgets_USE_FILE)
 	include(${wxWidgets_USE_FILE})
 endif()
 
-find_package(glad CONFIG REQUIRED)
+find_package(Vulkan REQUIRED)
+find_path(VulkanMemoryAllocator_INCLUDE_DIR "vk_mem_alloc.h" PATH_SUFFIXES "vma")
+
 find_package(glm CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
@@ -75,7 +74,7 @@ add_executable(rme ${rme_H} ${rme_SRC})
 
 set_target_properties(rme PROPERTIES CXX_STANDARD 23)
 set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
-target_compile_definitions(rme PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
+target_compile_definitions(rme PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_VULKAN_IMPLEMENTATION)
  
 # Copy assets to build directory
 add_custom_command(TARGET rme POST_BUILD
@@ -98,9 +97,10 @@ endif()
 # Include directories (for legacy find modules)
 target_include_directories(rme PRIVATE
 	${Boost_INCLUDE_DIRS}
-	${OPENGL_INCLUDE_DIR}
 	${ZLIB_INCLUDE_DIR}
 	${LUA_INCLUDE_DIR}
+	${Vulkan_INCLUDE_DIR}
+	${VulkanMemoryAllocator_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
@@ -118,8 +118,7 @@ else()
 	target_link_libraries(rme PRIVATE ${ZLIB_LIBRARIES})
 endif()
 
-target_link_libraries(rme PRIVATE ${OPENGL_LIBRARIES})
-target_link_libraries(rme PRIVATE glad::glad)
+target_link_libraries(rme PRIVATE Vulkan::Vulkan)
 target_link_libraries(rme PRIVATE glm::glm)
 target_link_libraries(rme PRIVATE nanovg::nanovg)
 target_link_libraries(rme PRIVATE spdlog::spdlog)
@@ -129,6 +128,3 @@ target_link_libraries(rme PRIVATE cpr::cpr)
 target_link_libraries(rme PRIVATE ${LUA_LIBRARIES})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "rme")
-
-
-
