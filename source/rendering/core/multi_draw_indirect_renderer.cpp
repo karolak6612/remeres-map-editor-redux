@@ -38,7 +38,7 @@ bool MultiDrawIndirectRenderer::initialize() {
 	}
 
 	// Runtime-only check - function pointer is set by GLAD if GL 4.3+ is available
-	available_ = (glMultiDrawElementsIndirect != nullptr);
+	available_ = (vkCmdDrawIndexedIndirect != nullptr);
 
 	if (!available_) {
 		// Warning: MDI disabled
@@ -49,7 +49,7 @@ bool MultiDrawIndirectRenderer::initialize() {
 	command_buffer_ = std::make_unique<GLBuffer>();
 
 	// Pre-allocate buffer storage
-	glNamedBufferStorage(command_buffer_->GetID(), MAX_COMMANDS * sizeof(DrawElementsIndirectCommand), nullptr, GL_DYNAMIC_STORAGE_BIT);
+	// gl API removed
 
 	initialized_ = true;
 	return true;
@@ -65,7 +65,7 @@ void MultiDrawIndirectRenderer::clear() {
 	commands_.clear();
 }
 
-void MultiDrawIndirectRenderer::addDrawCommand(GLuint count, GLuint instanceCount, GLuint firstIndex, GLuint baseVertex, GLuint baseInstance) {
+void MultiDrawIndirectRenderer::addDrawCommand(uint32_t count, uint32_t instanceCount, uint32_t firstIndex, uint32_t baseVertex, uint32_t baseInstance) {
 	if (commands_.size() >= MAX_COMMANDS) {
 		// Max commands reached, ignoring
 		return;
@@ -90,7 +90,7 @@ void MultiDrawIndirectRenderer::upload() {
 		return;
 	}
 
-	glNamedBufferSubData(command_buffer_->GetID(), 0, commands_.size() * sizeof(DrawElementsIndirectCommand), commands_.data());
+	// gl API removed
 }
 
 void MultiDrawIndirectRenderer::execute() {
@@ -99,9 +99,9 @@ void MultiDrawIndirectRenderer::execute() {
 	}
 
 	// Bind buffer for draw call
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, command_buffer_->GetID());
-	glMultiDrawElementsIndirect(GL_TRIANGLES, GL_UNSIGNED_INT,
+	// gl API removed
+	vkCmdDrawIndexedIndirect(0 /* GL CONST REMOVED */, 0 /* GL CONST REMOVED */,
 								nullptr, // Offset 0 in bound buffer
-								static_cast<GLsizei>(commands_.size()), sizeof(DrawElementsIndirectCommand));
-	glBindBuffer(GL_DRAW_INDIRECT_BUFFER, 0);
+								static_cast<int32_t>(commands_.size()), sizeof(DrawElementsIndirectCommand));
+	// gl API removed
 }

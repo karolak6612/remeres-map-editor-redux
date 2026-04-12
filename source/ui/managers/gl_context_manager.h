@@ -1,5 +1,5 @@
-#ifndef RME_GL_CONTEXT_MANAGER_H_
-#define RME_GL_CONTEXT_MANAGER_H_
+#ifndef RME_0 /* GL CONST REMOVED */
+#define RME_0 /* GL CONST REMOVED */
 
 #include <wx/wx.h>
 #include <wx/glcanvas.h>

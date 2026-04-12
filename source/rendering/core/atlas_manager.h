@@ -79,7 +79,7 @@ public:
 	/**
 	 * Get texture ID.
 	 */
-	GLuint getTextureId() const;
+	uint32_t getTextureId() const;
 
 	/**
 	 * Check if atlas is valid.

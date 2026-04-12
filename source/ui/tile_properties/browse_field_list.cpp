@@ -14,7 +14,6 @@
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
 #include "rendering/core/graphics.h"
-#include <glad/glad.h>
 #include <nanovg.h>
 #include <format>
 #include <vector>

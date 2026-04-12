@@ -6,7 +6,6 @@
 #include "ui/theme.h"
 #include "brushes/raw/raw_brush.h"
 #include "util/image_manager.h"
-#include <glad/glad.h>
 #include <nanovg.h>
 #include <algorithm>
 

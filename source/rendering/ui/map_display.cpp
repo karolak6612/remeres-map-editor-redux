@@ -44,9 +44,8 @@
 #include "rendering/ui/map_status_updater.h"
 #include "rendering/map_drawer.h"
 #include "rendering/core/text_renderer.h"
-#include <glad/glad.h>
 #include <nanovg.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 #include "app/application.h"
 #include "live/live_server.h"
 #include "live/live_client.h"
@@ -173,9 +172,9 @@ MapCanvas::~MapCanvas() {
 void MapCanvas::Refresh() {
 	if (refresh_watch.Time() > g_settings.getInteger(Config::HARD_REFRESH_RATE)) {
 		refresh_watch.Start();
-		wxGLCanvas::Update();
+		wxWindow::Update();
 	}
-	wxGLCanvas::Refresh();
+	wxWindow::Refresh();
 }
 
 void MapCanvas::SetZoom(double value) {
@@ -218,13 +217,13 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	}
 
 	// Sanitize state before handover to NanoVG
-	glUseProgram(0);
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	// gl API removed
+	// gl API removed
+	// gl API removed
+	// gl API removed
+	// gl API removed
 
-	glClear(GL_STENCIL_BUFFER_BIT);
+	// gl API removed
 	TextRenderer::BeginFrame(vg, GetSize().x, GetSize().y, GetContentScaleFactor());
 
 	if (options.show_creatures) {
@@ -246,8 +245,8 @@ void MapCanvas::DrawOverlays(NVGcontext* vg, const DrawingOptions& options) {
 	TextRenderer::EndFrame(vg);
 
 	// Sanitize state after NanoVG to avoid polluting the next frame or other tabs
-	glUseProgram(0);
-	glBindVertexArray(0);
+	// gl API removed
+	// gl API removed
 }
 
 void MapCanvas::PerformGarbageCollection() {

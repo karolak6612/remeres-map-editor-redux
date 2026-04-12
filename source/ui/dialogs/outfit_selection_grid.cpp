@@ -7,9 +7,8 @@
 #include "util/image_manager.h"
 #include "util/nvg_utils.h"
 
-#include <glad/glad.h>
 #include <nanovg.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 
 #include <algorithm>
 #include <iterator>

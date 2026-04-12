@@ -192,19 +192,19 @@ void MapDrawer::InitPostProcess() {
 		0, 2, 3
 	};
 
-	glNamedBufferStorage(pp_vbo->GetID(), sizeof(quadVertices), quadVertices, 0);
-	glNamedBufferStorage(pp_ebo->GetID(), sizeof(quadIndices), quadIndices, 0);
+	// gl API removed
+	// gl API removed
 
-	glVertexArrayVertexBuffer(pp_vao->GetID(), 0, pp_vbo->GetID(), 0, 4 * sizeof(float));
-	glVertexArrayElementBuffer(pp_vao->GetID(), pp_ebo->GetID());
+	// gl API removed
+	// gl API removed
 
-	glEnableVertexArrayAttrib(pp_vao->GetID(), 0);
-	glVertexArrayAttribFormat(pp_vao->GetID(), 0, 2, GL_FLOAT, GL_FALSE, 0);
-	glVertexArrayAttribBinding(pp_vao->GetID(), 0, 0);
+	// gl API removed
+	// gl API removed
+	// gl API removed
 
-	glEnableVertexArrayAttrib(pp_vao->GetID(), 1);
-	glVertexArrayAttribFormat(pp_vao->GetID(), 1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float));
-	glVertexArrayAttribBinding(pp_vao->GetID(), 1, 0);
+	// gl API removed
+	// gl API removed
+	// gl API removed
 }
 
 void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& options) {
@@ -219,19 +219,19 @@ void MapDrawer::DrawPostProcess(const RenderView& view, const DrawingOptions& op
 	}
 
 	// Only clear and bind main screen once we know we can draw the result
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // Clear main screen
+	// // gl API removed
+	// // gl API removed
+	 // Clear main screen
 
 	shader->Use();
 	shader->SetInt("u_Texture", 0);
 	// Set TextureSize uniform if shader needs it
 	shader->SetVec2("u_TextureSize", glm::vec2(fbo_width, fbo_height));
 
-	glBindTextureUnit(0, scale_texture->GetID());
-	glBindVertexArray(pp_vao->GetID());
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-	glBindVertexArray(0);
+	// gl API removed
+	// gl API removed
+	// // gl API removed
+	// gl API removed
 	shader->Unuse();
 }
 
@@ -251,15 +251,15 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 		fbo_width = target_w;
 		fbo_height = target_h;
 		scale_fbo = std::make_unique<GLFramebuffer>();
-		scale_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
+		scale_texture = std::make_unique<GLTextureResource>(0 /* GL CONST REMOVED */);
 
-		glTextureStorage2D(scale_texture->GetID(), 1, GL_RGBA8, fbo_width, fbo_height);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		// gl API removed
+		// gl API removed
+		// gl API removed
 
-		glNamedFramebufferTexture(scale_fbo->GetID(), GL_COLOR_ATTACHMENT0, scale_texture->GetID(), 0);
-		GLenum drawBuffers[] = { GL_COLOR_ATTACHMENT0 };
-		glNamedFramebufferDrawBuffers(scale_fbo->GetID(), 1, drawBuffers);
+		// gl API removed
+		uint32_t drawBuffers[] = { 0 /* GL CONST REMOVED */ };
+		// gl API removed
 
 		// Sanity check for division by zero risk in shaders
 		if (fbo_width < 1 || fbo_height < 1) {
@@ -271,14 +271,14 @@ void MapDrawer::UpdateFBO(const RenderView& view, const DrawingOptions& options)
 
 	// Update filtering parameters when scaling is enabled and either the FBO was resized or the AA mode changed (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode))
 	if (scale_texture && (fbo_resized || options.anti_aliasing != m_lastAaMode)) {
-		GLenum filter = options.anti_aliasing ? GL_LINEAR : GL_NEAREST;
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MIN_FILTER, filter);
-		glTextureParameteri(scale_texture->GetID(), GL_TEXTURE_MAG_FILTER, filter);
+		uint32_t filter = options.anti_aliasing ? 0 /* GL CONST REMOVED */ : 0 /* GL CONST REMOVED */;
+		// gl API removed
+		// gl API removed
 		m_lastAaMode = options.anti_aliasing;
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, scale_fbo->GetID());
-	glViewport(0, 0, fbo_width, fbo_height);
+	// // gl API removed
+	// // gl API removed
 }
 
 void MapDrawer::Release() {
@@ -340,8 +340,8 @@ void MapDrawer::Draw() {
 	if (use_fbo) {
 		DrawPostProcess(view, options);
 		// Reset to default FBO for overlays
-		glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
+		// // gl API removed
+		// // gl API removed
 	}
 
 	// Resume Batch for Overlays

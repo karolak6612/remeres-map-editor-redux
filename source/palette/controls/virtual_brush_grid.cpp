@@ -3,10 +3,9 @@
 #include "ui/gui.h"
 #include "rendering/core/graphics.h"
 
-#include <glad/glad.h>
 
 #include <nanovg.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 
 #include "util/nvg_utils.h"
 #include "ui/theme.h"

@@ -72,7 +72,7 @@ bool RenderView::IsTileVisible(int map_x, int map_y, int map_z, int& out_x, int&
 bool RenderView::IsPixelVisible(int draw_x, int draw_y, int margin) const {
 	// Logic matches IsTileVisible but uses pre-calculated draw coordinates.
 	// screensize_x * zoom gives the logical viewport size (since TILE_SIZE is constant 32).
-	// See SetupGL: glOrtho(0, width * zoom, ...)
+	// See SetupGL: /* gl API removed */(0, width * zoom, ...)
 
 	// Use cached logical dimensions
 	if (draw_x + TILE_SIZE + margin < 0 || draw_x - margin > logical_width || draw_y + TILE_SIZE + margin < 0 || draw_y - margin > logical_height) {
@@ -103,10 +103,10 @@ void RenderView::getScreenPosition(int map_x, int map_y, int map_z, int& out_x, 
 #include <glm/gtc/matrix_transform.hpp>
 
 void RenderView::SetupGL() {
-	glViewport(viewport_x, viewport_y, screensize_x, screensize_y);
+	// gl API removed
 
 	// Calculate Projection
-	// glOrtho(0, vPort[2] * zoom, vPort[3] * zoom, 0, -1, 1);
+	// // gl API removed
 	// Equivalent: 0 -> width*zoom, height*zoom -> 0
 
 	int width = screensize_x;
@@ -115,7 +115,7 @@ void RenderView::SetupGL() {
 	projectionMatrix = glm::ortho(0.0f, width * zoom, height * zoom, 0.0f, -1.0f, 1.0f);
 
 	// Calculate ModelView
-	// glTranslatef(0.375f, 0.375f, 0.0f);
+	// // gl API removed
 	viewMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(0.375f, 0.375f, 0.0f));
 }
 
@@ -125,11 +125,11 @@ void RenderView::ReleaseGL() {
 
 void RenderView::Clear() {
 	// Black Background
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	// gl API removed
 
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// gl API removed
 
-	// glLoadIdentity(); // Legacy
+	// // gl API removed // Legacy
 	// Blending and State management is now handled by individual renderers
 }
 

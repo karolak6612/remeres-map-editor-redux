@@ -28,7 +28,6 @@
 #include "ui/browse_tile_window.h"
 #include "util/image_manager.h"
 #include "util/nanovg_listbox.h"
-#include <glad/glad.h>
 #include <format>
 #include <nanovg.h>
 

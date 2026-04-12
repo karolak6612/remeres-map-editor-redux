@@ -8,10 +8,10 @@
 
 void ScreenCapture::Capture(int width, int height, uint8_t* buffer) {
 	// No glFinish needed, glReadPixels handles synchronization
-	glPixelStorei(GL_PACK_ALIGNMENT, 1); // 1 byte alignment
+	// gl API removed // 1 byte alignment
 
 	// Read the entire buffer at once (much faster than row-by-row)
-	glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, buffer);
+	// gl API removed
 
 	// OpenGL origin is bottom-left, but we usually expect top-left.
 	// Flip the image vertically on CPU.

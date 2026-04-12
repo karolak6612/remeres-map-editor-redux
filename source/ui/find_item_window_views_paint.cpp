@@ -4,7 +4,6 @@
 #include "ui/gui.h"
 #include "ui/theme.h"
 
-#include <glad/glad.h>
 #include <nanovg.h>
 
 #include <algorithm>

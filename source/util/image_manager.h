@@ -60,8 +60,8 @@ public:
 	// NanoVG support
 	int GetNanoVGImage(NVGcontext* vg, std::string_view assetPath, const wxColour& tint = wxNullColour);
 
-	// OpenGL support
-	uint32_t GetGLTexture(std::string_view assetPath);
+	// Vulkan support
+	VkImageView GetVulkanTexture(std::string_view assetPath);
 
 	// Cleanup
 	void ClearCache();
@@ -76,7 +76,7 @@ private:
 	std::unordered_map<std::string, wxBitmapBundle> m_bitmapBundleCache;
 	std::unordered_map<std::pair<std::string, uint32_t>, wxBitmap, PairHash> m_tintedBitmapCache;
 	std::unordered_map<NvgCacheKey, int, NvgCacheKeyHash> m_nvgImageCache;
-	std::unordered_map<std::string, uint32_t> m_glTextureCache;
+	std::unordered_map<std::string, VkImageView> m_vkTextureCache;
 
 	// Helper for tinting
 	wxImage TintImage(const wxImage& image, const wxColour& tint);

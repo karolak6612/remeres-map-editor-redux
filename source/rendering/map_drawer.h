@@ -35,7 +35,8 @@ class DoorIndicatorDrawer;
 #include "rendering/core/render_view.h"
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/primitive_renderer.h"
-#include "rendering/core/gl_resources.h"
+#include "rendering/core/vulkan_resources.h"
+#include "rendering/core/vulkan_context.h"
 #include "rendering/core/shader_program.h"
 
 class GridDrawer;
@@ -92,13 +93,14 @@ class MapDrawer {
 	std::unique_ptr<PrimitiveRenderer> primitive_renderer;
 
 	// Post-processing
-	std::unique_ptr<GLFramebuffer> scale_fbo;
-	std::unique_ptr<GLTextureResource> scale_texture;
+	std::unique_ptr<VulkanImage> scale_fbo;
+	VkFramebuffer vkFramebuffer = VK_NULL_HANDLE;
+
 	int fbo_width = 0;
 	int fbo_height = 0;
 	bool m_lastAaMode = false;
 
-	std::unique_ptr<GLVertexArray> pp_vao;
+
 	std::unique_ptr<GLBuffer> pp_vbo;
 	std::unique_ptr<GLBuffer> pp_ebo;
 

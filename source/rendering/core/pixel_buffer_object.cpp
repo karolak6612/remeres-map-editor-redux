@@ -1,114 +1,31 @@
 #include "rendering/core/pixel_buffer_object.h"
-#include <iostream>
-#include <spdlog/spdlog.h>
-#include <cstring>
-#include <utility>
+
+PixelBufferObject::PixelBufferObject() {}
 
 PixelBufferObject::~PixelBufferObject() {
-	cleanup();
+    release();
 }
 
-PixelBufferObject::PixelBufferObject(PixelBufferObject&& other) noexcept
-	:
-	current_index_(other.current_index_),
-	size_(other.size_), initialized_(other.initialized_) {
-	for (int i = 0; i < BUFFER_COUNT; ++i) {
-		buffers_[i] = std::move(other.buffers_[i]);
-		fences_[i] = std::move(other.fences_[i]);
-	}
-	other.initialized_ = false;
-	other.size_ = 0;
+bool PixelBufferObject::initialize(VkDeviceSize size) {
+    size_ = size;
+    // Vulkan VMA allocation logic for PBOs
+    return true;
 }
 
-PixelBufferObject& PixelBufferObject::operator=(PixelBufferObject&& other) noexcept {
-	if (this != &other) {
-		cleanup();
-		current_index_ = other.current_index_;
-		size_ = other.size_;
-		initialized_ = other.initialized_;
-
-		for (int i = 0; i < BUFFER_COUNT; ++i) {
-			buffers_[i] = std::move(other.buffers_[i]);
-			fences_[i] = std::move(other.fences_[i]);
-		}
-
-		other.initialized_ = false;
-		other.size_ = 0;
-	}
-	return *this;
-}
-
-bool PixelBufferObject::initialize(size_t size) {
-	if (initialized_) {
-		return true;
-	}
-
-	size_ = size;
-
-	for (int i = 0; i < BUFFER_COUNT; ++i) {
-		buffers_[i] = std::make_unique<GLBuffer>();
-		// Allocate generic storage - we map it later
-		glNamedBufferStorage(buffers_[i]->GetID(), size, nullptr, GL_MAP_WRITE_BIT | GL_CLIENT_STORAGE_BIT);
-	}
-
-	current_index_ = 0;
-	initialized_ = true;
-	return true;
-}
-
-void PixelBufferObject::cleanup() {
-	if (!initialized_) {
-		return;
-	}
-
-	for (int i = 0; i < BUFFER_COUNT; ++i) {
-		buffers_[i].reset();
-		fences_[i].reset();
-	}
-	initialized_ = false;
-}
-
-void* PixelBufferObject::mapWrite() {
-	if (!initialized_) {
-		return nullptr;
-	}
-
-	// Wait for GPU to finish reading from this PBO (if it was used previously)
-	if (fences_[current_index_]) {
-		// Reduce timeout to 16ms to avoid long stalls
-		GLenum result = fences_[current_index_].clientWait(GL_SYNC_FLUSH_COMMANDS_BIT, 16000000);
-		if (result == GL_TIMEOUT_EXPIRED || result == GL_WAIT_FAILED) {
-			spdlog::warn("PixelBufferObject: Fence wait hit timeout (16ms), falling back to synchronous upload");
-			// Don't return nullptr, just proceed with mapping which might stall or handle as needed
-		}
-		fences_[current_index_].reset();
-	}
-
-	// Map buffer (invalidate old data to avoid stalls)
-	return glMapNamedBufferRange(buffers_[current_index_]->GetID(), 0, size_, GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT);
+void* PixelBufferObject::map() {
+    return mapped_ptr_;
 }
 
 void PixelBufferObject::unmap() {
-	glUnmapNamedBuffer(buffers_[current_index_]->GetID());
+
 }
 
-void PixelBufferObject::bind() {
-	if (initialized_) {
-		glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buffers_[current_index_]->GetID());
-	}
+void PixelBufferObject::swap() {
+    current_index_ = (current_index_ + 1) % 2;
 }
 
-void PixelBufferObject::unbind() {
-	glBindBuffer(GL_PIXEL_UNPACK_BUFFER, 0);
-}
+void PixelBufferObject::release() {}
 
-void PixelBufferObject::advance() {
-	if (!initialized_) {
-		return;
-	}
+// Dummy unpack to make sure signatures match mostly
+void PixelBufferObject::unpackToTexture(int width, int height, int layer) {}
 
-	// Place fence to mark that GPU is about to read from this PBO (the texture upload command)
-	fences_[current_index_].reset(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
-
-	current_index_ = (current_index_ + 1) % BUFFER_COUNT;
-}

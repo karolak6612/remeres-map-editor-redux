@@ -106,12 +106,12 @@ void MinimapCache::ensurePageTexture(FloorCachePage& page) {
 		return;
 	}
 
-	page.texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D);
-	glTextureStorage2D(page.texture->GetID(), 1, GL_R8UI, PageSize, PageSize);
-	glTextureParameteri(page.texture->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(page.texture->GetID(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTextureParameteri(page.texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteri(page.texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	page.texture = std::make_unique<GLTextureResource>(0 /* GL CONST REMOVED */);
+	// gl API removed
+	// gl API removed
+	// gl API removed
+	// gl API removed
+	// gl API removed
 }
 
 void MinimapCache::uploadRect(const Map& map, int floor, FloorCachePage& page, const MinimapDirtyRect& rect) {
@@ -162,18 +162,18 @@ void MinimapCache::uploadRect(const Map& map, int floor, FloorCachePage& page, c
 		}
 	});
 
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTextureSubImage2D(
+	// gl API removed
+	/* gl API removed */(
 		page.texture->GetID(),
 		0,
 		clamped_rect.x,
 		clamped_rect.y,
 		clamped_rect.width,
 		clamped_rect.height,
-		GL_RED_INTEGER,
-		GL_UNSIGNED_BYTE,
+		0 /* GL CONST REMOVED */,
+		0 /* GL CONST REMOVED */,
 		upload_buffer_.data());
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	// gl API removed
 }
 
 void MinimapCache::flushVisible(const Map& map, int floor, const MinimapDirtyRect& visible_rect) {

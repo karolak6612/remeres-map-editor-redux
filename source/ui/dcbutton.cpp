@@ -23,7 +23,6 @@
 #include "game/sprites.h"
 #include "ui/gui.h"
 
-#include <glad/glad.h>
 #include <nanovg.h>
 
 IMPLEMENT_DYNAMIC_CLASS(DCButton, NanoVGCanvas)

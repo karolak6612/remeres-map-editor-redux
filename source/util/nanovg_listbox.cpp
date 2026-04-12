@@ -1,9 +1,8 @@
 #include "util/nanovg_listbox.h"
 #include "ui/theme.h"
 #include <wx/vlbox.h> // For styles like wxLB_MULTIPLE
-#include <glad/glad.h>
 #include <nanovg.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 #include <algorithm>
 #include <iterator>
 

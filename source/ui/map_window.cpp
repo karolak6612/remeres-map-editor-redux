@@ -35,8 +35,8 @@ MapWindow::MapWindow(wxWindow* parent, Editor& editor) :
 	editor(editor),
 	replaceItemsDialog(nullptr) {
 	int GL_settings[3];
-	GL_settings[0] = WX_GL_RGBA;
-	GL_settings[1] = WX_GL_DOUBLEBUFFER;
+	GL_settings[0] = WX_0 /* GL CONST REMOVED */;
+	GL_settings[1] = WX_0 /* GL CONST REMOVED */;
 	GL_settings[2] = 0;
 	canvas = newd MapCanvas(this, editor, GL_settings);
 

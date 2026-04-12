@@ -2,13 +2,13 @@
 #define RME_RENDERING_CORE_MULTI_DRAW_INDIRECT_RENDERER_H_
 
 #include "app/main.h"
-#include "rendering/core/gl_resources.h"
+#include "rendering/core/vulkan_resources.h"
 #include <vector>
 #include <cstdint>
 #include <memory>
 
 /**
- * GPU command buffer for glMultiDrawElementsIndirect (GL 4.3+).
+ * GPU command buffer for vkCmdDrawIndexedIndirect (Vulkan).
  *
  * Reduces 2-5 draw calls (one per atlas) to ONE draw call total.
  * GPU executes command buffer directly, eliminating CPUâ†’GPU sync per draw.
@@ -16,14 +16,14 @@
 class MultiDrawIndirectRenderer {
 public:
 	/**
-	 * OpenGL indirect draw command structure (must match spec exactly).
+	 * Vulkan indirect draw command structure (must match spec exactly).
 	 */
 	struct DrawElementsIndirectCommand {
-		GLuint count; // Number of indices per instance (6 for quad)
-		GLuint instanceCount; // Number of instances (sprites in this batch)
-		GLuint firstIndex; // Offset into EBO
-		GLuint baseVertex; // Offset into VBO
-		GLuint baseInstance; // Offset into instance buffer
+		uint32_t count; // Number of indices per instance (6 for quad)
+		uint32_t instanceCount; // Number of instances (sprites in this batch)
+		uint32_t firstIndex; // Offset into EBO
+		uint32_t baseVertex; // Offset into VBO
+		uint32_t baseInstance; // Offset into instance buffer
 	};
 
 	static constexpr int MAX_COMMANDS = 16; // Support up to 16 atlases
@@ -40,7 +40,7 @@ public:
 
 	/**
 	 * Initialize GPU buffer for indirect commands.
-	 * @return true if successful (requires GL 4.3+)
+	 * @return true if successful (requires Vulkan)
 	 */
 	bool initialize();
 
@@ -62,7 +62,7 @@ public:
 	 * @param baseVertex Offset into vertex buffer
 	 * @param baseInstance Offset into instance data
 	 */
-	void addDrawCommand(GLuint count, GLuint instanceCount, GLuint firstIndex = 0, GLuint baseVertex = 0, GLuint baseInstance = 0);
+	void addDrawCommand(uint32_t count, uint32_t instanceCount, uint32_t firstIndex = 0, uint32_t baseVertex = 0, uint32_t baseInstance = 0);
 
 	/**
 	 * Upload command buffer to GPU.
@@ -70,7 +70,7 @@ public:
 	void upload();
 
 	/**
-	 * Execute all draw commands with single glMultiDrawElementsIndirect call.
+	 * Execute all draw commands with single vkCmdDrawIndexedIndirect call.
 	 * VAO and shader must already be bound.
 	 */
 	void execute();
@@ -83,7 +83,7 @@ public:
 	}
 
 	/**
-	 * Check if MDI is available (GL 4.3+).
+	 * Check if MDI is available (Vulkan).
 	 */
 	bool isAvailable() const {
 		return available_;
@@ -91,7 +91,7 @@ public:
 
 private:
 	std::vector<DrawElementsIndirectCommand> commands_;
-	std::unique_ptr<GLBuffer> command_buffer_;
+	std::unique_ptr<VulkanBuffer> command_buffer_;
 	bool available_ = false;
 	bool initialized_ = false;
 };

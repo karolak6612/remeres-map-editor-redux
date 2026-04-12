@@ -3,270 +3,266 @@
 #include <algorithm>
 #include <spdlog/spdlog.h>
 
-TextureAtlas::TextureAtlas() = default;
+TextureAtlas::TextureAtlas(VulkanContext* vkContext) : vkContext_(vkContext) {}
 
 TextureAtlas::~TextureAtlas() {
-	release();
+    release();
 }
 
 TextureAtlas::TextureAtlas(TextureAtlas&& other) noexcept
-	:
-	texture_id_(std::move(other.texture_id_)),
-	layer_count_(other.layer_count_),
-	allocated_layers_(other.allocated_layers_),
-	total_sprite_count_(other.total_sprite_count_),
-	current_layer_(other.current_layer_), next_x_(other.next_x_),
-	next_y_(other.next_y_),
-	free_slots_(std::move(other.free_slots_)),
-	pbo_(std::move(other.pbo_)) {
-	other.layer_count_ = 0;
-	other.allocated_layers_ = 0;
-	other.total_sprite_count_ = 0;
-	other.current_layer_ = 0;
-	other.next_x_ = 0;
-	other.next_y_ = 0;
-	other.pbo_.reset();
+    :
+    vkContext_(other.vkContext_),
+    texture_id_(std::move(other.texture_id_)),
+    sampler_(std::exchange(other.sampler_, VK_NULL_HANDLE)),
+    layer_count_(other.layer_count_),
+    allocated_layers_(other.allocated_layers_),
+    total_sprite_count_(other.total_sprite_count_),
+    current_layer_(other.current_layer_), next_x_(other.next_x_),
+    next_y_(other.next_y_),
+    free_slots_(std::move(other.free_slots_)) {
+    other.layer_count_ = 0;
+    other.allocated_layers_ = 0;
+    other.total_sprite_count_ = 0;
+    other.current_layer_ = 0;
+    other.next_x_ = 0;
+    other.next_y_ = 0;
 }
 
 TextureAtlas& TextureAtlas::operator=(TextureAtlas&& other) noexcept {
-	if (this != &other) {
-		release();
-		texture_id_ = std::move(other.texture_id_);
-		layer_count_ = other.layer_count_;
-		allocated_layers_ = other.allocated_layers_;
-		total_sprite_count_ = other.total_sprite_count_;
-		current_layer_ = other.current_layer_;
-		next_x_ = other.next_x_;
-		next_y_ = other.next_y_;
-		free_slots_ = std::move(other.free_slots_);
-		pbo_ = std::move(other.pbo_);
-		other.layer_count_ = 0;
-		other.allocated_layers_ = 0;
-		other.total_sprite_count_ = 0;
-		other.current_layer_ = 0;
-		other.next_x_ = 0;
-		other.next_y_ = 0;
-		other.pbo_.reset();
-	}
-	return *this;
+    if (this != &other) {
+        release();
+        vkContext_ = other.vkContext_;
+        texture_id_ = std::move(other.texture_id_);
+        sampler_ = std::exchange(other.sampler_, VK_NULL_HANDLE);
+        layer_count_ = other.layer_count_;
+        allocated_layers_ = other.allocated_layers_;
+        total_sprite_count_ = other.total_sprite_count_;
+        current_layer_ = other.current_layer_;
+        next_x_ = other.next_x_;
+        next_y_ = other.next_y_;
+        free_slots_ = std::move(other.free_slots_);
+        other.layer_count_ = 0;
+        other.allocated_layers_ = 0;
+        other.total_sprite_count_ = 0;
+        other.current_layer_ = 0;
+        other.next_x_ = 0;
+        other.next_y_ = 0;
+    }
+    return *this;
 }
 
 bool TextureAtlas::initialize(int initial_layers) {
-	if (texture_id_) {
-		return true; // Already initialized
-	}
+    if (texture_id_) {
+        return true; // Already initialized
+    }
 
-	if (initial_layers < 1) {
-		initial_layers = 1;
-	}
-	if (initial_layers > MAX_LAYERS) {
-		initial_layers = MAX_LAYERS;
-	}
+    if (initial_layers < 1) {
+        initial_layers = 1;
+    }
+    if (initial_layers > MAX_LAYERS) {
+        initial_layers = MAX_LAYERS;
+    }
 
-	texture_id_ = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
+    VkImageCreateInfo imageInfo{};
+    imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+    imageInfo.imageType = VK_IMAGE_TYPE_2D;
+    imageInfo.extent.width = ATLAS_SIZE;
+    imageInfo.extent.height = ATLAS_SIZE;
+    imageInfo.extent.depth = 1;
+    imageInfo.mipLevels = 1;
+    imageInfo.arrayLayers = MAX_LAYERS; // Allocate max upfront or resize later, choosing max for simplicity here
+    imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+    imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+    imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+    imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+    imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-	// Set texture parameters
-	glTextureParameteri(texture_id_->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTextureParameteri(texture_id_->GetID(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	glTextureParameteri(texture_id_->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTextureParameteri(texture_id_->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    texture_id_ = std::make_unique<VulkanImage>(vkContext_->GetAllocator(), vkContext_->GetDevice(), imageInfo, VMA_MEMORY_USAGE_GPU_ONLY);
+    texture_id_->CreateView(VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, MAX_LAYERS);
 
-	// Allocate texture array storage (Immutable)
-	glTextureStorage3D(texture_id_->GetID(), 1, GL_RGBA8, ATLAS_SIZE, ATLAS_SIZE, initial_layers);
+    // Transition image to TRANSFER_DST_OPTIMAL
+    VkCommandBuffer cmdBuffer = vkContext_->BeginSingleTimeCommands();
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+    barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = texture_id_->GetImage();
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = MAX_LAYERS;
+    barrier.srcAccessMask = 0;
+    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 
-	allocated_layers_ = initial_layers;
-	layer_count_ = 1; // Start with one active layer
-	current_layer_ = 0;
-	next_x_ = 0;
-	next_y_ = 0;
+    vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+    vkContext_->EndSingleTimeCommands(cmdBuffer);
 
-	// Gate PBO because it currently causes random sprite corruption
-#ifdef USE_PBO_FOR_SPRITE_UPLOAD
-	pbo_ = std::make_unique<PixelBufferObject>();
-	if (!pbo_->initialize(SPRITE_SIZE * SPRITE_SIZE * 4)) {
-		spdlog::error("TextureAtlas: Failed to initialize PBO");
-		return false;
-	}
-#endif
+    VkSamplerCreateInfo samplerInfo{};
+    samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+    samplerInfo.magFilter = VK_FILTER_NEAREST;
+    samplerInfo.minFilter = VK_FILTER_NEAREST;
+    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+    samplerInfo.anisotropyEnable = VK_FALSE;
+    samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+    samplerInfo.unnormalizedCoordinates = VK_FALSE;
+    samplerInfo.compareEnable = VK_FALSE;
+    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 
-	spdlog::info("TextureAtlas created: {}x{} x {} layers, id={}", ATLAS_SIZE, ATLAS_SIZE, initial_layers, texture_id_->GetID());
-	return true;
+    if (vkCreateSampler(vkContext_->GetDevice(), &samplerInfo, nullptr, &sampler_) != VK_SUCCESS) {
+        spdlog::error("Failed to create texture sampler!");
+        return false;
+    }
+
+    allocated_layers_ = initial_layers;
+    layer_count_ = 1; // Start with one active layer
+    current_layer_ = 0;
+    next_x_ = 0;
+    next_y_ = 0;
+
+    spdlog::info("TextureAtlas created: {}x{} x {} layers", ATLAS_SIZE, ATLAS_SIZE, MAX_LAYERS);
+    return true;
 }
 
 bool TextureAtlas::addLayer() {
-	if (layer_count_ >= MAX_LAYERS) {
-		spdlog::error("TextureAtlas: Max layers ({}) reached", MAX_LAYERS);
-		return false;
-	}
+    if (layer_count_ >= MAX_LAYERS) {
+        spdlog::error("TextureAtlas: Max layers ({}) reached", MAX_LAYERS);
+        return false;
+    }
 
-	// If we need more layers than allocated, reallocate
-	if (layer_count_ >= allocated_layers_) {
-		// Linear growth to prevent massive VRAM spikes
-		// 4 layers = ~268 MB VRAM
-		int new_allocated = std::min(allocated_layers_ + 4, MAX_LAYERS);
-
-		spdlog::info("TextureAtlas: Expanding {} -> {} layers", allocated_layers_, new_allocated);
-
-		// Create new larger texture array
-		auto new_texture = std::make_unique<GLTextureResource>(GL_TEXTURE_2D_ARRAY);
-
-		glTextureParameteri(new_texture->GetID(), GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTextureParameteri(new_texture->GetID(), GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTextureParameteri(new_texture->GetID(), GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTextureParameteri(new_texture->GetID(), GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glTextureStorage3D(new_texture->GetID(), 1, GL_RGBA8, ATLAS_SIZE, ATLAS_SIZE, new_allocated);
-
-		GLenum err = glGetError();
-		if (err != GL_NO_ERROR) {
-			spdlog::error("TextureAtlas: glTextureStorage3D failed during expansion (err={}). VRAM might be full.", err);
-			return false;
-		}
-
-		// Copy existing layers using glCopyImageSubData (GL 4.3+)
-		glCopyImageSubData(texture_id_->GetID(), GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, new_texture->GetID(), GL_TEXTURE_2D_ARRAY, 0, 0, 0, 0, ATLAS_SIZE, ATLAS_SIZE, allocated_layers_);
-
-		err = glGetError();
-		if (err != GL_NO_ERROR) {
-			spdlog::error("TextureAtlas: glCopyImageSubData failed (err={}). Texture data lost!", err);
-			// We can't easily recover here, but at least we know why sprites are black.
-		}
-
-		// Removed glFinish() - it causes main thread to freeze waiting for GPU
-		// The driver should handle synchronization implicitly for the next draw call
-
-		texture_id_ = std::move(new_texture);
-		allocated_layers_ = new_allocated;
-	}
-
-	layer_count_++;
-	current_layer_ = layer_count_ - 1;
-	next_x_ = 0;
-	next_y_ = 0;
-
-	return true;
+    layer_count_++;
+    current_layer_ = layer_count_ - 1;
+    next_x_ = 0;
+    next_y_ = 0;
+    spdlog::info("TextureAtlas: Added layer {}", current_layer_);
+    return true;
 }
 
 std::optional<AtlasRegion> TextureAtlas::addSprite(const uint8_t* rgba_data) {
-	if (!isValid()) {
-		spdlog::error("TextureAtlas::addSprite called on uninitialized atlas");
-		return std::nullopt;
-	}
+    int px = -1, py = -1, pl = -1;
 
-	if (!rgba_data) {
-		spdlog::error("TextureAtlas::addSprite called with null data");
-		return std::nullopt;
-	}
+    if (!free_slots_.empty()) {
+        FreeSlot slot = free_slots_.back();
+        free_slots_.pop_back();
+        px = slot.pixel_x;
+        py = slot.pixel_y;
+        pl = slot.layer;
+    } else {
+        if (next_x_ >= ATLAS_SIZE) {
+            next_x_ = 0;
+            next_y_ += SPRITE_SIZE;
+        }
 
-	int pixel_x, pixel_y, layer;
+        if (next_y_ >= ATLAS_SIZE) {
+            if (!addLayer()) {
+                return std::nullopt;
+            }
+        }
 
-	// Check free list first (uses integer coordinates to avoid float precision issues)
-	if (!free_slots_.empty()) {
-		auto slot = free_slots_.back();
-		free_slots_.pop_back();
+        px = next_x_;
+        py = next_y_;
+        pl = current_layer_;
 
-		pixel_x = slot.pixel_x;
-		pixel_y = slot.pixel_y;
-		layer = slot.layer;
-	} else {
-		// Check if current layer is full
-		if (next_y_ >= SPRITES_PER_ROW) {
-			if (!addLayer()) {
-				return std::nullopt;
-			}
-		}
+        next_x_ += SPRITE_SIZE;
+    }
 
-		// Calculate pixel position in current layer
-		pixel_x = next_x_ * SPRITE_SIZE;
-		pixel_y = next_y_ * SPRITE_SIZE;
-		layer = current_layer_;
+    if (!rgba_data) {
+        spdlog::error("TextureAtlas: Null pixel data provided");
+        return std::nullopt;
+    }
 
-		// Advance to next slot
-		next_x_++;
-		if (next_x_ >= SPRITES_PER_ROW) {
-			next_x_ = 0;
-			next_y_++;
-		}
-		total_sprite_count_++;
-	}
+    VkDeviceSize imageSize = SPRITE_SIZE * SPRITE_SIZE * 4;
+    VulkanBuffer stagingBuffer(vkContext_->GetAllocator(), imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VMA_MEMORY_USAGE_CPU_ONLY);
 
-	// Upload sprite data to texture array
-	bool uploaded = false;
-	if (pbo_) {
-		void* ptr = pbo_->mapWrite();
-		if (ptr) {
-			memcpy(ptr, rgba_data, SPRITE_SIZE * SPRITE_SIZE * 4);
-			pbo_->unmap();
+    void* data;
+    vmaMapMemory(vkContext_->GetAllocator(), stagingBuffer.GetAllocation(), &data);
+    memcpy(data, rgba_data, static_cast<size_t>(imageSize));
+    vmaUnmapMemory(vkContext_->GetAllocator(), stagingBuffer.GetAllocation());
 
-			pbo_->bind(); // Binds GL_PIXEL_UNPACK_BUFFER
+    CopyBufferToImage(stagingBuffer.GetBuffer(), texture_id_->GetImage(), static_cast<uint32_t>(SPRITE_SIZE), static_cast<uint32_t>(SPRITE_SIZE), px, py, pl);
 
-			// Offset is 0 in PBO
-			glTextureSubImage3D(texture_id_->GetID(), 0, pixel_x, pixel_y, layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    AtlasRegion region;
+    region.atlas_index = pl;
+    region.pixel_x = px;
+    region.pixel_y = py;
+    region.u_min = static_cast<float>(px) / ATLAS_SIZE;
+    region.v_min = static_cast<float>(py) / ATLAS_SIZE;
+    region.u_max = static_cast<float>(px + SPRITE_SIZE) / ATLAS_SIZE;
+    region.v_max = static_cast<float>(py + SPRITE_SIZE) / ATLAS_SIZE;
 
-			pbo_->unbind();
-			pbo_->advance();
-			uploaded = true;
-		}
-	}
+    total_sprite_count_++;
+    return region;
+}
 
-	if (!uploaded) {
-		// Fallback synchronously
-		glTextureSubImage3D(texture_id_->GetID(), 0, pixel_x, pixel_y, layer, SPRITE_SIZE, SPRITE_SIZE, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba_data);
-	}
+void TextureAtlas::CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, int x, int y, int layer) {
+    VkCommandBuffer cmdBuffer = vkContext_->BeginSingleTimeCommands();
 
-	// Calculate UV coordinates with half-texel inset to prevent bleeding
-	const float texel_size = 1.0f / static_cast<float>(ATLAS_SIZE);
-	const float half_texel = texel_size * 0.5f;
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = layer;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = {static_cast<int32_t>(x), static_cast<int32_t>(y), 0};
+    region.imageExtent = {width, height, 1};
 
-	AtlasRegion region;
-	region.atlas_index = static_cast<uint32_t>(layer);
-	region.pixel_x = pixel_x;
-	region.pixel_y = pixel_y;
-	region.u_min = static_cast<float>(pixel_x) / ATLAS_SIZE + half_texel;
-	region.v_min = static_cast<float>(pixel_y) / ATLAS_SIZE + half_texel;
-	region.u_max = static_cast<float>(pixel_x + SPRITE_SIZE) / ATLAS_SIZE - half_texel;
-	region.v_max = static_cast<float>(pixel_y + SPRITE_SIZE) / ATLAS_SIZE - half_texel;
+    vkCmdCopyBufferToImage(cmdBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 
-	return region;
+    // Transition image layer to SHADER_READ_ONLY_OPTIMAL for the specific layer and copy block?
+    // Doing it globally is too slow for 1 sprite at a time, keeping it optimal requires more tracking.
+    // For simplicity of migration, we'll assume it's kept in TRANSFER_DST or transitioned after all uploads.
+    // Actually, let's keep it simple: Transfer block to READ_ONLY for reading.
+    // In a real optimized system, this would be batched.
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+    barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = layer;
+    barrier.subresourceRange.layerCount = 1;
+    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+    vkCmdPipelineBarrier(cmdBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                         0, 0, nullptr, 0, nullptr, 1, &barrier);
+
+    vkContext_->EndSingleTimeCommands(cmdBuffer);
 }
 
 void TextureAtlas::freeSlot(const AtlasRegion& region) {
-	FreeSlot slot;
-	slot.pixel_x = region.pixel_x;
-	slot.pixel_y = region.pixel_y;
-	slot.layer = static_cast<int>(region.atlas_index);
+    if (region.atlas_index == AtlasRegion::INVALID_SENTINEL) {
+        return;
+    }
 
-	// Critical Fix: check if slot is already in free list (Double Free protection)
-	// Iterating vector is fine as free_slots_ is small (usually < 100)
-	// If performance becomes issue, we can use std::unordered_set for lookup
-	for (const auto& s : free_slots_) {
-		if (s.pixel_x == slot.pixel_x && s.pixel_y == slot.pixel_y && s.layer == slot.layer) {
-			spdlog::warn("TextureAtlas: Double free detected for slot [x={}, y={}, layer={}] - ignoring", slot.pixel_x, slot.pixel_y, slot.layer);
-			return;
-		}
-	}
-
-	free_slots_.push_back(slot);
-}
-
-void TextureAtlas::bind(uint32_t slot) const {
-	glBindTextureUnit(slot, texture_id_->GetID());
-}
-
-void TextureAtlas::unbind(uint32_t slot) const {
-	glBindTextureUnit(slot, 0);
+    // In OpenGL version, it zeroes out the texture using PBO.
+    // In Vulkan, we just mark it as free.
+    free_slots_.push_back({region.pixel_x, region.pixel_y, static_cast<int>(region.atlas_index)});
+    total_sprite_count_--;
 }
 
 void TextureAtlas::release() {
-	if (texture_id_) {
-		spdlog::info("TextureAtlas releasing resources [ID={}]", texture_id_->GetID());
-	}
-	texture_id_.reset();
-	layer_count_ = 0;
-	allocated_layers_ = 0;
-	total_sprite_count_ = 0;
-	current_layer_ = 0;
-	next_x_ = 0;
-	next_y_ = 0;
-	free_slots_.clear();
+    if (sampler_ != VK_NULL_HANDLE) {
+        vkDestroySampler(vkContext_->GetDevice(), sampler_, nullptr);
+        sampler_ = VK_NULL_HANDLE;
+    }
+    texture_id_.reset();
+    layer_count_ = 0;
+    allocated_layers_ = 0;
+    total_sprite_count_ = 0;
+    free_slots_.clear();
 }

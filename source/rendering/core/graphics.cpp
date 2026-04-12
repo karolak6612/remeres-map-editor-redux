@@ -22,7 +22,7 @@
 #include "rendering/core/sprite_preloader.h"
 #include <nanovg.h>
 #include <spdlog/spdlog.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 #include "io/filehandle.h"
 #include "app/settings.h"
 #include "ui/gui.h"

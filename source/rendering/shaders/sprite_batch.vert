@@ -10,15 +10,18 @@ layout (location = 3) in vec4 aUV;        // u_min, v_min, u_max, v_max
 layout (location = 4) in vec4 aTint;      // r, g, b, a
 layout (location = 5) in float aLayer;    // texture array layer
 
-out vec3 TexCoord;
-out vec4 Tint;
+layout (location = 0) out vec3 TexCoord;
+layout (location = 1) out vec4 Tint;
 
-uniform mat4 uMVP;
+layout (binding = 0) uniform UBO {
+    mat4 uMVP;
+    vec4 uGlobalTint;
+} ubo;
 
 void main() {
     // Transform unit quad to screen position
     vec2 pos = aRect.xy + aPos * aRect.zw;
-    gl_Position = uMVP * vec4(pos, 0.0, 1.0);
+    gl_Position = ubo.uMVP * vec4(pos, 0.0, 1.0);
     
     // Interpolate UVs and pass layer
     TexCoord = vec3(mix(aUV.xy, aUV.zw, aTexCoord), aLayer);

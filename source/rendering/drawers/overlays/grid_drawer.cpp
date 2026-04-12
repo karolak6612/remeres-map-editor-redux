@@ -64,7 +64,7 @@ void GridDrawer::DrawIngameBox(SpriteBatch& sprite_batch, const RenderView& view
 
 	static wxColor side_color(0, 0, 0, 200);
 
-	// BatchRenderer doesn't support disabling GL_TEXTURE_2D state globally,
+	// BatchRenderer doesn't support disabling 0 /* GL CONST REMOVED */ state globally,
 	// but DrawQuad uses white texture if no texture ID is provided or if specific non-textured method used.
 	// DrawQuad uses whiteTextureID by default.
 
@@ -118,7 +118,7 @@ void GridDrawer::DrawNodeLoadingPlaceholder(SpriteBatch& sprite_batch, int nd_ma
 }
 
 void GridDrawer::drawRect(SpriteBatch& sprite_batch, int x, int y, int w, int h, const wxColor& color, int width) {
-	// glLineWidth(width); // Width ignored for now, BatchRenderer lines are 1px
+	// // gl API removed // Width ignored for now, BatchRenderer lines are 1px
 	glm::vec4 c(color.Red() / 255.0f, color.Green() / 255.0f, color.Blue() / 255.0f, color.Alpha() / 255.0f);
 
 	if (g_gui.gfx.ensureAtlasManager()) {

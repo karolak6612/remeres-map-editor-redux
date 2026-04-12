@@ -146,11 +146,11 @@ void MinimapDrawer::Draw(const wxSize& size, Editor& editor, MapCanvas& canvas, 
 		return;
 	}
 
-	glViewport(0, 0, window_width, window_height);
+	// gl API removed
 	const glm::mat4 projection = glm::ortho(0.0f, static_cast<float>(window_width), static_cast<float>(window_height), 0.0f, -1.0f, 1.0f);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT);
+	// gl API removed
+	// gl API removed
 
 	const VisibleWorldRect visible_rect = BuildVisibleWorldRect(size, editor, viewport_state);
 	const double start_x = visible_rect.start_x;

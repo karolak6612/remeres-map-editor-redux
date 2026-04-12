@@ -9,7 +9,7 @@
 #include <wx/image.h>
 #include <wx/dcmemory.h>
 #include <nanovg.h>
-#include <glad/glad.h>
+#include <vulkan/vulkan.h>
 #include <spdlog/spdlog.h>
 #include <vector>
 #include <cstdint>
@@ -33,7 +33,7 @@ void ImageManager::ClearCache() {
 	m_bitmapBundleCache.clear();
 	m_tintedBitmapCache.clear();
 	m_nvgImageCache.clear();
-	m_glTextureCache.clear();
+	m_vkTextureCache.clear();
 }
 
 std::string ImageManager::ResolvePath(std::string_view assetPath) {
@@ -233,7 +233,7 @@ int ImageManager::CreateNanoVGImageFromWxImage(NVGcontext* vg, const wxImage& im
 	return nvgCreateImageRGBA(vg, w, h, 0, rgba.data());
 }
 
-uint32_t ImageManager::GetGLTexture(std::string_view assetPath) {
+VkImageView ImageManager::GetVulkanTexture(std::string_view assetPath) {
 	// Not implemented yet - usually we can use NanoVG's image as GL texture if we know how it's stored,
 	// or load it via glad.
 	return 0;

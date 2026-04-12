@@ -7,22 +7,24 @@ namespace {
 layout(location = 0) in vec2 aPos;
 layout(location = 1) in vec2 aTexCoord;
 
-out vec2 vTexCoord;
-out vec4 t1;
-out vec4 t2;
-out vec4 t3;
-out vec4 t4;
-out vec4 t5;
-out vec4 t6;
-out vec4 t7;
+layout(location = 0) out vec2 vTexCoord;
+layout(location = 1) out vec4 t1;
+layout(location = 2) out vec4 t2;
+layout(location = 3) out vec4 t3;
+layout(location = 4) out vec4 t4;
+layout(location = 5) out vec4 t5;
+layout(location = 6) out vec4 t6;
+layout(location = 7) out vec4 t7;
 
-uniform vec2 u_TextureSize;
+layout (binding = 0) uniform UBO {
+    vec2 u_TextureSize;
+} ubo;
 
 void main() {
     gl_Position = vec4(aPos, 0.0, 1.0);
     vTexCoord = aTexCoord;
 
-    vec2 ps = 1.0 / u_TextureSize;
+    vec2 ps = 1.0 / ubo.u_TextureSize;
     float dx = ps.x;
     float dy = ps.y;
 
@@ -38,18 +40,18 @@ void main() {
 
 	const char* xbrz_frag_source = R"(
 #version 450 core
-in vec2 vTexCoord;
-in vec4 t1;
-in vec4 t2;
-in vec4 t3;
-in vec4 t4;
-in vec4 t5;
-in vec4 t6;
-in vec4 t7;
+layout(location = 0) in vec2 vTexCoord;
+layout(location = 1) in vec4 t1;
+layout(location = 2) in vec4 t2;
+layout(location = 3) in vec4 t3;
+layout(location = 4) in vec4 t4;
+layout(location = 5) in vec4 t5;
+layout(location = 6) in vec4 t6;
+layout(location = 7) in vec4 t7;
 
-out vec4 FragColor;
+layout(location = 8) layout(location = 0) out vec4 FragColor;
 
-uniform sampler2D u_Texture;
+layout (binding = 1) uniform sampler2D u_Texture;
 uniform vec2 u_TextureSize; // Size of source texture
 
 #define BLEND_NONE 0

@@ -13,9 +13,9 @@
  *
  * Usage:
  *   SyncHandle fence;
- *   fence.reset(glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0));
+ *   fence.reset(// gl API removed
  *   // ... later ...
- *   fence.clientWait(GL_SYNC_FLUSH_COMMANDS_BIT, timeout);
+ *   fence.clientWait(0 /* GL CONST REMOVED */, timeout);
  */
 class SyncHandle {
 public:
@@ -35,7 +35,7 @@ public:
 	 */
 	~SyncHandle() {
 		if (sync_) {
-			glDeleteSync(sync_);
+			// gl API removed
 		}
 	}
 
@@ -53,7 +53,7 @@ public:
 	SyncHandle& operator=(SyncHandle&& other) noexcept {
 		if (this != &other) {
 			if (sync_) {
-				glDeleteSync(sync_);
+				// gl API removed
 			}
 			sync_ = other.sync_;
 			other.sync_ = nullptr;
@@ -77,7 +77,7 @@ public:
 	 */
 	void reset(GLsync new_sync = nullptr) {
 		if (sync_) {
-			glDeleteSync(sync_);
+			// gl API removed
 		}
 		sync_ = new_sync;
 	}
@@ -108,15 +108,15 @@ public:
 	/**
 	 * Wait for the sync object to be signaled.
 	 *
-	 * @param flags Typically GL_SYNC_FLUSH_COMMANDS_BIT
+	 * @param flags Typically 0 /* GL CONST REMOVED */
 	 * @param timeout_ns Timeout in nanoseconds
-	 * @return GL_ALREADY_SIGNALED, GL_TIMEOUT_EXPIRED, GL_CONDITION_SATISFIED, or GL_WAIT_FAILED
+	 * @return 0 /* GL CONST REMOVED */, 0 /* GL CONST REMOVED */, 0 /* GL CONST REMOVED */, or 0 /* GL CONST REMOVED */
 	 */
-	GLenum clientWait(GLbitfield flags, GLuint64 timeout_ns) {
+	uint32_t clientWait(GLbitfield flags, GLuint64 timeout_ns) {
 		if (!sync_) {
-			return GL_CONDITION_SATISFIED;
+			return 0 /* GL CONST REMOVED */;
 		}
-		return glClientWaitSync(sync_, flags, timeout_ns);
+		return // gl API removed
 	}
 
 	/**
@@ -126,8 +126,8 @@ public:
 		if (!sync_) {
 			return true;
 		}
-		GLenum result = glClientWaitSync(sync_, 0, 0);
-		return result == GL_ALREADY_SIGNALED || result == GL_CONDITION_SATISFIED;
+		uint32_t result = // gl API removed
+		return result == 0 /* GL CONST REMOVED */ || result == 0 /* GL CONST REMOVED */;
 	}
 
 private:

@@ -22,10 +22,10 @@ public:
 	SpriteDrawer();
 	~SpriteDrawer();
 
-	void glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color = {});
-	void glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size = 0);
-	void glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color);
-	void glSetColor(wxColor color);
+	void // gl API removed
+	void // gl API removed
+	void // gl API removed
+	void // gl API removed
 
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color = {});
 	void BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, GameSprite* spr, DrawColor color = {});

@@ -25,7 +25,7 @@ public:
 	static constexpr int PageSize = 512;
 
 	struct VisiblePage {
-		GLuint texture_id = 0;
+		uint32_t texture_id = 0;
 		int page_x = 0;
 		int page_y = 0;
 	};

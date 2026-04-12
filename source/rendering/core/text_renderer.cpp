@@ -2,10 +2,9 @@
 #include "rendering/core/text_renderer.h"
 
 // GLAD must be included before NanoVG
-#include <glad/glad.h>
 
 #include <nanovg.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 
 #include <iostream>
 #include <vector>

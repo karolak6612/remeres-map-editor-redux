@@ -4,11 +4,10 @@
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
 
-#include <glad/glad.h>
 
-#define NANOVG_GL3_IMPLEMENTATION
+#define NANOVG_VULKAN_IMPLEMENTATION
 #include "util/nvg_utils.h"
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 #include "rendering/core/graphics.h"
 #include "ui/gui.h"
 
@@ -69,7 +68,7 @@ void NanoVGCanvas::InitGL() {
 		return;
 	}
 
-	m_nvg.reset(nvgCreateGL3(NVG_ANTIALIAS | NVG_STENCIL_STROKES));
+	m_nvg.reset(nvgCreateVk({}, NVG_ANTIALIAS | NVG_STENCIL_STROKES));
 	if (m_nvg) {
 		// Load default font - same as TextRenderer for consistency
 		TextRenderer::LoadFont(m_nvg.get());
@@ -97,12 +96,12 @@ void NanoVGCanvas::OnPaint(wxPaintEvent&) {
 	int w, h;
 	GetClientSize(&w, &h);
 
-	glViewport(0, 0, w, h);
+	// // gl API removed
 
 	// Use theme background
 	wxColour bg = Theme::Get(Theme::Role::Surface);
-	glClearColor(bg.Red() / 255.0f, bg.Green() / 255.0f, bg.Blue() / 255.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	// // gl API removed
+	// // gl API removed
 
 	NVGcontext* vg = m_nvg.get();
 	nvgBeginFrame(vg, w, h, GetContentScaleFactor());

@@ -14,7 +14,7 @@
 #include "game/creature.h"
 #include "ui/gui.h"
 #include "rendering/core/text_renderer.h"
-#include <glad/glad.h>
+
 #include <nanovg.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <spdlog/spdlog.h>
@@ -107,9 +107,9 @@ namespace IngamePreview {
 		options.global_light_color = wxColor(255, 255, 255);
 
 		// Initialize GL state
-		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		// // gl API removed
+		// // gl API removed
+		// // gl API removed
 
 		primitive_renderer->setProjectionMatrix(view.projectionMatrix);
 		light_buffer->Clear();

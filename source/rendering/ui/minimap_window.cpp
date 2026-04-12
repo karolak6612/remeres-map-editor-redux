@@ -432,8 +432,8 @@ void MinimapCanvas::OnPaint(wxPaintEvent& event) {
 	}
 
 	if (g_gui.IsLoading() || !g_gui.IsEditorOpen()) {
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		// gl API removed
+		// gl API removed
 		SwapBuffers();
 		return;
 	}
@@ -442,8 +442,8 @@ void MinimapCanvas::OnPaint(wxPaintEvent& event) {
 	MapCanvas* active_canvas = owner_->GetActiveCanvas();
 	MinimapViewportState* state = owner_->GetActiveViewportState();
 	if (!editor || !active_canvas || !state) {
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		// gl API removed
+		// gl API removed
 		SwapBuffers();
 		return;
 	}

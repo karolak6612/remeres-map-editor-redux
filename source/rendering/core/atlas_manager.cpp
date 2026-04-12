@@ -142,7 +142,7 @@ void AtlasManager::bind(uint32_t slot) const {
 	atlas_.bind(slot);
 }
 
-GLuint AtlasManager::getTextureId() const {
+uint32_t AtlasManager::getTextureId() const {
 	return atlas_.id();
 }
 

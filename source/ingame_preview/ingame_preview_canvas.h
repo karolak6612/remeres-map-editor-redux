@@ -19,7 +19,7 @@ namespace IngamePreview {
 
 	class IngamePreviewRenderer;
 
-	class IngamePreviewCanvas : public wxGLCanvas {
+	class IngamePreviewCanvas : public wxWindow {
 	public:
 		IngamePreviewCanvas(wxWindow* parent);
 		~IngamePreviewCanvas();
@@ -59,7 +59,8 @@ namespace IngamePreview {
 
 	private:
 		std::unique_ptr<IngamePreviewRenderer> renderer;
-		std::unique_ptr<wxGLContext> m_glContext;
+		VulkanContext* m_vkContext = nullptr;
+	VkSurfaceKHR m_surface = VK_NULL_HANDLE;
 		std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 		const void* last_tile_renderer;
 

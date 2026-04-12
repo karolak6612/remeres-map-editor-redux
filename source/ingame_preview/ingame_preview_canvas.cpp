@@ -7,9 +7,8 @@
 #include "rendering/ui/map_display.h"
 #include "rendering/core/text_renderer.h"
 #include <spdlog/spdlog.h>
-#include <glad/glad.h>
 #include <nanovg.h>
-#include <nanovg_gl.h>
+#include <nanovg_vk.h>
 #include "game/complexitem.h"
 #include "ui/managers/minimap_manager.h"
 
@@ -26,7 +25,7 @@ namespace IngamePreview {
 	}
 
 	IngamePreviewCanvas::IngamePreviewCanvas(wxWindow* parent) :
-		wxGLCanvas(parent, GetPreviewGLAttributes(), wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
+		wxWindow(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxWANTS_CHARS),
 		last_tile_renderer(nullptr),
 		camera_pos(0, 0, GROUND_LAYER),
 		zoom(1.0f),
@@ -50,7 +49,7 @@ namespace IngamePreview {
 		walk_lock_timer(0),
 		animation_timer(this) {
 		// Context creation must happen on the main/UI thread
-		m_glContext = std::make_unique<wxGLContext>(this, g_gui.GetGLContext(this));
+		m_vkContext = g_gui.GetVulkanContext(this);
 		if (!m_glContext->IsOK()) {
 			spdlog::error("IngamePreviewCanvas: Failed to create wxGLContext");
 			m_glContext.reset();

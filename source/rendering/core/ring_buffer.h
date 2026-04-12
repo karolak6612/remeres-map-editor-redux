@@ -79,7 +79,7 @@ public:
 	/**
 	 * Get the OpenGL buffer ID.
 	 */
-	GLuint getBufferId() const;
+	VkBuffer getBufferId() const;
 
 	/**
 	 * Get byte offset to current section for vertex attribute setup.

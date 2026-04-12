@@ -3,62 +3,57 @@
 
 #include "app/main.h"
 #include "rendering/core/shader_program.h"
-#include "rendering/core/gl_resources.h"
+#include "rendering/core/vulkan_context.h"
+#include "rendering/core/vulkan_resources.h"
 #include "rendering/core/ring_buffer.h"
 #include <vector>
 #include <memory>
 #include <glm/glm.hpp>
 #include <string_view>
 
-/**
- * Batched renderer for 2D primitives (lines, triangles).
- * Used for UI elements, selection boxes, and debug geometry.
- */
 class PrimitiveRenderer {
 public:
-	PrimitiveRenderer();
-	~PrimitiveRenderer();
+    PrimitiveRenderer(VulkanContext* vkContext);
+    ~PrimitiveRenderer();
 
-	// Singleton access or instance? MapDrawer will own it.
-	// But static access was convenient. We will pass it around.
+    void initialize(VkRenderPass renderPass, uint32_t subpass);
+    void shutdown();
 
-	void initialize();
-	void shutdown();
+    void setProjectionMatrix(const glm::mat4& projection);
 
-	void setProjectionMatrix(const glm::mat4& projection);
+    void drawTriangle(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, const glm::vec4& color);
+    void drawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color);
 
-	void drawTriangle(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, const glm::vec4& color);
-	void drawLine(const glm::vec2& p1, const glm::vec2& p2, const glm::vec4& color);
+    void drawRect(const glm::vec4& rect, const glm::vec4& color);
+    void drawBox(const glm::vec4& rect, const glm::vec4& color, float thickness);
 
-	// Draws a filled rectangle (using 2 triangles)
-	void drawRect(const glm::vec4& rect, const glm::vec4& color);
-
-	// Draws a hollow box with specified thickness (using 4 filled rectangles)
-	void drawBox(const glm::vec4& rect, const glm::vec4& color, float thickness);
-
-	void flush();
+    void flush(VkCommandBuffer cmdBuffer);
 
 private:
-	struct Vertex {
-		glm::vec2 pos;
-		glm::vec4 color;
-	};
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec4 color;
+    };
 
-	void flushTriangles();
-	void flushLines();
-	void flushPrimitives(std::vector<Vertex>& vertices, GLenum mode, std::string_view primitive_type_name);
+    void flushTriangles(VkCommandBuffer cmdBuffer);
+    void flushLines(VkCommandBuffer cmdBuffer);
+    void flushPrimitives(VkCommandBuffer cmdBuffer, std::vector<Vertex>& vertices, uint32_t vertexCount);
 
-	std::unique_ptr<ShaderProgram> shader_;
-	std::unique_ptr<GLVertexArray> vao_;
-	RingBuffer ring_buffer_;
+    VulkanContext* vkContext_ = nullptr;
+    std::unique_ptr<ShaderProgram> shaderLines_;
+    std::unique_ptr<ShaderProgram> shaderTriangles_;
 
-	std::vector<Vertex> triangle_verts_;
-	std::vector<Vertex> line_verts_;
+    VkPipelineLayout pipelineLayout_ = VK_NULL_HANDLE;
 
-	glm::mat4 projection_ { 1.0f };
-	bool initialized_ = false;
+    RingBuffer ring_buffer_;
 
-	static constexpr size_t MAX_VERTICES = 10000;
+    std::vector<Vertex> triangle_verts_;
+    std::vector<Vertex> line_verts_;
+
+    glm::mat4 projection_ { 1.0f };
+    bool initialized_ = false;
+
+    static constexpr size_t MAX_VERTICES = 10000;
 };
 
 #endif

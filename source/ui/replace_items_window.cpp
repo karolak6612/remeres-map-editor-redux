@@ -24,7 +24,6 @@
 #include "ui/gui.h"
 #include "util/image_manager.h"
 #include "item_definitions/core/item_definition_store.h"
-#include <glad/glad.h>
 #include <format>
 #include <nanovg.h>
 

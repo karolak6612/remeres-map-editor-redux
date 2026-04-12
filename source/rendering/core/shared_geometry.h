@@ -14,11 +14,11 @@ public:
 	}
 
 	bool initialize();
-	GLuint getQuadVBO();
-	GLuint getQuadEBO();
+	uint32_t getQuadVBO();
+	uint32_t getQuadEBO();
 
 	// Returns number of indices for the quad (6)
-	GLsizei getQuadIndexCount() const {
+	int32_t getQuadIndexCount() const {
 		return 6;
 	}
 

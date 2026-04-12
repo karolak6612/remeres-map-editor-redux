@@ -54,12 +54,12 @@ public:
 	void unmap();
 
 	/**
-	 * Bind the PBO as GL_PIXEL_UNPACK_BUFFER.
+	 * Bind the PBO as 0 /* GL CONST REMOVED */.
 	 */
 	void bind();
 
 	/**
-	 * Unbind GL_PIXEL_UNPACK_BUFFER.
+	 * Unbind 0 /* GL CONST REMOVED */.
 	 */
 	void unbind();
 

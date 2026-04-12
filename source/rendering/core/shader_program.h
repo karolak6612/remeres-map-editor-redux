@@ -1,42 +1,37 @@
 #ifndef RME_RENDERING_CORE_SHADER_PROGRAM_H_
 #define RME_RENDERING_CORE_SHADER_PROGRAM_H_
 
-#include "app/main.h"
+#include <vulkan/vulkan.h>
 #include <string>
-#include <unordered_map>
+#include <vector>
 #include <glm/glm.hpp>
-#include <memory>
-
-class GLProgram;
 
 class ShaderProgram {
 public:
-	ShaderProgram();
-	~ShaderProgram();
+    ShaderProgram(VkDevice device);
+    ~ShaderProgram();
 
-	bool Load(const std::string& vertexSource, const std::string& fragmentSource);
-	void Use() const;
-	void Unuse() const;
+    // Instead of loading source strings, we'll load SPIR-V binaries (from byte arrays or files)
+    bool LoadSPIRV(const std::vector<uint32_t>& vertSpv, const std::vector<uint32_t>& fragSpv);
 
-	// Uniform setters
-	void SetBool(const std::string& name, bool value) const;
-	void SetInt(const std::string& name, int value) const;
-	void SetFloat(const std::string& name, float value) const;
-	void SetVec2(const std::string& name, const glm::vec2& value) const;
-	void SetVec3(const std::string& name, const glm::vec3& value) const;
-	void SetVec4(const std::string& name, const glm::vec4& value) const;
-	void SetMat4(const std::string& name, const glm::mat4& value) const;
+    // Creates the graphics pipeline. Needs layout, render pass, etc.
+    bool BuildPipeline(VkRenderPass renderPass, uint32_t subpass, VkPipelineLayout layout,
+                       const std::vector<VkVertexInputBindingDescription>& vertexBindings,
+                       const std::vector<VkVertexInputAttributeDescription>& vertexAttributes);
 
-	bool IsValid() const;
+    void Bind(VkCommandBuffer cmdBuffer) const;
 
-	GLuint GetID() const;
+    VkPipeline GetPipeline() const { return pipeline_; }
+
+    bool IsValid() const { return pipeline_ != VK_NULL_HANDLE; }
 
 private:
-	std::unique_ptr<GLProgram> program_;
-	mutable std::unordered_map<std::string, GLint> uniform_cache;
+    VkDevice device_ = VK_NULL_HANDLE;
+    VkShaderModule vertModule_ = VK_NULL_HANDLE;
+    VkShaderModule fragModule_ = VK_NULL_HANDLE;
+    VkPipeline pipeline_ = VK_NULL_HANDLE;
 
-	GLint GetUniformLocation(const std::string& name) const;
-	bool CompileShader(GLuint shader, const std::string& source);
+    VkShaderModule CreateShaderModule(const std::vector<uint32_t>& code);
 };
 
 #endif

@@ -2,16 +2,13 @@
 #define RME_RENDERING_CORE_TEXTURE_ATLAS_H_
 
 #include "app/main.h"
-#include "rendering/core/pixel_buffer_object.h"
-#include "rendering/core/gl_resources.h"
+#include "rendering/core/vulkan_context.h"
+#include "rendering/core/vulkan_resources.h"
 #include <optional>
 #include <cstdint>
 #include <vector>
+#include <memory>
 
-/**
- * AtlasRegion represents where a sprite is located in the texture atlas.
- * Contains UV coordinates and layer index for sampling.
- */
 struct AtlasRegion {
 	uint32_t atlas_index = 0; // Layer in texture array
 	float u_min = 0.0f; // UV left
@@ -25,15 +22,6 @@ struct AtlasRegion {
 	static constexpr uint32_t INVALID_SENTINEL = 0xFFFFFFFE;
 };
 
-/**
- * TextureAtlas manages a GL_TEXTURE_2D_ARRAY that packs many sprites per layer.
- *
- * Each layer is ATLAS_SIZE x ATLAS_SIZE (4096x4096).
- * Each sprite is SPRITE_SIZE x SPRITE_SIZE (32x32).
- * This gives SPRITES_PER_ROW (128) sprites per row, and SPRITES_PER_LAYER (16384) per layer.
- *
- * Based on the imgui_renderer_example_readonly reference implementation.
- */
 class TextureAtlas {
 public:
 	static constexpr int ATLAS_SIZE = 4096;
@@ -42,80 +30,45 @@ public:
 	static constexpr int SPRITES_PER_LAYER = SPRITES_PER_ROW * SPRITES_PER_ROW; // 16384
 	static constexpr int MAX_LAYERS = 64; // 64 * 16384 = 1M+ sprites
 
-	TextureAtlas();
+	TextureAtlas(VulkanContext* vkContext);
 	~TextureAtlas();
 
-	// Non-copyable
 	TextureAtlas(const TextureAtlas&) = delete;
 	TextureAtlas& operator=(const TextureAtlas&) = delete;
 
-	// Moveable
 	TextureAtlas(TextureAtlas&& other) noexcept;
 	TextureAtlas& operator=(TextureAtlas&& other) noexcept;
 
-	/**
-	 * Initialize the texture array.
-	 * @param initial_layers Number of layers to pre-allocate (default: 8)
-	 * @return true if successful
-	 */
 	bool initialize(int initial_layers = 8);
-
-	/**
-	 * Add a 32x32 sprite to the atlas.
-	 * @param rgba_data Pointer to 32*32*4 bytes of RGBA pixel data
-	 * @return AtlasRegion with layer and UV coordinates, or nullopt on failure
-	 */
 	std::optional<AtlasRegion> addSprite(const uint8_t* rgba_data);
-
-	/**
-	 * Free a sprite slot for reuse.
-	 * @param region The region to free.
-	 */
 	void freeSlot(const AtlasRegion& region);
 
-	/**
-	 * Bind the texture array to a texture slot.
-	 */
-	void bind(uint32_t slot = 0) const;
-
-	/**
-	 * Unbind texture from slot.
-	 */
-	void unbind(uint32_t slot = 0) const;
-
-	/**
-	 * Get layer count.
-	 */
 	int getLayerCount() const {
 		return layer_count_;
 	}
 
-	/**
-	 * Get OpenGL texture ID.
-	 */
-	GLuint id() const {
-		return texture_id_ ? texture_id_->GetID() : 0;
+	VkImageView GetView() const {
+		return texture_id_ ? texture_id_->GetView() : VK_NULL_HANDLE;
 	}
 
-	/**
-	 * Check if atlas is valid.
-	 */
+    VkSampler GetSampler() const {
+        return sampler_;
+    }
+
 	bool isValid() const {
 		return texture_id_ != nullptr;
 	}
 
-	/**
-	 * Release resources.
-	 */
 	void release();
 
 private:
 	bool addLayer();
+    void CopyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, int x, int y, int layer);
 
-	// PBO for async uploads
-	std::unique_ptr<PixelBufferObject> pbo_;
+    VulkanContext* vkContext_ = nullptr;
+	std::unique_ptr<VulkanImage> texture_id_;
+    VkSampler sampler_ = VK_NULL_HANDLE;
 
-	std::unique_ptr<GLTextureResource> texture_id_;
 	int layer_count_ = 0;
 	int allocated_layers_ = 0;
 	int total_sprite_count_ = 0;
@@ -123,7 +76,6 @@ private:
 	int next_x_ = 0; // Next slot X in grid
 	int next_y_ = 0; // Next slot Y in grid
 
-	// Freed slots stored as integer coordinates to avoid float round-trip precision loss
 	struct FreeSlot {
 		int pixel_x;
 		int pixel_y;

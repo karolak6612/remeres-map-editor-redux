@@ -54,8 +54,8 @@ AboutWindow::AboutWindow(wxWindow* parent) :
 	about << "\n\n";
 
 	about << "Using " << wxVERSION_STRING << " interface\n";
-	const char* gl_version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-	about << "OpenGL version " << (gl_version ? wxString(gl_version, wxConvUTF8) : wxString("Unknown")) << "\n";
+	const char* gl_version = reinterpret_cast<const char*>(// gl API removed
+	about << "Vulkan version 1.3" << "\n";
 	about << "\n";
 	about << "This program comes with ABSOLUTELY NO WARRANTY;\n";
 	about << "for details see the LICENSE file.\n";

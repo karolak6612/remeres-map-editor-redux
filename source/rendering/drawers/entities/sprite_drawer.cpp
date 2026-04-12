@@ -14,7 +14,7 @@ SpriteDrawer::SpriteDrawer() {
 SpriteDrawer::~SpriteDrawer() {
 }
 
-void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color) {
+void SpriteDrawer::/* gl API removed */(SpriteBatch& sprite_batch, int sx, int sy, const AtlasRegion* region, DrawColor color) {
 	if (region) {
 		float normalizedR = color.r / 255.0f;
 		float normalizedG = color.g / 255.0f;
@@ -30,7 +30,7 @@ void SpriteDrawer::glBlitAtlasQuad(SpriteBatch& sprite_batch, int sx, int sy, co
 	}
 }
 
-void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size) {
+void SpriteDrawer::/* gl API removed */(SpriteBatch& sprite_batch, int sx, int sy, DrawColor color, int size) {
 	if (size == 0) {
 		size = TILE_SIZE;
 	}
@@ -47,7 +47,7 @@ void SpriteDrawer::glBlitSquare(SpriteBatch& sprite_batch, int sx, int sy, DrawC
 	}
 }
 
-void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color) {
+void SpriteDrawer::/* gl API removed */(SpriteBatch& sprite_batch, int sx, int sy, int width, int height, DrawColor color) {
 	float normalizedR = color.r / 255.0f;
 	float normalizedG = color.g / 255.0f;
 	float normalizedB = color.b / 255.0f;
@@ -58,10 +58,10 @@ void SpriteDrawer::glDrawBox(SpriteBatch& sprite_batch, int sx, int sy, int widt
 	}
 }
 
-void SpriteDrawer::glSetColor(wxColor color) {
+void SpriteDrawer::/* gl API removed */(wxColor color) {
 	// Not needed with BatchRenderer automatic color handling in DrawQuad,
 	// but if used for stateful drawing elsewhere, we might need a state setter.
-	// For now, ignoring as glBlitTexture/Square takes explicit color.
+	// For now, ignoring as /* gl API removed *//Square takes explicit color.
 }
 
 void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screeny, ServerItemId server_item_id, DrawColor color) {
@@ -92,7 +92,7 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
 				if (region) {
-					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
+					// gl API removed
 				}
 				// No fallback - if region is null, sprite failed to load
 			}

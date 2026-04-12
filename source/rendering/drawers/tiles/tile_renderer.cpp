@@ -249,9 +249,9 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 	if (only_colors) {
 		if (as_minimap) {
 			TileColorCalculator::GetMinimapColor(tile, r, g, b);
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 255));
+			sprite_drawer->// gl API removed
 		} else if (r != 255 || g != 255 || b != 255) {
-			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
+			sprite_drawer->// gl API removed
 		}
 	} else {
 		if (tile->ground && ground_it && !hidden_invalid_ground) {
@@ -313,7 +313,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		// Optimization: Use integer math for border color to avoid vec4 construction and casting
 		int ba = static_cast<int>(intensity * 255.0f);
 		// hr, hg, hb are already uint8_t
-		sprite_drawer->glDrawBox(sprite_batch, draw_x, draw_y, 32, 32, DrawColor(hr, hg, hb, ba));
+		sprite_drawer->// gl API removed
 	}
 
 	if (!only_colors) {
@@ -416,12 +416,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 
 		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {
-			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, DrawColor(255, 0, 255, 171));
+			sprite_drawer->// gl API removed
 		}
 
 		if (options.show_invalid_tiles && !as_minimap && invalid_tile_marker_color != InvalidOTBMItemMarkerColor::None) {
 			const DrawColor overlay = invalidTileOverlayColor(invalid_tile_marker_color, has_selected_invalid_item);
-			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, overlay);
+			sprite_drawer->// gl API removed
 		}
 
 		if (view.zoom < 10.0) {

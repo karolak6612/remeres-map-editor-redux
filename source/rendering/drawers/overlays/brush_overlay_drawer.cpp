@@ -166,7 +166,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				}
 			}
 		} else {
-			// if (brush->is<RAWBrush>()) { glEnable(GL_TEXTURE_2D); } -> handled by DrawRawBrush or BatchRenderer
+			// if (brush->is<RAWBrush>()) { // gl API removed } -> handled by DrawRawBrush or BatchRenderer
 
 			if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE || brush->is<SpawnBrush>()) {
 				if (brush->is<RAWBrush>() || brush->is<OptionalBorderBrush>()) {
@@ -295,7 +295,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				}
 			}
 
-			// if (brush->is<RAWBrush>()) { glDisable(GL_TEXTURE_2D); }
+			// if (brush->is<RAWBrush>()) { // gl API removed }
 		}
 	} else {
 		const BrushFootprint footprint = g_gui.GetBrushFootprint();
@@ -343,7 +343,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 				sprite_batch.drawRect(static_cast<float>(cx), static_cast<float>(cy), static_cast<float>(TILE_SIZE), static_cast<float>(TILE_SIZE), get_check_color(brush, editor, Position(view.mouse_map_x, view.mouse_map_y, view.floor)), *g_gui.gfx.getAtlasManager());
 			}
 		} else if (brush->is<CreatureBrush>()) {
-			// glEnable(GL_TEXTURE_2D);
+			// // gl API removed
 			int cy = (view.mouse_map_y) * TILE_SIZE - view.view_scroll_y - view.getFloorAdjustment();
 			int cx = (view.mouse_map_x) * TILE_SIZE - view.view_scroll_x - view.getFloorAdjustment();
 			CreatureBrush* creature_brush = brush->as<CreatureBrush>();
@@ -352,11 +352,11 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 			} else {
 				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, cx, cy, creature_brush->getType()->outfit, SOUTH, CreatureDrawOptions { .color = DrawColor(255, 64, 64, 160) });
 			}
-			// glDisable(GL_TEXTURE_2D);
+			// // gl API removed
 		} else if (!brush->is<DoodadBrush>()) {
 			RAWBrush* raw_brush = nullptr;
 			if (brush->is<RAWBrush>()) { // Textured brush
-				// glEnable(GL_TEXTURE_2D);
+				// // gl API removed
 				raw_brush = brush->as<RAWBrush>();
 			}
 
@@ -389,7 +389,7 @@ void BrushOverlayDrawer::draw(SpriteBatch& sprite_batch, PrimitiveRenderer& prim
 			}
 
 			// if (brush->is<RAWBrush>()) { // Textured brush
-			// 	glDisable(GL_TEXTURE_2D);
+			// 	// gl API removed
 			// }
 		}
 	}
