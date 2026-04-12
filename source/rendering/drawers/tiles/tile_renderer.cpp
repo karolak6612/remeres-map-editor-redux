@@ -197,12 +197,12 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 	return true;
 }
 
-void TileRenderer::RegisterGroundLightOcclusion(TileLocation* location, const RenderView& view, LightBuffer& light_buffer, size_t floor_light_start) const {
+void TileRenderer::RegisterGroundLightOcclusion(const TileLocation* location, const RenderView& view, LightBuffer& light_buffer, uint32_t floor_light_start) const {
 	if (!location) {
 		return;
 	}
 
-	Tile* tile = location->get();
+	const Tile* tile = location->get();
 	if (!tile || !tile->ground || !tile->ground->blocksLightFromBelow()) {
 		return;
 	}
@@ -211,11 +211,11 @@ void TileRenderer::RegisterGroundLightOcclusion(TileLocation* location, const Re
 	light_buffer.SetFieldBrightness(tile_x, tile_y, floor_light_start);
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) const {
 	if (!location) {
 		return;
 	}
-	Tile* tile = location->get();
+	Tile* tile = const_cast<Tile*>(location->get());
 
 	if (!tile) {
 		return;
@@ -270,7 +270,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 	Waypoint* waypoint = nullptr;
 	if (location->getWaypointCount() > 0) {
-		waypoint = editor->map.waypoints.getWaypoint(location);
+		waypoint = editor->map.waypoints.getWaypoint(const_cast<TileLocation*>(location));
 	}
 
 	// Waypoint tooltip (one per waypoint)

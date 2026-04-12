@@ -19,7 +19,7 @@ public:
 
 	void draw(const RenderView& view, const LightBuffer& light_buffer, const DrawingOptions& options);
 
-	// Call when the map changes (tiles added/removed, light sources change)
+	// The current backend rebuilds the tile lightmap every draw, so there is no retained cache to invalidate yet.
 	void markDirty();
 
 private:

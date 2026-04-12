@@ -32,7 +32,7 @@ struct LightBuffer {
 	void AddLight(int pixel_x, int pixel_y, const SpriteLight& light);
 	void AddTileLight(int tile_x, int tile_y, const SpriteLight& light);
 	void AddScreenLight(int screen_x, int screen_y, const RenderView& view, const SpriteLight& light);
-	void SetFieldBrightness(int tile_x, int tile_y, size_t start, uint8_t color = 0);
+	void SetFieldBrightness(int tile_x, int tile_y, uint32_t start, uint8_t color = 0);
 	void Clear();
 
 	[[nodiscard]] bool ContainsTile(int tile_x, int tile_y) const noexcept;

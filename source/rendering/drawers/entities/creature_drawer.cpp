@@ -76,8 +76,8 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 	if (outfit.lookItem != 0) {
 		if (const auto definition = g_item_definitions.get(outfit.lookItem)) {
 			GameSprite* spr = dynamic_cast<GameSprite*>(g_gui.gfx.getSprite(definition.clientId()));
-			if (spr && options.light_buffer && options.view && (spr->hasLight() || options.preview_local_player)) {
-				registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->hasLight() ? spr->getLight() : SpriteLight {}, options.preview_local_player);
+			if (spr && options.light_buffer && options.view && spr->hasLight()) {
+				registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->getLight(), false);
 			}
 			sprite_drawer->BlitSprite(sprite_batch, screenx, screeny, spr, options.color);
 			if (spr && options.light_buffer && options.view && (spr->hasLight() || options.preview_local_player)) {
@@ -91,8 +91,8 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 			return;
 		}
 
-		if (options.light_buffer && options.view && (spr->hasLight() || options.preview_local_player)) {
-			registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->hasLight() ? spr->getLight() : SpriteLight {}, options.preview_local_player);
+		if (options.light_buffer && options.view && spr->hasLight()) {
+			registerCreatureSpriteLight(*options.light_buffer, *options.view, *spr, screenx, screeny, spr->getLight(), false);
 		}
 
 		// Resolve animation frame for walk animation

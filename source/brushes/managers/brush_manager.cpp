@@ -16,6 +16,7 @@
 #include "map/basemap.h"
 #include "ui/gui.h"
 #include "ui/main_toolbar.h"
+#include "rendering/core/light_defaults.h"
 #include <algorithm>
 #include <array>
 
@@ -52,9 +53,9 @@ BrushManager::BrushManager() :
 	draw_locked_doors(false),
 	use_custom_thickness(false),
 	custom_thickness_mod(0.0),
-	light_intensity(255),
-	ambient_light_level(0.0f),
-	server_light_color(215) {
+	light_intensity(rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY),
+	ambient_light_level(rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT),
+	server_light_color(rme::lighting::DEFAULT_SERVER_LIGHT_COLOR) {
 }
 
 BrushManager::~BrushManager() {

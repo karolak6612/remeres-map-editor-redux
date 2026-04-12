@@ -14,12 +14,14 @@
 #include "map/tile.h"
 #include "game/creature.h"
 #include "ui/gui.h"
+#include "app/settings.h"
 #include "rendering/core/text_renderer.h"
 #include <glad/glad.h>
 #include <nanovg.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <algorithm>
 #include <cstdlib>
+#include <limits>
 
 namespace IngamePreview {
 
@@ -78,11 +80,13 @@ namespace IngamePreview {
 		DrawingOptions options;
 		options.SetIngame();
 		options.show_lights = lighting_enabled;
+		options.show_shade = g_settings.getBoolean(Config::SHOW_SHADE);
 		options.server_light = SpriteLight {
 			.intensity = light_intensity,
 			.color = server_light_color
 		};
 		options.minimum_ambient_light = static_cast<float>(ambient_light) / 255.0f;
+		options.draw_floor_shadow = options.show_shade;
 
 		// Initialize GL state
 		glViewport(viewport_x, viewport_y, viewport_width, viewport_height);
@@ -169,14 +173,15 @@ namespace IngamePreview {
 			};
 
 			if (draw_lights) {
-				const size_t floor_light_start = light_buffer->lights.size();
+				ASSERT(light_buffer->lights.size() <= std::numeric_limits<uint32_t>::max());
+				const uint32_t floor_light_start = static_cast<uint32_t>(light_buffer->lights.size());
 				visitVisibleNodes([&](const TileLocation* location, int, int) {
-					tile_renderer->RegisterGroundLightOcclusion(const_cast<TileLocation*>(location), view, *light_buffer, floor_light_start);
+					tile_renderer->RegisterGroundLightOcclusion(location, view, *light_buffer, floor_light_start);
 				});
 			}
 
 			visitVisibleNodes([&](const TileLocation* location, int draw_x, int draw_y) {
-				tile_renderer->DrawTile(*sprite_batch, const_cast<TileLocation*>(location), view, options, 0, draw_x, draw_y, draw_lights ? light_buffer.get() : nullptr);
+				tile_renderer->DrawTile(*sprite_batch, location, view, options, 0, draw_x, draw_y, draw_lights ? light_buffer.get() : nullptr);
 
 				if (creature_name_drawer && z == camera_pos.z) {
 					if (const Tile* tile = location->get(); tile && tile->creature) {

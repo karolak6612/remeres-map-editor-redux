@@ -6,6 +6,7 @@
 #include "game/creature.h"
 #include "rendering/core/render_view.h"
 #include "rendering/core/drawing_options.h"
+#include "rendering/core/light_defaults.h"
 #include <memory>
 #include <string>
 
@@ -54,8 +55,8 @@ namespace IngamePreview {
 		TileRenderer* tile_renderer;
 		std::unique_ptr<FloorVisibilityCalculator> floor_calculator;
 
-		uint8_t light_intensity = 255;
-		uint8_t server_light_color = 215;
+		uint8_t light_intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY;
+		uint8_t server_light_color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR;
 		std::string preview_name = "You";
 
 		// Internal rendering resources (could be shared or managed)

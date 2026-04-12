@@ -5,6 +5,7 @@
 #include "ui/gui.h"
 #include "rendering/map_drawer.h"
 #include "rendering/ui/map_display.h"
+#include "rendering/core/light_defaults.h"
 #include "rendering/core/text_renderer.h"
 #include <spdlog/spdlog.h>
 #include <glad/glad.h>
@@ -32,8 +33,8 @@ namespace IngamePreview {
 		zoom(1.0f),
 		lighting_enabled(true),
 		ambient_light(255),
-		light_intensity(255),
-		server_light_color(215),
+		light_intensity(rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY),
+		server_light_color(rme::lighting::DEFAULT_SERVER_LIGHT_COLOR),
 		viewport_width_tiles(15),
 		viewport_height_tiles(11),
 		preview_direction(SOUTH),

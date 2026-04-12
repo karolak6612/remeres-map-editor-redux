@@ -83,6 +83,8 @@ namespace IngamePreview {
 					}
 
 					if (const Tile* upper_tile = map.getTile(upper_x, upper_y, upper_z); TileLimitsFloorsView(upper_tile, !look_possible)) {
+						// This inversion is intentional: vertical sight above the camera uses the complementary free-view rule,
+						// while the diagonal covered-tile march below keeps the original rule to match OTClient's asymmetric floor stepping.
 						first_floor = upper_z + 1;
 						break;
 					}

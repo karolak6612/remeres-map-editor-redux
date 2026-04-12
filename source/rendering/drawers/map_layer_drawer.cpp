@@ -31,6 +31,8 @@
 #include "rendering/core/primitive_renderer.h"
 #include "rendering/core/sprite_preloader.h"
 
+#include <limits>
+
 MapLayerDrawer::MapLayerDrawer(TileRenderer* tile_renderer, GridDrawer* grid_drawer, Editor* editor) :
 	tile_renderer(tile_renderer),
 	grid_drawer(grid_drawer),
@@ -130,13 +132,14 @@ void MapLayerDrawer::Draw(SpriteBatch& sprite_batch, int map_z, bool live_client
 	// OTClient floor-aware light occlusion: capture light count at START of each floor,
 	// then mark opaque ground tiles with that index so they block light from floors below
 	if (draw_lights) {
-		size_t floor_light_start = light_buffer.lights.size();
-		visitAllVisibleNodes([&](TileLocation* location, int, int) {
+		ASSERT(light_buffer.lights.size() <= std::numeric_limits<uint32_t>::max());
+		const uint32_t floor_light_start = static_cast<uint32_t>(light_buffer.lights.size());
+		visitAllVisibleNodes([&](const TileLocation* location, int, int) {
 			tile_renderer->RegisterGroundLightOcclusion(location, view, light_buffer, floor_light_start);
 		});
 	}
 
-	auto drawVisibleTiles = [&](TileLocation* location, int draw_x, int draw_y) {
+	auto drawVisibleTiles = [&](const TileLocation* location, int draw_x, int draw_y) {
 		tile_renderer->DrawTile(sprite_batch, location, view, options, options.current_house_id, draw_x, draw_y, draw_lights ? &light_buffer : nullptr);
 	};
 

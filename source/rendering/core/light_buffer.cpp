@@ -24,7 +24,7 @@ void LightBuffer::Prepare(const RenderView& view) {
 }
 
 void LightBuffer::AddLight(int pixel_x, int pixel_y, const SpriteLight& light) {
-	const uint8_t intensity = std::min(light.intensity, static_cast<uint8_t>(255));
+	const uint8_t intensity = light.intensity;
 
 	if (!lights.empty()) {
 		Light& previous = lights.back();
@@ -50,14 +50,14 @@ void LightBuffer::AddScreenLight(int screen_x, int screen_y, const RenderView& v
 	AddLight(screen_x + view.view_scroll_x, screen_y + view.view_scroll_y, light);
 }
 
-void LightBuffer::SetFieldBrightness(int tile_x, int tile_y, size_t start, uint8_t color) {
+void LightBuffer::SetFieldBrightness(int tile_x, int tile_y, uint32_t start, uint8_t color) {
 	const int index = IndexOf(tile_x, tile_y);
 	if (index < 0) {
 		return;
 	}
 
 	tiles[static_cast<size_t>(index)] = TileLight {
-		.start = static_cast<uint32_t>(start),
+		.start = start,
 		.color = color
 	};
 }

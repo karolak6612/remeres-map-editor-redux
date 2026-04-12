@@ -1,6 +1,7 @@
 #include "app/main.h"
 #include "ui/gui.h"
 #include "rendering/core/drawing_options.h"
+#include "rendering/core/light_defaults.h"
 #include "rendering/postprocess/post_process_manager.h"
 
 #include <algorithm>
@@ -43,12 +44,12 @@ void DrawingOptions::SetDefault() {
 	show_hooks = false;
 	hide_items_when_zoomed = true;
 	current_house_id = 0;
-	draw_floor_shadow = true;
+	draw_floor_shadow = show_shade;
 	server_light = SpriteLight {
-		.intensity = 255,
-		.color = 215
+		.intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY,
+		.color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR
 	};
-	minimum_ambient_light = 0.0f;
+	minimum_ambient_light = rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT;
 	highlight_pulse = 0.0f;
 	anti_aliasing = false;
 	screen_shader_name = ShaderNames::NONE;
@@ -88,12 +89,12 @@ void DrawingOptions::SetIngame() {
 	show_hooks = false;
 	hide_items_when_zoomed = false;
 	current_house_id = 0;
-	draw_floor_shadow = true;
+	draw_floor_shadow = show_shade;
 	server_light = SpriteLight {
-		.intensity = 255,
-		.color = 215
+		.intensity = rme::lighting::DEFAULT_SERVER_LIGHT_INTENSITY,
+		.color = rme::lighting::DEFAULT_SERVER_LIGHT_COLOR
 	};
-	minimum_ambient_light = 0.0f;
+	minimum_ambient_light = rme::lighting::DEFAULT_MINIMUM_AMBIENT_LIGHT;
 }
 
 #include "app/settings.h"
@@ -134,8 +135,8 @@ void DrawingOptions::Update() {
 		.intensity = static_cast<uint8_t>(std::clamp(g_gui.GetLightIntensity(), 0, 255)),
 		.color = static_cast<uint8_t>(std::clamp(g_gui.GetServerLightColor(), 0, 255))
 	};
-	minimum_ambient_light = g_gui.GetAmbientLightLevel();
-	draw_floor_shadow = true;
+	minimum_ambient_light = std::clamp(g_gui.GetAmbientLightLevel(), 0.0f, 1.0f);
+	draw_floor_shadow = show_shade;
 
 	experimental_fog = g_settings.getBoolean(Config::EXPERIMENTAL_FOG);
 	anti_aliasing = g_settings.getBoolean(Config::ANTI_ALIASING);

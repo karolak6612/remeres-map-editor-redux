@@ -396,7 +396,7 @@ void MapDrawer::DrawMap() {
 			}
 		}
 
-		if (!options.show_lights && map_z == view.end_z && view.start_z != view.end_z) {
+		if (!options.isDrawLight() && map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(*sprite_batch, view, options);
 		}
 
