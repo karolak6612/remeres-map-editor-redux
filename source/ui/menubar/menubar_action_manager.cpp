@@ -84,6 +84,7 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(MAP_REMOVE_CORPSES, wxITEM_NORMAL, ICON_SKULL, OnMapRemoveCorpses);
 	MAKE_ACTION_ICON(MAP_REMOVE_UNREACHABLE_TILES, wxITEM_NORMAL, ICON_BAN, OnMapRemoveUnreachable);
 	MAKE_ACTION_ICON(MAP_CLEANUP, wxITEM_NORMAL, ICON_BROOM, OnMapCleanup);
+	MAKE_ACTION_ICON(MAP_CLEAN_INVALID_ZONES, wxITEM_NORMAL, ICON_BROOM, OnMapCleanInvalidZones);
 	MAKE_ACTION_ICON(MAP_CLEAN_HOUSE_ITEMS, wxITEM_NORMAL, ICON_HOUSE_MEDICAL, OnMapCleanHouseItems);
 	MAKE_ACTION_ICON(MAP_PROPERTIES, wxITEM_NORMAL, ICON_GEAR, OnMapProperties);
 	MAKE_ACTION_ICON(MAP_STATISTICS, wxITEM_NORMAL, ICON_CHART_BAR, OnMapStatistics);
@@ -110,6 +111,8 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(SHOW_LIGHTS, wxITEM_CHECK, ICON_LIGHTBULB, OnChangeViewSettings);
 	MAKE_ACTION_ICON(SHOW_LIGHT_STR, wxITEM_CHECK, ICON_LIGHTBULB, OnChangeViewSettings);
 	MAKE_ACTION_ICON(SHOW_TECHNICAL_ITEMS, wxITEM_CHECK, ICON_GEAR, OnChangeViewSettings);
+	MAKE_ACTION_ICON(SHOW_INVALID_TILES, wxITEM_CHECK, ICON_TRIANGLE_EXCLAMATION, OnChangeViewSettings);
+	MAKE_ACTION_ICON(SHOW_INVALID_ZONES, wxITEM_CHECK, ICON_TRIANGLE_EXCLAMATION, OnChangeViewSettings);
 	MAKE_ACTION_ICON(SHOW_WAYPOINTS, wxITEM_CHECK, ICON_FLAG, OnChangeViewSettings);
 	MAKE_ACTION_ICON(SHOW_GRID, wxITEM_CHECK, ICON_BORDER_ALL, OnChangeViewSettings);
 	MAKE_ACTION_ICON(SHOW_CREATURES, wxITEM_CHECK, ICON_DRAGON, OnChangeViewSettings);
@@ -167,9 +170,14 @@ void MenuBarActionManager::RegisterActions(MainMenuBar* mb, std::unordered_map<s
 	MAKE_ACTION_ICON(FLOOR_15, wxITEM_RADIO, ICON_L, OnChangeFloor);
 
 	MAKE_ACTION_ICON(DEBUG_VIEW_DAT, wxITEM_NORMAL, ICON_BUG, OnDebugViewDat);
+	MAKE_ACTION_ICON(MISSING_ITEMS_REPORT, wxITEM_NORMAL, ICON_LIST, OnMissingItemsReport);
 	MAKE_ACTION_ICON(EXTENSIONS, wxITEM_NORMAL, ICON_PUZZLE_PIECE, OnListExtensions);
 	MAKE_ACTION_ICON(GOTO_WEBSITE, wxITEM_NORMAL, ICON_GLOBE, OnGotoWebsite);
 	MAKE_ACTION_ICON(ABOUT, wxITEM_NORMAL, ICON_INFO, OnAbout);
+
+	MAKE_ACTION_ICON(SCRIPTS_MANAGER, wxITEM_NORMAL, ICON_CODE, OnScriptsManager);
+	MAKE_ACTION_ICON(SCRIPTS_OPEN_FOLDER, wxITEM_NORMAL, ICON_FOLDER_OPEN, OnScriptsOpenFolder);
+	MAKE_ACTION_ICON(SCRIPTS_RELOAD, wxITEM_NORMAL, ICON_SYNC, OnScriptsReload);
 
 #undef MAKE_ACTION
 #undef MAKE_ACTION_ICON
@@ -247,6 +255,7 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(MAP_REMOVE_ITEMS, is_host);
 	mb->EnableItem(MAP_REMOVE_CORPSES, is_local);
 	mb->EnableItem(MAP_REMOVE_UNREACHABLE_TILES, is_local);
+	mb->EnableItem(MAP_CLEAN_INVALID_ZONES, is_local);
 	mb->EnableItem(CLEAR_INVALID_HOUSES, is_local);
 	mb->EnableItem(CLEAR_MODIFIED_STATE, is_local);
 
@@ -287,6 +296,11 @@ void MenuBarActionManager::UpdateState(MainMenuBar* mb) {
 	mb->EnableItem(LIVE_CLOSE, is_live);
 
 	mb->EnableItem(DEBUG_VIEW_DAT, loaded);
+	mb->EnableItem(MISSING_ITEMS_REPORT, loaded);
+
+	mb->EnableItem(SCRIPTS_MANAGER, loaded);
+	mb->EnableItem(SCRIPTS_OPEN_FOLDER, loaded);
+	mb->EnableItem(SCRIPTS_RELOAD, loaded);
 
 	mb->UpdateFloorMenu();
 }

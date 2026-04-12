@@ -17,6 +17,10 @@
 #include "ui/tool_options_window.h"
 #include "item_definitions/core/asset_bundle_loader.h"
 #include "item_definitions/core/item_definition_store.h"
+#include "app/settings.h"
+
+#include <format>
+#include <ranges>
 
 VersionManager g_version;
 
@@ -135,11 +139,17 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 		return false;
 	}
 
+	// Track whether this mode uses OTB-backed definitions.
+	last_load_has_otb = (asset_request.mode == ItemDefinitionMode::DatOtb);
+
 	AssetBundle bundle;
 	AssetBundleLoader bundle_loader;
 	if (!bundle_loader.load(asset_request, bundle, error, warnings)) {
 		error = "Couldn't load canonical asset bundle: " + error;
 		g_loading.DestroyLoadBar();
+		// Clear stale data on failure
+		last_missing_items = {};
+		last_load_has_otb = true;
 		UnloadVersion();
 		return false;
 	}
@@ -148,8 +158,80 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	if (!bundle_loader.install(bundle, g_gui.gfx, g_item_definitions, error, warnings)) {
 		error = "Couldn't install canonical asset bundle: " + error;
 		g_loading.DestroyLoadBar();
+		// Clear stale data on failure
+		last_missing_items = {};
+		last_load_has_otb = true;
 		UnloadVersion();
 		return false;
+	}
+
+	// Store the missing items report for later dialog display (always collected regardless of warning setting)
+	last_missing_items = std::move(bundle.missing_items);
+
+	// Only add detailed missing items to warnings list if the user has enabled this option
+	if (g_settings.getBoolean(Config::SHOW_MISSING_ITEMS_WARNING)) {
+		constexpr size_t MAX_SHOW = 50;
+		size_t total_missing = last_missing_items.missing_in_dat.size() +
+		                       last_missing_items.missing_in_otb.size() +
+		                       last_missing_items.xml_no_otb.size() +
+		                       last_missing_items.otb_no_xml.size();
+		if (total_missing > 0) {
+			warnings.push_back(std::format("Missing item definitions detected ({} entries total).", total_missing));
+			warnings.push_back("Go to File -> Missing Items Report... to view details.");
+			warnings.push_back(""); // Empty line for readability
+
+			// Determine correct label for missing_in_otb based on mode
+			const std::string missing_in_otb_label = last_load_has_otb
+				? "tibia.dat items not in items.otb"
+				: "tibia.dat items not referenced by items.xml";
+
+			if (!last_missing_items.missing_in_dat.empty()) {
+				warnings.push_back(std::format("--- Items missing from tibia.dat ({}) ---", last_missing_items.missing_in_dat.size()));
+				for (const auto& entry : last_missing_items.missing_in_dat | std::views::take(MAX_SHOW)) {
+					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+				}
+				if (last_missing_items.missing_in_dat.size() > MAX_SHOW) {
+					warnings.push_back(std::format("  ...and {} more", last_missing_items.missing_in_dat.size() - MAX_SHOW));
+				}
+				warnings.push_back("");
+			}
+
+			if (!last_missing_items.missing_in_otb.empty()) {
+				warnings.push_back(std::format("--- {} ({}) ---", missing_in_otb_label, last_missing_items.missing_in_otb.size()));
+				for (const auto& entry : last_missing_items.missing_in_otb | std::views::take(MAX_SHOW)) {
+					warnings.push_back(std::format("  Client ID: {}", entry.client_id));
+				}
+				if (last_missing_items.missing_in_otb.size() > MAX_SHOW) {
+					warnings.push_back(std::format("  ...and {} more", last_missing_items.missing_in_otb.size() - MAX_SHOW));
+				}
+				warnings.push_back("");
+			}
+
+			if (!last_missing_items.xml_no_otb.empty()) {
+				warnings.push_back(std::format("--- items.xml entries missing from items.otb ({}) ---", last_missing_items.xml_no_otb.size()));
+				for (const auto& entry : last_missing_items.xml_no_otb | std::views::take(MAX_SHOW)) {
+					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+				}
+				if (last_missing_items.xml_no_otb.size() > MAX_SHOW) {
+					warnings.push_back(std::format("  ...and {} more", last_missing_items.xml_no_otb.size() - MAX_SHOW));
+				}
+				warnings.push_back("");
+			}
+
+			if (!last_missing_items.otb_no_xml.empty()) {
+				warnings.push_back(std::format("--- items.otb entries missing from items.xml ({}) ---", last_missing_items.otb_no_xml.size()));
+				for (const auto& entry : last_missing_items.otb_no_xml | std::views::take(MAX_SHOW)) {
+					warnings.push_back(std::format("  Server ID: {}, Client ID: {}, Name: '{}'",
+						entry.server_id, entry.client_id, entry.name.empty() ? "unknown" : entry.name));
+				}
+				if (last_missing_items.otb_no_xml.size() > MAX_SHOW) {
+					warnings.push_back(std::format("  ...and {} more", last_missing_items.otb_no_xml.size() - MAX_SHOW));
+				}
+				warnings.push_back("");
+			}
+		}
 	}
 
 	g_loading.SetLoadDone(35, "Loading creatures...");

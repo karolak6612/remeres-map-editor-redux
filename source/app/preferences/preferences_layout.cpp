@@ -184,7 +184,14 @@ void PreferencesLayout::AddControlRow(
 	text_sizer->Add(CreateTitleLabel(section, title), 0, wxBOTTOM, wxWindow::FromDIP(2, section));
 	text_sizer->Add(CreateDescriptionLabel(section, description), 0, wxEXPAND);
 	row_sizer->Add(text_sizer, 1, wxEXPAND | wxRIGHT, wxWindow::FromDIP(12, section));
-	row_sizer->Add(control, expand_control ? 1 : 0, (expand_control ? wxEXPAND : wxALIGN_CENTER_VERTICAL) | wxTOP, wxWindow::FromDIP(2, section));
+
+	int flags = wxTOP;
+	if (expand_control) {
+		flags |= wxEXPAND;
+	} else {
+		flags |= wxALIGN_CENTER_VERTICAL;
+	}
+	row_sizer->Add(control, expand_control ? 1 : 0, flags, wxWindow::FromDIP(2, section));
 
 	section->GetBodySizer()->Add(row_sizer, 0, wxEXPAND | wxBOTTOM, wxWindow::FromDIP(12, section));
 }

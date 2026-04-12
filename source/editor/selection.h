@@ -55,9 +55,16 @@ public:
 	// Clears the selection completely
 	void clear();
 
+	// Marks the current selection as dirty without changing membership.
+	void markChanged();
+
 	// Returns true when inside a session
 	bool isBusy() {
 		return busy;
+	}
+
+	bool isDeferred() const {
+		return deferred;
 	}
 
 	//
@@ -120,6 +127,7 @@ private:
 
 	bool busy;
 	bool deferred;
+	bool selectionChanged;
 	Editor& editor;
 	std::unique_ptr<BatchAction> session;
 	std::unique_ptr<Action> subsession;

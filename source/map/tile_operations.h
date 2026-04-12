@@ -36,6 +36,7 @@ namespace TileOperations {
 	void deselect(Tile* tile);
 	void selectGround(Tile* tile);
 	void deselectGround(Tile* tile);
+	void markSelectionChanged(Tile* tile);
 
 	std::vector<std::unique_ptr<Item>> popSelectedItems(Tile* tile, bool ignoreTileSelected = false);
 	ItemVector getSelectedItems(Tile* tile, bool unzoomed = false);

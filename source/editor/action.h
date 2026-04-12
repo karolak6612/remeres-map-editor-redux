@@ -59,12 +59,14 @@ class Change {
 private:
 	using Data = std::variant<std::monostate, std::unique_ptr<Tile>, HouseExitChangeData, WaypointChangeData>;
 	ChangeType type;
+	Position position;
 	Data data;
 
 	Change();
 
 public:
 	explicit Change(std::unique_ptr<Tile> tile);
+	Change(std::unique_ptr<Tile> tile, const Position& pos);
 	static Change* Create(House* house, const Position& where);
 	static Change* Create(Waypoint* wp, const Position& where);
 	~Change();
@@ -101,6 +103,7 @@ enum ActionIdentifier {
 	ACTION_ROTATE_ITEM,
 	ACTION_REPLACE_ITEMS,
 	ACTION_CHANGE_PROPERTIES,
+	ACTION_LUA_SCRIPT,
 };
 
 class Action {
@@ -163,6 +166,13 @@ public:
 	virtual void addAction(std::unique_ptr<Action> action);
 	virtual void addAndCommitAction(std::unique_ptr<Action> action);
 
+	void setLabel(const std::string& name) {
+		label = name;
+	}
+	const std::string& getLabel() const {
+		return label;
+	}
+
 protected:
 	BatchAction(Editor& editor, ActionIdentifier ident);
 
@@ -176,6 +186,7 @@ protected:
 	int timestamp;
 	uint32_t memory_size;
 	ActionIdentifier type;
+	std::string label;
 	ActionVector batch;
 
 	friend class ActionQueue;

@@ -25,8 +25,9 @@
 #include <toml++/toml.h>
 
 #include <iostream>
-#include <string>
 #include <fstream>
+#include <limits>
+#include <string>
 
 static toml::table g_settings_table;
 
@@ -68,6 +69,20 @@ int Settings::getInteger(uint32_t key) const {
 	return 0;
 }
 
+uint32_t Settings::getUnsignedInteger(uint32_t key) const {
+	if (key > Config::LAST) {
+		return 0;
+	}
+	const DynamicValue& dv = store[key];
+	if (auto val = std::get_if<uint32_t>(&dv.val)) {
+		return *val;
+	}
+	if (auto val = std::get_if<int>(&dv.val)) {
+		return static_cast<uint32_t>(std::max(0, *val));
+	}
+	return 0;
+}
+
 float Settings::getFloat(uint32_t key) const {
 	if (key > Config::LAST) {
 		return 0.0;
@@ -100,6 +115,16 @@ void Settings::setInteger(uint32_t key, int newval) {
 	}
 }
 
+void Settings::setUnsignedInteger(uint32_t key, uint32_t newval) {
+	if (key > Config::LAST) {
+		return;
+	}
+	DynamicValue& dv = store[key];
+	if (std::holds_alternative<uint32_t>(dv.val) || std::holds_alternative<std::monostate>(dv.val)) {
+		dv.val = newval;
+	}
+}
+
 void Settings::setFloat(uint32_t key, float newval) {
 	if (key > Config::LAST) {
 		return;
@@ -126,6 +151,8 @@ std::string Settings::DynamicValue::str() {
 		if constexpr (std::is_same_v<T, std::monostate>) {
 			return "";
 		} else if constexpr (std::is_same_v<T, int>) {
+			return i2s(arg);
+		} else if constexpr (std::is_same_v<T, uint32_t>) {
 			return i2s(arg);
 		} else if constexpr (std::is_same_v<T, float>) {
 			return f2s(arg);
@@ -195,6 +222,23 @@ void Settings::IO(IOMode mode) {
 		}                                                            \
 	} while (false)
 
+#define UInt(key, dflt)                                                                                                         \
+	do {                                                                                                                         \
+		std::string k = toLower(#key);                                                                                           \
+		if (mode == DEFAULT) {                                                                                                   \
+			setUnsignedInteger(key, static_cast<uint32_t>(dflt));                                                                \
+		} else if (mode == SAVE) {                                                                                               \
+			cur_sec->insert_or_assign(k, getUnsignedInteger(key));                                                               \
+		} else if (mode == LOAD) {                                                                                               \
+			const auto unsigned_value = (*cur_sec)[k].value<uint64_t>();                                                         \
+			const auto signed_value = (*cur_sec)[k].value<int64_t>();                                                            \
+			const auto loaded_value = unsigned_value.has_value()                                                                  \
+				? static_cast<uint32_t>(std::min<uint64_t>(*unsigned_value, std::numeric_limits<uint32_t>::max()))              \
+				: signed_value.has_value() ? static_cast<uint32_t>(std::max<int64_t>(0, *signed_value)) : static_cast<uint32_t>(dflt); \
+			setUnsignedInteger(key, loaded_value);                                                                               \
+		}                                                                                                                        \
+	} while (false)
+
 #define IntToSave(key, dflt)                                         \
 	do {                                                             \
 		std::string k = toLower(#key);                               \
@@ -240,7 +284,9 @@ void Settings::IO(IOMode mode) {
 	Bool(SHOW_LIGHTS, false);
 	Bool(SHOW_LIGHT_STR, true);
 	Bool(SHOW_TECHNICAL_ITEMS, true);
+	Bool(SHOW_INVALID_TILES, true);
 	Bool(SHOW_WAYPOINTS, true);
+	Bool(SHOW_INVALID_ZONES, true);
 	Bool(SHOW_GRID, false);
 	Bool(SHOW_EXTRA, true);
 	Bool(SHOW_SHADE, true);
@@ -256,7 +302,7 @@ void Settings::IO(IOMode mode) {
 	Bool(SHOW_ONLY_TILEFLAGS, false);
 	Bool(SHOW_ONLY_MODIFIED_TILES, false);
 	Bool(SHOW_PREVIEW, true);
-	Bool(SHOW_AUTOBORDER_PREVIEW, true);
+	Bool(SHOW_AUTOBORDER_PREVIEW, false);
 	Bool(SHOW_WALL_HOOKS, false);
 	Bool(SHOW_TOWNS, false);
 	Bool(ALWAYS_SHOW_ZONES, true);
@@ -304,7 +350,7 @@ void Settings::IO(IOMode mode) {
 	Bool(ERASER_LEAVE_UNIQUE, true);
 	Bool(DOODAD_BRUSH_ERASE_LIKE, false);
 	Bool(WARN_FOR_DUPLICATE_ID, true);
-	Bool(AUTO_CREATE_SPAWN, true);
+	Bool(AUTO_CREATE_SPAWN, false);
 	Int(DEFAULT_SPAWNTIME, 60);
 	Int(MAX_SPAWN_RADIUS, 30);
 	Int(CURRENT_SPAWN_RADIUS, 5);
@@ -318,10 +364,15 @@ void Settings::IO(IOMode mode) {
 	Int(COPY_POSITION_FORMAT, 0);
 	String(RECENT_EDITED_MAP_PATH, "");
 	String(RECENT_EDITED_MAP_POSITION, "");
-	Int(FIND_ITEM_MODE, 0);
-	Int(JUMP_TO_ITEM_MODE, 0);
-	Int(DEFAULT_NPC_SPAWNTIME, 60);
-	Int(CURRENT_NPC_SPAWN_RADIUS, 5);
+	UInt(ADVANCED_ITEM_FINDER_TYPE_FILTERS, 0);
+	UInt(ADVANCED_ITEM_FINDER_PROPERTY_FILTERS, 0);
+	UInt(ADVANCED_ITEM_FINDER_INTERACTION_FILTERS, 0);
+	UInt(ADVANCED_ITEM_FINDER_VISUAL_FILTERS, 0);
+	String(ADVANCED_ITEM_FINDER_QUERY_TEXT, "");
+	Int(ADVANCED_ITEM_FINDER_SELECTED_KIND, 0);
+	Int(ADVANCED_ITEM_FINDER_SELECTED_SERVER_ID, 0);
+	String(ADVANCED_ITEM_FINDER_SELECTED_CREATURE, "");
+	Int(SEARCH_RESULTS_LIMIT, 100000);
 
 	section("Graphics");
 	Bool(TEXTURE_MANAGEMENT, true);
@@ -389,6 +440,10 @@ void Settings::IO(IOMode mode) {
 	Int(PREFERENCES_WINDOW_WIDTH, 1200);
 	Int(PREFERENCES_WINDOW_HEIGHT, 500);
 	Int(THEME, 0);
+	Int(ADVANCED_ITEM_FINDER_WINDOW_X, -1);
+	Int(ADVANCED_ITEM_FINDER_WINDOW_Y, -1);
+	Int(ADVANCED_ITEM_FINDER_WINDOW_WIDTH, 1480);
+	Int(ADVANCED_ITEM_FINDER_WINDOW_HEIGHT, 860);
 
 	section("Hotkeys");
 	String(NUMERICAL_HOTKEYS, "");
@@ -416,6 +471,12 @@ void Settings::IO(IOMode mode) {
 	// experimental
 	section("experimental");
 	Int(EXPERIMENTAL_FOG, 0);
+
+	// Missing items report (added at end to preserve enum stability)
+	section("Editor");
+	Bool(SHOW_MISSING_ITEMS_WARNING, false);
+	Int(DEFAULT_NPC_SPAWNTIME, 60);
+	Int(CURRENT_NPC_SPAWN_RADIUS, 5);
 
 	if (mode == SAVE) {
 		std::ofstream file("config.toml");

@@ -51,6 +51,7 @@ MapTab::MapTab(const MapTab* other) :
 	int x, y;
 	other->GetCanvas()->GetScreenCenter(&x, &y);
 	SetScreenCenterPosition(Position(x, y, other->GetCanvas()->GetFloor()));
+	GetMinimapViewportState() = other->GetMinimapViewportState();
 }
 
 MapTab::~MapTab() {

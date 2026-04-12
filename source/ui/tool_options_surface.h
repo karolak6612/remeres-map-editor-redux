@@ -2,106 +2,116 @@
 #define RME_UI_TOOL_OPTIONS_SURFACE_H_
 
 #include "app/main.h"
-#include <wx/wx.h>
-#include <wx/timer.h>
-#include <vector>
 #include "palette/palette_common.h"
 
-class Brush;
+#include <string_view>
+#include <vector>
+#include <wx/wx.h>
 
-// A custom-drawn, high-density surface for tool options.
-// Replaces the old panel-based layout with a unified, paint-optimized control.
-class ToolOptionsSurface : public wxControl {
+class Brush;
+class wxBitmapToggleButton;
+class wxSlider;
+class wxGridSizer;
+class wxSpinCtrl;
+class wxComboBox;
+
+class ToolOptionsSurface : public wxPanel {
 public:
 	ToolOptionsSurface(wxWindow* parent);
-	~ToolOptionsSurface();
+	~ToolOptionsSurface() override = default;
 
-	// Mandatory overrides for custom controls
-	wxSize DoGetBestClientSize() const override;
-	void DoSetSizeHints(int minW, int minH, int maxW, int maxH, int incW, int incH) override;
-
-	// Event Handlers
-	void OnPaint(wxPaintEvent& evt);
-	void OnEraseBackground(wxEraseEvent& evt); // No-op
-	void OnMouse(wxMouseEvent& evt);
-	void OnLeave(wxMouseEvent& evt);
-	void OnSize(wxSizeEvent& evt);
-	void OnTimer(wxTimerEvent& evt);
-
-	// Interface
 	void SetPaletteType(PaletteType type);
-	void UpdateBrushSize(BrushShape shape, int size); // Called when size changes externally (e.g. shortcuts)
+	void SetActiveBrush(Brush* brush);
+	void UpdateBrushSize(BrushShape shape, int size);
 	void ReloadSettings();
 	void Clear();
 
 private:
-	// -- Logic --
-	PaletteType current_type = TILESET_TERRAIN;
-
-	// Tool State
-	Brush* hover_brush = nullptr;
-	Brush* active_brush = nullptr;
-
-	// Layout Constants (DIP-independent, scaled in methods)
-	const int ICON_SIZE_LG = 32;
-	const int ICON_SIZE_SM = 16;
-	const int GRID_GAP = 4;
-	const int SECTION_GAP = 12;
-
-	const int SLIDER_LABEL_WIDTH = 70;
-	const int SLIDER_TEXT_MARGIN = 40;
-	const int SLIDER_VALUE_MARGIN = 8;
-	const int SLIDER_THUMB_RADIUS = 5;
-
-	const int MIN_BRUSH_SIZE = 1;
-	const int MAX_BRUSH_SIZE = 15;
-	const int MIN_BRUSH_THICKNESS = 1;
-	const int MAX_BRUSH_THICKNESS = 100;
-
-	// Animation
-	wxTimer m_animTimer;
-	float m_hoverAlpha = 0.0f;
-	wxPoint m_hoverPos = wxPoint(-1, -1);
-
-	// Helper Structures
-	struct ToolRect {
-		wxRect rect;
-		Brush* brush;
-		int id; // Command ID / Toggle ID
-		wxString tooltip;
+	enum class ToolButtonAction {
+		SelectBrush,
+		SelectCreature,
+		SelectSpawn,
 	};
-	std::vector<ToolRect> tool_rects;
 
-	// UI Elements State
-	struct {
-		wxRect size_slider_rect;
-		wxRect thickness_slider_rect;
-		wxRect preview_check_rect;
-		wxRect lock_check_rect;
+	struct ToolButtonEntry {
+		ToolButtonAction action = ToolButtonAction::SelectBrush;
+		Brush* brush = nullptr;
+		wxBitmapToggleButton* button = nullptr;
+		std::string_view asset_path;
+	};
 
-		bool dragging_size = false;
-		bool dragging_thickness = false;
-		bool hover_preview = false;
-		bool hover_lock = false;
-	} interactables;
+	void BuildUi();
+	void EnsureToolButtons();
+	void RebuildToolButtons();
+	void RefreshFromState();
+	void UpdateSectionVisibility();
+	void UpdateSizeLabels();
+	void UpdateModeButtons();
+	void SyncToolSelection();
+	void SetMutatingUi(bool value);
+	[[nodiscard]] bool IsMutatingUi() const;
+	[[nodiscard]] bool IsCreatureToolMode() const;
+	[[nodiscard]] bool HasBrushSizeControls() const;
+	[[nodiscard]] bool HasThicknessControl() const;
+	[[nodiscard]] bool HasPreviewBorderControl() const;
+	[[nodiscard]] bool HasLockDoorsControl() const;
+	[[nodiscard]] bool HasSpawnControls() const;
+	[[nodiscard]] bool HasZoneControls() const;
+	[[nodiscard]] Brush* GetSelectedCreatureBrush() const;
+	[[nodiscard]] Brush* GetSelectedSpawnBrush() const;
+	[[nodiscard]] bool IsNpcCreatureSelected() const;
+	[[nodiscard]] std::vector<Brush*> GetDefaultTools() const;
+	[[nodiscard]] wxBitmap CreateToolBitmap(const ToolButtonEntry& entry) const;
+	[[nodiscard]] wxBitmap CreateBrushBitmap(Brush* brush) const;
+	[[nodiscard]] wxBitmap CreateModeBitmap(std::string_view assetPath, const wxColour& tint) const;
+	void RefreshZoneChoices();
+	void SyncSharedSpawnControls(int time, int size);
 
-	// Data Cache
-	int current_size = 1;
-	int current_thickness = 1;
-	bool show_preview = false;
-	bool lock_doors = false;
+	void OnToolButton(wxCommandEvent& event);
+	void OnSizeXChanged(wxCommandEvent& event);
+	void OnSizeYChanged(wxCommandEvent& event);
+	void OnExactToggled(wxCommandEvent& event);
+	void OnAspectToggled(wxCommandEvent& event);
+	void OnPreviewBorderToggled(wxCommandEvent& event);
+	void OnLockDoorsToggled(wxCommandEvent& event);
+	void OnThicknessChanged(wxCommandEvent& event);
+	void OnPlaceSpawnWithCreatureToggled(wxCommandEvent& event);
+	void OnSpawnTimeChanged(wxSpinEvent& event);
+	void OnSpawnSizeChanged(wxSpinEvent& event);
+	void OnZoneNameChanged(wxCommandEvent& event);
 
-	// Internal Helpers
-	void RebuildLayout();
-	void DrawToolIcon(wxDC& dc, const ToolRect& tr);
-	void DrawSlider(wxDC& dc, const wxRect& rect, const wxString& label, int value, int min, int max, bool active);
-	void DrawCheckbox(wxDC& dc, const wxRect& rect, const wxString& label, bool value, bool hover);
+	Brush* active_brush = nullptr;
+	bool mutating_ui = false;
 
-	int CalculateSliderValue(const wxRect& sliderRect, int min, int max) const;
+	wxBoxSizer* main_sizer = nullptr;
+	wxStaticBoxSizer* main_tools_sizer = nullptr;
+	wxGridSizer* main_tools_grid = nullptr;
+	wxStaticBoxSizer* size_sizer = nullptr;
+	wxStaticBoxSizer* other_sizer = nullptr;
+	wxPanel* thickness_panel = nullptr;
+	wxPanel* spawn_time_panel = nullptr;
+	wxCheckBox* place_spawn_with_creature_checkbox = nullptr;
+	wxPanel* spawn_size_panel = nullptr;
+	wxPanel* zone_name_panel = nullptr;
 
-	Brush* GetBrushAt(const wxPoint& pt);
-	void HandleClick(const wxPoint& pt);
-	void SelectBrush(Brush* brush);
+	wxSlider* size_x_slider = nullptr;
+	wxSlider* size_y_slider = nullptr;
+	wxStaticText* size_x_value = nullptr;
+	wxStaticText* size_y_value = nullptr;
+	wxBitmapToggleButton* exact_button = nullptr;
+	wxBitmapToggleButton* aspect_button = nullptr;
+	wxCheckBox* preview_border_checkbox = nullptr;
+	wxCheckBox* lock_doors_checkbox = nullptr;
+	wxStaticText* thickness_label = nullptr;
+	wxSlider* thickness_slider = nullptr;
+	wxStaticText* thickness_value = nullptr;
+	wxStaticText* spawn_time_label = nullptr;
+	wxSpinCtrl* spawn_time_spin = nullptr;
+	wxStaticText* spawn_size_label = nullptr;
+	wxSpinCtrl* spawn_size_spin = nullptr;
+	wxComboBox* zone_name_combo = nullptr;
+
+	std::vector<ToolButtonEntry> tool_buttons;
 };
 
 #endif

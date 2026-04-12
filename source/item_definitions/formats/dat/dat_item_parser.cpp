@@ -133,7 +133,6 @@ namespace {
 			case DatFlagAnimateAlways:
 				fragment.flags |= flagMask(ItemFlag::AnimateAlways);
 				return true;
-			case DatFlagFullGround:
 			case DatFlagLook:
 			case DatFlagDefault:
 				return true;
@@ -149,6 +148,9 @@ namespace {
 			case DatFlagNoMoveAnimation:
 				fragment.flags |= flagMask(ItemFlag::NoMoveAnimation);
 				return true;
+			case DatFlagFullGround:
+				fragment.flags |= flagMask(ItemFlag::FullTile);
+				return true;
 			case DatFlagFloorChange:
 				fragment.flags |= flagMask(ItemFlag::FloorChange);
 				return true;
@@ -163,9 +165,12 @@ namespace {
 				fragment.flags |= flagMask(ItemFlag::CanReadText) | flagMask(ItemFlag::CanWriteText);
 				return file.skip(2);
 			case DatFlagCloth:
+				return file.skip(2);
 			case DatFlagLensHelp:
+				fragment.flags |= flagMask(ItemFlag::LensHelp);
 				return file.skip(2);
 			case DatFlagUsable:
+				fragment.flags |= flagMask(ItemFlag::ForceUse);
 				fragment.flags |= flagMask(ItemFlag::Usable);
 				return file.skip(2);
 			case DatFlagLight: {

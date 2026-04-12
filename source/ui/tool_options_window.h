@@ -5,6 +5,7 @@
 #include "palette/palette_common.h"
 
 class ToolOptionsSurface;
+class Brush;
 
 class ToolOptionsWindow : public wxPanel {
 public:
@@ -12,6 +13,7 @@ public:
 	~ToolOptionsWindow();
 
 	void SetPaletteType(PaletteType type);
+	void SetActiveBrush(Brush* brush);
 	void UpdateBrushSize(BrushShape shape, int size);
 	void ReloadSettings();
 	void Clear();

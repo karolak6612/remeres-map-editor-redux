@@ -82,6 +82,7 @@ namespace MenuBar {
 		EDIT_ITEMS,
 		EDIT_MONSTERS,
 		MAP_CLEANUP,
+		MAP_CLEAN_INVALID_ZONES,
 		MAP_REMOVE_ITEMS,
 		MAP_REMOVE_CORPSES,
 		MAP_REMOVE_UNREACHABLE_TILES,
@@ -107,6 +108,8 @@ namespace MenuBar {
 		SHOW_LIGHTS,
 		SHOW_LIGHT_STR,
 		SHOW_TECHNICAL_ITEMS,
+		SHOW_INVALID_TILES,
+		SHOW_INVALID_ZONES,
 		SHOW_WAYPOINTS,
 		SHOW_GRID,
 		SHOW_EXTRA,
@@ -158,9 +161,14 @@ namespace MenuBar {
 		FLOOR_14,
 		FLOOR_15,
 		DEBUG_VIEW_DAT,
+		MISSING_ITEMS_REPORT,
 		EXTENSIONS,
 		GOTO_WEBSITE,
 		ABOUT,
+
+		SCRIPTS_MANAGER,
+		SCRIPTS_OPEN_FOLDER,
+		SCRIPTS_RELOAD,
 
 		EXPERIMENTAL_FOG,
 	};
@@ -173,6 +181,7 @@ class MapActionsHandler;
 class FileMenuHandler;
 class NavigationMenuHandler;
 class PaletteMenuHandler;
+class ScriptMenuHandler;
 
 class MainMenuBar : public wxEvtHandler {
 	friend class MenuBarLoader;
@@ -208,6 +217,7 @@ public:
 
 	void OnExportTilesets(wxCommandEvent& event);
 	void OnReloadDataFiles(wxCommandEvent& event); // RELOAD_DATA
+	void OnMissingItemsReport(wxCommandEvent& event);
 	void OnPreferences(wxCommandEvent& event);
 	void OnListExtensions(wxCommandEvent& event);
 	void OnGotoWebsite(wxCommandEvent& event);
@@ -264,6 +274,7 @@ public:
 
 	void OnMapStatistics(wxCommandEvent& event);
 	void OnMapCleanup(wxCommandEvent& event);
+	void OnMapCleanInvalidZones(wxCommandEvent& event);
 	void OnMapProperties(wxCommandEvent& event);
 
 	void OnToolbars(wxCommandEvent& event);
@@ -298,6 +309,10 @@ public:
 	void OnSelectWaypointPalette(wxCommandEvent& event);
 	void OnSelectRawPalette(wxCommandEvent& event);
 
+	void OnScriptsOpenFolder(wxCommandEvent& event);
+	void OnScriptsReload(wxCommandEvent& event);
+	void OnScriptsManager(wxCommandEvent& event);
+
 	void OnDebugViewDat(wxCommandEvent& event);
 
 	void OnOpenRecent(wxCommandEvent& event);
@@ -321,6 +336,12 @@ protected:
 	FileMenuHandler* fileMenuHandler;
 	NavigationMenuHandler* navigationMenuHandler;
 	PaletteMenuHandler* paletteMenuHandler;
+
+public:
+	ScriptMenuHandler* scriptMenuHandler;
+
+	void LoadScriptsMenu() const;
+	void RefreshScriptsMenu() const;
 };
 
 namespace MenuBar {

@@ -41,6 +41,7 @@ public:
 	void SelectPage(PaletteType palette);
 	// The currently selected brush in this palette
 	Brush* GetSelectedBrush() const;
+	Brush* GetSelectedCreatureBrush() const;
 	// The currently selected brush size in this palette
 	int GetSelectedBrushSize() const;
 	// The currently selected page (terrain, doodad...)

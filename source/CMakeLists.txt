@@ -21,6 +21,7 @@ set(rme_H
 
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush_enums.h
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/brush_footprint.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush_utility.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/door/door_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/flag/flag_brush.h
@@ -38,6 +39,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_border_calculator.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush_loader.h
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/terrain_placement.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_exit_brush.h
     ${CMAKE_CURRENT_LIST_DIR}/brushes/raw/raw_brush.h
@@ -163,6 +165,7 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/map_view_math.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.h
@@ -202,11 +205,13 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/sprite_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/map_layer_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_cache.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_renderer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush_overlay_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/grid_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/hook_indicator_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/door_indicator_drawer.h
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/lua_overlay_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.h
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.h
@@ -280,7 +285,11 @@ set(rme_H
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_util.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_internal.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_model.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_views.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/missing_items_dialog.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.h
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.h
@@ -364,6 +373,27 @@ set(rme_H
 
 set(rme_H
     ${rme_H}
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_algo.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_app.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_brush.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_color.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_creature.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_geo.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_http.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_image.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_item.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_json.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_map.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_noise.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_position.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_selection.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_tile.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_dialog.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_engine.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script_manager.h
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_scripts_window.h
 )
 
 set(rme_SRC
@@ -384,6 +414,7 @@ set(rme_SRC
 
     ${CMAKE_CURRENT_LIST_DIR}/editor/hotkey_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/brush_footprint.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/brush_utility.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/door/door_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/flag/flag_brush.cpp
@@ -403,6 +434,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush_arrays.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/ground_brush_loader.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/brushes/ground/terrain_placement.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/house/house_exit_brush.cpp
     ${CMAKE_CURRENT_LIST_DIR}/brushes/raw/raw_brush.cpp
@@ -514,6 +546,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/animator.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/atlas_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/coordinate_mapper.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/core/map_view_math.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/drawing_options.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/editor_sprite.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/core/game_sprite.cpp
@@ -549,11 +582,13 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/entities/sprite_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/map_layer_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_cache.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/minimap_renderer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/brush_overlay_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/grid_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/hook_indicator_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/door_indicator_drawer.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/lua_overlay_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/marker_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/preview_drawer.cpp
     ${CMAKE_CURRENT_LIST_DIR}/rendering/drawers/overlays/selection_drawer.cpp
@@ -631,7 +666,12 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialog_util.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/extension_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_layout.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_model.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_views.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/find_item_window_views_paint.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/find_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/dialogs/missing_items_dialog.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/map_properties_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/towns_window.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/map/import_map_window.cpp
@@ -648,6 +688,7 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/file_menu_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/navigation_menu_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/palette_menu_handler.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/ui/menubar/script_menu_handler.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/main_toolbar.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/loading_manager.cpp
     ${CMAKE_CURRENT_LIST_DIR}/ui/managers/layout_manager.cpp
@@ -710,6 +751,27 @@ set(rme_SRC
     ${CMAKE_CURRENT_LIST_DIR}/ui/tool_options_surface.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/file_system.cpp
     ${CMAKE_CURRENT_LIST_DIR}/util/image_manager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_algo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_app.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_brush.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_color.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_creature.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_geo.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_http.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_image.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_item.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_json.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_map.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_noise.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_position.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_selection.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_api_tile.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_dialog.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_engine.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_script_manager.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/lua/lua_scripts_window.cpp
 )
 
 if(WIN32)

@@ -13,6 +13,10 @@
 extern GUI g_gui;
 
 void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event) {
+	if (auto* map_window = dynamic_cast<MapWindow*>(canvas->GetParent())) {
+		map_window->ResumeMinimapTrackingToCurrentView();
+	}
+
 	int start_x, start_y;
 	static_cast<MapWindow*>(canvas->GetParent())->GetViewStart(&start_x, &start_y);
 
@@ -40,6 +44,9 @@ void NavigationController::HandleArrowKeys(MapCanvas* canvas, wxKeyEvent& event)
 
 void NavigationController::HandleMouseDrag(MapCanvas* canvas, wxMouseEvent& event) {
 	if (canvas->screendragging) {
+		if (auto* map_window = dynamic_cast<MapWindow*>(canvas->GetParent())) {
+			map_window->ResumeMinimapTrackingToCurrentView();
+		}
 		static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->zoom * (event.GetX() - canvas->cursor_x)), int(g_settings.getFloat(Config::SCROLL_SPEED) * canvas->zoom * (event.GetY() - canvas->cursor_y)));
 		canvas->Refresh();
 	}
@@ -81,8 +88,8 @@ void NavigationController::HandleCameraRelease(MapCanvas* canvas, wxMouseEvent& 
 		int screensize_x, screensize_y;
 		static_cast<MapWindow*>(canvas->GetParent())->GetViewSize(&screensize_x, &screensize_y);
 		static_cast<MapWindow*>(canvas->GetParent())->ScrollRelative(int(canvas->zoom * (2 * canvas->cursor_x - screensize_x)), int(canvas->zoom * (2 * canvas->cursor_y - screensize_y)));
-		canvas->Refresh();
 	}
+	canvas->SyncCursorHoverState();
 }
 
 void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {
@@ -90,6 +97,9 @@ void NavigationController::ChangeFloor(MapCanvas* canvas, int new_floor) {
 	int old_floor = canvas->floor;
 	canvas->floor = new_floor;
 	if (old_floor != new_floor) {
+		if (auto* map_window = dynamic_cast<MapWindow*>(canvas->GetParent())) {
+			map_window->ResumeMinimapTrackingToCurrentView();
+		}
 		canvas->UpdatePositionStatus();
 		g_gui.root->UpdateFloorMenu();
 		g_gui.UpdateMinimap(true);

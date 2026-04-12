@@ -21,6 +21,7 @@
 #include "editor/selection.h"
 #include "editor/selection_thread.h"
 #include "map/tile.h"
+#include "lua/lua_script_manager.h"
 #include "game/creature.h"
 #include "game/item.h"
 #include "editor/editor.h"
@@ -33,6 +34,7 @@
 Selection::Selection(Editor& editor) :
 	busy(false),
 	deferred(false),
+	selectionChanged(false),
 	editor(editor),
 	session(nullptr),
 	subsession(nullptr),
@@ -85,7 +87,6 @@ Position Selection::maxPosition() const {
 }
 
 void Selection::add(Tile* tile, Item* item) {
-	ASSERT(subsession);
 	ASSERT(tile);
 	ASSERT(item);
 
@@ -272,6 +273,7 @@ void Selection::addInternal(Tile* tile) {
 		if (it == tiles.end() || *it != tile) {
 			tiles.insert(it, tile);
 			bounds_dirty = true;
+			selectionChanged = true;
 		}
 	}
 }
@@ -285,6 +287,7 @@ void Selection::removeInternal(Tile* tile) {
 		if (it != tiles.end() && *it == tile) {
 			tiles.erase(it);
 			bounds_dirty = true;
+			selectionChanged = true;
 		}
 	}
 }
@@ -294,6 +297,7 @@ void Selection::flush() {
 		return;
 	}
 
+	const std::vector<Tile*> previousTiles = tiles;
 	bounds_dirty = true;
 
 	if (!pending_removes.empty()) {
@@ -324,10 +328,11 @@ void Selection::flush() {
 
 	pending_adds.clear();
 	pending_removes.clear();
+	selectionChanged = selectionChanged || (tiles != previousTiles);
 }
 
 void Selection::clear() {
-	if (tiles.empty()) {
+	if (tiles.empty() && pending_adds.empty() && pending_removes.empty()) {
 		return;
 	}
 
@@ -341,12 +346,26 @@ void Selection::clear() {
 		std::ranges::for_each(tiles, [](Tile* tile) {
 			TileOperations::deselect(tile);
 		});
+		if (deferred) {
+			std::ranges::for_each(pending_adds, [](Tile* tile) {
+				TileOperations::deselect(tile);
+			});
+			pending_adds.clear();
+			pending_removes.clear();
+		}
 	}
 	tiles.clear();
 	bounds_dirty = true;
+	selectionChanged = true;
+}
+
+void Selection::markChanged() {
+	bounds_dirty = true;
+	selectionChanged = true;
 }
 
 void Selection::start(SessionFlags flags) {
+	selectionChanged = false;
 	if (!(flags & INTERNAL)) {
 		if (flags & SUBTHREAD) {
 			;
@@ -381,7 +400,6 @@ void Selection::commit() {
 void Selection::finish(SessionFlags flags) {
 	if (!(flags & INTERNAL)) {
 		if (flags & SUBTHREAD) {
-			ASSERT(subsession);
 			subsession = nullptr;
 		} else {
 			ASSERT(session);
@@ -401,6 +419,14 @@ void Selection::finish(SessionFlags flags) {
 		deferred = false;
 	}
 	busy = false;
+
+	// Notify Lua scripts only if we're on the main thread and the selection actually changed
+	if (selectionChanged && !(flags & (INTERNAL | SUBTHREAD))) {
+		if (g_luaScripts.isInitialized()) {
+			g_luaScripts.emit("selectionChange");
+		}
+	}
+	selectionChanged = false;
 }
 
 void Selection::updateSelectionCount() {

@@ -31,6 +31,7 @@
 #include <format>
 #include <iterator>
 #include <cstring>
+#include <string_view>
 
 class wxFileName;
 using FileName = wxFileName;
@@ -143,7 +144,9 @@ protected:
 
 	template <class T>
 	bool getType(T& ref) {
-		fread(&ref, sizeof(ref), 1, file.get());
+		if (fread(&ref, sizeof(ref), 1, file.get()) != 1) {
+			return false;
+		}
 		return ferror(file.get()) == 0;
 	}
 };
@@ -191,6 +194,9 @@ public:
 	}
 	size_t getReadOffset() const {
 		return read_offset;
+	}
+	std::string_view rawData() const {
+		return data;
 	}
 	std::string hexDump(size_t maxBytes = 32) const {
 		size_t count = std::min(maxBytes, data.size());

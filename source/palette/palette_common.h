@@ -24,6 +24,7 @@
 #include "map/tileset.h"
 #include "ui/gui_ids.h"
 #include "brushes/brush_enums.h"
+#include "brushes/brush_footprint.h"
 #include "ui/controls/item_buttons.h"
 
 class GUI;
@@ -82,7 +83,7 @@ protected:
 	using ToolBarList = std::vector<PalettePanel*>;
 	ToolBarList tool_bars;
 	wxTimer refresh_timer;
-	int last_brush_size;
+	BrushSizeState last_brush_size_state { .shape = BRUSHSHAPE_SQUARE, .size_x = 1, .size_y = 1, .exact = true, .aspect_locked = true };
 };
 
 #endif

@@ -35,8 +35,7 @@
 
 PalettePanel::PalettePanel(wxWindow* parent, wxWindowID id, long style) :
 	wxPanel(parent, id, wxDefaultPosition, wxDefaultSize, style),
-	refresh_timer(this, PALETTE_DELAYED_REFRESH_TIMER),
-	last_brush_size(0) {
+	refresh_timer(this, PALETTE_DELAYED_REFRESH_TIMER) {
 	refresh_timer.Bind(wxEVT_TIMER, &PalettePanel::OnRefreshTimer, this);
 	////
 }
@@ -146,15 +145,15 @@ void PalettePanel::OnUpdateBrushSize(BrushShape shape, int size) {
 }
 
 void PalettePanel::OnSwitchIn() {
+	g_palettes.ActivatePalette(GetParentPalette());
+	g_gui.RestoreBrushSizeState(last_brush_size_state);
 	for (auto* toolbar : tool_bars) {
 		toolbar->OnSwitchIn();
 	}
-	g_palettes.ActivatePalette(GetParentPalette());
-	g_brush_manager.SetBrushSize(last_brush_size);
 }
 
 void PalettePanel::OnSwitchOut() {
-	last_brush_size = g_brush_manager.GetBrushSize();
+	last_brush_size_state = g_brush_manager.GetBrushSizeState();
 	for (auto* toolbar : tool_bars) {
 		toolbar->OnSwitchOut();
 	}

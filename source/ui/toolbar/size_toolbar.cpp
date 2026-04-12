@@ -66,6 +66,10 @@ void SizeToolBar::Update() {
 }
 
 void SizeToolBar::UpdateBrushSize(BrushShape shape, int size) {
+	const BrushFootprint footprint = g_gui.GetBrushFootprint();
+	const bool legacy_compatible = footprint.size_x == footprint.size_y && (!footprint.exact || footprint.isSingleTile());
+	const int legacy_size = legacy_compatible ? size : -1;
+
 	if (shape == BRUSHSHAPE_CIRCLE) {
 		toolbar->ToggleTool(TOOLBAR_SIZES_CIRCULAR, true);
 		toolbar->ToggleTool(TOOLBAR_SIZES_RECTANGULAR, false);
@@ -92,13 +96,13 @@ void SizeToolBar::UpdateBrushSize(BrushShape shape, int size) {
 		toolbar->SetToolBitmap(TOOLBAR_SIZES_7, IMAGE_MANAGER.GetBitmap(IMAGE_RECTANGULAR_7_SMALL, icon_size));
 	}
 
-	toolbar->ToggleTool(TOOLBAR_SIZES_1, size == 0);
-	toolbar->ToggleTool(TOOLBAR_SIZES_2, size == 1);
-	toolbar->ToggleTool(TOOLBAR_SIZES_3, size == 2);
-	toolbar->ToggleTool(TOOLBAR_SIZES_4, size == 4);
-	toolbar->ToggleTool(TOOLBAR_SIZES_5, size == 6);
-	toolbar->ToggleTool(TOOLBAR_SIZES_6, size == 8);
-	toolbar->ToggleTool(TOOLBAR_SIZES_7, size == 11);
+	toolbar->ToggleTool(TOOLBAR_SIZES_1, legacy_size == 0);
+	toolbar->ToggleTool(TOOLBAR_SIZES_2, legacy_size == 1);
+	toolbar->ToggleTool(TOOLBAR_SIZES_3, legacy_size == 2);
+	toolbar->ToggleTool(TOOLBAR_SIZES_4, legacy_size == 4);
+	toolbar->ToggleTool(TOOLBAR_SIZES_5, legacy_size == 6);
+	toolbar->ToggleTool(TOOLBAR_SIZES_6, legacy_size == 8);
+	toolbar->ToggleTool(TOOLBAR_SIZES_7, legacy_size == 11);
 
 	g_gui.GetAuiManager()->Update();
 }

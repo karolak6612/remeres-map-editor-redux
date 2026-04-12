@@ -61,6 +61,7 @@
 #include "rendering/drawers/overlays/marker_drawer.h"
 #include "rendering/drawers/overlays/hook_indicator_drawer.h"
 #include "rendering/drawers/overlays/door_indicator_drawer.h"
+#include "rendering/drawers/overlays/lua_overlay_drawer.h"
 #include "rendering/drawers/overlays/preview_drawer.h"
 #include "rendering/drawers/tiles/shade_drawer.h"
 #include "rendering/drawers/tiles/tile_color_calculator.h"
@@ -116,6 +117,7 @@ MapDrawer::MapDrawer(MapCanvas* canvas) :
 	primitive_renderer = std::make_unique<PrimitiveRenderer>();
 	hook_indicator_drawer = std::make_unique<HookIndicatorDrawer>();
 	door_indicator_drawer = std::make_unique<DoorIndicatorDrawer>();
+	lua_overlay_drawer = std::make_unique<LuaOverlayDrawer>(this);
 
 	item_drawer->SetHookIndicatorDrawer(hook_indicator_drawer.get());
 	item_drawer->SetDoorIndicatorDrawer(door_indicator_drawer.get());
@@ -307,6 +309,9 @@ void MapDrawer::Draw() {
 	// Begin Batches
 	sprite_batch->begin(view.projectionMatrix, *atlas);
 	primitive_renderer->setProjectionMatrix(view.projectionMatrix);
+	if (options.isDrawLight()) {
+		light_buffer.Prepare(view);
+	}
 
 	// Check Framebuffer Logic
 	// Check Framebuffer Logic
@@ -330,16 +335,17 @@ void MapDrawer::Draw() {
 	sprite_batch->end(*atlas);
 	primitive_renderer->flush();
 
-	if (options.isDrawLight()) {
-		DrawLight();
-	}
-
-	// If using FBO, we must now Resolve to Screen
+	// If using FBO, resolve to screen BEFORE compositing lightmap
+	// (lightmap must composite onto the resolved scene, not an empty framebuffer)
 	if (use_fbo) {
 		DrawPostProcess(view, options);
 		// Reset to default FBO for overlays
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(view.viewport_x, view.viewport_y, view.screensize_x, view.screensize_y);
+	}
+
+	if (options.isDrawLight()) {
+		DrawLight();
 	}
 
 	// Resume Batch for Overlays
@@ -360,6 +366,9 @@ void MapDrawer::Draw() {
 		DrawIngameBox(original_bounds);
 	}
 
+	// Draw Lua Overlays (sprites, lines, rects, etc.)
+	lua_overlay_drawer->Draw(view, options);
+
 	// Draw creature names (Overlay) moved to DrawCreatureNames()
 
 	// End Batches and Flush
@@ -376,17 +385,23 @@ void MapDrawer::DrawBackground() {
 void MapDrawer::DrawMap() {
 	bool live_client = editor.live_manager.IsClient();
 
-	bool only_colors = options.show_as_minimap || options.show_only_colors;
-
 	// Enable texture mode
 
 	for (int map_z = view.start_z; map_z >= view.superend_z; map_z--) {
-		if (map_z == view.end_z && view.start_z != view.end_z) {
+		if (options.isDrawLight() && options.draw_floor_shadow && view.end_z >= GROUND_LAYER + 1 && map_z == view.end_z) {
+			if (g_gui.gfx.ensureAtlasManager()) {
+				sprite_batch->drawRect(0.0f, 0.0f, view.screensize_x * view.zoom, view.screensize_y * view.zoom, glm::vec4(0.0f, 0.0f, 0.0f, 0.5f), *g_gui.gfx.getAtlasManager());
+			}
+		}
+
+		if (!options.isDrawLight() && map_z == view.end_z && view.start_z != view.end_z) {
 			shade_drawer->draw(*sprite_batch, view, options);
 		}
 
 		if (map_z >= view.end_z) {
-			DrawMapLayer(map_z, live_client);
+			DrawMapLayer(*sprite_batch, map_z, live_client);
+		} else if (options.isDrawLight()) {
+			DrawMapLayer(hidden_floor_light_batch, map_z, live_client, true);
 		}
 
 		preview_drawer->draw(*sprite_batch, canvas, view, map_z, options, editor, item_drawer.get(), sprite_drawer.get(), creature_drawer.get(), options.current_house_id);
@@ -424,12 +439,12 @@ void MapDrawer::DrawCreatureNames(NVGcontext* vg) {
 	creature_name_drawer->draw(vg, view);
 }
 
-void MapDrawer::DrawMapLayer(int map_z, bool live_client) {
-	map_layer_drawer->Draw(*sprite_batch, map_z, live_client, view, options, light_buffer);
+void MapDrawer::DrawMapLayer(SpriteBatch& batch, int map_z, bool live_client, bool light_collection_only) {
+	map_layer_drawer->Draw(batch, map_z, live_client, view, options, light_buffer, light_collection_only);
 }
 
 void MapDrawer::DrawLight() {
-	light_drawer->draw(view, options.experimental_fog, light_buffer, options.global_light_color, options.light_intensity, options.ambient_light_level);
+	light_drawer->draw(view, light_buffer, options);
 }
 
 void MapDrawer::TakeScreenshot(uint8_t* screenshot_buffer) {

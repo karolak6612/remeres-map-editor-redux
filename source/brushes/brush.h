@@ -66,6 +66,8 @@ using BrushMap = std::multimap<std::string, std::unique_ptr<Brush>, std::less<>>
 
 class Brushes {
 public:
+	using BorderMap = std::unordered_map<uint32_t, std::unique_ptr<AutoBorder>>;
+
 	Brushes();
 	~Brushes();
 
@@ -90,8 +92,11 @@ public:
 		return brushes;
 	}
 
+	const BorderMap& getBorders() const {
+		return borders;
+	}
+
 protected:
-	using BorderMap = std::unordered_map<uint32_t, std::unique_ptr<AutoBorder>>;
 	BrushMap brushes;
 	BorderMap borders;
 

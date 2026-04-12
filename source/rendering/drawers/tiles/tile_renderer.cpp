@@ -27,8 +27,54 @@
 #include "rendering/core/sprite_preloader.h"
 #include "rendering/utilities/pattern_calculator.h"
 
+#include <ranges>
+
 TileRenderer::TileRenderer(ItemDrawer* id, SpriteDrawer* sd, CreatureDrawer* cd, CreatureNameDrawer* cnd, FloorDrawer* fd, MarkerDrawer* md, TooltipDrawer* td, Editor* ed) :
 	item_drawer(id), sprite_drawer(sd), creature_drawer(cd), floor_drawer(fd), marker_drawer(md), tooltip_drawer(td), creature_name_drawer(cnd), editor(ed) {
+}
+
+namespace {
+	[[nodiscard]] int projectedFloorOffsetTiles(const RenderView& view, int map_z) {
+		if (map_z <= GROUND_LAYER) {
+			return GROUND_LAYER - map_z;
+		}
+		return view.floor - map_z;
+	}
+
+	[[nodiscard]] std::pair<int, int> projectedTilePosition(const RenderView& view, const Position& position) {
+		const int offset_tiles = projectedFloorOffsetTiles(view, position.z);
+		return { position.x - offset_tiles, position.y - offset_tiles };
+	}
+
+	[[nodiscard]] bool tileCarriesTranslucentLight(const Tile* tile) {
+		if (!tile) {
+			return false;
+		}
+		if (tile->ground && (tile->ground->isTranslucent() || tile->ground->hasLensHelp())) {
+			return true;
+		}
+		return std::ranges::any_of(tile->items, [](const std::unique_ptr<Item>& item) {
+			return item && (item->isTranslucent() || item->hasLensHelp());
+		});
+	}
+}
+
+static DrawColor invalidTileOverlayColor(InvalidOTBMItemMarkerColor markerColor, bool selected) {
+	uint8_t red = 255;
+	uint8_t green = 0;
+	uint8_t blue = 0;
+
+	if (markerColor == InvalidOTBMItemMarkerColor::Orange) {
+		green = 165;
+	}
+
+	if (selected) {
+		red = static_cast<uint8_t>(red / 2);
+		green = static_cast<uint8_t>(green / 2);
+		blue = static_cast<uint8_t>(blue / 2);
+	}
+
+	return DrawColor(red, green, blue, 171);
 }
 
 // Helper function to populate tooltip data from an item (in-place)
@@ -151,11 +197,25 @@ static bool FillItemTooltipData(TooltipData& data, Item* item, const ItemDefinit
 	return true;
 }
 
-void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer) {
+void TileRenderer::RegisterGroundLightOcclusion(const TileLocation* location, const RenderView& view, LightBuffer& light_buffer, uint32_t floor_light_start) const {
 	if (!location) {
 		return;
 	}
-	Tile* tile = location->get();
+
+	const Tile* tile = location->get();
+	if (!tile || !tile->ground || !tile->ground->blocksLightFromBelow()) {
+		return;
+	}
+
+	const auto [tile_x, tile_y] = projectedTilePosition(view, location->getPosition());
+	light_buffer.SetFieldBrightness(tile_x, tile_y, floor_light_start);
+}
+
+void TileRenderer::DrawTile(SpriteBatch& sprite_batch, const TileLocation* location, const RenderView& view, const DrawingOptions& options, uint32_t current_house_id, int in_draw_x, int in_draw_y, LightBuffer* light_buffer, bool light_collection_only) const {
+	if (!location) {
+		return;
+	}
+	Tile* tile = const_cast<Tile*>(location->get());
 
 	if (!tile) {
 		return;
@@ -180,16 +240,80 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		}
 	}
 
-	const auto& position = location->getPosition();
+	const int tile_draw_x = draw_x;
+	const int tile_draw_y = draw_y;
 
-	// Light Processing (Ground)
-	if (light_buffer && tile->hasLight()) {
-		if (tile->ground && tile->ground->hasLight()) {
-			light_buffer->AddLight(position.x, position.y, position.z, tile->ground->getLight());
+	const auto& position = location->getPosition();
+	const auto [projected_tile_x, projected_tile_y] = projectedTilePosition(view, position);
+
+	ItemDefinitionView ground_it;
+	if (tile->ground) {
+		ground_it = tile->ground->getDefinition();
+	}
+
+	const bool hidden_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !options.show_invalid_tiles;
+	const bool unresolved_invalid_ground = tile->ground && tile->ground->isInvalidOTBMItem() && !ground_it;
+
+	// Translucent light: when on floor 8 (GROUND_LAYER + 1), check if floor 7 above has translucent items
+	// OTClient: light seeps through translucent ground (grates, windows) from floor 7 to floor 8
+	if (light_buffer && position.z == GROUND_LAYER + 1) {
+		Position above_position = position;
+		--above_position.z;
+		if (const Tile* tile_above = editor ? editor->map.getTile(above_position) : nullptr; tileCarriesTranslucentLight(tile_above)) {
+			// Emit faint warm white light (intensity=1, color=215) matching OTClient
+			light_buffer->AddTileLight(projected_tile_x, projected_tile_y, SpriteLight {
+				.intensity = 1,
+				.color = 215
+			});
 		}
 	}
 
-	Waypoint* waypoint = nullptr;
+	if (light_collection_only) {
+		if (light_buffer && tile->ground && ground_it && !hidden_invalid_ground && !unresolved_invalid_ground) {
+			int ground_draw_x = draw_x;
+			int ground_draw_y = draw_y;
+			BlitItemParams params(position, tile->ground.get(), options);
+			params.tile = tile;
+			params.item_definition = ground_it;
+			params.light_collection_only = true;
+			params.light_buffer = light_buffer;
+			params.view = &view;
+			item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, ground_draw_x, ground_draw_y, params);
+		}
+
+		if (light_buffer) {
+			for (const auto& item : tile->items) {
+				const ItemDefinitionView it = item->getDefinition();
+				if (item->isInvalidOTBMItem() && (!options.show_invalid_tiles || !it)) {
+					continue;
+				}
+
+				int item_draw_x = draw_x;
+				int item_draw_y = draw_y;
+				BlitItemParams params(position, item.get(), options);
+				params.tile = tile;
+				params.item_definition = it;
+				params.light_collection_only = true;
+				params.light_buffer = light_buffer;
+				params.view = &view;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, item_draw_x, item_draw_y, params);
+			}
+
+			if (tile->creature && options.show_creatures) {
+				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions {
+					.map_pos = position,
+					.transient_selection_bounds = options.transient_selection_bounds,
+					.light_buffer = light_buffer,
+					.view = &view,
+					.light_collection_only = true
+				});
+			}
+		}
+
+		return;
+	}
+
+	const Waypoint* waypoint = nullptr;
 	if (location->getWaypointCount() > 0) {
 		waypoint = editor->map.waypoints.getWaypoint(location);
 	}
@@ -209,9 +333,12 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 		TileColorCalculator::Calculate(tile, options, current_house_id, location->getSpawnCount(), r, g, b);
 	}
 
-	ItemDefinitionView ground_it;
-	if (tile->ground) {
-		ground_it = tile->ground->getDefinition();
+	InvalidOTBMItemMarkerColor invalid_tile_marker_color = InvalidOTBMItemMarkerColor::None;
+	bool has_selected_invalid_item = false;
+
+	if (options.show_invalid_tiles && tile->ground && tile->ground->isInvalidOTBMItem()) {
+		invalid_tile_marker_color = tile->ground->invalidOTBMMarkerColor();
+		has_selected_invalid_item = tile->ground->isSelected();
 	}
 
 	if (only_colors) {
@@ -222,7 +349,7 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 			sprite_drawer->glBlitSquare(sprite_batch, draw_x, draw_y, DrawColor(r, g, b, 128));
 		}
 	} else {
-		if (tile->ground && ground_it) {
+		if (tile->ground && ground_it && !hidden_invalid_ground) {
 			if (GameSprite* ground_sprite = tile->ground->getSprite()) {
 				SpritePatterns patterns = PatternCalculator::Calculate(ground_sprite, ground_it, tile->ground.get(), tile, position);
 
@@ -238,8 +365,22 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 				params.green = g;
 				params.blue = b;
 				params.patterns = &patterns;
+				params.light_buffer = light_buffer;
+				params.view = &view;
+				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
+			} else if (!unresolved_invalid_ground) {
+				BlitItemParams params(position, tile->ground.get(), options);
+				params.tile = tile;
+				params.item_definition = ground_it;
+				params.red = r;
+				params.green = g;
+				params.blue = b;
+				params.light_buffer = light_buffer;
+				params.view = &view;
 				item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 			}
+		} else if (unresolved_invalid_ground) {
+			// Missing-definition ground placeholders are represented by the tile-level invalid overlay.
 		} else if (options.always_show_zones && (r != 255 || g != 255 || b != 255)) {
 			item_drawer->DrawRawBrush(sprite_batch, sprite_drawer, draw_x, draw_y, SPRITE_ZONE, r, g, b, 60);
 		}
@@ -293,11 +434,18 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 
 			// items on tile
 			for (const auto& item : tile->items) {
-				if (light_buffer && item->hasLight()) {
-					light_buffer->AddLight(position.x, position.y, position.z, item->getLight());
+				if (item->isInvalidOTBMItem() && options.show_invalid_tiles) {
+					if (invalid_tile_marker_color != InvalidOTBMItemMarkerColor::Red) {
+						invalid_tile_marker_color = item->invalidOTBMMarkerColor();
+					}
+					has_selected_invalid_item = has_selected_invalid_item || item->isSelected();
 				}
 
 				const ItemDefinitionView it = item->getDefinition();
+				if (item->isInvalidOTBMItem() && (!options.show_invalid_tiles || !it)) {
+					// Missing-definition placeholders are represented by the tile-level invalid overlay.
+					continue;
+				}
 
 				// item tooltip (one per item)
 				if (process_tooltips) {
@@ -327,6 +475,8 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.red = r;
 						params.green = g;
 						params.blue = b;
+						params.light_buffer = light_buffer;
+						params.view = &view;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					} else {
 						uint8_t ir = 255, ig = 255, ib = 255;
@@ -347,17 +497,35 @@ void TileRenderer::DrawTile(SpriteBatch& sprite_batch, TileLocation* location, c
 						params.red = ir;
 						params.green = ig;
 						params.blue = ib;
+						params.light_buffer = light_buffer;
+						params.view = &view;
 						item_drawer->BlitItem(sprite_batch, sprite_drawer, creature_drawer, draw_x, draw_y, params);
 					}
+				} else if (item->isInvalidOTBMItem()) {
+					// Missing-definition placeholders are represented by the tile-level invalid overlay.
 				}
 			}
 			// monster/npc on tile
 			if (tile->creature && options.show_creatures) {
-				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions { .map_pos = position, .transient_selection_bounds = options.transient_selection_bounds });
+				creature_drawer->BlitCreature(sprite_batch, sprite_drawer, draw_x, draw_y, tile->creature.get(), CreatureDrawOptions {
+					.map_pos = position,
+					.transient_selection_bounds = options.transient_selection_bounds,
+					.light_buffer = light_buffer,
+					.view = &view
+				});
 				if (creature_name_drawer) {
 					creature_name_drawer->addLabel(position, tile->creature->getName(), tile->creature.get());
 				}
 			}
+		}
+
+		if (options.show_invalid_zones && !as_minimap && tile->hasInvalidZones()) {
+			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, DrawColor(255, 0, 255, 171));
+		}
+
+		if (options.show_invalid_tiles && !as_minimap && invalid_tile_marker_color != InvalidOTBMItemMarkerColor::None) {
+			const DrawColor overlay = invalidTileOverlayColor(invalid_tile_marker_color, has_selected_invalid_item);
+			sprite_drawer->glBlitSquare(sprite_batch, tile_draw_x, tile_draw_y, overlay);
 		}
 
 		if (view.zoom < 10.0) {

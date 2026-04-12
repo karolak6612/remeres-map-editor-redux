@@ -51,33 +51,25 @@ void BrushUtility::GetTilesToDraw(int mouse_map_x, int mouse_map_y, int floor, s
 		FloodFill(&g_gui.GetCurrentMap(), position, BLOCK_SIZE / 2, BLOCK_SIZE / 2, oldBrush, tilestodraw);
 
 	} else {
-		int brushSize = g_gui.GetBrushSize();
-		int brushShape = g_gui.GetBrushShape();
+		const BrushFootprint footprint = g_gui.GetBrushFootprint();
+		for (int y = footprint.min_offset_y - 1; y <= footprint.max_offset_y + 1; ++y) {
+			for (int x = footprint.min_offset_x - 1; x <= footprint.max_offset_x + 1; ++x) {
+				if (footprint.containsOffset(x, y)) {
+					if (tilestodraw) {
+						tilestodraw->push_back(Position(mouse_map_x + x, mouse_map_y + y, floor));
+					}
+				}
 
-		for (int y = -brushSize - 1; y <= brushSize + 1; y++) {
-			for (int x = -brushSize - 1; x <= brushSize + 1; x++) {
-				if (brushShape == BRUSHSHAPE_SQUARE) {
-					if (x >= -brushSize && x <= brushSize && y >= -brushSize && y <= brushSize) {
-						if (tilestodraw) {
-							tilestodraw->push_back(Position(mouse_map_x + x, mouse_map_y + y, floor));
+				for (int check_y = y - 1; check_y <= y + 1; ++check_y) {
+					for (int check_x = x - 1; check_x <= x + 1; ++check_x) {
+						if (!footprint.containsOffset(check_x, check_y)) {
+							continue;
 						}
-					}
-					if (std::abs(x) - brushSize < 2 && std::abs(y) - brushSize < 2) {
 						if (tilestoborder) {
 							tilestoborder->push_back(Position(mouse_map_x + x, mouse_map_y + y, floor));
 						}
-					}
-				} else if (brushShape == BRUSHSHAPE_CIRCLE) {
-					double distance = sqrt(double(x * x) + double(y * y));
-					if (distance < brushSize + 0.005) {
-						if (tilestodraw) {
-							tilestodraw->push_back(Position(mouse_map_x + x, mouse_map_y + y, floor));
-						}
-					}
-					if (std::abs(distance - brushSize) < 1.5) {
-						if (tilestoborder) {
-							tilestoborder->push_back(Position(mouse_map_x + x, mouse_map_y + y, floor));
-						}
+						check_y = y + 2;
+						break;
 					}
 				}
 			}

@@ -214,9 +214,9 @@ void BrushPalettePanel::OnPageChanged(wxChoicebookEvent& event) {
 }
 
 void BrushPalettePanel::OnSwitchIn() {
+	g_palettes.ActivatePalette(GetParentPalette());
+	g_gui.RestoreBrushSizeState(last_brush_size_state);
 	LoadCurrentContents();
-	g_gui.SetBrushSizeInternal(last_brush_size);
-	OnUpdateBrushSize(g_gui.GetBrushShape(), last_brush_size);
 }
 
 void BrushPalettePanel::OnClickAddTileset(wxCommandEvent& WXUNUSED(event)) {

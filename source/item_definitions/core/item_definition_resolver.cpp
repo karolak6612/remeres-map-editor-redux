@@ -1,7 +1,11 @@
 #include "item_definitions/core/item_definition_resolver.h"
+#include "item_definitions/formats/dat/dat_catalog.h"
 
+#include <algorithm>
 #include <format>
+#include <ranges>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace {
 	constexpr uint64_t flagMask(ItemFlag flag) {
@@ -43,16 +47,44 @@ namespace {
 			row.flags |= flagMask(ItemFlag::Tooltipable);
 		}
 	}
+
+	// Check if a DAT item is empty/invalid and should be skipped
+	bool isDatItemEmptyOrInvalid(const DatItemFragment& dat, const DatCatalog* catalog, ClientItemId client_id) {
+		// An item is considered "Empty" (placeholder) if ALL of these conditions are true:
+		// 1. Has exactly 1 sprite AND that sprite ID is 0
+		// 2. No minimap color
+		// 3. No light
+		// 4. No group assigned (ITEM_GROUP_NONE)
+		// 5. No type assigned (ITEM_TYPE_NONE)
+		if (catalog) {
+			const auto* entry = catalog->entry(client_id);
+			if (entry) {
+				bool hasValidSprite = (entry->numsprites > 0 && !entry->sprite_ids.empty() && entry->sprite_ids[0] != 0);
+				bool hasMinimapColor = (entry->minimap_color != 0);
+				bool hasLight = entry->has_light;
+				
+				if (!hasValidSprite && !hasMinimapColor && !hasLight &&
+					dat.group == ITEM_GROUP_NONE && dat.type == ITEM_TYPE_NONE) {
+					return true; // This is a placeholder item
+				}
+			} else {
+				// No catalog entry means no definition
+				return true;
+			}
+		}
+
+		return false;
+	}
 }
 
-bool ItemDefinitionResolver::resolve(const ItemDefinitionLoadInput& input, const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings) {
+bool ItemDefinitionResolver::resolve(const ItemDefinitionLoadInput& input, const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings, MissingItemReport* missingReport) {
 	rows.clear();
 	switch (input.mode) {
 		case ItemDefinitionMode::DatOtb:
-			return resolveDatOtb(fragments, rows, error, warnings);
+			return resolveDatOtb(input, fragments, rows, error, warnings, missingReport);
 		case ItemDefinitionMode::DatOnly:
 		case ItemDefinitionMode::Protobuf:
-			return resolveDatOnly(fragments, rows, error, warnings);
+			return resolveDatOnly(input, fragments, rows, error, warnings, missingReport);
 		case ItemDefinitionMode::DatSrv:
 			error = "Selected item definition mode is not implemented yet.";
 			return false;
@@ -61,13 +93,15 @@ bool ItemDefinitionResolver::resolve(const ItemDefinitionLoadInput& input, const
 	return false;
 }
 
-bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings) {
+bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionLoadInput& input, const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings, MissingItemReport* missingReport) {
 	rows.reserve(fragments.otb.size());
+
+	// Track which DAT client IDs are referenced by OTB
+	std::unordered_set<ClientItemId> dat_ids_referenced_by_otb;
 
 	for (const auto& [server_id, otb] : fragments.otb) {
 		ResolvedItemDefinitionRow row;
 		row.server_id = server_id;
-		row.client_id = otb.client_id;
 		row.group = otb.group;
 		row.type = otb.type;
 		row.flags = otb.flags;
@@ -76,7 +110,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 		row.slot_position = otb.slot_position;
 		row.weapon_type = otb.weapon_type;
 		row.classification = otb.classification;
-		row.ground_equivalent = otb.ground_equivalent;
+		row.border_base_ground_id = otb.border_base_ground_id;
 		row.border_group = otb.border_group;
 		row.weight = otb.weight;
 		row.attack = otb.attack;
@@ -90,20 +124,111 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 		row.name = otb.name;
 		row.description = otb.description;
 
-		const auto dat_it = fragments.dat.find(otb.client_id);
-		if (dat_it == fragments.dat.end()) {
-			error = wxString::FromUTF8(std::format("Missing DAT definition for client id {}", otb.client_id));
-			return false;
+		const auto xml_it = fragments.xml.find(server_id);
+		const ClientItemId effective_client_id = (xml_it != fragments.xml.end() && xml_it->second.client_id.has_value()) ? *xml_it->second.client_id : otb.client_id;
+		if (effective_client_id == 0) {
+			warnings.push_back(std::format("Skipping items.otb entry {} because it does not define a DAT client id.", server_id));
+			continue;
 		}
+
+		row.client_id = effective_client_id;
+
+		const auto dat_it = fragments.dat.find(effective_client_id);
+		if (dat_it == fragments.dat.end()) {
+			// DAT item truly doesn't exist - collect as missing
+			if (missingReport) {
+				missingReport->missing_in_dat.push_back({
+					.server_id = server_id,
+					.client_id = effective_client_id,
+					.name = otb.name,
+					.description = otb.description
+				});
+			} else {
+				error = wxString::FromUTF8(std::format("Missing DAT definition for client id {} (server id {}).", effective_client_id, server_id));
+				return false;
+			}
+			// Continue processing other items
+			continue;
+		}
+
+		// OTB has a mapping to DAT. This is a valid item regardless of whether it's empty or not.
+		// We add it to the rows so the editor recognizes the ID.
+		dat_ids_referenced_by_otb.insert(effective_client_id);
 		row.flags |= dat_it->second.flags & ~flagMask(ItemFlag::Moveable);
 
-		const auto xml_it = fragments.xml.find(server_id);
 		if (xml_it != fragments.xml.end()) {
 			applyXmlOverrides(xml_it->second, row);
 		}
 		finalizeDerivedProperties(row);
 
 		rows.push_back(std::move(row));
+	}
+
+	// Collect DAT items not referenced by OTB
+	if (missingReport) {
+		for (const auto& [client_id, dat] : fragments.dat) {
+			// Skip empty/invalid DAT items
+			if (isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
+				continue;
+			}
+			if (!dat_ids_referenced_by_otb.contains(client_id)) {
+				missingReport->missing_in_otb.push_back({
+					.server_id = 0,
+					.client_id = client_id,
+					.name = "",
+					.description = ""
+				});
+			}
+		}
+
+		// Collect XML entries that reference non-existent OTB server IDs
+		for (const auto& [server_id, xml] : fragments.xml) {
+			// Skip server-side fluid types and special items (IDs < 100)
+			if (server_id < 100) {
+				continue;
+			}
+			// If XML server_id already exists in OTB, it's valid
+			if (fragments.otb.contains(server_id)) {
+				continue;
+			}
+			// If XML entry has a client_id override that maps to an existing OTB entry, it's valid
+			if (xml.client_id.has_value()) {
+				bool foundInOtb = std::ranges::any_of(fragments.otb, [&](const auto& p) {
+					return p.second.client_id == xml.client_id.value();
+				});
+				if (foundInOtb) {
+					continue;
+				}
+			}
+			missingReport->xml_no_otb.push_back({
+				.server_id = server_id,
+				.client_id = xml.client_id.value_or(0),
+				.name = xml.name,
+				.description = xml.description
+			});
+		}
+
+		// Collect OTB entries that don't have XML entries (informational)
+		for (const auto& [server_id, otb] : fragments.otb) {
+			// Skip OTB entries with no client ID
+			if (otb.client_id == 0) {
+				continue;
+			}
+			// Skip entries where DAT definition doesn't exist (already reported)
+			if (!fragments.dat.contains(otb.client_id)) {
+				continue;
+			}
+			// Skip entries that have XML overrides
+			if (fragments.xml.find(server_id) != fragments.xml.end()) {
+				continue;
+			}
+			missingReport->otb_no_xml.push_back({
+				.server_id = server_id,
+				.client_id = otb.client_id,
+				.name = otb.name,
+				.description = otb.description
+			});
+		}
 	}
 
 	if (rows.empty()) {
@@ -113,7 +238,7 @@ bool ItemDefinitionResolver::resolveDatOtb(const ItemDefinitionFragments& fragme
 	return true;
 }
 
-bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings) {
+bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input, const ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings, MissingItemReport* missingReport) {
 	rows.reserve(fragments.dat.size());
 
 	std::unordered_map<ClientItemId, size_t> client_to_row;
@@ -121,6 +246,10 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionFragments& fragm
 	std::unordered_map<ClientItemId, ServerItemId> xml_server_by_client;
 	xml_server_by_client.reserve(fragments.xml.size());
 
+	// Track which DAT client IDs are used by XML
+	std::unordered_set<ClientItemId> dat_ids_used_by_xml;
+
+	// 1. Load all items from tibia.dat (Source of Truth)
 	for (const auto& [client_id, dat] : fragments.dat) {
 		ResolvedItemDefinitionRow row;
 		row.server_id = client_id;
@@ -141,16 +270,37 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionFragments& fragm
 		client_to_row[client_id] = rows.size() - 1;
 	}
 
+	// 2. Apply items.xml overrides
 	for (const auto& [server_id, xml] : fragments.xml) {
-		const ClientItemId client_id = xml.client_id.value_or(server_id);
-		const auto row_it = client_to_row.find(client_id);
-		if (row_it == client_to_row.end()) {
-			if (isLiquidMetadataEntry(server_id, xml)) {
-				continue;
-			}
-			warnings.push_back(std::format("Skipping items.xml entry {} in dat_only mode because DAT client id {} is missing.", server_id, client_id));
+		if (isLiquidMetadataEntry(server_id, xml)) {
 			continue;
 		}
+
+		// Skip server-side fluid types and special items (IDs < 100)
+		if (server_id < 100) {
+			continue;
+		}
+
+		const ClientItemId client_id = xml.client_id.value_or(server_id);
+		const auto row_it = client_to_row.find(client_id);
+		
+		if (row_it == client_to_row.end()) {
+			// XML item is missing from tibia.dat.
+			// Rule: Report only when id >= 100.
+			if (missingReport) {
+				missingReport->missing_in_dat.push_back({
+					.server_id = server_id,
+					.client_id = client_id,
+					.name = xml.name,
+					.description = xml.description
+				});
+			} else {
+				warnings.push_back(std::format("Skipping items.xml entry {} in dat_only mode because DAT client id {} is missing.", server_id, client_id));
+			}
+			continue;
+		}
+
+		// DAT item exists. Handle duplicate XML mappings.
 		const auto owner_it = xml_server_by_client.find(client_id);
 		if (owner_it != xml_server_by_client.end() && owner_it->second != server_id) {
 			warnings.push_back(std::format("Duplicate items.xml client id {} in dat_only mode for server ids {} and {}. Keeping the first mapping.", client_id, owner_it->second, server_id));
@@ -158,6 +308,7 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionFragments& fragm
 		}
 		if (owner_it == xml_server_by_client.end()) {
 			xml_server_by_client.emplace(client_id, server_id);
+			dat_ids_used_by_xml.insert(client_id);
 		}
 
 		ResolvedItemDefinitionRow& row = rows[row_it->second];
@@ -167,6 +318,23 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionFragments& fragm
 
 	for (auto& row : rows) {
 		finalizeDerivedProperties(row);
+	}
+
+	// 3. Report items in tibia.dat that are missing from items.xml
+	// Rule: Report if item is NOT empty. Skip if item is empty.
+	if (missingReport) {
+		for (const auto& [client_id, dat] : fragments.dat) {
+			if (!dat_ids_used_by_xml.contains(client_id)) {
+				if (!isDatItemEmptyOrInvalid(dat, input.dat_catalog, client_id)) {
+					missingReport->missing_in_otb.push_back({
+						.server_id = 0,
+						.client_id = client_id,
+						.name = "",
+						.description = ""
+					});
+				}
+			}
+		}
 	}
 
 	if (rows.empty()) {

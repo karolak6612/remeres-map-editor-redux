@@ -19,38 +19,69 @@
 
 #include "brushes/brush.h"
 
+#include "editor/editor.h"
 #include "map/tile.h"
 #include "map/tile_operations.h"
+#include "ui/gui.h"
+#include "ui/managers/minimap_manager.h"
 #include "game/creature.h"
 #include "game/house.h"
 #include "map/basemap.h"
 #include "map/map_region.h"
 #include "game/spawn.h"
-#include "brushes/ground/ground_brush.h"
-#include "brushes/wall/wall_brush.h"
-#include "brushes/carpet/carpet_brush.h"
-#include "brushes/table/table_brush.h"
-#include "game/town.h"
-#include "map/map.h"
-
 #include <ranges>
 #include <algorithm>
 #include <iterator>
 #include <memory>
-#include <numeric>
+
+namespace {
+	bool itemsMatch(const Item* lhs, const Item* rhs) {
+		if (lhs == rhs) {
+			return true;
+		}
+		if (!lhs || !rhs) {
+			return false;
+		}
+		if (lhs->getID() != rhs->getID() || lhs->getSubtype() != rhs->getSubtype()) {
+			return false;
+		}
+
+		const InvalidOTBMItemData* lhsInvalid = lhs->getInvalidOTBMData();
+		const InvalidOTBMItemData* rhsInvalid = rhs->getInvalidOTBMData();
+		if (static_cast<bool>(lhsInvalid) != static_cast<bool>(rhsInvalid)) {
+			return false;
+		}
+		if (lhsInvalid && rhsInvalid && *lhsInvalid != *rhsInvalid) {
+			return false;
+		}
+		return true;
+	}
+
+	uint32_t preservedNodeHeapSize(const PreservedOTBMNode& node) {
+		uint32_t bytes = static_cast<uint32_t>(node.rawPayload.capacity());
+		bytes += static_cast<uint32_t>(node.children.capacity() * sizeof(PreservedOTBMNode));
+		for (const auto& child : node.children) {
+			bytes += preservedNodeHeapSize(child);
+		}
+		return bytes;
+	}
+}
 
 Tile::Tile(int x, int y, int z) :
 	location(nullptr),
+	ownedLocation(new TileLocation()),
 	ground(nullptr),
 	house_id(0),
 	mapflags(0),
 	statflags(0),
 	minimapColor(INVALID_MINIMAP_COLOR) {
-	////
+	ownedLocation->setPosition(Position(x, y, z));
+	location = ownedLocation;
 }
 
 Tile::Tile(TileLocation& loc) :
 	location(&loc),
+	ownedLocation(nullptr),
 	ground(nullptr),
 	house_id(0),
 	mapflags(0),
@@ -59,32 +90,42 @@ Tile::Tile(TileLocation& loc) :
 	////
 }
 
-Position Tile::getPosition() {
-	return location->getPosition();
+void Tile::setLocation(TileLocation* where) {
+	if (ownedLocation) {
+		delete ownedLocation;
+		ownedLocation = nullptr;
+	}
+	location = where;
 }
 
-const Position Tile::getPosition() const {
-	return location->getPosition();
+Position Tile::getPosition() const {
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition() : Position();
 }
 
 int Tile::getX() const {
-	return location->getPosition().x;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition().x : 0;
 }
 
 int Tile::getY() const {
-	return location->getPosition().y;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition().y : 0;
 }
 
 int Tile::getZ() const {
-	return location->getPosition().z;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getPosition().z : 0;
 }
 
 HouseExitList* Tile::getHouseExits() {
-	return location ? location->getHouseExits() : nullptr;
+	TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getHouseExits() : nullptr;
 }
 
 const HouseExitList* Tile::getHouseExits() const {
-	return location ? location->getHouseExits() : nullptr;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc ? loc->getHouseExits() : nullptr;
 }
 
 bool Tile::isHouseExit() const {
@@ -101,11 +142,59 @@ bool Tile::hasHouseExit(uint32_t exit) const {
 }
 
 Tile::~Tile() {
+	if (ownedLocation) {
+		delete ownedLocation;
+		ownedLocation = nullptr;
+	}
 	// Smart pointers handle deletion
+}
+
+std::unique_ptr<Tile> Tile::deepCopy() const {
+	std::unique_ptr<Tile> copy;
+	const TileLocation* loc = location ? location : ownedLocation;
+	if (loc) {
+		copy = std::make_unique<Tile>(loc->getPosition().x, loc->getPosition().y, loc->getPosition().z);
+		std::unique_ptr<TileLocation> clonedLocation = loc->clone();
+		if (copy->ownedLocation) {
+			delete copy->ownedLocation;
+		}
+		copy->ownedLocation = clonedLocation.release();
+		copy->location = copy->ownedLocation;
+	} else {
+		// Detached tile: keep a safe owned location even if we do not have one yet.
+		copy = std::make_unique<Tile>(0, 0, 0);
+	}
+	if (ground) {
+		copy->ground = ground->deepCopy();
+	}
+	for (const auto& item : items) {
+		copy->items.push_back(item->deepCopy());
+	}
+	if (creature) {
+		copy->creature = creature->deepCopy();
+	}
+	if (spawn) {
+		copy->spawn = spawn->deepCopy();
+	}
+	if (npc_spawn) {
+		copy->npc_spawn = npc_spawn->deepCopy();
+	}
+	copy->zone_ids = zone_ids;
+	copy->house_id = house_id;
+	copy->mapflags = mapflags;
+	copy->statflags = statflags;
+	copy->minimapColor = minimapColor;
+	if (invalidZones) {
+		copy->invalidZones = std::make_unique<InvalidZoneState>(*invalidZones);
+	}
+	return copy;
 }
 
 uint32_t Tile::memsize() const {
 	uint32_t mem = sizeof(*this);
+	if (ownedLocation) {
+		mem += sizeof(TileLocation);
+	}
 	if (ground) {
 		mem += ground->memsize();
 	}
@@ -116,6 +205,17 @@ uint32_t Tile::memsize() const {
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
 	mem += static_cast<uint32_t>(zone_ids.capacity() * sizeof(uint16_t));
+	if (invalidZones) {
+		mem += sizeof(InvalidZoneState);
+		mem += static_cast<uint32_t>(invalidZones->opaqueTileAttributes.capacity() * sizeof(OpaqueTileAttributeRecord));
+		for (const auto& attribute : invalidZones->opaqueTileAttributes) {
+			mem += static_cast<uint32_t>(attribute.rawBytes.capacity());
+		}
+		mem += static_cast<uint32_t>(invalidZones->opaqueChildNodes.capacity() * sizeof(PreservedOTBMNode));
+		for (const auto& node : invalidZones->opaqueChildNodes) {
+			mem += preservedNodeHeapSize(node);
+		}
+	}
 
 	return mem;
 }
@@ -144,17 +244,21 @@ int Tile::size() const {
 	if (mapflags) {
 		++sz;
 	}
-	if (location) {
-		if (location->getHouseExits()) {
+	if (hasInvalidZones()) {
+		++sz;
+	}
+	const TileLocation* loc = location ? location : ownedLocation;
+	if (loc) {
+		if (loc->getHouseExits()) {
 			++sz;
 		}
-		if (location->getSpawnCount()) {
+		if (loc->getSpawnCount()) {
 			++sz;
 		}
-		if (location->getNpcSpawnCount()) {
+		if (loc->getNpcSpawnCount()) {
 			++sz;
 		}
-		if (location->getWaypointCount()) {
+		if (loc->getWaypointCount()) {
 			++sz;
 		}
 	}
@@ -229,25 +333,31 @@ Item* Tile::getItemAt(int index) const {
 	return nullptr;
 }
 
+void Tile::setGround(std::unique_ptr<Item> item) {
+	if (!item) {
+		ground.reset();
+		TileOperations::update(this);
+		return;
+	}
+
+	ASSERT(item->isGroundTile());
+	ground = std::move(item);
+	TileOperations::update(this);
+}
+
 void Tile::addItem(std::unique_ptr<Item> item) {
 	if (!item) {
 		return;
 	}
 	if (item->isGroundTile()) {
-		ground = std::move(item);
-		TileOperations::update(this);
+		// Generic insertion preserves literal tile identity. Terrain policy lives in brushes/ground.
+		setGround(std::move(item));
 		return;
 	}
-
-	uint16_t gid = item->getGroundEquivalent();
 	auto it = items.begin();
-
-	if (gid != 0) {
-		ground = Item::Create(gid);
-		TileOperations::update(this);
-		return;
-		// At the very bottom!
-	} else if (item->isAlwaysOnBottom()) {
+	
+	// At the very bottom!
+	if (item->isAlwaysOnBottom()) {
 		// Find insertion point for always-on-bottom items
 		// They are sorted by TopOrder, and come before normal items.
 		it = std::ranges::find_if(items, [&](const std::unique_ptr<Item>& i) {
@@ -284,6 +394,24 @@ uint8_t Tile::getMiniMapColor() const {
 	}
 
 	return 0;
+}
+
+void Tile::modify() {
+	statflags |= TILESTATE_MODIFIED;
+	minimapColor = INVALID_MINIMAP_COLOR;
+
+	if (!ownedLocation) {
+		if (Editor* editor = g_gui.GetCurrentEditor()) {
+			const Position position = getPosition();
+			if (editor->map.getTile(position) == this) {
+				g_minimap.MarkTileDirty(editor->map, position);
+			}
+		}
+	}
+
+	if (isSelected()) {
+		TileOperations::markSelectionChanged(this);
+	}
 }
 
 bool tilePositionLessThan(const Tile* a, const Tile* b) {
@@ -354,7 +482,8 @@ void Tile::setHouseID(uint32_t newHouseId) {
 }
 
 bool Tile::isTownExit(Map& map) const {
-	return location->getTownCount() > 0;
+	const TileLocation* loc = location ? location : ownedLocation;
+	return loc && loc->getTownCount() > 0;
 }
 
 bool Tile::isContentEqual(const Tile* other) const {
@@ -362,18 +491,21 @@ bool Tile::isContentEqual(const Tile* other) const {
 		return false;
 	}
 
+	if (static_cast<bool>(invalidZones) != static_cast<bool>(other->invalidZones)) {
+		return false;
+	}
+	if (invalidZones && other->invalidZones && *invalidZones != *other->invalidZones) {
+		return false;
+	}
+
 	// Compare ground
-	if (ground != nullptr && other->ground != nullptr) {
-		if (ground->getID() != other->ground->getID() || ground->getSubtype() != other->ground->getSubtype()) {
-			return false;
-		}
-	} else if (ground != other->ground) {
+	if (!itemsMatch(ground.get(), other->ground.get())) {
 		return false;
 	}
 
 	// Compare items
 	if (!std::ranges::equal(items, other->items, [](const std::unique_ptr<Item>& it1, const std::unique_ptr<Item>& it2) {
-		return it1->getID() == it2->getID() && it1->getSubtype() == it2->getSubtype();
+		return itemsMatch(it1.get(), it2.get());
 	})) {
 		return false;
 	}

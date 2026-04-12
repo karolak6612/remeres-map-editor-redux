@@ -7,6 +7,7 @@
 
 #include "app/main.h"
 #include "app/client_version.h"
+#include "item_definitions/core/missing_item_report.h"
 
 class VersionManager {
 public:
@@ -29,10 +30,22 @@ public:
 		return loaded_version.empty() ? nullptr : ClientVersion::get(loaded_version);
 	}
 
+	// Access the missing items report from the last version load
+	const MissingItemReport& getLastMissingItems() const {
+		return last_missing_items;
+	}
+
+	// Check if the last loaded version uses OTB
+	bool lastLoadHasOtb() const {
+		return last_load_has_otb;
+	}
+
 private:
 	bool LoadDataFiles(wxString& error, std::vector<std::string>& warnings);
 
 	ClientVersionID loaded_version;
+	MissingItemReport last_missing_items;
+	bool last_load_has_otb = true;
 };
 
 extern VersionManager g_version;

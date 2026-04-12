@@ -172,9 +172,6 @@ namespace Config {
 		RECENT_EDITED_MAP_PATH,
 		RECENT_EDITED_MAP_POSITION,
 
-		FIND_ITEM_MODE,
-		JUMP_TO_ITEM_MODE,
-
 		SHOW_TOOLBAR_STANDARD,
 		SHOW_TOOLBAR_BRUSHES,
 		SHOW_TOOLBAR_POSITION,
@@ -210,6 +207,24 @@ namespace Config {
 		ANTI_ALIASING,
 		SCREEN_SHADER,
 
+		ADVANCED_ITEM_FINDER_TYPE_FILTERS,
+		ADVANCED_ITEM_FINDER_PROPERTY_FILTERS,
+		ADVANCED_ITEM_FINDER_INTERACTION_FILTERS,
+		ADVANCED_ITEM_FINDER_VISUAL_FILTERS,
+		ADVANCED_ITEM_FINDER_QUERY_TEXT,
+		ADVANCED_ITEM_FINDER_SELECTED_KIND,
+		ADVANCED_ITEM_FINDER_SELECTED_SERVER_ID,
+		ADVANCED_ITEM_FINDER_SELECTED_CREATURE,
+		ADVANCED_ITEM_FINDER_WINDOW_X,
+		ADVANCED_ITEM_FINDER_WINDOW_Y,
+		ADVANCED_ITEM_FINDER_WINDOW_WIDTH,
+		ADVANCED_ITEM_FINDER_WINDOW_HEIGHT,
+		SEARCH_RESULTS_LIMIT,
+		SHOW_INVALID_TILES,
+		SHOW_INVALID_ZONES,
+
+		// Add new settings at the end to preserve enum ordering for persisted settings
+		SHOW_MISSING_ITEMS_WARNING,
 		DEFAULT_NPC_SPAWNTIME,
 		CURRENT_NPC_SPAWN_RADIUS,
 
@@ -224,10 +239,12 @@ public:
 
 	bool getBoolean(uint32_t key) const;
 	int getInteger(uint32_t key) const;
+	uint32_t getUnsignedInteger(uint32_t key) const;
 	float getFloat(uint32_t key) const;
 	std::string getString(uint32_t key) const;
 
 	void setInteger(uint32_t key, int newval);
+	void setUnsignedInteger(uint32_t key, uint32_t newval);
 	void setFloat(uint32_t key, float newval);
 	void setString(uint32_t key, std::string newval);
 
@@ -246,7 +263,7 @@ public:
 		std::string str();
 
 	private:
-		std::variant<std::monostate, int, float, std::string> val;
+		std::variant<std::monostate, int, uint32_t, float, std::string> val;
 
 		friend class Settings;
 	};

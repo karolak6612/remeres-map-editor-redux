@@ -1799,6 +1799,8 @@ constexpr std::string_view IMAGE_WINDOW_HATCH_SMALL = "png/window_hatch_small.pn
 
 constexpr std::string_view IMAGE_GEM_EDIT = "png/gem_edit.png";
 constexpr std::string_view IMAGE_GEM_MOVE = "png/gem_move.png";
+constexpr std::string_view IMAGE_PLACE_CREATURE = "png/place_creature.png";
+constexpr std::string_view IMAGE_PLACE_SPAWN = "png/place_spawn.png";
 constexpr std::string_view IMAGE_EDITOR_ICON = "icon/editor_icon.png";
 constexpr std::string_view IMAGE_NO_LOGOUT = "png/no_logout.png";
 constexpr std::string_view IMAGE_NO_LOGOUT_SMALL = "png/no_logout_small.png";

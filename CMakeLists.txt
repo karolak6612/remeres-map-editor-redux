@@ -54,6 +54,9 @@ find_package(glad CONFIG REQUIRED)
 find_package(glm CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(tomlplusplus CONFIG REQUIRED)
+find_package(Lua REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+find_package(cpr CONFIG REQUIRED)
 
 # nanovg: try vcpkg/Conan first, fallback to ext/nanovg
 find_package(nanovg CONFIG QUIET)
@@ -70,13 +73,13 @@ endif()
 
 include(source/CMakeLists.txt)
 
-set(RME_APPEARANCES_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/protobuf/protobuf/appearances.proto")
+set(RME_APPEARANCES_PROTO "${CMAKE_CURRENT_SOURCE_DIR}/source/protobuf/appearances.proto")
 protobuf_generate_cpp(RME_PROTO_SRCS RME_PROTO_HDRS "${RME_APPEARANCES_PROTO}")
 
 # Removed WIN32 to enable Console subsystem for persistent debugging logs
 add_executable(rme ${rme_H} ${rme_SRC} ${RME_PROTO_SRCS} ${RME_PROTO_HDRS})
 
-set_target_properties(rme PROPERTIES CXX_STANDARD 20)
+set_target_properties(rme PROPERTIES CXX_STANDARD 23)
 set_target_properties(rme PROPERTIES CXX_STANDARD_REQUIRED ON)
 target_compile_definitions(rme PRIVATE WXWIN_COMPATIBILITY_3_3 NANOVG_GL3)
  
@@ -102,11 +105,11 @@ endif()
 target_include_directories(rme PRIVATE
 	${Boost_INCLUDE_DIRS}
 	${OPENGL_INCLUDE_DIR}
-
 	${ZLIB_INCLUDE_DIR}
 	${Protobuf_INCLUDE_DIRS}
 	${LIBLZMA_INCLUDE_DIRS}
 	${CMAKE_CURRENT_BINARY_DIR}
+	${LUA_INCLUDE_DIR}
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 )
 
@@ -142,6 +145,9 @@ target_link_libraries(rme PRIVATE glm::glm)
 target_link_libraries(rme PRIVATE nanovg::nanovg)
 target_link_libraries(rme PRIVATE spdlog::spdlog)
 target_link_libraries(rme PRIVATE tomlplusplus::tomlplusplus)
+target_link_libraries(rme PRIVATE sol2::sol2)
+target_link_libraries(rme PRIVATE cpr::cpr)
+target_link_libraries(rme PRIVATE ${LUA_LIBRARIES})
 
 set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT "rme")
 

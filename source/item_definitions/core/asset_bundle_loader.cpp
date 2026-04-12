@@ -64,7 +64,7 @@ bool AssetBundleLoader::load(const AssetLoadRequest& request, AssetBundle& bundl
 	}
 
 	ItemDefinitionsLoader definitions_loader;
-	if (!definitions_loader.assemble(toDefinitionInput(request, bundle.dat_catalog), bundle.fragments, bundle.rows, error, warnings)) {
+	if (!definitions_loader.assemble(toDefinitionInput(request, bundle.dat_catalog), bundle.fragments, bundle.rows, error, warnings, &bundle.missing_items)) {
 		return false;
 	}
 

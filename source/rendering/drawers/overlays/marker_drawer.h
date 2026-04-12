@@ -16,7 +16,7 @@ public:
 	MarkerDrawer();
 	~MarkerDrawer();
 
-	void draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, Waypoint* waypoint, uint32_t current_house_id, Editor& editor, const DrawingOptions& options);
+	void draw(SpriteBatch& sprite_batch, SpriteDrawer* drawer, int draw_x, int draw_y, const Tile* tile, const Waypoint* waypoint, uint32_t current_house_id, Editor& editor, const DrawingOptions& options);
 };
 
 #endif

@@ -26,6 +26,7 @@ public:
 	void OnExportTilesets(wxCommandEvent& event);
 
 	void OnReloadDataFiles(wxCommandEvent& event);
+	void OnMissingItemsReport(wxCommandEvent& event);
 	void OnPreferences(wxCommandEvent& event);
 	void OnListExtensions(wxCommandEvent& event);
 	void OnGotoWebsite(wxCommandEvent& event);

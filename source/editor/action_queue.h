@@ -19,6 +19,7 @@
 #define RME_EDITOR_ACTION_QUEUE_H
 
 #include <deque>
+#include <string>
 #include <vector>
 #include <memory>
 #include "editor/action.h"
@@ -53,6 +54,14 @@ public:
 	bool canRedo() {
 		return current < actions.size();
 	}
+
+	size_t getCurrentIndex() const {
+		return current;
+	}
+	size_t getSize() const {
+		return actions.size();
+	}
+	std::string getActionName(size_t index) const;
 
 protected:
 	size_t current;

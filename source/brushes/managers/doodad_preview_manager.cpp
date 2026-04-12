@@ -12,6 +12,7 @@
 #include "ui/gui.h"
 #include <cmath>
 #include <numbers>
+#include <vector>
 
 DoodadPreviewManager g_doodad_preview;
 
@@ -38,25 +39,24 @@ void DoodadPreviewManager::FillBuffer() {
 		return;
 	}
 
-	int object_count = 0;
-	int area;
-	if (g_brush_manager.GetBrushShape() == BRUSHSHAPE_SQUARE) {
-		area = 2 * g_brush_manager.GetBrushSize();
-		area = area * area + 1;
-	} else {
-		if (g_brush_manager.GetBrushSize() == 1) {
-			// There is a huge deviation here with the other formula.
-			area = 5;
-		} else {
-			area = static_cast<int>(0.5 + g_brush_manager.GetBrushSize() * g_brush_manager.GetBrushSize() * std::numbers::pi);
+	const BrushFootprint footprint = g_brush_manager.GetBrushFootprint();
+	std::vector<Position> valid_offsets;
+	for (int y = footprint.min_offset_y; y <= footprint.max_offset_y; ++y) {
+		for (int x = footprint.min_offset_x; x <= footprint.max_offset_x; ++x) {
+			if (footprint.containsOffset(x, y)) {
+				valid_offsets.emplace_back(x, y, 0);
+			}
 		}
 	}
+
+	const int area = std::max(1, static_cast<int>(valid_offsets.size()));
+	int object_count = 0;
 	const int object_range = (g_brush_manager.UseCustomThickness() ? static_cast<int>(area * g_brush_manager.GetCustomThicknessMod()) : brush->getThickness() * area / std::max(1, brush->getThicknessCeiling()));
 	const int final_object_count = std::max(1, object_range + random(object_range));
 
 	Position center_pos(0x8000, 0x8000, 0x8);
 
-	if (g_brush_manager.GetBrushSize() > 0 && !brush->oneSizeFitsAll()) {
+	if (!footprint.isSingleTile() && !brush->oneSizeFitsAll()) {
 		while (object_count < final_object_count) {
 			int retries = 0;
 			bool exit = false;
@@ -64,30 +64,9 @@ void DoodadPreviewManager::FillBuffer() {
 			// Try to place objects 5 times
 			while (retries < 5 && !exit) {
 
-				int pos_retries = 0;
-				int xpos = 0, ypos = 0;
-				bool found_pos = false;
-				if (g_brush_manager.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
-					while (pos_retries < 5 && !found_pos) {
-						xpos = random(-g_brush_manager.GetBrushSize(), g_brush_manager.GetBrushSize());
-						ypos = random(-g_brush_manager.GetBrushSize(), g_brush_manager.GetBrushSize());
-						float distance = std::hypot(static_cast<float>(xpos), static_cast<float>(ypos));
-						if (distance < g_brush_manager.GetBrushSize() + 0.005) {
-							found_pos = true;
-						} else {
-							++pos_retries;
-						}
-					}
-				} else {
-					found_pos = true;
-					xpos = random(-g_brush_manager.GetBrushSize(), g_brush_manager.GetBrushSize());
-					ypos = random(-g_brush_manager.GetBrushSize(), g_brush_manager.GetBrushSize());
-				}
-
-				if (!found_pos) {
-					++retries;
-					continue;
-				}
+				const Position& offset = valid_offsets[static_cast<size_t>(random(0, area - 1))];
+				const int xpos = offset.x;
+				const int ypos = offset.y;
 
 				// Decide whether the zone should have a composite or several single objects.
 				bool fail = false;

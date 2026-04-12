@@ -39,6 +39,7 @@ bool ReplacementEngine::ResolveReplacement(uint16_t& resultId, const Replacement
 #include "editor/editor.h"
 #include "ui/gui.h"
 #include "map/tile.h"
+#include "map/tile_operations.h"
 #include "game/item.h"
 #include <algorithm>
 #include <map>
@@ -57,6 +58,7 @@ void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<Rep
 	}
 
 	auto tileProcessor = [this, &ruleMap, editor](Tile* tile) {
+		bool changed = false;
 		auto finder = [this, &ruleMap](Map&, Tile*, Item* item, long long) {
 			auto it = ruleMap.find(item->getID());
 			if (it != ruleMap.end()) {
@@ -67,20 +69,22 @@ void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<Rep
 					} else {
 						item->setID(newId);
 					}
+					return true;
 				}
 			}
+			return false;
 		};
 
 		long long dummy = 0;
 		if (tile->ground) {
-			finder(editor->map, tile, tile->ground.get(), ++dummy);
+			changed = finder(editor->map, tile, tile->ground.get(), ++dummy) || changed;
 		}
 
 		std::vector<Container*> containers;
 		for (const auto& item : tile->items) {
 			containers.clear();
 			Container* container = item->asContainer();
-			finder(editor->map, tile, item.get(), ++dummy);
+			changed = finder(editor->map, tile, item.get(), ++dummy) || changed;
 
 			if (container) {
 				containers.push_back(container);
@@ -90,13 +94,18 @@ void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<Rep
 					auto& v = container->getVector();
 					for (const auto& i : v) {
 						Container* c = i->asContainer();
-						finder(editor->map, tile, i.get(), ++dummy);
+						changed = finder(editor->map, tile, i.get(), ++dummy) || changed;
 						if (c) {
 							containers.push_back(c);
 						}
 					}
 				}
 			}
+		}
+
+		if (changed) {
+			TileOperations::update(tile);
+			tile->modify();
 		}
 	};
 
@@ -115,20 +124,10 @@ void ReplacementEngine::ExecuteReplacement(Editor* editor, const std::vector<Rep
 		}
 	} else if (scope == ReplaceScope::AllMap) {
 		// Use All Map scope
-		auto globalFinder = [this, &ruleMap](Map&, Tile*, Item* item, long long) {
-			auto it = ruleMap.find(item->getID());
-			if (it != ruleMap.end()) {
-				uint16_t newId;
-				if (ResolveReplacement(newId, *it->second)) {
-					if (newId == TRASH_ITEM_ID) {
-						item->setID(0);
-					} else {
-						item->setID(newId);
-					}
-				}
-			}
+		auto allMapTileProcessor = [&tileProcessor](Map&, Tile* tile, long long) {
+			tileProcessor(tile);
 		};
-		foreach_ItemOnMap(editor->map, globalFinder, false);
+		foreach_TileOnMap(editor->map, allMapTileProcessor);
 	}
 
 	editor->map.doChange();

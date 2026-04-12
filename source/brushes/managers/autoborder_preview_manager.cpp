@@ -68,13 +68,14 @@ bool AutoborderPreviewManager::CheckPreconditions(const Position& pos) {
 void AutoborderPreviewManager::CopyMapArea(Editor& editor, const Position& pos) {
 	preview_buffer_map->clear();
 
-	int brush_size = g_gui.GetBrushSize();
-	int range = brush_size + 3; // +3 to cover borders and neighbors of borders
+	const BrushFootprint footprint = g_gui.GetBrushFootprint();
+	const int range_x = footprint.maxReachX() + 3;
+	const int range_y = footprint.maxReachY() + 3;
 
-	int start_x = pos.x - range;
-	int end_x = pos.x + range;
-	int start_y = pos.y - range;
-	int end_y = pos.y + range;
+	int start_x = pos.x - range_x;
+	int end_x = pos.x + range_x;
+	int start_y = pos.y - range_y;
+	int end_y = pos.y + range_y;
 
 	// Copy area from editor map to buffer map
 	int z = pos.z;
@@ -178,13 +179,14 @@ void AutoborderPreviewManager::ApplyBorders(const std::vector<Position>& tilesto
 }
 
 void AutoborderPreviewManager::PruneUnchanged(Editor& editor, const Position& pos) {
-	int brush_size = g_gui.GetBrushSize();
-	int range = brush_size + 3;
+	const BrushFootprint footprint = g_gui.GetBrushFootprint();
+	const int range_x = footprint.maxReachX() + 3;
+	const int range_y = footprint.maxReachY() + 3;
 
-	int start_x = pos.x - range;
-	int end_x = pos.x + range;
-	int start_y = pos.y - range;
-	int end_y = pos.y + range;
+	int start_x = pos.x - range_x;
+	int end_x = pos.x + range_x;
+	int start_y = pos.y - range_y;
+	int end_y = pos.y + range_y;
 
 	// Prune tiles that haven't changed to avoid "shade" overlay
 	// Prune tiles that haven't changed to avoid "shade" overlay

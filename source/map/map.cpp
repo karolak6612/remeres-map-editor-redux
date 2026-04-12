@@ -28,6 +28,7 @@
 #include <ranges>
 #include <unordered_set>
 #include <unordered_map>
+#include <atomic>
 #include <format>
 #include <spdlog/spdlog.h>
 
@@ -96,6 +97,10 @@ uint16_t ZoneRegistry::nextFreeId() const {
 	return candidate;
 }
 
+namespace {
+	static std::atomic_uint64_t g_nextMapGeneration { 1 };
+}
+
 Map::Map() :
 	BaseMap(),
 	width(512),
@@ -103,7 +108,8 @@ Map::Map() :
 	houses(*this),
 	has_changed(false),
 	unnamed(false),
-	waypoints(*this) {
+	waypoints(*this),
+	generation(g_nextMapGeneration.fetch_add(1, std::memory_order_relaxed)) {
 	spdlog::info("Map created [Map={}]", static_cast<void*>(this));
 	// Earliest version possible
 	// Caller is responsible for converting us to proper version
@@ -113,6 +119,7 @@ Map::Map() :
 
 void Map::initializeEmpty() {
 	spdlog::info("Map::initializeEmpty [Map={}]", static_cast<void*>(this));
+	generation = g_nextMapGeneration.fetch_add(1, std::memory_order_relaxed);
 	height = 2048;
 	width = 2048;
 
@@ -140,6 +147,7 @@ bool Map::open(const std::string& file) {
 		return true; // Do not reopen ourselves!
 	}
 
+	generation = g_nextMapGeneration.fetch_add(1, std::memory_order_relaxed);
 	tilecount = 0;
 
 	IOMapOTBM maploader(getVersion());
@@ -176,6 +184,10 @@ bool Map::convert(const ConversionMap& rm, bool showdialog) {
 
 void Map::cleanInvalidTiles(bool showdialog) {
 	MapConverter::cleanInvalidTiles(*this, showdialog);
+}
+
+void Map::cleanInvalidZones(bool showdialog) {
+	MapConverter::cleanInvalidZones(*this, showdialog);
 }
 
 void Map::convertHouseTiles(uint32_t fromId, uint32_t toId) {

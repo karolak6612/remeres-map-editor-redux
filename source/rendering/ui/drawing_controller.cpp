@@ -45,16 +45,17 @@ DrawingController::~DrawingController() {
 void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_down, bool ctrl_down, bool alt_down) {
 	Brush* brush = g_gui.GetCurrentBrush();
 	if (brush) {
+		const BrushFootprint footprint = g_gui.GetBrushFootprint();
 		if (shift_down && brush->canDrag()) {
 			dragging_draw = true;
 		} else {
-			if (g_gui.GetBrushSize() == 0 && !brush->oneSizeFitsAll()) {
+			if (footprint.isSingleTile() && !brush->oneSizeFitsAll()) {
 				drawing = true;
 			} else {
 				drawing = g_gui.GetCurrentBrush()->canSmear();
 			}
 			if (brush->is<WallBrush>()) {
-				if (alt_down && g_gui.GetBrushSize() == 0) {
+				if (alt_down && footprint.isSingleTile()) {
 					// z0mg, just clicked a tile, shift variaton.
 					if (ctrl_down) {
 						editor.undraw(mouse_map_pos, alt_down);
@@ -66,10 +67,10 @@ void DrawingController::HandleClick(const Position& mouse_map_pos, bool shift_do
 					PositionVector tilestodraw;
 					PositionVector tilestoborder;
 
-					int start_map_x = mouse_map_pos.x - g_gui.GetBrushSize();
-					int start_map_y = mouse_map_pos.y - g_gui.GetBrushSize();
-					int end_map_x = mouse_map_pos.x + g_gui.GetBrushSize();
-					int end_map_y = mouse_map_pos.y + g_gui.GetBrushSize();
+					const int start_map_x = mouse_map_pos.x + footprint.min_offset_x;
+					const int start_map_y = mouse_map_pos.y + footprint.min_offset_y;
+					const int end_map_x = mouse_map_pos.x + footprint.max_offset_x;
+					const int end_map_y = mouse_map_pos.y + footprint.max_offset_y;
 
 					for (int y = start_map_y - 1; y <= end_map_y + 1; ++y) {
 						for (int x = start_map_x - 1; x <= end_map_x + 1; ++x) {
@@ -245,19 +246,7 @@ void DrawingController::HandleDrag(const Position& mouse_map_pos, bool shift_dow
 			}
 		} else { // No borders
 			PositionVector tilestodraw;
-
-			for (int y = -g_gui.GetBrushSize(); y <= g_gui.GetBrushSize(); y++) {
-				for (int x = -g_gui.GetBrushSize(); x <= g_gui.GetBrushSize(); x++) {
-					if (g_gui.GetBrushShape() == BRUSHSHAPE_SQUARE) {
-						tilestodraw.push_back(Position(mouse_map_pos.x + x, mouse_map_pos.y + y, mouse_map_pos.z));
-					} else if (g_gui.GetBrushShape() == BRUSHSHAPE_CIRCLE) {
-						double distance = sqrt(double(x * x) + double(y * y));
-						if (distance < g_gui.GetBrushSize() + 0.005) {
-							tilestodraw.push_back(Position(mouse_map_pos.x + x, mouse_map_pos.y + y, mouse_map_pos.z));
-						}
-					}
-				}
-			}
+			BrushUtility::GetTilesToDraw(mouse_map_pos.x, mouse_map_pos.y, mouse_map_pos.z, &tilestodraw, nullptr);
 			if (ctrl_down) {
 				editor.undraw(tilestodraw, alt_down);
 			} else {
@@ -292,10 +281,10 @@ void DrawingController::HandleRelease(const Position& mouse_map_pos, bool shift_
 				int map_y = start_map_y + (end_map_y - start_map_y) / 2;
 
 				int width = std::min(g_settings.getInteger(Config::MAX_SPAWN_RADIUS), ((end_map_x - start_map_x) / 2 + (end_map_y - start_map_y) / 2) / 2);
-				int old = g_gui.GetBrushSize();
+				const BrushSizeState previous_size_state = g_gui.GetBrushSizeState();
 				g_gui.SetBrushSize(width);
 				editor.draw(Position(map_x, map_y, mouse_map_pos.z), alt_down);
-				g_gui.SetBrushSize(old);
+				g_gui.RestoreBrushSizeState(previous_size_state);
 			} else {
 				PositionVector tilestodraw;
 				PositionVector tilestoborder;

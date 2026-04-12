@@ -22,7 +22,7 @@ namespace {
 	}
 }
 
-bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings) const {
+bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemDefinitionFragments& fragments, std::vector<ResolvedItemDefinitionRow>& rows, wxString& error, std::vector<std::string>& warnings, MissingItemReport* missingReport) const {
 	const ItemDefinitionRecipe& recipe = ItemDefinitionRecipeRegistry::get(input.mode);
 	if (!recipe.runnable) {
 		error = "Selected item definition mode is not implemented yet.";
@@ -71,7 +71,7 @@ bool ItemDefinitionsLoader::assemble(const ItemDefinitionLoadInput& input, ItemD
 		}
 	}
 
-	if (!ItemDefinitionResolver::resolve(input, fragments, rows, error, warnings)) {
+	if (!ItemDefinitionResolver::resolve(input, fragments, rows, error, warnings, missingReport)) {
 		return false;
 	}
 

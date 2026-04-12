@@ -232,6 +232,10 @@ Brush* PaletteWindow::GetSelectedBrush() const {
 	return panel->GetSelectedBrush();
 }
 
+Brush* PaletteWindow::GetSelectedCreatureBrush() const {
+	return creature_palette ? creature_palette->GetSelectedCreatureBrush() : nullptr;
+}
+
 int PaletteWindow::GetSelectedBrushSize() const {
 	if (!choicebook) {
 		return 0;

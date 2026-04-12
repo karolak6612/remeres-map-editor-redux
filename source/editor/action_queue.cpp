@@ -18,6 +18,7 @@
 #include "app/main.h"
 
 #include "editor/action_queue.h"
+#include "lua/lua_script_manager.h"
 #include "editor/action.h"
 #include "editor/editor.h"
 #include "app/settings.h"
@@ -46,6 +47,33 @@ std::unique_ptr<Action> ActionQueue::createAction(BatchAction* batch) {
 
 std::unique_ptr<BatchAction> ActionQueue::createBatch(ActionIdentifier ident) {
 	return std::unique_ptr<BatchAction>(new BatchAction(editor, ident));
+}
+
+std::string ActionQueue::getActionName(size_t index) const {
+	if (index >= actions.size()) {
+		return "Unknown";
+	}
+	const BatchAction* batch = actions[index].get();
+	if (batch && !batch->getLabel().empty()) {
+		return batch->getLabel();
+	}
+	switch (batch->getType()) {
+		case ACTION_MOVE: return "Move";
+		case ACTION_REMOTE: return "Remote";
+		case ACTION_SELECT: return "Select";
+		case ACTION_DELETE_TILES: return "Delete";
+		case ACTION_CUT_TILES: return "Cut";
+		case ACTION_PASTE_TILES: return "Paste";
+		case ACTION_RANDOMIZE: return "Randomize";
+		case ACTION_BORDERIZE: return "Borderize";
+		case ACTION_DRAW: return "Draw";
+		case ACTION_SWITCHDOOR: return "Switch Door";
+		case ACTION_ROTATE_ITEM: return "Rotate Item";
+		case ACTION_REPLACE_ITEMS: return "Replace Items";
+		case ACTION_CHANGE_PROPERTIES: return "Change Properties";
+		case ACTION_LUA_SCRIPT: return "Lua Script";
+		default: return "Unknown";
+	}
 }
 
 void ActionQueue::resetTimer() {
@@ -107,6 +135,7 @@ void ActionQueue::addBatch(std::unique_ptr<BatchAction> batch, int stacking_dela
 		actions.push_back(std::move(batch));
 		current++;
 	} while (false);
+	g_luaScripts.emit("actionChange");
 }
 
 void ActionQueue::addAction(std::unique_ptr<Action> action, int stacking_delay) {
@@ -125,6 +154,7 @@ void ActionQueue::undo() {
 		BatchAction* batch = actions[current].get();
 		batch->undo();
 		editor.notifyStateChange();
+		g_luaScripts.emit("actionChange");
 	}
 }
 
@@ -134,10 +164,12 @@ void ActionQueue::redo() {
 		batch->redo();
 		current++;
 		editor.notifyStateChange();
+		g_luaScripts.emit("actionChange");
 	}
 }
 
 void ActionQueue::clear() {
 	actions.clear();
 	current = 0;
+	g_luaScripts.emit("actionChange");
 }

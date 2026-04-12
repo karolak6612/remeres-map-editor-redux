@@ -16,6 +16,7 @@
 #include "app/settings.h"
 #include "app/managers/version_manager.h"
 #include "ui/gui.h"
+#include "lua/lua_script_manager.h"
 
 #include <fstream>
 #include <ctime>
@@ -123,10 +124,10 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 	{
 		std::string n = nstr(FileSystem::GetLocalDataDirectory()) + ".saving.txt";
 		std::ofstream f(n.c_str(), std::ios::trunc | std::ios::out);
-		f << backup_otbm << std::endl
-		  << backup_house << std::endl
-		  << backup_spawn << std::endl
-		  << backup_waypoint << std::endl;
+		f << backup_otbm << '\n'
+		  << backup_house << '\n'
+		  << backup_spawn << '\n'
+		  << backup_waypoint << '\n';
 	}
 
 	{
@@ -389,7 +390,6 @@ void EditorPersistence::importHouses(Editor& editor, Map& imported_map, const Po
 						imported_house->setID(new_id);
 					}
 				} else {
-					house_id_map[imported_house->getID()] = imported_house->getID();
 				}
 				break;
 			}
@@ -400,6 +400,8 @@ void EditorPersistence::importHouses(Editor& editor, Map& imported_map, const Po
 				imported_house->setID(new_id);
 				break;
 			}
+			default:
+				break;
 		}
 
 		if (skip) {
@@ -500,12 +502,13 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 
 	bool resizemap = false;
 	bool resize_asked = false;
-	int newsize_x = editor.map.getWidth(), newsize_y = editor.map.getHeight();
+	int newsize_x = editor.map.getWidth();
+	int newsize_y = editor.map.getHeight();
 	int discarded_tiles = 0;
 
 	for (MapIterator mit = imported_map.begin(); mit != imported_map.end(); ++mit) {
 		if (tiles_merged % 8092 == 0) {
-			g_gui.SetLoadDone(int(100.0 * tiles_merged / tiles_to_import));
+			g_gui.SetLoadDone(static_cast<int>(100.0 * static_cast<double>(tiles_merged) / static_cast<double>(tiles_to_import)));
 		}
 		++tiles_merged;
 
@@ -520,26 +523,21 @@ bool EditorPersistence::importMap(Editor& editor, FileName filename, int import_
 			if (resize_asked) {
 				++discarded_tiles;
 				continue;
+			}
+			
+			resize_asked = true;
+			int ret = DialogUtil::PopupDialog("Collision", "The imported tiles are outside the current map scope. Do you want to resize the map? (Else additional tiles will be removed)", wxYES | wxNO);
+			if (ret == wxID_YES) {
+				// ...
+				resizemap = true;
 			} else {
-				resize_asked = true;
-				int ret = DialogUtil::PopupDialog("Collision", "The imported tiles are outside the current map scope. Do you want to resize the map? (Else additional tiles will be removed)", wxYES | wxNO);
-
-				if (ret == wxID_YES) {
-					// ...
-					resizemap = true;
-				} else {
-					++discarded_tiles;
-					continue;
-				}
+				++discarded_tiles;
+				continue;
 			}
 		}
 
-		if (new_pos.x > newsize_x) {
-			newsize_x = new_pos.x;
-		}
-		if (new_pos.y > newsize_y) {
-			newsize_y = new_pos.y;
-		}
+		newsize_x = std::max(newsize_x, int(new_pos.x));
+		newsize_y = std::max(newsize_y, int(new_pos.y));
 
 		std::unique_ptr<Tile> moved_tile = imported_map.setTile(import_tile->getPosition(), nullptr);
 		TileLocation* location = editor.map.createTileL(new_pos);

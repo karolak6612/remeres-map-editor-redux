@@ -3,6 +3,9 @@
 
 #include "map/map.h"
 #include "map/tile.h"
+#include "brushes/brush.h"
+#include "brushes/creature/creature_brush.h"
+#include "game/creature.h"
 #include "game/item.h"
 #include "game/complexitem.h"
 #include "ui/gui.h"
@@ -12,28 +15,29 @@ namespace EditorOperations {
 	constexpr int SEARCH_UPDATE_INTERVAL = 0x8000;
 
 	struct ItemSearcher {
-		ItemSearcher(uint16_t itemId, uint32_t maxCount) :
-			itemId(itemId), maxCount(maxCount) { }
+		ItemSearcher(uint16_t itemId, uint32_t maxCount, uint32_t offset = 0) :
+			itemId(itemId), maxCount(maxCount), offset(offset) { }
 
 		uint16_t itemId;
 		uint32_t maxCount;
+		uint32_t offset;
+		uint32_t totalMatches = 0;
 		std::vector<std::pair<Tile*, Item*>> result;
 
-		bool limitReached() const {
-			return result.size() >= (size_t)maxCount;
-		}
-
 		void operator()(Map& map, Tile* tile, Item* item, long long done) {
-			if (result.size() >= (size_t)maxCount) {
-				return;
-			}
-
 			if (done % SEARCH_UPDATE_INTERVAL == 0) {
 				g_gui.SetLoadDone((unsigned int)(100 * done / map.getTileCount()));
 			}
 
 			if (item->getID() == itemId) {
-				result.push_back(std::make_pair(tile, item));
+				++totalMatches;
+				if (totalMatches <= offset) {
+					return;
+				}
+
+				if (result.size() < static_cast<size_t>(maxCount)) {
+					result.emplace_back(tile, item);
+				}
 			}
 		}
 	};
@@ -133,6 +137,34 @@ namespace EditorOperations {
 			}
 
 			return false;
+		}
+	};
+
+	struct CreatureSearcher {
+		CreatureSearcher(const Brush* creatureBrush, uint32_t maxCount, uint32_t offset = 0) :
+			creatureBrush(creatureBrush), maxCount(maxCount), offset(offset) { }
+
+		const Brush* creatureBrush;
+		uint32_t maxCount;
+		uint32_t offset;
+		uint32_t totalMatches = 0;
+		std::vector<std::pair<Tile*, Creature*>> result;
+
+		void operator()(Map& map, Tile* tile, long long done) {
+			if (done % SEARCH_UPDATE_INTERVAL == 0) {
+				g_gui.SetLoadDone(static_cast<uint32_t>(100 * done / map.getTileCount()));
+			}
+
+			if (tile->creature != nullptr && static_cast<const Brush*>(tile->creature->getBrush()) == creatureBrush) {
+				++totalMatches;
+				if (totalMatches <= offset) {
+					return;
+				}
+
+				if (result.size() < static_cast<size_t>(maxCount)) {
+					result.emplace_back(tile, tile->creature.get());
+				}
+			}
 		}
 	};
 }

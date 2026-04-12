@@ -35,7 +35,7 @@ struct OtbItemFragment {
 	uint16_t slot_position = SLOTP_HAND;
 	uint8_t weapon_type = WEAPON_NONE;
 	uint8_t classification = 0;
-	uint16_t ground_equivalent = 0;
+	uint16_t border_base_ground_id = 0;
 	uint32_t border_group = 0;
 	float weight = 0.0f;
 	int attack = 0;
@@ -83,7 +83,7 @@ struct ResolvedItemDefinitionRow {
 	uint16_t slot_position = SLOTP_HAND;
 	uint8_t weapon_type = WEAPON_NONE;
 	uint8_t classification = 0;
-	uint16_t ground_equivalent = 0;
+	uint16_t border_base_ground_id = 0;
 	uint32_t border_group = 0;
 	float weight = 0.0f;
 	int attack = 0;

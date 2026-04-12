@@ -6,10 +6,14 @@
 #include "ui/menubar_loader.h"
 #include "ui/gui_ids.h"
 #include "util/image_manager.h"
+#include "ui/gui.h"
+#include "ui/main_frame.h"
+#include "ui/main_menubar.h"
+#include "ui/menubar/script_menu_handler.h"
 #include <wx/wx.h>
 #include <algorithm>
 
-bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, RecentFilesManager& recentFilesManager, std::vector<std::string>& warnings, wxString& error) {
+bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, MainMenuBar* mb, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, RecentFilesManager& recentFilesManager, std::vector<std::string>& warnings, wxString& error) {
 	// Open the XML file
 	pugi::xml_document doc;
 	pugi::xml_parse_result result = doc.load_file(path.GetFullPath().mb_str());
@@ -32,7 +36,7 @@ bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, std::unordere
 	// Load succeded
 	for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
 		// For each child node, load it
-		wxObject* i = LoadItem(menuNode, nullptr, items, actions, recentFilesManager, warnings, error);
+		wxObject* i = LoadItem(menuNode, nullptr, mb, items, actions, recentFilesManager, warnings, error);
 		wxMenu* m = dynamic_cast<wxMenu*>(i);
 		if (m) {
 			menubar->Append(m, m->GetTitle());
@@ -50,7 +54,7 @@ bool MenuBarLoader::Load(const FileName& path, wxMenuBar* menubar, std::unordere
 	return true;
 }
 
-wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, RecentFilesManager& recentFilesManager, std::vector<std::string>& warnings, wxString& error) {
+wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, MainMenuBar* mb, std::unordered_map<MenuBar::ActionID, std::list<wxMenuItem*>>& items, const std::unordered_map<std::string, std::unique_ptr<MenuBar::Action>>& actions, RecentFilesManager& recentFilesManager, std::vector<std::string>& warnings, wxString& error) {
 	pugi::xml_attribute attribute;
 
 	const std::string& nodeName = as_lower_str(node.name());
@@ -65,10 +69,17 @@ wxObject* MenuBarLoader::LoadItem(pugi::xml_node node, wxMenu* parent, std::unor
 		wxMenu* menu = newd wxMenu;
 		if ((attribute = node.attribute("special")) && std::string(attribute.as_string()) == "RECENT_FILES") {
 			recentFilesManager.UseMenu(menu);
+		} else if ((attribute = node.attribute("special")) && std::string(attribute.as_string()) == "SCRIPTS") {
+			for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
+				LoadItem(menuNode, menu, mb, items, actions, recentFilesManager, warnings, error);
+			}
+			if (mb && mb->scriptMenuHandler) {
+				mb->scriptMenuHandler->LoadScriptsMenu(menu);
+			}
 		} else {
 			for (pugi::xml_node menuNode = node.first_child(); menuNode; menuNode = menuNode.next_sibling()) {
 				// Load an add each item in order
-				LoadItem(menuNode, menu, items, actions, recentFilesManager, warnings, error);
+				LoadItem(menuNode, menu, mb, items, actions, recentFilesManager, warnings, error);
 			}
 		}
 

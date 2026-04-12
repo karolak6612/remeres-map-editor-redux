@@ -30,6 +30,12 @@ void ToolOptionsWindow::SetPaletteType(PaletteType type) {
 	}
 }
 
+void ToolOptionsWindow::SetActiveBrush(Brush* brush) {
+	if (surface) {
+		surface->SetActiveBrush(brush);
+	}
+}
+
 void ToolOptionsWindow::UpdateBrushSize(BrushShape shape, int size) {
 	if (surface) {
 		surface->UpdateBrushSize(shape, size);

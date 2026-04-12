@@ -58,6 +58,7 @@ public:
 	CopyBuffer& copybuffer;
 	GroundBrush* replace_brush;
 	Map map; // The map that is being edited
+	Map* getMap() { return &map; }
 
 	std::function<void()> onStateChange;
 	void notifyStateChange();

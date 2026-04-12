@@ -68,6 +68,12 @@ EditorPage::EditorPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 		"Show warnings when the editor detects duplicate ids that could break houses, quests, or actions.",
 		g_settings.getBoolean(Config::WARN_FOR_DUPLICATE_ID)
 	);
+	missing_items_warn_chkbox = PreferencesLayout::AddCheckBoxRow(
+		safety_section,
+		"Show missing items warning on load",
+		"Display a summary of missing item definitions after loading a map. Items are always tracked and available via File -> Missing Items Report...",
+		g_settings.getBoolean(Config::SHOW_MISSING_ITEMS_WARNING)
+	);
 	allow_multiple_orderitems_chkbox = PreferencesLayout::AddCheckBoxRow(
 		safety_section,
 		"Prevent toporder conflicts in RAW placement",
@@ -101,6 +107,7 @@ EditorPage::EditorPage(wxWindow* parent) : ScrollablePreferencesPage(parent) {
 void EditorPage::Apply() {
 	g_settings.setInteger(Config::GROUP_ACTIONS, group_actions_chkbox->GetValue());
 	g_settings.setInteger(Config::WARN_FOR_DUPLICATE_ID, duplicate_id_warn_chkbox->GetValue());
+	g_settings.setInteger(Config::SHOW_MISSING_ITEMS_WARNING, missing_items_warn_chkbox->GetValue());
 	g_settings.setInteger(Config::HOUSE_BRUSH_REMOVE_ITEMS, house_remove_chkbox->GetValue());
 	g_settings.setInteger(Config::AUTO_ASSIGN_DOORID, auto_assign_doors_chkbox->GetValue());
 	g_settings.setInteger(Config::ERASER_LEAVE_UNIQUE, eraser_leave_unique_chkbox->GetValue());

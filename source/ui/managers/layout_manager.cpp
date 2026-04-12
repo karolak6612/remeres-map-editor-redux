@@ -143,6 +143,13 @@ void LayoutManager::LoadPerspective() {
 		}
 	}
 
+	if (g_gui.tool_options) {
+		g_gui.tool_options->ReloadSettings();
+		if (PaletteWindow* palette = g_gui.GetPalette()) {
+			g_gui.ActivatePalette(palette);
+		}
+	}
+
 	if (g_settings.getInteger(Config::INGAME_PREVIEW_VISIBLE)) {
 		g_preview.Create();
 		if (g_preview.GetWindow()) {

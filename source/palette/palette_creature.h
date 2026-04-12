@@ -23,29 +23,21 @@
 #include "palette/panels/brush_panel.h"
 #include "ui/controls/sortable_list_box.h"
 
-class wxComboBox;
-
 class CreaturePalettePanel : public PalettePanel {
 public:
 	CreaturePalettePanel(wxWindow* parent, wxWindowID id = wxID_ANY);
 	~CreaturePalettePanel() override = default;
 
 	PaletteType GetType() const override;
+	[[nodiscard]] Brush* GetSelectedCreatureBrush() const;
 
-	// Select the first brush
 	void SelectFirstBrush() override;
-	// Returns the currently selected brush (first brush if panel is not loaded)
 	Brush* GetSelectedBrush() const override;
-	// Returns the currently selected brush size
 	int GetSelectedBrushSize() const override;
-	// Select the brush in the parameter, this only changes the look of the panel
 	bool SelectBrush(const Brush* whatbrush) override;
 
-	// Updates the palette window to use the current brush size
 	void OnUpdateBrushSize(BrushShape shape, int size) override;
-	// Called when this page is displayed
 	void OnSwitchIn() override;
-	// Called sometimes?
 	void OnUpdate() override;
 	void OnRefreshTilesets();
 
@@ -58,39 +50,10 @@ protected:
 	void SelectCreature(std::string name);
 
 public:
-	// Event handling
-	void OnChangeSpawnTime(wxSpinEvent& event);
-	void OnChangeSpawnSize(wxSpinEvent& event);
-	void OnChangeNpcSpawnTime(wxSpinEvent& event);
-	void OnChangeNpcSpawnSize(wxSpinEvent& event);
-	void OnZoneNameChanged(wxCommandEvent& event);
-
 	void OnSwitchingPage(wxChoicebookEvent& event);
 	void OnPageChanged(wxChoicebookEvent& event);
-	void OnClickCreatureBrushButton(wxCommandEvent& event);
-	void OnClickSpawnBrushButton(wxCommandEvent& event);
-	void OnClickNpcSpawnBrushButton(wxCommandEvent& event);
-	void OnClickZoneBrushButton(wxCommandEvent& event);
 
-protected:
-	void SelectCreatureBrush();
-	void SelectSpawnBrush();
-	void SelectNpcSpawnBrush();
-	void SelectZoneBrush();
-	void RefreshZoneChoices();
-
-	wxChoicebook* choicebook;
-	wxToggleButton* creature_brush_button;
-	wxToggleButton* spawn_brush_button;
-	wxToggleButton* npc_spawn_brush_button;
-	wxToggleButton* zone_brush_button;
-	wxSpinCtrl* creature_spawntime_spin;
-	wxSpinCtrl* spawn_size_spin;
-	wxSpinCtrl* npc_spawntime_spin;
-	wxSpinCtrl* npc_spawn_size_spin;
-	wxComboBox* zone_name_combo;
-
-	bool handling_event;
+	wxChoicebook* choicebook = nullptr;
 };
 
 #endif

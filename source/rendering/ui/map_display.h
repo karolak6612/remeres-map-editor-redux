@@ -48,9 +48,9 @@ class MapCanvas : public wxGLCanvas {
 	std::unique_ptr<NVGcontext, NVGDeleter> m_nvg;
 
 public:
-	MapCanvas(MapWindow* parent, Editor& editor, int* attriblist);
+	MapCanvas(wxWindow* parent, Editor& editor, int* attriblist);
 	~MapCanvas() override;
-	void Reset();
+	virtual void Reset();
 
 	// All events
 	void OnPaint(wxPaintEvent& event);
@@ -79,31 +79,32 @@ public:
 	void OnMousePropertiesClick(wxMouseEvent& event);
 	void OnMousePropertiesRelease(wxMouseEvent& event);
 
-	void Refresh();
+	virtual void Refresh();
 
-	void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
+	virtual void ScreenToMap(int screen_x, int screen_y, int* map_x, int* map_y);
 	void MouseToMap(int* map_x, int* map_y) {
 		ScreenToMap(cursor_x, cursor_y, map_x, map_y);
 	}
-	void GetScreenCenter(int* map_x, int* map_y);
+	virtual void GetScreenCenter(int* map_x, int* map_y);
 
-	void StartPasting();
-	void EndPasting();
-	void EnterSelectionMode();
-	void EnterDrawingMode();
+	virtual void StartPasting();
+	virtual void EndPasting();
+	virtual void EnterSelectionMode();
+	virtual void EnterDrawingMode();
 
-	void UpdatePositionStatus(int x = -1, int y = -1);
-	void UpdateZoomStatus();
+	virtual void UpdatePositionStatus(int x = -1, int y = -1);
+	virtual void UpdateZoomStatus();
+	void SyncCursorHoverState();
 
-	void ChangeFloor(int new_floor);
+	virtual void ChangeFloor(int new_floor);
 	int GetFloor() const {
 		return floor;
 	}
 	double GetZoom() const {
 		return zoom;
 	}
-	void SetZoom(double value);
-	void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
+	virtual void SetZoom(double value);
+	virtual void GetViewBox(int* view_scroll_x, int* view_scroll_y, int* screensize_x, int* screensize_y) const;
 
 	Position GetCursorPosition() const;
 

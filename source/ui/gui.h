@@ -19,6 +19,7 @@
 #include "ui/managers/minimap_manager.h"
 #include "brushes/managers/doodad_preview_manager.h"
 #include "brushes/managers/autoborder_preview_manager.h"
+#include "brushes/brush_footprint.h"
 #include "ui/managers/status_manager.h"
 #include "ui/managers/search_manager.h"
 #include "ui/managers/welcome_manager.h"
@@ -126,6 +127,9 @@ public:
 	void DestroyLoadBar() {
 		g_loading.DestroyLoadBar();
 	}
+	bool IsLoading() const {
+		return g_loading.IsLoading();
+	}
 
 	void UpdateMenubar();
 
@@ -169,8 +173,8 @@ public:
 	SearchResultWindow* ShowSearchWindow() {
 		return g_search.ShowSearchWindow();
 	}
-	void HideSearchWindow() {
-		g_search.HideSearchWindow();
+	void DestroySearchWindow() {
+		g_search.DestroySearchWindow();
 	}
 
 	// Minimap
@@ -218,19 +222,33 @@ public:
 	Brush* GetCurrentBrush() const;
 	BrushShape GetBrushShape() const;
 	int GetBrushSize() const;
+	int GetBrushSizeX() const;
+	int GetBrushSizeY() const;
+	bool IsExactBrushSize() const;
+	bool IsBrushAspectRatioLocked() const;
+	BrushSizeState GetBrushSizeState() const;
+	BrushFootprint GetBrushFootprint() const;
 	int GetBrushVariation() const;
 	int GetSpawnTime() const;
 
 	// Additional brush parameters
 	void SetSpawnTime(int time);
 
-	void SetLightIntensity(float v);
-	float GetLightIntensity() const;
+	void SetLightIntensity(int v);
+	int GetLightIntensity() const;
 
 	void SetAmbientLightLevel(float v);
 	float GetAmbientLightLevel() const;
+	void SetServerLightColor(int v);
+	int GetServerLightColor() const;
 	void SetBrushSize(int nz);
 	void SetBrushSizeInternal(int nz);
+	void SetBrushSizeX(int nz);
+	void SetBrushSizeY(int nz);
+	void SetBrushSizeAxes(int x, int y);
+	void SetExactBrushSize(bool exact);
+	void SetBrushAspectRatioLocked(bool locked);
+	void RestoreBrushSizeState(const BrushSizeState& state);
 	void SetBrushShape(BrushShape bs);
 	void SetBrushVariation(int nz);
 	void SetBrushThickness(int low, int ceil);

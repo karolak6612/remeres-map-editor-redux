@@ -18,6 +18,7 @@
 #ifndef RME_MAP_H_
 #define RME_MAP_H_
 
+#include <cstdint>
 #include "map/basemap.h"
 #include "map/tile.h"
 #include "game/town.h"
@@ -68,6 +69,7 @@ public:
 
 	// Operations on the entire map
 	void cleanInvalidTiles(bool showdialog = false);
+	void cleanInvalidZones(bool showdialog = false);
 	void convertHouseTiles(uint32_t fromId, uint32_t toId);
 
 	// Save a bmp image of the minimap
@@ -178,6 +180,10 @@ public:
 		return waypointfile;
 	}
 
+	uint64_t getGeneration() const {
+		return generation;
+	}
+
 	void flagAsNamed() {
 		unnamed = false;
 	}
@@ -230,6 +236,9 @@ protected:
 
 public:
 	Waypoints waypoints;
+
+private:
+	uint64_t generation;
 };
 
 template <typename ForeachType>

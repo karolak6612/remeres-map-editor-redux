@@ -89,10 +89,10 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 			}
 
 			if ((attribute = childNode.attribute("ground_equivalent"))) {
-				uint16_t ground_equivalent = attribute.as_ushort();
+				const uint16_t border_base_ground_id = attribute.as_ushort();
 
 				// Load from inline definition
-				const auto definition = g_item_definitions.get(ground_equivalent);
+				const auto definition = g_item_definitions.get(border_base_ground_id);
 				if (!definition) {
 					warnings.push_back("Invalid id of ground dependency equivalent item.\n");
 					continue;
@@ -106,7 +106,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 
 				auto autoBorder = std::make_unique<AutoBorder>(0);
 				autoBorder->ground = true;
-				autoBorder->load(childNode, warnings, &brush, ground_equivalent);
+				autoBorder->load(childNode, warnings, &brush, border_base_ground_id);
 				brush.owned_optional_border = std::move(autoBorder);
 				brush.optional_border = brush.owned_optional_border.get();
 			} else {
@@ -134,8 +134,8 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 					continue;
 				}
 
-				uint16_t ground_equivalent = attribute.as_ushort();
-				const auto definition = g_item_definitions.get(ground_equivalent);
+				const uint16_t border_base_ground_id = attribute.as_ushort();
+				const auto definition = g_item_definitions.get(border_base_ground_id);
 				bool valid = true;
 				if (!definition) {
 					warnings.push_back("Invalid id of ground dependency equivalent item.\n");
@@ -151,7 +151,7 @@ bool GroundBrushLoader::load(GroundBrush& brush, pugi::xml_node node, std::vecto
 				if (valid) {
 					newAutoBorder = std::make_unique<AutoBorder>(0);
 					newAutoBorder->ground = true;
-					newAutoBorder->load(childNode, warnings, &brush, ground_equivalent);
+					newAutoBorder->load(childNode, warnings, &brush, border_base_ground_id);
 					autoBorderPtr = newAutoBorder.get();
 				} else {
 					continue;
