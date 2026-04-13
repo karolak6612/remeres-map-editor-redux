@@ -71,8 +71,8 @@ namespace {
 
 		const auto draw_offset = sprite.getDrawOffset();
 		const wxSize composite_size = sprite.GetSize();
-		const int left = screen_x - draw_offset.first - std::max(0, composite_size.GetWidth() - TILE_SIZE);
-		const int top = screen_y - draw_offset.second - std::max(0, composite_size.GetHeight() - TILE_SIZE);
+		const int left = screen_x - draw_offset.first;
+		const int top = screen_y - draw_offset.second;
 		const int width = std::max(1, composite_size.GetWidth());
 		const int height = std::max(1, composite_size.GetHeight());
 		light_buffer.AddScreenLight(left + width / 2, top + height / 2, view, light);

@@ -248,8 +248,16 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 				warnings.push_back(std::format("Couldn't load {}: {}", npcs_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
 			}
 		}
-		if (monsters_xml_path.FileExists() && npcs_xml_path.FileExists() && !monsters_ok && !npcs_ok) {
-			error = "Couldn't load monsters.xml or npcs.xml for the selected client version.";
+		if ((!monsters_ok || !npcs_ok) && creatures_xml_path.FileExists()) {
+			if (!g_creatures.loadFromXML(creatures_xml_path, true, creatures_error, warnings)) {
+				warnings.push_back(std::format("Couldn't load {}: {}", creatures_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+			} else {
+				monsters_ok = true;
+				npcs_ok = true;
+			}
+		}
+		if (!monsters_ok && !npcs_ok) {
+			error = "Couldn't load monsters.xml, npcs.xml, or creatures.xml for the selected client version.";
 			g_loading.DestroyLoadBar();
 			last_missing_items = {};
 			last_load_has_otb = true;

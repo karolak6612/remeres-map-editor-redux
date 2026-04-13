@@ -73,6 +73,7 @@ void ZonePropertyPanel::SetTile(Tile* tile, Map* map) {
 
 void ZonePropertyPanel::RefreshZoneLists() {
 	assigned_zones->Clear();
+	assigned_zone_ids.clear();
 	zone_input->Clear();
 
 	if (current_map) {
@@ -86,6 +87,7 @@ void ZonePropertyPanel::RefreshZoneLists() {
 		for (uint16_t zone_id : current_tile->getZones()) {
 			const std::string zone_name = current_map->zones.findName(zone_id);
 			assigned_zones->Append(wxstr(zone_name.empty() ? std::to_string(zone_id) : zone_name));
+			assigned_zone_ids.push_back(zone_id);
 		}
 	}
 
@@ -127,18 +129,19 @@ void ZonePropertyPanel::OnRemoveZone(wxCommandEvent& event) {
 		return;
 	}
 
-	const std::string zone_name = nstr(assigned_zones->GetStringSelection());
-	const auto zone_id = current_map->zones.findId(zone_name);
-	if (!zone_id) {
+	const int selection = assigned_zones->GetSelection();
+	if (selection < 0 || static_cast<size_t>(selection) >= assigned_zone_ids.size()) {
 		return;
 	}
+	const uint16_t zone_id = assigned_zone_ids[static_cast<size_t>(selection)];
+	const std::string zone_name = current_map->zones.findName(zone_id);
 
 	if (!g_gui.GetCurrentEditor()) {
 		return;
 	}
 
 	auto new_tile = TileOperations::deepCopy(current_tile, *current_map);
-	new_tile->removeZone(*zone_id);
+	new_tile->removeZone(zone_id);
 
 	ApplyTileChange(std::move(new_tile));
 	zone_input->SetValue(wxstr(zone_name));
@@ -164,6 +167,13 @@ void ZonePropertyPanel::OnAssignedZoneSelected(wxCommandEvent& event) {
 		return;
 	}
 
-	zone_input->SetValue(assigned_zones->GetStringSelection());
-	g_brush_manager.SetSelectedZone(nstr(zone_input->GetValue()));
+	const int selection = assigned_zones->GetSelection();
+	if (selection < 0 || static_cast<size_t>(selection) >= assigned_zone_ids.size()) {
+		return;
+	}
+
+	const uint16_t zone_id = assigned_zone_ids[static_cast<size_t>(selection)];
+	const std::string zone_name = current_map ? current_map->zones.findName(zone_id) : std::string {};
+	zone_input->SetValue(wxstr(zone_name.empty() ? std::to_string(zone_id) : zone_name));
+	g_brush_manager.SetSelectedZone(zone_name);
 }

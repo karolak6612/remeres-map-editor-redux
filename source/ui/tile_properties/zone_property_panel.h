@@ -6,6 +6,7 @@
 #define RME_UI_ZONE_PROPERTY_PANEL_H_
 
 #include <memory>
+#include <vector>
 #include <wx/combobox.h>
 #include <wx/listbox.h>
 #include <wx/panel.h>
@@ -31,6 +32,7 @@ private:
 
 	Tile* current_tile = nullptr;
 	Map* current_map = nullptr;
+	std::vector<uint16_t> assigned_zone_ids;
 	wxListBox* assigned_zones = nullptr;
 	wxComboBox* zone_input = nullptr;
 	wxButton* add_zone_button = nullptr;

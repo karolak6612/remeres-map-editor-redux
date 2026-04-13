@@ -246,7 +246,19 @@ bool SpriteArchive::loadSheetPixels(const ProtobufSheet& sheet) const {
 		return false;
 	}
 
-	std::vector<uint8_t> buffer((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+	file.seekg(0, std::ios::end);
+	const std::streamsize size = file.tellg();
+	if (size <= 0) {
+		spdlog::error("SpriteArchive: protobuf sprite sheet {} is empty", sheet.path);
+		return false;
+	}
+
+	file.seekg(0, std::ios::beg);
+	std::vector<uint8_t> buffer(static_cast<size_t>(size));
+	if (!file.read(reinterpret_cast<char*>(buffer.data()), size)) {
+		spdlog::error("SpriteArchive: failed to read protobuf sprite sheet {}", sheet.path);
+		return false;
+	}
 	if (buffer.empty()) {
 		spdlog::error("SpriteArchive: protobuf sprite sheet {} is empty", sheet.path);
 		return false;

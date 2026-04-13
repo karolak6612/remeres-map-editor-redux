@@ -17,7 +17,7 @@ namespace {
 		FileName normalized(filename);
 		normalized.Normalize(wxPATH_NORM_ABSOLUTE | wxPATH_NORM_DOTS | wxPATH_NORM_TILDE);
 		std::string path_key = normalized.GetFullPath().ToStdString();
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 		std::transform(path_key.begin(), path_key.end(), path_key.begin(), [](unsigned char ch) {
 			return static_cast<char>(std::tolower(ch));
 		});

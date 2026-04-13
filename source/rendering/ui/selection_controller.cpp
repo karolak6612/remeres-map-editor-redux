@@ -23,6 +23,7 @@
 namespace {
 	enum class TileSelectionTargetKind {
 		None,
+		Tile,
 		Spawn,
 		NpcSpawn,
 		Creature,
@@ -31,6 +32,7 @@ namespace {
 
 	struct TileSelectionTarget {
 		TileSelectionTargetKind kind = TileSelectionTargetKind::None;
+		Tile* tile = nullptr;
 		Item* item = nullptr;
 		Spawn* spawn = nullptr;
 		Creature* creature = nullptr;
@@ -41,6 +43,8 @@ namespace {
 
 		[[nodiscard]] bool isSelected() const {
 			switch (kind) {
+				case TileSelectionTargetKind::Tile:
+					return tile && tile->isSelected();
 				case TileSelectionTargetKind::Spawn:
 				case TileSelectionTargetKind::NpcSpawn:
 					return spawn && spawn->isSelected();
@@ -73,11 +77,24 @@ namespace {
 			// can still target the tile's top item through selection mode.
 			return TileSelectionTarget { .kind = TileSelectionTargetKind::Item, .item = item };
 		}
+		if (!tile->getZones().empty()) {
+			return TileSelectionTarget { .kind = TileSelectionTargetKind::Tile, .tile = tile };
+		}
 		return {};
+	}
+
+	bool isTileSelectionTargetSelected(const Editor& editor, const TileSelectionTarget& target) {
+		if (target.kind == TileSelectionTargetKind::Tile) {
+			return std::ranges::find(editor.selection.getTiles(), target.tile) != editor.selection.getTiles().end();
+		}
+		return target.isSelected();
 	}
 
 	void addTileSelectionTarget(Selection& selection, Tile* tile, const TileSelectionTarget& target) {
 		switch (target.kind) {
+			case TileSelectionTargetKind::Tile:
+				selection.add(tile);
+				break;
 			case TileSelectionTargetKind::Spawn:
 			case TileSelectionTargetKind::NpcSpawn:
 				selection.add(tile, target.spawn);
@@ -95,6 +112,9 @@ namespace {
 
 	void removeTileSelectionTarget(Selection& selection, Tile* tile, const TileSelectionTarget& target) {
 		switch (target.kind) {
+			case TileSelectionTargetKind::Tile:
+				selection.remove(tile);
+				break;
 			case TileSelectionTargetKind::Spawn:
 			case TileSelectionTargetKind::NpcSpawn:
 				selection.remove(tile, target.spawn);
@@ -117,7 +137,7 @@ namespace {
 		}
 
 		editor.selection.start();
-		if (target.isSelected()) {
+		if (isTileSelectionTargetSelected(editor, target)) {
 			removeTileSelectionTarget(editor.selection, tile, target);
 		} else {
 			addTileSelectionTarget(editor.selection, tile, target);
@@ -132,7 +152,7 @@ namespace {
 		if (!target.exists()) {
 			return false;
 		}
-		if (only_if_unselected && target.isSelected()) {
+		if (only_if_unselected && isTileSelectionTargetSelected(editor, target)) {
 			return false;
 		}
 

@@ -420,7 +420,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 }
 
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
-	if (map.getVersion().otbm < MAP_OTBM_5 && (!map.npc_spawns.empty() || !map.zones.empty() || hasZoneAssignments(map))) {
+	if (map.getVersion().otbm < MAP_OTBM_5 && (!map.spawnnpcfile.empty() || !map.zonefile.empty() || !map.npc_spawns.empty() || !map.zones.empty() || hasZoneAssignments(map))) {
 		error("OTBM %d cannot store NPC spawn or zone data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
 		return false;
 	}

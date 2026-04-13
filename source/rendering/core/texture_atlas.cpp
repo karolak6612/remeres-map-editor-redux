@@ -111,6 +111,7 @@ bool TextureAtlas::addLayer() {
 		err = glGetError();
 		if (err != GL_NO_ERROR) {
 			spdlog::error("TextureAtlas: glCopyImageSubData failed (err={}). Texture data lost!", err);
+			return false;
 		}
 
 		texture_id_ = std::move(new_texture);
