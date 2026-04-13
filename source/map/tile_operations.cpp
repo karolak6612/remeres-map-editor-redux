@@ -182,6 +182,7 @@ namespace TileOperations {
 		for (uint16_t zone_id : src->zone_ids) {
 			dest->addZone(zone_id);
 		}
+		src->zone_ids.clear();
 		if (src->invalidZones) {
 			auto& dest_invalid_zones = dest->getOrCreateInvalidZones();
 			auto& src_invalid_zones = *src->invalidZones;

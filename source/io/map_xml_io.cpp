@@ -282,6 +282,10 @@ bool MapXMLIO::loadNpcSpawns(Map& map, pugi::xml_document& doc) {
 		if (!tile) {
 			tile = map.createTile(spawnPosition.x, spawnPosition.y, spawnPosition.z);
 		}
+		if (!tile) {
+			spdlog::warn("MapXMLIO: Failed to create tile at {}:{}:{} for NPC spawn", spawnPosition.x, spawnPosition.y, spawnPosition.z);
+			continue;
+		}
 
 		tile->npc_spawn = std::make_unique<Spawn>(radius);
 		map.addNpcSpawn(tile);

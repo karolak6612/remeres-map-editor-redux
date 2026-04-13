@@ -48,6 +48,10 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 		}
 
 		if (!rgba) {
+			if (image_dimensions.width == 0 || image_dimensions.height == 0 || image_dimensions.pixelCount() == 0) {
+				image_dimensions = ImageDimensions {};
+			}
+
 			// Fallback: Create a magenta texture to distinguish failure from garbage
 			constexpr int RGBA_COMPONENTS = 4;
 			rgba = std::make_unique<uint8_t[]>(image_dimensions.pixelCount() * RGBA_COMPONENTS);

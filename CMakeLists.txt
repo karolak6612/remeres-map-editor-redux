@@ -30,6 +30,7 @@ else()
 endif()
 
 find_package(OpenGL REQUIRED)
+set(protobuf_MODULE_COMPATIBLE TRUE)
 find_package(Protobuf REQUIRED)
 find_package(LibLZMA REQUIRED)
 

@@ -371,6 +371,10 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 
 			pugi::xml_attribute attribute;
 			if (!(attribute = monsterNode.attribute("file"))) {
+				warnings.push_back(std::format(
+					"Skipping <monster> entry in {} because it is missing a file attribute.",
+					filename.GetFullPath().ToStdString()
+				));
 				continue;
 			}
 
@@ -379,6 +383,13 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			pugi::xml_document monsterDoc;
 			pugi::xml_parse_result monsterResult = monsterDoc.load_file(monsterFile.GetFullPath().mb_str());
 			if (!monsterResult) {
+				warnings.push_back(std::format(
+					"Skipping <monster file=\"{}\"> in {} because {} could not be loaded: {}.",
+					attribute.as_string(),
+					filename.GetFullPath().ToStdString(),
+					monsterFile.GetFullPath().ToStdString(),
+					monsterResult.description()
+				));
 				continue;
 			}
 

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <spdlog/spdlog.h>
 
 namespace {
 	template <typename SpawnGetter, typename CountGetter>
@@ -49,6 +50,8 @@ namespace {
 		};
 
 		const int max_radius = std::max(map.getWidth(), map.getHeight());
+		const int max_iterations = std::max(1, max_radius + 1);
+		int iterations = 0;
 		while (found < target_count) {
 			for (int x = start_x; x <= end_x; ++x) {
 				check_tile(x, start_y);
@@ -65,7 +68,17 @@ namespace {
 			++end_x;
 			++end_y;
 
-			if ((end_x - start_x) / 2 > max_radius) {
+			++iterations;
+			if (iterations >= max_iterations || (end_x - start_x) / 2 > max_radius) {
+				spdlog::warn(
+					"MapSpawnManager: capped spawn lookup at tile {}:{}:{} after {} iteration(s); found {} of {} expected spawns.",
+					where->getX(),
+					where->getY(),
+					where->getZ(),
+					iterations,
+					found,
+					target_count
+				);
 				break;
 			}
 		}

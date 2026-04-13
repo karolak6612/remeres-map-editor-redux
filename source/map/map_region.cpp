@@ -46,6 +46,7 @@ std::unique_ptr<TileLocation> TileLocation::clone() const {
 	auto copy = std::make_unique<TileLocation>();
 	copy->position = position;
 	copy->spawn_count = spawn_count;
+	copy->npc_spawn_count = npc_spawn_count;
 	copy->waypoint_count = waypoint_count;
 	copy->town_count = town_count;
 	if (house_exits) {

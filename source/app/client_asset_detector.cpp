@@ -349,8 +349,10 @@ ClientAssetDetectionResult ClientAssetDetector::detect(const ClientVersion& clie
 			}
 			if (entry.value("type", std::string {}) == "appearances") {
 				const auto filename = entry.value("file", std::string {});
-				if (!filename.empty()) {
+				const wxFileName metadata_path(catalog_path.GetPath(), wxString::FromUTF8(filename));
+				if (!filename.empty() && metadata_path.FileExists()) {
 					result.metadata_file_name = filename;
+					break;
 				}
 			}
 		}

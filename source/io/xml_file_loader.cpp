@@ -62,7 +62,11 @@ namespace {
 				const FileName include_file = XmlFileLoader::resolveRelative(filename, wxString::FromUTF8(include_attribute.as_string()));
 				wxString include_error;
 				if (!visitFile(include_file, root_name, visitor, state, include_error, warnings)) {
-					warnings.push_back(std::format("Failed to load XML include {}: {}", include_file.GetFullPath().ToStdString(), include_error.ToStdString()));
+					error = include_error.empty()
+						? wxString::FromUTF8(std::format("Failed to load XML include {}.", include_file.GetFullPath().ToStdString()))
+						: include_error;
+					state.visiting.erase(path_key);
+					return false;
 				}
 				continue;
 			}

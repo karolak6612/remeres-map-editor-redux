@@ -108,6 +108,8 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 
 	auto rgbdata = parent->spriteList[sprite_index]->getRGBData();
 	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
+	const ImageDimensions base_dimensions = parent->spriteList[sprite_index]->getDimensions();
+	const ImageDimensions mask_dimensions = parent->spriteList[mask_index]->getDimensions();
 
 	if (!rgbdata) {
 		return nullptr;
@@ -115,10 +117,21 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBData() {
 	if (!template_rgbdata) {
 		return nullptr;
 	}
+	if (base_dimensions.width != mask_dimensions.width || base_dimensions.height != mask_dimensions.height || base_dimensions.pixelCount() != mask_dimensions.pixelCount()) {
+		spdlog::warn(
+			"TemplateImage (texture_id={}): Base/mask dimension mismatch (base={}x{}, mask={}x{})",
+			texture_id,
+			base_dimensions.width,
+			base_dimensions.height,
+			mask_dimensions.width,
+			mask_dimensions.height
+		);
+		return nullptr;
+	}
 
 	clampTemplateLookValues(this);
 
-	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), getDimensions().pixelCount(), lookHead, lookBody, lookLegs, lookFeet, false);
+	GameSprite::ColorizeTemplatePixels(rgbdata.get(), template_rgbdata.get(), base_dimensions.pixelCount(), lookHead, lookBody, lookLegs, lookFeet, false);
 
 	return rgbdata;
 }
@@ -131,6 +144,8 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 
 	auto rgbadata = parent->spriteList[sprite_index]->getRGBAData();
 	auto template_rgbdata = parent->spriteList[mask_index]->getRGBData();
+	const ImageDimensions base_dimensions = parent->spriteList[sprite_index]->getDimensions();
+	const ImageDimensions mask_dimensions = parent->spriteList[mask_index]->getDimensions();
 
 	if (!rgbadata) {
 		spdlog::warn("TemplateImage: Failed to load BASE sprite data for sprite_index={} (template_id={}). Parent width={}, height={}", sprite_index, texture_id, parent->width, parent->height);
@@ -140,11 +155,22 @@ std::unique_ptr<uint8_t[]> TemplateImage::getRGBAData() {
 		spdlog::warn("TemplateImage: Failed to load MASK sprite data for sprite_index={} (template_id={}) (mask_index={})", sprite_index, texture_id, mask_index);
 		return nullptr;
 	}
+	if (base_dimensions.width != mask_dimensions.width || base_dimensions.height != mask_dimensions.height || base_dimensions.pixelCount() != mask_dimensions.pixelCount()) {
+		spdlog::warn(
+			"TemplateImage (texture_id={}): Base/mask dimension mismatch (base={}x{}, mask={}x{})",
+			texture_id,
+			base_dimensions.width,
+			base_dimensions.height,
+			mask_dimensions.width,
+			mask_dimensions.height
+		);
+		return nullptr;
+	}
 
 	clampTemplateLookValues(this);
 
 	// Note: the base data is RGBA (4 channels) while the mask data is RGB (3 channels).
-	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), getDimensions().pixelCount(), lookHead, lookBody, lookLegs, lookFeet, true);
+	GameSprite::ColorizeTemplatePixels(rgbadata.get(), template_rgbdata.get(), base_dimensions.pixelCount(), lookHead, lookBody, lookLegs, lookFeet, true);
 
 	return rgbadata;
 }

@@ -139,6 +139,15 @@ std::shared_ptr<SpriteArchive> SpriteArchive::loadProtobuf(const wxFileName& cat
 			warnings.push_back("Skipping invalid protobuf sprite sheet entry in catalog-content.json.");
 			continue;
 		}
+		if (sheet.last_id > MAX_SPRITES) {
+			error = wxString::FromUTF8(std::format(
+				"Protobuf sprite sheet {} exceeds MAX_SPRITES={} with last sprite id {}.",
+				sheet.path,
+				MAX_SPRITES,
+				sheet.last_id
+			));
+			return nullptr;
+		}
 
 		sprite_count = std::max(sprite_count, sheet.last_id);
 		sheets.push_back(std::move(sheet));
@@ -345,10 +354,15 @@ bool SpriteArchive::loadSheetPixels(const ProtobufSheet& sheet) const {
 }
 
 bool SpriteArchive::readProtobufRgba(uint32_t sprite_id, std::unique_ptr<uint8_t[]>& target, ImageDimensions& dimensions) const {
-	if (sprite_id == 0 || sprite_id >= protobuf_sheet_lookup_.size()) {
+	if (sprite_id == 0) {
 		dimensions = {};
 		target = std::make_unique<uint8_t[]>(dimensions.pixelCount() * 4);
 		return true;
+	}
+	if (sprite_id >= protobuf_sheet_lookup_.size()) {
+		dimensions = {};
+		target.reset();
+		return false;
 	}
 
 	const int32_t sheet_index = protobuf_sheet_lookup_[sprite_id];
@@ -357,10 +371,14 @@ bool SpriteArchive::readProtobufRgba(uint32_t sprite_id, std::unique_ptr<uint8_t
 	}
 
 	std::lock_guard<std::mutex> lock(protobuf_mutex_);
+	if (last_decoded_sheet_index_ >= 0 && last_decoded_sheet_index_ != sheet_index && static_cast<size_t>(last_decoded_sheet_index_) < protobuf_sheets_.size()) {
+		protobuf_sheets_[static_cast<size_t>(last_decoded_sheet_index_)].releaseDecodedPixels();
+	}
 	auto& sheet = protobuf_sheets_[static_cast<size_t>(sheet_index)];
 	if (!loadSheetPixels(sheet) || !sheet.decoded_pixels) {
 		return false;
 	}
+	last_decoded_sheet_index_ = sheet_index;
 
 	const auto [source_width, source_height] = protobufSourceDimensions(sheet.layout);
 	dimensions = ImageDimensions {
