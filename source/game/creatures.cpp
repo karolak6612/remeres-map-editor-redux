@@ -387,6 +387,9 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 				if (current) {
 					CreatureType::preserve_assign_creature_fields(current, *creatureType);
 					delete creatureType;
+					if (!current->brush) {
+						ensureCreatureBrush(current);
+					}
 				} else {
 					creature_map[as_lower_str(creatureType->name)] = creatureType;
 
@@ -419,6 +422,9 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 				if (current) {
 					CreatureType::preserve_assign_creature_fields(current, *creatureType);
 					delete creatureType;
+					if (!current->brush) {
+						ensureCreatureBrush(current);
+					}
 				} else {
 					creature_map[as_lower_str(creatureType->name)] = creatureType;
 					ensureCreatureBrush(creatureType);
@@ -433,6 +439,9 @@ bool CreatureDatabase::importXMLFromOT(const FileName& filename, wxString& error
 			if (current) {
 				CreatureType::preserve_assign_creature_fields(current, *creatureType);
 				delete creatureType;
+				if (!current->brush) {
+					ensureCreatureBrush(current);
+				}
 			} else {
 				creature_map[as_lower_str(creatureType->name)] = creatureType;
 

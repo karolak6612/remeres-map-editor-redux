@@ -35,9 +35,6 @@ namespace {
 		return {};
 	}
 
-	std::string displayName(const wxFileName& filename, const char* fallback_name) {
-		return filename.IsOk() && !filename.GetFullPath().empty() ? filename.GetFullPath().ToStdString() : std::string(fallback_name);
-	}
 }
 
 VersionManager::VersionManager() :
@@ -237,11 +234,27 @@ bool VersionManager::LoadDataFiles(wxString& error, std::vector<std::string>& wa
 	g_loading.SetLoadDone(35, "Loading creatures...");
 	wxString creatures_error;
 	if (monsters_xml_path.FileExists() || npcs_xml_path.FileExists()) {
-		if (monsters_xml_path.FileExists() && !g_creatures.importXMLFromOT(monsters_xml_path, creatures_error, warnings)) {
-			warnings.push_back(std::format("Couldn't load {}: {}", monsters_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+		bool monsters_ok = !monsters_xml_path.FileExists();
+		bool npcs_ok = !npcs_xml_path.FileExists();
+		if (monsters_xml_path.FileExists()) {
+			monsters_ok = g_creatures.importXMLFromOT(monsters_xml_path, creatures_error, warnings);
+			if (!monsters_ok) {
+				warnings.push_back(std::format("Couldn't load {}: {}", monsters_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+			}
 		}
-		if (npcs_xml_path.FileExists() && !g_creatures.importXMLFromOT(npcs_xml_path, creatures_error, warnings)) {
-			warnings.push_back(std::format("Couldn't load {}: {}", npcs_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+		if (npcs_xml_path.FileExists()) {
+			npcs_ok = g_creatures.importXMLFromOT(npcs_xml_path, creatures_error, warnings);
+			if (!npcs_ok) {
+				warnings.push_back(std::format("Couldn't load {}: {}", npcs_xml_path.GetFullPath().ToStdString(), creatures_error.ToStdString()));
+			}
+		}
+		if (monsters_xml_path.FileExists() && npcs_xml_path.FileExists() && !monsters_ok && !npcs_ok) {
+			error = "Couldn't load monsters.xml or npcs.xml for the selected client version.";
+			g_loading.DestroyLoadBar();
+			last_missing_items = {};
+			last_load_has_otb = true;
+			UnloadVersion();
+			return false;
 		}
 	} else if (creatures_xml_path.FileExists()) {
 		if (!g_creatures.loadFromXML(creatures_xml_path, true, creatures_error, warnings)) {

@@ -7,6 +7,8 @@
 #include "rendering/core/graphics_assembler.h"
 #include "rendering/core/sprite_archive.h"
 
+#include <format>
+
 namespace {
 	ItemDefinitionLoadInput toDefinitionInput(const AssetLoadRequest& request, const DatCatalog& dat_catalog) {
 		return ItemDefinitionLoadInput {
@@ -61,6 +63,9 @@ bool AssetBundleLoader::load(const AssetLoadRequest& request, AssetBundle& bundl
 			}
 			break;
 		}
+		default:
+			error = wxString::FromUTF8(std::format("Unsupported item definition mode {}.", static_cast<int>(request.mode)));
+			return false;
 	}
 
 	ItemDefinitionsLoader definitions_loader;

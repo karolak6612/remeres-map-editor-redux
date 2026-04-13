@@ -49,6 +49,10 @@ void MapPopupMenu::Update() {
 		Delete(m_item);
 	}
 
+	const auto appendIconItem = [this](int id, const wxString& label, const wxString& help, std::string_view icon) {
+		return Append(id, label, help)->SetBitmap(IMAGE_MANAGER.GetBitmap(icon, wxSize(16, 16)));
+	};
+
 	bool anything_selected = editor.selection.size() != 0;
 
 	wxMenuItem* cutItem = Append(MAP_POPUP_MENU_CUT, "&Cut\tCTRL+X", "Cut out all selected items");
@@ -156,17 +160,17 @@ void MapPopupMenu::Update() {
 				}
 
 				if (topCreature) {
-					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush", ICON_DRAGON);
 				}
 
 				if (topSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush", ICON_FIRE);
 				}
 				if (topNpcSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush", ICON_USER);
 				}
 				if (hasZones) {
-					Append(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MARKER, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile", ICON_MARKER);
 				}
 
 				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));
@@ -212,17 +216,17 @@ void MapPopupMenu::Update() {
 			} else {
 
 				if (topCreature) {
-					Append(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_DRAGON, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_CREATURE_BRUSH, "Select Creature", "Uses the current creature as a creature brush", ICON_DRAGON);
 				}
 
 				if (topSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_FIRE, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_SPAWN_BRUSH, "Select Spawn", "Select the spawn brush", ICON_FIRE);
 				}
 				if (topNpcSpawn) {
-					Append(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_USER, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_NPC_SPAWN_BRUSH, "Select NPC Spawn", "Select the NPC spawn brush", ICON_USER);
 				}
 				if (hasZones) {
-					Append(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_MARKER, wxSize(16, 16)));
+					appendIconItem(MAP_POPUP_MENU_SELECT_ZONE_BRUSH, "Select Zone", "Select the zone brush for this tile", ICON_MARKER);
 				}
 
 				Append(MAP_POPUP_MENU_SELECT_RAW_BRUSH, "Select RAW", "Uses the top item as a RAW brush")->SetBitmap(IMAGE_MANAGER.GetBitmap(ICON_CUBE, wxSize(16, 16)));

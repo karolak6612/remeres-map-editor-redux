@@ -127,7 +127,9 @@ void EditorPersistence::saveMap(Editor& editor, FileName filename, bool showdial
 		f << backup_otbm << '\n'
 		  << backup_house << '\n'
 		  << backup_spawn << '\n'
-		  << backup_waypoint << '\n';
+		  << backup_waypoint << '\n'
+		  << backup_spawn_npc << '\n'
+		  << backup_zone << '\n';
 	}
 
 	{

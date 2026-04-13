@@ -17,6 +17,7 @@
 #include "rendering/core/light_buffer.h"
 #include "rendering/core/render_view.h"
 #include <spdlog/spdlog.h>
+#include <vector>
 
 CreatureDrawer::CreatureDrawer() {
 }
@@ -125,13 +126,34 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					mountOutfit.lookLegs = outfit.lookMountLegs;
 					mountOutfit.lookFeet = outfit.lookMountFeet;
 
+					std::vector<int> column_widths(mountSpr->width, TILE_SIZE);
+					std::vector<int> row_heights(mountSpr->height, TILE_SIZE);
 					for (int cx = 0; cx != mountSpr->width; ++cx) {
+						for (int cy = 0; cy != mountSpr->height; ++cy) {
+							if (const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame)) {
+								column_widths[cx] = std::max(column_widths[cx], region->pixel_width);
+								row_heights[cy] = std::max(row_heights[cy], region->pixel_height);
+							}
+						}
+					}
+
+					int mount_x_offset = 0;
+					for (int cx = 0; cx != mountSpr->width; ++cx) {
+						int mount_y_offset = 0;
 						for (int cy = 0; cy != mountSpr->height; ++cy) {
 							const AtlasRegion* region = mountSpr->getAtlasRegion(cx, cy, static_cast<int>(dir), 0, 0, mountOutfit, resolvedFrame);
 							if (region) {
-								sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - mountSpr->getDrawOffset().first, screeny - cy * TILE_SIZE - mountSpr->getDrawOffset().second, region, options.color);
+								sprite_drawer->glBlitAtlasQuad(
+									sprite_batch,
+									screenx - mount_x_offset - mountSpr->getDrawOffset().first,
+									screeny - mount_y_offset - mountSpr->getDrawOffset().second,
+									region,
+									options.color
+								);
 							}
+							mount_y_offset += row_heights[cy];
 						}
+						mount_x_offset += column_widths[cx];
 					}
 				}
 
@@ -150,13 +172,34 @@ void CreatureDrawer::BlitCreature(SpriteBatch& sprite_batch, SpriteDrawer* sprit
 					}
 				}
 
+				std::vector<int> column_widths(spr->width, TILE_SIZE);
+				std::vector<int> row_heights(spr->height, TILE_SIZE);
 				for (int cx = 0; cx != spr->width; ++cx) {
+					for (int cy = 0; cy != spr->height; ++cy) {
+						if (const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame)) {
+							column_widths[cx] = std::max(column_widths[cx], region->pixel_width);
+							row_heights[cy] = std::max(row_heights[cy], region->pixel_height);
+						}
+					}
+				}
+
+				int sprite_x_offset = 0;
+				for (int cx = 0; cx != spr->width; ++cx) {
+					int sprite_y_offset = 0;
 					for (int cy = 0; cy != spr->height; ++cy) {
 						const AtlasRegion* region = spr->getAtlasRegion(cx, cy, static_cast<int>(dir), pattern_y, pattern_z, outfit, resolvedFrame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE - spr->getDrawOffset().first, screeny - cy * TILE_SIZE - spr->getDrawOffset().second, region, options.color);
+							sprite_drawer->glBlitAtlasQuad(
+								sprite_batch,
+								screenx - sprite_x_offset - spr->getDrawOffset().first,
+								screeny - sprite_y_offset - spr->getDrawOffset().second,
+								region,
+								options.color
+							);
 						}
+						sprite_y_offset += row_heights[cy];
 					}
+					sprite_x_offset += column_widths[cx];
 				}
 			}
 		}

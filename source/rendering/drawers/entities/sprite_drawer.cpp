@@ -5,6 +5,7 @@
 
 #include "ui/gui.h"
 #include <spdlog/spdlog.h>
+#include <vector>
 #include "rendering/core/sprite_batch.h"
 #include "rendering/core/atlas_manager.h"
 
@@ -87,15 +88,32 @@ void SpriteDrawer::BlitSprite(SpriteBatch& sprite_batch, int screenx, int screen
 	// Note: ensureAtlasManager is called by MapDrawer at frame start usually, but we check here too if needed?
 	// BatchRenderer::SetAtlasManager call removed. Use sprite_batch.
 
+	std::vector<int> column_widths(spr->width, TILE_SIZE);
+	std::vector<int> row_heights(spr->height, TILE_SIZE);
 	for (int cx = 0; cx != spr->width; ++cx) {
+		for (int cy = 0; cy != spr->height; ++cy) {
+			for (int cf = 0; cf != spr->layers; ++cf) {
+				if (const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme)) {
+					column_widths[cx] = std::max(column_widths[cx], region->pixel_width);
+					row_heights[cy] = std::max(row_heights[cy], region->pixel_height);
+				}
+			}
+		}
+	}
+
+	int x_offset = 0;
+	for (int cx = 0; cx != spr->width; ++cx) {
+		int y_offset = 0;
 		for (int cy = 0; cy != spr->height; ++cy) {
 			for (int cf = 0; cf != spr->layers; ++cf) {
 				const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, -1, 0, 0, 0, tme);
 				if (region) {
-					glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, color);
+					glBlitAtlasQuad(sprite_batch, screenx - x_offset, screeny - y_offset, region, color);
 				}
 				// No fallback - if region is null, sprite failed to load
 			}
+			y_offset += row_heights[cy];
 		}
+		x_offset += column_widths[cx];
 	}
 }

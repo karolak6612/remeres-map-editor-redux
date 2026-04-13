@@ -183,15 +183,20 @@ uint32_t GameSprite::getSpriteId(int frameIndex, int pattern_x, int pattern_y) c
 }
 
 std::pair<int, int> GameSprite::getDrawOffset() const {
-	int implicit_offset_x = 0;
-	int implicit_offset_y = 0;
+	uint16_t max_width = 0;
+	uint16_t max_height = 0;
+	for (const auto* image : spriteList) {
+		if (!image) {
+			continue;
+		}
 
-	if (!spriteList.empty() && spriteList.front()) {
-		const auto dimensions = spriteList.front()->getDimensions();
-		implicit_offset_x = std::max(0, static_cast<int>(dimensions.width) - SPRITE_PIXELS);
-		implicit_offset_y = std::max(0, static_cast<int>(dimensions.height) - SPRITE_PIXELS);
+		const auto dimensions = image->getDimensions();
+		max_width = std::max<uint16_t>(max_width, dimensions.width);
+		max_height = std::max<uint16_t>(max_height, dimensions.height);
 	}
 
+	const int implicit_offset_x = std::max(0, static_cast<int>(max_width) - SPRITE_PIXELS);
+	const int implicit_offset_y = std::max(0, static_cast<int>(max_height) - SPRITE_PIXELS);
 	return std::make_pair(static_cast<int>(drawoffset_x) + implicit_offset_x, static_cast<int>(drawoffset_y) + implicit_offset_y);
 }
 

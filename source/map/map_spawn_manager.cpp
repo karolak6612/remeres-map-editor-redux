@@ -2,6 +2,41 @@
 #include "map/map.h"
 #include "map/map_region.h"
 
+void MapSpawnManager::applySpawnCoverage(Map& map, Tile* tile, Spawn* spawn, bool create_missing_tiles, int delta, bool npc) {
+	if (!tile || !spawn || delta == 0) {
+		return;
+	}
+
+	const int z = tile->getZ();
+	const int start_x = tile->getX() - spawn->getSize();
+	const int start_y = tile->getY() - spawn->getSize();
+	const int end_x = tile->getX() + spawn->getSize();
+	const int end_y = tile->getY() + spawn->getSize();
+
+	for (int y = start_y; y <= end_y; ++y) {
+		for (int x = start_x; x <= end_x; ++x) {
+			TileLocation* tile_location = create_missing_tiles ? map.createTileL(x, y, z) : map.getTileL(x, y, z);
+			if (!tile_location) {
+				continue;
+			}
+
+			if (npc) {
+				if (delta > 0) {
+					tile_location->increaseNpcSpawnCount();
+				} else if (tile_location->getNpcSpawnCount() > 0) {
+					tile_location->decreaseNpcSpawnCount();
+				}
+			} else {
+				if (delta > 0) {
+					tile_location->increaseSpawnCount();
+				} else if (tile_location->getSpawnCount() > 0) {
+					tile_location->decreaseSpawnCount();
+				}
+			}
+		}
+	}
+}
+
 bool MapSpawnManager::addSpawn(Map& map, Tile* tile) {
 	if (!tile) {
 		return false;
@@ -9,18 +44,7 @@ bool MapSpawnManager::addSpawn(Map& map, Tile* tile) {
 
 	Spawn* spawn = tile->spawn.get();
 	if (spawn) {
-		int z = tile->getZ();
-		int start_x = tile->getX() - spawn->getSize();
-		int start_y = tile->getY() - spawn->getSize();
-		int end_x = tile->getX() + spawn->getSize();
-		int end_y = tile->getY() + spawn->getSize();
-
-		for (int y = start_y; y <= end_y; ++y) {
-			for (int x = start_x; x <= end_x; ++x) {
-				TileLocation* ctile_loc = map.createTileL(x, y, z);
-				ctile_loc->increaseSpawnCount();
-			}
-		}
+		applySpawnCoverage(map, tile, spawn, true, 1, false);
 		map.spawns.addSpawn(tile);
 		return true;
 	}
@@ -34,18 +58,7 @@ bool MapSpawnManager::addNpcSpawn(Map& map, Tile* tile) {
 
 	Spawn* spawn = tile->npc_spawn.get();
 	if (spawn) {
-		int z = tile->getZ();
-		int start_x = tile->getX() - spawn->getSize();
-		int start_y = tile->getY() - spawn->getSize();
-		int end_x = tile->getX() + spawn->getSize();
-		int end_y = tile->getY() + spawn->getSize();
-
-		for (int y = start_y; y <= end_y; ++y) {
-			for (int x = start_x; x <= end_x; ++x) {
-				TileLocation* ctile_loc = map.createTileL(x, y, z);
-				ctile_loc->increaseNpcSpawnCount();
-			}
-		}
+		applySpawnCoverage(map, tile, spawn, true, 1, true);
 		map.npc_spawns.addSpawn(tile);
 		return true;
 	}
@@ -59,21 +72,7 @@ void MapSpawnManager::removeSpawnInternal(Map& map, Tile* tile) {
 
 	Spawn* spawn = tile->spawn.get();
 	ASSERT(spawn);
-
-	int z = tile->getZ();
-	int start_x = tile->getX() - spawn->getSize();
-	int start_y = tile->getY() - spawn->getSize();
-	int end_x = tile->getX() + spawn->getSize();
-	int end_y = tile->getY() + spawn->getSize();
-
-	for (int y = start_y; y <= end_y; ++y) {
-		for (int x = start_x; x <= end_x; ++x) {
-			TileLocation* ctile_loc = map.getTileL(x, y, z);
-			if (ctile_loc != nullptr && ctile_loc->getSpawnCount() > 0) {
-				ctile_loc->decreaseSpawnCount();
-			}
-		}
-	}
+	applySpawnCoverage(map, tile, spawn, false, -1, false);
 }
 
 void MapSpawnManager::removeNpcSpawnInternal(Map& map, Tile* tile) {
@@ -83,21 +82,7 @@ void MapSpawnManager::removeNpcSpawnInternal(Map& map, Tile* tile) {
 
 	Spawn* spawn = tile->npc_spawn.get();
 	ASSERT(spawn);
-
-	int z = tile->getZ();
-	int start_x = tile->getX() - spawn->getSize();
-	int start_y = tile->getY() - spawn->getSize();
-	int end_x = tile->getX() + spawn->getSize();
-	int end_y = tile->getY() + spawn->getSize();
-
-	for (int y = start_y; y <= end_y; ++y) {
-		for (int x = start_x; x <= end_x; ++x) {
-			TileLocation* ctile_loc = map.getTileL(x, y, z);
-			if (ctile_loc != nullptr && ctile_loc->getNpcSpawnCount() > 0) {
-				ctile_loc->decreaseNpcSpawnCount();
-			}
-		}
-	}
+	applySpawnCoverage(map, tile, spawn, false, -1, true);
 }
 
 void MapSpawnManager::removeSpawn(Map& map, Tile* tile) {

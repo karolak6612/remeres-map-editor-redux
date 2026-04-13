@@ -45,6 +45,9 @@ void ZoneBrush::draw(BaseMap* map, Tile* tile, void* parameter) {
 	}
 
 	const uint16_t zone_id = concrete_map->zones.ensureZone(std::string { zone_name });
+	if (zone_id == 0) {
+		return;
+	}
 	tile->addZone(zone_id);
 }
 
@@ -58,7 +61,6 @@ void ZoneBrush::undraw(BaseMap* map, Tile* tile) {
 
 	const std::string_view zone_name = g_brush_manager.GetSelectedZone();
 	if (zone_name.empty()) {
-		tile->clearZones();
 		return;
 	}
 

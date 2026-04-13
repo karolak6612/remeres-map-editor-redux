@@ -13,6 +13,7 @@ public:
 	static SpawnList getNpcSpawnList(Map& map, Tile* where);
 
 private:
+	static void applySpawnCoverage(Map& map, Tile* tile, Spawn* spawn, bool create_missing_tiles, int delta, bool npc);
 	static void removeSpawnInternal(Map& map, Tile* tile);
 	static void removeNpcSpawnInternal(Map& map, Tile* tile);
 };

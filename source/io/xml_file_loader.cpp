@@ -42,7 +42,6 @@ namespace {
 		}
 
 		state.visiting.insert(path_key);
-		state.visited.insert(path_key);
 
 		for (pugi::xml_node child = root.first_child(); child; child = child.next_sibling()) {
 			if (as_lower_str(child.name()) == "include") {
@@ -67,6 +66,7 @@ namespace {
 		}
 
 		state.visiting.erase(path_key);
+		state.visited.insert(path_key);
 		return true;
 	}
 }

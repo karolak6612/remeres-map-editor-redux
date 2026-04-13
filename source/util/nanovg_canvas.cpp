@@ -1,5 +1,7 @@
 #include "app/main.h"
 #include "util/nanovg_canvas.h"
+
+#include "app/definitions.h"
 #include "util/image_manager.h"
 #include "rendering/core/text_renderer.h"
 #include "ui/theme.h"
@@ -257,8 +259,8 @@ int NanoVGCanvas::CreateGameSpriteTexture(NVGcontext* vg, GameSprite* gs, uint64
 				}
 				const auto dimensions = image->getDimensions();
 
-				int part_x = (gs->width - sw - 1) * 32;
-				int part_y = (gs->height - sh - 1) * 32;
+				int part_x = (gs->width - sw - 1) * SPRITE_PIXELS;
+				int part_y = (gs->height - sh - 1) * SPRITE_PIXELS;
 
 				for (int sy = 0; sy < dimensions.height; ++sy) {
 					for (int sx = 0; sx < dimensions.width; ++sx) {

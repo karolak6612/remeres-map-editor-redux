@@ -5,6 +5,7 @@
 #include "app/main.h"
 
 #include <algorithm>
+#include <vector>
 #undef min
 #undef max
 
@@ -220,15 +221,32 @@ void ItemDrawer::BlitItem(SpriteBatch& sprite_batch, SpriteDrawer* sprite_drawer
 				sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx, screeny, region, DrawColor(red, green, blue, alpha));
 			}
 		} else {
+			std::vector<int> column_widths(spr->width, TILE_SIZE);
+			std::vector<int> row_heights(spr->height, TILE_SIZE);
 			for (int cx = 0; cx != spr->width; cx++) {
+				for (int cy = 0; cy != spr->height; cy++) {
+					for (int cf = 0; cf != spr->layers; cf++) {
+						if (const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame)) {
+							column_widths[cx] = std::max(column_widths[cx], region->pixel_width);
+							row_heights[cy] = std::max(row_heights[cy], region->pixel_height);
+						}
+					}
+				}
+			}
+
+			int x_offset = 0;
+			for (int cx = 0; cx != spr->width; cx++) {
+				int y_offset = 0;
 				for (int cy = 0; cy != spr->height; cy++) {
 					for (int cf = 0; cf != spr->layers; cf++) {
 						const AtlasRegion* region = spr->getAtlasRegion(cx, cy, cf, subtype, pattern_x, pattern_y, pattern_z, frame);
 						if (region) {
-							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - cx * TILE_SIZE, screeny - cy * TILE_SIZE, region, DrawColor(red, green, blue, alpha));
+							sprite_drawer->glBlitAtlasQuad(sprite_batch, screenx - x_offset, screeny - y_offset, region, DrawColor(red, green, blue, alpha));
 						}
 					}
+					y_offset += row_heights[cy];
 				}
+				x_offset += column_widths[cx];
 			}
 		}
 	}

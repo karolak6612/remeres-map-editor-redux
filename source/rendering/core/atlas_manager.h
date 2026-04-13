@@ -36,7 +36,7 @@ public:
 	 * @param pixel_height Height in pixels
 	 * @return Pointer to the region info, or nullptr on failure
 	 */
-	const AtlasRegion* addSprite(uint32_t sprite_id, const uint8_t* rgba_data, int pixel_width = TextureAtlas::BASE_SLOT_SIZE, int pixel_height = TextureAtlas::BASE_SLOT_SIZE);
+	const AtlasRegion* addSprite(uint32_t sprite_id, const uint8_t* rgba_data, int pixel_width, int pixel_height);
 
 	/**
 	 * Remove a sprite from the atlas, freeing its slot for reuse.

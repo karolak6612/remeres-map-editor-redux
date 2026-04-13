@@ -204,6 +204,9 @@ uint32_t Tile::memsize() const {
 	}
 
 	mem += sizeof(std::unique_ptr<Item>) * items.capacity();
+	if (npc_spawn) {
+		mem += sizeof(*npc_spawn);
+	}
 	mem += static_cast<uint32_t>(zone_ids.capacity() * sizeof(uint16_t));
 	if (invalidZones) {
 		mem += sizeof(InvalidZoneState);
@@ -530,9 +533,11 @@ void Tile::addZone(uint16_t zone_id) {
 		return;
 	}
 
-	zone_ids.push_back(zone_id);
-	std::ranges::sort(zone_ids);
-	zone_ids.erase(std::unique(zone_ids.begin(), zone_ids.end()), zone_ids.end());
+	const auto insertion_point = std::lower_bound(zone_ids.begin(), zone_ids.end(), zone_id);
+	if (insertion_point != zone_ids.end() && *insertion_point == zone_id) {
+		return;
+	}
+	zone_ids.insert(insertion_point, zone_id);
 }
 
 void Tile::removeZone(uint16_t zone_id) {
@@ -544,5 +549,5 @@ void Tile::clearZones() {
 }
 
 bool Tile::hasZone(uint16_t zone_id) const {
-	return std::ranges::find(zone_ids, zone_id) != zone_ids.end();
+	return std::ranges::binary_search(zone_ids, zone_id);
 }

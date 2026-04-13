@@ -30,6 +30,7 @@
 #include <unordered_map>
 #include <atomic>
 #include <format>
+#include <limits>
 #include <spdlog/spdlog.h>
 
 bool ZoneRegistry::addZone(const std::string& name, uint16_t id) {
@@ -85,16 +86,21 @@ uint16_t ZoneRegistry::ensureZone(const std::string& name) {
 	}
 
 	const uint16_t id = nextFreeId();
-	addZone(name, id);
+	if (id == 0 || !addZone(name, id)) {
+		spdlog::error("Failed to allocate zone id for '{}'.", name);
+		return 0;
+	}
 	return id;
 }
 
 uint16_t ZoneRegistry::nextFreeId() const {
-	uint16_t candidate = 1;
-	while (id_to_name.contains(candidate)) {
-		++candidate;
+	for (uint32_t candidate = 1; candidate <= std::numeric_limits<uint16_t>::max(); ++candidate) {
+		if (!id_to_name.contains(static_cast<uint16_t>(candidate))) {
+			return static_cast<uint16_t>(candidate);
+		}
 	}
-	return candidate;
+	spdlog::error("Zone id space exhausted.");
+	return 0;
 }
 
 namespace {

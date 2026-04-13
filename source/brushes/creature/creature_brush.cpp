@@ -120,7 +120,8 @@ void CreatureBrush::draw_creature(BaseMap* map, Tile* tile) {
 	if (canDraw(map, tile->getPosition())) {
 		undraw(map, tile);
 		if (creature_type) {
-			if (const bool use_npc_spawn = usesNpcSpawnSystem(map, creature_type); use_npc_spawn) {
+			const bool use_npc_spawn = usesNpcSpawnSystem(map, creature_type);
+			if (use_npc_spawn) {
 				if (tile->npc_spawn == nullptr && tile->getLocation()->getNpcSpawnCount() == 0) {
 					tile->npc_spawn = std::make_unique<Spawn>(1);
 				}
@@ -128,7 +129,7 @@ void CreatureBrush::draw_creature(BaseMap* map, Tile* tile) {
 				tile->spawn = std::make_unique<Spawn>(1);
 			}
 			tile->creature = std::make_unique<Creature>(creature_type);
-			tile->creature->setSpawnTime(usesNpcSpawnSystem(map, creature_type) ? g_brush_manager.GetNpcSpawnTime() : g_gui.GetSpawnTime());
+			tile->creature->setSpawnTime(use_npc_spawn ? g_brush_manager.GetNpcSpawnTime() : g_gui.GetSpawnTime());
 		}
 	}
 }

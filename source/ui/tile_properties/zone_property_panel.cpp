@@ -89,6 +89,9 @@ void ZonePropertyPanel::OnAddZone(wxCommandEvent& event) {
 	}
 
 	const uint16_t zone_id = current_map->zones.ensureZone(zone_name);
+	if (zone_id == 0) {
+		return;
+	}
 	auto new_tile = TileOperations::deepCopy(current_tile, *current_map);
 	if (new_tile->hasZone(zone_id)) {
 		return;

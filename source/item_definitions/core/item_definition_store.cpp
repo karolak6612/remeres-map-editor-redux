@@ -17,7 +17,7 @@ ItemDefinitionView::ItemDefinitionView(const ItemDefinitionStore* store, Definit
 
 bool ItemDefinitionView::isValid() const {
 	return store_ != nullptr && index_ < store_->identity_.server_ids.size() && index_ < store_->visual_.client_ids.size() &&
-		index_ < store_->editor_.data.size();
+		index_ < store_->editor_.data.size() && index_ < store_->passive_metadata_.json_blobs.size();
 }
 
 ServerItemId ItemDefinitionView::serverId() const {

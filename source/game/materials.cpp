@@ -17,6 +17,7 @@
 
 #include "app/main.h"
 
+#include <format>
 #include <wx/dir.h>
 
 #include "editor/editor.h"
@@ -85,7 +86,11 @@ bool Materials::loadMaterials(const FileName& identifier, wxString& error, std::
 			return true;
 		}
 		if (child_name == "tileset") {
-			return unserializeTileset(child_node, visit_warnings);
+			if (!unserializeTileset(child_node, visit_warnings)) {
+				visit_error = wxString::FromUTF8(std::format("Failed to load <tileset> from {}.", source_file.GetFullPath().ToStdString()));
+				return false;
+			}
+			return true;
 		}
 		(void)source_file;
 		(void)visit_error;

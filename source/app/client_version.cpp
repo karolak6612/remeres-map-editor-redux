@@ -17,17 +17,18 @@
 
 #include <toml++/toml.h>
 #include <charconv>
+#include <format>
 #include <fstream>
 #include <string>
 #include "app/main.h"
 
+#include "app/client_asset_detector.h"
 #include "app/settings.h"
 #include "io/filehandle.h"
 
 #include "ui/gui.h"
 
 #include "util/file_system.h"
-#include "util/json.h"
 #include "ui/dialog_util.h"
 #include "app/client_version.h"
 
@@ -483,40 +484,16 @@ bool ClientVersion::hasValidPaths() {
 
 	if (item_definition_mode == ItemDefinitionMode::Protobuf) {
 		package_path = wxFileName(client_path.GetFullPath(), "package.json");
-		if (!package_path.FileExists()) {
+		const ClientAssetDetectionResult detected_assets = ClientAssetDetector::detect(*this);
+		if (!detected_assets.sprites_file_name.has_value() || !detected_assets.metadata_file_name.has_value()) {
 			return false;
 		}
 
-		sprites_path = wxFileName(client_path.GetFullPath() + FileName::GetPathSeparator() + "assets", "catalog-content.json");
-		if (!sprites_path.FileExists()) {
+		sprites_path.Assign(client_path.GetFullPath() + FileName::GetPathSeparator() + wxString::FromUTF8(*detected_assets.sprites_file_name));
+		metadata_path = wxFileName(sprites_path.GetPath(), wxString::FromUTF8(*detected_assets.metadata_file_name));
+		if (!package_path.FileExists() || !sprites_path.FileExists()) {
 			return false;
 		}
-
-		std::ifstream catalog_stream(sprites_path.GetFullPath().ToStdString(), std::ios::in | std::ios::binary);
-		if (!catalog_stream.is_open()) {
-			return false;
-		}
-
-		json::json catalog = json::json::parse(catalog_stream, nullptr, false);
-		if (catalog.is_discarded() || !catalog.is_array()) {
-			return false;
-		}
-
-		std::string appearances_file;
-		for (const auto& entry : catalog) {
-			if (!entry.is_object() || entry.value("type", std::string {}) != "appearances") {
-				continue;
-			}
-			appearances_file = entry.value("file", std::string {});
-			if (!appearances_file.empty()) {
-				break;
-			}
-		}
-		if (appearances_file.empty()) {
-			return false;
-		}
-
-		metadata_path = wxFileName(sprites_path.GetPath(), wxString::FromUTF8(appearances_file));
 		return metadata_path.FileExists();
 	}
 
@@ -570,27 +547,38 @@ bool ClientVersion::hasValidPaths() {
 		}
 	}
 
-	wxString message = "Signatures are incorrect.\n";
-	message << "Metadata signature: %X\n";
-	message << "Sprites signature: %X";
-	wxLogError(wxString::Format(message, datSignature, sprSignature));
+	wxLogError("%s", wxString::FromUTF8(std::format(
+		"Signatures are incorrect.\nMetadata signature: {:X}\nSprites signature: {:X}",
+		datSignature,
+		sprSignature
+	)));
 	return false;
 }
 
 bool ClientVersion::loadValidPaths() {
 	while (!hasValidPaths()) {
-		wxString message;
 		if (item_definition_mode == ItemDefinitionMode::Protobuf) {
-			message = "Could not locate the protobuf client package, catalog-content.json, or appearances file. Please navigate to the protobuf client root for %s.\n";
-			message << "Attempted package file: %s\n";
-			message << "Attempted catalog file: %s\n";
-			message << "Attempted appearances file: %s\n";
-			DialogUtil::PopupDialog("Error", wxString::Format(message, name, package_path.GetFullPath(), sprites_path.GetFullPath(), metadata_path.GetFullPath()), wxOK);
+			const auto message = std::format(
+				"Could not locate the protobuf client package, catalog-content.json, or appearances file. Please navigate to the protobuf client root for {}.\n"
+				"Attempted package file: {}\n"
+				"Attempted catalog file: {}\n"
+				"Attempted appearances file: {}\n",
+				name,
+				nstr(package_path.GetFullPath()),
+				nstr(sprites_path.GetFullPath()),
+				nstr(metadata_path.GetFullPath())
+			);
+			DialogUtil::PopupDialog("Error", wxString::FromUTF8(message), wxOK);
 		} else {
-			message = "Could not locate metadata and/or sprite files, please navigate to your client assets %s installation folder.\n";
-			message << "Attempted metadata file: %s\n";
-			message << "Attempted sprites file: %s\n";
-			DialogUtil::PopupDialog("Error", wxString::Format(message, name, metadata_path.GetFullPath(), sprites_path.GetFullPath()), wxOK);
+			const auto message = std::format(
+				"Could not locate metadata and/or sprite files, please navigate to your client assets {} installation folder.\n"
+				"Attempted metadata file: {}\n"
+				"Attempted sprites file: {}\n",
+				name,
+				nstr(metadata_path.GetFullPath()),
+				nstr(sprites_path.GetFullPath())
+			);
+			DialogUtil::PopupDialog("Error", wxString::FromUTF8(message), wxOK);
 		}
 
 		wxString dirHelpText(item_definition_mode == ItemDefinitionMode::Protobuf ? "Select protobuf client root." : "Select assets directory.");

@@ -58,9 +58,8 @@ using attribute_t = uint8_t;
 using flags_t = uint32_t;
 
 namespace {
-	bool hasZoneAssignments(const Map& map) {
-		Map& mutable_map = const_cast<Map&>(map);
-		for (MapIterator it = mutable_map.begin(); it != mutable_map.end(); ++it) {
+	bool hasZoneAssignments(Map& map) {
+		for (MapIterator it = map.begin(); it != map.end(); ++it) {
 			if (const Tile* tile = it->get(); tile && !tile->getZones().empty()) {
 				return true;
 			}
@@ -422,7 +421,7 @@ bool IOMapOTBM::loadMap(Map& map, NodeFileReadHandle& f) {
 
 bool IOMapOTBM::saveMapToDisk(Map& map, const FileName& identifier) {
 	if (map.getVersion().otbm < MAP_OTBM_5 && (map.npc_spawns.begin() != map.npc_spawns.end() || !map.zones.empty() || hasZoneAssignments(map))) {
-		error("OTBM %d cannot store NPC spawn or zone data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm) + 1);
+		error("OTBM %d cannot store NPC spawn or zone data. Save this map as OTBM 5 or 6.", static_cast<int>(map.getVersion().otbm));
 		return false;
 	}
 

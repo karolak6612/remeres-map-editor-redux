@@ -56,7 +56,7 @@ public:
 	TextureAtlas& operator=(TextureAtlas&& other) noexcept;
 
 	bool initialize(int initial_layers = 8);
-	std::optional<AtlasRegion> addSprite(const uint8_t* rgba_data, int pixel_width = BASE_SLOT_SIZE, int pixel_height = BASE_SLOT_SIZE);
+	std::optional<AtlasRegion> addSprite(const uint8_t* rgba_data, int pixel_width, int pixel_height);
 	void freeSlot(const AtlasRegion& region);
 	void bind(uint32_t slot = 0) const;
 	void unbind(uint32_t slot = 0) const;

@@ -12,6 +12,14 @@ namespace {
 		return uint64_t { 1 } << static_cast<uint8_t>(flag);
 	}
 
+	constexpr std::string_view modeLabel(ItemDefinitionMode mode) {
+		return mode == ItemDefinitionMode::Protobuf ? "protobuf" : "dat_only";
+	}
+
+	constexpr std::string_view sourceLabel(ItemDefinitionMode mode) {
+		return mode == ItemDefinitionMode::Protobuf ? "protobuf" : "DAT";
+	}
+
 	constexpr bool isTooltipType(ItemTypes_t type) {
 		switch (type) {
 			case ITEM_TYPE_DEPOT:
@@ -295,7 +303,13 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 					.description = xml.description
 				});
 			} else {
-				warnings.push_back(std::format("Skipping items.xml entry {} in dat_only mode because DAT client id {} is missing.", server_id, client_id));
+				warnings.push_back(std::format(
+					"Skipping items.xml entry {} in {} mode because {} client id {} is missing.",
+					server_id,
+					modeLabel(input.mode),
+					sourceLabel(input.mode),
+					client_id
+				));
 			}
 			continue;
 		}
@@ -303,7 +317,13 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 		// DAT item exists. Handle duplicate XML mappings.
 		const auto owner_it = xml_server_by_client.find(client_id);
 		if (owner_it != xml_server_by_client.end() && owner_it->second != server_id) {
-			warnings.push_back(std::format("Duplicate items.xml client id {} in dat_only mode for server ids {} and {}. Keeping the first mapping.", client_id, owner_it->second, server_id));
+			warnings.push_back(std::format(
+				"Duplicate items.xml client id {} in {} mode for server ids {} and {}. Keeping the first mapping.",
+				client_id,
+				modeLabel(input.mode),
+				owner_it->second,
+				server_id
+			));
 			continue;
 		}
 		if (owner_it == xml_server_by_client.end()) {
@@ -338,7 +358,10 @@ bool ItemDefinitionResolver::resolveDatOnly(const ItemDefinitionLoadInput& input
 	}
 
 	if (rows.empty()) {
-		error = "No item definitions were resolved from DAT/XML.";
+		error = wxString::FromUTF8(std::format(
+			"No item definitions were resolved from {} / items.xml.",
+			input.mode == ItemDefinitionMode::Protobuf ? "protobuf" : "DAT"
+		));
 		return false;
 	}
 	return true;

@@ -37,6 +37,8 @@ const AtlasRegion* Image::EnsureAtlasSprite(uint32_t sprite_id, std::unique_ptr<
 
 		// 2. Load data
 		std::unique_ptr<uint8_t[]> rgba;
+		// Preloaded atlas data already matches the caller-supplied dimensions, while on-demand loading
+		// must refresh dimensions from the image source in case the sprite footprint is variable-sized.
 		ImageDimensions image_dimensions = dimensions.value_or(getDimensions());
 		if (preloaded_data) {
 			rgba = std::move(preloaded_data);
